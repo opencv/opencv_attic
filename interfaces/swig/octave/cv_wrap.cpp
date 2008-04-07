@@ -5354,6 +5354,26 @@ const char* _wrap_CV_WRITE_SEQ_ELEM_VAR_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CV_WRITE_SEQ_ELEM_VAR (@var{elem_ptr}, @var{writer})\n\
 @var{elem_ptr} is of type void. @var{writer} is of type CvSeqWriter. \n\
 @end deftypefn";
+const char* _wrap_Cv32suf_f_get_texinfo = 0;
+const char* _wrap_Cv32suf_f_set_texinfo = 0;
+const char* _wrap_Cv32suf_i_get_texinfo = 0;
+const char* _wrap_Cv32suf_i_set_texinfo = 0;
+const char* _wrap_Cv32suf_u_get_texinfo = 0;
+const char* _wrap_Cv32suf_u_set_texinfo = 0;
+const char* _wrap_Cv64suf_f_get_texinfo = 0;
+const char* _wrap_Cv64suf_f_set_texinfo = 0;
+const char* _wrap_Cv64suf_i_get_texinfo = 0;
+const char* _wrap_Cv64suf_i_set_texinfo = 0;
+const char* _wrap_Cv64suf_u_get_texinfo = 0;
+const char* _wrap_Cv64suf_u_set_texinfo = 0;
+const char* _wrap_CvAttrList_attr_get_texinfo = 0;
+const char* _wrap_CvAttrList_attr_set_texinfo = 0;
+const char* _wrap_CvAttrList_next_get_texinfo = 0;
+const char* _wrap_CvAttrList_next_set_texinfo = 0;
+const char* _wrap_CvAvgComp_neighbors_get_texinfo = 0;
+const char* _wrap_CvAvgComp_neighbors_set_texinfo = 0;
+const char* _wrap_CvAvgComp_rect_get_texinfo = 0;
+const char* _wrap_CvAvgComp_rect_set_texinfo = 0;
 const char* _wrap_CvBaseImageFilter_clear_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} clear (@var{self})\n\
 @var{self} is of type CvBaseImageFilter. \n\
@@ -5398,6 +5418,12 @@ const char* _wrap_CvBaseImageFilter_process_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = process (@var{self}, @var{_src}, @var{_dst})\n\
 @var{self} is of type CvBaseImageFilter. @var{_src} is of type CvMat. @var{_dst} is of type CvMat. @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_CvBox2D_angle_get_texinfo = 0;
+const char* _wrap_CvBox2D_angle_set_texinfo = 0;
+const char* _wrap_CvBox2D_center_get_texinfo = 0;
+const char* _wrap_CvBox2D_center_set_texinfo = 0;
+const char* _wrap_CvBox2D_size_get_texinfo = 0;
+const char* _wrap_CvBox2D_size_set_texinfo = 0;
 const char* _wrap_CvBoxFilter_get_scale_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = get_scale (@var{self})\n\
 @var{self} is of type CvBoxFilter. @var{retval} is of type double. \n\
@@ -5418,6 +5444,334 @@ const char* _wrap_CvBoxFilter_is_normalized_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = is_normalized (@var{self})\n\
 @var{self} is of type CvBoxFilter. @var{retval} is of type bool. \n\
 @end deftypefn";
+const char* _wrap_CvChainPtReader_block_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_block_max_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_block_max_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_block_min_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_block_min_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_block_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_code_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_code_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_delta_index_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_delta_index_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_deltas_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_deltas_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_header_size_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_header_size_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_prev_elem_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_prev_elem_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_pt_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_pt_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_ptr_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_ptr_set_texinfo = 0;
+const char* _wrap_CvChainPtReader_seq_get_texinfo = 0;
+const char* _wrap_CvChainPtReader_seq_set_texinfo = 0;
+const char* _wrap_CvChain_block_max_get_texinfo = 0;
+const char* _wrap_CvChain_block_max_set_texinfo = 0;
+const char* _wrap_CvChain_delta_elems_get_texinfo = 0;
+const char* _wrap_CvChain_delta_elems_set_texinfo = 0;
+const char* _wrap_CvChain_elem_size_get_texinfo = 0;
+const char* _wrap_CvChain_elem_size_set_texinfo = 0;
+const char* _wrap_CvChain_first_get_texinfo = 0;
+const char* _wrap_CvChain_first_set_texinfo = 0;
+const char* _wrap_CvChain_flags_get_texinfo = 0;
+const char* _wrap_CvChain_flags_set_texinfo = 0;
+const char* _wrap_CvChain_free_blocks_get_texinfo = 0;
+const char* _wrap_CvChain_free_blocks_set_texinfo = 0;
+const char* _wrap_CvChain_h_next_get_texinfo = 0;
+const char* _wrap_CvChain_h_next_set_texinfo = 0;
+const char* _wrap_CvChain_h_prev_get_texinfo = 0;
+const char* _wrap_CvChain_h_prev_set_texinfo = 0;
+const char* _wrap_CvChain_header_size_get_texinfo = 0;
+const char* _wrap_CvChain_header_size_set_texinfo = 0;
+const char* _wrap_CvChain_origin_get_texinfo = 0;
+const char* _wrap_CvChain_origin_set_texinfo = 0;
+const char* _wrap_CvChain_ptr_get_texinfo = 0;
+const char* _wrap_CvChain_ptr_set_texinfo = 0;
+const char* _wrap_CvChain_storage_get_texinfo = 0;
+const char* _wrap_CvChain_storage_set_texinfo = 0;
+const char* _wrap_CvChain_total_get_texinfo = 0;
+const char* _wrap_CvChain_total_set_texinfo = 0;
+const char* _wrap_CvChain_v_next_get_texinfo = 0;
+const char* _wrap_CvChain_v_next_set_texinfo = 0;
+const char* _wrap_CvChain_v_prev_get_texinfo = 0;
+const char* _wrap_CvChain_v_prev_set_texinfo = 0;
+const char* _wrap_CvConDensation_DP_get_texinfo = 0;
+const char* _wrap_CvConDensation_DP_set_texinfo = 0;
+const char* _wrap_CvConDensation_DynamMatr_get_texinfo = 0;
+const char* _wrap_CvConDensation_DynamMatr_set_texinfo = 0;
+const char* _wrap_CvConDensation_MP_get_texinfo = 0;
+const char* _wrap_CvConDensation_MP_set_texinfo = 0;
+const char* _wrap_CvConDensation_RandS_get_texinfo = 0;
+const char* _wrap_CvConDensation_RandS_set_texinfo = 0;
+const char* _wrap_CvConDensation_RandomSample_get_texinfo = 0;
+const char* _wrap_CvConDensation_RandomSample_set_texinfo = 0;
+const char* _wrap_CvConDensation_SamplesNum_get_texinfo = 0;
+const char* _wrap_CvConDensation_SamplesNum_set_texinfo = 0;
+const char* _wrap_CvConDensation_State_get_texinfo = 0;
+const char* _wrap_CvConDensation_State_set_texinfo = 0;
+const char* _wrap_CvConDensation_Temp_get_texinfo = 0;
+const char* _wrap_CvConDensation_Temp_set_texinfo = 0;
+const char* _wrap_CvConDensation_flConfidence_get_texinfo = 0;
+const char* _wrap_CvConDensation_flConfidence_set_texinfo = 0;
+const char* _wrap_CvConDensation_flCumulative_get_texinfo = 0;
+const char* _wrap_CvConDensation_flCumulative_set_texinfo = 0;
+const char* _wrap_CvConDensation_flNewSamples_get_texinfo = 0;
+const char* _wrap_CvConDensation_flNewSamples_set_texinfo = 0;
+const char* _wrap_CvConDensation_flSamples_get_texinfo = 0;
+const char* _wrap_CvConDensation_flSamples_set_texinfo = 0;
+const char* _wrap_CvConnectedComp_area_get_texinfo = 0;
+const char* _wrap_CvConnectedComp_area_set_texinfo = 0;
+const char* _wrap_CvConnectedComp_contour_get_texinfo = 0;
+const char* _wrap_CvConnectedComp_contour_set_texinfo = 0;
+const char* _wrap_CvConnectedComp_rect_get_texinfo = 0;
+const char* _wrap_CvConnectedComp_rect_set_texinfo = 0;
+const char* _wrap_CvConnectedComp_value_get_texinfo = 0;
+const char* _wrap_CvConnectedComp_value_set_texinfo = 0;
+const char* _wrap_CvContourTree_block_max_get_texinfo = 0;
+const char* _wrap_CvContourTree_block_max_set_texinfo = 0;
+const char* _wrap_CvContourTree_delta_elems_get_texinfo = 0;
+const char* _wrap_CvContourTree_delta_elems_set_texinfo = 0;
+const char* _wrap_CvContourTree_elem_size_get_texinfo = 0;
+const char* _wrap_CvContourTree_elem_size_set_texinfo = 0;
+const char* _wrap_CvContourTree_first_get_texinfo = 0;
+const char* _wrap_CvContourTree_first_set_texinfo = 0;
+const char* _wrap_CvContourTree_flags_get_texinfo = 0;
+const char* _wrap_CvContourTree_flags_set_texinfo = 0;
+const char* _wrap_CvContourTree_free_blocks_get_texinfo = 0;
+const char* _wrap_CvContourTree_free_blocks_set_texinfo = 0;
+const char* _wrap_CvContourTree_h_next_get_texinfo = 0;
+const char* _wrap_CvContourTree_h_next_set_texinfo = 0;
+const char* _wrap_CvContourTree_h_prev_get_texinfo = 0;
+const char* _wrap_CvContourTree_h_prev_set_texinfo = 0;
+const char* _wrap_CvContourTree_header_size_get_texinfo = 0;
+const char* _wrap_CvContourTree_header_size_set_texinfo = 0;
+const char* _wrap_CvContourTree_p1_get_texinfo = 0;
+const char* _wrap_CvContourTree_p1_set_texinfo = 0;
+const char* _wrap_CvContourTree_p2_get_texinfo = 0;
+const char* _wrap_CvContourTree_p2_set_texinfo = 0;
+const char* _wrap_CvContourTree_ptr_get_texinfo = 0;
+const char* _wrap_CvContourTree_ptr_set_texinfo = 0;
+const char* _wrap_CvContourTree_storage_get_texinfo = 0;
+const char* _wrap_CvContourTree_storage_set_texinfo = 0;
+const char* _wrap_CvContourTree_total_get_texinfo = 0;
+const char* _wrap_CvContourTree_total_set_texinfo = 0;
+const char* _wrap_CvContourTree_v_next_get_texinfo = 0;
+const char* _wrap_CvContourTree_v_next_set_texinfo = 0;
+const char* _wrap_CvContourTree_v_prev_get_texinfo = 0;
+const char* _wrap_CvContourTree_v_prev_set_texinfo = 0;
+const char* _wrap_CvContour_block_max_get_texinfo = 0;
+const char* _wrap_CvContour_block_max_set_texinfo = 0;
+const char* _wrap_CvContour_color_get_texinfo = 0;
+const char* _wrap_CvContour_color_set_texinfo = 0;
+const char* _wrap_CvContour_delta_elems_get_texinfo = 0;
+const char* _wrap_CvContour_delta_elems_set_texinfo = 0;
+const char* _wrap_CvContour_elem_size_get_texinfo = 0;
+const char* _wrap_CvContour_elem_size_set_texinfo = 0;
+const char* _wrap_CvContour_first_get_texinfo = 0;
+const char* _wrap_CvContour_first_set_texinfo = 0;
+const char* _wrap_CvContour_flags_get_texinfo = 0;
+const char* _wrap_CvContour_flags_set_texinfo = 0;
+const char* _wrap_CvContour_free_blocks_get_texinfo = 0;
+const char* _wrap_CvContour_free_blocks_set_texinfo = 0;
+const char* _wrap_CvContour_h_next_get_texinfo = 0;
+const char* _wrap_CvContour_h_next_set_texinfo = 0;
+const char* _wrap_CvContour_h_prev_get_texinfo = 0;
+const char* _wrap_CvContour_h_prev_set_texinfo = 0;
+const char* _wrap_CvContour_header_size_get_texinfo = 0;
+const char* _wrap_CvContour_header_size_set_texinfo = 0;
+const char* _wrap_CvContour_ptr_get_texinfo = 0;
+const char* _wrap_CvContour_ptr_set_texinfo = 0;
+const char* _wrap_CvContour_rect_get_texinfo = 0;
+const char* _wrap_CvContour_rect_set_texinfo = 0;
+const char* _wrap_CvContour_reserved_get_texinfo = 0;
+const char* _wrap_CvContour_reserved_set_texinfo = 0;
+const char* _wrap_CvContour_storage_get_texinfo = 0;
+const char* _wrap_CvContour_storage_set_texinfo = 0;
+const char* _wrap_CvContour_total_get_texinfo = 0;
+const char* _wrap_CvContour_total_set_texinfo = 0;
+const char* _wrap_CvContour_v_next_get_texinfo = 0;
+const char* _wrap_CvContour_v_next_set_texinfo = 0;
+const char* _wrap_CvContour_v_prev_get_texinfo = 0;
+const char* _wrap_CvContour_v_prev_set_texinfo = 0;
+const char* _wrap_CvConvexityDefect_depth_get_texinfo = 0;
+const char* _wrap_CvConvexityDefect_depth_point_get_texinfo = 0;
+const char* _wrap_CvConvexityDefect_depth_point_set_texinfo = 0;
+const char* _wrap_CvConvexityDefect_depth_set_texinfo = 0;
+const char* _wrap_CvConvexityDefect_end_get_texinfo = 0;
+const char* _wrap_CvConvexityDefect_end_set_texinfo = 0;
+const char* _wrap_CvConvexityDefect_start_get_texinfo = 0;
+const char* _wrap_CvConvexityDefect_start_set_texinfo = 0;
+const char* _wrap_CvFileNode_data_f_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_f_set_texinfo = 0;
+const char* _wrap_CvFileNode_data_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_i_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_i_set_texinfo = 0;
+const char* _wrap_CvFileNode_data_map_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_map_set_texinfo = 0;
+const char* _wrap_CvFileNode_data_seq_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_seq_set_texinfo = 0;
+const char* _wrap_CvFileNode_data_str_get_texinfo = 0;
+const char* _wrap_CvFileNode_data_str_set_texinfo = 0;
+const char* _wrap_CvFileNode_info_get_texinfo = 0;
+const char* _wrap_CvFileNode_info_set_texinfo = 0;
+const char* _wrap_CvFileNode_tag_get_texinfo = 0;
+const char* _wrap_CvFileNode_tag_set_texinfo = 0;
+const char* _wrap_CvFont_ascii_get_texinfo = 0;
+const char* _wrap_CvFont_ascii_set_texinfo = 0;
+const char* _wrap_CvFont_cyrillic_get_texinfo = 0;
+const char* _wrap_CvFont_cyrillic_set_texinfo = 0;
+const char* _wrap_CvFont_dx_get_texinfo = 0;
+const char* _wrap_CvFont_dx_set_texinfo = 0;
+const char* _wrap_CvFont_font_face_get_texinfo = 0;
+const char* _wrap_CvFont_font_face_set_texinfo = 0;
+const char* _wrap_CvFont_greek_get_texinfo = 0;
+const char* _wrap_CvFont_greek_set_texinfo = 0;
+const char* _wrap_CvFont_hscale_get_texinfo = 0;
+const char* _wrap_CvFont_hscale_set_texinfo = 0;
+const char* _wrap_CvFont_line_type_get_texinfo = 0;
+const char* _wrap_CvFont_line_type_set_texinfo = 0;
+const char* _wrap_CvFont_shear_get_texinfo = 0;
+const char* _wrap_CvFont_shear_set_texinfo = 0;
+const char* _wrap_CvFont_thickness_get_texinfo = 0;
+const char* _wrap_CvFont_thickness_set_texinfo = 0;
+const char* _wrap_CvFont_vscale_get_texinfo = 0;
+const char* _wrap_CvFont_vscale_set_texinfo = 0;
+const char* _wrap_CvGraphEdge_flags_get_texinfo = 0;
+const char* _wrap_CvGraphEdge_flags_set_texinfo = 0;
+const char* _wrap_CvGraphEdge_next_get_texinfo = 0;
+const char* _wrap_CvGraphEdge_next_set_texinfo = 0;
+const char* _wrap_CvGraphEdge_vtx_get_texinfo = 0;
+const char* _wrap_CvGraphEdge_vtx_set_texinfo = 0;
+const char* _wrap_CvGraphEdge_weight_get_texinfo = 0;
+const char* _wrap_CvGraphEdge_weight_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_dst_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_dst_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_edge_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_edge_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_graph_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_graph_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_index_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_index_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_mask_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_mask_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_stack_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_stack_set_texinfo = 0;
+const char* _wrap_CvGraphScanner_vtx_get_texinfo = 0;
+const char* _wrap_CvGraphScanner_vtx_set_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_first_get_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_first_set_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_flags_get_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_flags_set_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_ptr_get_texinfo = 0;
+const char* _wrap_CvGraphVtx2D_ptr_set_texinfo = 0;
+const char* _wrap_CvGraphVtx_first_get_texinfo = 0;
+const char* _wrap_CvGraphVtx_first_set_texinfo = 0;
+const char* _wrap_CvGraphVtx_flags_get_texinfo = 0;
+const char* _wrap_CvGraphVtx_flags_set_texinfo = 0;
+const char* _wrap_CvGraph_active_count_get_texinfo = 0;
+const char* _wrap_CvGraph_active_count_set_texinfo = 0;
+const char* _wrap_CvGraph_block_max_get_texinfo = 0;
+const char* _wrap_CvGraph_block_max_set_texinfo = 0;
+const char* _wrap_CvGraph_delta_elems_get_texinfo = 0;
+const char* _wrap_CvGraph_delta_elems_set_texinfo = 0;
+const char* _wrap_CvGraph_edges_get_texinfo = 0;
+const char* _wrap_CvGraph_edges_set_texinfo = 0;
+const char* _wrap_CvGraph_elem_size_get_texinfo = 0;
+const char* _wrap_CvGraph_elem_size_set_texinfo = 0;
+const char* _wrap_CvGraph_first_get_texinfo = 0;
+const char* _wrap_CvGraph_first_set_texinfo = 0;
+const char* _wrap_CvGraph_flags_get_texinfo = 0;
+const char* _wrap_CvGraph_flags_set_texinfo = 0;
+const char* _wrap_CvGraph_free_blocks_get_texinfo = 0;
+const char* _wrap_CvGraph_free_blocks_set_texinfo = 0;
+const char* _wrap_CvGraph_free_elems_get_texinfo = 0;
+const char* _wrap_CvGraph_free_elems_set_texinfo = 0;
+const char* _wrap_CvGraph_h_next_get_texinfo = 0;
+const char* _wrap_CvGraph_h_next_set_texinfo = 0;
+const char* _wrap_CvGraph_h_prev_get_texinfo = 0;
+const char* _wrap_CvGraph_h_prev_set_texinfo = 0;
+const char* _wrap_CvGraph_header_size_get_texinfo = 0;
+const char* _wrap_CvGraph_header_size_set_texinfo = 0;
+const char* _wrap_CvGraph_ptr_get_texinfo = 0;
+const char* _wrap_CvGraph_ptr_set_texinfo = 0;
+const char* _wrap_CvGraph_storage_get_texinfo = 0;
+const char* _wrap_CvGraph_storage_set_texinfo = 0;
+const char* _wrap_CvGraph_total_get_texinfo = 0;
+const char* _wrap_CvGraph_total_set_texinfo = 0;
+const char* _wrap_CvGraph_v_next_get_texinfo = 0;
+const char* _wrap_CvGraph_v_next_set_texinfo = 0;
+const char* _wrap_CvGraph_v_prev_get_texinfo = 0;
+const char* _wrap_CvGraph_v_prev_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_count_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_count_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_flags_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_flags_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_hid_cascade_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_hid_cascade_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_orig_window_size_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_orig_window_size_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_real_window_size_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_real_window_size_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_scale_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_scale_set_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_stage_classifier_get_texinfo = 0;
+const char* _wrap_CvHaarClassifierCascade_stage_classifier_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_alpha_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_alpha_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_count_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_count_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_haar_feature_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_haar_feature_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_left_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_left_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_right_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_right_set_texinfo = 0;
+const char* _wrap_CvHaarClassifier_threshold_get_texinfo = 0;
+const char* _wrap_CvHaarClassifier_threshold_set_texinfo = 0;
+const char* _wrap_CvHaarFeature_rect_get_texinfo = 0;
+const char* _wrap_CvHaarFeature_rect_r_get_texinfo = 0;
+const char* _wrap_CvHaarFeature_rect_r_set_texinfo = 0;
+const char* _wrap_CvHaarFeature_rect_weight_get_texinfo = 0;
+const char* _wrap_CvHaarFeature_rect_weight_set_texinfo = 0;
+const char* _wrap_CvHaarFeature_tilted_get_texinfo = 0;
+const char* _wrap_CvHaarFeature_tilted_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_child_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_child_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_classifier_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_classifier_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_count_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_count_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_next_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_next_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_parent_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_parent_set_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_threshold_get_texinfo = 0;
+const char* _wrap_CvHaarStageClassifier_threshold_set_texinfo = 0;
+const char* _wrap_CvHistogram_bins_get_texinfo = 0;
+const char* _wrap_CvHistogram_bins_set_texinfo = 0;
+const char* _wrap_CvHistogram_mat_get_texinfo = 0;
+const char* _wrap_CvHistogram_mat_set_texinfo = 0;
+const char* _wrap_CvHistogram_thresh2_get_texinfo = 0;
+const char* _wrap_CvHistogram_thresh2_set_texinfo = 0;
+const char* _wrap_CvHistogram_thresh_get_texinfo = 0;
+const char* _wrap_CvHistogram_thresh_set_texinfo = 0;
+const char* _wrap_CvHistogram_type_get_texinfo = 0;
+const char* _wrap_CvHistogram_type_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu1_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu1_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu2_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu2_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu3_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu3_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu4_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu4_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu5_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu5_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu6_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu6_set_texinfo = 0;
+const char* _wrap_CvHuMoments_hu7_get_texinfo = 0;
+const char* _wrap_CvHuMoments_hu7_set_texinfo = 0;
 const char* _wrap_CvImage_asIplImage_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator IplImage* (@var{self})\n\
 @var{self} is of type CvImage. @var{retval} is of type . \n\
@@ -5534,6 +5888,64 @@ const char* _wrap_CvImage_write_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} write (@var{self}, @var{fs}, @var{imgname})\n\
 @var{self} is of type CvImage. @var{fs} is of type CvFileStorage. @var{imgname} is of type char. \n\
 @end deftypefn";
+const char* _wrap_CvKalman_CP_get_texinfo = 0;
+const char* _wrap_CvKalman_CP_set_texinfo = 0;
+const char* _wrap_CvKalman_DP_get_texinfo = 0;
+const char* _wrap_CvKalman_DP_set_texinfo = 0;
+const char* _wrap_CvKalman_DynamMatr_get_texinfo = 0;
+const char* _wrap_CvKalman_DynamMatr_set_texinfo = 0;
+const char* _wrap_CvKalman_KalmGainMatr_get_texinfo = 0;
+const char* _wrap_CvKalman_KalmGainMatr_set_texinfo = 0;
+const char* _wrap_CvKalman_MNCovariance_get_texinfo = 0;
+const char* _wrap_CvKalman_MNCovariance_set_texinfo = 0;
+const char* _wrap_CvKalman_MP_get_texinfo = 0;
+const char* _wrap_CvKalman_MP_set_texinfo = 0;
+const char* _wrap_CvKalman_MeasurementMatr_get_texinfo = 0;
+const char* _wrap_CvKalman_MeasurementMatr_set_texinfo = 0;
+const char* _wrap_CvKalman_PNCovariance_get_texinfo = 0;
+const char* _wrap_CvKalman_PNCovariance_set_texinfo = 0;
+const char* _wrap_CvKalman_PosterErrorCovariance_get_texinfo = 0;
+const char* _wrap_CvKalman_PosterErrorCovariance_set_texinfo = 0;
+const char* _wrap_CvKalman_PosterState_get_texinfo = 0;
+const char* _wrap_CvKalman_PosterState_set_texinfo = 0;
+const char* _wrap_CvKalman_PriorErrorCovariance_get_texinfo = 0;
+const char* _wrap_CvKalman_PriorErrorCovariance_set_texinfo = 0;
+const char* _wrap_CvKalman_PriorState_get_texinfo = 0;
+const char* _wrap_CvKalman_PriorState_set_texinfo = 0;
+const char* _wrap_CvKalman_Temp1_get_texinfo = 0;
+const char* _wrap_CvKalman_Temp1_set_texinfo = 0;
+const char* _wrap_CvKalman_Temp2_get_texinfo = 0;
+const char* _wrap_CvKalman_Temp2_set_texinfo = 0;
+const char* _wrap_CvKalman_control_matrix_get_texinfo = 0;
+const char* _wrap_CvKalman_control_matrix_set_texinfo = 0;
+const char* _wrap_CvKalman_error_cov_post_get_texinfo = 0;
+const char* _wrap_CvKalman_error_cov_post_set_texinfo = 0;
+const char* _wrap_CvKalman_error_cov_pre_get_texinfo = 0;
+const char* _wrap_CvKalman_error_cov_pre_set_texinfo = 0;
+const char* _wrap_CvKalman_gain_get_texinfo = 0;
+const char* _wrap_CvKalman_gain_set_texinfo = 0;
+const char* _wrap_CvKalman_measurement_matrix_get_texinfo = 0;
+const char* _wrap_CvKalman_measurement_matrix_set_texinfo = 0;
+const char* _wrap_CvKalman_measurement_noise_cov_get_texinfo = 0;
+const char* _wrap_CvKalman_measurement_noise_cov_set_texinfo = 0;
+const char* _wrap_CvKalman_process_noise_cov_get_texinfo = 0;
+const char* _wrap_CvKalman_process_noise_cov_set_texinfo = 0;
+const char* _wrap_CvKalman_state_post_get_texinfo = 0;
+const char* _wrap_CvKalman_state_post_set_texinfo = 0;
+const char* _wrap_CvKalman_state_pre_get_texinfo = 0;
+const char* _wrap_CvKalman_state_pre_set_texinfo = 0;
+const char* _wrap_CvKalman_temp1_get_texinfo = 0;
+const char* _wrap_CvKalman_temp1_set_texinfo = 0;
+const char* _wrap_CvKalman_temp2_get_texinfo = 0;
+const char* _wrap_CvKalman_temp2_set_texinfo = 0;
+const char* _wrap_CvKalman_temp3_get_texinfo = 0;
+const char* _wrap_CvKalman_temp3_set_texinfo = 0;
+const char* _wrap_CvKalman_temp4_get_texinfo = 0;
+const char* _wrap_CvKalman_temp4_set_texinfo = 0;
+const char* _wrap_CvKalman_temp5_get_texinfo = 0;
+const char* _wrap_CvKalman_temp5_set_texinfo = 0;
+const char* _wrap_CvKalman_transition_matrix_get_texinfo = 0;
+const char* _wrap_CvKalman_transition_matrix_set_texinfo = 0;
 const char* _wrap_CvLaplaceFilter_init_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_kx}, @var{_ky})\n\
 @var{self} is of type CvLaplaceFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_kx} is of type CvMat. @var{_ky} is of type CvMat. \n\
@@ -5546,6 +5958,18 @@ const char* _wrap_CvLaplaceFilter_is_normalized_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = is_normalized (@var{self})\n\
 @var{self} is of type CvLaplaceFilter. @var{retval} is of type bool. \n\
 @end deftypefn";
+const char* _wrap_CvLineIterator_err_get_texinfo = 0;
+const char* _wrap_CvLineIterator_err_set_texinfo = 0;
+const char* _wrap_CvLineIterator_minus_delta_get_texinfo = 0;
+const char* _wrap_CvLineIterator_minus_delta_set_texinfo = 0;
+const char* _wrap_CvLineIterator_minus_step_get_texinfo = 0;
+const char* _wrap_CvLineIterator_minus_step_set_texinfo = 0;
+const char* _wrap_CvLineIterator_plus_delta_get_texinfo = 0;
+const char* _wrap_CvLineIterator_plus_delta_set_texinfo = 0;
+const char* _wrap_CvLineIterator_plus_step_get_texinfo = 0;
+const char* _wrap_CvLineIterator_plus_step_set_texinfo = 0;
+const char* _wrap_CvLineIterator_ptr_get_texinfo = 0;
+const char* _wrap_CvLineIterator_ptr_set_texinfo = 0;
 const char* _wrap_CvLinearFilter_clear_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} clear (@var{self})\n\
 @var{self} is of type CvLinearFilter. \n\
@@ -5566,6 +5990,30 @@ const char* _wrap_CvLinearFilter_init_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} init (@var{self}, @var{_max_width}, @var{_src_type}, @var{_dst_type}, @var{_is_separable}, @var{_ksize})\n\
 @var{self} is of type CvLinearFilter. @var{_max_width} is of type int. @var{_src_type} is of type int. @var{_dst_type} is of type int. @var{_is_separable} is of type bool. @var{_ksize} is of type CvSize. \n\
 @end deftypefn";
+const char* _wrap_CvMatND_data_db_get_texinfo = 0;
+const char* _wrap_CvMatND_data_db_set_texinfo = 0;
+const char* _wrap_CvMatND_data_fl_get_texinfo = 0;
+const char* _wrap_CvMatND_data_fl_set_texinfo = 0;
+const char* _wrap_CvMatND_data_get_texinfo = 0;
+const char* _wrap_CvMatND_data_i_get_texinfo = 0;
+const char* _wrap_CvMatND_data_i_set_texinfo = 0;
+const char* _wrap_CvMatND_data_ptr_get_texinfo = 0;
+const char* _wrap_CvMatND_data_ptr_set_texinfo = 0;
+const char* _wrap_CvMatND_data_s_get_texinfo = 0;
+const char* _wrap_CvMatND_data_s_set_texinfo = 0;
+const char* _wrap_CvMatND_dim_get_texinfo = 0;
+const char* _wrap_CvMatND_dim_size_get_texinfo = 0;
+const char* _wrap_CvMatND_dim_size_set_texinfo = 0;
+const char* _wrap_CvMatND_dim_step_get_texinfo = 0;
+const char* _wrap_CvMatND_dim_step_set_texinfo = 0;
+const char* _wrap_CvMatND_dims_get_texinfo = 0;
+const char* _wrap_CvMatND_dims_set_texinfo = 0;
+const char* _wrap_CvMatND_hdr_refcount_get_texinfo = 0;
+const char* _wrap_CvMatND_hdr_refcount_set_texinfo = 0;
+const char* _wrap_CvMatND_refcount_get_texinfo = 0;
+const char* _wrap_CvMatND_refcount_set_texinfo = 0;
+const char* _wrap_CvMatND_type_get_texinfo = 0;
+const char* _wrap_CvMatND_type_set_texinfo = 0;
 const char* _wrap_CvMat___add_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{val})\n\
 @var{self} is of type CvMat. @var{val} is of type CvScalar. @var{retval} is of type CvMat. \n\
@@ -5678,6 +6126,39 @@ const char* _wrap_CvMat___xor_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator ^ (@var{self}, @var{val})\n\
 @var{self} is of type CvMat. @var{val} is of type CvScalar. @var{retval} is of type CvMat. \n\
 @end deftypefn";
+const char* _wrap_CvMat_cols_get_texinfo = 0;
+const char* _wrap_CvMat_dataOrder_get_texinfo = 0;
+const char* _wrap_CvMat_data_db_get_texinfo = 0;
+const char* _wrap_CvMat_data_db_set_texinfo = 0;
+const char* _wrap_CvMat_data_fl_get_texinfo = 0;
+const char* _wrap_CvMat_data_fl_set_texinfo = 0;
+const char* _wrap_CvMat_data_get_texinfo = 0;
+const char* _wrap_CvMat_data_i_get_texinfo = 0;
+const char* _wrap_CvMat_data_i_set_texinfo = 0;
+const char* _wrap_CvMat_data_ptr_get_texinfo = 0;
+const char* _wrap_CvMat_data_ptr_set_texinfo = 0;
+const char* _wrap_CvMat_data_s_get_texinfo = 0;
+const char* _wrap_CvMat_data_s_set_texinfo = 0;
+const char* _wrap_CvMat_depth_get_texinfo = 0;
+const char* _wrap_CvMat_hdr_refcount_get_texinfo = 0;
+const char* _wrap_CvMat_hdr_refcount_set_texinfo = 0;
+const char* _wrap_CvMat_height_get_texinfo = 0;
+const char* _wrap_CvMat_imageData_get_texinfo = 0;
+const char* _wrap_CvMat_imageData_set_texinfo = 0;
+const char* _wrap_CvMat_imageSize_get_texinfo = 0;
+const char* _wrap_CvMat_nChannels_get_texinfo = 0;
+const char* _wrap_CvMat_origin_get_texinfo = 0;
+const char* _wrap_CvMat_refcount_get_texinfo = 0;
+const char* _wrap_CvMat_refcount_set_texinfo = 0;
+const char* _wrap_CvMat_rows_get_texinfo = 0;
+const char* _wrap_CvMat_step_get_texinfo = 0;
+const char* _wrap_CvMat_step_set_texinfo = 0;
+const char* _wrap_CvMat_type_get_texinfo = 0;
+const char* _wrap_CvMat_type_set_texinfo = 0;
+const char* _wrap_CvMat_widthStep_get_texinfo = 0;
+const char* _wrap_CvMat_width_get_texinfo = 0;
+const char* _wrap_CvMatrix3_m_get_texinfo = 0;
+const char* _wrap_CvMatrix3_m_set_texinfo = 0;
 const char* _wrap_CvMatrix_addref_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} addref (@var{self})\n\
 @var{self} is of type CvMatrix. \n\
@@ -5774,6 +6255,72 @@ const char* _wrap_CvMatrix_write_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} write (@var{self}, @var{fs}, @var{matname})\n\
 @var{self} is of type CvMatrix. @var{fs} is of type CvFileStorage. @var{matname} is of type char. \n\
 @end deftypefn";
+const char* _wrap_CvMemBlock_next_get_texinfo = 0;
+const char* _wrap_CvMemBlock_next_set_texinfo = 0;
+const char* _wrap_CvMemBlock_prev_get_texinfo = 0;
+const char* _wrap_CvMemBlock_prev_set_texinfo = 0;
+const char* _wrap_CvMemStoragePos_free_space_get_texinfo = 0;
+const char* _wrap_CvMemStoragePos_free_space_set_texinfo = 0;
+const char* _wrap_CvMemStoragePos_top_get_texinfo = 0;
+const char* _wrap_CvMemStoragePos_top_set_texinfo = 0;
+const char* _wrap_CvMemStorage_block_size_get_texinfo = 0;
+const char* _wrap_CvMemStorage_block_size_set_texinfo = 0;
+const char* _wrap_CvMemStorage_bottom_get_texinfo = 0;
+const char* _wrap_CvMemStorage_bottom_set_texinfo = 0;
+const char* _wrap_CvMemStorage_free_space_get_texinfo = 0;
+const char* _wrap_CvMemStorage_free_space_set_texinfo = 0;
+const char* _wrap_CvMemStorage_parent_get_texinfo = 0;
+const char* _wrap_CvMemStorage_parent_set_texinfo = 0;
+const char* _wrap_CvMemStorage_signature_get_texinfo = 0;
+const char* _wrap_CvMemStorage_signature_set_texinfo = 0;
+const char* _wrap_CvMemStorage_top_get_texinfo = 0;
+const char* _wrap_CvMemStorage_top_set_texinfo = 0;
+const char* _wrap_CvModuleInfo_func_tab_get_texinfo = 0;
+const char* _wrap_CvModuleInfo_func_tab_set_texinfo = 0;
+const char* _wrap_CvModuleInfo_name_get_texinfo = 0;
+const char* _wrap_CvModuleInfo_name_set_texinfo = 0;
+const char* _wrap_CvModuleInfo_next_get_texinfo = 0;
+const char* _wrap_CvModuleInfo_next_set_texinfo = 0;
+const char* _wrap_CvModuleInfo_version_get_texinfo = 0;
+const char* _wrap_CvModuleInfo_version_set_texinfo = 0;
+const char* _wrap_CvModule_info_get_texinfo = 0;
+const char* _wrap_CvModule_info_set_texinfo = 0;
+const char* _wrap_CvMoments_inv_sqrt_m00_get_texinfo = 0;
+const char* _wrap_CvMoments_inv_sqrt_m00_set_texinfo = 0;
+const char* _wrap_CvMoments_m00_get_texinfo = 0;
+const char* _wrap_CvMoments_m00_set_texinfo = 0;
+const char* _wrap_CvMoments_m01_get_texinfo = 0;
+const char* _wrap_CvMoments_m01_set_texinfo = 0;
+const char* _wrap_CvMoments_m02_get_texinfo = 0;
+const char* _wrap_CvMoments_m02_set_texinfo = 0;
+const char* _wrap_CvMoments_m03_get_texinfo = 0;
+const char* _wrap_CvMoments_m03_set_texinfo = 0;
+const char* _wrap_CvMoments_m10_get_texinfo = 0;
+const char* _wrap_CvMoments_m10_set_texinfo = 0;
+const char* _wrap_CvMoments_m11_get_texinfo = 0;
+const char* _wrap_CvMoments_m11_set_texinfo = 0;
+const char* _wrap_CvMoments_m12_get_texinfo = 0;
+const char* _wrap_CvMoments_m12_set_texinfo = 0;
+const char* _wrap_CvMoments_m20_get_texinfo = 0;
+const char* _wrap_CvMoments_m20_set_texinfo = 0;
+const char* _wrap_CvMoments_m21_get_texinfo = 0;
+const char* _wrap_CvMoments_m21_set_texinfo = 0;
+const char* _wrap_CvMoments_m30_get_texinfo = 0;
+const char* _wrap_CvMoments_m30_set_texinfo = 0;
+const char* _wrap_CvMoments_mu02_get_texinfo = 0;
+const char* _wrap_CvMoments_mu02_set_texinfo = 0;
+const char* _wrap_CvMoments_mu03_get_texinfo = 0;
+const char* _wrap_CvMoments_mu03_set_texinfo = 0;
+const char* _wrap_CvMoments_mu11_get_texinfo = 0;
+const char* _wrap_CvMoments_mu11_set_texinfo = 0;
+const char* _wrap_CvMoments_mu12_get_texinfo = 0;
+const char* _wrap_CvMoments_mu12_set_texinfo = 0;
+const char* _wrap_CvMoments_mu20_get_texinfo = 0;
+const char* _wrap_CvMoments_mu20_set_texinfo = 0;
+const char* _wrap_CvMoments_mu21_get_texinfo = 0;
+const char* _wrap_CvMoments_mu21_set_texinfo = 0;
+const char* _wrap_CvMoments_mu30_get_texinfo = 0;
+const char* _wrap_CvMoments_mu30_set_texinfo = 0;
 const char* _wrap_CvMorphology_clear_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} clear (@var{self})\n\
 @var{self} is of type CvMorphology. \n\
@@ -5806,6 +6353,28 @@ const char* _wrap_CvMorphology_init_binary_element_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CvMorphology::init_binary_element (@var{_element}, @var{_element_shape})\n\
 @var{_element} is of type CvMat. @var{_element_shape} is of type int. \n\
 @end deftypefn";
+const char* _wrap_CvNArrayIterator_count_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_count_set_texinfo = 0;
+const char* _wrap_CvNArrayIterator_dims_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_dims_set_texinfo = 0;
+const char* _wrap_CvNArrayIterator_hdr_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_hdr_set_texinfo = 0;
+const char* _wrap_CvNArrayIterator_ptr_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_ptr_set_texinfo = 0;
+const char* _wrap_CvNArrayIterator_size_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_size_set_texinfo = 0;
+const char* _wrap_CvNArrayIterator_stack_get_texinfo = 0;
+const char* _wrap_CvNArrayIterator_stack_set_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_default_func_addr_get_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_default_func_addr_set_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_func_addr_get_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_func_addr_set_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_func_names_get_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_func_names_set_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_loaded_from_get_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_loaded_from_set_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_search_modules_get_texinfo = 0;
+const char* _wrap_CvPluginFuncInfo_search_modules_set_texinfo = 0;
 const char* _wrap_CvPoint2D32f___repr___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __repr__ (@var{self})\n\
 @var{self} is of type CvPoint2D32f. @var{retval} is of type char. \n\
@@ -5814,6 +6383,26 @@ const char* _wrap_CvPoint2D32f___str___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
 @var{self} is of type CvPoint2D32f. @var{retval} is of type char. \n\
 @end deftypefn";
+const char* _wrap_CvPoint2D32f_x_get_texinfo = 0;
+const char* _wrap_CvPoint2D32f_x_set_texinfo = 0;
+const char* _wrap_CvPoint2D32f_y_get_texinfo = 0;
+const char* _wrap_CvPoint2D32f_y_set_texinfo = 0;
+const char* _wrap_CvPoint2D64f_x_get_texinfo = 0;
+const char* _wrap_CvPoint2D64f_x_set_texinfo = 0;
+const char* _wrap_CvPoint2D64f_y_get_texinfo = 0;
+const char* _wrap_CvPoint2D64f_y_set_texinfo = 0;
+const char* _wrap_CvPoint3D32f_x_get_texinfo = 0;
+const char* _wrap_CvPoint3D32f_x_set_texinfo = 0;
+const char* _wrap_CvPoint3D32f_y_get_texinfo = 0;
+const char* _wrap_CvPoint3D32f_y_set_texinfo = 0;
+const char* _wrap_CvPoint3D32f_z_get_texinfo = 0;
+const char* _wrap_CvPoint3D32f_z_set_texinfo = 0;
+const char* _wrap_CvPoint3D64f_x_get_texinfo = 0;
+const char* _wrap_CvPoint3D64f_x_set_texinfo = 0;
+const char* _wrap_CvPoint3D64f_y_get_texinfo = 0;
+const char* _wrap_CvPoint3D64f_y_set_texinfo = 0;
+const char* _wrap_CvPoint3D64f_z_get_texinfo = 0;
+const char* _wrap_CvPoint3D64f_z_set_texinfo = 0;
 const char* _wrap_CvPointVector___paren_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
 @var{self} is of type CvPointVector. @var{i} is of type difference_type. @var{retval} is of type value_type. \n\
@@ -5914,6 +6503,16 @@ const char* _wrap_CvPoint___str___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
 @var{self} is of type CvPoint. @var{retval} is of type char. \n\
 @end deftypefn";
+const char* _wrap_CvPoint_x_get_texinfo = 0;
+const char* _wrap_CvPoint_x_set_texinfo = 0;
+const char* _wrap_CvPoint_y_get_texinfo = 0;
+const char* _wrap_CvPoint_y_set_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_flags_get_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_flags_set_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_next_get_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_next_set_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_pt_get_texinfo = 0;
+const char* _wrap_CvQuadEdge2D_pt_set_texinfo = 0;
 const char* _wrap_CvRNG_Wrapper___eq_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{x})\n\
 @var{self} is of type CvRNG_Wrapper. @var{x} is of type CvRNG_Wrapper. @var{retval} is of type bool. \n\
@@ -5930,6 +6529,14 @@ const char* _wrap_CvRNG_Wrapper_ref_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = ref (@var{self})\n\
 @var{self} is of type CvRNG_Wrapper. @var{retval} is of type CvRNG. \n\
 @end deftypefn";
+const char* _wrap_CvRect_height_get_texinfo = 0;
+const char* _wrap_CvRect_height_set_texinfo = 0;
+const char* _wrap_CvRect_width_get_texinfo = 0;
+const char* _wrap_CvRect_width_set_texinfo = 0;
+const char* _wrap_CvRect_x_get_texinfo = 0;
+const char* _wrap_CvRect_x_set_texinfo = 0;
+const char* _wrap_CvRect_y_get_texinfo = 0;
+const char* _wrap_CvRect_y_set_texinfo = 0;
 const char* _wrap_CvScalar___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{index})\n\
 @var{self} is of type CvScalar. @var{index} is of type int. @var{retval} is of type double. \n\
@@ -5946,6 +6553,8 @@ const char* _wrap_CvScalar___str___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __str__ (@var{self})\n\
 @var{self} is of type CvScalar. @var{retval} is of type char. \n\
 @end deftypefn";
+const char* _wrap_CvScalar_val_get_texinfo = 0;
+const char* _wrap_CvScalar_val_set_texinfo = 0;
 const char* _wrap_CvSepFilter_clear_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} clear (@var{self})\n\
 @var{self} is of type CvSepFilter. \n\
@@ -5990,6 +6599,44 @@ const char* _wrap_CvSepFilter_init_sobel_kernel_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CvSepFilter::init_sobel_kernel (@var{_kx}, @var{_ky}, @var{dx}, @var{dy})\n\
 @var{_kx} is of type CvMat. @var{_ky} is of type CvMat. @var{dx} is of type int. @var{dy} is of type int. \n\
 @end deftypefn";
+const char* _wrap_CvSeqBlock_count_get_texinfo = 0;
+const char* _wrap_CvSeqBlock_count_set_texinfo = 0;
+const char* _wrap_CvSeqBlock_data_get_texinfo = 0;
+const char* _wrap_CvSeqBlock_data_set_texinfo = 0;
+const char* _wrap_CvSeqBlock_next_get_texinfo = 0;
+const char* _wrap_CvSeqBlock_next_set_texinfo = 0;
+const char* _wrap_CvSeqBlock_prev_get_texinfo = 0;
+const char* _wrap_CvSeqBlock_prev_set_texinfo = 0;
+const char* _wrap_CvSeqBlock_start_index_get_texinfo = 0;
+const char* _wrap_CvSeqBlock_start_index_set_texinfo = 0;
+const char* _wrap_CvSeqReader_block_get_texinfo = 0;
+const char* _wrap_CvSeqReader_block_max_get_texinfo = 0;
+const char* _wrap_CvSeqReader_block_max_set_texinfo = 0;
+const char* _wrap_CvSeqReader_block_min_get_texinfo = 0;
+const char* _wrap_CvSeqReader_block_min_set_texinfo = 0;
+const char* _wrap_CvSeqReader_block_set_texinfo = 0;
+const char* _wrap_CvSeqReader_delta_index_get_texinfo = 0;
+const char* _wrap_CvSeqReader_delta_index_set_texinfo = 0;
+const char* _wrap_CvSeqReader_header_size_get_texinfo = 0;
+const char* _wrap_CvSeqReader_header_size_set_texinfo = 0;
+const char* _wrap_CvSeqReader_prev_elem_get_texinfo = 0;
+const char* _wrap_CvSeqReader_prev_elem_set_texinfo = 0;
+const char* _wrap_CvSeqReader_ptr_get_texinfo = 0;
+const char* _wrap_CvSeqReader_ptr_set_texinfo = 0;
+const char* _wrap_CvSeqReader_seq_get_texinfo = 0;
+const char* _wrap_CvSeqReader_seq_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_max_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_max_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_min_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_min_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_block_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_header_size_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_header_size_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_ptr_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_ptr_set_texinfo = 0;
+const char* _wrap_CvSeqWriter_seq_get_texinfo = 0;
+const char* _wrap_CvSeqWriter_seq_set_texinfo = 0;
 const char* _wrap_CvSeq_CvConnectedComp___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
 @var{self} is of type CvSeq_CvConnectedComp. @var{i} is of type int. @var{retval} is of type CvConnectedComp. \n\
@@ -6130,6 +6777,16 @@ const char* _wrap_CvSeq_CvSeq_pop_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
 @var{self} is of type CvSeq_CvSeq. @var{retval} is of type CvSeq. \n\
 @end deftypefn";
+const char* _wrap_CvSeq_block_max_get_texinfo = 0;
+const char* _wrap_CvSeq_block_max_set_texinfo = 0;
+const char* _wrap_CvSeq_delta_elems_get_texinfo = 0;
+const char* _wrap_CvSeq_delta_elems_set_texinfo = 0;
+const char* _wrap_CvSeq_elem_size_get_texinfo = 0;
+const char* _wrap_CvSeq_elem_size_set_texinfo = 0;
+const char* _wrap_CvSeq_first_get_texinfo = 0;
+const char* _wrap_CvSeq_first_set_texinfo = 0;
+const char* _wrap_CvSeq_flags_get_texinfo = 0;
+const char* _wrap_CvSeq_flags_set_texinfo = 0;
 const char* _wrap_CvSeq_float_2___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
 @var{self} is of type CvSeq_float_2. @var{i} is of type int. @var{retval} is of type CvTuple_float_2. \n\
@@ -6170,6 +6827,112 @@ const char* _wrap_CvSeq_float_3_pop_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = pop (@var{self})\n\
 @var{self} is of type CvSeq_float_3. @var{retval} is of type CvTuple_float_3. \n\
 @end deftypefn";
+const char* _wrap_CvSeq_free_blocks_get_texinfo = 0;
+const char* _wrap_CvSeq_free_blocks_set_texinfo = 0;
+const char* _wrap_CvSeq_h_next_get_texinfo = 0;
+const char* _wrap_CvSeq_h_next_set_texinfo = 0;
+const char* _wrap_CvSeq_h_prev_get_texinfo = 0;
+const char* _wrap_CvSeq_h_prev_set_texinfo = 0;
+const char* _wrap_CvSeq_header_size_get_texinfo = 0;
+const char* _wrap_CvSeq_header_size_set_texinfo = 0;
+const char* _wrap_CvSeq_ptr_get_texinfo = 0;
+const char* _wrap_CvSeq_ptr_set_texinfo = 0;
+const char* _wrap_CvSeq_storage_get_texinfo = 0;
+const char* _wrap_CvSeq_storage_set_texinfo = 0;
+const char* _wrap_CvSeq_total_get_texinfo = 0;
+const char* _wrap_CvSeq_total_set_texinfo = 0;
+const char* _wrap_CvSeq_v_next_get_texinfo = 0;
+const char* _wrap_CvSeq_v_next_set_texinfo = 0;
+const char* _wrap_CvSeq_v_prev_get_texinfo = 0;
+const char* _wrap_CvSeq_v_prev_set_texinfo = 0;
+const char* _wrap_CvSetElem_flags_get_texinfo = 0;
+const char* _wrap_CvSetElem_flags_set_texinfo = 0;
+const char* _wrap_CvSetElem_next_free_get_texinfo = 0;
+const char* _wrap_CvSetElem_next_free_set_texinfo = 0;
+const char* _wrap_CvSet_active_count_get_texinfo = 0;
+const char* _wrap_CvSet_active_count_set_texinfo = 0;
+const char* _wrap_CvSet_block_max_get_texinfo = 0;
+const char* _wrap_CvSet_block_max_set_texinfo = 0;
+const char* _wrap_CvSet_delta_elems_get_texinfo = 0;
+const char* _wrap_CvSet_delta_elems_set_texinfo = 0;
+const char* _wrap_CvSet_elem_size_get_texinfo = 0;
+const char* _wrap_CvSet_elem_size_set_texinfo = 0;
+const char* _wrap_CvSet_first_get_texinfo = 0;
+const char* _wrap_CvSet_first_set_texinfo = 0;
+const char* _wrap_CvSet_flags_get_texinfo = 0;
+const char* _wrap_CvSet_flags_set_texinfo = 0;
+const char* _wrap_CvSet_free_blocks_get_texinfo = 0;
+const char* _wrap_CvSet_free_blocks_set_texinfo = 0;
+const char* _wrap_CvSet_free_elems_get_texinfo = 0;
+const char* _wrap_CvSet_free_elems_set_texinfo = 0;
+const char* _wrap_CvSet_h_next_get_texinfo = 0;
+const char* _wrap_CvSet_h_next_set_texinfo = 0;
+const char* _wrap_CvSet_h_prev_get_texinfo = 0;
+const char* _wrap_CvSet_h_prev_set_texinfo = 0;
+const char* _wrap_CvSet_header_size_get_texinfo = 0;
+const char* _wrap_CvSet_header_size_set_texinfo = 0;
+const char* _wrap_CvSet_ptr_get_texinfo = 0;
+const char* _wrap_CvSet_ptr_set_texinfo = 0;
+const char* _wrap_CvSet_storage_get_texinfo = 0;
+const char* _wrap_CvSet_storage_set_texinfo = 0;
+const char* _wrap_CvSet_total_get_texinfo = 0;
+const char* _wrap_CvSet_total_set_texinfo = 0;
+const char* _wrap_CvSet_v_next_get_texinfo = 0;
+const char* _wrap_CvSet_v_next_set_texinfo = 0;
+const char* _wrap_CvSet_v_prev_get_texinfo = 0;
+const char* _wrap_CvSet_v_prev_set_texinfo = 0;
+const char* _wrap_CvSize2D32f_height_get_texinfo = 0;
+const char* _wrap_CvSize2D32f_height_set_texinfo = 0;
+const char* _wrap_CvSize2D32f_width_get_texinfo = 0;
+const char* _wrap_CvSize2D32f_width_set_texinfo = 0;
+const char* _wrap_CvSize_height_get_texinfo = 0;
+const char* _wrap_CvSize_height_set_texinfo = 0;
+const char* _wrap_CvSize_width_get_texinfo = 0;
+const char* _wrap_CvSize_width_set_texinfo = 0;
+const char* _wrap_CvSlice_end_index_get_texinfo = 0;
+const char* _wrap_CvSlice_end_index_set_texinfo = 0;
+const char* _wrap_CvSlice_start_index_get_texinfo = 0;
+const char* _wrap_CvSlice_start_index_set_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_curidx_get_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_curidx_set_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_mat_get_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_mat_set_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_node_get_texinfo = 0;
+const char* _wrap_CvSparseMatIterator_node_set_texinfo = 0;
+const char* _wrap_CvSparseMat_dims_get_texinfo = 0;
+const char* _wrap_CvSparseMat_dims_set_texinfo = 0;
+const char* _wrap_CvSparseMat_hashsize_get_texinfo = 0;
+const char* _wrap_CvSparseMat_hashsize_set_texinfo = 0;
+const char* _wrap_CvSparseMat_hashtable_get_texinfo = 0;
+const char* _wrap_CvSparseMat_hashtable_set_texinfo = 0;
+const char* _wrap_CvSparseMat_hdr_refcount_get_texinfo = 0;
+const char* _wrap_CvSparseMat_hdr_refcount_set_texinfo = 0;
+const char* _wrap_CvSparseMat_heap_get_texinfo = 0;
+const char* _wrap_CvSparseMat_heap_set_texinfo = 0;
+const char* _wrap_CvSparseMat_idxoffset_get_texinfo = 0;
+const char* _wrap_CvSparseMat_idxoffset_set_texinfo = 0;
+const char* _wrap_CvSparseMat_refcount_get_texinfo = 0;
+const char* _wrap_CvSparseMat_refcount_set_texinfo = 0;
+const char* _wrap_CvSparseMat_size_get_texinfo = 0;
+const char* _wrap_CvSparseMat_size_set_texinfo = 0;
+const char* _wrap_CvSparseMat_type_get_texinfo = 0;
+const char* _wrap_CvSparseMat_type_set_texinfo = 0;
+const char* _wrap_CvSparseMat_valoffset_get_texinfo = 0;
+const char* _wrap_CvSparseMat_valoffset_set_texinfo = 0;
+const char* _wrap_CvSparseNode_hashval_get_texinfo = 0;
+const char* _wrap_CvSparseNode_hashval_set_texinfo = 0;
+const char* _wrap_CvSparseNode_next_get_texinfo = 0;
+const char* _wrap_CvSparseNode_next_set_texinfo = 0;
+const char* _wrap_CvStringHashNode_hashval_get_texinfo = 0;
+const char* _wrap_CvStringHashNode_hashval_set_texinfo = 0;
+const char* _wrap_CvStringHashNode_next_get_texinfo = 0;
+const char* _wrap_CvStringHashNode_next_set_texinfo = 0;
+const char* _wrap_CvStringHashNode_str_get_texinfo = 0;
+const char* _wrap_CvStringHashNode_str_set_texinfo = 0;
+const char* _wrap_CvString_len_get_texinfo = 0;
+const char* _wrap_CvString_len_set_texinfo = 0;
+const char* _wrap_CvString_ptr_get_texinfo = 0;
+const char* _wrap_CvString_ptr_set_texinfo = 0;
 const char* _wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator == (@var{self}, @var{x})\n\
 @var{self} is of type CvSubdiv2DEdge_Wrapper. @var{x} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type bool. \n\
@@ -6186,6 +6949,52 @@ const char* _wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = ref (@var{self})\n\
 @var{self} is of type CvSubdiv2DEdge_Wrapper. @var{retval} is of type CvSubdiv2DEdge. \n\
 @end deftypefn";
+const char* _wrap_CvSubdiv2DPoint_first_get_texinfo = 0;
+const char* _wrap_CvSubdiv2DPoint_first_set_texinfo = 0;
+const char* _wrap_CvSubdiv2DPoint_flags_get_texinfo = 0;
+const char* _wrap_CvSubdiv2DPoint_flags_set_texinfo = 0;
+const char* _wrap_CvSubdiv2DPoint_pt_get_texinfo = 0;
+const char* _wrap_CvSubdiv2DPoint_pt_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_active_count_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_active_count_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_block_max_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_block_max_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_bottomright_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_bottomright_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_delta_elems_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_delta_elems_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_edges_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_edges_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_elem_size_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_elem_size_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_first_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_first_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_flags_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_flags_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_free_blocks_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_free_blocks_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_free_elems_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_free_elems_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_h_next_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_h_next_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_h_prev_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_h_prev_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_header_size_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_header_size_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_is_geometry_valid_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_is_geometry_valid_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_ptr_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_ptr_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_quad_edges_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_quad_edges_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_recent_edge_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_recent_edge_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_storage_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_storage_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_topleft_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_topleft_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_total_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_total_set_texinfo = 0;
 const char* _wrap_CvSubdiv2D_typed_edges_get_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = typed_edges_get (@var{self})\n\
 @var{self} is of type CvSubdiv2D. @var{retval} is of type CvSeq_CvQuadEdge2D. \n\
@@ -6194,6 +7003,22 @@ const char* _wrap_CvSubdiv2D_typed_edges_set_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} typed_edges_set (@var{self}, @var{?})\n\
 @var{self} is of type CvSubdiv2D. @var{?} is of type CvSeq_CvQuadEdge2D. \n\
 @end deftypefn";
+const char* _wrap_CvSubdiv2D_v_next_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_v_next_set_texinfo = 0;
+const char* _wrap_CvSubdiv2D_v_prev_get_texinfo = 0;
+const char* _wrap_CvSubdiv2D_v_prev_set_texinfo = 0;
+const char* _wrap_CvTermCriteria_epsilon_get_texinfo = 0;
+const char* _wrap_CvTermCriteria_epsilon_set_texinfo = 0;
+const char* _wrap_CvTermCriteria_max_iter_get_texinfo = 0;
+const char* _wrap_CvTermCriteria_max_iter_set_texinfo = 0;
+const char* _wrap_CvTermCriteria_type_get_texinfo = 0;
+const char* _wrap_CvTermCriteria_type_set_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_level_get_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_level_set_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_max_level_get_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_max_level_set_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_node_get_texinfo = 0;
+const char* _wrap_CvTreeNodeIterator_node_set_texinfo = 0;
 const char* _wrap_CvTuple_CvPoint_2___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
 @var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
@@ -6202,6 +7027,8 @@ const char* _wrap_CvTuple_CvPoint_2___setitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
 @var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
 @end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2_val_get_texinfo = 0;
+const char* _wrap_CvTuple_CvPoint_2_val_set_texinfo = 0;
 const char* _wrap_CvTuple_float_2___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
 @var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{retval} is of type float. \n\
@@ -6210,6 +7037,8 @@ const char* _wrap_CvTuple_float_2___setitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
 @var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{obj} is of type float. \n\
 @end deftypefn";
+const char* _wrap_CvTuple_float_2_val_get_texinfo = 0;
+const char* _wrap_CvTuple_float_2_val_set_texinfo = 0;
 const char* _wrap_CvTuple_float_3___getitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
 @var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{retval} is of type float. \n\
@@ -6218,6 +7047,30 @@ const char* _wrap_CvTuple_float_3___setitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
 @var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{obj} is of type float. \n\
 @end deftypefn";
+const char* _wrap_CvTuple_float_3_val_get_texinfo = 0;
+const char* _wrap_CvTuple_float_3_val_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_clone_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_clone_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_flags_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_flags_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_header_size_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_header_size_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_is_instance_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_is_instance_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_next_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_next_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_prev_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_prev_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_read_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_read_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_release_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_release_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_type_name_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_type_name_set_texinfo = 0;
+const char* _wrap_CvTypeInfo_write_get_texinfo = 0;
+const char* _wrap_CvTypeInfo_write_set_texinfo = 0;
+const char* _wrap_CvType_info_get_texinfo = 0;
+const char* _wrap_CvType_info_set_texinfo = 0;
 const char* _wrap_FloatVector___paren_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
 @var{self} is of type FloatVector. @var{i} is of type difference_type. @var{retval} is of type value_type. \n\
@@ -6310,6 +7163,30 @@ const char* _wrap_FloatVector_swap_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} swap (@var{self}, @var{v})\n\
 @var{self} is of type FloatVector. @var{v} is of type FloatVector. \n\
 @end deftypefn";
+const char* _wrap_IplConvKernelFP_anchorX_get_texinfo = 0;
+const char* _wrap_IplConvKernelFP_anchorX_set_texinfo = 0;
+const char* _wrap_IplConvKernelFP_anchorY_get_texinfo = 0;
+const char* _wrap_IplConvKernelFP_anchorY_set_texinfo = 0;
+const char* _wrap_IplConvKernelFP_nCols_get_texinfo = 0;
+const char* _wrap_IplConvKernelFP_nCols_set_texinfo = 0;
+const char* _wrap_IplConvKernelFP_nRows_get_texinfo = 0;
+const char* _wrap_IplConvKernelFP_nRows_set_texinfo = 0;
+const char* _wrap_IplConvKernelFP_values_get_texinfo = 0;
+const char* _wrap_IplConvKernelFP_values_set_texinfo = 0;
+const char* _wrap_IplConvKernel_anchorX_get_texinfo = 0;
+const char* _wrap_IplConvKernel_anchorX_set_texinfo = 0;
+const char* _wrap_IplConvKernel_anchorY_get_texinfo = 0;
+const char* _wrap_IplConvKernel_anchorY_set_texinfo = 0;
+const char* _wrap_IplConvKernel_nCols_get_texinfo = 0;
+const char* _wrap_IplConvKernel_nCols_set_texinfo = 0;
+const char* _wrap_IplConvKernel_nRows_get_texinfo = 0;
+const char* _wrap_IplConvKernel_nRows_set_texinfo = 0;
+const char* _wrap_IplConvKernel_nShiftR_get_texinfo = 0;
+const char* _wrap_IplConvKernel_nShiftR_set_texinfo = 0;
+const char* _wrap_IplConvKernel_values_get_texinfo = 0;
+const char* _wrap_IplConvKernel_values_set_texinfo = 0;
+const char* _wrap_IplImage_ID_get_texinfo = 0;
+const char* _wrap_IplImage_ID_set_texinfo = 0;
 const char* _wrap_IplImage___add_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{val})\n\
 @var{self} is of type . @var{val} is of type CvScalar. @var{retval} is of type . \n\
@@ -6422,6 +7299,36 @@ const char* _wrap_IplImage___xor_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator ^ (@var{self}, @var{val})\n\
 @var{self} is of type . @var{val} is of type CvScalar. @var{retval} is of type . \n\
 @end deftypefn";
+const char* _wrap_IplImage_align_get_texinfo = 0;
+const char* _wrap_IplImage_align_set_texinfo = 0;
+const char* _wrap_IplImage_dataOrder_get_texinfo = 0;
+const char* _wrap_IplImage_dataOrder_set_texinfo = 0;
+const char* _wrap_IplImage_depth_get_texinfo = 0;
+const char* _wrap_IplImage_depth_set_texinfo = 0;
+const char* _wrap_IplImage_height_get_texinfo = 0;
+const char* _wrap_IplImage_height_set_texinfo = 0;
+const char* _wrap_IplImage_imageSize_get_texinfo = 0;
+const char* _wrap_IplImage_imageSize_set_texinfo = 0;
+const char* _wrap_IplImage_nChannels_get_texinfo = 0;
+const char* _wrap_IplImage_nChannels_set_texinfo = 0;
+const char* _wrap_IplImage_origin_get_texinfo = 0;
+const char* _wrap_IplImage_origin_set_texinfo = 0;
+const char* _wrap_IplImage_roi_get_texinfo = 0;
+const char* _wrap_IplImage_roi_set_texinfo = 0;
+const char* _wrap_IplImage_widthStep_get_texinfo = 0;
+const char* _wrap_IplImage_widthStep_set_texinfo = 0;
+const char* _wrap_IplImage_width_get_texinfo = 0;
+const char* _wrap_IplImage_width_set_texinfo = 0;
+const char* _wrap_IplROI_coi_get_texinfo = 0;
+const char* _wrap_IplROI_coi_set_texinfo = 0;
+const char* _wrap_IplROI_height_get_texinfo = 0;
+const char* _wrap_IplROI_height_set_texinfo = 0;
+const char* _wrap_IplROI_width_get_texinfo = 0;
+const char* _wrap_IplROI_width_set_texinfo = 0;
+const char* _wrap_IplROI_xOffset_get_texinfo = 0;
+const char* _wrap_IplROI_xOffset_set_texinfo = 0;
+const char* _wrap_IplROI_yOffset_get_texinfo = 0;
+const char* _wrap_IplROI_yOffset_set_texinfo = 0;
 const char* _wrap_OctSwigIterator___add_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = operator + (@var{self}, @var{n})\n\
 @var{self} is of type OctSwigIterator. @var{n} is of type ptrdiff_t. @var{retval} is of type OctSwigIterator. \n\
@@ -9452,15 +10359,15 @@ fail:
 
 
 static swig_octave_member swig_CvRNG_Wrapper_members[] = {
-{"ptr",_wrap_CvRNG_Wrapper_ptr,0,0,0,0},
-{"ref",_wrap_CvRNG_Wrapper_ref,0,0,0,0},
-{"__eq",_wrap_CvRNG_Wrapper___eq,0,0,0,0},
-{"__ne",_wrap_CvRNG_Wrapper___ne,0,0,0,0},
+{"ptr",_wrap_CvRNG_Wrapper_ptr,0,0,0,_wrap_CvRNG_Wrapper_ptr_texinfo},
+{"ref",_wrap_CvRNG_Wrapper_ref,0,0,0,_wrap_CvRNG_Wrapper_ref_texinfo},
+{"__eq",_wrap_CvRNG_Wrapper___eq,0,0,0,_wrap_CvRNG_Wrapper___eq_texinfo},
+{"__ne",_wrap_CvRNG_Wrapper___ne,0,0,0,_wrap_CvRNG_Wrapper___ne_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvRNG_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvRNG_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,0,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
+static swig_octave_class _wrap_class_CvRNG_Wrapper = {"CvRNG_Wrapper", &SWIGTYPE_p_CvRNG_Wrapper,0,_wrap_new_CvRNG_Wrapper,_wrap_new_CvRNG_Wrapper_texinfo,_wrap_delete_CvRNG_Wrapper,swig_CvRNG_Wrapper_members,swig_CvRNG_Wrapper_base_names,swig_CvRNG_Wrapper_base };
 
 static octave_value_list _wrap_new_CvSubdiv2DEdge_Wrapper (const octave_value_list& args, int nargout) {
   CvSubdiv2DEdge *arg1 = 0 ;
@@ -9647,15 +10554,15 @@ fail:
 
 
 static swig_octave_member swig_CvSubdiv2DEdge_Wrapper_members[] = {
-{"ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,0,0},
-{"ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,0,0},
-{"__eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,0,0},
-{"__ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,0,0},
+{"ptr",_wrap_CvSubdiv2DEdge_Wrapper_ptr,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper_ptr_texinfo},
+{"ref",_wrap_CvSubdiv2DEdge_Wrapper_ref,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper_ref_texinfo},
+{"__eq",_wrap_CvSubdiv2DEdge_Wrapper___eq,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper___eq_texinfo},
+{"__ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,0,_wrap_CvSubdiv2DEdge_Wrapper___ne_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSubdiv2DEdge_Wrapper_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DEdge_Wrapper_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,0,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
+static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_Wrapper", &SWIGTYPE_p_CvSubdiv2DEdge_Wrapper,0,_wrap_new_CvSubdiv2DEdge_Wrapper,_wrap_new_CvSubdiv2DEdge_Wrapper_texinfo,_wrap_delete_CvSubdiv2DEdge_Wrapper,swig_CvSubdiv2DEdge_Wrapper_members,swig_CvSubdiv2DEdge_Wrapper_base_names,swig_CvSubdiv2DEdge_Wrapper_base };
 
 static octave_value_list _wrap_delete_OctSwigIterator (const octave_value_list& args, int nargout) {
   swig::OctSwigIterator *arg1 = (swig::OctSwigIterator *) 0 ;
@@ -10443,21 +11350,21 @@ static octave_value_list _wrap_OctSwigIterator___sub (const octave_value_list& a
 
 
 static swig_octave_member swig_OctSwigIterator_members[] = {
-{"value",_wrap_OctSwigIterator_value,0,0,0,0},
-{"incr",_wrap_OctSwigIterator_incr,0,0,0,0},
-{"decr",_wrap_OctSwigIterator_decr,0,0,0,0},
-{"distance",_wrap_OctSwigIterator_distance,0,0,0,0},
-{"equal",_wrap_OctSwigIterator_equal,0,0,0,0},
-{"copy",_wrap_OctSwigIterator_copy,0,0,0,0},
-{"next",_wrap_OctSwigIterator_next,0,0,0,0},
-{"previous",_wrap_OctSwigIterator_previous,0,0,0,0},
-{"advance",_wrap_OctSwigIterator_advance,0,0,0,0},
-{"__eq",_wrap_OctSwigIterator___eq,0,0,0,0},
-{"__ne",_wrap_OctSwigIterator___ne,0,0,0,0},
-{"__incr",_wrap_OctSwigIterator___incr,0,0,0,0},
-{"__decr",_wrap_OctSwigIterator___decr,0,0,0,0},
-{"__add",_wrap_OctSwigIterator___add,0,0,0,0},
-{"__sub",_wrap_OctSwigIterator___sub,0,0,0,0},
+{"value",_wrap_OctSwigIterator_value,0,0,0,_wrap_OctSwigIterator_value_texinfo},
+{"incr",_wrap_OctSwigIterator_incr,0,0,0,_wrap_OctSwigIterator_incr_texinfo},
+{"decr",_wrap_OctSwigIterator_decr,0,0,0,_wrap_OctSwigIterator_decr_texinfo},
+{"distance",_wrap_OctSwigIterator_distance,0,0,0,_wrap_OctSwigIterator_distance_texinfo},
+{"equal",_wrap_OctSwigIterator_equal,0,0,0,_wrap_OctSwigIterator_equal_texinfo},
+{"copy",_wrap_OctSwigIterator_copy,0,0,0,_wrap_OctSwigIterator_copy_texinfo},
+{"next",_wrap_OctSwigIterator_next,0,0,0,_wrap_OctSwigIterator_next_texinfo},
+{"previous",_wrap_OctSwigIterator_previous,0,0,0,_wrap_OctSwigIterator_previous_texinfo},
+{"advance",_wrap_OctSwigIterator_advance,0,0,0,_wrap_OctSwigIterator_advance_texinfo},
+{"__eq",_wrap_OctSwigIterator___eq,0,0,0,_wrap_OctSwigIterator___eq_texinfo},
+{"__ne",_wrap_OctSwigIterator___ne,0,0,0,_wrap_OctSwigIterator___ne_texinfo},
+{"__incr",_wrap_OctSwigIterator___incr,0,0,0,_wrap_OctSwigIterator___incr_texinfo},
+{"__decr",_wrap_OctSwigIterator___decr,0,0,0,_wrap_OctSwigIterator___decr_texinfo},
+{"__add",_wrap_OctSwigIterator___add,0,0,0,_wrap_OctSwigIterator___add_texinfo},
+{"__sub",_wrap_OctSwigIterator___sub,0,0,0,_wrap_OctSwigIterator___sub_texinfo},
 {0,0,0,0}
 };
 static const char *swig_OctSwigIterator_base_names[] = {0};
@@ -11888,34 +12795,34 @@ fail:
 
 
 static swig_octave_member swig_FloatVector_members[] = {
-{"pop",_wrap_FloatVector_pop,0,0,0,0},
-{"__paren",_wrap_FloatVector___paren,0,0,0,0},
-{"__paren_asgn",_wrap_FloatVector___paren_asgn,0,0,0,0},
-{"append",_wrap_FloatVector_append,0,0,0,0},
-{"empty",_wrap_FloatVector_empty,0,0,0,0},
-{"size",_wrap_FloatVector_size,0,0,0,0},
-{"clear",_wrap_FloatVector_clear,0,0,0,0},
-{"swap",_wrap_FloatVector_swap,0,0,0,0},
-{"get_allocator",_wrap_FloatVector_get_allocator,0,0,0,0},
-{"begin",_wrap_FloatVector_begin,0,0,0,0},
-{"end",_wrap_FloatVector_end,0,0,0,0},
-{"rbegin",_wrap_FloatVector_rbegin,0,0,0,0},
-{"rend",_wrap_FloatVector_rend,0,0,0,0},
-{"pop_back",_wrap_FloatVector_pop_back,0,0,0,0},
-{"erase",_wrap_FloatVector_erase,0,0,0,0},
-{"push_back",_wrap_FloatVector_push_back,0,0,0,0},
-{"front",_wrap_FloatVector_front,0,0,0,0},
-{"back",_wrap_FloatVector_back,0,0,0,0},
-{"assign",_wrap_FloatVector_assign,0,0,0,0},
-{"resize",_wrap_FloatVector_resize,0,0,0,0},
-{"insert",_wrap_FloatVector_insert,0,0,0,0},
-{"reserve",_wrap_FloatVector_reserve,0,0,0,0},
-{"capacity",_wrap_FloatVector_capacity,0,0,0,0},
+{"pop",_wrap_FloatVector_pop,0,0,0,_wrap_FloatVector_pop_texinfo},
+{"__paren",_wrap_FloatVector___paren,0,0,0,_wrap_FloatVector___paren_texinfo},
+{"__paren_asgn",_wrap_FloatVector___paren_asgn,0,0,0,_wrap_FloatVector___paren_asgn_texinfo},
+{"append",_wrap_FloatVector_append,0,0,0,_wrap_FloatVector_append_texinfo},
+{"empty",_wrap_FloatVector_empty,0,0,0,_wrap_FloatVector_empty_texinfo},
+{"size",_wrap_FloatVector_size,0,0,0,_wrap_FloatVector_size_texinfo},
+{"clear",_wrap_FloatVector_clear,0,0,0,_wrap_FloatVector_clear_texinfo},
+{"swap",_wrap_FloatVector_swap,0,0,0,_wrap_FloatVector_swap_texinfo},
+{"get_allocator",_wrap_FloatVector_get_allocator,0,0,0,_wrap_FloatVector_get_allocator_texinfo},
+{"begin",_wrap_FloatVector_begin,0,0,0,_wrap_FloatVector_begin_texinfo},
+{"end",_wrap_FloatVector_end,0,0,0,_wrap_FloatVector_end_texinfo},
+{"rbegin",_wrap_FloatVector_rbegin,0,0,0,_wrap_FloatVector_rbegin_texinfo},
+{"rend",_wrap_FloatVector_rend,0,0,0,_wrap_FloatVector_rend_texinfo},
+{"pop_back",_wrap_FloatVector_pop_back,0,0,0,_wrap_FloatVector_pop_back_texinfo},
+{"erase",_wrap_FloatVector_erase,0,0,0,_wrap_FloatVector_erase_texinfo},
+{"push_back",_wrap_FloatVector_push_back,0,0,0,_wrap_FloatVector_push_back_texinfo},
+{"front",_wrap_FloatVector_front,0,0,0,_wrap_FloatVector_front_texinfo},
+{"back",_wrap_FloatVector_back,0,0,0,_wrap_FloatVector_back_texinfo},
+{"assign",_wrap_FloatVector_assign,0,0,0,_wrap_FloatVector_assign_texinfo},
+{"resize",_wrap_FloatVector_resize,0,0,0,_wrap_FloatVector_resize_texinfo},
+{"insert",_wrap_FloatVector_insert,0,0,0,_wrap_FloatVector_insert_texinfo},
+{"reserve",_wrap_FloatVector_reserve,0,0,0,_wrap_FloatVector_reserve_texinfo},
+{"capacity",_wrap_FloatVector_capacity,0,0,0,_wrap_FloatVector_capacity_texinfo},
 {0,0,0,0}
 };
 static const char *swig_FloatVector_base_names[] = {0};
 static const swig_type_info *swig_FloatVector_base[] = {0};
-static swig_octave_class _wrap_class_FloatVector = {"FloatVector", &SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t,0,_wrap_new_FloatVector,0,_wrap_delete_FloatVector,swig_FloatVector_members,swig_FloatVector_base_names,swig_FloatVector_base };
+static swig_octave_class _wrap_class_FloatVector = {"FloatVector", &SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t,0,_wrap_new_FloatVector,_wrap_new_FloatVector_texinfo,_wrap_delete_FloatVector,swig_FloatVector_members,swig_FloatVector_base_names,swig_FloatVector_base };
 
 static octave_value_list _wrap_CvPointVector_pop (const octave_value_list& args, int nargout) {
   std::vector< CvPoint > *arg1 = (std::vector< CvPoint > *) 0 ;
@@ -13335,34 +14242,34 @@ fail:
 
 
 static swig_octave_member swig_CvPointVector_members[] = {
-{"pop",_wrap_CvPointVector_pop,0,0,0,0},
-{"__paren",_wrap_CvPointVector___paren,0,0,0,0},
-{"__paren_asgn",_wrap_CvPointVector___paren_asgn,0,0,0,0},
-{"append",_wrap_CvPointVector_append,0,0,0,0},
-{"empty",_wrap_CvPointVector_empty,0,0,0,0},
-{"size",_wrap_CvPointVector_size,0,0,0,0},
-{"clear",_wrap_CvPointVector_clear,0,0,0,0},
-{"swap",_wrap_CvPointVector_swap,0,0,0,0},
-{"get_allocator",_wrap_CvPointVector_get_allocator,0,0,0,0},
-{"begin",_wrap_CvPointVector_begin,0,0,0,0},
-{"end",_wrap_CvPointVector_end,0,0,0,0},
-{"rbegin",_wrap_CvPointVector_rbegin,0,0,0,0},
-{"rend",_wrap_CvPointVector_rend,0,0,0,0},
-{"pop_back",_wrap_CvPointVector_pop_back,0,0,0,0},
-{"erase",_wrap_CvPointVector_erase,0,0,0,0},
-{"push_back",_wrap_CvPointVector_push_back,0,0,0,0},
-{"front",_wrap_CvPointVector_front,0,0,0,0},
-{"back",_wrap_CvPointVector_back,0,0,0,0},
-{"assign",_wrap_CvPointVector_assign,0,0,0,0},
-{"resize",_wrap_CvPointVector_resize,0,0,0,0},
-{"insert",_wrap_CvPointVector_insert,0,0,0,0},
-{"reserve",_wrap_CvPointVector_reserve,0,0,0,0},
-{"capacity",_wrap_CvPointVector_capacity,0,0,0,0},
+{"pop",_wrap_CvPointVector_pop,0,0,0,_wrap_CvPointVector_pop_texinfo},
+{"__paren",_wrap_CvPointVector___paren,0,0,0,_wrap_CvPointVector___paren_texinfo},
+{"__paren_asgn",_wrap_CvPointVector___paren_asgn,0,0,0,_wrap_CvPointVector___paren_asgn_texinfo},
+{"append",_wrap_CvPointVector_append,0,0,0,_wrap_CvPointVector_append_texinfo},
+{"empty",_wrap_CvPointVector_empty,0,0,0,_wrap_CvPointVector_empty_texinfo},
+{"size",_wrap_CvPointVector_size,0,0,0,_wrap_CvPointVector_size_texinfo},
+{"clear",_wrap_CvPointVector_clear,0,0,0,_wrap_CvPointVector_clear_texinfo},
+{"swap",_wrap_CvPointVector_swap,0,0,0,_wrap_CvPointVector_swap_texinfo},
+{"get_allocator",_wrap_CvPointVector_get_allocator,0,0,0,_wrap_CvPointVector_get_allocator_texinfo},
+{"begin",_wrap_CvPointVector_begin,0,0,0,_wrap_CvPointVector_begin_texinfo},
+{"end",_wrap_CvPointVector_end,0,0,0,_wrap_CvPointVector_end_texinfo},
+{"rbegin",_wrap_CvPointVector_rbegin,0,0,0,_wrap_CvPointVector_rbegin_texinfo},
+{"rend",_wrap_CvPointVector_rend,0,0,0,_wrap_CvPointVector_rend_texinfo},
+{"pop_back",_wrap_CvPointVector_pop_back,0,0,0,_wrap_CvPointVector_pop_back_texinfo},
+{"erase",_wrap_CvPointVector_erase,0,0,0,_wrap_CvPointVector_erase_texinfo},
+{"push_back",_wrap_CvPointVector_push_back,0,0,0,_wrap_CvPointVector_push_back_texinfo},
+{"front",_wrap_CvPointVector_front,0,0,0,_wrap_CvPointVector_front_texinfo},
+{"back",_wrap_CvPointVector_back,0,0,0,_wrap_CvPointVector_back_texinfo},
+{"assign",_wrap_CvPointVector_assign,0,0,0,_wrap_CvPointVector_assign_texinfo},
+{"resize",_wrap_CvPointVector_resize,0,0,0,_wrap_CvPointVector_resize_texinfo},
+{"insert",_wrap_CvPointVector_insert,0,0,0,_wrap_CvPointVector_insert_texinfo},
+{"reserve",_wrap_CvPointVector_reserve,0,0,0,_wrap_CvPointVector_reserve_texinfo},
+{"capacity",_wrap_CvPointVector_capacity,0,0,0,_wrap_CvPointVector_capacity_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvPointVector_base_names[] = {0};
 static const swig_type_info *swig_CvPointVector_base[] = {0};
-static swig_octave_class _wrap_class_CvPointVector = {"CvPointVector", &SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t,0,_wrap_new_CvPointVector,0,_wrap_delete_CvPointVector,swig_CvPointVector_members,swig_CvPointVector_base_names,swig_CvPointVector_base };
+static swig_octave_class _wrap_class_CvPointVector = {"CvPointVector", &SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t,0,_wrap_new_CvPointVector,_wrap_new_CvPointVector_texinfo,_wrap_delete_CvPointVector,swig_CvPointVector_members,swig_CvPointVector_base_names,swig_CvPointVector_base };
 
 static octave_value_list _wrap_cvCvtSeqToArray__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -19126,7 +20033,7 @@ static swig_octave_member swig_Cv32suf_members[] = {
 };
 static const char *swig_Cv32suf_base_names[] = {0};
 static const swig_type_info *swig_Cv32suf_base[] = {0};
-static swig_octave_class _wrap_class_Cv32suf = {"Cv32suf", &SWIGTYPE_p_Cv32suf,0,_wrap_new_Cv32suf,0,_wrap_delete_Cv32suf,swig_Cv32suf_members,swig_Cv32suf_base_names,swig_Cv32suf_base };
+static swig_octave_class _wrap_class_Cv32suf = {"Cv32suf", &SWIGTYPE_p_Cv32suf,0,_wrap_new_Cv32suf,_wrap_new_Cv32suf_texinfo,_wrap_delete_Cv32suf,swig_Cv32suf_members,swig_Cv32suf_base_names,swig_Cv32suf_base };
 
 static octave_value_list _wrap_Cv64suf_i_set (const octave_value_list& args, int nargout) {
   Cv64suf *arg1 = (Cv64suf *) 0 ;
@@ -19367,7 +20274,7 @@ static swig_octave_member swig_Cv64suf_members[] = {
 };
 static const char *swig_Cv64suf_base_names[] = {0};
 static const swig_type_info *swig_Cv64suf_base[] = {0};
-static swig_octave_class _wrap_class_Cv64suf = {"Cv64suf", &SWIGTYPE_p_Cv64suf,0,_wrap_new_Cv64suf,0,_wrap_delete_Cv64suf,swig_Cv64suf_members,swig_Cv64suf_base_names,swig_Cv64suf_base };
+static swig_octave_class _wrap_class_Cv64suf = {"Cv64suf", &SWIGTYPE_p_Cv64suf,0,_wrap_new_Cv64suf,_wrap_new_Cv64suf_texinfo,_wrap_delete_Cv64suf,swig_Cv64suf_members,swig_Cv64suf_base_names,swig_Cv64suf_base };
 
 static octave_value_list _wrap_cvRound (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -23748,34 +24655,34 @@ static swig_octave_member swig_IplImage_members[] = {
 {"roi",0,_wrap_IplImage_roi_get,_wrap_IplImage_roi_set,0,0},
 {"imageSize",0,_wrap_IplImage_imageSize_get,_wrap_IplImage_imageSize_set,0,0},
 {"widthStep",0,_wrap_IplImage_widthStep_get,_wrap_IplImage_widthStep_set,0,0},
-{"__mul",_wrap_IplImage___mul,0,0,0,0},
-{"__add",_wrap_IplImage___add,0,0,0,0},
-{"__xor",_wrap_IplImage___xor,0,0,0,0},
-{"__sub",_wrap_IplImage___sub,0,0,0,0},
-{"__ge",_wrap_IplImage___ge,0,0,0,0},
-{"__eq",_wrap_IplImage___eq,0,0,0,0},
-{"__le",_wrap_IplImage___le,0,0,0,0},
-{"__ne",_wrap_IplImage___ne,0,0,0,0},
-{"__lt",_wrap_IplImage___lt,0,0,0,0},
-{"__gt",_wrap_IplImage___gt,0,0,0,0},
-{"__div",_wrap_IplImage___div,0,0,0,0},
-{"__radd__",_wrap_IplImage___radd__,0,0,0,0},
-{"__rsub__",_wrap_IplImage___rsub__,0,0,0,0},
-{"__rmul__",_wrap_IplImage___rmul__,0,0,0,0},
-{"__rdiv__",_wrap_IplImage___rdiv__,0,0,0,0},
-{"__ror__",_wrap_IplImage___ror__,0,0,0,0},
-{"__rand__",_wrap_IplImage___rand__,0,0,0,0},
-{"__rxor__",_wrap_IplImage___rxor__,0,0,0,0},
-{"__req__",_wrap_IplImage___req__,0,0,0,0},
-{"__rgt__",_wrap_IplImage___rgt__,0,0,0,0},
-{"__rge__",_wrap_IplImage___rge__,0,0,0,0},
-{"__rlt__",_wrap_IplImage___rlt__,0,0,0,0},
-{"__rle__",_wrap_IplImage___rle__,0,0,0,0},
-{"__rne__",_wrap_IplImage___rne__,0,0,0,0},
-{"__pow__",_wrap_IplImage___pow__,0,0,0,0},
-{"__str",_wrap_IplImage___str,0,0,0,0},
-{"__paren_asgn",_wrap_IplImage___paren_asgn,0,0,0,0},
-{"__paren",_wrap_IplImage___paren,0,0,0,0},
+{"__mul",_wrap_IplImage___mul,0,0,0,_wrap_IplImage___mul_texinfo},
+{"__add",_wrap_IplImage___add,0,0,0,_wrap_IplImage___add_texinfo},
+{"__xor",_wrap_IplImage___xor,0,0,0,_wrap_IplImage___xor_texinfo},
+{"__sub",_wrap_IplImage___sub,0,0,0,_wrap_IplImage___sub_texinfo},
+{"__ge",_wrap_IplImage___ge,0,0,0,_wrap_IplImage___ge_texinfo},
+{"__eq",_wrap_IplImage___eq,0,0,0,_wrap_IplImage___eq_texinfo},
+{"__le",_wrap_IplImage___le,0,0,0,_wrap_IplImage___le_texinfo},
+{"__ne",_wrap_IplImage___ne,0,0,0,_wrap_IplImage___ne_texinfo},
+{"__lt",_wrap_IplImage___lt,0,0,0,_wrap_IplImage___lt_texinfo},
+{"__gt",_wrap_IplImage___gt,0,0,0,_wrap_IplImage___gt_texinfo},
+{"__div",_wrap_IplImage___div,0,0,0,_wrap_IplImage___div_texinfo},
+{"__radd__",_wrap_IplImage___radd__,0,0,0,_wrap_IplImage___radd___texinfo},
+{"__rsub__",_wrap_IplImage___rsub__,0,0,0,_wrap_IplImage___rsub___texinfo},
+{"__rmul__",_wrap_IplImage___rmul__,0,0,0,_wrap_IplImage___rmul___texinfo},
+{"__rdiv__",_wrap_IplImage___rdiv__,0,0,0,_wrap_IplImage___rdiv___texinfo},
+{"__ror__",_wrap_IplImage___ror__,0,0,0,_wrap_IplImage___ror___texinfo},
+{"__rand__",_wrap_IplImage___rand__,0,0,0,_wrap_IplImage___rand___texinfo},
+{"__rxor__",_wrap_IplImage___rxor__,0,0,0,_wrap_IplImage___rxor___texinfo},
+{"__req__",_wrap_IplImage___req__,0,0,0,_wrap_IplImage___req___texinfo},
+{"__rgt__",_wrap_IplImage___rgt__,0,0,0,_wrap_IplImage___rgt___texinfo},
+{"__rge__",_wrap_IplImage___rge__,0,0,0,_wrap_IplImage___rge___texinfo},
+{"__rlt__",_wrap_IplImage___rlt__,0,0,0,_wrap_IplImage___rlt___texinfo},
+{"__rle__",_wrap_IplImage___rle__,0,0,0,_wrap_IplImage___rle___texinfo},
+{"__rne__",_wrap_IplImage___rne__,0,0,0,_wrap_IplImage___rne___texinfo},
+{"__pow__",_wrap_IplImage___pow__,0,0,0,_wrap_IplImage___pow___texinfo},
+{"__str",_wrap_IplImage___str,0,0,0,_wrap_IplImage___str_texinfo},
+{"__paren_asgn",_wrap_IplImage___paren_asgn,0,0,0,_wrap_IplImage___paren_asgn_texinfo},
+{"__paren",_wrap_IplImage___paren,0,0,0,_wrap_IplImage___paren_texinfo},
 {0,0,0,0}
 };
 static const char *swig_IplImage_base_names[] = {0};
@@ -24139,7 +25046,7 @@ static swig_octave_member swig_IplROI_members[] = {
 };
 static const char *swig_IplROI_base_names[] = {0};
 static const swig_type_info *swig_IplROI_base[] = {0};
-static swig_octave_class _wrap_class_IplROI = {"IplROI", &SWIGTYPE_p__IplROI,0,_wrap_new_IplROI,0,_wrap_delete_IplROI,swig_IplROI_members,swig_IplROI_base_names,swig_IplROI_base };
+static swig_octave_class _wrap_class_IplROI = {"IplROI", &SWIGTYPE_p__IplROI,0,_wrap_new_IplROI,_wrap_new_IplROI_texinfo,_wrap_delete_IplROI,swig_IplROI_members,swig_IplROI_base_names,swig_IplROI_base };
 
 static octave_value_list _wrap_IplConvKernel_nCols_set (const octave_value_list& args, int nargout) {
   IplConvKernel *arg1 = (IplConvKernel *) 0 ;
@@ -24891,7 +25798,7 @@ static swig_octave_member swig_IplConvKernelFP_members[] = {
 };
 static const char *swig_IplConvKernelFP_base_names[] = {0};
 static const swig_type_info *swig_IplConvKernelFP_base[] = {0};
-static swig_octave_class _wrap_class_IplConvKernelFP = {"IplConvKernelFP", &SWIGTYPE_p__IplConvKernelFP,0,_wrap_new_IplConvKernelFP,0,_wrap_delete_IplConvKernelFP,swig_IplConvKernelFP_members,swig_IplConvKernelFP_base_names,swig_IplConvKernelFP_base };
+static swig_octave_class _wrap_class_IplConvKernelFP = {"IplConvKernelFP", &SWIGTYPE_p__IplConvKernelFP,0,_wrap_new_IplConvKernelFP,_wrap_new_IplConvKernelFP_texinfo,_wrap_delete_IplConvKernelFP,swig_IplConvKernelFP_members,swig_IplConvKernelFP_base_names,swig_IplConvKernelFP_base };
 
 static octave_value_list _wrap_CvMat_type_set (const octave_value_list& args, int nargout) {
   CvMat *arg1 = (CvMat *) 0 ;
@@ -28636,34 +29543,34 @@ static swig_octave_member swig_CvMat_members[] = {
 {"widthStep",0,_wrap_CvMat_widthStep_get,octave_set_immutable,0,0},
 {"rows",0,_wrap_CvMat_rows_get,octave_set_immutable,0,0},
 {"cols",0,_wrap_CvMat_cols_get,octave_set_immutable,0,0},
-{"__mul",_wrap_CvMat___mul,0,0,0,0},
-{"__add",_wrap_CvMat___add,0,0,0,0},
-{"__xor",_wrap_CvMat___xor,0,0,0,0},
-{"__sub",_wrap_CvMat___sub,0,0,0,0},
-{"__ge",_wrap_CvMat___ge,0,0,0,0},
-{"__eq",_wrap_CvMat___eq,0,0,0,0},
-{"__le",_wrap_CvMat___le,0,0,0,0},
-{"__ne",_wrap_CvMat___ne,0,0,0,0},
-{"__lt",_wrap_CvMat___lt,0,0,0,0},
-{"__gt",_wrap_CvMat___gt,0,0,0,0},
-{"__div",_wrap_CvMat___div,0,0,0,0},
-{"__radd__",_wrap_CvMat___radd__,0,0,0,0},
-{"__rsub__",_wrap_CvMat___rsub__,0,0,0,0},
-{"__rmul__",_wrap_CvMat___rmul__,0,0,0,0},
-{"__rdiv__",_wrap_CvMat___rdiv__,0,0,0,0},
-{"__ror__",_wrap_CvMat___ror__,0,0,0,0},
-{"__rand__",_wrap_CvMat___rand__,0,0,0,0},
-{"__rxor__",_wrap_CvMat___rxor__,0,0,0,0},
-{"__req__",_wrap_CvMat___req__,0,0,0,0},
-{"__rgt__",_wrap_CvMat___rgt__,0,0,0,0},
-{"__rge__",_wrap_CvMat___rge__,0,0,0,0},
-{"__rlt__",_wrap_CvMat___rlt__,0,0,0,0},
-{"__rle__",_wrap_CvMat___rle__,0,0,0,0},
-{"__rne__",_wrap_CvMat___rne__,0,0,0,0},
-{"__pow__",_wrap_CvMat___pow__,0,0,0,0},
-{"__str",_wrap_CvMat___str,0,0,0,0},
-{"__paren_asgn",_wrap_CvMat___paren_asgn,0,0,0,0},
-{"__paren",_wrap_CvMat___paren,0,0,0,0},
+{"__mul",_wrap_CvMat___mul,0,0,0,_wrap_CvMat___mul_texinfo},
+{"__add",_wrap_CvMat___add,0,0,0,_wrap_CvMat___add_texinfo},
+{"__xor",_wrap_CvMat___xor,0,0,0,_wrap_CvMat___xor_texinfo},
+{"__sub",_wrap_CvMat___sub,0,0,0,_wrap_CvMat___sub_texinfo},
+{"__ge",_wrap_CvMat___ge,0,0,0,_wrap_CvMat___ge_texinfo},
+{"__eq",_wrap_CvMat___eq,0,0,0,_wrap_CvMat___eq_texinfo},
+{"__le",_wrap_CvMat___le,0,0,0,_wrap_CvMat___le_texinfo},
+{"__ne",_wrap_CvMat___ne,0,0,0,_wrap_CvMat___ne_texinfo},
+{"__lt",_wrap_CvMat___lt,0,0,0,_wrap_CvMat___lt_texinfo},
+{"__gt",_wrap_CvMat___gt,0,0,0,_wrap_CvMat___gt_texinfo},
+{"__div",_wrap_CvMat___div,0,0,0,_wrap_CvMat___div_texinfo},
+{"__radd__",_wrap_CvMat___radd__,0,0,0,_wrap_CvMat___radd___texinfo},
+{"__rsub__",_wrap_CvMat___rsub__,0,0,0,_wrap_CvMat___rsub___texinfo},
+{"__rmul__",_wrap_CvMat___rmul__,0,0,0,_wrap_CvMat___rmul___texinfo},
+{"__rdiv__",_wrap_CvMat___rdiv__,0,0,0,_wrap_CvMat___rdiv___texinfo},
+{"__ror__",_wrap_CvMat___ror__,0,0,0,_wrap_CvMat___ror___texinfo},
+{"__rand__",_wrap_CvMat___rand__,0,0,0,_wrap_CvMat___rand___texinfo},
+{"__rxor__",_wrap_CvMat___rxor__,0,0,0,_wrap_CvMat___rxor___texinfo},
+{"__req__",_wrap_CvMat___req__,0,0,0,_wrap_CvMat___req___texinfo},
+{"__rgt__",_wrap_CvMat___rgt__,0,0,0,_wrap_CvMat___rgt___texinfo},
+{"__rge__",_wrap_CvMat___rge__,0,0,0,_wrap_CvMat___rge___texinfo},
+{"__rlt__",_wrap_CvMat___rlt__,0,0,0,_wrap_CvMat___rlt___texinfo},
+{"__rle__",_wrap_CvMat___rle__,0,0,0,_wrap_CvMat___rle___texinfo},
+{"__rne__",_wrap_CvMat___rne__,0,0,0,_wrap_CvMat___rne___texinfo},
+{"__pow__",_wrap_CvMat___pow__,0,0,0,_wrap_CvMat___pow___texinfo},
+{"__str",_wrap_CvMat___str,0,0,0,_wrap_CvMat___str_texinfo},
+{"__paren_asgn",_wrap_CvMat___paren_asgn,0,0,0,_wrap_CvMat___paren_asgn_texinfo},
+{"__paren",_wrap_CvMat___paren,0,0,0,_wrap_CvMat___paren_texinfo},
 {"imageData",0,_wrap_CvMat_imageData_get,_wrap_CvMat_imageData_set,0,0},
 {0,0,0,0}
 };
@@ -29028,7 +29935,7 @@ static swig_octave_member swig_CvMat_data_members[] = {
 };
 static const char *swig_CvMat_data_base_names[] = {0};
 static const swig_type_info *swig_CvMat_data_base[] = {0};
-static swig_octave_class _wrap_class_CvMat_data = {"CvMat_data", &SWIGTYPE_p_CvMat_data,0,_wrap_new_CvMat_data,0,_wrap_delete_CvMat_data,swig_CvMat_data_members,swig_CvMat_data_base_names,swig_CvMat_data_base };
+static swig_octave_class _wrap_class_CvMat_data = {"CvMat_data", &SWIGTYPE_p_CvMat_data,0,_wrap_new_CvMat_data,_wrap_new_CvMat_data_texinfo,_wrap_delete_CvMat_data,swig_CvMat_data_members,swig_CvMat_data_base_names,swig_CvMat_data_base };
 
 static octave_value_list _wrap_cvMat__SWIG_0 (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -29840,7 +30747,7 @@ static swig_octave_member swig_CvMatND_dim_members[] = {
 };
 static const char *swig_CvMatND_dim_base_names[] = {0};
 static const swig_type_info *swig_CvMatND_dim_base[] = {0};
-static swig_octave_class _wrap_class_CvMatND_dim = {"CvMatND_dim", &SWIGTYPE_p_CvMatND_dim,0,_wrap_new_CvMatND_dim,0,_wrap_delete_CvMatND_dim,swig_CvMatND_dim_members,swig_CvMatND_dim_base_names,swig_CvMatND_dim_base };
+static swig_octave_class _wrap_class_CvMatND_dim = {"CvMatND_dim", &SWIGTYPE_p_CvMatND_dim,0,_wrap_new_CvMatND_dim,_wrap_new_CvMatND_dim_texinfo,_wrap_delete_CvMatND_dim,swig_CvMatND_dim_members,swig_CvMatND_dim_base_names,swig_CvMatND_dim_base };
 
 static octave_value_list _wrap_CvMatND_data_ptr_set (const octave_value_list& args, int nargout) {
   CvMatND_data *arg1 = (CvMatND_data *) 0 ;
@@ -30199,7 +31106,7 @@ static swig_octave_member swig_CvMatND_data_members[] = {
 };
 static const char *swig_CvMatND_data_base_names[] = {0};
 static const swig_type_info *swig_CvMatND_data_base[] = {0};
-static swig_octave_class _wrap_class_CvMatND_data = {"CvMatND_data", &SWIGTYPE_p_CvMatND_data,0,_wrap_new_CvMatND_data,0,_wrap_delete_CvMatND_data,swig_CvMatND_data_members,swig_CvMatND_data_base_names,swig_CvMatND_data_base };
+static swig_octave_class _wrap_class_CvMatND_data = {"CvMatND_data", &SWIGTYPE_p_CvMatND_data,0,_wrap_new_CvMatND_data,_wrap_new_CvMatND_data_texinfo,_wrap_delete_CvMatND_data,swig_CvMatND_data_members,swig_CvMatND_data_base_names,swig_CvMatND_data_base };
 
 static octave_value_list _wrap_CvSparseMat_type_set (const octave_value_list& args, int nargout) {
   CvSparseMat *arg1 = (CvSparseMat *) 0 ;
@@ -31022,7 +31929,7 @@ static swig_octave_member swig_CvSparseNode_members[] = {
 };
 static const char *swig_CvSparseNode_base_names[] = {0};
 static const swig_type_info *swig_CvSparseNode_base[] = {0};
-static swig_octave_class _wrap_class_CvSparseNode = {"CvSparseNode", &SWIGTYPE_p_CvSparseNode,0,_wrap_new_CvSparseNode,0,_wrap_delete_CvSparseNode,swig_CvSparseNode_members,swig_CvSparseNode_base_names,swig_CvSparseNode_base };
+static swig_octave_class _wrap_class_CvSparseNode = {"CvSparseNode", &SWIGTYPE_p_CvSparseNode,0,_wrap_new_CvSparseNode,_wrap_new_CvSparseNode_texinfo,_wrap_delete_CvSparseNode,swig_CvSparseNode_members,swig_CvSparseNode_base_names,swig_CvSparseNode_base };
 
 static octave_value_list _wrap_CvSparseMatIterator_mat_set (const octave_value_list& args, int nargout) {
   CvSparseMatIterator *arg1 = (CvSparseMatIterator *) 0 ;
@@ -31263,7 +32170,7 @@ static swig_octave_member swig_CvSparseMatIterator_members[] = {
 };
 static const char *swig_CvSparseMatIterator_base_names[] = {0};
 static const swig_type_info *swig_CvSparseMatIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvSparseMatIterator = {"CvSparseMatIterator", &SWIGTYPE_p_CvSparseMatIterator,0,_wrap_new_CvSparseMatIterator,0,_wrap_delete_CvSparseMatIterator,swig_CvSparseMatIterator_members,swig_CvSparseMatIterator_base_names,swig_CvSparseMatIterator_base };
+static swig_octave_class _wrap_class_CvSparseMatIterator = {"CvSparseMatIterator", &SWIGTYPE_p_CvSparseMatIterator,0,_wrap_new_CvSparseMatIterator,_wrap_new_CvSparseMatIterator_texinfo,_wrap_delete_CvSparseMatIterator,swig_CvSparseMatIterator_members,swig_CvSparseMatIterator_base_names,swig_CvSparseMatIterator_base };
 
 static octave_value_list _wrap_CvHistogram_type_set (const octave_value_list& args, int nargout) {
   CvHistogram *arg1 = (CvHistogram *) 0 ;
@@ -31915,7 +32822,7 @@ static swig_octave_member swig_CvRect_members[] = {
 };
 static const char *swig_CvRect_base_names[] = {0};
 static const swig_type_info *swig_CvRect_base[] = {0};
-static swig_octave_class _wrap_class_CvRect = {"CvRect", &SWIGTYPE_p_CvRect,0,_wrap_new_CvRect,0,_wrap_delete_CvRect,swig_CvRect_members,swig_CvRect_base_names,swig_CvRect_base };
+static swig_octave_class _wrap_class_CvRect = {"CvRect", &SWIGTYPE_p_CvRect,0,_wrap_new_CvRect,_wrap_new_CvRect_texinfo,_wrap_delete_CvRect,swig_CvRect_members,swig_CvRect_base_names,swig_CvRect_base };
 
 static octave_value_list _wrap_cvRect (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -32299,7 +33206,7 @@ static swig_octave_member swig_CvTermCriteria_members[] = {
 };
 static const char *swig_CvTermCriteria_base_names[] = {0};
 static const swig_type_info *swig_CvTermCriteria_base[] = {0};
-static swig_octave_class _wrap_class_CvTermCriteria = {"CvTermCriteria", &SWIGTYPE_p_CvTermCriteria,0,_wrap_new_CvTermCriteria,0,_wrap_delete_CvTermCriteria,swig_CvTermCriteria_members,swig_CvTermCriteria_base_names,swig_CvTermCriteria_base };
+static swig_octave_class _wrap_class_CvTermCriteria = {"CvTermCriteria", &SWIGTYPE_p_CvTermCriteria,0,_wrap_new_CvTermCriteria,_wrap_new_CvTermCriteria_texinfo,_wrap_delete_CvTermCriteria,swig_CvTermCriteria_members,swig_CvTermCriteria_base_names,swig_CvTermCriteria_base };
 
 static octave_value_list _wrap_cvTermCriteria (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -32592,13 +33499,13 @@ fail:
 static swig_octave_member swig_CvPoint_members[] = {
 {"x",0,_wrap_CvPoint_x_get,_wrap_CvPoint_x_set,0,0},
 {"y",0,_wrap_CvPoint_y_get,_wrap_CvPoint_y_set,0,0},
-{"__str__",_wrap_CvPoint___str__,0,0,0,0},
-{"__repr__",_wrap_CvPoint___repr__,0,0,0,0},
+{"__str__",_wrap_CvPoint___str__,0,0,0,_wrap_CvPoint___str___texinfo},
+{"__repr__",_wrap_CvPoint___repr__,0,0,0,_wrap_CvPoint___repr___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvPoint_base_names[] = {0};
 static const swig_type_info *swig_CvPoint_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint = {"CvPoint", &SWIGTYPE_p_CvPoint,0,_wrap_new_CvPoint,0,_wrap_delete_CvPoint,swig_CvPoint_members,swig_CvPoint_base_names,swig_CvPoint_base };
+static swig_octave_class _wrap_class_CvPoint = {"CvPoint", &SWIGTYPE_p_CvPoint,0,_wrap_new_CvPoint,_wrap_new_CvPoint_texinfo,_wrap_delete_CvPoint,swig_CvPoint_members,swig_CvPoint_base_names,swig_CvPoint_base };
 
 static octave_value_list _wrap_cvPoint (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -32883,13 +33790,13 @@ fail:
 static swig_octave_member swig_CvPoint2D32f_members[] = {
 {"x",0,_wrap_CvPoint2D32f_x_get,_wrap_CvPoint2D32f_x_set,0,0},
 {"y",0,_wrap_CvPoint2D32f_y_get,_wrap_CvPoint2D32f_y_set,0,0},
-{"__str__",_wrap_CvPoint2D32f___str__,0,0,0,0},
-{"__repr__",_wrap_CvPoint2D32f___repr__,0,0,0,0},
+{"__str__",_wrap_CvPoint2D32f___str__,0,0,0,_wrap_CvPoint2D32f___str___texinfo},
+{"__repr__",_wrap_CvPoint2D32f___repr__,0,0,0,_wrap_CvPoint2D32f___repr___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvPoint2D32f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint2D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint2D32f = {"CvPoint2D32f", &SWIGTYPE_p_CvPoint2D32f,0,_wrap_new_CvPoint2D32f,0,_wrap_delete_CvPoint2D32f,swig_CvPoint2D32f_members,swig_CvPoint2D32f_base_names,swig_CvPoint2D32f_base };
+static swig_octave_class _wrap_class_CvPoint2D32f = {"CvPoint2D32f", &SWIGTYPE_p_CvPoint2D32f,0,_wrap_new_CvPoint2D32f,_wrap_new_CvPoint2D32f_texinfo,_wrap_delete_CvPoint2D32f,swig_CvPoint2D32f_members,swig_CvPoint2D32f_base_names,swig_CvPoint2D32f_base };
 
 static octave_value_list _wrap_cvPoint2D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -33229,7 +34136,7 @@ static swig_octave_member swig_CvPoint3D32f_members[] = {
 };
 static const char *swig_CvPoint3D32f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint3D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint3D32f = {"CvPoint3D32f", &SWIGTYPE_p_CvPoint3D32f,0,_wrap_new_CvPoint3D32f,0,_wrap_delete_CvPoint3D32f,swig_CvPoint3D32f_members,swig_CvPoint3D32f_base_names,swig_CvPoint3D32f_base };
+static swig_octave_class _wrap_class_CvPoint3D32f = {"CvPoint3D32f", &SWIGTYPE_p_CvPoint3D32f,0,_wrap_new_CvPoint3D32f,_wrap_new_CvPoint3D32f_texinfo,_wrap_delete_CvPoint3D32f,swig_CvPoint3D32f_members,swig_CvPoint3D32f_base_names,swig_CvPoint3D32f_base };
 
 static octave_value_list _wrap_cvPoint3D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -33460,7 +34367,7 @@ static swig_octave_member swig_CvPoint2D64f_members[] = {
 };
 static const char *swig_CvPoint2D64f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint2D64f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint2D64f = {"CvPoint2D64f", &SWIGTYPE_p_CvPoint2D64f,0,_wrap_new_CvPoint2D64f,0,_wrap_delete_CvPoint2D64f,swig_CvPoint2D64f_members,swig_CvPoint2D64f_base_names,swig_CvPoint2D64f_base };
+static swig_octave_class _wrap_class_CvPoint2D64f = {"CvPoint2D64f", &SWIGTYPE_p_CvPoint2D64f,0,_wrap_new_CvPoint2D64f,_wrap_new_CvPoint2D64f_texinfo,_wrap_delete_CvPoint2D64f,swig_CvPoint2D64f_members,swig_CvPoint2D64f_base_names,swig_CvPoint2D64f_base };
 
 static octave_value_list _wrap_cvPoint2D64f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -33742,7 +34649,7 @@ static swig_octave_member swig_CvPoint3D64f_members[] = {
 };
 static const char *swig_CvPoint3D64f_base_names[] = {0};
 static const swig_type_info *swig_CvPoint3D64f_base[] = {0};
-static swig_octave_class _wrap_class_CvPoint3D64f = {"CvPoint3D64f", &SWIGTYPE_p_CvPoint3D64f,0,_wrap_new_CvPoint3D64f,0,_wrap_delete_CvPoint3D64f,swig_CvPoint3D64f_members,swig_CvPoint3D64f_base_names,swig_CvPoint3D64f_base };
+static swig_octave_class _wrap_class_CvPoint3D64f = {"CvPoint3D64f", &SWIGTYPE_p_CvPoint3D64f,0,_wrap_new_CvPoint3D64f,_wrap_new_CvPoint3D64f_texinfo,_wrap_delete_CvPoint3D64f,swig_CvPoint3D64f_members,swig_CvPoint3D64f_base_names,swig_CvPoint3D64f_base };
 
 static octave_value_list _wrap_cvPoint3D64f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -33973,7 +34880,7 @@ static swig_octave_member swig_CvSize_members[] = {
 };
 static const char *swig_CvSize_base_names[] = {0};
 static const swig_type_info *swig_CvSize_base[] = {0};
-static swig_octave_class _wrap_class_CvSize = {"CvSize", &SWIGTYPE_p_CvSize,0,_wrap_new_CvSize,0,_wrap_delete_CvSize,swig_CvSize_members,swig_CvSize_base_names,swig_CvSize_base };
+static swig_octave_class _wrap_class_CvSize = {"CvSize", &SWIGTYPE_p_CvSize,0,_wrap_new_CvSize,_wrap_new_CvSize_texinfo,_wrap_delete_CvSize,swig_CvSize_members,swig_CvSize_base_names,swig_CvSize_base };
 
 static octave_value_list _wrap_cvSize (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -34196,7 +35103,7 @@ static swig_octave_member swig_CvSize2D32f_members[] = {
 };
 static const char *swig_CvSize2D32f_base_names[] = {0};
 static const swig_type_info *swig_CvSize2D32f_base[] = {0};
-static swig_octave_class _wrap_class_CvSize2D32f = {"CvSize2D32f", &SWIGTYPE_p_CvSize2D32f,0,_wrap_new_CvSize2D32f,0,_wrap_delete_CvSize2D32f,swig_CvSize2D32f_members,swig_CvSize2D32f_base_names,swig_CvSize2D32f_base };
+static swig_octave_class _wrap_class_CvSize2D32f = {"CvSize2D32f", &SWIGTYPE_p_CvSize2D32f,0,_wrap_new_CvSize2D32f,_wrap_new_CvSize2D32f_texinfo,_wrap_delete_CvSize2D32f,swig_CvSize2D32f_members,swig_CvSize2D32f_base_names,swig_CvSize2D32f_base };
 
 static octave_value_list _wrap_cvSize2D32f (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -34478,7 +35385,7 @@ static swig_octave_member swig_CvBox2D_members[] = {
 };
 static const char *swig_CvBox2D_base_names[] = {0};
 static const swig_type_info *swig_CvBox2D_base[] = {0};
-static swig_octave_class _wrap_class_CvBox2D = {"CvBox2D", &SWIGTYPE_p_CvBox2D,0,_wrap_new_CvBox2D,0,_wrap_delete_CvBox2D,swig_CvBox2D_members,swig_CvBox2D_base_names,swig_CvBox2D_base };
+static swig_octave_class _wrap_class_CvBox2D = {"CvBox2D", &SWIGTYPE_p_CvBox2D,0,_wrap_new_CvBox2D,_wrap_new_CvBox2D_texinfo,_wrap_delete_CvBox2D,swig_CvBox2D_members,swig_CvBox2D_base_names,swig_CvBox2D_base };
 
 static octave_value_list _wrap_CvLineIterator_ptr_set (const octave_value_list& args, int nargout) {
   CvLineIterator *arg1 = (CvLineIterator *) 0 ;
@@ -34896,7 +35803,7 @@ static swig_octave_member swig_CvLineIterator_members[] = {
 };
 static const char *swig_CvLineIterator_base_names[] = {0};
 static const swig_type_info *swig_CvLineIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvLineIterator = {"CvLineIterator", &SWIGTYPE_p_CvLineIterator,0,_wrap_new_CvLineIterator,0,_wrap_delete_CvLineIterator,swig_CvLineIterator_members,swig_CvLineIterator_base_names,swig_CvLineIterator_base };
+static swig_octave_class _wrap_class_CvLineIterator = {"CvLineIterator", &SWIGTYPE_p_CvLineIterator,0,_wrap_new_CvLineIterator,_wrap_new_CvLineIterator_texinfo,_wrap_delete_CvLineIterator,swig_CvLineIterator_members,swig_CvLineIterator_base_names,swig_CvLineIterator_base };
 
 static octave_value_list _wrap_CvSlice_start_index_set (const octave_value_list& args, int nargout) {
   CvSlice *arg1 = (CvSlice *) 0 ;
@@ -35078,7 +35985,7 @@ static swig_octave_member swig_CvSlice_members[] = {
 };
 static const char *swig_CvSlice_base_names[] = {0};
 static const swig_type_info *swig_CvSlice_base[] = {0};
-static swig_octave_class _wrap_class_CvSlice = {"CvSlice", &SWIGTYPE_p_CvSlice,0,_wrap_new_CvSlice,0,_wrap_delete_CvSlice,swig_CvSlice_members,swig_CvSlice_base_names,swig_CvSlice_base };
+static swig_octave_class _wrap_class_CvSlice = {"CvSlice", &SWIGTYPE_p_CvSlice,0,_wrap_new_CvSlice,_wrap_new_CvSlice_texinfo,_wrap_delete_CvSlice,swig_CvSlice_members,swig_CvSlice_base_names,swig_CvSlice_base };
 
 static octave_value_list _wrap_cvSlice (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -35399,15 +36306,15 @@ fail:
 
 static swig_octave_member swig_CvScalar_members[] = {
 {"val",0,_wrap_CvScalar_val_get,_wrap_CvScalar_val_set,0,0},
-{"__str__",_wrap_CvScalar___str__,0,0,0,0},
-{"__repr__",_wrap_CvScalar___repr__,0,0,0,0},
-{"__getitem__",_wrap_CvScalar___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvScalar___setitem__,0,0,0,0},
+{"__str__",_wrap_CvScalar___str__,0,0,0,_wrap_CvScalar___str___texinfo},
+{"__repr__",_wrap_CvScalar___repr__,0,0,0,_wrap_CvScalar___repr___texinfo},
+{"__getitem__",_wrap_CvScalar___getitem__,0,0,0,_wrap_CvScalar___getitem___texinfo},
+{"__setitem__",_wrap_CvScalar___setitem__,0,0,0,_wrap_CvScalar___setitem___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvScalar_base_names[] = {0};
 static const swig_type_info *swig_CvScalar_base[] = {0};
-static swig_octave_class _wrap_class_CvScalar = {"CvScalar", &SWIGTYPE_p_CvScalar,0,_wrap_new_CvScalar,0,_wrap_delete_CvScalar,swig_CvScalar_members,swig_CvScalar_base_names,swig_CvScalar_base };
+static swig_octave_class _wrap_class_CvScalar = {"CvScalar", &SWIGTYPE_p_CvScalar,0,_wrap_new_CvScalar,_wrap_new_CvScalar_texinfo,_wrap_delete_CvScalar,swig_CvScalar_members,swig_CvScalar_base_names,swig_CvScalar_base };
 
 static octave_value_list _wrap_cvScalar__SWIG_0 (const octave_value_list& args, int nargout) {
   double arg1 ;
@@ -35923,7 +36830,7 @@ static swig_octave_member swig_CvMemBlock_members[] = {
 };
 static const char *swig_CvMemBlock_base_names[] = {0};
 static const swig_type_info *swig_CvMemBlock_base[] = {0};
-static swig_octave_class _wrap_class_CvMemBlock = {"CvMemBlock", &SWIGTYPE_p_CvMemBlock,0,_wrap_new_CvMemBlock,0,_wrap_delete_CvMemBlock,swig_CvMemBlock_members,swig_CvMemBlock_base_names,swig_CvMemBlock_base };
+static swig_octave_class _wrap_class_CvMemBlock = {"CvMemBlock", &SWIGTYPE_p_CvMemBlock,0,_wrap_new_CvMemBlock,_wrap_new_CvMemBlock_texinfo,_wrap_delete_CvMemBlock,swig_CvMemBlock_members,swig_CvMemBlock_base_names,swig_CvMemBlock_base };
 
 static octave_value_list _wrap_CvMemStorage_signature_set (const octave_value_list& args, int nargout) {
   CvMemStorage *arg1 = (CvMemStorage *) 0 ;
@@ -36498,7 +37405,7 @@ static swig_octave_member swig_CvMemStoragePos_members[] = {
 };
 static const char *swig_CvMemStoragePos_base_names[] = {0};
 static const swig_type_info *swig_CvMemStoragePos_base[] = {0};
-static swig_octave_class _wrap_class_CvMemStoragePos = {"CvMemStoragePos", &SWIGTYPE_p_CvMemStoragePos,0,_wrap_new_CvMemStoragePos,0,_wrap_delete_CvMemStoragePos,swig_CvMemStoragePos_members,swig_CvMemStoragePos_base_names,swig_CvMemStoragePos_base };
+static swig_octave_class _wrap_class_CvMemStoragePos = {"CvMemStoragePos", &SWIGTYPE_p_CvMemStoragePos,0,_wrap_new_CvMemStoragePos,_wrap_new_CvMemStoragePos_texinfo,_wrap_delete_CvMemStoragePos,swig_CvMemStoragePos_members,swig_CvMemStoragePos_base_names,swig_CvMemStoragePos_base };
 
 static octave_value_list _wrap_CvSeqBlock_prev_set (const octave_value_list& args, int nargout) {
   CvSeqBlock *arg1 = (CvSeqBlock *) 0 ;
@@ -36864,7 +37771,7 @@ static swig_octave_member swig_CvSeqBlock_members[] = {
 };
 static const char *swig_CvSeqBlock_base_names[] = {0};
 static const swig_type_info *swig_CvSeqBlock_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqBlock = {"CvSeqBlock", &SWIGTYPE_p_CvSeqBlock,0,_wrap_new_CvSeqBlock,0,_wrap_delete_CvSeqBlock,swig_CvSeqBlock_members,swig_CvSeqBlock_base_names,swig_CvSeqBlock_base };
+static swig_octave_class _wrap_class_CvSeqBlock = {"CvSeqBlock", &SWIGTYPE_p_CvSeqBlock,0,_wrap_new_CvSeqBlock,_wrap_new_CvSeqBlock_texinfo,_wrap_delete_CvSeqBlock,swig_CvSeqBlock_members,swig_CvSeqBlock_base_names,swig_CvSeqBlock_base };
 
 static octave_value_list _wrap_CvSeq_flags_set (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -38032,7 +38939,7 @@ static swig_octave_member swig_CvSeq_members[] = {
 };
 static const char *swig_CvSeq_base_names[] = {0};
 static const swig_type_info *swig_CvSeq_base[] = {0};
-static swig_octave_class _wrap_class_CvSeq = {"CvSeq", &SWIGTYPE_p_CvSeq,0,_wrap_new_CvSeq,0,_wrap_delete_CvSeq,swig_CvSeq_members,swig_CvSeq_base_names,swig_CvSeq_base };
+static swig_octave_class _wrap_class_CvSeq = {"CvSeq", &SWIGTYPE_p_CvSeq,0,_wrap_new_CvSeq,_wrap_new_CvSeq_texinfo,_wrap_delete_CvSeq,swig_CvSeq_members,swig_CvSeq_base_names,swig_CvSeq_base };
 
 static octave_value_list _wrap_CvSetElem_flags_set (const octave_value_list& args, int nargout) {
   CvSetElem *arg1 = (CvSetElem *) 0 ;
@@ -38214,7 +39121,7 @@ static swig_octave_member swig_CvSetElem_members[] = {
 };
 static const char *swig_CvSetElem_base_names[] = {0};
 static const swig_type_info *swig_CvSetElem_base[] = {0};
-static swig_octave_class _wrap_class_CvSetElem = {"CvSetElem", &SWIGTYPE_p_CvSetElem,0,_wrap_new_CvSetElem,0,_wrap_delete_CvSetElem,swig_CvSetElem_members,swig_CvSetElem_base_names,swig_CvSetElem_base };
+static swig_octave_class _wrap_class_CvSetElem = {"CvSetElem", &SWIGTYPE_p_CvSetElem,0,_wrap_new_CvSetElem,_wrap_new_CvSetElem_texinfo,_wrap_delete_CvSetElem,swig_CvSetElem_members,swig_CvSetElem_base_names,swig_CvSetElem_base };
 
 static octave_value_list _wrap_CvSet_flags_set (const octave_value_list& args, int nargout) {
   CvSet *arg1 = (CvSet *) 0 ;
@@ -39400,7 +40307,7 @@ static swig_octave_member swig_CvSet_members[] = {
 };
 static const char *swig_CvSet_base_names[] = {0};
 static const swig_type_info *swig_CvSet_base[] = {0};
-static swig_octave_class _wrap_class_CvSet = {"CvSet", &SWIGTYPE_p_CvSet,0,_wrap_new_CvSet,0,_wrap_delete_CvSet,swig_CvSet_members,swig_CvSet_base_names,swig_CvSet_base };
+static swig_octave_class _wrap_class_CvSet = {"CvSet", &SWIGTYPE_p_CvSet,0,_wrap_new_CvSet,_wrap_new_CvSet_texinfo,_wrap_delete_CvSet,swig_CvSet_members,swig_CvSet_base_names,swig_CvSet_base };
 
 static octave_value_list _wrap_CvGraphEdge_flags_set (const octave_value_list& args, int nargout) {
   CvGraphEdge *arg1 = (CvGraphEdge *) 0 ;
@@ -39712,7 +40619,7 @@ static swig_octave_member swig_CvGraphEdge_members[] = {
 };
 static const char *swig_CvGraphEdge_base_names[] = {0};
 static const swig_type_info *swig_CvGraphEdge_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphEdge = {"CvGraphEdge", &SWIGTYPE_p_CvGraphEdge,0,_wrap_new_CvGraphEdge,0,_wrap_delete_CvGraphEdge,swig_CvGraphEdge_members,swig_CvGraphEdge_base_names,swig_CvGraphEdge_base };
+static swig_octave_class _wrap_class_CvGraphEdge = {"CvGraphEdge", &SWIGTYPE_p_CvGraphEdge,0,_wrap_new_CvGraphEdge,_wrap_new_CvGraphEdge_texinfo,_wrap_delete_CvGraphEdge,swig_CvGraphEdge_members,swig_CvGraphEdge_base_names,swig_CvGraphEdge_base };
 
 static octave_value_list _wrap_CvGraphVtx_flags_set (const octave_value_list& args, int nargout) {
   CvGraphVtx *arg1 = (CvGraphVtx *) 0 ;
@@ -39894,7 +40801,7 @@ static swig_octave_member swig_CvGraphVtx_members[] = {
 };
 static const char *swig_CvGraphVtx_base_names[] = {0};
 static const swig_type_info *swig_CvGraphVtx_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphVtx = {"CvGraphVtx", &SWIGTYPE_p_CvGraphVtx,0,_wrap_new_CvGraphVtx,0,_wrap_delete_CvGraphVtx,swig_CvGraphVtx_members,swig_CvGraphVtx_base_names,swig_CvGraphVtx_base };
+static swig_octave_class _wrap_class_CvGraphVtx = {"CvGraphVtx", &SWIGTYPE_p_CvGraphVtx,0,_wrap_new_CvGraphVtx,_wrap_new_CvGraphVtx_texinfo,_wrap_delete_CvGraphVtx,swig_CvGraphVtx_members,swig_CvGraphVtx_base_names,swig_CvGraphVtx_base };
 
 static octave_value_list _wrap_CvGraphVtx2D_flags_set (const octave_value_list& args, int nargout) {
   CvGraphVtx2D *arg1 = (CvGraphVtx2D *) 0 ;
@@ -40135,7 +41042,7 @@ static swig_octave_member swig_CvGraphVtx2D_members[] = {
 };
 static const char *swig_CvGraphVtx2D_base_names[] = {0};
 static const swig_type_info *swig_CvGraphVtx2D_base[] = {0};
-static swig_octave_class _wrap_class_CvGraphVtx2D = {"CvGraphVtx2D", &SWIGTYPE_p_CvGraphVtx2D,0,_wrap_new_CvGraphVtx2D,0,_wrap_delete_CvGraphVtx2D,swig_CvGraphVtx2D_members,swig_CvGraphVtx2D_base_names,swig_CvGraphVtx2D_base };
+static swig_octave_class _wrap_class_CvGraphVtx2D = {"CvGraphVtx2D", &SWIGTYPE_p_CvGraphVtx2D,0,_wrap_new_CvGraphVtx2D,_wrap_new_CvGraphVtx2D_texinfo,_wrap_delete_CvGraphVtx2D,swig_CvGraphVtx2D_members,swig_CvGraphVtx2D_base_names,swig_CvGraphVtx2D_base };
 
 static octave_value_list _wrap_CvGraph_flags_set (const octave_value_list& args, int nargout) {
   CvGraph *arg1 = (CvGraph *) 0 ;
@@ -41357,7 +42264,7 @@ static swig_octave_member swig_CvGraph_members[] = {
 };
 static const char *swig_CvGraph_base_names[] = {0};
 static const swig_type_info *swig_CvGraph_base[] = {0};
-static swig_octave_class _wrap_class_CvGraph = {"CvGraph", &SWIGTYPE_p_CvGraph,0,_wrap_new_CvGraph,0,_wrap_delete_CvGraph,swig_CvGraph_members,swig_CvGraph_base_names,swig_CvGraph_base };
+static swig_octave_class _wrap_class_CvGraph = {"CvGraph", &SWIGTYPE_p_CvGraph,0,_wrap_new_CvGraph,_wrap_new_CvGraph_texinfo,_wrap_delete_CvGraph,swig_CvGraph_members,swig_CvGraph_base_names,swig_CvGraph_base };
 
 static octave_value_list _wrap_CvChain_flags_set (const octave_value_list& args, int nargout) {
   CvChain *arg1 = (CvChain *) 0 ;
@@ -42352,7 +43259,7 @@ static swig_octave_member swig_CvChain_members[] = {
 };
 static const char *swig_CvChain_base_names[] = {0};
 static const swig_type_info *swig_CvChain_base[] = {0};
-static swig_octave_class _wrap_class_CvChain = {"CvChain", &SWIGTYPE_p_CvChain,0,_wrap_new_CvChain,0,_wrap_delete_CvChain,swig_CvChain_members,swig_CvChain_base_names,swig_CvChain_base };
+static swig_octave_class _wrap_class_CvChain = {"CvChain", &SWIGTYPE_p_CvChain,0,_wrap_new_CvChain,_wrap_new_CvChain_texinfo,_wrap_delete_CvChain,swig_CvChain_members,swig_CvChain_base_names,swig_CvChain_base };
 
 static octave_value_list _wrap_CvContour_flags_set (const octave_value_list& args, int nargout) {
   CvContour *arg1 = (CvContour *) 0 ;
@@ -43471,7 +44378,7 @@ static swig_octave_member swig_CvContour_members[] = {
 };
 static const char *swig_CvContour_base_names[] = {0};
 static const swig_type_info *swig_CvContour_base[] = {0};
-static swig_octave_class _wrap_class_CvContour = {"CvContour", &SWIGTYPE_p_CvContour,0,_wrap_new_CvContour,0,_wrap_delete_CvContour,swig_CvContour_members,swig_CvContour_base_names,swig_CvContour_base };
+static swig_octave_class _wrap_class_CvContour = {"CvContour", &SWIGTYPE_p_CvContour,0,_wrap_new_CvContour,_wrap_new_CvContour_texinfo,_wrap_delete_CvContour,swig_CvContour_members,swig_CvContour_base_names,swig_CvContour_base };
 
 static octave_value_list _wrap_CvSeqWriter_header_size_set (const octave_value_list& args, int nargout) {
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
@@ -43918,7 +44825,7 @@ static swig_octave_member swig_CvSeqWriter_members[] = {
 };
 static const char *swig_CvSeqWriter_base_names[] = {0};
 static const swig_type_info *swig_CvSeqWriter_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqWriter = {"CvSeqWriter", &SWIGTYPE_p_CvSeqWriter,0,_wrap_new_CvSeqWriter,0,_wrap_delete_CvSeqWriter,swig_CvSeqWriter_members,swig_CvSeqWriter_base_names,swig_CvSeqWriter_base };
+static swig_octave_class _wrap_class_CvSeqWriter = {"CvSeqWriter", &SWIGTYPE_p_CvSeqWriter,0,_wrap_new_CvSeqWriter,_wrap_new_CvSeqWriter_texinfo,_wrap_delete_CvSeqWriter,swig_CvSeqWriter_members,swig_CvSeqWriter_base_names,swig_CvSeqWriter_base };
 
 static octave_value_list _wrap_CvSeqReader_header_size_set (const octave_value_list& args, int nargout) {
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
@@ -44490,7 +45397,7 @@ static swig_octave_member swig_CvSeqReader_members[] = {
 };
 static const char *swig_CvSeqReader_base_names[] = {0};
 static const swig_type_info *swig_CvSeqReader_base[] = {0};
-static swig_octave_class _wrap_class_CvSeqReader = {"CvSeqReader", &SWIGTYPE_p_CvSeqReader,0,_wrap_new_CvSeqReader,0,_wrap_delete_CvSeqReader,swig_CvSeqReader_members,swig_CvSeqReader_base_names,swig_CvSeqReader_base };
+static swig_octave_class _wrap_class_CvSeqReader = {"CvSeqReader", &SWIGTYPE_p_CvSeqReader,0,_wrap_new_CvSeqReader,_wrap_new_CvSeqReader_texinfo,_wrap_delete_CvSeqReader,swig_CvSeqReader_members,swig_CvSeqReader_base_names,swig_CvSeqReader_base };
 
 static octave_value_list _wrap_CvAttrList_attr_set (const octave_value_list& args, int nargout) {
   CvAttrList *arg1 = (CvAttrList *) 0 ;
@@ -44674,7 +45581,7 @@ static swig_octave_member swig_CvAttrList_members[] = {
 };
 static const char *swig_CvAttrList_base_names[] = {0};
 static const swig_type_info *swig_CvAttrList_base[] = {0};
-static swig_octave_class _wrap_class_CvAttrList = {"CvAttrList", &SWIGTYPE_p_CvAttrList,0,_wrap_new_CvAttrList,0,_wrap_delete_CvAttrList,swig_CvAttrList_members,swig_CvAttrList_base_names,swig_CvAttrList_base };
+static swig_octave_class _wrap_class_CvAttrList = {"CvAttrList", &SWIGTYPE_p_CvAttrList,0,_wrap_new_CvAttrList,_wrap_new_CvAttrList_texinfo,_wrap_delete_CvAttrList,swig_CvAttrList_members,swig_CvAttrList_base_names,swig_CvAttrList_base };
 
 static octave_value_list _wrap_cvAttrList__SWIG_0 (const octave_value_list& args, int nargout) {
   char **arg1 = (char **) 0 ;
@@ -45004,7 +45911,7 @@ static swig_octave_member swig_CvString_members[] = {
 };
 static const char *swig_CvString_base_names[] = {0};
 static const swig_type_info *swig_CvString_base[] = {0};
-static swig_octave_class _wrap_class_CvString = {"CvString", &SWIGTYPE_p_CvString,0,_wrap_new_CvString,0,_wrap_delete_CvString,swig_CvString_members,swig_CvString_base_names,swig_CvString_base };
+static swig_octave_class _wrap_class_CvString = {"CvString", &SWIGTYPE_p_CvString,0,_wrap_new_CvString,_wrap_new_CvString_texinfo,_wrap_delete_CvString,swig_CvString_members,swig_CvString_base_names,swig_CvString_base };
 
 static octave_value_list _wrap_CvStringHashNode_hashval_set (const octave_value_list& args, int nargout) {
   CvStringHashNode *arg1 = (CvStringHashNode *) 0 ;
@@ -45245,7 +46152,7 @@ static swig_octave_member swig_CvStringHashNode_members[] = {
 };
 static const char *swig_CvStringHashNode_base_names[] = {0};
 static const swig_type_info *swig_CvStringHashNode_base[] = {0};
-static swig_octave_class _wrap_class_CvStringHashNode = {"CvStringHashNode", &SWIGTYPE_p_CvStringHashNode,0,_wrap_new_CvStringHashNode,0,_wrap_delete_CvStringHashNode,swig_CvStringHashNode_members,swig_CvStringHashNode_base_names,swig_CvStringHashNode_base };
+static swig_octave_class _wrap_class_CvStringHashNode = {"CvStringHashNode", &SWIGTYPE_p_CvStringHashNode,0,_wrap_new_CvStringHashNode,_wrap_new_CvStringHashNode_texinfo,_wrap_delete_CvStringHashNode,swig_CvStringHashNode_members,swig_CvStringHashNode_base_names,swig_CvStringHashNode_base };
 
 static octave_value_list _wrap_CvFileNode_tag_set (const octave_value_list& args, int nargout) {
   CvFileNode *arg1 = (CvFileNode *) 0 ;
@@ -45453,7 +46360,7 @@ static swig_octave_member swig_CvFileNode_members[] = {
 };
 static const char *swig_CvFileNode_base_names[] = {0};
 static const swig_type_info *swig_CvFileNode_base[] = {0};
-static swig_octave_class _wrap_class_CvFileNode = {"CvFileNode", &SWIGTYPE_p_CvFileNode,0,_wrap_new_CvFileNode,0,_wrap_delete_CvFileNode,swig_CvFileNode_members,swig_CvFileNode_base_names,swig_CvFileNode_base };
+static swig_octave_class _wrap_class_CvFileNode = {"CvFileNode", &SWIGTYPE_p_CvFileNode,0,_wrap_new_CvFileNode,_wrap_new_CvFileNode_texinfo,_wrap_delete_CvFileNode,swig_CvFileNode_members,swig_CvFileNode_base_names,swig_CvFileNode_base };
 
 static octave_value_list _wrap_CvFileNode_data_f_set (const octave_value_list& args, int nargout) {
   CvFileNode_data *arg1 = (CvFileNode_data *) 0 ;
@@ -45820,7 +46727,7 @@ static swig_octave_member swig_CvFileNode_data_members[] = {
 };
 static const char *swig_CvFileNode_data_base_names[] = {0};
 static const swig_type_info *swig_CvFileNode_data_base[] = {0};
-static swig_octave_class _wrap_class_CvFileNode_data = {"CvFileNode_data", &SWIGTYPE_p_CvFileNode_data,0,_wrap_new_CvFileNode_data,0,_wrap_delete_CvFileNode_data,swig_CvFileNode_data_members,swig_CvFileNode_data_base_names,swig_CvFileNode_data_base };
+static swig_octave_class _wrap_class_CvFileNode_data = {"CvFileNode_data", &SWIGTYPE_p_CvFileNode_data,0,_wrap_new_CvFileNode_data,_wrap_new_CvFileNode_data_texinfo,_wrap_delete_CvFileNode_data,swig_CvFileNode_data_members,swig_CvFileNode_data_base_names,swig_CvFileNode_data_base };
 
 static octave_value_list _wrap_CvTypeInfo_flags_set (const octave_value_list& args, int nargout) {
   CvTypeInfo *arg1 = (CvTypeInfo *) 0 ;
@@ -46475,7 +47382,7 @@ static swig_octave_member swig_CvTypeInfo_members[] = {
 };
 static const char *swig_CvTypeInfo_base_names[] = {0};
 static const swig_type_info *swig_CvTypeInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvTypeInfo = {"CvTypeInfo", &SWIGTYPE_p_CvTypeInfo,0,_wrap_new_CvTypeInfo,0,_wrap_delete_CvTypeInfo,swig_CvTypeInfo_members,swig_CvTypeInfo_base_names,swig_CvTypeInfo_base };
+static swig_octave_class _wrap_class_CvTypeInfo = {"CvTypeInfo", &SWIGTYPE_p_CvTypeInfo,0,_wrap_new_CvTypeInfo,_wrap_new_CvTypeInfo_texinfo,_wrap_delete_CvTypeInfo,swig_CvTypeInfo_members,swig_CvTypeInfo_base_names,swig_CvTypeInfo_base };
 
 static octave_value_list _wrap_CvPluginFuncInfo_func_addr_set (const octave_value_list& args, int nargout) {
   CvPluginFuncInfo *arg1 = (CvPluginFuncInfo *) 0 ;
@@ -46840,7 +47747,7 @@ static swig_octave_member swig_CvPluginFuncInfo_members[] = {
 };
 static const char *swig_CvPluginFuncInfo_base_names[] = {0};
 static const swig_type_info *swig_CvPluginFuncInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvPluginFuncInfo = {"CvPluginFuncInfo", &SWIGTYPE_p_CvPluginFuncInfo,0,_wrap_new_CvPluginFuncInfo,0,_wrap_delete_CvPluginFuncInfo,swig_CvPluginFuncInfo_members,swig_CvPluginFuncInfo_base_names,swig_CvPluginFuncInfo_base };
+static swig_octave_class _wrap_class_CvPluginFuncInfo = {"CvPluginFuncInfo", &SWIGTYPE_p_CvPluginFuncInfo,0,_wrap_new_CvPluginFuncInfo,_wrap_new_CvPluginFuncInfo_texinfo,_wrap_delete_CvPluginFuncInfo,swig_CvPluginFuncInfo_members,swig_CvPluginFuncInfo_base_names,swig_CvPluginFuncInfo_base };
 
 static octave_value_list _wrap_CvModuleInfo_next_set (const octave_value_list& args, int nargout) {
   CvModuleInfo *arg1 = (CvModuleInfo *) 0 ;
@@ -47152,7 +48059,7 @@ static swig_octave_member swig_CvModuleInfo_members[] = {
 };
 static const char *swig_CvModuleInfo_base_names[] = {0};
 static const swig_type_info *swig_CvModuleInfo_base[] = {0};
-static swig_octave_class _wrap_class_CvModuleInfo = {"CvModuleInfo", &SWIGTYPE_p_CvModuleInfo,0,_wrap_new_CvModuleInfo,0,_wrap_delete_CvModuleInfo,swig_CvModuleInfo_members,swig_CvModuleInfo_base_names,swig_CvModuleInfo_base };
+static swig_octave_class _wrap_class_CvModuleInfo = {"CvModuleInfo", &SWIGTYPE_p_CvModuleInfo,0,_wrap_new_CvModuleInfo,_wrap_new_CvModuleInfo_texinfo,_wrap_delete_CvModuleInfo,swig_CvModuleInfo_members,swig_CvModuleInfo_base_names,swig_CvModuleInfo_base };
 
 static octave_value_list _wrap_cvAlloc (const octave_value_list& args, int nargout) {
   size_t arg1 ;
@@ -48951,7 +49858,7 @@ static swig_octave_member swig_CvNArrayIterator_members[] = {
 };
 static const char *swig_CvNArrayIterator_base_names[] = {0};
 static const swig_type_info *swig_CvNArrayIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvNArrayIterator = {"CvNArrayIterator", &SWIGTYPE_p_CvNArrayIterator,0,_wrap_new_CvNArrayIterator,0,_wrap_delete_CvNArrayIterator,swig_CvNArrayIterator_members,swig_CvNArrayIterator_base_names,swig_CvNArrayIterator_base };
+static swig_octave_class _wrap_class_CvNArrayIterator = {"CvNArrayIterator", &SWIGTYPE_p_CvNArrayIterator,0,_wrap_new_CvNArrayIterator,_wrap_new_CvNArrayIterator_texinfo,_wrap_delete_CvNArrayIterator,swig_CvNArrayIterator_members,swig_CvNArrayIterator_base_names,swig_CvNArrayIterator_base };
 
 static octave_value_list _wrap_cvInitNArrayIterator (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -60979,7 +61886,7 @@ static swig_octave_member swig_CvFont_members[] = {
 };
 static const char *swig_CvFont_base_names[] = {0};
 static const swig_type_info *swig_CvFont_base[] = {0};
-static swig_octave_class _wrap_class_CvFont = {"CvFont", &SWIGTYPE_p_CvFont,0,_wrap_new_CvFont,0,_wrap_delete_CvFont,swig_CvFont_members,swig_CvFont_base_names,swig_CvFont_base };
+static swig_octave_class _wrap_class_CvFont = {"CvFont", &SWIGTYPE_p_CvFont,0,_wrap_new_CvFont,_wrap_new_CvFont_texinfo,_wrap_delete_CvFont,swig_CvFont_members,swig_CvFont_base_names,swig_CvFont_base };
 
 static octave_value_list _wrap_cvInitFont (const octave_value_list& args, int nargout) {
   CvFont *arg1 = (CvFont *) 0 ;
@@ -61740,7 +62647,7 @@ static swig_octave_member swig_CvTreeNodeIterator_members[] = {
 };
 static const char *swig_CvTreeNodeIterator_base_names[] = {0};
 static const swig_type_info *swig_CvTreeNodeIterator_base[] = {0};
-static swig_octave_class _wrap_class_CvTreeNodeIterator = {"CvTreeNodeIterator", &SWIGTYPE_p_CvTreeNodeIterator,0,_wrap_new_CvTreeNodeIterator,0,_wrap_delete_CvTreeNodeIterator,swig_CvTreeNodeIterator_members,swig_CvTreeNodeIterator_base_names,swig_CvTreeNodeIterator_base };
+static swig_octave_class _wrap_class_CvTreeNodeIterator = {"CvTreeNodeIterator", &SWIGTYPE_p_CvTreeNodeIterator,0,_wrap_new_CvTreeNodeIterator,_wrap_new_CvTreeNodeIterator_texinfo,_wrap_delete_CvTreeNodeIterator,swig_CvTreeNodeIterator_members,swig_CvTreeNodeIterator_base_names,swig_CvTreeNodeIterator_base };
 
 static octave_value_list _wrap_cvInitTreeNodeIterator (const octave_value_list& args, int nargout) {
   CvTreeNodeIterator *arg1 = (CvTreeNodeIterator *) 0 ;
@@ -67076,40 +67983,40 @@ fail:
 
 
 static swig_octave_member swig_CvImage_members[] = {
-{"clone",_wrap_CvImage_clone,0,0,0,0},
-{"create",_wrap_CvImage_create,0,0,0,0},
-{"release",_wrap_CvImage_release,0,0,0,0},
-{"clear",_wrap_CvImage_clear,0,0,0,0},
-{"attach",_wrap_CvImage_attach,0,0,0,0},
-{"detach",_wrap_CvImage_detach,0,0,0,0},
-{"load",_wrap_CvImage_load,0,0,0,0},
-{"read",_wrap_CvImage_read,0,0,0,0},
-{"save",_wrap_CvImage_save,0,0,0,0},
-{"write",_wrap_CvImage_write,0,0,0,0},
-{"show",_wrap_CvImage_show,0,0,0,0},
-{"is_valid",_wrap_CvImage_is_valid,0,0,0,0},
-{"width",_wrap_CvImage_width,0,0,0,0},
-{"height",_wrap_CvImage_height,0,0,0,0},
-{"size",_wrap_CvImage_size,0,0,0,0},
-{"roi_size",_wrap_CvImage_roi_size,0,0,0,0},
-{"roi",_wrap_CvImage_roi,0,0,0,0},
-{"coi",_wrap_CvImage_coi,0,0,0,0},
-{"set_roi",_wrap_CvImage_set_roi,0,0,0,0},
-{"reset_roi",_wrap_CvImage_reset_roi,0,0,0,0},
-{"set_coi",_wrap_CvImage_set_coi,0,0,0,0},
-{"depth",_wrap_CvImage_depth,0,0,0,0},
-{"channels",_wrap_CvImage_channels,0,0,0,0},
-{"pix_size",_wrap_CvImage_pix_size,0,0,0,0},
-{"data",_wrap_CvImage_data,0,0,0,0},
-{"step",_wrap_CvImage_step,0,0,0,0},
-{"origin",_wrap_CvImage_origin,0,0,0,0},
-{"roi_row",_wrap_CvImage_roi_row,0,0,0,0},
-{"asIplImage",_wrap_CvImage_asIplImage,0,0,0,0},
+{"clone",_wrap_CvImage_clone,0,0,0,_wrap_CvImage_clone_texinfo},
+{"create",_wrap_CvImage_create,0,0,0,_wrap_CvImage_create_texinfo},
+{"release",_wrap_CvImage_release,0,0,0,_wrap_CvImage_release_texinfo},
+{"clear",_wrap_CvImage_clear,0,0,0,_wrap_CvImage_clear_texinfo},
+{"attach",_wrap_CvImage_attach,0,0,0,_wrap_CvImage_attach_texinfo},
+{"detach",_wrap_CvImage_detach,0,0,0,_wrap_CvImage_detach_texinfo},
+{"load",_wrap_CvImage_load,0,0,0,_wrap_CvImage_load_texinfo},
+{"read",_wrap_CvImage_read,0,0,0,_wrap_CvImage_read_texinfo},
+{"save",_wrap_CvImage_save,0,0,0,_wrap_CvImage_save_texinfo},
+{"write",_wrap_CvImage_write,0,0,0,_wrap_CvImage_write_texinfo},
+{"show",_wrap_CvImage_show,0,0,0,_wrap_CvImage_show_texinfo},
+{"is_valid",_wrap_CvImage_is_valid,0,0,0,_wrap_CvImage_is_valid_texinfo},
+{"width",_wrap_CvImage_width,0,0,0,_wrap_CvImage_width_texinfo},
+{"height",_wrap_CvImage_height,0,0,0,_wrap_CvImage_height_texinfo},
+{"size",_wrap_CvImage_size,0,0,0,_wrap_CvImage_size_texinfo},
+{"roi_size",_wrap_CvImage_roi_size,0,0,0,_wrap_CvImage_roi_size_texinfo},
+{"roi",_wrap_CvImage_roi,0,0,0,_wrap_CvImage_roi_texinfo},
+{"coi",_wrap_CvImage_coi,0,0,0,_wrap_CvImage_coi_texinfo},
+{"set_roi",_wrap_CvImage_set_roi,0,0,0,_wrap_CvImage_set_roi_texinfo},
+{"reset_roi",_wrap_CvImage_reset_roi,0,0,0,_wrap_CvImage_reset_roi_texinfo},
+{"set_coi",_wrap_CvImage_set_coi,0,0,0,_wrap_CvImage_set_coi_texinfo},
+{"depth",_wrap_CvImage_depth,0,0,0,_wrap_CvImage_depth_texinfo},
+{"channels",_wrap_CvImage_channels,0,0,0,_wrap_CvImage_channels_texinfo},
+{"pix_size",_wrap_CvImage_pix_size,0,0,0,_wrap_CvImage_pix_size_texinfo},
+{"data",_wrap_CvImage_data,0,0,0,_wrap_CvImage_data_texinfo},
+{"step",_wrap_CvImage_step,0,0,0,_wrap_CvImage_step_texinfo},
+{"origin",_wrap_CvImage_origin,0,0,0,_wrap_CvImage_origin_texinfo},
+{"roi_row",_wrap_CvImage_roi_row,0,0,0,_wrap_CvImage_roi_row_texinfo},
+{"asIplImage",_wrap_CvImage_asIplImage,0,0,0,_wrap_CvImage_asIplImage_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvImage_base_names[] = {0};
 static const swig_type_info *swig_CvImage_base[] = {0};
-static swig_octave_class _wrap_class_CvImage = {"CvImage", &SWIGTYPE_p_CvImage,0,_wrap_new_CvImage,0,_wrap_delete_CvImage,swig_CvImage_members,swig_CvImage_base_names,swig_CvImage_base };
+static swig_octave_class _wrap_class_CvImage = {"CvImage", &SWIGTYPE_p_CvImage,0,_wrap_new_CvImage,_wrap_new_CvImage_texinfo,_wrap_delete_CvImage,swig_CvImage_members,swig_CvImage_base_names,swig_CvImage_base };
 
 static octave_value_list _wrap_new_CvMatrix__SWIG_0 (const octave_value_list& args, int nargout) {
   CvMatrix *result = 0 ;
@@ -69758,35 +70665,35 @@ fail:
 
 
 static swig_octave_member swig_CvMatrix_members[] = {
-{"clone",_wrap_CvMatrix_clone,0,0,0,0},
-{"set",_wrap_CvMatrix_set,0,0,0,0},
-{"create",_wrap_CvMatrix_create,0,0,0,0},
-{"addref",_wrap_CvMatrix_addref,0,0,0,0},
-{"release",_wrap_CvMatrix_release,0,0,0,0},
-{"clear",_wrap_CvMatrix_clear,0,0,0,0},
-{"load",_wrap_CvMatrix_load,0,0,0,0},
-{"read",_wrap_CvMatrix_read,0,0,0,0},
-{"save",_wrap_CvMatrix_save,0,0,0,0},
-{"write",_wrap_CvMatrix_write,0,0,0,0},
-{"show",_wrap_CvMatrix_show,0,0,0,0},
-{"is_valid",_wrap_CvMatrix_is_valid,0,0,0,0},
-{"rows",_wrap_CvMatrix_rows,0,0,0,0},
-{"cols",_wrap_CvMatrix_cols,0,0,0,0},
-{"size",_wrap_CvMatrix_size,0,0,0,0},
-{"type",_wrap_CvMatrix_type,0,0,0,0},
-{"depth",_wrap_CvMatrix_depth,0,0,0,0},
-{"channels",_wrap_CvMatrix_channels,0,0,0,0},
-{"pix_size",_wrap_CvMatrix_pix_size,0,0,0,0},
-{"data",_wrap_CvMatrix_data,0,0,0,0},
-{"step",_wrap_CvMatrix_step,0,0,0,0},
-{"set_data",_wrap_CvMatrix_set_data,0,0,0,0},
-{"row",_wrap_CvMatrix_row,0,0,0,0},
-{"asCvMat",_wrap_CvMatrix_asCvMat,0,0,0,0},
+{"clone",_wrap_CvMatrix_clone,0,0,0,_wrap_CvMatrix_clone_texinfo},
+{"set",_wrap_CvMatrix_set,0,0,0,_wrap_CvMatrix_set_texinfo},
+{"create",_wrap_CvMatrix_create,0,0,0,_wrap_CvMatrix_create_texinfo},
+{"addref",_wrap_CvMatrix_addref,0,0,0,_wrap_CvMatrix_addref_texinfo},
+{"release",_wrap_CvMatrix_release,0,0,0,_wrap_CvMatrix_release_texinfo},
+{"clear",_wrap_CvMatrix_clear,0,0,0,_wrap_CvMatrix_clear_texinfo},
+{"load",_wrap_CvMatrix_load,0,0,0,_wrap_CvMatrix_load_texinfo},
+{"read",_wrap_CvMatrix_read,0,0,0,_wrap_CvMatrix_read_texinfo},
+{"save",_wrap_CvMatrix_save,0,0,0,_wrap_CvMatrix_save_texinfo},
+{"write",_wrap_CvMatrix_write,0,0,0,_wrap_CvMatrix_write_texinfo},
+{"show",_wrap_CvMatrix_show,0,0,0,_wrap_CvMatrix_show_texinfo},
+{"is_valid",_wrap_CvMatrix_is_valid,0,0,0,_wrap_CvMatrix_is_valid_texinfo},
+{"rows",_wrap_CvMatrix_rows,0,0,0,_wrap_CvMatrix_rows_texinfo},
+{"cols",_wrap_CvMatrix_cols,0,0,0,_wrap_CvMatrix_cols_texinfo},
+{"size",_wrap_CvMatrix_size,0,0,0,_wrap_CvMatrix_size_texinfo},
+{"type",_wrap_CvMatrix_type,0,0,0,_wrap_CvMatrix_type_texinfo},
+{"depth",_wrap_CvMatrix_depth,0,0,0,_wrap_CvMatrix_depth_texinfo},
+{"channels",_wrap_CvMatrix_channels,0,0,0,_wrap_CvMatrix_channels_texinfo},
+{"pix_size",_wrap_CvMatrix_pix_size,0,0,0,_wrap_CvMatrix_pix_size_texinfo},
+{"data",_wrap_CvMatrix_data,0,0,0,_wrap_CvMatrix_data_texinfo},
+{"step",_wrap_CvMatrix_step,0,0,0,_wrap_CvMatrix_step_texinfo},
+{"set_data",_wrap_CvMatrix_set_data,0,0,0,_wrap_CvMatrix_set_data_texinfo},
+{"row",_wrap_CvMatrix_row,0,0,0,_wrap_CvMatrix_row_texinfo},
+{"asCvMat",_wrap_CvMatrix_asCvMat,0,0,0,_wrap_CvMatrix_asCvMat_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvMatrix_base_names[] = {0};
 static const swig_type_info *swig_CvMatrix_base[] = {0};
-static swig_octave_class _wrap_class_CvMatrix = {"CvMatrix", &SWIGTYPE_p_CvMatrix,0,_wrap_new_CvMatrix,0,_wrap_delete_CvMatrix,swig_CvMatrix_members,swig_CvMatrix_base_names,swig_CvMatrix_base };
+static swig_octave_class _wrap_class_CvMatrix = {"CvMatrix", &SWIGTYPE_p_CvMatrix,0,_wrap_new_CvMatrix,_wrap_new_CvMatrix_texinfo,_wrap_delete_CvMatrix,swig_CvMatrix_members,swig_CvMatrix_base_names,swig_CvMatrix_base };
 
 static octave_value_list _wrap_cvSetImageIOFunctions (const octave_value_list& args, int nargout) {
   CvLoadImageFunc arg1 = (CvLoadImageFunc) 0 ;
@@ -70020,7 +70927,7 @@ static swig_octave_member swig_CvModule_members[] = {
 };
 static const char *swig_CvModule_base_names[] = {0};
 static const swig_type_info *swig_CvModule_base[] = {0};
-static swig_octave_class _wrap_class_CvModule = {"CvModule", &SWIGTYPE_p_CvModule,0,_wrap_new_CvModule,0,_wrap_delete_CvModule,swig_CvModule_members,swig_CvModule_base_names,swig_CvModule_base };
+static swig_octave_class _wrap_class_CvModule = {"CvModule", &SWIGTYPE_p_CvModule,0,_wrap_new_CvModule,_wrap_new_CvModule_texinfo,_wrap_delete_CvModule,swig_CvModule_members,swig_CvModule_base_names,swig_CvModule_base };
 
 static octave_value_list _wrap_new_CvType__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -70575,7 +71482,7 @@ static swig_octave_member swig_CvType_members[] = {
 };
 static const char *swig_CvType_base_names[] = {0};
 static const swig_type_info *swig_CvType_base[] = {0};
-static swig_octave_class _wrap_class_CvType = {"CvType", &SWIGTYPE_p_CvType,0,_wrap_new_CvType,0,_wrap_delete_CvType,swig_CvType_members,swig_CvType_base_names,swig_CvType_base };
+static swig_octave_class _wrap_class_CvType = {"CvType", &SWIGTYPE_p_CvType,0,_wrap_new_CvType,_wrap_new_CvType_texinfo,_wrap_delete_CvType,swig_CvType_members,swig_CvType_base_names,swig_CvType_base };
 
 static octave_value_list _wrap_CvMoments_m00_set (const octave_value_list& args, int nargout) {
   CvMoments *arg1 = (CvMoments *) 0 ;
@@ -71701,7 +72608,7 @@ static swig_octave_member swig_CvMoments_members[] = {
 };
 static const char *swig_CvMoments_base_names[] = {0};
 static const swig_type_info *swig_CvMoments_base[] = {0};
-static swig_octave_class _wrap_class_CvMoments = {"CvMoments", &SWIGTYPE_p_CvMoments,0,_wrap_new_CvMoments,0,_wrap_delete_CvMoments,swig_CvMoments_members,swig_CvMoments_base_names,swig_CvMoments_base };
+static swig_octave_class _wrap_class_CvMoments = {"CvMoments", &SWIGTYPE_p_CvMoments,0,_wrap_new_CvMoments,_wrap_new_CvMoments_texinfo,_wrap_delete_CvMoments,swig_CvMoments_members,swig_CvMoments_base_names,swig_CvMoments_base };
 
 static octave_value_list _wrap_CvHuMoments_hu1_set (const octave_value_list& args, int nargout) {
   CvHuMoments *arg1 = (CvHuMoments *) 0 ;
@@ -72178,7 +73085,7 @@ static swig_octave_member swig_CvHuMoments_members[] = {
 };
 static const char *swig_CvHuMoments_base_names[] = {0};
 static const swig_type_info *swig_CvHuMoments_base[] = {0};
-static swig_octave_class _wrap_class_CvHuMoments = {"CvHuMoments", &SWIGTYPE_p_CvHuMoments,0,_wrap_new_CvHuMoments,0,_wrap_delete_CvHuMoments,swig_CvHuMoments_members,swig_CvHuMoments_base_names,swig_CvHuMoments_base };
+static swig_octave_class _wrap_class_CvHuMoments = {"CvHuMoments", &SWIGTYPE_p_CvHuMoments,0,_wrap_new_CvHuMoments,_wrap_new_CvHuMoments_texinfo,_wrap_delete_CvHuMoments,swig_CvHuMoments_members,swig_CvHuMoments_base_names,swig_CvHuMoments_base };
 
 static octave_value_list _wrap_CvConnectedComp_area_set (const octave_value_list& args, int nargout) {
   CvConnectedComp *arg1 = (CvConnectedComp *) 0 ;
@@ -72486,7 +73393,7 @@ static swig_octave_member swig_CvConnectedComp_members[] = {
 };
 static const char *swig_CvConnectedComp_base_names[] = {0};
 static const swig_type_info *swig_CvConnectedComp_base[] = {0};
-static swig_octave_class _wrap_class_CvConnectedComp = {"CvConnectedComp", &SWIGTYPE_p_CvConnectedComp,0,_wrap_new_CvConnectedComp,0,_wrap_delete_CvConnectedComp,swig_CvConnectedComp_members,swig_CvConnectedComp_base_names,swig_CvConnectedComp_base };
+static swig_octave_class _wrap_class_CvConnectedComp = {"CvConnectedComp", &SWIGTYPE_p_CvConnectedComp,0,_wrap_new_CvConnectedComp,_wrap_new_CvConnectedComp_texinfo,_wrap_delete_CvConnectedComp,swig_CvConnectedComp_members,swig_CvConnectedComp_base_names,swig_CvConnectedComp_base };
 
 static octave_value_list _wrap_CvChainPtReader_header_size_set (const octave_value_list& args, int nargout) {
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
@@ -73248,7 +74155,7 @@ static swig_octave_member swig_CvChainPtReader_members[] = {
 };
 static const char *swig_CvChainPtReader_base_names[] = {0};
 static const swig_type_info *swig_CvChainPtReader_base[] = {0};
-static swig_octave_class _wrap_class_CvChainPtReader = {"CvChainPtReader", &SWIGTYPE_p_CvChainPtReader,0,_wrap_new_CvChainPtReader,0,_wrap_delete_CvChainPtReader,swig_CvChainPtReader_members,swig_CvChainPtReader_base_names,swig_CvChainPtReader_base };
+static swig_octave_class _wrap_class_CvChainPtReader = {"CvChainPtReader", &SWIGTYPE_p_CvChainPtReader,0,_wrap_new_CvChainPtReader,_wrap_new_CvChainPtReader_texinfo,_wrap_delete_CvChainPtReader,swig_CvChainPtReader_members,swig_CvChainPtReader_base_names,swig_CvChainPtReader_base };
 
 static octave_value_list _wrap_CvContourTree_flags_set (const octave_value_list& args, int nargout) {
   CvContourTree *arg1 = (CvContourTree *) 0 ;
@@ -74302,7 +75209,7 @@ static swig_octave_member swig_CvContourTree_members[] = {
 };
 static const char *swig_CvContourTree_base_names[] = {0};
 static const swig_type_info *swig_CvContourTree_base[] = {0};
-static swig_octave_class _wrap_class_CvContourTree = {"CvContourTree", &SWIGTYPE_p_CvContourTree,0,_wrap_new_CvContourTree,0,_wrap_delete_CvContourTree,swig_CvContourTree_members,swig_CvContourTree_base_names,swig_CvContourTree_base };
+static swig_octave_class _wrap_class_CvContourTree = {"CvContourTree", &SWIGTYPE_p_CvContourTree,0,_wrap_new_CvContourTree,_wrap_new_CvContourTree_texinfo,_wrap_delete_CvContourTree,swig_CvContourTree_members,swig_CvContourTree_base_names,swig_CvContourTree_base };
 
 static octave_value_list _wrap_CvConvexityDefect_start_set (const octave_value_list& args, int nargout) {
   CvConvexityDefect *arg1 = (CvConvexityDefect *) 0 ;
@@ -74602,7 +75509,7 @@ static swig_octave_member swig_CvConvexityDefect_members[] = {
 };
 static const char *swig_CvConvexityDefect_base_names[] = {0};
 static const swig_type_info *swig_CvConvexityDefect_base[] = {0};
-static swig_octave_class _wrap_class_CvConvexityDefect = {"CvConvexityDefect", &SWIGTYPE_p_CvConvexityDefect,0,_wrap_new_CvConvexityDefect,0,_wrap_delete_CvConvexityDefect,swig_CvConvexityDefect_members,swig_CvConvexityDefect_base_names,swig_CvConvexityDefect_base };
+static swig_octave_class _wrap_class_CvConvexityDefect = {"CvConvexityDefect", &SWIGTYPE_p_CvConvexityDefect,0,_wrap_new_CvConvexityDefect,_wrap_new_CvConvexityDefect_texinfo,_wrap_delete_CvConvexityDefect,swig_CvConvexityDefect_members,swig_CvConvexityDefect_base_names,swig_CvConvexityDefect_base };
 
 static octave_value_list _wrap_CvQuadEdge2D_flags_set (const octave_value_list& args, int nargout) {
   CvQuadEdge2D *arg1 = (CvQuadEdge2D *) 0 ;
@@ -74855,7 +75762,7 @@ static swig_octave_member swig_CvQuadEdge2D_members[] = {
 };
 static const char *swig_CvQuadEdge2D_base_names[] = {0};
 static const swig_type_info *swig_CvQuadEdge2D_base[] = {0};
-static swig_octave_class _wrap_class_CvQuadEdge2D = {"CvQuadEdge2D", &SWIGTYPE_p_CvQuadEdge2D,0,_wrap_new_CvQuadEdge2D,0,_wrap_delete_CvQuadEdge2D,swig_CvQuadEdge2D_members,swig_CvQuadEdge2D_base_names,swig_CvQuadEdge2D_base };
+static swig_octave_class _wrap_class_CvQuadEdge2D = {"CvQuadEdge2D", &SWIGTYPE_p_CvQuadEdge2D,0,_wrap_new_CvQuadEdge2D,_wrap_new_CvQuadEdge2D_texinfo,_wrap_delete_CvQuadEdge2D,swig_CvQuadEdge2D_members,swig_CvQuadEdge2D_base_names,swig_CvQuadEdge2D_base };
 
 static octave_value_list _wrap_CvSubdiv2DPoint_flags_set (const octave_value_list& args, int nargout) {
   CvSubdiv2DPoint *arg1 = (CvSubdiv2DPoint *) 0 ;
@@ -75109,7 +76016,7 @@ static swig_octave_member swig_CvSubdiv2DPoint_members[] = {
 };
 static const char *swig_CvSubdiv2DPoint_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2DPoint_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2DPoint = {"CvSubdiv2DPoint", &SWIGTYPE_p_CvSubdiv2DPoint,0,_wrap_new_CvSubdiv2DPoint,0,_wrap_delete_CvSubdiv2DPoint,swig_CvSubdiv2DPoint_members,swig_CvSubdiv2DPoint_base_names,swig_CvSubdiv2DPoint_base };
+static swig_octave_class _wrap_class_CvSubdiv2DPoint = {"CvSubdiv2DPoint", &SWIGTYPE_p_CvSubdiv2DPoint,0,_wrap_new_CvSubdiv2DPoint,_wrap_new_CvSubdiv2DPoint_texinfo,_wrap_delete_CvSubdiv2DPoint,swig_CvSubdiv2DPoint_members,swig_CvSubdiv2DPoint_base_names,swig_CvSubdiv2DPoint_base };
 
 static octave_value_list _wrap_CvSubdiv2D_flags_set (const octave_value_list& args, int nargout) {
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
@@ -76614,13 +77521,13 @@ static swig_octave_member swig_CvSubdiv2D_members[] = {
 {"topleft",0,_wrap_CvSubdiv2D_topleft_get,_wrap_CvSubdiv2D_topleft_set,0,0},
 {"bottomright",0,_wrap_CvSubdiv2D_bottomright_get,_wrap_CvSubdiv2D_bottomright_set,0,0},
 {"edges",0,_wrap_CvSubdiv2D_edges_get,_wrap_CvSubdiv2D_edges_set,0,0},
-{"typed_edges_get",_wrap_CvSubdiv2D_typed_edges_get,0,0,0,0},
-{"typed_edges_set",_wrap_CvSubdiv2D_typed_edges_set,0,0,0,0},
+{"typed_edges_get",_wrap_CvSubdiv2D_typed_edges_get,0,0,0,_wrap_CvSubdiv2D_typed_edges_get_texinfo},
+{"typed_edges_set",_wrap_CvSubdiv2D_typed_edges_set,0,0,0,_wrap_CvSubdiv2D_typed_edges_set_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSubdiv2D_base_names[] = {0};
 static const swig_type_info *swig_CvSubdiv2D_base[] = {0};
-static swig_octave_class _wrap_class_CvSubdiv2D = {"CvSubdiv2D", &SWIGTYPE_p_CvSubdiv2D,0,_wrap_new_CvSubdiv2D,0,_wrap_delete_CvSubdiv2D,swig_CvSubdiv2D_members,swig_CvSubdiv2D_base_names,swig_CvSubdiv2D_base };
+static swig_octave_class _wrap_class_CvSubdiv2D = {"CvSubdiv2D", &SWIGTYPE_p_CvSubdiv2D,0,_wrap_new_CvSubdiv2D,_wrap_new_CvSubdiv2D_texinfo,_wrap_delete_CvSubdiv2D,swig_CvSubdiv2D_members,swig_CvSubdiv2D_base_names,swig_CvSubdiv2D_base };
 
 static octave_value_list _wrap_CvMatrix3_m_set (const octave_value_list& args, int nargout) {
   CvMatrix3 *arg1 = (CvMatrix3 *) 0 ;
@@ -76756,7 +77663,7 @@ static swig_octave_member swig_CvMatrix3_members[] = {
 };
 static const char *swig_CvMatrix3_base_names[] = {0};
 static const swig_type_info *swig_CvMatrix3_base[] = {0};
-static swig_octave_class _wrap_class_CvMatrix3 = {"CvMatrix3", &SWIGTYPE_p_CvMatrix3,0,_wrap_new_CvMatrix3,0,_wrap_delete_CvMatrix3,swig_CvMatrix3_members,swig_CvMatrix3_base_names,swig_CvMatrix3_base };
+static swig_octave_class _wrap_class_CvMatrix3 = {"CvMatrix3", &SWIGTYPE_p_CvMatrix3,0,_wrap_new_CvMatrix3,_wrap_new_CvMatrix3_texinfo,_wrap_delete_CvMatrix3,swig_CvMatrix3_members,swig_CvMatrix3_base_names,swig_CvMatrix3_base };
 
 static octave_value_list _wrap_CvConDensation_MP_set (const octave_value_list& args, int nargout) {
   CvConDensation *arg1 = (CvConDensation *) 0 ;
@@ -79406,7 +80313,7 @@ static swig_octave_member swig_CvHaarFeature_members[] = {
 };
 static const char *swig_CvHaarFeature_base_names[] = {0};
 static const swig_type_info *swig_CvHaarFeature_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarFeature = {"CvHaarFeature", &SWIGTYPE_p_CvHaarFeature,0,_wrap_new_CvHaarFeature,0,_wrap_delete_CvHaarFeature,swig_CvHaarFeature_members,swig_CvHaarFeature_base_names,swig_CvHaarFeature_base };
+static swig_octave_class _wrap_class_CvHaarFeature = {"CvHaarFeature", &SWIGTYPE_p_CvHaarFeature,0,_wrap_new_CvHaarFeature,_wrap_new_CvHaarFeature_texinfo,_wrap_delete_CvHaarFeature,swig_CvHaarFeature_members,swig_CvHaarFeature_base_names,swig_CvHaarFeature_base };
 
 static octave_value_list _wrap_CvHaarFeature_rect_r_set (const octave_value_list& args, int nargout) {
   CvHaarFeature_rect *arg1 = (CvHaarFeature_rect *) 0 ;
@@ -79588,7 +80495,7 @@ static swig_octave_member swig_CvHaarFeature_rect_members[] = {
 };
 static const char *swig_CvHaarFeature_rect_base_names[] = {0};
 static const swig_type_info *swig_CvHaarFeature_rect_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarFeature_rect = {"CvHaarFeature_rect", &SWIGTYPE_p_CvHaarFeature_rect,0,_wrap_new_CvHaarFeature_rect,0,_wrap_delete_CvHaarFeature_rect,swig_CvHaarFeature_rect_members,swig_CvHaarFeature_rect_base_names,swig_CvHaarFeature_rect_base };
+static swig_octave_class _wrap_class_CvHaarFeature_rect = {"CvHaarFeature_rect", &SWIGTYPE_p_CvHaarFeature_rect,0,_wrap_new_CvHaarFeature_rect,_wrap_new_CvHaarFeature_rect_texinfo,_wrap_delete_CvHaarFeature_rect,swig_CvHaarFeature_rect_members,swig_CvHaarFeature_rect_base_names,swig_CvHaarFeature_rect_base };
 
 static octave_value_list _wrap_CvHaarClassifier_count_set (const octave_value_list& args, int nargout) {
   CvHaarClassifier *arg1 = (CvHaarClassifier *) 0 ;
@@ -80006,7 +80913,7 @@ static swig_octave_member swig_CvHaarClassifier_members[] = {
 };
 static const char *swig_CvHaarClassifier_base_names[] = {0};
 static const swig_type_info *swig_CvHaarClassifier_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarClassifier = {"CvHaarClassifier", &SWIGTYPE_p_CvHaarClassifier,0,_wrap_new_CvHaarClassifier,0,_wrap_delete_CvHaarClassifier,swig_CvHaarClassifier_members,swig_CvHaarClassifier_base_names,swig_CvHaarClassifier_base };
+static swig_octave_class _wrap_class_CvHaarClassifier = {"CvHaarClassifier", &SWIGTYPE_p_CvHaarClassifier,0,_wrap_new_CvHaarClassifier,_wrap_new_CvHaarClassifier_texinfo,_wrap_delete_CvHaarClassifier,swig_CvHaarClassifier_members,swig_CvHaarClassifier_base_names,swig_CvHaarClassifier_base };
 
 static octave_value_list _wrap_CvHaarStageClassifier_count_set (const octave_value_list& args, int nargout) {
   CvHaarStageClassifier *arg1 = (CvHaarStageClassifier *) 0 ;
@@ -80424,7 +81331,7 @@ static swig_octave_member swig_CvHaarStageClassifier_members[] = {
 };
 static const char *swig_CvHaarStageClassifier_base_names[] = {0};
 static const swig_type_info *swig_CvHaarStageClassifier_base[] = {0};
-static swig_octave_class _wrap_class_CvHaarStageClassifier = {"CvHaarStageClassifier", &SWIGTYPE_p_CvHaarStageClassifier,0,_wrap_new_CvHaarStageClassifier,0,_wrap_delete_CvHaarStageClassifier,swig_CvHaarStageClassifier_members,swig_CvHaarStageClassifier_base_names,swig_CvHaarStageClassifier_base };
+static swig_octave_class _wrap_class_CvHaarStageClassifier = {"CvHaarStageClassifier", &SWIGTYPE_p_CvHaarStageClassifier,0,_wrap_new_CvHaarStageClassifier,_wrap_new_CvHaarStageClassifier_texinfo,_wrap_delete_CvHaarStageClassifier,swig_CvHaarStageClassifier_members,swig_CvHaarStageClassifier_base_names,swig_CvHaarStageClassifier_base };
 
 static octave_value_list _wrap_CvHaarClassifierCascade_flags_set (const octave_value_list& args, int nargout) {
   CvHaarClassifierCascade *arg1 = (CvHaarClassifierCascade *) 0 ;
@@ -81058,7 +81965,7 @@ static swig_octave_member swig_CvAvgComp_members[] = {
 };
 static const char *swig_CvAvgComp_base_names[] = {0};
 static const swig_type_info *swig_CvAvgComp_base[] = {0};
-static swig_octave_class _wrap_class_CvAvgComp = {"CvAvgComp", &SWIGTYPE_p_CvAvgComp,0,_wrap_new_CvAvgComp,0,_wrap_delete_CvAvgComp,swig_CvAvgComp_members,swig_CvAvgComp_base_names,swig_CvAvgComp_base };
+static swig_octave_class _wrap_class_CvAvgComp = {"CvAvgComp", &SWIGTYPE_p_CvAvgComp,0,_wrap_new_CvAvgComp,_wrap_new_CvAvgComp_texinfo,_wrap_delete_CvAvgComp,swig_CvAvgComp_members,swig_CvAvgComp_base_names,swig_CvAvgComp_base };
 
 static octave_value_list _wrap_cvCopyMakeBorder (const octave_value_list& args, int nargout) {
   CvArr *arg1 = (CvArr *) 0 ;
@@ -92735,22 +93642,22 @@ fail:
 
 
 static swig_octave_member swig_CvBaseImageFilter_members[] = {
-{"init",_wrap_CvBaseImageFilter_init,0,0,0,0},
-{"clear",_wrap_CvBaseImageFilter_clear,0,0,0,0},
-{"process",_wrap_CvBaseImageFilter_process,0,0,0,0},
-{"get_src_type",_wrap_CvBaseImageFilter_get_src_type,0,0,0,0},
-{"get_dst_type",_wrap_CvBaseImageFilter_get_dst_type,0,0,0,0},
-{"get_work_type",_wrap_CvBaseImageFilter_get_work_type,0,0,0,0},
-{"get_kernel_size",_wrap_CvBaseImageFilter_get_kernel_size,0,0,0,0},
-{"get_anchor",_wrap_CvBaseImageFilter_get_anchor,0,0,0,0},
-{"get_width",_wrap_CvBaseImageFilter_get_width,0,0,0,0},
-{"get_x_filter_func",_wrap_CvBaseImageFilter_get_x_filter_func,0,0,0,0},
-{"get_y_filter_func",_wrap_CvBaseImageFilter_get_y_filter_func,0,0,0,0},
+{"init",_wrap_CvBaseImageFilter_init,0,0,0,_wrap_CvBaseImageFilter_init_texinfo},
+{"clear",_wrap_CvBaseImageFilter_clear,0,0,0,_wrap_CvBaseImageFilter_clear_texinfo},
+{"process",_wrap_CvBaseImageFilter_process,0,0,0,_wrap_CvBaseImageFilter_process_texinfo},
+{"get_src_type",_wrap_CvBaseImageFilter_get_src_type,0,0,0,_wrap_CvBaseImageFilter_get_src_type_texinfo},
+{"get_dst_type",_wrap_CvBaseImageFilter_get_dst_type,0,0,0,_wrap_CvBaseImageFilter_get_dst_type_texinfo},
+{"get_work_type",_wrap_CvBaseImageFilter_get_work_type,0,0,0,_wrap_CvBaseImageFilter_get_work_type_texinfo},
+{"get_kernel_size",_wrap_CvBaseImageFilter_get_kernel_size,0,0,0,_wrap_CvBaseImageFilter_get_kernel_size_texinfo},
+{"get_anchor",_wrap_CvBaseImageFilter_get_anchor,0,0,0,_wrap_CvBaseImageFilter_get_anchor_texinfo},
+{"get_width",_wrap_CvBaseImageFilter_get_width,0,0,0,_wrap_CvBaseImageFilter_get_width_texinfo},
+{"get_x_filter_func",_wrap_CvBaseImageFilter_get_x_filter_func,0,0,0,_wrap_CvBaseImageFilter_get_x_filter_func_texinfo},
+{"get_y_filter_func",_wrap_CvBaseImageFilter_get_y_filter_func,0,0,0,_wrap_CvBaseImageFilter_get_y_filter_func_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvBaseImageFilter_base_names[] = {0};
 static const swig_type_info *swig_CvBaseImageFilter_base[] = {0};
-static swig_octave_class _wrap_class_CvBaseImageFilter = {"CvBaseImageFilter", &SWIGTYPE_p_CvBaseImageFilter,0,_wrap_new_CvBaseImageFilter,0,_wrap_delete_CvBaseImageFilter,swig_CvBaseImageFilter_members,swig_CvBaseImageFilter_base_names,swig_CvBaseImageFilter_base };
+static swig_octave_class _wrap_class_CvBaseImageFilter = {"CvBaseImageFilter", &SWIGTYPE_p_CvBaseImageFilter,0,_wrap_new_CvBaseImageFilter,_wrap_new_CvBaseImageFilter_texinfo,_wrap_delete_CvBaseImageFilter,swig_CvBaseImageFilter_members,swig_CvBaseImageFilter_base_names,swig_CvBaseImageFilter_base };
 
 static octave_value_list _wrap_new_CvSepFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvSepFilter *result = 0 ;
@@ -95317,22 +96224,22 @@ static octave_value_list _wrap_CvSepFilter_init_scharr_kernel (const octave_valu
 
 
 static swig_octave_member swig_CvSepFilter_members[] = {
-{"init_deriv",_wrap_CvSepFilter_init_deriv,0,0,0,0},
-{"init_gaussian",_wrap_CvSepFilter_init_gaussian,0,0,0,0},
-{"init",_wrap_CvSepFilter_init,0,0,0,0},
-{"clear",_wrap_CvSepFilter_clear,0,0,0,0},
-{"get_x_kernel",_wrap_CvSepFilter_get_x_kernel,0,0,0,0},
-{"get_y_kernel",_wrap_CvSepFilter_get_y_kernel,0,0,0,0},
-{"get_x_kernel_flags",_wrap_CvSepFilter_get_x_kernel_flags,0,0,0,0},
-{"get_y_kernel_flags",_wrap_CvSepFilter_get_y_kernel_flags,0,0,0,0},
-{"init_gaussian_kernel",_wrap_CvSepFilter_init_gaussian_kernel,0,0,1,0},
-{"init_sobel_kernel",_wrap_CvSepFilter_init_sobel_kernel,0,0,1,0},
-{"init_scharr_kernel",_wrap_CvSepFilter_init_scharr_kernel,0,0,1,0},
+{"init_deriv",_wrap_CvSepFilter_init_deriv,0,0,0,_wrap_CvSepFilter_init_deriv_texinfo},
+{"init_gaussian",_wrap_CvSepFilter_init_gaussian,0,0,0,_wrap_CvSepFilter_init_gaussian_texinfo},
+{"init",_wrap_CvSepFilter_init,0,0,0,_wrap_CvSepFilter_init_texinfo},
+{"clear",_wrap_CvSepFilter_clear,0,0,0,_wrap_CvSepFilter_clear_texinfo},
+{"get_x_kernel",_wrap_CvSepFilter_get_x_kernel,0,0,0,_wrap_CvSepFilter_get_x_kernel_texinfo},
+{"get_y_kernel",_wrap_CvSepFilter_get_y_kernel,0,0,0,_wrap_CvSepFilter_get_y_kernel_texinfo},
+{"get_x_kernel_flags",_wrap_CvSepFilter_get_x_kernel_flags,0,0,0,_wrap_CvSepFilter_get_x_kernel_flags_texinfo},
+{"get_y_kernel_flags",_wrap_CvSepFilter_get_y_kernel_flags,0,0,0,_wrap_CvSepFilter_get_y_kernel_flags_texinfo},
+{"init_gaussian_kernel",_wrap_CvSepFilter_init_gaussian_kernel,0,0,1,_wrap_CvSepFilter_init_gaussian_kernel_texinfo},
+{"init_sobel_kernel",_wrap_CvSepFilter_init_sobel_kernel,0,0,1,_wrap_CvSepFilter_init_sobel_kernel_texinfo},
+{"init_scharr_kernel",_wrap_CvSepFilter_init_scharr_kernel,0,0,1,_wrap_CvSepFilter_init_scharr_kernel_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSepFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvSepFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSepFilter = {"CvSepFilter", &SWIGTYPE_p_CvSepFilter,0,_wrap_new_CvSepFilter,0,_wrap_delete_CvSepFilter,swig_CvSepFilter_members,swig_CvSepFilter_base_names,swig_CvSepFilter_base };
+static swig_octave_class _wrap_class_CvSepFilter = {"CvSepFilter", &SWIGTYPE_p_CvSepFilter,0,_wrap_new_CvSepFilter,_wrap_new_CvSepFilter_texinfo,_wrap_delete_CvSepFilter,swig_CvSepFilter_members,swig_CvSepFilter_base_names,swig_CvSepFilter_base };
 
 static octave_value_list _wrap_new_CvLinearFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvLinearFilter *result = 0 ;
@@ -96926,16 +97833,16 @@ fail:
 
 
 static swig_octave_member swig_CvLinearFilter_members[] = {
-{"init",_wrap_CvLinearFilter_init,0,0,0,0},
-{"clear",_wrap_CvLinearFilter_clear,0,0,0,0},
-{"get_kernel",_wrap_CvLinearFilter_get_kernel,0,0,0,0},
-{"get_kernel_sparse_buf",_wrap_CvLinearFilter_get_kernel_sparse_buf,0,0,0,0},
-{"get_kernel_sparse_count",_wrap_CvLinearFilter_get_kernel_sparse_count,0,0,0,0},
+{"init",_wrap_CvLinearFilter_init,0,0,0,_wrap_CvLinearFilter_init_texinfo},
+{"clear",_wrap_CvLinearFilter_clear,0,0,0,_wrap_CvLinearFilter_clear_texinfo},
+{"get_kernel",_wrap_CvLinearFilter_get_kernel,0,0,0,_wrap_CvLinearFilter_get_kernel_texinfo},
+{"get_kernel_sparse_buf",_wrap_CvLinearFilter_get_kernel_sparse_buf,0,0,0,_wrap_CvLinearFilter_get_kernel_sparse_buf_texinfo},
+{"get_kernel_sparse_count",_wrap_CvLinearFilter_get_kernel_sparse_count,0,0,0,_wrap_CvLinearFilter_get_kernel_sparse_count_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvLinearFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvLinearFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvLinearFilter = {"CvLinearFilter", &SWIGTYPE_p_CvLinearFilter,0,_wrap_new_CvLinearFilter,0,_wrap_delete_CvLinearFilter,swig_CvLinearFilter_members,swig_CvLinearFilter_base_names,swig_CvLinearFilter_base };
+static swig_octave_class _wrap_class_CvLinearFilter = {"CvLinearFilter", &SWIGTYPE_p_CvLinearFilter,0,_wrap_new_CvLinearFilter,_wrap_new_CvLinearFilter_texinfo,_wrap_delete_CvLinearFilter,swig_CvLinearFilter_members,swig_CvLinearFilter_base_names,swig_CvLinearFilter_base };
 
 static octave_value_list _wrap_new_CvBoxFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvBoxFilter *result = 0 ;
@@ -98162,16 +99069,16 @@ fail:
 
 
 static swig_octave_member swig_CvBoxFilter_members[] = {
-{"init",_wrap_CvBoxFilter_init,0,0,0,0},
-{"is_normalized",_wrap_CvBoxFilter_is_normalized,0,0,0,0},
-{"get_scale",_wrap_CvBoxFilter_get_scale,0,0,0,0},
-{"get_sum_buf",_wrap_CvBoxFilter_get_sum_buf,0,0,0,0},
-{"get_sum_count_ptr",_wrap_CvBoxFilter_get_sum_count_ptr,0,0,0,0},
+{"init",_wrap_CvBoxFilter_init,0,0,0,_wrap_CvBoxFilter_init_texinfo},
+{"is_normalized",_wrap_CvBoxFilter_is_normalized,0,0,0,_wrap_CvBoxFilter_is_normalized_texinfo},
+{"get_scale",_wrap_CvBoxFilter_get_scale,0,0,0,_wrap_CvBoxFilter_get_scale_texinfo},
+{"get_sum_buf",_wrap_CvBoxFilter_get_sum_buf,0,0,0,_wrap_CvBoxFilter_get_sum_buf_texinfo},
+{"get_sum_count_ptr",_wrap_CvBoxFilter_get_sum_count_ptr,0,0,0,_wrap_CvBoxFilter_get_sum_count_ptr_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvBoxFilter_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvBoxFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvBoxFilter = {"CvBoxFilter", &SWIGTYPE_p_CvBoxFilter,0,_wrap_new_CvBoxFilter,0,_wrap_delete_CvBoxFilter,swig_CvBoxFilter_members,swig_CvBoxFilter_base_names,swig_CvBoxFilter_base };
+static swig_octave_class _wrap_class_CvBoxFilter = {"CvBoxFilter", &SWIGTYPE_p_CvBoxFilter,0,_wrap_new_CvBoxFilter,_wrap_new_CvBoxFilter_texinfo,_wrap_delete_CvBoxFilter,swig_CvBoxFilter_members,swig_CvBoxFilter_base_names,swig_CvBoxFilter_base };
 
 static octave_value_list _wrap_new_CvLaplaceFilter__SWIG_0 (const octave_value_list& args, int nargout) {
   CvLaplaceFilter *result = 0 ;
@@ -100056,14 +100963,14 @@ fail:
 
 
 static swig_octave_member swig_CvLaplaceFilter_members[] = {
-{"init",_wrap_CvLaplaceFilter_init,0,0,0,0},
-{"is_normalized",_wrap_CvLaplaceFilter_is_normalized,0,0,0,0},
-{"is_basic_laplacian",_wrap_CvLaplaceFilter_is_basic_laplacian,0,0,0,0},
+{"init",_wrap_CvLaplaceFilter_init,0,0,0,_wrap_CvLaplaceFilter_init_texinfo},
+{"is_normalized",_wrap_CvLaplaceFilter_is_normalized,0,0,0,_wrap_CvLaplaceFilter_is_normalized_texinfo},
+{"is_basic_laplacian",_wrap_CvLaplaceFilter_is_basic_laplacian,0,0,0,_wrap_CvLaplaceFilter_is_basic_laplacian_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvLaplaceFilter_base_names[] = {"_p_CvSepFilter",0};
 static const swig_type_info *swig_CvLaplaceFilter_base[] = {0,0};
-static swig_octave_class _wrap_class_CvLaplaceFilter = {"CvLaplaceFilter", &SWIGTYPE_p_CvLaplaceFilter,0,_wrap_new_CvLaplaceFilter,0,_wrap_delete_CvLaplaceFilter,swig_CvLaplaceFilter_members,swig_CvLaplaceFilter_base_names,swig_CvLaplaceFilter_base };
+static swig_octave_class _wrap_class_CvLaplaceFilter = {"CvLaplaceFilter", &SWIGTYPE_p_CvLaplaceFilter,0,_wrap_new_CvLaplaceFilter,_wrap_new_CvLaplaceFilter_texinfo,_wrap_delete_CvLaplaceFilter,swig_CvLaplaceFilter_members,swig_CvLaplaceFilter_base_names,swig_CvLaplaceFilter_base };
 
 static octave_value_list _wrap_new_CvMorphology__SWIG_0 (const octave_value_list& args, int nargout) {
   CvMorphology *result = 0 ;
@@ -102326,19 +103233,19 @@ static octave_value_list _wrap_CvMorphology_init_binary_element (const octave_va
 
 
 static swig_octave_member swig_CvMorphology_members[] = {
-{"init",_wrap_CvMorphology_init,0,0,0,0},
-{"clear",_wrap_CvMorphology_clear,0,0,0,0},
-{"get_element",_wrap_CvMorphology_get_element,0,0,0,0},
-{"get_element_shape",_wrap_CvMorphology_get_element_shape,0,0,0,0},
-{"get_operation",_wrap_CvMorphology_get_operation,0,0,0,0},
-{"get_element_sparse_buf",_wrap_CvMorphology_get_element_sparse_buf,0,0,0,0},
-{"get_element_sparse_count",_wrap_CvMorphology_get_element_sparse_count,0,0,0,0},
-{"init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,1,0},
+{"init",_wrap_CvMorphology_init,0,0,0,_wrap_CvMorphology_init_texinfo},
+{"clear",_wrap_CvMorphology_clear,0,0,0,_wrap_CvMorphology_clear_texinfo},
+{"get_element",_wrap_CvMorphology_get_element,0,0,0,_wrap_CvMorphology_get_element_texinfo},
+{"get_element_shape",_wrap_CvMorphology_get_element_shape,0,0,0,_wrap_CvMorphology_get_element_shape_texinfo},
+{"get_operation",_wrap_CvMorphology_get_operation,0,0,0,_wrap_CvMorphology_get_operation_texinfo},
+{"get_element_sparse_buf",_wrap_CvMorphology_get_element_sparse_buf,0,0,0,_wrap_CvMorphology_get_element_sparse_buf_texinfo},
+{"get_element_sparse_count",_wrap_CvMorphology_get_element_sparse_count,0,0,0,_wrap_CvMorphology_get_element_sparse_count_texinfo},
+{"init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,1,_wrap_CvMorphology_init_binary_element_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvMorphology_base_names[] = {"_p_CvBaseImageFilter",0};
 static const swig_type_info *swig_CvMorphology_base[] = {0,0};
-static swig_octave_class _wrap_class_CvMorphology = {"CvMorphology", &SWIGTYPE_p_CvMorphology,0,_wrap_new_CvMorphology,0,_wrap_delete_CvMorphology,swig_CvMorphology_members,swig_CvMorphology_base_names,swig_CvMorphology_base };
+static swig_octave_class _wrap_class_CvMorphology = {"CvMorphology", &SWIGTYPE_p_CvMorphology,0,_wrap_new_CvMorphology,_wrap_new_CvMorphology_texinfo,_wrap_delete_CvMorphology,swig_CvMorphology_members,swig_CvMorphology_base_names,swig_CvMorphology_base };
 
 static octave_value_list _wrap_CvTuple_CvPoint_2_val_set (const octave_value_list& args, int nargout) {
   CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
@@ -102555,13 +103462,13 @@ fail:
 
 static swig_octave_member swig_CvTuple_CvPoint_2_members[] = {
 {"val",0,_wrap_CvTuple_CvPoint_2_val_get,_wrap_CvTuple_CvPoint_2_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,0,0},
+{"__setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,0,_wrap_CvTuple_CvPoint_2___setitem___texinfo},
+{"__getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,0,_wrap_CvTuple_CvPoint_2___getitem___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_CvPoint_2_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_CvPoint_2_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_CvPoint_2 = {"CvTuple_CvPoint_2", &SWIGTYPE_p_CvTupleT_CvPoint_2_t,0,_wrap_new_CvTuple_CvPoint_2,0,_wrap_delete_CvTuple_CvPoint_2,swig_CvTuple_CvPoint_2_members,swig_CvTuple_CvPoint_2_base_names,swig_CvTuple_CvPoint_2_base };
+static swig_octave_class _wrap_class_CvTuple_CvPoint_2 = {"CvTuple_CvPoint_2", &SWIGTYPE_p_CvTupleT_CvPoint_2_t,0,_wrap_new_CvTuple_CvPoint_2,_wrap_new_CvTuple_CvPoint_2_texinfo,_wrap_delete_CvTuple_CvPoint_2,swig_CvTuple_CvPoint_2_members,swig_CvTuple_CvPoint_2_base_names,swig_CvTuple_CvPoint_2_base };
 
 static octave_value_list _wrap_CvTuple_float_2_val_set (const octave_value_list& args, int nargout) {
   CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
@@ -102778,13 +103685,13 @@ fail:
 
 static swig_octave_member swig_CvTuple_float_2_members[] = {
 {"val",0,_wrap_CvTuple_float_2_val_get,_wrap_CvTuple_float_2_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_float_2___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_float_2___getitem__,0,0,0,0},
+{"__setitem__",_wrap_CvTuple_float_2___setitem__,0,0,0,_wrap_CvTuple_float_2___setitem___texinfo},
+{"__getitem__",_wrap_CvTuple_float_2___getitem__,0,0,0,_wrap_CvTuple_float_2___getitem___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_float_2_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_float_2_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_float_2 = {"CvTuple_float_2", &SWIGTYPE_p_CvTupleT_float_2_t,0,_wrap_new_CvTuple_float_2,0,_wrap_delete_CvTuple_float_2,swig_CvTuple_float_2_members,swig_CvTuple_float_2_base_names,swig_CvTuple_float_2_base };
+static swig_octave_class _wrap_class_CvTuple_float_2 = {"CvTuple_float_2", &SWIGTYPE_p_CvTupleT_float_2_t,0,_wrap_new_CvTuple_float_2,_wrap_new_CvTuple_float_2_texinfo,_wrap_delete_CvTuple_float_2,swig_CvTuple_float_2_members,swig_CvTuple_float_2_base_names,swig_CvTuple_float_2_base };
 
 static octave_value_list _wrap_CvTuple_float_3_val_set (const octave_value_list& args, int nargout) {
   CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
@@ -103001,13 +103908,13 @@ fail:
 
 static swig_octave_member swig_CvTuple_float_3_members[] = {
 {"val",0,_wrap_CvTuple_float_3_val_get,_wrap_CvTuple_float_3_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_float_3___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_float_3___getitem__,0,0,0,0},
+{"__setitem__",_wrap_CvTuple_float_3___setitem__,0,0,0,_wrap_CvTuple_float_3___setitem___texinfo},
+{"__getitem__",_wrap_CvTuple_float_3___getitem__,0,0,0,_wrap_CvTuple_float_3___getitem___texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_float_3_base_names[] = {0};
 static const swig_type_info *swig_CvTuple_float_3_base[] = {0};
-static swig_octave_class _wrap_class_CvTuple_float_3 = {"CvTuple_float_3", &SWIGTYPE_p_CvTupleT_float_3_t,0,_wrap_new_CvTuple_float_3,0,_wrap_delete_CvTuple_float_3,swig_CvTuple_float_3_members,swig_CvTuple_float_3_base_names,swig_CvTuple_float_3_base };
+static swig_octave_class _wrap_class_CvTuple_float_3 = {"CvTuple_float_3", &SWIGTYPE_p_CvTupleT_float_3_t,0,_wrap_new_CvTuple_float_3,_wrap_new_CvTuple_float_3_texinfo,_wrap_delete_CvTuple_float_3,swig_CvTuple_float_3_members,swig_CvTuple_float_3_base_names,swig_CvTuple_float_3_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -103270,16 +104177,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvPoint_members[] = {
-{"cast",_wrap_CvSeq_CvPoint_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvPoint___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvPoint___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvPoint_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvPoint_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvPoint_cast,0,0,1,_wrap_CvSeq_CvPoint_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvPoint___getitem__,0,0,0,_wrap_CvSeq_CvPoint___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvPoint___setitem__,0,0,0,_wrap_CvSeq_CvPoint___setitem___texinfo},
+{"append",_wrap_CvSeq_CvPoint_append,0,0,0,_wrap_CvSeq_CvPoint_append_texinfo},
+{"pop",_wrap_CvSeq_CvPoint_pop,0,0,0,_wrap_CvSeq_CvPoint_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvPoint_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint = {"CvSeq_CvPoint", &SWIGTYPE_p_CvTypedSeqT_CvPoint_t,0,_wrap_new_CvSeq_CvPoint,0,_wrap_delete_CvSeq_CvPoint,swig_CvSeq_CvPoint_members,swig_CvSeq_CvPoint_base_names,swig_CvSeq_CvPoint_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint = {"CvSeq_CvPoint", &SWIGTYPE_p_CvTypedSeqT_CvPoint_t,0,_wrap_new_CvSeq_CvPoint,_wrap_new_CvSeq_CvPoint_texinfo,_wrap_delete_CvSeq_CvPoint,swig_CvSeq_CvPoint_members,swig_CvSeq_CvPoint_base_names,swig_CvSeq_CvPoint_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint2D32f_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -103542,16 +104449,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvPoint2D32f_members[] = {
-{"cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvPoint2D32f___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvPoint2D32f___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvPoint2D32f_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,1,_wrap_CvSeq_CvPoint2D32f_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvPoint2D32f___getitem__,0,0,0,_wrap_CvSeq_CvPoint2D32f___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvPoint2D32f___setitem__,0,0,0,_wrap_CvSeq_CvPoint2D32f___setitem___texinfo},
+{"append",_wrap_CvSeq_CvPoint2D32f_append,0,0,0,_wrap_CvSeq_CvPoint2D32f_append_texinfo},
+{"pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,0,_wrap_CvSeq_CvPoint2D32f_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvPoint2D32f_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint2D32f_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint2D32f = {"CvSeq_CvPoint2D32f", &SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t,0,_wrap_new_CvSeq_CvPoint2D32f,0,_wrap_delete_CvSeq_CvPoint2D32f,swig_CvSeq_CvPoint2D32f_members,swig_CvSeq_CvPoint2D32f_base_names,swig_CvSeq_CvPoint2D32f_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint2D32f = {"CvSeq_CvPoint2D32f", &SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t,0,_wrap_new_CvSeq_CvPoint2D32f,_wrap_new_CvSeq_CvPoint2D32f_texinfo,_wrap_delete_CvSeq_CvPoint2D32f,swig_CvSeq_CvPoint2D32f_members,swig_CvSeq_CvPoint2D32f_base_names,swig_CvSeq_CvPoint2D32f_base };
 
 static octave_value_list _wrap_CvSeq_CvRect_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -103814,16 +104721,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvRect_members[] = {
-{"cast",_wrap_CvSeq_CvRect_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvRect___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvRect___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvRect_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvRect_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvRect_cast,0,0,1,_wrap_CvSeq_CvRect_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvRect___getitem__,0,0,0,_wrap_CvSeq_CvRect___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvRect___setitem__,0,0,0,_wrap_CvSeq_CvRect___setitem___texinfo},
+{"append",_wrap_CvSeq_CvRect_append,0,0,0,_wrap_CvSeq_CvRect_append_texinfo},
+{"pop",_wrap_CvSeq_CvRect_pop,0,0,0,_wrap_CvSeq_CvRect_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvRect_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvRect_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvRect = {"CvSeq_CvRect", &SWIGTYPE_p_CvTypedSeqT_CvRect_t,0,_wrap_new_CvSeq_CvRect,0,_wrap_delete_CvSeq_CvRect,swig_CvSeq_CvRect_members,swig_CvSeq_CvRect_base_names,swig_CvSeq_CvRect_base };
+static swig_octave_class _wrap_class_CvSeq_CvRect = {"CvSeq_CvRect", &SWIGTYPE_p_CvTypedSeqT_CvRect_t,0,_wrap_new_CvSeq_CvRect,_wrap_new_CvSeq_CvRect_texinfo,_wrap_delete_CvSeq_CvRect,swig_CvSeq_CvRect_members,swig_CvSeq_CvRect_base_names,swig_CvSeq_CvRect_base };
 
 static octave_value_list _wrap_CvSeq_CvSeq_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -104090,16 +104997,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvSeq_members[] = {
-{"cast",_wrap_CvSeq_CvSeq_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvSeq___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvSeq___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvSeq_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvSeq_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvSeq_cast,0,0,1,_wrap_CvSeq_CvSeq_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvSeq___getitem__,0,0,0,_wrap_CvSeq_CvSeq___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvSeq___setitem__,0,0,0,_wrap_CvSeq_CvSeq___setitem___texinfo},
+{"append",_wrap_CvSeq_CvSeq_append,0,0,0,_wrap_CvSeq_CvSeq_append_texinfo},
+{"pop",_wrap_CvSeq_CvSeq_pop,0,0,0,_wrap_CvSeq_CvSeq_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvSeq_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvSeq_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvSeq = {"CvSeq_CvSeq", &SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t,0,_wrap_new_CvSeq_CvSeq,0,_wrap_delete_CvSeq_CvSeq,swig_CvSeq_CvSeq_members,swig_CvSeq_CvSeq_base_names,swig_CvSeq_CvSeq_base };
+static swig_octave_class _wrap_class_CvSeq_CvSeq = {"CvSeq_CvSeq", &SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t,0,_wrap_new_CvSeq_CvSeq,_wrap_new_CvSeq_CvSeq_texinfo,_wrap_delete_CvSeq_CvSeq,swig_CvSeq_CvSeq_members,swig_CvSeq_CvSeq_base_names,swig_CvSeq_CvSeq_base };
 
 static octave_value_list _wrap_CvSeq_CvQuadEdge2D_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -104362,16 +105269,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvQuadEdge2D_members[] = {
-{"cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvQuadEdge2D___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvQuadEdge2D___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,1,_wrap_CvSeq_CvQuadEdge2D_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvQuadEdge2D___getitem__,0,0,0,_wrap_CvSeq_CvQuadEdge2D___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvQuadEdge2D___setitem__,0,0,0,_wrap_CvSeq_CvQuadEdge2D___setitem___texinfo},
+{"append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,0,_wrap_CvSeq_CvQuadEdge2D_append_texinfo},
+{"pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,0,_wrap_CvSeq_CvQuadEdge2D_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvQuadEdge2D_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvQuadEdge2D_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvQuadEdge2D = {"CvSeq_CvQuadEdge2D", &SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t,0,_wrap_new_CvSeq_CvQuadEdge2D,0,_wrap_delete_CvSeq_CvQuadEdge2D,swig_CvSeq_CvQuadEdge2D_members,swig_CvSeq_CvQuadEdge2D_base_names,swig_CvSeq_CvQuadEdge2D_base };
+static swig_octave_class _wrap_class_CvSeq_CvQuadEdge2D = {"CvSeq_CvQuadEdge2D", &SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t,0,_wrap_new_CvSeq_CvQuadEdge2D,_wrap_new_CvSeq_CvQuadEdge2D_texinfo,_wrap_delete_CvSeq_CvQuadEdge2D,swig_CvSeq_CvQuadEdge2D_members,swig_CvSeq_CvQuadEdge2D_base_names,swig_CvSeq_CvQuadEdge2D_base };
 
 static octave_value_list _wrap_CvSeq_CvConnectedComp_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -104634,16 +105541,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvConnectedComp_members[] = {
-{"cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvConnectedComp___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvConnectedComp___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvConnectedComp_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,1,_wrap_CvSeq_CvConnectedComp_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvConnectedComp___getitem__,0,0,0,_wrap_CvSeq_CvConnectedComp___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvConnectedComp___setitem__,0,0,0,_wrap_CvSeq_CvConnectedComp___setitem___texinfo},
+{"append",_wrap_CvSeq_CvConnectedComp_append,0,0,0,_wrap_CvSeq_CvConnectedComp_append_texinfo},
+{"pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,0,_wrap_CvSeq_CvConnectedComp_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvConnectedComp_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvConnectedComp_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvConnectedComp = {"CvSeq_CvConnectedComp", &SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t,0,_wrap_new_CvSeq_CvConnectedComp,0,_wrap_delete_CvSeq_CvConnectedComp,swig_CvSeq_CvConnectedComp_members,swig_CvSeq_CvConnectedComp_base_names,swig_CvSeq_CvConnectedComp_base };
+static swig_octave_class _wrap_class_CvSeq_CvConnectedComp = {"CvSeq_CvConnectedComp", &SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t,0,_wrap_new_CvSeq_CvConnectedComp,_wrap_new_CvSeq_CvConnectedComp_texinfo,_wrap_delete_CvSeq_CvConnectedComp,swig_CvSeq_CvConnectedComp_members,swig_CvSeq_CvConnectedComp_base_names,swig_CvSeq_CvConnectedComp_base };
 
 static octave_value_list _wrap_CvSeq_CvPoint_2_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -104906,16 +105813,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_CvPoint_2_members[] = {
-{"cast",_wrap_CvSeq_CvPoint_2_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_CvPoint_2___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_CvPoint_2___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_CvPoint_2_append,0,0,0,0},
-{"pop",_wrap_CvSeq_CvPoint_2_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_CvPoint_2_cast,0,0,1,_wrap_CvSeq_CvPoint_2_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_CvPoint_2___getitem__,0,0,0,_wrap_CvSeq_CvPoint_2___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_CvPoint_2___setitem__,0,0,0,_wrap_CvSeq_CvPoint_2___setitem___texinfo},
+{"append",_wrap_CvSeq_CvPoint_2_append,0,0,0,_wrap_CvSeq_CvPoint_2_append_texinfo},
+{"pop",_wrap_CvSeq_CvPoint_2_pop,0,0,0,_wrap_CvSeq_CvPoint_2_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_CvPoint_2_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_CvPoint_2_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_CvPoint_2 = {"CvSeq_CvPoint_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,0,_wrap_new_CvSeq_CvPoint_2,0,_wrap_delete_CvSeq_CvPoint_2,swig_CvSeq_CvPoint_2_members,swig_CvSeq_CvPoint_2_base_names,swig_CvSeq_CvPoint_2_base };
+static swig_octave_class _wrap_class_CvSeq_CvPoint_2 = {"CvSeq_CvPoint_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,0,_wrap_new_CvSeq_CvPoint_2,_wrap_new_CvSeq_CvPoint_2_texinfo,_wrap_delete_CvSeq_CvPoint_2,swig_CvSeq_CvPoint_2_members,swig_CvSeq_CvPoint_2_base_names,swig_CvSeq_CvPoint_2_base };
 
 static octave_value_list _wrap_CvSeq_float_2_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -105178,16 +106085,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_float_2_members[] = {
-{"cast",_wrap_CvSeq_float_2_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_float_2___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_float_2___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_float_2_append,0,0,0,0},
-{"pop",_wrap_CvSeq_float_2_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_float_2_cast,0,0,1,_wrap_CvSeq_float_2_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_float_2___getitem__,0,0,0,_wrap_CvSeq_float_2___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_float_2___setitem__,0,0,0,_wrap_CvSeq_float_2___setitem___texinfo},
+{"append",_wrap_CvSeq_float_2_append,0,0,0,_wrap_CvSeq_float_2_append_texinfo},
+{"pop",_wrap_CvSeq_float_2_pop,0,0,0,_wrap_CvSeq_float_2_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_float_2_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_float_2_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_float_2 = {"CvSeq_float_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t,0,_wrap_new_CvSeq_float_2,0,_wrap_delete_CvSeq_float_2,swig_CvSeq_float_2_members,swig_CvSeq_float_2_base_names,swig_CvSeq_float_2_base };
+static swig_octave_class _wrap_class_CvSeq_float_2 = {"CvSeq_float_2", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t,0,_wrap_new_CvSeq_float_2,_wrap_new_CvSeq_float_2_texinfo,_wrap_delete_CvSeq_float_2,swig_CvSeq_float_2_members,swig_CvSeq_float_2_base_names,swig_CvSeq_float_2_base };
 
 static octave_value_list _wrap_CvSeq_float_3_cast (const octave_value_list& args, int nargout) {
   CvSeq *arg1 = (CvSeq *) 0 ;
@@ -105450,16 +106357,16 @@ fail:
 
 
 static swig_octave_member swig_CvSeq_float_3_members[] = {
-{"cast",_wrap_CvSeq_float_3_cast,0,0,1,0},
-{"__getitem__",_wrap_CvSeq_float_3___getitem__,0,0,0,0},
-{"__setitem__",_wrap_CvSeq_float_3___setitem__,0,0,0,0},
-{"append",_wrap_CvSeq_float_3_append,0,0,0,0},
-{"pop",_wrap_CvSeq_float_3_pop,0,0,0,0},
+{"cast",_wrap_CvSeq_float_3_cast,0,0,1,_wrap_CvSeq_float_3_cast_texinfo},
+{"__getitem__",_wrap_CvSeq_float_3___getitem__,0,0,0,_wrap_CvSeq_float_3___getitem___texinfo},
+{"__setitem__",_wrap_CvSeq_float_3___setitem__,0,0,0,_wrap_CvSeq_float_3___setitem___texinfo},
+{"append",_wrap_CvSeq_float_3_append,0,0,0,_wrap_CvSeq_float_3_append_texinfo},
+{"pop",_wrap_CvSeq_float_3_pop,0,0,0,_wrap_CvSeq_float_3_pop_texinfo},
 {0,0,0,0}
 };
 static const char *swig_CvSeq_float_3_base_names[] = {"_p_CvSeq",0};
 static const swig_type_info *swig_CvSeq_float_3_base[] = {0,0};
-static swig_octave_class _wrap_class_CvSeq_float_3 = {"CvSeq_float_3", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t,0,_wrap_new_CvSeq_float_3,0,_wrap_delete_CvSeq_float_3,swig_CvSeq_float_3_members,swig_CvSeq_float_3_base_names,swig_CvSeq_float_3_base };
+static swig_octave_class _wrap_class_CvSeq_float_3 = {"CvSeq_float_3", &SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t,0,_wrap_new_CvSeq_float_3,_wrap_new_CvSeq_float_3_texinfo,_wrap_delete_CvSeq_float_3,swig_CvSeq_float_3_members,swig_CvSeq_float_3_base_names,swig_CvSeq_float_3_base };
 
 static octave_value_list _wrap_SendErrorToPython (const octave_value_list& args, int nargout) {
   int arg1 ;
@@ -105821,20 +106728,20 @@ static const struct swig_octave_member swig_globals[] = {
 {"icvDepthToType",0,_wrap_icvDepthToType_get,_wrap_icvDepthToType_set,2,0},
 {"cvCreateImage",_wrap_cvCreateImage,0,0,2,_wrap_cvCreateImage_texinfo},
 {"cvCloneImage",_wrap_cvCloneImage,0,0,2,_wrap_cvCloneImage_texinfo},
-{"Cv32suf_i_set",_wrap_Cv32suf_i_set,0,0,2,0},
-{"Cv32suf_i_get",_wrap_Cv32suf_i_get,0,0,2,0},
-{"Cv32suf_u_set",_wrap_Cv32suf_u_set,0,0,2,0},
-{"Cv32suf_u_get",_wrap_Cv32suf_u_get,0,0,2,0},
-{"Cv32suf_f_set",_wrap_Cv32suf_f_set,0,0,2,0},
-{"Cv32suf_f_get",_wrap_Cv32suf_f_get,0,0,2,0},
+{"Cv32suf_i_set",_wrap_Cv32suf_i_set,0,0,2,_wrap_Cv32suf_i_set_texinfo},
+{"Cv32suf_i_get",_wrap_Cv32suf_i_get,0,0,2,_wrap_Cv32suf_i_get_texinfo},
+{"Cv32suf_u_set",_wrap_Cv32suf_u_set,0,0,2,_wrap_Cv32suf_u_set_texinfo},
+{"Cv32suf_u_get",_wrap_Cv32suf_u_get,0,0,2,_wrap_Cv32suf_u_get_texinfo},
+{"Cv32suf_f_set",_wrap_Cv32suf_f_set,0,0,2,_wrap_Cv32suf_f_set_texinfo},
+{"Cv32suf_f_get",_wrap_Cv32suf_f_get,0,0,2,_wrap_Cv32suf_f_get_texinfo},
 {"new_Cv32suf",_wrap_new_Cv32suf,0,0,2,_wrap_new_Cv32suf_texinfo},
 {"delete_Cv32suf",_wrap_delete_Cv32suf,0,0,2,_wrap_delete_Cv32suf_texinfo},
-{"Cv64suf_i_set",_wrap_Cv64suf_i_set,0,0,2,0},
-{"Cv64suf_i_get",_wrap_Cv64suf_i_get,0,0,2,0},
-{"Cv64suf_u_set",_wrap_Cv64suf_u_set,0,0,2,0},
-{"Cv64suf_u_get",_wrap_Cv64suf_u_get,0,0,2,0},
-{"Cv64suf_f_set",_wrap_Cv64suf_f_set,0,0,2,0},
-{"Cv64suf_f_get",_wrap_Cv64suf_f_get,0,0,2,0},
+{"Cv64suf_i_set",_wrap_Cv64suf_i_set,0,0,2,_wrap_Cv64suf_i_set_texinfo},
+{"Cv64suf_i_get",_wrap_Cv64suf_i_get,0,0,2,_wrap_Cv64suf_i_get_texinfo},
+{"Cv64suf_u_set",_wrap_Cv64suf_u_set,0,0,2,_wrap_Cv64suf_u_set_texinfo},
+{"Cv64suf_u_get",_wrap_Cv64suf_u_get,0,0,2,_wrap_Cv64suf_u_get_texinfo},
+{"Cv64suf_f_set",_wrap_Cv64suf_f_set,0,0,2,_wrap_Cv64suf_f_set_texinfo},
+{"Cv64suf_f_get",_wrap_Cv64suf_f_get,0,0,2,_wrap_Cv64suf_f_get_texinfo},
 {"new_Cv64suf",_wrap_new_Cv64suf,0,0,2,_wrap_new_Cv64suf_texinfo},
 {"delete_Cv64suf",_wrap_delete_Cv64suf,0,0,2,_wrap_delete_Cv64suf_texinfo},
 {"cvRound",_wrap_cvRound,0,0,2,_wrap_cvRound_texinfo},
@@ -105845,28 +106752,28 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvRNG",_wrap_cvRNG,0,0,2,_wrap_cvRNG_texinfo},
 {"cvRandInt",_wrap_cvRandInt,0,0,2,_wrap_cvRandInt_texinfo},
 {"cvRandReal",_wrap_cvRandReal,0,0,2,_wrap_cvRandReal_texinfo},
-{"IplImage_ID_set",_wrap_IplImage_ID_set,0,0,2,0},
-{"IplImage_ID_get",_wrap_IplImage_ID_get,0,0,2,0},
-{"IplImage_nChannels_set",_wrap_IplImage_nChannels_set,0,0,2,0},
-{"IplImage_nChannels_get",_wrap_IplImage_nChannels_get,0,0,2,0},
-{"IplImage_depth_set",_wrap_IplImage_depth_set,0,0,2,0},
-{"IplImage_depth_get",_wrap_IplImage_depth_get,0,0,2,0},
-{"IplImage_dataOrder_set",_wrap_IplImage_dataOrder_set,0,0,2,0},
-{"IplImage_dataOrder_get",_wrap_IplImage_dataOrder_get,0,0,2,0},
-{"IplImage_origin_set",_wrap_IplImage_origin_set,0,0,2,0},
-{"IplImage_origin_get",_wrap_IplImage_origin_get,0,0,2,0},
-{"IplImage_align_set",_wrap_IplImage_align_set,0,0,2,0},
-{"IplImage_align_get",_wrap_IplImage_align_get,0,0,2,0},
-{"IplImage_width_set",_wrap_IplImage_width_set,0,0,2,0},
-{"IplImage_width_get",_wrap_IplImage_width_get,0,0,2,0},
-{"IplImage_height_set",_wrap_IplImage_height_set,0,0,2,0},
-{"IplImage_height_get",_wrap_IplImage_height_get,0,0,2,0},
-{"IplImage_roi_set",_wrap_IplImage_roi_set,0,0,2,0},
-{"IplImage_roi_get",_wrap_IplImage_roi_get,0,0,2,0},
-{"IplImage_imageSize_set",_wrap_IplImage_imageSize_set,0,0,2,0},
-{"IplImage_imageSize_get",_wrap_IplImage_imageSize_get,0,0,2,0},
-{"IplImage_widthStep_set",_wrap_IplImage_widthStep_set,0,0,2,0},
-{"IplImage_widthStep_get",_wrap_IplImage_widthStep_get,0,0,2,0},
+{"IplImage_ID_set",_wrap_IplImage_ID_set,0,0,2,_wrap_IplImage_ID_set_texinfo},
+{"IplImage_ID_get",_wrap_IplImage_ID_get,0,0,2,_wrap_IplImage_ID_get_texinfo},
+{"IplImage_nChannels_set",_wrap_IplImage_nChannels_set,0,0,2,_wrap_IplImage_nChannels_set_texinfo},
+{"IplImage_nChannels_get",_wrap_IplImage_nChannels_get,0,0,2,_wrap_IplImage_nChannels_get_texinfo},
+{"IplImage_depth_set",_wrap_IplImage_depth_set,0,0,2,_wrap_IplImage_depth_set_texinfo},
+{"IplImage_depth_get",_wrap_IplImage_depth_get,0,0,2,_wrap_IplImage_depth_get_texinfo},
+{"IplImage_dataOrder_set",_wrap_IplImage_dataOrder_set,0,0,2,_wrap_IplImage_dataOrder_set_texinfo},
+{"IplImage_dataOrder_get",_wrap_IplImage_dataOrder_get,0,0,2,_wrap_IplImage_dataOrder_get_texinfo},
+{"IplImage_origin_set",_wrap_IplImage_origin_set,0,0,2,_wrap_IplImage_origin_set_texinfo},
+{"IplImage_origin_get",_wrap_IplImage_origin_get,0,0,2,_wrap_IplImage_origin_get_texinfo},
+{"IplImage_align_set",_wrap_IplImage_align_set,0,0,2,_wrap_IplImage_align_set_texinfo},
+{"IplImage_align_get",_wrap_IplImage_align_get,0,0,2,_wrap_IplImage_align_get_texinfo},
+{"IplImage_width_set",_wrap_IplImage_width_set,0,0,2,_wrap_IplImage_width_set_texinfo},
+{"IplImage_width_get",_wrap_IplImage_width_get,0,0,2,_wrap_IplImage_width_get_texinfo},
+{"IplImage_height_set",_wrap_IplImage_height_set,0,0,2,_wrap_IplImage_height_set_texinfo},
+{"IplImage_height_get",_wrap_IplImage_height_get,0,0,2,_wrap_IplImage_height_get_texinfo},
+{"IplImage_roi_set",_wrap_IplImage_roi_set,0,0,2,_wrap_IplImage_roi_set_texinfo},
+{"IplImage_roi_get",_wrap_IplImage_roi_get,0,0,2,_wrap_IplImage_roi_get_texinfo},
+{"IplImage_imageSize_set",_wrap_IplImage_imageSize_set,0,0,2,_wrap_IplImage_imageSize_set_texinfo},
+{"IplImage_imageSize_get",_wrap_IplImage_imageSize_get,0,0,2,_wrap_IplImage_imageSize_get_texinfo},
+{"IplImage_widthStep_set",_wrap_IplImage_widthStep_set,0,0,2,_wrap_IplImage_widthStep_set_texinfo},
+{"IplImage_widthStep_get",_wrap_IplImage_widthStep_get,0,0,2,_wrap_IplImage_widthStep_get_texinfo},
 {"delete_IplImage",_wrap_delete_IplImage,0,0,2,_wrap_delete_IplImage_texinfo},
 {"IplImage___mul",_wrap_IplImage___mul,0,0,2,_wrap_IplImage___mul_texinfo},
 {"IplImage___add",_wrap_IplImage___add,0,0,2,_wrap_IplImage___add_texinfo},
@@ -105896,63 +106803,63 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplImage___str",_wrap_IplImage___str,0,0,2,_wrap_IplImage___str_texinfo},
 {"IplImage___paren_asgn",_wrap_IplImage___paren_asgn,0,0,2,_wrap_IplImage___paren_asgn_texinfo},
 {"IplImage___paren",_wrap_IplImage___paren,0,0,2,_wrap_IplImage___paren_texinfo},
-{"IplROI_coi_set",_wrap_IplROI_coi_set,0,0,2,0},
-{"IplROI_coi_get",_wrap_IplROI_coi_get,0,0,2,0},
-{"IplROI_xOffset_set",_wrap_IplROI_xOffset_set,0,0,2,0},
-{"IplROI_xOffset_get",_wrap_IplROI_xOffset_get,0,0,2,0},
-{"IplROI_yOffset_set",_wrap_IplROI_yOffset_set,0,0,2,0},
-{"IplROI_yOffset_get",_wrap_IplROI_yOffset_get,0,0,2,0},
-{"IplROI_width_set",_wrap_IplROI_width_set,0,0,2,0},
-{"IplROI_width_get",_wrap_IplROI_width_get,0,0,2,0},
-{"IplROI_height_set",_wrap_IplROI_height_set,0,0,2,0},
-{"IplROI_height_get",_wrap_IplROI_height_get,0,0,2,0},
+{"IplROI_coi_set",_wrap_IplROI_coi_set,0,0,2,_wrap_IplROI_coi_set_texinfo},
+{"IplROI_coi_get",_wrap_IplROI_coi_get,0,0,2,_wrap_IplROI_coi_get_texinfo},
+{"IplROI_xOffset_set",_wrap_IplROI_xOffset_set,0,0,2,_wrap_IplROI_xOffset_set_texinfo},
+{"IplROI_xOffset_get",_wrap_IplROI_xOffset_get,0,0,2,_wrap_IplROI_xOffset_get_texinfo},
+{"IplROI_yOffset_set",_wrap_IplROI_yOffset_set,0,0,2,_wrap_IplROI_yOffset_set_texinfo},
+{"IplROI_yOffset_get",_wrap_IplROI_yOffset_get,0,0,2,_wrap_IplROI_yOffset_get_texinfo},
+{"IplROI_width_set",_wrap_IplROI_width_set,0,0,2,_wrap_IplROI_width_set_texinfo},
+{"IplROI_width_get",_wrap_IplROI_width_get,0,0,2,_wrap_IplROI_width_get_texinfo},
+{"IplROI_height_set",_wrap_IplROI_height_set,0,0,2,_wrap_IplROI_height_set_texinfo},
+{"IplROI_height_get",_wrap_IplROI_height_get,0,0,2,_wrap_IplROI_height_get_texinfo},
 {"new_IplROI",_wrap_new_IplROI,0,0,2,_wrap_new_IplROI_texinfo},
 {"delete_IplROI",_wrap_delete_IplROI,0,0,2,_wrap_delete_IplROI_texinfo},
-{"IplConvKernel_nCols_set",_wrap_IplConvKernel_nCols_set,0,0,2,0},
-{"IplConvKernel_nCols_get",_wrap_IplConvKernel_nCols_get,0,0,2,0},
-{"IplConvKernel_nRows_set",_wrap_IplConvKernel_nRows_set,0,0,2,0},
-{"IplConvKernel_nRows_get",_wrap_IplConvKernel_nRows_get,0,0,2,0},
-{"IplConvKernel_anchorX_set",_wrap_IplConvKernel_anchorX_set,0,0,2,0},
-{"IplConvKernel_anchorX_get",_wrap_IplConvKernel_anchorX_get,0,0,2,0},
-{"IplConvKernel_anchorY_set",_wrap_IplConvKernel_anchorY_set,0,0,2,0},
-{"IplConvKernel_anchorY_get",_wrap_IplConvKernel_anchorY_get,0,0,2,0},
-{"IplConvKernel_values_set",_wrap_IplConvKernel_values_set,0,0,2,0},
-{"IplConvKernel_values_get",_wrap_IplConvKernel_values_get,0,0,2,0},
-{"IplConvKernel_nShiftR_set",_wrap_IplConvKernel_nShiftR_set,0,0,2,0},
-{"IplConvKernel_nShiftR_get",_wrap_IplConvKernel_nShiftR_get,0,0,2,0},
+{"IplConvKernel_nCols_set",_wrap_IplConvKernel_nCols_set,0,0,2,_wrap_IplConvKernel_nCols_set_texinfo},
+{"IplConvKernel_nCols_get",_wrap_IplConvKernel_nCols_get,0,0,2,_wrap_IplConvKernel_nCols_get_texinfo},
+{"IplConvKernel_nRows_set",_wrap_IplConvKernel_nRows_set,0,0,2,_wrap_IplConvKernel_nRows_set_texinfo},
+{"IplConvKernel_nRows_get",_wrap_IplConvKernel_nRows_get,0,0,2,_wrap_IplConvKernel_nRows_get_texinfo},
+{"IplConvKernel_anchorX_set",_wrap_IplConvKernel_anchorX_set,0,0,2,_wrap_IplConvKernel_anchorX_set_texinfo},
+{"IplConvKernel_anchorX_get",_wrap_IplConvKernel_anchorX_get,0,0,2,_wrap_IplConvKernel_anchorX_get_texinfo},
+{"IplConvKernel_anchorY_set",_wrap_IplConvKernel_anchorY_set,0,0,2,_wrap_IplConvKernel_anchorY_set_texinfo},
+{"IplConvKernel_anchorY_get",_wrap_IplConvKernel_anchorY_get,0,0,2,_wrap_IplConvKernel_anchorY_get_texinfo},
+{"IplConvKernel_values_set",_wrap_IplConvKernel_values_set,0,0,2,_wrap_IplConvKernel_values_set_texinfo},
+{"IplConvKernel_values_get",_wrap_IplConvKernel_values_get,0,0,2,_wrap_IplConvKernel_values_get_texinfo},
+{"IplConvKernel_nShiftR_set",_wrap_IplConvKernel_nShiftR_set,0,0,2,_wrap_IplConvKernel_nShiftR_set_texinfo},
+{"IplConvKernel_nShiftR_get",_wrap_IplConvKernel_nShiftR_get,0,0,2,_wrap_IplConvKernel_nShiftR_get_texinfo},
 {"delete_IplConvKernel",_wrap_delete_IplConvKernel,0,0,2,_wrap_delete_IplConvKernel_texinfo},
-{"IplConvKernelFP_nCols_set",_wrap_IplConvKernelFP_nCols_set,0,0,2,0},
-{"IplConvKernelFP_nCols_get",_wrap_IplConvKernelFP_nCols_get,0,0,2,0},
-{"IplConvKernelFP_nRows_set",_wrap_IplConvKernelFP_nRows_set,0,0,2,0},
-{"IplConvKernelFP_nRows_get",_wrap_IplConvKernelFP_nRows_get,0,0,2,0},
-{"IplConvKernelFP_anchorX_set",_wrap_IplConvKernelFP_anchorX_set,0,0,2,0},
-{"IplConvKernelFP_anchorX_get",_wrap_IplConvKernelFP_anchorX_get,0,0,2,0},
-{"IplConvKernelFP_anchorY_set",_wrap_IplConvKernelFP_anchorY_set,0,0,2,0},
-{"IplConvKernelFP_anchorY_get",_wrap_IplConvKernelFP_anchorY_get,0,0,2,0},
-{"IplConvKernelFP_values_set",_wrap_IplConvKernelFP_values_set,0,0,2,0},
-{"IplConvKernelFP_values_get",_wrap_IplConvKernelFP_values_get,0,0,2,0},
+{"IplConvKernelFP_nCols_set",_wrap_IplConvKernelFP_nCols_set,0,0,2,_wrap_IplConvKernelFP_nCols_set_texinfo},
+{"IplConvKernelFP_nCols_get",_wrap_IplConvKernelFP_nCols_get,0,0,2,_wrap_IplConvKernelFP_nCols_get_texinfo},
+{"IplConvKernelFP_nRows_set",_wrap_IplConvKernelFP_nRows_set,0,0,2,_wrap_IplConvKernelFP_nRows_set_texinfo},
+{"IplConvKernelFP_nRows_get",_wrap_IplConvKernelFP_nRows_get,0,0,2,_wrap_IplConvKernelFP_nRows_get_texinfo},
+{"IplConvKernelFP_anchorX_set",_wrap_IplConvKernelFP_anchorX_set,0,0,2,_wrap_IplConvKernelFP_anchorX_set_texinfo},
+{"IplConvKernelFP_anchorX_get",_wrap_IplConvKernelFP_anchorX_get,0,0,2,_wrap_IplConvKernelFP_anchorX_get_texinfo},
+{"IplConvKernelFP_anchorY_set",_wrap_IplConvKernelFP_anchorY_set,0,0,2,_wrap_IplConvKernelFP_anchorY_set_texinfo},
+{"IplConvKernelFP_anchorY_get",_wrap_IplConvKernelFP_anchorY_get,0,0,2,_wrap_IplConvKernelFP_anchorY_get_texinfo},
+{"IplConvKernelFP_values_set",_wrap_IplConvKernelFP_values_set,0,0,2,_wrap_IplConvKernelFP_values_set_texinfo},
+{"IplConvKernelFP_values_get",_wrap_IplConvKernelFP_values_get,0,0,2,_wrap_IplConvKernelFP_values_get_texinfo},
 {"new_IplConvKernelFP",_wrap_new_IplConvKernelFP,0,0,2,_wrap_new_IplConvKernelFP_texinfo},
 {"delete_IplConvKernelFP",_wrap_delete_IplConvKernelFP,0,0,2,_wrap_delete_IplConvKernelFP_texinfo},
-{"CvMat_type_set",_wrap_CvMat_type_set,0,0,2,0},
-{"CvMat_type_get",_wrap_CvMat_type_get,0,0,2,0},
-{"CvMat_step_set",_wrap_CvMat_step_set,0,0,2,0},
-{"CvMat_step_get",_wrap_CvMat_step_get,0,0,2,0},
-{"CvMat_refcount_set",_wrap_CvMat_refcount_set,0,0,2,0},
-{"CvMat_refcount_get",_wrap_CvMat_refcount_get,0,0,2,0},
-{"CvMat_hdr_refcount_set",_wrap_CvMat_hdr_refcount_set,0,0,2,0},
-{"CvMat_hdr_refcount_get",_wrap_CvMat_hdr_refcount_get,0,0,2,0},
-{"CvMat_data_get",_wrap_CvMat_data_get,0,0,2,0},
+{"CvMat_type_set",_wrap_CvMat_type_set,0,0,2,_wrap_CvMat_type_set_texinfo},
+{"CvMat_type_get",_wrap_CvMat_type_get,0,0,2,_wrap_CvMat_type_get_texinfo},
+{"CvMat_step_set",_wrap_CvMat_step_set,0,0,2,_wrap_CvMat_step_set_texinfo},
+{"CvMat_step_get",_wrap_CvMat_step_get,0,0,2,_wrap_CvMat_step_get_texinfo},
+{"CvMat_refcount_set",_wrap_CvMat_refcount_set,0,0,2,_wrap_CvMat_refcount_set_texinfo},
+{"CvMat_refcount_get",_wrap_CvMat_refcount_get,0,0,2,_wrap_CvMat_refcount_get_texinfo},
+{"CvMat_hdr_refcount_set",_wrap_CvMat_hdr_refcount_set,0,0,2,_wrap_CvMat_hdr_refcount_set_texinfo},
+{"CvMat_hdr_refcount_get",_wrap_CvMat_hdr_refcount_get,0,0,2,_wrap_CvMat_hdr_refcount_get_texinfo},
+{"CvMat_data_get",_wrap_CvMat_data_get,0,0,2,_wrap_CvMat_data_get_texinfo},
 {"delete_CvMat",_wrap_delete_CvMat,0,0,2,_wrap_delete_CvMat_texinfo},
-{"CvMat_depth_get",_wrap_CvMat_depth_get,0,0,2,0},
-{"CvMat_nChannels_get",_wrap_CvMat_nChannels_get,0,0,2,0},
-{"CvMat_dataOrder_get",_wrap_CvMat_dataOrder_get,0,0,2,0},
-{"CvMat_origin_get",_wrap_CvMat_origin_get,0,0,2,0},
-{"CvMat_width_get",_wrap_CvMat_width_get,0,0,2,0},
-{"CvMat_height_get",_wrap_CvMat_height_get,0,0,2,0},
-{"CvMat_imageSize_get",_wrap_CvMat_imageSize_get,0,0,2,0},
-{"CvMat_widthStep_get",_wrap_CvMat_widthStep_get,0,0,2,0},
-{"CvMat_rows_get",_wrap_CvMat_rows_get,0,0,2,0},
-{"CvMat_cols_get",_wrap_CvMat_cols_get,0,0,2,0},
+{"CvMat_depth_get",_wrap_CvMat_depth_get,0,0,2,_wrap_CvMat_depth_get_texinfo},
+{"CvMat_nChannels_get",_wrap_CvMat_nChannels_get,0,0,2,_wrap_CvMat_nChannels_get_texinfo},
+{"CvMat_dataOrder_get",_wrap_CvMat_dataOrder_get,0,0,2,_wrap_CvMat_dataOrder_get_texinfo},
+{"CvMat_origin_get",_wrap_CvMat_origin_get,0,0,2,_wrap_CvMat_origin_get_texinfo},
+{"CvMat_width_get",_wrap_CvMat_width_get,0,0,2,_wrap_CvMat_width_get_texinfo},
+{"CvMat_height_get",_wrap_CvMat_height_get,0,0,2,_wrap_CvMat_height_get_texinfo},
+{"CvMat_imageSize_get",_wrap_CvMat_imageSize_get,0,0,2,_wrap_CvMat_imageSize_get_texinfo},
+{"CvMat_widthStep_get",_wrap_CvMat_widthStep_get,0,0,2,_wrap_CvMat_widthStep_get_texinfo},
+{"CvMat_rows_get",_wrap_CvMat_rows_get,0,0,2,_wrap_CvMat_rows_get_texinfo},
+{"CvMat_cols_get",_wrap_CvMat_cols_get,0,0,2,_wrap_CvMat_cols_get_texinfo},
 {"CvMat___mul",_wrap_CvMat___mul,0,0,2,_wrap_CvMat___mul_texinfo},
 {"CvMat___add",_wrap_CvMat___add,0,0,2,_wrap_CvMat___add_texinfo},
 {"CvMat___xor",_wrap_CvMat___xor,0,0,2,_wrap_CvMat___xor_texinfo},
@@ -105981,134 +106888,134 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat___str",_wrap_CvMat___str,0,0,2,_wrap_CvMat___str_texinfo},
 {"CvMat___paren_asgn",_wrap_CvMat___paren_asgn,0,0,2,_wrap_CvMat___paren_asgn_texinfo},
 {"CvMat___paren",_wrap_CvMat___paren,0,0,2,_wrap_CvMat___paren_texinfo},
-{"CvMat_imageData_set",_wrap_CvMat_imageData_set,0,0,2,0},
-{"CvMat_imageData_get",_wrap_CvMat_imageData_get,0,0,2,0},
-{"CvMat_data_ptr_set",_wrap_CvMat_data_ptr_set,0,0,2,0},
-{"CvMat_data_ptr_get",_wrap_CvMat_data_ptr_get,0,0,2,0},
-{"CvMat_data_s_set",_wrap_CvMat_data_s_set,0,0,2,0},
-{"CvMat_data_s_get",_wrap_CvMat_data_s_get,0,0,2,0},
-{"CvMat_data_i_set",_wrap_CvMat_data_i_set,0,0,2,0},
-{"CvMat_data_i_get",_wrap_CvMat_data_i_get,0,0,2,0},
-{"CvMat_data_fl_set",_wrap_CvMat_data_fl_set,0,0,2,0},
-{"CvMat_data_fl_get",_wrap_CvMat_data_fl_get,0,0,2,0},
-{"CvMat_data_db_set",_wrap_CvMat_data_db_set,0,0,2,0},
-{"CvMat_data_db_get",_wrap_CvMat_data_db_get,0,0,2,0},
+{"CvMat_imageData_set",_wrap_CvMat_imageData_set,0,0,2,_wrap_CvMat_imageData_set_texinfo},
+{"CvMat_imageData_get",_wrap_CvMat_imageData_get,0,0,2,_wrap_CvMat_imageData_get_texinfo},
+{"CvMat_data_ptr_set",_wrap_CvMat_data_ptr_set,0,0,2,_wrap_CvMat_data_ptr_set_texinfo},
+{"CvMat_data_ptr_get",_wrap_CvMat_data_ptr_get,0,0,2,_wrap_CvMat_data_ptr_get_texinfo},
+{"CvMat_data_s_set",_wrap_CvMat_data_s_set,0,0,2,_wrap_CvMat_data_s_set_texinfo},
+{"CvMat_data_s_get",_wrap_CvMat_data_s_get,0,0,2,_wrap_CvMat_data_s_get_texinfo},
+{"CvMat_data_i_set",_wrap_CvMat_data_i_set,0,0,2,_wrap_CvMat_data_i_set_texinfo},
+{"CvMat_data_i_get",_wrap_CvMat_data_i_get,0,0,2,_wrap_CvMat_data_i_get_texinfo},
+{"CvMat_data_fl_set",_wrap_CvMat_data_fl_set,0,0,2,_wrap_CvMat_data_fl_set_texinfo},
+{"CvMat_data_fl_get",_wrap_CvMat_data_fl_get,0,0,2,_wrap_CvMat_data_fl_get_texinfo},
+{"CvMat_data_db_set",_wrap_CvMat_data_db_set,0,0,2,_wrap_CvMat_data_db_set_texinfo},
+{"CvMat_data_db_get",_wrap_CvMat_data_db_get,0,0,2,_wrap_CvMat_data_db_get_texinfo},
 {"new_CvMat_data",_wrap_new_CvMat_data,0,0,2,_wrap_new_CvMat_data_texinfo},
 {"delete_CvMat_data",_wrap_delete_CvMat_data,0,0,2,_wrap_delete_CvMat_data_texinfo},
 {"cvMat",_wrap_cvMat,0,0,2,_wrap_cvMat_texinfo},
 {"cvmGet",_wrap_cvmGet,0,0,2,_wrap_cvmGet_texinfo},
 {"cvmSet",_wrap_cvmSet,0,0,2,_wrap_cvmSet_texinfo},
 {"cvCvToIplDepth",_wrap_cvCvToIplDepth,0,0,2,_wrap_cvCvToIplDepth_texinfo},
-{"CvMatND_type_set",_wrap_CvMatND_type_set,0,0,2,0},
-{"CvMatND_type_get",_wrap_CvMatND_type_get,0,0,2,0},
-{"CvMatND_dims_set",_wrap_CvMatND_dims_set,0,0,2,0},
-{"CvMatND_dims_get",_wrap_CvMatND_dims_get,0,0,2,0},
-{"CvMatND_refcount_set",_wrap_CvMatND_refcount_set,0,0,2,0},
-{"CvMatND_refcount_get",_wrap_CvMatND_refcount_get,0,0,2,0},
-{"CvMatND_hdr_refcount_set",_wrap_CvMatND_hdr_refcount_set,0,0,2,0},
-{"CvMatND_hdr_refcount_get",_wrap_CvMatND_hdr_refcount_get,0,0,2,0},
-{"CvMatND_dim_get",_wrap_CvMatND_dim_get,0,0,2,0},
-{"CvMatND_data_get",_wrap_CvMatND_data_get,0,0,2,0},
+{"CvMatND_type_set",_wrap_CvMatND_type_set,0,0,2,_wrap_CvMatND_type_set_texinfo},
+{"CvMatND_type_get",_wrap_CvMatND_type_get,0,0,2,_wrap_CvMatND_type_get_texinfo},
+{"CvMatND_dims_set",_wrap_CvMatND_dims_set,0,0,2,_wrap_CvMatND_dims_set_texinfo},
+{"CvMatND_dims_get",_wrap_CvMatND_dims_get,0,0,2,_wrap_CvMatND_dims_get_texinfo},
+{"CvMatND_refcount_set",_wrap_CvMatND_refcount_set,0,0,2,_wrap_CvMatND_refcount_set_texinfo},
+{"CvMatND_refcount_get",_wrap_CvMatND_refcount_get,0,0,2,_wrap_CvMatND_refcount_get_texinfo},
+{"CvMatND_hdr_refcount_set",_wrap_CvMatND_hdr_refcount_set,0,0,2,_wrap_CvMatND_hdr_refcount_set_texinfo},
+{"CvMatND_hdr_refcount_get",_wrap_CvMatND_hdr_refcount_get,0,0,2,_wrap_CvMatND_hdr_refcount_get_texinfo},
+{"CvMatND_dim_get",_wrap_CvMatND_dim_get,0,0,2,_wrap_CvMatND_dim_get_texinfo},
+{"CvMatND_data_get",_wrap_CvMatND_data_get,0,0,2,_wrap_CvMatND_data_get_texinfo},
 {"delete_CvMatND",_wrap_delete_CvMatND,0,0,2,_wrap_delete_CvMatND_texinfo},
-{"CvMatND_dim_size_set",_wrap_CvMatND_dim_size_set,0,0,2,0},
-{"CvMatND_dim_size_get",_wrap_CvMatND_dim_size_get,0,0,2,0},
-{"CvMatND_dim_step_set",_wrap_CvMatND_dim_step_set,0,0,2,0},
-{"CvMatND_dim_step_get",_wrap_CvMatND_dim_step_get,0,0,2,0},
+{"CvMatND_dim_size_set",_wrap_CvMatND_dim_size_set,0,0,2,_wrap_CvMatND_dim_size_set_texinfo},
+{"CvMatND_dim_size_get",_wrap_CvMatND_dim_size_get,0,0,2,_wrap_CvMatND_dim_size_get_texinfo},
+{"CvMatND_dim_step_set",_wrap_CvMatND_dim_step_set,0,0,2,_wrap_CvMatND_dim_step_set_texinfo},
+{"CvMatND_dim_step_get",_wrap_CvMatND_dim_step_get,0,0,2,_wrap_CvMatND_dim_step_get_texinfo},
 {"new_CvMatND_dim",_wrap_new_CvMatND_dim,0,0,2,_wrap_new_CvMatND_dim_texinfo},
 {"delete_CvMatND_dim",_wrap_delete_CvMatND_dim,0,0,2,_wrap_delete_CvMatND_dim_texinfo},
-{"CvMatND_data_ptr_set",_wrap_CvMatND_data_ptr_set,0,0,2,0},
-{"CvMatND_data_ptr_get",_wrap_CvMatND_data_ptr_get,0,0,2,0},
-{"CvMatND_data_fl_set",_wrap_CvMatND_data_fl_set,0,0,2,0},
-{"CvMatND_data_fl_get",_wrap_CvMatND_data_fl_get,0,0,2,0},
-{"CvMatND_data_db_set",_wrap_CvMatND_data_db_set,0,0,2,0},
-{"CvMatND_data_db_get",_wrap_CvMatND_data_db_get,0,0,2,0},
-{"CvMatND_data_i_set",_wrap_CvMatND_data_i_set,0,0,2,0},
-{"CvMatND_data_i_get",_wrap_CvMatND_data_i_get,0,0,2,0},
-{"CvMatND_data_s_set",_wrap_CvMatND_data_s_set,0,0,2,0},
-{"CvMatND_data_s_get",_wrap_CvMatND_data_s_get,0,0,2,0},
+{"CvMatND_data_ptr_set",_wrap_CvMatND_data_ptr_set,0,0,2,_wrap_CvMatND_data_ptr_set_texinfo},
+{"CvMatND_data_ptr_get",_wrap_CvMatND_data_ptr_get,0,0,2,_wrap_CvMatND_data_ptr_get_texinfo},
+{"CvMatND_data_fl_set",_wrap_CvMatND_data_fl_set,0,0,2,_wrap_CvMatND_data_fl_set_texinfo},
+{"CvMatND_data_fl_get",_wrap_CvMatND_data_fl_get,0,0,2,_wrap_CvMatND_data_fl_get_texinfo},
+{"CvMatND_data_db_set",_wrap_CvMatND_data_db_set,0,0,2,_wrap_CvMatND_data_db_set_texinfo},
+{"CvMatND_data_db_get",_wrap_CvMatND_data_db_get,0,0,2,_wrap_CvMatND_data_db_get_texinfo},
+{"CvMatND_data_i_set",_wrap_CvMatND_data_i_set,0,0,2,_wrap_CvMatND_data_i_set_texinfo},
+{"CvMatND_data_i_get",_wrap_CvMatND_data_i_get,0,0,2,_wrap_CvMatND_data_i_get_texinfo},
+{"CvMatND_data_s_set",_wrap_CvMatND_data_s_set,0,0,2,_wrap_CvMatND_data_s_set_texinfo},
+{"CvMatND_data_s_get",_wrap_CvMatND_data_s_get,0,0,2,_wrap_CvMatND_data_s_get_texinfo},
 {"new_CvMatND_data",_wrap_new_CvMatND_data,0,0,2,_wrap_new_CvMatND_data_texinfo},
 {"delete_CvMatND_data",_wrap_delete_CvMatND_data,0,0,2,_wrap_delete_CvMatND_data_texinfo},
-{"CvSparseMat_type_set",_wrap_CvSparseMat_type_set,0,0,2,0},
-{"CvSparseMat_type_get",_wrap_CvSparseMat_type_get,0,0,2,0},
-{"CvSparseMat_dims_set",_wrap_CvSparseMat_dims_set,0,0,2,0},
-{"CvSparseMat_dims_get",_wrap_CvSparseMat_dims_get,0,0,2,0},
-{"CvSparseMat_refcount_set",_wrap_CvSparseMat_refcount_set,0,0,2,0},
-{"CvSparseMat_refcount_get",_wrap_CvSparseMat_refcount_get,0,0,2,0},
-{"CvSparseMat_hdr_refcount_set",_wrap_CvSparseMat_hdr_refcount_set,0,0,2,0},
-{"CvSparseMat_hdr_refcount_get",_wrap_CvSparseMat_hdr_refcount_get,0,0,2,0},
-{"CvSparseMat_heap_set",_wrap_CvSparseMat_heap_set,0,0,2,0},
-{"CvSparseMat_heap_get",_wrap_CvSparseMat_heap_get,0,0,2,0},
-{"CvSparseMat_hashtable_set",_wrap_CvSparseMat_hashtable_set,0,0,2,0},
-{"CvSparseMat_hashtable_get",_wrap_CvSparseMat_hashtable_get,0,0,2,0},
-{"CvSparseMat_hashsize_set",_wrap_CvSparseMat_hashsize_set,0,0,2,0},
-{"CvSparseMat_hashsize_get",_wrap_CvSparseMat_hashsize_get,0,0,2,0},
-{"CvSparseMat_valoffset_set",_wrap_CvSparseMat_valoffset_set,0,0,2,0},
-{"CvSparseMat_valoffset_get",_wrap_CvSparseMat_valoffset_get,0,0,2,0},
-{"CvSparseMat_idxoffset_set",_wrap_CvSparseMat_idxoffset_set,0,0,2,0},
-{"CvSparseMat_idxoffset_get",_wrap_CvSparseMat_idxoffset_get,0,0,2,0},
-{"CvSparseMat_size_set",_wrap_CvSparseMat_size_set,0,0,2,0},
-{"CvSparseMat_size_get",_wrap_CvSparseMat_size_get,0,0,2,0},
+{"CvSparseMat_type_set",_wrap_CvSparseMat_type_set,0,0,2,_wrap_CvSparseMat_type_set_texinfo},
+{"CvSparseMat_type_get",_wrap_CvSparseMat_type_get,0,0,2,_wrap_CvSparseMat_type_get_texinfo},
+{"CvSparseMat_dims_set",_wrap_CvSparseMat_dims_set,0,0,2,_wrap_CvSparseMat_dims_set_texinfo},
+{"CvSparseMat_dims_get",_wrap_CvSparseMat_dims_get,0,0,2,_wrap_CvSparseMat_dims_get_texinfo},
+{"CvSparseMat_refcount_set",_wrap_CvSparseMat_refcount_set,0,0,2,_wrap_CvSparseMat_refcount_set_texinfo},
+{"CvSparseMat_refcount_get",_wrap_CvSparseMat_refcount_get,0,0,2,_wrap_CvSparseMat_refcount_get_texinfo},
+{"CvSparseMat_hdr_refcount_set",_wrap_CvSparseMat_hdr_refcount_set,0,0,2,_wrap_CvSparseMat_hdr_refcount_set_texinfo},
+{"CvSparseMat_hdr_refcount_get",_wrap_CvSparseMat_hdr_refcount_get,0,0,2,_wrap_CvSparseMat_hdr_refcount_get_texinfo},
+{"CvSparseMat_heap_set",_wrap_CvSparseMat_heap_set,0,0,2,_wrap_CvSparseMat_heap_set_texinfo},
+{"CvSparseMat_heap_get",_wrap_CvSparseMat_heap_get,0,0,2,_wrap_CvSparseMat_heap_get_texinfo},
+{"CvSparseMat_hashtable_set",_wrap_CvSparseMat_hashtable_set,0,0,2,_wrap_CvSparseMat_hashtable_set_texinfo},
+{"CvSparseMat_hashtable_get",_wrap_CvSparseMat_hashtable_get,0,0,2,_wrap_CvSparseMat_hashtable_get_texinfo},
+{"CvSparseMat_hashsize_set",_wrap_CvSparseMat_hashsize_set,0,0,2,_wrap_CvSparseMat_hashsize_set_texinfo},
+{"CvSparseMat_hashsize_get",_wrap_CvSparseMat_hashsize_get,0,0,2,_wrap_CvSparseMat_hashsize_get_texinfo},
+{"CvSparseMat_valoffset_set",_wrap_CvSparseMat_valoffset_set,0,0,2,_wrap_CvSparseMat_valoffset_set_texinfo},
+{"CvSparseMat_valoffset_get",_wrap_CvSparseMat_valoffset_get,0,0,2,_wrap_CvSparseMat_valoffset_get_texinfo},
+{"CvSparseMat_idxoffset_set",_wrap_CvSparseMat_idxoffset_set,0,0,2,_wrap_CvSparseMat_idxoffset_set_texinfo},
+{"CvSparseMat_idxoffset_get",_wrap_CvSparseMat_idxoffset_get,0,0,2,_wrap_CvSparseMat_idxoffset_get_texinfo},
+{"CvSparseMat_size_set",_wrap_CvSparseMat_size_set,0,0,2,_wrap_CvSparseMat_size_set_texinfo},
+{"CvSparseMat_size_get",_wrap_CvSparseMat_size_get,0,0,2,_wrap_CvSparseMat_size_get_texinfo},
 {"delete_CvSparseMat",_wrap_delete_CvSparseMat,0,0,2,_wrap_delete_CvSparseMat_texinfo},
-{"CvSparseNode_hashval_set",_wrap_CvSparseNode_hashval_set,0,0,2,0},
-{"CvSparseNode_hashval_get",_wrap_CvSparseNode_hashval_get,0,0,2,0},
-{"CvSparseNode_next_set",_wrap_CvSparseNode_next_set,0,0,2,0},
-{"CvSparseNode_next_get",_wrap_CvSparseNode_next_get,0,0,2,0},
+{"CvSparseNode_hashval_set",_wrap_CvSparseNode_hashval_set,0,0,2,_wrap_CvSparseNode_hashval_set_texinfo},
+{"CvSparseNode_hashval_get",_wrap_CvSparseNode_hashval_get,0,0,2,_wrap_CvSparseNode_hashval_get_texinfo},
+{"CvSparseNode_next_set",_wrap_CvSparseNode_next_set,0,0,2,_wrap_CvSparseNode_next_set_texinfo},
+{"CvSparseNode_next_get",_wrap_CvSparseNode_next_get,0,0,2,_wrap_CvSparseNode_next_get_texinfo},
 {"new_CvSparseNode",_wrap_new_CvSparseNode,0,0,2,_wrap_new_CvSparseNode_texinfo},
 {"delete_CvSparseNode",_wrap_delete_CvSparseNode,0,0,2,_wrap_delete_CvSparseNode_texinfo},
-{"CvSparseMatIterator_mat_set",_wrap_CvSparseMatIterator_mat_set,0,0,2,0},
-{"CvSparseMatIterator_mat_get",_wrap_CvSparseMatIterator_mat_get,0,0,2,0},
-{"CvSparseMatIterator_node_set",_wrap_CvSparseMatIterator_node_set,0,0,2,0},
-{"CvSparseMatIterator_node_get",_wrap_CvSparseMatIterator_node_get,0,0,2,0},
-{"CvSparseMatIterator_curidx_set",_wrap_CvSparseMatIterator_curidx_set,0,0,2,0},
-{"CvSparseMatIterator_curidx_get",_wrap_CvSparseMatIterator_curidx_get,0,0,2,0},
+{"CvSparseMatIterator_mat_set",_wrap_CvSparseMatIterator_mat_set,0,0,2,_wrap_CvSparseMatIterator_mat_set_texinfo},
+{"CvSparseMatIterator_mat_get",_wrap_CvSparseMatIterator_mat_get,0,0,2,_wrap_CvSparseMatIterator_mat_get_texinfo},
+{"CvSparseMatIterator_node_set",_wrap_CvSparseMatIterator_node_set,0,0,2,_wrap_CvSparseMatIterator_node_set_texinfo},
+{"CvSparseMatIterator_node_get",_wrap_CvSparseMatIterator_node_get,0,0,2,_wrap_CvSparseMatIterator_node_get_texinfo},
+{"CvSparseMatIterator_curidx_set",_wrap_CvSparseMatIterator_curidx_set,0,0,2,_wrap_CvSparseMatIterator_curidx_set_texinfo},
+{"CvSparseMatIterator_curidx_get",_wrap_CvSparseMatIterator_curidx_get,0,0,2,_wrap_CvSparseMatIterator_curidx_get_texinfo},
 {"new_CvSparseMatIterator",_wrap_new_CvSparseMatIterator,0,0,2,_wrap_new_CvSparseMatIterator_texinfo},
 {"delete_CvSparseMatIterator",_wrap_delete_CvSparseMatIterator,0,0,2,_wrap_delete_CvSparseMatIterator_texinfo},
-{"CvHistogram_type_set",_wrap_CvHistogram_type_set,0,0,2,0},
-{"CvHistogram_type_get",_wrap_CvHistogram_type_get,0,0,2,0},
-{"CvHistogram_bins_set",_wrap_CvHistogram_bins_set,0,0,2,0},
-{"CvHistogram_bins_get",_wrap_CvHistogram_bins_get,0,0,2,0},
-{"CvHistogram_thresh_set",_wrap_CvHistogram_thresh_set,0,0,2,0},
-{"CvHistogram_thresh_get",_wrap_CvHistogram_thresh_get,0,0,2,0},
-{"CvHistogram_thresh2_set",_wrap_CvHistogram_thresh2_set,0,0,2,0},
-{"CvHistogram_thresh2_get",_wrap_CvHistogram_thresh2_get,0,0,2,0},
-{"CvHistogram_mat_set",_wrap_CvHistogram_mat_set,0,0,2,0},
-{"CvHistogram_mat_get",_wrap_CvHistogram_mat_get,0,0,2,0},
+{"CvHistogram_type_set",_wrap_CvHistogram_type_set,0,0,2,_wrap_CvHistogram_type_set_texinfo},
+{"CvHistogram_type_get",_wrap_CvHistogram_type_get,0,0,2,_wrap_CvHistogram_type_get_texinfo},
+{"CvHistogram_bins_set",_wrap_CvHistogram_bins_set,0,0,2,_wrap_CvHistogram_bins_set_texinfo},
+{"CvHistogram_bins_get",_wrap_CvHistogram_bins_get,0,0,2,_wrap_CvHistogram_bins_get_texinfo},
+{"CvHistogram_thresh_set",_wrap_CvHistogram_thresh_set,0,0,2,_wrap_CvHistogram_thresh_set_texinfo},
+{"CvHistogram_thresh_get",_wrap_CvHistogram_thresh_get,0,0,2,_wrap_CvHistogram_thresh_get_texinfo},
+{"CvHistogram_thresh2_set",_wrap_CvHistogram_thresh2_set,0,0,2,_wrap_CvHistogram_thresh2_set_texinfo},
+{"CvHistogram_thresh2_get",_wrap_CvHistogram_thresh2_get,0,0,2,_wrap_CvHistogram_thresh2_get_texinfo},
+{"CvHistogram_mat_set",_wrap_CvHistogram_mat_set,0,0,2,_wrap_CvHistogram_mat_set_texinfo},
+{"CvHistogram_mat_get",_wrap_CvHistogram_mat_get,0,0,2,_wrap_CvHistogram_mat_get_texinfo},
 {"delete_CvHistogram",_wrap_delete_CvHistogram,0,0,2,_wrap_delete_CvHistogram_texinfo},
-{"CvRect_x_set",_wrap_CvRect_x_set,0,0,2,0},
-{"CvRect_x_get",_wrap_CvRect_x_get,0,0,2,0},
-{"CvRect_y_set",_wrap_CvRect_y_set,0,0,2,0},
-{"CvRect_y_get",_wrap_CvRect_y_get,0,0,2,0},
-{"CvRect_width_set",_wrap_CvRect_width_set,0,0,2,0},
-{"CvRect_width_get",_wrap_CvRect_width_get,0,0,2,0},
-{"CvRect_height_set",_wrap_CvRect_height_set,0,0,2,0},
-{"CvRect_height_get",_wrap_CvRect_height_get,0,0,2,0},
+{"CvRect_x_set",_wrap_CvRect_x_set,0,0,2,_wrap_CvRect_x_set_texinfo},
+{"CvRect_x_get",_wrap_CvRect_x_get,0,0,2,_wrap_CvRect_x_get_texinfo},
+{"CvRect_y_set",_wrap_CvRect_y_set,0,0,2,_wrap_CvRect_y_set_texinfo},
+{"CvRect_y_get",_wrap_CvRect_y_get,0,0,2,_wrap_CvRect_y_get_texinfo},
+{"CvRect_width_set",_wrap_CvRect_width_set,0,0,2,_wrap_CvRect_width_set_texinfo},
+{"CvRect_width_get",_wrap_CvRect_width_get,0,0,2,_wrap_CvRect_width_get_texinfo},
+{"CvRect_height_set",_wrap_CvRect_height_set,0,0,2,_wrap_CvRect_height_set_texinfo},
+{"CvRect_height_get",_wrap_CvRect_height_get,0,0,2,_wrap_CvRect_height_get_texinfo},
 {"new_CvRect",_wrap_new_CvRect,0,0,2,_wrap_new_CvRect_texinfo},
 {"delete_CvRect",_wrap_delete_CvRect,0,0,2,_wrap_delete_CvRect_texinfo},
 {"cvRect",_wrap_cvRect,0,0,2,_wrap_cvRect_texinfo},
 {"cvRectToROI",_wrap_cvRectToROI,0,0,2,_wrap_cvRectToROI_texinfo},
 {"cvROIToRect",_wrap_cvROIToRect,0,0,2,_wrap_cvROIToRect_texinfo},
-{"CvTermCriteria_type_set",_wrap_CvTermCriteria_type_set,0,0,2,0},
-{"CvTermCriteria_type_get",_wrap_CvTermCriteria_type_get,0,0,2,0},
-{"CvTermCriteria_max_iter_set",_wrap_CvTermCriteria_max_iter_set,0,0,2,0},
-{"CvTermCriteria_max_iter_get",_wrap_CvTermCriteria_max_iter_get,0,0,2,0},
-{"CvTermCriteria_epsilon_set",_wrap_CvTermCriteria_epsilon_set,0,0,2,0},
-{"CvTermCriteria_epsilon_get",_wrap_CvTermCriteria_epsilon_get,0,0,2,0},
+{"CvTermCriteria_type_set",_wrap_CvTermCriteria_type_set,0,0,2,_wrap_CvTermCriteria_type_set_texinfo},
+{"CvTermCriteria_type_get",_wrap_CvTermCriteria_type_get,0,0,2,_wrap_CvTermCriteria_type_get_texinfo},
+{"CvTermCriteria_max_iter_set",_wrap_CvTermCriteria_max_iter_set,0,0,2,_wrap_CvTermCriteria_max_iter_set_texinfo},
+{"CvTermCriteria_max_iter_get",_wrap_CvTermCriteria_max_iter_get,0,0,2,_wrap_CvTermCriteria_max_iter_get_texinfo},
+{"CvTermCriteria_epsilon_set",_wrap_CvTermCriteria_epsilon_set,0,0,2,_wrap_CvTermCriteria_epsilon_set_texinfo},
+{"CvTermCriteria_epsilon_get",_wrap_CvTermCriteria_epsilon_get,0,0,2,_wrap_CvTermCriteria_epsilon_get_texinfo},
 {"new_CvTermCriteria",_wrap_new_CvTermCriteria,0,0,2,_wrap_new_CvTermCriteria_texinfo},
 {"delete_CvTermCriteria",_wrap_delete_CvTermCriteria,0,0,2,_wrap_delete_CvTermCriteria_texinfo},
 {"cvTermCriteria",_wrap_cvTermCriteria,0,0,2,_wrap_cvTermCriteria_texinfo},
-{"CvPoint_x_set",_wrap_CvPoint_x_set,0,0,2,0},
-{"CvPoint_x_get",_wrap_CvPoint_x_get,0,0,2,0},
-{"CvPoint_y_set",_wrap_CvPoint_y_set,0,0,2,0},
-{"CvPoint_y_get",_wrap_CvPoint_y_get,0,0,2,0},
+{"CvPoint_x_set",_wrap_CvPoint_x_set,0,0,2,_wrap_CvPoint_x_set_texinfo},
+{"CvPoint_x_get",_wrap_CvPoint_x_get,0,0,2,_wrap_CvPoint_x_get_texinfo},
+{"CvPoint_y_set",_wrap_CvPoint_y_set,0,0,2,_wrap_CvPoint_y_set_texinfo},
+{"CvPoint_y_get",_wrap_CvPoint_y_get,0,0,2,_wrap_CvPoint_y_get_texinfo},
 {"CvPoint___str__",_wrap_CvPoint___str__,0,0,2,_wrap_CvPoint___str___texinfo},
 {"CvPoint___repr__",_wrap_CvPoint___repr__,0,0,2,_wrap_CvPoint___repr___texinfo},
 {"new_CvPoint",_wrap_new_CvPoint,0,0,2,_wrap_new_CvPoint_texinfo},
 {"delete_CvPoint",_wrap_delete_CvPoint,0,0,2,_wrap_delete_CvPoint_texinfo},
 {"cvPoint",_wrap_cvPoint,0,0,2,_wrap_cvPoint_texinfo},
-{"CvPoint2D32f_x_set",_wrap_CvPoint2D32f_x_set,0,0,2,0},
-{"CvPoint2D32f_x_get",_wrap_CvPoint2D32f_x_get,0,0,2,0},
-{"CvPoint2D32f_y_set",_wrap_CvPoint2D32f_y_set,0,0,2,0},
-{"CvPoint2D32f_y_get",_wrap_CvPoint2D32f_y_get,0,0,2,0},
+{"CvPoint2D32f_x_set",_wrap_CvPoint2D32f_x_set,0,0,2,_wrap_CvPoint2D32f_x_set_texinfo},
+{"CvPoint2D32f_x_get",_wrap_CvPoint2D32f_x_get,0,0,2,_wrap_CvPoint2D32f_x_get_texinfo},
+{"CvPoint2D32f_y_set",_wrap_CvPoint2D32f_y_set,0,0,2,_wrap_CvPoint2D32f_y_set_texinfo},
+{"CvPoint2D32f_y_get",_wrap_CvPoint2D32f_y_get,0,0,2,_wrap_CvPoint2D32f_y_get_texinfo},
 {"CvPoint2D32f___str__",_wrap_CvPoint2D32f___str__,0,0,2,_wrap_CvPoint2D32f___str___texinfo},
 {"CvPoint2D32f___repr__",_wrap_CvPoint2D32f___repr__,0,0,2,_wrap_CvPoint2D32f___repr___texinfo},
 {"new_CvPoint2D32f",_wrap_new_CvPoint2D32f,0,0,2,_wrap_new_CvPoint2D32f_texinfo},
@@ -106116,76 +107023,76 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvPoint2D32f",_wrap_cvPoint2D32f,0,0,2,_wrap_cvPoint2D32f_texinfo},
 {"cvPointTo32f",_wrap_cvPointTo32f,0,0,2,_wrap_cvPointTo32f_texinfo},
 {"cvPointFrom32f",_wrap_cvPointFrom32f,0,0,2,_wrap_cvPointFrom32f_texinfo},
-{"CvPoint3D32f_x_set",_wrap_CvPoint3D32f_x_set,0,0,2,0},
-{"CvPoint3D32f_x_get",_wrap_CvPoint3D32f_x_get,0,0,2,0},
-{"CvPoint3D32f_y_set",_wrap_CvPoint3D32f_y_set,0,0,2,0},
-{"CvPoint3D32f_y_get",_wrap_CvPoint3D32f_y_get,0,0,2,0},
-{"CvPoint3D32f_z_set",_wrap_CvPoint3D32f_z_set,0,0,2,0},
-{"CvPoint3D32f_z_get",_wrap_CvPoint3D32f_z_get,0,0,2,0},
+{"CvPoint3D32f_x_set",_wrap_CvPoint3D32f_x_set,0,0,2,_wrap_CvPoint3D32f_x_set_texinfo},
+{"CvPoint3D32f_x_get",_wrap_CvPoint3D32f_x_get,0,0,2,_wrap_CvPoint3D32f_x_get_texinfo},
+{"CvPoint3D32f_y_set",_wrap_CvPoint3D32f_y_set,0,0,2,_wrap_CvPoint3D32f_y_set_texinfo},
+{"CvPoint3D32f_y_get",_wrap_CvPoint3D32f_y_get,0,0,2,_wrap_CvPoint3D32f_y_get_texinfo},
+{"CvPoint3D32f_z_set",_wrap_CvPoint3D32f_z_set,0,0,2,_wrap_CvPoint3D32f_z_set_texinfo},
+{"CvPoint3D32f_z_get",_wrap_CvPoint3D32f_z_get,0,0,2,_wrap_CvPoint3D32f_z_get_texinfo},
 {"new_CvPoint3D32f",_wrap_new_CvPoint3D32f,0,0,2,_wrap_new_CvPoint3D32f_texinfo},
 {"delete_CvPoint3D32f",_wrap_delete_CvPoint3D32f,0,0,2,_wrap_delete_CvPoint3D32f_texinfo},
 {"cvPoint3D32f",_wrap_cvPoint3D32f,0,0,2,_wrap_cvPoint3D32f_texinfo},
-{"CvPoint2D64f_x_set",_wrap_CvPoint2D64f_x_set,0,0,2,0},
-{"CvPoint2D64f_x_get",_wrap_CvPoint2D64f_x_get,0,0,2,0},
-{"CvPoint2D64f_y_set",_wrap_CvPoint2D64f_y_set,0,0,2,0},
-{"CvPoint2D64f_y_get",_wrap_CvPoint2D64f_y_get,0,0,2,0},
+{"CvPoint2D64f_x_set",_wrap_CvPoint2D64f_x_set,0,0,2,_wrap_CvPoint2D64f_x_set_texinfo},
+{"CvPoint2D64f_x_get",_wrap_CvPoint2D64f_x_get,0,0,2,_wrap_CvPoint2D64f_x_get_texinfo},
+{"CvPoint2D64f_y_set",_wrap_CvPoint2D64f_y_set,0,0,2,_wrap_CvPoint2D64f_y_set_texinfo},
+{"CvPoint2D64f_y_get",_wrap_CvPoint2D64f_y_get,0,0,2,_wrap_CvPoint2D64f_y_get_texinfo},
 {"new_CvPoint2D64f",_wrap_new_CvPoint2D64f,0,0,2,_wrap_new_CvPoint2D64f_texinfo},
 {"delete_CvPoint2D64f",_wrap_delete_CvPoint2D64f,0,0,2,_wrap_delete_CvPoint2D64f_texinfo},
 {"cvPoint2D64f",_wrap_cvPoint2D64f,0,0,2,_wrap_cvPoint2D64f_texinfo},
-{"CvPoint3D64f_x_set",_wrap_CvPoint3D64f_x_set,0,0,2,0},
-{"CvPoint3D64f_x_get",_wrap_CvPoint3D64f_x_get,0,0,2,0},
-{"CvPoint3D64f_y_set",_wrap_CvPoint3D64f_y_set,0,0,2,0},
-{"CvPoint3D64f_y_get",_wrap_CvPoint3D64f_y_get,0,0,2,0},
-{"CvPoint3D64f_z_set",_wrap_CvPoint3D64f_z_set,0,0,2,0},
-{"CvPoint3D64f_z_get",_wrap_CvPoint3D64f_z_get,0,0,2,0},
+{"CvPoint3D64f_x_set",_wrap_CvPoint3D64f_x_set,0,0,2,_wrap_CvPoint3D64f_x_set_texinfo},
+{"CvPoint3D64f_x_get",_wrap_CvPoint3D64f_x_get,0,0,2,_wrap_CvPoint3D64f_x_get_texinfo},
+{"CvPoint3D64f_y_set",_wrap_CvPoint3D64f_y_set,0,0,2,_wrap_CvPoint3D64f_y_set_texinfo},
+{"CvPoint3D64f_y_get",_wrap_CvPoint3D64f_y_get,0,0,2,_wrap_CvPoint3D64f_y_get_texinfo},
+{"CvPoint3D64f_z_set",_wrap_CvPoint3D64f_z_set,0,0,2,_wrap_CvPoint3D64f_z_set_texinfo},
+{"CvPoint3D64f_z_get",_wrap_CvPoint3D64f_z_get,0,0,2,_wrap_CvPoint3D64f_z_get_texinfo},
 {"new_CvPoint3D64f",_wrap_new_CvPoint3D64f,0,0,2,_wrap_new_CvPoint3D64f_texinfo},
 {"delete_CvPoint3D64f",_wrap_delete_CvPoint3D64f,0,0,2,_wrap_delete_CvPoint3D64f_texinfo},
 {"cvPoint3D64f",_wrap_cvPoint3D64f,0,0,2,_wrap_cvPoint3D64f_texinfo},
-{"CvSize_width_set",_wrap_CvSize_width_set,0,0,2,0},
-{"CvSize_width_get",_wrap_CvSize_width_get,0,0,2,0},
-{"CvSize_height_set",_wrap_CvSize_height_set,0,0,2,0},
-{"CvSize_height_get",_wrap_CvSize_height_get,0,0,2,0},
+{"CvSize_width_set",_wrap_CvSize_width_set,0,0,2,_wrap_CvSize_width_set_texinfo},
+{"CvSize_width_get",_wrap_CvSize_width_get,0,0,2,_wrap_CvSize_width_get_texinfo},
+{"CvSize_height_set",_wrap_CvSize_height_set,0,0,2,_wrap_CvSize_height_set_texinfo},
+{"CvSize_height_get",_wrap_CvSize_height_get,0,0,2,_wrap_CvSize_height_get_texinfo},
 {"new_CvSize",_wrap_new_CvSize,0,0,2,_wrap_new_CvSize_texinfo},
 {"delete_CvSize",_wrap_delete_CvSize,0,0,2,_wrap_delete_CvSize_texinfo},
 {"cvSize",_wrap_cvSize,0,0,2,_wrap_cvSize_texinfo},
-{"CvSize2D32f_width_set",_wrap_CvSize2D32f_width_set,0,0,2,0},
-{"CvSize2D32f_width_get",_wrap_CvSize2D32f_width_get,0,0,2,0},
-{"CvSize2D32f_height_set",_wrap_CvSize2D32f_height_set,0,0,2,0},
-{"CvSize2D32f_height_get",_wrap_CvSize2D32f_height_get,0,0,2,0},
+{"CvSize2D32f_width_set",_wrap_CvSize2D32f_width_set,0,0,2,_wrap_CvSize2D32f_width_set_texinfo},
+{"CvSize2D32f_width_get",_wrap_CvSize2D32f_width_get,0,0,2,_wrap_CvSize2D32f_width_get_texinfo},
+{"CvSize2D32f_height_set",_wrap_CvSize2D32f_height_set,0,0,2,_wrap_CvSize2D32f_height_set_texinfo},
+{"CvSize2D32f_height_get",_wrap_CvSize2D32f_height_get,0,0,2,_wrap_CvSize2D32f_height_get_texinfo},
 {"new_CvSize2D32f",_wrap_new_CvSize2D32f,0,0,2,_wrap_new_CvSize2D32f_texinfo},
 {"delete_CvSize2D32f",_wrap_delete_CvSize2D32f,0,0,2,_wrap_delete_CvSize2D32f_texinfo},
 {"cvSize2D32f",_wrap_cvSize2D32f,0,0,2,_wrap_cvSize2D32f_texinfo},
-{"CvBox2D_center_set",_wrap_CvBox2D_center_set,0,0,2,0},
-{"CvBox2D_center_get",_wrap_CvBox2D_center_get,0,0,2,0},
-{"CvBox2D_size_set",_wrap_CvBox2D_size_set,0,0,2,0},
-{"CvBox2D_size_get",_wrap_CvBox2D_size_get,0,0,2,0},
-{"CvBox2D_angle_set",_wrap_CvBox2D_angle_set,0,0,2,0},
-{"CvBox2D_angle_get",_wrap_CvBox2D_angle_get,0,0,2,0},
+{"CvBox2D_center_set",_wrap_CvBox2D_center_set,0,0,2,_wrap_CvBox2D_center_set_texinfo},
+{"CvBox2D_center_get",_wrap_CvBox2D_center_get,0,0,2,_wrap_CvBox2D_center_get_texinfo},
+{"CvBox2D_size_set",_wrap_CvBox2D_size_set,0,0,2,_wrap_CvBox2D_size_set_texinfo},
+{"CvBox2D_size_get",_wrap_CvBox2D_size_get,0,0,2,_wrap_CvBox2D_size_get_texinfo},
+{"CvBox2D_angle_set",_wrap_CvBox2D_angle_set,0,0,2,_wrap_CvBox2D_angle_set_texinfo},
+{"CvBox2D_angle_get",_wrap_CvBox2D_angle_get,0,0,2,_wrap_CvBox2D_angle_get_texinfo},
 {"new_CvBox2D",_wrap_new_CvBox2D,0,0,2,_wrap_new_CvBox2D_texinfo},
 {"delete_CvBox2D",_wrap_delete_CvBox2D,0,0,2,_wrap_delete_CvBox2D_texinfo},
-{"CvLineIterator_ptr_set",_wrap_CvLineIterator_ptr_set,0,0,2,0},
-{"CvLineIterator_ptr_get",_wrap_CvLineIterator_ptr_get,0,0,2,0},
-{"CvLineIterator_err_set",_wrap_CvLineIterator_err_set,0,0,2,0},
-{"CvLineIterator_err_get",_wrap_CvLineIterator_err_get,0,0,2,0},
-{"CvLineIterator_plus_delta_set",_wrap_CvLineIterator_plus_delta_set,0,0,2,0},
-{"CvLineIterator_plus_delta_get",_wrap_CvLineIterator_plus_delta_get,0,0,2,0},
-{"CvLineIterator_minus_delta_set",_wrap_CvLineIterator_minus_delta_set,0,0,2,0},
-{"CvLineIterator_minus_delta_get",_wrap_CvLineIterator_minus_delta_get,0,0,2,0},
-{"CvLineIterator_plus_step_set",_wrap_CvLineIterator_plus_step_set,0,0,2,0},
-{"CvLineIterator_plus_step_get",_wrap_CvLineIterator_plus_step_get,0,0,2,0},
-{"CvLineIterator_minus_step_set",_wrap_CvLineIterator_minus_step_set,0,0,2,0},
-{"CvLineIterator_minus_step_get",_wrap_CvLineIterator_minus_step_get,0,0,2,0},
+{"CvLineIterator_ptr_set",_wrap_CvLineIterator_ptr_set,0,0,2,_wrap_CvLineIterator_ptr_set_texinfo},
+{"CvLineIterator_ptr_get",_wrap_CvLineIterator_ptr_get,0,0,2,_wrap_CvLineIterator_ptr_get_texinfo},
+{"CvLineIterator_err_set",_wrap_CvLineIterator_err_set,0,0,2,_wrap_CvLineIterator_err_set_texinfo},
+{"CvLineIterator_err_get",_wrap_CvLineIterator_err_get,0,0,2,_wrap_CvLineIterator_err_get_texinfo},
+{"CvLineIterator_plus_delta_set",_wrap_CvLineIterator_plus_delta_set,0,0,2,_wrap_CvLineIterator_plus_delta_set_texinfo},
+{"CvLineIterator_plus_delta_get",_wrap_CvLineIterator_plus_delta_get,0,0,2,_wrap_CvLineIterator_plus_delta_get_texinfo},
+{"CvLineIterator_minus_delta_set",_wrap_CvLineIterator_minus_delta_set,0,0,2,_wrap_CvLineIterator_minus_delta_set_texinfo},
+{"CvLineIterator_minus_delta_get",_wrap_CvLineIterator_minus_delta_get,0,0,2,_wrap_CvLineIterator_minus_delta_get_texinfo},
+{"CvLineIterator_plus_step_set",_wrap_CvLineIterator_plus_step_set,0,0,2,_wrap_CvLineIterator_plus_step_set_texinfo},
+{"CvLineIterator_plus_step_get",_wrap_CvLineIterator_plus_step_get,0,0,2,_wrap_CvLineIterator_plus_step_get_texinfo},
+{"CvLineIterator_minus_step_set",_wrap_CvLineIterator_minus_step_set,0,0,2,_wrap_CvLineIterator_minus_step_set_texinfo},
+{"CvLineIterator_minus_step_get",_wrap_CvLineIterator_minus_step_get,0,0,2,_wrap_CvLineIterator_minus_step_get_texinfo},
 {"new_CvLineIterator",_wrap_new_CvLineIterator,0,0,2,_wrap_new_CvLineIterator_texinfo},
 {"delete_CvLineIterator",_wrap_delete_CvLineIterator,0,0,2,_wrap_delete_CvLineIterator_texinfo},
-{"CvSlice_start_index_set",_wrap_CvSlice_start_index_set,0,0,2,0},
-{"CvSlice_start_index_get",_wrap_CvSlice_start_index_get,0,0,2,0},
-{"CvSlice_end_index_set",_wrap_CvSlice_end_index_set,0,0,2,0},
-{"CvSlice_end_index_get",_wrap_CvSlice_end_index_get,0,0,2,0},
+{"CvSlice_start_index_set",_wrap_CvSlice_start_index_set,0,0,2,_wrap_CvSlice_start_index_set_texinfo},
+{"CvSlice_start_index_get",_wrap_CvSlice_start_index_get,0,0,2,_wrap_CvSlice_start_index_get_texinfo},
+{"CvSlice_end_index_set",_wrap_CvSlice_end_index_set,0,0,2,_wrap_CvSlice_end_index_set_texinfo},
+{"CvSlice_end_index_get",_wrap_CvSlice_end_index_get,0,0,2,_wrap_CvSlice_end_index_get_texinfo},
 {"new_CvSlice",_wrap_new_CvSlice,0,0,2,_wrap_new_CvSlice_texinfo},
 {"delete_CvSlice",_wrap_delete_CvSlice,0,0,2,_wrap_delete_CvSlice_texinfo},
 {"cvSlice",_wrap_cvSlice,0,0,2,_wrap_cvSlice_texinfo},
-{"CvScalar_val_set",_wrap_CvScalar_val_set,0,0,2,0},
-{"CvScalar_val_get",_wrap_CvScalar_val_get,0,0,2,0},
+{"CvScalar_val_set",_wrap_CvScalar_val_set,0,0,2,_wrap_CvScalar_val_set_texinfo},
+{"CvScalar_val_get",_wrap_CvScalar_val_get,0,0,2,_wrap_CvScalar_val_get_texinfo},
 {"CvScalar___str__",_wrap_CvScalar___str__,0,0,2,_wrap_CvScalar___str___texinfo},
 {"CvScalar___repr__",_wrap_CvScalar___repr__,0,0,2,_wrap_CvScalar___repr___texinfo},
 {"CvScalar___getitem__",_wrap_CvScalar___getitem__,0,0,2,_wrap_CvScalar___getitem___texinfo},
@@ -106195,355 +107102,355 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvScalar",_wrap_cvScalar,0,0,2,_wrap_cvScalar_texinfo},
 {"cvRealScalar",_wrap_cvRealScalar,0,0,2,_wrap_cvRealScalar_texinfo},
 {"cvScalarAll",_wrap_cvScalarAll,0,0,2,_wrap_cvScalarAll_texinfo},
-{"CvMemBlock_prev_set",_wrap_CvMemBlock_prev_set,0,0,2,0},
-{"CvMemBlock_prev_get",_wrap_CvMemBlock_prev_get,0,0,2,0},
-{"CvMemBlock_next_set",_wrap_CvMemBlock_next_set,0,0,2,0},
-{"CvMemBlock_next_get",_wrap_CvMemBlock_next_get,0,0,2,0},
+{"CvMemBlock_prev_set",_wrap_CvMemBlock_prev_set,0,0,2,_wrap_CvMemBlock_prev_set_texinfo},
+{"CvMemBlock_prev_get",_wrap_CvMemBlock_prev_get,0,0,2,_wrap_CvMemBlock_prev_get_texinfo},
+{"CvMemBlock_next_set",_wrap_CvMemBlock_next_set,0,0,2,_wrap_CvMemBlock_next_set_texinfo},
+{"CvMemBlock_next_get",_wrap_CvMemBlock_next_get,0,0,2,_wrap_CvMemBlock_next_get_texinfo},
 {"new_CvMemBlock",_wrap_new_CvMemBlock,0,0,2,_wrap_new_CvMemBlock_texinfo},
 {"delete_CvMemBlock",_wrap_delete_CvMemBlock,0,0,2,_wrap_delete_CvMemBlock_texinfo},
-{"CvMemStorage_signature_set",_wrap_CvMemStorage_signature_set,0,0,2,0},
-{"CvMemStorage_signature_get",_wrap_CvMemStorage_signature_get,0,0,2,0},
-{"CvMemStorage_bottom_set",_wrap_CvMemStorage_bottom_set,0,0,2,0},
-{"CvMemStorage_bottom_get",_wrap_CvMemStorage_bottom_get,0,0,2,0},
-{"CvMemStorage_top_set",_wrap_CvMemStorage_top_set,0,0,2,0},
-{"CvMemStorage_top_get",_wrap_CvMemStorage_top_get,0,0,2,0},
-{"CvMemStorage_parent_set",_wrap_CvMemStorage_parent_set,0,0,2,0},
-{"CvMemStorage_parent_get",_wrap_CvMemStorage_parent_get,0,0,2,0},
-{"CvMemStorage_block_size_set",_wrap_CvMemStorage_block_size_set,0,0,2,0},
-{"CvMemStorage_block_size_get",_wrap_CvMemStorage_block_size_get,0,0,2,0},
-{"CvMemStorage_free_space_set",_wrap_CvMemStorage_free_space_set,0,0,2,0},
-{"CvMemStorage_free_space_get",_wrap_CvMemStorage_free_space_get,0,0,2,0},
+{"CvMemStorage_signature_set",_wrap_CvMemStorage_signature_set,0,0,2,_wrap_CvMemStorage_signature_set_texinfo},
+{"CvMemStorage_signature_get",_wrap_CvMemStorage_signature_get,0,0,2,_wrap_CvMemStorage_signature_get_texinfo},
+{"CvMemStorage_bottom_set",_wrap_CvMemStorage_bottom_set,0,0,2,_wrap_CvMemStorage_bottom_set_texinfo},
+{"CvMemStorage_bottom_get",_wrap_CvMemStorage_bottom_get,0,0,2,_wrap_CvMemStorage_bottom_get_texinfo},
+{"CvMemStorage_top_set",_wrap_CvMemStorage_top_set,0,0,2,_wrap_CvMemStorage_top_set_texinfo},
+{"CvMemStorage_top_get",_wrap_CvMemStorage_top_get,0,0,2,_wrap_CvMemStorage_top_get_texinfo},
+{"CvMemStorage_parent_set",_wrap_CvMemStorage_parent_set,0,0,2,_wrap_CvMemStorage_parent_set_texinfo},
+{"CvMemStorage_parent_get",_wrap_CvMemStorage_parent_get,0,0,2,_wrap_CvMemStorage_parent_get_texinfo},
+{"CvMemStorage_block_size_set",_wrap_CvMemStorage_block_size_set,0,0,2,_wrap_CvMemStorage_block_size_set_texinfo},
+{"CvMemStorage_block_size_get",_wrap_CvMemStorage_block_size_get,0,0,2,_wrap_CvMemStorage_block_size_get_texinfo},
+{"CvMemStorage_free_space_set",_wrap_CvMemStorage_free_space_set,0,0,2,_wrap_CvMemStorage_free_space_set_texinfo},
+{"CvMemStorage_free_space_get",_wrap_CvMemStorage_free_space_get,0,0,2,_wrap_CvMemStorage_free_space_get_texinfo},
 {"delete_CvMemStorage",_wrap_delete_CvMemStorage,0,0,2,_wrap_delete_CvMemStorage_texinfo},
-{"CvMemStoragePos_top_set",_wrap_CvMemStoragePos_top_set,0,0,2,0},
-{"CvMemStoragePos_top_get",_wrap_CvMemStoragePos_top_get,0,0,2,0},
-{"CvMemStoragePos_free_space_set",_wrap_CvMemStoragePos_free_space_set,0,0,2,0},
-{"CvMemStoragePos_free_space_get",_wrap_CvMemStoragePos_free_space_get,0,0,2,0},
+{"CvMemStoragePos_top_set",_wrap_CvMemStoragePos_top_set,0,0,2,_wrap_CvMemStoragePos_top_set_texinfo},
+{"CvMemStoragePos_top_get",_wrap_CvMemStoragePos_top_get,0,0,2,_wrap_CvMemStoragePos_top_get_texinfo},
+{"CvMemStoragePos_free_space_set",_wrap_CvMemStoragePos_free_space_set,0,0,2,_wrap_CvMemStoragePos_free_space_set_texinfo},
+{"CvMemStoragePos_free_space_get",_wrap_CvMemStoragePos_free_space_get,0,0,2,_wrap_CvMemStoragePos_free_space_get_texinfo},
 {"new_CvMemStoragePos",_wrap_new_CvMemStoragePos,0,0,2,_wrap_new_CvMemStoragePos_texinfo},
 {"delete_CvMemStoragePos",_wrap_delete_CvMemStoragePos,0,0,2,_wrap_delete_CvMemStoragePos_texinfo},
-{"CvSeqBlock_prev_set",_wrap_CvSeqBlock_prev_set,0,0,2,0},
-{"CvSeqBlock_prev_get",_wrap_CvSeqBlock_prev_get,0,0,2,0},
-{"CvSeqBlock_next_set",_wrap_CvSeqBlock_next_set,0,0,2,0},
-{"CvSeqBlock_next_get",_wrap_CvSeqBlock_next_get,0,0,2,0},
-{"CvSeqBlock_start_index_set",_wrap_CvSeqBlock_start_index_set,0,0,2,0},
-{"CvSeqBlock_start_index_get",_wrap_CvSeqBlock_start_index_get,0,0,2,0},
-{"CvSeqBlock_count_set",_wrap_CvSeqBlock_count_set,0,0,2,0},
-{"CvSeqBlock_count_get",_wrap_CvSeqBlock_count_get,0,0,2,0},
-{"CvSeqBlock_data_set",_wrap_CvSeqBlock_data_set,0,0,2,0},
-{"CvSeqBlock_data_get",_wrap_CvSeqBlock_data_get,0,0,2,0},
+{"CvSeqBlock_prev_set",_wrap_CvSeqBlock_prev_set,0,0,2,_wrap_CvSeqBlock_prev_set_texinfo},
+{"CvSeqBlock_prev_get",_wrap_CvSeqBlock_prev_get,0,0,2,_wrap_CvSeqBlock_prev_get_texinfo},
+{"CvSeqBlock_next_set",_wrap_CvSeqBlock_next_set,0,0,2,_wrap_CvSeqBlock_next_set_texinfo},
+{"CvSeqBlock_next_get",_wrap_CvSeqBlock_next_get,0,0,2,_wrap_CvSeqBlock_next_get_texinfo},
+{"CvSeqBlock_start_index_set",_wrap_CvSeqBlock_start_index_set,0,0,2,_wrap_CvSeqBlock_start_index_set_texinfo},
+{"CvSeqBlock_start_index_get",_wrap_CvSeqBlock_start_index_get,0,0,2,_wrap_CvSeqBlock_start_index_get_texinfo},
+{"CvSeqBlock_count_set",_wrap_CvSeqBlock_count_set,0,0,2,_wrap_CvSeqBlock_count_set_texinfo},
+{"CvSeqBlock_count_get",_wrap_CvSeqBlock_count_get,0,0,2,_wrap_CvSeqBlock_count_get_texinfo},
+{"CvSeqBlock_data_set",_wrap_CvSeqBlock_data_set,0,0,2,_wrap_CvSeqBlock_data_set_texinfo},
+{"CvSeqBlock_data_get",_wrap_CvSeqBlock_data_get,0,0,2,_wrap_CvSeqBlock_data_get_texinfo},
 {"new_CvSeqBlock",_wrap_new_CvSeqBlock,0,0,2,_wrap_new_CvSeqBlock_texinfo},
 {"delete_CvSeqBlock",_wrap_delete_CvSeqBlock,0,0,2,_wrap_delete_CvSeqBlock_texinfo},
-{"CvSeq_flags_set",_wrap_CvSeq_flags_set,0,0,2,0},
-{"CvSeq_flags_get",_wrap_CvSeq_flags_get,0,0,2,0},
-{"CvSeq_header_size_set",_wrap_CvSeq_header_size_set,0,0,2,0},
-{"CvSeq_header_size_get",_wrap_CvSeq_header_size_get,0,0,2,0},
-{"CvSeq_h_prev_set",_wrap_CvSeq_h_prev_set,0,0,2,0},
-{"CvSeq_h_prev_get",_wrap_CvSeq_h_prev_get,0,0,2,0},
-{"CvSeq_h_next_set",_wrap_CvSeq_h_next_set,0,0,2,0},
-{"CvSeq_h_next_get",_wrap_CvSeq_h_next_get,0,0,2,0},
-{"CvSeq_v_prev_set",_wrap_CvSeq_v_prev_set,0,0,2,0},
-{"CvSeq_v_prev_get",_wrap_CvSeq_v_prev_get,0,0,2,0},
-{"CvSeq_v_next_set",_wrap_CvSeq_v_next_set,0,0,2,0},
-{"CvSeq_v_next_get",_wrap_CvSeq_v_next_get,0,0,2,0},
-{"CvSeq_total_set",_wrap_CvSeq_total_set,0,0,2,0},
-{"CvSeq_total_get",_wrap_CvSeq_total_get,0,0,2,0},
-{"CvSeq_elem_size_set",_wrap_CvSeq_elem_size_set,0,0,2,0},
-{"CvSeq_elem_size_get",_wrap_CvSeq_elem_size_get,0,0,2,0},
-{"CvSeq_block_max_set",_wrap_CvSeq_block_max_set,0,0,2,0},
-{"CvSeq_block_max_get",_wrap_CvSeq_block_max_get,0,0,2,0},
-{"CvSeq_ptr_set",_wrap_CvSeq_ptr_set,0,0,2,0},
-{"CvSeq_ptr_get",_wrap_CvSeq_ptr_get,0,0,2,0},
-{"CvSeq_delta_elems_set",_wrap_CvSeq_delta_elems_set,0,0,2,0},
-{"CvSeq_delta_elems_get",_wrap_CvSeq_delta_elems_get,0,0,2,0},
-{"CvSeq_storage_set",_wrap_CvSeq_storage_set,0,0,2,0},
-{"CvSeq_storage_get",_wrap_CvSeq_storage_get,0,0,2,0},
-{"CvSeq_free_blocks_set",_wrap_CvSeq_free_blocks_set,0,0,2,0},
-{"CvSeq_free_blocks_get",_wrap_CvSeq_free_blocks_get,0,0,2,0},
-{"CvSeq_first_set",_wrap_CvSeq_first_set,0,0,2,0},
-{"CvSeq_first_get",_wrap_CvSeq_first_get,0,0,2,0},
+{"CvSeq_flags_set",_wrap_CvSeq_flags_set,0,0,2,_wrap_CvSeq_flags_set_texinfo},
+{"CvSeq_flags_get",_wrap_CvSeq_flags_get,0,0,2,_wrap_CvSeq_flags_get_texinfo},
+{"CvSeq_header_size_set",_wrap_CvSeq_header_size_set,0,0,2,_wrap_CvSeq_header_size_set_texinfo},
+{"CvSeq_header_size_get",_wrap_CvSeq_header_size_get,0,0,2,_wrap_CvSeq_header_size_get_texinfo},
+{"CvSeq_h_prev_set",_wrap_CvSeq_h_prev_set,0,0,2,_wrap_CvSeq_h_prev_set_texinfo},
+{"CvSeq_h_prev_get",_wrap_CvSeq_h_prev_get,0,0,2,_wrap_CvSeq_h_prev_get_texinfo},
+{"CvSeq_h_next_set",_wrap_CvSeq_h_next_set,0,0,2,_wrap_CvSeq_h_next_set_texinfo},
+{"CvSeq_h_next_get",_wrap_CvSeq_h_next_get,0,0,2,_wrap_CvSeq_h_next_get_texinfo},
+{"CvSeq_v_prev_set",_wrap_CvSeq_v_prev_set,0,0,2,_wrap_CvSeq_v_prev_set_texinfo},
+{"CvSeq_v_prev_get",_wrap_CvSeq_v_prev_get,0,0,2,_wrap_CvSeq_v_prev_get_texinfo},
+{"CvSeq_v_next_set",_wrap_CvSeq_v_next_set,0,0,2,_wrap_CvSeq_v_next_set_texinfo},
+{"CvSeq_v_next_get",_wrap_CvSeq_v_next_get,0,0,2,_wrap_CvSeq_v_next_get_texinfo},
+{"CvSeq_total_set",_wrap_CvSeq_total_set,0,0,2,_wrap_CvSeq_total_set_texinfo},
+{"CvSeq_total_get",_wrap_CvSeq_total_get,0,0,2,_wrap_CvSeq_total_get_texinfo},
+{"CvSeq_elem_size_set",_wrap_CvSeq_elem_size_set,0,0,2,_wrap_CvSeq_elem_size_set_texinfo},
+{"CvSeq_elem_size_get",_wrap_CvSeq_elem_size_get,0,0,2,_wrap_CvSeq_elem_size_get_texinfo},
+{"CvSeq_block_max_set",_wrap_CvSeq_block_max_set,0,0,2,_wrap_CvSeq_block_max_set_texinfo},
+{"CvSeq_block_max_get",_wrap_CvSeq_block_max_get,0,0,2,_wrap_CvSeq_block_max_get_texinfo},
+{"CvSeq_ptr_set",_wrap_CvSeq_ptr_set,0,0,2,_wrap_CvSeq_ptr_set_texinfo},
+{"CvSeq_ptr_get",_wrap_CvSeq_ptr_get,0,0,2,_wrap_CvSeq_ptr_get_texinfo},
+{"CvSeq_delta_elems_set",_wrap_CvSeq_delta_elems_set,0,0,2,_wrap_CvSeq_delta_elems_set_texinfo},
+{"CvSeq_delta_elems_get",_wrap_CvSeq_delta_elems_get,0,0,2,_wrap_CvSeq_delta_elems_get_texinfo},
+{"CvSeq_storage_set",_wrap_CvSeq_storage_set,0,0,2,_wrap_CvSeq_storage_set_texinfo},
+{"CvSeq_storage_get",_wrap_CvSeq_storage_get,0,0,2,_wrap_CvSeq_storage_get_texinfo},
+{"CvSeq_free_blocks_set",_wrap_CvSeq_free_blocks_set,0,0,2,_wrap_CvSeq_free_blocks_set_texinfo},
+{"CvSeq_free_blocks_get",_wrap_CvSeq_free_blocks_get,0,0,2,_wrap_CvSeq_free_blocks_get_texinfo},
+{"CvSeq_first_set",_wrap_CvSeq_first_set,0,0,2,_wrap_CvSeq_first_set_texinfo},
+{"CvSeq_first_get",_wrap_CvSeq_first_get,0,0,2,_wrap_CvSeq_first_get_texinfo},
 {"new_CvSeq",_wrap_new_CvSeq,0,0,2,_wrap_new_CvSeq_texinfo},
 {"delete_CvSeq",_wrap_delete_CvSeq,0,0,2,_wrap_delete_CvSeq_texinfo},
-{"CvSetElem_flags_set",_wrap_CvSetElem_flags_set,0,0,2,0},
-{"CvSetElem_flags_get",_wrap_CvSetElem_flags_get,0,0,2,0},
-{"CvSetElem_next_free_set",_wrap_CvSetElem_next_free_set,0,0,2,0},
-{"CvSetElem_next_free_get",_wrap_CvSetElem_next_free_get,0,0,2,0},
+{"CvSetElem_flags_set",_wrap_CvSetElem_flags_set,0,0,2,_wrap_CvSetElem_flags_set_texinfo},
+{"CvSetElem_flags_get",_wrap_CvSetElem_flags_get,0,0,2,_wrap_CvSetElem_flags_get_texinfo},
+{"CvSetElem_next_free_set",_wrap_CvSetElem_next_free_set,0,0,2,_wrap_CvSetElem_next_free_set_texinfo},
+{"CvSetElem_next_free_get",_wrap_CvSetElem_next_free_get,0,0,2,_wrap_CvSetElem_next_free_get_texinfo},
 {"new_CvSetElem",_wrap_new_CvSetElem,0,0,2,_wrap_new_CvSetElem_texinfo},
 {"delete_CvSetElem",_wrap_delete_CvSetElem,0,0,2,_wrap_delete_CvSetElem_texinfo},
-{"CvSet_flags_set",_wrap_CvSet_flags_set,0,0,2,0},
-{"CvSet_flags_get",_wrap_CvSet_flags_get,0,0,2,0},
-{"CvSet_header_size_set",_wrap_CvSet_header_size_set,0,0,2,0},
-{"CvSet_header_size_get",_wrap_CvSet_header_size_get,0,0,2,0},
-{"CvSet_h_prev_set",_wrap_CvSet_h_prev_set,0,0,2,0},
-{"CvSet_h_prev_get",_wrap_CvSet_h_prev_get,0,0,2,0},
-{"CvSet_h_next_set",_wrap_CvSet_h_next_set,0,0,2,0},
-{"CvSet_h_next_get",_wrap_CvSet_h_next_get,0,0,2,0},
-{"CvSet_v_prev_set",_wrap_CvSet_v_prev_set,0,0,2,0},
-{"CvSet_v_prev_get",_wrap_CvSet_v_prev_get,0,0,2,0},
-{"CvSet_v_next_set",_wrap_CvSet_v_next_set,0,0,2,0},
-{"CvSet_v_next_get",_wrap_CvSet_v_next_get,0,0,2,0},
-{"CvSet_total_set",_wrap_CvSet_total_set,0,0,2,0},
-{"CvSet_total_get",_wrap_CvSet_total_get,0,0,2,0},
-{"CvSet_elem_size_set",_wrap_CvSet_elem_size_set,0,0,2,0},
-{"CvSet_elem_size_get",_wrap_CvSet_elem_size_get,0,0,2,0},
-{"CvSet_block_max_set",_wrap_CvSet_block_max_set,0,0,2,0},
-{"CvSet_block_max_get",_wrap_CvSet_block_max_get,0,0,2,0},
-{"CvSet_ptr_set",_wrap_CvSet_ptr_set,0,0,2,0},
-{"CvSet_ptr_get",_wrap_CvSet_ptr_get,0,0,2,0},
-{"CvSet_delta_elems_set",_wrap_CvSet_delta_elems_set,0,0,2,0},
-{"CvSet_delta_elems_get",_wrap_CvSet_delta_elems_get,0,0,2,0},
-{"CvSet_storage_set",_wrap_CvSet_storage_set,0,0,2,0},
-{"CvSet_storage_get",_wrap_CvSet_storage_get,0,0,2,0},
-{"CvSet_free_blocks_set",_wrap_CvSet_free_blocks_set,0,0,2,0},
-{"CvSet_free_blocks_get",_wrap_CvSet_free_blocks_get,0,0,2,0},
-{"CvSet_first_set",_wrap_CvSet_first_set,0,0,2,0},
-{"CvSet_first_get",_wrap_CvSet_first_get,0,0,2,0},
-{"CvSet_free_elems_set",_wrap_CvSet_free_elems_set,0,0,2,0},
-{"CvSet_free_elems_get",_wrap_CvSet_free_elems_get,0,0,2,0},
-{"CvSet_active_count_set",_wrap_CvSet_active_count_set,0,0,2,0},
-{"CvSet_active_count_get",_wrap_CvSet_active_count_get,0,0,2,0},
+{"CvSet_flags_set",_wrap_CvSet_flags_set,0,0,2,_wrap_CvSet_flags_set_texinfo},
+{"CvSet_flags_get",_wrap_CvSet_flags_get,0,0,2,_wrap_CvSet_flags_get_texinfo},
+{"CvSet_header_size_set",_wrap_CvSet_header_size_set,0,0,2,_wrap_CvSet_header_size_set_texinfo},
+{"CvSet_header_size_get",_wrap_CvSet_header_size_get,0,0,2,_wrap_CvSet_header_size_get_texinfo},
+{"CvSet_h_prev_set",_wrap_CvSet_h_prev_set,0,0,2,_wrap_CvSet_h_prev_set_texinfo},
+{"CvSet_h_prev_get",_wrap_CvSet_h_prev_get,0,0,2,_wrap_CvSet_h_prev_get_texinfo},
+{"CvSet_h_next_set",_wrap_CvSet_h_next_set,0,0,2,_wrap_CvSet_h_next_set_texinfo},
+{"CvSet_h_next_get",_wrap_CvSet_h_next_get,0,0,2,_wrap_CvSet_h_next_get_texinfo},
+{"CvSet_v_prev_set",_wrap_CvSet_v_prev_set,0,0,2,_wrap_CvSet_v_prev_set_texinfo},
+{"CvSet_v_prev_get",_wrap_CvSet_v_prev_get,0,0,2,_wrap_CvSet_v_prev_get_texinfo},
+{"CvSet_v_next_set",_wrap_CvSet_v_next_set,0,0,2,_wrap_CvSet_v_next_set_texinfo},
+{"CvSet_v_next_get",_wrap_CvSet_v_next_get,0,0,2,_wrap_CvSet_v_next_get_texinfo},
+{"CvSet_total_set",_wrap_CvSet_total_set,0,0,2,_wrap_CvSet_total_set_texinfo},
+{"CvSet_total_get",_wrap_CvSet_total_get,0,0,2,_wrap_CvSet_total_get_texinfo},
+{"CvSet_elem_size_set",_wrap_CvSet_elem_size_set,0,0,2,_wrap_CvSet_elem_size_set_texinfo},
+{"CvSet_elem_size_get",_wrap_CvSet_elem_size_get,0,0,2,_wrap_CvSet_elem_size_get_texinfo},
+{"CvSet_block_max_set",_wrap_CvSet_block_max_set,0,0,2,_wrap_CvSet_block_max_set_texinfo},
+{"CvSet_block_max_get",_wrap_CvSet_block_max_get,0,0,2,_wrap_CvSet_block_max_get_texinfo},
+{"CvSet_ptr_set",_wrap_CvSet_ptr_set,0,0,2,_wrap_CvSet_ptr_set_texinfo},
+{"CvSet_ptr_get",_wrap_CvSet_ptr_get,0,0,2,_wrap_CvSet_ptr_get_texinfo},
+{"CvSet_delta_elems_set",_wrap_CvSet_delta_elems_set,0,0,2,_wrap_CvSet_delta_elems_set_texinfo},
+{"CvSet_delta_elems_get",_wrap_CvSet_delta_elems_get,0,0,2,_wrap_CvSet_delta_elems_get_texinfo},
+{"CvSet_storage_set",_wrap_CvSet_storage_set,0,0,2,_wrap_CvSet_storage_set_texinfo},
+{"CvSet_storage_get",_wrap_CvSet_storage_get,0,0,2,_wrap_CvSet_storage_get_texinfo},
+{"CvSet_free_blocks_set",_wrap_CvSet_free_blocks_set,0,0,2,_wrap_CvSet_free_blocks_set_texinfo},
+{"CvSet_free_blocks_get",_wrap_CvSet_free_blocks_get,0,0,2,_wrap_CvSet_free_blocks_get_texinfo},
+{"CvSet_first_set",_wrap_CvSet_first_set,0,0,2,_wrap_CvSet_first_set_texinfo},
+{"CvSet_first_get",_wrap_CvSet_first_get,0,0,2,_wrap_CvSet_first_get_texinfo},
+{"CvSet_free_elems_set",_wrap_CvSet_free_elems_set,0,0,2,_wrap_CvSet_free_elems_set_texinfo},
+{"CvSet_free_elems_get",_wrap_CvSet_free_elems_get,0,0,2,_wrap_CvSet_free_elems_get_texinfo},
+{"CvSet_active_count_set",_wrap_CvSet_active_count_set,0,0,2,_wrap_CvSet_active_count_set_texinfo},
+{"CvSet_active_count_get",_wrap_CvSet_active_count_get,0,0,2,_wrap_CvSet_active_count_get_texinfo},
 {"new_CvSet",_wrap_new_CvSet,0,0,2,_wrap_new_CvSet_texinfo},
 {"delete_CvSet",_wrap_delete_CvSet,0,0,2,_wrap_delete_CvSet_texinfo},
-{"CvGraphEdge_flags_set",_wrap_CvGraphEdge_flags_set,0,0,2,0},
-{"CvGraphEdge_flags_get",_wrap_CvGraphEdge_flags_get,0,0,2,0},
-{"CvGraphEdge_weight_set",_wrap_CvGraphEdge_weight_set,0,0,2,0},
-{"CvGraphEdge_weight_get",_wrap_CvGraphEdge_weight_get,0,0,2,0},
-{"CvGraphEdge_next_set",_wrap_CvGraphEdge_next_set,0,0,2,0},
-{"CvGraphEdge_next_get",_wrap_CvGraphEdge_next_get,0,0,2,0},
-{"CvGraphEdge_vtx_set",_wrap_CvGraphEdge_vtx_set,0,0,2,0},
-{"CvGraphEdge_vtx_get",_wrap_CvGraphEdge_vtx_get,0,0,2,0},
+{"CvGraphEdge_flags_set",_wrap_CvGraphEdge_flags_set,0,0,2,_wrap_CvGraphEdge_flags_set_texinfo},
+{"CvGraphEdge_flags_get",_wrap_CvGraphEdge_flags_get,0,0,2,_wrap_CvGraphEdge_flags_get_texinfo},
+{"CvGraphEdge_weight_set",_wrap_CvGraphEdge_weight_set,0,0,2,_wrap_CvGraphEdge_weight_set_texinfo},
+{"CvGraphEdge_weight_get",_wrap_CvGraphEdge_weight_get,0,0,2,_wrap_CvGraphEdge_weight_get_texinfo},
+{"CvGraphEdge_next_set",_wrap_CvGraphEdge_next_set,0,0,2,_wrap_CvGraphEdge_next_set_texinfo},
+{"CvGraphEdge_next_get",_wrap_CvGraphEdge_next_get,0,0,2,_wrap_CvGraphEdge_next_get_texinfo},
+{"CvGraphEdge_vtx_set",_wrap_CvGraphEdge_vtx_set,0,0,2,_wrap_CvGraphEdge_vtx_set_texinfo},
+{"CvGraphEdge_vtx_get",_wrap_CvGraphEdge_vtx_get,0,0,2,_wrap_CvGraphEdge_vtx_get_texinfo},
 {"new_CvGraphEdge",_wrap_new_CvGraphEdge,0,0,2,_wrap_new_CvGraphEdge_texinfo},
 {"delete_CvGraphEdge",_wrap_delete_CvGraphEdge,0,0,2,_wrap_delete_CvGraphEdge_texinfo},
-{"CvGraphVtx_flags_set",_wrap_CvGraphVtx_flags_set,0,0,2,0},
-{"CvGraphVtx_flags_get",_wrap_CvGraphVtx_flags_get,0,0,2,0},
-{"CvGraphVtx_first_set",_wrap_CvGraphVtx_first_set,0,0,2,0},
-{"CvGraphVtx_first_get",_wrap_CvGraphVtx_first_get,0,0,2,0},
+{"CvGraphVtx_flags_set",_wrap_CvGraphVtx_flags_set,0,0,2,_wrap_CvGraphVtx_flags_set_texinfo},
+{"CvGraphVtx_flags_get",_wrap_CvGraphVtx_flags_get,0,0,2,_wrap_CvGraphVtx_flags_get_texinfo},
+{"CvGraphVtx_first_set",_wrap_CvGraphVtx_first_set,0,0,2,_wrap_CvGraphVtx_first_set_texinfo},
+{"CvGraphVtx_first_get",_wrap_CvGraphVtx_first_get,0,0,2,_wrap_CvGraphVtx_first_get_texinfo},
 {"new_CvGraphVtx",_wrap_new_CvGraphVtx,0,0,2,_wrap_new_CvGraphVtx_texinfo},
 {"delete_CvGraphVtx",_wrap_delete_CvGraphVtx,0,0,2,_wrap_delete_CvGraphVtx_texinfo},
-{"CvGraphVtx2D_flags_set",_wrap_CvGraphVtx2D_flags_set,0,0,2,0},
-{"CvGraphVtx2D_flags_get",_wrap_CvGraphVtx2D_flags_get,0,0,2,0},
-{"CvGraphVtx2D_first_set",_wrap_CvGraphVtx2D_first_set,0,0,2,0},
-{"CvGraphVtx2D_first_get",_wrap_CvGraphVtx2D_first_get,0,0,2,0},
-{"CvGraphVtx2D_ptr_set",_wrap_CvGraphVtx2D_ptr_set,0,0,2,0},
-{"CvGraphVtx2D_ptr_get",_wrap_CvGraphVtx2D_ptr_get,0,0,2,0},
+{"CvGraphVtx2D_flags_set",_wrap_CvGraphVtx2D_flags_set,0,0,2,_wrap_CvGraphVtx2D_flags_set_texinfo},
+{"CvGraphVtx2D_flags_get",_wrap_CvGraphVtx2D_flags_get,0,0,2,_wrap_CvGraphVtx2D_flags_get_texinfo},
+{"CvGraphVtx2D_first_set",_wrap_CvGraphVtx2D_first_set,0,0,2,_wrap_CvGraphVtx2D_first_set_texinfo},
+{"CvGraphVtx2D_first_get",_wrap_CvGraphVtx2D_first_get,0,0,2,_wrap_CvGraphVtx2D_first_get_texinfo},
+{"CvGraphVtx2D_ptr_set",_wrap_CvGraphVtx2D_ptr_set,0,0,2,_wrap_CvGraphVtx2D_ptr_set_texinfo},
+{"CvGraphVtx2D_ptr_get",_wrap_CvGraphVtx2D_ptr_get,0,0,2,_wrap_CvGraphVtx2D_ptr_get_texinfo},
 {"new_CvGraphVtx2D",_wrap_new_CvGraphVtx2D,0,0,2,_wrap_new_CvGraphVtx2D_texinfo},
 {"delete_CvGraphVtx2D",_wrap_delete_CvGraphVtx2D,0,0,2,_wrap_delete_CvGraphVtx2D_texinfo},
-{"CvGraph_flags_set",_wrap_CvGraph_flags_set,0,0,2,0},
-{"CvGraph_flags_get",_wrap_CvGraph_flags_get,0,0,2,0},
-{"CvGraph_header_size_set",_wrap_CvGraph_header_size_set,0,0,2,0},
-{"CvGraph_header_size_get",_wrap_CvGraph_header_size_get,0,0,2,0},
-{"CvGraph_h_prev_set",_wrap_CvGraph_h_prev_set,0,0,2,0},
-{"CvGraph_h_prev_get",_wrap_CvGraph_h_prev_get,0,0,2,0},
-{"CvGraph_h_next_set",_wrap_CvGraph_h_next_set,0,0,2,0},
-{"CvGraph_h_next_get",_wrap_CvGraph_h_next_get,0,0,2,0},
-{"CvGraph_v_prev_set",_wrap_CvGraph_v_prev_set,0,0,2,0},
-{"CvGraph_v_prev_get",_wrap_CvGraph_v_prev_get,0,0,2,0},
-{"CvGraph_v_next_set",_wrap_CvGraph_v_next_set,0,0,2,0},
-{"CvGraph_v_next_get",_wrap_CvGraph_v_next_get,0,0,2,0},
-{"CvGraph_total_set",_wrap_CvGraph_total_set,0,0,2,0},
-{"CvGraph_total_get",_wrap_CvGraph_total_get,0,0,2,0},
-{"CvGraph_elem_size_set",_wrap_CvGraph_elem_size_set,0,0,2,0},
-{"CvGraph_elem_size_get",_wrap_CvGraph_elem_size_get,0,0,2,0},
-{"CvGraph_block_max_set",_wrap_CvGraph_block_max_set,0,0,2,0},
-{"CvGraph_block_max_get",_wrap_CvGraph_block_max_get,0,0,2,0},
-{"CvGraph_ptr_set",_wrap_CvGraph_ptr_set,0,0,2,0},
-{"CvGraph_ptr_get",_wrap_CvGraph_ptr_get,0,0,2,0},
-{"CvGraph_delta_elems_set",_wrap_CvGraph_delta_elems_set,0,0,2,0},
-{"CvGraph_delta_elems_get",_wrap_CvGraph_delta_elems_get,0,0,2,0},
-{"CvGraph_storage_set",_wrap_CvGraph_storage_set,0,0,2,0},
-{"CvGraph_storage_get",_wrap_CvGraph_storage_get,0,0,2,0},
-{"CvGraph_free_blocks_set",_wrap_CvGraph_free_blocks_set,0,0,2,0},
-{"CvGraph_free_blocks_get",_wrap_CvGraph_free_blocks_get,0,0,2,0},
-{"CvGraph_first_set",_wrap_CvGraph_first_set,0,0,2,0},
-{"CvGraph_first_get",_wrap_CvGraph_first_get,0,0,2,0},
-{"CvGraph_free_elems_set",_wrap_CvGraph_free_elems_set,0,0,2,0},
-{"CvGraph_free_elems_get",_wrap_CvGraph_free_elems_get,0,0,2,0},
-{"CvGraph_active_count_set",_wrap_CvGraph_active_count_set,0,0,2,0},
-{"CvGraph_active_count_get",_wrap_CvGraph_active_count_get,0,0,2,0},
-{"CvGraph_edges_set",_wrap_CvGraph_edges_set,0,0,2,0},
-{"CvGraph_edges_get",_wrap_CvGraph_edges_get,0,0,2,0},
+{"CvGraph_flags_set",_wrap_CvGraph_flags_set,0,0,2,_wrap_CvGraph_flags_set_texinfo},
+{"CvGraph_flags_get",_wrap_CvGraph_flags_get,0,0,2,_wrap_CvGraph_flags_get_texinfo},
+{"CvGraph_header_size_set",_wrap_CvGraph_header_size_set,0,0,2,_wrap_CvGraph_header_size_set_texinfo},
+{"CvGraph_header_size_get",_wrap_CvGraph_header_size_get,0,0,2,_wrap_CvGraph_header_size_get_texinfo},
+{"CvGraph_h_prev_set",_wrap_CvGraph_h_prev_set,0,0,2,_wrap_CvGraph_h_prev_set_texinfo},
+{"CvGraph_h_prev_get",_wrap_CvGraph_h_prev_get,0,0,2,_wrap_CvGraph_h_prev_get_texinfo},
+{"CvGraph_h_next_set",_wrap_CvGraph_h_next_set,0,0,2,_wrap_CvGraph_h_next_set_texinfo},
+{"CvGraph_h_next_get",_wrap_CvGraph_h_next_get,0,0,2,_wrap_CvGraph_h_next_get_texinfo},
+{"CvGraph_v_prev_set",_wrap_CvGraph_v_prev_set,0,0,2,_wrap_CvGraph_v_prev_set_texinfo},
+{"CvGraph_v_prev_get",_wrap_CvGraph_v_prev_get,0,0,2,_wrap_CvGraph_v_prev_get_texinfo},
+{"CvGraph_v_next_set",_wrap_CvGraph_v_next_set,0,0,2,_wrap_CvGraph_v_next_set_texinfo},
+{"CvGraph_v_next_get",_wrap_CvGraph_v_next_get,0,0,2,_wrap_CvGraph_v_next_get_texinfo},
+{"CvGraph_total_set",_wrap_CvGraph_total_set,0,0,2,_wrap_CvGraph_total_set_texinfo},
+{"CvGraph_total_get",_wrap_CvGraph_total_get,0,0,2,_wrap_CvGraph_total_get_texinfo},
+{"CvGraph_elem_size_set",_wrap_CvGraph_elem_size_set,0,0,2,_wrap_CvGraph_elem_size_set_texinfo},
+{"CvGraph_elem_size_get",_wrap_CvGraph_elem_size_get,0,0,2,_wrap_CvGraph_elem_size_get_texinfo},
+{"CvGraph_block_max_set",_wrap_CvGraph_block_max_set,0,0,2,_wrap_CvGraph_block_max_set_texinfo},
+{"CvGraph_block_max_get",_wrap_CvGraph_block_max_get,0,0,2,_wrap_CvGraph_block_max_get_texinfo},
+{"CvGraph_ptr_set",_wrap_CvGraph_ptr_set,0,0,2,_wrap_CvGraph_ptr_set_texinfo},
+{"CvGraph_ptr_get",_wrap_CvGraph_ptr_get,0,0,2,_wrap_CvGraph_ptr_get_texinfo},
+{"CvGraph_delta_elems_set",_wrap_CvGraph_delta_elems_set,0,0,2,_wrap_CvGraph_delta_elems_set_texinfo},
+{"CvGraph_delta_elems_get",_wrap_CvGraph_delta_elems_get,0,0,2,_wrap_CvGraph_delta_elems_get_texinfo},
+{"CvGraph_storage_set",_wrap_CvGraph_storage_set,0,0,2,_wrap_CvGraph_storage_set_texinfo},
+{"CvGraph_storage_get",_wrap_CvGraph_storage_get,0,0,2,_wrap_CvGraph_storage_get_texinfo},
+{"CvGraph_free_blocks_set",_wrap_CvGraph_free_blocks_set,0,0,2,_wrap_CvGraph_free_blocks_set_texinfo},
+{"CvGraph_free_blocks_get",_wrap_CvGraph_free_blocks_get,0,0,2,_wrap_CvGraph_free_blocks_get_texinfo},
+{"CvGraph_first_set",_wrap_CvGraph_first_set,0,0,2,_wrap_CvGraph_first_set_texinfo},
+{"CvGraph_first_get",_wrap_CvGraph_first_get,0,0,2,_wrap_CvGraph_first_get_texinfo},
+{"CvGraph_free_elems_set",_wrap_CvGraph_free_elems_set,0,0,2,_wrap_CvGraph_free_elems_set_texinfo},
+{"CvGraph_free_elems_get",_wrap_CvGraph_free_elems_get,0,0,2,_wrap_CvGraph_free_elems_get_texinfo},
+{"CvGraph_active_count_set",_wrap_CvGraph_active_count_set,0,0,2,_wrap_CvGraph_active_count_set_texinfo},
+{"CvGraph_active_count_get",_wrap_CvGraph_active_count_get,0,0,2,_wrap_CvGraph_active_count_get_texinfo},
+{"CvGraph_edges_set",_wrap_CvGraph_edges_set,0,0,2,_wrap_CvGraph_edges_set_texinfo},
+{"CvGraph_edges_get",_wrap_CvGraph_edges_get,0,0,2,_wrap_CvGraph_edges_get_texinfo},
 {"new_CvGraph",_wrap_new_CvGraph,0,0,2,_wrap_new_CvGraph_texinfo},
 {"delete_CvGraph",_wrap_delete_CvGraph,0,0,2,_wrap_delete_CvGraph_texinfo},
-{"CvChain_flags_set",_wrap_CvChain_flags_set,0,0,2,0},
-{"CvChain_flags_get",_wrap_CvChain_flags_get,0,0,2,0},
-{"CvChain_header_size_set",_wrap_CvChain_header_size_set,0,0,2,0},
-{"CvChain_header_size_get",_wrap_CvChain_header_size_get,0,0,2,0},
-{"CvChain_h_prev_set",_wrap_CvChain_h_prev_set,0,0,2,0},
-{"CvChain_h_prev_get",_wrap_CvChain_h_prev_get,0,0,2,0},
-{"CvChain_h_next_set",_wrap_CvChain_h_next_set,0,0,2,0},
-{"CvChain_h_next_get",_wrap_CvChain_h_next_get,0,0,2,0},
-{"CvChain_v_prev_set",_wrap_CvChain_v_prev_set,0,0,2,0},
-{"CvChain_v_prev_get",_wrap_CvChain_v_prev_get,0,0,2,0},
-{"CvChain_v_next_set",_wrap_CvChain_v_next_set,0,0,2,0},
-{"CvChain_v_next_get",_wrap_CvChain_v_next_get,0,0,2,0},
-{"CvChain_total_set",_wrap_CvChain_total_set,0,0,2,0},
-{"CvChain_total_get",_wrap_CvChain_total_get,0,0,2,0},
-{"CvChain_elem_size_set",_wrap_CvChain_elem_size_set,0,0,2,0},
-{"CvChain_elem_size_get",_wrap_CvChain_elem_size_get,0,0,2,0},
-{"CvChain_block_max_set",_wrap_CvChain_block_max_set,0,0,2,0},
-{"CvChain_block_max_get",_wrap_CvChain_block_max_get,0,0,2,0},
-{"CvChain_ptr_set",_wrap_CvChain_ptr_set,0,0,2,0},
-{"CvChain_ptr_get",_wrap_CvChain_ptr_get,0,0,2,0},
-{"CvChain_delta_elems_set",_wrap_CvChain_delta_elems_set,0,0,2,0},
-{"CvChain_delta_elems_get",_wrap_CvChain_delta_elems_get,0,0,2,0},
-{"CvChain_storage_set",_wrap_CvChain_storage_set,0,0,2,0},
-{"CvChain_storage_get",_wrap_CvChain_storage_get,0,0,2,0},
-{"CvChain_free_blocks_set",_wrap_CvChain_free_blocks_set,0,0,2,0},
-{"CvChain_free_blocks_get",_wrap_CvChain_free_blocks_get,0,0,2,0},
-{"CvChain_first_set",_wrap_CvChain_first_set,0,0,2,0},
-{"CvChain_first_get",_wrap_CvChain_first_get,0,0,2,0},
-{"CvChain_origin_set",_wrap_CvChain_origin_set,0,0,2,0},
-{"CvChain_origin_get",_wrap_CvChain_origin_get,0,0,2,0},
+{"CvChain_flags_set",_wrap_CvChain_flags_set,0,0,2,_wrap_CvChain_flags_set_texinfo},
+{"CvChain_flags_get",_wrap_CvChain_flags_get,0,0,2,_wrap_CvChain_flags_get_texinfo},
+{"CvChain_header_size_set",_wrap_CvChain_header_size_set,0,0,2,_wrap_CvChain_header_size_set_texinfo},
+{"CvChain_header_size_get",_wrap_CvChain_header_size_get,0,0,2,_wrap_CvChain_header_size_get_texinfo},
+{"CvChain_h_prev_set",_wrap_CvChain_h_prev_set,0,0,2,_wrap_CvChain_h_prev_set_texinfo},
+{"CvChain_h_prev_get",_wrap_CvChain_h_prev_get,0,0,2,_wrap_CvChain_h_prev_get_texinfo},
+{"CvChain_h_next_set",_wrap_CvChain_h_next_set,0,0,2,_wrap_CvChain_h_next_set_texinfo},
+{"CvChain_h_next_get",_wrap_CvChain_h_next_get,0,0,2,_wrap_CvChain_h_next_get_texinfo},
+{"CvChain_v_prev_set",_wrap_CvChain_v_prev_set,0,0,2,_wrap_CvChain_v_prev_set_texinfo},
+{"CvChain_v_prev_get",_wrap_CvChain_v_prev_get,0,0,2,_wrap_CvChain_v_prev_get_texinfo},
+{"CvChain_v_next_set",_wrap_CvChain_v_next_set,0,0,2,_wrap_CvChain_v_next_set_texinfo},
+{"CvChain_v_next_get",_wrap_CvChain_v_next_get,0,0,2,_wrap_CvChain_v_next_get_texinfo},
+{"CvChain_total_set",_wrap_CvChain_total_set,0,0,2,_wrap_CvChain_total_set_texinfo},
+{"CvChain_total_get",_wrap_CvChain_total_get,0,0,2,_wrap_CvChain_total_get_texinfo},
+{"CvChain_elem_size_set",_wrap_CvChain_elem_size_set,0,0,2,_wrap_CvChain_elem_size_set_texinfo},
+{"CvChain_elem_size_get",_wrap_CvChain_elem_size_get,0,0,2,_wrap_CvChain_elem_size_get_texinfo},
+{"CvChain_block_max_set",_wrap_CvChain_block_max_set,0,0,2,_wrap_CvChain_block_max_set_texinfo},
+{"CvChain_block_max_get",_wrap_CvChain_block_max_get,0,0,2,_wrap_CvChain_block_max_get_texinfo},
+{"CvChain_ptr_set",_wrap_CvChain_ptr_set,0,0,2,_wrap_CvChain_ptr_set_texinfo},
+{"CvChain_ptr_get",_wrap_CvChain_ptr_get,0,0,2,_wrap_CvChain_ptr_get_texinfo},
+{"CvChain_delta_elems_set",_wrap_CvChain_delta_elems_set,0,0,2,_wrap_CvChain_delta_elems_set_texinfo},
+{"CvChain_delta_elems_get",_wrap_CvChain_delta_elems_get,0,0,2,_wrap_CvChain_delta_elems_get_texinfo},
+{"CvChain_storage_set",_wrap_CvChain_storage_set,0,0,2,_wrap_CvChain_storage_set_texinfo},
+{"CvChain_storage_get",_wrap_CvChain_storage_get,0,0,2,_wrap_CvChain_storage_get_texinfo},
+{"CvChain_free_blocks_set",_wrap_CvChain_free_blocks_set,0,0,2,_wrap_CvChain_free_blocks_set_texinfo},
+{"CvChain_free_blocks_get",_wrap_CvChain_free_blocks_get,0,0,2,_wrap_CvChain_free_blocks_get_texinfo},
+{"CvChain_first_set",_wrap_CvChain_first_set,0,0,2,_wrap_CvChain_first_set_texinfo},
+{"CvChain_first_get",_wrap_CvChain_first_get,0,0,2,_wrap_CvChain_first_get_texinfo},
+{"CvChain_origin_set",_wrap_CvChain_origin_set,0,0,2,_wrap_CvChain_origin_set_texinfo},
+{"CvChain_origin_get",_wrap_CvChain_origin_get,0,0,2,_wrap_CvChain_origin_get_texinfo},
 {"new_CvChain",_wrap_new_CvChain,0,0,2,_wrap_new_CvChain_texinfo},
 {"delete_CvChain",_wrap_delete_CvChain,0,0,2,_wrap_delete_CvChain_texinfo},
-{"CvContour_flags_set",_wrap_CvContour_flags_set,0,0,2,0},
-{"CvContour_flags_get",_wrap_CvContour_flags_get,0,0,2,0},
-{"CvContour_header_size_set",_wrap_CvContour_header_size_set,0,0,2,0},
-{"CvContour_header_size_get",_wrap_CvContour_header_size_get,0,0,2,0},
-{"CvContour_h_prev_set",_wrap_CvContour_h_prev_set,0,0,2,0},
-{"CvContour_h_prev_get",_wrap_CvContour_h_prev_get,0,0,2,0},
-{"CvContour_h_next_set",_wrap_CvContour_h_next_set,0,0,2,0},
-{"CvContour_h_next_get",_wrap_CvContour_h_next_get,0,0,2,0},
-{"CvContour_v_prev_set",_wrap_CvContour_v_prev_set,0,0,2,0},
-{"CvContour_v_prev_get",_wrap_CvContour_v_prev_get,0,0,2,0},
-{"CvContour_v_next_set",_wrap_CvContour_v_next_set,0,0,2,0},
-{"CvContour_v_next_get",_wrap_CvContour_v_next_get,0,0,2,0},
-{"CvContour_total_set",_wrap_CvContour_total_set,0,0,2,0},
-{"CvContour_total_get",_wrap_CvContour_total_get,0,0,2,0},
-{"CvContour_elem_size_set",_wrap_CvContour_elem_size_set,0,0,2,0},
-{"CvContour_elem_size_get",_wrap_CvContour_elem_size_get,0,0,2,0},
-{"CvContour_block_max_set",_wrap_CvContour_block_max_set,0,0,2,0},
-{"CvContour_block_max_get",_wrap_CvContour_block_max_get,0,0,2,0},
-{"CvContour_ptr_set",_wrap_CvContour_ptr_set,0,0,2,0},
-{"CvContour_ptr_get",_wrap_CvContour_ptr_get,0,0,2,0},
-{"CvContour_delta_elems_set",_wrap_CvContour_delta_elems_set,0,0,2,0},
-{"CvContour_delta_elems_get",_wrap_CvContour_delta_elems_get,0,0,2,0},
-{"CvContour_storage_set",_wrap_CvContour_storage_set,0,0,2,0},
-{"CvContour_storage_get",_wrap_CvContour_storage_get,0,0,2,0},
-{"CvContour_free_blocks_set",_wrap_CvContour_free_blocks_set,0,0,2,0},
-{"CvContour_free_blocks_get",_wrap_CvContour_free_blocks_get,0,0,2,0},
-{"CvContour_first_set",_wrap_CvContour_first_set,0,0,2,0},
-{"CvContour_first_get",_wrap_CvContour_first_get,0,0,2,0},
-{"CvContour_rect_set",_wrap_CvContour_rect_set,0,0,2,0},
-{"CvContour_rect_get",_wrap_CvContour_rect_get,0,0,2,0},
-{"CvContour_color_set",_wrap_CvContour_color_set,0,0,2,0},
-{"CvContour_color_get",_wrap_CvContour_color_get,0,0,2,0},
-{"CvContour_reserved_set",_wrap_CvContour_reserved_set,0,0,2,0},
-{"CvContour_reserved_get",_wrap_CvContour_reserved_get,0,0,2,0},
+{"CvContour_flags_set",_wrap_CvContour_flags_set,0,0,2,_wrap_CvContour_flags_set_texinfo},
+{"CvContour_flags_get",_wrap_CvContour_flags_get,0,0,2,_wrap_CvContour_flags_get_texinfo},
+{"CvContour_header_size_set",_wrap_CvContour_header_size_set,0,0,2,_wrap_CvContour_header_size_set_texinfo},
+{"CvContour_header_size_get",_wrap_CvContour_header_size_get,0,0,2,_wrap_CvContour_header_size_get_texinfo},
+{"CvContour_h_prev_set",_wrap_CvContour_h_prev_set,0,0,2,_wrap_CvContour_h_prev_set_texinfo},
+{"CvContour_h_prev_get",_wrap_CvContour_h_prev_get,0,0,2,_wrap_CvContour_h_prev_get_texinfo},
+{"CvContour_h_next_set",_wrap_CvContour_h_next_set,0,0,2,_wrap_CvContour_h_next_set_texinfo},
+{"CvContour_h_next_get",_wrap_CvContour_h_next_get,0,0,2,_wrap_CvContour_h_next_get_texinfo},
+{"CvContour_v_prev_set",_wrap_CvContour_v_prev_set,0,0,2,_wrap_CvContour_v_prev_set_texinfo},
+{"CvContour_v_prev_get",_wrap_CvContour_v_prev_get,0,0,2,_wrap_CvContour_v_prev_get_texinfo},
+{"CvContour_v_next_set",_wrap_CvContour_v_next_set,0,0,2,_wrap_CvContour_v_next_set_texinfo},
+{"CvContour_v_next_get",_wrap_CvContour_v_next_get,0,0,2,_wrap_CvContour_v_next_get_texinfo},
+{"CvContour_total_set",_wrap_CvContour_total_set,0,0,2,_wrap_CvContour_total_set_texinfo},
+{"CvContour_total_get",_wrap_CvContour_total_get,0,0,2,_wrap_CvContour_total_get_texinfo},
+{"CvContour_elem_size_set",_wrap_CvContour_elem_size_set,0,0,2,_wrap_CvContour_elem_size_set_texinfo},
+{"CvContour_elem_size_get",_wrap_CvContour_elem_size_get,0,0,2,_wrap_CvContour_elem_size_get_texinfo},
+{"CvContour_block_max_set",_wrap_CvContour_block_max_set,0,0,2,_wrap_CvContour_block_max_set_texinfo},
+{"CvContour_block_max_get",_wrap_CvContour_block_max_get,0,0,2,_wrap_CvContour_block_max_get_texinfo},
+{"CvContour_ptr_set",_wrap_CvContour_ptr_set,0,0,2,_wrap_CvContour_ptr_set_texinfo},
+{"CvContour_ptr_get",_wrap_CvContour_ptr_get,0,0,2,_wrap_CvContour_ptr_get_texinfo},
+{"CvContour_delta_elems_set",_wrap_CvContour_delta_elems_set,0,0,2,_wrap_CvContour_delta_elems_set_texinfo},
+{"CvContour_delta_elems_get",_wrap_CvContour_delta_elems_get,0,0,2,_wrap_CvContour_delta_elems_get_texinfo},
+{"CvContour_storage_set",_wrap_CvContour_storage_set,0,0,2,_wrap_CvContour_storage_set_texinfo},
+{"CvContour_storage_get",_wrap_CvContour_storage_get,0,0,2,_wrap_CvContour_storage_get_texinfo},
+{"CvContour_free_blocks_set",_wrap_CvContour_free_blocks_set,0,0,2,_wrap_CvContour_free_blocks_set_texinfo},
+{"CvContour_free_blocks_get",_wrap_CvContour_free_blocks_get,0,0,2,_wrap_CvContour_free_blocks_get_texinfo},
+{"CvContour_first_set",_wrap_CvContour_first_set,0,0,2,_wrap_CvContour_first_set_texinfo},
+{"CvContour_first_get",_wrap_CvContour_first_get,0,0,2,_wrap_CvContour_first_get_texinfo},
+{"CvContour_rect_set",_wrap_CvContour_rect_set,0,0,2,_wrap_CvContour_rect_set_texinfo},
+{"CvContour_rect_get",_wrap_CvContour_rect_get,0,0,2,_wrap_CvContour_rect_get_texinfo},
+{"CvContour_color_set",_wrap_CvContour_color_set,0,0,2,_wrap_CvContour_color_set_texinfo},
+{"CvContour_color_get",_wrap_CvContour_color_get,0,0,2,_wrap_CvContour_color_get_texinfo},
+{"CvContour_reserved_set",_wrap_CvContour_reserved_set,0,0,2,_wrap_CvContour_reserved_set_texinfo},
+{"CvContour_reserved_get",_wrap_CvContour_reserved_get,0,0,2,_wrap_CvContour_reserved_get_texinfo},
 {"new_CvContour",_wrap_new_CvContour,0,0,2,_wrap_new_CvContour_texinfo},
 {"delete_CvContour",_wrap_delete_CvContour,0,0,2,_wrap_delete_CvContour_texinfo},
-{"CvSeqWriter_header_size_set",_wrap_CvSeqWriter_header_size_set,0,0,2,0},
-{"CvSeqWriter_header_size_get",_wrap_CvSeqWriter_header_size_get,0,0,2,0},
-{"CvSeqWriter_seq_set",_wrap_CvSeqWriter_seq_set,0,0,2,0},
-{"CvSeqWriter_seq_get",_wrap_CvSeqWriter_seq_get,0,0,2,0},
-{"CvSeqWriter_block_set",_wrap_CvSeqWriter_block_set,0,0,2,0},
-{"CvSeqWriter_block_get",_wrap_CvSeqWriter_block_get,0,0,2,0},
-{"CvSeqWriter_ptr_set",_wrap_CvSeqWriter_ptr_set,0,0,2,0},
-{"CvSeqWriter_ptr_get",_wrap_CvSeqWriter_ptr_get,0,0,2,0},
-{"CvSeqWriter_block_min_set",_wrap_CvSeqWriter_block_min_set,0,0,2,0},
-{"CvSeqWriter_block_min_get",_wrap_CvSeqWriter_block_min_get,0,0,2,0},
-{"CvSeqWriter_block_max_set",_wrap_CvSeqWriter_block_max_set,0,0,2,0},
-{"CvSeqWriter_block_max_get",_wrap_CvSeqWriter_block_max_get,0,0,2,0},
+{"CvSeqWriter_header_size_set",_wrap_CvSeqWriter_header_size_set,0,0,2,_wrap_CvSeqWriter_header_size_set_texinfo},
+{"CvSeqWriter_header_size_get",_wrap_CvSeqWriter_header_size_get,0,0,2,_wrap_CvSeqWriter_header_size_get_texinfo},
+{"CvSeqWriter_seq_set",_wrap_CvSeqWriter_seq_set,0,0,2,_wrap_CvSeqWriter_seq_set_texinfo},
+{"CvSeqWriter_seq_get",_wrap_CvSeqWriter_seq_get,0,0,2,_wrap_CvSeqWriter_seq_get_texinfo},
+{"CvSeqWriter_block_set",_wrap_CvSeqWriter_block_set,0,0,2,_wrap_CvSeqWriter_block_set_texinfo},
+{"CvSeqWriter_block_get",_wrap_CvSeqWriter_block_get,0,0,2,_wrap_CvSeqWriter_block_get_texinfo},
+{"CvSeqWriter_ptr_set",_wrap_CvSeqWriter_ptr_set,0,0,2,_wrap_CvSeqWriter_ptr_set_texinfo},
+{"CvSeqWriter_ptr_get",_wrap_CvSeqWriter_ptr_get,0,0,2,_wrap_CvSeqWriter_ptr_get_texinfo},
+{"CvSeqWriter_block_min_set",_wrap_CvSeqWriter_block_min_set,0,0,2,_wrap_CvSeqWriter_block_min_set_texinfo},
+{"CvSeqWriter_block_min_get",_wrap_CvSeqWriter_block_min_get,0,0,2,_wrap_CvSeqWriter_block_min_get_texinfo},
+{"CvSeqWriter_block_max_set",_wrap_CvSeqWriter_block_max_set,0,0,2,_wrap_CvSeqWriter_block_max_set_texinfo},
+{"CvSeqWriter_block_max_get",_wrap_CvSeqWriter_block_max_get,0,0,2,_wrap_CvSeqWriter_block_max_get_texinfo},
 {"new_CvSeqWriter",_wrap_new_CvSeqWriter,0,0,2,_wrap_new_CvSeqWriter_texinfo},
 {"delete_CvSeqWriter",_wrap_delete_CvSeqWriter,0,0,2,_wrap_delete_CvSeqWriter_texinfo},
-{"CvSeqReader_header_size_set",_wrap_CvSeqReader_header_size_set,0,0,2,0},
-{"CvSeqReader_header_size_get",_wrap_CvSeqReader_header_size_get,0,0,2,0},
-{"CvSeqReader_seq_set",_wrap_CvSeqReader_seq_set,0,0,2,0},
-{"CvSeqReader_seq_get",_wrap_CvSeqReader_seq_get,0,0,2,0},
-{"CvSeqReader_block_set",_wrap_CvSeqReader_block_set,0,0,2,0},
-{"CvSeqReader_block_get",_wrap_CvSeqReader_block_get,0,0,2,0},
-{"CvSeqReader_ptr_set",_wrap_CvSeqReader_ptr_set,0,0,2,0},
-{"CvSeqReader_ptr_get",_wrap_CvSeqReader_ptr_get,0,0,2,0},
-{"CvSeqReader_block_min_set",_wrap_CvSeqReader_block_min_set,0,0,2,0},
-{"CvSeqReader_block_min_get",_wrap_CvSeqReader_block_min_get,0,0,2,0},
-{"CvSeqReader_block_max_set",_wrap_CvSeqReader_block_max_set,0,0,2,0},
-{"CvSeqReader_block_max_get",_wrap_CvSeqReader_block_max_get,0,0,2,0},
-{"CvSeqReader_delta_index_set",_wrap_CvSeqReader_delta_index_set,0,0,2,0},
-{"CvSeqReader_delta_index_get",_wrap_CvSeqReader_delta_index_get,0,0,2,0},
-{"CvSeqReader_prev_elem_set",_wrap_CvSeqReader_prev_elem_set,0,0,2,0},
-{"CvSeqReader_prev_elem_get",_wrap_CvSeqReader_prev_elem_get,0,0,2,0},
+{"CvSeqReader_header_size_set",_wrap_CvSeqReader_header_size_set,0,0,2,_wrap_CvSeqReader_header_size_set_texinfo},
+{"CvSeqReader_header_size_get",_wrap_CvSeqReader_header_size_get,0,0,2,_wrap_CvSeqReader_header_size_get_texinfo},
+{"CvSeqReader_seq_set",_wrap_CvSeqReader_seq_set,0,0,2,_wrap_CvSeqReader_seq_set_texinfo},
+{"CvSeqReader_seq_get",_wrap_CvSeqReader_seq_get,0,0,2,_wrap_CvSeqReader_seq_get_texinfo},
+{"CvSeqReader_block_set",_wrap_CvSeqReader_block_set,0,0,2,_wrap_CvSeqReader_block_set_texinfo},
+{"CvSeqReader_block_get",_wrap_CvSeqReader_block_get,0,0,2,_wrap_CvSeqReader_block_get_texinfo},
+{"CvSeqReader_ptr_set",_wrap_CvSeqReader_ptr_set,0,0,2,_wrap_CvSeqReader_ptr_set_texinfo},
+{"CvSeqReader_ptr_get",_wrap_CvSeqReader_ptr_get,0,0,2,_wrap_CvSeqReader_ptr_get_texinfo},
+{"CvSeqReader_block_min_set",_wrap_CvSeqReader_block_min_set,0,0,2,_wrap_CvSeqReader_block_min_set_texinfo},
+{"CvSeqReader_block_min_get",_wrap_CvSeqReader_block_min_get,0,0,2,_wrap_CvSeqReader_block_min_get_texinfo},
+{"CvSeqReader_block_max_set",_wrap_CvSeqReader_block_max_set,0,0,2,_wrap_CvSeqReader_block_max_set_texinfo},
+{"CvSeqReader_block_max_get",_wrap_CvSeqReader_block_max_get,0,0,2,_wrap_CvSeqReader_block_max_get_texinfo},
+{"CvSeqReader_delta_index_set",_wrap_CvSeqReader_delta_index_set,0,0,2,_wrap_CvSeqReader_delta_index_set_texinfo},
+{"CvSeqReader_delta_index_get",_wrap_CvSeqReader_delta_index_get,0,0,2,_wrap_CvSeqReader_delta_index_get_texinfo},
+{"CvSeqReader_prev_elem_set",_wrap_CvSeqReader_prev_elem_set,0,0,2,_wrap_CvSeqReader_prev_elem_set_texinfo},
+{"CvSeqReader_prev_elem_get",_wrap_CvSeqReader_prev_elem_get,0,0,2,_wrap_CvSeqReader_prev_elem_get_texinfo},
 {"new_CvSeqReader",_wrap_new_CvSeqReader,0,0,2,_wrap_new_CvSeqReader_texinfo},
 {"delete_CvSeqReader",_wrap_delete_CvSeqReader,0,0,2,_wrap_delete_CvSeqReader_texinfo},
-{"CvAttrList_attr_set",_wrap_CvAttrList_attr_set,0,0,2,0},
-{"CvAttrList_attr_get",_wrap_CvAttrList_attr_get,0,0,2,0},
-{"CvAttrList_next_set",_wrap_CvAttrList_next_set,0,0,2,0},
-{"CvAttrList_next_get",_wrap_CvAttrList_next_get,0,0,2,0},
+{"CvAttrList_attr_set",_wrap_CvAttrList_attr_set,0,0,2,_wrap_CvAttrList_attr_set_texinfo},
+{"CvAttrList_attr_get",_wrap_CvAttrList_attr_get,0,0,2,_wrap_CvAttrList_attr_get_texinfo},
+{"CvAttrList_next_set",_wrap_CvAttrList_next_set,0,0,2,_wrap_CvAttrList_next_set_texinfo},
+{"CvAttrList_next_get",_wrap_CvAttrList_next_get,0,0,2,_wrap_CvAttrList_next_get_texinfo},
 {"new_CvAttrList",_wrap_new_CvAttrList,0,0,2,_wrap_new_CvAttrList_texinfo},
 {"delete_CvAttrList",_wrap_delete_CvAttrList,0,0,2,_wrap_delete_CvAttrList_texinfo},
 {"cvAttrList",_wrap_cvAttrList,0,0,2,_wrap_cvAttrList_texinfo},
-{"CvString_len_set",_wrap_CvString_len_set,0,0,2,0},
-{"CvString_len_get",_wrap_CvString_len_get,0,0,2,0},
-{"CvString_ptr_set",_wrap_CvString_ptr_set,0,0,2,0},
-{"CvString_ptr_get",_wrap_CvString_ptr_get,0,0,2,0},
+{"CvString_len_set",_wrap_CvString_len_set,0,0,2,_wrap_CvString_len_set_texinfo},
+{"CvString_len_get",_wrap_CvString_len_get,0,0,2,_wrap_CvString_len_get_texinfo},
+{"CvString_ptr_set",_wrap_CvString_ptr_set,0,0,2,_wrap_CvString_ptr_set_texinfo},
+{"CvString_ptr_get",_wrap_CvString_ptr_get,0,0,2,_wrap_CvString_ptr_get_texinfo},
 {"new_CvString",_wrap_new_CvString,0,0,2,_wrap_new_CvString_texinfo},
 {"delete_CvString",_wrap_delete_CvString,0,0,2,_wrap_delete_CvString_texinfo},
-{"CvStringHashNode_hashval_set",_wrap_CvStringHashNode_hashval_set,0,0,2,0},
-{"CvStringHashNode_hashval_get",_wrap_CvStringHashNode_hashval_get,0,0,2,0},
-{"CvStringHashNode_str_set",_wrap_CvStringHashNode_str_set,0,0,2,0},
-{"CvStringHashNode_str_get",_wrap_CvStringHashNode_str_get,0,0,2,0},
-{"CvStringHashNode_next_set",_wrap_CvStringHashNode_next_set,0,0,2,0},
-{"CvStringHashNode_next_get",_wrap_CvStringHashNode_next_get,0,0,2,0},
+{"CvStringHashNode_hashval_set",_wrap_CvStringHashNode_hashval_set,0,0,2,_wrap_CvStringHashNode_hashval_set_texinfo},
+{"CvStringHashNode_hashval_get",_wrap_CvStringHashNode_hashval_get,0,0,2,_wrap_CvStringHashNode_hashval_get_texinfo},
+{"CvStringHashNode_str_set",_wrap_CvStringHashNode_str_set,0,0,2,_wrap_CvStringHashNode_str_set_texinfo},
+{"CvStringHashNode_str_get",_wrap_CvStringHashNode_str_get,0,0,2,_wrap_CvStringHashNode_str_get_texinfo},
+{"CvStringHashNode_next_set",_wrap_CvStringHashNode_next_set,0,0,2,_wrap_CvStringHashNode_next_set_texinfo},
+{"CvStringHashNode_next_get",_wrap_CvStringHashNode_next_get,0,0,2,_wrap_CvStringHashNode_next_get_texinfo},
 {"new_CvStringHashNode",_wrap_new_CvStringHashNode,0,0,2,_wrap_new_CvStringHashNode_texinfo},
 {"delete_CvStringHashNode",_wrap_delete_CvStringHashNode,0,0,2,_wrap_delete_CvStringHashNode_texinfo},
-{"CvFileNode_tag_set",_wrap_CvFileNode_tag_set,0,0,2,0},
-{"CvFileNode_tag_get",_wrap_CvFileNode_tag_get,0,0,2,0},
-{"CvFileNode_info_set",_wrap_CvFileNode_info_set,0,0,2,0},
-{"CvFileNode_info_get",_wrap_CvFileNode_info_get,0,0,2,0},
-{"CvFileNode_data_get",_wrap_CvFileNode_data_get,0,0,2,0},
+{"CvFileNode_tag_set",_wrap_CvFileNode_tag_set,0,0,2,_wrap_CvFileNode_tag_set_texinfo},
+{"CvFileNode_tag_get",_wrap_CvFileNode_tag_get,0,0,2,_wrap_CvFileNode_tag_get_texinfo},
+{"CvFileNode_info_set",_wrap_CvFileNode_info_set,0,0,2,_wrap_CvFileNode_info_set_texinfo},
+{"CvFileNode_info_get",_wrap_CvFileNode_info_get,0,0,2,_wrap_CvFileNode_info_get_texinfo},
+{"CvFileNode_data_get",_wrap_CvFileNode_data_get,0,0,2,_wrap_CvFileNode_data_get_texinfo},
 {"new_CvFileNode",_wrap_new_CvFileNode,0,0,2,_wrap_new_CvFileNode_texinfo},
 {"delete_CvFileNode",_wrap_delete_CvFileNode,0,0,2,_wrap_delete_CvFileNode_texinfo},
-{"CvFileNode_data_f_set",_wrap_CvFileNode_data_f_set,0,0,2,0},
-{"CvFileNode_data_f_get",_wrap_CvFileNode_data_f_get,0,0,2,0},
-{"CvFileNode_data_i_set",_wrap_CvFileNode_data_i_set,0,0,2,0},
-{"CvFileNode_data_i_get",_wrap_CvFileNode_data_i_get,0,0,2,0},
-{"CvFileNode_data_str_set",_wrap_CvFileNode_data_str_set,0,0,2,0},
-{"CvFileNode_data_str_get",_wrap_CvFileNode_data_str_get,0,0,2,0},
-{"CvFileNode_data_seq_set",_wrap_CvFileNode_data_seq_set,0,0,2,0},
-{"CvFileNode_data_seq_get",_wrap_CvFileNode_data_seq_get,0,0,2,0},
-{"CvFileNode_data_map_set",_wrap_CvFileNode_data_map_set,0,0,2,0},
-{"CvFileNode_data_map_get",_wrap_CvFileNode_data_map_get,0,0,2,0},
+{"CvFileNode_data_f_set",_wrap_CvFileNode_data_f_set,0,0,2,_wrap_CvFileNode_data_f_set_texinfo},
+{"CvFileNode_data_f_get",_wrap_CvFileNode_data_f_get,0,0,2,_wrap_CvFileNode_data_f_get_texinfo},
+{"CvFileNode_data_i_set",_wrap_CvFileNode_data_i_set,0,0,2,_wrap_CvFileNode_data_i_set_texinfo},
+{"CvFileNode_data_i_get",_wrap_CvFileNode_data_i_get,0,0,2,_wrap_CvFileNode_data_i_get_texinfo},
+{"CvFileNode_data_str_set",_wrap_CvFileNode_data_str_set,0,0,2,_wrap_CvFileNode_data_str_set_texinfo},
+{"CvFileNode_data_str_get",_wrap_CvFileNode_data_str_get,0,0,2,_wrap_CvFileNode_data_str_get_texinfo},
+{"CvFileNode_data_seq_set",_wrap_CvFileNode_data_seq_set,0,0,2,_wrap_CvFileNode_data_seq_set_texinfo},
+{"CvFileNode_data_seq_get",_wrap_CvFileNode_data_seq_get,0,0,2,_wrap_CvFileNode_data_seq_get_texinfo},
+{"CvFileNode_data_map_set",_wrap_CvFileNode_data_map_set,0,0,2,_wrap_CvFileNode_data_map_set_texinfo},
+{"CvFileNode_data_map_get",_wrap_CvFileNode_data_map_get,0,0,2,_wrap_CvFileNode_data_map_get_texinfo},
 {"new_CvFileNode_data",_wrap_new_CvFileNode_data,0,0,2,_wrap_new_CvFileNode_data_texinfo},
 {"delete_CvFileNode_data",_wrap_delete_CvFileNode_data,0,0,2,_wrap_delete_CvFileNode_data_texinfo},
-{"CvTypeInfo_flags_set",_wrap_CvTypeInfo_flags_set,0,0,2,0},
-{"CvTypeInfo_flags_get",_wrap_CvTypeInfo_flags_get,0,0,2,0},
-{"CvTypeInfo_header_size_set",_wrap_CvTypeInfo_header_size_set,0,0,2,0},
-{"CvTypeInfo_header_size_get",_wrap_CvTypeInfo_header_size_get,0,0,2,0},
-{"CvTypeInfo_prev_set",_wrap_CvTypeInfo_prev_set,0,0,2,0},
-{"CvTypeInfo_prev_get",_wrap_CvTypeInfo_prev_get,0,0,2,0},
-{"CvTypeInfo_next_set",_wrap_CvTypeInfo_next_set,0,0,2,0},
-{"CvTypeInfo_next_get",_wrap_CvTypeInfo_next_get,0,0,2,0},
-{"CvTypeInfo_type_name_set",_wrap_CvTypeInfo_type_name_set,0,0,2,0},
-{"CvTypeInfo_type_name_get",_wrap_CvTypeInfo_type_name_get,0,0,2,0},
-{"CvTypeInfo_is_instance_set",_wrap_CvTypeInfo_is_instance_set,0,0,2,0},
-{"CvTypeInfo_is_instance_get",_wrap_CvTypeInfo_is_instance_get,0,0,2,0},
-{"CvTypeInfo_release_set",_wrap_CvTypeInfo_release_set,0,0,2,0},
-{"CvTypeInfo_release_get",_wrap_CvTypeInfo_release_get,0,0,2,0},
-{"CvTypeInfo_read_set",_wrap_CvTypeInfo_read_set,0,0,2,0},
-{"CvTypeInfo_read_get",_wrap_CvTypeInfo_read_get,0,0,2,0},
-{"CvTypeInfo_write_set",_wrap_CvTypeInfo_write_set,0,0,2,0},
-{"CvTypeInfo_write_get",_wrap_CvTypeInfo_write_get,0,0,2,0},
-{"CvTypeInfo_clone_set",_wrap_CvTypeInfo_clone_set,0,0,2,0},
-{"CvTypeInfo_clone_get",_wrap_CvTypeInfo_clone_get,0,0,2,0},
+{"CvTypeInfo_flags_set",_wrap_CvTypeInfo_flags_set,0,0,2,_wrap_CvTypeInfo_flags_set_texinfo},
+{"CvTypeInfo_flags_get",_wrap_CvTypeInfo_flags_get,0,0,2,_wrap_CvTypeInfo_flags_get_texinfo},
+{"CvTypeInfo_header_size_set",_wrap_CvTypeInfo_header_size_set,0,0,2,_wrap_CvTypeInfo_header_size_set_texinfo},
+{"CvTypeInfo_header_size_get",_wrap_CvTypeInfo_header_size_get,0,0,2,_wrap_CvTypeInfo_header_size_get_texinfo},
+{"CvTypeInfo_prev_set",_wrap_CvTypeInfo_prev_set,0,0,2,_wrap_CvTypeInfo_prev_set_texinfo},
+{"CvTypeInfo_prev_get",_wrap_CvTypeInfo_prev_get,0,0,2,_wrap_CvTypeInfo_prev_get_texinfo},
+{"CvTypeInfo_next_set",_wrap_CvTypeInfo_next_set,0,0,2,_wrap_CvTypeInfo_next_set_texinfo},
+{"CvTypeInfo_next_get",_wrap_CvTypeInfo_next_get,0,0,2,_wrap_CvTypeInfo_next_get_texinfo},
+{"CvTypeInfo_type_name_set",_wrap_CvTypeInfo_type_name_set,0,0,2,_wrap_CvTypeInfo_type_name_set_texinfo},
+{"CvTypeInfo_type_name_get",_wrap_CvTypeInfo_type_name_get,0,0,2,_wrap_CvTypeInfo_type_name_get_texinfo},
+{"CvTypeInfo_is_instance_set",_wrap_CvTypeInfo_is_instance_set,0,0,2,_wrap_CvTypeInfo_is_instance_set_texinfo},
+{"CvTypeInfo_is_instance_get",_wrap_CvTypeInfo_is_instance_get,0,0,2,_wrap_CvTypeInfo_is_instance_get_texinfo},
+{"CvTypeInfo_release_set",_wrap_CvTypeInfo_release_set,0,0,2,_wrap_CvTypeInfo_release_set_texinfo},
+{"CvTypeInfo_release_get",_wrap_CvTypeInfo_release_get,0,0,2,_wrap_CvTypeInfo_release_get_texinfo},
+{"CvTypeInfo_read_set",_wrap_CvTypeInfo_read_set,0,0,2,_wrap_CvTypeInfo_read_set_texinfo},
+{"CvTypeInfo_read_get",_wrap_CvTypeInfo_read_get,0,0,2,_wrap_CvTypeInfo_read_get_texinfo},
+{"CvTypeInfo_write_set",_wrap_CvTypeInfo_write_set,0,0,2,_wrap_CvTypeInfo_write_set_texinfo},
+{"CvTypeInfo_write_get",_wrap_CvTypeInfo_write_get,0,0,2,_wrap_CvTypeInfo_write_get_texinfo},
+{"CvTypeInfo_clone_set",_wrap_CvTypeInfo_clone_set,0,0,2,_wrap_CvTypeInfo_clone_set_texinfo},
+{"CvTypeInfo_clone_get",_wrap_CvTypeInfo_clone_get,0,0,2,_wrap_CvTypeInfo_clone_get_texinfo},
 {"new_CvTypeInfo",_wrap_new_CvTypeInfo,0,0,2,_wrap_new_CvTypeInfo_texinfo},
 {"delete_CvTypeInfo",_wrap_delete_CvTypeInfo,0,0,2,_wrap_delete_CvTypeInfo_texinfo},
-{"CvPluginFuncInfo_func_addr_set",_wrap_CvPluginFuncInfo_func_addr_set,0,0,2,0},
-{"CvPluginFuncInfo_func_addr_get",_wrap_CvPluginFuncInfo_func_addr_get,0,0,2,0},
-{"CvPluginFuncInfo_default_func_addr_set",_wrap_CvPluginFuncInfo_default_func_addr_set,0,0,2,0},
-{"CvPluginFuncInfo_default_func_addr_get",_wrap_CvPluginFuncInfo_default_func_addr_get,0,0,2,0},
-{"CvPluginFuncInfo_func_names_set",_wrap_CvPluginFuncInfo_func_names_set,0,0,2,0},
-{"CvPluginFuncInfo_func_names_get",_wrap_CvPluginFuncInfo_func_names_get,0,0,2,0},
-{"CvPluginFuncInfo_search_modules_set",_wrap_CvPluginFuncInfo_search_modules_set,0,0,2,0},
-{"CvPluginFuncInfo_search_modules_get",_wrap_CvPluginFuncInfo_search_modules_get,0,0,2,0},
-{"CvPluginFuncInfo_loaded_from_set",_wrap_CvPluginFuncInfo_loaded_from_set,0,0,2,0},
-{"CvPluginFuncInfo_loaded_from_get",_wrap_CvPluginFuncInfo_loaded_from_get,0,0,2,0},
+{"CvPluginFuncInfo_func_addr_set",_wrap_CvPluginFuncInfo_func_addr_set,0,0,2,_wrap_CvPluginFuncInfo_func_addr_set_texinfo},
+{"CvPluginFuncInfo_func_addr_get",_wrap_CvPluginFuncInfo_func_addr_get,0,0,2,_wrap_CvPluginFuncInfo_func_addr_get_texinfo},
+{"CvPluginFuncInfo_default_func_addr_set",_wrap_CvPluginFuncInfo_default_func_addr_set,0,0,2,_wrap_CvPluginFuncInfo_default_func_addr_set_texinfo},
+{"CvPluginFuncInfo_default_func_addr_get",_wrap_CvPluginFuncInfo_default_func_addr_get,0,0,2,_wrap_CvPluginFuncInfo_default_func_addr_get_texinfo},
+{"CvPluginFuncInfo_func_names_set",_wrap_CvPluginFuncInfo_func_names_set,0,0,2,_wrap_CvPluginFuncInfo_func_names_set_texinfo},
+{"CvPluginFuncInfo_func_names_get",_wrap_CvPluginFuncInfo_func_names_get,0,0,2,_wrap_CvPluginFuncInfo_func_names_get_texinfo},
+{"CvPluginFuncInfo_search_modules_set",_wrap_CvPluginFuncInfo_search_modules_set,0,0,2,_wrap_CvPluginFuncInfo_search_modules_set_texinfo},
+{"CvPluginFuncInfo_search_modules_get",_wrap_CvPluginFuncInfo_search_modules_get,0,0,2,_wrap_CvPluginFuncInfo_search_modules_get_texinfo},
+{"CvPluginFuncInfo_loaded_from_set",_wrap_CvPluginFuncInfo_loaded_from_set,0,0,2,_wrap_CvPluginFuncInfo_loaded_from_set_texinfo},
+{"CvPluginFuncInfo_loaded_from_get",_wrap_CvPluginFuncInfo_loaded_from_get,0,0,2,_wrap_CvPluginFuncInfo_loaded_from_get_texinfo},
 {"new_CvPluginFuncInfo",_wrap_new_CvPluginFuncInfo,0,0,2,_wrap_new_CvPluginFuncInfo_texinfo},
 {"delete_CvPluginFuncInfo",_wrap_delete_CvPluginFuncInfo,0,0,2,_wrap_delete_CvPluginFuncInfo_texinfo},
-{"CvModuleInfo_next_set",_wrap_CvModuleInfo_next_set,0,0,2,0},
-{"CvModuleInfo_next_get",_wrap_CvModuleInfo_next_get,0,0,2,0},
-{"CvModuleInfo_name_set",_wrap_CvModuleInfo_name_set,0,0,2,0},
-{"CvModuleInfo_name_get",_wrap_CvModuleInfo_name_get,0,0,2,0},
-{"CvModuleInfo_version_set",_wrap_CvModuleInfo_version_set,0,0,2,0},
-{"CvModuleInfo_version_get",_wrap_CvModuleInfo_version_get,0,0,2,0},
-{"CvModuleInfo_func_tab_set",_wrap_CvModuleInfo_func_tab_set,0,0,2,0},
-{"CvModuleInfo_func_tab_get",_wrap_CvModuleInfo_func_tab_get,0,0,2,0},
+{"CvModuleInfo_next_set",_wrap_CvModuleInfo_next_set,0,0,2,_wrap_CvModuleInfo_next_set_texinfo},
+{"CvModuleInfo_next_get",_wrap_CvModuleInfo_next_get,0,0,2,_wrap_CvModuleInfo_next_get_texinfo},
+{"CvModuleInfo_name_set",_wrap_CvModuleInfo_name_set,0,0,2,_wrap_CvModuleInfo_name_set_texinfo},
+{"CvModuleInfo_name_get",_wrap_CvModuleInfo_name_get,0,0,2,_wrap_CvModuleInfo_name_get_texinfo},
+{"CvModuleInfo_version_set",_wrap_CvModuleInfo_version_set,0,0,2,_wrap_CvModuleInfo_version_set_texinfo},
+{"CvModuleInfo_version_get",_wrap_CvModuleInfo_version_get,0,0,2,_wrap_CvModuleInfo_version_get_texinfo},
+{"CvModuleInfo_func_tab_set",_wrap_CvModuleInfo_func_tab_set,0,0,2,_wrap_CvModuleInfo_func_tab_set_texinfo},
+{"CvModuleInfo_func_tab_get",_wrap_CvModuleInfo_func_tab_get,0,0,2,_wrap_CvModuleInfo_func_tab_get_texinfo},
 {"new_CvModuleInfo",_wrap_new_CvModuleInfo,0,0,2,_wrap_new_CvModuleInfo_texinfo},
 {"delete_CvModuleInfo",_wrap_delete_CvModuleInfo,0,0,2,_wrap_delete_CvModuleInfo_texinfo},
 {"cvAlloc",_wrap_cvAlloc,0,0,2,_wrap_cvAlloc_texinfo},
@@ -106576,18 +107483,18 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvCloneSparseMat",_wrap_cvCloneSparseMat,0,0,2,_wrap_cvCloneSparseMat_texinfo},
 {"cvInitSparseMatIterator",_wrap_cvInitSparseMatIterator,0,0,2,_wrap_cvInitSparseMatIterator_texinfo},
 {"cvGetNextSparseNode",_wrap_cvGetNextSparseNode,0,0,2,_wrap_cvGetNextSparseNode_texinfo},
-{"CvNArrayIterator_count_set",_wrap_CvNArrayIterator_count_set,0,0,2,0},
-{"CvNArrayIterator_count_get",_wrap_CvNArrayIterator_count_get,0,0,2,0},
-{"CvNArrayIterator_dims_set",_wrap_CvNArrayIterator_dims_set,0,0,2,0},
-{"CvNArrayIterator_dims_get",_wrap_CvNArrayIterator_dims_get,0,0,2,0},
-{"CvNArrayIterator_size_set",_wrap_CvNArrayIterator_size_set,0,0,2,0},
-{"CvNArrayIterator_size_get",_wrap_CvNArrayIterator_size_get,0,0,2,0},
-{"CvNArrayIterator_ptr_set",_wrap_CvNArrayIterator_ptr_set,0,0,2,0},
-{"CvNArrayIterator_ptr_get",_wrap_CvNArrayIterator_ptr_get,0,0,2,0},
-{"CvNArrayIterator_stack_set",_wrap_CvNArrayIterator_stack_set,0,0,2,0},
-{"CvNArrayIterator_stack_get",_wrap_CvNArrayIterator_stack_get,0,0,2,0},
-{"CvNArrayIterator_hdr_set",_wrap_CvNArrayIterator_hdr_set,0,0,2,0},
-{"CvNArrayIterator_hdr_get",_wrap_CvNArrayIterator_hdr_get,0,0,2,0},
+{"CvNArrayIterator_count_set",_wrap_CvNArrayIterator_count_set,0,0,2,_wrap_CvNArrayIterator_count_set_texinfo},
+{"CvNArrayIterator_count_get",_wrap_CvNArrayIterator_count_get,0,0,2,_wrap_CvNArrayIterator_count_get_texinfo},
+{"CvNArrayIterator_dims_set",_wrap_CvNArrayIterator_dims_set,0,0,2,_wrap_CvNArrayIterator_dims_set_texinfo},
+{"CvNArrayIterator_dims_get",_wrap_CvNArrayIterator_dims_get,0,0,2,_wrap_CvNArrayIterator_dims_get_texinfo},
+{"CvNArrayIterator_size_set",_wrap_CvNArrayIterator_size_set,0,0,2,_wrap_CvNArrayIterator_size_set_texinfo},
+{"CvNArrayIterator_size_get",_wrap_CvNArrayIterator_size_get,0,0,2,_wrap_CvNArrayIterator_size_get_texinfo},
+{"CvNArrayIterator_ptr_set",_wrap_CvNArrayIterator_ptr_set,0,0,2,_wrap_CvNArrayIterator_ptr_set_texinfo},
+{"CvNArrayIterator_ptr_get",_wrap_CvNArrayIterator_ptr_get,0,0,2,_wrap_CvNArrayIterator_ptr_get_texinfo},
+{"CvNArrayIterator_stack_set",_wrap_CvNArrayIterator_stack_set,0,0,2,_wrap_CvNArrayIterator_stack_set_texinfo},
+{"CvNArrayIterator_stack_get",_wrap_CvNArrayIterator_stack_get,0,0,2,_wrap_CvNArrayIterator_stack_get_texinfo},
+{"CvNArrayIterator_hdr_set",_wrap_CvNArrayIterator_hdr_set,0,0,2,_wrap_CvNArrayIterator_hdr_set_texinfo},
+{"CvNArrayIterator_hdr_get",_wrap_CvNArrayIterator_hdr_get,0,0,2,_wrap_CvNArrayIterator_hdr_get_texinfo},
 {"new_CvNArrayIterator",_wrap_new_CvNArrayIterator,0,0,2,_wrap_new_CvNArrayIterator_texinfo},
 {"delete_CvNArrayIterator",_wrap_delete_CvNArrayIterator,0,0,2,_wrap_delete_CvNArrayIterator_texinfo},
 {"cvInitNArrayIterator",_wrap_cvInitNArrayIterator,0,0,2,_wrap_cvInitNArrayIterator_texinfo},
@@ -106765,20 +107672,20 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvClearGraph",_wrap_cvClearGraph,0,0,2,_wrap_cvClearGraph_texinfo},
 {"cvGraphVtxDegree",_wrap_cvGraphVtxDegree,0,0,2,_wrap_cvGraphVtxDegree_texinfo},
 {"cvGraphVtxDegreeByPtr",_wrap_cvGraphVtxDegreeByPtr,0,0,2,_wrap_cvGraphVtxDegreeByPtr_texinfo},
-{"CvGraphScanner_vtx_set",_wrap_CvGraphScanner_vtx_set,0,0,2,0},
-{"CvGraphScanner_vtx_get",_wrap_CvGraphScanner_vtx_get,0,0,2,0},
-{"CvGraphScanner_dst_set",_wrap_CvGraphScanner_dst_set,0,0,2,0},
-{"CvGraphScanner_dst_get",_wrap_CvGraphScanner_dst_get,0,0,2,0},
-{"CvGraphScanner_edge_set",_wrap_CvGraphScanner_edge_set,0,0,2,0},
-{"CvGraphScanner_edge_get",_wrap_CvGraphScanner_edge_get,0,0,2,0},
-{"CvGraphScanner_graph_set",_wrap_CvGraphScanner_graph_set,0,0,2,0},
-{"CvGraphScanner_graph_get",_wrap_CvGraphScanner_graph_get,0,0,2,0},
-{"CvGraphScanner_stack_set",_wrap_CvGraphScanner_stack_set,0,0,2,0},
-{"CvGraphScanner_stack_get",_wrap_CvGraphScanner_stack_get,0,0,2,0},
-{"CvGraphScanner_index_set",_wrap_CvGraphScanner_index_set,0,0,2,0},
-{"CvGraphScanner_index_get",_wrap_CvGraphScanner_index_get,0,0,2,0},
-{"CvGraphScanner_mask_set",_wrap_CvGraphScanner_mask_set,0,0,2,0},
-{"CvGraphScanner_mask_get",_wrap_CvGraphScanner_mask_get,0,0,2,0},
+{"CvGraphScanner_vtx_set",_wrap_CvGraphScanner_vtx_set,0,0,2,_wrap_CvGraphScanner_vtx_set_texinfo},
+{"CvGraphScanner_vtx_get",_wrap_CvGraphScanner_vtx_get,0,0,2,_wrap_CvGraphScanner_vtx_get_texinfo},
+{"CvGraphScanner_dst_set",_wrap_CvGraphScanner_dst_set,0,0,2,_wrap_CvGraphScanner_dst_set_texinfo},
+{"CvGraphScanner_dst_get",_wrap_CvGraphScanner_dst_get,0,0,2,_wrap_CvGraphScanner_dst_get_texinfo},
+{"CvGraphScanner_edge_set",_wrap_CvGraphScanner_edge_set,0,0,2,_wrap_CvGraphScanner_edge_set_texinfo},
+{"CvGraphScanner_edge_get",_wrap_CvGraphScanner_edge_get,0,0,2,_wrap_CvGraphScanner_edge_get_texinfo},
+{"CvGraphScanner_graph_set",_wrap_CvGraphScanner_graph_set,0,0,2,_wrap_CvGraphScanner_graph_set_texinfo},
+{"CvGraphScanner_graph_get",_wrap_CvGraphScanner_graph_get,0,0,2,_wrap_CvGraphScanner_graph_get_texinfo},
+{"CvGraphScanner_stack_set",_wrap_CvGraphScanner_stack_set,0,0,2,_wrap_CvGraphScanner_stack_set_texinfo},
+{"CvGraphScanner_stack_get",_wrap_CvGraphScanner_stack_get,0,0,2,_wrap_CvGraphScanner_stack_get_texinfo},
+{"CvGraphScanner_index_set",_wrap_CvGraphScanner_index_set,0,0,2,_wrap_CvGraphScanner_index_set_texinfo},
+{"CvGraphScanner_index_get",_wrap_CvGraphScanner_index_get,0,0,2,_wrap_CvGraphScanner_index_get_texinfo},
+{"CvGraphScanner_mask_set",_wrap_CvGraphScanner_mask_set,0,0,2,_wrap_CvGraphScanner_mask_set_texinfo},
+{"CvGraphScanner_mask_get",_wrap_CvGraphScanner_mask_get,0,0,2,_wrap_CvGraphScanner_mask_get_texinfo},
 {"delete_CvGraphScanner",_wrap_delete_CvGraphScanner,0,0,2,_wrap_delete_CvGraphScanner_texinfo},
 {"cvCreateGraphScanner",_wrap_cvCreateGraphScanner,0,0,2,_wrap_cvCreateGraphScanner_texinfo},
 {"cvReleaseGraphScanner",_wrap_cvReleaseGraphScanner,0,0,2,_wrap_cvReleaseGraphScanner_texinfo},
@@ -106794,26 +107701,26 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvPolyLine",_wrap_cvPolyLine,0,0,2,_wrap_cvPolyLine_texinfo},
 {"cvClipLine",_wrap_cvClipLine,0,0,2,_wrap_cvClipLine_texinfo},
 {"cvInitLineIterator",_wrap_cvInitLineIterator,0,0,2,_wrap_cvInitLineIterator_texinfo},
-{"CvFont_font_face_set",_wrap_CvFont_font_face_set,0,0,2,0},
-{"CvFont_font_face_get",_wrap_CvFont_font_face_get,0,0,2,0},
-{"CvFont_ascii_set",_wrap_CvFont_ascii_set,0,0,2,0},
-{"CvFont_ascii_get",_wrap_CvFont_ascii_get,0,0,2,0},
-{"CvFont_greek_set",_wrap_CvFont_greek_set,0,0,2,0},
-{"CvFont_greek_get",_wrap_CvFont_greek_get,0,0,2,0},
-{"CvFont_cyrillic_set",_wrap_CvFont_cyrillic_set,0,0,2,0},
-{"CvFont_cyrillic_get",_wrap_CvFont_cyrillic_get,0,0,2,0},
-{"CvFont_hscale_set",_wrap_CvFont_hscale_set,0,0,2,0},
-{"CvFont_hscale_get",_wrap_CvFont_hscale_get,0,0,2,0},
-{"CvFont_vscale_set",_wrap_CvFont_vscale_set,0,0,2,0},
-{"CvFont_vscale_get",_wrap_CvFont_vscale_get,0,0,2,0},
-{"CvFont_shear_set",_wrap_CvFont_shear_set,0,0,2,0},
-{"CvFont_shear_get",_wrap_CvFont_shear_get,0,0,2,0},
-{"CvFont_thickness_set",_wrap_CvFont_thickness_set,0,0,2,0},
-{"CvFont_thickness_get",_wrap_CvFont_thickness_get,0,0,2,0},
-{"CvFont_dx_set",_wrap_CvFont_dx_set,0,0,2,0},
-{"CvFont_dx_get",_wrap_CvFont_dx_get,0,0,2,0},
-{"CvFont_line_type_set",_wrap_CvFont_line_type_set,0,0,2,0},
-{"CvFont_line_type_get",_wrap_CvFont_line_type_get,0,0,2,0},
+{"CvFont_font_face_set",_wrap_CvFont_font_face_set,0,0,2,_wrap_CvFont_font_face_set_texinfo},
+{"CvFont_font_face_get",_wrap_CvFont_font_face_get,0,0,2,_wrap_CvFont_font_face_get_texinfo},
+{"CvFont_ascii_set",_wrap_CvFont_ascii_set,0,0,2,_wrap_CvFont_ascii_set_texinfo},
+{"CvFont_ascii_get",_wrap_CvFont_ascii_get,0,0,2,_wrap_CvFont_ascii_get_texinfo},
+{"CvFont_greek_set",_wrap_CvFont_greek_set,0,0,2,_wrap_CvFont_greek_set_texinfo},
+{"CvFont_greek_get",_wrap_CvFont_greek_get,0,0,2,_wrap_CvFont_greek_get_texinfo},
+{"CvFont_cyrillic_set",_wrap_CvFont_cyrillic_set,0,0,2,_wrap_CvFont_cyrillic_set_texinfo},
+{"CvFont_cyrillic_get",_wrap_CvFont_cyrillic_get,0,0,2,_wrap_CvFont_cyrillic_get_texinfo},
+{"CvFont_hscale_set",_wrap_CvFont_hscale_set,0,0,2,_wrap_CvFont_hscale_set_texinfo},
+{"CvFont_hscale_get",_wrap_CvFont_hscale_get,0,0,2,_wrap_CvFont_hscale_get_texinfo},
+{"CvFont_vscale_set",_wrap_CvFont_vscale_set,0,0,2,_wrap_CvFont_vscale_set_texinfo},
+{"CvFont_vscale_get",_wrap_CvFont_vscale_get,0,0,2,_wrap_CvFont_vscale_get_texinfo},
+{"CvFont_shear_set",_wrap_CvFont_shear_set,0,0,2,_wrap_CvFont_shear_set_texinfo},
+{"CvFont_shear_get",_wrap_CvFont_shear_get,0,0,2,_wrap_CvFont_shear_get_texinfo},
+{"CvFont_thickness_set",_wrap_CvFont_thickness_set,0,0,2,_wrap_CvFont_thickness_set_texinfo},
+{"CvFont_thickness_get",_wrap_CvFont_thickness_get,0,0,2,_wrap_CvFont_thickness_get_texinfo},
+{"CvFont_dx_set",_wrap_CvFont_dx_set,0,0,2,_wrap_CvFont_dx_set_texinfo},
+{"CvFont_dx_get",_wrap_CvFont_dx_get,0,0,2,_wrap_CvFont_dx_get_texinfo},
+{"CvFont_line_type_set",_wrap_CvFont_line_type_set,0,0,2,_wrap_CvFont_line_type_set_texinfo},
+{"CvFont_line_type_get",_wrap_CvFont_line_type_get,0,0,2,_wrap_CvFont_line_type_get_texinfo},
 {"new_CvFont",_wrap_new_CvFont,0,0,2,_wrap_new_CvFont_texinfo},
 {"delete_CvFont",_wrap_delete_CvFont,0,0,2,_wrap_delete_CvFont_texinfo},
 {"cvInitFont",_wrap_cvInitFont,0,0,2,_wrap_cvInitFont_texinfo},
@@ -106824,12 +107731,12 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvEllipse2Poly",_wrap_cvEllipse2Poly,0,0,2,_wrap_cvEllipse2Poly_texinfo},
 {"cvDrawContours",_wrap_cvDrawContours,0,0,2,_wrap_cvDrawContours_texinfo},
 {"cvLUT",_wrap_cvLUT,0,0,2,_wrap_cvLUT_texinfo},
-{"CvTreeNodeIterator_node_set",_wrap_CvTreeNodeIterator_node_set,0,0,2,0},
-{"CvTreeNodeIterator_node_get",_wrap_CvTreeNodeIterator_node_get,0,0,2,0},
-{"CvTreeNodeIterator_level_set",_wrap_CvTreeNodeIterator_level_set,0,0,2,0},
-{"CvTreeNodeIterator_level_get",_wrap_CvTreeNodeIterator_level_get,0,0,2,0},
-{"CvTreeNodeIterator_max_level_set",_wrap_CvTreeNodeIterator_max_level_set,0,0,2,0},
-{"CvTreeNodeIterator_max_level_get",_wrap_CvTreeNodeIterator_max_level_get,0,0,2,0},
+{"CvTreeNodeIterator_node_set",_wrap_CvTreeNodeIterator_node_set,0,0,2,_wrap_CvTreeNodeIterator_node_set_texinfo},
+{"CvTreeNodeIterator_node_get",_wrap_CvTreeNodeIterator_node_get,0,0,2,_wrap_CvTreeNodeIterator_node_get_texinfo},
+{"CvTreeNodeIterator_level_set",_wrap_CvTreeNodeIterator_level_set,0,0,2,_wrap_CvTreeNodeIterator_level_set_texinfo},
+{"CvTreeNodeIterator_level_get",_wrap_CvTreeNodeIterator_level_get,0,0,2,_wrap_CvTreeNodeIterator_level_get_texinfo},
+{"CvTreeNodeIterator_max_level_set",_wrap_CvTreeNodeIterator_max_level_set,0,0,2,_wrap_CvTreeNodeIterator_max_level_set_texinfo},
+{"CvTreeNodeIterator_max_level_get",_wrap_CvTreeNodeIterator_max_level_get,0,0,2,_wrap_CvTreeNodeIterator_max_level_get_texinfo},
 {"new_CvTreeNodeIterator",_wrap_new_CvTreeNodeIterator,0,0,2,_wrap_new_CvTreeNodeIterator_texinfo},
 {"delete_CvTreeNodeIterator",_wrap_delete_CvTreeNodeIterator,0,0,2,_wrap_delete_CvTreeNodeIterator_texinfo},
 {"cvInitTreeNodeIterator",_wrap_cvInitTreeNodeIterator,0,0,2,_wrap_cvInitTreeNodeIterator_texinfo},
@@ -106959,358 +107866,358 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvSetImageIOFunctions",_wrap_cvSetImageIOFunctions,0,0,2,_wrap_cvSetImageIOFunctions_texinfo},
 {"new_CvModule",_wrap_new_CvModule,0,0,2,_wrap_new_CvModule_texinfo},
 {"delete_CvModule",_wrap_delete_CvModule,0,0,2,_wrap_delete_CvModule_texinfo},
-{"CvModule_info_set",_wrap_CvModule_info_set,0,0,2,0},
-{"CvModule_info_get",_wrap_CvModule_info_get,0,0,2,0},
+{"CvModule_info_set",_wrap_CvModule_info_set,0,0,2,_wrap_CvModule_info_set_texinfo},
+{"CvModule_info_get",_wrap_CvModule_info_get,0,0,2,_wrap_CvModule_info_get_texinfo},
 {"CvModule_first",0,_wrap_CvModule_first_get,_wrap_CvModule_first_set,2,0},
 {"CvModule_last",0,_wrap_CvModule_last_get,_wrap_CvModule_last_set,2,0},
 {"new_CvType",_wrap_new_CvType,0,0,2,_wrap_new_CvType_texinfo},
 {"delete_CvType",_wrap_delete_CvType,0,0,2,_wrap_delete_CvType_texinfo},
-{"CvType_info_set",_wrap_CvType_info_set,0,0,2,0},
-{"CvType_info_get",_wrap_CvType_info_get,0,0,2,0},
+{"CvType_info_set",_wrap_CvType_info_set,0,0,2,_wrap_CvType_info_set_texinfo},
+{"CvType_info_get",_wrap_CvType_info_get,0,0,2,_wrap_CvType_info_get_texinfo},
 {"CvType_first",0,_wrap_CvType_first_get,_wrap_CvType_first_set,2,0},
 {"CvType_last",0,_wrap_CvType_last_get,_wrap_CvType_last_set,2,0},
-{"CvMoments_m00_set",_wrap_CvMoments_m00_set,0,0,2,0},
-{"CvMoments_m00_get",_wrap_CvMoments_m00_get,0,0,2,0},
-{"CvMoments_m10_set",_wrap_CvMoments_m10_set,0,0,2,0},
-{"CvMoments_m10_get",_wrap_CvMoments_m10_get,0,0,2,0},
-{"CvMoments_m01_set",_wrap_CvMoments_m01_set,0,0,2,0},
-{"CvMoments_m01_get",_wrap_CvMoments_m01_get,0,0,2,0},
-{"CvMoments_m20_set",_wrap_CvMoments_m20_set,0,0,2,0},
-{"CvMoments_m20_get",_wrap_CvMoments_m20_get,0,0,2,0},
-{"CvMoments_m11_set",_wrap_CvMoments_m11_set,0,0,2,0},
-{"CvMoments_m11_get",_wrap_CvMoments_m11_get,0,0,2,0},
-{"CvMoments_m02_set",_wrap_CvMoments_m02_set,0,0,2,0},
-{"CvMoments_m02_get",_wrap_CvMoments_m02_get,0,0,2,0},
-{"CvMoments_m30_set",_wrap_CvMoments_m30_set,0,0,2,0},
-{"CvMoments_m30_get",_wrap_CvMoments_m30_get,0,0,2,0},
-{"CvMoments_m21_set",_wrap_CvMoments_m21_set,0,0,2,0},
-{"CvMoments_m21_get",_wrap_CvMoments_m21_get,0,0,2,0},
-{"CvMoments_m12_set",_wrap_CvMoments_m12_set,0,0,2,0},
-{"CvMoments_m12_get",_wrap_CvMoments_m12_get,0,0,2,0},
-{"CvMoments_m03_set",_wrap_CvMoments_m03_set,0,0,2,0},
-{"CvMoments_m03_get",_wrap_CvMoments_m03_get,0,0,2,0},
-{"CvMoments_mu20_set",_wrap_CvMoments_mu20_set,0,0,2,0},
-{"CvMoments_mu20_get",_wrap_CvMoments_mu20_get,0,0,2,0},
-{"CvMoments_mu11_set",_wrap_CvMoments_mu11_set,0,0,2,0},
-{"CvMoments_mu11_get",_wrap_CvMoments_mu11_get,0,0,2,0},
-{"CvMoments_mu02_set",_wrap_CvMoments_mu02_set,0,0,2,0},
-{"CvMoments_mu02_get",_wrap_CvMoments_mu02_get,0,0,2,0},
-{"CvMoments_mu30_set",_wrap_CvMoments_mu30_set,0,0,2,0},
-{"CvMoments_mu30_get",_wrap_CvMoments_mu30_get,0,0,2,0},
-{"CvMoments_mu21_set",_wrap_CvMoments_mu21_set,0,0,2,0},
-{"CvMoments_mu21_get",_wrap_CvMoments_mu21_get,0,0,2,0},
-{"CvMoments_mu12_set",_wrap_CvMoments_mu12_set,0,0,2,0},
-{"CvMoments_mu12_get",_wrap_CvMoments_mu12_get,0,0,2,0},
-{"CvMoments_mu03_set",_wrap_CvMoments_mu03_set,0,0,2,0},
-{"CvMoments_mu03_get",_wrap_CvMoments_mu03_get,0,0,2,0},
-{"CvMoments_inv_sqrt_m00_set",_wrap_CvMoments_inv_sqrt_m00_set,0,0,2,0},
-{"CvMoments_inv_sqrt_m00_get",_wrap_CvMoments_inv_sqrt_m00_get,0,0,2,0},
+{"CvMoments_m00_set",_wrap_CvMoments_m00_set,0,0,2,_wrap_CvMoments_m00_set_texinfo},
+{"CvMoments_m00_get",_wrap_CvMoments_m00_get,0,0,2,_wrap_CvMoments_m00_get_texinfo},
+{"CvMoments_m10_set",_wrap_CvMoments_m10_set,0,0,2,_wrap_CvMoments_m10_set_texinfo},
+{"CvMoments_m10_get",_wrap_CvMoments_m10_get,0,0,2,_wrap_CvMoments_m10_get_texinfo},
+{"CvMoments_m01_set",_wrap_CvMoments_m01_set,0,0,2,_wrap_CvMoments_m01_set_texinfo},
+{"CvMoments_m01_get",_wrap_CvMoments_m01_get,0,0,2,_wrap_CvMoments_m01_get_texinfo},
+{"CvMoments_m20_set",_wrap_CvMoments_m20_set,0,0,2,_wrap_CvMoments_m20_set_texinfo},
+{"CvMoments_m20_get",_wrap_CvMoments_m20_get,0,0,2,_wrap_CvMoments_m20_get_texinfo},
+{"CvMoments_m11_set",_wrap_CvMoments_m11_set,0,0,2,_wrap_CvMoments_m11_set_texinfo},
+{"CvMoments_m11_get",_wrap_CvMoments_m11_get,0,0,2,_wrap_CvMoments_m11_get_texinfo},
+{"CvMoments_m02_set",_wrap_CvMoments_m02_set,0,0,2,_wrap_CvMoments_m02_set_texinfo},
+{"CvMoments_m02_get",_wrap_CvMoments_m02_get,0,0,2,_wrap_CvMoments_m02_get_texinfo},
+{"CvMoments_m30_set",_wrap_CvMoments_m30_set,0,0,2,_wrap_CvMoments_m30_set_texinfo},
+{"CvMoments_m30_get",_wrap_CvMoments_m30_get,0,0,2,_wrap_CvMoments_m30_get_texinfo},
+{"CvMoments_m21_set",_wrap_CvMoments_m21_set,0,0,2,_wrap_CvMoments_m21_set_texinfo},
+{"CvMoments_m21_get",_wrap_CvMoments_m21_get,0,0,2,_wrap_CvMoments_m21_get_texinfo},
+{"CvMoments_m12_set",_wrap_CvMoments_m12_set,0,0,2,_wrap_CvMoments_m12_set_texinfo},
+{"CvMoments_m12_get",_wrap_CvMoments_m12_get,0,0,2,_wrap_CvMoments_m12_get_texinfo},
+{"CvMoments_m03_set",_wrap_CvMoments_m03_set,0,0,2,_wrap_CvMoments_m03_set_texinfo},
+{"CvMoments_m03_get",_wrap_CvMoments_m03_get,0,0,2,_wrap_CvMoments_m03_get_texinfo},
+{"CvMoments_mu20_set",_wrap_CvMoments_mu20_set,0,0,2,_wrap_CvMoments_mu20_set_texinfo},
+{"CvMoments_mu20_get",_wrap_CvMoments_mu20_get,0,0,2,_wrap_CvMoments_mu20_get_texinfo},
+{"CvMoments_mu11_set",_wrap_CvMoments_mu11_set,0,0,2,_wrap_CvMoments_mu11_set_texinfo},
+{"CvMoments_mu11_get",_wrap_CvMoments_mu11_get,0,0,2,_wrap_CvMoments_mu11_get_texinfo},
+{"CvMoments_mu02_set",_wrap_CvMoments_mu02_set,0,0,2,_wrap_CvMoments_mu02_set_texinfo},
+{"CvMoments_mu02_get",_wrap_CvMoments_mu02_get,0,0,2,_wrap_CvMoments_mu02_get_texinfo},
+{"CvMoments_mu30_set",_wrap_CvMoments_mu30_set,0,0,2,_wrap_CvMoments_mu30_set_texinfo},
+{"CvMoments_mu30_get",_wrap_CvMoments_mu30_get,0,0,2,_wrap_CvMoments_mu30_get_texinfo},
+{"CvMoments_mu21_set",_wrap_CvMoments_mu21_set,0,0,2,_wrap_CvMoments_mu21_set_texinfo},
+{"CvMoments_mu21_get",_wrap_CvMoments_mu21_get,0,0,2,_wrap_CvMoments_mu21_get_texinfo},
+{"CvMoments_mu12_set",_wrap_CvMoments_mu12_set,0,0,2,_wrap_CvMoments_mu12_set_texinfo},
+{"CvMoments_mu12_get",_wrap_CvMoments_mu12_get,0,0,2,_wrap_CvMoments_mu12_get_texinfo},
+{"CvMoments_mu03_set",_wrap_CvMoments_mu03_set,0,0,2,_wrap_CvMoments_mu03_set_texinfo},
+{"CvMoments_mu03_get",_wrap_CvMoments_mu03_get,0,0,2,_wrap_CvMoments_mu03_get_texinfo},
+{"CvMoments_inv_sqrt_m00_set",_wrap_CvMoments_inv_sqrt_m00_set,0,0,2,_wrap_CvMoments_inv_sqrt_m00_set_texinfo},
+{"CvMoments_inv_sqrt_m00_get",_wrap_CvMoments_inv_sqrt_m00_get,0,0,2,_wrap_CvMoments_inv_sqrt_m00_get_texinfo},
 {"new_CvMoments",_wrap_new_CvMoments,0,0,2,_wrap_new_CvMoments_texinfo},
 {"delete_CvMoments",_wrap_delete_CvMoments,0,0,2,_wrap_delete_CvMoments_texinfo},
-{"CvHuMoments_hu1_set",_wrap_CvHuMoments_hu1_set,0,0,2,0},
-{"CvHuMoments_hu1_get",_wrap_CvHuMoments_hu1_get,0,0,2,0},
-{"CvHuMoments_hu2_set",_wrap_CvHuMoments_hu2_set,0,0,2,0},
-{"CvHuMoments_hu2_get",_wrap_CvHuMoments_hu2_get,0,0,2,0},
-{"CvHuMoments_hu3_set",_wrap_CvHuMoments_hu3_set,0,0,2,0},
-{"CvHuMoments_hu3_get",_wrap_CvHuMoments_hu3_get,0,0,2,0},
-{"CvHuMoments_hu4_set",_wrap_CvHuMoments_hu4_set,0,0,2,0},
-{"CvHuMoments_hu4_get",_wrap_CvHuMoments_hu4_get,0,0,2,0},
-{"CvHuMoments_hu5_set",_wrap_CvHuMoments_hu5_set,0,0,2,0},
-{"CvHuMoments_hu5_get",_wrap_CvHuMoments_hu5_get,0,0,2,0},
-{"CvHuMoments_hu6_set",_wrap_CvHuMoments_hu6_set,0,0,2,0},
-{"CvHuMoments_hu6_get",_wrap_CvHuMoments_hu6_get,0,0,2,0},
-{"CvHuMoments_hu7_set",_wrap_CvHuMoments_hu7_set,0,0,2,0},
-{"CvHuMoments_hu7_get",_wrap_CvHuMoments_hu7_get,0,0,2,0},
+{"CvHuMoments_hu1_set",_wrap_CvHuMoments_hu1_set,0,0,2,_wrap_CvHuMoments_hu1_set_texinfo},
+{"CvHuMoments_hu1_get",_wrap_CvHuMoments_hu1_get,0,0,2,_wrap_CvHuMoments_hu1_get_texinfo},
+{"CvHuMoments_hu2_set",_wrap_CvHuMoments_hu2_set,0,0,2,_wrap_CvHuMoments_hu2_set_texinfo},
+{"CvHuMoments_hu2_get",_wrap_CvHuMoments_hu2_get,0,0,2,_wrap_CvHuMoments_hu2_get_texinfo},
+{"CvHuMoments_hu3_set",_wrap_CvHuMoments_hu3_set,0,0,2,_wrap_CvHuMoments_hu3_set_texinfo},
+{"CvHuMoments_hu3_get",_wrap_CvHuMoments_hu3_get,0,0,2,_wrap_CvHuMoments_hu3_get_texinfo},
+{"CvHuMoments_hu4_set",_wrap_CvHuMoments_hu4_set,0,0,2,_wrap_CvHuMoments_hu4_set_texinfo},
+{"CvHuMoments_hu4_get",_wrap_CvHuMoments_hu4_get,0,0,2,_wrap_CvHuMoments_hu4_get_texinfo},
+{"CvHuMoments_hu5_set",_wrap_CvHuMoments_hu5_set,0,0,2,_wrap_CvHuMoments_hu5_set_texinfo},
+{"CvHuMoments_hu5_get",_wrap_CvHuMoments_hu5_get,0,0,2,_wrap_CvHuMoments_hu5_get_texinfo},
+{"CvHuMoments_hu6_set",_wrap_CvHuMoments_hu6_set,0,0,2,_wrap_CvHuMoments_hu6_set_texinfo},
+{"CvHuMoments_hu6_get",_wrap_CvHuMoments_hu6_get,0,0,2,_wrap_CvHuMoments_hu6_get_texinfo},
+{"CvHuMoments_hu7_set",_wrap_CvHuMoments_hu7_set,0,0,2,_wrap_CvHuMoments_hu7_set_texinfo},
+{"CvHuMoments_hu7_get",_wrap_CvHuMoments_hu7_get,0,0,2,_wrap_CvHuMoments_hu7_get_texinfo},
 {"new_CvHuMoments",_wrap_new_CvHuMoments,0,0,2,_wrap_new_CvHuMoments_texinfo},
 {"delete_CvHuMoments",_wrap_delete_CvHuMoments,0,0,2,_wrap_delete_CvHuMoments_texinfo},
-{"CvConnectedComp_area_set",_wrap_CvConnectedComp_area_set,0,0,2,0},
-{"CvConnectedComp_area_get",_wrap_CvConnectedComp_area_get,0,0,2,0},
-{"CvConnectedComp_value_set",_wrap_CvConnectedComp_value_set,0,0,2,0},
-{"CvConnectedComp_value_get",_wrap_CvConnectedComp_value_get,0,0,2,0},
-{"CvConnectedComp_rect_set",_wrap_CvConnectedComp_rect_set,0,0,2,0},
-{"CvConnectedComp_rect_get",_wrap_CvConnectedComp_rect_get,0,0,2,0},
-{"CvConnectedComp_contour_set",_wrap_CvConnectedComp_contour_set,0,0,2,0},
-{"CvConnectedComp_contour_get",_wrap_CvConnectedComp_contour_get,0,0,2,0},
+{"CvConnectedComp_area_set",_wrap_CvConnectedComp_area_set,0,0,2,_wrap_CvConnectedComp_area_set_texinfo},
+{"CvConnectedComp_area_get",_wrap_CvConnectedComp_area_get,0,0,2,_wrap_CvConnectedComp_area_get_texinfo},
+{"CvConnectedComp_value_set",_wrap_CvConnectedComp_value_set,0,0,2,_wrap_CvConnectedComp_value_set_texinfo},
+{"CvConnectedComp_value_get",_wrap_CvConnectedComp_value_get,0,0,2,_wrap_CvConnectedComp_value_get_texinfo},
+{"CvConnectedComp_rect_set",_wrap_CvConnectedComp_rect_set,0,0,2,_wrap_CvConnectedComp_rect_set_texinfo},
+{"CvConnectedComp_rect_get",_wrap_CvConnectedComp_rect_get,0,0,2,_wrap_CvConnectedComp_rect_get_texinfo},
+{"CvConnectedComp_contour_set",_wrap_CvConnectedComp_contour_set,0,0,2,_wrap_CvConnectedComp_contour_set_texinfo},
+{"CvConnectedComp_contour_get",_wrap_CvConnectedComp_contour_get,0,0,2,_wrap_CvConnectedComp_contour_get_texinfo},
 {"new_CvConnectedComp",_wrap_new_CvConnectedComp,0,0,2,_wrap_new_CvConnectedComp_texinfo},
 {"delete_CvConnectedComp",_wrap_delete_CvConnectedComp,0,0,2,_wrap_delete_CvConnectedComp_texinfo},
-{"CvChainPtReader_header_size_set",_wrap_CvChainPtReader_header_size_set,0,0,2,0},
-{"CvChainPtReader_header_size_get",_wrap_CvChainPtReader_header_size_get,0,0,2,0},
-{"CvChainPtReader_seq_set",_wrap_CvChainPtReader_seq_set,0,0,2,0},
-{"CvChainPtReader_seq_get",_wrap_CvChainPtReader_seq_get,0,0,2,0},
-{"CvChainPtReader_block_set",_wrap_CvChainPtReader_block_set,0,0,2,0},
-{"CvChainPtReader_block_get",_wrap_CvChainPtReader_block_get,0,0,2,0},
-{"CvChainPtReader_ptr_set",_wrap_CvChainPtReader_ptr_set,0,0,2,0},
-{"CvChainPtReader_ptr_get",_wrap_CvChainPtReader_ptr_get,0,0,2,0},
-{"CvChainPtReader_block_min_set",_wrap_CvChainPtReader_block_min_set,0,0,2,0},
-{"CvChainPtReader_block_min_get",_wrap_CvChainPtReader_block_min_get,0,0,2,0},
-{"CvChainPtReader_block_max_set",_wrap_CvChainPtReader_block_max_set,0,0,2,0},
-{"CvChainPtReader_block_max_get",_wrap_CvChainPtReader_block_max_get,0,0,2,0},
-{"CvChainPtReader_delta_index_set",_wrap_CvChainPtReader_delta_index_set,0,0,2,0},
-{"CvChainPtReader_delta_index_get",_wrap_CvChainPtReader_delta_index_get,0,0,2,0},
-{"CvChainPtReader_prev_elem_set",_wrap_CvChainPtReader_prev_elem_set,0,0,2,0},
-{"CvChainPtReader_prev_elem_get",_wrap_CvChainPtReader_prev_elem_get,0,0,2,0},
-{"CvChainPtReader_code_set",_wrap_CvChainPtReader_code_set,0,0,2,0},
-{"CvChainPtReader_code_get",_wrap_CvChainPtReader_code_get,0,0,2,0},
-{"CvChainPtReader_pt_set",_wrap_CvChainPtReader_pt_set,0,0,2,0},
-{"CvChainPtReader_pt_get",_wrap_CvChainPtReader_pt_get,0,0,2,0},
-{"CvChainPtReader_deltas_set",_wrap_CvChainPtReader_deltas_set,0,0,2,0},
-{"CvChainPtReader_deltas_get",_wrap_CvChainPtReader_deltas_get,0,0,2,0},
+{"CvChainPtReader_header_size_set",_wrap_CvChainPtReader_header_size_set,0,0,2,_wrap_CvChainPtReader_header_size_set_texinfo},
+{"CvChainPtReader_header_size_get",_wrap_CvChainPtReader_header_size_get,0,0,2,_wrap_CvChainPtReader_header_size_get_texinfo},
+{"CvChainPtReader_seq_set",_wrap_CvChainPtReader_seq_set,0,0,2,_wrap_CvChainPtReader_seq_set_texinfo},
+{"CvChainPtReader_seq_get",_wrap_CvChainPtReader_seq_get,0,0,2,_wrap_CvChainPtReader_seq_get_texinfo},
+{"CvChainPtReader_block_set",_wrap_CvChainPtReader_block_set,0,0,2,_wrap_CvChainPtReader_block_set_texinfo},
+{"CvChainPtReader_block_get",_wrap_CvChainPtReader_block_get,0,0,2,_wrap_CvChainPtReader_block_get_texinfo},
+{"CvChainPtReader_ptr_set",_wrap_CvChainPtReader_ptr_set,0,0,2,_wrap_CvChainPtReader_ptr_set_texinfo},
+{"CvChainPtReader_ptr_get",_wrap_CvChainPtReader_ptr_get,0,0,2,_wrap_CvChainPtReader_ptr_get_texinfo},
+{"CvChainPtReader_block_min_set",_wrap_CvChainPtReader_block_min_set,0,0,2,_wrap_CvChainPtReader_block_min_set_texinfo},
+{"CvChainPtReader_block_min_get",_wrap_CvChainPtReader_block_min_get,0,0,2,_wrap_CvChainPtReader_block_min_get_texinfo},
+{"CvChainPtReader_block_max_set",_wrap_CvChainPtReader_block_max_set,0,0,2,_wrap_CvChainPtReader_block_max_set_texinfo},
+{"CvChainPtReader_block_max_get",_wrap_CvChainPtReader_block_max_get,0,0,2,_wrap_CvChainPtReader_block_max_get_texinfo},
+{"CvChainPtReader_delta_index_set",_wrap_CvChainPtReader_delta_index_set,0,0,2,_wrap_CvChainPtReader_delta_index_set_texinfo},
+{"CvChainPtReader_delta_index_get",_wrap_CvChainPtReader_delta_index_get,0,0,2,_wrap_CvChainPtReader_delta_index_get_texinfo},
+{"CvChainPtReader_prev_elem_set",_wrap_CvChainPtReader_prev_elem_set,0,0,2,_wrap_CvChainPtReader_prev_elem_set_texinfo},
+{"CvChainPtReader_prev_elem_get",_wrap_CvChainPtReader_prev_elem_get,0,0,2,_wrap_CvChainPtReader_prev_elem_get_texinfo},
+{"CvChainPtReader_code_set",_wrap_CvChainPtReader_code_set,0,0,2,_wrap_CvChainPtReader_code_set_texinfo},
+{"CvChainPtReader_code_get",_wrap_CvChainPtReader_code_get,0,0,2,_wrap_CvChainPtReader_code_get_texinfo},
+{"CvChainPtReader_pt_set",_wrap_CvChainPtReader_pt_set,0,0,2,_wrap_CvChainPtReader_pt_set_texinfo},
+{"CvChainPtReader_pt_get",_wrap_CvChainPtReader_pt_get,0,0,2,_wrap_CvChainPtReader_pt_get_texinfo},
+{"CvChainPtReader_deltas_set",_wrap_CvChainPtReader_deltas_set,0,0,2,_wrap_CvChainPtReader_deltas_set_texinfo},
+{"CvChainPtReader_deltas_get",_wrap_CvChainPtReader_deltas_get,0,0,2,_wrap_CvChainPtReader_deltas_get_texinfo},
 {"new_CvChainPtReader",_wrap_new_CvChainPtReader,0,0,2,_wrap_new_CvChainPtReader_texinfo},
 {"delete_CvChainPtReader",_wrap_delete_CvChainPtReader,0,0,2,_wrap_delete_CvChainPtReader_texinfo},
-{"CvContourTree_flags_set",_wrap_CvContourTree_flags_set,0,0,2,0},
-{"CvContourTree_flags_get",_wrap_CvContourTree_flags_get,0,0,2,0},
-{"CvContourTree_header_size_set",_wrap_CvContourTree_header_size_set,0,0,2,0},
-{"CvContourTree_header_size_get",_wrap_CvContourTree_header_size_get,0,0,2,0},
-{"CvContourTree_h_prev_set",_wrap_CvContourTree_h_prev_set,0,0,2,0},
-{"CvContourTree_h_prev_get",_wrap_CvContourTree_h_prev_get,0,0,2,0},
-{"CvContourTree_h_next_set",_wrap_CvContourTree_h_next_set,0,0,2,0},
-{"CvContourTree_h_next_get",_wrap_CvContourTree_h_next_get,0,0,2,0},
-{"CvContourTree_v_prev_set",_wrap_CvContourTree_v_prev_set,0,0,2,0},
-{"CvContourTree_v_prev_get",_wrap_CvContourTree_v_prev_get,0,0,2,0},
-{"CvContourTree_v_next_set",_wrap_CvContourTree_v_next_set,0,0,2,0},
-{"CvContourTree_v_next_get",_wrap_CvContourTree_v_next_get,0,0,2,0},
-{"CvContourTree_total_set",_wrap_CvContourTree_total_set,0,0,2,0},
-{"CvContourTree_total_get",_wrap_CvContourTree_total_get,0,0,2,0},
-{"CvContourTree_elem_size_set",_wrap_CvContourTree_elem_size_set,0,0,2,0},
-{"CvContourTree_elem_size_get",_wrap_CvContourTree_elem_size_get,0,0,2,0},
-{"CvContourTree_block_max_set",_wrap_CvContourTree_block_max_set,0,0,2,0},
-{"CvContourTree_block_max_get",_wrap_CvContourTree_block_max_get,0,0,2,0},
-{"CvContourTree_ptr_set",_wrap_CvContourTree_ptr_set,0,0,2,0},
-{"CvContourTree_ptr_get",_wrap_CvContourTree_ptr_get,0,0,2,0},
-{"CvContourTree_delta_elems_set",_wrap_CvContourTree_delta_elems_set,0,0,2,0},
-{"CvContourTree_delta_elems_get",_wrap_CvContourTree_delta_elems_get,0,0,2,0},
-{"CvContourTree_storage_set",_wrap_CvContourTree_storage_set,0,0,2,0},
-{"CvContourTree_storage_get",_wrap_CvContourTree_storage_get,0,0,2,0},
-{"CvContourTree_free_blocks_set",_wrap_CvContourTree_free_blocks_set,0,0,2,0},
-{"CvContourTree_free_blocks_get",_wrap_CvContourTree_free_blocks_get,0,0,2,0},
-{"CvContourTree_first_set",_wrap_CvContourTree_first_set,0,0,2,0},
-{"CvContourTree_first_get",_wrap_CvContourTree_first_get,0,0,2,0},
-{"CvContourTree_p1_set",_wrap_CvContourTree_p1_set,0,0,2,0},
-{"CvContourTree_p1_get",_wrap_CvContourTree_p1_get,0,0,2,0},
-{"CvContourTree_p2_set",_wrap_CvContourTree_p2_set,0,0,2,0},
-{"CvContourTree_p2_get",_wrap_CvContourTree_p2_get,0,0,2,0},
+{"CvContourTree_flags_set",_wrap_CvContourTree_flags_set,0,0,2,_wrap_CvContourTree_flags_set_texinfo},
+{"CvContourTree_flags_get",_wrap_CvContourTree_flags_get,0,0,2,_wrap_CvContourTree_flags_get_texinfo},
+{"CvContourTree_header_size_set",_wrap_CvContourTree_header_size_set,0,0,2,_wrap_CvContourTree_header_size_set_texinfo},
+{"CvContourTree_header_size_get",_wrap_CvContourTree_header_size_get,0,0,2,_wrap_CvContourTree_header_size_get_texinfo},
+{"CvContourTree_h_prev_set",_wrap_CvContourTree_h_prev_set,0,0,2,_wrap_CvContourTree_h_prev_set_texinfo},
+{"CvContourTree_h_prev_get",_wrap_CvContourTree_h_prev_get,0,0,2,_wrap_CvContourTree_h_prev_get_texinfo},
+{"CvContourTree_h_next_set",_wrap_CvContourTree_h_next_set,0,0,2,_wrap_CvContourTree_h_next_set_texinfo},
+{"CvContourTree_h_next_get",_wrap_CvContourTree_h_next_get,0,0,2,_wrap_CvContourTree_h_next_get_texinfo},
+{"CvContourTree_v_prev_set",_wrap_CvContourTree_v_prev_set,0,0,2,_wrap_CvContourTree_v_prev_set_texinfo},
+{"CvContourTree_v_prev_get",_wrap_CvContourTree_v_prev_get,0,0,2,_wrap_CvContourTree_v_prev_get_texinfo},
+{"CvContourTree_v_next_set",_wrap_CvContourTree_v_next_set,0,0,2,_wrap_CvContourTree_v_next_set_texinfo},
+{"CvContourTree_v_next_get",_wrap_CvContourTree_v_next_get,0,0,2,_wrap_CvContourTree_v_next_get_texinfo},
+{"CvContourTree_total_set",_wrap_CvContourTree_total_set,0,0,2,_wrap_CvContourTree_total_set_texinfo},
+{"CvContourTree_total_get",_wrap_CvContourTree_total_get,0,0,2,_wrap_CvContourTree_total_get_texinfo},
+{"CvContourTree_elem_size_set",_wrap_CvContourTree_elem_size_set,0,0,2,_wrap_CvContourTree_elem_size_set_texinfo},
+{"CvContourTree_elem_size_get",_wrap_CvContourTree_elem_size_get,0,0,2,_wrap_CvContourTree_elem_size_get_texinfo},
+{"CvContourTree_block_max_set",_wrap_CvContourTree_block_max_set,0,0,2,_wrap_CvContourTree_block_max_set_texinfo},
+{"CvContourTree_block_max_get",_wrap_CvContourTree_block_max_get,0,0,2,_wrap_CvContourTree_block_max_get_texinfo},
+{"CvContourTree_ptr_set",_wrap_CvContourTree_ptr_set,0,0,2,_wrap_CvContourTree_ptr_set_texinfo},
+{"CvContourTree_ptr_get",_wrap_CvContourTree_ptr_get,0,0,2,_wrap_CvContourTree_ptr_get_texinfo},
+{"CvContourTree_delta_elems_set",_wrap_CvContourTree_delta_elems_set,0,0,2,_wrap_CvContourTree_delta_elems_set_texinfo},
+{"CvContourTree_delta_elems_get",_wrap_CvContourTree_delta_elems_get,0,0,2,_wrap_CvContourTree_delta_elems_get_texinfo},
+{"CvContourTree_storage_set",_wrap_CvContourTree_storage_set,0,0,2,_wrap_CvContourTree_storage_set_texinfo},
+{"CvContourTree_storage_get",_wrap_CvContourTree_storage_get,0,0,2,_wrap_CvContourTree_storage_get_texinfo},
+{"CvContourTree_free_blocks_set",_wrap_CvContourTree_free_blocks_set,0,0,2,_wrap_CvContourTree_free_blocks_set_texinfo},
+{"CvContourTree_free_blocks_get",_wrap_CvContourTree_free_blocks_get,0,0,2,_wrap_CvContourTree_free_blocks_get_texinfo},
+{"CvContourTree_first_set",_wrap_CvContourTree_first_set,0,0,2,_wrap_CvContourTree_first_set_texinfo},
+{"CvContourTree_first_get",_wrap_CvContourTree_first_get,0,0,2,_wrap_CvContourTree_first_get_texinfo},
+{"CvContourTree_p1_set",_wrap_CvContourTree_p1_set,0,0,2,_wrap_CvContourTree_p1_set_texinfo},
+{"CvContourTree_p1_get",_wrap_CvContourTree_p1_get,0,0,2,_wrap_CvContourTree_p1_get_texinfo},
+{"CvContourTree_p2_set",_wrap_CvContourTree_p2_set,0,0,2,_wrap_CvContourTree_p2_set_texinfo},
+{"CvContourTree_p2_get",_wrap_CvContourTree_p2_get,0,0,2,_wrap_CvContourTree_p2_get_texinfo},
 {"new_CvContourTree",_wrap_new_CvContourTree,0,0,2,_wrap_new_CvContourTree_texinfo},
 {"delete_CvContourTree",_wrap_delete_CvContourTree,0,0,2,_wrap_delete_CvContourTree_texinfo},
-{"CvConvexityDefect_start_set",_wrap_CvConvexityDefect_start_set,0,0,2,0},
-{"CvConvexityDefect_start_get",_wrap_CvConvexityDefect_start_get,0,0,2,0},
-{"CvConvexityDefect_end_set",_wrap_CvConvexityDefect_end_set,0,0,2,0},
-{"CvConvexityDefect_end_get",_wrap_CvConvexityDefect_end_get,0,0,2,0},
-{"CvConvexityDefect_depth_point_set",_wrap_CvConvexityDefect_depth_point_set,0,0,2,0},
-{"CvConvexityDefect_depth_point_get",_wrap_CvConvexityDefect_depth_point_get,0,0,2,0},
-{"CvConvexityDefect_depth_set",_wrap_CvConvexityDefect_depth_set,0,0,2,0},
-{"CvConvexityDefect_depth_get",_wrap_CvConvexityDefect_depth_get,0,0,2,0},
+{"CvConvexityDefect_start_set",_wrap_CvConvexityDefect_start_set,0,0,2,_wrap_CvConvexityDefect_start_set_texinfo},
+{"CvConvexityDefect_start_get",_wrap_CvConvexityDefect_start_get,0,0,2,_wrap_CvConvexityDefect_start_get_texinfo},
+{"CvConvexityDefect_end_set",_wrap_CvConvexityDefect_end_set,0,0,2,_wrap_CvConvexityDefect_end_set_texinfo},
+{"CvConvexityDefect_end_get",_wrap_CvConvexityDefect_end_get,0,0,2,_wrap_CvConvexityDefect_end_get_texinfo},
+{"CvConvexityDefect_depth_point_set",_wrap_CvConvexityDefect_depth_point_set,0,0,2,_wrap_CvConvexityDefect_depth_point_set_texinfo},
+{"CvConvexityDefect_depth_point_get",_wrap_CvConvexityDefect_depth_point_get,0,0,2,_wrap_CvConvexityDefect_depth_point_get_texinfo},
+{"CvConvexityDefect_depth_set",_wrap_CvConvexityDefect_depth_set,0,0,2,_wrap_CvConvexityDefect_depth_set_texinfo},
+{"CvConvexityDefect_depth_get",_wrap_CvConvexityDefect_depth_get,0,0,2,_wrap_CvConvexityDefect_depth_get_texinfo},
 {"new_CvConvexityDefect",_wrap_new_CvConvexityDefect,0,0,2,_wrap_new_CvConvexityDefect_texinfo},
 {"delete_CvConvexityDefect",_wrap_delete_CvConvexityDefect,0,0,2,_wrap_delete_CvConvexityDefect_texinfo},
-{"CvQuadEdge2D_flags_set",_wrap_CvQuadEdge2D_flags_set,0,0,2,0},
-{"CvQuadEdge2D_flags_get",_wrap_CvQuadEdge2D_flags_get,0,0,2,0},
-{"CvQuadEdge2D_pt_set",_wrap_CvQuadEdge2D_pt_set,0,0,2,0},
-{"CvQuadEdge2D_pt_get",_wrap_CvQuadEdge2D_pt_get,0,0,2,0},
-{"CvQuadEdge2D_next_set",_wrap_CvQuadEdge2D_next_set,0,0,2,0},
-{"CvQuadEdge2D_next_get",_wrap_CvQuadEdge2D_next_get,0,0,2,0},
+{"CvQuadEdge2D_flags_set",_wrap_CvQuadEdge2D_flags_set,0,0,2,_wrap_CvQuadEdge2D_flags_set_texinfo},
+{"CvQuadEdge2D_flags_get",_wrap_CvQuadEdge2D_flags_get,0,0,2,_wrap_CvQuadEdge2D_flags_get_texinfo},
+{"CvQuadEdge2D_pt_set",_wrap_CvQuadEdge2D_pt_set,0,0,2,_wrap_CvQuadEdge2D_pt_set_texinfo},
+{"CvQuadEdge2D_pt_get",_wrap_CvQuadEdge2D_pt_get,0,0,2,_wrap_CvQuadEdge2D_pt_get_texinfo},
+{"CvQuadEdge2D_next_set",_wrap_CvQuadEdge2D_next_set,0,0,2,_wrap_CvQuadEdge2D_next_set_texinfo},
+{"CvQuadEdge2D_next_get",_wrap_CvQuadEdge2D_next_get,0,0,2,_wrap_CvQuadEdge2D_next_get_texinfo},
 {"new_CvQuadEdge2D",_wrap_new_CvQuadEdge2D,0,0,2,_wrap_new_CvQuadEdge2D_texinfo},
 {"delete_CvQuadEdge2D",_wrap_delete_CvQuadEdge2D,0,0,2,_wrap_delete_CvQuadEdge2D_texinfo},
-{"CvSubdiv2DPoint_flags_set",_wrap_CvSubdiv2DPoint_flags_set,0,0,2,0},
-{"CvSubdiv2DPoint_flags_get",_wrap_CvSubdiv2DPoint_flags_get,0,0,2,0},
-{"CvSubdiv2DPoint_first_set",_wrap_CvSubdiv2DPoint_first_set,0,0,2,0},
-{"CvSubdiv2DPoint_first_get",_wrap_CvSubdiv2DPoint_first_get,0,0,2,0},
-{"CvSubdiv2DPoint_pt_set",_wrap_CvSubdiv2DPoint_pt_set,0,0,2,0},
-{"CvSubdiv2DPoint_pt_get",_wrap_CvSubdiv2DPoint_pt_get,0,0,2,0},
+{"CvSubdiv2DPoint_flags_set",_wrap_CvSubdiv2DPoint_flags_set,0,0,2,_wrap_CvSubdiv2DPoint_flags_set_texinfo},
+{"CvSubdiv2DPoint_flags_get",_wrap_CvSubdiv2DPoint_flags_get,0,0,2,_wrap_CvSubdiv2DPoint_flags_get_texinfo},
+{"CvSubdiv2DPoint_first_set",_wrap_CvSubdiv2DPoint_first_set,0,0,2,_wrap_CvSubdiv2DPoint_first_set_texinfo},
+{"CvSubdiv2DPoint_first_get",_wrap_CvSubdiv2DPoint_first_get,0,0,2,_wrap_CvSubdiv2DPoint_first_get_texinfo},
+{"CvSubdiv2DPoint_pt_set",_wrap_CvSubdiv2DPoint_pt_set,0,0,2,_wrap_CvSubdiv2DPoint_pt_set_texinfo},
+{"CvSubdiv2DPoint_pt_get",_wrap_CvSubdiv2DPoint_pt_get,0,0,2,_wrap_CvSubdiv2DPoint_pt_get_texinfo},
 {"new_CvSubdiv2DPoint",_wrap_new_CvSubdiv2DPoint,0,0,2,_wrap_new_CvSubdiv2DPoint_texinfo},
 {"delete_CvSubdiv2DPoint",_wrap_delete_CvSubdiv2DPoint,0,0,2,_wrap_delete_CvSubdiv2DPoint_texinfo},
-{"CvSubdiv2D_flags_set",_wrap_CvSubdiv2D_flags_set,0,0,2,0},
-{"CvSubdiv2D_flags_get",_wrap_CvSubdiv2D_flags_get,0,0,2,0},
-{"CvSubdiv2D_header_size_set",_wrap_CvSubdiv2D_header_size_set,0,0,2,0},
-{"CvSubdiv2D_header_size_get",_wrap_CvSubdiv2D_header_size_get,0,0,2,0},
-{"CvSubdiv2D_h_prev_set",_wrap_CvSubdiv2D_h_prev_set,0,0,2,0},
-{"CvSubdiv2D_h_prev_get",_wrap_CvSubdiv2D_h_prev_get,0,0,2,0},
-{"CvSubdiv2D_h_next_set",_wrap_CvSubdiv2D_h_next_set,0,0,2,0},
-{"CvSubdiv2D_h_next_get",_wrap_CvSubdiv2D_h_next_get,0,0,2,0},
-{"CvSubdiv2D_v_prev_set",_wrap_CvSubdiv2D_v_prev_set,0,0,2,0},
-{"CvSubdiv2D_v_prev_get",_wrap_CvSubdiv2D_v_prev_get,0,0,2,0},
-{"CvSubdiv2D_v_next_set",_wrap_CvSubdiv2D_v_next_set,0,0,2,0},
-{"CvSubdiv2D_v_next_get",_wrap_CvSubdiv2D_v_next_get,0,0,2,0},
-{"CvSubdiv2D_total_set",_wrap_CvSubdiv2D_total_set,0,0,2,0},
-{"CvSubdiv2D_total_get",_wrap_CvSubdiv2D_total_get,0,0,2,0},
-{"CvSubdiv2D_elem_size_set",_wrap_CvSubdiv2D_elem_size_set,0,0,2,0},
-{"CvSubdiv2D_elem_size_get",_wrap_CvSubdiv2D_elem_size_get,0,0,2,0},
-{"CvSubdiv2D_block_max_set",_wrap_CvSubdiv2D_block_max_set,0,0,2,0},
-{"CvSubdiv2D_block_max_get",_wrap_CvSubdiv2D_block_max_get,0,0,2,0},
-{"CvSubdiv2D_ptr_set",_wrap_CvSubdiv2D_ptr_set,0,0,2,0},
-{"CvSubdiv2D_ptr_get",_wrap_CvSubdiv2D_ptr_get,0,0,2,0},
-{"CvSubdiv2D_delta_elems_set",_wrap_CvSubdiv2D_delta_elems_set,0,0,2,0},
-{"CvSubdiv2D_delta_elems_get",_wrap_CvSubdiv2D_delta_elems_get,0,0,2,0},
-{"CvSubdiv2D_storage_set",_wrap_CvSubdiv2D_storage_set,0,0,2,0},
-{"CvSubdiv2D_storage_get",_wrap_CvSubdiv2D_storage_get,0,0,2,0},
-{"CvSubdiv2D_free_blocks_set",_wrap_CvSubdiv2D_free_blocks_set,0,0,2,0},
-{"CvSubdiv2D_free_blocks_get",_wrap_CvSubdiv2D_free_blocks_get,0,0,2,0},
-{"CvSubdiv2D_first_set",_wrap_CvSubdiv2D_first_set,0,0,2,0},
-{"CvSubdiv2D_first_get",_wrap_CvSubdiv2D_first_get,0,0,2,0},
-{"CvSubdiv2D_free_elems_set",_wrap_CvSubdiv2D_free_elems_set,0,0,2,0},
-{"CvSubdiv2D_free_elems_get",_wrap_CvSubdiv2D_free_elems_get,0,0,2,0},
-{"CvSubdiv2D_active_count_set",_wrap_CvSubdiv2D_active_count_set,0,0,2,0},
-{"CvSubdiv2D_active_count_get",_wrap_CvSubdiv2D_active_count_get,0,0,2,0},
-{"CvSubdiv2D_quad_edges_set",_wrap_CvSubdiv2D_quad_edges_set,0,0,2,0},
-{"CvSubdiv2D_quad_edges_get",_wrap_CvSubdiv2D_quad_edges_get,0,0,2,0},
-{"CvSubdiv2D_is_geometry_valid_set",_wrap_CvSubdiv2D_is_geometry_valid_set,0,0,2,0},
-{"CvSubdiv2D_is_geometry_valid_get",_wrap_CvSubdiv2D_is_geometry_valid_get,0,0,2,0},
-{"CvSubdiv2D_recent_edge_set",_wrap_CvSubdiv2D_recent_edge_set,0,0,2,0},
-{"CvSubdiv2D_recent_edge_get",_wrap_CvSubdiv2D_recent_edge_get,0,0,2,0},
-{"CvSubdiv2D_topleft_set",_wrap_CvSubdiv2D_topleft_set,0,0,2,0},
-{"CvSubdiv2D_topleft_get",_wrap_CvSubdiv2D_topleft_get,0,0,2,0},
-{"CvSubdiv2D_bottomright_set",_wrap_CvSubdiv2D_bottomright_set,0,0,2,0},
-{"CvSubdiv2D_bottomright_get",_wrap_CvSubdiv2D_bottomright_get,0,0,2,0},
-{"CvSubdiv2D_edges_set",_wrap_CvSubdiv2D_edges_set,0,0,2,0},
-{"CvSubdiv2D_edges_get",_wrap_CvSubdiv2D_edges_get,0,0,2,0},
+{"CvSubdiv2D_flags_set",_wrap_CvSubdiv2D_flags_set,0,0,2,_wrap_CvSubdiv2D_flags_set_texinfo},
+{"CvSubdiv2D_flags_get",_wrap_CvSubdiv2D_flags_get,0,0,2,_wrap_CvSubdiv2D_flags_get_texinfo},
+{"CvSubdiv2D_header_size_set",_wrap_CvSubdiv2D_header_size_set,0,0,2,_wrap_CvSubdiv2D_header_size_set_texinfo},
+{"CvSubdiv2D_header_size_get",_wrap_CvSubdiv2D_header_size_get,0,0,2,_wrap_CvSubdiv2D_header_size_get_texinfo},
+{"CvSubdiv2D_h_prev_set",_wrap_CvSubdiv2D_h_prev_set,0,0,2,_wrap_CvSubdiv2D_h_prev_set_texinfo},
+{"CvSubdiv2D_h_prev_get",_wrap_CvSubdiv2D_h_prev_get,0,0,2,_wrap_CvSubdiv2D_h_prev_get_texinfo},
+{"CvSubdiv2D_h_next_set",_wrap_CvSubdiv2D_h_next_set,0,0,2,_wrap_CvSubdiv2D_h_next_set_texinfo},
+{"CvSubdiv2D_h_next_get",_wrap_CvSubdiv2D_h_next_get,0,0,2,_wrap_CvSubdiv2D_h_next_get_texinfo},
+{"CvSubdiv2D_v_prev_set",_wrap_CvSubdiv2D_v_prev_set,0,0,2,_wrap_CvSubdiv2D_v_prev_set_texinfo},
+{"CvSubdiv2D_v_prev_get",_wrap_CvSubdiv2D_v_prev_get,0,0,2,_wrap_CvSubdiv2D_v_prev_get_texinfo},
+{"CvSubdiv2D_v_next_set",_wrap_CvSubdiv2D_v_next_set,0,0,2,_wrap_CvSubdiv2D_v_next_set_texinfo},
+{"CvSubdiv2D_v_next_get",_wrap_CvSubdiv2D_v_next_get,0,0,2,_wrap_CvSubdiv2D_v_next_get_texinfo},
+{"CvSubdiv2D_total_set",_wrap_CvSubdiv2D_total_set,0,0,2,_wrap_CvSubdiv2D_total_set_texinfo},
+{"CvSubdiv2D_total_get",_wrap_CvSubdiv2D_total_get,0,0,2,_wrap_CvSubdiv2D_total_get_texinfo},
+{"CvSubdiv2D_elem_size_set",_wrap_CvSubdiv2D_elem_size_set,0,0,2,_wrap_CvSubdiv2D_elem_size_set_texinfo},
+{"CvSubdiv2D_elem_size_get",_wrap_CvSubdiv2D_elem_size_get,0,0,2,_wrap_CvSubdiv2D_elem_size_get_texinfo},
+{"CvSubdiv2D_block_max_set",_wrap_CvSubdiv2D_block_max_set,0,0,2,_wrap_CvSubdiv2D_block_max_set_texinfo},
+{"CvSubdiv2D_block_max_get",_wrap_CvSubdiv2D_block_max_get,0,0,2,_wrap_CvSubdiv2D_block_max_get_texinfo},
+{"CvSubdiv2D_ptr_set",_wrap_CvSubdiv2D_ptr_set,0,0,2,_wrap_CvSubdiv2D_ptr_set_texinfo},
+{"CvSubdiv2D_ptr_get",_wrap_CvSubdiv2D_ptr_get,0,0,2,_wrap_CvSubdiv2D_ptr_get_texinfo},
+{"CvSubdiv2D_delta_elems_set",_wrap_CvSubdiv2D_delta_elems_set,0,0,2,_wrap_CvSubdiv2D_delta_elems_set_texinfo},
+{"CvSubdiv2D_delta_elems_get",_wrap_CvSubdiv2D_delta_elems_get,0,0,2,_wrap_CvSubdiv2D_delta_elems_get_texinfo},
+{"CvSubdiv2D_storage_set",_wrap_CvSubdiv2D_storage_set,0,0,2,_wrap_CvSubdiv2D_storage_set_texinfo},
+{"CvSubdiv2D_storage_get",_wrap_CvSubdiv2D_storage_get,0,0,2,_wrap_CvSubdiv2D_storage_get_texinfo},
+{"CvSubdiv2D_free_blocks_set",_wrap_CvSubdiv2D_free_blocks_set,0,0,2,_wrap_CvSubdiv2D_free_blocks_set_texinfo},
+{"CvSubdiv2D_free_blocks_get",_wrap_CvSubdiv2D_free_blocks_get,0,0,2,_wrap_CvSubdiv2D_free_blocks_get_texinfo},
+{"CvSubdiv2D_first_set",_wrap_CvSubdiv2D_first_set,0,0,2,_wrap_CvSubdiv2D_first_set_texinfo},
+{"CvSubdiv2D_first_get",_wrap_CvSubdiv2D_first_get,0,0,2,_wrap_CvSubdiv2D_first_get_texinfo},
+{"CvSubdiv2D_free_elems_set",_wrap_CvSubdiv2D_free_elems_set,0,0,2,_wrap_CvSubdiv2D_free_elems_set_texinfo},
+{"CvSubdiv2D_free_elems_get",_wrap_CvSubdiv2D_free_elems_get,0,0,2,_wrap_CvSubdiv2D_free_elems_get_texinfo},
+{"CvSubdiv2D_active_count_set",_wrap_CvSubdiv2D_active_count_set,0,0,2,_wrap_CvSubdiv2D_active_count_set_texinfo},
+{"CvSubdiv2D_active_count_get",_wrap_CvSubdiv2D_active_count_get,0,0,2,_wrap_CvSubdiv2D_active_count_get_texinfo},
+{"CvSubdiv2D_quad_edges_set",_wrap_CvSubdiv2D_quad_edges_set,0,0,2,_wrap_CvSubdiv2D_quad_edges_set_texinfo},
+{"CvSubdiv2D_quad_edges_get",_wrap_CvSubdiv2D_quad_edges_get,0,0,2,_wrap_CvSubdiv2D_quad_edges_get_texinfo},
+{"CvSubdiv2D_is_geometry_valid_set",_wrap_CvSubdiv2D_is_geometry_valid_set,0,0,2,_wrap_CvSubdiv2D_is_geometry_valid_set_texinfo},
+{"CvSubdiv2D_is_geometry_valid_get",_wrap_CvSubdiv2D_is_geometry_valid_get,0,0,2,_wrap_CvSubdiv2D_is_geometry_valid_get_texinfo},
+{"CvSubdiv2D_recent_edge_set",_wrap_CvSubdiv2D_recent_edge_set,0,0,2,_wrap_CvSubdiv2D_recent_edge_set_texinfo},
+{"CvSubdiv2D_recent_edge_get",_wrap_CvSubdiv2D_recent_edge_get,0,0,2,_wrap_CvSubdiv2D_recent_edge_get_texinfo},
+{"CvSubdiv2D_topleft_set",_wrap_CvSubdiv2D_topleft_set,0,0,2,_wrap_CvSubdiv2D_topleft_set_texinfo},
+{"CvSubdiv2D_topleft_get",_wrap_CvSubdiv2D_topleft_get,0,0,2,_wrap_CvSubdiv2D_topleft_get_texinfo},
+{"CvSubdiv2D_bottomright_set",_wrap_CvSubdiv2D_bottomright_set,0,0,2,_wrap_CvSubdiv2D_bottomright_set_texinfo},
+{"CvSubdiv2D_bottomright_get",_wrap_CvSubdiv2D_bottomright_get,0,0,2,_wrap_CvSubdiv2D_bottomright_get_texinfo},
+{"CvSubdiv2D_edges_set",_wrap_CvSubdiv2D_edges_set,0,0,2,_wrap_CvSubdiv2D_edges_set_texinfo},
+{"CvSubdiv2D_edges_get",_wrap_CvSubdiv2D_edges_get,0,0,2,_wrap_CvSubdiv2D_edges_get_texinfo},
 {"CvSubdiv2D_typed_edges_get",_wrap_CvSubdiv2D_typed_edges_get,0,0,2,_wrap_CvSubdiv2D_typed_edges_get_texinfo},
 {"CvSubdiv2D_typed_edges_set",_wrap_CvSubdiv2D_typed_edges_set,0,0,2,_wrap_CvSubdiv2D_typed_edges_set_texinfo},
 {"new_CvSubdiv2D",_wrap_new_CvSubdiv2D,0,0,2,_wrap_new_CvSubdiv2D_texinfo},
 {"delete_CvSubdiv2D",_wrap_delete_CvSubdiv2D,0,0,2,_wrap_delete_CvSubdiv2D_texinfo},
-{"CvMatrix3_m_set",_wrap_CvMatrix3_m_set,0,0,2,0},
-{"CvMatrix3_m_get",_wrap_CvMatrix3_m_get,0,0,2,0},
+{"CvMatrix3_m_set",_wrap_CvMatrix3_m_set,0,0,2,_wrap_CvMatrix3_m_set_texinfo},
+{"CvMatrix3_m_get",_wrap_CvMatrix3_m_get,0,0,2,_wrap_CvMatrix3_m_get_texinfo},
 {"new_CvMatrix3",_wrap_new_CvMatrix3,0,0,2,_wrap_new_CvMatrix3_texinfo},
 {"delete_CvMatrix3",_wrap_delete_CvMatrix3,0,0,2,_wrap_delete_CvMatrix3_texinfo},
-{"CvConDensation_MP_set",_wrap_CvConDensation_MP_set,0,0,2,0},
-{"CvConDensation_MP_get",_wrap_CvConDensation_MP_get,0,0,2,0},
-{"CvConDensation_DP_set",_wrap_CvConDensation_DP_set,0,0,2,0},
-{"CvConDensation_DP_get",_wrap_CvConDensation_DP_get,0,0,2,0},
-{"CvConDensation_DynamMatr_set",_wrap_CvConDensation_DynamMatr_set,0,0,2,0},
-{"CvConDensation_DynamMatr_get",_wrap_CvConDensation_DynamMatr_get,0,0,2,0},
-{"CvConDensation_State_set",_wrap_CvConDensation_State_set,0,0,2,0},
-{"CvConDensation_State_get",_wrap_CvConDensation_State_get,0,0,2,0},
-{"CvConDensation_SamplesNum_set",_wrap_CvConDensation_SamplesNum_set,0,0,2,0},
-{"CvConDensation_SamplesNum_get",_wrap_CvConDensation_SamplesNum_get,0,0,2,0},
-{"CvConDensation_flSamples_set",_wrap_CvConDensation_flSamples_set,0,0,2,0},
-{"CvConDensation_flSamples_get",_wrap_CvConDensation_flSamples_get,0,0,2,0},
-{"CvConDensation_flNewSamples_set",_wrap_CvConDensation_flNewSamples_set,0,0,2,0},
-{"CvConDensation_flNewSamples_get",_wrap_CvConDensation_flNewSamples_get,0,0,2,0},
-{"CvConDensation_flConfidence_set",_wrap_CvConDensation_flConfidence_set,0,0,2,0},
-{"CvConDensation_flConfidence_get",_wrap_CvConDensation_flConfidence_get,0,0,2,0},
-{"CvConDensation_flCumulative_set",_wrap_CvConDensation_flCumulative_set,0,0,2,0},
-{"CvConDensation_flCumulative_get",_wrap_CvConDensation_flCumulative_get,0,0,2,0},
-{"CvConDensation_Temp_set",_wrap_CvConDensation_Temp_set,0,0,2,0},
-{"CvConDensation_Temp_get",_wrap_CvConDensation_Temp_get,0,0,2,0},
-{"CvConDensation_RandomSample_set",_wrap_CvConDensation_RandomSample_set,0,0,2,0},
-{"CvConDensation_RandomSample_get",_wrap_CvConDensation_RandomSample_get,0,0,2,0},
-{"CvConDensation_RandS_set",_wrap_CvConDensation_RandS_set,0,0,2,0},
-{"CvConDensation_RandS_get",_wrap_CvConDensation_RandS_get,0,0,2,0},
+{"CvConDensation_MP_set",_wrap_CvConDensation_MP_set,0,0,2,_wrap_CvConDensation_MP_set_texinfo},
+{"CvConDensation_MP_get",_wrap_CvConDensation_MP_get,0,0,2,_wrap_CvConDensation_MP_get_texinfo},
+{"CvConDensation_DP_set",_wrap_CvConDensation_DP_set,0,0,2,_wrap_CvConDensation_DP_set_texinfo},
+{"CvConDensation_DP_get",_wrap_CvConDensation_DP_get,0,0,2,_wrap_CvConDensation_DP_get_texinfo},
+{"CvConDensation_DynamMatr_set",_wrap_CvConDensation_DynamMatr_set,0,0,2,_wrap_CvConDensation_DynamMatr_set_texinfo},
+{"CvConDensation_DynamMatr_get",_wrap_CvConDensation_DynamMatr_get,0,0,2,_wrap_CvConDensation_DynamMatr_get_texinfo},
+{"CvConDensation_State_set",_wrap_CvConDensation_State_set,0,0,2,_wrap_CvConDensation_State_set_texinfo},
+{"CvConDensation_State_get",_wrap_CvConDensation_State_get,0,0,2,_wrap_CvConDensation_State_get_texinfo},
+{"CvConDensation_SamplesNum_set",_wrap_CvConDensation_SamplesNum_set,0,0,2,_wrap_CvConDensation_SamplesNum_set_texinfo},
+{"CvConDensation_SamplesNum_get",_wrap_CvConDensation_SamplesNum_get,0,0,2,_wrap_CvConDensation_SamplesNum_get_texinfo},
+{"CvConDensation_flSamples_set",_wrap_CvConDensation_flSamples_set,0,0,2,_wrap_CvConDensation_flSamples_set_texinfo},
+{"CvConDensation_flSamples_get",_wrap_CvConDensation_flSamples_get,0,0,2,_wrap_CvConDensation_flSamples_get_texinfo},
+{"CvConDensation_flNewSamples_set",_wrap_CvConDensation_flNewSamples_set,0,0,2,_wrap_CvConDensation_flNewSamples_set_texinfo},
+{"CvConDensation_flNewSamples_get",_wrap_CvConDensation_flNewSamples_get,0,0,2,_wrap_CvConDensation_flNewSamples_get_texinfo},
+{"CvConDensation_flConfidence_set",_wrap_CvConDensation_flConfidence_set,0,0,2,_wrap_CvConDensation_flConfidence_set_texinfo},
+{"CvConDensation_flConfidence_get",_wrap_CvConDensation_flConfidence_get,0,0,2,_wrap_CvConDensation_flConfidence_get_texinfo},
+{"CvConDensation_flCumulative_set",_wrap_CvConDensation_flCumulative_set,0,0,2,_wrap_CvConDensation_flCumulative_set_texinfo},
+{"CvConDensation_flCumulative_get",_wrap_CvConDensation_flCumulative_get,0,0,2,_wrap_CvConDensation_flCumulative_get_texinfo},
+{"CvConDensation_Temp_set",_wrap_CvConDensation_Temp_set,0,0,2,_wrap_CvConDensation_Temp_set_texinfo},
+{"CvConDensation_Temp_get",_wrap_CvConDensation_Temp_get,0,0,2,_wrap_CvConDensation_Temp_get_texinfo},
+{"CvConDensation_RandomSample_set",_wrap_CvConDensation_RandomSample_set,0,0,2,_wrap_CvConDensation_RandomSample_set_texinfo},
+{"CvConDensation_RandomSample_get",_wrap_CvConDensation_RandomSample_get,0,0,2,_wrap_CvConDensation_RandomSample_get_texinfo},
+{"CvConDensation_RandS_set",_wrap_CvConDensation_RandS_set,0,0,2,_wrap_CvConDensation_RandS_set_texinfo},
+{"CvConDensation_RandS_get",_wrap_CvConDensation_RandS_get,0,0,2,_wrap_CvConDensation_RandS_get_texinfo},
 {"delete_CvConDensation",_wrap_delete_CvConDensation,0,0,2,_wrap_delete_CvConDensation_texinfo},
-{"CvKalman_MP_set",_wrap_CvKalman_MP_set,0,0,2,0},
-{"CvKalman_MP_get",_wrap_CvKalman_MP_get,0,0,2,0},
-{"CvKalman_DP_set",_wrap_CvKalman_DP_set,0,0,2,0},
-{"CvKalman_DP_get",_wrap_CvKalman_DP_get,0,0,2,0},
-{"CvKalman_CP_set",_wrap_CvKalman_CP_set,0,0,2,0},
-{"CvKalman_CP_get",_wrap_CvKalman_CP_get,0,0,2,0},
-{"CvKalman_PosterState_set",_wrap_CvKalman_PosterState_set,0,0,2,0},
-{"CvKalman_PosterState_get",_wrap_CvKalman_PosterState_get,0,0,2,0},
-{"CvKalman_PriorState_set",_wrap_CvKalman_PriorState_set,0,0,2,0},
-{"CvKalman_PriorState_get",_wrap_CvKalman_PriorState_get,0,0,2,0},
-{"CvKalman_DynamMatr_set",_wrap_CvKalman_DynamMatr_set,0,0,2,0},
-{"CvKalman_DynamMatr_get",_wrap_CvKalman_DynamMatr_get,0,0,2,0},
-{"CvKalman_MeasurementMatr_set",_wrap_CvKalman_MeasurementMatr_set,0,0,2,0},
-{"CvKalman_MeasurementMatr_get",_wrap_CvKalman_MeasurementMatr_get,0,0,2,0},
-{"CvKalman_MNCovariance_set",_wrap_CvKalman_MNCovariance_set,0,0,2,0},
-{"CvKalman_MNCovariance_get",_wrap_CvKalman_MNCovariance_get,0,0,2,0},
-{"CvKalman_PNCovariance_set",_wrap_CvKalman_PNCovariance_set,0,0,2,0},
-{"CvKalman_PNCovariance_get",_wrap_CvKalman_PNCovariance_get,0,0,2,0},
-{"CvKalman_KalmGainMatr_set",_wrap_CvKalman_KalmGainMatr_set,0,0,2,0},
-{"CvKalman_KalmGainMatr_get",_wrap_CvKalman_KalmGainMatr_get,0,0,2,0},
-{"CvKalman_PriorErrorCovariance_set",_wrap_CvKalman_PriorErrorCovariance_set,0,0,2,0},
-{"CvKalman_PriorErrorCovariance_get",_wrap_CvKalman_PriorErrorCovariance_get,0,0,2,0},
-{"CvKalman_PosterErrorCovariance_set",_wrap_CvKalman_PosterErrorCovariance_set,0,0,2,0},
-{"CvKalman_PosterErrorCovariance_get",_wrap_CvKalman_PosterErrorCovariance_get,0,0,2,0},
-{"CvKalman_Temp1_set",_wrap_CvKalman_Temp1_set,0,0,2,0},
-{"CvKalman_Temp1_get",_wrap_CvKalman_Temp1_get,0,0,2,0},
-{"CvKalman_Temp2_set",_wrap_CvKalman_Temp2_set,0,0,2,0},
-{"CvKalman_Temp2_get",_wrap_CvKalman_Temp2_get,0,0,2,0},
-{"CvKalman_state_pre_set",_wrap_CvKalman_state_pre_set,0,0,2,0},
-{"CvKalman_state_pre_get",_wrap_CvKalman_state_pre_get,0,0,2,0},
-{"CvKalman_state_post_set",_wrap_CvKalman_state_post_set,0,0,2,0},
-{"CvKalman_state_post_get",_wrap_CvKalman_state_post_get,0,0,2,0},
-{"CvKalman_transition_matrix_set",_wrap_CvKalman_transition_matrix_set,0,0,2,0},
-{"CvKalman_transition_matrix_get",_wrap_CvKalman_transition_matrix_get,0,0,2,0},
-{"CvKalman_control_matrix_set",_wrap_CvKalman_control_matrix_set,0,0,2,0},
-{"CvKalman_control_matrix_get",_wrap_CvKalman_control_matrix_get,0,0,2,0},
-{"CvKalman_measurement_matrix_set",_wrap_CvKalman_measurement_matrix_set,0,0,2,0},
-{"CvKalman_measurement_matrix_get",_wrap_CvKalman_measurement_matrix_get,0,0,2,0},
-{"CvKalman_process_noise_cov_set",_wrap_CvKalman_process_noise_cov_set,0,0,2,0},
-{"CvKalman_process_noise_cov_get",_wrap_CvKalman_process_noise_cov_get,0,0,2,0},
-{"CvKalman_measurement_noise_cov_set",_wrap_CvKalman_measurement_noise_cov_set,0,0,2,0},
-{"CvKalman_measurement_noise_cov_get",_wrap_CvKalman_measurement_noise_cov_get,0,0,2,0},
-{"CvKalman_error_cov_pre_set",_wrap_CvKalman_error_cov_pre_set,0,0,2,0},
-{"CvKalman_error_cov_pre_get",_wrap_CvKalman_error_cov_pre_get,0,0,2,0},
-{"CvKalman_gain_set",_wrap_CvKalman_gain_set,0,0,2,0},
-{"CvKalman_gain_get",_wrap_CvKalman_gain_get,0,0,2,0},
-{"CvKalman_error_cov_post_set",_wrap_CvKalman_error_cov_post_set,0,0,2,0},
-{"CvKalman_error_cov_post_get",_wrap_CvKalman_error_cov_post_get,0,0,2,0},
-{"CvKalman_temp1_set",_wrap_CvKalman_temp1_set,0,0,2,0},
-{"CvKalman_temp1_get",_wrap_CvKalman_temp1_get,0,0,2,0},
-{"CvKalman_temp2_set",_wrap_CvKalman_temp2_set,0,0,2,0},
-{"CvKalman_temp2_get",_wrap_CvKalman_temp2_get,0,0,2,0},
-{"CvKalman_temp3_set",_wrap_CvKalman_temp3_set,0,0,2,0},
-{"CvKalman_temp3_get",_wrap_CvKalman_temp3_get,0,0,2,0},
-{"CvKalman_temp4_set",_wrap_CvKalman_temp4_set,0,0,2,0},
-{"CvKalman_temp4_get",_wrap_CvKalman_temp4_get,0,0,2,0},
-{"CvKalman_temp5_set",_wrap_CvKalman_temp5_set,0,0,2,0},
-{"CvKalman_temp5_get",_wrap_CvKalman_temp5_get,0,0,2,0},
+{"CvKalman_MP_set",_wrap_CvKalman_MP_set,0,0,2,_wrap_CvKalman_MP_set_texinfo},
+{"CvKalman_MP_get",_wrap_CvKalman_MP_get,0,0,2,_wrap_CvKalman_MP_get_texinfo},
+{"CvKalman_DP_set",_wrap_CvKalman_DP_set,0,0,2,_wrap_CvKalman_DP_set_texinfo},
+{"CvKalman_DP_get",_wrap_CvKalman_DP_get,0,0,2,_wrap_CvKalman_DP_get_texinfo},
+{"CvKalman_CP_set",_wrap_CvKalman_CP_set,0,0,2,_wrap_CvKalman_CP_set_texinfo},
+{"CvKalman_CP_get",_wrap_CvKalman_CP_get,0,0,2,_wrap_CvKalman_CP_get_texinfo},
+{"CvKalman_PosterState_set",_wrap_CvKalman_PosterState_set,0,0,2,_wrap_CvKalman_PosterState_set_texinfo},
+{"CvKalman_PosterState_get",_wrap_CvKalman_PosterState_get,0,0,2,_wrap_CvKalman_PosterState_get_texinfo},
+{"CvKalman_PriorState_set",_wrap_CvKalman_PriorState_set,0,0,2,_wrap_CvKalman_PriorState_set_texinfo},
+{"CvKalman_PriorState_get",_wrap_CvKalman_PriorState_get,0,0,2,_wrap_CvKalman_PriorState_get_texinfo},
+{"CvKalman_DynamMatr_set",_wrap_CvKalman_DynamMatr_set,0,0,2,_wrap_CvKalman_DynamMatr_set_texinfo},
+{"CvKalman_DynamMatr_get",_wrap_CvKalman_DynamMatr_get,0,0,2,_wrap_CvKalman_DynamMatr_get_texinfo},
+{"CvKalman_MeasurementMatr_set",_wrap_CvKalman_MeasurementMatr_set,0,0,2,_wrap_CvKalman_MeasurementMatr_set_texinfo},
+{"CvKalman_MeasurementMatr_get",_wrap_CvKalman_MeasurementMatr_get,0,0,2,_wrap_CvKalman_MeasurementMatr_get_texinfo},
+{"CvKalman_MNCovariance_set",_wrap_CvKalman_MNCovariance_set,0,0,2,_wrap_CvKalman_MNCovariance_set_texinfo},
+{"CvKalman_MNCovariance_get",_wrap_CvKalman_MNCovariance_get,0,0,2,_wrap_CvKalman_MNCovariance_get_texinfo},
+{"CvKalman_PNCovariance_set",_wrap_CvKalman_PNCovariance_set,0,0,2,_wrap_CvKalman_PNCovariance_set_texinfo},
+{"CvKalman_PNCovariance_get",_wrap_CvKalman_PNCovariance_get,0,0,2,_wrap_CvKalman_PNCovariance_get_texinfo},
+{"CvKalman_KalmGainMatr_set",_wrap_CvKalman_KalmGainMatr_set,0,0,2,_wrap_CvKalman_KalmGainMatr_set_texinfo},
+{"CvKalman_KalmGainMatr_get",_wrap_CvKalman_KalmGainMatr_get,0,0,2,_wrap_CvKalman_KalmGainMatr_get_texinfo},
+{"CvKalman_PriorErrorCovariance_set",_wrap_CvKalman_PriorErrorCovariance_set,0,0,2,_wrap_CvKalman_PriorErrorCovariance_set_texinfo},
+{"CvKalman_PriorErrorCovariance_get",_wrap_CvKalman_PriorErrorCovariance_get,0,0,2,_wrap_CvKalman_PriorErrorCovariance_get_texinfo},
+{"CvKalman_PosterErrorCovariance_set",_wrap_CvKalman_PosterErrorCovariance_set,0,0,2,_wrap_CvKalman_PosterErrorCovariance_set_texinfo},
+{"CvKalman_PosterErrorCovariance_get",_wrap_CvKalman_PosterErrorCovariance_get,0,0,2,_wrap_CvKalman_PosterErrorCovariance_get_texinfo},
+{"CvKalman_Temp1_set",_wrap_CvKalman_Temp1_set,0,0,2,_wrap_CvKalman_Temp1_set_texinfo},
+{"CvKalman_Temp1_get",_wrap_CvKalman_Temp1_get,0,0,2,_wrap_CvKalman_Temp1_get_texinfo},
+{"CvKalman_Temp2_set",_wrap_CvKalman_Temp2_set,0,0,2,_wrap_CvKalman_Temp2_set_texinfo},
+{"CvKalman_Temp2_get",_wrap_CvKalman_Temp2_get,0,0,2,_wrap_CvKalman_Temp2_get_texinfo},
+{"CvKalman_state_pre_set",_wrap_CvKalman_state_pre_set,0,0,2,_wrap_CvKalman_state_pre_set_texinfo},
+{"CvKalman_state_pre_get",_wrap_CvKalman_state_pre_get,0,0,2,_wrap_CvKalman_state_pre_get_texinfo},
+{"CvKalman_state_post_set",_wrap_CvKalman_state_post_set,0,0,2,_wrap_CvKalman_state_post_set_texinfo},
+{"CvKalman_state_post_get",_wrap_CvKalman_state_post_get,0,0,2,_wrap_CvKalman_state_post_get_texinfo},
+{"CvKalman_transition_matrix_set",_wrap_CvKalman_transition_matrix_set,0,0,2,_wrap_CvKalman_transition_matrix_set_texinfo},
+{"CvKalman_transition_matrix_get",_wrap_CvKalman_transition_matrix_get,0,0,2,_wrap_CvKalman_transition_matrix_get_texinfo},
+{"CvKalman_control_matrix_set",_wrap_CvKalman_control_matrix_set,0,0,2,_wrap_CvKalman_control_matrix_set_texinfo},
+{"CvKalman_control_matrix_get",_wrap_CvKalman_control_matrix_get,0,0,2,_wrap_CvKalman_control_matrix_get_texinfo},
+{"CvKalman_measurement_matrix_set",_wrap_CvKalman_measurement_matrix_set,0,0,2,_wrap_CvKalman_measurement_matrix_set_texinfo},
+{"CvKalman_measurement_matrix_get",_wrap_CvKalman_measurement_matrix_get,0,0,2,_wrap_CvKalman_measurement_matrix_get_texinfo},
+{"CvKalman_process_noise_cov_set",_wrap_CvKalman_process_noise_cov_set,0,0,2,_wrap_CvKalman_process_noise_cov_set_texinfo},
+{"CvKalman_process_noise_cov_get",_wrap_CvKalman_process_noise_cov_get,0,0,2,_wrap_CvKalman_process_noise_cov_get_texinfo},
+{"CvKalman_measurement_noise_cov_set",_wrap_CvKalman_measurement_noise_cov_set,0,0,2,_wrap_CvKalman_measurement_noise_cov_set_texinfo},
+{"CvKalman_measurement_noise_cov_get",_wrap_CvKalman_measurement_noise_cov_get,0,0,2,_wrap_CvKalman_measurement_noise_cov_get_texinfo},
+{"CvKalman_error_cov_pre_set",_wrap_CvKalman_error_cov_pre_set,0,0,2,_wrap_CvKalman_error_cov_pre_set_texinfo},
+{"CvKalman_error_cov_pre_get",_wrap_CvKalman_error_cov_pre_get,0,0,2,_wrap_CvKalman_error_cov_pre_get_texinfo},
+{"CvKalman_gain_set",_wrap_CvKalman_gain_set,0,0,2,_wrap_CvKalman_gain_set_texinfo},
+{"CvKalman_gain_get",_wrap_CvKalman_gain_get,0,0,2,_wrap_CvKalman_gain_get_texinfo},
+{"CvKalman_error_cov_post_set",_wrap_CvKalman_error_cov_post_set,0,0,2,_wrap_CvKalman_error_cov_post_set_texinfo},
+{"CvKalman_error_cov_post_get",_wrap_CvKalman_error_cov_post_get,0,0,2,_wrap_CvKalman_error_cov_post_get_texinfo},
+{"CvKalman_temp1_set",_wrap_CvKalman_temp1_set,0,0,2,_wrap_CvKalman_temp1_set_texinfo},
+{"CvKalman_temp1_get",_wrap_CvKalman_temp1_get,0,0,2,_wrap_CvKalman_temp1_get_texinfo},
+{"CvKalman_temp2_set",_wrap_CvKalman_temp2_set,0,0,2,_wrap_CvKalman_temp2_set_texinfo},
+{"CvKalman_temp2_get",_wrap_CvKalman_temp2_get,0,0,2,_wrap_CvKalman_temp2_get_texinfo},
+{"CvKalman_temp3_set",_wrap_CvKalman_temp3_set,0,0,2,_wrap_CvKalman_temp3_set_texinfo},
+{"CvKalman_temp3_get",_wrap_CvKalman_temp3_get,0,0,2,_wrap_CvKalman_temp3_get_texinfo},
+{"CvKalman_temp4_set",_wrap_CvKalman_temp4_set,0,0,2,_wrap_CvKalman_temp4_set_texinfo},
+{"CvKalman_temp4_get",_wrap_CvKalman_temp4_get,0,0,2,_wrap_CvKalman_temp4_get_texinfo},
+{"CvKalman_temp5_set",_wrap_CvKalman_temp5_set,0,0,2,_wrap_CvKalman_temp5_set_texinfo},
+{"CvKalman_temp5_get",_wrap_CvKalman_temp5_get,0,0,2,_wrap_CvKalman_temp5_get_texinfo},
 {"delete_CvKalman",_wrap_delete_CvKalman,0,0,2,_wrap_delete_CvKalman_texinfo},
-{"CvHaarFeature_tilted_set",_wrap_CvHaarFeature_tilted_set,0,0,2,0},
-{"CvHaarFeature_tilted_get",_wrap_CvHaarFeature_tilted_get,0,0,2,0},
-{"CvHaarFeature_rect_get",_wrap_CvHaarFeature_rect_get,0,0,2,0},
+{"CvHaarFeature_tilted_set",_wrap_CvHaarFeature_tilted_set,0,0,2,_wrap_CvHaarFeature_tilted_set_texinfo},
+{"CvHaarFeature_tilted_get",_wrap_CvHaarFeature_tilted_get,0,0,2,_wrap_CvHaarFeature_tilted_get_texinfo},
+{"CvHaarFeature_rect_get",_wrap_CvHaarFeature_rect_get,0,0,2,_wrap_CvHaarFeature_rect_get_texinfo},
 {"new_CvHaarFeature",_wrap_new_CvHaarFeature,0,0,2,_wrap_new_CvHaarFeature_texinfo},
 {"delete_CvHaarFeature",_wrap_delete_CvHaarFeature,0,0,2,_wrap_delete_CvHaarFeature_texinfo},
-{"CvHaarFeature_rect_r_set",_wrap_CvHaarFeature_rect_r_set,0,0,2,0},
-{"CvHaarFeature_rect_r_get",_wrap_CvHaarFeature_rect_r_get,0,0,2,0},
-{"CvHaarFeature_rect_weight_set",_wrap_CvHaarFeature_rect_weight_set,0,0,2,0},
-{"CvHaarFeature_rect_weight_get",_wrap_CvHaarFeature_rect_weight_get,0,0,2,0},
+{"CvHaarFeature_rect_r_set",_wrap_CvHaarFeature_rect_r_set,0,0,2,_wrap_CvHaarFeature_rect_r_set_texinfo},
+{"CvHaarFeature_rect_r_get",_wrap_CvHaarFeature_rect_r_get,0,0,2,_wrap_CvHaarFeature_rect_r_get_texinfo},
+{"CvHaarFeature_rect_weight_set",_wrap_CvHaarFeature_rect_weight_set,0,0,2,_wrap_CvHaarFeature_rect_weight_set_texinfo},
+{"CvHaarFeature_rect_weight_get",_wrap_CvHaarFeature_rect_weight_get,0,0,2,_wrap_CvHaarFeature_rect_weight_get_texinfo},
 {"new_CvHaarFeature_rect",_wrap_new_CvHaarFeature_rect,0,0,2,_wrap_new_CvHaarFeature_rect_texinfo},
 {"delete_CvHaarFeature_rect",_wrap_delete_CvHaarFeature_rect,0,0,2,_wrap_delete_CvHaarFeature_rect_texinfo},
-{"CvHaarClassifier_count_set",_wrap_CvHaarClassifier_count_set,0,0,2,0},
-{"CvHaarClassifier_count_get",_wrap_CvHaarClassifier_count_get,0,0,2,0},
-{"CvHaarClassifier_haar_feature_set",_wrap_CvHaarClassifier_haar_feature_set,0,0,2,0},
-{"CvHaarClassifier_haar_feature_get",_wrap_CvHaarClassifier_haar_feature_get,0,0,2,0},
-{"CvHaarClassifier_threshold_set",_wrap_CvHaarClassifier_threshold_set,0,0,2,0},
-{"CvHaarClassifier_threshold_get",_wrap_CvHaarClassifier_threshold_get,0,0,2,0},
-{"CvHaarClassifier_left_set",_wrap_CvHaarClassifier_left_set,0,0,2,0},
-{"CvHaarClassifier_left_get",_wrap_CvHaarClassifier_left_get,0,0,2,0},
-{"CvHaarClassifier_right_set",_wrap_CvHaarClassifier_right_set,0,0,2,0},
-{"CvHaarClassifier_right_get",_wrap_CvHaarClassifier_right_get,0,0,2,0},
-{"CvHaarClassifier_alpha_set",_wrap_CvHaarClassifier_alpha_set,0,0,2,0},
-{"CvHaarClassifier_alpha_get",_wrap_CvHaarClassifier_alpha_get,0,0,2,0},
+{"CvHaarClassifier_count_set",_wrap_CvHaarClassifier_count_set,0,0,2,_wrap_CvHaarClassifier_count_set_texinfo},
+{"CvHaarClassifier_count_get",_wrap_CvHaarClassifier_count_get,0,0,2,_wrap_CvHaarClassifier_count_get_texinfo},
+{"CvHaarClassifier_haar_feature_set",_wrap_CvHaarClassifier_haar_feature_set,0,0,2,_wrap_CvHaarClassifier_haar_feature_set_texinfo},
+{"CvHaarClassifier_haar_feature_get",_wrap_CvHaarClassifier_haar_feature_get,0,0,2,_wrap_CvHaarClassifier_haar_feature_get_texinfo},
+{"CvHaarClassifier_threshold_set",_wrap_CvHaarClassifier_threshold_set,0,0,2,_wrap_CvHaarClassifier_threshold_set_texinfo},
+{"CvHaarClassifier_threshold_get",_wrap_CvHaarClassifier_threshold_get,0,0,2,_wrap_CvHaarClassifier_threshold_get_texinfo},
+{"CvHaarClassifier_left_set",_wrap_CvHaarClassifier_left_set,0,0,2,_wrap_CvHaarClassifier_left_set_texinfo},
+{"CvHaarClassifier_left_get",_wrap_CvHaarClassifier_left_get,0,0,2,_wrap_CvHaarClassifier_left_get_texinfo},
+{"CvHaarClassifier_right_set",_wrap_CvHaarClassifier_right_set,0,0,2,_wrap_CvHaarClassifier_right_set_texinfo},
+{"CvHaarClassifier_right_get",_wrap_CvHaarClassifier_right_get,0,0,2,_wrap_CvHaarClassifier_right_get_texinfo},
+{"CvHaarClassifier_alpha_set",_wrap_CvHaarClassifier_alpha_set,0,0,2,_wrap_CvHaarClassifier_alpha_set_texinfo},
+{"CvHaarClassifier_alpha_get",_wrap_CvHaarClassifier_alpha_get,0,0,2,_wrap_CvHaarClassifier_alpha_get_texinfo},
 {"new_CvHaarClassifier",_wrap_new_CvHaarClassifier,0,0,2,_wrap_new_CvHaarClassifier_texinfo},
 {"delete_CvHaarClassifier",_wrap_delete_CvHaarClassifier,0,0,2,_wrap_delete_CvHaarClassifier_texinfo},
-{"CvHaarStageClassifier_count_set",_wrap_CvHaarStageClassifier_count_set,0,0,2,0},
-{"CvHaarStageClassifier_count_get",_wrap_CvHaarStageClassifier_count_get,0,0,2,0},
-{"CvHaarStageClassifier_threshold_set",_wrap_CvHaarStageClassifier_threshold_set,0,0,2,0},
-{"CvHaarStageClassifier_threshold_get",_wrap_CvHaarStageClassifier_threshold_get,0,0,2,0},
-{"CvHaarStageClassifier_classifier_set",_wrap_CvHaarStageClassifier_classifier_set,0,0,2,0},
-{"CvHaarStageClassifier_classifier_get",_wrap_CvHaarStageClassifier_classifier_get,0,0,2,0},
-{"CvHaarStageClassifier_next_set",_wrap_CvHaarStageClassifier_next_set,0,0,2,0},
-{"CvHaarStageClassifier_next_get",_wrap_CvHaarStageClassifier_next_get,0,0,2,0},
-{"CvHaarStageClassifier_child_set",_wrap_CvHaarStageClassifier_child_set,0,0,2,0},
-{"CvHaarStageClassifier_child_get",_wrap_CvHaarStageClassifier_child_get,0,0,2,0},
-{"CvHaarStageClassifier_parent_set",_wrap_CvHaarStageClassifier_parent_set,0,0,2,0},
-{"CvHaarStageClassifier_parent_get",_wrap_CvHaarStageClassifier_parent_get,0,0,2,0},
+{"CvHaarStageClassifier_count_set",_wrap_CvHaarStageClassifier_count_set,0,0,2,_wrap_CvHaarStageClassifier_count_set_texinfo},
+{"CvHaarStageClassifier_count_get",_wrap_CvHaarStageClassifier_count_get,0,0,2,_wrap_CvHaarStageClassifier_count_get_texinfo},
+{"CvHaarStageClassifier_threshold_set",_wrap_CvHaarStageClassifier_threshold_set,0,0,2,_wrap_CvHaarStageClassifier_threshold_set_texinfo},
+{"CvHaarStageClassifier_threshold_get",_wrap_CvHaarStageClassifier_threshold_get,0,0,2,_wrap_CvHaarStageClassifier_threshold_get_texinfo},
+{"CvHaarStageClassifier_classifier_set",_wrap_CvHaarStageClassifier_classifier_set,0,0,2,_wrap_CvHaarStageClassifier_classifier_set_texinfo},
+{"CvHaarStageClassifier_classifier_get",_wrap_CvHaarStageClassifier_classifier_get,0,0,2,_wrap_CvHaarStageClassifier_classifier_get_texinfo},
+{"CvHaarStageClassifier_next_set",_wrap_CvHaarStageClassifier_next_set,0,0,2,_wrap_CvHaarStageClassifier_next_set_texinfo},
+{"CvHaarStageClassifier_next_get",_wrap_CvHaarStageClassifier_next_get,0,0,2,_wrap_CvHaarStageClassifier_next_get_texinfo},
+{"CvHaarStageClassifier_child_set",_wrap_CvHaarStageClassifier_child_set,0,0,2,_wrap_CvHaarStageClassifier_child_set_texinfo},
+{"CvHaarStageClassifier_child_get",_wrap_CvHaarStageClassifier_child_get,0,0,2,_wrap_CvHaarStageClassifier_child_get_texinfo},
+{"CvHaarStageClassifier_parent_set",_wrap_CvHaarStageClassifier_parent_set,0,0,2,_wrap_CvHaarStageClassifier_parent_set_texinfo},
+{"CvHaarStageClassifier_parent_get",_wrap_CvHaarStageClassifier_parent_get,0,0,2,_wrap_CvHaarStageClassifier_parent_get_texinfo},
 {"new_CvHaarStageClassifier",_wrap_new_CvHaarStageClassifier,0,0,2,_wrap_new_CvHaarStageClassifier_texinfo},
 {"delete_CvHaarStageClassifier",_wrap_delete_CvHaarStageClassifier,0,0,2,_wrap_delete_CvHaarStageClassifier_texinfo},
-{"CvHaarClassifierCascade_flags_set",_wrap_CvHaarClassifierCascade_flags_set,0,0,2,0},
-{"CvHaarClassifierCascade_flags_get",_wrap_CvHaarClassifierCascade_flags_get,0,0,2,0},
-{"CvHaarClassifierCascade_count_set",_wrap_CvHaarClassifierCascade_count_set,0,0,2,0},
-{"CvHaarClassifierCascade_count_get",_wrap_CvHaarClassifierCascade_count_get,0,0,2,0},
-{"CvHaarClassifierCascade_orig_window_size_set",_wrap_CvHaarClassifierCascade_orig_window_size_set,0,0,2,0},
-{"CvHaarClassifierCascade_orig_window_size_get",_wrap_CvHaarClassifierCascade_orig_window_size_get,0,0,2,0},
-{"CvHaarClassifierCascade_real_window_size_set",_wrap_CvHaarClassifierCascade_real_window_size_set,0,0,2,0},
-{"CvHaarClassifierCascade_real_window_size_get",_wrap_CvHaarClassifierCascade_real_window_size_get,0,0,2,0},
-{"CvHaarClassifierCascade_scale_set",_wrap_CvHaarClassifierCascade_scale_set,0,0,2,0},
-{"CvHaarClassifierCascade_scale_get",_wrap_CvHaarClassifierCascade_scale_get,0,0,2,0},
-{"CvHaarClassifierCascade_stage_classifier_set",_wrap_CvHaarClassifierCascade_stage_classifier_set,0,0,2,0},
-{"CvHaarClassifierCascade_stage_classifier_get",_wrap_CvHaarClassifierCascade_stage_classifier_get,0,0,2,0},
-{"CvHaarClassifierCascade_hid_cascade_set",_wrap_CvHaarClassifierCascade_hid_cascade_set,0,0,2,0},
-{"CvHaarClassifierCascade_hid_cascade_get",_wrap_CvHaarClassifierCascade_hid_cascade_get,0,0,2,0},
+{"CvHaarClassifierCascade_flags_set",_wrap_CvHaarClassifierCascade_flags_set,0,0,2,_wrap_CvHaarClassifierCascade_flags_set_texinfo},
+{"CvHaarClassifierCascade_flags_get",_wrap_CvHaarClassifierCascade_flags_get,0,0,2,_wrap_CvHaarClassifierCascade_flags_get_texinfo},
+{"CvHaarClassifierCascade_count_set",_wrap_CvHaarClassifierCascade_count_set,0,0,2,_wrap_CvHaarClassifierCascade_count_set_texinfo},
+{"CvHaarClassifierCascade_count_get",_wrap_CvHaarClassifierCascade_count_get,0,0,2,_wrap_CvHaarClassifierCascade_count_get_texinfo},
+{"CvHaarClassifierCascade_orig_window_size_set",_wrap_CvHaarClassifierCascade_orig_window_size_set,0,0,2,_wrap_CvHaarClassifierCascade_orig_window_size_set_texinfo},
+{"CvHaarClassifierCascade_orig_window_size_get",_wrap_CvHaarClassifierCascade_orig_window_size_get,0,0,2,_wrap_CvHaarClassifierCascade_orig_window_size_get_texinfo},
+{"CvHaarClassifierCascade_real_window_size_set",_wrap_CvHaarClassifierCascade_real_window_size_set,0,0,2,_wrap_CvHaarClassifierCascade_real_window_size_set_texinfo},
+{"CvHaarClassifierCascade_real_window_size_get",_wrap_CvHaarClassifierCascade_real_window_size_get,0,0,2,_wrap_CvHaarClassifierCascade_real_window_size_get_texinfo},
+{"CvHaarClassifierCascade_scale_set",_wrap_CvHaarClassifierCascade_scale_set,0,0,2,_wrap_CvHaarClassifierCascade_scale_set_texinfo},
+{"CvHaarClassifierCascade_scale_get",_wrap_CvHaarClassifierCascade_scale_get,0,0,2,_wrap_CvHaarClassifierCascade_scale_get_texinfo},
+{"CvHaarClassifierCascade_stage_classifier_set",_wrap_CvHaarClassifierCascade_stage_classifier_set,0,0,2,_wrap_CvHaarClassifierCascade_stage_classifier_set_texinfo},
+{"CvHaarClassifierCascade_stage_classifier_get",_wrap_CvHaarClassifierCascade_stage_classifier_get,0,0,2,_wrap_CvHaarClassifierCascade_stage_classifier_get_texinfo},
+{"CvHaarClassifierCascade_hid_cascade_set",_wrap_CvHaarClassifierCascade_hid_cascade_set,0,0,2,_wrap_CvHaarClassifierCascade_hid_cascade_set_texinfo},
+{"CvHaarClassifierCascade_hid_cascade_get",_wrap_CvHaarClassifierCascade_hid_cascade_get,0,0,2,_wrap_CvHaarClassifierCascade_hid_cascade_get_texinfo},
 {"delete_CvHaarClassifierCascade",_wrap_delete_CvHaarClassifierCascade,0,0,2,_wrap_delete_CvHaarClassifierCascade_texinfo},
-{"CvAvgComp_rect_set",_wrap_CvAvgComp_rect_set,0,0,2,0},
-{"CvAvgComp_rect_get",_wrap_CvAvgComp_rect_get,0,0,2,0},
-{"CvAvgComp_neighbors_set",_wrap_CvAvgComp_neighbors_set,0,0,2,0},
-{"CvAvgComp_neighbors_get",_wrap_CvAvgComp_neighbors_get,0,0,2,0},
+{"CvAvgComp_rect_set",_wrap_CvAvgComp_rect_set,0,0,2,_wrap_CvAvgComp_rect_set_texinfo},
+{"CvAvgComp_rect_get",_wrap_CvAvgComp_rect_get,0,0,2,_wrap_CvAvgComp_rect_get_texinfo},
+{"CvAvgComp_neighbors_set",_wrap_CvAvgComp_neighbors_set,0,0,2,_wrap_CvAvgComp_neighbors_set_texinfo},
+{"CvAvgComp_neighbors_get",_wrap_CvAvgComp_neighbors_get,0,0,2,_wrap_CvAvgComp_neighbors_get_texinfo},
 {"new_CvAvgComp",_wrap_new_CvAvgComp,0,0,2,_wrap_new_CvAvgComp_texinfo},
 {"delete_CvAvgComp",_wrap_delete_CvAvgComp,0,0,2,_wrap_delete_CvAvgComp_texinfo},
 {"cvCopyMakeBorder",_wrap_cvCopyMakeBorder,0,0,2,_wrap_cvCopyMakeBorder_texinfo},
@@ -107521,20 +108428,20 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMorphology_get_element_sparse_buf",_wrap_CvMorphology_get_element_sparse_buf,0,0,2,_wrap_CvMorphology_get_element_sparse_buf_texinfo},
 {"CvMorphology_get_element_sparse_count",_wrap_CvMorphology_get_element_sparse_count,0,0,2,_wrap_CvMorphology_get_element_sparse_count_texinfo},
 {"CvMorphology_init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,2,_wrap_CvMorphology_init_binary_element_texinfo},
-{"CvTuple_CvPoint_2_val_set",_wrap_CvTuple_CvPoint_2_val_set,0,0,2,0},
-{"CvTuple_CvPoint_2_val_get",_wrap_CvTuple_CvPoint_2_val_get,0,0,2,0},
+{"CvTuple_CvPoint_2_val_set",_wrap_CvTuple_CvPoint_2_val_set,0,0,2,_wrap_CvTuple_CvPoint_2_val_set_texinfo},
+{"CvTuple_CvPoint_2_val_get",_wrap_CvTuple_CvPoint_2_val_get,0,0,2,_wrap_CvTuple_CvPoint_2_val_get_texinfo},
 {"CvTuple_CvPoint_2___setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,2,_wrap_CvTuple_CvPoint_2___setitem___texinfo},
 {"CvTuple_CvPoint_2___getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,2,_wrap_CvTuple_CvPoint_2___getitem___texinfo},
 {"new_CvTuple_CvPoint_2",_wrap_new_CvTuple_CvPoint_2,0,0,2,_wrap_new_CvTuple_CvPoint_2_texinfo},
 {"delete_CvTuple_CvPoint_2",_wrap_delete_CvTuple_CvPoint_2,0,0,2,_wrap_delete_CvTuple_CvPoint_2_texinfo},
-{"CvTuple_float_2_val_set",_wrap_CvTuple_float_2_val_set,0,0,2,0},
-{"CvTuple_float_2_val_get",_wrap_CvTuple_float_2_val_get,0,0,2,0},
+{"CvTuple_float_2_val_set",_wrap_CvTuple_float_2_val_set,0,0,2,_wrap_CvTuple_float_2_val_set_texinfo},
+{"CvTuple_float_2_val_get",_wrap_CvTuple_float_2_val_get,0,0,2,_wrap_CvTuple_float_2_val_get_texinfo},
 {"CvTuple_float_2___setitem__",_wrap_CvTuple_float_2___setitem__,0,0,2,_wrap_CvTuple_float_2___setitem___texinfo},
 {"CvTuple_float_2___getitem__",_wrap_CvTuple_float_2___getitem__,0,0,2,_wrap_CvTuple_float_2___getitem___texinfo},
 {"new_CvTuple_float_2",_wrap_new_CvTuple_float_2,0,0,2,_wrap_new_CvTuple_float_2_texinfo},
 {"delete_CvTuple_float_2",_wrap_delete_CvTuple_float_2,0,0,2,_wrap_delete_CvTuple_float_2_texinfo},
-{"CvTuple_float_3_val_set",_wrap_CvTuple_float_3_val_set,0,0,2,0},
-{"CvTuple_float_3_val_get",_wrap_CvTuple_float_3_val_get,0,0,2,0},
+{"CvTuple_float_3_val_set",_wrap_CvTuple_float_3_val_set,0,0,2,_wrap_CvTuple_float_3_val_set_texinfo},
+{"CvTuple_float_3_val_get",_wrap_CvTuple_float_3_val_get,0,0,2,_wrap_CvTuple_float_3_val_get_texinfo},
 {"CvTuple_float_3___setitem__",_wrap_CvTuple_float_3___setitem__,0,0,2,_wrap_CvTuple_float_3___setitem___texinfo},
 {"CvTuple_float_3___getitem__",_wrap_CvTuple_float_3___getitem__,0,0,2,_wrap_CvTuple_float_3___getitem___texinfo},
 {"new_CvTuple_float_3",_wrap_new_CvTuple_float_3,0,0,2,_wrap_new_CvTuple_float_3_texinfo},
