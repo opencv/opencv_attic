@@ -221,6 +221,11 @@ CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
         result = cvCaptureFromFile_XINE (filename);
     #endif
 
+    #ifdef HAVE_GSTREAMER
+    if (! result)
+        result = cvCaptureFromFile_GStreamer (filename);
+    #endif
+
     #ifdef HAVE_FFMPEG
     if (! result)
         result = cvCaptureFromFile_FFMPEG (filename);

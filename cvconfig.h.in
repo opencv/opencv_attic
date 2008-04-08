@@ -39,6 +39,9 @@
 /* FFMpeg video library */
 #undef HAVE_FFMPEG
 
+/* GStreamer multimedia framework */
+#undef HAVE_GSTREAMER
+
 /* GTK+ 2.0 Thread support */
 #undef HAVE_GTHREAD
 
