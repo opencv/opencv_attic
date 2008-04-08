@@ -7,12 +7,13 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
-    @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
+    @GSTREAMER_CFLAGS@ @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
 
 noinst_HEADERS     = \
     _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
     grfmt_jpeg.h grfmt_jpeg2000.h grfmt_exr.h grfmt_imageio.h      \
-    grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h utils.h
+    grfmt_pxm.h grfmt_png.h grfmt_sunras.h grfmt_tiff.h grfmts.h   \
+    utils.h gstappsink.h
 noinst_LTLIBRARIES = lib_highgui.la
 lib_LTLIBRARIES    = libhighgui.la
 
@@ -38,6 +39,12 @@ if BUILD_XINE
 TMP_XINE=cvcap_xine.cpp
 else
 TMP_XINE=
+endif
+
+if BUILD_GSTREAMER
+TMP_GSTREAMER=cvcap_gstreamer.cpp gstappsink.c
+else
+TMP_GSTREAMER=
 endif
 
 if BUILD_QUICKTIME
@@ -71,7 +78,7 @@ lib_highgui_la_SOURCES = \
     grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
     grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
     precomp.cpp utils.cpp cvcap.cpp cvcap_images.cpp window.cpp  \
-    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG)                       \
+    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_GSTREAMER)      \
     $(TMP_QT) $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO)
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -84,5 +91,5 @@ libhighgui_la_LIBADD  = \
     lib_highgui.la \
     $(top_builddir)/cxcore/src/libcxcore.la \
     $(top_builddir)/cv/src/libcv.la         \
-    @GTHREAD_LIBS@ @GTK_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ @IEEE1394LIBS@ \
-    @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@
+    @GTHREAD_LIBS@ @GTK_LIBS@ @GSTREAMER_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ \
+    @IEEE1394LIBS@ @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@

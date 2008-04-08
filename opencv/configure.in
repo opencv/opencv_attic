@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.49 $)
+AC_REVISION($Revision: 1.50 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -124,6 +124,12 @@ AC_ARG_WITH([xine],
             [AS_HELP_STRING([--with-xine],[use xine libraries (see LICENSE) [no]])],
             [with_xine=$withval],
             [with_xine=no])
+
+# does the user want OpenCV to use the gstreamer multimedia framework?
+AC_ARG_WITH([gstreamer],
+            [AS_HELP_STRING([--with-gstreamer],[use gstreamer multimedia framework [automatic]])],
+            [with_gstreamer=$withval],
+            [with_gstreamer=auto])
 
 # does the user want OpenCV to use ffmpeg video libraries?
 AC_ARG_WITH([ffmpeg],
@@ -425,6 +431,51 @@ fi
 AC_SUBST(QUICKTIME_CFLAGS)
 AC_SUBST(QUICKTIME_LIBS)
 AM_CONDITIONAL([BUILD_QUICKTIME], [test x"$have_quicktime" = "xyes"])
+
+# GStreamer seems to be a nice solution for both reading and writing
+# and even supports some cameras
+GSTREAMER_CFLAGS=""
+GSTREAMER_LIBS=""
+if test x"$with_gstreamer" = "xno"; then
+    have_gstreamer=no
+else
+
+    if test x"$with_ffmpeg" = "xyes"; then
+        AC_MSG_ERROR([You cannot specify --with-gstreamer and --with-ffmpeg at the same time])
+    fi
+
+    # check if ./configure arguments are valid
+    if test x"$with_gstreamer" = "xauto"; then
+       with_gstreamer=yes
+    fi
+    if test x"$with_gstreamer" = "xyes"; then
+
+        # pkg-config is needed for GTK+
+        AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+        if test x"$PKG_CONFIG" == "xno"; then
+            AC_MSG_ERROR([You have to install pkg-config to compile OpenCV with GStreamer])
+        fi
+
+        PKG_CHECK_MODULES(GSTREAMER, "gstreamer-0.10",
+                          [
+                            have_gstreamer=yes
+                            AC_DEFINE(HAVE_GSTREAMER,,[GStreamer multimedia framework])
+                          ],
+                          [ have_gstreamer=no ])
+
+        if test x"$have_gstreamer" = "xyes"; then
+            GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstbase-0.10"
+            with_ffmpeg=no
+        fi
+    else
+        # if we get here then --with-gstreamer was not called with 'yes','no' or 'auto'
+        AC_MSG_WARN([unexpected arguments for option --with-gstreamer, continuing assuming 'no'])
+        have_gstreamer=no
+    fi
+fi
+AC_SUBST(GSTREAMER_CFLAGS)
+AC_SUBST(GSTREAMER_LIBS)
+AM_CONDITIONAL([BUILD_GSTREAMER], [test x"$have_gstreamer" = "xyes"])
 
 # prefer XINE over FFMPEG for video reading because it is quick, has a cleaner API
 # and allows for easy seeking with some formats
@@ -959,6 +1010,7 @@ HighGUI configuration ================================================
     Video I/O ---------------------
     Use QuickTime / Mac OS X: ${have_quicktime}
     Use xine:                 ${have_xine}
+    Use gstreamer:            ${have_gstreamer}
     Use ffmpeg:               ${have_ffmpeg}
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}

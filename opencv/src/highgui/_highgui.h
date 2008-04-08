@@ -187,6 +187,10 @@ CvVideoWriter* cvCreateVideoWriter_Images(const char* filename);
 CvCapture* cvCaptureFromFile_XINE (const char* filename);
 #endif
 
+#ifdef HAVE_GSTREAMER
+CvCapture* cvCaptureFromFile_GStreamer (const char* filename);
+#endif
+
 #ifdef HAVE_FFMPEG
 CvCapture* cvCaptureFromFile_FFMPEG (const char* filename);
 
