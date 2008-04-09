@@ -2088,11 +2088,11 @@ static swig_module_info swig_module = {swig_types, 109, 0, 0, 0, 0};
 #include <stdexcept>
 
 
-	#include <cxtypes.h>
-	#include <cv.h>
-	#include <highgui.h>
-	#include "octhelpers.h"
-	#include "octcvseq.hpp"
+#include <cxtypes.h>
+#include <cv.h>
+#include <highgui.h>
+#include "octhelpers.h"
+#include "octcvseq.hpp"
 
 
 
@@ -2461,62 +2461,36 @@ SWIG_AsVal_size_t (octave_value obj, size_t *val)
 }
 
 
-	/* This encapsulates the octave callback and user_data for mouse callback */
-	struct OctCvMouseCBData {
-	  /*
-		octave_value oct_func;
-		void * user_data;
-	  */
-	};
-	// This encapsulates the octave callback and user_data for mouse callback
-	// C helper function which is responsible for calling
-	// the Octave real trackbar callback function
-    static void icvOctOnMouse (int event, int x, int y,
-					 int flags, OctCvMouseCBData * param) {
-      /*
-		// Must ensure this thread has a lock on the interpreter
-		PyGILState_STATE state = PyGILState_Ensure();
+  // This encapsulates the octave callback and user_data for mouse callback
+  struct OctCvMouseCBData {
+    octave_value oct_func;
+    octave_value user_data;
+  };
+  // This encapsulates the octave callback and user_data for mouse callback
+  // C helper function which is responsible for calling
+  // the Octave real trackbar callback function
+  static void icvOctOnMouse (int event, int x, int y,
+			     int flags, OctCvMouseCBData * param) {
+    octave_value oct_func(param->oct_func);
+    if (!oct_func.is_function() && !oct_func.is_function_handle())
+      return;
 
-		octave_valueresult;
-
-		// the argument of the callback ready to be passed to Octave code
-		octave_valuearg1 = PyInt_FromLong (event);
-		octave_valuearg2 = PyInt_FromLong (x);
-		octave_valuearg3 = PyInt_FromLong (y);
-		octave_valuearg4 = PyInt_FromLong (flags);
-		octave_valuearg5 = (octave_value)param->user_data;  // assume this is already a PyObject
-
-		// build the tuple for calling the Octave callback
-		octave_valuearglist = Py_BuildValue ("(OOOOO)",
-				arg1, arg2, arg3, arg4, arg5);
-
-		// call the Octave callback
-		result = PyEval_CallObject (param->py_func, arglist);
-
-		 Errors in Octave callback get swallowed, so report them here
-		if(!result){
-			PyErr_Print();
-			cvError( CV_StsInternal, "icvPyOnMouse", "", __FILE__, __LINE__);
-		}
-
-		// cleanup
-		Py_XDECREF (result);
-
-		// Release Interpreter lock
-		PyGILState_Release(state);
-      */
-	}
+    octave_value_list args;
+    args.append(octave_value(event));
+    args.append(octave_value(x));
+    args.append(octave_value(y));
+    args.append(octave_value(flags));
+    args.append(param->user_data);
+    oct_func.subsref ("(", std::list<octave_value_list>(1, args),0);
+  }
 
 
-	void cvSetMouseCallbackOct( const char* window_name, octave_value on_mouse, void* param=NULL ){
-	  /*
-		// TODO potential memory leak if mouse callback is redefined
-		PyCvMouseCBData * py_callback = new PyCvMouseCBData;
-		py_callback->py_func = on_mouse;
-		py_callback->user_data = param ? param : Py_None;
-		cvSetMouseCallback( window_name, (CvMouseCallback) icvPyOnMouse, (void *) py_callback );
-	  */
-	}
+  void cvSetMouseCallbackOct( const char* window_name, octave_value on_mouse, octave_value param = octave_value() ){
+    OctCvMouseCBData * oct_callback = new OctCvMouseCBData;
+    oct_callback->oct_func = on_mouse;
+    oct_callback->user_data = param;
+    cvSetMouseCallback( window_name, (CvMouseCallback) icvOctOnMouse, (void *) oct_callback );
+  }
 
 
 SWIGINTERN int
@@ -2540,6 +2514,113 @@ SWIG_AsCharPtrAndSize(const octave_value& ov, char** cptr, size_t* psize, int *a
 
 
 
+
+
+  // C helper function which is responsible for calling
+  // the Octave real trackbar callback function
+  static void icvOctOnTrackbar( octave_value oct_cb_func, int pos) {
+    if (!oct_cb_func.is_function() && !oct_cb_func.is_function_handle())
+      return;
+
+    octave_value_list args;
+    args.append(octave_value(pos));
+    oct_cb_func.subsref ("(", std::list<octave_value_list>(1, args),0);
+  }
+
+#define ICV_OCT_MAX_CB 10
+
+  struct OctCvTrackbar {
+    CvTrackbarCallback cv_func;
+    octave_value oct_func;
+    octave_value oct_pos;
+  };
+
+  static int my_trackbar_cb_size=0;
+  extern OctCvTrackbar my_trackbar_cb_funcs[ICV_OCT_MAX_CB];
+  
+
+static void icvOctTrackbarCB0(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[0].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB1(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[1].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB2(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[2].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB3(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[3].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB4(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[4].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB5(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[5].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB6(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[6].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB7(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[7].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB8(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[8].oct_func, pos);
+}                                                                               
+
+
+static void icvOctTrackbarCB9(int pos){                                      
+  icvOctOnTrackbar(my_trackbar_cb_funcs[9].oct_func, pos);
+}                                                                               
+
+
+  OctCvTrackbar my_trackbar_cb_funcs[ICV_OCT_MAX_CB] = {
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB0, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB1, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB2, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB3, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB4, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB5, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB6, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB7, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB8, octave_value(), octave_value() }
+/*@SWIG@*/,
+    /*@SWIG:highgui.i,129,%ICV_OCT_CB_TAB_ENTRY@*/
+{(CvTrackbarCallback) icvOctTrackbarCB9, octave_value(), octave_value() }
+/*@SWIG@*/
+  };
 
 
 #include "highgui.h"
@@ -4607,11 +4688,10 @@ static swig_octave_class _wrap_class_CvSubdiv2DEdge_Wrapper = {"CvSubdiv2DEdge_W
 static octave_value_list _wrap_cvSetMouseCallback__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
   octave_value arg2 ;
-  void *arg3 = (void *) 0 ;
+  octave_value arg3 ;
   int res1 ;
   char *buf1 = 0 ;
   int alloc1 = 0 ;
-  int res3 ;
   octave_value_list _out;
   octave_value_list *_outp=&_out;
   octave_value _outv;
@@ -4625,10 +4705,7 @@ static octave_value_list _wrap_cvSetMouseCallback__SWIG_0 (const octave_value_li
   }
   arg1 = (char *)(buf1);
   arg2 = args(1);
-  res3 = SWIG_ConvertPtr(args(2),SWIG_as_voidptrptr(&arg3), 0, 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvSetMouseCallback" "', argument " "3"" of type '" "void *""'"); 
-  }
+  arg3 = args(2);
   cvSetMouseCallbackOct((char const *)arg1,arg2,arg3);
   _outv = octave_value();
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
@@ -4690,9 +4767,7 @@ static octave_value_list _wrap_cvSetMouseCallback (const octave_value_list& args
     if (_v) {
       _v = (*argv[1]).is_defined();
       if (_v) {
-        void *ptr = 0;
-        int res = SWIG_ConvertPtr(argv[2], &ptr, 0, 0);
-        _v = SWIG_CheckState(res);
+        _v = (*argv[2]).is_defined();
         if (_v) {
           return _wrap_cvSetMouseCallback__SWIG_0(args, nargout);
         }
@@ -4704,166 +4779,6 @@ static octave_value_list _wrap_cvSetMouseCallback (const octave_value_list& args
   return octave_value_list();
 }
 
-
-
-    /* C helper function which is responsible for calling
-       the Octave real trackbar callback function */
-    static void icvOctOnTrackbar( octave_value oct_cb_func, int pos) {
-      /*
-	
-      // Must ensure this thread has a lock on the interpreter
-		PyGILState_STATE state = PyGILState_Ensure();
-
-		octave_valueresult;
-
-		// the argument of the callback ready to be passed to Octave code
-		octave_valuearg1 = PyInt_FromLong (pos);
-
-		// build the tuple for calling the Octave callback
-		octave_valuearglist = Py_BuildValue ("(O)", arg1);
-
-		// call the Octave callback
-		result = PyEval_CallObject (py_cb_func, arglist);
-
-		// Errors in Octave callback get swallowed, so report them here
-		if(!result){
-			PyErr_Print();
-			cvError( CV_StsInternal, "icvPyOnTrackbar", "", __FILE__, __LINE__);
-		}
-
-
-		// cleanup
-		Py_XDECREF (result);
-
-		// Release Interpreter lock
-		PyGILState_Release(state);
-      */
-	}
-
-#define ICV_OCT_MAX_CB 10
-
-	struct OctCvTrackbar {
-		CvTrackbarCallback cv_func;
-		octave_value oct_func;
-		octave_value oct_pos;
-	};
-
-	static int my_trackbar_cb_size=0;
-	extern OctCvTrackbar my_trackbar_cb_funcs[ICV_OCT_MAX_CB];
-
-
-static void icvOctTrackbarCB0(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[0].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[0].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB1(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[1].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[1].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB2(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[2].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[2].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB3(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[3].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[3].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB4(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[4].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[4].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB5(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[5].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[5].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB6(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[6].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[6].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB7(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[7].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[7].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB8(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[8].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[8].py_func, pos );
-  */
-}                                                                               
-
-
-static void icvOctTrackbarCB9(int pos){                                      
-  /*
-	if(!my_trackbar_cb_funcs[9].py_func) return;
-	icvPyOnTrackbar( my_trackbar_cb_funcs[9].py_func, pos );
-  */
-}                                                                               
-
-
-	OctCvTrackbar my_trackbar_cb_funcs[ICV_OCT_MAX_CB] = {
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB0, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB1, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB2, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB3, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB4, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB5, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB6, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB7, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB8, octave_value(), octave_value() }
-/*@SWIG@*/,
-		/*@SWIG:highgui.i,181,%ICV_OCT_CB_TAB_ENTRY@*/
-	{(CvTrackbarCallback) icvOctTrackbarCB9, octave_value(), octave_value() }
-/*@SWIG@*/
-	};
 
 static octave_value_list _wrap_cvLoadImage__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -5524,19 +5439,17 @@ static octave_value_list _wrap_cvCreateTrackbar (const octave_value_list& args, 
   } 
   arg4 = (int)(val4);
   {
-    /*
-    	if(my_trackbar_cb_size == ICV_OCT_MAX_CB){
-    		SWIG_exception(SWIG_IndexError, "Exceeded maximum number of trackbars");
-    	}
+    if(my_trackbar_cb_size == ICV_OCT_MAX_CB){
+      SWIG_exception(SWIG_IndexError, "Exceeded maximum number of trackbars");
+    }
     
-    	my_trackbar_cb_size++;
+    my_trackbar_cb_size++;
     
-    	// memorize the Octave address of the callback function
-    	my_trackbar_cb_funcs[my_trackbar_cb_size-1].oct_func = (octave_value) args(4);
+    // memorize the Octave address of the callback function
+    my_trackbar_cb_funcs[my_trackbar_cb_size-1].oct_func = (octave_value) args(4);
     
-    	// prepare to call the C function who will register the callback
-    	arg5 = my_trackbar_cb_funcs[ my_trackbar_cb_size-1 ].cv_func;
-    */
+    // prepare to call the C function who will register the callback
+    arg5 = my_trackbar_cb_funcs[ my_trackbar_cb_size-1 ].cv_func;
   }
   {
     try {
