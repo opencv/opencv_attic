@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.50 $)
+AC_REVISION($Revision: 1.51 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -815,10 +815,10 @@ fi
 if test x"$with_octave" = "xyes"; then
     # check that octave version is at least 2.9.12
     cat > conftest.m <<'EOF'
-[[a,b,c]]=sscanf(version,"%i.%i.%i","C");
+[[a,b,c]]=sscanf([[version()," "]],"%i.%i.%i","C");
 exit(sum([[a,b,c]].*[[1e5,1e3,1]])<209012)
 EOF
-    $OCTAVE conftest.m >& /dev/null || with_octave="no";
+    $OCTAVE --no-init-file conftest.m >& /dev/null || with_octave="no";
     rm -f conftest.m
 
     if test x"$with_octave" = "xno"; then
