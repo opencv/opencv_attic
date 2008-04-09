@@ -1,6 +1,6 @@
 #! /usr/bin/env octave -q
-cv
-highgui
+cv;
+highgui;
 
 inpaint_mask = None;
 img0 = None;
@@ -31,14 +31,14 @@ function on_mouse( event, x, y, flags, param )
 endfunction
 
 filename = "../c/fruits.jpg";
-if (length(argv)>=2)
-  filename = argv(1)
+if (size(argv, 1)>=2)
+  filename = argv(1, :);
 endif
 
-img0 = cvLoadImage(filename,-1)
+img0 = cvLoadImage(filename,-1);
 if (!img0)
-  print "Can't open image '%s'" % filename
-  exit(1)
+  printf("Can't open image '%s'\n", filename);
+  exit(1);
 endif
 
 printf("Hot keys:\n");

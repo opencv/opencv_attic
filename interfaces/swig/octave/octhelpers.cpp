@@ -203,7 +203,7 @@ CvRect OctSlice_to_CvRect(CvArr * src, octave_value idx_object){
     return cvRect(0,0,0,0);
   }
 
-  return cvRect(lower[1],lower[0], upper[1]-lower[1], upper[0]-lower[0]);
+  return cvRect(lower[1], lower[0], upper[1]-lower[1], upper[0]-lower[0]);
 }
 
 double OctObject_AsDouble(octave_value obj){
@@ -234,8 +234,7 @@ long OctObject_AsLong(octave_value obj){
 
 // standard python container routines, adapted to octave
 
-// * should matrix conversions happen here or at typemap layer? probably latter
-// * first, should implementation documentation scheme, and comb through typemaps
+// * should matrix conversions happen here or at typemap layer? or both
 
 bool OctNumber_Check(const octave_value& ov) {
   return ov.is_scalar_type();
@@ -286,7 +285,7 @@ double OctFloat_AsDouble (const octave_value& ov) {
 }
 
 octave_value OctSequence_New(int n) {
-  return Cell(1,n);
+  return n ? Cell(1,n) : Cell(dim_vector(0,0));
 }
 
 bool OctSequence_Check(const octave_value& ov) {
@@ -294,6 +293,7 @@ bool OctSequence_Check(const octave_value& ov) {
 }
 
 int OctSequence_Size(const octave_value& ov) {
+  Cell c(ov.cell_value());
   return ov.cell_value().numel();
 }
 
@@ -306,12 +306,14 @@ octave_value OctSequence_GetItem(const octave_value& ov,int i) {
   return c(i);
 }
 
-void OctSequence_SetItem(const octave_value& ov,int i,const octave_value& v) {
+void OctSequence_SetItem(octave_value& ov,int i,const octave_value& v) {
   Cell c(ov.cell_value());
   if (i<0||i>=c.numel())
     error("index out of bounds");
-  else
+  else {
     c(i)=v;
+    ov=c;
+  }
 }
 
 octave_value OctTuple_New(int n) {
@@ -326,7 +328,7 @@ int OctTuple_Size(const octave_value& ov) {
   return OctSequence_Size(ov);
 }
 
-void OctTuple_SetItem(const octave_value& ov,int i,const octave_value& v) {
+void OctTuple_SetItem(octave_value& ov,int i,const octave_value& v) {
   OctSequence_SetItem(ov,i,v);
 }
 
@@ -346,7 +348,7 @@ int OctList_Size(const octave_value& ov) {
   return OctSequence_Size(ov);
 }
 
-void OctList_SetItem(const octave_value& ov,int i,const octave_value& v) {
+void OctList_SetItem(octave_value& ov,int i,const octave_value& v) {
   OctSequence_SetItem(ov,i,v);
 }
 

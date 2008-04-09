@@ -1,14 +1,14 @@
 #! /usr/bin/env octave -q
 
-#the script demostrates iterative construction of
-#delaunay triangulation and voronoi tesselation
+## the script demostrates iterative construction of
+## delaunay triangulation and voronoi tesselation
 
-#Original Author (C version): ?
-#Converted to Python by: Roman Stanchak
-#Converted to Octave by: Xavier Delacour
+## Original Author (C version): ?
+## Converted to Python by: Roman Stanchak
+## Converted to Octave by: Xavier Delacour
 
-cv
-highgui
+cv;
+highgui;
 
 function draw_subdiv_point( img, fp, color )
   cvCircle( img, cvPoint(cvRound(fp.x), cvRound(fp.y)), 3, color, \
@@ -38,7 +38,7 @@ function draw_subdiv( img, subdiv, delaunay_color, voronoi_color )
   elem_size = subdiv.edges.elem_size;
 
   for edge in subdiv.edges,
-    edge_rot = cvSubdiv2DRotateEdge( edge, 1 )
+    edge_rot = cvSubdiv2DRotateEdge( edge, 1 );
 
     if( CV_IS_SET_ELEM( edge ))
       draw_subdiv_edge( img, edge_rot, voronoi_color );
@@ -71,15 +71,15 @@ function draw_subdiv_facet( img, edge )
   t = edge;
   count = 0;
 
-# count number of edges in facet
+  ## count number of edges in facet
   while (count == 0 || t != edge)
-    count+=1
+    count+=1;
     t = cvSubdiv2DGetEdge( t, CV_NEXT_AROUND_LEFT );
   endwhile
 
   buf = []
 
-# gather points
+  ## gather points
   t = edge;
   for i=0:count-1,
     assert t>4
@@ -108,10 +108,10 @@ function paint_voronoi( subdiv, img )
   for edge in subdiv.edges,
 
     if( CV_IS_SET_ELEM( edge ))
-# left
+      ## left
       draw_subdiv_facet( img, cvSubdiv2DRotateEdge( edge, 1 ));
 
-# right
+      ## right
       draw_subdiv_facet( img, cvSubdiv2DRotateEdge( edge, 3 ));
     endif
   endfor

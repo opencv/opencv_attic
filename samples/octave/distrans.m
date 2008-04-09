@@ -1,11 +1,11 @@
 #! /usr/bin/env octave -q
-cv
-highgui
+cv;
+highgui;
 
 wndname = "Distance transform";
 tbarname = "Threshold";
 
-# The output images
+## The output images
 dist = 0;
 dist8u1 = 0;
 dist8u2 = 0;
@@ -15,11 +15,11 @@ dist32s = 0;
 gray = 0;
 edge = 0;
 
-# define a trackbar callback
+## define a trackbar callback
 function on_trackbar( edge_thresh )
 
   cvThreshold( gray, edge, float(edge_thresh), float(edge_thresh), CV_THRESH_BINARY );
-#Distance transform                  
+  ## Distance transform                  
   cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, None, None );
 
   cvConvertScale( dist, dist, 5000.0, 0 );
@@ -38,35 +38,35 @@ endfunction
 
 edge_thresh = 100;
 
-filename = "../c/stuff.jpg"
-if (length(argv) > 1)
-  filename = argv(1)
+filename = "../c/stuff.jpg";
+if (size(argv, 1) > 1)
+  filename = argv(1, :);
 endif
 
 gray = cvLoadImage( filename, 0 );
 if (!gray)
-  print "Failed to load %s" % filename
-  exit(-1)
+  printf("Failed to load %s\n",filename);
+  exit(-1);
 endif
 
-# Create the output image
+## Create the output image
 dist = cvCreateImage( cvSize(gray.width,gray.height), IPL_DEPTH_32F, 1 );
 dist8u1 = cvCloneImage( gray );
 dist8u2 = cvCloneImage( gray );
 dist8u = cvCreateImage( cvSize(gray.width,gray.height), IPL_DEPTH_8U, 3 );
 dist32s = cvCreateImage( cvSize(gray.width,gray.height), IPL_DEPTH_32S, 1 );
 
-# Convert to grayscale
+## Convert to grayscale
 edge = cvCloneImage( gray );
 
-# Create a window
+## Create a window
 cvNamedWindow( wndname, 1 );
 
-# create a toolbar 
+## create a toolbar 
 cvCreateTrackbar( tbarname, wndname, edge_thresh, 255, on_trackbar );
 
-# Show the image
+## Show the image
 on_trackbar(edge_thresh);
 
-# Wait for a key stroke; the same function arranges events processing
+## Wait for a key stroke; the same function arranges events processing
 cvWaitKey(0);

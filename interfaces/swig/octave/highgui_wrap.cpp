@@ -2061,15 +2061,16 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
 #define SWIGTYPE_p_p_CvCapture swig_types[98]
 #define SWIGTYPE_p_p_CvVideoWriter swig_types[99]
 #define SWIGTYPE_p_p_char swig_types[100]
-#define SWIGTYPE_p_size_t swig_types[101]
-#define SWIGTYPE_p_size_type swig_types[102]
-#define SWIGTYPE_p_unsigned_char swig_types[103]
-#define SWIGTYPE_p_unsigned_long_long swig_types[104]
-#define SWIGTYPE_p_unsigned_short swig_types[105]
-#define SWIGTYPE_p_value_type swig_types[106]
-#define SWIGTYPE_p_void swig_types[107]
-static swig_type_info *swig_types[109];
-static swig_module_info swig_module = {swig_types, 108, 0, 0, 0, 0};
+#define SWIGTYPE_p_signed_char swig_types[101]
+#define SWIGTYPE_p_size_t swig_types[102]
+#define SWIGTYPE_p_size_type swig_types[103]
+#define SWIGTYPE_p_unsigned_char swig_types[104]
+#define SWIGTYPE_p_unsigned_long_long swig_types[105]
+#define SWIGTYPE_p_unsigned_short swig_types[106]
+#define SWIGTYPE_p_value_type swig_types[107]
+#define SWIGTYPE_p_void swig_types[108]
+static swig_type_info *swig_types[110];
+static swig_module_info swig_module = {swig_types, 109, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2539,68 +2540,6 @@ SWIG_AsCharPtrAndSize(const octave_value& ov, char** cptr, size_t* psize, int *a
 
 
 
-
-
-	octave_value cvWaitKeyOct(int delay=0){
-	  /*
-		// In order for the event processing thread to run a octave callback
-		// it must acquire the global interpreter lock, but  cvWaitKey blocks, so
-		// this thread can never release the lock. So release it here.
-		OctThreadState * thread_state = OctEval_SaveThread();
-		int res = cvWaitKey(delay);
-		OctEval_RestoreThread( thread_state );
-		
-		char str[2]={(char)res,0};
-		if(res==-1){
-			return OctLong_FromLong(-1);
-		}
-		return OctString_FromString(str);
-	  */
-	  return octave_value();
-	}
-
-
-#include <limits.h>
-#if !defined(SWIG_NO_LLONG_MAX)
-# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
-#   define LLONG_MAX __LONG_LONG_MAX__
-#   define LLONG_MIN (-LLONG_MAX - 1LL)
-#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
-# endif
-#endif
-
-
-  SWIGINTERN int SWIG_AsVal_long (const octave_value& ov, long* val)
-    {
-      if (!ov.is_scalar_type())
-	return SWIG_TypeError;
-      if (ov.is_complex_scalar())
-	return SWIG_TypeError;
-      if (ov.is_double_type()||ov.is_single_type()) {
-	double v=ov.double_value();
-	if (v!=floor(v))
-	  return SWIG_TypeError;
-      }
-      if (val)
-	*val = ov.long_value();
-      return SWIG_OK;
-    }
-
-
-SWIGINTERN int
-SWIG_AsVal_int (octave_value obj, int *val)
-{
-  long v;
-  int res = SWIG_AsVal_long (obj, &v);
-  if (SWIG_IsOK(res)) {
-    if ((v < INT_MIN || v > INT_MAX)) {
-      return SWIG_OverflowError;
-    } else {
-      if (val) *val = (int)(v);
-    }
-  }  
-  return res;
-}
 
 
 #include "highgui.h"
@@ -3538,6 +3477,49 @@ CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
 }
 
 
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
+
+
+  SWIGINTERN int SWIG_AsVal_long (const octave_value& ov, long* val)
+    {
+      if (!ov.is_scalar_type())
+	return SWIG_TypeError;
+      if (ov.is_complex_scalar())
+	return SWIG_TypeError;
+      if (ov.is_double_type()||ov.is_single_type()) {
+	double v=ov.double_value();
+	if (v!=floor(v))
+	  return SWIG_TypeError;
+      }
+      if (val)
+	*val = ov.long_value();
+      return SWIG_OK;
+    }
+
+
+SWIGINTERN int
+SWIG_AsVal_int (octave_value obj, int *val)
+{
+  long v;
+  int res = SWIG_AsVal_long (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v < INT_MIN || v > INT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = (int)(v);
+    }
+  }  
+  return res;
+}
+
+
 CvMat * cvRetrieveFrame__CvMat( CvCapture* capture ){
 	IplImage * im = cvRetrieveFrame(capture);
 	if(im){
@@ -4128,6 +4110,10 @@ const char* _wrap_cvStartWindowThread_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvStartWindowThread ()\n\
 @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_cvWaitKey_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvWaitKey (@var{delay} = 0)\n\
+@var{delay} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
 const char* _wrap_cvSetTrackbarPos_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvSetTrackbarPos (@var{trackbar_name}, @var{window_name}, @var{pos})\n\
 @var{trackbar_name} is of type char. @var{window_name} is of type char. @var{pos} is of type int. \n\
@@ -4150,10 +4136,6 @@ const char* _wrap_cvQueryFrame_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_cvShowImage_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvShowImage (@var{name}, @var{image})\n\
 @var{name} is of type char. @var{image} is of type CvArr. \n\
-@end deftypefn";
-const char* _wrap_cvWaitKeyC_texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = cvWaitKey (@var{delay} = 0)\n\
-@var{delay} is of type int. @var{retval} is of type int. \n\
 @end deftypefn";
 const char* _wrap_CvvImage_Height_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = Height (@var{self})\n\
@@ -4882,73 +4864,6 @@ static void icvOctTrackbarCB9(int pos){
 	{(CvTrackbarCallback) icvOctTrackbarCB9, octave_value(), octave_value() }
 /*@SWIG@*/
 	};
-
-static octave_value_list _wrap_cvWaitKey__SWIG_0 (const octave_value_list& args, int nargout) {
-  int arg1 ;
-  octave_value result;
-  int val1 ;
-  int ecode1 = 0 ;
-  octave_value_list _out;
-  octave_value_list *_outp=&_out;
-  octave_value _outv;
-  
-  if (!SWIG_check_num_args("cvWaitKey",args.length(),1,1,0)) {
-    SWIG_fail;
-  }
-  ecode1 = SWIG_AsVal_int(args(0), &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "cvWaitKey" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = (int)(val1);
-  result = cvWaitKeyOct(arg1);
-  _outv = result;
-  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
-fail:
-  return _out;
-}
-
-
-static octave_value_list _wrap_cvWaitKey__SWIG_1 (const octave_value_list& args, int nargout) {
-  octave_value result;
-  octave_value_list _out;
-  octave_value_list *_outp=&_out;
-  octave_value _outv;
-  
-  if (!SWIG_check_num_args("cvWaitKey",args.length(),0,0,0)) {
-    SWIG_fail;
-  }
-  result = cvWaitKeyOct();
-  _outv = result;
-  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
-fail:
-  return _out;
-}
-
-
-static octave_value_list _wrap_cvWaitKey (const octave_value_list& args, int nargout) {
-  int argc = args.length();
-  octave_value_ref argv[1]={
-    octave_value_ref(args,0)
-  };
-  
-  if (argc == 0) {
-    return _wrap_cvWaitKey__SWIG_1(args, nargout);
-  }
-  if (argc == 1) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      return _wrap_cvWaitKey__SWIG_0(args, nargout);
-    }
-  }
-  
-  error("No matching function for overload");
-  return octave_value_list();
-}
-
 
 static octave_value_list _wrap_cvLoadImage__SWIG_0 (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
@@ -5934,7 +5849,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_cvWaitKeyC (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_cvWaitKey (const octave_value_list& args, int nargout) {
   int arg1 = (int) 0 ;
   int result;
   int val1 ;
@@ -5943,13 +5858,13 @@ static octave_value_list _wrap_cvWaitKeyC (const octave_value_list& args, int na
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("cvWaitKeyC",args.length(),1,0,0)) {
+  if (!SWIG_check_num_args("cvWaitKey",args.length(),1,0,0)) {
     SWIG_fail;
   }
   if (0<args.length()) {
     ecode1 = SWIG_AsVal_int(args(0), &val1);
     if (!SWIG_IsOK(ecode1)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "cvWaitKeyC" "', argument " "1"" of type '" "int""'");
+      SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "cvWaitKey" "', argument " "1"" of type '" "int""'");
     } 
     arg1 = (int)(val1);
   }
@@ -7609,7 +7524,6 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSubdiv2DEdge_Wrapper___ne",_wrap_CvSubdiv2DEdge_Wrapper___ne,0,0,2,0},
 {"delete_CvSubdiv2DEdge_Wrapper",_wrap_delete_CvSubdiv2DEdge_Wrapper,0,0,2,_wrap_delete_CvSubdiv2DEdge_Wrapper_texinfo},
 {"cvSetMouseCallback",_wrap_cvSetMouseCallback,0,0,2,0},
-{"cvWaitKey",_wrap_cvWaitKey,0,0,2,0},
 {"cvLoadImage",_wrap_cvLoadImage,0,0,2,_wrap_cvLoadImage_texinfo},
 {"cvRetrieveFrame",_wrap_cvRetrieveFrame,0,0,2,_wrap_cvRetrieveFrame_texinfo},
 {"cvQueryFrame",_wrap_cvQueryFrame,0,0,2,_wrap_cvQueryFrame_texinfo},
@@ -7631,7 +7545,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvLoadImageM",_wrap_cvLoadImageM,0,0,2,_wrap_cvLoadImageM_texinfo},
 {"cvSaveImage",_wrap_cvSaveImage,0,0,2,_wrap_cvSaveImage_texinfo},
 {"cvConvertImage",_wrap_cvConvertImage,0,0,2,_wrap_cvConvertImage_texinfo},
-{"cvWaitKeyC",_wrap_cvWaitKeyC,0,0,2,_wrap_cvWaitKeyC_texinfo},
+{"cvWaitKey",_wrap_cvWaitKey,0,0,2,_wrap_cvWaitKey_texinfo},
 {"cvCreateFileCapture",_wrap_cvCreateFileCapture,0,0,2,_wrap_cvCreateFileCapture_texinfo},
 {"cvCreateCameraCapture",_wrap_cvCreateCameraCapture,0,0,2,_wrap_cvCreateCameraCapture_texinfo},
 {"cvGrabFrame",_wrap_cvGrabFrame,0,0,2,_wrap_cvGrabFrame_texinfo},
@@ -7794,6 +7708,7 @@ static swig_type_info _swigt__p_octave_value = {"_p_octave_value", "octave_value
 static swig_type_info _swigt__p_p_CvCapture = {"_p_p_CvCapture", "CvCapture **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_CvVideoWriter = {"_p_p_CvVideoWriter", "CvVideoWriter **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_char = {"_p_p_char", "char **", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_signed_char = {"_p_signed_char", "schar *|signed char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_t = {"_p_size_t", "size_t *|CvSubdiv2DEdge *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "uchar *|unsigned char *", 0, 0, (void*)0, 0};
@@ -7904,6 +7819,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_p_CvCapture,
   &_swigt__p_p_CvVideoWriter,
   &_swigt__p_p_char,
+  &_swigt__p_signed_char,
   &_swigt__p_size_t,
   &_swigt__p_size_type,
   &_swigt__p_unsigned_char,
@@ -8014,6 +7930,7 @@ static swig_cast_info _swigc__p_octave_value[] = {  {&_swigt__p_octave_value, 0,
 static swig_cast_info _swigc__p_p_CvCapture[] = {  {&_swigt__p_p_CvCapture, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_CvVideoWriter[] = {  {&_swigt__p_p_CvVideoWriter, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_signed_char[] = {  {&_swigt__p_signed_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_t[] = {  {&_swigt__p_size_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -8124,6 +8041,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_p_CvCapture,
   _swigc__p_p_CvVideoWriter,
   _swigc__p_p_char,
+  _swigc__p_signed_char,
   _swigc__p_size_t,
   _swigc__p_size_type,
   _swigc__p_unsigned_char,
@@ -8438,10 +8356,6 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
 
 void SWIG_init_user(octave_swig_type* module_ns)
 {
-  /*
-  	OctEval_InitThreads();
-    */
-  
   SWIG_Octave_SetConstant(module_ns,"CV_WINDOW_AUTOSIZE",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_EVENT_MOUSEMOVE",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_EVENT_LBUTTONDOWN",SWIG_From_int((int)(1)));

@@ -52,19 +52,18 @@ octave_value OctSequence_New(int n);
 bool OctSequence_Check(const octave_value& ov);
 int OctSequence_Size(const octave_value& ov);
 octave_value OctSequence_GetItem(const octave_value& ov,int i);
-void OctSequence_SetItem(const octave_value& ov,int i,const octave_value& v);
+void OctSequence_SetItem(octave_value& ov,int i,const octave_value& v);
 
 octave_value OctTuple_New(int n);
 bool OctTuple_Check(const octave_value& ov);
 int OctTuple_Size(const octave_value& ov);
-void OctTuple_SetItem(const octave_value& c,int i,const octave_value& ov);
+void OctTuple_SetItem(octave_value& c,int i,const octave_value& ov);
 octave_value OctTuple_GetItem(const octave_value& c,int i);
 
 octave_value OctList_New(int n);
 bool OctList_Check(const octave_value& ov);
 int OctList_Size(const octave_value& ov);
-void OctList_SetItem(const octave_value& c,int i,const octave_value& ov);
-octave_value OctList_SetItem(const octave_value& c,int i);
+void OctList_SetItem(octave_value& ov,int i,const octave_value& ov);
 octave_value OctList_GetItem(const octave_value& ov,int i);
 
 bool OctSlice_Check(const octave_value& ov);

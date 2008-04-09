@@ -1,45 +1,45 @@
 #! /usr/bin/env octave -q
-cv
-highgui
+cv;
+highgui;
 
 file_name = "../c/baboon.jpg";
 
-_brightness = 100
-_contrast = 100
-Gbrightness = 100
-Gcontrast = 100
+_brightness = 100;
+_contrast = 100;
+Gbrightness = 100;
+Gcontrast = 100;
 
-hist_size = 64
-range_0=[0,256]
-ranges = [ range_0 ]
-src_image=None
-dst_image=None
-hist_image=None
-hist=None
-lut=cvCreateMat(256,1,CV_8U)
+hist_size = 64;
+range_0=[0,256];
+ranges = [ range_0 ];
+src_image=None;
+dst_image=None;
+hist_image=None;
+hist=None;
+lut=cvCreateMat(256,1,CV_8U);
 
-# brightness/contrast callback function
+## brightness/contrast callback function
 function update_brightness( val )
   global Gbrightness    # global tag is required, or we get UnboundLocalError
-  Gbrightness = val
-  update_brightcont( )
+  Gbrightness = val;
+  update_brightcont( );
 endfunction
 
 function update_contrast( val )
-  global Gcontrast     # global tag is required, or we get UnboundLocalError
-  Gcontrast = val
-  update_brightcont( )
+  global Gcontrast;     # global tag is required, or we get UnboundLocalError
+  Gcontrast = val;
+  update_brightcont( );
 endfunction
 
 function update_brightcont()
-# no global tag required for images ???
+  ## no global tag required for images ???
 
   brightness = Gbrightness - 100;
   contrast = Gcontrast - 100;
   max_value = 0;
 
-# The algorithm is by Werner D. Streidt
-# (http://visca.com/ffactory/archives/5-99/msg00021.html)
+  ## The algorithm is by Werner D. Streidt
+  ## (http://visca.com/ffactory/archives/5-99/msg00021.html)
   if( contrast > 0 )
     delta = 127.*contrast/100;
     a = 255./(255. - delta*2);
@@ -68,7 +68,7 @@ function update_brightcont()
   cvZero( dst_image );
   min_value, max_value = cvGetMinMaxHistValue( hist );
   cvScale( hist.bins, hist.bins, float(hist_image.height)/max_value, 0 );
-#cvNormalizeHist( hist, 1000 );
+  ##cvNormalizeHist( hist, 1000 );
 
   cvSet( hist_image, cvScalarAll(255));
   bin_w = cvRound(float(hist_image.width)/hist_size);
@@ -83,16 +83,16 @@ function update_brightcont()
 endfunction
 
 
-# Load the source image. HighGUI use.
-if length(argv)>1
-  file_name = argv(1)
+## Load the source image. HighGUI use.
+if size(argv, 1)>1
+  file_name = argv(1, :);
 endif
 
 src_image = cvLoadImage( file_name, 0 );
 
 if (!src_image)
-  print "Image was not loaded.";
-  exit(-1)
+  printf("Image was not loaded.\n");
+  exit(-1);
 endif
 
 

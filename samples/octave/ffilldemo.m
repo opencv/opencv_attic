@@ -1,10 +1,10 @@
 #! /usr/bin/env octave -q
-cv
-highgui
+cv;
+highgui;
 
-color_img0=None;
-mask=None;
-color_img=None;
+color_img0 = None;
+mask = None;
+color_img = None;
 gray_img0 = None;
 gray_img = None;
 ffill_case = 1;
@@ -16,10 +16,10 @@ is_mask = 0;
 new_mask_val = 255;
 
 function update_lo( pos )
-  lo_diff = pos
+  lo_diff = pos;
 endfunction
 function update_up( pos )
-  up_diff = pos
+  up_diff = pos;
 endfunction
 
 function on_mouse( event, x, y, flags, param )
@@ -29,24 +29,25 @@ function on_mouse( event, x, y, flags, param )
   endif
 
   if (event == CV_EVENT_LBUTTONDOWN)
-    comp = CvConnectedComp()
-    my_mask = None
+    comp = CvConnectedComp();
+    my_mask = None;
     seed = cvPoint(x,y);
     if (ffill_case==0)
-      lo = up = 0
-      flags = connectivity + (new_mask_val << 8)
+      lo = 0;
+      up = 0;
+      flags = connectivity + (new_mask_val << 8);
     else
       lo = lo_diff;
       up = up_diff;
       flags = connectivity + (new_mask_val << 8) + \
-	  CV_FLOODFILL_FIXED_RANGE
+	  CV_FLOODFILL_FIXED_RANGE;
     endif
-    b = random.randint(0,255)
-    g = random.randint(0,255)
-    r = random.randint(0,255)
+    b = random.randint(0,255);
+    g = random.randint(0,255);
+    r = random.randint(0,255);
 
     if( is_mask )
-      my_mask = mask
+      my_mask = mask;
       cvThreshold( mask, mask, 1, 128, CV_THRESH_BINARY );
     endif
     
@@ -66,7 +67,7 @@ function on_mouse( event, x, y, flags, param )
     endif
     
 
-    print "%g pixels were repainted" % comp.area;
+    printf("%s pixels were repainted\n", comp.area);
 
     if( is_mask )
       cvShowImage( "mask", mask );
@@ -77,15 +78,15 @@ endfunction
 
 
 
-filename = "../c/fruits.jpg"
-if (length(argv)>1)
-  filename=argv(1)
+filename = "../c/fruits.jpg";
+if (size(argv, 1)>1)
+  filename=argv(1, :);
 endif
 
-color_img0 = cvLoadImage(filename,1)
+color_img0 = cvLoadImage(filename,1);
 if (! color_img0)
-  print "Could not open %s" % filename
-  exit(-1)
+  printf("Could not open %s\n",filename);
+  exit(-1);
 endif
 
 printf("Hot keys:\n");

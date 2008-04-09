@@ -21,8 +21,8 @@ function on_mouse( event, x, y, flags, param )
 endfunction
 
 filename = "../c/fruits.jpg"
-if (length(argv)>1)
-  filename=argv(1)
+if (size(argv, 1)>1)
+  filename=argv(1, :)
 endif
 
 src = cvLoadImage(filename,1)

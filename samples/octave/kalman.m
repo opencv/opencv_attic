@@ -1,17 +1,17 @@
 #! /usr/bin/env octave -q
-#   Tracking of rotating point.
-#   Rotation speed is constant.
-#   Both state and measurements vectors are 1D (a point angle),
-#   Measurement is the real point angle + gaussian noise.
-#   The real and the estimated points are connected with yellow line segment,
-#   the real and the measured points are connected with red line segment.
-#   (if Kalman filter works correctly,
-#    the yellow segment should be shorter than the red one).
-#   Pressing any key (except ESC) will reset the tracking with a different speed.
-#   Pressing ESC will stop the program.
+##   Tracking of rotating point.
+##   Rotation speed is constant.
+##   Both state and measurements vectors are 1D (a point angle),
+##   Measurement is the real point angle + gaussian noise.
+##   The real and the estimated points are connected with yellow line segment,
+##   the real and the measured points are connected with red line segment.
+##   (if Kalman filter works correctly,
+##    the yellow segment should be shorter than the red one).
+##   Pressing any key (except ESC) will reset the tracking with a different speed.
+##   Pressing ESC will stop the program.
 
-cv
-highgui
+cv;
+highgui;
 
 A = [ [1, 1], [0, 1] ];
 
@@ -38,33 +38,33 @@ while (true),
   
   while (true),
     function calc_point(angle)
-    return cvPoint( cvRound(img.width/2 + img.width/3*cos(angle)),
-                   cvRound(img.height/2 - img.width/3*sin(angle))) 
-  endfunction
+      return cvPoint( cvRound(img.width/2 + img.width/3*cos(angle)),
+                     cvRound(img.height/2 - img.width/3*sin(angle)));
+    endfunction
 
-    state_angle = state[0] 
+    state_angle = state[0];
     state_pt = calc_point(state_angle);
     
     prediction = cvKalmanPredict( kalman );
-    predict_angle = prediction[0,0] 
+    predict_angle = prediction[0,0];
     predict_pt = calc_point(predict_angle);
 
     cvRandArr( rng, measurement, CV_RAND_NORMAL, cvRealScalar(0),
               cvRealScalar(sqrt(kalman.measurement_noise_cov[0,0])) );
 
-# generate measurement 
+    ## generate measurement 
     cvMatMulAdd( kalman.measurement_matrix, state, measurement, measurement );
 
     measurement_angle = measurement[0,0];
     measurement_pt = calc_point(measurement_angle);
     
-# plot points 
+    ## plot points 
     function draw_cross( center, color, d )
-      cvLine( img, cvPoint( center.x - d, center.y - d ),                
+      cvLine( img, cvPoint( center.x - d, center.y - d ),
              cvPoint( center.x + d, center.y + d ), color, 1, CV_AA, 0); 
       cvLine( img, cvPoint( center.x + d, center.y - d ),                
              cvPoint( center.x - d, center.y + d ), \
-	     color, 1, CV_AA, 0 )
+	     color, 1, CV_AA, 0 );
     endfunction
 
     cvZero( img );
