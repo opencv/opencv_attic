@@ -33,8 +33,8 @@ function on_mouse( event, x, y, flags, param )
 endfunction
 
 filename = "../c/fruits.jpg"
-if (length(argv)>1)
-  filename = argv(1)
+if (size(argv, 1)>1)
+  filename = argv(1, :)
 endif
 
 rng = cvRNG(-1);
@@ -82,8 +82,8 @@ while (true)
   if (c == 'w')
     storage = cvCreateMemStorage(0);
     comp_count = 0;
-#cvSaveImage( "wshed_mask.png", marker_mask );
-#marker_mask = cvLoadImage( "wshed_mask.png", 0 );
+    ##cvSaveImage( "wshed_mask.png", marker_mask );
+    ##marker_mask = cvLoadImage( "wshed_mask.png", 0 );
     nb_cont, contours = cvFindContours( marker_mask, storage, sizeof_CvContour,
 				       CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
     cvZero( markers );
@@ -102,11 +102,11 @@ while (true)
     t = cvGetTickCount();
     cvWatershed( img0, markers );
     t = cvGetTickCount() - t;
-#print "exec time = %f" % t/(cvGetTickFrequency()*1000.)
+    ##print "exec time = %f" % t/(cvGetTickFrequency()*1000.)
 
     cvSet( wshed, cvScalarAll(255) );
 
-# paint the watershed image
+    ## paint the watershed image
     for j=0:markers.height-1,
       for i=0:markers.width-1,
 	idx = markers[j,i]

@@ -7,16 +7,16 @@ colorlaplace = None
 planes = [ None, None, None ];
 capture = None
 
-if (length(argv)==1)
+if (size(argv, 1)==1)
   capture = cvCreateCameraCapture( 0 )
-elseif (length(argv)==2 && all(isdigit(argv(1))))
-  capture = cvCreateCameraCapture( int(argv(1)) )
-elseif (len(sys.argv)==2)
-  capture = cvCreateFileCapture( argv(1) ); 
+elseif (size(argv, 1)==2 && all(isdigit(argv(1, :))))
+  capture = cvCreateCameraCapture( int32(argv(1, :)) )
+elseif (size(argv, 1)==2)
+  capture = cvCreateFileCapture( argv(1, :) ); 
 endif
 
 if (! capture)
-  print "Could not initialize capturing..."
+  printf("Could not initialize capturing...\n");
   exit(-1)
 endif
 

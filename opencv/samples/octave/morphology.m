@@ -33,8 +33,8 @@ function Dilation(pos)
 endfunction
 
 filename = "../c/baboon.jpg"
-if (length(argv)==2)
-  filename = argv(1)
+if (size(argv, 1)==2)
+  filename = argv(1, :)
 endif
 src = cvLoadImage(filename,1)
 if (! src)

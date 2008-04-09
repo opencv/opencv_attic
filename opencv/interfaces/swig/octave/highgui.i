@@ -246,38 +246,6 @@ static void icvOctTrackbarCB##idx(int pos){
 */
 }
 
-/**
- * typemap so that cvWaitKey returns a character in all cases except -1
- */
-%rename (cvWaitKeyC) cvWaitKey;
-%rename (cvWaitKey) cvWaitKeyOct;
-%inline %{
-	octave_value cvWaitKeyOct(int delay=0){
-	  /*
-		// In order for the event processing thread to run a octave callback
-		// it must acquire the global interpreter lock, but  cvWaitKey blocks, so
-		// this thread can never release the lock. So release it here.
-		OctThreadState * thread_state = OctEval_SaveThread();
-		int res = cvWaitKey(delay);
-		OctEval_RestoreThread( thread_state );
-		
-		char str[2]={(char)res,0};
-		if(res==-1){
-			return OctLong_FromLong(-1);
-		}
-		return OctString_FromString(str);
-	  */
-	  return octave_value();
-	}
-%}
-// HighGUI Octave module initialization
-// needed for callbacks to work in a threaded environment 
-%init %{
-  /*
-	OctEval_InitThreads();
-  */
-%}
-
 
 %include "../general/highgui.i"
 %include "adapters.i"

@@ -34,8 +34,8 @@ function ON_SEGMENT()
 endfunction
 
 filename = "../c/fruits.jpg";
-if (length(argv) == 2)
-  filename = sys.argv(1)
+if (size(argv, :) == 2)
+  filename = argv(1, :)
 endif
 image[0] = cvLoadImage( filename, 1)
 if (! image[0])
@@ -51,7 +51,7 @@ image[0].width &= -(1<<level);
 image[0].height &= -(1<<level);
 image0 = cvCloneImage( image[0] );
 image1 = cvCloneImage( image[0] );
-# segmentation of the color image
+## segmentation of the color image
 l = 1;
 threshold1 =255;
 threshold2 =30;

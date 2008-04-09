@@ -51,6 +51,8 @@
 
 // * add support for sparse matrices
 
+// * add support for complex matrices
+
 // * add support for roi and coi, or complain if either is set
 
 // * test case for channel==1

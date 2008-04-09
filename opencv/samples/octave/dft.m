@@ -1,10 +1,10 @@
 #! /usr/bin/env octave -q
-cv
-highgui
+cv;
+highgui;
 
-# Rearrange the quadrants of Fourier image so that the origin is at
-# the image center
-# src & dst arrays of equal size & type
+## Rearrange the quadrants of Fourier image so that the origin is at
+## the image center
+## src & dst arrays of equal size & type
 function cvShiftDFT(src_arr, dst_arr )
 
   size = cvGetSize(src_arr);
@@ -57,7 +57,7 @@ function cvShiftDFT(src_arr, dst_arr )
 endfunction
 
 
-im = cvLoadImage( argv(1), CV_LOAD_IMAGE_GRAYSCALE);
+im = cvLoadImage( argv(1, :), CV_LOAD_IMAGE_GRAYSCALE);
 
 realInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
 imaginaryInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
@@ -74,7 +74,7 @@ dft_A = cvCreateMat( dft_M, dft_N, CV_64FC2 );
 image_Re = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
 image_Im = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
 
-# copy A to dft_A and pad dft_A with zeros
+## copy A to dft_A and pad dft_A with zeros
 tmp = cvGetSubRect( dft_A, cvRect(0,0, im.width, im.height));
 cvCopy( complexInput, tmp, None );
 if(dft_A.width > im.width)
@@ -82,8 +82,8 @@ if(dft_A.width > im.width)
   cvZero( tmp );
 endif
 
-# no need to pad bottom part of dft_A with zeros because of
-# use nonzero_rows parameter in cvDFT() call below
+## no need to pad bottom part of dft_A with zeros because of
+## use nonzero_rows parameter in cvDFT() call below
 
 cvDFT( dft_A, dft_A, CV_DXT_FORWARD, complexInput.height );
 
@@ -91,22 +91,22 @@ cvNamedWindow("win", 0);
 cvNamedWindow("magnitude", 0);
 cvShowImage("win", im);
 
-# Split Fourier in real and imaginary parts
+## Split Fourier in real and imaginary parts
 cvSplit( dft_A, image_Re, image_Im, None, None );
 
-# Compute the magnitude of the spectrum Mag = sqrt(Re^2 + Im^2)
+## Compute the magnitude of the spectrum Mag = sqrt(Re^2 + Im^2)
 cvPow( image_Re, image_Re, 2.0);
 cvPow( image_Im, image_Im, 2.0);
 cvAdd( image_Re, image_Im, image_Re, None);
 cvPow( image_Re, image_Re, 0.5 );
 
-# Compute log(1 + Mag)
+## Compute log(1 + Mag)
 cvAddS( image_Re, cvScalarAll(1.0), image_Re, None ); # 1 + Mag
 cvLog( image_Re, image_Re ); # log(1 + Mag)
 
 
-# Rearrange the quadrants of Fourier image so that the origin is at
-# the image center
+## Rearrange the quadrants of Fourier image so that the origin is at
+## the image center
 cvShiftDFT( image_Re, image_Re );
 
 min, max = cvMinMaxLoc(image_Re);
