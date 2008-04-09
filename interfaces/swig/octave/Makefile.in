@@ -62,9 +62,13 @@ clean:
 	rm -rf *.o *.oct *~ octave-core $(PKG_TARFILE) $(PKG_NAME)
 endif
 
+ifdef OCTAVE
 install: $(PKG_TARFILE)
 	mkdir -p $(datarootdir)/opencv
 	$(INSTALL) $(PKG_TARFILE) $(datarootdir)/opencv/$(PKG_TARFILE)
+else
+install:
+endif
 
 cv.oct: $(CV_SOURCES)
 	$(MKOCTFILE) -o cv.oct $(BUILD_CPPFLAGS) $(CV_LDFLAGS) $(CV_SOURCES)
