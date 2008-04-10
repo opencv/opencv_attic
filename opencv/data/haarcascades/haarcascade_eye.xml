@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
     Stump-based 20x20 frontal eye detector.
     Created by Shameem Hameed (http://umich.edu/~shameem)
@@ -41,7 +42,6 @@
  or tort (including negligence or otherwise) arising in any way out of
  the use of this software, even if advised of the possibility of such damage.
 -->
-<?xml version="1.0"?>
 <opencv_storage>
 <haarcascade_frontaleye type_id="opencv-haar-classifier">
   <size>
