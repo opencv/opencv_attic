@@ -1105,6 +1105,21 @@ CVAPI(void) cvFindHomography( const CvMat* src_points,
                               const CvMat* dst_points,
                               CvMat* homography );
 
+/* Computes RQ decomposition for 3x3 matrices */
+CVAPI(void) cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
+                           CvMat *matrixQx CV_DEFAULT(NULL),
+                           CvMat *matrixQy CV_DEFAULT(NULL),
+                           CvMat *matrixQz CV_DEFAULT(NULL),
+                           CvPoint3D64f *eulerAngles CV_DEFAULT(NULL));
+
+/* Computes projection matrix decomposition */
+CVAPI(void) cvDecomposeProjectionMatrix( const CvMat *projMatr, CvMat *calibMatr,
+                                         CvMat *rotMatr, CvMat *posVect,
+                                         CvMat *rotMatrX CV_DEFAULT(NULL),
+                                         CvMat *rotMatrY CV_DEFAULT(NULL),
+                                         CvMat *rotMatrZ CV_DEFAULT(NULL),
+                                         CvPoint3D64f *eulerAngles CV_DEFAULT(NULL));
+
 /* projects object points to the view plane using
    the specified extrinsic and intrinsic camera parameters */
 CVAPI(void) cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_vector,
