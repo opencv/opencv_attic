@@ -23,7 +23,7 @@ Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SW
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
-Bovyrin, Alexander      Intel Corp.                Contours, Stereo, Improvements in object detection
+Bovyrin, Alexander      Intel Corp.                Contours, Stereo, Improvements in object detection, blobtrack/vs module in cvaux
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
@@ -51,11 +51,13 @@ Guhring, Philipp        ???                        Single-object mode in cvHaarD
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
+Hameed, Shameem         University of Michigan     Haar classifiers for eye detection
+ 
 Hasler, Nils            Max Planck Institut        16-bit images support, Jasper and OpenEXR bindings in HighGUI
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
 Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
-Kuranov, Alexander      Intel Corp.                Matlab wrappers, Face detection code, haartraining and related applications 
+Kuranov, Alexander      Intel Corp.                Matlab wrappers, face detection code, haartraining and related applications 
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
@@ -75,11 +77,12 @@ Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on 
 Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
 Pleskov, Alexander      Intel Corp.                Pyramidal segmentation, gesture recognition code, comp. geometry functions
 
-Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports, functionality proposals
+Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports, functionality proposals,
+                                                   blobtrack/vs module in cvaux
 
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
-Shavit, Adi             ???                        OpenCV forum moderation
+Shavit, Adi             ???                        OpenCV forum moderation, OpenCV logo
 Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees and CNN in Machine Learning module
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
