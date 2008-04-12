@@ -726,13 +726,13 @@ typedef struct CvSeqBlock
     int start_index;
 
     int count;
-    char* data;
+    schar* data;
 }
 CvSeqBlock;
 # 1217 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeq
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
 # 1237 "../../../cxcore/include/cxtypes.h"
@@ -749,7 +749,7 @@ CvSetElem;
 
 typedef struct CvSet
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
 # 1290 "../../../cxcore/include/cxtypes.h"
@@ -774,7 +774,7 @@ CvGraphVtx2D;
 # 1317 "../../../cxcore/include/cxtypes.h"
 typedef struct CvGraph
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
 }
 CvGraph;
 
@@ -784,7 +784,7 @@ CvGraph;
 
 typedef struct CvChain
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
     CvPoint origin;
 }
 CvChain;
@@ -797,7 +797,7 @@ CvChain;
 
 typedef struct CvContour
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvRect rect; int color; int reserved[3];
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvRect rect; int color; int reserved[3];
 }
 CvContour;
 
@@ -805,13 +805,13 @@ typedef CvContour CvPoint2DSeq;
 # 1484 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqWriter
 {
-    int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max;
+    int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max;
 }
 CvSeqWriter;
 # 1502 "../../../cxcore/include/cxtypes.h"
 typedef struct CvSeqReader
 {
-    int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max; int delta_index; char* prev_elem;
+    int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max; int delta_index; schar* prev_elem;
 }
 CvSeqReader;
 # 1622 "../../../cxcore/include/cxtypes.h"
@@ -1687,11 +1687,11 @@ extern "C" void cvSetSeqBlockSize( CvSeq* seq, int delta_elems );
 
 
 
-extern "C" char* cvSeqPush( CvSeq* seq, void* element = NULL);
+extern "C" schar* cvSeqPush( CvSeq* seq, void* element = NULL);
 
 
 
-extern "C" char* cvSeqPushFront( CvSeq* seq, void* element = NULL);
+extern "C" schar* cvSeqPushFront( CvSeq* seq, void* element = NULL);
 
 
 
@@ -1714,8 +1714,8 @@ extern "C" void cvSeqPopMulti( CvSeq* seq, void* elements,
 
 
 
-extern "C" char* cvSeqInsert( CvSeq* seq, int before_index,
-                           void* element = NULL);
+extern "C" schar* cvSeqInsert( CvSeq* seq, int before_index,
+                            void* element = NULL);
 
 
 extern "C" void cvSeqRemove( CvSeq* seq, int index );
@@ -1730,7 +1730,7 @@ extern "C" void cvClearSeq( CvSeq* seq );
 
 
 
-extern "C" char* cvGetSeqElem( const CvSeq* seq, int index );
+extern "C" schar* cvGetSeqElem( const CvSeq* seq, int index );
 
 
 
@@ -1807,9 +1807,9 @@ typedef int (* CvCmpFunc)(const void* a, const void* b, void* userdata );
 extern "C" void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata = NULL );
 
 
-extern "C" char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
-                          int is_sorted, int* elem_idx,
-                          void* userdata = NULL );
+extern "C" schar* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
+                           int is_sorted, int* elem_idx,
+                           void* userdata = NULL );
 
 
 extern "C" void cvSeqInvert( CvSeq* seq );
@@ -2755,16 +2755,16 @@ typedef struct _CvContourScanner* CvContourScanner;
 # 99 "../../../cv/include/cvtypes.h"
 typedef struct CvChainPtReader
 {
-    int header_size; CvSeq* seq; CvSeqBlock* block; char* ptr; char* block_min; char* block_max; int delta_index; char* prev_elem;
+    int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max; int delta_index; schar* prev_elem;
     char code;
     CvPoint pt;
-    char deltas[8][2];
+    schar deltas[8][2];
 }
 CvChainPtReader;
 # 116 "../../../cv/include/cvtypes.h"
 typedef struct CvContourTree
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
     CvPoint p1;
     CvPoint p2;
 }
@@ -2798,7 +2798,7 @@ CvSubdiv2DPoint;
 # 170 "../../../cv/include/cvtypes.h"
 typedef struct CvSubdiv2D
 {
-    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; char* block_max; char* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges; int quad_edges; int is_geometry_valid; CvSubdiv2DEdge recent_edge; CvPoint2D32f topleft; CvPoint2D32f bottomright;
+    int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges; int quad_edges; int is_geometry_valid; CvSubdiv2DEdge recent_edge; CvPoint2D32f topleft; CvPoint2D32f bottomright;
 }
 CvSubdiv2D;
 
@@ -3807,6 +3807,21 @@ extern "C" void cvFindHomography( const CvMat* src_points,
                               CvMat* homography );
 
 
+extern "C" void cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
+                           CvMat *matrixQx = NULL,
+                           CvMat *matrixQy = NULL,
+                           CvMat *matrixQz = NULL,
+                           CvPoint3D64f *eulerAngles = NULL);
+
+
+extern "C" void cvDecomposeProjectionMatrix( const CvMat *projMatr, CvMat *calibMatr,
+                                         CvMat *rotMatr, CvMat *posVect,
+                                         CvMat *rotMatrX = NULL,
+                                         CvMat *rotMatrY = NULL,
+                                         CvMat *rotMatrZ = NULL,
+                                         CvPoint3D64f *eulerAngles = NULL);
+
+
 
 extern "C" void cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_vector,
                               const CvMat* translation_vector, const CvMat* intrinsic_matrix,
@@ -3823,7 +3838,7 @@ extern "C" void cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           const CvMat* distortion_coeffs,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
-# 1133 "../../../cv/include/cv.h"
+# 1148 "../../../cv/include/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -3874,7 +3889,7 @@ extern "C" int cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
 extern "C" void cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
-# 1191 "../../../cv/include/cv.h"
+# 1206 "../../../cv/include/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = (8 + 2),
@@ -4181,4 +4196,4 @@ protected:
     int el_shape;
     int operation;
 };
-# 1211 "../../../cv/include/cv.h" 2
+# 1226 "../../../cv/include/cv.h" 2

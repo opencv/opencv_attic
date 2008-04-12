@@ -190,7 +190,7 @@ icvFitLine3D_wods( CvPoint3D32f * points, int count, float *weights, float *line
     CvMat _det = cvMat( 3, 3, CV_32F, det );
     CvMat _evc = cvMat( 3, 3, CV_32F, evc );
     CvMat _evl = cvMat( 3, 1, CV_32F, evl );
-    cvEigenVV( &_det, &_evc, &_evl, 0 ); 
+    cvEigenVV( &_det, &_evc, &_evl, 0 );
     i = evl[0] < evl[1] ? (evl[0] < evl[2] ? 0 : 2) : (evl[1] < evl[2] ? 1 : 2);
     }
 #else
@@ -331,7 +331,7 @@ icvWeightWelsch( float *d, int count, float *w, float _c )
 }
 
 
-/* Takes an array of 2D points, type of distance (including user-defined 
+/* Takes an array of 2D points, type of distance (including user-defined
 distance specified by callbacks, fills the array of four floats with line
 parameters A, B, C, D, where (A, B) is the normalized direction vector,
 (C, D) is the point that belongs to the line. */
@@ -462,9 +462,9 @@ _exit_:
 }
 
 
-/* Takes an array of 3D points, type of distance (including user-defined 
-distance specified by callbacks, fills the array of four floats with line 
-parameters A, B, C, D, E, F, where (A, B, C) is the normalized direction vector, 
+/* Takes an array of 3D points, type of distance (including user-defined
+distance specified by callbacks, fills the array of four floats with line
+parameters A, B, C, D, E, F, where (A, B, C) is the normalized direction vector,
 (D, E, F) is the point that belongs to the line. */
 
 static CvStatus
@@ -527,7 +527,7 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     for( i = 0; i < 100; i++ )
     {
         double sum_w = 0;
-        
+
         if( first )
         {
             first = 0;
@@ -606,12 +606,12 @@ CV_IMPL void
 cvFitLine( const CvArr* array, int dist, double param,
            double reps, double aeps, float *line )
 {
-    char* buffer = 0;
+    schar* buffer = 0;
     CV_FUNCNAME( "cvFitLine" );
 
     __BEGIN__;
 
-    char* points = 0;
+    schar* points = 0;
     union { CvContour contour; CvSeq seq; } header;
     CvSeqBlock block;
     CvSeq* ptseq = (CvSeq*)array;
@@ -658,7 +658,7 @@ cvFitLine( const CvArr* array, int dist, double param,
     }
     else
     {
-        CV_CALL( buffer = points = (char*)cvAlloc( ptseq->total*CV_ELEM_SIZE(type) ));
+        CV_CALL( buffer = points = (schar*)cvAlloc( ptseq->total*CV_ELEM_SIZE(type) ));
         CV_CALL( cvCvtSeqToArray( ptseq, points, CV_WHOLE_SEQ ));
 
         if( CV_MAT_DEPTH(type) != CV_32F )

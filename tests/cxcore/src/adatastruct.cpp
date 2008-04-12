@@ -51,7 +51,7 @@
 
 typedef  struct  CvTsSimpleSeq
 {
-    char* array;
+    schar* array;
     int   count;
     int   max_count;
     int   elem_size;
@@ -65,7 +65,7 @@ static CvTsSimpleSeq*  cvTsCreateSimpleSeq( int max_count, int elem_size )
     seq->elem_size = elem_size;
     seq->max_count = max_count;
     seq->count = 0;
-    seq->array = (char*)(seq + 1);
+    seq->array = (schar*)(seq + 1);
     return seq;
 }
 
@@ -76,7 +76,7 @@ static void cvTsReleaseSimpleSeq( CvTsSimpleSeq** seq )
 }
 
 
-static char*  cvTsSimpleSeqElem( CvTsSimpleSeq* seq, int index )
+static schar*  cvTsSimpleSeqElem( CvTsSimpleSeq* seq, int index )
 {
     assert( 0 <= index && index < seq->count );
     return seq->array + index * seq->elem_size;
@@ -110,12 +110,12 @@ static void cvTsSimpleSeqShiftAndCopy( CvTsSimpleSeq* seq, int from_idx, int to_
 static void cvTsSimpleSeqInvert( CvTsSimpleSeq* seq )
 {
     int i, k, len = seq->count, elem_size = seq->elem_size;
-    char *data = seq->array, t;
+    schar *data = seq->array, t;
 
     for( i = 0; i < len/2; i++ )
     {
-        char* a = data + i*elem_size;
-        char* b = data + (len - i - 1)*elem_size;
+        schar* a = data + i*elem_size;
+        schar* b = data + (len - i - 1)*elem_size;
         for( k = 0; k < elem_size; k++ )
             CV_SWAP( a[k], b[k], t );
     }
@@ -127,7 +127,7 @@ static void cvTsSimpleSeqInvert( CvTsSimpleSeq* seq )
 
 typedef  struct  CvTsSimpleSet
 {
-    char* array;
+    schar* array;
     int   count, max_count;
     int   elem_size;
     int*  free_stack;
@@ -158,7 +158,7 @@ static CvTsSimpleSet*  cvTsCreateSimpleSet( int max_count, int elem_size )
     set_header->elem_size = elem_size + 1;
     set_header->max_count = max_count;
     set_header->free_stack = (int*)(set_header + 1);
-    set_header->array = (char*)(set_header->free_stack + max_count);
+    set_header->array = (schar*)(set_header->free_stack + max_count);
 
     cvTsClearSimpleSet( set_header );
     return set_header;
@@ -171,7 +171,7 @@ static void cvTsReleaseSimpleSet( CvTsSimpleSet** set_header )
 }
 
 
-static char*  cvTsSimpleSetFind( CvTsSimpleSet* set_header, int index )
+static schar*  cvTsSimpleSetFind( CvTsSimpleSet* set_header, int index )
 {
     int idx = index * set_header->elem_size;
     assert( 0 <= index && index < set_header->max_count );
@@ -272,7 +272,7 @@ static void  cvTsSimpleGraphRemoveVertex( CvTsSimpleGraph* graph, int index )
     /* remove all the corresponding edges */
     for( i = 0; i < max_vtx_count; i++ )
     {
-        graph->matrix[(i*max_vtx_count + index)*edge_size] = 
+        graph->matrix[(i*max_vtx_count + index)*edge_size] =
         graph->matrix[(index*max_vtx_count + i)*edge_size] = 0;
     }
 }
@@ -281,7 +281,7 @@ static void  cvTsSimpleGraphRemoveVertex( CvTsSimpleGraph* graph, int index )
 static void cvTsSimpleGraphAddEdge( CvTsSimpleGraph* graph, int idx1, int idx2, void* edge )
 {
     int i, t, n = graph->oriented ? 1 : 2;
-    
+
     assert( cvTsSimpleSetFind( graph->vtx, idx1 ) &&
             cvTsSimpleSetFind( graph->vtx, idx2 ));
 
@@ -300,8 +300,8 @@ static void cvTsSimpleGraphAddEdge( CvTsSimpleGraph* graph, int idx1, int idx2, 
 
 static void  cvTsSimpleGraphRemoveEdge( CvTsSimpleGraph* graph, int idx1, int idx2 )
 {
-    int i, t, n = graph->oriented ? 1 : 2;    
-    
+    int i, t, n = graph->oriented ? 1 : 2;
+
     assert( cvTsSimpleSetFind( graph->vtx, idx1 ) &&
             cvTsSimpleSetFind( graph->vtx, idx2 ));
 
@@ -315,7 +315,7 @@ static void  cvTsSimpleGraphRemoveEdge( CvTsSimpleGraph* graph, int idx1, int id
 }
 
 
-static char*  cvTsSimpleGraphFindVertex( CvTsSimpleGraph* graph, int index )
+static schar*  cvTsSimpleGraphFindVertex( CvTsSimpleGraph* graph, int index )
 {
     return cvTsSimpleSetFind( graph->vtx, index );
 }
@@ -339,10 +339,10 @@ static int  cvTsSimpleGraphVertexDegree( CvTsSimpleGraph* graph, int index )
     int edge_size = graph->edge_size;
     int max_vtx_count = graph->vtx->max_count;
     assert( cvTsSimpleGraphFindVertex( graph, index ) != 0 );
-    
+
     for( i = 0; i < max_vtx_count; i++ )
     {
-        count += graph->matrix[(i*max_vtx_count + index)*edge_size] + 
+        count += graph->matrix[(i*max_vtx_count + index)*edge_size] +
                  graph->matrix[(index*max_vtx_count + i)*edge_size];
     }
 
@@ -475,7 +475,7 @@ int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
                                             max_log_storage_block_size );
     min_log_elem_size = cvReadInt( find_param( fs, "min_log_elem_size" ), min_log_elem_size );
     max_log_elem_size = cvReadInt( find_param( fs, "max_log_elem_size" ), max_log_elem_size );
-    
+
     struct_count = cvTsClipInt( struct_count, 1, 100 );
     max_struct_size = cvTsClipInt( max_struct_size, 1, 1<<20 );
     generations = cvTsClipInt( generations, 1, 100 );
@@ -495,7 +495,7 @@ int CxCore_DynStructBaseTest::read_params( CvFileStorage* fs )
 void CxCore_DynStructBaseTest::update_progressbar()
 {
     int64 t;
-    
+
     if( test_progress < 0 )
     {
         test_progress = 0;
@@ -523,18 +523,18 @@ int CxCore_DynStructBaseTest::test_seq_block_consistence( int _struct_idx, CvSeq
 {
     int sum = 0, code = -1;
     CV_FUNCNAME( "CxCore_DynStructBaseTest::test_seq_block_consistence" );
-    
+
     struct_idx = _struct_idx;
 
     __BEGIN__;
 
     CV_TS_SEQ_CHECK_CONDITION( seq != 0, "Null sequence pointer" );
-    
+
     if( seq->first )
     {
         CvSeqBlock* block = seq->first;
         CvSeqBlock* prev_block = block->prev;
-        
+
         int delta_idx = seq->first->start_index;
 
         for( ;; )
@@ -543,7 +543,7 @@ int CxCore_DynStructBaseTest::test_seq_block_consistence( int _struct_idx, CvSeq
                              block->count > 0 && block->prev == prev_block &&
                              prev_block->next == block,
                              "sequence blocks are inconsistent" );
-            sum += block->count;                
+            sum += block->count;
             prev_block = block;
             block = block->next;
             if( block == seq->first ) break;
@@ -620,7 +620,7 @@ int CxCore_SeqBaseTest::test_multi_create()
         double t;
         CvMat m;
         CvTsSimpleSeq* sseq;
-        
+
         pos[i] = -1;
         index[i] = i;
 
@@ -675,9 +675,9 @@ int CxCore_SeqBaseTest::test_multi_create()
                     index[k] = index[k+1];
                 break;
             }
-            
+
             {
-                char* el = cvTsSimpleSeqElem( sseq, pos[struct_idx] );
+                schar* el = cvTsSimpleSeqElem( sseq, pos[struct_idx] );
                 CV_WRITE_SEQ_ELEM_VAR( el, writer[struct_idx] );
             }
             pos[struct_idx]++;
@@ -716,7 +716,7 @@ int  CxCore_SeqBaseTest::test_get_seq_elem( int _struct_idx, int iters )
         int idx0 = (unsigned)idx < (unsigned)(sseq->count) ? idx : idx < 0 ?
                    idx + sseq->count : idx - sseq->count;
         int bad_range = (unsigned)idx0 >= (unsigned)(sseq->count);
-        char* elem;
+        schar* elem;
         CV_CALL( elem = cvGetSeqElem( seq, idx ));
 
         if( bad_range )
@@ -754,7 +754,7 @@ int  CxCore_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
     int total = seq->total;
     CvRNG* rng = ts->get_rng();
     CvSeqReader reader;
-    char* elem;
+    schar* elem;
 
     CV_FUNCNAME( "CxCore_SeqBaseTest::test_get_seq_reading" );
 
@@ -762,7 +762,7 @@ int  CxCore_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
 
     assert( total == sseq->count );
     this->struct_idx = _struct_idx;
-    elem = (char*)alloca( sseq->elem_size );
+    elem = (schar*)alloca( sseq->elem_size );
 
     pos = cvTsRandInt(rng) % 2;
     CV_CALL( cvStartReadSeq( seq, &reader, pos ));
@@ -848,7 +848,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
     const int max_op = 14;
     int i, code = -1;
     int max_elem_size = 0;
-    char *elem = 0, *elem2 = 0;
+    schar *elem = 0, *elem2 = 0;
     CvMat* elem_mat = 0;
     CvRNG* rng = ts->get_rng();
 
@@ -860,7 +860,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
         max_elem_size = MAX( max_elem_size, ((CvSeq*)cxcore_struct[i])->elem_size );
 
     CV_CALL( elem_mat = cvCreateMat( 1, max_struct_size*max_elem_size, CV_8UC1 ));
-    elem = (char*)elem_mat->data.ptr;
+    elem = (schar*)elem_mat->data.ptr;
 
     for( iter = 0; iter < iters; iter++ )
     {
@@ -881,7 +881,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
 
             elem_mat->cols = elem_size;
             cvRandArr( rng, elem_mat, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(255) );
-            
+
             whence = op - 1;
             if( whence < 0 )
             {
@@ -936,7 +936,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
                        "The popped sequence element isn't correct" );
 
             cvTsSimpleSeqShiftAndCopy( sseq, pos + 1, pos );
-            
+
             if( sseq->count > 0 )
             {
                 CV_CALL( elem2 = cvGetSeqElem( seq, pos < sseq->count ? pos : -1 ));
@@ -1009,7 +1009,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
             whence = op - 10;
             pos = whence < 0 ? 0 : whence > 0 ? sseq->count - count :
                 cvTsRandInt(rng) % (sseq->count - count + 1);
-            
+
             if( whence != 0 )
             {
                 CV_CALL( cvSeqPopMulti( seq, elem, count, whence < 0 ));
@@ -1025,7 +1025,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
             {
                 CV_CALL( cvSeqRemoveSlice( seq, cvSlice(pos, pos + count) ));
             }
-            
+
             CV_TS_SEQ_CHECK_CONDITION( seq->total == sseq->count - count,
                        "The popmulti left a wrong number of elements in the sequence" );
 
@@ -1048,7 +1048,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
             {
                 CvMemStoragePos storage_pos;
                 cvSaveMemStoragePos( storage, &storage_pos );
-                
+
                 int copy_data = cvTsRandInt(rng) % 2;
                 count = cvTsRandInt(rng) % (seq->total + 1);
                 pos = cvTsRandInt(rng) % (seq->total - count + 1);
@@ -1061,7 +1061,7 @@ int  CxCore_SeqBaseTest::test_seq_ops( int iters )
                 {
                     int test_idx = cvTsRandInt(rng) % count;
                     elem2 = cvGetSeqElem( seq_slice, test_idx );
-                    char* elem3 = cvGetSeqElem( seq, pos + test_idx );
+                    schar* elem3 = cvGetSeqElem( seq, pos + test_idx );
                     CV_TS_SEQ_CHECK_CONDITION( elem2 &&
                         memcmp( elem2, cvTsSimpleSeqElem(sseq,pos + test_idx), elem_size) == 0,
                         "The extracted slice elements are not correct" );
@@ -1204,7 +1204,7 @@ void CxCore_SeqSortInvTest::run( int )
     CvRNG* rng = ts->get_rng();
     int i, k;
     double t;
-    char *elem0, *elem, *elem2;
+    schar *elem0, *elem, *elem2;
     CvMat* buffer = 0;
 
     CV_FUNCNAME( "CxCore_SeqSortInvTest::run" );
@@ -1229,7 +1229,7 @@ void CxCore_SeqSortInvTest::run( int )
                 + min_log_storage_block_size;
             storage = cvCreateMemStorage( cvRound( exp(t * CV_LOG2) ) );
         }
-        
+
         for( iter = 0; iter < iterations/10; iter++ )
         {
             int max_size = 0;
@@ -1391,7 +1391,7 @@ int  CxCore_SetTest::test_set_ops( int iters )
     int max_elem_size = 0;
     int idx, idx0;
     CvSetElem *elem = 0, *elem2 = 0, *elem3 = 0;
-    char* elem_data = 0;
+    schar* elem_data = 0;
     CvMat* elem_mat = 0;
     CvRNG* rng = ts->get_rng();
     //int max_active_count = 0, mean_active_count = 0;
@@ -1408,7 +1408,7 @@ int  CxCore_SetTest::test_set_ops( int iters )
     for( iter = 0; iter < iters; iter++ )
     {
         struct_idx = cvTsRandInt(rng) % struct_count;
-        
+
         CvSet* cvset = (CvSet*)cxcore_struct[struct_idx];
         CvTsSimpleSet* sset = (CvTsSimpleSet*)simple_struct[struct_idx];
         int pure_elem_size = sset->elem_size - 1;
@@ -1439,7 +1439,7 @@ int  CxCore_SetTest::test_set_ops( int iters )
             elem_mat->cols = cvset->elem_size;
             cvRandArr( rng, elem_mat, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(255) );
             elem = (CvSetElem*)elem_mat->data.ptr;
-        
+
             if( by_ptr )
             {
                 CV_CALL( elem2 = cvSetNew( cvset ));
@@ -1453,11 +1453,11 @@ int  CxCore_SetTest::test_set_ops( int iters )
                     "cvSetAdd returned NULL pointer or a wrong index" );
             }
 
-            elem_data = (char*)elem + sizeof(int);
+            elem_data = (schar*)elem + sizeof(int);
 
             if( !pass_data )
-                memcpy( (char*)elem2 + sizeof(int), elem_data, pure_elem_size );
-        
+                memcpy( (schar*)elem2 + sizeof(int), elem_data, pure_elem_size );
+
             idx = elem2->flags;
             idx0 = cvTsSimpleSetAdd( sset, elem_data );
             CV_CALL( elem3 = cvGetSetElem( cvset, idx ));
@@ -1475,10 +1475,10 @@ int  CxCore_SetTest::test_set_ops( int iters )
         else if( op == 2 || op == 3 ) // remove element
         {
             idx = cvTsRandInt(rng) % sset->max_count;
-        
+
             if( sset->free_count == sset->max_count || idx >= sset->count )
                 continue;
-        
+
             elem_data = cvTsSimpleSetFind(sset, idx);
             if( elem_data == 0 )
                 continue;
@@ -1548,7 +1548,7 @@ void CxCore_SetTest::run( int )
 
     clear();
     test_progress = -1;
-    
+
     simple_struct = (void**)cvAlloc( struct_count * sizeof(simple_struct[0]) );
     memset( simple_struct, 0, struct_count * sizeof(simple_struct[0]) );
     cxcore_struct = (void**)cvAlloc( struct_count * sizeof(cxcore_struct[0]) );
@@ -1569,7 +1569,7 @@ void CxCore_SetTest::run( int )
             elem_size = MAX( elem_size, (int)sizeof(CvSetElem) );
             elem_size = MIN( elem_size, (int)(storage->block_size - sizeof(void*) - sizeof(CvMemBlock) - sizeof(CvSeqBlock)) );
             pure_elem_size = MIN( pure_elem_size, elem_size-(int)sizeof(CvSetElem) );
-            
+
             cvTsReleaseSimpleSet( (CvTsSimpleSet**)&simple_struct[i] );
             simple_struct[i] = cvTsCreateSimpleSet( max_struct_size, pure_elem_size );
             CV_CALL( cxcore_struct[i] = cvCreateSet( 0, sizeof(CvSet), elem_size, storage ));
@@ -1654,7 +1654,8 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
         CvGraph* graph = (CvGraph*)cxcore_struct[struct_idx];
         CvTsSimpleGraph* sgraph = (CvTsSimpleGraph*)simple_struct[struct_idx];
         CvSet* edges = graph->edges;
-        char *vtx_data, *edge_data;
+        schar *vtx_data;
+        char *edge_data;
         int pure_vtx_size = sgraph->vtx->elem_size - 1,
             pure_edge_size = sgraph->edge_size - 1;
         int prev_vtx_total = graph->total,
@@ -1668,7 +1669,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
         if( cvTsRandInt(rng) % 200 == 0 ) // clear graph
         {
             int prev_vtx_count = graph->total, prev_edge_count = graph->edges->total;
-            
+
             cvClearGraph( graph );
             cvTsClearSimpleGraph( sgraph );
 
@@ -1695,10 +1696,10 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
                 elem_mat->cols = graph->elem_size;
                 cvRandArr( rng, elem_mat, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(255) );
             }
-            
+
             vtx = (CvGraphVtx*)elem_mat->data.ptr;
             idx0 = cvTsSimpleGraphAddVertex( sgraph, vtx + 1 );
-            
+
             pass_data = cvTsRandInt(rng) % 2;
             CV_CALL( idx = cvGraphAddVtx( graph, pass_data ? vtx : 0, &vtx2 ));
 
@@ -1723,7 +1724,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
             idx = cvTsRandInt(rng) % sgraph->vtx->max_count;
             if( sgraph->vtx->free_count == sgraph->vtx->max_count || idx >= sgraph->vtx->count )
                 continue;
-        
+
             vtx_data = cvTsSimpleGraphFindVertex(sgraph, idx);
             if( vtx_data == 0 )
                 continue;
@@ -1767,7 +1768,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
         }
         else if( op == 2 ) // add edge
         {
-            int v_idx[2] = {0,0}, res = 0;            
+            int v_idx[2] = {0,0}, res = 0;
             int v_prev_degree[2] = {0,0}, v_degree[2] = {0,0};
 
             if( sgraph->vtx->free_count >= sgraph->vtx->max_count-1 )
@@ -1854,7 +1855,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
                                        "The vertices lists have not been updated properly" );
 
             cvTsSimpleGraphAddEdge( sgraph, v_idx[0], v_idx[1], edge + 1 );
-            
+
             CV_TS_SEQ_CHECK_CONDITION( (!first_free || first_free == (CvSetElem*)edge2) &&
                                        (!next_free || graph->edges->free_elems == next_free) &&
                                        graph->edges->active_count == prev_edge_count + 1,
@@ -1864,7 +1865,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
         {
             int v_idx[2] = {0,0}, by_ptr;
             int v_prev_degree[2] = {0,0}, v_degree[2] = {0,0};
-            
+
             if( sgraph->vtx->free_count >= sgraph->vtx->max_count-1 )
                 continue;
 
@@ -1945,7 +1946,7 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
                                        "The vertices lists have not been updated properly" );
 
             cvTsSimpleGraphRemoveEdge( sgraph, v_idx[0], v_idx[1] );
-            
+
             CV_TS_SEQ_CHECK_CONDITION( graph->edges->free_elems == (CvSetElem*)edge &&
                                        graph->edges->free_elems->next_free == first_free &&
                                        graph->edges->active_count == prev_edge_count - 1,
@@ -1997,7 +1998,7 @@ void CxCore_GraphTest::run( int )
 
     clear();
     test_progress = -1;
-    
+
     simple_struct = (void**)cvAlloc( struct_count * sizeof(simple_struct[0]) );
     memset( simple_struct, 0, struct_count * sizeof(simple_struct[0]) );
     cxcore_struct = (void**)cvAlloc( struct_count * sizeof(cxcore_struct[0]) );
@@ -2026,7 +2027,7 @@ void CxCore_GraphTest::run( int )
                 pure_elem_size[k] = pe;
                 elem_size[k] = e;
             }
-            
+
             cvTsReleaseSimpleGraph( (CvTsSimpleGraph**)&simple_struct[i] );
             simple_struct[i] = cvTsCreateSimpleGraph( max_struct_size/4, pure_elem_size[0],
                                     pure_elem_size[1], is_oriented );
@@ -2085,7 +2086,7 @@ int CxCore_GraphScanTest::create_random_graph( int _struct_idx )
     __BEGIN__;
 
     struct_idx = _struct_idx;
-    
+
     CV_CALL( cxcore_struct[_struct_idx] = graph = cvCreateGraph(
         is_oriented ? CV_ORIENTED_GRAPH : CV_GRAPH,
         sizeof(CvGraph), sizeof(CvGraphVtx), sizeof(CvGraphEdge), storage ));
@@ -2099,7 +2100,7 @@ int CxCore_GraphScanTest::create_random_graph( int _struct_idx )
     {
         int j = cvTsRandInt(rng) % vtx_count;
         int k = cvTsRandInt(rng) % vtx_count;
-        
+
         if( j != k )
             CV_CALL( cvGraphAddEdge( graph, j, k ));
     }
@@ -2126,7 +2127,7 @@ void CxCore_GraphScanTest::run( int )
 
     clear();
     test_progress = -1;
-    
+
     cxcore_struct = (void**)cvAlloc( struct_count * sizeof(cxcore_struct[0]) );
     memset( cxcore_struct, 0, struct_count * sizeof(cxcore_struct[0]) );
 
@@ -2142,13 +2143,13 @@ void CxCore_GraphScanTest::run( int )
             // !!! ATTENTION !!! The test relies on the particular order of the inserted edges
             // (LIFO: the edge inserted last goes first in the list of incident edges).
             // if it is changed, the test will have to be modified.
-            
+
             int vtx_count = -1, edge_count = 0, edges[][3] =
             {
                 {0,4,'f'}, {0,1,'t'}, {1,4,'t'}, {1,2,'t'}, {2,3,'t'}, {4,3,'c'}, {3,1,'b'},
                 {5,7,'t'}, {7,5,'b'}, {5,6,'t'}, {6,0,'c'}, {7,6,'c'}, {6,4,'c'}, {-1,-1,0}
             };
-            
+
             CvGraph* graph;
             CV_CALL( graph = cvCreateGraph( CV_ORIENTED_GRAPH, sizeof(CvGraph),
                             sizeof(CvGraphVtx), sizeof(CvGraphEdge), storage ));
@@ -2264,7 +2265,7 @@ void CxCore_GraphScanTest::run( int )
             {
                 CvGraphVtx* start_vtx = cvTsRandInt(rng) % 2 || graph->active_count == 0 ? 0 :
                     cvGetGraphVtx( graph, cvTsRandInt(rng) % graph->active_count );
-                
+
                 CV_CALL( scanner = cvCreateGraphScanner( graph, start_vtx, CV_GRAPH_ALL_ITEMS ));
 
                 if( !vtx_mask || vtx_mask->cols < graph->active_count )
@@ -2281,7 +2282,7 @@ void CxCore_GraphScanTest::run( int )
 
                 cvZero( vtx_mask );
                 cvZero( edge_mask );
-             
+
                 for(;;)
                 {
                     int code;

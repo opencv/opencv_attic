@@ -72,8 +72,8 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 
     for( i = 0; i < 8; i++ )
     {
-        reader->deltas[i][0] = (char) icvCodeDeltas[i].x;
-        reader->deltas[i][1] = (char) icvCodeDeltas[i].y;
+        reader->deltas[i][0] = (schar) icvCodeDeltas[i].x;
+        reader->deltas[i][1] = (schar) icvCodeDeltas[i].y;
     }
 
     __END__;
@@ -84,7 +84,7 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 CV_IMPL CvPoint
 cvReadChainPoint( CvChainPtReader * reader )
 {
-    char *ptr;
+    schar *ptr;
     int code;
     CvPoint pt = { 0, 0 };
 
@@ -96,7 +96,7 @@ cvReadChainPoint( CvChainPtReader * reader )
         CV_ERROR( CV_StsNullPtr, "" );
 
     pt = reader->pt;
-    
+
     ptr = reader->ptr;
     if( ptr )
     {
@@ -109,7 +109,7 @@ cvReadChainPoint( CvChainPtReader * reader )
         }
 
         reader->ptr = ptr;
-        reader->code = (char)code;
+        reader->code = (schar)code;
         assert( (code & ~7) == 0 );
         reader->pt.x = pt.x + icvCodeDeltas[code].x;
         reader->pt.y = pt.y + icvCodeDeltas[code].y;
@@ -152,8 +152,8 @@ typedef struct _CvContourScanner
     CvMemStoragePos initial_pos;        /* starting storage pos */
     CvMemStoragePos backup_pos; /* beginning of the latest approx. contour */
     CvMemStoragePos backup_pos2;        /* ending of the latest approx. contour */
-    char *img0;                 /* image origin */
-    char *img;                  /* current image row */
+    schar *img0;                /* image origin */
+    schar *img;                 /* current image row */
     int img_step;               /* image step */
     CvSize img_size;            /* ROI size */
     CvPoint offset;             /* ROI offset: coordinates, added to each contour point */
@@ -185,13 +185,13 @@ _CvContourScanner;
 #define _CV_FIND_CONTOURS_FLAGS_EXTERNAL_ONLY    1
 #define _CV_FIND_CONTOURS_FLAGS_HIERARCHIC       2
 
-/* 
+/*
    Initializes scanner structure.
    Prepare image for scanning ( clear borders and convert all pixels to 0-1.
 */
 CV_IMPL CvContourScanner
 cvStartFindContours( void* _img, CvMemStorage* storage,
-                     int  header_size, int mode, 
+                     int  header_size, int mode,
                      int  method, CvPoint offset )
 {
     int y;
@@ -230,8 +230,8 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
     memset( scanner, 0, sizeof( *scanner ));
 
     scanner->storage1 = scanner->storage2 = storage;
-    scanner->img0 = (char *) img;
-    scanner->img = (char *) (img + step);
+    scanner->img0 = (schar *) img;
+    scanner->img = (schar *) (img + step);
     scanner->img_step = step;
     scanner->img_size.width = size.width - 1;   /* exclude rightest column */
     scanner->img_size.height = size.height - 1; /* exclude bottomost row */
@@ -328,7 +328,7 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
     return scanner;
 }
 
-/* 
+/*
    Final stage of contour processing.
    Three variants possible:
       1. Contour, which was retrieved using border following, is added to
@@ -345,16 +345,16 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
                 It's marked as "link to contour" and h_next pointer of it is set to
                 new, substituting contour.
 
-      3. The similar to 2, but when NULL pointer was assigned by 
+      3. The similar to 2, but when NULL pointer was assigned by
          icvSubstituteContour function. In this case, the function removes
-         retrieved contour completely if plane case and 
+         retrieved contour completely if plane case and
          leaves header if hierarchical (but doesn't mark header as "link").
       ------------------------------------------------------------------------
       The 1st variant can be used to retrieve and store all the contours from the image
-      (with optional convertion from chains to contours using some approximation from 
+      (with optional convertion from chains to contours using some approximation from
       restriced set of methods). Some characteristics of contour can be computed in the
       same pass.
-      
+
       The usage scheme can look like:
 
       icvContourScanner scanner;
@@ -367,7 +367,7 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
       icvCreateMemStorage( &contour_storage, block_size/0 );
 
       ...
-              
+
       cvStartFindContours
               ( img, contour_storage,
                 header_size, approx_method,
@@ -395,7 +395,7 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
       Second variant is more complex and can be used when someone wants store not
       the retrieved contours but transformed ones. (e.g. approximated with some
       non-default algorithm ).
-      
+
       The scheme can be the as following:
 
       icvContourScanner scanner;
@@ -410,7 +410,7 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
       icvCreateMemStorage( &temp_storage, block_size/0 );
 
       ...
-              
+
       icvStartFindContours8uC1R
               ( <img_params>, temp_storage,
                 header_size, approx_method,
@@ -455,13 +455,13 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
           ...
       }
 
-      new_storage variable is not needed here. 
+      new_storage variable is not needed here.
 
       Two notes.
       1. Second and third method can interleave. I.e. it is possible to
          remain contours that satisfy with some criteria and reject others.
          In hierarchic case the resulting tree is the part of original tree with
-         some nodes absent. But in the resulting tree the contour1 is a child 
+         some nodes absent. But in the resulting tree the contour1 is a child
          (may be indirect) of contour2 iff in the original tree the contour1
          is a child (may be indirect) of contour2.
 */
@@ -519,7 +519,7 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
 }
 
 
-/* 
+/*
     marks domain border with +/-<constant> and stores the contour into CvSeq.
         method:
             <0  - chain
@@ -527,16 +527,16 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
             >0  - simple approximation
 */
 static CvStatus
-icvFetchContour( char                   *ptr, 
+icvFetchContour( schar                  *ptr,
                  int                    step,
-                 CvPoint                pt, 
-                 CvSeq*                 contour, 
+                 CvPoint                pt,
+                 CvSeq*                 contour,
                  int    _method )
 {
-    const char      nbd = 2;
+    const schar     nbd = 2;
     int             deltas[16];
     CvSeqWriter     writer;
-    char            *i0 = ptr, *i1, *i3, *i4 = 0;
+    schar           *i0 = ptr, *i1, *i3, *i4 = 0;
     int             prev_s = -1, s, s_end;
     int             method = _method - 1;
 
@@ -565,7 +565,7 @@ icvFetchContour( char                   *ptr,
 
     if( s == s_end )            /* single pixel domain */
     {
-        *i0 = (char) (nbd | -128);
+        *i0 = (schar) (nbd | -128);
         if( method >= 0 )
         {
             CV_WRITE_SEQ_ELEM( pt, writer );
@@ -592,7 +592,7 @@ icvFetchContour( char                   *ptr,
             /* check "right" bound */
             if( (unsigned) (s - 1) < (unsigned) s_end )
             {
-                *i3 = (char) (nbd | -128);
+                *i3 = (schar) (nbd | -128);
             }
             else if( *i3 == 1 )
             {
@@ -601,7 +601,7 @@ icvFetchContour( char                   *ptr,
 
             if( method < 0 )
             {
-                char _s = (char) s;
+                schar _s = (schar) s;
 
                 CV_WRITE_SEQ_ELEM( _s, writer );
             }
@@ -641,15 +641,15 @@ icvFetchContour( char                   *ptr,
 
 
 
-/* 
+/*
    trace contour until certain point is met.
    returns 1 if met, 0 else.
 */
 static int
-icvTraceContour( char *ptr, int step, char *stop_ptr, int is_hole )
+icvTraceContour( schar *ptr, int step, schar *stop_ptr, int is_hole )
 {
     int deltas[16];
-    char *i0 = ptr, *i1, *i3, *i4;
+    schar *i0 = ptr, *i1, *i3, *i4;
     int s, s_end;
 
     /* initialize local state */
@@ -698,17 +698,17 @@ icvTraceContour( char *ptr, int step, char *stop_ptr, int is_hole )
 
 
 static CvStatus
-icvFetchContourEx( char*                ptr, 
+icvFetchContourEx( schar*               ptr,
                    int                  step,
-                   CvPoint              pt, 
+                   CvPoint              pt,
                    CvSeq*               contour,
-                   int  _method, 
+                   int  _method,
                    int                  nbd,
                    CvRect*              _rect )
 {
     int         deltas[16];
     CvSeqWriter writer;
-    char        *i0 = ptr, *i1, *i3, *i4;
+    schar        *i0 = ptr, *i1, *i3, *i4;
     CvRect      rect;
     int         prev_s = -1, s, s_end;
     int         method = _method - 1;
@@ -742,7 +742,7 @@ icvFetchContourEx( char*                ptr,
 
     if( s == s_end )            /* single pixel domain */
     {
-        *i0 = (char) (nbd | 0x80);
+        *i0 = (schar) (nbd | 0x80);
         if( method >= 0 )
         {
             CV_WRITE_SEQ_ELEM( pt, writer );
@@ -770,16 +770,16 @@ icvFetchContourEx( char*                ptr,
             /* check "right" bound */
             if( (unsigned) (s - 1) < (unsigned) s_end )
             {
-                *i3 = (char) (nbd | 0x80);
+                *i3 = (schar) (nbd | 0x80);
             }
             else if( *i3 == 1 )
             {
-                *i3 = (char) nbd;
+                *i3 = (schar) nbd;
             }
 
             if( method < 0 )
             {
-                char _s = (char) s;
+                schar _s = (schar) s;
                 CV_WRITE_SEQ_ELEM( _s, writer );
             }
             else if( s != prev_s || method == 0 )
@@ -834,8 +834,8 @@ icvFetchContourEx( char*                ptr,
 CvSeq *
 cvFindNextContour( CvContourScanner scanner )
 {
-    char *img0;
-    char *img;
+    schar *img0;
+    schar *img;
     int step;
     int width, height;
     int x, y;
@@ -1041,7 +1041,7 @@ cvFindNextContour( CvContourScanner scanner )
                 scanner->pt.x = x + 1;
                 scanner->pt.y = y;
                 scanner->lnbd = lnbd;
-                scanner->img = (char *) img;
+                scanner->img = (schar *) img;
                 scanner->nbd = nbd;
                 contour = l_cinfo->contour;
 
@@ -1077,8 +1077,8 @@ cvFindNextContour( CvContourScanner scanner )
 }
 
 
-/* 
-   The function add to tree the last retrieved/substituted contour, 
+/*
+   The function add to tree the last retrieved/substituted contour,
    releases temp_storage, restores state of dst_storage (if needed), and
    returns pointer to root of the contour tree */
 CV_IMPL CvSeq *
@@ -1211,13 +1211,13 @@ icvFindContoursInInterval( const CvArr* src,
     tmp_prev = &(tmp);
     tmp_prev->next = 0;
     tmp_prev->link = 0;
-    
+
     // First line. None of runs is binded
     tmp.pt.y = 0;
     i = 0;
     CV_WRITE_SEQ_ELEM( tmp, writer );
     upper_line = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
-    
+
     tmp_prev = upper_line;
     for( j = 0; j < img_size.width; )
     {
@@ -1247,7 +1247,7 @@ icvFindContoursInInterval( const CvArr* src,
     upper_total = runs->total - 1;
     last_elem = tmp_prev;
     tmp_prev->next = 0;
-    
+
     for( i = 1; i < img_size.height; i++ )
     {
 //------// Find runs in next line
@@ -1373,7 +1373,7 @@ icvFindContoursInInterval( const CvArr* src,
                         upper_run = upper_run->next->next;
                     }
                 }
-                break;          
+                break;
             }
         }// k, n
 
@@ -1507,15 +1507,15 @@ icvFindContoursInInterval( const CvArr* src,
 //    Notes:
 //F*/
 CV_IMPL int
-cvFindContours( void*  img,  CvMemStorage*  storage,                
-                CvSeq**  firstContour, int  cntHeaderSize,                 
-                int  mode, 
+cvFindContours( void*  img,  CvMemStorage*  storage,
+                CvSeq**  firstContour, int  cntHeaderSize,
+                int  mode,
                 int  method, CvPoint offset )
 {
     CvContourScanner scanner = 0;
     CvSeq *contour = 0;
     int count = -1;
-    
+
     CV_FUNCNAME( "cvFindContours" );
 
     __BEGIN__;
@@ -1545,7 +1545,7 @@ cvFindContours( void*  img,  CvMemStorage*  storage,
         }
         while( contour != 0 );
 
-        *firstContour = cvEndFindContours( &scanner );    
+        *firstContour = cvEndFindContours( &scanner );
     }
 
     __END__;

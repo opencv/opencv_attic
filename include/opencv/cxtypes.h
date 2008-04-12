@@ -1186,7 +1186,7 @@ typedef struct CvSeqBlock
     int    start_index;       /* index of the first element in the block +
                                  sequence->first->start_index */
     int    count;             /* number of elements in the block */
-    char*  data;              /* pointer to the first element of the block */
+    schar* data;              /* pointer to the first element of the block */
 }
 CvSeqBlock;
 
@@ -1207,8 +1207,8 @@ CvSeqBlock;
     CV_TREE_NODE_FIELDS(CvSeq);                                         \
     int       total;          /* total number of elements */            \
     int       elem_size;      /* size of sequence element in bytes */   \
-    char*     block_max;      /* maximal bound of the last block */     \
-    char*     ptr;            /* current write pointer */               \
+    schar*    block_max;      /* maximal bound of the last block */     \
+    schar*    ptr;            /* current write pointer */               \
     int       delta_elems;    /* how many elements allocated when the seq grows */  \
     CvMemStorage* storage;    /* where the seq is stored */             \
     CvSeqBlock* free_blocks;  /* free blocks list */                    \
@@ -1477,9 +1477,9 @@ typedef CvContour CvPoint2DSeq;
     int          header_size;                                      \
     CvSeq*       seq;        /* the sequence written */            \
     CvSeqBlock*  block;      /* current block */                   \
-    char*        ptr;        /* pointer to free space */           \
-    char*        block_min;  /* pointer to the beginning of block*/\
-    char*        block_max;  /* pointer to the end of block */
+    schar*       ptr;        /* pointer to free space */           \
+    schar*       block_min;  /* pointer to the beginning of block*/\
+    schar*       block_max;  /* pointer to the end of block */
 
 typedef struct CvSeqWriter
 {
@@ -1492,11 +1492,11 @@ CvSeqWriter;
     int          header_size;                                       \
     CvSeq*       seq;        /* sequence, beign read */             \
     CvSeqBlock*  block;      /* current block */                    \
-    char*        ptr;        /* pointer to element be read next */  \
-    char*        block_min;  /* pointer to the beginning of block */\
-    char*        block_max;  /* pointer to the end of block */      \
+    schar*       ptr;        /* pointer to element be read next */  \
+    schar*       block_min;  /* pointer to the beginning of block */\
+    schar*       block_max;  /* pointer to the end of block */      \
     int          delta_index;/* = seq->first->start_index   */      \
-    char*        prev_elem;  /* pointer to previous element */
+    schar*       prev_elem;  /* pointer to previous element */
 
 
 typedef struct CvSeqReader

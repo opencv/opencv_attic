@@ -41,7 +41,7 @@
 #include "_cxcore.h"
 
 #define ICV_FREE_PTR(storage)  \
-    ((char*)(storage)->top + (storage)->block_size - (storage)->free_space)
+    ((schar*)(storage)->top + (storage)->block_size - (storage)->free_space)
 
 #define ICV_ALIGNED_SEQ_BLOCK_SIZE  \
     (int)cvAlign(sizeof(CvSeqBlock), CV_STRUCT_ALIGN)
@@ -384,7 +384,7 @@ cvRestoreMemStoragePos( CvMemStorage * storage, CvMemStoragePos * pos )
 CV_IMPL void*
 cvMemStorageAlloc( CvMemStorage* storage, size_t size )
 {
-    char *ptr = 0;
+    schar *ptr = 0;
 
     CV_FUNCNAME( "cvMemStorageAlloc" );
 
@@ -523,7 +523,7 @@ cvSetSeqBlockSize( CvSeq *seq, int delta_elements )
 
 
 /* finds sequence element by its index */
-CV_IMPL char*
+CV_IMPL schar*
 cvGetSeqElem( const CvSeq *seq, int index )
 {
     CvSeqBlock *block;
@@ -565,7 +565,7 @@ cvGetSeqElem( const CvSeq *seq, int index )
 CV_IMPL int
 cvSeqElemIdx( const CvSeq* seq, const void* _element, CvSeqBlock** _block )
 {
-    const char *element = (const char *)_element;
+    const schar *element = (const schar *)_element;
     int elem_size;
     int id = -1;
     CvSeqBlock *first_block;
@@ -713,7 +713,7 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
     }
     seq->elem_size = elem_size;
     seq->total = total;
-    seq->block_max = seq->ptr = (char *) array + total * elem_size;
+    seq->block_max = seq->ptr = (schar *) array + total * elem_size;
 
     if( total > 0 )
     {
@@ -721,7 +721,7 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
         block->prev = block->next = block;
         block->start_index = 0;
         block->count = total;
-        block->data = (char *) array;
+        block->data = (schar *) array;
     }
 
     result = seq;
@@ -770,7 +770,7 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
 
             delta = MIN( delta, delta_elems ) * elem_size;
             seq->block_max += delta;
-            storage->free_space = cvAlignLeft((int)(((char*)storage->top + storage->block_size) -
+            storage->free_space = cvAlignLeft((int)(((schar*)storage->top + storage->block_size) -
                                               seq->block_max), CV_STRUCT_ALIGN );
             EXIT;
         }
@@ -797,7 +797,7 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
             }
 
             CV_CALL( block = (CvSeqBlock*)cvMemStorageAlloc( storage, delta ));
-            block->data = (char*)cvAlignPtr( block + 1, CV_STRUCT_ALIGN );
+            block->data = (schar*)cvAlignPtr( block + 1, CV_STRUCT_ALIGN );
             block->count = delta - ICV_ALIGNED_SEQ_BLOCK_SIZE;
             block->prev = block->next = 0;
         }
@@ -1031,7 +1031,7 @@ cvEndWriteSeq( CvSeqWriter * writer )
     if( writer->block && writer->seq->storage )
     {
         CvMemStorage *storage = seq->storage;
-        char *storage_block_max = (char *) storage->top + storage->block_size;
+        schar *storage_block_max = (schar *) storage->top + storage->block_size;
 
         assert( writer->block->count > 0 );
 
@@ -1117,7 +1117,7 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
 
         if( reverse )
         {
-            char *temp = reader->ptr;
+            schar *temp = reader->ptr;
 
             reader->ptr = reader->prev_elem;
             reader->prev_elem = temp;
@@ -1268,7 +1268,7 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
     }
     else
     {
-        char* ptr = reader->ptr;
+        schar* ptr = reader->ptr;
         index *= elem_size;
         block = reader->block;
 
@@ -1303,10 +1303,10 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
 
 
 /* pushes element to the sequence */
-CV_IMPL char*
+CV_IMPL schar*
 cvSeqPush( CvSeq *seq, void *element )
 {
-    char *ptr = 0;
+    schar *ptr = 0;
     size_t elem_size;
 
     CV_FUNCNAME( "cvSeqPush" );
@@ -1343,7 +1343,7 @@ cvSeqPush( CvSeq *seq, void *element )
 CV_IMPL void
 cvSeqPop( CvSeq *seq, void *element )
 {
-    char *ptr;
+    schar *ptr;
     int elem_size;
 
     CV_FUNCNAME( "cvSeqPop" );
@@ -1374,10 +1374,10 @@ cvSeqPop( CvSeq *seq, void *element )
 
 
 /* pushes element to the front of the sequence */
-CV_IMPL char*
+CV_IMPL schar*
 cvSeqPushFront( CvSeq *seq, void *element )
 {
-    char* ptr = 0;
+    schar* ptr = 0;
     int elem_size;
     CvSeqBlock *block;
 
@@ -1447,7 +1447,7 @@ cvSeqPopFront( CvSeq *seq, void *element )
 }
 
 /* inserts new element in the middle of the sequence */
-CV_IMPL char*
+CV_IMPL schar*
 cvSeqInsert( CvSeq *seq, int before_index, void *element )
 {
     int elem_size;
@@ -1455,7 +1455,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
     CvSeqBlock *block;
     int delta_index;
     int total;
-    char* ret_ptr = 0;
+    schar* ret_ptr = 0;
 
     CV_FUNCNAME( "cvSeqInsert" );
 
@@ -1485,7 +1485,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
 
         if( before_index >= total >> 1 )
         {
-            char *ptr = seq->ptr + elem_size;
+            schar *ptr = seq->ptr + elem_size;
 
             if( ptr > seq->block_max )
             {
@@ -1573,7 +1573,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
 CV_IMPL void
 cvSeqRemove( CvSeq *seq, int index )
 {
-    char *ptr;
+    schar *ptr;
     int elem_size;
     int block_size;
     CvSeqBlock *block;
@@ -2120,9 +2120,9 @@ cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr )
 typedef struct CvSeqReaderPos
 {
     CvSeqBlock* block;
-    char* ptr;
-    char* block_min;
-    char* block_max;
+    schar* ptr;
+    schar* block_min;
+    schar* block_max;
 }
 CvSeqReaderPos;
 
@@ -2142,8 +2142,8 @@ CvSeqReaderPos;
     (reader).block_max = (pos).block_max;   \
 }
 
-inline char*
-icvMed3( char* a, char* b, char* c, CvCmpFunc cmp_func, void* aux )
+inline schar*
+icvMed3( schar* a, schar* b, schar* c, CvCmpFunc cmp_func, void* aux )
 {
     return cmp_func(a, b, aux) < 0 ?
       (cmp_func(b, c, aux) < 0 ? b : cmp_func(a, c, aux) < 0 ? c : a)
@@ -2223,7 +2223,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
                     }
                     while( ptr2.ptr != left.ptr )
                     {
-                        char* cur = ptr2.ptr;
+                        schar* cur = ptr2.ptr;
                         CV_PREV_SEQ_ELEM( elem_size, ptr2 );
                         if( cmp_func( ptr2.ptr, cur, aux ) <= 0 )
                             break;
@@ -2237,7 +2237,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
             {
                 CvSeqReader left0, left1, right0, right1;
                 CvSeqReader tmp0, tmp1;
-                char *m1, *m2, *m3, *pivot;
+                schar *m1, *m2, *m3, *pivot;
                 int swap_cnt = 0;
                 int l, l0, l1, r, r0, r1;
 
@@ -2248,7 +2248,7 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
                 if( n > 40 )
                 {
                     int d = n / 8;
-                    char *p1, *p2, *p3;
+                    schar *p1, *p2, *p3;
                     p1 = tmp0.ptr;
                     cvSetSeqReaderPos( &tmp0, d, 1 );
                     p2 = tmp0.ptr;
@@ -2436,12 +2436,12 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
 }
 
 
-CV_IMPL char*
+CV_IMPL schar*
 cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
              int is_sorted, int* _idx, void* userdata )
 {
-    char* result = 0;
-    const char* elem = (const char*)_elem;
+    schar* result = 0;
+    const schar* elem = (const schar*)_elem;
     int idx = -1;
 
     CV_FUNCNAME("cvSeqSearch");
@@ -2519,7 +2519,7 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
         while( j > i )
         {
             int k = (i+j)>>1, code;
-            char* ptr = cvGetSeqElem( seq, k );
+            schar* ptr = cvGetSeqElem( seq, k );
             code = cmp_func( elem, ptr, userdata );
             if( !code )
             {
@@ -2574,7 +2574,7 @@ cvSeqInvert( CvSeq* seq )
 typedef struct CvPTreeNode
 {
     struct CvPTreeNode* parent;
-    char* element;
+    schar* element;
     int rank;
 }
 CvPTreeNode;
@@ -2791,7 +2791,7 @@ cvSetAdd( CvSet* set, CvSetElem* element, CvSetElem** inserted_element )
     {
         int count = set->total;
         int elem_size = set->elem_size;
-        char *ptr;
+        schar *ptr;
         CV_CALL( icvGrowSeq( (CvSeq *) set, 0 ));
 
         set->free_elems = (CvSetElem*) (ptr = set->ptr);
@@ -3371,11 +3371,11 @@ icvSeqElemsClearFlags( CvSeq* seq, int offset, int clear_mask )
 }
 
 
-static  char*
+static  schar*
 icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
                     int value, int* start_index )
 {
-    char* elem_ptr = 0;
+    schar* elem_ptr = 0;
 
     CV_FUNCNAME("icvStartScanGraph");
 

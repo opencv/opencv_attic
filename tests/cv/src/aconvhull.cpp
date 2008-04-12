@@ -271,7 +271,7 @@ void CV_BaseShapeDescrTest::generate_point_set( void* points )
     CvSeqReader reader;
     uchar* data = 0;
     double a[4], b[4];
-    
+
     for( k = 0; k < 4; k++ )
     {
         a[k] = high.val[k] - low.val[k];
@@ -547,7 +547,7 @@ int CV_ConvHullTest::validate_test_results( int test_case_idx )
 
         for( i = 0; i < hull_count; i++ )
         {
-            char* ptr = reader.ptr;
+            schar* ptr = reader.ptr;
             int idx;
             CV_NEXT_SEQ_ELEM( hseq->elem_size, reader );
 
@@ -910,7 +910,7 @@ int CV_PerimeterTest::validate_test_results( int test_case_idx )
 
     len = MIN( len, total );
     len -= !is_closed && len == total;
-    
+
     ptr = (CvPoint2D32f*)points2->data.fl;
     prev_pt = ptr[slice.start_index % total];
 
@@ -1375,12 +1375,12 @@ cvTsGenerateTousledBlob( CvPoint2D32f center, CvSize2D32f axes,
     }
 
     assert( point_type == CV_32SC2 || point_type == CV_32FC2 );
-    
+
     for( i = 0; i < total; i++ )
     {
         CvPoint* pp;
         CvPoint2D32f p;
-        
+
         double phi0 = 2*CV_PI*i/total;
         double phi = CV_PI*angle/180.;
         double t = cvTsRandReal(rng)*max_r_scale + (1 - max_r_scale);
@@ -1398,7 +1398,7 @@ cvTsGenerateTousledBlob( CvPoint2D32f center, CvSize2D32f axes,
         }
         else
             pp = ((CvPoint*)data) + i;
-        
+
         if( point_type == CV_32SC2 )
         {
             pp->x = cvRound(p.x);

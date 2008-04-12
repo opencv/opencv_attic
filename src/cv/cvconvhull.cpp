@@ -202,7 +202,7 @@ icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
     CV_FUNCNAME( "icvCalcAndWritePtIndices" );
 
     __BEGIN__;
-    
+
     int i, incr = start < end ? 1 : -1;
     int idx, first_idx = ptseq->first->start_index;
 
@@ -232,9 +232,9 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     CvPoint** pointer = 0;
     CvPoint2D32f** pointerf = 0;
     int* stack = 0;
-    
+
     CV_FUNCNAME( "cvConvexHull2" );
-    
+
     hull.s = 0;
 
     __BEGIN__;
@@ -497,7 +497,7 @@ finish_hull:
         hull.c->rect = cvBoundingRect( ptseq,
             ptseq->header_size < (int)sizeof(CvContour) ||
             &ptseq->flags == &contour_header.flags );
-        
+
         /*if( ptseq != (CvSeq*)&contour_header )
             hullseq->v_prev = ptseq;*/
     }
@@ -519,7 +519,7 @@ cvConvexityDefects( const CvArr* array,
                     CvMemStorage* storage )
 {
     CvSeq* defects = 0;
-    
+
     CV_FUNCNAME( "cvConvexityDefects" );
 
     __BEGIN__;
@@ -571,7 +571,7 @@ cvConvexityDefects( const CvArr* array,
     else
     {
         CvMat* mat = (CvMat*)hull;
-        
+
         if( !CV_IS_MAT( hull ))
             CV_ERROR(CV_StsBadArg, "Convex hull is neither sequence nor matrix");
 
@@ -582,7 +582,7 @@ cvConvexityDefects( const CvArr* array,
 
         if( mat->cols + mat->rows - 1 > ptseq->total )
             CV_ERROR( CV_StsBadSize, "Convex hull is larger than the point sequence" );
-        
+
         CV_CALL( hull = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
             sizeof(CvContour), CV_ELEM_SIZE(mat->type), mat->data.ptr,
@@ -669,7 +669,7 @@ cvConvexityDefects( const CvArr* array,
 
         dx0 = (double)hull_next->x - (double)hull_cur->x;
         dy0 = (double)hull_next->y - (double)hull_cur->y;
-        assert( dx0 != 0 || dy0 != 0 ); 
+        assert( dx0 != 0 || dy0 != 0 );
         scale = 1./sqrt(dx0*dx0 + dy0*dy0);
 
         defect.start = hull_cur;
@@ -680,12 +680,12 @@ cvConvexityDefects( const CvArr* array,
             /* go through ptseq to achieve next hull point */
             CV_NEXT_SEQ_ELEM( sizeof(CvPoint), ptseq_reader );
 
-            if( ptseq_reader.ptr == (char*)hull_next )
+            if( ptseq_reader.ptr == (schar*)hull_next )
                 break;
             else
             {
                 CvPoint* cur = (CvPoint*)ptseq_reader.ptr;
-            
+
                 /* compute distance from current point to hull edge */
                 double dx = (double)cur->x - (double)hull_cur->x;
                 double dy = (double)cur->y - (double)hull_cur->y;
@@ -758,14 +758,14 @@ cvCheckContourConvexity( const CvArr* array )
         EXIT;
 
     cvStartReadSeq( contour, &reader, 0 );
-    
+
     flag = 1;
 
     if( CV_SEQ_ELTYPE( contour ) == CV_32SC2 )
     {
         CvPoint *prev_pt = (CvPoint*)reader.prev_elem;
         CvPoint *cur_pt = (CvPoint*)reader.ptr;
-    
+
         int dx0 = cur_pt->x - prev_pt->x;
         int dy0 = cur_pt->y - prev_pt->y;
 
@@ -806,7 +806,7 @@ cvCheckContourConvexity( const CvArr* array )
 
         CvPoint2D32f *prev_pt = (CvPoint2D32f*)reader.prev_elem;
         CvPoint2D32f *cur_pt = (CvPoint2D32f*)reader.ptr;
-    
+
         float dx0 = cur_pt->x - prev_pt->x;
         float dy0 = cur_pt->y - prev_pt->y;
 
