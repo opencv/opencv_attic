@@ -80,7 +80,7 @@
 
 #define CV_COVAR_COLS     16
 
-#define CV_PCA_DATA_AS_ROW 0 
+#define CV_PCA_DATA_AS_ROW 0
 
 #define CV_PCA_DATA_AS_COL 1
 
@@ -192,7 +192,7 @@
 
 #define CV_FONT_HERSHEY_DUPLEX          2
 
-#define CV_FONT_HERSHEY_COMPLEX         3 
+#define CV_FONT_HERSHEY_COMPLEX         3
 
 #define CV_FONT_HERSHEY_TRIPLEX         4
 
@@ -202,7 +202,7 @@
 
 #define CV_FONT_HERSHEY_SCRIPT_COMPLEX  7
 
-#define CV_FONT_ITALIC                 16  
+#define CV_FONT_ITALIC                 16
 
 #define CV_FONT_VECTOR0    CV_FONT_HERSHEY_SIMPLEX
 

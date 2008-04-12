@@ -3916,7 +3916,7 @@ meet the memory storage constraints.
 <hr><h3><a name="decl_cvSeqPush">SeqPush</a></h3>
 <p class="Blurb">Adds element to sequence end</p>
 <pre>
-char* cvSeqPush( CvSeq* seq, void* element=NULL );
+schar* cvSeqPush( CvSeq* seq, void* element=NULL );
 </pre><p><dl>
 <dt>seq<dd>Sequence.
 <dt>element<dd>Added element.
@@ -3963,7 +3963,7 @@ an error if the sequence is already empty. The function has O(1) complexity. </p
 <hr><h3><a name="decl_cvSeqPushFront">SeqPushFront</a></h3>
 <p class="Blurb">Adds element to sequence beginning</p>
 <pre>
-char* cvSeqPushFront( CvSeq* seq, void* element=NULL );
+schar* cvSeqPushFront( CvSeq* seq, void* element=NULL );
 </pre><p><dl>
 <dt>seq<dd>Sequence.
 <dt>element<dd>Added element.
@@ -4023,7 +4023,7 @@ in the sequence, the function removes as many elements as possible.</p>
 <hr><h3><a name="decl_cvSeqInsert">SeqInsert</a></h3>
 <p class="Blurb">Inserts element in sequence middle</p>
 <pre>
-char* cvSeqInsert( CvSeq* seq, int before_index, void* element=NULL );
+schar* cvSeqInsert( CvSeq* seq, int before_index, void* element=NULL );
 </pre><p><dl>
 <dt>seq<dd>Sequence.
 <dt>before_index<dd>Index before which the element is inserted. Inserting before 0 (the minimal allowed value
@@ -5131,7 +5131,7 @@ All the functions include parameter color that means rgb value (that may be
 constructed with <code>CV_RGB</code> macro or <code>cvScalar</code> function)
 for color images and brightness for grayscale images.</p><p>
 If a drawn figure is partially or completely outside the image, it is clipped.
-For color images the order channel is: <font color=blue>B</font>lue <font color=green>G</font>reen <font color=red>R</font>ed ... 
+For color images the order channel is: <font color=blue>B</font>lue <font color=green>G</font>reen <font color=red>R</font>ed ...
 If one needs a different channel order, it is possible to construct color
 via <code>cvScalar</code> with the particular channel order, or
 convert the image before and/or after drawing in it with
@@ -6620,7 +6620,7 @@ void main( int argc, char** argv )
     CvScalar color_tab[MAX_CLUSTERS];
     IplImage* img = cvCreateImage( cvSize( 500, 500 ), 8, 3 );
     CvRNG rng = cvRNG(0xffffffff);
-    
+
     color_tab[0] = CV_RGB(255,0,0);
     color_tab[1] = CV_RGB(0,255,0);
     color_tab[2] = CV_RGB(100,100,255);

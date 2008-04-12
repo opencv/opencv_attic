@@ -4668,11 +4668,11 @@ def cvSetSeqBlockSize(*args):
   return _cv.cvSetSeqBlockSize(*args)
 
 def cvSeqPush(*args):
-  """cvSeqPush(CvSeq seq, void element=None) -> char"""
+  """cvSeqPush(CvSeq seq, void element=None) -> schar"""
   return _cv.cvSeqPush(*args)
 
 def cvSeqPushFront(*args):
-  """cvSeqPushFront(CvSeq seq, void element=None) -> char"""
+  """cvSeqPushFront(CvSeq seq, void element=None) -> schar"""
   return _cv.cvSeqPushFront(*args)
 
 def cvSeqPop(*args):
@@ -4692,7 +4692,7 @@ def cvSeqPopMulti(*args):
   return _cv.cvSeqPopMulti(*args)
 
 def cvSeqInsert(*args):
-  """cvSeqInsert(CvSeq seq, int before_index, void element=None) -> char"""
+  """cvSeqInsert(CvSeq seq, int before_index, void element=None) -> schar"""
   return _cv.cvSeqInsert(*args)
 
 def cvSeqRemove(*args):
@@ -4704,7 +4704,7 @@ def cvClearSeq(*args):
   return _cv.cvClearSeq(*args)
 
 def cvGetSeqElem(*args):
-  """cvGetSeqElem(CvSeq seq, int index) -> char"""
+  """cvGetSeqElem(CvSeq seq, int index) -> schar"""
   return _cv.cvGetSeqElem(*args)
 
 def cvSeqElemIdx(*args):
@@ -4775,7 +4775,7 @@ def cvSeqSort(*args):
 def cvSeqSearch(*args):
   """
     cvSeqSearch(CvSeq seq, void elem, CvCmpFunc func, int is_sorted, 
-        int elem_idx, void userdata=None) -> char
+        int elem_idx, void userdata=None) -> schar
     """
   return _cv.cvSeqSearch(*args)
 
@@ -7285,6 +7285,22 @@ def cvRodrigues2(*args):
 def cvFindHomography(*args):
   """cvFindHomography(CvMat src_points, CvMat dst_points, CvMat homography)"""
   return _cv.cvFindHomography(*args)
+
+def cvRQDecomp3x3(*args):
+  """
+    cvRQDecomp3x3(CvMat matrixM, CvMat matrixR, CvMat matrixQ, CvMat matrixQx=None, 
+        CvMat matrixQy=None, CvMat matrixQz=None, 
+        CvPoint3D64f eulerAngles=None)
+    """
+  return _cv.cvRQDecomp3x3(*args)
+
+def cvDecomposeProjectionMatrix(*args):
+  """
+    cvDecomposeProjectionMatrix(CvMat projMatr, CvMat calibMatr, CvMat rotMatr, CvMat posVect, 
+        CvMat rotMatrX=None, CvMat rotMatrY=None, 
+        CvMat rotMatrZ=None, CvPoint3D64f eulerAngles=None)
+    """
+  return _cv.cvDecomposeProjectionMatrix(*args)
 
 def cvProjectPoints2(*args):
   """

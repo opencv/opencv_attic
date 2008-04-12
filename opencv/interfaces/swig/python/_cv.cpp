@@ -2597,8 +2597,8 @@ static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
 #define SWIGTYPE_p__IplImage swig_types[104]
 #define SWIGTYPE_p__IplROI swig_types[105]
 #define SWIGTYPE_p__IplTileInfo swig_types[106]
-#define SWIGTYPE_p_a_2__char swig_types[107]
-#define SWIGTYPE_p_a_2__float swig_types[108]
+#define SWIGTYPE_p_a_2__float swig_types[107]
+#define SWIGTYPE_p_a_2__signed_char swig_types[108]
 #define SWIGTYPE_p_a_3__float swig_types[109]
 #define SWIGTYPE_p_allocator_type swig_types[110]
 #define SWIGTYPE_p_char swig_types[111]
@@ -35425,12 +35425,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqBlock_data_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqBlock *arg1 = (CvSeqBlock *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -35440,23 +35439,16 @@ SWIGINTERN PyObject *_wrap_CvSeqBlock_data_set(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqBlock_data_set" "', argument " "1"" of type '" "CvSeqBlock *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqBlock * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqBlock_data_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqBlock_data_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->data) delete[] arg1->data;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->data = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->data = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->data = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -35464,7 +35456,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqBlock_data_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqBlock *arg1 = (CvSeqBlock *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -35475,8 +35467,8 @@ SWIGINTERN PyObject *_wrap_CvSeqBlock_data_get(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqBlock_data_get" "', argument " "1"" of type '" "CvSeqBlock *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqBlock * >(argp1);
-  result = (char *) ((arg1)->data);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->data);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -36127,11 +36119,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeq_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -36150,23 +36141,16 @@ SWIGINTERN PyObject *_wrap_CvSeq_block_max_set(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (CvSeq *) ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -36174,7 +36158,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeq_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -36193,8 +36177,8 @@ SWIGINTERN PyObject *_wrap_CvSeq_block_max_get(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (CvSeq *) ptr1;
   }
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -36204,11 +36188,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeq_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -36227,23 +36210,16 @@ SWIGINTERN PyObject *_wrap_CvSeq_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
     arg1 = (CvSeq *) ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeq_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -36251,7 +36227,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeq_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -36270,8 +36246,8 @@ SWIGINTERN PyObject *_wrap_CvSeq_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
     arg1 = (CvSeq *) ptr1;
   }
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -37305,11 +37281,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSet_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSet *arg1 = (CvSet *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -37324,23 +37299,16 @@ SWIGINTERN PyObject *_wrap_CvSet_block_max_set(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (CvSet *)ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSet_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSet_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -37348,7 +37316,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSet_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSet *arg1 = (CvSet *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -37363,8 +37331,8 @@ SWIGINTERN PyObject *_wrap_CvSet_block_max_get(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (CvSet *)ptr1;
   }
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -37374,11 +37342,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSet_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSet *arg1 = (CvSet *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -37393,23 +37360,16 @@ SWIGINTERN PyObject *_wrap_CvSet_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
     arg1 = (CvSet *)ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSet_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSet_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -37417,7 +37377,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSet_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSet *arg1 = (CvSet *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -37432,8 +37392,8 @@ SWIGINTERN PyObject *_wrap_CvSet_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
     arg1 = (CvSet *)ptr1;
   }
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -39034,11 +38994,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvGraph_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvGraph *arg1 = (CvGraph *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -39052,23 +39011,16 @@ SWIGINTERN PyObject *_wrap_CvGraph_block_max_set(PyObject *SWIGUNUSEDPARM(self),
     }
     arg1 = (CvGraph *)ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvGraph_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvGraph_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -39076,7 +39028,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvGraph_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvGraph *arg1 = (CvGraph *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -39090,8 +39042,8 @@ SWIGINTERN PyObject *_wrap_CvGraph_block_max_get(PyObject *SWIGUNUSEDPARM(self),
     }
     arg1 = (CvGraph *)ptr1;
   }
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -39101,11 +39053,10 @@ fail:
 SWIGINTERN PyObject *_wrap_CvGraph_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvGraph *arg1 = (CvGraph *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *ptr1 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -39119,23 +39070,16 @@ SWIGINTERN PyObject *_wrap_CvGraph_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObj
     }
     arg1 = (CvGraph *)ptr1;
   }
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvGraph_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvGraph_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -39143,7 +39087,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvGraph_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvGraph *arg1 = (CvGraph *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   PyObject * obj0 = 0 ;
   
@@ -39157,8 +39101,8 @@ SWIGINTERN PyObject *_wrap_CvGraph_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObj
     }
     arg1 = (CvGraph *)ptr1;
   }
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -40101,12 +40045,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChain_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChain *arg1 = (CvChain *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -40116,23 +40059,16 @@ SWIGINTERN PyObject *_wrap_CvChain_block_max_set(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChain_block_max_set" "', argument " "1"" of type '" "CvChain *""'"); 
   }
   arg1 = reinterpret_cast< CvChain * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChain_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChain_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -40140,7 +40076,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChain_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChain *arg1 = (CvChain *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -40151,8 +40087,8 @@ SWIGINTERN PyObject *_wrap_CvChain_block_max_get(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChain_block_max_get" "', argument " "1"" of type '" "CvChain *""'"); 
   }
   arg1 = reinterpret_cast< CvChain * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -40162,12 +40098,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChain_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChain *arg1 = (CvChain *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -40177,23 +40112,16 @@ SWIGINTERN PyObject *_wrap_CvChain_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObj
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChain_ptr_set" "', argument " "1"" of type '" "CvChain *""'"); 
   }
   arg1 = reinterpret_cast< CvChain * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChain_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChain_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -40201,7 +40129,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChain_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChain *arg1 = (CvChain *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -40212,8 +40140,8 @@ SWIGINTERN PyObject *_wrap_CvChain_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObj
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChain_ptr_get" "', argument " "1"" of type '" "CvChain *""'"); 
   }
   arg1 = reinterpret_cast< CvChain * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -41001,12 +40929,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContour_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContour *arg1 = (CvContour *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -41016,23 +40943,16 @@ SWIGINTERN PyObject *_wrap_CvContour_block_max_set(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContour_block_max_set" "', argument " "1"" of type '" "CvContour *""'"); 
   }
   arg1 = reinterpret_cast< CvContour * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContour_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContour_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -41040,7 +40960,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContour_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContour *arg1 = (CvContour *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -41051,8 +40971,8 @@ SWIGINTERN PyObject *_wrap_CvContour_block_max_get(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContour_block_max_get" "', argument " "1"" of type '" "CvContour *""'"); 
   }
   arg1 = reinterpret_cast< CvContour * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -41062,12 +40982,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContour_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContour *arg1 = (CvContour *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -41077,23 +40996,16 @@ SWIGINTERN PyObject *_wrap_CvContour_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyO
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContour_ptr_set" "', argument " "1"" of type '" "CvContour *""'"); 
   }
   arg1 = reinterpret_cast< CvContour * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContour_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContour_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -41101,7 +41013,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContour_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContour *arg1 = (CvContour *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -41112,8 +41024,8 @@ SWIGINTERN PyObject *_wrap_CvContour_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyO
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContour_ptr_get" "', argument " "1"" of type '" "CvContour *""'"); 
   }
   arg1 = reinterpret_cast< CvContour * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -41724,12 +41636,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -41739,23 +41650,16 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_ptr_set(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_ptr_set" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -41763,7 +41667,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -41774,8 +41678,8 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_ptr_get(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_ptr_get" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -41785,12 +41689,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_block_min_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -41800,23 +41703,16 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_block_min_set(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_block_min_set" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_block_min_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_block_min_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_min) delete[] arg1->block_min;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_min = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_min = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_min = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -41824,7 +41720,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_block_min_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -41835,8 +41731,8 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_block_min_get(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_block_min_get" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  result = (char *) ((arg1)->block_min);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_min);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -41846,12 +41742,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -41861,23 +41756,16 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_block_max_set(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_block_max_set" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqWriter_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -41885,7 +41773,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqWriter_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqWriter *arg1 = (CvSeqWriter *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -41896,8 +41784,8 @@ SWIGINTERN PyObject *_wrap_CvSeqWriter_block_max_get(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqWriter_block_max_get" "', argument " "1"" of type '" "CvSeqWriter *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqWriter * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -42131,12 +42019,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -42146,23 +42033,16 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_ptr_set(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_ptr_set" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -42170,7 +42050,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -42181,8 +42061,8 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_ptr_get(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_ptr_get" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -42192,12 +42072,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_block_min_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -42207,23 +42086,16 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_block_min_set(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_block_min_set" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_block_min_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_block_min_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_min) delete[] arg1->block_min;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_min = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_min = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_min = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -42231,7 +42103,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_block_min_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -42242,8 +42114,8 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_block_min_get(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_block_min_get" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  result = (char *) ((arg1)->block_min);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_min);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -42253,12 +42125,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -42268,23 +42139,16 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_block_max_set(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_block_max_set" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -42292,7 +42156,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -42303,8 +42167,8 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_block_max_get(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_block_max_get" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -42367,12 +42231,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_prev_elem_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -42382,23 +42245,16 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_prev_elem_set(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_prev_elem_set" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_prev_elem_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSeqReader_prev_elem_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->prev_elem) delete[] arg1->prev_elem;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->prev_elem = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->prev_elem = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->prev_elem = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -42406,7 +42262,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSeqReader_prev_elem_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSeqReader *arg1 = (CvSeqReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -42417,8 +42273,8 @@ SWIGINTERN PyObject *_wrap_CvSeqReader_prev_elem_get(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeqReader_prev_elem_get" "', argument " "1"" of type '" "CvSeqReader *""'"); 
   }
   arg1 = reinterpret_cast< CvSeqReader * >(argp1);
-  result = (char *) ((arg1)->prev_elem);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->prev_elem);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -55074,7 +54930,7 @@ SWIGINTERN PyObject *_wrap_cvSeqPush(PyObject *SWIGUNUSEDPARM(self), PyObject *a
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
   void *arg2 = (void *) NULL ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   int res2 ;
   PyObject * obj0 = 0 ;
@@ -55103,14 +54959,14 @@ SWIGINTERN PyObject *_wrap_cvSeqPush(PyObject *SWIGUNUSEDPARM(self), PyObject *a
   }
   {
     try {
-      result = (char *)cvSeqPush(arg1,arg2); 
+      result = (schar *)cvSeqPush(arg1,arg2); 
     } 
     catch (...) 
     {
       SWIG_fail;
     } 
   }
-  resultobj = SWIG_FromCharPtr(result);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -55121,7 +54977,7 @@ SWIGINTERN PyObject *_wrap_cvSeqPushFront(PyObject *SWIGUNUSEDPARM(self), PyObje
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
   void *arg2 = (void *) NULL ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   int res2 ;
   PyObject * obj0 = 0 ;
@@ -55150,14 +55006,14 @@ SWIGINTERN PyObject *_wrap_cvSeqPushFront(PyObject *SWIGUNUSEDPARM(self), PyObje
   }
   {
     try {
-      result = (char *)cvSeqPushFront(arg1,arg2); 
+      result = (schar *)cvSeqPushFront(arg1,arg2); 
     } 
     catch (...) 
     {
       SWIG_fail;
     } 
   }
-  resultobj = SWIG_FromCharPtr(result);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -55389,7 +55245,7 @@ SWIGINTERN PyObject *_wrap_cvSeqInsert(PyObject *SWIGUNUSEDPARM(self), PyObject 
   CvSeq *arg1 = (CvSeq *) 0 ;
   int arg2 ;
   void *arg3 = (void *) NULL ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   int val2 ;
   int ecode2 = 0 ;
@@ -55426,14 +55282,14 @@ SWIGINTERN PyObject *_wrap_cvSeqInsert(PyObject *SWIGUNUSEDPARM(self), PyObject 
   }
   {
     try {
-      result = (char *)cvSeqInsert(arg1,arg2,arg3); 
+      result = (schar *)cvSeqInsert(arg1,arg2,arg3); 
     } 
     catch (...) 
     {
       SWIG_fail;
     } 
   }
-  resultobj = SWIG_FromCharPtr(result);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -55527,7 +55383,7 @@ SWIGINTERN PyObject *_wrap_cvGetSeqElem(PyObject *SWIGUNUSEDPARM(self), PyObject
   PyObject *resultobj = 0;
   CvSeq *arg1 = (CvSeq *) 0 ;
   int arg2 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   int val2 ;
   int ecode2 = 0 ;
@@ -55556,14 +55412,14 @@ SWIGINTERN PyObject *_wrap_cvGetSeqElem(PyObject *SWIGUNUSEDPARM(self), PyObject
   arg2 = static_cast< int >(val2);
   {
     try {
-      result = (char *)cvGetSeqElem((CvSeq const *)arg1,arg2); 
+      result = (schar *)cvGetSeqElem((CvSeq const *)arg1,arg2); 
     } 
     catch (...) 
     {
       SWIG_fail;
     } 
   }
-  resultobj = SWIG_FromCharPtr(result);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -56330,7 +56186,7 @@ SWIGINTERN PyObject *_wrap_cvSeqSearch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   int arg4 ;
   int *arg5 = (int *) 0 ;
   void *arg6 = (void *) NULL ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *ptr1 ;
   int res2 ;
   int val4 ;
@@ -56388,14 +56244,14 @@ SWIGINTERN PyObject *_wrap_cvSeqSearch(PyObject *SWIGUNUSEDPARM(self), PyObject 
   }
   {
     try {
-      result = (char *)cvSeqSearch(arg1,(void const *)arg2,arg3,arg4,arg5,arg6); 
+      result = (schar *)cvSeqSearch(arg1,(void const *)arg2,arg3,arg4,arg5,arg6); 
     } 
     catch (...) 
     {
       SWIG_fail;
     } 
   }
-  resultobj = SWIG_FromCharPtr(result);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71004,12 +70860,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -71019,23 +70874,16 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_ptr_set(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_ptr_set" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -71043,7 +70891,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -71054,8 +70902,8 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_ptr_get(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_ptr_get" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71065,12 +70913,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_block_min_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -71080,23 +70927,16 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_block_min_set(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_block_min_set" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_block_min_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_block_min_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_min) delete[] arg1->block_min;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_min = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_min = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_min = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -71104,7 +70944,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_block_min_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -71115,8 +70955,8 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_block_min_get(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_block_min_get" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  result = (char *) ((arg1)->block_min);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_min);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71126,12 +70966,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -71141,23 +70980,16 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_block_max_set(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_block_max_set" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -71165,7 +70997,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -71176,8 +71008,8 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_block_max_get(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_block_max_get" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71240,12 +71072,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_prev_elem_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -71255,23 +71086,16 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_prev_elem_set(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_prev_elem_set" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_prev_elem_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_prev_elem_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->prev_elem) delete[] arg1->prev_elem;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->prev_elem = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->prev_elem = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->prev_elem = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -71279,7 +71103,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_prev_elem_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -71290,8 +71114,8 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_prev_elem_get(PyObject *SWIGUNUSEDPAR
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_prev_elem_get" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  result = (char *) ((arg1)->prev_elem);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->prev_elem);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71407,7 +71231,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_deltas_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char (*arg2)[2] ;
+  schar (*arg2)[2] ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -71421,11 +71245,11 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_deltas_set(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_deltas_set" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_a_2__char, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_a_2__signed_char, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_deltas_set" "', argument " "2"" of type '" "char [8][2]""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvChainPtReader_deltas_set" "', argument " "2"" of type '" "schar [8][2]""'"); 
   } 
-  arg2 = reinterpret_cast< char (*)[2] >(argp2);
+  arg2 = reinterpret_cast< schar (*)[2] >(argp2);
   {
     if (arg2) {
       size_t ii = 0;
@@ -71434,11 +71258,11 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_deltas_set(PyObject *SWIGUNUSEDPARM(s
           size_t jj = 0;
           for (; jj < (size_t)2; ++jj) arg1->deltas[ii][jj] = arg2[ii][jj];
         } else {
-          SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""deltas""' of type '""char [8][2]""'");
+          SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""deltas""' of type '""schar [8][2]""'");
         }
       }
     } else {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""deltas""' of type '""char [8][2]""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""deltas""' of type '""schar [8][2]""'");
     }
   }
   resultobj = SWIG_Py_Void();
@@ -71451,7 +71275,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvChainPtReader_deltas_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvChainPtReader *arg1 = (CvChainPtReader *) 0 ;
-  char (*result)[2] = 0 ;
+  schar (*result)[2] = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -71462,8 +71286,8 @@ SWIGINTERN PyObject *_wrap_CvChainPtReader_deltas_get(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvChainPtReader_deltas_get" "', argument " "1"" of type '" "CvChainPtReader *""'"); 
   }
   arg1 = reinterpret_cast< CvChainPtReader * >(argp1);
-  result = (char (*)[2])(char (*)[2]) ((arg1)->deltas);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_a_2__char, 0 |  0 );
+  result = (schar (*)[2])(schar (*)[2]) ((arg1)->deltas);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_a_2__signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -71986,12 +71810,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContourTree_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContourTree *arg1 = (CvContourTree *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -72001,23 +71824,16 @@ SWIGINTERN PyObject *_wrap_CvContourTree_block_max_set(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContourTree_block_max_set" "', argument " "1"" of type '" "CvContourTree *""'"); 
   }
   arg1 = reinterpret_cast< CvContourTree * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContourTree_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContourTree_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -72025,7 +71841,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContourTree_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContourTree *arg1 = (CvContourTree *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -72036,8 +71852,8 @@ SWIGINTERN PyObject *_wrap_CvContourTree_block_max_get(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContourTree_block_max_get" "', argument " "1"" of type '" "CvContourTree *""'"); 
   }
   arg1 = reinterpret_cast< CvContourTree * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -72047,12 +71863,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContourTree_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContourTree *arg1 = (CvContourTree *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -72062,23 +71877,16 @@ SWIGINTERN PyObject *_wrap_CvContourTree_ptr_set(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContourTree_ptr_set" "', argument " "1"" of type '" "CvContourTree *""'"); 
   }
   arg1 = reinterpret_cast< CvContourTree * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContourTree_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvContourTree_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -72086,7 +71894,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvContourTree_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvContourTree *arg1 = (CvContourTree *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -72097,8 +71905,8 @@ SWIGINTERN PyObject *_wrap_CvContourTree_ptr_get(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvContourTree_ptr_get" "', argument " "1"" of type '" "CvContourTree *""'"); 
   }
   arg1 = reinterpret_cast< CvContourTree * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -73665,12 +73473,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSubdiv2D_block_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -73680,23 +73487,16 @@ SWIGINTERN PyObject *_wrap_CvSubdiv2D_block_max_set(PyObject *SWIGUNUSEDPARM(sel
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSubdiv2D_block_max_set" "', argument " "1"" of type '" "CvSubdiv2D *""'"); 
   }
   arg1 = reinterpret_cast< CvSubdiv2D * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSubdiv2D_block_max_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSubdiv2D_block_max_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->block_max) delete[] arg1->block_max;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->block_max = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->block_max = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->block_max = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -73704,7 +73504,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSubdiv2D_block_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -73715,8 +73515,8 @@ SWIGINTERN PyObject *_wrap_CvSubdiv2D_block_max_get(PyObject *SWIGUNUSEDPARM(sel
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSubdiv2D_block_max_get" "', argument " "1"" of type '" "CvSubdiv2D *""'"); 
   }
   arg1 = reinterpret_cast< CvSubdiv2D * >(argp1);
-  result = (char *) ((arg1)->block_max);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->block_max);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -73726,12 +73526,11 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSubdiv2D_ptr_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
-  char *arg2 = (char *) 0 ;
+  schar *arg2 = (schar *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -73741,23 +73540,16 @@ SWIGINTERN PyObject *_wrap_CvSubdiv2D_ptr_set(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSubdiv2D_ptr_set" "', argument " "1"" of type '" "CvSubdiv2D *""'"); 
   }
   arg1 = reinterpret_cast< CvSubdiv2D * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_signed_char, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSubdiv2D_ptr_set" "', argument " "2"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvSubdiv2D_ptr_set" "', argument " "2"" of type '" "schar *""'"); 
   }
-  arg2 = buf2;
-  if (arg1->ptr) delete[] arg1->ptr;
-  if (arg2) {
-    size_t size = strlen(arg2) + 1;
-    arg1->ptr = reinterpret_cast< char* >(memcpy((new char[size]), arg2, sizeof(char)*(size)));
-  } else {
-    arg1->ptr = 0;
-  }
+  arg2 = reinterpret_cast< schar * >(argp2);
+  if (arg1) (arg1)->ptr = arg2;
+  
   resultobj = SWIG_Py_Void();
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return resultobj;
 fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   return NULL;
 }
 
@@ -73765,7 +73557,7 @@ fail:
 SWIGINTERN PyObject *_wrap_CvSubdiv2D_ptr_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvSubdiv2D *arg1 = (CvSubdiv2D *) 0 ;
-  char *result = 0 ;
+  schar *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
@@ -73776,8 +73568,8 @@ SWIGINTERN PyObject *_wrap_CvSubdiv2D_ptr_get(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSubdiv2D_ptr_get" "', argument " "1"" of type '" "CvSubdiv2D *""'"); 
   }
   arg1 = reinterpret_cast< CvSubdiv2D * >(argp1);
-  result = (char *) ((arg1)->ptr);
-  resultobj = SWIG_FromCharPtr(result);
+  result = (schar *) ((arg1)->ptr);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_signed_char, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -88447,6 +88239,197 @@ SWIGINTERN PyObject *_wrap_cvFindHomography(PyObject *SWIGUNUSEDPARM(self), PyOb
   {
     try {
       cvFindHomography((CvMat const *)arg1,(CvMat const *)arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvRQDecomp3x3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvMat *arg3 = (CvMat *) 0 ;
+  CvMat *arg4 = (CvMat *) NULL ;
+  CvMat *arg5 = (CvMat *) NULL ;
+  CvMat *arg6 = (CvMat *) NULL ;
+  CvPoint3D64f *arg7 = (CvPoint3D64f *) NULL ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO|OOOO:cvRQDecomp3x3",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvRQDecomp3x3" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = reinterpret_cast< CvMat * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvRQDecomp3x3" "', argument " "2"" of type '" "CvMat *""'"); 
+  }
+  arg2 = reinterpret_cast< CvMat * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvRQDecomp3x3" "', argument " "3"" of type '" "CvMat *""'"); 
+  }
+  arg3 = reinterpret_cast< CvMat * >(argp3);
+  if (obj3) {
+    res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res4)) {
+      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "cvRQDecomp3x3" "', argument " "4"" of type '" "CvMat *""'"); 
+    }
+    arg4 = reinterpret_cast< CvMat * >(argp4);
+  }
+  if (obj4) {
+    res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res5)) {
+      SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "cvRQDecomp3x3" "', argument " "5"" of type '" "CvMat *""'"); 
+    }
+    arg5 = reinterpret_cast< CvMat * >(argp5);
+  }
+  if (obj5) {
+    res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res6)) {
+      SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "cvRQDecomp3x3" "', argument " "6"" of type '" "CvMat *""'"); 
+    }
+    arg6 = reinterpret_cast< CvMat * >(argp6);
+  }
+  if (obj6) {
+    res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_CvPoint3D64f, 0 |  0 );
+    if (!SWIG_IsOK(res7)) {
+      SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "cvRQDecomp3x3" "', argument " "7"" of type '" "CvPoint3D64f *""'"); 
+    }
+    arg7 = reinterpret_cast< CvPoint3D64f * >(argp7);
+  }
+  {
+    try {
+      cvRQDecomp3x3((CvMat const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cvDecomposeProjectionMatrix(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvMat *arg3 = (CvMat *) 0 ;
+  CvMat *arg4 = (CvMat *) 0 ;
+  CvMat *arg5 = (CvMat *) NULL ;
+  CvMat *arg6 = (CvMat *) NULL ;
+  CvMat *arg7 = (CvMat *) NULL ;
+  CvPoint3D64f *arg8 = (CvPoint3D64f *) NULL ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  void *argp8 = 0 ;
+  int res8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO|OOOO:cvDecomposeProjectionMatrix",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvDecomposeProjectionMatrix" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = reinterpret_cast< CvMat * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvDecomposeProjectionMatrix" "', argument " "2"" of type '" "CvMat *""'"); 
+  }
+  arg2 = reinterpret_cast< CvMat * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvDecomposeProjectionMatrix" "', argument " "3"" of type '" "CvMat *""'"); 
+  }
+  arg3 = reinterpret_cast< CvMat * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "cvDecomposeProjectionMatrix" "', argument " "4"" of type '" "CvMat *""'"); 
+  }
+  arg4 = reinterpret_cast< CvMat * >(argp4);
+  if (obj4) {
+    res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res5)) {
+      SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "cvDecomposeProjectionMatrix" "', argument " "5"" of type '" "CvMat *""'"); 
+    }
+    arg5 = reinterpret_cast< CvMat * >(argp5);
+  }
+  if (obj5) {
+    res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res6)) {
+      SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "cvDecomposeProjectionMatrix" "', argument " "6"" of type '" "CvMat *""'"); 
+    }
+    arg6 = reinterpret_cast< CvMat * >(argp6);
+  }
+  if (obj6) {
+    res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_CvMat, 0 |  0 );
+    if (!SWIG_IsOK(res7)) {
+      SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "cvDecomposeProjectionMatrix" "', argument " "7"" of type '" "CvMat *""'"); 
+    }
+    arg7 = reinterpret_cast< CvMat * >(argp7);
+  }
+  if (obj7) {
+    res8 = SWIG_ConvertPtr(obj7, &argp8,SWIGTYPE_p_CvPoint3D64f, 0 |  0 );
+    if (!SWIG_IsOK(res8)) {
+      SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "cvDecomposeProjectionMatrix" "', argument " "8"" of type '" "CvPoint3D64f *""'"); 
+    }
+    arg8 = reinterpret_cast< CvPoint3D64f * >(argp8);
+  }
+  {
+    try {
+      cvDecomposeProjectionMatrix((CvMat const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8); 
     } 
     catch (...) 
     {
@@ -105774,6 +105757,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"cvInitUndistortMap", _wrap_cvInitUndistortMap, METH_VARARGS, NULL},
 	 { (char *)"cvRodrigues2", _wrap_cvRodrigues2, METH_VARARGS, NULL},
 	 { (char *)"cvFindHomography", _wrap_cvFindHomography, METH_VARARGS, NULL},
+	 { (char *)"cvRQDecomp3x3", _wrap_cvRQDecomp3x3, METH_VARARGS, NULL},
+	 { (char *)"cvDecomposeProjectionMatrix", _wrap_cvDecomposeProjectionMatrix, METH_VARARGS, NULL},
 	 { (char *)"cvProjectPoints2", _wrap_cvProjectPoints2, METH_VARARGS, NULL},
 	 { (char *)"cvFindExtrinsicCameraParams2", _wrap_cvFindExtrinsicCameraParams2, METH_VARARGS, NULL},
 	 { (char *)"cvCalibrateCamera2", _wrap_cvCalibrateCamera2, METH_VARARGS, NULL},
@@ -106128,8 +106113,8 @@ static swig_type_info _swigt__p__IplConvKernelFP = {"_p__IplConvKernelFP", "_Ipl
 static swig_type_info _swigt__p__IplImage = {"_p__IplImage", "_IplImage *|IplImage *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p__IplROI = {"_p__IplROI", "_IplROI *|IplROI *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p__IplTileInfo = {"_p__IplTileInfo", "_IplTileInfo *|IplTileInfo *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_a_2__char = {"_p_a_2__char", "char (*)[2]", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_a_2__float = {"_p_a_2__float", "float (*)[2]", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_a_2__signed_char = {"_p_a_2__signed_char", "signed char (*)[2]|schar (*)[2]", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_a_3__float = {"_p_a_3__float", "float (*)[3]", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocator_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
@@ -106312,8 +106297,8 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p__IplImage,
   &_swigt__p__IplROI,
   &_swigt__p__IplTileInfo,
-  &_swigt__p_a_2__char,
   &_swigt__p_a_2__float,
+  &_swigt__p_a_2__signed_char,
   &_swigt__p_a_3__float,
   &_swigt__p_allocator_type,
   &_swigt__p_char,
@@ -106496,8 +106481,8 @@ static swig_cast_info _swigc__p__IplConvKernelFP[] = {  {&_swigt__p__IplConvKern
 static swig_cast_info _swigc__p__IplImage[] = {  {&_swigt__p__IplImage, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p__IplROI[] = {  {&_swigt__p__IplROI, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p__IplTileInfo[] = {  {&_swigt__p__IplTileInfo, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_a_2__char[] = {  {&_swigt__p_a_2__char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_a_2__float[] = {  {&_swigt__p_a_2__float, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_a_2__signed_char[] = {  {&_swigt__p_a_2__signed_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_a_3__float[] = {  {&_swigt__p_a_3__float, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -106680,8 +106665,8 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p__IplImage,
   _swigc__p__IplROI,
   _swigc__p__IplTileInfo,
-  _swigc__p_a_2__char,
   _swigc__p_a_2__float,
+  _swigc__p_a_2__signed_char,
   _swigc__p_a_3__float,
   _swigc__p_allocator_type,
   _swigc__p_char,
