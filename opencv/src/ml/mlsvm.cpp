@@ -1361,7 +1361,7 @@ bool CvSVM::do_train( int svm_type, int sample_count, int var_count, const float
         int* sv_tab = 0;
         const float** temp_samples = 0;
         int* class_ranges = 0;
-        char* temp_y = 0;
+        schar* temp_y = 0;
         assert( svm_type == CvSVM::C_SVC || svm_type == CvSVM::NU_SVC );
 
         if( svm_type == CvSVM::C_SVC && params.class_weights )
@@ -1388,7 +1388,7 @@ bool CvSVM::do_train( int svm_type, int sample_count, int var_count, const float
                             (class_count + 1)*sizeof(class_ranges[0])));
         CV_CALL( temp_samples = (const float**)cvMemStorageAlloc( temp_storage,
                             sample_count*sizeof(temp_samples[0])));
-        CV_CALL( temp_y = (char*)cvMemStorageAlloc( temp_storage, sample_count));
+        CV_CALL( temp_y = (schar*)cvMemStorageAlloc( temp_storage, sample_count));
 
         class_ranges[class_count] = 0;
         cvSortSamplesByClasses( samples, responses, class_ranges, 0 );
