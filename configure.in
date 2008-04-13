@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.51 $)
+AC_REVISION($Revision: 1.52 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -127,9 +127,9 @@ AC_ARG_WITH([xine],
 
 # does the user want OpenCV to use the gstreamer multimedia framework?
 AC_ARG_WITH([gstreamer],
-            [AS_HELP_STRING([--with-gstreamer],[use gstreamer multimedia framework [automatic]])],
+            [AS_HELP_STRING([--with-gstreamer],[use gstreamer multimedia framework (see LICENSE) [no]])],
             [with_gstreamer=$withval],
-            [with_gstreamer=auto])
+            [with_gstreamer=no])
 
 # does the user want OpenCV to use ffmpeg video libraries?
 AC_ARG_WITH([ffmpeg],
