@@ -52,7 +52,7 @@
 %{
 	#include "octhelpers.h"
 	#include "octcvseq.hpp"
-	#include "error.h"
+	///#include "error.h"
 %}
 
 
@@ -76,7 +76,7 @@
 %include "./imagedata.i"
 
 // We integrate OpenCV error handling into the Octave exception mechanism
-%include "./error.h"
+///%include "./error.h"
 
 
 // include some wrappers to manipulate CvSeq types
