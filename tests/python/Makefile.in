@@ -336,7 +336,9 @@ TESTS_ENVIRONMENT = \
     DYLD_LIBRARY_PATH=$(top_builddir)/cxcore/src/.libs:$(top_builddir)/cv/src/.libs:$(top_builddir)/otherlibs/highgui/.libs:$(LD_LIBRARY_PATH) \
     PYTHONPATH=$(top_srcdir)/interfaces/swig:$(top_builddir)/interfaces/swig/python/.libs
 
-TESTS = $(check_SCRIPTS)
+
+# do tests only if we ask for python
+@BUILD_PYTHON_WRAPPERS_TRUE@TESTS = $(check_SCRIPTS)
 all: all-am
 
 .SUFFIXES:
