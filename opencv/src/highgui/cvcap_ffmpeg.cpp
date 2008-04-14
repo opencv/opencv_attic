@@ -50,8 +50,6 @@ extern "C" {
 }
 
 
-#define INT64_C (long long)
-
 #ifdef NDEBUG
 #define CV_WARN(message)
 #else
