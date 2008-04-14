@@ -1,3 +1,6 @@
+# use the default c++ flags
+AM_CXXFLAGS=@DEF_CXXFLAGS@
+
 EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \

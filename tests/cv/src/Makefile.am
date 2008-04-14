@@ -1,3 +1,6 @@
+# use the default c++ flags
+AM_CXXFLAGS=@DEF_CXXFLAGS@
+
 INCLUDES =                            \
     -I.                               \
     -I$(top_srcdir)/tests/cxts        \

@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.52 $)
+AC_REVISION($Revision: 1.53 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -193,6 +193,11 @@ if test x"$CXXFLAGS" = "x-g -O2" ; then
     CXXFLAGS=""
 fi
 
+# set the default c++ flags for all the compilations
+# we don't append CXXFLAGS, because it's done at compile time
+# see http://www.gnu.org/software/libtool/manual/automake/Flag-Variables-Ordering.html
+# for more information
+DEFAULT_CXXFLAGS=""
 
 # see if the user wants aggressive optimizations of the code,
 # check whether to include debugging code
@@ -201,7 +206,7 @@ if test x"$debug" = "xyes"; then
     AC_MSG_RESULT([yes])
     if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
         CPPFLAGS="-DDEBUG -D_DEBUG $CPPFLAGS"
-        CXXFLAGS="-ggdb -O0 $CXXFLAGS"
+        DEFAULT_CXXFLAGS="-ggdb -O0 $DEFAULT_CXXFLAGS"
     fi
 else
     AC_MSG_RESULT([no])
@@ -210,42 +215,44 @@ else
     i*86-apple-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             # apples g++ fails with '-march=i686' and there are no apple machines older than prescott/core anyway
-            CXXFLAGS="-g -march=prescott -ffast-math -fomit-frame-pointer $CXXFLAGS"
+            DEFAULT_CXXFLAGS="-g -march=prescott -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     i686-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
           # default to i686/pentiumpro -- people can override this
-          CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
+          DEFAULT_CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     powerpc-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             # default to G3 processors -- people can override this
-            CXXFLAGS="-g -mcpu=G3 -mtune=G5 -fomit-frame-pointer $CXXFLAGS"
+            DEFAULT_CXXFLAGS="-g -mcpu=G3 -mtune=G5 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     *-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            CXXFLAGS="-fomit-frame-pointer $CXXFLAGS"
+            DEFAULT_CXXFLAGS="-fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     esac
 
     CPPFLAGS="-DNDEBUG $CPPFLAGS"
-    CXXFLAGS="-O3 $CXXFLAGS"
+    DEFAULT_CXXFLAGS="-O3 $DEFAULT_CXXFLAGS"
 fi
 
 if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-    PY_CXXFLAGS="-Wall -pipe $CXXFLAGS"
-    OCT_CXXFLAGS="-fno-strict-aliasing -Wall -Wno-uninitialized -pipe $CXXFLAGS"
-    CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
+    PY_CXXFLAGS="-Wall -pipe $DEFAULT_CXXFLAGS"
+    OCT_CXXFLAGS="-fno-strict-aliasing -Wall -Wno-uninitialized -pipe $DEFAULT_CXXFLAGS"
+    DEF_CXXFLAGS="-Wall -fno-rtti -pipe $DEFAULT_CXXFLAGS"
 else
-    PY_CXXFLAGS="$CXXFLAGS"
-    OCT_CXXFLAGS="$CXXFLAGS"
+    PY_CXXFLAGS="$DEFAULT_CXXFLAGS"
+    OCT_CXXFLAGS="$DEFAULT_CXXFLAGS"
+    DEF_CXXFLAGS="$DEFAULT_CXXFLAGS"
 fi
 AC_SUBST(PY_CXXFLAGS)
 AC_SUBST(OCT_CXXFLAGS)
+AC_SUBST(DEF_CXXFLAGS)
 
 # add libm because it is used by several libraries and OpenCV itself
 AC_CHECK_LIB(m,pow)
@@ -988,6 +995,9 @@ AC_MSG_RESULT([
 General configuration ================================================
     Compiler:                 ${CXX}
     CXXFLAGS:                 ${CXXFLAGS}
+    DEF_CXXFLAGS:             ${DEF_CXXFLAGS}
+    PY_CXXFLAGS:              ${PY_CXXFLAGS}
+    OCT_CXXFLAGS:             ${OCT_CXXFLAGS}
 
     Install path:             ${prefix}
 
