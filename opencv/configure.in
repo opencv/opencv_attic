@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.53 $)
+AC_REVISION($Revision: 1.54 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -857,11 +857,6 @@ if test x"$with_octave" = "xyes"; then
     AC_MSG_RESULT([$OCTAVE_ARCH])
     AC_SUBST(OCTAVE_ARCH,[$OCTAVE_ARCH])
 
-    # find Octave package version
-    OCTAVE_PKG_VERSION=`egrep '^Version: ' interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //'`;
-    AC_SUBST(OCTAVE_PKG_VERSION,[$OCTAVE_PKG_VERSION])
-    AC_MSG_NOTICE([Octave package version is $OCTAVE_PKG_VERSION])
-
 else
     # check if ./configure arguments are valid
     if test x"$with_octave" = "xno"; then
@@ -901,6 +896,10 @@ EOF
 	   $SWIG -c++ -octave conftest.i || AC_MSG_ERROR(SWIG doesn't support Octave modules)
 	   AC_MSG_RESULT([yes])
 	   rm -f conftest.*
+    
+        # specify the flags for swig
+        AC_SUBST([SWIG_OCTAVE_OPT], "-octave")
+
 	fi
 
         # check for swig python library
