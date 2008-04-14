@@ -1,3 +1,6 @@
+# use the default c++ flags
+AM_CXXFLAGS=@DEF_CXXFLAGS@
+
 EXTRA_DIST = cxts.dsp cxts.vcproj precomp.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/tests

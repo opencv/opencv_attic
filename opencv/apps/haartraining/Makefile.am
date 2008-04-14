@@ -1,3 +1,6 @@
+# use the default c++ flags
+AM_CXXFLAGS=@DEF_CXXFLAGS@
+
 lib_LIBRARIES = libcvhaartraining.a
 
 bin_PROGRAMS = opencv-haartraining opencv-createsamples opencv-performance

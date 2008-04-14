@@ -1,3 +1,6 @@
+# use the default c++ flags
+AM_CXXFLAGS=@DEF_CXXFLAGS@
+
 EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 
 INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
