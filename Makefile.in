@@ -43,8 +43,7 @@ target_triplet = @target@
 DIST_COMMON = README $(am__configure_deps) $(libcvinclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/cvconfig.h.in $(srcdir)/opencv.pc.in \
-	$(srcdir)/opencv.spec.in $(top_srcdir)/configure \
-	$(top_srcdir)/interfaces/swig/octave/Makefile.in AUTHORS \
+	$(srcdir)/opencv.spec.in $(top_srcdir)/configure AUTHORS \
 	COPYING ChangeLog INSTALL NEWS THANKS TODO \
 	autotools/config.guess autotools/config.sub autotools/depcomp \
 	autotools/install-sh autotools/ltmain.sh autotools/missing \
@@ -62,8 +61,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = cvconfig.h
-CONFIG_CLEAN_FILES = opencv.pc opencv.spec \
-	interfaces/swig/octave/Makefile
+CONFIG_CLEAN_FILES = opencv.pc opencv.spec
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -191,7 +189,6 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OCTAVE = @OCTAVE@
 OCTAVE_ARCH = @OCTAVE_ARCH@
-OCTAVE_PKG_VERSION = @OCTAVE_PKG_VERSION@
 OCT_CXXFLAGS = @OCT_CXXFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -217,6 +214,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 SWIG = @SWIG@
+SWIG_OCTAVE_OPT = @SWIG_OCTAVE_OPT@
 SWIG_PYTHON_LIBS = @SWIG_PYTHON_LIBS@
 SWIG_PYTHON_OPT = @SWIG_PYTHON_OPT@
 SWIG_RUNTIME_LIBS_DIR = @SWIG_RUNTIME_LIBS_DIR@
@@ -420,8 +418,6 @@ opencv.pc: $(top_builddir)/config.status $(srcdir)/opencv.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 opencv.spec: $(top_builddir)/config.status $(srcdir)/opencv.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-interfaces/swig/octave/Makefile: $(top_builddir)/config.status $(top_srcdir)/interfaces/swig/octave/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -602,7 +598,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/autotools $(distdir)/autotools/aclocal $(distdir)/interfaces/swig/octave
+	$(mkdir_p) $(distdir)/. $(distdir)/autotools $(distdir)/autotools/aclocal
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

@@ -939,12 +939,12 @@ BUILD_PYTHON_WRAPPERS_FALSE
 OCTAVE
 MKOCTFILE
 OCTAVE_ARCH
-OCTAVE_PKG_VERSION
 BUILD_OCTAVE_WRAPPERS_TRUE
 BUILD_OCTAVE_WRAPPERS_FALSE
 SWIG
 SWIG_VERSION
 SWIG_RUNTIME_LIBS_DIR
+SWIG_OCTAVE_OPT
 SWIG_PYTHON_OPT
 SWIG_PYTHON_LIBS
 UPDATE_SWIG_WRAPPERS_TRUE
@@ -26306,13 +26306,6 @@ echo "${ECHO_T}$OCTAVE_ARCH" >&6; }
     OCTAVE_ARCH=$OCTAVE_ARCH
 
 
-    # find Octave package version
-    OCTAVE_PKG_VERSION=`egrep '^Version: ' interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //'`;
-    OCTAVE_PKG_VERSION=$OCTAVE_PKG_VERSION
-
-    { echo "$as_me:$LINENO: Octave package version is $OCTAVE_PKG_VERSION" >&5
-echo "$as_me: Octave package version is $OCTAVE_PKG_VERSION" >&6;}
-
 else
     # check if ./configure arguments are valid
     if test x"$with_octave" = "xno"; then
@@ -26762,6 +26755,11 @@ echo "$as_me: error: SWIG doesn't support Octave modules" >&2;}
 	   { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 	   rm -f conftest.*
+
+        # specify the flags for swig
+        SWIG_OCTAVE_OPT="-octave"
+
+
 	fi
 
         # check for swig python library
@@ -27865,12 +27863,12 @@ BUILD_PYTHON_WRAPPERS_FALSE!$BUILD_PYTHON_WRAPPERS_FALSE$ac_delim
 OCTAVE!$OCTAVE$ac_delim
 MKOCTFILE!$MKOCTFILE$ac_delim
 OCTAVE_ARCH!$OCTAVE_ARCH$ac_delim
-OCTAVE_PKG_VERSION!$OCTAVE_PKG_VERSION$ac_delim
 BUILD_OCTAVE_WRAPPERS_TRUE!$BUILD_OCTAVE_WRAPPERS_TRUE$ac_delim
 BUILD_OCTAVE_WRAPPERS_FALSE!$BUILD_OCTAVE_WRAPPERS_FALSE$ac_delim
 SWIG!$SWIG$ac_delim
 SWIG_VERSION!$SWIG_VERSION$ac_delim
 SWIG_RUNTIME_LIBS_DIR!$SWIG_RUNTIME_LIBS_DIR$ac_delim
+SWIG_OCTAVE_OPT!$SWIG_OCTAVE_OPT$ac_delim
 SWIG_PYTHON_OPT!$SWIG_PYTHON_OPT$ac_delim
 SWIG_PYTHON_LIBS!$SWIG_PYTHON_LIBS$ac_delim
 UPDATE_SWIG_WRAPPERS_TRUE!$UPDATE_SWIG_WRAPPERS_TRUE$ac_delim
