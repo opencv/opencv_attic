@@ -156,8 +156,10 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEBUG = @DEBUG@
 DEFS = @DEFS@
+DEF_CXXFLAGS = @DEF_CXXFLAGS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -192,6 +194,7 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OCTAVE = @OCTAVE@
@@ -217,6 +220,7 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -284,6 +288,9 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
+
+# use the default c++ flags
+AM_CXXFLAGS = @DEF_CXXFLAGS@
 lib_LIBRARIES = libcvhaartraining.a
 ALL_CV_LIBS = \
     libcvhaartraining.a                             \
