@@ -306,18 +306,20 @@ icvDFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave,
 
             digits[1]++;
 
-            assert (nf >= 2); // because we read radix[2] which is uninitialized otherwise
-            for( i = n, j = radix[2]; i < n0; )
+            if( nf >= 2 )
             {
-                for( k = 0; k < n; k++ )
-                    itab[i+k] = itab[k] + j;
-                if( (i += n) >= n0 )
-                    break;
-                j += radix[2];
-                for( k = 1; ++digits[k] >= factors[k]; k++ )
+                for( i = n, j = radix[2]; i < n0; )
                 {
-                    digits[k] = 0;
-                    j += radix[k+2] - radix[k];
+                    for( k = 0; k < n; k++ )
+                        itab[i+k] = itab[k] + j;
+                    if( (i += n) >= n0 )
+                        break;
+                    j += radix[2];
+                    for( k = 1; ++digits[k] >= factors[k]; k++ )
+                    {
+                        digits[k] = 0;
+                        j += radix[k+2] - radix[k];
+                    }
                 }
             }
         }
