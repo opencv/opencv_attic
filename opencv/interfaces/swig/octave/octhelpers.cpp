@@ -113,7 +113,6 @@ int OctLong_AsIndex( octave_value idx_object, int len ){
   int idx = OctLong_AsLong( idx_object );
   if(idx<0) return len+idx;
   return idx;
-  return 0;
 }
 
 CvRect OctSlice_to_CvRect(CvArr * src, octave_value idx_object){
@@ -367,8 +366,3 @@ int OctObject_Length(const octave_value& ov) {
 bool OctSlice_GetIndicesEx(const octave_value& ov, Oct_ssize_t len, Oct_ssize_t* start, Oct_ssize_t* stop, Oct_ssize_t* step, Oct_ssize_t* slicelength ) {
   return false;
 }
-
-
-
-
-

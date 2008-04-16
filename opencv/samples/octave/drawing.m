@@ -1,14 +1,13 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 printf("OpenCV Octave version of drawing\n");
 
 ## import the necessary things for OpenCV
-cv
-highgui
+cv;
+highgui;
 
-function ret=random_color (random)
-  icolor = random.randint (0, 0xFFFFFF);
-  ret = cv.cvScalar (icolor & 0xff, (icolor >> 8) & 0xff, (icolor >> 16) & 0xff);
+function ret=random_color ()
+  ret = CV_RGB(int32(rand()*255), int32(rand()*255), int32(rand()*255));
 endfunction
 
 
@@ -28,18 +27,15 @@ highgui.cvNamedWindow (window_name, 1);
 cv.cvSetZero (image);
 highgui.cvShowImage (window_name, image);
 
-## create the random number
-random = Random ();
-
 ## draw some lines
 for i=0:number-1,
-  pt1 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
-  pt2 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
+  pt1 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
+  pt2 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
   cv.cvLine (image, pt1, pt2,
-             random_color (random),
-             random.randrange (0, 10),
+             random_color (),
+             int32(rand() * 10),
              line_type, 0);
   
   highgui.cvShowImage (window_name, image);
@@ -48,13 +44,13 @@ endfor
 
 ## draw some rectangles
 for i=0:number-1,
-  pt1 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
-  pt2 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
+  pt1 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
+  pt2 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
   cv.cvRectangle (image, pt1, pt2,
-                  random_color (random),
-                  random.randrange (-1, 9),
+                  random_color (),
+                  int32(rand() * 10 - 1),
                   line_type, 0);
   
   highgui.cvShowImage (window_name, image);
@@ -63,14 +59,14 @@ endfor
 
 ## draw some ellipes
 for i=0:number-1,
-  pt1 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
-  sz = cv.cvSize (random.randrange (0, 200),
-                  random.randrange (0, 200));
-  angle = random.randrange (0, 1000) * 0.180;
+  pt1 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
+  sz = cv.cvSize (int32(rand() * 200),
+                  int32(rand() * 200));
+  angle = rand() * 1000 * 0.180;
   cv.cvEllipse (image, pt1, sz, angle, angle - 100, angle + 200,
-                random_color (random),
-                random.randrange (-1, 9),
+                random_color (),
+                int32(rand() * 10 - 1),
                 line_type, 0);
   
   highgui.cvShowImage (window_name, image);
@@ -80,54 +76,45 @@ endfor
 ## init the list of polylines
 nb_polylines = 2;
 polylines_size = 3;
-pt = [0,] * nb_polylines;
-for a=0:nb_polylines-1,
-  pt [a] = [0,] * polylines_size;
+pt = cell(1, nb_polylines);
+for a=1:nb_polylines,
+  pt{a} = cell(1,polylines_size);
 endfor
 
 ## draw some polylines
 for i=0:number-1,
-  for a=0:nb_polylines-1,
-    for b=0:polylines_size-1,
-      pt [a][b] = cv.cvPoint (random.randrange (-width, 2 * width),
-                              random.randrange (-height, 2 * \
-						height));
+  for a=1:nb_polylines,
+    for b=1:polylines_size,
+      pt {a}{b} = cv.cvPoint (int32(rand() * 2 * width - width), \
+                              int32(rand() * 2 * height - height));
     endfor
-    cv.cvPolyLine (image, pt, 1,
-                   random_color (random),
-                   random.randrange (1, 9),
-                   line_type, 0);
-
-    highgui.cvShowImage (window_name, image);
-    highgui.cvWaitKey (delay);
   endfor
+  cv.cvPolyLine (image, pt, 1, random_color(), int32(rand() * 8 + 1), line_type, 0);
+
+  highgui.cvShowImage (window_name, image);
+  highgui.cvWaitKey (delay);
 endfor
 
 ## draw some filled polylines
 for i=0:number-1,
-  for a=0:nb_polylines-1,
-    for b=0:polylines_size-1,
-      pt [a][b] = cv.cvPoint (random.randrange (-width, 2 * width),
-                              random.randrange (-height, 2 * \
-						height));
+  for a=1:nb_polylines,
+    for b=1:polylines_size,
+      pt {a}{b} = cv.cvPoint (int32(rand() * 2 * width - width),
+                              int32(rand() * 2 * height - height));
     endfor
-    cv.cvFillPoly (image, pt,
-                   random_color (random),
-                   line_type, 0);
-
-    highgui.cvShowImage (window_name, image);
-    highgui.cvWaitKey (delay);
   endfor
+  cv.cvFillPoly (image, pt, random_color (), line_type, 0);
+
+  highgui.cvShowImage (window_name, image);
+  highgui.cvWaitKey (delay);
 endfor
 
 ## draw some circles
 for i=0:number-1,
-  pt1 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
-  cv.cvCircle (image, pt1, random.randrange (0, 300),
-               random_color (random),
-               random.randrange (-1, 9),
-               line_type, 0);
+  pt1 = cv.cvPoint (int32(rand() * 2 * width - width),
+                    int32(rand() * 2 * height - height));
+  cv.cvCircle (image, pt1, int32(rand() * 300), random_color (), \
+	       int32(rand() * 10 - 1), line_type, 0);
   
   highgui.cvShowImage (window_name, image);
   highgui.cvWaitKey (delay);
@@ -135,34 +122,34 @@ endfor
 
 ## draw some text
 for i=0:number-1,
-  pt1 = cv.cvPoint (random.randrange (-width, 2 * width),
-                    random.randrange (-height, 2 * height));
-  font = cv.cvInitFont (random.randrange (0, 8),
-                        random.randrange (0, 100) * 0.05 + 0.01,
-                        random.randrange (0, 100) * 0.05 + 0.01,
-                        random.randrange (0, 5) * 0.1,
-                        random.randrange (0, 10),
+  pt1 = cv.cvPoint (int32(rand() * 2 * width - width), \
+                    int32(rand() * 2 * height - height));
+  font = cv.cvInitFont (int32(rand() * 8), \
+                        rand() * 100 * 0.05 + 0.01, \
+                        rand() * 100 * 0.05 + 0.01, \
+                        rand() * 5 * 0.1, \
+                        int32(rand() * 10), \
                         line_type);
 
-  cv.cvPutText (image, "Testing text rendering!",
-                pt1, font,
-                random_color (random));
+  cv.cvPutText (image, "Testing text rendering!", \
+                pt1, font, \
+                random_color ());
   
   highgui.cvShowImage (window_name, image);
   highgui.cvWaitKey (delay);
 endfor
 
 ## prepare a text, and get it's properties
-font = cv.cvInitFont (cv.CV_FONT_HERSHEY_COMPLEX,
+font = cv.cvInitFont (cv.CV_FONT_HERSHEY_COMPLEX, \
                       3, 3, 0.0, 5, line_type);
-text_size, ymin = cv.cvGetTextSize ("OpenCV forever!", font);
-pt1.x = (width - text_size.width) / 2;
-pt1.y = (height + text_size.height) / 2;
+[text_size, ymin] = cv.cvGetTextSize ("OpenCV forever!", font);
+pt1.x = int32((width - text_size.width) / 2);
+pt1.y = int32((height + text_size.height) / 2);
 image2 = cv.cvCloneImage(image);
 
 ## now, draw some OpenCV pub ;-)
 for i=0:255-1,
-  cv.cvSubS (image2, cv.cvScalarAll (i), image, None);
+  cv.cvSubS (image2, cv.cvScalarAll (i), image, []);
   cv.cvPutText (image, "OpenCV forever!",
                 pt1, font, cv.cvScalar (255, i, i));
   highgui.cvShowImage (window_name, image);

@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 printf("OpenCV Octave version of lkdemo\n");
 
@@ -15,8 +15,8 @@ MAX_COUNT = 500
 #############################################################################
 ## some "global" variables
 
-image = None
-pt = None
+image = []
+pt = []
 add_remove_pt = false
 flags = 0
 night_mode = false
@@ -91,7 +91,7 @@ printf("Hot keys: \n" \
 highgui.cvNamedWindow ('LkDemo', highgui.CV_WINDOW_AUTOSIZE)
 
 ## register the mouse callback
-highgui.cvSetMouseCallback ('LkDemo', on_mouse, None)
+highgui.cvSetMouseCallback ('LkDemo', on_mouse, [])
 
 while (1)
   ## do forever
@@ -140,7 +140,7 @@ while (1)
     points [1] = cv.cvGoodFeaturesToTrack (
 					   grey, eig, temp,
 					   MAX_COUNT,
-					   quality, min_distance, None, 3, 0, 0.04)
+					   quality, min_distance, [], 3, 0, 0.04)
 
     ## refine the corner locations
     cv.cvFindCornerSubPix (
@@ -163,7 +163,7 @@ while (1)
 						    points [0], len (points [0]),
 						    cv.cvSize (win_size, win_size), 3,
 						    len (points [0]),
-						    None,
+						    [],
 						    cv.cvTermCriteria (cv.CV_TERMCRIT_ITER|cv.CV_TERMCRIT_EPS,
 								       20, 0.03),
 						    flags)

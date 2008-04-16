@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 ## the script demostrates iterative construction of
 ## delaunay triangulation and voronoi tesselation
@@ -11,11 +11,14 @@ cv;
 highgui;
 
 function draw_subdiv_point( img, fp, color )
+  global CV_FILLED;
   cvCircle( img, cvPoint(cvRound(fp.x), cvRound(fp.y)), 3, color, \
 	   CV_FILLED, 8, 0 );
 endfunction
 
 function draw_subdiv_edge( img, edge, color )
+  global CV_AA;
+
   org_pt = cvSubdiv2DEdgeOrg(edge);
   dst_pt = cvSubdiv2DEdgeDst(edge);
 
@@ -133,11 +136,11 @@ cvNamedWindow( win, 1 );
 storage = cvCreateMemStorage(0);
 subdiv = cvCreateSubdivDelaunay2D( rect, storage );
 
-print "Delaunay triangulation will be build now interactively."
-print "To stop the process, press any key\n";
+printf("Delaunay triangulation will be build now interactively.\n");
+printf("To stop the process, press any key\n");
 
 for i=0:200-1,
-  fp = cvPoint2D32f( random()*(rect.width-10)+5, random()*(rect.height-10)+5 )
+  fp = cvPoint2D32f(  int32(rand()*(rect.width-10)+5), int32(rand()*(rect.height-10)+5) )
 
   locate_point( subdiv, fp, img, active_facet_color );
   cvShowImage( win, img );

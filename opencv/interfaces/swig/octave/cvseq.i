@@ -56,39 +56,6 @@
 %template (CvSeq_float_2) CvTypedSeq< CvTuple<float,2> >;
 %template (CvSeq_float_3) CvTypedSeq< CvTuple<float,3> >;
 
-/*
-%extend CvSeq {
-	%pythoncode %{
-	def __iter__(self):
-		"""
-		generator function iterating elements in the sequence
-		"""
-		for i in range(self.total):
-			yield self[i]
-
-	def vrange(self):
-		"""
-		generator function iterating along v_next
-		"""
-		s = self
-		t = type(self)
-		while s:
-			yield s
-			s = t.cast(s.v_next)
-
-	def hrange(self):
-		"""
-		generator function iterating along h_next
-		"""
-		s = self
-		t = type(self)
-		while s:
-			yield s
-			s = t.cast(s.h_next)
-	%}
-}
-*/
-
 // accessor to turn edges into a typed sequence
 %extend CvSubdiv2D {
 	CvTypedSeq<CvQuadEdge2D> * typed_edges;

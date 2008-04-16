@@ -1,12 +1,12 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv;
 highgui;
 
-color_img0 = None;
-mask = None;
-color_img = None;
-gray_img0 = None;
-gray_img = None;
+color_img0 = [];
+mask = [];
+color_img = [];
+gray_img0 = [];
+gray_img = [];
 ffill_case = 1;
 lo_diff = 20
 up_diff = 20;
@@ -30,7 +30,7 @@ function on_mouse( event, x, y, flags, param )
 
   if (event == CV_EVENT_LBUTTONDOWN)
     comp = CvConnectedComp();
-    my_mask = None;
+    my_mask = [];
     seed = cvPoint(x,y);
     if (ffill_case==0)
       lo = 0;
@@ -133,7 +133,7 @@ while (true)
     else
       
       print("Color mode is set");
-      cvCopy( color_img0, color_img, None );
+      cvCopy( color_img0, color_img, [] );
       cvZero( mask );
       is_color = 1;
     endif
@@ -152,8 +152,8 @@ while (true)
     
   elseif (c=='r')
     print("Original image is restored");
-    cvCopy( color_img0, color_img, None );
-    cvCopy( gray_img0, gray_img, None );
+    cvCopy( color_img0, color_img, [] );
+    cvCopy( gray_img0, gray_img, [] );
     cvZero( mask );
   elseif (c=='s')
     print("Simple floodfill mode is set");

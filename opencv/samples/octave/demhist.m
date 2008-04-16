@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv;
 highgui;
 
@@ -12,10 +12,10 @@ Gcontrast = 100;
 hist_size = 64;
 range_0=[0,256];
 ranges = [ range_0 ];
-src_image=None;
-dst_image=None;
-hist_image=None;
-hist=None;
+src_image=[];
+dst_image=[];
+hist_image=[];
+hist=[];
 lut=cvCreateMat(256,1,CV_8U);
 
 ## brightness/contrast callback function
@@ -64,7 +64,7 @@ function update_brightcont()
   cvLUT( src_image, dst_image, lut );
   cvShowImage( "image", dst_image );
 
-  cvCalcHist( dst_image, hist, 0, None );
+  cvCalcHist( dst_image, hist, 0, [] );
   cvZero( dst_image );
   min_value, max_value = cvGetMinMaxHistValue( hist );
   cvScale( hist.bins, hist.bins, float(hist_image.height)/max_value, 0 );

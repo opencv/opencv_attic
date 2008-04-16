@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 printf("OpenCV Octave version of convexhull\n");
 
@@ -8,9 +8,6 @@ highgui;
 
 ## how many points we want at max
 _MAX_POINTS = 100;
-
-## main object to get random values from
-my_random = random.Random ();
 
 ## create the image where we want to display results
 image = cv.cvCreateImage (cv.cvSize (500, 500), 8, 3);
@@ -22,17 +19,16 @@ while (true)
   ## do forever
 
   ## get a random number of points
-  count = my_random.randrange (0, _MAX_POINTS) + 1;
+  count = int32(rand()*_MAX_POINTS)+1
 
   ## initialisations
-  points = [];
+  points = {};
   
-  for i=0:count-1,
+  for i=1:count,
     ## generate a random point
-    points.append (cv.cvPoint (
-			       my_random.randrange (0, image.width / 2) + image.width / 4,
-			       my_random.randrange (0, image.width / 2) + image.width / 4
-			       ));
+    points{i} = cv.cvPoint  \
+    (int32(rand() * (image.width / 2) + image.width / 4), \
+     int32(rand() * (image.height / 2) + image.height / 4)); \
   endfor
 
   ## compute the convex hull
@@ -41,25 +37,25 @@ while (true)
   ## start with an empty image
   cv.cvSetZero (image);
 
-  for i=0:count-1,
+  for i=1:count,
     ## draw all the points
-    cv.cvCircle (image, points [i], 2,
-                 cv.cvScalar (0, 0, 255, 0),
+    cv.cvCircle (image, points {i}, 2, \
+                 cv.cvScalar (0, 0, 255, 0), \
                  cv.CV_FILLED, cv.CV_AA, 0);
   endfor
 
   ## start the line from the last point
-  pt0 = points [hull [-1]];
-  
-  for point_index in hull,
+  pt0 = points {hull [-1]};
+
+  for point_index = 1:hull.rows,
     ## connect the previous point to the current one
 
     ## get the current one
-    pt1 = points [point_index];
+    pt1 = points {point_index};
 
     ## draw
-    cv.cvLine (image, pt0, pt1,
-               cv.cvScalar (0, 255, 0, 0),
+    cv.cvLine (image, pt0, pt1, \
+               cv.cvScalar (0, 255, 0, 0), \
                1, cv.CV_AA, 0);
 
     ## now, current one will be the previous one for the next iteration

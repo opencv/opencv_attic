@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 ## This program is demonstration for face and object detection using haar-like features.
 ## The program finds faces in a camera image or video stream and displays a red box around them.
 
@@ -10,7 +10,7 @@ highgui;
 
 
 ## Global Variables
-cascade = None;
+cascade = [];
 storage = cvCreateMemStorage(0);
 cascade_name = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
 input_name = "../c/lena.jpg";
@@ -95,7 +95,7 @@ if (size(argv, 1) > 1)
   cvNamedWindow( "result", 1 );
 
   if( capture )
-    frame_copy = None;
+    frame_copy = [];
     while (true)
       frame = cvQueryFrame( capture );
       if( ! frame )

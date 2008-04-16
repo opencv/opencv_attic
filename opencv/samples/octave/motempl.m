@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 cv
 highgui
@@ -10,11 +10,11 @@ MIN_TIME_DELTA = 0.05;
 N = 4;
 buf = range(10) 
 last = 0;
-mhi = None; # MHI
-orient = None; # orientation
-mask = None; # valid orientation mask
-segmask = None; # motion segmentation map
-storage = None; # temporary storage
+mhi = []; # MHI
+orient = []; # orientation
+mask = []; # valid orientation mask
+segmask = []; # motion segmentation map
+storage = []; # temporary storage
 
 function update_mhi( img, dst, diff_threshold )
   global last
@@ -46,7 +46,7 @@ function update_mhi( img, dst, diff_threshold )
       cvCvtScale( mhi, mask, 255./MHI_DURATION,
 		 (MHI_DURATION - timestamp)*255./MHI_DURATION );
       cvZero( dst );
-      cvMerge( mask, None, None, None, dst );
+      cvMerge( mask, [], [], [], dst );
       cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
       if( not storage )
 	storage = cvCreateMemStorage(0);
@@ -72,7 +72,7 @@ function update_mhi( img, dst, diff_threshold )
           mask_roi = cvGetSubRect( mask, comp_rect );
           angle = cvCalcGlobalOrientation( orient_roi, mask_roi, mhi_roi, timestamp, MHI_DURATION);
           angle = 360.0 - angle;  # adjust for images with top-left origin
-          count = cvNorm( silh_roi, None, CV_L1, None ); # calculate number of points within silhouette ROI
+          count = cvNorm( silh_roi, [], CV_L1, [] ); # calculate number of points within silhouette ROI
           if( count < comp_rect.width * comp_rect.height * 0.05 )
             continue;
 	  endif

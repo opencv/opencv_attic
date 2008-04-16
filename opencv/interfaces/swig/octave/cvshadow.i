@@ -136,16 +136,15 @@ def cvHoughLines2( *args ):
 // cvSeqSlice
 // cvTreeToNodeSeq
 
-// cvRelease* functions don't consider python's reference count
-// so we get a double-free error when the reference count reaches zero.
-// Instead, just make these aliases to Py_XDECREF()
 /*
+// cvRelease* functions don't consider Octave's reference count
+// so we get a double-free error when the reference count reaches zero.
+// Instead, make these no-ops.
 %define %myrelease(function)
 %ignore function;
 %rename (function) function##_Shadow;
 %inline %{
 void function##_Shadow(PyObject * obj){
-	Py_XDECREF(obj);
 }
 %}
 %enddef

@@ -49,56 +49,63 @@
 /** class to make sequence iteration nicer */
 template<class T>
 class CvTypedSeqReader : public CvSeqReader {
-    int pos;
+  int pos;
 public:
-    CvTypedSeqReader( const CvSeq * seq ){
-        cvStartReadSeq( seq, this );
-        pos = 0;
-    }
-    T * current(){
-        return (T*) this->ptr;
-    }
-    void next(){
-        CV_NEXT_SEQ_ELEM( this->seq->elem_size, *this );
-        pos++;
-    }
-    bool valid(){
-        return pos<this->seq->total;
-    }
+  CvTypedSeqReader( const CvSeq * seq ){
+    cvStartReadSeq( seq, this );
+    pos = 0;
+  }
+  T * current(){
+    return (T*) this->ptr;
+  }
+  void next(){
+    CV_NEXT_SEQ_ELEM( this->seq->elem_size, *this );
+    pos++;
+  }
+  bool valid(){
+    return pos<this->seq->total;
+  }
 };
 
 template<class T>
 class CvTypedSeq : public CvSeq {
 public:
-	static CvTypedSeq<T> * cast(CvSeq * seq){
-		return (CvTypedSeq<T> *) seq;
-	}
-	T * __getitem__ (int i){
-		return (T *) cvGetSeqElem(this, i);
-	}
-	void __setitem__ (int i, T * obj){
-		T * ptr = this->__getitem__(i);
-		memcpy(ptr, obj, sizeof(T));
-	}
-	void append(T * obj){
-		cvSeqPush( this, obj );
-	}
-	T * pop(){
-		T * obj = new T;
-		cvSeqPop( this, obj );
-		return obj;
-	}
+  static CvTypedSeq<T> * cast(CvSeq * seq){
+    return (CvTypedSeq<T> *) seq;
+  }
+  T * __paren (int i){
+    return (T *) cvGetSeqElem(this, i);
+  }
+  void __paren_asgn (int i, T * obj){
+    T * ptr = this->__paren(i);
+    memcpy(ptr, obj, sizeof(T));
+  }
+  /*
+  Octave_map __map() {
+    Octave_map m;
+    m.assign();
+    return m;
+  }
+  */
+  void append(T * obj){
+    cvSeqPush( this, obj );
+  }
+  T * pop(){
+    T * obj = new T;
+    cvSeqPop( this, obj );
+    return obj;
+  }
 };
 
 template<class T, int size=2>
 struct CvTuple {
-	T val[2];
-	void __setitem__(int i, T * obj){
-		val[i] = *obj;
-	}
-	const T & __getitem__(int i){
-		return val[i];
-	}
+  T val[2];
+  void __setitem__(int i, T * obj){
+    val[i] = *obj;
+  }
+  const T & __getitem__(int i){
+    return val[i];
+  }
 };
 
 #endif  //PY_CV_SEQ_H

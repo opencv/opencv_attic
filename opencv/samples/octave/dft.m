@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv;
 highgui;
 
@@ -10,16 +10,15 @@ function cvShiftDFT(src_arr, dst_arr )
   size = cvGetSize(src_arr);
   dst_size = cvGetSize(dst_arr);
 
-  if(dst_size.width != size.width ||
+  if(dst_size.width != size.width || \
      dst_size.height != size.height)
-    cvError( CV_StsUnmatchedSizes, "cvShiftDFT", "Source and \
-	Destination arrays must have equal sizes", __FILE__, \
-	    __LINE__ );    
+    cvError( CV_StsUnmatchedSizes, "cvShiftDFT", \
+	    "Source and Destination arrays must have equal sizes", \
+	    __FILE__, __LINE__ );    
   endif
 
-  if(src_arr is dst_arr)
-    tmp = cvCreateMat(size.height/2, size.width/2, \
-		      cvGetElemType(src_arr));
+  if(swig_this(src_arr) == swig_this(dst_arr))
+    tmp = cvCreateMat(size.height/2, size.width/2, cvGetElemType(src_arr));
   endif
   
   cx = size.width/2;
@@ -36,8 +35,8 @@ function cvShiftDFT(src_arr, dst_arr )
 
   if(swig_this(src_arr) != swig_this(dst_arr))
     if( !CV_ARE_TYPES_EQ( q1, d1 ))
-      cvError( CV_StsUnmatchedFormats, "cvShiftDFT", "Source and \
-	  Destination arrays must have the same format", \
+      cvError( CV_StsUnmatchedFormats, \
+	      "cvShiftDFT", "Source and Destination arrays must have the same format", \
 	      __FILE__, __LINE__ );    
     endif
     
@@ -57,7 +56,7 @@ function cvShiftDFT(src_arr, dst_arr )
 endfunction
 
 
-im = cvLoadImage( argv(1, :), CV_LOAD_IMAGE_GRAYSCALE);
+im = cvLoadImage( argv(){1}, CV_LOAD_IMAGE_GRAYSCALE);
 
 realInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
 imaginaryInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
@@ -65,7 +64,7 @@ complexInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 2);
 
 cvScale(im, realInput, 1.0, 0.0);
 cvZero(imaginaryInput);
-cvMerge(realInput, imaginaryInput, None, None, complexInput);
+cvMerge(realInput, imaginaryInput, [], [], complexInput);
 
 dft_M = cvGetOptimalDFTSize( im.height - 1 );
 dft_N = cvGetOptimalDFTSize( im.width - 1 );
@@ -76,7 +75,7 @@ image_Im = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
 
 ## copy A to dft_A and pad dft_A with zeros
 tmp = cvGetSubRect( dft_A, cvRect(0,0, im.width, im.height));
-cvCopy( complexInput, tmp, None );
+cvCopy( complexInput, tmp, [] );
 if(dft_A.width > im.width)
   tmp = cvGetSubRect( dft_A, cvRect(im.width,0, dft_N - im.width, im.height));
   cvZero( tmp );
@@ -92,16 +91,16 @@ cvNamedWindow("magnitude", 0);
 cvShowImage("win", im);
 
 ## Split Fourier in real and imaginary parts
-cvSplit( dft_A, image_Re, image_Im, None, None );
+cvSplit( dft_A, image_Re, image_Im, [], [] );
 
 ## Compute the magnitude of the spectrum Mag = sqrt(Re^2 + Im^2)
 cvPow( image_Re, image_Re, 2.0);
 cvPow( image_Im, image_Im, 2.0);
-cvAdd( image_Re, image_Im, image_Re, None);
+cvAdd( image_Re, image_Im, image_Re, []);
 cvPow( image_Re, image_Re, 0.5 );
 
 ## Compute log(1 + Mag)
-cvAddS( image_Re, cvScalarAll(1.0), image_Re, None ); # 1 + Mag
+cvAddS( image_Re, cvScalarAll(1.0), image_Re, [] ); # 1 + Mag
 cvLog( image_Re, image_Re ); # log(1 + Mag)
 
 
@@ -109,7 +108,7 @@ cvLog( image_Re, image_Re ); # log(1 + Mag)
 ## the image center
 cvShiftDFT( image_Re, image_Re );
 
-min, max = cvMinMaxLoc(image_Re);
+[min, max] = cvMinMaxLoc(image_Re);
 cvScale(image_Re, image_Re, 1.0/(max-min), 1.0*(-min)/(max-min));
 cvShowImage("magnitude", image_Re);
 

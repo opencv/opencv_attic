@@ -146,21 +146,20 @@
     *freearg = false;
 
     // check if OpenCV type
-    if( OctSwigObject_Check(obj) ){
+    if ( OctSwigObject_Check(obj) ){
       SWIG_ConvertPtr(obj, &cvarr, 0, SWIG_POINTER_EXCEPTION);
     }
-    else if(OctList_Check(obj) || OctTuple_Check(obj)){
+    else if (OctList_Check(obj) || OctTuple_Check(obj)){
       cvarr = OctSequence_to_CvArr( obj );
       *freearg = (cvarr != NULL);
     }
-    else if(OctLong_Check(obj) && OctLong_AsLong(obj)==0){
+    else if (OctLong_Check(obj) && OctLong_AsLong(obj)==0){
       return NULL;
     }
     else {
       SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
     }
     return cvarr;
-    return 0;
   }
 
   static int OctObject_GetElemType(octave_value obj){
@@ -186,7 +185,7 @@
     int ndim=0;
     int cvtype;
     octave_value item;
-	
+
     // figure out dimensions
     for(item = obj; 
 	(OctTuple_Check(item) || OctList_Check(item));
@@ -196,12 +195,11 @@
 	ndim++;
       }
 
-	
     if(ndim==0){
       error("Cannot convert an empty octave object to a CvArr");
       return NULL;
     }
-	
+
     cvtype = OctObject_GetElemType(item);
     // collapse last dim into NCH if we found a single channel, but the last dim is <=3
     if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
@@ -209,12 +207,12 @@
       dims[ndim-1]=1;	
       ndim--;
     }
-	
+
     if(cvtype==-1){
       error("Could not determine OpenCV element type of Octave sequence");
       return NULL;
     }
-	
+
     // CvMat
     if(ndim<=2){
       CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
