@@ -152,9 +152,8 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 		return 0;
 	}
 
-	if(cap->buffer) {
+	if(cap->buffer)
 		gst_buffer_unref(cap->buffer);
-	}
 
 	icvHandleMessage(cap);
 
@@ -414,18 +413,98 @@ static void newpad(GstElement *decodebin, GstPad *pad, gboolean last, gpointer d
 	gst_pad_link (pad, sinkpad);
 }
 
-//
-// connect decodebin's dynamically created source pads to colourconverter
-//
-//static void newbuffer(GstAppSink *appsink, gpointer data)
-//{
-//	printf("received buffer\n");
-//}
+CvCapture * cvCaptureFromCAM_GStreamer(const char *sourcetype)
+{
+	CvCapture_GStreamer *capture = 0;
+	CV_FUNCNAME("cvCaptureFromCAM_GStreamer");
+
+	__BEGIN__;
+
+//	teststreamer(filename);
+
+//	return 0;
+	printf("entered capturecreator\n");
+
+	if(!isInited) {
+		gst_init (NULL, NULL);
+
+// according to the documentation this is the way to register a plugin now
+// unfortunately, it has not propagated into my distribution yet...
+// 		gst_plugin_register_static(GST_VERSION_MAJOR, GST_VERSION_MINOR,
+// 			"opencv-appsink", "Element application sink",
+// 			"0.1", appsink_plugin_init, "LGPL", "highgui", "opencv",
+// 			"http://opencvlibrary.sourceforge.net/");
+
+		isInited = true;
+	}
+
+	GstElement *pipeline = gst_pipeline_new (NULL);
+
+	GstElement *source = gst_element_factory_make(sourcetype, NULL);
+
+	GstElement *colour = gst_element_factory_make("ffmpegcolorspace", NULL);
+
+	GstElement *sink = gst_element_factory_make("opencv-appsink", NULL);
+	GstCaps *caps = gst_caps_new_simple("video/x-raw-rgb", NULL);
+	gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
+	gst_base_sink_set_sync(GST_BASE_SINK(sink), false);
+//	g_signal_connect(sink, "new-buffer", G_CALLBACK(newbuffer), NULL);
+
+	GstElement *decodebin = gst_element_factory_make("decodebin", NULL);
+	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(newpad), colour);
+
+	gst_bin_add_many(GST_BIN(pipeline), source, decodebin, colour, sink, NULL);
+
+	printf("added many\n");
+
+	if(!gst_element_link(source, decodebin)) {
+		CV_ERROR(CV_StsError, "GStreamer: cannot link filesrc -> decodebin\n");
+		return 0;
+	}
+
+	if(!gst_element_link(colour, sink)) {
+		CV_ERROR(CV_StsError, "GStreamer: cannot link colour -> sink\n");
+		return 0;
+	}
+
+	printf("linked\n");
+
+	// construct capture struct
+	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
+	memset(capture, 0, sizeof(CvCapture_GStreamer));
+	capture->vtable = &capture_vtable;
+	capture->pipeline = pipeline;
+	capture->appsink = sink;
+
+	printf("pausing\n");
+
+	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
+	   GST_STATE_CHANGE_FAILURE) {
+		CV_ERROR(CV_StsError, "GStreamer: unable to start pipeline\n");
+		icvHandleMessage(capture);
+		cvReleaseCapture((CvCapture **)(void *)&capture);
+		return 0;
+	}
+
+	printf("state now paused\n");
+
+	icvHandleMessage(capture);
+
+	OPENCV_ASSERT(capture,
+                      "cvCaptureFromFile_GStreamer( const char * )", "couldn't create capture");
+
+//	GstClock *clock = gst_pipeline_get_clock(GST_PIPELINE(pipeline));
+//	printf("clock %s\n", gst_object_get_name(GST_OBJECT(clock)));
+
+	__END__;
+
+	return (CvCapture *)capture;
+}
 
 CvCapture * cvCaptureFromFile_GStreamer (const char * filename)
 {
 	CvCapture_GStreamer *capture = 0;
-	CV_FUNCNAME("cvWriteFrame");
+	CV_FUNCNAME("cvCaptureFromFile_GStreamer");
 
 	__BEGIN__;
 
@@ -490,57 +569,7 @@ CvCapture * cvCaptureFromFile_GStreamer (const char * filename)
 	}
 
 	icvHandleMessage(capture);
-#if 0
-	sleep(1);
 
-	GstBus *bus;
-	bus = gst_element_get_bus(pipeline);
-
-	while(1) {
-	while(gst_bus_have_pending(bus)) {
-		GstMessage* msg = gst_bus_pop(bus);
-
-		printf("Got %s message\n", GST_MESSAGE_TYPE_NAME(msg));
-
-		switch (GST_MESSAGE_TYPE (msg)) {
-		case GST_MESSAGE_STATE_CHANGED:
-			GstState oldstate, newstate, pendstate;
-			gst_message_parse_state_changed(msg, &oldstate, &newstate, &pendstate);
-			printf("state changed from %d to %d (%d)\n", oldstate, newstate, pendstate);
-			break;
-		case GST_MESSAGE_ERROR: {
-			GError *err;
-			gchar *debug;
-			gst_message_parse_error(msg, &err, &debug);
-
-			fprintf(stderr, "Embedded video playback halted; module %s reported: %s\n",
-				  gst_element_get_name(GST_MESSAGE_SRC (msg)), err->message);
-
-			g_error_free(err);
-			g_free(debug);
-
-			gst_element_set_state(pipeline, GST_STATE_NULL);
-
-			break;
-			}
-		case GST_MESSAGE_EOS:
-			printf("NetStream has reached the end of the stream.");
-
-			return 0;
-		default:
-//			CV_WARN("unhandled message\n");
-			break;
-		}
-
-		gst_message_unref(msg);
-	}
-	GstBuffer *buffer = gst_app_sink_pull_buffer(GST_APP_SINK(sink));
-	gst_buffer_unref(buffer);
-	printf("got buffer\n");
-
-//	sleep(100);
-	}
-#endif
 	OPENCV_ASSERT(capture,
                       "cvCaptureFromFile_GStreamer( const char * )", "couldn't create capture");
 
