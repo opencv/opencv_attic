@@ -267,7 +267,7 @@ else{}
     CvRect subrect = OctSlice_to_CvRect( self, object );
     CHECK_SLICE_BOUNDS( subrect, self->cols, self->rows, );
     cvGetSubRect(self, &tmp, subrect);
-		
+
     // Reshape source array to fit destination
     // This will be used a lot for small arrays b/c
     // OctObject_to_CvArr tries to compress a 2-D octave
@@ -276,7 +276,7 @@ else{}
 
     cvConvert(src, &tmp);
   }
-	
+
   // slice access
   octave_value __paren(octave_value object){
     CvMat * mat;
@@ -423,7 +423,7 @@ else{}
     CvMat mat;
     IplImage * im;
     CvRect subrect = OctSlice_to_CvRect( self, object );
-		
+
     // return scalar if single element
     if(subrect.width==1 && subrect.height==1){
       CvScalar * s;
@@ -450,7 +450,7 @@ else{}
 	return OctFloat_FromDouble( CV_IMAGE_ELEM(self, double, subrect.y, subrect.x) );
       }
     }
-		
+
     // otherwise return array
     im = (IplImage *) cvAlloc(sizeof(IplImage));
     cvGetSubRect(self, &mat, subrect);

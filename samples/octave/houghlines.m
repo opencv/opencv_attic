@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 ## This is a standalone program. Pass an image name as a first parameter of the program.
 
 cv;
@@ -8,12 +8,12 @@ highgui;
 USE_STANDARD=0;
 
 filename = "../../docs/ref/pics/building.jpg"
-if (size(argv, 1)>1)
-  filename = argv(1, :);
+if (size(argv, 1)>=1)
+  filename = argv(){1};
 endif
 
 src=cvLoadImage(filename, 0);
-if (!src)
+if (!swig_this(src))
   printf("Error opening image %s\n",filename);
   exit(-1);
 endif

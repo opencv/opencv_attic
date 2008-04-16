@@ -1,11 +1,11 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv;
 highgui;
 
-inpaint_mask = None;
-img0 = None;
-img = None;
-inpainted = None;
+inpaint_mask = [];
+img0 = [];
+img = [];
+inpainted = [];
 prev_pt = cvPoint(-1,-1);
 
 function on_mouse( event, x, y, flags, param )
@@ -57,7 +57,7 @@ cvZero( inpaint_mask );
 cvZero( inpainted );
 cvShowImage( "image", img );
 cvShowImage( "watershed transform", inpainted );
-cvSetMouseCallback( "image", on_mouse, None );
+cvSetMouseCallback( "image", on_mouse, [] );
 
 while (true)
   c = cvWaitKey(0);

@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 ##
 ## The full "Square Detector" program.
 ## It loads several images subsequentally and tries to find squares in
@@ -9,9 +9,9 @@ cv
 highgui
 
 thresh = 50;
-img = None;
-img0 = None;
-storage = None;
+img = [];
+img0 = [];
+storage = [];
 wndname = "Square Detection Demo";
 
 function angle( pt1, pt2, pt0 )
@@ -44,9 +44,9 @@ function squares = findSquares4( img, storage )
   ## find squares in every color plane of the image
   for c=0:3-1,
     ## extract the c-th color plane
-    channels = [None, None, None]
+    channels = [[], [], []]
     channels[c] = tgray
-    cvSplit( subimage, channels[0], channels[1], channels[2], None ) 
+    cvSplit( subimage, channels[0], channels[1], channels[2], [] ) 
     for l=0:N-1,
       ## hack: use Canny instead of zero threshold level.
       ## Canny helps to catch squares with gradient shading
@@ -56,7 +56,7 @@ function squares = findSquares4( img, storage )
         cvCanny( tgray, gray, 0, thresh, 5 );
 	## dilate canny output to remove potential
 	## holes between edge segments
-        cvDilate( gray, gray, None, 1 );
+        cvDilate( gray, gray, [], 1 );
       else
 	## apply threshold if l!=0
 	##     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0

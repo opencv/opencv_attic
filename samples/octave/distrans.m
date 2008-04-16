@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv;
 highgui;
 
@@ -20,18 +20,18 @@ function on_trackbar( edge_thresh )
 
   cvThreshold( gray, edge, float(edge_thresh), float(edge_thresh), CV_THRESH_BINARY );
   ## Distance transform                  
-  cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, None, None );
+  cvDistTransform( edge, dist, CV_DIST_L2, CV_DIST_MASK_5, [], [] );
 
   cvConvertScale( dist, dist, 5000.0, 0 );
   cvPow( dist, dist, 0.5 );
   
   cvConvertScale( dist, dist32s, 1.0, 0.5 );
-  cvAndS( dist32s, cvScalarAll(255), dist32s, None );
+  cvAndS( dist32s, cvScalarAll(255), dist32s, [] );
   cvConvertScale( dist32s, dist8u1, 1, 0 );
   cvConvertScale( dist32s, dist32s, -1, 0 );
-  cvAddS( dist32s, cvScalarAll(255), dist32s, None );
+  cvAddS( dist32s, cvScalarAll(255), dist32s, [] );
   cvConvertScale( dist32s, dist8u2, 1, 0 );
-  cvMerge( dist8u1, dist8u2, dist8u2, None, dist8u );
+  cvMerge( dist8u1, dist8u2, dist8u2, [], dist8u );
   cvShowImage( wndname, dist8u );
 endfunction
 

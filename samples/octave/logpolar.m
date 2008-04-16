@@ -1,10 +1,10 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 cv
 highgui
 
-src=None
-dst=None
-src2=None
+src=[]
+dst=[]
+src2=[]
 
 function on_mouse( event, x, y, flags, param )
 
@@ -40,7 +40,7 @@ dst = cvCreateImage( cvSize(256,256), 8, 3 );
 src2 = cvCreateImage( cvGetSize(src), 8, 3 );
 
 cvSetMouseCallback( "original", on_mouse );
-on_mouse( CV_EVENT_LBUTTONDOWN, src.width/2, src.height/2, None, None)
+on_mouse( CV_EVENT_LBUTTONDOWN, src.width/2, src.height/2, [], [])
 
 cvShowImage( "original", src );
 cvWaitKey();

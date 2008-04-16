@@ -128,7 +128,7 @@ else
     endif
     
     ## mirror the captured image
-    cv.cvFlip (frame, None, 1);
+    cv.cvFlip (frame, [], 1);
 
     ## compute the hsv version of the image 
     cv.cvCvtColor (frame, hsv, cv.CV_BGR2HSV);
@@ -137,7 +137,7 @@ else
     cv.cvInRangeS (hsv, hsv_min, hsv_max, mask);
 
     ## extract the hue from the hsv array
-    cv.cvSplit (hsv, hue, None, None, None);
+    cv.cvSplit (hsv, hue, [], [], []);
 
     ## select the rectangle of interest in the hue/mask arrays
     hue_roi = cv.cvGetSubRect (hue, selection);

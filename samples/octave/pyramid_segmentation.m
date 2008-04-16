@@ -1,17 +1,17 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 cv
 highgui
 
-image =  [None, None]
-image0 = None
-image1 = None
+image =  [[], []]
+image0 = []
+image1 = []
 threshold1 = 255
 threshold2 = 30
 l = level = 4;
 block_size = 1000;
 filter = CV_GAUSSIAN_5x5;
-storage = None
+storage = []
 min_comp = CvConnectedComp()
 
 function set_thresh1( val )

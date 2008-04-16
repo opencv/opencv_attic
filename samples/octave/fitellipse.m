@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 ## This program is demonstration for ellipse fitting. Program finds 
 ## contours and approximate it by ellipses.
 
@@ -13,9 +13,9 @@
 cv;
 highgui;
 
-image02 = None;
-image03 = None;
-image04 = None;
+image02 = [];
+image03 = [];
+image04 = [];
 
 function process_image( slider_pos )
   ##  Define trackbar callback functon. This function find contours,
