@@ -188,6 +188,7 @@ CvCapture* cvCaptureFromFile_XINE (const char* filename);
 #endif
 
 #ifdef HAVE_GSTREAMER
+CvCapture* cvCaptureFromCAM_GStreamer (const char* source);
 CvCapture* cvCaptureFromFile_GStreamer (const char* filename);
 #endif
 

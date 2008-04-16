@@ -120,7 +120,7 @@ CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
  */
 CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 {
-    int  domains[] =
+	int  domains[] =
 	{
 		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394
 		CV_CAP_STEREO,
@@ -131,17 +131,17 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 	};
 
 
-    // interpret preferred interface (0 = autodetect)
-    int pref = (index / 100) * 100;
-    if (pref)
+	// interpret preferred interface (0 = autodetect)
+	int pref = (index / 100) * 100;
+	if (pref)
 	{
 		domains[0]=pref;
 		index %= 100;
 		domains[1]=-1;
-    }
+	}
 
-    // try every possibly installed camera API
-    for (int i = 0; domains[i] >= 0; i++)
+	// try every possibly installed camera API
+	for (int i = 0; domains[i] >= 0; i++)
 	{
 
 		// local variable to memorize the captured device
@@ -166,6 +166,15 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			capture = cvCaptureFromCAM_V4L (index);
 			if (capture)
 				return capture;
+		#elif defined (HAVE_GSTREAMER)
+		#endif
+		#ifdef HAVE_GSTREAMER
+			capture = cvCaptureFromCAM_GStreamer("v4l2src");
+			if (capture)
+				return capture;
+			capture = cvCaptureFromCAM_GStreamer("v4lsrc");
+			if (capture)
+				return capture;
 		#endif
 
 		#if   defined (HAVE_DC1394)
@@ -174,8 +183,15 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			if (capture)
 				return capture;
 		#elif defined (HAVE_CMU1394)
-			case CV_CAP_IEEE1394:
+		case CV_CAP_IEEE1394:
 			capture = cvCaptureFromCAM_CMU (index);
+			if (capture)
+				return capture;
+		#elif defined (HAVE_GSTREAMER)
+		case CV_CAP_FIREWIRE:
+		#endif
+		#ifdef HAVE_GSTREAMER
+			capture = cvCaptureFromCAM_GStreamer("dv1394src");
 			if (capture)
 				return capture;
 		#endif
@@ -193,11 +209,11 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			if (capture)
 				return capture;
 		#endif
-        }
-    }
+		}
+	}
 
 	// failed open a camera
-    return 0;
+	return 0;
 }
 
 /**
