@@ -29,6 +29,10 @@ CV_BayerGB2RGB=CV_BayerGR2BGR;
 CV_BayerRG2RGB=CV_BayerBG2BGR;
 CV_BayerGR2RGB=CV_BayerGB2BGR;
 
+global cvCalcHist; # all the above should be global, or belong to cv
+global cvZero;
+global cvScale;
+
 CV_MAKE_TYPE=@CV_MAKETYPE;
 CV_IS_CONT_MAT=@CV_IS_MAT_CONT;
 cvGetSubArr=@cvGetSubRect;
@@ -51,4 +55,12 @@ cvDrawLine=@cvLine;
 cvDrawCircle=@cvCircle;
 cvDrawEllipse=@cvEllipse;
 cvDrawPolyLine=@cvPolyLine;
+cvCalcHist=@cvCalcArrHist;
+
+function [count,seq] = cvFindContours(varargin)
+	global cv;
+	[count, seq] = cv.cvFindContoursUntyped( varargin{:} );
+	seq = cv.CvSeq_CvPoint.cast(seq);
+endfunction
+
 

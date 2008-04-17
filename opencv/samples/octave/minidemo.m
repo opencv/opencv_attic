@@ -1,17 +1,15 @@
-#! /usr/bin/env octave -q
-highgui
+#! /usr/bin/env octave
 
-highgui.cvNamedWindow("win", highgui.CV_WINDOW_AUTOSIZE)
-cap = highgui.cvCaptureFromFile("/home/asbach/Source/ObjectDetection/older/avi/table.avi")
-img = highgui.cvQueryFrame(cap)
 
-img
+cvNamedWindow("win", CV_WINDOW_AUTOSIZE);
+cap = cvCreateFileCapture("/home/x/work/sneaker/dvgrab-001.avi");
+img = cvQueryFrame(cap);
+
 printf("Got frame of dimensions (%i x %i)",img.width,img.height);
 
-highgui.cvShowImage("win", img)
-highgui.cvMoveWindow("win", 200, 200)
-highgui.cvWaitKey(0)
+cvShowImage("win", img);
+cvMoveWindow("win", 200, 200);
+cvWaitKey(0);
 
-pilimg = opencv.Ipl2PIL(img)
-pilimg
+octimg = cv2im(img);
 
