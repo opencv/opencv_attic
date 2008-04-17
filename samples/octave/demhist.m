@@ -4,14 +4,24 @@ highgui;
 
 file_name = "../c/baboon.jpg";
 
+global Gbrightness;
+global Gcontrast;
+global hist_size;
+global ranges;
+global src_image;
+global dst_image;
+global hist_image;
+global hist;
+global lut;
+
 _brightness = 100;
 _contrast = 100;
 Gbrightness = 100;
 Gcontrast = 100;
 
 hist_size = 64;
-range_0=[0,256];
-ranges = [ range_0 ];
+range_0={0,256};
+ranges = { range_0 };
 src_image=[];
 dst_image=[];
 hist_image=[];
@@ -32,7 +42,18 @@ function update_contrast( val )
 endfunction
 
 function update_brightcont()
-  ## no global tag required for images ???
+  global Gbrightness;
+  global Gcontrast;
+  global hist_size;
+  global ranges;
+  global src_image;
+  global dst_image;
+  global hist_image;
+  global hist;
+  global lut;
+  global cvCalcHist; # use cv namespace for these instead
+  global cvZero;
+  global cvScale;
 
   brightness = Gbrightness - 100;
   contrast = Gcontrast - 100;
@@ -58,7 +79,7 @@ function update_brightcont()
     if( v > 255 )
       v = 255;
     endif
-    lut[i] = v;
+    lut(i) = v;
   endfor
   
   cvLUT( src_image, dst_image, lut );
@@ -66,17 +87,15 @@ function update_brightcont()
 
   cvCalcHist( dst_image, hist, 0, [] );
   cvZero( dst_image );
-  min_value, max_value = cvGetMinMaxHistValue( hist );
-  cvScale( hist.bins, hist.bins, float(hist_image.height)/max_value, 0 );
+  [min_value, max_value] = cvGetMinMaxHistValue( hist );
+  cvScale( hist.bins, hist.bins, double(hist_image.height)/max_value, 0 );
   ##cvNormalizeHist( hist, 1000 );
 
   cvSet( hist_image, cvScalarAll(255));
-  bin_w = cvRound(float(hist_image.width)/hist_size);
+  bin_w = cvRound(double(hist_image.width)/hist_size);
 
   for i=0:hist_size-1,
-    cvRectangle( hist_image, cvPoint(i*bin_w, hist_image.height),
-                cvPoint((i+1)*bin_w, hist_image.height - cvRound(cvGetReal1D(hist.bins,i))),
-                cvScalarAll(0), -1, 8, 0 );
+    cvRectangle( hist_image, cvPoint(i*bin_w, hist_image.height), cvPoint((i+1)*bin_w, hist_image.height - cvRound(cvGetReal1D(hist.bins,i))), cvScalarAll(0), -1, 8, 0 );
   endfor
   
   cvShowImage( "histogram", hist_image );
@@ -85,12 +104,12 @@ endfunction
 
 ## Load the source image. HighGUI use.
 if size(argv, 1)>1
-  file_name = argv(1, :);
+  file_name = argv(){1}
 endif
 
 src_image = cvLoadImage( file_name, 0 );
 
-if (!src_image)
+if (!swig_this(src_image))
   printf("Image was not loaded.\n");
   exit(-1);
 endif
@@ -98,13 +117,13 @@ endif
 
 dst_image = cvCloneImage(src_image);
 hist_image = cvCreateImage(cvSize(320,200), 8, 1);
-hist = cvCreateHist([hist_size], CV_HIST_ARRAY, ranges, 1);
+hist = cvCreateHist({hist_size}, CV_HIST_ARRAY, ranges, 1);
 
 cvNamedWindow("image", 0);
 cvNamedWindow("histogram", 0);
 
-cvCreateTrackbar("brightness", "image", _brightness, 200, update_brightness);
-cvCreateTrackbar("contrast", "image", _contrast, 200, update_contrast);
+cvCreateTrackbar("brightness", "image", _brightness, 200, @update_brightness);
+cvCreateTrackbar("contrast", "image", _contrast, 200, @update_contrast);
 
 update_brightcont();
 cvWaitKey(0);

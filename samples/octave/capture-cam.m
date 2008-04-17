@@ -1,4 +1,4 @@
-#! /usr/bin/env octave -q
+#! /usr/bin/env octave
 
 ## import the necessary things for OpenCV
 cv;
