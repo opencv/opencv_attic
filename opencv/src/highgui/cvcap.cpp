@@ -169,10 +169,10 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		#elif defined (HAVE_GSTREAMER)
 		#endif
 		#ifdef HAVE_GSTREAMER
-			capture = cvCaptureFromCAM_GStreamer("v4l2src");
+			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L2, 0);
 			if (capture)
 				return capture;
-			capture = cvCaptureFromCAM_GStreamer("v4lsrc");
+			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L, 0);
 			if (capture)
 				return capture;
 		#endif
@@ -191,7 +191,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		case CV_CAP_FIREWIRE:
 		#endif
 		#ifdef HAVE_GSTREAMER
-			capture = cvCaptureFromCAM_GStreamer("dv1394src");
+			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_1394, 0);
 			if (capture)
 				return capture;
 		#endif
@@ -239,7 +239,7 @@ CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
 
     #ifdef HAVE_GSTREAMER
     if (! result)
-        result = cvCaptureFromFile_GStreamer (filename);
+        result = cvCreateCapture_GStreamer (CV_CAP_GSTREAMER_FILE, filename);
     #endif
 
     #ifdef HAVE_FFMPEG
