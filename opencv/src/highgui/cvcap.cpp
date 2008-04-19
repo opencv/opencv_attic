@@ -167,6 +167,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			if (capture)
 				return capture;
 		#elif defined (HAVE_GSTREAMER)
+		case CV_CAP_V4L:
 		#endif
 		#ifdef HAVE_GSTREAMER
 			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L2, 0);
