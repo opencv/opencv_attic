@@ -590,6 +590,19 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 		return 0;
 	}
 
+	printf("linked, pausing\n");
+
+	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
+	   GST_STATE_CHANGE_FAILURE) {
+		CV_WARN("GStreamer: unable to start pipeline\n");
+//		icvHandleMessage(capture);
+//		cvReleaseCapture((CvCapture **)(void *)&capture);
+		gst_object_unref(pipeline);
+		return 0;
+	}
+
+	printf("state now paused\n");
+
 	// construct capture struct
 	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
 	memset(capture, 0, sizeof(CvCapture_GStreamer));
@@ -599,19 +612,6 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	capture->source = source;
 	capture->decodebin = decodebin;
 	capture->appsink = sink;
-
-	printf("linked, pausing\n");
-
-	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
-	   GST_STATE_CHANGE_FAILURE) {
-		CV_ERROR(CV_StsError, "GStreamer: unable to start pipeline\n");
-		icvHandleMessage(capture);
-		cvReleaseCapture((CvCapture **)(void *)&capture);
-		gst_object_unref(pipeline);
-		return 0;
-	}
-
-	printf("state now paused\n");
 
 	icvHandleMessage(capture);
 
