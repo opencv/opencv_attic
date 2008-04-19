@@ -660,6 +660,7 @@ gst_app_sink_pull_buffer (GstAppSink * appsink)
 
   while (TRUE) {
     GST_DEBUG_OBJECT (appsink, "trying to grab a buffer");
+    printf("trying to grab a buffer\n");
     if (!appsink->started)
       goto not_started;
 
@@ -671,10 +672,12 @@ gst_app_sink_pull_buffer (GstAppSink * appsink)
 
     /* nothing to return, wait */
     GST_DEBUG_OBJECT (appsink, "waiting for a buffer");
+    printf("waiting for a buffer\n");
     g_cond_wait (appsink->cond, appsink->mutex);
   }
   buf = g_queue_pop_head (appsink->queue);
   GST_DEBUG_OBJECT (appsink, "we have a buffer %p", buf);
+  printf("we have a buffer %p\n", buf);
   g_mutex_unlock (appsink->mutex);
 
   return buf;
@@ -683,12 +686,14 @@ gst_app_sink_pull_buffer (GstAppSink * appsink)
 eos:
   {
     GST_DEBUG_OBJECT (appsink, "we are EOS, return NULL");
+    printf("we are EOS, return NULL\n");
     g_mutex_unlock (appsink->mutex);
     return NULL;
   }
 not_started:
   {
     GST_DEBUG_OBJECT (appsink, "we are stopped, return NULL");
+    printf("we are stopped, return NULL\n");
     g_mutex_unlock (appsink->mutex);
     return NULL;
   }
@@ -723,7 +728,8 @@ gst_app_sink_peek_buffer (GstAppSink * appsink)
 
   g_mutex_lock (appsink->mutex);
 
-  GST_DEBUG_OBJECT (appsink, "trying to grab a buffer");
+  GST_DEBUG_OBJECT (appsink, "peeking for buffer");
+  printf("peeking for buffer\n");
   if (!appsink->started)
     goto not_started;
 
@@ -736,6 +742,7 @@ gst_app_sink_peek_buffer (GstAppSink * appsink)
   /* nothing to return, wait */
   buf = g_queue_pop_head (appsink->queue);
   GST_DEBUG_OBJECT (appsink, "we have a buffer %p", buf);
+  printf("we have a buffer %p\n", buf);
   g_mutex_unlock (appsink->mutex);
 
   return buf;
@@ -744,12 +751,14 @@ gst_app_sink_peek_buffer (GstAppSink * appsink)
 eos:
   {
     GST_DEBUG_OBJECT (appsink, "we are EOS, return NULL");
+    printf("we are EOS, return NULL\n");
     g_mutex_unlock (appsink->mutex);
     return NULL;
   }
 not_started:
   {
     GST_DEBUG_OBJECT (appsink, "we are stopped, return NULL");
+    printf("we are stopped, return NULL\n");
     g_mutex_unlock (appsink->mutex);
     return NULL;
   }

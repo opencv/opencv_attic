@@ -167,30 +167,38 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 	icvHandleMessage(cap);
 
 	if(!gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink))) {
+		printf("no buffers queued, starting pipeline\n");
+
 		if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PLAYING) ==
 		GST_STATE_CHANGE_FAILURE) {
 			icvHandleMessage(cap);
 			return 0;
 		}
 
-//		printf("pulling buffer\n");
+		printf("pulling buffer\n");
 
 		cap->buffer = gst_app_sink_pull_buffer(GST_APP_SINK(cap->appsink));
+
+		printf("pausing pipeline\n");
 
 		if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PAUSED) ==
 		GST_STATE_CHANGE_FAILURE) {
 			icvHandleMessage(cap);
 			return 0;
 		}
+
+		printf("pipeline paused\n");
+
 	} else {
-//		printf("peeking buffer\n");
+		printf("peeking buffer, %d buffers in queue\n",
+		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
 		cap->buffer = gst_app_sink_peek_buffer(GST_APP_SINK(cap->appsink));
 	}
 
-//	printf("pulled buffer %p\n", cap->buffer);
-
 	if(!cap->buffer)
 		return 0;
+
+	printf("pulled buffer %p\n", cap->buffer);
 
 	return 1;
 }
@@ -354,16 +362,19 @@ static void icvRestartPipeline(CvCapture_GStreamer *cap)
  	__END__;
 }
 
-static void icvSetFilter(CvCapture_GStreamer *cap, const char *property, ...)
+static void icvSetFilter(CvCapture_GStreamer *cap, const char *property, int type, int v1, int v2)
 {
-	va_list args;
+	if(!cap->caps) {
+		if(type == G_TYPE_INT)
+			cap->caps = gst_caps_new_simple("video/x-raw-rgb", property, type, v1, NULL);
+		else
+			cap->caps = gst_caps_new_simple("video/x-raw-rgb", property, type, v1, v2, NULL);
+	}
 
-	if(!cap->caps)
-		cap->caps = gst_caps_new_simple("video/x-raw-rgb", NULL);
-
-	va_start(args, property);
-	gst_caps_set_simple_valist(cap->caps, "video/x-raw-rgb", args);
-	va_end(args);
+	if(type == G_TYPE_INT)
+		gst_caps_set_simple(cap->caps, "video/x-raw-rgb", property, type, v1, NULL);
+	else
+		gst_caps_set_simple(cap->caps, "video/x-raw-rgb", property, type, v1, v2, NULL);
 
 	icvRestartPipeline(cap);
 }
@@ -417,13 +428,13 @@ static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
 		break;
 	case CV_CAP_PROP_FRAME_WIDTH:
 		if(value > 0)
-			icvSetFilter(cap, "width", G_TYPE_INT, (int) value, NULL);
+			icvSetFilter(cap, "width", G_TYPE_INT, (int) value, 0);
 		else
 			icvRemoveFilter(cap, "width");
 		break;
 	case CV_CAP_PROP_FRAME_HEIGHT:
 		if(value > 0)
-			icvSetFilter(cap, "height", G_TYPE_INT, (int) value, NULL);
+			icvSetFilter(cap, "height", G_TYPE_INT, (int) value, 0);
 		else
 			icvRemoveFilter(cap, "height");
 		break;
@@ -437,7 +448,7 @@ static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
 			} else
 				denom = 1;
 
-			icvSetFilter(cap, "framerate", GST_TYPE_FRACTION, num, denom, NULL);
+			icvSetFilter(cap, "framerate", GST_TYPE_FRACTION, num, denom);
 		} else
 			icvRemoveFilter(cap, "framerate");
 		break;
