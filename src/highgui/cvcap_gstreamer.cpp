@@ -71,9 +71,13 @@ typedef struct CvCapture_GStreamer
 	int			type;	// one of [1394, v4l2, v4l, file]
 
 	GstElement	       *pipeline;
+	GstElement	       *source;
+	GstElement	       *decodebin;
 	GstElement	       *appsink;
 
 	GstBuffer	       *buffer;
+
+	GstCaps		       *caps;	// filter caps inserted right after the source
 
 	IplImage	       *frame;
 } CvCapture_GStreamer;
@@ -92,6 +96,9 @@ static void icvClose_GStreamer(CvCapture *capture)
 
 	if(cap->frame)
 		cvReleaseImage(&cap->frame);
+
+	if(cap->caps)
+		gst_caps_unref(cap->caps);
 }
 
 static void icvHandleMessage(CvCapture_GStreamer *cap)
@@ -307,9 +314,69 @@ static double icvGetProperty_GStreamer(CvCapture *capture, int id)
 	case CV_CAP_PROP_GAIN:
 	case CV_CAP_PROP_CONVERT_RGB:
 		break;
+	default:
+		CV_WARN("GStreamer: unhandled property");
+		break;
 	}
-	CV_WARN("GStreamer: unhandled property");
 	return 0;
+}
+
+static void icvRestartPipeline(CvCapture_GStreamer *cap)
+{
+	CV_FUNCNAME("icvRestartPipeline");
+
+	__BEGIN__;
+
+	printf("restarting pipeline, going to ready\n");
+
+	if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_READY) ==
+	   GST_STATE_CHANGE_FAILURE) {
+		CV_ERROR(CV_StsError, "GStreamer: unable to start pipeline\n");
+		return;
+	}
+
+	printf("ready, relinking\n");
+
+	gst_element_unlink(cap->source, cap->decodebin);
+	printf("filtering with %s\n", gst_caps_to_string(cap->caps));
+	gst_element_link_filtered(cap->source, cap->decodebin, cap->caps);
+
+	printf("relinked, pausing\n");
+
+	if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PAUSED) ==
+	   GST_STATE_CHANGE_FAILURE) {
+		CV_ERROR(CV_StsError, "GStreamer: unable to start pipeline\n");
+		return;
+	}
+
+	printf("state now paused\n");
+
+ 	__END__;
+}
+
+static void icvSetFilter(CvCapture_GStreamer *cap, const char *property, ...)
+{
+	va_list args;
+
+	if(!cap->caps)
+		cap->caps = gst_caps_new_simple("video/x-raw-rgb", NULL);
+
+	va_start(args, property);
+	gst_caps_set_simple_valist(cap->caps, "video/x-raw-rgb", args);
+	va_end(args);
+
+	icvRestartPipeline(cap);
+}
+
+static void icvRemoveFilter(CvCapture_GStreamer *cap, const char *filter)
+{
+	if(!cap->caps)
+		return;
+
+	GstStructure *s = gst_caps_get_structure(cap->caps, 0);
+	gst_structure_remove_field(s, filter);
+
+	icvRestartPipeline(cap);
 }
 
 static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
@@ -330,27 +397,50 @@ static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
 		if(!gst_element_seek_simple(GST_ELEMENT(cap->pipeline), format,
 					    flags, (gint64) (value * GST_MSECOND))) {
 			CV_WARN("GStreamer: unable to seek");
-			return 0;
 		}
+		break;
 	case CV_CAP_PROP_POS_FRAMES:
 		format = GST_FORMAT_BUFFERS;
 		flags = (GstSeekFlags) (GST_SEEK_FLAG_FLUSH|GST_SEEK_FLAG_ACCURATE);
 		if(!gst_element_seek_simple(GST_ELEMENT(cap->pipeline), format,
 					    flags, (gint64) value)) {
 			CV_WARN("GStreamer: unable to seek");
-			return 0;
 		}
+		break;
 	case CV_CAP_PROP_POS_AVI_RATIO:
 		format = GST_FORMAT_PERCENT;
 		flags = (GstSeekFlags) (GST_SEEK_FLAG_FLUSH|GST_SEEK_FLAG_ACCURATE);
 		if(!gst_element_seek_simple(GST_ELEMENT(cap->pipeline), format,
 					    flags, (gint64) (value * GST_FORMAT_PERCENT_MAX))) {
 			CV_WARN("GStreamer: unable to seek");
-			return 0;
 		}
+		break;
 	case CV_CAP_PROP_FRAME_WIDTH:
+		if(value > 0)
+			icvSetFilter(cap, "width", G_TYPE_INT, (int) value, NULL);
+		else
+			icvRemoveFilter(cap, "width");
+		break;
 	case CV_CAP_PROP_FRAME_HEIGHT:
+		if(value > 0)
+			icvSetFilter(cap, "height", G_TYPE_INT, (int) value, NULL);
+		else
+			icvRemoveFilter(cap, "height");
+		break;
 	case CV_CAP_PROP_FPS:
+		if(value > 0) {
+			int num, denom;
+			num = (int) value;
+			if(value != num) { // FIXME this supports only fractions x/1 and x/2
+				num = (int) (value * 2);
+				denom = 2;
+			} else
+				denom = 1;
+
+			icvSetFilter(cap, "framerate", GST_TYPE_FRACTION, num, denom, NULL);
+		} else
+			icvRemoveFilter(cap, "framerate");
+		break;
 	case CV_CAP_PROP_FOURCC:
 	case CV_CAP_PROP_FRAME_COUNT:
 	case CV_CAP_PROP_FORMAT:
@@ -362,8 +452,9 @@ static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
 	case CV_CAP_PROP_GAIN:
 	case CV_CAP_PROP_CONVERT_RGB:
 		break;
+	default:
+		CV_WARN("GStreamer: unhandled property");
 	}
-	CV_WARN("GStreamer: unhandled property");
 	return 0;
 }
 
@@ -425,9 +516,9 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 //	teststreamer(filename);
 
 //	return 0;
-	printf("entered capturecreator\n");
 
 	if(!isInited) {
+		printf("gst_init\n");
 		gst_init (NULL, NULL);
 
 // according to the documentation this is the way to register a plugin now
@@ -440,10 +531,13 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 		isInited = true;
 	}
 
-	GstElement *pipeline = gst_pipeline_new (NULL);
-
 	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
+	printf("entered capturecreator %s\n", sourcetypes[type]);
+
 	GstElement *source = gst_element_factory_make(sourcetypes[type], NULL);
+	if(!source)
+		return 0;
+
 	if(type == CV_CAP_GSTREAMER_FILE)
 		g_object_set(G_OBJECT(source), "location", filename, NULL);
 
@@ -459,18 +553,22 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	GstElement *decodebin = gst_element_factory_make("decodebin", NULL);
 	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(newpad), colour);
 
+	GstElement *pipeline = gst_pipeline_new (NULL);
+
 	gst_bin_add_many(GST_BIN(pipeline), source, decodebin, colour, sink, NULL);
 
 	printf("added many\n");
 
 	switch(type) {
-	case CV_CAP_GSTREAMER_V4L2: // default to 640x480
+	case CV_CAP_GSTREAMER_V4L2: // default to 640x480, 30 fps
 		caps = gst_caps_new_simple("video/x-raw-rgb",
 					   "width", G_TYPE_INT, 640,
 					   "height", G_TYPE_INT, 480,
+					   "framerate", GST_TYPE_FRACTION, 30, 1,
 					   NULL);
 		if(!gst_element_link_filtered(source, decodebin, caps)) {
-			CV_ERROR(CV_StsError, "GStreamer: cannot link v4lsrc -> decodebin\n");
+			CV_ERROR(CV_StsError, "GStreamer: cannot link v4l2src -> decodebin\n");
+			gst_object_unref(pipeline);
 			return 0;
 		}
 		gst_caps_unref(caps);
@@ -480,6 +578,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	case CV_CAP_GSTREAMER_FILE:
 		if(!gst_element_link(source, decodebin)) {
 			CV_ERROR(CV_StsError, "GStreamer: cannot link filesrc -> decodebin\n");
+			gst_object_unref(pipeline);
 			return 0;
 		}
 		break;
@@ -487,10 +586,9 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 
 	if(!gst_element_link(colour, sink)) {
 		CV_ERROR(CV_StsError, "GStreamer: cannot link colour -> sink\n");
+		gst_object_unref(pipeline);
 		return 0;
 	}
-
-	printf("linked\n");
 
 	// construct capture struct
 	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
@@ -498,15 +596,18 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	capture->vtable = &capture_vtable;
 	capture->type = type;
 	capture->pipeline = pipeline;
+	capture->source = source;
+	capture->decodebin = decodebin;
 	capture->appsink = sink;
 
-	printf("pausing\n");
+	printf("linked, pausing\n");
 
 	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
 	   GST_STATE_CHANGE_FAILURE) {
 		CV_ERROR(CV_StsError, "GStreamer: unable to start pipeline\n");
 		icvHandleMessage(capture);
 		cvReleaseCapture((CvCapture **)(void *)&capture);
+		gst_object_unref(pipeline);
 		return 0;
 	}
 
