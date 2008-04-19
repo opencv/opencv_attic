@@ -167,7 +167,7 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 	icvHandleMessage(cap);
 
 	if(!gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink))) {
-		printf("no buffers queued, starting pipeline\n");
+//		printf("no buffers queued, starting pipeline\n");
 
 		if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PLAYING) ==
 		GST_STATE_CHANGE_FAILURE) {
@@ -175,11 +175,11 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 			return 0;
 		}
 
-		printf("pulling buffer\n");
+//		printf("pulling buffer\n");
 
 		cap->buffer = gst_app_sink_pull_buffer(GST_APP_SINK(cap->appsink));
 
-		printf("pausing pipeline\n");
+//		printf("pausing pipeline\n");
 
 		if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PAUSED) ==
 		GST_STATE_CHANGE_FAILURE) {
@@ -187,18 +187,17 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 			return 0;
 		}
 
-		printf("pipeline paused\n");
-
+//		printf("pipeline paused\n");
 	} else {
-		printf("peeking buffer, %d buffers in queue\n",
-		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
+//		printf("peeking buffer, %d buffers in queue\n",
+//		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
 		cap->buffer = gst_app_sink_peek_buffer(GST_APP_SINK(cap->appsink));
 	}
 
 	if(!cap->buffer)
 		return 0;
 
-	printf("pulled buffer %p\n", cap->buffer);
+//	printf("pulled buffer %p\n", cap->buffer);
 
 	return 1;
 }
@@ -212,6 +211,8 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 
 	if(!cap->buffer)
 		return 0;
+
+	printf("getting buffercaps\n");
 
 	GstCaps* caps = gst_buffer_get_caps(cap->buffer);
 
@@ -227,11 +228,15 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 	gst_structure_get_int(structure, "green_mask", &greenmask);
 	gst_structure_get_int(structure, "blue_mask", &bluemask);
 
+	printf("buffer has %d bpp, endianness %d, rgb %x %x %x, %s\n", bpp, endianness, redmask, greenmask, bluemask, gst_caps_to_string(caps));
+
 	if(!cap->frame) {
 		gint height, width;
 
 		gst_structure_get_int(structure, "width", &width);
 		gst_structure_get_int(structure, "height", &height);
+
+		printf("creating frame %dx%d\n", width, height);
 
 		cap->frame = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 	}
@@ -240,16 +245,20 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 
 	unsigned char *data = GST_BUFFER_DATA(cap->buffer);
 
+	printf("generating shifts\n");
+
 	IplImage *frame = cap->frame;
-	int nbyte = bpp >> 3;
-	int redshift, blueshift, greenshift;
-	int mask = redmask;
+	unsigned nbyte = bpp >> 3;
+	unsigned redshift, blueshift, greenshift;
+	unsigned mask = redmask;
 	for(redshift = 0, mask = redmask; (mask & 1) == 0; mask >>= 1, redshift++)
 		;
 	for(greenshift = 0, mask = greenmask; (mask & 1) == 0; mask >>= 1, greenshift++)
 		;
 	for(blueshift = 0, mask = bluemask; (mask & 1) == 0; mask >>= 1, blueshift++)
 		;
+
+	printf("shifts: %u %u %u\n", redshift, greenshift, blueshift);
 
 	for(int r = 0; r < frame->height; r++) {
 		for(int c = 0; c < frame->width; c++, data += nbyte) {
@@ -259,6 +268,8 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 			frame->imageData[at+2] = ((*((gint *)data)) & bluemask) >> blueshift;
 		}
 	}
+
+	printf("converted buffer\n");
 
 	gst_buffer_unref(cap->buffer);
 	cap->buffer = 0;
@@ -503,7 +514,7 @@ static void newpad(GstElement *decodebin, GstPad *pad, gboolean last, gpointer d
 	caps = gst_pad_get_caps(pad);
 	str = gst_caps_get_structure(caps, 0);
 	const char *structname = gst_structure_get_name(str);
-	g_print("new pad %s\n", structname);
+//	g_print("new pad %s\n", structname);
 	if(!g_strrstr(structname, "video")) {
 		gst_caps_unref(caps);
 		gst_object_unref(sinkpad);
@@ -529,7 +540,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 //	return 0;
 
 	if(!isInited) {
-		printf("gst_init\n");
+//		printf("gst_init\n");
 		gst_init (NULL, NULL);
 
 // according to the documentation this is the way to register a plugin now
@@ -543,7 +554,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	}
 
 	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
-	printf("entered capturecreator %s\n", sourcetypes[type]);
+//	printf("entered capturecreator %s\n", sourcetypes[type]);
 
 	GstElement *source = gst_element_factory_make(sourcetypes[type], NULL);
 	if(!source)
@@ -568,7 +579,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 
 	gst_bin_add_many(GST_BIN(pipeline), source, decodebin, colour, sink, NULL);
 
-	printf("added many\n");
+//	printf("added many\n");
 
 	switch(type) {
 	case CV_CAP_GSTREAMER_V4L2: // default to 640x480, 30 fps
@@ -601,7 +612,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 		return 0;
 	}
 
-	printf("linked, pausing\n");
+//	printf("linked, pausing\n");
 
 	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
 	   GST_STATE_CHANGE_FAILURE) {
@@ -612,7 +623,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 		return 0;
 	}
 
-	printf("state now paused\n");
+//	printf("state now paused\n");
 
 	// construct capture struct
 	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
