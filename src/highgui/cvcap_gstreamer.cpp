@@ -375,6 +375,8 @@ static void icvRestartPipeline(CvCapture_GStreamer *cap)
 
 static void icvSetFilter(CvCapture_GStreamer *cap, const char *property, int type, int v1, int v2)
 {
+	printf("setting cap %s %d %d %d\n", property, type, v1, v2);
+
 	if(!cap->caps) {
 		if(type == G_TYPE_INT)
 			cap->caps = gst_caps_new_simple("video/x-raw-rgb", property, type, v1, NULL);
