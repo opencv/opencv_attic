@@ -154,20 +154,19 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			capture = cvCaptureFromCAM_TYZX (index);
 			if (capture)
 				return capture;
+			break;
 		#endif
 
-		#if   defined (HAVE_VFW)
 		case CV_CAP_VFW:
+		#ifdef HAVE_VFW
 			capture = cvCaptureFromCAM_VFW (index);
 			if (capture)
 				return capture;
-		#elif defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
-		case CV_CAP_V4L:
+		#endif
+		#if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
 			capture = cvCaptureFromCAM_V4L (index);
 			if (capture)
 				return capture;
-		#elif defined (HAVE_GSTREAMER)
-		case CV_CAP_V4L:
 		#endif
 		#ifdef HAVE_GSTREAMER
 			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L2, 0);
@@ -177,31 +176,32 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			if (capture)
 				return capture;
 		#endif
+			break;
 
-		#if   defined (HAVE_DC1394)
-		case CV_CAP_DC1394:
+		case CV_CAP_FIREWIRE:
+		#ifdef HAVE_DC1394
 			capture = cvCaptureFromCAM_DC1394 (index);
 			if (capture)
 				return capture;
-		#elif defined (HAVE_CMU1394)
-		case CV_CAP_IEEE1394:
+		#endif
+		#ifdef HAVE_CMU1394
 			capture = cvCaptureFromCAM_CMU (index);
 			if (capture)
 				return capture;
-		#elif defined (HAVE_GSTREAMER)
-		case CV_CAP_FIREWIRE:
 		#endif
 		#ifdef HAVE_GSTREAMER
 			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_1394, 0);
 			if (capture)
 				return capture;
 		#endif
+			break;
 
 		#ifdef HAVE_MIL
 		case CV_CAP_MIL:
 			capture = cvCaptureFromCAM_MIL (index);
 			if (capture)
 				return capture;
+			break;
 		#endif
 
 		#ifdef HAVE_QUICKTIME
@@ -209,6 +209,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			capture = cvCaptureFromCAM_QT (index);
 			if (capture)
 				return capture;
+			break;
 		#endif
 		}
 	}
