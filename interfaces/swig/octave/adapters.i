@@ -58,37 +58,6 @@
 // * test case for channel==1
 // * test case for channel=={2,3,4}
 // * test case for 2 dim, 1 dim, n dim cases
-/*
-highgui;
-cv;
-
-I=cvLoadImage("sink.png");
-a=cv2im(I);
-I2=im2cv(a, CV_8U);
-
-imshow(cv2im(I));
-imshow(cv2im(I2));
-
-a=rand(3,3,3);
-b=mat2cv(a,CV_64FC1);
-c=cv2mat(b);
-assert(all(a==c));
-
-a=eye(3);
-b=mat2cv(a,CV_64FC1);
-c=cv2mat(b);
-assert(all(a==c));
-
-assert(all(cv2mat(mat2cv(eye(3),6))==eye(3)));
-
-I=cvLoadImage("sink.png");
-a=cv2im(I);
-I2=cvCloneImage(I);
-cvSobel(I,I2,2,2);
-imshow(cv2im(I2));
-
-imshow(a);
- */
 
 %{
 

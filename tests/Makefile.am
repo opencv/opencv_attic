@@ -1,1 +1,1 @@
-SUBDIRS = cxts cxcore cv python
+SUBDIRS = cxts cxcore cv python octave
