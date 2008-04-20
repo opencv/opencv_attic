@@ -60,7 +60,25 @@ cvCalcHist=@cvCalcArrHist;
 function [count,seq] = cvFindContours(varargin)
 	global cv;
 	[count, seq] = cv.cvFindContoursUntyped( varargin{:} );
-	seq = cv.CvSeq_CvPoint.cast(seq);
+	if (swig_this(seq))
+	  seq = cv.CvSeq_CvPoint.cast(seq);
+	endif
 endfunction
 
+function c = CvSeq_map(self)
+  c = cell(1, self.total);
+  for i = 1:self.total, c{i} = self{i}; end;
+endfunction
+function c = CvSeq_hrange(self)
+  c = {};
+  i = 0;
+  s = self;
+  while swig_this(s.h_next), s = s.cast(s.h_next); c{++i} = s; end;
+endfunction
+function c = CvSeq_vrange(self)
+  c = {};
+  i = 0;
+  s = self;
+  while swig_this(s.v_next), s = s.cast(s.v_next); c{++i} = s; end;
+endfunction
 
