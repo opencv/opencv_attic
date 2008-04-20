@@ -3,210 +3,180 @@
 printf("OpenCV Octave version of lkdemo\n");
 
 ## import the necessary things for OpenCV
-cv
-highgui
+cv;
+highgui;
 
 #############################################################################
 ## some "constants"
 
-win_size = 10
-MAX_COUNT = 500
+win_size = 10;
+MAX_COUNT = 500;
 
 #############################################################################
 ## some "global" variables
 
-image = []
-pt = []
-add_remove_pt = false
-flags = 0
-night_mode = false
-need_to_init = false
+global g;
+
+g.image = [];
+g.pt = [];
+g.add_remove_pt = false;
+g.flags = 0;
+g.night_mode = false;
+g.need_to_init = false;
 
 #############################################################################
 ## the mouse callback
 
 ## the callback on the trackbar
 function on_mouse (event, x, y, flags, param)
+  global g;
+  global cv;
+  global highgui;
 
-  ## we will use the global pt and add_remove_pt
-  global pt
-  global add_remove_pt
-  
-  if (swig_this(image) == 0)
+  if (swig_this(g.image) == 0)
     ## not initialized, so skip
-    return
+    return;
   endif
 
-  if (image.origin != 0)
+  if (g.image.origin != 0)
     ## different origin
-    y = image.height - y
+    y = g.image.height - y;
   endif
 
   if (event == highgui.CV_EVENT_LBUTTONDOWN)
     ## user has click, so memorize it
-    pt = cv.cvPoint (x, y)
-    add_remove_pt = true
+    pt = cv.cvPoint (x, y);
+    add_remove_pt = true;
   endif
 endfunction
 
 #############################################################################
 ## so, here is the main part of the program
 
-try
-  ## try to get the device number from the command line
-  device = int32 (argv (1, :))
 
-  ## got it ! so remove it from the arguments
-  argv (1, :) = []
-catch
-  ## no device number on the command line, assume we want the 1st device
-  device = 0
-end_try_catch
-
-if (size (argv, 1) == 1)
-  ## no argument on the command line, try to use the camera
-  capture = highgui.cvCreateCameraCapture (device)
-
-else
-  ## we have an argument on the command line,
-  ## we can assume this is a file name, so open it
-  capture = highgui.cvCreateFileCapture (argv (1, :))
+filename = "/home/x/work/sneaker/dvgrab-001.avi";
+if (size(argv, 1)>1)
+  filename=argv(){1};
 endif
 
+capture = highgui.cvCreateFileCapture (filename);
+
 ## check that capture device is OK
-if (!capture)
-  print "Error opening capture device"
+if (!swig_this(capture))
+  printf("Error opening capture device\n");
   exit(1)
 endif
 
 ## display a small howto use it
-printf("Hot keys: \n" \
-       "\tESC - quit the program\n" \
-       "\tr - auto-initialize tracking\n" \
-       "\tc - delete all the points\n" \
-       "\tn - switch the \"night\" mode on/off\n" \
-       "To add/remove a feature point click it\n");
+printf("Hot keys: \n");
+printf("\tESC - quit the program\n");
+printf("\tr - auto-initialize tracking\n");
+printf("\tc - delete all the points\n");
+printf("\tn - switch the \"night\" mode on/off\n");
+printf("To add/remove a feature point click it\n");
 
 ## first, create the necessary windows
-highgui.cvNamedWindow ('LkDemo', highgui.CV_WINDOW_AUTOSIZE)
+highgui.cvNamedWindow ('LkDemo', 1);
 
 ## register the mouse callback
-highgui.cvSetMouseCallback ('LkDemo', on_mouse, [])
+highgui.cvSetMouseCallback ('LkDemo', @on_mouse, [])
 
-while (1)
+#while (1)
   ## do forever
 
   ## 1. capture the current image
-  frame = highgui.cvQueryFrame (capture)
+  frame = highgui.cvQueryFrame (capture);
   if (swig_this(frame) == 0)
     ## no image captured... end the processing
     break
   endif
 
-  if (swig_this(image) == 0),
+  if (swig_this(g.image) == 0),
     ## create the images we need
-    image = cv.cvCreateImage (cv.cvGetSize (frame), 8, 3)
-    image.origin = frame.origin
-    grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
-    prev_grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
-    pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
-    prev_pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
-    points = {[], []}
+    g.image = cv.cvCreateImage (cv.cvGetSize (frame), 8, 3);
+#    g.image.origin = frame.origin;
+    grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1);
+    prev_grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1);
+    pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1);
+    prev_pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1);
+    points = {[], []};
   endif
 
   ## copy the frame, so we can draw on it
-  cv.cvCopy (frame, image)
+  cv.cvCopy (frame, g.image)
 
   ## create a grey version of the image
-  cv.cvCvtColor (image, grey, cv.CV_BGR2GRAY)
+  cv.cvCvtColor (g.image, grey, cv.CV_BGR2GRAY)
 
-  if (night_mode)
+  if (g.night_mode)
     ## night mode: only display the points
-    cv.cvSetZero (image)
+    cv.cvSetZero (g.image)
   endif
 
-  if (need_to_init)
+  if (g.need_to_init)
     ## we want to search all the good points
 
     ## create the wanted images
-    eig = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1)
-    temp = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1)
+    eig = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1);
+    temp = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1);
 
     ## the default parameters
-    quality = 0.01
-    min_distance = 10
+    quality = 0.01;
+    min_distance = 10;
 
     ## search the good points
-    points [1] = cv.cvGoodFeaturesToTrack (
-					   grey, eig, temp,
-					   MAX_COUNT,
-					   quality, min_distance, [], 3, 0, 0.04)
+    g.points {1} = cv.cvGoodFeaturesToTrack (grey, eig, temp,MAX_COUNT,quality, min_distance, [], 3, 0, 0.04);
 
     ## refine the corner locations
-    cv.cvFindCornerSubPix (
-			   grey,
-			   points [1],
-			   cv.cvSize (win_size, win_size), cv.cvSize (-1, -1),
-			   cv.cvTermCriteria (cv.CV_TERMCRIT_ITER | cv.CV_TERMCRIT_EPS,
-					      20, 0.03))
+    cv.cvFindCornerSubPix (grey,g.points {1},cv.cvSize (win_size, win_size), cv.cvSize (-1, -1),cv.cvTermCriteria (cv.CV_TERMCRIT_ITER | cv.CV_TERMCRIT_EPS,20, 0.03));
 
     ## release the temporary images
-    cv.cvReleaseImage (eig)
-    cv.cvReleaseImage (temp)
+    cv.cvReleaseImage (eig);
+    cv.cvReleaseImage (temp);
     
-  else (len (points [0]) > 0)
+  else (size (g.points {1}, 2) > 0)
     ## we have points, so display them
 
     ## calculate the optical flow
-    [points [1], status] = cv.cvCalcOpticalFlowPyrLK (
-						    prev_grey, grey, prev_pyramid, pyramid,
-						    points [0], len (points [0]),
-						    cv.cvSize (win_size, win_size), 3,
-						    len (points [0]),
-						    [],
-						    cv.cvTermCriteria (cv.CV_TERMCRIT_ITER|cv.CV_TERMCRIT_EPS,
-								       20, 0.03),
-						    flags)
+    [tmp, status] = cv.cvCalcOpticalFlowPyrLK (prev_grey, grey, prev_pyramid, pyramid,g.points {1}, size (g.points {1},2),cv.cvSize (win_size, win_size), 3,size (points {1}, 2),[],cv.cvTermCriteria (bitor(cv.CV_TERMCRIT_ITER,cv.CV_TERMCRIT_EPS),20, 0.03),g.flags);
+    points {1} = tmp;
 
     ## initializations
-    point_counter = -1
-    new_points = []
+    point_counter = -1;
+    new_points = {};
     
-    for the_point in points (1),
+    for the_point = points {1},
       ## go trough all the points
 
       ## increment the counter
-      point_counter += 1
+      point_counter += 1;
       
       if (add_remove_pt)
 	## we have a point to add, so see if it is close to
 	## another one. If yes, don't use it
-        dx = pt.x - the_point.x
-        dy = pt.y - the_point.y
+        dx = pt.x - the_point.x;
+        dy = pt.y - the_point.y;
         if (dx * dx + dy * dy <= 25)
 	  ## too close
-          add_remove_pt = 0
-          continue
+          add_remove_pt = 0;
+          continue;
 	endif
       endif
 
       if (!status (point_counter))
 	## we will disable this point
-        continue
+        continue;
       endif
 
       ## this point is a correct point
-      new_points.append (the_point)
+      new_points = append (new_points, the_point);
       
       ## draw the current point
-      cv.cvCircle (image,
-                   [the_point.x, the_point.y],
-                   3, cv.cvScalar (0, 255, 0, 0),
-                   -1, 8, 0)
+      cv.cvCircle (g.image, {the_point.x, the_point.y},3, cv.cvScalar (0, 255, 0, 0),-1, 8, 0);
     endfor
 
-    ## set back the points we keep
-    points [1] = new_points
+    ## set back the points we keep;
+    points {1} = new_points;
   endif
   
   if (add_remove_pt)
@@ -226,13 +196,13 @@ while (1)
   endif
 
   ## swapping
-  prev_grey, grey = grey, prev_grey
-  prev_pyramid, pyramid = pyramid, prev_pyramid
-  points [0], points [1] = points [1], points [0]
-  need_to_init = false
+  tmp = prev_grey; prev_grey = grey; grey = tmp;
+  tmp = prev_pyramid; prev_pyramid = pyramid; pyramid = tmp;
+  tmp = points{1}; points{1} = points{2}; points{2} = tmp;
+  g.need_to_init = false;
   
   ## we can now display the image
-  highgui.cvShowImage ('LkDemo', image)
+  highgui.cvShowImage ('LkDemo', g.image)
 
   ## handle events
   c = highgui.cvWaitKey (10)
@@ -243,11 +213,11 @@ while (1)
   endif
 
   ## processing depending on the character
-  if (c in ['r', 'R'])
-    need_to_init = true
-  elseif (c in ['c', 'C'])
-    points = [[], []]
-  elseif (c in ['n', 'N'])
-    night_mode = not night_mode
+  if (c == int32('r'))
+    g.need_to_init = true;
+  elseif (c == int32('c'))
+    g.points = {[], []};
+  elseif (c == int32('n'))
+    g.night_mode = !night_mode
   endif
-endwhile
+#endwhile

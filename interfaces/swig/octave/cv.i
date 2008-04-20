@@ -50,9 +50,9 @@
 
 
 %{
-	#include "octhelpers.h"
-	#include "octcvseq.hpp"
-	///#include "error.h"
+#include "octhelpers.h"
+#include "octcvseq.hpp"
+#include "error.h"
 %}
 
 
@@ -75,12 +75,13 @@
 
 %include "./imagedata.i"
 
-// We integrate OpenCV error handling into the Octave exception mechanism
-///%include "./error.h"
-
-
 // include some wrappers to manipulate CvSeq types
 %include "./octcvseq.hpp"
 
 // aliases from #defines
 %include "./cvaliases.i"
+
+%insert(init) %{
+  cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator());
+%}
+

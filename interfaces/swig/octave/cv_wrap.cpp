@@ -818,48 +818,46 @@ SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *point
 #include <vector>
 #include <string>
 
-namespace {
+typedef octave_value_list(*octave_func) (const octave_value_list &, int);
+class octave_swig_type;
 
-  typedef octave_value_list(*octave_func) (const octave_value_list &, int);
-  class octave_swig_type;
+namespace Swig {
+  class Director;
 
-  namespace Swig {
-    class Director;
+  SWIGRUNTIME void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
+  SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d);
+  SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self);
 
-    void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
-    void swig_director_destroyed(octave_swig_type *self, Director *d);
-    void swig_director_set_self(Director *d, octave_swig_type *self);
+  SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost);
+  SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov);
+  SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov);
 
-    octave_base_value *swig_value_ref(octave_swig_type *ost);
-    octave_swig_type *swig_value_deref(const octave_value &ov);
-    octave_swig_type *swig_value_deref(const octave_base_value &ov);
+  typedef std::map < void *, Director * > rtdir_map;
 
-    typedef std::map < void *, Director * > rtdir_map;
-
-    SWIGINTERN rtdir_map &get_rtdir_map() {
-      static swig_module_info *module = 0;
-      if (!module)
-	module = SWIG_GetModule(0);
-      assert(module);
-      if (!module->clientdata)
-	module->clientdata = new rtdir_map;
-      return *(rtdir_map *) module->clientdata;
-    }
-
-    SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
-      get_rtdir_map()[vptr] = d;
-    }
-
-    SWIGINTERNINLINE void erase_rtdir(void *vptr) {
-      get_rtdir_map().erase(vptr);
-    }
-
-    SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
-      rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
-      Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
-      return rtdir;
-    }
+  SWIGINTERN rtdir_map &get_rtdir_map() {
+    static swig_module_info *module = 0;
+    if (!module)
+      module = SWIG_GetModule(0);
+    assert(module);
+    if (!module->clientdata)
+      module->clientdata = new rtdir_map;
+    return *(rtdir_map *) module->clientdata;
   }
+
+  SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
+    get_rtdir_map()[vptr] = d;
+  }
+
+  SWIGINTERNINLINE void erase_rtdir(void *vptr) {
+    get_rtdir_map().erase(vptr);
+  }
+
+  SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
+    rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
+    Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
+    return rtdir;
+  }
+}
 
   struct swig_octave_member {
     const char *name;
@@ -1409,6 +1407,23 @@ namespace {
       return outarg(0).string_value();
     }
 
+    /*
+    virtual Octave_map map_value() const {
+      octave_swig_type *nc_this = const_cast < octave_swig_type *>(this);
+      member_value_pair *m = nc_this->find_member("__str", false);
+      if (!m) {
+	error("__map method not defined");
+	return std::string();
+      }
+      octave_value_list outarg = nc_this->member_invoke(m, octave_value_list(nc_this->as_value()), 1);
+      if (outarg.length() < 1 || !outarg(0).is_map()) {
+	error("__map method did not return a string");
+	return std::string();
+      }
+      return outarg(0).map_value();
+    }
+    */
+
     virtual string_vector map_keys() const {
       member_map tmp;
       load_members(tmp);
@@ -1721,6 +1736,8 @@ namespace {
       error("swig_typeinfo must be called with only a single object");
       return octave_value_list();
     }
+    if (args(0).is_matrix_type() && args(0).rows() == 0 && args(0).columns() == 0)
+      return octave_value(octave_uint64(0));
     octave_swig_type *ost = Swig::swig_value_deref(args(0));
     if (!ost) {
       error("object is not a swig_ref");
@@ -1729,106 +1746,104 @@ namespace {
     return octave_value(octave_uint64((unsigned long long) ost->swig_this()));
   }
 
-
 #define SWIG_DIRECTORS
 
-  struct Director;
-  class octave_swig_type;
+namespace Swig {
+  class Director {
+    octave_swig_type *self;
+    bool disowned;
 
-  namespace Swig {
-    class Director {
-      octave_swig_type *self;
-      bool disowned;
+    Director(const Director &x);
+    Director &operator=(const Director &rhs);
+  public:
 
-      Director(const Director &x);
-      Director &operator=(const Director &rhs);
-    public:
+    Director(void *vptr):self(0), disowned(false) {
+      set_rtdir(vptr, this);
+    }
 
-      Director(void *vptr):self(0), disowned(false) {
-	set_rtdir(vptr, this);
-      }
+    ~Director() {
+      swig_director_destroyed(self, this);
+      if (disowned)
+	self->decref();
+    }
 
-      ~Director() {
-	swig_director_destroyed(self, this);
-	if (disowned)
-	  self->decref();
-      }
+    void swig_set_self(octave_swig_type *new_self) {
+      assert(!disowned);
+      self = new_self;
+    }
 
-      void swig_set_self(octave_swig_type *new_self) {
-	assert(!disowned);
-	self = new_self;
-      }
+    octave_swig_type *swig_get_self() const {
+      return self;
+    }
 
-      octave_swig_type *swig_get_self() const {
-	return self;
-      }
+    void swig_disown() {
+      if (disowned)
+	return;
+      disowned = true;
+      self->incref();
+    }
+  };
 
-      void swig_disown() {
-	if (disowned)
-	  return;
-	disowned = true;
-	self->incref();
-      }
-    };
+  struct DirectorTypeMismatchException {
+    static void raise(const char *msg) {
+      // ... todo
+      throw(DirectorTypeMismatchException());
+    }
 
-    struct DirectorTypeMismatchException {
-      static void raise(const char *msg) {
-	// ... todo
-	throw(DirectorTypeMismatchException());
-      }
+    static void raise(const octave_value &ov, const char *msg) {
+      // ... todo
+      raise(msg);
+    }
+  };
+  struct DirectorPureVirtualException {
+    static void raise(const char *msg) {
+      // ... todo
+      throw(DirectorPureVirtualException());
+    }
 
-      static void raise(const octave_value &ov, const char *msg) {
-	// ... todo
-	raise(msg);
-      }
-    };
-    struct DirectorPureVirtualException {
-      static void raise(const char *msg) {
-	// ... todo
-	throw(DirectorPureVirtualException());
-      }
+    static void raise(const octave_value &ov, const char *msg) {
+      // ... todo
+      raise(msg);
+    }
+  };
 
-      static void raise(const octave_value &ov, const char *msg) {
-	// ... todo
-	raise(msg);
-      }
-    };
+}
 
-  }
-
-  void swig_acquire_ownership(void *vptr) {
+  SWIGRUNTIME void swig_acquire_ownership(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  void swig_acquire_ownership_array(void *vptr) {
+  SWIGRUNTIME void swig_acquire_ownership_array(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  void swig_acquire_ownership_obj(void *vptr, int own) {
+  SWIGRUNTIME void swig_acquire_ownership_obj(void *vptr, int own) {
     //  assert(0);
     // ... todo
   }
 
   namespace Swig {
-    void swig_director_destroyed(octave_swig_type *self, Director *d) {
+    SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d) {
       self->director_destroyed(d);
     }
 
-    void swig_director_set_self(Director *d, octave_swig_type *self) {
+    SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self) {
       d->swig_set_self(self);
     }
 
-    octave_base_value *swig_value_ref(octave_swig_type *ost) {
+    SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost) {
       return new octave_swig_ref(ost);
     }
 
-    octave_swig_type *swig_value_deref(const octave_value &ov) {
+    SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov) {
+      if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
+	ov = ov.cell_value()(0);
       return swig_value_deref(*ov.internal_rep());
     }
 
-    octave_swig_type *swig_value_deref(const octave_base_value &ov) {
+    SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov) {
       if (ov.type_id() != octave_swig_ref::static_type_id())
 	return 0;
       const octave_swig_ref *osr = static_cast < const octave_swig_ref *>(&ov);
@@ -1838,11 +1853,11 @@ namespace {
   }
 
 #define swig_unary_op(name) \
-octave_value swig_unary_op_##name(const octave_base_value &x) { \
+SWIGRUNTIME octave_value swig_unary_op_##name(const octave_base_value &x) { \
   return octave_swig_type::dispatch_unary_op(x,#name); \
 }
 #define swig_binary_op(name) \
-octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
+SWIGRUNTIME octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
   return octave_swig_type::dispatch_binary_op(lhs,rhs,#name); \
 }
 #define swigreg_unary_op(name) \
@@ -1881,7 +1896,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
   swig_binary_op(el_and);
   swig_binary_op(el_or);
 
-  void swig_install_unary_ops(int tid) {
+  SWIGRUNTIME void SWIG_InstallUnaryOps(int tid) {
     swigreg_unary_op(not);
     swigreg_unary_op(uplus);
     swigreg_unary_op(uminus);
@@ -1890,7 +1905,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_unary_op(incr);
     swigreg_unary_op(decr);
   }
-  void swig_install_binary_ops(int tid1, int tid2) {
+  SWIGRUNTIME void SWIG_InstallBinaryOps(int tid1, int tid2) {
     swigreg_binary_op(add);
     swigreg_binary_op(sub);
     swigreg_binary_op(mul);
@@ -1912,20 +1927,18 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_binary_op(el_and);
     swigreg_binary_op(el_or);
   }
-  void swig_install_ops(int tid) {
+  SWIGRUNTIME void SWIG_InstallOps(int tid) {
     // here we assume that tid are conseq integers increasing from zero, and 
     // that our tid is the last one. might be better to have explicit string 
     // list of types we should bind to, and use lookup_type to resolve their tid.
 
-    swig_install_unary_ops(tid);
-    swig_install_binary_ops(tid, tid);
+    SWIG_InstallUnaryOps(tid);
+    SWIG_InstallBinaryOps(tid, tid);
     for (int j = 0; j < tid; ++j) {
-      swig_install_binary_ops(j, tid);
-      swig_install_binary_ops(tid, j);
+      SWIG_InstallBinaryOps(j, tid);
+      SWIG_InstallBinaryOps(tid, j);
     }
   }
-
-}
 
 SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
   int own = (flags &SWIG_POINTER_OWN) ? SWIG_POINTER_OWN : 0;
@@ -1936,9 +1949,11 @@ SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *ty
   return Swig::swig_value_ref(new octave_swig_type(ptr, type, own));
 }
 
-SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(const octave_value &ov, void **ptr, swig_type_info *type, int flags, int *own) {
+SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(octave_value ov, void **ptr, swig_type_info *type, int flags, int *own) {
+  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
+    ov = ov.cell_value()(0);
   if (!ov.is_defined() ||
-      (ov.is_matrix_type() && ov.rows()==0 && ov.columns()==0) ) {
+      (ov.is_matrix_type() && ov.rows() == 0 && ov.columns() == 0) ) {
     if (ptr)
       *ptr = 0;
     return SWIG_OK;
@@ -1955,7 +1970,7 @@ SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(const octave_value &ov, void **ptr,
   return SWIG_OK;
 }
 
-SWIGRUNTIMEINLINE octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
+SWIGRUNTIME octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
   return new octave_swig_packed(type, (char *) ptr, sz);
 }
 
@@ -2212,9 +2227,9 @@ static swig_module_info swig_module = {swig_types, 189, 0, 0, 0, 0};
 #include <stdexcept>
 
 
-	#include "octhelpers.h"
-	#include "octcvseq.hpp"
-	///#include "error.h"
+#include "octhelpers.h"
+#include "octcvseq.hpp"
+#include "error.h"
 
 
 
@@ -4774,8 +4789,10 @@ SWIGINTERN void CvScalar___setitem__(CvScalar *self,int index,double value){
 SWIGINTERN void delete_CvMemStorage(CvMemStorage *self){ CvMemStorage   * dummy = self; cvReleaseMemStorage         (& dummy); }
 
 SWIGINTERN int
-SWIG_AsCharPtrAndSize(const octave_value& ov, char** cptr, size_t* psize, int *alloc)
+SWIG_AsCharPtrAndSize(octave_value ov, char** cptr, size_t* psize, int *alloc)
 {
+  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
+    ov = ov.cell_value()(0);
   if (!ov.is_string())
     return SWIG_TypeError;
   
@@ -4868,10 +4885,10 @@ SWIG_From_char  (char c)
 }
 
 SWIGINTERN CvTypedSeq< CvQuadEdge2D > *CvSubdiv2D_typed_edges_get(CvSubdiv2D *self){
-		return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
-	}
+    return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
+  }
 SWIGINTERN void CvSubdiv2D_typed_edges_set(CvSubdiv2D *self,CvTypedSeq< CvQuadEdge2D > *){
-	}
+  }
 SWIGINTERN void delete_CvConDensation(CvConDensation *self){ CvConDensation * dummy = self; cvReleaseConDensation       (& dummy); }
 SWIGINTERN void delete_CvKalman(CvKalman *self){ CvKalman       * dummy = self; cvReleaseKalman             (& dummy); }
 
@@ -5904,6 +5921,18 @@ const char* _wrap_CvMorphology_get_operation_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = get_operation (@var{self})\n\
 @var{self} is of type CvMorphology. @var{retval} is of type int. \n\
 @end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___paren_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
 const char* _wrap_CvSeq_CvPoint___paren_asgn_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} __paren_asgn (@var{self}, @var{i}, @var{obj})\n\
 @var{self} is of type CvSeq_CvPoint. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
@@ -6123,6 +6152,18 @@ const char* _wrap_FloatVector___paren_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CvMat___paren_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{object})\n\
 @var{self} is of type CvMat. @var{object} is of type octave_value. @var{retval} is of type octave_value. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___paren_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{retval} is of type float. \n\
 @end deftypefn";
 const char* _wrap_CvSeq_CvPoint___paren_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __paren (@var{self}, @var{i})\n\
@@ -7031,6 +7072,54 @@ const char* _wrap_new_CvGraph_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_cvFirstType_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvFirstType ()\n\
 @var{retval} is of type CvTypeInfo. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{retval} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{i} is of type int. @var{retval} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvRect. @var{i} is of type int. @var{retval} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvSeq. @var{i} is of type int. @var{retval} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{i} is of type int. @var{retval} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{i} is of type int. @var{retval} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_float_2. @var{i} is of type int. @var{retval} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3___brace_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = __brace (@var{self}, @var{i})\n\
+@var{self} is of type CvSeq_float_3. @var{i} is of type int. @var{retval} is of type CvTuple_float_3. \n\
 @end deftypefn";
 const char* _wrap_cvRandArr_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvRandArr (@var{rng}, @var{arr}, @var{dist_type}, @var{param1}, @var{param2})\n\
@@ -8668,30 +8757,6 @@ const char* _wrap_CvScalar___setitem___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} __setitem__ (@var{self}, @var{index}, @var{value})\n\
 @var{self} is of type CvScalar. @var{index} is of type int. @var{value} is of type double. \n\
 @end deftypefn";
-const char* _wrap_CvTuple_CvPoint_2___setitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
-@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
-@end deftypefn";
-const char* _wrap_CvTuple_CvPoint_2___getitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
-@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{retval} is of type CvPoint. \n\
-@end deftypefn";
-const char* _wrap_CvTuple_float_2___setitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
-@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{obj} is of type float. \n\
-@end deftypefn";
-const char* _wrap_CvTuple_float_2___getitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
-@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{retval} is of type float. \n\
-@end deftypefn";
-const char* _wrap_CvTuple_float_3___setitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} __setitem__ (@var{self}, @var{i}, @var{obj})\n\
-@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{obj} is of type float. \n\
-@end deftypefn";
-const char* _wrap_CvTuple_float_3___getitem___texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = __getitem__ (@var{self}, @var{i})\n\
-@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{retval} is of type float. \n\
-@end deftypefn";
 const char* _wrap_cvMeanShift_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvMeanShift (@var{prob_image}, @var{window}, @var{criteria}, @var{comp})\n\
 @var{prob_image} is of type CvArr. @var{window} is of type CvRect. @var{criteria} is of type CvTermCriteria. @var{comp} is of type CvConnectedComp. @var{retval} is of type int. \n\
@@ -9187,6 +9252,54 @@ const char* _wrap_cvUseOptimized_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CV_IS_STORAGE_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CV_IS_STORAGE (@var{storage})\n\
 @var{storage} is of type CvMemStorage. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_CvPoint_2___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_2___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_2. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvTuple_float_3___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvTuple_float_3. @var{i} is of type int. @var{obj} is of type float. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint. @var{i} is of type int. @var{obj} is of type CvPoint. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint2D32f___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint2D32f. @var{i} is of type int. @var{obj} is of type CvPoint2D32f. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvRect___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvRect. @var{i} is of type int. @var{obj} is of type CvRect. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvSeq___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvSeq. @var{i} is of type int. @var{obj} is of type CvSeq. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvQuadEdge2D___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvQuadEdge2D. @var{i} is of type int. @var{obj} is of type CvQuadEdge2D. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvConnectedComp___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvConnectedComp. @var{i} is of type int. @var{obj} is of type CvConnectedComp. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_CvPoint_2___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_CvPoint_2. @var{i} is of type int. @var{obj} is of type CvTuple_CvPoint_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_2___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_float_2. @var{i} is of type int. @var{obj} is of type CvTuple_float_2. \n\
+@end deftypefn";
+const char* _wrap_CvSeq_float_3___brace_asgn_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __brace_asgn (@var{self}, @var{i}, @var{obj})\n\
+@var{self} is of type CvSeq_float_3. @var{i} is of type int. @var{obj} is of type CvTuple_float_3. \n\
 @end deftypefn";
 const char* _wrap_cvReleaseHist_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvReleaseHist (@var{hist})\n\
@@ -102008,7 +102121,51 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_CvPoint_2___setitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_CvPoint_2___paren (const octave_value_list& args, int nargout) {
+  CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
+  int arg2 ;
+  CvPoint *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_CvPoint_2___paren",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___paren" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
+  }
+  arg1 = (CvTuple< CvPoint,2 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___paren" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      {
+        CvPoint const &_result_ref = (arg1)->__paren(arg2);
+        result = (CvPoint *) &_result_ref;
+      } 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_CvPoint_2___paren_asgn (const octave_value_list& args, int nargout) {
   CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
   int arg2 ;
   CvPoint *arg3 = (CvPoint *) 0 ;
@@ -102022,27 +102179,27 @@ static octave_value_list _wrap_CvTuple_CvPoint_2___setitem__ (const octave_value
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_CvPoint_2___setitem__",args.length(),3,3,0)) {
+  if (!SWIG_check_num_args("CvTuple_CvPoint_2___paren_asgn",args.length(),3,3,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___setitem__" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___paren_asgn" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
   }
   arg1 = (CvTuple< CvPoint,2 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___setitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___paren_asgn" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvPoint, 0 |  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_CvPoint_2___setitem__" "', argument " "3"" of type '" "CvPoint *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_CvPoint_2___paren_asgn" "', argument " "3"" of type '" "CvPoint *""'"); 
   }
   arg3 = (CvPoint *)(argp3);
   {
     try {
-      (arg1)->__setitem__(arg2,arg3); 
+      (arg1)->__paren_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -102056,7 +102213,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_CvPoint_2___getitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_CvPoint_2___brace (const octave_value_list& args, int nargout) {
   CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
   int arg2 ;
   CvPoint *result = 0 ;
@@ -102068,23 +102225,23 @@ static octave_value_list _wrap_CvTuple_CvPoint_2___getitem__ (const octave_value
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_CvPoint_2___getitem__",args.length(),2,2,0)) {
+  if (!SWIG_check_num_args("CvTuple_CvPoint_2___brace",args.length(),2,2,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___getitem__" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___brace" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
   }
   arg1 = (CvTuple< CvPoint,2 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___getitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___brace" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   {
     try {
       {
-        CvPoint const &_result_ref = (arg1)->__getitem__(arg2);
+        CvPoint const &_result_ref = (arg1)->__brace(arg2);
         result = (CvPoint *) &_result_ref;
       } 
     } 
@@ -102094,6 +102251,54 @@ static octave_value_list _wrap_CvTuple_CvPoint_2___getitem__ (const octave_value
     } 
   }
   _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_CvPoint_2___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTuple< CvPoint,2 > *arg1 = (CvTuple< CvPoint,2 > *) 0 ;
+  int arg2 ;
+  CvPoint *arg3 = (CvPoint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_CvPoint_2___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_CvPoint_2___brace_asgn" "', argument " "1"" of type '" "CvTuple< CvPoint,2 > *""'"); 
+  }
+  arg1 = (CvTuple< CvPoint,2 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_CvPoint_2___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_CvPoint_2___brace_asgn" "', argument " "3"" of type '" "CvPoint *""'"); 
+  }
+  arg3 = (CvPoint *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
@@ -102159,8 +102364,10 @@ fail:
 
 static swig_octave_member swig_CvTuple_CvPoint_2_members[] = {
 {"val",0,_wrap_CvTuple_CvPoint_2_val_get,_wrap_CvTuple_CvPoint_2_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,0,0},
+{"__paren",_wrap_CvTuple_CvPoint_2___paren,0,0,0,0},
+{"__paren_asgn",_wrap_CvTuple_CvPoint_2___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvTuple_CvPoint_2___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvTuple_CvPoint_2___brace_asgn,0,0,0,0},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_CvPoint_2_base_names[] = {0};
@@ -102231,7 +102438,51 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_float_2___setitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_float_2___paren (const octave_value_list& args, int nargout) {
+  CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
+  int arg2 ;
+  float *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_float_2___paren",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___paren" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
+  }
+  arg1 = (CvTuple< float,2 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___paren" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      {
+        float const &_result_ref = (arg1)->__paren(arg2);
+        result = (float *) &_result_ref;
+      } 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_From_float((float)(*result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_float_2___paren_asgn (const octave_value_list& args, int nargout) {
   CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
   int arg2 ;
   float *arg3 = (float *) 0 ;
@@ -102245,27 +102496,27 @@ static octave_value_list _wrap_CvTuple_float_2___setitem__ (const octave_value_l
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_float_2___setitem__",args.length(),3,3,0)) {
+  if (!SWIG_check_num_args("CvTuple_float_2___paren_asgn",args.length(),3,3,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___setitem__" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___paren_asgn" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
   }
   arg1 = (CvTuple< float,2 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___setitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___paren_asgn" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_float, 0 |  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_2___setitem__" "', argument " "3"" of type '" "float *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_2___paren_asgn" "', argument " "3"" of type '" "float *""'"); 
   }
   arg3 = (float *)(argp3);
   {
     try {
-      (arg1)->__setitem__(arg2,arg3); 
+      (arg1)->__paren_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -102279,7 +102530,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_float_2___getitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_float_2___brace (const octave_value_list& args, int nargout) {
   CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
   int arg2 ;
   float *result = 0 ;
@@ -102291,23 +102542,23 @@ static octave_value_list _wrap_CvTuple_float_2___getitem__ (const octave_value_l
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_float_2___getitem__",args.length(),2,2,0)) {
+  if (!SWIG_check_num_args("CvTuple_float_2___brace",args.length(),2,2,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___getitem__" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___brace" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
   }
   arg1 = (CvTuple< float,2 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___getitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___brace" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   {
     try {
       {
-        float const &_result_ref = (arg1)->__getitem__(arg2);
+        float const &_result_ref = (arg1)->__brace(arg2);
         result = (float *) &_result_ref;
       } 
     } 
@@ -102317,6 +102568,54 @@ static octave_value_list _wrap_CvTuple_float_2___getitem__ (const octave_value_l
     } 
   }
   _outv = SWIG_From_float((float)(*result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_float_2___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTuple< float,2 > *arg1 = (CvTuple< float,2 > *) 0 ;
+  int arg2 ;
+  float *arg3 = (float *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_float_2___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_2___brace_asgn" "', argument " "1"" of type '" "CvTuple< float,2 > *""'"); 
+  }
+  arg1 = (CvTuple< float,2 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_2___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_2___brace_asgn" "', argument " "3"" of type '" "float *""'"); 
+  }
+  arg3 = (float *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
@@ -102382,8 +102681,10 @@ fail:
 
 static swig_octave_member swig_CvTuple_float_2_members[] = {
 {"val",0,_wrap_CvTuple_float_2_val_get,_wrap_CvTuple_float_2_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_float_2___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_float_2___getitem__,0,0,0,0},
+{"__paren",_wrap_CvTuple_float_2___paren,0,0,0,0},
+{"__paren_asgn",_wrap_CvTuple_float_2___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvTuple_float_2___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvTuple_float_2___brace_asgn,0,0,0,0},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_float_2_base_names[] = {0};
@@ -102454,7 +102755,51 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_float_3___setitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_float_3___paren (const octave_value_list& args, int nargout) {
+  CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
+  int arg2 ;
+  float *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_float_3___paren",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___paren" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
+  }
+  arg1 = (CvTuple< float,3 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___paren" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      {
+        float const &_result_ref = (arg1)->__paren(arg2);
+        result = (float *) &_result_ref;
+      } 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_From_float((float)(*result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_float_3___paren_asgn (const octave_value_list& args, int nargout) {
   CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
   int arg2 ;
   float *arg3 = (float *) 0 ;
@@ -102468,27 +102813,27 @@ static octave_value_list _wrap_CvTuple_float_3___setitem__ (const octave_value_l
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_float_3___setitem__",args.length(),3,3,0)) {
+  if (!SWIG_check_num_args("CvTuple_float_3___paren_asgn",args.length(),3,3,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___setitem__" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___paren_asgn" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
   }
   arg1 = (CvTuple< float,3 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___setitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___paren_asgn" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_float, 0 |  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_3___setitem__" "', argument " "3"" of type '" "float *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_3___paren_asgn" "', argument " "3"" of type '" "float *""'"); 
   }
   arg3 = (float *)(argp3);
   {
     try {
-      (arg1)->__setitem__(arg2,arg3); 
+      (arg1)->__paren_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -102502,7 +102847,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvTuple_float_3___getitem__ (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvTuple_float_3___brace (const octave_value_list& args, int nargout) {
   CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
   int arg2 ;
   float *result = 0 ;
@@ -102514,23 +102859,23 @@ static octave_value_list _wrap_CvTuple_float_3___getitem__ (const octave_value_l
   octave_value_list *_outp=&_out;
   octave_value _outv;
   
-  if (!SWIG_check_num_args("CvTuple_float_3___getitem__",args.length(),2,2,0)) {
+  if (!SWIG_check_num_args("CvTuple_float_3___brace",args.length(),2,2,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___getitem__" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___brace" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
   }
   arg1 = (CvTuple< float,3 > *)(argp1);
   ecode2 = SWIG_AsVal_int(args(1), &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___getitem__" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___brace" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = (int)(val2);
   {
     try {
       {
-        float const &_result_ref = (arg1)->__getitem__(arg2);
+        float const &_result_ref = (arg1)->__brace(arg2);
         result = (float *) &_result_ref;
       } 
     } 
@@ -102540,6 +102885,54 @@ static octave_value_list _wrap_CvTuple_float_3___getitem__ (const octave_value_l
     } 
   }
   _outv = SWIG_From_float((float)(*result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvTuple_float_3___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTuple< float,3 > *arg1 = (CvTuple< float,3 > *) 0 ;
+  int arg2 ;
+  float *arg3 = (float *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvTuple_float_3___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvTuple_float_3___brace_asgn" "', argument " "1"" of type '" "CvTuple< float,3 > *""'"); 
+  }
+  arg1 = (CvTuple< float,3 > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvTuple_float_3___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvTuple_float_3___brace_asgn" "', argument " "3"" of type '" "float *""'"); 
+  }
+  arg3 = (float *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
@@ -102605,8 +102998,10 @@ fail:
 
 static swig_octave_member swig_CvTuple_float_3_members[] = {
 {"val",0,_wrap_CvTuple_float_3_val_get,_wrap_CvTuple_float_3_val_set,0,0},
-{"__setitem__",_wrap_CvTuple_float_3___setitem__,0,0,0,0},
-{"__getitem__",_wrap_CvTuple_float_3___getitem__,0,0,0,0},
+{"__paren",_wrap_CvTuple_float_3___paren,0,0,0,0},
+{"__paren_asgn",_wrap_CvTuple_float_3___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvTuple_float_3___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvTuple_float_3___brace_asgn,0,0,0,0},
 {0,0,0,0}
 };
 static const char *swig_CvTuple_float_3_base_names[] = {0};
@@ -102730,6 +103125,95 @@ static octave_value_list _wrap_CvSeq_CvPoint___paren_asgn (const octave_value_li
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvPoint > *arg1 = (CvTypedSeq< CvPoint > *) 0 ;
+  int arg2 ;
+  CvPoint *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint___brace" "', argument " "1"" of type '" "CvTypedSeq< CvPoint > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvPoint > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvPoint *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvPoint > *arg1 = (CvTypedSeq< CvPoint > *) 0 ;
+  int arg2 ;
+  CvPoint *arg3 = (CvPoint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvPoint_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvPoint > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvPoint > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvPoint, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint___brace_asgn" "', argument " "3"" of type '" "CvPoint *""'"); 
+  }
+  arg3 = (CvPoint *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -102877,6 +103361,8 @@ static swig_octave_member swig_CvSeq_CvPoint_members[] = {
 {"cast",_wrap_CvSeq_CvPoint_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvPoint___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvPoint___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvPoint___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvPoint___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvPoint_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvPoint_pop,0,0,0,0},
 {0,0,0,0}
@@ -103002,6 +103488,95 @@ static octave_value_list _wrap_CvSeq_CvPoint2D32f___paren_asgn (const octave_val
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint2D32f___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvPoint2D32f > *arg1 = (CvTypedSeq< CvPoint2D32f > *) 0 ;
+  int arg2 ;
+  CvPoint2D32f *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint2D32f___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f___brace" "', argument " "1"" of type '" "CvTypedSeq< CvPoint2D32f > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvPoint2D32f > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint2D32f___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvPoint2D32f *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint2D32f___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvPoint2D32f > *arg1 = (CvTypedSeq< CvPoint2D32f > *) 0 ;
+  int arg2 ;
+  CvPoint2D32f *arg3 = (CvPoint2D32f *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint2D32f___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint2D32f___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvPoint2D32f > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvPoint2D32f > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint2D32f___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvPoint2D32f, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint2D32f___brace_asgn" "', argument " "3"" of type '" "CvPoint2D32f *""'"); 
+  }
+  arg3 = (CvPoint2D32f *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -103149,6 +103724,8 @@ static swig_octave_member swig_CvSeq_CvPoint2D32f_members[] = {
 {"cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvPoint2D32f___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvPoint2D32f___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvPoint2D32f___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvPoint2D32f___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvPoint2D32f_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,0,0},
 {0,0,0,0}
@@ -103274,6 +103851,95 @@ static octave_value_list _wrap_CvSeq_CvRect___paren_asgn (const octave_value_lis
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvRect___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvRect > *arg1 = (CvTypedSeq< CvRect > *) 0 ;
+  int arg2 ;
+  CvRect *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvRect___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect___brace" "', argument " "1"" of type '" "CvTypedSeq< CvRect > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvRect > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvRect___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvRect *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvRect, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvRect___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvRect > *arg1 = (CvTypedSeq< CvRect > *) 0 ;
+  int arg2 ;
+  CvRect *arg3 = (CvRect *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvRect___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvRect_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvRect___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvRect > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvRect > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvRect___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvRect, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvRect___brace_asgn" "', argument " "3"" of type '" "CvRect *""'"); 
+  }
+  arg3 = (CvRect *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -103421,6 +104087,8 @@ static swig_octave_member swig_CvSeq_CvRect_members[] = {
 {"cast",_wrap_CvSeq_CvRect_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvRect___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvRect___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvRect___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvRect___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvRect_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvRect_pop,0,0,0,0},
 {0,0,0,0}
@@ -103548,6 +104216,97 @@ static octave_value_list _wrap_CvSeq_CvSeq___paren_asgn (const octave_value_list
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvSeq___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvSeq * > *arg1 = (CvTypedSeq< CvSeq * > *) 0 ;
+  int arg2 ;
+  CvSeq **result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvSeq___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq___brace" "', argument " "1"" of type '" "CvTypedSeq< CvSeq * > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvSeq * > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvSeq___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvSeq **)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_CvSeq, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvSeq___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvSeq * > *arg1 = (CvTypedSeq< CvSeq * > *) 0 ;
+  int arg2 ;
+  CvSeq **arg3 = (CvSeq **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *vptr3 ;
+  CvSeq *buffer3 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvSeq___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvSeq___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvSeq * > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvSeq * > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvSeq___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    if ((SWIG_ConvertPtr(args(2), &vptr3, SWIGTYPE_p_CvSeq, 1)) == -1){
+      SWIG_fail;
+    }
+    buffer3 = (CvSeq *) vptr3;
+    arg3=&buffer3;
+  }
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -103697,6 +104456,8 @@ static swig_octave_member swig_CvSeq_CvSeq_members[] = {
 {"cast",_wrap_CvSeq_CvSeq_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvSeq___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvSeq___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvSeq___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvSeq___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvSeq_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvSeq_pop,0,0,0,0},
 {0,0,0,0}
@@ -103822,6 +104583,95 @@ static octave_value_list _wrap_CvSeq_CvQuadEdge2D___paren_asgn (const octave_val
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvQuadEdge2D___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvQuadEdge2D > *arg1 = (CvTypedSeq< CvQuadEdge2D > *) 0 ;
+  int arg2 ;
+  CvQuadEdge2D *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvQuadEdge2D___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D___brace" "', argument " "1"" of type '" "CvTypedSeq< CvQuadEdge2D > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvQuadEdge2D > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvQuadEdge2D___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvQuadEdge2D *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvQuadEdge2D___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvQuadEdge2D > *arg1 = (CvTypedSeq< CvQuadEdge2D > *) 0 ;
+  int arg2 ;
+  CvQuadEdge2D *arg3 = (CvQuadEdge2D *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvQuadEdge2D___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvQuadEdge2D___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvQuadEdge2D > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvQuadEdge2D > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvQuadEdge2D___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvQuadEdge2D, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvQuadEdge2D___brace_asgn" "', argument " "3"" of type '" "CvQuadEdge2D *""'"); 
+  }
+  arg3 = (CvQuadEdge2D *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -103969,6 +104819,8 @@ static swig_octave_member swig_CvSeq_CvQuadEdge2D_members[] = {
 {"cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvQuadEdge2D___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvQuadEdge2D___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvQuadEdge2D___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvQuadEdge2D___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,0,0},
 {0,0,0,0}
@@ -104094,6 +104946,95 @@ static octave_value_list _wrap_CvSeq_CvConnectedComp___paren_asgn (const octave_
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvConnectedComp___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvConnectedComp > *arg1 = (CvTypedSeq< CvConnectedComp > *) 0 ;
+  int arg2 ;
+  CvConnectedComp *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvConnectedComp___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp___brace" "', argument " "1"" of type '" "CvTypedSeq< CvConnectedComp > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvConnectedComp > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvConnectedComp___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvConnectedComp *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvConnectedComp___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvConnectedComp > *arg1 = (CvTypedSeq< CvConnectedComp > *) 0 ;
+  int arg2 ;
+  CvConnectedComp *arg3 = (CvConnectedComp *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvConnectedComp___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvConnectedComp___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvConnectedComp > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvConnectedComp > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvConnectedComp___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvConnectedComp, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvConnectedComp___brace_asgn" "', argument " "3"" of type '" "CvConnectedComp *""'"); 
+  }
+  arg3 = (CvConnectedComp *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -104241,6 +105182,8 @@ static swig_octave_member swig_CvSeq_CvConnectedComp_members[] = {
 {"cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvConnectedComp___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvConnectedComp___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvConnectedComp___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvConnectedComp___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvConnectedComp_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,0,0},
 {0,0,0,0}
@@ -104366,6 +105309,95 @@ static octave_value_list _wrap_CvSeq_CvPoint_2___paren_asgn (const octave_value_
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint_2___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< CvPoint,2 > > *arg1 = (CvTypedSeq< CvTuple< CvPoint,2 > > *) 0 ;
+  int arg2 ;
+  CvTuple< CvPoint,2 > *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint_2___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2___brace" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< CvPoint,2 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< CvPoint,2 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint_2___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvTuple< CvPoint,2 > *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_CvPoint_2___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< CvPoint,2 > > *arg1 = (CvTypedSeq< CvTuple< CvPoint,2 > > *) 0 ;
+  int arg2 ;
+  CvTuple< CvPoint,2 > *arg3 = (CvTuple< CvPoint,2 > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_CvPoint_2___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_CvPoint_2___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< CvPoint,2 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< CvPoint,2 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_CvPoint_2___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvTupleT_CvPoint_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_CvPoint_2___brace_asgn" "', argument " "3"" of type '" "CvTuple< CvPoint,2 > *""'"); 
+  }
+  arg3 = (CvTuple< CvPoint,2 > *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -104513,6 +105545,8 @@ static swig_octave_member swig_CvSeq_CvPoint_2_members[] = {
 {"cast",_wrap_CvSeq_CvPoint_2_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_CvPoint_2___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_CvPoint_2___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_CvPoint_2___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_CvPoint_2___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_CvPoint_2_append,0,0,0,0},
 {"pop",_wrap_CvSeq_CvPoint_2_pop,0,0,0,0},
 {0,0,0,0}
@@ -104638,6 +105672,95 @@ static octave_value_list _wrap_CvSeq_float_2___paren_asgn (const octave_value_li
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_float_2___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< float,2 > > *arg1 = (CvTypedSeq< CvTuple< float,2 > > *) 0 ;
+  int arg2 ;
+  CvTuple< float,2 > *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_float_2___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_float_2___brace" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< float,2 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< float,2 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_float_2___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvTuple< float,2 > *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_float_2___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< float,2 > > *arg1 = (CvTypedSeq< CvTuple< float,2 > > *) 0 ;
+  int arg2 ;
+  CvTuple< float,2 > *arg3 = (CvTuple< float,2 > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_float_2___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_float_2___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< float,2 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< float,2 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_float_2___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvTupleT_float_2_t, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_float_2___brace_asgn" "', argument " "3"" of type '" "CvTuple< float,2 > *""'"); 
+  }
+  arg3 = (CvTuple< float,2 > *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -104785,6 +105908,8 @@ static swig_octave_member swig_CvSeq_float_2_members[] = {
 {"cast",_wrap_CvSeq_float_2_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_float_2___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_float_2___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_float_2___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_float_2___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_float_2_append,0,0,0,0},
 {"pop",_wrap_CvSeq_float_2_pop,0,0,0,0},
 {0,0,0,0}
@@ -104910,6 +106035,95 @@ static octave_value_list _wrap_CvSeq_float_3___paren_asgn (const octave_value_li
   {
     try {
       (arg1)->__paren_asgn(arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_float_3___brace (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< float,3 > > *arg1 = (CvTypedSeq< CvTuple< float,3 > > *) 0 ;
+  int arg2 ;
+  CvTuple< float,3 > *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_float_3___brace",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_float_3___brace" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< float,3 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< float,3 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_float_3___brace" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  {
+    try {
+      result = (CvTuple< float,3 > *)(arg1)->__brace(arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvSeq_float_3___brace_asgn (const octave_value_list& args, int nargout) {
+  CvTypedSeq< CvTuple< float,3 > > *arg1 = (CvTypedSeq< CvTuple< float,3 > > *) 0 ;
+  int arg2 ;
+  CvTuple< float,3 > *arg3 = (CvTuple< float,3 > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvSeq_float_3___brace_asgn",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvSeq_float_3___brace_asgn" "', argument " "1"" of type '" "CvTypedSeq< CvTuple< float,3 > > *""'"); 
+  }
+  arg1 = (CvTypedSeq< CvTuple< float,3 > > *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvSeq_float_3___brace_asgn" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvTupleT_float_3_t, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CvSeq_float_3___brace_asgn" "', argument " "3"" of type '" "CvTuple< float,3 > *""'"); 
+  }
+  arg3 = (CvTuple< float,3 > *)(argp3);
+  {
+    try {
+      (arg1)->__brace_asgn(arg2,arg3); 
     } 
     catch (...) 
     {
@@ -105057,6 +106271,8 @@ static swig_octave_member swig_CvSeq_float_3_members[] = {
 {"cast",_wrap_CvSeq_float_3_cast,0,0,1,0},
 {"__paren",_wrap_CvSeq_float_3___paren,0,0,0,0},
 {"__paren_asgn",_wrap_CvSeq_float_3___paren_asgn,0,0,0,0},
+{"__brace",_wrap_CvSeq_float_3___brace,0,0,0,0},
+{"__brace_asgn",_wrap_CvSeq_float_3___brace_asgn,0,0,0,0},
 {"append",_wrap_CvSeq_float_3_append,0,0,0,0},
 {"pop",_wrap_CvSeq_float_3_pop,0,0,0,0},
 {0,0,0,0}
@@ -106972,25 +108188,33 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMorphology_init_binary_element",_wrap_CvMorphology_init_binary_element,0,0,2,_wrap_CvMorphology_init_binary_element_texinfo},
 {"CvTuple_CvPoint_2_val_set",_wrap_CvTuple_CvPoint_2_val_set,0,0,2,0},
 {"CvTuple_CvPoint_2_val_get",_wrap_CvTuple_CvPoint_2_val_get,0,0,2,0},
-{"CvTuple_CvPoint_2___setitem__",_wrap_CvTuple_CvPoint_2___setitem__,0,0,2,_wrap_CvTuple_CvPoint_2___setitem___texinfo},
-{"CvTuple_CvPoint_2___getitem__",_wrap_CvTuple_CvPoint_2___getitem__,0,0,2,_wrap_CvTuple_CvPoint_2___getitem___texinfo},
+{"CvTuple_CvPoint_2___paren",_wrap_CvTuple_CvPoint_2___paren,0,0,2,_wrap_CvTuple_CvPoint_2___paren_texinfo},
+{"CvTuple_CvPoint_2___paren_asgn",_wrap_CvTuple_CvPoint_2___paren_asgn,0,0,2,_wrap_CvTuple_CvPoint_2___paren_asgn_texinfo},
+{"CvTuple_CvPoint_2___brace",_wrap_CvTuple_CvPoint_2___brace,0,0,2,_wrap_CvTuple_CvPoint_2___brace_texinfo},
+{"CvTuple_CvPoint_2___brace_asgn",_wrap_CvTuple_CvPoint_2___brace_asgn,0,0,2,_wrap_CvTuple_CvPoint_2___brace_asgn_texinfo},
 {"new_CvTuple_CvPoint_2",_wrap_new_CvTuple_CvPoint_2,0,0,2,_wrap_new_CvTuple_CvPoint_2_texinfo},
 {"delete_CvTuple_CvPoint_2",_wrap_delete_CvTuple_CvPoint_2,0,0,2,_wrap_delete_CvTuple_CvPoint_2_texinfo},
 {"CvTuple_float_2_val_set",_wrap_CvTuple_float_2_val_set,0,0,2,0},
 {"CvTuple_float_2_val_get",_wrap_CvTuple_float_2_val_get,0,0,2,0},
-{"CvTuple_float_2___setitem__",_wrap_CvTuple_float_2___setitem__,0,0,2,_wrap_CvTuple_float_2___setitem___texinfo},
-{"CvTuple_float_2___getitem__",_wrap_CvTuple_float_2___getitem__,0,0,2,_wrap_CvTuple_float_2___getitem___texinfo},
+{"CvTuple_float_2___paren",_wrap_CvTuple_float_2___paren,0,0,2,_wrap_CvTuple_float_2___paren_texinfo},
+{"CvTuple_float_2___paren_asgn",_wrap_CvTuple_float_2___paren_asgn,0,0,2,_wrap_CvTuple_float_2___paren_asgn_texinfo},
+{"CvTuple_float_2___brace",_wrap_CvTuple_float_2___brace,0,0,2,_wrap_CvTuple_float_2___brace_texinfo},
+{"CvTuple_float_2___brace_asgn",_wrap_CvTuple_float_2___brace_asgn,0,0,2,_wrap_CvTuple_float_2___brace_asgn_texinfo},
 {"new_CvTuple_float_2",_wrap_new_CvTuple_float_2,0,0,2,_wrap_new_CvTuple_float_2_texinfo},
 {"delete_CvTuple_float_2",_wrap_delete_CvTuple_float_2,0,0,2,_wrap_delete_CvTuple_float_2_texinfo},
 {"CvTuple_float_3_val_set",_wrap_CvTuple_float_3_val_set,0,0,2,0},
 {"CvTuple_float_3_val_get",_wrap_CvTuple_float_3_val_get,0,0,2,0},
-{"CvTuple_float_3___setitem__",_wrap_CvTuple_float_3___setitem__,0,0,2,_wrap_CvTuple_float_3___setitem___texinfo},
-{"CvTuple_float_3___getitem__",_wrap_CvTuple_float_3___getitem__,0,0,2,_wrap_CvTuple_float_3___getitem___texinfo},
+{"CvTuple_float_3___paren",_wrap_CvTuple_float_3___paren,0,0,2,_wrap_CvTuple_float_3___paren_texinfo},
+{"CvTuple_float_3___paren_asgn",_wrap_CvTuple_float_3___paren_asgn,0,0,2,_wrap_CvTuple_float_3___paren_asgn_texinfo},
+{"CvTuple_float_3___brace",_wrap_CvTuple_float_3___brace,0,0,2,_wrap_CvTuple_float_3___brace_texinfo},
+{"CvTuple_float_3___brace_asgn",_wrap_CvTuple_float_3___brace_asgn,0,0,2,_wrap_CvTuple_float_3___brace_asgn_texinfo},
 {"new_CvTuple_float_3",_wrap_new_CvTuple_float_3,0,0,2,_wrap_new_CvTuple_float_3_texinfo},
 {"delete_CvTuple_float_3",_wrap_delete_CvTuple_float_3,0,0,2,_wrap_delete_CvTuple_float_3_texinfo},
 {"CvSeq_CvPoint_cast",_wrap_CvSeq_CvPoint_cast,0,0,2,_wrap_CvSeq_CvPoint_cast_texinfo},
 {"CvSeq_CvPoint___paren",_wrap_CvSeq_CvPoint___paren,0,0,2,_wrap_CvSeq_CvPoint___paren_texinfo},
 {"CvSeq_CvPoint___paren_asgn",_wrap_CvSeq_CvPoint___paren_asgn,0,0,2,_wrap_CvSeq_CvPoint___paren_asgn_texinfo},
+{"CvSeq_CvPoint___brace",_wrap_CvSeq_CvPoint___brace,0,0,2,_wrap_CvSeq_CvPoint___brace_texinfo},
+{"CvSeq_CvPoint___brace_asgn",_wrap_CvSeq_CvPoint___brace_asgn,0,0,2,_wrap_CvSeq_CvPoint___brace_asgn_texinfo},
 {"CvSeq_CvPoint_append",_wrap_CvSeq_CvPoint_append,0,0,2,_wrap_CvSeq_CvPoint_append_texinfo},
 {"CvSeq_CvPoint_pop",_wrap_CvSeq_CvPoint_pop,0,0,2,_wrap_CvSeq_CvPoint_pop_texinfo},
 {"new_CvSeq_CvPoint",_wrap_new_CvSeq_CvPoint,0,0,2,_wrap_new_CvSeq_CvPoint_texinfo},
@@ -106998,6 +108222,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvPoint2D32f_cast",_wrap_CvSeq_CvPoint2D32f_cast,0,0,2,_wrap_CvSeq_CvPoint2D32f_cast_texinfo},
 {"CvSeq_CvPoint2D32f___paren",_wrap_CvSeq_CvPoint2D32f___paren,0,0,2,_wrap_CvSeq_CvPoint2D32f___paren_texinfo},
 {"CvSeq_CvPoint2D32f___paren_asgn",_wrap_CvSeq_CvPoint2D32f___paren_asgn,0,0,2,_wrap_CvSeq_CvPoint2D32f___paren_asgn_texinfo},
+{"CvSeq_CvPoint2D32f___brace",_wrap_CvSeq_CvPoint2D32f___brace,0,0,2,_wrap_CvSeq_CvPoint2D32f___brace_texinfo},
+{"CvSeq_CvPoint2D32f___brace_asgn",_wrap_CvSeq_CvPoint2D32f___brace_asgn,0,0,2,_wrap_CvSeq_CvPoint2D32f___brace_asgn_texinfo},
 {"CvSeq_CvPoint2D32f_append",_wrap_CvSeq_CvPoint2D32f_append,0,0,2,_wrap_CvSeq_CvPoint2D32f_append_texinfo},
 {"CvSeq_CvPoint2D32f_pop",_wrap_CvSeq_CvPoint2D32f_pop,0,0,2,_wrap_CvSeq_CvPoint2D32f_pop_texinfo},
 {"new_CvSeq_CvPoint2D32f",_wrap_new_CvSeq_CvPoint2D32f,0,0,2,_wrap_new_CvSeq_CvPoint2D32f_texinfo},
@@ -107005,6 +108231,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvRect_cast",_wrap_CvSeq_CvRect_cast,0,0,2,_wrap_CvSeq_CvRect_cast_texinfo},
 {"CvSeq_CvRect___paren",_wrap_CvSeq_CvRect___paren,0,0,2,_wrap_CvSeq_CvRect___paren_texinfo},
 {"CvSeq_CvRect___paren_asgn",_wrap_CvSeq_CvRect___paren_asgn,0,0,2,_wrap_CvSeq_CvRect___paren_asgn_texinfo},
+{"CvSeq_CvRect___brace",_wrap_CvSeq_CvRect___brace,0,0,2,_wrap_CvSeq_CvRect___brace_texinfo},
+{"CvSeq_CvRect___brace_asgn",_wrap_CvSeq_CvRect___brace_asgn,0,0,2,_wrap_CvSeq_CvRect___brace_asgn_texinfo},
 {"CvSeq_CvRect_append",_wrap_CvSeq_CvRect_append,0,0,2,_wrap_CvSeq_CvRect_append_texinfo},
 {"CvSeq_CvRect_pop",_wrap_CvSeq_CvRect_pop,0,0,2,_wrap_CvSeq_CvRect_pop_texinfo},
 {"new_CvSeq_CvRect",_wrap_new_CvSeq_CvRect,0,0,2,_wrap_new_CvSeq_CvRect_texinfo},
@@ -107012,6 +108240,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvSeq_cast",_wrap_CvSeq_CvSeq_cast,0,0,2,_wrap_CvSeq_CvSeq_cast_texinfo},
 {"CvSeq_CvSeq___paren",_wrap_CvSeq_CvSeq___paren,0,0,2,_wrap_CvSeq_CvSeq___paren_texinfo},
 {"CvSeq_CvSeq___paren_asgn",_wrap_CvSeq_CvSeq___paren_asgn,0,0,2,_wrap_CvSeq_CvSeq___paren_asgn_texinfo},
+{"CvSeq_CvSeq___brace",_wrap_CvSeq_CvSeq___brace,0,0,2,_wrap_CvSeq_CvSeq___brace_texinfo},
+{"CvSeq_CvSeq___brace_asgn",_wrap_CvSeq_CvSeq___brace_asgn,0,0,2,_wrap_CvSeq_CvSeq___brace_asgn_texinfo},
 {"CvSeq_CvSeq_append",_wrap_CvSeq_CvSeq_append,0,0,2,_wrap_CvSeq_CvSeq_append_texinfo},
 {"CvSeq_CvSeq_pop",_wrap_CvSeq_CvSeq_pop,0,0,2,_wrap_CvSeq_CvSeq_pop_texinfo},
 {"new_CvSeq_CvSeq",_wrap_new_CvSeq_CvSeq,0,0,2,_wrap_new_CvSeq_CvSeq_texinfo},
@@ -107019,6 +108249,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvQuadEdge2D_cast",_wrap_CvSeq_CvQuadEdge2D_cast,0,0,2,_wrap_CvSeq_CvQuadEdge2D_cast_texinfo},
 {"CvSeq_CvQuadEdge2D___paren",_wrap_CvSeq_CvQuadEdge2D___paren,0,0,2,_wrap_CvSeq_CvQuadEdge2D___paren_texinfo},
 {"CvSeq_CvQuadEdge2D___paren_asgn",_wrap_CvSeq_CvQuadEdge2D___paren_asgn,0,0,2,_wrap_CvSeq_CvQuadEdge2D___paren_asgn_texinfo},
+{"CvSeq_CvQuadEdge2D___brace",_wrap_CvSeq_CvQuadEdge2D___brace,0,0,2,_wrap_CvSeq_CvQuadEdge2D___brace_texinfo},
+{"CvSeq_CvQuadEdge2D___brace_asgn",_wrap_CvSeq_CvQuadEdge2D___brace_asgn,0,0,2,_wrap_CvSeq_CvQuadEdge2D___brace_asgn_texinfo},
 {"CvSeq_CvQuadEdge2D_append",_wrap_CvSeq_CvQuadEdge2D_append,0,0,2,_wrap_CvSeq_CvQuadEdge2D_append_texinfo},
 {"CvSeq_CvQuadEdge2D_pop",_wrap_CvSeq_CvQuadEdge2D_pop,0,0,2,_wrap_CvSeq_CvQuadEdge2D_pop_texinfo},
 {"new_CvSeq_CvQuadEdge2D",_wrap_new_CvSeq_CvQuadEdge2D,0,0,2,_wrap_new_CvSeq_CvQuadEdge2D_texinfo},
@@ -107026,6 +108258,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvConnectedComp_cast",_wrap_CvSeq_CvConnectedComp_cast,0,0,2,_wrap_CvSeq_CvConnectedComp_cast_texinfo},
 {"CvSeq_CvConnectedComp___paren",_wrap_CvSeq_CvConnectedComp___paren,0,0,2,_wrap_CvSeq_CvConnectedComp___paren_texinfo},
 {"CvSeq_CvConnectedComp___paren_asgn",_wrap_CvSeq_CvConnectedComp___paren_asgn,0,0,2,_wrap_CvSeq_CvConnectedComp___paren_asgn_texinfo},
+{"CvSeq_CvConnectedComp___brace",_wrap_CvSeq_CvConnectedComp___brace,0,0,2,_wrap_CvSeq_CvConnectedComp___brace_texinfo},
+{"CvSeq_CvConnectedComp___brace_asgn",_wrap_CvSeq_CvConnectedComp___brace_asgn,0,0,2,_wrap_CvSeq_CvConnectedComp___brace_asgn_texinfo},
 {"CvSeq_CvConnectedComp_append",_wrap_CvSeq_CvConnectedComp_append,0,0,2,_wrap_CvSeq_CvConnectedComp_append_texinfo},
 {"CvSeq_CvConnectedComp_pop",_wrap_CvSeq_CvConnectedComp_pop,0,0,2,_wrap_CvSeq_CvConnectedComp_pop_texinfo},
 {"new_CvSeq_CvConnectedComp",_wrap_new_CvSeq_CvConnectedComp,0,0,2,_wrap_new_CvSeq_CvConnectedComp_texinfo},
@@ -107033,6 +108267,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_CvPoint_2_cast",_wrap_CvSeq_CvPoint_2_cast,0,0,2,_wrap_CvSeq_CvPoint_2_cast_texinfo},
 {"CvSeq_CvPoint_2___paren",_wrap_CvSeq_CvPoint_2___paren,0,0,2,_wrap_CvSeq_CvPoint_2___paren_texinfo},
 {"CvSeq_CvPoint_2___paren_asgn",_wrap_CvSeq_CvPoint_2___paren_asgn,0,0,2,_wrap_CvSeq_CvPoint_2___paren_asgn_texinfo},
+{"CvSeq_CvPoint_2___brace",_wrap_CvSeq_CvPoint_2___brace,0,0,2,_wrap_CvSeq_CvPoint_2___brace_texinfo},
+{"CvSeq_CvPoint_2___brace_asgn",_wrap_CvSeq_CvPoint_2___brace_asgn,0,0,2,_wrap_CvSeq_CvPoint_2___brace_asgn_texinfo},
 {"CvSeq_CvPoint_2_append",_wrap_CvSeq_CvPoint_2_append,0,0,2,_wrap_CvSeq_CvPoint_2_append_texinfo},
 {"CvSeq_CvPoint_2_pop",_wrap_CvSeq_CvPoint_2_pop,0,0,2,_wrap_CvSeq_CvPoint_2_pop_texinfo},
 {"new_CvSeq_CvPoint_2",_wrap_new_CvSeq_CvPoint_2,0,0,2,_wrap_new_CvSeq_CvPoint_2_texinfo},
@@ -107040,6 +108276,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_float_2_cast",_wrap_CvSeq_float_2_cast,0,0,2,_wrap_CvSeq_float_2_cast_texinfo},
 {"CvSeq_float_2___paren",_wrap_CvSeq_float_2___paren,0,0,2,_wrap_CvSeq_float_2___paren_texinfo},
 {"CvSeq_float_2___paren_asgn",_wrap_CvSeq_float_2___paren_asgn,0,0,2,_wrap_CvSeq_float_2___paren_asgn_texinfo},
+{"CvSeq_float_2___brace",_wrap_CvSeq_float_2___brace,0,0,2,_wrap_CvSeq_float_2___brace_texinfo},
+{"CvSeq_float_2___brace_asgn",_wrap_CvSeq_float_2___brace_asgn,0,0,2,_wrap_CvSeq_float_2___brace_asgn_texinfo},
 {"CvSeq_float_2_append",_wrap_CvSeq_float_2_append,0,0,2,_wrap_CvSeq_float_2_append_texinfo},
 {"CvSeq_float_2_pop",_wrap_CvSeq_float_2_pop,0,0,2,_wrap_CvSeq_float_2_pop_texinfo},
 {"new_CvSeq_float_2",_wrap_new_CvSeq_float_2,0,0,2,_wrap_new_CvSeq_float_2_texinfo},
@@ -107047,6 +108285,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvSeq_float_3_cast",_wrap_CvSeq_float_3_cast,0,0,2,_wrap_CvSeq_float_3_cast_texinfo},
 {"CvSeq_float_3___paren",_wrap_CvSeq_float_3___paren,0,0,2,_wrap_CvSeq_float_3___paren_texinfo},
 {"CvSeq_float_3___paren_asgn",_wrap_CvSeq_float_3___paren_asgn,0,0,2,_wrap_CvSeq_float_3___paren_asgn_texinfo},
+{"CvSeq_float_3___brace",_wrap_CvSeq_float_3___brace,0,0,2,_wrap_CvSeq_float_3___brace_texinfo},
+{"CvSeq_float_3___brace_asgn",_wrap_CvSeq_float_3___brace_asgn,0,0,2,_wrap_CvSeq_float_3___brace_asgn_texinfo},
 {"CvSeq_float_3_append",_wrap_CvSeq_float_3_append,0,0,2,_wrap_CvSeq_float_3_append_texinfo},
 {"CvSeq_float_3_pop",_wrap_CvSeq_float_3_pop,0,0,2,_wrap_CvSeq_float_3_pop_texinfo},
 {"new_CvSeq_float_3",_wrap_new_CvSeq_float_3,0,0,2,_wrap_new_CvSeq_float_3_texinfo},
@@ -108186,7 +109426,7 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
 
   SWIG_init_user(module_ns);
 
-  swig_install_ops(octave_swig_ref::static_type_id());
+  SWIG_InstallOps(octave_swig_ref::static_type_id());
 
   // the incref is necessary so install_global doesn't destroy module_ns,
   // as it would if it installed something with the same name as the module.
@@ -108713,5 +109953,8 @@ void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CvMorphology_GRAYSCALE",SWIG_From_int((int)(CvMorphology::GRAYSCALE)));
   SWIG_Octave_SetConstant(module_ns,"CvMorphology_ERODE",SWIG_From_int((int)(CvMorphology::ERODE)));
   SWIG_Octave_SetConstant(module_ns,"CvMorphology_DILATE",SWIG_From_int((int)(CvMorphology::DILATE)));
+  
+  cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator());
+  
 }
 

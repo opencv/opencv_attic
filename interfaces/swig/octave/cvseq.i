@@ -58,19 +58,19 @@
 
 // accessor to turn edges into a typed sequence
 %extend CvSubdiv2D {
-	CvTypedSeq<CvQuadEdge2D> * typed_edges;
-	CvTypedSeq<CvQuadEdge2D> * typed_edges_get(){
-		return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
-	}
-	void typed_edges_set( CvTypedSeq<CvQuadEdge2D> * ){
-	}
-	/* add iterator support to octave...
-	%pythoncode %{
-	def __iter__(self):
-		s = CvSeq_QuadEdge2D.cast(self)
-		for i in range(s.total):
-			yield s[i]
-	%}
-	*/
+  CvTypedSeq<CvQuadEdge2D> * typed_edges;
+  CvTypedSeq<CvQuadEdge2D> * typed_edges_get(){
+    return (CvTypedSeq<CvQuadEdge2D> *) self->edges;
+  }
+  void typed_edges_set( CvTypedSeq<CvQuadEdge2D> * ){
+  }
+  /* add iterator support to octave...
+     %pythoncode %{
+     def __iter__(self):
+     s = CvSeq_QuadEdge2D.cast(self)
+     for i in range(s.total):
+     yield s[i]
+     %}
+  */
 }
 

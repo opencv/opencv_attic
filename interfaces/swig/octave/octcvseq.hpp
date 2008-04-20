@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef PY_CV_SEQ_H
-#define PY_CV_SEQ_H
+#ifndef OCT_CV_SEQ_H
+#define OCT_CV_SEQ_H
 
 #include "cxcore.h"
 #include "cvtypes.h"
@@ -80,13 +80,14 @@ public:
     T * ptr = this->__paren(i);
     memcpy(ptr, obj, sizeof(T));
   }
-  /*
-  Octave_map __map() {
-    Octave_map m;
-    m.assign();
-    return m;
+
+  T * __brace (int i){
+    return __paren(i);
   }
-  */
+  void __brace_asgn (int i, T * obj){
+    __paren_asgn(i, obj);
+  }
+
   void append(T * obj){
     cvSeqPush( this, obj );
   }
@@ -100,12 +101,20 @@ public:
 template<class T, int size=2>
 struct CvTuple {
   T val[2];
-  void __setitem__(int i, T * obj){
-    val[i] = *obj;
-  }
-  const T & __getitem__(int i){
+  const T & __paren(int i){
     return val[i];
   }
+  void __paren_asgn(int i, T * obj){
+    val[i] = *obj;
+  }
+
+  const T & __brace(int i){
+    return __paren(i);
+  }
+  void __brace_asgn(int i, T * obj){
+    return __paren_asgn(i,obj);
+  }
+
 };
 
-#endif  //PY_CV_SEQ_H
+#endif  //OCT_CV_SEQ_H
