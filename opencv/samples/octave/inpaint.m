@@ -2,41 +2,44 @@
 cv;
 highgui;
 
+global g;
 inpaint_mask = [];
-img0 = [];
-img = [];
-inpainted = [];
-prev_pt = cvPoint(-1,-1);
+g.img0 = [];
+g.img = [];
+g.inpainted = [];
+g.prev_pt = cvPoint(-1,-1);
 
 function on_mouse( event, x, y, flags, param )
-  global prev_pt
-  if (!img)
+  global g;
+  global cv;
+  global highgui;
+  if (!swig_this(g.img))
     return;
   endif
 
-  if (event == CV_EVENT_LBUTTONUP || ! (flags & CV_EVENT_FLAG_LBUTTON))
-    prev_pt = cvPoint(-1,-1);
-  elseif (event == CV_EVENT_LBUTTONDOWN)
-    prev_pt = cvPoint(x,y);
-  elseif (event == CV_EVENT_MOUSEMOVE && (flags & CV_EVENT_FLAG_LBUTTON))
+  if (event == highgui.CV_EVENT_LBUTTONUP || ! (bitand(flags,highgui.CV_EVENT_FLAG_LBUTTON)))
+    g.prev_pt = cvPoint(-1,-1);
+  elseif (event == highgui.CV_EVENT_LBUTTONDOWN)
+    g.prev_pt = cvPoint(x,y);
+  elseif (event == highgui.CV_EVENT_MOUSEMOVE && bitand(flags,highgui.CV_EVENT_FLAG_LBUTTON))
     pt = cvPoint(x,y);
-    if (prev_pt.x < 0)
-      prev_pt = pt;
+    if (g.prev_pt.x < 0)
+      g.prev_pt = pt;
     endif
-    cvLine( inpaint_mask, prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
-    cvLine( img, prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
-    prev_pt = pt;
-    cvShowImage( "image", img );
+    cvLine( g.inpaint_mask, g.prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
+    cvLine( g.img, g.prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
+    g.prev_pt = pt;
+    cvShowImage( "image", g.img );
   endif
 endfunction
 
 filename = "../c/fruits.jpg";
-if (size(argv, 1)>=2)
-  filename = argv(1, :);
+if (size(argv, 1)>=1)
+  filename = argv(){1};
 endif
 
-img0 = cvLoadImage(filename,-1);
-if (!img0)
+g.img0 = cvLoadImage(filename,-1);
+if (!swig_this(g.img0))
   printf("Can't open image '%s'\n", filename);
   exit(1);
 endif
@@ -49,33 +52,33 @@ printf("\t\t(before running it, paint something on the image)\n");
 
 cvNamedWindow( "image", 1 );
 
-img = cvCloneImage( img0 );
-inpainted = cvCloneImage( img0 );
-inpaint_mask = cvCreateImage( cvGetSize(img), 8, 1 );
+g.img = cvCloneImage( g.img0 );
+g.inpainted = cvCloneImage( g.img0 );
+g.inpaint_mask = cvCreateImage( cvGetSize(g.img), 8, 1 );
 
-cvZero( inpaint_mask );
-cvZero( inpainted );
-cvShowImage( "image", img );
-cvShowImage( "watershed transform", inpainted );
-cvSetMouseCallback( "image", on_mouse, [] );
+cvZero( g.inpaint_mask );
+cvZero( g.inpainted );
+cvShowImage( "image", g.img );
+cvShowImage( "watershed transform", g.inpainted );
+cvSetMouseCallback( "image", @on_mouse, [] );
 
 while (true)
   c = cvWaitKey(0);
 
-  if( c == '\x1b' || c=='q')
+  if( c == 27 || c=='q')
     break;
   endif
 
   if( c == 'r' )
-    cvZero( inpaint_mask );
-    cvCopy( img0, img );
-    cvShowImage( "image", img );
+    cvZero( g.inpaint_mask );
+    cvCopy( g.img0, g.img );
+    cvShowImage( "image", g.img );
   endif
 
   if( c == 'i' || c == '\012' )
-    cvNamedWindow( "inpainted image", 1 );
-    cvInpaint( img, inpaint_mask, inpainted, 3, CV_INPAINT_TELEA );
-    cvShowImage( "inpainted image", inpainted );
+    cvNamedWindow( "g.inpainted image", 1 );
+    cvInpaint( g.img, g.inpaint_mask, g.inpainted, 3, CV_INPAINT_TELEA );
+    cvShowImage( "g.inpainted image", g.inpainted );
   endif
 endwhile
 

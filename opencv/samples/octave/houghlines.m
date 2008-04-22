@@ -29,9 +29,9 @@ if (USE_STANDARD)
   lines = cvHoughLines2( dst, storage, CV_HOUGH_STANDARD, 1, CV_PI/180, 100, 0, 0 );
 
   for i=0:min(lines.total, 100)-1,
-    line = lines[i];
-    rho = line[0];
-    theta = line[1];
+    line = lines{i};
+    rho = line{0};
+    theta = line{1};
     pt1 = CvPoint();
     pt2 = CvPoint();
     a = cos(theta);
@@ -47,8 +47,9 @@ if (USE_STANDARD)
 
 else
   lines = cvHoughLines2( dst, storage, CV_HOUGH_PROBABILISTIC, 1, CV_PI/180, 50, 50, 10 );
-  for line in lines,
-    cvLine( color_dst, line[0], line[1], CV_RGB(255,0,0), 3, 8 );
+  for line = CvSeq_map(lines),
+    line = line{1};
+    cvLine( color_dst, line{0}, line{1}, CV_RGB(255,0,0), 3, 8 );
   endfor
 endif
 

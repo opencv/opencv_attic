@@ -2,75 +2,79 @@
 cv;
 highgui;
 
-color_img0 = [];
-mask = [];
-color_img = [];
-gray_img0 = [];
-gray_img = [];
-ffill_case = 1;
-lo_diff = 20
-up_diff = 20;
-connectivity = 4;
-is_color = 1;
-is_mask = 0;
-new_mask_val = 255;
+global g;
+g.color_img0 = [];
+g.mask = [];
+g.color_img = [];
+g.gray_img0 = [];
+g.gray_img = [];
+g.ffill_case = 1;
+g.lo_diff = 20
+g.up_diff = 20;
+g.connectivity = 4;
+g.is_color = 1;
+g.is_mask = 0;
+g.new_mask_val = 255;
+
+function ret = randint(v1, v2)
+  ret = int32(rand() * (v2 - v1) + v1);
+end
 
 function update_lo( pos )
-  lo_diff = pos;
+  g.lo_diff = pos;
 endfunction
 function update_up( pos )
-  up_diff = pos;
+  g.up_diff = pos;
 endfunction
 
 function on_mouse( event, x, y, flags, param )
+  global g;
+  global cv;
+  global highgui;
 
-  if( ! color_img )
+  if( !swig_this(g.color_img) )
     return;
   endif
 
-  if (event == CV_EVENT_LBUTTONDOWN)
-    comp = CvConnectedComp();
+  if (event == highgui.CV_EVENT_LBUTTONDOWN)
+    comp = cv.CvConnectedComp();
     my_mask = [];
     seed = cvPoint(x,y);
-    if (ffill_case==0)
+    if (g.ffill_case==0)
       lo = 0;
       up = 0;
-      flags = connectivity + (new_mask_val << 8);
+      flags = g.connectivity + bitshift(g.new_mask_val,8);
     else
-      lo = lo_diff;
-      up = up_diff;
-      flags = connectivity + (new_mask_val << 8) + \
-	  CV_FLOODFILL_FIXED_RANGE;
+      lo = g.lo_diff;
+      up = g.up_diff;
+      flags = g.connectivity + bitshift(g.new_mask_val,8) + \
+	  cv.CV_FLOODFILL_FIXED_RANGE;
     endif
-    b = random.randint(0,255);
-    g = random.randint(0,255);
-    r = random.randint(0,255);
+    color = CV_RGB( randint(0,255), randint(0,255), randint(0,255) );    
 
-    if( is_mask )
-      my_mask = mask;
-      cvThreshold( mask, mask, 1, 128, CV_THRESH_BINARY );
+    if( g.is_mask )
+      my_mask = g.mask;
+      cvThreshold( g.mask, g.mask, 1, 128, cv.CV_THRESH_BINARY );
     endif
     
-    if( is_color )
-      
-      color = CV_RGB( r, g, b );
-      cvFloodFill( color_img, seed, color, CV_RGB( lo, lo, lo ),
+    if( g.is_color )
+      cv.cvFloodFill( g.color_img, seed, color, cv.CV_RGB( lo, lo, lo ),
                   CV_RGB( up, up, up ), comp, flags, my_mask );
-      cvShowImage( "image", color_img );
+      cvShowImage( "image", g.color_img );
       
     else
       
       brightness = cvRealScalar((r*2 + g*7 + b + 5)/10);
-      cvFloodFill( gray_img, seed, brightness, cvRealScalar(lo),
+      cvFloodFill( g.gray_img, seed, brightness, cvRealScalar(lo),
                   cvRealScalar(up), comp, flags, my_mask );
-      cvShowImage( "image", gray_img );
+      cvShowImage( "image", g.gray_img );
     endif
     
 
-    printf("%s pixels were repainted\n", comp.area);
+    printf("%i pixels were repainted\n", comp.area);
 
-    if( is_mask )
-      cvShowImage( "mask", mask );
+    if( g.is_mask )
+      cvShowImage( "mask", g.mask );
     endif
   endif
 endfunction
@@ -79,12 +83,12 @@ endfunction
 
 
 filename = "../c/fruits.jpg";
-if (size(argv, 1)>1)
-  filename=argv(1, :);
+if (size(argv, 1)>0)
+  filename=argv(){1};
 endif
 
-color_img0 = cvLoadImage(filename,1);
-if (! color_img0)
+g.color_img0 = cvLoadImage(filename,1);
+if (!swig_this(g.color_img0))
   printf("Could not open %s\n",filename);
   exit(-1);
 endif
@@ -97,79 +101,79 @@ printf("\tr - restore the original image\n");
 printf("\ts - use null-range floodfill\n");
 printf("\tf - use gradient floodfill with fixed(absolute) range\n");
 printf("\tg - use gradient floodfill with floating(relative) range\n");
-printf("\t4 - use 4-connectivity mode\n");
-printf("\t8 - use 8-connectivity mode\n");
+printf("\t4 - use 4-g.connectivity mode\n");
+printf("\t8 - use 8-g.connectivity mode\n");
 
-color_img = cvCloneImage( color_img0 );
-gray_img0 = cvCreateImage( cvSize(color_img.width, color_img.height), 8, 1 );
-cvCvtColor( color_img, gray_img0, CV_BGR2GRAY );
-gray_img = cvCloneImage( gray_img0 );
-mask = cvCreateImage( cvSize(color_img.width + 2, color_img.height + 2), 8, 1 );
+g.color_img = cvCloneImage( g.color_img0 );
+g.gray_img0 = cvCreateImage( cvSize(g.color_img.width, g.color_img.height), 8, 1 );
+cvCvtColor( g.color_img, g.gray_img0, CV_BGR2GRAY );
+g.gray_img = cvCloneImage( g.gray_img0 );
+g.mask = cvCreateImage( cvSize(g.color_img.width + 2, g.color_img.height + 2), 8, 1 );
 
 cvNamedWindow( "image", 1 );
-cvCreateTrackbar( "lo_diff", "image", lo_diff, 255, update_lo);
-cvCreateTrackbar( "up_diff", "image", up_diff, 255, update_up);
+cvCreateTrackbar( "g.lo_diff", "image", g.lo_diff, 255, @update_lo);
+cvCreateTrackbar( "g.up_diff", "image", g.up_diff, 255, @update_up);
 
-cvSetMouseCallback( "image", on_mouse );
+cvSetMouseCallback( "image", @on_mouse );
 
 while (true)
-  if( is_color )
-    cvShowImage( "image", color_img );
+  if( g.is_color )
+    cvShowImage( "image", g.color_img );
   else
-    cvShowImage( "image", gray_img );
+    cvShowImage( "image", g.gray_img );
   endif
 
   c = cvWaitKey(0);
-  if (c=='\x1b')
-    print("Exiting ...");
+  if (c==27)
+    printf("Exiting ...\n");
     exit(0)
   elseif (c=='c')
-    if( is_color )
+    if( g.is_color )
       
       print("Grayscale mode is set");
-      cvCvtColor( color_img, gray_img, CV_BGR2GRAY );
-      is_color = 0;
+      cvCvtColor( g.color_img, g.gray_img, CV_BGR2GRAY );
+      g.is_color = 0;
       
     else
       
       print("Color mode is set");
-      cvCopy( color_img0, color_img, [] );
-      cvZero( mask );
-      is_color = 1;
+      cvCopy( g.color_img0, g.color_img, [] );
+      cvZero( g.mask );
+      g.is_color = 1;
     endif
     
   elseif (c=='m')
-    if( is_mask )
+    if( g.is_mask )
       cvDestroyWindow( "mask" );
-      is_mask = 0;
+      g.is_mask = 0;
       
     else
       cvNamedWindow( "mask", 0 );
-      cvZero( mask );
-      cvShowImage( "mask", mask );
-      is_mask = 1;
+      cvZero( g.mask );
+      cvShowImage( "mask", g.mask );
+      g.is_mask = 1;
     endif
     
   elseif (c=='r')
-    print("Original image is restored");
-    cvCopy( color_img0, color_img, [] );
-    cvCopy( gray_img0, gray_img, [] );
-    cvZero( mask );
+    printf("Original image is restored");
+    cvCopy( g.color_img0, g.color_img, [] );
+    cvCopy( g.gray_img0, g.gray_img, [] );
+    cvZero( g.mask );
   elseif (c=='s')
-    print("Simple floodfill mode is set");
-    ffill_case = 0;
+    printf("Simple floodfill mode is set");
+    g.ffill_case = 0;
   elseif (c=='f')
-    print("Fixed Range floodfill mode is set");
-    ffill_case = 1;
+    printf("Fixed Range floodfill mode is set");
+    g.ffill_case = 1;
   elseif (c=='g')
-    print("Gradient (floating range) floodfill mode is set");
-    ffill_case = 2;
+    printf("Gradient (floating range) floodfill mode is set");
+    g.ffill_case = 2;
   elseif (c=='4')
-    print("4-connectivity mode is set");
-    connectivity = 4;
+    printf("4-g.connectivity mode is set");
+    g.connectivity = 4;
   elseif (c=='8')
-    print("8-connectivity mode is set");
-    connectivity = 8;
+    printf("8-g.connectivity mode is set");
+    g.connectivity = 8;
   endif
 
 endwhile
