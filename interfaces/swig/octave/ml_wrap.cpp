@@ -909,6 +909,7 @@ namespace Swig {
     typedef std::pair < const swig_octave_member *, octave_value > member_value_pair;
     typedef std::map < std::string, member_value_pair > member_map;
     member_map members;
+    bool always_static;
 
     const swig_octave_member *find_member(const swig_type_info *type, const std::string &name) {
       if (!type->clientdata)
@@ -1074,8 +1075,10 @@ namespace Swig {
     octave_swig_type &operator=(const octave_swig_type &rhs);
   public:
 
-    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0)
-      :	module(0), construct_type(_ptr ? 0 : _type), own(_own) {
+    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0,
+		     bool _always_static = false)
+      :	module(0), construct_type(_ptr ? 0 : _type), own(_own), 
+      always_static(_always_static) {
       if (_type || _ptr)
 	types.push_back(std::make_pair(_type, _ptr));
       if (_ptr) {
@@ -1299,9 +1302,12 @@ namespace Swig {
 	}
 
 	octave_value_list args;
-	if (!m->first || (!m->first->is_static() && !m->first->is_global()))
+	if (!always_static &&
+	    (!m->first || (!m->first->is_static() && !m->first->is_global())))
 	  args.append(as_value());
-	if (skip < (int) ops.size() && ops[skip] == '(' && ((m->first && m->first->method) || m->second.is_function() || m->second.is_function_handle())) {
+	if (skip < (int) ops.size() && ops[skip] == '(' && 
+	    ((m->first && m->first->method) || m->second.is_function() || 
+	     m->second.is_function_handle())) {
 	  args.append(*idx_it++);
 	  ++skip;
 	  sub_ovl = member_invoke(m, args, nargout);
@@ -37145,7 +37151,7 @@ SWIG_PropagateClientData(void) {
 
 
 
-void SWIG_init_user(octave_swig_type* module_ns);
+static void SWIG_init_user(octave_swig_type* module_ns);
 
 DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
   static bool already_init=false;
@@ -37175,14 +37181,11 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
     if (swig_globals[j].get_method)
       cvar_ns->assign(swig_globals[j].name,&swig_globals[j]);
 
-  octave_swig_type* module_ns=new octave_swig_type;
+  octave_swig_type* module_ns=new octave_swig_type(0, 0, 0, true);
   module_ns->assign("cvar",Swig::swig_value_ref(cvar_ns));
   for (int j=0;swig_globals[j].name;++j)
     if (swig_globals[j].method)
       module_ns->assign(swig_globals[j].name,&swig_globals[j]);
-
-  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
-  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
 
   // * need better solution here; swig_type -> octave_class mapping is 
   // * really n-to-1, in some cases such as template partial spec, etc. 
@@ -37206,11 +37209,14 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
     module_ns->install_global();
   module_ns->decref();
 
+  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
+  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
+
   return octave_value_list();
 }
 
 
-void SWIG_init_user(octave_swig_type* module_ns)
+static void SWIG_init_user(octave_swig_type* module_ns)
 {
   feval("cv",octave_value_list(),0);
   SWIG_Octave_SetConstant(module_ns,"CV_LOG2PI",octave_value((1.8378770664093454835606594728112)));

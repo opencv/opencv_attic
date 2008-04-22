@@ -8,9 +8,9 @@ function ret = randint(a, b)
 endfunction
 
 function minarea_array(img, count)
-  global CV_32SC2;
-  global cvZero;
-  pointMat = cvCreateMat( count, 1, CV_32SC2 );
+  global cv;
+  global highgui;
+  pointMat = cvCreateMat( count, 1, cv.CV_32SC2 );
   for i=0:count-1,
     pointMat(i) = cvPoint( randint(img.width/4, img.width*3/4), randint(img.height/4, img.height*3/4) );
   endfor
@@ -18,30 +18,26 @@ function minarea_array(img, count)
   box = cvMinAreaRect2( pointMat );
   box_vtx = cvBoxPoints( box );
   [success, center, radius] = cvMinEnclosingCircle( pointMat );
-  cvZero( img );
+  cv.cvZero( img );
   for i=0:count-1,
     cvCircle( img, cvGet1D(pointMat,i), 2, CV_RGB( 255, 0, 0 ), \
-	     CV_FILLED, CV_AA, 0 );
+	     cv.CV_FILLED, cv.CV_AA, 0 );
   endfor
 
-  box_vtx = {cvPointFrom32f(box_vtx{1}),
-             cvPointFrom32f(box_vtx{2}),
-             cvPointFrom32f(box_vtx{3}),
+  box_vtx = {cvPointFrom32f(box_vtx{1}), \
+             cvPointFrom32f(box_vtx{2}), \
+             cvPointFrom32f(box_vtx{3}), \
              cvPointFrom32f(box_vtx{4})};
-  cvCircle( img, cvPointFrom32f(center), cvRound(radius), CV_RGB(255, 255, 0), 1, CV_AA, 0 );
-  cvPolyLine( img, {box_vtx}, 1, CV_RGB(0,255,255), 1, CV_AA ) ;
+  cvCircle( img, cvPointFrom32f(center), cvRound(radius), CV_RGB(255, 255, 0), 1, cv.CV_AA, 0 );
+  cvPolyLine( img, {box_vtx}, 1, CV_RGB(0,255,255), 1, cv.CV_AA ) ;
 endfunction
 
 
 function minarea_seq(img, count, storage)
-  global CV_SEQ_KIND_GENERIC;
-  global CV_32SC2;
-  global sizeof_CvContour;
-  global sizeof_CvPoint;
-  global CvSeq_CvPoint;
-  global cvZero;
-  ptseq = cvCreateSeq( bitor(CV_SEQ_KIND_GENERIC, CV_32SC2), sizeof_CvContour, sizeof_CvPoint, storage );
-  ptseq = CvSeq_CvPoint.cast( ptseq );
+  global cv;
+  global highgui;
+  ptseq = cvCreateSeq( bitor(cv.CV_SEQ_KIND_GENERIC, cv.CV_32SC2), cv.sizeof_CvContour, cv.sizeof_CvPoint, storage );
+  ptseq = cv.CvSeq_CvPoint.cast( ptseq );
   for i=0:count-1,
     pt0 = cvPoint( randint(img.width/4, img.width*3/4), randint(img.height/4, img.height*3/4) );
     cvSeqPush( ptseq, pt0 );
@@ -49,17 +45,18 @@ function minarea_seq(img, count, storage)
   box = cvMinAreaRect2( ptseq );
   box_vtx = cvBoxPoints( box );
   [success, center, radius] = cvMinEnclosingCircle( ptseq );
-  cvZero( img );
-  for pt = ptseq,
-    cvCircle( img, pt, 2, CV_RGB( 255, 0, 0 ), CV_FILLED, CV_AA, 0 );
+  cv.cvZero( img );
+  for pt = CvSeq_map(ptseq),
+    pt = pt{1};
+    cvCircle( img, pt, 2, CV_RGB( 255, 0, 0 ), cv.CV_FILLED, cv.CV_AA, 0 );
   endfor
 
-  box_vtx = {cvPointFrom32f(box_vtx{0}),
-             cvPointFrom32f(box_vtx{1}),
-             cvPointFrom32f(box_vtx{2}),
-             cvPointFrom32f(box_vtx{3})};
-  cvCircle( img, cvPointFrom32f(center), cvRound(radius), CV_RGB(255, 255, 0), 1, CV_AA, 0 );
-  cvPolyLine( img, {box_vtx}, 1, CV_RGB(0,255,255), 1, CV_AA );
+  box_vtx = {cvPointFrom32f(box_vtx{1}), \
+             cvPointFrom32f(box_vtx{2}), \
+             cvPointFrom32f(box_vtx{3}), \
+             cvPointFrom32f(box_vtx{4})};
+  cvCircle( img, cvPointFrom32f(center), cvRound(radius), CV_RGB(255, 255, 0), 1, cv.CV_AA, 0 );
+  cvPolyLine( img, {box_vtx}, 1, CV_RGB(0,255,255), 1, cv.CV_AA );
   cvClearMemStorage( storage );
 endfunction
 

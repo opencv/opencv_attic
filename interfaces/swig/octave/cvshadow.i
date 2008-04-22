@@ -69,12 +69,6 @@
 
 // eliminates need for IplImage ** typemap
 %rename (cvCalcImageHist) cvCalcHist;
-/*
-%pythoncode %{
-def cvCalcHist(*args):
-	return cvCalcArrHist(*args)
-%}
-*/
 
 // must come after %ignore, %rename
 %include "cvshadow.h"
@@ -93,13 +87,6 @@ def cvCalcHist(*args):
 /* Define sequence type for functions returning sequences */
 %define %cast_seq( cvfunc, type )
 %rename (cvfunc##Untyped) cvfunc;
-/*
-%pythoncode %{
-def cvfunc(*args):
-	seq = cvfunc##Untyped( *args )
-	return type.cast(seq)
-%}
-*/
 %enddef
 
 %cast_seq( cvHoughCircles, CvSeq_float_3 );
@@ -110,26 +97,9 @@ def cvfunc(*args):
 
 /* Special cases ... */
 %rename(cvFindContoursUntyped) cvFindContours;
-/*
-%pythoncode %{
-def cvFindContours( *args ):
-	count, seq = cvFindContoursUntyped( *args )
-	return count, CvSeq_CvPoint.cast(seq)
-%}
-*/
 
 /* cvHoughLines2 returns a different type of sequence depending on its args */
 %rename (cvHoughLinesUntyped) cvHoughLines2;
-/*
-%pythoncode %{
-def cvHoughLines2( *args ):
-	seq = cvHoughLinesUntyped( *args )
-	type = CV_SEQ_ELTYPE(seq) 
-	if type == CV_32SC4:
-		return CvSeq_CvPoint_2.cast(seq)
-	return CvSeq_float_2.cast(seq)
-%}
-*/
 
 // cvPointSeqFromMat
 // cvSeqPartition

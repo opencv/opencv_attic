@@ -13,32 +13,33 @@
 cv;
 highgui;
 
-image02 = [];
-image03 = [];
-image04 = [];
+global g;
+g.image02 = [];
+g.image03 = [];
+g.image04 = [];
 
 function process_image( slider_pos )
+  global g;
+  global cv;
+  global highgui;
+
   ##  Define trackbar callback functon. This function find contours,
   ##    draw it and approximate it by ellipses.
   stor = cv.cvCreateMemStorage(0);
   
   ## Threshold the source image. This needful for cv.cvFindContours().
-  cv.cvThreshold( image03, image02, slider_pos, 255, cv.CV_THRESH_BINARY );
+  cv.cvThreshold( g.image03, g.image02, slider_pos, 255, cv.CV_THRESH_BINARY );
   
   ## Find all contours.
-  [nb_contours, cont] = cv.cvFindContours (image02,
-					   stor,
-					   cv.sizeof_CvContour,
-					   cv.CV_RETR_LIST,
-					   cv.CV_CHAIN_APPROX_NONE,
-					   cv.cvPoint (0,0));
+  [nb_contours, cont] = cv.cvFindContours (g.image02,stor,cv.sizeof_CvContour,cv.CV_RETR_LIST,cv.CV_CHAIN_APPROX_NONE,cv.cvPoint (0,0));
   
   ## Clear images. IPL use.
-  cv.cvZero(image02);
-  cv.cvZero(image04);
+  cv.cvZero(g.image02);
+  cv.cvZero(g.image04);
   
   ## This cycle draw all contours and approximate it by ellipses.
-  for c in cont.hrange(),
+  for c = cv.CvSeq_hrange(cont),
+    c = c{1};
     count = c.total; # This is number point in contour
 
     ## Number point must be more than or equal to 6 (for cv.cvFitEllipse_32f).        
@@ -62,7 +63,7 @@ function process_image( slider_pos )
     box = cv.cvFitEllipse2(PointArray2D32f);
     
     ## Draw current contour.
-    cv.cvDrawContours(image04, c, cv.CV_RGB(255,255,255), cv.CV_RGB(255,255,255),0,1,8,cv.cvPoint(0,0));
+    cv.cvDrawContours(g.image04, c, cv.CV_RGB(255,255,255), cv.CV_RGB(255,255,255),0,1,8,cv.cvPoint(0,0));
     
     ## Convert ellipse data from float to integer representation.
     center = cv.CvPoint();
@@ -74,43 +75,41 @@ function process_image( slider_pos )
     box.angle = -box.angle;
     
     ## Draw ellipse.
-    cv.cvEllipse(image04, center, size,
-                 box.angle, 0, 360,
-                 cv.CV_RGB(0,0,255), 1, cv.CV_AA, 0);
+    cv.cvEllipse(g.image04, center, size,box.angle, 0, 360,cv.CV_RGB(0,0,255), 1, cv.CV_AA, 0);
   endfor    
 
   ## Show image. HighGUI use.
-  highgui.cvShowImage( "Result", image04 );
+  highgui.cvShowImage( "Result", g.image04 );
 endfunction
 
 argc = size(argv, 1);
 filename = "../c/stuff.jpg";
 if(argc == 2)
-  filename = argv(1, :);
+  filename = argv(){1};
 endif
 
 slider_pos = 70;
 
 ## load image and force it to be grayscale
-image03 = highgui.cvLoadImage(filename, 0);
-if (! image03)
+g.image03 = highgui.cvLoadImage(filename, 0);
+if (!swig_this( g.image03))
   printf("Could not load image %s\n", filename);
   exit(-1);
 endif
 
 ## Create the destination images
-image02 = cv.cvCloneImage( image03 );
-image04 = cv.cvCloneImage( image03 );
+g.image02 = cv.cvCloneImage( g.image03 );
+g.image04 = cv.cvCloneImage( g.image03 );
 
 ## Create windows.
 highgui.cvNamedWindow("Source", 1);
 highgui.cvNamedWindow("Result", 1);
 
 ## Show the image.
-highgui.cvShowImage("Source", image03);
+highgui.cvShowImage("Source", g.image03);
 
 ## Create toolbars. HighGUI use.
-highgui.cvCreateTrackbar( "Threshold", "Result", slider_pos, 255, process_image );
+highgui.cvCreateTrackbar( "Threshold", "Result", slider_pos, 255, @process_image );
 
 
 process_image( 1 );
