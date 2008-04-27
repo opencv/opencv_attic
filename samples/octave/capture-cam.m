@@ -1,6 +1,11 @@
 #! /usr/bin/env octave
 
 ## import the necessary things for OpenCV
+addpath("/home/x/opencv2/interfaces/swig/octave");
+source("/home/x/opencv2/interfaces/swig/octave/PKG_ADD_template");
+debug_on_error(true);
+debug_on_warning(true);
+crash_dumps_octave_core (0)
 cv;
 highgui;
 
@@ -28,30 +33,21 @@ printf("OpenCV Octave capture video\n");
 highgui.cvNamedWindow ('Camera', highgui.CV_WINDOW_AUTOSIZE);
 
 ## move the new window to a better place
-highgui.cvMoveWindow ('Camera', 10, 10);
+#highgui.cvMoveWindow ('Camera', 10, 10);
 
 try
   ## try to get the device number from the command line
-  device = int32 (argv (1, :));
-
-  ## got it ! so remove it from the arguments
-  argv(1, :) = [];
+  device = int32 (argv(){1});
 catch
   ## no device number on the command line, assume we want the 1st device
-  device = 0;
+  device = -1;
 end_try_catch
 
-if (size (argv, 1) == 1)
-  ## no argument on the command line, try to use the camera
-  capture = highgui.cvCreateCameraCapture (device);
-else
-  ## we have an argument on the command line,
-  ## we can assume this is a file name, so open it
-  capture = highgui.cvCreateFileCapture (argv (1, :));
-endif
+## no argument on the command line, try to use the camera
+capture = highgui.cvCreateCameraCapture (device);
 
 ## check that capture device is OK
-if (!capture)
+if (!swig_this(capture))
   printf("Error opening capture device\n");
   exit (1);
 endif
@@ -74,7 +70,7 @@ writer = highgui.cvCreateVideoWriter ("captured.mpg", MPEG1VIDEO,
                                       fps, frame_size, true);
 
 ## check the writer is OK
-if (!writer)
+if (!swig_this(writer))
   printf("Error opening writer\n");
   exit(1);
 endif
