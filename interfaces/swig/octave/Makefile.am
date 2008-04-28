@@ -104,7 +104,7 @@ $(PKG_NAME).tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
-MY_MKOCTFILE=$(CXX) -shared
+MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
 
 cv.oct: cv_wrap.cpp cvshadow.cpp error.cpp octhelpers.cpp
 	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/cv/src/.libs -lcv $^

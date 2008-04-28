@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.56 $)
+AC_REVISION($Revision: 1.57 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -839,6 +839,8 @@ if test x"$with_octave" = "xyes"; then
        AC_MSG_WARN([mkoctfile not found, disabling octave wrappers])
        with_octave=no
     fi
+    OCTAVE_INCFLAGS=`$MKOCTFILE -p INCFLAGS`
+    AC_SUBST(OCTAVE_INCFLAGS,[$OCTAVE_INCFLAGS])
 fi
 if test x"$with_octave" = "xyes"; then
     # check that octave version is at least 2.9.12
@@ -861,7 +863,7 @@ if test x"$with_octave" = "xyes"; then
 
     # check that we have octave headers
     OLD_CPPFLAGS=$CPPFLAGS
-    CPPFLAGS="$CPPFLAGS -x c++"
+    CPPFLAGS="$CPPFLAGS -x c++ $OCTAVE_INCFLAGS"
     AC_CHECK_HEADER(octave/oct.h,
         [have_octave=yes],
         [
