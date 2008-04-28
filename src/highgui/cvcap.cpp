@@ -127,6 +127,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		CV_CAP_VFW,        // identical to CV_CAP_V4L
 		CV_CAP_MIL,
 		CV_CAP_QT,
+		CV_CAP_UNICAP,
 		-1
 	};
 
@@ -211,6 +212,15 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 				return capture;
 			break;
 		#endif
+			
+		#ifdef HAVE_UNICAP
+		case CV_CAP_UNICAP:
+		  capture = cvCaptureFromCAM_Unicap (index);
+		  if (capture)
+		    return capture;
+		  break;
+		#endif
+
 		}
 	}
 

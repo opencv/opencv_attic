@@ -211,4 +211,9 @@ CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
 #endif
 
+#ifdef HAVE_UNICAP
+CvCapture * cvCaptureFromCAM_Unicap  (const int     index);
+
+#endif
+
 #endif /* __HIGHGUI_H_ */

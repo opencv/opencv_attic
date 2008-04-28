@@ -241,6 +241,8 @@ CVAPI(CvCapture*) cvCreateFileCapture( const char* filename );
 
 #define CV_CAP_QT       500   // QuickTime
 
+#define CV_CAP_UNICAP   600   // Unicap drivers
+
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCreateCameraCapture( int index );
 
