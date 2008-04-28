@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.55 $)
+AC_REVISION($Revision: 1.56 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -148,6 +148,12 @@ AC_ARG_WITH([v4l],
             [AS_HELP_STRING([--with-v4l],[use video4linux [automatic]])],
             [with_v4l=$withval],
             [with_v4l=auto])
+
+# does the user want OpenCV to use the unicap library?
+AC_ARG_WITH([unicap],
+            [AS_HELP_STRING([--with-unicap],[use unicap (see LICENSE) [no]])],
+            [with_unicap=$withval],
+            [with_unicap=no])
 
 # does the user want OpenCV to use image libraries from OS X 10.4?
 AC_ARG_WITH([imageio],
@@ -483,6 +489,21 @@ fi
 AC_SUBST(GSTREAMER_CFLAGS)
 AC_SUBST(GSTREAMER_LIBS)
 AM_CONDITIONAL([BUILD_GSTREAMER], [test x"$have_gstreamer" = "xyes"])
+
+# Check for the unicap library
+if test x"$with_unicap" = "xno"; then
+    have_unicap=no
+else
+	PKG_CHECK_MODULES(UNICAP_PACKAGE,libunicap)
+	AC_SUBST(UNICAP_PACKAGE_LIBS)
+	AC_SUBST(UNICAP_PACKAGE_CFLAGS)
+	PKG_CHECK_MODULES(UCIL_PACKAGE,libucil)
+	AC_SUBST(UCIL_PACKAGE_LIBS)
+	AC_SUBST(UCIL_PACKAGE_CFLAGS)
+	have_unicap=yes
+	AC_DEFINE(HAVE_UNICAP,,[Unicap video capture library])
+fi
+AM_CONDITIONAL([BUILD_UNICAP], [test x"$have_unicap" = "xyes"])
 
 # prefer XINE over FFMPEG for video reading because it is quick, has a cleaner API
 # and allows for easy seeking with some formats
@@ -1025,6 +1046,7 @@ HighGUI configuration ================================================
     Use dc1394 & raw1394:     ${have_dc1394}
     Use v4l:                  ${have_v4l}
     Use v4l2:                 ${have_v4l2}
+    Use unicap:               ${have_unicap}
 
 Wrappers for other languages =========================================
     SWIG                      ${SWIG}
