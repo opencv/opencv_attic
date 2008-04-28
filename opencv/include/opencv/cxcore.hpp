@@ -85,7 +85,10 @@ public:
 
     void create( CvSize size, int depth, int channels )
     {
-        attach( cvCreateImage( size, depth, channels ));
+        if( !image || !refcount ||
+            image->width != size.width || image->height != size.height ||
+            image->depth != depth || image->nChannels != channels )
+            attach( cvCreateImage( size, depth, channels ));
     }
 
     void release() { detach(); }
@@ -258,7 +261,10 @@ public:
 
     void create( int rows, int cols, int type )
     {
-        set( cvCreateMat( rows, cols, type ), false );
+        if( !matrix || !matrix->refcount ||
+            matrix->rows != rows || matrix->cols != cols ||
+            CV_MAT_TYPE(matrix->type) != type )
+            set( cvCreateMat( rows, cols, type ), false );
     }
 
     void addref() const
