@@ -546,12 +546,13 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
 
     CvMat srcstub, *src;
     CvMat dststub, *dst;
-    int src_cn, swap_rb = flags & CV_CVTIMG_SWAP_RB;
+    int src_cn, dst_cn, swap_rb = flags & CV_CVTIMG_SWAP_RB;
 
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
 
     src_cn = CV_MAT_CN( src->type );
+    dst_cn = CV_MAT_CN( dst->type );
 
     if( src_cn != 1 && src_cn != 3 && src_cn != 4 )
         CV_ERROR( CV_BadNumChannels, "Source image must have 1, 3 or 4 channels" );
@@ -574,10 +575,11 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
         src = temp;
     }
 
+    if( src_cn != dst_cn || src_cn == 3 && swap_rb )
     {
         uchar *s = src->data.ptr, *d = dst->data.ptr;
         int s_step = src->step, d_step = dst->step;
-        int code = src_cn*10 + CV_MAT_CN(dst->type);
+        int code = src_cn*10 + dst_cn;
         CvSize size = { src->cols, src->rows };
 
         if( CV_IS_MAT_CONT(src->type & dst->type) )
@@ -596,8 +598,8 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
             icvCvt_BGR2Gray_8u_C3C1R( s, s_step, d, d_step, size, swap_rb );
             break;
         case 33:
-            if( swap_rb )
-                icvCvt_RGB2BGR_8u_C3R( s, s_step, d, d_step, size );
+            assert( swap_rb );
+            icvCvt_RGB2BGR_8u_C3R( s, s_step, d, d_step, size );
             break;
         case 41:
             icvCvt_BGRA2Gray_8u_C4C1R( s, s_step, d, d_step, size, swap_rb );
@@ -608,9 +610,7 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
         default:
             CV_ERROR( CV_StsUnsupportedFormat, "Unsupported combination of input/output formats" );
         }
-
-        if( code != 33 || swap_rb )
-            src = dst;
+        src = dst;
     }
 
     if( flags & CV_CVTIMG_FLIP )
