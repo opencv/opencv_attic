@@ -102,13 +102,13 @@ CvCapture;
 
 #define CV_VIDEOWRITER_BASE_API_COUNT 2
 
-typedef void         (CV_CDECL* CvVideoWriterCloseFunc)         ( CvVideoWriter* writer );
+typedef void         (CV_CDECL* CvVideoWriterCloseFunc)       ( CvVideoWriter* writer );
 typedef int          (CV_CDECL* CvVideoWriterWriteFrameFunc)    ( CvVideoWriter* writer,
                                                                   const IplImage* image );
 typedef struct CvVideoWriterVTable
 {
     int                           count;
-    CvVideoWriterCloseFunc        close;
+    CvVideoWriterCloseFunc      close;
     CvVideoWriterWriteFrameFunc   write_frame;
 }
 CvVideoWriterVTable;
@@ -170,9 +170,11 @@ CvCapture* cvCaptureFromFile_Win32( const char* filename );
 CvCapture* cvCaptureFromCAM_VFW( int index );
 CvCapture* cvCaptureFromFile_VFW( const char* filename );
 
+CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
+                                          double fps, CvSize frameSize, int is_color );
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
-int cvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image );
+int icvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image );
 void cvReleaseVideoWriter_VFW( CvVideoWriter** writer );
 
 #endif

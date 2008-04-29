@@ -323,7 +323,7 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** pwriter )
 
 	CvVideoWriter* writer = *pwriter;
 	if(writer && writer->vtable &&
-	   writer->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
+	   writer->vtable->count >= CV_VIDEOWRITER_BASE_API_COUNT &&
 	   writer->vtable->close )
 		writer->vtable->close( writer );
 	cvFree( pwriter );

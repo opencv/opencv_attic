@@ -49,8 +49,8 @@
 // video%04d.png or the first frame of the sequence i.e. video0001.png
 //
 
-#include <sys/stat.h>
 #include "_highgui.h"
+#include <sys/stat.h>
 
 #ifdef NDEBUG
 #define CV_WARN(message)
@@ -83,27 +83,14 @@ static void icvClose_Images(CvCapture *capture)
 static int icvGrabFrame_Images(CvCapture *capture)
 {
 	CvCapture_Images *cap = (CvCapture_Images *)capture;
-	char str[100];
-	char *x = str;
-	int size = 100;
-	if(snprintf(x, size, cap->filename, cap->firstframe + cap->currentframe) == size - 1) {
-		// buffer too small
-		size *= 2;
-
-		if(x == str)
-			x = (char *)malloc(size);
-		else
-			x = (char *)realloc(x, size);
-	}
+	char str[1024];
+	sprintf(str, cap->filename, cap->firstframe + cap->currentframe);
 
 	if(cap->frame)
 		cvReleaseImage(&cap->frame);
 
-	cap->frame = cvLoadImage(x, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
+	cap->frame = cvLoadImage(str, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
 	int res = (cap->frame != 0);
-
-	if(x != str)
-		free(x);
 
 	if(res)
 		cap->currentframe++;
@@ -241,36 +228,22 @@ CvCapture * cvCaptureFromFile_Images (const char * filename)
 
 	// determine the length of the sequence
 	unsigned length = 0;
-	char str[100];
-	char *x = str;
-	int size = 100;
-	while(1) {
-		if(snprintf(x, size, name, offset + length) == size - 1) {
-			// buffer too small
-			size *= 2;
-
-			if(x == str)
-				x = (char *)malloc(size);
-			else
-				x = (char *)realloc(x, size);
-		}
-
+	char str[1024];
+	for(;;) {
+		sprintf(str, name, offset + length);
 		struct stat s;
-		if(stat(x, &s)) {
+		if(stat(str, &s)) {
 			if(length == 0 && offset == 0) { // allow starting with 0 or 1
 				offset++;
 				continue;
 			}
 		}
 
-		if(!cvHaveImageReader(x))
+		if(!cvHaveImageReader(str))
 			break;
 
 		length++;
 	}
-
-	if(x != str)
-		free(x);
 
 	if(length == 0)
 		return 0;
@@ -301,29 +274,17 @@ typedef struct CvVideoWriter_Images {
 	CvVideoWriterVTable    *vtable;
 	char		       *filename;
 	unsigned		currentframe;
-};
+} CvVideoWriter_Images;
 
 static int icvWriteFrame_Images( CvVideoWriter* writer, const IplImage* image )
 {
 	CvVideoWriter_Images *wri = (CvVideoWriter_Images *)writer;
 
-	char str[100];
-	char *x = str;
-	int size = 100;
-	while(snprintf(x, size, wri->filename, wri->currentframe) == size - 1) {
-		size *= 2;
-		if(x == str)
-			x = (char *)malloc(size);
-		else
-			x = (char *)realloc(x, size);
-	}
-
-	int ret = cvSaveImage(x, image);
+	char str[1024];
+	sprintf(str, wri->filename, wri->currentframe);
+	int ret = cvSaveImage(str, image);
 
 	wri->currentframe++;
-
-	if(x != str)
-		free(x);
 
 	return ret;
 }
@@ -351,23 +312,10 @@ CvVideoWriter* cvCreateVideoWriter_Images( const char* filename )
 	if(!name)
 		return 0;
 
-	char str[100];
-	char *x = str;
-	int size = 100;
-	while(snprintf(x, size, name, 0) == size - 1) {
-		size *= 2;
-		if(x == str)
-			x = (char *)malloc(size);
-		else
-			x = (char *)realloc(x, size);
-	}
-	if(!cvHaveImageWriter(x)) {
-		if(x != str)
-			free(x);
-		return 0;
-	}
-	if(x != str)
-		free(x);
+	char str[1024];
+	sprintf(str, name, 0);
+	if(!cvHaveImageWriter(str))
+        return 0;
 
 	writer = (CvVideoWriter_Images *)cvAlloc(sizeof(CvCapture_Images));
 	memset(writer, 0, sizeof(CvVideoWriter_Images));

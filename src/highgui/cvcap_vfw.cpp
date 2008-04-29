@@ -494,22 +494,23 @@ static CvCaptureVTable captureCAM_VFW_vtable =
 
 CvCapture* cvCaptureFromCAM_VFW( int index )
 {
-	CvCaptureCAM_VFW * capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
-	memset( capture, 0, sizeof(*capture));
-	capture->vtable = &captureCAM_VFW_vtable;
-	
-	if( icvOpenCAM_VFW( capture, index ))
-		return (CvCapture*)capture;
-	
-	cvReleaseCapture( (CvCapture**)&capture );
-	return 0;
+    CvCaptureCAM_VFW * capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
+    memset( capture, 0, sizeof(*capture));
+    capture->vtable = &captureCAM_VFW_vtable;
+
+    if( icvOpenCAM_VFW( capture, index ))
+        return (CvCapture*)capture;
+
+    cvReleaseCapture( (CvCapture**)&capture );
+    return 0;
 }
 
 
 /*************************** writing AVIs ******************************/
 
-typedef struct CvAVI_VFW_Writer
+typedef struct CvVFWWriter
 {
+    CvVideoWriter base;
     PAVIFILE      avifile;
     PAVISTREAM    compressed;
     PAVISTREAM    uncompressed;
@@ -518,10 +519,10 @@ typedef struct CvAVI_VFW_Writer
     IplImage    * tempFrame;
     long          pos;
     int           fourcc;
-} CvAVI_VFW_Writer;
+} CvVFWWriter;
 
 
-static void icvCloseAVIWriter( CvAVI_VFW_Writer* writer )
+static void icvCloseVideoWriter_VFW( CvVFWWriter* writer )
 {
     if( writer )
     {
@@ -544,19 +545,19 @@ typedef struct tagBITMAPINFO_8Bit
     RGBQUAD          bmiColors[256];
 } BITMAPINFOHEADER_8BIT;
 
-static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
-                             double fps, CvSize frameSize, int is_color )
+static int icvInitVideoWriter_VFW( CvVFWWriter* writer, int fourcc,
+                                   double fps, CvSize frameSize, int is_color )
 {
     if( writer && writer->avifile )
     {
         AVICOMPRESSOPTIONS copts, *pcopts = &copts;
         AVISTREAMINFO aviinfo;
-		
+
         assert( frameSize.width > 0 && frameSize.height > 0 );
-		
+
         BITMAPINFOHEADER_8BIT bmih;
         int i;
-		
+
         bmih.bmiHeader = icvBitmapHeader( frameSize.width, frameSize.height, is_color ? 24 : 8 );
         for( i = 0; i < 256; i++ )
         {
@@ -565,7 +566,7 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
             bmih.bmiColors[i].rgbRed = (BYTE)i;
             bmih.bmiColors[i].rgbReserved = 0;
         }
-		
+
         memset( &aviinfo, 0, sizeof(aviinfo));
         aviinfo.fccType = streamtypeVIDEO;
         aviinfo.fccHandler = 0;
@@ -575,9 +576,9 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
         aviinfo.rcFrame.top = aviinfo.rcFrame.left = 0;
         aviinfo.rcFrame.right = frameSize.width;
         aviinfo.rcFrame.bottom = frameSize.height;
-		
+
         if( AVIFileCreateStream( writer->avifile,
-								 &writer->uncompressed, &aviinfo ) == AVIERR_OK )
+            &writer->uncompressed, &aviinfo ) == AVIERR_OK )
         {
             copts.fccType = streamtypeVIDEO;
             copts.fccHandler = fourcc != -1 ? fourcc : 0; 
@@ -590,97 +591,111 @@ static int icvInitAVIWriter( CvAVI_VFW_Writer* writer, int fourcc,
             copts.lpParms = 0; 
             copts.cbParms = 0; 
             copts.dwInterleaveEvery = 0;
-			
+
             if( fourcc != -1 ||
                 AVISaveOptions( 0, 0, 1, &writer->uncompressed, &pcopts ) == TRUE )
             {
                 if( AVIMakeCompressedStream( &writer->compressed,
-											 writer->uncompressed, pcopts, 0 ) == AVIERR_OK &&
+                                             writer->uncompressed, pcopts, 0 ) == AVIERR_OK &&
                     // check that the resolution was not changed
                     bmih.bmiHeader.biWidth == frameSize.width &&
                     bmih.bmiHeader.biHeight == frameSize.height &&
                     AVIStreamSetFormat( writer->compressed, 0, &bmih, sizeof(bmih)) == AVIERR_OK )
-				{
-					writer->fps = fps;
-					writer->fourcc = (int)copts.fccHandler;
-					writer->frameSize = frameSize;
-					writer->tempFrame = cvCreateImage( frameSize, 8, (is_color ? 3 : 1) );
-					return 1;
-				}
+                {
+                    writer->fps = fps;
+                    writer->fourcc = (int)copts.fccHandler;
+                    writer->frameSize = frameSize;
+                    writer->tempFrame = cvCreateImage( frameSize, 8, (is_color ? 3 : 1) );
+                    return 1;
+                }
             }
         }
     }
-    icvCloseAVIWriter( writer );
+    icvCloseVideoWriter_VFW( writer );
     return 0;
 }
+
+int
+icvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image )
+{
+    CvVFWWriter* writer = (CvVFWWriter*)_writer;
+    int code = 0;
+
+    CV_FUNCNAME( "icvWriteFrame_VFW" );
+
+    __BEGIN__;
+
+    if( !writer || !image )
+        EXIT;
+
+    if( writer->frameSize.width <= 0 || writer->frameSize.height <= 0 )
+        writer->frameSize = cvGetSize(image);
+    else if( writer->frameSize.width != image->width ||
+             writer->frameSize.height != image->height )
+    {
+        CV_ERROR( CV_StsUnmatchedSizes,
+            "image size is different from the currently set frame size" );
+    }
+
+    if( !writer->compressed && !icvInitVideoWriter_VFW( writer, writer->fourcc,
+        writer->fps, writer->frameSize, image->nChannels > 1 ))
+        EXIT;
+
+    if( image->nChannels != writer->tempFrame->nChannels ||
+        image->depth != writer->tempFrame->depth ||
+        image->origin == 0 )
+    {
+        cvConvertImage( image, writer->tempFrame,
+                        image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
+        image = (const IplImage*)writer->tempFrame;
+    }
+
+    code = AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
+                           image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK;
+
+    __END__;
+
+    return code;
+}
+
+static CvVideoWriterVTable videoWriter_VFW_vtable = 
+{
+    2, 
+    (CvVideoWriterCloseFunc)icvCloseVideoWriter_VFW,
+    (CvVideoWriterWriteFrameFunc)icvWriteFrame_VFW
+};
 
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color )
 {
-    CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)cvAlloc( sizeof(CvAVI_VFW_Writer));
+    bool ok = false;
+    CvVFWWriter* writer = (CvVFWWriter*)cvAlloc( sizeof(*writer));
     memset( writer, 0, sizeof(*writer));
-	
+
     icvInitCapture_VFW();
+    writer->base.vtable = &videoWriter_VFW_vtable;
     
     if( AVIFileOpen( &writer->avifile, filename, OF_CREATE | OF_WRITE, 0 ) == AVIERR_OK )
     {
         if( frameSize.width > 0 && frameSize.height > 0 )
         {
-            if( !icvInitAVIWriter( writer, fourcc, fps, frameSize, is_color ))
-                cvReleaseVideoWriter( (CvVideoWriter**)&writer );
-        }
-        else if( fourcc == -1 )
-        {
-            icvCloseAVIWriter( writer );
+            if( !icvInitVideoWriter_VFW( writer, fourcc, fps, frameSize, is_color ))
+                goto _exit_;
         }
         else
         {
             /* postpone initialization until the first frame is written */
-            writer->fourcc = fourcc;
+            writer->fourcc = fourcc == -1 ? 0 : fourcc;
             writer->fps = fps;
             writer->frameSize = frameSize;
         }
     }
+
+    ok = true;
+
+_exit_:
+    if( !ok )
+        cvReleaseVideoWriter( (CvVideoWriter**)&writer );
     
     return (CvVideoWriter*)writer;
 }
-
-int cvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image )
-{
-    CvAVI_VFW_Writer* writer = (CvAVI_VFW_Writer*)_writer;
-	
-    if( writer && (writer->compressed ||
-				   icvInitAVIWriter( writer, writer->fourcc, writer->fps,
-									 writer->frameSize, image->nChannels > 1 )))
-    {
-        if (image->nChannels != writer->tempFrame->nChannels)
-        {
-            cvConvertImage( image, writer->tempFrame,
-							image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
-            image = (const IplImage*)writer->tempFrame;
-        }
-        // If only flipping is needed, do not call cvConvertImage because when source and destination are single channel, cvConvertImage fails.
-        else if (image->origin == 0)
-        {
-            cvFlip( image, writer->tempFrame, 0 );
-            image = (const IplImage*)writer->tempFrame;
-        }
-        if( AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
-                            image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK )
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void cvReleaseVideoWriter_VFW( CvVideoWriter** writer )
-{
-    if( writer && *writer )
-    {
-        icvCloseAVIWriter( (CvAVI_VFW_Writer*)*writer );
-        cvFree( writer );
-    }
-}
-
-
