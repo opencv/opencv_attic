@@ -54,7 +54,8 @@ icvInitFFMPEG(void)
     if( !ffmpeg_initialized )
     {
 #ifdef _DEBUG
-#define ffopencv_suffix_dbg "d"
+//#define ffopencv_suffix_dbg "d"
+#define ffopencv_suffix_dbg ""
 #else
 #define ffopencv_suffix_dbg ""
 #endif
@@ -86,7 +87,7 @@ icvInitFFMPEG(void)
     }
 }
 
-CvCapture * cvCaptureFromFile_Win32 (const char * filename)
+CvCapture* cvCaptureFromFile_Win32 (const char * filename)
 {
     CvCapture* result = 0;
     
@@ -102,8 +103,8 @@ CvCapture * cvCaptureFromFile_Win32 (const char * filename)
 }
 
 
-CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
-                                            double fps, CvSize frameSize, int is_color )
+CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
+                                          double fps, CvSize frameSize, int is_color )
 {
     CvVideoWriter* result = 0;
     
@@ -119,22 +120,14 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
     return result;
 }
 
-CV_IMPL int cvWriteFrame( CvVideoWriter* writer, const IplImage* image )
+CV_IMPL int icvWriteFrame_FFMPEG_W32( CvVideoWriter* writer, const IplImage* image )
 {
     int result;
     
     if( icvCreateVideoWriter_FFMPEG_p && icvWriteFrame_FFMPEG_p )
         result = icvWriteFrame_FFMPEG_p( writer, image );
     else
-        result = cvWriteFrame_VFW( writer, image );
+        result = icvWriteFrame_VFW( writer, image );
 
     return result;
-}
-
-CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** writer )
-{
-    if( icvCreateVideoWriter_FFMPEG_p && icvReleaseVideoWriter_FFMPEG_p )
-        icvReleaseVideoWriter_FFMPEG_p( writer );
-    else
-        cvReleaseVideoWriter_VFW( writer );
 }

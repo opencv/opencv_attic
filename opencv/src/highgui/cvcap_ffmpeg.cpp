@@ -665,7 +665,7 @@ CvCapture* cvCaptureFromFile_FFMPEG( const char* filename )
 
 
 ///////////////// FFMPEG CvVideoWriter implementation //////////////////////////
-typedef struct CvAVI_FFMPEG_Writer
+typedef struct CvFFMPEGWriter
 {
 	CvVideoWriterVTable *vtable;
 
@@ -680,9 +680,9 @@ typedef struct CvAVI_FFMPEG_Writer
 	AVStream        * video_st;
 	int 			  input_pix_fmt;
     IplImage        * temp_image;
-} CvAVI_FFMPEG_Writer;
+} CvFFMPEGWriter;
 
-static const char * icv_FFMPEG_ErrStr(int err)
+static const char * icvFFMPEGErrStr(int err)
 {
     switch(err) {
     case AVERROR_NUMEXPECTED:
@@ -908,7 +908,7 @@ static int icvWriteFrame_FFMPEG( CvVideoWriter * writer, const IplImage * image 
 	__BEGIN__;
 
 	// typecast from opaque data type to implemented struct
-	CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*) writer;
+	CvFFMPEGWriter * mywriter = (CvFFMPEGWriter*) writer;
 #if LIBAVFORMAT_BUILD > 4628
     AVCodecContext *c = mywriter->video_st->codec;
 #else
@@ -967,16 +967,13 @@ static int icvWriteFrame_FFMPEG( CvVideoWriter * writer, const IplImage * image 
 }
 
 /// close video output stream and free associated memory
-static void icvReleaseVideoWriter_FFMPEG( CvVideoWriter ** writer )
+static void icvCloseVideoWriter_FFMPEG( CvFFMPEGWriter* mywriter )
 {
 	int i;
 
 	// nothing to do if already released
-	if ( !(*writer) )
+	if ( !writer )
 		return;
-
-	// release data structures in reverse order
-	CvAVI_FFMPEG_Writer * mywriter = (CvAVI_FFMPEG_Writer*)(*writer);
 
 	/* no more frame to compress. The codec has a latency of a few
 	   frames if using B frames, so we get the last frames by
@@ -1039,10 +1036,10 @@ static void icvReleaseVideoWriter_FFMPEG( CvVideoWriter ** writer )
 	(*writer) = 0;
 }
 
-static CvVideoWriterVTable writerAVI_FFMPEG_vtable =
+static CvVideoWriterVTable videoWriter_FFMPEG_vtable =
 {
     2,
-    (CvVideoWriterCloseFunc)icvReleaseVideoWriter_FFMPEG,
+    (CvVideoWriterCloseFunc)icvCloseVideoWriter_FFMPEG,
     (CvVideoWriterWriteFrameFunc)icvWriteFrame_FFMPEG
 };
 
@@ -1052,7 +1049,7 @@ CvVideoWriter* cvCreateVideoWriter_FFMPEG( const char * filename, int fourcc,
 {
 	CV_FUNCNAME("cvCreateVideoWriter");
 
-	CvAVI_FFMPEG_Writer * writer = NULL;
+	CvFFMPEGWriter* writer = NULL;
 	CodecID codec_id = CODEC_ID_NONE;
 	int err;
 
@@ -1064,7 +1061,7 @@ CvVideoWriter* cvCreateVideoWriter_FFMPEG( const char * filename, int fourcc,
 	assert (frameSize.width > 0  &&  frameSize.height > 0);
 
 	// allocate memory for structure...
-	writer = (CvAVI_FFMPEG_Writer *) cvAlloc( sizeof(CvAVI_FFMPEG_Writer));
+	writer = (CvFFMPEGWriter*)cvAlloc( sizeof(*writer));
 	memset (writer, 0, sizeof (*writer));
 
 	writer->vtable = &writerAVI_FFMPEG_vtable;
