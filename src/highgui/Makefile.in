@@ -70,7 +70,7 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 	cvcap.cpp cvcap_images.cpp window.cpp cvcap_dc1394.cpp \
 	cvcap_v4l.cpp cvcap_ffmpeg.cpp cvcap_gstreamer.cpp \
 	gstappsink.c cvcap_qt.cpp cvcap_xine.cpp window_gtk.cpp \
-	window_carbon.cpp grfmt_imageio.cpp
+	window_carbon.cpp grfmt_imageio.cpp cvcap_unicap.cpp
 @BUILD_DC1394_TRUE@am__objects_1 = cvcap_dc1394.lo
 @BUILD_V4L_TRUE@am__objects_2 = cvcap_v4l.lo
 @BUILD_FFMPEG_TRUE@am__objects_3 = cvcap_ffmpeg.lo
@@ -80,13 +80,15 @@ am__lib_highgui_la_SOURCES_DIST = bitstrm.cpp grfmt_base.cpp \
 @BUILD_GTK_TRUE@am__objects_7 = window_gtk.lo
 @BUILD_CARBON_TRUE@am__objects_8 = window_carbon.lo
 @BUILD_IMAGEIO_TRUE@am__objects_9 = grfmt_imageio.lo
+@BUILD_UNICAP_TRUE@am__objects_10 = cvcap_unicap.lo
 am_lib_highgui_la_OBJECTS = bitstrm.lo grfmt_base.lo grfmt_bmp.lo \
 	grfmt_jpeg.lo grfmt_png.lo grfmt_pxm.lo grfmt_jpeg2000.lo \
 	grfmt_exr.lo grfmt_sunras.lo grfmt_tiff.lo image.lo \
 	loadsave.lo precomp.lo utils.lo cvcap.lo cvcap_images.lo \
 	window.lo $(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7) $(am__objects_8) $(am__objects_9)
+	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
+	$(am__objects_10)
 lib_highgui_la_OBJECTS = $(am_lib_highgui_la_OBJECTS)
 libhighgui_la_DEPENDENCIES = lib_highgui.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
@@ -151,6 +153,8 @@ BUILD_PYTHON_WRAPPERS_FALSE = @BUILD_PYTHON_WRAPPERS_FALSE@
 BUILD_PYTHON_WRAPPERS_TRUE = @BUILD_PYTHON_WRAPPERS_TRUE@
 BUILD_QUICKTIME_FALSE = @BUILD_QUICKTIME_FALSE@
 BUILD_QUICKTIME_TRUE = @BUILD_QUICKTIME_TRUE@
+BUILD_UNICAP_FALSE = @BUILD_UNICAP_FALSE@
+BUILD_UNICAP_TRUE = @BUILD_UNICAP_TRUE@
 BUILD_V4L_FALSE = @BUILD_V4L_FALSE@
 BUILD_V4L_TRUE = @BUILD_V4L_TRUE@
 BUILD_XINE_FALSE = @BUILD_XINE_FALSE@
@@ -172,7 +176,6 @@ DEFS = @DEFS@
 DEF_CXXFLAGS = @DEF_CXXFLAGS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -207,11 +210,11 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
-NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OCTAVE = @OCTAVE@
 OCTAVE_ARCH = @OCTAVE_ARCH@
+OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OCT_CXXFLAGS = @OCT_CXXFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -232,7 +235,6 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -242,6 +244,10 @@ SWIG_PYTHON_LIBS = @SWIG_PYTHON_LIBS@
 SWIG_PYTHON_OPT = @SWIG_PYTHON_OPT@
 SWIG_RUNTIME_LIBS_DIR = @SWIG_RUNTIME_LIBS_DIR@
 SWIG_VERSION = @SWIG_VERSION@
+UCIL_PACKAGE_CFLAGS = @UCIL_PACKAGE_CFLAGS@
+UCIL_PACKAGE_LIBS = @UCIL_PACKAGE_LIBS@
+UNICAP_PACKAGE_CFLAGS = @UNICAP_PACKAGE_CFLAGS@
+UNICAP_PACKAGE_LIBS = @UNICAP_PACKAGE_LIBS@
 UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
@@ -308,12 +314,14 @@ EXTRA_DIST = highgui.dsp highgui.vcproj highgui.rc resource.h    \
     cvcap_cmu.cpp cvcap_tyzx.cpp cvcap_vfw.cpp cvcap_mil.cpp     \
     cvcap_qt.cpp cvcap_dc1394.cpp cvcap_ffmpeg.cpp               \
     cvcap_v4l.cpp cvcap_xine.cpp cvcap_images.cpp                \
+    cvcap_unicap.cpp                                             \
     window_carbon.cpp window_gtk.cpp window_w32.cpp              \
     grfmt_imageio.cpp
 
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
     -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
-    @GSTREAMER_CFLAGS@ @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@
+    @GSTREAMER_CFLAGS@ @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@    \
+    @UNICAP_PACKAGE_CFLAGS@ @UCIL_PACKAGE_CFLAGS@
 
 noinst_HEADERS = \
     _highgui.h bitstrm.h grfmt_base.h grfmt_bmp.h \
@@ -327,6 +335,8 @@ lib_LTLIBRARIES = libhighgui.la
 @BUILD_DC1394_TRUE@TMP_DC1394 = cvcap_dc1394.cpp
 @BUILD_V4L_FALSE@TMP_V4L = 
 @BUILD_V4L_TRUE@TMP_V4L = cvcap_v4l.cpp
+@BUILD_UNICAP_FALSE@TMP_UNICAP = 
+@BUILD_UNICAP_TRUE@TMP_UNICAP = cvcap_unicap.cpp
 @BUILD_FFMPEG_FALSE@TMP_FFMPEG = 
 @BUILD_FFMPEG_TRUE@TMP_FFMPEG = cvcap_ffmpeg.cpp
 @BUILD_XINE_FALSE@TMP_XINE = 
@@ -344,12 +354,13 @@ lib_LTLIBRARIES = libhighgui.la
 
 # convenience library
 lib_highgui_la_SOURCES = \
-    bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp      \
-    grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp \
-    grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp       \
-    precomp.cpp utils.cpp cvcap.cpp cvcap_images.cpp window.cpp  \
-    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_GSTREAMER)      \
-    $(TMP_QT) $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO)
+    bitstrm.cpp grfmt_base.cpp grfmt_bmp.cpp grfmt_jpeg.cpp       \
+    grfmt_png.cpp grfmt_pxm.cpp grfmt_jpeg2000.cpp grfmt_exr.cpp  \
+    grfmt_sunras.cpp grfmt_tiff.cpp image.cpp loadsave.cpp        \
+    precomp.cpp utils.cpp cvcap.cpp cvcap_images.cpp window.cpp   \
+    $(TMP_DC1394) $(TMP_V4L) $(TMP_FFMPEG) $(TMP_GSTREAMER)       \
+    $(TMP_QT) $(TMP_XINE) $(TMP_GTK) $(TMP_CARBON) $(TMP_IMAGEIO) \
+    $(TMP_UNICAP)
 
 lib_highgui_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -362,8 +373,9 @@ libhighgui_la_LIBADD = \
     lib_highgui.la \
     $(top_builddir)/cxcore/src/libcxcore.la \
     $(top_builddir)/cv/src/libcv.la         \
-    @GTHREAD_LIBS@ @GTK_LIBS@ @GSTREAMER_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@ \
-    @IEEE1394LIBS@ @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@
+    @GTHREAD_LIBS@ @GTK_LIBS@ @GSTREAMER_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@   \
+    @IEEE1394LIBS@ @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@ \
+    @UNICAP_PACKAGE_LIBS@ @UCIL_PACKAGE_LIBS@
 
 all: all-am
 
@@ -452,6 +464,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_gstreamer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_images.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_qt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_unicap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_v4l.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvcap_xine.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy.Plo@am__quote@

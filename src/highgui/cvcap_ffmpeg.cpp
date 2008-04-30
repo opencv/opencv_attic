@@ -967,7 +967,7 @@ static int icvWriteFrame_FFMPEG( CvVideoWriter * writer, const IplImage * image 
 }
 
 /// close video output stream and free associated memory
-static void icvCloseVideoWriter_FFMPEG( CvFFMPEGWriter* mywriter )
+static void icvCloseVideoWriter_FFMPEG( CvFFMPEGWriter* writer )
 {
 	int i;
 
@@ -981,59 +981,56 @@ static void icvCloseVideoWriter_FFMPEG( CvFFMPEGWriter* mywriter )
 	// TODO -- do we need to account for latency here?
 
 	/* write the trailer, if any */
-	av_write_trailer(mywriter->oc);
+	av_write_trailer(writer->oc);
 
 	// free pictures
 #if LIBAVFORMAT_BUILD > 4628
-	if( mywriter->video_st->codec->pix_fmt != mywriter->input_pix_fmt){
+	if( writer->video_st->codec->pix_fmt != writer->input_pix_fmt){
 #else
-	if( mywriter->video_st->codec.pix_fmt != mywriter->input_pix_fmt){
+	if( writer->video_st->codec.pix_fmt != writer->input_pix_fmt){
 #endif
-		cvFree(&(mywriter->picture->data[0]));
+		cvFree(&(writer->picture->data[0]));
 	}
-	av_free(mywriter->picture);
+	av_free(writer->picture);
 
-    if (mywriter->input_picture) {
-        av_free(mywriter->input_picture);
+    if (writer->input_picture) {
+        av_free(writer->input_picture);
     }
 
 	/* close codec */
 #if LIBAVFORMAT_BUILD > 4628
-	avcodec_close(mywriter->video_st->codec);
+	avcodec_close(writer->video_st->codec);
 #else
-	avcodec_close(&(mywriter->video_st->codec));
+	avcodec_close(&(writer->video_st->codec));
 #endif
 
-	av_free(mywriter->outbuf);
+	av_free(writer->outbuf);
 
 	/* free the streams */
-	for(i = 0; i < mywriter->oc->nb_streams; i++) {
-		av_freep(&mywriter->oc->streams[i]->codec);
-		av_freep(&mywriter->oc->streams[i]);
+	for(i = 0; i < writer->oc->nb_streams; i++) {
+		av_freep(&writer->oc->streams[i]->codec);
+		av_freep(&writer->oc->streams[i]);
 	}
 
-	if (!(mywriter->fmt->flags & AVFMT_NOFILE)) {
+	if (!(writer->fmt->flags & AVFMT_NOFILE)) {
 		/* close the output file */
 
 
 #if LIBAVCODEC_VERSION_INT==((51<<16)+(49<<8)+0)
-		url_fclose(mywriter->oc->pb);
+		url_fclose(writer->oc->pb);
 #else
-		url_fclose(&mywriter->oc->pb);
+		url_fclose(&writer->oc->pb);
 #endif
 
 	}
 
 	/* free the stream */
-	av_free(mywriter->oc);
+	av_free(writer->oc);
 
-    cvReleaseImage( &mywriter->temp_image );
+    cvReleaseImage( &writer->temp_image );
 
 	/* free cvVideoWriter */
-	cvFree ( writer );
-
-	// mark as released
-	(*writer) = 0;
+	cvFree ( &writer );
 }
 
 static CvVideoWriterVTable videoWriter_FFMPEG_vtable =
@@ -1064,7 +1061,7 @@ CvVideoWriter* cvCreateVideoWriter_FFMPEG( const char * filename, int fourcc,
 	writer = (CvFFMPEGWriter*)cvAlloc( sizeof(*writer));
 	memset (writer, 0, sizeof (*writer));
 
-	writer->vtable = &writerAVI_FFMPEG_vtable;
+	writer->vtable = &videoWriter_FFMPEG_vtable;
 
 	// tell FFMPEG to register codecs
 	av_register_all ();
@@ -1173,7 +1170,7 @@ CvVideoWriter* cvCreateVideoWriter_FFMPEG( const char * filename, int fourcc,
     /* open the codec */
     if ( (err=avcodec_open(c, codec)) < 0) {
 		char errtext[256];
-		sprintf(errtext, "Could not open codec '%s': %s", codec->name, icv_FFMPEG_ErrStr(err));
+		sprintf(errtext, "Could not open codec '%s': %s", codec->name, icvFFMPEGErrStr(err));
 		CV_ERROR(CV_StsBadArg, errtext);
     }
 
