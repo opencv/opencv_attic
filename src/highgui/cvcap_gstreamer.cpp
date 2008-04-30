@@ -73,6 +73,7 @@ typedef struct CvCapture_GStreamer
 	GstElement	       *pipeline;
 	GstElement	       *source;
 	GstElement	       *decodebin;
+	GstElement	       *colour;
 	GstElement	       *appsink;
 
 	GstBuffer	       *buffer;
@@ -175,6 +176,24 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 			return 0;
 		}
 
+// 		icvHandleMessage(cap);
+//
+// 		// check whether stream contains an acceptable video stream
+// 		GstPad *sinkpad = gst_element_get_pad(cap->colour, "sink");
+// 		if(!GST_PAD_IS_LINKED(sinkpad)) {
+// 			gst_object_unref(sinkpad);
+// 			fprintf(stderr, "GStreamer: Pipeline is NOT ready. Format unknown?\n");
+// 			return 0;
+// 		}
+// 		gst_object_unref(sinkpad);
+
+// 		printf("pulling preroll\n");
+//
+// 		if(!gst_app_sink_pull_preroll(GST_APP_SINK(cap->appsink))) {
+// 			printf("no preroll\n");
+// 			return 0;
+// 		}
+
 //		printf("pulling buffer\n");
 
 		cap->buffer = gst_app_sink_pull_buffer(GST_APP_SINK(cap->appsink));
@@ -212,7 +231,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 	if(!cap->buffer)
 		return 0;
 
-	printf("getting buffercaps\n");
+//	printf("getting buffercaps\n");
 
 	GstCaps* caps = gst_buffer_get_caps(cap->buffer);
 
@@ -222,21 +241,28 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 
 	gint bpp, endianness, redmask, greenmask, bluemask;
 
-	gst_structure_get_int(structure, "bpp", &bpp);
-	gst_structure_get_int(structure, "endianness", &endianness);
-	gst_structure_get_int(structure, "red_mask", &redmask);
-	gst_structure_get_int(structure, "green_mask", &greenmask);
-	gst_structure_get_int(structure, "blue_mask", &bluemask);
+	if(!gst_structure_get_int(structure, "bpp", &bpp) ||
+	   !gst_structure_get_int(structure, "endianness", &endianness) ||
+	   !gst_structure_get_int(structure, "red_mask", &redmask) ||
+	   !gst_structure_get_int(structure, "green_mask", &greenmask) ||
+	   !gst_structure_get_int(structure, "blue_mask", &bluemask)) {
+		printf("missing essential information in buffer caps, %s\n", gst_caps_to_string(caps));
+		return 0;
+	}
 
 	printf("buffer has %d bpp, endianness %d, rgb %x %x %x, %s\n", bpp, endianness, redmask, greenmask, bluemask, gst_caps_to_string(caps));
+
+	if(!redmask || !greenmask || !bluemask)
+		return 0;
 
 	if(!cap->frame) {
 		gint height, width;
 
-		gst_structure_get_int(structure, "width", &width);
-		gst_structure_get_int(structure, "height", &height);
+		if(!gst_structure_get_int(structure, "width", &width) ||
+		   !gst_structure_get_int(structure, "height", &height))
+			return 0;
 
-		printf("creating frame %dx%d\n", width, height);
+//		printf("creating frame %dx%d\n", width, height);
 
 		cap->frame = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 	}
@@ -269,7 +295,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 		}
 	}
 
-	printf("converted buffer\n");
+//	printf("converted buffer\n");
 
 	gst_buffer_unref(cap->buffer);
 	cap->buffer = 0;
@@ -375,7 +401,7 @@ static void icvRestartPipeline(CvCapture_GStreamer *cap)
 
 static void icvSetFilter(CvCapture_GStreamer *cap, const char *property, int type, int v1, int v2)
 {
-	printf("setting cap %p %s %d %d %d, %s\n", cap->caps, property, type, v1, v2);
+	printf("setting cap %p %s %d %d %d\n", cap->caps, property, type, v1, v2);
 
 	if(!cap->caps) {
 		if(type == G_TYPE_INT)
@@ -497,14 +523,14 @@ static CvCaptureVTable capture_vtable =
 //
 // connect decodebin's dynamically created source pads to colourconverter
 //
-static void newpad(GstElement *decodebin, GstPad *pad, gboolean last, gpointer data)
+static void icvNewPad(GstElement *decodebin, GstPad *pad, gboolean last, gpointer data)
 {
 	GstElement *sink = GST_ELEMENT(data);
 	GstStructure *str;
 	GstPad *sinkpad;
 	GstCaps *caps;
 
-	/* only link once */
+	/* link only once */
 	sinkpad = gst_element_get_pad(sink, "sink");
 
 	if(GST_PAD_IS_LINKED(sinkpad)) {
@@ -525,10 +551,11 @@ static void newpad(GstElement *decodebin, GstPad *pad, gboolean last, gpointer d
 	}
 	printf("linking pad %s\n", structname);
 
-	gst_caps_unref (caps);
-
 	/* link'n'play */
 	gst_pad_link (pad, sinkpad);
+
+	gst_caps_unref(caps);
+	gst_object_unref(sinkpad);
 }
 
 CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
@@ -576,7 +603,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 //	g_signal_connect(sink, "new-buffer", G_CALLBACK(newbuffer), NULL);
 
 	GstElement *decodebin = gst_element_factory_make("decodebin", NULL);
-	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(newpad), colour);
+	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(icvNewPad), colour);
 
 	GstElement *pipeline = gst_pipeline_new (NULL);
 
@@ -619,7 +646,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 
 	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
 	   GST_STATE_CHANGE_FAILURE) {
-		CV_WARN("GStreamer: unable to start pipeline\n");
+		CV_WARN("GStreamer: unable to set pipeline to paused\n");
 //		icvHandleMessage(capture);
 //		cvReleaseCapture((CvCapture **)(void *)&capture);
 		gst_object_unref(pipeline);
@@ -636,6 +663,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 	capture->pipeline = pipeline;
 	capture->source = source;
 	capture->decodebin = decodebin;
+	capture->colour = colour;
 	capture->appsink = sink;
 
 	icvHandleMessage(capture);
