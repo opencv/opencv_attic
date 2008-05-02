@@ -50,47 +50,43 @@
 /****************** Capturing video from TYZX stereo camera  *******************/
 /** Initially developed by Roman Stanchak rstanchak@yahoo.com                  */
 
-typedef struct CvCaptureCAM_TYZX
+class CvCaptureCAM_TYZX : CvCapture
 {
-    CvCaptureVTable* vtable;
+public:
+    CvCaptureCAM_TYZX() { index = -1; image = 0; }
+    virtual ~CvCaptureCAM_TYZX() { close(); }
+    
+    virtual bool open( int _index );
+    virtual void close();
+    bool isOpened() { return index >= 0; }
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double) { return false; }
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+
+protected:
+    virtual bool allocateImage();
+
 	int index;
     IplImage* image;
 }
 CvCaptureCAM_TYZX;
 
-static int        icvOpenCAM_TYZX          (CvCaptureCAM_TYZX * capture, int wIndex );
-static int        icvSetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id, double value );
-static void       icvCloseCAM_TYZX         (CvCaptureCAM_TYZX* capture );
-static int        icvGrabFrameCAM_TYZX     (CvCaptureCAM_TYZX* capture );
-static IplImage * icvRetrieveFrameCAM_TYZX (CvCaptureCAM_TYZX* capture ); 
-static double     icvGetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id );
-static int        icvSetPropertyCAM_TYZX   (CvCaptureCAM_TYZX* capture, int property_id, double value );
-
-static CvCaptureVTable captureCAM_TYZX_vtable =
-{
-	6,
-	(CvCaptureCloseFunc)icvCloseCAM_TYZX,
-	(CvCaptureGrabFrameFunc)icvGrabFrameCAM_TYZX,
-	(CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_TYZX,
-	(CvCaptureGetPropertyFunc)icvGetPropertyCAM_TYZX,
-	(CvCaptureSetPropertyFunc)icvSetPropertyCAM_TYZX,
-	(CvCaptureGetDescriptionFunc)0
-};
-
-
-
 DeepSeaIF * g_tyzx_camera   = 0;
 int         g_tyzx_refcount = 0;
 
-static int icvOpenCAM_TYZX(CvCaptureCAM_TYZX * capture, int index )
+bool CvCaptureCAM_TYZX::open( int _index )
 {
-	if(!g_tyzx_camera){
+	close();
+    
+    if(!g_tyzx_camera){
 		g_tyzx_camera = new DeepSeaIF;
-		if(!g_tyzx_camera) return 0;
+		if(!g_tyzx_camera) return false;
 	
 		if(!g_tyzx_camera->initializeSettings(NULL)){
 			delete g_tyzx_camera;
-			return 0;
+			return false;
 		}
 	
 		// set initial sensor mode
@@ -105,20 +101,19 @@ static int icvOpenCAM_TYZX(CvCaptureCAM_TYZX * capture, int index )
 		g_tyzx_camera->setDoIntensityCrop(true);
 		g_tyzx_camera->enable8bitImages(true);
 		if(!g_tyzx_camera->startCapture()){
-			return 0;
+			return false;
 		}
 		g_tyzx_refcount++;
 	}
-	capture->index=index;
-	return 1;
+	index = _index;
+	return true;
 }
 
-static void icvCloseCAM_TYZX( CvCaptureCAM_TYZX* capture )
+void CvCaptureCAM_TYZX::close()
 {
-	if( capture && capture->image )
+	if( isOpened() )
 	{
-		cvReleaseImage( &capture->image );
-		capture->image = 0;
+		cvReleaseImage( &image );
 		g_tyzx_refcount--;
 		if(g_tyzx_refcount==0){
 			delete g_tyzx_camera;
@@ -126,24 +121,21 @@ static void icvCloseCAM_TYZX( CvCaptureCAM_TYZX* capture )
 	}
 }
 
-static int icvGrabFrameCAM_TYZX (CvCaptureCAM_TYZX * )
+bool CvCaptureCAM_TYZX::grabFrame()
 {
-	return g_tyzx_camera && g_tyzx_camera->grab();
+	return isOpened() && g_tyzx_camera && g_tyzx_camera->grab();
 }
 
-static void icvAllocateImageCAM_TYZX (CvCaptureCAM_TYZX * capture)
+bool CvCaptureCAM_TYZX::allocateImage()
 {
 	int depth, nch;
 	CvSize size;
 
 	// assume we want to resize
-	if(capture->image)
-	{
-		cvReleaseImage(&(capture->image));
-	}
+    cvReleaseImage(&image);
 
 	// figure out size depending on index provided
-	switch(capture->index){
+	switch(index){
 		case CV_TYZX_RIGHT:
 			size = cvSize(g_tyzx_camera->intensityWidth(), g_tyzx_camera->intensityHeight());
 			depth = 8;
@@ -161,39 +153,38 @@ static void icvAllocateImageCAM_TYZX (CvCaptureCAM_TYZX * capture)
 			nch = 1;
 			break;
 	}
-	capture->image = cvCreateImage(size, depth, nch);
+	image = cvCreateImage(size, depth, nch);
+    return image != 0;
 }
 
 /// Copy 'grabbed' image into capture buffer and return it.
-static IplImage * icvRetrieveFrameCAM_TYZX (CvCaptureCAM_TYZX * capture)
+IplImage * CvCaptureCAM_TYZX::retrieveFrame()
 {
-	if(!capture || !g_tyzx_camera) return 0;
+	if(!isOpened() || !g_tyzx_camera) return 0;
 
-	if(!capture->image){
-		icvAllocateImageCAM_TYZX(capture);
-		if(!capture->image) return 0;
-	}
+	if(!image && !alocateImage())
+        return 0;
 
 	// copy camera image into buffer.
 	// tempting to reference TYZX memory directly to avoid copying.
-	switch (capture->index)
+	switch (index)
 	{
 		case CV_TYZX_RIGHT:
-			memcpy(capture->image->imageData, g_tyzx_camera->getRImage(), capture->image->imageSize);
+			memcpy(image->imageData, g_tyzx_camera->getRImage(), image->imageSize);
 			break;
 		case CV_TYZX_Z:
-			memcpy(capture->image->imageData, g_tyzx_camera->getZImage(), capture->image->imageSize);
+			memcpy(image->imageData, g_tyzx_camera->getZImage(), image->imageSize);
 			break;
 		case CV_TYZX_LEFT:
 		default:
-			memcpy(capture->image->imageData, g_tyzx_camera->getLImage(), capture->image->imageSize);
+			memcpy(image->imageData, g_tyzx_camera->getLImage(), image->imageSize);
 			break;
 	}
 
-	return capture->image;
+	return image;
 }
 
-static double icvGetPropertyCAM_TYZX (CvCaptureCAM_TYZX * capture, int property_id)
+double CvCaptureCAM_TYZX::getProperty(int property_id)
 {
 	CvSize size;
 	switch(capture->index)
@@ -222,21 +213,17 @@ static double icvGetPropertyCAM_TYZX (CvCaptureCAM_TYZX * capture, int property_
 	return 0;
 }
 
-static int icvSetPropertyCAM_TYZX (CvCaptureCAM_TYZX *, int, double )
+bool CvCaptureCAM_TYZX::setProperty( int, double )
 {
-	int retval = -1;
-	return retval;
+	return false;
 }
 
-CvCapture * cvCaptureFromCAM_TYZX (int index)
+CvCapture * cvCreateCameraCapture_TYZX (int index)
 {
-	CvCaptureCAM_TYZX * capture = (CvCaptureCAM_TYZX*) cvAlloc( sizeof(*capture));
-	memset( capture, 0, sizeof(*capture));
-	capture->vtable = &captureCAM_TYZX_vtable;
+	CvCaptureCAM_TYZX * capture = new CvCaptureCAM_TYZX;
+    if( capture->open(index) )
+        return capture;
 
-	if (icvOpenCAM_TYZX( capture, index ))
-		return (CvCapture*)capture;
-
-	cvReleaseCapture( (CvCapture**)&capture );
-	return 0;
+    delete capture;
+    return 0;
 }

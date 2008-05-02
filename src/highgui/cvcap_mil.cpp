@@ -52,9 +52,6 @@
   #pragma optimize("",off)
 #endif
 
-
-
-
 /********************* Capturing video from camera via MIL *********************/
 
 struct 
@@ -63,21 +60,43 @@ struct
     int MilUser;
 } g_Mil = {0,0}; //global structure for handling MIL application
 
-typedef struct CvCaptureCAM_MIL
+class CvCaptureCAM_MIL : public CvCapture
 {
-    CvCaptureVTable* vtable;
+public:
+    CvCaptureCAM_MIL() { init(); }
+    virtual ~CvCaptureCAM_MIL() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double) { return false; }
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+
+protected:
+    void init();
+
     MIL_ID 
-		MilSystem,       /* System identifier.       */
-		MilDisplay,      /* Display identifier.      */
-		MilDigitizer,    /* Digitizer identifier.    */ 
-		MilImage;        /* Image buffer identifier. */
+        MilSystem,       /* System identifier.       */
+        MilDisplay,      /* Display identifier.      */
+        MilDigitizer,    /* Digitizer identifier.    */ 
+        MilImage;        /* Image buffer identifier. */
     IplImage* rgb_frame;
+};
+
+
+void CvCaptureCAM_MIL::init()
+{
+    MilSystem = MilDisplay = MilDigitizer = MilImage = M_NULL;
+    rgb_frame = 0;
 }
-CvCaptureCAM_MIL;
 
 // Initialize camera input
-static int icvOpenCAM_MIL( CvCaptureCAM_MIL* capture, int wIndex )
+bool CvCaptureCAM_MIL::open( int wIndex )
 {
+    close();
+
     if( g_Mil.MilApplication == M_NULL )
     {
         assert(g_Mil.MilUser == 0);
@@ -91,14 +110,13 @@ static int icvOpenCAM_MIL( CvCaptureCAM_MIL* capture, int wIndex )
     }
     
     int dev_table[16] = { M_DEV0, M_DEV1, M_DEV2, M_DEV3,
-		M_DEV4, M_DEV5, M_DEV6, M_DEV7,
-		M_DEV8, M_DEV9, M_DEV10, M_DEV11,
-		M_DEV12, M_DEV13, M_DEV14, M_DEV15 };
-    
+        M_DEV4, M_DEV5, M_DEV6, M_DEV7,
+        M_DEV8, M_DEV9, M_DEV10, M_DEV11,
+        M_DEV12, M_DEV13, M_DEV14, M_DEV15 };
+
     //set default window size
-    int w = 320/*160*/;
-    int h = 240/*120*/;
-    
+    int w = 320;
+    int h = 240;
     
     for( ; wIndex < 16; wIndex++ ) 
     {
@@ -108,110 +126,93 @@ static int icvOpenCAM_MIL( CvCaptureCAM_MIL* capture, int wIndex )
                                    //e.g.M_SYSTEM_METEOR,M_SYSTEM_METEOR_II...
                    dev_table[wIndex], 
                    M_DEFAULT, 
-                   &(capture->MilSystem) ); 
-		
-        if( capture->MilSystem != M_NULL )
+                   &MilSystem ); 
+
+        if( MilSystem != M_NULL )
             break;
     }
-    if( capture->MilSystem != M_NULL )
+    if( MilSystem != M_NULL )
     {
-        MdigAlloc(capture->MilSystem,M_DEFAULT,
+        MdigAlloc(MilSystem,M_DEFAULT,
                   M_CAMERA_SETUP, //default. May be M_NTSC or other
-                  M_DEFAULT,&(capture->MilDigitizer));
+                  M_DEFAULT,&MilDigitizer);
         
-        capture->rgb_frame = cvCreateImage(cvSize(w,h), IPL_DEPTH_8U, 3 );
-        MdigControl(capture->MilDigitizer, M_GRAB_SCALE,  1.0 / 2);
+        rgb_frame = cvCreateImage(cvSize(w,h), IPL_DEPTH_8U, 3 );
+        MdigControl(MilDigitizer, M_GRAB_SCALE,  1.0 / 2);
         
         /*below line enables getting image vertical orientation 
-			consistent with VFW but it introduces some image corruption 
-			on MeteorII, so we left the image as is*/  
-        //MdigControl(capture->MilDigitizer, M_GRAB_DIRECTION_Y, M_REVERSE );
-		
-        capture->MilImage = MbufAllocColor(capture->MilSystem, 3, w, h,
-										   8+M_UNSIGNED,
-										   M_IMAGE + M_GRAB,                                                      
-										   M_NULL);
+         consistent with VFW but it introduces some image corruption 
+         on MeteorII, so we left the image as is*/  
+        //MdigControl(MilDigitizer, M_GRAB_DIRECTION_Y, M_REVERSE );
+
+        MilImage = MbufAllocColor(MilSystem, 3, w, h,
+            8+M_UNSIGNED, M_IMAGE + M_GRAB, M_NULL);
     }
     
-    return capture->MilSystem != M_NULL;
+    return MilSystem != M_NULL;
 }
 
-static  void icvCloseCAM_MIL( CvCaptureCAM_MIL* capture )
+void CvCaptureCAM_MIL::close( CvCaptureCAM_MIL* capture )
 {
-    if( capture->MilSystem != M_NULL )
+    if( MilSystem != M_NULL )
     {
-        MdigFree( capture->MilDigitizer );
-        MbufFree( capture->MilImage );
-        MsysFree( capture->MilSystem );
-        cvReleaseImage(&capture->rgb_frame ); 
-        capture->rgb_frame = 0;
+        MdigFree( MilDigitizer );
+        MbufFree( MilImage );
+        MsysFree( MilSystem );
+        cvReleaseImage(&rgb_frame ); 
         
         g_Mil.MilUser--;
         if(!g_Mil.MilUser)
             MappFree(g_Mil.MilApplication);
-		
-        capture->MilSystem = M_NULL;
-        capture->MilDigitizer = M_NULL;
+
+        MilSystem = M_NULL;
+        MilDigitizer = M_NULL;
     }
 }         
 
 
-static int icvGrabFrameCAM_MIL( CvCaptureCAM_MIL* capture )
+bool CvCaptureCAM_MIL::grabFrame()
 {
-    if( capture->MilSystem )
+    if( MilSystem )
     {
-        MdigGrab(capture->MilDigitizer, capture->MilImage);
-        return 1;
+        MdigGrab(MilDigitizer, MilImage);
+        return true;
     }
-    return 0;
+    return false;
 }
 
 
-static IplImage* icvRetrieveFrameCAM_MIL( CvCaptureCAM_MIL* capture )
+IplImage* CvCaptureCAM_MIL::retrieveFrame()
 {
-    MbufGetColor(capture->MilImage, M_BGR24+M_PACKED, M_ALL_BAND, (void*)(capture->rgb_frame->imageData)); 
-    //make image vertical orientation consistent with VFW
-    //You can find some better way to do this
-    capture->rgb_frame->origin = IPL_ORIGIN_BL;
-    cvFlip(capture->rgb_frame,capture->rgb_frame,0);
-    return capture->rgb_frame;
+    MbufGetColor(MilImage, M_BGR24+M_PACKED, M_ALL_BAND, (void*)(rgb_frame->imageData)); 
+    return rgb_frame;
 }
 
-static double icvGetPropertyCAM_MIL( CvCaptureCAM_MIL* capture, int property_id )
+double CvCaptureCAM_MIL::getProperty( int property_id )
 {
     switch( property_id )
     {
-		case CV_CAP_PROP_FRAME_WIDTH:
-			if( capture->rgb_frame) return capture->rgb_frame->width;
-		case CV_CAP_PROP_FRAME_HEIGHT:
-			if( capture->rgb_frame) return capture->rgb_frame->height;
+	case CV_CAP_PROP_FRAME_WIDTH:
+        return rgb_frame ? rgb_frame->width : 0;
+	case CV_CAP_PROP_FRAME_HEIGHT:
+		return rgb_frame ? rgb_frame->height : 0;
     } 
     return 0;
 }
 
-static CvCaptureVTable captureCAM_MIL_vtable = 
+bool CvCaptureCAM_MIL::setProperty( int, double )
 {
-    6,
-    (CvCaptureCloseFunc)icvCloseCAM_MIL,
-    (CvCaptureGrabFrameFunc)icvGrabFrameCAM_MIL,
-    (CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_MIL,
-    (CvCaptureGetPropertyFunc)icvGetPropertyCAM_MIL,
-    (CvCaptureSetPropertyFunc)0,
-    (CvCaptureGetDescriptionFunc)0
-};
-
-CvCapture* cvCaptureFromCAM_MIL( int index )
-{
-	CvCaptureCAM_MIL* capture = (CvCaptureCAM_MIL*)cvAlloc( sizeof(*capture));
-	memset( capture, 0, sizeof(*capture));
-	capture->vtable = &captureCAM_MIL_vtable;
-	
-	if( icvOpenCAM_MIL( capture, index ))
-		return (CvCapture*)capture;
-	
-	cvReleaseCapture( (CvCapture**)&capture );
-	return 0;
+    return false;
 }
 
 
+CvCapture* cvCreateCameraCapture_MIL( int index )
+{
+	CvCaptureCAM_MIL* capture = new CvCaptureCAM_MIL;
 
+    if( capture->open( index ))
+        return capture;
+
+    delete capture;
+    return 0;
+}

@@ -41,17 +41,28 @@
 
 #include "_highgui.h"
 
-static int ffmpeg_initialized = 0;
-static CvCaptureFromFile icvCaptureFromFile_FFMPEG_p = 0;
-static CvCreateVideoWriter icvCreateVideoWriter_FFMPEG_p = 0;
-static CvWriteFrame icvWriteFrame_FFMPEG_p = 0;
-static CvReleaseVideoWriter icvReleaseVideoWriter_FFMPEG_p = 0;
-static HMODULE ffopencv = 0;
+extern "C"
+{
+typedef CvCapture* (*CvCreateFileCapture_Plugin)( const char* filename );
+typedef CvCapture* (*CvCreateCameraCapture_Plugin)( int index );
+typedef void (*CvReleaseCapture_Plugin)( CvCapture** capture );
+typedef CvVideoWriter* (*CvCreateVideoWriter_Plugin)( const char* filename, int fourcc,
+                                                      double fps, CvSize frameSize, int isColor );
+typedef void (*CvReleaseVideoWriter_Plugin)( CvVideoWriter** writer );
+}
+
+static HMODULE icvFFOpenCV = 0;
+static CvCreateFileCapture_Plugin icvCreateFileCapture_FFMPEG_p = 0;
+static CvReleaseCapture_Plugin icvReleaseCapture_FFMPEG_p = 0;
+static CvCreateVideoWriter_Plugin icvCreateVideoWriter_FFMPEG_p = 0;
+static CvReleaseVideoWriter_Plugin icvReleaseVideoWriter_FFMPEG_p = 0;
+
 
 static void
 icvInitFFMPEG(void)
 {
-    if( !ffmpeg_initialized )
+    static int ffmpegInitialized = 0;
+    if( !ffmpegInitialized )
     {
 #ifdef _DEBUG
 //#define ffopencv_suffix_dbg "d"
@@ -70,64 +81,119 @@ icvInitFFMPEG(void)
         const char* ffopencv_name =
             ffopencv_name_m(CV_MAJOR_VERSION,CV_MINOR_VERSION,CV_SUBMINOR_VERSION);
 
-        ffopencv = LoadLibrary( ffopencv_name );
-        if( ffopencv )
+        icvFFOpenCV = LoadLibrary( ffopencv_name );
+        if( icvFFOpenCV )
         {
-            icvCaptureFromFile_FFMPEG_p =
-                (CvCaptureFromFile)GetProcAddress(ffopencv, "cvCaptureFromFile_FFMPEG");
+            icvCreateFileCapture_FFMPEG_p =
+                (CvCreateFileCapture_Plugin)GetProcAddress(icvFFOpenCV, "cvCreateFileCapture_FFMPEG");
             icvCreateVideoWriter_FFMPEG_p =
-                (CvCreateVideoWriter)GetProcAddress(ffopencv, "cvCreateVideoWriter_FFMPEG");
-            icvWriteFrame_FFMPEG_p =
-                (CvWriteFrame)GetProcAddress(ffopencv, "cvWriteFrame_FFMPEG");
+                (CvCreateVideoWriter_Plugin)GetProcAddress(icvFFOpenCV, "cvCreateVideoWriter_FFMPEG");
+            icvReleaseCapture_FFMPEG_p =
+                (CvReleaseCapture_Plugin)GetProcAddress(icvFFOpenCV, "cvReleaseCapture_FFMPEG");
             icvReleaseVideoWriter_FFMPEG_p =
-                (CvReleaseVideoWriter)GetProcAddress(ffopencv, "cvReleaseVideoWriter_FFMPEG");
+                (CvReleaseVideoWriter_Plugin)GetProcAddress(icvFFOpenCV, "cvReleaseVideoWriter_FFMPEG");
         }
-
-        ffmpeg_initialized = 1;
+        ffmpegInitialized = 1;
     }
 }
 
-CvCapture* cvCaptureFromFile_Win32 (const char * filename)
+
+class CvCapture_FFMPEG_proxy : public CvCapture
 {
-    CvCapture* result = 0;
-    
-    icvInitFFMPEG();
+public:
+    CvCapture_FFMPEG_proxy() { ffmpegCapture = 0; }
+    virtual ~CvCapture_FFMPEG_proxy() { close(); }
 
-    if( icvCaptureFromFile_FFMPEG_p )
-        result = icvCaptureFromFile_FFMPEG_p(filename);
+    virtual double getProperty(int propId)
+    {
+        return ffmpegCapture ? ffmpegCapture->getProperty(propId) : 0;
+    }
+    virtual bool setProperty(int propId, double value)
+    {
+        return ffmpegCapture ? ffmpegCapture->setProperty(propId, value) : false;
+    }
+    virtual bool grabFrame()
+    {
+        return ffmpegCapture ? ffmpegCapture->grabFrame() : false;
+    }
+    virtual IplImage* retrieveFrame()
+    {
+        return ffmpegCapture ? ffmpegCapture->retrieveFrame() : 0;
+    }
+    virtual bool open( const char* filename )
+    {
+        close();
 
-    if( !result )
-        result = cvCaptureFromFile_VFW(filename);
+        icvInitFFMPEG();
+        if( !icvCreateFileCapture_FFMPEG_p )
+            return false;
+        ffmpegCapture = icvCreateFileCapture_FFMPEG_p( filename );
+        return ffmpegCapture != 0;
+    }
+    virtual void close()
+    {
+        if( ffmpegCapture && icvReleaseCapture_FFMPEG_p )
+            icvReleaseCapture_FFMPEG_p( &ffmpegCapture );
+        assert( ffmpegCapture == 0 );
+        ffmpegCapture = 0;
+    }
 
-    return result;
+protected:
+    CvCapture* ffmpegCapture;
+};
+
+
+CvCapture* cvCreateFileCapture_Win32(const char * filename)
+{
+    CvCapture_FFMPEG_proxy* result = new CvCapture_FFMPEG_proxy;
+    if( result->open( filename ))
+        return result;
+    delete result;
+    return cvCreateFileCapture_VFW(filename);
 }
+
+
+class CvVideoWriter_FFMPEG_proxy : public CvVideoWriter
+{
+public:
+    CvVideoWriter_FFMPEG_proxy() { ffmpegWriter = 0; }
+    virtual ~CvVideoWriter_FFMPEG_proxy() { close(); }
+
+    virtual bool writeFrame( const IplImage* image )
+    {
+        return ffmpegWriter ? ffmpegWriter->writeFrame(image) : false;
+    }
+    virtual bool open( const char* filename, int fourcc, double fps, CvSize frameSize, bool isColor )
+    {
+        close();
+        icvInitFFMPEG();
+        if( !icvCreateVideoWriter_FFMPEG_p )
+            return false;
+        ffmpegWriter = icvCreateVideoWriter_FFMPEG_p( filename, fourcc, fps, frameSize, isColor );
+        return ffmpegWriter != 0;
+    }
+
+    virtual void close()
+    {
+        if( ffmpegWriter && icvReleaseVideoWriter_FFMPEG_p )
+            icvReleaseVideoWriter_FFMPEG_p( &ffmpegWriter );
+        assert( ffmpegWriter == 0 );
+        ffmpegWriter = 0;
+    }
+
+protected:
+    CvVideoWriter* ffmpegWriter;
+};
 
 
 CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
-                                          double fps, CvSize frameSize, int is_color )
+                                          double fps, CvSize frameSize, int isColor )
 {
-    CvVideoWriter* result = 0;
+    CvVideoWriter_FFMPEG_proxy* result = new CvVideoWriter_FFMPEG_proxy;
+
+    if( result->open( filename, fourcc, fps, frameSize, isColor != 0 ))
+        return result;
+    delete result;
     
-    icvInitFFMPEG();
-
-    // as video writer does not have virtual functions, we should be
-    // careful and do not mix FFMPEG & VFW. Therefore, use only one of the interfaces
-    if( icvCreateVideoWriter_FFMPEG_p )
-        result = icvCreateVideoWriter_FFMPEG_p(filename, fourcc, fps, frameSize, is_color);
-    else
-        result = cvCreateVideoWriter_VFW(filename, fourcc, fps, frameSize, is_color);
-
-    return result;
-}
-
-CV_IMPL int icvWriteFrame_FFMPEG_W32( CvVideoWriter* writer, const IplImage* image )
-{
-    int result;
-    
-    if( icvCreateVideoWriter_FFMPEG_p && icvWriteFrame_FFMPEG_p )
-        result = icvWriteFrame_FFMPEG_p( writer, image );
-    else
-        result = icvWriteFrame_VFW( writer, image );
-
-    return result;
+    return cvCreateVideoWriter_VFW(filename, fourcc, fps, frameSize, isColor);
 }

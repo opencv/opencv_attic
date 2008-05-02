@@ -261,7 +261,6 @@ int  PALETTE_BGR24 = 0,
 
 typedef struct CvCaptureCAM_V4L
 {
-    CvCaptureVTable* vtable;
     int deviceHandle;
     int bufferIndex;
     int FirstCapture;
@@ -321,16 +320,6 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h);
 
 static int numCameras = 0;
 static int indexList = 0; 
-CvCaptureVTable captureCAM_V4L_vtable =
-{
-    6,
-    (CvCaptureCloseFunc)icvCloseCAM_V4L,
-    (CvCaptureGrabFrameFunc)icvGrabFrameCAM_V4L,
-    (CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_V4L,
-    (CvCaptureGetPropertyFunc)icvGetPropertyCAM_V4L,
-    (CvCaptureSetPropertyFunc)icvSetPropertyCAM_V4L,
-    (CvCaptureGetDescriptionFunc)0
-};
 
 #ifdef HAVE_CAMV4L2
 
@@ -355,7 +344,7 @@ static int xioctl( int fd, int request, void *arg)
    If it fails on the first attempt of /dev/video0, then check if /dev/video is valid.
    Returns the global numCameras with the correct value (we hope) */
 
-void icvInitCapture_V4L() {
+static void icvInitCapture_V4L() {
    int deviceHandle;
    int CameraNumber;
    char deviceName[MAX_DEVICE_DRIVER_NAME];
@@ -379,7 +368,7 @@ void icvInitCapture_V4L() {
       
 }; /* End icvInitCapture_V4L */
 
-int
+static int
 try_palette(int fd,
             struct video_picture *cam_pic,
             int pal,
@@ -398,7 +387,7 @@ try_palette(int fd,
 
 #ifdef HAVE_CAMV4L2
 
-int try_palette_v4l2(CvCaptureCAM_V4L* capture, unsigned long colorspace)
+static int try_palette_v4l2(CvCaptureCAM_V4L* capture, unsigned long colorspace)
 {
   CLEAR (capture->form);
 
@@ -420,7 +409,7 @@ int try_palette_v4l2(CvCaptureCAM_V4L* capture, unsigned long colorspace)
 
 #endif /* HAVE_CAMV4L2 */
 
-int try_init_v4l(CvCaptureCAM_V4L* capture, char *deviceName)
+static int try_init_v4l(CvCaptureCAM_V4L* capture, char *deviceName)
 {
 
   // if detect = -1 then unable to open device
@@ -464,7 +453,7 @@ int try_init_v4l(CvCaptureCAM_V4L* capture, char *deviceName)
 
 #ifdef HAVE_CAMV4L2
 
-int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
+static int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
 {
 
   // if detect = -1 then unable to open device
@@ -513,7 +502,7 @@ int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
 
 }
 
-int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
+static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
 {
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_BGR24) == 0)
   {
@@ -587,7 +576,7 @@ int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
 
 #endif /* HAVE_CAMV4L2 */
 
-int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
+static int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
 {
 
   if(ioctl(capture->deviceHandle, VIDIOCGPICT, &capture->imageProperties) < 0) {
@@ -622,7 +611,7 @@ int autosetup_capture_mode_v4l(CvCaptureCAM_V4L* capture)
 
 #ifdef HAVE_CAMV4L2
 
-void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
+static void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
 {
 //  printf (" Menu items:\n");
   CLEAR (capture->querymenu);
@@ -641,7 +630,7 @@ void v4l2_scan_controls_enumerate_menu(CvCaptureCAM_V4L* capture)
   }
 }
 
-void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
+static void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
 {
 
   __u32 ctrl_id;
@@ -1064,7 +1053,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
    return 1;
 }; /* End _capture_V4L */
 
-CvCapture * cvCaptureFromCAM_V4L (int index)
+static CvCaptureCAM_V4L * icvCaptureFromCAM_V4L (int index)
 {
    static int autoindex=0;
 
@@ -1106,7 +1095,6 @@ CvCapture * cvCaptureFromCAM_V4L (int index)
    memset(capture,0,sizeof(CvCaptureCAM_V4L));
    /* Present the routines needed for V4L funtionality.  They are inserted as part of
       the standard set of cv calls promoting transparency.  "Vector Table" insertion. */
-   capture->vtable = &captureCAM_V4L_vtable;
    capture->FirstCapture = 1;
    
 #ifdef HAVE_CAMV4L2
@@ -1124,7 +1112,7 @@ CvCapture * cvCaptureFromCAM_V4L (int index)
    }
 #endif  /* HAVE_CAMV4L2 */
 
-   return (CvCapture *)capture;
+   return capture;
 }; /* End icvOpenCAM_V4L */
 
 #ifdef HAVE_CAMV4L2
@@ -2680,5 +2668,71 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
       //cvFree((void **)capture);
    }
 };
+
+
+class CvCaptureCAM_V4L_CPP : CvCapture
+{
+public:
+    CvCaptureCAM_V4L_CPP() { captureV4L = 0; }
+    virtual ~CvCaptureCAM_V4L_CPP() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCaptureCAM_V4L* captureV4L;
+};
+
+bool CvCaptureCAM_V4L_CPP::open( int index )
+{
+    close();
+    captureV4L = icvCaptureFromCAM_V4L(index);
+    return captureV4L != 0;
+}
+
+void CvCaptureCAM_V4L_CPP::close()
+{
+    if( captureV4L )
+    {
+        icvCloseCAM_V4L( captureV4L );
+        cvFree( &captureV4L );
+    }
+}
+
+bool CvCaptureCAM_V4L_CPP::grabFrame()
+{
+    return captureV4L ? icvGrabFrameCAM_V4L( captureV4L ) != 0 : false;
+}
+
+IplImage* CvCaptureCAM_V4L_CPP::retrieveFrame()
+{
+    return captureV4L ? icvRetrieveFrameCAM_V4L( captureV4L ) : 0;
+}
+
+double CvCaptureCAM_V4L_CPP::getProperty( int propId )
+{
+    return captureV4L ? icvGetPropertyCAM_V4L( captureV4L, propId );
+}
+
+bool CvCaptureCAM_V4L_CPP::setProperty( int propId, double value )
+{
+    return captureV4L ? icvSetPropertyCAM_V4L( captureV4L, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateCameraCapture_V4L( int index )
+{
+    CvCaptureCAM_V4L_CPP* capture = new CvCaptureCAM_V4L_CPP;
+
+    if( capture->open( index ))
+        return capture;
+
+    delete capture;
+    return 0;
+}
 
 #endif

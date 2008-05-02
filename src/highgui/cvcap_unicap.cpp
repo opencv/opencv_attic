@@ -54,9 +54,38 @@ extern "C" {
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
 
-typedef struct CvCapture_Unicap
+struct CvCapture_Unicap : CvCapture
 {
-  CvCaptureVTable *vtable;
+  CvCapture_Unicap() { init(); }
+  virtual ~CvCapture_Unicap() { close(); }
+
+  virtual bool open( int index );
+  virtual void close();
+
+  virtual double getProperty(int);
+  virtual bool setProperty(int, double) { return false; }
+  virtual bool grabFrame();
+  virtual IplImage* retrieveFrame();
+
+  bool shutdownDevice();
+  bool initDevice();
+
+  void init()
+  {
+    device_initialized = false;
+    desired_format = 0;
+    desired_size = cvSize(0,0);
+    convert_rgb = false;
+
+    handle = 0;
+    memset( &device, 0, sizeof(device) );
+    memset( &format_spec, 0, sizeof(format_spec) );
+    memset( &format, 0, sizeof(format) );
+    memset( &raw_buffer, 0, sizeof(raw_buffer) );
+    memset( &buffer, 0, sizeof(buffer) );
+
+    raw_frame = frame = 0;
+  }
 
   bool device_initialized;
 
@@ -74,104 +103,108 @@ typedef struct CvCapture_Unicap
 
   IplImage *raw_frame;
   IplImage *frame;
-} CvCapture_Unicap;
+};
 
-static bool icvShutdownDevice(CvCapture_Unicap *cap) {
-  CV_FUNCNAME("icvShutdownDevice");
+bool CvCapture_Unicap::shutdownDevice() {
+  bool result = false;
+  CV_FUNCNAME("CvCapture_Unicap::shutdownDevice");
   __BEGIN__;
 
-  if (!SUCCESS(unicap_stop_capture(cap->handle)))
+  if (!SUCCESS(unicap_stop_capture(handle)))
     CV_ERROR(CV_StsError, "unicap: failed to stop capture on device\n");
   
-  if (!SUCCESS(unicap_close(cap->handle)))
+  if (!SUCCESS(unicap_close(handle)))
     CV_ERROR(CV_StsError, "unicap: failed to close the device\n");
 
-  cvReleaseImage(&cap->raw_frame);
-  cvReleaseImage(&cap->frame);
+  cvReleaseImage(&raw_frame);
+  cvReleaseImage(&frame);
 
-  cap->device_initialized = false;
+  device_initialized = false;
 
-  return true;
+  result = true;
   __END__;
-  return false;
+  return result;
 }
 
-static bool icvInitDevice(CvCapture_Unicap *cap) {
-  CV_FUNCNAME("icvInitDevice");
+bool CvCapture_Unicap::initDevice() {
+  bool result = false;
+  CV_FUNCNAME("CvCapture_Unicap::initDevice");
   __BEGIN__;
 
-  if (cap->device_initialized && !icvShutdownDevice(cap))
+  if (device_initialized && !shutdownDevice())
     return false;
 
-  if(!SUCCESS(unicap_enumerate_devices(NULL, &cap->device, cap->desired_device)))
+  if(!SUCCESS(unicap_enumerate_devices(NULL, &device, desired_device)))
     CV_ERROR(CV_StsError, "unicap: failed to get info for device\n");
 
-  if(!SUCCESS(unicap_open( &cap->handle, &cap->device)))
+  if(!SUCCESS(unicap_open( &handle, &device)))
     CV_ERROR(CV_StsError, "unicap: failed to open device\n");
 
-  unicap_void_format(&cap->format_spec);
+  unicap_void_format(&format_spec);
 
-  if (!SUCCESS(unicap_enumerate_formats(cap->handle, &cap->format_spec, &cap->format, cap->desired_format))) {
-    icvShutdownDevice(cap);
+  if (!SUCCESS(unicap_enumerate_formats(handle, &format_spec, &format, desired_format))) {
+    shutdownDevice();
     CV_ERROR(CV_StsError, "unicap: failed to get video format\n");
   }
 
   int i;
-  for (i = cap->format.size_count - 1; i > 0; i--)
-    if (cap->format.sizes[i].width == cap->desired_size.width && 
-	cap->format.sizes[i].height == cap->desired_size.height)
+  for (i = format.size_count - 1; i > 0; i--)
+    if (format.sizes[i].width == desired_size.width && 
+	format.sizes[i].height == desired_size.height)
       break;
-  cap->format.size.width = cap->format.sizes[i].width;
-  cap->format.size.height = cap->format.sizes[i].height;
+  format.size.width = format.sizes[i].width;
+  format.size.height = format.sizes[i].height;
 
-  if (!SUCCESS(unicap_set_format(cap->handle, &cap->format))) {
-    icvShutdownDevice(cap);
+  if (!SUCCESS(unicap_set_format(handle, &format))) {
+    shutdownDevice();
     CV_ERROR(CV_StsError, "unicap: failed to set video format\n");
   }
 
-  memset(&cap->raw_buffer, 0x0, sizeof(unicap_data_buffer_t));
-  cap->raw_frame = cvCreateImage(cvSize(cap->format.size.width, 
-					cap->format.size.height), 
-				  8, cap->format.bpp / 8);
-  memcpy(&cap->raw_buffer.format, &cap->format, sizeof(cap->raw_buffer.format));
-  cap->raw_buffer.data = (unsigned char*)cap->raw_frame->imageData;
-  cap->raw_buffer.buffer_size = cap->format.size.width * 
-    cap->format.size.height * cap->format.bpp / 8;
+  memset(&raw_buffer, 0x0, sizeof(unicap_data_buffer_t));
+  raw_frame = cvCreateImage(cvSize(format.size.width, 
+					format.size.height), 
+				  8, format.bpp / 8);
+  memcpy(&raw_buffer.format, &format, sizeof(raw_buffer.format));
+  raw_buffer.data = (unsigned char*)raw_frame->imageData;
+  raw_buffer.buffer_size = format.size.width * 
+    format.size.height * format.bpp / 8;
 
-  memset(&cap->buffer, 0x0, sizeof(unicap_data_buffer_t));
-  memcpy(&cap->buffer.format, &cap->format, sizeof(cap->buffer.format));
+  memset(&buffer, 0x0, sizeof(unicap_data_buffer_t));
+  memcpy(&buffer.format, &format, sizeof(buffer.format));
 
-  cap->buffer.format.fourcc = UCIL_FOURCC('B','G','R','3');
-  cap->buffer.format.bpp = 24;
+  buffer.format.fourcc = UCIL_FOURCC('B','G','R','3');
+  buffer.format.bpp = 24;
   // * todo support greyscale output
-  //    cap->buffer.format.fourcc = UCIL_FOURCC('G','R','E','Y');
-  //    cap->buffer.format.bpp = 8;
+  //    buffer.format.fourcc = UCIL_FOURCC('G','R','E','Y');
+  //    buffer.format.bpp = 8;
 
-  cap->frame = cvCreateImage(cvSize(cap->buffer.format.size.width, 
-				    cap->buffer.format.size.height), 
-			      8, cap->buffer.format.bpp / 8);
-  cap->buffer.data = (unsigned char*)cap->frame->imageData;
-  cap->buffer.buffer_size = cap->buffer.format.size.width * 
-    cap->buffer.format.size.height * cap->buffer.format.bpp / 8;
+  frame = cvCreateImage(cvSize(buffer.format.size.width, 
+				    buffer.format.size.height), 
+			      8, buffer.format.bpp / 8);
+  buffer.data = (unsigned char*)frame->imageData;
+  buffer.buffer_size = buffer.format.size.width * 
+    buffer.format.size.height * buffer.format.bpp / 8;
 
-  if(!SUCCESS(unicap_start_capture(cap->handle))) {
-    icvShutdownDevice(cap);
+  if(!SUCCESS(unicap_start_capture(handle))) {
+    shutdownDevice();
     CV_ERROR(CV_StsError, "unicap: failed to start capture on device\n");
   }
 
-  cap->device_initialized = true;
-  return true;
+  device_initialized = true;
+  result = true;
   __END__;
-  return false;
+  return result;
 }
 
-static void icvClose_Unicap(CvCapture_Unicap *cap) {
-  icvShutdownDevice(cap);
-  cvFree(&cap);
+void CvCapture_Unicap::close() {
+  if(device_initialized) 
+    shutdownDevice();
 }
 
-static int icvGrabFrame_Unicap(CvCapture_Unicap *cap) {
-  CV_FUNCNAME("icvGrabFrame_Unicap");
+bool CvCapture_Unicap::grabFrame() {
+  bool result = false;
+
+  CV_FUNCNAME("CvCapture_Unicap::grabFrame");
   __BEGIN__;
 
   unicap_data_buffer_t *returned_buffer;
@@ -179,42 +212,45 @@ static int icvGrabFrame_Unicap(CvCapture_Unicap *cap) {
   int retry_count = 100;
 
   while (retry_count--) {
-    if(!SUCCESS(unicap_queue_buffer(cap->handle, &cap->raw_buffer)))
+    if(!SUCCESS(unicap_queue_buffer(handle, &raw_buffer)))
       CV_ERROR(CV_StsError, "unicap: failed to queue a buffer on device\n");
 
-    if(SUCCESS(unicap_wait_buffer(cap->handle, &returned_buffer)))
-      return 1;
+    if(SUCCESS(unicap_wait_buffer(handle, &returned_buffer)))
+    {
+      result = true;
+      EXIT;
+    }
     
     CV_WARN("unicap: failed to wait for buffer on device\n");
     usleep(100 * 1000);
   }
 
   __END__;
-  return 0;
+  return result;
 }
 
-static IplImage *icvRetrieveFrame_Unicap(CvCapture_Unicap *cap) {
-  if (cap->convert_rgb) {
-    ucil_convert_buffer(&cap->buffer, &cap->raw_buffer);
-    return cap->frame;
+IplImage * CvCapture_Unicap::retrieveFrame() {
+  if (convert_rgb) {
+    ucil_convert_buffer(&buffer, &raw_buffer);
+    return frame;
   }
-  return cap->raw_frame;
+  return raw_frame;
 }
 
-static double icvGetProperty_Unicap(CvCapture_Unicap *cap, int id) {
+double CvCapture_Unicap::getProperty(int id) {
   switch (id) {
   case CV_CAP_PROP_POS_MSEC: break;
   case CV_CAP_PROP_POS_FRAMES: break;
   case CV_CAP_PROP_POS_AVI_RATIO: break;
   case CV_CAP_PROP_FRAME_WIDTH:
-    return cap->desired_size.width;
+    return desired_size.width;
   case CV_CAP_PROP_FRAME_HEIGHT:
-    return cap->desired_size.height;
+    return desired_size.height;
   case CV_CAP_PROP_FPS: break;
   case CV_CAP_PROP_FOURCC: break;
   case CV_CAP_PROP_FRAME_COUNT: break;
   case CV_CAP_PROP_FORMAT:
-    return cap->desired_format;
+    return desired_format;
   case CV_CAP_PROP_MODE: break;
   case CV_CAP_PROP_BRIGHTNESS: break;
   case CV_CAP_PROP_CONTRAST: break;
@@ -222,13 +258,13 @@ static double icvGetProperty_Unicap(CvCapture_Unicap *cap, int id) {
   case CV_CAP_PROP_HUE: break;
   case CV_CAP_PROP_GAIN: break;
   case CV_CAP_PROP_CONVERT_RGB:
-    return cap->convert_rgb;
+    return convert_rgb;
   }
 
   return 0;
 }
 
-static int icvSetProperty_Unicap(CvCapture_Unicap *cap, int id, double value) {
+bool CvCapture_Unicap::setProperty(int id, double value) {
   bool reinit = false;
 
   switch (id) {
@@ -236,18 +272,18 @@ static int icvSetProperty_Unicap(CvCapture_Unicap *cap, int id, double value) {
   case CV_CAP_PROP_POS_FRAMES: break;
   case CV_CAP_PROP_POS_AVI_RATIO: break;
   case CV_CAP_PROP_FRAME_WIDTH:
-    cap->desired_size.width = (int)value;
+    desired_size.width = (int)value;
     reinit = true;
     break;
   case CV_CAP_PROP_FRAME_HEIGHT:
-    cap->desired_size.height = (int)value;
+    desired_size.height = (int)value;
     reinit = true;
     break;
   case CV_CAP_PROP_FPS: break;
   case CV_CAP_PROP_FOURCC: break;
   case CV_CAP_PROP_FRAME_COUNT: break;
   case CV_CAP_PROP_FORMAT:
-    cap->desired_format = id;
+    desired_format = id;
     reinit = true;
     break;
   case CV_CAP_PROP_MODE: break;
@@ -257,47 +293,35 @@ static int icvSetProperty_Unicap(CvCapture_Unicap *cap, int id, double value) {
   case CV_CAP_PROP_HUE: break;
   case CV_CAP_PROP_GAIN: break;
   case CV_CAP_PROP_CONVERT_RGB:
-    cap->convert_rgb = value != 0;
+    convert_rgb = value != 0;
     break;
   }
 
-  if (reinit && !icvInitDevice(cap))
-    return 0;
+  if (reinit && !initDevice())
+    return false;
 
-  return 1;
+  return true;
 }
 
-static CvCaptureVTable capture_vtable =
-  {
-    6,
-    ( CvCaptureCloseFunc ) icvClose_Unicap,
-    ( CvCaptureGrabFrameFunc ) icvGrabFrame_Unicap,
-    ( CvCaptureRetrieveFrameFunc ) icvRetrieveFrame_Unicap,
-    ( CvCaptureGetPropertyFunc ) icvGetProperty_Unicap,
-    ( CvCaptureSetPropertyFunc ) icvSetProperty_Unicap,
-    ( CvCaptureGetDescriptionFunc ) 0
-  };
+bool CvCapture_Unicap::open(int index)
+{
+  close();
+  device_initialized = false;
 
-
-CvCapture * cvCaptureFromCAM_Unicap (const int index) {
-  CvCapture_Unicap *cap = 0;
-
-  cap = (CvCapture_Unicap *)cvAlloc(sizeof(CvCapture_Unicap));
-  memset(cap, 0, sizeof(CvCapture_Unicap));
-
-  cap->device_initialized = false;
-
-  cap->desired_device = index < 0 ? 0 : index;
-  cap->desired_format = 0;
-  cap->desired_size = cvSize(320, 240);
-  cap->convert_rgb = true;
+  desired_device = index < 0 ? 0 : index;
+  desired_format = 0;
+  desired_size = cvSize(320, 240);
+  convert_rgb = true;
   
-  if (!icvInitDevice(cap)) {
-    cvFree(&cap);
-    return 0;
-  }
+  return initDevice();
+}
 
-  cap->vtable = &capture_vtable;
 
-  return (CvCapture *)cap;
+CvCapture * cvCreateCameraCapture_Unicap(const int index)
+{
+  CvCapture_Unicap *cap = new CvCapture_Unicap;
+  if( cap->open() )
+    return cap;
+  delete cap;
+  return 0;
 }
