@@ -141,7 +141,8 @@ CV_IMPL CvBool cv3dTrackerCalibrateCameras(int num_cameras,
         if (samples[c]->nChannels == 3)
         {
             // convert to gray
-            if (gray_img == NULL || !CV_ARE_SIZES_EQ(gray_img, samples[c]))
+            if (gray_img == NULL || gray_img->width != samples[c]->width ||
+                gray_img->height != samples[c]->height )
             {
                 if (gray_img != NULL)
                     cvReleaseImage(&gray_img);
