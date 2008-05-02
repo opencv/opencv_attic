@@ -159,7 +159,8 @@ CV_IMPL CvBool cv3dTrackerCalibrateCameras(int num_cameras,
             img = samples[c];
         }
 
-        if (tmp_img == NULL || !CV_ARE_SIZES_EQ(tmp_img, samples[c]))
+        if (tmp_img == NULL || tmp_img->width != samples[c]->width ||
+            tmp_img->height != samples[c]->height )
         {
             if (tmp_img != NULL)
                 cvReleaseImage(&tmp_img);

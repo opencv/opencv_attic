@@ -208,7 +208,10 @@ cvChangeDetection( IplImage*  prev_frame,
     if( !prev_frame || !curr_frame || !change_mask ||
         prev_frame->nChannels != 3 || curr_frame->nChannels != 3 || change_mask->nChannels != 1 ||
         prev_frame->depth != IPL_DEPTH_8U || curr_frame->depth != IPL_DEPTH_8U || change_mask->depth != IPL_DEPTH_8U ||
-        !CV_ARE_SIZES_EQ( prev_frame, curr_frame ) || !CV_ARE_SIZES_EQ( prev_frame, change_mask ) ) return 0;
+        prev_frame->width != curr_frame->width ||
+        prev_frame->height != curr_frame->height ||
+        prev_frame->width != change_mask->width ||
+        prev_frame->height != change_mask->height ) return 0;
 
     cvZero ( change_mask );
 
