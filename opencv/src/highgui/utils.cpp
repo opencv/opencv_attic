@@ -565,14 +565,22 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
     
     if( !CV_ARE_DEPTHS_EQ( src, dst ))
     {
-        double scale = 0, shift = 0;
         int src_depth = CV_MAT_DEPTH(src->type);
-        temp = cvCreateMat( src->height, src->width,
-                            (src->type & CV_MAT_CN_MASK)|(dst->type & CV_MAT_DEPTH_MASK));
-        scale = src_depth <= CV_8S ? 1 : src_depth <= CV_32S ? 1./256 : 255;
-        shift = src_depth == CV_8S || src_depth == CV_16S ? 128 : 0;
-        cvConvertScale( src, temp, scale, shift );
-        src = temp;
+        double scale = src_depth <= CV_8S ? 1 : src_depth <= CV_32S ? 1./256 : 255;
+        double shift = src_depth == CV_8S || src_depth == CV_16S ? 128 : 0;
+        
+        if( !CV_ARE_CNS_EQ( src, dst ))
+        {
+            temp = cvCreateMat( src->height, src->width,
+                (src->type & CV_MAT_CN_MASK)|(dst->type & CV_MAT_DEPTH_MASK));
+            cvConvertScale( src, temp, scale, shift );
+            src = temp;
+        }
+        else
+        {
+            cvConvertScale( src, dst, scale, shift );
+            src = dst;
+        }
     }
 
     if( src_cn != dst_cn || src_cn == 3 && swap_rb )

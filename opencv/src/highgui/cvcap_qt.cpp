@@ -73,8 +73,6 @@ static int did_enter_movies = 0;
 /// Movie state structure for QuickTime movies
 typedef struct CvCapture_QT_Movie
 {
-	CvCaptureVTable * vtable;
-
 	Movie      myMovie;            // movie handle
 	GWorldPtr  myGWorld;           // we render into an offscreen GWorld
 
@@ -90,7 +88,6 @@ typedef struct CvCapture_QT_Movie
 } CvCapture_QT_Movie;
 
 
-
 static       int         icvOpenFile_QT_Movie      (CvCapture_QT_Movie * capture, const char  * filename);
 static       int         icvClose_QT_Movie         (CvCapture_QT_Movie * capture);
 static       double      icvGetProperty_QT_Movie   (CvCapture_QT_Movie * capture, int property_id);
@@ -99,21 +96,9 @@ static       int         icvGrabFrame_QT_Movie     (CvCapture_QT_Movie * capture
 static const void      * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture);
 
 
-static CvCaptureVTable capture_QT_Movie_vtable =
+static CvCapture_QT_Movie * icvCaptureFromFile_QT (const char * filename)
 {
-    6,
-    (CvCaptureCloseFunc)           icvClose_QT_Movie,
-    (CvCaptureGrabFrameFunc)       icvGrabFrame_QT_Movie,
-    (CvCaptureRetrieveFrameFunc)   icvRetrieveFrame_QT_Movie,
-    (CvCaptureGetPropertyFunc)     icvGetProperty_QT_Movie,
-    (CvCaptureSetPropertyFunc)     icvSetProperty_QT_Movie,
-    (CvCaptureGetDescriptionFunc)  0
-};
-
-
-CvCapture * cvCaptureFromFile_QT (const char * filename)
-{
-	static int did_enter_movies = 0;
+    static int did_enter_movies = 0;
 	if (! did_enter_movies)
 	{
 		EnterMovies();
@@ -127,13 +112,11 @@ CvCapture * cvCaptureFromFile_QT (const char * filename)
         capture = (CvCapture_QT_Movie *) cvAlloc (sizeof (*capture));
         memset (capture, 0, sizeof(*capture));
 
-        capture->vtable = &capture_QT_Movie_vtable;
-
         if (!icvOpenFile_QT_Movie (capture, filename))
-            cvReleaseCapture ((CvCapture**) & capture);
+            cvFree( &capture );
     }
 
-    return (CvCapture*)capture;
+    return capture;
 }
 
 
@@ -554,8 +537,6 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 	/// SequenceGrabber state structure for QuickTime
 	typedef struct CvCapture_QT_Cam_vdig
 	{
-		CvCaptureVTable  * vtable;
-
 		ComponentInstance  grabber;
 		short              channel;
 		GWorldPtr          myGWorld;
@@ -573,8 +554,6 @@ static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
 
 	typedef struct CvCapture_QT_Cam_barg
 	{
-		CvCaptureVTable  * vtable;
-
 		SeqGrabComponent   grabber;
 		SGChannel          channel;
 		GWorldPtr          gworld;
@@ -599,25 +578,13 @@ static       int         icvGrabFrame_QT_Cam     (CvCapture_QT_Cam * capture);
 static const void      * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture);
 
 
-static CvCaptureVTable capture_QT_Cam_vtable =
-{
-    6,
-    (CvCaptureCloseFunc)           icvClose_QT_Cam,
-    (CvCaptureGrabFrameFunc)       icvGrabFrame_QT_Cam,
-    (CvCaptureRetrieveFrameFunc)   icvRetrieveFrame_QT_Cam,
-    (CvCaptureGetPropertyFunc)     icvGetProperty_QT_Cam,
-    (CvCaptureSetPropertyFunc)     icvSetProperty_QT_Cam,
-    (CvCaptureGetDescriptionFunc)  0
-};
-
-
 /**
  * Initialize memory structure and call method to open camera
  *
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date 2006-01-29
  */
-CvCapture * cvCaptureFromCAM_QT (const int index)
+static CvCapture_QT_Cam * icvCaptureFromCAM_QT (const int index)
 {
 	if (! did_enter_movies)
 	{
@@ -632,13 +599,11 @@ CvCapture * cvCaptureFromCAM_QT (const int index)
         capture = (CvCapture_QT_Cam *) cvAlloc (sizeof (*capture));
         memset (capture, 0, sizeof(*capture));
 
-        capture->vtable = &capture_QT_Cam_vtable;
-
         if (!icvOpenCamera_QT (capture, index))
-            cvReleaseCapture ((CvCapture**) & capture);
+            cvFree (&capture);
     }
 
-    return (CvCapture *) capture;
+    return capture;
 }
 
 /// capture properties currently unimplemented for QuickTime camera interface
@@ -1110,7 +1075,6 @@ static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
 
 
 typedef struct CvVideoWriter_QT {
-    CvVideoWriterVTable vtable;
 
     DataHandler data_handler;
     Movie movie;
@@ -1122,9 +1086,10 @@ typedef struct CvVideoWriter_QT {
     TimeValue duration_per_sample;
 } CvVideoWriter_QT;
 
+
 static TimeScale const TIME_SCALE = 600;
 
-OSStatus icvEncodedFrameOutputCallback(
+static OSStatus icvEncodedFrameOutputCallback(
     void* writer,
     ICMCompressionSessionRef compression_session_ref,
     OSStatus error,
@@ -1132,7 +1097,7 @@ OSStatus icvEncodedFrameOutputCallback(
     void* reserved
 );
 
-void icvSourceTrackingCallback(
+static void icvSourceTrackingCallback(
     void *source_tracking_ref_con,
     ICMSourceTrackingFlags source_tracking_flags,
     void *source_frame_ref_con,
@@ -1140,12 +1105,9 @@ void icvSourceTrackingCallback(
 );
 
 static int icvWriteFrame_QT(
-    CvVideoWriter * writer,
+    CvVideoWriter_QT * video_writer,
     const IplImage * image
 ) {
-    CvVideoWriter_QT* video_writer =
-        reinterpret_cast<CvVideoWriter_QT*>( writer );
-
     CVPixelBufferRef pixel_buffer_ref = NULL;
     CVReturn retval =
         CVPixelBufferCreate(
@@ -1195,10 +1157,9 @@ static int icvWriteFrame_QT(
     return 0;
 }
 
-static void icvReleaseVideoWriter_QT( CvVideoWriter ** writer ) {
+static void icvReleaseVideoWriter_QT( CvVideoWriter_QT ** writer ) {
     if ( ( writer != NULL ) && ( *writer != NULL ) ) {
-        CvVideoWriter_QT* video_writer =
-            reinterpret_cast<CvVideoWriter_QT*>( *writer );
+        CvVideoWriter_QT* video_writer = *writer;
 
         // force compression session to complete encoding of outstanding source
         // frames
@@ -1239,12 +1200,11 @@ static void icvReleaseVideoWriter_QT( CvVideoWriter ** writer ) {
 
         DisposeMovie( video_writer->movie );
 
-        cvFree( reinterpret_cast<void**>( &video_writer ) );
-        *writer = NULL;
+        cvFree( writer );
     }
 }
 
-OSStatus icvEncodedFrameOutputCallback(
+static OSStatus icvEncodedFrameOutputCallback(
     void* writer,
     ICMCompressionSessionRef compression_session_ref,
     OSStatus error,
@@ -1259,7 +1219,7 @@ OSStatus icvEncodedFrameOutputCallback(
     return err;
 }
 
-void icvSourceTrackingCallback(
+static void icvSourceTrackingCallback(
     void *source_tracking_ref_con,
     ICMSourceTrackingFlags source_tracking_flags,
     void *source_frame_ref_con,
@@ -1272,27 +1232,19 @@ void icvSourceTrackingCallback(
     }
 }
 
-static CvVideoWriterVTable video_writer_QT_vtable =
-{
-    2,
-    (CvVideoWriterCloseFunc)icvReleaseVideoWriter_QT,
-    (CvVideoWriterWriteFrameFunc)icvWriteFrame_QT
-};
 
-CvVideoWriter* cvCreateVideoWriter_QT(
+static CvVideoWriter_QT* icvCreateVideoWriter_QT(
     const char * filename,
     int fourcc,
     double fps,
     CvSize frame_size,
     int is_color
 ) {
-    CV_FUNCNAME( "cvCreateVideoWriter" );
+    CV_FUNCNAME( "icvCreateVideoWriter" );
 
     CvVideoWriter_QT* video_writer =
         static_cast<CvVideoWriter_QT*>( cvAlloc( sizeof( CvVideoWriter_QT ) ) );
     memset( video_writer, 0, sizeof( CvVideoWriter_QT ) );
-
-    video_writer->vtable = video_writer_QT_vtable;
 
     Handle data_ref = NULL;
     OSType data_ref_type;
@@ -1447,5 +1399,196 @@ CvVideoWriter* cvCreateVideoWriter_QT(
         video_writer = NULL;
     }
 
-    return reinterpret_cast<CvVideoWriter*>( video_writer );
+    return video_writer;
+}
+
+
+/**
+*
+*   Wrappers for the new C++ CvCapture & CvVideoWriter structures
+*
+*/
+
+class CvCapture_QT_Movie_CPP : public CvCapture
+{
+public:
+    CvCapture_QT_Movie_CPP() { captureQT = 0; }
+    virtual ~CvCapture_QT_Movie_CPP() { close(); }
+
+    virtual bool open( const char* filename );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCapture_QT_Movie* captureQT;
+};
+
+bool CvCapture_QT_Movie_CPP::open( const char* filename )
+{
+    close();
+    captureQT = icvCaptureFromFile_QT( filename );
+    return captureQT != 0;
+}
+
+void CvCapture_QT_Movie_CPP::close()
+{
+    if( captureQT )
+    {
+        icvClose_QT_Movie( captureQT );
+        cvFree( &captureQT );
+    }
+}
+
+bool CvCapture_QT_Movie_CPP::grabFrame()
+{
+    return captureQT ? icvGrabFrame_QT_Movie( captureQT ) != 0 : false;
+}
+
+IplImage* CvCapture_QT_Movie_CPP::retrieveFrame()
+{
+    return captureQT ? icvRetrieveFrame_QT_Movie( captureQT ) : 0;
+}
+
+double CvCapture_QT_Movie_CPP::getProperty( int propId )
+{
+    return captureQT ? icvGetProperty_QT_Movie( captureQT, propId );
+}
+
+bool CvCapture_QT_Movie_CPP::setProperty( int propId, double value )
+{
+    return captureQT ? icvSetProperty_QT_Movie( captureQT, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateFileCapture_QT( const char* filename )
+{
+    CvCapture_QT_Movie_CPP* capture = new CvCapture_QT_Movie_CPP;
+
+    if( capture->open( filename ))
+        return capture;
+
+    delete capture;
+    return 0;
+}
+
+
+/////////////////////////////////////
+
+class CvCapture_QT_Cam_CPP : public CvCapture
+{
+public:
+    CvCapture_QT_Cam_CPP() { captureQT = 0; }
+    virtual ~CvCapture_QT_Cam_CPP() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCapture_QT_Cam* captureQT;
+};
+
+bool CvCapture_QT_Cam_CPP::open( int index )
+{
+    close();
+    captureQT = icvCaptureFromCam_QT( index );
+    return captureQT != 0;
+}
+
+void CvCapture_QT_Cam_CPP::close()
+{
+    if( captureQT )
+    {
+        icvClose_QT_Cam( captureQT );
+        cvFree( &captureQT );
+    }
+}
+
+bool CvCapture_QT_Cam_CPP::grabFrame()
+{
+    return captureQT ? icvGrabFrame_QT_Cam( captureQT ) != 0 : false;
+}
+
+IplImage* CvCapture_QT_Cam_CPP::retrieveFrame()
+{
+    return captureQT ? icvRetrieveFrame_QT_Cam( captureQT ) : 0;
+}
+
+double CvCapture_QT_Cam_CPP::getProperty( int propId )
+{
+    return captureQT ? icvGetProperty_QT_Cam( captureQT, propId );
+}
+
+bool CvCapture_QT_Cam_CPP::setProperty( int propId, double value )
+{
+    return captureQT ? icvSetProperty_QT_Cam( captureQT, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateCameraCapture_QT( int index )
+{
+    CvCapture_QT_Cam_CPP* capture = new CvCapture_QT_Cam_CPP;
+
+    if( capture->open( index ))
+        return capture;
+
+    delete capture;
+    return 0;
+}
+
+/////////////////////////////////
+
+class CvVideoWriter_QT_CPP : public CvVideoWriter
+{
+public:
+    CvVideoWriter_QT_CPP() { writerQT = 0; }
+    virtual ~CvVideoWriter_QT_CPP() { close(); }
+
+    virtual bool open( const char* filename, int fourcc,
+                       double fps, CvSize frameSize, bool isColor );
+    virtual void close();
+    virtual bool writeFrame( const IplImage* );
+
+protected:
+    CvVideoWriter_QT* writerQT;
+};
+
+bool CvVideoWriter_QT_CPP::open( const char* filename, int fourcc,
+                       double fps, CvSize frameSize, bool isColor )
+{
+    close();
+    writerQT = icvCreateVideoWriter_QT( filename, fourcc, fps, frameSize, isColor );
+    return writerQT != 0;
+}
+
+void CvVideoWriter_QT_CPP::close()
+{
+    if( writerQT )
+    {
+        icvReleaseVideoWriter_QT( &writerQT );
+        writerQT = 0;
+    }
+}
+
+bool CvVideoWriter_QT_CPP::writeFrame( const IplImage* image )
+{
+    if( !writerQT || !image )
+        return false;
+    return icvWriteFrame_QT( writerQT, image ) >= 0;
+}
+
+CvVideoWriter* cvCreateVideoWriter_QT( const char* filename, int fourcc,
+                                       double fps, CvSize frameSize, int isColor )
+{
+    CvVideoWriter_QT_CPP* writer = new CvVideoWriter_QT_CPP;
+    if( writer->open( filename, fourcc, fps, frameSize, isColor != 0 ))
+        return writer;
+    delete writer;
+    return 0;
 }

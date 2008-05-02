@@ -71,67 +71,23 @@ void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origi
 
 /***************************** CvCapture structure ******************************/
 
-#define CV_CAPTURE_BASE_API_COUNT 6
-
-typedef void         (CV_CDECL* CvCaptureCloseFunc)         ( CvCapture* capture );
-typedef int          (CV_CDECL* CvCaptureGrabFrameFunc)     ( CvCapture* capture );
-typedef IplImage   * (CV_CDECL* CvCaptureRetrieveFrameFunc) ( CvCapture* capture );
-typedef double       (CV_CDECL* CvCaptureGetPropertyFunc)   ( CvCapture* capture, int id );
-typedef int          (CV_CDECL* CvCaptureSetPropertyFunc)   ( CvCapture* capture,
-                                                              int id, double value );
-typedef const char * (CV_CDECL* CvCaptureGetDescriptionFunc)( CvCapture* capture );
-
-typedef struct CvCaptureVTable
+struct CvCapture
 {
-    int                           count;
-    CvCaptureCloseFunc            close;
-    CvCaptureGrabFrameFunc        grab_frame;
-    CvCaptureRetrieveFrameFunc    retrieve_frame;
-    CvCaptureGetPropertyFunc      get_property;
-    CvCaptureSetPropertyFunc      set_property;
-    CvCaptureGetDescriptionFunc   get_description;
-}
-CvCaptureVTable;
+    virtual ~CvCapture() {}
+    virtual double getProperty(int) { return 0; }
+    virtual bool setProperty(int, double) { return 0; }
+    virtual bool grabFrame() { return true; }
+    virtual IplImage* retrieveFrame() { return 0; }
+    virtual IplImage* queryFrame() { return grabFrame() ? retrieveFrame() : 0; }
+};
 
-typedef struct CvCapture
+/*************************** CvVideoWriter structure ****************************/
+
+struct CvVideoWriter
 {
-    CvCaptureVTable* vtable;
-}
-CvCapture;
-
-
-#define CV_VIDEOWRITER_BASE_API_COUNT 2
-
-typedef void         (CV_CDECL* CvVideoWriterCloseFunc)       ( CvVideoWriter* writer );
-typedef int          (CV_CDECL* CvVideoWriterWriteFrameFunc)    ( CvVideoWriter* writer,
-                                                                  const IplImage* image );
-typedef struct CvVideoWriterVTable
-{
-    int                           count;
-    CvVideoWriterCloseFunc      close;
-    CvVideoWriterWriteFrameFunc   write_frame;
-}
-CvVideoWriterVTable;
-
-typedef struct CvVideoWriter
-{
-    CvVideoWriterVTable* vtable;
-}
-CvVideoWriter;
-
-
-extern "C" {
-
-typedef CvCapture* (CV_CDECL * CvCaptureFromFile)( const char* filename );
-
-typedef CvVideoWriter* (CV_CDECL * CvCreateVideoWriter)( const char * filename,
-        int fourcc, double fps, CvSize frameSize, int is_color );
-
-typedef int (CV_CDECL * CvWriteFrame)( CvVideoWriter * writer, const IplImage * image );
-
-typedef void (CV_CDECL * CvReleaseVideoWriter)( CvVideoWriter ** writer );
-
-}
+    virtual ~CvVideoWriter() {}
+    virtual bool writeFrame(const IplImage*) { return false; }
+};
 
 #ifdef WIN32
 #define HAVE_VFW 1
@@ -145,48 +101,45 @@ typedef void (CV_CDECL * CvReleaseVideoWriter)( CvVideoWriter ** writer );
 
 
 #if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
-CvCapture * cvCaptureFromCAM_V4L( int index );
+CvCapture * cvCreateCameraCapture_V4L( int index );
 #endif
 
 #ifdef HAVE_DC1394
-CvCapture * cvCaptureFromCAM_DC1394( int index );
+CvCapture * cvCreateCameraCapture_DC1394( int index );
 #endif
 
 #ifdef HAVE_MIL
-CvCapture* cvCaptureFromCAM_MIL( int index );
+CvCapture* cvCreateCameraCapture_MIL( int index );
 #endif
 
 #ifdef HAVE_CMU1394
-CvCapture * cvCaptureFromCAM_CMU( int index );
+CvCapture * cvCreateCameraCapture_CMU( int index );
 #endif
 
 #ifdef HAVE_TYZX
-CV_IMPL CvCapture * cvCaptureFromCAM_TYZX( int index );
+CV_IMPL CvCapture * cvCreateCameraCapture_TYZX( int index );
 #endif
 
 #ifdef WIN32
-CvCapture* cvCaptureFromFile_Win32( const char* filename );
+CvCapture* cvCreateFileCapture_Win32( const char* filename );
 
-CvCapture* cvCaptureFromCAM_VFW( int index );
-CvCapture* cvCaptureFromFile_VFW( const char* filename );
+CvCapture* cvCreateCameraCapture_VFW( int index );
+CvCapture* cvCreateFileCapture_VFW( const char* filename );
 
 CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
                                           double fps, CvSize frameSize, int is_color );
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
-int icvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image );
-void cvReleaseVideoWriter_VFW( CvVideoWriter** writer );
-
 #endif
 
 CVAPI(int) cvHaveImageReader(const char* filename);
 CVAPI(int) cvHaveImageWriter(const char* filename);
 
-CvCapture* cvCaptureFromFile_Images(const char* filename);
+CvCapture* cvCreateFileCapture_Images(const char* filename);
 CvVideoWriter* cvCreateVideoWriter_Images(const char* filename);
 
 #ifdef HAVE_XINE
-CvCapture* cvCaptureFromFile_XINE (const char* filename);
+CvCapture* cvCreateFileCapture_XINE (const char* filename);
 #endif
 
 #ifdef HAVE_GSTREAMER
@@ -199,22 +152,22 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename);
 #endif
 
 #ifdef HAVE_FFMPEG
-CvCapture* cvCaptureFromFile_FFMPEG (const char* filename);
+CvCapture* cvCreateFileCapture_FFMPEG (const char* filename);
 
 CvVideoWriter* cvCreateVideoWriter_FFMPEG ( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color );
 #endif
 
 #ifdef HAVE_QUICKTIME
-CvCapture * cvCaptureFromFile_QT (const char  * filename);
-CvCapture * cvCaptureFromCAM_QT  (const int     index);
+CvCapture * cvCreateFileCapture_QT (const char  * filename);
+CvCapture * cvCreateCameraCapture_QT  (const int     index);
 
 CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
 #endif
 
 #ifdef HAVE_UNICAP
-CvCapture * cvCaptureFromCAM_Unicap  (const int     index);
+CvCapture * cvCreateCameraCapture_Unicap  (const int     index);
 
 #endif
 

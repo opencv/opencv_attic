@@ -83,10 +83,8 @@ typedef struct CvCapture_GStreamer
 	IplImage	       *frame;
 } CvCapture_GStreamer;
 
-static void icvClose_GStreamer(CvCapture *capture)
+static void icvClose_GStreamer(CvCapture_GStreamer *cap)
 {
-	CvCapture_GStreamer *cap = (CvCapture_GStreamer *)capture;
-
 	if(cap->pipeline) {
 		gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_NULL);
 		gst_object_unref(GST_OBJECT(cap->pipeline));
@@ -150,10 +148,8 @@ static void icvHandleMessage(CvCapture_GStreamer *cap)
 //
 // start the pipeline, grab a buffer, and pause again
 //
-static int icvGrabFrame_GStreamer(CvCapture *capture)
+static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 {
-	CvCapture_GStreamer *cap = (CvCapture_GStreamer *)capture;
-
 	if(!cap->pipeline)
 		return 0;
 
@@ -224,10 +220,8 @@ static int icvGrabFrame_GStreamer(CvCapture *capture)
 //
 // decode buffer
 //
-static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
+static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap)
 {
-	CvCapture_GStreamer *cap = (CvCapture_GStreamer *)capture;
-
 	if(!cap->buffer)
 		return 0;
 
@@ -303,9 +297,8 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture *capture)
 	return cap->frame;
 }
 
-static double icvGetProperty_GStreamer(CvCapture *capture, int id)
+static double icvGetProperty_GStreamer(CvCapture_GStreamer *cap, int id)
 {
-	CvCapture_GStreamer *cap = (CvCapture_GStreamer *)capture;
 	GstFormat format;
 	//GstQuery q;
 	gint64 value;
@@ -430,9 +423,8 @@ static void icvRemoveFilter(CvCapture_GStreamer *cap, const char *filter)
 	icvRestartPipeline(cap);
 }
 
-static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
+static int icvSetProperty_GStreamer(CvCapture_GStreamer *cap, int id, double value)
 {
-	CvCapture_GStreamer *cap = (CvCapture_GStreamer *)capture;
 	GstFormat format;
 	GstSeekFlags flags;
 
@@ -509,17 +501,6 @@ static int icvSetProperty_GStreamer(CvCapture *capture, int id, double value)
 	return 0;
 }
 
-static CvCaptureVTable capture_vtable =
-{
-	6,
-	( CvCaptureCloseFunc ) icvClose_GStreamer,
-	( CvCaptureGrabFrameFunc ) icvGrabFrame_GStreamer,
-	( CvCaptureRetrieveFrameFunc ) icvRetrieveFrame_GStreamer,
-	( CvCaptureGetPropertyFunc ) icvGetProperty_GStreamer,
-	( CvCaptureSetPropertyFunc ) icvSetProperty_GStreamer,
-	( CvCaptureGetDescriptionFunc ) 0
-};
-
 //
 // connect decodebin's dynamically created source pads to colourconverter
 //
@@ -558,7 +539,7 @@ static void icvNewPad(GstElement *decodebin, GstPad *pad, gboolean last, gpointe
 	gst_object_unref(sinkpad);
 }
 
-CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
+static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *filename)
 {
 	CvCapture_GStreamer *capture = 0;
 	CV_FUNCNAME("cvCaptureFromCAM_GStreamer");
@@ -676,7 +657,7 @@ CvCapture * cvCreateCapture_GStreamer(int type, const char *filename)
 
 	__END__;
 
-	return (CvCapture *)capture;
+	return capture;
 }
 
 #if 0
@@ -766,3 +747,69 @@ CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename )
 	return (CvVideoWriter *)writer;
 }
 #endif
+
+
+class CvCapture_GStreamer_CPP : public CvCapture
+{
+public:
+    CvCapture_GStreamer_CPP() { captureGS = 0; }
+    virtual ~CvCapture_GStreamer_CPP() { close(); }
+
+    virtual bool open( int type, const char* filename );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCapture_GStreamer* captureGS;
+};
+
+bool CvCapture_GStreamer_CPP::open( int type, const char* filename )
+{
+    close();
+    captureGS = icvCreateCapture_GStreamer( type, filename );
+    return captureGS != 0;
+}
+
+void CvCapture_GStreamer_CPP::close()
+{
+    if( captureGS )
+    {
+        icvClose_GStreamer( captureGS );
+        cvFree( &captureGS );
+    }
+}
+
+bool CvCapture_GStreamer_CPP::grabFrame()
+{
+    return captureGS ? icvGrabFrame_GStreamer( captureGS ) != 0 : false;
+}
+
+IplImage* CvCapture_GStreamer_CPP::retrieveFrame()
+{
+    return captureGS ? icvRetrieveFrame_GStreamer( captureGS ) : 0;
+}
+
+double CvCapture_GStreamer_CPP::getProperty( int propId )
+{
+    return captureGS ? icvGetProperty_GStreamer( captureGS, propId );
+}
+
+bool CvCapture_GStreamer_CPP::setProperty( int propId, double value )
+{
+    return captureGS ? icvSetProperty_GStreamer( captureGS, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateCapture_GStreamer( int type, const char* filename )
+{
+    CvCapture_GStreamer_CPP* capture = new CvCapture_GStreamer_CPP;
+
+    if( capture->open( type, filename ))
+        return capture;
+
+    delete capture;
+    return 0;
+}

@@ -56,59 +56,35 @@ CV_IMPL void cvReleaseCapture( CvCapture** pcapture )
 {
     if( pcapture && *pcapture )
     {
-        CvCapture* capture = *pcapture;
-        if( capture && capture->vtable &&
-            capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-            capture->vtable->close )
-            capture->vtable->close( capture );
-        cvFree( pcapture );
+        delete *pcapture;
+        *pcapture = 0;
     }
 }
 
 CV_IMPL IplImage* cvQueryFrame( CvCapture* capture )
 {
-    if( capture && capture->vtable &&
-        capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-        capture->vtable->grab_frame && capture->vtable->retrieve_frame &&
-        capture->vtable->grab_frame( capture ))
-        return capture->vtable->retrieve_frame( capture );
-    return 0;
+    return capture ? capture->queryFrame() : 0;
 }
+
 
 CV_IMPL int cvGrabFrame( CvCapture* capture )
 {
-    if( capture && capture->vtable &&
-        capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-        capture->vtable->grab_frame )
-        return capture->vtable->grab_frame( capture );
-    return 0;
+    return capture ? capture->grabFrame() : 0;
 }
 
 CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
 {
-    if( capture && capture->vtable &&
-        capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-        capture->vtable->retrieve_frame )
-        return capture->vtable->retrieve_frame( capture );
-    return 0;
+    return capture ? capture->retrieveFrame() : 0;
 }
 
 CV_IMPL double cvGetCaptureProperty( CvCapture* capture, int id )
 {
-    if( capture && capture->vtable &&
-        capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-        capture->vtable->get_property )
-        return capture->vtable->get_property( capture, id );
-    return 0;
+    return capture ? capture->getProperty(id) : 0;
 }
 
 CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
 {
-    if( capture && capture->vtable &&
-        capture->vtable->count >= CV_CAPTURE_BASE_API_COUNT &&
-        capture->vtable->set_property )
-        return capture->vtable->set_property( capture, id, value );
-    return 0;
+    return capture ? capture->setProperty(id, value) : 0;
 }
 
 
@@ -118,7 +94,7 @@ CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
  * API that can access a given camera index.
  * Add multiples of 100 to select an API.
  */
-CV_IMPL CvCapture * cvCaptureFromCAM (int index)
+CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 {
 	int  domains[] =
 	{
@@ -144,7 +120,6 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 	// try every possibly installed camera API
 	for (int i = 0; domains[i] >= 0; i++)
 	{
-
 		// local variable to memorize the captured device
 		CvCapture *capture;
 
@@ -152,7 +127,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 		{
 		#ifdef HAVE_TYZX
 		case CV_CAP_STEREO:
-			capture = cvCaptureFromCAM_TYZX (index);
+			capture = cvCreateCameraCapture_TYZX (index);
 			if (capture)
 				return capture;
 			break;
@@ -160,12 +135,12 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 
 		case CV_CAP_VFW:
 		#ifdef HAVE_VFW
-			capture = cvCaptureFromCAM_VFW (index);
+			capture = cvCreateCameraCapture_VFW (index);
 			if (capture)
 				return capture;
 		#endif
 		#if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
-			capture = cvCaptureFromCAM_V4L (index);
+			capture = cvCreateCameraCapture_V4L (index);
 			if (capture)
 				return capture;
 		#endif
@@ -181,12 +156,12 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 
 		case CV_CAP_FIREWIRE:
 		#ifdef HAVE_DC1394
-			capture = cvCaptureFromCAM_DC1394 (index);
+			capture = cvCreateCameraCapture_DC1394 (index);
 			if (capture)
 				return capture;
 		#endif
 		#ifdef HAVE_CMU1394
-			capture = cvCaptureFromCAM_CMU (index);
+			capture = cvCreateCameraCapture_CMU (index);
 			if (capture)
 				return capture;
 		#endif
@@ -199,7 +174,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 
 		#ifdef HAVE_MIL
 		case CV_CAP_MIL:
-			capture = cvCaptureFromCAM_MIL (index);
+			capture = cvCreateCameraCapture_MIL (index);
 			if (capture)
 				return capture;
 			break;
@@ -207,7 +182,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 
 		#ifdef HAVE_QUICKTIME
 		case CV_CAP_QT:
-			capture = cvCaptureFromCAM_QT (index);
+			capture = cvCreateCameraCapture_QT (index);
 			if (capture)
 				return capture;
 			break;
@@ -215,7 +190,7 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
 			
 		#ifdef HAVE_UNICAP
 		case CV_CAP_UNICAP:
-		  capture = cvCaptureFromCAM_Unicap (index);
+		  capture = cvCreateCameraCapture_Unicap (index);
 		  if (capture)
 		    return capture;
 		  break;
@@ -232,21 +207,21 @@ CV_IMPL CvCapture * cvCaptureFromCAM (int index)
  * Videoreader dispatching method: it tries to find the first
  * API that can access a given filename.
  */
-CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
+CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
 {
     CvCapture * result = 0;
 
     if (! result)
-        result = cvCaptureFromFile_Images(filename);
+        result = cvCreateFileCapture_Images (filename);
 
     #ifdef WIN32
     if (! result)
-        result = cvCaptureFromFile_Win32 (filename);
+        result = cvCreateFileCapture_Win32 (filename);
     #endif
 
     #ifdef HAVE_XINE
     if (! result)
-        result = cvCaptureFromFile_XINE (filename);
+        result = cvCreateFileCapture_XINE (filename);
     #endif
 
     #ifdef HAVE_GSTREAMER
@@ -256,12 +231,12 @@ CV_IMPL CvCapture * cvCaptureFromFile (const char * filename)
 
     #ifdef HAVE_FFMPEG
     if (! result)
-        result = cvCaptureFromFile_FFMPEG (filename);
+        result = cvCreateFileCapture_FFMPEG (filename);
     #endif
 
     #ifdef HAVE_QUICKTIME
     if (! result)
-        result = cvCaptureFromFile_QT (filename);
+        result = cvCreateFileCapture_QT (filename);
     #endif
 
     return result;
@@ -309,22 +284,14 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
 
 CV_IMPL int cvWriteFrame( CvVideoWriter* writer, const IplImage* image )
 {
-	if(writer && writer->vtable &&
-	   writer->vtable->count >= CV_VIDEOWRITER_BASE_API_COUNT &&
-	   writer->vtable->write_frame)
-		return writer->vtable->write_frame(writer, image);
-	return 0;
+    return writer ? writer->writeFrame(image) : 0;
 }
 
 CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** pwriter )
 {
-	if(!pwriter || !*pwriter)
-		return;
-
-	CvVideoWriter* writer = *pwriter;
-	if(writer && writer->vtable &&
-	   writer->vtable->count >= CV_VIDEOWRITER_BASE_API_COUNT &&
-	   writer->vtable->close )
-		writer->vtable->close( writer );
-	cvFree( pwriter );
+    if( pwriter && *pwriter )
+    {
+        delete *pwriter;
+        *pwriter = 0;
+    }
 }

@@ -50,10 +50,6 @@
 #pragma optimize("",off)
 #endif
 
-
-CvCapture* cvCaptureFromFile_VFW (const char* filename);
-CvCapture* cvCaptureFromCAM_VFW  (int index);
-
 /********************* Capturing video from AVI via VFW ************************/
 
 static BITMAPINFOHEADER icvBitmapHeader( int width, int height, int bpp, int compression = BI_RGB )
@@ -70,6 +66,7 @@ static BITMAPINFOHEADER icvBitmapHeader( int width, int height, int bpp, int com
     return bmih;
 }
 
+
 static void icvInitCapture_VFW()
 {
     static int isInitialized = 0;
@@ -81,9 +78,30 @@ static void icvInitCapture_VFW()
 }
 
 
-typedef struct CvCaptureAVI_VFW
+class CvCaptureAVI_VFW : public CvCapture
 {
-    CvCaptureVTable   * vtable;
+public:
+    CvCaptureAVI_VFW()
+    {
+        init();
+    }
+
+    virtual ~CvCaptureAVI_VFW()
+    {
+        close();
+    }
+
+    virtual bool open( const char* filename );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+
+protected:
+    void init();
+
     PAVIFILE            avifile;
     PAVISTREAM          avistream;
     PGETFRAME           getframe;
@@ -93,134 +111,135 @@ typedef struct CvCaptureAVI_VFW
     double              fps;
     int                 pos;
     int                 data_offset;
-    IplImage            frame;
+    IplImage*           frame;
     CvSize              size;
-}
-CvCaptureAVI_VFW;
+};
 
 
-static void icvCloseAVI_VFW( CvCaptureAVI_VFW* capture )
+void CvCaptureAVI_VFW::init()
 {
-    if( capture->getframe )
-    {
-        AVIStreamGetFrameClose( capture->getframe );
-        capture->getframe = 0;
-    }
-    if( capture->avistream )
-    {
-        AVIStreamRelease( capture->avistream );
-        capture->avistream = 0;
-    }
-    if( capture->avifile )
-    {
-        AVIFileRelease( capture->avifile );
-        capture->avifile = 0;
-    }
-    capture->bmih = 0;
-    capture->pos = 0;
-    capture->film_range.start_index = capture->film_range.end_index = 0;
-    memset( &capture->frame, 0, sizeof(capture->frame));
+    avifile = 0;
+    avistream = 0;
+    getframe = 0;
+    memset( &aviinfo, 0, sizeof(aviinfo) );
+    bmih = 0;
+    film_range = cvSlice(0,0);
+    fps = 0;
+    pos = 0;
+    data_offset = 0;
+    frame = 0;
+    size = cvSize(0,0);
 }
 
-static int icvOpenAVI_VFW( CvCaptureAVI_VFW* capture, const char* filename )
-{
-    HRESULT hr;
 
+void CvCaptureAVI_VFW::close()
+{
+    if( getframe )
+        AVIStreamGetFrameClose( getframe );
+
+    if( avistream )
+        AVIStreamRelease( avistream );
+
+    if( avifile )
+        AVIFileRelease( avifile );
+
+    cvReleaseImage( &frame );
+    init();
+}
+
+
+bool CvCaptureAVI_VFW::open( const char* filename )
+{
+    close();
     icvInitCapture_VFW();
 
-    if( !capture )
-        return 0;
+    if( !filename )
+        return false;
 
-    hr = AVIFileOpen( &capture->avifile, filename, OF_READ, NULL );
+    HRESULT hr = AVIFileOpen( &avifile, filename, OF_READ, NULL );
     if( SUCCEEDED(hr))
     {
-        hr = AVIFileGetStream( capture->avifile, &capture->avistream, streamtypeVIDEO, 0 );
+        hr = AVIFileGetStream( avifile, &avistream, streamtypeVIDEO, 0 );
         if( SUCCEEDED(hr))
         {
-            hr = AVIStreamInfo( capture->avistream, &capture->aviinfo,
-                                    sizeof(capture->aviinfo));
+            hr = AVIStreamInfo( avistream, &aviinfo, sizeof(aviinfo));
             if( SUCCEEDED(hr))
             {
-                //int fcc = capture->aviinfo.fccHandler;
-                capture->data_offset = 0;
-                capture->size.width = capture->aviinfo.rcFrame.right -
-                                      capture->aviinfo.rcFrame.left;
-                capture->size.height = capture->aviinfo.rcFrame.bottom -
-                                      capture->aviinfo.rcFrame.top;
-                BITMAPINFOHEADER bmih = icvBitmapHeader(
-                    capture->size.width, capture->size.height, 24 );
+                //int fcc = aviinfo.fccHandler;
+                data_offset = 0;
+                size.width = aviinfo.rcFrame.right - aviinfo.rcFrame.left;
+                size.height = aviinfo.rcFrame.bottom - aviinfo.rcFrame.top;
+                BITMAPINFOHEADER bmih = icvBitmapHeader( size.width, size.height, 24 );
                 
-                capture->film_range.start_index = (int)capture->aviinfo.dwStart;
-                capture->film_range.end_index = capture->film_range.start_index +
-                                                (int)capture->aviinfo.dwLength;
-                capture->fps = ((double)capture->aviinfo.dwRate)/capture->aviinfo.dwScale;
-                capture->pos = capture->film_range.start_index;
-                capture->getframe = AVIStreamGetFrameOpen( capture->avistream, &bmih );
-                if( capture->getframe != 0 )
-                    return 1;
+                film_range.start_index = (int)aviinfo.dwStart;
+                film_range.end_index = film_range.start_index + (int)aviinfo.dwLength;
+                fps = (double)aviinfo.dwRate/aviinfo.dwScale;
+                pos = film_range.start_index;
+                getframe = AVIStreamGetFrameOpen( avistream, &bmih );
+                if( getframe != 0 )
+                    return true;
             }
         }
     }
 
-    icvCloseAVI_VFW( capture );
-    return 0;
+    close();
+    return false;
 }
 
-static int icvGrabFrameAVI_VFW( CvCaptureAVI_VFW* capture )
+bool CvCaptureAVI_VFW::grabFrame()
 {
-    if( capture->avistream )
-    {
-        capture->bmih = (BITMAPINFOHEADER*)
-            AVIStreamGetFrame( capture->getframe, capture->pos++ );
-    }
-
-    return capture->bmih != 0;
+    if( avistream )
+        bmih = (BITMAPINFOHEADER*)AVIStreamGetFrame( getframe, pos++ );
+    return bmih != 0;
 }
 
-static const IplImage* icvRetrieveFrameAVI_VFW( CvCaptureAVI_VFW* capture )
+IplImage* CvCaptureAVI_VFW::retrieveFrame()
 {
-    if( capture->avistream && capture->bmih )
+    if( avistream && bmih )
     {
-        cvInitImageHeader( &capture->frame,
-                           cvSize( capture->bmih->biWidth,
-                                   capture->bmih->biHeight ),
+        IplImage src;
+        cvInitImageHeader( &src, cvSize( bmih->biWidth, bmih->biHeight ),
                            IPL_DEPTH_8U, 3, IPL_ORIGIN_BL, 4 );
-        capture->frame.imageData = capture->frame.imageDataOrigin =
-            (char*)(capture->bmih + 1) + capture->data_offset;
-        return &capture->frame;
+        cvSetData( &src, (char*)(bmih + 1) + data_offset, src.widthStep );
+        if( !frame || frame->width != src.width || frame->height != src.height )
+        {
+            cvReleaseImage( &frame );
+            frame = cvCreateImage( cvGetSize(&src), 8, 3 );
+        }
+
+        cvFlip( &src, frame, 0 );
+        return frame;
     }
 
     return 0;
 }
 
-static double icvGetPropertyAVI_VFW( CvCaptureAVI_VFW* capture, int property_id )
+double CvCaptureAVI_VFW::getProperty( int property_id )
 {
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        return cvRound(capture->pos*1000./capture->fps);
+        return cvRound(pos*1000./fps);
     case CV_CAP_PROP_POS_FRAMES:
-        return capture->pos;
+        return pos;
     case CV_CAP_PROP_POS_AVI_RATIO:
-        return (capture->pos - capture->film_range.start_index)/
-               (capture->film_range.end_index - capture->film_range.start_index + 1e-10);
+        return (pos - film_range.start_index)/
+               (film_range.end_index - film_range.start_index + 1e-10);
     case CV_CAP_PROP_FRAME_WIDTH:
-        return capture->size.width;
+        return size.width;
     case CV_CAP_PROP_FRAME_HEIGHT:
-        return capture->size.height;
+        return size.height;
     case CV_CAP_PROP_FPS:
-        return capture->fps;
+        return fps;
     case CV_CAP_PROP_FOURCC:
-        return capture->aviinfo.fccHandler;
+        return aviinfo.fccHandler;
     case CV_CAP_PROP_FRAME_COUNT:
-        return capture->film_range.end_index - capture->film_range.start_index;
+        return film_range.end_index - film_range.start_index;
     }
     return 0;
 }
 
-
-static int icvSetPropertyAVI_VFW( CvCaptureAVI_VFW* capture,
-                                  int property_id, double value )
+bool CvCaptureAVI_VFW::setProperty( int property_id, double value )
 {
     switch( property_id )
     {
@@ -228,81 +247,93 @@ static int icvSetPropertyAVI_VFW( CvCaptureAVI_VFW* capture,
     case CV_CAP_PROP_POS_FRAMES:
     case CV_CAP_PROP_POS_AVI_RATIO:
         {
-            int pos;
             switch( property_id )
             {
             case CV_CAP_PROP_POS_MSEC:
-                pos = cvRound(value*capture->fps*0.001);
+                pos = cvRound(value*fps*0.001);
                 break;
             case CV_CAP_PROP_POS_AVI_RATIO:
-                pos = cvRound(value*(capture->film_range.end_index - 
-                                     capture->film_range.start_index) +
-                              capture->film_range.start_index);
+                pos = cvRound(value*(film_range.end_index - 
+                                     film_range.start_index) +
+                              film_range.start_index);
                 break;
             default:
                 pos = cvRound(value);
             }
-            if( pos < capture->film_range.start_index )
-                pos = capture->film_range.start_index;
-            if( pos > capture->film_range.end_index )
-                pos = capture->film_range.end_index;
-            capture->pos = pos;
+            if( pos < film_range.start_index )
+                pos = film_range.start_index;
+            if( pos > film_range.end_index )
+                pos = film_range.end_index;
         }
         break;
     default:
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
-static CvCaptureVTable captureAVI_VFW_vtable = 
+CvCapture* cvCreateFileCapture_VFW (const char* filename)
 {
-    6, 
-    (CvCaptureCloseFunc)          icvCloseAVI_VFW,
-    (CvCaptureGrabFrameFunc)      icvGrabFrameAVI_VFW,
-    (CvCaptureRetrieveFrameFunc)  icvRetrieveFrameAVI_VFW,
-    (CvCaptureGetPropertyFunc)    icvGetPropertyAVI_VFW,
-    (CvCaptureSetPropertyFunc)    icvSetPropertyAVI_VFW,
-    (CvCaptureGetDescriptionFunc) 0
-};
-
-
-CvCapture* cvCaptureFromFile_VFW (const char* filename)
-{
-    CvCaptureAVI_VFW* capture = 0;
-
-    if( filename )
-    {
-        capture = (CvCaptureAVI_VFW*)cvAlloc( sizeof(*capture));
-        memset( capture, 0, sizeof(*capture));
-
-        capture->vtable = &captureAVI_VFW_vtable;
-
-        if( !icvOpenAVI_VFW( capture, filename ))
-            cvReleaseCapture( (CvCapture**)&capture );
-    }
-
-    return (CvCapture*)capture;
+    CvCaptureAVI_VFW* capture = new CvCaptureAVI_VFW;
+    if( capture->open(filename) )
+        return capture;
+    delete capture;
+    return 0;
 }
+
 
 /********************* Capturing video from camera via VFW *********************/
 
-typedef struct CvCaptureCAM_VFW
+class CvCaptureCAM_VFW : public CvCapture
 {
-    CvCaptureVTable* vtable;
+public:
+    CvCaptureCAM_VFW() { init(); }
+    virtual ~CvCaptureCAM_VFW() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double) { return false; }
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+
+protected:
+    void init();
+    void closeHIC();
+    static LRESULT PASCAL frameCallback( HWND hWnd, VIDEOHDR* hdr );
+
     CAPDRIVERCAPS caps;
     HWND   capWnd;
     VIDEOHDR* hdr;
     DWORD  fourcc;
     HIC    hic;
-    IplImage* rgb_frame;
-    IplImage frame;
+    IplImage* frame;
+};
+
+
+void CvCaptureCAM_VFW::init()
+{
+    memset( &caps, 0, sizeof(caps) );
+    capWnd = 0;
+    hdr = 0;
+    fourcc = 0;
+    hic = 0;
+    frame = 0;
 }
-CvCaptureCAM_VFW;
+
+void CvCaptureCAM_VFW::closeHIC()
+{
+    if( hic )
+    {
+        ICDecompressEnd( hic );
+        ICClose( hic );
+        hic = 0;
+    }
+}
 
 
-static LRESULT PASCAL FrameCallbackProc( HWND hWnd, VIDEOHDR* hdr ) 
+LRESULT PASCAL CvCaptureCAM_VFW::frameCallback( HWND hWnd, VIDEOHDR* hdr )
 { 
     CvCaptureCAM_VFW* capture = 0;
 
@@ -316,11 +347,13 @@ static LRESULT PASCAL FrameCallbackProc( HWND hWnd, VIDEOHDR* hdr )
 
 
 // Initialize camera input
-static int icvOpenCAM_VFW( CvCaptureCAM_VFW* capture, int wIndex )
+bool CvCaptureCAM_VFW::open( int wIndex )
 {
     char szDeviceName[80];
     char szDeviceVersion[80];
     HWND hWndC = 0;
+
+    close();
     
     if( (unsigned)wIndex >= 10 )
         wIndex = 0;
@@ -342,17 +375,16 @@ static int icvOpenCAM_VFW( CvCaptureCAM_VFW* capture, int wIndex )
     
     if( hWndC )
     {
-        capture->capWnd = hWndC;
-        capture->hdr = 0;
-        capture->hic = 0;
-        capture->fourcc = (DWORD)-1;
-        capture->rgb_frame = 0;
+        capWnd = hWndC;
+        hdr = 0;
+        hic = 0;
+        fourcc = (DWORD)-1;
         
-        memset( &capture->caps, 0, sizeof(capture->caps));
-        capDriverGetCaps( hWndC, &capture->caps, sizeof(&capture->caps));
+        memset( &caps, 0, sizeof(caps));
+        capDriverGetCaps( hWndC, &caps, sizeof(&caps));
         ::MoveWindow( hWndC, 0, 0, 320, 240, TRUE );
-        capSetUserData( hWndC, (size_t)capture );
-        capSetCallbackOnFrame( hWndC, FrameCallbackProc ); 
+        capSetUserData( hWndC, (size_t)this );
+        capSetCallbackOnFrame( hWndC, frameCallback ); 
         CAPTUREPARMS p;
         capCaptureGetSetup(hWndC,&p,sizeof(CAPTUREPARMS));
         p.dwRequestMicroSecPerFrame = 66667/2;
@@ -361,341 +393,304 @@ static int icvOpenCAM_VFW( CvCaptureCAM_VFW* capture, int wIndex )
         capPreviewScale(hWndC,FALSE);
         capPreviewRate(hWndC,1);
     }
-    return capture->capWnd != 0;
+    return capWnd != 0;
 }
 
-static  void icvCloseCAM_VFW( CvCaptureCAM_VFW* capture )
-{
-    if( capture && capture->capWnd )
-    {
-        capSetCallbackOnFrame( capture->capWnd, NULL ); 
-        capDriverDisconnect( capture->capWnd );
-        DestroyWindow( capture->capWnd );
-        cvReleaseImage( &capture->rgb_frame );
-        if( capture->hic )
-        {
-            ICDecompressEnd( capture->hic );
-            ICClose( capture->hic );
-        }
 
-        capture->capWnd = 0;
-        capture->hic = 0;
-        capture->hdr = 0;
-        capture->fourcc = 0;
-        capture->rgb_frame = 0;
-        memset( &capture->frame, 0, sizeof(capture->frame));
+void CvCaptureCAM_VFW::close()
+{
+    if( capWnd )
+    {
+        capSetCallbackOnFrame( capWnd, NULL ); 
+        capDriverDisconnect( capWnd );
+        DestroyWindow( capWnd );
+        closeHIC();
     }
+    cvReleaseImage( &frame );
+    init();
 }
 
 
-static int icvGrabFrameCAM_VFW( CvCaptureCAM_VFW* capture )
+bool CvCaptureCAM_VFW::grabFrame()
 {
-    if( capture->capWnd )
+    if( capWnd )
     {
-        SendMessage( capture->capWnd, WM_CAP_GRAB_FRAME_NOSTOP, 0, 0 );
-        return 1;
+        SendMessage( capWnd, WM_CAP_GRAB_FRAME_NOSTOP, 0, 0 );
+        return true;
     }
-    return 0;
+    return false;
 }
 
 
-static IplImage* icvRetrieveFrameCAM_VFW( CvCaptureCAM_VFW* capture )
+IplImage* CvCaptureCAM_VFW::retrieveFrame()
 {
-    if( capture->capWnd )
+    BITMAPINFO vfmt;
+    memset( &vfmt, 0, sizeof(vfmt));
+    BITMAPINFOHEADER& vfmt0 = vfmt.bmiHeader;
+    int sz, prevWidth, prevHeight;
+    
+    if( !capWnd )
+        return 0;
+        
+    sz = capGetVideoFormat( capWnd, &vfmt, sizeof(vfmt));
+    prevWidth = frame ? frame->width : 0;
+    prevHeight = frame ? frame->height : 0;
+        
+    if( !hdr || hdr->lpData == 0 || sz == 0 )
+        return 0;
+
+    if( !frame || frame->width != vfmt0.biWidth || frame->height != vfmt0.biHeight )
     {
-        BITMAPINFO vfmt;
-        memset( &vfmt, 0, sizeof(vfmt));
-        int sz = capGetVideoFormat( capture->capWnd, &vfmt, sizeof(vfmt));
+        cvReleaseImage( &frame );
+        frame = cvCreateImage( cvSize( vfmt0.biWidth, vfmt0.biHeight ), 8, 3 );
+    }
 
-        if( capture->hdr && capture->hdr->lpData && sz != 0 )
+    if( vfmt.bmiHeader.biCompression != BI_RGB ||
+        vfmt.bmiHeader.biBitCount != 24 )
+    {
+        BITMAPINFOHEADER vfmt1 = icvBitmapHeader( vfmt0.biWidth, vfmt0.biHeight, 24 );
+
+        if( hic == 0 || fourcc != vfmt0.biCompression ||
+            prevWidth != vfmt0.biWidth || prevHeight != vfmt0.biHeight )
         {
-            long code = ICERR_OK;
-            char* frame_data = (char*)capture->hdr->lpData;
-
-            if( vfmt.bmiHeader.biCompression != BI_RGB ||
-                vfmt.bmiHeader.biBitCount != 24 )
+            closeHIC();
+            hic = ICOpen( MAKEFOURCC('V','I','D','C'),
+                          vfmt0.biCompression, ICMODE_DECOMPRESS );
+            if( hic )
             {
-                BITMAPINFOHEADER& vfmt0 = vfmt.bmiHeader;
-                BITMAPINFOHEADER vfmt1 = icvBitmapHeader( vfmt0.biWidth, vfmt0.biHeight, 24 );
-                code = ICERR_ERROR;
-
-                if( capture->hic == 0 ||
-                    capture->fourcc != vfmt0.biCompression ||
-                    capture->rgb_frame == 0 ||
-                    vfmt0.biWidth != capture->rgb_frame->width ||
-                    vfmt0.biHeight != capture->rgb_frame->height )
+                if( ICDecompressBegin( hic, &vfmt0, &vfmt1 ) != ICERR_OK )
                 {
-                    if( capture->hic )
-                    {
-                        ICDecompressEnd( capture->hic );
-                        ICClose( capture->hic );
-                    }
-                    capture->hic = ICOpen( MAKEFOURCC('V','I','D','C'),
-                                            vfmt0.biCompression, ICMODE_DECOMPRESS );
-                    if( capture->hic &&
-                        ICDecompressBegin( capture->hic, &vfmt0, &vfmt1 ) == ICERR_OK )
-                    {
-                        cvReleaseImage( &capture->rgb_frame );
-                        capture->rgb_frame = cvCreateImage(
-                            cvSize( vfmt0.biWidth, vfmt0.biHeight ), IPL_DEPTH_8U, 3 );
-                        capture->rgb_frame->origin = IPL_ORIGIN_BL;
-
-                        code = ICDecompress( capture->hic, 0,
-                                             &vfmt0, capture->hdr->lpData,
-                                             &vfmt1, capture->rgb_frame->imageData );
-                        frame_data = capture->rgb_frame->imageData;
-                    }
+                    closeHIC();
+                    return 0;
                 }
             }
-        
-            if( code == ICERR_OK )
-            {
-                cvInitImageHeader( &capture->frame,
-                                   cvSize(vfmt.bmiHeader.biWidth,
-                                          vfmt.bmiHeader.biHeight),
-                                   IPL_DEPTH_8U, 3, IPL_ORIGIN_BL, 4 );
-                capture->frame.imageData = capture->frame.imageDataOrigin = frame_data;
-                return &capture->frame;
-            }
         }
+
+        if( !hic || ICDecompress( hic, 0, &vfmt0, hdr->lpData,
+            &vfmt1, frame->imageData ) != ICERR_OK )
+        {
+            closeHIC();
+            return 0;
+        }
+
+        cvFlip( frame, frame, 0 );
+    }
+    else
+    {
+        IplImage src;
+        cvInitImageHeader( &src, cvSize(vfmt0.biWidth, vfmt0.biHeight),
+            IPL_DEPTH_8U, 3, IPL_ORIGIN_BL, 4 );
+        cvSetData( &src, hdr->lpData, src.widthStep );
+        cvFlip( &src, frame, 0 );
     }
 
-    return 0;
+    return frame;
 }
 
 
-static double icvGetPropertyCAM_VFW( CvCaptureCAM_VFW* capture, int property_id )
+double CvCaptureCAM_VFW::getProperty( int property_id )
 {
     switch( property_id )
     {
     case CV_CAP_PROP_FRAME_WIDTH:
-        return capture->frame.width;
+        return frame ? frame->width : 0;
     case CV_CAP_PROP_FRAME_HEIGHT:
-        return capture->frame.height;
+        return frame ? frame->height : 0;
     case CV_CAP_PROP_FOURCC:
-        return capture->fourcc;
+        return fourcc;
     }
     return 0;
 }
 
 
-
-static CvCaptureVTable captureCAM_VFW_vtable = 
+CvCapture* cvCreateCameraCapture_VFW( int index )
 {
-    6,
-    (CvCaptureCloseFunc)icvCloseCAM_VFW,
-    (CvCaptureGrabFrameFunc)icvGrabFrameCAM_VFW,
-    (CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_VFW,
-    (CvCaptureGetPropertyFunc)icvGetPropertyCAM_VFW,
-    (CvCaptureSetPropertyFunc)0,
-    (CvCaptureGetDescriptionFunc)0
-};
+    CvCaptureCAM_VFW* capture = new CvCaptureCAM_VFW;
 
+    if( capture->open( index ))
+        return capture;
 
-CvCapture* cvCaptureFromCAM_VFW( int index )
-{
-    CvCaptureCAM_VFW * capture = (CvCaptureCAM_VFW*)cvAlloc( sizeof(*capture));
-    memset( capture, 0, sizeof(*capture));
-    capture->vtable = &captureCAM_VFW_vtable;
-
-    if( icvOpenCAM_VFW( capture, index ))
-        return (CvCapture*)capture;
-
-    cvReleaseCapture( (CvCapture**)&capture );
+    delete capture;
     return 0;
 }
 
 
 /*************************** writing AVIs ******************************/
 
-typedef struct CvVFWWriter
+class CvVideoWriter_VFW : public CvVideoWriter
 {
-    CvVideoWriter base;
+public:
+    CvVideoWriter_VFW() { init(); }
+    virtual ~CvVideoWriter_VFW() { close(); }
+
+    virtual bool open( const char* filename, int fourcc,
+                       double fps, CvSize frameSize, bool isColor );
+    virtual void close();
+    virtual bool writeFrame( const IplImage* );
+
+protected:
+    void init();
+    bool createStreams( CvSize frameSize, bool isColor );
+    
     PAVIFILE      avifile;
     PAVISTREAM    compressed;
     PAVISTREAM    uncompressed;
     double        fps;
-    CvSize        frameSize;
-    IplImage    * tempFrame;
+    IplImage*     tempFrame;
     long          pos;
     int           fourcc;
-} CvVFWWriter;
+};
 
 
-static void icvCloseVideoWriter_VFW( CvVFWWriter* writer )
+void CvVideoWriter_VFW::init()
 {
-    if( writer )
-    {
-        if( writer->uncompressed )
-            AVIStreamRelease( writer->uncompressed );
-        if( writer->compressed )
-            AVIStreamRelease( writer->compressed );
-        if( writer->avifile )
-            AVIFileRelease( writer->avifile );
-        cvReleaseImage( &writer->tempFrame );
-        memset( writer, 0, sizeof(*writer));
-    }
+    avifile = 0;
+    compressed = uncompressed = 0;
+    fps = 0;
+    tempFrame = 0;
+    pos = 0;
+    fourcc = 0;
+}
+
+void CvVideoWriter_VFW::close()
+{
+    if( uncompressed )
+        AVIStreamRelease( uncompressed );
+    if( compressed )
+        AVIStreamRelease( compressed );
+    if( avifile )
+        AVIFileRelease( avifile );
+    cvReleaseImage( &tempFrame );
+    init();
 }
 
 
 // philipg.  Made this code capable of writing 8bpp gray scale bitmaps
-typedef struct tagBITMAPINFO_8Bit 
+struct BITMAPINFO_8Bit
 {
     BITMAPINFOHEADER bmiHeader;
     RGBQUAD          bmiColors[256];
-} BITMAPINFOHEADER_8BIT;
+};
 
-static int icvInitVideoWriter_VFW( CvVFWWriter* writer, int fourcc,
-                                   double fps, CvSize frameSize, int is_color )
+
+bool CvVideoWriter_VFW::open( const char* filename, int _fourcc, double _fps, CvSize frameSize, bool isColor )
 {
-    if( writer && writer->avifile )
+    close();
+    
+    icvInitCapture_VFW();
+    if( AVIFileOpen( &avifile, filename, OF_CREATE | OF_WRITE, 0 ) == AVIERR_OK )
+    {
+        fourcc = _fourcc;
+        fps = _fps;
+        if( frameSize.width > 0 && frameSize.height > 0 &&
+            !createStreams( frameSize, isColor ) )
+        {
+            close();
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool CvVideoWriter_VFW::createStreams( CvSize frameSize, bool isColor )
+{
+    if( !avifile )
+        return false;
+    AVISTREAMINFO aviinfo;
+
+    BITMAPINFO_8Bit bmih;
+    bmih.bmiHeader = icvBitmapHeader( frameSize.width, frameSize.height, isColor ? 24 : 8 );
+    for( int i = 0; i < 256; i++ )
+    {
+        bmih.bmiColors[i].rgbBlue = (BYTE)i;
+        bmih.bmiColors[i].rgbGreen = (BYTE)i;
+        bmih.bmiColors[i].rgbRed = (BYTE)i;
+        bmih.bmiColors[i].rgbReserved = 0;
+    }
+
+    memset( &aviinfo, 0, sizeof(aviinfo));
+    aviinfo.fccType = streamtypeVIDEO;
+    aviinfo.fccHandler = 0;
+    // use highest possible accuracy for dwRate/dwScale
+    aviinfo.dwScale = (DWORD)((double)0x7FFFFFFF / fps);
+    aviinfo.dwRate = cvRound(fps * aviinfo.dwScale);
+    aviinfo.rcFrame.top = aviinfo.rcFrame.left = 0;
+    aviinfo.rcFrame.right = frameSize.width;
+    aviinfo.rcFrame.bottom = frameSize.height;
+
+    if( AVIFileCreateStream( avifile, &uncompressed, &aviinfo ) == AVIERR_OK )
     {
         AVICOMPRESSOPTIONS copts, *pcopts = &copts;
-        AVISTREAMINFO aviinfo;
+        copts.fccType = streamtypeVIDEO;
+        copts.fccHandler = fourcc != -1 ? fourcc : 0; 
+        copts.dwKeyFrameEvery = 1; 
+        copts.dwQuality = (DWORD)-1; 
+        copts.dwBytesPerSecond = 0; 
+        copts.dwFlags = AVICOMPRESSF_VALID; 
+        copts.lpFormat = &bmih; 
+        copts.cbFormat = (isColor ? sizeof(BITMAPINFOHEADER) : sizeof(bmih));
+        copts.lpParms = 0; 
+        copts.cbParms = 0; 
+        copts.dwInterleaveEvery = 0;
 
-        assert( frameSize.width > 0 && frameSize.height > 0 );
-
-        BITMAPINFOHEADER_8BIT bmih;
-        int i;
-
-        bmih.bmiHeader = icvBitmapHeader( frameSize.width, frameSize.height, is_color ? 24 : 8 );
-        for( i = 0; i < 256; i++ )
+        if( fourcc != -1 || AVISaveOptions( 0, 0, 1, &uncompressed, &pcopts ) == TRUE )
         {
-            bmih.bmiColors[i].rgbBlue = (BYTE)i;
-            bmih.bmiColors[i].rgbGreen = (BYTE)i;
-            bmih.bmiColors[i].rgbRed = (BYTE)i;
-            bmih.bmiColors[i].rgbReserved = 0;
-        }
-
-        memset( &aviinfo, 0, sizeof(aviinfo));
-        aviinfo.fccType = streamtypeVIDEO;
-        aviinfo.fccHandler = 0;
-        // use highest possible accuracy for dwRate/dwScale
-        aviinfo.dwScale = (DWORD)((double)0x7FFFFFFF / fps);
-        aviinfo.dwRate = cvRound(fps * aviinfo.dwScale);
-        aviinfo.rcFrame.top = aviinfo.rcFrame.left = 0;
-        aviinfo.rcFrame.right = frameSize.width;
-        aviinfo.rcFrame.bottom = frameSize.height;
-
-        if( AVIFileCreateStream( writer->avifile,
-            &writer->uncompressed, &aviinfo ) == AVIERR_OK )
-        {
-            copts.fccType = streamtypeVIDEO;
-            copts.fccHandler = fourcc != -1 ? fourcc : 0; 
-            copts.dwKeyFrameEvery = 1; 
-            copts.dwQuality = (DWORD)-1; 
-            copts.dwBytesPerSecond = 0; 
-            copts.dwFlags = AVICOMPRESSF_VALID; 
-            copts.lpFormat = &bmih; 
-            copts.cbFormat = (is_color ? sizeof(BITMAPINFOHEADER) : sizeof(bmih));
-            copts.lpParms = 0; 
-            copts.cbParms = 0; 
-            copts.dwInterleaveEvery = 0;
-
-            if( fourcc != -1 ||
-                AVISaveOptions( 0, 0, 1, &writer->uncompressed, &pcopts ) == TRUE )
+            if( AVIMakeCompressedStream( &compressed, uncompressed, pcopts, 0 ) == AVIERR_OK &&
+                AVIStreamSetFormat( compressed, 0, &bmih, sizeof(bmih)) == AVIERR_OK )
             {
-                if( AVIMakeCompressedStream( &writer->compressed,
-                                             writer->uncompressed, pcopts, 0 ) == AVIERR_OK &&
-                    // check that the resolution was not changed
-                    bmih.bmiHeader.biWidth == frameSize.width &&
-                    bmih.bmiHeader.biHeight == frameSize.height &&
-                    AVIStreamSetFormat( writer->compressed, 0, &bmih, sizeof(bmih)) == AVIERR_OK )
-                {
-                    writer->fps = fps;
-                    writer->fourcc = (int)copts.fccHandler;
-                    writer->frameSize = frameSize;
-                    writer->tempFrame = cvCreateImage( frameSize, 8, (is_color ? 3 : 1) );
-                    return 1;
-                }
+                fps = fps;
+                fourcc = (int)copts.fccHandler;
+                frameSize = frameSize;
+                tempFrame = cvCreateImage( frameSize, 8, (isColor ? 3 : 1) );
+                return true;
             }
         }
     }
-    icvCloseVideoWriter_VFW( writer );
-    return 0;
+    return false;
 }
 
-int
-icvWriteFrame_VFW( CvVideoWriter* _writer, const IplImage* image )
-{
-    CvVFWWriter* writer = (CvVFWWriter*)_writer;
-    int code = 0;
 
-    CV_FUNCNAME( "icvWriteFrame_VFW" );
+bool CvVideoWriter_VFW::writeFrame( const IplImage* image )
+{
+    bool result = false;
+    CV_FUNCNAME( "CvVideoWriter_VFW::writeFrame" );
 
     __BEGIN__;
 
-    if( !writer || !image )
+    if( !image )
         EXIT;
 
-    if( writer->frameSize.width <= 0 || writer->frameSize.height <= 0 )
-        writer->frameSize = cvGetSize(image);
-    else if( writer->frameSize.width != image->width ||
-             writer->frameSize.height != image->height )
-    {
+    if( !compressed && !createStreams( cvGetSize(image), image->nChannels > 1 ))
+        EXIT;
+
+    if( image->width != tempFrame->width || image->height != tempFrame->height )
         CV_ERROR( CV_StsUnmatchedSizes,
             "image size is different from the currently set frame size" );
-    }
 
-    if( !writer->compressed && !icvInitVideoWriter_VFW( writer, writer->fourcc,
-        writer->fps, writer->frameSize, image->nChannels > 1 ))
-        EXIT;
-
-    if( image->nChannels != writer->tempFrame->nChannels ||
-        image->depth != writer->tempFrame->depth ||
-        image->origin == 0 )
+    if( image->nChannels != tempFrame->nChannels ||
+        image->depth != tempFrame->depth ||
+        image->origin == 0 ||
+        image->widthStep != cvAlign(image->width*image->nChannels*((image->depth & 255)/8), 4))
     {
-        cvConvertImage( image, writer->tempFrame,
-                        image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
-        image = (const IplImage*)writer->tempFrame;
+        cvConvertImage( image, tempFrame, image->origin == 0 ? CV_CVTIMG_FLIP : 0 );
+        image = (const IplImage*)tempFrame;
     }
 
-    code = AVIStreamWrite( writer->compressed, writer->pos++, 1, image->imageData,
-                           image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK;
+    result = AVIStreamWrite( compressed, pos++, 1, image->imageData,
+                             image->imageSize, AVIIF_KEYFRAME, 0, 0 ) == AVIERR_OK;
 
     __END__;
 
-    return code;
+    return result;
 }
 
-static CvVideoWriterVTable videoWriter_VFW_vtable = 
-{
-    2, 
-    (CvVideoWriterCloseFunc)icvCloseVideoWriter_VFW,
-    (CvVideoWriterWriteFrameFunc)icvWriteFrame_VFW
-};
-
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
-                                        double fps, CvSize frameSize, int is_color )
+                                        double fps, CvSize frameSize, int isColor )
 {
-    bool ok = false;
-    CvVFWWriter* writer = (CvVFWWriter*)cvAlloc( sizeof(*writer));
-    memset( writer, 0, sizeof(*writer));
-
-    icvInitCapture_VFW();
-    writer->base.vtable = &videoWriter_VFW_vtable;
-    
-    if( AVIFileOpen( &writer->avifile, filename, OF_CREATE | OF_WRITE, 0 ) == AVIERR_OK )
-    {
-        if( frameSize.width > 0 && frameSize.height > 0 )
-        {
-            if( !icvInitVideoWriter_VFW( writer, fourcc, fps, frameSize, is_color ))
-                goto _exit_;
-        }
-        else
-        {
-            /* postpone initialization until the first frame is written */
-            writer->fourcc = fourcc == -1 ? 0 : fourcc;
-            writer->fps = fps;
-            writer->frameSize = frameSize;
-        }
-    }
-
-    ok = true;
-
-_exit_:
-    if( !ok )
-        cvReleaseVideoWriter( (CvVideoWriter**)&writer );
-    
-    return (CvVideoWriter*)writer;
+    CvVideoWriter_VFW* writer = new CvVideoWriter_VFW;
+    if( writer->open( filename, fourcc, fps, frameSize, isColor != 0 ))
+        return writer;
+    delete writer;
+    return 0;
 }
