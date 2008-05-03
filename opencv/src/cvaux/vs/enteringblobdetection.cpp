@@ -39,11 +39,11 @@
 //M*/
 
 /*
-This file contain implementation of virtual interface of CvBlobDetector
-this implementation based on simple algorithm
-new blob is detected when several successive frames contains connected componets 
-which have uniform motion with not high speed.
-Also separation from border and already tracked blobs are considered.
+This file implements the virtual interface defined as "CvBlobDetector".
+This implementation based on a simple algorithm:
+A new blob is detected when several successive frames contains connected components 
+which have uniform motion not at an unreasonably high speed.
+Separation from border and already tracked blobs are also considered.
 */
 
 //#define USE_OBJECT_DETECTOR
