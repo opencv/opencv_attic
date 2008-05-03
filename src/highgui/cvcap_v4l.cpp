@@ -2670,7 +2670,7 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
 };
 
 
-class CvCaptureCAM_V4L_CPP : CvCapture
+class CvCaptureCAM_V4L_CPP : public CvCapture
 {
 public:
     CvCaptureCAM_V4L_CPP() { captureV4L = 0; }
@@ -2716,7 +2716,7 @@ IplImage* CvCaptureCAM_V4L_CPP::retrieveFrame()
 
 double CvCaptureCAM_V4L_CPP::getProperty( int propId )
 {
-    return captureV4L ? icvGetPropertyCAM_V4L( captureV4L, propId );
+    return captureV4L ? icvGetPropertyCAM_V4L( captureV4L, propId ) : 0;
 }
 
 bool CvCaptureCAM_V4L_CPP::setProperty( int propId, double value )

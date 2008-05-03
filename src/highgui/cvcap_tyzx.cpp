@@ -50,7 +50,7 @@
 /****************** Capturing video from TYZX stereo camera  *******************/
 /** Initially developed by Roman Stanchak rstanchak@yahoo.com                  */
 
-class CvCaptureCAM_TYZX : CvCapture
+class CvCaptureCAM_TYZX : public CvCapture
 {
 public:
     CvCaptureCAM_TYZX() { index = -1; image = 0; }
