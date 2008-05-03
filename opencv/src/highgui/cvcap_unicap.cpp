@@ -54,7 +54,7 @@ extern "C" {
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
 
-struct CvCapture_Unicap : CvCapture
+struct CvCapture_Unicap : public CvCapture
 {
   CvCapture_Unicap() { init(); }
   virtual ~CvCapture_Unicap() { close(); }

@@ -795,7 +795,7 @@ IplImage* CvCapture_GStreamer_CPP::retrieveFrame()
 
 double CvCapture_GStreamer_CPP::getProperty( int propId )
 {
-    return captureGS ? icvGetProperty_GStreamer( captureGS, propId );
+    return captureGS ? icvGetProperty_GStreamer( captureGS, propId ) : 0;
 }
 
 bool CvCapture_GStreamer_CPP::setProperty( int propId, double value )
