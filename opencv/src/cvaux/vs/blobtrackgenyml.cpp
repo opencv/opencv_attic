@@ -47,7 +47,7 @@ typedef struct DefBlobTrack
     int         FrameBegin;
     int         FrameLast;
     int         Saved; /* flag */
-}DefBlobTrack;
+} DefBlobTrack;
 
 class CvBlobTrackGenYML:public CvBlobTrackGen
 {
@@ -64,14 +64,16 @@ protected:
         char    video_name[1024];
         char*   struct_name = NULL;
         CvFileStorage* storage = cvOpenFileStorage(m_pFileName,NULL,CV_STORAGE_WRITE_TEXT);
+
         if(storage==NULL)
         {
-            printf("WARNING!!! Can not open %s file for trajectories writing",m_pFileName);
+            printf("WARNING!!! Cannot open %s file for trajectory output.", m_pFileName);
         }
 
-        for(i=0;i<1024 && m_pFileName[i]!='.' && m_pFileName[i]!=0;++i)video_name[i]=m_pFileName[i];
+        for(i=0; i<1024 && m_pFileName[i]!='.' && m_pFileName[i]!=0; ++i) video_name[i]=m_pFileName[i];
         video_name[i] = 0;
-        for(;i>0;i--)
+
+        for(;i>0; i--)
         {
             if(video_name[i-1] == '\\') break;
             if(video_name[i-1] == '/') break;
@@ -80,7 +82,8 @@ protected:
         struct_name = video_name + i;
 
         cvStartWriteStruct(storage, struct_name, CV_NODE_SEQ);
-        for(i=0;i<ObjNum;++i)
+
+        for(i=0; i<ObjNum; ++i)
         {
             char            obj_name[1024];
             DefBlobTrack*   pTrack = (DefBlobTrack*)m_TrackList.GetBlob(i);
@@ -102,7 +105,7 @@ protected:
             sprintf(obj_name,"%s_obj%d",struct_name,i);
             cvStartWriteStruct(storage, obj_name, CV_NODE_MAP);
             
-            { /* write pos */
+            {   /* Write position: */
                 int             j;
                 CvPoint2D32f    p;
                 cvStartWriteStruct(storage, "Pos", CV_NODE_SEQ|CV_NODE_FLOW);
@@ -116,11 +119,12 @@ protected:
                 cvEndWriteStruct( storage );
             }
             
-            { /* write size */
+            {   /* Write size: */
                 int             j;
                 CvPoint2D32f    p;
                 cvStartWriteStruct(storage, "Size", CV_NODE_SEQ|CV_NODE_FLOW);
-                for(j=0;j<pSeq->GetBlobNum();++j)
+
+                for(j=0; j<pSeq->GetBlobNum(); ++j)
                 {
                     CvBlob* pB = pSeq->GetBlob(j);
                     p.x = pB->w/(m_Size.width-1);
@@ -132,7 +136,9 @@ protected:
             cvEndWriteStruct( storage );
         }
         cvReleaseFileStorage(&storage);
-    }/* Save All */
+
+    }   /* Save All */
+
 public:
     CvBlobTrackGenYML():m_TrackList(sizeof(DefBlobTrack))
     {
@@ -140,25 +146,29 @@ public:
         m_pFileName = NULL;
         m_Size = cvSize(2,2);
     };
+
     ~CvBlobTrackGenYML()
     {
         int i;
         SaveAll();
-        for(i=m_TrackList.GetBlobNum();i>0;--i)
+
+        for(i=m_TrackList.GetBlobNum(); i>0; --i)
         {
             DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlob(i-1);
-            /* delete sequence */
+            /* Delete sequence: */
             delete pTrack->pSeq;
             pTrack->pSeq = NULL;
-        }/* check next track */
-    }/* destructor */
+        }   /* Check next track. */
+
+    }   /* Destructor. */
 
     void    SetFileName(char* pFileName){m_pFileName = pFileName;};
     void    AddBlob(CvBlob* pBlob)
     {
         DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlobByID(CV_BLOB_ID(pBlob));
+
         if(pTrack==NULL)
-        {/* add new track */
+        {   /* Add new track: */
             DefBlobTrack    Track;
             Track.blob = pBlob[0];
             Track.FrameBegin = m_Frame;
@@ -166,7 +176,7 @@ public:
             Track.Saved = 0;
             m_TrackList.AddBlob((CvBlob*)&Track);
             pTrack = (DefBlobTrack*)m_TrackList.GetBlobByID(CV_BLOB_ID(pBlob));
-        }/* add new track */
+        }   /* Add new track. */
 
         assert(pTrack);
         pTrack->FrameLast = m_Frame;
@@ -177,21 +187,26 @@ public:
     {
         int i;
         m_Size = cvSize(pImg->width,pImg->height);
-        for(i=m_TrackList.GetBlobNum();i>0;--i)
+
+        for(i=m_TrackList.GetBlobNum(); i>0; --i)
         {
             DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlob(i-1);
+
             if(pTrack->FrameLast < m_Frame && !pTrack->Saved)
-            {/* save track */
+            {   /* Save track: */
                 SaveAll();
-            }/* save track */
-        }/* check next track */
+            }   /* Save track. */
+
+        }   /* Check next track. */
+
         m_Frame++;
     }
+
     void Release()
     {
         delete this;
     }
-}; /* class CvBlobTrackGenYML */
+};  /* class CvBlobTrackGenYML */
 
 
 CvBlobTrackGen* cvCreateModuleBlobTrackGenYML()

@@ -41,9 +41,10 @@
 #include "_cvaux.h"
 
 /*======================= KALMAN FILTER AS TRACKER =========================*/
-/* state vector is (x,y,w,h,dx,dy,dw,dh)*/
-/* mesurment is (x,y,w,h) */
- /* dinamic matrix A */
+/* State vector is (x,y,w,h,dx,dy,dw,dh). */
+/* Measurement is (x,y,w,h) */
+
+/* Dynamic matrix A: */
 const float A8[] = { 1, 0, 0, 0, 1, 0, 0, 0,
                      0, 1, 0, 0, 0, 1, 0, 0,
                      0, 0, 1, 0, 0, 0, 1, 0,
@@ -52,21 +53,23 @@ const float A8[] = { 1, 0, 0, 0, 1, 0, 0, 0,
                      0, 0, 0, 0, 0, 1, 0, 0,
                      0, 0, 0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 0, 0, 1};
-/* measurement matrix H */
+
+/* Measurement matrix H: */
 const float H8[] = { 1, 0, 0, 0, 0, 0, 0, 0,
                      0, 1, 0, 0, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0, 0, 0};
 
-/* matices for zero size velosity */ 
-/* dinamic matrix A */
+/* Matices for zero size velocity: */ 
+/* Dynamic matrix A: */
 const float A6[] = { 1, 0, 0, 0, 1, 0,
                      0, 1, 0, 0, 0, 1,
                      0, 0, 1, 0, 0, 0,
                      0, 0, 0, 1, 0, 0,
                      0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 1};
-/* measurement matrix H */
+
+/* Measurement matrix H: */
 const float H6[] = { 1, 0, 0, 0, 0, 0,
                      0, 1, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0,
@@ -81,6 +84,7 @@ private:
     CvBlob      m_Blob;
     CvKalman*   m_pKalman;
     int         m_Frame;
+
 public:
     CvBlobTrackerOneKalman()
     {
@@ -96,10 +100,12 @@ public:
         cvZero(m_pKalman->state_post);
         cvZero(m_pKalman->state_pre);
     }
+
     ~CvBlobTrackerOneKalman()
     {
         cvReleaseKalman(&m_pKalman);
     }
+
     virtual void Init(CvBlob* pBlob, IplImage* /*pImg*/, IplImage* /*pImgFG*/ = NULL)
     {
         m_Blob = pBlob[0];
@@ -108,14 +114,16 @@ public:
         m_pKalman->state_post->data.fl[2] = CV_BLOB_WX(pBlob);
         m_pKalman->state_post->data.fl[3] = CV_BLOB_WY(pBlob);
     }
+
     virtual CvBlob* Process(CvBlob* pBlob, IplImage* /*pImg*/, IplImage* /*pImgFG*/ = NULL)
     {
         CvBlob* pBlobRes = &m_Blob;
         float   Z[4];
         CvMat   Zmat = cvMat(4,1,CV_32F,Z);
         m_Blob = pBlob[0];
+
         if(m_Frame < 2)
-        {/* first call */
+        {   /* First call: */
             m_pKalman->state_post->data.fl[0+4] = CV_BLOB_X(pBlob)-m_pKalman->state_post->data.fl[0];
             m_pKalman->state_post->data.fl[1+4] = CV_BLOB_Y(pBlob)-m_pKalman->state_post->data.fl[1];
             if(m_pKalman->DP>6)
@@ -130,7 +138,7 @@ public:
             memcpy(m_pKalman->state_pre->data.fl,m_pKalman->state_post->data.fl,sizeof(float)*STATE_NUM);
         }
         else
-        {/* another call */
+        {   /* Another call: */
             Z[0] = CV_BLOB_X(pBlob);
             Z[1] = CV_BLOB_Y(pBlob);
             Z[2] = CV_BLOB_WX(pBlob);
@@ -150,7 +158,7 @@ public:
     {
         delete this;
     }
-}; /* class CvBlobTrackerOneKalman */
+};  /* class CvBlobTrackerOneKalman */
 
 static CvBlobTrackerOne* cvCreateModuleBlobTrackerOneKalman()
 {

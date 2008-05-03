@@ -76,8 +76,9 @@ static int CompareContour(const void* a, const void* b, void* )
     if(dx < wt && dy < ht) return 1;
     return 0;
 }
+
 void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* storage)
-{/* create contours */
+{   /* Create contours: */
     IplImage*       pIB = NULL;
     CvSeq*          cnt = NULL;
     CvSeq*          cnt_list = cvCreateSeq(0,sizeof(CvSeq),sizeof(CvSeq*), storage );
@@ -89,16 +90,16 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
     cvFindContours(pIB,storage, &cnt, sizeof(CvContour), CV_RETR_EXTERNAL);
     cvReleaseImage(&pIB);
 
-    /* create cnt_list*/
-    /* process each contours*/
-    for(;cnt;cnt=cnt->h_next)
+    /* Create cnt_list.      */
+    /* Process each contour: */
+    for(; cnt; cnt=cnt->h_next)
     {
         cvSeqPush( cnt_list, &cnt);
     }
 
     claster_num = cvSeqPartition( cnt_list, storage, &clasters, CompareContour, NULL );
 
-    for(claster_cur=0;claster_cur<claster_num;++claster_cur)
+    for(claster_cur=0; claster_cur<claster_num; ++claster_cur)
     {
         int         cnt_cur;
         CvBlob      NewBlob;
@@ -107,7 +108,7 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
         CvRect      rect_res = cvRect(-1,-1,-1,-1);
         CvMat       mat;
 
-        for(cnt_cur=0;cnt_cur<clasters->total;++cnt_cur)
+        for(cnt_cur=0; cnt_cur<clasters->total; ++cnt_cur)
         {
             CvRect  rect;
             CvSeq*  cnt;
@@ -121,7 +122,7 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
                 rect_res = rect;
             }
             else
-            {/* unite rects */
+            {   /* Unite rects: */
                 int x0,x1,y0,y1;
                 x0 = MIN(rect_res.x,rect.x);
                 y0 = MIN(rect_res.y,rect.y);
@@ -153,25 +154,27 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
         }
         NewBlob = cvBlob(rect_res.x+(float)X,rect_res.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
         pBlobs->AddBlob(&NewBlob);
-    }/* next cluster */
+
+    }   /* Next cluster. */
 
     #if 0
-    {// debug info
+    {   // Debug info:
         IplImage* pI = cvCreateImage(cvSize(pFG->width,pFG->height),IPL_DEPTH_8U,3);
         cvZero(pI);
-        for(claster_cur=0;claster_cur<claster_num;++claster_cur)
+        for(claster_cur=0; claster_cur<claster_num; ++claster_cur)
         {
             int         cnt_cur;
             CvScalar    color = CV_RGB(rand()%256,rand()%256,rand()%256);
-            for(cnt_cur=0;cnt_cur<clasters->total;++cnt_cur)
+
+            for(cnt_cur=0; cnt_cur<clasters->total; ++cnt_cur)
             {
                 CvSeq*  cnt;
                 int k = *(int*)cvGetSeqElem( clasters, cnt_cur );
                 if(k!=claster_cur) continue;
                 cnt = *(CvSeq**)cvGetSeqElem( cnt_list, cnt_cur );
                 cvDrawContours( pI, cnt, color, color, 0, 1, 8);
-
             }
+
             CvBlob* pB = pBlobs->GetBlob(claster_cur);
             int x = cvRound(CV_BLOB_RX(pB)), y = cvRound(CV_BLOB_RY(pB));
             cvEllipse( pI, 
@@ -180,25 +183,28 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
                 0, 0, 360, 
                 color, 1 );
         }
+
         cvNamedWindow( "Clusters", 0);
         cvShowImage( "Clusters",pI );
 
         cvReleaseImage(&pI);
 
-    }/* debug info */
+    }   /* Debug info. */
     #endif
-}/* cvFindBlobsByCCClasters */
 
-/* simple blob detector  */
-/* numer of successive frame to analyse */
+}   /* cvFindBlobsByCCClasters */
+
+/* Simple blob detector.  */
+/* Number of successive frame to analyse: */
 #define EBD_FRAME_NUM   5
 class CvBlobDetectorSimple:public CvBlobDetector
 {
 public:
     CvBlobDetectorSimple();
-    ~CvBlobDetectorSimple();
+   ~CvBlobDetectorSimple();
     int DetectNewBlob(IplImage* pImg, IplImage* pFGMask, CvBlobSeq* pNewBlobList, CvBlobSeq* pOldBlobList);
     void Release(){delete this;};
+
 protected:
     IplImage*       m_pMaskBlobNew;
     IplImage*       m_pMaskBlobExist;
@@ -209,7 +215,7 @@ protected:
 /* Blob detector creator (sole interface function for this file) */
 CvBlobDetector* cvCreateBlobDetectorSimple(){return new CvBlobDetectorSimple;};
 
-/* Constructor of BlobDetector */
+/* Constructor of BlobDetector: */
 CvBlobDetectorSimple::CvBlobDetectorSimple()
 {
     int i = 0;
@@ -218,55 +224,60 @@ CvBlobDetectorSimple::CvBlobDetectorSimple()
     for(i=0;i<EBD_FRAME_NUM;++i)m_pBlobLists[i] = NULL;
 }
 
-/* destructor of BlobDetector*/
+/* Destructor of BlobDetector: */
 CvBlobDetectorSimple::~CvBlobDetectorSimple()
 {
     int i;
     if(m_pMaskBlobExist) cvReleaseImage(&m_pMaskBlobExist);
     if(m_pMaskBlobNew) cvReleaseImage(&m_pMaskBlobNew);
-    for(i=0;i<EBD_FRAME_NUM;++i)delete m_pBlobLists[i];
-}/* cvReleaseBlobDetector */
+    for(i=0; i<EBD_FRAME_NUM; ++i) delete m_pBlobLists[i];
+}   /* cvReleaseBlobDetector */
 
-/* cvDetectNewBlobs return 1 and fill blob pNewBlob by blob parameters if new blob is detected */
+/* cvDetectNewBlobs
+ * return 1 and fill blob pNewBlob by blob parameters
+ * if new blob is detected:
+ */
 int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlobSeq* pNewBlobList, CvBlobSeq* pOldBlobList)
 {
-    int         res = 0;
+    int         result = 0;
     CvSize      S = cvSize(pFGMask->width,pFGMask->height);
     if(m_pMaskBlobNew == NULL ) m_pMaskBlobNew = cvCreateImage(S,IPL_DEPTH_8U,1);
     if(m_pMaskBlobExist == NULL ) m_pMaskBlobExist = cvCreateImage(S,IPL_DEPTH_8U,1);
     
-    /* shift blob list */
+    /* Shift blob list: */
     {
         int     i;
         if(m_pBlobLists[0]) delete m_pBlobLists[0];
         for(i=1;i<EBD_FRAME_NUM;++i)m_pBlobLists[i-1]=m_pBlobLists[i];
         m_pBlobLists[EBD_FRAME_NUM-1] = new CvBlobSeq;
-    }/* shift blob list */
+    }   /* Shift blob list. */
     
-    /* create exist blob mask */
+    /* Create exist blob mask: */
     cvCopy(pFGMask, m_pMaskBlobNew);
 
-    /* create contours and add new blobs to blob list */
-    {/* create blobs */
+    /* Create contours and add new blobs to blob list: */
+    {   /* Create blobs: */
         CvBlobSeq       Blobs;
         CvMemStorage*   storage = cvCreateMemStorage();
 
 #if 1
-        {/* glue contours */
+        {   /* Glue contours: */
             cvFindBlobsByCCClasters(m_pMaskBlobNew, &Blobs, storage );
-        }/* glue contours */
+        }   /* Glue contours. */
 #else
-        { /**/
+        {   /**/
             IplImage*       pIB = cvCloneImage(m_pMaskBlobNew);
             CvSeq*          cnts = NULL;
             CvSeq*          cnt = NULL;
             cvThreshold(pIB,pIB,128,255,CV_THRESH_BINARY);
             cvFindContours(pIB,storage, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
-            /* process each contours*/
-            for(cnt = cnts;cnt;cnt=cnt->h_next)
+
+            /* Process each contours: */
+            for(cnt = cnts; cnt; cnt=cnt->h_next)
             {
                 CvBlob  NewBlob;
-                /* image moments */
+
+                /* Image moments: */
                 double      M00,X,Y,XX,YY;
                 CvMoments   m;
                 CvRect      r = ((CvContour*)cnt)->rect;
@@ -281,14 +292,15 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                 YY = (cvGetSpatialMoment( &m, 0, 2 )/M00) - Y*Y;
                 NewBlob = cvBlob(r.x+(float)X,r.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
                 Blobs.AddBlob(&NewBlob);
-            }/* next contour */
+            }   /* Next contour. */
             cvReleaseImage(&pIB);
-        }/* one contour - one blob */
+
+        }   /* One contour - one blob. */
 #endif
 
-        {/* Delete small and intersected blobs */
+        {   /* Delete small and intersected blobs: */
             int i;
-            for(i=Blobs.GetBlobNum();i>0;i--)
+            for(i=Blobs.GetBlobNum(); i>0; i--)
             {
                 CvBlob* pB = Blobs.GetBlob(i-1);
 
@@ -300,26 +312,26 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                 if(pOldBlobList)
                 {
                     int j;
-                    for(j=pOldBlobList->GetBlobNum();j>0;j--)
+                    for(j=pOldBlobList->GetBlobNum(); j>0; j--)
                     {
                         CvBlob* pBOld = pOldBlobList->GetBlob(j-1);
                         if((fabs(pBOld->x-pB->x) < (CV_BLOB_RX(pBOld)+CV_BLOB_RX(pB))) &&
                            (fabs(pBOld->y-pB->y) < (CV_BLOB_RY(pBOld)+CV_BLOB_RY(pB))))
-                        {/* intersection is present, delete blob from list*/
+                        {   /* Intersection is present, so delete blob from list: */
                             Blobs.DelBlob(i-1);
                             break;
                         }
-                    }/* checl next old blob */
-                }/*if pOldBlobList */
-            }/* check next blob */
-        }/* Delete small and intersected blobs */
+                    }   /* Check next old blob. */
+                }   /*  if pOldBlobList */
+            }   /* Check next blob. */
+        }   /*  Delete small and intersected blobs. */
 
-        {/* bubble sort blobs by size */
+        {   /* Bubble-sort blobs by size: */
             int N = Blobs.GetBlobNum();
             int i,j;
-            for(i=1;i<N;++i)
+            for(i=1; i<N; ++i)
             {
-                for(j=i;j>0;--j)
+                for(j=i; j>0; --j)
                 {
                     CvBlob  temp;
                     float   AreaP, AreaN;
@@ -333,17 +345,21 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                     pP[0] = temp;
                 }
             }
-            /* copy only first 10 blobs */
-            for(i=0;i<MIN(N,10);++i)
+
+            /* Copy only first 10 blobs: */
+            for(i=0; i<MIN(N,10); ++i)
             {
                 m_pBlobLists[EBD_FRAME_NUM-1]->AddBlob(Blobs.GetBlob(i));
             }
-        }/* sort blobs by size */
-        cvReleaseMemStorage(&storage);
-    }/* create Blobs */
 
-    /* analize blob list to find best blob trajectory */
-    {/* analize blob list to find best blob trajectory */
+        }   /* Sort blobs by size. */
+
+        cvReleaseMemStorage(&storage);
+
+    }   /* Create blobs. */
+
+    /* Analyze blob list to find best blob trajectory: */
+    {
         int     Count = 0;
         int     pBLIndex[EBD_FRAME_NUM];
         int     pBL_BEST[EBD_FRAME_NUM];
@@ -351,60 +367,62 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
         int     finish = 0;
         double  BestError = -1;
         int     Good = 1;
-        for(i=0;i<EBD_FRAME_NUM;++i)
+
+        for(i=0; i<EBD_FRAME_NUM; ++i)
         {
             pBLIndex[i] = 0;
             pBL_BEST[i] = 0;
         }
         
-        /* check configuration exist */
-        for(i=0;Good && (i<EBD_FRAME_NUM);++i)
+        /* Check configuration exist: */
+        for(i=0; Good && (i<EBD_FRAME_NUM); ++i)
             if(m_pBlobLists[i] == NULL || m_pBlobLists[i]->GetBlobNum() == 0)
                 Good = 0;
 
         if(Good)
-        do{/* for each configuration */
+        do{ /* For each configuration: */
             CvBlob* pBL[EBD_FRAME_NUM];
             int     Good = 1;
             double  Error = 0;
             CvBlob* pBNew = m_pBlobLists[EBD_FRAME_NUM-1]->GetBlob(pBLIndex[EBD_FRAME_NUM-1]);
-            for(i=0;i<EBD_FRAME_NUM;++i)pBL[i] = m_pBlobLists[i]->GetBlob(pBLIndex[i]);
+
+            for(i=0; i<EBD_FRAME_NUM; ++i)  pBL[i] = m_pBlobLists[i]->GetBlob(pBLIndex[i]);
 
             Count++;
 
-            /* check intersection last blob with existed */
+            /* Check intersection last blob with existed: */
             if(Good && pOldBlobList)
-            { /* check intersection last blob with existed */
+            {   /* Check intersection last blob with existed: */
                 int     k;
-                for(k=pOldBlobList->GetBlobNum();k>0;--k)
+                for(k=pOldBlobList->GetBlobNum(); k>0; --k)
                 {
                     CvBlob* pBOld = pOldBlobList->GetBlob(k-1);
                     if((fabs(pBOld->x-pBNew->x) < (CV_BLOB_RX(pBOld)+CV_BLOB_RX(pBNew))) &&
                        (fabs(pBOld->y-pBNew->y) < (CV_BLOB_RY(pBOld)+CV_BLOB_RY(pBNew))))
                         Good = 0;
                 }
-            }/* check intersection last blob with existed */
+            }   /* Check intersection last blob with existed. */
 
-            /* check distance to image border */
+            /* Check distance to image border: */
             if(Good)
-            { /* check distance to image border */
+            {   /* Check distance to image border: */
                 CvBlob*  pB = pBNew;
                 float    dx = MIN(pB->x,S.width-pB->x)/CV_BLOB_RX(pB);
                 float    dy = MIN(pB->y,S.height-pB->y)/CV_BLOB_RY(pB);
 
                 if(dx < 1.1 || dy < 1.1) Good = 0;
-            }/* check distance to image border */
+            }   /* Check distance to image border. */
 
-            /* check uniform moveing */
+            /* Check uniform motion: */
             if(Good)
-            {/* check uniform moveing */
+            {
                 int     N = EBD_FRAME_NUM;
                 float   sum[2] = {0,0};   
                 float   jsum[2] = {0,0};
                 float   a[2],b[2]; /* estimated parameters of moving x(t) = a*t+b*/
-                int     j;
-                
-                for(j=0;j<N;++j)
+
+                int j;
+                for(j=0; j<N; ++j)
                 {
                     float   x = pBL[j]->x;
                     float   y = pBL[j]->y;
@@ -413,49 +431,56 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                     sum[1] += y;
                     jsum[1] += j*y;
                 }
+
                 a[0] = 6*((1-N)*sum[0]+2*jsum[0])/(N*(N*N-1));
                 b[0] = -2*((1-2*N)*sum[0]+3*jsum[0])/(N*(N+1));
                 a[1] = 6*((1-N)*sum[1]+2*jsum[1])/(N*(N*N-1));
                 b[1] = -2*((1-2*N)*sum[1]+3*jsum[1])/(N*(N+1));
-                for(j=0;j<N;++j)
+
+                for(j=0; j<N; ++j)
                 {
                     Error += 
                         pow(a[0]*j+b[0]-pBL[j]->x,2)+
                         pow(a[1]*j+b[1]-pBL[j]->y,2);
                 }
+
                 Error = sqrt(Error/N);
+
                 if( Error > S.width*0.01 || 
                     fabs(a[0])>S.width*0.1 ||
                     fabs(a[1])>S.height*0.1)
                     Good = 0;
-            }/* check configuration */
+
+            }   /* Check configuration. */
 
             
-            /* new best trajectory */
+            /* New best trajectory: */
             if(Good && (BestError == -1 || BestError > Error))
-            {/* new best trajectory */
-                for(i=0;i<EBD_FRAME_NUM;++i)
+            {
+                for(i=0; i<EBD_FRAME_NUM; ++i)
                 {
                     pBL_BEST[i] = pBLIndex[i];
                 }
                 BestError = Error;
-            }/* new best trajectory */
+            }   /* New best trajectory. */
 
-            /* set next configuration */
-            for(i=0;i<EBD_FRAME_NUM;++i)
+            /* Set next configuration: */
+            for(i=0; i<EBD_FRAME_NUM; ++i)
             {
                 pBLIndex[i]++;
                 if(pBLIndex[i] != m_pBlobLists[i]->GetBlobNum()) break;
                 pBLIndex[i]=0;
-            }/* next time shift */
+            }   /* Next time shift. */
+
             if(i==EBD_FRAME_NUM)finish=1;
-        }while(!finish); /* check next time configuration of connected components */
+
+        } while(!finish);	/* Check next time configuration of connected components. */
 
         #if 0
         {/**/
             printf("BlobDetector configurations = %d [",Count);
             int i;
-            for(i=0;i<EBD_FRAME_NUM;++i)
+            for(i=0; i<EBD_FRAME_NUM; ++i)
             {
                 printf("%d,",m_pBlobLists[i]?m_pBlobLists[i]->GetBlobNum():0);
             }
@@ -465,25 +490,29 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
         #endif
 
         if(BestError != -1)
-        {/* put new blob to output and delete from blob list */
+        {   /* Write new blob to output and delete from blob list: */
             CvBlob* pNewBlob = m_pBlobLists[EBD_FRAME_NUM-1]->GetBlob(pBL_BEST[EBD_FRAME_NUM-1]);
             pNewBlobList->AddBlob(pNewBlob);
-            for(i=0;i<EBD_FRAME_NUM;++i)
-            {/* remove blob from each list */
+
+            for(i=0; i<EBD_FRAME_NUM; ++i)
+            {   /* Remove blob from each list: */
                 m_pBlobLists[i]->DelBlob(pBL_BEST[i]);
-            }/* remove blob from each list */
-            res = 1;
-        }/* put new blob to output and delete from blob list */
-    }/* analize blod list to find best blob trajectory */
+            }   /* Remove blob from each list. */
 
-    return res;
-}/* cvDetectNewBlob */
+            result = 1;
+
+        }   /* Write new blob to output and delete from blob list. */
+    }   /*  Analyze blob list to find best blob trajectory. */
+
+    return result;
+
+}   /* cvDetectNewBlob */
 
 
 
 
-/* simple blob detector2  */
-/* numer of successive frame to analyse */
+/* Simple blob detector2.  */
+/* Number of successive frames to analyse: */
 #define SEQ_SIZE_MAX    30
 #define SEQ_NUM         1000
 typedef struct
@@ -491,13 +520,15 @@ typedef struct
     int     size;
     CvBlob* pBlobs[SEQ_SIZE_MAX];
 } DefSeq;
+
 class CvBlobDetectorCC:public CvBlobDetector
 {
 public:
     CvBlobDetectorCC();
-    ~CvBlobDetectorCC();
+   ~CvBlobDetectorCC();
     int DetectNewBlob(IplImage* pImg, IplImage* pFGMask, CvBlobSeq* pNewBlobList, CvBlobSeq* pOldBlobList);
     void Release(){delete this;};
+
     virtual void ParamUpdate()
     {
         if(SEQ_SIZE<1)SEQ_SIZE=1;
@@ -520,8 +551,9 @@ public:
         }
 #endif
     }
+
 private:
-    /* lists of connected components detected on previouse frames */
+    /* Lists of connected components detected on previous frames: */
     CvBlobSeq*      m_pBlobLists[SEQ_SIZE_MAX];
     DefSeq          m_TrackSeq[SEQ_NUM];
     int             m_TrackNum;
@@ -531,9 +563,10 @@ private:
     int             m_Clastering;
     int             SEQ_SIZE;
 
-    /* if not 0 then the detector is loaded from the specified file
-       and it is applied for splitting blobs which actually correspond
-       to groups of objects */ 
+    /* If not 0 then the detector is loaded from the specified file
+     * and it is applied for splitting blobs which actually correspond
+     * to groups of objects:
+     */ 
     char*           m_param_split_detector_file_name;
     float           m_param_roi_scale;
     int             m_param_only_roi;
@@ -548,10 +581,10 @@ private:
     CvBlobSeq       m_debug_blob_seq;
 };
 
-/* Blob detector creator (sole interface function for this file) */
+/* Blob detector creator (sole interface function for this file): */
 CvBlobDetector* cvCreateBlobDetectorCC(){return new CvBlobDetectorCC;}
 
-/* Constructor of BlobDetector */
+/* Constructor for BlobDetector: */
 CvBlobDetectorCC::CvBlobDetectorCC() :
     m_split_detector(0),
     m_detected_blob_seq(sizeof(CvDetectedBlob)),
@@ -604,14 +637,13 @@ CvBlobDetectorCC::CvBlobDetectorCC() :
     m_roi_seq = cvCreateSeq( 0, sizeof(*m_roi_seq), sizeof(CvRect), cvCreateMemStorage() );
     
     SetModuleName("BD_CC");
-
 }
 
-/* destructor of BlobDetector*/
+/* Destructor for BlobDetector: */
 CvBlobDetectorCC::~CvBlobDetectorCC()
 {
     int i;
-    for(i=0;i<SEQ_SIZE_MAX;++i)
+    for(i=0; i<SEQ_SIZE_MAX; ++i)
     {
         if(m_pBlobLists[i]) 
             delete m_pBlobLists[i];
@@ -623,32 +655,38 @@ CvBlobDetectorCC::~CvBlobDetectorCC()
         m_roi_seq = 0;
     }
     //cvDestroyWindow( "EnteringBlobDetectionDebug" );
-}/* cvReleaseBlobDetector */
+}   /* cvReleaseBlobDetector */
 
 
-/* cvDetectNewBlobs return 1 and fill blob pNewBlob by blob parameters if new blob is detected */
+/* cvDetectNewBlobs
+ * Return 1 and fill blob pNewBlob  with
+ * blob parameters if new blob is detected:
+ */
 int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlobSeq* pNewBlobList, CvBlobSeq* pOldBlobList)
 {
-    int         res = 0;
+    int         result = 0;
     CvSize      S = cvSize(pFGMask->width,pFGMask->height);
     
-    /* shift blob list */
+    /* Shift blob list: */
     {
         int     i;
         if(m_pBlobLists[SEQ_SIZE-1]) delete m_pBlobLists[SEQ_SIZE-1];
-        for(i=SEQ_SIZE-1;i>0;--i)m_pBlobLists[i]=m_pBlobLists[i-1];
+
+        for(i=SEQ_SIZE-1; i>0; --i)  m_pBlobLists[i] = m_pBlobLists[i-1];
+
         m_pBlobLists[0] = new CvBlobSeq;
-    }/* shift blob list */
+
+    }   /* Shift blob list. */
     
-    /* create contours and add new blobs to blob list */
-    {/* create blobs */
+    /* Create contours and add new blobs to blob list: */
+    {   /* Create blobs: */
         CvBlobSeq       Blobs;
         CvMemStorage*   storage = cvCreateMemStorage();
 
         if(m_Clastering)
-        {/* glue contours */
+        {   /* Glue contours: */
             cvFindBlobsByCCClasters(pFGMask, &Blobs, storage );
-        }/* glue contours */
+        }   /* Glue contours. */
         else
         { /**/
             IplImage*       pIB = cvCloneImage(pFGMask);
@@ -656,11 +694,12 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
             CvSeq*          cnt = NULL;
             cvThreshold(pIB,pIB,128,255,CV_THRESH_BINARY);
             cvFindContours(pIB,storage, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
-            /* process each contours*/
-            for(cnt = cnts;cnt;cnt=cnt->h_next)
+
+            /* Process each contour: */
+            for(cnt = cnts; cnt; cnt=cnt->h_next)
             {
                 CvBlob  NewBlob;
-                /* image moments */
+                /* Image moments: */
                 double      M00,X,Y,XX,YY;
                 CvMoments   m;
                 CvRect      r = ((CvContour*)cnt)->rect;
@@ -675,13 +714,16 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                 YY = (cvGetSpatialMoment( &m, 0, 2 )/M00) - Y*Y;
                 NewBlob = cvBlob(r.x+(float)X,r.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
                 Blobs.AddBlob(&NewBlob);
-            }/* next contour */
-            cvReleaseImage(&pIB);
-        }/* one contour - one blob */
 
-        {/* Delete small and intersected blobs */
+            }   /* Next contour. */
+
+            cvReleaseImage(&pIB);
+
+        }   /* One contour - one blob. */
+
+        {   /* Delete small and intersected blobs: */
             int i;
-            for(i=Blobs.GetBlobNum();i>0;i--)
+            for(i=Blobs.GetBlobNum(); i>0; i--)
             {
                 CvBlob* pB = Blobs.GetBlob(i-1);
 
@@ -690,29 +732,30 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                     Blobs.DelBlob(i-1);
                     continue;
                 }
+
                 if(pOldBlobList)
                 {
                     int j;
-                    for(j=pOldBlobList->GetBlobNum();j>0;j--)
+                    for(j=pOldBlobList->GetBlobNum(); j>0; j--)
                     {
                         CvBlob* pBOld = pOldBlobList->GetBlob(j-1);
                         if((fabs(pBOld->x-pB->x) < (CV_BLOB_RX(pBOld)+CV_BLOB_RX(pB))) &&
                            (fabs(pBOld->y-pB->y) < (CV_BLOB_RY(pBOld)+CV_BLOB_RY(pB))))
-                        {/* intersection is present, delete blob from list*/
+                        {   /* Intersection detected, delete blob from list: */
                             Blobs.DelBlob(i-1);
                             break;
                         }
-                    }/* checl next old blob */
-                }/*if pOldBlobList */
-            }/* check next blob */
-        }/* Delete small and intersected blobs */
+                    }   /* Check next old blob. */
+                }   /*  if pOldBlobList. */
+            }   /*  Check next blob. */
+        }   /*  Delete small and intersected blobs. */
 
-        {/* bubble sort blobs by size */
+        {   /* Bubble-sort blobs by size: */
             int N = Blobs.GetBlobNum();
             int i,j;
-            for(i=1;i<N;++i)
+            for(i=1; i<N; ++i)
             {
-                for(j=i;j>0;--j)
+                for(j=i; j>0; --j)
                 {
                     CvBlob  temp;
                     float   AreaP, AreaN;
@@ -726,40 +769,47 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                     pP[0] = temp;
                 }
             }
-            /* copy only first 10 blobs */
-            for(i=0;i<MIN(N,10);++i)
+
+            /* Copy only first 10 blobs: */
+            for(i=0; i<MIN(N,10); ++i)
             {
                 m_pBlobLists[0]->AddBlob(Blobs.GetBlob(i));
             }
-        }/* sort blobs by size */
-        cvReleaseMemStorage(&storage);
-    }/* create Blobs */
 
-    {/* shift each track */
-        int     j;
-        for(j=0;j<m_TrackNum;++j)
+        }   /* Sort blobs by size. */
+
+        cvReleaseMemStorage(&storage);
+
+    }   /* Create blobs. */
+
+    {   /* Shift each track: */
+        int j;
+        for(j=0; j<m_TrackNum; ++j)
         {
             int     i;
             DefSeq* pTrack = m_TrackSeq+j;
-            for(i=SEQ_SIZE-1;i>0;--i)pTrack->pBlobs[i]=pTrack->pBlobs[i-1];
+
+            for(i=SEQ_SIZE-1; i>0; --i)
+                pTrack->pBlobs[i] = pTrack->pBlobs[i-1];
+
             pTrack->pBlobs[0] = NULL;
             if(pTrack->size == SEQ_SIZE)pTrack->size--;
         }
-    }/* shift each track */
+    }   /* Shift each track. */
 
-    /* analize blob list to find best blob trajectory */
-    {/* analize blob list to find best blob trajectory */
+    /* Analyze blob list to find best blob trajectory: */
+    {
         double      BestError = -1;
         int         BestTrack = -1;;
         CvBlobSeq*  pNewBlobs = m_pBlobLists[0];
         int         i;
         int         NewTrackNum = 0;
-        for(i=pNewBlobs->GetBlobNum();i>0;--i)
+        for(i=pNewBlobs->GetBlobNum(); i>0; --i)
         {
             CvBlob* pBNew = pNewBlobs->GetBlob(i-1);
             int     j;
             int     AsignedTrack = 0;
-            for(j=0;j<m_TrackNum;++j)
+            for(j=0; j<m_TrackNum; ++j)
             {
                 double  dx,dy;
                 DefSeq* pTrack = m_TrackSeq+j;
@@ -769,31 +819,32 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                 dy = fabs(CV_BLOB_Y(pLastBlob)-CV_BLOB_Y(pBNew));
                 if(dx > 2*CV_BLOB_WX(pLastBlob) || dy > 2*CV_BLOB_WY(pLastBlob)) continue;
                 AsignedTrack++;
+
                 if(pTrack->pBlobs[0]==NULL)
-                {/*fill existed track */
+                {   /* Fill existed track: */
                     pTrack->pBlobs[0] = pBNew;
                     pTrack->size++;
                 }
                 else if((m_TrackNum+NewTrackNum)<SEQ_NUM)
-                { /* duplicate existed track */
+                {   /* Duplicate existed track: */
                     m_TrackSeq[m_TrackNum+NewTrackNum] = pTrack[0];
                     m_TrackSeq[m_TrackNum+NewTrackNum].pBlobs[0] = pBNew;
                     NewTrackNum++;
                 }
-            }/* next track */
+            }   /* Next track. */
 
             if(AsignedTrack==0 && (m_TrackNum+NewTrackNum)<SEQ_NUM )
-            {/* init new track */
+            {   /* Initialize new track: */
                 m_TrackSeq[m_TrackNum+NewTrackNum].size = 1;
                 m_TrackSeq[m_TrackNum+NewTrackNum].pBlobs[0] = pBNew;
                 NewTrackNum++;
             }
-        }/* next new blob */
+        }   /* Next new blob. */
 
         m_TrackNum += NewTrackNum;
 
-        /* check each track */
-        for(i=0;i<m_TrackNum;++i)
+        /* Check each track: */
+        for(i=0; i<m_TrackNum; ++i)
         {
             int     Good = 1;
             DefSeq* pTrack = m_TrackSeq+i;
@@ -801,30 +852,30 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
             if(pTrack->size != SEQ_SIZE) continue;
             if(pBNew == NULL ) continue;
             
-            /* check intersection last blob with existed */
+            /* Check intersection last blob with existed: */
             if(Good && pOldBlobList)
-            { /* check intersection last blob with existed */
-                int     k;
-                for(k=pOldBlobList->GetBlobNum();k>0;--k)
+            {
+                int k;
+                for(k=pOldBlobList->GetBlobNum(); k>0; --k)
                 {
                     CvBlob* pBOld = pOldBlobList->GetBlob(k-1);
                     if((fabs(pBOld->x-pBNew->x) < (CV_BLOB_RX(pBOld)+CV_BLOB_RX(pBNew))) &&
                        (fabs(pBOld->y-pBNew->y) < (CV_BLOB_RY(pBOld)+CV_BLOB_RY(pBNew))))
                         Good = 0;
                 }
-            }/* check intersection last blob with existed */
+            }   /* Check intersection last blob with existed. */
 
-            /* check distance to image border */
+            /* Check distance to image border: */
             if(Good)
-            { /* check distance to image border */
+            {   /* Check distance to image border: */
                 float    dx = MIN(pBNew->x,S.width-pBNew->x)/CV_BLOB_RX(pBNew);
                 float    dy = MIN(pBNew->y,S.height-pBNew->y)/CV_BLOB_RY(pBNew);
                 if(dx < m_MinDistToBorder || dy < m_MinDistToBorder) Good = 0;
-            }/* check distance to image border */
+            }   /* Check distance to image border. */
 
-            /* check uniform moveing */
+            /* Check uniform moveing. */
             if(Good)
-            {/* check uniform moveing */
+            {   /* Check uniform motion: */
                 double      Error = 0;
                 int         N = pTrack->size;
                 CvBlob**    pBL = pTrack->pBlobs;
@@ -833,7 +884,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                 float       a[2],b[2]; /* estimated parameters of moving x(t) = a*t+b*/
                 int         j;
                 
-                for(j=0;j<N;++j)
+                for(j=0; j<N; ++j)
                 {
                     float   x = pBL[j]->x;
                     float   y = pBL[j]->y;
@@ -842,63 +893,66 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                     sum[1] += y;
                     jsum[1] += j*y;
                 }
+
                 a[0] = 6*((1-N)*sum[0]+2*jsum[0])/(N*(N*N-1));
                 b[0] = -2*((1-2*N)*sum[0]+3*jsum[0])/(N*(N+1));
                 a[1] = 6*((1-N)*sum[1]+2*jsum[1])/(N*(N*N-1));
                 b[1] = -2*((1-2*N)*sum[1]+3*jsum[1])/(N*(N+1));
-                for(j=0;j<N;++j)
+
+                for(j=0; j<N; ++j)
                 {
                     Error += 
                         pow(a[0]*j+b[0]-pBL[j]->x,2)+
                         pow(a[1]*j+b[1]-pBL[j]->y,2);
                 }
+
                 Error = sqrt(Error/N);
+
                 if( Error > S.width*0.01 || 
                     fabs(a[0])>S.width*0.1 ||
                     fabs(a[1])>S.height*0.1)
                     Good = 0;
                 
-                /* new best trajectory */
+                /* New best trajectory: */
                 if(Good && (BestError == -1 || BestError > Error))
-                {/* new best trajectory */
+                {   /* New best trajectory: */
                     BestTrack = i;
                     BestError = Error;
-                }/* new best trajectory */
-            }/* check uniform moveing */
-        }/* next track */
+                }   /* New best trajectory. */
+            }   /*  Check uniform motion. */
+        }   /*  Next track. */
 
         #if 0
-        {/**/
+        {   /**/
             printf("BlobDetector configurations = %d [",m_TrackNum);
             int i;
-            for(i=0;i<SEQ_SIZE;++i)
+            for(i=0; i<SEQ_SIZE; ++i)
             {
                 printf("%d,",m_pBlobLists[i]?m_pBlobLists[i]->GetBlobNum():0);
             }
             printf("]\n");
-        
         }
         #endif
 
         if(BestTrack >= 0)
-        {/* put new blob to output and delete from blob list */
+        {   /* Put new blob to output and delete from blob list: */
             assert(m_TrackSeq[BestTrack].size == SEQ_SIZE);
             assert(m_TrackSeq[BestTrack].pBlobs[0]);
             pNewBlobList->AddBlob(m_TrackSeq[BestTrack].pBlobs[0]);
             m_TrackSeq[BestTrack].pBlobs[0] = NULL;
             m_TrackSeq[BestTrack].size--;
-            res = 1;
-        }/* put new blob to output and mark in blob list to delete*/
-    }/* analize blod list to find best blob trajectory */
+            result = 1;
+        }   /* Put new blob to output and mark in blob list to delete. */
+    }   /*  Analyze blod list to find best blob trajectory. */
 
-    {/* delete bad tracks */
+    {   /* Delete bad tracks: */
         int i;
-        for(i=m_TrackNum-1;i>=0;--i)
-        {/* delete bad tracks */
+        for(i=m_TrackNum-1; i>=0; --i)
+        {   /* Delete bad tracks: */
             if(m_TrackSeq[i].pBlobs[0]) continue;
             if(m_TrackNum>0)
                 m_TrackSeq[i] = m_TrackSeq[--m_TrackNum];
-        }/* delete bad tracks */
+        }   /* Delete bad tracks: */
     }
 
 #ifdef USE_OBJECT_DETECTOR
@@ -961,9 +1015,9 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
             if( m_detected_blob_seq.GetBlobNum() > 1 )
             {
                 /*
-                 * Split blob
+                 * Split blob.
                  * The original blob is replaced by the first detected blob,
-                 * remaining detected blobs are added to the end of the sequence
+                 * remaining detected blobs are added to the end of the sequence:
                  */
                 CvBlob* first_b = m_detected_blob_seq.GetBlob(0);
                 CV_BLOB_X(b)  = CV_BLOB_X(first_b);  CV_BLOB_Y(b)  = CV_BLOB_Y(first_b);
@@ -975,17 +1029,19 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                     pNewBlobList->AddBlob(detected_b);
                 }
             }
-        } /* for each new blob */
+        }   /* For each new blob. */
+
         for( i = 0; i < pNewBlobList->GetBlobNum(); ++i )
         {
             CvBlob* b = pNewBlobList->GetBlob(i);
             CvDetectedBlob d_b = cvDetectedBlob( CV_BLOB_X(b), CV_BLOB_Y(b), CV_BLOB_WX(b), CV_BLOB_WY(b), 2 );
             m_debug_blob_seq.AddBlob(&d_b);
         }
-    } // if( m_split_detector )
+    }   // if( m_split_detector )
 #endif
 
-    return res;
-}/* cvDetectNewBlob */
+    return result;
+
+}   /* cvDetectNewBlob */
 
 

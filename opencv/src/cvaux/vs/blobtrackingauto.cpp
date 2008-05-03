@@ -51,7 +51,7 @@ The track is lost when integral of foreground mask image by blob area has low va
 /* list of Blob Detection modules */
 CvBlobDetector* cvCreateBlobDetectorSimple();
 
-/* get frequency for each module time working estimation */
+/* Get frequency for each module time working estimation: */
 static double FREQ = 1000*cvGetTickFrequency();
 
 #if 1
@@ -85,12 +85,12 @@ static double FREQ = 1000*cvGetTickFrequency();
 #define TIME_END(_name_)
 #endif
 
-/* special extended blob structure for auto blob tracking */
+/* Special extended blob structure for auto blob tracking: */
 typedef struct CvBlobTrackAuto
 {
     CvBlob  blob;
     int     BadFrames;
-}CvBlobTrackAuto;
+} CvBlobTrackAuto;
 
 class CvBlobTrackerAuto1: public CvBlobTrackerAuto
 {
@@ -103,27 +103,29 @@ public:
     virtual IplImage* GetFGMask(){return m_pFGMask;};
     float   GetState(int BlobID){return m_pBTA?m_pBTA->GetState(BlobID):0;};
     char*   GetStateDesc(int BlobID){return m_pBTA?m_pBTA->GetStateDesc(BlobID):NULL;};
-    /* return 0 if trajectory is normal 
-       return >0 if trajectory abnormal */
+    /* Return 0 if trajectory is normal;
+       return >0 if trajectory abnormal. */
     void Process(IplImage* pImg, IplImage* pMask = NULL);
     void Release(){delete this;};
+
 private:
     IplImage*               m_pFGMask;
     int                     m_FGTrainFrames;
-    CvFGDetector*           m_pFG; /* pointer to foreground mask detector modelu */
-    CvBlobTracker*          m_pBT; /* pointer to Blob tracker module */
+    CvFGDetector*           m_pFG; /* Pointer to foreground mask detector module. */
+    CvBlobTracker*          m_pBT; /* Pointer to Blob tracker module. */
     int                     m_BTDel;
     int                     m_BTReal;
-    CvBlobDetector*         m_pBD; /* pointer to Blob detector module */
+    CvBlobDetector*         m_pBD; /* Pointer to Blob detector module. */
     int                     m_BDDel;
     CvBlobTrackGen*         m_pBTGen;
     CvBlobTrackPostProc*    m_pBTPostProc;
     int                     m_UsePPData;
-    CvBlobTrackAnalysis*    m_pBTA; /* blob trajectory analyser */
+    CvBlobTrackAnalysis*    m_pBTA; /* Blob trajectory analyser. */
     CvBlobSeq               m_BlobList;
     int                     m_FrameCount;
     int                     m_NextBlobID;
     char*                   m_TimesFile;
+
 public:
     virtual void SaveState(CvFileStorage* fs)
     {
@@ -131,6 +133,7 @@ public:
         cvWriteInt(fs,"NextBlobID",m_NextBlobID);
         m_BlobList.Write(fs,"BlobList");
     };
+
     virtual void LoadState(CvFileStorage* fs, CvFileNode* node)
     {
         CvFileNode* BlobListNode = cvGetFileNodeByName(fs,node,"BlobList");
@@ -149,7 +152,7 @@ CvBlobTrackerAuto* cvCreateBlobTrackerAuto1(CvBlobTrackerAutoParam1* param)
     return (CvBlobTrackerAuto*)new CvBlobTrackerAuto1(param);
 }
 
-/* Constructor of auto blob tracker*/
+/* Constructor of auto blob tracker: */
 CvBlobTrackerAuto1::CvBlobTrackerAuto1(CvBlobTrackerAutoParam1* param):m_BlobList(sizeof(CvBlobTrackAuto))
 {
     m_BlobList.AddFormat("i");
@@ -176,26 +179,27 @@ CvBlobTrackerAuto1::CvBlobTrackerAuto1(CvBlobTrackerAutoParam1* param):m_BlobLis
     m_pBTPostProc = param?param->pBTPP:NULL;
     m_UsePPData = param?param->UsePPData:0;
 
-    /* create default sub modules */
+    /* Create default submodules: */
     if(m_pBD==NULL)
     {
         m_pBD = cvCreateBlobDetectorSimple();
         m_BDDel = 1;
     }
+
     if(m_pBT==NULL)
     {
         m_pBT = cvCreateBlobTrackerMS();
         m_BTDel = 1;
     }
 
-}/* CvBlobTrackerAuto1::CvBlobTrackerAuto1 */
+} /* CvBlobTrackerAuto1::CvBlobTrackerAuto1 */
 
-/* Destructor of auto blob tracker */
+/* Destructor for auto blob tracker: */
 CvBlobTrackerAuto1::~CvBlobTrackerAuto1()
 {
     if(m_BDDel)m_pBD->Release();
     if(m_BTDel)m_pBT->Release();
-}/* Destructor of auto blob tracker */
+}
 
 void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
 {
@@ -203,7 +207,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
     int         i;
     IplImage*   pFG = pMask;
     
-    /* increase frame counter */
+    /* Bump frame counter: */
     m_FrameCount++;
     
     if(m_TimesFile)
@@ -212,6 +216,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
         static double TimeSum = 0;
         static int Count = 0;
         Count++;
+
         if(Count%100==0)
         {
             time_t ltime;
@@ -227,15 +232,18 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
         }
     }
     
-    /* update BG model */
+    /* Update BG model: */
     TIME_BEGIN()
+
     if(m_pFG)
-    {/* if FG detector is needed */
+    {   /* If FG detector is needed: */
         m_pFG->Process(pImg);
         pFG = m_pFG->GetMask();
-    }/* if FG detector is needed */
+    }   /* If FG detector is needed. */
+
     TIME_END("FGDetector",-1)
-    m_pFGMask = pFG; /* for external use */
+
+    m_pFGMask = pFG; /* For external use. */
 
     /*if(m_pFG && m_pFG->GetParam("DebugWnd") == 1)
     {// debug foreground result
@@ -247,14 +255,15 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
         }
     }*/
 
-    /* track blobs */
+    /* Track blobs: */
     TIME_BEGIN()
     if(m_pBT)
     {
         int i;
         m_pBT->Process(pImg, pFG);
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Update data of tracked blob list: */
             CvBlob* pB = m_BlobList.GetBlob(i-1);
             int     BlobID = CV_BLOB_ID(pB);
             int     i = m_pBT->GetBlobIndexByID(BlobID);
@@ -265,12 +274,13 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
     }
     TIME_END("BlobTracker",CurBlobNum)
 
-    /* this part should be removed */
+    /* This part should be removed: */
     if(m_BTReal && m_pBT)
-    {/* update blob list (detect new blob for real blob tracker )*/
+    {   /* Update blob list (detect new blob for real blob tracker): */
         int i;
-        for(i=m_pBT->GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+
+        for(i=m_pBT->GetBlobNum(); i>0; --i)
+        {   /* Update data of tracked blob list: */
             CvBlob* pB = m_pBT->GetBlob(i-1);
             if(pB && m_BlobList.GetBlobByID(CV_BLOB_ID(pB)) == NULL )
             {
@@ -279,56 +289,58 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
                 NewB.BadFrames = 0;
                 m_BlobList.AddBlob((CvBlob*)&NewB);
             }
-        }/* next blob */
-        /*delete blobs */
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+        }   /* Next blob. */
+
+        /* Delete blobs: */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Update tracked-blob list: */
             CvBlob* pB = m_BlobList.GetBlob(i-1);
             if(pB && m_pBT->GetBlobByID(CV_BLOB_ID(pB)) == NULL )
             {
                 m_BlobList.DelBlob(i-1);
             }
-        }/* next blob */
-    }/* update blob list */
+        }   /* Next blob. */
+    }   /* Update bloblist. */
 
 
     TIME_BEGIN()
     if(m_pBTPostProc)
-    {/* post processing module */
+    {   /* Post-processing module: */
         int i;
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Update tracked-blob list: */
             CvBlob* pB = m_BlobList.GetBlob(i-1);
             m_pBTPostProc->AddBlob(pB);
         }
         m_pBTPostProc->Process();
 
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Update tracked-blob list: */
             CvBlob* pB = m_BlobList.GetBlob(i-1);
             int     BlobID = CV_BLOB_ID(pB);
             CvBlob* pBN = m_pBTPostProc->GetBlobByID(BlobID);
 
             if(pBN && m_UsePPData && pBN->w >= CV_BLOB_MINW && pBN->h >= CV_BLOB_MINH)
-            { /* set new data for tracker */
+            {   /* Set new data for tracker: */
                 m_pBT->SetBlobByID(BlobID, pBN );
             }
             
             if(pBN)
-            {/* update blob list by result from postprocessing */
+            {   /* Update blob list with results from postprocessing: */
                 pB[0] = pBN[0];
             }
         }
-    }/* post processing module */
+    }   /* Post-processing module. */
+
     TIME_END("PostProcessing",CurBlobNum)
 
-    /* Blob deleter (experimental and simple)*/
+    /* Blob deleter (experimental and simple): */
     TIME_BEGIN()
     if(pFG)
-    {/* Blob deleter */
+    {   /* Blob deleter: */
         int i;
         if(!m_BTReal)for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* check all blobs from list */
+        {   /* Check all blobs on list: */
             CvBlobTrackAuto* pB = (CvBlobTrackAuto*)(m_BlobList.GetBlob(i-1));
             int     Good = 0;
             int     w=pFG->width;
@@ -363,41 +375,44 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
             {
                 pB->BadFrames++;
             }
-        }/* next blob */
+        }   /* Next blob: */
         
-        /* check error count */
-        for(i=0;i<m_BlobList.GetBlobNum();++i)
+        /* Check error count: */
+        for(i=0; i<m_BlobList.GetBlobNum(); ++i)
         {
             CvBlobTrackAuto* pB = (CvBlobTrackAuto*)m_BlobList.GetBlob(i);
+
             if(pB->BadFrames>3)
-            {/* delete such object */
-                /* from tracker */
+            {   /* Delete such objects */
+                /* from tracker...     */
                 m_pBT->DelBlobByID(CV_BLOB_ID(pB));
-                /* from local list */
+
+                /* ... and from local list: */
                 m_BlobList.DelBlob(i);
                 i--;
             }
-        }/* check error count for next blob */
-    }/* Blob deleter */
+        }   /* Check error count for next blob. */
+    }   /*  Blob deleter. */
+
     TIME_END("BlobDeleter",m_BlobList.GetBlobNum())
     
-    /* Update blobs */
+    /* Update blobs: */
     TIME_BEGIN()
     if(m_pBT)
         m_pBT->Update(pImg, pFG);
     TIME_END("BlobTrackerUpdate",CurBlobNum)
 
-    /* detect new blob */
+    /* Detect new blob: */
     TIME_BEGIN()
     if(!m_BTReal && m_pBD && pFG && (m_FrameCount > m_FGTrainFrames) )
-    {/* detect new blob */
+    {   /* Detect new blob: */
         static CvBlobSeq    NewBlobList;
         CvBlobTrackAuto     NewB;
 
         NewBlobList.Clear();
 
         if(m_pBD->DetectNewBlob(pImg, pFG, &NewBlobList, &m_BlobList))
-        {/* add new blob to tracker and blob list */
+        {   /* Add new blob to tracker and blob list: */
             int i;
             IplImage* pMask = pFG;
             
@@ -407,10 +422,11 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
                 cvErode(pFG,pMask,NULL,2);
             }*/
 
-            for(i=0;i<NewBlobList.GetBlobNum();++i)
+            for(i=0; i<NewBlobList.GetBlobNum(); ++i)
             {
                 CvBlob* pBN = NewBlobList.GetBlob(i);
                 pBN->ID = m_NextBlobID;
+
                 if(pBN && pBN->w >= CV_BLOB_MINW && pBN->h >= CV_BLOB_MINH)
                 {
                     CvBlob* pB = m_pBT->AddBlob(pBN, pImg, pMask );
@@ -422,35 +438,40 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
                         m_NextBlobID++;
                     }
                 }
-            }/* add next blob from list of detected blob */
+            }   /* Add next blob from list of detected blob. */
 
             if(pMask != pFG) cvReleaseImage(&pMask);
 
-        }/* create and add new blobs and trackers */
-    }/* detect new blob */
+        }   /* Create and add new blobs and trackers. */
+
+    }   /*  Detect new blob. */
+
     TIME_END("BlobDetector",-1)
 
     TIME_BEGIN()
     if(m_pBTGen)
-    {/* run tracj generator */
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* update data of tracked blob list */
+    {   /* Run track generator: */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Update data of tracked blob list: */
             CvBlob* pB = m_BlobList.GetBlob(i-1);
             m_pBTGen->AddBlob(pB);
         }
         m_pBTGen->Process(pImg, pFG);
-    }/* run tracj generator */
+    }   /* Run track generator: */
     TIME_END("TrajectoryGeneration",-1)
 
     TIME_BEGIN()
     if(m_pBTA)
-    {/* trajectory analysis module */
+    {   /* Trajectory analysis module: */
         int i;
-        for(i=m_BlobList.GetBlobNum();i>0;i--)
+        for(i=m_BlobList.GetBlobNum(); i>0; i--)
             m_pBTA->AddBlob(m_BlobList.GetBlob(i-1));
+
         m_pBTA->Process(pImg, pFG);
-    }/* trajectory analysis module */
+
+    }   /* Trajectory analysis module. */
+
     TIME_END("TrackAnalysis",m_BlobList.GetBlobNum())
 
-}/* CvBlobTrackerAuto1::Process */
+} /* CvBlobTrackerAuto1::Process */
 

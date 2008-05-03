@@ -41,9 +41,10 @@
 #include "_cvaux.h"
 
 /*======================= KALMAN FILTER =========================*/
-/* state vector is (x,y,w,h,dx,dy,dw,dh)*/
-/* mesurment is (x,y,w,h) */
- /* dinamic matrix A */
+/* State vector is (x,y,w,h,dx,dy,dw,dh). */
+/* Measurement is (x,y,w,h). */
+
+/* Dynamic matrix A: */
 const float A8[] = { 1, 0, 0, 0, 1, 0, 0, 0,
                      0, 1, 0, 0, 0, 1, 0, 0,
                      0, 0, 1, 0, 0, 0, 1, 0,
@@ -52,21 +53,23 @@ const float A8[] = { 1, 0, 0, 0, 1, 0, 0, 0,
                      0, 0, 0, 0, 0, 1, 0, 0,
                      0, 0, 0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 0, 0, 1};
-/* measurement matrix H */
+
+/* Measurement matrix H: */
 const float H8[] = { 1, 0, 0, 0, 0, 0, 0, 0,
                      0, 1, 0, 0, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0, 0, 0};
 
-/* matices for zero size velosity */ 
-/* dinamic matrix A */
+/* Matrices for zero size velocity: */ 
+/* Dinamic matrix A: */
 const float A6[] = { 1, 0, 0, 0, 1, 0,
                      0, 1, 0, 0, 0, 1,
                      0, 0, 1, 0, 0, 0,
                      0, 0, 0, 1, 0, 0,
                      0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 1};
-/* measurement matrix H */
+
+/* Measurement matrix H: */
 const float H6[] = { 1, 0, 0, 0, 0, 0,
                      0, 1, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0,
@@ -78,6 +81,7 @@ const float H6[] = { 1, 0, 0, 0, 0, 0,
 
 class CvBlobTrackPostProcKalman:public CvBlobTrackPostProcOne
 {
+
 private:
     CvBlob      m_Blob;
     CvKalman*   m_pKalman;
@@ -85,9 +89,10 @@ private:
     float       m_ModelNoise;
     float       m_DataNoisePos;
     float       m_DataNoiseSize;
+
 public:
     CvBlobTrackPostProcKalman();
-    ~CvBlobTrackPostProcKalman();
+   ~CvBlobTrackPostProcKalman();
     CvBlob* Process(CvBlob* pBlob);
     void Release();
     virtual void ParamUpdate();
@@ -99,6 +104,7 @@ CvBlobTrackPostProcKalman::CvBlobTrackPostProcKalman()
     m_ModelNoise = 1e-6f;
     m_DataNoisePos = 1e-6f;
     m_DataNoiseSize = 1e-1f;
+
     #if STATE_NUM>6
         m_DataNoiseSize *= (float)pow(20.,2.);
     #else
@@ -122,6 +128,7 @@ CvBlobTrackPostProcKalman::CvBlobTrackPostProcKalman()
     cvZero(m_pKalman->state_post);
     cvZero(m_pKalman->state_pre);
 }
+
 CvBlobTrackPostProcKalman::~CvBlobTrackPostProcKalman()
 {
     cvReleaseKalman(&m_pKalman);
@@ -134,14 +141,16 @@ void CvBlobTrackPostProcKalman::ParamUpdate()
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 2,2) = m_DataNoiseSize;
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 3,3) = m_DataNoiseSize;
 }
+
 CvBlob* CvBlobTrackPostProcKalman::Process(CvBlob* pBlob)
 {
     CvBlob* pBlobRes = &m_Blob;
     float   Z[4];
     CvMat   Zmat = cvMat(4,1,CV_32F,Z);
     m_Blob = pBlob[0];
+
     if(m_Frame < 2)
-    {/* first call */
+    {   /* First call: */
         m_pKalman->state_post->data.fl[0+4] = CV_BLOB_X(pBlob)-m_pKalman->state_post->data.fl[0];
         m_pKalman->state_post->data.fl[1+4] = CV_BLOB_Y(pBlob)-m_pKalman->state_post->data.fl[1];
         if(m_pKalman->DP>6)
@@ -155,7 +164,7 @@ CvBlob* CvBlobTrackPostProcKalman::Process(CvBlob* pBlob)
         m_pKalman->state_post->data.fl[3] = CV_BLOB_WY(pBlob);
     }
     else
-    {/* another call */
+    {   /* Nonfirst call: */
         cvKalmanPredict(m_pKalman,0);
         Z[0] = CV_BLOB_X(pBlob);
         Z[1] = CV_BLOB_Y(pBlob);
@@ -171,6 +180,7 @@ CvBlob* CvBlobTrackPostProcKalman::Process(CvBlob* pBlob)
     m_Frame++;
     return pBlobRes;
 }
+
 void CvBlobTrackPostProcKalman::Release()
 {
     delete this;
@@ -192,6 +202,7 @@ CvBlobTrackPostProc* cvCreateModuleBlobTrackPostProcKalman()
 /*======================= KALMAN PREDICTOR =========================*/
 class CvBlobTrackPredictKalman:public CvBlobTrackPredictor
 {
+
 private:
     CvBlob      m_BlobPredict;
     CvKalman*   m_pKalman;
@@ -199,6 +210,7 @@ private:
     float       m_ModelNoise;
     float       m_DataNoisePos;
     float       m_DataNoiseSize;
+
 public:
     CvBlobTrackPredictKalman();
     ~CvBlobTrackPredictKalman();
@@ -209,7 +221,7 @@ public:
     {
         delete this;
     }
-}; /* class CvBlobTrackPredictKalman */
+};  /* class CvBlobTrackPredictKalman */
 
 
 void CvBlobTrackPredictKalman::ParamUpdate()
@@ -219,11 +231,13 @@ void CvBlobTrackPredictKalman::ParamUpdate()
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 2,2) = m_DataNoiseSize;
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 3,3) = m_DataNoiseSize;
 }
+
 CvBlobTrackPredictKalman::CvBlobTrackPredictKalman()
 {
     m_ModelNoise = 1e-6f;
     m_DataNoisePos = 1e-6f;
     m_DataNoiseSize = 1e-1f;
+
     #if STATE_NUM>6
         m_DataNoiseSize *= (float)pow(20.,2.);
     #else
@@ -247,10 +261,12 @@ CvBlobTrackPredictKalman::CvBlobTrackPredictKalman()
     cvZero(m_pKalman->state_post);
     cvZero(m_pKalman->state_pre);
 }
+
 CvBlobTrackPredictKalman::~CvBlobTrackPredictKalman()
 {
     cvReleaseKalman(&m_pKalman);
 }
+
 CvBlob* CvBlobTrackPredictKalman::Predict()
 {
     if(m_Frame >= 2)
@@ -269,8 +285,9 @@ void CvBlobTrackPredictKalman::Update(CvBlob* pBlob)
     float   Z[4];
     CvMat   Zmat = cvMat(4,1,CV_32F,Z);
     m_BlobPredict = pBlob[0];
+
     if(m_Frame < 2)
-    {/* first call */
+    {   /* First call: */
         m_pKalman->state_post->data.fl[0+4] = CV_BLOB_X(pBlob)-m_pKalman->state_post->data.fl[0];
         m_pKalman->state_post->data.fl[1+4] = CV_BLOB_Y(pBlob)-m_pKalman->state_post->data.fl[1];
         if(m_pKalman->DP>6)
@@ -284,16 +301,19 @@ void CvBlobTrackPredictKalman::Update(CvBlob* pBlob)
         m_pKalman->state_post->data.fl[3] = CV_BLOB_WY(pBlob);
     }
     else
-    {/* another call */
+    {   /* Nonfirst call: */
         Z[0] = CV_BLOB_X(pBlob);
         Z[1] = CV_BLOB_Y(pBlob);
         Z[2] = CV_BLOB_WX(pBlob);
         Z[3] = CV_BLOB_WY(pBlob);
         cvKalmanCorrect(m_pKalman,&Zmat);
     }
+
     cvKalmanPredict(m_pKalman,0);
+
     m_Frame++;
-}/* update */
+
+}   /* Update. */
 
 CvBlobTrackPredictor* cvCreateModuleBlobTrackPredictKalman()
 {

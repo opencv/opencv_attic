@@ -65,7 +65,7 @@ public:
     ~CvBlobTrackAnalysisList()
     {
         int i;
-        for(i=m_TrackAnalyserList.GetBlobNum();i>0;--i)
+        for(i=m_TrackAnalyserList.GetBlobNum(); i>0; --i)
         {
             DefTrackAnalyser* pF = (DefTrackAnalyser*)m_TrackAnalyserList.GetBlob(i-1);
             pF->pFilter->Release();
@@ -75,7 +75,7 @@ public:
     {
         DefTrackAnalyser* pF = (DefTrackAnalyser*)m_TrackAnalyserList.GetBlobByID(CV_BLOB_ID(pBlob));
         if(pF == NULL)
-        { /* create new filter */
+        {   /* Create new filter: */
             DefTrackAnalyser F;
             F.state = 0;
             F.blob = pBlob[0];
@@ -92,21 +92,21 @@ public:
     virtual void    Process(IplImage* pImg, IplImage* pFG)
     {
         int i;
-        for(i=m_TrackAnalyserList.GetBlobNum();i>0;--i)
+        for(i=m_TrackAnalyserList.GetBlobNum(); i>0; --i)
         {
             DefTrackAnalyser* pF = (DefTrackAnalyser*)m_TrackAnalyserList.GetBlob(i-1);
             if(pF->m_LastFrame == m_Frame)
-            {/* process */
+            {   /* Process: */
                 int ID = CV_BLOB_ID(pF);
                 pF->state = pF->pFilter->Process(&(pF->blob), pImg, pFG);
                 CV_BLOB_ID(pF) = ID;
             }
             else
-            {/* delete blob filter */
+            {   /* Delete blob filter: */
                 pF->pFilter->Release();
                 m_TrackAnalyserList.DelBlob(i-1);
             }
-        }/* next blob */
+        } /* Next blob. */
         m_Frame++;
     };
     float GetState(int BlobID)

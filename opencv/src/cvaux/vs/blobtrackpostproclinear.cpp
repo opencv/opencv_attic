@@ -44,11 +44,13 @@
 #define TIME_WND 5
 class CvBlobTrackPostProcTimeAver:public CvBlobTrackPostProcOne
 {
+
 protected:
     CvBlob      m_Blob;
     CvBlob      m_pBlobs[TIME_WND];
     float       m_Weights[TIME_WND];
     int         m_Frame;
+
 public:
     CvBlobTrackPostProcTimeAver( int KernelType = 0)
     {
@@ -63,7 +65,9 @@ public:
             }
         }
     };
-    ~CvBlobTrackPostProcTimeAver(){};
+
+   ~CvBlobTrackPostProcTimeAver(){};
+
     CvBlob* Process(CvBlob* pBlob)
     {
         float   WSum = 0;
@@ -73,7 +77,7 @@ public:
         m_pBlobs[index] = pBlob[0];
         m_Blob.x = m_Blob.y = m_Blob.w = m_Blob.h = 0;
         
-        for(i=0;i<size;++i)
+        for(i=0; i<size; ++i)
         {
             float   W = m_Weights[i];
             int     index  = (m_Frame - i + TIME_WND) % TIME_WND;
@@ -93,16 +97,18 @@ public:
         m_Frame++;
         return &m_Blob;
     };
+
     void Release()
     {
         delete this;
     }
-}; /* class CvBlobTrackPostProcTimeAver */
+};  /* class CvBlobTrackPostProcTimeAver */
 
 CvBlobTrackPostProcOne* cvCreateModuleBlobTrackPostProcTimeAverRectOne()
 {
     return (CvBlobTrackPostProcOne*) new CvBlobTrackPostProcTimeAver(0);
 }
+
 CvBlobTrackPostProcOne* cvCreateModuleBlobTrackPostProcTimeAverExpOne()
 {
     return (CvBlobTrackPostProcOne*) new CvBlobTrackPostProcTimeAver(1);
@@ -112,6 +118,7 @@ CvBlobTrackPostProc* cvCreateModuleBlobTrackPostProcTimeAverRect()
 {
     return cvCreateBlobTrackPostProcList(cvCreateModuleBlobTrackPostProcTimeAverRectOne);
 }
+
 CvBlobTrackPostProc* cvCreateModuleBlobTrackPostProcTimeAverExp()
 {
     return cvCreateBlobTrackPostProcList(cvCreateModuleBlobTrackPostProcTimeAverExpOne);

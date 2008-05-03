@@ -101,11 +101,11 @@ typedef struct DefModule_BlobTrackAnalysis
 } DefModule_BlobTrackAnalysis;
 DefModule_BlobTrackAnalysis BlobTrackAnalysis_Modules[] =
 {
-    {cvCreateModuleBlobTrackAnalysisHistPVS,"HistPVS","Histogramm of 5D feture vector analysis (x,y,vx,vy,state)"},
+    {cvCreateModuleBlobTrackAnalysisHistPVS,"HistPVS","Histogram of 5D feture vector analysis (x,y,vx,vy,state)"},
     {NULL,"None","No trajectory analiser"},
-    {cvCreateModuleBlobTrackAnalysisHistP,"HistP","Histogramm of 2D feture vector analysis (x,y)"},
-    {cvCreateModuleBlobTrackAnalysisHistPV,"HistPV","Histogramm of 4D feture vector analysis (x,y,vx,vy)"},
-    {cvCreateModuleBlobTrackAnalysisHistSS,"HistSS","Histogramm of 4D feture vector analysis (startpos,endpos)"},
+    {cvCreateModuleBlobTrackAnalysisHistP,"HistP","Histogram of 2D feture vector analysis (x,y)"},
+    {cvCreateModuleBlobTrackAnalysisHistPV,"HistPV","Histogram of 4D feture vector analysis (x,y,vx,vy)"},
+    {cvCreateModuleBlobTrackAnalysisHistSS,"HistSS","Histogram of 4D feture vector analysis (startpos,endpos)"},
     {cvCreateModuleBlobTrackAnalysisTrackDist,"TrackDist","Compare tracks directly"},
     {cvCreateModuleBlobTrackAnalysisIOR,"IOR","Integrator (by OR operation) of several analysers "},
     {NULL,NULL,NULL}

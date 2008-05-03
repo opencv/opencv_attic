@@ -54,6 +54,7 @@ protected:
     CvBlobTrackPostProcOne* (*m_CreatePostProc)();
     CvBlobSeq               m_BlobFilterList;
     int                     m_Frame;
+
 public:
     CvBlobTrackPostProcList(CvBlobTrackPostProcOne* (*create)()):m_BlobFilterList(sizeof(DefBlobFilter))
     {
@@ -63,7 +64,8 @@ public:
         TransferParamsFromChild(pM,NULL);
         pM->Release();
     }
-    ~CvBlobTrackPostProcList()
+
+   ~CvBlobTrackPostProcList()
     {
         int i;
         for(i=m_BlobFilterList.GetBlobNum();i>0;--i)
@@ -72,11 +74,12 @@ public:
             pF->pFilter->Release();
         }
     };
+
     virtual void    AddBlob(CvBlob* pBlob)
     {
         DefBlobFilter* pF = (DefBlobFilter*)m_BlobFilterList.GetBlobByID(CV_BLOB_ID(pBlob));
         if(pF == NULL)
-        { /* create new filter */
+        {   /* Create new filter: */
             DefBlobFilter F;
             F.blob = pBlob[0];
             F.m_LastFrame = m_Frame;
@@ -90,33 +93,37 @@ public:
         pF->blob = pBlob[0];
         pF->m_LastFrame = m_Frame;
     };
+
     virtual void    Process()
     {
         int i;
-        for(i=m_BlobFilterList.GetBlobNum();i>0;--i)
+        for(i=m_BlobFilterList.GetBlobNum(); i>0; --i)
         {
             DefBlobFilter* pF = (DefBlobFilter*)m_BlobFilterList.GetBlob(i-1);
+
             if(pF->m_LastFrame == m_Frame)
-            {/* process */
+            {   /* Process: */
                 int ID = CV_BLOB_ID(pF);
                 pF->blob = *(pF->pFilter->Process(&(pF->blob)));
                 CV_BLOB_ID(pF) = ID;
             }
             else
-            {/* delete blob filter */
+            {   /* Delete blob filter: */
                 pF->pFilter->Release();
                 m_BlobFilterList.DelBlob(i-1);
             }
-        }/* next blob */
+        }   /* Next blob. */
         m_Frame++;
     };
+
     int     GetBlobNum(){return m_BlobFilterList.GetBlobNum();};
     CvBlob* GetBlob(int index){return m_BlobFilterList.GetBlob(index);};
     void    Release(){delete this;};
 
-    /* additional functionality */
+    /* Additional functionality: */
     CvBlob* GetBlobByID(int BlobID){return m_BlobFilterList.GetBlobByID(BlobID);}
-}; /* CvBlobTrackPostProcList */
+
+};  /* CvBlobTrackPostProcList */
 
 CvBlobTrackPostProc* cvCreateBlobTrackPostProcList(CvBlobTrackPostProcOne* (*create)())
 {
