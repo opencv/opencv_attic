@@ -137,7 +137,6 @@ static char * videodev[4]={
 
 typedef struct CvCaptureCAM_DC1394
 {
-    CvCaptureVTable* vtable;
     raw1394handle_t handle;
     nodeid_t  camera_node;
     dc1394_cameracapture* camera;
@@ -198,17 +197,6 @@ static const int preferred_modes[]
 	0
 };
 
-static CvCaptureVTable captureCAM_DC1394_vtable = 
-{
-	6,
-	(CvCaptureCloseFunc)icvCloseCAM_DC1394,
-	(CvCaptureGrabFrameFunc)icvGrabFrameCAM_DC1394,
-	(CvCaptureRetrieveFrameFunc)icvRetrieveFrameCAM_DC1394,
-	(CvCaptureGetPropertyFunc)icvGetPropertyCAM_DC1394,
-	(CvCaptureSetPropertyFunc)icvSetPropertyCAM_DC1394,
-	(CvCaptureGetDescriptionFunc)0
-};
-
 void icvInitCapture_DC1394(){
 	int p;
 
@@ -234,7 +222,7 @@ void icvInitCapture_DC1394(){
 	}
 };
 
-CvCapture * cvCaptureFromCAM_DC1394 (int index)
+static CvCaptureCAM_DC1394 * icvCaptureFromCAM_DC1394 (int index)
 {
 	quadlet_t modes[8], formats;
 	int i;
@@ -249,8 +237,7 @@ CvCapture * cvCaptureFromCAM_DC1394 (int index)
 	if (index<0)
 		return 0;
 
-	CvCaptureCAM_DC1394 * pcap = (CvCaptureCAM_DC1394*)cvAlloc(sizeof(CvCaptureCAM_DC1394));
-	pcap->vtable = &captureCAM_DC1394_vtable;
+	CvCaptureCAM_DC1394 * pcap = (CvCaptureCAM_DC1394*)cvAlloc(sizeof(*pcap));
 
 	/* Select a port and camera */
 	pcap->device_name = videodev[cameras[index].portnum];
@@ -360,7 +347,7 @@ CvCapture * cvCaptureFromCAM_DC1394 (int index)
 
 	memset(&(pcap->frame), 0, sizeof(IplImage));
 	icvResizeFrame( pcap );
-	return (CvCapture *)pcap;
+	return pcap;
 
 ERROR:
 	return 0;  
@@ -1062,6 +1049,72 @@ rgb482bgr(const unsigned char *src, unsigned char *dest,
 		dest[j+2] = (y + (src[i--] << 8)) >> (bits - 8);
 		j--;
 	}
+}
+
+
+class CvCaptureCAM_DC1394_CPP : public CvCapture
+{
+public:
+    CvCaptureCAM_DC1394_CPP() { captureDC1394 = 0; }
+    virtual ~CvCaptureCAM_DC1394_CPP() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCaptureCAM_DC1394* captureDC1394;
+};
+
+bool CvCaptureCAM_DC1394_CPP::open( int index )
+{
+    close();
+    captureDC1394 = icvCaptureFromCAM_DC1394(index);
+    return captureDC1394 != 0;
+}
+
+void CvCaptureCAM_DC1394_CPP::close()
+{
+    if( captureDC1394 )
+    {
+        icvCloseCAM_DC1394( captureDC1394 );
+        cvFree( &captureDC1394 );
+    }
+}
+
+bool CvCaptureCAM_DC1394_CPP::grabFrame()
+{
+    return captureDC1394 ? icvGrabFrameCAM_DC1394( captureDC1394 ) != 0 : false;
+}
+
+IplImage* CvCaptureCAM_DC1394_CPP::retrieveFrame()
+{
+    return captureDC1394 ? (IplImage*)icvRetrieveFrameCAM_DC1394( captureDC1394 ) : 0;
+}
+
+double CvCaptureCAM_DC1394_CPP::getProperty( int propId )
+{
+    return captureDC1394 ? icvGetPropertyCAM_DC1394( captureDC1394, propId ) : 0;
+}
+
+bool CvCaptureCAM_DC1394_CPP::setProperty( int propId, double value )
+{
+    return captureDC1394 ? icvSetPropertyCAM_DC1394( captureDC1394, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateCameraCapture_DC1394( int index )
+{
+    CvCaptureCAM_DC1394_CPP* capture = new CvCaptureCAM_DC1394_CPP;
+
+    if( capture->open( index ))
+        return capture;
+
+    delete capture;
+    return 0;
 }
 
 #endif

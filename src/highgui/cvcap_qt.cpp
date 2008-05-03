@@ -1450,7 +1450,7 @@ bool CvCapture_QT_Movie_CPP::grabFrame()
 
 IplImage* CvCapture_QT_Movie_CPP::retrieveFrame()
 {
-    return captureQT ? icvRetrieveFrame_QT_Movie( captureQT ) : 0;
+    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Movie( captureQT ) : 0;
 }
 
 double CvCapture_QT_Movie_CPP::getProperty( int propId )
@@ -1518,7 +1518,7 @@ bool CvCapture_QT_Cam_CPP::grabFrame()
 
 IplImage* CvCapture_QT_Cam_CPP::retrieveFrame()
 {
-    return captureQT ? icvRetrieveFrame_QT_Cam( captureQT ) : 0;
+    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Cam( captureQT ) : 0;
 }
 
 double CvCapture_QT_Cam_CPP::getProperty( int propId )
