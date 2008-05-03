@@ -427,7 +427,7 @@ struct CvBlob
 {
     float   x,y; /* blob position   */
     float   w,h; /* blob sizes      */
-    int     ID;  /* blbo ID         */     
+    int     ID;  /* blob ID         */     
 };
 
 inline CvBlob cvBlob(float x,float y, float w, float h)
