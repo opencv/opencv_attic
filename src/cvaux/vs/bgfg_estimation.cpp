@@ -39,8 +39,8 @@
 //M*/
 #include "_cvaux.h"
 
-//Function cvCreateBGStatModel creates and returns initialized BG model
-// parameters:
+// Function cvCreateBGStatModel creates and returns initialized BG model.
+// Parameters:
 //      first_frame   - frame from video sequence
 //      model_type – type of BG model (CV_BG_MODEL_MOG, CV_BG_MODEL_FGD,…)
 //      parameters  - (optional) if NULL the default parameters of the algorithm will be used
@@ -63,7 +63,7 @@ class CvFGDetectorBase:public CvFGDetector
 protected:
     CvBGStatModel*  m_pFG;
     int             m_FGType;
-    void*           m_pFGParam; /* foreground params */
+    void*           m_pFGParam; /* Foreground parameters. */
     CvFGDStatModelParams        m_ParamFGD;
     CvGaussBGStatModelParams    m_ParamMOG;
     char*                       m_SaveName;
@@ -165,7 +165,8 @@ public:
     {
         return m_pFG?m_pFG->foreground:NULL;
     };
-    /* process current image */
+
+    /* Process current image: */
     virtual void    Process(IplImage* pImg)
     {
         if(m_pFG == NULL)
@@ -190,7 +191,8 @@ public:
             cvUpdateBGStatModel( pImg, m_pFG );
         }
     };
-    /* release foreground detector */
+
+    /* Release foreground detector: */
     virtual void    Release()
     {
         SaveState(0);

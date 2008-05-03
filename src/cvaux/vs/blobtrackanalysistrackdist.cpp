@@ -77,6 +77,7 @@ public:
     {
         DefTrackPoint   p = {x,y,r,0};
         int             Num = GetPointNum();
+
         if(Num > 0)
         {
             DefTrackPoint* pPrev = GetPoint(Num-1);
@@ -85,20 +86,22 @@ public:
             float  dy = y-pPrev->y;
             p.vx = Alpha*dx+(1-Alpha)*pPrev->vx;
             p.vy = Alpha*dy+(1-Alpha)*pPrev->vy;
-            p.v = Alpha*dx+(1-Alpha)*pPrev->v;
+            p.v  = Alpha*dx+(1-Alpha)*pPrev->v;
         }
         AddPoint(&p);
     }
+
     inline void AddPoint(DefTrackPoint* pB)
-    {/* add point and recal last velocities */
+    {   /* Add point and recalculate last velocities: */
         int     wnd=3;
         int     Num;
         int     i;
         cvSeqPush(m_pSeq,pB);
         
         Num = GetPointNum();
-        for(i=MAX(0,Num-wnd-1);i<Num;++i)
-        {/* next updating point */
+
+        for(i=MAX(0,Num-wnd-1); i<Num; ++i)
+        {   /* Next updating point: */
             DefTrackPoint*  p = GetPoint(i);
             int             j0 = i - wnd;
             int             j1 = i + wnd;
@@ -115,14 +118,15 @@ public:
                 p->vy = (p1->y - p0->y) / dt;
                 p->v = (float)sqrt(p->vx*p->vx+p->vy*p->vy);
             }
-        }/* next updating point */
+        } /* Next updating point. */
 
 #if 0
         if(0)
-        { /* debug */
+        {   /* Debug: */
             int i;
             printf("Blob %d: ",ID);
-            for(i=0;i<GetPointNum();++i)
+
+            for(i=0; i<GetPointNum(); ++i)
             {
                 DefTrackPoint*  p = GetPoint(i);
                 printf(",(%.2f,%.2f,%f.2)",p->vx,p->vy,p->v);
@@ -140,16 +144,17 @@ private:
     CvSeq*          m_pSeq;
 };
 
-/* fill array pIdxPairs by pair of index of correspondent blobs */
-/* return number of pairs                                       */
-/* pIdxPairs must have size not less that 2*(pSeqNum+pSeqTNum)  */
-/* pTmp is pointer to memory which size is pSeqNum*pSeqTNum*16  */
+/* Fill array pIdxPairs by pair of index of correspondent blobs. */
+/* Return number of pairs.                                       */
+/* pIdxPairs must have size not less that 2*(pSeqNum+pSeqTNum)   */
+/* pTmp is pointer to memory which size is pSeqNum*pSeqTNum*16   */
 typedef struct DefMatch
 {
-    int     Idx;  /* prev best blob index */
-    int     IdxT; /* prev best template blob index */
-    double  D; /* blob to blob distance sum */
-}DefMatch;
+    int     Idx;  /* Previous best blob index.          */
+    int     IdxT; /* Previous best template blob index. */
+    double  D;    /* Blob to blob distance sum.         */
+} DefMatch;
+
 static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* pIdxPairs, void* pTmp)
 {
     int         NumPair = 0;
@@ -157,18 +162,18 @@ static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* 
     int         Num = pSeq->GetPointNum();
     int         NumT = pSeqT->GetPointNum();
     int         i,it;
-    int         i0=0; /* last point in the track sequence */
+    int         i0=0; /* Last point in the track sequence. */
 
     if(MaxLen > 0 && Num > MaxLen)
-    {/* set new point seq len and new last point in this seq */
+    {   /* Set new point seq len and new last point in this seq: */
         Num = MaxLen;
         i0 = pSeq->GetPointNum() - Num; 
     }
 
-    for(i=0;i<Num;++i)
-    { /* for eacj point row */
-        for(it=0;it<NumT;++it)
-        { /* for each point templet column */
+    for(i=0; i<Num; ++i)
+    {   /* For each point row: */
+        for(it=0; it<NumT; ++it)
+        {   /* For each point template column: */
             DefTrackPoint*  pB = pSeq->GetPoint(i+i0);
             DefTrackPoint*  pBT = pSeqT->GetPoint(it);
             DefMatch*       pMT_cur = pMT + i*NumT + it;
@@ -184,40 +189,44 @@ static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* 
 
             if(i==0) continue;
 
-            for(iDI=0;iDI<3;++iDI)
+            for(iDI=0; iDI<3; ++iDI)
             {
                 int         i_prev = i+DI[iDI][0];
                 int         it_prev = it+DI[iDI][1];
+
                 if(i_prev >= 0 && it_prev>=0)
                 {
                     double D_cur = D+pMT[NumT*i_prev+it_prev].D;
+
                     if(pMT_cur->D > D_cur || (pMT_cur->Idx<0) )
-                    {/* set new best local way */
+                    {   /* Set new best local way: */
                         pMT_cur->D = D_cur;
                         pMT_cur->Idx = i_prev;
                         pMT_cur->IdxT = it_prev;
                     }
                 }
-            }/* check next direction */
-        }/* fill next colum from table */
-    }/*fill next row */
+            } /* Check next direction. */
+        } /* Fill next colum from table. */
+    } /* Fill next row. */
 
-    {   /* back tracking */
-        /* find best end in template */
+    {   /* Back tracking. */
+        /* Find best end in template: */
         int         it_best = 0;
         DefMatch*   pMT_best = pMT + (Num-1)*NumT;
         i = Num-1; /* set current i to last position */
-        for(it=1;it<NumT;++it)
+
+        for(it=1; it<NumT; ++it)
         {
             DefMatch* pMT_new = pMT + it + i*NumT;
+
             if(pMT_best->D > pMT_new->D)
             {
                 pMT_best->D = pMT_new->D;
                 it_best = it;
             }
-        }/* find best end template point */
+        } /* Find best end template point. */
         
-        /* back tracking whole sequence */
+        /* Back tracking whole sequence: */
         for(it = it_best;i>=0 && it>=0;)
         {
             DefMatch* pMT_new = pMT + it + i*NumT;
@@ -228,10 +237,10 @@ static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* 
             it = pMT_new->IdxT;
             i = pMT_new->Idx;
         }
-    }/* end back tracing */
+    } /* End back tracing. */
 
     return NumPair;
-}/* cvTrackMatch */
+} /* cvTrackMatch. */
 
 typedef struct DefTrackForDist
 {
@@ -245,11 +254,11 @@ typedef struct DefTrackForDist
 
 class CvBlobTrackAnalysisTrackDist : public CvBlobTrackAnalysis
 {
-    /*---------------- internal functions --------------------*/
+    /*---------------- Internal functions: --------------------*/
 private:
-    char*               m_pDebugAVIName; /* for debuf purpose */
-    //CvVideoWriter*      m_pDebugAVI; /* for debuf purpose */
-    IplImage*           m_pDebugImg; /* for debuf purpose */
+    char*               m_pDebugAVIName; /* For debugging. */
+  //CvVideoWriter*      m_pDebugAVI;     /* For debugging. */
+    IplImage*           m_pDebugImg;     /* For debugging. */
 
     char                m_DataFileName[1024];
     CvBlobSeq           m_Tracks;
@@ -269,7 +278,8 @@ private:
         m_pTempData = cvAlloc(Size);
         if(m_pTempData) m_TempDataSize = Size;
         return m_pTempData;
-    }/* ReallocTempData */
+    } /* ReallocTempData. */
+
 public:
     CvBlobTrackAnalysisTrackDist():m_Tracks(sizeof(DefTrackForDist)),m_TrackDataBase(sizeof(DefTrackForDist))
     {
@@ -299,25 +309,27 @@ public:
         AddParam("VelThreshold",&m_VelThreshold);
         CommentParam("VelThreshold","Minimal allowed relative difference between blob speed");
 
-    }/* constructor */
+    } /* Constructor. */
+
     ~CvBlobTrackAnalysisTrackDist()
     {
         int i;
-        for(i=m_Tracks.GetBlobNum();i>0;--i)
+        for(i=m_Tracks.GetBlobNum(); i>0; --i)
         {
             DefTrackForDist* pF = (DefTrackForDist*)m_Tracks.GetBlob(i-1);
             delete pF->pTrack;
         }
         if(m_pDebugImg) cvReleaseImage(&m_pDebugImg);
         //if(m_pDebugAVI) cvReleaseVideoWriter(&m_pDebugAVI);
-    }/* destructor */
+    } /* Destructor. */
 
-    /*-----------------  interface --------------------*/
+    /*----------------- Interface: --------------------*/
     virtual void    AddBlob(CvBlob* pBlob)
     {
         DefTrackForDist* pF = (DefTrackForDist*)m_Tracks.GetBlobByID(CV_BLOB_ID(pBlob));
+
         if(pF == NULL)
-        { /* create new TRack record */
+        {   /* Create new TRack record: */
             DefTrackForDist F;
             F.state = 0;
             F.blob = pBlob[0];
@@ -333,21 +345,25 @@ public:
         pF->blob = pBlob[0];
         pF->LastFrame = m_Frame;
     };
+
     virtual void Process(IplImage* pImg, IplImage* /*pFG*/)
     {
         int i;
         double          MinTv = pImg->width/1440.0; /* minimal threshold for speed difference */
         double          MinTv2 = MinTv*MinTv;
-        for(i=m_Tracks.GetBlobNum();i>0;--i)
+
+        for(i=m_Tracks.GetBlobNum(); i>0; --i)
         {
             DefTrackForDist* pF = (DefTrackForDist*)m_Tracks.GetBlob(i-1);
             pF->state = 0;
+
             if(pF->LastFrame == m_Frame || pF->LastFrame+1 == m_Frame)
-            {/* process one blob trajectory */
+            {   /* Process one blob trajectory: */
                 int NumEq = 0;
                 int it;
-                for(it=m_TrackDataBase.GetBlobNum();it>0;--it)
-                {/* check template */
+
+                for(it=m_TrackDataBase.GetBlobNum(); it>0; --it)
+                {   /* Check template: */
                     DefTrackForDist*   pFT = (DefTrackForDist*)m_TrackDataBase.GetBlob(it-1);
                     int         Num = pF->pTrack->GetPointNum();
                     int         NumT = pFT->pTrack->GetPointNum();
@@ -361,14 +377,14 @@ public:
 
                     if(i==it) continue;
                     
-                    /* match track */
+                    /* Match track: */
                     PairNum = cvTrackMatch( pF->pTrack, m_TraceLen, pFT->pTrack, pPairIdx, pTmpData );
                     Equal = MAX(1,cvRound(PairNum*0.1));
 
                     UseVel = 3*pF->pTrack->GetPointNum() > m_TraceLen;
                     UsePos = 10*pF->pTrack->GetPointNum() > m_TraceLen;
 
-                    { /* check continues */
+                    {   /* Check continues: */
                         float   D;
                         int     DI = pPairIdx[0*2+0]-pPairIdx[(PairNum-1)*2+0];
                         int     DIt = pPairIdx[0*2+1]-pPairIdx[(PairNum-1)*2+1];
@@ -378,10 +394,10 @@ public:
                             if(fabs(D)>m_VelThreshold)Equal=0;
                             if(fabs(D)>m_VelThreshold*0.5)Equal/=2;
                         }
-                    }/* check continues */
+                    }   /* Check continues. */
 
-                    for(k=0;Equal>0 && k<PairNum;++k)
-                    {/* compare with threshold */
+                    for(k=0; Equal>0 && k<PairNum; ++k)
+                    {   /* Compare with threshold: */
                         int             j = pPairIdx[k*2+0];
                         int             jt = pPairIdx[k*2+1];
                         DefTrackPoint*  pB = pF->pTrack->GetPoint(j);
@@ -390,7 +406,7 @@ public:
                         double          dy = pB->y-pBT->y;
                         double          dvx = pB->vx - pBT->vx;
                         double          dvy = pB->vy - pBT->vy;
-                        //double          dv = pB->v - pBT->v;
+                      //double          dv = pB->v - pBT->v;
                         double          D = dx*dx+dy*dy;
                         double          Td = pBT->r*m_PosThreshold;
                         double          dv2 = dvx*dvx+dvy*dvy;
@@ -401,28 +417,28 @@ public:
                         if(Tv2 < MinTv2) Tv2 = MinTv2;
                         if(Tvm < MinTv) Tvm = MinTv;
 
-                        /* check trajectory position */
+                        /* Check trajectory position: */
                         if(UsePos && D > Td*Td)
                         {
                             Equal--;
                         }
                         else
-                        /* check trajectory velacity */
-                        /* don't consider tails of trajectory becasue its unnstable for velosity calculation */
+                        /* Check trajectory velocity. */
+                        /* Don't consider trajectory tail because its unstable for velocity computation. */
                         if(UseVel && j>5 && jt>5 && dv2 > Tv2 )
                         {
                             Equal--;
                         }
-                    }/* compare with threshold */
+                    } /* Compare with threshold. */
 
                     if(Equal>0)
                     {
                         NumEq++;
                         pFT->close++;
                     }
-                }/* next template */
+                } /* Next template. */
 
-                { /* calc state */
+                {   /* Calculate state: */
                     float   T = m_TrackDataBase.GetBlobNum() * m_AbnormalThreshold; /* calc threshold */
 
                     if(T>0)
@@ -436,18 +452,18 @@ public:
                     {// if abnormal blob
                         printf("Abnormal blob(%d) %d < %f, state=%f\n",CV_BLOB_ID(pF),NumEq,T, pF->state);
                     }*/
-                }/* calc state */
-            }/* process one blob trajectory */
+                }   /* Calculate state. */
+            }   /*  Process one blob trajectory. */
             else
-            {/* move track to trcaks data base */
+            {   /* Move track to tracks data base: */
                 m_TrackDataBase.AddBlob((CvBlob*)pF);
                 m_Tracks.DelBlob(i-1);
             }
-        }/* next blob */
+        } /* Next blob. */
 
 
         if(m_Wnd)
-        {/* debug output */
+        {   /* Debug output: */
             int i;
 
             if(m_pDebugImg==NULL) 
@@ -455,8 +471,8 @@ public:
             else 
                 cvCopyImage(pImg, m_pDebugImg);
 
-            for(i=m_TrackDataBase.GetBlobNum();i>0;--i)
-            {/* draw all elements from trackdata base  */
+            for(i=m_TrackDataBase.GetBlobNum(); i>0; --i)
+            {   /* Draw all elements in track data base:  */
                 int         j;
                 DefTrackForDist*   pF = (DefTrackForDist*)m_TrackDataBase.GetBlob(i-1);
                 CvScalar    color = CV_RGB(0,0,0);
@@ -470,17 +486,17 @@ public:
                     color = CV_RGB(0,0,128);
                 }
 
-                for(j=pF->pTrack->GetPointNum();j>0;j--)
+                for(j=pF->pTrack->GetPointNum(); j>0; j--)
                 {
                     DefTrackPoint* pB = pF->pTrack->GetPoint(j-1);
                     int r = 0;//MAX(cvRound(pB->r),1);
                     cvCircle(m_pDebugImg, cvPoint(cvRound(pB->x),cvRound(pB->y)), r, color);
                 }
                 pF->close = 0;
-            }/* draw all elements from trackdata base  */
+            }   /* Draw all elements in track data base. */
 
-            for(i=m_Tracks.GetBlobNum();i>0;--i)
-            {/* draw all elements for all trajectories */
+            for(i=m_Tracks.GetBlobNum(); i>0; --i)
+            {   /* Draw all elements for all trajectories: */
                 DefTrackForDist*    pF = (DefTrackForDist*)m_Tracks.GetBlob(i-1);
                 int                 j;
                 int                 c = cvRound(pF->state*255);
@@ -495,36 +511,39 @@ public:
                     0, 0, 360, 
                     CV_RGB(c,255-c,0), cvRound(1+(0*c)/255) );
 
-                for(j=pF->pTrack->GetPointNum();j>0;j--)
+                for(j=pF->pTrack->GetPointNum(); j>0; j--)
                 {
                     DefTrackPoint* pB = pF->pTrack->GetPoint(j-1);
                     if(pF->pTrack->GetPointNum()-j > m_TraceLen) break;
                     cvCircle(m_pDebugImg, cvPoint(cvRound(pB->x),cvRound(pB->y)), 0, color);
                 }
                 pF->close = 0;
-            }/* draw all elements for all trajectories */
+
+            }   /* Draw all elements for all trajectories. */
             
             //cvNamedWindow("Tracks",0);
             //cvShowImage("Tracks", m_pDebugImg);
-        }/* debug output */
+        } /* Debug output. */
 
 #if 0        
         if(m_pDebugImg && m_pDebugAVIName)
         {
             if(m_pDebugAVI==NULL)
-            {/* create avi file for writing */
+            {   /* Create avi file for writing: */
                 m_pDebugAVI = cvCreateVideoWriter( 
                     m_pDebugAVIName, 
                     CV_FOURCC('x','v','i','d'), 
                     25, 
                     cvSize(m_pDebugImg->width,m_pDebugImg->height));
+
                 if(m_pDebugAVI == NULL)
                 {
                     printf("WARNING!!! Can not create AVI file %s for writing\n",m_pDebugAVIName);
                 }
-            }/* create avi file for writing */
+            }   /* Create avi file for writing. */
+
             if(m_pDebugAVI)cvWriteFrame( m_pDebugAVI, m_pDebugImg );
-        }/* write debug window to AVI file */
+        }   /* Write debug window to AVI file. */
 #endif
         m_Frame++;
     };
@@ -533,13 +552,15 @@ public:
         DefTrackForDist* pF = (DefTrackForDist*)m_Tracks.GetBlobByID(BlobID);
         return pF?pF->state:0.0f;
     };
-    /* return 0 if trajectory is normal 
-       return >0 if trajectory abnormal */
+
+    /* Return 0 if trajectory is normal; 
+       return >0 if trajectory abnormal. */
     virtual char*   GetStateDesc(int BlobID)
     {
         if(GetState(BlobID)>0.5) return "abnormal";
         return NULL;
     }
+
     virtual void    SetFileName(char* DataBaseName)
     {
         m_DataFileName[0] = 0;
@@ -551,7 +572,6 @@ public:
     };
 
     virtual void    Release(){ delete this; };
-
 };
 
 

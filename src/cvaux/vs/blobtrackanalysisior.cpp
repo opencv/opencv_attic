@@ -54,41 +54,47 @@ protected:
     } m_Ans[MAX_ANS];
     int m_AnNum;
     char m_Desc[MAX_DESC];
+
 public:
     CvBlobTrackAnalysisIOR()
     {
         m_AnNum = 0;
     }
+
     ~CvBlobTrackAnalysisIOR()
     {
     };
+
     virtual void    AddBlob(CvBlob* pBlob)
     {
         int i;
-        for(i=0;i<m_AnNum;++i)
+        for(i=0; i<m_AnNum; ++i)
         {
             m_Ans[i].pAn->AddBlob(pBlob);
-        }/* next analizer */
+        } /* Next analyzer. */
     };
+
     virtual void    Process(IplImage* pImg, IplImage* pFG)
     {
         int i;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(i=0;i<m_AnNum;++i)
+        for(i=0; i<m_AnNum; ++i)
         {
             m_Ans[i].pAn->Process(pImg, pFG);
-        }/* next analizer */
+        } /* Next analyzer. */
     };
+
     float GetState(int BlobID)
     {
         int state = 0;
         int i;
-        for(i=0;i<m_AnNum;++i)
+        for(i=0; i<m_AnNum; ++i)
         {
             state |= (m_Ans[i].pAn->GetState(BlobID) > 0.5);
-        }/* next analizer */
+        } /* Next analyzer. */
+
         return (float)state;
     };
 
@@ -97,9 +103,11 @@ public:
         int     rest = MAX_DESC-1;
         int     i;
         m_Desc[0] = 0;
-        for(i=0;i<m_AnNum;++i)
+
+        for(i=0; i<m_AnNum; ++i)
         {
             char* str = m_Ans[i].pAn->GetStateDesc(BlobID);
+
             if(str && strlen(m_Ans[i].pName) + strlen(str)+4 < (size_t)rest)
             {
                 strcat(m_Desc,m_Ans[i].pName);
@@ -108,15 +116,18 @@ public:
                 strcat(m_Desc,"\n");
                 rest = MAX_DESC - (int)strlen(m_Desc) - 1;
             }
-        }/* next analizer */
+        } /* Next analyzer. */
+
         if(m_Desc[0]!=0)return m_Desc;
+
         return NULL;
     };
+
     virtual void SetFileName(char* /*DataBaseName*/)
     {
     };
 
-    int AddAnalizer(CvBlobTrackAnalysis* pA, char* pName)
+    int AddAnalyzer(CvBlobTrackAnalysis* pA, char* pName)
     {
         if(m_AnNum<MAX_ANS)
         {
@@ -129,20 +140,21 @@ public:
         }
         else
         {
-            printf("Can not add track analizer %s! (not more that %d analizers)\n",pName,MAX_ANS);
+            printf("Can not add track analyzer %s! (not more that %d analyzers)\n",pName,MAX_ANS);
             return 0;
         }
     }
     void    Release()
     {
         int i;
-        for(i=0;i<m_AnNum;++i)
+        for(i=0; i<m_AnNum; ++i)
         {
             m_Ans[i].pAn->Release();
-        }/* next analizer */
+        } /* Next analyzer. */
+
         delete this;
     };
-}; /* CvBlobTrackAnalysisIOR */
+}; /* CvBlobTrackAnalysisIOR. */
 
 CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisIOR()
 {
@@ -150,10 +162,10 @@ CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisIOR()
     CvBlobTrackAnalysis* pA = NULL;
 
     pA = cvCreateModuleBlobTrackAnalysisHistPVS();
-    pIOR->AddAnalizer(pA, "HIST");
+    pIOR->AddAnalyzer(pA, "HIST");
 
     //pA = (CvBlobTrackAnalysis*)cvCreateModuleBlobTrackAnalysisHeightScale();
-    //pIOR->AddAnalizer(pA, "SCALE");
+    //pIOR->AddAnalyzer(pA, "SCALE");
 
     return (CvBlobTrackAnalysis*)pIOR;
 }/* cvCreateCvBlobTrackAnalysisIOR */

@@ -48,24 +48,25 @@ typedef float DefHistType;
 #define HIST_INDEX(_pData) (((_pData)[0]>>m_ByteShift) + (((_pData)[1]>>(m_ByteShift))<<m_BinBit)+((pImgData[2]>>m_ByteShift)<<(m_BinBit*2)))
 
 void calcKernelEpanechnikov(CvMat* pK)
-{/* allocate kernel for histogramm creation */
+{    /* Allocate kernel for histogramm creation: */
     int     x,y;
     int     w = pK->width;
     int     h = pK->height;
     float   x0 = 0.5f*(w-1);
     float   y0 = 0.5f*(h-1);
-    for(y=0;y<h;++y)for(x=0;x<w;++x)
+
+    for(y=0; y<h; ++y) for(x=0; x<w; ++x)
     {
 //                float   r2 = ((x-x0)*(x-x0)/(x0*x0)+(y-y0)*(y-y0)/(y0*y0));
         float   r2 = ((x-x0)*(x-x0)+(y-y0)*(y-y0))/((x0*x0)+(y0*y0));
         CV_MAT_ELEM(pK[0],DefHistType, y, x) = (DefHistType)((r2<1)?(1-r2):0);
     }
-}/* allocate kernel for histogramm creation */
+}   /* Allocate kernel for histogram creation. */
 
 class CvBlobTrackerOneMSFGS:public CvBlobTrackerOne
 {
 private:
-    /* parameters */
+    /* Parameters: */
     float           m_FGWeight;
     float           m_Alpha;
     CvSize          m_ObjSize;
@@ -86,6 +87,7 @@ private:
     float           m_HistCandidateVolume;
     CvMat*          m_HistTemp;
     CvBlob          m_Blob;
+
     void ReAllocHist(int Dim, int BinBit)
     {
         m_BinBit = BinBit;
@@ -104,6 +106,7 @@ private:
         m_HistModelVolume = 0.0f;
         m_HistCandidateVolume = 0.0f;
     }
+
     void ReAllocKernel(int  w, int h, float sigma=0.4)
     {
         double  ScaleToObj = sigma*1.39;
@@ -116,7 +119,7 @@ private:
         m_KernelMeanShiftSize = cvSize(kernel_width,kernel_height);
 
         
-        /* create kernels for histogramm calculation */
+        /* Create kernels for histogram calculation: */
         if(m_KernelHistModel) cvReleaseMat(&m_KernelHistModel);
         m_KernelHistModel = cvCreateMat(h, w, DefHistTypeMat);
         calcKernelEpanechnikov(m_KernelHistModel);
@@ -127,8 +130,8 @@ private:
         if(m_Weights) cvReleaseMat(&m_Weights);
         m_Weights = cvCreateMat(kernel_height, kernel_width, CV_32F);
         
-        for(s=-SCALE_RANGE;s<=SCALE_RANGE;++s)
-        {/* allocate kernwl for meanshifts in space and scale */
+        for(s=-SCALE_RANGE; s<=SCALE_RANGE; ++s)
+        {   /* Allocate kernel for meanshifts in space and scale: */
             int     si = s+SCALE_RANGE;
             double  cur_sigma = sigma * pow(SCALE_BASE,s);
             double  cur_sigma2 = cur_sigma*cur_sigma;
@@ -138,11 +141,13 @@ private:
             if(m_KernelMeanShiftG[si]) cvReleaseMat(&m_KernelMeanShiftG[si]);
             m_KernelMeanShiftK[si] = cvCreateMat(kernel_height, kernel_width, DefHistTypeMat);
             m_KernelMeanShiftG[si] = cvCreateMat(kernel_height, kernel_width, DefHistTypeMat);
-            for(y=0;y<kernel_height;++y)
+
+            for(y=0; y<kernel_height; ++y)
             {
                 DefHistType* pK = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftK[si][0], y, 0, sizeof(DefHistType) ); 
                 DefHistType* pG = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftG[si][0], y, 0, sizeof(DefHistType) ); 
-                for(x=0;x<kernel_width;++x)
+
+                for(x=0; x<kernel_width; ++x)
                 {
                     double r2 = ((x-x0)*(x-x0)/(x0*x0)+(y-y0)*(y-y0)/(y0*y0));
                     double sigma12 = cur_sigma2 / 2.56;
@@ -150,13 +155,15 @@ private:
                     pK[x] = (DefHistType)(Gaussian2D(r2, sigma12)/sigma12 - Gaussian2D(r2, sigma22)/sigma22);
                     pG[x] = (DefHistType)(Gaussian2D(r2, cur_sigma2/1.6) - Gaussian2D(r2, cur_sigma2*1.6));
                 }
-            }/* next line */
+            }   /* Next line. */
         }
-    }/* ReallocKernel*/
+    }   /* ReallocKernel */
+
     inline double Gaussian2D(double x, double sigma2) 
     {
         return (exp(-x/(2*sigma2)) / (2*3.1415926535897932384626433832795*sigma2) );
     }
+
     void calcHist(IplImage* pImg, IplImage* pMask, CvPoint Center, CvMat* pKernel, CvMat* pHist, DefHistType* pHistVolume)
     {
         int         w = pKernel->width;
@@ -172,7 +179,7 @@ private:
 
         if(m_Dim == 3)
         {
-            for(y=0;y<h;++y)
+            for(y=0; y<h; ++y)
             {
                 unsigned char* pImgData = NULL;
                 unsigned char* pMaskData = NULL;
@@ -182,10 +189,12 @@ private:
                 pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y+y0,x0*3);
                 pMaskData = pMask?(&CV_IMAGE_ELEM(pMask,unsigned char,y+y0,x0)):NULL;
                 pKernelData = (DefHistType*)CV_MAT_ELEM_PTR_FAST(pKernel[0],y,0,sizeof(DefHistType));
-                for(x=0;x<w;++x,pImgData+=3)
+
+                for(x=0; x<w; ++x, pImgData+=3)
                 {
                     if((x0+x)>=pImg->width) continue;
                     if((x0+x)<0)continue;
+
                     if(pMaskData==NULL || pMaskData[x]>128)
                     {
                         DefHistType K = pKernelData[x];
@@ -193,22 +202,28 @@ private:
                         assert(index >= 0 && index < pHist->cols);
                         Volume += K;
                         ((DefHistType*)(pHist->data.ptr))[index] += K;
-                    }/* only masked pixels */
-                }/* next column */
-            }/* next row */
-        }/* if m_Dim == 3 */
+
+                    }   /* Only masked pixels. */
+                }   /*  Next column. */
+            }   /*  Next row. */
+        }   /* if m_Dim == 3. */
+
         if(pHistVolume)pHistVolume[0] = Volume;
-    };/*calcHist*/
+
+    }; /* calcHist */
+
     double calcBhattacharyya()
     {
         cvMul(m_HistCandidate,m_HistModel,m_HistTemp);
         cvPow(m_HistTemp,m_HistTemp,0.5);
         return cvSum(m_HistTemp).val[0] / sqrt(m_HistCandidateVolume*m_HistModelVolume);
-    } /* calcBhattacharyyaCoefficient */
+    }   /* calcBhattacharyyaCoefficient */
+
     void calcWeights(IplImage* pImg, IplImage* pImgFG, CvPoint Center)
     {
         cvZero(m_Weights);
-        /* calc new pos */
+
+        /* Calculate new position: */
         if(m_Dim == 3)
         {
             int         x0 = Center.x - m_KernelMeanShiftSize.width/2;
@@ -218,8 +233,8 @@ private:
             assert(m_Weights->width == m_KernelMeanShiftSize.width);
             assert(m_Weights->height == m_KernelMeanShiftSize.height);
 
-            /*calc shift vector */
-            for(y=0;y<m_KernelMeanShiftSize.height;++y)
+            /* Calcualte shift vector: */
+            for(y=0; y<m_KernelMeanShiftSize.height; ++y)
             {
                 unsigned char* pImgData = NULL;
                 unsigned char* pMaskData = NULL;
@@ -231,7 +246,7 @@ private:
                 pMaskData = pImgFG?(&CV_IMAGE_ELEM(pImgFG,unsigned char,y+y0,x0)):NULL;
                 pWData = (float*)CV_MAT_ELEM_PTR_FAST(m_Weights[0],y,0,sizeof(float));
                 
-                for(x=0;x<m_KernelMeanShiftSize.width;++x,pImgData+=3)
+                for(x=0; x<m_KernelMeanShiftSize.width; ++x, pImgData+=3)
                 {
                     double      V  = 0;
                     double      HM = 0;
@@ -244,16 +259,18 @@ private:
 
                     if(m_HistModelVolume>0)
                         HM = ((DefHistType*)m_HistModel->data.ptr)[index]/m_HistModelVolume;
+
                     if(m_HistCandidateVolume>0)
                         HC = ((DefHistType*)m_HistCandidate->data.ptr)[index]/m_HistCandidateVolume;
 
                     V = (HC>0)?sqrt(HM / HC):0;
                     V += m_FGWeight*(pMaskData?((pMaskData[x]/255.0f)):0);
                     pWData[x] = (float)MIN(V,100000);
-                }/* next column */
-            }/* next row */
-        }/* if m_Dim == 3 */
-    }/* calcWeights */
+
+                }   /* Next column. */
+            }   /*  Next row. */
+        }   /*  if m_Dim == 3. */
+    }   /*  calcWeights */
 
 public:
     CvBlobTrackerOneMSFGS()
@@ -262,7 +279,7 @@ public:
         m_FGWeight = 0;
         m_Alpha = 0.0;
         
-        /* add several parameters for external use */
+        /* Add several parameters for external use: */
         AddParam("FGWeight", &m_FGWeight);
         CommentParam("FGWeight","Weight of FG mask using (0 - mask will not be used for tracking)");
         AddParam("Alpha", &m_Alpha);
@@ -276,13 +293,15 @@ public:
         m_KernelHistModel = NULL;
         m_KernelHistCandidate = NULL;
         m_Weights = NULL;
-        for(i=0;i<SCALE_NUM;++i)
+
+        for(i=0; i<SCALE_NUM; ++i)
         {
             m_KernelMeanShiftK[i] = NULL;
             m_KernelMeanShiftG[i] = NULL;
         }
-        ReAllocHist(3,5);   /* 3D hist, each dim has 2^5 bins*/
+        ReAllocHist(3,5);   /* 3D hist, each dimension has 2^5 bins. */
     }
+
     ~CvBlobTrackerOneMSFGS()
     {
         int i;
@@ -290,13 +309,15 @@ public:
         if(m_HistCandidate) cvReleaseMat(&m_HistCandidate);
         if(m_HistTemp) cvReleaseMat(&m_HistTemp);
         if(m_KernelHistModel) cvReleaseMat(&m_KernelHistModel);
-        for(i=0;i<SCALE_NUM;++i)
+
+        for(i=0; i<SCALE_NUM; ++i)
         {
             if(m_KernelMeanShiftK[i]) cvReleaseMat(&m_KernelMeanShiftK[i]);
             if(m_KernelMeanShiftG[i]) cvReleaseMat(&m_KernelMeanShiftG[i]);
         }
     }
-    /* interface */
+
+    /* Interface: */
     virtual void Init(CvBlob* pBlobInit, IplImage* pImg, IplImage* pImgFG = NULL)
     {
         int w = cvRound(CV_BLOB_WX(pBlobInit));
@@ -309,6 +330,7 @@ public:
         calcHist(pImg, pImgFG, cvPointFrom32f(CV_BLOB_CENTER(pBlobInit)), m_KernelHistModel, m_HistModel, &m_HistModelVolume);
         m_Blob = pBlobInit[0];
     };
+
     virtual CvBlob* Process(CvBlob* pBlobPrev, IplImage* pImg, IplImage* pImgFG = NULL)
     {
         int     iter;
@@ -317,31 +339,34 @@ public:
         {
             m_Blob = pBlobPrev[0];
         }
-        for(iter=0;iter<10;++iter)
+
+        for(iter=0; iter<10; ++iter)
         {
 //            float   newx=0,newy=0,sum=0;
             float   dx=0,dy=0,sum=0;
             int     x,y,si;
+
             CvPoint Center = cvPoint(cvRound(m_Blob.x),cvRound(m_Blob.y));
-            CvSize  Size = cvSize(cvRound(m_Blob.w),cvRound(m_Blob.h));
+            CvSize  Size   = cvSize(cvRound(m_Blob.w),cvRound(m_Blob.h));
 
             if(m_ObjSize.width != Size.width || m_ObjSize.height != Size.height)
-            {   /* realloc kernels */
+            {   /* Reallocate kernels: */
                 ReAllocKernel(Size.width,Size.height);
-            }   /* realloc kernels */
+            }   /* Reallocate kernels. */
 
-            /* mean shift in coordinate space */
+            /* Mean shift in coordinate space: */
             calcHist(pImg, NULL, Center, m_KernelHistCandidate, m_HistCandidate, &m_HistCandidateVolume);
             calcWeights(pImg, pImgFG, Center);
-            for(si=1;si<(SCALE_NUM-1);++si)
+
+            for(si=1; si<(SCALE_NUM-1); ++si)
             {
                 CvMat*  pKernel = m_KernelMeanShiftK[si];
                 float   sdx = 0, sdy=0, ssum=0;
                 int     s = si-SCALE_RANGE;
                 float   factor = (1.0f-( float(s)/float(SCALE_RANGE) )*( float(s)/float(SCALE_RANGE) ));
 
-                for(y=0;y<m_KernelMeanShiftSize.height;++y)
-                for(x=0;x<m_KernelMeanShiftSize.width;++x)
+                for(y=0; y<m_KernelMeanShiftSize.height; ++y)
+                for(x=0; x<m_KernelMeanShiftSize.width;  ++x)
                 {
                     float W = *(float*)CV_MAT_ELEM_PTR_FAST(m_Weights[0],y,x,sizeof(float));
                     float K = *(float*)CV_MAT_ELEM_PTR_FAST(pKernel[0],y,x,sizeof(float));
@@ -349,11 +374,14 @@ public:
                     ssum += (float)fabs(KW);
                     sdx += KW*(x-m_KernelMeanShiftSize.width*0.5f);
                     sdy += KW*(y-m_KernelMeanShiftSize.height*0.5f);
-                }/* next pixel */
+                }   /* Next pixel. */
+
                 dx += sdx * factor;
                 dy += sdy * factor;
                 sum  += ssum * factor;
-            }/* next scale */
+
+            }   /* Next scale. */
+
             if(sum > 0)
             {
                 dx /= sum;
@@ -363,7 +391,7 @@ public:
             m_Blob.x += dx;
             m_Blob.y += dy;
 
-            {   /* mean shift in scale space */
+            {   /* Mean shift in scale space: */
                 float   news = 0;
                 float   sum = 0;
                 float   scale;
@@ -372,6 +400,7 @@ public:
                 calcHist(pImg, NULL, Center, m_KernelHistCandidate, m_HistCandidate, &m_HistCandidateVolume);
                 calcWeights(pImg, pImgFG, Center);
                 //cvSet(m_Weights,cvScalar(1));
+
                 for(si=0; si<SCALE_NUM; si++) 
                 {
                     double  W = cvDotProduct(m_Weights, m_KernelMeanShiftG[si]);;   
@@ -379,21 +408,24 @@ public:
                     sum += (float)fabs(W);
                     news += (float)(s*W);
                 }
+
                 if(sum>0)
                 {
                     news /= sum;
                 }
+
                 scale = (float)pow((double)SCALE_BASE,(double)news);
                 m_Blob.w *= scale;
                 m_Blob.h *= scale;
-            }   /* mean shift in scale space */
+            }   /* Mean shift in scale space. */
             
-            /* check fo finish */
+            /* Check fo finish: */
             if(fabs(dx)<0.1 && fabs(dy)<0.1) break;
-        }/* next iteration */
+
+        }   /* Next iteration. */
 
         if(m_Alpha>0)
-        {/* update hist */
+        {   /* Update histogram: */
             double  Vol, WM, WC;
             CvPoint Center = cvPoint(cvRound(m_Blob.x),cvRound(m_Blob.y));
             calcHist(pImg, pImgFG, Center, m_KernelHistModel, m_HistCandidate, &m_HistCandidateVolume);
@@ -402,10 +434,12 @@ public:
             WC = Vol*(m_Alpha)/m_HistCandidateVolume;
             cvAddWeighted(m_HistModel, WM, m_HistCandidate,WC,0,m_HistModel);
             m_HistModelVolume = (float)cvSum(m_HistModel).val[0];
-        }/* update hist */
+        }   /* Update histogram. */
 
         return &m_Blob;
-    }; /* Process */
+
+    };  /* Process */
+
     virtual void Release(){delete this;};
 }; /*CvBlobTrackerOneMSFGS*/
 
@@ -413,6 +447,7 @@ CvBlobTrackerOne* cvCreateBlobTrackerOneMSFGS()
 {
     return (CvBlobTrackerOne*) new CvBlobTrackerOneMSFGS;
 }
+
 CvBlobTracker* cvCreateBlobTrackerMSFGS()
 {
     return cvCreateBlobTrackerList(cvCreateBlobTrackerOneMSFGS);

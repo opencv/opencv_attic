@@ -41,7 +41,7 @@
 #include "_cvaux.h"
 
 static float CalcAverageMask(CvBlob* pBlob, IplImage* pImgFG )
-{/* calc summ of mask */
+{   /* Calculate sum of mask: */
     double  Area, Aver = 0;
     CvRect  r;
     CvMat   mat;
@@ -57,6 +57,7 @@ static float CalcAverageMask(CvBlob* pBlob, IplImage* pImgFG )
     if(r.y<0){r.height += r.y;r.y = 0;}
     if((r.x+r.width)>=pImgFG->width){r.width=pImgFG->width-r.x-1;}
     if((r.y+r.height)>=pImgFG->height){r.height=pImgFG->height-r.y-1;}
+
     if(r.width>0 && r.height>0)
     {
         double Sum = cvSum(cvGetSubRect(pImgFG,&mat,r)).val[0]/255.0;
@@ -64,7 +65,7 @@ static float CalcAverageMask(CvBlob* pBlob, IplImage* pImgFG )
         Aver = Sum/Area;
     }
     return (float)Aver;
-}/* calc summ of mask */
+}   /* Calculate sum of mask. */
 
 
 /*============== BLOB TRACKERCC CLASS DECLARATION =============== */
@@ -76,7 +77,8 @@ typedef struct DefBlobTracker
     int                         Collision;
     CvBlobSeq*                  pBlobHyp;
     float                       AverFG;
-}DefBlobTracker;
+} DefBlobTracker;
+
 void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* storage);
 
 class CvBlobTrackerCC : public CvBlobTracker
@@ -90,7 +92,7 @@ private:
     char*           m_ConfidenceTypeStr;
     CvBlobSeq       m_BlobList;
     CvBlobSeq       m_BlobListNew;
-//    int             m_LastID;
+//  int             m_LastID;
     CvMemStorage*   m_pMem;
     int             m_ClearHyp;
     IplImage*       m_pImg;
@@ -98,12 +100,12 @@ private:
 public:
     CvBlobTrackerCC():m_BlobList(sizeof(DefBlobTracker))
     {
-//        m_LastID = 0;
+//      m_LastID = 0;
         m_ClearHyp = 0;
         m_pMem = cvCreateMemStorage();
         m_Collision = 1; /* if 1 then collistion will be detected and processed */
         AddParam("Collision",&m_Collision);
-        CommentParam("Collision", "if 1 then collision cases are processed in special way");
+        CommentParam("Collision", "If 1 then collision cases are processed in special way");
 
         m_AlphaSize = 0.02f;
         AddParam("AlphaSize",&m_AlphaSize);
@@ -111,11 +113,11 @@ public:
 
         m_AlphaPos = 1.0f;
         AddParam("AlphaPos",&m_AlphaPos);
-        CommentParam("AlphaPos", "Pos update speed (0..1)");
+        CommentParam("AlphaPos", "Position update speed (0..1)");
 
         m_Alpha = 0.001f;
         AddParam("Alpha", &m_Alpha);
-        CommentParam("Alpha","Coefficient for model histogramm updating (0 - hist is not upated)");
+        CommentParam("Alpha","Coefficient for model histogram updating (0 - hist is not updated)");
 
         m_ConfidenceType=0;
         m_ConfidenceTypeStr = "NearestBlob";
@@ -124,12 +126,13 @@ public:
 
         SetModuleName("CC");
     };
+
     ~CvBlobTrackerCC()
     {
         if(m_pMem)cvReleaseMemStorage(&m_pMem);
     };
 
-    /* blob functions*/
+    /* Blob functions: */
     virtual int     GetBlobNum() {return m_BlobList.GetBlobNum();};
     virtual CvBlob* GetBlob(int BlobIndex){return m_BlobList.GetBlob(BlobIndex);};
     virtual void    SetBlob(int BlobIndex, CvBlob* pBlob)
@@ -137,6 +140,7 @@ public:
         CvBlob* pB = m_BlobList.GetBlob(BlobIndex);
         if(pB) pB[0] = pBlob[0];
     };
+
     virtual CvBlob* GetBlobByID(int BlobID){return m_BlobList.GetBlobByID(BlobID);};
     virtual void    DelBlob(int BlobIndex)
     {
@@ -171,17 +175,18 @@ public:
     /* return pointer to new added blob */
     virtual CvBlob* AddBlob(CvBlob* pB, IplImage* /*pImg*/, IplImage* pImgFG = NULL )
     {
-        assert(pImgFG); /* this tracker use only foreground mask */
+        assert(pImgFG); /* This tracker uses only foreground mask. */
         DefBlobTracker NewB;
         NewB.blob = pB[0];
 //        CV_BLOB_ID(&NewB) = m_LastID;
         NewB.pBlobHyp = new CvBlobSeq;
-        NewB.pPredictor = cvCreateModuleBlobTrackPredictKalman(); /* module for predict position */
+        NewB.pPredictor = cvCreateModuleBlobTrackPredictKalman(); /* Module for positino prediction. */
         NewB.pPredictor->Update(pB);
         NewB.AverFG = pImgFG?CalcAverageMask(pB,pImgFG):0;
         m_BlobList.AddBlob((CvBlob*)&NewB);
         return m_BlobList.GetBlob(m_BlobList.GetBlobNum()-1);
     };
+
     virtual void    Process(IplImage* pImg, IplImage* pImgFG = NULL)
     {
         CvSeq*      cnts;
@@ -193,7 +198,7 @@ public:
 
         if(m_BlobList.GetBlobNum() <= 0 ) return;
         
-        /* clear blob list for new blobs */
+        /* Clear bloblist for new blobs: */
         m_BlobListNew.Clear();
 
         assert(m_pMem);
@@ -201,22 +206,24 @@ public:
         assert(pImgFG);
 
         
-        /* find CC */
+        /* Find CC: */
 #if 0
-        {// by contur clastring
+        {   // By contour clustering:
             cvFindBlobsByCCClasters(pImgFG, &m_BlobListNew, m_pMem);
         }
 #else
-        {/* one contour - one blob */
+        {   /* One contour - one blob: */
             IplImage* pBin = cvCloneImage(pImgFG);
             assert(pBin);
             cvThreshold(pBin,pBin,128,255,CV_THRESH_BINARY);
             cvFindContours(pBin, m_pMem, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
-            /* process each contours*/
-            for(cnt = cnts;cnt;cnt=cnt->h_next)
+
+            /* Process each contour: */
+            for(cnt = cnts; cnt; cnt=cnt->h_next)
             {
                 CvBlob  NewBlob;
-                /* image moments */
+
+                /* Image moments: */
                 double      M00,X,Y,XX,YY;
                 CvMoments   m;
                 CvRect      r = ((CvContour*)cnt)->rect;
@@ -231,19 +238,20 @@ public:
                 YY = (cvGetSpatialMoment( &m, 0, 2 )/M00) - Y*Y;
                 NewBlob = cvBlob(r.x+(float)X,r.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
                 m_BlobListNew.AddBlob(&NewBlob);
-            }/* next contour */
+            }   /* Next contour. */
+
             cvReleaseImage(&pBin);
         }
 #endif        
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* predict new blob position */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Predict new blob position: */
             CvBlob*         pB=NULL;
             DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(i-1);
 
-            /* update predictor by previouse value of blob*/
+            /* Update predictor by previous value of blob: */
             pBT->pPredictor->Update(&(pBT->blob));
             
-            /* predict current position */
+            /* Predict current position: */
             pB = pBT->pPredictor->Predict();
             
             if(pB)
@@ -254,35 +262,45 @@ public:
             {
                 pBT->BlobPredict = pBT->blob;
             }
-        }/* predict new blob position */
+        }   /* Predict new blob position. */
 
         if(m_Collision)
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* predict collision */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Predict collision. */
             int             Collision = 0;
             int             j;
             DefBlobTracker* pF = (DefBlobTracker*)m_BlobList.GetBlob(i-1);
-            for(j=m_BlobList.GetBlobNum();j>0;--j)
-            {/* predict collision */
+
+            for(j=m_BlobList.GetBlobNum(); j>0; --j)
+            {   /* Predict collision: */
                 CvBlob* pB1;
                 CvBlob* pB2;
                 DefBlobTracker* pF2 = (DefBlobTracker*)m_BlobList.GetBlob(j-1);
                 if(i==j) continue;
                 pB1 = &pF->BlobPredict;
                 pB2 = &pF2->BlobPredict;
+
                 if( fabs(pB1->x-pB2->x)<0.6*(pB1->w+pB2->w) &&
                     fabs(pB1->y-pB2->y)<0.6*(pB1->h+pB2->h) ) Collision = 1;
+
                 pB1 = &pF->blob;
                 pB2 = &pF2->blob;
+
                 if( fabs(pB1->x-pB2->x)<0.6*(pB1->w+pB2->w) &&
                     fabs(pB1->y-pB2->y)<0.6*(pB1->h+pB2->h) ) Collision = 1;
-                if(Collision) break;
-            }/* check next blob to cross current*/
-            pF->Collision = Collision;
-        }/* predict collision */
 
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* find a neighbour on cur frame for each blob from prev frame */
+                if(Collision) break;
+
+            }   /* Check next blob to cross current. */
+
+            pF->Collision = Collision;
+
+        }   /* Predict collision. */
+
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Find a neighbour on current frame
+             * for each blob from previous frame:
+             */
             CvBlob*         pB = m_BlobList.GetBlob(i-1);
             DefBlobTracker* pBT = (DefBlobTracker*)pB;
             //int             BlobID = CV_BLOB_ID(pB);
@@ -291,17 +309,17 @@ public:
             //int j;
 
             if(pBT->pBlobHyp->GetBlobNum()>0)
-            {/* track all hypothesis */
+            {   /* Track all hypotheses: */
                 int h,hN = pBT->pBlobHyp->GetBlobNum();
-                for(h=0;h<hN;++h)
+                for(h=0; h<hN; ++h)
                 {
                     int         j, jN = m_BlobListNew.GetBlobNum();
                     CvBlob*     pB = pBT->pBlobHyp->GetBlob(h);
                     int         BlobID = CV_BLOB_ID(pB);
                     CvBlob*     pBBest = NULL;
                     double      DistBest = -1;
-                    for(j=0;j<jN;j++)
-                    {/* find best CC */
+                    for(j=0; j<jN; j++)
+                    {   /* Find best CC: */
                         double  Dist = -1;
                         CvBlob* pBNew = m_BlobListNew.GetBlob(j);
                         double  dx = fabs(CV_BLOB_X(pB)-CV_BLOB_X(pBNew));
@@ -314,25 +332,26 @@ public:
                             DistBest = Dist;
                             pBBest = pBNew;
                         }
-                    }/* find best CC */
+                    }   /* Find best CC. */
+
                     if(pBBest)
                     {
                         pB[0] = pBBest[0];
                         CV_BLOB_ID(pB) = BlobID;
                     }
                     else
-                    { /* delete this hypothesis */
+                    {   /* Delete this hypothesis. */
                         pBT->pBlobHyp->DelBlob(h);
                         h--;
                         hN--;
                     }
-                }/* next hyp*/
-            }/* track all hypothesis */
-        }/* track next blob */
+                }   /* Next hypothysis. */
+            }   /*  Track all hypotheses. */
+        }   /*  Track next blob. */
 
         m_ClearHyp = 1;
 
-    }/* Process */
+    } /* Process. */
 
     virtual void ProcessBlob(int BlobIndex, CvBlob* pBlob, IplImage* /*pImg*/, IplImage* /*pImgFG*/ = NULL)
     {
@@ -348,12 +367,12 @@ public:
         BlobID = pB->ID;
 
         if(m_Collision && pBT->Collision)
-        {/* tracking in collision */
+        {   /* Tracking in collision: */
             pB[0]=pBT->BlobPredict;
             CV_BLOB_ID(pB)=BlobID;
-        }/* tracking in collision */
+        }   /* Tracking in collision. */
         else
-        {/* not collision tracking */
+        {   /* Non-collision tracking: */
             CvBlob* pBBest = GetNearestBlob(pB);
             if(pBBest)
             {
@@ -367,7 +386,7 @@ public:
                 pB->y = y;
                 CV_BLOB_ID(pB) = BlobID;
             }
-        }/* not collision tracking */
+        }   /* Non-collision tracking. */
 
         pBlob[0] = pB[0];
         pBlob->ID = ID;
@@ -375,7 +394,7 @@ public:
     
     virtual double  GetConfidence(int BlobIndex, CvBlob* pBlob, IplImage* /*pImg*/, IplImage* pImgFG = NULL)
     {
-        /* define koefficients in exp by exp(-XT*K)=VT */
+        /* Define coefficients in exp by exp(-XT*K)=VT: */
         static double _KS = -log(0.1)/pow(0.5,2); /* XT = 1, VT = 0.1 - when size is Larger in 2 times Confidence is smoller in 10 times */
         static double _KP = -log(0.1)/pow(m_pImg->width*0.02,2); /* XT = 0.02*ImgWidth, VT = 0.1*/
         DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(BlobIndex);
@@ -394,17 +413,17 @@ public:
         ds2 = dw*dw+dh*dh;
 
         if(!pBT->Collision) 
-        { /* Confidence for size by nearest blob */
+        {   /* Confidence for size by nearest blob: */
             W*=exp(-_KS*ds2);
         }
         
         if(m_ConfidenceType==0 && !pBT->Collision) 
-        { /* confinence by nearest blob */
+        {   /* Confidence by nearest blob: */
             W*=exp(-_KP*dp2);
         }
 
         if(m_ConfidenceType==1 && pBT->AverFG>0)
-        {/* calc summ of mask */
+        {   /* Calculate sum of mask: */
             float   Aver = CalcAverageMask(pBlob, pImgFG );
             if(Aver < pBT->AverFG)
             {
@@ -412,16 +431,17 @@ public:
                 if(diff < 0.1f) diff = 0.1f;
                 W *= diff;
             }
-        }/* calc summ of mask */
+        }   /* Calculate sum of mask. */
 
         if(m_ConfidenceType==2)
-        {/* calc BCoeff */
+        {   /* Calculate BCoeff: */
             float   S = 0.2f;
             float   Aver = CalcAverageMask(pBlob, pImgFG );
             double B = sqrt(Aver*pBT->AverFG)+sqrt((1-Aver)*(1-pBT->AverFG));
             
             W *= exp((B-1)/(2*S));
-        }/* calc summ of mask */
+        }   /* Calculate sum of mask. */
+
         return W;
     };
 
@@ -444,7 +464,7 @@ public:
         
         CvBlobTracker::ParamUpdate();
         
-        for(i=0;i<3;++i)
+        for(i=0; i<3; ++i)
         {
             if(cv_stricmp(m_ConfidenceTypeStr,pCT[i])==0)
             {
@@ -453,29 +473,33 @@ public:
         }
         SetParamStr("ConfidenceType",pCT[m_ConfidenceType]);
     }
-    /*  ===============  MULTI HYPOTHESIS INTERFACE ==================  */
-    /* return number of position hyposetis of currently tracked blob */
+
+    /* ===============  MULTI HYPOTHESIS INTERFACE ================== */
+    /* Return number of position hypotheses of currently tracked blob: */
     virtual int     GetBlobHypNum(int BlobIdx)
     {
         DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(BlobIdx);
         assert(pBT->pBlobHyp);
         return pBT->pBlobHyp->GetBlobNum();
-    };/* CvBlobtrackerList::GetBlobHypNum() */
+    };  /* CvBlobtrackerList::GetBlobHypNum() */
 
-    /* return pointer to specified blob hypothesis by index blob */
+    /* Return pointer to specified blob hypothesis by index blob: */
     virtual CvBlob* GetBlobHyp(int BlobIndex, int hypothesis)
     {
         DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(BlobIndex);
         assert(pBT->pBlobHyp);
         return pBT->pBlobHyp->GetBlob(hypothesis);
-    };/* CvBlobtrackerList::GetBlobHyp() */
-    /* Set new parameters for specified (by index) blob hyp (can be called several times for each hyp )*/
+    };  /* CvBlobtrackerList::GetBlobHyp() */
+
+    /* Set new parameters for specified (by index) blob hypothesis
+     * (can be called several times for each hypothesis):
+     */
     virtual void    SetBlobHyp(int BlobIndex, CvBlob* pBlob)
     {
         if(m_ClearHyp)
-        {/* clear all hypothesis */
+        {   /* Clear all hypotheses: */
             int b, bN = m_BlobList.GetBlobNum();
-            for(b=0;b<bN;++b)
+            for(b=0; b<bN; ++b)
             {
                 DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(b);
                 assert(pBT->pBlobHyp);
@@ -483,7 +507,7 @@ public:
             }
             m_ClearHyp = 0;
         }
-        {/* add hypothesis */
+        {   /* Add hypothesis: */
             DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(BlobIndex);
             assert(pBT->pBlobHyp);
             pBT->pBlobHyp->AddBlob(pBlob);
@@ -502,8 +526,8 @@ private:
         
         BlobID = pB->ID;
 
-        for(j=m_BlobListNew.GetBlobNum();j>0;--j)
-        {/* find best CC */
+        for(j=m_BlobListNew.GetBlobNum(); j>0; --j)
+        {   /* Find best CC: */
             double  Dist = -1;
             CvBlob* pBNew = m_BlobListNew.GetBlob(j-1);
             double  dx = fabs(CV_BLOB_X(pB)-CV_BLOB_X(pBNew));
@@ -516,8 +540,11 @@ private:
                 DistBest = Dist;
                 pBBest = pBNew;
             }
-        }/* find best CC */
+
+        }   /* Find best CC. */
+
         return pBBest;
+
     }; /* GetNearestBlob */
 
 };

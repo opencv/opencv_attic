@@ -1086,16 +1086,16 @@ CV_EXPORTS CvBlobTrackAnalysis* cvCreateBlobTrackAnalysisList(CvBlobTrackAnalysi
 
 /* Declarations of constructors of implemented modules: */
 
-/* Based on histogramm analysis of 2D FV (x,y): */
+/* Based on histogram analysis of 2D FV (x,y): */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistP();
 
-/* Based on histogramm analysis of 4D FV (x,y,vx,vy): */
+/* Based on histogram analysis of 4D FV (x,y,vx,vy): */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistPV();
 
-/* Based on histogramm analysis of 5D FV (x,y,vx,vy,state): */
+/* Based on histogram analysis of 5D FV (x,y,vx,vy,state): */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistPVS();
 
-/* Based on histogramm analysis of 4D FV (startpos,stoppos): */
+/* Based on histogram analysis of 4D FV (startpos,stoppos): */
 CV_EXPORTS CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisHistSS();
 
 

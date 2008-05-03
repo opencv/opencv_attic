@@ -48,11 +48,11 @@ typedef struct DefBlobTrack
     int         FrameBegin;
     int         FrameLast;
     int         Saved; /* flag */
-}DefBlobTrack;
+} DefBlobTrack;
 
 
 static void SaveTrack(DefBlobTrack* pTrack, char* pFileName, int norm = 0)
-{/* save blob track */
+{   /* Save blob track: */
     int         j;
     FILE*       out = NULL;
     CvBlobSeq*  pS = pTrack->pSeq;
@@ -64,26 +64,28 @@ static void SaveTrack(DefBlobTrack* pTrack, char* pFileName, int norm = 0)
     out = fopen(pFileName,"at");
     if(out == NULL)
     {
-        printf("Warning! Can not open %s file for track output\n",pFileName);
+        printf("Warning! Cannot open %s file for track output\n", pFileName);
         return;
     }
 
     fprintf(out,"%d",pTrack->FrameBegin);
     
-    if(pS)for(j=0;j<pS->GetBlobNum();++j)
+    if(pS) for(j=0; j<pS->GetBlobNum(); ++j)
     {
         CvBlob* pB = pS->GetBlob(j);
         
         fprintf(out,", %.1f, %.1f", CV_BLOB_X(pB),CV_BLOB_Y(pB));
+
         if(CV_BLOB_WX(pB0)>0)
             fprintf(out,", %.2f",CV_BLOB_WX(pB)/(norm?CV_BLOB_WX(pB0):1));
+
         if(CV_BLOB_WY(pB0)>0)
             fprintf(out,", %.2f",CV_BLOB_WY(pB)/(norm?CV_BLOB_WY(pB0):1));
     }
     fprintf(out,"\n");
     fclose(out);
     pTrack->Saved = 1;
-}/* save blob track */
+}   /* Save blob track. */
 
 class CvBlobTrackGen1:public CvBlobTrackGen
 {
@@ -95,6 +97,7 @@ public:
         m_Frame = 0;
         m_pFileName = NULL;
     };
+
     ~CvBlobTrackGen1()
     {
         int i;
@@ -102,22 +105,26 @@ public:
         {
             DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlob(i-1);
             if(!pTrack->Saved)
-            {/* save track */
+            {   /* Save track: */
                 SaveTrack(pTrack, m_pFileName, m_BlobSizeNorm);
-            }/* save track */
+            }   /* Save track. */
 
-            /* delete sequence */
+            /* Delete sequence: */
             delete pTrack->pSeq;
+
             pTrack->pSeq = NULL;
-        }/* check next track */
-    }/* destructor */
+
+        }   /* Check next track. */
+    }   /*  Destructor. */
 
     void    SetFileName(char* pFileName){m_pFileName = pFileName;};
+
     void    AddBlob(CvBlob* pBlob)
     {
         DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlobByID(CV_BLOB_ID(pBlob));
+
         if(pTrack==NULL)
-        {/* add new track */
+        {   /* Add new track: */
             DefBlobTrack    Track;
             Track.blob = pBlob[0];
             Track.FrameBegin = m_Frame;
@@ -125,21 +132,24 @@ public:
             Track.Saved = 0;
             m_TrackList.AddBlob((CvBlob*)&Track);
             pTrack = (DefBlobTrack*)m_TrackList.GetBlobByID(CV_BLOB_ID(pBlob));
-        }/* add new track */
+        }   /* Add new track. */
 
         assert(pTrack);
         pTrack->FrameLast = m_Frame;
         assert(pTrack->pSeq);
         pTrack->pSeq->AddBlob(pBlob);
     };
+
     void    Process(IplImage* /*pImg*/ = NULL, IplImage* /*pFG*/ = NULL)
     {
         int i;
-        for(i=m_TrackList.GetBlobNum();i>0;--i)
+
+        for(i=m_TrackList.GetBlobNum(); i>0; --i)
         {
             DefBlobTrack* pTrack = (DefBlobTrack*)m_TrackList.GetBlob(i-1);
+
             if(pTrack->FrameLast < m_Frame && !pTrack->Saved)
-            {/* save track */
+            {   /* Save track: */
                 SaveTrack(pTrack, m_pFileName, m_BlobSizeNorm);
                 if(pTrack->Saved)
                 {   /* delete sequence */
@@ -147,20 +157,22 @@ public:
                     pTrack->pSeq = NULL;
                     m_TrackList.DelBlob(i-1);
                 }
-            }/* save track */
-        }/* check next track */
+            }   /* Save track. */
+        }   /*  Check next track. */
         m_Frame++;
     }
+
     void Release()
     {
         delete this;
     }
+
 protected:
     int         m_Frame;
     char*       m_pFileName;
     CvBlobSeq   m_TrackList;
     int         m_BlobSizeNorm;
-}; /* class CvBlobTrackGen1 */
+};  /* class CvBlobTrackGen1 */
 
 
 CvBlobTrackGen* cvCreateModuleBlobTrackGen1()

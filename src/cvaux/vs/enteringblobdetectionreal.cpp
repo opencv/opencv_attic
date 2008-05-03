@@ -55,19 +55,24 @@ protected:
     CvTestSeq*      m_pTestSeq;
     CvBlobSeq       m_DetectedBlobs;
     CvMemStorage*   m_pMem;
+
 public:
     CvBlobDetectorReal(CvTestSeq* pTestSeq)
     {
         m_pTestSeq = pTestSeq;
         m_pMem = cvCreateMemStorage(0);
     }
-    /* destructor of BlobDetector*/
-    ~CvBlobDetectorReal()
+
+    /* Destructor of BlobDetector: */
+   ~CvBlobDetectorReal()
     {
         if(m_pMem) cvReleaseMemStorage(&m_pMem);
-    }/* cvReleaseBlobDetector */
+    }   /* cvReleaseBlobDetector */
 
-    /* cvDetectNewBlobs return 1 and fill blob pNewBlob by blob parameters if new blob is detected */
+    /* cvDetectNewBlobs:
+     * Return 1 and fill blob pNewBlob withd
+     * blob parameters if new blob is detected:
+     */
     int DetectNewBlob(IplImage* /*pImg*/, IplImage* /*pFGMask*/, CvBlobSeq* pNewBlobList, CvBlobSeq* /*pOldBlobList*/)
     {
         int         i;
@@ -87,8 +92,8 @@ public:
         cvFindContours( pMaskCopy, m_pMem, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
         cvReleaseImage(&pMaskCopy);
 
-        for(i=0;i<TestObjNum;++i)
-        {/* check each object */
+        for(i=0; i<TestObjNum; ++i)
+        {   /* Check each object: */
             CvPoint2D32f    RealPos;
             CvPoint2D32f    RealSize;
             int             RealPosFlag = cvTestSeqGetObjectPos(m_pTestSeq,i,&RealPos);
@@ -98,12 +103,12 @@ public:
             if(m_DetectedBlobs.GetBlobByID(i)) continue;
 
             if(RealSizeFlag)
-            { /* real size is know */
+            {   /* Real size is known: */
                 float W2 = RealSize.x * 0.5f;
                 float H2 = RealSize.y * 0.5f;
                 if( RealPos.x > W2 && RealPos.x < (pMask->width-W2) &&
                     RealPos.y > H2 && RealPos.y < (pMask->height-H2) )
-                {   /* yes !! we found new blob, Let's add it to list */
+                {   /* Yes!!  We found new blob, let's add it to list: */
                     CvBlob  NewBlob;
                     NewBlob.x = RealPos.x;
                     NewBlob.y = RealPos.y;
@@ -113,12 +118,13 @@ public:
                     m_DetectedBlobs.AddBlob(&NewBlob);
                     pNewBlobList->AddBlob(&NewBlob);
                 }
-            }/* real size is know */
+            }   /* Real size is known. */
             else
             {
                 CvSeq*  cnt;
                 if(m_DetectedBlobs.GetBlobByID(i)) continue;
-                for(cnt=cnts;cnt;cnt=cnt->h_next)
+
+                for(cnt=cnts; cnt; cnt=cnt->h_next)
                 {
                     //CvBlob* pNewBlob = NULL;
                     CvBlob  NewBlob;
@@ -127,12 +133,13 @@ public:
                     float   y = RealPos.y - r.y;
 
                     if(x<0 || x > r.width || y < 0 || y > r.height ) continue;
+
                     if( r.x <= 1 ||
                         r.y <= 1 ||
                         r.x + r.width >= pMask->width - 2 ||
                         r.y + r.height >= pMask->height - 2 ) continue;
 
-                    /* yes !! we found new blob, Let's add it to list */
+                    /* Yes!!  We found new blob, let's add it to list: */
                     NewBlob.x = RealPos.x;
                     NewBlob.y = RealPos.y;
                     NewBlob.w = (float)r.width;
@@ -141,15 +148,17 @@ public:
                     m_DetectedBlobs.AddBlob(&NewBlob);
                     pNewBlobList->AddBlob(&NewBlob);
                 }
-            }/* check new blob entrance */
-        }/* check next object */
+            }   /* Check new blob entrance. */
+        }   /* Check next object. */
 
         return pNewBlobList->GetBlobNum();
-    }/* cvDetectNewBlob */
+
+    }   /* cvDetectNewBlob */
+
     void Release(){delete this;};
 };
 
-/* Blob detector creator  */
+/* Blob detector constructor: */
 CvBlobDetector* cvCreateBlobDetectorReal(CvTestSeq* pTestSeq){return new CvBlobDetectorReal(pTestSeq);}
 
 

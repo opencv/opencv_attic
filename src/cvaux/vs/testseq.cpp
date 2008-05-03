@@ -49,7 +49,7 @@ This file contain implementation of virtual interface of CvTestSeq
 #define SRC_TYPE_AVI 1
 #define SRC_TYPE_IMAGE 0
 
-/* Transformation structure */
+/* Transformation structure: */
 typedef struct CvTSTrans
 {
     float           T[6]; /* geometry transformation */
@@ -60,7 +60,8 @@ typedef struct CvTSTrans
     float           GN; /* standart deviation of added gaussian noise */
     float           NoiseAmp; /* amplifier of noise power */
     float           angle;
-}CvTSTrans;
+} CvTSTrans;
+
 void SET_TRANS_0(CvTSTrans *pT)
 {
     memset(pT,0,sizeof(CvTSTrans));
@@ -71,7 +72,7 @@ void SET_TRANS_0(CvTSTrans *pT)
     pT->NoiseAmp = 1;
 }
 
-/* ===some defenitions and function for transformation update ===*/
+/* === Some definitions and functions for transformation update: ===*/
 #define P_ANGLE 0
 #define P_S     1
 #define P_SX    2
@@ -104,6 +105,7 @@ static void icvUpdateTrans(CvTSTrans* pTrans, int param, double val, float MaxX,
         TR[5] = S*T[2]+C*T[5];
         for(i=0;i<6;++i)T[i]=(float)TR[i];
     }
+
     if(param==P_S)
     {
         int i;
@@ -113,6 +115,7 @@ static void icvUpdateTrans(CvTSTrans* pTrans, int param, double val, float MaxX,
         pTrans->Shift.x = (float)(pTrans->Shift.x *val);
         pTrans->Shift.y = (float)(pTrans->Shift.y *val);
     }
+
     if(param==P_SX)
     {
         int i;
@@ -120,6 +123,7 @@ static void icvUpdateTrans(CvTSTrans* pTrans, int param, double val, float MaxX,
         pTrans->Scale.x = (float)(pTrans->Scale.x*val);
         pTrans->Shift.x = (float)(pTrans->Shift.x*val);
     }
+
     if(param==P_SY)
     {
         int i;
@@ -127,28 +131,35 @@ static void icvUpdateTrans(CvTSTrans* pTrans, int param, double val, float MaxX,
         pTrans->Scale.y = (float)(pTrans->Scale.y *val);
         pTrans->Shift.y = (float)(pTrans->Shift.y *val);
     }
+
     if(param==P_DX)
     {
         pTrans->Shift.x = (float)(pTrans->Shift.x +val);
         pTrans->T[2] = (float)(pTrans->T[2] +val*MaxX);
     }
+
     if(param==P_DY)
     {
         pTrans->Shift.y = (float)(pTrans->Shift.y +val);
         pTrans->T[5] = (float)(pTrans->T[5] +val*MaxY);
     }
+
     if(param==P_C)
     {
         pTrans->C = (float)(pTrans->C *val);
         pTrans->I = (float)(pTrans->I *val);
     }
+
     if(param==P_I) pTrans->I = (float)(pTrans->I +val);
+
     if(param==P_GN)
     {
         pTrans->GN = (float)sqrt(val*val+pTrans->GN*pTrans->GN);
     }
+
     if(param==P_NAmp) pTrans->NoiseAmp = (float)(pTrans->NoiseAmp *val);
-}/* icvUpdateTrans */
+}   /* icvUpdateTrans */
+
 /* === END some defenitions and function for transformation update ===*/
 
 typedef struct CvTestSeqElem
@@ -178,8 +189,9 @@ typedef struct CvTestSeqElem
     int             noise_type;
     CvRandState     rnd_state;
     int             ObjID;
- }CvTestSeqElem;
-/* test seq main structure */
+} CvTestSeqElem;
+
+/* Test seq main structure: */
 typedef struct CvTestSeq_
 {
     int             ID;
@@ -199,11 +211,12 @@ typedef struct CvTestSeq_
     float           IVar_CurI;
     int             ObjNum;
 
-}CvTestSeq_;
+} CvTestSeq_;
 
 
 CvSize cvTestSeqGetImageSize(CvTestSeq* pTestSeq){return cvSize(((CvTestSeq_*)(pTestSeq))->pImg->width,((CvTestSeq_*)(pTestSeq))->pImg->height);}
 int cvTestSeqFrameNum(CvTestSeq* pTestSeq){return ((CvTestSeq_*)(pTestSeq))->FrameNum;}
+
 static void icvTestSeqCreateMask(IplImage* pImg,IplImage* pImgMask, int threshold)
 {
     if(pImg->nChannels > 1)
@@ -215,29 +228,29 @@ static void icvTestSeqCreateMask(IplImage* pImg,IplImage* pImgMask, int threshol
     {
         cvThreshold(pImg,pImgMask,threshold,255,CV_THRESH_BINARY);
     }
-}/* icvTestSeqCreateMask */
+}   /* icvTestSeqCreateMask */
 
 
 static void icvTestSeqQureyFrameElem(CvTestSeqElem* p, int /*frame*/)
-{/* read next frame from avi for one record */
+{   /* Read next frame from avi for one record: */
     if(p->type == SRC_TYPE_AVI)
     {
         IplImage*   pI = NULL;
         //int         frameNum = p->AVILen;
 
         if(p->pAVI == NULL && p->pFileName)
-        {/* open avi file if it is necessary */
+        {   /* Open avi file if necessary: */
             p->pAVI = 0;//cvCaptureFromFile(p->pFileName);
             if(p->pAVI == NULL)
             {
                 printf("WARNING!!! Can not open avi file %s\n",p->pFileName);
                 return;
             }
-        }/* open avi file if it is necessary */
+        }   /* Open avi file if necessary. */
 
         assert(p->pAVI);
         //if(frame >= frameNum)
-        {/* set new position */
+        {   /* Set new position: */
             //int N = frame%frameNum;
 
             /*if( N==0 ||
@@ -245,7 +258,7 @@ static void icvTestSeqQureyFrameElem(CvTestSeqElem* p, int /*frame*/)
             {
                 cvSetCaptureProperty(p->pAVI,CV_CAP_PROP_POS_FRAMES,N);
             }*/
-        }/* set new position */
+        }   /* Set new position. */
 
         //pI = cvQueryFrame(p->pAVI);
         if(pI)
@@ -268,16 +281,18 @@ static void icvTestSeqQureyFrameElem(CvTestSeqElem* p, int /*frame*/)
         }
     }
 
-}/* icvTestSeqQureyFrameElem */
+}   /* icvTestSeqQureyFrameElem */
 
-/*------------- recursive function to read all images,------------------------*/
-/*-------------------videos and objects from config file ---------------------*/
+/*------------- Recursive function to read all images, ------------------------*/
+/*------------- videos and objects from config file.   ------------------------*/
+
 static CvTestSeqElem* icvTestSeqReadElemAll(CvTestSeq_* pTS, CvFileStorage* fs, const char* name);
+
 static void icvTestSeqAllocTrans(CvTestSeqElem* p)
-{/*allocate transformation array if necessary */
+{   /* Allocate transformation array if necessary */
     /* work with transformation */
     if(p->pTrans == NULL/* && p->FrameNum>0*/)
-    {/* allocate transforamtion array */
+    {   /* Allocate transformation array: */
         int num = MAX(1,p->FrameNum);
         p->pTrans = (CvTSTrans*)cvAlloc(sizeof(CvTSTrans)*num);
         p->TransNum = num;
@@ -285,11 +300,12 @@ static void icvTestSeqAllocTrans(CvTestSeqElem* p)
     }
 
     if(p->FrameNum > p->TransNum)
-    {/* allocate new transforamtion array */
+    {   /* Allocate new transformation array: */
         int         i;
         int         num = p->FrameNum;
         CvTSTrans*  pNewTrans = (CvTSTrans*)cvAlloc(sizeof(CvTSTrans)*num);
-        for(i=0;i<num;++i)
+
+        for(i=0; i<num; ++i)
         {
             if(p->pTrans)
                 pNewTrans[i] = p->pTrans[i%p->TransNum];
@@ -299,8 +315,8 @@ static void icvTestSeqAllocTrans(CvTestSeqElem* p)
         if(p->pTrans)cvFree(&p->pTrans);
         p->pTrans = pNewTrans;
         p->TransNum = num;
-    }/* allocate new transforamtion array */
-}/*allocate transformation array if necessary */
+    }   /* Allocate new transformation array. */
+}   /*  Allocate transformation array if necessary. */
 
 static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, CvFileNode* node)
 {
@@ -310,7 +326,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
     const char*     pVideoObjName = cvReadStringByName( fs, node,"VideoObj", NULL);
 
     if(pVideoName)
-    {/* check to noise flag */
+    {   /* Check to noise flag: */
         if( cv_stricmp(pVideoName,"noise_gaussian") == 0 ||
             cv_stricmp(pVideoName,"noise_normal") == 0) noise_type = CV_NOISE_GAUSSIAN;
         if( cv_stricmp(pVideoName,"noise_uniform") == 0) noise_type = CV_NOISE_UNIFORM;
@@ -319,7 +335,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
     }
 
     if((pVideoName || pVideoObjName ) && noise_type == CV_NOISE_NONE)
-    {/* read other elements */
+    {   /* Read other elements: */
         if(pVideoName) pElem = icvTestSeqReadElemAll(pTS, fs, pVideoName);
         if(pVideoObjName)
         {
@@ -332,9 +348,9 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
             }
             pTS->ObjNum++;
         }
-    }/* read other elements */
+    }   /* Read other elements. */
     else
-    {/* create new elem */
+    {   /* Create new element: */
         CvFileNode* pPosNode = cvGetFileNodeByName( fs, node,"Pos");
         CvFileNode* pSizeNode = cvGetFileNodeByName( fs, node,"Size");
         int AutoSize = (pSizeNode && CV_NODE_IS_STRING(pSizeNode->tag) && cv_stricmp("auto",cvReadString(pSizeNode,""))==0);
@@ -348,7 +364,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
         cvRandInit( &pElem->rnd_state, 1, 0, 0,CV_RAND_NORMAL);
 
         if(pFileName && pElem->noise_type == CV_NOISE_NONE)
-        {/* if AVI or BMP */
+        {   /* If AVI or BMP: */
             size_t  l = strlen(pFileName);
             pElem->pFileName = pFileName;
 
@@ -387,14 +403,14 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                 }
                 else
                 {
-                    printf("WARNING!!! Can not open avi file %s\n",pFileName);
+                    printf("WARNING!!! Cannot open avi file %s\n",pFileName);
                 }
             }
 
-        }/* if AVI or BMP */
+        }   /* If AVI or BMP. */
 
         if(pPosNode)
-        {/* read positions */
+        {   /* Read positions: */
             if(CV_NODE_IS_SEQ(pPosNode->tag))
             {
                 int num = pPosNode->data.seq->total;
@@ -406,7 +422,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
         }
 
         if(pSizeNode)
-        {/* read sizes */
+        {   /* Read sizes: */
             if(CV_NODE_IS_SEQ(pSizeNode->tag))
             {
                 int num = pSizeNode->data.seq->total;
@@ -417,7 +433,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
         }
 
         if(AutoPos || AutoSize)
-        {/* auto size and pos */
+        {   /* Auto size and pos: */
             int     i;
             int     num = (pElem->type == SRC_TYPE_AVI)?pElem->AVILen:1;
             if(AutoSize)
@@ -431,7 +447,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                 pElem->PosNum = num;
             }
 
-            for(i=0;i<num;++i)
+            for(i=0; i<num; ++i)
             {
                 IplImage* pFG = NULL;
                 CvPoint2D32f* pPos = AutoPos?(pElem->pPos + i):NULL;
@@ -457,6 +473,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                     CvMoments   m;
                     cvMoments( pElem->pImgMask, &m, 0 );
                     M00 = cvGetSpatialMoment( &m, 0, 0 );
+
                     if(M00 > 0 && pSize )
                     {
                         double X = cvGetSpatialMoment( &m, 1, 0 )/M00;
@@ -466,6 +483,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                         pSize->x = (float)(4*sqrt(XX))/(pElem->pImgMask->width-1);
                         pSize->y = (float)(4*sqrt(YY))/(pElem->pImgMask->height-1);
                     }
+
                     if(M00 > 0 && pPos)
                     {
                         pPos->x = (float)(cvGetSpatialMoment( &m, 1, 0 )/(M00*(pElem->pImgMask->width-1)));
@@ -473,31 +491,38 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                     }
 
                     if(pPos)
-                    { /* another way to calculate y pos using object median */
-                        int y0=0,y1=pFG->height-1;
-                        for(y0=0;y0<pFG->height;++y0)
+                    {   /* Another way to calculate y pos
+                         * using object median:
+                         */
+                        int y0=0, y1=pFG->height-1;
+                        for(y0=0; y0<pFG->height; ++y0)
                         {
                             CvMat       m;
                             CvScalar    s = cvSum(cvGetRow(pFG, &m, y0));
                             if(s.val[0] > 255*7) break;
                         }
-                        for(y1=pFG->height-1;y1>0;--y1)
+
+                        for(y1=pFG->height-1; y1>0; --y1)
                         {
                             CvMat m;
                             CvScalar s = cvSum(cvGetRow(pFG, &m, y1));
                             if(s.val[0] > 255*7) break;
                         }
+
                         pPos->y = (y0+y1)*0.5f/(pFG->height-1);
                     }
-                }/* pFG */
-            }/* next frame */
+                }   /* pFG */
+            }   /* Next frame. */
+
             //if(pElem->pAVI) cvReleaseCapture(&pElem->pAVI);
+
             pElem->pAVI = NULL;
-        }/* end auto pos creation */
-    }/* create new elem */
+
+        }   /* End auto position creation. */
+    }   /*  Create new element. */
 
     if(pElem)
-    {/* read transfroms and */
+    {   /* Read transforms and: */
         int             FirstFrame, LastFrame;
         CvTestSeqElem*  p=pElem;
         CvFileNode*     pTransNode = NULL;
@@ -512,9 +537,10 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
         while( pTransNode &&
                CV_NODE_IS_STRING(pTransNode->tag) &&
                cv_stricmp("auto",cvReadString(pTransNode,""))!=0)
-        {/* Trans is reference */
+        {   /* Trans is reference: */
             pTransNode = cvGetFileNodeByName( fs, NULL,cvReadString(pTransNode,""));
         }
+
         pS = cvGetFileNodeByName( fs, node,"Shift");
         ShiftByPos = 0;
         pTransSeq = pTransNode?(CV_NODE_IS_SEQ(pTransNode->tag)?pTransNode->data.seq:NULL):NULL;
@@ -528,8 +554,11 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
 
         FirstFrame = pElem->FrameBegin;
         LastFrame = pElem->FrameBegin+pElem->FrameNum-1;
-        /* calc length of video and reallocate transformation array */
-        for(p=pElem;p;p=p->next)
+
+        /* Calculate length of video and reallocate
+         * transformation array:
+         */
+        for(p=pElem; p; p=p->next)
         {
             int v;
             v = cvReadIntByName( fs, node, "BG", -1 );
@@ -547,22 +576,23 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
 
             icvTestSeqAllocTrans(p);
 
-            {/* new range estimation */
+            {   /* New range estimation: */
                 int LF = p->FrameBegin+p->FrameNum-1;
                 if(p==pElem || FirstFrame > p->FrameBegin)FirstFrame = p->FrameBegin;
                 if(p==pElem || LastFrame < LF)LastFrame = LF;
-            }/* new range estimation */
-        }/* end allocate new transfrom array */
+            }   /* New range estimation. */
+        }   /*  End allocate new transfrom array. */
 
         if(ShiftByPos)
         {
             for(p=pElem;p;p=p->next)
-            {/* modify transformation to make autoshift */
+            {   /* Modify transformation to make autoshift: */
                 int         i;
                 int         num = p->FrameNum;
                 assert(num <= p->TransNum);
                 p->TransNum = MAX(1,num);
-                for(i=0;i<num;++i)
+
+                for(i=0; i<num; ++i)
                 {
                     CvTSTrans*  pT = p->pTrans+i;
                     //float   t = (num>1)?((float)i/(num-1)):0.0f;
@@ -570,73 +600,82 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                     float newy = p->pPos[i%p->PosNum].y;
                     pT->Shift.x = -newx*pT->Scale.x;
                     pT->Shift.y = -newy*pT->Scale.y;
+
                     if(p->pImg)
                     {
                         newx *= p->pImg->width-1;
                         newy *= p->pImg->height-1;
                     }
+
                     pT->T[2] = -(pT->T[0]*newx+pT->T[1]*newy);
                     pT->T[5] = -(pT->T[3]*newx+pT->T[4]*newy);
                 }
-            }/* modify transformation old*/
-        }/* next record */
+            }   /* Modify transformation old. */
+        }   /*  Next record. */
 
-        /* init frame num array */
+        /* Initialize frame number array: */
         KeyFrames[0] = FirstFrame;
+
         if(pTransSeq&&KeyFrameNum>1)
-        {/* init frame num array */
+        {
             int i0,i1,i;
-            for(i=0;i<KeyFrameNum;++i)
+            for(i=0; i<KeyFrameNum; ++i)
             {
                 CvFileNode* pTN = (CvFileNode*)cvGetSeqElem(pTransSeq,i);
                 KeyFrames[i] = cvReadIntByName(fs,pTN,"frame",-1);
             }
+
             if(KeyFrames[0]<0)KeyFrames[0]=FirstFrame;
             if(KeyFrames[KeyFrameNum-1]<0)KeyFrames[KeyFrameNum-1]=LastFrame;
-            for(i0=0,i1=1;i1<KeyFrameNum;)
+
+            for(i0=0, i1=1; i1<KeyFrameNum;)
             {
                 int i;
-                for(i1=i0+1;i1<KeyFrameNum && KeyFrames[i1]<0;i1++);
+
+                for(i1=i0+1; i1<KeyFrameNum && KeyFrames[i1]<0; i1++);
+
                 assert(i1<KeyFrameNum);
                 assert(i1>i0);
-                for(i=i0+1;i<i1;++i)
+
+                for(i=i0+1; i<i1; ++i)
                 {
                     KeyFrames[i] = cvRound(KeyFrames[i0] + (float)(i-i0)*(float)(KeyFrames[i1] - KeyFrames[i0])/(float)(i1-i0));
                 }
                 i0 = i1;
                 i1++;
-            }/* next key run*/
-        }/* init frame num array */
+            }   /* Next key run. */
+        }   /*  Initialize frame number array. */
 
         if(pTransNode || pTransSeq)
-        {/* more complex transform */
+        {   /* More complex transform. */
             int     param;
             CvFileNode* pTN = pTransSeq?(CvFileNode*)cvGetSeqElem(pTransSeq,0):pTransNode;
 
-            for(p=pElem;p;p=p->next)
+            for(p=pElem; p; p=p->next)
             {
                 //int trans_num = p->TransNum;
-                for(param=0;param_name[param];++param)
+                for(param=0; param_name[param]; ++param)
                 {
                     char*   name = param_name[param];
                     float   defv = param_defval[param];
                     if(KeyFrameNum==1)
-                    {/* only one transform record */
+                    {   /* Only one transform record: */
                         int     i;
                         double  val;
                         CvFileNode* node = cvGetFileNodeByName( fs, pTN,name);
                         if(node == NULL) continue;
                         val = cvReadReal(node,defv);
-                        for(i=0;i<p->TransNum;++i)
+
+                        for(i=0; i<p->TransNum; ++i)
                         {
                             icvUpdateTrans(
                                 p->pTrans+i, param, val,
                                 p->pImg?(float)(p->pImg->width-1):1.0f,
                                 p->pImg?(float)(p->pImg->height-1):1.0f);
                         }
-                    }/* next record */
+                    }   /* Next record. */
                     else
-                    { /* several transforms */
+                    {   /* Several transforms: */
                         int         i0,i1;
                         double      v0;
                         double      v1;
@@ -644,19 +683,23 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                         CvFileNode* pTN = (CvFileNode*)cvGetSeqElem(pTransSeq,0);
                         v0 = cvReadRealByName(fs, pTN,name,defv);
 
-                        for(i1=1,i0=0;i1<KeyFrameNum;++i1)
+                        for(i1=1,i0=0; i1<KeyFrameNum; ++i1)
                         {
                             int         f0,f1;
                             int         i;
                             CvFileNode* pTN = (CvFileNode*)cvGetSeqElem(pTransSeq,i1);
                             CvFileNode* pVN = cvGetFileNodeByName(fs,pTN,name);
+
                             if(pVN)v1 = cvReadReal(pVN,defv);
                             else if(pVN == NULL && i1 == KeyFrameNum-1) v1 = defv;
                             else continue;
+
                             f0 = KeyFrames[i0];
                             f1 = KeyFrames[i1];
+
                             if(i1==(KeyFrameNum-1)) f1++;
-                            for(i=f0;i<f1;++i)
+
+                            for(i=f0; i<f1; ++i)
                             {
                                 double   val;
                                 double   t = (float)(i-f0);
@@ -665,28 +708,36 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                                 if(li>= p->TransNum) break;
                                 if(KeyFrames[i1]>KeyFrames[i0]) t /=(float)(KeyFrames[i1]-KeyFrames[i0]);
                                 val = t*(v1-v0)+v0;
+
                                 icvUpdateTrans(
                                     p->pTrans+li, param, val,
                                     p->pImg?(float)(p->pImg->width-1):1.0f,
                                     p->pImg?(float)(p->pImg->height-1):1.0f);
-                            }/* next transform */
+
+                            }   /* Next transform. */
                             i0 = i1;
                             v0 = v1;
-                        }/* next value run */
-                    } /* several transforms */
-                }/* next parameters */
-            }/* next record */
-        }/* more complex transform */
-    }/* read transfroms */
+
+                        }   /* Next value run. */
+                    }   /*  Several transforms. */
+                }   /*  Next parameter. */
+            }   /*  Next record. */
+        }   /*  More complex transform. */
+    }   /*  Read transfroms. */
+
     return pElem;
-}/* icvTestSeqReadElemOne */
+
+}   /* icvTestSeqReadElemOne */
 
 static CvTestSeqElem* icvTestSeqReadElemAll(CvTestSeq_* pTS, CvFileStorage* fs, const char* name)
 {
     CvTestSeqElem*  pElem = NULL;
     CvFileNode*     node;
+
     if(name == NULL) return NULL;
+
     node = cvGetFileNodeByName( fs, NULL, name );
+
     if(node == NULL)
     {
         printf("WARNING!!! - Video %s does not exist!\n", name);
@@ -696,20 +747,23 @@ static CvTestSeqElem* icvTestSeqReadElemAll(CvTestSeq_* pTS, CvFileStorage* fs, 
     printf("Read node %s\n",name);
 
     if(CV_NODE_IS_SEQ(node->tag))
-    {/* read all element in sequence */
+    {   /* Read all element in sequence: */
         int             i;
         CvSeq*          seq = node->data.seq;
         CvTestSeqElem*  pElemLast = NULL;
-        for(i=0;i<seq->total;++i)
+
+        for(i=0; i<seq->total; ++i)
         {
             CvFileNode*     next_node = (CvFileNode*)cvGetSeqElem( seq, i );
             CvTestSeqElem*  pElemNew = icvTestSeqReadElemOne(pTS, fs, next_node );
             CvFileNode*     pDurNode = cvGetFileNodeByName( fs, next_node,"Dur");
+
             if(pElemNew == NULL )
             {
-                printf("WARNING in parsing %s record!!! Can not read array element\n", name);
+                printf("WARNING in parsing %s record!!! Cannot read array element\n", name);
                 continue;
             }
+
             if(pElem && pElemLast)
             {
                 pElemLast->next = pElemNew;
@@ -723,20 +777,24 @@ static CvTestSeqElem* icvTestSeqReadElemAll(CvTestSeq_* pTS, CvFileStorage* fs, 
                 pElem = pElemNew;
             }
 
-            /* find last elem */
+            /* Find last element: */
             for(pElemLast=pElemNew;pElemLast && pElemLast->next;pElemLast= pElemLast->next);
-        }/* next elemnt */
-    }/* read all element in sequence */
+
+        }   /* Next element. */
+    }   /*  Read all element in sequence. */
     else
-    {/* read one element */
+    {   /* Read one element: */
         pElem = icvTestSeqReadElemOne(pTS, fs, node );
     }
+
     return pElem;
-}/* icvTestSeqReadElemAll */
+
+}   /* icvTestSeqReadElemAll */
 
 static void icvTestSeqReleaseAll(CvTestSeqElem** ppElemList)
 {
     CvTestSeqElem* p = ppElemList[0];
+
     while(p)
     {
         CvTestSeqElem* pd = p;
@@ -751,9 +809,12 @@ static void icvTestSeqReleaseAll(CvTestSeqElem** ppElemList)
         if(p->pSize)cvFree(&p->pSize);
         p=p->next;
         cvFree(&pd);
-    }/* next element */
+
+    }   /* Next element. */
+
     ppElemList[0] = NULL;
-}/* icvTestSeqReleaseAll */
+
+}   /* icvTestSeqReleaseAll */
 
 CvTestSeq* cvCreateTestSeq(char* pConfigfile, char** videos, int numvideo, float Scale, int noise_type, double noise_ampl)
 {
@@ -771,10 +832,11 @@ CvTestSeq* cvCreateTestSeq(char* pConfigfile, char** videos, int numvideo, float
     pTS->IVar_DI = 0;
     pTS->ObjNum = 0;
 
-    /* read all videos */
-    for(i=0;i<numvideo;++i)
+    /* Read all videos: */
+    for (i=0; i<numvideo; ++i)
     {
         CvTestSeqElem*  pElemNew = icvTestSeqReadElemAll(pTS, fs, videos[i]);
+
         if(pTS->pElemList==NULL)pTS->pElemList = pElemNew;
         else
         {
@@ -782,17 +844,19 @@ CvTestSeq* cvCreateTestSeq(char* pConfigfile, char** videos, int numvideo, float
             for(p=pTS->pElemList;p->next;p=p->next);
             p->next = pElemNew;
         }
-    }/* read all videos */
+    }   /* Read all videos. */
 
-    {/* Calculate elements and image size and video length */
+    {   /* Calculate elements and image size and video length: */
         CvTestSeqElem*  p = pTS->pElemList;
         int             num = 0;
         CvSize          MaxSize = {0,0};
         int             MaxFN = 0;
-        for(p = pTS->pElemList;p;p=p->next,num++)
+
+        for(p = pTS->pElemList; p; p=p->next, num++)
         {
             int     FN = p->FrameBegin+p->FrameNum;
             CvSize  S = {0,0};
+
             if(p->pImg && p->BG)
             {
                 S.width = p->pImg->width;
@@ -803,22 +867,28 @@ CvTestSeq* cvCreateTestSeq(char* pConfigfile, char** videos, int numvideo, float
             if(MaxSize.height < S.height) MaxSize.height = S.height;
             if(MaxFN < FN)MaxFN = FN;
         }
+
         pTS->ListNum = num;
+
         if(MaxSize.width == 0)MaxSize.width = 320;
         if(MaxSize.height == 0)MaxSize.height = 240;
+
         MaxSize.width = cvRound(Scale*MaxSize.width);
         MaxSize.height = cvRound(Scale*MaxSize.height);
+
         pTS->pImg = cvCreateImage(MaxSize,IPL_DEPTH_8U,3);
         pTS->pImgMask = cvCreateImage(MaxSize,IPL_DEPTH_8U,1);
         pTS->FrameNum = MaxFN;
-        for(p = pTS->pElemList;p;p=p->next)
+
+        for(p = pTS->pElemList; p; p=p->next)
         {
             if(p->FrameNum<=0)p->FrameNum=MaxFN;
         }
-    }/* Calculate elements and image size */
+    }   /* Calculate elements and image size. */
 
     return (CvTestSeq*)pTS;
-}/* cvCreateTestSeq */
+
+}   /* cvCreateTestSeq */
 
 void cvReleaseTestSeq(CvTestSeq** ppTestSeq)
 {
@@ -830,7 +900,8 @@ void cvReleaseTestSeq(CvTestSeq** ppTestSeq)
     if(pTS->pFileStorage)cvReleaseFileStorage(&pTS->pFileStorage);
 
     cvFree(ppTestSeq);
-}/* cvReleaseTestSeq */
+
+}   /* cvReleaseTestSeq */
 
 void cvTestSeqSetFrame(CvTestSeq* pTestSeq, int n)
 {
@@ -852,7 +923,8 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
     if(pTS->CurFrame >= pTS->FrameNum) return NULL;
     cvZero(pImg);
     cvZero(pImgMask);
-    for(p=pTS->pElemList;p;p=p->next)
+
+    for(p=pTS->pElemList; p; p=p->next)
     {
         int             DirectCopy = FALSE;
         int             frame = pTS->CurFrame - p->FrameBegin;
@@ -862,7 +934,7 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
         assert(pTrans);
 
         if( p->FrameNum > 0 && (frame < 0 || frame >= p->FrameNum) )
-        { /* current frame is out of range */
+        {   /* Current frame is out of range: */
             //if(p->pAVI)cvReleaseCapture(&p->pAVI);
             p->pAVI = NULL;
             continue;
@@ -873,19 +945,19 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
         cvZero(pImgMaskAdd);
 
         if(p->noise_type == CV_NOISE_NONE)
-        {/* for not noise */
-            /* get next frame */
+        {   /* For not noise:  */
+            /* Get next frame: */
             icvTestSeqQureyFrameElem(p, frame);
             if(p->pImg == NULL) continue;
 
 #if 1 /* transform using T filed in Trans */
-            {/* calc transform matrix */
+            {   /* Calculate transform matrix: */
                 float   W = (float)(pImgAdd->width-1);
                 float   H = (float)(pImgAdd->height-1);
                 float   W0 = (float)(p->pImg->width-1);
                 float   H0 = (float)(p->pImg->height-1);
                 cvZero(pT);
-                {/* calc invert matrxi */
+                {   /* Calcualte inverse matrix: */
                     CvMat   mat = cvMat(2,3,CV_32F, pTrans->T);
                     mat.width--;
                     pT->width--;
@@ -896,6 +968,7 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                 CV_MAT_ELEM(pT[0], float, 0, 2) =
                     CV_MAT_ELEM(pT[0], float, 0, 0)*(W0/2-pTrans->T[2])+
                     CV_MAT_ELEM(pT[0], float, 0, 1)*(H0/2-pTrans->T[5]);
+
                 CV_MAT_ELEM(pT[0], float, 1, 2) =
                     CV_MAT_ELEM(pT[0], float, 1, 0)*(W0/2-pTrans->T[2])+
                     CV_MAT_ELEM(pT[0], float, 1, 1)*(H0/2-pTrans->T[5]);
@@ -904,9 +977,10 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                 CV_MAT_ELEM(pT[0], float, 0, 1) *= H0/H;
                 CV_MAT_ELEM(pT[0], float, 1, 0) *= W0/W;
                 CV_MAT_ELEM(pT[0], float, 1, 1) *= H0/H;
-            }/* calc transform matrix */
+
+            }   /* Calculate transform matrix. */
 #else
-            {/* calc transform matrix */
+            {   /* Calculate transform matrix: */
                 float   SX = (float)(p->pImg->width-1)/((pImgAdd->width-1)*pTrans->Scale.x);
                 float   SY = (float)(p->pImg->height-1)/((pImgAdd->height-1)*pTrans->Scale.y);
                 float   DX = pTrans->Shift.x;
@@ -916,11 +990,11 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                 ((float*)(pT->data.ptr+pT->step*1))[1]=SY;
                 ((float*)(pT->data.ptr+pT->step*0))[2]=SX*(pImgAdd->width-1)*(0.5f-DX);
                 ((float*)(pT->data.ptr+pT->step*1))[2]=SY*(pImgAdd->height-1)*(0.5f-DY);
-            }/* calc transform matrix */
+            }   /* Calculate transform matrix. */
 #endif
 
 
-            {/* check for direct copy */
+            {   /* Check for direct copy: */
                 DirectCopy = TRUE;
                 if( fabs(CV_MAT_ELEM(pT[0],float,0,0)-1) > 0.00001) DirectCopy = FALSE;
                 if( fabs(CV_MAT_ELEM(pT[0],float,1,0)) > 0.00001) DirectCopy = FALSE;
@@ -930,7 +1004,7 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                 if( fabs(CV_MAT_ELEM(pT[0],float,1,2)-(pImg->height-1)*0.5) > 0.5) DirectCopy = FALSE;
             }
 
-            /* extract image and mask */
+            /* Extract image and mask: */
             if(p->pImg->nChannels == 1)
             {
                 if(DirectCopy)
@@ -943,6 +1017,7 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                     cvCvtColor( pImgAddG,pImgAdd,CV_GRAY2BGR);
                 }
             }
+
             if(p->pImg->nChannels == 3)
             {
                 if(DirectCopy)
@@ -957,78 +1032,85 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
                     cvCopyImage(p->pImgMask, pImgMaskAdd);
                 else
                     cvGetQuadrangleSubPix( p->pImgMask, pImgMaskAdd, pT);
+
                 cvThreshold(pImgMaskAdd,pImgMaskAdd,128,255,CV_THRESH_BINARY);
             }
 
             if(pTrans->C != 1 || pTrans->I != 0)
-            {/* intencity transformation */
+            {   /* Intensity transformation: */
                 cvScale(pImgAdd, pImgAdd, pTrans->C,pTrans->I);
-            }/* intencity transformation */
+            }   /* Intensity transformation: */
 
             if(pTrans->GN > 0)
-            {/* add noise */
+            {   /* Add noise: */
                 IplImage* pImgN = cvCloneImage(pImgAdd);
                 cvRandSetRange( &p->rnd_state, pTrans->GN, 0, -1 );
                 cvRand(&p->rnd_state, pImgN);
                 cvAdd(pImgN,pImgAdd,pImgAdd);
                 cvReleaseImage(&pImgN);
-            }/* add noise */
+            }   /* Add noise. */
 
             if(p->Mask)
-            {/* update only mask */
+            {   /* Update only mask: */
                 cvOr(pImgMaskAdd, pImgMask, pImgMask);
             }
             else
-            {   /* add image and mask to exist main image and mask */
+            {   /* Add image and mask to exist main image and mask: */
                 if(p->BG)
-                {/* if image is background */
+                {   /* If image is background: */
                     cvCopy( pImgAdd, pImg, NULL);
                 }
                 else
-                {/* if image is foreground */
+                {   /* If image is foreground: */
                     cvCopy( pImgAdd, pImg, pImgMaskAdd);
                     if(p->ObjID>=0)
                         cvOr(pImgMaskAdd, pImgMask, pImgMask);
                 }
-            }/* not mask */
-        }/* for not noise */
+            }   /* Not mask. */
+        }   /*  For not noise. */
         else
-        {/* process noise video */
+        {   /* Process noise video: */
 
             if( p->noise_type == CV_NOISE_GAUSSIAN ||
                 p->noise_type == CV_NOISE_UNIFORM)
-            {/* gaussan and uniform additive noise */
+
+            {   /* Gaussan and uniform additive noise: */
                 cvAddNoise(pImg,p->noise_type,pTrans->NoiseAmp * pTrans->C, &p->rnd_state);
-            }/* gaussan and uniform additive noise */
+            }   /* Gaussan and uniform additive noise. */
+
             if( p->noise_type == CV_NOISE_SPECKLE)
-            { /* speckle - multiplicative noise */
+            {   /* Speckle -- multiplicative noise: */
                 if(pTrans->I != 0)cvSubS(pImg,cvScalar(pTrans->I,pTrans->I,pTrans->I),pImg);
                 cvAddNoise(pImg,p->noise_type,pTrans->NoiseAmp, &p->rnd_state);
                 if(pTrans->I != 0)cvAddS(pImg,cvScalar(pTrans->I,pTrans->I,pTrans->I),pImg);
-            }/* speckle - multiplicative noise */
+            }   /* Speckle -- multiplicative noise. */
+
             if( p->noise_type == CV_NOISE_SALT_AND_PEPPER)
-            { /* salt and pepper */
+            {   /* Salt and pepper: */
                 cvAddNoise(pImg,p->noise_type,pTrans->NoiseAmp, &p->rnd_state);
-            }/* speckle - multiplicative noise */
-        }/* process noise video */
-    }/* next item */
+            }   /* Salt and pepper. */
+        }   /*  Process noise video.*/
+    }   /*  Next item. */
 
     if(pImg)
     {
         if(pTS->noise_type != CV_NOISE_NONE)
-        {/* add noise */
+        {   /* Add noise: */
             cvAddNoise(pImg,pTS->noise_type,pTS->noise_ampl);
         }
+
         if(pTS->IVar_DI != 0)
-        {/* change intensity */
+        {   /* Change intensity: */
             float   I = MIN(pTS->IVar_CurI,pTS->IVar_MaxI);
             I = MAX(I,pTS->IVar_MinI);
             cvScale(pImg,pImg,1,I);
 
             if(pTS->IVar_CurI >= pTS->IVar_MaxI)
                 pTS->IVar_CurDI = (float)-fabs(pTS->IVar_DI);
+
             if(pTS->IVar_CurI <= pTS->IVar_MinI)
                 pTS->IVar_CurDI = (float)+fabs(pTS->IVar_DI);
+
             pTS->IVar_CurI += pTS->IVar_CurDI;
         }
     }
@@ -1040,12 +1122,14 @@ IplImage* cvTestSeqQueryFrame(CvTestSeq* pTestSeq)
     cvReleaseImage(&pImgMaskAdd);
     cvReleaseMat(&pT);
     return pImg;
-}/*cvTestSeqQueryFrame*/
+
+}   /*cvTestSeqQueryFrame*/
 
 IplImage* cvTestSeqGetFGMask(CvTestSeq* pTestSeq)
 {
     return ((CvTestSeq_*)pTestSeq)->pImgMask;
 }
+
 IplImage* cvTestSeqGetImage(CvTestSeq* pTestSeq)
 {
     return ((CvTestSeq_*)pTestSeq)->pImg;
@@ -1062,11 +1146,13 @@ int cvTestSeqGetObjectPos(CvTestSeq* pTestSeq, int ObjIndex, CvPoint2D32f* pPos)
     CvTestSeq_*     pTS = (CvTestSeq_*)pTestSeq;
     CvTestSeqElem*  p = pTS->pElemList;
     if(pTS->CurFrame > pTS->FrameNum) return 0;
-    for(p=pTS->pElemList;p;p=p->next)
+
+    for(p=pTS->pElemList; p; p=p->next)
     {
         int frame = pTS->CurFrame - p->FrameBegin - 1;
         if(ObjIndex==p->ObjID && frame >= 0 && frame < p->FrameNum) break;
     }
+
     if(p && p->pPos && p->PosNum>0)
     {
         CvTSTrans*  pTrans;
@@ -1076,7 +1162,8 @@ int cvTestSeqGetObjectPos(CvTestSeq* pTestSeq, int ObjIndex, CvPoint2D32f* pPos)
         t = (p->FrameNum>1)?((float)frame / (p->FrameNum-1)):0;
         pTrans = p->pTrans + frame%p->TransNum;
         pPos[0] = p->pPos[frame%p->PosNum];
-#if 1 /* transform using T filed in Trans */
+
+#if 1   /* Transform using T filed in Trans: */
         {
             float x = pPos->x * (p->pImg?(p->pImg->width-1):1);
             float y = pPos->y * (p->pImg?(p->pImg->height-1):1);
@@ -1102,28 +1189,34 @@ int cvTestSeqGetObjectPos(CvTestSeq* pTestSeq, int ObjIndex, CvPoint2D32f* pPos)
         return 1;
     }
     return 0;
-}/* cvTestSeqGetObjectPos */
+
+}   /* cvTestSeqGetObjectPos */
 
 int cvTestSeqGetObjectSize(CvTestSeq* pTestSeq, int ObjIndex, CvPoint2D32f* pSize)
 {
     CvTestSeq_*     pTS = (CvTestSeq_*)pTestSeq;
     CvTestSeqElem*  p = pTS->pElemList;
     if(pTS->CurFrame > pTS->FrameNum) return 0;
-    for(p=pTS->pElemList;p;p=p->next)
+
+    for(p=pTS->pElemList; p; p=p->next)
     {
         int frame = pTS->CurFrame - p->FrameBegin - 1;
         if(ObjIndex==p->ObjID && frame >= 0 && frame < p->FrameNum) break;
     }
+
     if(p && p->pSize && p->SizeNum>0)
     {
         CvTSTrans*  pTrans;
         float       t;
         int         frame = pTS->CurFrame - p->FrameBegin - 1;
+
         if(frame < 0 || frame >= p->FrameNum) return 0;
+
         t = (p->FrameNum>1)?((float)frame / (p->FrameNum-1)):0;
         pTrans = p->pTrans + frame%p->TransNum;
         pSize[0] = p->pSize[frame%p->SizeNum];
-#if 1 /* transform using T filed in Trans */
+
+#if 1   /* Transform using T filed in Trans: */
         {
             float x = pSize->x * (p->pImg?(p->pImg->width-1):1);
             float y = pSize->y * (p->pImg?(p->pImg->height-1):1);
@@ -1156,17 +1249,20 @@ int cvTestSeqGetObjectSize(CvTestSeq* pTestSeq, int ObjIndex, CvPoint2D32f* pSiz
         pSize->y *= pTS->pImg->height-1;
         return 1;
     }
-    return 0;
-}/* cvTestSeqGetObjectSize */
 
-/* add noise to finile image */
+    return 0;
+
+}   /* cvTestSeqGetObjectSize */
+
+/* Add noise to finile image: */
 void cvTestSeqAddNoise(CvTestSeq* pTestSeq, int noise_type, double noise_ampl)
 {
     CvTestSeq_*     pTS = (CvTestSeq_*)pTestSeq;
     pTS->noise_type = noise_type;
     pTS->noise_ampl = noise_ampl;
 }
-/* add Intensity variation */
+
+/* Add Intensity variation: */
 void cvTestSeqAddIntensityVariation(CvTestSeq* pTestSeq, float DI_per_frame, float MinI, float MaxI)
 {
     CvTestSeq_* pTS = (CvTestSeq_*)pTestSeq;
@@ -1176,7 +1272,7 @@ void cvTestSeqAddIntensityVariation(CvTestSeq* pTestSeq, float DI_per_frame, flo
 }
 
 void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_state)
-{/* add noise to image */
+{   /* Add noise to image: */
     CvSize      S = cvSize(pImg->width,pImg->height);
     IplImage*   pImgAdd = cvCreateImage(S,pImg->depth,pImg->nChannels);
     static CvRandState local_rnd_state;
@@ -1187,18 +1283,21 @@ void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_st
         first = 0;
         cvRandInit( &local_rnd_state, 1, 0, 0,CV_RAND_NORMAL);
     }
+
     if(rnd_state == NULL)rnd_state = &local_rnd_state;
 
     if( noise_type == CV_NOISE_GAUSSIAN ||
         noise_type == CV_NOISE_UNIFORM)
-    {/* gaussan and uniform additive noise */
+    {   /* Gaussan and uniform additive noise: */
         int set_zero = 0;
+
         if( noise_type == CV_NOISE_GAUSSIAN)
         {
             rnd_state->disttype = CV_RAND_NORMAL;
             cvRandSetRange( rnd_state,  Ampl, 0, -1 );
             if(Ampl <= 0) set_zero = 1;
         }
+
         if( noise_type == CV_NOISE_UNIFORM)
         {
             double max_val =
@@ -1207,6 +1306,7 @@ void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_st
             cvRandSetRange( rnd_state, -max_val, max_val, -1 );
             if(max_val < 1) set_zero = 1;
         }
+
         if(!set_zero)
         {
             IplImage*   pImgNoise = cvCreateImage(S,IPL_DEPTH_32F,pImg->nChannels);
@@ -1218,10 +1318,10 @@ void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_st
             cvReleaseImage(&pImgNoise);
             cvReleaseImage(&pImgOrg);
         }
-    }/* gaussan and uniform additive noise */
+    }   /* Gaussan and uniform additive noise. */
 
     if( noise_type == CV_NOISE_SPECKLE)
-    { /* speckle - multiplicative noise */
+    {   /* Speckle -- multiplicative noise: */
         IplImage* pImgSP = cvCreateImage( S,IPL_DEPTH_32F, pImg->nChannels );
         IplImage* pImgTemp = cvCreateImage(S,IPL_DEPTH_32F, pImg->nChannels );
         rnd_state->disttype = CV_RAND_NORMAL;
@@ -1233,20 +1333,22 @@ void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_st
         cvConvert(pImgTemp,pImg);
         cvReleaseImage(&pImgSP);
         cvReleaseImage(&pImgTemp);
-    }/* speckle - multiplicative noise */
+    }   /* Speckle -- multiplicative noise. */
 
     if( noise_type == CV_NOISE_SALT_AND_PEPPER && Ampl > 0)
-    { /* salt and pepper */
+    {   /* Salt and pepper: */
         IplImage* pImgMask = cvCreateImage( S,IPL_DEPTH_32F, 1 );
         IplImage* pImgMaskBin = cvCreateImage( S,IPL_DEPTH_8U, 1 );
         IplImage* pImgVal = cvCreateImage( S,IPL_DEPTH_8U, 1 );
         rnd_state->disttype = CV_RAND_UNI;
-        /* create mask */
+
+        /* Create mask: */
         cvRandSetRange( rnd_state, 0, 1, -1 );
         cvRand(rnd_state, pImgMask);
         cvThreshold(pImgMask,pImgMask, Ampl, 255, CV_THRESH_BINARY_INV );
         cvConvert(pImgMask,pImgMaskBin);
-        /* create vals */
+
+        /* Create vals: */
         cvRandSetRange( rnd_state, 0, 255, -1 );
         cvRand(rnd_state, pImgVal);
         cvThreshold(pImgVal,pImgVal,128, 255, CV_THRESH_BINARY );
@@ -1260,7 +1362,10 @@ void cvAddNoise(IplImage* pImg, int noise_type, double Ampl, CvRandState* rnd_st
         cvReleaseImage(&pImgMask);
         cvReleaseImage(&pImgMaskBin);
         cvReleaseImage(&pImgVal);
-    }/* speckle - multiplicative noise */
+
+    }   /* Salt and pepper. */
+
     cvReleaseImage(&pImgAdd);
-}/* cvAddNoise */
+
+}   /* cvAddNoise */
 

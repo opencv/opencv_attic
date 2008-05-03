@@ -50,8 +50,10 @@ typedef struct DefBlobTrackerCR
     int                         Collision;
     CvBlobSeq*                  pBlobHyp;
     CvBlobTrackerOne*           pResolver;
-}DefBlobTrackerCR;
+} DefBlobTrackerCR;
+
 void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* storage);
+
 class CvBlobTrackerCCCR : public CvBlobTracker
 {
 private:
@@ -87,12 +89,13 @@ public:
         }
         SetParam("SizeVar",0);
     };
+
     ~CvBlobTrackerCCCR()
     {
         if(m_pMem)cvReleaseMemStorage(&m_pMem);
     };
 
-    /* blob functions*/
+    /* Blob functions: */
     virtual int     GetBlobNum() {return m_BlobList.GetBlobNum();};
     virtual CvBlob* GetBlob(int BlobIndex){return m_BlobList.GetBlob(BlobIndex);};
     virtual void    SetBlob(int BlobIndex, CvBlob* pBlob)
@@ -100,6 +103,7 @@ public:
         CvBlob* pB = m_BlobList.GetBlob(BlobIndex);
         if(pB) pB[0] = pBlob[0];
     };
+
     virtual CvBlob* GetBlobByID(int BlobID){return m_BlobList.GetBlobByID(BlobID);};
     virtual void    DelBlob(int BlobIndex)
     {
@@ -109,6 +113,7 @@ public:
         delete pBT->pBlobHyp;
         m_BlobList.DelBlob(BlobIndex);
     };
+
     virtual void    DelBlobByID(int BlobID)
     {
         DefBlobTrackerCR* pBT = (DefBlobTrackerCR*)m_BlobList.GetBlobByID(BlobID);
@@ -117,13 +122,14 @@ public:
         delete pBT->pBlobHyp;
         m_BlobList.DelBlobByID(BlobID);
     };
+
     virtual void    Release(){delete this;};
 
     /* Add new blob to track it and assign to this blob personal ID */
     /* pBlob - pinter to structure with blob parameters (ID is ignored)*/
     /* pImg - current image */
     /* pImgFG - current foreground mask */
-    /* return pointer to new added blob */
+    /* Return pointer to new added blob: */
     virtual CvBlob* AddBlob(CvBlob* pB, IplImage* pImg, IplImage* pImgFG = NULL )
     {
         DefBlobTrackerCR NewB;
@@ -142,6 +148,7 @@ public:
         m_BlobList.AddBlob((CvBlob*)&NewB);
         return m_BlobList.GetBlob(m_BlobList.GetBlobNum()-1);
     };
+
     virtual void    Process(IplImage* pImg, IplImage* pImgFG = NULL)
     {
         CvSeq*      cnts;
@@ -151,23 +158,25 @@ public:
 
         if(m_BlobList.GetBlobNum() <= 0 ) return;
         
-        /* clear blob list for new blobs */
+        /* Clear blob list for new blobs: */
         m_BlobListNew.Clear();
 
         assert(m_pMem);
         cvClearMemStorage(m_pMem);
         assert(pImgFG);
 
-        {/* one contour - one blob */
+        {   /* One contour - one blob: */
             IplImage* pBin = cvCloneImage(pImgFG);
             assert(pBin);
             cvThreshold(pBin,pBin,128,255,CV_THRESH_BINARY);
             cvFindContours(pBin, m_pMem, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
-            /* process each contours*/
-            for(cnt = cnts;cnt;cnt=cnt->h_next)
+
+            /* Process each contour: */
+            for(cnt = cnts; cnt; cnt=cnt->h_next)
             {
                 CvBlob  NewBlob;
-                /* image moments */
+
+                /* Image moments: */
                 double      M00,X,Y,XX,YY;
                 CvMoments   m;
                 CvRect      r = ((CvContour*)cnt)->rect;
@@ -182,15 +191,18 @@ public:
                 YY = (cvGetSpatialMoment( &m, 0, 2 )/M00) - Y*Y;
                 NewBlob = cvBlob(r.x+(float)X,r.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
                 m_BlobListNew.AddBlob(&NewBlob);
-            }/* next contour */
+
+            }   /* Next contour. */
+
             cvReleaseImage(&pBin);
         }
 
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* predict new blob position */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Predict new blob position. */
             CvBlob*             pB = NULL;
             DefBlobTrackerCR*   pBT = (DefBlobTrackerCR*)m_BlobList.GetBlob(i-1);
-            /*update predictor */
+
+            /* Update predictor. */
             pBT->pPredictor->Update(&(pBT->blob));
             pB = pBT->pPredictor->Predict();
             if(pB)
@@ -198,35 +210,37 @@ public:
                 pBT->BlobPredict = pB[0];
             }
             pBT->BlobPrev = pBT->blob;
-        }/* predict new blob position */
+        }   /* Predict new blob position. */
 
 
         if(m_BlobList.GetBlobNum()>0 && m_BlobListNew.GetBlobNum()>0)
-        {/* resolve new blob to old */
+        {   /* Resolve new blob to old: */
             int i,j;
             int NOld = m_BlobList.GetBlobNum();
             int NNew = m_BlobListNew.GetBlobNum();
             
-            for(i=0;i<NOld;i++)
-            {/* set 0 collision and clear all hyp */
+            for(i=0; i<NOld; i++)
+            {   /* Set 0 collision and clear all hyp: */
                 DefBlobTrackerCR* pF = (DefBlobTrackerCR*)m_BlobList.GetBlob(i);
                 pF->Collision = 0;
                 pF->pBlobHyp->Clear();
-            }/* set 0 collision */
+            }   /* Set 0 collision. */
 
-            /* create correspondance records */
-            for(j=0;j<NNew;++j)
+            /* Create correspondence records: */
+            for(j=0; j<NNew; ++j)
             {
                 CvBlob*             pB1 = m_BlobListNew.GetBlob(j);
                 DefBlobTrackerCR*   pFLast = NULL;
                 
-                for(i=0;i<NOld;i++)
-                {/* check intersection */
+                for(i=0; i<NOld; i++)
+                {   /* Check intersection: */
                     int Intersection = 0;
                     DefBlobTrackerCR* pF = (DefBlobTrackerCR*)m_BlobList.GetBlob(i);
                     CvBlob* pB2 = &(pF->BlobPredict);
+
                     if( fabs(pB1->x-pB2->x)<0.5*(pB1->w+pB2->w) &&
                         fabs(pB1->y-pB2->y)<0.5*(pB1->h+pB2->h) ) Intersection = 1;
+
                     if(Intersection)
                     {
                         if(pFLast)
@@ -236,17 +250,17 @@ public:
                         pFLast = pF;
                         pF->pBlobHyp->AddBlob(pB1);
                     }
-                }/* check intersection */
-            }/* check next new blob  */
-        }/* resolve new blob to old */
+                }   /* Check intersection. */
+            }   /*  Check next new blob. */
+        }   /*  Resolve new blob to old. */
 
-        for(i=m_BlobList.GetBlobNum();i>0;--i)
-        {/* track each blob */
+        for(i=m_BlobList.GetBlobNum(); i>0; --i)
+        {   /* Track each blob. */
             CvBlob*             pB = m_BlobList.GetBlob(i-1);
             DefBlobTrackerCR*   pBT = (DefBlobTrackerCR*)pB;
             int                 BlobID = CV_BLOB_ID(pB);
-            //CvBlob*             pBBest = NULL;
-            //double              DistBest = -1;
+          //CvBlob*             pBBest = NULL;
+          //double              DistBest = -1;
             int j;
 
             if(pBT->pResolver)
@@ -255,29 +269,29 @@ public:
             }
             
             if(pBT->Collision)
-            {/* tracking in collision */
+            {   /* Tracking in collision: */
                 if(pBT->pResolver)
                 {
                     pB[0] = pBT->pResolver->Process(&(pBT->BlobPredict),pImg, pImgFG)[0];
                 }
-            }/* tracking in collision */
+            }   /* Tracking in collision. */
             else
-            {/* not collision tracking */
+            {   /* Non-collision tracking: */
                 CvBlob  NewCC = pBT->BlobPredict;
                 if(pBT->pBlobHyp->GetBlobNum()==1)
-                {/* one blob to one CC */
+                {   /* One blob to one CC: */
                     NewCC = pBT->pBlobHyp->GetBlob(0)[0];
                 }
                 else
-                {/* one blob several CC */
+                {   /* One blob several CC: */
                     CvBlob* pBBest = NULL;
                     double  DistBest = -1;
                     double  CMax = 0;
                     for(j=pBT->pBlobHyp->GetBlobNum();j>0;--j)
-                    {/* find best CC */
+                    {   /* Find best CC: */
                         CvBlob* pBNew = pBT->pBlobHyp->GetBlob(j-1);
                         if(pBT->pResolver)
-                        {/* choose CC by confidence */
+                        {     /* Choose CC by confidence: */
 //                            double  dx = fabs(CV_BLOB_X(pB)-CV_BLOB_X(pBNew));
 //                            double  dy = fabs(CV_BLOB_Y(pB)-CV_BLOB_Y(pBNew));
                             double  C = pBT->pResolver->GetConfidence(pBNew,pImg, pImgFG);
@@ -288,7 +302,7 @@ public:
                             }
                         }
                         else
-                        { /* chose CC by distance */
+                        {    /* Choose CC by distance: */
                             double  dx = fabs(CV_BLOB_X(pB)-CV_BLOB_X(pBNew));
                             double  dy = fabs(CV_BLOB_Y(pB)-CV_BLOB_Y(pBNew));
                             double  Dist = sqrt(dx*dx+dy*dy);
@@ -298,29 +312,29 @@ public:
                                 pBBest = pBNew;
                             }
                         }
-                    }/* find best CC */
+                    }   /* Find best CC. */
                     if(pBBest)
                         NewCC = pBBest[0];
-                }/* one blob several CC */
+                }   /* One blob several CC. */
                 pB->x = NewCC.x;
                 pB->y = NewCC.y;
                 pB->w = (m_AlphaSize)*NewCC.w+(1-m_AlphaSize)*pB->w;
                 pB->h = (m_AlphaSize)*NewCC.h+(1-m_AlphaSize)*pB->h;
                 pBT->pResolver->SkipProcess(&(pBT->BlobPredict),pImg, pImgFG);
-            }/* not collision tracking */
+            }   /* Non-collision tracking. */
             
             pBT->pResolver->Update(pB, pImg, pImgFG);
 
             CV_BLOB_ID(pB)=BlobID;
 
-        }/* track next blob */
+        }   /* Track next blob. */
 
         if(m_Wnd)
         {
             IplImage* pI = cvCloneImage(pImg);
             int i;
-            for(i=m_BlobListNew.GetBlobNum();i>0;--i)
-            {/* draw each new CC */
+            for(i=m_BlobListNew.GetBlobNum(); i>0; --i)
+            {   /* Draw each new CC: */
                 CvBlob* pB = m_BlobListNew.GetBlob(i-1);
                 CvPoint p = cvPointFrom32f(CV_BLOB_CENTER(pB));
                 int x = cvRound(CV_BLOB_RX(pB)), y = cvRound(CV_BLOB_RY(pB));
@@ -333,8 +347,8 @@ public:
                     CV_RGB(255,255,0), 1 );
             }
 
-            for(i=m_BlobList.GetBlobNum();i>0;--i)
-            {/* draw each new CC */
+            for(i=m_BlobList.GetBlobNum(); i>0; --i)
+            {   /* Draw each new CC: */
                 DefBlobTrackerCR* pF = (DefBlobTrackerCR*)m_BlobList.GetBlob(i-1);
                 CvBlob* pB = &(pF->BlobPredict);
                 CvPoint p = cvPointFrom32f(CV_BLOB_CENTER(pB));
@@ -362,13 +376,15 @@ public:
             cvReleaseImage(&pI);
         }
         
-    }/* Process */
+    } /* Process. */
+
     virtual void SaveState(CvFileStorage* fs)
     {
         int     b,bN = m_BlobList.GetBlobNum();
         cvWriteInt(fs,"BlobNum",m_BlobList.GetBlobNum());
         cvStartWriteStruct(fs,"BlobList",CV_NODE_SEQ);
-        for(b=0;b<bN;++b)
+
+        for(b=0; b<bN; ++b)
         {
             DefBlobTrackerCR* pF = (DefBlobTrackerCR*)m_BlobList.GetBlob(b);
             cvStartWriteStruct(fs,NULL,CV_NODE_MAP);
@@ -394,8 +410,10 @@ public:
             cvEndWriteStruct(fs);
             cvEndWriteStruct(fs);
         }
+
         cvEndWriteStruct(fs);
-    }/* SaveState*/
+
+    }   /* SaveState. */
     
     virtual void LoadState(CvFileStorage* fs, CvFileNode* node)
     {
@@ -403,7 +421,8 @@ public:
         CvFileNode* pBlobListNode = cvGetFileNodeByName(fs,node,"BlobList");
         if(!CV_NODE_IS_SEQ(pBlobListNode->tag)) return;
         bN = pBlobListNode->data.seq->total;
-        for(b=0;b<bN;++b)
+
+        for(b=0; b<bN; ++b)
         {
             DefBlobTrackerCR*   pF = NULL;
             CvBlob              Blob;
@@ -423,9 +442,11 @@ public:
             pSeqNode = cvGetFileNodeByName(fs, pBlobNode, "BlobPredict");
             if(CV_NODE_IS_SEQ(pSeqNode->tag))
                 cvReadRawData( fs, pSeqNode, &pF->BlobPredict, "ffffi" );
+
             pSeqNode = cvGetFileNodeByName(fs, pBlobNode, "BlobPrev");
             if(CV_NODE_IS_SEQ(pSeqNode->tag))
                 cvReadRawData( fs, pSeqNode, &pF->BlobPrev, "ffffi" );
+
             pSeqNode = cvGetFileNodeByName(fs, pBlobNode, "BlobHyp");
             if(pSeqNode)
                 pF->pBlobHyp->Load(fs,pSeqNode);
@@ -434,11 +455,12 @@ public:
             pSeqNode = cvGetFileNodeByName(fs, pBlobNode, "Predictor");
             if(pSeqNode)
                 pF->pPredictor->LoadState(fs,pSeqNode);
+
             pSeqNode = cvGetFileNodeByName(fs, pBlobNode, "Resolver");
             if(pSeqNode)
                 pF->pResolver->LoadState(fs,pSeqNode);
-        }/* read next blob */
-    }/* CCwithCR LoadState */
+        }   /* Read next blob. */
+    }   /*  CCwithCR LoadState */
 
     //void SetCollision(int Collision){m_Collision = Collision;};
 };

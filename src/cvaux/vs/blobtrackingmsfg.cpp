@@ -66,10 +66,12 @@ public:
         m_HistVolume = 0;
         Resize(BinNum);
     }
+
     ~DefHist()
     {
         if(m_pHist)cvReleaseMat(&m_pHist);
     }
+
     void Resize(int BinNum)
     {
         if(m_pHist)cvReleaseMat(&m_pHist);
@@ -80,15 +82,16 @@ public:
         }
         m_HistVolume = 0;
     }
+
     void Update(DefHist* pH, float W)
-    {/* update hist */
+    {   /* Update histogram: */
         double  Vol, WM, WC;
         Vol = 0.5*(m_HistVolume + pH->m_HistVolume);
         WM = Vol*(1-W)/m_HistVolume;
         WC = Vol*(W)/pH->m_HistVolume;
         cvAddWeighted(m_pHist, WM, pH->m_pHist,WC,0,m_pHist);
         m_HistVolume = (float)cvSum(m_pHist).val[0];
-    }/* update hist */
+    }   /* Update histogram: */
 };
 
 class CvBlobTrackerOneMSFG:public CvBlobTrackerOne
@@ -96,6 +99,7 @@ class CvBlobTrackerOneMSFG:public CvBlobTrackerOne
 protected:
     int             m_BinNumTotal; /* protected only for parralel MSPF */
     CvSize          m_ObjSize;
+
     void ReAllocKernel(int  w, int h)
     {
         int     x,y;
@@ -109,7 +113,8 @@ protected:
         if(m_KernelMeanShift) cvReleaseMat(&m_KernelMeanShift);
         m_KernelHist = cvCreateMat(h, w, DefHistTypeMat);
         m_KernelMeanShift = cvCreateMat(h, w, DefHistTypeMat);
-        for(y=0;y<h;++y)for(x=0;x<w;++x)
+
+        for(y=0; y<h; ++y) for(x=0; x<w; ++x)
         {
             double r2 = ((x-x0)*(x-x0)/(x0*x0)+(y-y0)*(y-y0)/(y0*y0));
 //            double r2 = ((x-x0)*(x-x0)+(y-y0)*(y-y0))/((y0*y0)+(x0*x0));
@@ -117,8 +122,9 @@ protected:
             CV_MAT_ELEM(m_KernelMeanShift[0],DefHistType, y, x) = (DefHistType)GetKernelMeanShift(r2);
         }
     }
+
 private:
-    /* parameters */
+    /* Parameters: */
     int             m_IterNum;
     float           m_FGWeight;
     float           m_Alpha;
@@ -169,16 +175,20 @@ private:
         m_HistModel.Resize(m_BinNumTotal);
         m_HistTemp.Resize(m_BinNumTotal);
     }
+
     double GetKernelHist(double r2)
     {
         return (r2 < 1) ? 1 -  r2 : 0;
     }
+
     double GetKernelMeanShift(double r2)
     {
         return (r2<1) ? 1 : 0;
     }
+
 //    void CollectHist(IplImage* pImg, IplImage* pMask, CvPoint Center, CvMat* pHist, DefHistType* pHistVolume)
 //    void CollectHist(IplImage* pImg, IplImage* pMask, CvPoint Center, DefHist* pHist)
+
     void CollectHist(IplImage* pImg, IplImage* pMask, CvBlob* pBlob, DefHist* pHist)
     {
         int UsePrecalculatedKernel = 0;
@@ -204,20 +214,23 @@ private:
 
         if(m_Dim == 3)
         {
-            for(y=0;y<BH;++y)
+            for(y=0; y<BH; ++y)
             {
                 unsigned char* pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y+y0,x0*3);
                 unsigned char* pMaskData = pMask?(&CV_IMAGE_ELEM(pMask,unsigned char,y+y0,x0)):NULL;
                 DefHistType* pKernelData = NULL;
+
                 if(UsePrecalculatedKernel)
                 {
                     pKernelData = ((DefHistType*)CV_MAT_ELEM_PTR_FAST(m_KernelHist[0],y,0,sizeof(DefHistType)));
                 }
-                for(x=0;x<BW;++x,pImgData+=3)
+
+                for(x=0; x<BW; ++x, pImgData+=3)
                 {
                     DefHistType K;
                     int index = HIST_INDEX(pImgData);
                     assert(index >= 0 && index < pHist->m_pHist->cols);
+
                     if(UsePrecalculatedKernel)
                     {
                         K = pKernelData[x];
@@ -236,11 +249,15 @@ private:
                     }
                     Volume += K;
                     ((DefHistType*)(pHist->m_pHist->data.ptr))[index] += K;
-                }/* next column */
-            }/* next row */
-        }/* if m_Dim == 3 */
+
+                }   /* Next column. */
+            }   /*  Next row. */
+        }   /* if m_Dim == 3. */
+
         pHist->m_HistVolume = Volume;
-    };/*CollectHist*/
+
+    };  /* CollectHist */
+
     double calcBhattacharyya(DefHist* pHM = NULL, DefHist* pHC = NULL, DefHist* pHT = NULL)
     {
         if(pHM==NULL) pHM = &m_HistModel;
@@ -249,12 +266,12 @@ private:
         if(pHC->m_HistVolume*pHM->m_HistVolume > 0)
         {
 #if 0
-            // use CV functions
+            // Use CV functions:
             cvMul(pHM->m_pHist,pHC->m_pHist,pHT->m_pHist);
             cvPow(pHT->m_pHist,pHT->m_pHist,0.5);
             return cvSum(pHT->m_pHist).val[0] / sqrt(pHC->m_HistVolume*pHM->m_HistVolume);
 #else
-            // Do computations manually and let autovectorizer do the job
+            // Do computations manually and let autovectorizer do the job:
             DefHistType *hm, *hc, *ht;
             double sum;
             int     size;
@@ -271,42 +288,45 @@ private:
 #endif
         }
         return 0;
-    } /* calcBhattacharyyaCoefficient */
+    }   /* calcBhattacharyyaCoefficient. */
+
 protected:
-    //double GetBhattacharyya(IplImage* pImg, IplImage* pImgFG, float x, float y, DefHist* pHist=NULL)
+    // double GetBhattacharyya(IplImage* pImg, IplImage* pImgFG, float x, float y, DefHist* pHist=NULL)
     double GetBhattacharyya(IplImage* pImg, IplImage* pImgFG, CvBlob* pBlob, DefHist* pHist=NULL, int /*thread_number*/ = 0)
     {
         if(pHist==NULL)pHist = &m_HistTemp;
         CollectHist(pImg, pImgFG, pBlob, pHist);
         return calcBhattacharyya(&m_HistModel, pHist, pHist);
     }
+
     void UpdateModelHist(IplImage* pImg, IplImage* pImgFG, CvBlob* pBlob)
     {
         if(m_Alpha>0 && !m_Collision)
-        {/* update hist */
+        {   /* Update histogram: */
             CollectHist(pImg, pImgFG, pBlob, &m_HistCandidate);
             m_HistModel.Update(&m_HistCandidate, m_Alpha);
-        }/* update hist */
-    }/* UpdateModelHist*/
+        }   /* Update histogram. */
+
+    }   /* UpdateModelHist */
 
 public:
     CvBlobTrackerOneMSFG()
     {
 
-        /* add several parameters for external use */
+        /* Add several parameters for external use: */
         m_FGWeight = 2;
         AddParam("FGWeight", &m_FGWeight);
         CommentParam("FGWeight","Weight of FG mask using (0 - mask will not be used for tracking)");
 
         m_Alpha = 0.01f;
         AddParam("Alpha", &m_Alpha);
-        CommentParam("Alpha","Coefficient for model histogramm updating (0 - hist is not upated)");
+        CommentParam("Alpha","Coefficient for model histogram updating (0 - hist is not upated)");
 
         m_IterNum = 10;
         AddParam("IterNum", &m_IterNum);
         CommentParam("IterNum","Maximal number of iteration in meanshift operation");
 
-        /* init internal data */
+        /* Initialize internal data: */
         m_Collision = 0;
 //        m_BinBit=0;
         m_Dim = 0;
@@ -319,6 +339,7 @@ public:
         m_KernelMeanShift = NULL;
         ReAllocHist(3,5);   /* 3D hist, each dim has 2^5 bins*/
     }
+
     ~CvBlobTrackerOneMSFG()
     {
         /*
@@ -329,7 +350,8 @@ public:
         if(m_KernelHist) cvReleaseMat(&m_KernelHist);
         if(m_KernelMeanShift) cvReleaseMat(&m_KernelMeanShift);
     }
-    /* interface */
+
+    /* Interface: */
     virtual void Init(CvBlob* pBlobInit, IplImage* pImg, IplImage* pImgFG = NULL)
     {
         int w = cvRound(CV_BLOB_WX(pBlobInit));
@@ -346,6 +368,7 @@ public:
             CollectHist(pImg, pImgFG, pBlobInit, &m_HistModel);
         m_Blob = pBlobInit[0];
     };
+
     virtual CvBlob* Process(CvBlob* pBlobPrev, IplImage* pImg, IplImage* pImgFG = NULL)
     {
         int     iter;
@@ -355,7 +378,7 @@ public:
             m_Blob = pBlobPrev[0];
         }
 
-        {/* check blob size and realloc kernels if it is necessary */
+        {   /* Check blob size and realloc kernels if it is necessary: */
             int w = cvRound(m_Blob.w);
             int h = cvRound(m_Blob.h);
             if( w != m_ObjSize.width || h!=m_ObjSize.height)
@@ -363,10 +386,10 @@ public:
                 ReAllocKernel(w,h);
                 /* after this ( w != m_ObjSize.width || h!=m_ObjSize.height) shoiuld be false */
             }
-        }/* check blob size and realloc kernels if it is necessary */
+        }   /* Check blob size and realloc kernels if it is necessary: */
 
 
-        for(iter=0;iter<m_IterNum;++iter)
+        for(iter=0; iter<m_IterNum; ++iter)
         {
             float   newx=0,newy=0,sum=0;
             //int     x,y;
@@ -377,7 +400,7 @@ public:
             B0 = calcBhattacharyya();
 
             if(m_Wnd)if(CV_BLOB_ID(pBlobPrev)==0 && iter == 0)
-            {/* debug */
+            {   /* Debug: */
                 IplImage*   pW = cvCloneImage(pImgFG);
                 IplImage*   pWFG = cvCloneImage(pImgFG);
                 int         x,y;
@@ -387,12 +410,14 @@ public:
 
                 assert(m_ObjSize.width < pImg->width);
                 assert(m_ObjSize.height < pImg->height);
-                /*calc shift vector */
-                for(y=0;y<pImg->height;++y)
+
+                /* Calculate shift vector: */
+                for(y=0; y<pImg->height; ++y)
                 {
                     unsigned char* pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y,0);
                     unsigned char* pMaskData = pImgFG?(&CV_IMAGE_ELEM(pImgFG,unsigned char,y,0)):NULL;
-                    for(x=0;x<pImg->width;++x,pImgData+=3)
+
+                    for(x=0; x<pImg->width; ++x, pImgData+=3)
                     {
                         int         xk = cvRound(x-(m_Blob.x-m_Blob.w*0.5));
                         int         yk = cvRound(y-(m_Blob.y-m_Blob.h*0.5));
@@ -410,8 +435,10 @@ public:
 
                         if(m_HistModel.m_HistVolume>0)
                             HM = ((DefHistType*)m_HistModel.m_pHist->data.ptr)[index]/m_HistModel.m_HistVolume;
+
                         if(m_HistCandidate.m_HistVolume>0)
                             HC = ((DefHistType*)m_HistCandidate.m_pHist->data.ptr)[index]/m_HistCandidate.m_HistVolume;
+
                         K = *(DefHistType*)CV_MAT_ELEM_PTR_FAST(m_KernelMeanShift[0],yk,xk,sizeof(DefHistType));
 
                         if(HC>0)
@@ -430,8 +457,9 @@ public:
                             CV_IMAGE_ELEM(pWFG,uchar,y,x) = (uchar)Vi;
                         }
 
-                    }/* next column */
-                }/* next row */
+                    }   /* Next column. */
+                }   /*  Next row. */
+
                 //cvNamedWindow("MSFG_W",0);
                 //cvShowImage("MSFG_W",pW);
                 //cvNamedWindow("MSFG_WFG",0);
@@ -442,11 +470,13 @@ public:
                 //cvSaveImage("MSFG_W.bmp",pW);
                 //cvSaveImage("MSFG_WFG.bmp",pWFG);
                 //cvSaveImage("MSFG_FG.bmp",pImgFG);
-            }/* debug */
+
+            }   /* Debug. */
 
 
-            /* calc new pos by meanshift */
-            /* calc new pos */
+            /* Calculate new position by meanshift: */
+
+            /* Calculate new position: */
             if(m_Dim == 3)
             {
                 int         x0 = cvRound(m_Blob.x - m_ObjSize.width*0.5);
@@ -456,18 +486,20 @@ public:
                 assert(m_ObjSize.width < pImg->width);
                 assert(m_ObjSize.height < pImg->height);
 
-                /* crop blob bounds */
+                /* Crop blob bounds: */
                 if((x0+m_ObjSize.width)>=pImg->width) x0=pImg->width-m_ObjSize.width-1;
                 if((y0+m_ObjSize.height)>=pImg->height) y0=pImg->height-m_ObjSize.height-1;
                 if(x0<0){ x0=0;}
                 if(y0<0){ y0=0;}
-                /*calc shift vector */
-                for(y=0;y<m_ObjSize.height;++y)
+
+                /* Calculate shift vector: */
+                for(y=0; y<m_ObjSize.height; ++y)
                 {
                     unsigned char* pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y+y0,x0*3);
                     unsigned char* pMaskData = pImgFG?(&CV_IMAGE_ELEM(pImgFG,unsigned char,y+y0,x0)):NULL;
                     DefHistType* pKernelData = (DefHistType*)CV_MAT_ELEM_PTR_FAST(m_KernelMeanShift[0],y,0,sizeof(DefHistType));
-                    for(x=0;x<m_ObjSize.width;++x,pImgData+=3)
+
+                    for(x=0; x<m_ObjSize.width; ++x, pImgData+=3)
                     {
                         DefHistType K = pKernelData[x];
                         double      HM = 0;
@@ -477,6 +509,7 @@ public:
 
                         if(m_HistModel.m_HistVolume>0)
                             HM = ((DefHistType*)m_HistModel.m_pHist->data.ptr)[index]/m_HistModel.m_HistVolume;
+
                         if(m_HistCandidate.m_HistVolume>0)
                             HC = ((DefHistType*)m_HistCandidate.m_pHist->data.ptr)[index]/m_HistCandidate.m_HistVolume;
 
@@ -493,8 +526,8 @@ public:
                         sum += K;
                         newx += K*x;
                         newy += K*y;
-                    }/* next column */
-                }/* next row */
+                    }   /* Next column. */
+                }   /*  Next row. */
 
                 if(sum > 0)
                 {
@@ -504,11 +537,12 @@ public:
                 newx += x0;
                 newy += y0;
 
-            }/* if m_Dim == 3 */
-            /* calc new pos be meanshift */
+            }   /* if m_Dim == 3. */
+
+            /* Calculate new position by meanshift: */
 
             for(;;)
-            {/* iterate using bahattcharrya coefficient */
+            {   /* Iterate using bahattcharrya coefficient: */
                 double  B1;
                 CvBlob  B = m_Blob;
 //                CvPoint NewCenter = cvPoint(cvRound(newx),cvRound(newy));
@@ -520,15 +554,15 @@ public:
                 newx = 0.5f*(newx+m_Blob.x);
                 newy = 0.5f*(newy+m_Blob.y);
                 if(fabs(newx-m_Blob.x)<0.1 && fabs(newy-m_Blob.y)<0.1) break;
-            }/* iterate using bahattcharrya coefficient */
+            }   /* Iterate using bahattcharrya coefficient. */
 
             if(fabs(newx-m_Blob.x)<0.5 && fabs(newy-m_Blob.y)<0.5) break;
             m_Blob.x = newx;
             m_Blob.y = newy;
-        }/* next iteration */
+        }   /* Next iteration. */
 
         while(!m_Collision && m_FGWeight>0)
-        { /* update size if no collision */
+        {   /* Update size if no collision. */
             float       Alpha = 0.04f;
             CvBlob      NewBlob;
             double      M00,X,Y,XX,YY;
@@ -561,21 +595,25 @@ public:
             m_Blob.w = MAX(NewBlob.w,5);
             m_Blob.h = MAX(NewBlob.h,5);
             break;
-        }/* update size if no collision */
+
+        }   /* Update size if no collision. */
 
         return &m_Blob;
-    }; /* CvBlobTrackerOneMSFG::Process */
+
+    };  /* CvBlobTrackerOneMSFG::Process */
+
     virtual double GetConfidence(CvBlob* pBlob, IplImage* pImg, IplImage* /*pImgFG*/ = NULL, IplImage* pImgUnusedReg = NULL)
     {
         double  S = 0.2;
         double  B = GetBhattacharyya(pImg, pImgUnusedReg, pBlob, &m_HistTemp);
         return exp((B-1)/(2*S));
-    };/*CvBlobTrackerOneMSFG::*/
+
+    };  /*CvBlobTrackerOneMSFG::*/
 
     virtual void Update(CvBlob* pBlob, IplImage* pImg, IplImage* pImgFG = NULL)
-    {   /* update hist */
+    {   /* Update histogram: */
         UpdateModelHist(pImg, pImgFG, pBlob?pBlob:&m_Blob);
-    }/*CvBlobTrackerOneMSFG::*/
+    }   /*CvBlobTrackerOneMSFG::*/
 
     virtual void Release(){delete this;};
     virtual void SetCollision(int CollisionFlag)
@@ -602,7 +640,7 @@ public:
         }
     };
 
-}; /*CvBlobTrackerOneMSFG*/
+};  /*CvBlobTrackerOneMSFG*/
 
 #if 0
 void CvBlobTrackerOneMSFG::CollectHist(IplImage* pImg, IplImage* pMask, CvBlob* pBlob, DefHist* pHist)
@@ -630,20 +668,23 @@ void CvBlobTrackerOneMSFG::CollectHist(IplImage* pImg, IplImage* pMask, CvBlob* 
 
     if(m_Dim == 3)
     {
-        for(y=0;y<BH;++y)
+        for(y=0; y<BH; ++y)
         {
             unsigned char* pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y+y0,x0*3);
             unsigned char* pMaskData = pMask?(&CV_IMAGE_ELEM(pMask,unsigned char,y+y0,x0)):NULL;
             DefHistType* pKernelData = NULL;
+
             if(UsePrecalculatedKernel)
             {
                 pKernelData = ((DefHistType*)CV_MAT_ELEM_PTR_FAST(m_KernelHist[0],y,0,sizeof(DefHistType)));
             }
-            for(x=0;x<BW;++x,pImgData+=3)
+
+            for(x=0; x<BW; ++x, pImgData+=3)
             {
                 DefHistType K;
                 int index = HIST_INDEX(pImgData);
                 assert(index >= 0 && index < pHist->m_pHist->cols);
+
                 if(UsePrecalculatedKernel)
                 {
                     K = pKernelData[x];
@@ -662,23 +703,28 @@ void CvBlobTrackerOneMSFG::CollectHist(IplImage* pImg, IplImage* pMask, CvBlob* 
                 }
                 Volume += K;
                 ((DefHistType*)(pHist->m_pHist->data.ptr))[index] += K;
-            }/* next column */
-        }/* next row */
-    }/* if m_Dim == 3 */
+
+            }   /* Next column. */
+        }   /*  Next row. */
+    }   /*  if m_Dim == 3. */
+
     pHist->m_HistVolume = Volume;
-};/*CollectHist*/
+
+};  /* CollectHist */
 #endif
 
 CvBlobTrackerOne* cvCreateBlobTrackerOneMSFG()
 {
     return (CvBlobTrackerOne*) new CvBlobTrackerOneMSFG;
 }
+
 CvBlobTracker* cvCreateBlobTrackerMSFG()
 {
     return cvCreateBlobTrackerList(cvCreateBlobTrackerOneMSFG);
 }
 
-/* Create specific tracker without FG usin - just simple mean-shift tracker*/
+/* Create specific tracker without FG
+ * usin - just simple mean-shift tracker: */
 class CvBlobTrackerOneMS:public CvBlobTrackerOneMSFG
 {
 public:
@@ -693,6 +739,7 @@ CvBlobTrackerOne* cvCreateBlobTrackerOneMS()
 {
     return (CvBlobTrackerOne*) new CvBlobTrackerOneMS;
 }
+
 CvBlobTracker* cvCreateBlobTrackerMS()
 {
     return cvCreateBlobTrackerList(cvCreateBlobTrackerOneMS);
@@ -703,7 +750,7 @@ typedef struct DefParticle
     CvBlob  blob;
     float   Vx,Vy;
     double  W;
-}DefParticle;
+} DefParticle;
 
 class CvBlobTrackerOneMSPF:public CvBlobTrackerOneMS
 {
@@ -732,6 +779,7 @@ public:
         cvWriteStruct(fs,"ParticlesPredicted",m_pParticlesPredicted,"ffffiffd",m_ParticleNum);
         cvWriteStruct(fs,"ParticlesResampled",m_pParticlesResampled,"ffffiffd",m_ParticleNum);
     };
+
     virtual void LoadState(CvFileStorage* fs, CvFileNode* node)
     {
         //CvMat* pM;
@@ -775,6 +823,7 @@ public:
         }
 #endif
     }
+
     ~CvBlobTrackerOneMSPF()
     {
         if(m_pParticlesResampled)cvFree(&m_pParticlesResampled);
@@ -783,6 +832,7 @@ public:
         if(m_HistForParalel) delete[] m_HistForParalel;
 #endif
     }
+
 private:
     void Realloc()
     {
@@ -790,19 +840,20 @@ private:
         if(m_pParticlesPredicted)cvFree(&m_pParticlesPredicted);
         m_pParticlesPredicted = (DefParticle*)cvAlloc(sizeof(DefParticle)*m_ParticleNum);
         m_pParticlesResampled = (DefParticle*)cvAlloc(sizeof(DefParticle)*m_ParticleNum);
-    };/* Realloc*/
+    };  /* Realloc*/
+
     void DrawDebug(IplImage* pImg, IplImage* /*pImgFG*/)
     {
         int k;
-        for(k=0;k<2;++k)
+        for(k=0; k<2; ++k)
         {
             DefParticle*    pBP = k?m_pParticlesResampled:m_pParticlesPredicted;
-            //const char*           name = k?"MSPF resampled particle":"MSPF Predicted particle";
+            //const char*   name = k?"MSPF resampled particle":"MSPF Predicted particle";
             IplImage*       pI = cvCloneImage(pImg);
             int             h,hN = m_ParticleNum;
             CvBlob          C = cvBlob(0,0,0,0);
             double          WS = 0;
-            for(h=0;h<hN;++h)
+            for(h=0; h<hN; ++h)
             {
                 CvBlob  B = pBP[h].blob;
                 int     CW = cvRound(255*pBP[h].W);
@@ -822,34 +873,40 @@ private:
                     s,
                     0, 0, 360,
                     CV_RGB(CW,0,0), 1 );
-            }/* next hypothetis */
+
+            }   /* Next hypothesis. */
+
             C.x /= hN;
             C.y /= hN;
             C.w /= hN;
             C.h /= hN;
+
             cvEllipse( pI,
                 cvPointFrom32f(CV_BLOB_CENTER(&C)),
                 cvSize(cvRound(C.w*0.5),cvRound(C.h*0.5)),
                 0, 0, 360,
                 CV_RGB(0,0,255), 1 );
+
             cvEllipse( pI,
                 cvPointFrom32f(CV_BLOB_CENTER(&m_Blob)),
                 cvSize(cvRound(m_Blob.w*0.5),cvRound(m_Blob.h*0.5)),
                 0, 0, 360,
                 CV_RGB(0,255,0), 1 );
+
             //cvNamedWindow(name,0);
             //cvShowImage(name,pI);
             cvReleaseImage(&pI);
-        }/*  */
+        } /*  */
 
         //printf("Blob %d, point (%.1f,%.1f) size (%.1f,%.1f)\n",m_Blob.ID,m_Blob.x,m_Blob.y,m_Blob.w,m_Blob.h);
-    }/* ::DrawDebug */
+    } /* ::DrawDebug */
+
 private:
     void Prediction()
     {
         int p;
-        for(p=0;p<m_ParticleNum;++p)
-        {/* "prediction" of particle */
+        for(p=0; p<m_ParticleNum; ++p)
+        {   /* "Prediction" of particle: */
             //double  t;
             float   r[5];
             CvMat   rm = cvMat(1,5,CV_32F,r);
@@ -858,53 +915,57 @@ private:
             m_pParticlesPredicted[p] = m_pParticlesResampled[p];
 
             if(cvRandReal(&m_RNG)<0.5)
-            {/* half of particles will predict based on external blob */
+            {   /* Half of particles will predict based on external blob: */
                 m_pParticlesPredicted[p].blob = m_Blob;
             }
 
             if(cvRandReal(&m_RNG)<m_UseVel)
-            {/* predict moving particle by usual way by using speed */
+            {   /* Predict moving particle by usual way by using speed: */
                 m_pParticlesPredicted[p].blob.x += m_pParticlesPredicted[p].Vx;
                 m_pParticlesPredicted[p].blob.y += m_pParticlesPredicted[p].Vy;
             }
             else
-            {/* stop several particles */
+            {   /* Stop several particles: */
                 m_pParticlesPredicted[p].Vx = 0;
                 m_pParticlesPredicted[p].Vy = 0;
             }
 
-            {/* update position */
+            {   /* Update position: */
                 float S = (m_Blob.w + m_Blob.h)*0.5f;
                 m_pParticlesPredicted[p].blob.x += m_PosVar*S*r[0];
                 m_pParticlesPredicted[p].blob.y += m_PosVar*S*r[1];
-                /* update velocity */
+
+                /* Update velocity: */
                 m_pParticlesPredicted[p].Vx += (float)(m_PosVar*S*0.1*r[3]);
                 m_pParticlesPredicted[p].Vy += (float)(m_PosVar*S*0.1*r[4]);
             }
 
-            /* update size */
+            /* Update size: */
             m_pParticlesPredicted[p].blob.w *= (1+m_SizeVar*r[2]);
             m_pParticlesPredicted[p].blob.h *= (1+m_SizeVar*r[2]);
 
-            /* truncate size of particle */
+            /* Truncate size of particle: */
             if(m_pParticlesPredicted[p].blob.w > m_ImgSize.width*0.5f)
             {
                 m_pParticlesPredicted[p].blob.w = m_ImgSize.width*0.5f;
             }
+
             if(m_pParticlesPredicted[p].blob.h > m_ImgSize.height*0.5f)
             {
                 m_pParticlesPredicted[p].blob.h = m_ImgSize.height*0.5f;
             }
+
             if(m_pParticlesPredicted[p].blob.w < 1 )
             {
                 m_pParticlesPredicted[p].blob.w = 1;
             }
+
             if(m_pParticlesPredicted[p].blob.h < 1)
             {
                 m_pParticlesPredicted[p].blob.h = 1;
             }
-        }/* "prediction" of particle */
-    }/* Prediction */
+        }   /* "Prediction" of particle. */
+    }   /* Prediction */
 
     void UpdateWeightsMS(IplImage* pImg, IplImage* /*pImgFG*/)
     {
@@ -913,7 +974,7 @@ private:
         if( m_HistForParalel[0].m_pHist==NULL || m_HistForParalel[0].m_pHist->cols != m_BinNumTotal)
         {
             int t;
-            for(t=0;t<m_ThreadNum;++t)
+            for(t=0; t<m_ThreadNum; ++t)
                 m_HistForParalel[t].Resize(m_BinNumTotal);
         }
 #endif
@@ -922,7 +983,7 @@ private:
 #pragma omp parallel for num_threads(m_ThreadNum),schedule(runtime)
 #endif
         for(p=0;p<m_ParticleNum;++p)
-        {/* calc weights for particles */
+        {   /* Calculate weights for particles: */
             double  S = 0.2;
             double  B = 0;
 #ifdef _OPENMP
@@ -937,43 +998,51 @@ private:
 #endif
                 );
             m_pParticlesPredicted[p].W *= exp((B-1)/(2*S));
-        }/* calc weights for particles */
+
+        }   /* Calculate weights for particles. */
     }
+
     void UpdateWeightsCC(IplImage* /*pImg*/, IplImage* /*pImgFG*/)
     {
         int p;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(p=0;p<m_ParticleNum;++p)
-        {/* calc weights for particles */
+        for(p=0; p<m_ParticleNum; ++p)
+        {   /* Calculate weights for particles: */
             double W = 1;
             m_pParticlesPredicted[p].W *= W;
-        }/* calc weights for particles */
+        }   /* Calculate weights for particles. */
     }
+
     void Resample()
-    {/* resample particle */
+    {   /* Resample particle: */
         int         p;
         double      Sum = 0;
-        for(p=0;p<m_ParticleNum;++p)
+
+        for(p=0; p<m_ParticleNum; ++p)
         {
             Sum += m_pParticlesPredicted[p].W;
         }
-        for(p=0;p<m_ParticleNum;++p)
+
+        for(p=0; p<m_ParticleNum; ++p)
         {
-            double  T = Sum * cvRandReal(&m_RNG); /* set current random threshold for cululative weight */
+            double  T = Sum * cvRandReal(&m_RNG);   /* Set current random threshold for cululative weight. */
             int     p2;
             double  Sum2 = 0;
-            for(p2=0;p2<m_ParticleNum;++p2)
+
+            for(p2=0; p2<m_ParticleNum; ++p2)
             {
                 Sum2 += m_pParticlesPredicted[p2].W;
                 if(Sum2 >= T)break;
             }
+
             if(p2>=m_ParticleNum)p2=m_ParticleNum-1;
             m_pParticlesResampled[p] = m_pParticlesPredicted[p2];
             m_pParticlesResampled[p].W = 1;
-        }/* find next particle */
-    } /* resample particle */
+
+        }   /* Find next particle. */
+    }   /*  Resample particle. */
 
 
 public:
@@ -992,7 +1061,9 @@ public:
             m_pParticlesResampled[i] = PP;
         }
         m_Blob = pBlobInit[0];
-    } /* CvBlobTrackerOneMSPF::Init*/
+
+    }   /* CvBlobTrackerOneMSPF::Init*/
+
     virtual CvBlob* Process(CvBlob* pBlobPrev, IplImage* pImg, IplImage* pImgFG = NULL)
     {
         int p;
@@ -1003,15 +1074,15 @@ public:
 
         m_Blob = pBlobPrev[0];
 
-        {/* check blob size and realloc kernels if it is necessary */
+        {   /* Check blob size and realloc kernels if it is necessary: */
             int w = cvRound(m_Blob.w);
             int h = cvRound(m_Blob.h);
             if( w != m_ObjSize.width || h!=m_ObjSize.height)
             {
                 ReAllocKernel(w,h);
-                /* after this ( w != m_ObjSize.width || h!=m_ObjSize.height) shoiuld be false */
+                /* After this ( w != m_ObjSize.width || h!=m_ObjSize.height) should be false. */
             }
-        }/* check blob size and realloc kernels if it is necessary */
+        }   /* Check blob size and realloc kernels if it is necessary. */
 
         Prediction();
 
@@ -1034,14 +1105,16 @@ public:
         fprintf(stderr, "PF Resampling, %d ticks\n",  (int)ticks);
 #endif
 
-        {/* find average result */
+        {   /* Find average result: */
             float   x = 0;
             float   y = 0;
             float   w = 0;
             float   h = 0;
             float   Sum = 0;
+
             DefParticle* pP = m_pParticlesResampled;
-            for(p=0;p<m_ParticleNum;++p)
+
+            for(p=0; p<m_ParticleNum; ++p)
             {
                 float W = (float)pP[p].W;
                 x += W*pP[p].blob.x;
@@ -1050,6 +1123,7 @@ public:
                 h += W*pP[p].blob.h;
                 Sum += W;
             }
+
             if(Sum>0)
             {
                 m_Blob.x = x / Sum;
@@ -1057,7 +1131,7 @@ public:
                 m_Blob.w = w / Sum;
                 m_Blob.h = h / Sum;
             }
-        }/* find average result */
+        }   /* Find average result. */
 
         if(m_Wnd)
         {
@@ -1065,11 +1139,13 @@ public:
         }
 
         return &m_Blob;
-    }/* CvBlobTrackerOneMSPF::Process */
+
+    }   /* CvBlobTrackerOneMSPF::Process */
+
     virtual void SkipProcess(CvBlob* pBlob, IplImage* /*pImg*/, IplImage* /*pImgFG*/ = NULL)
     {
         int p;
-        for(p=0;p<m_ParticleNum;++p)
+        for(p=0; p<m_ParticleNum; ++p)
         {
             m_pParticlesResampled[p].blob = pBlob[0];
             m_pParticlesResampled[p].Vx = 0;
@@ -1083,12 +1159,14 @@ public:
     {
         Realloc();
     }
-}; /* CvBlobTrackerOneMSPF */
+
+};  /* CvBlobTrackerOneMSPF */
 
 CvBlobTrackerOne* cvCreateBlobTrackerOneMSPF()
 {
     return (CvBlobTrackerOne*) new CvBlobTrackerOneMSPF;
 }
+
 CvBlobTracker* cvCreateBlobTrackerMSPF()
 {
     return cvCreateBlobTrackerList(cvCreateBlobTrackerOneMSPF);
