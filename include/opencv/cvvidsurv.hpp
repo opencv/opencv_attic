@@ -623,7 +623,7 @@ protected:
 class CV_EXPORTS CvBlobDetector: public CvVSModule
 {
 public:
-    /* try to detect new blob entrance based on foreground mask */
+    /* Try to detect new blob entrance based on foreground mask. */
     /* pFGMask - image of foreground mask */
     /* pNewBlob - pointer to CvBlob structure which will bew filled if new blob entrance detected */
     /* pOldBlobList - pointer to blob list which already exist on image */
