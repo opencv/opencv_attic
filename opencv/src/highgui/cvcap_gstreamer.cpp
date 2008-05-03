@@ -66,8 +66,6 @@ static bool isInited = false;
 typedef struct CvCapture_GStreamer
 {
 	/// method call table
-	CvCaptureVTable	       *vtable;
-
 	int			type;	// one of [1394, v4l2, v4l, file]
 
 	GstElement	       *pipeline;
@@ -639,7 +637,6 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 	// construct capture struct
 	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
 	memset(capture, 0, sizeof(CvCapture_GStreamer));
-	capture->vtable = &capture_vtable;
 	capture->type = type;
 	capture->pipeline = pipeline;
 	capture->source = source;
@@ -667,7 +664,6 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 //
 //
 typedef struct CvVideoWriter_GStreamer {
-	CvVideoWriterVTable    *vtable;
 	char		       *filename;
 	unsigned		currentframe;
 };
@@ -704,13 +700,6 @@ static void icvReleaseVideoWriter_GStreamer( CvVideoWriter** writer )
 	free((*wri)->filename);
 }
 
-static CvVideoWriterVTable writer_vtable =
-{
-    2,
-    (CvVideoWriterCloseFunc)icvReleaseVideoWriter_GStreamer,
-    (CvVideoWriterWriteFrameFunc)icvWriteFrame_GStreamer
-};
-
 CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename )
 {
 	CvVideoWriter_GStreamer *writer;
@@ -742,7 +731,6 @@ CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename )
 	memset(writer, 0, sizeof(CvVideoWriter_GStreamer));
 	writer->filename = strdup(name);
 	writer->currentframe = offset;
-	writer->vtable = &writer_vtable;
 
 	return (CvVideoWriter *)writer;
 }
@@ -790,7 +778,7 @@ bool CvCapture_GStreamer_CPP::grabFrame()
 
 IplImage* CvCapture_GStreamer_CPP::retrieveFrame()
 {
-    return captureGS ? icvRetrieveFrame_GStreamer( captureGS ) : 0;
+    return captureGS ? (IplImage*)icvRetrieveFrame_GStreamer( captureGS ) : 0;
 }
 
 double CvCapture_GStreamer_CPP::getProperty( int propId )

@@ -66,8 +66,6 @@ extern "C"
 typedef struct CvCaptureAVI_XINE
 {
 	/// method call table
-	CvCaptureVTable * vtable;
-
 	xine_t * xine;
 	xine_stream_t * stream;
 	xine_video_port_t * vo_port;
@@ -761,24 +759,11 @@ static int icvSetPropertyAVI_XINE( CvCaptureAVI_XINE* capture,
 }
 
 
-static CvCaptureVTable captureAVI_XINE_vtable =
-{
-	6,
-	( CvCaptureCloseFunc ) icvCloseAVI_XINE,
-	( CvCaptureGrabFrameFunc ) icvGrabFrameAVI_XINE,
-	( CvCaptureRetrieveFrameFunc ) icvRetrieveFrameAVI_XINE,
-	( CvCaptureGetPropertyFunc ) icvGetPropertyAVI_XINE,
-	( CvCaptureSetPropertyFunc ) icvSetPropertyAVI_XINE,
-	( CvCaptureGetDescriptionFunc ) 0
-};
-
-
-CvCapture* cvCaptureFromFile_XINE( const char* filename )
+static CvCaptureAVI_XINE* icvCaptureFromFile_XINE( const char* filename )
 {
 	// construct capture struct
 	CvCaptureAVI_XINE * capture = ( CvCaptureAVI_XINE* ) cvAlloc ( sizeof ( CvCaptureAVI_XINE ) );
 	memset( capture, 0, sizeof ( CvCaptureAVI_XINE ) );
-	capture->vtable = &captureAVI_XINE_vtable;
 
 	// initialize XINE
 	if ( !icvOpenAVI_XINE( capture, filename ) )
@@ -787,8 +772,76 @@ CvCapture* cvCaptureFromFile_XINE( const char* filename )
 	OPENCV_ASSERT ( capture,
                         "cvCaptureFromFile_XINE( const char * )", "couldn't create capture");
 		
-	return ( CvCapture* ) capture;
+	return capture;
 
 }
+
+
+
+class CvCaptureAVI_XINE_CPP : public CvCapture
+{
+public:
+    CvCaptureAVI_XINE_CPP() { captureXINE = 0; }
+    virtual ~CvCaptureAVI_XINE_CPP() { close(); }
+
+    virtual bool open( int index );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame();
+protected:
+
+    CvCaptureAVI_XINE* captureXINE;
+};
+
+bool CvCaptureAVI_XINE_CPP::open( int index )
+{
+    close();
+    captureXINE = icvCaptureFromFile_XINE(index);
+    return captureXINE != 0;
+}
+
+void CvCaptureAVI_XINE_CPP::close()
+{
+    if( captureXINE )
+    {
+        icvCloseAVI_XINE( captureXINE );
+        cvFree( &captureXINE );
+    }
+}
+
+bool CvCaptureAVI_XINE_CPP::grabFrame()
+{
+    return captureXINE ? icvGrabFrameAVI_XINE( captureXINE ) != 0 : false;
+}
+
+IplImage* CvCaptureAVI_XINE_CPP::retrieveFrame()
+{
+    return captureXINE ? (IplImage*)icvRetrieveFrameAVI_XINE( captureXINE ) : 0;
+}
+
+double CvCaptureAVI_XINE_CPP::getProperty( int propId )
+{
+    return captureXINE ? icvGetPropertyAVI_XINE( captureXINE, propId ) : 0;
+}
+
+bool CvCaptureAVI_XINE_CPP::setProperty( int propId, double value )
+{
+    return captureXINE ? icvSetPropertyAVI_XINE( captureXINE, propId, value ) != 0 : false;
+}
+
+CvCapture* cvCreateCameraCapture_XINE( int index )
+{
+    CvCaptureAVI_XINE_CPP* capture = new CvCaptureAVI_XINE_CPP;
+
+    if( capture->open( index ))
+        return capture;
+
+    delete capture;
+    return 0;
+}
+
 
 #undef NDEBUG

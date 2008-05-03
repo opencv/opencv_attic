@@ -2711,7 +2711,7 @@ bool CvCaptureCAM_V4L_CPP::grabFrame()
 
 IplImage* CvCaptureCAM_V4L_CPP::retrieveFrame()
 {
-    return captureV4L ? icvRetrieveFrameCAM_V4L( captureV4L ) : 0;
+    return captureV4L ? (IplImage*)icvRetrieveFrameCAM_V4L( captureV4L ) : 0;
 }
 
 double CvCaptureCAM_V4L_CPP::getProperty( int propId )
