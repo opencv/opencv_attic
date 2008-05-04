@@ -1159,19 +1159,19 @@ inline void cvReleaseBlobTrackerAuto(CvBlobTrackerAuto** ppT)
 /* Parameters of blobtracker auto ver1: */
 struct CvBlobTrackerAutoParam1
 {
-    int                     FGTrainFrames; /* number of frames are needed for FG detector to train */
-    CvFGDetector*           pFG; /* FGDetector module, if this filed is NULL the Process FG mask is used */
-    CvBlobDetector*         pBD; /* existed blob detector module
-                                if this filed is NULL default blobdetector module will be created */
-    CvBlobTracker*          pBT; /* existed blob tracking module
-                                if this filed is NULL default blobtracker module will be created */
-    CvBlobTrackGen*         pBTGen; /* existed blob trajectory generator,
-                                if this filed is NULL no any generator is used */
-    CvBlobTrackPostProc*    pBTPP; /* existed blob trajectory postprocessing module
-                                if this filed is NULL no any postprocessing is used */
+    int                     FGTrainFrames; /* Number of frames are needed for FG detector to train.                 */
+    CvFGDetector*           pFG;           /* FGDetector module. If this field is NULL the Process FG mask is used. */
+    CvBlobDetector*         pBD;           /* Existed blob detector module.
+                                              If this field is NULL default blobdetector module will be created.    */
+    CvBlobTracker*          pBT;           /* Existed blob tracking module.
+                                              If this field is NULL default blobtracker module will be created.     */
+    CvBlobTrackGen*         pBTGen;        /* Existed blob trajectory generator.
+                                              If this field is NULL no generator is used.                           */
+    CvBlobTrackPostProc*    pBTPP;         /* Existed blob trajectory postprocessing module.
+                                              If this field is NULL no postprocessing is done.                      */
     int                     UsePPData;
-    CvBlobTrackAnalysis*    pBTA; /* existed blob trajectory analysis module */
-                                  /* if this filed is NULL no any analysis is made */
+    CvBlobTrackAnalysis*    pBTA;          /* Existed blob trajectory analysis module.                              */
+                                           /* If this field is NULL no any analysis is made.                        */
 };
 
 /* Create blob tracker auto ver1: */
