@@ -102,7 +102,7 @@ inline void FaceFeature::SetWeight(double  dWeight)
 class FaceTemplate
 {
 public:
-    FaceTemplate(long lFeatureCount) {m_lFeturesCount = lFeatureCount;  m_lpFeaturesList = new FaceFeature[lFeatureCount];};
+    FaceTemplate(long lFeatureCount) {m_lFeaturesCount = lFeatureCount;  m_lpFeaturesList = new FaceFeature[lFeatureCount];};
     virtual ~FaceTemplate();
     
     inline long GetCount();
@@ -111,13 +111,13 @@ public:
 protected:
     FaceFeature * m_lpFeaturesList; 
 private:
-    long m_lFeturesCount;
+    long m_lFeaturesCount;
 };//class FaceTemplate
 
 
 inline long FaceTemplate::GetCount()
 {
-    return m_lFeturesCount;
+    return m_lFeaturesCount;
 }//inline long FaceTemplate::GetCount()
 
 
@@ -229,8 +229,8 @@ public:
     virtual double GetWeight() = 0;
 protected:
     FaceFeature * m_lpIdealFace;//ideal face definition
-    long m_lFaceFeaturesNumber; //total number of diferent face fetures 
-    long * m_lplFaceFeaturesCount;//number of each fetures fouded for this face
+    long m_lFaceFeaturesNumber; //total number of diferent face features 
+    long * m_lplFaceFeaturesCount;//number of each features fouded for this face
     FaceFeature ** m_lppFoundedFaceFeatures;//founded features of curen face
     double m_dWeight;
 };

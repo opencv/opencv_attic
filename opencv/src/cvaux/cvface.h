@@ -64,10 +64,10 @@ public:
 	virtual bool CheckElem(void * lpCandidat,void * lpIdeal) = 0;
 	virtual double GetWeight() = 0;
 protected:
-	FaceFeature * m_lpIdealFace;//ideal face definition
-	long m_lFaceFeaturesNumber; //total number of diferent face fetures 
-	long * m_lplFaceFeaturesCount;//number of each fetures fouded for this face
-	FaceFeature ** m_lppFoundedFaceFeatures;//founded features of curen face
+	FaceFeature * m_lpIdealFace;             // Ideal face definition.
+	long m_lFaceFeaturesNumber;              // Total number of different face features .
+	long * m_lplFaceFeaturesCount;           // Count of each feature found on this face.
+	FaceFeature ** m_lppFoundedFaceFeatures; // Features found on current face.
 	double m_dWeight;
 };
 
