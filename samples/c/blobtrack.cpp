@@ -108,11 +108,11 @@ typedef struct DefModule_BlobTrackAnalysis
 
 DefModule_BlobTrackAnalysis BlobTrackAnalysis_Modules[] =
 {
-    {cvCreateModuleBlobTrackAnalysisHistPVS,"HistPVS","Histogram of 5D feture vector analysis (x,y,vx,vy,state)"},
+    {cvCreateModuleBlobTrackAnalysisHistPVS,"HistPVS","Histogram of 5D feature vector analysis (x,y,vx,vy,state)"},
     {NULL,"None","No trajectory analiser"},
-    {cvCreateModuleBlobTrackAnalysisHistP,"HistP","Histogram of 2D feture vector analysis (x,y)"},
-    {cvCreateModuleBlobTrackAnalysisHistPV,"HistPV","Histogram of 4D feture vector analysis (x,y,vx,vy)"},
-    {cvCreateModuleBlobTrackAnalysisHistSS,"HistSS","Histogram of 4D feture vector analysis (startpos,endpos)"},
+    {cvCreateModuleBlobTrackAnalysisHistP,"HistP","Histogram of 2D feature vector analysis (x,y)"},
+    {cvCreateModuleBlobTrackAnalysisHistPV,"HistPV","Histogram of 4D feature vector analysis (x,y,vx,vy)"},
+    {cvCreateModuleBlobTrackAnalysisHistSS,"HistSS","Histogram of 4D feature vector analysis (startpos,endpos)"},
     {cvCreateModuleBlobTrackAnalysisTrackDist,"TrackDist","Compare tracks directly"},
     {cvCreateModuleBlobTrackAnalysisIOR,"IOR","Integrator (by OR operation) of several analysers "},
     {NULL,NULL,NULL}
@@ -136,7 +136,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
     for( FrameNum=0; pCap && (key=cvWaitKey(OneFrameProcess?0:1))!=27;
          FrameNum++)
     {   /* Main loop: */
-        IplImage*   pImg = NULL;
+        IplImage*   pImg  = NULL;
         IplImage*   pMask = NULL;
 
         if(key!=-1)
