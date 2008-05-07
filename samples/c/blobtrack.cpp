@@ -199,7 +199,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
 
         /* Draw debug info: */
         if(pImg)
-        {   /* Draw all inforamtion about tets sequence: */
+        {   /* Draw all information about test sequence: */
             char        str[1024];
             int         line_type = CV_AA;   // Change it to 8 to see non-antialiased graphics.
             CvFont      font;
@@ -276,7 +276,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
             }
 
             cvReleaseImage(&pI);
-        }   /* Draw all inforamtion about tets sequence. */
+        }   /* Draw all information about test sequence. */
     }   /*  Main loop. */
 
     if(pFGAvi)cvReleaseVideoWriter( &pFGAvi );
