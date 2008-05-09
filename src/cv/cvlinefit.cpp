@@ -339,15 +339,17 @@ parameters A, B, C, D, where (A, B) is the normalized direction vector,
 static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
                                float _param, float reps, float aeps, float *line )
 {
+    double EPS = count*FLT_EPSILON;
     void (*calc_weights) (float *, int, float *) = 0;
     void (*calc_weights_param) (float *, int, float *, float) = 0;
     float *w;                   /* weights */
     float *r;                   /* square distances */
-    int i, j;
+    int i, j, k;
     float _line[6], _lineprev[6];
-    int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
+    double min_err = DBL_MAX, err = 0;
+    CvRNG rng = cvRNG(-1);
 
     memset( line, 0, 4*sizeof(line[0]) );
 
@@ -387,75 +389,90 @@ static CvStatus  icvFitLine2D( CvPoint2D32f * points, int count, int dist,
     w = (float *) cvAlloc( count * sizeof( float ));
     r = (float *) cvAlloc( count * sizeof( float ));
 
-    for( i = 0; i < count; i++ )
-        w[i] = 1.0f;
-
-    icvFitLine2D_wods( points, count, 0, _line );
-    for( i = 0; i < 100; i++ )
+    for( k = 0; k < 20; k++ )
     {
-        double sum_w = 0;
-
-        if( first )
+        int first = 1;
+        for( i = 0; i < count; i++ )
+            w[i] = 0.f;
+        
+        for( i = 0; i < MIN(count,10); )
         {
-            first = 0;
-        }
-        else
-        {
-            double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1];
-            t = MAX(t,-1.);
-            t = MIN(t,1.);
-            if( fabs(acos(t)) < adelta )
+            j = cvRandInt(&rng) % count;
+            if( w[j] < FLT_EPSILON )
             {
-                float x, y, d;
-
-                x = (float) fabs( _line[2] - _lineprev[2] );
-                y = (float) fabs( _line[3] - _lineprev[3] );
-
-                d = x > y ? x : y;
-                if( d < rdelta )
-                    goto _exit_;
+                w[j] = 1.f;
+                i++;
             }
         }
-        /* calculate distances */
-        if( icvCalcDist2D( points, count, _line, r ) < FLT_EPSILON*count )
-            break;
 
-        /* calculate weights */
-        if( calc_weights )
-        {
-            calc_weights( r, count, w );
-        }
-        else if( calc_weights_param )
-        {
-            calc_weights_param( r, count, w, _param );
-        }
-        else
-            goto _exit_;
-
-        for( j = 0; j < count; j++ )
-            sum_w += w[j];
-
-        if( fabs(sum_w) > FLT_EPSILON )
-        {
-            sum_w = 1./sum_w;
-            for( j = 0; j < count; j++ )
-                w[j] = (float)(w[j]*sum_w);
-        }
-        else
-        {
-            for( j = 0; j < count; j++ )
-                w[j] = 1.f;
-        }
-
-        /* save the line parameters */
-        memcpy( _lineprev, _line, 4 * sizeof( float ));
-
-        /* Run again... */
         icvFitLine2D_wods( points, count, w, _line );
+        for( i = 0; i < 30; i++ )
+        {
+            double sum_w = 0;
+
+            if( first )
+            {
+                first = 0;
+            }
+            else
+            {
+                double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1];
+                t = MAX(t,-1.);
+                t = MIN(t,1.);
+                if( fabs(acos(t)) < adelta )
+                {
+                    float x, y, d;
+
+                    x = (float) fabs( _line[2] - _lineprev[2] );
+                    y = (float) fabs( _line[3] - _lineprev[3] );
+
+                    d = x > y ? x : y;
+                    if( d < rdelta )
+                        break;
+                }
+            }
+            /* calculate distances */
+            err = icvCalcDist2D( points, count, _line, r );
+            if( err < EPS )
+                break;
+
+            /* calculate weights */
+            if( calc_weights )
+                calc_weights( r, count, w );
+            else
+                calc_weights_param( r, count, w, _param );
+
+            for( j = 0; j < count; j++ )
+                sum_w += w[j];
+
+            if( fabs(sum_w) > FLT_EPSILON )
+            {
+                sum_w = 1./sum_w;
+                for( j = 0; j < count; j++ )
+                    w[j] = (float)(w[j]*sum_w);
+            }
+            else
+            {
+                for( j = 0; j < count; j++ )
+                    w[j] = 1.f;
+            }
+
+            /* save the line parameters */
+            memcpy( _lineprev, _line, 4 * sizeof( float ));
+
+            /* Run again... */
+            icvFitLine2D_wods( points, count, w, _line );
+        }
+
+        if( err < min_err )
+        {
+            min_err = err;
+            memcpy( line, _line, 4 * sizeof(line[0]));
+            if( err < EPS )
+                break;
+        }
     }
 
-_exit_:
-    memcpy( line, _line, 4 * sizeof(line[0]));
     cvFree( &w );
     cvFree( &r );
     return CV_OK;
@@ -471,15 +488,17 @@ static CvStatus
 icvFitLine3D( CvPoint3D32f * points, int count, int dist,
               float _param, float reps, float aeps, float *line )
 {
+    double EPS = count*FLT_EPSILON;
     void (*calc_weights) (float *, int, float *) = 0;
     void (*calc_weights_param) (float *, int, float *, float) = 0;
     float *w;                   /* weights */
     float *r;                   /* square distances */
-    int i, j;
+    int i, j, k;
     float _line[6], _lineprev[6];
-    int first = 1;
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
+    double min_err = DBL_MAX, err = 0;
+    CvRNG rng = cvRNG(-1);
 
     memset( line, 0, 6*sizeof(line[0]) );
 
@@ -520,82 +539,97 @@ icvFitLine3D( CvPoint3D32f * points, int count, int dist,
     w = (float *) cvAlloc( count * sizeof( float ));
     r = (float *) cvAlloc( count * sizeof( float ));
 
-    for( i = 0; i < count; i++ )
-        w[i] = 1.0f;
-
-    icvFitLine3D_wods( points, count, 0, _line );
-    for( i = 0; i < 100; i++ )
+    for( k = 0; k < 20; k++ )
     {
-        double sum_w = 0;
-
-        if( first )
+        int first = 1;
+        for( i = 0; i < count; i++ )
+            w[i] = 0.f;
+        
+        for( i = 0; i < MIN(count,10); )
         {
-            first = 0;
-        }
-        else
-        {
-            double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1] + _line[2] * _lineprev[2];
-            t = MAX(t,-1.);
-            t = MIN(t,1.);
-            if( fabs(acos(t)) < adelta )
+            j = cvRandInt(&rng) % count;
+            if( w[j] < FLT_EPSILON )
             {
-                float x, y, z, ax, ay, az, dx, dy, dz, d;
-
-                x = _line[3] - _lineprev[3];
-                y = _line[4] - _lineprev[4];
-                z = _line[5] - _lineprev[5];
-                ax = _line[0] - _lineprev[0];
-                ay = _line[1] - _lineprev[1];
-                az = _line[2] - _lineprev[2];
-                dx = (float) fabs( y * az - z * ay );
-                dy = (float) fabs( z * ax - x * az );
-                dz = (float) fabs( x * ay - y * ax );
-
-                d = dx > dy ? (dx > dz ? dx : dz) : (dy > dz ? dy : dz);
-                if( d < rdelta )
-                    goto _exit_;
+                w[j] = 1.f;
+                i++;
             }
         }
-        /* calculate distances */
-        if( icvCalcDist3D( points, count, _line, r ) < FLT_EPSILON*count )
-            break;
 
-        /* calculate weights */
-        if( calc_weights )
-        {
-            calc_weights( r, count, w );
-        }
-        else if( calc_weights_param )
-        {
-            calc_weights_param( r, count, w, _param );
-        }
-        else
-            goto _exit_;
-
-        for( j = 0; j < count; j++ )
-            sum_w += w[j];
-
-        if( fabs(sum_w) > FLT_EPSILON )
-        {
-            sum_w = 1./sum_w;
-            for( j = 0; j < count; j++ )
-                w[j] = (float)(w[j]*sum_w);
-        }
-        else
-        {
-            for( j = 0; j < count; j++ )
-                w[j] = 1.f;
-        }
-
-        /* save the line parameters */
-        memcpy( _lineprev, _line, 6 * sizeof( float ));
-
-        /* Run again... */
         icvFitLine3D_wods( points, count, w, _line );
+        for( i = 0; i < 30; i++ )
+        {
+            double sum_w = 0;
+
+            if( first )
+            {
+                first = 0;
+            }
+            else
+            {
+                double t = _line[0] * _lineprev[0] + _line[1] * _lineprev[1] + _line[2] * _lineprev[2];
+                t = MAX(t,-1.);
+                t = MIN(t,1.);
+                if( fabs(acos(t)) < adelta )
+                {
+                    float x, y, z, ax, ay, az, dx, dy, dz, d;
+
+                    x = _line[3] - _lineprev[3];
+                    y = _line[4] - _lineprev[4];
+                    z = _line[5] - _lineprev[5];
+                    ax = _line[0] - _lineprev[0];
+                    ay = _line[1] - _lineprev[1];
+                    az = _line[2] - _lineprev[2];
+                    dx = (float) fabs( y * az - z * ay );
+                    dy = (float) fabs( z * ax - x * az );
+                    dz = (float) fabs( x * ay - y * ax );
+
+                    d = dx > dy ? (dx > dz ? dx : dz) : (dy > dz ? dy : dz);
+                    if( d < rdelta )
+                        break;
+                }
+            }
+            /* calculate distances */
+            if( icvCalcDist3D( points, count, _line, r ) < FLT_EPSILON*count )
+                break;
+
+            /* calculate weights */
+            if( calc_weights )
+                calc_weights( r, count, w );
+            else
+                calc_weights_param( r, count, w, _param );
+
+            for( j = 0; j < count; j++ )
+                sum_w += w[j];
+
+            if( fabs(sum_w) > FLT_EPSILON )
+            {
+                sum_w = 1./sum_w;
+                for( j = 0; j < count; j++ )
+                    w[j] = (float)(w[j]*sum_w);
+            }
+            else
+            {
+                for( j = 0; j < count; j++ )
+                    w[j] = 1.f;
+            }
+
+            /* save the line parameters */
+            memcpy( _lineprev, _line, 6 * sizeof( float ));
+
+            /* Run again... */
+            icvFitLine3D_wods( points, count, w, _line );
+        }
+
+        if( err < min_err )
+        {
+            min_err = err;
+            memcpy( line, _line, 6 * sizeof(line[0]));
+            if( err < EPS )
+                break;
+        }
     }
-_exit_:
+
     // Return...
-    memcpy( line, _line, 6 * sizeof(line[0]));
     cvFree( &w );
     cvFree( &r );
     return CV_OK;
