@@ -152,9 +152,11 @@ typedef unsigned short ushort;
 
 typedef signed char schar;
 
-/* CvArr* is used to pass arbitrary array-like data structures
-   into the functions where the particular
-   array type is recognized at runtime */
+/* CvArr* is used to pass arbitrary
+ * array-like data structures
+ * into functions where the particular
+ * array type is recognized at runtime:
+ */
 typedef void CvArr;
 
 typedef union Cv32suf
@@ -303,7 +305,7 @@ CV_INLINE CvRNG cvRNG( int64 seed CV_DEFAULT(-1))
     return rng;
 }
 
-/* returns random 32-bit unsigned integer */
+/* Return random 32-bit unsigned integer: */
 CV_INLINE unsigned cvRandInt( CvRNG* rng )
 {
     uint64 temp = *rng;
@@ -312,7 +314,7 @@ CV_INLINE unsigned cvRandInt( CvRNG* rng )
     return (unsigned)temp;
 }
 
-/* returns random floating-point number between 0 and 1 */
+/* Returns random floating-point number between 0 and 1: */
 CV_INLINE double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 /* 2^-32 */;
@@ -361,36 +363,36 @@ CV_INLINE double cvRandReal( CvRNG* rng )
 
 typedef struct _IplImage
 {
-    int  nSize;         /* sizeof(IplImage) */
-    int  ID;            /* version (=0)*/
-    int  nChannels;     /* Most of OpenCV functions support 1,2,3 or 4 channels */
-    int  alphaChannel;  /* ignored by OpenCV */
-    int  depth;         /* pixel depth in bits: IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_16S,
-                           IPL_DEPTH_32S, IPL_DEPTH_32F and IPL_DEPTH_64F are supported */
-    char colorModel[4]; /* ignored by OpenCV */
-    char channelSeq[4]; /* ditto */
-    int  dataOrder;     /* 0 - interleaved color channels, 1 - separate color channels.
-                           cvCreateImage can only create interleaved images */
-    int  origin;        /* 0 - top-left origin,
-                           1 - bottom-left origin (Windows bitmaps style) */
-    int  align;         /* Alignment of image rows (4 or 8).
-                           OpenCV ignores it and uses widthStep instead */
-    int  width;         /* image width in pixels */
-    int  height;        /* image height in pixels */
-    struct _IplROI *roi;/* image ROI. if NULL, the whole image is selected */
-    struct _IplImage *maskROI; /* must be NULL */
-    void  *imageId;     /* ditto */
-    struct _IplTileInfo *tileInfo; /* ditto */
-    int  imageSize;     /* image data size in bytes
-                           (==image->height*image->widthStep
-                           in case of interleaved data)*/
-    char *imageData;  /* pointer to aligned image data */
-    int  widthStep;   /* size of aligned image row in bytes */
-    int  BorderMode[4]; /* ignored by OpenCV */
-    int  BorderConst[4]; /* ditto */
-    char *imageDataOrigin; /* pointer to very origin of image data
-                              (not necessarily aligned) -
-                              needed for correct deallocation */
+    int  nSize;             /* sizeof(IplImage) */
+    int  ID;                /* version (=0)*/
+    int  nChannels;         /* Most of OpenCV functions support 1,2,3 or 4 channels */
+    int  alphaChannel;      /* Ignored by OpenCV */
+    int  depth;             /* Pixel depth in bits: IPL_DEPTH_8U, IPL_DEPTH_8S, IPL_DEPTH_16S,
+                               IPL_DEPTH_32S, IPL_DEPTH_32F and IPL_DEPTH_64F are supported.  */
+    char colorModel[4];     /* Ignored by OpenCV */
+    char channelSeq[4];     /* ditto */
+    int  dataOrder;         /* 0 - interleaved color channels, 1 - separate color channels.
+                               cvCreateImage can only create interleaved images */
+    int  origin;            /* 0 - top-left origin,
+                               1 - bottom-left origin (Windows bitmaps style).  */
+    int  align;             /* Alignment of image rows (4 or 8).
+                               OpenCV ignores it and uses widthStep instead.    */
+    int  width;             /* Image width in pixels.                           */
+    int  height;            /* Image height in pixels.                          */
+    struct _IplROI *roi;    /* Image ROI. If NULL, the whole image is selected. */
+    struct _IplImage *maskROI;      /* Must be NULL. */
+    void  *imageId;                 /* "           " */
+    struct _IplTileInfo *tileInfo;  /* "           " */
+    int  imageSize;         /* Image data size in bytes
+                               (==image->height*image->widthStep
+                               in case of interleaved data)*/
+    char *imageData;        /* Pointer to aligned image data.         */
+    int  widthStep;         /* Size of aligned image row in bytes.    */
+    int  BorderMode[4];     /* Ignored by OpenCV.                     */
+    int  BorderConst[4];    /* Ditto.                                 */
+    char *imageDataOrigin;  /* Pointer to very origin of image data
+                               (not necessarily aligned) -
+                               needed for correct deallocation */
 }
 IplImage;
 
@@ -602,7 +604,7 @@ CvMat;
 #define CV_IS_MAT_CONST(mat)  \
     (((mat)->rows|(mat)->cols) == 1)
 
-/* size of each channel item,
+/* Size of each channel item,
    0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
 #define CV_ELEM_SIZE1(type) \
     ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
@@ -611,9 +613,10 @@ CvMat;
 #define CV_ELEM_SIZE(type) \
     (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
 
-/* inline constructor. No data is allocated internally!!!
-   (use together with cvCreateData, or use cvCreateMat instead to
-   get a matrix with allocated data) */
+/* Inline constructor. No data is allocated internally!!!
+ * (Use together with cvCreateData, or use cvCreateMat instead to
+ * get a matrix with allocated data):
+ */
 CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL))
 {
     CvMat m;
@@ -806,9 +809,9 @@ typedef struct CvHistogram
 {
     int     type;
     CvArr*  bins;
-    float   thresh[CV_MAX_DIM][2]; /* for uniform histograms */
-    float** thresh2; /* for non-uniform histograms */
-    CvMatND mat; /* embedded matrix header for array histograms */
+    float   thresh[CV_MAX_DIM][2];  /* For uniform histograms.                      */
+    float** thresh2;                /* For non-uniform histograms.                  */
+    CvMatND mat;                    /* Embedded matrix header for array histograms. */
 }
 CvHistogram;
 
@@ -1056,21 +1059,21 @@ CV_INLINE  CvSize2D32f  cvSize2D32f( double width, double height )
 
 typedef struct CvBox2D
 {
-    CvPoint2D32f center;  /* center of the box */
-    CvSize2D32f  size;    /* box width and length */
-    float angle;          /* angle between the horizontal axis
-                             and the first side (i.e. length) in degrees */
+    CvPoint2D32f center;  /* Center of the box.                          */
+    CvSize2D32f  size;    /* Box width and length.                       */
+    float angle;          /* Angle between the horizontal axis           */
+                          /* and the first side (i.e. length) in degrees */
 }
 CvBox2D;
 
 
-/* Line iterator state */
+/* Line iterator state: */
 typedef struct CvLineIterator
 {
-    /* pointer to the current point */
+    /* Pointer to the current point: */
     uchar* ptr;
 
-    /* Bresenham algorithm state */
+    /* Bresenham algorithm state: */
     int  err;
     int  plus_delta;
     int  minus_delta;
@@ -1156,11 +1159,11 @@ CvMemBlock;
 typedef struct CvMemStorage
 {
     int signature;
-    CvMemBlock* bottom;/* first allocated block */
-    CvMemBlock* top;   /* current memory block - top of the stack */
-    struct  CvMemStorage* parent; /* borrows new blocks from */
-    int block_size;  /* block size */
-    int free_space;  /* free space in the current block */
+    CvMemBlock* bottom;           /* First allocated block.                   */
+    CvMemBlock* top;              /* Current memory block - top of the stack. */
+    struct  CvMemStorage* parent; /* We get new blocks from parent as needed. */
+    int block_size;               /* Block size.                              */
+    int free_space;               /* Remaining free space in current block.   */
 }
 CvMemStorage;
 
@@ -1181,38 +1184,38 @@ CvMemStoragePos;
 
 typedef struct CvSeqBlock
 {
-    struct CvSeqBlock*  prev; /* previous sequence block */
-    struct CvSeqBlock*  next; /* next sequence block */
-    int    start_index;       /* index of the first element in the block +
-                                 sequence->first->start_index */
-    int    count;             /* number of elements in the block */
-    schar* data;              /* pointer to the first element of the block */
+    struct CvSeqBlock*  prev; /* Previous sequence block.                   */
+    struct CvSeqBlock*  next; /* Next sequence block.                       */
+  int    start_index;         /* Index of the first element in the block +  */
+                              /* sequence->first->start_index.              */
+    int    count;             /* Number of elements in the block.           */
+    schar* data;              /* Pointer to the first element of the block. */
 }
 CvSeqBlock;
 
 
-#define CV_TREE_NODE_FIELDS(node_type)                          \
-    int       flags;         /* micsellaneous flags */          \
-    int       header_size;   /* size of sequence header */      \
-    struct    node_type* h_prev; /* previous sequence */        \
-    struct    node_type* h_next; /* next sequence */            \
-    struct    node_type* v_prev; /* 2nd previous sequence */    \
-    struct    node_type* v_next  /* 2nd next sequence */
+#define CV_TREE_NODE_FIELDS(node_type)                               \
+    int       flags;             /* Miscellaneous flags.     */      \
+    int       header_size;       /* Size of sequence header. */      \
+    struct    node_type* h_prev; /* Previous sequence.       */      \
+    struct    node_type* h_next; /* Next sequence.           */      \
+    struct    node_type* v_prev; /* 2nd previous sequence.   */      \
+    struct    node_type* v_next  /* 2nd next sequence.       */
 
 /*
    Read/Write sequence.
    Elements can be dynamically inserted to or deleted from the sequence.
 */
-#define CV_SEQUENCE_FIELDS()                                            \
-    CV_TREE_NODE_FIELDS(CvSeq);                                         \
-    int       total;          /* total number of elements */            \
-    int       elem_size;      /* size of sequence element in bytes */   \
-    schar*    block_max;      /* maximal bound of the last block */     \
-    schar*    ptr;            /* current write pointer */               \
-    int       delta_elems;    /* how many elements allocated when the seq grows */  \
-    CvMemStorage* storage;    /* where the seq is stored */             \
-    CvSeqBlock* free_blocks;  /* free blocks list */                    \
-    CvSeqBlock* first; /* pointer to the first sequence block */
+#define CV_SEQUENCE_FIELDS()                                              \
+    CV_TREE_NODE_FIELDS(CvSeq);                                           \
+    int       total;          /* Total number of elements.            */  \
+    int       elem_size;      /* Size of sequence element in bytes.   */  \
+    schar*    block_max;      /* Maximal bound of the last block.     */  \
+    schar*    ptr;            /* Current write pointer.               */  \
+    int       delta_elems;    /* Grow seq this many at a time.        */  \
+    CvMemStorage* storage;    /* Where the seq is stored.             */  \
+    CvSeqBlock* free_blocks;  /* Free blocks list.                    */  \
+    CvSeqBlock* first;        /* Pointer to the first sequence block. */
 
 typedef struct CvSeq
 {
@@ -1261,19 +1264,22 @@ CvSet;
 /************************************* Graph ********************************************/
 
 /*
-  Graph is represented as a set of vertices.
+  We represent a graph as a set of vertices.
   Vertices contain their adjacency lists (more exactly, pointers to first incoming or
   outcoming edge (or 0 if isolated vertex)). Edges are stored in another set.
-  There is a single-linked list of incoming/outcoming edges for each vertex.
+  There is a singly-linked list of incoming/outcoming edges for each vertex.
 
-  Each edge consists of:
-    two pointers to the starting and the ending vertices (vtx[0] and vtx[1],
-    respectively). Graph may be oriented or not. In the second case, edges between
-    vertex i to vertex j are not distingueshed (during the search operations).
+  Each edge consists of
 
-    two pointers to next edges for the starting and the ending vertices.
-    next[0] points to the next edge in the vtx[0] adjacency list and
-    next[1] points to the next edge in the vtx[1] adjacency list.
+     o   Two pointers to the starting and ending vertices
+         (vtx[0] and vtx[1] respectively).
+
+	 A graph may be oriented or not. In the latter case, edges between
+	 vertex i to vertex j are not distinguished during search operations.
+
+     o   Two pointers to next edges for the starting and ending vertices, where
+         next[0] points to the next edge in the vtx[0] adjacency list and
+         next[1] points to the next edge in the vtx[1] adjacency list.
 */
 #define CV_GRAPH_EDGE_FIELDS()      \
     int flags;                      \
@@ -1519,7 +1525,7 @@ CvSeqReader;
     cvGetSeqElem( (CvSeq*)(seq), (index) )))
 #define CV_GET_SEQ_ELEM( elem_type, seq, index ) CV_SEQ_ELEM( (seq), elem_type, (index) )
 
-/* macro that adds element to sequence */
+/* Add element to sequence: */
 #define CV_WRITE_SEQ_ELEM_VAR( elem_ptr, writer )     \
 {                                                     \
     if( (writer).ptr >= (writer).block_max )          \
@@ -1543,7 +1549,7 @@ CvSeqReader;
 }
 
 
-/* move reader position forward */
+/* Move reader position forward: */
 #define CV_NEXT_SEQ_ELEM( elem_size, reader )                 \
 {                                                             \
     if( ((reader).ptr += (elem_size)) >= (reader).block_max ) \
@@ -1553,7 +1559,7 @@ CvSeqReader;
 }
 
 
-/* move reader position backward */
+/* Move reader position backward: */
 #define CV_PREV_SEQ_ELEM( elem_size, reader )                \
 {                                                            \
     if( ((reader).ptr -= (elem_size)) < (reader).block_min ) \
@@ -1562,7 +1568,7 @@ CvSeqReader;
     }                                                        \
 }
 
-/* read element and move read position forward */
+/* Read element and move read position forward: */
 #define CV_READ_SEQ_ELEM( elem, reader )                       \
 {                                                              \
     assert( (reader).seq->elem_size == sizeof(elem));          \
@@ -1570,7 +1576,7 @@ CvSeqReader;
     CV_NEXT_SEQ_ELEM( sizeof(elem), reader )                   \
 }
 
-/* read element and move read position backward */
+/* Read element and move read position backward: */
 #define CV_REV_READ_SEQ_ELEM( elem, reader )                     \
 {                                                                \
     assert( (reader).seq->elem_size == sizeof(elem));            \
@@ -1607,7 +1613,7 @@ CvSeqReader;
 
 /************ Graph macros ************/
 
-/* returns next graph edge for given vertex */
+/* Return next graph edge for given vertex: */
 #define  CV_NEXT_GRAPH_EDGE( edge, vertex )                              \
      (assert((edge)->vtx[0] == (vertex) || (edge)->vtx[1] == (vertex)),  \
       (edge)->next[(edge)->vtx[1] == (vertex)])
@@ -1621,18 +1627,18 @@ CvSeqReader;
 /* "black box" file storage */
 typedef struct CvFileStorage CvFileStorage;
 
-/* storage flags */
+/* Storage flags: */
 #define CV_STORAGE_READ          0
 #define CV_STORAGE_WRITE         1
 #define CV_STORAGE_WRITE_TEXT    CV_STORAGE_WRITE
 #define CV_STORAGE_WRITE_BINARY  CV_STORAGE_WRITE
 #define CV_STORAGE_APPEND        2
 
-/* list of attributes */
+/* List of attributes: */
 typedef struct CvAttrList
 {
-    const char** attr; /* NULL-terminated array of (attribute_name,attribute_value) pairs */
-    struct CvAttrList* next; /* pointer to next chunk of the attributes list */
+    const char** attr;         /* NULL-terminated array of (attribute_name,attribute_value) pairs. */
+    struct CvAttrList* next;   /* Pointer to next chunk of the attributes list.                    */
 }
 CvAttrList;
 
@@ -1663,7 +1669,7 @@ struct CvTypeInfo;
 #define CV_NODE_TYPE(flags)  ((flags) & CV_NODE_TYPE_MASK)
 
 /* file node flags */
-#define CV_NODE_FLOW        8 /* used only for writing structures to YAML format */
+#define CV_NODE_FLOW        8 /* Used only for writing structures in YAML format. */
 #define CV_NODE_USER        16
 #define CV_NODE_EMPTY       32
 #define CV_NODE_NAMED       64
@@ -1689,8 +1695,8 @@ typedef struct CvString
 }
 CvString;
 
-/* all the keys (names) of elements in the readed file storage
-   are stored in the hash to speed up the lookup operations */
+/* All the keys (names) of elements in the readed file storage
+   are stored in the hash to speed up the lookup operations: */
 typedef struct CvStringHashNode
 {
     unsigned hashval;
@@ -1701,7 +1707,7 @@ CvStringHashNode;
 
 typedef struct CvGenericHash CvFileNodeHash;
 
-/* basic element of the file storage - scalar or collection */
+/* Basic element of the file storage - scalar or collection: */
 typedef struct CvFileNode
 {
     int tag;
