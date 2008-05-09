@@ -861,10 +861,14 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        capture->form.fmt.pix.sizeimage = min;
 
    CLEAR (capture->req);
+   
+   unsigned int buffer_number = 4;
 
-   capture->req.count               = 4;
-   capture->req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-   capture->req.memory              = V4L2_MEMORY_MMAP;
+   try_again:
+   
+   capture->req.count = buffer_number;
+   capture->req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   capture->req.memory = V4L2_MEMORY_MMAP;
 
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_REQBUFS, &capture->req))
    {
@@ -879,13 +883,21 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
        return -1;
    }
 
-   if (capture->req.count < 4)
+   if (capture->req.count < buffer_number)
    {
-       fprintf (stderr, "Insufficient buffer memory on %s\n", deviceName);
+       if (buffer_number == 1)
+       {
+           fprintf (stderr, "Insufficient buffer memory on %s\n", deviceName);
 
-       /* free capture, and returns an error code */
-       icvCloseCAM_V4L (capture);
-       return -1;
+           /* free capture, and returns an error code */
+           icvCloseCAM_V4L (capture);
+           return -1;
+       } else {
+         buffer_number--;
+	 printf("%d\n", buffer_number);
+	 
+	 goto try_again;
+       }
    }
 
    for (n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
@@ -2670,7 +2682,7 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
 };
 
 
-class CvCaptureCAM_V4L_CPP : public CvCapture
+class CvCaptureCAM_V4L_CPP : CvCapture
 {
 public:
     CvCaptureCAM_V4L_CPP() { captureV4L = 0; }
@@ -2711,12 +2723,12 @@ bool CvCaptureCAM_V4L_CPP::grabFrame()
 
 IplImage* CvCaptureCAM_V4L_CPP::retrieveFrame()
 {
-    return captureV4L ? (IplImage*)icvRetrieveFrameCAM_V4L( captureV4L ) : 0;
+    return captureV4L ? icvRetrieveFrameCAM_V4L( captureV4L ) : 0;
 }
 
 double CvCaptureCAM_V4L_CPP::getProperty( int propId )
 {
-    return captureV4L ? icvGetPropertyCAM_V4L( captureV4L, propId ) : 0;
+    return captureV4L ? icvGetPropertyCAM_V4L( captureV4L, propId ) : 0.0;
 }
 
 bool CvCaptureCAM_V4L_CPP::setProperty( int propId, double value )
@@ -2729,7 +2741,7 @@ CvCapture* cvCreateCameraCapture_V4L( int index )
     CvCaptureCAM_V4L_CPP* capture = new CvCaptureCAM_V4L_CPP;
 
     if( capture->open( index ))
-        return capture;
+        return (CvCapture*)capture;
 
     delete capture;
     return 0;
