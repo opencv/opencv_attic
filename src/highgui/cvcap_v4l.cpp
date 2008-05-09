@@ -894,7 +894,6 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
            return -1;
        } else {
          buffer_number--;
-	 printf("%d\n", buffer_number);
 	 
 	 goto try_again;
        }
