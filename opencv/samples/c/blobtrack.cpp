@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
         return 0;
     }   /* Print help. */
 
-    {   /* Parse srguments: */
+    {   /* Parse arguments: */
         int i;
         for(i=1; i<argc; ++i)
         {
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
                 }
             }   /* Next argument. */
         }
-    }   /* Parse srguments. */
+    }   /* Parse arguments. */
 
     if(track_name)
     {   /* Set Trajectory Generator module: */
