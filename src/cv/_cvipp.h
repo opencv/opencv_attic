@@ -732,9 +732,9 @@ IPCVAPI_EX( CvStatus, icvSqrIntegral_8u32s64f_C1R,
               int* pDst, int dstStep, double* pSqr, int sqrStep,
               CvSize roiSize, int val, double valSqr ))
 
-IPCVAPI_EX( CvStatus, icvRectStdDev_32s32f_C1R,
-            "ippiRectStdDev_32s32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-            ( const int* pSrc, int srcStep,
+IPCVAPI_EX( CvStatus, icvRectStdDev_32f_C1R,
+            "ippiRectStdDev_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
+            ( const float* pSrc, int srcStep,
               const double* pSqr, int sqrStep, float* pDst, int dstStep,
               CvSize roiSize, CvRect rect ))
 
@@ -748,9 +748,9 @@ IPCVAPI_EX( CvStatus, icvHaarClassifierFree_32f,
             "ippiHaarClassifierFree_32f", CV_PLUGINS1(CV_PLUGIN_IPPCV),
             ( void *pState ))
 
-IPCVAPI_EX( CvStatus, icvApplyHaarClassifier_32s32f_C1R,
-            "ippiApplyHaarClassifier_32s32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
-            ( const int* pSrc, int srcStep, const float* pNorm,
+IPCVAPI_EX( CvStatus, icvApplyHaarClassifier_32f_C1R,
+            "ippiApplyHaarClassifier_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
+            ( const float* pSrc, int srcStep, const float* pNorm,
               int normStep, uchar* pMask, int maskStep,
               CvSize roi, int *pPositive, float threshold,
               void *pState ))
