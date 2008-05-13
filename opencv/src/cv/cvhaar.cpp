@@ -116,8 +116,8 @@ struct CvHidHaarClassifierCascade
 /* IPP functions for object detection */
 icvHaarClassifierInitAlloc_32f_t icvHaarClassifierInitAlloc_32f_p = 0;
 icvHaarClassifierFree_32f_t icvHaarClassifierFree_32f_p = 0;
-icvApplyHaarClassifier_32s32f_C1R_t icvApplyHaarClassifier_32s32f_C1R_p = 0;
-icvRectStdDev_32s32f_C1R_t icvRectStdDev_32s32f_C1R_p = 0;
+icvApplyHaarClassifier_32f_C1R_t icvApplyHaarClassifier_32f_C1R_p = 0;
+icvRectStdDev_32f_C1R_t icvRectStdDev_32f_C1R_p = 0;
 
 const int icv_object_win_border = 1;
 const float icv_stage_threshold_bias = 0.0001f;
@@ -335,15 +335,11 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
         }
     }
 
-    //
-    // NOTE: Currently, OpenMP is implemented and IPP modes are incompatible.
-    //
-#ifndef _OPENMP
     {
     int can_use_ipp = icvHaarClassifierInitAlloc_32f_p != 0 &&
         icvHaarClassifierFree_32f_p != 0 &&
-                      icvApplyHaarClassifier_32s32f_C1R_p != 0 &&
-                      icvRectStdDev_32s32f_C1R_p != 0 &&
+                      icvApplyHaarClassifier_32f_C1R_p != 0 &&
+                      icvRectStdDev_32f_C1R_p != 0 &&
                       !out->has_tilted_features && !out->is_tree && out->is_stump_based;
 
     if( can_use_ipp )
@@ -398,7 +394,6 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
         }
     }
     }
-#endif
 
     cascade->hid_cascade = out;
     assert( (char*)haar_node_ptr - (char*)out <= datasize );
@@ -870,12 +865,8 @@ cvHaarDetectObjects( const CvArr* _img,
     CvSeq* result_seq = 0;
     CvMemStorage* temp_storage = 0;
     CvAvgComp* comps = 0;
-    int i;
-
-#ifdef _OPENMP
     CvSeq* seq_thread[CV_MAX_THREADS] = {0};
-    int max_threads = 0;
-#endif
+    int i, max_threads = 0;
 
     CV_FUNCNAME( "cvHaarDetectObjects" );
 
@@ -910,17 +901,6 @@ cvHaarDetectObjects( const CvArr* _img,
     CV_CALL( sqsum = cvCreateMat( img->rows + 1, img->cols + 1, CV_64FC1 ));
     CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
 
-#ifdef _OPENMP
-    max_threads = cvGetNumThreads();
-    for( i = 0; i < max_threads; i++ )
-    {
-        CvMemStorage* temp_storage_thread;
-        CV_CALL( temp_storage_thread = cvCreateMemStorage(0));
-        CV_CALL( seq_thread[i] = cvCreateSeq( 0, sizeof(CvSeq),
-                        sizeof(CvRect), temp_storage_thread ));
-    }
-#endif
-
     if( !cascade->hid_cascade )
         CV_CALL( icvCreateHidHaarClassifierCascade(cascade) );
 
@@ -931,17 +911,32 @@ cvHaarDetectObjects( const CvArr* _img,
     seq2 = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), temp_storage );
     result_seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), storage );
 
+    max_threads = cvGetNumThreads();
+    if( max_threads > 1 )
+        for( i = 0; i < max_threads; i++ )
+        {
+            CvMemStorage* temp_storage_thread;
+            CV_CALL( temp_storage_thread = cvCreateMemStorage(0));
+            CV_CALL( seq_thread[i] = cvCreateSeq( 0, sizeof(CvSeq),
+                sizeof(CvRect), temp_storage_thread ));
+        }
+    else
+        seq_thread[0] = seq;
+
     if( CV_MAT_CN(img->type) > 1 )
     {
         cvCvtColor( img, temp, CV_BGR2GRAY );
         img = temp;
     }
 
+    if( flags & CV_HAAR_FIND_BIGGEST_OBJECT )
+        flags &= ~(CV_HAAR_SCALE_IMAGE|CV_HAAR_DO_CANNY_PRUNING);
+
     if( flags & CV_HAAR_SCALE_IMAGE )
     {
         CvSize win_size0 = cascade->orig_window_size;
         int use_ipp = cascade->hid_cascade->ipp_stages != 0 &&
-                    icvApplyHaarClassifier_32s32f_C1R_p != 0;
+                    icvApplyHaarClassifier_32f_C1R_p != 0;
 
         if( use_ipp )
             CV_CALL( norm_img = cvCreateMat( img->rows, img->cols, CV_32FC1 ));
@@ -949,13 +944,13 @@ cvHaarDetectObjects( const CvArr* _img,
 
         for( factor = 1; ; factor *= scale_factor )
         {
-            int positive = 0;
-            int x, y;
+            int strip_count, strip_size;
+            int ystep = factor > 2. ? 1 : 2;
             CvSize win_size = { cvRound(win_size0.width*factor),
                                 cvRound(win_size0.height*factor) };
             CvSize sz = { cvRound( img->cols/factor ), cvRound( img->rows/factor ) };
             CvSize sz1 = { sz.width - win_size0.width, sz.height - win_size0.height };
-            CvRect rect1 = { icv_object_win_border, icv_object_win_border,
+            CvRect equ_rect = { icv_object_win_border, icv_object_win_border,
                 win_size0.width - icv_object_win_border*2,
                 win_size0.height - icv_object_win_border*2 };
             CvMat img1, sum1, sqsum1, norm1, tilted1, mask1;
@@ -980,52 +975,114 @@ cvHaarDetectObjects( const CvArr* _img,
             cvResize( img, &img1, CV_INTER_LINEAR );
             cvIntegral( &img1, &sum1, &sqsum1, _tilted );
 
-            if( use_ipp && icvRectStdDev_32s32f_C1R_p( sum1.data.i, sum1.step,
-                sqsum1.data.db, sqsum1.step, norm1.data.fl, norm1.step, sz1, rect1 ) < 0 )
-                use_ipp = 0;
-
-            if( use_ipp )
+            if( max_threads > 1 )
             {
-                positive = mask1.cols*mask1.rows;
-                cvSet( &mask1, cvScalarAll(255) );
-                for( i = 0; i < cascade->count; i++ )
-                {
-                    if( icvApplyHaarClassifier_32s32f_C1R_p(sum1.data.i, sum1.step,
-                        norm1.data.fl, norm1.step, mask1.data.ptr, mask1.step,
-                        sz1, &positive, cascade->hid_cascade->stage_classifier[i].threshold,
-                        cascade->hid_cascade->ipp_stages[i]) < 0 )
-                    {
-                        use_ipp = 0;
-                        break;
-                    }
-                    if( positive <= 0 )
-                        break;
-                }
+                strip_count = MAX(MIN(sz1.height/ystep, max_threads*3), 1);
+                strip_size = (sz1.height + strip_count - 1)/strip_count;
+                strip_size = (strip_size / ystep)*ystep;
+            }
+            else
+            {
+                strip_count = 1;
+                strip_size = sz1.height;
             }
 
             if( !use_ipp )
-            {
                 cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, 0, 1. );
-                for( y = 0, positive = 0; y < sz1.height; y++ )
-                    for( x = 0; x < sz1.width; x++ )
-                    {
-                        mask1.data.ptr[mask1.step*y + x] =
-                            cvRunHaarClassifierCascade( cascade, cvPoint(x,y), 0 ) > 0;
-                        positive += mask1.data.ptr[mask1.step*y + x];
-                    }
+            else
+            {
+                for( i = 0; i <= sz.height; i++ )
+                {
+                    const int* isum = (int*)(sum1.data.ptr + sum1.step*i);
+                    float* fsum = (float*)isum;
+                    const int FLT_DELTA = -(1 << 24);
+                    int j;
+                    for( j = 0; j <= sz.width; j++ )
+                        fsum[j] = (float)(isum[j] + FLT_DELTA);
+                }
             }
 
-            if( positive > 0 )
+        #ifdef _OPENMP
+            #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+        #endif
+            for( i = 0; i < strip_count; i++ )
             {
-                for( y = 0; y < sz1.height; y++ )
-                    for( x = 0; x < sz1.width; x++ )
-                        if( mask1.data.ptr[mask1.step*y + x] != 0 )
+                int thread_id = cvGetThreadNum();
+                int positive = 0;
+                int y1 = i*strip_size, y2 = (i+1)*strip_size/* - ystep + 1*/;
+                CvSize ssz;
+                int x, y, j;
+                if( i == strip_count - 1 || y2 > sz1.height )
+                    y2 = sz1.height;
+                ssz = cvSize(sz1.width, y2 - y1);
+
+                if( use_ipp )
+                {
+                    icvRectStdDev_32f_C1R_p(
+                        (float*)(sum1.data.ptr + y1*sum1.step), sum1.step,
+                        (double*)(sqsum1.data.ptr + y1*sqsum1.step), sqsum1.step,
+                        (float*)(norm1.data.ptr + y1*norm1.step), norm1.step, ssz, equ_rect );
+
+                    positive = (ssz.width/ystep)*((ssz.height + ystep-1)/ystep);
+                    memset( mask1.data.ptr + y1*mask1.step, ystep == 1, mask1.height*mask1.step);
+                    
+                    if( ystep > 1 )
+                    {
+                        for( y = y1, positive = 0; y < y2; y += ystep )
+                            for( x = 0; x < ssz.width; x += ystep )
+                                mask1.data.ptr[mask1.step*y + x] = (uchar)1;
+                    }
+
+                    for( j = 0; j < cascade->count; j++ )
+                    {
+                        if( icvApplyHaarClassifier_32f_C1R_p(
+                            (float*)(sum1.data.ptr + y1*sum1.step), sum1.step,
+                            (float*)(norm1.data.ptr + y1*norm1.step), norm1.step,
+                            mask1.data.ptr + y1*mask1.step, mask1.step, ssz, &positive,
+                            cascade->hid_cascade->stage_classifier[j].threshold,
+                            cascade->hid_cascade->ipp_stages[j]) < 0 )
                         {
-                            CvRect obj_rect = { cvRound(x*factor), cvRound(y*factor),
-                                                win_size.width, win_size.height };
-                            cvSeqPush( seq, &obj_rect );
+                            positive = 0;
+                            break;
                         }
+                        if( positive <= 0 )
+                            break;
+                    }
+                }
+                else
+                {
+                    for( y = y1, positive = 0; y < y2; y += ystep )
+                        for( x = 0; x < ssz.width; x += ystep )
+                        {
+                            mask1.data.ptr[mask1.step*y + x] =
+                                cvRunHaarClassifierCascade( cascade, cvPoint(x,y), 0 ) > 0;
+                            positive += mask1.data.ptr[mask1.step*y + x];
+                        }
+                }
+
+                if( positive > 0 )
+                {
+                    for( y = y1; y < y2; y += ystep )
+                        for( x = 0; x < ssz.width; x += ystep )
+                            if( mask1.data.ptr[mask1.step*y + x] != 0 )
+                            {
+                                CvRect obj_rect = { cvRound(x*factor), cvRound(y*factor),
+                                                    win_size.width, win_size.height };
+                                cvSeqPush( seq_thread[thread_id], &obj_rect );
+                            }
+                }
             }
+
+            // gather the results
+            if( max_threads > 1 )
+                for( i = 0; i < max_threads; i++ )
+                {
+                    CvSeq* s = seq_thread[i];
+                    int j, total = s->total;
+                    CvSeqBlock* b = s->first;
+                    for( j = 0; j < total; j += b->count, b = b->next )
+                        cvSeqPushMulti( seq, b->data, b->count );
+                }
         }
     }
     else
@@ -1124,11 +1181,12 @@ cvHaarDetectObjects( const CvArr* _img,
 
             for( pass = 0; pass < npass; pass++ )
             {
-#ifdef _OPENMP
-    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
-#endif
+            #ifdef _OPENMP
+                #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+            #endif
                 for( int _iy = start_y; _iy < end_y; _iy++ )
                 {
+                    int thread_id = cvGetThreadNum();
                     int iy = cvRound(_iy*ystep);
                     int _ix, _xstep = 1;
                     uchar* mask_row = temp->data.ptr + temp->step * iy;
@@ -1162,11 +1220,7 @@ cvHaarDetectObjects( const CvArr* _img,
                                 else
                                 {
                                     CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
-#ifndef _OPENMP
-                                    cvSeqPush( seq, &rect );
-#else
-                                    cvSeqPush( seq_thread[omp_get_thread_num()], &rect );
-#endif
+                                    cvSeqPush( seq_thread[thread_id], &rect );
                                 }
                             }
                             if( result < 0 )
@@ -1181,11 +1235,7 @@ cvHaarDetectObjects( const CvArr* _img,
                                 if( pass == npass - 1 )
                                 {
                                     CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
-#ifndef _OPENMP
-                                    cvSeqPush( seq, &rect );
-#else
-                                    cvSeqPush( seq_thread[omp_get_thread_num()], &rect );
-#endif
+                                    cvSeqPush( seq_thread[thread_id], &rect );
                                 }
                             }
                             else
@@ -1197,17 +1247,16 @@ cvHaarDetectObjects( const CvArr* _img,
                 cascade->hid_cascade->count = cascade->count;
             }
 
-#ifdef _OPENMP
-	        // gather the results
-	        for( i = 0; i < max_threads; i++ )
-	        {
-		        CvSeq* s = seq_thread[i];
-                int j, total = s->total;
-                CvSeqBlock* b = s->first;
-                for( j = 0; j < total; j += b->count, b = b->next )
-                    cvSeqPushMulti( seq, b->data, b->count );
-	        }
-#endif
+            // gather the results
+            if( max_threads > 1 )
+	            for( i = 0; i < max_threads; i++ )
+	            {
+		            CvSeq* s = seq_thread[i];
+                    int j, total = s->total;
+                    CvSeqBlock* b = s->first;
+                    for( j = 0; j < total; j += b->count, b = b->next )
+                        cvSeqPushMulti( seq, b->data, b->count );
+	            }
 
             if( find_biggest_object )
             {
@@ -1462,13 +1511,12 @@ cvHaarDetectObjects( const CvArr* _img,
 
     __END__;
 
-#ifdef _OPENMP
-	for( i = 0; i < max_threads; i++ )
-	{
-		if( seq_thread[i] )
-            cvReleaseMemStorage( &seq_thread[i]->storage );
-	}
-#endif
+    if( max_threads > 1 )
+	    for( i = 0; i < max_threads; i++ )
+	    {
+		    if( seq_thread[i] )
+                cvReleaseMemStorage( &seq_thread[i]->storage );
+	    }
 
     cvReleaseMemStorage( &temp_storage );
     cvReleaseMat( &sum );
