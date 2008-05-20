@@ -32,10 +32,15 @@ haar_flags = 0
 
 
 def detect_and_draw( img ):
+    # allocate temporary images
     gray = cvCreateImage( cvSize(img.width,img.height), 8, 1 );
     small_img = cvCreateImage( cvSize( cvRound (img.width/image_scale),
 						               cvRound (img.height/image_scale)), 8, 1 );
+
+    # convert color input image to grayscale
     cvCvtColor( img, gray, CV_BGR2GRAY );
+
+    # scale input image for faster processing
     cvResize( gray, small_img, CV_INTER_LINEAR );
 
     cvEqualizeHist( small_img, small_img );
@@ -49,9 +54,12 @@ def detect_and_draw( img ):
         t = cvGetTickCount() - t;
         print "detection time = %gms" % (t/(cvGetTickFrequency()*1000.));
         if faces:
-            for r in faces:
-                pt1 = cvPoint( int(r.x*image_scale), int(r.y*image_scale))
-                pt2 = cvPoint( int((r.x+r.width)*image_scale), int((r.y+r.height)*image_scale) )
+            for face_rect in faces:
+                # the input to cvHaarDetectObjects was resized, so scale the 
+                # bounding box of each face and convert it to two CvPoints
+                pt1 = cvPoint( int(face_rect.x*image_scale), int(face_rect.y*image_scale))
+                pt2 = cvPoint( int((face_rect.x+face_rect.width)*image_scale),
+                               int((face_rect.y+face_rect.height)*image_scale) )
                 cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 );
 
     cvShowImage( "result", img );
@@ -113,8 +121,8 @@ if __name__ == '__main__':
         image = cvLoadImage( input_name, 1 );
 
         if( image ):
-        
+            
             detect_and_draw( image );
             cvWaitKey(0);
-        
+    
     cvDestroyWindow("result");
