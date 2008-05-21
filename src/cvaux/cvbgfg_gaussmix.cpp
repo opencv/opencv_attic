@@ -106,7 +106,7 @@ static void icvUpdatePartialNoMatch( double* src_pixel, int nChannels,
 
 static void icvGetSortKey( const int nChannels, double* sort_key, const CvGaussBGPoint* g_point, 
                     const CvGaussBGStatModelParams *bg_model_params );
-static void icvBackgroundTest( const int nChannels, int n, int p, int *match, CvGaussBGModel* bg_model );
+static void icvBackgroundTest( const int nChannels, int n, int i, int j, int *match, CvGaussBGModel* bg_model );
 
 static void CV_CDECL icvReleaseGaussianBGModel( CvGaussBGModel** bg_model );
 static int CV_CDECL icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model );
@@ -304,7 +304,7 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model )
             }
             icvGetSortKey( nChannels, sort_key, g_point, &bg_model_params );
             icvInsertionSortGaussians( g_point, sort_key, (CvGaussBGStatModelParams *)&bg_model_params );
-            icvBackgroundTest( nChannels, n, p, match, bg_model );
+            icvBackgroundTest( nChannels, n, i, j, match, bg_model );
         }
     }
     
@@ -567,7 +567,7 @@ static void icvGetSortKey( const int nChannels, double* sort_key, const CvGaussB
 }
 
 
-static void icvBackgroundTest( const int nChannels, int n, int p, int *match, CvGaussBGModel* bg_model )
+static void icvBackgroundTest( const int nChannels, int n, int i, int j, int *match, CvGaussBGModel* bg_model )
 {
     int m, b;
     uchar pixelValue = (uchar)255; // will switch to 0 if match found
@@ -575,7 +575,7 @@ static void icvBackgroundTest( const int nChannels, int n, int p, int *match, Cv
     CvGaussBGPoint* g_point = bg_model->g_point;
     
     for( m = 0; m < nChannels; m++)
-        bg_model->background->imageData[p+m]   = (unsigned char)(g_point[n].g_values[0].mean[m]+0.5);
+        bg_model->background->imageData[ bg_model->background->widthStep*j + i + m]  = (unsigned char)(g_point[n].g_values[0].mean[m]+0.5);
     
     for( b = 0; b < bg_model->params.n_gauss; b++)
     {
@@ -586,7 +586,7 @@ static void icvBackgroundTest( const int nChannels, int n, int p, int *match, Cv
             break;
     }
     
-    bg_model->foreground->imageData[p/nChannels] = pixelValue;
+    bg_model->foreground->imageData[ bg_model->foreground->widthStep*j + i] = pixelValue;
 }
 
 /* End of file. */
