@@ -61,7 +61,7 @@
 	/* This encapsulates the python callback and user_data for mouse callback */
 	struct PyCvMouseCBData {
 		PyObject * py_func;
-		void * user_data;
+		PyObject * user_data;
 	};
 	/* This encapsulates the python callback and user_data for mouse callback */
     /* C helper function which is responsible for calling
@@ -79,7 +79,7 @@
 		PyObject *arg2 = PyInt_FromLong (x);
 		PyObject *arg3 = PyInt_FromLong (y);
 		PyObject *arg4 = PyInt_FromLong (flags);
-		PyObject *arg5 = (PyObject *)param->user_data;  // assume this is already a PyObject
+		PyObject *arg5 = param->user_data;  // assume this is already a PyObject
 
 		/* build the tuple for calling the Python callback */
 		PyObject *arglist = Py_BuildValue ("(OOOOO)",
@@ -107,11 +107,15 @@
 %rename (cvSetMouseCallbackOld) cvSetMouseCallback;
 %rename (cvSetMouseCallback) cvSetMouseCallbackPy;
 %inline %{
-	void cvSetMouseCallbackPy( const char* window_name, PyObject * on_mouse, void* param=NULL ){
+	void cvSetMouseCallbackPy( const char* window_name, PyObject * on_mouse, PyObject * param=NULL ){
 		// TODO potential memory leak if mouse callback is redefined
 		PyCvMouseCBData * py_callback = new PyCvMouseCBData;
 		py_callback->py_func = on_mouse;
 		py_callback->user_data = param ? param : Py_None;
+
+        Py_XINCREF(py_callback->py_func);
+        Py_XINCREF(py_callback->user_data);
+            
 		cvSetMouseCallback( window_name, (CvMouseCallback) icvPyOnMouse, (void *) py_callback );
 	}
 %}
@@ -227,7 +231,12 @@ static void icvPyTrackbarCB##idx(int pos){
 
 	my_trackbar_cb_size++;
 
-	/* memorize the Python address of the callback function */
+    if (!PyCallable_Check($input)) {
+        PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+        return 0;
+    }
+    Py_XINCREF((PyObject*) $input);         /* Add a reference to new callback */
+    Py_XDECREF(my_trackbar_cb_funcs[my_trackbar_cb_size-1].py_func);  /* Dispose of previous callback */
 	my_trackbar_cb_funcs[my_trackbar_cb_size-1].py_func = (PyObject *) $input;
 
 	/* prepare to call the C function who will register the callback */
