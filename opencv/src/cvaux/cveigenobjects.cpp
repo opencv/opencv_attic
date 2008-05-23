@@ -1037,14 +1037,14 @@ icvEigenDecomposite_8u32fR( uchar * obj, int objStep, int nEigObjs,
 //             an object) using previously calculated eigen objects basis, mean (averaged)
 //             object and decomposition coefficients of the restored object
 //    Context:
-//    Parameters:  nEigObjs - number of eigen objects
-//                 eigens  - array of pointers to eigen objects
-//                 eigStep  - eigen objects step (in bytes)
-//                 coeffs   - previousely calculated decomposition coefficients
-//                 avg      - pointer to averaged object
-//                 avgStep  - its step (in bytes)
-//                 rest     - pointer to restored object
-//                 restStep - its step (in bytes)
+//    Parameters:  nEigObjs - Number of eigen objects
+//                 eigens   - Array of pointers to eigen objects
+//                 eigStep  - Eigen objects step (in bytes)
+//                 coeffs   - Previously calculated decomposition coefficients
+//                 avg      - Pointer to averaged object
+//                 avgStep  - Its step (in bytes)
+//                 rest     - Pointer to restored object
+//                 restStep - Its step (in bytes)
 //                 size     - ROI size of each object
 //
 //    Returns: CV status

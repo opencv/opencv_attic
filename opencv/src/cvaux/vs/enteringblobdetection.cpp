@@ -208,7 +208,7 @@ public:
 protected:
     IplImage*       m_pMaskBlobNew;
     IplImage*       m_pMaskBlobExist;
-    /* lists of connected components detected on previouse frames */
+    /* Lists of connected components detected on previous frames: */
     CvBlobSeq*      m_pBlobLists[EBD_FRAME_NUM]; 
 };
 
