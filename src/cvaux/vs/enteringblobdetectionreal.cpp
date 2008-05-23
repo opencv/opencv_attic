@@ -70,7 +70,7 @@ public:
     }   /* cvReleaseBlobDetector */
 
     /* cvDetectNewBlobs:
-     * Return 1 and fill blob pNewBlob withd
+     * Return 1 and fill blob pNewBlob with
      * blob parameters if new blob is detected:
      */
     int DetectNewBlob(IplImage* /*pImg*/, IplImage* /*pFGMask*/, CvBlobSeq* pNewBlobList, CvBlobSeq* /*pOldBlobList*/)
