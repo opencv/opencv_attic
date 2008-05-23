@@ -626,7 +626,7 @@ class CV_EXPORTS CvBlobDetector: public CvVSModule
 public:
     /* Try to detect new blob entrance based on foreground mask. */
     /* pFGMask - image of foreground mask */
-    /* pNewBlob - pointer to CvBlob structure which will bew filled if new blob entrance detected */
+    /* pNewBlob - pointer to CvBlob structure which will be filled if new blob entrance detected */
     /* pOldBlobList - pointer to blob list which already exist on image */
     virtual int DetectNewBlob(IplImage* pImg, IplImage* pImgFG, CvBlobSeq* pNewBlobList, CvBlobSeq* pOldBlobList) = 0;
     /* release blob detector */
