@@ -271,7 +271,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
             cvThreshold(pIB,pIB,128,255,CV_THRESH_BINARY);
             cvFindContours(pIB,storage, &cnts, sizeof(CvContour), CV_RETR_EXTERNAL);
 
-            /* Process each contours: */
+            /* Process each contour: */
             for(cnt = cnts; cnt; cnt=cnt->h_next)
             {
                 CvBlob  NewBlob;
@@ -281,17 +281,26 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                 CvMoments   m;
                 CvRect      r = ((CvContour*)cnt)->rect;
                 CvMat       mat;
+
                 if(r.height < S.height*0.02 || r.width < S.width*0.02) continue;
+
                 cvMoments( cvGetSubRect(m_pMaskBlobNew,&mat,r), &m, 0 );
                 M00 = cvGetSpatialMoment( &m, 0, 0 );
+
                 if(M00 <= 0 ) continue;
-                X = cvGetSpatialMoment( &m, 1, 0 )/M00;
-                Y = cvGetSpatialMoment( &m, 0, 1 )/M00;
+
+                X  = cvGetSpatialMoment( &m, 1, 0 )/M00;
+                Y  = cvGetSpatialMoment( &m, 0, 1 )/M00;
+
                 XX = (cvGetSpatialMoment( &m, 2, 0 )/M00) - X*X;
                 YY = (cvGetSpatialMoment( &m, 0, 2 )/M00) - Y*Y;
+
                 NewBlob = cvBlob(r.x+(float)X,r.y+(float)Y,(float)(4*sqrt(XX)),(float)(4*sqrt(YY)));
+
                 Blobs.AddBlob(&NewBlob);
+
             }   /* Next contour. */
+
             cvReleaseImage(&pIB);
 
         }   /* One contour - one blob. */
