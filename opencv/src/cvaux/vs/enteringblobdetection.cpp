@@ -73,8 +73,7 @@ static int CompareContour(const void* a, const void* b, void* )
     //wt = MAX(ra.width,rb.width)*0.1f;
     wt = 0;
     ht = MAX(ra.height,rb.height)*0.3f;
-    if(dx < wt && dy < ht) return 1;
-    return 0;
+    return (dx < wt && dy < ht);
 }
 
 void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* storage)
