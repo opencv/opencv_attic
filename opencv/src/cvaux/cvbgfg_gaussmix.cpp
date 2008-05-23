@@ -39,11 +39,14 @@
 //M*/
 
 
-//This is based on the "An Improved Adaptive Background Mixture Model for
-//Real-time Tracking and Shadow Detection" by P. KaewTraKulPong and R. Bowden
-//The windowing method is used, but not the shadow detection. I make some of my
-//own modifications which make more sense. There are some errors in some of their
-//equations.
+// This is based on the "An Improved Adaptive Background Mixture Model for
+// Real-time Tracking with Shadow Detection" by P. KaewTraKulPong and R. Bowden
+// http://personal.ee.surrey.ac.uk/Personal/R.Bowden/publications/avbs01/avbs01.pdf
+//
+// The windowing method is used, but not the shadow detection. I make some of my
+// own modifications which make more sense. There are some errors in some of their
+// equations.
+//
 //IplImage values of image that are useful
 //int  nSize;         /* sizeof(IplImage) */
 //int  depth;         /* pixel depth in bits: IPL_DEPTH_8U ...*/

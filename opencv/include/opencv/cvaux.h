@@ -1255,7 +1255,9 @@ CVAPI(CvBGStatModel*) cvCreateFGDStatModel( IplImage* first_frame,
    Interface of Gaussian mixture algorithm
    (P. KadewTraKuPong and R. Bowden,
    "An improved adaptive background mixture model for real-time tracking with shadow detection"
-   in Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001.")
+   in Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001."
+   http://personal.ee.surrey.ac.uk/Personal/R.Bowden/publications/avbs01/avbs01.pdf
+   )
 */
 
 #define CV_BGFG_MOG_MAX_NGAUSSIANS 500
