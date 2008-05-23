@@ -881,7 +881,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                 if(dx < m_MinDistToBorder || dy < m_MinDistToBorder) Good = 0;
             }   /* Check distance to image border. */
 
-            /* Check uniform moveing. */
+            /* Check uniform motion: */
             if(Good)
             {   /* Check uniform motion: */
                 double      Error = 0;
