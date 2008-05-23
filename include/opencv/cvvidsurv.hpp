@@ -770,7 +770,7 @@ public:
     CvBlobTracker(){SetTypeName("BlobTracker");};
 
     /* Add new blob to track it and assign to this blob personal ID */
-    /* pBlob - pinter to structure with blob parameters (ID is ignored)*/
+    /* pBlob - pointer to structure with blob parameters (ID is ignored)*/
     /* pImg - current image */
     /* pImgFG - current foreground mask */
     /* Return pointer to new added blob: */
@@ -838,7 +838,7 @@ public:
 
     };
 
-    /* Return pinter to blob by its unique ID: */
+    /* Return pointer to blob by its unique ID: */
     virtual int     GetBlobIndexByID(int BlobID)
     {
         int i;
@@ -850,7 +850,7 @@ public:
         return -1;
     };
 
-    /* Return pinter to blob by its unique ID: */
+    /* Return pointer to blob by its unique ID: */
     virtual CvBlob* GetBlobByID(int BlobID){return GetBlob(GetBlobIndexByID(BlobID));};
 
     /* Delete blob by its ID: */
