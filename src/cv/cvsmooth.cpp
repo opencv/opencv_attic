@@ -1029,22 +1029,22 @@ icvMedianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
 \****************************************************************************************/
 
 static void
-icvBilateralFiltering( const CvMat* src, CvMat* dst,
-                       double sigma_color, double sigma_space )
+icvBilateralFiltering_8u( const CvMat* src, CvMat* dst, int d,
+                          double sigma_color, double sigma_space )
 {
     CvMat* temp = 0;
     float* color_weight = 0;
     float* space_weight = 0;
     int* space_ofs = 0;
 
-    CV_FUNCNAME( "icvBilateralFiltering" );
+    CV_FUNCNAME( "icvBilateralFiltering_8u" );
 
     __BEGIN__;
 
     double gauss_color_coeff = -0.5/(sigma_color*sigma_color);
     double gauss_space_coeff = -0.5/(sigma_space*sigma_space);
     int cn = CV_MAT_CN(src->type);
-    int i, j, k, maxk, radius, d;
+    int i, j, k, maxk, radius;
     CvSize size = cvGetMatSize(src);
    
     if( CV_MAT_TYPE(src->type) != CV_8UC1 &&
@@ -1058,7 +1058,10 @@ icvBilateralFiltering( const CvMat* src, CvMat* dst,
     if( sigma_space <= 0 )
         sigma_space = 1;
 
-    radius = cvRound(sigma_space*1.5);
+    if( d == 0 )
+        radius = cvRound(sigma_space*1.5);
+    else
+        radius = d/2;
     radius = MAX(radius, 1);
     d = radius*2 + 1;
 
@@ -1137,6 +1140,153 @@ icvBilateralFiltering( const CvMat* src, CvMat* dst,
     cvFree( &color_weight );
     cvFree( &space_weight );
     cvFree( &space_ofs );
+}
+
+
+static void icvBilateralFiltering_32f( const CvMat* src, CvMat* dst, int d,
+                                       double sigma_color, double sigma_space )
+{
+  	CvMat* temp = 0;
+    float* space_weight = 0;
+    int* space_ofs = 0;
+    float *expLUT = 0;
+ 
+    CV_FUNCNAME( "icvBilateralFiltering_32f" );
+    
+    __BEGIN__;
+
+    double gauss_color_coeff = -0.5/(sigma_color*sigma_color);
+    double gauss_space_coeff = -0.5/(sigma_space*sigma_space);
+    int cn = CV_MAT_CN(src->type);
+    int i, j, k, maxk, radius;
+    double minValSrc=-1, maxValSrc=1;
+    const int kExpNumBinsPerChannel = 1 << 12;
+    int kExpNumBins = 0;
+    float lastExpVal = 1.f;
+    int temp_step;
+    float len, scale_index;
+    CvMat src_reshaped;
+    
+    CvSize size = cvGetMatSize(src);
+   
+    if( CV_MAT_TYPE(src->type) != CV_32FC1 &&
+        CV_MAT_TYPE(src->type) != CV_32FC3 ||
+        !CV_ARE_TYPES_EQ(src, dst) )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "Both source and destination must be 32-bit float, single-channel or 3-channel images" );
+
+    if( sigma_color <= 0 )
+        sigma_color = 1;
+    if( sigma_space <= 0 )
+        sigma_space = 1;
+
+    if( d == 0 )
+        radius = cvRound(sigma_space*1.5);
+    else
+        radius = d/2;
+    radius = MAX(radius, 1);
+    d = radius*2 + 1;
+    // compute the min/max range for the input image (even if multichannel)
+    
+    CV_CALL( cvReshape( src, &src_reshaped, 1 ) );   
+    CV_CALL( cvMinMaxLoc(&src_reshaped, &minValSrc, &maxValSrc) ); 
+    
+    // temporary copy of the image with borders for easy processing
+    CV_CALL( temp = cvCreateMat( src->rows + radius*2,
+        src->cols + radius*2, src->type ));
+    temp_step = temp->step/sizeof(float);
+    CV_CALL( cvCopyMakeBorder( src, temp, cvPoint(radius,radius), IPL_BORDER_REPLICATE ));
+    // allocate lookup tables
+    CV_CALL( space_weight = (float*)cvAlloc(d*d*sizeof(space_weight[0])));
+    CV_CALL( space_ofs = (int*)cvAlloc(d*d*sizeof(space_ofs[0])));
+   
+    // assign a length which is slightly more than needed
+    len = (float)(maxValSrc - minValSrc) * cn;
+    kExpNumBins = kExpNumBinsPerChannel * cn;
+    CV_CALL( expLUT = (float*)cvAlloc((kExpNumBins+2) * sizeof(expLUT[0])));
+    scale_index = kExpNumBins/len;
+    
+    // initialize the exp LUT
+    for( i = 0; i < kExpNumBins+2; i++ )
+    {
+        if( lastExpVal > 0.f )
+        {
+            double val =  i / scale_index;
+            expLUT[i] = (float)exp(val * val * gauss_color_coeff);
+            lastExpVal = expLUT[i];
+        }
+        else
+            expLUT[i] = 0.f;
+    }
+    
+    // initialize space-related bilateral filter coefficients
+    for( i = -radius, maxk = 0; i <= radius; i++ )
+        for( j = -radius; j <= radius; j++ )
+        {
+            double r = sqrt((double)i*i + (double)j*j);
+            if( r > radius )
+                continue;
+            space_weight[maxk] = (float)exp(r*r*gauss_space_coeff);
+            space_ofs[maxk++] = i*temp_step + j*cn;
+        }
+
+    for( i = 0; i < size.height; i++ )
+    {
+	    const float* sptr = temp->data.fl + (i+radius)*temp_step + radius*cn;
+        float* dptr = (float*)(dst->data.ptr + i*dst->step);
+
+        if( cn == 1 )
+        {
+            for( j = 0; j < size.width; j++ )
+            {
+                float sum = 0, wsum = 0;
+                float val0 = sptr[j];
+                for( k = 0; k < maxk; k++ )
+                {
+                    float val = sptr[j + space_ofs[k]];
+					float alpha = fabs(val - val0)*scale_index;
+                    int idx = cvFloor(alpha);
+                    alpha -= idx;
+                    float w = space_weight[k]*(expLUT[idx] + alpha*(expLUT[idx+1] - expLUT[idx]));
+	                sum += val*w;
+                    wsum += w;
+                }
+                dptr[j] = (float)(sum/wsum);
+            }
+        }
+        else
+        {
+            assert( cn == 3 );
+            for( j = 0; j < size.width*3; j += 3 )
+            {
+                float sum_b = 0, sum_g = 0, sum_r = 0, wsum = 0;
+                float b0 = sptr[j], g0 = sptr[j+1], r0 = sptr[j+2];
+                for( k = 0; k < maxk; k++ )
+                {
+                    const float* sptr_k = sptr + j + space_ofs[k];
+                    float b = sptr_k[0], g = sptr_k[1], r = sptr_k[2];
+					float alpha = (fabs(b - b0) + fabs(g - g0) + fabs(r - r0))*scale_index;
+                    int idx = cvFloor(alpha);
+                    alpha -= idx;
+                    float w = space_weight[k]*(expLUT[idx] + alpha*(expLUT[idx+1] - expLUT[idx]));
+                    sum_b += b*w; sum_g += g*w; sum_r += r*w;
+                    wsum += w;
+                }
+                wsum = 1.f/wsum;
+                b0 = sum_b*wsum;
+                g0 = sum_g*wsum;
+                r0 = sum_r*wsum;
+                dptr[j] = b0; dptr[j+1] = g0; dptr[j+2] = r0;
+            }
+        }
+    }
+    
+    __END__;
+
+    cvReleaseMat( &temp );
+    cvFree( &space_weight );
+    cvFree( &space_ofs );
+    cvFree( &expLUT );
 }
 
 //////////////////////////////// IPP smoothing functions /////////////////////////////////
@@ -1352,7 +1502,25 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
         CV_CALL( gaussian_filter.process( src, dst ));
     }
     else if( smooth_type == CV_BILATERAL )
-        CV_CALL( icvBilateralFiltering( src, dst, param1, param2 ));
+    {
+        if( param2 != 0 && (param2 != param1 || param1 % 2 == 0) )
+            CV_ERROR( CV_StsBadSize, "Bilateral filter only supports square windows of odd size" );
+        
+        switch( src_type )
+        {
+        case CV_32FC1:
+        case CV_32FC3:
+            CV_CALL( icvBilateralFiltering_32f( src, dst, param1, param3, param4 ));
+            break;
+        case CV_8UC1:
+        case CV_8UC3:
+            CV_CALL( icvBilateralFiltering_8u( src, dst, param1, param3, param4 ));
+            break;
+        default:
+            CV_ERROR( CV_StsUnsupportedFormat,
+                "Unknown/unsupported format: bilateral filter only supports 8uC1, 8uC3, 32fC1 and 32fC3 formats" );
+        }
+    }
 
     __END__;
 
