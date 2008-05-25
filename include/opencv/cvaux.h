@@ -1176,7 +1176,7 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
   "Foreground Object Detection from Videos Containing Complex Background. ACM MM2003")
 */
 
-/* default paremeters of foreground detection algorithm */
+/* Default parameters of foreground detection algorithm: */
 #define  CV_BGFG_FGD_LC              128
 #define  CV_BGFG_FGD_N1C             15
 #define  CV_BGFG_FGD_N2C             25
