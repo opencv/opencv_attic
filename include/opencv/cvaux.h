@@ -1158,6 +1158,9 @@ CVAPI(void)  cvDeleteMoire( IplImage*  img );
  *       Chen et al, Intel Technology Journal V09:02 , 2005 12p
  *       http://developer.intel.com/technology/itj/2005/volume09issue02/art02_computer_vision/vol09_art02.pdf
  *
+ * which has both a good overview of the blobtracker software in particular,
+ * and also many references to introductory (and advanced) papers on computer vision.
+ *
  */
 
 
