@@ -1117,9 +1117,53 @@ CVAPI(void)  cvDeleteMoire( IplImage*  img );
 *                           Background/foreground segmentation                           *
 \****************************************************************************************/
 
-#define CV_BG_MODEL_FGD     0
-#define CV_BG_MODEL_MOG     1
-#define CV_BG_MODEL_FGD_SIMPLE   2
+/* We discriminate between foreground and background pixels
+ * by building and maintaining a model of the background.
+ * Any pixel which does not fit this model is then deemed
+ * to be foreground.
+ *
+ * At present we support two core background models,
+ * one of which has two variations:
+ *
+ *  o CV_BG_MODEL_FGD: latest and greatest algorithm, described in
+ *    
+ *	 Foreground Object Detection from Videos Containing Complex Background.
+ *	 Liyuan Li, Weimin Huang, Irene Y.H. Gu, and Qi Tian. 
+ *	 ACM MM2003 9p
+ *	 http://muq.org/~cynbe/bib/foreground-object-detection-from-videos-containing-complex-background.pdf
+ *
+ *  o CV_BG_MODEL_FGD_SIMPLE:
+ *       A code comment describes this as a simplified version of the above,
+ *       but the code is in fact currently identical. (Cynbe 2008-05-25)
+ *
+ *  o CV_BG_MODEL_MOG: "Mixture of Gaussians", older algorithm, described in
+ *
+ *       Moving target classification and tracking from real-time video.
+ *       A Lipton, H Fujijoshi, R Patil
+ *       Proceedings IEEE Workshop on Application of Computer Vision pp 8-14 1998
+ *       http://www.vision.cs.chubu.ac.jp/04/pdf/VSAM02.pdf
+ *
+ *       Learning patterns of activity using real-time tracking
+ *       C Stauffer and W Grimson  August 2000
+ *       IEEE Transactions on Pattern Analysis and Machine Intelligence 22(8):747-757
+ *       http://people.csail.mit.edu/people/stauffer/Home/_papers/vsam-pami-tracking.ps
+ *
+ * Additional background may be found on the Wiki page
+ *
+ *       http://opencvlibrary.sourceforge.net/VideoSurveillance
+ *
+ * which in particular recommends the Intel semi-popular overview article
+ *
+ *       Computer Vision Workload Analysis: Case Study of Video Surveillance Systems
+ *       Chen et al, Intel Technology Journal V09:02 , 2005 12p
+ *       http://developer.intel.com/technology/itj/2005/volume09issue02/art02_computer_vision/vol09_art02.pdf
+ *
+ */
+
+
+#define CV_BG_MODEL_FGD		0
+#define CV_BG_MODEL_MOG		1			/* "Mixture of Gaussians".	*/
+#define CV_BG_MODEL_FGD_SIMPLE	2
 
 struct CvBGStatModel;
 
@@ -1172,8 +1216,6 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
 
 /*
   Interface of ACM MM2003 algorithm
-  (Liyuan Li, Weimin Huang, Irene Y.H. Gu, and Qi Tian. 
-  "Foreground Object Detection from Videos Containing Complex Background. ACM MM2003")
 */
 
 /* Default parameters of foreground detection algorithm: */
@@ -1253,12 +1295,14 @@ CVAPI(CvBGStatModel*) cvCreateFGDStatModel( IplImage* first_frame,
 
 /* 
    Interface of Gaussian mixture algorithm
-   (P. KadewTraKuPong and R. Bowden,
+
    "An improved adaptive background mixture model for real-time tracking with shadow detection"
-   in Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001."
+   P. KadewTraKuPong and R. Bowden,
+   Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001."
    http://personal.ee.surrey.ac.uk/Personal/R.Bowden/publications/avbs01/avbs01.pdf
-   )
 */
+
+/* Note:  "MOG" == "Mixture Of Gaussians": */
 
 #define CV_BGFG_MOG_MAX_NGAUSSIANS 500
 
