@@ -132,21 +132,23 @@ public:
             AddParam("ObjWithoutHoles",&m_ParamFGD.is_obj_without_holes);
             AddParam("Morphology",&m_ParamFGD.perform_morphing);
         }
-        else if( m_FGType == CV_BG_MODEL_MOG )
+        else if( m_FGType == CV_BG_MODEL_MOG )			// "MOG" == "Mixture Of Gaussians"
         {
             if(m_pFGParam)
             {
                 m_ParamMOG = *(CvGaussBGStatModelParams*)m_pFGParam;
             }
             else
-            {
-                m_ParamMOG.win_size = CV_BGFG_MOG_WINDOW_SIZE;
-                m_ParamMOG.bg_threshold = CV_BGFG_MOG_BACKGROUND_THRESHOLD;
+            {                              // These constants are all from cvaux/include/cvaux.h
+                m_ParamMOG.win_size      = CV_BGFG_MOG_WINDOW_SIZE;
+                m_ParamMOG.bg_threshold  = CV_BGFG_MOG_BACKGROUND_THRESHOLD;
+
                 m_ParamMOG.std_threshold = CV_BGFG_MOG_STD_THRESHOLD;
-                m_ParamMOG.weight_init = CV_BGFG_MOG_WEIGHT_INIT;
+                m_ParamMOG.weight_init   = CV_BGFG_MOG_WEIGHT_INIT;
+
                 m_ParamMOG.variance_init = CV_BGFG_MOG_SIGMA_INIT*CV_BGFG_MOG_SIGMA_INIT;
-                m_ParamMOG.minArea = CV_BGFG_MOG_MINAREA;
-                m_ParamMOG.n_gauss = CV_BGFG_MOG_NGAUSSIANS;
+                m_ParamMOG.minArea       = CV_BGFG_MOG_MINAREA;
+                m_ParamMOG.n_gauss       = CV_BGFG_MOG_NGAUSSIANS;
             }
             AddParam("NG",&m_ParamMOG.n_gauss);
         }

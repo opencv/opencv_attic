@@ -12,9 +12,9 @@
 #endif
 
 /* List of foreground (FG) DETECTION modules: */
-static CvFGDetector* cvCreateFGDetector0(){return cvCreateFGDetectorBase(CV_BG_MODEL_FGD, NULL);}
-static CvFGDetector* cvCreateFGDetector0Simple(){return cvCreateFGDetectorBase(CV_BG_MODEL_FGD_SIMPLE, NULL);}
-static CvFGDetector* cvCreateFGDetector1(){return cvCreateFGDetectorBase(CV_BG_MODEL_MOG, NULL);}
+static CvFGDetector* cvCreateFGDetector0      () { return cvCreateFGDetectorBase(CV_BG_MODEL_FGD,        NULL); }
+static CvFGDetector* cvCreateFGDetector0Simple() { return cvCreateFGDetectorBase(CV_BG_MODEL_FGD_SIMPLE, NULL); }
+static CvFGDetector* cvCreateFGDetector1      () { return cvCreateFGDetectorBase(CV_BG_MODEL_MOG,        NULL); }
 
 typedef struct DefModule_FGDetector
 {
@@ -26,7 +26,7 @@ typedef struct DefModule_FGDetector
 DefModule_FGDetector FGDetector_Modules[] =
 {
     {cvCreateFGDetector0,"FG_0","Foreground Object Detection from Videos Containing Complex Background. ACM MM2003."},
-    {cvCreateFGDetector0Simple,"FG_0S","Simplyfied version of FG_0"},
+    {cvCreateFGDetector0Simple,"FG_0S","Simplified version of FG_0"},
     {cvCreateFGDetector1,"FG_1","Adaptive background mixture models for real-time tracking. CVPR1999"},
     {NULL,NULL,NULL}
 };

@@ -147,14 +147,16 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
     
     //init parameters
     if( parameters == NULL )
-    {
-        params.win_size = CV_BGFG_MOG_WINDOW_SIZE;
-        params.bg_threshold = CV_BGFG_MOG_BACKGROUND_THRESHOLD;
+      {                        /* These constants are defined in cvaux/include/cvaux.h: */
+        params.win_size      = CV_BGFG_MOG_WINDOW_SIZE;
+        params.bg_threshold  = CV_BGFG_MOG_BACKGROUND_THRESHOLD;
+
         params.std_threshold = CV_BGFG_MOG_STD_THRESHOLD;
-        params.weight_init = CV_BGFG_MOG_WEIGHT_INIT;
+        params.weight_init   = CV_BGFG_MOG_WEIGHT_INIT;
+
         params.variance_init = CV_BGFG_MOG_SIGMA_INIT*CV_BGFG_MOG_SIGMA_INIT;
-        params.minArea = CV_BGFG_MOG_MINAREA;
-        params.n_gauss = CV_BGFG_MOG_NGAUSSIANS;
+        params.minArea       = CV_BGFG_MOG_MINAREA;
+        params.n_gauss       = CV_BGFG_MOG_NGAUSSIANS;
     }
     else
     {
