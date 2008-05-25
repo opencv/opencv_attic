@@ -1248,10 +1248,26 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
 
 #define  CV_BGFG_FGD_BG_UPDATE_TRESH 0.5f
 
+/* See the above-referenced Li/Huang/Gu/Tian paper
+ * for a full description of these background-model
+ * parameters:
+ */
 typedef struct CvFGDStatModelParams
 {
-    int           Lc, N1c, N2c, Lcc, N1cc, N2cc, is_obj_without_holes, perform_morphing;
-    float         alpha1, alpha2, alpha3, delta, T, minArea;
+    int    Lc;
+    int    N1c;
+    int    N2c;
+    int    Lcc;
+    int    N1cc;
+    int    N2cc;
+    int    is_obj_without_holes;
+    int    perform_morphing;
+    float  alpha1;
+    float  alpha2;		/* Background learning rate. */
+    float  alpha3;
+    float  delta;
+    float  T;
+    float  minArea;
 }
 CvFGDStatModelParams;
 

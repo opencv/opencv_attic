@@ -38,6 +38,15 @@
 //
 //M*/
 
+
+// This file implements the foreground/background
+// discrimination algorithm described in
+//
+//     Foreground Object Detection from Videos Containing Complex Background
+//     Li, Huan, Gu, Tian 2003 9p
+//     http://muq.org/~cynbe/bib/foreground-object-detection-from-videos-containing-complex-background.pdf 
+
+
 #include "_cvaux.h"
 
 #include <math.h>
@@ -205,13 +214,22 @@ cvChangeDetection( IplImage*  prev_frame,
     int i, j, b, x, y, thres;
     const int PIXELRANGE=256;
 
-    if( !prev_frame || !curr_frame || !change_mask ||
-        prev_frame->nChannels != 3 || curr_frame->nChannels != 3 || change_mask->nChannels != 1 ||
-        prev_frame->depth != IPL_DEPTH_8U || curr_frame->depth != IPL_DEPTH_8U || change_mask->depth != IPL_DEPTH_8U ||
-        prev_frame->width != curr_frame->width ||
-        prev_frame->height != curr_frame->height ||
-        prev_frame->width != change_mask->width ||
-        prev_frame->height != change_mask->height ) return 0;
+    if( !prev_frame
+    ||  !curr_frame
+    ||  !change_mask
+    ||   prev_frame->nChannels  != 3
+    ||   curr_frame->nChannels  != 3
+    ||   change_mask->nChannels != 1
+    ||   prev_frame->depth  != IPL_DEPTH_8U
+    ||   curr_frame->depth  != IPL_DEPTH_8U
+    ||   change_mask->depth != IPL_DEPTH_8U
+    ||   prev_frame->width  != curr_frame->width
+    ||   prev_frame->height != curr_frame->height
+    ||   prev_frame->width  != change_mask->width
+    ||   prev_frame->height != change_mask->height
+    ){
+        return 0;
+    }
 
     cvZero ( change_mask );
 
@@ -312,7 +330,13 @@ icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
     cvClearMemStorage(model->storage);
     cvZero(model->foreground);
 
-    //form FG pixels candidates using image differencing with adaptive threshold [P.Rosin, Thresholding for change detection, ICCV, 1998 ]
+    // Form foreground pixel candidates using image differencing
+    // with adaptive thresholding.  The algorithm is from:
+    //
+    //    Thresholding for Change Detection
+    //    Paul L. Rosin 1998 6p
+    //    http://www.cis.temple.edu/~latecki/Courses/CIS750-03/Papers/thresh-iccv.pdf
+    //
     cvChangeDetection( prev_frame, curr_frame, model->Ftd );
     cvChangeDetection( model->background, curr_frame, model->Fbd );
 
