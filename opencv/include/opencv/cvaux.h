@@ -1275,7 +1275,8 @@ typedef struct CvFGDStatModelParams
 				/* Used to allow the first N1cc vectors to adapt over time to changing background.				*/
 
     int    is_obj_without_holes;/* If TRUE we ignore holes within foreground blobs. Defaults to TRUE.						*/
-    int    perform_morphing;	/* Number of erode-dilate-erode foreground-blob cleanup iterations, erasing one-pixel junk and merging almost-touching blobs. Defaults to 1. */
+    int    perform_morphing;	/* Number of erode-dilate-erode foreground-blob cleanup iterations.						*/
+				/* These erase one-pixel junk blobs and merge almost-touching blobs. Default value is 1.			*/
 
     float  alpha1;		/* How quickly we forget old background pixel values seen.  Typically set to 0.1  				*/
     float  alpha2;		/* "Controls speed of feature learning". Depends on T. Typical value circa 0.005. 				*/
