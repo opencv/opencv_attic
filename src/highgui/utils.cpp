@@ -42,6 +42,38 @@
 #include "_highgui.h"
 #include "utils.h"
 
+#if defined WIN32 && defined _MSC_VER && _MSC_VER >= 1200
+#if defined WIN64 && defined EM64T
+    #ifdef _DEBUG
+        #pragma comment(lib, "libjasperd_64.lib")
+        #pragma comment(lib, "libjpegd_64.lib")
+        #pragma comment(lib, "libpngd_64.lib")
+        #pragma comment(lib, "libtiffd_64.lib")
+        #pragma comment(lib, "zlibd_64.lib")
+    #else
+        #pragma comment(lib, "libjasper_64.lib")
+        #pragma comment(lib, "libjpeg_64.lib")
+        #pragma comment(lib, "libpng_64.lib")
+        #pragma comment(lib, "libtiff_64.lib")
+        #pragma comment(lib, "zlib_64.lib")
+    #endif
+#elif !defined WIN64
+    #ifdef _DEBUG
+        #pragma comment(lib, "libjasperd.lib")
+        #pragma comment(lib, "libjpegd.lib")
+        #pragma comment(lib, "libpngd.lib")
+        #pragma comment(lib, "libtiffd.lib")
+        #pragma comment(lib, "zlibd.lib")
+    #else
+        #pragma comment(lib, "libjasper.lib")
+        #pragma comment(lib, "libjpeg.lib")
+        #pragma comment(lib, "libpng.lib")
+        #pragma comment(lib, "libtiff.lib")
+        #pragma comment(lib, "zlib.lib")
+    #endif
+#endif
+#endif
+
 #define  SCALE  14
 #define  cR  (int)(0.299*(1 << SCALE) + 0.5)
 #define  cG  (int)(0.587*(1 << SCALE) + 0.5)
