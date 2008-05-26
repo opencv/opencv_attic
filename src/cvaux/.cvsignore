@@ -1,1 +1,1 @@
-*.aps *.o Makefile .libs
+*.aps *.o Makefile .libs *.user

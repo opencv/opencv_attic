@@ -1,1 +1,1 @@
-Makefile *.plg *.aps *.o .libs
+Makefile *.plg *.aps *.o .libs *.user

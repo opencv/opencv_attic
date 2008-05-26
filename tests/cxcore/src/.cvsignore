@@ -1,1 +1,1 @@
-Makefile *.o *.lo
+Makefile *.o *.lo *.plg *.user
