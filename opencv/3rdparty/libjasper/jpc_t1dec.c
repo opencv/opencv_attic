@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Tier 1 Decoder
  *
- * $Id: jpc_t1dec.c,v 1.1 2007-01-15 16:09:28 vp153 Exp $
+ * $Id: jpc_t1dec.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -114,7 +114,7 @@ static long t1dec_cnt = 0;
 { \
 	(v) = jpc_mqdec_getbit(mqdec); \
 	if (jas_getdbglevel() >= 100) { \
-		fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
+		jas_eprintf("index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
 		++t1dec_cnt; \
 	} \
 }
@@ -130,7 +130,7 @@ static long t1dec_cnt = 0;
 { \
 	(v) = jpc_bitstream_getbit(bitstream); \
 	if (jas_getdbglevel() >= 100) { \
-		fprintf(stderr, "index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
+		jas_eprintf("index = %ld; passtype = %s; symtype = %s; sym = %d\n", t1dec_cnt, passtypename, symtypename, v); \
 		++t1dec_cnt; \
 	} \
 }
@@ -240,10 +240,10 @@ static int jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile, jpc_dec_tcom
 			if (cblk->numimsbs > band->numbps) {
 				ccp = &tile->cp->ccps[compno];
 				if (ccp->roishift <= 0) {
-					fprintf(stderr, "warning: corrupt code stream\n");
+					jas_eprintf("warning: corrupt code stream\n");
 				} else {
 					if (cblk->numimsbs < ccp->roishift - band->numbps) {
-						fprintf(stderr, "warning: corrupt code stream\n");
+						jas_eprintf("warning: corrupt code stream\n");
 					}
 				}
 			}
@@ -295,7 +295,7 @@ if (bpno < 0) {
 			}
 
 			if (ret) {
-				fprintf(stderr, "coding pass failed passtype=%d segtype=%d\n", passtype, seg->type);
+				jas_eprintf("coding pass failed passtype=%d segtype=%d\n", passtype, seg->type);
 				return -1;
 			}
 
@@ -316,7 +316,7 @@ if (bpno < 0) {
 			  filldata)) < 0) {
 				return -1;
 			} else if (ret > 0) {
-				fprintf(stderr, "warning: bad termination pattern detected\n");
+				jas_eprintf("warning: bad termination pattern detected\n");
 			}
 			jpc_bitstream_close(cblk->nulldec);
 			cblk->nulldec = 0;
@@ -914,7 +914,7 @@ static int dec_clnpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos, 
 		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
 		segsymval = (segsymval << 1) | (v & 1);
 		if (segsymval != 0xa) {
-			fprintf(stderr, "warning: bad segmentation symbol\n");
+			jas_eprintf("warning: bad segmentation symbol\n");
 		}
 	}
 

@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Image Library
  *
- * $Id: jas_image.c,v 1.1 2007-01-15 16:09:24 vp153 Exp $
+ * $Id: jas_image.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -306,6 +306,7 @@ static jas_image_cmpt_t *jas_image_cmpt_create(uint_fast32_t tlx, uint_fast32_t 
 		return 0;
 	}
 
+	cmpt->type_ = JAS_IMAGE_CT_UNKNOWN;
 	cmpt->tlx_ = tlx;
 	cmpt->tly_ = tly;
 	cmpt->hstep_ = hstep;
@@ -1298,7 +1299,7 @@ jas_image_t *jas_image_chclrspc(jas_image_t *image, jas_cmprof_t *outprof,
 	jas_cmcmptfmt_t *outcmptfmts;
 
 #if 0
-fprintf(stderr, "IMAGE\n");
+jas_eprintf("IMAGE\n");
 jas_image_dump(image, stderr);
 #endif
 
@@ -1433,9 +1434,9 @@ jas_image_dump(image, stderr);
 	jas_image_destroy(inimage);
 
 #if 0
-fprintf(stderr, "INIMAGE\n");
+jas_eprintf("INIMAGE\n");
 jas_image_dump(inimage, stderr);
-fprintf(stderr, "OUTIMAGE\n");
+jas_eprintf("OUTIMAGE\n");
 jas_image_dump(outimage, stderr);
 #endif
 	return outimage;

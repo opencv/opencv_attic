@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 1999-2000 Image Power, Inc. and the University of
- *   British Columbia.
- * Copyright (c) 2001-2002 Michael David Adams.
+ * Copyright (c) 2004 Michael David Adams.
  * All rights reserved.
  */
 
@@ -62,70 +60,90 @@
  */
 
 /*
- * Command Line Option Parsing Code
+ * Timing Routines
  *
- * $Id: jas_getopt.h,v 1.2 2008-05-26 09:41:51 vp153 Exp $
+ * $Id: jas_tmr.c,v 1.1 2008-05-26 09:40:51 vp153 Exp $
  */
 
-#ifndef JAS_GETOPT_H
-#define JAS_GETOPT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <jasper/jas_config.h>
-
 /******************************************************************************\
-* Constants.
+* Includes.
 \******************************************************************************/
 
-#define	JAS_GETOPT_EOF	(-1)
-#define	JAS_GETOPT_ERR	'?'
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-/* option flags. */
-#define	JAS_OPT_HASARG	0x01	/* option has argument */
-
-/******************************************************************************\
-* Types.
-\******************************************************************************/
-
-/* Command line option type. */
-typedef struct {
-
-	int id;
-	/* The unique identifier for this option. */
-
-	char *name;
-	/* The name of this option. */
-
-	int flags;
-	/* option flags. */
-
-} jas_opt_t;
+#include "jasper/jas_tmr.h"
 
 /******************************************************************************\
-* External data.
+* Code.
 \******************************************************************************/
 
-/* The current option index. */
-extern int jas_optind;
+#if defined(HAVE_GETTIMEOFDAY)
 
-/* The current option argument. */
-extern char *jas_optarg;
-
-/* The debug level. */
-extern int jas_opterr;
-
-/******************************************************************************\
-* Prototypes.
-\******************************************************************************/
-
-/* Get the next option. */
-int jas_getopt(int argc, char **argv, jas_opt_t *opts);
-
-#ifdef __cplusplus
+void jas_tmr_start(jas_tmr_t *tmr)
+{
+	if (gettimeofday(&tmr->start, 0)) {
+		abort();
+	}
 }
-#endif
+
+void jas_tmr_stop(jas_tmr_t *tmr)
+{
+	if (gettimeofday(&tmr->stop, 0)) {
+		abort();
+	}
+}
+
+double jas_tmr_get(jas_tmr_t *tmr)
+{
+	double t0;
+	double t1;
+	t0 = ((double) tmr->start.tv_sec) + ((double) tmr->start.tv_usec) / 1e6;
+	t1 = ((double) tmr->stop.tv_sec) + ((double) tmr->stop.tv_usec) / 1e6;
+	return t1 - t0;
+}
+
+#elif defined(HAVE_GETRUSAGE)
+
+void jas_tmr_start(jas_tmr_t *tmr)
+{
+	if (getrusage(RUSAGE_SELF, &tmr->start) < 0) {
+		abort();
+	}
+}
+
+void jas_tmr_stop(jas_tmr_t *tmr)
+{
+	if (getrusage(RUSAGE_SELF, &tmr->stop) < 0) {
+		abort();
+	}
+}
+
+double jas_tmr_get(jas_tmr_t *tmr)
+{
+	double t;
+	t = ((tmr->stop.ru_utime.tv_sec * 1e6 + tmr->stop.ru_utime.tv_usec) -
+	  (tmr->start.ru_utime.tv_sec * 1e6 + tmr->start.ru_utime.tv_usec)) / 1e6;
+	t += ((tmr->stop.ru_stime.tv_sec * 1e6 + tmr->stop.ru_stime.tv_usec) -
+	  (tmr->start.ru_stime.tv_sec * 1e6 + tmr->start.ru_stime.tv_usec)) / 1e6;
+	return t;
+}
+
+#else
+
+void jas_tmr_start(jas_tmr_t *tmr)
+{
+}
+
+void jas_tmr_stop(jas_tmr_t *tmr)
+{
+}
+
+double jas_tmr_get(jas_tmr_t *tmr)
+{
+	return 0.0;
+}
 
 #endif
+

@@ -7,9 +7,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -79,6 +79,7 @@
 #include <jasper/jas_seq.h>
 #include <jasper/jas_stream.h>
 #include <jasper/jas_string.h>
+#include <jasper/jas_tmr.h>
 #include <jasper/jas_tvp.h>
 
 #ifdef __cplusplus

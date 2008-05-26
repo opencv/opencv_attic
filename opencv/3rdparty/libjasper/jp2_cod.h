@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * JP2 Library
  *
- * $Id: jp2_cod.h,v 1.1 2007-01-15 16:09:24 vp153 Exp $
+ * $Id: jp2_cod.h,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 #ifndef JP2_COD_H
@@ -87,7 +87,7 @@
 * Box class.
 \******************************************************************************/
 
-#define	JP2_BOX_HDRLEN	8
+#define	JP2_BOX_HDRLEN(ext) ((ext) ? 16 : 8)
 
 /* Box types. */
 #define	JP2_BOX_JP		0x6a502020	/* Signature */
@@ -241,7 +241,12 @@ typedef struct {
 	struct jp2_boxinfo_s *info;
 
 	uint_fast32_t type;
+
+	/* The length of the box including the (variable-length) header. */
 	uint_fast32_t len;
+
+	/* The length of the box data. */
+	uint_fast32_t datalen;
 
 	union {
 		jp2_jp_t jp;

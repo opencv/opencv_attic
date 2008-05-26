@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * JP2 Library
  *
- * $Id: jp2_cod.c,v 1.1 2007-01-15 16:09:24 vp153 Exp $
+ * $Id: jp2_cod.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -262,7 +262,14 @@ jp2_box_t *jp2_box_get(jas_stream_t *in)
 		if (jp2_getuint64(in, &extlen)) {
 			goto error;
 		}
+		if (extlen > 0xffffffffUL) {
+			jas_eprintf("warning: cannot handle large 64-bit box length\n");
+			extlen = 0xffffffffUL;
+		}
 		box->len = extlen;
+		box->datalen = extlen - JP2_BOX_HDRLEN(true);
+	} else {
+		box->datalen = box->len - JP2_BOX_HDRLEN(false);
 	}
 	if (box->len != 0 && box->len < 8) {
 		goto error;
@@ -274,22 +281,24 @@ jp2_box_t *jp2_box_get(jas_stream_t *in)
 		if (!(tmpstream = jas_stream_memopen(0, 0))) {
 			goto error;
 		}
-		if (jas_stream_copy(tmpstream, in, box->len - JP2_BOX_HDRLEN)) {
+		if (jas_stream_copy(tmpstream, in, box->datalen)) {
+			jas_eprintf("cannot copy box data\n");
 			goto error;
 		}
 		jas_stream_rewind(tmpstream);
 
 		if (box->ops->getdata) {
 			if ((*box->ops->getdata)(box, tmpstream)) {
+				jas_eprintf("cannot parse box data\n");
 				goto error;
 			}
 		}
 		jas_stream_close(tmpstream);
 	}
 
-#if 0
-	jp2_box_dump(box, stderr);
-#endif
+	if (jas_getdbglevel() >= 1) {
+		jp2_box_dump(box, stderr);
+	}
 
 	return box;
 	abort();
@@ -334,7 +343,7 @@ static int jp2_ftyp_getdata(jp2_box_t *box, jas_stream_t *in)
 	if (jp2_getuint32(in, &ftyp->majver) || jp2_getuint32(in, &ftyp->minver)) {
 		return -1;
 	}
-	ftyp->numcompatcodes = ((box->len - JP2_BOX_HDRLEN) - 8) / 4;
+	ftyp->numcompatcodes = (box->datalen - 8) / 4;
 	if (ftyp->numcompatcodes > JP2_FTYP_MAXCOMPATCODES) {
 		return -1;
 	}
@@ -362,7 +371,7 @@ static int jp2_bpcc_getdata(jp2_box_t *box, jas_stream_t *in)
 {
 	jp2_bpcc_t *bpcc = &box->data.bpcc;
 	unsigned int i;
-	bpcc->numcmpts = box->len - JP2_BOX_HDRLEN;
+	bpcc->numcmpts = box->datalen;
 	if (!(bpcc->bpcs = jas_malloc(bpcc->numcmpts * sizeof(uint_fast8_t)))) {
 		return -1;
 	}
@@ -406,7 +415,7 @@ static int jp2_colr_getdata(jp2_box_t *box, jas_stream_t *in)
 		}
 		break;
 	case JP2_COLR_ICC:
-		colr->iccplen = box->len - JP2_BOX_HDRLEN - 3;
+		colr->iccplen = box->datalen - 3;
 		if (!(colr->iccp = jas_malloc(colr->iccplen * sizeof(uint_fast8_t)))) {
 			return -1;
 		}
@@ -478,7 +487,7 @@ int jp2_box_put(jp2_box_t *box, jas_stream_t *out)
 				goto error;
 			}
 		}
-		box->len = jas_stream_tell(tmpstream) + JP2_BOX_HDRLEN;
+		box->len = jas_stream_tell(tmpstream) + JP2_BOX_HDRLEN(false);
 		jas_stream_rewind(tmpstream);
 	}
 	extlen = (box->len >= (((uint_fast64_t)1) << 32)) != 0;
@@ -495,7 +504,7 @@ int jp2_box_put(jp2_box_t *box, jas_stream_t *out)
 	}
 
 	if (dataflag) {
-		if (jas_stream_copy(out, tmpstream, box->len - JP2_BOX_HDRLEN)) {
+		if (jas_stream_copy(out, tmpstream, box->len - JP2_BOX_HDRLEN(false))) {
 			goto error;
 		}
 		jas_stream_close(tmpstream);
@@ -665,9 +674,21 @@ static int jp2_getuint32(jas_stream_t *in, uint_fast32_t *val)
 
 static int jp2_getuint64(jas_stream_t *in, uint_fast64_t *val)
 {
-	in = 0;
-	val = 0;
-	abort();
+	uint_fast64_t tmpval;
+	int i;
+	int c;
+
+	tmpval = 0;
+	for (i = 0; i < 8; ++i) {
+		tmpval <<= 8;
+		if ((c = jas_stream_getc(in)) == EOF) {
+			return -1;
+		}
+		tmpval |= (c & 0xff);
+	}
+	*val = tmpval;
+
+	return 0;
 }
 
 /******************************************************************************\
@@ -744,7 +765,7 @@ static int jp2_cmap_getdata(jp2_box_t *box, jas_stream_t *in)
 	jp2_cmapent_t *ent;
 	unsigned int i;
 
-	cmap->numchans = (box->len - JP2_BOX_HDRLEN) / 4;
+	cmap->numchans = (box->datalen) / 4;
 	if (!(cmap->ents = jas_malloc(cmap->numchans * sizeof(jp2_cmapent_t)))) {
 		return -1;
 	}
