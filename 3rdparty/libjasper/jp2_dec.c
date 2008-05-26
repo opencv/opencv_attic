@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * JP2 Library
  *
- * $Id: jp2_dec.c,v 1.1 2007-01-15 16:09:24 vp153 Exp $
+ * $Id: jp2_dec.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -155,7 +155,7 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 	found = 0;
 	while ((box = jp2_box_get(in))) {
 		if (jas_getdbglevel() >= 1) {
-			fprintf(stderr, "box type %s\n", box->info->name);
+			jas_eprintf("box type %s\n", box->info->name);
 		}
 		switch (box->type) {
 		case JP2_BOX_JP2C:
@@ -411,7 +411,7 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 		goto error;
 	}
 #if 0
-fprintf(stderr, "no of components is %d\n", jas_image_numcmpts(dec->image));
+jas_eprintf("no of components is %d\n", jas_image_numcmpts(dec->image));
 #endif
 
 	/* Prevent the image from being destroyed later. */

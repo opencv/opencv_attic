@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 1999-2000 Image Power, Inc. and the University of
- *   British Columbia.
- * Copyright (c) 2001-2002 Michael David Adams.
+ * Copyright (c) 2004 Michael David Adams.
  * All rights reserved.
  */
 
@@ -61,68 +59,42 @@
  * __END_OF_JASPER_LICENSE__
  */
 
-/*
- * Command Line Option Parsing Code
- *
- * $Id: jas_getopt.h,v 1.2 2008-05-26 09:41:51 vp153 Exp $
- */
+#ifndef JAS_TMR_H
+#define JAS_TMR_H
 
-#ifndef JAS_GETOPT_H
-#define JAS_GETOPT_H
+#include<time.h>
+#include <jasper/jas_config.h>
+#if defined(HAVE_SYS_TIME_H)
+#include <sys/time.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <jasper/jas_config.h>
+#if defined(HAVE_GETTIMEOFDAY)
 
-/******************************************************************************\
-* Constants.
-\******************************************************************************/
-
-#define	JAS_GETOPT_EOF	(-1)
-#define	JAS_GETOPT_ERR	'?'
-
-/* option flags. */
-#define	JAS_OPT_HASARG	0x01	/* option has argument */
-
-/******************************************************************************\
-* Types.
-\******************************************************************************/
-
-/* Command line option type. */
 typedef struct {
+	struct timeval start;
+	struct timeval stop;
+} jas_tmr_t;
 
-	int id;
-	/* The unique identifier for this option. */
+#elif defined(HAVE_GETRUSAGE)
 
-	char *name;
-	/* The name of this option. */
+typedef struct {
+	struct rusage start;
+	struct rusage stop;
+} jas_tmr_t;
 
-	int flags;
-	/* option flags. */
+#else
 
-} jas_opt_t;
+typedef int jas_tmr_t;
 
-/******************************************************************************\
-* External data.
-\******************************************************************************/
+#endif
 
-/* The current option index. */
-extern int jas_optind;
-
-/* The current option argument. */
-extern char *jas_optarg;
-
-/* The debug level. */
-extern int jas_opterr;
-
-/******************************************************************************\
-* Prototypes.
-\******************************************************************************/
-
-/* Get the next option. */
-int jas_getopt(int argc, char **argv, jas_opt_t *opts);
+void jas_tmr_start(jas_tmr_t *tmr);
+void jas_tmr_stop(jas_tmr_t *tmr);
+double jas_tmr_get(jas_tmr_t *tmr);
 
 #ifdef __cplusplus
 }

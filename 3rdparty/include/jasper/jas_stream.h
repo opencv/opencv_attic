@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * I/O Stream Class
  *
- * $Id: jas_stream.h,v 1.1 2006-10-11 16:48:43 vp153 Exp $
+ * $Id: jas_stream.h,v 1.2 2008-05-26 09:41:51 vp153 Exp $
  */
 
 #ifndef JAS_STREAM_H
@@ -297,7 +297,7 @@ jas_stream_t *jas_stream_memopen(char *buf, int bufsize);
 jas_stream_t *jas_stream_fdopen(int fd, const char *mode);
 
 /* Open a stdio stream as a stream. */
-jas_stream_t *jas_stream_reopen(const char *path, const char *mode, FILE *fp);
+jas_stream_t *jas_stream_freopen(const char *path, const char *mode, FILE *fp);
 
 /* Open a temporary file as a stream. */
 jas_stream_t *jas_stream_tmpfile(void);

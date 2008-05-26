@@ -7,9 +7,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -86,11 +86,12 @@
 #define	HAVE_STDLIB_H		1
 #define	HAVE_STDDEF_H		1
 
-#define EXCLUDE_MIF_SUPPORT 1
-#define EXCLUDE_PNM_SUPPORT 1
-#define EXCLUDE_BMP_SUPPORT 1
-#define EXCLUDE_RAS_SUPPORT 1
-#define EXCLUDE_JPG_SUPPORT 1
-#define EXCLUDE_PGX_SUPPORT 1
+#define EXCLUDE_JPG_SUPPORT     1
+#define EXCLUDE_MIF_SUPPORT     1
+#define EXCLUDE_PNM_SUPPORT     1
+#define EXCLUDE_PNM_SUPPORT     1
+#define EXCLUDE_RAS_SUPPORT     1
+#define EXCLUDE_BMP_SUPPORT     1
+#define EXCLUDE_PGX_SUPPORT     1
 
 #endif

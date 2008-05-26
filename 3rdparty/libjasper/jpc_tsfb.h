@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1999-2000 Image Power, Inc. and the University of
  *   British Columbia.
- * Copyright (c) 2001-2002 Michael David Adams.
+ * Copyright (c) 2001-2004 Michael David Adams.
  * All rights reserved.
  */
 
@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Tree-Structured Filter Bank (TSFB) Library
  *
- * $Id: jpc_tsfb.h,v 1.1 2007-01-15 16:09:30 vp153 Exp $
+ * $Id: jpc_tsfb.h,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 #ifndef JPC_TSFB_H
@@ -87,11 +87,6 @@
 #define	JPC_TSFB_MAXDEPTH	32
 #define	JPC_TSFB_RITIMODE	JPC_QMFB1D_RITIMODE
 
-#define	JPC_TSFB_MAXBANDSPERNODE	(JPC_QMFB1D_MAXCHANS * JPC_QMFB1D_MAXCHANS)
-
-#define	JPC_TSFB_PRUNEVERT	0x01
-#define	JPC_TSFB_PRUNEHORZ	0x02
-
 #define JPC_TSFB_LL	0
 #define JPC_TSFB_LH	1
 #define JPC_TSFB_HL	2
@@ -100,36 +95,6 @@
 /******************************************************************************\
 * Types.
 \******************************************************************************/
-
-typedef struct {
-
-	int xstart;
-	int ystart;
-	int xend;
-	int yend;
-	int locxstart;
-	int locystart;
-	int locxend;
-	int locyend;
-
-} jpc_tsfbnodeband_t;
-
-typedef struct jpc_tsfbnode_s {
-
-	int numhchans;
-	int numvchans;
-	jpc_qmfb1d_t *hqmfb;
-	jpc_qmfb1d_t *vqmfb;
-	int maxchildren;
-	int numchildren;
-	struct jpc_tsfbnode_s *children[JPC_TSFB_MAXBANDSPERNODE];
-	struct jpc_tsfbnode_s *parent;
-
-} jpc_tsfbnode_t;
-
-typedef struct {
-	jpc_tsfbnode_t *root;
-} jpc_tsfb_t;
 
 typedef struct {
 	int xstart;
@@ -144,6 +109,11 @@ typedef struct {
 	jpc_fix_t synenergywt;
 } jpc_tsfb_band_t;
 
+typedef struct {
+	int numlvls;
+	jpc_qmfb2d_t *qmfb;
+} jpc_tsfb_t;
+
 /******************************************************************************\
 * Functions.
 \******************************************************************************/
@@ -151,19 +121,14 @@ typedef struct {
 /* Create a TSFB. */
 jpc_tsfb_t *jpc_cod_gettsfb(int qmfbid, int numlevels);
 
-/* Create a wavelet-type TSFB with the specified horizontal and vertical
-  QMFBs. */
-jpc_tsfb_t *jpc_tsfb_wavelet(jpc_qmfb1d_t *hqmfb, jpc_qmfb1d_t *vqmfb,
-  int numdlvls);
-
 /* Destroy a TSFB. */
 void jpc_tsfb_destroy(jpc_tsfb_t *tsfb);
 
 /* Perform analysis. */
-void jpc_tsfb_analyze(jpc_tsfb_t *tsfb, int flags, jas_seq2d_t *x);
+int jpc_tsfb_analyze(jpc_tsfb_t *tsfb, jas_seq2d_t *x);
 
 /* Perform synthesis. */
-void jpc_tsfb_synthesize(jpc_tsfb_t *tsfb, int flags, jas_seq2d_t *x);
+int jpc_tsfb_synthesize(jpc_tsfb_t *tsfb, jas_seq2d_t *x);
 
 /* Get band information for a TSFB. */
 int jpc_tsfb_getbands(jpc_tsfb_t *tsfb, uint_fast32_t xstart,

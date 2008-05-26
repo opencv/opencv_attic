@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Primitive Types
  *
- * $Id: jas_types.h,v 1.1 2006-10-11 16:48:43 vp153 Exp $
+ * $Id: jas_types.h,v 1.2 2008-05-26 09:41:51 vp153 Exp $
  */
 
 #ifndef JAS_TYPES_H
@@ -93,6 +93,8 @@
 #endif
 
 #if defined(HAVE_STDLIB_H)
+#undef false
+#undef true
 #include <stdlib.h>
 #endif
 #if defined(HAVE_STDDEF_H)
@@ -187,6 +189,26 @@ typedef ulonglong uint_fast64_t;
 #define UINT_FAST64_MAX	ULLONG_MAX
 #endif
 /**********/
+#endif
+
+/* Hopefully, these macro definitions will fix more problems than they cause. */
+#if !defined(uchar)
+#define uchar unsigned char
+#endif
+#if !defined(ushort)
+#define ushort unsigned short
+#endif
+#if !defined(uint)
+#define uint unsigned int
+#endif
+#if !defined(ulong)
+#define ulong unsigned long
+#endif
+#if !defined(longlong)
+#define longlong long long
+#endif
+#if !defined(ulonglong)
+#define ulonglong unsigned long long
 #endif
 
 /* The below macro is intended to be used for type casts.  By using this

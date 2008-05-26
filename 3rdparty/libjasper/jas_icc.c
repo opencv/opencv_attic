@@ -7,9 +7,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -67,6 +67,7 @@
 #include <jasper/jas_icc.h>
 #include <jasper/jas_cm.h>
 #include <jasper/jas_stream.h>
+#include <jasper/jas_string.h>
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -869,7 +870,7 @@ jas_iccattrval_t *jas_iccattrval_clone(jas_iccattrval_t *attrval)
 void jas_iccattrval_destroy(jas_iccattrval_t *attrval)
 {
 #if 0
-fprintf(stderr, "refcnt=%d\n", attrval->refcnt);
+jas_eprintf("refcnt=%d\n", attrval->refcnt);
 #endif
 	if (--attrval->refcnt <= 0) {
 		if (attrval->ops->destroy)
@@ -1188,7 +1189,7 @@ static int jas_icctxt_copy(jas_iccattrval_t *attrval,
 {
 	jas_icctxt_t *txt = &attrval->data.txt;
 	jas_icctxt_t *othtxt = &othattrval->data.txt;
-	if (!(txt->string = strdup(othtxt->string)))
+	if (!(txt->string = jas_strdup(othtxt->string)))
 		return -1;
 	return 0;
 }

@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Sequence/Matrix Library
  *
- * $Id: jas_seq.c,v 1.1 2007-01-15 16:09:24 vp153 Exp $
+ * $Id: jas_seq.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -359,26 +359,6 @@ int jas_matrix_resize(jas_matrix_t *matrix, int numrows, int numcols)
 	return 0;
 }
 
-int jas_matrix_output(jas_matrix_t *matrix, FILE *out)
-{
-	int i;
-	int j;
-	jas_seqent_t x;
-
-	fprintf(out, "%d %d\n", jas_matrix_numrows(matrix), jas_matrix_numcols(matrix));
-	for (i = 0; i < jas_matrix_numrows(matrix); ++i) {
-		for (j = 0; j < jas_matrix_numcols(matrix); ++j) {
-			x = jas_matrix_get(matrix, i, j);
-			fprintf(out, "%ld", JAS_CAST(long, x));
-			if (j < jas_matrix_numcols(matrix) - 1) {
-				fprintf(out, " ");
-			}
-		}
-		fprintf(out, "\n");
-	}
-	return 0;
-}
-
 void jas_matrix_setall(jas_matrix_t *matrix, jas_seqent_t val)
 {
 	int i;
@@ -397,8 +377,7 @@ void jas_matrix_setall(jas_matrix_t *matrix, jas_seqent_t val)
 	}
 }
 
-#if 0
-jas_matrix_t *jas_matrix_input(FILE *in)
+jas_matrix_t *jas_seq2d_input(FILE *in)
 {
 	jas_matrix_t *matrix;
 	int i;
@@ -406,11 +385,19 @@ jas_matrix_t *jas_matrix_input(FILE *in)
 	long x;
 	int numrows;
 	int numcols;
+	int xoff;
+	int yoff;
 
-	if (fscanf(in, "%d %d", &numrows, &numcols) != 2)
+	if (fscanf(in, "%d %d", &xoff, &yoff) != 2)
 		return 0;
-	if (!(matrix = jas_matrix_create(numrows, numcols)))
+	if (fscanf(in, "%d %d", &numcols, &numrows) != 2)
 		return 0;
+	if (!(matrix = jas_seq2d_create(xoff, yoff, xoff + numcols, yoff + numrows)))
+		return 0;
+
+	if (jas_matrix_numrows(matrix) != numrows || jas_matrix_numcols(matrix) != numcols) {
+		abort();
+	}
 
 	/* Get matrix data. */
 	for (i = 0; i < jas_matrix_numrows(matrix); i++) {
@@ -425,4 +412,43 @@ jas_matrix_t *jas_matrix_input(FILE *in)
 
 	return matrix;
 }
-#endif
+
+int jas_seq2d_output(jas_matrix_t *matrix, FILE *out)
+{
+#define MAXLINELEN	80
+	int i;
+	int j;
+	jas_seqent_t x;
+	char buf[MAXLINELEN + 1];
+	char sbuf[MAXLINELEN + 1];
+	int n;
+
+	fprintf(out, "%d %d\n", jas_seq2d_xstart(matrix),
+	  jas_seq2d_ystart(matrix));
+	fprintf(out, "%d %d\n", jas_matrix_numcols(matrix),
+	  jas_matrix_numrows(matrix));
+
+	buf[0] = '\0';
+	for (i = 0; i < jas_matrix_numrows(matrix); ++i) {
+		for (j = 0; j < jas_matrix_numcols(matrix); ++j) {
+			x = jas_matrix_get(matrix, i, j);
+			sprintf(sbuf, "%s%4ld", (strlen(buf) > 0) ? " " : "",
+			  JAS_CAST(long, x));
+			n = strlen(buf);
+			if (n + strlen(sbuf) > MAXLINELEN) {
+				fputs(buf, out);
+				fputs("\n", out);
+				buf[0] = '\0';
+			}
+			strcat(buf, sbuf);
+			if (j == jas_matrix_numcols(matrix) - 1) {
+				fputs(buf, out);
+				fputs("\n", out);
+				buf[0] = '\0';
+			}
+		}
+	}
+	fputs(buf, out);
+
+	return 0;
+}

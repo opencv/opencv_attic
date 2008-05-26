@@ -9,9 +9,9 @@
  * 
  * JasPer License Version 2.0
  * 
+ * Copyright (c) 2001-2006 Michael David Adams
  * Copyright (c) 1999-2000 Image Power, Inc.
  * Copyright (c) 1999-2000 The University of British Columbia
- * Copyright (c) 2001-2003 Michael David Adams
  * 
  * All rights reserved.
  * 
@@ -64,7 +64,7 @@
 /*
  * Command Line Option Parsing Library
  *
- * $Id: jas_getopt.c,v 1.1 2007-01-15 16:09:23 vp153 Exp $
+ * $Id: jas_getopt.c,v 1.2 2008-05-26 09:40:52 vp153 Exp $
  */
 
 /******************************************************************************\
@@ -126,7 +126,7 @@ int jas_getopt(int argc, char **argv, jas_opt_t *opts)
 				}
 				if (!(opt = jas_optlookup(opts, cp))) {
 					if (jas_opterr) {
-						fprintf(stderr, "unknown long option %s\n", s);
+						jas_eprintf("unknown long option %s\n", s);
 					}
 					return JAS_GETOPT_ERR;
 				}
@@ -137,7 +137,7 @@ int jas_getopt(int argc, char **argv, jas_opt_t *opts)
 				if (strlen(cp) != 1 ||
 				  !(opt = jas_optlookup(opts, cp))) {
 					if (jas_opterr) {
-						fprintf(stderr, "unknown short option %s\n", s);
+						jas_eprintf("unknown short option %s\n", s);
 					}
 					return JAS_GETOPT_ERR;
 				}
@@ -148,7 +148,7 @@ int jas_getopt(int argc, char **argv, jas_opt_t *opts)
 				/* The option has an argument. */
 				if (jas_optind >= argc) {
 					if (jas_opterr) {
-						fprintf(stderr, "missing argument for option %s\n", s);
+						jas_eprintf("missing argument for option %s\n", s);
 					}
 					return JAS_GETOPT_ERR;
 				}
