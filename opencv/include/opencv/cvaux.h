@@ -1230,11 +1230,12 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
 #define  CV_BGFG_FGD_N1CC            25
 #define  CV_BGFG_FGD_N2CC            40
 
-/* BG reference image update parameter */
+/* Background reference image update parameter: */
 #define  CV_BGFG_FGD_ALPHA_1         0.1f
 
 /* stat model update parameter
-   0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec (if 25fps and absolutely static BG) */
+ * 0.002f ~ 1K frame(~45sec), 0.005 ~ 18sec (if 25fps and absolutely static BG)
+ */
 #define  CV_BGFG_FGD_ALPHA_2         0.005f
 
 /* start value for alpha parameter (to fast initiate statistic model) */
@@ -1250,24 +1251,39 @@ CVAPI(int)  cvChangeDetection( IplImage*  prev_frame,
 
 /* See the above-referenced Li/Huang/Gu/Tian paper
  * for a full description of these background-model
- * parameters:
+ * tuning parameters.
+ *
+ * Nomenclature:  'c'  == "color", a three-component red/green/blue vector.
+ *                         We use histograms of these to model the range of
+ *                         colors we've seen at a given background pixel.
+ *
+ *                'cc' == "color co-occurrence", a six-component vector giving
+ *                         RGB color for both this frame and preceding frame.
+ *                             We use histograms of these to model the range of
+ *                         color CHANGES we've seen at a given background pixel.
  */
 typedef struct CvFGDStatModelParams
 {
-    int    Lc;
-    int    N1c;
-    int    N2c;
-    int    Lcc;
-    int    N1cc;
-    int    N2cc;
-    int    is_obj_without_holes;
-    int    perform_morphing;
-    float  alpha1;
-    float  alpha2;		/* Background learning rate. */
-    float  alpha3;
-    float  delta;
-    float  T;
-    float  minArea;
+    int    Lc;			/* Quantized levels per 'color' component. Power of two, typically 32, 64 or 128.				*/
+    int    N1c;			/* Number of color vectors used to model normal background color variation at a given pixel.			*/
+    int    N2c;			/* Number of color vectors retained at given pixel.  Must be > N1c, typically ~ 5/3 of N1c.			*/
+				/* Used to allow the first N1c vectors to adapt over time to changing background.				*/
+
+    int    Lcc;			/* Quantized levels per 'color co-occurrence' component.  Power of two, typically 16, 32 or 64.			*/
+    int    N1cc;		/* Number of color co-occurrence vectors used to model normal background color variation at a given pixel.	*/
+    int    N2cc;		/* Number of color co-occurrence vectors retained at given pixel.  Must be > N1cc, typically ~ 5/3 of N1cc.	*/
+				/* Used to allow the first N1cc vectors to adapt over time to changing background.				*/
+
+    int    is_obj_without_holes;/* If TRUE we ignore holes within foreground blobs. Defaults to TRUE.						*/
+    int    perform_morphing;	/* Number of erode-dilate-erode foreground-blob cleanup iterations, erasing one-pixel junk and merging almost-touching blobs. Defaults to 1. */
+
+    float  alpha1;		/* How quickly we forget old background pixel values seen.  Typically set to 0.1  				*/
+    float  alpha2;		/* "Controls speed of feature learning". Depends on T. Typical value circa 0.005. 				*/
+    float  alpha3;		/* Alternate to alpha2, used (e.g.) for quicker initial convergence. Typical value 0.1.				*/
+
+    float  delta;		/* Affects color and color co-occurrence quantization, typically set to 2.					*/
+    float  T;			/* "A percentage value which determines when new features can be recognized as new background." (Typically 0.9).*/
+    float  minArea;		/* Discard foreground blobs whose bounding box is smaller than this threshold.					*/
 }
 CvFGDStatModelParams;
 
