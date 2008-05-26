@@ -1244,7 +1244,7 @@ static void icvBilateralFiltering_32f( const CvMat* src, CvMat* dst, int d,
                 for( k = 0; k < maxk; k++ )
                 {
                     float val = sptr[j + space_ofs[k]];
-					float alpha = fabs(val - val0)*scale_index;
+					float alpha = (float)(fabs(val - val0)*scale_index);
                     int idx = cvFloor(alpha);
                     alpha -= idx;
                     float w = space_weight[k]*(expLUT[idx] + alpha*(expLUT[idx+1] - expLUT[idx]));
@@ -1265,7 +1265,7 @@ static void icvBilateralFiltering_32f( const CvMat* src, CvMat* dst, int d,
                 {
                     const float* sptr_k = sptr + j + space_ofs[k];
                     float b = sptr_k[0], g = sptr_k[1], r = sptr_k[2];
-					float alpha = (fabs(b - b0) + fabs(g - g0) + fabs(r - r0))*scale_index;
+					float alpha = (float)((fabs(b - b0) + fabs(g - g0) + fabs(r - r0))*scale_index);
                     int idx = cvFloor(alpha);
                     alpha -= idx;
                     float w = space_weight[k]*(expLUT[idx] + alpha*(expLUT[idx+1] - expLUT[idx]));
