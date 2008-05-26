@@ -80,10 +80,10 @@ CVAPI(void) cvCopyMakeBorder( const CvArr* src, CvArr* dst, CvPoint offset,
 /* Smoothes array (removes noise) */
 CVAPI(void) cvSmooth( const CvArr* src, CvArr* dst,
                       int smoothtype CV_DEFAULT(CV_GAUSSIAN),
-                      int param1 CV_DEFAULT(3),
-                      int param2 CV_DEFAULT(0),
-                      double param3 CV_DEFAULT(0),
-                      double param4 CV_DEFAULT(0));
+                      int size1 CV_DEFAULT(3),
+                      int size2 CV_DEFAULT(0),
+                      double sigma1 CV_DEFAULT(0),
+                      double sigma2 CV_DEFAULT(0));
 
 /* Convolves the image with the kernel */
 CVAPI(void) cvFilter2D( const CvArr* src, CvArr* dst, const CvMat* kernel,
@@ -1155,6 +1155,16 @@ CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
                                 CvMat* rotation_vectors CV_DEFAULT(NULL),
                                 CvMat* translation_vectors CV_DEFAULT(NULL),
                                 int flags CV_DEFAULT(0) );
+
+CVAPI(void) cvCalibrationMatrixValues( const CvMat *calibMatr,
+                                int imgWidth, int imgHeight,
+                                double apertureWidth CV_DEFAULT(0),
+                                double apertureHeight CV_DEFAULT(0),
+                                double *fovx CV_DEFAULT(NULL),
+                                double *fovy CV_DEFAULT(NULL),
+                                double *focalLength CV_DEFAULT(NULL),
+                                CvPoint2D64f *principalPoint CV_DEFAULT(NULL),
+                                double *pixelAspectRatio CV_DEFAULT(NULL));
 
 #define CV_CALIB_CB_ADAPTIVE_THRESH  1
 #define CV_CALIB_CB_NORMALIZE_IMAGE  2

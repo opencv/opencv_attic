@@ -1633,4 +1633,64 @@ cvCalibrateCamera2( const CvMat* obj_points,
     cvReleaseMat( &_err );
 }
 
+
+void cvCalibrationMatrixValues( const CvMat *calibMatr, int imgWidth, int imgHeight,
+    double apertureWidth, double apertureHeight, double *fovx, double *fovy,
+    double *focalLength, CvPoint2D64f *principalPoint, double *pasp )
+{
+    double alphax, alphay, mx, my;
+    
+    CV_FUNCNAME("cvCalibrationMatrixValues");
+    __BEGIN__;
+    
+    /* Validate parameters. */
+    
+    if(calibMatr == 0)
+        CV_ERROR(CV_StsNullPtr, "Some of parameters is a NULL pointer!");
+    
+    if(!CV_IS_MAT(calibMatr))
+        CV_ERROR(CV_StsUnsupportedFormat, "Input parameters must be a matrices!");
+    
+    if(calibMatr->cols != 3 || calibMatr->rows != 3)
+        CV_ERROR(CV_StsUnmatchedSizes, "Size of matrices must be 3x3!");
+    
+    alphax = cvmGet(calibMatr, 0, 0);
+    alphay = cvmGet(calibMatr, 1, 1);
+    assert(imgWidth != 0 && imgHeight != 0 && alphax != 0.0 && alphay != 0.0);
+    
+    /* Calculate pixel aspect ratio. */
+    if(pasp)
+        *pasp = alphay / alphax;
+    
+    /* Calculate number of pixel per realworld unit. */
+    
+    if(apertureWidth != 0.0 && apertureHeight != 0.0) {
+        mx = imgWidth / apertureWidth;
+        my = imgHeight / apertureHeight;
+    } else {
+        mx = 1.0;
+        my = *pasp;
+    }
+    
+    /* Calculate fovx and fovy. */
+    
+    if(fovx)
+        *fovx = 2 * atan(imgWidth / (2 * alphax)) * 180.0 / CV_PI;
+    
+    if(fovy)
+        *fovy = 2 * atan(imgHeight / (2 * alphay)) * 180.0 / CV_PI;
+    
+    /* Calculate focal length. */
+    
+    if(focalLength)
+        *focalLength = alphax / mx;
+    
+    /* Calculate principle point. */
+    
+    if(principalPoint)
+        *principalPoint = cvPoint2D64f(cvmGet(calibMatr, 0, 2) / mx, cvmGet(calibMatr, 1, 2) / my);
+    
+    __END__;
+}
+
 /* End of file. */
