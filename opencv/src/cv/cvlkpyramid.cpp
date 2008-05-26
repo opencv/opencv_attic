@@ -452,7 +452,7 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
             int pt_status;
             CvPoint2D32f u;
             CvPoint prev_minJ = { -1, -1 }, prev_maxJ = { -1, -1 };
-            double Gxx = 0, Gxy = 0, Gyy = 0, D = 0;
+            double Gxx = 0, Gxy = 0, Gyy = 0, D = 0, minEig = 0;
             float prev_mx = 0, prev_my = 0;
             int j, x, y;
             int threadIdx = cvGetThreadNum();
@@ -577,6 +577,11 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
                         pt_status = 0;
                         break;
                     }
+
+                    // Adi Shavit - 2008.05
+                    if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
+                        minEig = (Gyy + Gxx - sqrt((Gxx-Gyy)*(Gxx-Gyy) + 4.*Gxy*Gxy))/(2*jsz.height*jsz.width);
+
                     D = 1. / D;
 
                     prev_minJ = minJ;
@@ -608,20 +613,25 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
             {
                 /* calc error */
                 double err = 0;
-
-                for( y = 0; y < jsz.height; y++ )
+                if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
+                    err = minEig;
+                else
                 {
-                    const float* pi = patchI +
-                        (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
-                    const float* pj = patchJ + y*jsz.width;
-
-                    for( x = 0; x < jsz.width; x++ )
+                    for( y = 0; y < jsz.height; y++ )
                     {
-                        double t = pi[x] - pj[x];
-                        err += t * t;
+                        const float* pi = patchI +
+                            (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
+                        const float* pj = patchJ + y*jsz.width;
+
+                        for( x = 0; x < jsz.width; x++ )
+                        {
+                            double t = pi[x] - pj[x];
+                            err += t * t;
+                        }
                     }
+                    err = sqrt(err);
                 }
-                error[i] = (float)sqrt(err);
+                error[i] = (float)err;
             }
         } // end of point processing loop (i)
         }

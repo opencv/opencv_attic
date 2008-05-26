@@ -474,6 +474,7 @@ CVAPI(void)  cvCalcOpticalFlowHS( const CvArr* prev, const CvArr* curr,
 #define  CV_LKFLOW_PYR_A_READY       1
 #define  CV_LKFLOW_PYR_B_READY       2
 #define  CV_LKFLOW_INITIAL_GUESSES   4
+#define  CV_LKFLOW_GET_MIN_EIGENVALS 8
 
 /* It is Lucas & Kanade method, modified to use pyramids.
    Also it does several iterations to get optical flow for
