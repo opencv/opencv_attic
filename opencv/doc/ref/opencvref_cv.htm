@@ -798,41 +798,43 @@ operation, for "top hat" and "black hat".
 <pre>
 void cvSmooth( const CvArr* src, CvArr* dst,
                int smoothtype=CV_GAUSSIAN,
-               int param1=3, int param2=0, double param3=0, double param4=0 );
+               int size1=3, int size2=0, double sigma1=0, double sigma2=0 );
 </pre><p><dl>
 <dt>src<dd>The source image.
 <dt>dst<dd>The destination image.
 <dt>smoothtype<dd>Type of the smoothing operation:<ul>
 <li>CV_BLUR_NO_SCALE (simple blur with no scaling) -
               for each pixel the result is a sum of pixels values in
-              <code>param1</code>&times;<code>param2</code> neighborhood of the pixel.
+              <code>size1</code>&times;<code>size2</code> neighborhood of the pixel.
               If the neighborhood size varies from pixel to pixel, compute the sums
               using integral image (<a href="#decl_cvIntegral">cvIntegral</a>).
-<li>CV_BLUR (simple blur) - for each pixel the result is a mean of pixel values
-              <code>param1</code>&times;<code>param2</code> neighborhood of the pixel.
+<li>CV_BLUR (simple blur) - for each pixel the result is the average value (brightness/color)
+              of <code>size1</code>&times;<code>size2</code> neighborhood of the pixel.
 <li>CV_GAUSSIAN (Gaussian blur) - the image is smoothed using the Gaussian kernel
-              of size <code>param1</code>&times;<code>param2</code>.
-              <code>param3</code> and <code>param4</code> may optionally be
+              of aperture size <code>size1</code>&times;<code>size2</code>.
+              <code>sigma1</code> and <code>sigma2</code> may optionally be
               used to specify shape of the kernel.
 <li>CV_MEDIAN (median blur) - the image is smoothed using medial filter
-              of size <code>param1</code>&times;<code>param1</code>.
+              of size <code>size1</code>&times;<code>size1</code> (i.e. only square aperture can be used).
               That is, for each pixel the result is the median computed
-              over <code>param1</code>&times;<code>param1</code> neighborhood.
+              over <code>size1</code>&times;<code>size1</code> neighborhood.
 <li>CV_BILATERAL (bilateral filter) -
               the image is smoothed using a bilateral 3x3 filter
-              with color sigma=<code>param1</code> and
-              space sigma=<code>param2</code>.
+              with color sigma=<code>sigma1</code> and
+              spatial sigma=<code>sigma2</code>. If <code>size1!=0</code>, then
+              a circular kernel with diameter <code>size1</code> is used;
+              otherwise the diameter of the kernel is computed from <code>sigma2</code>.
               Information about bilateral filtering
               can be found at <a href="http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html">
               http://www.dai.ed.ac.uk/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html</a>
 </ul>
-<dt>param1<dd>The first parameter of smoothing operation. It should be odd (1, 3, 5, ...),
-              so that a pixel neighborhood used for smoothing operation is symmetrical
-              relative to the pixel.
-<dt>param2<dd>The second parameter of smoothing operation. In case of simple scaled/non-scaled and
-              Gaussian blur if <code>param2</code> is zero, it is set to <code>param1</code>.
-              When not 0, it should be odd too.
-<dt>param3<dd>In case of Gaussian kernel this parameter may specify Gaussian sigma (standard deviation).
+<dt>size1<dd>The first parameter of smoothing operation. It should be odd (1, 3, 5, ...),
+             so that a pixel neighborhood used for smoothing operation is symmetrical
+             relative to the pixel.
+<dt>size2<dd>The second parameter of smoothing operation. In case of simple scaled/non-scaled and
+             Gaussian blur if <code>size2</code> is zero, it is set to <code>size1</code>.
+             When not 0, it should be odd too.
+<dt>sigma1<dd><p>In case of Gaussian kernel this parameter may specify Gaussian sigma (standard deviation).
               If it is zero, it is calculated from the kernel size:<br>
               <pre>
               sigma = (n/2 - 1)*0.3 + 0.8, where n=param1 for horizontal kernel,
@@ -840,20 +842,29 @@ void cvSmooth( const CvArr* src, CvArr* dst,
               </pre>
               With the standard sigma for small kernels (3&times;3 to 7&times;7) the performance is better.
               If <code>param3</code> is not zero, while <code>param1</code> and <code>param2</code>
-              are zeros, the kernel size is calculated from the sigma (to provide accurate enough operation).
-<dt>param4<dd>In case of non-square Gaussian kernel the parameter may be used to specify a different
-              (from <code>param3</code>) sigma in the vertical direction.
-</dl><p>
-The function <code>cvSmooth</code> smoothes image using one of several methods. Every of the methods
-has some features and restrictions listed below</p>
-<p>Blur with no scaling works with single-channel images only and supports accumulation of
-8u to 16s format (similar to <a href="#decl_cvSobel">cvSobel</a> and <a href="#decl_cvLaplace">cvLaplace</a>)
-and accumulation of 32f to 32f format.</p><p>
-Simple blur and Gaussian blur support 1- or 3-channel, 8-bit, 16-bit and 32-bit floating point images.
-These two methods can process images in-place.</p>
-<p>Median and bilateral filters work with 1- or 3-channel 8-bit images and can not process images
-in-place.</p>
+              are zeros, the kernel size is calculated from the sigma (to provide accurate enough operation).</p>
 
+              <p>In case of Bilateral filter the parameter specifies color sigma; the larger the value,
+              the stronger the pasterization effect of the filter is.</p>
+<dt>sigma2<dd><p>In case of non-square Gaussian kernel the parameter may be used to specify a different
+              (from <code>param3</code>) sigma in the vertical direction.</p>
+
+              <p>In case of Bilateral filter the parameter specifies spatial sigma; the larger the value,
+              the stronger the blurring effect of the filter. Note that with large <code>sigma2</code>
+              the processing speed decreases substantionally, so it is recommended to limit the kernel
+              size using the parameter <code>size1</code>.</p>
+</dl><p>
+The function <code>cvSmooth</code> smoothes image using one of the pre-defined methods. Every of the methods
+has some features and restrictions listed below:</p>
+<ul>
+<li>Blur with no scaling works with single-channel images only and supports accumulation of
+8u to 16s format (similar to <a href="#decl_cvSobel">cvSobel</a> and <a href="#decl_cvLaplace">cvLaplace</a>)
+and accumulation of 32f to 32f format.</li>
+<li>Simple blur and Gaussian blur support 1- or 3-channel, 8-bit, 16-bit and 32-bit floating-point images.
+These two methods can process images in-place.</li>
+<li>Median filter works with 1- or 3-channel 8-bit images and can not process images in-place.</li>
+<li>Bilateral filter works with 1- or 3-channel, 8-bit or 32-bit floating-point images and can not process images in-place.</li>
+</ul>
 
 <hr><h3><a name="decl_cvFilter2D">Filter2D</a></h3>
 <p class="Blurb">Applies linear filter to image</p>
@@ -4761,6 +4772,33 @@ optimized to minimize the total back-projection error - the sum of squared diffe
 actual coordinates of image points and the ones computed using
 <a href="#decl_cvProjectPoints2">cvProjectPoints2</a>.
 </p>
+
+
+<hr><h3><a name="decl_cvCalibrationMatrixValues">CalibrationMatrixValues</a></h3>
+<p class="Blurb">Finds intrinsic and extrinsic camera parameters using calibration pattern</p>
+<pre>
+void cvCalibrationMatrixValues( const CvMat *calibMatr,
+                                int imgWidth, int imgHeight,
+                                double apertureWidth=0, double apertureHeight=0,
+                                double *fovx=NULL, double *fovy=NULL,
+                                double *focalLength=NULL,
+                                CvPoint2D64f *principalPoint=NULL,
+                                double *pixelAspectRatio=NULL );
+</pre><p><dl>
+<dt>calibMatr<dd>The matrix of intrinsic parameters, e.g. computed by <a href="#decl_cvCalibrateCamera2">cvCalibrateCamera2</a>
+<dt>imgWidth<dd>Image width in pixels
+<dt>imgHeight<dd>Image height in pixels
+<dt>apertureWidth<dd>Aperture width in realworld units (optional input parameter)
+<dt>apertureHeight<dd>Aperture width in realworld units (optional input parameter)
+<dt>fovx<dd>Field of view angle in x direction in degrees (optional output parameter)
+<dt>fovx<dd>Field of view angle in y direction in degrees (optional output parameter)
+<dt>focalLength<dd>Focal length in realworld units (optional output parameter)
+<dt>principalPoint<dd>The principal point in realworld units (optional output parameter)
+<dt>pixelAspectRatio<dd>The pixel aspect ratio ~ fy/fx (optional output parameter)
+</dl></p><p>
+The function <code>cvCalibrationMatrixValues</code> computes various useful camera (sensor/lens)
+characteristics using the computed camera calibration matrix, image frame resolution in pixels
+and the physical aperture size.</p>
 
 
 <hr><h3><a name="decl_cvFindExtrinsicCameraParams2">FindExtrinsicCameraParams2</a></h3>
