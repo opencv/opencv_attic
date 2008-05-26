@@ -35,7 +35,7 @@ Chudinovich, Boris      Intel Corp.                Ideas and algorithms on conto
 Cowperthwaite, David    Intel Corp.                3d Tracker
 
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
-Delacour, Xavier        ???                        Octave bindings
+Delacour, Xavier        ???                        Octave bindings, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
@@ -48,6 +48,7 @@ Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsd
 Gruebele, Philip        ???                        Multiple patches for OpenCV
 Guhring, Philipp        ???                        Single-object mode in cvHaarDetectObjects
 
+Hafeneger, Stefan       ???                        Some 3D & Calibration related functionality
 Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
                                                    calibration app for Linux (is not supported now?)
                                                    patches for Linux version
@@ -83,7 +84,7 @@ Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
 Shavit, Adi             ???                        OpenCV forum moderation, OpenCV logo
-Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees and CNN in Machine Learning module
+Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees, CNN in Machine Learning module; SVM enhancements
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 Stavinzky, Jay          ???                        8u->8u L1 Distance transform.
