@@ -580,7 +580,7 @@ static void icvBackgroundTest( const int nChannels, int n, int i, int j, int *ma
     CvGaussBGPoint* g_point = bg_model->g_point;
     
     for( m = 0; m < nChannels; m++)
-        bg_model->background->imageData[ bg_model->background->widthStep*j + i + m]  = (unsigned char)(g_point[n].g_values[0].mean[m]+0.5);
+        bg_model->background->imageData[ bg_model->background->widthStep*i + j*nChannels + m]  = (unsigned char)(g_point[n].g_values[0].mean[m]+0.5);
     
     for( b = 0; b < bg_model->params.n_gauss; b++)
     {
@@ -591,7 +591,7 @@ static void icvBackgroundTest( const int nChannels, int n, int i, int j, int *ma
             break;
     }
     
-    bg_model->foreground->imageData[ bg_model->foreground->widthStep*j + i] = pixelValue;
+    bg_model->foreground->imageData[ bg_model->foreground->widthStep*i + j] = pixelValue;
 }
 
 /* End of file. */
