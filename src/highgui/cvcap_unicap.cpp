@@ -63,7 +63,7 @@ struct CvCapture_Unicap : public CvCapture
   virtual void close();
 
   virtual double getProperty(int);
-  virtual bool setProperty(int, double) { return false; }
+  virtual bool setProperty(int, double);
   virtual bool grabFrame();
   virtual IplImage* retrieveFrame();
 
@@ -320,7 +320,7 @@ bool CvCapture_Unicap::open(int index)
 CvCapture * cvCreateCameraCapture_Unicap(const int index)
 {
   CvCapture_Unicap *cap = new CvCapture_Unicap;
-  if( cap->open() )
+  if( cap->open(index) )
     return cap;
   delete cap;
   return 0;
