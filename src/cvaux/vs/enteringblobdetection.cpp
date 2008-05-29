@@ -45,7 +45,7 @@ A new blob is detected when several successive frames contains connected compone
 which have uniform motion not at an unreasonably high speed.
 Separation from border and already tracked blobs are also considered.
 
-For background see:
+For an entrypoint into the literature see:
 
      Appearance Models for Occlusion Handling
      Andrew Senior &t al, 8p 2001
