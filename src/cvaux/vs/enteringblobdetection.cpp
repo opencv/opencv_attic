@@ -44,6 +44,13 @@ This implementation based on a simple algorithm:
 A new blob is detected when several successive frames contains connected components 
 which have uniform motion not at an unreasonably high speed.
 Separation from border and already tracked blobs are also considered.
+
+For background see:
+
+     Appearance Models for Occlusion Handling
+     Andrew Senior &t al, 8p 2001
+     http://www.research.ibm.com/peoplevision/PETS2001.pdf
+
 */
 
 //#define USE_OBJECT_DETECTOR
