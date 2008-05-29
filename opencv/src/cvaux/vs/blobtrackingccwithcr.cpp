@@ -40,6 +40,28 @@
 
 #include "_cvaux.h"
 
+/* Blob (foreground-pixel connected-component) tracking with collision resolution.
+ *
+ * For entrypoints into the literature see:
+ *
+ *  A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian Bayesian Tracking
+ *  Arulampalam &t al, 2001, 15p
+ *  http://www-clmc.usc.edu/publications/A/arulampalam-TSP2002.pdf
+ *
+ *  Particle Filters for Positioning, Navigation, and Tracking
+ *  Gustafsson et al, 2002 12p
+ *  http://www.control.isy.liu.se/~fredrik/reports/01SPpf4pos.pdf
+ *
+ *  Particle Filtering in High Clutter Environments
+ *  Korhonen et al, 2005 4p
+ *  http://www.cs.uku.fi/finsig05/papers/paper26_FINSIG05.pdf
+ *
+ *   Appearance Models for Occlusion Handling
+ *   Andrew Senior &t al, 8p 2001
+ *   http://www.research.ibm.com/peoplevision/PETS2001.pdf
+ *
+ */
+
 /*============== BLOB TRACKERCC CLASS DECLARATION =============== */
 typedef struct DefBlobTrackerCR
 {
