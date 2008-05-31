@@ -46,11 +46,15 @@
 #endif
 
 extern "C" {
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/avcodec.h>
 #ifndef WIN32
+#define INT64_C
+#define __STDC_CONSTANT_MACROS
+#include <stdint.h>
 #include <errno.h>
 #endif
+
+#include <ffmpeg/avformat.h>
+#include <ffmpeg/avcodec.h>
 }
 
 #if defined _MSC_VER && _MSC_VER >= 1200
