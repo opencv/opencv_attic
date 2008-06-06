@@ -5,7 +5,9 @@ EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 
 INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
 
-noinst_HEADERS     = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
+noinst_HEADERS     = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h \
+    _cvkdtree.hpp
+
 noinst_LTLIBRARIES = lib_cv.la
 lib_LTLIBRARIES    = libcv.la
 
@@ -24,7 +26,7 @@ lib_cv_la_SOURCES = \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp cvshapedescr.cpp \
     cvsmooth.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp \
     cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp \
-    cvundistort.cpp cvutils.cpp
+    cvundistort.cpp cvutils.cpp cvkdtree.cpp
 lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 
 # real library

@@ -42,6 +42,7 @@
 
 // 2004-03-23, Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
+// 2008-05-15, Xavier Delacour   <xavier.delacour@gmail.com>
 
 
 %extend IplImage       { ~IplImage       () { IplImage       * dummy = self; cvReleaseImage              (& dummy); } }
@@ -57,6 +58,7 @@
 %extend CvHistogram    { ~CvHistogram    () { CvHistogram    * dummy = self; cvReleaseHist               (& dummy); } }
 %extend CvHaarClassifierCascade { ~CvHaarClassifierCascade () { CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); } }
 %extend CvPOSITObject  { ~CvPOSITObject  () { CvPOSITObject  * dummy = self; cvReleasePOSITObject        (& dummy); } }
+%extend CvFeatureTree  { ~CvFeatureTree  () { CvFeatureTree  * dummy = self; cvReleaseFeatureTree        (& dummy); } }
 
 // string operators for some OpenCV types
 

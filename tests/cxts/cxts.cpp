@@ -1258,7 +1258,7 @@ int CvTS::run( int argc, char** argv )
         fs = cvOpenFileStorage( config_name, 0, CV_STORAGE_WRITE );
         if( !fs )
         {
-            printf( LOG, "ERROR: could not open config file %s", config_name );
+            printf( LOG, "ERROR: could not open config file %s\n", config_name );
             return -1;
         }
         cvWriteComment( fs, CV_TS_VERSION " config file", 0 );
