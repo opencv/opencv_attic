@@ -41,6 +41,9 @@
 
 // 2008-05-13, Xavier Delacour <xavier.delacour@gmail.com>
 
+#include "_cv.h"
+
+#if !defined _MSC_VER || defined __ICL || _MSC_VER >= 1400
 #include "_cvkdtree.hpp"
 
 // * write up some docs
@@ -277,3 +280,4 @@ int cvFindFeaturesBoxed(CvFeatureTree* tr,
 
   return nr;
 }
+#endif
