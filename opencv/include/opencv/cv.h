@@ -1051,6 +1051,24 @@ CVAPI(CvSeq*) cvHoughCircles( CvArr* image, void* circle_storage,
 CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
                         double reps, double aeps, float* line );
 
+
+/* Constructs kd-tree from set of feature descriptors */
+CvFeatureTree* cvCreateFeatureTree(CvMat* desc);
+
+/* Release kd-tree */
+void cvReleaseFeatureTree(CvFeatureTree* tr);
+
+/* Searches kd-tree for k nearest neighbors of given reference points,
+   searching at most emax leaves. */
+void cvFindFeatures(CvFeatureTree* tr, CvMat* desc,
+		    CvMat* results, CvMat* dist, int k = 2, int emax = 20);
+
+/* Search kd-tree for all points that are inlier to given rect region. */
+int cvFindFeaturesBoxed(CvFeatureTree* tr,
+		    CvMat* bounds_min, CvMat* bounds_max,
+		    CvMat* results);
+
+
 /****************************************************************************************\
 *                         Haar-like Object Detection functions                           *
 \****************************************************************************************/

@@ -379,6 +379,8 @@ typedef struct CvAvgComp
 }
 CvAvgComp;
 
+class CvFeatureTree;
+
 #endif /*_CVTYPES_H_*/
 
 /* End of file. */

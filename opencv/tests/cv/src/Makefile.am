@@ -30,6 +30,7 @@ cvtest_SOURCES = \
     amotiontemplates.cpp     amotseg.cpp              aoptflowhs.cpp \
     aoptflowlk.cpp           aoptflowpyrlk.cpp        aposit.cpp \
     apyrsegmentation.cpp     asnakes.cpp              asubdivisions.cpp \
+    akdtree.cpp \
     atemplmatch.cpp          athresh.cpp      cvtest.cpp    tsysa.cpp                
 cvtest_LDADD =                                           \
     $(top_builddir)/tests/cxts/libcxts.la            \
