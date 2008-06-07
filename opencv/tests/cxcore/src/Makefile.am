@@ -16,6 +16,7 @@ cxcoretest_SOURCES =        \
 	adatastruct.cpp     \
 	adxt.cpp            \
 	amath.cpp           \
+	asolvepoly.cpp      \
 	cxcoretest_main.cpp
 cxcoretest_LDADD = \
 	$(top_builddir)/tests/cxts/libcxts.la \
