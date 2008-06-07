@@ -679,6 +679,10 @@ CVAPI(void) cvRandShuffle( CvArr* mat, CvRNG* rng,
 /* Finds real roots of a cubic equation */
 CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
+/* Finds all real and complex roots of a polynomial equation */
+CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots,
+			int maxiter = 10, int fig = 10);
+
 /****************************************************************************************\
 *                                Matrix operations                                       *
 \****************************************************************************************/
