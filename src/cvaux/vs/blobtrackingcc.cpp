@@ -180,7 +180,7 @@ public:
         NewB.blob = pB[0];
 //        CV_BLOB_ID(&NewB) = m_LastID;
         NewB.pBlobHyp = new CvBlobSeq;
-        NewB.pPredictor = cvCreateModuleBlobTrackPredictKalman(); /* Module for positino prediction. */
+        NewB.pPredictor = cvCreateModuleBlobTrackPredictKalman(); /* Module for position prediction. */
         NewB.pPredictor->Update(pB);
         NewB.AverFG = pImgFG?CalcAverageMask(pB,pImgFG):0;
         m_BlobList.AddBlob((CvBlob*)&NewB);
