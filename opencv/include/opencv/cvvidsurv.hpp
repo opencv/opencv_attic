@@ -944,17 +944,21 @@ CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerLHRS(CvBlobTrackerParamLH* /*param*
 /* Simple blob tracker based on connected component tracking: */
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerCC();
 
-/* Connected component tracking and MSPF resolver for collision: */
+/* Connected component tracking and mean-shift particle filter collion-resolver: */
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerCCMSPF();
 
-/* Blob tracker that integrates MS and CC: */
+/* Blob tracker that integrates meanshift and connected components: */
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerMSFG();
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerMSFGS();
 
-/* MS without CC */
+/* Meanshift without connected-components */
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerMS();
 
-/* Particle filtering using bahata... coefficient: */
+/* Particle filtering via Bhattacharya coefficient, which        */
+/* is roughly the dot-product of two probability densities.      */
+/* See: Real-Time Tracking of Non-Rigid Objects using Mean Shift */
+/*      Comanicius, Ramesh, Meer, 2000, 8p                       */
+/*      http://citeseer.ist.psu.edu/321441.html                  */
 CV_EXPORTS CvBlobTracker* cvCreateBlobTrackerMSPF();
 
 /* =========== tracker integrators trackers =============*/
