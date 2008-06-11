@@ -805,59 +805,82 @@ SWIGRUNTIME octave_value SWIG_Error(int code, const char *msg) {
 #define Octave_Error_Occurred() 0
 #define SWIG_Octave_AddErrorMsg(msg) {;}
 
-SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata);
-SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer);
-
 // For backward compatibility only
 #define SWIG_POINTER_EXCEPTION  0
 #define SWIG_arg_fail(arg)      0
+
+SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata) {
+  octave_value tmp = get_global_value("__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION, true);
+  if (!tmp.is_defined() || !tmp.is_uint64_type())
+    return 0;
+  unsigned long r = tmp.uint64_scalar_value().value();
+  assert(sizeof(r) == sizeof(swig_module_info *));
+  return (swig_module_info *) r;
+}
+
+SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer) {
+  unsigned long r = (unsigned long) pointer;
+  assert(sizeof(r) == sizeof(swig_module_info *));
+  const char *module_var = "__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION;
+  link_to_global_variable(curr_sym_tab->lookup(module_var, true));
+  set_global_value(module_var, octave_uint64(r));
+}
 
 // Runtime API implementation
 
 #include <map>
 #include <vector>
 #include <string>
+#include <ext/hash_map>
 
-typedef octave_value_list(*octave_func) (const octave_value_list &, int);
-class octave_swig_type;
+namespace {
 
-namespace Swig {
-  class Director;
+  typedef octave_value_list(*octave_func) (const octave_value_list &, int);
+  class octave_swig_type;
 
-  SWIGRUNTIME void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
-  SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d);
-  SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self);
+  namespace Swig {
+    class Director;
 
-  SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost);
-  SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov);
-  SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov);
+    void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
+    void swig_director_destroyed(octave_swig_type *self, Director *d);
+    void swig_director_set_self(Director *d, octave_swig_type *self);
 
-  typedef std::map < void *, Director * > rtdir_map;
+    octave_base_value *swig_value_ref(octave_swig_type *ost);
+    octave_swig_type *swig_value_deref(const octave_value &ov);
+    octave_swig_type *swig_value_deref(const octave_base_value &ov);
 
-  SWIGINTERN rtdir_map &get_rtdir_map() {
-    static swig_module_info *module = 0;
-    if (!module)
-      module = SWIG_GetModule(0);
-    assert(module);
-    if (!module->clientdata)
-      module->clientdata = new rtdir_map;
-    return *(rtdir_map *) module->clientdata;
+    struct hash_voidptr {
+      int operator() (void *p) const {
+	return (int) p;
+      }
+    };
+    typedef __gnu_cxx::hash_map < void *, Director *, hash_voidptr > rtdir_map;
+
+    using namespace __gnu_cxx;
+    SWIGINTERN rtdir_map &get_rtdir_map() {
+      static swig_module_info *module = 0;
+      if (!module)
+	module = SWIG_GetModule(0);
+      assert(module);
+      if (!module->clientdata)
+	module->clientdata = new rtdir_map;
+      return *(rtdir_map *) module->clientdata;
+    }
+
+    SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
+      get_rtdir_map()[vptr] = d;
+    }
+
+    SWIGINTERNINLINE void erase_rtdir(void *vptr) {
+      get_rtdir_map().erase(vptr);
+    }
+
+    SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
+      rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
+      Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
+      return rtdir;
+    }
   }
-
-  SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
-    get_rtdir_map()[vptr] = d;
-  }
-
-  SWIGINTERNINLINE void erase_rtdir(void *vptr) {
-    get_rtdir_map().erase(vptr);
-  }
-
-  SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
-    rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
-    Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
-    return rtdir;
-  }
-}
 
   struct swig_octave_member {
     const char *name;
@@ -900,7 +923,7 @@ namespace Swig {
       }};
     typedef std::pair < const swig_type_info *, cpp_ptr > type_ptr_pair;
 
-    mutable swig_module_info *module;
+    swig_module_info *module;
 
     const swig_type_info *construct_type;	// type of special type object
     std::vector < type_ptr_pair > types;	// our c++ base classes
@@ -909,7 +932,6 @@ namespace Swig {
     typedef std::pair < const swig_octave_member *, octave_value > member_value_pair;
     typedef std::map < std::string, member_value_pair > member_map;
     member_map members;
-    bool always_static;
 
     const swig_octave_member *find_member(const swig_type_info *type, const std::string &name) {
       if (!type->clientdata)
@@ -974,34 +996,6 @@ namespace Swig {
 	  return c->base[j];
       }
       return 0;
-    }
-
-    void load_members(const swig_octave_class* c,member_map& out) const {
-      for (const swig_octave_member *m = c->members; m->name; ++m) {
-	if (out.find(m->name) == out.end())
-	  out.insert(std::make_pair(m->name, std::make_pair(m, octave_value())));
-      }
-      for (int j = 0; c->base_names[j]; ++j) {
-	if (!c->base[j]) {
-	  if (!module)
-	    module = SWIG_GetModule(0);
-	  assert(module);
-	  c->base[j] = SWIG_MangledTypeQueryModule(module, module, c->base_names[j]);
-	}
-	if (!c->base[j])
-	  continue;
-	assert(c->base[j]->clientdata);
-	const swig_octave_class *cj =
-	  (const swig_octave_class *) c->base[j]->clientdata;
-	load_members(cj,out);
-      }
-    }
-
-    void load_members(member_map& out) const {
-      out=members;
-      for (unsigned int j = 0; j < types.size(); ++j)
-	if (types[j].first->clientdata)
-	  load_members((const swig_octave_class *) types[j].first->clientdata, out);
     }
 
     octave_value_list member_invoke(member_value_pair *m, const octave_value_list &args, int nargout) {
@@ -1075,10 +1069,8 @@ namespace Swig {
     octave_swig_type &operator=(const octave_swig_type &rhs);
   public:
 
-    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0,
-		     bool _always_static = false)
-      :	module(0), construct_type(_ptr ? 0 : _type), own(_own), 
-      always_static(_always_static) {
+    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0)
+      :	module(0), construct_type(_ptr ? 0 : _type), own(_own) {
       if (_type || _ptr)
 	types.push_back(std::make_pair(_type, _ptr));
       if (_ptr) {
@@ -1302,12 +1294,9 @@ namespace Swig {
 	}
 
 	octave_value_list args;
-	if (!always_static &&
-	    (!m->first || (!m->first->is_static() && !m->first->is_global())))
+	if (!m->first || (!m->first->is_static() && !m->first->is_global()))
 	  args.append(as_value());
-	if (skip < (int) ops.size() && ops[skip] == '(' && 
-	    ((m->first && m->first->method) || m->second.is_function() || 
-	     m->second.is_function_handle())) {
+	if (skip < (int) ops.size() && ops[skip] == '(' && ((m->first && m->first->method) || m->second.is_function() || m->second.is_function_handle())) {
 	  args.append(*idx_it++);
 	  ++skip;
 	  sub_ovl = member_invoke(m, args, nargout);
@@ -1413,35 +1402,6 @@ namespace Swig {
       return outarg(0).string_value();
     }
 
-    /*
-    virtual Octave_map map_value() const {
-      octave_swig_type *nc_this = const_cast < octave_swig_type *>(this);
-      member_value_pair *m = nc_this->find_member("__str", false);
-      if (!m) {
-	error("__map method not defined");
-	return std::string();
-      }
-      octave_value_list outarg = nc_this->member_invoke(m, octave_value_list(nc_this->as_value()), 1);
-      if (outarg.length() < 1 || !outarg(0).is_map()) {
-	error("__map method did not return a string");
-	return std::string();
-      }
-      return outarg(0).map_value();
-    }
-    */
-
-    virtual string_vector map_keys() const {
-      member_map tmp;
-      load_members(tmp);
-
-      string_vector keys(tmp.size());
-      int k = 0;
-      for (member_map::iterator it = tmp.begin(); it != tmp.end(); ++it)
-	keys(k++) = it->first;
-
-      return keys;
-    }
-
     virtual octave_value convert_to_str(bool pad = false, bool force = false, char type = '"') const {
       return string_value();
     }
@@ -1528,9 +1488,6 @@ namespace Swig {
 	return;
       }
 
-      member_map tmp;
-      load_members(tmp);
-
       os << "{" << std::endl;
       for (unsigned int j = 0; j < types.size(); ++j) {
 	if (types[j].first->clientdata) {
@@ -1540,14 +1497,14 @@ namespace Swig {
 	  os << "  " << types[j].first->name << ", ptr = " << types[j].second.ptr << std::endl;
 	}
       }
-      for (member_map::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+      for (member_map::const_iterator it = members.begin(); it != members.end(); ++it) {
 	if (it->second.first) {
 	  const char *objtype = it->second.first->method ? "method" : "variable";
-	  const char *modifier = (it->second.first->flags &1) ? "static " : (it->second.first->flags &2) ? "global " : "";
-	  os << "  " << it->second.first->name << " (" << modifier << objtype << ")" << std::endl;
+	  const char *modifier = (it->second.first->flags &1) ? "static" : (it->second.first->flags &2) ? "global" : "";
+	  os << it->second.first->name << " (c++ " << modifier << " " << objtype << ")" << std::endl;
 	  assert(it->second.first->name == it->first);
 	} else {
-	  os << "  " << it->first << std::endl;
+	  os << it->first << " (octave value)" << std::endl;
 	}
       }
       os << "}" << std::endl;
@@ -1605,9 +1562,6 @@ namespace Swig {
     virtual std::string string_value(bool force = false) const 
       { return ptr->string_value(force); }
 
-    virtual string_vector map_keys() const
-      { return ptr->map_keys(); }
-
     virtual octave_value convert_to_str(bool pad = false, bool force = false, char type = '"') const
       { return ptr->convert_to_str(pad, force, type); }
 
@@ -1629,15 +1583,15 @@ namespace Swig {
     std::vector < char > buf;
   public:
 
-    octave_swig_packed(swig_type_info *_type = 0, const void *_buf = 0, size_t _buf_len = 0)
-      :	type(_type), buf((const char*)_buf, (const char*)_buf + _buf_len) {
+    octave_swig_packed(swig_type_info *_type = 0, const char *_buf = 0, size_t _buf_len = 0)
+      :	type(_type), buf(_buf, _buf + _buf_len) {
     }
 
-    bool copy(swig_type_info *outtype, void *ptr, size_t sz) const {
+    bool copy(swig_type_info *outtype, char *ptr, size_t sz) {
       if (outtype && outtype != type)
 	return false;
       assert(sz <= buf.size());
-      std::copy(&buf[0], &buf[sz], (char*)ptr);
+      std::copy(&buf[0], &buf[sz], ptr);
       return true;
     }
 
@@ -1742,8 +1696,6 @@ namespace Swig {
       error("swig_typeinfo must be called with only a single object");
       return octave_value_list();
     }
-    if (args(0).is_matrix_type() && args(0).rows() == 0 && args(0).columns() == 0)
-      return octave_value(octave_uint64(0));
     octave_swig_type *ost = Swig::swig_value_deref(args(0));
     if (!ost) {
       error("object is not a swig_ref");
@@ -1752,104 +1704,106 @@ namespace Swig {
     return octave_value(octave_uint64((unsigned long long) ost->swig_this()));
   }
 
+
 #define SWIG_DIRECTORS
 
-namespace Swig {
-  class Director {
-    octave_swig_type *self;
-    bool disowned;
+  struct Director;
+  class octave_swig_type;
 
-    Director(const Director &x);
-    Director &operator=(const Director &rhs);
-  public:
+  namespace Swig {
+    class Director {
+      octave_swig_type *self;
+      bool disowned;
 
-    Director(void *vptr):self(0), disowned(false) {
-      set_rtdir(vptr, this);
-    }
+      Director(const Director &x);
+      Director &operator=(const Director &rhs);
+    public:
 
-    ~Director() {
-      swig_director_destroyed(self, this);
-      if (disowned)
-	self->decref();
-    }
+      Director(void *vptr):self(0), disowned(false) {
+	set_rtdir(vptr, this);
+      }
 
-    void swig_set_self(octave_swig_type *new_self) {
-      assert(!disowned);
-      self = new_self;
-    }
+      ~Director() {
+	swig_director_destroyed(self, this);
+	if (disowned)
+	  self->decref();
+      }
 
-    octave_swig_type *swig_get_self() const {
-      return self;
-    }
+      void swig_set_self(octave_swig_type *new_self) {
+	assert(!disowned);
+	self = new_self;
+      }
 
-    void swig_disown() {
-      if (disowned)
-	return;
-      disowned = true;
-      self->incref();
-    }
-  };
+      octave_swig_type *swig_get_self() const {
+	return self;
+      }
 
-  struct DirectorTypeMismatchException {
-    static void raise(const char *msg) {
-      // ... todo
-      throw(DirectorTypeMismatchException());
-    }
+      void swig_disown() {
+	if (disowned)
+	  return;
+	disowned = true;
+	self->incref();
+      }
+    };
 
-    static void raise(const octave_value &ov, const char *msg) {
-      // ... todo
-      raise(msg);
-    }
-  };
-  struct DirectorPureVirtualException {
-    static void raise(const char *msg) {
-      // ... todo
-      throw(DirectorPureVirtualException());
-    }
+    struct DirectorTypeMismatchException {
+      static void raise(const char *msg) {
+	// ... todo
+	throw(DirectorTypeMismatchException());
+      }
 
-    static void raise(const octave_value &ov, const char *msg) {
-      // ... todo
-      raise(msg);
-    }
-  };
+      static void raise(const octave_value &ov, const char *msg) {
+	// ... todo
+	raise(msg);
+      }
+    };
+    struct DirectorPureVirtualException {
+      static void raise(const char *msg) {
+	// ... todo
+	throw(DirectorPureVirtualException());
+      }
 
-}
+      static void raise(const octave_value &ov, const char *msg) {
+	// ... todo
+	raise(msg);
+      }
+    };
 
-  SWIGRUNTIME void swig_acquire_ownership(void *vptr) {
+  }
+
+  void swig_acquire_ownership(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  SWIGRUNTIME void swig_acquire_ownership_array(void *vptr) {
+  void swig_acquire_ownership_array(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  SWIGRUNTIME void swig_acquire_ownership_obj(void *vptr, int own) {
+  void swig_acquire_ownership_obj(void *vptr, int own) {
     //  assert(0);
     // ... todo
   }
 
   namespace Swig {
-    SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d) {
+    void swig_director_destroyed(octave_swig_type *self, Director *d) {
       self->director_destroyed(d);
     }
 
-    SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self) {
+    void swig_director_set_self(Director *d, octave_swig_type *self) {
       d->swig_set_self(self);
     }
 
-    SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost) {
+    octave_base_value *swig_value_ref(octave_swig_type *ost) {
       return new octave_swig_ref(ost);
     }
 
-    SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov) {
-      if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-	ov = ov.cell_value()(0);
+    octave_swig_type *swig_value_deref(const octave_value &ov) {
       return swig_value_deref(*ov.internal_rep());
     }
 
-    SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov) {
+    octave_swig_type *swig_value_deref(const octave_base_value &ov) {
       if (ov.type_id() != octave_swig_ref::static_type_id())
 	return 0;
       const octave_swig_ref *osr = static_cast < const octave_swig_ref *>(&ov);
@@ -1858,12 +1812,57 @@ namespace Swig {
 
   }
 
+  SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
+    int own = (flags &SWIG_POINTER_OWN) ? SWIG_POINTER_OWN : 0;
+
+    Swig::Director *d = Swig::get_rtdir(ptr);
+    if (d && d->swig_get_self())
+      return d->swig_get_self()->as_value();
+    return Swig::swig_value_ref(new octave_swig_type(ptr, type, own));
+  }
+
+  SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(const octave_value &ov, void **ptr, swig_type_info *type, int flags, int *own) {
+    if (!ov.is_defined()) {
+      if (ptr)
+	*ptr = 0;
+      return SWIG_OK;
+    }
+    if (ov.type_id() != octave_swig_ref::static_type_id())
+      return SWIG_TypeError;
+    octave_swig_ref *osr = static_cast < octave_swig_ref *>(ov.internal_rep());
+    octave_swig_type *ost = osr->get_ptr();
+    void *vptr = ost->cast(type, own, flags);
+    if (!vptr)
+      return SWIG_TypeError;
+    if (ptr)
+      *ptr = vptr;
+    return SWIG_OK;
+  }
+
+  SWIGRUNTIMEINLINE octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
+    return new octave_swig_packed(type, (char *) ptr, sz);
+  }
+
+  SWIGRUNTIME int SWIG_Octave_ConvertPacked(const octave_value &ov, void *ptr, size_t sz, swig_type_info *type) {
+    if (!ov.is_defined())
+      return SWIG_TypeError;
+    if (ov.type_id() != octave_swig_packed::static_type_id())
+      return SWIG_TypeError;
+    octave_swig_packed *ost = static_cast < octave_swig_packed *>(ov.internal_rep());
+    return ost->copy(type, (char *) ptr, sz) ? SWIG_OK : SWIG_TypeError;
+  }
+
+  void SWIG_Octave_SetConstant(octave_swig_type *module_ns, const std::string &name, const octave_value &ov) {
+    module_ns->assign(name, ov);
+  }
+
+
 #define swig_unary_op(name) \
-SWIGRUNTIME octave_value swig_unary_op_##name(const octave_base_value &x) { \
+octave_value swig_unary_op_##name(const octave_base_value &x) { \
   return octave_swig_type::dispatch_unary_op(x,#name); \
 }
 #define swig_binary_op(name) \
-SWIGRUNTIME octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
+octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
   return octave_swig_type::dispatch_binary_op(lhs,rhs,#name); \
 }
 #define swigreg_unary_op(name) \
@@ -1902,7 +1901,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
   swig_binary_op(el_and);
   swig_binary_op(el_or);
 
-  SWIGRUNTIME void SWIG_InstallUnaryOps(int tid) {
+  void swig_install_unary_ops(int tid) {
     swigreg_unary_op(not);
     swigreg_unary_op(uplus);
     swigreg_unary_op(uminus);
@@ -1911,7 +1910,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_unary_op(incr);
     swigreg_unary_op(decr);
   }
-  SWIGRUNTIME void SWIG_InstallBinaryOps(int tid1, int tid2) {
+  void swig_install_binary_ops(int tid1, int tid2) {
     swigreg_binary_op(add);
     swigreg_binary_op(sub);
     swigreg_binary_op(mul);
@@ -1933,83 +1932,19 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_binary_op(el_and);
     swigreg_binary_op(el_or);
   }
-  SWIGRUNTIME void SWIG_InstallOps(int tid) {
+  void swig_install_ops(int tid) {
     // here we assume that tid are conseq integers increasing from zero, and 
     // that our tid is the last one. might be better to have explicit string 
     // list of types we should bind to, and use lookup_type to resolve their tid.
 
-    SWIG_InstallUnaryOps(tid);
-    SWIG_InstallBinaryOps(tid, tid);
+    swig_install_unary_ops(tid);
+    swig_install_binary_ops(tid, tid);
     for (int j = 0; j < tid; ++j) {
-      SWIG_InstallBinaryOps(j, tid);
-      SWIG_InstallBinaryOps(tid, j);
+      swig_install_binary_ops(j, tid);
+      swig_install_binary_ops(tid, j);
     }
   }
 
-SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
-  int own = (flags &SWIG_POINTER_OWN) ? SWIG_POINTER_OWN : 0;
-
-  Swig::Director *d = Swig::get_rtdir(ptr);
-  if (d && d->swig_get_self())
-    return d->swig_get_self()->as_value();
-  return Swig::swig_value_ref(new octave_swig_type(ptr, type, own));
-}
-
-SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(octave_value ov, void **ptr, swig_type_info *type, int flags, int *own) {
-  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-    ov = ov.cell_value()(0);
-  if (!ov.is_defined() ||
-      (ov.is_matrix_type() && ov.rows() == 0 && ov.columns() == 0) ) {
-    if (ptr)
-      *ptr = 0;
-    return SWIG_OK;
-  }
-  if (ov.type_id() != octave_swig_ref::static_type_id())
-    return SWIG_ERROR;
-  octave_swig_ref *osr = static_cast < octave_swig_ref *>(ov.internal_rep());
-  octave_swig_type *ost = osr->get_ptr();
-  void *vptr = ost->cast(type, own, flags);
-  if (!vptr)
-    return SWIG_ERROR;
-  if (ptr)
-    *ptr = vptr;
-  return SWIG_OK;
-}
-
-SWIGRUNTIME octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
-  return new octave_swig_packed(type, (char *) ptr, sz);
-}
-
-SWIGRUNTIME int SWIG_Octave_ConvertPacked(const octave_value &ov, void *ptr, size_t sz, swig_type_info *type) {
-  if (!ov.is_defined())
-    return SWIG_ERROR;
-  if (ov.type_id() != octave_swig_packed::static_type_id())
-    return SWIG_ERROR;
-  octave_swig_packed *ost = static_cast < octave_swig_packed *>(ov.internal_rep());
-  return ost->copy(type, (char *) ptr, sz) ? SWIG_OK : SWIG_ERROR;
-}
-
-void SWIG_Octave_SetConstant(octave_swig_type *module_ns, const std::string &name, const octave_value &ov) {
-  module_ns->assign(name, ov);
-}
-
-SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata) {
-  octave_value ov = get_global_value("__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION, true);
-  if (!ov.is_defined() ||
-      ov.type_id() != octave_swig_packed::static_type_id())
-    return 0;
-  const octave_swig_packed* osp = 
-    static_cast < const octave_swig_packed *> (ov.internal_rep());
-  swig_module_info *pointer = 0;
-  osp->copy(0, &pointer, sizeof(swig_module_info *));
-  return pointer;
-}
-
-SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer) {
-  octave_value ov = new octave_swig_packed(0, &pointer, sizeof(swig_module_info *));
-  const char *module_var = "__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION;
-  link_to_global_variable(curr_sym_tab->lookup(module_var, true));
-  set_global_value(module_var, ov);
 }
 
 
@@ -2039,183 +1974,184 @@ SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *point
 #define SWIGTYPE_p_CvContour swig_types[11]
 #define SWIGTYPE_p_CvContourTree swig_types[12]
 #define SWIGTYPE_p_CvConvexityDefect swig_types[13]
-#define SWIGTYPE_p_CvFileNode swig_types[14]
-#define SWIGTYPE_p_CvFileNode_data swig_types[15]
-#define SWIGTYPE_p_CvFileStorage swig_types[16]
-#define SWIGTYPE_p_CvFilter swig_types[17]
-#define SWIGTYPE_p_CvFont swig_types[18]
-#define SWIGTYPE_p_CvGenericHash swig_types[19]
-#define SWIGTYPE_p_CvGraph swig_types[20]
-#define SWIGTYPE_p_CvGraphEdge swig_types[21]
-#define SWIGTYPE_p_CvGraphScanner swig_types[22]
-#define SWIGTYPE_p_CvGraphVtx swig_types[23]
-#define SWIGTYPE_p_CvGraphVtx2D swig_types[24]
-#define SWIGTYPE_p_CvHaarClassifier swig_types[25]
-#define SWIGTYPE_p_CvHaarClassifierCascade swig_types[26]
-#define SWIGTYPE_p_CvHaarFeature swig_types[27]
-#define SWIGTYPE_p_CvHaarFeature_rect swig_types[28]
-#define SWIGTYPE_p_CvHaarStageClassifier swig_types[29]
-#define SWIGTYPE_p_CvHidHaarClassifierCascade swig_types[30]
-#define SWIGTYPE_p_CvHistogram swig_types[31]
-#define SWIGTYPE_p_CvHuMoments swig_types[32]
-#define SWIGTYPE_p_CvImage swig_types[33]
-#define SWIGTYPE_p_CvKalman swig_types[34]
-#define SWIGTYPE_p_CvLaplaceFilter swig_types[35]
-#define SWIGTYPE_p_CvLineIterator swig_types[36]
-#define SWIGTYPE_p_CvLinearFilter swig_types[37]
-#define SWIGTYPE_p_CvMat swig_types[38]
-#define SWIGTYPE_p_CvMatND swig_types[39]
-#define SWIGTYPE_p_CvMatND_data swig_types[40]
-#define SWIGTYPE_p_CvMatND_dim swig_types[41]
-#define SWIGTYPE_p_CvMat_data swig_types[42]
-#define SWIGTYPE_p_CvMatrix swig_types[43]
-#define SWIGTYPE_p_CvMatrix3 swig_types[44]
-#define SWIGTYPE_p_CvMemBlock swig_types[45]
-#define SWIGTYPE_p_CvMemStorage swig_types[46]
-#define SWIGTYPE_p_CvMemStoragePos swig_types[47]
-#define SWIGTYPE_p_CvModule swig_types[48]
-#define SWIGTYPE_p_CvModuleInfo swig_types[49]
-#define SWIGTYPE_p_CvMoments swig_types[50]
-#define SWIGTYPE_p_CvMorphology swig_types[51]
-#define SWIGTYPE_p_CvNArrayIterator swig_types[52]
-#define SWIGTYPE_p_CvNextEdgeType swig_types[53]
-#define SWIGTYPE_p_CvPOSITObject swig_types[54]
-#define SWIGTYPE_p_CvPluginFuncInfo swig_types[55]
-#define SWIGTYPE_p_CvPoint swig_types[56]
-#define SWIGTYPE_p_CvPoint2D32f swig_types[57]
-#define SWIGTYPE_p_CvPoint2D64f swig_types[58]
-#define SWIGTYPE_p_CvPoint3D32f swig_types[59]
-#define SWIGTYPE_p_CvPoint3D64f swig_types[60]
-#define SWIGTYPE_p_CvQuadEdge2D swig_types[61]
-#define SWIGTYPE_p_CvRNG_Wrapper swig_types[62]
-#define SWIGTYPE_p_CvRandState swig_types[63]
-#define SWIGTYPE_p_CvRect swig_types[64]
-#define SWIGTYPE_p_CvScalar swig_types[65]
-#define SWIGTYPE_p_CvSepFilter swig_types[66]
-#define SWIGTYPE_p_CvSeq swig_types[67]
-#define SWIGTYPE_p_CvSeqBlock swig_types[68]
-#define SWIGTYPE_p_CvSeqReader swig_types[69]
-#define SWIGTYPE_p_CvSeqWriter swig_types[70]
-#define SWIGTYPE_p_CvSet swig_types[71]
-#define SWIGTYPE_p_CvSetElem swig_types[72]
-#define SWIGTYPE_p_CvSize swig_types[73]
-#define SWIGTYPE_p_CvSize2D32f swig_types[74]
-#define SWIGTYPE_p_CvSlice swig_types[75]
-#define SWIGTYPE_p_CvSparseMat swig_types[76]
-#define SWIGTYPE_p_CvSparseMatIterator swig_types[77]
-#define SWIGTYPE_p_CvSparseNode swig_types[78]
-#define SWIGTYPE_p_CvString swig_types[79]
-#define SWIGTYPE_p_CvStringHashNode swig_types[80]
-#define SWIGTYPE_p_CvSubdiv2D swig_types[81]
-#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[82]
-#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[83]
-#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[84]
-#define SWIGTYPE_p_CvTermCriteria swig_types[85]
-#define SWIGTYPE_p_CvTreeNodeIterator swig_types[86]
-#define SWIGTYPE_p_CvTupleT_CvPoint_2_t swig_types[87]
-#define SWIGTYPE_p_CvTupleT_float_2_t swig_types[88]
-#define SWIGTYPE_p_CvTupleT_float_3_t swig_types[89]
-#define SWIGTYPE_p_CvType swig_types[90]
-#define SWIGTYPE_p_CvTypeInfo swig_types[91]
-#define SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t swig_types[92]
-#define SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t swig_types[93]
-#define SWIGTYPE_p_CvTypedSeqT_CvPoint_t swig_types[94]
-#define SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[95]
-#define SWIGTYPE_p_CvTypedSeqT_CvRect_t swig_types[96]
-#define SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t swig_types[97]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[98]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[99]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[100]
-#define SWIGTYPE_p__CvContourScanner swig_types[101]
-#define SWIGTYPE_p__IplConvKernel swig_types[102]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[103]
-#define SWIGTYPE_p__IplImage swig_types[104]
-#define SWIGTYPE_p__IplROI swig_types[105]
-#define SWIGTYPE_p__IplTileInfo swig_types[106]
-#define SWIGTYPE_p_a_2__float swig_types[107]
-#define SWIGTYPE_p_a_2__signed_char swig_types[108]
-#define SWIGTYPE_p_a_3__float swig_types[109]
-#define SWIGTYPE_p_allocator_type swig_types[110]
-#define SWIGTYPE_p_char swig_types[111]
-#define SWIGTYPE_p_difference_type swig_types[112]
-#define SWIGTYPE_p_double swig_types[113]
-#define SWIGTYPE_p_f_int_int_int_int_int__p__IplROI swig_types[114]
-#define SWIGTYPE_p_f_int_int_int_p_char_p_char_int_int_int_int_int_p_IplROI_p_IplImage_p_void_p_IplTileInfo__p__IplImage swig_types[115]
-#define SWIGTYPE_p_f_int_p_q_const__char_p_q_const__char_p_q_const__char_int_p_void__int swig_types[116]
-#define SWIGTYPE_p_f_p_CvFileStorage_p_CvFileNode__p_void swig_types[117]
-#define SWIGTYPE_p_f_p_CvFileStorage_p_q_const__char_p_q_const__void_CvAttrList__void swig_types[118]
-#define SWIGTYPE_p_f_p__IplImage_int__void swig_types[119]
-#define SWIGTYPE_p_f_p__IplImage_int_int__void swig_types[120]
-#define SWIGTYPE_p_f_p_p_unsigned_char_p_unsigned_char_int_int_p_void__void swig_types[121]
-#define SWIGTYPE_p_f_p_p_void__void swig_types[122]
-#define SWIGTYPE_p_f_p_q_const__IplImage__p__IplImage swig_types[123]
-#define SWIGTYPE_p_f_p_q_const__char_int__p_CvMat swig_types[124]
-#define SWIGTYPE_p_f_p_q_const__char_int__p__IplImage swig_types[125]
-#define SWIGTYPE_p_f_p_q_const__char_p_q_const__void__int swig_types[126]
-#define SWIGTYPE_p_f_p_q_const__char_p_q_const__void__void swig_types[127]
-#define SWIGTYPE_p_f_p_q_const__float_p_q_const__float_p_void__float swig_types[128]
-#define SWIGTYPE_p_f_p_q_const__unsigned_char_p_unsigned_char_p_void__void swig_types[129]
-#define SWIGTYPE_p_f_p_q_const__void__int swig_types[130]
-#define SWIGTYPE_p_f_p_q_const__void__p_void swig_types[131]
-#define SWIGTYPE_p_f_p_q_const__void_p_q_const__void_p_void__int swig_types[132]
-#define SWIGTYPE_p_f_p_void_p_void__int swig_types[133]
-#define SWIGTYPE_p_f_size_t_p_void__p_void swig_types[134]
-#define SWIGTYPE_p_float swig_types[135]
-#define SWIGTYPE_p_int swig_types[136]
-#define SWIGTYPE_p_long_long swig_types[137]
-#define SWIGTYPE_p_p_CvConDensation swig_types[138]
-#define SWIGTYPE_p_p_CvFileStorage swig_types[139]
-#define SWIGTYPE_p_p_CvGraphEdge swig_types[140]
-#define SWIGTYPE_p_p_CvGraphScanner swig_types[141]
-#define SWIGTYPE_p_p_CvGraphVtx swig_types[142]
-#define SWIGTYPE_p_p_CvHaarClassifierCascade swig_types[143]
-#define SWIGTYPE_p_p_CvHistogram swig_types[144]
-#define SWIGTYPE_p_p_CvKalman swig_types[145]
-#define SWIGTYPE_p_p_CvMat swig_types[146]
-#define SWIGTYPE_p_p_CvMatND swig_types[147]
-#define SWIGTYPE_p_p_CvMemStorage swig_types[148]
-#define SWIGTYPE_p_p_CvPOSITObject swig_types[149]
-#define SWIGTYPE_p_p_CvPoint swig_types[150]
-#define SWIGTYPE_p_p_CvSeq swig_types[151]
-#define SWIGTYPE_p_p_CvSeqBlock swig_types[152]
-#define SWIGTYPE_p_p_CvSetElem swig_types[153]
-#define SWIGTYPE_p_p_CvSparseMat swig_types[154]
-#define SWIGTYPE_p_p_CvSubdiv2DPoint swig_types[155]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvConnectedComp_t swig_types[156]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvPoint2D32f_t swig_types[157]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvPoint_t swig_types[158]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[159]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvRect_t swig_types[160]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvSeq_p_t swig_types[161]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[162]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[163]
-#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[164]
-#define SWIGTYPE_p_p__CvContourScanner swig_types[165]
-#define SWIGTYPE_p_p__IplConvKernel swig_types[166]
-#define SWIGTYPE_p_p__IplImage swig_types[167]
-#define SWIGTYPE_p_p_char swig_types[168]
-#define SWIGTYPE_p_p_float swig_types[169]
-#define SWIGTYPE_p_p_p_CvMat swig_types[170]
-#define SWIGTYPE_p_p_unsigned_char swig_types[171]
-#define SWIGTYPE_p_p_void swig_types[172]
-#define SWIGTYPE_p_short swig_types[173]
-#define SWIGTYPE_p_signed_char swig_types[174]
-#define SWIGTYPE_p_size_t swig_types[175]
-#define SWIGTYPE_p_size_type swig_types[176]
-#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t swig_types[177]
-#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t__allocator_type swig_types[178]
-#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t__value_type swig_types[179]
-#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t swig_types[180]
-#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t__allocator_type swig_types[181]
-#define SWIGTYPE_p_swig__OctSwigIterator swig_types[182]
-#define SWIGTYPE_p_unsigned_char swig_types[183]
-#define SWIGTYPE_p_unsigned_int swig_types[184]
-#define SWIGTYPE_p_unsigned_long_long swig_types[185]
-#define SWIGTYPE_p_unsigned_short swig_types[186]
-#define SWIGTYPE_p_value_type swig_types[187]
-#define SWIGTYPE_p_void swig_types[188]
-static swig_type_info *swig_types[190];
-static swig_module_info swig_module = {swig_types, 189, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvFeatureTree swig_types[14]
+#define SWIGTYPE_p_CvFileNode swig_types[15]
+#define SWIGTYPE_p_CvFileNode_data swig_types[16]
+#define SWIGTYPE_p_CvFileStorage swig_types[17]
+#define SWIGTYPE_p_CvFilter swig_types[18]
+#define SWIGTYPE_p_CvFont swig_types[19]
+#define SWIGTYPE_p_CvGenericHash swig_types[20]
+#define SWIGTYPE_p_CvGraph swig_types[21]
+#define SWIGTYPE_p_CvGraphEdge swig_types[22]
+#define SWIGTYPE_p_CvGraphScanner swig_types[23]
+#define SWIGTYPE_p_CvGraphVtx swig_types[24]
+#define SWIGTYPE_p_CvGraphVtx2D swig_types[25]
+#define SWIGTYPE_p_CvHaarClassifier swig_types[26]
+#define SWIGTYPE_p_CvHaarClassifierCascade swig_types[27]
+#define SWIGTYPE_p_CvHaarFeature swig_types[28]
+#define SWIGTYPE_p_CvHaarFeature_rect swig_types[29]
+#define SWIGTYPE_p_CvHaarStageClassifier swig_types[30]
+#define SWIGTYPE_p_CvHidHaarClassifierCascade swig_types[31]
+#define SWIGTYPE_p_CvHistogram swig_types[32]
+#define SWIGTYPE_p_CvHuMoments swig_types[33]
+#define SWIGTYPE_p_CvImage swig_types[34]
+#define SWIGTYPE_p_CvKalman swig_types[35]
+#define SWIGTYPE_p_CvLaplaceFilter swig_types[36]
+#define SWIGTYPE_p_CvLineIterator swig_types[37]
+#define SWIGTYPE_p_CvLinearFilter swig_types[38]
+#define SWIGTYPE_p_CvMat swig_types[39]
+#define SWIGTYPE_p_CvMatND swig_types[40]
+#define SWIGTYPE_p_CvMatND_data swig_types[41]
+#define SWIGTYPE_p_CvMatND_dim swig_types[42]
+#define SWIGTYPE_p_CvMat_data swig_types[43]
+#define SWIGTYPE_p_CvMatrix swig_types[44]
+#define SWIGTYPE_p_CvMatrix3 swig_types[45]
+#define SWIGTYPE_p_CvMemBlock swig_types[46]
+#define SWIGTYPE_p_CvMemStorage swig_types[47]
+#define SWIGTYPE_p_CvMemStoragePos swig_types[48]
+#define SWIGTYPE_p_CvModule swig_types[49]
+#define SWIGTYPE_p_CvModuleInfo swig_types[50]
+#define SWIGTYPE_p_CvMoments swig_types[51]
+#define SWIGTYPE_p_CvMorphology swig_types[52]
+#define SWIGTYPE_p_CvNArrayIterator swig_types[53]
+#define SWIGTYPE_p_CvNextEdgeType swig_types[54]
+#define SWIGTYPE_p_CvPOSITObject swig_types[55]
+#define SWIGTYPE_p_CvPluginFuncInfo swig_types[56]
+#define SWIGTYPE_p_CvPoint swig_types[57]
+#define SWIGTYPE_p_CvPoint2D32f swig_types[58]
+#define SWIGTYPE_p_CvPoint2D64f swig_types[59]
+#define SWIGTYPE_p_CvPoint3D32f swig_types[60]
+#define SWIGTYPE_p_CvPoint3D64f swig_types[61]
+#define SWIGTYPE_p_CvQuadEdge2D swig_types[62]
+#define SWIGTYPE_p_CvRNG_Wrapper swig_types[63]
+#define SWIGTYPE_p_CvRandState swig_types[64]
+#define SWIGTYPE_p_CvRect swig_types[65]
+#define SWIGTYPE_p_CvScalar swig_types[66]
+#define SWIGTYPE_p_CvSepFilter swig_types[67]
+#define SWIGTYPE_p_CvSeq swig_types[68]
+#define SWIGTYPE_p_CvSeqBlock swig_types[69]
+#define SWIGTYPE_p_CvSeqReader swig_types[70]
+#define SWIGTYPE_p_CvSeqWriter swig_types[71]
+#define SWIGTYPE_p_CvSet swig_types[72]
+#define SWIGTYPE_p_CvSetElem swig_types[73]
+#define SWIGTYPE_p_CvSize swig_types[74]
+#define SWIGTYPE_p_CvSize2D32f swig_types[75]
+#define SWIGTYPE_p_CvSlice swig_types[76]
+#define SWIGTYPE_p_CvSparseMat swig_types[77]
+#define SWIGTYPE_p_CvSparseMatIterator swig_types[78]
+#define SWIGTYPE_p_CvSparseNode swig_types[79]
+#define SWIGTYPE_p_CvString swig_types[80]
+#define SWIGTYPE_p_CvStringHashNode swig_types[81]
+#define SWIGTYPE_p_CvSubdiv2D swig_types[82]
+#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[83]
+#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[84]
+#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[85]
+#define SWIGTYPE_p_CvTermCriteria swig_types[86]
+#define SWIGTYPE_p_CvTreeNodeIterator swig_types[87]
+#define SWIGTYPE_p_CvTupleT_CvPoint_2_t swig_types[88]
+#define SWIGTYPE_p_CvTupleT_float_2_t swig_types[89]
+#define SWIGTYPE_p_CvTupleT_float_3_t swig_types[90]
+#define SWIGTYPE_p_CvType swig_types[91]
+#define SWIGTYPE_p_CvTypeInfo swig_types[92]
+#define SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t swig_types[93]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t swig_types[94]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint_t swig_types[95]
+#define SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[96]
+#define SWIGTYPE_p_CvTypedSeqT_CvRect_t swig_types[97]
+#define SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t swig_types[98]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[99]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[100]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[101]
+#define SWIGTYPE_p__CvContourScanner swig_types[102]
+#define SWIGTYPE_p__IplConvKernel swig_types[103]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[104]
+#define SWIGTYPE_p__IplImage swig_types[105]
+#define SWIGTYPE_p__IplROI swig_types[106]
+#define SWIGTYPE_p__IplTileInfo swig_types[107]
+#define SWIGTYPE_p_a_2__float swig_types[108]
+#define SWIGTYPE_p_a_2__signed_char swig_types[109]
+#define SWIGTYPE_p_a_3__float swig_types[110]
+#define SWIGTYPE_p_allocator_type swig_types[111]
+#define SWIGTYPE_p_char swig_types[112]
+#define SWIGTYPE_p_difference_type swig_types[113]
+#define SWIGTYPE_p_double swig_types[114]
+#define SWIGTYPE_p_f_int_int_int_int_int__p__IplROI swig_types[115]
+#define SWIGTYPE_p_f_int_int_int_p_char_p_char_int_int_int_int_int_p_IplROI_p_IplImage_p_void_p_IplTileInfo__p__IplImage swig_types[116]
+#define SWIGTYPE_p_f_int_p_q_const__char_p_q_const__char_p_q_const__char_int_p_void__int swig_types[117]
+#define SWIGTYPE_p_f_p_CvFileStorage_p_CvFileNode__p_void swig_types[118]
+#define SWIGTYPE_p_f_p_CvFileStorage_p_q_const__char_p_q_const__void_CvAttrList__void swig_types[119]
+#define SWIGTYPE_p_f_p__IplImage_int__void swig_types[120]
+#define SWIGTYPE_p_f_p__IplImage_int_int__void swig_types[121]
+#define SWIGTYPE_p_f_p_p_unsigned_char_p_unsigned_char_int_int_p_void__void swig_types[122]
+#define SWIGTYPE_p_f_p_p_void__void swig_types[123]
+#define SWIGTYPE_p_f_p_q_const__IplImage__p__IplImage swig_types[124]
+#define SWIGTYPE_p_f_p_q_const__char_int__p_CvMat swig_types[125]
+#define SWIGTYPE_p_f_p_q_const__char_int__p__IplImage swig_types[126]
+#define SWIGTYPE_p_f_p_q_const__char_p_q_const__void__int swig_types[127]
+#define SWIGTYPE_p_f_p_q_const__char_p_q_const__void__void swig_types[128]
+#define SWIGTYPE_p_f_p_q_const__float_p_q_const__float_p_void__float swig_types[129]
+#define SWIGTYPE_p_f_p_q_const__unsigned_char_p_unsigned_char_p_void__void swig_types[130]
+#define SWIGTYPE_p_f_p_q_const__void__int swig_types[131]
+#define SWIGTYPE_p_f_p_q_const__void__p_void swig_types[132]
+#define SWIGTYPE_p_f_p_q_const__void_p_q_const__void_p_void__int swig_types[133]
+#define SWIGTYPE_p_f_p_void_p_void__int swig_types[134]
+#define SWIGTYPE_p_f_size_t_p_void__p_void swig_types[135]
+#define SWIGTYPE_p_float swig_types[136]
+#define SWIGTYPE_p_int swig_types[137]
+#define SWIGTYPE_p_long_long swig_types[138]
+#define SWIGTYPE_p_p_CvConDensation swig_types[139]
+#define SWIGTYPE_p_p_CvFileStorage swig_types[140]
+#define SWIGTYPE_p_p_CvGraphEdge swig_types[141]
+#define SWIGTYPE_p_p_CvGraphScanner swig_types[142]
+#define SWIGTYPE_p_p_CvGraphVtx swig_types[143]
+#define SWIGTYPE_p_p_CvHaarClassifierCascade swig_types[144]
+#define SWIGTYPE_p_p_CvHistogram swig_types[145]
+#define SWIGTYPE_p_p_CvKalman swig_types[146]
+#define SWIGTYPE_p_p_CvMat swig_types[147]
+#define SWIGTYPE_p_p_CvMatND swig_types[148]
+#define SWIGTYPE_p_p_CvMemStorage swig_types[149]
+#define SWIGTYPE_p_p_CvPOSITObject swig_types[150]
+#define SWIGTYPE_p_p_CvPoint swig_types[151]
+#define SWIGTYPE_p_p_CvSeq swig_types[152]
+#define SWIGTYPE_p_p_CvSeqBlock swig_types[153]
+#define SWIGTYPE_p_p_CvSetElem swig_types[154]
+#define SWIGTYPE_p_p_CvSparseMat swig_types[155]
+#define SWIGTYPE_p_p_CvSubdiv2DPoint swig_types[156]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvConnectedComp_t swig_types[157]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvPoint2D32f_t swig_types[158]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvPoint_t swig_types[159]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[160]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvRect_t swig_types[161]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvSeq_p_t swig_types[162]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[163]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[164]
+#define SWIGTYPE_p_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[165]
+#define SWIGTYPE_p_p__CvContourScanner swig_types[166]
+#define SWIGTYPE_p_p__IplConvKernel swig_types[167]
+#define SWIGTYPE_p_p__IplImage swig_types[168]
+#define SWIGTYPE_p_p_char swig_types[169]
+#define SWIGTYPE_p_p_float swig_types[170]
+#define SWIGTYPE_p_p_p_CvMat swig_types[171]
+#define SWIGTYPE_p_p_unsigned_char swig_types[172]
+#define SWIGTYPE_p_p_void swig_types[173]
+#define SWIGTYPE_p_short swig_types[174]
+#define SWIGTYPE_p_signed_char swig_types[175]
+#define SWIGTYPE_p_size_t swig_types[176]
+#define SWIGTYPE_p_size_type swig_types[177]
+#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t swig_types[178]
+#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t__allocator_type swig_types[179]
+#define SWIGTYPE_p_std__vectorT_CvPoint_std__allocatorT_CvPoint_t_t__value_type swig_types[180]
+#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t swig_types[181]
+#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t__allocator_type swig_types[182]
+#define SWIGTYPE_p_swig__OctSwigIterator swig_types[183]
+#define SWIGTYPE_p_unsigned_char swig_types[184]
+#define SWIGTYPE_p_unsigned_int swig_types[185]
+#define SWIGTYPE_p_unsigned_long_long swig_types[186]
+#define SWIGTYPE_p_unsigned_short swig_types[187]
+#define SWIGTYPE_p_value_type swig_types[188]
+#define SWIGTYPE_p_void swig_types[189]
+static swig_type_info *swig_types[191];
+static swig_module_info swig_module = {swig_types, 190, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3996,7 +3932,7 @@ SWIGINTERN IplImage *IplImage_operator_Sa___SWIG_0(IplImage *self,CvArr *src){
 		cvAdd(self, src, res);
 		return res;
 	}
-SWIGINTERN IplImage *IplImage_operator_Sm_(IplImage *self,CvArr *src){
+SWIGINTERN IplImage *IplImage_operator_Sm___SWIG_0(IplImage *self,CvArr *src){
 		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
 		cvMul(self, src, res);
 		return res;
@@ -4032,68 +3968,73 @@ SWIGINTERN IplImage *IplImage_operator_Ss___SWIG_1(IplImage *self,CvScalar val){
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sg__Se___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 2);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sg__Se___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 2);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Se__Se___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 0);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Se__Se___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 0);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sl__Se___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 4);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sl__Se___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 4);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_SN__Se___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 5);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_SN__Se___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 5);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sl___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 3);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sl___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 3);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sg___SWIG_0(IplImage *self,CvArr *src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmp(self, src, res, 1);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sg___SWIG_1(IplImage *self,double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), 8, 1);
 		cvCmpS(self, val, res, 1);
+		return res;
+	}
+SWIGINTERN IplImage *IplImage_operator_Sm___SWIG_1(IplImage *self,double val){
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvConvertScale(self, res, val);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage_operator_Sd___SWIG_1(IplImage *self,double val){
 		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-		cvConvertScale(self, res, val);
+		cvConvertScale(self, res, 1.0/val);
 		return res;
 	}
 SWIGINTERN IplImage *IplImage___radd____SWIG_0(IplImage *self,CvArr *arg){
@@ -4303,7 +4244,7 @@ SWIGINTERN CvMat *CvMat_operator_Sa___SWIG_0(CvMat *self,CvArr *src){
 		cvAdd(self, src, res);
 		return res;
 	}
-SWIGINTERN CvMat *CvMat_operator_Sm_(CvMat *self,CvArr *src){
+SWIGINTERN CvMat *CvMat_operator_Sm___SWIG_0(CvMat *self,CvArr *src){
 		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
 		cvMul(self, src, res);
 		return res;
@@ -4339,68 +4280,73 @@ SWIGINTERN CvMat *CvMat_operator_Ss___SWIG_1(CvMat *self,CvScalar val){
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sg__Se___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 2);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sg__Se___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 2);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Se__Se___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 0);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Se__Se___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 0);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sl__Se___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 4);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sl__Se___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 4);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_SN__Se___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 5);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_SN__Se___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 5);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sl___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 3);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sl___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 3);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sg___SWIG_0(CvMat *self,CvArr *src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmp(self, src, res, 1);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sg___SWIG_1(CvMat *self,double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, 0);
 		cvCmpS(self, val, res, 1);
+		return res;
+	}
+SWIGINTERN CvMat *CvMat_operator_Sm___SWIG_1(CvMat *self,double val){
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvConvertScale(self, res, val);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat_operator_Sd___SWIG_1(CvMat *self,double val){
 		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-		cvConvertScale(self, res, val);
+		cvConvertScale(self, res, 1.0/val);
 		return res;
 	}
 SWIGINTERN CvMat *CvMat___radd____SWIG_0(CvMat *self,CvArr *arg){
@@ -4795,10 +4741,8 @@ SWIGINTERN void CvScalar___setitem__(CvScalar *self,int index,double value){
 SWIGINTERN void delete_CvMemStorage(CvMemStorage *self){ CvMemStorage   * dummy = self; cvReleaseMemStorage         (& dummy); }
 
 SWIGINTERN int
-SWIG_AsCharPtrAndSize(octave_value ov, char** cptr, size_t* psize, int *alloc)
+SWIG_AsCharPtrAndSize(const octave_value& ov, char** cptr, size_t* psize, int *alloc)
 {
-  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-    ov = ov.cell_value()(0);
   if (!ov.is_string())
     return SWIG_TypeError;
   
@@ -5204,8 +5148,8 @@ const char* _wrap_cvSeqPushFront_texinfo = "-*- texinfo -*-\n\
 @var{seq} is of type CvSeq. @var{element} is of type void. @var{retval} is of type schar. \n\
 @end deftypefn";
 const char* _wrap_cvSmooth_texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} cvSmooth (@var{src}, @var{dst}, @var{smoothtype} = 2, @var{param1} = 3, @var{param2} = 0, @var{param3} = 0, @var{param4} = 0)\n\
-@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{smoothtype} is of type int. @var{param1} is of type int. @var{param2} is of type int. @var{param3} is of type double. @var{param4} is of type double. \n\
+@deftypefn {Loadable Function} cvSmooth (@var{src}, @var{dst}, @var{smoothtype} = 2, @var{size1} = 3, @var{size2} = 0, @var{sigma1} = 0, @var{sigma2} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{smoothtype} is of type int. @var{size1} is of type int. @var{size2} is of type int. @var{sigma1} is of type double. @var{sigma2} is of type double. \n\
 @end deftypefn";
 const char* _wrap_new_CvSubdiv2D_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CvSubdiv2D::CvSubdiv2D ()\n\
@@ -5299,6 +5243,10 @@ const char* _wrap_CvMat___ror___texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = __ror__ (@var{self}, @var{arg})\n\
 @var{self} is of type CvMat. @var{arg} is of type double. @var{retval} is of type CvMat. \n\
 @end deftypefn";
+const char* _wrap_cvFindFeatures_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvFindFeatures (@var{tr}, @var{desc}, @var{results}, @var{dist}, @var{k} = 2, @var{emax} = 20)\n\
+@var{tr} is of type CvFeatureTree. @var{desc} is of type CvMat. @var{results} is of type CvMat. @var{dist} is of type CvMat. @var{k} is of type int. @var{emax} is of type int. \n\
+@end deftypefn";
 const char* _wrap_CvSeq_CvPoint2D32f_cast_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CvTypedSeq<(CvPoint2D32f)>::cast (@var{seq})\n\
 @var{seq} is of type CvSeq. @var{retval} is of type CvSeq_CvPoint2D32f. \n\
@@ -5346,6 +5294,14 @@ const char* _wrap_CV_WRITE_SEQ_ELEM_VAR_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_cvSeqRemove_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvSeqRemove (@var{seq}, @var{index})\n\
 @var{seq} is of type CvSeq. @var{index} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvCreateFeatureTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvCreateFeatureTree (@var{desc})\n\
+@var{desc} is of type CvMat. @var{retval} is of type CvFeatureTree. \n\
+@end deftypefn";
+const char* _wrap_cvReleaseFeatureTree_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvReleaseFeatureTree (@var{tr})\n\
+@var{tr} is of type CvFeatureTree. \n\
 @end deftypefn";
 const char* _wrap_CV_NODE_SEQ_IS_SIMPLE_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CV_NODE_SEQ_IS_SIMPLE (@var{seq})\n\
@@ -5436,8 +5392,8 @@ const char* _wrap_FloatVector_begin_texinfo = "-*- texinfo -*-\n\
 @var{self} is of type FloatVector. @var{retval} is of type const_iterator. \n\
 @end deftypefn";
 const char* _wrap_CvMat___mul_texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{src})\n\
-@var{self} is of type CvMat. @var{src} is of type CvArr. @var{retval} is of type CvMat. \n\
+@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{val})\n\
+@var{self} is of type CvMat. @var{val} is of type double. @var{retval} is of type CvMat. \n\
 @end deftypefn";
 const char* _wrap_cvMax_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvMax (@var{src1}, @var{src2}, @var{dst})\n\
@@ -5648,8 +5604,8 @@ const char* _wrap_cvGetCols_texinfo = "-*- texinfo -*-\n\
 @var{arr} is of type CvArr. @var{submat} is of type CvMat. @var{start_col} is of type int. @var{end_col} is of type int. @var{retval} is of type CvMat. \n\
 @end deftypefn";
 const char* _wrap_IplImage___mul_texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{src})\n\
-@var{self} is of type . @var{src} is of type CvArr. @var{retval} is of type . \n\
+@deftypefn {Loadable Function} @var{retval} = operator * (@var{self}, @var{val})\n\
+@var{self} is of type . @var{val} is of type double. @var{retval} is of type . \n\
 @end deftypefn";
 const char* _wrap_CvImage_roi_row_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = roi_row (@var{self}, @var{y})\n\
@@ -6431,6 +6387,10 @@ const char* _wrap_delete_CvMatND_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CvMatND (@var{self})\n\
 @var{self} is of type CvMatND. \n\
 @end deftypefn";
+const char* _wrap_cvFindFeaturesBoxed_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} @var{retval} = cvFindFeaturesBoxed (@var{tr}, @var{bounds_min}, @var{bounds_max}, @var{results})\n\
+@var{tr} is of type CvFeatureTree. @var{bounds_min} is of type CvMat. @var{bounds_max} is of type CvMat. @var{results} is of type CvMat. @var{retval} is of type int. \n\
+@end deftypefn";
 const char* _wrap_CvImage_set_coi_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} set_coi (@var{self}, @var{coi})\n\
 @var{self} is of type CvImage. @var{coi} is of type int. \n\
@@ -6778,6 +6738,10 @@ const char* _wrap_delete_CvHistogram_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CV_READ_EDGE_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CV_READ_EDGE (@var{pt1}, @var{pt2}, @var{reader})\n\
 @var{pt1} is of type CvPoint. @var{pt2} is of type CvPoint. @var{reader} is of type CvSeqReader. \n\
+@end deftypefn";
+const char* _wrap_cvCalibrationMatrixValues_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvCalibrationMatrixValues (@var{calibMatr}, @var{imgWidth}, @var{imgHeight}, @var{apertureWidth} = 0, @var{apertureHeight} = 0, @var{fovx} = nil, @var{fovy} = nil, @var{focalLength} = nil, @var{principalPoint} = nil, @var{pixelAspectRatio} = nil)\n\
+@var{calibMatr} is of type CvMat. @var{imgWidth} is of type int. @var{imgHeight} is of type int. @var{apertureWidth} is of type double. @var{apertureHeight} is of type double. @var{fovx} is of type double. @var{fovy} is of type double. @var{focalLength} is of type double. @var{principalPoint} is of type CvPoint2D64f. @var{pixelAspectRatio} is of type double. \n\
 @end deftypefn";
 const char* _wrap_cvCartToPolar_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvCartToPolar (@var{x}, @var{y}, @var{magnitude}, @var{angle} = nil, @var{angle_in_degrees} = 0)\n\
@@ -7850,6 +7814,10 @@ const char* _wrap_delete_CvMorphology_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CvMatrix_addref_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} addref (@var{self})\n\
 @var{self} is of type CvMatrix. \n\
+@end deftypefn";
+const char* _wrap_cvSolvePoly_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSolvePoly (@var{coeffs}, @var{roots}, @var{maxiter} = 10, @var{fig} = 10)\n\
+@var{coeffs} is of type CvMat. @var{roots} is of type CvMat. @var{maxiter} is of type int. @var{fig} is of type int. \n\
 @end deftypefn";
 const char* _wrap_cvSet2D_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} cvSet2D (@var{arr}, @var{idx0}, @var{idx1}, @var{value})\n\
@@ -20205,7 +20173,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_IplImage___mul (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_IplImage___mul__SWIG_0 (const octave_value_list& args, int nargout) {
   IplImage *arg1 = (IplImage *) 0 ;
   CvArr *arg2 = (CvArr *) 0 ;
   IplImage *result = 0 ;
@@ -20232,7 +20200,7 @@ static octave_value_list _wrap_IplImage___mul (const octave_value_list& args, in
   }
   {
     try {
-      result = (IplImage *)IplImage_operator_Sm_(arg1,arg2); 
+      result = (IplImage *)IplImage_operator_Sm___SWIG_0(arg1,arg2); 
     } 
     catch (...) 
     {
@@ -21554,6 +21522,103 @@ static octave_value_list _wrap_IplImage___gt (const octave_value_list& args, int
       }
       if (_v) {
         return _wrap_IplImage___gt__SWIG_1(args, nargout);
+      }
+    }
+  }
+  
+  error("No matching function for overload");
+  return octave_value_list();
+}
+
+
+static octave_value_list _wrap_IplImage___mul__SWIG_1 (const octave_value_list& args, int nargout) {
+  IplImage *arg1 = (IplImage *) 0 ;
+  double arg2 ;
+  IplImage *result = 0 ;
+  IplImage header1 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("IplImage___mul",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  {
+    void * vptr;
+    int res = SWIG_ConvertPtr(args(0), (&vptr), SWIGTYPE_p_CvMat, 0);
+    if ( res == -1 ){
+      SWIG_exception( SWIG_TypeError, "%%typemap(in) IplImage * : could not convert to CvMat");
+      SWIG_fail;
+    }
+    arg1 = cvGetImage((CvMat *)vptr, &header1);
+  }
+  ecode2 = SWIG_AsVal_double(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IplImage___mul" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = (double)(val2);
+  {
+    try {
+      result = (IplImage *)IplImage_operator_Sm___SWIG_1(arg1,arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  {
+    SWIG_exception( SWIG_TypeError, "IplImage * return type is deprecated. Please file a bug report at www.sourceforge.net/opencvlibrary if you see this error message.");
+    SWIG_fail;
+  }
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_IplImage___mul (const octave_value_list& args, int nargout) {
+  int argc = args.length();
+  octave_value_ref argv[2]={
+    octave_value_ref(args,0),octave_value_ref(args,1)
+  };
+  
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p__IplImage, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        void *ptr;
+        if(OctList_Check(argv[1]) || OctTuple_Check(argv[1])) {
+          _v = 1;
+        }
+        else if (SWIG_ConvertPtr(argv[1], &ptr, 0, 0) == -1) {
+          _v = 0;
+        }
+        else{
+          _v = 1;
+        }
+      }
+      if (_v) {
+        return _wrap_IplImage___mul__SWIG_0(args, nargout);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p__IplImage, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_double(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_IplImage___mul__SWIG_1(args, nargout);
       }
     }
   }
@@ -23469,7 +23534,6 @@ static swig_octave_member swig_IplImage_members[] = {
 {"roi",0,_wrap_IplImage_roi_get,_wrap_IplImage_roi_set,0,0},
 {"imageSize",0,_wrap_IplImage_imageSize_get,_wrap_IplImage_imageSize_set,0,0},
 {"widthStep",0,_wrap_IplImage_widthStep_get,_wrap_IplImage_widthStep_set,0,0},
-{"__mul",_wrap_IplImage___mul,0,0,0,0},
 {"__add",_wrap_IplImage___add,0,0,0,0},
 {"__xor",_wrap_IplImage___xor,0,0,0,0},
 {"__sub",_wrap_IplImage___sub,0,0,0,0},
@@ -23479,6 +23543,7 @@ static swig_octave_member swig_IplImage_members[] = {
 {"__ne",_wrap_IplImage___ne,0,0,0,0},
 {"__lt",_wrap_IplImage___lt,0,0,0,0},
 {"__gt",_wrap_IplImage___gt,0,0,0,0},
+{"__mul",_wrap_IplImage___mul,0,0,0,0},
 {"__div",_wrap_IplImage___div,0,0,0,0},
 {"__radd__",_wrap_IplImage___radd__,0,0,0,0},
 {"__rsub__",_wrap_IplImage___rsub__,0,0,0,0},
@@ -25277,7 +25342,7 @@ fail:
 }
 
 
-static octave_value_list _wrap_CvMat___mul (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_CvMat___mul__SWIG_0 (const octave_value_list& args, int nargout) {
   CvMat *arg1 = (CvMat *) 0 ;
   CvArr *arg2 = (CvArr *) 0 ;
   CvMat *result = 0 ;
@@ -25301,7 +25366,7 @@ static octave_value_list _wrap_CvMat___mul (const octave_value_list& args, int n
   }
   {
     try {
-      result = (CvMat *)CvMat_operator_Sm_(arg1,arg2); 
+      result = (CvMat *)CvMat_operator_Sm___SWIG_0(arg1,arg2); 
     } 
     catch (...) 
     {
@@ -26512,6 +26577,97 @@ static octave_value_list _wrap_CvMat___gt (const octave_value_list& args, int na
       }
       if (_v) {
         return _wrap_CvMat___gt__SWIG_1(args, nargout);
+      }
+    }
+  }
+  
+  error("No matching function for overload");
+  return octave_value_list();
+}
+
+
+static octave_value_list _wrap_CvMat___mul__SWIG_1 (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  double arg2 ;
+  CvMat *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvMat___mul",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvMat___mul" "', argument " "1"" of type '" "CvMat *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  ecode2 = SWIG_AsVal_double(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvMat___mul" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = (double)(val2);
+  {
+    try {
+      result = (CvMat *)CvMat_operator_Sm___SWIG_1(arg1,arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvMat___mul (const octave_value_list& args, int nargout) {
+  int argc = args.length();
+  octave_value_ref argv[2]={
+    octave_value_ref(args,0),octave_value_ref(args,1)
+  };
+  
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        void *ptr;
+        if(OctList_Check(argv[1]) || OctTuple_Check(argv[1])) {
+          _v = 1;
+        }
+        else if (SWIG_ConvertPtr(argv[1], &ptr, 0, 0) == -1) {
+          _v = 0;
+        }
+        else{
+          _v = 1;
+        }
+      }
+      if (_v) {
+        return _wrap_CvMat___mul__SWIG_0(args, nargout);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_double(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_CvMat___mul__SWIG_1(args, nargout);
       }
     }
   }
@@ -28357,7 +28513,6 @@ static swig_octave_member swig_CvMat_members[] = {
 {"widthStep",0,_wrap_CvMat_widthStep_get,octave_set_immutable,0,0},
 {"rows",0,_wrap_CvMat_rows_get,octave_set_immutable,0,0},
 {"cols",0,_wrap_CvMat_cols_get,octave_set_immutable,0,0},
-{"__mul",_wrap_CvMat___mul,0,0,0,0},
 {"__add",_wrap_CvMat___add,0,0,0,0},
 {"__xor",_wrap_CvMat___xor,0,0,0,0},
 {"__sub",_wrap_CvMat___sub,0,0,0,0},
@@ -28367,6 +28522,7 @@ static swig_octave_member swig_CvMat_members[] = {
 {"__ne",_wrap_CvMat___ne,0,0,0,0},
 {"__lt",_wrap_CvMat___lt,0,0,0,0},
 {"__gt",_wrap_CvMat___gt,0,0,0,0},
+{"__mul",_wrap_CvMat___mul,0,0,0,0},
 {"__div",_wrap_CvMat___div,0,0,0,0},
 {"__radd__",_wrap_CvMat___radd__,0,0,0,0},
 {"__rsub__",_wrap_CvMat___rsub__,0,0,0,0},
@@ -53291,6 +53447,66 @@ static octave_value_list _wrap_cvSolveCubic (const octave_value_list& args, int 
     } 
   }
   _outv = SWIG_From_int((int)(result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvSolvePoly (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  int arg3 = (int) 10 ;
+  int arg4 = (int) 10 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvSolvePoly",args.length(),4,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvSolvePoly" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvSolvePoly" "', argument " "2"" of type '" "CvMat *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  if (2<args.length()) {
+    ecode3 = SWIG_AsVal_int(args(2), &val3);
+    if (!SWIG_IsOK(ecode3)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cvSolvePoly" "', argument " "3"" of type '" "int""'");
+    } 
+    arg3 = (int)(val3);
+  }
+  if (3<args.length()) {
+    ecode4 = SWIG_AsVal_int(args(3), &val4);
+    if (!SWIG_IsOK(ecode4)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "cvSolvePoly" "', argument " "4"" of type '" "int""'");
+    } 
+    arg4 = (int)(val4);
+  }
+  {
+    try {
+      cvSolvePoly((CvMat const *)arg1,arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
@@ -89207,6 +89423,204 @@ fail:
 }
 
 
+static octave_value_list _wrap_cvCreateFeatureTree (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvFeatureTree *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvCreateFeatureTree",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvCreateFeatureTree" "', argument " "1"" of type '" "CvMat *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  {
+    try {
+      result = (CvFeatureTree *)cvCreateFeatureTree(arg1); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvFeatureTree, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvReleaseFeatureTree (const octave_value_list& args, int nargout) {
+  CvFeatureTree *arg1 = (CvFeatureTree *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvReleaseFeatureTree",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvFeatureTree, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvReleaseFeatureTree" "', argument " "1"" of type '" "CvFeatureTree *""'"); 
+  }
+  arg1 = (CvFeatureTree *)(argp1);
+  {
+    try {
+      cvReleaseFeatureTree(arg1); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvFindFeatures (const octave_value_list& args, int nargout) {
+  CvFeatureTree *arg1 = (CvFeatureTree *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvMat *arg3 = (CvMat *) 0 ;
+  CvMat *arg4 = (CvMat *) 0 ;
+  int arg5 = (int) 2 ;
+  int arg6 = (int) 20 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvFindFeatures",args.length(),6,4,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvFeatureTree, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvFindFeatures" "', argument " "1"" of type '" "CvFeatureTree *""'"); 
+  }
+  arg1 = (CvFeatureTree *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvFindFeatures" "', argument " "2"" of type '" "CvMat *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvFindFeatures" "', argument " "3"" of type '" "CvMat *""'"); 
+  }
+  arg3 = (CvMat *)(argp3);
+  res4 = SWIG_ConvertPtr(args(3), &argp4,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "cvFindFeatures" "', argument " "4"" of type '" "CvMat *""'"); 
+  }
+  arg4 = (CvMat *)(argp4);
+  if (4<args.length()) {
+    ecode5 = SWIG_AsVal_int(args(4), &val5);
+    if (!SWIG_IsOK(ecode5)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "cvFindFeatures" "', argument " "5"" of type '" "int""'");
+    } 
+    arg5 = (int)(val5);
+  }
+  if (5<args.length()) {
+    ecode6 = SWIG_AsVal_int(args(5), &val6);
+    if (!SWIG_IsOK(ecode6)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "cvFindFeatures" "', argument " "6"" of type '" "int""'");
+    } 
+    arg6 = (int)(val6);
+  }
+  {
+    try {
+      cvFindFeatures(arg1,arg2,arg3,arg4,arg5,arg6); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvFindFeaturesBoxed (const octave_value_list& args, int nargout) {
+  CvFeatureTree *arg1 = (CvFeatureTree *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvMat *arg3 = (CvMat *) 0 ;
+  CvMat *arg4 = (CvMat *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvFindFeaturesBoxed",args.length(),4,4,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvFeatureTree, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvFindFeaturesBoxed" "', argument " "1"" of type '" "CvFeatureTree *""'"); 
+  }
+  arg1 = (CvFeatureTree *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "cvFindFeaturesBoxed" "', argument " "2"" of type '" "CvMat *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  res3 = SWIG_ConvertPtr(args(2), &argp3,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "cvFindFeaturesBoxed" "', argument " "3"" of type '" "CvMat *""'"); 
+  }
+  arg3 = (CvMat *)(argp3);
+  res4 = SWIG_ConvertPtr(args(3), &argp4,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "cvFindFeaturesBoxed" "', argument " "4"" of type '" "CvMat *""'"); 
+  }
+  arg4 = (CvMat *)(argp4);
+  {
+    try {
+      result = (int)cvFindFeaturesBoxed(arg1,arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_From_int((int)(result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
 static octave_value_list _wrap_cvLoadHaarClassifierCascade (const octave_value_list& args, int nargout) {
   char *arg1 = (char *) 0 ;
   CvSize arg2 ;
@@ -90108,6 +90522,124 @@ static octave_value_list _wrap_cvCalibrateCamera2 (const octave_value_list& args
     to_add[1] = SWIG_NewPointerObj(arg6, SWIGTYPE_p_CvMat, 1);
     _outp = SWIG_AppendResult( _outp, to_add, 2 );
   }
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvCalibrationMatrixValues (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  double arg4 = (double) 0 ;
+  double arg5 = (double) 0 ;
+  double *arg6 = (double *) NULL ;
+  double *arg7 = (double *) NULL ;
+  double *arg8 = (double *) NULL ;
+  CvPoint2D64f *arg9 = (CvPoint2D64f *) NULL ;
+  double *arg10 = (double *) NULL ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  double val4 ;
+  int ecode4 = 0 ;
+  double val5 ;
+  int ecode5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  void *argp8 = 0 ;
+  int res8 = 0 ;
+  void *argp9 = 0 ;
+  int res9 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvCalibrationMatrixValues",args.length(),10,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvCalibrationMatrixValues" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvCalibrationMatrixValues" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  ecode3 = SWIG_AsVal_int(args(2), &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "cvCalibrationMatrixValues" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = (int)(val3);
+  if (3<args.length()) {
+    ecode4 = SWIG_AsVal_double(args(3), &val4);
+    if (!SWIG_IsOK(ecode4)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "cvCalibrationMatrixValues" "', argument " "4"" of type '" "double""'");
+    } 
+    arg4 = (double)(val4);
+  }
+  if (4<args.length()) {
+    ecode5 = SWIG_AsVal_double(args(4), &val5);
+    if (!SWIG_IsOK(ecode5)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "cvCalibrationMatrixValues" "', argument " "5"" of type '" "double""'");
+    } 
+    arg5 = (double)(val5);
+  }
+  if (5<args.length()) {
+    res6 = SWIG_ConvertPtr(args(5), &argp6,SWIGTYPE_p_double, 0 |  0 );
+    if (!SWIG_IsOK(res6)) {
+      SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "cvCalibrationMatrixValues" "', argument " "6"" of type '" "double *""'"); 
+    }
+    arg6 = (double *)(argp6);
+  }
+  if (6<args.length()) {
+    res7 = SWIG_ConvertPtr(args(6), &argp7,SWIGTYPE_p_double, 0 |  0 );
+    if (!SWIG_IsOK(res7)) {
+      SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "cvCalibrationMatrixValues" "', argument " "7"" of type '" "double *""'"); 
+    }
+    arg7 = (double *)(argp7);
+  }
+  if (7<args.length()) {
+    res8 = SWIG_ConvertPtr(args(7), &argp8,SWIGTYPE_p_double, 0 |  0 );
+    if (!SWIG_IsOK(res8)) {
+      SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "cvCalibrationMatrixValues" "', argument " "8"" of type '" "double *""'"); 
+    }
+    arg8 = (double *)(argp8);
+  }
+  if (8<args.length()) {
+    res9 = SWIG_ConvertPtr(args(8), &argp9,SWIGTYPE_p_CvPoint2D64f, 0 |  0 );
+    if (!SWIG_IsOK(res9)) {
+      SWIG_exception_fail(SWIG_ArgError(res9), "in method '" "cvCalibrationMatrixValues" "', argument " "9"" of type '" "CvPoint2D64f *""'"); 
+    }
+    arg9 = (CvPoint2D64f *)(argp9);
+  }
+  if (9<args.length()) {
+    res10 = SWIG_ConvertPtr(args(9), &argp10,SWIGTYPE_p_double, 0 |  0 );
+    if (!SWIG_IsOK(res10)) {
+      SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "cvCalibrationMatrixValues" "', argument " "10"" of type '" "double *""'"); 
+    }
+    arg10 = (double *)(argp10);
+  }
+  {
+    try {
+      cvCalibrationMatrixValues((CvMat const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
 }
@@ -106537,7 +107069,6 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplImage_widthStep_set",_wrap_IplImage_widthStep_set,0,0,2,0},
 {"IplImage_widthStep_get",_wrap_IplImage_widthStep_get,0,0,2,0},
 {"delete_IplImage",_wrap_delete_IplImage,0,0,2,_wrap_delete_IplImage_texinfo},
-{"IplImage___mul",_wrap_IplImage___mul,0,0,2,_wrap_IplImage___mul_texinfo},
 {"IplImage___add",_wrap_IplImage___add,0,0,2,_wrap_IplImage___add_texinfo},
 {"IplImage___xor",_wrap_IplImage___xor,0,0,2,_wrap_IplImage___xor_texinfo},
 {"IplImage___sub",_wrap_IplImage___sub,0,0,2,_wrap_IplImage___sub_texinfo},
@@ -106547,6 +107078,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"IplImage___ne",_wrap_IplImage___ne,0,0,2,_wrap_IplImage___ne_texinfo},
 {"IplImage___lt",_wrap_IplImage___lt,0,0,2,_wrap_IplImage___lt_texinfo},
 {"IplImage___gt",_wrap_IplImage___gt,0,0,2,_wrap_IplImage___gt_texinfo},
+{"IplImage___mul",_wrap_IplImage___mul,0,0,2,_wrap_IplImage___mul_texinfo},
 {"IplImage___div",_wrap_IplImage___div,0,0,2,_wrap_IplImage___div_texinfo},
 {"IplImage___radd__",_wrap_IplImage___radd__,0,0,2,_wrap_IplImage___radd___texinfo},
 {"IplImage___rsub__",_wrap_IplImage___rsub__,0,0,2,_wrap_IplImage___rsub___texinfo},
@@ -106622,7 +107154,6 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat_widthStep_get",_wrap_CvMat_widthStep_get,0,0,2,0},
 {"CvMat_rows_get",_wrap_CvMat_rows_get,0,0,2,0},
 {"CvMat_cols_get",_wrap_CvMat_cols_get,0,0,2,0},
-{"CvMat___mul",_wrap_CvMat___mul,0,0,2,_wrap_CvMat___mul_texinfo},
 {"CvMat___add",_wrap_CvMat___add,0,0,2,_wrap_CvMat___add_texinfo},
 {"CvMat___xor",_wrap_CvMat___xor,0,0,2,_wrap_CvMat___xor_texinfo},
 {"CvMat___sub",_wrap_CvMat___sub,0,0,2,_wrap_CvMat___sub_texinfo},
@@ -106632,6 +107163,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvMat___ne",_wrap_CvMat___ne,0,0,2,_wrap_CvMat___ne_texinfo},
 {"CvMat___lt",_wrap_CvMat___lt,0,0,2,_wrap_CvMat___lt_texinfo},
 {"CvMat___gt",_wrap_CvMat___gt,0,0,2,_wrap_CvMat___gt_texinfo},
+{"CvMat___mul",_wrap_CvMat___mul,0,0,2,_wrap_CvMat___mul_texinfo},
 {"CvMat___div",_wrap_CvMat___div,0,0,2,_wrap_CvMat___div_texinfo},
 {"CvMat___radd__",_wrap_CvMat___radd__,0,0,2,_wrap_CvMat___radd___texinfo},
 {"CvMat___rsub__",_wrap_CvMat___rsub__,0,0,2,_wrap_CvMat___rsub___texinfo},
@@ -107341,6 +107873,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvRandArr",_wrap_cvRandArr,0,0,2,_wrap_cvRandArr_texinfo},
 {"cvRandShuffle",_wrap_cvRandShuffle,0,0,2,_wrap_cvRandShuffle_texinfo},
 {"cvSolveCubic",_wrap_cvSolveCubic,0,0,2,_wrap_cvSolveCubic_texinfo},
+{"cvSolvePoly",_wrap_cvSolvePoly,0,0,2,_wrap_cvSolvePoly_texinfo},
 {"cvCrossProduct",_wrap_cvCrossProduct,0,0,2,_wrap_cvCrossProduct_texinfo},
 {"cvGEMM",_wrap_cvGEMM,0,0,2,_wrap_cvGEMM_texinfo},
 {"cvTransform",_wrap_cvTransform,0,0,2,_wrap_cvTransform_texinfo},
@@ -108115,6 +108648,10 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvHoughLinesUntyped",_wrap_cvHoughLinesUntyped,0,0,2,_wrap_cvHoughLinesUntyped_texinfo},
 {"cvHoughCirclesUntyped",_wrap_cvHoughCirclesUntyped,0,0,2,_wrap_cvHoughCirclesUntyped_texinfo},
 {"cvFitLine",_wrap_cvFitLine,0,0,2,_wrap_cvFitLine_texinfo},
+{"cvCreateFeatureTree",_wrap_cvCreateFeatureTree,0,0,2,_wrap_cvCreateFeatureTree_texinfo},
+{"cvReleaseFeatureTree",_wrap_cvReleaseFeatureTree,0,0,2,_wrap_cvReleaseFeatureTree_texinfo},
+{"cvFindFeatures",_wrap_cvFindFeatures,0,0,2,_wrap_cvFindFeatures_texinfo},
+{"cvFindFeaturesBoxed",_wrap_cvFindFeaturesBoxed,0,0,2,_wrap_cvFindFeaturesBoxed_texinfo},
 {"cvLoadHaarClassifierCascade",_wrap_cvLoadHaarClassifierCascade,0,0,2,_wrap_cvLoadHaarClassifierCascade_texinfo},
 {"cvReleaseHaarClassifierCascade",_wrap_cvReleaseHaarClassifierCascade,0,0,2,_wrap_cvReleaseHaarClassifierCascade_texinfo},
 {"cvSetImagesForHaarClassifierCascade",_wrap_cvSetImagesForHaarClassifierCascade,0,0,2,_wrap_cvSetImagesForHaarClassifierCascade_texinfo},
@@ -108128,6 +108665,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvProjectPoints2",_wrap_cvProjectPoints2,0,0,2,_wrap_cvProjectPoints2_texinfo},
 {"cvFindExtrinsicCameraParams2",_wrap_cvFindExtrinsicCameraParams2,0,0,2,_wrap_cvFindExtrinsicCameraParams2_texinfo},
 {"cvCalibrateCamera2",_wrap_cvCalibrateCamera2,0,0,2,_wrap_cvCalibrateCamera2_texinfo},
+{"cvCalibrationMatrixValues",_wrap_cvCalibrationMatrixValues,0,0,2,_wrap_cvCalibrationMatrixValues_texinfo},
 {"cvFindChessboardCorners",_wrap_cvFindChessboardCorners,0,0,2,_wrap_cvFindChessboardCorners_texinfo},
 {"cvDrawChessboardCorners",_wrap_cvDrawChessboardCorners,0,0,2,_wrap_cvDrawChessboardCorners_texinfo},
 {"cvCreatePOSITObject",_wrap_cvCreatePOSITObject,0,0,2,_wrap_cvCreatePOSITObject_texinfo},
@@ -108388,6 +108926,7 @@ static swig_type_info _swigt__p_CvConnectedComp = {"_p_CvConnectedComp", "CvConn
 static swig_type_info _swigt__p_CvContour = {"_p_CvContour", "CvPoint2DSeq *|CvContour *", 0, 0, (void*)&_wrap_class_CvContour, 0};
 static swig_type_info _swigt__p_CvContourTree = {"_p_CvContourTree", "CvContourTree *", 0, 0, (void*)&_wrap_class_CvContourTree, 0};
 static swig_type_info _swigt__p_CvConvexityDefect = {"_p_CvConvexityDefect", "CvConvexityDefect *", 0, 0, (void*)&_wrap_class_CvConvexityDefect, 0};
+static swig_type_info _swigt__p_CvFeatureTree = {"_p_CvFeatureTree", "CvFeatureTree *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvFileNode = {"_p_CvFileNode", "CvFileNode *", 0, 0, (void*)&_wrap_class_CvFileNode, 0};
 static swig_type_info _swigt__p_CvFileNode_data = {"_p_CvFileNode_data", "CvFileNode_data *", 0, 0, (void*)&_wrap_class_CvFileNode_data, 0};
 static swig_type_info _swigt__p_CvFileStorage = {"_p_CvFileStorage", "CvFileStorage *", 0, 0, (void*)0, 0};
@@ -108579,6 +109118,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvContour,
   &_swigt__p_CvContourTree,
   &_swigt__p_CvConvexityDefect,
+  &_swigt__p_CvFeatureTree,
   &_swigt__p_CvFileNode,
   &_swigt__p_CvFileNode_data,
   &_swigt__p_CvFileStorage,
@@ -108770,6 +109310,7 @@ static swig_cast_info _swigc__p_CvConnectedComp[] = {  {&_swigt__p_CvConnectedCo
 static swig_cast_info _swigc__p_CvContour[] = {  {&_swigt__p_CvContour, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvContourTree[] = {  {&_swigt__p_CvContourTree, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvConvexityDefect[] = {  {&_swigt__p_CvConvexityDefect, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvFeatureTree[] = {  {&_swigt__p_CvFeatureTree, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvFileNode[] = {  {&_swigt__p_CvFileNode, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvFileNode_data[] = {  {&_swigt__p_CvFileNode_data, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvFileStorage[] = {  {&_swigt__p_CvFileStorage, 0, 0, 0},{0, 0, 0, 0}};
@@ -108961,6 +109502,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvContour,
   _swigc__p_CvContourTree,
   _swigc__p_CvConvexityDefect,
+  _swigc__p_CvFeatureTree,
   _swigc__p_CvFileNode,
   _swigc__p_CvFileNode_data,
   _swigc__p_CvFileStorage,
@@ -109380,7 +109922,7 @@ SWIG_PropagateClientData(void) {
 
 
 
-static void SWIG_init_user(octave_swig_type* module_ns);
+void SWIG_init_user(octave_swig_type* module_ns);
 
 DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
   static bool already_init=false;
@@ -109410,11 +109952,14 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
     if (swig_globals[j].get_method)
       cvar_ns->assign(swig_globals[j].name,&swig_globals[j]);
 
-  octave_swig_type* module_ns=new octave_swig_type(0, 0, 0, true);
+  octave_swig_type* module_ns=new octave_swig_type;
   module_ns->assign("cvar",Swig::swig_value_ref(cvar_ns));
   for (int j=0;swig_globals[j].name;++j)
     if (swig_globals[j].method)
       module_ns->assign(swig_globals[j].name,&swig_globals[j]);
+
+  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
+  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
 
   // * need better solution here; swig_type -> octave_class mapping is 
   // * really n-to-1, in some cases such as template partial spec, etc. 
@@ -109429,23 +109974,16 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
 
   SWIG_init_user(module_ns);
 
-  SWIG_InstallOps(octave_swig_ref::static_type_id());
+  swig_install_ops(octave_swig_ref::static_type_id());
 
-  // the incref is necessary so install_global doesn't destroy module_ns,
-  // as it would if it installed something with the same name as the module.
-  module_ns->incref();
   if (global_option)
     module_ns->install_global();
-  module_ns->decref();
-
-  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
-  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
 
   return octave_value_list();
 }
 
 
-static void SWIG_init_user(octave_swig_type* module_ns)
+void SWIG_init_user(octave_swig_type* module_ns)
 {
   SWIG_Octave_SetConstant(module_ns,"sizeof_CvContour",SWIG_From_size_t((size_t)(sizeof(CvContour))));
   SWIG_Octave_SetConstant(module_ns,"sizeof_CvPoint",SWIG_From_size_t((size_t)(sizeof(CvPoint))));
@@ -109857,6 +110395,7 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_LKFLOW_PYR_A_READY",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_LKFLOW_PYR_B_READY",SWIG_From_int((int)(2)));
   SWIG_Octave_SetConstant(module_ns,"CV_LKFLOW_INITIAL_GUESSES",SWIG_From_int((int)(4)));
+  SWIG_Octave_SetConstant(module_ns,"CV_LKFLOW_GET_MIN_EIGENVALS",SWIG_From_int((int)(8)));
   SWIG_Octave_SetConstant(module_ns,"CV_POLY_APPROX_DP",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_DOMINANT_IPAN",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_CONTOURS_MATCH_I1",SWIG_From_int((int)(1)));

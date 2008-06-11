@@ -805,59 +805,82 @@ SWIGRUNTIME octave_value SWIG_Error(int code, const char *msg) {
 #define Octave_Error_Occurred() 0
 #define SWIG_Octave_AddErrorMsg(msg) {;}
 
-SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata);
-SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer);
-
 // For backward compatibility only
 #define SWIG_POINTER_EXCEPTION  0
 #define SWIG_arg_fail(arg)      0
+
+SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata) {
+  octave_value tmp = get_global_value("__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION, true);
+  if (!tmp.is_defined() || !tmp.is_uint64_type())
+    return 0;
+  unsigned long r = tmp.uint64_scalar_value().value();
+  assert(sizeof(r) == sizeof(swig_module_info *));
+  return (swig_module_info *) r;
+}
+
+SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer) {
+  unsigned long r = (unsigned long) pointer;
+  assert(sizeof(r) == sizeof(swig_module_info *));
+  const char *module_var = "__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION;
+  link_to_global_variable(curr_sym_tab->lookup(module_var, true));
+  set_global_value(module_var, octave_uint64(r));
+}
 
 // Runtime API implementation
 
 #include <map>
 #include <vector>
 #include <string>
+#include <ext/hash_map>
 
-typedef octave_value_list(*octave_func) (const octave_value_list &, int);
-class octave_swig_type;
+namespace {
 
-namespace Swig {
-  class Director;
+  typedef octave_value_list(*octave_func) (const octave_value_list &, int);
+  class octave_swig_type;
 
-  SWIGRUNTIME void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
-  SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d);
-  SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self);
+  namespace Swig {
+    class Director;
 
-  SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost);
-  SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov);
-  SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov);
+    void swig_register_director(octave_swig_type *self, void *ptr, Director *d);
+    void swig_director_destroyed(octave_swig_type *self, Director *d);
+    void swig_director_set_self(Director *d, octave_swig_type *self);
 
-  typedef std::map < void *, Director * > rtdir_map;
+    octave_base_value *swig_value_ref(octave_swig_type *ost);
+    octave_swig_type *swig_value_deref(const octave_value &ov);
+    octave_swig_type *swig_value_deref(const octave_base_value &ov);
 
-  SWIGINTERN rtdir_map &get_rtdir_map() {
-    static swig_module_info *module = 0;
-    if (!module)
-      module = SWIG_GetModule(0);
-    assert(module);
-    if (!module->clientdata)
-      module->clientdata = new rtdir_map;
-    return *(rtdir_map *) module->clientdata;
+    struct hash_voidptr {
+      int operator() (void *p) const {
+	return (int) p;
+      }
+    };
+    typedef __gnu_cxx::hash_map < void *, Director *, hash_voidptr > rtdir_map;
+
+    using namespace __gnu_cxx;
+    SWIGINTERN rtdir_map &get_rtdir_map() {
+      static swig_module_info *module = 0;
+      if (!module)
+	module = SWIG_GetModule(0);
+      assert(module);
+      if (!module->clientdata)
+	module->clientdata = new rtdir_map;
+      return *(rtdir_map *) module->clientdata;
+    }
+
+    SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
+      get_rtdir_map()[vptr] = d;
+    }
+
+    SWIGINTERNINLINE void erase_rtdir(void *vptr) {
+      get_rtdir_map().erase(vptr);
+    }
+
+    SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
+      rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
+      Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
+      return rtdir;
+    }
   }
-
-  SWIGINTERNINLINE void set_rtdir(void *vptr, Director *d) {
-    get_rtdir_map()[vptr] = d;
-  }
-
-  SWIGINTERNINLINE void erase_rtdir(void *vptr) {
-    get_rtdir_map().erase(vptr);
-  }
-
-  SWIGINTERNINLINE Director *get_rtdir(void *vptr) {
-    rtdir_map::const_iterator pos = get_rtdir_map().find(vptr);
-    Director *rtdir = (pos != get_rtdir_map().end())? pos->second : 0;
-    return rtdir;
-  }
-}
 
   struct swig_octave_member {
     const char *name;
@@ -900,7 +923,7 @@ namespace Swig {
       }};
     typedef std::pair < const swig_type_info *, cpp_ptr > type_ptr_pair;
 
-    mutable swig_module_info *module;
+    swig_module_info *module;
 
     const swig_type_info *construct_type;	// type of special type object
     std::vector < type_ptr_pair > types;	// our c++ base classes
@@ -909,7 +932,6 @@ namespace Swig {
     typedef std::pair < const swig_octave_member *, octave_value > member_value_pair;
     typedef std::map < std::string, member_value_pair > member_map;
     member_map members;
-    bool always_static;
 
     const swig_octave_member *find_member(const swig_type_info *type, const std::string &name) {
       if (!type->clientdata)
@@ -974,34 +996,6 @@ namespace Swig {
 	  return c->base[j];
       }
       return 0;
-    }
-
-    void load_members(const swig_octave_class* c,member_map& out) const {
-      for (const swig_octave_member *m = c->members; m->name; ++m) {
-	if (out.find(m->name) == out.end())
-	  out.insert(std::make_pair(m->name, std::make_pair(m, octave_value())));
-      }
-      for (int j = 0; c->base_names[j]; ++j) {
-	if (!c->base[j]) {
-	  if (!module)
-	    module = SWIG_GetModule(0);
-	  assert(module);
-	  c->base[j] = SWIG_MangledTypeQueryModule(module, module, c->base_names[j]);
-	}
-	if (!c->base[j])
-	  continue;
-	assert(c->base[j]->clientdata);
-	const swig_octave_class *cj =
-	  (const swig_octave_class *) c->base[j]->clientdata;
-	load_members(cj,out);
-      }
-    }
-
-    void load_members(member_map& out) const {
-      out=members;
-      for (unsigned int j = 0; j < types.size(); ++j)
-	if (types[j].first->clientdata)
-	  load_members((const swig_octave_class *) types[j].first->clientdata, out);
     }
 
     octave_value_list member_invoke(member_value_pair *m, const octave_value_list &args, int nargout) {
@@ -1075,10 +1069,8 @@ namespace Swig {
     octave_swig_type &operator=(const octave_swig_type &rhs);
   public:
 
-    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0,
-		     bool _always_static = false)
-      :	module(0), construct_type(_ptr ? 0 : _type), own(_own), 
-      always_static(_always_static) {
+    octave_swig_type(void *_ptr = 0, const swig_type_info *_type = 0, int _own = 0)
+      :	module(0), construct_type(_ptr ? 0 : _type), own(_own) {
       if (_type || _ptr)
 	types.push_back(std::make_pair(_type, _ptr));
       if (_ptr) {
@@ -1302,12 +1294,9 @@ namespace Swig {
 	}
 
 	octave_value_list args;
-	if (!always_static &&
-	    (!m->first || (!m->first->is_static() && !m->first->is_global())))
+	if (!m->first || (!m->first->is_static() && !m->first->is_global()))
 	  args.append(as_value());
-	if (skip < (int) ops.size() && ops[skip] == '(' && 
-	    ((m->first && m->first->method) || m->second.is_function() || 
-	     m->second.is_function_handle())) {
+	if (skip < (int) ops.size() && ops[skip] == '(' && ((m->first && m->first->method) || m->second.is_function() || m->second.is_function_handle())) {
 	  args.append(*idx_it++);
 	  ++skip;
 	  sub_ovl = member_invoke(m, args, nargout);
@@ -1413,35 +1402,6 @@ namespace Swig {
       return outarg(0).string_value();
     }
 
-    /*
-    virtual Octave_map map_value() const {
-      octave_swig_type *nc_this = const_cast < octave_swig_type *>(this);
-      member_value_pair *m = nc_this->find_member("__str", false);
-      if (!m) {
-	error("__map method not defined");
-	return std::string();
-      }
-      octave_value_list outarg = nc_this->member_invoke(m, octave_value_list(nc_this->as_value()), 1);
-      if (outarg.length() < 1 || !outarg(0).is_map()) {
-	error("__map method did not return a string");
-	return std::string();
-      }
-      return outarg(0).map_value();
-    }
-    */
-
-    virtual string_vector map_keys() const {
-      member_map tmp;
-      load_members(tmp);
-
-      string_vector keys(tmp.size());
-      int k = 0;
-      for (member_map::iterator it = tmp.begin(); it != tmp.end(); ++it)
-	keys(k++) = it->first;
-
-      return keys;
-    }
-
     virtual octave_value convert_to_str(bool pad = false, bool force = false, char type = '"') const {
       return string_value();
     }
@@ -1528,9 +1488,6 @@ namespace Swig {
 	return;
       }
 
-      member_map tmp;
-      load_members(tmp);
-
       os << "{" << std::endl;
       for (unsigned int j = 0; j < types.size(); ++j) {
 	if (types[j].first->clientdata) {
@@ -1540,14 +1497,14 @@ namespace Swig {
 	  os << "  " << types[j].first->name << ", ptr = " << types[j].second.ptr << std::endl;
 	}
       }
-      for (member_map::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+      for (member_map::const_iterator it = members.begin(); it != members.end(); ++it) {
 	if (it->second.first) {
 	  const char *objtype = it->second.first->method ? "method" : "variable";
-	  const char *modifier = (it->second.first->flags &1) ? "static " : (it->second.first->flags &2) ? "global " : "";
-	  os << "  " << it->second.first->name << " (" << modifier << objtype << ")" << std::endl;
+	  const char *modifier = (it->second.first->flags &1) ? "static" : (it->second.first->flags &2) ? "global" : "";
+	  os << it->second.first->name << " (c++ " << modifier << " " << objtype << ")" << std::endl;
 	  assert(it->second.first->name == it->first);
 	} else {
-	  os << "  " << it->first << std::endl;
+	  os << it->first << " (octave value)" << std::endl;
 	}
       }
       os << "}" << std::endl;
@@ -1605,9 +1562,6 @@ namespace Swig {
     virtual std::string string_value(bool force = false) const 
       { return ptr->string_value(force); }
 
-    virtual string_vector map_keys() const
-      { return ptr->map_keys(); }
-
     virtual octave_value convert_to_str(bool pad = false, bool force = false, char type = '"') const
       { return ptr->convert_to_str(pad, force, type); }
 
@@ -1629,15 +1583,15 @@ namespace Swig {
     std::vector < char > buf;
   public:
 
-    octave_swig_packed(swig_type_info *_type = 0, const void *_buf = 0, size_t _buf_len = 0)
-      :	type(_type), buf((const char*)_buf, (const char*)_buf + _buf_len) {
+    octave_swig_packed(swig_type_info *_type = 0, const char *_buf = 0, size_t _buf_len = 0)
+      :	type(_type), buf(_buf, _buf + _buf_len) {
     }
 
-    bool copy(swig_type_info *outtype, void *ptr, size_t sz) const {
+    bool copy(swig_type_info *outtype, char *ptr, size_t sz) {
       if (outtype && outtype != type)
 	return false;
       assert(sz <= buf.size());
-      std::copy(&buf[0], &buf[sz], (char*)ptr);
+      std::copy(&buf[0], &buf[sz], ptr);
       return true;
     }
 
@@ -1742,8 +1696,6 @@ namespace Swig {
       error("swig_typeinfo must be called with only a single object");
       return octave_value_list();
     }
-    if (args(0).is_matrix_type() && args(0).rows() == 0 && args(0).columns() == 0)
-      return octave_value(octave_uint64(0));
     octave_swig_type *ost = Swig::swig_value_deref(args(0));
     if (!ost) {
       error("object is not a swig_ref");
@@ -1752,104 +1704,106 @@ namespace Swig {
     return octave_value(octave_uint64((unsigned long long) ost->swig_this()));
   }
 
+
 #define SWIG_DIRECTORS
 
-namespace Swig {
-  class Director {
-    octave_swig_type *self;
-    bool disowned;
+  struct Director;
+  class octave_swig_type;
 
-    Director(const Director &x);
-    Director &operator=(const Director &rhs);
-  public:
+  namespace Swig {
+    class Director {
+      octave_swig_type *self;
+      bool disowned;
 
-    Director(void *vptr):self(0), disowned(false) {
-      set_rtdir(vptr, this);
-    }
+      Director(const Director &x);
+      Director &operator=(const Director &rhs);
+    public:
 
-    ~Director() {
-      swig_director_destroyed(self, this);
-      if (disowned)
-	self->decref();
-    }
+      Director(void *vptr):self(0), disowned(false) {
+	set_rtdir(vptr, this);
+      }
 
-    void swig_set_self(octave_swig_type *new_self) {
-      assert(!disowned);
-      self = new_self;
-    }
+      ~Director() {
+	swig_director_destroyed(self, this);
+	if (disowned)
+	  self->decref();
+      }
 
-    octave_swig_type *swig_get_self() const {
-      return self;
-    }
+      void swig_set_self(octave_swig_type *new_self) {
+	assert(!disowned);
+	self = new_self;
+      }
 
-    void swig_disown() {
-      if (disowned)
-	return;
-      disowned = true;
-      self->incref();
-    }
-  };
+      octave_swig_type *swig_get_self() const {
+	return self;
+      }
 
-  struct DirectorTypeMismatchException {
-    static void raise(const char *msg) {
-      // ... todo
-      throw(DirectorTypeMismatchException());
-    }
+      void swig_disown() {
+	if (disowned)
+	  return;
+	disowned = true;
+	self->incref();
+      }
+    };
 
-    static void raise(const octave_value &ov, const char *msg) {
-      // ... todo
-      raise(msg);
-    }
-  };
-  struct DirectorPureVirtualException {
-    static void raise(const char *msg) {
-      // ... todo
-      throw(DirectorPureVirtualException());
-    }
+    struct DirectorTypeMismatchException {
+      static void raise(const char *msg) {
+	// ... todo
+	throw(DirectorTypeMismatchException());
+      }
 
-    static void raise(const octave_value &ov, const char *msg) {
-      // ... todo
-      raise(msg);
-    }
-  };
+      static void raise(const octave_value &ov, const char *msg) {
+	// ... todo
+	raise(msg);
+      }
+    };
+    struct DirectorPureVirtualException {
+      static void raise(const char *msg) {
+	// ... todo
+	throw(DirectorPureVirtualException());
+      }
 
-}
+      static void raise(const octave_value &ov, const char *msg) {
+	// ... todo
+	raise(msg);
+      }
+    };
 
-  SWIGRUNTIME void swig_acquire_ownership(void *vptr) {
+  }
+
+  void swig_acquire_ownership(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  SWIGRUNTIME void swig_acquire_ownership_array(void *vptr) {
+  void swig_acquire_ownership_array(void *vptr) {
     //  assert(0);
     // ... todo
   }
 
-  SWIGRUNTIME void swig_acquire_ownership_obj(void *vptr, int own) {
+  void swig_acquire_ownership_obj(void *vptr, int own) {
     //  assert(0);
     // ... todo
   }
 
   namespace Swig {
-    SWIGRUNTIME void swig_director_destroyed(octave_swig_type *self, Director *d) {
+    void swig_director_destroyed(octave_swig_type *self, Director *d) {
       self->director_destroyed(d);
     }
 
-    SWIGRUNTIME void swig_director_set_self(Director *d, octave_swig_type *self) {
+    void swig_director_set_self(Director *d, octave_swig_type *self) {
       d->swig_set_self(self);
     }
 
-    SWIGRUNTIME octave_base_value *swig_value_ref(octave_swig_type *ost) {
+    octave_base_value *swig_value_ref(octave_swig_type *ost) {
       return new octave_swig_ref(ost);
     }
 
-    SWIGRUNTIME octave_swig_type *swig_value_deref(octave_value ov) {
-      if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-	ov = ov.cell_value()(0);
+    octave_swig_type *swig_value_deref(const octave_value &ov) {
       return swig_value_deref(*ov.internal_rep());
     }
 
-    SWIGRUNTIME octave_swig_type *swig_value_deref(const octave_base_value &ov) {
+    octave_swig_type *swig_value_deref(const octave_base_value &ov) {
       if (ov.type_id() != octave_swig_ref::static_type_id())
 	return 0;
       const octave_swig_ref *osr = static_cast < const octave_swig_ref *>(&ov);
@@ -1858,12 +1812,57 @@ namespace Swig {
 
   }
 
+  SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
+    int own = (flags &SWIG_POINTER_OWN) ? SWIG_POINTER_OWN : 0;
+
+    Swig::Director *d = Swig::get_rtdir(ptr);
+    if (d && d->swig_get_self())
+      return d->swig_get_self()->as_value();
+    return Swig::swig_value_ref(new octave_swig_type(ptr, type, own));
+  }
+
+  SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(const octave_value &ov, void **ptr, swig_type_info *type, int flags, int *own) {
+    if (!ov.is_defined()) {
+      if (ptr)
+	*ptr = 0;
+      return SWIG_OK;
+    }
+    if (ov.type_id() != octave_swig_ref::static_type_id())
+      return SWIG_TypeError;
+    octave_swig_ref *osr = static_cast < octave_swig_ref *>(ov.internal_rep());
+    octave_swig_type *ost = osr->get_ptr();
+    void *vptr = ost->cast(type, own, flags);
+    if (!vptr)
+      return SWIG_TypeError;
+    if (ptr)
+      *ptr = vptr;
+    return SWIG_OK;
+  }
+
+  SWIGRUNTIMEINLINE octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
+    return new octave_swig_packed(type, (char *) ptr, sz);
+  }
+
+  SWIGRUNTIME int SWIG_Octave_ConvertPacked(const octave_value &ov, void *ptr, size_t sz, swig_type_info *type) {
+    if (!ov.is_defined())
+      return SWIG_TypeError;
+    if (ov.type_id() != octave_swig_packed::static_type_id())
+      return SWIG_TypeError;
+    octave_swig_packed *ost = static_cast < octave_swig_packed *>(ov.internal_rep());
+    return ost->copy(type, (char *) ptr, sz) ? SWIG_OK : SWIG_TypeError;
+  }
+
+  void SWIG_Octave_SetConstant(octave_swig_type *module_ns, const std::string &name, const octave_value &ov) {
+    module_ns->assign(name, ov);
+  }
+
+
 #define swig_unary_op(name) \
-SWIGRUNTIME octave_value swig_unary_op_##name(const octave_base_value &x) { \
+octave_value swig_unary_op_##name(const octave_base_value &x) { \
   return octave_swig_type::dispatch_unary_op(x,#name); \
 }
 #define swig_binary_op(name) \
-SWIGRUNTIME octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
+octave_value swig_binary_op_##name(const octave_base_value&lhs,const octave_base_value &rhs) { \
   return octave_swig_type::dispatch_binary_op(lhs,rhs,#name); \
 }
 #define swigreg_unary_op(name) \
@@ -1902,7 +1901,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
   swig_binary_op(el_and);
   swig_binary_op(el_or);
 
-  SWIGRUNTIME void SWIG_InstallUnaryOps(int tid) {
+  void swig_install_unary_ops(int tid) {
     swigreg_unary_op(not);
     swigreg_unary_op(uplus);
     swigreg_unary_op(uminus);
@@ -1911,7 +1910,7 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_unary_op(incr);
     swigreg_unary_op(decr);
   }
-  SWIGRUNTIME void SWIG_InstallBinaryOps(int tid1, int tid2) {
+  void swig_install_binary_ops(int tid1, int tid2) {
     swigreg_binary_op(add);
     swigreg_binary_op(sub);
     swigreg_binary_op(mul);
@@ -1933,83 +1932,19 @@ octave_value_typeinfo::register_binary_op(octave_value::op_##name,tid1,tid2,swig
     swigreg_binary_op(el_and);
     swigreg_binary_op(el_or);
   }
-  SWIGRUNTIME void SWIG_InstallOps(int tid) {
+  void swig_install_ops(int tid) {
     // here we assume that tid are conseq integers increasing from zero, and 
     // that our tid is the last one. might be better to have explicit string 
     // list of types we should bind to, and use lookup_type to resolve their tid.
 
-    SWIG_InstallUnaryOps(tid);
-    SWIG_InstallBinaryOps(tid, tid);
+    swig_install_unary_ops(tid);
+    swig_install_binary_ops(tid, tid);
     for (int j = 0; j < tid; ++j) {
-      SWIG_InstallBinaryOps(j, tid);
-      SWIG_InstallBinaryOps(tid, j);
+      swig_install_binary_ops(j, tid);
+      swig_install_binary_ops(tid, j);
     }
   }
 
-SWIGRUNTIME octave_value SWIG_Octave_NewPointerObj(void *ptr, swig_type_info *type, int flags) {
-  int own = (flags &SWIG_POINTER_OWN) ? SWIG_POINTER_OWN : 0;
-
-  Swig::Director *d = Swig::get_rtdir(ptr);
-  if (d && d->swig_get_self())
-    return d->swig_get_self()->as_value();
-  return Swig::swig_value_ref(new octave_swig_type(ptr, type, own));
-}
-
-SWIGRUNTIME int SWIG_Octave_ConvertPtrAndOwn(octave_value ov, void **ptr, swig_type_info *type, int flags, int *own) {
-  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-    ov = ov.cell_value()(0);
-  if (!ov.is_defined() ||
-      (ov.is_matrix_type() && ov.rows() == 0 && ov.columns() == 0) ) {
-    if (ptr)
-      *ptr = 0;
-    return SWIG_OK;
-  }
-  if (ov.type_id() != octave_swig_ref::static_type_id())
-    return SWIG_ERROR;
-  octave_swig_ref *osr = static_cast < octave_swig_ref *>(ov.internal_rep());
-  octave_swig_type *ost = osr->get_ptr();
-  void *vptr = ost->cast(type, own, flags);
-  if (!vptr)
-    return SWIG_ERROR;
-  if (ptr)
-    *ptr = vptr;
-  return SWIG_OK;
-}
-
-SWIGRUNTIME octave_value SWIG_Octave_NewPackedObj(void *ptr, size_t sz, swig_type_info *type) {
-  return new octave_swig_packed(type, (char *) ptr, sz);
-}
-
-SWIGRUNTIME int SWIG_Octave_ConvertPacked(const octave_value &ov, void *ptr, size_t sz, swig_type_info *type) {
-  if (!ov.is_defined())
-    return SWIG_ERROR;
-  if (ov.type_id() != octave_swig_packed::static_type_id())
-    return SWIG_ERROR;
-  octave_swig_packed *ost = static_cast < octave_swig_packed *>(ov.internal_rep());
-  return ost->copy(type, (char *) ptr, sz) ? SWIG_OK : SWIG_ERROR;
-}
-
-void SWIG_Octave_SetConstant(octave_swig_type *module_ns, const std::string &name, const octave_value &ov) {
-  module_ns->assign(name, ov);
-}
-
-SWIGRUNTIME swig_module_info *SWIG_Octave_GetModule(void *clientdata) {
-  octave_value ov = get_global_value("__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION, true);
-  if (!ov.is_defined() ||
-      ov.type_id() != octave_swig_packed::static_type_id())
-    return 0;
-  const octave_swig_packed* osp = 
-    static_cast < const octave_swig_packed *> (ov.internal_rep());
-  swig_module_info *pointer = 0;
-  osp->copy(0, &pointer, sizeof(swig_module_info *));
-  return pointer;
-}
-
-SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *pointer) {
-  octave_value ov = new octave_swig_packed(0, &pointer, sizeof(swig_module_info *));
-  const char *module_var = "__SWIG_MODULE__" SWIG_TYPE_TABLE_NAME SWIG_RUNTIME_VERSION;
-  link_to_global_variable(curr_sym_tab->lookup(module_var, true));
-  set_global_value(module_var, ov);
 }
 
 
@@ -2557,10 +2492,8 @@ SWIG_AsVal_size_t (octave_value obj, size_t *val)
 
 
 SWIGINTERN int
-SWIG_AsCharPtrAndSize(octave_value ov, char** cptr, size_t* psize, int *alloc)
+SWIG_AsCharPtrAndSize(const octave_value& ov, char** cptr, size_t* psize, int *alloc)
 {
-  if (ov.is_cell() && ov.rows() == 1 && ov.columns() == 1)
-    ov = ov.cell_value()(0);
   if (!ov.is_string())
     return SWIG_TypeError;
   
@@ -8271,7 +8204,7 @@ SWIG_PropagateClientData(void) {
 
 
 
-static void SWIG_init_user(octave_swig_type* module_ns);
+void SWIG_init_user(octave_swig_type* module_ns);
 
 DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
   static bool already_init=false;
@@ -8301,11 +8234,14 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
     if (swig_globals[j].get_method)
       cvar_ns->assign(swig_globals[j].name,&swig_globals[j]);
 
-  octave_swig_type* module_ns=new octave_swig_type(0, 0, 0, true);
+  octave_swig_type* module_ns=new octave_swig_type;
   module_ns->assign("cvar",Swig::swig_value_ref(cvar_ns));
   for (int j=0;swig_globals[j].name;++j)
     if (swig_globals[j].method)
       module_ns->assign(swig_globals[j].name,&swig_globals[j]);
+
+  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
+  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
 
   // * need better solution here; swig_type -> octave_class mapping is 
   // * really n-to-1, in some cases such as template partial spec, etc. 
@@ -8320,23 +8256,16 @@ DEFUN_DLD (SWIG_name,args,nargout,SWIG_name_d) {
 
   SWIG_init_user(module_ns);
 
-  SWIG_InstallOps(octave_swig_ref::static_type_id());
+  swig_install_ops(octave_swig_ref::static_type_id());
 
-  // the incref is necessary so install_global doesn't destroy module_ns,
-  // as it would if it installed something with the same name as the module.
-  module_ns->incref();
   if (global_option)
     module_ns->install_global();
-  module_ns->decref();
-
-  link_to_global_variable(curr_sym_tab->lookup(SWIG_name_d,true));
-  set_global_value(SWIG_name_d,Swig::swig_value_ref(module_ns));
 
   return octave_value_list();
 }
 
 
-static void SWIG_init_user(octave_swig_type* module_ns)
+void SWIG_init_user(octave_swig_type* module_ns)
 {
   SWIG_Octave_SetConstant(module_ns,"CV_WINDOW_AUTOSIZE",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_EVENT_MOUSEMOVE",SWIG_From_int((int)(0)));
@@ -8379,6 +8308,7 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_TYZX_COLOR",SWIG_From_int((int)(402)));
   SWIG_Octave_SetConstant(module_ns,"CV_TYZX_Z",SWIG_From_int((int)(403)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_QT",SWIG_From_int((int)(500)));
+  SWIG_Octave_SetConstant(module_ns,"CV_CAP_UNICAP",SWIG_From_int((int)(600)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_MSEC",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_FRAMES",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_AVI_RATIO",SWIG_From_int((int)(2)));
