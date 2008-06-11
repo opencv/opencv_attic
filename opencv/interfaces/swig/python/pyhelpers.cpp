@@ -82,42 +82,44 @@ PyObject * SWIG_AppendResult(PyObject * result, PyObject ** to_add, int num){
 }
 
 template <typename T>
-std::ostream & cv_arr_write(std::ostream & out, T * data, int rows, int nch, int step){
-	int i,j,k;
-	char * cdata = (char *) data;
-	std::string chdelim1="", chdelim2="";
+void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch, size_t step){
+    size_t i,j,k;
+    char * cdata = (char *) data;
+    char * chdelim1="", * chdelim2="";
 
-	// only output channel parens if > 1
-	if(nch>1){
-		chdelim1="(";
-		chdelim2=")";
-	}
+    // only output channel parens if > 1
+    if(nch>1){
+        chdelim1="(";
+        chdelim2=")";
+    }
 
-	out<<"[";
-	for(i=0; i<rows; i++){
-		out<<"[";
+    fprintf(f,"[");
+    for(i=0; i<rows; i++){
+		fprintf(f, "[" );
 
-		// first element
-		out<<chdelim1;
-		out<<((T*)(cdata+i*step))[0];
-		for(k=1; k<nch; k++){
-			out<<", "<<((T*)(cdata+i*step))[k];
-		}
-		out<<chdelim2;
-		
-		// remaining elements
-		for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
-			out<<", "<<chdelim1;
-			out<<((T*)(cdata+i*step+j))[0];
-			for(k=1; k<nch; k++){
-				out<<", "<<((T*)(cdata+i*step+j))[k];
-			}
-			out<<chdelim2;
-		}
-		out<<"]\n";
-	}
-	out<<"]";
-	return out;
+        // first element
+        // out<<chdelim1;
+		fprintf(f, chdelim1);
+        fprintf(f, fmt, ((T*)(cdata+i*step))[0]);
+        for(k=1; k<nch; k++){
+			fprintf(f, ", ");
+			fprintf(f, fmt, ((T*)(cdata+i*step))[k]);
+        }
+		fprintf(f, chdelim2);
+
+        // remaining elements
+        for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
+			fprintf(f, ",%s", chdelim1);
+        	fprintf(f, fmt, ((T*)(cdata+i*step+j))[0]);
+            for(k=1; k<nch; k++){
+				fprintf(f, ", ");
+				fprintf(f, fmt, ((T*)(cdata+i*step+j))[k]);
+            }
+			fprintf(f, chdelim2);
+        }
+		fprintf(f, "]\n" );
+    }
+	fprintf(f, "]" );
 }
 
 void cvArrPrint(CvArr * arr){
@@ -132,35 +134,34 @@ void cvArrPrint(CvArr * arr){
 	int cn = CV_MAT_CN(mat->type);
 	int depth = CV_MAT_DEPTH(mat->type);
 	int step = MAX(mat->step, cn*mat->cols*CV_ELEM_SIZE(depth));
-	std::ostringstream str;
+
 
 	switch(depth){
 		case CV_8U:
-			cv_arr_write(str, (uchar *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%u", (uchar *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_8S:
-			cv_arr_write(str, (char *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%d", (char *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_16U:
-			cv_arr_write(str, (ushort *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%u", (ushort *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_16S:
-			cv_arr_write(str, (short *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%d", (short *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_32S:
-			cv_arr_write(str, (int *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%d", (int *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_32F:
-			cv_arr_write(str, (float *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%f", (float *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		case CV_64F:
-			cv_arr_write(str, (double *)mat->data.ptr, mat->rows, cn, step);
+			cv_arr_write(stdout, "%g", (double *)mat->data.ptr, mat->rows, cn, step);
 			break;
 		default:
 			CV_ERROR( CV_StsError, "Unknown element type");
 			break;
 	}
-	std::cout<<str.str()<<std::endl;
 
 	__END__;
 }

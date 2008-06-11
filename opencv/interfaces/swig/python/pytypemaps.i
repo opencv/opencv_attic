@@ -50,19 +50,33 @@
 		cvFree(&($1));
 	}
 }
+
+/* typecheck typemaps */
 %typecheck(SWIG_TYPECHECK_POINTER) CvArr * {
 	void *ptr;
+	if ($input == Py_None) {
+		$1 = 1;
+	}
 	if(PyList_Check($input) || PyTuple_Check($input)) {
 		$1 = 1;
 	}
-	else if (SWIG_ConvertPtr($input, &ptr, 0, 0) == -1) {
+	else if (SWIG_ConvertPtr($input, &ptr, $descriptor(CvMat*), 0) != -1){
+		$1 = 1;
+	}
+	else {
 		$1 = 0;
 		PyErr_Clear();
 	}
-	else{
-		$1 = 1;
-	}
 }
+
+%typecheck(SWIG_TYPECHECK_POINTER) CvScalar {
+    $1 = CvScalar_Check( $input );
+}
+
+/* copy built-in swig typemaps for these types */
+%typemap(typecheck) CvPoint = SWIGTYPE;
+%typemap(typecheck) CvPoint2D32f = SWIGTYPE;
+
 
 // for cvReshape, cvGetRow, where header is passed, then filled in
 %typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) {
@@ -213,14 +227,28 @@
  * so, we can call cvGetMinMaxHistValue() in Python like:
  * min_value, max_value = cvGetMinMaxHistValue (hist, None, None)
  */
-%apply int *OUTPUT {int *min_idx};                                                                   
+%apply int *OUTPUT {int *min_idx};
 %apply int *OUTPUT {int *max_idx}; 
 %apply float *OUTPUT {float *min_value};
 %apply float *OUTPUT {float *max_value};
+
 /**
  * map output parameters of cvMinMaxLoc
  */
-%apply double *OUTPUT {double* min_val, double* max_val};
+%apply double *OUTPUT {double* min_val};
+%apply double *OUTPUT {double* max_val};
+
+%typemap(in, numinputs=0) CvPoint * OUTPUT {
+    $1 = (CvPoint *) malloc(sizeof(CvPoint));
+}
+
+%typemap(argout) CvPoint * OUTPUT { 
+	PyObject * to_add = SWIG_NewPointerObj ($1, $descriptor(CvPoint *), SWIG_POINTER_OWN);
+	$result = SWIG_AppendOutput( $result, to_add );
+}
+
+%apply CvPoint *OUTPUT {CvPoint *min_loc};
+%apply CvPoint *OUTPUT {CvPoint *max_loc}; 
 
 /**
  * the input argument of cvPolyLine "CvPoint** pts" is converted from 

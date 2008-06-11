@@ -69,11 +69,6 @@
 
 %include "sizeof.i"
 
-/* assign type conversion precedence */
-%typemap(typecheck) CvPoint = SWIGTYPE;
-%typemap(typecheck) CvScalar = SWIGTYPE;
-%typemap(typecheck) CvPoint2D32f = SWIGTYPE;
-
 /**
  * IplImage has no reference counting of underlying data, which creates problems with double 
  * frees after accessing subarrays in python -- instead, replace IplImage with CvMat, which
@@ -121,4 +116,3 @@ CvMat * func##__CvMat##decl{
 }
 %}
 %enddef
-
