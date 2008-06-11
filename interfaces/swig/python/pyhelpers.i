@@ -116,6 +116,16 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 	return cvPoint2D32f(0,0);
 }
 
+/* Check if this object can be interpreted as a CvScalar */
+static bool CvScalar_Check(PyObject * obj){
+	void * vptr;
+    CvScalar val;
+	return SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar,     0 ) != -1 ||
+	       SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0 ) != -1 ||
+           SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint,      0 ) != -1 ||
+	       PyObject_AsDoubleArray(obj, val.val, 4) !=-1;
+}
+
 static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;

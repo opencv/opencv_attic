@@ -103,29 +103,29 @@
 
 // Macro to map logical operations to cvCmp
 %define %wrap_cvCmp(pyfunc, cmp_op)
-%wrap_cvGeneric_CvArr(CvMat, CvArr *, pyfunc, CvMat *, 
+%wrap_cvGeneric_CvArr(CvMat, CvMat *, pyfunc, CvMat *, 
                       cvCmp(self, arg, retarg, cmp_op), 
 					  cvCreateMat(self->rows, self->cols, CV_8U));
-%wrap_cvGeneric_CvArr(IplImage, CvArr *, pyfunc, IplImage *, 
+%wrap_cvGeneric_CvArr(IplImage, IplImage *, pyfunc, IplImage *, 
                       cvCmp(self, arg, retarg, cmp_op), 
 					  cvCreateImage(cvGetSize(self), 8, 1));
 %enddef
 
 %define %wrap_cvCmpS(pyfunc, cmp_op)
-%wrap_cvGeneric_CvArr(CvMat, CvArr *, pyfunc, double, 
+%wrap_cvGeneric_CvArr(CvMat, CvMat *, pyfunc, double, 
                       cvCmpS(self, arg, retarg, cmp_op), 
 					  cvCreateMat(self->rows, self->cols, CV_8U));
-%wrap_cvGeneric_CvArr(IplImage, CvArr *, pyfunc, double, 
+%wrap_cvGeneric_CvArr(IplImage, IplImage *, pyfunc, double, 
                       cvCmpS(self, arg, retarg, cmp_op), 
 					  cvCreateImage(cvGetSize(self), 8, 1));
 %enddef
 
 // special case for cvScale, /, * 
 %define %wrap_cvScale(pyfunc, scale)
-%wrap_cvGeneric_CvArr(CvMat, CvArr *, pyfunc, double,
+%wrap_cvGeneric_CvArr(CvMat, CvMat *, pyfunc, double,
 		cvScale(self, retarg, scale),
 		cvCreateMat(self->rows, self->cols, self->type));
-%wrap_cvGeneric_CvArr(IplImage, CvArr *, pyfunc, double,
+%wrap_cvGeneric_CvArr(IplImage, IplImage *, pyfunc, double,
 		cvScale(self, retarg, scale),
 		cvCreateImage(cvGetSize(self), self->depth, self->nChannels));
 %enddef
@@ -140,14 +140,12 @@
 // special case for reverse operations
 %wrap_cvArr_binaryop(__rsub__, CvArr *, cvSub(arg, self, retarg));
 %wrap_cvArr_binaryop(__rdiv__, CvArr *, cvDiv(arg, self, retarg));
-%wrap_cvArr_binaryop(__rmul__, CvArr *, cvMatMul(arg, self, retarg));
+%wrap_cvArr_binaryop(__rmul__, CvArr *, cvMul(arg, self, retarg));
 
 %wrap_cvArithS(__radd__, cvAddS);
 %wrap_cvArithS(__rsub__, cvSubRS);
 
-
 %wrap_cvScale(__rmul__, arg);
-%wrap_cvScale(__rdiv__, 1.0/arg);
 
 %wrap_cvLogicS(__ror__, cvOrS)
 %wrap_cvLogicS(__rand__, cvAndS)
@@ -160,6 +158,10 @@
 %wrap_cvCmpS(__rle__, CV_CMP_LE);
 %wrap_cvCmpS(__rne__, CV_CMP_NE);
 
+// special case for scalar-array division
+%wrap_cvGeneric_CvArr(CvMat, CvMat *, __rdiv__, double, 
+    cvDiv(NULL, self, retarg, arg),
+    cvCreateMat(self->rows, self->cols, self->type));
 
 // misc operators for python
 %wrap_cvArr_binaryop(__pow__, double, cvPow(self, retarg, arg))
@@ -318,6 +320,14 @@ else{}
 
 		return SWIG_NewPointerObj( mat, $descriptor(CvMat *), 1 );
 	}
+
+	// ~ operator -- swig doesn't generate this from the C++ equivalent
+	CvMat * __invert__(){
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvNot( self, res );
+		return res;
+	}
+
 %pythoncode %{
 def __iter__(self):
    	"""
@@ -367,9 +377,10 @@ def __ne__(self, arg):
 	if not arg:
 		return True
 	return _cv.CvMat___ne__(self, arg)
+
 %}
 
-}
+} //extend CvMat
 
 // slice access and assignment for IplImage 
 %extend _IplImage
