@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.57 $)
+AC_REVISION($Revision: 1.58 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -491,19 +491,23 @@ AC_SUBST(GSTREAMER_LIBS)
 AM_CONDITIONAL([BUILD_GSTREAMER], [test x"$have_gstreamer" = "xyes"])
 
 # Check for the unicap library
+UNICAP_PACKAGE_LIBS=""
+UNICAP_PACKAGE_CFLAGS=""
+UCIL_PACKAGE_LIBS=""
+UCIL_PACKAGE_CFLAGS=""
 if test x"$with_unicap" = "xno"; then
     have_unicap=no
 else
 	PKG_CHECK_MODULES(UNICAP_PACKAGE,libunicap)
-	AC_SUBST(UNICAP_PACKAGE_LIBS)
-	AC_SUBST(UNICAP_PACKAGE_CFLAGS)
 	PKG_CHECK_MODULES(UCIL_PACKAGE,libucil)
-	AC_SUBST(UCIL_PACKAGE_LIBS)
-	AC_SUBST(UCIL_PACKAGE_CFLAGS)
 	have_unicap=yes
 	AC_DEFINE(HAVE_UNICAP,,[Unicap video capture library])
 fi
 AM_CONDITIONAL([BUILD_UNICAP], [test x"$have_unicap" = "xyes"])
+AC_SUBST(UNICAP_PACKAGE_LIBS)
+AC_SUBST(UNICAP_PACKAGE_CFLAGS)
+AC_SUBST(UCIL_PACKAGE_LIBS)
+AC_SUBST(UCIL_PACKAGE_CFLAGS)
 
 # prefer XINE over FFMPEG for video reading because it is quick, has a cleaner API
 # and allows for easy seeking with some formats
