@@ -122,75 +122,89 @@
 	}
 	%newobject operator >=;
 	CvMat * operator >= (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_GE);
 		return res;
 	}
 	CvMat * operator >= (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_GE);
 		return res;
 	}
 	%newobject operator ==;
 	CvMat * operator == (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_EQ);
 		return res;
 	}
 	CvMat * operator == (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_EQ);
 		return res;
 	}
 	%newobject operator <=;
 	CvMat * operator <= (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_LE);
 		return res;
 	}
 	CvMat * operator <= (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_LE);
 		return res;
 	}
 	%newobject operator !=;
 	CvMat * operator != (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_NE);
 		return res;
 	}
 	CvMat * operator != (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_NE);
 		return res;
 	}
 	%newobject operator <;
 	CvMat * operator < (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_LT);
 		return res;
 	}
 	CvMat * operator < (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_LT);
 		return res;
 	}
 	%newobject operator >;
 	CvMat * operator > (CvArr * src){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmp(self, src, res, CV_CMP_GT);
 		return res;
 	}
 	CvMat * operator > (double val){
-		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		CvMat * res = cvCreateMat(self->rows, self->cols, CV_8U);
 		cvCmpS(self, val, res, CV_CMP_GT);
 		return res;
+	}
+	%newobject operator *;
+	CvMat * operator * (double val){
+		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
+		cvScale(self, res, val);
+		return res;
+	}
+	CvMat * operator *= (double val){
+		cvScale(self, self, val);
+		return self;
 	}
 	%newobject operator /;
 	CvMat * operator / (double val){
 		CvMat * res = cvCreateMat(self->rows, self->cols, self->type);
-		cvScale(self, res, val);
+		cvScale(self, res, 1.0/val);
 		return res;
+	}
+	CvMat * operator /= (double val){
+		cvScale(self, self, 1.0/val);
+		return self;
 	}
 } /* extend CvMat */
 
@@ -317,75 +331,89 @@
 	}
 	%newobject operator >=;
 	IplImage * operator >= (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_GE);
 		return res;
 	}
 	IplImage * operator >= (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_GE);
 		return res;
 	}
 	%newobject operator ==;
 	IplImage * operator == (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_EQ);
 		return res;
 	}
 	IplImage * operator == (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_EQ);
 		return res;
 	}
 	%newobject operator <=;
 	IplImage * operator <= (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_LE);
 		return res;
 	}
 	IplImage * operator <= (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_LE);
 		return res;
 	}
 	%newobject operator !=;
 	IplImage * operator != (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_NE);
 		return res;
 	}
 	IplImage * operator != (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_NE);
 		return res;
 	}
 	%newobject operator <;
 	IplImage * operator < (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_LT);
 		return res;
 	}
 	IplImage * operator < (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_LT);
 		return res;
 	}
 	%newobject operator >;
 	IplImage * operator > (CvArr * src){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmp(self, src, res, CV_CMP_GT);
 		return res;
 	}
 	IplImage * operator > (double val){
-		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		IplImage * res = cvCreateImage(cvGetSize(self), IPL_DEPTH_8U, 1);
 		cvCmpS(self, val, res, CV_CMP_GT);
 		return res;
+	}
+	%newobject operator *;
+	IplImage * operator * (double val){
+		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
+		cvScale(self, res, val);
+		return res;
+	}
+	IplImage * operator *= (double val){
+		cvScale(self, self, val);
+		return self;
 	}
 	%newobject operator /;
 	IplImage * operator / (double val){
 		IplImage * res = cvCreateImage(cvGetSize(self), self->depth, self->nChannels);
-		cvScale(self, res, val);
+		cvScale(self, res, 1.0/val);
 		return res;
+	}
+	IplImage * operator /= (double val){
+		cvScale(self, self, 1.0/val);
+		return self;
 	}
 } /* extend IplImage */
 
