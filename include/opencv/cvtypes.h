@@ -379,7 +379,7 @@ typedef struct CvAvgComp
 }
 CvAvgComp;
 
-class CvFeatureTree;
+struct CvFeatureTree;
 
 #endif /*_CVTYPES_H_*/
 
