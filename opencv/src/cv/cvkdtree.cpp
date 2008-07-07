@@ -51,7 +51,7 @@
 // * removing __valuetype parameter from CvKDTree and using virtuals instead 
 // * of void* data here could simplify things.
 
-class CvFeatureTree {
+struct CvFeatureTree {
 
   template <class __scalartype, int __cvtype>
   struct deref {
@@ -143,7 +143,7 @@ public:
       tmp[j] = j;
 
     dispatch_cvtype(mat, data = new tree_type
-		    (&tmp[0], &tmp[tmp.size()], mat->cols,
+		    (&tmp[0], &tmp[0] + tmp.size(), mat->cols,
 		     tree_type::deref_type(mat)));
   }
   ~CvFeatureTree() {
