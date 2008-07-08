@@ -203,7 +203,7 @@ try:
           raise ValueError, 'Unknown or unsupported input mode'
       
       result = cv.cvCreateImage(
-          cv.cvSize(input.shape[0], input.shape[1]),  # size
+          cv.cvSize(input.shape[1], input.shape[0]),  # size
           depth,  # depth
           channels  # channels
           )
@@ -248,13 +248,13 @@ try:
       # Get the numpy array and reshape it correctly
       if input.nChannels == 1:
           array_1d = numpy.fromstring(input.imageData, dtype=ipl2dtype[key])
-          return numpy.reshape(array_1d, (input.width, input.height))
+          return numpy.reshape(array_1d, (input.height, input.width))
       elif input.nChannels == 3:
           # Change the order of channels from BGR to RGB
           rgb = cv.cvCreateImage(cv.cvSize(input.width, input.height), input.depth, 3)
           cv.cvCvtColor(input, rgb, cv.CV_BGR2RGB)
           array_1d = numpy.fromstring(rgb.imageData, dtype=ipl2dtype[key])
-          return numpy.reshape(array_1d, (input.width, input.height, 3))
+          return numpy.reshape(array_1d, (input.height, input.width, 3))
 
 except ImportError:
   pass
