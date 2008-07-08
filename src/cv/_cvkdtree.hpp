@@ -85,8 +85,8 @@ private:
 				    __valuector ctor) {
     assert(last - first > 0);
 
-    accum_type maxvar = std::numeric_limits < accum_type >::min();
-    int maxj = 0;
+    accum_type maxvar = -std::numeric_limits < accum_type >::max();
+    int maxj = -1;
     for (int j = 0; j < point_dim; ++j) {
       accum_type mean = 0;
       for (__instype * k = first; k < last; ++k)
@@ -99,13 +99,14 @@ private:
       }
       var /= last - first;
 
+      assert(maxj != -1 || var >= maxvar);
+
       if (var >= maxvar) {
 	maxvar = var;
 	maxj = j;
       }
     }
 
-    assert(maxj >=0 && maxj < point_dim);
     return maxj;
   }
 

@@ -151,7 +151,7 @@ public:
   }
 
   int dims() {
-    int d;
+    int d = 0;
     dispatch_cvtype(mat, d = ((tree_type*) data)->dims());
     return d;
   }
