@@ -56,6 +56,9 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 	int depth = CV_MAT_DEPTH(self->type);
 	int cn = CV_MAT_CN(self->type);
 
+	int step = self->step ? self->step : 
+	  step = CV_ELEM_SIZE(self->type) * self->cols;
+
 	if (depth == CV_8U && cn==3){
 		// RGB case
 		// The data is reordered beause OpenCV uses BGR instead of RGB
@@ -65,7 +68,7 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 			{
 				// In OpenCV the beginning of the lines are aligned
 				// to 4 Bytes. So use step instead of cols.
-				long position = line*self->step + pixel*3;
+				long position = line*step + pixel*3;
 				long sourcepos = line*self->cols*3 + pixel*3;
 				self->data.ptr[position  ] = py_string[sourcepos+2];
 				self->data.ptr[position+1] = py_string[sourcepos+1];
@@ -82,9 +85,9 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 			// to 4 Bytes. So use step instead of cols.
 			memcpy
 				(
-				 self->data.ptr + line*self->step,
+				 self->data.ptr + line*step,
 				 py_string + line*self->cols,
-				 self->step
+				 step
 				);
 		}
 	}
@@ -97,9 +100,9 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 			// as long as the alignment
 			memcpy
 				(
-				 self->data.ptr + line*self->step,
+				 self->data.ptr + line*step,
 				 py_string + line*self->cols*sizeof(float),
-				 self->step
+				 step
 				);
 		}
 	}
@@ -112,9 +115,9 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 			// as long as the alignment
 			memcpy
 				(
-				 self->data.ptr + line*self->step,
+				 self->data.ptr + line*step,
 				 py_string + line*self->cols*sizeof(double),
-				 self->step
+				 step
 				);
 		}
 	}
@@ -136,7 +139,9 @@ PyObject* CvMat_imageData_get(CvMat * self)
 		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
 		return NULL;
 	}		 
-	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*self->step);
+	int step = self->step ? self->step : 
+	  step = CV_ELEM_SIZE(self->type) * self->cols;
+	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*step);
 }
 
 %}
