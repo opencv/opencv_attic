@@ -32,6 +32,7 @@
 <li><a href="#cv_motion_motempl">Motion Templates</a>
 <li><a href="#cv_motion_tracking">Object Tracking</a>
 <li><a href="#cv_motion_optflow">Optical Flow</a>
+<li><a href="#cv_motion_feature">Feature Matching</a>
 <li><a href="#cv_motion_estimators">Estimators</a>
 </ul>
 <li><a href="#cv_pattern">Pattern Recognition</a>
@@ -3796,6 +3797,68 @@ the readiness flag for the corresponding image can be set in the next call (i.e.
 for all the image pairs except the very first one <code>CV_LKFLOW_PYR_A_READY</code> is set).
 </p>
 
+<hr><h2><a name="cv_motion_feature">Feature Matching</a></h2>
+
+<hr><h3><a name="decl_cvCreateFeatureTree">CreateFeatureTree</a></h3>
+<p class="Blurb">Constructs a tree of feature vectors</p>
+<pre>
+CvFeatureTree* cvCreateFeatureTree(CvMat* desc);
+</pre><p><dl>
+<dt>desc<dd>n x d matrix of n d-dimensional feature vectors (CV_32FC1 or CV_64FC1).
+</dl></p><p>
+The function <code>cvCreateFeatureTree</code> constructs a balanced kd-tree index of 
+the given feature vectors. The lifetime of the desc matrix must exceed that 
+of the returned tree. I.e., no copy is made of the vectors.
+</p>
+
+<hr><h3><a name="decl_cvReleaseFeatureTree">ReleaseFeatureTree</a></h3>
+<p class="Blurb">Destroys a tree of feature vectors</p>
+<pre>
+void cvReleaseFeatureTree(CvFeatureTree* tr);
+</pre><p><dl>
+<dt>tr<dd>pointer to tree being destroyed.
+</dl></p><p>
+The function <code>cvReleaseFeatureTree</code> deallocates the given kd-tree.
+</p>
+
+<hr><h3><a name="decl_cvFindFeatures">FindFeatures</a></h3>
+<p class="Blurb">Finds approximate k nearest neighbors of given vectors using best-bin-first search</p>
+<pre>
+void cvFindFeatures(CvFeatureTree* tr, CvMat* desc,
+		    CvMat* results, CvMat* dist, int k=2, int emax=20);
+</pre><p><dl>
+<dt>tr<dd>pointer to kd-tree index of reference vectors.
+<dt>desc<dd>m x d matrix of (row-)vectors to find the nearest neighbors of.
+<dt>results<dd>m x k set of row indices of matching vectors (referring to matrix passed to cvCreateFeatureTree). Contains -1 in some columns if fewer than k neighbors found.
+<dt>dist<dd>m x k matrix of distances to k nearest neighbors.
+<dt>k<dd>The number of neighbors to find.
+<dt>emax<dd>The maximum number of leaves to visit.
+</dl></p><p>
+The function <code>cvFindFeatures</code> finds (with high probability) the <code>k</code> nearest
+neighbors in <code>tr</code> for each of the given (row-)vectors in <code>desc</code>, using
+best-bin-first searching (<a href="#paper_beis97">[Beis97]</a>).
+The complexity of the entire operation is at most <code>O(m*emax*log2(n))</code>, 
+where <code>n</code> is the number of vectors in the tree.
+</p>
+
+<hr><h3><a name="decl_cvFindFeaturesBoxed">FindFeaturesBoxed</a></h3>
+<p class="Blurb">Orthogonal range search</p>
+<pre>
+int cvFindFeaturesBoxed(CvFeatureTree* tr,
+			CvMat* bounds_min, CvMat* bounds_max,
+			CvMat* results);
+</pre><p><dl>
+<dt>tr<dd>pointer to kd-tree index of reference vectors.
+<dt>bounds_min<dd>1 x d or d x 1 vector (CV_32FC1 or CV_64FC1) giving minimum value for each dimension.
+<dt>bounds_max<dd>1 x d or d x 1 vector (CV_32FC1 or CV_64FC1) giving maximum value for each dimension.
+<dt>results<dd>1 x m or m x 1 vector (CV_32SC1) to contain output row indices (referring to matrix passed to cvCreateFeatureTree).
+</dl></p><p>
+The function <code>cvFindFeaturesBoxed</code> performs orthogonal range seaching on the
+given kd-tree. That is, it returns the set of vectors <code>v</code> in <code>tr</code> that satisfy
+<code>bounds_min[i] <= v[i] <= bounds_max[i], 0 <= i < d</code>, where <code>d</code> is the dimension
+of vectors in the tree. 
+The function returns the number of such vectors found.
+</p>
 
 <hr><h2><a name="cv_motion_estimators">Estimators</a></h2>
 
@@ -5258,72 +5321,75 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvCalcBackProject">CalcBackProject</a></td>
-<td width="25%"><a href="#decl_cvCalibrateCamera2">CalibrateCamera2</a></td>
-<td width="25%"><a href="#decl_cvConvexityDefects">ConvexityDefects</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcBackProjectPatch">CalcBackProjectPatch</a></td>
-<td width="25%"><a href="#decl_cvCamShift">CamShift</a></td>
-<td width="25%"><a href="#decl_cvCopyHist">CopyHist</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcEMD2">CalcEMD2</a></td>
-<td width="25%"><a href="#decl_cvCanny">Canny</a></td>
-<td width="25%"><a href="#decl_cvCopyMakeBorder">CopyMakeBorder</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvCalcGlobalOrientation">CalcGlobalOrientation</a></td>
-<td width="25%"><a href="#decl_cvCheckContourConvexity">CheckContourConvexity</a></td>
-<td width="25%"><a href="#decl_cvCornerEigenValsAndVecs">CornerEigenValsAndVecs</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcHist">CalcHist</a></td>
-<td width="25%"><a href="#decl_cvClearHist">ClearHist</a></td>
-<td width="25%"><a href="#decl_cvCornerHarris">CornerHarris</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcImageHomography">CalcImageHomography</a></td>
-<td width="25%"><a href="#decl_cvClearSubdivVoronoi2D">ClearSubdivVoronoi2D</a></td>
-<td width="25%"><a href="#decl_cvCornerMinEigenVal">CornerMinEigenVal</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvCalcMotionGradient">CalcMotionGradient</a></td>
-<td width="25%"><a href="#decl_cvCompareHist">CompareHist</a></td>
-<td width="25%"><a href="#decl_cvCreateConDensation">CreateConDensation</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcOpticalFlowBM">CalcOpticalFlowBM</a></td>
-<td width="25%"><a href="#decl_cvComputeCorrespondEpilines">ComputeCorrespondEpilines</a></td>
-<td width="25%"><a href="#decl_cvCreateContourTree">CreateContourTree</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcOpticalFlowHS">CalcOpticalFlowHS</a></td>
-<td width="25%"><a href="#decl_cvConDensInitSampleSet">ConDensInitSampleSet</a></td>
-<td width="25%"><a href="#decl_cvCreateHist">CreateHist</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvCalcOpticalFlowLK">CalcOpticalFlowLK</a></td>
-<td width="25%"><a href="#decl_cvConDensUpdateByTime">ConDensUpdateByTime</a></td>
-<td width="25%"><a href="#decl_cvCreateKalman">CreateKalman</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcOpticalFlowPyrLK">CalcOpticalFlowPyrLK</a></td>
-<td width="25%"><a href="#decl_cvContourArea">ContourArea</a></td>
-<td width="25%"><a href="#decl_cvCreatePOSITObject">CreatePOSITObject</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvCalcPGH">CalcPGH</a></td>
-<td width="25%"><a href="#decl_cvContourFromContourTree">ContourFromContourTree</a></td>
-<td width="25%"><a href="#decl_cvCreateStructuringElementEx">CreateStructuringElementEx</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvCalcProbDensity">CalcProbDensity</a></td>
+<td width="25%"><a href="#decl_cvCalcSubdivVoronoi2D">CalcSubdivVoronoi2D</a></td>
+<td width="25%"><a href="#decl_cvCalibrateCamera2">CalibrateCamera2</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCamShift">CamShift</a></td>
+<td width="25%"><a href="#decl_cvCanny">Canny</a></td>
+<td width="25%"><a href="#decl_cvCheckContourConvexity">CheckContourConvexity</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvClearHist">ClearHist</a></td>
+<td width="25%"><a href="#decl_cvClearSubdivVoronoi2D">ClearSubdivVoronoi2D</a></td>
+<td width="25%"><a href="#decl_cvCompareHist">CompareHist</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvComputeCorrespondEpilines">ComputeCorrespondEpilines</a></td>
+<td width="25%"><a href="#decl_cvConDensInitSampleSet">ConDensInitSampleSet</a></td>
+<td width="25%"><a href="#decl_cvConDensUpdateByTime">ConDensUpdateByTime</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvContourArea">ContourArea</a></td>
+<td width="25%"><a href="#decl_cvContourFromContourTree">ContourFromContourTree</a></td>
 <td width="25%"><a href="#decl_cvConvertPointsHomogenious">ConvertPointsHomogenious</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvConvexHull2">ConvexHull2</a></td>
+<td width="25%"><a href="#decl_cvConvexityDefects">ConvexityDefects</a></td>
+<td width="25%"><a href="#decl_cvCopyHist">CopyHist</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCopyMakeBorder">CopyMakeBorder</a></td>
+<td width="25%"><a href="#decl_cvCornerEigenValsAndVecs">CornerEigenValsAndVecs</a></td>
+<td width="25%"><a href="#decl_cvCornerHarris">CornerHarris</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCornerMinEigenVal">CornerMinEigenVal</a></td>
+<td width="25%"><a href="#decl_cvCreateConDensation">CreateConDensation</a></td>
+<td width="25%"><a href="#decl_cvCreateContourTree">CreateContourTree</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCreateFeatureTree">cvCreateFeatureTree</a></td>
+<td width="25%"><a href="#decl_cvCreateHist">CreateHist</a></td>
+<td width="25%"><a href="#decl_cvCreateKalman">CreateKalman</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvCreatePOSITObject">CreatePOSITObject</a></td>
+<td width="25%"><a href="#decl_cvCreateStructuringElementEx">CreateStructuringElementEx</a></td>
 <td width="25%"><a href="#decl_cvCreateSubdivDelaunay2D">CreateSubdivDelaunay2D</a></td>
 </tr>
 <tr>
-<td width="25%"><a href="#decl_cvCalcSubdivVoronoi2D">CalcSubdivVoronoi2D</a></td>
-<td width="25%"><a href="#decl_cvConvexHull2">ConvexHull2</a></td>
 <td width="25%"><a href="#decl_cvCvtColor">CvtColor</a></td>
 </tr>
 </table>
@@ -5347,22 +5413,26 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <table width="100%">
 <tr>
 <td width="25%"><a href="#decl_cvFilter2D">Filter2D</a></td>
-<td width="25%"><a href="#decl_cvFindExtrinsicCameraParams2">FindExtrinsicCameraParams2</a></td>
-<td width="25%"><a href="#decl_cvFindNextContour">FindNextContour</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvFindChessboardCorners">FindChessboardCorners</a></td>
-<td width="25%"><a href="#decl_cvFindFundamentalMat">FindFundamentalMat</a></td>
-<td width="25%"><a href="#decl_cvFitEllipse">FitEllipse</a></td>
-</tr>
-<tr>
 <td width="25%"><a href="#decl_cvFindContours">FindContours</a></td>
-<td width="25%"><a href="#decl_cvFindHomography">FindHomography</a></td>
-<td width="25%"><a href="#decl_cvFitLine2D">FitLine2D</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvFindCornerSubPix">FindCornerSubPix</a></td>
+<td width="25%"><a href="#decl_cvFindExtrinsicCameraParams2">FindExtrinsicCameraParams2</a></td>
+<td width="25%"><a href="#decl_cvFindFeatures">FindFeatures</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvFindFeaturesBoxed">FindFeaturesBoxed</a></td>
+<td width="25%"><a href="#decl_cvFindFundamentalMat">FindFundamentalMat</a></td>
+<td width="25%"><a href="#decl_cvFindHomography">FindHomography</a></td>
+</tr>
+<tr>
 <td width="25%"><a href="#decl_cvFindNearestPoint2D">FindNearestPoint2D</a></td>
+<td width="25%"><a href="#decl_cvFindNextContour">FindNextContour</a></td>
+<td width="25%"><a href="#decl_cvFitEllipse">FitEllipse</a></td>
+</tr>
+<tr>
+<td width="25%"><a href="#decl_cvFitLine2D">FitLine2D</a></td>
 <td width="25%"><a href="#decl_cvFloodFill">FloodFill</a></td>
 </tr>
 </table>
@@ -5491,13 +5561,16 @@ to use multi-channel <code>Nx1</code> or <code>1xN</code> arrays.
 <td width="25%"><a href="#decl_cvRodrigues2">Rodrigues2</a></td>
 </tr>
 <tr>
+<td width="25%"><a href="#decl_cvReleaseFeatureTree">ReleaseFeatureTree</a></td>
 <td width="25%"><a href="#decl_cvReleaseHaarClassifierCascade">ReleaseHaarClassifierCascade</a></td>
 <td width="25%"><a href="#decl_cvReleaseStructuringElement">ReleaseStructuringElement</a></td>
-<td width="25%"><a href="#decl_cvRunHaarClassifierCascade">RunHaarClassifierCascade</a></td>
 </tr>
 <tr>
+<td width="25%"><a href="#decl_cvRunHaarClassifierCascade">RunHaarClassifierCascade</a></td>
 <td width="25%"><a href="#decl_cvReleaseHist">ReleaseHist</a></td>
 <td width="25%"><a href="#decl_cvRemap">Remap</a></td>
+</tr>
+<tr>
 <td width="25%"><a href="#decl_cvRunningAvg">RunningAvg</a></td>
 </tr>
 </table>
@@ -5566,6 +5639,13 @@ the OpenCV users. This list is not complete; it serves only
 as a starting point.
 </p>
 <ol>
+
+
+<li><a name="paper_beis97"><b>[Beis97]</b>
+J.S. Beis and D.G. Lowe, "Shape indexing using approximate nearest-neighbor search in highdimensional spaces".
+In Proc. IEEE Conf. Comp. Vision Patt. Recog., pages 1000--1006, 1997.
+</a>
+
 <li><a name="paper_borgefors86"><b>[Borgefors86]</b>
 Gunilla Borgefors, "Distance Transformations in Digital Images". Computer Vision, Graphics and Image Processing 34, 344-371 (1986).
 </a>
