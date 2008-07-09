@@ -648,12 +648,12 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig) {
 
   if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
       CV_MAT_TYPE(a->type) != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "a must be either CV_32FC2 or CV_64FC2");
+    CV_ERROR(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
   if (CV_MAT_TYPE(r->type) != CV_32FC2 && 
       CV_MAT_TYPE(r->type) != CV_64FC2)
-    CV_ERROR(CV_StsUnsupportedFormat, "r must be either CV_32FC2 or CV_64FC2");
+    CV_ERROR(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
   if (CV_MAT_DEPTH(a->type) != CV_MAT_DEPTH(r->type))
-    CV_ERROR(CV_StsUnmatchedFormats, "a and r must have same depth");
+    CV_ERROR(CV_StsUnmatchedFormats, "coeffs and roots must have same depth");
 
   if (m - 1 != n)
     CV_ERROR(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
