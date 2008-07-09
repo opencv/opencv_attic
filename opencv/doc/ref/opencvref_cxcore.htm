@@ -3138,6 +3138,23 @@ x<sup>3</sup> + coeffs[0]*x<sup>2</sup> + coeffs[1]*x + coeffs[2] = 0
 <p>The function returns the number of real roots found. The roots are stored
 to <code>root</code> array, which is padded with zeros if there is only one root.</p>
 
+
+<hr><h3><a name="decl_cvSolvePoly">SolvePoly</a></h3>
+<p class="Blurb">Finds real and complex roots of a polynomial equation with
+real coefficients</p>
+<pre>
+void cvSolvePoly(const CvMat* coeffs, CvMat *roots,
+                 int maxiter = 10, int fig = 10);
+</pre><p><dl>
+<dt>coeffs<dd>The (degree + 1)-length array of equation coefficients (CV_32FC1 or CV_64FC1).
+<dt>roots<dd>The degree-length output array of real or complex roots (CV_32FC2 or CV_64FC2).
+<dt>maxiter<dd>The maximum number of iterations.
+<dt>fig<dd>The required figures of precision required.
+</dl><p>
+The function <code>cvSolvePoly</code> finds all real and complex roots of any
+degree polynomial with real coefficients.
+
+
 <hr><h2><a name="cxcore_arrays_rng">Random Number Generation</a></h2>
 
 <hr><h3><a name="decl_cvRNG">RNG</a></h3>
@@ -7753,7 +7770,7 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvScaleAdd">ScaleAdd</a></td>
 <td width="25%"><a href="#decl_cvSetAdd">SetAdd</a></td>
-<td width="25%"><a href="#decl_cvSplit">Split</a></td>
+<td width="25%"><a href="#decl_cvSolvePoly">SolvePoly</a></td>
 </tr>
 <tr>
 <td width="25%"><a href="#decl_cvSeqElemIdx">SeqElemIdx</a></td>
@@ -7823,6 +7840,7 @@ The retrieved index may be used to access local-thread data inside the paralleli
 <tr>
 <td width="25%"><a href="#decl_cvSeqSearch">SeqSearch</a></td>
 <td width="25%"><a href="#decl_cvSetSeqBlockSize">SetSeqBlockSize</a></td>
+<td width="25%"><a href="#decl_cvSplit">Split</a></td>
 <td width="25%%"></td>
 </tr>
 </table>
