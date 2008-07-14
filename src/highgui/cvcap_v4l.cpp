@@ -2023,7 +2023,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
   {
 
     /* [FD] this really belongs here */
-    if (ioctl(capture->deviceHandle, VIDIOCSYNC, &capture->mmaps[capture->bufferIndex]) == -1) {
+    if (ioctl(capture->deviceHandle, VIDIOCSYNC, &capture->mmaps[capture->bufferIndex].frame) == -1) {
       fprintf( stderr, "HIGHGUI ERROR: V4L: Could not SYNC to video stream. %s\n", strerror(errno));
     }
 
@@ -2031,7 +2031,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
 
    /* Now get what has already been captured as a IplImage return */
 
-   /* First, reallocate imageData if the frame sized changed */
+   /* First, reallocate imageData if the frame size changed */
 
 #ifdef HAVE_CAMV4L2
 
