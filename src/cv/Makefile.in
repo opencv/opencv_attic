@@ -77,7 +77,7 @@ am_lib_cv_la_OBJECTS = cvaccum.lo cvadapthresh.lo cvapprox.lo \
 	cvsamplers.lo cvsegmentation.lo cvshapedescr.lo cvsmooth.lo \
 	cvsnakes.lo cvsubdivision2d.lo cvsumpixels.lo cvswitcher.lo \
 	cvtables.lo cvtemplmatch.lo cvthresh.lo cvundistort.lo \
-	cvutils.lo
+	cvutils.lo cvkdtree.lo
 lib_cv_la_OBJECTS = $(am_lib_cv_la_OBJECTS)
 libcv_la_DEPENDENCIES = lib_cv.la \
 	$(top_builddir)/cxcore/src/libcxcore.la @LTLIBOBJS@
@@ -139,6 +139,8 @@ BUILD_PYTHON_WRAPPERS_FALSE = @BUILD_PYTHON_WRAPPERS_FALSE@
 BUILD_PYTHON_WRAPPERS_TRUE = @BUILD_PYTHON_WRAPPERS_TRUE@
 BUILD_QUICKTIME_FALSE = @BUILD_QUICKTIME_FALSE@
 BUILD_QUICKTIME_TRUE = @BUILD_QUICKTIME_TRUE@
+BUILD_UNICAP_FALSE = @BUILD_UNICAP_FALSE@
+BUILD_UNICAP_TRUE = @BUILD_UNICAP_TRUE@
 BUILD_V4L_FALSE = @BUILD_V4L_FALSE@
 BUILD_V4L_TRUE = @BUILD_V4L_TRUE@
 BUILD_XINE_FALSE = @BUILD_XINE_FALSE@
@@ -160,7 +162,6 @@ DEFS = @DEFS@
 DEF_CXXFLAGS = @DEF_CXXFLAGS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -195,11 +196,11 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
-NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OCTAVE = @OCTAVE@
 OCTAVE_ARCH = @OCTAVE_ARCH@
+OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OCT_CXXFLAGS = @OCT_CXXFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -220,7 +221,6 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -230,6 +230,10 @@ SWIG_PYTHON_LIBS = @SWIG_PYTHON_LIBS@
 SWIG_PYTHON_OPT = @SWIG_PYTHON_OPT@
 SWIG_RUNTIME_LIBS_DIR = @SWIG_RUNTIME_LIBS_DIR@
 SWIG_VERSION = @SWIG_VERSION@
+UCIL_PACKAGE_CFLAGS = @UCIL_PACKAGE_CFLAGS@
+UCIL_PACKAGE_LIBS = @UCIL_PACKAGE_LIBS@
+UNICAP_PACKAGE_CFLAGS = @UNICAP_PACKAGE_CFLAGS@
+UNICAP_PACKAGE_LIBS = @UNICAP_PACKAGE_LIBS@
 UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
@@ -294,7 +298,9 @@ target_vendor = @target_vendor@
 AM_CXXFLAGS = @DEF_CXXFLAGS@
 EXTRA_DIST = cv.dsp cv.vcproj cv.rc resource.h
 INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
-noinst_HEADERS = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h
+noinst_HEADERS = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h \
+    _cvkdtree.hpp
+
 noinst_LTLIBRARIES = lib_cv.la
 lib_LTLIBRARIES = libcv.la
 
@@ -313,7 +319,7 @@ lib_cv_la_SOURCES = \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp cvshapedescr.cpp \
     cvsmooth.cpp cvsnakes.cpp cvsubdivision2d.cpp cvsumpixels.cpp \
     cvswitcher.cpp cvtables.cpp cvtemplmatch.cpp cvthresh.cpp \
-    cvundistort.cpp cvutils.cpp
+    cvundistort.cpp cvutils.cpp cvkdtree.cpp
 
 lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -435,6 +441,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvimgwarp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvinpaint.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvkalman.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvkdtree.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvlinefit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvlkpyramid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvmatchcontours.Plo@am__quote@

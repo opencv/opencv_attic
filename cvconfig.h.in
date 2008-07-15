@@ -120,6 +120,9 @@
 /* TIFF codec */
 #undef HAVE_TIFF
 
+/* Unicap video capture library */
+#undef HAVE_UNICAP
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
