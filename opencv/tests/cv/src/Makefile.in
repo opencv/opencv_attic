@@ -68,8 +68,9 @@ am_cvtest_OBJECTS = aaccum.$(OBJEXT) aadaptthresh.$(OBJEXT) \
 	aoptflowhs.$(OBJEXT) aoptflowlk.$(OBJEXT) \
 	aoptflowpyrlk.$(OBJEXT) aposit.$(OBJEXT) \
 	apyrsegmentation.$(OBJEXT) asnakes.$(OBJEXT) \
-	asubdivisions.$(OBJEXT) atemplmatch.$(OBJEXT) \
-	athresh.$(OBJEXT) cvtest.$(OBJEXT) tsysa.$(OBJEXT)
+	asubdivisions.$(OBJEXT) akdtree.$(OBJEXT) \
+	atemplmatch.$(OBJEXT) athresh.$(OBJEXT) cvtest.$(OBJEXT) \
+	tsysa.$(OBJEXT)
 cvtest_OBJECTS = $(am_cvtest_OBJECTS)
 cvtest_DEPENDENCIES = $(top_builddir)/tests/cxts/libcxts.la \
 	$(top_builddir)/cxcore/src/libcxcore.la \
@@ -124,6 +125,8 @@ BUILD_PYTHON_WRAPPERS_FALSE = @BUILD_PYTHON_WRAPPERS_FALSE@
 BUILD_PYTHON_WRAPPERS_TRUE = @BUILD_PYTHON_WRAPPERS_TRUE@
 BUILD_QUICKTIME_FALSE = @BUILD_QUICKTIME_FALSE@
 BUILD_QUICKTIME_TRUE = @BUILD_QUICKTIME_TRUE@
+BUILD_UNICAP_FALSE = @BUILD_UNICAP_FALSE@
+BUILD_UNICAP_TRUE = @BUILD_UNICAP_TRUE@
 BUILD_V4L_FALSE = @BUILD_V4L_FALSE@
 BUILD_V4L_TRUE = @BUILD_V4L_TRUE@
 BUILD_XINE_FALSE = @BUILD_XINE_FALSE@
@@ -145,7 +148,6 @@ DEFS = @DEFS@
 DEF_CXXFLAGS = @DEF_CXXFLAGS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -180,11 +182,11 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
-NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OCTAVE = @OCTAVE@
 OCTAVE_ARCH = @OCTAVE_ARCH@
+OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OCT_CXXFLAGS = @OCT_CXXFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -205,7 +207,6 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -215,6 +216,10 @@ SWIG_PYTHON_LIBS = @SWIG_PYTHON_LIBS@
 SWIG_PYTHON_OPT = @SWIG_PYTHON_OPT@
 SWIG_RUNTIME_LIBS_DIR = @SWIG_RUNTIME_LIBS_DIR@
 SWIG_VERSION = @SWIG_VERSION@
+UCIL_PACKAGE_CFLAGS = @UCIL_PACKAGE_CFLAGS@
+UCIL_PACKAGE_LIBS = @UCIL_PACKAGE_LIBS@
+UNICAP_PACKAGE_CFLAGS = @UNICAP_PACKAGE_CFLAGS@
+UNICAP_PACKAGE_LIBS = @UNICAP_PACKAGE_LIBS@
 UPDATE_SWIG_WRAPPERS_FALSE = @UPDATE_SWIG_WRAPPERS_FALSE@
 UPDATE_SWIG_WRAPPERS_TRUE = @UPDATE_SWIG_WRAPPERS_TRUE@
 VERSION = @VERSION@
@@ -305,6 +310,7 @@ cvtest_SOURCES = \
     amotiontemplates.cpp     amotseg.cpp              aoptflowhs.cpp \
     aoptflowlk.cpp           aoptflowpyrlk.cpp        aposit.cpp \
     apyrsegmentation.cpp     asnakes.cpp              asubdivisions.cpp \
+    akdtree.cpp \
     atemplmatch.cpp          athresh.cpp      cvtest.cpp    tsysa.cpp                
 
 cvtest_LDADD = \
@@ -391,6 +397,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aimage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aimgwarp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/akalman.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/akdtree.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/akmeans.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amatchcontourtrees.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amoments.Po@am__quote@

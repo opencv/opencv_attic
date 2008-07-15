@@ -146,6 +146,15 @@ http://linux-uvc.berlios.de/
   some drivers working, but not fully with V4L2. (so, we do not know when we
   need to switch from V4L2 to V4L.
 
+10th patch: July 02, 2008, Mikhail Afanasyev fopencv@theamk.com
+Fix reliability problems with high-resolution UVC cameras on linux
+the symptoms were damaged image and 'Corrupt JPEG data: premature end of data segment' on stderr
+- V4L_ABORT_BADJPEG detects JPEG warnings and turns them into errors, so bad images
+  could be filtered out
+- USE_TEMP_BUFFER fixes the main problem (improper buffer management) and
+  prevents bad images in the first place
+
+
 make & enjoy!
 
 */
@@ -225,6 +234,18 @@ make & enjoy!
 #define CHANNEL_NUMBER 1
 #define MAX_CAMERAS 8
 
+
+// default and maximum number of V4L buffers, not including last, 'special' buffer
+#define MAX_V4L_BUFFERS 10
+#define DEFAULT_V4L_BUFFERS 4
+
+// if enabled, copies data from the buffer. this uses a bit more memory,
+//  but much more reliable for some UVC cameras
+#define USE_TEMP_BUFFER
+
+// if enabled, then bad JPEG warnings become errors and cause NULL returned instead of image
+#define V4L_ABORT_BADJPEG
+
 #define MAX_DEVICE_DRIVER_NAME 80
 
 /* Device Capture Objects */
@@ -275,7 +296,7 @@ typedef struct CvCaptureCAM_V4L
 #ifdef HAVE_CAMV4L2
 
    /* V4L2 variables */
-   buffer buffers[10];
+   buffer buffers[MAX_V4L_BUFFERS + 1];
    struct v4l2_capability cap;
    struct v4l2_input inp;
    struct v4l2_format form;
@@ -862,7 +883,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
 
    CLEAR (capture->req);
    
-   unsigned int buffer_number = 4;
+   unsigned int buffer_number = DEFAULT_V4L_BUFFERS;
 
    try_again:
    
@@ -894,6 +915,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
            return -1;
        } else {
          buffer_number--;
+	 fprintf (stderr, "Insufficient buffer memory on %s -- decreaseing buffers\n", deviceName);
 	 
 	 goto try_again;
        }
@@ -932,6 +954,13 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
            icvCloseCAM_V4L (capture);
            return -1;
        }
+
+#ifdef USE_TEMP_BUFFER
+       if (n_buffers == 0) {
+	 capture->buffers[MAX_V4L_BUFFERS].start = malloc( buf.length );
+	 capture->buffers[MAX_V4L_BUFFERS].length = buf.length;
+       };
+#endif
    }
 
    /* Set up Image data */
@@ -1155,7 +1184,16 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
 
    assert(buf.index < capture->req.count);
    
+#ifdef USE_TEMP_BUFFER
+   memcpy(capture->buffers[MAX_V4L_BUFFERS].start, 
+	  capture->buffers[buf.index].start, 
+	  capture->buffers[MAX_V4L_BUFFERS].length );
+   capture->bufferIndex = MAX_V4L_BUFFERS;
+   //printf("got data in buff %d, len=%d, flags=0x%X, seq=%d, used=%d)\n", 
+   //	  buf.index, buf.length, buf.flags, buf.sequence, buf.bytesused);
+#else
    capture->bufferIndex = buf.index;
+#endif
 
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
        perror ("VIDIOC_QBUF");
@@ -1265,6 +1303,12 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
         }
       
       }
+      
+#ifdef V4L_ABORT_BADJPEG
+      // skip first frame. it is often bad -- this is unnotied in traditional apps,
+      //  but could be fatal if bad jpeg is enabled
+      mainloop_v4l2(capture);
+#endif
 
       /* preparation is ok */
       capture->FirstCapture = 0;
@@ -1692,6 +1736,19 @@ error_exit( j_common_ptr cinfo )
     longjmp( err_mgr->setjmp_buffer, 1 );
 }
 
+#ifdef V4L_ABORT_BADJPEG
+void emit_message (j_common_ptr cinfo, int msg_level) {
+  char buffer[JMSG_LENGTH_MAX];
+  GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
+  if (msg_level >= 0) {
+    return;
+  };
+  (*cinfo->err->format_message) (cinfo, buffer);
+  fprintf(stderr, "Camera decode error (%d): %s\n", msg_level, buffer);
+  longjmp( err_mgr->setjmp_buffer, 1 );
+};
+#endif
+
 /////////////////////// MyMJpegReader ///////////////////
 
 /* constructor just call the parent constructor, but without real filename */
@@ -1715,6 +1772,9 @@ bool  MyMJpegReader::ReadHeader () {
 
     cinfo->err = jpeg_std_error(&jerr->pub);
     jerr->pub.error_exit = error_exit;
+#ifdef V4L_ABORT_BADJPEG
+    jerr->pub.emit_message = emit_message;
+#endif
 
     m_cinfo = cinfo;
     m_jerr = jerr;
@@ -1744,18 +1804,27 @@ bool  MyMJpegReader::ReadHeader () {
 }
 
 /* convert from mjpeg to rgb24 */
-static void 
+static bool
 mjpeg_to_rgb24 (int width, int height,
 		unsigned char *src, int length,
 		unsigned char *dst)
 {
     /* use a MyMJpegReader reader for doing the conversion */
     MyMJpegReader* reader = 0;
+    bool ok;
     reader = new MyMJpegReader (src, length);
-    reader->ReadHeader ();
-    reader->ReadData (dst, width * 3, 1 );
+    ok = reader->ReadHeader ();
+    if (ok) { 
+      ok = reader->ReadData (dst, width * 3, 1 );
+    };
     delete reader;
-
+    return ok;
+    /*
+    if (!ok) {
+      fprintf(stderr, "Camera returned bad header\n");
+      memset(dst, 0, width * 3 * height);
+    };
+    */
 }
 
 #endif
@@ -2092,12 +2161,13 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture) {
        because it's use libjepg and fmemopen()
     */
     if (PALETTE_MJPEG == 1)
-      mjpeg_to_rgb24(capture->form.fmt.pix.width,
-		     capture->form.fmt.pix.height,
-		     (unsigned char*)(capture->buffers[capture->bufferIndex]
-				      .start),
-		     capture->buffers[capture->bufferIndex].length,
-		     (unsigned char*)capture->frame.imageData);
+      if (!mjpeg_to_rgb24(capture->form.fmt.pix.width,
+			  capture->form.fmt.pix.height,
+			  (unsigned char*)(capture->buffers[capture->bufferIndex]
+					   .start),
+			  capture->buffers[capture->bufferIndex].length,
+			  (unsigned char*)capture->frame.imageData))
+	return 0;
 #endif
 #endif
 
