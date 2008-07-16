@@ -43,6 +43,8 @@ Dubey, Premnath         ???                        Patch for cvcam (Windows vers
 Eaton, Daniel           ???                        Texture descriptors code
 Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI and more ...
 
+Filip, Daniel           Google Inc.                cv::wImage* template image classes
+
 Gaspard Breton          France Telecom             Support for multiple cameras (2,3,4) in SyncFilter and cvcam
 Grachev, Ilya           Intel Corp.                TCL/TK demos (cvlkdemo, cvcsdemo, cvenv)
 Gruebele, Philip        ???                        Multiple patches for OpenCV
@@ -88,6 +90,7 @@ Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Rand
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 Stavinzky, Jay          ???                        8u->8u L1 Distance transform.
+Toderici, George        ???                        Floating-point bilateral filter
 Veretennikov, Eugene    Intel Corp.                Testing, some comp. geometry functions
 Vezhnevets, Vladimir    MSU Graphics and Media Lab New algorithm for chessboard detection
 
