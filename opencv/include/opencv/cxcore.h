@@ -681,7 +681,7 @@ CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
 /* Finds all real and complex roots of a polynomial equation */
 CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots,
-			int maxiter = 10, int fig = 10);
+			int maxiter CV_DEFAULT(0), int fig CV_DEFAULT(0));
 
 /****************************************************************************************\
 *                                Matrix operations                                       *
