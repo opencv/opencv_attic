@@ -496,9 +496,9 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     // calculate the euler angle
     if( eulerAngles )
     {
-        eulerAngles->x = acos(_Qx[1][1]) * (180.0 / CV_PI);
-        eulerAngles->y = acos(_Qy[0][0]) * (180.0 / CV_PI);
-        eulerAngles->z = acos(_Qz[0][0]) * (180.0 / CV_PI);
+        eulerAngles->x = acos(_Qx[1][1]) * (_Qx[1][2] >= 0 ? 1 : -1) * (180.0 / CV_PI);
+        eulerAngles->y = acos(_Qy[0][0]) * (_Qy[0][2] >= 0 ? 1 : -1) * (180.0 / CV_PI);
+        eulerAngles->z = acos(_Qz[0][0]) * (_Qz[0][1] >= 0 ? 1 : -1) * (180.0 / CV_PI);
     }
 
     /* Calulate orthogonal matrix. */
