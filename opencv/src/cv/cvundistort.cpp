@@ -65,31 +65,22 @@ icvUnDistort_8u_CnR( const uchar* src, int srcstep,
         for( u = 0; u < size.width; u++ )
         {
             float x = (u - u0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
-            double kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
-            double _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + x0;
-            double _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + y0; 
-            
-            int ix = cvRound(_x*(1 << ICV_WARP_SHIFT));
-            int iy = cvRound(_y*(1 << ICV_WARP_SHIFT));
-            int ifx = ix & ICV_WARP_MASK;
-            int ify = iy & ICV_WARP_MASK;
-            ix >>= ICV_WARP_SHIFT;
-            iy >>= ICV_WARP_SHIFT;
-
-            float a0 = icvLinearCoeffs[ifx*2];
-            float a1 = icvLinearCoeffs[ifx*2 + 1];
-            float b0 = icvLinearCoeffs[ify*2];
-            float b1 = icvLinearCoeffs[ify*2 + 1];
+            float kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
+            float _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + x0;
+            float _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + y0;
+            int ix = cvFloor(_x), iy = cvFloor(_y);
 
             if( (unsigned)iy < (unsigned)(size.height - 1) &&
                 (unsigned)ix < (unsigned)(size.width - 1) )
             {
                 const uchar* ptr = src + iy*srcstep + ix*cn;
+                _x -= ix; _y -= iy;
                 for( i = 0; i < cn; i++ )
                 {
-                    float t0 = a1*CV_8TO32F(ptr[i]) + a0*CV_8TO32F(ptr[i+cn]);
-                    float t1 = a1*CV_8TO32F(ptr[i+srcstep]) + a0*CV_8TO32F(ptr[i + srcstep + cn]);
-                    dst[u*cn + i] = (uchar)cvRound(b1*t0 + b0*t1);
+                    float t0 = CV_8TO32F(ptr[i]), t1 = CV_8TO32F(ptr[i+srcstep]);
+                    t0 += _x*(CV_8TO32F(ptr[i+cn]) - t0);
+                    t1 += _x*(CV_8TO32F(ptr[i + srcstep + cn]) - t1);
+                    dst[u*cn + i] = (uchar)cvRound(t0 + _y*(t1 - t0));
                 }
             }
             else
@@ -97,6 +88,7 @@ icvUnDistort_8u_CnR( const uchar* src, int srcstep,
                 for( i = 0; i < cn; i++ )
                     dst[u*cn + i] = 0;
             }
+            
         }
     }
 
@@ -117,7 +109,6 @@ CV_IMPL void
 cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_coeffs )
 {
     static int inittab = 0;
-    uchar* buffer = 0;
 
     CV_FUNCNAME( "cvUndistort2" );
 
@@ -178,30 +169,10 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
     src_step = src->step ? src->step : CV_STUB_STEP;
     dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
-    if( fabs((double)k[2]) < 1e-5 && fabs((double)k[3]) < 1e-5 &&
-        fabs((double)k[4]) < 1e-5 && icvUndistortGetSize_p )
-    {
-        int buf_size = 0;
-        CvUndistortRadialIPPFunc func =
-            cn == 1 ? (CvUndistortRadialIPPFunc)icvUndistortRadial_8u_C1R_p :
-                      (CvUndistortRadialIPPFunc)icvUndistortRadial_8u_C3R_p;
-
-        if( func && icvUndistortGetSize_p( size, &buf_size ) >= 0 && buf_size > 0 )
-        {
-            CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
-            if( func( src->data.ptr, src_step, dst->data.ptr,
-                      dst_step, size, a[0], a[4],
-                      a[2], a[5], k[0], k[1], buffer ) >= 0 )
-                EXIT;
-        }
-    }
-
     icvUnDistort_8u_CnR( src->data.ptr, src_step,
         dst->data.ptr, dst_step, size, a, k, cn );
 
     __END__;
-
-    cvFree( &buffer );
 }
 
 

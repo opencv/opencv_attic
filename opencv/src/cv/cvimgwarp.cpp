@@ -1627,28 +1627,20 @@ icvRemap_Bilinear_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,
     {                                                                       \
         for( j = 0; j < dsize.width; j++ )                                  \
         {                                                                   \
-            int ix = cvRound(mapx[j]*(1 << ICV_WARP_SHIFT));                \
-            int iy = cvRound(mapy[j]*(1 << ICV_WARP_SHIFT));                \
-            int ifx = ix & ICV_WARP_MASK;                                   \
-            int ify = iy & ICV_WARP_MASK;                                   \
-            ix >>= ICV_WARP_SHIFT;                                          \
-            iy >>= ICV_WARP_SHIFT;                                          \
-                                                                            \
-            float x0 = icvLinearCoeffs[ifx*2];                              \
-            float x1 = icvLinearCoeffs[ifx*2 + 1];                          \
-            float y0 = icvLinearCoeffs[ify*2];                              \
-            float y1 = icvLinearCoeffs[ify*2 + 1];                          \
+            float _x = mapx[j], _y = mapy[j];                               \
+            int ix = cvFloor(_x), iy = cvFloor(_y);                         \
                                                                             \
             if( (unsigned)ix < (unsigned)ssize.width &&                     \
                 (unsigned)iy < (unsigned)ssize.height )                     \
             {                                                               \
                 const arrtype* s = src + iy*srcstep + ix*cn;                \
+                _x -= ix; _y -= iy;                                         \
                 for( k = 0; k < cn; k++, s++ )                              \
                 {                                                           \
-                    float t0 = x1*load_macro(s[0]) + x0*load_macro(s[cn]);  \
-                    float t1 = x1*load_macro(s[srcstep]) +                  \
-                               x0*load_macro(s[srcstep + cn]);              \
-                    dst[j*cn + k] = (arrtype)cast_macro(y1*t0 + y0*t1);     \
+                    float t0 = load_macro(s[0]), t1 = load_macro(s[srcstep]); \
+                    t0 += _x*(load_macro(s[cn]) - t0);                      \
+                    t1 += _x*(load_macro(s[srcstep + cn]) - t1);            \
+                    dst[j*cn + k] = (arrtype)cast_macro(t0 + _y*(t1 - t0)); \
                 }                                                           \
             }                                                               \
             else if( fillval )                                              \
