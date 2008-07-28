@@ -50,8 +50,6 @@
     The 1st initial port was done by Valery Mosyagin.
 */
 
-static const int IMG_ACTIVE_THRESH = 5; // minimum number of active points per view to consider it active
-
 static void
 cvCompleteSymm( CvMat* matrix, int LtoR=0 )
 {
@@ -2389,22 +2387,18 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
     CvMat* Je = 0;
     CvMat* Ji = 0;
     CvMat* imagePoints[2] = {0,0};
-    //CvMat* activeImages[2] = {0,0};
-    //CvMat* activePoints[2] = {0,0};
     CvMat* objectPoints = 0;
     CvMat* RT0 = 0;
     CvLevMarq solver;
-    int k;
     
     CV_FUNCNAME( "cvStereoCalibrate" );
 
     __BEGIN__;
 
-    //signed char* activeMask;
     double A[2][9], dk[2][5]={{0,0,0,0,0},{0,0,0,0,0}}, rlr[9];
     CvMat K[2], Dist[2], om_LR, T_LR;
     CvMat R_LR = cvMat(3, 3, CV_64F, rlr);
-    int i, j, p, ni = 0, ofs, nimages, nactive, pointsTotal, maxPoints = 0;
+    int i, k, p, ni = 0, ofs, nimages, pointsTotal, maxPoints = 0;
     int nparams;
     bool recomputeIntrinsics = false;
     double aspectRatio[2] = {0,0};
@@ -2439,8 +2433,6 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         const CvMat* points = k == 0 ? _imagePoints1 : _imagePoints2;
         const CvMat* cameraMatrix = k == 0 ? _cameraMatrix1 : _cameraMatrix2;
         const CvMat* distCoeffs = k == 0 ? _distCoeffs1 : _distCoeffs2;
-        //CvMat* activeImg = k == 0 ? _activeImages1 : _activeImages2;
-        //CvMat* activePt = k == 0 ? _activePoints1 : _activePoints2;
 
         int cn = CV_MAT_CN(_imagePoints1->type);
         CV_ASSERT( (CV_MAT_DEPTH(_imagePoints1->type) == CV_32F ||
@@ -2454,37 +2446,6 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         imagePoints[k] = cvCreateMat( points->rows, points->cols, CV_64FC(CV_MAT_CN(points->type)));
         cvConvert( points, imagePoints[k] );
         cvReshape( imagePoints[k], imagePoints[k], 2, 1 );
-
-        /*if( activePt )
-        {
-            CV_ASSERT( CV_IS_MAT(activePt) &&
-                (CV_MAT_TYPE(activePt->type) == CV_8UC1 || CV_MAT_TYPE(activePt->type) == CV_8SC1) &&
-                (activePt->rows == 1 || activePt->cols == 1) &&
-                activePt->rows + activePt->cols - 1 == pointsTotal );
-            activePoints[k] = cvCreateMat( activePt->rows, activePt->cols, activePt->type );
-            cvCopy( activePt, activePoints[k] );
-            cvReshape( activePt, activePt, 1, 1 );
-        }
-        else
-        {
-            activePoints[k] = cvCreateMat( 1, pointsTotal, CV_8UC1 );
-            cvSet( activePoints[k], cvScalarAll(1) );
-        }
-
-        if( activeImg )
-        {
-            CV_ASSERT( CV_IS_MAT(activeImg) &&
-                (CV_MAT_TYPE(activeImg->type) == CV_8UC1 || CV_MAT_TYPE(activeImg->type) == CV_8SC1) &&
-                (activeImg->rows == 1 || activeImg->cols == 1) &&
-                activeImg->rows + activeImg->cols - 1 == nimages );
-            activeImages[k] = cvCreateMat( activeImg->rows, activeImg->cols, activeImg->type );
-            cvCopy( activeImg, activeImages[k] );
-        }
-        else
-        {
-            activeImages[k] = cvCreateMat( 1, nimages, CV_8UC1 );
-            cvSet( activeImages[k], cvScalarAll(1) );
-        }*/
 
         if( flags & (CV_CALIB_FIX_INTRINSIC|CV_CALIB_USE_INTRINSIC_GUESS|
             CV_CALIB_FIX_ASPECT_RATIO|CV_CALIB_FIX_FOCAL_LENGTH) )
@@ -2502,8 +2463,6 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         {
             cvCalibrateCamera2( objectPoints, imagePoints[k],
                 npoints, imageSize, &K[k], &Dist[k], 0, 0, flags );
-            //if( !result )
-            //    EXIT;
         }
     }
 
@@ -2530,37 +2489,10 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
 
     // we optimize for the inter-camera R(3),t(3), then, optionally,
     // for intrinisic parameters of each camera ((fx,fy,cx,cy,k1,k2,p1,p2) ~ 8 parameters).
-    nparams = 6 + (recomputeIntrinsics ? NINTRINSIC*2 : 0);
-
-    for( i = nactive = ofs = 0; i < nimages; ofs += ni, i++ )
-    {
-        //int activeLeft = 0, activeRight = 0;
-        ni = npoints->data.i[i];
-        /*if( activeImages[0]->data.ptr[i] == 0 || activeImages[1]->data.ptr[i] == 0 )
-        {
-            activeImages[0]->data.ptr[i] = 0;
-            continue;
-        }
-        activeImages[0]->data.ptr[i] = 1;
-
-        for( j = 0; j < ni; j++ )
-        {
-            activeLeft += activePoints[0]->data.ptr[j+ofs];
-            activeRight += activePoints[1]->data.ptr[j+ofs];
-        }
-        if( activeLeft < IMG_ACTIVE_THRESH || activeRight < IMG_ACTIVE_THRESH )
-        {
-            activeImages[0]->data.ptr[i] = 0;
-            continue;
-        }*/
-        nactive++;
-        nparams += 6; // ... and for R{left}, T{left} for each pair of active views
-    }
-
-    //activeMask = (signed char*)activeImages[0]->data.ptr;
+    nparams = 6*(nimages+1) + (recomputeIntrinsics ? NINTRINSIC*2 : 0);
 
     // storage for initial [om(R){i}|t{i}] (in order to compute the median for each component)
-    RT0 = cvCreateMat( 6, nactive, CV_64F );
+    RT0 = cvCreateMat( 6, nimages, CV_64F );
 
     solver.init( nparams, 0, termCrit );
     if( recomputeIntrinsics )
@@ -2595,18 +2527,12 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
        om = median(om_ref_list)
        T = median(T_ref_list)
     */
-    for( i = j = ofs = 0; i < nimages; ofs += ni, i++ )
+    for( i = ofs = 0; i < nimages; ofs += ni, i++ )
     {
         ni = npoints->data.i[i];
         CvMat objpt_i;
         double _om[2][3], r[2][9], t[2][3];
         CvMat om[2], R[2], T[2], imgpt_i[2];
-
-        /*if( activeMask[i] <= 0 )
-        {
-            j += activeMask[i] < 0;
-            continue;
-        }*/
 
         objpt_i = cvMat(1, ni, CV_64FC3, objectPoints->data.db + ofs*3);
         for( k = 0; k < 2; k++ )
@@ -2623,38 +2549,37 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
             if( k == 0 )
             {
                 // save initial om_left and T_left
-                solver.param->data.db[(j+1)*6] = _om[0][0];
-                solver.param->data.db[(j+1)*6 + 1] = _om[0][1];
-                solver.param->data.db[(j+1)*6 + 2] = _om[0][2];
-                solver.param->data.db[(j+1)*6 + 3] = t[0][0];
-                solver.param->data.db[(j+1)*6 + 4] = t[0][1];
-                solver.param->data.db[(j+1)*6 + 5] = t[0][2];
+                solver.param->data.db[(i+1)*6] = _om[0][0];
+                solver.param->data.db[(i+1)*6 + 1] = _om[0][1];
+                solver.param->data.db[(i+1)*6 + 2] = _om[0][2];
+                solver.param->data.db[(i+1)*6 + 3] = t[0][0];
+                solver.param->data.db[(i+1)*6 + 4] = t[0][1];
+                solver.param->data.db[(i+1)*6 + 5] = t[0][2];
             }
         }
         cvGEMM( &R[1], &R[0], 1, 0, 0, &R[0], CV_GEMM_B_T );
         cvGEMM( &R[0], &T[0], -1, &T[1], 1, &T[1] );
         cvRodrigues2( &R[0], &T[0] );
-        RT0->data.db[j] = t[0][0];
-        RT0->data.db[j + nactive] = t[0][1];
-        RT0->data.db[j + nactive*2] = t[0][2];
-        RT0->data.db[j + nactive*3] = t[1][0];
-        RT0->data.db[j + nactive*4] = t[1][1];
-        RT0->data.db[j + nactive*5] = t[1][2];
-        j++;
+        RT0->data.db[i] = t[0][0];
+        RT0->data.db[i + nimages] = t[0][1];
+        RT0->data.db[i + nimages*2] = t[0][2];
+        RT0->data.db[i + nimages*3] = t[1][0];
+        RT0->data.db[i + nimages*4] = t[1][1];
+        RT0->data.db[i + nimages*5] = t[1][2];
     }
 
     // find the medians and save the first 6 parameters
     for( i = 0; i < 6; i++ )
     {
-        qsort( RT0->data.db + i*nactive, nactive, CV_ELEM_SIZE(RT0->type), dbCmp );
-        solver.param->data.db[i] = nactive % 2 != 0 ? RT0->data.db[i*nactive + nactive/2] :
-            (RT0->data.db[i*nactive + nactive/2 - 1] + RT0->data.db[i*nactive + nactive/2])*0.5;
+        qsort( RT0->data.db + i*nimages, nimages, CV_ELEM_SIZE(RT0->type), dbCmp );
+        solver.param->data.db[i] = nimages % 2 != 0 ? RT0->data.db[i*nimages + nimages/2] :
+            (RT0->data.db[i*nimages + nimages/2 - 1] + RT0->data.db[i*nimages + nimages/2])*0.5;
     }
 
     if( recomputeIntrinsics )
         for( k = 0; k < 2; k++ )
         {
-            double* iparam = solver.param->data.db + (nactive+1)*6 + k*NINTRINSIC;
+            double* iparam = solver.param->data.db + (nimages+1)*6 + k*NINTRINSIC;
             if( flags & CV_CALIB_ZERO_TANGENT_DIST )
                 dk[k][2] = dk[k][3] = 0;
             iparam[0] = A[k][0]; iparam[1] = A[k][4]; iparam[2] = A[k][2]; iparam[3] = A[k][5];
@@ -2692,8 +2617,8 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
 
         if( recomputeIntrinsics )
         {
-            double* iparam = solver.param->data.db + (nactive+1)*6;
-            double* ipparam = solver.prevParam->data.db + (nactive+1)*6;
+            double* iparam = solver.param->data.db + (nimages+1)*6;
+            double* ipparam = solver.prevParam->data.db + (nimages+1)*6;
             dpdf = &dpdf_hdr;
             dpdc = &dpdc_hdr;
             dpdk = &dpdk_hdr;
@@ -2725,23 +2650,13 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
             }
         }
 
-        for( i = j = ofs = 0; i < nimages; ofs += ni, i++ )
+        for( i = ofs = 0; i < nimages; ofs += ni, i++ )
         {
             ni = npoints->data.i[i];
             CvMat objpt_i, _part;
             
-            // activeMask[i]:
-            //    =0 - (was initially deactivated (in the left and/or the right view) by user
-            //    <0 - has been deactivated by the optimization algorithm
-            //    >0 - still active
-            /*if( activeMask[i] <= 0 )
-            {
-                j += activeMask[i] < 0;
-                continue;
-            }*/
-
-            om[0] = cvMat(3,1,CV_64F,solver.param->data.db+(j+1)*6);
-            T[0] = cvMat(3,1,CV_64F,solver.param->data.db+(j+1)*6+3);
+            om[0] = cvMat(3,1,CV_64F,solver.param->data.db+(i+1)*6);
+            T[0] = cvMat(3,1,CV_64F,solver.param->data.db+(i+1)*6+3);
             
             if( JtJ || JtErr )
                 cvComposeRT( &om[0], &T[0], &om_LR, &T_LR, &om[1], &T[1], &dr3dr1, 0,
@@ -2775,10 +2690,9 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
                 l2err = cvNorm( &tmpimagePoints, 0, CV_L2 );
                 maxErr = cvNorm( &tmpimagePoints, 0, CV_C );
 
-                // TODO: once again, we ignore activePoints[k] here.
                 if( JtJ || JtErr )
                 {
-                    int iofs = (nactive+1)*6 + k*NINTRINSIC, eofs = (j+1)*6;
+                    int iofs = (nimages+1)*6 + k*NINTRINSIC, eofs = (i+1)*6;
                     assert( JtJ && JtErr );
 
                     if( k == 1 )
@@ -2839,19 +2753,10 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
                     }
                 }
 
-                /*if( maxErr > imgThreshold )
-                {
-                    activeMask[i] = (signed char)-1;
-                    break;
-                }*/
-
                 if( errNorm )
                     *errNorm += l2err*l2err;
             }
-            j++;
         }
-        //if( errNorm && solver.iters % 10 == 0 )
-        //    printf("%d. |err|=%g\n", solver.iters, *errNorm );
     }
 
     cvRodrigues2( &om_LR, &R_LR );
@@ -2869,11 +2774,6 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         cvConvert( &Dist[1], _distCoeffs2 );
     }
     
-    /*if( _activeImages1 )
-        cvCopy( activeImages[0], _activeImages1 );
-    if( _activeImages2 )
-        cvCopy( activeImages[1], _activeImages2 );*/
-
     if( _E || _F )
     {
         double* t = T_LR.data.db;
@@ -2909,15 +2809,10 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
     cvReleaseMat( &J_LR );
     cvReleaseMat( &Je );
     cvReleaseMat( &Ji );
-    cvReleaseMat( &objectPoints );
     cvReleaseMat( &RT0 );
-
-    for( k = 0; k < 2; k++ )
-    {
-        cvReleaseMat( &imagePoints[k] );
-        //cvReleaseMat( &activeImages[k] );
-        //cvReleaseMat( &activePoints[k] );
-    };
+    cvReleaseMat( &objectPoints );
+    cvReleaseMat( &imagePoints[0] );
+    cvReleaseMat( &imagePoints[1] );
 }
 
 
