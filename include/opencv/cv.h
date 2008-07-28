@@ -1107,25 +1107,45 @@ CVAPI(int) cvRunHaarClassifierCascade( CvHaarClassifierCascade* cascade,
 *                     Camera Calibration and Rectification functions                     *
 \****************************************************************************************/
 
-/* transforms the input image to compensate lens distortion */
+/* Transforms the input image to compensate lens distortion */
 CVAPI(void) cvUndistort2( const CvArr* src, CvArr* dst,
                           const CvMat* intrinsic_matrix,
                           const CvMat* distortion_coeffs );
 
-/* computes transformation map from intrinsic camera parameters
+/* Computes transformation map from intrinsic camera parameters
    that can used by cvRemap */
 CVAPI(void) cvInitUndistortMap( const CvMat* intrinsic_matrix,
                                 const CvMat* distortion_coeffs,
                                 CvArr* mapx, CvArr* mapy );
 
-/* converts rotation vector to rotation matrix or vice versa */
+/* Computes transformation+rectification map for stereo camera (invididual view) */
+CVAPI(void) cvInitUndistortRectifyMap( const CvMat* camera_matrix,
+                                       const CvMat* dist_coeffs,
+                                       const CvMat *R, const CvMat* new_camera_matrix,
+                                       CvArr* mapx, CvArr* mapy );
+
+/* Computes the original (undistorted) feature coordinates
+   from the observed (distorted) coordinates */
+CVAPI(void) cvUndistortPoints( const CvMat* src, CvMat* dst,
+                               const CvMat* camera_matrix,
+                               const CvMat* dist_coeffs,
+                               const CvMat* R CV_DEFAULT(0),
+                               const CvMat* P CV_DEFAULT(0));
+
+/* Converts rotation vector to rotation matrix or vice versa */
 CVAPI(int) cvRodrigues2( const CvMat* src, CvMat* dst,
                          CvMat* jacobian CV_DEFAULT(0) );
 
-/* finds perspective transformation between the object plane and image (view) plane */
-CVAPI(void) cvFindHomography( const CvMat* src_points,
-                              const CvMat* dst_points,
-                              CvMat* homography );
+#define CV_LMEDS 4
+#define CV_RANSAC 8
+
+/* Finds perspective transformation between the object plane and image (view) plane */
+CVAPI(int) cvFindHomography( const CvMat* src_points,
+                             const CvMat* dst_points,
+                             CvMat* homography,
+                             int method CV_DEFAULT(0),
+                             double ransacReprojThreshold CV_DEFAULT(0),
+                             CvMat* mask CV_DEFAULT(0));
 
 /* Computes RQ decomposition for 3x3 matrices */
 CVAPI(void) cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
@@ -1142,16 +1162,30 @@ CVAPI(void) cvDecomposeProjectionMatrix( const CvMat *projMatr, CvMat *calibMatr
                                          CvMat *rotMatrZ CV_DEFAULT(NULL),
                                          CvPoint3D64f *eulerAngles CV_DEFAULT(NULL));
 
-/* projects object points to the view plane using
+/* Computes d(AB)/dA and d(AB)/dB */
+CVAPI(void) cvCalcMatMulDeriv( const CvMat* A, const CvMat* B, CvMat* dABdA, CvMat* dABdB );
+
+/* Computes r3 = rodrigues(rodrigues(r2)*rodrigues(r1)),
+   t3 = rodrigues(r2)*t1 + t2 and the respective derivatives */
+CVAPI(void) cvComposeRT( const CvMat* _rvec1, const CvMat* _tvec1,
+                         const CvMat* _rvec2, const CvMat* _tvec2,
+                         CvMat* _rvec3, CvMat* _tvec3,
+                         CvMat* dr3dr1 CV_DEFAULT(0), CvMat* dr3dt1 CV_DEFAULT(0),
+                         CvMat* dr3dr2 CV_DEFAULT(0), CvMat* dr3dt2 CV_DEFAULT(0),
+                         CvMat* dt3dr1 CV_DEFAULT(0), CvMat* dt3dt1 CV_DEFAULT(0),
+                         CvMat* dt3dr2 CV_DEFAULT(0), CvMat* dt3dt2 CV_DEFAULT(0) );
+
+/* Projects object points to the view plane using
    the specified extrinsic and intrinsic camera parameters */
 CVAPI(void) cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_vector,
                               const CvMat* translation_vector, const CvMat* intrinsic_matrix,
                               const CvMat* distortion_coeffs, CvMat* image_points,
                               CvMat* dpdrot CV_DEFAULT(NULL), CvMat* dpdt CV_DEFAULT(NULL),
                               CvMat* dpdf CV_DEFAULT(NULL), CvMat* dpdc CV_DEFAULT(NULL),
-                              CvMat* dpddist CV_DEFAULT(NULL) );
+                              CvMat* dpddist CV_DEFAULT(NULL),
+                              double aspect_ratio CV_DEFAULT(0));
 
-/* finds extrinsic camera parameters from
+/* Finds extrinsic camera parameters from
    a few known corresponding point pairs and intrinsic parameters */
 CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           const CvMat* image_points,
@@ -1160,12 +1194,24 @@ CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
 
+/* Computes initial estimate of the intrinsic camera parameters
+   in case of planar calibration target (e.g. chessboard) */
+CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
+                                     const CvMat* image_points,
+                                     const CvMat* npoints, CvSize image_size,
+                                     CvMat* intrinsic_matrix,
+                                     double aspect_ratio CV_DEFAULT(1.) );
+
 #define CV_CALIB_USE_INTRINSIC_GUESS  1
 #define CV_CALIB_FIX_ASPECT_RATIO     2
 #define CV_CALIB_FIX_PRINCIPAL_POINT  4
 #define CV_CALIB_ZERO_TANGENT_DIST    8
+#define CV_CALIB_FIX_FOCAL_LENGTH 16
+#define CV_CALIB_FIX_K1  32
+#define CV_CALIB_FIX_K2  64
+#define CV_CALIB_FIX_K3  128
 
-/* finds intrinsic and extrinsic camera parameters
+/* Finds intrinsic and extrinsic camera parameters
    from a few views of known calibration pattern */
 CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
@@ -1177,15 +1223,50 @@ CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
                                 CvMat* translation_vectors CV_DEFAULT(NULL),
                                 int flags CV_DEFAULT(0) );
 
-CVAPI(void) cvCalibrationMatrixValues( const CvMat *calibMatr,
-                                int imgWidth, int imgHeight,
-                                double apertureWidth CV_DEFAULT(0),
-                                double apertureHeight CV_DEFAULT(0),
+/* Computes various useful characteristics of the camera from the data computed by
+   cvCalibrateCamera2 */
+CVAPI(void) cvCalibrationMatrixValues( const CvMat *camera_matrix,
+                                CvSize image_size,
+                                double aperture_width CV_DEFAULT(0),
+                                double aperture_height CV_DEFAULT(0),
                                 double *fovx CV_DEFAULT(NULL),
                                 double *fovy CV_DEFAULT(NULL),
-                                double *focalLength CV_DEFAULT(NULL),
-                                CvPoint2D64f *principalPoint CV_DEFAULT(NULL),
-                                double *pixelAspectRatio CV_DEFAULT(NULL));
+                                double *focal_length CV_DEFAULT(NULL),
+                                CvPoint2D64f *principal_point CV_DEFAULT(NULL),
+                                double *pixel_aspect_ratio CV_DEFAULT(NULL));
+
+#define CV_CALIB_FIX_INTRINSIC  256
+#define CV_CALIB_SAME_FOCAL_LENGTH 512
+
+/* Computes the transformation from one camera coordinate system to another one
+   from a few correspondent views of the same calibration target. Optionally, calibrates
+   both cameras */
+CVAPI(void) cvStereoCalibrate( const CvMat* object_points, const CvMat* image_points1,
+                               const CvMat* image_points2, const CvMat* npoints,
+                               CvMat* camera_matrix1, CvMat* dist_coeffs1,
+                               CvMat* camera_matrix2, CvMat* dist_coeffs2,
+                               CvSize image_size, CvMat* R, CvMat* T,
+                               CvMat* E CV_DEFAULT(0), CvMat* F CV_DEFAULT(0),
+                               CvTermCriteria term_crit CV_DEFAULT(cvTermCriteria(
+                                   CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,30,1e-6)),
+                               int flags CV_DEFAULT(CV_CALIB_FIX_INTRINSIC) );
+
+#define CV_CALIB_ZERO_DISPARITY 1024
+
+/* Computes 3D rotations (+ optional shift) for each camera coordinate system to make both
+   views parallel (=> to make all the epipolar lines horizontal or vertical) */
+CVAPI(void) cvStereoRectify( const CvMat* camera_matrix1, const CvMat* camera_matrix2,
+                             const CvMat* dist_coeffs1, const CvMat* dist_coeffs2,
+                             CvSize image_size, const CvMat* R, const CvMat* T,
+                             CvMat* R1, CvMat* R2, CvMat* P1, CvMat* P2,
+                             int flags CV_DEFAULT(CV_CALIB_ZERO_DISPARITY) );
+
+/* Computes rectification transformations for uncalibrated pair of images using a set
+   of point correspondences */
+CVAPI(int) cvStereoRectifyUncalibrated( const CvMat* points1, const CvMat* points2,
+                                        const CvMat* F, CvSize img_size,
+                                        CvMat* H1, CvMat* H2,
+                                        double threshold CV_DEFAULT(5));
 
 #define CV_CALIB_CB_ADAPTIVE_THRESH  1
 #define CV_CALIB_CB_NORMALIZE_IMAGE  2
@@ -1231,8 +1312,8 @@ CVAPI(void) cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
 /* Calculates fundamental matrix given a set of corresponding points */
 #define CV_FM_7POINT 1
 #define CV_FM_8POINT 2
-#define CV_FM_LMEDS_ONLY  4
-#define CV_FM_RANSAC_ONLY 8
+#define CV_FM_LMEDS_ONLY  CV_LMEDS
+#define CV_FM_RANSAC_ONLY CV_RANSAC
 #define CV_FM_LMEDS (CV_FM_LMEDS_ONLY + CV_FM_8POINT)
 #define CV_FM_RANSAC (CV_FM_RANSAC_ONLY + CV_FM_8POINT)
 CVAPI(int) cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,

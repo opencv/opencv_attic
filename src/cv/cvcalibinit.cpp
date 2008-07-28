@@ -157,7 +157,7 @@ icvCalcAffineTranf2D32f(CvPoint2D32f* pts1, CvPoint2D32f* pts2, int count, CvMat
     int i, j;
     int real_count = 0;
     for( j = 0; j < count; j++ )
-    {	
+    {
         if( pts1[j].x >= 0 ) real_count++;		
     }
     if(real_count < 3) return;
@@ -165,16 +165,16 @@ icvCalcAffineTranf2D32f(CvPoint2D32f* pts1, CvPoint2D32f* pts2, int count, CvMat
     CvMat* uv = cvCreateMat( 2*real_count, 1, CV_32FC1 );
     //estimate affine transfromation
     for( i = 0, j = 0; j < count; j++ )
-    {	
+    {
         if( pts1[j].x >= 0 ) 
-        {		
+        {
             CV_MAT_ELEM( *xy, float, i*2+1, 2 ) = CV_MAT_ELEM( *xy, float, i*2, 0 ) = pts2[j].x;
             CV_MAT_ELEM( *xy, float, i*2+1, 3 ) = CV_MAT_ELEM( *xy, float, i*2, 1 ) = pts2[j].y;
             CV_MAT_ELEM( *xy, float, i*2, 2 ) = CV_MAT_ELEM( *xy, float, i*2, 3 ) = CV_MAT_ELEM( *xy, float, i*2, 5 ) = \
                 CV_MAT_ELEM( *xy, float, i*2+1, 0 ) = CV_MAT_ELEM( *xy, float, i*2+1, 1 ) = CV_MAT_ELEM( *xy, float, i*2+1, 4 ) = 0;
             CV_MAT_ELEM( *xy, float, i*2, 4 ) = CV_MAT_ELEM( *xy, float, i*2+1, 5 ) = 1;                
             CV_MAT_ELEM( *uv, float, i*2, 0 ) = pts1[j].x;
-            CV_MAT_ELEM( *uv, float, i*2+1, 0 ) = pts1[j].y;		
+            CV_MAT_ELEM( *uv, float, i*2+1, 0 ) = pts1[j].y;
             i++;
         }
     }
@@ -190,6 +190,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                              CvPoint2D32f* out_corners, int* out_corner_count,
                              int flags )
 {
+    int k;
     const int min_dilations = 0;
     const int max_dilations = 3;
     int found = 0;
@@ -262,178 +263,184 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     // This is necessary because some squares simply do not separate properly with a single dilation.  However,
     // we want to use the minimum number of dilations possible since dilations cause the squares to become smaller,
     // making it difficult to detect smaller squares.
-    for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
+    for( k = 0; k < 2; k++ )
     {
-        if (found) break;		// already found it
-
-        // convert the input grayscale image to binary (black-n-white)
-        if( flags & CV_CALIB_CB_ADAPTIVE_THRESH )
+        for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
         {
-            int block_size = cvRound(MIN(img->cols,img->rows)*0.2)|1;
-            cvDilate( img, thresh_img, 0, dilations );
+            if (found) break;		// already found it
 
-            // convert to binary
-            cvAdaptiveThreshold( img, thresh_img, 255,
-                CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, block_size, 0 );
-            if (dilations > 0)
-                cvDilate( thresh_img, thresh_img, 0, dilations-1 );
-        }
-        else
-        {
-            // Make dilation before the thresholding.
-            // It splits chessboard corners
-            //cvDilate( img, thresh_img, 0, 1 );
-
-            // empiric threshold level
-            double mean = cvMean( img );
-            int thresh_level = cvRound( mean - 10 );
-            thresh_level = MAX( thresh_level, 10 );
-
-            cvThreshold( img, thresh_img, thresh_level, 255, CV_THRESH_BINARY );
-            cvDilate( thresh_img, thresh_img, 0, dilations );
-        }
-
-
-#ifdef DEBUG_CHESSBOARD
-        cvCvtColor(thresh_img,dbg_img,CV_GRAY2BGR);
-#endif
-
-        // So we can find rectangles that go to the edge, we draw a white line around the image edge.
-        // Otherwise FindContours will miss those clipped rectangle contours.
-        // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
-        cvRectangle( thresh_img, cvPoint(0,0), cvPoint(thresh_img->cols-1,
-            thresh_img->rows-1), CV_RGB(255,255,255), 3, 8);
-
-        CV_CALL( quad_count = icvGenerateQuads( &quads, &corners, storage, thresh_img, flags ));
-
-
-        PRINTF("Quad count: %d/%d\n", quad_count, expected_corners_num);
-
-        // Run multi-level quads extraction
-        // In case one-level binarization did not give enough number of quads 
-        if( quad_count < expected_corners_num )
-        {
-            CV_CALL( quad_count = icvGenerateQuadsEx( &quads, &corners, storage, img, thresh_img, dilations, flags ));
-            PRINTF("EX quad count: %d/%d\n", quad_count, expected_corners_num);
-        }
-
-#ifdef DEBUG_CHESSBOARD
-        cvCopy(dbg_img, dbg1_img);
-        cvNamedWindow("all_quads", 1);
-        // copy corners to temp array
-        for( i = 0; i < quad_count; i++ )
-        {
-            for (int k=0; k<4; k++)
+            if( k == 1 )
             {
-                CvPoint2D32f pt1, pt2;
-                CvScalar color = CV_RGB(30,255,30);
-                pt1 = quads[i].corners[k]->pt;
-                pt2 = quads[i].corners[(k+1)%4]->pt;
-                pt2.x = (pt1.x + pt2.x)/2;
-                pt2.y = (pt1.y + pt2.y)/2;
-                if (k>0)
-                    color = CV_RGB(200,200,0);
-                cvLine( dbg1_img, cvPointFrom32f(pt1), cvPointFrom32f(pt2), color, 3, 8);
+                //Pattern was not found using binarization
+                // Run multi-level quads extraction
+                // In case one-level binarization did not give enough number of quads 
+                CV_CALL( quad_count = icvGenerateQuadsEx( &quads, &corners, storage, img, thresh_img, dilations, flags ));
+                PRINTF("EX quad count: %d/%d\n", quad_count, expected_corners_num);
             }
-        }
+            else
+            {
+                // convert the input grayscale image to binary (black-n-white)
+                if( flags & CV_CALIB_CB_ADAPTIVE_THRESH )
+                {
+                    int block_size = cvRound(MIN(img->cols,img->rows)*0.2)|1;
 
+                    // convert to binary
+                    cvAdaptiveThreshold( img, thresh_img, 255,
+                        CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, block_size, 0 );
+                    if (dilations > 0)
+                        cvDilate( thresh_img, thresh_img, 0, dilations-1 );
+                }
+                else
+                {
+                    // Make dilation before the thresholding.
+                    // It splits chessboard corners
+                    //cvDilate( img, thresh_img, 0, 1 );
 
-        cvShowImage("all_quads", (IplImage*)dbg1_img);
-        cvWaitKey();
-#endif
+                    // empiric threshold level
+                    double mean = cvMean( img );
+                    int thresh_level = cvRound( mean - 10 );
+                    thresh_level = MAX( thresh_level, 10 );
 
+                    cvThreshold( img, thresh_img, thresh_level, 255, CV_THRESH_BINARY );
+                    cvDilate( thresh_img, thresh_img, 0, dilations );
+                }
 
-        if( quad_count <= 0 )
-            continue;
-
-        // Find quad's neighbors
-        CV_CALL( icvFindQuadNeighbors( quads, quad_count ));
-
-        // allocate extra for adding in icvOrderFoundQuads
-        CV_CALL( quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * (quad_count+5)));
-        CV_CALL( corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * (quad_count+5)*4 ));
-
-        for( group_idx = 0; ; group_idx++ )
-        {
-            int count;
-            CV_CALL( count = icvFindConnectedQuads( quads, quad_count, quad_group, group_idx, storage ));
-
-            int icount = count;
-            if( count == 0 )
-                break;
-
-            // order the quad corners globally
-            // maybe delete or add some
-            PRINTF("Starting ordering of inner quads\n");
-            count = icvOrderFoundConnectedQuads(count, quad_group, &quad_count, &quads, &corners,
-                pattern_size, storage );
-            PRINTF("Orig count: %d  After ordering: %d\n", icount, count);
 
 
 #ifdef DEBUG_CHESSBOARD
-            cvCopy(dbg_img,dbg2_img);
-            cvNamedWindow("connected_group", 1);
+                cvCvtColor(thresh_img,dbg_img,CV_GRAY2BGR);
+#endif
+
+                // So we can find rectangles that go to the edge, we draw a white line around the image edge.
+                // Otherwise FindContours will miss those clipped rectangle contours.
+                // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
+                cvRectangle( thresh_img, cvPoint(0,0), cvPoint(thresh_img->cols-1,
+                    thresh_img->rows-1), CV_RGB(255,255,255), 3, 8);
+
+                CV_CALL( quad_count = icvGenerateQuads( &quads, &corners, storage, thresh_img, flags ));
+
+
+                PRINTF("Quad count: %d/%d\n", quad_count, expected_corners_num);
+            }
+
+
+#ifdef DEBUG_CHESSBOARD
+            cvCopy(dbg_img, dbg1_img);
+            cvNamedWindow("all_quads", 1);
             // copy corners to temp array
             for( i = 0; i < quad_count; i++ )
             {
-                if (quads[i].group_idx == group_idx)
-                    for (int k=0; k<4; k++)
-                    {
-                        CvPoint2D32f pt1, pt2;
-                        CvScalar color = CV_RGB(30,255,30);
-                        if (quads[i].ordered)
-                            color = CV_RGB(255,30,30);
-                        pt1 = quads[i].corners[k]->pt;
-                        pt2 = quads[i].corners[(k+1)%4]->pt;
-                        pt2.x = (pt1.x + pt2.x)/2;
-                        pt2.y = (pt1.y + pt2.y)/2;
-                        if (k>0)
-                            color = CV_RGB(200,200,0);
-                        cvLine( dbg2_img, cvPointFrom32f(pt1), cvPointFrom32f(pt2), color, 3, 8);
-                    }
+                for (int k=0; k<4; k++)
+                {
+                    CvPoint2D32f pt1, pt2;
+                    CvScalar color = CV_RGB(30,255,30);
+                    pt1 = quads[i].corners[k]->pt;
+                    pt2 = quads[i].corners[(k+1)%4]->pt;
+                    pt2.x = (pt1.x + pt2.x)/2;
+                    pt2.y = (pt1.y + pt2.y)/2;
+                    if (k>0)
+                        color = CV_RGB(200,200,0);
+                    cvLine( dbg1_img, cvPointFrom32f(pt1), cvPointFrom32f(pt2), color, 3, 8);
+                }
             }
-            cvShowImage("connected_group", (IplImage*)dbg2_img);
+
+
+            cvShowImage("all_quads", (IplImage*)dbg1_img);
             cvWaitKey();
 #endif
 
-            if (count == 0)
-                continue;		// haven't found inner quads
 
+            if( quad_count <= 0 )
+                continue;
 
-            // If count is more than it should be, this will remove those quads
-            // which cause maximum deviation from a nice square pattern.
-            CV_CALL( count = icvCleanFoundConnectedQuads( count, quad_group, pattern_size ));
-            PRINTF("Connected group: %d  orig count: %d cleaned: %d\n", group_idx, icount, count);
+            // Find quad's neighbors
+            CV_CALL( icvFindQuadNeighbors( quads, quad_count ));
 
-            CV_CALL( count = icvCheckQuadGroup( quad_group, count, corner_group, pattern_size ));
-            PRINTF("Connected group: %d  count: %d  cleaned: %d\n", group_idx, icount, count);
+            // allocate extra for adding in icvOrderFoundQuads
+            CV_CALL( quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * (quad_count+5)));
+            CV_CALL( corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * (quad_count+5)*4 ));
 
-            if( count > 0 || (out_corner_count && -count > *out_corner_count) )
+            for( group_idx = 0; ; group_idx++ )
             {
-                int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
-                n = MIN( n, pattern_size.width * pattern_size.height );
+                int count;
+                CV_CALL( count = icvFindConnectedQuads( quads, quad_count, quad_group, group_idx, storage ));
 
-                // copy corners to output array
-                for( i = 0; i < n; i++ )
-                    out_corners[i] = corner_group[i]->pt;
-
-                if( out_corner_count )
-                    *out_corner_count = n;
-
-                if( count > 0 )
-                {
-                    found = 1;
+                int icount = count;
+                if( count == 0 )
                     break;
+
+                // order the quad corners globally
+                // maybe delete or add some
+                PRINTF("Starting ordering of inner quads\n");
+                count = icvOrderFoundConnectedQuads(count, quad_group, &quad_count, &quads, &corners,
+                    pattern_size, storage );
+                PRINTF("Orig count: %d  After ordering: %d\n", icount, count);
+
+
+#ifdef DEBUG_CHESSBOARD
+                cvCopy(dbg_img,dbg2_img);
+                cvNamedWindow("connected_group", 1);
+                // copy corners to temp array
+                for( i = 0; i < quad_count; i++ )
+                {
+                    if (quads[i].group_idx == group_idx)
+                        for (int k=0; k<4; k++)
+                        {
+                            CvPoint2D32f pt1, pt2;
+                            CvScalar color = CV_RGB(30,255,30);
+                            if (quads[i].ordered)
+                                color = CV_RGB(255,30,30);
+                            pt1 = quads[i].corners[k]->pt;
+                            pt2 = quads[i].corners[(k+1)%4]->pt;
+                            pt2.x = (pt1.x + pt2.x)/2;
+                            pt2.y = (pt1.y + pt2.y)/2;
+                            if (k>0)
+                                color = CV_RGB(200,200,0);
+                            cvLine( dbg2_img, cvPointFrom32f(pt1), cvPointFrom32f(pt2), color, 3, 8);
+                        }
                 }
-            } 
-        }
+                cvShowImage("connected_group", (IplImage*)dbg2_img);
+                cvWaitKey();
+#endif
 
-        cvFree( &quads );
-        cvFree( &corners );
-        cvFree( &quad_group );
-        cvFree( &corner_group );
+                if (count == 0)
+                    continue;		// haven't found inner quads
 
-    }
+
+                // If count is more than it should be, this will remove those quads
+                // which cause maximum deviation from a nice square pattern.
+                CV_CALL( count = icvCleanFoundConnectedQuads( count, quad_group, pattern_size ));
+                PRINTF("Connected group: %d  orig count: %d cleaned: %d\n", group_idx, icount, count);
+
+                CV_CALL( count = icvCheckQuadGroup( quad_group, count, corner_group, pattern_size ));
+                PRINTF("Connected group: %d  count: %d  cleaned: %d\n", group_idx, icount, count);
+
+                if( count > 0 || (out_corner_count && -count > *out_corner_count) )
+                {
+                    int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
+                    n = MIN( n, pattern_size.width * pattern_size.height );
+
+                    // copy corners to output array
+                    for( i = 0; i < n; i++ )
+                        out_corners[i] = corner_group[i]->pt;
+
+                    if( out_corner_count )
+                        *out_corner_count = n;
+
+                    if( count > 0 )
+                    {
+                        found = 1;
+                        break;
+                    }
+                } 
+            }
+
+            cvFree( &quads );
+            cvFree( &corners );
+            cvFree( &quad_group );
+            cvFree( &corner_group );
+        }//dilations
+    }//
 
 
     __END__;
@@ -444,6 +451,20 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     cvFree( &quads );
     cvFree( &corners );
 
+    if( found && pattern_size.height % 2 == 0 && pattern_size.width % 2 == 0 )
+    {
+        int last_row = (pattern_size.height-1)*pattern_size.width;
+        double dy0 = out_corners[last_row].y - out_corners[0].y;
+        if( dy0 < 0 )
+        {
+            int i, n = pattern_size.width*pattern_size.height;
+            for( i = 0; i < n/2; i++ )
+            {
+                CvPoint2D32f temp;
+                CV_SWAP(out_corners[i], out_corners[n-i-1], temp);
+            }
+        }
+    }
 
     return found;
 }
@@ -468,10 +489,11 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
 {
     CvMemStorage* temp_storage = cvCreateChildMemStorage( storage );
     CvSeq* stack = cvCreateSeq( 0, sizeof(*stack), sizeof(void*), temp_storage );
+    int i;
 
     // first find an interior quad
     CvCBQuad *start = NULL;
-    for (int i=0; i<quad_count; i++)
+    for (i=0; i<quad_count; i++)
     {
         if (quads[i]->count == 4)
         {
@@ -489,7 +511,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     int col_hist[HSIZE*2];
     int row_hist[HSIZE*2]; // bad programming, should allow variable size
 
-    for (int i=0; i<HSIZE*2; i++) // init to zero
+    for (i=0; i<HSIZE*2; i++) // init to zero
         col_hist[i] = row_hist[i] = 0;
     cvSeqPush(stack, &start);
     start->row = 0;
@@ -544,7 +566,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
 
     cvReleaseMemStorage( &temp_storage );
 
-    for (int i=col_min; i<=col_max; i++)
+    for (i=col_min; i<=col_max; i++)
         PRINTF("HIST[%d] = %d\n", i, col_hist[i+HSIZE]);
 
     // analyze inner quad structure
@@ -607,7 +629,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     // if there is an outer quad missing, fill it in
     // first order all inner quads
     int found = 0;
-    for (int i=0; i<quad_count; i++)
+    for (i=0; i<quad_count; i++)
     {
         if (quads[i]->count == 4)
         {   // ok, look at neighbors
@@ -685,7 +707,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
             }
 
         }
-        return rcount;		
+        return rcount;
     }
 
     return 0;
@@ -761,7 +783,7 @@ icvAddOuterQuad( CvCBQuad *quad, CvCBQuad **quads, int quad_count,
             all_count++;
         }
     }
-  return added;
+    return added;
 }
 
 
@@ -782,17 +804,29 @@ icvTrimCol(CvCBQuad **quads, int count, int col, int dir)
         {
             if (dir == 1)
             {
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
-                rcount--;
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
-                rcount--;
+                if (quads[i]->neighbors[1])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
+                    rcount--;
+                }
+                if (quads[i]->neighbors[2])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
+                    rcount--;
+                }
             }
             else
             {
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
-                rcount--;
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
-                rcount--;
+                if (quads[i]->neighbors[0])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
+                    rcount--;
+                }
+                if (quads[i]->neighbors[3])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
+                    rcount--;
+                }
             }
 
         }
@@ -803,9 +837,9 @@ icvTrimCol(CvCBQuad **quads, int count, int col, int dir)
 static int
 icvTrimRow(CvCBQuad **quads, int count, int row, int dir)
 {
-    int rcount = count;
+    int i, rcount = count;
     // find the right quad(s)
-    for (int i=0; i<count; i++)
+    for (i=0; i<count; i++)
     {
 #ifdef DEBUG_CHESSBOARD
         if (quads[i]->ordered)
@@ -815,17 +849,29 @@ icvTrimRow(CvCBQuad **quads, int count, int row, int dir)
         {
             if (dir == 1)   // remove from bottom
             {
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
-                rcount--;
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
-                rcount--;
+                if (quads[i]->neighbors[2])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
+                    rcount--;
+                }
+                if (quads[i]->neighbors[3])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
+                    rcount--;
+                }
             }
             else    // remove from top
             {
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
-                rcount--;
-                icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
-                rcount--;
+                if (quads[i]->neighbors[0])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
+                    rcount--;
+                }
+                if (quads[i]->neighbors[1])
+                {
+                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
+                    rcount--;
+                }
             }
 
         }
@@ -841,11 +887,12 @@ icvTrimRow(CvCBQuad **quads, int count, int row, int dir)
 static void
 icvRemoveQuadFromGroup(CvCBQuad **quads, int count, CvCBQuad *q0)
 {
+    int i, j;
     // remove any references to this quad as a neighbor
-    for(int i = 0; i < count; i++ )
+    for(i = 0; i < count; i++ )
     {
         CvCBQuad *q = quads[i];
-        for(int j = 0; j < 4; j++ )
+        for(j = 0; j < 4; j++ )
         {
             if( q->neighbors[j] == q0 )
             {
@@ -864,7 +911,7 @@ icvRemoveQuadFromGroup(CvCBQuad **quads, int count, CvCBQuad *q0)
     }
 
     // remove the quad
-    for(int i = 0; i < count; i++ )
+    for(i = 0; i < count; i++ )
     {
         CvCBQuad *q = quads[i];
         if (q == q0)
@@ -1393,6 +1440,15 @@ static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
                         dist <= cur_quad->edge_len*thresh_scale &&
                         dist <= quads[k].edge_len*thresh_scale )
                     {
+                        // check edge lengths, make sure they're compatible
+                        // edges that are different by more than 1:4 are rejected
+                        float ediff = cur_quad->edge_len - quads[k].edge_len;
+                        if (ediff > 32*cur_quad->edge_len ||
+                            ediff > 32*quads[k].edge_len)
+                        {
+                            PRINTF("Incompatible edge lengths\n");
+                            continue;
+                        }
                         closest_corner_idx = j;
                         closest_quad = &quads[k];
                         min_dist = dist;
@@ -1731,7 +1787,7 @@ icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
 
                 // reject non-quadrangles
                 if( dst_contour->total == 4 && cvCheckContourConvexity(dst_contour) )
-                {					
+                {
                     CvPoint pt[4];
                     double d1, d2, p = cvContourPerimeter(dst_contour);
                     double area = fabs(cvContourArea(dst_contour, CV_WHOLE_SEQ));
