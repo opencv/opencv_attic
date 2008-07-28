@@ -460,8 +460,8 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
 
         for( x = 0; x < dcols; x++, dptr += elem_size )
         {
-            double xs = mx[x];
-            double ys = my[x];
+            float xs = mx[x];
+            float ys = my[x];
             int ixs = cvFloor(xs);
             int iys = cvFloor(ys);
 
@@ -489,10 +489,10 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
                 const uchar* sptr = sptr0 + iys*step + ixs*cn;
                 for( k = 0; k < cn; k++ )
                 {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
+                    float v00 = sptr[k];
+                    float v01 = sptr[cn + k];
+                    float v10 = sptr[step + k];
+                    float v11 = sptr[step + cn + k];
 
                     v00 = v00 + xs*(v01 - v00);
                     v10 = v10 + xs*(v11 - v10);
@@ -506,10 +506,10 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
                 const ushort* sptr = (const ushort*)sptr0 + iys*step + ixs*cn;
                 for( k = 0; k < cn; k++ )
                 {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
+                    float v00 = sptr[k];
+                    float v01 = sptr[cn + k];
+                    float v10 = sptr[step + k];
+                    float v11 = sptr[step + cn + k];
 
                     v00 = v00 + xs*(v01 - v00);
                     v10 = v10 + xs*(v11 - v10);
@@ -523,10 +523,10 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
                 const float* sptr = (const float*)sptr0 + iys*step + ixs*cn;
                 for( k = 0; k < cn; k++ )
                 {
-                    double v00 = sptr[k];
-                    double v01 = sptr[cn + k];
-                    double v10 = sptr[step + k];
-                    double v11 = sptr[step + cn + k];
+                    float v00 = sptr[k];
+                    float v01 = sptr[cn + k];
+                    float v10 = sptr[step + k];
+                    float v11 = sptr[step + cn + k];
 
                     v00 = v00 + xs*(v01 - v00);
                     v10 = v10 + xs*(v11 - v10);
@@ -959,16 +959,18 @@ CV_WarpPerspectiveTest warp_perspective_test;
 void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMat* mapy )
 {
     int u, v;
-    double a[9], k[4];
+    double a[9], k[5]={0,0,0,0,0};
     CvMat _a = cvMat(3, 3, CV_64F, a);
     CvMat _k = cvMat(_k0->rows,_k0->cols,
         CV_MAKETYPE(CV_64F,CV_MAT_CN(_k0->type)),k);
-    double fx, fy, cx, cy, ifx, ify;
+    double fx, fy, cx, cy, ifx, ify, cxn, cyn;
     
     cvTsConvert( _a0, &_a );
     cvTsConvert( _k0, &_k );
     fx = a[0]; fy = a[4]; cx = a[2]; cy = a[5];
     ifx = 1./fx; ify = 1./fy;
+    cxn = (mapy->cols - 1)*0.5;
+    cyn = (mapy->rows - 1)*0.5;
 
     for( v = 0; v < mapy->rows; v++ )
     {
@@ -981,11 +983,11 @@ void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMa
             double y = (v - cy)*ify;
             double x2 = x*x, y2 = y*y;
             double r2 = x2 + y2;
-            double cdist = 1 + r2*(k[0] + k[1]*r2);
+            double cdist = 1 + (k[0] + (k[1] + k[4]*r2)*r2)*r2;
             double x1 = x*cdist + k[2]*2*x*y + k[3]*(r2 + 2*x2);
             double y1 = y*cdist + k[3]*2*x*y + k[2]*(r2 + 2*y2);
-            mx[u] = (float)(x1*fx + cx);
-            my[u] = (float)(y1*fy + cy);
+            mx[u] = (float)(x1*fx + cxn);
+            my[u] = (float)(y1*fy + cyn);
         }
     }
 }
@@ -1052,6 +1054,7 @@ void CV_RemapTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** s
 {
     CV_ImgWarpBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     types[INPUT][1] = types[INPUT][2] = CV_32FC1;
+    interpolation = CV_INTER_LINEAR;
 }
 
 
