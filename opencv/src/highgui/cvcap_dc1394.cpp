@@ -393,7 +393,7 @@ static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 			unsigned char * dst = (unsigned char *)capture->frame.imageData;
 			switch (capture->color_mode) {
 				case COLOR_FORMAT7_RGB8:
-					printf("icvRetrieveFrame convert RGB to BGR\n");
+					//printf("icvRetrieveFrame convert RGB to BGR\n");
 					/* Convert RGB to BGR */
 					for (int i=0;i<capture->frame.imageSize;i+=6) {
 						dst[i]   = src[i+2];
