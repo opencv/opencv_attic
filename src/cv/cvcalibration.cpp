@@ -2770,8 +2770,14 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
     {
         cvConvert( &K[0], _cameraMatrix1 );
         cvConvert( &K[1], _cameraMatrix2 );
-        cvConvert( &Dist[0], _distCoeffs1 );
-        cvConvert( &Dist[1], _distCoeffs2 );
+
+        for( k = 0; k < 2; k++ )
+        {
+            CvMat* distCoeffs = k == 0 ? _distCoeffs1 : _distCoeffs2;
+            CvMat tdist = cvMat( distCoeffs->rows, distCoeffs->cols,
+                CV_MAKETYPE(CV_64F,CV_MAT_CN(distCoeffs->type)), Dist[k].data.db );
+            cvConvert( &tdist, distCoeffs );
+        }
     }
     
     if( _E || _F )
