@@ -284,7 +284,7 @@ public:
 protected:
     // Disallow copy and assignment
     WImageC(const WImageC&);
-    void operator=(const WImage&);
+    void operator=(const WImageC&);
 
     void SetIpl(IplImage* image) {
         assert(!image || image->depth == WImage<T>::Depth());
