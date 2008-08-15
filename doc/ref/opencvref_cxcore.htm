@@ -3206,16 +3206,10 @@ cvRandInit( &rng_state,
             0xffffffff /* just use a fixed seed here */,
             CV_RAND_UNI /* specify uniform type */ );
 
-/* initialize the locations */
+/* initialize the locations using a uniform distribution */
 cvRandArr( &rng_state, locations, CV_RAND_UNI, cvScalar(0,0,0,0), cvScalar(size.width,size.height,0,0) );
 
-/* modify RNG to make it produce normally distributed values */
-rng_state.disttype = CV_RAND_NORMAL;
-cvRandSetRange( &rng_state,
-                30 /* deviation */,
-                100 /* average point brightness */,
-                -1 /* initialize all the dimensions */ );
-/* generate values */
+/* generate normally distributed random values */
 cvRandArr( &rng_state, values, CV_RAND_NORMAL,
            cvRealScalar(100), // average intensity
            cvRealScalar(30) // deviation of the intensity
