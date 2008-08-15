@@ -345,7 +345,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
 
 
 void
-cvTsConvertHomogenious( const CvMat* src, CvMat* dst )
+cvTsConvertHomogeneous( const CvMat* src, CvMat* dst )
 {
     CvMat* src_buf = 0;
     CvMat* dst_buf = 0;
@@ -512,7 +512,7 @@ cvTsProjectPoints( const CvMat* _3d, const CvMat* Rt, const CvMat* A,
         m[2] = s;
     }
 
-    cvTsConvertHomogenious( temp, _2d );
+    cvTsConvertHomogeneous( temp, _2d );
     cvReleaseMat( &noise );
     cvReleaseMat( &temp );
 }
@@ -755,7 +755,7 @@ CV_FundamentalMatTest::CV_FundamentalMatTest()
 {
     // input arrays:
     //   0, 1 - arrays of 2d points that are passed to %func%.
-    //          Can have different data type, layout, be stored in homogenious coordinates or not.
+    //          Can have different data type, layout, be stored in homogeneous coordinates or not.
     //   2 - array of 3d points that are projected to both view planes
     //   3 - [R|t] matrix for the second view plane (for the first one it is [I|0]
     //   4, 5 - intrinsic matrices
@@ -998,8 +998,8 @@ void CV_FundamentalMatTest::prepare_to_validation( int test_case_idx )
     CvMat* p1 = cvCreateMat( 1, pt_count, CV_64FC2 );
     CvMat* p2 = cvCreateMat( 1, pt_count, CV_64FC2 );
 
-    cvTsConvertHomogenious( &test_mat[INPUT][0], p1 );
-    cvTsConvertHomogenious( &test_mat[INPUT][1], p2 );
+    cvTsConvertHomogeneous( &test_mat[INPUT][0], p1 );
+    cvTsConvertHomogeneous( &test_mat[INPUT][1], p2 );
 
     cvTsConvert( &test_mat[TEMP][0], &F );
 
@@ -1038,12 +1038,12 @@ void CV_FundamentalMatTest::prepare_to_validation( int test_case_idx )
 CV_FundamentalMatTest fmatrix_test;
 
 
-/********************************** convert homogenious *********************************/
+/********************************** convert homogeneous *********************************/
 
-class CV_ConvertHomogeniousTest : public CvArrTest
+class CV_ConvertHomogeneousTest : public CvArrTest
 {
 public:
-    CV_ConvertHomogeniousTest();
+    CV_ConvertHomogeneousTest();
 
 protected:
     int read_params( CvFileStorage* fs );
@@ -1058,7 +1058,7 @@ protected:
 };
 
 
-CV_ConvertHomogeniousTest::CV_ConvertHomogeniousTest()
+CV_ConvertHomogeneousTest::CV_ConvertHomogeneousTest()
     : CvArrTest( "_3d-cvt-homogen", "cvConvertPointsHomogeniuos", "" )
 {
     test_array[INPUT].push(NULL);
@@ -1073,14 +1073,14 @@ CV_ConvertHomogeniousTest::CV_ConvertHomogeniousTest()
 }
 
 
-int CV_ConvertHomogeniousTest::read_params( CvFileStorage* fs )
+int CV_ConvertHomogeneousTest::read_params( CvFileStorage* fs )
 {
     int code = CvArrTest::read_params( fs );
     return code;
 }
 
 
-void CV_ConvertHomogeniousTest::get_test_array_types_and_sizes( int /*test_case_idx*/,
+void CV_ConvertHomogeneousTest::get_test_array_types_and_sizes( int /*test_case_idx*/,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
@@ -1142,13 +1142,13 @@ void CV_ConvertHomogeniousTest::get_test_array_types_and_sizes( int /*test_case_
 }
 
 
-double CV_ConvertHomogeniousTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+double CV_ConvertHomogeneousTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     return 1e-5;
 }
 
 
-void CV_ConvertHomogeniousTest::fill_array( int /*test_case_idx*/, int /*i*/, int /*j*/, CvMat* arr )
+void CV_ConvertHomogeneousTest::fill_array( int /*test_case_idx*/, int /*i*/, int /*j*/, CvMat* arr )
 {
     CvMat* temp = cvCreateMat( 1, pt_count, CV_MAKETYPE(CV_64FC1,dims1) );
     CvRNG* rng = ts->get_rng();
@@ -1158,24 +1158,24 @@ void CV_ConvertHomogeniousTest::fill_array( int /*test_case_idx*/, int /*i*/, in
         low.val[dims1-1] = 1.;
 
     cvRandArr( rng, temp, CV_RAND_UNI, low, high );
-    cvTsConvertHomogenious( temp, arr );
+    cvTsConvertHomogeneous( temp, arr );
     cvReleaseMat( &temp );
 }
 
 
-void CV_ConvertHomogeniousTest::run_func()
+void CV_ConvertHomogeneousTest::run_func()
 {
-    cvConvertPointsHomogenious( &test_mat[INPUT][0], &test_mat[OUTPUT][0] );
+    cvConvertPointsHomogeneous( &test_mat[INPUT][0], &test_mat[OUTPUT][0] );
 }
 
 
-void CV_ConvertHomogeniousTest::prepare_to_validation( int /*test_case_idx*/ )
+void CV_ConvertHomogeneousTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    cvTsConvertHomogenious( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0] );
+    cvTsConvertHomogeneous( &test_mat[INPUT][0], &test_mat[REF_OUTPUT][0] );
 }
 
 
-CV_ConvertHomogeniousTest cvt_homogen_test;
+CV_ConvertHomogeneousTest cvt_homogen_test;
 
 
 /************************** compute corresponding epipolar lines ************************/
@@ -1294,7 +1294,7 @@ void CV_ComputeEpilinesTest::fill_array( int test_case_idx, int i, int j, CvMat*
     {
         CvMat* temp = cvCreateMat( 1, pt_count, CV_MAKETYPE(CV_64FC1,dims) );
         cvRandArr( rng, temp, CV_RAND_UNI, cvScalar(0,0,1), cvScalarAll(10) );
-        cvTsConvertHomogenious( temp, arr );
+        cvTsConvertHomogeneous( temp, arr );
         cvReleaseMat( &temp );
     }
     else if( i == INPUT && j == 1 )
@@ -1319,7 +1319,7 @@ void CV_ComputeEpilinesTest::prepare_to_validation( int /*test_case_idx*/ )
     CvMat F = cvMat( 3, 3, CV_64F, f );
     int i;
 
-    cvTsConvertHomogenious( &test_mat[INPUT][0], pt );
+    cvTsConvertHomogeneous( &test_mat[INPUT][0], pt );
     cvTsConvert( &test_mat[INPUT][1], &F );
     if( which_image == 2 )
         cvTranspose( &F, &F );
@@ -1336,7 +1336,7 @@ void CV_ComputeEpilinesTest::prepare_to_validation( int /*test_case_idx*/ )
         l[0] = t0*d; l[1] = t1*d; l[2] = t2*d;
     }
 
-    cvTsConvertHomogenious( lines, &test_mat[REF_OUTPUT][0] );
+    cvTsConvertHomogeneous( lines, &test_mat[REF_OUTPUT][0] );
     cvReleaseMat( &pt );
     cvReleaseMat( &lines );
 }
