@@ -1095,10 +1095,10 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
 
 static CvCaptureCAM_V4L * icvCaptureFromCAM_V4L (int index)
 {
-   static int autoindex=0;
+   static int autoindex;
+   autoindex = 0;
 
-   char deviceName[MAX_DEVICE_DRIVER_NAME];
-   
+   char deviceName[MAX_DEVICE_DRIVER_NAME];   
    
    if (!numCameras)
       icvInitCapture_V4L(); /* Havent called icvInitCapture yet - do it now! */
@@ -2732,6 +2732,10 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
      }
 #ifdef HAVE_CAMV4L2
      else {
+       capture->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+       if (ioctl(capture->deviceHandle, VIDIOC_STREAMOFF, &capture->type) < 0) {
+           perror ("Unable to stop the stream.");
+       }
 
        for (unsigned int n_buffers = 0; n_buffers < capture->req.count; ++n_buffers)
        {
