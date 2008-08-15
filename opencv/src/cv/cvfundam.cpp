@@ -1028,12 +1028,12 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
 
 
 CV_IMPL void
-cvConvertPointsHomogenious( const CvMat* src, CvMat* dst )
+cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
 {
     CvMat* temp = 0;
     CvMat* denom = 0;
 
-    CV_FUNCNAME( "cvConvertPointsHomogenious" );
+    CV_FUNCNAME( "cvConvertPointsHomogeneous" );
 
     __BEGIN__;
 

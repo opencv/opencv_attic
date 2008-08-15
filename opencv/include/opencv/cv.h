@@ -1056,18 +1056,18 @@ CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
 struct CvFeatureTree;
 
 /* Constructs kd-tree from set of feature descriptors */
-CVAPI(CvFeatureTree*) cvCreateFeatureTree(CvMat* desc);
+CVAPI(struct CvFeatureTree*) cvCreateFeatureTree(CvMat* desc);
 
 /* Release kd-tree */
-CVAPI(void) cvReleaseFeatureTree(CvFeatureTree* tr);
+CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
 /* Searches kd-tree for k nearest neighbors of given reference points,
    searching at most emax leaves. */
-CVAPI(void) cvFindFeatures(CvFeatureTree* tr, CvMat* desc,
-		    CvMat* results, CvMat* dist, int k = 2, int emax = 20);
+CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
+		    CvMat* results, CvMat* dist, int k CV_DEFAULT(2), int emax CV_DEFAULT(20));
 
 /* Search kd-tree for all points that are inlier to given rect region. */
-CVAPI(int) cvFindFeaturesBoxed(CvFeatureTree* tr,
+CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
 		    CvMat* bounds_min, CvMat* bounds_max,
 		    CvMat* results);
 
@@ -1104,21 +1104,21 @@ CVAPI(int) cvRunHaarClassifierCascade( CvHaarClassifierCascade* cascade,
                                       CvPoint pt, int start_stage CV_DEFAULT(0));
 
 /****************************************************************************************\
-*                     Camera Calibration and Rectification functions                     *
+*                      Camera Calibration, Pose Estimation and Stereo                    *
 \****************************************************************************************/
 
 /* Transforms the input image to compensate lens distortion */
 CVAPI(void) cvUndistort2( const CvArr* src, CvArr* dst,
-                          const CvMat* intrinsic_matrix,
+                          const CvMat* camera_matrix,
                           const CvMat* distortion_coeffs );
 
 /* Computes transformation map from intrinsic camera parameters
    that can used by cvRemap */
-CVAPI(void) cvInitUndistortMap( const CvMat* intrinsic_matrix,
+CVAPI(void) cvInitUndistortMap( const CvMat* camera_matrix,
                                 const CvMat* distortion_coeffs,
                                 CvArr* mapx, CvArr* mapy );
 
-/* Computes transformation+rectification map for stereo camera (invididual view) */
+/* Computes undistortion+rectification map for a head of stereo camera */
 CVAPI(void) cvInitUndistortRectifyMap( const CvMat* camera_matrix,
                                        const CvMat* dist_coeffs,
                                        const CvMat *R, const CvMat* new_camera_matrix,
@@ -1178,7 +1178,7 @@ CVAPI(void) cvComposeRT( const CvMat* _rvec1, const CvMat* _tvec1,
 /* Projects object points to the view plane using
    the specified extrinsic and intrinsic camera parameters */
 CVAPI(void) cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_vector,
-                              const CvMat* translation_vector, const CvMat* intrinsic_matrix,
+                              const CvMat* translation_vector, const CvMat* camera_matrix,
                               const CvMat* distortion_coeffs, CvMat* image_points,
                               CvMat* dpdrot CV_DEFAULT(NULL), CvMat* dpdt CV_DEFAULT(NULL),
                               CvMat* dpdf CV_DEFAULT(NULL), CvMat* dpdc CV_DEFAULT(NULL),
@@ -1189,7 +1189,7 @@ CVAPI(void) cvProjectPoints2( const CvMat* object_points, const CvMat* rotation_
    a few known corresponding point pairs and intrinsic parameters */
 CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           const CvMat* image_points,
-                                          const CvMat* intrinsic_matrix,
+                                          const CvMat* camera_matrix,
                                           const CvMat* distortion_coeffs,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
@@ -1199,8 +1199,23 @@ CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
 CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
                                      const CvMat* image_points,
                                      const CvMat* npoints, CvSize image_size,
-                                     CvMat* intrinsic_matrix,
+                                     CvMat* camera_matrix,
                                      double aspect_ratio CV_DEFAULT(1.) );
+
+#define CV_CALIB_CB_ADAPTIVE_THRESH  1
+#define CV_CALIB_CB_NORMALIZE_IMAGE  2
+#define CV_CALIB_CB_FILTER_QUADS     4 
+
+/* Detects corners on a chessboard calibration pattern */
+CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
+                                    CvPoint2D32f* corners,
+                                    int* corner_count CV_DEFAULT(NULL),
+                                    int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH) );
+
+/* Draws individual chessboard corners or the whole chessboard detected */
+CVAPI(void) cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
+                                     CvPoint2D32f* corners,
+                                     int count, int pattern_was_found );
 
 #define CV_CALIB_USE_INTRINSIC_GUESS  1
 #define CV_CALIB_FIX_ASPECT_RATIO     2
@@ -1217,7 +1232,7 @@ CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
                                 CvSize image_size,
-                                CvMat* intrinsic_matrix,
+                                CvMat* camera_matrix,
                                 CvMat* distortion_coeffs,
                                 CvMat* rotation_vectors CV_DEFAULT(NULL),
                                 CvMat* translation_vectors CV_DEFAULT(NULL),
@@ -1259,6 +1274,7 @@ CVAPI(void) cvStereoRectify( const CvMat* camera_matrix1, const CvMat* camera_ma
                              const CvMat* dist_coeffs1, const CvMat* dist_coeffs2,
                              CvSize image_size, const CvMat* R, const CvMat* T,
                              CvMat* R1, CvMat* R2, CvMat* P1, CvMat* P2,
+                             CvMat* Q CV_DEFAULT(0),
                              int flags CV_DEFAULT(CV_CALIB_ZERO_DISPARITY) );
 
 /* Computes rectification transformations for uncalibrated pair of images using a set
@@ -1267,21 +1283,6 @@ CVAPI(int) cvStereoRectifyUncalibrated( const CvMat* points1, const CvMat* point
                                         const CvMat* F, CvSize img_size,
                                         CvMat* H1, CvMat* H2,
                                         double threshold CV_DEFAULT(5));
-
-#define CV_CALIB_CB_ADAPTIVE_THRESH  1
-#define CV_CALIB_CB_NORMALIZE_IMAGE  2
-#define CV_CALIB_CB_FILTER_QUADS     4 
-
-/* Detects corners on a chessboard calibration pattern */
-CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
-                                    CvPoint2D32f* corners,
-                                    int* corner_count CV_DEFAULT(NULL),
-                                    int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH) );
-
-/* Draws individual chessboard corners or the whole chessboard detected */
-CVAPI(void) cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
-                                     CvPoint2D32f* corners,
-                                     int count, int pattern_was_found );
 
 typedef struct CvPOSITObject CvPOSITObject;
 
@@ -1298,16 +1299,11 @@ CVAPI(void)  cvPOSIT(  CvPOSITObject* posit_object, CvPoint2D32f* image_points,
 /* Releases CvPOSITObject structure */
 CVAPI(void)  cvReleasePOSITObject( CvPOSITObject**  posit_object );
 
-
-/****************************************************************************************\
-*                                 Epipolar Geometry                                      *
-\****************************************************************************************/
-
 /* updates the number of RANSAC iterations */
 CVAPI(int) cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
-CVAPI(void) cvConvertPointsHomogenious( const CvMat* src, CvMat* dst );
+CVAPI(void) cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
 
 /* Calculates fundamental matrix given a set of corresponding points */
 #define CV_FM_7POINT 1
@@ -1329,6 +1325,55 @@ CVAPI(void) cvComputeCorrespondEpilines( const CvMat* points,
                                          int which_image,
                                          const CvMat* fundamental_matrix,
                                          CvMat* correspondent_lines );
+
+/* stereo correspondence parameters and functions */
+
+#define CV_STEREO_BM_NORMALIZED_RESPONSE  0
+
+/* Block matching algorithm structure */
+typedef struct CvStereoBMState
+{
+    // pre-filtering (normalization of input images)
+    int preFilterType; // =CV_STEREO_BM_NORMALIZED_RESPONSE now
+    int preFilterSize; // averaging window size: ~5x5..21x21
+    int preFilterCap; // the output of pre-filtering is clipped by [-preFilterCap,preFilterCap]
+    
+    // correspondence using Sum of Absolute Difference (SAD)
+    int SADWindowSize; // ~5x5..21x21
+    int minDisparity;  // minimum disparity (can be negative) 
+    int numberOfDisparities; // maximum disparity - minimum disparity (> 0)
+    
+    // post-filtering
+    int textureThreshold;  // the disparity is only computed for pixels
+                           // with textured enough neighborhood
+    float uniquenessRatio; // accept the computed disparity d* only if
+                           // SAD(d) >= SAD(d*)*(1 + uniquenessRatio)
+                           // for any d != d*+/-1 within the search range.
+    int speckleWindowSize; // disparity variation window
+    int speckleRange; // acceptable range of variation in window
+
+    // temporary buffers
+    CvMat* preFilteredImg0;
+    CvMat* preFilteredImg1;
+    CvMat* slidingSumBuf;
+}
+CvStereoBMState;
+
+#define CV_STEREO_BM_BASIC 0
+#define CV_STEREO_BM_FISH_EYE 1
+#define CV_STEREO_BM_NARROW 2
+
+CVAPI(CvStereoBMState*) cvCreateStereoBMState(int preset CV_DEFAULT(CV_STEREO_BM_BASIC),
+                                              int numberOfDisparities CV_DEFAULT(0));
+
+CVAPI(void) cvReleaseStereoBMState( CvStereoBMState** state );
+
+CVAPI(void) cvFindStereoCorrespondenceBM( const CvArr* left, const CvArr* right,
+                                          CvArr* disparity, CvStereoBMState* state );
+
+/* Reprojects the computed disparity image to the 3D space using the specified 4x4 matrix */
+CVAPI(void)  cvReprojectImageTo3D( const CvArr* disparityImage,
+                                   CvArr* _3dImage, const CvMat* Q );
 
 #ifdef __cplusplus
 }
