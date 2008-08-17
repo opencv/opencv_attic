@@ -381,8 +381,9 @@ static void icvInitCapture_V4L() {
     // add indexList
     indexList|=(1 << CameraNumber);
         numCameras++;
-    }        
-    close(deviceHandle);
+    }
+    if (deviceHandle != -1)
+      close(deviceHandle);
       /* Set up to test the next /dev/video source in line */
       CameraNumber++;
    } /* End while */
@@ -2747,7 +2748,8 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
      }
 #endif /* HAVE_CAMV4L2 */
 
-     if (capture->deviceHandle > 0) close(capture->deviceHandle);
+     if (capture->deviceHandle != -1) 
+       close(capture->deviceHandle);
 
      if (capture->frame.imageData) cvFree(&capture->frame.imageData);
       //cvFree((void **)capture);
