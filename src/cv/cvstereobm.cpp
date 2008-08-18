@@ -46,12 +46,6 @@
 
 #include "_cv.h"
 
-#undef CV_SSE2
-#define CV_SSE2 1
-#if CV_SSE2
-#include "emmintrin.h"
-#endif
-
 CV_IMPL CvStereoBMState*
 cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
 {
