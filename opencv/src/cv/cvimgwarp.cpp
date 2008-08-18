@@ -1778,6 +1778,197 @@ icvRemap_32f_C4R_t icvRemap_32f_C4R_p = 0;
 
 /**************************************************************/
 
+#define CV_REMAP_SHIFT 5
+#define CV_REMAP_MASK ((1 << CV_REMAP_SHIFT) - 1)
+
+#if CV_SSE2 && defined(__GNUC__)
+#define align(x) __attribute__ ((aligned (x)))
+#elif CV_SSE2 && (defined(__ICL) || defined _MSC_VER && _MSC_VER >= 1300)
+#define align(x) __declspec(align(x))
+#else
+#define align(x)
+#endif
+
+static void icvRemapFixedPt_8u( const CvMat* src, CvMat* dst,
+    const CvMat* xymap, const CvMat* amap, const uchar* fillval )
+{
+    const int TABSZ = 1 << (CV_REMAP_SHIFT*2);
+    static ushort align(8) atab[TABSZ][4];
+    static int inittab = 0;
+
+    int x, y, cols = src->cols, rows = src->rows;
+    const uchar* sptr0 = src->data.ptr;
+    int sstep = src->step;
+    uchar fv0 = fillval[0], fv1 = fillval[1], fv2 = fillval[2], fv3 = fillval[3];
+    int cn = CV_MAT_CN(src->type);
+#if CV_SSE2
+    const uchar* sptr1 = sptr0 + sstep;
+    __m128i br = _mm_set1_epi32((cols-2) + ((rows-2)<<16));
+    __m128i xy2ofs = _mm_set1_epi32(1 + (sstep << 16));
+    __m128i z = _mm_setzero_si128();
+    int align(16) iofs0[4], iofs1[4];
+#endif
+
+    if( !inittab )
+    {
+        for( y = 0; y <= CV_REMAP_MASK; y++ )
+            for( x = 0; x <= CV_REMAP_MASK; x++ )
+            {
+                int k = (y << CV_REMAP_SHIFT) + x;
+                atab[k][0] = (ushort)((CV_REMAP_MASK+1 - y)*(CV_REMAP_MASK+1 - x));
+                atab[k][1] = (ushort)((CV_REMAP_MASK+1 - y)*x);
+                atab[k][2] = (ushort)(y*(CV_REMAP_MASK+1 - x));
+                atab[k][3] = (ushort)(y*x);
+            }
+        inittab = 1;
+    }
+
+    for( y = 0; y < rows; y++ )
+    {
+        const short* xy = (const short*)(xymap->data.ptr + xymap->step*y);
+        const ushort* alpha = (const ushort*)(amap->data.ptr + amap->step*y);
+        uchar* dptr = (uchar*)(dst->data.ptr + dst->step*y);
+        int x = 0;
+
+        if( cn == 1 )
+        {
+    #if CV_SSE2
+            for( ; x <= cols - 8; x += 8 )
+            {
+                __m128i xy0 = _mm_load_si128( (const __m128i*)(xy + x*2));
+                __m128i xy1 = _mm_load_si128( (const __m128i*)(xy + x*2 + 8));
+                // 0|0|0|0|... <= x0|y0|x1|y1|... < cols-1|rows-1|cols-1|rows-1|... ?
+                __m128i mask0 = _mm_cmpeq_epi32(_mm_or_si128(_mm_cmpgt_epi16(z, xy0),
+                                                _mm_cmpgt_epi16(xy0,br)), z);
+                __m128i mask1 = _mm_cmpeq_epi32(_mm_or_si128(_mm_cmpgt_epi16(z, xy1),
+                                                _mm_cmpgt_epi16(xy1,br)), z);
+                __m128i ofs0 = _mm_and_si128(_mm_madd_epi16( xy0, xy2ofs ), mask0 );
+                __m128i ofs1 = _mm_and_si128(_mm_madd_epi16( xy1, xy2ofs ), mask1 );
+                unsigned i0, i1;
+                __m128i v0, v1, v2, v3, a0, a1, b0, b1;
+                _mm_store_si128( (__m128i*)iofs0, ofs0 );
+                _mm_store_si128( (__m128i*)iofs1, ofs1 );
+                i0 = *(ushort*)(sptr0 + iofs0[0]) + (*(ushort*)(sptr0 + iofs0[1]) << 16);
+                i1 = *(ushort*)(sptr0 + iofs0[2]) + (*(ushort*)(sptr0 + iofs0[3]) << 16);
+                v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                i0 = *(ushort*)(sptr1 + iofs0[0]) + (*(ushort*)(sptr1 + iofs0[1]) << 16);
+                i1 = *(ushort*)(sptr1 + iofs0[2]) + (*(ushort*)(sptr1 + iofs0[3]) << 16);
+                v1 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                v0 = _mm_unpacklo_epi8(v0, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
+
+                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x]]),
+                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+1]]));
+                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+2]]),
+                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+3]]));
+                b0 = _mm_unpacklo_epi64(a0, a1);
+                b1 = _mm_unpackhi_epi64(a0, a1);
+                v0 = _mm_madd_epi16(v0, b0);
+                v1 = _mm_madd_epi16(v1, b1);
+                v0 = _mm_and_si128(_mm_add_epi32(v0, v1), mask0);
+
+                i0 = *(ushort*)(sptr0 + iofs1[0]) + (*(ushort*)(sptr0 + iofs1[1]) << 16);
+                i1 = *(ushort*)(sptr0 + iofs1[2]) + (*(ushort*)(sptr0 + iofs1[3]) << 16);
+                v2 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                i0 = *(ushort*)(sptr1 + iofs1[0]) + (*(ushort*)(sptr1 + iofs1[1]) << 16);
+                i1 = *(ushort*)(sptr1 + iofs1[2]) + (*(ushort*)(sptr1 + iofs1[3]) << 16);
+                v3 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                v2 = _mm_unpacklo_epi8(v2, z);
+                v3 = _mm_unpacklo_epi8(v3, z);
+
+                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+4]]),
+                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+5]]));
+                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+6]]),
+                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+7]]));
+                b0 = _mm_unpacklo_epi64(a0, a1);
+                b1 = _mm_unpackhi_epi64(a0, a1);
+                v2 = _mm_madd_epi16(v2, b0);
+                v3 = _mm_madd_epi16(v3, b1);
+                v2 = _mm_and_si128(_mm_add_epi32(v2, v3), mask1);
+
+                v0 = _mm_srai_epi32(v0, CV_REMAP_SHIFT*2);
+                v2 = _mm_srai_epi32(v2, CV_REMAP_SHIFT*2);
+                v0 = _mm_packus_epi16(_mm_packs_epi32(v0, v2), z);
+                _mm_storel_epi64( (__m128i*)(dptr + x), v0 );
+            }
+    #endif
+
+            for( ; x < cols; x++ )
+            {
+                int xi = xy[x*2], yi = xy[x*2+1];
+                if( (unsigned)yi >= (unsigned)(rows - 1) ||
+                    (unsigned)xi >= (unsigned)(cols - 1))
+                {
+                    dptr[x] = fv0;
+                }
+                else
+                {
+                    const uchar* sptr = sptr0 + sstep*yi + xi;
+                    const ushort* a = atab[alpha[x]];
+                    dptr[x] = (uchar)((sptr[0]*a[0] + sptr[1]*a[1] + sptr[sstep]*a[2] +
+                                      sptr[sstep+1]*a[3])>>CV_REMAP_SHIFT*2);
+                }
+            }
+        }
+        else if( cn == 3 )
+        {
+            for( ; x < cols; x++ )
+            {
+                int xi = xy[x*2], yi = xy[x*2+1];
+                if( (unsigned)yi >= (unsigned)(rows - 1) ||
+                    (unsigned)xi >= (unsigned)(cols - 1))
+                {
+                    dptr[x*3] = fv0; dptr[x*3+1] = fv1; dptr[x*3+2] = fv2;
+                }
+                else
+                {
+                    const uchar* sptr = sptr0 + sstep*yi + xi*3;
+                    const ushort* a = atab[alpha[x]];
+                    int v0, v1, v2;
+                    v0 = (sptr[0]*a[0] + sptr[3]*a[1] +
+                        sptr[sstep]*a[2] + sptr[sstep+3]*a[3])>>CV_REMAP_SHIFT*2;
+                    v1 = (sptr[1]*a[0] + sptr[4]*a[1] +
+                        sptr[sstep+1]*a[2] + sptr[sstep+4]*a[3])>>CV_REMAP_SHIFT*2;
+                    v2 = (sptr[2]*a[0] + sptr[5]*a[1] +
+                        sptr[sstep+2]*a[2] + sptr[sstep+5]*a[3])>>CV_REMAP_SHIFT*2;
+                    dptr[x*3] = (uchar)v0; dptr[x*3+1] = (uchar)v1; dptr[x*3+2] = (uchar)v2;
+                }
+            }
+        }
+        else
+        {
+            assert( cn == 4 );
+            for( ; x < cols; x++ )
+            {
+                int xi = xy[x*2], yi = xy[x*2+1];
+                if( (unsigned)yi >= (unsigned)(rows - 1) ||
+                    (unsigned)xi >= (unsigned)(cols - 1))
+                {
+                    dptr[x*4] = fv0; dptr[x*4+1] = fv1;
+                    dptr[x*4+2] = fv2; dptr[x*4+3] = fv3;
+                }
+                else
+                {
+                    const uchar* sptr = sptr0 + sstep*yi + xi*3;
+                    const ushort* a = atab[alpha[x]];
+                    int v0, v1;
+                    v0 = (sptr[0]*a[0] + sptr[4]*a[1] +
+                        sptr[sstep]*a[2] + sptr[sstep+3]*a[3])>>CV_REMAP_SHIFT*2;
+                    v1 = (sptr[1]*a[0] + sptr[5]*a[1] +
+                        sptr[sstep+1]*a[2] + sptr[sstep+5]*a[3])>>CV_REMAP_SHIFT*2;
+                    dptr[x*4] = (uchar)v0; dptr[x*4+1] = (uchar)v1;
+                    v0 = (sptr[2]*a[0] + sptr[6]*a[1] +
+                        sptr[sstep+2]*a[2] + sptr[sstep+6]*a[3])>>CV_REMAP_SHIFT*2;
+                    v1 = (sptr[3]*a[0] + sptr[7]*a[1] +
+                        sptr[sstep+3]*a[2] + sptr[sstep+7]*a[3])>>CV_REMAP_SHIFT*2;
+                    dptr[x*4+2] = (uchar)v0; dptr[x*4+3] = (uchar)v1;
+                }
+            }
+        }
+    }
+}
+
+
 CV_IMPL void
 cvRemap( const CvArr* srcarr, CvArr* dstarr,
          const CvArr* _mapx, const CvArr* _mapy,
@@ -1796,6 +1987,7 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
     CvMat mxstub, *mapx = (CvMat*)_mapx;
     CvMat mystub, *mapy = (CvMat*)_mapy;
     int type, depth, cn;
+    bool fltremap;
     int method = flags & 3;
     double fillbuf[4];
     CvSize ssize, dsize;
@@ -1816,13 +2008,22 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( !CV_ARE_TYPES_EQ( mapx, mapy ) || CV_MAT_TYPE( mapx->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnmatchedFormats, "Both map arrays must have 32fC1 type" );
+    if( CV_MAT_TYPE(mapx->type) == CV_16SC1 && CV_MAT_TYPE(mapy->type) == CV_16SC2 )
+    {
+        CvMat* temp;
+        CV_SWAP(mapx, mapy, temp);
+    }
+
+    if( (CV_MAT_TYPE(mapx->type) != CV_32FC1 || CV_MAT_TYPE(mapy->type) != CV_32FC1) &&
+        (CV_MAT_TYPE(mapx->type) != CV_16SC2 || CV_MAT_TYPE(mapy->type) != CV_16SC1))
+        CV_ERROR( CV_StsUnmatchedFormats, "Either both map arrays must have 32fC1 type, "
+        "or one of them must be 16sC2 and the other one must be 16sC1" );
 
     if( !CV_ARE_SIZES_EQ( mapx, mapy ) || !CV_ARE_SIZES_EQ( mapx, dst ))
         CV_ERROR( CV_StsUnmatchedSizes,
         "Both map arrays and the destination array must have the same size" );
 
+    fltremap = CV_MAT_TYPE(mapx->type) == CV_32FC1;
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
@@ -1832,6 +2033,18 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
     
+    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
+
+    if( !fltremap )
+    {
+        if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_8UC3 &&
+            CV_MAT_TYPE(src->type) != CV_8UC4 )
+            CV_ERROR( CV_StsUnsupportedFormat,
+            "Only 8-bit input/output is supported by the fixed-point variant of cvRemap" );
+        icvRemapFixedPt_8u( src, dst, mapx, mapy, (uchar*)fillbuf );
+        EXIT;
+    }
+
     if( icvRemap_8u_C1R_p )
     {
         CvRemapIPPFunc ipp_func =
@@ -1865,8 +2078,6 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
         }
     }
 
-    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
-
     {
         CvRemapFunc func = method == CV_INTER_CUBIC ?
             (CvRemapFunc)bicubic_tab.fn_2d[depth] :
@@ -1878,6 +2089,46 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
         func( src->data.ptr, src->step, ssize, dst->data.ptr, dst->step, dsize,
               mapx->data.fl, mapx->step, mapy->data.fl, mapy->step,
               cn, flags & CV_WARP_FILL_OUTLIERS ? fillbuf : 0 );
+    }
+
+    __END__;
+}
+
+CV_IMPL void
+cvConvertMaps( const CvArr* arrx, const CvArr* arry,
+               CvArr* arrxy, CvArr* arra )
+{
+    CV_FUNCNAME( "cvConvertMaps" );
+
+    __BEGIN__;
+
+    CvMat xstub, *mapx = cvGetMat( arrx, &xstub );
+    CvMat ystub, *mapy = cvGetMat( arry, &ystub );
+    CvMat xystub, *mapxy = cvGetMat( arrxy, &xystub );
+    CvMat astub, *mapa = cvGetMat( arra, &astub );
+    int x, y, cols = mapx->cols, rows = mapx->rows;
+
+    CV_ASSERT( CV_ARE_SIZES_EQ(mapx, mapy) && CV_ARE_TYPES_EQ(mapx, mapy) &&
+        CV_MAT_TYPE(mapx->type) == CV_32FC1 &&
+        CV_ARE_SIZES_EQ(mapxy, mapx) && CV_ARE_SIZES_EQ(mapxy, mapa) &&
+        CV_MAT_TYPE(mapxy->type) == CV_16SC2 &&
+        CV_MAT_TYPE(mapa->type) == CV_16SC1 );
+
+    for( y = 0; y < rows; y++ )
+    {
+        const float* xrow = (const float*)(mapx->data.ptr + mapx->step*y);
+        const float* yrow = (const float*)(mapy->data.ptr + mapy->step*y);
+        short* xy = (short*)(mapxy->data.ptr + mapxy->step*y);
+        short* alpha = (short*)(mapa->data.ptr + mapa->step*y);
+
+        for( x = 0; x < cols; x++ )
+        {
+            int xi = cvRound(xrow[x]*(1 << CV_REMAP_SHIFT));
+            int yi = cvRound(yrow[x]*(1 << CV_REMAP_SHIFT));
+            xy[x*2] = (short)(xi >> CV_REMAP_SHIFT);
+            xy[x*2+1] = (short)(yi >> CV_REMAP_SHIFT);
+            alpha[x] = (short)((xi & CV_REMAP_MASK) + ((yi & CV_REMAP_MASK)<<CV_REMAP_SHIFT));
+        }
     }
 
     __END__;
