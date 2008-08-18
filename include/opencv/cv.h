@@ -299,6 +299,10 @@ CVAPI(void)  cvRemap( const CvArr* src, CvArr* dst,
                       int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
                       CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
 
+/* Converts mapx & mapy from floating-point to integer formats for cvRemap */
+CVAPI(void)  cvConvertMaps( const CvArr* mapx, const CvArr* mapy,
+                            CvArr* mapxy, CvArr* mapalpha );
+
 /* Performs forward or inverse log-polar image transform */
 CVAPI(void)  cvLogPolar( const CvArr* src, CvArr* dst,
                          CvPoint2D32f center, double M,
@@ -1346,8 +1350,8 @@ typedef struct CvStereoBMState
     // post-filtering
     int textureThreshold;  // the disparity is only computed for pixels
                            // with textured enough neighborhood
-    float uniquenessRatio; // accept the computed disparity d* only if
-                           // SAD(d) >= SAD(d*)*(1 + uniquenessRatio)
+    int uniquenessRatio;   // accept the computed disparity d* only if
+                           // SAD(d) >= SAD(d*)*(1 + uniquenessRatio/100.)
                            // for any d != d*+/-1 within the search range.
     int speckleWindowSize; // disparity variation window
     int speckleRange; // acceptable range of variation in window
