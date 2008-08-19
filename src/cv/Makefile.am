@@ -26,7 +26,7 @@ lib_cv_la_SOURCES = \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp \
     cvshapedescr.cpp cvsmooth.cpp cvsnakes.cpp cvstereobm.cpp cvstereogc.cpp \
     cvsubdivision2d.cpp cvsumpixels.cpp cvswitcher.cpp cvtables.cpp \
-    cvtemplmatch.cpp cvthresh.cpp cvundistort.cpp cvutils.cpp cvkdtree.cpp \
+    cvtemplmatch.cpp cvthresh.cpp cvundistort.cpp cvutils.cpp cvkdtree.cpp
 lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 
 # real library
