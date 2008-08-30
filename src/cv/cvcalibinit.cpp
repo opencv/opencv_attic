@@ -203,7 +203,6 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 #endif
     CvMemStorage* storage = 0;
 
-#define EXTRA_QUADS 10		// extra quad slots for additions
     CvCBQuad *quads = 0, **quad_group = 0;
     CvCBCorner *corners = 0, **corner_group = 0;
 
@@ -357,8 +356,8 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
             CV_CALL( icvFindQuadNeighbors( quads, quad_count ));
 
             // allocate extra for adding in icvOrderFoundQuads
-            CV_CALL( quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * (quad_count+5)));
-            CV_CALL( corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * (quad_count+5)*4 ));
+            CV_CALL( quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * (quad_count+quad_count / 2)));
+            CV_CALL( corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * (quad_count+quad_count / 2)*4 ));
 
             for( group_idx = 0; ; group_idx++ )
             {
@@ -1642,8 +1641,8 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
     cvEndFindContours( &scanner );
 
     // allocate quad & corner buffers
-    CV_CALL( *out_quads = (CvCBQuad*)cvAlloc((EXTRA_QUADS+root->total) * sizeof((*out_quads)[0])));
-    CV_CALL( *out_corners = (CvCBCorner*)cvAlloc((EXTRA_QUADS+root->total) * 4 * sizeof((*out_corners)[0])));
+    CV_CALL( *out_quads = (CvCBQuad*)cvAlloc((root->total+root->total / 2) * sizeof((*out_quads)[0])));
+    CV_CALL( *out_corners = (CvCBCorner*)cvAlloc((root->total+root->total / 2) * 4 * sizeof((*out_corners)[0])));
 
     // Create array of quads structures
     for( idx = 0; idx < root->total; idx++ )
@@ -1868,8 +1867,8 @@ icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
     }
 
     // allocate quad & corner buffers
-    CV_CALL( *out_quads = (CvCBQuad*)cvAlloc((EXTRA_QUADS+root->total) * sizeof((*out_quads)[0])));
-    CV_CALL( *out_corners = (CvCBCorner*)cvAlloc((EXTRA_QUADS+root->total) * 4 * sizeof((*out_corners)[0])));
+    CV_CALL( *out_quads = (CvCBQuad*)cvAlloc((root->total+root->total / 2) * sizeof((*out_quads)[0])));
+    CV_CALL( *out_corners = (CvCBCorner*)cvAlloc((root->total+root->total / 2) * 4 * sizeof((*out_corners)[0])));
 
     // Create array of quads structures
     for( idx = 0; idx < root->total; idx++ )
