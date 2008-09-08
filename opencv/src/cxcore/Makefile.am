@@ -1,8 +1,6 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-EXTRA_DIST = cxcore.dsp cxcore.vcproj cxcore.rc resource.h
-
 INCLUDES = -I. -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
 
 noinst_HEADERS     = _cxcore.h _cxipp.h

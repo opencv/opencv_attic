@@ -1,8 +1,6 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-EXTRA_DIST = ml.dsp ml.vcproj ml.rc resource.h
-
 INCLUDES = -I. -I$(top_srcdir)/ml/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
 
 noinst_HEADERS     = _ml.h
