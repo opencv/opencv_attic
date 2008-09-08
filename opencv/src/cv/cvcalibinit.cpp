@@ -190,7 +190,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                              CvPoint2D32f* out_corners, int* out_corner_count,
                              int flags )
 {
-    int k;
+    int k = 0;
     const int min_dilations = 0;
     const int max_dilations = 3;
     int found = 0;
@@ -215,7 +215,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
     __BEGIN__;
 
-    int quad_count, group_idx, i, dilations;
+    int quad_count = 0, group_idx = 0, i = 0, dilations = 0;
     CvMat stub, *img = (CvMat*)arr;
 
     CV_CALL( img = cvGetMat( img, &stub ));
@@ -361,7 +361,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
             for( group_idx = 0; ; group_idx++ )
             {
-                int count;
+                int count = 0;
                 CV_CALL( count = icvFindConnectedQuads( quads, quad_count, quad_group, group_idx, storage ));
 
                 int icount = count;
