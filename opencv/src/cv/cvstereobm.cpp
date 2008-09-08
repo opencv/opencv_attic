@@ -100,11 +100,20 @@ cvReleaseStereoBMState( CvStereoBMState** state )
     __END__;
 }
 
+#define CV_STEREO_BM_INT_ACCUM 1
+
+#if CV_STEREO_BM_INT_ACCUM
+#undef CV_SSE2
+#define CV_SSE2 0
+typedef int sum_t;
+#else
+typedef ushort sum_t;
+#endif
 
 static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, CvMat* buf )
 {
     int x, y, wsz2 = winsize/2;
-    ushort* vsum = (ushort*)cvAlignPtr(buf->data.s + wsz2 + 1, 32);
+    sum_t* vsum = (sum_t*)cvAlignPtr(buf->data.ptr + (wsz2 + 1)*sizeof(vsum[0]), 32);
     int scale_g = winsize*winsize/8, scale_s = (1024 + scale_g)/(scale_g*2);
     const int OFS = 256*5, TABSZ = OFS*2 + 256;
     uchar tab[TABSZ];
@@ -199,8 +208,8 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     CvMat dstub, *disp = cvGetMat( disparr, &dstub );
     int bufSize, x, y, d, width, width1, height;
     int ftzero, wsz, wsz2, ndisp, mindisp, textureThreshold, uniquenessRatio;
-    ushort* sad;
-    ushort *hsad0, *hsad, *hsad_sub;
+    sum_t* sad;
+    sum_t *hsad0, *hsad, *hsad_sub;
     int* htext;
     uchar *cbuf0, *cbuf;
     const uchar *lptr0, *lptr, *lptr_sub, *rptr0, *rptr;
@@ -229,15 +238,15 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     if( state->preFilterType != CV_STEREO_BM_NORMALIZED_RESPONSE )
         CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
 
-    if( state->preFilterSize < 5 || state->preFilterSize > 21 || state->preFilterSize % 2 == 0 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..31" );
+    if( state->preFilterSize < 5 || state->preFilterSize > 21+CV_STEREO_BM_INT_ACCUM*128 || state->preFilterSize % 2 == 0 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..21+" );
 
-    if( state->preFilterCap < 1 || state->preFilterCap > 31 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31" );
+    if( state->preFilterCap < 1 || state->preFilterCap > 31+CV_STEREO_BM_INT_ACCUM*32 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31+" );
 
-    if( state->SADWindowSize < 5 || state->SADWindowSize > 21 || state->SADWindowSize % 2 == 0 ||
+    if( state->SADWindowSize < 5 || state->SADWindowSize > 21+CV_STEREO_BM_INT_ACCUM*128 || state->SADWindowSize % 2 == 0 ||
         state->SADWindowSize >= MIN(left0->cols, left0->rows) )
-        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..21 and "
+        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..21+ and "
                                     "be not larger than image width or height" );
 
     if( state->numberOfDisparities <= 0 || state->numberOfDisparities % 16 != 0 )
@@ -290,9 +299,9 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     icvPrefilter( left0, &left, state->preFilterSize, ftzero, state->slidingSumBuf );
     icvPrefilter( right0, &right, state->preFilterSize, ftzero, state->slidingSumBuf );
 
-    sad = (ushort*)cvAlignPtr(state->slidingSumBuf->data.s + 1);
-    hsad0 = (ushort*)cvAlignPtr(sad + ndisp + 1);
-    htext = (int*)cvAlignPtr(hsad0 + height*ndisp + wsz2 + 2);
+    sad = (sum_t*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
+    hsad0 = (sum_t*)cvAlignPtr(sad + ndisp + 1);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
     cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
     lptr0 = left.data.ptr + lofs;
     rptr0 = right.data.ptr + rofs;
@@ -321,7 +330,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             {
                 int diff = abs(lval - rptr[d]);
                 cbuf[d] = (uchar)diff;
-                hsad[d] = (ushort)(hsad[d] + diff);
+                hsad[d] = (sum_t)(hsad[d] + diff);
             }
             htext[y] += tab[lval];
         }
@@ -346,7 +355,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
         lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
         lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
         rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
-        
+
         for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
              hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
         {
@@ -373,7 +382,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             {
                 int diff = abs(lval - rptr[d]);
                 cbuf[d] = (uchar)diff;
-                hsad[d] = (ushort)(hsad[d] + diff - cbuf_sub[d]);
+                hsad[d] = (sum_t)(hsad[d] + diff - cbuf_sub[d]);
             }
 #endif
             htext[y] += tab[lval] - tab[lptr_sub[0]];
@@ -388,12 +397,12 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
 
         // initialize sums
         for( d = 0; d < ndisp; d++ )
-            sad[d] = (ushort)(hsad0[d]*(wsz2 + 2));
+            sad[d] = (sum_t)(hsad0[d]*(wsz2 + 2));
         
         hsad = hsad0 + ndisp;
         for( y = 1; y < wsz2; y++, hsad += ndisp )
             for( d = 0; d < ndisp; d++ )
-                sad[d] = (ushort)(sad[d] + hsad[d]);
+                sad[d] = (sum_t)(sad[d] + hsad[d]);
         int tsum = 0;
         for( y = -wsz2-1; y < wsz2; y++ )
             tsum += htext[y];
@@ -445,7 +454,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             for( d = 0; d < ndisp; d++ )
             {
                 int currsad = sad[d] + hsad[d] - hsad_sub[d];
-                sad[d] = (ushort)currsad;
+                sad[d] = (sum_t)currsad;
                 if( currsad < minsad )
                 {
                     minsad = currsad;
