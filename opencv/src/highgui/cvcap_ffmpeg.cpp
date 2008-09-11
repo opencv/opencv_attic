@@ -1040,7 +1040,7 @@ void CvVideoWriter_FFMPEG::close()
 		/* close the output file */
 
 
-#if LIBAVCODEC_VERSION_INT==((51<<16)+(49<<8)+0)
+#if LIBAVCODEC_VERSION_INT >= ((51<<16)+(49<<8)+0)
 		url_fclose(oc->pb);
 #else
 		url_fclose(&oc->pb);
