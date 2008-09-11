@@ -1498,7 +1498,7 @@ protected:
 bool CvCapture_QT_Cam_CPP::open( int index )
 {
     close();
-    captureQT = icvCaptureFromCam_QT( index );
+    captureQT = icvCaptureFromCAM_QT( index );
     return captureQT != 0;
 }
 
