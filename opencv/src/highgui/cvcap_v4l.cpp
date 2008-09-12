@@ -1305,10 +1305,13 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
       
       }
       
-#ifdef V4L_ABORT_BADJPEG
-      // skip first frame. it is often bad -- this is unnotied in traditional apps,
-      //  but could be fatal if bad jpeg is enabled
-      mainloop_v4l2(capture);
+#if defined(V4L_ABORT_BADJPEG) && defined(HAVE_CAMV4L2)
+     if (V4L2_SUPPORT == 1)
+     {
+        // skip first frame. it is often bad -- this is unnotied in traditional apps,
+        //  but could be fatal if bad jpeg is enabled
+        mainloop_v4l2(capture);
+     }
 #endif
 
       /* preparation is ok */
