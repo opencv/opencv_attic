@@ -138,7 +138,9 @@ PyObject* CvMat_imageData_get(CvMat * self)
 	{
 		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
 		return NULL;
-	}		 
+	}
+	
+ 
 	int step = self->step ? self->step : 
 	  step = CV_ELEM_SIZE(self->type) * self->cols;
 	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*step);
