@@ -225,7 +225,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
         CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit grayscale or color images are supported" );
 
     if( pattern_size.width <= 2 || pattern_size.height <= 2 )
-        CV_ERROR( CV_StsOutOfRange, "pattern should have at least 2x2 size" );
+        CV_ERROR( CV_StsOutOfRange, "Both width and height of the pattern should have bigger than 2" );
 
     if( !out_corners )
         CV_ERROR( CV_StsNullPtr, "Null pointer to corners" );
