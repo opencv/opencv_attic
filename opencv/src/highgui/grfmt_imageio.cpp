@@ -12,6 +12,7 @@
 
 #include "grfmt_imageio.h"
 #include <iostream>
+using namespace std;
 
 // ImageIO filter factory
 
@@ -189,29 +190,34 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
     }
     
     // Move the bitmap (in RGB) into data (in BGR)
-    int dataIndex = 0;
     int bitmapIndex = 0;
     
-    // We make the assumption that the step is the number of colors * the width
-    assert( ( color ? 3 : 1 )*m_width == step );
-    
-    if( color == CV_LOAD_IMAGE_COLOR ) {
-        for( int i = 0; i < m_width * m_height; ++i) {
-            // Blue channel
-            data[dataIndex + 0] = bitdata[bitmapIndex + 2];
-            // Green channel
-            data[dataIndex + 1] = bitdata[bitmapIndex + 1];
-            // Red channel
-            data[dataIndex + 2] = bitdata[bitmapIndex + 0];
-            
-            dataIndex += 3;
-            bitmapIndex += bpp;
-        }
+    if( color == CV_LOAD_IMAGE_COLOR ) 
+	{
+		uchar * base = data;
+		
+		for (int y = 0; y < m_height; y++)
+		{
+			uchar * line = base + y * step;
+			
+		    for (int x = 0; x < m_width; x++) 
+		    {
+				// Blue channel
+				line[0] = bitdata[bitmapIndex + 2];
+				// Green channel
+				line[1] = bitdata[bitmapIndex + 1];
+				// Red channel
+				line[2] = bitdata[bitmapIndex + 0];
+				
+				line        += 3;
+				bitmapIndex += bpp;
+			}
+		}
     }
     else if( color == CV_LOAD_IMAGE_GRAYSCALE )
     {
-        // the bitmap representation is exactly what we want in data
-        memcpy( data, bitmap, m_width*m_height );
+		for (int y = 0; y < m_height; y++)
+			memcpy (data + y * step, bitmap + y * m_width, m_width);
     }
     
     free( bitmap );
