@@ -584,7 +584,7 @@ static const void      * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture);
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date 2006-01-29
  */
-static CvCapture_QT_Cam * icvCaptureFromCAM_QT (const int index)
+static CvCapture_QT_Cam * icvCaptureFromCam_QT (const int index)
 {
 	if (! did_enter_movies)
 	{
@@ -1498,7 +1498,7 @@ protected:
 bool CvCapture_QT_Cam_CPP::open( int index )
 {
     close();
-    captureQT = icvCaptureFromCAM_QT( index );
+    captureQT = icvCaptureFromCam_QT( index );
     return captureQT != 0;
 }
 
