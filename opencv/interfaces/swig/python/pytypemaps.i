@@ -322,6 +322,18 @@
 	free($2);
 }
 
+
+/** this typemap is meant to help cvCalcOpticalFlowPyrLK */
+%typemap(in, numinputs = 0) (int count, char* status, float* track_error) {
+   	$1 [count] = (char *)  malloc (count * sizeof (char));
+   	$2 [count] = (float *) malloc (count * sizeof (float));
+}
+
+%typemap(argout) float *track_error { 
+	PyObject * to_add = SWIG_NewPointerObj ($1, $descriptor(float *), SWIG_POINTER_OWN);
+	$result = SWIG_AppendOutput( $result, to_add );
+}
+
 /** Macro to define typemaps to convert a python list of CvPoints to a C array of CvPoints */
 %define %typemap_CvPoint_CArr(points_arg, numpoints_arg)
 
@@ -357,7 +369,7 @@
 }
 
 /**
- * return the finded contours with all the others parametres
+ * return the contours with all the others parametres
  */
 %typemap(argout) (CvSeq ** OUTPUT) {
     PyObject *to_add;
