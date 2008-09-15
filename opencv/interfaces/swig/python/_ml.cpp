@@ -17101,6 +17101,36 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_CvEM_get_log_likelihood(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CvEM *arg1 = (CvEM *) 0 ;
+  double result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CvEM_get_log_likelihood",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CvEM, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvEM_get_log_likelihood" "', argument " "1"" of type '" "CvEM const *""'"); 
+  }
+  arg1 = reinterpret_cast< CvEM * >(argp1);
+  {
+    try {
+      result = (double)((CvEM const *)arg1)->get_log_likelihood(); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_CvEM_get_covs(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvEM *arg1 = (CvEM *) 0 ;
@@ -35841,6 +35871,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvEM_get_means", _wrap_CvEM_get_means, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_weights", _wrap_CvEM_get_weights, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_probs", _wrap_CvEM_get_probs, METH_VARARGS, NULL},
+	 { (char *)"CvEM_get_log_likelihood", _wrap_CvEM_get_log_likelihood, METH_VARARGS, NULL},
 	 { (char *)"CvEM_get_covs", _wrap_CvEM_get_covs, METH_VARARGS, NULL},
 	 { (char *)"CvEM_swigregister", CvEM_swigregister, METH_VARARGS, NULL},
 	 { (char *)"CvPair32s32f_i_set", _wrap_CvPair32s32f_i_set, METH_VARARGS, NULL},

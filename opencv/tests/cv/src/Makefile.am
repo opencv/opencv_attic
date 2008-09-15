@@ -11,7 +11,7 @@ INCLUDES =                            \
 
 check_PROGRAMS   = cvtest
 TESTS            = $(check_PROGRAMS)
-EXTRA_DIST       = cvtest.dsp cvtest.vcproj
+EXTRA_DIST       = cvtest.dsp cvtest.vs2005.vcproj
 MOSTLYCLEANFILES = .lst .sum
 
 noinst_HEADERS = \

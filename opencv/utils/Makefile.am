@@ -3,7 +3,7 @@ EXTRA_DIST = \
     opencv.iss            \
     cvinfo/cvinfo.cpp     \
     cvinfo/cvinfo.dsp     \
-    cvinfo/cvinfo.vcproj
+    cvinfo/cvinfo.vs2005.vcproj
 
 noinst_PYTHON = \
     check_doc.py               \

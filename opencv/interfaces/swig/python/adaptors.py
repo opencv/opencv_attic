@@ -224,14 +224,14 @@ try:
          IPL_DEPTH_32F x 1 channel
          IPL_DEPTH_64F x 1 channel
       """
-  
+      
       if not isinstance(input, cv.CvMat):
           raise TypeError, 'must be called with a cv.CvMat!'
-  
+      
       # assert that the channels are interleaved
       if input.dataOrder != 0:
           raise ValueError, 'dataOrder must be 0 (interleaved)!'
-  
+      
       # data type dictionary:
       # (channels, depth) : numpy dtype
       ipl2dtype = {
@@ -240,12 +240,13 @@ try:
           (1, cv.IPL_DEPTH_32F) : numpy.float32,
           (1, cv.IPL_DEPTH_64F) : numpy.float64
           }
-  
+      
       key = (input.nChannels, input.depth)
       if not ipl2dtype.has_key(key):
           raise ValueError, 'unknown or unsupported input mode'
-  
+      
       # Get the numpy array and reshape it correctly
+      # ATTENTION: flipped dimensions width/height on 2007-11-15
       if input.nChannels == 1:
           array_1d = numpy.fromstring(input.imageData, dtype=ipl2dtype[key])
           return numpy.reshape(array_1d, (input.height, input.width))
