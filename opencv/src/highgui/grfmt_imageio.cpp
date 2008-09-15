@@ -316,27 +316,33 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
     }
     
     // Copy pixel information from data into bitmapData
-    if( bpp == 4 )
+    if (bpp == 4)
     {
-        int dataIndex = 0;
-        int bitmapIndex = 0;
-        for( int i = 0; i < width * height; ++i)
-        {
-            // Blue channel
-            bitmapData[bitmapIndex + 2] = data[dataIndex + 0];
-            // Green channel
-            bitmapData[bitmapIndex + 1] = data[dataIndex + 1];
-            // Red channel
-            bitmapData[bitmapIndex + 0] = data[dataIndex + 2];
-            
-            dataIndex += 3;
-            bitmapIndex += bpp;
-        }
+        int           bitmapIndex = 0;
+		const uchar * base        = data;
+		
+		for (int y = 0; y < height; y++)
+		{
+			const uchar * line = base + y * step;
+			
+		    for (int x = 0; x < width; x++) 
+		    {
+				// Blue channel
+                bitmapData[bitmapIndex + 2] = line[0];
+				// Green channel
+				bitmapData[bitmapIndex + 1] = line[1];
+				// Red channel
+				bitmapData[bitmapIndex + 0] = line[2];
+				
+				line        += 3;
+				bitmapIndex += bpp;
+			}
+		}
     }
-    else if( bpp == 1 )
+    else if (bpp == 1)
     {
-        // the bitmap representation is exactly what we want in data
-        memcpy( bitmapData, data, width * height );
+		for (int y = 0; y < height; y++)
+			memcpy (bitmapData + y * width, data + y * step, width);
     }
     
     // Turn the bitmap context into an imageRef
