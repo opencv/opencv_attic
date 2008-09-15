@@ -84,16 +84,16 @@ endif
 
 if BUILD_OCTAVE_WRAPPERS
 
-OCTAVE_PKG_VERSION=$(shell egrep '^Version: ' $(top_srcdir)/interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //')
+OCTAVE_PKG_VERSION=1.0 #$(shell egrep '^Version: ' $(top_srcdir)/interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //')
 
-PKG_NAME=opencv-$(OCTAVE_PKG_VERSION)
+PKG_NAME=opencv-1.0
 PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-dist_octave_DATA = $(PKG_NAME).tar.gz
+#dist_octave_DATA = opencv-1.0.tar.gz
 
-$(PKG_NAME).tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
+opencv-1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 	mkdir -p $(PKG_NAME)
 	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
 	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
@@ -116,4 +116,4 @@ highgui.oct: highgui_wrap.cpp octhelpers.cpp
 endif
 
 clean-local:
-	rm -rf $(PKG_NAME).tar.gz *.oct
+	rm -rf opencv-1.0.tar.gz *.oct
