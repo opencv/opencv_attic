@@ -55,6 +55,9 @@ extern "C" {
 
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
+#if defined(HAVE_FFMPEG_SWSCALE)
+#include <ffmpeg/swscale.h>
+#endif
 }
 
 #if defined _MSC_VER && _MSC_VER >= 1200
@@ -72,6 +75,9 @@ extern "C" {
 #define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
 #endif
 
+#if defined(HAVE_FFMPEG_SWSCALE)
+static struct SwsContext *img_convert_ctx = NULL;
+#endif
 
 
 
@@ -261,7 +267,7 @@ public:
 
     virtual bool open( const char* filename );
     virtual void close();
-    
+
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
@@ -395,7 +401,7 @@ bool CvCapture_FFMPEG::open( const char* _filename )
 #else
         AVCodecContext *enc = &ic->streams[i]->codec;
 #endif
-        
+
         if( CODEC_TYPE_VIDEO == enc->codec_type && video_stream < 0) {
             AVCodec *codec = avcodec_find_decoder(enc->codec_id);
             if (!codec ||
@@ -498,7 +504,7 @@ IplImage* CvCapture_FFMPEG::retrieveFrame()
     if( !video_st || !picture->data[0] )
         return 0;
 
-
+#if !defined(HAVE_FFMPEG_SWSCALE)
 #if LIBAVFORMAT_BUILD > 4628
     img_convert( (AVPicture*)&rgb_picture, PIX_FMT_BGR24,
                  (AVPicture*)picture,
@@ -511,6 +517,21 @@ IplImage* CvCapture_FFMPEG::retrieveFrame()
                  video_st->codec.pix_fmt,
                  video_st->codec.width,
                  video_st->codec.height );
+#endif
+#else
+    img_convert_ctx = sws_getContext(video_st->codec->width,
+                  video_st->codec->height,
+                  video_st->codec->pix_fmt,
+                  video_st->codec->width,
+                  video_st->codec->height,
+                  PIX_FMT_BGR24,
+                  SWS_BICUBIC,
+                  NULL, NULL, NULL);
+
+         sws_scale(img_convert_ctx, picture->data,
+             picture->linesize, 0,
+             video_st->codec->height,
+             rgb_picture.data, rgb_picture.linesize);
 #endif
     return &frame;
 }
@@ -972,12 +993,31 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 		avpicture_fill((AVPicture *)input_picture, (uint8_t *) image->imageData,
 				input_pix_fmt, image->width, image->height);
 
+#if !defined(HAVE_FFMPEG_SWSCALE)
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)picture, c->pix_fmt,
 					(AVPicture *)input_picture, input_pix_fmt,
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
+#else
+		img_convert_ctx = sws_getContext(image->width,
+		             image->height,
+		             PIX_FMT_BGR24,
+		             c->width,
+		             c->height,
+		             c->pix_fmt,
+		             SWS_BICUBIC,
+		             NULL, NULL, NULL);
+
+		    if ( sws_scale(img_convert_ctx, input_picture->data,
+		             input_picture->linesize, 0,
+		             image->height,
+		             picture->data, picture->linesize) < 0 )
+		    {
+		      CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
+		    }
+#endif
 	}
 	else{
 		avpicture_fill((AVPicture *)picture, (uint8_t *) image->imageData,
