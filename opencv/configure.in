@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.58 $)
+AC_REVISION($Revision: 1.59 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -564,6 +564,13 @@ else
                                      ],
                                      [ have_ffmpeg=no ]),
                         [ have_ffmpeg=no ])
+        AC_CHECK_HEADER([ffmpeg/swscale.h],
+                            AC_CHECK_LIB(swscale,sws_getContext,
+                                         [
+					   AC_DEFINE(HAVE_FFMPEG_SWSCALE,,[ffmpeg's libswscale])
+                                           FFMPEG_SWSCALE_LIBS="-lswscale"
+                                         ]))
+        FFMPEGLIBS="$FFMPEGLIBS $FFMPEG_SWSCALE_LIBS"
     else
         # if we get here then --with-ffmpeg was not called with 'yes','no' or 'auto'
         AC_MSG_WARN([unexpected arguments for option --with-ffmpeg, continuing assuming 'no'])
