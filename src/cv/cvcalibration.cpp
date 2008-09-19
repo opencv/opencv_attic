@@ -333,7 +333,7 @@ void CvLevMarq::step()
             double *row = JtJ->data.db + i*nparams, *col = JtJ->data.db + i;
             for( j = 0; j < nparams; j++ )
                 row[j] = col[j*nparams] = 0;
-            JtErr->data.db[j-1] = 0;
+            JtErr->data.db[i] = 0;
         }
 
     if( !err )
