@@ -1075,6 +1075,42 @@ CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
 		    CvMat* bounds_min, CvMat* bounds_max,
 		    CvMat* results);
 
+typedef struct CvSURFPoint
+{
+    CvPoint2D32f pt;
+    int laplacian;
+    int size;
+    float dir;
+    float hessian;
+} CvSURFPoint;
+
+CV_INLINE CvSURFPoint cvSURFPoint( CvPoint2D32f pt, int laplacian,
+                                   int size, float dir CV_DEFAULT(0),
+                                   float hessian CV_DEFAULT(0))
+{
+    CvSURFPoint kp;
+    kp.pt = pt;
+    kp.laplacian = laplacian;
+    kp.size = size;
+    kp.dir = dir;
+    kp.hessian = hessian;
+    return kp;
+}
+
+typedef struct CvSURFParams
+{
+    int extended;
+    double hessianThreshold;
+
+    int nOctaves;
+    int nOctaveLayers;
+}
+CvSURFParams;
+
+CVAPI(CvSURFParams) cvSURFParams( double hessianThreshold, int extended CV_DEFAULT(0) );
+CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
+                           CvSeq** keypoints, CvSeq** descriptors,
+                           CvMemStorage* storage, CvSURFParams params );
 
 /****************************************************************************************\
 *                         Haar-like Object Detection functions                           *

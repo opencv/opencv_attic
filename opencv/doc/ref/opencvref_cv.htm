@@ -9,7 +9,7 @@
 <hr><p><ul>
 <li><a href="#cv_imgproc">Image Processing</a>
 <ul>
-<li><a href="#cv_imgproc_features">Gradients, Edges and Corners</a>
+<li><a href="#cv_imgproc_features">Gradients, Edges, Corners and Features</a>
 <li><a href="#cv_imgproc_resampling">Sampling, Interpolation and Geometrical Transforms</a>
 <li><a href="#cv_imgproc_morphology">Morphological Operations</a>
 <li><a href="#cv_imgproc_filters">Filters and Color Conversion</a>
@@ -59,7 +59,7 @@ as "images" however they do not necessarily have to be IplImage&#146;s, they may
 be CvMat&#146;s or CvMatND&#146;s as well.
 </p>
 
-<hr><h2><a name="cv_imgproc_features">Gradients, Edges and Corners</a></h2>
+<hr><h2><a name="cv_imgproc_features">Gradients, Edges, Corners and Features</a></h2>
 
 <hr><h3><a name="decl_cvSobel">Sobel</a></h3>
 <p class="Blurb">Calculates first, second, third or mixed image derivatives using extended Sobel operator</p>
@@ -351,6 +351,63 @@ and checking that the distance between the newly considered feature and the feat
 is larger than <code>min_distance</code>. So, the function removes the features than are too close
 to the stronger features.</p>
 
+
+<hr><h3><a name="decl_cvExtractSURF">ExtractSURF</a></h3>
+<p class="Blurb">Extracts Speeded Up Robust Features from image</p>
+<pre>
+void cvExtractSURF( const CvArr* image, const CvArr* mask,
+                    CvSeq** keypoints, CvSeq** descriptors,
+                    CvMemStorage* storage, CvSURFParams params );
+</pre><p><dl>
+<dt>image<dd>The input 8-bit grayscale image.
+<dt>mask<dd>The optional input 8-bit mask. The features are only found in the areas
+   that contain more than 50% of non-zero mask pixels.
+<dt>keypoints<dd>The output parameter; double pointer to the sequence of keypoints.
+ This will be the sequence of <code>CvSURFPoint</code> structures:
+ <pre>
+ typedef struct CvSURFPoint
+ {
+    CvPoint2D32f pt; // position of the feature within the image
+    int laplacian;   // -1, 0 or +1. sign of the laplacian at the point.
+                     // can be used to speedup feature comparison
+                     // (normally features with laplacians of different signs can not match)
+    int size;        // size of the feature
+    float dir;       // orientation of the feature: 0..360 degrees
+    float hessian;   // value of the hessian (can be used to approximately estimate the feature strengths;
+                     // see also params.hessianThreshold)
+ }
+ CvSURFPoint;
+ </pre>
+<dt>descriptors<dd>The optional output parameter; double pointer to the sequence of descriptors;
+   Depending on the <code>params.extended</code> value, each element of the sequence
+   will be either 64-element or 128-element floating-point (CV_32F) vector.
+   If the parameter is NULL, the descriptors are not computed.
+<dt>storage<dd>Memory storage where keypoints and descriptors will be stored.
+<dt>params<dd>Various algorithm parameters put to the structure <code>CvSURFParams</code>:
+ <pre>
+ typedef struct CvSURFParams
+ {
+    int extended; // 0 means basic descriptors (64 elements each),
+                  // 1 means extended descriptors (128 elements each)
+    double hessianThreshold; // only features with keypoint.hessian larger than that are extracted.
+                  // good default value is ~300-500 (can depend on the average
+                  // local contrast and sharpness of the image).
+                  // user can further filter out some features based on their hessian values
+                  // and other characteristics
+    int nOctaves; // the number of octaves to be used for extraction.
+                  // With each next octave the feature size is doubled (3 by default)
+    int nOctaveLayers; // The number of layers within each octave (4 by default)
+ }
+ CvSURFParams;
+
+ CvSURFParams cvSURFParams(double hessianThreshold, int extended=0); // returns default parameters
+ </pre>
+</dl><p>
+The function <code>cvExtractSURF</code> finds robust features in the image, as described in
+<a href="#paper_bay06">[Bay06]</a>. For each feature it returns its location, size, orientation
+and optionally the descriptor, basic or extended. The function can be used for object tracking
+and localization, image stitching etc. See find_obj.cpp demo in OpenCV samples directory.
+</p>
 
 <hr><h2><a name="cv_imgproc_resampling">Sampling, Interpolation and Geometrical Transforms</a></h2>
 
@@ -6091,6 +6148,11 @@ as a starting point.
 </p>
 <ol>
 
+<li><a name="paper_bay06"><b>[Bay06]</b>
+Herbert Bay, Tinne Tuytelaars and Luc Van Gool
+"SURF: Speeded Up Robust Features", Proceedings of the 9th European Conference
+on Computer Vision, Springer LNCS volume 3951, part 1, pp 404--417, 2006.
+</a>
 
 <li><a name="paper_beis97"><b>[Beis97]</b>
 J.S. Beis and D.G. Lowe, "Shape indexing using approximate nearest-neighbor search in highdimensional spaces".
