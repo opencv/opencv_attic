@@ -736,7 +736,7 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
 
     FILE* info;
     FILE* vec;
-    IplImage* src;
+    IplImage* src = NULL;
     IplImage* sample;
     int line;
     int error;
