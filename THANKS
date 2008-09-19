@@ -64,6 +64,7 @@ Kuranov, Alexander      Intel Corp.                Matlab wrappers, face detecti
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
+Liu Liu                 ???                        SURF code
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
 
