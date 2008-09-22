@@ -285,10 +285,10 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int i, j, k, nangle0 = 0, N;
 
     CV_ASSERT( img != 0 && CV_MAT_TYPE(img->type) == CV_8UC1 &&
-        (mask == 0 || CV_ARE_SIZES_EQ(img,mask) &&
+        (mask == 0 || (CV_ARE_SIZES_EQ(img,mask) &&
         CV_MAT_TYPE(mask->type) == CV_8UC1) &&
         storage != 0 && params.hessianThreshold >= 0 &&
-        params.nOctaves > 0 && params.nOctaveLayers > 0 );
+        params.nOctaves > 0 && params.nOctaveLayers > 0 ));
 
     sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
     cvIntegral( img, sum );
