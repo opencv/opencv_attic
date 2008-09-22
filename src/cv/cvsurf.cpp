@@ -310,6 +310,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
 
     CvSepFilter::init_gaussian_kernel( &_G, 2.5 );
 
+    {
     const double sigma = 3.3;
     double c2 = 1./(sigma*sigma*2), gs = 0;
     for( i = 0; i < PATCH_SZ; i++ )
@@ -323,6 +324,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         }
     }
     cvScale( &_DW, &_DW, 1./gs );
+    }
 
     for( i = -4; i <= 4; i++ )
         for( j = -4; j <= 4; j++ )
