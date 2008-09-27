@@ -1411,6 +1411,38 @@ CVAPI(void) cvReleaseStereoBMState( CvStereoBMState** state );
 CVAPI(void) cvFindStereoCorrespondenceBM( const CvArr* left, const CvArr* right,
                                           CvArr* disparity, CvStereoBMState* state );
 
+/* Kolmogorov-Zabin stereo-correspondence algorithm (a.k.a. KZ1) */
+#define CV_STEREO_GC_OCCLUDED  SHRT_MAX
+
+typedef struct CvStereoGCState
+{
+    int Ithreshold;
+    int interactionRadius;
+    float K, lambda, lambda1, lambda2;
+    int occlusionCost;
+    int minDisparity;
+    int numberOfDisparities;
+    int maxIters;
+
+    CvMat* left;
+    CvMat* right;
+    CvMat* dispLeft;
+    CvMat* dispRight;
+    CvMat* ptrLeft;
+    CvMat* ptrRight;
+    CvMat* vtxBuf;
+    CvMat* edgeBuf;
+}
+CvStereoGCState;
+
+CVAPI(CvStereoGCState*) cvCreateStereoGCState( int numberOfDisparities, int maxIters );
+CVAPI(void) cvReleaseStereoGCState( CvStereoGCState** state );
+
+CVAPI(void) cvFindStereoCorrespondenceGC( const CvArr* left, const CvArr* right,
+                                          CvArr* disparityLeft, CvArr* disparityRight, 
+                                          CvStereoGCState* state, 
+                                          int useDisparityGuess CV_DEFAULT(0) );
+
 /* Reprojects the computed disparity image to the 3D space using the specified 4x4 matrix */
 CVAPI(void)  cvReprojectImageTo3D( const CvArr* disparityImage,
                                    CvArr* _3dImage, const CvMat* Q );

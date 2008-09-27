@@ -5695,7 +5695,7 @@ post-filtering procedures.</p>
 It means that the supplied stereo pair should be rectified. Vertical stereo layout is not directly
 supported, but in such a case the images could be transposed by user.</p>
 
-<hr><h3><a name="decl_cvCreateStateBM">CreateStateBM</a></h3>
+<hr><h3><a name="decl_cvCreateStereoBMState">CreateStereoBMState</a></h3>
 <p class="Blurb">Creates block matching stereo correspondence structure</p>
 <pre>
 #define CV_STEREO_BM_BASIC 0
@@ -5719,7 +5719,7 @@ It is possible to override any of the parameters at any time between the calls t
 </p>
 
 
-<hr><h3><a name="decl_cvReleaseStateBM">ReleaseStateBM</a></h3>
+<hr><h3><a name="decl_cvReleaseStereoBMState">ReleaseStereoBMState</a></h3>
 <p class="Blurb">Releases block matching stereo correspondence structure</p>
 <pre>
 void cvReleaseStereoBMState( CvStereoBMState** state );
@@ -5730,7 +5730,7 @@ void cvReleaseStereoBMState( CvStereoBMState** state );
 </dl></p>
 <p>
 The function cvReleaseStereoBMState releases the stereo correspondence structure and
-all the internal buffers it points to.
+all the associated internal buffers.
 </p>
 
 
@@ -5753,6 +5753,117 @@ The function cvFindStereoCorrespondenceBM computes disparity map for
 the input rectified stereo pair.
 </p>
 
+
+<hr><h3><a name="decl_CvStereoGCState">CvStereoGCState</a></h3>
+<p class="Blurb">The structure for graph cuts-based stereo correspondence algorithm</p>
+<pre>
+typedef struct CvStereoGCState
+{
+    int Ithreshold; // threshold for piece-wise linear data cost function (5 by default)
+    int interactionRadius; // radius for smoothness cost function (1 by default; means Potts model)
+    float K, lambda, lambda1, lambda2; // parameters for the cost function
+                                       // (usually computed adaptively from the input data)
+    int occlusionCost; // 10000 by default
+    int minDisparity; // 0 by default; see CvStereoBMState
+    int numberOfDisparities; // defined by user; see CvStereoBMState
+    int maxIters; // number of iterations; defined by user.
+
+    // internal buffers
+    CvMat* left;
+    CvMat* right;
+    CvMat* dispLeft;
+    CvMat* dispRight;
+    CvMat* ptrLeft;
+    CvMat* ptrRight;
+    CvMat* vtxBuf;
+    CvMat* edgeBuf;
+}
+CvStereoGCState;
+</pre>
+<p>
+The graph cuts stereo correspondence algorithm,
+described in <a href="#paper_kolmogorov03">[Kolmogorov03]</a> (as <b>KZ1</b>), is non-realtime
+stereo correpsondence algorithm that usually gives very accurate depth map with well-defined
+object boundaries. The algorithm represents stereo problem as a sequence of binary
+optimization problems, each of those is solved using maximum graph flow algorithm.
+The state structure above should not be allocated and initialized manually; instead, use
+<a href="#decl_cvCreateStereoGCState">cvCreateStereoGCState</a> and then override
+necessary parameters if needed.</p>
+
+<hr><h3><a name="decl_cvCreateStereoGCState">CreateStereoGCState</a></h3>
+<p class="Blurb">Creates the state of graph cut-based stereo correspondence algorithm</p>
+<pre>
+CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
+                                        int maxIters );
+</pre>
+<p>
+<dl>
+<dt>numberOfDisparities<dd>The number of disparities. The disparity search range will be
+   <code>state->minDisparity &le; disparity &lt; state->minDisparity + state->numberOfDisparities</code>
+<dt>maxIters<dd>Maximum number of iterations. On each iteration all possible (or reasonable)
+   alpha-expansions are tried. The algorithm may terminate earlier if it could not find
+   an alpha-expansion that decreases the overall cost function value. See
+   <a href="#paper_kolmogorov">[Kolmogorov03]</a>
+   for details.
+</dl></p>
+<p>
+The function cvCreateStereoGCState creates the stereo correspondence structure and initializes it.
+It is possible to override any of the parameters at any time between the calls to
+<a href="#decl_cvFindStereoCorrespondenceGC">cvFindStereoCorrespondenceGC</a>.
+</p>
+
+
+<hr><h3><a name="decl_cvReleaseStereoGCState">ReleaseStereoGCState</a></h3>
+<p class="Blurb">Releases the state structure of the graph cut-based stereo correspondence algorithm</p>
+<pre>
+void cvReleaseStereoGCState( CvStereoGCState** state );
+</pre>
+<p>
+<dl>
+<dt>state<dd>Double pointer to the released structure
+</dl></p>
+<p>
+The function cvReleaseStereoGCState releases the stereo correspondence structure and
+all the associated internal buffers.
+</p>
+
+
+<hr><h3><a name="decl_cvFindStereoCorrespondenceGC">FindStereoCorrespondenceGC</a></h3>
+<p class="Blurb">Computes the disparity map using graph cut-based algorithm</p>
+<pre>
+void cvFindStereoCorrespondenceGC( const CvArr* left, const CvArr* right,
+                                   CvArr* dispLeft, CvArr* dispRight,
+                                   CvStereoGCState* state,
+                                   int useDisparityGuess CV_DEFAULT(0) );
+</pre>
+<p>
+<dl>
+<dt>left<dd>The left single-channel, 8-bit image.
+<dt>right<dd>The right image of the same size and the same type.
+<dt>dispLeft<dd>The optional output single-channel 16-bit signed left disparity map of the same size as input images.
+<dt>dispRight<dd>The optional output single-channel 16-bit signed right disparity map of the same size as input images.
+<dt>state<dd>Stereo correspondence structure.
+<dt>useDisparityGuess<dd>If the parameter is not zero, the algorithm will start with pre-defined
+             disparity maps. Both dispLeft and dispRight should be valid disparity maps. Otherwise,
+             the function starts with blank disparity maps (all pixels are marked as occlusions).
+</dl></p>
+<p>
+The function cvFindStereoCorrespondenceGC computes disparity maps for
+the input rectified stereo pair. Note that the left disparity image will contain values in the following range:
+<pre>
+-state->numberOfDisparities-state->minDisparity &lt; dispLeft(x,y) &le; -state->minDisparity,
+or
+dispLeft(x,y) == CV_STEREO_GC_OCCLUSION,
+</pre>
+where as for the right disparity image the following will be true:
+<pre>
+state->minDisparity &le; dispRight(x,y) &lt; state->minDisparity+state->numberOfDisparities,
+or
+dispRight(x,y) == CV_STEREO_GC_OCCLUSION,
+</pre>
+that is, the range for the left disparity image will be inversed, and the pixels for
+which no good match has been found, will be marked as occlusions.
+</p>
 
 <hr><h3><a name="decl_cvReprojectImageTo3D">ReprojectImageTo3D</a></h3>
 <p class="Blurb">Reprojects disparity image to 3D space</p>
@@ -6236,6 +6347,9 @@ Artificial Intelligence (IJCAI), pp. 674-679.
 
 <li><b>[Kass88]</b> M. Kass, A. Witkin, and D. Terzopoulos. Snakes: Active Contour Models,
 International Journal of Computer Vision, pp. 321-331, 1988.
+
+<li><a name ="paper_kolmogorov03"></a><b>[Kolmogorov03]</b>V. Kolmogorov. Graph Based Algorithms for Scene Reconstruction
+from Two or More Views. PhD thesis, Cornell University, September 2003.
 
 <li><a name="paper_lienhart02"><b>[Lienhart02]</b>
 Rainer Lienhart and Jochen Maydt.
