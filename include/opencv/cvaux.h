@@ -1130,37 +1130,20 @@ CVAPI(void)  cvDeleteMoire( IplImage*  img );
  *	 Foreground Object Detection from Videos Containing Complex Background.
  *	 Liyuan Li, Weimin Huang, Irene Y.H. Gu, and Qi Tian. 
  *	 ACM MM2003 9p
- *	 http://muq.org/~cynbe/bib/foreground-object-detection-from-videos-containing-complex-background.pdf
  *
  *  o CV_BG_MODEL_FGD_SIMPLE:
  *       A code comment describes this as a simplified version of the above,
- *       but the code is in fact currently identical. (Cynbe 2008-05-25)
+ *       but the code is in fact currently identical
  *
  *  o CV_BG_MODEL_MOG: "Mixture of Gaussians", older algorithm, described in
  *
  *       Moving target classification and tracking from real-time video.
  *       A Lipton, H Fujijoshi, R Patil
  *       Proceedings IEEE Workshop on Application of Computer Vision pp 8-14 1998
- *       http://www.vision.cs.chubu.ac.jp/04/pdf/VSAM02.pdf
  *
  *       Learning patterns of activity using real-time tracking
  *       C Stauffer and W Grimson  August 2000
  *       IEEE Transactions on Pattern Analysis and Machine Intelligence 22(8):747-757
- *       http://people.csail.mit.edu/people/stauffer/Home/_papers/vsam-pami-tracking.ps
- *
- * Additional background may be found on the Wiki page
- *
- *       http://opencvlibrary.sourceforge.net/VideoSurveillance
- *
- * which in particular recommends the Intel semi-popular overview article
- *
- *       Computer Vision Workload Analysis: Case Study of Video Surveillance Systems
- *       Chen et al, Intel Technology Journal V09:02 , 2005 12p
- *       http://developer.intel.com/technology/itj/2005/volume09issue02/art02_computer_vision/vol09_art02.pdf
- *
- * which has both a good overview of the blobtracker software in particular,
- * and also many references to introductory (and advanced) papers on computer vision.
- *
  */
 
 
