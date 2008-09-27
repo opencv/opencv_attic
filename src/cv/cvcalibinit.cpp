@@ -60,13 +60,22 @@
 \************************************************************************************/
 
 #include "_cv.h"
+#include <stdarg.h>
 
 //#define DEBUG_CHESSBOARD
 #ifdef DEBUG_CHESSBOARD
-#define PRINTF printf
+static int PRINTF( const char* fmt, ... )
+{
+    va_list args;
+    va_start(args, fmt);
+    return vprintf(fmt, args);
+}
 #include "..//..//otherlibs/highgui/highgui.h"
 #else
-#define PRINTF(x,...)
+static int PRINTF( const char*, ... )
+{
+    return 0;
+}
 #endif
 
 

@@ -497,18 +497,18 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                             if( ty >= 0 )
                             {
                                 vec[0] += tx;
-                                vec[1] += fabs(tx);
+                                vec[1] += (float)fabs(tx);
                             } else {
                                 vec[2] += tx;
-                                vec[3] += fabs(tx);
+                                vec[3] += (float)fabs(tx);
                             }
                             if ( tx >= 0 )
                             {
                                 vec[4] += ty;
-                                vec[5] += fabs(ty);
+                                vec[5] += (float)fabs(ty);
                             } else {
                                 vec[6] += ty;
-                                vec[7] += fabs(ty);
+                                vec[7] += (float)fabs(ty);
                             }
                         }
                     }
@@ -534,7 +534,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                         {
                             float tx = DX[y][x], ty = DY[y][x];
                             vec[0] += tx; vec[1] += ty;
-                            vec[2] += fabs(tx); vec[3] += fabs(ty);
+                            vec[2] += (float)fabs(tx); vec[3] += (float)fabs(ty);
                         }
                     }
                     double normalize = 0;

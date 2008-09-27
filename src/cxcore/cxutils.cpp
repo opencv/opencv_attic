@@ -463,15 +463,15 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
 
 #define MAXN 16
 
-template <class T>
-static void icvFindPolynomialRoots(const T *a, T *u, int n, int maxiter, int fig) {
+static void icvFindPolynomialRoots(const double *a, double *u, int n, int maxiter, int fig)
+{
   int i;
   int j;
-  T h[MAXN + 3], b[MAXN + 3], c[MAXN + 3], d[MAXN + 3], e[MAXN + 3];
+  double h[MAXN + 3], b[MAXN + 3], c[MAXN + 3], d[MAXN + 3], e[MAXN + 3];
   // [-2 : n]
-  T K, ps, qs, pt, qt, s, rev, r;
+  double K, ps, qs, pt, qt, s, rev, r = 0;
   int t;
-  T p, q, qq;
+  double p = 0, q = 0, qq;
 
   // Zero elements with negative indices
   b[2 + -1] = b[2 + -2] =
@@ -639,35 +639,49 @@ static void icvFindPolynomialRoots(const T *a, T *u, int n, int maxiter, int fig
 
 #undef MAXN
 
-void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig) {
-  int m = a->rows * a->cols;
-  int n = r->rows * r->cols;
+void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
+{
+    __BEGIN__;
 
-  __BEGIN__;
-  CV_FUNCNAME("cvSolvePoly");
+    int m, n;
+    double *ad = 0, *rd = 0;
 
-  if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
-      CV_MAT_TYPE(a->type) != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
-  if (CV_MAT_TYPE(r->type) != CV_32FC2 && 
-      CV_MAT_TYPE(r->type) != CV_64FC2)
-    CV_ERROR(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
-  if (CV_MAT_DEPTH(a->type) != CV_MAT_DEPTH(r->type))
-    CV_ERROR(CV_StsUnmatchedFormats, "coeffs and roots must have same depth");
+    CV_FUNCNAME("cvSolvePoly");
 
-  if (m - 1 != n)
-    CV_ERROR(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
+    if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
+        CV_MAT_TYPE(a->type) != CV_64FC1)
+        CV_ERROR(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
+    if (CV_MAT_TYPE(r->type) != CV_32FC2 && 
+        CV_MAT_TYPE(r->type) != CV_64FC2)
+        CV_ERROR(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
+    m = a->rows * a->cols;
+    n = r->rows * r->cols;
 
-  switch (CV_MAT_DEPTH(a->type)) {
-  case CV_32F:
-    icvFindPolynomialRoots(a->data.fl, r->data.fl, n, maxiter, fig);
-    break;
-  case CV_64F:
-    icvFindPolynomialRoots(a->data.db, r->data.db, n, maxiter, fig);
-    break;
-  }
+    if (m - 1 != n)
+        CV_ERROR(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
 
-  __END__;
+    if( CV_MAT_TYPE(a->type) == CV_32F || !CV_IS_MAT_CONT(a->type))
+    {
+        ad = (double*)cvStackAlloc(m*sizeof(ad[0]));
+        CvMat _a = cvMat( a->rows, a->cols, CV_64F, ad );
+        cvConvert( a, &_a );
+    }
+    else
+        ad = a->data.db;
+
+    if( CV_MAT_TYPE(r->type) == CV_32F || !CV_IS_MAT_CONT(r->type))
+        rd = (double*)cvStackAlloc(n*sizeof(ad[0]));
+    else
+        rd = r->data.db;
+
+    icvFindPolynomialRoots( ad, rd, n, maxiter, fig);
+    if( rd != r->data.db )
+    {
+        CvMat _r = cvMat( r->rows, r->cols, CV_64F, rd );
+        cvConvert( &_r, r );
+    }
+
+    __END__;
 }
 
 
