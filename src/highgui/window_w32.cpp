@@ -459,6 +459,9 @@ static void icvRemoveWindow( CvWindow* window )
     icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
     icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
 
+    if( window->toolbar.toolbar )
+        icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, 0);
+
     if( window->prev )
         window->prev->next = window->next;
     else
