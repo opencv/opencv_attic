@@ -1103,7 +1103,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     CV_FUNCNAME("CvVideoWriter_FFMPEG::open");
 
 	CodecID codec_id = CODEC_ID_NONE;
-	int err;
+	int err, codec_pix_fmt, bitrate_scale=64;
 
 	__BEGIN__;
 
@@ -1159,7 +1159,6 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 #endif
 
     // set a few optimal pixel formats for lossless codecs of interest..
-    int codec_pix_fmt;
     switch (codec_id) {
 #if LIBAVCODEC_VERSION_INT>((50<<16)+(1<<8)+0)
     case CODEC_ID_JPEGLS:
@@ -1174,6 +1173,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 	case CODEC_ID_MJPEG:
 	case CODEC_ID_LJPEG:
 		codec_pix_fmt = PIX_FMT_YUVJ420P;
+		bitrate_scale = 128;
 		break;
     case CODEC_ID_RAWVIDEO:
     default:
@@ -1184,7 +1184,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
 	// TODO -- safe to ignore output audio stream?
 	video_st = icv_add_video_stream_FFMPEG(oc, codec_id,
-			frameSize.width, frameSize.height, frameSize.width*frameSize.height*64,
+			frameSize.width, frameSize.height, frameSize.width*frameSize.height*bitrate_scale,
             fps, codec_pix_fmt);
 
 
