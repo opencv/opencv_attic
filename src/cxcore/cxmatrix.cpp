@@ -541,6 +541,54 @@ cvTranspose( const CvArr* srcarr, CvArr* dstarr )
 *                              LU decomposition/back substitution                        *
 \****************************************************************************************/
 
+CV_IMPL void
+cvCompleteSymm( CvMat* matrix, int LtoR )
+{
+    CV_FUNCNAME( "cvCompleteSymm" );
+
+    __BEGIN__;
+    
+    int i, j, nrows;
+    
+    CV_ASSERT( CV_IS_MAT(matrix) && matrix->rows == matrix->cols );
+
+    nrows = matrix->rows;
+
+    if( CV_MAT_TYPE(matrix->type) == CV_32FC1 || CV_MAT_TYPE(matrix->type) == CV_32SC1 )
+    {
+        int* data = matrix->data.i;
+        int step = matrix->step/sizeof(data[0]);
+        int j0 = 0, j1 = nrows;
+        for( i = 0; i < nrows; i++ )
+        {
+            if( !LtoR ) j1 = i; else j0 = i+1;
+            for( j = j0; j < j1; j++ )
+                data[i*step + j] = data[j*step + i];
+        }
+    }
+    else if( CV_MAT_TYPE(matrix->type) == CV_64FC1 )
+    {
+        double* data = matrix->data.db;
+        int step = matrix->step/sizeof(data[0]);
+        int j0 = 0, j1 = nrows;
+        for( i = 0; i < nrows; i++ )
+        {
+            if( !LtoR ) j1 = i; else j0 = i+1;
+            for( j = j0; j < j1; j++ )
+                data[i*step + j] = data[j*step + i];
+        }
+    }
+    else
+        CV_ERROR( CV_StsUnsupportedFormat, "" );
+
+    __END__;
+}
+
+
+/****************************************************************************************\
+*                              LU decomposition/back substitution                        *
+\****************************************************************************************/
+
 #define arrtype float
 #define temptype double
 
@@ -1118,6 +1166,39 @@ cvInvert( const CvArr* srcarr, CvArr* dstarr, int method )
 *                               Linear system [least-squares] solution                   *
 \****************************************************************************************/
 
+static void
+icvLSQ( const CvMat* A, const CvMat* B, CvMat* X )
+{
+    CvMat* AtA = 0;
+    CvMat* AtB = 0;
+    CvMat* W = 0;
+    CvMat* V = 0;
+
+    CV_FUNCNAME( "icvLSQ" );
+
+    __BEGIN__;
+
+    if( !CV_IS_MAT(A) || !CV_IS_MAT(B) || !CV_IS_MAT(X) )
+        CV_ERROR( CV_StsBadArg, "Some of required arguments is not a valid matrix" );
+
+    AtA = cvCreateMat( A->cols, A->cols, A->type );
+    AtB = cvCreateMat( A->cols, 1, A->type );
+    W = cvCreateMat( A->cols, 1, A->type );
+    V = cvCreateMat( A->cols, A->cols, A->type );
+
+    cvMulTransposed( A, AtA, 1 );
+    cvGEMM( A, B, 1, 0, 0, AtB, CV_GEMM_A_T );
+    cvSVD( AtA, W, 0, V, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    cvSVBkSb( W, V, V, AtB, X, CV_SVD_U_T + CV_SVD_V_T );
+
+    __END__;
+
+    cvReleaseMat( &AtA );
+    cvReleaseMat( &AtB );
+    cvReleaseMat( &W );
+    cvReleaseMat( &V );
+}
+
 CV_IMPL int
 cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
 {
@@ -1146,6 +1227,12 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
 
     if( !CV_IS_MAT( dst ))
         CV_CALL( dst = cvGetMat( dst, &dstub ));
+
+    if( method & CV_LSQ )
+    {
+        icvLSQ( src, src2, dst );
+        EXIT;
+    }
 
     if( method == CV_SVD || method == CV_SVD_SYM )
     {
