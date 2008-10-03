@@ -149,7 +149,6 @@ static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphan
         if( v->weight != 0 )
         {
             last = last->next = v;
-            // todo: can this be set during the graph construction?
             v->dist = 1;
             v->parent = TERMINAL;
             v->t = v->weight < 0;
@@ -609,12 +608,6 @@ static inline void icvAddEdge( GCVtx *x, GCVtx* y, GCEdge* edgeBuf, int nedges, 
     y->first = nedges+1;
 }
 
-static inline int icvSetTWeights( GCVtx* vtx, int sourceWeight, int sinkWeight )
-{
-    vtx->weight = (short)(sourceWeight - sinkWeight);
-    return MIN(sourceWeight, sinkWeight);
-}
-
 static inline int icvAddTWeights( GCVtx* vtx, int sourceWeight, int sinkWeight )
 {
     int w = vtx->weight;
@@ -638,7 +631,7 @@ static inline int icvAddTerm( GCVtx* x, GCVtx* y, int A, int B, int C, int D,
         dE += icvAddTWeights(y, 0, A - B);
         if( (w = B - A + C - D) != 0 )
         {
-            icvAddEdge( x, y, edgeBuf, nedges, 0, B - A + C - D );
+            icvAddEdge( x, y, edgeBuf, nedges, 0, w );
             nedges += 2;
         }
     }
@@ -648,7 +641,7 @@ static inline int icvAddTerm( GCVtx* x, GCVtx* y, int A, int B, int C, int D,
         dE += icvAddTWeights(y, 0, C - D);
         if( (w = B - A + C - D) != 0 )
         {
-            icvAddEdge( x, y, edgeBuf, nedges, B - A + C - D, 0 );
+            icvAddEdge( x, y, edgeBuf, nedges, w, 0 );
             nedges += 2;
         }
     }
