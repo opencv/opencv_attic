@@ -1250,7 +1250,8 @@ CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
 CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
                                     CvPoint2D32f* corners,
                                     int* corner_count CV_DEFAULT(NULL),
-                                    int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH) );
+                                    int flags CV_DEFAULT(CV_CALIB_CB_ADAPTIVE_THRESH+
+                                        CV_CALIB_CB_NORMALIZE_IMAGE) );
 
 /* Draws individual chessboard corners or the whole chessboard detected */
 CVAPI(void) cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,

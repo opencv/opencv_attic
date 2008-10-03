@@ -97,9 +97,10 @@ void CV_ChessboardDetectorTest::run( int start_from )
 {
     int code = CvTS::OK;
 
+//#define WRITE_POINTS 1
 #ifndef WRITE_POINTS    
     const double rough_success_error_level = 2.5;
-    const double precise_success_error_level = 0.2;
+    const double precise_success_error_level = 2;
     double err = 0, max_rough_error = 0, max_precise_error = 0;
 #endif
 
@@ -192,8 +193,8 @@ void CV_ChessboardDetectorTest::run( int start_from )
         u = (CvPoint2D32f*)_u->data.fl;
         v = (CvPoint2D32f*)_v->data.fl;
 
-        OPENCV_CALL( result = cvFindChessBoardCornerGuesses(
-                     gray, thresh, 0, etalon_size, v, &count ));
+        OPENCV_CALL( result = cvFindChessboardCorners(
+                     gray, etalon_size, v, &count, 7 ));
 
         //show_points( gray, 0, etalon_count, v, count, etalon_size, result );
         if( !result || count != etalon_count )
@@ -226,7 +227,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
 #endif
         OPENCV_CALL( cvFindCornerSubPix( gray, v, count, cvSize( 5, 5 ), cvSize(-1,-1),
                             cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1)));
-        //show_points( gray, u + 1, etalon_count, v, count );
+        //show_points( gray, u + 1, etalon_count, v, count, etalon_size, result  );
 
 #ifndef WRITE_POINTS
         err = 0;
