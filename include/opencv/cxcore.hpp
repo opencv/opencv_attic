@@ -96,10 +96,9 @@ public:
 
     void attach( IplImage* img, bool use_refcount=true )
     {
-        if( refcount )
+        if( refcount && --*refcount == 0 )
         {
-            if( --*refcount == 0 )
-                cvReleaseImage( &image );
+            cvReleaseImage( &image );
             delete refcount;
         }
         image = img;
@@ -108,14 +107,13 @@ public:
 
     void detach()
     {
-        if( refcount )
+        if( refcount && --*refcount == 0 )
         {
-            if( --*refcount == 0 )
-                cvReleaseImage( &image );
+            cvReleaseImage( &image );
             delete refcount;
-            refcount = 0;
         }
         image = 0;
+        refcount = 0;
     }
 
     bool load( const char* filename, const char* imgname=0, int color=-1 );
