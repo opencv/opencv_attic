@@ -86,7 +86,7 @@ LINK32=link.exe
 # Name "cvsample - Win32 Debug"
 # Begin Source File
 
-SOURCE=.\facedetect.c
+SOURCE=.\squares.c
 # End Source File
 # End Target
 # End Project

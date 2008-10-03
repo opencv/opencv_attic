@@ -404,7 +404,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\squares.c"
+			RelativePath=".\drawing.c"
 			>
 		</File>
 	</Files>
