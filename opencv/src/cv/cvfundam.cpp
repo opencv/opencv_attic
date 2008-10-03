@@ -860,7 +860,7 @@ int CvFMEstimator::run8Point( const CvMat* _m1, const CvMat* _m2, CvMat* _fmatri
 
     for( i = 0; i < 8; i++ )
     {
-        if( fabs(w[i]) < FLT_EPSILON )
+        if( fabs(w[i]) < DBL_EPSILON )
             break;
     }
 
