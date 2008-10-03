@@ -609,6 +609,8 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     }
     else if( count > 4 )
         tempMask = cvCreateMat( 1, count, CV_8U );
+    if( tempMask )
+        cvSet( tempMask, cvScalarAll(1.) );
 
     {
     CvHomographyEstimator estimator( MIN(count, 5) );
@@ -979,6 +981,8 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
     }
     else if( count > 8 )
         tempMask = cvCreateMat( 1, count, CV_8U );
+    if( tempMask )
+        cvSet( tempMask, cvScalarAll(1.) );
 
     {
     CvFMEstimator estimator( MIN(count, (method & 3) == CV_FM_7POINT ? 7 : 8) );
