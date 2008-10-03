@@ -351,17 +351,6 @@ protected:
 };
 
 
-typedef IplImage* (CV_CDECL * CvLoadImageFunc)( const char* filename, int colorness );
-typedef CvMat* (CV_CDECL * CvLoadImageMFunc)( const char* filename, int colorness );
-typedef int (CV_CDECL * CvSaveImageFunc)( const char* filename, const CvArr* image );
-typedef void (CV_CDECL * CvShowImageFunc)( const char* windowname, const CvArr* image );
-
-CVAPI(int) cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
-                            CvSaveImageFunc _save_image, CvShowImageFunc _show_image );
-
-#define CV_SET_IMAGE_IO_FUNCTIONS() \
-    cvSetImageIOFunctions( cvLoadImage, cvLoadImageM, cvSaveImage, cvShowImage )
-
 // classes for automatic module/RTTI data registration/unregistration
 struct CV_EXPORTS CvModule
 {
