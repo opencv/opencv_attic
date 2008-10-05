@@ -62,6 +62,7 @@
 #define __const   const
 
 // SWIG needs this to be parsed before cv.h
+%ignore CV_SET_IMAGE_IO_FUNCTIONS;
 %include "./cvmacros.i"
 
 // A couple of typemaps helps wrapping OpenCV functions in a sensible way
