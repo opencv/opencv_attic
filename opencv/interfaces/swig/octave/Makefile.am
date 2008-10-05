@@ -91,7 +91,7 @@ PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-#dist_octave_DATA = opencv-1.0.tar.gz
+dist_octave_DATA = opencv-1.0.tar.gz
 
 opencv-1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 	mkdir -p $(PKG_NAME)
