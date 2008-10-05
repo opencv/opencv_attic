@@ -1523,12 +1523,14 @@ extern "C" void cvTranspose( const CvArr* src, CvArr* dst );
 
 
 
+extern "C" void cvCompleteSymm( CvMat* matrix, int LtoR = 0 );
+
 
 
 
 extern "C" void cvFlip( const CvArr* src, CvArr* dst = NULL,
                      int flip_mode = 0);
-# 741 "../../../cxcore/include/cxcore.h"
+# 743 "../../../cxcore/include/cxcore.h"
 extern "C" void cvSVD( CvArr* A, CvArr* W, CvArr* U = NULL,
                      CvArr* V = NULL, int flags = 0);
 
@@ -1537,6 +1539,8 @@ extern "C" void cvSVD( CvArr* A, CvArr* W, CvArr* U = NULL,
 extern "C" void cvSVBkSb( const CvArr* W, const CvArr* U,
                         const CvArr* V, const CvArr* B,
                         CvArr* X, int flags );
+
+
 
 
 
@@ -1566,7 +1570,7 @@ extern "C" void cvSetIdentity( CvArr* mat, CvScalar value = cvRealScalar(1) );
 
 
 extern "C" CvArr* cvRange( CvArr* mat, double start, double end );
-# 799 "../../../cxcore/include/cxcore.h"
+# 803 "../../../cxcore/include/cxcore.h"
 extern "C" void cvCalcCovarMatrix( const CvArr** vects, int count,
                                 CvArr* cov_mat, CvArr* avg, int flags );
 
@@ -1608,7 +1612,7 @@ extern "C" void cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
                           CvPoint* min_loc = NULL,
                           CvPoint* max_loc = NULL,
                           const CvArr* mask = NULL );
-# 858 "../../../cxcore/include/cxcore.h"
+# 862 "../../../cxcore/include/cxcore.h"
 extern "C" double cvNorm( const CvArr* arr1, const CvArr* arr2 = NULL,
                        int norm_type = 4,
                        const CvArr* mask = NULL );
@@ -1626,7 +1630,7 @@ extern "C" void cvNormalize( const CvArr* src, CvArr* dst,
 
 extern "C" void cvReduce( const CvArr* src, CvArr* dst, int dim = -1,
                        int op = 0 );
-# 892 "../../../cxcore/include/cxcore.h"
+# 896 "../../../cxcore/include/cxcore.h"
 extern "C" void cvDFT( const CvArr* src, CvArr* dst, int flags,
                     int nonzero_rows = 0 );
 
@@ -1926,7 +1930,7 @@ extern "C" void cvClearGraph( CvGraph* graph );
 
 extern "C" int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
 extern "C" int cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
-# 1226 "../../../cxcore/include/cxcore.h"
+# 1230 "../../../cxcore/include/cxcore.h"
 typedef struct CvGraphScanner
 {
     CvGraphVtx* vtx;
@@ -1953,7 +1957,7 @@ extern "C" int cvNextGraphItem( CvGraphScanner* scanner );
 
 
 extern "C" CvGraph* cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
-# 1273 "../../../cxcore/include/cxcore.h"
+# 1277 "../../../cxcore/include/cxcore.h"
 extern "C" void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2,
                      CvScalar color, int thickness = 1,
                      int line_type = 8, int shift = 0 );
@@ -2003,7 +2007,7 @@ extern "C" void cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours, 
 extern "C" void cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours,
                          int is_closed, CvScalar color, int thickness = 1,
                          int line_type = 8, int shift = 0 );
-# 1332 "../../../cxcore/include/cxcore.h"
+# 1336 "../../../cxcore/include/cxcore.h"
 extern "C" int cvClipLine( CvSize img_size, CvPoint* pt1, CvPoint* pt2 );
 
 
@@ -2013,7 +2017,7 @@ extern "C" int cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
                                 CvLineIterator* line_iterator,
                                 int connectivity = 8,
                                 int left_to_right = 0);
-# 1369 "../../../cxcore/include/cxcore.h"
+# 1373 "../../../cxcore/include/cxcore.h"
 typedef struct CvFont
 {
     int font_face;
@@ -2203,7 +2207,7 @@ extern "C" void cvSetIPLAllocators( Cv_iplCreateImageHeader create_header,
                                Cv_iplDeallocate deallocate,
                                Cv_iplCreateROI create_roi,
                                Cv_iplCloneImage clone_image );
-# 1570 "../../../cxcore/include/cxcore.h"
+# 1574 "../../../cxcore/include/cxcore.h"
 extern "C" CvFileStorage* cvOpenFileStorage( const char* filename,
                                           CvMemStorage* memstorage,
                                           int flags );
@@ -2383,6 +2387,19 @@ extern "C" void cvSetNumThreads( int threads = 0 );
 extern "C" int cvGetThreadNum( void );
 
 
+
+typedef IplImage* ( * CvLoadImageFunc)( const char* filename, int colorness );
+typedef CvMat* ( * CvLoadImageMFunc)( const char* filename, int colorness );
+typedef int ( * CvSaveImageFunc)( const char* filename, const CvArr* image );
+typedef void ( * CvShowImageFunc)( const char* windowname, const CvArr* image );
+
+extern "C" int cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
+                            CvSaveImageFunc _save_image, CvShowImageFunc _show_image );
+
+
+
+
+
 }
 
 # 1 "../../../cxcore/include/cxcore.hpp" 1
@@ -2440,10 +2457,9 @@ public:
 
     void attach( IplImage* img, bool use_refcount=true )
     {
-        if( refcount )
+        if( refcount && --*refcount == 0 )
         {
-            if( --*refcount == 0 )
-                cvReleaseImage( &image );
+            cvReleaseImage( &image );
             delete refcount;
         }
         image = img;
@@ -2452,14 +2468,13 @@ public:
 
     void detach()
     {
-        if( refcount )
+        if( refcount && --*refcount == 0 )
         {
-            if( --*refcount == 0 )
-                cvReleaseImage( &image );
+            cvReleaseImage( &image );
             delete refcount;
-            refcount = 0;
         }
         image = 0;
+        refcount = 0;
     }
 
     bool load( const char* filename, const char* imgname=0, int color=-1 );
@@ -2695,17 +2710,6 @@ protected:
 };
 
 
-typedef IplImage* ( * CvLoadImageFunc)( const char* filename, int colorness );
-typedef CvMat* ( * CvLoadImageMFunc)( const char* filename, int colorness );
-typedef int ( * CvSaveImageFunc)( const char* filename, const CvArr* image );
-typedef void ( * CvShowImageFunc)( const char* windowname, const CvArr* image );
-
-extern "C" int cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
-                            CvSaveImageFunc _save_image, CvShowImageFunc _show_image );
-
-
-
-
 
 struct CvModule
 {
@@ -2728,7 +2732,7 @@ struct CvType
     static CvTypeInfo* first;
     static CvTypeInfo* last;
 };
-# 1752 "../../../cxcore/include/cxcore.h" 2
+# 1769 "../../../cxcore/include/cxcore.h" 2
 # 59 "../../../cv/include/cv.h" 2
 # 1 "../../../cv/include/cvtypes.h" 1
 # 51 "../../../cv/include/cvtypes.h"
@@ -3788,7 +3792,50 @@ extern "C" void cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
 extern "C" int cvFindFeaturesBoxed(struct CvFeatureTree* tr,
       CvMat* bounds_min, CvMat* bounds_max,
       CvMat* results);
-# 1085 "../../../cv/include/cv.h"
+
+typedef struct CvSURFPoint
+{
+    CvPoint2D32f pt;
+    int laplacian;
+    int size;
+    float dir;
+    float hessian;
+} CvSURFPoint;
+
+inline CvSURFPoint cvSURFPoint( CvPoint2D32f pt, int laplacian,
+                                   int size, float dir = 0,
+                                   float hessian = 0)
+{
+    CvSURFPoint kp;
+    kp.pt = pt;
+    kp.laplacian = laplacian;
+    kp.size = size;
+    kp.dir = dir;
+    kp.hessian = hessian;
+    return kp;
+}
+
+typedef struct CvSURFParams
+{
+    int extended;
+    double hessianThreshold;
+
+    int nOctaves;
+    int nOctaveLayers;
+}
+CvSURFParams;
+
+extern "C" CvSURFParams cvSURFParams( double hessianThreshold, int extended = 0 );
+extern "C" void cvExtractSURF( const CvArr* img, const CvArr* mask,
+                           CvSeq** keypoints, CvSeq** descriptors,
+                           CvMemStorage* storage, CvSURFParams params );
+
+
+
+
+
+
+
 extern "C" CvHaarClassifierCascade* cvLoadHaarClassifierCascade(
                     const char* directory, CvSize orig_window_size);
 
@@ -3921,13 +3968,14 @@ extern "C" void cvInitIntrinsicParams2D( const CvMat* object_points,
 extern "C" int cvFindChessboardCorners( const void* image, CvSize pattern_size,
                                     CvPoint2D32f* corners,
                                     int* corner_count = NULL,
-                                    int flags = 1 );
+                                    int flags = 1 + 2 );
+
 
 
 extern "C" void cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
                                      CvPoint2D32f* corners,
                                      int count, int pattern_was_found );
-# 1235 "../../../cv/include/cv.h"
+# 1272 "../../../cv/include/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -4004,11 +4052,11 @@ extern "C" int cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
 extern "C" void cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
-# 1319 "../../../cv/include/cv.h"
+# 1356 "../../../cv/include/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
-                                 int method = (8 + 2),
-                                 double param1 = 1., double param2 = 0.99,
+                                 int method = 8,
+                                 double param1 = 3., double param2 = 0.99,
                                  CvMat* status = NULL );
 
 
@@ -4063,6 +4111,38 @@ extern "C" void cvReleaseStereoBMState( CvStereoBMState** state );
 
 extern "C" void cvFindStereoCorrespondenceBM( const CvArr* left, const CvArr* right,
                                           CvArr* disparity, CvStereoBMState* state );
+
+
+
+
+typedef struct CvStereoGCState
+{
+    int Ithreshold;
+    int interactionRadius;
+    float K, lambda, lambda1, lambda2;
+    int occlusionCost;
+    int minDisparity;
+    int numberOfDisparities;
+    int maxIters;
+
+    CvMat* left;
+    CvMat* right;
+    CvMat* dispLeft;
+    CvMat* dispRight;
+    CvMat* ptrLeft;
+    CvMat* ptrRight;
+    CvMat* vtxBuf;
+    CvMat* edgeBuf;
+}
+CvStereoGCState;
+
+extern "C" CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities, int maxIters );
+extern "C" void cvReleaseStereoGCState( CvStereoGCState** state );
+
+extern "C" void cvFindStereoCorrespondenceGC( const CvArr* left, const CvArr* right,
+                                          CvArr* disparityLeft, CvArr* disparityRight,
+                                          CvStereoGCState* state,
+                                          int useDisparityGuess = 0 );
 
 
 extern "C" void cvReprojectImageTo3D( const CvArr* disparityImage,
@@ -4360,4 +4440,42 @@ protected:
     int el_shape;
     int operation;
 };
-# 1388 "../../../cv/include/cv.h" 2
+
+
+
+
+struct CvLevMarq
+{
+    CvLevMarq();
+    CvLevMarq( int nparams, int nerrs, CvTermCriteria criteria=
+        cvTermCriteria(2 +1,30,DBL_EPSILON),
+        bool completeSymmFlag=false );
+    ~CvLevMarq();
+    void init( int nparams, int nerrs, CvTermCriteria criteria=
+        cvTermCriteria(2 +1,30,DBL_EPSILON),
+        bool completeSymmFlag=false );
+    bool update( const CvMat*& param, CvMat*& J, CvMat*& err );
+    bool updateAlt( const CvMat*& param, CvMat*& JtJ, CvMat*& JtErr, double*& errNorm );
+
+    void clear();
+    void step();
+    enum { DONE=0, STARTED=1, CALC_J=2, CHECK_ERR=3 };
+
+    CvMat* mask;
+    CvMat* prevParam;
+    CvMat* param;
+    CvMat* J;
+    CvMat* err;
+    CvMat* JtJ;
+    CvMat* JtJN;
+    CvMat* JtErr;
+    CvMat* JtJV;
+    CvMat* JtJW;
+    double prevErrNorm, errNorm;
+    int lambdaLg10;
+    CvTermCriteria criteria;
+    int state;
+    int iters;
+    bool completeSymmFlag;
+};
+# 1457 "../../../cv/include/cv.h" 2

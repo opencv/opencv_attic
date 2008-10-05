@@ -66,6 +66,8 @@
 
 #define CV_SVD_SYM 2
 
+#define CV_LSQ 8
+
 #define cvInv cvInvert
 
 #define CV_COVAR_SCRAMBLED 0
@@ -982,9 +984,9 @@
 
 #define CV_FM_RANSAC_ONLY CV_RANSAC
 
-#define CV_FM_LMEDS (CV_FM_LMEDS_ONLY + CV_FM_8POINT)
+#define CV_FM_LMEDS CV_LMEDS
 
-#define CV_FM_RANSAC (CV_FM_RANSAC_ONLY + CV_FM_8POINT)
+#define CV_FM_RANSAC CV_RANSAC
 
 #define CV_STEREO_BM_NORMALIZED_RESPONSE  0
 
@@ -993,6 +995,8 @@
 #define CV_STEREO_BM_FISH_EYE 1
 
 #define CV_STEREO_BM_NARROW 2
+
+#define CV_STEREO_GC_OCCLUDED  SHRT_MAX
 
 #define CV_RETR_EXTERNAL 0
 
