@@ -45,6 +45,12 @@
 \****************************************************************************************/
 
 #include "_cv.h"
+// replace "#if 0" with "#if 1" to force using SSE2 intrinsics
+#if 0
+#undef CV_SSE2
+#define CV_SSE2 1
+#include "emmintrin.h"
+#endif
 
 CV_IMPL CvStereoBMState*
 cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
@@ -100,20 +106,10 @@ cvReleaseStereoBMState( CvStereoBMState** state )
     __END__;
 }
 
-#define CV_STEREO_BM_INT_ACCUM 1
-
-#if CV_STEREO_BM_INT_ACCUM
-#undef CV_SSE2
-#define CV_SSE2 0
-typedef int sum_t;
-#else
-typedef ushort sum_t;
-#endif
-
 static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, CvMat* buf )
 {
     int x, y, wsz2 = winsize/2;
-    sum_t* vsum = (sum_t*)cvAlignPtr(buf->data.ptr + (wsz2 + 1)*sizeof(vsum[0]), 32);
+    int* vsum = (int*)cvAlignPtr(buf->data.ptr + (wsz2 + 1)*sizeof(vsum[0]), 32);
     int scale_g = winsize*winsize/8, scale_s = (1024 + scale_g)/(scale_g*2);
     const int OFS = 256*5, TABSZ = OFS*2 + 256;
     uchar tab[TABSZ];
@@ -145,24 +141,6 @@ static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero,
         uchar* dptr = dst->data.ptr + dst->step*y;
         x = 0;
 
-#if CV_SSE2
-        __m128i z = _mm_setzero_si128();
-        for( ; x <= size.width - 16; x += 16 )
-        {
-            __m128i b0 = _mm_loadu_si128((const __m128i*)(bottom + x));
-            __m128i t0 = _mm_loadu_si128((const __m128i*)(top + x));
-            __m128i b1 = _mm_unpackhi_epi8(b0, z);
-            __m128i t1 = _mm_unpackhi_epi8(t0, z);
-            __m128i s0 = _mm_load_si128((const __m128i*)(vsum + x));
-            __m128i s1 = _mm_load_si128((const __m128i*)(vsum + x + 8));
-            b0 = _mm_unpacklo_epi8(b0, z);
-            t0 = _mm_unpacklo_epi8(t0, z);
-            s0 = _mm_add_epi16(s0,_mm_sub_epi16(b0,t0));
-            s1 = _mm_add_epi16(s1,_mm_sub_epi16(b1,t1));
-            _mm_store_si128((__m128i*)(vsum + x), s0);
-            _mm_store_si128((__m128i*)(vsum + x + 8), s1);
-        }
-#endif
         for( ; x < size.width; x++ )
             vsum[x] = (ushort)(vsum[x] + bottom[x] - top[x]);
 
@@ -192,123 +170,44 @@ static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero,
     }
 }
 
-CV_IMPL void
-cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
-                              CvArr* disparr, CvStereoBMState* state )
+static const int DISPARITY_SHIFT = 4;
+
+#if CV_SSE2
+static void
+icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
+                                    CvMat* disp, CvStereoBMState* state )
 {
-    const int DISPARITY_SHIFT = 4;
-    
-    CV_FUNCNAME( "cvFindStereoCorrespondenceBM" );
+    int x, y, d;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int ndisp = state->numberOfDisparities;
+    int mindisp = state->minDisparity;
+    int lofs = MAX(ndisp - 1 + mindisp, 0);
+    int rofs = -MIN(ndisp - 1 + mindisp, 0);
+    int width = left->cols, height = left->rows;
+    int width1 = width - rofs - ndisp + 1;
+    int ftzero = state->preFilterCap;
+    int textureThreshold = state->textureThreshold;
+    int uniquenessRatio = state->uniquenessRatio;
+    short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
 
-    __BEGIN__;
-
-    CvMat lstub, *left0 = cvGetMat( leftarr, &lstub );
-    CvMat rstub, *right0 = cvGetMat( rightarr, &rstub );
-    CvMat left, right;
-    CvMat dstub, *disp = cvGetMat( disparr, &dstub );
-    int bufSize, x, y, d, width, width1, height;
-    int ftzero, wsz, wsz2, ndisp, mindisp, textureThreshold, uniquenessRatio;
-    sum_t* sad;
-    sum_t *hsad0, *hsad, *hsad_sub;
-    int* htext;
+    ushort *sad, *hsad0, *hsad, *hsad_sub;
+    int *htext;
     uchar *cbuf0, *cbuf;
-    const uchar *lptr0, *lptr, *lptr_sub, *rptr0, *rptr;
-    short* dptr;
-    int lofs, rofs, sstep, dstep, cstep;
+    const uchar* lptr0 = left->data.ptr + lofs;
+    const uchar* rptr0 = right->data.ptr + rofs;
+    const uchar *lptr, *lptr_sub, *rptr;
+    short* dptr = disp->data.s;
+    int sstep = left->step;
+    int dstep = disp->step/sizeof(dptr[0]);
+    int cstep = height*ndisp;
     const int TABSZ = 256;
     uchar tab[TABSZ];
-    short FILTERED;
-#if CV_SSE2
     const __m128i d0_8 = _mm_setr_epi16(0,1,2,3,4,5,6,7), dd_8 = _mm_set1_epi16(8);
-#endif
 
-    if( !CV_ARE_SIZES_EQ(left0, right0) ||
-        !CV_ARE_SIZES_EQ(disp, left0) )
-        CV_ERROR( CV_StsUnmatchedSizes, "All the images must have the same size" );
-
-    if( CV_MAT_TYPE(left0->type) != CV_8UC1 ||
-        !CV_ARE_TYPES_EQ(left0, right0) ||
-        CV_MAT_TYPE(disp->type) != CV_16SC1 )
-        CV_ERROR( CV_StsUnsupportedFormat,
-        "Both input images must have 8uC1 format and the disparity image must have 16sC1 format" );
-
-    if( !state )
-        CV_ERROR( CV_StsNullPtr, "Stereo BM state is NULL." );
-
-    if( state->preFilterType != CV_STEREO_BM_NORMALIZED_RESPONSE )
-        CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
-
-    if( state->preFilterSize < 5 || state->preFilterSize > 21+CV_STEREO_BM_INT_ACCUM*128 || state->preFilterSize % 2 == 0 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..21+" );
-
-    if( state->preFilterCap < 1 || state->preFilterCap > 31+CV_STEREO_BM_INT_ACCUM*32 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31+" );
-
-    if( state->SADWindowSize < 5 || state->SADWindowSize > 21+CV_STEREO_BM_INT_ACCUM*128 || state->SADWindowSize % 2 == 0 ||
-        state->SADWindowSize >= MIN(left0->cols, left0->rows) )
-        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..21+ and "
-                                    "be not larger than image width or height" );
-
-    if( state->numberOfDisparities <= 0 || state->numberOfDisparities % 16 != 0 )
-        CV_ERROR( CV_StsOutOfRange, "numberOfDisparities must be positive and divisble by 16" );
-    if( state->textureThreshold < 0 )
-        CV_ERROR( CV_StsOutOfRange, "texture threshold must be non-negative" );
-    if( state->uniquenessRatio < 0 )
-        CV_ERROR( CV_StsOutOfRange, "uniqueness ratio must be non-negative" );
-
-    if( !state->preFilteredImg0 ||
-        state->preFilteredImg0->cols*state->preFilteredImg0->rows < left0->cols*left0->rows )
-    {
-        cvReleaseMat( &state->preFilteredImg0 );
-        cvReleaseMat( &state->preFilteredImg1 );
-
-        state->preFilteredImg0 = cvCreateMat( left0->rows, left0->cols, CV_8U );
-        state->preFilteredImg1 = cvCreateMat( left0->rows, left0->cols, CV_8U );
-    }
-    left = cvMat(left0->rows, left0->cols, CV_8U, state->preFilteredImg0->data.ptr);
-    right = cvMat(right0->rows, right0->cols, CV_8U, state->preFilteredImg1->data.ptr);
-    
-    mindisp = state->minDisparity;
-    ndisp = state->numberOfDisparities;
-    ftzero = state->preFilterCap;
-    FILTERED = (short)((state->minDisparity - 1) << DISPARITY_SHIFT);
-    textureThreshold = state->textureThreshold;
-    uniquenessRatio = state->uniquenessRatio;
-
-    width = left0->cols;
-    height = left0->rows;
-    lofs = MAX(ndisp - 1 + mindisp, 0);
-    rofs = -MIN(ndisp - 1 + mindisp, 0);
-    width1 = width - rofs - ndisp + 1;
-    if( lofs >= width || rofs >= width || width1 < 1 )
-    {
-        cvSet( disp, cvScalarAll(FILTERED) );
-        EXIT;
-    }
-
-    wsz = state->SADWindowSize; wsz2 = wsz/2;
-    bufSize = (ndisp + 2)*sizeof(sad[0]) + height*ndisp*sizeof(hsad[0]) +
-        (height + wsz + 2)*sizeof(htext[0]) + height*ndisp*(wsz+1)*sizeof(cbuf[0]);
-    bufSize = MAX(bufSize, (width + state->preFilterSize + 2)*(int)sizeof(hsad[0])) + 1024;
-    if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize )
-    {
-        cvReleaseMat( &state->slidingSumBuf );
-        state->slidingSumBuf = cvCreateMat( 1, bufSize, CV_8U );
-    }
-    
-    icvPrefilter( left0, &left, state->preFilterSize, ftzero, state->slidingSumBuf );
-    icvPrefilter( right0, &right, state->preFilterSize, ftzero, state->slidingSumBuf );
-
-    sad = (sum_t*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
-    hsad0 = (sum_t*)cvAlignPtr(sad + ndisp + 1);
+    sad = (ushort*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
+    hsad0 = (ushort*)cvAlignPtr(sad + ndisp + 1);
     htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
     cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
-    lptr0 = left.data.ptr + lofs;
-    rptr0 = right.data.ptr + rofs;
-    dptr = disp->data.s;
-    sstep = left.step;
-    dstep = disp->step/sizeof(dptr[0]);
-    cstep = height*ndisp;
 
     for( x = 0; x < TABSZ; x++ )
         tab[x] = (uchar)abs(x - ftzero);
@@ -330,7 +229,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             {
                 int diff = abs(lval - rptr[d]);
                 cbuf[d] = (uchar)diff;
-                hsad[d] = (sum_t)(hsad[d] + diff);
+                hsad[d] = (ushort)(hsad[d] + diff);
             }
             htext[y] += tab[lval];
         }
@@ -360,7 +259,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
              hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
         {
             int lval = lptr[0];
-#if CV_SSE2            
             __m128i lv = _mm_set1_epi8((char)lval), z = _mm_setzero_si128();
             for( d = 0; d < ndisp; d += 16 )
             {
@@ -377,14 +275,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
                 _mm_store_si128((__m128i*)(hsad + d), hsad_l);
                 _mm_store_si128((__m128i*)(hsad + d + 8), hsad_h);
             }
-#else
-            for( d = 0; d < ndisp; d++ )
-            {
-                int diff = abs(lval - rptr[d]);
-                cbuf[d] = (uchar)diff;
-                hsad[d] = (sum_t)(hsad[d] + diff - cbuf_sub[d]);
-            }
-#endif
             htext[y] += tab[lval] - tab[lptr_sub[0]];
         }
 
@@ -397,12 +287,12 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
 
         // initialize sums
         for( d = 0; d < ndisp; d++ )
-            sad[d] = (sum_t)(hsad0[d]*(wsz2 + 2));
+            sad[d] = (ushort)(hsad0[d]*(wsz2 + 2));
         
         hsad = hsad0 + ndisp;
         for( y = 1; y < wsz2; y++, hsad += ndisp )
             for( d = 0; d < ndisp; d++ )
-                sad[d] = (sum_t)(sad[d] + hsad[d]);
+                sad[d] = (ushort)(sad[d] + hsad[d]);
         int tsum = 0;
         for( y = -wsz2-1; y < wsz2; y++ )
             tsum += htext[y];
@@ -413,7 +303,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             int minsad = INT_MAX, mind = -1;
             hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
             hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
-#if CV_SSE2
             __m128i minsad8 = _mm_set1_epi16(SHRT_MAX);
             __m128i mind8 = _mm_set1_epi16(-1), d8 = d0_8, mask;
 
@@ -450,18 +339,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
             mind = (short)_mm_cvtsi128_si32(mind8);
             minsad = sad[mind];
-#else
-            for( d = 0; d < ndisp; d++ )
-            {
-                int currsad = sad[d] + hsad[d] - hsad_sub[d];
-                sad[d] = (sum_t)currsad;
-                if( currsad < minsad )
-                {
-                    minsad = currsad;
-                    mind = d;
-                }
-            }
-#endif
             tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
             if( tsum < textureThreshold )
             {
@@ -472,7 +349,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             if( uniquenessRatio > 0 )
             {
                 int thresh = minsad + (minsad * uniquenessRatio/100);
-#if CV_SSE2
                 __m128i thresh8 = _mm_set1_epi16((short)(thresh + 1));
                 __m128i d1 = _mm_set1_epi16((short)(mind-1)), d2 = _mm_set1_epi16((short)(mind+1));
                 __m128i d8 = d0_8;
@@ -481,21 +357,11 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
                 {
                     __m128i sad8 = _mm_load_si128((__m128i*)(sad + d));
                     __m128i mask = _mm_cmpgt_epi16( thresh8, sad8 );
+                    mask = _mm_and_si128(mask, _mm_or_si128(_mm_cmpgt_epi16(d1,d8), _mm_cmpgt_epi16(d8,d2)));
                     if( _mm_movemask_epi8(mask) )
-                    {
-                        mask = _mm_and_si128(mask, _mm_or_si128(_mm_cmpgt_epi16(d1,d8), _mm_cmpgt_epi16(d8,d2)));
-                        if( _mm_movemask_epi8(mask) )
-                            break;
-                    }
+                        break;
                     d8 = _mm_add_epi16(d8, dd_8);
                 }
-#else
-                for( d = 0; d < ndisp; d++ )
-                {
-                    if( sad[d] <= thresh && (d < mind-1 || d > mind+1))
-                        break;
-                }
-#endif
                 if( d < ndisp )
                 {
                     dptr[y*dstep] = FILTERED;
@@ -511,6 +377,270 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
             }
         }
     }
+}
+#endif
+
+static void
+icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
+                               CvMat* disp, CvStereoBMState* state )
+{
+    int x, y, d;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int ndisp = state->numberOfDisparities;
+    int mindisp = state->minDisparity;
+    int lofs = MAX(ndisp - 1 + mindisp, 0);
+    int rofs = -MIN(ndisp - 1 + mindisp, 0);
+    int width = left->cols, height = left->rows;
+    int width1 = width - rofs - ndisp + 1;
+    int ftzero = state->preFilterCap;
+    int textureThreshold = state->textureThreshold;
+    int uniquenessRatio = state->uniquenessRatio;
+    short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
+
+    int *sad, *hsad0, *hsad, *hsad_sub, *htext;
+    uchar *cbuf0, *cbuf;
+    const uchar* lptr0 = left->data.ptr + lofs;
+    const uchar* rptr0 = right->data.ptr + rofs;
+    const uchar *lptr, *lptr_sub, *rptr;
+    short* dptr = disp->data.s;
+    int sstep = left->step;
+    int dstep = disp->step/sizeof(dptr[0]);
+    int cstep = height*ndisp;
+    const int TABSZ = 256;
+    uchar tab[TABSZ];
+
+    sad = (int*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
+    hsad0 = (int*)cvAlignPtr(sad + ndisp + 1);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
+    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
+
+    for( x = 0; x < TABSZ; x++ )
+        tab[x] = (uchar)abs(x - ftzero);
+
+    // initialize buffers
+    memset( hsad0, 0, height*ndisp*sizeof(hsad0[0]) );
+    memset( htext - wsz2 - 1, 0, (height + wsz + 1)*sizeof(htext[0]) );
+
+    for( x = -wsz2-1; x < wsz2; x++ )
+    {
+        hsad = hsad0; cbuf = cbuf0 + (x + wsz2 + 1)*cstep;
+        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1);
+        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1);
+
+        for( y = 0; y < height; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            for( d = 0; d < ndisp; d++ )
+            {
+                int diff = abs(lval - rptr[d]);
+                cbuf[d] = (uchar)diff;
+                hsad[d] = (int)(hsad[d] + diff);
+            }
+            htext[y] += tab[lval];
+        }
+    }
+
+    // initialize the left and right borders of the disparity map
+    for( y = 0; y < height; y++ )
+    {
+        for( x = 0; x < lofs; x++ )
+            dptr[y*dstep + x] = FILTERED;
+        for( x = lofs + width1; x < width; x++ )
+            dptr[y*dstep + x] = FILTERED;
+    }
+    dptr += lofs;
+
+    for( x = 0; x < width1; x++, dptr++ )
+    {
+        int x0 = x - wsz2 - 1, x1 = x + wsz2;
+        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep;
+        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep;
+        hsad = hsad0;
+        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
+        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
+        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
+
+        for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
+             hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
+        {
+            int lval = lptr[0];
+            for( d = 0; d < ndisp; d++ )
+            {
+                int diff = abs(lval - rptr[d]);
+                cbuf[d] = (uchar)diff;
+                hsad[d] = hsad[d] + diff - cbuf_sub[d];
+            }
+            htext[y] += tab[lval] - tab[lptr_sub[0]];
+        }
+
+        // fill borders
+        for( y = 0; y <= wsz2; y++ )
+        {
+            htext[height+y] = htext[height-1];
+            htext[-y-1] = htext[0];
+        }
+
+        // initialize sums
+        for( d = 0; d < ndisp; d++ )
+            sad[d] = (int)(hsad0[d]*(wsz2 + 2));
+        
+        hsad = hsad0 + ndisp;
+        for( y = 1; y < wsz2; y++, hsad += ndisp )
+            for( d = 0; d < ndisp; d++ )
+                sad[d] = (int)(sad[d] + hsad[d]);
+        int tsum = 0;
+        for( y = -wsz2-1; y < wsz2; y++ )
+            tsum += htext[y];
+
+        // finally, start the real processing
+        for( y = 0; y < height; y++ )
+        {
+            int minsad = INT_MAX, mind = -1;
+            hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
+            hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
+
+            for( d = 0; d < ndisp; d++ )
+            {
+                int currsad = sad[d] + hsad[d] - hsad_sub[d];
+                sad[d] = currsad;
+                if( currsad < minsad )
+                {
+                    minsad = currsad;
+                    mind = d;
+                }
+            }
+            tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
+            if( tsum < textureThreshold )
+            {
+                dptr[y*dstep] = FILTERED;
+                continue;
+            }
+
+            if( uniquenessRatio > 0 )
+            {
+                int thresh = minsad + (minsad * uniquenessRatio/100);
+                for( d = 0; d < ndisp; d++ )
+                {
+                    if( sad[d] <= thresh && (d < mind-1 || d > mind+1))
+                        break;
+                }
+                if( d < ndisp )
+                {
+                    dptr[y*dstep] = FILTERED;
+                    continue;
+                }
+            }
+            
+            {
+            sad[-1] = sad[1];
+            sad[ndisp] = sad[ndisp-2];
+            int p = sad[mind+1], n = sad[mind-1], d = p + n - 2*sad[mind];
+            dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
+            }
+        }
+    }
+}
+
+
+
+CV_IMPL void
+cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
+                              CvArr* disparr, CvStereoBMState* state )
+{
+    CV_FUNCNAME( "cvFindStereoCorrespondenceBM" );
+
+    __BEGIN__;
+
+    CvMat lstub, *left0 = cvGetMat( leftarr, &lstub );
+    CvMat rstub, *right0 = cvGetMat( rightarr, &rstub );
+    CvMat left, right;
+    CvMat dstub, *disp = cvGetMat( disparr, &dstub );
+    int bufSize, width, width1, height;
+    int wsz, ndisp, mindisp, lofs, rofs;
+
+    if( !CV_ARE_SIZES_EQ(left0, right0) ||
+        !CV_ARE_SIZES_EQ(disp, left0) )
+        CV_ERROR( CV_StsUnmatchedSizes, "All the images must have the same size" );
+
+    if( CV_MAT_TYPE(left0->type) != CV_8UC1 ||
+        !CV_ARE_TYPES_EQ(left0, right0) ||
+        CV_MAT_TYPE(disp->type) != CV_16SC1 )
+        CV_ERROR( CV_StsUnsupportedFormat,
+        "Both input images must have 8uC1 format and the disparity image must have 16sC1 format" );
+
+    if( !state )
+        CV_ERROR( CV_StsNullPtr, "Stereo BM state is NULL." );
+
+    if( state->preFilterType != CV_STEREO_BM_NORMALIZED_RESPONSE )
+        CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
+
+    if( state->preFilterSize < 5 || state->preFilterSize > 255 || state->preFilterSize % 2 == 0 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..21+" );
+
+    if( state->preFilterCap < 1 || state->preFilterCap > 63 )
+        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31+" );
+
+    if( state->SADWindowSize < 5 || state->SADWindowSize > 255 || state->SADWindowSize % 2 == 0 ||
+        state->SADWindowSize >= MIN(left0->cols, left0->rows) )
+        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..255 and "
+                                    "be not larger than image width or height" );
+
+    if( state->numberOfDisparities <= 0 || state->numberOfDisparities % 16 != 0 )
+        CV_ERROR( CV_StsOutOfRange, "numberOfDisparities must be positive and divisble by 16" );
+    if( state->textureThreshold < 0 )
+        CV_ERROR( CV_StsOutOfRange, "texture threshold must be non-negative" );
+    if( state->uniquenessRatio < 0 )
+        CV_ERROR( CV_StsOutOfRange, "uniqueness ratio must be non-negative" );
+
+    if( !state->preFilteredImg0 ||
+        state->preFilteredImg0->cols*state->preFilteredImg0->rows < left0->cols*left0->rows )
+    {
+        cvReleaseMat( &state->preFilteredImg0 );
+        cvReleaseMat( &state->preFilteredImg1 );
+
+        state->preFilteredImg0 = cvCreateMat( left0->rows, left0->cols, CV_8U );
+        state->preFilteredImg1 = cvCreateMat( left0->rows, left0->cols, CV_8U );
+    }
+    left = cvMat(left0->rows, left0->cols, CV_8U, state->preFilteredImg0->data.ptr);
+    right = cvMat(right0->rows, right0->cols, CV_8U, state->preFilteredImg1->data.ptr);
+    
+    mindisp = state->minDisparity;
+    ndisp = state->numberOfDisparities;
+
+    width = left0->cols;
+    height = left0->rows;
+    lofs = MAX(ndisp - 1 + mindisp, 0);
+    rofs = -MIN(ndisp - 1 + mindisp, 0);
+    width1 = width - rofs - ndisp + 1;
+    if( lofs >= width || rofs >= width || width1 < 1 )
+    {
+        int FILTERED = (short)((state->minDisparity - 1) << DISPARITY_SHIFT);
+        cvSet( disp, cvScalarAll(FILTERED) );
+        EXIT;
+    }
+
+    wsz = state->SADWindowSize;
+    bufSize = (ndisp + 2)*sizeof(int) + height*ndisp*sizeof(int) +
+        (height + wsz + 2)*sizeof(int) + height*ndisp*(wsz+1)*sizeof(uchar);
+    bufSize = MAX(bufSize, (width + state->preFilterSize + 2)*(int)sizeof(int)) + 1024;
+    if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize )
+    {
+        cvReleaseMat( &state->slidingSumBuf );
+        state->slidingSumBuf = cvCreateMat( 1, bufSize, CV_8U );
+    }
+    
+    icvPrefilter( left0, &left, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
+    icvPrefilter( right0, &right, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
+
+#if CV_SSE2
+    if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
+    {
+        icvFindStereoCorrespondenceBM_SSE2( &left, &right, disp, state );
+        EXIT;
+    }
+#endif
+
+    icvFindStereoCorrespondenceBM( &left, &right, disp, state );
 
     __END__;
 }
