@@ -98,6 +98,9 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 {
 	int  domains[] =
 	{
+#ifdef HAVE_VIDEOINPUT
+        CV_CAP_DSHOW,
+#endif
 		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394
 		CV_CAP_STEREO,
 		CV_CAP_VFW,        // identical to CV_CAP_V4L
@@ -106,7 +109,6 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 		CV_CAP_UNICAP,
 		-1
 	};
-
 
 	// interpret preferred interface (0 = autodetect)
 	int pref = (index / 100) * 100;
@@ -125,6 +127,14 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 
 		switch (domains[i])
 		{
+        #ifdef HAVE_VIDEOINPUT
+        case CV_CAP_DSHOW:
+            capture = cvCreateCameraCapture_DShow (index);
+            if (capture)
+                return capture;
+            break;
+        #endif
+
 		#ifdef HAVE_TYZX
 		case CV_CAP_STEREO:
 			capture = cvCreateCameraCapture_TYZX (index);

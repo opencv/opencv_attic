@@ -83,6 +83,12 @@ openexr-1.4.0 - OpenEXR is a high dynamic-range (HDR) image file format develope
 
 ------------------------------------------------------------------------------------
 
+videoInput-0.1991 - Video capturing library for Windows using DirectShow as backend
+             Written by Theodore Watson
+             http://muonics.net/school/spring05/videoInput/
+
+------------------------------------------------------------------------------------
+
 The folder lib also contains libvfw_*.a import libraries that enable to
 build vfw camera/avi capture code of highgui with Mingw compiler.
 

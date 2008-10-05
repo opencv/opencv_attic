@@ -92,6 +92,10 @@ struct CvVideoWriter
 #ifdef WIN32
 #define HAVE_VFW 1
 
+#if _MSC_VER >= 1400
+#define HAVE_VIDEOINPUT 1
+#endif
+
 /* uncomment to enable OpenEXR codec (will not compile under MSVC6) */
 //#define HAVE_ILMIMF 1
 
@@ -130,6 +134,11 @@ CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
                                           double fps, CvSize frameSize, int is_color );
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
+
+#ifdef HAVE_VIDEOINPUT
+CvCapture* cvCreateCameraCapture_DShow( int index );
+#endif
+
 #endif
 
 CVAPI(int) cvHaveImageReader(const char* filename);
