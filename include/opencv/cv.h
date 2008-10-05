@@ -1352,7 +1352,7 @@ CVAPI(void) cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
 #define CV_FM_LMEDS_ONLY  CV_LMEDS
 #define CV_FM_RANSAC_ONLY CV_RANSAC
 #define CV_FM_LMEDS CV_LMEDS
-#define CV_FM_RANSAC CV_LMEDS
+#define CV_FM_RANSAC CV_RANSAC
 CVAPI(int) cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method CV_DEFAULT(CV_FM_RANSAC),
