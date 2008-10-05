@@ -39,7 +39,7 @@
 /* FFMpeg video library */
 #undef HAVE_FFMPEG
 
-/* FFMpeg's libswscale library */
+/* ffmpeg's libswscale */
 #undef HAVE_FFMPEG_SWSCALE
 
 /* GStreamer multimedia framework */

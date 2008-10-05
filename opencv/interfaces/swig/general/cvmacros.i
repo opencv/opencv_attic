@@ -114,6 +114,7 @@ int CV_IS_GRAPH_VERTEX_VISITED(CvGraphVtx * vtx);
 int CV_IS_GRAPH_EDGE_VISITED(CvGraphEdge * edge);
 CvScalar CV_RGB(double r,double g,int b);
 void CV_NEXT_LINE_POINT(CvLineIterator line_iterator);
+void CV_SET_IMAGE_IO_FUNCTIONS();
 void CV_INIT_3X3_DELTAS(double * deltas,int step,int nch);
 int CV_IS_HAAR_CLASSIFIER(void * haar);
 void cvCalcBackProject(IplImage * image,CvArr * dst,CvHistogram * hist);

@@ -72,8 +72,9 @@ am_lib_cv_la_OBJECTS = cvaccum.lo cvadapthresh.lo cvapprox.lo \
 	cvpyramids.lo cvpyrsegmentation.lo cvrotcalipers.lo \
 	cvsamplers.lo cvsegmentation.lo cvshapedescr.lo cvsmooth.lo \
 	cvsnakes.lo cvstereobm.lo cvstereogc.lo cvsubdivision2d.lo \
-	cvsumpixels.lo cvswitcher.lo cvtables.lo cvtemplmatch.lo \
-	cvthresh.lo cvundistort.lo cvutils.lo cvkdtree.lo
+	cvsumpixels.lo cvsurf.lo cvswitcher.lo cvtables.lo \
+	cvtemplmatch.lo cvthresh.lo cvundistort.lo cvutils.lo \
+	cvkdtree.lo
 lib_cv_la_OBJECTS = $(am_lib_cv_la_OBJECTS)
 lib_cv_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -297,7 +298,7 @@ lib_cv_la_SOURCES = \
     cvoptflowlk.cpp cvpgh.cpp cvposit.cpp cvprecomp.cpp cvpyramids.cpp \
     cvpyrsegmentation.cpp cvrotcalipers.cpp cvsamplers.cpp cvsegmentation.cpp \
     cvshapedescr.cpp cvsmooth.cpp cvsnakes.cpp cvstereobm.cpp cvstereogc.cpp \
-    cvsubdivision2d.cpp cvsumpixels.cpp cvswitcher.cpp cvtables.cpp \
+    cvsubdivision2d.cpp cvsumpixels.cpp cvsurf.cpp cvswitcher.cpp cvtables.cpp \
     cvtemplmatch.cpp cvthresh.cpp cvundistort.cpp cvutils.cpp cvkdtree.cpp
 
 lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
@@ -445,6 +446,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvstereogc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsubdivision2d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsumpixels.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsurf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvswitcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtables.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtemplmatch.Plo@am__quote@

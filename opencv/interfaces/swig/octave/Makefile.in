@@ -13,6 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -33,7 +34,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig/octave
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
+DIST_COMMON = $(am__dist_octave_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -47,6 +49,16 @@ CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_octave_DATA_DIST = opencv-1.0.tar.gz
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(octavedir)"
+dist_octaveDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_octave_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -254,6 +266,7 @@ EXTRA_DIST = \
 @BUILD_OCTAVE_WRAPPERS_TRUE@PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 @BUILD_OCTAVE_WRAPPERS_TRUE@PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 @BUILD_OCTAVE_WRAPPERS_TRUE@octavedir = $(pkgdatadir)/octave
+@BUILD_OCTAVE_WRAPPERS_TRUE@dist_octave_DATA = opencv-1.0.tar.gz
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
@@ -296,6 +309,23 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-dist_octaveDATA: $(dist_octave_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(octavedir)" || $(MKDIR_P) "$(DESTDIR)$(octavedir)"
+	@list='$(dist_octave_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_octaveDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(octavedir)/$$f'"; \
+	  $(dist_octaveDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(octavedir)/$$f"; \
+	done
+
+uninstall-dist_octaveDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_octave_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(octavedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(octavedir)/$$f"; \
+	done
 tags: TAGS
 TAGS:
 
@@ -331,8 +361,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile
+all-am: Makefile $(DATA)
 installdirs:
+	for dir in "$(DESTDIR)$(octavedir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -375,7 +408,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dist_octaveDATA
 
 install-dvi: install-dvi-am
 
@@ -409,21 +442,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-dist_octaveDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	clean-local distclean distclean-generic distclean-libtool \
 	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am
+	install-am install-data install-data-am \
+	install-dist_octaveDATA install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_octaveDATA
 
 
 # SWIG #######################################################################
@@ -463,7 +497,6 @@ uninstall-am:
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/otherlibs/highgui/highgui.h         \
 @UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_OCTAVE_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
-#dist_octave_DATA = opencv-1.0.tar.gz
 
 @BUILD_OCTAVE_WRAPPERS_TRUE@opencv-1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 @BUILD_OCTAVE_WRAPPERS_TRUE@	mkdir -p $(PKG_NAME)
