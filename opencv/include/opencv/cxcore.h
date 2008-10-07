@@ -676,6 +676,15 @@ CVAPI(void) cvRandArr( CvRNG* rng, CvArr* arr, int dist_type,
 CVAPI(void) cvRandShuffle( CvArr* mat, CvRNG* rng,
                            double iter_factor CV_DEFAULT(1.));
 
+#define CV_SORT_EVERY_ROW 0
+#define CV_SORT_EVERY_COLUMN 1
+#define CV_SORT_ASCENDING 0
+#define CV_SORT_DESCENDING 16
+
+CVAPI(void) cvSort( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
+                    CvArr* idxmat CV_DEFAULT(NULL),
+                    int flags CV_DEFAULT(0));
+
 /* Finds real roots of a cubic equation */
 CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
