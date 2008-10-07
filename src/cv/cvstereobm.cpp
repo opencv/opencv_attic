@@ -45,12 +45,11 @@
 \****************************************************************************************/
 
 #include "_cv.h"
-// replace "#if 0" with "#if 1" to force using SSE2 intrinsics
-#if 0
+/*
 #undef CV_SSE2
 #define CV_SSE2 1
 #include "emmintrin.h"
-#endif
+*/
 
 CV_IMPL CvStereoBMState*
 cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
@@ -106,10 +105,10 @@ cvReleaseStereoBMState( CvStereoBMState** state )
     __END__;
 }
 
-static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, CvMat* buf )
+static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, uchar* buf )
 {
     int x, y, wsz2 = winsize/2;
-    int* vsum = (int*)cvAlignPtr(buf->data.ptr + (wsz2 + 1)*sizeof(vsum[0]), 32);
+    int* vsum = (int*)cvAlignPtr(buf + (wsz2 + 1)*sizeof(vsum[0]), 32);
     int scale_g = winsize*winsize/8, scale_s = (1024 + scale_g)/(scale_g*2);
     const int OFS = 256*5, TABSZ = OFS*2 + 256;
     uchar tab[TABSZ];
@@ -170,15 +169,18 @@ static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero,
     }
 }
 
+
 static const int DISPARITY_SHIFT = 4;
 
 #if CV_SSE2
 static void
 icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
-                                    CvMat* disp, CvStereoBMState* state )
+                                    CvMat* disp, CvStereoBMState* state,
+                                    uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
     int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
     int lofs = MAX(ndisp - 1 + mindisp, 0);
@@ -199,30 +201,30 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
     short* dptr = disp->data.s;
     int sstep = left->step;
     int dstep = disp->step/sizeof(dptr[0]);
-    int cstep = height*ndisp;
+    int cstep = (height + dy0 + dy1)*ndisp;
     const int TABSZ = 256;
     uchar tab[TABSZ];
     const __m128i d0_8 = _mm_setr_epi16(0,1,2,3,4,5,6,7), dd_8 = _mm_set1_epi16(8);
 
-    sad = (ushort*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
-    hsad0 = (ushort*)cvAlignPtr(sad + ndisp + 1);
-    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
-    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
+    sad = (ushort*)cvAlignPtr(buf + sizeof(sad[0]));
+    hsad0 = (ushort*)cvAlignPtr(sad + ndisp + 1 + dy0*ndisp);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + (height+dy1)*ndisp) + wsz2 + 2);
+    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2 + dy0*ndisp);
 
     for( x = 0; x < TABSZ; x++ )
         tab[x] = (uchar)abs(x - ftzero);
 
     // initialize buffers
-    memset( hsad0, 0, height*ndisp*sizeof(hsad0[0]) );
+    memset( hsad0 - dy0*ndisp, 0, (height + dy0 + dy1)*ndisp*sizeof(hsad0[0]) );
     memset( htext - wsz2 - 1, 0, (height + wsz + 1)*sizeof(htext[0]) );
 
     for( x = -wsz2-1; x < wsz2; x++ )
     {
-        hsad = hsad0; cbuf = cbuf0 + (x + wsz2 + 1)*cstep;
-        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1);
-        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1);
+        hsad = hsad0 - dy0*ndisp; cbuf = cbuf0 + (x + wsz2 + 1)*cstep - dy0*ndisp;
+        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1) - dy0*sstep;
+        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1) - dy0*sstep;
 
-        for( y = 0; y < height; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
+        for( y = -dy0; y < height + dy1; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
         {
             int lval = lptr[0];
             for( d = 0; d < ndisp; d++ )
@@ -248,14 +250,14 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
     for( x = 0; x < width1; x++, dptr++ )
     {
         int x0 = x - wsz2 - 1, x1 = x + wsz2;
-        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep;
-        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep;
-        hsad = hsad0;
-        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
-        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
-        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
+        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep - dy0*ndisp;
+        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep - dy0*ndisp;
+        hsad = hsad0 - dy0*ndisp;
+        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs) - dy0*sstep;
+        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs) - dy0*sstep;
+        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs) - dy0*sstep;
 
-        for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
+        for( y = -dy0; y < height + dy1; y++, cbuf += ndisp, cbuf_sub += ndisp,
              hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
         {
             int lval = lptr[0];
@@ -279,18 +281,17 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
         }
 
         // fill borders
-        for( y = 0; y <= wsz2; y++ )
-        {
-            htext[height+y] = htext[height-1];
-            htext[-y-1] = htext[0];
-        }
+        for( y = dy1; y <= wsz2; y++ )
+            htext[height+y] = htext[height+dy1-1];
+        for( y = -wsz2-1; y < -dy0; y++ )
+            htext[y] = htext[-dy0];
 
         // initialize sums
         for( d = 0; d < ndisp; d++ )
-            sad[d] = (ushort)(hsad0[d]*(wsz2 + 2));
+            sad[d] = (ushort)(hsad0[d-ndisp*dy0]*(wsz2 + 2 - dy0));
         
-        hsad = hsad0 + ndisp;
-        for( y = 1; y < wsz2; y++, hsad += ndisp )
+        hsad = hsad0 + (1 - dy0)*ndisp;
+        for( y = 1 - dy0; y < wsz2; y++, hsad += ndisp )
             for( d = 0; d < ndisp; d++ )
                 sad[d] = (ushort)(sad[d] + hsad[d]);
         int tsum = 0;
@@ -301,8 +302,8 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
         for( y = 0; y < height; y++ )
         {
             int minsad = INT_MAX, mind = -1;
-            hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
-            hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
+            hsad = hsad0 + MIN(y + wsz2, height+dy1-1)*ndisp;
+            hsad_sub = hsad0 + MAX(y - wsz2 - 1, -dy0)*ndisp;
             __m128i minsad8 = _mm_set1_epi16(SHRT_MAX);
             __m128i mind8 = _mm_set1_epi16(-1), d8 = d0_8, mask;
 
@@ -382,10 +383,12 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
 
 static void
 icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
-                               CvMat* disp, CvStereoBMState* state )
+                               CvMat* disp, CvStereoBMState* state,
+                               uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
     int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
     int lofs = MAX(ndisp - 1 + mindisp, 0);
@@ -405,29 +408,29 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
     short* dptr = disp->data.s;
     int sstep = left->step;
     int dstep = disp->step/sizeof(dptr[0]);
-    int cstep = height*ndisp;
+    int cstep = (height+dy0+dy1)*ndisp;
     const int TABSZ = 256;
     uchar tab[TABSZ];
 
-    sad = (int*)cvAlignPtr(state->slidingSumBuf->data.ptr + sizeof(sad[0]));
-    hsad0 = (int*)cvAlignPtr(sad + ndisp + 1);
-    htext = (int*)cvAlignPtr((int*)(hsad0 + height*ndisp) + wsz2 + 2);
-    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2);
+    sad = (int*)cvAlignPtr(buf + sizeof(sad[0]));
+    hsad0 = (int*)cvAlignPtr(sad + ndisp + 1 + dy0*ndisp);
+    htext = (int*)cvAlignPtr((int*)(hsad0 + (height+dy1)*ndisp) + wsz2 + 2);
+    cbuf0 = (uchar*)cvAlignPtr(htext + height + wsz2 + 2 + dy0*ndisp);
 
     for( x = 0; x < TABSZ; x++ )
         tab[x] = (uchar)abs(x - ftzero);
 
     // initialize buffers
-    memset( hsad0, 0, height*ndisp*sizeof(hsad0[0]) );
+    memset( hsad0 - dy0*ndisp, 0, (height + dy0 + dy1)*ndisp*sizeof(hsad0[0]) );
     memset( htext - wsz2 - 1, 0, (height + wsz + 1)*sizeof(htext[0]) );
 
     for( x = -wsz2-1; x < wsz2; x++ )
     {
-        hsad = hsad0; cbuf = cbuf0 + (x + wsz2 + 1)*cstep;
-        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1);
-        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1);
+        hsad = hsad0 - dy0*ndisp; cbuf = cbuf0 + (x + wsz2 + 1)*cstep - dy0*ndisp;
+        lptr = lptr0 + MIN(MAX(x, -lofs), width-lofs-1) - dy0*sstep;
+        rptr = rptr0 + MIN(MAX(x, -rofs), width-rofs-1) - dy0*sstep;
 
-        for( y = 0; y < height; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
+        for( y = -dy0; y < height + dy1; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
         {
             int lval = lptr[0];
             for( d = 0; d < ndisp; d++ )
@@ -453,14 +456,14 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
     for( x = 0; x < width1; x++, dptr++ )
     {
         int x0 = x - wsz2 - 1, x1 = x + wsz2;
-        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep;
-        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep;
-        hsad = hsad0;
-        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs);
-        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs);
-        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs);
+        const uchar* cbuf_sub = cbuf0 + ((x0 + wsz2 + 1) % (wsz + 1))*cstep - dy0*ndisp;
+        uchar* cbuf = cbuf0 + ((x1 + wsz2 + 1) % (wsz + 1))*cstep - dy0*ndisp;
+        hsad = hsad0 - dy0*ndisp;
+        lptr_sub = lptr0 + MIN(MAX(x0, -lofs), width-1-lofs) - dy0*sstep;
+        lptr = lptr0 + MIN(MAX(x1, -lofs), width-1-lofs) - dy0*sstep;
+        rptr = rptr0 + MIN(MAX(x1, -rofs), width-1-rofs) - dy0*sstep;
 
-        for( y = 0; y < height; y++, cbuf += ndisp, cbuf_sub += ndisp,
+        for( y = -dy0; y < height + dy1; y++, cbuf += ndisp, cbuf_sub += ndisp,
              hsad += ndisp, lptr += sstep, lptr_sub += sstep, rptr += sstep )
         {
             int lval = lptr[0];
@@ -474,18 +477,17 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
         }
 
         // fill borders
-        for( y = 0; y <= wsz2; y++ )
-        {
-            htext[height+y] = htext[height-1];
-            htext[-y-1] = htext[0];
-        }
+        for( y = dy1; y <= wsz2; y++ )
+            htext[height+y] = htext[height+dy1-1];
+        for( y = -wsz2-1; y < -dy0; y++ )
+            htext[y] = htext[-dy0];
 
         // initialize sums
         for( d = 0; d < ndisp; d++ )
-            sad[d] = (int)(hsad0[d]*(wsz2 + 2));
+            sad[d] = (int)(hsad0[d-ndisp*dy0]*(wsz2 + 2 - dy0));
         
-        hsad = hsad0 + ndisp;
-        for( y = 1; y < wsz2; y++, hsad += ndisp )
+        hsad = hsad0 + (1 - dy0)*ndisp;
+        for( y = 1 - dy0; y < wsz2; y++, hsad += ndisp )
             for( d = 0; d < ndisp; d++ )
                 sad[d] = (int)(sad[d] + hsad[d]);
         int tsum = 0;
@@ -496,8 +498,8 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
         for( y = 0; y < height; y++ )
         {
             int minsad = INT_MAX, mind = -1;
-            hsad = hsad0 + MIN(y + wsz2, height-1)*ndisp;
-            hsad_sub = hsad0 + MAX(y - wsz2 - 1, 0)*ndisp;
+            hsad = hsad0 + MIN(y + wsz2, height+dy1-1)*ndisp;
+            hsad_sub = hsad0 + MAX(y - wsz2 - 1, -dy0)*ndisp;
 
             for( d = 0; d < ndisp; d++ )
             {
@@ -542,7 +544,6 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
 }
 
 
-
 CV_IMPL void
 cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
                               CvArr* disparr, CvStereoBMState* state )
@@ -555,8 +556,9 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     CvMat rstub, *right0 = cvGetMat( rightarr, &rstub );
     CvMat left, right;
     CvMat dstub, *disp = cvGetMat( disparr, &dstub );
-    int bufSize, width, width1, height;
+    int bufSize0, bufSize1, bufSize, width, width1, height;
     int wsz, ndisp, mindisp, lofs, rofs;
+    int i, n = cvGetNumThreads();
 
     if( !CV_ARE_SIZES_EQ(left0, right0) ||
         !CV_ARE_SIZES_EQ(disp, left0) )
@@ -575,10 +577,10 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
         CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
 
     if( state->preFilterSize < 5 || state->preFilterSize > 255 || state->preFilterSize % 2 == 0 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..21+" );
+        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..255" );
 
     if( state->preFilterCap < 1 || state->preFilterCap > 63 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..31+" );
+        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..63" );
 
     if( state->SADWindowSize < 5 || state->SADWindowSize > 255 || state->SADWindowSize % 2 == 0 ||
         state->SADWindowSize >= MIN(left0->cols, left0->rows) )
@@ -620,27 +622,58 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     }
 
     wsz = state->SADWindowSize;
-    bufSize = (ndisp + 2)*sizeof(int) + height*ndisp*sizeof(int) +
-        (height + wsz + 2)*sizeof(int) + height*ndisp*(wsz+1)*sizeof(uchar);
-    bufSize = MAX(bufSize, (width + state->preFilterSize + 2)*(int)sizeof(int)) + 1024;
-    if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize )
+    bufSize0 = (ndisp + 2)*sizeof(int) + (height+wsz+2)*ndisp*sizeof(int) +
+        (height + wsz + 2)*sizeof(int) + (height+wsz+2)*ndisp*(wsz+1)*sizeof(uchar) + 256;
+    bufSize1 = (width + state->preFilterSize + 2)*sizeof(int) + 256;
+    bufSize = MAX(bufSize0, bufSize1);
+    n = MAX(MIN(height/wsz, n), 1);
+
+    if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize*n )
     {
         cvReleaseMat( &state->slidingSumBuf );
-        state->slidingSumBuf = cvCreateMat( 1, bufSize, CV_8U );
+        state->slidingSumBuf = cvCreateMat( 1, bufSize*n, CV_8U );
     }
-    
-    icvPrefilter( left0, &left, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
-    icvPrefilter( right0, &right, state->preFilterSize, state->preFilterCap, state->slidingSumBuf );
 
-#if CV_SSE2
-    if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
-    {
-        icvFindStereoCorrespondenceBM_SSE2( &left, &right, disp, state );
-        EXIT;
-    }
+#ifdef _OPENMP
+#pragma omp parallel sections num_threads(n)
 #endif
+    {
+    #ifdef _OPENMP
+    #pragma omp section
+    #endif
+        icvPrefilter( left0, &left, state->preFilterSize,
+            state->preFilterCap, state->slidingSumBuf->data.ptr );
+    #ifdef _OPENMP
+    #pragma omp section
+    #endif
+        icvPrefilter( right0, &right, state->preFilterSize,
+            state->preFilterCap, state->slidingSumBuf->data.ptr + bufSize1*(n>1) );
+    }
 
-    icvFindStereoCorrespondenceBM( &left, &right, disp, state );
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(n), schedule(static)
+#endif
+    for( i = 0; i < n; i++ )
+    {
+        int thread_id = cvGetThreadNum();
+        CvMat left_i, right_i, disp_i;
+        int row0 = i*left.rows/n, row1 = (i+1)*left.rows/n;
+        cvGetRows( &left, &left_i, row0, row1 );
+        cvGetRows( &right, &right_i, row0, row1 );
+        cvGetRows( disp, &disp_i, row0, row1 );
+    #if CV_SSE2
+        if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
+        {
+            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i, &disp_i, state,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0, row0, left.rows-row1 );
+        }
+        else
+    #endif
+        {
+            icvFindStereoCorrespondenceBM( &left_i, &right_i, &disp_i, state,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0, row0, left.rows-row1 );
+        }
+    }
 
     __END__;
 }
