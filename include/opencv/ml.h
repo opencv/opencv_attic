@@ -593,11 +593,8 @@ public:
     enum { START_E_STEP=1, START_M_STEP=2, START_AUTO_STEP=0 };
 
     CvEM();
-
-    // TODO: implement non-default constructor!
-    //       see bug 1830346 on the sourceforge bug tracker
-    //CvEM( const CvMat* samples, const CvMat* sample_idx=0,
-    //      CvEMParams params=CvEMParams(), CvMat* labels=0 );
+    CvEM( const CvMat* samples, const CvMat* sample_idx=0,
+          CvEMParams params=CvEMParams(), CvMat* labels=0 );
 
     virtual ~CvEM();
 
