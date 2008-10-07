@@ -75,7 +75,6 @@ CvEM::CvEM()
     covs = cov_rotate_mats = 0;
 }
 
-/*
 CvEM::CvEM( const CvMat* samples, const CvMat* sample_idx,
             CvEMParams params, CvMat* labels )
 {
@@ -83,9 +82,8 @@ CvEM::CvEM( const CvMat* samples, const CvMat* sample_idx,
     covs = cov_rotate_mats = 0;
 
     // just invoke the train() method
-    this->train(samples, sample_idx, params, labels);
+    train(samples, sample_idx, params, labels);
 }
-*/
 
 CvEM::~CvEM()
 {
