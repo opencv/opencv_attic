@@ -1246,14 +1246,16 @@ static CvVideoWriter_QT* icvCreateVideoWriter_QT(
         static_cast<CvVideoWriter_QT*>( cvAlloc( sizeof( CvVideoWriter_QT ) ) );
     memset( video_writer, 0, sizeof( CvVideoWriter_QT ) );
 
-    Handle data_ref = NULL;
-    OSType data_ref_type;
-    DataHandler data_handler = NULL;
-    Movie movie = NULL;
-    ICMCompressionSessionOptionsRef options_ref = NULL;
-    ICMCompressionSessionRef compression_session_ref = NULL;
-
-    OSErr err = noErr;
+    Handle                            data_ref     = NULL;
+    OSType                            data_ref_type;
+    DataHandler                       data_handler = NULL;
+    Movie                             movie        = NULL;
+    ICMCompressionSessionOptionsRef   options_ref  = NULL;
+    ICMCompressionSessionRef          compression_session_ref = NULL;
+    CFStringRef                       out_path     = nil;
+    Track                             video_track  = nil;
+    Media                             video        = nil;
+    OSErr                             err          = noErr;
 
     __BEGIN__
 
@@ -1279,8 +1281,7 @@ static CvVideoWriter_QT* icvCreateVideoWriter_QT(
     }
 
     // convert the file name into a data reference
-    CFStringRef out_path = CFStringCreateWithCString( kCFAllocatorDefault,
-        filename, kCFStringEncodingISOLatin1 );
+    out_path = CFStringCreateWithCString( kCFAllocatorDefault, filename, kCFStringEncodingISOLatin1 );
     CV_ASSERT( out_path != nil );
     err = QTNewDataReferenceFromFullPathCFString( out_path, kQTPOSIXPathStyle,
         0, &data_ref, &data_ref_type );
@@ -1299,19 +1300,15 @@ static CvVideoWriter_QT* icvCreateVideoWriter_QT(
     }
 
     // create a track with video
-    Track video_track =
-        NewMovieTrack(
-            movie,
+    video_track = NewMovieTrack (movie,
             FixRatio( frame_size.width, 1 ),
             FixRatio( frame_size.height, 1 ),
-            kNoVolume
-        );
+            kNoVolume);
     err = GetMoviesError();
     if ( err != noErr ) {
         CV_ERROR( CV_StsInternal, "Cannot create video track" );
     }
-    Media video =
-        NewTrackMedia( video_track, VideoMediaType, TIME_SCALE, nil, 0 );
+    video = NewTrackMedia( video_track, VideoMediaType, TIME_SCALE, nil, 0 );
     err = GetMoviesError();
     if ( err != noErr ) {
         CV_ERROR( CV_StsInternal, "Cannot create video media" );
