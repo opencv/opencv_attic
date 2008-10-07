@@ -970,4 +970,237 @@ cvRange( CvArr* arr, double start, double end )
     return ok ? arr : 0;
 }
 
+
+#define ICV_LT_BY_IDX(a, b) (aux[a] < aux[b])
+
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx64f, int, ICV_LT_BY_IDX, const double* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx32f, int, ICV_LT_BY_IDX, const float* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx32s, int, ICV_LT_BY_IDX, const int* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx16u, int, ICV_LT_BY_IDX, const ushort* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx16s, int, ICV_LT_BY_IDX, const short* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx8u, int, ICV_LT_BY_IDX, const uchar* )
+static CV_IMPLEMENT_QSORT_EX( icvSortIdx8s, int, ICV_LT_BY_IDX, const schar* )
+
+static CV_IMPLEMENT_QSORT_EX( icvSort64f, double, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort32f, float, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort32s, int, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort16u, ushort, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort16s, short, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort8u, uchar, CV_LT, int )
+static CV_IMPLEMENT_QSORT_EX( icvSort8s, schar, CV_LT, int )
+
+typedef void (*CvSortFunc)( void* arr, size_t n, int );
+typedef void (*CvSortIdxFunc)( int* arr, size_t n, const void* );
+
+static inline void
+icvCopy1D( const void* src, int s, void* dst, int d, int n, int elemSize )
+{
+    int i;
+    switch( elemSize )
+    {
+    case 1:
+        for( i = 0; i < n; i++ )
+            ((uchar*)dst)[i*d] = ((uchar*)src)[i*s];
+        break;
+    case 2:
+        for( i = 0; i < n; i++ )
+            ((ushort*)dst)[i*d] = ((ushort*)src)[i*s];
+        break;
+    case 4:
+        for( i = 0; i < n; i++ )
+            ((int*)dst)[i*d] = ((int*)src)[i*s];
+        break;
+    case 8:
+        for( i = 0; i < n; i++ )
+            ((int64*)dst)[i*d] = ((int64*)src)[i*s];
+        break;
+    default:
+        assert(0);
+    }
+}
+
+static void
+icvShuffle1D( const uchar* src, const int* idx, uchar* dst, int d, int n, int elemSize )
+{
+    int i;
+    switch( elemSize )
+    {
+    case 1:
+        for( i = 0; i < n; i++ )
+            dst[i*d] = src[idx[i]];
+        break;
+    case 2:
+        for( i = 0; i < n; i++ )
+            ((ushort*)dst)[i*d] = ((ushort*)src)[idx[i]];
+        break;
+    case 4:
+        for( i = 0; i < n; i++ )
+            ((int*)dst)[i*d] = ((int*)src)[idx[i]];
+        break;
+    case 8:
+        for( i = 0; i < n; i++ )
+            ((int64*)dst)[i*d] = ((int64*)src)[idx[i]];
+        break;
+    default:
+        assert(0);
+    }
+}
+
+
+CV_IMPL void
+cvSort( const CvArr* _src, CvArr* _dst, CvArr* _idx, int flags )
+{
+    uchar *tsrc = 0;
+    int* tidx = 0;
+    
+    CV_FUNCNAME("cvSort");
+
+    __BEGIN__;
+
+    CvMat sstub, *src = cvGetMat(_src, &sstub);
+    CvMat dstub, *dst = _dst ? cvGetMat(_dst, &dstub) : 0;
+    CvMat istub, *idx = _idx ? cvGetMat(_idx, &istub) : 0;
+    int type = CV_MAT_TYPE(src->type), elemSize = CV_ELEM_SIZE(type);
+    int sstep = src->step, dstep = dst ? dst->step : 0;
+    int istep = idx ? idx->step/sizeof(int) : 0;
+    int i, len = src->cols;
+    CvSortFunc sortFunc = 0;
+    CvSortIdxFunc sortIdxFunc = 0;
+
+    if( CV_MAT_CN( src->type ) != 1 )
+        CV_ERROR( CV_StsUnsupportedFormat, "The input matrix should be a one-channel matrix." );
+    if( idx )
+    {
+        if( CV_MAT_TYPE( idx->type ) != CV_32SC1)
+            CV_ERROR( CV_StsUnsupportedFormat, "The index matrix must be CV_32SC1." );
+
+        if( !CV_ARE_SIZES_EQ( idx, src ))
+            CV_ERROR( CV_StsUnmatchedSizes, "The input matrix and index matrix must be of the same size" );
+    }
+
+    if( dst )
+    {
+        if( !CV_ARE_TYPES_EQ(src, dst) )
+            CV_ERROR( CV_StsUnmatchedFormats, "The input and output matrix must be of the same type" );
+
+        if( !CV_ARE_SIZES_EQ(src, dst) )
+            CV_ERROR( CV_StsUnmatchedSizes, "The input and output matrix must be of the same size" );
+    }
+
+    if( !idx && !dst )
+        CV_ERROR( CV_StsNullPtr, "At least one of index array or destination array must be non-NULL" );
+
+    if( type == CV_8U )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx8u, sortFunc = (CvSortFunc)icvSort8u;
+    else if( type == CV_8S )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx8s, sortFunc = (CvSortFunc)icvSort8s;
+    else if( type == CV_16U )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx16u, sortFunc = (CvSortFunc)icvSort16u;
+    else if( type == CV_16S )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx16s, sortFunc = (CvSortFunc)icvSort16s;
+    else if( type == CV_32S )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx32s, sortFunc = (CvSortFunc)icvSort32s;
+    else if( type == CV_32F )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx32f, sortFunc = (CvSortFunc)icvSort32f;
+    else if( type == CV_64F )
+        sortIdxFunc = (CvSortIdxFunc)icvSortIdx64f, sortFunc = (CvSortFunc)icvSort64f;
+    else
+        CV_ERROR( CV_StsUnsupportedFormat, "Unsupported format of the input array" );
+
+    // single-column case, where all of src, idx & dst arrays are continuous, is
+    // equivalent to "sort every row" mode.
+    if( (flags & CV_SORT_EVERY_COLUMN) &&
+        (src->cols > 1 || !CV_IS_MAT_CONT(src->type &
+        (dst ? dst->type : -1) & (idx ? idx->type : -1))) )
+    {
+        uchar* dptr = dst ? dst->data.ptr : 0;
+        int* idxptr = idx ? idx->data.i : 0;
+
+        len = src->rows;
+        tsrc = (uchar*)cvAlloc(len*elemSize);
+        if( idx )
+        {
+            tidx = (int*)cvAlloc(len*sizeof(tidx[0]));
+            for( i = 0; i < len; i++ )
+                tidx[i] = i;
+        }
+
+        if( flags & CV_SORT_DESCENDING )
+        {
+            dptr += dstep*(src->rows - 1);
+            dstep = -dstep;
+            idxptr += istep*(src->rows - 1);
+            istep = -istep;
+        }
+
+        sstep /= elemSize;
+        dstep /= elemSize;
+
+        for( i = 0; i < src->cols; i++ )
+        {
+            icvCopy1D( src->data.ptr + i*elemSize, sstep, tsrc, 1, len, elemSize );
+            if( tidx )
+            {
+                sortIdxFunc( tidx, len, tsrc );
+                if( dst )
+                    icvShuffle1D( tsrc, tidx, dptr + i*elemSize, dstep, len, elemSize );
+                icvCopy1D( tidx, 1, idxptr + i, istep, len, sizeof(int) );
+            }
+            else
+            {
+                sortFunc( tsrc, len, 0 );
+                icvCopy1D( tsrc, 1, dptr + i*elemSize, dstep, len, elemSize );
+            }
+        }
+    }
+    else
+    {
+        int j, t, count = src->rows;
+        if( flags & CV_SORT_EVERY_COLUMN )
+            CV_SWAP( len, count, t );
+
+        if( (flags & CV_SORT_DESCENDING) || idx && dst && dst->data.ptr == src->data.ptr )
+            tsrc = (uchar*)cvAlloc(len*elemSize);
+
+        for( i = 0; i < count; i++ )
+        {
+            if( !idx )
+            {
+                const uchar* sptr = src->data.ptr + i*sstep;
+                uchar* dptr = dst->data.ptr + i*dstep;
+                uchar* ptr = flags & CV_SORT_DESCENDING ? tsrc : dptr;
+                if( ptr != sptr )
+                    icvCopy1D( sptr, 1, ptr, 1, len, elemSize );
+                sortFunc( ptr, len, 0 );
+                if( flags & CV_SORT_DESCENDING )
+                    icvCopy1D( ptr + (len-1)*elemSize, -1, dptr, 1, len, elemSize );
+            }
+            else
+            {
+                int* idx_ = idx->data.i + istep*i;
+                const uchar* sptr = src->data.ptr + sstep*i;
+                uchar* dptr = dst ? dst->data.ptr + dstep*i : 0;
+                for( j = 0; j < len; j++ )
+                    idx_[j] = j;
+                if( dptr && dptr == sptr )
+                {
+                    icvCopy1D( sptr, 1, tsrc, 1, len, elemSize );
+                    sptr = tsrc;
+                }
+                sortIdxFunc( idx_, len, sptr );
+                if( flags & CV_SORT_DESCENDING )
+                    for( j = 0; j < len/2; j++ )
+                        CV_SWAP(idx_[j], idx_[len-j-1], t);
+                if( dptr )
+                    icvShuffle1D( sptr, idx_, dptr, 1, len, elemSize );
+            }
+        }
+    }
+
+    __END__;
+
+    cvFree( &tsrc );
+    cvFree( &tidx );
+}
+
 /* End of file. */
