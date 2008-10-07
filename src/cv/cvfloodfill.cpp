@@ -1076,15 +1076,25 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
 
     if( is_simple )
     {
+        int elem_size = CV_ELEM_SIZE(type);
+        const uchar* seed_ptr = img->data.ptr + img->step*seed_point.y + elem_size*seed_point.x;
         CvFloodFillFunc func = (CvFloodFillFunc)ffill_tab[idx];
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
-        
-        IPPI_CALL( func( img->data.ptr, img->step, size,
-                         seed_point, &nv_buf, comp, flags,
-                         buffer, buffer_size, cn ));
+        // check if the new value is different from the current value at the seed point.
+        // if they are exactly the same, use the generic version with mask to avoid infinite loops.
+        for( i = 0; i < elem_size; i++ )
+            if( seed_ptr[i] != ((uchar*)nv_buf)[i] )
+                break;
+        if( i < elem_size )
+        {
+            IPPI_CALL( func( img->data.ptr, img->step, size,
+                             seed_point, &nv_buf, comp, flags,
+                             buffer, buffer_size, cn ));
+            EXIT;
+        }
     }
-    else
+
     {
         CvFloodFillGradFunc func = (CvFloodFillGradFunc)ffillgrad_tab[idx];
         if( !func )
