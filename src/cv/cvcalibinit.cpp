@@ -159,6 +159,8 @@ static int icvAddOuterQuad(CvCBQuad *quad, CvCBQuad **quads, int quad_count,
 
 static void icvRemoveQuadFromGroup(CvCBQuad **quads, int count, CvCBQuad *q0);
 
+static int icvCheckBoardMonotony( CvPoint2D32f* corners, CvSize pattern_size );
+
 #if 0
 static void
 icvCalcAffineTranf2D32f(CvPoint2D32f* pts1, CvPoint2D32f* pts2, int count, CvMat* affine_trans)
@@ -459,6 +461,9 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     cvFree( &quads );
     cvFree( &corners );
 
+    if( found )
+        found = icvCheckBoardMonotony( out_corners, pattern_size );
+
     if( found && pattern_size.height % 2 == 0 && pattern_size.width % 2 == 0 )
     {
         int last_row = (pattern_size.height-1)*pattern_size.width;
@@ -477,6 +482,46 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     return found;
 }
 
+//
+// Checks that each board row and column is pretty much monotonous curve:
+// It analyzes each row and each column of the chessboard as following:
+//    for each corner c lying between end points in the same row/column it checks that
+//    the point projection to the line segment (a,b) is lying between projections
+//    of the neighbor corners in the same row/column.
+//
+// This function has been created as temporary workaround for the bug in current implementation
+// of cvFindChessboardCornes that produces absolutely unordered sets of corners.
+//
+
+static int
+icvCheckBoardMonotony( CvPoint2D32f* corners, CvSize pattern_size )
+{
+    int i, j, k;
+    
+    for( k = 0; k < 2; k++ )
+    {
+        for( i = 0; i < (k == 0 ? pattern_size.height : pattern_size.width); i++ )
+        {
+            CvPoint2D32f a = k == 0 ? corners[i*pattern_size.width] : corners[i];
+            CvPoint2D32f b = k == 0 ? corners[(i+1)*pattern_size.width-1] :
+                corners[(pattern_size.height-1)*pattern_size.width + i];
+            float prevt = 0, dx0 = b.x - a.x, dy0 = b.y - a.y;
+            if( fabs(dx0) + fabs(dy0) < FLT_EPSILON )
+                return 0;
+            for( j = 1; j < (k == 0 ? pattern_size.width : pattern_size.height) - 1; j++ )
+            {
+                CvPoint2D32f c = k == 0 ? corners[i*pattern_size.width + j] :
+                    corners[j*pattern_size.width + i];
+                float t = ((c.x - a.x)*dx0 + (c.y - a.y)*dy0)/(dx0*dx0 + dy0*dy0);
+                if( t < prevt || t > 1 )
+                    return 0;
+                prevt = t;
+            }
+        }
+    }
+
+    return 1;
+}
 
 //
 // order a group of connected quads
