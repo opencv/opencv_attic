@@ -46,6 +46,11 @@
 #pragma warning( disable: 4711 )
 #endif
 
+#ifdef __GNUC__
+#define WM_CAP_FIRSTA              (WM_USER)
+#define capSendMessage(hwnd,m,w,l) (IsWindow(hwnd)?SendMessage(hwnd,m,w,l):0)
+#endif
+
 #if defined WIN64 && defined EM64T && defined _MSC_VER && !defined __ICL
 #pragma optimize("",off)
 #endif
