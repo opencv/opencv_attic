@@ -96,8 +96,8 @@ void CvCaptureCAM_DShow::close()
 bool CvCaptureCAM_DShow::open( int _index )
 {
     close();
-    VI.setupDevice(index);
-    if( !VI.isDeviceSetup(index) )
+    VI.setupDevice(_index);
+    if( !VI.isDeviceSetup(_index) )
         return false;
     index = _index;
     return true;
