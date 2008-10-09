@@ -1,6 +1,7 @@
 #include "_cxts.h"
 #include "cxcore.h"
 
+#include <algorithm>
 #include <complex>
 #include <vector>
 #include <iostream>
