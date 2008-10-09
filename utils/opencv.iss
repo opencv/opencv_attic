@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=Intel(R) Open Source Computer Vision Library
-AppVerName=Intel(R) Open Source Computer Vision Library 1.1tp1
+AppVerName=Intel(R) Open Source Computer Vision Library 1.1pre1
 AppCopyright=Copyright (C) 2000-2006 Intel Corporation
 DefaultDirName={pf}\OpenCV
 DefaultGroupName=OpenCV
@@ -10,7 +10,7 @@ DefaultGroupName=OpenCV
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_1.1tp1
+OutputBaseFilename=OpenCV_1.1pre1
 WizardImageFile=utils/splash.bmp
 SetupIconFile=utils/opencv.ico
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
