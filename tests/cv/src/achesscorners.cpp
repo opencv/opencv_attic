@@ -196,7 +196,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
         OPENCV_CALL( result = cvFindChessboardCorners(
                      gray, pattern_size, v, &count, 7 ));
 
-        show_points( gray, 0, count0, v, count, pattern_size, result );
+        //show_points( gray, 0, count0, v, count, pattern_size, result );
         if( !result || count != count0 )
         {
             ts->printf( CvTS::LOG, "chess board is not found" );
