@@ -42,7 +42,7 @@
 #include "cvtest.h"
 
 void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, int v_cnt,
-                  CvSize etalon_size, int was_found )
+                  CvSize pattern_size, int was_found )
 {
     CvSize size;
     int i;
@@ -68,7 +68,7 @@ void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, i
         }
     }
 
-    cvDrawChessboardCorners( rgb, etalon_size, v, v_cnt, was_found );
+    cvDrawChessboardCorners( rgb, pattern_size, v, v_cnt, was_found );
 
     cvvNamedWindow( "test", 0 );
     cvvShowImage( "test", rgb );
@@ -117,7 +117,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
     IplImage* gray = 0;
     IplImage* thresh = 0;
 
-    int  idx, max_idx;
+    int  k, idx, max_idx;
     int  progress = 0;
 
     sprintf( filepath, "%scameracalibration/", ts->get_data_path() );
@@ -137,9 +137,9 @@ void CV_ChessboardDetectorTest::run( int start_from )
 
     for( idx = start_from; idx < max_idx; idx++ )
     {
-        int etalon_count = -1;
+        int count0 = -1;
         int count = 0;
-        CvSize etalon_size = { -1, -1 };
+        CvSize pattern_size = { -1, -1 };
         int j, result;
         
         ts->update_context( this, idx-1, true );
@@ -182,22 +182,22 @@ void CV_ChessboardDetectorTest::run( int start_from )
             continue;
         }
 
-        etalon_size.width = _u->cols;
-        etalon_size.height = _u->rows;
-        etalon_count = etalon_size.width*etalon_size.height;
+        pattern_size.width = _u->cols;
+        pattern_size.height = _u->rows;
+        count0 = pattern_size.width*pattern_size.height;
 
         /* allocate additional buffers */
         _v = cvCloneMat( _u );
-        count = etalon_count;
+        count = count0;
 
         u = (CvPoint2D32f*)_u->data.fl;
         v = (CvPoint2D32f*)_v->data.fl;
 
         OPENCV_CALL( result = cvFindChessboardCorners(
-                     gray, etalon_size, v, &count, 7 ));
+                     gray, pattern_size, v, &count, 7 ));
 
-        //show_points( gray, 0, etalon_count, v, count, etalon_size, result );
-        if( !result || count != etalon_count )
+        show_points( gray, 0, count0, v, count, pattern_size, result );
+        if( !result || count != count0 )
         {
             ts->printf( CvTS::LOG, "chess board is not found" );
             code = CvTS::FAIL_INVALID_OUTPUT;
@@ -205,48 +205,57 @@ void CV_ChessboardDetectorTest::run( int start_from )
         }
 
 #ifndef WRITE_POINTS
-        err = 0;
-        for( j = 0; j < etalon_count; j++ )
+        err = DBL_MAX;
+        for( k = 0; k < 2; k++ )
         {
-            double dx = fabs( v[j].x - u[j].x );
-            double dy = fabs( v[j].y - u[j].y );
-
-            dx = MAX( dx, dy );
-            if( dx > err )
+            double err1 = 0;
+            for( j = 0; j < count0; j++ )
             {
-                err = dx;
-                if( err > rough_success_error_level )
-                {
-                    ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
-                    code = CvTS::FAIL_BAD_ACCURACY;
-                    goto _exit_;
-                }
+                int j1 = k == 0 ? j : count0 - j - 1;
+                double dx = fabs( v[j].x - u[j1].x );
+                double dy = fabs( v[j].y - u[j1].y );
+
+                dx = MAX( dx, dy );
+                if( dx > err1 )
+                    err1 = dx;
             }
+            err = MIN(err, err1);
         }
+        if( err > rough_success_error_level )
+        {
+            ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
+            code = CvTS::FAIL_BAD_ACCURACY;
+            goto _exit_;
+        }
+
         max_rough_error = MAX( max_rough_error, err );
 #endif
         OPENCV_CALL( cvFindCornerSubPix( gray, v, count, cvSize( 5, 5 ), cvSize(-1,-1),
                             cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1)));
-        //show_points( gray, u + 1, etalon_count, v, count, etalon_size, result  );
+        //show_points( gray, u + 1, count0, v, count, pattern_size, result  );
 
 #ifndef WRITE_POINTS
-        err = 0;
-        for( j = 0; j < etalon_count; j++ )
+        err = DBL_MAX;
+        for( k = 0; k < 2; k++ )
         {
-            double dx = fabs( v[j].x - u[j].x );
-            double dy = fabs( v[j].y - u[j].y );
-
-            dx = MAX( dx, dy );
-            if( dx > err )
+            double err1 = 0;
+            for( j = 0; j < count0; j++ )
             {
-                err = dx;
-                if( err > precise_success_error_level )
-                {
-                    ts->printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
-                    code = CvTS::FAIL_BAD_ACCURACY;
-                    goto _exit_;
-                }
+                int j1 = k == 0 ? j : count0 - j - 1;
+                double dx = fabs( v[j].x - u[j1].x );
+                double dy = fabs( v[j].y - u[j1].y );
+
+                dx = MAX( dx, dy );
+                if( dx > err1 )
+                    err1 = dx;
             }
+            err = MIN(err, err1);
+        }
+        if( err > precise_success_error_level )
+        {
+            ts->printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
+            code = CvTS::FAIL_BAD_ACCURACY;
+            goto _exit_;
         }
         max_precise_error = MAX( max_precise_error, err );
 #else
