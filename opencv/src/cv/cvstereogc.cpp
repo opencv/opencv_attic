@@ -714,14 +714,9 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
                 GCVtx** ptr = (k == 0 ? pleft0 : pright0) + y1*pstep;
                 for( x = 0; x < cols; x++ )
                 {
-                    if( disp[x] != a )
-                    {
-                        GCVtx* v = ptr[x] = &vbuf[nvtx++];
-                        v->first = 0;
-                        v->weight = disp[x] == (short)(OCCLUDED ? -OCCLUSION_PENALTY2 : 0);
-                    }
-                    else
-                        ptr[x] = 0;
+                    GCVtx* v = ptr[x] = &vbuf[nvtx++];
+                    v->first = 0;
+                    v->weight = disp[x] == (short)(OCCLUDED ? -OCCLUSION_PENALTY2 : 0);
                 }
             }
         }
@@ -760,21 +755,7 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
                 E0a = IS_BLOCKED(d, alpha) ? INFINITY : 0;
                 Ea0 = IS_BLOCKED(-d1, alpha) ? INFINITY : 0;
                 Eaa = dtab[icvDataCostFuncGraySubpix( left + x*3, right + x1*3 )];
-
-                if( var )
-                {
-                    if( var1 )
-                        E += icvAddTerm( var, var1, 0, E0a, Ea0, Eaa, ebuf, nedges );
-                    else
-                        E += icvAddTWeights( var, Eaa, E0a );
-                }
-                else
-                {
-                    if( var1 )
-                        E += icvAddTWeights( var1, Eaa, Ea0 );
-                    else
-                        E += Eaa;
-                }
+                E += icvAddTerm( var, var1, 0, E0a, Ea0, Eaa, ebuf, nedges );
             }
 
             // smoothness
@@ -793,23 +774,10 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
                     var1 = p[x+1];
                     d1 = disp[x+1];
                     scale = stabI[img[0] - img[3]];
-                    if( var )
-                    {
-                        E0a = icvSmoothnessCostFunc( d, a, maxR, stabR, scale );
-                        if( var1 )
-                        {
-                            Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
-                            E00 = icvSmoothnessCostFunc( d, d1, maxR, stabR, scale );
-                            E += icvAddTerm( var, var1, E00, E0a, Ea0, 0, ebuf, nedges );
-                        }
-                        else
-                            E += icvAddTWeights( var, 0, E0a );
-                    }
-                    else if( var1 )
-                    {
-                        Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
-                        E += icvAddTWeights( var1, 0, Ea0 );
-                    }
+                    E0a = icvSmoothnessCostFunc( d, a, maxR, stabR, scale );
+                    Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
+                    E00 = icvSmoothnessCostFunc( d, d1, maxR, stabR, scale );
+                    E += icvAddTerm( var, var1, E00, E0a, Ea0, 0, ebuf, nedges );
                 }
 
                 if( y < rows - 1 )
@@ -817,23 +785,10 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
                     var1 = p[x+pstep];
                     d1 = disp[x+dstep];
                     scale = stabI[img[0] - img[step]];
-                    if( var )
-                    {
-                        E0a = icvSmoothnessCostFunc( d, a, maxR, stabR, scale );
-                        if( var1 )
-                        {
-                            Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
-                            E00 = icvSmoothnessCostFunc( d, d1, maxR, stabR, scale );
-                            E += icvAddTerm( var, var1, E00, E0a, Ea0, 0, ebuf, nedges );
-                        }
-                        else
-                            E += icvAddTWeights( var, 0, E0a );
-                    }
-                    else if( var1 )
-                    {
-                        Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
-                        E += icvAddTWeights( var1, 0, Ea0 );
-                    }
+                    E0a = icvSmoothnessCostFunc( d, a, maxR, stabR, scale );
+                    Ea0 = icvSmoothnessCostFunc( a, d1, maxR, stabR, scale );
+                    E00 = icvSmoothnessCostFunc( d, d1, maxR, stabR, scale );
+                    E += icvAddTerm( var, var1, E00, E0a, Ea0, 0, ebuf, nedges );
                 }
             }
 
@@ -846,7 +801,7 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
                     if( d != -dleft[x1] )
                     {
                         var1 = pleft[x1];
-                        E += icvAddTerm( var, var1, 0, INFINITY, 0, 0, ebuf, nedges );  
+                        E += icvAddTerm( var, var1, 0, INFINITY, 0, 0, ebuf, nedges );
                     }
                 }
             }
