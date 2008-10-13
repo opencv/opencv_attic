@@ -63,7 +63,7 @@
   #endif
 
   #if defined WIN32 && (!defined WIN64 || defined EM64T) && \
-      (defined _MSC_VER || defined CV_ICC) \
+      (_MSC_VER >= 1400 || defined CV_ICC) \
       || defined __SSE2__ || defined _MM_SHUFFLE2
     #include <emmintrin.h>
     #define CV_SSE2 1
