@@ -998,8 +998,8 @@ icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
     }
 
     if( isdigit(c) ||
-        (c == '-' || c == '+') && (isdigit(d) || d == '.') ||
-        c == '.' && isalnum(d)) // a number
+        ((c == '-' || c == '+') && (isdigit(d) || d == '.')) ||
+        (c == '.' && isalnum(d))) // a number
     {
         double fval;
         int ival;
@@ -1072,7 +1072,7 @@ force_int:
                         buf[len++] = '\r';
                     else if( d == 't' )
                         buf[len++] = '\t';
-                    else if( d == 'x' || isdigit(d) && d < '8' )
+                    else if( d == 'x' || (isdigit(d) && d < '8') )
                     {
                         int val, is_hex = d == 'x';
                         c = ptr[3];
@@ -1166,7 +1166,7 @@ force_string:
 
             do c = *++endptr;
             while( cv_isprint(c) &&
-                   (!is_parent_flow || c != ',' && c != '}' && c != ']') &&
+                   (!is_parent_flow || (c != ',' && c != '}' && c != ']')) &&
                    (is_parent_flow || c != ':' || value_type == CV_NODE_STRING));
 
             if( endptr == ptr )
@@ -1581,7 +1581,7 @@ icvYMLWriteString( CvFileStorage* fs, const char* key,
     if( len > CV_FS_MAX_LEN )
         CV_ERROR( CV_StsBadArg, "The written string is too long" );
 
-    if( quote || len == 0 || str[0] != str[len-1] || str[0] != '\"' && str[0] != '\'' )
+    if( quote || len == 0 || str[0] != str[len-1] || (str[0] != '\"' && str[0] != '\'') )
     {
         int need_quote = quote || len == 0;
         data = buf;
@@ -1798,7 +1798,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
         char c = *ptr, d;
         char* endptr;
 
-        if( isspace(c) || c == '\0' || c == '<' && ptr[1] == '!' && ptr[2] == '-' )
+        if( isspace(c) || c == '\0' || (c == '<' && ptr[1] == '!' && ptr[2] == '-') )
         {
             CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, 0 ));
             have_space = 1;
@@ -1886,8 +1886,8 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             }
 
             if( value_type != CV_NODE_STRING &&
-                (isdigit(c) || (c == '-' || c == '+') &&
-                (isdigit(d) || d == '.') || c == '.' && isalnum(d)) ) // a number
+                (isdigit(c) || ((c == '-' || c == '+') &&
+                (isdigit(d) || d == '.')) || (c == '.' && isalnum(d))) ) // a number
             {
                 double fval;
                 int ival;
@@ -2000,8 +2000,8 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
     }
 
     if( (CV_NODE_TYPE(node->tag) == CV_NODE_NONE ||
-        CV_NODE_TYPE(node->tag) != value_type &&
-        !CV_NODE_IS_COLLECTION(node->tag)) &&
+        (CV_NODE_TYPE(node->tag) != value_type &&
+        !CV_NODE_IS_COLLECTION(node->tag))) &&
         CV_NODE_IS_COLLECTION(value_type) )
     {
         CV_CALL( icvFSCreateCollection( fs, CV_NODE_IS_MAP(value_type) ?
@@ -4240,11 +4240,11 @@ icvWriteSeqTree( CvFileStorage* fs, const char* name,
 
     const CvSeq* seq = (CvSeq*)struct_ptr;
     const char* recursive_value = cvAttrValue( &attr, "recursive" );
-    int is_recursive = !(!recursive_value || strcmp(recursive_value,"0") == 0 ||
-                       strlen(recursive_value) == 5 &&
-                       (strcmp(recursive_value,"false") == 0 ||
-                       strcmp(recursive_value,"False") == 0 ||
-                       strcmp(recursive_value,"FALSE") == 0 ));
+    int is_recursive = recursive_value &&
+                       strcmp(recursive_value,"0") != 0 &&
+                       strcmp(recursive_value,"false") != 0 &&
+                       strcmp(recursive_value,"False") != 0 &&
+                       strcmp(recursive_value,"FALSE") != 0;
 
     assert( CV_IS_SEQ( seq ));
 
@@ -4706,7 +4706,7 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
         for( i = 0; i < fmt_pair_count; i += 2 )
             edge_items_per_elem += fmt_pairs[i];
 
-        if( edge_dt[2] == 'f' || edge_dt[2] == '1' && edge_dt[3] == 'f' )
+        if( edge_dt[2] == 'f' || (edge_dt[2] == '1' && edge_dt[3] == 'f') )
             dst_edge_dt = edge_dt + 3 + isdigit(edge_dt[2]);
         else
         {

@@ -295,11 +295,11 @@ cvLUT( const void* srcarr, void* dstarr, const void* lutarr )
         lut_data = shuffled_lut;
     }
 
-    if( lut_cn == 1 || lut_cn <= 4 && depth == CV_8U )
+    if( lut_cn == 1 || (lut_cn <= 4 && depth == CV_8U) )
     {
         CvLUT_TransformFunc func = depth == CV_8U ? lut_8u_tab[cn-1] :
             (CvLUT_TransformFunc)(lut_c1_tab.fn_2d[depth]);
-    
+
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
 

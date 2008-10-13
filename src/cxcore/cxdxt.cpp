@@ -1820,7 +1820,7 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
     else if( !inv && CV_MAT_CN(src->type) == 1 && CV_MAT_CN(dst->type) == 2 )
     {
         if( (src->cols != 1 || dst->cols != 1 ||
-            src->rows/2+1 != dst->rows && src->rows != dst->rows) &&
+            (src->rows/2+1 != dst->rows && src->rows != dst->rows)) &&
             (src->cols/2+1 != dst->cols || src->rows != dst->rows) )
             CV_ERROR( CV_StsUnmatchedSizes, "" );
         real_transform = 1;
@@ -1828,7 +1828,7 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
     else if( inv && CV_MAT_CN(src->type) == 2 && CV_MAT_CN(dst->type) == 1 )
     {
         if( (src->cols != 1 || dst->cols != 1 ||
-            dst->rows/2+1 != src->rows && src->rows != dst->rows) &&
+            (dst->rows/2+1 != src->rows && src->rows != dst->rows)) &&
             (dst->cols/2+1 != src->cols || src->rows != dst->rows) )
             CV_ERROR( CV_StsUnmatchedSizes, "" );
         real_transform = 1;
@@ -1845,8 +1845,8 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
     // determine, which transform to do first - row-wise
     // (stage 0) or column-wise (stage 1) transform
     if( !(flags & CV_DXT_ROWS) && src->rows > 1 &&
-        (src->cols == 1 && !CV_IS_MAT_CONT(src->type & dst->type) ||
-        src->cols > 1 && inv && real_transform) )
+        ((src->cols == 1 && !CV_IS_MAT_CONT(src->type & dst->type)) ||
+        (src->cols > 1 && inv && real_transform)) )
         stage = 1;
 
     ipp_norm_flag = !(flags & CV_DXT_SCALE) ? 8 : (flags & CV_DXT_INVERSE) ? 2 : 1;
@@ -1938,8 +1938,8 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
             if( (factors[i] & 1) != 0 && factors[i] > 5 )
                 sz += (factors[i]+1)*complex_elem_size;
 
-            if( stage == 0 && (src->data.ptr == dst->data.ptr && !inplace_transform || odd_real) ||
-                stage == 1 && !inplace_transform )
+            if( (stage == 0 && ((src->data.ptr == dst->data.ptr && !inplace_transform) || odd_real)) ||
+                (stage == 1 && !inplace_transform) )
             {
                 use_buf = 1;
                 sz += len*complex_elem_size;
@@ -1948,7 +1948,7 @@ cvDFT( const CvArr* srcarr, CvArr* dstarr, int flags, int nonzero_rows )
 
         if( sz > buf_size )
         {
-            prev_len = 0; // because we release the buffer, 
+            prev_len = 0; // because we release the buffer,
                           // force recalculation of
                           // twiddle factors and permutation table
             if( !local_alloc && buffer )
@@ -2238,8 +2238,8 @@ cvMulSpectrums( const CvArr* srcAarr, const CvArr* srcBarr,
     rows = srcA->rows;
     cols = srcA->cols;
     is_1d = (flags & CV_DXT_ROWS) ||
-            (rows == 1 || cols == 1 &&
-             CV_IS_MAT_CONT( srcA->type & srcB->type & dst->type ));
+            (rows == 1 || (cols == 1 &&
+             CV_IS_MAT_CONT( srcA->type & srcB->type & dst->type )));
 
     if( is_1d && !(flags & CV_DXT_ROWS) )
         cols = cols + rows - 1, rows = 1;
@@ -2647,7 +2647,7 @@ cvDCT( const CvArr* srcarr, CvArr* dstarr, int flags )
     dct_func = dct_tbl[inv + (depth == CV_64F)*2];
 
     if( (flags & CV_DXT_ROWS) || src->rows == 1 ||
-        src->cols == 1 && CV_IS_MAT_CONT(src->type & dst->type))
+        (src->cols == 1 && CV_IS_MAT_CONT(src->type & dst->type)))
     {
         stage = end_stage = 0;
     }

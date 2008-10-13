@@ -675,8 +675,8 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
         if( !CV_ARE_TYPES_EQ( C, D ))
             CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-        if( (flags&CV_GEMM_C_T) == 0 && (C->cols != D->cols || C->rows != D->rows) ||
-            (flags&CV_GEMM_C_T) != 0 && (C->rows != D->cols || C->cols != D->rows))
+        if( ((flags&CV_GEMM_C_T) == 0 && (C->cols != D->cols || C->rows != D->rows)) ||
+            ((flags&CV_GEMM_C_T) != 0 && (C->rows != D->cols || C->cols != D->rows)))
             CV_ERROR( CV_StsUnmatchedSizes, "" );
 
         if( (flags & CV_GEMM_C_T) != 0 && C->data.ptr == D->data.ptr )
@@ -1090,9 +1090,9 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                        &_beta, D->data.ptr, &ldd );
             }
         }
-        else if( (d_size.height <= block_lin_size/2 || d_size.width <= block_lin_size/2) &&
-            len <= 10000 || len <= 10 ||
-            d_size.width <= block_lin_size && d_size.height <= block_lin_size && len <= block_lin_size )
+        else if( ((d_size.height <= block_lin_size/2 || d_size.width <= block_lin_size/2) &&
+            len <= 10000) || len <= 10 ||
+            (d_size.width <= block_lin_size && d_size.height <= block_lin_size && len <= block_lin_size) )
         {
             single_mul_func( A->data.ptr, A->step, B->data.ptr, b_step,
                              C->data.ptr, C->step, D->data.ptr, D->step,
@@ -1213,7 +1213,7 @@ cvGEMM( const CvArr* Aarr, const CvArr* Barr, double alpha,
                             CV_SWAP( a_bl_size.width, a_bl_size.height, t );
                             _a = a_buf;
                         }
-                
+
                         if( dj < d_size.width )
                         {
                             CvSize b_size;
@@ -1647,7 +1647,7 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
     {
         if( !src_seq )
         {
-            if( CV_IS_MAT_CONT(src->type) || src->rows != 1 && src->cols != 1 )
+            if( CV_IS_MAT_CONT(src->type) || (src->rows != 1 && src->cols != 1) )
                 CV_ERROR( CV_StsBadSize, "if eigher the source or destination is a sequence, "
                 "the other array must be also a sequence of continous 1d vector" );
             src_seq = cvMakeSeqHeaderForArray( CV_MAT_TYPE(src->type), sizeof(hdr),
@@ -1657,7 +1657,7 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
 
         if( !dst_seq )
         {
-            if( CV_IS_MAT_CONT(dst->type) || dst->rows != 1 && dst->cols != 1 )
+            if( CV_IS_MAT_CONT(dst->type) || (dst->rows != 1 && dst->cols != 1) )
                 CV_ERROR( CV_StsBadSize, "if eigher the source or destination is a sequence, "
                 "the other array must be also a sequence of continous 1d vector" );
             if( dst->rows + dst->cols - 1 != src_seq->total )
@@ -1725,8 +1725,7 @@ cvTransform( const CvArr* srcarr, CvArr* dstarr,
             CV_CALL( shift = cvGetMat( shift, &shiftstub, &coi ));
 
         if( CV_MAT_CN( shift->type ) * shift->cols * shift->rows == dst_cn &&
-            (shift->rows == 1 || shift->rows == dst_cn) ||
-            (shift->cols == 1 || shift->cols == dst_cn) )
+            (shift->rows == 1 || shift->cols == 1) )
         {
             if( CV_MAT_DEPTH( shift->type ) == CV_64F )
             {
@@ -2615,7 +2614,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
         if( !dot_func )
             CV_ERROR( CV_StsUnsupportedFormat,
             "The format of input vectors is not supported" );
-        
+
         for( i = 0; i < count; i++ )
         {
             int a, b, delta;
@@ -3161,9 +3160,9 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
         (order == 0 && src->rows != dst->rows))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( src->data.ptr == dst->data.ptr || stype == dtype &&
+    if( src->data.ptr == dst->data.ptr || (stype == dtype &&
         (dst->cols >= gemm_level && dst->rows >= gemm_level &&
-         src->cols >= gemm_level && src->rows >= gemm_level))
+         src->cols >= gemm_level && src->rows >= gemm_level)))
     {
         if( deltaarr )
         {
@@ -3172,7 +3171,7 @@ cvMulTransposed( const CvArr* srcarr, CvArr* dstarr,
             cvSub( src, src2, src2 );
             src = src2;
         }
-        cvGEMM( src, src, scale, 0, 0, dst, order == 0 ? CV_GEMM_B_T : CV_GEMM_A_T ); 
+        cvGEMM( src, src, scale, 0, 0, dst, order == 0 ? CV_GEMM_B_T : CV_GEMM_A_T );
     }
     else
     {

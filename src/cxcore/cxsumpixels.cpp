@@ -910,8 +910,8 @@ cvReduce( const CvArr* srcarr, CvArr* dstarr, int dim, int op )
     if( dim > 1 )
         CV_ERROR( CV_StsOutOfRange, "The reduced dimensionality index is out of range" );
 
-    if( dim == 0 && (dst->cols != src->cols || dst->rows != 1) ||
-        dim == 1 && (dst->rows != src->rows || dst->cols != 1) )
+    if( (dim == 0 && (dst->cols != src->cols || dst->rows != 1)) ||
+        (dim == 1 && (dst->rows != src->rows || dst->cols != 1)) )
         CV_ERROR( CV_StsBadSize, "The output array size is incorrect" );
 
     if( op == CV_REDUCE_AVG )

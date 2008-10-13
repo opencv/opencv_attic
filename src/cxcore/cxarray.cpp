@@ -2983,7 +2983,7 @@ cvReshapeMatND( const CvArr* arr,
         header->cols = total_width / new_cn;
 
         if( header->cols * new_cn != total_width ||
-            new_sizes && header->cols != new_sizes[1] )
+            (new_sizes && header->cols != new_sizes[1]) )
             CV_ERROR( CV_StsBadArg, "The total matrix width is not "
                             "divisible by the new number of columns" );
 
@@ -3256,9 +3256,9 @@ static IplROI* icvCreateROI( int coi, int xOffset, int yOffset, int width, int h
 }
 
 static  void
-icvGetColorModel( int nchannels, char** colorModel, char** channelSeq )
+icvGetColorModel( int nchannels, const char** colorModel, const char** channelSeq )
 {
-    static char* tab[][2] =
+    static const char* tab[][2] =
     {
         {"GRAY", "GRAY"},
         {"",""},
@@ -3295,12 +3295,11 @@ cvCreateImageHeader( CvSize size, int depth, int channels )
     }
     else
     {
-        char *colorModel;
-        char *channelSeq;
+        const char *colorModel, *channelSeq;
 
         icvGetColorModel( channels, &colorModel, &channelSeq );
 
-        img = CvIPL.createHeader( channels, 0, depth, colorModel, channelSeq,
+        img = CvIPL.createHeader( channels, 0, depth, (char*)colorModel, (char*)channelSeq,
                                   IPL_DATA_ORDER_PIXEL, IPL_ORIGIN_TL,
                                   CV_DEFAULT_IMAGE_ROW_ALIGN,
                                   size.width, size.height, 0, 0, 0, 0 );
@@ -3349,7 +3348,7 @@ cvInitImageHeader( IplImage * image, CvSize size, int depth,
 
     __BEGIN__;
 
-    char *colorModel, *channelSeq;
+    const char *colorModel, *channelSeq;
 
     if( !image )
         CV_ERROR( CV_HeaderIsNull, "null pointer to header" );

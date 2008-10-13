@@ -59,7 +59,7 @@ icvIsXmlOrYaml( const char* filename )
 {
     const char* suffix = strrchr( filename, '.' );
     return suffix &&
-        strcmp( suffix, ".xml" ) == 0 ||
+        (strcmp( suffix, ".xml" ) == 0 ||
         strcmp( suffix, ".Xml" ) == 0 ||
         strcmp( suffix, ".XML" ) == 0 ||
         strcmp( suffix, ".yml" ) == 0 ||
@@ -67,7 +67,7 @@ icvIsXmlOrYaml( const char* filename )
         strcmp( suffix, ".YML" ) == 0 ||
         strcmp( suffix, ".yaml" ) == 0 ||
         strcmp( suffix, ".Yaml" ) == 0 ||
-        strcmp( suffix, ".YAML" ) == 0;
+        strcmp( suffix, ".YAML" ) == 0);
 }
 
 

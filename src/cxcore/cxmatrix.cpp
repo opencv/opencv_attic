@@ -1784,7 +1784,7 @@ cvProjectPCA( const CvArr* data_arr, const CvArr* avg_arr,
     if( CV_MAT_CN(data->type) != 1 || CV_MAT_CN(avg->type) != 1 )
         CV_ERROR( CV_StsUnsupportedFormat, "All the input and output arrays must be 1-channel" );
 
-    if( CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1 ||
+    if( (CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1) ||
         !CV_ARE_TYPES_EQ(avg, evects) || !CV_ARE_TYPES_EQ(avg, result) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "All the input and output arrays (except for data) must have the same type, 32fC1 or 64fC1" );
@@ -1917,7 +1917,7 @@ cvBackProjectPCA( const CvArr* proj_arr, const CvArr* avg_arr,
     if( !CV_IS_MAT(result) )
         CV_CALL( result = cvGetMat( result, &rstub ));
 
-    if( CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1 ||
+    if( (CV_MAT_TYPE(avg->type) != CV_32FC1 && CV_MAT_TYPE(avg->type) != CV_64FC1) ||
         !CV_ARE_TYPES_EQ(avg, data) || !CV_ARE_TYPES_EQ(avg, evects) || !CV_ARE_TYPES_EQ(avg, result) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "All the input and output arrays must have the same type, 32fC1 or 64fC1" );
