@@ -75,7 +75,7 @@ cvKMeans2( const CvArr* samples_arr, int cluster_count,
         CV_ERROR( CV_StsUnsupportedFormat,
         "samples should be floating-point matrix, cluster_idx - integer vector" );
 
-    if( labels->rows != 1 && (labels->cols != 1 || !CV_IS_MAT_CONT(labels->type)) ||
+    if( (labels->rows != 1 && (labels->cols != 1 || !CV_IS_MAT_CONT(labels->type))) ||
         labels->rows + labels->cols - 1 != samples->rows )
         CV_ERROR( CV_StsUnmatchedSizes,
         "cluster_idx should be 1D vector of the same number of elements as samples' number of rows" );
@@ -274,25 +274,25 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
     double a0 = 1., a1, a2, a3;
     double x0 = 0., x1 = 0., x2 = 0.;
     int step = 1, coeff_count;
-    
+
     if( !CV_IS_MAT(coeffs) )
         CV_ERROR( !coeffs ? CV_StsNullPtr : CV_StsBadArg, "Input parameter is not a valid matrix" );
 
     if( !CV_IS_MAT(roots) )
         CV_ERROR( !roots ? CV_StsNullPtr : CV_StsBadArg, "Output parameter is not a valid matrix" );
 
-    if( CV_MAT_TYPE(coeffs->type) != CV_32FC1 && CV_MAT_TYPE(coeffs->type) != CV_64FC1 ||
-        CV_MAT_TYPE(roots->type) != CV_32FC1 && CV_MAT_TYPE(roots->type) != CV_64FC1 )
+    if( (CV_MAT_TYPE(coeffs->type) != CV_32FC1 && CV_MAT_TYPE(coeffs->type) != CV_64FC1) ||
+        (CV_MAT_TYPE(roots->type) != CV_32FC1 && CV_MAT_TYPE(roots->type) != CV_64FC1) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "Both matrices should be floating-point (single or double precision)" );
 
     coeff_count = coeffs->rows + coeffs->cols - 1;
 
-    if( coeffs->rows != 1 && coeffs->cols != 1 || coeff_count != 3 && coeff_count != 4 )
+    if( (coeffs->rows != 1 && coeffs->cols != 1) || (coeff_count != 3 && coeff_count != 4) )
         CV_ERROR( CV_StsBadSize,
         "The matrix of coefficients must be 1-dimensional vector of 3 or 4 elements" );
 
-    if( roots->rows != 1 && roots->cols != 1 ||
+    if( (roots->rows != 1 && roots->cols != 1) ||
         roots->rows + roots->cols - 1 != 3 )
         CV_ERROR( CV_StsBadSize,
         "The matrix of roots must be 1-dimensional vector of 3 elements" );
@@ -1159,7 +1159,7 @@ cvSort( const CvArr* _src, CvArr* _dst, CvArr* _idx, int flags )
         if( flags & CV_SORT_EVERY_COLUMN )
             CV_SWAP( len, count, t );
 
-        if( (flags & CV_SORT_DESCENDING) || idx && dst && dst->data.ptr == src->data.ptr )
+        if( (flags & CV_SORT_DESCENDING) || (idx && dst && dst->data.ptr == src->data.ptr) )
             tsrc = (uchar*)cvAlloc(len*elemSize);
 
         for( i = 0; i < count; i++ )
