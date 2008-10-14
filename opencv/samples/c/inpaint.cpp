@@ -43,7 +43,7 @@ int main( int argc, char** argv )
     printf( "Hot keys: \n"
             "\tESC - quit the program\n"
             "\tr - restore the original image\n"
-            "\ti or ENTER - run inpainting algorithm\n"
+            "\ti or SPACE - run inpainting algorithm\n"
             "\t\t(before running it, paint something on the image)\n" );
     
     cvNamedWindow( "image", 1 );
@@ -72,7 +72,7 @@ int main( int argc, char** argv )
             cvShowImage( "image", img );
         }
 
-        if( (char)c == 'i' || (char)c == '\n' )
+        if( (char)c == 'i' || (char)c == ' ' )
         {
             cvNamedWindow( "inpainted image", 1 );
             cvInpaint( img, inpaint_mask, inpainted, 3, CV_INPAINT_TELEA );

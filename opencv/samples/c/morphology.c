@@ -64,7 +64,7 @@ int main( int argc, char** argv )
         "\tr - use rectangle structuring element\n"
         "\te - use elliptic structuring element\n"
         "\tc - use cross-shaped structuring element\n"
-        "\tENTER - loop through all the options\n" );
+        "\tSPACE - loop through all the options\n" );
 
     dst = cvCloneImage(src);
 
@@ -92,7 +92,7 @@ int main( int argc, char** argv )
             element_shape = CV_SHAPE_RECT;
         else if( (char)c == 'c' )
             element_shape = CV_SHAPE_CROSS;
-        else if( (char)c == '\n' )
+        else if( (char)c == ' ' )
             element_shape = (element_shape + 1) % 3;
     }
 
