@@ -111,7 +111,7 @@ int main( int argc, char** argv )
         "\t5 - use 5x5 mask\n"
         "\t0 - use precise distance transform\n"
         "\tv - switch Voronoi diagram mode on/off\n"
-        "\tENTER - loop through all the modes\n" );
+        "\tSPACE - loop through all the modes\n" );
 
     dist = cvCreateImage( cvGetSize(gray), IPL_DEPTH_32F, 1 );
     dist8u1 = cvCloneImage( gray );
@@ -151,7 +151,7 @@ int main( int argc, char** argv )
             mask_size = CV_DIST_MASK_PRECISE;
         else if( (char)c == 'v' )
             build_voronoi ^= 1;
-        else if( (char)c == '\n' || (char)c == '\r' )
+        else if( (char)c == ' ' )
         {
             if( build_voronoi )
             {
