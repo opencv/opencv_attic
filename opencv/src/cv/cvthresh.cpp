@@ -397,8 +397,8 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
         if( ithresh < 0 || ithresh >= 255 )
         {
             if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV ||
-                (type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV) && ithresh < 0 ||
-                type == CV_THRESH_TOZERO && ithresh >= 255 )
+                ((type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV) && ithresh < 0) ||
+                (type == CV_THRESH_TOZERO && ithresh >= 255) )
             {
                 int v = type == CV_THRESH_BINARY ? (ithresh >= 255 ? 0 : imaxval) :
                         type == CV_THRESH_BINARY_INV ? (ithresh >= 255 ? imaxval : 0) :

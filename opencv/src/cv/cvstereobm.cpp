@@ -56,14 +56,14 @@ cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
 {
     CvStereoBMState* state = 0;
 
-    CV_FUNCNAME( "cvCreateStereoBMState" );
+    //CV_FUNCNAME( "cvCreateStereoBMState" );
 
     __BEGIN__;
 
     state = (CvStereoBMState*)cvAlloc( sizeof(*state) );
     if( !state )
         EXIT;
-    
+
     state->preFilterType = CV_STEREO_BM_NORMALIZED_RESPONSE;
     state->preFilterSize = 9;
     state->preFilterCap = 31;

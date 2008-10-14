@@ -231,11 +231,11 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
 
     if( block_size < 3 || !(block_size & 1) )
         CV_ERROR( CV_StsOutOfRange, "averaging window size must be an odd number >= 3" );
-        
-    if( aperture_size < 3 && aperture_size != CV_SCHARR || !(aperture_size & 1) )
+
+    if( (aperture_size < 3 && aperture_size != CV_SCHARR) || !(aperture_size & 1) )
         CV_ERROR( CV_StsOutOfRange,
         "Derivative filter aperture size must be a positive odd number >=3 or CV_SCHARR" );
-    
+
     depth = CV_MAT_DEPTH(src->type);
     d_depth = depth == CV_8U ? CV_16S : CV_32F;
 
@@ -270,8 +270,8 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
         }
     }
     
-    if( ipp_sobel_vert && ipp_sobel_horiz ||
-        ipp_scharr_vert && ipp_scharr_horiz )
+    if( (ipp_sobel_vert && ipp_sobel_horiz) ||
+        (ipp_scharr_vert && ipp_scharr_horiz) )
     {
         CV_CALL( tempsrc = icvIPPFilterInit( src, buf_size,
             cvSize(el_size.width,el_size.height + block_size)));
@@ -430,7 +430,7 @@ cvCornerMinEigenVal( const void* srcarr, void* eigenvarr,
     CV_CALL( src = cvGetMat( srcarr, &stub ));
     CV_CALL( eigenv = cvGetMat( eigenv, &eigstub ));
 
-    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1 ||
+    if( (CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1) ||
         CV_MAT_TYPE(eigenv->type) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
 
@@ -457,7 +457,7 @@ cvCornerHarris( const CvArr* srcarr, CvArr* harris_responce,
     CV_CALL( src = cvGetMat( srcarr, &stub ));
     CV_CALL( eigenv = cvGetMat( eigenv, &eigstub ));
 
-    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1 ||
+    if( (CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1) ||
         CV_MAT_TYPE(eigenv->type) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
 
@@ -489,7 +489,7 @@ cvCornerEigenValsAndVecs( const void* srcarr, void* eigenvarr,
         CV_ERROR( CV_StsUnmatchedSizes, "Output array should be 6 times "
             "wider than the input array and they should have the same height");
 
-    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1 ||
+    if( (CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1) ||
         CV_MAT_TYPE(eigenv->type) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
 
@@ -531,7 +531,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     CV_CALL( src = cvGetMat( srcarr, &stub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
-    if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1 ||
+    if( (CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_32FC1) ||
         CV_MAT_TYPE(dst->type) != CV_32FC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "Input must be 8uC1 or 32fC1, output must be 32fC1" );
 
@@ -544,7 +544,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     if( aperture_size < 3 || aperture_size > 7 || !(aperture_size & 1) )
         CV_ERROR( CV_StsOutOfRange,
         "Derivative filter aperture size must be 3, 5 or 7" );
-    
+
     depth = CV_MAT_DEPTH(src->type);
     d_depth = depth == CV_8U ? CV_16S : CV_32F;
 
@@ -573,7 +573,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
             ipp_sobel_cross = icvFilterSobelCross_32f_C1R_p;
         }
     }
-    
+
     if( ipp_sobel_vert && ipp_sobel_horiz && ipp_sobel_vert_second &&
         ipp_sobel_horiz_second && ipp_sobel_cross )
     {

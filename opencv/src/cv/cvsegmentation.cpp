@@ -252,7 +252,7 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
                 break;
             active_queue = i;
         }
-        
+
         ws_pop( active_queue, mofs, iofs );
 
         m = mask + mofs;
@@ -261,17 +261,22 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
         if( t > 0 ) lab = t;
         t = m[1];
         if( t > 0 )
+        {
             if( lab == 0 ) lab = t;
             else if( t != lab ) lab = WSHED;
+        }
         t = m[-mstep];
         if( t > 0 )
+        {
             if( lab == 0 ) lab = t;
             else if( t != lab ) lab = WSHED;
+        }
         t = m[mstep];
         if( t > 0 )
+        {
             if( lab == 0 ) lab = t;
             else if( t != lab ) lab = WSHED;
-        
+        }
         assert( lab != 0 );
         m[0] = lab;
         if( lab == WSHED )
@@ -467,7 +472,7 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
                         int row_count = 0;
                         x = minx;
                         for( ; x + 3 <= maxx; x += 4, ptr += 12 )
-                        {      
+                        {
                             int t0 = ptr[0], t1 = ptr[1], t2 = ptr[2];
                             if( tab[t0-c0+255] + tab[t1-c1+255] + tab[t2-c2+255] <= isr2 )
                             {                        
@@ -506,7 +511,7 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
                         count += row_count;
                         sy += y*row_count;
                     }
-            
+
                     if( count == 0 )
                         break;
 
@@ -516,8 +521,8 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
                     s0 = cvRound(s0*icount);
                     s1 = cvRound(s1*icount);
                     s2 = cvRound(s2*icount);
-        
-                    stop_flag = x0 == x1 && y0 == y1 || abs(x1-x0) + abs(y1-y0) +
+
+                    stop_flag = (x0 == x1 && y0 == y1) || abs(x1-x0) + abs(y1-y0) +
                         tab[s0 - c0 + 255] + tab[s1 - c1 + 255] +
                         tab[s2 - c2 + 255] <= termcrit.epsilon;
                 

@@ -228,10 +228,9 @@ icvCreateContourTree( const CvSeq * contour, CvMemStorage * storage,
                                                     &sn2, &sn2_c, &hn2, &an2, &bn2 ));
 
             if( (s_c < sp1_c && s_c < sp2_c && s_c <= sn1_c && s_c <= sn2_c && s_c < e) ||
-                (s_c == sp1_c && s_c <= sp2_c || s_c == sp2_c && s_c <= sp1_c) && s_c <= sn1_c
-                && s_c <= sn2_c && s_c < e && j > 1 && prev2_null == 0 || (s_c < eps && j > 0
-                                                                           && prev_null == 0) )
-
+                (((s_c == sp1_c && s_c <= sp2_c) || (s_c == sp2_c && s_c <= sp1_c)) &&
+                s_c <= sn1_c && s_c <= sn2_c && s_c < e && j > 1 && prev2_null == 0) ||
+                (s_c < eps && j > 0 && prev_null == 0) )
             {
                 prev_null = prev2_null = 1;
                 if( s_c < threshold )

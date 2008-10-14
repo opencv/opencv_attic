@@ -64,7 +64,7 @@ CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
         "The matrix can not be converted to point sequence because of "
         "inappropriate element type" );
 
-    if( mat->width != 1 && mat->height != 1 || !CV_IS_MAT_CONT(mat->type))
+    if( (mat->width != 1 && mat->height != 1) || !CV_IS_MAT_CONT(mat->type))
         CV_ERROR( CV_StsBadArg,
         "The matrix converted to point sequence must be "
         "1-dimensional and continuous" );

@@ -563,7 +563,7 @@ icvPyrDownBorder_##flavor##_CnR( const arrtype *src, int src_step, CvSize src_si
                 }                                                                       \
             }                                                                           \
         }                                                                               \
-        else if( W == 3 && Wd == 1 || W > 3 && !(Wd & 1) )                              \
+        else if( (W == 3 && Wd == 1) || (W > 3 && !(Wd & 1)) )                          \
         {                                                                               \
             for( i = 0; i < H; i++, src += src_step, buf += channels )                  \
             {                                                                           \
@@ -1069,8 +1069,8 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     // current restriction of PyrDownBorder* 
-    if( src_size.width <= 2 && dst_size.width != 1 ||
-        src_size.height <= 2 && dst_size.height != 1 )
+    if( (src_size.width <= 2 && dst_size.width != 1) ||
+        (src_size.height <= 2 && dst_size.height != 1) )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     /*if( src->data.ptr == dst->data.ptr )
@@ -1231,7 +1231,7 @@ cvCreatePyramid( const CvArr* srcarr, int extra_layers, double rate,
         }
         else
             layer_size = layer_sizes[i];
-        
+
         if( bufarr )
         {
             pyramid[i] = cvCreateMatHeader( layer_size.height, layer_size.width, src->type );

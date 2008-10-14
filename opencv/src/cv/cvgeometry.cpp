@@ -217,12 +217,12 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
             v0 = v;
             CV_READ_SEQ_ELEM( v, reader );
 
-            if( v0.y <= ip.y && v.y <= ip.y ||
-                v0.y > ip.y && v.y > ip.y ||
-                v0.x < ip.x && v.x < ip.x )
+            if( (v0.y <= ip.y && v.y <= ip.y) ||
+                (v0.y > ip.y && v.y > ip.y) ||
+                (v0.x < ip.x && v.x < ip.x) )
             {
-                if( ip.y == v.y && (ip.x == v.x || ip.y == v0.y &&
-                    (v0.x <= ip.x && ip.x <= v.x || v.x <= ip.x && ip.x <= v0.x)) )
+                if( ip.y == v.y && (ip.x == v.x || (ip.y == v0.y &&
+                    ((v0.x <= ip.x && ip.x <= v.x) || (v.x <= ip.x && ip.x <= v0.x)))) )
                     EXIT;
                 continue;
             }
@@ -268,12 +268,12 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
                     v = cvPointTo32f( iv );
                 }
 
-                if( v0.y <= pt.y && v.y <= pt.y ||
-                    v0.y > pt.y && v.y > pt.y ||
-                    v0.x < pt.x && v.x < pt.x )
+                if( (v0.y <= pt.y && v.y <= pt.y) ||
+                    (v0.y > pt.y && v.y > pt.y) ||
+                    (v0.x < pt.x && v.x < pt.x) )
                 {
-                    if( pt.y == v.y && (pt.x == v.x || pt.y == v0.y &&
-                        (v0.x <= pt.x && pt.x <= v.x || v.x <= pt.x && pt.x <= v0.x)) )
+                    if( pt.y == v.y && (pt.x == v.x || (pt.y == v0.y &&
+                        ((v0.x <= pt.x && pt.x <= v.x) || (v.x <= pt.x && pt.x <= v0.x)))) )
                         EXIT;
                     continue;
                 }
@@ -285,7 +285,7 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
                     dist = -dist;
                 counter += dist > 0;
             }
-            
+
             result = counter % 2 == 0 ? -100 : 100;
         }
         else
@@ -328,9 +328,9 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
                         break;
                 }
 
-                if( v0.y <= pt.y && v.y <= pt.y ||
-                    v0.y > pt.y && v.y > pt.y ||
-                    v0.x < pt.x && v.x < pt.x )
+                if( (v0.y <= pt.y && v.y <= pt.y) ||
+                    (v0.y > pt.y && v.y > pt.y) ||
+                    (v0.x < pt.x && v.x < pt.x) )
                     continue;
 
                 dist_num = dy1*dx - dx1*dy;
@@ -385,7 +385,7 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     c *= z;
     s *= z;
 
-    double _Qx[3][3] = { 1, 0, 0, 0, c, s, 0, -s, c };
+    double _Qx[3][3] = { {1, 0, 0}, {0, c, s}, {0, -s, c} };
     CvMat Qx = cvMat(3, 3, CV_64F, _Qx);
 
     cvMatMul(&M, &Qx, &R);
@@ -404,7 +404,7 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     c *= z;
     s *= z;
 
-    double _Qy[3][3] = { c, 0, s, 0, 1, 0, -s, 0, c };
+    double _Qy[3][3] = { {c, 0, s}, {0, 1, 0}, {-s, 0, c} };
     CvMat Qy = cvMat(3, 3, CV_64F, _Qy);
     cvMatMul(&R, &Qy, &M);
 
@@ -424,7 +424,7 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     c *= z;
     s *= z;
 
-    double _Qz[3][3] = { c, s, 0, -s, c, 0, 0, 0, 1 };
+    double _Qz[3][3] = { {c, s, 0}, {-s, c, 0}, {0, 0, 1} };
     CvMat Qz = cvMat(3, 3, CV_64F, _Qz);
 
     cvMatMul(&M, &Qz, &R);

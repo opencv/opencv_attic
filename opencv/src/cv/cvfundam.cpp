@@ -960,7 +960,7 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
 
     CV_ASSERT( CV_IS_MAT(points1) && CV_IS_MAT(points2) && CV_ARE_SIZES_EQ(points1, points2) );
     CV_ASSERT( CV_IS_MAT(fmatrix) && fmatrix->cols == 3 &&
-        (fmatrix->rows == 3 || fmatrix->rows == 9 && method == CV_FM_7POINT) );
+        (fmatrix->rows == 3 || (fmatrix->rows == 9 && method == CV_FM_7POINT)) );
 
     count = MAX(points1->cols, points1->rows);
     if( count < 7 )
@@ -1046,7 +1046,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
 
     depth = CV_MAT_DEPTH(points->type);
     cn = CV_MAT_CN(points->type);
-    if( depth != CV_32F && depth != CV_64F || cn != 1 && cn != 2 && cn != 3 )
+    if( (depth != CV_32F && depth != CV_64F) || (cn != 1 && cn != 2 && cn != 3) )
         CV_ERROR( CV_StsUnsupportedFormat, "The format of point matrix is unsupported" );
 
     if( points->rows > points->cols )
@@ -1056,7 +1056,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     }
     else
     {
-        if( points->rows > 1 && cn > 1 || points->rows == 1 && cn == 1 )
+        if( (points->rows > 1 && cn > 1) || (points->rows == 1 && cn == 1) )
             CV_ERROR( CV_StsBadSize, "The point matrix does not have a proper layout (2xn, 3xn, nx2 or nx3)" );
         dims = cn * points->rows;
         count = points->cols;
@@ -1079,7 +1079,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
 
     abc_depth = CV_MAT_DEPTH(lines->type);
     abc_cn = CV_MAT_CN(lines->type);
-    if( abc_depth != CV_32F && abc_depth != CV_64F || abc_cn != 1 && abc_cn != 3 )
+    if( (abc_depth != CV_32F && abc_depth != CV_64F) || (abc_cn != 1 && abc_cn != 3) )
         CV_ERROR( CV_StsUnsupportedFormat, "The format of the matrix of lines is unsupported" );
 
     if( lines->rows > lines->cols )
@@ -1089,7 +1089,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     }
     else
     {
-        if( lines->rows > 1 && abc_cn > 1 || lines->rows == 1 && abc_cn == 1 )
+        if( (lines->rows > 1 && abc_cn > 1) || (lines->rows == 1 && abc_cn == 1) )
             CV_ERROR( CV_StsBadSize, "The lines matrix does not have a proper layout (3xn or nx3)" );
         abc_dims = abc_cn * lines->rows;
         abc_count = lines->cols;

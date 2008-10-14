@@ -518,7 +518,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
 {
     int bb;
 
-    if( *buf1 == NULL && *buf2 == NULL || *buf3 == NULL )
+    if( (*buf1 == NULL && *buf2 == NULL) || *buf3 == NULL )
         return CV_NULLPTR_ERR;
 
     bb = *b_max;
@@ -629,7 +629,7 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
 
 /****************   edges intersection examination   **************************/
                 sk = nx * (xi - pt_s.x) + ny * (yi - pt_s.y);
-                if( fabs( sk ) < eps && lpt > 0 || sk * sk1 < -eps )
+                if( (fabs( sk ) < eps && lpt > 0) || sk * sk1 < -eps )
                 {
                     if( fabs( sk ) < eps )
                     {
