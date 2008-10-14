@@ -786,7 +786,7 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
     {
         mat = (CvMat*)lineStorage;
 
-        if( !CV_IS_MAT_CONT( mat->type ) || mat->rows != 1 && mat->cols != 1 )
+        if( !CV_IS_MAT_CONT( mat->type ) || (mat->rows != 1 && mat->cols != 1) )
             CV_ERROR( CV_StsBadArg,
             "The destination matrix should be continuous and have a single row or a single column" );
 
@@ -909,13 +909,13 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
             float vx, vy;
             int sx, sy, x0, y0, x1, y1, r, k;
             CvPoint pt;
-            
+
             vx = dx_row[x];
             vy = dy_row[x];
 
-            if( !edges_row[x] || vx == 0 && vy == 0 )
+            if( !edges_row[x] || (vx == 0 && vy == 0) )
                 continue;
-            
+
             if( fabs(vx) < fabs(vy) )
             {
                 sx = cvRound(vx*ONE/fabs(vy));
@@ -1036,7 +1036,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
             {
                 float r_cur = ddata[sort_buf[(j + start_idx)/2]];
                 if( (start_idx - j)*r_best >= max_count*r_cur ||
-                    r_best < FLT_EPSILON && start_idx - j >= max_count )
+                    (r_best < FLT_EPSILON && start_idx - j >= max_count) )
                 {
                     r_best = r_cur;
                     max_count = start_idx - j;
@@ -1117,7 +1117,7 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     {
         mat = (CvMat*)circle_storage;
 
-        if( !CV_IS_MAT_CONT( mat->type ) || mat->rows != 1 && mat->cols != 1 ||
+        if( !CV_IS_MAT_CONT( mat->type ) || (mat->rows != 1 && mat->cols != 1) ||
             CV_MAT_TYPE(mat->type) != CV_32FC3 )
             CV_ERROR( CV_StsBadArg,
             "The destination matrix should be continuous and have a single row or a single column" );

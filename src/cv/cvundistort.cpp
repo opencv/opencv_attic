@@ -148,14 +148,14 @@ cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-        CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1 )
+        (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
         CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
 
-    if( !CV_IS_MAT(dist_coeffs) || dist_coeffs->rows != 1 && dist_coeffs->cols != 1 ||
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5 ||
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F )
+    if( !CV_IS_MAT(dist_coeffs) || (dist_coeffs->rows != 1 && dist_coeffs->cols != 1) ||
+        (dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
+        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5) ||
+        (CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
+        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F) )
         CV_ERROR( CV_StsBadArg,
             "Distortion coefficients must be 1x4, 4x1, 1x5 or 5x1 floating-point vector" );
 
@@ -211,14 +211,14 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
     size = cvGetMatSize(_mapx);
 
     if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-        CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1 )
+        (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
         CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
 
-    if( !CV_IS_MAT(dist_coeffs) || dist_coeffs->rows != 1 && dist_coeffs->cols != 1 ||
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5 ||
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F )
+    if( !CV_IS_MAT(dist_coeffs) || (dist_coeffs->rows != 1 && dist_coeffs->cols != 1) ||
+        (dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
+        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5) ||
+        (CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
+        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F) )
         CV_ERROR( CV_StsBadArg,
             "Distortion coefficients must be 1x4, 4x1, 1x5 or 5x1 floating-point vector" );
 
@@ -295,7 +295,7 @@ cvInitUndistortRectifyMap( const CvMat* A, const CvMat* distCoeffs,
     if( A )
     {
         if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-            CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1 )
+            (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
             CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
         cvConvert( A, &_a );
     }
@@ -306,7 +306,7 @@ cvInitUndistortRectifyMap( const CvMat* A, const CvMat* distCoeffs,
     {
         CvMat Ar33;
         if( !CV_IS_MAT(Ar) || Ar->rows != 3 || (Ar->cols != 3 && Ar->cols != 4) ||
-            CV_MAT_TYPE(Ar->type) != CV_32FC1 && CV_MAT_TYPE(Ar->type) != CV_64FC1 )
+            (CV_MAT_TYPE(Ar->type) != CV_32FC1 && CV_MAT_TYPE(Ar->type) != CV_64FC1) )
             CV_ERROR( CV_StsBadArg, "The new intrinsic matrix must be a valid 3x3 floating-point matrix" );
         cvGetCols( Ar, &Ar33, 0, 3 );
         cvConvert( &Ar33, &_ar );
@@ -315,7 +315,7 @@ cvInitUndistortRectifyMap( const CvMat* A, const CvMat* distCoeffs,
         cvSetIdentity( &_ar );
 
     if( !CV_IS_MAT(R) || R->rows != 3 || R->cols != 3  ||
-        CV_MAT_TYPE(R->type) != CV_32FC1 && CV_MAT_TYPE(R->type) != CV_64FC1 )
+        (CV_MAT_TYPE(R->type) != CV_32FC1 && CV_MAT_TYPE(R->type) != CV_64FC1) )
         CV_ERROR( CV_StsBadArg, "Rotaion/homography matrix must be a valid 3x3 floating-point matrix" );
 
     if( distCoeffs )

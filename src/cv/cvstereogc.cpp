@@ -41,6 +41,7 @@
 
 #include "_cv.h"
 
+#undef INFINITY
 #define INFINITY 10000
 #define OCCLUSION_PENALTY 10000
 #define OCCLUSION_PENALTY2 1000
@@ -368,7 +369,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities, int maxIters )
 {
     CvStereoGCState* state = 0;
 
-    CV_FUNCNAME("cvCreateStereoGCState");
+    //CV_FUNCNAME("cvCreateStereoGCState");
 
     __BEGIN__;
     

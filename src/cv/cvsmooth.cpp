@@ -117,8 +117,8 @@ void CvBoxFilter::init( int _max_width, int _src_type, int _dst_type,
     sum = 0;
     normalized = _normalized;
 
-    if( normalized && CV_MAT_TYPE(_src_type) != CV_MAT_TYPE(_dst_type) ||
-        !normalized && CV_MAT_CN(_src_type) != CV_MAT_CN(_dst_type))
+    if( (normalized && CV_MAT_TYPE(_src_type) != CV_MAT_TYPE(_dst_type)) ||
+        (!normalized && CV_MAT_CN(_src_type) != CV_MAT_CN(_dst_type)))
         CV_ERROR( CV_StsUnmatchedFormats,
         "In case of normalized box filter input and output must have the same type.\n"
         "In case of unnormalized box filter the number of input and output channels must be the same" );
@@ -925,8 +925,8 @@ icvMedianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
                 }
             }
 
-            if( src_step1 > 0 && y < size.height-1 ||
-                src_step1 < 0 && size.height-y-1 > 0 )
+            if( (src_step1 > 0 && y < size.height-1) ||
+                (src_step1 < 0 && size.height-y-1 > 0) )
                 src_bottom += src_step1;
         }
 
@@ -1006,8 +1006,8 @@ icvMedianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
                 }
             }
 
-            if( src_step1 > 0 && src_bottom + src_step1 < src_max ||
-                src_step1 < 0 && src_bottom + src_step1 >= src )
+            if( (src_step1 > 0 && src_bottom + src_step1 < src_max) ||
+                (src_step1 < 0 && src_bottom + src_step1 >= src) )
                 src_bottom += src_step1;
 
             if( y >= m/2 )
@@ -1046,9 +1046,9 @@ icvBilateralFiltering_8u( const CvMat* src, CvMat* dst, int d,
     int cn = CV_MAT_CN(src->type);
     int i, j, k, maxk, radius;
     CvSize size = cvGetMatSize(src);
-   
-    if( CV_MAT_TYPE(src->type) != CV_8UC1 &&
-        CV_MAT_TYPE(src->type) != CV_8UC3 ||
+
+    if( (CV_MAT_TYPE(src->type) != CV_8UC1 &&
+        CV_MAT_TYPE(src->type) != CV_8UC3) ||
         !CV_ARE_TYPES_EQ(src, dst) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "Both source and destination must be 8-bit, single-channel or 3-channel images" );
@@ -1166,11 +1166,11 @@ static void icvBilateralFiltering_32f( const CvMat* src, CvMat* dst, int d,
     int temp_step;
     float len, scale_index;
     CvMat src_reshaped;
-    
+
     CvSize size = cvGetMatSize(src);
-   
-    if( CV_MAT_TYPE(src->type) != CV_32FC1 &&
-        CV_MAT_TYPE(src->type) != CV_32FC3 ||
+
+    if( (CV_MAT_TYPE(src->type) != CV_32FC1 &&
+        CV_MAT_TYPE(src->type) != CV_32FC3) ||
         !CV_ARE_TYPES_EQ(src, dst) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "Both source and destination must be 32-bit float, single-channel or 3-channel images" );
@@ -1436,8 +1436,8 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
     {
         int img_size_mp = size.width*size.height;
         img_size_mp = (img_size_mp + (1<<19)) >> 20;
-        
-        if( depth != CV_8U || cn != 1 && cn != 3 && cn != 4 )
+
+        if( depth != CV_8U || (cn != 1 && cn != 3 && cn != 4) )
             CV_ERROR( CV_StsUnsupportedFormat,
             "Median filter only supports 8uC1, 8uC3 and 8uC4 images" );
 

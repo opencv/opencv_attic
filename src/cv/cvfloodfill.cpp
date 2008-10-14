@@ -523,13 +523,13 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                         int idx, val[1];
                 
                         if( !mask[i] &&
-                            ((val[0] = img[i],
+                            (((val[0] = img[i],
                             (unsigned)(idx = i-L-1) <= length) &&
-                            DIFF_INT_C1( val, img - curstep + (i-1) ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_INT_C1( val, img - curstep + i ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_INT_C1( val, img - curstep + (i+1) )))
+                            DIFF_INT_C1( val, img - curstep + (i-1))) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_INT_C1( val, img - curstep + i )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_INT_C1( val, img - curstep + (i+1) ))))
                         {
                             int j = i;
                             mask[i] = newMaskVal;
@@ -539,12 +539,12 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                             while( !mask[++i] &&
                                    ((val[0] = img[i],
                                    DIFF_INT_C1( val, img + (i-1) )) ||
-                                   ((unsigned)(idx = i-L-1) <= length &&
-                                   DIFF_INT_C1( val, img - curstep + (i-1) )) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_INT_C1( val, img - curstep + i ) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_INT_C1( val, img - curstep + (i+1) )))
+                                   (((unsigned)(idx = i-L-1) <= length &&
+                                   DIFF_INT_C1( val, img - curstep + (i-1) ))) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_INT_C1( val, img - curstep + i )) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_INT_C1( val, img - curstep + (i+1) ))))
                                 mask[i] = newMaskVal;
 
                             ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
@@ -609,15 +609,15 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                     for( i = left; i <= right; i++ )
                     {
                         int idx, val[3];
-                
+
                         if( !mask[i] &&
-                            ((ICV_SET_C3( val, img+i*3 ),
+                            (((ICV_SET_C3( val, img+i*3 ),
                             (unsigned)(idx = i-L-1) <= length) &&
-                            DIFF_INT_C3( val, img - curstep + (i-1)*3 ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_INT_C3( val, img - curstep + i*3 ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_INT_C3( val, img - curstep + (i+1)*3 )))
+                            DIFF_INT_C3( val, img - curstep + (i-1)*3 )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_INT_C3( val, img - curstep + i*3 )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_INT_C3( val, img - curstep + (i+1)*3 ))))
                         {
                             int j = i;
                             mask[i] = newMaskVal;
@@ -627,12 +627,12 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                             while( !mask[++i] &&
                                    ((ICV_SET_C3( val, img + i*3 ),
                                    DIFF_INT_C3( val, img + (i-1)*3 )) ||
-                                   ((unsigned)(idx = i-L-1) <= length &&
-                                   DIFF_INT_C3( val, img - curstep + (i-1)*3 )) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_INT_C3( val, img - curstep + i*3 ) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_INT_C3( val, img - curstep + (i+1)*3 )))
+                                   (((unsigned)(idx = i-L-1) <= length &&
+                                   DIFF_INT_C3( val, img - curstep + (i-1)*3 ))) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_INT_C3( val, img - curstep + i*3 )) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_INT_C3( val, img - curstep + (i+1)*3 ))))
                                 mask[i] = newMaskVal;
 
                             ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
@@ -653,7 +653,7 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                 }
         }
     }
-    
+
     if( region )
     {
         region->area = area;
@@ -661,7 +661,7 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
         region->rect.y = YMin;
         region->rect.width = XMax - XMin + 1;
         region->rect.height = YMax - YMin + 1;
-    
+
         if( fillImage )
             region->value = cvScalar(newVal[0], newVal[1], newVal[2]);
         else
@@ -828,15 +828,15 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                     {
                         int idx;
                         float val[1];
-                
+
                         if( !mask[i] &&
-                            ((val[0] = img[i],
+                            (((val[0] = img[i],
                             (unsigned)(idx = i-L-1) <= length) &&
-                            DIFF_FLT_C1( val, img - curstep + (i-1) ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_FLT_C1( val, img - curstep + i ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_FLT_C1( val, img - curstep + (i+1) )))
+                            DIFF_FLT_C1( val, img - curstep + (i-1) )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_FLT_C1( val, img - curstep + i )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_FLT_C1( val, img - curstep + (i+1) ))))
                         {
                             int j = i;
                             mask[i] = newMaskVal;
@@ -846,12 +846,12 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                             while( !mask[++i] &&
                                    ((val[0] = img[i],
                                    DIFF_FLT_C1( val, img + (i-1) )) ||
-                                   ((unsigned)(idx = i-L-1) <= length &&
-                                   DIFF_FLT_C1( val, img - curstep + (i-1) )) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_FLT_C1( val, img - curstep + i ) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_FLT_C1( val, img - curstep + (i+1) )))
+                                   (((unsigned)(idx = i-L-1) <= length &&
+                                   DIFF_FLT_C1( val, img - curstep + (i-1) ))) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_FLT_C1( val, img - curstep + i )) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_FLT_C1( val, img - curstep + (i+1) ))))
                                 mask[i] = newMaskVal;
 
                             ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );
@@ -919,13 +919,13 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                         float val[3];
                 
                         if( !mask[i] &&
-                            ((ICV_SET_C3( val, img+i*3 ),
+                            (((ICV_SET_C3( val, img+i*3 ),
                             (unsigned)(idx = i-L-1) <= length) &&
-                            DIFF_FLT_C3( val, img - curstep + (i-1)*3 ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_FLT_C3( val, img - curstep + i*3 ) ||
-                            (unsigned)(++idx) <= length &&
-                            DIFF_FLT_C3( val, img - curstep + (i+1)*3 )))
+                            DIFF_FLT_C3( val, img - curstep + (i-1)*3 )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_FLT_C3( val, img - curstep + i*3 )) ||
+                            ((unsigned)(++idx) <= length &&
+                            DIFF_FLT_C3( val, img - curstep + (i+1)*3 ))))
                         {
                             int j = i;
                             mask[i] = newMaskVal;
@@ -935,12 +935,12 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                             while( !mask[++i] &&
                                    ((ICV_SET_C3( val, img + i*3 ),
                                    DIFF_FLT_C3( val, img + (i-1)*3 )) ||
-                                   ((unsigned)(idx = i-L-1) <= length &&
-                                   DIFF_FLT_C3( val, img - curstep + (i-1)*3 )) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_FLT_C3( val, img - curstep + i*3 ) ||
-                                   (unsigned)(++idx) <= length &&
-                                   DIFF_FLT_C3( val, img - curstep + (i+1)*3 )))
+                                   (((unsigned)(idx = i-L-1) <= length &&
+                                   DIFF_FLT_C3( val, img - curstep + (i-1)*3 ))) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_FLT_C3( val, img - curstep + i*3 )) ||
+                                   ((unsigned)(++idx) <= length &&
+                                   DIFF_FLT_C3( val, img - curstep + (i+1)*3 ))))
                                 mask[i] = newMaskVal;
 
                             ICV_PUSH( YC + dir, j+1, i-1, L, R, -dir );

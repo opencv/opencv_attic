@@ -423,7 +423,7 @@ void CvMorphology::init_binary_element( CvMat* element, int element_shape, CvPoi
         uchar* ptr = element->data.ptr + i*element->step;
         int j1 = 0, j2 = 0, jx, t = 0;
 
-        if( element_shape == RECT || element_shape == CROSS && i == anchor.y )
+        if( element_shape == RECT || (element_shape == CROSS && i == anchor.y) )
             j2 = cols;
         else if( element_shape == CROSS )
             j1 = anchor.x, j2 = j1 + 1;
@@ -1128,7 +1128,7 @@ cvMorphologyEx( const void* src, void* dst,
     __BEGIN__;
 
     if( (op == CV_MOP_GRADIENT ||
-        (op == CV_MOP_TOPHAT || op == CV_MOP_BLACKHAT) && src == dst) && temp == 0 )
+        ((op == CV_MOP_TOPHAT || op == CV_MOP_BLACKHAT) && src == dst)) && temp == 0 )
         CV_ERROR( CV_HeaderIsNull, "temp image required" );
 
     if( temp == src || temp == dst )

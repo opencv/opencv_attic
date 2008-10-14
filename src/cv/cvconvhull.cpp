@@ -191,7 +191,7 @@ typedef int (*sklansky_func)( CvPoint** points, int start, int end,
                               int* stack, int sign, int sign2 );
 
 #define cmp_pts( pt1, pt2 )  \
-    ((pt1)->x < (pt2)->x || (pt1)->x <= (pt2)->x && (pt1)->y < (pt2)->y)
+    ((pt1)->x < (pt2)->x || ((pt1)->x <= (pt2)->x && (pt1)->y < (pt2)->y))
 static CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32s, CvPoint*, cmp_pts )
 static CV_IMPLEMENT_QSORT( icvSortPointsByPointers_32f, CvPoint2D32f*, cmp_pts )
 
@@ -293,7 +293,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
 
         mat = (CvMat*)hull_storage;
 
-        if( mat->cols != 1 && mat->rows != 1 || !CV_IS_MAT_CONT(mat->type))
+        if( (mat->cols != 1 && mat->rows != 1) || !CV_IS_MAT_CONT(mat->type))
             CV_ERROR( CV_StsBadArg,
             "The hull matrix should be continuous and have a single row or a single column" );
 
@@ -444,9 +444,9 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         {
             int check_idx = bl_count > 2 ? bl_stack[1] :
                             bl_count + br_count > 2 ? br_stack[2-bl_count] : -1;
-            if( check_idx == stop_idx || check_idx >= 0 &&
+            if( check_idx == stop_idx || (check_idx >= 0 &&
                 pointer[check_idx]->x == pointer[stop_idx]->x &&
-                pointer[check_idx]->y == pointer[stop_idx]->y )
+                pointer[check_idx]->y == pointer[stop_idx]->y) )
             {
                 /* if all the points lie on the same line, then
                    the bottom part of the convex hull is the mirrored top part
@@ -575,7 +575,7 @@ cvConvexityDefects( const CvArr* array,
         if( !CV_IS_MAT( hull ))
             CV_ERROR(CV_StsBadArg, "Convex hull is neither sequence nor matrix");
 
-        if( mat->cols != 1 && mat->rows != 1 ||
+        if( (mat->cols != 1 && mat->rows != 1) ||
             !CV_IS_MAT_CONT(mat->type) || CV_MAT_TYPE(mat->type) != CV_32SC1 )
             CV_ERROR( CV_StsBadArg,
             "The matrix should be 1-dimensional and continuous array of int's" );

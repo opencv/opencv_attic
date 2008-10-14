@@ -748,15 +748,15 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     if( !CV_ARE_SIZES_EQ(input_img,output_img) || !CV_ARE_SIZES_EQ(input_img,inpaint_mask))
         CV_ERROR( CV_StsUnmatchedSizes, "All the input and output images must have the same size" );
     
-    if( CV_MAT_TYPE(input_img->type) != CV_8UC1 &&
-        CV_MAT_TYPE(input_img->type) != CV_8UC3 ||
+    if( (CV_MAT_TYPE(input_img->type) != CV_8UC1 &&
+        CV_MAT_TYPE(input_img->type) != CV_8UC3) ||
         !CV_ARE_TYPES_EQ(input_img,output_img) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "Only 8-bit 1-channel and 3-channel input/output images are supported" );
-    
+
     if( CV_MAT_TYPE(inpaint_mask->type) != CV_8UC1 )
         CV_ERROR( CV_StsUnsupportedFormat, "The mask must be 8-bit 1-channel image" );
-    
+
     range = MAX(range,1);
     range = MIN(range,100);
 

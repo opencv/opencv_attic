@@ -190,7 +190,7 @@ icvApproximateChainTC89( CvChain*               chain,
             dk_num = (pt0.x - array[i1].pt.x) * dy - (pt0.y - array[i1].pt.y) * dx;
             d.f = (float) (((double) d_num) * lk - ((double) dk_num) * l);
 
-            if( k > 1 && (l >= lk || (d_num > 0 && d.i <= 0 || d_num < 0 && d.i >= 0)))
+            if( k > 1 && (l >= lk || ((d_num > 0 && d.i <= 0) || (d_num < 0 && d.i >= 0))))
                 break;
 
             d_num = dk_num;
@@ -362,7 +362,7 @@ icvApproximateChainTC89( CvChain*               chain,
                     int s1 = prev_current->s;
                     int s2 = current->s;
 
-                    if( s1 > s2 || s1 == s2 && prev_current->k <= current->k )
+                    if( s1 > s2 || (s1 == s2 && prev_current->k <= current->k) )
                         /* remove second */
                         prev_current->next = current->next;
                     else

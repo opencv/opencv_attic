@@ -97,8 +97,8 @@ icvInitPyramidalAlgorithm( const CvMat* imgA, const CvMat* imgB,
     *size = 0;
 
     /* check input arguments */
-    if( (flags & CV_LKFLOW_PYR_A_READY) != 0 && !pyrA ||
-        (flags & CV_LKFLOW_PYR_B_READY) != 0 && !pyrB )
+    if( ((flags & CV_LKFLOW_PYR_A_READY) != 0 && !pyrA) ||
+        ((flags & CV_LKFLOW_PYR_B_READY) != 0 && !pyrB) )
         CV_ERROR( CV_StsNullPtr, "Some of the precomputed pyramids are missing" );
 
     if( level < 0 )

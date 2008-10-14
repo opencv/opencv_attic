@@ -300,7 +300,7 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
 
         if( right_of_dprev > 0 )
         {
-            if( right_of_onext > 0 || right_of_onext == 0 && right_of_curr == 0 )
+            if( right_of_onext > 0 || (right_of_onext == 0 && right_of_curr == 0) )
             {
                 location = CV_PTLOC_INSIDE;
                 EXIT;

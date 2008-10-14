@@ -342,9 +342,9 @@ cvIntegral( const CvArr* image, CvArr* sumImage,
         sum->height != src->height + 1 )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    if( CV_MAT_DEPTH( sum->type ) != CV_64F &&
+    if( (CV_MAT_DEPTH( sum->type ) != CV_64F &&
         (CV_MAT_DEPTH( src->type ) != CV_8U ||
-         CV_MAT_DEPTH( sum->type ) != CV_32S ) ||
+         CV_MAT_DEPTH( sum->type ) != CV_32S )) ||
         !CV_ARE_CNS_EQ( src, sum ))
         CV_ERROR( CV_StsUnsupportedFormat,
         "Sum array must have 64f type (or 32s type in case of 8u source array) "

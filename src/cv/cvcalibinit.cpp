@@ -1294,8 +1294,8 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         }
     }
 
-    if( !right || right->count != 2 && right->count != 3 ||
-        !below || below->count != 2 && below->count != 3 )
+    if( !right || (right->count != 2 && right->count != 3) ||
+        !below || (below->count != 2 && below->count != 3) )
         EXIT;
 
     cur->row = 0;
@@ -1679,8 +1679,8 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
                 dy = pt[1].y - pt[2].y;
                 d4 = sqrt(dx*dx + dy*dy);
                 if( !(flags & CV_CALIB_CB_FILTER_QUADS) ||
-                    d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_size &&
-                    d1 >= 0.15 * p && d2 >= 0.15 * p )
+                    (d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_size &&
+                    d1 >= 0.15 * p && d2 >= 0.15 * p) )
                 {
                     CvContourEx* parent = (CvContourEx*)(src_contour->v_prev);
                     parent->counter++;
@@ -1878,8 +1878,8 @@ icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
                     d4 = sqrt(dx*dx + dy*dy);
                     if( edge_flag ||
                         (!(flags & CV_CALIB_CB_FILTER_QUADS) ||
-                        d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_size &&
-                        d1 >= 0.15 * p && d2 >= 0.15 * p) )
+                        (d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_size &&
+                        d1 >= 0.15 * p && d2 >= 0.15 * p)) )
                     {
                         CvContourEx* parent = (CvContourEx*)(src_contour->v_prev);
                         parent->counter++;

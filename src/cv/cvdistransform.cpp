@@ -643,7 +643,7 @@ icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
 
     //init first pixel to max (we're going to be skipping it)
     dbase[0] = (uchar)(sbase[0] == 0 ? 0 : 255);
-    
+
     //first row (scan west only, skip first pixel)
     for( x = 1; x < width; x++ )
         dbase[x] = (uchar)(sbase[x] == 0 ? 0 : lut[dbase[x-1]]);
@@ -652,14 +652,14 @@ icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
     {
         sbase += srcstep;
         dbase += dststep;
-        
+
         //for left edge, scan north only
         a = sbase[0] == 0 ? 0 : lut[dbase[-dststep]];
         dbase[0] = (uchar)a;
 
         for( x = 1; x < width; x++ )
         {
-            a = sbase[x] == 0 ? 0 : lut[CV_CALC_MIN_8U(a, dbase[x - dststep])];
+            a = sbase[x] == 0 ? 0 : lut[MIN(a, dbase[x - dststep])];
             dbase[x] = (uchar)a;
         }
     }
@@ -679,16 +679,16 @@ icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
     for( y = height - 2; y >= 0; y-- )
     {
         dbase -= dststep;
-        
+
         // do right edge
         a = lut[dbase[width-1+dststep]];
-        dbase[width-1] = (uchar)(CV_CALC_MIN_8U(a, dbase[width-1]));
+        dbase[width-1] = (uchar)(MIN(a, dbase[width-1]));
 
         for( x = width - 2; x >= 0; x-- )
         {
             int b = dbase[x+dststep];
-            a = lut[CV_CALC_MIN_8U(a, b)];
-            dbase[x] = (uchar)(CV_CALC_MIN_8U(a, dbase[x]));
+            a = lut[MIN(a, b)];
+            dbase[x] = (uchar)(MIN(a, dbase[x]));
         }
     }
 
@@ -724,8 +724,8 @@ cvDistTransform( const void* srcarr, void* dstarr,
     CV_CALL( src = cvGetMat( src, &srcstub ));
     CV_CALL( dst = cvGetMat( dst, &dststub ));
 
-    if( !CV_IS_MASK_ARR( src ) || CV_MAT_TYPE( dst->type ) != CV_32FC1 &&
-        (CV_MAT_TYPE(dst->type) != CV_8UC1 || distType != CV_DIST_L1 || labels) )
+    if( !CV_IS_MASK_ARR( src ) || (CV_MAT_TYPE( dst->type ) != CV_32FC1 &&
+        (CV_MAT_TYPE(dst->type) != CV_8UC1 || distType != CV_DIST_L1 || labels)) )
         CV_ERROR( CV_StsUnsupportedFormat,
         "source image must be 8uC1 and the distance map must be 32fC1 "
         "(or 8uC1 in case of simple L1 distance transform)" );

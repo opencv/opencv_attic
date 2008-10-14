@@ -726,7 +726,7 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
 
     int dims, size[CV_MAX_DIM], total = 0;
     int i, j;
-    
+
     if( !ranges )
         CV_ERROR( CV_StsNullPtr, "NULL ranges pointer" );
 
@@ -2142,7 +2142,7 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
                            int method, double norm_factor )
 {
     CvHistogram* model = 0;
-    
+
     CV_FUNCNAME( "cvCalcArrBackProjectPatch" );
 
     __BEGIN__;
@@ -2157,7 +2157,7 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
     if( !CV_IS_HIST(hist))
         CV_ERROR( CV_StsBadArg, "Bad histogram pointer" );
 
-    if( !img )
+    if( !arr )
         CV_ERROR( CV_StsNullPtr, "Null double array pointer" );
 
     if( norm_factor <= 0 )
