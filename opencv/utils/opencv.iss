@@ -1,8 +1,8 @@
 ; -- OpenCV script for Inno Setup 2.0 (or later) Installer --
 
 [Setup]
-AppName=Intel(R) Open Source Computer Vision Library
-AppVerName=Intel(R) Open Source Computer Vision Library 1.1pre1
+AppName=Open Source Computer Vision Library
+AppVerName=Open Source Computer Vision Library 1.1pre1
 AppCopyright=Copyright (C) 2000-2006 Intel Corporation
 DefaultDirName={pf}\OpenCV
 DefaultGroupName=OpenCV
@@ -172,54 +172,48 @@ Source: "_make\*.mak"; DestDir: "{app}\_make"
 
 ; cxcore
 Source: "cxcore\include\*.h*"; DestDir: "{app}\cxcore\include"
-;Source: "cxcore\include\Makefile.*"; DestDir: "{app}\cxcore\include"
 Source: "cxcore\src\*.c*"; DestDir: "{app}\cxcore\src"
 Source: "cxcore\src\*.h*"; DestDir: "{app}\cxcore\src"
-Source: "cxcore\src\Makefile.*"; DestDir: "{app}\cxcore\src"
+Source: "cxcore\src\Makefile.ms"; DestDir: "{app}\cxcore\src"
+Source: "cxcore\src\Makefile.gnu"; DestDir: "{app}\cxcore\src"
 Source: "cxcore\src\*.rc"; DestDir: "{app}\cxcore\src"
 Source: "cxcore\src\*.dsp"; DestDir: "{app}\cxcore\src"
 Source: "cxcore\src\*.vcproj"; DestDir: "{app}\cxcore\src"
-;Source: "cxcore\Makefile.*"; DestDir: "{app}\cxcore"
 
 
 ; cv
 Source: "cv\include\*.h*"; DestDir: "{app}\cv\include"
-;Source: "cv\include\Makefile.*"; DestDir: "{app}\cv\include"
 Source: "cv\src\*.c*"; DestDir: "{app}\cv\src"
 Source: "cv\src\*.h*"; DestDir: "{app}\cv\src"
-Source: "cv\src\Makefile.*"; DestDir: "{app}\cv\src"
+Source: "cv\src\Makefile.ms"; DestDir: "{app}\cv\src"
+Source: "cv\src\Makefile.gnu"; DestDir: "{app}\cv\src"
 Source: "cv\src\*.rc"; DestDir: "{app}\cv\src"
 Source: "cv\src\*.dsp"; DestDir: "{app}\cv\src"
 Source: "cv\src\*.vcproj"; DestDir: "{app}\cv\src"
-;Source: "cv\Makefile.*"; DestDir: "{app}\cv"
 
 ; cvaux
 Source: "cvaux\include\*.h*"; DestDir: "{app}\cvaux\include"
-;Source: "cvaux\include\Makefile.*"; DestDir: "{app}\cvaux\include"
 Source: "cvaux\src\*.c*"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\vs\*.c*"; DestDir: "{app}\cvaux\src\vs"
 Source: "cvaux\src\*.h*"; DestDir: "{app}\cvaux\src"
-Source: "cvaux\src\Makefile.*"; DestDir: "{app}\cvaux\src"
+Source: "cvaux\src\Makefile.ms"; DestDir: "{app}\cvaux\src"
+Source: "cvaux\src\Makefile.gnu"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.rc"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.dsp"; DestDir: "{app}\cvaux\src"
 Source: "cvaux\src\*.vcproj"; DestDir: "{app}\cvaux\src"
-;Source: "cvaux\Makefile.*"; DestDir: "{app}\cvaux"
 
 ; ml
 Source: "ml\include\*.h*"; DestDir: "{app}\ml\include"
 Source: "ml\src\*.c*"; DestDir: "{app}\ml\src"
 Source: "ml\src\*.h*"; DestDir: "{app}\ml\src"
-Source: "ml\src\Makefile.*"; DestDir: "{app}\ml\src"
+Source: "ml\src\Makefile.ms"; DestDir: "{app}\ml\src"
+Source: "ml\src\Makefile.gnu"; DestDir: "{app}\ml\src"
 Source: "ml\src\*.rc"; DestDir: "{app}\ml\src"
 Source: "ml\src\*.dsp"; DestDir: "{app}\ml\src"
 Source: "ml\src\*.vcproj"; DestDir: "{app}\ml\src"
-;Source: "ml\Makefile.*"; DestDir: "{app}\ml"
 
 Source: "data\*.txt"; DestDir: "{app}\data"
 Source: "data\haarcascades\*.xml"; DestDir: "{app}\data\haarcascades"
-
-; otherlibs
-Source: "otherlibs\Makefile.*"; DestDir: "{app}\otherlibs"
 
 ; graphic libraries
 Source: "otherlibs\_graphics\include\*.h"; DestDir: "{app}\otherlibs\_graphics\include"
@@ -229,8 +223,8 @@ Source: "otherlibs\_graphics\lib\lib*.lib"; DestDir: "{app}\otherlibs\_graphics\
 Source: "otherlibs\_graphics\lib\zlib*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\readme.txt"; DestDir: "{app}\otherlibs\_graphics"
 
-Source: "otherlibs\_graphics\src\*.dsw"; DestDir: "{app}\otherlibs\_graphics\src"
-Source: "otherlibs\_graphics\src\*.sln"; DestDir: "{app}\otherlibs\_graphics\src"
+;Source: "otherlibs\_graphics\src\*.dsw"; DestDir: "{app}\otherlibs\_graphics\src"
+;Source: "otherlibs\_graphics\src\*.sln"; DestDir: "{app}\otherlibs\_graphics\src"
 
 Source: "otherlibs\_graphics\src\libjasper\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 Source: "otherlibs\_graphics\src\libjasper\license"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
@@ -266,25 +260,9 @@ Source: "otherlibs\highgui\*.h*"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\*.rc"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\*.dsp"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\*.vcproj"; DestDir: "{app}\otherlibs\highgui"
-Source: "otherlibs\highgui\Makefile.*"; DestDir: "{app}\otherlibs\highgui"
+Source: "otherlibs\highgui\Makefile.ms"; DestDir: "{app}\otherlibs\highgui"
+Source: "otherlibs\highgui\Makefile.gnu"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\*.sh"; DestDir: "{app}\otherlibs\highgui"
-
-; otherlibs: cvcam
-;Source: "otherlibs\cvcam\include\*.h*"; DestDir: "{app}\otherlibs\cvcam\include"
-;Source: "otherlibs\cvcam\include\Makefile.*"; DestDir: "{app}\otherlibs\cvcam\include"
-;Source: "otherlibs\cvcam\sample\*.c*"; DestDir: "{app}\otherlibs\cvcam\sample"
-;Source: "otherlibs\cvcam\sample\*.ds*"; DestDir: "{app}\otherlibs\cvcam\sample"
-;Source: "otherlibs\cvcam\src\windows\*.c*"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\windows\*.h*"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\windows\*.rc"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\windows\*.txt"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\windows\*.dsp"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\windows\*.vcproj"; DestDir: "{app}\otherlibs\cvcam\src\windows"
-;Source: "otherlibs\cvcam\src\unix\*.c*"; DestDir: "{app}\otherlibs\cvcam\src\unix"
-;Source: "otherlibs\cvcam\src\unix\*.h*"; DestDir: "{app}\otherlibs\cvcam\src\unix"
-;Source: "otherlibs\cvcam\src\unix\Makefile.*"; DestDir: "{app}\otherlibs\cvcam\src\unix"
-;Source: "otherlibs\cvcam\Makefile.*"; DestDir: "{app}\otherlibs\cvcam"
-;Source: "otherlibs\cvcam\src\Makefile.*"; DestDir: "{app}\otherlibs\cvcam\src"
 
 ; interfaces
 ;Source: "interfaces\Makefile.*"; DestDir: "{app}\interfaces"
@@ -307,17 +285,13 @@ Source: "interfaces\ipp\*.ds*"; DestDir: "{app}\interfaces\ipp"
 Source: "interfaces\ipp\*.py"; DestDir: "{app}\interfaces\ipp"
 Source: "interfaces\ipp\*.txt"; DestDir: "{app}\interfaces\ipp"
 
-;Source: "interfaces\swig\Makefile.*"; DestDir: "{app}\interfaces\swig"
-;Source: "interfaces\swig\filtered\Makefile.*"; DestDir: "{app}\interfaces\swig\filtered"
 Source: "interfaces\swig\filtered\*.h"; DestDir: "{app}\interfaces\swig\filtered"
 Source: "interfaces\swig\general\*.i"; DestDir: "{app}\interfaces\swig\general"
-;Source: "interfaces\swig\general\Makefile.*"; DestDir: "{app}\interfaces\swig\general"
-;Source: "interfaces\swig\python\Makefile.*"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.py"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.i"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.c*"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.h*"; DestDir: "{app}\interfaces\swig\python"
-Source: "interfaces\swig\python\build\lib.win32-2.5\opencv\*.py*"; DestDir: "{app}\interfaces\swig\python\build\lib.win32-2.5\opencv"
+Source: "interfaces\swig\python\build\lib.win32-2.6\opencv\*.py*"; DestDir: "{app}\interfaces\swig\python\build\lib.win32-2.5\opencv"
 
 ;Source: "interfaces\matlab\ReadMe.txt"; DestDir: "{app}\interfaces\matlab"
 ;Source: "interfaces\matlab\src\*.c*"; DestDir: "{app}\interfaces\matlab\src"
@@ -334,39 +308,34 @@ Source: "docs\*.htm*"; DestDir: "{app}\docs"
 Source: "docs\*.jp*"; DestDir: "{app}\docs"
 Source: "docs\*.txt"; DestDir: "{app}\docs"
 Source: "docs\*.pdf"; DestDir: "{app}\docs"
-Source: "docs\*.rtf"; DestDir: "{app}\docs"
-;Source: "docs\Makefile.*"; DestDir: "{app}\docs"
+;Source: "docs\*.rtf"; DestDir: "{app}\docs"
 Source: "docs\ref\*.htm*"; DestDir: "{app}\docs\ref"
 Source: "docs\ref\*.css"; DestDir: "{app}\docs\ref"
-;Source: "docs\ref\Makefile.*"; DestDir: "{app}\docs\ref"
 Source: "docs\ref\pics\*.jp*"; DestDir: "{app}\docs\ref\pics"
 Source: "docs\ref\pics\*.png"; DestDir: "{app}\docs\ref\pics"
-;Source: "docs\ref\pics\Makefile.*"; DestDir: "{app}\docs\ref\pics"
 Source: "docs\papers\*.pdf"; DestDir: "{app}\docs\papers"
 Source: "docs\papers\*.ps"; DestDir: "{app}\docs\papers"
 Source: "docs\vidsurv\*.doc"; DestDir: "{app}\docs\vidsurv"
 
 ; sample code
-Source: "samples\makefile.*"; DestDir: "{app}\samples"
 Source: "samples\c\*.c*"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.sh"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.jp*"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.png"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.dsp"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.vcproj"; DestDir: "{app}\samples\c"
-Source: "samples\c\Makefile.*"; DestDir: "{app}\samples\c"
+Source: "samples\c\Makefile.ms"; DestDir: "{app}\samples\c"
+Source: "samples\c\Makefile.gnu"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.exe"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.data"; DestDir: "{app}\samples\c"
 
 Source: "samples\python\*.py"; DestDir: "{app}\samples\python"
-Source: "samples\python\Makefile.*"; DestDir: "{app}\samples\python"
 
 ; batch tests
-;Source: "tests\Makefile.*"; DestDir: "{app}\tests"
-;Source: "tests\cv\Makefile.*"; DestDir: "{app}\tests\cv"
 Source: "tests\cv\src\*.c*"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.h*"; DestDir: "{app}\tests\cv\src"
-Source: "tests\cv\src\Makefile.*"; DestDir: "{app}\tests\cv\src"
+Source: "tests\cv\src\Makefile.ms"; DestDir: "{app}\tests\cv\src"
+Source: "tests\cv\src\Makefile.gnu"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.dsp"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.vcproj"; DestDir: "{app}\tests\cv\src"
 Source: "tests\cv\src\*.inc"; DestDir: "{app}\tests\cv\src"
@@ -378,13 +347,14 @@ Source: "tests\cxts\*.c*"; DestDir: "{app}\tests\cxts"
 Source: "tests\cxts\*.h*"; DestDir: "{app}\tests\cxts"
 Source: "tests\cxts\*.dsp"; DestDir: "{app}\tests\cxts"
 Source: "tests\cxts\*.vcproj"; DestDir: "{app}\tests\cxts"
-Source: "tests\cxts\Makefile.*"; DestDir: "{app}\tests\cxts"
+Source: "tests\cxts\Makefile.ms"; DestDir: "{app}\tests\cxts"
+Source: "tests\cxts\Makefile.gnu"; DestDir: "{app}\tests\cxts"
 Source: "tests\cxcore\src\*.c*"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\*.h*"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\*.dsp"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\cxcore\src\*.vcproj"; DestDir: "{app}\tests\cxcore\src"
-Source: "tests\cxcore\src\Makefile.*"; DestDir: "{app}\tests\cxcore\src"
-Source: "tests\python\Makefile.*"; DestDir: "{app}\tests\python"
+Source: "tests\cxcore\src\Makefile.ms"; DestDir: "{app}\tests\cxcore\src"
+Source: "tests\cxcore\src\Makefile.gnu"; DestDir: "{app}\tests\cxcore\src"
 Source: "tests\python\highgui\*.py"; DestDir: "{app}\tests\python\highgui"
 
 ; utilities
@@ -448,12 +418,6 @@ Source: "utils\*.ico"; DestDir: "{app}\utils"
 
 
 ; applications
-;Source: "apps\HaarFaceDetect\*.c*"; DestDir: "{app}\apps\HaarFaceDetect"
-;Source: "apps\HaarFaceDetect\*.h*"; DestDir: "{app}\apps\HaarFaceDetect"
-;Source: "apps\HaarFaceDetect\*.dsp"; DestDir: "{app}\apps\HaarFaceDetect"
-;Source: "apps\HaarFaceDetect\*.zip"; DestDir: "{app}\apps\HaarFaceDetect"
-;Source: "apps\HaarFaceDetect\Makefile.*"; DestDir: "{app}\apps\HaarFaceDetect"
-;Source: "apps\HaarFaceDetect\SampleBase\*.*"; DestDir: "{app}\apps\HaarFaceDetect\SampleBase"
 
 Source: "apps\HaarTraining\*.*"; DestDir: "{app}\apps\HaarTraining"
 Source: "apps\HaarTraining\include\*.h*"; DestDir: "{app}\apps\HaarTraining\include"
@@ -463,46 +427,31 @@ Source: "apps\HaarTraining\make\*.sln"; DestDir: "{app}\apps\HaarTraining\make"
 Source: "apps\HaarTraining\src\*.c*"; DestDir: "{app}\apps\HaarTraining\src"
 Source: "apps\HaarTraining\src\*.h*"; DestDir: "{app}\apps\HaarTraining\src"
 Source: "apps\HaarTraining\src\*.h*"; DestDir: "{app}\apps\HaarTraining\src"
-Source: "apps\HaarTraining\src\Makefile.*"; DestDir: "{app}\apps\HaarTraining\src"
 Source: "apps\HaarTraining\doc\*.htm*"; DestDir: "{app}\apps\HaarTraining\doc"
-
-;Source: "apps\Tracker3dDemo\*.c*"; DestDir: "{app}\apps\Tracker3dDemo"
-;Source: "apps\Tracker3dDemo\*.h*"; DestDir: "{app}\apps\Tracker3dDemo"
-;Source: "apps\Tracker3dDemo\*.rc"; DestDir: "{app}\apps\Tracker3dDemo"
-;Source: "apps\Tracker3dDemo\*.ds*"; DestDir: "{app}\apps\Tracker3dDemo"
 
 ; precompiled binaries
 ;Source: "bin\cvinfo.exe"; DestDir: "{app}\bin"
+Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.OPENMP\vcomp.dll"; DestDir: "{app}\bin"
+Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.CRT\msvcp80.dll"; DestDir: "{app}\bin"
+Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.CRT\msvcr80.dll"; DestDir: "{app}\bin"
 Source: "bin\cvtest.exe"; DestDir: "{app}\bin"
 Source: "bin\cxcoretest.exe"; DestDir: "{app}\bin"
 Source: "bin\cxcore110.dll"; DestDir: "{app}\bin"
+Source: "bin\cxcore110.pdb"; DestDir: "{app}\bin"
 Source: "bin\cv110.dll"; DestDir: "{app}\bin"
+Source: "bin\cv110.pdb"; DestDir: "{app}\bin"
 Source: "bin\highgui110.dll"; DestDir: "{app}\bin"
+Source: "bin\highgui110.pdb"; DestDir: "{app}\bin"
 Source: "bin\cvaux110.dll"; DestDir: "{app}\bin"
+Source: "bin\cvaux110.pdb"; DestDir: "{app}\bin"
 Source: "bin\ml110.dll"; DestDir: "{app}\bin"
+Source: "bin\ml110.pdb"; DestDir: "{app}\bin"
+Source: "bin\ffopencv110.dll"; DestDir: "{app}\bin"
+Source: "bin\ffopencv110.pdb"; DestDir: "{app}\bin"
 Source: "bin\cxts001.dll"; DestDir: "{app}\bin"
-;Source: "bin\cvcam110.dll"; DestDir: "{app}\bin"
 Source: "bin\haartraining.exe"; DestDir: "{app}\bin"
 Source: "bin\createsamples.exe"; DestDir: "{app}\bin"
 Source: "bin\performance.exe"; DestDir: "{app}\bin"
-;Source: "bin\proxytrans.ax"; DestDir: "{app}\bin"
-;Source: "bin\syncfilter.ax"; DestDir: "{app}\bin"
-;Source: "bin\calibfilter.ax"; DestDir: "{app}\bin"
-;Source: "bin\registerall.bat"; DestDir: "{app}\bin"
-
-;Source: "bin\*.exe"; DestDir: "{app}\bin"
-;Source: "bin\*.dll"; DestDir: "{app}\bin"
-;Source: "bin\*.ax"; DestDir: "{app}\bin"
-;Source: "bin\*.bat"; DestDir: "{app}\bin"
-
-; 3D Tracking
-;Source: "bin\Tracker3dDemo.exe"; DestDir: "{app}\bin"
-;Source: "bin\Tracker3dFilter.ax"; DestDir: "{app}\bin"
-;Source: "bin\BlobTracker.dll"; DestDir: "{app}\bin"
-;Source: "bin\CamShiftTracker.dll"; DestDir: "{app}\bin"
-;Source: "bin\tracking_expected_results*"; DestDir: "{app}\bin"
-;Source: "bin\trackingtest*"; DestDir: "{app}\bin"
-;Source: "bin\cam*.txt"; DestDir: "{app}\bin"
 
 ; import libraries
 Source: "lib\cxcore.lib"; DestDir: "{app}\lib"
@@ -516,8 +465,8 @@ Source: "lib\cxts.lib"; DestDir: "{app}\lib"
 
 [Icons]
 Name: "{group}\OpenCV Workspace MSVC6"; Filename: "{app}\_make\opencv.dsw"
-Name: "{group}\OpenCV Workspace .NET 2005"; Filename: "{app}\_make\opencv.sln"
-;Name: "{group}\OpenCV Workspace Borland C++ BuilderX"; Filename: "{app}\_make\cbuilderx\opencv.bpgr"
+Name: "{group}\OpenCV Workspace .NET 2005,2008"; Filename: "{app}\_make\opencv.vs2005.sln"
+Name: "{group}\OpenCV Workspace .NET 2005,2008 (Express or Standard Edition)"; Filename: "{app}\_make\opencv.vs2005.no_openmp.sln"
 Name: "{group}\Documentation"; Filename: "{app}\docs\index.htm"
 Name: "{group}\Samples"; Filename: "{app}\samples\c\"
 
@@ -530,13 +479,11 @@ Name: add_opencv_path; Description: "Add <...>\OpenCV\bin to the system PATH"; F
 ; "My Program" keys upon uninstall, and delete the "My Company" keys
 ; if there is nothing left in them.
 Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "Path"; ValueData: "{app}\bin;{olddata}"; Flags: createvalueifdoesntexist; Tasks: add_opencv_path
-Root: HKCU; Subkey: "Software\Intel"; Flags: uninsdeletekeyifempty
-Root: HKCU; Subkey: "Software\Intel\OpenCV"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Intel\OpenCV\Settings"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
+Root: HKCU; Subkey: "Software\OpenCV"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\OpenCV\Settings"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
 [Run]
 Filename: "{reg:HKLM\Software\Python\PythonCore\2.5\InstallPath,|C:\Python25\}python.exe"; Parameters: "setup-for-win.py install"; WorkingDir: "{app}\interfaces\swig\python"; Flags: skipifdoesntexist; StatusMsg: "Installing OpenCV Module for Python..."
-;Filename: "{app}\bin\RegisterAll.bat"; WorkingDir: "{app}\bin"; StatusMsg: "Registering DirectShow filters..."
 Filename: "{app}\docs\index.htm"; Description: "View Documentation"; Flags: postinstall shellexec
 
 [UninstallRun]
