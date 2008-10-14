@@ -56,6 +56,7 @@
 #include <limits.h>
 
 #include <_cvcommon.h>
+#include <_cvhaartraining.h>
 #include <cvclassifier.h>
 
 #ifdef _OPENMP
@@ -64,104 +65,121 @@
 
 #define CV_BOOST_IMPL
 
-typedef struct CvValArray
+const int rsort_bits1 = (sizeof(float)*8+2)/3, rsort_bits2 = rsort_bits1;
+const int rsort_bits3 = sizeof(float)*8 - rsort_bits1 - rsort_bits2;
+const int rsort_max_bits = rsort_bits1, rsort_max_size = 1 << rsort_max_bits;
+const int rsort_shift2 = rsort_bits1, rsort_shift3 = rsort_shift2 + rsort_bits2;
+const int rsort_mask1 = (1 << rsort_bits1) - 1;
+const int rsort_mask2 = (1 << rsort_bits2) - 1;
+const int rsort_mask3 = (1 << rsort_bits3) - 1;
+const int rsort_h_size = rsort_mask1 + rsort_mask2 + rsort_mask3 + 6;
+
+#define toggle_32f32u(x) ((x) ^ (((x) >> 31) | 0x80000000))
+#define toggle_32u32f(x) ((x) ^ ((~(x) >> 31) | 0x80000000))
+
+static void
+icvRadixSortIndexedValArray( const idx_type* src, int size,
+                             float* fdata, idx_type* dst, idx_type* buf )
 {
-    uchar* data;
-    size_t step;
-} CvValArray;
+    idx_type hist[rsort_h_size];
+    const int h2_ofs = 2 + rsort_mask1, h3_ofs = h2_ofs + 2 + rsort_mask2;
+    int i, j, k, pos;
+    int v, s;
+    int* idata = (int*)fdata;
 
-#define CMP_VALUES( idx1, idx2 )                                 \
-    ( *( (float*) (aux->data + ((int) (idx1)) * aux->step ) ) <  \
-      *( (float*) (aux->data + ((int) (idx2)) * aux->step ) ) )
+    /* pass 1. compute all histograms */
+    for( k = 0; k < rsort_h_size; k++ )
+        hist[k] = 0;
 
-CV_IMPLEMENT_QSORT_EX( icvSortIndexedValArray_16s, short, CMP_VALUES, CvValArray* )
+    for( j = 0; j < size; j++ )
+    {
+        i = src[j];
+        v = idata[i];
+        v = toggle_32f32u(v);
+        int k1 = v & rsort_mask1;
+        int pos1 = hist[k1+1] + 1;
+        int k2 = (v >> rsort_shift2) & rsort_mask2;
+        int pos2 = hist[k2+h2_ofs+1] + 1;
+        int k3 = (unsigned)v >> rsort_shift3;
+        int pos3 = hist[k3+h3_ofs+1] + 1;
+        idata[i] = v;
+        hist[k1 + 1] = (idx_type)pos1;
+        hist[k2 + h2_ofs+1] = (idx_type)pos2;
+        hist[k3 + h3_ofs+1] = (idx_type)pos3;
+    }
 
-CV_IMPLEMENT_QSORT_EX( icvSortIndexedValArray_32s, int,   CMP_VALUES, CvValArray* )
+    for( k = 0, s = -1; k < h2_ofs; k++ )
+        hist[k] = (idx_type)(s += hist[k]);
 
-CV_IMPLEMENT_QSORT_EX( icvSortIndexedValArray_32f, float, CMP_VALUES, CvValArray* )
+    for( k = h2_ofs, s = -1; k < h3_ofs; k++ )
+        hist[k] = (idx_type)(s += hist[k]);
+
+    for( k = h3_ofs, s = -1; k < rsort_h_size; k++ )
+        hist[k] = (idx_type)(s += hist[k]);
+
+    /* pass 2. sort by the lower rsort_bits1 bits */
+    for( j = 0; j < size; j++ )
+    {
+        int i = src[j];
+        int v = idata[i];
+        k = v & rsort_mask1;
+        pos = hist[k]+1;
+        dst[pos] = (idx_type)i;
+        hist[k] = (idx_type)pos;
+    }
+
+    /* pass 3. sort by the next rsort_bits2 bits */
+    for( j = 0; j < size; j++ )
+    {
+        int i = dst[j];
+        int v = idata[i];
+        k = (v >> rsort_shift2) & rsort_mask2;
+        pos = hist[k + h2_ofs]+1;
+        buf[pos] = (idx_type)i;
+        hist[k + h2_ofs] = (idx_type)pos;
+    }
+
+    /* pass 4. sort by the highest rsort_bits3 bits */
+    for( j = 0; j < size; j++ )
+    {
+        int i = buf[j];
+        int v = idata[i];
+        k = (unsigned)v >> rsort_shift3;
+        pos = hist[k + h3_ofs]+1;
+        idata[i] = toggle_32u32f(v);
+        dst[pos] = (idx_type)i;
+        hist[k + h3_ofs] = (idx_type)pos;
+    }
+}
+
 
 CV_BOOST_IMPL
 void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
 {
-    int idxtype = 0;
-    uchar* data = NULL;
-    size_t istep = 0;
-    size_t jstep = 0;
+    int i, rows = idx->rows, cols = idx->cols;
+    idx_type *src, *buf;
 
-    int i = 0;
-    int j = 0;
+    OPENCV_ASSERT( CV_MAT_TYPE(idx->type) == CV_16SC1 &&
+            CV_MAT_TYPE(val->type) == CV_32FC1 &&
+            CV_ARE_SIZES_EQ(val, idx) && sortcols == 0, "", "" );
 
-    CvValArray va;
+    src = (idx_type*)cvAlloc( cols*sizeof(src[0]) );
+    buf = (idx_type*)cvAlloc( cols*sizeof(buf[0]) ); 
 
-    assert( idx != NULL );
-    assert( val != NULL );
+    for( i = 0; i < cols; i++ )
+        src[i] = (idx_type)i;
 
-    idxtype = CV_MAT_TYPE( idx->type );
-    assert( idxtype == CV_16SC1 || idxtype == CV_32SC1 || idxtype == CV_32FC1 );
-    assert( CV_MAT_TYPE( val->type ) == CV_32FC1 );
-    if( sortcols )
+    for( i = 0; i < rows; i++ )
     {
-        assert( idx->rows == val->cols );
-        assert( idx->cols == val->rows );
-        istep = CV_ELEM_SIZE( val->type );
-        jstep = val->step;
-    }
-    else
-    {
-        assert( idx->rows == val->rows );
-        assert( idx->cols == val->cols );
-        istep = val->step;
-        jstep = CV_ELEM_SIZE( val->type );
+        idx_type* dst = (idx_type*)(idx->data.ptr + idx->step*i); 
+        icvRadixSortIndexedValArray( src, cols,
+            (float*)(val->data.ptr + val->step*i), dst, buf );
     }
 
-    va.data = val->data.ptr;
-    va.step = jstep;
-    switch( idxtype )
-    {
-        case CV_16SC1:
-            for( i = 0; i < idx->rows; i++ )
-            {
-                for( j = 0; j < idx->cols; j++ )
-                {
-                    CV_MAT_ELEM( *idx, short, i, j ) = (short) j;
-                }
-                icvSortIndexedValArray_16s( (short*) (idx->data.ptr + i * idx->step),
-                                            idx->cols, &va );
-                va.data += istep;
-            }
-            break;
-
-        case CV_32SC1:
-            for( i = 0; i < idx->rows; i++ )
-            {
-                for( j = 0; j < idx->cols; j++ )
-                {
-                    CV_MAT_ELEM( *idx, int, i, j ) = j;
-                }
-                icvSortIndexedValArray_32s( (int*) (idx->data.ptr + i * idx->step),
-                                            idx->cols, &va );
-                va.data += istep;
-            }
-            break;
-
-        case CV_32FC1:
-            for( i = 0; i < idx->rows; i++ )
-            {
-                for( j = 0; j < idx->cols; j++ )
-                {
-                    CV_MAT_ELEM( *idx, float, i, j ) = (float) j;
-                }
-                icvSortIndexedValArray_32f( (float*) (idx->data.ptr + i * idx->step),
-                                            idx->cols, &va );
-                va.data += istep;
-            }
-            break;
-
-        default:
-            assert( 0 );
-            break;
-    }
+    cvFree( &src );
+    cvFree( &buf );
 }
+
 
 CV_BOOST_IMPL
 void cvReleaseStumpClassifier( CvClassifier** classifier )
@@ -170,412 +188,162 @@ void cvReleaseStumpClassifier( CvClassifier** classifier )
     *classifier = 0;
 }
 
-CV_BOOST_IMPL
-float cvEvalStumpClassifier( CvClassifier* classifier, CvMat* sample )
-{
-    assert( classifier != NULL );
-    assert( sample != NULL );
-    assert( CV_MAT_TYPE( sample->type ) == CV_32FC1 );
-    
-    if( (CV_MAT_ELEM( (*sample), float, 0,
-            ((CvStumpClassifier*) classifier)->compidx )) <
-        ((CvStumpClassifier*) classifier)->threshold ) 
-    {
-        return ((CvStumpClassifier*) classifier)->left;
-    }
-    else
-    {
-        return ((CvStumpClassifier*) classifier)->right;
-    }
-
-    return 0.0F;
-}
-
-#define ICV_DEF_FIND_STUMP_THRESHOLD( suffix, type, error )                              \
-CV_BOOST_IMPL int icvFindStumpThreshold_##suffix(                                              \
-        uchar* data, size_t datastep,                                                    \
-        uchar* wdata, size_t wstep,                                                      \
-        uchar* ydata, size_t ystep,                                                      \
-        uchar* idxdata, size_t idxstep, int num,                                         \
-        float* lerror,                                                                   \
-        float* rerror,                                                                   \
-        float* threshold, float* left, float* right,                                     \
-        float* sumw, float* sumwy, float* sumwyy )                                       \
-{                                                                                        \
-    int found = 0;                                                                       \
-    float wyl  = 0.0F;                                                                   \
-    float wl   = 0.0F;                                                                   \
-    float wyyl = 0.0F;                                                                   \
-    float wyr  = 0.0F;                                                                   \
-    float wr   = 0.0F;                                                                   \
-                                                                                         \
-    float curleft  = 0.0F;                                                               \
-    float curright = 0.0F;                                                               \
-    float* prevval = NULL;                                                               \
-    float* curval  = NULL;                                                               \
-    float curlerror = 0.0F;                                                              \
-    float currerror = 0.0F;                                                              \
-    float wposl;                                                                         \
-    float wposr;                                                                         \
-                                                                                         \
-    int i = 0;                                                                           \
-    int idx = 0;                                                                         \
-                                                                                         \
-    wposl = wposr = 0.0F;                                                                \
-    if( *sumw == FLT_MAX )                                                               \
-    {                                                                                    \
-        /* calculate sums */                                                             \
-        float *y = NULL;                                                                 \
-        float *w = NULL;                                                                 \
-        float wy = 0.0F;                                                                 \
-                                                                                         \
-        *sumw   = 0.0F;                                                                  \
-        *sumwy  = 0.0F;                                                                  \
-        *sumwyy = 0.0F;                                                                  \
-        for( i = 0; i < num; i++ )                                                       \
-        {                                                                                \
-            idx = (int) ( *((type*) (idxdata + i*idxstep)) );                            \
-            w = (float*) (wdata + idx * wstep);                                          \
-            *sumw += *w;                                                                 \
-            y = (float*) (ydata + idx * ystep);                                          \
-            wy = (*w) * (*y);                                                            \
-            *sumwy += wy;                                                                \
-            *sumwyy += wy * (*y);                                                        \
-        }                                                                                \
-    }                                                                                    \
-                                                                                         \
-    for( i = 0; i < num; i++ )                                                           \
-    {                                                                                    \
-        idx = (int) ( *((type*) (idxdata + i*idxstep)) );                                \
-        curval = (float*) (data + idx * datastep);                                       \
-         /* for debug purpose */                                                         \
-        if( i > 0 ) assert( (*prevval) <= (*curval) );                                   \
-                                                                                         \
-        wyr  = *sumwy - wyl;                                                             \
-        wr   = *sumw  - wl;                                                              \
-                                                                                         \
-        if( wl > 0.0 ) curleft = wyl / wl;                                               \
-        else curleft = 0.0F;                                                             \
-                                                                                         \
-        if( wr > 0.0 ) curright = wyr / wr;                                              \
-        else curright = 0.0F;                                                            \
-                                                                                         \
-        error                                                                            \
-                                                                                         \
-        if( curlerror + currerror < (*lerror) + (*rerror) )                              \
-        {                                                                                \
-            (*lerror) = curlerror;                                                       \
-            (*rerror) = currerror;                                                       \
-            *threshold = *curval;                                                        \
-            if( i > 0 ) {                                                                \
-                *threshold = 0.5F * (*threshold + *prevval);                             \
-            }                                                                            \
-            *left  = curleft;                                                            \
-            *right = curright;                                                           \
-            found = 1;                                                                   \
-        }                                                                                \
-                                                                                         \
-        do                                                                               \
-        {                                                                                \
-            wl  += *((float*) (wdata + idx * wstep));                                    \
-            wyl += (*((float*) (wdata + idx * wstep)))                                   \
-                * (*((float*) (ydata + idx * ystep)));                                   \
-            wyyl += *((float*) (wdata + idx * wstep))                                    \
-                * (*((float*) (ydata + idx * ystep)))                                    \
-                * (*((float*) (ydata + idx * ystep)));                                   \
-        }                                                                                \
-        while( (++i) < num &&                                                            \
-            ( *((float*) (data + (idx =                                                  \
-                (int) ( *((type*) (idxdata + i*idxstep))) ) * datastep))                 \
-                == *curval ) );                                                          \
-        --i;                                                                             \
-        prevval = curval;                                                                \
-    } /* for each value */                                                               \
-                                                                                         \
-    return found;                                                                        \
-}
-
-/* misclassification error
- * err = MIN( wpos, wneg );
- */
-#define ICV_DEF_FIND_STUMP_THRESHOLD_MISC( suffix, type )                                \
-    ICV_DEF_FIND_STUMP_THRESHOLD( misc_##suffix, type,                                   \
-        wposl = 0.5F * ( wl + wyl );                                                     \
-        wposr = 0.5F * ( wr + wyr );                                                     \
-        curleft = 0.5F * ( 1.0F + curleft );                                             \
-        curright = 0.5F * ( 1.0F + curright );                                           \
-        curlerror = MIN( wposl, wl - wposl );                                            \
-        currerror = MIN( wposr, wr - wposr );                                            \
-    )
-
-/* gini error
- * err = 2 * wpos * wneg /(wpos + wneg)
- */
-#define ICV_DEF_FIND_STUMP_THRESHOLD_GINI( suffix, type )                                \
-    ICV_DEF_FIND_STUMP_THRESHOLD( gini_##suffix, type,                                   \
-        wposl = 0.5F * ( wl + wyl );                                                     \
-        wposr = 0.5F * ( wr + wyr );                                                     \
-        curleft = 0.5F * ( 1.0F + curleft );                                             \
-        curright = 0.5F * ( 1.0F + curright );                                           \
-        curlerror = 2.0F * wposl * ( 1.0F - curleft );                                   \
-        currerror = 2.0F * wposr * ( 1.0F - curright );                                  \
-    )
-
-#define CV_ENTROPY_THRESHOLD FLT_MIN
-
-/* entropy error
- * err = - wpos * log(wpos / (wpos + wneg)) - wneg * log(wneg / (wpos + wneg))
- */
-#define ICV_DEF_FIND_STUMP_THRESHOLD_ENTROPY( suffix, type )                             \
-    ICV_DEF_FIND_STUMP_THRESHOLD( entropy_##suffix, type,                                \
-        wposl = 0.5F * ( wl + wyl );                                                     \
-        wposr = 0.5F * ( wr + wyr );                                                     \
-        curleft = 0.5F * ( 1.0F + curleft );                                             \
-        curright = 0.5F * ( 1.0F + curright );                                           \
-        curlerror = currerror = 0.0F;                                                    \
-        if( curleft > CV_ENTROPY_THRESHOLD )                                             \
-            curlerror -= wposl * logf( curleft );                                        \
-        if( curleft < 1.0F - CV_ENTROPY_THRESHOLD )                                      \
-            curlerror -= (wl - wposl) * logf( 1.0F - curleft );                          \
-                                                                                         \
-        if( curright > CV_ENTROPY_THRESHOLD )                                            \
-            currerror -= wposr * logf( curright );                                       \
-        if( curright < 1.0F - CV_ENTROPY_THRESHOLD )                                     \
-            currerror -= (wr - wposr) * logf( 1.0F - curright );                         \
-    )
-
-/* least sum of squares error */
-#define ICV_DEF_FIND_STUMP_THRESHOLD_SQ( suffix, type )                                  \
-    ICV_DEF_FIND_STUMP_THRESHOLD( sq_##suffix, type,                                     \
-        /* calculate error (sum of squares)          */                                  \
-        /* err = sum( w * (y - left(rigt)Val)^2 )    */                                  \
-        curlerror = wyyl + curleft * curleft * wl - 2.0F * curleft * wyl;                \
-        currerror = (*sumwyy) - wyyl + curright * curright * wr - 2.0F * curright * wyr; \
-    )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_MISC( 16s, short )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_MISC( 32s, int )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_MISC( 32f, float )
-
-
-ICV_DEF_FIND_STUMP_THRESHOLD_GINI( 16s, short )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_GINI( 32s, int )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_GINI( 32f, float )
-
-
-ICV_DEF_FIND_STUMP_THRESHOLD_ENTROPY( 16s, short )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_ENTROPY( 32s, int )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_ENTROPY( 32f, float )
-
-
-ICV_DEF_FIND_STUMP_THRESHOLD_SQ( 16s, short )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_SQ( 32s, int )
-
-ICV_DEF_FIND_STUMP_THRESHOLD_SQ( 32f, float )
-
-typedef int (*CvFindThresholdFunc)( uchar* data, size_t datastep,
-                                    uchar* wdata, size_t wstep,
-                                    uchar* ydata, size_t ystep,
-                                    uchar* idxdata, size_t idxstep, int num,
-                                    float* lerror,
-                                    float* rerror,
-                                    float* threshold, float* left, float* right,
-                                    float* sumw, float* sumwy, float* sumwyy );
-
-CvFindThresholdFunc findStumpThreshold_16s[4] = {
-        icvFindStumpThreshold_misc_16s,
-        icvFindStumpThreshold_gini_16s,
-        icvFindStumpThreshold_entropy_16s,
-        icvFindStumpThreshold_sq_16s
-    };
-
-CvFindThresholdFunc findStumpThreshold_32s[4] = {
-        icvFindStumpThreshold_misc_32s,
-        icvFindStumpThreshold_gini_32s,
-        icvFindStumpThreshold_entropy_32s,
-        icvFindStumpThreshold_sq_32s
-    };
-
-CvFindThresholdFunc findStumpThreshold_32f[4] = {
-        icvFindStumpThreshold_misc_32f,
-        icvFindStumpThreshold_gini_32f,
-        icvFindStumpThreshold_entropy_32f,
-        icvFindStumpThreshold_sq_32f
-    };
 
 CV_BOOST_IMPL
-CvClassifier* cvCreateStumpClassifier( CvMat* trainData,
-                      int flags,
-                      CvMat* trainClasses,
-                      CvMat* typeMask,
-                      CvMat* missedMeasurementsMask,
-                      CvMat* compIdx,
-                      CvMat* sampleIdx,
-                      CvMat* weights,
-                      CvClassifierTrainParams* trainParams
-                    )
+float cvEvalStumpClassifier( CvClassifier* _classifier, CvMat* sample )
 {
-    CvStumpClassifier* stump = NULL;
-    int m = 0; /* number of samples */
-    int n = 0; /* number of components */
-    uchar* data = NULL;
-    int cstep   = 0;
-    int sstep   = 0;
-    uchar* ydata = NULL;
-    int ystep    = 0;
-    uchar* idxdata = NULL;
-    int idxstep    = 0;
-    int l = 0; /* number of indices */     
-    uchar* wdata = NULL;
-    int wstep    = 0;
-
-    int* idx = NULL;
-    int i = 0;
+    CvStumpClassifier* classifier = (CvStumpClassifier*)_classifier;
+    assert( !classifier && !sample && CV_MAT_TYPE( sample->type ) == CV_32FC1 );
     
-    float sumw   = FLT_MAX;
-    float sumw1  = FLT_MAX;
-    float sumw0  = FLT_MAX;
-    float sumwy  = FLT_MAX;
-    float sumwyy = FLT_MAX;
-
-    assert( trainData != NULL );
-    assert( CV_MAT_TYPE( trainData->type ) == CV_32FC1 );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( missedMeasurementsMask == NULL );
-    assert( compIdx == NULL );
-    assert( weights != NULL );
-    assert( CV_MAT_TYPE( weights->type ) == CV_32FC1 );
-    assert( trainParams != NULL );
-
-    data = trainData->data.ptr;
-    if( CV_IS_ROW_SAMPLE( flags ) )
-    {
-        cstep = CV_ELEM_SIZE( trainData->type );
-        sstep = trainData->step;
-        m = trainData->rows;
-        n = trainData->cols;
-    }
-    else
-    {
-        sstep = CV_ELEM_SIZE( trainData->type );
-        cstep = trainData->step;
-        m = trainData->cols;
-        n = trainData->rows;
-    }
-
-    ydata = trainClasses->data.ptr;
-    if( trainClasses->rows == 1 )
-    {
-        assert( trainClasses->cols == m );
-        ystep = CV_ELEM_SIZE( trainClasses->type );
-    }
-    else
-    {
-        assert( trainClasses->rows == m );
-        ystep = trainClasses->step;
-    }
-
-    wdata = weights->data.ptr;
-    if( weights->rows == 1 )
-    {
-        assert( weights->cols == m );
-        wstep = CV_ELEM_SIZE( weights->type );
-    }
-    else
-    {
-        assert( weights->rows == m );
-        wstep = weights->step;
-    }
-
-    l = m;
-    if( sampleIdx != NULL )
-    {
-        assert( CV_MAT_TYPE( sampleIdx->type ) == CV_32FC1 );
-
-        idxdata = sampleIdx->data.ptr;
-        if( sampleIdx->rows == 1 )
-        {
-            l = sampleIdx->cols;
-            idxstep = CV_ELEM_SIZE( sampleIdx->type );
-        }
-        else
-        {
-            l = sampleIdx->rows;
-            idxstep = sampleIdx->step;
-        }
-        assert( l <= m );
-    }
-
-    idx = (int*) cvAlloc( l * sizeof( int ) );
-    stump = (CvStumpClassifier*) cvAlloc( sizeof( CvStumpClassifier) );
-
-    /* START */
-    memset( (void*) stump, 0, sizeof( CvStumpClassifier ) );
-
-    stump->eval = cvEvalStumpClassifier;
-    stump->tune = NULL;
-    stump->save = NULL;
-    stump->release = cvReleaseStumpClassifier;
-
-    stump->lerror = FLT_MAX;
-    stump->rerror = FLT_MAX;
-    stump->left  = 0.0F;
-    stump->right = 0.0F;
-
-    /* copy indices */
-    if( sampleIdx != NULL )
-    {
-        for( i = 0; i < l; i++ )
-        {
-            idx[i] = (int) *((float*) (idxdata + i*idxstep));
-        }
-    }
-    else
-    {
-        for( i = 0; i < l; i++ )
-        {
-            idx[i] = i;
-        }
-    }
-
-    for( i = 0; i < n; i++ )
-    {
-        CvValArray va;
-
-        va.data = data + i * ((size_t) cstep);
-        va.step = sstep;
-        icvSortIndexedValArray_32s( idx, l, &va );
-        if( findStumpThreshold_32s[(int) ((CvStumpTrainParams*) trainParams)->error]
-              ( data + i * ((size_t) cstep), sstep,
-                wdata, wstep, ydata, ystep, (uchar*) idx, sizeof( int ), l,
-                &(stump->lerror), &(stump->rerror),
-                &(stump->threshold), &(stump->left), &(stump->right), 
-                &sumw, &sumwy, &sumwyy ) )
-        {
-            stump->compidx = i;
-        }
-    } /* for each component */
-
-    /* END */
-
-    cvFree( &idx );
-
-    if( ((CvStumpTrainParams*) trainParams)->type == CV_CLASSIFICATION_CLASS )
-    {
-        stump->left = 2.0F * (stump->left >= 0.5F) - 1.0F;
-        stump->right = 2.0F * (stump->right >= 0.5F) - 1.0F;
-    }
-
-    return (CvClassifier*) stump;
+    return sample->data.fl[classifier->compidx] < classifier->threshold ?
+        classifier->left : classifier->right; 
 }
+
+
+static int icvFindStumpThreshold(
+        const float* data, const float* wdata,
+        const float* ydata, const idx_type* idxdata, int num,
+        CvStumpClassifier* stump, CvStumpError errtype,
+        double sumw, double sumwy, double sumwyy )
+{
+    int found = 0;
+    double wyl = 0, wl = 0, wyyl = 0;
+    double prevval = -FLT_MAX;
+    double lerror = stump->lerror, rerror = stump->rerror;
+    double min_error = lerror + rerror;
+    double left = 0, right = 0, threshold = 0;
+    int i;
+
+    for( i = 0; i < num; i++ )
+    {
+        int idx = idxdata[i];
+        double curval = data[idx];
+        double w, wr = sumw  - wl;
+
+        if( wl > 0 && wr > 0 && curval > prevval )
+        {
+            double wyr = sumwy - wyl;
+            w = wl*wr;
+
+            if( errtype == CV_SQUARE )
+            {
+                // min least squares approximation:
+                // err = sum( w * (y - val_{left|right})^2 )
+                // note: a special algorithm is used to reduce the number of operations
+                double err1 = wyl*wyl*wr + wyr*wyr*wl;
+
+                if( (sumwyy - min_error)*w < err1 )
+                {
+                    w = 1./w;
+                    left = wyl*wr*w;
+                    right = wyr*wl*w;
+                    min_error = sumwyy - err1*w;
+                    lerror = wyyl - left*wyl;
+                    rerror = min_error - lerror;
+                    threshold = i > 0 ? 0.5 * (curval + prevval) : curval;
+                    found = 1;
+                }
+            }
+            else
+            {
+                w = 1./w;
+                double wposl = 0.5*(wl + wyl);
+                double wposr = 0.5*(wr + wyr);
+                double curleft = 0.5*(1 + wyl*wr*w);
+                double curright = 0.5*(1 + wyr*wl*w);
+                double curlerror, currerror;
+
+                if( errtype == CV_GINI )
+                {
+                    // gini error: err = 2 * wpos * wneg /(wpos + wneg)
+                    curlerror = 2 * wposl * (1 - curleft);
+                    currerror = 2 * wposr * (1 - curright);
+                }
+                else if( errtype == CV_MISCLASSIFICATION )
+                {
+                    // misclassification error: err = MIN( wpos, wneg );
+                    curlerror = MIN( wposl, wl - wposl );
+                    currerror = MIN( wposr, wr - wposr );
+                }
+                else
+                {
+                    const double eps = FLT_MIN;
+                    // entropy:
+                    // err = - wpos * log(wpos /(wpos + wneg)) - wneg * log(wneg/(wpos + wneg))
+                    curlerror = currerror = 0;
+
+                    if( curleft > eps )
+                        curlerror -= wposl * log( curleft );
+                    if( curleft < 1 - eps )
+                        curlerror -= (wl - wposl) * log( 1 - curleft );
+
+                    if( curright > eps )
+                        currerror -= wposr * log( curright );
+                    if( curright < 1 - eps )
+                        currerror -= (wr - wposr) * log( 1 - curright );
+                }
+
+                if( curlerror + currerror < min_error )
+                {
+                    left = curleft;
+                    right = curright;
+                    min_error = curlerror + currerror;
+                    lerror = curlerror;
+                    rerror = currerror;
+                    threshold = i > 0 ? 0.5 * (curval + prevval) : curval;
+                    found = 1;
+                }
+            }
+        }
+
+        //do
+        {
+            w = wdata[idx];
+            double wy = wdata[idx]*ydata[idx];
+            wl += w; wyl += wy;
+            wyyl += wy*ydata[idx];
+        }
+        //while( ++i < num && data[idx = idxdata[i]] == curval );
+        //--i;
+        prevval = curval;
+    }
+
+    if( found )
+    {
+        stump->left = (float)left;
+        stump->right = (float)right;
+        stump->lerror = (float)lerror;
+        stump->rerror = (float)rerror;
+        stump->threshold = (float)threshold;
+    }
+
+    return found;
+}
+
+static void
+icvCalcWSums( const float* wdata,
+    const float* ydata, const idx_type* idxdata, int num,
+    double* _sumw, double* _sumwy, double* _sumwyy )
+{
+    double sumw = 0, sumwy = 0, sumwyy = 0;
+    int i;
+
+    for( i = 0; i < num; i++ )
+    {
+        int idx = idxdata[i];
+        double w = wdata[idx];
+        double y = ydata[idx];
+        double wy = w*y;
+        sumw += w;
+        sumwy += wy;
+        sumwyy += wy*y;
+    }
+
+    *_sumw = sumw;
+    *_sumwy = sumwy;
+    *_sumwyy = sumwyy;
+}
+
 
 /*
  * cvCreateMTStumpClassifier
@@ -587,518 +355,237 @@ CV_BOOST_IMPL
 CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
                       int flags,
                       CvMat* trainClasses,
-                      CvMat* typeMask,
-                      CvMat* missedMeasurementsMask,
-                      CvMat* compIdx,
+                      CvMat* ,
+                      CvMat* ,
+                      CvMat* ,
                       CvMat* sampleIdx,
                       CvMat* weights,
-                      CvClassifierTrainParams* trainParams )
+                      CvClassifierTrainParams* _trainParams )
 {
-    CvStumpClassifier* stump = NULL;
-    int m = 0; /* number of samples */
+    CvStumpClassifier* best_stump = 0;
+    CvMTStumpTrainParams* trainParams = (CvMTStumpTrainParams*)_trainParams;
+    int m = trainClasses->cols + trainClasses->rows - 1; /* number of samples */
     int n = 0; /* number of components */
-    uchar* data = NULL;
-    size_t cstep   = 0;
-    size_t sstep   = 0;
-    int    datan   = 0; /* num components */
-    uchar* ydata = NULL;
-    size_t ystep = 0;
-    uchar* idxdata = NULL;
-    size_t idxstep = 0;
-    int    l = 0; /* number of indices */     
-    uchar* wdata = NULL;
-    size_t wstep = 0;
-
-    uchar* sorteddata = NULL;
-    int    sortedtype    = 0;
-    size_t sortedcstep   = 0; /* component step */
-    size_t sortedsstep   = 0; /* sample step */
-    int    sortedn       = 0; /* num components */
-    int    sortedm       = 0; /* num samples */
-
-    char* filter = NULL;
-    int i = 0;
+    int l = 0; /* number of active samples */
+    int datan = 0; /* num components */
+    float* ydata = trainClasses->data.fl;
+    idx_type* idxdata = 0;
+    double sumw = 0, sumwy = 0, sumwyy = 0;
     
-    int compidx = 0;
-    int stumperror;
-    int portion;
+    float* wdata = weights->data.fl;
 
-    /* private variables */
-    CvMat mat;
-    CvValArray va;
-    float lerror;
-    float rerror;
-    float left;
-    float right;
-    float threshold;
-    int optcompidx;
+    idx_type* sorteddata = 0;
+    size_t sortedstep = 0; /* component step */
+    /* size of the cache of sorted indexes */
+    int sortedn = 0; /* number of rows */
+    int sortedm = 0; /* number of columns */
 
-    float sumw;
-    float sumwy;
-    float sumwyy;
-
-    int t_compidx;
-    int t_n;
+    char* mask = 0;
+    const int min_portion0 = 10, max_portion1 = 50;
+    int i, t_compidx, portion0;
     
-    int ti;
-    int tj;
-    int tk;
+    CvStumpError stumperror = trainParams->error;
+    int max_threads = cvGetNumThreads();
 
-    uchar* t_data;
-    size_t t_cstep;
-    size_t t_sstep;
+    idx_type* sorted_idx[CV_MAX_THREADS] = {0};
+    CvStumpClassifier stumps[CV_MAX_THREADS];
+    CvMat* callback_data[CV_MAX_THREADS] = {0};
 
-    size_t matcstep;
-    size_t matsstep;
+    assert( CV_MAT_TYPE(trainClasses->type) == CV_32FC1 &&
+            CV_IS_MAT_CONT(trainClasses->type & weights->type) );
 
-    int* t_idx;
-    /* end private variables */
-
-    assert( trainParams != NULL );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( missedMeasurementsMask == NULL );
-    assert( compIdx == NULL );
-
-    stumperror = (int) ((CvMTStumpTrainParams*) trainParams)->error;
-
-    ydata = trainClasses->data.ptr;
-    if( trainClasses->rows == 1 )
+    if( trainParams->sortedIdx )
     {
-        m = trainClasses->cols;
-        ystep = CV_ELEM_SIZE( trainClasses->type );
+        assert( CV_MAT_TYPE(trainParams->sortedIdx->type) == CV_16SC1 );
+        sorteddata = (idx_type*)trainParams->sortedIdx->data.ptr;
+        sortedstep = trainParams->sortedIdx->step/sizeof(sorteddata[0]);
+        sortedn = trainParams->sortedIdx->rows;
+        sortedm = trainParams->sortedIdx->cols;
+    }
+
+    if( !trainData )
+    {
+        n = trainParams->numcomp;
+        assert( trainParams->getTrainData != 0 && n > 0 );
     }
     else
     {
-        m = trainClasses->rows;
-        ystep = trainClasses->step;
-    }
+        assert( CV_MAT_TYPE(trainData->type) == CV_32FC1 && trainData->cols == m );
+        datan = n = trainData->rows;
 
-    wdata = weights->data.ptr;
-    if( weights->rows == 1 )
-    {
-        assert( weights->cols == m );
-        wstep = CV_ELEM_SIZE( weights->type );
-    }
-    else
-    {
-        assert( weights->rows == m );
-        wstep = weights->step;
-    }
-
-    if( ((CvMTStumpTrainParams*) trainParams)->sortedIdx != NULL )
-    {
-        sortedtype =
-            CV_MAT_TYPE( ((CvMTStumpTrainParams*) trainParams)->sortedIdx->type );
-        assert( sortedtype == CV_16SC1 || sortedtype == CV_32SC1
-                || sortedtype == CV_32FC1 );
-        sorteddata = ((CvMTStumpTrainParams*) trainParams)->sortedIdx->data.ptr;
-        sortedsstep = CV_ELEM_SIZE( sortedtype );
-        sortedcstep = ((CvMTStumpTrainParams*) trainParams)->sortedIdx->step;
-        sortedn = ((CvMTStumpTrainParams*) trainParams)->sortedIdx->rows;
-        sortedm = ((CvMTStumpTrainParams*) trainParams)->sortedIdx->cols;
-    }
-
-    if( trainData == NULL )
-    {
-        assert( ((CvMTStumpTrainParams*) trainParams)->getTrainData != NULL );
-        n = ((CvMTStumpTrainParams*) trainParams)->numcomp;
-        assert( n > 0 );
-    }
-    else
-    {
-        assert( CV_MAT_TYPE( trainData->type ) == CV_32FC1 );
-        data = trainData->data.ptr;
-        if( CV_IS_ROW_SAMPLE( flags ) )
-        {
-            cstep = CV_ELEM_SIZE( trainData->type );
-            sstep = trainData->step;
-            assert( m == trainData->rows );
-            datan = n = trainData->cols;
-        }
-        else
-        {
-            sstep = CV_ELEM_SIZE( trainData->type );
-            cstep = trainData->step;
-            assert( m == trainData->cols );
-            datan = n = trainData->rows;
-        }
-        if( ((CvMTStumpTrainParams*) trainParams)->getTrainData != NULL )
-        {
-            n = ((CvMTStumpTrainParams*) trainParams)->numcomp;
-        }        
+        if( trainParams->getTrainData != 0 )
+            n = trainParams->numcomp;
     }
     assert( datan <= n );
 
-    if( sampleIdx != NULL )
+    l = !sampleIdx ? m : sampleIdx->rows + sampleIdx->cols - 1;
+    idxdata = (idx_type*)cvAlloc( l*sizeof(idxdata[0]) );
+    if( sampleIdx != 0 )
     {
         assert( CV_MAT_TYPE( sampleIdx->type ) == CV_32FC1 );
-        idxdata = sampleIdx->data.ptr;
-        idxstep = ( sampleIdx->rows == 1 )
-            ? CV_ELEM_SIZE( sampleIdx->type ) : sampleIdx->step;
-        l = ( sampleIdx->rows == 1 ) ? sampleIdx->cols : sampleIdx->rows;
+        const float* _idxdata = sampleIdx->data.fl;
+        int idxstep = MAX( sampleIdx->step/sizeof(_idxdata[0]), 1 );
 
-        if( sorteddata != NULL )
+        for( i = 0; i < l; i++ )
+            idxdata[i] = (idx_type)cvRound(_idxdata[i*idxstep]);
+
+        if( sorteddata != 0 )
         {
-            filter = (char*) cvAlloc( sizeof( char ) * m );
-            memset( (void*) filter, 0, sizeof( char ) * m );
+            mask = (char*)cvAlloc( m );
+            memset( mask, 0, m );
             for( i = 0; i < l; i++ )
-            {
-                filter[(int) *((float*) (idxdata + i * idxstep))] = (char) 1;
-            }
+                mask[idxdata[i]] = (char)1;
         }
     }
     else
-    {
-        l = m;
-    }
+        for( i = 0; i < l; i++ )
+            idxdata[i] = (idx_type)i;
 
-    stump = (CvStumpClassifier*) cvAlloc( sizeof( CvStumpClassifier) );
+    best_stump = (CvStumpClassifier*)cvAlloc( sizeof(*best_stump) );
+    memset( best_stump, 0, sizeof(*best_stump) );
 
-    /* START */
-    memset( (void*) stump, 0, sizeof( CvStumpClassifier ) );
+    best_stump->eval = cvEvalStumpClassifier;
+    best_stump->tune = 0;
+    best_stump->save = 0;
+    best_stump->release = cvReleaseStumpClassifier;
 
-    portion = ((CvMTStumpTrainParams*)trainParams)->portion;
+    best_stump->lerror = best_stump->rerror = FLT_MAX;
+    best_stump->left = best_stump->right = 0.f;
     
-    if( portion < 1 )
+    portion0 = trainParams->portion;
+    if( portion0 < 1 )
+        portion0 = MAX( (1 << 20)/m, min_portion0 );
+
+    for( i = 0; i < max_threads; i++ )
     {
-        /* auto portion */
-        portion = n;
-        #ifdef _OPENMP
-        portion /= omp_get_max_threads();        
-        #endif /* _OPENMP */        
-    }
+        sorted_idx[i] = (idx_type*)cvAlloc( l*2*sizeof(sorted_idx[i][0]) );
+        stumps[i] = *best_stump;
 
-    stump->eval = cvEvalStumpClassifier;
-    stump->tune = NULL;
-    stump->save = NULL;
-    stump->release = cvReleaseStumpClassifier;
-
-    stump->lerror = FLT_MAX;
-    stump->rerror = FLT_MAX;
-    stump->left  = 0.0F;
-    stump->right = 0.0F;
-
-    compidx = 0;
-    #ifdef _OPENMP
-    #pragma omp parallel private(mat, va, lerror, rerror, left, right, threshold, \
-                                 optcompidx, sumw, sumwy, sumwyy, t_compidx, t_n, \
-                                 ti, tj, tk, t_data, t_cstep, t_sstep, matcstep,  \
-                                 matsstep, t_idx)
-    #endif /* _OPENMP */
-    {
-        lerror = FLT_MAX;
-        rerror = FLT_MAX;
-        left  = 0.0F;
-        right = 0.0F;
-        threshold = 0.0F;
-        optcompidx = 0;
-
-        sumw   = FLT_MAX;
-        sumwy  = FLT_MAX;
-        sumwyy = FLT_MAX;
-
-        t_compidx = 0;
-        t_n = 0;
-        
-        ti = 0;
-        tj = 0;
-        tk = 0;
-
-        t_data = NULL;
-        t_cstep = 0;
-        t_sstep = 0;
-
-        matcstep = 0;
-        matsstep = 0;
-
-        t_idx = NULL;
-
-        mat.data.ptr = NULL;
-        
         if( datan < n )
+            callback_data[i] = cvCreateMat( MIN(portion0, max_portion1), m, CV_32F );
+    }
+
+    icvCalcWSums( wdata, ydata, idxdata, l, &sumw, &sumwy, &sumwyy );
+
+    #ifdef _OPENMP
+    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+    #endif /* _OPENMP */
+    for( t_compidx = 0; t_compidx < n; t_compidx += portion0 )
+    {
+        /*
+        This function, unlike cvCreateStumpClassifier,
+        can compute the features and sort their indexes on-fly.
+        Then, it can use "cache", i.e. some precomputed features
+        ("datan" rows of trainData) and/or
+        some previously sorted indexes
+        ("sortedn" rows of sorteddata).
+        In general sortedn != datan, so for every feature we
+        need to be able to handle all 4 cases:
+        1) no feature values and no sorted indexes in cache,
+        2) only sorted indices are in cache
+        3) only feature values in cache
+        4) both feature values and sorted indexes are in cache.
+        that makes the loop body more complex.
+        */
+        int thread_idx = cvGetThreadNum();
+        float lerror = FLT_MAX, rerror = FLT_MAX;
+        float left  = 0.f, right = 0.f, threshold = 0.f;
+        int optcompidx = 0;
+        int ti, t_n = MIN( portion0, n - t_compidx );
+
+        idx_type *t_idx = 0;
+        CvStumpClassifier* stump = &stumps[thread_idx];
+
+        for( ti = t_compidx; ti < t_compidx + t_n; )
         {
-            /* prepare matrix for callback */
-            if( CV_IS_ROW_SAMPLE( flags ) )
+            CvMat mat;
+            int t_n1 = t_n; // when all the feature values are in cache,
+                            // this nested loop body is run just once
+            if( ti + t_n1 > datan )
             {
-                mat = cvMat( m, portion, CV_32FC1, 0 );
-                matcstep = CV_ELEM_SIZE( mat.type );
-                matsstep = mat.step;
+                // we are completely or partially outside of
+                // "precomputed feature values" zone.
+                
+                if( ti < datan )
+                    // if we are partially outside, let's proceed up to the boundary.
+                    t_n1 = datan - ti;
+                else
+                    // otherwise, we probably need to decrease
+                    // the step to fit the temporary buffer
+                    t_n1 = MIN( t_n1, max_portion1 );
+            }
+            
+            // now, regarding feature vals availability in cache, we have just 2 options:
+            // 1) the whole stripe is in cache
+            // 2) the whole stripe is not in cache
+            if( ti < datan )
+            {
+                cvInitMatHeader( &mat, t_n1, m, CV_32F,
+                    trainData->data.ptr + trainData->step*ti, trainData->step );
             }
             else
             {
-                mat = cvMat( portion, m, CV_32FC1, 0 );
-                matcstep = mat.step;
-                matsstep = CV_ELEM_SIZE( mat.type );
-            }
-            mat.data.ptr = (uchar*) cvAlloc( sizeof( float ) * mat.rows * mat.cols );
-        }
+                cvInitMatHeader( &mat, t_n1, m, CV_32F,
+                    callback_data[thread_idx]->data.ptr,
+                    callback_data[thread_idx]->step );
 
-        if( filter != NULL || sortedn < n )
-        {
-            t_idx = (int*) cvAlloc( sizeof( int ) * m );
-            if( sortedn == 0 || filter == NULL )
+                trainParams->getTrainData( &mat, sampleIdx, 0,
+                    ti, t_n1, trainParams->userdata );
+            }
+
+            for( t_n1 += ti; ti < t_n1; ti++, mat.data.ptr += mat.step )
             {
-                if( idxdata != NULL )
+                int tj, tk = l;
+                if( ti < sortedn )
                 {
-                    for( ti = 0; ti < l; ti++ )
+                    t_idx = sorteddata + ti*sortedstep;
+                    tk = sortedm;
+                    if( mask )
                     {
-                        t_idx[ti] = (int) *((float*) (idxdata + ti * idxstep));
+                        t_idx = sorted_idx[thread_idx];
+                        for( tj = tk = 0; tj < sortedm; tj++ )
+                        {
+                            int curidx = sorteddata[ti*sortedstep + tj];
+                            if( mask[curidx] != 0 )
+                                t_idx[tk++] = (idx_type)curidx;
+                        }
                     }
                 }
                 else
                 {
-                    for( ti = 0; ti < l; ti++ )
-                    {
-                        t_idx[ti] = ti;
-                    }
-                }                
-            }
-        }
-
-        #ifdef _OPENMP
-        #pragma omp critical(c_compidx)
-        #endif /* _OPENMP */
-        {
-            t_compidx = compidx;
-            compidx += portion;
-        }
-        while( t_compidx < n )
-        {
-            t_n = portion;
-            if( t_compidx < datan )
-            {
-                t_n = ( t_n < (datan - t_compidx) ) ? t_n : (datan - t_compidx);
-                t_data = data;
-                t_cstep = cstep;
-                t_sstep = sstep;
-            }
-            else
-            {
-                t_n = ( t_n < (n - t_compidx) ) ? t_n : (n - t_compidx);
-                t_cstep = matcstep;
-                t_sstep = matsstep;
-                t_data = mat.data.ptr - t_compidx * ((size_t) t_cstep );
-
-                /* calculate components */
-                ((CvMTStumpTrainParams*)trainParams)->getTrainData( &mat,
-                        sampleIdx, compIdx, t_compidx, t_n,
-                        ((CvMTStumpTrainParams*)trainParams)->userdata );
-            }
-
-            if( sorteddata != NULL )
-            {
-                if( filter != NULL )
-                {
-                    /* have sorted indices and filter */
-                    switch( sortedtype )
-                    {
-                        case CV_16SC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                tk = 0;
-                                for( tj = 0; tj < sortedm; tj++ )
-                                {
-                                    int curidx = (int) ( *((short*) (sorteddata
-                                            + ti * sortedcstep + tj * sortedsstep)) );
-                                    if( filter[curidx] != 0 )
-                                    {
-                                        t_idx[tk++] = curidx;
-                                    }
-                                }
-                                if( findStumpThreshold_32s[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        (uchar*) t_idx, sizeof( int ), tk,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        case CV_32SC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                tk = 0;
-                                for( tj = 0; tj < sortedm; tj++ )
-                                {
-                                    int curidx = (int) ( *((int*) (sorteddata
-                                            + ti * sortedcstep + tj * sortedsstep)) );
-                                    if( filter[curidx] != 0 )
-                                    {
-                                        t_idx[tk++] = curidx;
-                                    }
-                                }
-                                if( findStumpThreshold_32s[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        (uchar*) t_idx, sizeof( int ), tk,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        case CV_32FC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                tk = 0;
-                                for( tj = 0; tj < sortedm; tj++ )
-                                {
-                                    int curidx = (int) ( *((float*) (sorteddata
-                                            + ti * sortedcstep + tj * sortedsstep)) );
-                                    if( filter[curidx] != 0 )
-                                    {
-                                        t_idx[tk++] = curidx;
-                                    }
-                                }
-                                if( findStumpThreshold_32s[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        (uchar*) t_idx, sizeof( int ), tk,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        default:
-                            assert( 0 );
-                            break;
-                    }
+                    t_idx = sorted_idx[thread_idx];
+                    icvRadixSortIndexedValArray( idxdata, tk, mat.data.fl, t_idx, t_idx + tk );
                 }
-                else
-                {
-                    /* have sorted indices */
-                    switch( sortedtype )
-                    {
-                        case CV_16SC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                if( findStumpThreshold_16s[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        sorteddata + ti * sortedcstep, sortedsstep, sortedm,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        case CV_32SC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                if( findStumpThreshold_32s[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        sorteddata + ti * sortedcstep, sortedsstep, sortedm,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        case CV_32FC1:
-                            for( ti = t_compidx; ti < MIN( sortedn, t_compidx + t_n ); ti++ )
-                            {
-                                if( findStumpThreshold_32f[stumperror]( 
-                                        t_data + ti * t_cstep, t_sstep,
-                                        wdata, wstep, ydata, ystep,
-                                        sorteddata + ti * sortedcstep, sortedsstep, sortedm,
-                                        &lerror, &rerror,
-                                        &threshold, &left, &right, 
-                                        &sumw, &sumwy, &sumwyy ) )
-                                {
-                                    optcompidx = ti;
-                                }
-                            }
-                            break;
-                        default:
-                            assert( 0 );
-                            break;
-                    }
-                }
-            }
 
-            ti = MAX( t_compidx, MIN( sortedn, t_compidx + t_n ) );
-            for( ; ti < t_compidx + t_n; ti++ )
-            {
-                va.data = t_data + ti * t_cstep;
-                va.step = t_sstep;
-                icvSortIndexedValArray_32s( t_idx, l, &va );
-                if( findStumpThreshold_32s[stumperror]( 
-                        t_data + ti * t_cstep, t_sstep,
-                        wdata, wstep, ydata, ystep,
-                        (uchar*)t_idx, sizeof( int ), l,
-                        &lerror, &rerror,
-                        &threshold, &left, &right, 
-                        &sumw, &sumwy, &sumwyy ) )
-                {
-                    optcompidx = ti;
-                }
-            }
-            #ifdef _OPENMP
-            #pragma omp critical(c_compidx)
-            #endif /* _OPENMP */
-            {
-                t_compidx = compidx;
-                compidx += portion;
-            }
-        } /* while have training data */
-
-        /* get the best classifier */
-        #ifdef _OPENMP
-        #pragma omp critical(c_beststump)
-        #endif /* _OPENMP */
-        {
-            if( lerror + rerror < stump->lerror + stump->rerror )
-            {
-                stump->lerror    = lerror;
-                stump->rerror    = rerror;
-                stump->compidx   = optcompidx;
-                stump->threshold = threshold;
-                stump->left      = left;
-                stump->right     = right;
+                if( icvFindStumpThreshold( mat.data.fl, wdata, ydata,
+                        t_idx, tk, stump, stumperror, sumw, sumwy, sumwyy ) )
+                    stump->compidx = ti;
             }
         }
-
-        /* free allocated memory */
-        if( mat.data.ptr != NULL )
-        {
-            cvFree( &(mat.data.ptr) );
-        }
-        if( t_idx != NULL )
-        {
-            cvFree( &t_idx );
-        }
-    } /* end of parallel region */
-
-    /* END */
-
-    /* free allocated memory */
-    if( filter != NULL )
-    {
-        cvFree( &filter );
     }
 
-    if( ((CvMTStumpTrainParams*) trainParams)->type == CV_CLASSIFICATION_CLASS )
+    cvFree( &mask );
+    cvFree( &idxdata );
+
+    for( i = 0; i < max_threads; i++ )
     {
-        stump->left = 2.0F * (stump->left >= 0.5F) - 1.0F;
-        stump->right = 2.0F * (stump->right >= 0.5F) - 1.0F;
+        cvFree( &sorted_idx[i] );
+        cvReleaseMat( &callback_data[i] );
+
+        if( (double)stumps[i].lerror + stumps[i].rerror <
+            (double)best_stump->lerror + best_stump->rerror )
+            *best_stump = stumps[i];
     }
 
-    return (CvClassifier*) stump;
+    if( trainParams->type == CV_CLASSIFICATION_CLASS )
+    {
+        best_stump->left = best_stump->left >= 0.5f ? 1.f : -1.f;
+        best_stump->right = best_stump->right >= 0.5f ? 1.f : -1.f;
+    }
+
+    return (CvClassifier*)best_stump;
 }
+
 
 CV_BOOST_IMPL
 float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
@@ -1108,7 +595,6 @@ float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
     int idx;
 
     __BEGIN__;
-
 
     CV_ASSERT( classifier != NULL );
     CV_ASSERT( sample != NULL );
