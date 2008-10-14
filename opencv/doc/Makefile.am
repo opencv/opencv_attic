@@ -1,6 +1,6 @@
 opencvdocdir = $(pkgdatadir)/doc
 nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
-    license.txt opencv.jpg opencvman_old.pdf \
+    license.txt opencv.jpg opencv-logo.png opencv-logo2.png opencvman_old.pdf \
     ../THANKS ../ChangeLog \
     papers/algo_tracking.pdf papers/avbpa99.ps papers/camshift.pdf \
     ref/opencvref.css ref/opencvref_cv.htm ref/opencvref_cvaux.htm \
