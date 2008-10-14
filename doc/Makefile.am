@@ -7,8 +7,8 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     ref/opencvref_cxcore.htm ref/opencvref_highgui.htm ref/opencvref_ml.htm \
     ref/pics/backprojectpatch.png \
     ref/pics/boundingrect.png  ref/pics/building.jpg  ref/pics/contoursecarea.png \
-    ref/pics/cornersubpix.png  ref/pics/defects.png  ref/pics/ellipse.png \
-    ref/pics/em1.png  ref/pics/em3.png  ref/pics/em4.png \
+    ref/pics/cornersubpix.png  ref/pics/defects.png  ref/pics/disparity.png \
+    ref/pics/ellipse.png  ref/pics/em1.png  ref/pics/em3.png  ref/pics/em4.png \
     ref/pics/em5.png  ref/pics/em6.png  ref/pics/em7.png \
     ref/pics/em8.png  ref/pics/em9.png  ref/pics/errmsg.png \
     ref/pics/face.png   ref/pics/haarfeatures.png  ref/pics/houghp.png \

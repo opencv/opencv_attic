@@ -5485,7 +5485,7 @@ int cvFindFundamentalMat( const CvMat* points1,
                           const CvMat* points2,
                           CvMat* fundamental_matrix,
                           int    method=CV_FM_RANSAC,
-                          double param1=1.,
+                          double param1=3.,
                           double param2=0.99,
                           CvMat* status=NULL);
 </pre>
@@ -5501,19 +5501,19 @@ int cvFindFundamentalMat( const CvMat* points1,
 <dt>method<dd>Method for computing the fundamental matrix
           <dd>CV_FM_7POINT - for 7-point algorithm. N == 7
           <dd>CV_FM_8POINT - for 8-point algorithm. N >= 8
-          <dd>CV_FM_RANSAC - for RANSAC  algorithm. N >= 8
-          <dd>CV_FM_LMEDS  - for LMedS   algorithm. N >= 8
-<dt>param1<dd>The parameter is used for RANSAC or LMedS methods only.
+          <dd>CV_FM_RANSAC - for RANSAC  algorithm. N > 8
+          <dd>CV_FM_LMEDS  - for LMedS   algorithm. N > 8
+<dt>param1<dd>The parameter is used for RANSAC method only.
             It is the maximum distance from point to epipolar line in pixels,
             beyond which the point is considered an outlier and is not used
             for computing the final fundamental matrix.
-            Usually it is set to 0.5 or 1.0.
+            Usually it is set somewhere from 1 to 3.
 <dt>param2 <dd>The parameter is used for RANSAC or LMedS methods only.
-            It denotes the desirable level of confidence that the matrix
-            is correct.
+            It denotes the desirable level of confidence of the fundamental matrix estimate.
 <dt>status<dd>The optional output array of N elements,
             every element of which is set to 0 for outliers
-            and to 1 for the other points.
+            and to 1 for the "inliers", i.e. points that comply
+            well with the estimated epipolar geometry.
             The array is computed only in RANSAC and LMedS methods.
             For other methods it is set to all 1&#146;s.</p>
 </dl></p>
@@ -5560,7 +5560,7 @@ for( i = 0; i &lt; point_count; i++ )
 
 fundamental_matrix = cvCreateMat(3,3,CV_32FC1);
 int fm_count = cvFindFundamentalMat( points1,points2,fundamental_matrix,
-                                     CV_FM_RANSAC,1.0,0.99,status );
+                                     CV_FM_RANSAC,3,0.99,status );
 </pre>
 
 
@@ -5864,6 +5864,28 @@ dispRight(x,y) == CV_STEREO_GC_OCCLUSION,
 that is, the range for the left disparity image will be inversed, and the pixels for
 which no good match has been found, will be marked as occlusions.
 </p>
+<p>Here is how the function can be called:</p>
+<pre>
+// image_left and image_right are the input 8-bit single-channel images
+// from the left and the right cameras, respectively
+CvSize size = cvGetSize(image_left);
+CvMat* disparity_left = cvCreateMat( size.height, size.width, CV_16S );
+CvMat* disparity_right = cvCreateMat( size.height, size.width, CV_16S );
+CvStereoGCState* state = cvCreateStereoGCState( 16, 2 );
+cvFindStereoCorrespondenceGC( image_left, image_right,
+    disparity_left, disparity_right, state, 0 );
+cvReleaseStereoGCState( &state );
+// now process the computed disparity images as you want ...
+</pre>
+and this is the output left disparity image computed from the well-known
+Tsukuba stereo pair and multiplied by -16 (because the values in the left
+disparity images are usually negative):
+<pre>
+CvMat* disparity_left_visual = cvCreateMat( size.height, size.width, CV_8U );
+cvConvertScale( disparity_left, disparity_left_visual, -16 );
+cvSave( "disparity.png", disparity_left_visual );
+</pre>
+<p><img align="center" src="pics/disparity.png"></p>
 
 <hr><h3><a name="decl_cvReprojectImageTo3D">ReprojectImageTo3D</a></h3>
 <p class="Blurb">Reprojects disparity image to 3D space</p>
