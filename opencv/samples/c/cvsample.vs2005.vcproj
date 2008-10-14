@@ -404,7 +404,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\drawing.c"
+			RelativePath=".\stereo_calib.cpp"
 			>
 		</File>
 	</Files>
