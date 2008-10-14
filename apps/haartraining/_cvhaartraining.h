@@ -61,10 +61,6 @@
 /* term criteria for K-Means */
 #define CV_TERM_CRITERIA() cvTermCriteria( CV_TERMCRIT_EPS, 1000, 1E-5 )
 
-/* If CV_COL_ARRANGEMENT is defined then sample feature values are stored in column.
-   Otherwise they are stored in row */
-#define CV_COL_ARRANGEMENT
-
 /* print statistic info */
 #define CV_VERBOSE 1
 
@@ -270,28 +266,24 @@ typedef struct CvTreeCascadeClassifier
 } CvTreeCascadeClassifier;
 
 
-CV_INLINE float cvEvalFastHaarFeature( CvFastHaarFeature* feature,
-                                       sum_type* sum, sum_type* tilted )
+CV_INLINE float cvEvalFastHaarFeature( const CvFastHaarFeature* feature,
+                                       const sum_type* sum, const sum_type* tilted )
 {
-    sum_type* img = NULL;
-    int i = 0;
-    float ret = 0.0F;
-    
-    assert( feature );
-    
-    img = ( feature->tilted ) ? tilted : sum;
+    const sum_type* img = feature->tilted ? tilted : sum;
+    float ret = feature->rect[0].weight*
+        (img[feature->rect[0].p0] - img[feature->rect[0].p1] -
+         img[feature->rect[0].p2] + img[feature->rect[0].p3]) +
+         feature->rect[1].weight*
+        (img[feature->rect[1].p0] - img[feature->rect[1].p1] -
+         img[feature->rect[1].p2] + img[feature->rect[1].p3]);
 
-    assert( img );
-
-    for( i = 0; feature->rect[i].weight != 0.0F && i < CV_HAAR_FEATURE_MAX; i++ )
-    {
-        ret += feature->rect[i].weight *
-            ( img[feature->rect[i].p0] - img[feature->rect[i].p1] -
-              img[feature->rect[i].p2] + img[feature->rect[i].p3] );
-    }
-
+    if( feature->rect[2].weight != 0.0f )
+        ret += feature->rect[2].weight *
+            ( img[feature->rect[2].p0] - img[feature->rect[2].p1] -
+              img[feature->rect[2].p2] + img[feature->rect[2].p3] );
     return ret;
 }
+
 
 typedef struct CvSampleDistortionData
 {

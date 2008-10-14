@@ -64,7 +64,6 @@ int main( int argc, char* argv[] )
     int nneg    = 2000;
     int nstages = 14;
     int mem     = 200;
-    int numprecalculated = 0;
     int nsplits = 1;
     float minhitrate     = 0.995F;
     float maxfalsealarm  = 0.5F;
@@ -239,9 +238,6 @@ int main( int argc, char* argv[] )
         }
     }
 
-    numprecalculated = (int) ( ((size_t) mem) * ((size_t) 1048576) /
-        ( ((size_t) (npos + nneg)) * (sizeof( float ) + sizeof( short )) ) );
-    
     printf( "Data dir name: %s\n", ((dirname == NULL) ? nullname : dirname ) );
     printf( "Vec file name: %s\n", ((vecname == NULL) ? nullname : vecname ) );
     printf( "BG  file name: %s\n", ((bgname == NULL) ? nullname : bgname ) );
@@ -259,7 +255,7 @@ int main( int argc, char* argv[] )
     printf( "Mode: %s\n", ( (mode == 0) ? "BASIC" : ( (mode == 1) ? "CORE" : "ALL") ) );
     printf( "Width: %d\n", width );
     printf( "Height: %d\n", height );
-    printf( "Max num of precalculated features: %d\n", numprecalculated );
+    //printf( "Max num of precalculated features: %d\n", numprecalculated );
     printf( "Applied boosting algorithm: %s\n", boosttypes[boosttype] );
     printf( "Error (valid only for Discrete and Real AdaBoost): %s\n",
             stumperrors[stumperror] );
@@ -268,7 +264,7 @@ int main( int argc, char* argv[] )
     printf( "Min number of positive samples per cluster: %d\n", minpos );
 
     cvCreateTreeCascadeClassifier( dirname, vecname, bgname,
-                               npos, nneg, nstages, numprecalculated,
+                               npos, nneg, nstages, mem,
                                nsplits,
                                minhitrate, maxfalsealarm, weightfraction,
                                mode, symmetric,

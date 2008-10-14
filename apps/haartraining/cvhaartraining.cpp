@@ -532,207 +532,149 @@ void icvReleaseHaarTrainingData( CvHaarTrainigData** haarTrainingData )
     }
 }
 
-static
+
 void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
                                  int first, int num, void* userdata )
 {
-    int i = 0;
-    int j = 0;
-    float val = 0.0F;
-    float normfactor = 0.0F;
-    
-    CvHaarTrainingData* training_data;
-    CvIntHaarFeatures* haar_features;
+    int i, j;
+    float* dst = mat->data.fl;
+    int dststep = mat->step/sizeof(dst[0]);
+    float* idxdata = 0;
+    int idxstep = 0;
+    int num_samples = mat->cols;
+    int fast_mode = 1;
 
-#ifdef CV_COL_ARRANGEMENT
+    CvHaarTrainingData* training_data = ((CvUserdata*) userdata)->trainingData;
+    CvIntHaarFeatures* haar_features = ((CvUserdata*) userdata)->haarFeatures;
+
     assert( mat->rows >= num );
-#else
-    assert( mat->cols >= num );
-#endif
 
-    training_data = ((CvUserdata*) userdata)->trainingData;
-    haar_features = ((CvUserdata*) userdata)->haarFeatures;
-    if( sampleIdx == NULL )
+    if( sampleIdx )
     {
-        int num_samples;
+        assert( CV_MAT_TYPE(sampleIdx->type) == CV_32FC1 );
+        
+        idxdata = sampleIdx->data.fl;
+        idxstep = MAX(sampleIdx->step/sizeof(idxdata[0]), 1);
+        num_samples = sampleIdx->cols + sampleIdx->rows - 1;
+    }
 
-#ifdef CV_COL_ARRANGEMENT
-        num_samples = mat->cols;
-#else
-        num_samples = mat->rows;
-#endif
-        for( i = 0; i < num_samples; i++ )
+    for( i = 0; i < num_samples; i++ )
+    {
+        int idx = !idxdata ? i : cvRound(idxdata[i*idxstep]);
+        float normfactor = training_data->normfactor.data.fl[idx];
+        const sum_type* sum_img = (sum_type*)(training_data->sum.data.ptr + idx*training_data->sum.step);
+        const sum_type* tilted_img = (sum_type*)(training_data->tilted.data.ptr + idx*training_data->tilted.step);
+        normfactor = normfactor > FLT_EPSILON ? 1.f/normfactor : 0.f;
+
+        for( j = 0; j < num; j++ )
         {
-            for( j = 0; j < num; j++ )
-            {
-                val = cvEvalFastHaarFeature(
-                        ( haar_features->fastfeature
-                            + first + j ),
-                        (sum_type*) (training_data->sum.data.ptr
-                            + i * training_data->sum.step),
-                        (sum_type*) (training_data->tilted.data.ptr
-                            + i * training_data->tilted.step) );
-                normfactor = training_data->normfactor.data.fl[i];
-                val = ( normfactor == 0.0F ) ? 0.0F : (val / normfactor);
-
-#ifdef CV_COL_ARRANGEMENT
-                CV_MAT_ELEM( *mat, float, j, i ) = val;
-#else
-                CV_MAT_ELEM( *mat, float, i, j ) = val;
-#endif
-            }
+            float val = cvEvalFastHaarFeature( haar_features->fastfeature + first + j, sum_img, tilted_img );
+            dst[idx + j*dststep] = val*normfactor;
         }
     }
-    else
-    {
-        uchar* idxdata = NULL;
-        size_t step    = 0;
-        int    numidx  = 0;
-        int    idx     = 0;
-
-        assert( CV_MAT_TYPE( sampleIdx->type ) == CV_32FC1 );
-
-        idxdata = sampleIdx->data.ptr;
-        if( sampleIdx->rows == 1 )
-        {
-            step = sizeof( float );
-            numidx = sampleIdx->cols;
-        }
-        else
-        {
-            step = sampleIdx->step;
-            numidx = sampleIdx->rows;
-        }
-
-        for( i = 0; i < numidx; i++ )
-        {
-            for( j = 0; j < num; j++ )
-            {
-                idx = (int)( *((float*) (idxdata + i * step)) );
-                val = cvEvalFastHaarFeature(
-                        ( haar_features->fastfeature
-                            + first + j ),
-                        (sum_type*) (training_data->sum.data.ptr
-                            + idx * training_data->sum.step),
-                        (sum_type*) (training_data->tilted.data.ptr
-                            + idx * training_data->tilted.step) );
-                normfactor = training_data->normfactor.data.fl[idx];
-                val = ( normfactor == 0.0F ) ? 0.0F : (val / normfactor);
-
-#ifdef CV_COL_ARRANGEMENT
-                CV_MAT_ELEM( *mat, float, j, idx ) = val;
-#else
-                CV_MAT_ELEM( *mat, float, idx, j ) = val;
-#endif
-
-            }
-        }
-    }
-#if 0 /*def CV_VERBOSE*/
-    if( first % 5000 == 0 )
-    {
-        fprintf( stderr, "%3d%%\r", (int) (100.0 * first / 
-            haar_features->count) );
-        fflush( stderr );
-    }
-#endif /* CV_VERBOSE */
 }
 
+
 static
-void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
-                      int numprecalculated )
+void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures, int _mem )
 {
+    int i, max_threads = 0;
+    CvMat* valbuf[CV_MAX_THREADS] = {0};
+    
     CV_FUNCNAME( "icvPrecalculate" );
 
     __BEGIN__;
 
+    int num_i, num_f = 0;
+    size_t mem = (size_t)_mem*(1 << 20);
+    int m = data->sum.rows;
+    const int portion0 = 100;
+    CvUserdata userdata = cvUserdata( data, haarFeatures );
+
     icvReleaseHaarTrainingDataCache( &data );
 
-    numprecalculated -= numprecalculated % CV_STUMP_TRAIN_PORTION;
-    numprecalculated = MIN( numprecalculated, haarFeatures->count );
-
-    if( numprecalculated > 0 )
+    // !!!
+    // Indexes are twice smaller than the feature values (short vs float),
+    // and indexes take at least as much time to sort, as the values to compute.
+    // With SSE2 feature values could probably be computed even faster.
+    // Thus we prefer to store indexes in cache.
+    // If all indexes fit to cache, we use the remaining space for values.
+    num_i = (int)(mem/(m*sizeof(idx_type)));
+    if( num_i > haarFeatures->count )
     {
-        int portion = CV_STUMP_TRAIN_PORTION;
-        int idx = 0;
-        //size_t datasize;
-        int m;
-        CvUserdata userdata;
-
-        /* private variables */
-        #ifdef _OPENMP
-        CvMat t_data;
-        CvMat t_idx;
-        int first;
-        int t_portion;
-        #endif /* _OPENMP */
-
-        m = data->sum.rows;
-
-#ifdef CV_COL_ARRANGEMENT
-        CV_CALL( data->valcache = cvCreateMat( numprecalculated, m, CV_32FC1 ) );
-#else
-        CV_CALL( data->valcache = cvCreateMat( m, numprecalculated, CV_32FC1 ) );
-#endif
-        CV_CALL( data->idxcache = cvCreateMat( numprecalculated, m, CV_IDX_MAT_TYPE ) );
-
-        userdata = cvUserdata( data, haarFeatures );
-
-        #ifdef _OPENMP
-        #pragma omp parallel for private(t_data, t_idx, first, t_portion)
-        for( first = 0; first < numprecalculated; first += portion )
-        {
-            t_data = *data->valcache;
-            t_idx = *data->idxcache;
-            t_portion = MIN( portion, (numprecalculated - first) );
-            
-            /* indices */
-            t_idx.rows = t_portion;
-            t_idx.data.ptr = data->idxcache->data.ptr + first * ((size_t)t_idx.step);
-
-            /* feature values */
-#ifdef CV_COL_ARRANGEMENT
-            t_data.rows = t_portion;
-            t_data.data.ptr = data->valcache->data.ptr +
-                first * ((size_t) t_data.step );
-#else
-            t_data.cols = t_portion;
-            t_data.data.ptr = data->valcache->data.ptr +
-                first * ((size_t) CV_ELEM_SIZE( t_data.type ));
-#endif
-            icvGetTrainingDataCallback( &t_data, NULL, NULL, first, t_portion,
-                                        &userdata );
-#ifdef CV_COL_ARRANGEMENT
-            cvGetSortedIndices( &t_data, &t_idx, 0 );
-#else
-            cvGetSortedIndices( &t_data, &t_idx, 1 );
-#endif
-
-#ifdef CV_VERBOSE
-            putc( '.', stderr );
-            fflush( stderr );
-#endif /* CV_VERBOSE */
-
-        }
-
-#ifdef CV_VERBOSE
-        fprintf( stderr, "\n" );
-        fflush( stderr );
-#endif /* CV_VERBOSE */
-
-        #else
-        icvGetTrainingDataCallback( data->valcache, NULL, NULL, 0, numprecalculated,
-                                    &userdata );
-#ifdef CV_COL_ARRANGEMENT
-        cvGetSortedIndices( data->valcache, data->idxcache, 0 );
-#else
-        cvGetSortedIndices( data->valcache, data->idxcache, 1 );
-#endif
-        #endif /* _OPENMP */
+        num_i = haarFeatures->count;
+        mem -= (size_t)num_i*m*sizeof(idx_type);
+        num_f = (int)(mem/(m*sizeof(float)));
+        num_f = MIN( num_f, haarFeatures->count );
+        assert( num_i >= num_f );
     }
 
+#ifdef CV_VERBOSE
+    printf( "Number of presorted indexes: %d\n", num_i );
+    printf( "Number of precomputed features: %d\n", num_f );
+#endif
+
+    if( num_i <= 0 )
+        EXIT;
+
+    max_threads = cvGetNumThreads();
+
+    CV_CALL( data->idxcache = cvCreateMat( num_i, m, CV_16S ) );
+
+    if( num_f > 0 )
+        CV_CALL( data->valcache = cvCreateMat( num_f, m, CV_32F ) );
+
+    if( num_f < num_i )
+    {
+        for( i = 0; i < max_threads; i++ )
+            CV_CALL( valbuf[i] = cvCreateMat( portion0, m, CV_32F ));
+    }
+
+#ifdef CV_VERBOSE
+    printf( "Precomputing data, that may take a few minutes...\n", num_i );
+#endif
+
+    #ifdef _OPENMP
+    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+    #endif /* _OPENMP */
+    for( i = 0; i < num_i; i += portion0 )
+    {
+        int thread_idx = cvGetThreadNum();
+        int portion = MIN( portion0, num_i - i );
+        CvMat dst_i, dst_f;
+        cvGetRows( data->idxcache, &dst_i, i, i + portion );
+        if( i + portion <= num_f )
+            cvGetRows( data->valcache, &dst_f, i, i + portion );
+        else
+            cvGetRows( valbuf[thread_idx], &dst_f, 0, portion );
+
+        icvGetTrainingDataCallback( &dst_f, 0, 0, i, portion, &userdata );
+        cvGetSortedIndices( &dst_f, &dst_i, 0 );
+
+        if( i < num_f && i + portion > num_f )
+        {
+            CvMat src_f;
+            portion = num_f - i;
+            cvGetRows( valbuf[thread_idx], &src_f, 0, portion );
+            cvGetRows( data->valcache, &dst_f, i, i + portion );
+            cvCopy( &src_f, &dst_f );
+        }
+    #ifdef CV_VERBOSE
+        if( i > 0 && i*100/num_i > (i - portion)*100/num_i )
+            printf( "." );
+    #endif
+    }
+
+    #ifdef CV_VERBOSE
+    printf( "\n" );
+    #endif
+
     __END__;
+
+    for( i = 0; i < max_threads; i++ )
+        cvReleaseMat( &valbuf[i] );
 }
+
 
 static
 void icvSplitIndicesCallback( int compidx, float threshold,
@@ -806,8 +748,6 @@ void icvSplitIndicesCallback( int compidx, float threshold,
  * minhitrate       - desired min hit rate
  * maxfalsealarm    - desired max false alarm rate
  * symmetric        - if not 0 it is assumed that samples are vertically symmetric
- * numprecalculated - number of features that will be precalculated. Each precalculated
- *   feature need (number_of_samples*(sizeof( float ) + sizeof( short ))) bytes of memory
  * weightfraction   - weight trimming parameter
  * numsplits        - number of binary splits in each tree
  * boosttype        - type of applied boosting algorithm
@@ -828,12 +768,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                                                    CvStumpError stumperror,
                                                    int maxsplits )
 {
-
-#ifdef CV_COL_ARRANGEMENT
     int flags = CV_COL_SAMPLE;
-#else
-    int flags = CV_ROW_SAMPLE;
-#endif
 
     CvStageHaarClassifier* stage = NULL;
     CvBoostTrainer* trainer;
@@ -1857,12 +1792,12 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
     return getcount;
 }
 
-
+#if 0
 void cvCreateCascadeClassifier( const char* dirname,
                                 const char* vecfilename,
                                 const char* bgfilename, 
                                 int npos, int nneg, int nstages,
-                                int numprecalculated,
+                                int mem,
                                 int numsplits,
                                 float minhitrate, float maxfalsealarm,
                                 float weightfraction,
@@ -2000,7 +1935,7 @@ void cvCreateCascadeClassifier( const char* dirname,
             proctime = -TIME( 0 );
 #endif /* CV_VERBOSE */
 
-            icvPrecalculate( data, haar_features, numprecalculated );
+            icvPrecalculate( data, haar_features, mem );
 
 #ifdef CV_VERBOSE
             printf( "PRECALCULATION TIME: %.2f\n", (proctime + TIME( 0 )) );
@@ -2064,6 +1999,7 @@ void cvCreateCascadeClassifier( const char* dirname,
     icvDestroyBackgroundReaders();
     cascade->release( (CvIntHaarClassifier**) &cascade );
 }
+#endif
 
 /* tree cascade classifier */
 
@@ -2205,7 +2141,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                                     const char* vecfilename,
                                     const char* bgfilename, 
                                     int npos, int nneg, int nstages,
-                                    int numprecalculated,
+                                    int mem,
                                     int numsplits,
                                     float minhitrate, float maxfalsealarm,
                                     float weightfraction,
@@ -2365,7 +2301,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                     /* precalculate feature values */
                     proctime = -TIME( 0 );
-                    icvPrecalculate( training_data, haar_features, numprecalculated );
+                    icvPrecalculate( training_data, haar_features, mem );
                     printf( "Precalculation time: %.2f\n", (proctime + TIME( 0 )) );
 
                     /* train stage classifier using all positive samples */
