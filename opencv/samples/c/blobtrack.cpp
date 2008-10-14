@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 /* Select appropriate case insensitive string comparison function: */
-#ifdef WIN32
+#if defined WIN32 || defined _MSC_VER
   #define MY_STRNICMP strnicmp
   #define MY_STRICMP stricmp
 #else
