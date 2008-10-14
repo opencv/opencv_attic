@@ -205,8 +205,8 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
 
     if( ((aperture_size == CV_SCHARR || aperture_size == 3 || aperture_size == 5) &&
         dx <= 2 && dy <= 2 && dx + dy <= 2 && icvFilterSobelNegVertBorder_8u16s_C1R_p) &&
-        (src_type == CV_8UC1 && dst_type == CV_16SC1 ||
-        src_type == CV_32FC1 && dst_type == CV_32FC1) )
+        (src_type == CV_8UC1 && dst_type == CV_16SC1/* ||
+        src_type == CV_32FC1 && dst_type == CV_32FC1*/) )
     {
         CvDerivGetBufSizeIPPFunc ipp_sobel_getbufsize_func = 0;
         CvDerivIPPFunc_8u ipp_sobel_func_8u = 0;
@@ -288,8 +288,8 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             }
         }
 
-        if( (ipp_sobel_func_8u || ipp_sobel_func_32f) && ipp_sobel_getbufsize_func ||
-            (ipp_scharr_func_8u || ipp_scharr_func_32f) && ipp_scharr_getbufsize_func )
+        if( ((ipp_sobel_func_8u || ipp_sobel_func_32f) && ipp_sobel_getbufsize_func) ||
+            ((ipp_scharr_func_8u || ipp_scharr_func_32f) && ipp_scharr_getbufsize_func) )
         {
             int bufsize = 0, masksize = aperture_size == 3 ? 33 : 55;
             CvSize size = cvGetMatSize( src );
@@ -327,7 +327,7 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             }
 
             if( status >= 0 &&
-                (dx == 0 && dy == 1 && origin || dx == 1 && dy == 1 && !origin)) // negate the output
+                ((dx == 0 && dy == 1 && origin) || (dx == 1 && dy == 1 && !origin))) // negate the output
                 cvSubRS( dst, cvScalarAll(0), dst );
 
             if( status >= 0 )
@@ -410,12 +410,12 @@ void CvLaplaceFilter::init( int _max_width, int _src_type, int _dst_type, bool _
     normalized = _normalized;
     basic_laplacian = _ksize0 == 1;
 
-    if( (src_depth != CV_8U || dst_depth != CV_16S && dst_depth != CV_32F) &&
-        (src_depth != CV_32F || dst_depth != CV_32F) ||
+    if( ((src_depth != CV_8U || (dst_depth != CV_16S && dst_depth != CV_32F)) &&
+        (src_depth != CV_32F || dst_depth != CV_32F)) ||
         CV_MAT_CN(_src_type) != CV_MAT_CN(_dst_type) )
         CV_ERROR( CV_StsUnmatchedFormats,
         "Laplacian can either transform 8u->16s, or 8u->32f, or 32f->32f.\n"
-        "The channel number must be the same." );
+        "The number of channels must be the same." );
 
     if( _ksize < 1 || _ksize > CV_MAX_SOBEL_KSIZE || _ksize % 2 == 0 )
         CV_ERROR( CV_StsOutOfRange, "kernel size must be within 1..7 and odd" );
@@ -815,10 +815,9 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
     src_type = CV_MAT_TYPE(src->type);
     dst_type = CV_MAT_TYPE(dst->type);
 
-    if( aperture_size == 3 || aperture_size == 5 &&
-        (src_type == CV_8UC1 && dst_type == CV_16SC1 ||
-        src_type == CV_32FC1 && dst_type == CV_32FC1) &&
-        (aperture_size == 3 || src_type < CV_32FC1) )
+    if( (aperture_size == 3 || aperture_size == 5) &&
+        (src_type == CV_8UC1 && dst_type == CV_16SC1/* ||
+        src_type == CV_32FC1 && dst_type == CV_32FC1*/) )
     {
         CvDerivGetBufSizeIPPFunc ipp_laplace_getbufsize_func = 0;
         CvDerivIPPFunc_8u ipp_laplace_func_8u = 0;
