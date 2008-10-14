@@ -10,7 +10,7 @@ lib_LTLIBRARIES    = libcvaux.la
 # convenience library
 lib_cvaux_la_SOURCES = \
     camshift.cpp cv3dtracker.cpp cvaux.cpp cvauxutils.cpp \
-    cvbgfg_acmmm2003.cpp cvbgfg_common.cpp cvbgfg_gaussmix.cpp \
+    cvbgfg_acmmm2003.cpp cvbgfg_codebook.cpp cvbgfg_common.cpp cvbgfg_gaussmix.cpp \
     cvcalibfilter.cpp cvclique.cpp cvcorrespond.cpp cvcorrimages.cpp \
     cvcreatehandmask.cpp cvdpstereo.cpp cveigenobjects.cpp \
     cvepilines.cpp cvface.cpp cvfacedetection.cpp cvfacetemplate.cpp \
