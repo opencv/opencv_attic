@@ -54,6 +54,16 @@ if not os.path.exists('_highgui_win32.cpp') or is_older('_highgui_win32.cpp','_h
         "char *c = (char*)methods[i].ml_doc;")],
         [('PyAPI_FUNC','#undef PyAPI_FUNC\n')])
 
+if not os.path.exists('_ml_win32.cpp') or is_older('_ml_win32.cpp','_ml.cpp'):
+    patch_for_win32('_ml.cpp', '_ml_win32.cpp',
+        [('unsigned long long','uint64',),('long long','int64'),
+        ("char *doc = (((PyCFunctionObject *)obj) -> m_ml -> ml_doc);",
+        "char *doc = (char*)(((PyCFunctionObject *)obj) -> m_ml -> ml_doc);"),
+        ("char *c = methods[i].ml_doc;",
+        "char *c = (char*)methods[i].ml_doc;")],
+        [('PyAPI_FUNC','#undef PyAPI_FUNC\n')])
+
+
 setup(name='OpenCV Python Wrapper',
       version='0.0',
       packages = ['opencv'],
@@ -71,6 +81,25 @@ setup(name='OpenCV Python Wrapper',
                              library_dirs = [os.path.join (opencv_base_dir,
                                                            'lib')],
                              libraries = ['cv', 'cxcore'],
+                             ),
+
+                   Extension('opencv._ml',
+                             [os.path.join (opencv_pwrap_dir, '_ml_win32.cpp'),
+                              os.path.join (opencv_pwrap_dir, 'error.cpp'),
+                              os.path.join (opencv_pwrap_dir, 'cvshadow.cpp'),
+                              os.path.join (opencv_pwrap_dir, 'pyhelpers.cpp')],
+                             include_dirs = [os.path.join (opencv_base_dir,
+                                                           'cv', 'include'),
+                                             os.path.join (opencv_base_dir,
+                                                           'cxcore', 'include'),
+                                             os.path.join (opencv_base_dir,
+                                                           'ml', 'include'),
+                                             os.path.join (opencv_base_dir,
+                                                           'otherlibs', 'highgui'),
+                                                           ],
+                             library_dirs = [os.path.join (opencv_base_dir,
+                                                           'lib')],
+                             libraries = ['cv', 'cxcore', 'ml'],
                              ),
 
                    Extension('opencv._highgui',                             [os.path.join (opencv_pwrap_dir, '_highgui_win32.cpp'),
