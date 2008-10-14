@@ -178,7 +178,7 @@ void CvBaseImageFilter::init( int _max_width, int _src_type, int _dst_type,
     assert( max_rows > max_ky*2 );
     row_tab_sz = cvAlign( max_rows*sizeof(uchar*), ALIGN );
     total_buf_sz = buf_size + row_tab_sz + bsz;
-    
+
     CV_CALL( ptr = buffer = (uchar*)cvAlloc( total_buf_sz ));
     
     rows = (uchar**)ptr;
@@ -282,8 +282,8 @@ void CvBaseImageFilter::start_process( CvSlice x_range, int width )
                 border_tab[i + j] = idx + ofs + j;
             if( mode != IPL_BORDER_REPLICATE )
             {
-                if( delta > 0 && idx == width ||
-                    delta < 0 && idx == 0 )
+                if( (delta > 0 && idx == width) ||
+                    (delta < 0 && idx == 0) )
                 {
                     if( mode == IPL_BORDER_REFLECT_101 )
                         idx -= delta*2;
@@ -343,7 +343,7 @@ int CvBaseImageFilter::fill_cyclic_buffer( const uchar* src, int src_step,
     int i, y = y0, bsz1 = border_tab_sz1, bsz = border_tab_sz;
     int pix_size = CV_ELEM_SIZE(src_type);
     int width = prev_x_range.end_index - prev_x_range.start_index, width_n = width*pix_size;
-    bool can_use_src_as_trow = is_separable && width >= ksize.width;
+    bool can_use_src_as_trow = false; //is_separable && width >= ksize.width;
 
     // fill the cyclic buffer
     for( ; buf_count < buf_max_count && y < y2; buf_count++, y++, src += src_step )
@@ -559,7 +559,7 @@ int CvBaseImageFilter::process( const CvMat* src, CvMat* dst,
 
         row_count = top_rows + buf_count;
         
-        if( !rows[0] || (phase & CV_END) && src_y == src_y2 )
+        if( !rows[0] || ((phase & CV_END) && src_y == src_y2) )
         {
             int br = (phase & CV_END) && src_y == src_y2 ? bottom_rows : 0;
             make_y_border( row_count, top_rows, br );
@@ -682,8 +682,8 @@ void CvSepFilter::init( int _max_width, int _src_type, int _dst_type,
     const float eps = FLT_EPSILON*100.f;
 
     if( !CV_IS_MAT(_kx) || !CV_IS_MAT(_ky) ||
-        _kx->cols != 1 && _kx->rows != 1 ||
-        _ky->cols != 1 && _ky->rows != 1 ||
+        (_kx->cols != 1 && _kx->rows != 1) ||
+        (_ky->cols != 1 && _ky->rows != 1) ||
         CV_MAT_CN(_kx->type) != 1 || CV_MAT_CN(_ky->type) != 1 ||
         !CV_ARE_TYPES_EQ(_kx,_ky) )
         CV_ERROR( CV_StsBadArg,
@@ -1806,9 +1806,9 @@ void CvSepFilter::init_gaussian_kernel( CvMat* kernel, double sigma )
 
     type = CV_MAT_TYPE(kernel->type);
     
-    if( kernel->cols != 1 && kernel->rows != 1 ||
+    if( (kernel->cols != 1 && kernel->rows != 1) ||
         (kernel->cols + kernel->rows - 1) % 2 == 0 ||
-        type != CV_32FC1 && type != CV_64FC1 )
+        (type != CV_32FC1 && type != CV_64FC1) )
         CV_ERROR( CV_StsBadSize, "kernel should be 1D floating-point vector of odd (2*k+1) size" );
 
     n = kernel->cols + kernel->rows - 1;
@@ -1886,9 +1886,9 @@ void CvSepFilter::init_sobel_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int
         double scale = !normalize ? 1. : 1./(1 << (n-order-1));
         int iscale = 1;
 
-        if( kernel->cols != 1 && kernel->rows != 1 ||
+        if( (kernel->cols != 1 && kernel->rows != 1) ||
             (kernel->cols + kernel->rows - 1) % 2 == 0 ||
-            type != CV_32FC1 && type != CV_64FC1 && type != CV_32SC1 )
+            (type != CV_32FC1 && type != CV_64FC1 && type != CV_32SC1) )
             CV_ERROR( CV_StsOutOfRange,
             "Both kernels must be 1D floating-point or integer vectors of odd (2*k+1) size." );
 
@@ -1986,9 +1986,9 @@ void CvSepFilter::init_scharr_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, in
         double scale = !normalize ? 1. : order == 0 ? 1./16 : 1./2;
         int iscale = 1;
 
-        if( kernel->cols != 1 && kernel->rows != 1 ||
+        if( (kernel->cols != 1 && kernel->rows != 1) ||
             kernel->cols + kernel->rows - 1 != 3 ||
-            type != CV_32FC1 && type != CV_64FC1 && type != CV_32SC1 )
+            (type != CV_32FC1 && type != CV_64FC1 && type != CV_32SC1) )
             CV_ERROR( CV_StsOutOfRange,
             "Both kernels must be 1D floating-point or integer vectors containing 3 elements each." );
 
@@ -2293,7 +2293,7 @@ CvMat* icvIPPFilterInit( const CvMat* src, int stripe_size, CvSize ksize )
     temp_size.height = (stripe_size*2 + temp_size.width*pix_size) / (temp_size.width*pix_size*2);
     temp_size.height = MAX( temp_size.height, ksize.height );
     temp_size.height = MIN( temp_size.height, src->rows + ksize.height - 1 );
-    
+
     return cvCreateMat( temp_size.height, temp_size.width, src->type );
 }
 
@@ -2404,8 +2404,8 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
         !CV_IS_MAT_CONT(kernelX->type & kernelY->type) ||
         CV_MAT_TYPE(kernelX->type) != CV_32FC1 ||
         CV_MAT_TYPE(kernelY->type) != CV_32FC1 ||
-        kernelX->cols != 1 && kernelX->rows != 1 ||
-        kernelY->cols != 1 && kernelY->rows != 1 ||
+        (kernelX->cols != 1 && kernelX->rows != 1) ||
+        (kernelY->cols != 1 && kernelY->rows != 1) ||
         (unsigned)anchor.x >= (unsigned)(kernelX->cols + kernelX->rows - 1) ||
         (unsigned)anchor.y >= (unsigned)(kernelY->cols + kernelY->rows - 1) )
         CV_ERROR( CV_StsError, "Internal Error: incorrect parameters" );
