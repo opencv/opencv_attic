@@ -306,6 +306,7 @@ Source: "interfaces\swig\python\build\lib.win32-2.6\opencv\*.py*"; DestDir: "{ap
 ; documentation
 Source: "docs\*.htm*"; DestDir: "{app}\docs"
 Source: "docs\*.jp*"; DestDir: "{app}\docs"
+Source: "docs\*.png"; DestDir: "{app}\docs"
 Source: "docs\*.txt"; DestDir: "{app}\docs"
 Source: "docs\*.pdf"; DestDir: "{app}\docs"
 ;Source: "docs\*.rtf"; DestDir: "{app}\docs"
