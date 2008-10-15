@@ -339,8 +339,8 @@ static void print_params(CvVSModule* pM, char* module, char* log_name)
 
     for (i=0; ; ++i)
     {
-        char*   param = pM->GetParamName(i);
-        char*   str = param?pM->GetParamStr(param):NULL;
+        const char*   param = pM->GetParamName(i);
+        const char*   str = param?pM->GetParamStr(param):NULL;
         if(param == NULL)break;
         if(str)
         {
