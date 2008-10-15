@@ -1,4 +1,89 @@
-- Bugfix: added dma_unlisten to icvCloseCAM_DC1394 (thanks to Victor Benso)
+=============================================================================
+                      OpenCV 1.1pre1, October, 2008
+=============================================================================
+
+>>> New functionality/features: <<<
+
+  - General:
+    * Octave bindings have been added. See interfaces/swig/octave (for now, Linux only)
+    * [Windows] OpenCV is now built with VS2005 with SSE2 and OpenMP support
+      included (if you want to rebuild OpenCV using Express or
+      Standard Edition of VS, use _make\opencv.vs2005.no_openmp.sln).
+    * [Windows] Python bindings have been updated to use Python 2.6
+    * [Windows] cvcam has been removed (as videoInput is now supported by highgui)
+
+  - CXCORE, CV, CVAUX:
+    * Speeded-up Robust Features (SURF), contributed by Liu Liu.
+      see samples/c/find_obj.cpp and the documentation opencvref_cv.htm
+    * Many improvements in camera calibration:
+      - Added stereo camera calibration: cvStereoCalibrate, cvStereoRectify etc.
+      - Single camera calibration now uses Levenberg-Marquardt method and supports
+        extra flags to switch on/off optimization of individual camera parameters
+      - The optional 3rd radial distortion parameter (k3*r^6) is now supported in
+        every calibration-related function
+    * 2 stereo correspondence algorithms:
+      - very fast block matching method by Kurt Konolige
+        (processes the Tsukuba stereo pair in <10ms on Core2Duo laptop)
+      - slow but more accurate graph-cut based algorithm by Kolmogorov and Zabin
+    * Better homography estimation algorithms (RANSAC and LMEDs)
+    * new C++ template image classes contributed by Daniel Filip (Google inc.).
+      see opencv/cxcore/include/cvwimage.h
+    * Fast approximate nearest neighbor search (by Xavier Delacour)
+    * Codebook method for background/foreground segmentation (by Gary Bradski)
+    * Sort function (contributed by Shiqi Yu)
+    * [OpenCV+IPP] Face Detection (cvHaarDetectObjects) now runs much faster
+      (up to 2x faster) when using IPP 5.3 or higher.
+    * Much faster (~4x faster) fixed-point variant of cvRemap has been added
+
+  - MLL:
+    * Python bindings for MLL have been added. There are no samples yet.
+
+  - HighGUI:
+    * [Windows, 32bit] Added support for videoInput library.
+      Hence, cvcam is [almost] not needed anymore
+    * [Windows, 32bit] FFMPEG can now be used for video decoding/encoding
+      via ffopencv*.dll
+    * [Linux] Added unicap support
+    * Improved internal video capturing and video encoding APIs
+
+  - Documentation:
+    * OpenCV book has been published (sold separately :) see docs/index.htm)
+
+  - New samples (opencv/samples):
+    * Many Octave samples
+    * find_obj.cpp (SURF), bgfg_codebook.cpp (Codebook BG/FG segmentation),
+      stereo_calib.cpp (Stereo calibration and stereo correspondence)
+
+>>> Bug fixes: <<<
+     Many thanks to everybody who submitted bug reports and/or provided the patches!
+
+    * added dma_unlisten to icvCloseCAM_DC1394 (thanks to Victor Benso)
+    * LMEDs algorithm for cvFindFundamentalMat estimation has been fixed
+    * Broken debug build of highgui in VS2005/2008 (SF #2056185, SF #1709435)
+    * cvFindChessboardCorners memory leak and incorrect size checks
+      (SF #1972896, SF #1910323)
+    * disabling GTK causes v4l runtime error (SF #2088102)
+    * cvsetmousecallback bug (SF #2053529)
+    * libhighgui needed deprecated "img_convert" replacement (SF #2011753)
+    * Segfault in createsamples caused by uninitialized variable (SF #1977989)
+    * Data Alignment Issue in bgfg_gaussmix (SF #1961755)
+    * libpng need to be updated (SF #1952793)
+    * cvCreateVideoWriter_Win32 - identifier not found (SF #1944254)
+    * Bug in cvmorph.cpp (SF #1908844)
+    * dilate (cvDilate) works bogus with default kernel (SF #1887130)
+    * CvEM non-default constructor declared but not defined (SF #1830346)
+    * cvFloodFill (in ver 1.0) Hangs (SF #1790565)
+    * double delete in CvImage (SF #1733437)
+    * cvFilter2D anchor default value is not working properly (SF #1713779)
+    * cvCvtColor - Bug? in converting HSV2RGB (SF #1676344)
+    * Invalid selection of the MKL-dll version in cvUseOptimized() (SF #1633017)
+    * ...
+
+>>> Known issues:
+    * Borland compiler is not supported (but might work) in this update.
+    * 64-bit Windows is not supported (but might work) in this update.
+    * SF bug tracker still contains over 50 records of open bugs.
+      Many of them will be addressed in the next update.
 
 =============================================================================
                       OpenCV 1.0, October 18, 2006
