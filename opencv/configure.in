@@ -40,7 +40,7 @@ AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIR([autotools/aclocal])
 
 # put CVS revision of this configure.in into the resulting configure script
-AC_REVISION($Revision: 1.59 $)
+AC_REVISION($Revision: 1.60 $)
 
 # Detect the canonical host and target build environment
 AC_CANONICAL_HOST
@@ -185,7 +185,6 @@ AC_ARG_WITH([gthread],
             [with_gthread=$withval],
             [with_gthread=auto])
 
-
 ######################################################################
 # getting the code to compile
 
@@ -204,6 +203,62 @@ fi
 # see http://www.gnu.org/software/libtool/manual/automake/Flag-Variables-Ordering.html
 # for more information
 DEFAULT_CXXFLAGS=""
+
+######################################################################
+# SSE2 support
+
+AC_ARG_ENABLE([sse2],
+              [AS_HELP_STRING([--enable-sse2],[enable SSE2 intrinsics [yes]])],
+              [sse2=$enableval],
+              [sse2=yes])
+
+if test x"$sse2" = "xyes"; then
+  if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    case $target in
+    i*86-apple-* | i686-*-* | amd64-*-* | x86_64-*-*)
+      DEFAULT_CXXFLAGS=" -msse2 $DEFAULT_CXXFLAGS"
+        ;;
+    *-*-*)
+        ;;
+    esac
+  fi  
+fi
+
+
+######################################################################
+# OpenMP support
+
+AC_MSG_CHECKING(for OpenMP support)
+AC_LINK_IFELSE([
+AC_LANG_PROGRAM([[
+#include <omp.h>
+void f(int* a, int* b, int n) {
+  int i;  
+  #pragma parallel for
+  for(i = 0; i < n; i++)
+     a[i] += b[i];
+}
+]])],
+[have_openmp=yes],
+[have_openmp=no])
+
+# because of this: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=28482
+# we disable OpenMP by default. But one may enable it explicitly with --enable-openmp=yes
+have_openmp=no
+
+AC_MSG_RESULT($have_openmp)
+
+AC_ARG_ENABLE([openmp],
+              [AS_HELP_STRING([--enable-openmp],[enable OpenMP threading [automatic]])],
+              [openmp=$enableval],
+              [openmp=$have_openmp])
+
+if test x"$openmp" = "xyes"; then
+ if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    DEFAULT_CXXFLAGS=" -fopenmp $DEFAULT_CXXFLAGS"
+    AC_CHECK_LIB(gomp,omp_get_num_threads)
+ fi
+fi
 
 # see if the user wants aggressive optimizations of the code,
 # check whether to include debugging code
@@ -230,6 +285,12 @@ else
           DEFAULT_CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
+    amd64-*-* | x86_64-*-*)
+        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+          # default to i686/pentiumpro -- people can override this
+          DEFAULT_CXXFLAGS="-g $DEFAULT_CXXFLAGS"
+        fi
+        ;;    
     powerpc-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             # default to G3 processors -- people can override this
