@@ -61,28 +61,10 @@ Name: "{app}\otherlibs\_graphics\src\libpng"
 Name: "{app}\otherlibs\_graphics\src\libtiff"
 Name: "{app}\otherlibs\_graphics\src\zlib"
 Name: "{app}\otherlibs\highgui"
-;Name: "{app}\otherlibs\cvcam"
-;Name: "{app}\otherlibs\cvcam\include"
-;Name: "{app}\otherlibs\cvcam\sample"
-;Name: "{app}\otherlibs\cvcam\src"
-;Name: "{app}\otherlibs\cvcam\src\windows"
-;Name: "{app}\otherlibs\cvcam\src\unix"
+Name: "{app}\otherlibs\ffopencv"
 
 ; interfaces
 Name: "{app}\interfaces"
-;Name: "{app}\interfaces\ch"
-;Name: "{app}\interfaces\ch\c"
-;Name: "{app}\interfaces\ch\c\handmade"
-;Name: "{app}\interfaces\ch\c\handmade\cv"
-;Name: "{app}\interfaces\ch\c\handmade\cvcam"
-;Name: "{app}\interfaces\ch\c\handmade\cxcore"
-;Name: "{app}\interfaces\ch\c\handmade\highgui"
-;Name: "{app}\interfaces\ch\chfcreate"
-;Name: "{app}\interfaces\ch\chfhandmade"
-;Name: "{app}\interfaces\ch\demos"
-;Name: "{app}\interfaces\ch\demos\data"
-;Name: "{app}\interfaces\ch\demos\data\haarcascades"
-
 Name: "{app}\interfaces\ipp"
 
 Name: "{app}\interfaces\swig"
@@ -90,8 +72,8 @@ Name: "{app}\interfaces\swig\filtered"
 Name: "{app}\interfaces\swig\general"
 Name: "{app}\interfaces\swig\python"
 Name: "{app}\interfaces\swig\python\build"
-Name: "{app}\interfaces\swig\python\build\lib.win32-2.5"
-Name: "{app}\interfaces\swig\python\build\lib.win32-2.5\opencv"
+Name: "{app}\interfaces\swig\python\build\lib.win32-2.6"
+Name: "{app}\interfaces\swig\python\build\lib.win32-2.6\opencv"
 
 ; documentation
 Name: "{app}\docs"
@@ -124,21 +106,6 @@ Name: "{app}\tests\python\highgui"
 Name: "{app}\utils"
 Name: "{app}\utils\cvinfo"
 
-; direct show filters
-;Name: "{app}\filters"
-;Name: "{app}\filters\CalibFilter"
-;Name: "{app}\filters\ProxyTrans"
-;Name: "{app}\filters\SyncFilter"
-;Name: "{app}\filters\Tracker3dFilter"
-;Name: "{app}\filters\Tracker3dFilter\include"
-;Name: "{app}\filters\Tracker3dFilter\src"
-;Name: "{app}\filters\Tracker3dFilter\trackers"
-;Name: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-;Name: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-;Name: "{app}\filters\Tracker3dFilter\data"
-;Name: "{app}\filters\Tracker3dFilter\data\CameraCalibration"
-;Name: "{app}\filters\Tracker3dFilter\data\Tracking"
-
 ; applications
 Name: "{app}\apps\"
 Name: "{app}\apps\HaarTraining"
@@ -167,8 +134,6 @@ Source: "_make\opencv*.dsw"; DestDir: "{app}\_make"
 Source: "_make\opencv*.sln"; DestDir: "{app}\_make"
 Source: "_make\makefile.*"; DestDir: "{app}\_make"
 Source: "_make\*.mak"; DestDir: "{app}\_make"
-;Source: "_make\cbuilderx\*.cbx"; DestDir: "{app}\_make\cbuilderx"
-;Source: "_make\cbuilderx\*.bpgr"; DestDir: "{app}\_make\cbuilderx"
 
 ; cxcore
 Source: "cxcore\include\*.h*"; DestDir: "{app}\cxcore\include"
@@ -222,9 +187,6 @@ Source: "otherlibs\_graphics\lib\*.a"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\lib\*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\readme.txt"; DestDir: "{app}\otherlibs\_graphics"
 
-;Source: "otherlibs\_graphics\src\*.dsw"; DestDir: "{app}\otherlibs\_graphics\src"
-;Source: "otherlibs\_graphics\src\*.sln"; DestDir: "{app}\otherlibs\_graphics\src"
-
 Source: "otherlibs\_graphics\src\libjasper\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 Source: "otherlibs\_graphics\src\libjasper\license"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 
@@ -263,20 +225,14 @@ Source: "otherlibs\highgui\Makefile.ms"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\Makefile.gnu"; DestDir: "{app}\otherlibs\highgui"
 Source: "otherlibs\highgui\*.sh"; DestDir: "{app}\otherlibs\highgui"
 
+; otherlibs: ffopencv
+Source: "otherlibs\ffopencv\*.c*"; DestDir: "{app}\otherlibs\ffopencv"
+Source: "otherlibs\ffopencv\*.h*"; DestDir: "{app}\otherlibs\ffopencv"
+Source: "otherlibs\ffopencv\*.ds*"; DestDir: "{app}\otherlibs\ffopencv"
+Source: "otherlibs\ffopencv\*.vcproj"; DestDir: "{app}\otherlibs\ffopencv"
+Source: "otherlibs\ffopencv\*.sln"; DestDir: "{app}\otherlibs\ffopencv"
+
 ; interfaces
-;Source: "interfaces\Makefile.*"; DestDir: "{app}\interfaces"
-
-;Source: "interfaces\ch\Makefile"; DestDir: "{app}\interfaces\ch"
-;Source: "interfaces\ch\pkg*.ch"; DestDir: "{app}\interfaces\ch"
-;Source: "interfaces\ch\readme.txt"; DestDir: "{app}\interfaces\ch"
-;Source: "interfaces\ch\c\Makefile*"; DestDir: "{app}\interfaces\ch\c"
-;Source: "interfaces\ch\c\handmade\cv\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cv"
-;Source: "interfaces\ch\c\handmade\cvcam\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cvcam"
-;Source: "interfaces\ch\c\handmade\cxcore\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\cxcore"
-;Source: "interfaces\ch\c\handmade\highgui\*.c"; DestDir: "{app}\interfaces\ch\c\handmade\highgui"
-;Source: "interfaces\ch\chfhandmade\*.chf"; DestDir: "{app}\interfaces\ch\chfhandmade"
-;Source: "interfaces\ch\demos\*.ch"; DestDir: "{app}\interfaces\ch\demos"
-
 Source: "interfaces\ipp\*.c"; DestDir: "{app}\interfaces\ipp"
 Source: "interfaces\ipp\*.h"; DestDir: "{app}\interfaces\ipp"
 Source: "interfaces\ipp\*.def"; DestDir: "{app}\interfaces\ipp"
@@ -290,17 +246,7 @@ Source: "interfaces\swig\python\*.py"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.i"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.c*"; DestDir: "{app}\interfaces\swig\python"
 Source: "interfaces\swig\python\*.h*"; DestDir: "{app}\interfaces\swig\python"
-Source: "interfaces\swig\python\build\lib.win32-2.6\opencv\*.py*"; DestDir: "{app}\interfaces\swig\python\build\lib.win32-2.5\opencv"
-
-;Source: "interfaces\matlab\ReadMe.txt"; DestDir: "{app}\interfaces\matlab"
-;Source: "interfaces\matlab\src\*.c*"; DestDir: "{app}\interfaces\matlab\src"
-;Source: "interfaces\matlab\src\*.h*"; DestDir: "{app}\interfaces\matlab\src"
-;Source: "interfaces\matlab\src\*.dsp"; DestDir: "{app}\interfaces\matlab\src"
-;Source: "interfaces\matlab\src\*.def"; DestDir: "{app}\interfaces\matlab\src"
-;Source: "interfaces\matlab\toolbox\*.*"; DestDir: "{app}\interfaces\matlab\toolbox"
-;Source: "interfaces\matlab\toolbox\opencv\*.m"; DestDir: "{app}\interfaces\matlab\toolbox\opencv"
-;Source: "interfaces\matlab\toolbox\opencv\cvwrap.dll"; DestDir: "{app}\interfaces\matlab\toolbox\opencv"
-;Source: "interfaces\matlab\toolbox\opencv\cvdemos\*.m*"; DestDir: "{app}\interfaces\matlab\toolbox\opencv\cvdemos"
+Source: "interfaces\swig\python\build\lib.win32-2.6\opencv\*.py*"; DestDir: "{app}\interfaces\swig\python\build\lib.win32-2.6\opencv"
 
 ; documentation
 Source: "docs\*.htm*"; DestDir: "{app}\docs"
@@ -363,62 +309,8 @@ Source: "utils\*.py"; DestDir: "{app}\utils"
 Source: "utils\*.iss"; DestDir: "{app}\utils"
 Source: "utils\*.bmp"; DestDir: "{app}\utils"
 Source: "utils\*.ico"; DestDir: "{app}\utils"
-;Source: "utils\cvinfo\*.c*"; DestDir: "{app}\utils\cvinfo"
-;Source: "utils\cvinfo\*.dsp"; DestDir: "{app}\utils\cvinfo"
-;Source: "utils\cvinfo\*.vcproj"; DestDir: "{app}\utils\cvinfo"
-
-; direct show filters
-;Source: "filters\*.*"; DestDir: "{app}\filters"
-;Source: "filters\CalibFilter\*.c*"; DestDir: "{app}\filters\CalibFilter"
-;Source: "filters\CalibFilter\*.h*"; DestDir: "{app}\filters\CalibFilter"
-;Source: "filters\CalibFilter\*.rc"; DestDir: "{app}\filters\CalibFilter"
-;Source: "filters\CalibFilter\*.def"; DestDir: "{app}\filters\CalibFilter"
-;Source: "filters\CalibFilter\*.dsp"; DestDir: "{app}\filters\CalibFilter"
-;Source: "filters\CalibFilter\*.vcproj"; DestDir: "{app}\filters\CalibFilter"
-
-;Source: "filters\ProxyTrans\*.c*"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.h*"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.rc"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.def"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.dsp"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.vcproj"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\ProxyTrans\*.txt"; DestDir: "{app}\filters\ProxyTrans"
-
-;Source: "filters\SyncFilter\*.c*"; DestDir: "{app}\filters\SyncFilter"
-;Source: "filters\SyncFilter\*.h*"; DestDir: "{app}\filters\SyncFilter"
-;Source: "filters\ProxyTrans\*.rc"; DestDir: "{app}\filters\ProxyTrans"
-;Source: "filters\SyncFilter\*.def"; DestDir: "{app}\filters\SyncFilter"
-;Source: "filters\SyncFilter\*.dsp"; DestDir: "{app}\filters\SyncFilter"
-;Source: "filters\SyncFilter\*.vcproj"; DestDir: "{app}\filters\SyncFilter"
-
-;Source: "filters\Tracker3dFilter\*.*"; DestDir: "{app}\filters\Tracker3dFilter"
-;Source: "filters\Tracker3dFilter\include\*.h*"; DestDir: "{app}\filters\Tracker3dFilter\include"
-;Source: "filters\Tracker3dFilter\src\*.c*"; DestDir: "{app}\filters\Tracker3dFilter\src"
-;Source: "filters\Tracker3dFilter\src\*.h*"; DestDir: "{app}\filters\Tracker3dFilter\src"
-;Source: "filters\Tracker3dFilter\src\*.rc"; DestDir: "{app}\filters\Tracker3dFilter\src"
-;Source: "filters\Tracker3dFilter\src\*.def"; DestDir: "{app}\filters\Tracker3dFilter\src"
-;Source: "filters\Tracker3dFilter\src\*.dsp"; DestDir: "{app}\filters\Tracker3dFilter\src"
-
-;Source: "filters\Tracker3dFilter\trackers\*.*"; DestDir: "{app}\filters\Tracker3dFilter\trackers"
-;Source: "filters\Tracker3dFilter\trackers\BlobTracker\*.c*"; DestDir: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-;Source: "filters\Tracker3dFilter\trackers\BlobTracker\*.h*"; DestDir: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-;Source: "filters\Tracker3dFilter\trackers\BlobTracker\*.rc"; DestDir: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-;Source: "filters\Tracker3dFilter\trackers\BlobTracker\*.def"; DestDir: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-;Source: "filters\Tracker3dFilter\trackers\BlobTracker\*.dsp"; DestDir: "{app}\filters\Tracker3dFilter\trackers\BlobTracker"
-
-;Source: "filters\Tracker3dFilter\trackers\CamShiftTracker\*.c*"; DestDir: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-;Source: "filters\Tracker3dFilter\trackers\CamShiftTracker\*.h*"; DestDir: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-;Source: "filters\Tracker3dFilter\trackers\CamShiftTracker\*.rc"; DestDir: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-;Source: "filters\Tracker3dFilter\trackers\CamShiftTracker\*.def"; DestDir: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-;Source: "filters\Tracker3dFilter\trackers\CamShiftTracker\*.dsp"; DestDir: "{app}\filters\Tracker3dFilter\trackers\CamShiftTracker"
-
-;Source: "filters\Tracker3dFilter\data\*.*"; DestDir: "{app}\filters\Tracker3dFilter\data"
-;Source: "filters\Tracker3dFilter\data\CameraCalibration\*.*"; DestDir: "{app}\filters\Tracker3dFilter\data\CameraCalibration"
-;Source: "filters\Tracker3dFilter\data\Tracking\*.*"; DestDir: "{app}\filters\Tracker3dFilter\data\Tracking"
-
 
 ; applications
-
 Source: "apps\HaarTraining\*.*"; DestDir: "{app}\apps\HaarTraining"
 Source: "apps\HaarTraining\include\*.h*"; DestDir: "{app}\apps\HaarTraining\include"
 Source: "apps\HaarTraining\make\*.ds*"; DestDir: "{app}\apps\HaarTraining\make"
@@ -461,7 +353,6 @@ Source: "lib\cvaux.lib"; DestDir: "{app}\lib"
 Source: "lib\ml.lib"; DestDir: "{app}\lib"
 Source: "lib\cvhaartraining.lib"; DestDir: "{app}\lib"
 Source: "lib\cxts.lib"; DestDir: "{app}\lib"
-;Source: "lib\cvcam.lib"; DestDir: "{app}\lib"
 
 [Icons]
 Name: "{group}\OpenCV Workspace MSVC6"; Filename: "{app}\_make\opencv.dsw"
@@ -483,9 +374,9 @@ Root: HKCU; Subkey: "Software\OpenCV"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\OpenCV\Settings"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
 [Run]
-Filename: "{reg:HKLM\Software\Python\PythonCore\2.5\InstallPath,|C:\Python25\}python.exe"; Parameters: "setup-for-win.py install"; WorkingDir: "{app}\interfaces\swig\python"; Flags: skipifdoesntexist; StatusMsg: "Installing OpenCV Module for Python..."
+Filename: "{reg:HKLM\Software\Python\PythonCore\2.6\InstallPath,|C:\Python26\}python.exe"; Parameters: "setup-for-win.py install"; WorkingDir: "{app}\interfaces\swig\python"; Flags: skipifdoesntexist; StatusMsg: "Installing OpenCV Module for Python..."
 Filename: "{app}\docs\index.htm"; Description: "View Documentation"; Flags: postinstall shellexec
 
 [UninstallRun]
-;Filename: "{app}\bin\RegisterAll.bat"; Parameters: "/U"; WorkingDir: "{app}\bin"
+
 
