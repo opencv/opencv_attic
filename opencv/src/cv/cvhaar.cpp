@@ -516,7 +516,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     {
 #ifdef _OPENMP
     int max_threads = cvGetNumThreads();
-    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+    #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
 #endif // _OPENMP
     for( i = 0; i < _cascade->count; i++ )
     {
@@ -1003,7 +1003,7 @@ cvHaarDetectObjects( const CvArr* _img,
             }
 
         #ifdef _OPENMP
-            #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+            #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
         #endif
             for( i = 0; i < strip_count; i++ )
             {
@@ -1182,7 +1182,7 @@ cvHaarDetectObjects( const CvArr* _img,
             for( pass = 0; pass < npass; pass++ )
             {
             #ifdef _OPENMP
-                #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+                #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
             #endif
                 for( int _iy = start_y; _iy < end_y; _iy++ )
                 {

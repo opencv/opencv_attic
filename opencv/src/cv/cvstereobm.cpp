@@ -651,7 +651,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     }
 
 #ifdef _OPENMP
-    #pragma omp parallel for num_threads(n), schedule(static)
+    #pragma omp parallel for num_threads(n) schedule(static)
 #endif
     for( i = 0; i < n; i++ )
     {

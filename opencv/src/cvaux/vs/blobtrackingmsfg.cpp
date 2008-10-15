@@ -980,7 +980,7 @@ private:
 #endif
 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(m_ThreadNum),schedule(runtime)
+#pragma omp parallel for num_threads(m_ThreadNum) schedule(runtime)
 #endif
         for(p=0;p<m_ParticleNum;++p)
         {   /* Calculate weights for particles: */
