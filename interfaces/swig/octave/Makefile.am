@@ -91,16 +91,16 @@ PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-dist_octave_DATA = opencv-1.0.tar.gz
+#dist_octave_DATA = opencv-1.1.0.tar.gz
 
-opencv-1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
-	mkdir -p $(PKG_NAME)
-	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
-	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
-	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-	tar cpzvf $@ $(PKG_NAME)
-	rm -rf $(PKG_NAME)
+#opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
+#	mkdir -p $(PKG_NAME)
+#	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+#	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
+#	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
+#	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+#	tar cpzvf $@ $(PKG_NAME)
+#	rm -rf $(PKG_NAME)
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
@@ -115,5 +115,5 @@ highgui.oct: highgui_wrap.cpp octhelpers.cpp
 
 endif
 
-clean-local:
-	rm -rf opencv-1.0.tar.gz *.oct
+#clean-local:
+#	rm -rf opencv-1.1.0.tar.gz *.oct
