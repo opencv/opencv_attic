@@ -6,8 +6,7 @@ Windows
 
     Installation under Windows is pretty strightforward.
     Download executable installation from SourceForge and run it.
-    It installs OpenCV, registers DirectShow filters and performs
-    other post-installation procedures.
+    It installs OpenCV and performs misc. post-installation procedures.
     After that you can start using OpenCV.
 
     Building OpenCV from sources
@@ -15,15 +14,18 @@ Windows
 
     Also, it is possible to build the modified OpenCV from source, or
     build the latest OpenCV snapshot,
-    obtained from SourceForge CVS (see http://sourceforge.net/cvs/?group_id=22870).
+    obtained from SourceForge CVS,
+       CVSROOT=:pserver:anonymous@opencvlibrary.cvs.sourceforge.net:/cvsroot/opencvlibrary
+       module name: opencv
 
-    +++ These are instructions for MSVC 6.0, MSVC.NET 2003 and MSVC.NET 2005
+    +++ These are instructions for MSVC 6.0, VS.NET 2003, 2005 or 2008
 
-    * Specify the appropriate CVSROOT (see the link above) in WinCVS and
-      checkout the module "opencv".
-    * Open opencv\_make\opencv.dsw (in case of MSVC 6.0 or MSVC.NET 2003, in the latter
-      case they will be converted to MSVC.NET 2003 project files),
-      or opencv\_make\opencv.sln (in case of MSVC.NET 2005)
+    * Open the OpenCV workspace/solution:
+      * opencv\_make\opencv.dsw if you are using VS.NET 2003 or earlier,
+      * opencv\_make\opencv.vs2005.no_openmp.sln if you are using VS.NET 2005/2008,
+        Express or Standard Edition (that do not support OpenMP)
+      * opencv\_make\opencv.vs2005.sln if you are using VS.NET 2005/2008,
+        Professional Edition or upper.
     * Select the configuration of interest, for example, Win32 Release, and build it.
     * Add opencv\bin to the system PATH.
       The path can be modified at
@@ -34,8 +36,8 @@ Windows
         or with MinGW - native GNU C/C++ port to Win32.
         The platforms supported are: Win32 on IA32, Win64 on EM64T/AMD64, Win64 on Itanium.
 
-    * Install platform SDK or MinGW (with GCC 3.x or 4.x),
-      Intel Compiler 9.0 or later (if needed)
+    * Install platform SDK (+ optionally, Intel Compiler 9.0 or later),
+      or MinGW (with GCC 3.x or 4.x)
     * Edit opencv\_make\make_cfg.mak, correct the paths to the SDK and ICC.
     * In the command-line prompt:
       * Enter opencv\_make directory
@@ -47,8 +49,6 @@ Windows
                                (ideal as command-line alternative to MSVC 6.0)
         nmake /f makefile.64 - build EM64T/AMD64 version using Platform SDK
                                (the produced DLLs will have _64 suffix)
-        nmake /f makefile.i7 - build Itanium version using Platform SDK
-                               (the produced DLLs will have _i7 suffix).
 
         mingw32-make -f make_all_gnu.mak - build IA32 version with gcc compiler
                 (Make sure that <gcc_root>\bin is in the system path.
@@ -110,61 +110,63 @@ Linux
                           (/usr/local/lib/libavutil.so.* for newer versions)
                            /usr/local/include/ffmpeg/*.h
 
+   Grab OpenCV from CVS:
+   ======
+   In the shell type:
+   cvs -z3 -d:pserver:anonymous@opencvlibrary.cvs.sourceforge.net:/cvsroot/opencvlibrary co -P opencv
+
+
    Now build OpenCV:  
    ======
    
-   a) if your distribution uses RPM, you may build RPMs using:
-         rpmbuild -ta OpenCV-x.y.z.tar.gz (for RPM 4.x or later) or
-         rpm -ta OpenCV-x.y.z.tar.gz" (for eariler versions of RPM)
-      where OpenCV-x.y.z.tar.gz should be put to /usr/src/redhat/SOURCES/ or
-      similar directory  
+   Run the following commands:
+   
+   autoreconf -i --force # recommended to do with fresh CVS snapshots,
+                         # requires reasonably recent versions of automake,
+                         # autoconf and libtool (see below)
+   ./configure
 
-      it will build OpenCV-x.y.z.*.rpm
-      (there is no OpenCV-devel, everything is in one package)
+   make
+   sudo make install
+   sudo ldconfig
+
+   You can influence which libraries are used and which features are
+   enabled by specifying the appropriate flags to ./configure. 
+
+   See './configure --help' for more information.
+
+   Post-install:
       
-      then install it by:
-        rpm -i OpenCV-x.y.z.*.rpm
-      
-   b) if your distribution does not support RPM, build and install it
-      in Unix/Linux traditional way:
-
-        ./configure
-        make
-        sudo make install
-        sudo ldconfig
-
-      You can influence which libraries are used and which features are
-      enabled by specifying the appropriate flags to ./configure. 
-
-      See './configure --help' for more information.
+   default installation path is /usr/local/lib and /usr/local/include/opencv,
+   so you need to add /usr/local/lib to /etc/ld.so.conf (and run ldconfig after)
+   or add it to LD_LIBRARY_PATH environment variable
 
 
-   both a&b (post-install))
-      
-      default installation path is /usr/local/lib and /usr/local/include/opencv,
-      so you need to add /usr/local/lib to /etc/ld.so.conf (and run ldconfig after)
-      or add it to LD_LIBRARY_PATH environment variable
+   Using autotools and other developer tools
+   =======
 
-   c) if you want to step in as an OpenCV developer, you will need some additional tools:
+   if you want to step in as an OpenCV developer, or if the latest
+   snapshot does not build with configure + make + makeinstall,
+   you will need some additional tools:
 
-      autoconf-2.59 (including autoheader-2.59)
-      automake-1.9* (including aclocal-1.9*)
-      libtool-1.5 (including libtoolize-1.5)
-      swig (version 1.3.30 or current CVS version respectively)
+   autoconf-2.59 (including autoheader-2.59)
+   automake-1.9* (including aclocal-1.9*)
+   libtool-1.5 (including libtoolize-1.5)
+   swig (version 1.3.30 or current CVS version respectively)
 
-      If the default versions of these tools installed on your machine differs, you
-      should specify the paths to the required versions via environment variables. For
-      example, if 'automake --version' gives you a version number 1.7.x but there is
-      /usr/bin/automake-1.9 installed on your machine, then call 
+   If the default versions of these tools installed on your machine differs, you
+   should specify the paths to the required versions via environment variables. For
+   example, if 'automake --version' gives you a version number 1.7.x but there is
+   /usr/bin/automake-1.9 installed on your machine, then call 
 
-      export AUTOMAKE=/usr/binautomake-1.9
+   export AUTOMAKE=/usr/binautomake-1.9
 
-      whenever you want to work on OpenCV sources.
+   whenever you want to work on OpenCV sources.
 
-      In addition, you should 'configure --enable-maintainer-mode', so that all
-      autotools are invoked automagically, if Makefile's or the configure-script
-      need to be regenerated. You can manually regenerate everything by starting
-      'autoreconf' from the top directory.
+   In addition, you should 'configure --enable-maintainer-mode', so that all
+   autotools are invoked automagically, if Makefile's or the configure-script
+   need to be regenerated. You can manually regenerate everything by starting
+   'autoreconf' from the top directory.
 
 
    How to test OpenCV:
