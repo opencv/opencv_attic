@@ -468,7 +468,7 @@ CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
     icvCalcWSums( wdata, ydata, idxdata, l, &sumw, &sumwy, &sumwyy );
 
     #ifdef _OPENMP
-    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+    #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
     #endif /* _OPENMP */
     for( t_compidx = 0; t_compidx < n; t_compidx += portion0 )
     {

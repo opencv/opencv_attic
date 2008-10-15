@@ -532,7 +532,7 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
     }
 
 #ifdef _OPENMP
-    #pragma omp parallel for num_threads(thread_count), schedule(dynamic)
+    #pragma omp parallel for num_threads(thread_count) schedule(dynamic)
 #endif
     for( i = 0; i < m; i++ )
     {

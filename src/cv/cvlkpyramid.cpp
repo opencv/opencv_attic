@@ -441,7 +441,7 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
 
         {
 #ifdef _OPENMP
-        #pragma omp parallel for num_threads(threadCount), schedule(dynamic) 
+        #pragma omp parallel for num_threads(threadCount) schedule(dynamic) 
 #endif // _OPENMP
         /* find flow for each given point */
         for( i = 0; i < count; i++ )

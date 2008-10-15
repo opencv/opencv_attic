@@ -336,7 +336,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     {
 #ifdef _OPENMP
     int nthreads = cvGetNumThreads();
-#pragma omp parallel for num_threads(nthreads), schedule(dynamic)
+#pragma omp parallel for num_threads(nthreads) schedule(dynamic)
 #endif
     for( k = 0; k < N; k++ )
     {

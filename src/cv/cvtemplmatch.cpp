@@ -190,7 +190,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
 
     {
 #ifdef _OPENMP
-    #pragma omp parallel for num_threads(num_threads), schedule(dynamic)
+    #pragma omp parallel for num_threads(num_threads) schedule(dynamic)
 #endif
     // calculate correlation by blocks
     for( k = 0; k < tile_count; k++ )

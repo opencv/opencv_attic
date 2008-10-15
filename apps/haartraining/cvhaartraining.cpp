@@ -635,7 +635,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
 #endif
 
     #ifdef _OPENMP
-    #pragma omp parallel for num_threads(max_threads), schedule(dynamic)
+    #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
     #endif /* _OPENMP */
     for( i = 0; i < num_i; i += portion0 )
     {
