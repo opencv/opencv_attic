@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib cxcored.lib cvd.lib highguid.lib"
-				OutputFile="..\..\bin\cvsampled.exe"
+				OutputFile=".\cvsampled.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="../../lib"
@@ -169,7 +169,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib cxcored_64.lib cvd_64.lib highguid_64.lib"
-				OutputFile=".\..\..\bin\cvsampled_64.exe"
+				OutputFile=".\cvsampled_64.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="../../lib"
@@ -265,7 +265,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib cxcore.lib cv.lib highgui.lib"
-				OutputFile=".\..\..\bin\cvsample.exe"
+				OutputFile=".\cvsample.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="../../lib"
@@ -362,7 +362,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib cxcore_64.lib cv_64.lib highgui_64.lib"
-				OutputFile=".\..\..\bin\cvsample_64.exe"
+				OutputFile=".\cvsample_64.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="../../lib"
