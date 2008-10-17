@@ -39,49 +39,30 @@
 //
 //M*/
 
-// 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
+
+// 2004-03-17, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
-// 2008-04-03, Xavier Delacour    <xavier.delacour@gmail.com>
 
 
-// todo remove these..
-#pragma SWIG nowarn=312,362,303,365,366,367,368,370,371,372,451,454,503
+#include "cxcore.h"
 
+/**
+ *  This function will set a Octave error and throw an int.
+ *  Exceptions are catched automatically by the SWIG code from "typemaps.i"
+ */
+int SendErrorToOctave (      int     status, 
+			     const char *  func_name, 
+			     const char *  err_msg,
+			     const char *  file_name, 
+                             int     line, 
+                             void *  /*userdata*/)    throw(int);
 
-%{
-#include "octhelpers.h"
-#include "octcvseq.hpp"
-#include "octerror.h"
-%}
+/// Returns the adress of the static method "SendErrorToPython()"
+CvErrorCallback  function_ptr_generator();
 
+/// Dummy to generate an empty void pointer 
+void *           void_ptr_generator();
 
-// direct SWIG to generate octave docstrings
-%feature("autodoc", 1);
-
-// include octave-specific files
-%include "./octtypemaps.i"
-%include "./cvshadow.i" 
-
-// parse OpenCV headers
-%include "../general/cv.i"
-
-// Accessors for the CvMat and IplImage data structure are defined here
-%include "./cvarr.i"
-
-// Octave sequence compatibility for CvSeq
-%include "./cvseq.i"
-
-
-%include "./imagedata.i"
-
-// include some wrappers to manipulate CvSeq types
-%include "./octcvseq.hpp"
-
-// aliases from #defines
-%include "./cvaliases.i"
-
-%insert(init) %{
-  cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator());
-%}
-
+/// Dummy to generate an empty void double pointer
+void **          void_ptrptr_generator();
