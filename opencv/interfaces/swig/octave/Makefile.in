@@ -13,6 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -33,7 +34,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig/octave
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
+DIST_COMMON = $(am__dist_octave_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
@@ -47,6 +49,16 @@ CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_octave_DATA_DIST = opencv-1.1.0.tar.gz
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(octavedir)"
+dist_octaveDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_octave_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -240,33 +252,24 @@ EXTRA_DIST = \
   octtypemaps.i    \
   \
   cvshadow.h       \
-  error.h          \
+  octerror.h       \
   octhelpers.h     \
   \
   cv_wrap.cpp      \
   ml_wrap.cpp      \
   highgui_wrap.cpp \
   cvshadow.cpp     \
-  error.cpp        \
+  octerror.cpp     \
   octhelpers.cpp
 
 
 # Conditional targets #######################################################
 @BUILD_OCTAVE_WRAPPERS_TRUE@OCTAVE_PKG_VERSION = 1.0 #$(shell egrep '^Version: ' $(top_srcdir)/interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //')
-@BUILD_OCTAVE_WRAPPERS_TRUE@PKG_NAME = opencv-1.0
+@BUILD_OCTAVE_WRAPPERS_TRUE@PKG_NAME = opencv-1.1.0
 @BUILD_OCTAVE_WRAPPERS_TRUE@PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 @BUILD_OCTAVE_WRAPPERS_TRUE@PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 @BUILD_OCTAVE_WRAPPERS_TRUE@octavedir = $(pkgdatadir)/octave
-#dist_octave_DATA = opencv-1.1.0.tar.gz
-
-#opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
-#	mkdir -p $(PKG_NAME)
-#	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-#	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
-#	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
-#	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-#	tar cpzvf $@ $(PKG_NAME)
-#	rm -rf $(PKG_NAME)
+@BUILD_OCTAVE_WRAPPERS_TRUE@dist_octave_DATA = opencv-1.1.0.tar.gz
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
@@ -309,6 +312,23 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-dist_octaveDATA: $(dist_octave_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(octavedir)" || $(MKDIR_P) "$(DESTDIR)$(octavedir)"
+	@list='$(dist_octave_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_octaveDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(octavedir)/$$f'"; \
+	  $(dist_octaveDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(octavedir)/$$f"; \
+	done
+
+uninstall-dist_octaveDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_octave_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(octavedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(octavedir)/$$f"; \
+	done
 tags: TAGS
 TAGS:
 
@@ -344,8 +364,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile
+all-am: Makefile $(DATA)
 installdirs:
+	for dir in "$(DESTDIR)$(octavedir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -372,7 +395,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -388,7 +411,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dist_octaveDATA
 
 install-dvi: install-dvi-am
 
@@ -422,20 +445,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-dist_octaveDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
-	distclean distclean-generic distclean-libtool distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
+	clean-local distclean distclean-generic distclean-libtool \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-data install-data-am \
+	install-dist_octaveDATA install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-man install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_octaveDATA
 
 
 # SWIG #######################################################################
@@ -445,7 +470,7 @@ uninstall-am:
 # this rule creates the octave wrapper sources for cxcore and cv
 @UPDATE_SWIG_WRAPPERS_TRUE@cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i              \
 @UPDATE_SWIG_WRAPPERS_TRUE@         octtypemaps.i cvshadow.i cvseq.i                       \
-@UPDATE_SWIG_WRAPPERS_TRUE@         error.cpp error.h                                      \
+@UPDATE_SWIG_WRAPPERS_TRUE@         octerror.cpp octerror.h                                \
 @UPDATE_SWIG_WRAPPERS_TRUE@         octhelpers.h cvshadow.h octcvseq.hpp                   \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cv.i             \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/memory.i         \
@@ -476,15 +501,24 @@ uninstall-am:
 @UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_OCTAVE_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
-@BUILD_OCTAVE_WRAPPERS_TRUE@cv.oct: cv_wrap.cpp cvshadow.cpp error.cpp octhelpers.cpp
+@BUILD_OCTAVE_WRAPPERS_TRUE@opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	mkdir -p $(PKG_NAME)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
+@BUILD_OCTAVE_WRAPPERS_TRUE@	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	tar cpzvf $@ $(PKG_NAME)
+@BUILD_OCTAVE_WRAPPERS_TRUE@	rm -rf $(PKG_NAME)
+
+@BUILD_OCTAVE_WRAPPERS_TRUE@cv.oct: cv_wrap.cpp cvshadow.cpp octerror.cpp octhelpers.cpp
 @BUILD_OCTAVE_WRAPPERS_TRUE@	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/cv/src/.libs -lcv $^
 @BUILD_OCTAVE_WRAPPERS_TRUE@ml.oct: ml_wrap.cpp octhelpers.cpp
 @BUILD_OCTAVE_WRAPPERS_TRUE@	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/ml/src/.libs -lml $^
 @BUILD_OCTAVE_WRAPPERS_TRUE@highgui.oct: highgui_wrap.cpp octhelpers.cpp
 @BUILD_OCTAVE_WRAPPERS_TRUE@	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/otherlibs/highgui/.libs -lhighgui $^
 
-#clean-local:
-#	rm -rf opencv-1.1.0.tar.gz *.oct
+clean-local:
+	rm -rf opencv-1.1.0.tar.gz *.oct
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
