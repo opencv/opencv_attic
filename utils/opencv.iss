@@ -10,7 +10,7 @@ DefaultGroupName=OpenCV
 SourceDir=..
 Compression=bzip/9
 LicenseFile="docs\license.txt"
-OutputBaseFilename=OpenCV_1.1pre1
+OutputBaseFilename=OpenCV_1.1pre1a
 WizardImageFile=utils/splash.bmp
 SetupIconFile=utils/opencv.ico
 ; uncomment the following line if you want your installation to run on NT 3.51 too.
@@ -104,7 +104,6 @@ Name: "{app}\tests\python\highgui"
 
 ; utilities
 Name: "{app}\utils"
-Name: "{app}\utils\cvinfo"
 
 ; applications
 Name: "{app}\apps\"
@@ -187,8 +186,12 @@ Source: "otherlibs\_graphics\lib\*.a"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\lib\*.lib"; DestDir: "{app}\otherlibs\_graphics\lib"
 Source: "otherlibs\_graphics\readme.txt"; DestDir: "{app}\otherlibs\_graphics"
 
-Source: "otherlibs\_graphics\src\libjasper\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 Source: "otherlibs\_graphics\src\libjasper\license"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\*.c"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\*.h"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\*.dsp"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\*.vcproj"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
+Source: "otherlibs\_graphics\src\libjasper\readme"; DestDir: "{app}\otherlibs\_graphics\src\libjasper"
 
 Source: "otherlibs\_graphics\src\libjpeg\*.c"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
 Source: "otherlibs\_graphics\src\libjpeg\*.h"; DestDir: "{app}\otherlibs\_graphics\src\libjpeg"
@@ -267,6 +270,7 @@ Source: "docs\vidsurv\*.doc"; DestDir: "{app}\docs\vidsurv"
 Source: "samples\c\*.c*"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.sh"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.jp*"; DestDir: "{app}\samples\c"
+Source: "samples\c\*.txt"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.png"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.dsp"; DestDir: "{app}\samples\c"
 Source: "samples\c\*.vcproj"; DestDir: "{app}\samples\c"
@@ -322,7 +326,6 @@ Source: "apps\HaarTraining\src\*.h*"; DestDir: "{app}\apps\HaarTraining\src"
 Source: "apps\HaarTraining\doc\*.htm*"; DestDir: "{app}\apps\HaarTraining\doc"
 
 ; precompiled binaries
-;Source: "bin\cvinfo.exe"; DestDir: "{app}\bin"
 Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.OPENMP\vcomp.dll"; DestDir: "{app}\bin"
 Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.CRT\msvcp80.dll"; DestDir: "{app}\bin"
 Source: "C:\Program Files\Microsoft Visual Studio 8\VC\redist\x86\Microsoft.VC80.CRT\msvcr80.dll"; DestDir: "{app}\bin"
