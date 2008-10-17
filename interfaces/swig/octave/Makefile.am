@@ -27,14 +27,14 @@ EXTRA_DIST = \
   octtypemaps.i    \
   \
   cvshadow.h       \
-  error.h          \
+  octerror.h       \
   octhelpers.h     \
   \
   cv_wrap.cpp      \
   ml_wrap.cpp      \
   highgui_wrap.cpp \
   cvshadow.cpp     \
-  error.cpp        \
+  octerror.cpp     \
   octhelpers.cpp
 
 
@@ -46,7 +46,7 @@ if UPDATE_SWIG_WRAPPERS
 # this rule creates the octave wrapper sources for cxcore and cv
 cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i              \
          octtypemaps.i cvshadow.i cvseq.i                       \
-         error.cpp error.h                                      \
+         octerror.cpp octerror.h                                \
          octhelpers.h cvshadow.h octcvseq.hpp                   \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
          $(top_srcdir)/interfaces/swig/general/memory.i         \
@@ -86,27 +86,27 @@ if BUILD_OCTAVE_WRAPPERS
 
 OCTAVE_PKG_VERSION=1.0 #$(shell egrep '^Version: ' $(top_srcdir)/interfaces/swig/octave/DESCRIPTION|sed -e 's/Version: //')
 
-PKG_NAME=opencv-1.0
+PKG_NAME=opencv-1.1.0
 PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-#dist_octave_DATA = opencv-1.1.0.tar.gz
+dist_octave_DATA = opencv-1.1.0.tar.gz
 
-#opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
-#	mkdir -p $(PKG_NAME)
-#	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-#	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
-#	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
-#	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
-#	tar cpzvf $@ $(PKG_NAME)
-#	rm -rf $(PKG_NAME)
+opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
+	mkdir -p $(PKG_NAME)
+	mkdir -p $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+	cp -rf $(PKG_OTHER_FILES) $(PKG_NAME)
+	mv $(PKG_NAME)/PKG_ADD_template $(PKG_NAME)/PKG_ADD
+	cp -rf $(PKG_OCT_FILES) $(PKG_NAME)/inst/$(OCTAVE_ARCH)
+	tar cpzvf $@ $(PKG_NAME)
+	rm -rf $(PKG_NAME)
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
 MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
 
-cv.oct: cv_wrap.cpp cvshadow.cpp error.cpp octhelpers.cpp
+cv.oct: cv_wrap.cpp cvshadow.cpp octerror.cpp octhelpers.cpp
 	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/cv/src/.libs -lcv $^
 ml.oct: ml_wrap.cpp octhelpers.cpp
 	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/ml/src/.libs -lml $^
@@ -115,5 +115,5 @@ highgui.oct: highgui_wrap.cpp octhelpers.cpp
 
 endif
 
-#clean-local:
-#	rm -rf opencv-1.1.0.tar.gz *.oct
+clean-local:
+	rm -rf opencv-1.1.0.tar.gz *.oct

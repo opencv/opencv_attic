@@ -39,49 +39,71 @@
 //
 //M*/
 
-// 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
+
+// 2004-03-17, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
 //             Mark Asbach       <asbach@ient.rwth-aachen.de>
 //             Institute of Communications Engineering, RWTH Aachen University
-// 2008-04-03, Xavier Delacour    <xavier.delacour@gmail.com>
+// 2008-04-19, Xavier Delacour   <xavier.delacour@gmail.com>
 
 
-// todo remove these..
-#pragma SWIG nowarn=312,362,303,365,366,367,368,370,371,372,451,454,503
-
-
-%{
-#include "octhelpers.h"
-#include "octcvseq.hpp"
 #include "octerror.h"
-%}
+#include <sstream>
+#include <iostream>
+
+#include <octave/oct.h>
+
+// OpenCV headers
+#include "cxcore.h"
+#include "cxerror.h"
 
 
-// direct SWIG to generate octave docstrings
-%feature("autodoc", 1);
+//=========================================================================
+int SendErrorToOctave
+    (
+    int status, 
+    const char* func_name, 
+    const char* err_msg,
+    const char* file_name, 
+    int line, 
+    void* /*userdata*/
+    )
+    throw(int)
+    {
+    std::stringstream message;
+    message   
+        << " openCV Error:"
+        << "\n        Status=" << cvErrorStr(status)
+        << "\n        function name=" << (func_name ? func_name : "unknown")
+        << "\n        error message=" << (err_msg ? err_msg : "unknown")
+        << "\n        file_name=" << (file_name ? file_name : "unknown")
+        << "\n        line=" << line
+        << std::flush;
 
-// include octave-specific files
-%include "./octtypemaps.i"
-%include "./cvshadow.i" 
+    // Clear OpenCV's error status for the next call!
+    cvSetErrStatus( CV_StsOk );
+    
+    // Set Octave Error.
+    error(message.str().c_str());
+    throw 1;    
+    return 0;
+    }
 
-// parse OpenCV headers
-%include "../general/cv.i"
+    
+//=========================================================================
+void* void_ptr_generator()
+    { 
+    return 0;
+    }
 
-// Accessors for the CvMat and IplImage data structure are defined here
-%include "./cvarr.i"
+//=========================================================================
+void** void_ptrptr_generator()
+    { 
+    return 0;
+    }
 
-// Octave sequence compatibility for CvSeq
-%include "./cvseq.i"
-
-
-%include "./imagedata.i"
-
-// include some wrappers to manipulate CvSeq types
-%include "./octcvseq.hpp"
-
-// aliases from #defines
-%include "./cvaliases.i"
-
-%insert(init) %{
-  cvRedirectError(function_ptr_generator(), void_ptr_generator(), void_ptrptr_generator());
-%}
+//=========================================================================
+CvErrorCallback function_ptr_generator()
+    {
+    return &SendErrorToOctave;
+    }
 
