@@ -8400,6 +8400,7 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_TYZX_Z",SWIG_From_int((int)(403)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_QT",SWIG_From_int((int)(500)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_UNICAP",SWIG_From_int((int)(600)));
+  SWIG_Octave_SetConstant(module_ns,"CV_CAP_DSHOW",SWIG_From_int((int)(700)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_MSEC",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_FRAMES",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_POS_AVI_RATIO",SWIG_From_int((int)(2)));

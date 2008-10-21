@@ -16242,7 +16242,7 @@ static const char *swig_CvEMParams_base_names[] = {0};
 static const swig_type_info *swig_CvEMParams_base[] = {0};
 static swig_octave_class _wrap_class_CvEMParams = {"CvEMParams", &SWIGTYPE_p_CvEMParams,0,_wrap_new_CvEMParams,0,_wrap_delete_CvEMParams,swig_CvEMParams_members,swig_CvEMParams_base_names,swig_CvEMParams_base };
 
-static octave_value_list _wrap_new_CvEM (const octave_value_list& args, int nargout) {
+static octave_value_list _wrap_new_CvEM__SWIG_0 (const octave_value_list& args, int nargout) {
   CvEM *result = 0 ;
   octave_value_list _out;
   octave_value_list *_outp=&_out;
@@ -16264,6 +16264,279 @@ static octave_value_list _wrap_new_CvEM (const octave_value_list& args, int narg
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
+}
+
+
+static octave_value_list _wrap_new_CvEM__SWIG_1 (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvEMParams arg3 ;
+  CvMat *arg4 = (CvMat *) 0 ;
+  CvEM *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("new_CvEM",args.length(),4,4,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvEM" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_CvEM" "', argument " "2"" of type '" "CvMat const *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  {
+    res3 = SWIG_ConvertPtr(args(2), &argp3, SWIGTYPE_p_CvEMParams,  0 );
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_CvEM" "', argument " "3"" of type '" "CvEMParams""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEM" "', argument " "3"" of type '" "CvEMParams""'");
+    } else {
+      arg3 = *((CvEMParams *)(argp3));
+    }
+  }
+  res4 = SWIG_ConvertPtr(args(3), &argp4,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEM" "', argument " "4"" of type '" "CvMat *""'"); 
+  }
+  arg4 = (CvMat *)(argp4);
+  {
+    try {
+      result = (CvEM *)new CvEM((CvMat const *)arg1,(CvMat const *)arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvEM, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_new_CvEM__SWIG_2 (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvEMParams arg3 ;
+  CvEM *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("new_CvEM",args.length(),3,3,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvEM" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_CvEM" "', argument " "2"" of type '" "CvMat const *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  {
+    res3 = SWIG_ConvertPtr(args(2), &argp3, SWIGTYPE_p_CvEMParams,  0 );
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_CvEM" "', argument " "3"" of type '" "CvEMParams""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEM" "', argument " "3"" of type '" "CvEMParams""'");
+    } else {
+      arg3 = *((CvEMParams *)(argp3));
+    }
+  }
+  {
+    try {
+      result = (CvEM *)new CvEM((CvMat const *)arg1,(CvMat const *)arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvEM, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_new_CvEM__SWIG_3 (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvMat *arg2 = (CvMat *) 0 ;
+  CvEM *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("new_CvEM",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvEM" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  res2 = SWIG_ConvertPtr(args(1), &argp2,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_CvEM" "', argument " "2"" of type '" "CvMat const *""'"); 
+  }
+  arg2 = (CvMat *)(argp2);
+  {
+    try {
+      result = (CvEM *)new CvEM((CvMat const *)arg1,(CvMat const *)arg2); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvEM, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_new_CvEM__SWIG_4 (const octave_value_list& args, int nargout) {
+  CvMat *arg1 = (CvMat *) 0 ;
+  CvEM *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("new_CvEM",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvMat, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvEM" "', argument " "1"" of type '" "CvMat const *""'"); 
+  }
+  arg1 = (CvMat *)(argp1);
+  {
+    try {
+      result = (CvEM *)new CvEM((CvMat const *)arg1); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvEM, 1 |  0 );
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_new_CvEM (const octave_value_list& args, int nargout) {
+  int argc = args.length();
+  octave_value_ref argv[4]={
+    octave_value_ref(args,0),octave_value_ref(args,1),octave_value_ref(args,2),octave_value_ref(args,3)
+  };
+  
+  if (argc == 0) {
+    return _wrap_new_CvEM__SWIG_0(args, nargout);
+  }
+  if (argc == 1) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_new_CvEM__SWIG_4(args, nargout);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_CvMat, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_new_CvEM__SWIG_3(args, nargout);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_CvMat, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_CvEMParams, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_new_CvEM__SWIG_2(args, nargout);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CvMat, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_CvMat, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_CvEMParams, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          void *vptr = 0;
+          int res = SWIG_ConvertPtr(argv[3], &vptr, SWIGTYPE_p_CvMat, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_new_CvEM__SWIG_1(args, nargout);
+          }
+        }
+      }
+    }
+  }
+  
+  error("No matching function for overload");
+  return octave_value_list();
 }
 
 

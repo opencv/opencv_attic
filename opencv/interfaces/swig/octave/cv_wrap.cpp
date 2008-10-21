@@ -2244,7 +2244,7 @@ static swig_module_info swig_module = {swig_types, 198, 0, 0, 0, 0};
 
 #include "octhelpers.h"
 #include "octcvseq.hpp"
-#include "error.h"
+#include "octerror.h"
 
 
 
@@ -9139,6 +9139,10 @@ const char* _wrap_cvMatMulAdd_texinfo = "-*- texinfo -*-\n\
 const char* _wrap_CV_ELEM_SIZE_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = CV_ELEM_SIZE (@var{type})\n\
 @var{type} is of type int. @var{retval} is of type int. \n\
+@end deftypefn";
+const char* _wrap_cvSort_texinfo = "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} cvSort (@var{src}, @var{dst} = nil, @var{idxmat} = nil, @var{flags} = 0)\n\
+@var{src} is of type CvArr. @var{dst} is of type CvArr. @var{idxmat} is of type CvArr. @var{flags} is of type int. \n\
 @end deftypefn";
 const char* _wrap_delete_CvFileNode_data_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} CvFileNode_data::~CvFileNode_data (@var{self})\n\
@@ -53622,6 +53626,77 @@ static octave_value_list _wrap_cvRandShuffle (const octave_value_list& args, int
     if(arg1!=NULL && freearg1){
       cvReleaseData( arg1 );
       cvFree(&(arg1));
+    }
+  }
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_cvSort (const octave_value_list& args, int nargout) {
+  CvArr *arg1 = (CvArr *) 0 ;
+  CvArr *arg2 = (CvArr *) NULL ;
+  CvArr *arg3 = (CvArr *) NULL ;
+  int arg4 = (int) 0 ;
+  bool freearg1 = false ;
+  bool freearg2 = false ;
+  bool freearg3 = false ;
+  int val4 ;
+  int ecode4 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("cvSort",args.length(),4,1,0)) {
+    SWIG_fail;
+  }
+  {
+    arg1 = OctObject_to_CvArr(args(0), &freearg1);
+  }
+  if (1<args.length()) {
+    {
+      arg2 = OctObject_to_CvArr(args(1), &freearg2);
+    }
+  }
+  if (2<args.length()) {
+    {
+      arg3 = OctObject_to_CvArr(args(2), &freearg3);
+    }
+  }
+  if (3<args.length()) {
+    ecode4 = SWIG_AsVal_int(args(3), &val4);
+    if (!SWIG_IsOK(ecode4)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "cvSort" "', argument " "4"" of type '" "int""'");
+    } 
+    arg4 = (int)(val4);
+  }
+  {
+    try {
+      cvSort((void const *)arg1,arg2,arg3,arg4); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+  {
+    if(arg1!=NULL && freearg1){
+      cvReleaseData( arg1 );
+      cvFree(&(arg1));
+    }
+  }
+  {
+    if(arg2!=NULL && freearg2){
+      cvReleaseData( arg2 );
+      cvFree(&(arg2));
+    }
+  }
+  {
+    if(arg3!=NULL && freearg3){
+      cvReleaseData( arg3 );
+      cvFree(&(arg3));
     }
   }
 fail:
@@ -114030,6 +114105,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvCheckArr",_wrap_cvCheckArr,0,0,2,_wrap_cvCheckArr_texinfo},
 {"cvRandArr",_wrap_cvRandArr,0,0,2,_wrap_cvRandArr_texinfo},
 {"cvRandShuffle",_wrap_cvRandShuffle,0,0,2,_wrap_cvRandShuffle_texinfo},
+{"cvSort",_wrap_cvSort,0,0,2,_wrap_cvSort_texinfo},
 {"cvSolveCubic",_wrap_cvSolveCubic,0,0,2,_wrap_cvSolveCubic_texinfo},
 {"cvSolvePoly",_wrap_cvSolvePoly,0,0,2,_wrap_cvSolvePoly_texinfo},
 {"cvCrossProduct",_wrap_cvCrossProduct,0,0,2,_wrap_cvCrossProduct_texinfo},
@@ -116346,6 +116422,10 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_CHECK_QUIET",SWIG_From_int((int)(2)));
   SWIG_Octave_SetConstant(module_ns,"CV_RAND_UNI",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_RAND_NORMAL",SWIG_From_int((int)(1)));
+  SWIG_Octave_SetConstant(module_ns,"CV_SORT_EVERY_ROW",SWIG_From_int((int)(0)));
+  SWIG_Octave_SetConstant(module_ns,"CV_SORT_EVERY_COLUMN",SWIG_From_int((int)(1)));
+  SWIG_Octave_SetConstant(module_ns,"CV_SORT_ASCENDING",SWIG_From_int((int)(0)));
+  SWIG_Octave_SetConstant(module_ns,"CV_SORT_DESCENDING",SWIG_From_int((int)(16)));
   SWIG_Octave_SetConstant(module_ns,"CV_GEMM_A_T",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_GEMM_B_T",SWIG_From_int((int)(2)));
   SWIG_Octave_SetConstant(module_ns,"CV_GEMM_C_T",SWIG_From_int((int)(4)));
@@ -116420,9 +116500,9 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_ErrModeParent",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_ErrModeSilent",SWIG_From_int((int)(2)));
   SWIG_Octave_SetConstant(module_ns,"CV_MAJOR_VERSION",SWIG_From_int((int)(1)));
-  SWIG_Octave_SetConstant(module_ns,"CV_MINOR_VERSION",SWIG_From_int((int)(0)));
+  SWIG_Octave_SetConstant(module_ns,"CV_MINOR_VERSION",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_SUBMINOR_VERSION",SWIG_From_int((int)(0)));
-  SWIG_Octave_SetConstant(module_ns,"CV_VERSION",SWIG_FromCharPtr("1.0.0"));
+  SWIG_Octave_SetConstant(module_ns,"CV_VERSION",SWIG_FromCharPtr("1.1.0"));
   SWIG_Octave_SetConstant(module_ns,"CV_PI",octave_value(3.1415926535897932384626433832795));
   SWIG_Octave_SetConstant(module_ns,"CV_LOG2",octave_value(0.69314718055994530941723212145818));
   SWIG_Octave_SetConstant(module_ns,"IPL_DEPTH_SIGN",SWIG_From_int((int)(0x80000000)));
