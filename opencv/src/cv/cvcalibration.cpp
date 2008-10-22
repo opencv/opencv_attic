@@ -2615,8 +2615,10 @@ cvStereoRectifyUncalibrated(
 CV_IMPL void
 cvReprojectImageTo3D(
     const CvArr* disparityImage,
-    CvArr* _3dImage, const CvMat* _Q )
+    CvArr* _3dImage, const CvMat* _Q,
+    int handleMissingValues )
 {
+    const double bigZ = 10000.;
     CV_FUNCNAME( "cvReprojectImageTo3D" );
 
     __BEGIN__;
@@ -2629,12 +2631,20 @@ cvReprojectImageTo3D(
     int x, y, rows = src->rows, cols = src->cols;
     float* sbuf = (float*)cvStackAlloc( cols*sizeof(sbuf[0]) );
     float* dbuf = (float*)cvStackAlloc( cols*3*sizeof(dbuf[0]) );
+    double minDisparity = FLT_MAX;
 
     CV_ASSERT( CV_ARE_SIZES_EQ(src, dst) &&
-        (CV_MAT_TYPE(stype) == CV_16SC1 || CV_MAT_TYPE(stype) == CV_32FC1) &&
-        (CV_MAT_TYPE(dtype) == CV_16SC3 || CV_MAT_TYPE(dtype) == CV_32FC3) );
+        (CV_MAT_TYPE(stype) == CV_8UC1 || CV_MAT_TYPE(stype) == CV_16SC1 ||
+         CV_MAT_TYPE(stype) == CV_32SC1 || CV_MAT_TYPE(stype) == CV_32FC1) &&
+        (CV_MAT_TYPE(dtype) == CV_16SC3 || CV_MAT_TYPE(dtype) == CV_32SC3 ||
+        CV_MAT_TYPE(dtype) == CV_32FC3) );
 
     cvConvert( _Q, &Q );
+
+    // NOTE: here we quietly assume that at least one pixel in the disparity map is not defined.
+    // and we set the corresponding Z's to some fixed big value.
+    if( handleMissingValues )
+        cvMinMaxLoc( disparityImage, &minDisparity, 0, 0, 0 ); 
 
     for( y = 0; y < rows; y++ )
     {
@@ -2643,13 +2653,28 @@ cvReprojectImageTo3D(
         double qx = q[0][1]*y + q[0][3], qy = q[1][1]*y + q[1][3];
         double qz = q[2][1]*y + q[2][3], qw = q[3][1]*y + q[3][3];
 
-        if( stype == CV_16SC1 )
+        if( stype == CV_8UC1 )
+        {
+            const uchar* sptr0 = (const uchar*)sptr;
+            for( x = 0; x < cols; x++ )
+                sbuf[x] = (float)sptr0[x];
+            sptr = sbuf;
+        }
+        else if( stype == CV_16SC1 )
         {
             const short* sptr0 = (const short*)sptr;
             for( x = 0; x < cols; x++ )
                 sbuf[x] = (float)sptr0[x];
             sptr = sbuf;
         }
+        else if( stype == CV_32SC1 )
+        {
+            const int* sptr0 = (const int*)sptr;
+            for( x = 0; x < cols; x++ )
+                sbuf[x] = (float)sptr0[x];
+            sptr = sbuf;
+        }
+                
         if( dtype != CV_32FC3 )
             dptr = dbuf;
 
@@ -2660,6 +2685,8 @@ cvReprojectImageTo3D(
             double X = (qx + q[0][2]*d)*iW;
             double Y = (qy + q[1][2]*d)*iW;
             double Z = (qz + q[2][2]*d)*iW;
+            if( fabs(d-minDisparity) <= FLT_EPSILON )
+                Z = bigZ;
 
             dptr[x*3] = (float)X;
             dptr[x*3+1] = (float)Y;
@@ -2672,6 +2699,14 @@ cvReprojectImageTo3D(
             {
                 int ival = cvRound(dptr[x]);
                 ((short*)dptr0)[x] = CV_CAST_16S(ival);
+            }
+        }
+        else if( dtype == CV_32SC3 )
+        {
+            for( x = 0; x < cols*3; x++ )
+            {
+                int ival = cvRound(dptr[x]);
+                ((int*)dptr0)[x] = ival;
             }
         }
     }

@@ -1446,7 +1446,8 @@ CVAPI(void) cvFindStereoCorrespondenceGC( const CvArr* left, const CvArr* right,
 
 /* Reprojects the computed disparity image to the 3D space using the specified 4x4 matrix */
 CVAPI(void)  cvReprojectImageTo3D( const CvArr* disparityImage,
-                                   CvArr* _3dImage, const CvMat* Q );
+                                   CvArr* _3dImage, const CvMat* Q,
+                                   int handleMissingValues CV_DEFAULT(0) );
 
 #ifdef __cplusplus
 }
