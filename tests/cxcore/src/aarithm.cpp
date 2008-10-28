@@ -1254,6 +1254,403 @@ void CxCore_MergeTest::run_func()
 
 CxCore_MergeTest merge_test;
 
+///////////////// CompleteSymm /////////////////////
+
+class CxCore_CompleteSymm : public CvArrTest
+{
+public:
+    CxCore_CompleteSymm();
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    int prepare_test_case( int test_case_idx );
+    void run_func();
+    void prepare_to_validation( int test_case_idx );
+	int LtoR; //flags 
+};
+
+CxCore_CompleteSymm::CxCore_CompleteSymm() :
+    CvArrTest("matrix-symm", "cvCompleteSymm", "Test of cvCompleteSymm function")
+{
+	/*Generates 1 input and 1 outputs (by default we have 2 inputs and 1 output)*/
+	test_array[INPUT].clear();
+	test_array[INPUT].push(NULL);
+	test_array[OUTPUT].clear();
+	test_array[OUTPUT].push(NULL);
+	test_array[REF_OUTPUT].clear();
+	test_array[REF_OUTPUT].push(NULL);
+}
+
+
+void CxCore_CompleteSymm::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    sizes[INPUT][0] =sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(sizes[INPUT][0].height, sizes[INPUT][0].height );
+
+	/*Making input and output matrixes one-channel*/
+	int type;
+	switch (test_case_idx % 3)
+	{
+		case 0:
+			type = CV_32FC1;
+			break;
+		case 1:
+			type = CV_32SC1;
+			break;
+		default:
+			type = CV_64FC1;
+	}
+	types[OUTPUT][0] = types[INPUT][0] = types[REF_OUTPUT][0] = type;
+}
+
+int CxCore_CompleteSymm::prepare_test_case( int test_case_idx )
+{
+    int code = CvArrTest::prepare_test_case( test_case_idx );
+	if (code)
+	{
+		CvRNG* rng = ts->get_rng();
+		unsigned val = cvRandInt(rng);
+		LtoR = val % 2;
+		cvConvert(&test_mat[INPUT][0], &test_mat[OUTPUT][0]);
+	}
+	return code;
+}
+
+void CxCore_CompleteSymm::run_func()
+{
+	cvCompleteSymm(&test_mat[OUTPUT][0],LtoR);
+}
+
+void CxCore_CompleteSymm::prepare_to_validation( int )
+{
+	CvMat* ref_output = cvCreateMat(test_mat[OUTPUT][0].rows, test_mat[OUTPUT][0].cols, CV_64F); 
+	CvMat* input = cvCreateMat(test_mat[INPUT][0].rows, test_mat[INPUT][0].cols, CV_64F);
+	cvConvert(&test_mat[INPUT][0], input);
+	
+	for (int i=0;i<input->rows;i++)
+	{
+		ref_output->data.db[i*input->cols+i]=input->data.db[i*input->cols+i];
+		if (LtoR)
+		{
+			for (int j=0;j<i;j++)
+			{
+				ref_output->data.db[j*input->cols+i] = ref_output->data.db[i*input->cols+j]=input->data.db[i*input->cols+j];
+			}
+				
+		}
+		else 
+		{
+			for (int j=0;j<i;j++)
+			{
+				ref_output->data.db[j*input->cols+i] = ref_output->data.db[i*input->cols+j]=input->data.db[j*input->cols+i];
+			}
+		}
+	}
+
+	cvConvert(ref_output, &test_mat[REF_OUTPUT][0]);
+	cvReleaseMat(&input);
+	cvReleaseMat(&ref_output);
+}
+
+CxCore_CompleteSymm complete_symm;
+
+
+////////////////////////////// Sort /////////////////////////////////
+
+class CxCore_SortTest : public CxCore_MemTest
+{
+public:
+    CxCore_SortTest();
+protected:
+    void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    int prepare_test_case( int test_case_idx );
+    void run_func();
+    void prepare_to_validation( int test_case_idx );
+	int flags; //flags for sorting
+private:
+	static int _cdecl compareIndexes (const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
+	static int _cdecl compare(const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
+	bool useIndexMatrix;
+	bool useInPlaceSort;
+	CvMat* input;
+
+};
+
+CxCore_SortTest::CxCore_SortTest() :
+    CxCore_MemTest( "matrix-sort", "cvSort", 0, false )
+{
+	/*Generates 1 input and 2 outputs (by default we have 2 inputs and 1 output)*/
+	test_array[INPUT].clear();
+	test_array[INPUT].push(NULL);
+	test_array[OUTPUT].push(NULL);
+	test_array[REF_OUTPUT].push(NULL);
+}
+
+
+void CxCore_SortTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+    CxCore_MemTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    sizes[INPUT][0] = sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] = cvSize(sizes[INPUT][0].height, sizes[INPUT][0].width );
+	types[OUTPUT][1] = types[REF_OUTPUT][1] = CV_32SC1;
+
+	/*Making input and output matrixes one-channel*/
+	types[OUTPUT][0] = types[INPUT][0] = CV_MAKETYPE(CV_MAT_DEPTH(types[INPUT][0]), 1);
+	types[REF_OUTPUT][0] = CV_MAKETYPE(CV_MAT_DEPTH(types[REF_OUTPUT][0]), 1);
+}
+
+int CxCore_SortTest::prepare_test_case( int test_case_idx )
+{
+	if (test_case_idx==0)
+	{
+		useIndexMatrix=true;
+		useInPlaceSort=false;
+	}
+   int code = CxCore_MemTest::prepare_test_case( test_case_idx );
+
+   if( code > 0 )
+	{
+		//Copying input data
+		input = cvCreateMat(test_mat[INPUT][0].rows, test_mat[INPUT][0].cols, CV_64F);
+		cvConvert(&test_mat[INPUT][0], input);
+		CvRNG* rng = ts->get_rng();
+		unsigned val = cvRandInt(rng);
+        // Setting up flags
+		switch (val%4)
+		{
+			case 0:
+				flags = CV_SORT_EVERY_ROW + CV_SORT_DESCENDING;
+				break;
+			case 1:
+				flags = CV_SORT_EVERY_ROW + CV_SORT_ASCENDING;
+				break;
+			case 2:
+				flags = CV_SORT_EVERY_COLUMN + CV_SORT_DESCENDING;
+				break;
+			case 3:
+				flags = CV_SORT_EVERY_COLUMN + CV_SORT_ASCENDING;
+				break;
+		}
+		if (val%3) 
+			useIndexMatrix = !useIndexMatrix;
+
+		if (val%5) 
+			useInPlaceSort = !useInPlaceSort;
+
+	}
+    return code;
+}
+
+void CxCore_SortTest::run_func()
+{
+	//test_mat[OUTPUT][0] is sorted matrix
+	//test_mat[OUTPUT][1] is index matrix
+	if (useInPlaceSort)
+	{
+		cvConvert(&test_mat[INPUT][0], &test_mat[OUTPUT][0]);
+		if (useIndexMatrix)
+			cvSort(&(test_mat[OUTPUT][0]),&(test_mat[OUTPUT][0]),&(test_mat[OUTPUT][1]),flags);
+		else
+		{
+			cvSort(&(test_mat[OUTPUT][0]),&(test_mat[OUTPUT][0]),0,flags);
+		}
+
+	}
+	else
+	{
+		if (useIndexMatrix)
+			cvSort(&(test_mat[INPUT][0]),&(test_mat[OUTPUT][0]),&(test_mat[OUTPUT][1]),flags);
+		else
+		{
+			cvSort(&(test_mat[INPUT][0]),&(test_mat[OUTPUT][0]),0,flags);
+		}
+	}
+}
+
+int CxCore_SortTest::compareIndexes (const void * a, const void * b)
+{
+	double zero = 1e-30;
+	double res=(**((double**)a)-**((double**)b));
+	return res<-zero?-1:(res>zero?1:0);
+}
+int CxCore_SortTest::compare (const void * a, const void * b)
+{
+	return *((int*)a)-*((int*)b);
+}
+
+void CxCore_SortTest::prepare_to_validation(int)
+{
+	/*Creating matrixes copies to work with*/
+	CvMat* ref_indexes = cvCreateMat(test_mat[REF_OUTPUT][1].rows, test_mat[REF_OUTPUT][1].cols, CV_32SC1); 
+	CvMat* indexes = cvCreateMat(test_mat[OUTPUT][1].rows, test_mat[OUTPUT][1].cols, CV_32SC1); 
+	CvMat* ref_output = cvCreateMat(test_mat[OUTPUT][0].rows, test_mat[OUTPUT][0].cols,CV_64F); 
+	
+	/*Copying data*/
+	cvConvert(&test_mat[REF_OUTPUT][1], ref_indexes);
+	cvConvert(&test_mat[OUTPUT][1], indexes);
+
+	/*Following block generates REF_OUTPUT indexes matrix*/
+	if ((flags == (CV_SORT_EVERY_ROW+CV_SORT_ASCENDING)) ||(flags == (CV_SORT_EVERY_ROW+CV_SORT_DESCENDING)))
+	for (int i=0;i<test_mat[REF_OUTPUT][1].rows;i++)
+		for (int j=0;j<test_mat[REF_OUTPUT][1].cols;j++)
+			ref_indexes->data.i[ref_indexes->cols*i + j]=j;
+	else 
+	for (int i=0;i<test_mat[REF_OUTPUT][1].rows;i++)
+		for (int j=0;j<test_mat[REF_OUTPUT][1].cols;j++)
+			ref_indexes->data.i[ref_indexes->cols*i + j]=i;
+	cvConvert(ref_indexes, &test_mat[REF_OUTPUT][1]);
+	/*End of block*/
+
+	/* Matrix User's Sorting Algorithm */
+	int order = -1; // order of sorting (ASCENDING or DESCENDING)
+	//// Following to variables are for sorting rows or cols in one block without any conditions (if statements)
+	short rowsSort=0;
+	short colsSort=0;
+	if ((flags == CV_SORT_EVERY_ROW+CV_SORT_ASCENDING)||(flags == CV_SORT_EVERY_COLUMN+CV_SORT_ASCENDING)) order=1;
+	if ((flags == CV_SORT_EVERY_ROW+CV_SORT_ASCENDING)||(flags == CV_SORT_EVERY_ROW+CV_SORT_DESCENDING)) rowsSort=1;
+	else colsSort=1;
+	int i,j;
+	
+	// For accessing [i,j] element using index matrix we can use following formula
+	// input->data.db[(input->cols*i+ref_indexes->cols*i+j)*rowsSort+(cols*(ref_indexes->cols*i+j)+j)*colsSort];
+
+    if ((flags == CV_SORT_EVERY_ROW+CV_SORT_ASCENDING)||(flags == CV_SORT_EVERY_ROW+CV_SORT_DESCENDING))
+	{
+		double** row = new double*[input->cols];
+		for (i=0;i<input->rows; i++)
+		{
+			for (int j=0;j<input->cols;j++)
+				row[j]=&(input->data.db[(input->cols*i+j)]);
+			qsort(row,input->cols,sizeof(row[0]),&CxCore_SortTest::compareIndexes);
+			for (int j=0;j<ref_indexes->cols;j++)
+			{
+				if (order==1)
+					ref_indexes->data.i[ref_indexes->cols*i+j]=row[j]-&(input->data.db[input->cols*i]);
+				else
+					ref_indexes->data.i[ref_indexes->cols*(i+1)-1-j]=row[j]-&(input->data.db[input->cols*i]);
+			}
+		}
+		delete[] row;
+	}
+	else
+	{
+		double** col = new double*[input->rows];
+		for (j=0;j<input->cols; j++)
+		{
+			for (int i=0;i<input->rows;i++)
+				col[i]=&(input->data.db[(input->cols*i+j)]);
+			qsort(col,input->rows,sizeof(col[0]),&CxCore_SortTest::compareIndexes);
+			for (int i=0;i<ref_indexes->rows;i++)
+			{
+				if (order==1)
+					ref_indexes->data.i[ref_indexes->cols*i+j]=(col[i]-&(input->data.db[j]))/(ref_output->cols);
+				else
+					ref_indexes->data.i[ref_indexes->cols*(ref_indexes->rows-1-i)+j]=(col[i]-&(input->data.db[j]))/(ref_output->cols);
+			}
+		}
+		delete[] col;
+	}
+
+	/*End of Sort*/
+
+	int n;
+	for (i=0;i<input->rows;i++)
+		for (j=0;j<input->cols;j++)
+		{
+			n=(input->cols*i+ref_indexes->data.i[ref_indexes->cols*i+j])*rowsSort+
+			(input->cols*(ref_indexes->data.i[ref_indexes->cols*i+j])+j)*colsSort;
+			ref_output->data.db[ref_output->cols*i+j] = input->data.db[n];
+		}
+
+	if (useIndexMatrix)
+	{
+		/* Comparing indexes matrixes */
+		if ((flags == CV_SORT_EVERY_ROW+CV_SORT_ASCENDING)||(flags == CV_SORT_EVERY_ROW+CV_SORT_DESCENDING))
+		{
+			int begin=0,end=0;
+			double temp;
+			for (i=0;i<indexes->rows;i++)
+			{
+				for (j=0;j<indexes->cols-1;j++)
+					if (ref_output->data.db[ref_output->cols*i+j]==ref_output->data.db[ref_output->cols*i+j+1])
+					{
+						temp=ref_output->data.db[ref_output->cols*i+j];
+						begin=j++;
+						while ((j<ref_output->cols)&&(temp==ref_output->data.db[ref_output->cols*i+j])) j++;
+						end=--j;
+						int* row = new int[end-begin+1];
+						int* row1 = new int[end-begin+1];
+
+						for (int k=0;k<=end-begin;k++)
+						{
+							row[k]=ref_indexes->data.i[ref_indexes->cols*i+k+begin];
+							row1[k]=indexes->data.i[indexes->cols*i+k+begin];
+						}
+						qsort(row,end-begin+1,sizeof(row[0]),&CxCore_SortTest::compare);
+						qsort(row1,end-begin+1,sizeof(row1[0]),&CxCore_SortTest::compare);
+						for (int k=0;k<=end-begin;k++)
+						{
+							ref_indexes->data.i[ref_indexes->cols*i+k+begin]=row[k];
+							indexes->data.i[indexes->cols*i+k+begin]=row1[k];
+						}	
+						delete[] row;
+						delete[] row1;
+					}
+			}
+		}
+		else
+		{
+			int begin=0,end=0;
+			double temp;
+			for (j=0;j<indexes->cols;j++)
+			{
+				for (i=0;i<indexes->rows-1;i++)
+					if (ref_output->data.db[ref_output->cols*i+j]==ref_output->data.db[ref_output->cols*(i+1)+j])
+					{
+						temp=ref_output->data.db[ref_output->cols*i+j];
+						begin=i++;
+						while ((i<ref_output->rows)&&(temp==ref_output->data.db[ref_output->cols*i+j])) i++;
+						end=--i;
+
+						int* col = new int[end-begin+1];
+						int* col1 = new int[end-begin+1];
+
+						for (int k=0;k<=end-begin;k++)
+						{
+							col[k]=ref_indexes->data.i[ref_indexes->cols*(k+begin)+j];
+							col1[k]=indexes->data.i[indexes->cols*(k+begin)+j];
+						}
+						qsort(col,end-begin+1,sizeof(col[0]),&CxCore_SortTest::compare);
+						qsort(col1,end-begin+1,sizeof(col1[0]),&CxCore_SortTest::compare);
+						for (int k=0;k<=end-begin;k++)
+						{
+							ref_indexes->data.i[ref_indexes->cols*(k+begin)+j]=col[k];
+							indexes->data.i[indexes->cols*(k+begin)+j]=col1[k];
+						}	
+						delete[] col;
+						delete[] col1;
+					}
+			}
+		}
+	/* End of compare*/
+	cvConvert(ref_indexes, &test_mat[REF_OUTPUT][1]);
+	cvConvert(indexes, &test_mat[OUTPUT][1]);
+	}
+	else
+	{
+		cvConvert(ref_indexes, &test_mat[REF_OUTPUT][1]);
+		cvConvert(ref_indexes, &test_mat[OUTPUT][1]);
+	}
+
+	cvConvert(ref_output, &test_mat[REF_OUTPUT][0]);
+
+	/*releasing matrixes*/
+	cvReleaseMat(&ref_output); 
+	cvReleaseMat(&input); 
+	cvReleaseMat(&indexes); 
+	cvReleaseMat(&ref_indexes);   
+}
+
+CxCore_SortTest sort_test;
+
 ////////////////////////////// min/max  /////////////////////////////
 
 class CxCore_MinMaxBaseTest : public CxCore_ArithmTest
