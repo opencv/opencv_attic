@@ -12,6 +12,10 @@ AM_CPPFLAGS = \
 AM_CXXFLAGS = @OCT_CXXFLAGS@
 
 EXTRA_DIST = \
+  DESCRIPTION      \
+  INDEX            \
+  PKG_ADD_template \
+  COPYING          \
   opencv.m         \
   \
   adapters.i       \
@@ -28,6 +32,7 @@ EXTRA_DIST = \
   \
   cvshadow.h       \
   octerror.h       \
+  octcvseq.hpp     \
   octhelpers.h     \
   \
   cv_wrap.cpp      \
