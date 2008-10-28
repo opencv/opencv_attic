@@ -1835,8 +1835,8 @@ static void icvRemapFixedPt_8u( const CvMat* src, CvMat* dst,
     #if CV_SSE2
             for( ; x <= cols - 8; x += 8 )
             {
-                __m128i xy0 = _mm_load_si128( (const __m128i*)(xy + x*2));
-                __m128i xy1 = _mm_load_si128( (const __m128i*)(xy + x*2 + 8));
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(xy + x*2));
+                __m128i xy1 = _mm_loadu_si128( (const __m128i*)(xy + x*2 + 8));
                 // 0|0|0|0|... <= x0|y0|x1|y1|... < cols-1|rows-1|cols-1|rows-1|... ?
                 __m128i mask0 = _mm_cmpeq_epi32(_mm_or_si128(_mm_cmpgt_epi16(z, xy0),
                                                 _mm_cmpgt_epi16(xy0,br)), z);
