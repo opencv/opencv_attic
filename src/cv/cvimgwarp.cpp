@@ -1781,6 +1781,10 @@ icvRemap_32f_C4R_t icvRemap_32f_C4R_p = 0;
 #define CV_REMAP_SHIFT 5
 #define CV_REMAP_MASK ((1 << CV_REMAP_SHIFT) - 1)
 
+#if defined __GNUC__ && __GNUC__*10 + __GNUC_MINOR__ < 42
+#undef CV_SSE2
+#endif
+
 #if CV_SSE2 && defined(__GNUC__)
 #define align(x) __attribute__ ((aligned (x)))
 #elif CV_SSE2 && (defined(__ICL) || defined _MSC_VER && _MSC_VER >= 1300)
