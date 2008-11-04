@@ -1995,40 +1995,77 @@ icvPerspectiveTransform_##flavor##_C3R( const arrtype* src, int srcstep,        
     return CV_OK;                                                                       \
 }
 
+#define ICV_PERSPECTIVE_TRANSFORM_FUNC_2_3( flavor, arrtype )                           \
+static CvStatus CV_STDCALL                                                              \
+icvPerspectiveTransform_##flavor##_C2C3R( const arrtype* src, int srcstep,              \
+                                          arrtype* dst, int dststep,                    \
+                                          CvSize size, const double* mat )              \
+{                                                                                       \
+    int i, j;                                                                           \
+    size.width *= 3;                                                                    \
+    srcstep /= sizeof(src[0]); dststep /= sizeof(dst[0]);                               \
+                                                                                        \
+    for( ; size.height--; src += srcstep, dst += dststep )                              \
+    {                                                                                   \
+        for( i = j = 0; i < size.width; i += 3, j += 2 )                                \
+        {                                                                               \
+            arrtype x = src[i], y = src[i + 1], z = src[i + 2];                         \
+            double w = x*mat[8] + y*mat[9] + z*mat[10] + mat[11];                       \
+                                                                                        \
+            if( fabs(w) > FLT_EPSILON )                                                 \
+            {                                                                           \
+                w = 1./w;                                                               \
+                dst[j] = (arrtype)((x*mat[0] + y*mat[1] + z*mat[2] + mat[3]) * w);      \
+                dst[j+1] = (arrtype)((x*mat[4] + y*mat[5] + z*mat[6] + mat[7]) * w);    \
+            }                                                                           \
+            else                                                                        \
+                dst[j] = dst[j+1] = (arrtype)0;                                         \
+        }                                                                               \
+    }                                                                                   \
+                                                                                        \
+    return CV_OK;                                                                       \
+}
+
+
 ICV_PERSPECTIVE_TRANSFORM_FUNC_2( 32f, float )
 ICV_PERSPECTIVE_TRANSFORM_FUNC_2( 64f, double )
+ICV_PERSPECTIVE_TRANSFORM_FUNC_2_3( 32f, float )
+ICV_PERSPECTIVE_TRANSFORM_FUNC_2_3( 64f, double )
 ICV_PERSPECTIVE_TRANSFORM_FUNC_3( 32f, float )
 ICV_PERSPECTIVE_TRANSFORM_FUNC_3( 64f, double )
 
-static void icvInitPerspectiveTransformTable( CvFuncTable* tab2, CvFuncTable* tab3 )\
-{                                                                                   \
-    tab2->fn_2d[CV_32F] = (void*)icvPerspectiveTransform_32f_C2R;                   \
-    tab2->fn_2d[CV_64F] = (void*)icvPerspectiveTransform_64f_C2R;                   \
-    tab3->fn_2d[CV_32F] = (void*)icvPerspectiveTransform_32f_C3R;                   \
-    tab3->fn_2d[CV_64F] = (void*)icvPerspectiveTransform_64f_C3R;                   \
+static void icvInitPerspectiveTransformTable( CvFuncTable* tab2,
+                            CvFuncTable* tab23, CvFuncTable* tab3 )
+{
+    tab2->fn_2d[CV_32F] = (void*)icvPerspectiveTransform_32f_C2R;
+    tab2->fn_2d[CV_64F] = (void*)icvPerspectiveTransform_64f_C2R;
+    tab23->fn_2d[CV_32F] = (void*)icvPerspectiveTransform_32f_C2C3R;
+    tab23->fn_2d[CV_64F] = (void*)icvPerspectiveTransform_64f_C2C3R;
+    tab3->fn_2d[CV_32F] = (void*)icvPerspectiveTransform_32f_C3R;
+    tab3->fn_2d[CV_64F] = (void*)icvPerspectiveTransform_64f_C3R;
 }
 
 
 CV_IMPL void
 cvPerspectiveTransform( const CvArr* srcarr, CvArr* dstarr, const CvMat* mat )
 {
-    static CvFuncTable tab[2];
+    static CvFuncTable tab[3];
     static int inittab = 0;
     double buffer[16];
 
-    CV_FUNCNAME( "cvPerspectiveProject" );
+    CV_FUNCNAME( "cvPerspectiveTransform" );
 
     __BEGIN__;
 
     CvMat sstub, *src = (CvMat*)srcarr;
     CvMat dstub, *dst = (CvMat*)dstarr;
-    int i, j, type, cn;
+    int i, j, depth, cn, dst_cn;
     CvFunc2D_2A1P func = 0;
     CvSize size;
 
     if( !inittab )
     {
-        icvInitPerspectiveTransformTable( &tab[0], &tab[1] );
+        icvInitPerspectiveTransformTable( &tab[0], &tab[1], &tab[2] );
         inittab = 1;
     }
 
@@ -2050,47 +2087,47 @@ cvPerspectiveTransform( const CvArr* srcarr, CvArr* dstarr, const CvMat* mat )
             CV_ERROR( CV_BadCOI, "" );
     }
 
-    if( !CV_ARE_TYPES_EQ( src, dst ))
+    if( !CV_ARE_DEPTHS_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
-    type = CV_MAT_TYPE( src->type );
-    cn = CV_MAT_CN( type );
+    depth = CV_MAT_DEPTH( src->type );
+    cn = CV_MAT_CN( src->type );
+    dst_cn = CV_MAT_CN( dst->type );
 
-    if( cn != 2 && cn != 3 )
+    if( cn != 2 && cn != 3 || dst_cn != 2 && dst_cn != 3 || dst_cn > cn )
         CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
 
     if( !CV_IS_MAT( mat ))
         CV_ERROR( CV_StsBadArg, "Invalid transformation matrix" );
 
-    if( mat->rows != cn + 1 && mat->cols != mat->rows )
+    if( mat->rows != dst_cn + 1 || mat->cols != cn + 1 )
         CV_ERROR( CV_StsBadSize,
         "The size of transform matrix must be equal to number of channels" );
 
-    if( CV_MAT_TYPE( mat->type ) == CV_64FC1 )
+    if( CV_MAT_TYPE(mat->type) == CV_64FC1 )
     {
-        for( i = 0; i <= cn; i++ )
+        for( i = 0; i <= dst_cn; i++ )
         {
             for( j = 0; j <= cn; j++ )
                 buffer[i*(cn+1) + j] = ((double*)(mat->data.ptr + mat->step*i))[j];
         }
     }
-    else if( CV_MAT_TYPE( mat->type ) == CV_32FC1 )
+    else if( CV_MAT_TYPE(mat->type) == CV_32FC1 )
     {
-        for( i = 0; i <= cn; i++ )
+        for( i = 0; i <= dst_cn; i++ )
         {
             for( j = 0; j <= cn; j++ )
                 buffer[i*(cn+1) + j] = ((float*)(mat->data.ptr + mat->step*i))[j];
         }
     }
     else
-    {
-        CV_ERROR( CV_StsUnsupportedFormat, "Rotation matrix must be 32fC1 or 64fC1" );
-    }
+        CV_ERROR( CV_StsUnsupportedFormat, "Rotation matrix must be 32f or 64f" );
 
-    func = (CvFunc2D_2A1P)tab[cn == 3].fn_2d[CV_MAT_DEPTH(type)];
+    func = (CvFunc2D_2A1P)tab[cn == 2 && dst_cn == 2 ? 0 :
+            cn == 3 && dst_cn == 2 ? 1 : 2].fn_2d[depth];
 
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
