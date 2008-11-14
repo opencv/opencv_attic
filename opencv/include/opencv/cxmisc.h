@@ -130,8 +130,8 @@
     #include <alloca.h>
 #elif defined HAVE_ALLOCA
     #include <stdlib.h>
-#elif
-    #error
+#else
+    #error "No alloca!"
 #endif
 
 /* ! DO NOT make it an inline function */
