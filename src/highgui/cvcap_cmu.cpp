@@ -541,7 +541,7 @@ bool CvCaptureCAM_CMU::setProperty( int property_id, double value )
 CvCapture * cvCreateCameraCapture_CMU (int index)
 {
     CvCaptureCAM_CMU* capture = new CvCaptureCAM_CMU;
-    if( !capture->open(index) )
+    if( capture->open(index) )
         return capture;
     delete capture;
     return 0;
