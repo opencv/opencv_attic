@@ -130,8 +130,8 @@ static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
                 sizeCache[k] = size = (sc*6 + 9) << octave; // gaussian scale size*1.2/9.;
             scaleCache[k] = scale = MAX(size, SIZE0);
 
-            hessian_rows = (sum->rows)*SIZE0/scale;
-            hessian_cols = (sum->cols)*SIZE0/scale;
+            hessian_rows = MAX((sum->rows)*SIZE0/scale, SIZE0);
+            hessian_cols = MAX((sum->cols)*SIZE0/scale, SIZE0);
             hessians[k] = cvCreateMat( hessian_rows, hessian_cols, CV_32FC1 );
             traces[k] = cvCreateMat( hessian_rows, hessian_cols, CV_32FC1 );
 
