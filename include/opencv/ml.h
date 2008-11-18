@@ -1554,10 +1554,6 @@ CVAPI(void) cvCreateTestSet( int type, CvMat** samples,
                  CvMat** responses,
                  int num_classes, ... );
 
-/* Aij <- Aji for i > j if lower_to_upper != 0
-              for i < j if lower_to_upper = 0 */
-CVAPI(void) cvCompleteSymm( CvMat* matrix, int lower_to_upper );
-
 #endif
 
 #endif /*__ML_H__*/
