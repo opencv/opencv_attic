@@ -778,7 +778,11 @@ CV_IMPL int cvGetNumThreads(void)
     return icvNumThreads;
 }
 
-CV_IMPL void cvSetNumThreads( int threads )
+CV_IMPL void cvSetNumThreads( int
+#ifdef _OPENMP                             
+                             threads
+#endif
+                             )
 {
     if( !icvNumProcs )
     {
