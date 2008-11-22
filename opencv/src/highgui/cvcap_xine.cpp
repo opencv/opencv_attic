@@ -784,7 +784,7 @@ public:
     CvCaptureAVI_XINE_CPP() { captureXINE = 0; }
     virtual ~CvCaptureAVI_XINE_CPP() { close(); }
 
-    virtual bool open( int index );
+    virtual bool open( const char* filename );
     virtual void close();
 
     virtual double getProperty(int);
@@ -796,10 +796,10 @@ protected:
     CvCaptureAVI_XINE* captureXINE;
 };
 
-bool CvCaptureAVI_XINE_CPP::open( int index )
+bool CvCaptureAVI_XINE_CPP::open( const char* filename )
 {
     close();
-    captureXINE = icvCaptureFromFile_XINE(index);
+    captureXINE = icvCaptureFromFile_XINE(filename);
     return captureXINE != 0;
 }
 
