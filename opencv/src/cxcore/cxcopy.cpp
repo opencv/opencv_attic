@@ -439,7 +439,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
             src_step = dst_step = CV_STUB_STEP;
         }
 
-        if( src->data.ptr != dst->data.ptr )
+        if( src->data.ptr != dst->data.ptr || src->step != dst->step )
             icvCopy_8u_C1R( src->data.ptr, src_step,
                             dst->data.ptr, dst_step, size );
     }
