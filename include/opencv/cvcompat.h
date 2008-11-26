@@ -818,7 +818,7 @@ CV_INLINE  void  cvKMeans( int num_clusters, float** samples,
     int i;
     for( i = 0; i < num_samples; i++ )
         memcpy( samples_mat->data.fl + i*vec_size, samples[i], vec_size*sizeof(float));
-    cvKMeans2( samples_mat, num_clusters, &cluster_idx_mat, termcrit );
+    cvKMeans2( samples_mat, num_clusters, &cluster_idx_mat, termcrit, 1, 0, 0, 0, 0 );
     cvReleaseMat( &samples_mat );
 }
 

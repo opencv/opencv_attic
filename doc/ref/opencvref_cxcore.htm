@@ -6608,14 +6608,35 @@ raises runtime error.
 <hr><h3><a name="decl_cvKMeans2">KMeans2</a></h3>
 <p class="Blurb">Splits set of vectors by given number of clusters</p>
 <pre>
-void cvKMeans2( const CvArr* samples, int cluster_count,
-                CvArr* labels, CvTermCriteria termcrit );
+int cvKMeans2( const CvArr* samples, int cluster_count,
+               CvArr* labels, CvTermCriteria termcrit,
+               int attempts=1, CvRNG* rng=0, int flags=0,
+               CvArr* centers=0, double* compactness=0);
 </pre><p><dl>
 <dt>samples<dd>Floating-point matrix of input samples, one row per sample.
 <dt>cluster_count<dd>Number of clusters to split the set by.
 <dt>labels<dd>Output integer vector storing cluster indices for every sample.
-<dt>termcrit<dd>Specifies maximum number of iterations and/or accuracy (distance the centers move by
-between the subsequent iterations).
+<dt>termcrit<dd>Specifies maximum number of iterations of the core kmeans loop
+and/or accuracy (distance the centers move by between the subsequent iterations).
+<dt>attempts<dd>How many times the algorithm is executed using different initial
+labelings. The algorithm returns labels that yield the best compactness
+(see the last function parameter)
+<dt>rng<dd>Optional external random number generator; can be used to fully
+control the function behaviour.
+<dt>flags<dd>Can be 0 or CV_KMEANS_USE_INITIAL_LABELS. The latter value means that during 
+the first (and possibly the only) attempt the function uses the user-supplied labels
+as the initial approximation, instead of generating random labels. For the second
+and further attempts the function will use randomly generated labels in any case.
+<dt>centers<dd>The optional output array of the cluster centers.
+<dt>compactness<dd>The optional output parameter, which is computed as
+<pre>
+sum<sub>i</sub>||samples(i)-centers(labels(i))||<sup>2</sup>
+</pre>
+after every attempt; the best (minimum) value is chosen and the corresponding labels
+are returned by the function. Basically, user can use only the core of the function,
+set the number of attempts to 1, initialize labels each time using a custom algorithm
+(flags=CV_KMEAN_USE_INITIAL_LABELS) and, based on the output compactness
+or any other criteria, choose the best clustering.
 </dl><p>
 The function <code>cvKMeans2</code> implements k-means algorithm that finds centers of <code>cluster_count</code> clusters
 and groups the input samples around the clusters. On output <code>labels(i)</code> contains a cluster index
@@ -6671,7 +6692,8 @@ void main( int argc, char** argv )
         }
 
         cvKMeans2( points, cluster_count, clusters,
-                   cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ));
+                   cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ),
+                   3, 0, 0, 0, 0);
 
         cvZero( img );
 
