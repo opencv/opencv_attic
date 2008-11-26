@@ -5,6 +5,7 @@
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
+#include <stdio.h>
 #endif
 
 int main( int argc, char** argv )
@@ -56,8 +57,9 @@ int main( int argc, char** argv )
             CV_SWAP( *pt1, *pt2, temp );
         }
 
-        cvKMeans2( points, cluster_count, clusters,
-                   cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ));
+        printf( "iterations=%d\n", cvKMeans2( points, cluster_count, clusters,
+                cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ),
+                5, 0, 0, 0, 0 ));
 
         cvZero( img );
 

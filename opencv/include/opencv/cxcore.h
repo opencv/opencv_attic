@@ -1471,8 +1471,11 @@ CVAPI(CvSeq*) cvTreeToNodeSeq( const void* first, int header_size,
 
 /* The function implements the K-means algorithm for clustering an array of sample
    vectors in a specified number of classes */
-CVAPI(void)  cvKMeans2( const CvArr* samples, int cluster_count,
-                        CvArr* labels, CvTermCriteria termcrit );
+#define CV_KMEANS_USE_INITIAL_LABELS    1
+CVAPI(int) cvKMeans2( const CvArr* samples, int cluster_count, CvArr* labels,
+                      CvTermCriteria termcrit, int attempts CV_DEFAULT(1),
+                      CvRNG* rng CV_DEFAULT(0), int flags CV_DEFAULT(0),
+                      CvArr* _centers CV_DEFAULT(0), double* compactness CV_DEFAULT(0) );
 
 /****************************************************************************************\
 *                                    System functions                                    *
