@@ -1,5 +1,4 @@
-#include "_cxts.h"
-#include "cxcore.h"
+#include "cxcoretest.h"
 
 #include <algorithm>
 #include <complex>
