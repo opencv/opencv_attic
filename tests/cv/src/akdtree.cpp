@@ -1,5 +1,4 @@
-#include "_cxts.h"
-#include "cv.h"
+#include "cvtest.h"
 
 // * add test for cvFindFeaturesBoxed
 
