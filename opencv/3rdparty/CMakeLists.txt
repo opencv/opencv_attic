@@ -1,0 +1,5 @@
+add_subdirectory(libjasper)
+add_subdirectory(libjpeg)
+add_subdirectory(libpng)
+add_subdirectory(libtiff)
+add_subdirectory(zlib)

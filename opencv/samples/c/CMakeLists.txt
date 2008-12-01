@@ -1,0 +1,51 @@
+# ----------------------------------------------------------------------------
+#  CMake file for C samples. See root CMakeLists.txt 
+#
+# ----------------------------------------------------------------------------
+
+PROJECT(c_samples)
+
+# ---------------------------------------------
+#      Define executable targets
+# ---------------------------------------------
+MACRO(MY_DEFINE_EXAMPLE name srcs)
+	ADD_EXECUTABLE(${name} ${srcs})
+	ADD_DEPENDENCIES(${name} cv cxcore highgui ml cvaux)
+	TARGET_LINK_LIBRARIES(${name} cv cxcore highgui ml cvaux)  # ${OPENCV_LINKER_LIBS}
+ENDMACRO(MY_DEFINE_EXAMPLE)
+
+MY_DEFINE_EXAMPLE(bgfg_codebook 	bgfg_codebook.cpp)
+MY_DEFINE_EXAMPLE(bgfg_segm			bgfg_segm.cpp)
+MY_DEFINE_EXAMPLE(blobtrack			blobtrack.cpp)
+MY_DEFINE_EXAMPLE(camshiftdemo		camshiftdemo.c)
+MY_DEFINE_EXAMPLE(contours			contours.c)
+MY_DEFINE_EXAMPLE(convert_cascade	convert_cascade.c)
+MY_DEFINE_EXAMPLE(convexhull		convexhull.c)
+MY_DEFINE_EXAMPLE(delaunay			delaunay.c)
+MY_DEFINE_EXAMPLE(demhist			demhist.c)
+MY_DEFINE_EXAMPLE(dft				dft.c)
+MY_DEFINE_EXAMPLE(distrans			distrans.c)
+MY_DEFINE_EXAMPLE(drawing			drawing.c)
+MY_DEFINE_EXAMPLE(edge				edge.c)
+MY_DEFINE_EXAMPLE(facedetect		facedetect.c)
+MY_DEFINE_EXAMPLE(ffilldemo			ffilldemo.c)
+MY_DEFINE_EXAMPLE(find_obj			find_obj.cpp)
+MY_DEFINE_EXAMPLE(fitellipse		fitellipse.c)
+MY_DEFINE_EXAMPLE(houghlines		houghlines.c)
+MY_DEFINE_EXAMPLE(image				image.cpp)
+MY_DEFINE_EXAMPLE(inpaint			inpaint.cpp)
+MY_DEFINE_EXAMPLE(kalman			kalman.c)
+MY_DEFINE_EXAMPLE(kmeans			kmeans.c)
+MY_DEFINE_EXAMPLE(laplace			laplace.c)
+MY_DEFINE_EXAMPLE(letter_recog		letter_recog.cpp)
+MY_DEFINE_EXAMPLE(lkdemo			lkdemo.c)
+MY_DEFINE_EXAMPLE(minarea			minarea.c)
+MY_DEFINE_EXAMPLE(morphology		morphology.c)
+MY_DEFINE_EXAMPLE(motempl			motempl.c)
+MY_DEFINE_EXAMPLE(mushroom			mushroom.cpp)
+MY_DEFINE_EXAMPLE(pyramid_segmentation	pyramid_segmentation.c)
+MY_DEFINE_EXAMPLE(squares			squares.c)
+MY_DEFINE_EXAMPLE(stereo_calib		stereo_calib.cpp)
+MY_DEFINE_EXAMPLE(watershed			watershed)
+
+
