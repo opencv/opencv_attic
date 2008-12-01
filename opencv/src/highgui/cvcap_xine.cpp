@@ -832,11 +832,11 @@ bool CvCaptureAVI_XINE_CPP::setProperty( int propId, double value )
     return captureXINE ? icvSetPropertyAVI_XINE( captureXINE, propId, value ) != 0 : false;
 }
 
-CvCapture* cvCreateCameraCapture_XINE( int index )
+CvCapture* cvCreateFileCapture_XINE(const char* filename)
 {
     CvCaptureAVI_XINE_CPP* capture = new CvCaptureAVI_XINE_CPP;
 
-    if( capture->open( index ))
+    if( capture->open(filename))
         return capture;
 
     delete capture;
