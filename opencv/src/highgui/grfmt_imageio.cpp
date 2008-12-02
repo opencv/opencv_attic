@@ -244,14 +244,25 @@ static
 CFStringRef  FilenameToUTI( const char* filename )
 {
     const char* ext = filename;
+    char* ext_buf;
+    int i;
+    CFStringRef imageUTI = NULL;
+
     for(;;)
     {
         const char* temp = strchr( ext + 1, '.' );
         if( !temp ) break;
         ext = temp;
     }
-    
-    CFStringRef imageUTI = NULL;
+
+    if(!ext)
+        return NULL;
+
+    ext_buf = (char*)malloc(strlen(ext)+1);
+    for(i = 0; ext[i] != '\0'; i++)
+        ext_buf[i] = (char)tolower(ext[i]);
+    ext_buf[i] = '\0';
+    ext = ext_buf;
     
     if( !strcmp(ext, ".bmp") || !strcmp(ext, ".dib") )
         imageUTI = CFSTR( "com.microsoft.bmp" );
@@ -267,6 +278,8 @@ CFStringRef  FilenameToUTI( const char* filename )
         imageUTI = CFSTR( "public.png" );
     else if( !strcmp(ext, ".tiff") || !strcmp(ext, ".tif") )
         imageUTI = CFSTR( "public.tiff" );
+
+    free(ext_buf);
     
     return imageUTI;
 }
