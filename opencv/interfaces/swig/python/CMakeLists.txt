@@ -4,6 +4,9 @@
 # ----------------------------------------------------------------------------
 project(python_support)
 
+file(GLOB py_module_files "*.py")
+list(REMOVE_ITEM py_module_files "setup-for-win.py")
+
 if(WIN32)
     set(PY_SRC_SUFFIX "_win32")
     set(PY_MODULE_SUFFIX ".pyd")
@@ -80,7 +83,7 @@ set_target_properties(_cv PROPERTIES
 	)
 
 add_dependencies(_cv cxcore cv highgui ml cvaux)
-target_link_libraries(_cv ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES})
+target_link_libraries(_cv ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES} cxcore cv cvaux)
 
 # ----------------------------------------------------------------------------------
 # 				HighGui wrapper
@@ -99,7 +102,7 @@ set_target_properties(_highgui PROPERTIES
     )
 
 add_dependencies(_highgui cxcore cv highgui)
-target_link_libraries(_highgui ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES})
+target_link_libraries(_highgui ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES} cxcore highgui cv)
 
 # ----------------------------------------------------------------------------------
 #           ML wrapper
@@ -118,11 +121,12 @@ set_target_properties(_ml PROPERTIES
     )
 
 add_dependencies(_ml cxcore ml)
-target_link_libraries(_ml ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES})
+target_link_libraries(_ml ${OPENCV_LINKER_LIBS} ${PYTHON_LIBRARIES} cxcore ml)
 
 if(UNIX)  
     get_target_property(LOC_CV _cv LOCATION)
     get_target_property(LOC_ML _ml LOCATION)
     get_target_property(LOC_HG _highgui LOCATION)
-    install(FILES ${LOC_CV} ${LOC_ML} ${LOC_HG} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH})
+    #install(FILES ${LOC_CV} ${LOC_ML} ${LOC_HG} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH})
+    install(FILES ${py_module_files} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH})
 endif(UNIX)

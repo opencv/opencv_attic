@@ -3,15 +3,15 @@
 #
 # ----------------------------------------------------------------------------
 
-PROJECT(c_samples)
+project(c_samples)
 
 # ---------------------------------------------
 #      Define executable targets
 # ---------------------------------------------
 MACRO(MY_DEFINE_EXAMPLE name srcs)
-	ADD_EXECUTABLE(${name} ${srcs})
-	ADD_DEPENDENCIES(${name} cv cxcore highgui ml cvaux)
-	TARGET_LINK_LIBRARIES(${name} cv cxcore highgui ml cvaux)  # ${OPENCV_LINKER_LIBS}
+	add_executable(${name} ${srcs})
+	add_dependencies(${name} cv cxcore highgui ml cvaux)
+	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} cv cxcore highgui ml cvaux)
 ENDMACRO(MY_DEFINE_EXAMPLE)
 
 MY_DEFINE_EXAMPLE(bgfg_codebook 	bgfg_codebook.cpp)
@@ -46,6 +46,5 @@ MY_DEFINE_EXAMPLE(mushroom			mushroom.cpp)
 MY_DEFINE_EXAMPLE(pyramid_segmentation	pyramid_segmentation.c)
 MY_DEFINE_EXAMPLE(squares			squares.c)
 MY_DEFINE_EXAMPLE(stereo_calib		stereo_calib.cpp)
-MY_DEFINE_EXAMPLE(watershed			watershed)
-
+MY_DEFINE_EXAMPLE(watershed			watershed.cpp)
 

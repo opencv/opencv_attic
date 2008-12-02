@@ -60,3 +60,8 @@ install(TARGETS ${the_target}
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
     )
+
+if(UNIX)
+    install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+endif()
+    

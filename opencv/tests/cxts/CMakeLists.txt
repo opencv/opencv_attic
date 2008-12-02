@@ -56,5 +56,4 @@ set_target_properties(${the_target} PROPERTIES
 add_dependencies(${the_target} cxcore)
     
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
-
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
