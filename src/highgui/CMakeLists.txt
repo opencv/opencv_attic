@@ -9,10 +9,15 @@ project(highgui)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR} 
-    ${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
     ${CMAKE_SOURCE_DIR}/cxcore/include 
     ${CMAKE_SOURCE_DIR}/cv/include
     )
+
+if(MSVC)
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
+    )
+endif()    
 
 file(GLOB grfmt_hdrs grfmt*.h)    
 file(GLOB grfmt_srcs grfmt*.cpp)
@@ -71,6 +76,26 @@ if(UNIX)
     endif()
 
     set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
+
+    if(NOT APPLE)
+        if(JPEG_FOUND)
+            add_definitions(-DHAVE_JPEG)
+            include_directories(${JPEG_INCLUDE_DIR})
+        endif()
+        if(PNG_FOUND)
+            add_definitions(-DHAVE_PNG)
+            add_definitions(${PNG_DEFINITIONS})
+            include_directories(${PNG_INCLUDE_DIR})
+        endif()
+        if(TIFF_FOUND)
+            add_definitions(-DHAVE_TIFF)
+            include_directories(${TIFF_INCLUDE_DIR})
+        endif()
+        if(JASPER_FOUND)
+            add_definitions(-DHAVE_JASPER)
+            include_directories(${JASPER_INCLUDE_DIR})
+        endif()
+    endif()        
 endif()
 
 if(APPLE)
@@ -81,9 +106,11 @@ endif(APPLE)
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
-link_directories("${CMAKE_SOURCE_DIR}/otherlibs/_graphics/lib")
-link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib")	
-link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib/${ConfigurationName}")
+if(MSVC)
+    link_directories("${CMAKE_SOURCE_DIR}/otherlibs/_graphics/lib")
+    link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib")	
+    link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib/${ConfigurationName}")
+endif()    
 
 set(lib_srcs ${highgui_srcs} ${grfmt_srcs})
 
@@ -106,6 +133,16 @@ if(WIN32 AND MSVC)
         endif()        
     endforeach()
     set(lib_srcs ${lib_srcs} precomp.cpp)
+endif()
+
+if(UNIX)
+    foreach(P ${HIGHGUI_INCLUDE_DIRS})
+        include_directories(${P})
+    endforeach()
+
+    foreach(P ${HIGHGUI_LIBRARY_DIRS})
+        link_directories(${P})
+    endforeach()
 endif()
 
 # ----------------------------------------------------------------------------------
@@ -139,7 +176,7 @@ endif(WIN32)
 
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES})
 
 # Dependencies of this target:
 add_dependencies(${the_target} cv cxcore)
@@ -166,3 +203,7 @@ install(TARGETS ${the_target}
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
     )
+
+if(UNIX)
+    install(FILES highgui.h DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+endif()

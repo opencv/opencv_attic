@@ -9,8 +9,7 @@ source_group("Src" FILES ${test_srcs})
 file(GLOB test_hdrs "src/*.h*")
 source_group("Include" FILES ${test_hdrs})
 
-include_directories(../cxts)
-if(WIN32 AND MSVC)
+if(WIN32 AND MSVC)
     set(pch_header "cxcoretest.h")
     set(pch_src "precomp.cpp")
     foreach(src_file ${test_srcs})
@@ -30,6 +29,8 @@ include_directories(../cxts)
     endforeach()
 endif()
 
+include_directories(../cxts)
+
 set(the_target "cxcoretest")
 
 add_executable(${the_target} ${test_srcs} ${test_hdrs})
@@ -40,10 +41,12 @@ set_target_properties(${the_target} PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
 	)
 
+
+add_dependencies(${the_target} cxts cxcore)
+
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
-add_dependencies(${the_target} cxts cxcore highgui)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cxts)
 
 enable_testing()
 get_target_property(LOC ${the_target} LOCATION)
-add_test(cvtest ${LOC})
+add_test(cxcoretest "${LOC}")

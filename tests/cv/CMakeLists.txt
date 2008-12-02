@@ -41,10 +41,11 @@ set_target_properties(${the_target} PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
 	)
 
-# Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
 
 add_dependencies(${the_target} cxts cxcore cv cvaux highgui)
+
+# Add the required libraries for linking:
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv cvaux highgui cxts)
 
 enable_testing()
 get_target_property(LOC ${the_target} LOCATION)

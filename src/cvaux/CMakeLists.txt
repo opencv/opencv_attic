@@ -18,10 +18,10 @@ source_group(Src\\VideoSurveillance FILES ${aux_srcs_vs})
 # The corresponding .h files:
 file(GLOB_RECURSE aux_hdrs_external include/*.h*)
 file(GLOB_RECURSE aux_hdrs_internal src/*.h*)
-set(lib_hdrs ${lib_hdrs} ${aux_hdrs_external} ${aux_hdrs_internal})
+set(lib_hdrs ${lib_hdrs} ${aux_hdrs_ext} ${aux_hdrs_int})
 
-source_group("Include\\External" FILES ${aux_hdrs_external})
-source_group("Include\\Internal" FILES ${aux_hdrs_internal})
+source_group("Include\\External" FILES ${aux_hdrs_ext})
+source_group("Include\\Internal" FILES ${aux_hdrs_int})
 
 include_directories("${OPENCV_SOURCE_DIR}/cv/src")
 include_directories(src)
@@ -72,7 +72,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv)
 
 # Dependencies of this target:
 add_dependencies(${the_target} cxcore cv)
@@ -83,5 +83,6 @@ install(TARGETS ${the_target}
 	ARCHIVE DESTINATION lib
 	)
 
-
-
+if(UNIX)
+    install(FILES ${lib_hdrs_ext} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+endif()

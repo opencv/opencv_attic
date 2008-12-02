@@ -53,7 +53,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
 
 # Dependencies of this target:
 add_dependencies(${the_target} cxcore)
@@ -63,3 +63,7 @@ install(TARGETS ${the_target}
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
     )
+
+if(UNIX)
+    install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+endif()
