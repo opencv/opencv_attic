@@ -27,7 +27,9 @@ project(OpenCV)
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
-set(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "" FORCE)
+if(MSVC)
+    set(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "" FORCE)
+endif()
 
 # --------------------------------------------------------------
 # Indicate CMake 2.7 and above that we don't want to mix relative
@@ -163,9 +165,11 @@ macro(CHECK_MODULE module_name define)
 endmacro()
 
 if(UNIX)
-    CHECK_MODULE(gtk+-2.0 HAVE_GTK)
-    CHECK_MODULE(gthread-2.0 HAVE_GTHREAD)
-    CHECK_MODULE(gstreamer-base-0.10 HAVE_GSTREAMER)
+    if(NOT APPLE)
+        CHECK_MODULE(gtk+-2.0 HAVE_GTK)
+        CHECK_MODULE(gthread-2.0 HAVE_GTHREAD)
+        CHECK_MODULE(gstreamer-base-0.10 HAVE_GSTREAMER)
+    endif()
 
     CHECK_MODULE(libunicap HAVE_UNICAP_)
     CHECK_MODULE(libucil HAVE_UNICAP_UCIL)
@@ -182,17 +186,18 @@ if(UNIX)
 
     CHECK_MODULE(libadc1394 HAVE_DC1394)
 
-    CHECK_MODULE(libxine HAVE_XINE)
+    if(NOT APPLE)
+        CHECK_MODULE(libxine HAVE_XINE)
+        CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
+        CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
 
-    CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
-    CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
+        include(FindPNG)
+        include(FindJPEG)
+        include(FindTIFF)
+        include(FindJasper)
 
-    include(FindPNG)
-    include(FindJPEG)
-    include(FindTIFF)
-    include(FindJasper)
-
-    set(OPENCV_LINKER_LIBS dl m pthread)
+        set(OPENCV_LINKER_LIBS dl m pthread)
+    endif()    
 endif()
 
 # ===================================================
@@ -204,7 +209,7 @@ include(FindPythonInterp)
 
 # Build with python if installes:
 # ===================================================
-set(BUILD_PYTHON_SUPPORT ${PYTHONLIBS_FOUND} CACHE BOOL "Build with python support if installed")
+set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with python support if installed")
 
 if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
     #LIST(APPEND OPENCV_LINKER_LIBS ${PYTHON_LIBRARIES})
@@ -226,10 +231,14 @@ endif()
 #   "Classic" function & headers detection:
 # ---------------------------------------------------------------
 if(UNIX)
-    CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
-    CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
-    CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
-    CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
+    if(NOT APPLE)
+        CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
+        CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
+        CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
+        CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
+    else()
+        add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
+    endif()    
 endif()
 
 # ----------------------------------------------------------------------------
@@ -242,7 +251,7 @@ endif()
 #  A directory will be created for each platform so the "cvconfig.h" file is
 #   not overwritten if cmake generates code in the same path.
 # ----------------------------------------------------------------------------
-add_definitions( -DHAVE_CONFIG_H)
+add_definitions(-DHAVE_CONFIG_H)
 
 set(OPENCV_CONFIG_FILE_INCLUDE_DIR "${CMAKE_BINARY_DIR}/" CACHE PATH "Where to create the platform-dependant cvconfig.h")
 
@@ -325,7 +334,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -pg -g")
     else()
         # Remove unreferenced functions: function level linking
-        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -ffunction-sections")
+        if(NOT APPLE)
+            set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -ffunction-sections")
+        endif()    
     endif()
 
     # Parallel mode
@@ -424,6 +435,7 @@ message(STATUS "    Linker flags (Debug):      ${CMAKE_SHARED_LINKER_FLAGS} ${CM
 endif()
 
 if(UNIX)
+if(NOT APPLE)
 message(STATUS "")
 message(STATUS "  GUI: ")
 message(STATUS "    GTK+ 2.x:                  ${HAVE_GTK}")
@@ -434,6 +446,7 @@ message(STATUS "    JPEG:                      ${JPEG_FOUND}")
 message(STATUS "    PNG:                       ${PNG_FOUND}")
 message(STATUS "    TIFF:                      ${TIFF_FOUND}")
 message(STATUS "    JASPER:                    ${JASPER_FOUND}")
+endif()
 message(STATUS "")
 message(STATUS "  Video I/O: ")
 message(STATUS "    DC1394:                    ${HAVE_DC1394}")

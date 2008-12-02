@@ -99,9 +99,9 @@ if(UNIX)
 endif()
 
 if(APPLE)
-    add_definitions(-DUSE_VDIG_VERSION=1 -DHAVE_QUICKTIME=1)
-    set(highgui_srcs ${highgui_srcs} window_carbon.cpp cvcap_qt.cpp)	
-endif(APPLE)	
+    add_definitions(-DUSE_VDIG_VERSION=1 -DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
+    set(highgui_srcs ${highgui_srcs} window_carbon.cpp cvcap_qt.cpp)
+endif(APPLE)
 
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
@@ -174,15 +174,14 @@ if(WIN32)
 	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib")
 endif(WIN32)
 
-
-# Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES})
-
 # Dependencies of this target:
 add_dependencies(${the_target} cv cxcore)
 
+# Add the required libraries for linking:
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES})
+
 if(WIN32)
-    add_dependencies(${the_target} cv cxcore cvaux libjasper libjpeg libpng libtiff zlib)
+    add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
 	target_link_libraries(${the_target} comctl32 gdi32 videoinput)
 
 	if (MSVC)
