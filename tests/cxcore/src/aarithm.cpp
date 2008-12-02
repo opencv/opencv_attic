@@ -1367,8 +1367,8 @@ protected:
     void prepare_to_validation( int test_case_idx );
 	int flags; //flags for sorting
 private:
-	static int _cdecl compareIndexes (const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
-	static int _cdecl compare(const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
+	static int compareIndexes (const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
+	static int compare(const void * a, const void * b); // comparing two elements of the matrix with pointers sorting
 	bool useIndexMatrix;
 	bool useInPlaceSort;
 	CvMat* input;
