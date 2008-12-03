@@ -16,8 +16,8 @@ source_group(Src FILES ${aux_srcs})
 source_group(Src\\VideoSurveillance FILES ${aux_srcs_vs})
 
 # The corresponding .h files:
-file(GLOB_RECURSE aux_hdrs_external include/*.h*)
-file(GLOB_RECURSE aux_hdrs_internal src/*.h*)
+file(GLOB_RECURSE aux_hdrs_ext include/*.h*)
+file(GLOB_RECURSE aux_hdrs_int src/*.h*)
 set(lib_hdrs ${lib_hdrs} ${aux_hdrs_ext} ${aux_hdrs_int})
 
 source_group("Include\\External" FILES ${aux_hdrs_ext})
@@ -84,5 +84,5 @@ install(TARGETS ${the_target}
 	)
 
 if(UNIX)
-    install(FILES ${lib_hdrs_ext} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+    install(FILES ${aux_hdrs_ext} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
 endif()
