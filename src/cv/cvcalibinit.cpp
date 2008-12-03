@@ -273,7 +273,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     // This is necessary because some squares simply do not separate properly with a single dilation.  However,
     // we want to use the minimum number of dilations possible since dilations cause the squares to become smaller,
     // making it difficult to detect smaller squares.
-    for( k = 0; k < 2; k++ )
+    for( k = 0; k < 1; k++ )
     {
         for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
         {
