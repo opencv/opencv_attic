@@ -26,6 +26,6 @@ INCLUDE_DIRECTORIES(${CMAKE_INCLUDE_DIRS_CONFIGCMAKE})
 LINK_DIRECTORIES(${CMAKE_LIB_DIRS_CONFIGCMAKE})
 
 # ======================================================
-# Link libraries:
+# Link libraries: e.g.   cxcore110.so
 # ======================================================
-SET(OpenCV_LIBS cxcore cv ml highgui cvaux)
+SET(OpenCV_LIBS cxcore${OPENCV_DLLVERSION} cv${OPENCV_DLLVERSION} ml${OPENCV_DLLVERSION} highgui${OPENCV_DLLVERSION} cvaux${OPENCV_DLLVERSION})
