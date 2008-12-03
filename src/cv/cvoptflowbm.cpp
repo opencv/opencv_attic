@@ -572,6 +572,7 @@ cvCalcOpticalFlowBM( const void* srcarrA, const void* srcarrB,
     CvMat stubB, *srcB = (CvMat*)srcarrB;
     CvMat stubx, *velx = (CvMat*)velarrx;
     CvMat stuby, *vely = (CvMat*)velarry;
+    CvSize velSize;
 
     CV_CALL( srcA = cvGetMat( srcA, &stubA ));
     CV_CALL( srcB = cvGetMat( srcB, &stubB ));
@@ -585,10 +586,13 @@ cvCalcOpticalFlowBM( const void* srcarrA, const void* srcarrB,
     if( !CV_ARE_TYPES_EQ( velx, vely ))
         CV_ERROR( CV_StsUnmatchedFormats, "Destination images have different formats" );
 
+    velSize.width = cvFloor((double)(srcA->width - blockSize.width)/shiftSize.width);
+    velSize.height = cvFloor((double)(srcA->height - blockSize.height)/shiftSize.height);
+
     if( !CV_ARE_SIZES_EQ( srcA, srcB ) ||
         !CV_ARE_SIZES_EQ( velx, vely ) ||
-        (unsigned)(velx->width*blockSize.width - srcA->width) >= (unsigned)blockSize.width ||
-        (unsigned)(velx->height*blockSize.height - srcA->height) >= (unsigned)blockSize.height )
+        velx->width != velSize.width ||
+        vely->height != velSize.height )
         CV_ERROR( CV_StsUnmatchedSizes, "" );
 
     if( CV_MAT_TYPE( srcA->type ) != CV_8UC1 ||
