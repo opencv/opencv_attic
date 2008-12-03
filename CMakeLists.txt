@@ -459,7 +459,7 @@ set(libdir		"\${exec_prefix}/lib")
 set(includedir		"\${prefix}/include")
 set(VERSION             ${OPENCV_VERSION})
 
-configure_file("${CMAKE_SOURCE_DIR}/opencv.pc.in" "${CMAKE_BINARY_DIR}/unix-install/opencv.pc" @ONLY IMMEDIATE)
+configure_file("${CMAKE_SOURCE_DIR}/opencv.pc.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/opencv.pc" @ONLY IMMEDIATE)
 
 if(UNIX)
     install(FILES ${CMAKE_BINARY_DIR}/unix-install/opencv.pc DESTINATION lib/pkgconfig)
