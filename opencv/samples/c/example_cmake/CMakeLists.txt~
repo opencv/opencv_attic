@@ -1,0 +1,23 @@
+PROJECT(opencv_example)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+if(COMMAND cmake_policy)
+      cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
+IF(UNIX)
+	IF (EXISTS /usr/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules)
+		set(OpenCV_DIR  /usr/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules CACHE PATH "Directory of OpenCVConfig.cmake" )
+	ELSE(EXISTS /usr/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules)
+		set(OpenCV_DIR  "" CACHE PATH "Directory of OpenCVConfig.cmake" )
+	ENDIF (EXISTS /usr/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules)
+ENDIF(UNIX)
+
+FIND_PACKAGE( OpenCV REQUIRED )
+
+# Declare the target (an executable)
+ADD_EXECUTABLE(opencv_example  minarea.c)
+
+TARGET_LINK_LIBRARIES(opencv_example ${OpenCV_LIBS})
+
+
