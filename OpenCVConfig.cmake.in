@@ -18,12 +18,12 @@
 # ======================================================
 # Include directories to add to the user project:
 # ======================================================
-INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/include/opencv/)
+INCLUDE_DIRECTORIES(${CMAKE_INCLUDE_DIRS_CONFIGCMAKE})
 
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
-LINK_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/lib)
+LINK_DIRECTORIES(${CMAKE_LIB_DIRS_CONFIGCMAKE})
 
 # ======================================================
 # Link libraries:

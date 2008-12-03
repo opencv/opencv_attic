@@ -186,6 +186,15 @@ if(UNIX)
 
     CHECK_MODULE(libadc1394 HAVE_DC1394)
 
+    CHECK_MODULE(libxine HAVE_XINE)
+
+    CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
+    CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
+    CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
+    CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
+    CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
+    CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
+
     if(NOT APPLE)
         CHECK_MODULE(libxine HAVE_XINE)
         CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
@@ -225,20 +234,6 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
         get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
         set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
     endif()
-endif()
-
-# ---------------------------------------------------------------
-#   "Classic" function & headers detection:
-# ---------------------------------------------------------------
-if(UNIX)
-    if(NOT APPLE)
-        CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
-        CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
-        CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
-        CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
-    else()
-        add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
-    endif()    
 endif()
 
 # ----------------------------------------------------------------------------
@@ -407,15 +402,76 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
     add_subdirectory(interfaces)
 endif()
 
-# ----------------------------------------------------------------------------
-#   Installation for CMake Module:
-# ----------------------------------------------------------------------------
-if(UNIX) 
-    configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" )
+# --------------------------------------------------------------------------------------------
+#   Installation for CMake Module:  OpenCVConfig.cmake
+#  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
+#  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use with "make install"
+# -------------------------------------------------------------------------------------------
 
+# -------------------------------------------------------------------------------------------
+#  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
+# -------------------------------------------------------------------------------------------
+# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
+set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE)
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${OPENCV_CONFIG_FILE_INCLUDE_DIR}")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cv/include")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cvaux/include")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cxcore/include")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/ml/include")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/otherlibs/highgui")
+
+set(CMAKE_LIB_DIRS_CONFIGCMAKE ${LIBRARY_OUTPUT_PATH})
+
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE)
+
+# --------------------------------------------------------------------------------------------
+#  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
+# -------------------------------------------------------------------------------------------
+# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
+
+set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/include/opencv")
+set(CMAKE_LIB_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/lib")
+
+exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/unix-install/\"")
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE)
+
+if(UNIX)
     set(CMAKE_DIR_FOR_MODULES "/usr/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules")
-    install(FILES ${CMAKE_BINARY_DIR}/OpenCVConfig.cmake DESTINATION ${CMAKE_DIR_FOR_MODULES})
+    install(FILES ${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake DESTINATION ${CMAKE_DIR_FOR_MODULES})
 endif()
+
+
+# --------------------------------------------------------------------------------------------
+#  Part 2/2: ${BIN_DIR}/unix-install/opencv.pc -> For use *with* "make install"
+# prefix=/usr
+# exec_prefix=${prefix}
+# libdir=${exec_prefix}/lib
+# includedir=${prefix}/include/opencv
+# -------------------------------------------------------------------------------------------
+set(prefix 		${CMAKE_INSTALL_PREFIX})
+set(exec_prefix		"\${prefix}")
+set(libdir		"\${exec_prefix}/lib")
+set(includedir		"\${prefix}/include")
+set(VERSION             ${OPENCV_VERSION})
+
+configure_file("${CMAKE_SOURCE_DIR}/opencv.pc.in" "${CMAKE_BINARY_DIR}/unix-install/opencv.pc" @ONLY IMMEDIATE)
+
+if(UNIX)
+    install(FILES ${CMAKE_BINARY_DIR}/unix-install/opencv.pc DESTINATION lib/pkgconfig)
+endif()
+
+
+# ----------------------------------------------------------------------------
+#   Uninstall target, for "make uninstall"
+# ----------------------------------------------------------------------------
+CONFIGURE_FILE(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
+
+ADD_CUSTOM_TARGET(uninstall
+  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
 
 # ----------------------------------------------------------------------------
 #   Sumary:
