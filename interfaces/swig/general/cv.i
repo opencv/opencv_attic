@@ -87,11 +87,14 @@
 %ignore cvCloneImage;
 %rename (cvCloneImage) cvCloneImageMat;
 %inline %{
-extern const signed char icvDepthToType[];
-#define icvIplToCvDepth( depth ) \
-    icvDepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
 CvMat * cvCreateImageMat( CvSize size, int depth, int channels ){
-	depth = icvIplToCvDepth(depth);
+    static const signed char icvDepthToType[]=
+    {
+        -1, -1, CV_8U, CV_8S, CV_16U, CV_16S, -1, -1,
+        CV_32F, CV_32S, -1, -1, -1, -1, -1, -1, CV_64F, -1
+    };
+
+	depth = icvDepthToType[((depth & 255) >> 2) + (depth < 0)];
 	return cvCreateMat( size.height, size.width, CV_MAKE_TYPE(depth, channels));
 }
 #define cvCloneImageMat( mat ) cvCloneMat( mat )

@@ -2,6 +2,15 @@
 #include <iostream>
 #include <sstream>
 
+#if defined WIN32 && defined _MSC_VER
+
+CvModuleInfo* CvModule::first = 0;
+CvModuleInfo* CvModule::last = 0;
+CvTypeInfo* CvType::first = 0;
+CvTypeInfo* CvType::last = 0;
+
+#endif
+
 int PySwigObject_Check(PyObject *op);
 
 /* Py_ssize_t for old Pythons */
