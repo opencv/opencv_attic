@@ -60,4 +60,6 @@ install(TARGETS haartraining RUNTIME DESTINATION bin)
 install(TARGETS createsamples RUNTIME DESTINATION bin)
 install(TARGETS performance RUNTIME DESTINATION bin)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/data/haarcascades DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opencv/haarcascades)
+file(GLOB HAAR_CASCADES ${CMAKE_SOURCE_DIR}/data/haarcascades/*.xml)
+
+install(FILES ${HAAR_CASCADES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opencv/haarcascades)
