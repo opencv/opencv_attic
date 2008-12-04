@@ -88,6 +88,14 @@ get_target_property(LOC_HIGHGUI ${SWIG_MODULE_highgui_REAL_NAME} LOCATION)
 
 # ------------------------------ installation ----------------------------------
 
+if(WIN32)
+    set_target_properties(
+        ${SWIG_MODULE_cv_REAL_NAME}
+        ${SWIG_MODULE_ml_REAL_NAME}
+        ${SWIG_MODULE_highgui_REAL_NAME}
+        PROPERTIES SUFFIX ".pyd")
+endif()
+
 set(pyopencv_files __init__.py adaptors.py matlab_syntax.py
     ${CMAKE_CURRENT_BINARY_DIR}/cv.py
     ${CMAKE_CURRENT_BINARY_DIR}/ml.py
