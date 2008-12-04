@@ -10,6 +10,10 @@ include_directories(${PYTHON_INCLUDE_PATH})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../filtered)
 
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+endif()
+
 # ----------------------------------- cv module ------------------------------
 
 set_source_files_properties(cv.i PROPERTIES
@@ -40,10 +44,8 @@ set(SWIG_MODULE_cv_EXTRA_DEPS
     ../general/sizeof.i ../general/cvmacros.i
     )
 
-SWIG_ADD_MODULE(cv python cv.i cvshadow.cpp error.cpp pyhelpers.cpp)
+SWIG_ADD_MODULE(cv python cv.i cvshadow.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h cvshadow.h pycvseq.hpp)
 SWIG_LINK_LIBRARIES(cv ${PYTHON_LIBRARIES} cxcore cv)
-
-add_dependencies(${SWIG_MODULE_cv_REAL_NAME} error.h pyhelpers.h cvshadow.h pycvseq.hpp)
 
 # ----------------------------------- ml module ------------------------------
 
@@ -59,10 +61,8 @@ set(SWIG_MODULE_ml_EXTRA_DEPS
     ${CMAKE_SOURCE_DIR}/ml/include/ml.h
     )
 
-SWIG_ADD_MODULE(ml python ml.i pyhelpers.cpp)
+SWIG_ADD_MODULE(ml python ml.i pyhelpers.cpp pyhelpers.h)
 SWIG_LINK_LIBRARIES(ml ${PYTHON_LIBRARIES} cxcore ml)
-
-add_dependencies(${SWIG_MODULE_ml_REAL_NAME} pyhelpers.h)
 
 # --------------------------------highgui module ------------------------------
 
@@ -79,10 +79,8 @@ set(SWIG_MODULE_highgui_EXTRA_DEPS
     ${CMAKE_SOURCE_DIR}/otherlibs/highgui/highgui.h
     )
 
-SWIG_ADD_MODULE(highgui python highgui.i pyhelpers.cpp)
+SWIG_ADD_MODULE(highgui python highgui.i pyhelpers.cpp pyhelpers.h)
 SWIG_LINK_LIBRARIES(highgui ${PYTHON_LIBRARIES} cxcore cv highgui)
-
-add_dependencies(${SWIG_MODULE_highgui_REAL_NAME} pyhelpers.h)
 
 get_target_property(LOC_CV ${SWIG_MODULE_cv_REAL_NAME} LOCATION)
 get_target_property(LOC_ML ${SWIG_MODULE_ml_REAL_NAME} LOCATION)
