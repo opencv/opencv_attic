@@ -193,7 +193,7 @@ if(UNIX)
         set(HAVE_FFMPEG 1)
     endif()
 
-    CHECK_MODULE(libadc1394 HAVE_DC1394)
+    CHECK_MODULE(libdc1394 HAVE_DC1394)
 
     CHECK_MODULE(libxine HAVE_XINE)
 
@@ -218,19 +218,18 @@ if(UNIX)
     endif()    
 endif()
 
-# ===================================================
-# Check for Python libraries
-# ===================================================
+set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with Python support")
+set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 
-include(FindPythonLibs)
-include(FindPythonInterp)
+find_package(SWIG)
+if(SWIG_FOUND)
+
+find_package(PythonInterp)
+find_package(PythonLibs)
 
 # Build with python if installes:
 # ===================================================
-set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with python support if installed")
-
 if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-    #LIST(APPEND OPENCV_LINKER_LIBS ${PYTHON_LIBRARIES})
     execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
               ERROR_VARIABLE PYTHON_VERSION_FULL 
               OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -243,6 +242,22 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
         get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
         set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
     endif()
+endif()
+
+endif()
+
+# ---------------------------------------------------------------
+#   "Classic" function & headers detection:
+# ---------------------------------------------------------------
+if(UNIX)
+    if(NOT APPLE)
+        CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
+        CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
+        CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
+        CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
+    else()
+        add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
+    endif()    
 endif()
 
 # ----------------------------------------------------------------------------
@@ -407,7 +422,7 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
+if(SWIG_FOUND)
     add_subdirectory(interfaces)
 endif()
 

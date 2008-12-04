@@ -1,1 +1,6 @@
-add_subdirectory(python)
+if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
+    add_subdirectory(python)
+endif()
+if(OCTAVE_FOUND AND BUILD_OCTAVE_SUPPORT)
+    add_subdirectory(octave)
+endif()
