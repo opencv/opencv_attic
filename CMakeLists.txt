@@ -414,8 +414,8 @@ if(BUILD_EXAMPLES)
     add_subdirectory(samples)
 endif()
 
-#add_subdirectory(apps)
-#add_subdirectory(doc)
+add_subdirectory(apps)
+add_subdirectory(docs)
 
 if(BUILD_TESTS)
     enable_testing()
