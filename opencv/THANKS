@@ -20,6 +20,7 @@ Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Alekseev, Aleksey       Intel Corp.                IppCV testing
 Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 
+Baksheev, Anatoly       Argus CV                   CMake support for OpenCV
 Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
@@ -33,6 +34,7 @@ Burenkov, Denis         Moscow State Uni           Contour morphing, several dem
 Cherepanova, Tatiana    Novosibirsk University     Face tracking
 Cherepennikov, Valery   Intel Corp.                Optimization, matrices, estimators (Kalman, ConDensation) and more ...
 Chudinovich, Boris      Intel Corp.                Ideas and algorithms on contours and comp. geometry functions
+Conbere, Morgan         ???                        Image I/O on MacOSX
 Cowperthwaite, David    Intel Corp.                3d Tracker
 
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
