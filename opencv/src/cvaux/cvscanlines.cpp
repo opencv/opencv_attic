@@ -1485,7 +1485,7 @@ icvGetCoefficientStereo( CvMatrix3 * matrix,
     r_radius = (float) sqrt( (double)MAX( MAX( radius1, radius2 ), MAX( radius3, radius4 )));
 
     if( l_start_end[0] == 2 && r_start_end[0] == 2 )
-
+    {
         if( l_radius > r_radius )
         {
 
@@ -1499,7 +1499,6 @@ icvGetCoefficientStereo( CvMatrix3 * matrix,
                                                 l_radius, scanlines_1, scanlines_2, numlines );
 
             return error;
-
         }
         else
         {
@@ -1516,6 +1515,7 @@ icvGetCoefficientStereo( CvMatrix3 * matrix,
 
             return error;
         }                       /* if */
+    }
 
     if( l_start_end[0] == 2 )
     {
@@ -2011,11 +2011,11 @@ cvMakeScanlines( const CvMatrix3* matrix, CvSize imgSize,
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name: cvDeleteMoire
-//    Purpose: The functions 
+//    Purpose: The functions
 //    Context:
-//    Parameters:  
+//    Parameters:
 //
-//    Notes:  
+//    Notes:
 //F*/
 CV_IMPL void
 cvMakeAlphaScanlines( int *scanlines_1,

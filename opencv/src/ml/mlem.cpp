@@ -94,7 +94,7 @@ CvEM::~CvEM()
 void CvEM::clear()
 {
     int i;
-    
+
     cvReleaseMat( &means );
     cvReleaseMat( &weights );
     cvReleaseMat( &probs );
@@ -121,7 +121,7 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
     CV_FUNCNAME( "CvEM::set_params" );
 
     __BEGIN__;
-    
+
     int k;
 
     params = _params;
@@ -155,8 +155,8 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
     {
         const CvMat* p = params.weights;
         if( !CV_IS_MAT(p) ||
-            CV_MAT_TYPE(p->type) != CV_32FC1  &&
-            CV_MAT_TYPE(p->type) != CV_64FC1 ||
+            (CV_MAT_TYPE(p->type) != CV_32FC1  &&
+            CV_MAT_TYPE(p->type) != CV_64FC1) ||
             p->rows != train_data.count ||
             p->cols != params.nclusters )
             CV_ERROR( CV_StsBadArg, "The array of probabilities must be a valid "
@@ -167,8 +167,8 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
     {
         const CvMat* m = params.means;
         if( !CV_IS_MAT(m) ||
-            CV_MAT_TYPE(m->type) != CV_32FC1  &&
-            CV_MAT_TYPE(m->type) != CV_64FC1 ||
+            (CV_MAT_TYPE(m->type) != CV_32FC1  &&
+            CV_MAT_TYPE(m->type) != CV_64FC1) ||
             m->rows != params.nclusters ||
             m->cols != train_data.dims )
             CV_ERROR( CV_StsBadArg, "The array of mean's must be a valid "
@@ -179,9 +179,9 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
     {
         const CvMat* w = params.weights;
         if( !CV_IS_MAT(w) ||
-            CV_MAT_TYPE(w->type) != CV_32FC1  &&
-            CV_MAT_TYPE(w->type) != CV_64FC1 ||
-            w->rows != 1 && w->cols != 1 ||
+            (CV_MAT_TYPE(w->type) != CV_32FC1  &&
+            CV_MAT_TYPE(w->type) != CV_64FC1) ||
+            (w->rows != 1 && w->cols != 1) ||
             w->rows + w->cols - 1 != params.nclusters )
             CV_ERROR( CV_StsBadArg, "The array of weights must be a valid "
             "1d floating-point vector (CvMat) of 'nclusters' elements" );
@@ -192,8 +192,8 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
         {
             const CvMat* cov = params.covs[k];
             if( !CV_IS_MAT(cov) ||
-                CV_MAT_TYPE(cov->type) != CV_32FC1  &&
-                CV_MAT_TYPE(cov->type) != CV_64FC1 ||
+                (CV_MAT_TYPE(cov->type) != CV_32FC1  &&
+                CV_MAT_TYPE(cov->type) != CV_64FC1) ||
                 cov->rows != cov->cols || cov->cols != train_data.dims )
                 CV_ERROR( CV_StsBadArg,
                 "Each of covariation matrices must be a valid square "
@@ -330,7 +330,7 @@ bool CvEM::train( const CvMat* _samples, const CvMat* _sample_idx,
     dims = train_data.dims;
 
     if( labels && (!CV_IS_MAT(labels) || CV_MAT_TYPE(labels->type) != CV_32SC1 ||
-        labels->cols != 1 && labels->rows != 1 || labels->cols + labels->rows - 1 != nsamples ))
+        (labels->cols != 1 && labels->rows != 1) || labels->cols + labels->rows - 1 != nsamples ))
         CV_ERROR( CV_StsBadArg,
         "labels array (when passed) must be a valid 1d integer vector of <sample_count> elements" );
 
@@ -368,7 +368,7 @@ bool CvEM::train( const CvMat* _samples, const CvMat* _sample_idx,
             CvMat sample = cvMat( 1, dims, CV_32F );
             CvMat prob = cvMat( 1, nclusters, CV_64F );
             int lstep = CV_IS_MAT_CONT(labels->type) ? 1 : labels->step/sizeof(int);
-            
+
             for( i = 0; i < nsamples; i++ )
             {
                 int idx = sample_idx ? sample_idx->data.i[i] : i;
@@ -396,7 +396,7 @@ bool CvEM::train( const CvMat* _samples, const CvMat* _sample_idx,
 void CvEM::init_em( const CvVectors& train_data )
 {
     CvMat *w = 0, *u = 0, *tcov = 0;
-    
+
     CV_FUNCNAME( "CvEM::init_em" );
 
     __BEGIN__;
@@ -512,7 +512,7 @@ void CvEM::init_auto( const CvVectors& train_data )
     else
     {
         int max_count = 0;
-        
+
         CV_CALL( class_ranges = cvCreateMat( 1, nclusters+1, CV_32SC1 ));
         if( nclusters > 1 )
         {
@@ -541,19 +541,19 @@ void CvEM::init_auto( const CvVectors& train_data )
             vec[i] = hdr + i;
             hdr[i] = hdr[0];
         }
-                
+
         for( i = 0; i < nclusters; i++ )
         {
             int left = class_ranges->data.i[i], right = class_ranges->data.i[i+1];
             int cluster_size = right - left;
             CvMat avg;
-            
+
             if( cluster_size <= 0 )
                 continue;
 
             for( j = left; j < right; j++ )
                 hdr[j - left].data.fl = train_data.data.fl[j];
-            
+
             CV_CALL( cvGetRow( means, &avg, i ));
             CV_CALL( cvCalcCovarMatrix( vec, cluster_size, covs[i],
                 &avg, CV_COVAR_NORMAL | CV_COVAR_SCALE ));
@@ -576,7 +576,7 @@ void CvEM::kmeans( const CvVectors& train_data, int nclusters, CvMat* labels,
     CvMat* centers = 0;
     CvMat* old_centers = 0;
     CvMat* counters = 0;
-    
+
     CV_FUNCNAME( "CvEM::kmeans" );
 
     __BEGIN__;
@@ -624,7 +624,7 @@ void CvEM::kmeans( const CvVectors& train_data, int nclusters, CvMat* labels,
                 {
                     const double* c = (double*)(centers->data.ptr + k*centers->step);
                     double dist = 0;
-                
+
                     for( j = 0; j <= dims - 4; j += 4 )
                     {
                         double t0 = c[j] - s[j];
@@ -640,7 +640,7 @@ void CvEM::kmeans( const CvVectors& train_data, int nclusters, CvMat* labels,
                         double t = c[j] - s[j];
                         dist += t*t;
                     }
-                
+
                     if( min_dist > dist )
                     {
                         min_dist = dist;
@@ -710,7 +710,7 @@ void CvEM::kmeans( const CvVectors& train_data, int nclusters, CvMat* labels,
                 for( j = 0; j < dims; j++ )
                     c[j] = s[j];
             }
-            
+
             if( iter > 1 )
             {
                 double dist = 0;
@@ -791,7 +791,7 @@ double CvEM::run_em( const CvVectors& train_data )
     double min_det_value = MAX( DBL_MIN, pow( min_variation, dims ));
     double likelihood_bias = -CV_LOG2PI * (double)nsamples * (double)dims / 2., _log_likelihood = -DBL_MAX;
     int start_step = params.start_step;
-    
+
     int i, j, k, n;
     int is_general = 0, is_diagonal = 0, is_spherical = 0;
     double prev_log_likelihood = -DBL_MAX / 1000., det, d;
@@ -814,12 +814,12 @@ double CvEM::run_em( const CvVectors& train_data )
         else
         {
             w_data = inv_eigen_values->data.db;
-            
+
             if( params.cov_mat_type == COV_MAT_GENERIC )
                 cvSVD( *covs, inv_eigen_values, *cov_rotate_mats, 0, CV_SVD_U_T );
             else
                 cvTranspose( cvGetDiag(*covs, &diag), inv_eigen_values );
-       
+
             cvMaxS( inv_eigen_values, FLT_EPSILON, inv_eigen_values );
             for( j = 0, det = 1.; j < dims; j++ )
                 det *= w_data[j];
@@ -899,7 +899,7 @@ double CvEM::run_em( const CvVectors& train_data )
                 log_det->data.db[k] = d;
             }
         }
-    
+
         cvLog( log_det, log_det );
         if( is_spherical )
             cvScale( log_det, log_det, dims );
@@ -980,7 +980,7 @@ double CvEM::run_em( const CvVectors& train_data )
         {
             double sum = sp_data[k], inv_sum = 1./sum;
             CvMat* cov = covs[k], _mean, _sample;
-            
+
             w = cvGetRow( cov_eigen_values, &whdr, k );
             w_data = w->data.db;
             cvGetRow( means, &_mean, k );
@@ -988,7 +988,7 @@ double CvEM::run_em( const CvVectors& train_data )
 
             // update weights_k
             weights->data.db[k] = sum;
-            
+
             // update means_k
             cvScale( &_mean, &_mean, inv_sum );
 
@@ -1013,7 +1013,7 @@ double CvEM::run_em( const CvVectors& train_data )
                         w_data[is_spherical ? 0 : j] += p*val*val;
                     }
             }
-            
+
             if( is_spherical )
             {
                 d = w_data[0]/(double)dims;
@@ -1046,7 +1046,7 @@ double CvEM::run_em( const CvVectors& train_data )
         cvScale( log_weights, log_weight_div_det, -2 );
         cvAdd( log_weight_div_det, log_det, log_weight_div_det );
     }
-    
+
     /* Now finalize all the covariation matrices:
     1) if <cov_mat_type> == COV_MAT_DIAGONAL we used array of <w> as diagonals.
        Now w[k] should be copied back to the diagonals of covs[k];

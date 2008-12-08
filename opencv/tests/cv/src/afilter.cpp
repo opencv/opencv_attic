@@ -108,7 +108,7 @@ int CV_FilterBaseTestImpl::write_default_params( CvFileStorage* fs )
     int code = CvArrTest::write_default_params( fs );
     if( code < 0 )
         return code;
-    
+
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
         write_param( fs, "max_aperture_size", max_aperture_size );
@@ -198,7 +198,7 @@ int CV_FilterBaseTestImpl::prepare_test_case( int test_case_idx )
 void CV_FilterBaseTestImpl::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* src = &test_mat[INPUT][0];
-    
+
     if( !CV_ARE_TYPES_EQ( src, &test_mat[TEMP][0] ))
     {
         cvTsConvert( src, &test_mat[REF_OUTPUT][0] );
@@ -338,7 +338,7 @@ int CV_MorphologyBaseTestImpl::prepare_test_case( int test_case_idx )
 
     if( code <= 0 )
         return code;
-    
+
     if( shape == CV_SHAPE_CUSTOM )
     {
         eldata = (int*)alloca( aperture_size.width*aperture_size.height*sizeof(eldata[0]) );
@@ -358,7 +358,7 @@ int CV_MorphologyBaseTestImpl::prepare_test_case( int test_case_idx )
         if( nonzero == 0 )
             eldata[anchor.y*aperture_size.width + anchor.x] = 1;
     }
-    
+
     cvReleaseStructuringElement( &element );
     element = cvCreateStructuringElementEx( aperture_size.width, aperture_size.height,
                                             anchor.x, anchor.y, shape, eldata );
@@ -460,7 +460,7 @@ protected:
     void run_func();
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int test_case_idx, int i, int j );
-    
+
     void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool *are_images );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
@@ -669,7 +669,7 @@ void CV_SobelTest::get_test_array_types_and_sizes( int test_case_idx,
         int t;
         CV_SWAP( dx, dy, t );
     }
-    
+
     if( _aperture_size < 0 )
         aperture_size = cvSize(3, 3);
     else if( _aperture_size == 1 )
@@ -725,7 +725,7 @@ void CV_SobelTest::get_timing_test_array_types_and_sizes( int test_case_idx,
 int CV_SobelTest::prepare_test_case( int test_case_idx )
 {
     int code = CV_DerivBaseTest::prepare_test_case( test_case_idx );
-    
+
     if( code > 0 )
     {
         if( _aperture_size < 0 && ((dx != 1 || dy != 0) && (dx != 0 || dy != 1)) )
@@ -882,7 +882,7 @@ void CV_LaplaceTest::get_test_array_types_and_sizes( int test_case_idx,
     }
     else
         aperture_size = cvSize(_aperture_size, _aperture_size);
-        
+
     sizes[INPUT][1] = aperture_size;
     sizes[TEMP][0].width = sizes[INPUT][0].width + aperture_size.width - 1;
     sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;
@@ -1022,7 +1022,7 @@ void CV_SmoothBaseTest::get_timing_test_array_types_and_sizes( int test_case_idx
 {
     CV_FilterBaseTest::get_timing_test_array_types_and_sizes( test_case_idx,
                                     sizes, types, whole_sizes, are_images );
-    
+
     aperture_size.width = aperture_size.height = cvReadInt( find_timing_param( "mask_size" ), 3 );
     anchor.x = anchor.y = aperture_size.width / 2;
     sizes[INPUT][1] = aperture_size;
@@ -1077,7 +1077,7 @@ void CV_BlurTest::get_test_array_types_and_sizes( int test_case_idx,
     if( !normalize )
     {
         int depth = CV_MAT_DEPTH(types[INPUT][0]);
-        types[INPUT][0] = CV_MAKETYPE(depth, 1); 
+        types[INPUT][0] = CV_MAKETYPE(depth, 1);
         types[TEMP][0] = types[OUTPUT][0] =
             types[REF_OUTPUT][0] = CV_MAKETYPE(depth==CV_8U?CV_16S:CV_32F,1);
     }
@@ -1179,7 +1179,7 @@ void CV_GaussianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
     anchor = cvPoint(aperture_size.width/2,aperture_size.height/2);
     sizes[TEMP][0].width = sizes[INPUT][0].width + aperture_size.width - 1;
     sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;
-    
+
     sigma = exp(cvTsRandReal(rng)*5-2);
     param1 = aperture_size.width;
     param2 = aperture_size.height;
@@ -1227,7 +1227,7 @@ void CV_GaussianBlurTest::run_func()
 static void
 icvCalcGaussianKernel( int n, double sigma, float* kernel )
 {
-    static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] = 
+    static const float small_gaussian_tab[][SMALL_GAUSSIAN_SIZE] =
     {
         {1.f},
         {0.25f, 0.5f, 0.25f},
@@ -1247,7 +1247,7 @@ icvCalcGaussianKernel( int n, double sigma, float* kernel )
         double sum = 1.;
         int i;
         sum = kernel[n/2] = 1.f;
-    
+
         for( i = 1; i <= n/2; i++ )
         {
             kernel[n/2+i] = kernel[n/2-i] = (float)exp(scale2X*i*i);
@@ -1324,7 +1324,7 @@ void CV_MedianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
     int cn = CV_MAT_CN(types[INPUT][0]);
     types[INPUT][0] = types[TEMP][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_MAKETYPE(depth,cn);
     types[INPUT][1] = types[TEMP][0] = types[TEMP][1] = CV_MAKETYPE(depth,1);
-    
+
     aperture_size.height = aperture_size.width;
     anchor.x = anchor.y = aperture_size.width / 2;
     sizes[INPUT][1] = cvSize(aperture_size.width,aperture_size.height);
@@ -1336,7 +1336,7 @@ void CV_MedianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
 
     sizes[TEMP][0].width = sizes[INPUT][0].width + aperture_size.width - 1;
     sizes[TEMP][0].height = sizes[INPUT][0].height + aperture_size.height - 1;
-    
+
     sizes[TEMP][1] = cn > 1 ? sizes[INPUT][0] : cvSize(0,0);
     inplace = false;
 }
@@ -1559,7 +1559,7 @@ void CV_PyramidBaseTest::get_test_array_types_and_sizes( int test_case_idx, CvSi
         sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = sz;
         sizes[TEMP][1] = cvSize(0,0);
     }
-    
+
     sizes[INPUT][1] = aperture_size;
     sizes[TEMP][0].width = sz.width + aperture_size.width - 1;
     sizes[TEMP][0].height = sz.height + aperture_size.height - 1;
@@ -1593,7 +1593,7 @@ int CV_PyramidBaseTest::prepare_test_case( int test_case_idx )
     double scale = 1./256;
     CvMat* kernel;
     int code = CV_FilterBaseTest::prepare_test_case( test_case_idx );
-    
+
     if( code <= 0 )
         return code;
 
@@ -1629,7 +1629,7 @@ static void cvTsDownsample( const CvMat* src, CvMat* dst )
         elem_size /= sizeof(int);
         ncols /= sizeof(int);
     }
-    
+
     for( i = 0; i < dst->rows; i++ )
     {
         const uchar* src_row = src->data.ptr + i*2*src->step;
@@ -1705,7 +1705,7 @@ static void cvTsUpsample( const CvMat* src, CvMat* dst )
         elem_size /= sizeof(int);
         ncols /= sizeof(int);
     }
-    
+
     for( i = 0; i < src->rows; i++ )
     {
         const uchar* src_row = src->data.ptr + i*src->step;
@@ -1790,7 +1790,7 @@ CV_PyramidUpTest pyrup;
 //////////////////////// feature selection //////////////////////////
 
 static const char* featuresel_param_names[] = { "block_size", "aperture", "size", "depth", 0 };
-static const int featuresel_block_size[] = { 3, 5, 11 }; 
+static const int featuresel_block_size[] = { 3, 5, 11 };
 
 class CV_FeatureSelBaseTestImpl : public CvArrTest
 {
@@ -1855,7 +1855,7 @@ int CV_FeatureSelBaseTestImpl::write_default_params( CvFileStorage* fs )
     int code = CvArrTest::write_default_params( fs );
     if( code < 0 )
         return code;
-    
+
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
         write_param( fs, "max_aperture_size", max_aperture_size );
@@ -1983,7 +1983,7 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
     CvMat *dx2 = 0, *dxdy = 0, *dy2 = 0;
     CvMat* kernel = 0, *src2 = 0;
     const CvMat* src = _src;
-    
+
     int type, ftype;
     double denom;
 
@@ -2000,12 +2000,12 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
             CV_MAT_TYPE(eigenv->type) == CV_32FC1 );
 
     assert( src->rows == eigenv->rows &&
-            (mode > 0 && src->cols == eigenv->cols ||
-            mode == 0 && src->cols*6 == eigenv->cols) );
+            ((mode > 0 && src->cols == eigenv->cols) ||
+            (mode == 0 && src->cols*6 == eigenv->cols)) );
 
     type = CV_MAT_TYPE(src->type);
     ftype = CV_32FC1;
-    
+
     CV_CALL( dx2 = cvCreateMat( src->rows, src->cols, ftype ));
     CV_CALL( dy2 = cvCreateMat( src->rows, src->cols, ftype ));
     CV_CALL( dxdy = cvCreateMat( src->rows, src->cols, ftype ));
@@ -2019,7 +2019,7 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
         cvTsAdd( src, cvScalarAll(1./255), 0, cvScalarAll(0.), cvScalarAll(0.), dx2, 0 );
         src = dx2;
     }
-    
+
     cvTsPrepareToFilter( src, src2, anchor, CV_TS_BORDER_REPLICATE );
     cvTsCalcSobelKernel2D( 1, 0, _aperture_size, 0, kernel );
     cvTsConvolve2D( src2, dx2, kernel, anchor );
@@ -2053,7 +2053,7 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
     CV_CALL( kernel = cvCreateMat( block_size, block_size, CV_32F ));
     cvTsAdd( 0, cvScalarAll(0), 0, cvScalarAll(0), cvScalarAll(1./*(block_size*block_size)*/), kernel, 0 );
     anchor = cvPoint( block_size/2, block_size/2 );
-    
+
     cvTsPrepareToFilter( dx2, src2, anchor, CV_TS_BORDER_REPLICATE );
     cvTsConvolve2D( src2, dx2, kernel, anchor );
     cvTsPrepareToFilter( dy2, src2, anchor, CV_TS_BORDER_REPLICATE );
@@ -2095,12 +2095,12 @@ cvTsCornerEigenValsVecs( const CvMat* _src, CvMat* eigenv, CvMat* ocv_eigenv,
 
                 /* the orientation of eigen vectors might be inversed relative to OpenCV function,
                    which is normal */
-                if( fabs(x1) >= fabs(y1) && ocv_eigenvp[j*6+2]*x1 < 0 ||
-                    fabs(x1) < fabs(y1) && ocv_eigenvp[j*6+3]*y1 < 0 )
+                if( (fabs(x1) >= fabs(y1) && ocv_eigenvp[j*6+2]*x1 < 0) ||
+                    (fabs(x1) < fabs(y1) && ocv_eigenvp[j*6+3]*y1 < 0) )
                     x1 = -x1, y1 = -y1;
 
-                if( fabs(x2) >= fabs(y2) && ocv_eigenvp[j*6+4]*x2 < 0 ||
-                    fabs(x2) < fabs(y2) && ocv_eigenvp[j*6+5]*y2 < 0 )
+                if( (fabs(x2) >= fabs(y2) && ocv_eigenvp[j*6+4]*x2 < 0) ||
+                    (fabs(x2) < fabs(y2) && ocv_eigenvp[j*6+5]*y2 < 0) )
                     x2 = -x2, y2 = -y2;
 
                 eigenvp[j*6] = (float)l1;
@@ -2212,7 +2212,7 @@ CV_EigenValVecTest features_evalvec;
 
 
 static const char* precorner_param_names[] = { "aperture", "size", "depth", 0 };
-static const int precorner_aperture[] = { 3, 5, 7 }; 
+static const int precorner_aperture[] = { 3, 5, 7 };
 
 // precornerdetect
 class CV_PreCornerDetectTest : public CV_FeatureSelBaseTest
@@ -2240,7 +2240,7 @@ int CV_PreCornerDetectTest::write_default_params( CvFileStorage* fs )
     int code = CV_FeatureSelBaseTest::write_default_params( fs );
     if( code < 0 )
         return code;
-    
+
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
         start_write_param( fs );
@@ -2410,12 +2410,12 @@ int CV_IntegralTest::write_default_params( CvFileStorage* fs )
     int code = CvArrTest::write_default_params( fs );
     if( code < 0 )
         return code;
-    
+
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
         int i;
-        start_write_param( fs );        
-        
+        start_write_param( fs );
+
         cvStartWriteStruct( fs, "sum_depth", CV_NODE_SEQ+CV_NODE_FLOW );
         for( i = 0; integral_sum_depth[i] >= 0; i++ )
             cvWriteString( fs, 0, cvTsGetTypeName(integral_sum_depth[i]) );
@@ -2436,7 +2436,7 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
     int cn = cvTsRandInt(rng) % 3 + 1;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     CvSize sum_size;
-    
+
     depth = depth == 0 ? CV_8U : CV_32F;
     cn += cn == 2;
     sum_depth = depth == CV_8U && (cvTsRandInt(rng) & 1) == 1 ? CV_32S : CV_64F;
@@ -2525,7 +2525,7 @@ void CV_IntegralTest::print_timing_params( int test_case_idx, char* ptr, int par
 int CV_IntegralTest::prepare_test_case( int test_case_idx )
 {
     int code = CvArrTest::prepare_test_case( test_case_idx );
-    return code > 0 && (test_array[OUTPUT][2] && CV_MAT_CN(test_mat[OUTPUT][2].type) > 1 ||
+    return code > 0 && ((test_array[OUTPUT][2] && CV_MAT_CN(test_mat[OUTPUT][2].type) > 1) ||
         CV_MAT_DEPTH(test_mat[OUTPUT][0].type) < CV_MAT_DEPTH(test_mat[INPUT][0].type)) ? 0 : code;
 }
 
@@ -2569,14 +2569,14 @@ cvTsIntegral( const CvMat* img, const CvMat* sum, const CvMat* sqsum, const CvMa
             double t = x > 0 ? data[x-1] : 0, ts = t;
             s += t;
             sq += t*t;
-            
+
             sdata[x] = s + sdata[x - sstep];
             if( sqdata )
                 sqdata[x] = sq + sqdata[x - sqstep];
-            
+
             if( !tdata )
                 continue;
-            
+
             if( x == 0 )
                 ts += tdata[-tstep+1];
             else

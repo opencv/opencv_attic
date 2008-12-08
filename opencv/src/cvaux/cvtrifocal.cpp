@@ -119,7 +119,7 @@ void fprintMatrix(FILE* file,CvMat* matrix)
 void icvNormalizePoints( CvMat* points, CvMat* normPoints,CvMat* cameraMatr )
 {
     /* Normalize image points using camera matrix */
-    
+
     CV_FUNCNAME( "icvNormalizePoints" );
     __BEGIN__;
 
@@ -128,7 +128,7 @@ void icvNormalizePoints( CvMat* points, CvMat* normPoints,CvMat* cameraMatr )
     {
         CV_ERROR( CV_StsNullPtr, "Some of parameters is a NULL pointer" );
     }
-    
+
     if( !CV_IS_MAT(points) || !CV_IS_MAT(normPoints) || !CV_IS_MAT(cameraMatr) )
     {
         CV_ERROR( CV_StsUnsupportedFormat, "Input parameters must be a matrices" );
@@ -210,8 +210,8 @@ int icvComputeProjectMatrices6Points( CvMat* points1,CvMat* points2,CvMat* point
     }
 
     if( projMatr1->cols != 4 || projMatr2->cols != 4 || projMatr3->cols != 4 ||
-        !(projMatr1->rows == 3 && projMatr2->rows == 3 && projMatr3->rows == 3) &&
-        !(projMatr1->rows == 9 && projMatr2->rows == 9 && projMatr3->rows == 9) )
+        (!(projMatr1->rows == 3 && projMatr2->rows == 3 && projMatr3->rows == 3) &&
+        !(projMatr1->rows == 9 && projMatr2->rows == 9 && projMatr3->rows == 9)) )
     {
         CV_ERROR( CV_StsUnmatchedSizes, "Size of project matrix must be 3x4 or 9x4 (for 3 matrices)" );
     }
@@ -254,7 +254,7 @@ int icvComputeProjectMatrices6Points( CvMat* points1,CvMat* points2,CvMat* point
         /* find base points transform for last four points on i-th image */
         cvGetSubRect(points[i],&tmpPoints,cvRect(2,0,4,2));
         icvFindBaseTransform(&tmpPoints,&transMatr);
-        
+
         {/* We have base transform. Compute error scales for three first points */
             CvMat trPoint;
             double trPoint_dat[3*3];
@@ -266,7 +266,7 @@ int icvComputeProjectMatrices6Points( CvMat* points1,CvMat* points2,CvMat* point
                 cvmSet(&trPoint,1,kk,cvmGet(points[i],1,kk+2));
                 cvmSet(&trPoint,2,kk,1);
             }
-            
+
             /* Transform points */
             CvMat resPnts;
             double resPnts_dat[9];
@@ -424,7 +424,7 @@ int icvGetRandNumbers(int range,int count,int* arr)
     {
         CV_ERROR( CV_StsOutOfRange, "Can't generate such numbers. Count must be <= range and range must be > 0" );
     }
-    
+
     int i,j;
     int newRand;
     for( i = 0; i < count; i++ )
@@ -446,7 +446,7 @@ int icvGetRandNumbers(int range,int count,int* arr)
                 }
             }
         } while(haveRep);
-        
+
         /* We have good random number */
         arr[i] = newRand;
     }
@@ -475,7 +475,7 @@ void icvSelectColsByNumbers(CvMat* srcMatr, CvMat* dstMatr, int* indexes,int num
     int numRows;
     numRows = srcMatr->rows;
     srcSize = srcMatr->cols;
-    
+
     if( numRows != dstMatr->rows )
     {
         CV_ERROR( CV_StsOutOfRange, "Number of rows of matrices must be the same" );
@@ -505,11 +505,11 @@ void icvProject4DPoints(CvMat* points4D,CvMat* projMatr, CvMat* projPoints)
 {
 
     CvMat* tmpProjPoints = 0;
-    
+
     CV_FUNCNAME( "icvProject4DPoints" );
-    
+
     __BEGIN__;
-    
+
     if( points4D == 0 || projMatr == 0 || projPoints == 0)
     {
         CV_ERROR( CV_StsNullPtr, "Some of parameters is a NULL pointer" );
@@ -551,7 +551,7 @@ void icvProject4DPoints(CvMat* points4D,CvMat* projMatr, CvMat* projPoints)
     CV_CALL( tmpProjPoints = cvCreateMat(3,numPoints,CV_64F) );
 
     cvmMul(projMatr,points4D,tmpProjPoints);
-    
+
     /* Scale points */
     int i;
     for( i = 0; i < numPoints; i++ )
@@ -675,7 +675,7 @@ int icvCompute3ProjectMatricesNPointsStatus( CvMat** points,/* 3 arrays of point
 
 
     /* Create common status for all points */
-    
+
     int i;
 
     CV_CALL( comStat = (unsigned char*)cvAlloc(sizeof(unsigned char)*numPoints) );
@@ -903,7 +903,7 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
         tmpProjMatr[1] = cvMat(9,4,CV_64F,tmpProjMatr_dat+36);
         tmpProjMatr[2] = cvMat(9,4,CV_64F,tmpProjMatr_dat+72);
 
-        /* choosen points */        
+        /* choosen points */
 
         while( wasCount < NumSamples )
         {
@@ -924,7 +924,7 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
             icvSelectColsByNumbers( points[0], &selPoints[0], randNumbs,6);
             icvSelectColsByNumbers( points[1], &selPoints[1], randNumbs,6);
             icvSelectColsByNumbers( points[2], &selPoints[2], randNumbs,6);
-            
+
             /* Compute projection matrices for this points */
             int numProj = icvComputeProjectMatrices6Points( &selPoints[0],&selPoints[1],&selPoints[2],
                                                             &tmpProjMatr[0],&tmpProjMatr[1],&tmpProjMatr[2]);
@@ -1001,7 +1001,7 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
                     {
                         ep = 0.5;/* if there is not good points set ration of outliers to 50% */
                     }
-            
+
 			        double newNumSamples = (log(1-p) / log(1-pow(1-ep,6)));
                     if(  newNumSamples < double(NumSamples) )
                     {
@@ -1015,7 +1015,7 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
 #if 0
         char str[300];
         sprintf(str,"Initial numPoints = %d\nmaxGoodPoints=%d\nRANSAC made %d steps",
-                    numPoints, 
+                    numPoints,
                     maxGoodPoints,
                     cvRound(wasCount));
         MessageBox(0,str,"Info",MB_OK|MB_TASKMODAL);
@@ -1099,12 +1099,12 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
                 resMatrs[1] = &resProjMatrs[1];
                 resMatrs[2] = &resProjMatrs[2];
 
-                cvOptimizeLevenbergMarquardtBundle( projMs,//projMs, 
+                cvOptimizeLevenbergMarquardtBundle( projMs,//projMs,
                                                     gPoints,//points,//points2D,
                                                     pointsPres,//pointsPres,
                                                     3,
-                                                    resMatrs,//resProjMatrs, 
-                                                    resPoints4D,//resPoints4D, 
+                                                    resMatrs,//resProjMatrs,
+                                                    resPoints4D,//resPoints4D,
                                                     100, 1e-9 );
 
                 /* We found optimized projection matrices */
@@ -1206,12 +1206,12 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
                 resMatrs[1] = &resProjMatrs[1];
                 resMatrs[2] = &resProjMatrs[2];
 
-                cvOptimizeLevenbergMarquardtBundle( projMs,//projMs, 
+                cvOptimizeLevenbergMarquardtBundle( projMs,//projMs,
                                                     points,//points2D,
                                                     pointsPres,//pointsPres,
                                                     3,
-                                                    resMatrs,//resProjMatrs, 
-                                                    resPoints4D,//resPoints4D, 
+                                                    resMatrs,//resProjMatrs,
+                                                    resPoints4D,//resPoints4D,
                                                     100, 1e-9 );
 
                 /* We found optimized projection matrices */
@@ -1279,7 +1279,7 @@ int icvComputeProjectMatricesNPoints(  CvMat* points1,CvMat* points2,CvMat* poin
                 cvReleaseMat(&optStatus);
                 cvReleaseMat(&resPoints4D);
 
-   
+
 #endif
             } while ( needRepeat );
 
@@ -1357,9 +1357,9 @@ void icvFindBaseTransform(CvMat* points,CvMat* resultT)
     {
         CV_ERROR( CV_StsUnmatchedSizes, "size of matrix resultT must be 3x3" );
     }
-    
+
     /* Function gets four points and compute transformation to e1=(100) e2=(010) e3=(001) e4=(111) */
-    
+
     /* !!! test each three points not collinear. Need to test */
 
     /* Create matrices */
@@ -1409,7 +1409,7 @@ void icvFindBaseTransform(CvMat* points,CvMat* resultT)
     cvInvert(&matrA,&tmpRes);
 
     cvConvert(&tmpRes,resultT);
-    
+
     __END__;
 
     return;
@@ -1424,7 +1424,7 @@ void GetGeneratorReduceFundSolution(CvMat* points1,CvMat* points2,CvMat* fundRed
     __BEGIN__;
 
     /* Test input data for errors */
-    
+
     if( points1 == 0 || points2 == 0 || fundReduceCoef1 == 0 || fundReduceCoef2 == 0)
     {
         CV_ERROR( CV_StsNullPtr, "Some of parameters is a NULL pointer" );
@@ -1434,9 +1434,9 @@ void GetGeneratorReduceFundSolution(CvMat* points1,CvMat* points2,CvMat* fundRed
     {
         CV_ERROR( CV_StsUnsupportedFormat, "Input parameters must be a matrices" );
     }
-    
-    
-    
+
+
+
     if( points1->rows != 3 || points1->cols != 3 )
     {
         CV_ERROR( CV_StsUnmatchedSizes, "Number of points1 must be 3 and and have 3 coordinates" );
@@ -1486,7 +1486,7 @@ void GetGeneratorReduceFundSolution(CvMat* points1,CvMat* points2,CvMat* fundRed
     CvMat matrU;
     CvMat matrW;
     CvMat matrV;
-    
+
     double matrU_dat[3*3];
     double matrW_dat[3*5];
     double matrV_dat[5*5];
@@ -1517,7 +1517,7 @@ void GetGeneratorReduceFundSolution(CvMat* points1,CvMat* points2,CvMat* fundRed
 int GetGoodReduceFundamMatrFromTwo(CvMat* fundReduceCoef1,CvMat* fundReduceCoef2,CvMat* resFundReduceCoef)
 {
     int numRoots = 0;
-    
+
     CV_FUNCNAME( "GetGoodReduceFundamMatrFromTwo" );
     __BEGIN__;
 
@@ -1577,11 +1577,11 @@ int GetGoodReduceFundamMatrFromTwo(CvMat* fundReduceCoef1,CvMat* fundReduceCoef2
     coeffs_dat[1] = ((r2*(-p1-q1-r1-s1-t1+p2+q2+r2+s2+t2)+(r1-r2)*(-p2-q2-r2-s2-t2))*(q1-q2)+(r1-r2)*(-p1-q1-r1-s1-t1+p2+q2+r2+s2+t2)*q2+(p2*(s1-s2)+(p1-p2)*s2)*(t1-t2)+(p1-p2)*(s1-s2)*t2);/* *a^2 */
     coeffs_dat[2] = (r2*(-p2-q2-r2-s2-t2)*(q1-q2)+(r2*(-p1-q1-r1-s1-t1+p2+q2+r2+s2+t2)+(r1-r2)*(-p2-q2-r2-s2-t2))*q2+p2*s2*(t1-t2)+(p2*(s1-s2)+(p1-p2)*s2)*t2);/* *a */
     coeffs_dat[3] = r2*(-p2-q2-r2-s2-t2)*q2+p2*s2*t2;/* 1 */
-    
+
     int num;
     num = cvSolveCubic(&coeffs,&result);
 
-    
+
     /* test number of solutions and test for real solutions */
     int i;
     for( i = 0; i < num; i++ )
@@ -1635,11 +1635,11 @@ void GetProjMatrFromReducedFundamental(CvMat* fundReduceCoefs,CvMat* projMatrCoe
     /* Computes project matrix from given reduced matrix */
     /* we have p,q,r,s,t and need get a,b,c,d */
     /* Fill matrix to compute ratio a:b:c as A:B:C */
-    
+
     CvMat matrA;
     double matrA_dat[3*3];
     matrA = cvMat(3,3,CV_64F,matrA_dat);
-    
+
     double p,q,r,s,t;
     p = cvmGet(fundReduceCoefs,0,0);
     q = cvmGet(fundReduceCoefs,0,1);
@@ -1662,7 +1662,7 @@ void GetProjMatrFromReducedFundamental(CvMat* fundReduceCoefs,CvMat* projMatrCoe
     CvMat matrU;
     CvMat matrW;
     CvMat matrV;
-    
+
     double matrU_dat[3*3];
     double matrW_dat[3*3];
     double matrV_dat[3*3];
@@ -1731,7 +1731,7 @@ void GetProjMatrFromReducedFundamental(CvMat* fundReduceCoefs,CvMat* projMatrCoe
         CvMat matrU;
         CvMat matrW;
         CvMat matrV;
-    
+
         double matrU_dat[36];
         double matrW_dat[36];
         double matrV_dat[36];
@@ -1744,7 +1744,7 @@ void GetProjMatrFromReducedFundamental(CvMat* fundReduceCoefs,CvMat* projMatrCoe
         /* We get transposed matrixes U and V */
 
         cvSVD(&matrK,&matrW,0,&matrV,CV_SVD_V_T);
-        
+
         a = matrV_dat[6*5+0];
         b = matrV_dat[6*5+1];
         c = matrV_dat[6*5+2];
@@ -1769,7 +1769,7 @@ void icvComputeProjectMatrix(CvMat* objPoints,CvMat* projPoints,CvMat* projMatr)
 
     /* Reconstruct points using object points and projected points */
     /* Number of points must be >=6 */
-    
+
     CvMat matrV;
     CvMat* matrA = 0;
     CvMat* matrW = 0;
@@ -1884,12 +1884,12 @@ void icvComputeProjectMatrix(CvMat* objPoints,CvMat* projPoints,CvMat* projMatr)
         matrDat[13] = w*Y;
         matrDat[14] = w*Z;
         matrDat[15] = w*W;
-    
+
         matrDat[16] = 0;
         matrDat[17] = 0;
         matrDat[18] = 0;
         matrDat[19] = 0;
-    
+
         matrDat[20] = -x*X;
         matrDat[21] = -x*Y;
         matrDat[22] = -x*Z;
@@ -1899,12 +1899,12 @@ void icvComputeProjectMatrix(CvMat* objPoints,CvMat* projPoints,CvMat* projMatr)
         matrDat[25] = -y*Y;
         matrDat[26] = -y*Z;
         matrDat[27] = -y*W;
-    
+
         matrDat[28] = x*X;
         matrDat[29] = x*Y;
         matrDat[30] = x*Z;
         matrDat[31] = x*W;
-    
+
         matrDat[32] = 0;
         matrDat[33] = 0;
         matrDat[34] = 0;
@@ -2051,7 +2051,7 @@ void icvComputeTransform4D(CvMat* points1,CvMat* points2,CvMat* transMatr)
     {
         cvmSet(transMatr,i/4,i%4,cvmGet(&matrV,15,i));
     }
-    
+
     cvReleaseMat(&matrA);
     cvReleaseMat(&matrW);
 
@@ -2129,7 +2129,7 @@ void icvReconstructPointsFor3View( CvMat* projMatr1,CvMat* projMatr2,CvMat* proj
 
     CvMat* projPoints[3];
     CvMat* projMatrs[3];
-    
+
     projPoints[0] = projPoints1;
     projPoints[1] = projPoints2;
     projPoints[2] = projPoints3;
@@ -2263,7 +2263,7 @@ void ReconstructPointsFor3View_bySolve( CvMat* projMatr1,CvMat* projMatr2,CvMat*
 
     CvMat* projPoints[3];
     CvMat* projMatrs[3];
-    
+
     projPoints[0] = projPoints1;
     projPoints[1] = projPoints2;
     projPoints[2] = projPoints3;
@@ -2286,7 +2286,7 @@ void ReconstructPointsFor3View_bySolve( CvMat* projMatr1,CvMat* projMatr2,CvMat*
             cvmSet(&vectB,j*3+0,0,x-cvmGet(projMatrs[j],0,3));
             cvmSet(&vectB,j*3+1,0,y-cvmGet(projMatrs[j],1,3));
             cvmSet(&vectB,j*3+2,0,1-cvmGet(projMatrs[j],2,3));
-            
+
             for( int t = 0; t < 3; t++ )
             {
                 for( int k = 0; k < 3; k++ )
@@ -2416,7 +2416,7 @@ void icvComputeCameraExrinnsicByPosition(CvMat* camPos, CvMat* rotMatr, CvMat* t
     /* normaize vectors */
     double norm;
     int i;
-    
+
     /* Norm X */
     norm = 0;
     for( i = 0; i < 3; i++ )
@@ -2484,7 +2484,7 @@ void FindTransformForProjectMatrices(CvMat* projMatr1,CvMat* projMatr2,CvMat* ro
     {
         CV_ERROR( CV_StsUnsupportedFormat, "Input parameters must be a matrices" );
     }
-    
+
     if( projMatr1->cols != 4 || projMatr1->rows != 3 )
     {
         CV_ERROR( CV_StsUnmatchedSizes, "Size of project matrix 1 must be 3x4" );
@@ -2494,7 +2494,7 @@ void FindTransformForProjectMatrices(CvMat* projMatr1,CvMat* projMatr2,CvMat* ro
     {
         CV_ERROR( CV_StsUnmatchedSizes, "Size of project matrix 2 must be 3x4" );
     }
-    
+
     if( rotMatr->cols != 3 || rotMatr->rows != 3 )
     {
         CV_ERROR( CV_StsUnmatchedSizes, "Size of rotation matrix must be 3x3" );
@@ -2522,7 +2522,7 @@ void FindTransformForProjectMatrices(CvMat* projMatr1,CvMat* projMatr2,CvMat* ro
             cvmSet(&matrA,i,j,cvmGet(projMatr1,i/4,j%4));
         }
         /* Fill vector B */
-        
+
         double val = cvmGet(projMatr2,i/4,i%4);
         if( (i+1)%4 == 0 )
         {
@@ -2625,7 +2625,7 @@ void icvComputeQ(int numMatr, CvMat** projMatr, CvMat** cameraMatr, CvMat* matrQ
             CV_ERROR( CV_StsUnmatchedSizes, "Size of each camera matrix must be 3x3" );
         }
     }
-    
+
     CvMat matrw;
     double matrw_dat[9];
     matrw = cvMat(3,3,CV_64F,matrw_dat);
@@ -2666,7 +2666,7 @@ void icvComputeQ(int numMatr, CvMat** projMatr, CvMat** cameraMatr, CvMat* matrQ
                         for( j = 0; j < 4; j++ )
                         {
                             /* get elements from current projection matrix */
-                            dataQ[i*4+j] = cvmGet(projMatr[currMatr],currWi,j) * 
+                            dataQ[i*4+j] = cvmGet(projMatr[currMatr],currWi,j) *
                                            cvmGet(projMatr[currMatr],currWj,i);
                         }
                     }
@@ -2720,7 +2720,7 @@ void icvComputeQ(int numMatr, CvMat** projMatr, CvMat** cameraMatr, CvMat* matrQ
         }
     }
 
-    
+
     __END__;
 
     /* Free allocated memory */
@@ -2758,29 +2758,29 @@ void icvDecomposeQ(CvMat* /*matrQ*/,CvMat* /*matrH*/)
 
     CvMat matrIS;
     double matrIS_dat[16];
-    matrIS = 
+    matrIS =
 
 
 
 
 /* det for matrix Q with q1-q10 */
 /*
-+ q1*q5*q8*q10 
++ q1*q5*q8*q10
 - q1*q5*q9*q9
-- q1*q6*q6*q10 
-+ 2*q1*q6*q7*q9 
-- q1*q7*q7*q8 
-- q2*q2*q8*q10 
-+ q2*q2*q9*q9 
-+ 2*q2*q6*q3*q10 
-- 2*q2*q6*q4*q9 
-- 2*q2*q7*q3*q9 
-+ 2*q2*q7*q4*q8 
-- q5*q3*q3*q10 
-+ 2*q3*q5*q4*q9 
-+ q3*q3*q7*q7 
-- 2*q3*q7*q4*q6 
-- q5*q4*q4*q8 
+- q1*q6*q6*q10
++ 2*q1*q6*q7*q9
+- q1*q7*q7*q8
+- q2*q2*q8*q10
++ q2*q2*q9*q9
++ 2*q2*q6*q3*q10
+- 2*q2*q6*q4*q9
+- 2*q2*q7*q3*q9
++ 2*q2*q7*q4*q8
+- q5*q3*q3*q10
++ 2*q3*q5*q4*q9
++ q3*q3*q7*q7
+- 2*q3*q7*q4*q6
+- q5*q4*q4*q8
 + q4*q4*q6*q6
 */
 

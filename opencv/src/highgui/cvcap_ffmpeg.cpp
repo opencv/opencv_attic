@@ -536,6 +536,7 @@ IplImage* CvCapture_FFMPEG::retrieveFrame()
     return &frame;
 }
 
+#define AV_NOPTS_VALUE_ ((int64_t)AV_NOPTS_VALUE)
 
 double CvCapture_FFMPEG::getProperty( int property_id )
 {
@@ -549,18 +550,18 @@ double CvCapture_FFMPEG::getProperty( int property_id )
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        // if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE))
-        if(ic->start_time != AV_NOPTS_VALUE)
+        // if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE_))
+        if(ic->start_time != AV_NOPTS_VALUE_)
         return (double)(timestamp - ic->start_time)*1000/(double)AV_TIME_BASE;
         break;
     case CV_CAP_PROP_POS_FRAMES:
-    //if(video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE))
-    if(video_st->cur_dts != AV_NOPTS_VALUE)
+    //if(video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE_))
+    if(video_st->cur_dts != AV_NOPTS_VALUE_)
         return (double)video_st->cur_dts-1;
     break;
     case CV_CAP_PROP_POS_AVI_RATIO:
-    //  if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE) && ic->duration != static_cast<double>(AV_NOPTS_VALUE))
-    if(ic->start_time != AV_NOPTS_VALUE && ic->duration != AV_NOPTS_VALUE)
+    //  if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE_) && ic->duration != static_cast<double>(AV_NOPTS_VALUE_))
+    if(ic->start_time != AV_NOPTS_VALUE_ && ic->duration != AV_NOPTS_VALUE_)
         return (double)(timestamp-ic->start_time)/(double)ic->duration;
     break;
     case CV_CAP_PROP_FRAME_WIDTH:
@@ -624,20 +625,20 @@ bool CvCapture_FFMPEG::setProperty( int property_id, double value )
             {
             case CV_CAP_PROP_POS_FRAMES:
                 timestamp=(int64_t)value;
-                if(ic->start_time != AV_NOPTS_VALUE)
+                if(ic->start_time != AV_NOPTS_VALUE_)
                     timestamp += ic->start_time;
                 break;
 
             case CV_CAP_PROP_POS_MSEC:
                 time_base=ic->streams[video_stream]->time_base;
                 timestamp=(int64_t)(value*(float(time_base.den)/float(time_base.num))/1000);
-                if(ic->start_time != AV_NOPTS_VALUE)
+                if(ic->start_time != AV_NOPTS_VALUE_)
                     timestamp += ic->start_time;
                 break;
 
             case CV_CAP_PROP_POS_AVI_RATIO:
                 timestamp=(int64_t)(value*ic->duration);
-                if(ic->start_time != AV_NOPTS_VALUE && ic->duration != AV_NOPTS_VALUE)
+                if(ic->start_time != AV_NOPTS_VALUE_ && ic->duration != AV_NOPTS_VALUE_)
                     timestamp += ic->start_time;
                 break;
             }

@@ -86,7 +86,7 @@
 void cvGetPerspectiveTransform( CvSize src_size, double quad[4][2],
                                 double coeffs[3][3] )
 {
-    CV_FUNCNAME( "cvWarpPerspective" );
+    //CV_FUNCNAME( "cvWarpPerspective" );
 
     __BEGIN__;
 
@@ -144,7 +144,7 @@ void cvWarpPerspective( CvArr* src, CvArr* dst, double quad[4][2] )
     CV_CALL( dst_img = cvGetImage( dst, &dst_stub ) );
     iplWarpPerspectiveQ( src_img, dst_img, quad, IPL_WARP_R_TO_Q,
                          IPL_INTER_CUBIC | IPL_SMOOTH_EDGE );
-#else    
+#else
 
     int fill_value = 0;
 
@@ -393,7 +393,7 @@ void cvWarpPerspective( CvArr* src, CvArr* dst, double quad[4][2] )
 }
 
 static
-void icvRandomQuad( int width, int height, double quad[4][2], 
+void icvRandomQuad( int width, int height, double quad[4][2],
                     double maxxangle,
                     double maxyangle,
                     double maxzangle )
@@ -403,7 +403,7 @@ void icvRandomQuad( int width, int height, double quad[4][2],
 
     double halfw, halfh;
     int i;
-    
+
     double rotVectData[3];
     double vectData[3];
     double rotMatData[9];
@@ -454,7 +454,7 @@ void icvRandomQuad( int width, int height, double quad[4][2],
         cvMatMulAdd( &rotMat, &rotVect, 0, &vect );
         quad[i][0] = vectData[0] * d / (d + vectData[2]) + halfw;
         quad[i][1] = vectData[1] * d / (d + vectData[2]) + halfh;
-        
+
         /*
         quad[i][0] += halfw;
         quad[i][1] += halfh;
@@ -468,7 +468,7 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
 {
     memset( data, 0, sizeof( *data ) );
     data->src = cvLoadImage( imgfilename, 0 );
-    if( data->src != NULL && data->src->nChannels == 1 
+    if( data->src != NULL && data->src->nChannels == 1
         && data->src->depth == IPL_DEPTH_8U )
     {
         int r, c;
@@ -477,7 +477,7 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
         uchar* perode;
         uchar* pdilate;
         uchar dd, de;
-        
+
         data->dx = data->src->width / 2;
         data->dy = data->src->height / 2;
         data->bgcolor = bgcolor;
@@ -485,7 +485,7 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
         data->mask = cvCloneImage( data->src );
         data->erode = cvCloneImage( data->src );
         data->dilate = cvCloneImage( data->src );
-            
+
         /* make mask image */
         for( r = 0; r < data->mask->height; r++ )
         {
@@ -504,7 +504,7 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
                 }
             }
         }
-            
+
         /* extend borders of source image */
         cvErode( data->src, data->erode, 0, 1 );
         cvDilate( data->src, data->dilate, 0, 1 );
@@ -518,10 +518,10 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
                 {
                     psrc = ( (uchar*) (data->src->imageData + r * data->src->widthStep)
                            + c );
-                    perode = 
+                    perode =
                         ( (uchar*) (data->erode->imageData + r * data->erode->widthStep)
                                 + c );
-                    pdilate = 
+                    pdilate =
                         ( (uchar*)(data->dilate->imageData + r * data->dilate->widthStep)
                                 + c );
                     de = bgcolor - (*perode);
@@ -583,7 +583,7 @@ void icvPlaceDistortedSample( CvArr* background,
     quad[2][1] += (double) data->dy;
     quad[3][0] += (double) data->dx;
     quad[3][1] += (double) data->dy;
-    
+
     cvSet( data->img, cvScalar( data->bgcolor ) );
     cvSet( data->maskimg, cvScalar( 0.0 ) );
 
@@ -607,7 +607,7 @@ void icvPlaceDistortedSample( CvArr* background,
         cr.width  = (int) (MAX( quad[1][0], quad[2][0] ) + 0.5F ) - cr.x;
         cr.height = (int) (MAX( quad[2][1], quad[3][1] ) + 0.5F ) - cr.y;
     }
-    
+
     xshift = maxshiftf * rand() / RAND_MAX;
     yshift = maxshiftf * rand() / RAND_MAX;
 
@@ -631,14 +631,14 @@ void icvPlaceDistortedSample( CvArr* background,
 
     img = cvCreateImage( cvSize( bgimg->cols, bgimg->rows ), IPL_DEPTH_8U, 1 );
     maskimg = cvCreateImage( cvSize( bgimg->cols, bgimg->rows ), IPL_DEPTH_8U, 1 );
-    
+
     cvSetImageROI( data->img, roi );
     cvResize( data->img, img );
     cvResetImageROI( data->img );
     cvSetImageROI( data->maskimg, roi );
     cvResize( data->maskimg, maskimg );
     cvResetImageROI( data->maskimg );
-    
+
     forecolordev = (int) (maxintensitydev * (2.0 * rand() / RAND_MAX - 1.0));
 
     for( r = 0; r < img->height; r++ )
@@ -695,14 +695,14 @@ void icvWriteVecHeader( FILE* file, int count, int width, int height )
     short tmp;
 
     /* number of samples */
-    fwrite( &count, sizeof( count ), 1, file );    
+    fwrite( &count, sizeof( count ), 1, file );
     /* vector size */
     vecsize = width * height;
     fwrite( &vecsize, sizeof( vecsize ), 1, file );
     /* min/max values */
     tmp = 0;
     fwrite( &tmp, sizeof( tmp ), 1, file );
-    fwrite( &tmp, sizeof( tmp ), 1, file );    
+    fwrite( &tmp, sizeof( tmp ), 1, file );
 }
 
 void icvWriteVecSample( FILE* file, CvArr* sample )
@@ -790,7 +790,7 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
     {
         cvNamedWindow( "Sample", CV_WINDOW_AUTOSIZE );
     }
-    
+
     strcpy( fullname, infoname );
     filename = strrchr( fullname, '\\' );
     if( filename == NULL )
@@ -831,7 +831,7 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
             cvSetImageROI( src, cvRect( x, y, width, height ) );
             cvResize( src, sample, width >= sample->width &&
                       height >= sample->height ? CV_INTER_AREA : CV_INTER_LINEAR );
-            
+
             if( showsamples )
             {
                 cvShowImage( "Sample", sample );
@@ -839,10 +839,10 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
                 {
                     showsamples = 0;
                 }
-            }            
+            }
             icvWriteVecSample( vec, sample );
         }
-        
+
         if( src )
         {
             cvReleaseImage( &src );
@@ -858,7 +858,7 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
             break;
         }
     }
-    
+
     if( sample )
     {
         cvReleaseImage( &sample );
@@ -875,10 +875,10 @@ void cvShowVecSamples( const char* filename, int winwidth, int winheight,
                        double scale )
 {
     CvVecFile file;
-    short tmp; 
+    short tmp;
     int i;
     CvMat* sample;
-    
+
     tmp = 0;
     file.input = fopen( filename, "rb" );
 
@@ -888,12 +888,12 @@ void cvShowVecSamples( const char* filename, int winwidth, int winheight,
         fread( &file.vecsize, sizeof( file.vecsize ), 1, file.input );
         fread( &tmp, sizeof( tmp ), 1, file.input );
         fread( &tmp, sizeof( tmp ), 1, file.input );
-        
+
         if( file.vecsize != winwidth * winheight )
         {
             int guessed_w = 0;
             int guessed_h = 0;
-            
+
             fprintf( stderr, "Warning: specified sample width=%d and height=%d "
                 "does not correspond to .vec file vector size=%d.\n",
                 winwidth, winheight, file.vecsize );

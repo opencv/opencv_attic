@@ -158,7 +158,7 @@ typedef CvVoronoiParabolaInt* pCvVoronoiParabola;
 typedef CvVoronoiChainInt* pCvVoronoiChain;
 typedef CvVoronoiHoleInt* pCvVoronoiHole;
 typedef CvPointFloat* pCvPointFloat;
-typedef CvDirection* pCvDirection; 
+typedef CvDirection* pCvDirection;
 
 /****************************************************************************************\
 *                                    Function definitions                                *
@@ -171,7 +171,7 @@ typedef CvDirection* pCvDirection;
 //    Context:
 //    Parameters:
 //      ContourSeq : in, vertices of polygon.
-//      VoronoiDiagramInt : in&out, pointer to struct, which contains the 
+//      VoronoiDiagramInt : in&out, pointer to struct, which contains the
 //                       description of Voronoi Diagram.
 //      VoronoiStorage: in, storage for Voronoi Diagram.
 //      contour_type: in, type of vertices.
@@ -179,10 +179,10 @@ typedef CvDirection* pCvDirection;
 //      contour_orientation: in, orientation of polygons.
 //                           = 1, if contour is left - oriented in left coordinat system
 //                           =-1, if contour is left - oriented in right coordinat system
-//      attempt_number: in, number of unsuccessful attemts made by program to compute 
+//      attempt_number: in, number of unsuccessful attemts made by program to compute
 //                          the Voronoi Diagram befor return the error
 //
-//    Returns: 1, if Voronoi Diagram was succesfully computed 
+//    Returns: 1, if Voronoi Diagram was succesfully computed
 //             0, if some error occures
 //F*/
 static int  _cvLee(CvSeq* ContourSeq,
@@ -200,14 +200,14 @@ static int  _cvLee(CvSeq* ContourSeq,
 //    Context:
 //    Parameters:
 //            ContourSeq : in, vertices of polygon
-//       pVoronoiDiagram : in, pointer to struct, which contains the 
+//       pVoronoiDiagram : in, pointer to struct, which contains the
 //                          description of Voronoi Diagram
-//           contour_type: in, type of vertices.  The possible values are 
+//           contour_type: in, type of vertices.  The possible values are
 //                          CV_LEE_INT,CV_LEE_FLOAT,CV_LEE_DOUBLE.
 //    contour_orientation: in, orientation of polygons.
 //                           = 1, if contour is left - oriented in left coordinat system
 //                           =-1, if contour is left - oriented in right coordinat system
-//     Return: 1, if sites were succesfully constructed 
+//     Return: 1, if sites were succesfully constructed
 //             0, if some error occures
 //F*/
 static int _cvConstuctSites(CvSeq* ContourSeq,
@@ -221,9 +221,9 @@ static int _cvConstuctSites(CvSeq* ContourSeq,
 //    Purpose : Compute chains for given polygon with holes.
 //    Context:
 //    Parameters:
-//       pVoronoiDiagram : in, pointer to struct, which contains the 
+//       pVoronoiDiagram : in, pointer to struct, which contains the
 //                          description of Voronoi Diagram
-//     Return: 1, if chains were succesfully constructed 
+//     Return: 1, if chains were succesfully constructed
 //             0, if some error occures
 //F*/
 static int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram);
@@ -234,9 +234,9 @@ static int _cvConstructChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 //    Purpose: Compute skeleton for given collection of sites, using Lee algorithm
 //    Context:
 //    Parameters:
-//      VoronoiDiagram : in, pointer to struct, which contains the 
+//      VoronoiDiagram : in, pointer to struct, which contains the
 //                       description of Voronoi Diagram.
-//    Returns: 1, if skeleton was succesfully computed 
+//    Returns: 1, if skeleton was succesfully computed
 //             0, if some error occures
 //F*/
 static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram);
@@ -247,23 +247,23 @@ static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram);
 //    Purpose: Construct tree of sites (by analogy with contour tree).
 //    Context:
 //    Parameters:
-//      VoronoiDiagram : in, pointer to struct, which contains the 
+//      VoronoiDiagram : in, pointer to struct, which contains the
 //                       description of Voronoi Diagram.
-//    Returns: 
+//    Returns:
 //F*/
 static void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Author:   Andrey Sobolev
 //    Name:     _cvReleaseVoronoiStorage
-//    Purpose : Function realease storages. 
+//    Purpose : Function realease storages.
 //                  The storages are divided into two groups:
 //                  SiteStorage, EdgeStorage, NodeStorage form the first group;
 //                  ChainStorage,ParabolaStorage,DirectionStorage,HoleStorage form the second group.
 //    Context:
 //    Parameters:
 //        pVoronoiStorage: in,
-//        group1,group2: in, if group1<>0 then storages from first group released   
+//        group1,group2: in, if group1<>0 then storages from first group released
 //                           if group2<>0 then storages from second group released
 //    Return    :
 //F*/
@@ -272,22 +272,22 @@ static void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int g
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //  Author:  Andrey Sobolev
 //  Name:  _cvConvert
-//  Purpose :  Function convert internal representation of VD (via 
-//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into 
+//  Purpose :  Function convert internal representation of VD (via
+//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into
 //                  external representation of VD (via structs CvVoronoiSite2D, CvVoronoiEdge2D,
-//                  CvVoronoiNode2D) 
+//                  CvVoronoiNode2D)
 //    Context:
 //    Parameters:
 //        VoronoiDiagram: in
 //        VoronoiStorage: in
-//        change_orientation: in, if = -1 then the convertion is accompanied with change 
+//        change_orientation: in, if = -1 then the convertion is accompanied with change
 //                            of orientation
 //
 //     Return: 1, if convertion was succesfully completed
 //             0, if some error occures
 //F*/
 /*
-static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
                       CvMemStorage* VoronoiStorage,
                       int change_orientation);
 */
@@ -302,8 +302,8 @@ static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //  Author:  Andrey Sobolev
 //  Name:  _cvConvertSameOrientation
-//  Purpose :  Function convert internal representation of VD (via 
-//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into 
+//  Purpose :  Function convert internal representation of VD (via
+//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into
 //                  external representation of VD (via structs CvVoronoiSite2D, CvVoronoiEdge2D,
 //                  CvVoronoiNode2D) without change of orientation
 //    Context:
@@ -315,7 +315,7 @@ static int _cvConvert(CvVoronoiDiagram2D* VoronoiDiagram,
 //             0, if some error occures
 //F*/
 /*
-static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                                       CvMemStorage* VoronoiStorage);
 */
 static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
@@ -328,8 +328,8 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //  Author:  Andrey Sobolev
 //  Name:  _cvConvertChangeOrientation
-//  Purpose :  Function convert internal representation of VD (via 
-//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into 
+//  Purpose :  Function convert internal representation of VD (via
+//                  structs CvVoronoiSiteInt, CvVoronoiEdgeInt,CvVoronoiNodeInt) into
 //                  external representation of VD (via structs CvVoronoiSite2D, CvVoronoiEdge2D,
 //                  CvVoronoiNode2D) with change of orientation
 //    Context:
@@ -341,7 +341,7 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 //             0, if some error occures
 //F*/
 /*
-static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram, 
+static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                                       CvMemStorage* VoronoiStorage);
                                       */
 static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
@@ -353,17 +353,17 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Compute  sites for external polygon. 
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Description : Compute  sites for external polygon.
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      ContourSeq : in, vertices of polygon
      pReflexSite: out, pointer to reflex site,if any exist,else NULL
      orientation: in, orientation of contour ( = 1 or = -1)
      type:        in, type of vertices. The possible values are (int)1,
                    (float)1,(double)1.
-     Return:    1, if sites were succesfully constructed 
-                0, if some error occures    : 
+     Return:    1, if sites were succesfully constructed
+                0, if some error occures    :
     --------------------------------------------------------------------------*/
 template<class T>
 int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
@@ -373,24 +373,24 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Compute  sites for internal polygon (for hole). 
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Description : Compute  sites for internal polygon (for hole).
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      CurrSiteSeq: in, the sequence for sites to be constructed
      CurrContourSeq : in, vertices of polygon
-     pTopSite: out, pointer to the most left site of polygon (it is the most left 
+     pTopSite: out, pointer to the most left site of polygon (it is the most left
                 vertex of polygon)
      orientation: in, orientation of contour ( = 1 or = -1)
      type:        in, type of vertices. The possible values are (int)1,
                    (float)1,(double)1.
-     Return:    1, if sites were succesfully constructed 
-                0, if some error occures    : 
+     Return:    1, if sites were succesfully constructed
+                0, if some error occures    :
     --------------------------------------------------------------------------*/
 template<class T>
 int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
                          CvSeq* CurrSiteSeq,
-                         CvSeq* CurrContourSeq, 
+                         CvSeq* CurrContourSeq,
                          pCvVoronoiSite &pTopSite,
                          int orientation,
                          T /*type*/);
@@ -398,11 +398,11 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the simple chains of sites for external polygon.
-    Arguments 
-     pVoronoiDiagram : in&out, pointer to struct, which contains the 
+    Arguments
+     pVoronoiDiagram : in&out, pointer to struct, which contains the
                         description of Voronoi Diagram
-    
-    Return: 1, if chains were succesfully constructed 
+
+    Return: 1, if chains were succesfully constructed
             0, if some error occures
     --------------------------------------------------------------------------*/
 static int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram);
@@ -410,14 +410,14 @@ static int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram);
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the simple chains of sites for internal polygon (= hole)
-    Arguments 
-    pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+    pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
     CurrSiteSeq : in, the sequence of sites
    CurrChainSeq : in,the sequence for chains to be constructed
        pTopSite : in, the most left site of hole
 
-      Return    : 
+      Return    :
     --------------------------------------------------------------------------*/
 static void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
                                   CvSeq* CurrChainSeq,
@@ -427,12 +427,12 @@ static void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the initial Voronoi Diagram for single site
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pSite: in, pointer to site
 
-     Return : 
+     Return :
     --------------------------------------------------------------------------*/
 static void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoiDiagram);
 
@@ -440,21 +440,21 @@ static void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoronoi
     Author      : Andrey Sobolev
     Description : Function moves each node on small random value. The nodes are taken
                     from pVoronoiDiagram->NodeSeq.
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      begin,end: in, the first and the last nodes in pVoronoiDiagram->NodeSeq,
                     which moves
      shift: in, the value of maximal shift.
-     Return : 
+     Return :
     --------------------------------------------------------------------------*/
 static void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begin, int end, float shift);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the internal Voronoi Diagram for external polygon.
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      Return     : 1, if VD was constructed succesfully
                   0, if some error occure
@@ -464,36 +464,36 @@ static int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram);
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the external Voronoi Diagram for each internal polygon (hole).
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 static void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function joins the Voronoi Diagrams of different 
-                    chains into one Voronoi Diagram 
-    Arguments 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+    Description : Function joins the Voronoi Diagrams of different
+                    chains into one Voronoi Diagram
+    Arguments
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pChain1,pChain1: in, given chains
      Return     : 1, if joining was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
-static int _cvJoinChains(pCvVoronoiChain pChain1, 
+static int _cvJoinChains(pCvVoronoiChain pChain1,
                          pCvVoronoiChain pChain2,
                          CvVoronoiDiagramInt* pVoronoiDiagram);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function finds the nearest site for top vertex 
+    Description : Function finds the nearest site for top vertex
                  (= the most left vertex) of each hole
-    Arguments 
-        pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+        pVoronoiDiagram : in, pointer to struct, which contains the
                          description of Voronoi Diagram
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram);
 
@@ -501,12 +501,12 @@ static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram);
     Author      : Andrey Sobolev
     Description : Function seeks for site, which has common bisector in
                   final VD with top vertex of given hole. It stores in pHole->opposite_site.
-                   The search begins from  Hole->nearest_site and realizes in clockwise 
+                   The search begins from  Hole->nearest_site and realizes in clockwise
                    direction around the top vertex of given hole.
-    Arguments 
-        pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+        pVoronoiDiagram : in, pointer to struct, which contains the
                           description of Voronoi Diagram
-          pHole : in, given hole        
+          pHole : in, given hole
      Return     : 1, if the search was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
@@ -516,12 +516,12 @@ static int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoro
     Author      : Andrey Sobolev
     Description : Function seeks for site, which has common bisector in
                   final VD with top vertex of given hole. It stores in pHole->opposite_site.
-                   The search begins from  Hole->nearest_site and realizes in counterclockwise 
+                   The search begins from  Hole->nearest_site and realizes in counterclockwise
                    direction around the top vertex of given hole.
-    Arguments 
-        pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+        pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
-          pHole : in, given hole        
+          pHole : in, given hole
      Return     : 1, if the search was succesful
                   0, if some error occure
     --------------------------------------------------------------------------*/
@@ -529,10 +529,10 @@ static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoro
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function merges external VD of hole and internal VD, which was 
+    Description : Function merges external VD of hole and internal VD, which was
                   constructed ealier.
-    Arguments 
-pVoronoiDiagram : in, pointer to struct, which contains the 
+    Arguments
+pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
           pHole : in, given hole
      Return     : 1, if merging was succesful
@@ -548,14 +548,14 @@ static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the bisector of two sites
-    Arguments 
+    Arguments
      pSite_left,pSite_right: in, given sites
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
-void _cvCalcEdge(pCvVoronoiSite pSite_left, 
+void _cvCalcEdge(pCvVoronoiSite pSite_left,
                 pCvVoronoiSite pSite_right,
                 pCvVoronoiEdge pEdge,
                 CvVoronoiDiagramInt* pVoronoiDiagram);
@@ -563,13 +563,13 @@ void _cvCalcEdge(pCvVoronoiSite pSite_left,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the bisector of point and site
-    Arguments 
+    Arguments
      pSite      : in, site
      pNode      : in, point
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 void _cvCalcEdge(pCvVoronoiSite pSite,
                 pCvVoronoiNode pNode,
@@ -579,15 +579,15 @@ void _cvCalcEdge(pCvVoronoiSite pSite,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the bisector of point and site
-    Arguments 
+    Arguments
      pSite      : in, site
      pNode      : in, point
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
-void _cvCalcEdge(pCvVoronoiNode pNode, 
+void _cvCalcEdge(pCvVoronoiNode pNode,
                 pCvVoronoiSite pSite,
                 pCvVoronoiEdge pEdge,
                 CvVoronoiDiagramInt* pVoronoiDiagram);
@@ -595,13 +595,13 @@ void _cvCalcEdge(pCvVoronoiNode pNode,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the direction of bisector of two segments
-    Arguments 
+    Arguments
      pDirection1: in, direction of first segment
      pDirection2: in, direction of second segment
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvCalcEdgeLL(pCvDirection pDirection1,
@@ -612,12 +612,12 @@ void _cvCalcEdgeLL(pCvDirection pDirection1,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Compute the bisector of two points
-    Arguments 
+    Arguments
      pPoint1, pPoint2: in, given points
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvCalcEdgePP(pCvPointFloat pPoint1,
@@ -627,16 +627,16 @@ void _cvCalcEdgePP(pCvPointFloat pPoint1,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Compute the bisector of segment and point. Since 
+    Description : Compute the bisector of segment and point. Since
                     it is parabola, it is defined by its focus (site - point)
                     and directrice(site-segment)
-    Arguments 
+    Arguments
      pFocus    : in, point, which defines the focus of parabola
-     pDirectrice: in, site - segment, which defines the directrice of parabola 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pDirectrice: in, site - segment, which defines the directrice of parabola
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvCalcEdgePL(pCvVoronoiNode pFocus,
@@ -646,16 +646,16 @@ void _cvCalcEdgePL(pCvVoronoiNode pFocus,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Compute the bisector of segment and point. Since 
+    Description : Compute the bisector of segment and point. Since
                     it is parabola, it is defined by its focus (site - point)
                     and directrice(site-segment)
-    Arguments 
+    Arguments
      pFocus    : in, point, which defines the focus of parabola
-     pDirectrice: in, site - segment, which defines the directrice of parabola 
-     pVoronoiDiagram : in, pointer to struct, which contains the 
+     pDirectrice: in, site - segment, which defines the directrice of parabola
+     pVoronoiDiagram : in, pointer to struct, which contains the
                         description of Voronoi Diagram
      pEdge      : out, bisector
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
@@ -672,7 +672,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1,pEdge2: in, two edges
         pPoint: out, intersection of pEdge1 and pEdge2
         Radius: out, distance between pPoint and sites, assosiated
@@ -693,7 +693,7 @@ float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in, straight ray
     pEdge2: in, straight ray or segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -715,7 +715,7 @@ float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in, straight ray
     pEdge2: in, parabolic ray or segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -737,7 +737,7 @@ float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in, straight ray
     pEdge2: in, parabolic segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -759,9 +759,9 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in, straight ray
-    pEdge2: in, parabolic ray 
+    pEdge2: in, parabolic ray
         pPoint: out, intersection of pEdge1 and pEdge2
         Radius: out, distance between pPoint and sites, assosiated
                     with pEdge1 and pEdge2 (pPoint is situated on the equal
@@ -781,7 +781,7 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
     pEdge2: in,  straight ray or segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -802,9 +802,9 @@ float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
-    pEdge2: in,  straight ray 
+    pEdge2: in,  straight ray
         pPoint: out, intersection of pEdge1 and pEdge2
         Radius: out, distance between pPoint and sites, assosiated
                     with pEdge1 and pEdge2 (pPoint is situated on the equal
@@ -824,7 +824,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
     pEdge2: in,  straight segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -846,7 +846,7 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
     pEdge2: in,  parabolic ray or segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -869,9 +869,9 @@ float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
-    pEdge2: in,  parabolic ray 
+    pEdge2: in,  parabolic ray
         pPoint: out, intersection of pEdge1 and pEdge2
         Radius: out, distance between pPoint and sites, assosiated
                     with pEdge1 and pEdge2 (pPoint is situated on the equal
@@ -891,7 +891,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
     Description : Function computes intersection of two edges. Intersection
                     must be the nearest to the marked point on pEdge1
                     (this marked point is pEdge1->node1->node).
-    Arguments 
+    Arguments
     pEdge1 : in,  parabolic ray
     pEdge2: in,  parabolic segment
         pPoint: out, intersection of pEdge1 and pEdge2
@@ -914,11 +914,11 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge1  : in
         pEdge2  : out
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
@@ -926,67 +926,67 @@ void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge   : in&out
         pEdge_left_prev : in&out
         pSite_left : in&out
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
-void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge,
                           pCvVoronoiEdge pEdge_left_prev,
                           pCvVoronoiSite pSite_left);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge   : in&out
         pEdge_right_next : in&out
         pSite_right : in&out
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
-void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge,
                           pCvVoronoiEdge pEdge_right_next,
                           pCvVoronoiSite pSite_right);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge   : in&out
         pEdge_left_next : in&out
         pSite_left : in&out
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
-void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge,
                         pCvVoronoiEdge pEdge_left_next,
                         pCvVoronoiSite pSite_left);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge   : in&out
         pEdge_right_prev : in&out
         pSite_right : in&out
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
-void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge,
                          pCvVoronoiEdge pEdge_right_prev,
                          pCvVoronoiSite pSite_right);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge_left_cur  : in
         pEdge_left : in
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
@@ -994,11 +994,11 @@ void _cvTwinNULLLeft(pCvVoronoiEdge pEdge_left_cur,
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : 
-    Arguments 
+    Description :
+    Arguments
         pEdge_right_cur : in
         pEdge_right : in
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvTwinNULLRight(pCvVoronoiEdge pEdge_right_cur,
@@ -1008,11 +1008,11 @@ void _cvTwinNULLRight(pCvVoronoiEdge pEdge_right_cur,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : function initializes the struct CvVoronoiNode
-    Arguments 
+    Arguments
         pNode   : out
-         pPoint : in, 
+         pPoint : in,
         radius  : in
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 template <class T> CV_INLINE
 void _cvInitVoronoiNode(pCvVoronoiNode pNode,
@@ -1021,10 +1021,10 @@ void _cvInitVoronoiNode(pCvVoronoiNode pNode,
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : function initializes the struct CvVoronoiSite
-    Arguments 
+    Arguments
         pSite   : out
-         pNode1,pNode2,pPrev_site : in 
-     Return     : 
+         pNode1,pNode2,pPrev_site : in
+     Return     :
     --------------------------------------------------------------------------*/
 CV_INLINE
 void _cvInitVoronoiSite(pCvVoronoiSite pSite,
@@ -1036,9 +1036,9 @@ void _cvInitVoronoiSite(pCvVoronoiSite pSite,
     Author      : Andrey Sobolev
     Description : function pushs the element in the end of the sequence
                     end returns its adress
-    Arguments 
+    Arguments
             Seq : in, pointer to the sequence
-           Elem : in, element 
+           Elem : in, element
      Return     : pointer to the element in the sequence
     --------------------------------------------------------------------------*/
 template <class T> CV_INLINE
@@ -1048,13 +1048,13 @@ T _cvSeqPush(CvSeq* Seq, T pElem);
     Author      : Andrey Sobolev
     Description : function pushs the element in the begin of the sequence
                     end returns its adress
-    Arguments 
+    Arguments
             Seq : in, pointer to the sequence
-           Elem : in, element 
+           Elem : in, element
      Return     : pointer to the element in the sequence
     --------------------------------------------------------------------------*/
 template <class T> CV_INLINE
-T _cvSeqPushFront(CvSeq* Seq, T pElem); 
+T _cvSeqPushFront(CvSeq* Seq, T pElem);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
@@ -1062,9 +1062,9 @@ T _cvSeqPushFront(CvSeq* Seq, T pElem);
                      so as all elements in this sequence would be normalized
                      according to field .x_coord of element. pHoleHierarchy->TopHole
                      points to hole with smallest x_coord.
-    Arguments 
+    Arguments
 pHoleHierarchy  : in, pointer to the structur
-          pHole : in, element 
+          pHole : in, element
      Return     : pointer to the element in the sequence
     --------------------------------------------------------------------------*/
 CV_INLINE
@@ -1074,7 +1074,7 @@ void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHol
     Author      : Andrey Sobolev
     Description : function intersects given edge pEdge (and his twin edge)
                     by point pNode on two parts
-    Arguments 
+    Arguments
         pEdge   : in, given edge
           pNode : in, given point
         EdgeSeq : in
@@ -1082,14 +1082,14 @@ void _cvSeqPushInOrder(CvVoronoiDiagramInt* pVoronoiDiagram, pCvVoronoiHole pHol
     --------------------------------------------------------------------------*/
 CV_INLINE
 pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,
-                                 pCvVoronoiNode pNode, 
+                                 pCvVoronoiNode pNode,
                                  CvSeq* EdgeSeq);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : function intersects given edge pEdge (and his twin edge)
                     by point pNode on two parts
-    Arguments 
+    Arguments
         pEdge   : in, given edge
           pNode : in, given point
         EdgeSeq : in
@@ -1097,16 +1097,16 @@ pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,
     --------------------------------------------------------------------------*/
 CV_INLINE
 pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,
-                                pCvVoronoiNode pNode, 
+                                pCvVoronoiNode pNode,
                                 CvSeq* EdgeSeq);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : function pushs the element in the end of the sequence
                     end returns its adress
-    Arguments 
+    Arguments
           writer: in, writer associated with sequence
-          pElem : in, element 
+          pElem : in, element
      Return     : pointer to the element in the sequence
     --------------------------------------------------------------------------*/
 template<class T> CV_INLINE
@@ -1119,18 +1119,18 @@ T _cvWriteSeqElem(T pElem, CvSeqWriter &writer);
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Function changes x and y
-    Arguments 
+    Arguments
             x,y : in&out
-      Return    : 
+      Return    :
     --------------------------------------------------------------------------*/
 template <class T> CV_INLINE
 void _cvSwap(T &x, T &y);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the inverse map to the 
+    Description : Function computes the inverse map to the
                     given ortogonal affine map
-    Arguments 
+    Arguments
             A   : in, given ortogonal affine map
             B   : out, inverse map
       Return    : 1, if inverse map exist
@@ -1142,45 +1142,45 @@ int _cvCalcOrtogInverse(T* B, T* A);
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Function computes the composition of two affine maps
-    Arguments 
+    Arguments
             A,B : in, given affine maps
             Result: out, composition of A and B (Result = AB)
-      Return    : 
+      Return    :
     --------------------------------------------------------------------------*/
 template <class T> CV_INLINE
 void _cvCalcComposition(T* Result,T* A,T* B);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the image of point under 
+    Description : Function computes the image of point under
                     given affin map
-    Arguments 
+    Arguments
             A   : in, affine maps
         pPoint  : in, pointer to point
         pImgPoint:out, pointer to image of point
-      Return    : 
+      Return    :
     --------------------------------------------------------------------------*/
 template<class T> CV_INLINE
 void _cvCalcPointImage(pCvPointFloat pImgPoint,pCvPointFloat pPoint,T* A);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the image of vector under 
+    Description : Function computes the image of vector under
                     given affin map
-    Arguments 
+    Arguments
             A   : in, affine maps
         pVector : in, pointer to vector
         pImgVector:out, pointer to image of vector
-      Return    : 
+      Return    :
     --------------------------------------------------------------------------*/
 template<class T> CV_INLINE
 void _cvCalcVectorImage(pCvDirection pImgVector,pCvDirection pVector,T* A);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the distance between the point 
+    Description : Function computes the distance between the point
                     and site. Internal function.
-    Arguments 
+    Arguments
         pPoint  : in, point
         pSite   : in, site
       Return    : distance
@@ -1190,8 +1190,8 @@ float _cvCalcDist(pCvPointFloat pPoint, pCvVoronoiSite pSite);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the distance between two points 
-    Arguments 
+    Description : Function computes the distance between two points
+    Arguments
     pPoint1,pPoint2 : in, two points
       Return    : distance
     --------------------------------------------------------------------------*/
@@ -1200,9 +1200,9 @@ float _cvPPDist(pCvPointFloat pPoint1,pCvPointFloat pPoint2);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
-    Description : Function computes the distance betwin point and 
-                    segment. Internal function. 
-    Arguments 
+    Description : Function computes the distance betwin point and
+                    segment. Internal function.
+    Arguments
           pPoint: in, point
     pPoint1,pPoint2 : in, segment [pPoint1,pPoint2]
        Return   : distance
@@ -1214,20 +1214,20 @@ float _cvPLDist(pCvPointFloat pPoint,pCvPointFloat pPoint1,pCvDirection pDirecti
     Author      : Andrey Sobolev
     Description : Function solves the squar equation with real coefficients
                     T - float or double
-    Arguments 
-     c2,c1,c0: in, real coefficients of polynom 
+    Arguments
+     c2,c1,c0: in, real coefficients of polynom
                X: out, array of roots
      Return     : number of roots
     --------------------------------------------------------------------------*/
-template <class T> 
+template <class T>
 int _cvSolveEqu2thR(T c2, T c1, T c0, T* X);
 
 /*--------------------------------------------------------------------------
     Author      : Andrey Sobolev
     Description : Function solves the linear equation with real or complex coefficients
                     T - float or double or complex
-    Arguments 
-        c1,c0: in, real or complex coefficients of polynom 
+    Arguments
+        c1,c0: in, real or complex coefficients of polynom
                X: out, array of roots
      Return     : number of roots
     --------------------------------------------------------------------------*/
@@ -1241,11 +1241,11 @@ int _cvSolveEqu1th(T c1, T c0, T* X);
     Author      : Andrey Sobolev
     Description : For each sequence function creates the memory block sufficient to store
                   all elements of sequnce
-    Arguments 
-        pVoronoiDiagramInt: in, pointer to struct, which contains the 
+    Arguments
+        pVoronoiDiagramInt: in, pointer to struct, which contains the
                             description of Voronoi Diagram.
         vertices_number: in, number of vertices in polygon
-     Return     : 
+     Return     :
     --------------------------------------------------------------------------*/
 void _cvSetSeqBlockSize(CvVoronoiDiagramInt* pVoronoiDiagramInt,int vertices_number)
 {
@@ -1264,7 +1264,7 @@ void _cvSetSeqBlockSize(CvVoronoiDiagramInt* pVoronoiDiagramInt,int vertices_num
 \****************************************************************************************/
 
 
-CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,    
+CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
                                            CvVoronoiDiagram2D** VoronoiDiagram,
                                            CvMemStorage* VoronoiStorage,
                                            CvLeeParameters contour_type,
@@ -1288,7 +1288,7 @@ CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
 
     if(!VoronoiStorage)
         CV_ERROR( CV_StsBadArg,"Storage is not initialized" );
-   
+
     if( contour_type < 0 || contour_type > 2)
         CV_ERROR( CV_StsBadArg,"Unsupported parameter: type" );
 
@@ -1307,7 +1307,7 @@ CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
             CurContourSeq = CurContourSeq->h_next)
         {
             if(_cvLee(CurContourSeq, &VoronoiDiagramInt,VoronoiStorage,contour_type,contour_orientation,attempt_number))
-    
+
             {
                 if(!_cvConvert(*VoronoiDiagram,VoronoiDiagramInt,SiteSeq,NodeWriter,EdgeWriter,VoronoiStorage,contour_orientation))
                     goto exit;
@@ -1321,10 +1321,10 @@ CV_IMPL int   cvVoronoiDiagramFromContour(CvSeq* ContourSeq,
         if(SiteSeq != NULL)
             return 1;
 
-    
+
     __END__;
     return 0;
-}//end of cvVoronoiDiagramFromContour 
+}//end of cvVoronoiDiagramFromContour
 
 CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
                                          CvSeq** ContourSeq,
@@ -1335,13 +1335,13 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
 {
     CV_FUNCNAME( "cvVoronoiDiagramFromContour" );
     int RESULT = 0;
-    
+
     __BEGIN__;
 
     IplImage* pWorkImage = NULL;
     CvSize image_size;
     int i, multiplicator = 3;
-    
+
     int approx_method;
     CvMemStorage* ApproxContourStorage = NULL;
     CvSeq* ApproxContourSeq = NULL;
@@ -1363,7 +1363,7 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
 
     if(approx_precision<0 && approx_precision != CV_LEE_AUTO)
         CV_ERROR( CV_StsBadArg,"Unsupported presision value" );
-    
+
     switch(regularization_method)
     {
         case CV_LEE_ERODE:  image_size.width = pImage->width;
@@ -1391,13 +1391,13 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
 
     if(pWorkImage && pWorkImage != pImage )
         cvReleaseImage(&pWorkImage);
-    
+
     ApproxContourStorage = cvCreateMemStorage(0);
     if(approx_precision > 0)
     {
         ApproxContourSeq = cvApproxPoly(*ContourSeq, sizeof(CvContour), ApproxContourStorage,\
                                         CV_POLY_APPROX_DP,approx_precision,1);
-    
+
         RESULT = cvVoronoiDiagramFromContour(ApproxContourSeq,VoronoiDiagram,VoronoiStorage,CV_LEE_INT,-1,10);
     }
     else if(approx_precision == CV_LEE_AUTO)
@@ -1435,10 +1435,10 @@ CV_IMPL int   cvVoronoiDiagramFromImage(IplImage* pImage,
     */
 
     cvReleaseMemStorage(&ApproxContourStorage);
-    
-    
+
+
     __END__;
-    return RESULT;                                         
+    return RESULT;
 }//end of cvVoronoiDiagramFromImage
 
 CV_IMPL void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
@@ -1446,7 +1446,7 @@ CV_IMPL void cvReleaseVoronoiStorage(CvVoronoiDiagram2D* VoronoiDiagram,
 {
     /*CV_FUNCNAME( "cvReleaseVoronoiStorage" );*/
     __BEGIN__;
-    
+
     CvSeq* Seq;
 
     if(VoronoiDiagram->storage)
@@ -1499,7 +1499,7 @@ NEXTATTEMPT:
     pVoronoiDiagramInt->HoleSeq =  cvCreateSeq(0,sizeof(CvSeq),sizeof(CvVoronoiHoleInt),VoronoiStorageInt.HoleStorage);
 
     _cvSetSeqBlockSize(pVoronoiDiagramInt,ContourSeq->total);
-    
+
     if(!_cvConstuctSites(ContourSeq, pVoronoiDiagramInt, contour_type,contour_orientation))
     {
         attempt = attempt_number;
@@ -1514,10 +1514,10 @@ NEXTATTEMPT:
     }
 
     if(!_cvConstructSkeleton(pVoronoiDiagramInt))
-        goto FAULT; 
+        goto FAULT;
 
     _cvConstructSiteTree(pVoronoiDiagramInt);
-    
+
 //SUCCESS:
     _cvReleaseVoronoiStorage(&VoronoiStorageInt,0,1);
     return 1;
@@ -1536,7 +1536,7 @@ static int _cvConstuctSites(CvSeq* ContourSeq,
                             int contour_orientation)
 {
     pVoronoiDiagram->reflex_site = NULL;
-    pVoronoiDiagram->top_hole = NULL;   
+    pVoronoiDiagram->top_hole = NULL;
     int result = 0;
 
     switch(contour_type)
@@ -1549,11 +1549,11 @@ static int _cvConstuctSites(CvSeq* ContourSeq,
                              break;
         default:             return 0;
     }
-    
+
     if(!result)
         return 0;
 
-    CvSeq* CurSiteSeq; 
+    CvSeq* CurSiteSeq;
     CvVoronoiHoleInt Hole = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,false,0};
     pCvVoronoiSite pTopSite = 0;
     for(CvSeq* CurContourSeq = ContourSeq->v_next;\
@@ -1610,7 +1610,7 @@ static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
         return 0;
     _cvConstructIntVD(pVoronoiDiagram);
     _cvFindNearestSite(pVoronoiDiagram);
-    
+
     float dx,dy;
     int result;
     for(pCvVoronoiHole pHole = pVoronoiDiagram->top_hole;\
@@ -1620,7 +1620,7 @@ static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
             continue;
         dx = pHole->node->node.x - pHole->site_top->node1->node.x;
         dy = pHole->node->node.y - pHole->site_top->node1->node.y;
-        
+
         if(fabs(dy) < 0.01 && dx < 0)
             pHole->site_opposite = pHole->site_nearest;
         else
@@ -1636,7 +1636,7 @@ static int _cvConstructSkeleton(CvVoronoiDiagramInt* pVoronoiDiagram)
                 continue;
             }
         }
-    
+
         if(!_cvMergeVD(pHole,pVoronoiDiagram))
             return 0;
     }
@@ -1662,7 +1662,7 @@ static void _cvConstructSiteTree(CvVoronoiDiagramInt* pVoronoiDiagram)
             pHole->SiteSeq->h_prev = CurSeq;
             pHole->SiteSeq->v_prev = pVoronoiDiagram->SiteSeq;
         }
-        CurSeq = pHole->SiteSeq; 
+        CurSeq = pHole->SiteSeq;
     }
     CurSeq->h_next = NULL;
 }//end of _cvConstructSiteTree
@@ -1680,7 +1680,7 @@ static void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begi
         pNode = (pCvVoronoiNode)Reader.ptr;
         pNode->node.x = (float)cvFloor(pNode->node.x) + rand()*rnd_const;
         pNode->node.y = (float)cvFloor(pNode->node.y) + rand()*rnd_const;
-        CV_NEXT_SEQ_ELEM( sizeof(CvVoronoiNodeInt), Reader ); 
+        CV_NEXT_SEQ_ELEM( sizeof(CvVoronoiNodeInt), Reader );
     }
 
     for(pCvVoronoiHole pHole = pVoronoiDiagram->top_hole;\
@@ -1689,7 +1689,7 @@ static void _cvRandomModification(CvVoronoiDiagramInt* pVoronoiDiagram, int begi
     {
         pHole->site_top->node1->node.x = (float)cvFloor(pHole->site_top->node1->node.x);
     }
-        
+
 }//end of _cvRandomModification
 
 static void _cvReleaseVoronoiStorage(CvVoronoiStorageInt* pVoronoiStorage, int group1, int group2)
@@ -1748,7 +1748,7 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 
     CvMemStorage *NewSiteStorage = cvCreateChildMemStorage(VoronoiStorage);
     CvSet *NewSiteSeq = NULL,*CurrNewSiteSeq = NULL, *PrevNewSiteSeq = NULL;;
-    CvSeqWriter SiteWriter; 
+    CvSeqWriter SiteWriter;
 
     CvVoronoiSite2D NewSite = {{0,0},{0,0},{0,0}},NewSite_prev;
     CvVoronoiSite2D *pNewSite, *pNewSite_prev = &NewSite_prev;
@@ -1781,17 +1781,17 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
             CurrNewSiteSeq->v_prev = (CvSeq*)PrevNewSiteSeq->v_prev;
         }
         PrevNewSiteSeq = CurrNewSiteSeq;
-        
+
         pSite = pFirstSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0);
         while(pSite->prev_site->node1 == pSite->prev_site->node2)\
             pSite = pSite->next_site;
         pFirstSite = pSite;
-        
+
         pNewSite_prev = &NewSite_prev;
         cvStartAppendToSeq((CvSeq*)CurrNewSiteSeq, &SiteWriter);
         do
         {
-            pNewSite = _cvWriteSeqElem(&NewSite,SiteWriter); 
+            pNewSite = _cvWriteSeqElem(&NewSite,SiteWriter);
             pNewSite->next[0] = pNewSite_prev;
             pNewSite_prev->next[1] = pNewSite;
             pEdge = pSite->edge1;
@@ -1805,8 +1805,8 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                 pNewSite->node[0] = pNewEdge1->node[0];
             }
             else
-            {   
-                pNewEdge1 = _cvWriteSeqElem(&NewEdge,EdgeWriter); 
+            {
+                pNewEdge1 = _cvWriteSeqElem(&NewEdge,EdgeWriter);
                 pNewEdge1->site[0] = pNewSite;
 
                 pNode1 = _cvWriteSeqElem(&Node,NodeWriter);
@@ -1844,8 +1844,8 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                     }
                 }
                 else
-                {   
-                    pNewEdge2 = _cvWriteSeqElem(&NewEdge,EdgeWriter); 
+                {
+                    pNewEdge2 = _cvWriteSeqElem(&NewEdge,EdgeWriter);
                     pNewEdge2->site[0] = pNewSite;
 
                     pNode1 = _cvWriteSeqElem(&Node,NodeWriter);
@@ -1853,12 +1853,12 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                     pNode1->pt.y = pEdge->node1->node.y;
                     pNode1->radius = pEdge->node1->radius;
                     pNewEdge2->node[0] = pNode1;
-                
+
                     if(pNewEdge1->site[0] == pNewSite)
                         pNewEdge2->node[1] = pNewEdge1->node[0];
                     else
                         pNewEdge2->node[1] = pNewEdge1->node[1];
-                
+
                     if(!pNewEdge1->node[0] || !pNewEdge1->node[1])
                         return 0;
                     pEdge->twin_edge->site = NULL;
@@ -1868,7 +1868,7 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                     pNewEdge1->next[2] = pNewEdge2;
                 else
                     pNewEdge1->next[3] = pNewEdge2;
-            
+
                 if(pNewEdge2->site[0] == pNewSite)
                     pNewEdge2->next[0] = pNewEdge1;
                 else
@@ -1886,7 +1886,7 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 //              cvSetRemove((CvSet*)VoronoiDiagram,VoronoiDiagram->total-1);
                 pNewSite->node[1] = pNewEdge1->node[0] = pNewSite->node[0];
             }
-            
+
             pNewSite_prev = pNewSite;
             pSite = pSite->next_site;
         }while(pSite != pFirstSite);
@@ -1898,7 +1898,7 @@ static int _cvConvertSameOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
             Node.radius = 0;
             pNewSite->node[0] = pNewSite->node[1] = _cvWriteSeqElem(&Node,NodeWriter);
         }
-        
+
         cvEndWriteSeq(&SiteWriter);
         pNewSite = (CvVoronoiSite2D*)cvGetSetElem(CurrNewSiteSeq, 0);
         pNewSite->next[0] = pNewSite_prev;
@@ -1930,7 +1930,7 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 {
     // pNewSite->edge[1] = pSite->edge2
     // pNewSite->edge[0] = pSite->edge1
-    
+
     CvSeq* SiteSeq = VoronoiDiagramInt.SiteSeq;
     CvSeq* EdgeSeq = VoronoiDiagramInt.EdgeSeq;
     CvSeq* NodeSeq = VoronoiDiagramInt.NodeSeq;
@@ -1938,7 +1938,7 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
 
     CvMemStorage *NewSiteStorage = cvCreateChildMemStorage(VoronoiStorage);
     CvSet *NewSiteSeq = NULL,*CurrNewSiteSeq = NULL, *PrevNewSiteSeq = NULL;;
-    CvSeqWriter SiteWriter; 
+    CvSeqWriter SiteWriter;
 
     CvVoronoiSite2D NewSite = {{0,0},{0,0},{0,0}},NewSite_prev;
     CvVoronoiSite2D *pNewSite, *pNewSite_prev = &NewSite_prev;
@@ -1971,17 +1971,17 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
             CurrNewSiteSeq->v_prev = (CvSeq*)PrevNewSiteSeq->v_prev;
         }
         PrevNewSiteSeq = CurrNewSiteSeq;
-        
+
         pSite = (pCvVoronoiSite)cvGetSeqElem(CurrSiteSeq, 0);
         while(pSite->next_site->node1 == pSite->next_site->node2)\
             pSite = pSite->next_site;
         pFirstSite = pSite;
-        
+
         pNewSite_prev = &NewSite_prev;
         cvStartAppendToSeq((CvSeq*)CurrNewSiteSeq, &SiteWriter);
         do
         {
-            pNewSite = _cvWriteSeqElem(&NewSite,SiteWriter); 
+            pNewSite = _cvWriteSeqElem(&NewSite,SiteWriter);
             pNewSite->next[0] = pNewSite_prev;
             pNewSite_prev->next[1] = pNewSite;
 
@@ -1996,10 +1996,10 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                 pNewSite->node[0] = pNewEdge1->node[0];
             }
             else
-            {   
-                pNewEdge1 = _cvWriteSeqElem(&NewEdge,EdgeWriter); 
+            {
+                pNewEdge1 = _cvWriteSeqElem(&NewEdge,EdgeWriter);
                 pNewEdge1->site[0] = pNewSite;
-                
+
                 pNode1 = _cvWriteSeqElem(&Node,NodeWriter);
                 pNode2 = _cvWriteSeqElem(&Node,NodeWriter);
                 pNode1->pt.x = pEdge->node1->node.x;
@@ -2019,7 +2019,7 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                 pEdge->twin_edge->twin_edge = (pCvVoronoiEdge)pNewEdge1;
             }
             pNewSite->edge[1] = pNewEdge1;
-            
+
 
             pEdge = pEdge->next_edge;
             while((pEdge != NULL && CurrSiteSeq->total>1) ||
@@ -2037,8 +2037,8 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                     }
                 }
                 else
-                {   
-                    pNewEdge2 = _cvWriteSeqElem(&NewEdge,EdgeWriter); 
+                {
+                    pNewEdge2 = _cvWriteSeqElem(&NewEdge,EdgeWriter);
                     pNewEdge2->site[0] = pNewSite;
 
                     pNode2 = _cvWriteSeqElem(&Node,NodeWriter);
@@ -2051,7 +2051,7 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
                         pNewEdge2->node[1] = pNewEdge1->node[0];
                     else
                         pNewEdge2->node[1] = pNewEdge1->node[1];
-                
+
                     if(!pNewEdge1->node[0] || !pNewEdge1->node[1])
                         return 0;
                     pEdge->twin_edge->site = NULL;
@@ -2091,7 +2091,7 @@ static int _cvConvertChangeOrientation(CvVoronoiDiagram2D* VoronoiDiagram,
             Node.radius = 0;
             pNewSite->node[0] = pNewSite->node[1] = _cvWriteSeqElem(&Node,NodeWriter);
         }
-        
+
         cvEndWriteSeq(&SiteWriter);
         pNewSite = (CvVoronoiSite2D*)cvGetSetElem(CurrNewSiteSeq, 0);
         pNewSite->next[0] = pNewSite_prev;
@@ -2118,14 +2118,14 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
                          CvSeq* ContourSeq,
                          int orientation,
                          T type)
-{ 
+{
     const double angl_eps = 0.03;
     CvSeq* SiteSeq = pVoronoiDiagram->SiteSeq;
     CvSeq* NodeSeq = pVoronoiDiagram->NodeSeq;
     //CvSeq* DirectionSeq = pVoronoiDiagram->DirectionSeq;
     CvPointFloat Vertex1,Vertex2,Vertex3;
     CvLeePoint<T> VertexT1,VertexT2,VertexT3;
-    
+
     CvSeqReader ContourReader;
     CvVoronoiSiteInt Site = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     CvVoronoiSiteInt SiteTemp = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -2134,7 +2134,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     pCvVoronoiSite pSite = &SiteTemp,pSite_prev = &SiteTemp;
     pCvVoronoiSite pReflexSite = NULL;
     int NReflexSite = 0;
-    
+
     float delta_x_rc, delta_x_cl, delta_y_rc, delta_y_cl;
     float norm_cl,norm_rc, mult_cl_rc;
     float _sin, _cos;
@@ -2148,11 +2148,11 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     }
     else
     {
-        cvStartReadSeq(ContourSeq, &ContourReader,1); 
+        cvStartReadSeq(ContourSeq, &ContourReader,1);
         CV_REV_READ_SEQ_ELEM(VertexT1,ContourReader);
-        CV_REV_READ_SEQ_ELEM(VertexT2,ContourReader);   
+        CV_REV_READ_SEQ_ELEM(VertexT2,ContourReader);
     }
-    
+
     Vertex1.x = (float)VertexT1.x;
     Vertex1.y = (float)VertexT1.y;
     Vertex2.x = (float)VertexT2.x;
@@ -2187,7 +2187,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
         norm_rc = (float)sqrt((double)delta_x_rc*delta_x_rc + delta_y_rc*delta_y_rc);
         if(norm_rc==0)
             continue;
-    
+
         mult_cl_rc = norm_cl*norm_rc;
         _sin = (delta_y_rc* delta_x_cl - delta_x_rc* delta_y_cl)/mult_cl_rc;
         _cos = -(delta_x_cl*delta_x_rc + delta_y_cl*delta_y_rc)/mult_cl_rc;
@@ -2202,7 +2202,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
         {
             pSite = _cvSeqPush(SiteSeq, &Site);
             _cvInitVoronoiSite(pSite,pNode1,pNode1,pSite_prev);
-            pReflexSite = pSite; 
+            pReflexSite = pSite;
             NReflexSite++;
             pSite_prev->next_site = pSite;
 
@@ -2217,7 +2217,7 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
             delta_y_rc = delta_y_cl + delta_y_rc;
             delta_x_rc = delta_x_cl + delta_x_rc;
             pSite->node2 = pNode2;
-        
+
             norm_rc = (float)sqrt((double)delta_y_rc*delta_y_rc + delta_x_rc*delta_x_rc);
         }
         Vertex2=Vertex3;
@@ -2258,11 +2258,11 @@ int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
 template<class T>
 int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
                                  CvSeq* CurrSiteSeq,
-                                 CvSeq* CurrContourSeq, 
+                                 CvSeq* CurrContourSeq,
                                  pCvVoronoiSite &pTopSite,
                                  int orientation,
                                  T type)
-{ 
+{
     const double angl_eps = 0.03;
     float min_x = (float)999999999;
     CvSeq* SiteSeq = CurrSiteSeq;
@@ -2270,7 +2270,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     //CvSeq* DirectionSeq = pVoronoiDiagram->DirectionSeq;
     CvPointFloat Vertex1,Vertex2,Vertex3;
     CvLeePoint<T> VertexT1,VertexT2,VertexT3;
-    
+
     CvSeqReader ContourReader;
     CvVoronoiSiteInt Site = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     CvVoronoiSiteInt SiteTemp = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -2279,11 +2279,11 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     pCvVoronoiSite pSite = &SiteTemp,pSite_prev = &SiteTemp;
     pTopSite = NULL;
     int NReflexSite = 0;
-    
+
     if(CurrContourSeq->total == 1)
     {
-        cvStartReadSeq(CurrContourSeq, &ContourReader,0); 
-        CV_READ_SEQ_ELEM(VertexT1,ContourReader); 
+        cvStartReadSeq(CurrContourSeq, &ContourReader,0);
+        CV_READ_SEQ_ELEM(VertexT1,ContourReader);
         Vertex1.x = (float)VertexT1.x;
         Vertex1.y = (float)VertexT1.y;
 
@@ -2308,9 +2308,9 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     }
     else
     {
-        cvStartReadSeq(CurrContourSeq, &ContourReader,1); 
+        cvStartReadSeq(CurrContourSeq, &ContourReader,1);
         CV_REV_READ_SEQ_ELEM(VertexT1,ContourReader);
-        CV_REV_READ_SEQ_ELEM(VertexT2,ContourReader);   
+        CV_REV_READ_SEQ_ELEM(VertexT2,ContourReader);
     }
 
     Vertex1.x = (float)VertexT1.x;
@@ -2336,7 +2336,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
         }
         Vertex3.x = (float)VertexT3.x;
         Vertex3.y = (float)VertexT3.y;
-    
+
         _cvInitVoronoiNode(&Node, &Vertex3);
         pNode2 = _cvSeqPush(NodeSeq, &Node);
 
@@ -2362,7 +2362,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
             if(pNode1->node.x < min_x)
             {
                 min_x = pNode1->node.x;
-                pTopSite = pSite; 
+                pTopSite = pSite;
             }
             NReflexSite++;
             pSite_prev->next_site = pSite;
@@ -2393,7 +2393,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
     if(SiteTemp.next_site==NULL)
         return 0;
 
-    if(NReflexSite < 3 && CurrContourSeq->total > 2 || NReflexSite < 2)
+    if((NReflexSite < 3 && CurrContourSeq->total > 2) || NReflexSite < 2)
         return 0;
 
     pSite->node2 = SiteTemp.next_site->node1;
@@ -2422,7 +2422,7 @@ static int _cvConstructExtChains(CvVoronoiDiagramInt* pVoronoiDiagram)
 
         pSite = pSiteFirst = pReflexSite->next_site;
     }
-    
+
     Chain.last_site = pSite;
     _cvConstructEdges(pSite,pVoronoiDiagram);
     pSite_prev = pSite;
@@ -2501,7 +2501,7 @@ static void _cvConstructIntChains(CvVoronoiDiagramInt* pVoronoiDiagram,
 
     if(pSite == pSiteFirst->prev_site && ChainSeq->total == 0)
         return;
-    
+
     Chain.first_site = pSite_prev;
     if(pSite == pSiteFirst->prev_site)
     {
@@ -2551,7 +2551,7 @@ CV_INLINE void _cvConstructEdges(pCvVoronoiSite pSite,CvVoronoiDiagramInt* pVoro
 
         pEdge1 = _cvSeqPush(EdgeSeq,&Edge);
         pEdge2 = _cvSeqPush(EdgeSeq,&Edge);
-    
+
         pEdge2->direction = pSite_next->edge1->direction;
         pEdge2->twin_edge = pSite_next->edge1;
         pSite_next->edge1->twin_edge = pEdge2;
@@ -2613,23 +2613,23 @@ static int _cvConstructExtVD(CvVoronoiDiagramInt* pVoronoiDiagram)
     return 1;
 }//end of _cvConstructExtVD
 
-static int _cvJoinChains(pCvVoronoiChain pChain1, 
+static int _cvJoinChains(pCvVoronoiChain pChain1,
                           pCvVoronoiChain pChain2,
                           CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     const double dist_eps = 0.05;
-    if(pChain1->first_site == NULL || pChain1->last_site == NULL || 
-        pChain2->first_site == NULL || pChain2->last_site == NULL) 
+    if(pChain1->first_site == NULL || pChain1->last_site == NULL ||
+        pChain2->first_site == NULL || pChain2->last_site == NULL)
         return 0;
 
     CvVoronoiEdgeInt EdgeNULL = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
     CvSeq* NodeSeq = pVoronoiDiagram->NodeSeq;
     CvSeq* EdgeSeq = pVoronoiDiagram->EdgeSeq;
-        
+
     pCvVoronoiSite pSite_left = pChain1->last_site;
     pCvVoronoiSite pSite_right = pChain2->first_site;
-    
+
     pCvVoronoiEdge pEdge_left = pSite_left->edge2->next_edge;
     pCvVoronoiEdge pEdge_right = pSite_right->edge1->prev_edge;
 
@@ -2646,7 +2646,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
 
     pCvVoronoiEdge pEdge1,pEdge2;
     CvPointFloat Point1 = {0,0}, Point2 = {0,0};
-    
+
     float radius1,radius2,dist1,dist2;
     bool left = true,right = true;
 
@@ -2657,10 +2657,10 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
     pEdge1->node2 = NULL;
     pEdge2 = pSite_right->edge1;
     pEdge2->node1 = NULL;
-    
+
     for(;;)
     {
-        
+
         if(left)
             pEdge1->node1 = pNode_begin;
         if(right)
@@ -2698,7 +2698,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
                 if(pEdge_left == NULL)
                     break;
             }
-            
+
             if(left)
                 dist1 = _cvCalcEdgeIntersection(pEdge1, pEdge_left, &Point1,radius1);
             else
@@ -2709,7 +2709,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
 
             pEdge_left = pEdge_left->next_edge;
         }
-    
+
         while(pEdge_right!=NULL)
         {
             if(pEdge_right->node1 == NULL)
@@ -2718,7 +2718,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
                 if(pEdge_right == NULL)
                     break;
             }
-        
+
             if(left)
                 dist2 = _cvCalcEdgeIntersection(pEdge1, pEdge_right, &Point2, radius2);
             else
@@ -2726,7 +2726,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
 
             if(dist2>=0)
                 break;
-    
+
             pEdge_right = pEdge_right->prev_edge;
         }
 
@@ -2770,16 +2770,16 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
         }
 
         if(fabs(dist1 - dist2)<dist_eps)
-        {           
+        {
             pNode_begin = _cvSeqPush(NodeSeq,&Node);
             _cvInitVoronoiNode(pNode_begin, &Point2,radius2);
-            
+
             pEdge1->node2 = pNode_begin;
             pEdge2->node1 = pNode_begin;
 
             _cvStickEdgeLeftEnd(pEdge1,pEdge_left,pSite_left);
             _cvTwinNULLLeft(pEdge_left_cur,pEdge_left);
-            
+
             _cvStickEdgeRightEnd(pEdge2,pEdge_right,pSite_right);
             _cvTwinNULLRight(pEdge_right_cur,pEdge_right);
 
@@ -2835,7 +2835,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
             pNode_begin = _cvSeqPush(NodeSeq,&Node);
             _cvInitVoronoiNode(pNode_begin, &Point1,radius1);
             pEdge1->node2 = pNode_begin;
-            _cvTwinNULLLeft(pEdge_left_cur,pEdge_left); 
+            _cvTwinNULLLeft(pEdge_left_cur,pEdge_left);
             _cvStickEdgeLeftEnd(pEdge1,pEdge_left,pSite_left);
             if(right)
             {
@@ -2875,7 +2875,7 @@ static int _cvJoinChains(pCvVoronoiChain pChain1,
                     return 1;
 
             }
-        
+
         }
 
         if((dist1>dist2&&dist2>=0)||(dist1<0&&dist2>=0))
@@ -2968,20 +2968,20 @@ static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
                     {
                         pPoint1 = &pSite->node1->node;
                         pPoint2 = &pSite->node2->node;
-                        
+
                         Direction.x = -pSite->direction->y;
                         Direction.y = pSite->direction->x;
-                                        
+
                         if(
-                                 (pTopPoint->x - pPoint2->x)*Direction.y - 
+                                 (pTopPoint->x - pPoint2->x)*Direction.y -
                                  (pTopPoint->y - pPoint2->y)*Direction.x > 0
                             ||
-                                 (pTopPoint->x - pPoint1->x)*Direction.y - 
+                                 (pTopPoint->x - pPoint1->x)*Direction.y -
                                  (pTopPoint->y - pPoint1->y)*Direction.x < 0
                             ||
-                                 (pTopPoint->x - pPoint1->x)*pSite->direction->y -  
+                                 (pTopPoint->x - pPoint1->x)*pSite->direction->y -
                                  (pTopPoint->y - pPoint1->y)*pSite->direction->x > 0
-                           )                       
+                           )
                                 continue;
 
                         distance = _cvCalcDist(pTopPoint, pSite);
@@ -2990,18 +2990,18 @@ static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
                     {
                         pPoint1 = &pSite->node1->node;
                         if(
-                                 (pTopPoint->x - pPoint1->x)*pSite->edge2->direction->y - 
+                                 (pTopPoint->x - pPoint1->x)*pSite->edge2->direction->y -
                                  (pTopPoint->y - pPoint1->y)*pSite->edge2->direction->x > 0
                             ||
-                                 (pTopPoint->x - pPoint1->x)*pSite->edge1->direction->y -  
+                                 (pTopPoint->x - pPoint1->x)*pSite->edge1->direction->y -
                                  (pTopPoint->y - pPoint1->y)*pSite->edge1->direction->x < 0
-                           )                       
+                           )
                                 continue;
 
                         distance = _cvCalcDist(pTopPoint, pSite);
                     }
-                    
-                    
+
+
                     if(distance < min_distance)
                     {
                         min_distance = distance;
@@ -3009,16 +3009,16 @@ static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
                     }
                 }
             }
-            
+
             if(pCurrHole == NULL)
                 pCurrHole = pVoronoiDiagram->top_hole;
             else
                 pCurrHole = pCurrHole->next_hole;
-            
+
             CurrSeq = pCurrHole->SiteSeq;
         }
-        pHole->x_coord = min_distance; 
-        
+        pHole->x_coord = min_distance;
+
         if(pHole->site_nearest->node1 == pHole->site_nearest->node2)
         {
             Direction.x = (pHole->site_nearest->node1->node.x - pHole->site_top->node1->node.x)/2;
@@ -3026,7 +3026,7 @@ static void _cvFindNearestSite(CvVoronoiDiagramInt* pVoronoiDiagram)
         }
         else
         {
-            
+
             Direction.x = pHole->site_nearest->direction->y * min_distance / 2;
             Direction.y = - pHole->site_nearest->direction->x * min_distance / 2;
         }
@@ -3042,7 +3042,7 @@ static void _cvConstructIntVD(CvVoronoiDiagramInt* pVoronoiDiagram)
     pCvVoronoiChain pChain1, pChain2;
     pCvVoronoiHole pHole;
     int i;
-    
+
     pHole = pVoronoiDiagram->top_hole;
 
     for(;pHole != NULL; pHole = pHole->next_hole)
@@ -3081,7 +3081,7 @@ static int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoro
     CvVoronoiEdgeInt Edge = {NULL,pNode,pSite_right,NULL,NULL,NULL,NULL,NULL};
     CvVoronoiEdgeInt Edge_cur = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     pCvVoronoiEdge pEdge = &Edge;
-    
+
     float radius1, radius2,dist1, dist2;
     CvPointFloat Point1 = {0,0}, Point2 = {0,0};
 
@@ -3100,7 +3100,7 @@ static int _cvFindOppositSiteCW(pCvVoronoiHole pHole, CvVoronoiDiagramInt* pVoro
                 break;
             pEdge_left = pEdge_left->next_edge;
         }
-    
+
         dist2 = _cvCalcEdgeIntersection(pEdge, pEdge_right, &Point2, radius2);
         if(dist2>=0 && dist1 >= dist2)
         {
@@ -3129,14 +3129,14 @@ static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoro
 
     CvDirection Direction = {-1,0};
     CvVoronoiEdgeInt Edge_left = {pSite_left->node1,NULL,pSite_left,NULL,NULL,NULL, NULL, &Direction};
-    
+
     pCvVoronoiEdge pEdge_left = &Edge_left;
     pCvVoronoiEdge pEdge_right = pSite_right->edge1->prev_edge;
 
     CvVoronoiEdgeInt Edge = {NULL,pNode,pSite_left,NULL,NULL,NULL,NULL};
     CvVoronoiEdgeInt Edge_cur = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     pCvVoronoiEdge pEdge = &Edge;
-    
+
     double dist1, dist2;
     float radius1, radius2;
     CvPointFloat Point1 = {0,0}, Point2 = {0,0};
@@ -3146,7 +3146,7 @@ static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoro
         pEdge->direction = NULL;
         pEdge->parabola = NULL;
         _cvCalcEdge(pSite_left,pSite_right,pEdge,pVoronoiDiagram);
-    
+
         dist1=dist2=-1;
         radius1 = -1; radius2 = -2;
         while(pEdge_right!=NULL)
@@ -3156,7 +3156,7 @@ static int _cvFindOppositSiteCCW(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoro
                 break;
             pEdge_right = pEdge_right->prev_edge;
         }
-    
+
         dist2 = _cvCalcEdgeIntersection(pEdge, pEdge_left, &Point2, radius1);
         if(dist2>=0 && dist1 > dist2)
         {
@@ -3193,7 +3193,7 @@ static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
 
     CvSeq* NodeSeq = pVoronoiDiagram->NodeSeq;
     CvSeq* EdgeSeq = pVoronoiDiagram->EdgeSeq;
-        
+
     pCvVoronoiEdge pEdge_left = NULL;
     if(pSite_left->edge2 != NULL)
         pEdge_left = pSite_left->edge2->next_edge;
@@ -3207,9 +3207,9 @@ static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
 
     pCvVoronoiEdge pEdge1,pEdge2,pEdge1_first, pEdge2_first;
     CvPointFloat Point1 = {0,0}, Point2 = {0,0};
-    
+
     float radius1,radius2,dist1,dist2;
-    
+
     CvVoronoiNodeInt Node;
 
     pEdge1_first = pEdge1 = _cvSeqPush(EdgeSeq, &EdgeNULL);;
@@ -3220,18 +3220,18 @@ static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
     do
     {
         pEdge1->node1 = pEdge2->node2 = pNode_begin;
-        
+
         pEdge_left = pEdge_left_cur;
         pEdge_right = pEdge_right_cur->prev_edge;
 
         _cvCalcEdge(pSite_left,pSite_right,pEdge1,pVoronoiDiagram);
         _cvMakeTwinEdge(pEdge2,pEdge1);
-        
+
         if(pEdge_left_prev != NULL)
             _cvStickEdgeLeftBegin(pEdge1,pEdge_left_prev,pSite_left);
         if(pEdge_right_next != NULL)
             _cvStickEdgeRightBegin(pEdge2,pEdge_right_next,pSite_right);
-            
+
         dist1=dist2=-1;
         radius1 = -1; radius2 = -2;
 
@@ -3247,13 +3247,13 @@ static int _cvMergeVD(pCvVoronoiHole pHole,CvVoronoiDiagramInt* pVoronoiDiagram)
             pEdge_left = pEdge_left->next_edge;
         }
 
-RIGHT:  
+RIGHT:
         while(pEdge_right!=NULL)
         {
             dist2 = _cvCalcEdgeIntersection(pEdge1, pEdge_right, &Point2,radius2);
             if(dist2>=0)
                 goto RESULTHANDLING;
-        
+
             pEdge_right = pEdge_right->prev_edge;
         }
         pEdge_right = pEdge_right_cur;
@@ -3262,12 +3262,12 @@ RIGHT:
 RESULTHANDLING:
         if(dist1<0&&dist2<0)
             return 0;
-    
+
         if(fabs(dist1 - dist2)<dist_eps)
         {
             pNode_begin = _cvSeqPush(NodeSeq,&Node);
             _cvInitVoronoiNode(pNode_begin, &Point2,radius2);
-        
+
             pEdge1->node2 = pNode_begin;
             pEdge2->node1 = pNode_begin;
 
@@ -3275,14 +3275,14 @@ RESULTHANDLING:
 
             _cvStickEdgeLeftEnd(pEdge1,pEdge_left,pSite_left);
             _cvStickEdgeRightEnd(pEdge2,pEdge_right,pSite_right);
-        
+
             pEdge_left_prev = pEdge_left->twin_edge;
             if(!pEdge_left_prev)
                 return 0;
             pEdge_left_cur = pEdge_left_prev->next_edge;
             pSite_left = pEdge_left_prev->site;
             pEdge1 = _cvSeqPush(EdgeSeq, &EdgeNULL);
-                
+
             pEdge_right_next = pEdge_right->twin_edge;
             if(!pEdge_right_next)
                 return 0;
@@ -3296,14 +3296,14 @@ RESULTHANDLING:
         {
             pNode_begin = _cvSeqPush(NodeSeq,&Node);
             _cvInitVoronoiNode(pNode_begin, &Point1,radius1);
-            
+
             pEdge1->node2 = pNode_begin;
             _cvStickEdgeLeftEnd(pEdge1,pEdge_left,pSite_left);
-        
+
             pEdge2->node1 = pNode_begin;
             pEdge_right_next = pEdge2;
             pEdge2 = _cvSeqPush(EdgeSeq, &EdgeNULL);
-            
+
             pEdge_left_prev = pEdge_left->twin_edge;
             if(!pEdge_left_prev)
                 return 0;
@@ -3318,16 +3318,16 @@ RESULTHANDLING:
         {
             pNode_begin = _cvSeqPush(NodeSeq,&Node);
             _cvInitVoronoiNode(pNode_begin, &Point2,radius2);
-    
+
             pEdge_right_cur = _cvDivideRightEdge(pEdge_right,pNode_begin,EdgeSeq);
 
             pEdge2->node1 = pNode_begin;
             _cvStickEdgeRightEnd(pEdge2,pEdge_right,pSite_right);
-        
+
             pEdge1->node2 = pNode_begin;
             pEdge_left_prev = pEdge1;
             pEdge1 = _cvSeqPush(EdgeSeq, &EdgeNULL);
-            
+
             pEdge_right_next = pEdge_right->twin_edge;
             if(!pEdge_right_next)
                 return 0;
@@ -3340,7 +3340,7 @@ RESULTHANDLING:
     }while(!(pSite_left == pSite_left_first && pSite_right == pSite_right_first));
 
         pEdge1_first->node1 = pNode_begin;
-        pEdge2_first->node2 = pNode_begin; 
+        pEdge2_first->node2 = pNode_begin;
         _cvStickEdgeLeftBegin(pEdge1_first,pEdge_left_prev,pSite_left_first);
         _cvStickEdgeRightBegin(pEdge2_first,pEdge_right_next,pSite_right_first);
 
@@ -3354,7 +3354,7 @@ RESULTHANDLING:
 //                               Computation of bisectors                               //
 /////////////////////////////////////////////////////////////////////////////////////// */
 
-void _cvCalcEdge(pCvVoronoiSite pSite_left, 
+void _cvCalcEdge(pCvVoronoiSite pSite_left,
                  pCvVoronoiSite pSite_right,
                  pCvVoronoiEdge pEdge,
                  CvVoronoiDiagramInt* pVoronoiDiagram)
@@ -3392,7 +3392,7 @@ void _cvCalcEdge(pCvVoronoiSite pSite,
                      pEdge,pVoronoiDiagram);
 }//end of _cvCalcEdge
 
-void _cvCalcEdge(pCvVoronoiNode pNode, 
+void _cvCalcEdge(pCvVoronoiNode pNode,
                          pCvVoronoiSite pSite,
                          pCvVoronoiEdge pEdge,
                          CvVoronoiDiagramInt* pVoronoiDiagram)
@@ -3432,7 +3432,7 @@ void _cvCalcEdgePL(pCvVoronoiNode pFocus,
                   CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvPointFloat pPoint0 = &pFocus->node;
-    pCvPointFloat pPoint1 = &pDirectrice->node1->node; 
+    pCvPointFloat pPoint1 = &pDirectrice->node1->node;
 
     CvDirection Vector01 = {pPoint0->x - pPoint1->x,pPoint0->y - pPoint1->y};
     float half_h = (Vector01.y*pDirectrice->direction->x - Vector01.x*pDirectrice->direction->y)/2;
@@ -3444,8 +3444,8 @@ void _cvCalcEdgePL(pCvVoronoiNode pFocus,
     }
     CvVoronoiParabolaInt Parabola;
     pCvVoronoiParabola  pParabola = _cvSeqPush(pVoronoiDiagram->ParabolaSeq,&Parabola);
-    float* map = pParabola->map; 
-        
+    float* map = pParabola->map;
+
     map[1] = Normal.x;
     map[4] = Normal.y;
     map[0] = Normal.y;
@@ -3466,7 +3466,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
                   CvVoronoiDiagramInt* pVoronoiDiagram)
 {
     pCvPointFloat pPoint0 = &pFocus->node;
-    pCvPointFloat pPoint1 = &pDirectrice->node1->node; 
+    pCvPointFloat pPoint1 = &pDirectrice->node1->node;
 
     CvDirection Vector01 = {pPoint0->x - pPoint1->x,pPoint0->y - pPoint1->y};
     float half_h = (Vector01.y*pDirectrice->direction->x - Vector01.x*pDirectrice->direction->y)/2;
@@ -3478,7 +3478,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
     }
     CvVoronoiParabolaInt Parabola;
     pCvVoronoiParabola  pParabola = _cvSeqPush(pVoronoiDiagram->ParabolaSeq,&Parabola);
-    float* map = pParabola->map; 
+    float* map = pParabola->map;
 
     map[1] = Normal.x;
     map[4] = Normal.y;
@@ -3486,7 +3486,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
     map[3] = Normal.x;
     map[2] = pPoint0->x - Normal.x*half_h;
     map[5] = pPoint0->y - Normal.y*half_h;
-    
+
     pParabola->a = 1/(4*half_h);
     pParabola->focus = pFocus;
     pParabola->directrice = pDirectrice;
@@ -3497,7 +3497,7 @@ void _cvCalcEdgeLP(pCvVoronoiSite pDirectrice,
 //                  Computation of intersections of bisectors                           //
 /////////////////////////////////////////////////////////////////////////////////////// */
 
-static 
+static
 float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
                               pCvVoronoiEdge pEdge2,
                               CvPointFloat* pPoint,
@@ -3505,7 +3505,7 @@ float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
 {
     if((pEdge1->parabola==NULL)&&(pEdge2->parabola==NULL))
         return _cvLine_LineIntersection(pEdge1,pEdge2,pPoint,Radius);
-    if((pEdge1->parabola==NULL)&&(pEdge2->parabola!=NULL)) 
+    if((pEdge1->parabola==NULL)&&(pEdge2->parabola!=NULL))
         return _cvLine_ParIntersection(pEdge1,pEdge2,pPoint,Radius);
     if((pEdge1->parabola!=NULL)&&(pEdge2->parabola==NULL))
         return _cvPar_LineIntersection(pEdge1,pEdge2,pPoint,Radius);
@@ -3552,7 +3552,7 @@ float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
         Point3.y = pEdge2->node1->node.y;
         x43 = pEdge2->direction->x;
         y43 = pEdge2->direction->y;
-    
+
     }
     else if(pEdge2->node1==NULL)
     {
@@ -3585,10 +3585,10 @@ float _cvLine_LineIntersection(pCvVoronoiEdge pEdge1,
         return -1;
     if(((pEdge2->node2!=NULL)&&(pEdge2->node1!=NULL))&&(m>1.f+LEE_CONST_ACCEPTABLE_ERROR))
         return -1;
-    
+
     pPoint->x = (float)(k*x21) + Point1.x;
-    pPoint->y = (float)(k*y21) + Point1.y; 
-    
+    pPoint->y = (float)(k*y21) + Point1.y;
+
     Radius = _cvCalcDist(pPoint,pEdge1->site);
     return _cvPPDist(pPoint,&Point1);;
 }//end of _cvLine_LineIntersection
@@ -3619,8 +3619,8 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
         pEdge1->node2 == pEdge2->node2) &&
         pEdge1->node2 != NULL))
         IntersectionNumber = 2;
-    
-    pCvPointFloat pRayPoint1; 
+
+    pCvPointFloat pRayPoint1;
     if(pEdge1->node1!=NULL)
         pRayPoint1 = &(pEdge1->node1->node);
     else
@@ -3632,9 +3632,9 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
     pCvPointFloat pParPoint1;
     if(pEdge2->node1==NULL)
         pParPoint1 = &(pEdge2->node2->node);
-    else 
+    else
         pParPoint1 = &(pEdge2->node1->node);
-    
+
     float InversParabola[6];
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
@@ -3730,7 +3730,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
         pEdge1->node2 != NULL))
         IntersectionNumber = 2;
 
-    pCvPointFloat pRayPoint1; 
+    pCvPointFloat pRayPoint1;
     if(pEdge1->node1!=NULL)
         pRayPoint1 = &(pEdge1->node1->node);
     else
@@ -3759,7 +3759,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
     int N = _cvSolveEqu2thR(c2,c1,c0,X);
     if(N==0)
         return -1;
-    
+
     _cvCalcPointImage(&ParPoint1_img, pParPoint1, InversParabola);
     _cvCalcPointImage(&ParPoint2_img, pParPoint2, InversParabola);
     if(ParPoint1_img.x>ParPoint2_img.x)
@@ -3814,7 +3814,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
         }
         else if(pr0 > -LEE_CONST_ACCEPTABLE_ERROR)
         {
-            
+
             if(X[0] >= ParPoint1_img.x - LEE_CONST_ACCEPTABLE_ERROR)
                 N=1;
             else
@@ -3882,11 +3882,11 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
     pCvPointFloat pRayPoint1;
     if(pEdge2->node1==NULL)
         pRayPoint1 = &(pEdge2->node2->node);
-    else 
+    else
         pRayPoint1 = &(pEdge2->node1->node);
     pCvDirection pDirection = pEdge2->direction;
 
-            
+
     float InversParabola[6];
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
@@ -3895,10 +3895,10 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
     _cvCalcVectorImage(&Direction_img,pDirection, InversParabola);
     _cvCalcPointImage(&RayPoint1_img, pRayPoint1, InversParabola);
 
-    
+
     float q = RayPoint1_img.y - pEdge1->parabola->a*RayPoint1_img.x*RayPoint1_img.x;
-    if(pEdge2->site->node1 == pEdge2->site->node2 && q < 0 ||
-        pEdge2->site->node1 != pEdge2->site->node2 && q > 0)
+    if((pEdge2->site->node1 == pEdge2->site->node2 && q < 0) ||
+        (pEdge2->site->node1 != pEdge2->site->node2 && q > 0))
         return -1;
 
     float c2 = pEdge1->parabola->a*Direction_img.x;
@@ -3921,7 +3921,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
     {
         if(X[i]<=ParPoint1_img.x - LEE_CONST_ACCEPTABLE_ERROR)
             continue;
-        pr = (X[i]-RayPoint1_img.x)*sign_x + 
+        pr = (X[i]-RayPoint1_img.x)*sign_x +
                         (pEdge1->parabola->a*X[i]*X[i]-RayPoint1_img.y)*sign_y;
         if(pr <= -LEE_CONST_ACCEPTABLE_ERROR)
             continue;
@@ -3934,7 +3934,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
 
     if(i==N)
         return -1;
-        
+
     Point.y = pEdge1->parabola->a*Point.x*Point.x;
     Radius = Point.y + 1.f/(4*pEdge1->parabola->a);
     _cvCalcPointImage(pPoint,&Point,Parabola);
@@ -3979,20 +3979,20 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
     CvDirection Direction_img;
     _cvCalcPointImage(&RayPoint1_img, pRayPoint1, InversParabola);
     _cvCalcPointImage(&RayPoint2_img, pRayPoint2, InversParabola);
-    
+
     float q;
     if(Radius == -1)
     {
          q = RayPoint1_img.y - pEdge1->parabola->a*RayPoint1_img.x*RayPoint1_img.x;
-         if(pEdge2->site->node1 == pEdge2->site->node2 && q < 0 ||
-            pEdge2->site->node1 != pEdge2->site->node2 && q > 0)
+         if((pEdge2->site->node1 == pEdge2->site->node2 && q < 0) ||
+            (pEdge2->site->node1 != pEdge2->site->node2 && q > 0))
                 return -1;
     }
     if(Radius == -2)
     {
          q = RayPoint2_img.y - pEdge1->parabola->a*RayPoint2_img.x*RayPoint2_img.x;
-        if(pEdge2->site->node1 == pEdge2->site->node2 && q < 0 ||
-            pEdge2->site->node1 != pEdge2->site->node2 && q > 0)
+        if((pEdge2->site->node1 == pEdge2->site->node2 && q < 0) ||
+            (pEdge2->site->node1 != pEdge2->site->node2 && q > 0))
                 return -1;
     }
 
@@ -4008,7 +4008,7 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
         return -1;
     int sign_x = SIGN(RayPoint2_img.x - RayPoint1_img.x);
     int sign_y = SIGN(RayPoint2_img.y - RayPoint1_img.y);
-    float pr_dir = (RayPoint2_img.x - RayPoint1_img.x)*sign_x + 
+    float pr_dir = (RayPoint2_img.x - RayPoint1_img.x)*sign_x +
                    (RayPoint2_img.y - RayPoint1_img.y)*sign_y;
     float pr;
 
@@ -4090,7 +4090,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
     {
         pCvPointFloat pFocus1 = &(pEdge1->parabola->focus->node);
         pCvPointFloat pFocus2 = &(pEdge2->parabola->focus->node);
-        
+
         Point.x = (pFocus1->x + pFocus2->x)/2;
         Point.y = (pFocus1->y + pFocus2->y)/2;
         Direction.x = pFocus1->y - pFocus2->y;
@@ -4101,18 +4101,18 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
         pCvVoronoiSite pDirectrice1 = pEdge1->parabola->directrice;
         pCvPointFloat pPoint1 = &(pDirectrice1->node1->node);
         pCvDirection pVector21 = pDirectrice1->direction;
-    
+
         pCvVoronoiSite pDirectrice2 = pEdge2->parabola->directrice;
         pCvPointFloat pPoint3 = &(pDirectrice2->node1->node);
         pCvDirection pVector43 = pDirectrice2->direction;
-        
+
         Direction.x = pVector43->x - pVector21->x;
         Direction.y = pVector43->y - pVector21->y;
 
         if((fabs(Direction.x) < LEE_CONST_ZERO) &&
            (fabs(Direction.y) < LEE_CONST_ZERO))
                 Direction = *pVector43;
-    
+
         float det = pVector21->y * pVector43->x - pVector21->x * pVector43->y;
         if(fabs(det) < LEE_CONST_ZERO)
         {
@@ -4130,12 +4130,12 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
 
     float InversParabola2[6];
     _cvCalcOrtogInverse(InversParabola2, Parabola2);
-    
+
     CvPointFloat  Par2Point1_img,Point_img;
     CvDirection Direction_img;
     _cvCalcVectorImage(&Direction_img,&Direction, InversParabola2);
     _cvCalcPointImage(&Point_img, &Point, InversParabola2);
-    
+
     float a1 = pEdge1->parabola->a;
     float a2 = pEdge2->parabola->a;
     float c2 = a2*Direction_img.x;
@@ -4183,10 +4183,10 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
         else
             break;
     }
-    
+
     if(i==N)
         return -1;
-        
+
     Radius = Point.y + 1.f/(4*pEdge1->parabola->a);
     _cvCalcPointImage(pPoint,&Point,Parabola1);
     float dist = Point.x - Par1Point1_img.x;
@@ -4221,14 +4221,14 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
 
     pCvPointFloat pPar2Point1 = &(pEdge2->node1->node);
     pCvPointFloat pPar2Point2 = &(pEdge2->node2->node);
-    
+
     CvPointFloat Point;
     CvDirection Direction;
     if(pEdge1->parabola->directrice==pEdge2->parabola->directrice)  //common site is segment -> different focuses
     {
         pCvPointFloat pFocus1 = &(pEdge1->parabola->focus->node);
         pCvPointFloat pFocus2 = &(pEdge2->parabola->focus->node);
-        
+
         Point.x = (pFocus1->x + pFocus2->x)/2;
         Point.y = (pFocus1->y + pFocus2->y)/2;
         Direction.x = pFocus1->y - pFocus2->y;
@@ -4239,18 +4239,18 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
         pCvVoronoiSite pDirectrice1 = pEdge1->parabola->directrice;
         pCvPointFloat pPoint1 = &(pDirectrice1->node1->node);
         pCvDirection pVector21 = pDirectrice1->direction;
-    
+
         pCvVoronoiSite pDirectrice2 = pEdge2->parabola->directrice;
         pCvPointFloat pPoint3 = &(pDirectrice2->node1->node);
         pCvDirection pVector43 = pDirectrice2->direction;
-        
+
         Direction.x = pVector43->x - pVector21->x;
         Direction.y = pVector43->y - pVector21->y;
 
         if((fabs(Direction.x) < LEE_CONST_ZERO) &&
            (fabs(Direction.y) < LEE_CONST_ZERO))
                 Direction = *pVector43;
-    
+
         float det = pVector21->y * pVector43->x - pVector21->x * pVector43->y;
         if(fabs(det) < LEE_CONST_ZERO)
         {
@@ -4267,15 +4267,15 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
     }
 
 
-    
+
     float InversParabola2[6];
     _cvCalcOrtogInverse(InversParabola2, Parabola2);
-    
+
     CvPointFloat  Par2Point1_img,Par2Point2_img,Point_img;
     CvDirection Direction_img;
     _cvCalcVectorImage(&Direction_img,&Direction, InversParabola2);
     _cvCalcPointImage(&Point_img, &Point, InversParabola2);
-    
+
     float a1 = pEdge1->parabola->a;
     float a2 = pEdge2->parabola->a;
     float c2 = a2*Direction_img.x;
@@ -4307,7 +4307,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
     }
     else if(X[N-1]>Par2Point2_img.x)
             N=1;
-    
+
     float InversParabola1[6];
     CvPointFloat Par1Point1_img;
     _cvCalcOrtogInverse(InversParabola1, Parabola1);
@@ -4323,7 +4323,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
             (X[0]<X[1] && IntersectionNumber == 2))
             _cvSwap(X[0], X[1]);
     }
-            
+
 
     for(i = 0;i<N;i++)
     {
@@ -4337,7 +4337,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
 
     if(i==N)
         return -1;
-        
+
     Radius = Point.y + 1.f/(4*a1);
     _cvCalcPointImage(pPoint,&Point,Parabola1);
     float dist = Point.x - Par1Point1_img.x;
@@ -4363,7 +4363,7 @@ void _cvMakeTwinEdge(pCvVoronoiEdge pEdge2,
 }//end of _cvMakeTwinEdge
 
 CV_INLINE
-void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge,
                           pCvVoronoiEdge pEdge_left_prev,
                           pCvVoronoiSite pSite_left)
 {
@@ -4379,7 +4379,7 @@ void _cvStickEdgeLeftBegin(pCvVoronoiEdge pEdge,
 }//end of _cvStickEdgeLeftBegin
 
 CV_INLINE
-void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge,
                           pCvVoronoiEdge pEdge_right_next,
                           pCvVoronoiSite pSite_right)
 {
@@ -4395,7 +4395,7 @@ void _cvStickEdgeRightBegin(pCvVoronoiEdge pEdge,
 }// end of _cvStickEdgeRightBegin
 
 CV_INLINE
-void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge,
                         pCvVoronoiEdge pEdge_left_next,
                         pCvVoronoiSite pSite_left)
 {
@@ -4410,7 +4410,7 @@ void _cvStickEdgeLeftEnd(pCvVoronoiEdge pEdge,
 }//end of _cvStickEdgeLeftEnd
 
 CV_INLINE
-void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge, 
+void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge,
                          pCvVoronoiEdge pEdge_right_prev,
                          pCvVoronoiSite pSite_right)
 {
@@ -4426,7 +4426,7 @@ void _cvStickEdgeRightEnd(pCvVoronoiEdge pEdge,
 
 template <class T> CV_INLINE
 void _cvInitVoronoiNode(pCvVoronoiNode pNode,
-                        T pPoint, 
+                        T pPoint,
                         float radius)
 {
     pNode->node.x = (float)pPoint->x;
@@ -4445,7 +4445,7 @@ void _cvInitVoronoiSite(pCvVoronoiSite pSite,
     pSite->prev_site = pPrev_site;
 }//end of _cvInitVoronoiSite
 
-template <class T> CV_INLINE 
+template <class T> CV_INLINE
 T _cvSeqPush(CvSeq* Seq, T pElem)
 {
     cvSeqPush(Seq, pElem);
@@ -4519,7 +4519,7 @@ pCvVoronoiEdge _cvDivideRightEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvS
     CvVoronoiEdgeInt Edge1 = *pEdge;
     CvVoronoiEdgeInt Edge2 = *pEdge->twin_edge;
     pCvVoronoiEdge pEdge1, pEdge2;
-    
+
     pEdge1 = _cvSeqPush(EdgeSeq, &Edge1);
     pEdge2 = _cvSeqPush(EdgeSeq, &Edge2);
 
@@ -4543,7 +4543,7 @@ pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvSe
     CvVoronoiEdgeInt Edge1 = *pEdge;
     CvVoronoiEdgeInt Edge2 = *pEdge->twin_edge;
     pCvVoronoiEdge pEdge1, pEdge2;
-    
+
     pEdge1 = _cvSeqPush(EdgeSeq, &Edge1);
     pEdge2 = _cvSeqPush(EdgeSeq, &Edge2);
 
@@ -4554,7 +4554,7 @@ pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvSe
     if(pEdge1->prev_edge != NULL)
         pEdge1->prev_edge->next_edge = pEdge1;
     pEdge1->next_edge = NULL;
-    
+
     pEdge1->node2 = pEdge2->node1= pNode;
     pEdge1->twin_edge = pEdge2;
     pEdge2->twin_edge = pEdge1;
@@ -4564,12 +4564,12 @@ pCvVoronoiEdge _cvDivideLeftEdge(pCvVoronoiEdge pEdge,pCvVoronoiNode pNode, CvSe
 template<class T> CV_INLINE
 T _cvWriteSeqElem(T pElem, CvSeqWriter &writer)
 {
-    if( writer.ptr >= writer.block_max )        
-          cvCreateSeqBlock( &writer); 
+    if( writer.ptr >= writer.block_max )
+          cvCreateSeqBlock( &writer);
 
     T ptr = (T)writer.ptr;
-    memcpy(writer.ptr, pElem, sizeof(*pElem));      
-    writer.ptr += sizeof(*pElem);   
+    memcpy(writer.ptr, pElem, sizeof(*pElem));
+    writer.ptr += sizeof(*pElem);
     return ptr;
 }//end of _cvWriteSeqElem
 
@@ -4609,7 +4609,7 @@ int _cvCalcOrtogInverse(T* B, T* A)
         return 0;
 }//end of _cvCalcOrtogInverse
 
-template<class T> CV_INLINE 
+template<class T> CV_INLINE
 void _cvCalcVectorImage(pCvDirection pImgVector,pCvDirection pVector,T* A)
 {
     pImgVector->x = A[0]*pVector->x + A[1]*pVector->y;
@@ -4704,7 +4704,7 @@ int _cvSolveEqu2thR(T c2, T c1, T c0, T* X)
             }
         }
     }
-}//end of _cvSolveEqu2thR   
+}//end of _cvSolveEqu2thR
 
 template <class T> CV_INLINE
 int _cvSolveEqu1th(T c1, T c0, T* X)

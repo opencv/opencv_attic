@@ -100,7 +100,7 @@ CvBackgroundData* cvbgdata = NULL;
 
 
 /*
- * get sum image offsets for <rect> corner points 
+ * get sum image offsets for <rect> corner points
  * step - row step (measured in image pixels!) of sum image
  */
 #define CV_SUM_OFFSETS( p0, p1, p2, p3, rect, step )                      \
@@ -114,7 +114,7 @@ CvBackgroundData* cvbgdata = NULL;
     (p3) = (rect).x + (rect).width + (step) * ((rect).y + (rect).height);
 
 /*
- * get tilted image offsets for <rect> corner points 
+ * get tilted image offsets for <rect> corner points
  * step - row step (measured in image pixels!) of tilted image
  */
 #define CV_TILTED_OFFSETS( p0, p1, p2, p3, rect, step )                   \
@@ -146,7 +146,7 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
 {
     CvIntHaarFeatures* features = NULL;
     CvTHaarFeature haarFeature;
-    
+
     CvMemStorage* storage = NULL;
     CvSeq* seq = NULL;
     CvSeqWriter writer;
@@ -164,7 +164,7 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
     float factor = 1.0F;
 
     factor = ((float) winsize.width) * winsize.height / (24 * 24);
-#if 0    
+#if 0
     s0 = (int) (s0 * factor);
     s1 = (int) (s1 * factor);
     s2 = (int) (s2 * factor);
@@ -244,7 +244,7 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                            
+
                         // haar_y4
                         if ( (x+dx*4 <= winsize.height) && (y+dy <= winsize.width ) ) {
                             if (dx*4*dy < s0) continue;
@@ -269,7 +269,7 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                         }
                     }
 
-                    if (mode != 0 /*BASIC*/) {                
+                    if (mode != 0 /*BASIC*/) {
                         // point
                         if ( (x+dx*3 <= winsize.width) && (y+dy*3 <= winsize.height) ) {
                             if (dx*9*dy < s0) continue;
@@ -281,12 +281,12 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                             }
                         }
                     }
-                    
-                    if (mode == 2 /*ALL*/) {                
+
+                    if (mode == 2 /*ALL*/) {
                         // tilted haar_x2                                      (x, y, w, h, b, weight)
                         if ( (x+2*dx <= winsize.width) && (y+2*dx+dy <= winsize.height) && (x-dy>= 0) ) {
                             if (dx*2*dy < s1) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_x2",
                                     x, y, dx*2, dy, -1,
@@ -294,11 +294,11 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
+
                         // tilted haar_y2                                      (x, y, w, h, b, weight)
                         if ( (x+dx <= winsize.width) && (y+dx+2*dy <= winsize.height) && (x-2*dy>= 0) ) {
                             if (dx*2*dy < s1) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_y2",
                                     x, y, dx, 2*dy, -1,
@@ -306,11 +306,11 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
+
                         // tilted haar_x3                                   (x, y, w, h, b, weight)
                         if ( (x+3*dx <= winsize.width) && (y+3*dx+dy <= winsize.height) && (x-dy>= 0) ) {
                             if (dx*3*dy < s2) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_x3",
                                     x,    y,    dx*3, dy, -1,
@@ -318,11 +318,11 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
+
                         // tilted haar_y3                                      (x, y, w, h, b, weight)
                         if ( (x+dx <= winsize.width) && (y+dx+3*dy <= winsize.height) && (x-3*dy>= 0) ) {
                             if (dx*3*dy < s2) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_y3",
                                     x,    y,    dx, 3*dy, -1,
@@ -330,12 +330,12 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
-                        
+
+
                         // tilted haar_x4                                   (x, y, w, h, b, weight)
                         if ( (x+4*dx <= winsize.width) && (y+4*dx+dy <= winsize.height) && (x-dy>= 0) ) {
                             if (dx*4*dy < s3) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_x4",
 
@@ -345,11 +345,11 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
+
                         // tilted haar_y4                                      (x, y, w, h, b, weight)
                         if ( (x+dx <= winsize.width) && (y+dx+4*dy <= winsize.height) && (x-4*dy>= 0) ) {
                             if (dx*4*dy < s3) continue;
-                            
+
                             if (!symmetric || (x <= (winsize.width / 2) )) {
                                 haarFeature = cvHaarFeature( "tilted_haar_y4",
                                     x,    y,    dx, 4*dy, -1,
@@ -357,10 +357,10 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }
-                        
+
 
                         /*
-                        
+
                           // tilted point
                           if ( (x+dx*3 <= winsize.width - 1) && (y+dy*3 <= winsize.height - 1) && (x-3*dy>= 0)) {
                           if (dx*9*dy < 36) continue;
@@ -387,10 +387,10 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
     features->winsize = winsize;
     cvCvtSeqToArray( seq, (CvArr*) features->feature );
     cvReleaseMemStorage( &storage );
-    
+
     icvConvertToFastHaarFeature( features->feature, features->fastfeature,
                                  features->count, (winsize.width + 1) );
-    
+
     return features;
 }
 
@@ -430,7 +430,7 @@ void icvConvertToFastHaarFeature( CvTHaarFeature* haarFeature,
                                 fastHaarFeature[i].rect[j].p3,
                                 haarFeature[i].rect[j].r, step )
             }
-            
+
         }
         else
         {
@@ -461,15 +461,15 @@ static
 CvHaarTrainigData* icvCreateHaarTrainingData( CvSize winsize, int maxnumsamples )
 {
     CvHaarTrainigData* data;
-    
+
     CV_FUNCNAME( "icvCreateHaarTrainingData" );
-    
+
     __BEGIN__;
 
     data = NULL;
     uchar* ptr = NULL;
     size_t datasize = 0;
-    
+
     datasize = sizeof( CvHaarTrainigData ) +
           /* sum and tilted */
         ( 2 * (winsize.width + 1) * (winsize.height + 1) * sizeof( sum_type ) +
@@ -542,7 +542,7 @@ void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
     float* idxdata = 0;
     int idxstep = 0;
     int num_samples = mat->cols;
-    int fast_mode = 1;
+    //int fast_mode = 1;
 
     CvHaarTrainingData* training_data = ((CvUserdata*) userdata)->trainingData;
     CvIntHaarFeatures* haar_features = ((CvUserdata*) userdata)->haarFeatures;
@@ -552,7 +552,7 @@ void icvGetTrainingDataCallback( CvMat* mat, CvMat* sampleIdx, CvMat*,
     if( sampleIdx )
     {
         assert( CV_MAT_TYPE(sampleIdx->type) == CV_32FC1 );
-        
+
         idxdata = sampleIdx->data.fl;
         idxstep = MAX(sampleIdx->step/sizeof(idxdata[0]), 1);
         num_samples = sampleIdx->cols + sampleIdx->rows - 1;
@@ -580,7 +580,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
 {
     int i, max_threads = 0;
     CvMat* valbuf[CV_MAX_THREADS] = {0};
-    
+
     CV_FUNCNAME( "icvPrecalculate" );
 
     __BEGIN__;
@@ -631,7 +631,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
     }
 
 #ifdef CV_VERBOSE
-    printf( "Precomputing data, that may take a few minutes...\n", num_i );
+    printf( "Precomputing data, that may take a few minutes...\n" );
 #endif
 
     #ifdef _OPENMP
@@ -701,7 +701,7 @@ void icvSplitIndicesCallback( int compidx, float threshold,
         {
             if( cvEvalFastHaarFeature( fastfeature,
                     (sum_type*) (data->sum.data.ptr + i * data->sum.step),
-                    (sum_type*) (data->tilted.data.ptr + i * data->tilted.step) ) 
+                    (sum_type*) (data->tilted.data.ptr + i * data->tilted.step) )
                 < threshold * data->normfactor.data.fl[i] )
             {
                 (*left)->data.fl[(*left)->cols++] = (float) i;
@@ -727,7 +727,7 @@ void icvSplitIndicesCallback( int compidx, float threshold,
             index = (int) *((float*) (idxdata + i * idxstep));
             if( cvEvalFastHaarFeature( fastfeature,
                     (sum_type*) (data->sum.data.ptr + index * data->sum.step),
-                    (sum_type*) (data->tilted.data.ptr + index * data->tilted.step) ) 
+                    (sum_type*) (data->tilted.data.ptr + index * data->tilted.step) )
                 < threshold * data->normfactor.data.fl[index] )
             {
                 (*left)->data.fl[(*left)->cols++] = (float) index;
@@ -780,14 +780,14 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     CvMat eval;
     int n = 0;
     int m = 0;
-    size_t datasize = 0;
+    //size_t datasize = 0;
     int numpos = 0;
     int numneg = 0;
     int numfalse = 0;
     float sum_stage = 0.0F;
     float threshold = 0.0F;
     float falsealarm = 0.0F;
-    
+
     //CvMat* sampleIdx = NULL;
     CvMat* trimmedIdx;
     //float* idxdata = NULL;
@@ -800,7 +800,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     int idx;
     int numsamples;
     int numtrimmed;
-    
+
     CvCARTHaarClassifier* classifier;
     CvSeq* seq = NULL;
     CvMemStorage* storage = NULL;
@@ -814,7 +814,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     printf( "|  N |%%SMP|F|  ST.THR |    HR   |    FA   | EXP. ERR|\n" );
     printf( "+----+----+-+---------+---------+---------+---------+\n" );
 #endif /* CV_VERBOSE */
-    
+
     n = haarFeatures->count;
     m = data->sum.rows;
     numsamples = (sampleIdx) ? MAX( sampleIdx->rows, sampleIdx->cols ) : m;
@@ -838,7 +838,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     trainParams.userdata = &userdata;
 
     eval = cvMat( 1, m, CV_32FC1, cvAlloc( sizeof( float ) * m ) );
-    
+
     storage = cvCreateMemStorage();
     seq = cvCreateSeq( 0, sizeof( *seq ), sizeof( classifier ), storage );
 
@@ -848,7 +848,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     num_splits = 0;
     sumalpha = 0.0F;
     do
-    {     
+    {
 
 #ifdef CV_VERBOSE
         int v_wt = 0;
@@ -876,12 +876,12 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
         num_splits += classifier->count;
 
         cart->release( (CvClassifier**) &cart );
-        
+
         if( symmetric && (seq->total % 2) )
         {
             float normfactor = 0.0F;
             CvStumpClassifier* stump;
-            
+
             /* flip haar features */
             for( i = 0; i < classifier->count; i++ )
             {
@@ -890,9 +890,9 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                     for( j = 0; j < CV_HAAR_FEATURE_MAX &&
                                     classifier->feature[i].rect[j].weight != 0.0F; j++ )
                     {
-                        classifier->feature[i].rect[j].r.x = data->winsize.width - 
+                        classifier->feature[i].rect[j].r.x = data->winsize.width -
                             classifier->feature[i].rect[j].r.x -
-                            classifier->feature[i].rect[j].r.width;                
+                            classifier->feature[i].rect[j].r.width;
                     }
                 }
                 else
@@ -904,7 +904,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                     for( j = 0; j < CV_HAAR_FEATURE_MAX &&
                                     classifier->feature[i].rect[j].weight != 0.0F; j++ )
                     {
-                        classifier->feature[i].rect[j].r.x = data->winsize.width - 
+                        classifier->feature[i].rect[j].r.x = data->winsize.width -
                             classifier->feature[i].rect[j].r.x;
                         CV_SWAP( classifier->feature[i].rect[j].r.width,
                                  classifier->feature[i].rect[j].r.height, tmp );
@@ -939,7 +939,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                     weakTrainVals, 0, 0, 0, trimmedIdx,
                     &(data->weights),
                     trainParams.stumpTrainParams );
-            
+
                 classifier->threshold[i] = stump->threshold;
                 if( classifier->left[i] <= 0 )
                 {
@@ -950,8 +950,8 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                     classifier->val[-classifier->right[i]] = stump->right;
                 }
 
-                stump->release( (CvClassifier**) &stump );        
-                
+                stump->release( (CvClassifier**) &stump );
+
             }
 
             stumpTrainParams.getTrainData = icvGetTrainingDataCallback;
@@ -969,7 +969,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
             cvReleaseMat( &trimmedIdx );
             trimmedIdx = NULL;
         }
-        
+
         for( i = 0; i < numsamples; i++ )
         {
             idx = icvGetIdxAt( sampleIdx, i );
@@ -983,10 +983,10 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
         alpha = cvBoostNextWeakClassifier( &eval, &data->cls, weakTrainVals,
                                            &data->weights, trainer );
         sumalpha += alpha;
-        
+
         for( i = 0; i <= classifier->count; i++ )
         {
-            if( boosttype == CV_RABCLASS ) 
+            if( boosttype == CV_RABCLASS )
             {
                 classifier->val[i] = cvLogRatio( classifier->val[i] );
             }
@@ -1006,7 +1006,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                 for( j = 0; j < seq->total; j++ )
                 {
                     classifier = *((CvCARTHaarClassifier**) cvGetSeqElem( seq, j ));
-                    eval.data.fl[numpos] += classifier->eval( 
+                    eval.data.fl[numpos] += classifier->eval(
                         (CvIntHaarClassifier*) classifier,
                         (sum_type*) (data->sum.data.ptr + idx * data->sum.step),
                         (sum_type*) (data->tilted.data.ptr + idx * data->tilted.step),
@@ -1092,7 +1092,7 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
             fflush( stdout );
         }
 #endif /* CV_VERBOSE */
-        
+
     } while( falsealarm > maxfalsealarm && (!maxsplits || (num_splits < maxsplits) ) );
     cvBoostEndTraining( &trainer );
 
@@ -1106,12 +1106,12 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
                                                                        threshold );
         cvCvtSeqToArray( seq, (CvArr*) stage->classifier );
     }
-    
+
     /* CLEANUP */
     cvReleaseMemStorage( &storage );
     cvReleaseMat( &weakTrainVals );
     cvFree( &(eval.data.ptr) );
-    
+
     return (CvIntHaarClassifier*) stage;
 }
 
@@ -1121,7 +1121,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
 {
     CvBackgroundData* data = NULL;
 
-    const char* dir = NULL;    
+    const char* dir = NULL;
     char full[PATH_MAX];
     char* imgfilename = NULL;
     size_t datasize = 0;
@@ -1131,7 +1131,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
     int    len   = 0;
 
     assert( filename != NULL );
-    
+
     dir = strrchr( filename, '\\' );
     if( dir == NULL )
     {
@@ -1152,7 +1152,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
     {
         count = 0;
         datasize = 0;
-        
+
         /* count */
         while( !feof( input ) )
         {
@@ -1250,7 +1250,7 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
                                    CvBackgroundReader* reader )
 {
     IplImage* img = NULL;
-    char* filename = NULL;
+    //char* filename = NULL;
     size_t datasize = 0;
     int round = 0;
     int i = 0;
@@ -1277,10 +1277,10 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
         {
             round = data->round;
 
-//#ifdef CV_VERBOSE 
+//#ifdef CV_VERBOSE
 //            printf( "Open background image: %s\n", data->filename[data->last] );
 //#endif /* CV_VERBOSE */
-          
+
             img = cvLoadImage( data->filename[data->last++], 0 );
             if( !img )
                 continue;
@@ -1293,7 +1293,7 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
 
             offset.x = MIN( offset.x, img->width - data->winsize.width );
             offset.y = MIN( offset.y, img->height - data->winsize.height );
-            
+
             if( img != NULL && img->depth == IPL_DEPTH_8U && img->nChannels == 1 &&
                 offset.x >= 0 && offset.y >= 0 )
             {
@@ -1328,7 +1328,7 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
     reader->scale = MAX(
         ((float) data->winsize.width + reader->point.x) / ((float) reader->src.cols),
         ((float) data->winsize.height + reader->point.y) / ((float) reader->src.rows) );
-    
+
     reader->img = cvMat( (int) (reader->scale * reader->src.rows + 0.5F),
                          (int) (reader->scale * reader->src.cols + 0.5F),
                           CV_8UC1, (void*) cvAlloc( datasize ) );
@@ -1501,11 +1501,11 @@ void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
     sum_type   valsum   = 0;
     sqsum_type valsqsum = 0;
     double area = 0.0;
-    
+
     cvIntegralImage( img, sum, sqsum, tilted );
     normrect = cvRect( 1, 1, img->cols - 2, img->rows - 2 );
     CV_SUM_OFFSETS( p0, p1, p2, p3, normrect, img->cols + 1 )
-    
+
     area = normrect.width * normrect.height;
     valsum = ((sum_type*) (sum->data.ptr))[p0] - ((sum_type*) (sum->data.ptr))[p1]
            - ((sum_type*) (sum->data.ptr))[p2] + ((sum_type*) (sum->data.ptr))[p3];
@@ -1565,7 +1565,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
         for( ; ; )
         {
             next = callback( &img, userdata );
-            
+
             if( !next ) break;
 
             consumedcount++;
@@ -1574,13 +1574,13 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
             normfactor = data->normfactor.data.fl + i;
             sum.data.ptr = (uchar*) sumdata;
             tilted.data.ptr = (uchar*) tilteddata;
-            icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );            
+            icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );
             if( cascade->eval( cascade, sumdata, tilteddata, *normfactor ) != 0.0F )
             {
                 getcount++;
                 break;
             }
-        }        
+        }
     }
     if( consumed != NULL ) (*consumed) = consumedcount;
 
@@ -1656,7 +1656,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                        CV_SQSUM_MAT_TYPE,
                        cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
                                                      * (data->winsize.width + 1) ) );
-        
+
         #ifdef _OPENMP
         #pragma omp for schedule(static, 1)
         #endif /* _OPENMP */
@@ -1665,7 +1665,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
             for( ; ; )
             {
                 icvGetBackgroundImage( cvbgdata, cvbgreader, &img );
-                
+
                 CCOUNTER_INC(thread_consumed_count);
 
                 sumdata = (sum_type*) (data->sum.data.ptr + i * data->sum.step);
@@ -1673,7 +1673,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                 normfactor = data->normfactor.data.fl + i;
                 sum.data.ptr = (uchar*) sumdata;
                 tilted.data.ptr = (uchar*) tilteddata;
-                icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );            
+                icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );
                 if( cascade->eval( cascade, sumdata, tilteddata, *normfactor ) != 0.0F )
                 {
                     break;
@@ -1687,7 +1687,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                 fflush( stderr );
             }
 #endif /* CV_VERBOSE */
-            
+
         }
 
         cvFree( &(img.data.ptr) );
@@ -1707,7 +1707,7 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
         /* *acceptance_ratio = ((double) count) / consumed_count; */
         *acceptance_ratio = CCOUNTER_DIV(count, consumed_count);
     }
-    
+
     return count;
 }
 
@@ -1719,22 +1719,22 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
     int c = 0;
 
     assert( img->rows * img->cols == ((CvVecFile*) userdata)->vecsize );
-    
+
     fread( &tmp, sizeof( tmp ), 1, ((CvVecFile*) userdata)->input );
     fread( ((CvVecFile*) userdata)->vector, sizeof( short ),
            ((CvVecFile*) userdata)->vecsize, ((CvVecFile*) userdata)->input );
-    
-    if( feof( ((CvVecFile*) userdata)->input ) || 
+
+    if( feof( ((CvVecFile*) userdata)->input ) ||
         (((CvVecFile*) userdata)->last)++ >= ((CvVecFile*) userdata)->count )
     {
         return 0;
     }
-    
+
     for( r = 0; r < img->rows; r++ )
     {
         for( c = 0; c < img->cols; c++ )
         {
-            CV_MAT_ELEM( *img, uchar, r, c ) = 
+            CV_MAT_ELEM( *img, uchar, r, c ) =
                 (uchar) ( ((CvVecFile*) userdata)->vector[r * img->cols + c] );
         }
     }
@@ -1747,7 +1747,7 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
  * Get training data from .vec file
  */
 static
-int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int count,                                   
+int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int count,
                                    CvIntHaarClassifier* cascade,
                                    const char* filename,
                                    int* consumed )
@@ -1759,8 +1759,8 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
     __BEGIN__;
 
     CvVecFile file;
-    short tmp = 0;    
-    
+    short tmp = 0;
+
     file.input = NULL;
     if( filename ) file.input = fopen( filename, "rb" );
 
@@ -1795,7 +1795,7 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
 #if 0
 void cvCreateCascadeClassifier( const char* dirname,
                                 const char* vecfilename,
-                                const char* bgfilename, 
+                                const char* bgfilename,
                                 int npos, int nneg, int nstages,
                                 int mem,
                                 int numsplits,
@@ -1835,7 +1835,7 @@ void cvCreateCascadeClassifier( const char* dirname,
 
     cascade = (CvCascadeHaarClassifier*) icvCreateCascadeHaarClassifier( nstages );
     cascade->count = 0;
-    
+
     if( icvInitBackgroundReaders( bgfilename, winsize ) )
     {
         data = icvCreateHaarTrainingData( winsize, npos + nneg );
@@ -1848,7 +1848,7 @@ void cvCreateCascadeClassifier( const char* dirname,
         for( i = 0; i < nstages; i++, cascade->count++ )
         {
             sprintf( stagename, "%s%d/%s", dirname, i, CV_STAGE_CART_FILE_NAME );
-            cascade->classifier[i] = 
+            cascade->classifier[i] =
                 icvLoadCARTStageHaarClassifier( stagename, winsize.width + 1 );
 
             if( !icvMkDir( stagename ) )
@@ -1916,7 +1916,7 @@ void cvCreateCascadeClassifier( const char* dirname,
             data->sum.rows = data->tilted.rows = poscount + negcount;
             data->normfactor.cols = data->weights.cols = data->cls.cols =
                     poscount + negcount;
-        
+
             posweight = (equalweights) ? 1.0F / (poscount + negcount) : (0.5F / poscount);
             negweight = (equalweights) ? 1.0F / (poscount + negcount) : (0.5F / negcount);
             for( j = 0; j < poscount; j++ )
@@ -1956,7 +1956,7 @@ void cvCreateCascadeClassifier( const char* dirname,
             file = fopen( stagename, "w" );
             if( file != NULL )
             {
-                cascade->classifier[i]->save( 
+                cascade->classifier[i]->save(
                     (CvIntHaarClassifier*) cascade->classifier[i], file );
                 fclose( file );
             }
@@ -1994,7 +1994,7 @@ void cvCreateCascadeClassifier( const char* dirname,
         printf( "FAILED TO INITIALIZE BACKGROUND READERS\n" );
 #endif /* CV_VERBOSE */
     }
-    
+
     /* CLEAN UP */
     icvDestroyBackgroundReaders();
     cascade->release( (CvIntHaarClassifier**) &cascade );
@@ -2090,7 +2090,7 @@ CvMat* icvGetUsedValues( CvHaarTrainingData* training_data,
     }
     total = last + 1;
     CV_CALL( ptr = cvCreateMat( num, total, CV_32FC1 ) );
-    
+
 
     #ifdef _OPENMP
     #pragma omp parallel for
@@ -2139,7 +2139,7 @@ typedef struct CvSplit
 
 void cvCreateTreeCascadeClassifier( const char* dirname,
                                     const char* vecfilename,
-                                    const char* bgfilename, 
+                                    const char* bgfilename,
                                     int npos, int nneg, int nstages,
                                     int mem,
                                     int numsplits,
@@ -2216,7 +2216,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
     if( !icvInitBackgroundReaders( bgfilename, winsize ) && nstages > 0 )
         CV_ERROR( CV_StsError, "Unable to read negative images" );
-    
+
     if( nstages > 0 )
     {
         /* width-first search in the tree */
@@ -2225,7 +2225,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
             CvSplit* first_split;
             CvSplit* last_split;
             CvSplit* cur_split;
-            
+
             CvTreeCascadeNode* parent;
             CvTreeCascadeNode* cur_node;
             CvTreeCascadeNode* last_node;
@@ -2234,7 +2234,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
             parent = leaves;
             leaves = NULL;
             do
-            {                
+            {
                 int best_clusters; /* best selected number of clusters */
                 float posweight, negweight;
                 double leaf_fa_rate;
@@ -2323,7 +2323,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                     multiple_clusters = NULL;
 
                     printf( "Number of used features: %d\n", single_num );
-                    
+
                     if( maxtreesplits >= 0 )
                     {
                         max_clusters = MIN( max_clusters, maxtreesplits - total_splits + 1 );
@@ -2381,7 +2381,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                             printf( "Clusters are too small. Clustering aborted.\n" );
                             break;
                         }
-                        
+
                         cur_num = 0;
                         cur_node = last_node = NULL;
                         for( cluster = 0; (cluster < k) && (cur_num < best_num); cluster++ )
@@ -2463,7 +2463,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                     CV_CALL( cur_split = (CvSplit*) cvAlloc( sizeof( *cur_split ) ) );
                     CV_ZERO_OBJ( cur_split );
-                    
+
                     if( last_split ) last_split->next = cur_split;
                     else first_split = cur_split;
                     last_split = cur_split;
@@ -2521,7 +2521,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                     ? last_split->multiple_clusters : last_split->single_cluster;
                 parent = last_split->parent;
                 if( parent ) parent->child = cur_node;
-                
+
                 /* connect leaves via next_same_level and save them */
                 for( ; cur_node; cur_node = cur_node->next )
                 {
@@ -2555,14 +2555,14 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                 printf( "\nParent node: %s\n", buf );
                 printf( "Chosen number of splits: %d\n\n", (last_split->multiple_clusters)
                     ? (last_split->num_clusters - 1) : 0 );
-                
+
                 cur_split = last_split;
                 last_split = last_split->next;
                 cvFree( &cur_split );
             } /* for each split point */
 
             printf( "Total number of splits: %d\n", total_splits );
-            
+
             if( !(tcc->root) ) tcc->root = leaves;
             CV_CALL( icvPrintTreeCascade( tcc->root ) );
 
@@ -2689,7 +2689,7 @@ void cvCreateTrainingSamples( const char* filename,
                     inverse = (rand() > (RAND_MAX/2));
                 }
                 icvPlaceDistortedSample( &sample, inverse, maxintensitydev,
-                    maxxangle, maxyangle, maxzangle, 
+                    maxxangle, maxyangle, maxzangle,
                     0   /* nonzero means placing image without cut offs */,
                     0.0 /* nozero adds random shifting                  */,
                     0.0 /* nozero adds random scaling                   */,
@@ -2717,13 +2717,13 @@ void cvCreateTrainingSamples( const char* filename,
             cvFree( &(sample.data.ptr) );
             fclose( output );
         } /* if( output != NULL ) */
-        
+
         icvEndSampleDistortion( &data );
     }
-    
+
 #ifdef CV_VERBOSE
     printf( "\r      \r" );
-#endif /* CV_VERBOSE */ 
+#endif /* CV_VERBOSE */
 
 }
 
@@ -2772,7 +2772,7 @@ void cvCreateTestSamples( const char* infoname,
             {
                 cvNamedWindow( "Image", CV_WINDOW_AUTOSIZE );
             }
-            
+
             info = fopen( infoname, "w" );
             strcpy( fullname, infoname );
             filename = strrchr( fullname, '\\' );
@@ -2794,7 +2794,7 @@ void cvCreateTestSamples( const char* infoname,
             for( i = 0; i < count; i++ )
             {
                 icvGetNextFromBackgroundData( cvbgdata, cvbgreader );
-                
+
                 maxscale = MIN( 0.7F * cvbgreader->src.cols / winwidth,
                                    0.7F * cvbgreader->src.rows / winheight );
                 if( maxscale < 1.0F ) continue;
@@ -2811,14 +2811,14 @@ void cvCreateTestSamples( const char* infoname,
                     inverse = (rand() > (RAND_MAX/2));
                 }
                 icvPlaceDistortedSample( &win, inverse, maxintensitydev,
-                                         maxxangle, maxyangle, maxzangle, 
+                                         maxxangle, maxyangle, maxzangle,
                                          1, 0.0, 0.0, &data );
-                
-                
+
+
                 sprintf( filename, "%04d_%04d_%04d_%04d_%04d.jpg",
                          (i + 1), x, y, width, height );
-                
-                if( info ) 
+
+                if( info )
                 {
                     fprintf( info, "%s %d %d %d %d %d\n",
                         filename, 1, x, y, width, height );

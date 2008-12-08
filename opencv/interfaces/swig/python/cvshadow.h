@@ -14,8 +14,8 @@ double cvArcLength_Shadow( const CvSeq * seq, CvSlice slice=CV_WHOLE_SEQ, int is
 double cvArcLength_Shadow( const CvArr * arr, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1);
 
 // cvContourPerimeter is a macro, but this still works
-static double cvContourPerimeter_Shadow(CvSeq * seq){ return cvContourPerimeter( seq ); }
-static double cvContourPerimeter_Shadow(CvArr * arr){ return cvContourPerimeter( arr ); }
+//static double cvContourPerimeter_Shadow(CvSeq * seq){ return cvContourPerimeter( seq ); }
+//static double cvContourPerimeter_Shadow(CvArr * arr){ return cvContourPerimeter( arr ); }
 
 // Return a typed sequence instead of generic CvSeq
 CvTypedSeq<CvRect> * cvHaarDetectObjects_Shadow( const CvArr* image, CvHaarClassifierCascade* cascade,
@@ -27,11 +27,11 @@ CvTypedSeq<CvPoint> * cvApproxPoly_Shadow( const void* src_seq, int header_size,
                                     int method, double parameter, int parameter2=0);
 
 // Always return a new Mat of indices
-CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation=CV_CLOCKWISE, 
+CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation=CV_CLOCKWISE,
 		                  int return_points=0);
 
 std::vector<CvPoint> cvSnakeImage_Shadow( const CvMat * image, std::vector<CvPoint>  points,
-		std::vector<float> alpha, std::vector<float> beta, std::vector<float> gamma, 
+		std::vector<float> alpha, std::vector<float> beta, std::vector<float> gamma,
 		CvSize win, CvTermCriteria criteria, int calc_gradient=1 );
 
 #endif

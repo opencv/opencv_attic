@@ -70,7 +70,7 @@ void CvNormalBayesClassifier::clear()
             cvReleaseMat( &cov_rotate_mats[cls] );
         }
     }
-    
+
     cvReleaseMat( &cls_labels );
     cvReleaseMat( &var_idx );
     cvReleaseMat( &c );
@@ -114,7 +114,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
     CvMat* __cls_labels = 0;
     CvMat* __var_idx = 0;
     CvMat* cov = 0;
-    
+
     CV_FUNCNAME( "CvNormalBayesClassifier::train" );
 
     __BEGIN__;
@@ -122,7 +122,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
     int cls, nsamples = 0, _var_count = 0, _var_all = 0, nclasses = 0;
     int s, c1, c2;
     const int* responses_data;
-    
+
     CV_CALL( cvPrepareTrainData( 0,
         _train_data, CV_ROW_SAMPLE, _responses, CV_VAR_CATEGORICAL,
         _var_idx, _sample_idx, false, &train_data,
@@ -153,7 +153,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
         avg             = productsum + nclasses;
         inv_eigen_values= avg        + nclasses;
         cov_rotate_mats = inv_eigen_values         + nclasses;
-        
+
         CV_CALL( c = cvCreateMat( 1, nclasses, CV_64FC1 ));
 
         for( cls = 0; cls < nclasses; cls++ )
@@ -175,8 +175,8 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
     else
     {
         // check that the new training data has the same dimensionality etc.
-        if( _var_count != var_count || _var_all != var_all || !(!_var_idx && !var_idx ||
-            _var_idx && var_idx && cvNorm(_var_idx,var_idx,CV_C) < DBL_EPSILON) )
+        if( _var_count != var_count || _var_all != var_all || !((!_var_idx && !var_idx) ||
+            (_var_idx && var_idx && cvNorm(_var_idx,var_idx,CV_C) < DBL_EPSILON)) )
             CV_ERROR( CV_StsBadArg,
             "The new training data is inconsistent with the original training data" );
 
@@ -200,7 +200,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
         double* sum_data = sum[cls]->data.db;
         double* prod_data = productsum[cls]->data.db;
         const float* train_vec = train_data[s];
-        
+
         for( c1 = 0; c1 < _var_count; c1++, prod_data += _var_count )
         {
             double val1 = train_vec[c1];
@@ -285,7 +285,7 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
     int allocated_buffer = 0;
 
     CV_FUNCNAME( "CvNormalBayesClassifier::predict" );
-    
+
     __BEGIN__;
 
     int i, j, k, cls = -1, _var_count, nclasses;
@@ -307,9 +307,9 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
 
     if( results )
     {
-        if( !CV_IS_MAT(results) || CV_MAT_TYPE(results->type) != CV_32FC1 &&
-        CV_MAT_TYPE(results->type) != CV_32SC1 ||
-        results->cols != 1 && results->rows != 1 ||
+        if( !CV_IS_MAT(results) || (CV_MAT_TYPE(results->type) != CV_32FC1 &&
+        CV_MAT_TYPE(results->type) != CV_32SC1) ||
+        (results->cols != 1 && results->rows != 1) ||
         results->cols + results->rows - 1 != samples->rows )
         CV_ERROR( CV_StsBadArg, "The output array must be integer or floating-point vector "
         "with the number of elements = number of rows in the input matrix" );
@@ -317,7 +317,7 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
         rtype = CV_MAT_TYPE(results->type);
         rstep = CV_IS_MAT_CONT(results->type) ? 1 : results->step/CV_ELEM_SIZE(rtype);
     }
-    
+
     if( var_idx )
         vidx = var_idx->data.i;
 
@@ -330,13 +330,13 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
         CV_CALL( buffer = cvAlloc( size ));
         allocated_buffer = 1;
     }
-    
+
     diff = cvMat( 1, var_count, CV_64FC1, buffer );
 
     for( k = 0; k < samples->rows; k++ )
     {
         int ival;
-        
+
         for( i = 0; i < nclasses; i++ )
         {
             double cur = c->data.db[i];
@@ -422,7 +422,7 @@ void CvNormalBayesClassifier::write( CvFileStorage* fs, const char* name )
     for( i = 0; i < nclasses; i++ )
         CV_CALL( cvWrite( fs, NULL, sum[i] ));
     CV_CALL( cvEndWriteStruct( fs ));
- 
+
     CV_CALL( cvStartWriteStruct( fs, "productsum", CV_NODE_SEQ ));
     for( i = 0; i < nclasses; i++ )
         CV_CALL( cvWrite( fs, NULL, productsum[i] ));
@@ -463,7 +463,7 @@ void CvNormalBayesClassifier::read( CvFileStorage* fs, CvFileNode* root_node )
     CvFileNode* node;
     CvSeq* seq;
     CvSeqReader reader;
-    
+
     clear();
 
     CV_CALL( var_count = cvReadIntByName( fs, root_node, "var_count", -1 ));

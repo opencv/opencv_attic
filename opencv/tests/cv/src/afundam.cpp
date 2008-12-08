@@ -53,8 +53,8 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
 
     if( jacobian )
     {
-        assert( jacobian->rows == 9 && jacobian->cols == 3 ||
-                jacobian->rows == 3 && jacobian->cols == 9 );
+        assert( (jacobian->rows == 9 && jacobian->cols == 3) ||
+                (jacobian->rows == 3 && jacobian->cols == 9) );
     }
 
     if( src->cols == 1 || src->rows == 1 )

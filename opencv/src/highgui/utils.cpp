@@ -390,7 +390,7 @@ uchar* FillUniColor( uchar* data, uchar*& line_end,
             end = line_end;
 
         count3 -= (int)(end - data);
-        
+
         for( ; data < end; data += 3 )
         {
             WRITE_PIX( data, clr );
@@ -422,7 +422,7 @@ uchar* FillUniGray( uchar* data, uchar*& line_end,
             end = line_end;
 
         count -= (int)(end - data);
-        
+
         for( ; data < end; data++ )
         {
             *data = clr;
@@ -452,7 +452,7 @@ uchar* FillColorRow8( uchar* data, uchar* indices, int len, PaletteEntry* palett
     WRITE_PIX( data - 3, clr );
     return data;
 }
-                       
+
 
 uchar* FillGrayRow8( uchar* data, uchar* indices, int len, uchar* palette )
 {
@@ -528,7 +528,7 @@ uchar* FillColorRow1( uchar* data, uchar* indices, int len, PaletteEntry* palett
         *((PaletteEntry*)(data - 6)) = palette[(idx & 2) != 0];
         *((PaletteEntry*)(data - 3)) = palette[(idx & 1) != 0];
     }
-    
+
     int idx = indices[0] << 24;
     for( data -= 24; data < end; data += 3, idx += idx )
     {
@@ -556,7 +556,7 @@ uchar* FillGrayRow1( uchar* data, uchar* indices, int len, uchar* palette )
         *((uchar*)(data - 2)) = palette[(idx & 2) != 0];
         *((uchar*)(data - 1)) = palette[(idx & 1) != 0];
     }
-    
+
     int idx = indices[0] << 24;
     for( data -= 8; data < end; data++, idx += idx )
     {
@@ -571,9 +571,9 @@ CV_IMPL void
 cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
 {
     CvMat* temp = 0;
-    
+
     CV_FUNCNAME( "cvConvertImage" );
-    
+
     __BEGIN__;
 
     CvMat srcstub, *src;
@@ -594,13 +594,13 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
 
     if( CV_MAT_CN(dst->type) != 1 && CV_MAT_CN(dst->type) != 3 )
         CV_ERROR( CV_BadNumChannels, "Destination image must have 1 or 3 channels" );
-    
+
     if( !CV_ARE_DEPTHS_EQ( src, dst ))
     {
         int src_depth = CV_MAT_DEPTH(src->type);
         double scale = src_depth <= CV_8S ? 1 : src_depth <= CV_32S ? 1./256 : 255;
         double shift = src_depth == CV_8S || src_depth == CV_16S ? 128 : 0;
-        
+
         if( !CV_ARE_CNS_EQ( src, dst ))
         {
             temp = cvCreateMat( src->height, src->width,
@@ -615,7 +615,7 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
         }
     }
 
-    if( src_cn != dst_cn || src_cn == 3 && swap_rb )
+    if( src_cn != dst_cn || (src_cn == 3 && swap_rb) )
     {
         uchar *s = src->data.ptr, *d = dst->data.ptr;
         int s_step = src->step, d_step = dst->step;
@@ -628,7 +628,7 @@ cvConvertImage( const CvArr* srcarr, CvArr* dstarr, int flags )
             size.height = 1;
             s_step = d_step = CV_STUB_STEP;
         }
-        
+
         switch( code )
         {
         case 13:

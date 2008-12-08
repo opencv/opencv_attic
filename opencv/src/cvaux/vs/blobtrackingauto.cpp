@@ -40,10 +40,10 @@
 
 /*
 This file contain simple implementation of BlobTrackerAuto virtual interface
-This module just connected other low level 3 modules 
+This module just connected other low level 3 modules
 (foreground estimator + BlobDetector + BlobTracker)
 and some simple code to detect "lost tracking"
-The track is lost when integral of foreground mask image by blob area has low value 
+The track is lost when integral of foreground mask image by blob area has low value
 */
 #include "_cvaux.h"
 #include <time.h>
@@ -102,7 +102,7 @@ public:
     int     GetBlobNum(){return m_BlobList.GetBlobNum();};
     virtual IplImage* GetFGMask(){return m_pFGMask;};
     float   GetState(int BlobID){return m_pBTA?m_pBTA->GetState(BlobID):0;};
-    char*   GetStateDesc(int BlobID){return m_pBTA?m_pBTA->GetStateDesc(BlobID):NULL;};
+    const char*   GetStateDesc(int BlobID){return m_pBTA?m_pBTA->GetStateDesc(BlobID):NULL;};
     /* Return 0 if trajectory is normal;
        return >0 if trajectory abnormal. */
     void Process(IplImage* pImg, IplImage* pMask = NULL);
@@ -124,7 +124,7 @@ private:
     CvBlobSeq               m_BlobList;
     int                     m_FrameCount;
     int                     m_NextBlobID;
-    char*                   m_TimesFile;
+    const char*                   m_TimesFile;
 
 public:
     virtual void SaveState(CvFileStorage* fs)
@@ -206,10 +206,10 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
     int         CurBlobNum = 0;
     int         i;
     IplImage*   pFG = pMask;
-    
+
     /* Bump frame counter: */
     m_FrameCount++;
-    
+
     if(m_TimesFile)
     {
         static int64  TickCount = cvGetTickCount();
@@ -224,14 +224,14 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
             FILE* out = fopen(m_TimesFile,"at");
             double Time;
             TickCount = cvGetTickCount()-TickCount;
-            Time = TickCount/FREQ;       
+            Time = TickCount/FREQ;
             if(out){fprintf(out,"- %sFrame: %d ALL_TIME - %f\n",ctime( &ltime ),Count,Time/1000);fclose(out);}
 
             TimeSum = 0;
             TickCount = cvGetTickCount();
         }
     }
-    
+
     /* Update BG model: */
     TIME_BEGIN()
 
@@ -324,7 +324,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
             {   /* Set new data for tracker: */
                 m_pBT->SetBlobByID(BlobID, pBN );
             }
-            
+
             if(pBN)
             {   /* Update blob list with results from postprocessing: */
                 pB[0] = pBN[0];
@@ -354,7 +354,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
             if(r.x+r.width>=w){r.width = w-r.x-1;}
             if(r.y+r.height>=h){r.height = h-r.y-1;}
 
-            if(r.width > 4 && r.height > 4 && r.x < w && r.y < h && 
+            if(r.width > 4 && r.height > 4 && r.x < w && r.y < h &&
                 r.x >=0 && r.y >=0 &&
                 r.x+r.width < w && r.y+r.height < h && area > 0)
             {
@@ -376,7 +376,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
                 pB->BadFrames++;
             }
         }   /* Next blob: */
-        
+
         /* Check error count: */
         for(i=0; i<m_BlobList.GetBlobNum(); ++i)
         {
@@ -395,7 +395,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
     }   /*  Blob deleter. */
 
     TIME_END("BlobDeleter",m_BlobList.GetBlobNum())
-    
+
     /* Update blobs: */
     TIME_BEGIN()
     if(m_pBT)
@@ -415,7 +415,7 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
         {   /* Add new blob to tracker and blob list: */
             int i;
             IplImage* pMask = pFG;
-            
+
             /*if(0)if(NewBlobList.GetBlobNum()>0 && pFG )
             {// erode FG mask (only for FG_0 and MS1||MS2)
                 pMask = cvCloneImage(pFG);

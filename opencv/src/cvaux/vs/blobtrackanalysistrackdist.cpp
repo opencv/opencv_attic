@@ -58,7 +58,7 @@ public:
         m_pSeq = cvCreateSeq(0,sizeof(CvSeq),BlobSize,m_pMem);
     }
     ~DefTrackRec()
-    { 
+    {
         cvReleaseMemStorage(&m_pMem);
     };
     inline DefTrackPoint* GetPoint(int PointIndex)
@@ -97,7 +97,7 @@ public:
         int     Num;
         int     i;
         cvSeqPush(m_pSeq,pB);
-        
+
         Num = GetPointNum();
 
         for(i=MAX(0,Num-wnd-1); i<Num; ++i)
@@ -167,7 +167,7 @@ static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* 
     if(MaxLen > 0 && Num > MaxLen)
     {   /* Set new point seq len and new last point in this seq: */
         Num = MaxLen;
-        i0 = pSeq->GetPointNum() - Num; 
+        i0 = pSeq->GetPointNum() - Num;
     }
 
     for(i=0; i<Num; ++i)
@@ -225,7 +225,7 @@ static int cvTrackMatch(DefTrackRec* pSeq, int MaxLen, DefTrackRec* pSeqT, int* 
                 it_best = it;
             }
         } /* Find best end template point. */
-        
+
         /* Back tracking whole sequence: */
         for(it = it_best;i>=0 && it>=0;)
         {
@@ -256,7 +256,7 @@ class CvBlobTrackAnalysisTrackDist : public CvBlobTrackAnalysis
 {
     /*---------------- Internal functions: --------------------*/
 private:
-    char*               m_pDebugAVIName; /* For debugging. */
+    const char*               m_pDebugAVIName; /* For debugging. */
   //CvVideoWriter*      m_pDebugAVI;     /* For debugging. */
     IplImage*           m_pDebugImg;     /* For debugging. */
 
@@ -288,7 +288,7 @@ public:
         m_Frame = 0;
         m_pTempData = NULL;
         m_TempDataSize = 0;
-        
+
         m_pDebugAVIName = NULL;
         AddParam("DebugAVI",&m_pDebugAVIName);
         CommentParam("DebugAVI","Name of AVI file to save images from debug window");
@@ -296,7 +296,7 @@ public:
         m_TraceLen = 50;
         AddParam("TraceLen",&m_TraceLen);
         CommentParam("TraceLen","Length (in frames) of trajectory part that is used for comparison");
-        
+
         m_AbnormalThreshold = 0.02f;
         AddParam("AbnormalThreshold",&m_AbnormalThreshold);
         CommentParam("AbnormalThreshold","If trajectory is equal with less then <AbnormalThreshold*DataBaseTrackNum> tracks then trajectory is abnormal");
@@ -376,7 +376,7 @@ public:
                     int         UsePos = 0;
 
                     if(i==it) continue;
-                    
+
                     /* Match track: */
                     PairNum = cvTrackMatch( pF->pTrack, m_TraceLen, pFT->pTrack, pPairIdx, pTmpData );
                     Equal = MAX(1,cvRound(PairNum*0.1));
@@ -413,7 +413,7 @@ public:
                         double          Tv2 = (pBT->vx*pBT->vx+pBT->vy*pBT->vy)*m_VelThreshold*m_VelThreshold;
                         double          Tvm = pBT->v*m_VelThreshold;
 
-                        
+
                         if(Tv2 < MinTv2) Tv2 = MinTv2;
                         if(Tvm < MinTv) Tvm = MinTv;
 
@@ -447,7 +447,7 @@ public:
                     }
                     if(pF->state<0)pF->state=0;
                     if(pF->state>1)pF->state=1;
-                    
+
                     /*if(0)if(pF->state>0)
                     {// if abnormal blob
                         printf("Abnormal blob(%d) %d < %f, state=%f\n",CV_BLOB_ID(pF),NumEq,T, pF->state);
@@ -466,9 +466,9 @@ public:
         {   /* Debug output: */
             int i;
 
-            if(m_pDebugImg==NULL) 
+            if(m_pDebugImg==NULL)
                 m_pDebugImg = cvCloneImage(pImg);
-            else 
+            else
                 cvCopyImage(pImg, m_pDebugImg);
 
             for(i=m_TrackDataBase.GetBlobNum(); i>0; --i)
@@ -477,7 +477,7 @@ public:
                 DefTrackForDist*   pF = (DefTrackForDist*)m_TrackDataBase.GetBlob(i-1);
                 CvScalar    color = CV_RGB(0,0,0);
                 if(!pF->close) continue;
-                if(pF->close) 
+                if(pF->close)
                 {
                     color = CV_RGB(0,0,255);
                 }
@@ -504,11 +504,11 @@ public:
                 CvPoint             p = cvPointFrom32f(CV_BLOB_CENTER(pF));
                 int                 x = cvRound(CV_BLOB_RX(pF)), y = cvRound(CV_BLOB_RY(pF));
                 CvSize              s = cvSize(MAX(1,x), MAX(1,y));
-                
-                cvEllipse( m_pDebugImg, 
+
+                cvEllipse( m_pDebugImg,
                     p,
                     s,
-                    0, 0, 360, 
+                    0, 0, 360,
                     CV_RGB(c,255-c,0), cvRound(1+(0*c)/255) );
 
                 for(j=pF->pTrack->GetPointNum(); j>0; j--)
@@ -520,20 +520,20 @@ public:
                 pF->close = 0;
 
             }   /* Draw all elements for all trajectories. */
-            
+
             //cvNamedWindow("Tracks",0);
             //cvShowImage("Tracks", m_pDebugImg);
         } /* Debug output. */
 
-#if 0        
+#if 0
         if(m_pDebugImg && m_pDebugAVIName)
         {
             if(m_pDebugAVI==NULL)
             {   /* Create avi file for writing: */
-                m_pDebugAVI = cvCreateVideoWriter( 
-                    m_pDebugAVIName, 
-                    CV_FOURCC('x','v','i','d'), 
-                    25, 
+                m_pDebugAVI = cvCreateVideoWriter(
+                    m_pDebugAVIName,
+                    CV_FOURCC('x','v','i','d'),
+                    25,
                     cvSize(m_pDebugImg->width,m_pDebugImg->height));
 
                 if(m_pDebugAVI == NULL)
@@ -553,9 +553,9 @@ public:
         return pF?pF->state:0.0f;
     };
 
-    /* Return 0 if trajectory is normal; 
+    /* Return 0 if trajectory is normal;
        return >0 if trajectory abnormal. */
-    virtual char*   GetStateDesc(int BlobID)
+    virtual const char*   GetStateDesc(int BlobID)
     {
         if(GetState(BlobID)>0.5) return "abnormal";
         return NULL;

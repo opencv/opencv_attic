@@ -17,7 +17,7 @@
 
 /* wrapper to the better function PyInt_AsLong, removing problems
    with RedHat (I hope) */
-static long PyInt_AS_LONG (PyObject *obj) {
+long PyInt_AS_LONG (PyObject *obj) {
     return PyInt_AsLong (obj);
 }
 
@@ -27,7 +27,7 @@ static long PyInt_AS_LONG (PyObject *obj) {
 #endif
 
 /* wrapper to the better function PyFloat_AS_DOUBLE, to prevent errors */
-static double PyFloat_AS_DOUBLE (PyObject *obj) {
+double PyFloat_AS_DOUBLE (PyObject *obj) {
     return PyFloat_AsDouble (obj);
 }
 %}

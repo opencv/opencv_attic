@@ -142,7 +142,7 @@ bool  GrFmtTiffReader::ReadHeader()
         if( TIFFRGBAImageOK( tif, errmsg ) &&
             TIFFGetField( tif, TIFFTAG_IMAGEWIDTH, &width ) &&
             TIFFGetField( tif, TIFFTAG_IMAGELENGTH, &height ) &&
-            TIFFGetField( tif, TIFFTAG_PHOTOMETRIC, &photometric ) && 
+            TIFFGetField( tif, TIFFTAG_PHOTOMETRIC, &photometric ) &&
             (!TIFFGetField( tif, TIFFTAG_COMPRESSION, &compression ) ||
             (compression != COMPRESSION_LZW &&
              compression != COMPRESSION_OJPEG)))
@@ -150,7 +150,7 @@ bool  GrFmtTiffReader::ReadHeader()
             m_width = width;
             m_height = height;
             m_iscolor = photometric > 1;
-            
+
             result = true;
         }
     }
@@ -175,19 +175,19 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
         int tile_width0 = m_width, tile_height0 = 0;
         int x, y, i;
         int is_tiled = TIFFIsTiled(tif);
-        
-        if( !is_tiled &&
-            TIFFGetField( tif, TIFFTAG_ROWSPERSTRIP, &tile_height0 ) ||
-            is_tiled &&
+
+        if( (!is_tiled &&
+            TIFFGetField( tif, TIFFTAG_ROWSPERSTRIP, &tile_height0 )) ||
+            (is_tiled &&
             TIFFGetField( tif, TIFFTAG_TILEWIDTH, &tile_width0 ) &&
-            TIFFGetField( tif, TIFFTAG_TILELENGTH, &tile_height0 ))
+            TIFFGetField( tif, TIFFTAG_TILELENGTH, &tile_height0 )))
         {
             if( tile_width0 <= 0 )
                 tile_width0 = m_width;
 
             if( tile_height0 <= 0 )
                 tile_height0 = m_height;
-            
+
             buffer = new uchar[tile_height0*tile_width0*4];
 
             for( y = 0; y < m_height; y += tile_height0, data += step*tile_height0 )
@@ -296,10 +296,10 @@ int  GrFmtTiffReader::ReadTable( int offset, int count,
                                  int*& array, int& arraysize )
 {
     int i;
-    
+
     if( count < 0 )
         return RBS_BAD_HEADER;
-    
+
     if( fieldType != TIFF_TYPE_SHORT &&
         fieldType != TIFF_TYPE_LONG &&
         fieldType != TIFF_TYPE_BYTE )
@@ -424,7 +424,7 @@ bool  GrFmtTiffReader::ReadHeader()
 
                     if( ReadTable( value, count, fieldType, bpp_arr_ref, count ) < 0 )
                         BAD_HEADER_ERR();
-                
+
                     for( j = 1; j < count; j++ )
                     {
                         if( bpp_arr[j] != bpp_arr[0] )
@@ -568,7 +568,7 @@ bool  GrFmtTiffReader::ReadData( uchar* data, int step, int color )
 
     if( m_strips < 0 || !m_strm.IsOpened())
         return false;
-    
+
     if( src_pitch+32 > buffer_size )
         src = new uchar[src_pitch+32];
 
@@ -652,7 +652,7 @@ bad_decoding_end:
         }
     }
 
-    if( src != buffer ) delete[] src; 
+    if( src != buffer ) delete[] src;
     return result;
 }
 
@@ -796,7 +796,7 @@ bool  GrFmtTiffWriter::WriteImage( const uchar* data, int step,
 
         WriteTag( TIFF_TAG_SAMPLES_PER_PIXEL, TIFF_TYPE_SHORT, 1, channels );
         WriteTag( TIFF_TAG_ROWS_PER_STRIP, TIFF_TYPE_LONG, 1, rowsPerStrip );
-        
+
         WriteTag( TIFF_TAG_STRIP_COUNTS,
                   stripCount > 1 ? TIFF_TYPE_SHORT : TIFF_TYPE_LONG,
                   stripCount, stripCountsOffset );

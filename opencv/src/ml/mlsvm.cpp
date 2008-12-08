@@ -1368,9 +1368,9 @@ bool CvSVM::do_train( int svm_type, int sample_count, int var_count, const float
         {
             const CvMat* cw = params.class_weights;
 
-            if( !CV_IS_MAT(cw) || cw->cols != 1 && cw->rows != 1 ||
+            if( !CV_IS_MAT(cw) || (cw->cols != 1 && cw->rows != 1) ||
                 cw->rows + cw->cols - 1 != class_count ||
-                CV_MAT_TYPE(cw->type) != CV_32FC1 && CV_MAT_TYPE(cw->type) != CV_64FC1 )
+                (CV_MAT_TYPE(cw->type) != CV_32FC1 && CV_MAT_TYPE(cw->type) != CV_64FC1) )
                 CV_ERROR( CV_StsBadArg, "params.class_weights must be 1d floating-point vector "
                     "containing as many elements as the number of classes" );
 
@@ -2291,8 +2291,8 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
 
         CV_CALL( df[i].alpha = (double*)cvMemStorageAlloc( storage,
                                         sv_count*sizeof(df[i].alpha[0])));
-        CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(alpha_node->tag) &&
-                   alpha_node->data.seq->total == sv_count );
+        CV_ASSERT( sv_count == 1 || (CV_NODE_IS_SEQ(alpha_node->tag) &&
+                   alpha_node->data.seq->total == sv_count) );
         CV_CALL( cvReadRawData( fs, alpha_node, df[i].alpha, "d" ));
 
         if( class_count > 1 )
@@ -2302,8 +2302,8 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
                 CV_ERROR( CV_StsParseError, "index is missing in the decision function" );
             CV_CALL( df[i].sv_index = (int*)cvMemStorageAlloc( storage,
                                             sv_count*sizeof(df[i].sv_index[0])));
-            CV_ASSERT( sv_count == 1 || CV_NODE_IS_SEQ(index_node->tag) &&
-                   index_node->data.seq->total == sv_count );
+            CV_ASSERT( sv_count == 1 || (CV_NODE_IS_SEQ(index_node->tag) &&
+                   index_node->data.seq->total == sv_count) );
             CV_CALL( cvReadRawData( fs, index_node, df[i].sv_index, "i" ));
         }
         else

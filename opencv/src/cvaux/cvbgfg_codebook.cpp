@@ -98,7 +98,7 @@ void cvBGCodeBookUpdate( CvBGCodeBookModel* model, const CvArr* _image,
     CvBGCodeBookElem* freeList;
 
     CV_ASSERT( model && CV_MAT_TYPE(image->type) == CV_8UC3 &&
-        (!mask || CV_IS_MASK_ARR(mask) && CV_ARE_SIZES_EQ(image, mask)) );
+        (!mask || (CV_IS_MASK_ARR(mask) && CV_ARE_SIZES_EQ(image, mask))) );
 
     if( roi.x == 0 && roi.y == 0 && roi.width == 0 && roi.height == 0 )
     {
@@ -227,7 +227,7 @@ int cvBGCodeBookDiff( const CvBGCodeBookModel* model, const CvArr* _image,
                       CvArr* _fgmask, CvRect roi )
 {
     int maskCount = -1;
-    
+
     CV_FUNCNAME( "cvBGCodeBookDiff" );
 
     __BEGIN__;
@@ -271,7 +271,7 @@ int cvBGCodeBookDiff( const CvBGCodeBookModel* model, const CvArr* _image,
             int l0 = p0 + m0, l1 = p1 + m1, l2 = p2 + m2;
             int h0 = p0 - M0, h1 = p1 - M1, h2 = p2 - M2;
             m[x] = (uchar)255;
-            
+
             for( e = *cb; e != 0; e = e->next )
             {
                 if( e->boxMin[0] <= l0 && h0 <= e->boxMax[0] &&
@@ -302,8 +302,8 @@ void cvBGCodeBookClearStale( CvBGCodeBookModel* model, int staleThresh,
     int x, y, T;
     CvBGCodeBookElem* freeList;
 
-    CV_ASSERT( model && (!mask || CV_IS_MASK_ARR(mask) &&
-        mask->cols == model->size.width && mask->rows == model->size.height) );
+    CV_ASSERT( model && (!mask || (CV_IS_MASK_ARR(mask) &&
+        mask->cols == model->size.width && mask->rows == model->size.height)) );
 
     if( roi.x == 0 && roi.y == 0 && roi.width == 0 && roi.height == 0 )
     {
