@@ -1,1 +1,1 @@
-SUBDIRS = haartraining
+SUBDIRS = cxcore cv cvaux ml highgui
