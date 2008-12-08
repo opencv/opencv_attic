@@ -1,6 +1,6 @@
 /*
  *  grfmt_imageio.cpp
- *  
+ *
  *
  *  Created by Morgan Conbere on 5/17/07.
  *
@@ -32,8 +32,8 @@ GrFmtImageIO::~GrFmtImageIO()
 bool  GrFmtImageIO::CheckFile( const char* filename )
 {
     if( !filename ) return false;
-    
-    // If a CFImageRef can be retrieved from an image file, it is 
+
+    // If a CFImageRef can be retrieved from an image file, it is
     // readable by ImageIO.  Effectively this is using ImageIO
     // to check the signatures and determine the file format for us.
     CFURLRef imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
@@ -41,15 +41,15 @@ bool  GrFmtImageIO::CheckFile( const char* filename )
                                                                     strlen( filename ),
                                                                     false );
     if( !imageURLRef ) return false;
-    
+
     CGImageSourceRef sourceRef = CGImageSourceCreateWithURL( imageURLRef, NULL );
     CFRelease( imageURLRef );
     if( !sourceRef ) return false;
-    
+
     CGImageRef imageRef = CGImageSourceCreateImageAtIndex( sourceRef, 0, NULL );
     CFRelease( sourceRef );
     if( !imageRef ) return false;
-    
+
     return true;
 }
 
@@ -83,7 +83,7 @@ GrFmtImageIOReader::~GrFmtImageIOReader()
 void  GrFmtImageIOReader::Close()
 {
     CGImageRelease( imageRef );
-    
+
     GrFmtReader::Close();
 }
 
@@ -93,31 +93,31 @@ bool  GrFmtImageIOReader::ReadHeader()
     CFURLRef         imageURLRef;
     CGImageSourceRef sourceRef;
     imageRef = NULL;
-    
+
     imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
                                                            (const UInt8*)m_filename,
                                                            strlen(m_filename),
                                                            false );
-    
+
     sourceRef = CGImageSourceCreateWithURL( imageURLRef, NULL );
     CFRelease( imageURLRef );
     if ( !sourceRef )
         return false;
-    
+
     imageRef = CGImageSourceCreateImageAtIndex( sourceRef, 0, NULL );
     CFRelease( sourceRef );
     if( !imageRef )
         return false;
-    
+
     m_width = CGImageGetWidth( imageRef );
     m_height = CGImageGetHeight( imageRef );
-    
+
     CGColorSpaceRef colorSpace = CGImageGetColorSpace( imageRef );
     if( !colorSpace )
         return false;
-    
+
     m_iscolor = ( CGColorSpaceGetNumberOfComponents( colorSpace ) > 1 );
-    
+
     return true;
 }
 
@@ -125,20 +125,20 @@ bool  GrFmtImageIOReader::ReadHeader()
 bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
 {
     int bpp; // Bytes per pixel
-    
+
     // Set color to either CV_IMAGE_LOAD_COLOR or CV_IMAGE_LOAD_GRAYSCALE if unchanged
     color = color > 0 || ( m_iscolor && color < 0 );
-    
+
     // Get Height, Width, and color information
     if( !ReadHeader() )
         return false;
-    
+
     CGContextRef     context = NULL; // The bitmap context
     CGColorSpaceRef  colorSpace = NULL;
     uchar*           bitmap = NULL;
     CGImageAlphaInfo alphaInfo;
-    
-    // CoreGraphics will take care of converting to grayscale and back as long as the 
+
+    // CoreGraphics will take care of converting to grayscale and back as long as the
     // appropriate colorspace is set
     if( color == CV_LOAD_IMAGE_GRAYSCALE )
     {
@@ -148,39 +148,39 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
     }
     else if( color == CV_LOAD_IMAGE_COLOR )
     {
-        colorSpace = CGColorSpaceCreateDeviceRGB();
+        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
         bpp = 4; /* CG only has 8 and 32 bit color spaces, so we waste a byte */
         alphaInfo = kCGImageAlphaNoneSkipLast;
     }
     if( !colorSpace )
         return false;
-    
+
     bitmap = (uchar*)malloc( bpp * m_height * m_width );
     if( !bitmap )
     {
         CGColorSpaceRelease( colorSpace );
         return false;
     }
-    
+
     context = CGBitmapContextCreate( (void *)bitmap,
                                      m_width,        /* width */
                                      m_height,       /* height */
                                      m_bit_depth,    /* bit depth */
-                                     bpp * m_width,  /* bytes per row */ 
+                                     bpp * m_width,  /* bytes per row */
                                      colorSpace,     /* color space */
                                      alphaInfo);
-    
+
     CGColorSpaceRelease( colorSpace );
     if( !context )
     {
         free( bitmap );
         return false;
     }
-    
+
     // Copy the image data into the bitmap region
     CGRect rect = {{0,0},{m_width,m_height}};
     CGContextDrawImage( context, rect, imageRef );
-    
+
     uchar* bitdata = (uchar*)CGBitmapContextGetData( context );
     if( !bitdata )
     {
@@ -188,19 +188,19 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
         CGContextRelease( context );
         return false;
     }
-    
+
     // Move the bitmap (in RGB) into data (in BGR)
     int bitmapIndex = 0;
-    
-    if( color == CV_LOAD_IMAGE_COLOR ) 
+
+    if( color == CV_LOAD_IMAGE_COLOR )
 	{
 		uchar * base = data;
-		
+
 		for (int y = 0; y < m_height; y++)
 		{
 			uchar * line = base + y * step;
-			
-		    for (int x = 0; x < m_width; x++) 
+
+		    for (int x = 0; x < m_width; x++)
 		    {
 				// Blue channel
 				line[0] = bitdata[bitmapIndex + 2];
@@ -208,7 +208,7 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
 				line[1] = bitdata[bitmapIndex + 1];
 				// Red channel
 				line[2] = bitdata[bitmapIndex + 0];
-				
+
 				line        += 3;
 				bitmapIndex += bpp;
 			}
@@ -219,7 +219,7 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
 		for (int y = 0; y < m_height; y++)
 			memcpy (data + y * step, bitmap + y * m_width, m_width);
     }
-    
+
     free( bitmap );
     CGContextRelease( context );
     return true;
@@ -263,7 +263,7 @@ CFStringRef  FilenameToUTI( const char* filename )
         ext_buf[i] = (char)tolower(ext[i]);
     ext_buf[i] = '\0';
     ext = ext_buf;
-    
+
     if( !strcmp(ext, ".bmp") || !strcmp(ext, ".dib") )
         imageUTI = CFSTR( "com.microsoft.bmp" );
     else if( !strcmp(ext, ".exr") )
@@ -280,7 +280,7 @@ CFStringRef  FilenameToUTI( const char* filename )
         imageUTI = CFSTR( "public.tiff" );
 
     free(ext_buf);
-    
+
     return imageUTI;
 }
 
@@ -290,29 +290,29 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
 {
     // Determine the appropriate UTI based on the filename extension
     CFStringRef imageUTI = FilenameToUTI( m_filename );
-    
+
     // Determine the Bytes Per Pixel
     int bpp = (_channels == 1) ? 1 : 4;
-    
+
     // Write the data into a bitmap context
     CGContextRef context;
     CGColorSpaceRef colorSpace;
     uchar* bitmapData = NULL;
-    
+
     if( bpp == 1 )
         colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericGray );
     else if( bpp == 4 )
-        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGB );
+        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
     if( !colorSpace )
         return false;
-    
+
     bitmapData = (uchar*)malloc( bpp * height * width );
     if( !bitmapData )
     {
         CGColorSpaceRelease( colorSpace );
         return false;
     }
-    
+
     context = CGBitmapContextCreate( bitmapData,
                                      width,
                                      height,
@@ -327,18 +327,18 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
         free( bitmapData );
         return false;
     }
-    
+
     // Copy pixel information from data into bitmapData
     if (bpp == 4)
     {
         int           bitmapIndex = 0;
 		const uchar * base        = data;
-		
+
 		for (int y = 0; y < height; y++)
 		{
 			const uchar * line = base + y * step;
-			
-		    for (int x = 0; x < width; x++) 
+
+		    for (int x = 0; x < width; x++)
 		    {
 				// Blue channel
                 bitmapData[bitmapIndex + 2] = line[0];
@@ -346,7 +346,7 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
 				bitmapData[bitmapIndex + 1] = line[1];
 				// Red channel
 				bitmapData[bitmapIndex + 0] = line[2];
-				
+
 				line        += 3;
 				bitmapIndex += bpp;
 			}
@@ -357,7 +357,7 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
 		for (int y = 0; y < height; y++)
 			memcpy (bitmapData + y * width, data + y * step, width);
     }
-    
+
     // Turn the bitmap context into an imageRef
     CGImageRef imageRef = CGBitmapContextCreateImage( context );
     CGContextRelease( context );
@@ -366,7 +366,7 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
         free( bitmapData );
         return false;
     }
-    
+
     // Write the imageRef to a file based on the UTI
     CFURLRef imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
                                                                     (const UInt8*)m_filename,
@@ -378,11 +378,11 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
         free( bitmapData );
         return false;
     }
-    
+
     CGImageDestinationRef destRef = CGImageDestinationCreateWithURL( imageURLRef,
-                                                                     imageUTI, 
+                                                                     imageUTI,
                                                                      1,
-                                                                     NULL);        
+                                                                     NULL);
     CFRelease( imageURLRef );
     if( !destRef )
     {
@@ -391,18 +391,18 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
         std::cerr << "!destRef" << std::endl << std::flush;
         return false;
     }
-    
+
     CGImageDestinationAddImage(destRef, imageRef, NULL);
     if( !CGImageDestinationFinalize(destRef) )
     {
         std::cerr << "Finalize failed" << std::endl << std::flush;
         return false;
     }
-    
+
     CFRelease( destRef );
-    CGImageRelease( imageRef );    
+    CGImageRelease( imageRef );
     free( bitmapData );
-    
+
     return true;
 }
 
