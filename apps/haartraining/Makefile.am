@@ -7,9 +7,9 @@ bin_PROGRAMS = opencv-haartraining opencv-createsamples opencv-performance
 
 ALL_CV_LIBS =                                       \
     libcvhaartraining.a                             \
-    $(top_builddir)/otherlibs/highgui/libhighgui.la \
-    $(top_builddir)/cv/src/libcv.la                 \
-    $(top_builddir)/cxcore/src/libcxcore.la
+    $(top_builddir)/src/highgui/libhighgui.la       \
+    $(top_builddir)/src/cv/libcv.la                 \
+    $(top_builddir)/src/cxcore/libcxcore.la
 
 libcvhaartraining_a_SOURCES = \
     cvboost.cpp           \
@@ -31,11 +31,6 @@ noinst_HEADERS = cvclassifier.h _cvhaartraining.h _cvcommon.h
 
 EXTRA_DIST =
 
-INCLUDES =                                \
-    -I$(top_srcdir)/cxcore/include    \
-    -I$(top_srcdir)/cv/include        \
-    -I$(top_srcdir)/otherlibs/highgui \
-    -I$(srcdir)/../include            \
-    -I.
+INCLUDES = -I$(top_srcdir)/include/opencv -I.
 
 #CXX=@CXXOPENMP@

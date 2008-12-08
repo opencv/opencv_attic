@@ -1,6 +1,6 @@
 opencvdocdir = $(pkgdatadir)/doc
-nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
-    license.txt opencv.jpg opencv-logo.png opencv-logo2.png opencvman_old.pdf \
+nobase_dist_opencvdoc_DATA = faq.htm index.htm \
+    license.txt opencv.jpg opencv-logo.png opencv-logo2.png \
     ../THANKS ../ChangeLog \
     papers/algo_tracking.pdf papers/avbpa99.ps papers/camshift.pdf \
     ref/opencvref.css ref/opencvref_cv.htm ref/opencvref_cvaux.htm \
@@ -17,4 +17,4 @@ nobase_dist_opencvdoc_DATA = cvcam.rtf faq.htm index.htm \
     ref/pics/minareabox.png  ref/pics/mlp_.png  ref/pics/neuron_model.png \
     ref/pics/pointpolygon.png  ref/pics/quadedge.png  ref/pics/right.jpg \
     ref/pics/sigmoid_bipolar.png  ref/pics/subdiv.png ref/pics/threshold.png \
-    python.txt python-wrappers-on-windows.txt
+    python.txt

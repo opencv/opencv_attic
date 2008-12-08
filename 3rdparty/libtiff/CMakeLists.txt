@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-#  CMake file for libtiff. See root CMakeLists.txt 
+#  CMake file for libtiff. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 project(libtiff)
@@ -7,8 +7,8 @@ project(libtiff)
 # List of C++ files:
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR} 
-	${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	)
 
 # The .cpp files:
@@ -64,7 +64,7 @@ endif(WIN32)
 if(APPLE)
     set(lib_srcs ${lib_srcs} tif_apple.c)
 endif(APPLE)
-	
+
 file(GLOB lib_hdrs *.h*)
 
 set(the_target "libtiff")
@@ -75,15 +75,9 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
 
-set_target_properties(${the_target} 
-	PROPERTIES 
-	OUTPUT_NAME "${the_target}" 
+set_target_properties(${the_target}
+	PROPERTIES
+	OUTPUT_NAME "${the_target}"
 	DEBUG_POSTFIX "d"
-	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
 	)
-
-#install(TARGETS ${the_target}
-#	RUNTIME DESTINATION bin
-#	LIBRARY DESTINATION lib
-#	ARCHIVE DESTINATION lib
-#	)

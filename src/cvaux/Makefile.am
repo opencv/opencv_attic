@@ -1,7 +1,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-INCLUDES = -I. -I$(top_srcdir)/cvaux/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)/cv/include -I$(top_srcdir)/cv/src -I$(top_srcdir)
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I../cv -I$(top_srcdir)
 
 noinst_HEADERS     = _cvaux.h _cvfacedetection.h _cvvectrack.h _cvvm.h
 noinst_LTLIBRARIES = lib_cvaux.la
@@ -50,6 +50,6 @@ libcvaux_la_SOURCES = dummy.cpp
 libcvaux_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
 libcvaux_la_LIBADD  = \
     lib_cvaux.la \
-    $(top_builddir)/cxcore/src/libcxcore.la \
-    $(top_builddir)/cv/src/libcv.la         \
+    $(top_builddir)/src/cxcore/libcxcore.la \
+    $(top_builddir)/src/cv/libcv.la         \
     @LTLIBOBJS@

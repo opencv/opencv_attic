@@ -9,8 +9,8 @@ EXTRA_DIST = \
     window_carbon.cpp window_gtk.cpp window_w32.cpp              \
     grfmt_imageio.cpp
 
-INCLUDES = -I. -I$(top_srcdir)/cxcore/include \
-    -I$(top_srcdir)/cv/include @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
+INCLUDES = -I. -I$(top_srcdir)/include/opencv \
+    @GTHREAD_CFLAGS@ @GTK_CFLAGS@ \
     @GSTREAMER_CFLAGS@ @QUICKTIME_CFLAGS@ @CARBON_CFLAGS@    \
     @UNICAP_PACKAGE_CFLAGS@ @UCIL_PACKAGE_CFLAGS@
 
@@ -101,8 +101,8 @@ libhighgui_la_SOURCES = dummy.cpp
 libhighgui_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
 libhighgui_la_LIBADD  = \
     lib_highgui.la \
-    $(top_builddir)/cxcore/src/libcxcore.la \
-    $(top_builddir)/cv/src/libcv.la         \
+    $(top_builddir)/src/cxcore/libcxcore.la \
+    $(top_builddir)/src/cv/libcv.la         \
     @GTHREAD_LIBS@ @GTK_LIBS@ @GSTREAMER_LIBS@ @IMAGELIBS@ @FFMPEGLIBS@   \
     @IEEE1394LIBS@ @QUICKTIME_LIBS@ @CARBON_LIBS@ @XINE_LIBS@ @LTLIBOBJS@ \
     @UNICAP_PACKAGE_LIBS@ @UCIL_PACKAGE_LIBS@

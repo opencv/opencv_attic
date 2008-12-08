@@ -23,10 +23,10 @@ set_source_files_properties(cv.i PROPERTIES
     )
 
 set(opencv_headers
-    ${CMAKE_SOURCE_DIR}/cxcore/include/cxtypes.h
-    ${CMAKE_SOURCE_DIR}/cxcore/include/cxcore.h
-    ${CMAKE_SOURCE_DIR}/cv/include/cvtypes.h
-    ${CMAKE_SOURCE_DIR}/cv/include/cv.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/cxtypes.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/cxcore.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/cvtypes.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/cv.h
     )
 
 add_custom_command(
@@ -58,7 +58,7 @@ set_source_files_properties(ml.i PROPERTIES
 set(SWIG_MODULE_ml_EXTRA_DEPS
     nointpb.i pytypemaps.i
     ../general/memory.i ../general/typemaps.i
-    ${CMAKE_SOURCE_DIR}/ml/include/ml.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/ml.h
     )
 
 SWIG_ADD_MODULE(ml python ml.i pyhelpers.cpp pyhelpers.h)
@@ -76,7 +76,7 @@ set(SWIG_MODULE_highgui_EXTRA_DEPS
     nointpb.i pytypemaps.i
     ../general/highgui.i
     ../general/memory.i ../general/typemaps.i
-    ${CMAKE_SOURCE_DIR}/otherlibs/highgui/highgui.h
+    ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h
     )
 
 SWIG_ADD_MODULE(highgui python highgui.i pyhelpers.cpp pyhelpers.h)

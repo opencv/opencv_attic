@@ -98,8 +98,8 @@ noinst_PYTHON = \
 TESTS_ENVIRONMENT = \
     top_srcdir=$(top_srcdir) \
     top_builddir=$(top_builddir) \
-    LD_LIBRARY_PATH=$(top_builddir)/cxcore/src/.libs:$(top_builddir)/cv/src/.libs:$(top_builddir)/otherlibs/highgui/.libs:$(LD_LIBRARY_PATH) \
-    DYLD_LIBRARY_PATH=$(top_builddir)/cxcore/src/.libs:$(top_builddir)/cv/src/.libs:$(top_builddir)/otherlibs/highgui/.libs:$(LD_LIBRARY_PATH) \
+    LD_LIBRARY_PATH=$(top_builddir)/src/cxcore/.libs:$(top_builddir)/src/cv/.libs:$(top_builddir)/src/highgui/.libs:$(LD_LIBRARY_PATH) \
+    DYLD_LIBRARY_PATH=$(top_builddir)/src/cxcore/.libs:$(top_builddir)/src/cv/.libs:$(top_builddir)/src/highgui/.libs:$(LD_LIBRARY_PATH) \
     PYTHONPATH=$(top_srcdir)/interfaces/swig:$(top_builddir)/interfaces/swig/python/.libs
 
 # do tests only if we ask for python

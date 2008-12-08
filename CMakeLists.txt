@@ -3,7 +3,7 @@
 #
 #    From the off-tree build directory, invoke:
 #      $ cmake <PATH_TO_OPENCV_ROOT>
-#   
+#
 #
 #   - OCT-2008: Initial version <joseluisblancoc@gmail.com>
 #
@@ -132,7 +132,7 @@ set(BUILD_TESTS ON CACHE BOOL "Build tests")
 if(UNIX)
     include(FindPkgConfig OPTIONAL)
     include(CheckFunctionExists)
-    include(CheckIncludeFile) 
+    include(CheckIncludeFile)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -143,7 +143,7 @@ endif()
 
 # ===================================================
 # Macros that checks if module have been installed.
-# After it adds module to build and define 
+# After it adds module to build and define
 # constants passed as second arg
 # ===================================================
 
@@ -157,7 +157,7 @@ macro(CHECK_MODULE module_name define)
         set(ALIAS_LIBRARIES         ${ALIAS}_LIBRARIES)
 
         PKG_CHECK_MODULES(${ALIAS} ${module_name})
-        
+
         if (${ALIAS_FOUND})
             set(${define} 1)
             foreach(P "${ALIAS_INCLUDE_DIRS}")
@@ -195,16 +195,12 @@ if(UNIX)
 
     CHECK_MODULE(libdc1394 HAVE_DC1394)
 
-    CHECK_MODULE(libxine HAVE_XINE)
-
-    CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
-    CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
-    CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
-    CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
-    CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
-    CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
-
     if(NOT APPLE)
+        CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
+        CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
+        CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
+        CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
+
         CHECK_MODULE(libxine HAVE_XINE)
         CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
         CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
@@ -215,7 +211,9 @@ if(UNIX)
         include(FindJasper)
 
         set(OPENCV_LINKER_LIBS dl m pthread)
-    endif()    
+    else()
+        add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
+    endif()
 endif()
 
 set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with Python support")
@@ -231,7 +229,7 @@ find_package(PythonLibs)
 # ===================================================
 if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
-              ERROR_VARIABLE PYTHON_VERSION_FULL 
+              ERROR_VARIABLE PYTHON_VERSION_FULL
               OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
@@ -244,20 +242,6 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
     endif()
 endif()
 
-endif()
-
-# ---------------------------------------------------------------
-#   "Classic" function & headers detection:
-# ---------------------------------------------------------------
-if(UNIX)
-    if(NOT APPLE)
-        CHECK_FUNCTION_EXISTS(alloca HAVE_ALLOCA)
-        CHECK_INCLUDE_FILE(alloca.h HAVE_ALLOCA_H)
-        CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
-        CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
-    else()
-        add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
-    endif()    
 endif()
 
 # ----------------------------------------------------------------------------
@@ -280,14 +264,11 @@ configure_file("${CMAKE_SOURCE_DIR}/cvconfig.h.cmake" "${OPENCV_CONFIG_FILE_INCL
 # ---------------------------------------------------------------------------
 # The C+//0 include & link directories:
 # ---------------------------------------------------------------------------
-include_directories(".")
-include_directories("${OPENCV_CONFIG_FILE_INCLUDE_DIR}")
-include_directories("${CMAKE_SOURCE_DIR}/cv/include")
-include_directories("${CMAKE_SOURCE_DIR}/cv/src")
-include_directories("${CMAKE_SOURCE_DIR}/cvaux/include")
-include_directories("${CMAKE_SOURCE_DIR}/cxcore/include")
-include_directories("${CMAKE_SOURCE_DIR}/ml/include")
-include_directories("${CMAKE_SOURCE_DIR}/otherlibs/highgui")
+include_directories("."
+    "${OPENCV_CONFIG_FILE_INCLUDE_DIR}"
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/include/opencv"
+    )
 
 # ----------------------------------------------------------------------------
 # 			Set the maximum level of warnings:
@@ -327,7 +308,7 @@ if(MSVC)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    # High level of warnings. 
+    # High level of warnings.
     # The -Wno-long-long is required in 64bit systems when including sytem headers.
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wall")
 
@@ -355,7 +336,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         # Remove unreferenced functions: function level linking
         if(NOT APPLE)
             set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -ffunction-sections")
-        endif()    
+        endif()
     endif()
 
     # Parallel mode
@@ -365,7 +346,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
-    
+
     if(OPENCV_USE_SSE2)
 	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse2")
     endif()
@@ -404,18 +385,13 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory 
 #-----------------------------------
 # Subdirectories:
 #-----------------------------------
-add_subdirectory(cxcore)
-add_subdirectory(cv)
-add_subdirectory(cvaux)
-add_subdirectory(ml)
-add_subdirectory(otherlibs)
+add_subdirectory(src)
+add_subdirectory(apps)
+add_subdirectory(doc)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(samples)
 endif()
-
-add_subdirectory(apps)
-add_subdirectory(docs)
 
 if(BUILD_TESTS)
     enable_testing()
@@ -424,6 +400,10 @@ endif()
 
 if(SWIG_FOUND)
     add_subdirectory(interfaces)
+endif()
+
+if(WIN32)
+    add_subdirectory(3rdparty)
 endif()
 
 # --------------------------------------------------------------------------------------------
@@ -436,18 +416,15 @@ endif()
 #  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
 # -------------------------------------------------------------------------------------------
 
-# Name of libraries is: libcv110.so, etc... 
+# Name of libraries is: libcv110.so, etc...
 #  OPENCV_DLLVERSION must be set to "110", etc..
 # Already done above.
 
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE)
 list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${OPENCV_CONFIG_FILE_INCLUDE_DIR}")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cv/include")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cvaux/include")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/cxcore/include")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/ml/include")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/otherlibs/highgui")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/include")
+list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/include/opencv")
 
 set(CMAKE_LIB_DIRS_CONFIGCMAKE ${LIBRARY_OUTPUT_PATH})
 

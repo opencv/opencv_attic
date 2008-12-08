@@ -3,7 +3,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-# tell make where aclocal finds its files in Maintainer Mode 
+# tell make where aclocal finds its files in Maintainer Mode
 ACLOCAL_AMFLAGS = -I ./autotools/aclocal
 
 ## Any directories that you want built and installed should go here.
@@ -12,13 +12,13 @@ if BUILD_APPS
 else
   APPS_DIR =
 endif
-SUBDIRS = cxcore cv cvaux ml otherlibs utils interfaces $(APPS_DIR) tests samples data docs
+SUBDIRS = src include utils interfaces $(APPS_DIR) tests samples data doc
 
 # All the rest of the distributed files
 #EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
 EXTRA_DIST = THANKS TODO \
              opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
-             _make apps filters make_frameworks.sh
+             apps make_frameworks.sh
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
@@ -34,9 +34,9 @@ $(PACKAGE)-$(VERSION).tar.gz: dist
 
 dist-hook:
 	rm -rf `find $(distdir) -name CVS`
-	chmod u+x $(srcdir)/utils/unix2dos.py
-	find $(distdir) -name *.dsw -exec $(srcdir)/utils/unix2dos.py {} \;
-	find $(distdir) -name *.dsp -exec $(srcdir)/utils/unix2dos.py {} \;
+#	chmod u+x $(srcdir)/utils/unix2dos.py
+#	find $(distdir) -name *.dsw -exec $(srcdir)/utils/unix2dos.py {} \;
+#	find $(distdir) -name *.dsp -exec $(srcdir)/utils/unix2dos.py {} \;
 
 # Rule to build RPM distribution package
 rpm: $(PACKAGE)-$(VERSION).tar.gz
@@ -64,13 +64,13 @@ clean-local: clean-framework
 # It currently creates a private framework (see Apple documentation) that
 # cannot be placed to the /Library/Framework locations but is intended to get
 # copied into application bundles.
-# 
+#
 # You should usually not invoke this target directly but use the shell script
 # 'make_frameworks.sh' instead that will create the most sensible
 # default installation (universal build).
-# 
+#
 # See: http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-# 
+#
 
 FRAMEWORK_NAME = OpenCV
 FRAMEWORK_VERSION = A
@@ -87,37 +87,37 @@ FRAMEWORK_INSTALL_NAME = $(FRAMEWORK_INSTALL_PATH)/$(FRAMEWORK_NAME).framework/V
 
 FRAMEWORK_XHEADERS = \
   $(top_srcdir)/autotools/darwin/OpenCV.h     \
-  $(top_srcdir)/cxcore/include/cxcore.h       \
-  $(top_srcdir)/cxcore/include/cxerror.h      \
-  $(top_srcdir)/cxcore/include/cxtypes.h      \
-  $(top_srcdir)/cxcore/include/cxmisc.h       \
-  $(top_srcdir)/cxcore/include/cxcore.hpp     \
-  $(top_srcdir)/cxcore/include/cvver.h        \
-  $(top_srcdir)/cv/include/cv.h               \
-  $(top_srcdir)/cv/include/cvcompat.h         \
-  $(top_srcdir)/cv/include/cvtypes.h          \
-  $(top_srcdir)/cv/include/cv.hpp             \
-  $(top_srcdir)/cvaux/include/cvaux.h         \
-  $(top_srcdir)/cvaux/include/cvmat.hpp       \
-  $(top_srcdir)/cvaux/include/cvaux.hpp       \
-  $(top_srcdir)/cvaux/include/cvvidsurv.hpp   \
-  $(top_srcdir)/ml/include/ml.h               \
-  $(top_srcdir)/otherlibs/highgui/highgui.h
+  $(top_srcdir)/include/opencv/cxcore.h       \
+  $(top_srcdir)/include/opencv/cxerror.h      \
+  $(top_srcdir)/include/opencv/cxtypes.h      \
+  $(top_srcdir)/include/opencv/cxmisc.h       \
+  $(top_srcdir)/include/opencv/cxcore.hpp     \
+  $(top_srcdir)/include/opencv/cvver.h        \
+  $(top_srcdir)/include/opencv/cv.h           \
+  $(top_srcdir)/include/opencv/cvcompat.h     \
+  $(top_srcdir)/include/opencv/cvtypes.h      \
+  $(top_srcdir)/include/opencv/cv.hpp         \
+  $(top_srcdir)/include/opencv/cvaux.h        \
+  $(top_srcdir)/include/opencv/cvmat.hpp      \
+  $(top_srcdir)/include/opencv/cvaux.hpp      \
+  $(top_srcdir)/include/opencv/cvvidsurv.hpp  \
+  $(top_srcdir)/include/opencv/ml.h           \
+  $(top_srcdir)/include/opencv/highgui.h
 
 FRAMEWORK_OFILES = \
-  $(top_builddir)/cxcore/src/.libs/lib_cxcore.a  \
-  $(top_builddir)/cv/src/.libs/lib_cv.a          \
-  $(top_builddir)/cvaux/src/.libs/lib_cvaux.a    \
-  $(top_builddir)/ml/src/.libs/lib_ml.a          \
-  $(top_builddir)/otherlibs/highgui/.libs/lib_highgui.a
+  $(top_builddir)/src/cxcore/.libs/lib_cxcore.a  \
+  $(top_builddir)/src/cv/.libs/lib_cv.a          \
+  $(top_builddir)/src/cvaux/.libs/lib_cvaux.a    \
+  $(top_builddir)/src/ml/.libs/lib_ml.a          \
+  $(top_builddir)/src/highgui/.libs/lib_highgui.a
 
 FRAMEWORK_XLIBRARIES = -framework Carbon -framework QuickTime -framework QuartzCore
 
 FRAMEWORK_DOCUMENTATION = \
-  $(top_srcdir)/docs/license.txt \
-  $(top_srcdir)/docs/index.htm   \
-  $(top_srcdir)/docs/faq.htm     \
-  $(top_srcdir)/docs/ref
+  $(top_srcdir)/doc/license.txt \
+  $(top_srcdir)/doc/index.htm   \
+  $(top_srcdir)/doc/faq.htm     \
+  $(top_srcdir)/doc/ref
 
 FMWK_CC = g++ -dynamiclib -all_load -Wl,-single_module -Wl,-Y,100
 

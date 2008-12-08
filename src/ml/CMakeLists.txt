@@ -1,17 +1,16 @@
 # ----------------------------------------------------------------------------
-#  CMake file for ml. See root CMakeLists.txt 
+#  CMake file for ml. See root CMakeLists.txt
 # ----------------------------------------------------------------------------
 project(ml)
 
-file(GLOB lib_srcs "src/*.cpp")
+file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
-file(GLOB lib_hdrs "include/*.h*")
+set(lib_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/ml.h)
 source_group("Include\\External" FILES ${lib_hdrs})
-file(GLOB lib_int_hdrs "src/*.h*")
+file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
 if(WIN32 AND MSVC)
-    list(REMOVE_ITEM lib_srcs "src/dummy.cpp")
     set(pch_header "_ml.h")
     set(pch_src "ml.cpp")
     foreach(src_file ${lib_srcs})
@@ -29,7 +28,7 @@ if(WIN32 AND MSVC)
                 PROPERTIES
                 COMPILE_FLAGS "/Yu${pch_header}"
                 )
-        endif()        
+        endif()
     endforeach()
     list(REMOVE_ITEM lib_srcs ${dummy})
 endif()

@@ -1,13 +1,19 @@
 # ----------------------------------------------------------------------------
-#  CMake file for cv. See root CMakeLists.txt 
+#  CMake file for cv. See root CMakeLists.txt
 # ----------------------------------------------------------------------------
 project(cv)
 
-file(GLOB lib_srcs "src/*.cpp")
+file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
-file(GLOB lib_hdrs "include/*.h*")
+
+set(lib_hdr_names cv.h cv.hpp cvcompat.h cvtypes.h)
+set(lib_hdrs)
+foreach(h ${lib_hdr_names})
+    list(APPEND lib_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+endforeach()
 source_group("Include\\External" FILES ${lib_hdrs})
-file(GLOB lib_int_hdrs "src/*.h*")
+
+file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
 if(WIN32 AND MSVC)
@@ -28,7 +34,7 @@ if(WIN32 AND MSVC)
                 PROPERTIES
                 COMPILE_FLAGS "/Yu${pch_header}"
                 )
-        endif()        
+        endif()
     endforeach()
     list(REMOVE_ITEM lib_srcs ${dummy})
 endif()
