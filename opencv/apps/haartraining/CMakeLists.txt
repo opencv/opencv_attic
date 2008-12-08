@@ -27,7 +27,7 @@ add_executable(haartraining cvhaartraining.h haartraining.cpp)
 add_dependencies(haartraining cxcore cv cvhaartraining)
 target_link_libraries(haartraining cxcore cv cvhaartraining highgui)
 set_target_properties(haartraining PROPERTIES
-                      DEBUG_POSTFIX "d"
+                      DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
                       OUTPUT_NAME "opencv-haartraining")
 
 # -----------------------------------------------------------
@@ -38,7 +38,7 @@ add_executable(createsamples cvhaartraining.h createsamples.cpp)
 add_dependencies(createsamples cxcore cv cvhaartraining)
 target_link_libraries(createsamples cxcore cv cvhaartraining highgui)
 set_target_properties(createsamples PROPERTIES
-                      DEBUG_POSTFIX "d"
+                      DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
                       OUTPUT_NAME "opencv-createsamples")
 
 # -----------------------------------------------------------
@@ -48,7 +48,7 @@ add_executable(performance performance.cpp)
 add_dependencies(performance cxcore cv highgui cvhaartraining)
 target_link_libraries(performance cxcore cv cvhaartraining highgui)
 set_target_properties(performance PROPERTIES
-                      DEBUG_POSTFIX "d"
+                      DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
                       OUTPUT_NAME "opencv-performance")
 
 # -----------------------------------------------------------
