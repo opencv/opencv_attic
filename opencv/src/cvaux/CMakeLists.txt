@@ -1,30 +1,28 @@
 # ----------------------------------------------------------------------------
-#  CMake file for cvaux. See root CMakeLists.txt 
+#  CMake file for cvaux. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 project(cvaux)
 
-# List of C++ files:
-set(lib_srcs "")
-set(lib_hdrs "")
-
-# The source files:
-file(GLOB aux_srcs src/*.cpp)
-file(GLOB aux_srcs_vs src/vs/*.cpp)
-set(lib_srcs ${lib_srcs} ${aux_srcs} ${aux_srcs_vs})
+file(GLOB aux_srcs *.cpp)
+file(GLOB aux_srcs_vs vs/*.cpp)
+set(lib_srcs ${aux_srcs_vs} ${aux_srcs})
 source_group(Src FILES ${aux_srcs})
 source_group(Src\\VideoSurveillance FILES ${aux_srcs_vs})
 
-# The corresponding .h files:
-file(GLOB_RECURSE aux_hdrs_ext include/*.h*)
-file(GLOB_RECURSE aux_hdrs_int src/*.h*)
+set(aux_hdr_names cvaux.h cvmat.hpp cvvidsurv.hpp)
+set(aux_hdrs_ext)
+foreach(h ${aux_hdr_names})
+    list(APPEND aux_hdrs_ext "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+endforeach()
+
+file(GLOB_RECURSE aux_hdrs_int *.h*)
 set(lib_hdrs ${lib_hdrs} ${aux_hdrs_ext} ${aux_hdrs_int})
 
 source_group("Include\\External" FILES ${aux_hdrs_ext})
 source_group("Include\\Internal" FILES ${aux_hdrs_int})
 
-include_directories("${OPENCV_SOURCE_DIR}/cv/src")
-include_directories(src)
+include_directories("${CMAKE_SOURCE_DIR}/src/cv" ".")
 
 if(WIN32 AND MSVC)
     set(pch_header "_cvaux.h")
@@ -44,7 +42,7 @@ if(WIN32 AND MSVC)
                 PROPERTIES
                 COMPILE_FLAGS "/Yu${pch_header}"
                 )
-        endif()        
+        endif()
     endforeach()
     list(REMOVE_ITEM lib_srcs ${dummy})
 endif()

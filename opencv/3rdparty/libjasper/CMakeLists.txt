@@ -1,13 +1,13 @@
 # ----------------------------------------------------------------------------
-#  CMake file for libjasper. See root CMakeLists.txt 
+#  CMake file for libjasper. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 project(libjasper)
 
 # List of C++ files:
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR} 
-	${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
+	${CMAKE_CURRENT_SOURCE_DIR}
+	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	)
 
 # The .cpp files:
@@ -27,15 +27,9 @@ if(MSVC)
     add_definitions(-DJAS_WIN_MSVC_BUILD)
 endif()
 
-set_target_properties(${the_target} 
-	PROPERTIES 
+set_target_properties(${the_target}
+	PROPERTIES
 	OUTPUT_NAME "${the_target}"
 	DEBUG_POSTFIX "d"
-	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib"
 	)
-
-#install(TARGETS ${the_target}
-#	RUNTIME DESTINATION bin
-#	LIBRARY DESTINATION lib
-#	ARCHIVE DESTINATION lib
-#	)

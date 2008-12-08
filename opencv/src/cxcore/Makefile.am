@@ -1,7 +1,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-INCLUDES = -I. -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)
 
 noinst_HEADERS     = _cxcore.h _cxipp.h
 noinst_LTLIBRARIES = lib_cxcore.la

@@ -1,13 +1,19 @@
 # ----------------------------------------------------------------------------
-#  CMake file for cxcore. See root CMakeLists.txt 
+#  CMake file for cxcore. See root CMakeLists.txt
 # ----------------------------------------------------------------------------
 project(cxcore)
 
-file(GLOB lib_srcs "src/*.cpp")
+file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
-file(GLOB lib_hdrs "include/*.h*")
+
+set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxtypes.h cvver.h cvwimage.h)
+set(lib_hdrs)
+foreach(h ${lib_hdr_names})
+    list(APPEND lib_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+endforeach()
 source_group("Include\\External" FILES ${lib_hdrs})
-file(GLOB lib_int_hdrs "src/*.h*")
+
+file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
 if(WIN32 AND MSVC)
@@ -61,7 +67,7 @@ install(TARGETS ${the_target}
 	ARCHIVE DESTINATION lib
     )
 
+# install each module headers separately
 if(UNIX)
     install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
 endif()
-    

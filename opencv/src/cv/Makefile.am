@@ -1,7 +1,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-INCLUDES = -I. -I$(top_srcdir)/cv/include -I$(top_srcdir)/cxcore/include -I$(top_srcdir)
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)
 
 noinst_HEADERS     = _cv.h _cvgeom.h _cvimgproc.h _cvipp.h _cvlist.h _cvmatrix.h \
     _cvkdtree.hpp
@@ -31,5 +31,5 @@ lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 libcv_la_SOURCES = dummy.cpp
 libcv_la_LDFLAGS = -no-undefined -version-info @LT_VERSION@ @LDFLAGS@
 libcv_la_LIBADD = lib_cv.la \
-    $(top_builddir)/cxcore/src/libcxcore.la \
+    $(top_builddir)/src/cxcore/libcxcore.la \
     @LTLIBOBJS@
