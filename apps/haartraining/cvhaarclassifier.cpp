@@ -55,7 +55,7 @@ CvIntHaarClassifier* icvCreateCARTHaarClassifier( int count )
 
     datasize = sizeof( *cart ) +
         ( sizeof( int ) +
-          sizeof( CvTHaarFeature ) + sizeof( CvFastHaarFeature ) + 
+          sizeof( CvTHaarFeature ) + sizeof( CvFastHaarFeature ) +
           sizeof( float ) + sizeof( int ) + sizeof( int ) ) * count +
         sizeof( float ) * (count + 1);
 
@@ -112,7 +112,7 @@ float icvEvalCARTHaarClassifier( CvIntHaarClassifier* classifier,
 
     do
     {
-        if( cvEvalFastHaarFeature( 
+        if( cvEvalFastHaarFeature(
                 ((CvCARTHaarClassifier*) classifier)->fastfeature + idx, sum, tilted )
               < (((CvCARTHaarClassifier*) classifier)->threshold[idx] * normfactor) )
         {
@@ -123,7 +123,7 @@ float icvEvalCARTHaarClassifier( CvIntHaarClassifier* classifier,
             idx = ((CvCARTHaarClassifier*) classifier)->right[idx];
         }
     } while( idx > 0 );
-    
+
     return ((CvCARTHaarClassifier*) classifier)->val[-idx];
 }
 
@@ -176,7 +176,7 @@ float icvEvalStageHaarClassifier( CvIntHaarClassifier* classifier,
     stage_sum = 0.0F;
     for( i = 0; i < ((CvStageHaarClassifier*) classifier)->count; i++ )
     {
-        stage_sum += 
+        stage_sum +=
             ((CvStageHaarClassifier*) classifier)->classifier[i]->eval(
                 ((CvStageHaarClassifier*) classifier)->classifier[i],
                 sum, tilted, normfactor );
@@ -234,8 +234,8 @@ float icvEvalCascadeHaarClassifier( CvIntHaarClassifier* classifier,
         if( ((CvCascadeHaarClassifier*) classifier)->classifier[i]->eval(
                     ((CvCascadeHaarClassifier*) classifier)->classifier[i],
                     sum, tilted, normfactor )
-            < ( ((CvStageHaarClassifier*) 
-                    ((CvCascadeHaarClassifier*) classifier)->classifier[i])->threshold 
+            < ( ((CvStageHaarClassifier*)
+                    ((CvCascadeHaarClassifier*) classifier)->classifier[i])->threshold
                             - CV_THRESHOLD_EPS) )
         {
             return 0.0;
@@ -283,10 +283,10 @@ void icvLoadHaarFeature( CvTHaarFeature* feature, FILE* file )
     int j;
     int tmp;
     int weight;
-        
+
     nrect = 0;
     fscanf( file, "%d", &nrect );
-    
+
     assert( nrect <= CV_HAAR_FEATURE_MAX );
 
     for( j = 0; j < nrect; j++ )
@@ -304,7 +304,7 @@ void icvLoadHaarFeature( CvTHaarFeature* feature, FILE* file )
         feature->rect[j].r.x = 0;
         feature->rect[j].r.y = 0;
         feature->rect[j].r.width = 0;
-        feature->rect[j].r.height = 0;                    
+        feature->rect[j].r.height = 0;
         feature->rect[j].weight = 0.0f;
     }
     fscanf( file, "%s", &(feature->desc[0]) );
@@ -325,14 +325,14 @@ void icvSaveCARTHaarClassifier( CvIntHaarClassifier* classifier, FILE* file )
         fprintf( file, "%e %d %d\n",
             ((CvCARTHaarClassifier*) classifier)->threshold[i],
             ((CvCARTHaarClassifier*) classifier)->left[i],
-            ((CvCARTHaarClassifier*) classifier)->right[i] );        
+            ((CvCARTHaarClassifier*) classifier)->right[i] );
     }
     for( i = 0; i <= count; i++ )
     {
         fprintf( file, "%e ", ((CvCARTHaarClassifier*) classifier)->val[i] );
     }
     fprintf( file, "\n" );
-}    
+}
 
 
 CvIntHaarClassifier* icvLoadCARTHaarClassifier( FILE* file, int step )
@@ -358,9 +358,9 @@ CvIntHaarClassifier* icvLoadCARTHaarClassifier( FILE* file, int step )
         }
         icvConvertToFastHaarFeature( ptr->feature, ptr->fastfeature, ptr->count, step );
     }
-    
+
     return (CvIntHaarClassifier*) ptr;
-}    
+}
 
 
 void icvSaveStageHaarClassifier( CvIntHaarClassifier* classifier, FILE* file )
@@ -378,12 +378,12 @@ void icvSaveStageHaarClassifier( CvIntHaarClassifier* classifier, FILE* file )
     }
 
     threshold = ((CvStageHaarClassifier*) classifier)->threshold;
-    
-    /* to be compatible with the previous implementation */    
+
+    /* to be compatible with the previous implementation */
     /* threshold = 2.0F * ((CvStageHaarClassifier*) classifier)->threshold - count; */
 
     fprintf( file, "%e\n", threshold );
-}    
+}
 
 
 
@@ -391,8 +391,8 @@ CvIntHaarClassifier* icvLoadCARTStageHaarClassifierF( FILE* file, int step )
 {
     CvStageHaarClassifier* ptr = NULL;
 
-    CV_FUNCNAME( "icvLoadCARTStageHaarClassifierF" );
-    
+    //CV_FUNCNAME( "icvLoadCARTStageHaarClassifierF" );
+
     __BEGIN__;
 
     if( file != NULL )
@@ -412,7 +412,7 @@ CvIntHaarClassifier* icvLoadCARTStageHaarClassifierF( FILE* file, int step )
             }
 
             fscanf( file, "%f", &threshold );
-            
+
             ptr->threshold = threshold;
             /* to be compatible with the previous implementation */
             /* ptr->threshold = 0.5F * (threshold + count); */
@@ -561,7 +561,7 @@ CvTreeCascadeNode* icvCreateTreeCascadeNode()
 
 void icvReleaseTreeCascadeNodes( CvTreeCascadeNode** node )
 {
-    CV_FUNCNAME( "icvReleaseTreeCascadeNodes" );
+    //CV_FUNCNAME( "icvReleaseTreeCascadeNodes" );
 
     __BEGIN__;
 
@@ -605,7 +605,7 @@ void icvReleaseTreeCascadeClassifier( CvIntHaarClassifier** classifier )
 
 void icvPrintTreeCascade( CvTreeCascadeNode* root )
 {
-    CV_FUNCNAME( "icvPrintTreeCascade" );
+    //CV_FUNCNAME( "icvPrintTreeCascade" );
 
     __BEGIN__;
 
@@ -720,7 +720,7 @@ CvIntHaarClassifier* icvLoadTreeCascadeClassifier( const char* filename, int ste
         fclose( f );
     }
     num = i;
-    
+
     if( num < 1 ) EXIT;
 
     data_size = sizeof( *nodes ) * num;
@@ -732,10 +732,10 @@ CvIntHaarClassifier* icvLoadTreeCascadeClassifier( const char* filename, int ste
         f = fopen( stage_name, "r" );
         CV_CALL( stage = (CvStageHaarClassifier*)
             icvLoadCARTStageHaarClassifierF( f, step ) );
-        
+
         result = ( f && stage ) ? fscanf( f, "%d%d", &parent, &next ) : 0;
         if( f ) fclose( f );
-        
+
         if( result != 2 )
         {
             num = i;
@@ -746,7 +746,7 @@ CvIntHaarClassifier* icvLoadTreeCascadeClassifier( const char* filename, int ste
 
         if( parent >= i || (next != -1 && next != i + 1) )
             CV_ERROR( CV_StsError, "Invalid tree links" );
-        
+
         CV_CALL( nodes[i] = icvCreateTreeCascadeNode() );
         nodes[i]->stage = stage;
         nodes[i]->idx = i;
@@ -781,14 +781,14 @@ CvTreeCascadeNode* icvFindDeepestLeaves( CvTreeCascadeClassifier* tcc )
 {
     CvTreeCascadeNode* leaves;
 
-    CV_FUNCNAME( "icvFindDeepestLeaves" );
+    //CV_FUNCNAME( "icvFindDeepestLeaves" );
 
     __BEGIN__;
 
     int level, cur_level;
     CvTreeCascadeNode* ptr;
     CvTreeCascadeNode* last;
-    
+
     leaves = last = NULL;
 
     ptr = tcc->root;
@@ -814,12 +814,12 @@ CvTreeCascadeNode* icvFindDeepestLeaves( CvTreeCascadeClassifier* tcc )
                 ptr->next_same_level = NULL;
             }
             while( ptr && ptr->next == NULL ) { ptr = ptr->parent; cur_level--; }
-            if( ptr ) ptr = ptr->next;            
+            if( ptr ) ptr = ptr->next;
         }
     }
 
     __END__;
-    
+
     return leaves;
 }
 

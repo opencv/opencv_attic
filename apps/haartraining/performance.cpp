@@ -78,8 +78,8 @@ int main( int argc, char* argv[] )
 {
     int i, j;
     char* classifierdir = NULL;
-    char* samplesdir    = NULL;
-    
+    //char* samplesdir    = NULL;
+
     int saveDetected = 1;
     double scale_factor = 1.2;
     float maxSizeDiff = 1.5F;
@@ -92,7 +92,7 @@ int main( int argc, char* argv[] )
     int height = 24;
 
     int rocsize;
-    
+
     FILE* info;
     char* infoname;
     char fullname[PATH_MAX];
@@ -103,10 +103,10 @@ int main( int argc, char* argv[] )
     CvHaarClassifierCascade* cascade;
     CvMemStorage* storage;
     CvSeq* objects;
-    
+
     double totaltime;
-    
-    infoname = "";
+
+    infoname = (char*)"";
     rocsize = 40;
     if( argc == 1 )
     {
@@ -122,7 +122,7 @@ int main( int argc, char* argv[] )
                 "  [-h <sample_height = %d>]\n",
                 argv[0], maxSizeDiff, maxPosDiff, scale_factor, nos, rocsize,
                 width, height );
-        
+
         return 0;
     }
 
@@ -216,7 +216,7 @@ int main( int argc, char* argv[] )
         int totalHits, totalMissed, totalFalseAlarms;
         int found;
         float distance;
-        
+
         int refcount;
         ObjectPos* ref;
         int detcount;
@@ -233,7 +233,7 @@ int main( int argc, char* argv[] )
         printf( "+================================+======+======+======+\n" );
         printf( "|            File Name           | Hits |Missed| False|\n" );
         printf( "+================================+======+======+======+\n" );
-        
+
         totalHits = totalMissed = totalFalseAlarms = 0;
         while( !feof( info ) )
         {
@@ -262,8 +262,8 @@ int main( int argc, char* argv[] )
                 objects = cvHaarDetectObjects( img, cascade, storage, scale_factor, 1 );
                 totaltime += time( 0 );
                 cascade->count = nos0;
-                
-                detcount = ( objects ? objects->total : 0);                
+
+                detcount = ( objects ? objects->total : 0);
                 det = (detcount > 0) ?
                     ( (ObjectPos*)cvAlloc( detcount * sizeof( *det )) ) : NULL;
                 hits = missed = falseAlarms = 0;
@@ -286,7 +286,7 @@ int main( int argc, char* argv[] )
                     found = 0;
                     for( j = 0; j < refcount; j++ )
                     {
-                        distance = sqrtf( (det[i].x - ref[j].x) * (det[i].x - ref[j].x) + 
+                        distance = sqrtf( (det[i].x - ref[j].x) * (det[i].x - ref[j].x) +
                                           (det[i].y - ref[j].y) * (det[i].y - ref[j].y) );
                         if( (distance < ref[j].width * maxPosDiff) &&
                             (det[i].width > ref[j].width / maxSizeDiff) &&
@@ -313,7 +313,7 @@ int main( int argc, char* argv[] )
                     else
                     {
                         missed++;
-                    }                            
+                    }
                 }
 
                 totalHits += hits;
@@ -333,12 +333,12 @@ int main( int argc, char* argv[] )
 
                 if( det ) { cvFree( &det ); det = NULL; }
             } /* if( !error ) */
-            
+
             cvReleaseImage( &img );
             cvFree( &ref );
         }
         fclose( info );
-        
+
         printf( "|%32.32s|%6d|%6d|%6d|\n", "Total",
                 totalHits, totalMissed, totalFalseAlarms );
         printf( "+================================+======+======+======+\n" );

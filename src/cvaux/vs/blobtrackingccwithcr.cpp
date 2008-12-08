@@ -89,7 +89,7 @@ private:
 
 
 public:
-    CvBlobTrackerCCCR(CvBlobTrackerOne* (*CreateCR)(), char* CRName):m_BlobList(sizeof(DefBlobTrackerCR))
+    CvBlobTrackerCCCR(CvBlobTrackerOne* (*CreateCR)(), const char* CRName):m_BlobList(sizeof(DefBlobTrackerCR))
     {
         m_CreateCR = CreateCR;
         m_pMem = cvCreateMemStorage();
@@ -158,8 +158,8 @@ public:
         NewB.blob = pB[0];
         NewB.pBlobHyp = new CvBlobSeq;
         NewB.pPredictor = cvCreateModuleBlobTrackPredictKalman(); /* module for predict position */
-        NewB.pPredictor->SetParam("DataNoisePos",0.001); 
-        NewB.pPredictor->ParamUpdate(); 
+        NewB.pPredictor->SetParam("DataNoisePos",0.001);
+        NewB.pPredictor->ParamUpdate();
         NewB.pResolver = NULL;
         if(m_CreateCR)
         {
@@ -179,7 +179,7 @@ public:
         //CvMat*      pMC = NULL;
 
         if(m_BlobList.GetBlobNum() <= 0 ) return;
-        
+
         /* Clear blob list for new blobs: */
         m_BlobListNew.Clear();
 
@@ -240,7 +240,7 @@ public:
             int i,j;
             int NOld = m_BlobList.GetBlobNum();
             int NNew = m_BlobListNew.GetBlobNum();
-            
+
             for(i=0; i<NOld; i++)
             {   /* Set 0 collision and clear all hyp: */
                 DefBlobTrackerCR* pF = (DefBlobTrackerCR*)m_BlobList.GetBlob(i);
@@ -253,7 +253,7 @@ public:
             {
                 CvBlob*             pB1 = m_BlobListNew.GetBlob(j);
                 DefBlobTrackerCR*   pFLast = NULL;
-                
+
                 for(i=0; i<NOld; i++)
                 {   /* Check intersection: */
                     int Intersection = 0;
@@ -289,7 +289,7 @@ public:
             {
                 pBT->pResolver->SetCollision(pBT->Collision);
             }
-            
+
             if(pBT->Collision)
             {   /* Tracking in collision: */
                 if(pBT->pResolver)
@@ -344,7 +344,7 @@ public:
                 pB->h = (m_AlphaSize)*NewCC.h+(1-m_AlphaSize)*pB->h;
                 pBT->pResolver->SkipProcess(&(pBT->BlobPredict),pImg, pImgFG);
             }   /* Non-collision tracking. */
-            
+
             pBT->pResolver->Update(pB, pImg, pImgFG);
 
             CV_BLOB_ID(pB)=BlobID;
@@ -381,7 +381,7 @@ public:
                     s,
                     0, 0, 360,
                     CV_RGB(0,0,255), 1 );
-                
+
                 pB = &(pF->blob);
                 p = cvPointFrom32f(CV_BLOB_CENTER(pB));
                 x = cvRound(CV_BLOB_RX(pB)); y = cvRound(CV_BLOB_RY(pB));
@@ -397,7 +397,7 @@ public:
             //cvShowImage("CCwithCR",pI);
             cvReleaseImage(&pI);
         }
-        
+
     } /* Process. */
 
     virtual void SaveState(CvFileStorage* fs)
@@ -422,11 +422,11 @@ public:
             cvEndWriteStruct(fs);
             pF->pBlobHyp->Write(fs,"BlobHyp");
             cvWriteInt(fs,"Collision",pF->Collision);
-            
+
             cvStartWriteStruct(fs,"Predictor",CV_NODE_MAP);
             pF->pPredictor->SaveState(fs);
             cvEndWriteStruct(fs);
-            
+
             cvStartWriteStruct(fs,"Resolver",CV_NODE_MAP);
             pF->pResolver->SaveState(fs);
             cvEndWriteStruct(fs);
@@ -436,7 +436,7 @@ public:
         cvEndWriteStruct(fs);
 
     }   /* SaveState. */
-    
+
     virtual void LoadState(CvFileStorage* fs, CvFileNode* node)
     {
         int         b,bN = cvReadIntByName(fs,node,"BlobNum",0);

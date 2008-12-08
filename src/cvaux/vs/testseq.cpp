@@ -83,7 +83,7 @@ void SET_TRANS_0(CvTSTrans *pT)
 #define P_C     7
 #define P_GN    8
 #define P_NAmp  9
-static char*   param_name[] =    {"angle","s","sx","sy","dx","dy","I","C","GN","NoiseAmp", NULL};
+static const char*   param_name[] =    {"angle","s","sx","sy","dx","dy","I","C","GN","NoiseAmp", NULL};
 static float   param_defval[] =  { 0,      1,  1,   1,   0,   0,   0,  1,  0,   1};
 static void icvUpdateTrans(CvTSTrans* pTrans, int param, double val, float MaxX, float MaxY)
 {
@@ -565,7 +565,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
             if(v!=-1)p->BG = v;
             v = cvReadIntByName( fs, node, "Mask", -1 );
             if(v!=-1)p->Mask = v;
-            
+
             p->FrameBegin += cvReadIntByName( fs, node, "FrameBegin", 0 );
             p->FrameNum = cvReadIntByName( fs, node, "FrameNum", p->FrameNum );
             p->FrameNum = cvReadIntByName( fs, node, "Dur", p->FrameNum );
@@ -656,7 +656,7 @@ static CvTestSeqElem* icvTestSeqReadElemOne(CvTestSeq_* pTS, CvFileStorage* fs, 
                 //int trans_num = p->TransNum;
                 for(param=0; param_name[param]; ++param)
                 {
-                    char*   name = param_name[param];
+                    const char*   name = param_name[param];
                     float   defv = param_defval[param];
                     if(KeyFrameNum==1)
                     {   /* Only one transform record: */

@@ -135,9 +135,9 @@ cvTsPointPolygonTest( CvPoint2D32f pt, const CvPoint2D32f* vv, int n, int* _idx=
                 break;
         }
 
-        if( v0.y <= pt.y && v.y <= pt.y ||
-            v0.y > pt.y && v.y > pt.y ||
-            v0.x < pt.x && v.x < pt.x )
+        if( (v0.y <= pt.y && v.y <= pt.y) ||
+            (v0.y > pt.y && v.y > pt.y) ||
+            (v0.x < pt.x && v.x < pt.x) )
             continue;
 
         dist_num = dy1*dx - dx1*dy;
@@ -815,7 +815,7 @@ int CV_MinCircleTest::validate_test_results( int test_case_idx )
             v[j++] = p[i];
     }
 
-    if( point_count >= 2 && (j < 2 || j == 2 && cvTsDist(v[0],v[1]) < (radius-1)*2/eps) )
+    if( point_count >= 2 && (j < 2 || (j == 2 && cvTsDist(v[0],v[1]) < (radius-1)*2/eps)) )
     {
         ts->printf( CvTS::LOG,
             "There should be at at least 3 points near the circle boundary or 2 points on the diameter\n" );

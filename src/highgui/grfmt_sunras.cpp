@@ -93,7 +93,7 @@ void  GrFmtSunRasterReader::Close()
 bool  GrFmtSunRasterReader::ReadHeader()
 {
     bool result = false;
-    
+
     assert( strlen(m_filename) != 0 );
     if( !m_strm.Open( m_filename )) return false;
 
@@ -114,11 +114,11 @@ bool  GrFmtSunRasterReader::ReadHeader()
             (m_bpp == 1 || m_bpp == 8 || m_bpp == 24 || m_bpp == 32) &&
             (m_type == RAS_OLD || m_type == RAS_STANDARD ||
              (m_type == RAS_BYTE_ENCODED && m_bpp == 8) || m_type == RAS_FORMAT_RGB) &&
-            (m_maptype == RMT_NONE && m_maplength == 0 ||
-             m_maptype == RMT_EQUAL_RGB && m_maplength <= palSize && m_bpp <= 8))
+            ((m_maptype == RMT_NONE && m_maplength == 0) ||
+             (m_maptype == RMT_EQUAL_RGB && m_maplength <= palSize && m_bpp <= 8)))
         {
             memset( m_palette, 0, sizeof(m_palette));
-            
+
             if( m_maplength != 0 )
             {
                 int readed;
@@ -148,7 +148,7 @@ bool  GrFmtSunRasterReader::ReadHeader()
             else
             {
                 m_iscolor = m_bpp > 8;
-                
+
                 if( !m_iscolor )
                     FillGrayPalette( m_palette, m_bpp );
 
@@ -186,7 +186,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
 
     if( m_offset < 0 || !m_strm.IsOpened())
         return false;
-    
+
     if( src_pitch+32 > buffer_size )
         src = new uchar[src_pitch+32];
 
@@ -199,7 +199,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
     if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
-        
+
         switch( m_bpp )
         {
         /************************* 1 BPP ************************/
@@ -221,7 +221,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
                 uchar* line_end = src + (m_width*m_bpp + 7)/8;
                 uchar* tsrc = src;
                 y = 0;
-               
+
                 for(;;)
                 {
                     int max_count = (int)(line_end - tsrc);
@@ -325,11 +325,11 @@ bad_decoding_1bpp:
                         code = m_strm.GetByte();
 
                         if( color )
-                            data = FillUniColor( data, line_end, step, width3, 
+                            data = FillUniColor( data, line_end, step, width3,
                                                  y, m_height, len,
                                                  m_palette[code] );
                         else
-                            data = FillUniGray( data, line_end, step, width3, 
+                            data = FillUniGray( data, line_end, step, width3,
                                                 y, m_height, len,
                                                 gray_palette[code] );
                         if( y >= m_height )
@@ -377,7 +377,7 @@ bad_decoding_end:
                 /* hack: a0 b0 g0 r0 a1 b1 g1 r1 ... are written to src + 3,
                    so when we look at src + 4, we see b0 g0 r0 x b1 g1 g1 x ... */
                 m_strm.GetBytes( src + 3, src_pitch );
-                
+
                 if( color )
                     icvCvt_BGRA2BGR_8u_C4C3R( src + 4, 0, data, 0, cvSize(m_width,1),
                                               m_type == RAS_FORMAT_RGB ? 2 : 0 );
@@ -392,7 +392,7 @@ bad_decoding_end:
         }
     }
 
-    if( src != buffer ) delete[] src; 
+    if( src != buffer ) delete[] src;
     if( bgr != bgr_buffer ) delete[] bgr;
 
     return result;
@@ -419,7 +419,7 @@ bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
     int  y;
 
     assert( data && width > 0 && height > 0 && step >= fileStep);
-    
+
     if( m_strm.Open( m_filename ) )
     {
         m_strm.PutBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) );
@@ -433,7 +433,7 @@ bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
 
         for( y = 0; y < height; y++, data += step )
             m_strm.PutBytes( data, fileStep );
-        
+
         m_strm.Close();
         result = true;
     }

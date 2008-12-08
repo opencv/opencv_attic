@@ -44,11 +44,11 @@ CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_
 	CvMat * points_mat=(CvMat *) points;
 	CvSeq * points_seq=(CvSeq *) points;
 	int npoints, type;
-	
+
 	CV_FUNCNAME("cvConvexHull2");
-	
+
 	__BEGIN__;
-	
+
 	if(CV_IS_MAT(points_mat)){
 		npoints = MAX(points_mat->rows, points_mat->cols);
 		type = return_points ? points_mat->type : CV_32S;
@@ -62,24 +62,18 @@ CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_
 	}
 	CV_CALL( hull=cvCreateMat(1,npoints,type) );
 	CV_CALL( cvConvexHull2(points, hull, orientation, return_points) );
-	
+
 	__END__;
 	return hull;
 }
 std::vector<CvPoint> cvSnakeImage_Shadow( const CvMat * image, std::vector<CvPoint>  points,
-		std::vector<float> alpha, std::vector<float> beta, 
-		std::vector<float> gamma, 
+		std::vector<float> alpha, std::vector<float> beta,
+		std::vector<float> gamma,
 		CvSize win, CvTermCriteria criteria, int calc_gradient ){
 	IplImage ipl_stub;
-	CV_FUNCNAME("cvSnakeImage_Shadow");
-	
-	__BEGIN__;
-
-	cvSnakeImage( cvGetImage(image, &ipl_stub), &(points[0]), points.size(), 
-			      &((alpha)[0]), &((beta)[0]), &((gamma)[0]), 
-				  (alpha.size()>1 && beta.size()>1 && gamma.size()>1 ? CV_ARRAY : CV_VALUE), 
+	cvSnakeImage( cvGetImage(image, &ipl_stub), &(points[0]), points.size(),
+			      &((alpha)[0]), &((beta)[0]), &((gamma)[0]),
+				  (alpha.size()>1 && beta.size()>1 && gamma.size()>1 ? CV_ARRAY : CV_VALUE),
 				  win, criteria, calc_gradient );
-
-	__END__;
 	return points;
 }

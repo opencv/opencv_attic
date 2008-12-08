@@ -43,14 +43,14 @@ PyObject * SWIG_AppendResult(PyObject * result, PyObject ** to_add, int num){
 		if(num==1){
 			return to_add[0];
 		}
-		
+
 		/* create a new tuple to put in our new pointer python objects */
 		result = PyTuple_New (num);
 
 		/* put in our new pointer python objects */
 		for(int i=0; i<num; i++){
 			PyTuple_SetItem (result, i, to_add[i]);
-		}	
+		}
 	}
 	else {
 		/* we have other results, so add it to the end */
@@ -94,7 +94,7 @@ template <typename T>
 void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch, size_t step){
     size_t i,j,k;
     char * cdata = (char *) data;
-    char * chdelim1="", * chdelim2="";
+    const char * chdelim1="", * chdelim2="";
 
     // only output channel parens if > 1
     if(nch>1){
@@ -102,19 +102,19 @@ void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch,
         chdelim2=")";
     }
 
-    fprintf(f,"[");
+    fputs("[", f);
     for(i=0; i<rows; i++){
 		fprintf(f, "[" );
 
         // first element
         // out<<chdelim1;
-		fprintf(f, chdelim1);
+		fputs(chdelim1, f);
         fprintf(f, fmt, ((T*)(cdata+i*step))[0]);
         for(k=1; k<nch; k++){
 			fprintf(f, ", ");
 			fprintf(f, fmt, ((T*)(cdata+i*step))[k]);
         }
-		fprintf(f, chdelim2);
+		fputs(chdelim2, f);
 
         // remaining elements
         for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
@@ -124,22 +124,22 @@ void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch,
 				fprintf(f, ", ");
 				fprintf(f, fmt, ((T*)(cdata+i*step+j))[k]);
             }
-			fprintf(f, chdelim2);
+			fputs(chdelim2, f);
         }
-		fprintf(f, "]\n" );
+		fputs("]\n", f);
     }
-	fprintf(f, "]" );
+	fputs("]", f);
 }
 
 void cvArrPrint(CvArr * arr){
     CV_FUNCNAME( "cvArrPrint" );
-	    
+
 	__BEGIN__;
 	CvMat * mat;
 	CvMat stub;
 
 	mat = cvGetMat(arr, &stub);
-	
+
 	int cn = CV_MAT_CN(mat->type);
 	int depth = CV_MAT_DEPTH(mat->type);
 	int step = MAX(mat->step, cn*mat->cols*CV_ELEM_SIZE(depth));

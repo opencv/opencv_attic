@@ -245,7 +245,7 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
     CvDTreeParams tree_params( params.max_depth, params.min_sample_count,
         params.regression_accuracy, params.use_surrogates, params.max_categories,
         params.cv_folds, params.use_1se_rule, false, params.priors );
-    
+
     data = new CvDTreeTrainData();
     CV_CALL(data->set_data( _train_data, _tflag, _responses, _var_idx,
         _sample_idx, _var_type, _missing_mask, tree_params, true));
@@ -305,7 +305,7 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
 
     const int max_ntrees = term_crit.max_iter;
     const double max_oob_err = term_crit.epsilon;
-    
+
     const int dims = data->var_count;
     float maximal_response = 0;
 
@@ -453,7 +453,7 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
                     if( m > 1 )
                         oob_samples_perm_ptr[i*dims+m-1] = samples_ptr[i*dims+m-1];
                 }
-    
+
                 // predict "permuted" cases and calculate the number of votes for the
                 // correct class in the variable-m-permuted oob data
                 sample  = cvMat( 1, dims, CV_32FC1, oob_samples_perm_ptr );
@@ -516,7 +516,7 @@ float CvRTrees::get_proximity( const CvMat* sample1, const CvMat* sample2,
 {
     float result = 0;
 
-    CV_FUNCNAME( "CvRTrees::get_proximity" );
+    //CV_FUNCNAME( "CvRTrees::get_proximity" );
 
     __BEGIN__;
 

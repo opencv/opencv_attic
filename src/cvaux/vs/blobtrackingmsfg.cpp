@@ -788,7 +788,7 @@ public:
         if(m_ParticleNum>0)
         {
             Realloc();
-            printf("sizeof(DefParticle) is %d\n", sizeof(DefParticle));
+            printf("sizeof(DefParticle) is %d\n", (int)sizeof(DefParticle));
             cvReadStructByName(fs,node,"ParticlesPredicted",m_pParticlesPredicted,"ffffiffd");
             cvReadStructByName(fs,node,"ParticlesResampled",m_pParticlesResampled,"ffffiffd");
         }

@@ -631,7 +631,7 @@ icvFetchContour( schar                  *ptr,
     if( _method != CV_CHAIN_CODE )
         cvBoundingRect( contour, 1 );
 
-    assert( writer.seq->total == 0 && writer.seq->first == 0 ||
+    assert( (writer.seq->total == 0 && writer.seq->first == 0) ||
             writer.seq->total > writer.seq->first->count ||
             (writer.seq->first->prev == writer.seq->first &&
              writer.seq->first->next == writer.seq->first) );
@@ -820,7 +820,7 @@ icvFetchContourEx( schar*               ptr,
     if( _method != CV_CHAIN_CODE )
         ((CvContour*)contour)->rect = rect;
 
-    assert( writer.seq->total == 0 && writer.seq->first == 0 ||
+    assert( (writer.seq->total == 0 && writer.seq->first == 0) ||
             writer.seq->total > writer.seq->first->count ||
             (writer.seq->first->prev == writer.seq->first &&
              writer.seq->first->next == writer.seq->first) );

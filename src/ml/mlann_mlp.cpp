@@ -194,7 +194,7 @@ void CvANN_MLP::init_weights()
                 w[k*n2 + j] = val;
                 s += val;
             }
-            
+
             if( i < layer_sizes->cols - 1 )
             {
                 s = 1./(s - val);
@@ -220,7 +220,7 @@ void CvANN_MLP::create( const CvMat* _layer_sizes, int _activ_func,
     clear();
 
     if( !CV_IS_MAT(_layer_sizes) ||
-        _layer_sizes->cols != 1 && _layer_sizes->rows != 1 ||
+        (_layer_sizes->cols != 1 && _layer_sizes->rows != 1) ||
         CV_MAT_TYPE(_layer_sizes->type) != CV_32SC1 )
         CV_ERROR( CV_StsBadArg,
         "The array of layer neuron counters must be an integer vector" );
@@ -277,8 +277,8 @@ float CvANN_MLP::predict( const CvMat* _inputs, CvMat* _outputs ) const
 
     if( !CV_IS_MAT(_inputs) || !CV_IS_MAT(_outputs) ||
         !CV_ARE_TYPES_EQ(_inputs,_outputs) ||
-        CV_MAT_TYPE(_inputs->type) != CV_32FC1 &&
-        CV_MAT_TYPE(_inputs->type) != CV_64FC1 ||
+        (CV_MAT_TYPE(_inputs->type) != CV_32FC1 &&
+        CV_MAT_TYPE(_inputs->type) != CV_64FC1) ||
         _inputs->rows != _outputs->rows )
         CV_ERROR( CV_StsBadArg, "Both input and output must be floating-point matrices "
                                 "of the same type and have the same number of rows" );
@@ -349,7 +349,7 @@ void CvANN_MLP::scale_input( const CvMat* _src, CvMat* _dst ) const
     {
         const float* src = _src->data.fl;
         step /= sizeof(src[0]);
-        
+
         for( i = 0; i < _src->rows; i++, src += step, dst += cols )
             for( j = 0; j < cols; j++ )
                 dst[j] = src[j]*w[j*2] + w[j*2+1];
@@ -358,7 +358,7 @@ void CvANN_MLP::scale_input( const CvMat* _src, CvMat* _dst ) const
     {
         const double* src = _src->data.db;
         step /= sizeof(src[0]);
-        
+
         for( i = 0; i < _src->rows; i++, src += step, dst += cols )
             for( j = 0; j < cols; j++ )
                 dst[j] = src[j]*w[j*2] + w[j*2+1];
@@ -377,7 +377,7 @@ void CvANN_MLP::scale_output( const CvMat* _src, CvMat* _dst ) const
     {
         float* dst = _dst->data.fl;
         step /= sizeof(dst[0]);
-        
+
         for( i = 0; i < _src->rows; i++, src += cols, dst += step )
             for( j = 0; j < cols; j++ )
                 dst[j] = (float)(src[j]*w[j*2] + w[j*2+1]);
@@ -386,7 +386,7 @@ void CvANN_MLP::scale_output( const CvMat* _src, CvMat* _dst ) const
     {
         double* dst = _dst->data.db;
         step /= sizeof(dst[0]);
-        
+
         for( i = 0; i < _src->rows; i++, src += cols, dst += step )
             for( j = 0; j < cols; j++ )
                 dst[j] = src[j]*w[j*2] + w[j*2+1];
@@ -435,7 +435,7 @@ void CvANN_MLP::calc_activ_func( CvMat* sums, const double* bias ) const
                 data[j] = t*t*scale;
             }
     }
-    
+
     cvExp( sums, sums );
 
     n *= cols;
@@ -529,13 +529,13 @@ void CvANN_MLP::calc_activ_func_deriv( CvMat* _xf, CvMat* _df,
             double x0 = 1.+xf[i], x1 = 1.+xf[i+1], x2 = 1.+xf[i+2], x3 = 1.+xf[i+3];
             double a = x0*x1, b = x2*x3, d = 1./(a*b), t0, t1;
             a *= d; b *= d;
-            
+
             t0 = b*x1; t1 = b*x0;
             df[i] = scale*xf[i]*t0*t0;
             df[i+1] = scale*xf[i+1]*t1*t1;
             t0 *= scale2*(2 - x0); t1 *= scale2*(2 - x1);
             xf[i] = t0; xf[i+1] = t1;
-            
+
             t0 = a*x3; t1 = a*x2;
             df[i+2] = scale*xf[i+2]*t0*t0;
             df[i+3] = scale*xf[i+3]*t1*t1;
@@ -569,13 +569,13 @@ void CvANN_MLP::calc_input_scale( const CvVectors* vecs, int flags )
     bool no_scale = (flags & NO_INPUT_SCALE) != 0;
     double* scale = weights[0];
     int count = vecs->count;
-    
+
     if( reset_weights )
     {
         int i, j, vcount = layer_sizes->data.i[0];
         int type = vecs->type;
         double a = no_scale ? 1. : 0.;
-        
+
         for( j = 0; j < vcount; j++ )
             scale[2*j] = a, scale[j*2+1] = 0.;
 
@@ -624,7 +624,7 @@ void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
     if( reset_weights )
     {
         double a0 = no_scale ? 1 : DBL_MAX, b0 = no_scale ? 0 : -DBL_MAX;
-        
+
         for( j = 0; j < vcount; j++ )
         {
             scale[2*j] = inv_scale[2*j] = a0;
@@ -649,7 +649,7 @@ void CvANN_MLP::calc_output_scale( const CvVectors* vecs, int flags )
                 double mj = scale[j*2], Mj = scale[j*2+1];
                 if( mj > t ) mj = t;
                 if( Mj < t ) Mj = t;
-            
+
                 scale[j*2] = mj;
                 scale[j*2+1] = Mj;
             }
@@ -709,15 +709,15 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
         CV_ERROR( CV_StsError,
         "The network has not been created. Use method create or the appropriate constructor" );
 
-    if( !CV_IS_MAT(_inputs) || CV_MAT_TYPE(_inputs->type) != CV_32FC1 &&
-        CV_MAT_TYPE(_inputs->type) != CV_64FC1 || _inputs->cols != layer_sizes->data.i[0] )
+    if( !CV_IS_MAT(_inputs) || (CV_MAT_TYPE(_inputs->type) != CV_32FC1 &&
+        CV_MAT_TYPE(_inputs->type) != CV_64FC1) || _inputs->cols != layer_sizes->data.i[0] )
         CV_ERROR( CV_StsBadArg,
         "input training data should be a floating-point matrix with"
         "the number of rows equal to the number of training samples and "
         "the number of columns equal to the size of 0-th (input) layer" );
 
-    if( !CV_IS_MAT(_outputs) || CV_MAT_TYPE(_outputs->type) != CV_32FC1 &&
-        CV_MAT_TYPE(_outputs->type) != CV_64FC1 ||
+    if( !CV_IS_MAT(_outputs) || (CV_MAT_TYPE(_outputs->type) != CV_32FC1 &&
+        CV_MAT_TYPE(_outputs->type) != CV_64FC1) ||
         _outputs->cols != layer_sizes->data.i[layer_sizes->cols - 1] )
         CV_ERROR( CV_StsBadArg,
         "output training data should be a floating-point matrix with"
@@ -744,22 +744,22 @@ bool CvANN_MLP::prepare_to_train( const CvMat* _inputs, const CvMat* _outputs,
         sw_type = CV_MAT_TYPE(_sample_weights->type);
         sw_count = _sample_weights->cols + _sample_weights->rows - 1;
 
-        if( sw_type != CV_32FC1 && sw_type != CV_64FC1 ||
-            _sample_weights->cols != 1 && _sample_weights->rows != 1 ||
-            sw_count != count && sw_count != _inputs->rows )
+        if( (sw_type != CV_32FC1 && sw_type != CV_64FC1) ||
+            (_sample_weights->cols != 1 && _sample_weights->rows != 1) ||
+            (sw_count != count && sw_count != _inputs->rows) )
             CV_ERROR( CV_StsBadArg,
             "sample_weights must be 1d floating-point vector containing weights "
             "of all or selected training samples" );
 
         sw_step = CV_IS_MAT_CONT(_sample_weights->type) ? 1 :
             _sample_weights->step/CV_ELEM_SIZE(sw_type);
-        
+
         CV_CALL( sw = (double*)cvAlloc( count*sizeof(sw[0]) ));
     }
 
     CV_CALL( ivecs.data.ptr = (uchar**)cvAlloc( count*sizeof(ivecs.data.ptr[0]) ));
     CV_CALL( ovecs.data.ptr = (uchar**)cvAlloc( count*sizeof(ovecs.data.ptr[0]) ));
-    
+
     ivecs.type = CV_MAT_TYPE(_inputs->type);
     ovecs.type = CV_MAT_TYPE(_outputs->type);
     ivecs.count = ovecs.count = count;
@@ -819,11 +819,11 @@ int CvANN_MLP::train( const CvMat* _inputs, const CvMat* _outputs,
 {
     const int MAX_ITER = 1000;
     const double DEFAULT_EPSILON = FLT_EPSILON;
-    
+
     double* sw = 0;
     CvVectors x0, u;
     int iter = -1;
-   
+
     x0.data.ptr = u.data.ptr = 0;
 
     CV_FUNCNAME( "CvANN_MLP::train" );
@@ -880,7 +880,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
     double **x = 0, **df = 0;
     CvMat* _idx = 0;
     int iter = -1, count = x0.count;
-   
+
     CV_FUNCNAME( "CvANN_MLP::train_backprop" );
 
     __BEGIN__;
@@ -1055,7 +1055,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
     CvMat* buf = 0;
     double **x = 0, **df = 0;
     int iter = -1, count = x0.count;
-   
+
     CV_FUNCNAME( "CvANN_MLP::train" );
 
     __BEGIN__;
@@ -1210,7 +1210,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
                     E += sweight*E1;
                 }
 
-            // backward pass, update dEdw            
+            // backward pass, update dEdw
             for( i = l_count-1; i > 0; i-- )
             {
                 n1 = layer_sizes->data.i[i-1]; n2 = layer_sizes->data.i[i];
@@ -1370,7 +1370,7 @@ void CvANN_MLP::write( CvFileStorage* fs, const char* name )
     cvWrite( fs, "layer_sizes", layer_sizes );
 
     write_params( fs );
-    
+
     cvStartWriteStruct( fs, "input_scale", CV_NODE_SEQ + CV_NODE_FLOW );
     cvWriteRawData( fs, weights[0], layer_sizes->data.i[0]*2, "d" );
     cvEndWriteStruct( fs );
@@ -1415,9 +1415,9 @@ void CvANN_MLP::read_params( CvFileStorage* fs, CvFileNode* node )
 
     f_param1 = cvReadRealByName( fs, node, "f_param1", 0 );
     f_param2 = cvReadRealByName( fs, node, "f_param2", 0 );
-    
+
     set_activ_func( activ_func, f_param1, f_param2 );
-    
+
     min_val = cvReadRealByName( fs, node, "min_val", 0. );
     max_val = cvReadRealByName( fs, node, "max_val", 1. );
     min_val1 = cvReadRealByName( fs, node, "min_val1", 0. );
@@ -1464,7 +1464,7 @@ void CvANN_MLP::read_params( CvFileStorage* fs, CvFileNode* node )
 void CvANN_MLP::read( CvFileStorage* fs, CvFileNode* node )
 {
     CvMat* _layer_sizes = 0;
-    
+
     CV_FUNCNAME( "CvANN_MLP::read" );
 
     __BEGIN__;

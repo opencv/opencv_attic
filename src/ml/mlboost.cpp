@@ -44,7 +44,7 @@ static inline double
 log_ratio( double val )
 {
     const double eps = 1e-5;
-    
+
     val = MAX( val, eps );
     val = MIN( val, 1. - eps );
     return log( val/(1. - val) );
@@ -107,7 +107,7 @@ CvBoostTree::train( CvDTreeTrainData* _train_data,
     ensemble = _ensemble;
     data = _train_data;
     data->shared = true;
-    
+
     return do_train( _subsample_idx );
 }
 
@@ -145,7 +145,7 @@ CvBoostTree::scale( double scale )
                 break;
             node = node->left;
         }
-        
+
         for( parent = node->parent; parent && parent->right == node;
             node = parent, parent = parent->parent )
             ;
@@ -393,7 +393,7 @@ CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi )
         {
             double lsum2 = lcw[0]*lcw[0] + lcw[1]*lcw[1];
             double rsum2 = rcw[0]*rcw[0] + rcw[1]*rcw[1];
-        
+
             L += weight;
             R -= weight;
 
@@ -540,7 +540,7 @@ CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi )
             double s = sum[idx];
             lsum += s; L += ni;
             rsum -= s; R -= ni;
-            
+
             if( L > FLT_EPSILON && R > FLT_EPSILON )
             {
                 double val = (lsum*lsum*R + rsum*rsum*L)/(L*R);
@@ -580,12 +580,12 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
     // RL - ... primary split sends to the right and the surrogate split sends to the left
     // RR - ... both send to the right
     int i, best_i = -1, best_inversed = 0;
-    double best_val; 
+    double best_val;
     double LL = 0, RL = 0, LR, RR;
     double worst_val = node->maxlr;
     double sum = 0, sum_abs = 0;
     best_val = worst_val;
-    
+
     for( i = 0; i < n1; i++ )
     {
         int idx = sorted[i].i;
@@ -649,7 +649,7 @@ CvBoostTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     double best_val = 0;
     double* lc = (double*)cvStackAlloc( (mi+1)*2*sizeof(lc[0]) ) + 1;
     double* rc = lc + mi + 1;
-    
+
     for( i = -1; i < mi; i++ )
         lc[i] = rc[i] = 0;
 
@@ -709,7 +709,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
     if( data->is_classifier )
     {
         const int* responses = data->get_class_labels(node);
-        
+
         for( i = 0; i < count; i++ )
         {
             int idx = labels[i];
@@ -730,7 +730,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         {
             double p = rcw[1]/(rcw[0] + rcw[1]);
             assert( boost_type == CvBoost::REAL );
-            
+
             // store log-ratio of the probability
             node->value = 0.5*log_ratio(p);
         }
@@ -743,7 +743,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         //  * node risk is the sum of squared errors: sum_i((Y_i - <node_value>)^2)
         double sum = 0, sum2 = 0, iw;
         const float* values = data->get_ord_responses(node);
-        
+
         for( i = 0; i < count; i++ )
         {
             int idx = labels[i];
@@ -758,7 +758,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         iw = 1./rcw[0];
         node->value = sum*iw;
         node->node_risk = sum2 - (sum*iw)*sum;
-        
+
         // renormalize the risk, as in try_split_node the unweighted formula
         // sqrt(risk)/n is used, rather than sqrt(risk)/sum(weights_i)
         node->node_risk *= count*iw*count*iw;
@@ -809,7 +809,7 @@ void CvBoost::prune( CvSlice slice )
     {
         CvSeqReader reader;
         int i, count = cvSliceLength( slice, weak );
-        
+
         cvStartReadSeq( weak, &reader );
         cvSetSeqReaderPos( &reader, slice.start_index );
 
@@ -870,7 +870,7 @@ bool
 CvBoost::set_params( const CvBoostParams& _params )
 {
     bool ok = false;
-    
+
     CV_FUNCNAME( "CvBoost::set_params" );
 
     __BEGIN__;
@@ -895,9 +895,9 @@ CvBoost::set_params( const CvBoostParams& _params )
     if( (params.boost_type == LOGIT || params.boost_type == GENTLE) &&
         params.split_criteria != SQERR )
         params.split_criteria = SQERR;
-    
+
     ok = true;
-    
+
     __END__;
 
     return ok;
@@ -985,7 +985,7 @@ CvBoost::update_weights( CvBoostTree* tree )
         int* labels = data->get_labels(data->data_root);
         double w0 = 1./count;
         double p[2] = { 1, 1 };
-        
+
         cvReleaseMat( &orig_response );
         cvReleaseMat( &sum_response );
         cvReleaseMat( &weak_eval );
@@ -1027,7 +1027,7 @@ CvBoost::update_weights( CvBoostTree* tree )
         if( params.boost_type == LOGIT )
         {
             CV_CALL( sum_response = cvCreateMat( 1, count, CV_64F ));
-            
+
             for( i = 0; i < count; i++ )
             {
                 sum_response->data.db[i] = 0;
@@ -1084,7 +1084,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             //   err = sum(w_i*(f(x_i) != y_i))/sum(w_i)
             //   C = log((1-err)/err)
             //   w_i *= exp(C*(f(x_i) != y_i))
-            
+
             double C, err = 0.;
             double scale[] = { 1., 0. };
 
@@ -1094,12 +1094,12 @@ CvBoost::update_weights( CvBoostTree* tree )
                 sumw += w;
                 err += w*(weak_eval->data.db[i] != orig_response->data.i[i]);
             }
-            
+
             if( sumw != 0 )
                 err /= sumw;
             C = err = -log_ratio( err );
             scale[1] = exp(err);
-    
+
             sumw = 0;
             for( i = 0; i < count; i++ )
             {
@@ -1116,7 +1116,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             // Real AdaBoost:
             //   weak_eval[i] = f(x_i) = 0.5*log(p(x_i)/(1-p(x_i))), p(x_i)=P(y=1|x_i)
             //   w_i *= exp(-y_i*f(x_i))
-            
+
             for( i = 0; i < count; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
@@ -1156,7 +1156,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             }
 
             cvExp( weak_eval, weak_eval );
-            
+
             for( i = 0; i < count; i++ )
             {
                 double p = 1./(1. + weak_eval->data.db[i]);
@@ -1182,7 +1182,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             //   weak_eval[i] = f(x_i) in [-1,1]
             //   w_i *= exp(-y_i*f(x_i))
             assert( params.boost_type == GENTLE );
-            
+
             for( i = 0; i < count; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
@@ -1215,7 +1215,7 @@ static CV_IMPLEMENT_QSORT_EX( icvSort_64f, double, CV_LT, int )
 void
 CvBoost::trim_weights()
 {
-    CV_FUNCNAME( "CvBoost::trim_weights" );
+    //CV_FUNCNAME( "CvBoost::trim_weights" );
 
     __BEGIN__;
 
@@ -1266,7 +1266,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     float* buf = 0;
     bool allocated = false;
     float value = -FLT_MAX;
-    
+
     CV_FUNCNAME( "CvBoost::predict" );
 
     __BEGIN__;
@@ -1285,9 +1285,9 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
         CV_ERROR( CV_StsError, "The boosted tree ensemble has not been trained yet" );
 
     if( !CV_IS_MAT(_sample) || CV_MAT_TYPE(_sample->type) != CV_32FC1 ||
-        _sample->cols != 1 && _sample->rows != 1 ||
-        _sample->cols + _sample->rows - 1 != data->var_all && !raw_mode ||
-        _sample->cols + _sample->rows - 1 != data->var_count && raw_mode )
+        (_sample->cols != 1 && _sample->rows != 1) ||
+        (_sample->cols + _sample->rows - 1 != data->var_all && !raw_mode) ||
+        (_sample->cols + _sample->rows - 1 != data->var_count && raw_mode) )
             CV_ERROR( CV_StsBadArg,
         "the input sample must be 1d floating-point vector with the same "
         "number of elements as the total number of variables used for training" );
@@ -1311,7 +1311,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     {
         if( !CV_IS_MAT(weak_responses) ||
             CV_MAT_TYPE(weak_responses->type) != CV_32FC1 ||
-            weak_responses->cols != 1 && weak_responses->rows != 1 ||
+            (weak_responses->cols != 1 && weak_responses->rows != 1) ||
             weak_responses->cols + weak_responses->rows - 1 != weak_count )
             CV_ERROR( CV_StsBadArg,
             "The output matrix of weak classifier responses must be valid "
@@ -1442,7 +1442,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
 
 void CvBoost::write_params( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "CvBoost::write_params" );
+    //CV_FUNCNAME( "CvBoost::write_params" );
 
     __BEGIN__;
 
@@ -1557,7 +1557,7 @@ CvBoost::read( CvFileStorage* fs, CvFileNode* node )
 
     if( !data )
         EXIT;
-        
+
     trees_fnode = cvGetFileNodeByName( fs, node, "trees" );
     if( !trees_fnode || !CV_NODE_IS_SEQ(trees_fnode->tag) )
         CV_ERROR( CV_StsParseError, "<trees> tag is missing" );
@@ -1590,7 +1590,7 @@ CvBoost::write( CvFileStorage* fs, const char* name )
     CV_FUNCNAME( "CvBoost::write" );
 
     __BEGIN__;
-    
+
     CvSeqReader reader;
     int i;
 
@@ -1598,7 +1598,7 @@ CvBoost::write( CvFileStorage* fs, const char* name )
 
     if( !weak )
         CV_ERROR( CV_StsBadArg, "The classifier has not been trained yet" );
-        
+
     write_params( fs );
     cvStartWriteStruct( fs, "trees", CV_NODE_SEQ );
 

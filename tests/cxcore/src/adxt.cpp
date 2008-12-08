@@ -102,7 +102,7 @@ static void cvTsDFT_1D( const CvMat* _src, CvMat* _dst, int flags, CvMat* wave=0
         src_step = _src->step/CV_ELEM_SIZE(_src->type);
     if( !CV_IS_MAT_CONT(_dst->type) )
         dst_step = _dst->step/CV_ELEM_SIZE(_dst->type);
-    
+
     if( CV_MAT_TYPE(_src->type) == CV_32FC2 )
     {
         CvTsComplex32f* dst = (CvTsComplex32f*)_dst->data.fl;
@@ -112,7 +112,7 @@ static void cvTsDFT_1D( const CvMat* _src, CvMat* _dst, int flags, CvMat* wave=0
             CvTsComplex64f sum = {0,0};
             int delta = i;
             k = 0;
-        
+
             for( j = 0; j < n; j++, src += src_step )
             {
                 sum.re += src->re*w[k].re - src->im*w[k].im;
@@ -134,7 +134,7 @@ static void cvTsDFT_1D( const CvMat* _src, CvMat* _dst, int flags, CvMat* wave=0
             CvTsComplex64f sum = {0,0};
             int delta = i;
             k = 0;
-        
+
             for( j = 0; j < n; j++, src += src_step )
             {
                 sum.re += src->re*w[k].re - src->im*w[k].im;
@@ -160,7 +160,7 @@ static void cvTsDFT_2D( const CvMat* src, CvMat* dst, int flags )
     int i;
     CvMat* tmp = cvCreateMat( dst->cols, dst->rows, dst->type );
     CvMat* wave = cvTsInitDFTWave( dst->cols, flags & CV_DXT_INVERSE );
-    
+
     // 1. row-wise transform
     for( i = 0; i < dst->rows; i++ )
     {
@@ -234,16 +234,16 @@ static void cvTsDCT_1D( const CvMat* _src, CvMat* _dst, int flags, CvMat* wave=0
         src_step = _src->step/CV_ELEM_SIZE(_src->type);
     if( !CV_IS_MAT_CONT(_dst->type) )
         dst_step = _dst->step/CV_ELEM_SIZE(_dst->type);
-    
+
     if( CV_MAT_TYPE(_src->type) == CV_32FC1 )
     {
-        float *dst = _dst->data.fl; 
-    
+        float *dst = _dst->data.fl;
+
         for( i = 0; i < n; i++, dst += dst_step )
         {
             const float* src = _src->data.fl;
             double sum = 0;
-        
+
             for( j = 0; j < n; j++, src += src_step )
                 sum += src[0]*w[j];
             w += n;
@@ -253,12 +253,12 @@ static void cvTsDCT_1D( const CvMat* _src, CvMat* _dst, int flags, CvMat* wave=0
     else if( CV_MAT_TYPE(_src->type) == CV_64FC1 )
     {
         double *dst = _dst->data.db;
-    
+
         for( i = 0; i < n; i++, dst += dst_step )
         {
             const double* src = _src->data.db;
             double sum = 0;
-        
+
             for( j = 0; j < n; j++, src += src_step )
                 sum += src[0]*w[j];
             w += n;
@@ -278,7 +278,7 @@ static void cvTsDCT_2D( const CvMat* src, CvMat* dst, int flags )
     int i;
     CvMat* tmp = cvCreateMat( dst->cols, dst->rows, dst->type );
     CvMat* wave = cvTsInitDCTWave( dst->cols, flags & CV_DXT_INVERSE );
-    
+
     // 1. row-wise transform
     for( i = 0; i < dst->rows; i++ )
     {
@@ -325,7 +325,7 @@ static void cvTsConvertFromCCS( const CvMat* _src0, const CvMat* _src1,
         CvMat src0_row, src1_row, dst_row;
         for( i = 0; i < count; i++ )
         {
-            int j = !is_2d || i == 0 ? i : count - i;            
+            int j = !is_2d || i == 0 ? i : count - i;
             cvGetRow( _src0, &src0_row, i );
             cvGetRow( _src1, &src1_row, j );
             cvGetRow( _dst, &dst_row, i );
@@ -377,7 +377,7 @@ static void cvTsConvertFromCCS( const CvMat* _src0, const CvMat* _src1,
             delta1 = delta0 + (cn == 1 ? src_step : 1);
             if( cn == 1 )
                 src_step *= 2;
-        
+
             for( i = 1; i < n2; i++, delta0 += src_step, delta1 += src_step )
             {
                 float t0 = src0[delta0];
@@ -413,7 +413,7 @@ static void cvTsConvertFromCCS( const CvMat* _src0, const CvMat* _src1,
             delta1 = delta0 + (cn == 1 ? src_step : 1);
             if( cn == 1 )
                 src_step *= 2;
-        
+
             for( i = 1; i < n2; i++, delta0 += src_step, delta1 += src_step )
             {
                 double t0 = src0[delta0];
@@ -439,13 +439,13 @@ static void cvTsFixCCS( CvMat* mat, int cols, int flags )
     int rows2 = flags & CV_DXT_ROWS ? rows : rows/2 + 1, cols2 = cols/2 + 1;
 
     assert( cols2 == mat->cols );
-    
+
     if( CV_MAT_TYPE(mat->type) == CV_32FC2 )
     {
         for( i = 0; i < rows2; i++ )
         {
             CvTsComplex32f* row = (CvTsComplex32f*)(mat->data.ptr + mat->step*i);
-            if( (flags & CV_DXT_ROWS) || i == 0 || i == rows2 - 1 && rows % 2 == 0 )
+            if( (flags & CV_DXT_ROWS) || i == 0 || (i == rows2 - 1 && rows % 2 == 0) )
             {
                 row[0].im = 0;
                 if( cols % 2 == 0 )
@@ -470,7 +470,7 @@ static void cvTsFixCCS( CvMat* mat, int cols, int flags )
         for( i = 0; i < rows2; i++ )
         {
             CvTsComplex64f* row = (CvTsComplex64f*)(mat->data.ptr + mat->step*i);
-            if( (flags & CV_DXT_ROWS) || i == 0 || i == rows2 - 1 && rows % 2 == 0 )
+            if( (flags & CV_DXT_ROWS) || i == 0 || (i == rows2 - 1 && rows % 2 == 0) )
             {
                 row[0].im = 0;
                 if( cols % 2 == 0 )
@@ -607,12 +607,12 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         sizes[INPUT][0] = sizes[INPUT][1] = size;
         types[INPUT][1] = types[INPUT][0];
     }
-    else if( cn == 2 && (bits&32) || cn == 1 && allow_complex )
+    else if( (cn == 2 && (bits&32)) || (cn == 1 && allow_complex) )
     {
         types[TEMP][0] = depth + 8; // CV_??FC2
         sizes[TEMP][0] = size;
         size = cvSize(size.width/2+1, size.height);
-        
+
         if( flags & CV_DXT_INVERSE )
         {
             if( cn == 2 )
@@ -645,8 +645,8 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
 
     inplace = false;
     if( spectrum_mode ||
-        !temp_dst && types[INPUT][0] == types[OUTPUT][0] ||
-        temp_dst && types[INPUT][0] == types[TEMP][1] )
+        (!temp_dst && types[INPUT][0] == types[OUTPUT][0]) ||
+        (temp_dst && types[INPUT][0] == types[TEMP][1]) )
         inplace = (bits & 64) != 0;
 
     types[REF_OUTPUT][0] = types[OUTPUT][0];
@@ -787,7 +787,7 @@ void CxCore_DFTTest::prepare_to_validation( int /*test_case_idx*/ )
     if( src_cn != 2 || dst_cn != 2 )
     {
         tmp_src = &test_mat[TEMP][0];
-        
+
         if( !(flags & CV_DXT_INVERSE ) )
         {
             CvMat* cvdft_dst = &test_mat[TEMP][1];
