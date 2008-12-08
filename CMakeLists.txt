@@ -140,7 +140,9 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
     set(OPENCV_ENABLE_PARALLEL OFF CACHE BOOL "Enable parallel mode (requires GCC 4.2.2)")
-    set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+	if (NOT MINGW)
+		set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+	endif(NOT MINGW)
 endif()
 
 # ===================================================

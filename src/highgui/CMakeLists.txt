@@ -131,7 +131,7 @@ if(WIN32 AND MSVC)
                 )
         endif()
     endforeach()
-    set(lib_srcs ${lib_srcs} precomp.cpp)
+    #set(lib_srcs ${lib_srcs} precomp.cpp)  # Already added above...
 endif()
 
 # ----------------------------------------------------------------------------------
@@ -159,9 +159,9 @@ set_target_properties(${the_target} PROPERTIES
 	LINK_INTERFACE_LIBRARIES ""
 	)
 
-if(WIN32)
+if(MSVC)
 	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib")
-endif(WIN32)
+endif(MSVC)
 
 # Dependencies of this target:
 add_dependencies(${the_target} cv cxcore)
@@ -171,10 +171,10 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRA
 
 if(WIN32)
     add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
-	target_link_libraries(${the_target} comctl32 gdi32 videoinput)
+	target_link_libraries(${the_target} comctl32 gdi32)
 
 	if (MSVC)
-		target_link_libraries(${the_target} vfw32)
+		target_link_libraries(${the_target} vfw32 videoinput)
 	endif()
 
 	if(MINGW)

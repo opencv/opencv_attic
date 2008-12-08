@@ -231,7 +231,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
                 p.y -= s.height;
                 cvPutText( pI, str, p, &font, CV_RGB(0,255,255));
                 {
-                    char* pS = pTracker->GetStateDesc(CV_BLOB_ID(pB));
+                    const char* pS = pTracker->GetStateDesc(CV_BLOB_ID(pB));
 
                     if(pS)
                     {
@@ -308,7 +308,7 @@ static void set_params(int argc, char* argv[], CvVSModule* pM, char* prefix, cha
         for(j=0; ; ++j)
         {
             int     param_len;
-            char*   param = pM->GetParamName(j);
+            const char*   param = pM->GetParamName(j);
             if(param==NULL) break;
             param_len = strlen(param);
             if(cmd_param_len!=param_len) continue;

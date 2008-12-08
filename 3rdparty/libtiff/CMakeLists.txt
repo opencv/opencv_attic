@@ -20,7 +20,6 @@ set(lib_srcs
 	tif_warning.c
 	tif_version.c
 	tif_tile.c
-	tif_tile.c
 	tif_thunder.c
 	tif_swab.c
 	tif_strip.c
