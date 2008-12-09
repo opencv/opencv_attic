@@ -45,7 +45,7 @@
  * haar classifiers (stump, CART, stage, cascade)
  */
 
-#include <_cvhaartraining.h>
+#include "_cvhaartraining.h"
 
 
 CvIntHaarClassifier* icvCreateCARTHaarClassifier( int count )

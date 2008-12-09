@@ -40,24 +40,24 @@
 //M*/
 
 #ifdef HAVE_CONFIG_H
-    #include <cvconfig.h>
+    #include "cvconfig.h"
 #endif
 
 #ifdef HAVE_MALLOC_H
     #include <malloc.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
+#include <cfloat>
+#include <cmath>
+#include <ctime>
+#include <climits>
+
 #include <memory.h>
-#include <float.h>
-#include <math.h>
 
-#include <time.h>
-#include <limits.h>
-
-#include <_cvcommon.h>
-#include <_cvhaartraining.h>
-#include <cvclassifier.h>
+#include "_cvcommon.h"
+#include "_cvhaartraining.h"
+#include "cvclassifier.h"
 
 #ifdef _OPENMP
 #include <omp.h>

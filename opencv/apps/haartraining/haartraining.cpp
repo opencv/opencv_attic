@@ -45,11 +45,11 @@
  * Train cascade classifier
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
-#include <cvhaartraining.h>
+#include "cvhaartraining.h"
 
 int main( int argc, char* argv[] )
 {
