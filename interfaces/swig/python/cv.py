@@ -1164,6 +1164,7 @@ CV_FONT_HERSHEY_SCRIPT_SIMPLEX = _cv.CV_FONT_HERSHEY_SCRIPT_SIMPLEX
 CV_FONT_HERSHEY_SCRIPT_COMPLEX = _cv.CV_FONT_HERSHEY_SCRIPT_COMPLEX
 CV_FONT_ITALIC = _cv.CV_FONT_ITALIC
 CV_FONT_VECTOR0 = _cv.CV_FONT_VECTOR0
+CV_KMEANS_USE_INITIAL_LABELS = _cv.CV_KMEANS_USE_INITIAL_LABELS
 CV_ErrModeLeaf = _cv.CV_ErrModeLeaf
 CV_ErrModeParent = _cv.CV_ErrModeParent
 CV_ErrModeSilent = _cv.CV_ErrModeSilent
@@ -1617,13 +1618,6 @@ def cvArcLength(*args):
     """
   return _cv.cvArcLength(*args)
 
-def cvContourPerimeter(*args):
-  """
-    cvContourPerimeter(CvSeq seq) -> double
-    cvContourPerimeter(CvArr arr) -> double
-    """
-  return _cv.cvContourPerimeter(*args)
-
 def cvHaarDetectObjects(*args):
   """
     cvHaarDetectObjects(CvArr image, CvHaarClassifierCascade cascade, CvMemStorage storage, 
@@ -1667,8 +1661,6 @@ def cvSnakeImage(*args):
         CvTermCriteria criteria) -> CvPointVector
     """
   return _cv.cvSnakeImage(*args)
-cvar = _cv.cvar
-icvDepthToType = cvar.icvDepthToType
 
 class Cv64suf(_object):
     """Proxy of C++ Cv64suf class"""
@@ -5175,7 +5167,11 @@ def cvTreeToNodeSeq(*args):
   return _cv.cvTreeToNodeSeq(*args)
 
 def cvKMeans2(*args):
-  """cvKMeans2(CvArr samples, int cluster_count, CvArr labels, CvTermCriteria termcrit)"""
+  """
+    cvKMeans2(CvArr samples, int cluster_count, CvArr labels, CvTermCriteria termcrit, 
+        int attempts=1, CvRNG rng=0, 
+        int flags=0, CvArr _centers=0, double compactness=0) -> int
+    """
   return _cv.cvKMeans2(*args)
 
 def cvRegisterModule(*args):
@@ -5791,6 +5787,7 @@ class CvModule(_object):
     if _newclass:last = _swig_property(_cv.CvModule_last_get, _cv.CvModule_last_set)
 CvModule_swigregister = _cv.CvModule_swigregister
 CvModule_swigregister(CvModule)
+cvar = _cv.cvar
 
 class CvType(_object):
     """Proxy of C++ CvType class"""
@@ -7746,7 +7743,7 @@ def cvFindStereoCorrespondenceGC(*args):
   return _cv.cvFindStereoCorrespondenceGC(*args)
 
 def cvReprojectImageTo3D(*args):
-  """cvReprojectImageTo3D(CvArr disparityImage, CvArr _3dImage, CvMat Q)"""
+  """cvReprojectImageTo3D(CvArr disparityImage, CvArr _3dImage, CvMat Q, int handleMissingValues=0)"""
   return _cv.cvReprojectImageTo3D(*args)
 class CvBaseImageFilter(_object):
     """Proxy of C++ CvBaseImageFilter class"""

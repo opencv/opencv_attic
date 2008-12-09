@@ -1047,13 +1047,7 @@ doc/Makefile
 data/Makefile
 include/Makefile
 src/Makefile
-src/cxcore/Makefile
-src/cv/Makefile
-src/cvaux/Makefile
-src/ml/Makefile
-src/highgui/Makefile
 apps/Makefile
-apps/haartraining/Makefile
 interfaces/Makefile
 interfaces/swig/Makefile
 interfaces/swig/filtered/Makefile

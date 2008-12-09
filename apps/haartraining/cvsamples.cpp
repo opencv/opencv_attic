@@ -45,8 +45,8 @@
  * support functions for training and test samples creation.
  */
 
-#include <cvhaartraining.h>
-#include <_cvhaartraining.h>
+#include "cvhaartraining.h"
+#include "_cvhaartraining.h"
 
 /* if ipl.h file is included then iplWarpPerspectiveQ function
    is used for image transformation during samples creation;

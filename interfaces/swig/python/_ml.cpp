@@ -2512,7 +2512,7 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 /* wrapper to the better function PyInt_AsLong, removing problems
    with RedHat (I hope) */
-static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
+long PyInt_AS_LONG (PyObject *obj) {
     return PyInt_AsLong (obj);
 }
 
@@ -2522,7 +2522,7 @@ static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
 #endif
 
 /* wrapper to the better function PyFloat_AS_DOUBLE, to prevent errors */
-static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
+double PyFloat_AS_DOUBLE (PyObject *obj) {
     return PyFloat_AsDouble (obj);
 }
 
@@ -2769,7 +2769,7 @@ namespace swig {
 
 
 
-static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
+CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
 static CvArr * PySequence_to_CvArr( PyObject * obj );
 
 // convert a python sequence/array/list object into a c-array
@@ -2840,7 +2840,7 @@ PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
 PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
 PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
-static CvPoint PyObject_to_CvPoint(PyObject * obj){
+CvPoint PyObject_to_CvPoint(PyObject * obj){
 	CvPoint val;
 	CvPoint *ptr;
 	CvPoint2D32f * ptr2D32f;
@@ -2863,7 +2863,7 @@ static CvPoint PyObject_to_CvPoint(PyObject * obj){
 	return cvPoint(0,0);
 }
 
-static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
+CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
     CvPoint2D32f val;
     CvPoint2D32f *ptr2D32f;
 	CvPoint *ptr;
@@ -2885,7 +2885,7 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 }
 
 /* Check if this object can be interpreted as a CvScalar */
-static bool CvScalar_Check(PyObject * obj){
+bool CvScalar_Check(PyObject * obj){
 	void * vptr;
     CvScalar val;
 	return SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar,     0 ) != -1 ||
@@ -2894,7 +2894,7 @@ static bool CvScalar_Check(PyObject * obj){
 	       PyObject_AsDoubleArray(obj, val.val, 4) !=-1;
 }
 
-static CvScalar PyObject_to_CvScalar(PyObject * obj){
+CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;
     CvPoint2D32f *ptr2D32f;
@@ -2914,11 +2914,11 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
 		return val;
 	}
-	return cvScalar(-1,-1,-1,-1); 
+	return cvScalar(-1,-1,-1,-1);
 }
 
 /* if python sequence type, convert to CvMat or CvMatND */
-static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
+CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	CvArr * cvarr;
 	*freearg = false;
 
@@ -2941,15 +2941,15 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 
 static int PyObject_GetElemType(PyObject * obj){
 	void *vptr;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;
 	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
 	if(PyLong_Check(obj)) return CV_32S;
 	return CV_32F;
@@ -2962,35 +2962,35 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 	int ndim=0;
 	int cvtype;
 	PyObject * item;
-	
+
 	// figure out dimensions
-	for(item = obj; 
+	for(item = obj;
 		(PyTuple_Check(item) || PyList_Check(item));
 		item = PySequence_GetItem(item, 0))
 	{
-		dims[ndim] = PySequence_Size( item ); 
+		dims[ndim] = PySequence_Size( item );
 		ndim++;
 	}
 
-	
+
 	if(ndim==0){
 		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
 		return NULL;
 	}
-	
+
 	cvtype = PyObject_GetElemType(item);
 	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
 	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
 		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
-		dims[ndim-1]=1;	
+		dims[ndim-1]=1;
 		ndim--;
 	}
-	
+
 	if(cvtype==-1){
 		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
 		return NULL;
 	}
-	
+
 	// CvMat
 	if(ndim<=2){
 		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
@@ -2998,7 +2998,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 			PyObject * rowobj = PySequence_GetItem(obj, i);
 			if( dims[1] > 1 ){
 				// double check size
-				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
+				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) &&
 						PySequence_Size(rowobj) == dims[1]);
 
 				for(int j=0; j<dims[1]; j++){
@@ -3016,7 +3016,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 	// CvMatND
 	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
 	return NULL;
-	
+
 }
 
 

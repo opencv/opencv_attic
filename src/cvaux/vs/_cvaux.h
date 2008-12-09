@@ -38,93 +38,36 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+#ifndef __CVAUX_H__
+#define __CVAUX_H__
 
-#include "_cvcommon.h"
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4710 4711 4514 4996 ) /* function AAA selected for automatic inline expansion */
+#endif
 
-#include <cstring>
-#include <ctime>
+#include "cvaux.h"
+#include "cxmisc.h"
+#include "_cvmatrix.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#ifdef _WIN32
-#include <direct.h>
-#endif /* _WIN32 */
+typedef unsigned short ushort;
 
-
-CV_IMPLEMENT_QSORT( icvSort_32f, float, less_than )
-
-CV_IMPLEMENT_QSORT( icvSort_32s, int, less_than )
-
-int icvMkDir( const char* filename )
+CV_INLINE bool operator == (CvSize size1, CvSize size2 );
+CV_INLINE bool operator == (CvSize size1, CvSize size2 )
 {
-    char path[PATH_MAX];
-    char* p;
-    int pos;
-
-#ifdef _WIN32
-    struct _stat st;
-#else /* _WIN32 */
-    struct stat st;
-    mode_t mode;
-
-    mode = 0755;
-#endif /* _WIN32 */
-
-    strcpy( path, filename );
-
-    p = path;
-    for( ; ; )
-    {
-        pos = strcspn( p, "/\\" );
-
-        if( pos == (int) strlen( p ) ) break;
-        if( pos != 0 )
-        {
-            p[pos] = '\0';
-
-#ifdef _WIN32
-            if( p[pos-1] != ':' )
-            {
-                if( _stat( path, &st ) != 0 )
-                {
-                    if( _mkdir( path ) != 0 ) return 0;
-                }
-            }
-#else /* _WIN32 */
-            if( stat( path, &st ) != 0 )
-            {
-                if( mkdir( path, mode ) != 0 ) return 0;
-            }
-#endif /* _WIN32 */
-        }
-        
-        p[pos] = '/';
-
-        p += pos + 1;
-    }
-
-    return 1;
+    return size1.width == size2.width && size1.height == size2.height;
 }
 
-#if 0
-/* debug functions */
-void icvSave( const CvArr* ptr, const char* filename, int line )
+CV_INLINE bool operator != (CvSize size1, CvSize size2 );
+CV_INLINE bool operator != (CvSize size1, CvSize size2 )
 {
-    CvFileStorage* fs;
-    char buf[PATH_MAX];
-    const char* name;
-    
-    name = strrchr( filename, '\\' );
-    if( !name ) name = strrchr( filename, '/' );
-    if( !name ) name = filename;
-    else name++; /* skip '/' or '\\' */
-
-    sprintf( buf, "%s-%d-%d", name, line, time( NULL ) );
-    fs = cvOpenFileStorage( buf, NULL, CV_STORAGE_WRITE_TEXT );
-    if( !fs ) return;
-    cvWrite( fs, "debug", ptr );
-    cvReleaseFileStorage( &fs );
+    return size1.width != size2.width || size1.height != size2.height;
 }
-#endif // #if 0
 
-/* End of file. */
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#endif /* __CVAUX_H__ */

@@ -1,7 +1,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@
 
-EXTRA_DIST = precomp.cpp cxcoretest.dsp cxcoretest.vs2005.vcproj
+EXTRA_DIST = precomp.cpp 
 
 INCLUDES =                         \
 	-I$(top_srcdir)/include/opencv \
@@ -20,4 +20,4 @@ cxcoretest_SOURCES =    \
 	cxcoretest_main.cpp
 cxcoretest_LDADD = \
 	$(top_builddir)/tests/cxts/libcxts.la \
-	$(top_builddir)/src/cxcore/libcxcore.la
+	$(top_builddir)/src/libcxcore.la

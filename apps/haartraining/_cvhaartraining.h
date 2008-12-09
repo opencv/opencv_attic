@@ -48,10 +48,10 @@
 #ifndef __CVHAARTRAINING_H_
 #define __CVHAARTRAINING_H_
 
-#include <_cvcommon.h>
-#include <cvclassifier.h>
-#include <string.h>
-#include <stdio.h>
+#include "_cvcommon.h"
+#include "cvclassifier.h"
+#include <cstring>
+#include <cstdio>
 
 /* parameters for tree cascade classifier training */
 

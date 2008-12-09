@@ -45,12 +45,12 @@
  * Create test/training samples
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
 
-#include <cvhaartraining.h>
+#include "cvhaartraining.h"
 
 int main( int argc, char* argv[] )
 {

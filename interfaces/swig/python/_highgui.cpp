@@ -2512,7 +2512,7 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 /* wrapper to the better function PyInt_AsLong, removing problems
    with RedHat (I hope) */
-static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
+long PyInt_AS_LONG (PyObject *obj) {
     return PyInt_AsLong (obj);
 }
 
@@ -2522,7 +2522,7 @@ static PyAPI_FUNC(long) PyInt_AS_LONG (PyObject *obj) {
 #endif
 
 /* wrapper to the better function PyFloat_AS_DOUBLE, to prevent errors */
-static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
+double PyFloat_AS_DOUBLE (PyObject *obj) {
     return PyFloat_AsDouble (obj);
 }
 
@@ -2610,30 +2610,41 @@ static PyAPI_FUNC(double) PyFloat_AS_DOUBLE (PyObject *obj) {
 #define SWIGTYPE_p_CvTermCriteria swig_types[75]
 #define SWIGTYPE_p_CvTreeNodeIterator swig_types[76]
 #define SWIGTYPE_p_CvTypeInfo swig_types[77]
-#define SWIGTYPE_p_CvVideoWriter swig_types[78]
-#define SWIGTYPE_p_CvvImage swig_types[79]
-#define SWIGTYPE_p__IplConvKernel swig_types[80]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[81]
-#define SWIGTYPE_p__IplImage swig_types[82]
-#define SWIGTYPE_p__IplROI swig_types[83]
-#define SWIGTYPE_p__IplTileInfo swig_types[84]
-#define SWIGTYPE_p_char swig_types[85]
-#define SWIGTYPE_p_f_int__void swig_types[86]
-#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[87]
-#define SWIGTYPE_p_float swig_types[88]
-#define SWIGTYPE_p_int swig_types[89]
-#define SWIGTYPE_p_long_long swig_types[90]
-#define SWIGTYPE_p_p_CvCapture swig_types[91]
-#define SWIGTYPE_p_p_CvVideoWriter swig_types[92]
-#define SWIGTYPE_p_p_char swig_types[93]
-#define SWIGTYPE_p_signed_char swig_types[94]
-#define SWIGTYPE_p_size_t swig_types[95]
-#define SWIGTYPE_p_unsigned_char swig_types[96]
-#define SWIGTYPE_p_unsigned_long_long swig_types[97]
-#define SWIGTYPE_p_unsigned_short swig_types[98]
-#define SWIGTYPE_p_void swig_types[99]
-static swig_type_info *swig_types[101];
-static swig_module_info swig_module = {swig_types, 100, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t swig_types[78]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t swig_types[79]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint_t swig_types[80]
+#define SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[81]
+#define SWIGTYPE_p_CvTypedSeqT_CvRect_t swig_types[82]
+#define SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t swig_types[83]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[84]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[85]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[86]
+#define SWIGTYPE_p_CvVideoWriter swig_types[87]
+#define SWIGTYPE_p_CvvImage swig_types[88]
+#define SWIGTYPE_p__IplConvKernel swig_types[89]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[90]
+#define SWIGTYPE_p__IplImage swig_types[91]
+#define SWIGTYPE_p__IplROI swig_types[92]
+#define SWIGTYPE_p__IplTileInfo swig_types[93]
+#define SWIGTYPE_p_allocator_type swig_types[94]
+#define SWIGTYPE_p_char swig_types[95]
+#define SWIGTYPE_p_difference_type swig_types[96]
+#define SWIGTYPE_p_f_int__void swig_types[97]
+#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[98]
+#define SWIGTYPE_p_float swig_types[99]
+#define SWIGTYPE_p_int swig_types[100]
+#define SWIGTYPE_p_long_long swig_types[101]
+#define SWIGTYPE_p_p_char swig_types[102]
+#define SWIGTYPE_p_signed_char swig_types[103]
+#define SWIGTYPE_p_size_t swig_types[104]
+#define SWIGTYPE_p_size_type swig_types[105]
+#define SWIGTYPE_p_unsigned_char swig_types[106]
+#define SWIGTYPE_p_unsigned_long_long swig_types[107]
+#define SWIGTYPE_p_unsigned_short swig_types[108]
+#define SWIGTYPE_p_value_type swig_types[109]
+#define SWIGTYPE_p_void swig_types[110]
+static swig_type_info *swig_types[112];
+static swig_module_info swig_module = {swig_types, 111, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2733,7 +2744,7 @@ namespace swig {
 
 
 
-static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
+CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
 static CvArr * PySequence_to_CvArr( PyObject * obj );
 
 // convert a python sequence/array/list object into a c-array
@@ -2804,7 +2815,7 @@ PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
 PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
 PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
-static CvPoint PyObject_to_CvPoint(PyObject * obj){
+CvPoint PyObject_to_CvPoint(PyObject * obj){
 	CvPoint val;
 	CvPoint *ptr;
 	CvPoint2D32f * ptr2D32f;
@@ -2827,7 +2838,7 @@ static CvPoint PyObject_to_CvPoint(PyObject * obj){
 	return cvPoint(0,0);
 }
 
-static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
+CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
     CvPoint2D32f val;
     CvPoint2D32f *ptr2D32f;
 	CvPoint *ptr;
@@ -2849,7 +2860,7 @@ static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
 }
 
 /* Check if this object can be interpreted as a CvScalar */
-static bool CvScalar_Check(PyObject * obj){
+bool CvScalar_Check(PyObject * obj){
 	void * vptr;
     CvScalar val;
 	return SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar,     0 ) != -1 ||
@@ -2858,7 +2869,7 @@ static bool CvScalar_Check(PyObject * obj){
 	       PyObject_AsDoubleArray(obj, val.val, 4) !=-1;
 }
 
-static CvScalar PyObject_to_CvScalar(PyObject * obj){
+CvScalar PyObject_to_CvScalar(PyObject * obj){
 	CvScalar val;
 	CvScalar * ptr;
     CvPoint2D32f *ptr2D32f;
@@ -2878,11 +2889,11 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
 	if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
 		return val;
 	}
-	return cvScalar(-1,-1,-1,-1); 
+	return cvScalar(-1,-1,-1,-1);
 }
 
 /* if python sequence type, convert to CvMat or CvMatND */
-static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
+CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 	CvArr * cvarr;
 	*freearg = false;
 
@@ -2905,15 +2916,15 @@ static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
 
 static int PyObject_GetElemType(PyObject * obj){
 	void *vptr;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;	
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;	
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;
+	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;
 	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
 	if(PyLong_Check(obj)) return CV_32S;
 	return CV_32F;
@@ -2926,35 +2937,35 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 	int ndim=0;
 	int cvtype;
 	PyObject * item;
-	
+
 	// figure out dimensions
-	for(item = obj; 
+	for(item = obj;
 		(PyTuple_Check(item) || PyList_Check(item));
 		item = PySequence_GetItem(item, 0))
 	{
-		dims[ndim] = PySequence_Size( item ); 
+		dims[ndim] = PySequence_Size( item );
 		ndim++;
 	}
 
-	
+
 	if(ndim==0){
 		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
 		return NULL;
 	}
-	
+
 	cvtype = PyObject_GetElemType(item);
 	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
 	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
 		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
-		dims[ndim-1]=1;	
+		dims[ndim-1]=1;
 		ndim--;
 	}
-	
+
 	if(cvtype==-1){
 		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
 		return NULL;
 	}
-	
+
 	// CvMat
 	if(ndim<=2){
 		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
@@ -2962,7 +2973,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 			PyObject * rowobj = PySequence_GetItem(obj, i);
 			if( dims[1] > 1 ){
 				// double check size
-				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) && 
+				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) &&
 						PySequence_Size(rowobj) == dims[1]);
 
 				for(int j=0; j<dims[1]; j++){
@@ -2980,7 +2991,7 @@ static CvArr * PySequence_to_CvArr( PyObject * obj ){
 	// CvMatND
 	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
 	return NULL;
-	
+
 }
 
 
@@ -3408,6 +3419,999 @@ SWIG_AsVal_int (PyObject * obj, int *val)
 
 
 #include "highgui.h"
+
+  
+namespace swig {
+  struct stop_iteration {
+  };
+
+  struct PySwigIterator {
+  private:
+    PyObject_ptr _seq;
+
+  protected:
+    PySwigIterator(PyObject *seq) : _seq(seq)
+    {
+    }
+      
+  public:
+    virtual ~PySwigIterator() {}
+
+    // Access iterator method, required by Python
+    virtual PyObject *value() const = 0;
+
+    // Forward iterator method, required by Python
+    virtual PySwigIterator *incr(size_t n = 1) = 0;
+    
+    // Backward iterator method, very common in C++, but not required in Python
+    virtual PySwigIterator *decr(size_t /*n*/ = 1)
+    {
+      throw stop_iteration();
+    }
+
+    // Random access iterator methods, but not required in Python
+    virtual ptrdiff_t distance(const PySwigIterator &/*x*/) const
+    {
+      throw std::invalid_argument("operation not supported");
+    }
+
+    virtual bool equal (const PySwigIterator &/*x*/) const
+    {
+      throw std::invalid_argument("operation not supported");
+    }
+    
+    // C++ common/needed methods
+    virtual PySwigIterator *copy() const = 0;
+
+    PyObject *next()     
+    {
+      SWIG_PYTHON_THREAD_BEGIN_BLOCK; // disable threads       
+      PyObject *obj = value();
+      incr();       
+      SWIG_PYTHON_THREAD_END_BLOCK; // re-enable threads
+      return obj;     
+    }
+
+    PyObject *previous()
+    {
+      SWIG_PYTHON_THREAD_BEGIN_BLOCK; // disable threads       
+      decr();
+      PyObject *obj = value();
+      SWIG_PYTHON_THREAD_END_BLOCK; // re-enable threads       
+      return obj;
+    }
+
+    PySwigIterator *advance(ptrdiff_t n)
+    {
+      return  (n > 0) ?  incr(n) : decr(-n);
+    }
+      
+    bool operator == (const PySwigIterator& x)  const
+    {
+      return equal(x);
+    }
+      
+    bool operator != (const PySwigIterator& x) const
+    {
+      return ! operator==(x);
+    }
+      
+    PySwigIterator& operator += (ptrdiff_t n)
+    {
+      return *advance(n);
+    }
+
+    PySwigIterator& operator -= (ptrdiff_t n)
+    {
+      return *advance(-n);
+    }
+      
+    PySwigIterator* operator + (ptrdiff_t n) const
+    {
+      return copy()->advance(n);
+    }
+
+    PySwigIterator* operator - (ptrdiff_t n) const
+    {
+      return copy()->advance(-n);
+    }
+      
+    ptrdiff_t operator - (const PySwigIterator& x) const
+    {
+      return x.distance(*this);
+    }
+      
+    static swig_type_info* descriptor() {
+      static int init = 0;
+      static swig_type_info* desc = 0;
+      if (!init) {
+	desc = SWIG_TypeQuery("swig::PySwigIterator *");
+	init = 1;
+      }	
+      return desc;
+    }    
+  };
+}
+
+
+namespace swig {  
+  template <class Type>
+  struct noconst_traits {
+    typedef Type noconst_type;
+  };
+
+  template <class Type>
+  struct noconst_traits<const Type> {
+    typedef Type noconst_type;
+  };
+
+  /*
+    type categories
+  */
+  struct pointer_category { };  
+  struct value_category { };
+
+  /*
+    General traits that provides type_name and type_info
+  */
+  template <class Type> struct traits { };
+
+  template <class Type>
+  inline const char* type_name() {
+    return traits<typename noconst_traits<Type >::noconst_type >::type_name();
+  }
+
+  template <class Type> 
+  struct traits_info {
+    static swig_type_info *type_query(std::string name) {
+      name += " *";
+      return SWIG_TypeQuery(name.c_str());
+    }    
+    static swig_type_info *type_info() {
+      static swig_type_info *info = type_query(type_name<Type>());
+      return info;
+    }
+  };
+
+  template <class Type>
+  inline swig_type_info *type_info() {
+    return traits_info<Type>::type_info();
+  }
+
+  /*
+    Partial specialization for pointers
+  */
+  template <class Type> struct traits <Type *> {
+    typedef pointer_category category;
+    static std::string make_ptr_name(const char* name) {
+      std::string ptrname = name;
+      ptrname += " *";
+      return ptrname;
+    }    
+    static const char* type_name() {
+      static std::string name = make_ptr_name(swig::type_name<Type>());
+      return name.c_str();
+    }
+  };
+
+  template <class Type, class Category> 
+  struct traits_as { };
+ 
+  template <class Type, class Category> 
+  struct traits_check { };
+
+}
+
+
+namespace swig {  
+  /*
+    Traits that provides the from method
+  */
+  template <class Type> struct traits_from_ptr {
+    static PyObject *from(Type *val, int owner = 0) {
+      return SWIG_NewPointerObj(val, type_info<Type>(), owner);
+    }
+  };
+
+  template <class Type> struct traits_from {
+    static PyObject *from(const Type& val) {
+      return traits_from_ptr<Type>::from(new Type(val), 1);
+    }
+  };
+
+  template <class Type> struct traits_from<Type *> {
+    static PyObject *from(Type* val) {
+      return traits_from_ptr<Type>::from(val, 0);
+    }
+  };
+
+  template <class Type> struct traits_from<const Type *> {
+    static PyObject *from(const Type* val) {
+      return traits_from_ptr<Type>::from(const_cast<Type*>(val), 0);
+    }
+  };
+
+
+  template <class Type>
+  inline PyObject *from(const Type& val) {
+    return traits_from<Type>::from(val);
+  }
+
+  template <class Type>
+  inline PyObject *from_ptr(Type* val, int owner) {
+    return traits_from_ptr<Type>::from(val, owner);
+  }
+
+  /*
+    Traits that provides the asval/as/check method
+  */
+  template <class Type>
+  struct traits_asptr {   
+    static int asptr(PyObject *obj, Type **val) {
+      Type *p;
+      int res = (SWIG_ConvertPtr(obj, (void**)&p, type_info<Type>(), 0) == SWIG_OK) ? SWIG_OLDOBJ : 0;
+      if (SWIG_IsOK(res)) {
+	if (val) *val = p;
+      }
+      return res;
+    }
+  }; 
+
+  template <class Type>
+  inline int asptr(PyObject *obj, Type **vptr) {
+    return traits_asptr<Type>::asptr(obj, vptr);
+  }
+
+  template <class Type> 
+  struct traits_asval {
+    static int asval(PyObject *obj, Type *val) {
+      if (val) {
+	Type *p = 0;
+	int res = traits_asptr<Type>::asptr(obj, &p);
+	if (!SWIG_IsOK(res)) return res;	
+	if (p) {
+	  typedef typename noconst_traits<Type>::noconst_type noconst_type;
+	  *(const_cast<noconst_type*>(val)) = *p;
+	  if (SWIG_IsNewObj(res)){
+	    delete p;
+	    res = SWIG_DelNewMask(res);
+	  }
+	  return res;
+	} else {
+	  return SWIG_ERROR;
+	}
+      } else {
+	return traits_asptr<Type>::asptr(obj, (Type **)(0));
+      }
+    }
+  };
+
+  template <class Type> struct traits_asval<Type*> {
+    static int asval(PyObject *obj, Type **val) {
+      if (val) {
+        typedef typename noconst_traits<Type>::noconst_type noconst_type;
+        noconst_type *p = 0;
+        int res = traits_asptr<noconst_type>::asptr(obj,  &p);
+        if (SWIG_IsOK(res)) {
+          *(const_cast<noconst_type**>(val)) = p;
+	}
+	return res;
+      } else {
+	return traits_asptr<Type>::asptr(obj, (Type **)(0));
+      }
+    }
+  };
+  
+  template <class Type>
+  inline int asval(PyObject *obj, Type *val) {
+    return traits_asval<Type>::asval(obj, val);
+  }
+
+  template <class Type> 
+  struct traits_as<Type, value_category> {
+    static Type as(PyObject *obj, bool throw_error) {
+      Type v;
+      int res = asval(obj, &v);
+      if (!obj || !SWIG_IsOK(res)) {
+	if (!PyErr_Occurred()) {
+	  ::SWIG_Error(SWIG_TypeError,  swig::type_name<Type>());
+	}
+	if (throw_error) throw std::invalid_argument("bad type");
+      }
+      return v;
+    }
+  };
+
+  template <class Type> 
+  struct traits_as<Type, pointer_category> {
+    static Type as(PyObject *obj, bool throw_error) {
+      Type *v = 0;      
+      int res = (obj ? traits_asptr<Type>::asptr(obj, &v) : SWIG_ERROR);
+      if (SWIG_IsOK(res) && v) {
+	if (SWIG_IsNewObj(res)) {
+	  Type r(*v);
+	  delete v;
+	  return r;
+	} else {
+	  return *v;
+	}
+      } else {
+	// Uninitialized return value, no Type() constructor required.
+	static Type *v_def = (Type*) malloc(sizeof(Type));
+	if (!PyErr_Occurred()) {
+	  SWIG_Error(SWIG_TypeError,  swig::type_name<Type>());
+	}
+	if (throw_error) throw std::invalid_argument("bad type");
+	memset(v_def,0,sizeof(Type));
+	return *v_def;
+      }
+    }
+  };
+
+  template <class Type> 
+  struct traits_as<Type*, pointer_category> {
+    static Type* as(PyObject *obj, bool throw_error) {
+      Type *v = 0;      
+      int res = (obj ? traits_asptr<Type>::asptr(obj, &v) : SWIG_ERROR);
+      if (SWIG_IsOK(res)) {
+	return v;
+      } else {
+	if (!PyErr_Occurred()) {
+	  SWIG_Error(SWIG_TypeError,  swig::type_name<Type>());
+	}
+	if (throw_error) throw std::invalid_argument("bad type");
+	return 0;
+      }
+    }
+  };
+    
+  template <class Type>
+  inline Type as(PyObject *obj, bool te = false) {
+    return traits_as<Type, typename traits<Type>::category>::as(obj, te);
+  }
+
+  template <class Type> 
+  struct traits_check<Type, value_category> {
+    static bool check(PyObject *obj) {
+      int res = obj ? asval(obj, (Type *)(0)) : SWIG_ERROR;
+      return SWIG_IsOK(res) ? true : false;
+    }
+  };
+
+  template <class Type> 
+  struct traits_check<Type, pointer_category> {
+    static bool check(PyObject *obj) {
+      int res = obj ? asptr(obj, (Type **)(0)) : SWIG_ERROR;
+      return SWIG_IsOK(res) ? true : false;
+    }
+  };
+
+  template <class Type>
+  inline bool check(PyObject *obj) {
+    return traits_check<Type, typename traits<Type>::category>::check(obj);
+  }
+}
+
+
+#include <functional>
+
+namespace std {
+  template <>
+  struct less <PyObject *>: public binary_function<PyObject *, PyObject *, bool>
+  {
+    bool
+    operator()(PyObject * v, PyObject *w) const
+    { 
+      bool res;
+      SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+      res = PyObject_Compare(v, w) < 0;
+      SWIG_PYTHON_THREAD_END_BLOCK;
+      return res;
+    }
+  };
+
+  template <>
+  struct less <swig::PyObject_ptr>: public binary_function<swig::PyObject_ptr, swig::PyObject_ptr, bool>
+  {
+    bool
+    operator()(const swig::PyObject_ptr& v, const swig::PyObject_ptr& w) const
+    {
+      return std::less<PyObject *>()(v, w);
+    }
+  };
+
+  template <>
+  struct less <swig::PyObject_var>: public binary_function<swig::PyObject_var, swig::PyObject_var, bool>
+  {
+    bool
+    operator()(const swig::PyObject_var& v, const swig::PyObject_var& w) const
+    {
+      return std::less<PyObject *>()(v, w);
+    }
+  };
+
+}
+
+namespace swig {
+  template <> struct traits<PyObject *> {
+    typedef value_category category;
+    static const char* type_name() { return "PyObject *"; }
+  };  
+
+  template <>  struct traits_asval<PyObject * > {   
+    typedef PyObject * value_type;
+    static int asval(PyObject *obj, value_type *val) {
+      if (val) *val = obj;
+      return SWIG_OK;
+    }
+  };
+
+  template <> 
+  struct traits_check<PyObject *, value_category> {
+    static bool check(PyObject *) {
+      return true;
+    }
+  };
+
+  template <>  struct traits_from<PyObject *> {
+    typedef PyObject * value_type;
+    static PyObject *from(const value_type& val) {
+      Py_XINCREF(val);
+      return val;
+    }
+  };
+  
+}
+
+namespace swig {
+  inline size_t
+  check_index(ptrdiff_t i, size_t size, bool insert = false) {
+    if ( i < 0 ) {
+      if ((size_t) (-i) <= size)
+	return (size_t) (i + size);
+    } else if ( (size_t) i < size ) {
+      return (size_t) i;
+    } else if (insert && ((size_t) i == size)) {
+      return size;
+    }
+    
+    throw std::out_of_range("index out of range");
+  }
+
+  inline size_t
+  slice_index(ptrdiff_t i, size_t size) {
+    if ( i < 0 ) {
+      if ((size_t) (-i) <= size) {
+	return (size_t) (i + size);
+      } else {
+	throw std::out_of_range("index out of range");
+      }
+    } else {
+      return ( (size_t) i < size ) ? ((size_t) i) : size;
+    }
+  }
+
+  template <class Sequence, class Difference>
+  inline typename Sequence::iterator
+  getpos(Sequence* self, Difference i)  {
+    typename Sequence::iterator pos = self->begin();
+    std::advance(pos, check_index(i,self->size()));
+    return pos;
+  }
+
+  template <class Sequence, class Difference>
+  inline typename Sequence::const_iterator
+  cgetpos(const Sequence* self, Difference i)  {
+    typename Sequence::const_iterator pos = self->begin();
+    std::advance(pos, check_index(i,self->size()));
+    return pos;
+  }
+
+  template <class Sequence, class Difference>
+  inline Sequence*
+  getslice(const Sequence* self, Difference i, Difference j) {
+    typename Sequence::size_type size = self->size();
+    typename Sequence::size_type ii = swig::check_index(i, size);
+    typename Sequence::size_type jj = swig::slice_index(j, size);
+
+    if (jj > ii) {
+      typename Sequence::const_iterator vb = self->begin();
+      typename Sequence::const_iterator ve = self->begin();
+      std::advance(vb,ii);
+      std::advance(ve,jj);
+      return new Sequence(vb, ve);
+    } else {
+      return new Sequence();
+    }
+  }
+
+  template <class Sequence, class Difference, class InputSeq>
+  inline void
+  setslice(Sequence* self, Difference i, Difference j, const InputSeq& v) {
+    typename Sequence::size_type size = self->size();
+    typename Sequence::size_type ii = swig::check_index(i, size, true);
+    typename Sequence::size_type jj = swig::slice_index(j, size);
+    if (jj < ii) jj = ii;
+    size_t ssize = jj - ii;
+    if (ssize <= v.size()) {
+      typename Sequence::iterator sb = self->begin();
+      typename InputSeq::const_iterator vmid = v.begin();
+      std::advance(sb,ii);
+      std::advance(vmid, jj - ii);
+      self->insert(std::copy(v.begin(), vmid, sb), vmid, v.end());
+    } else {
+      typename Sequence::iterator sb = self->begin();
+      typename Sequence::iterator se = self->begin();
+      std::advance(sb,ii);
+      std::advance(se,jj);
+      self->erase(sb,se);
+      self->insert(sb, v.begin(), v.end());
+    }
+  }
+
+  template <class Sequence, class Difference>
+  inline void
+  delslice(Sequence* self, Difference i, Difference j) {
+    typename Sequence::size_type size = self->size();
+    typename Sequence::size_type ii = swig::check_index(i, size, true);
+    typename Sequence::size_type jj = swig::slice_index(j, size);
+    if (jj > ii) {
+      typename Sequence::iterator sb = self->begin();
+      typename Sequence::iterator se = self->begin();
+      std::advance(sb,ii);
+      std::advance(se,jj);
+      self->erase(sb,se);
+    }
+  }
+}
+
+
+#if defined(__SUNPRO_CC) && defined(_RWSTD_VER)
+#  if !defined(SWIG_NO_STD_NOITERATOR_TRAITS_STL)
+#    define SWIG_STD_NOITERATOR_TRAITS_STL
+#  endif
+#endif
+
+#if !defined(SWIG_STD_NOITERATOR_TRAITS_STL)
+#include <iterator>
+#else
+namespace std {
+  template <class Iterator>
+  struct iterator_traits {
+    typedef ptrdiff_t difference_type;
+    typedef typename Iterator::value_type value_type;
+  };
+
+  template <class Iterator, class Category,class T, class Reference, class Pointer, class Distance>
+  struct iterator_traits<__reverse_bi_iterator<Iterator,Category,T,Reference,Pointer,Distance> > {
+    typedef Distance difference_type;
+    typedef T value_type;
+  };
+
+  template <class T>
+  struct iterator_traits<T*> {
+    typedef T value_type;
+    typedef ptrdiff_t difference_type;
+  };
+
+  template<typename _InputIterator>
+  inline typename iterator_traits<_InputIterator>::difference_type
+  distance(_InputIterator __first, _InputIterator __last)
+  {
+    typename iterator_traits<_InputIterator>::difference_type __n = 0;
+    while (__first != __last) {
+      ++__first; ++__n;
+    }
+    return __n;
+  }
+}
+#endif
+
+
+namespace swig {
+  template<typename OutIterator>
+  class PySwigIterator_T :  public PySwigIterator
+  {
+  public:
+    typedef OutIterator out_iterator;
+    typedef typename std::iterator_traits<out_iterator>::value_type value_type;    
+    typedef PySwigIterator_T<out_iterator> self_type;
+
+    PySwigIterator_T(out_iterator curr, PyObject *seq)
+      : PySwigIterator(seq), current(curr)
+    {
+    }
+
+    const out_iterator& get_current() const
+    {
+      return current;
+    }
+
+    
+    bool equal (const PySwigIterator &iter) const
+    {
+      const self_type *iters = dynamic_cast<const self_type *>(&iter);
+      if (iters) {
+	return (current == iters->get_current());
+      } else {
+	throw std::invalid_argument("bad iterator type");
+      }
+    }
+    
+    ptrdiff_t distance(const PySwigIterator &iter) const
+    {
+      const self_type *iters = dynamic_cast<const self_type *>(&iter);
+      if (iters) {
+	return std::distance(current, iters->get_current());
+      } else {
+	throw std::invalid_argument("bad iterator type");
+      }
+    }    
+    
+  protected:
+    out_iterator current;
+  };
+  
+  template <class ValueType>
+  struct from_oper 
+  {
+    typedef const ValueType& argument_type;
+    typedef PyObject *result_type;
+    result_type operator()(argument_type v) const
+    {
+      return swig::from(v);
+    }
+  };
+
+  template<typename OutIterator, 
+	   typename ValueType = typename std::iterator_traits<OutIterator>::value_type,
+	   typename FromOper = from_oper<ValueType> >
+  class PySwigIteratorOpen_T :  public PySwigIterator_T<OutIterator>
+  {
+  public:
+    FromOper from;
+    typedef OutIterator out_iterator;
+    typedef ValueType value_type;
+    typedef PySwigIterator_T<out_iterator>  base;
+    typedef PySwigIteratorOpen_T<OutIterator, ValueType, FromOper> self_type;
+    
+    PySwigIteratorOpen_T(out_iterator curr, PyObject *seq)
+      : PySwigIterator_T<OutIterator>(curr, seq)
+    {
+    }
+    
+    PyObject *value() const {
+      return from(static_cast<const value_type&>(*(base::current)));
+    }
+    
+    PySwigIterator *copy() const
+    {
+      return new self_type(*this);
+    }
+
+    PySwigIterator *incr(size_t n = 1)
+    {
+      while (n--) {
+	++base::current;
+      }
+      return this;
+    }
+
+    PySwigIterator *decr(size_t n = 1)
+    {
+      while (n--) {
+	--base::current;
+      }
+      return this;
+    }
+  };
+
+  template<typename OutIterator, 
+	   typename ValueType = typename std::iterator_traits<OutIterator>::value_type,
+	   typename FromOper = from_oper<ValueType> >
+  class PySwigIteratorClosed_T :  public PySwigIterator_T<OutIterator>
+  {
+  public:
+    FromOper from;
+    typedef OutIterator out_iterator;
+    typedef ValueType value_type;
+    typedef PySwigIterator_T<out_iterator>  base;    
+    typedef PySwigIteratorClosed_T<OutIterator, ValueType, FromOper> self_type;
+    
+    PySwigIteratorClosed_T(out_iterator curr, out_iterator first, out_iterator last, PyObject *seq)
+      : PySwigIterator_T<OutIterator>(curr, seq), begin(first), end(last)
+    {
+    }
+    
+    PyObject *value() const {
+      if (base::current == end) {
+	throw stop_iteration();
+      } else {
+	return from(static_cast<const value_type&>(*(base::current)));
+      }
+    }
+    
+    PySwigIterator *copy() const
+    {
+      return new self_type(*this);
+    }
+
+    PySwigIterator *incr(size_t n = 1)
+    {
+      while (n--) {
+	if (base::current == end) {
+	  throw stop_iteration();
+	} else {
+	  ++base::current;
+	}
+      }
+      return this;
+    }
+
+    PySwigIterator *decr(size_t n = 1)
+    {
+      while (n--) {
+	if (base::current == begin) {
+	  throw stop_iteration();
+	} else {
+	  --base::current;
+	}
+      }
+      return this;
+    }
+
+  private:
+    out_iterator begin;
+    out_iterator end;
+  };
+
+  template<typename OutIter>
+  inline PySwigIterator*
+  make_output_iterator(const OutIter& current, const OutIter& begin,const OutIter& end, PyObject *seq = 0)
+  {
+    return new PySwigIteratorClosed_T<OutIter>(current, begin, end, seq);
+  }
+
+  template<typename OutIter>
+  inline PySwigIterator*
+  make_output_iterator(const OutIter& current, PyObject *seq = 0)
+  {
+    return new PySwigIteratorOpen_T<OutIter>(current, seq);
+  }
+}
+
+
+namespace swig
+{
+  template <class T>
+  struct PySequence_Ref
+  {
+    PySequence_Ref(PyObject* seq, int index)
+      : _seq(seq), _index(index)
+    {
+    }
+    
+    operator T () const
+    {
+      swig::PyObject_var item = PySequence_GetItem(_seq, _index);
+      try {
+	return swig::as<T>(item, true);
+      } catch (std::exception& e) {
+	char msg[1024];
+	sprintf(msg, "in sequence element %d ", _index);
+	if (!PyErr_Occurred()) {
+	  ::SWIG_Error(SWIG_TypeError,  swig::type_name<T>());
+	}
+	SWIG_Python_AddErrorMsg(msg);
+	SWIG_Python_AddErrorMsg(e.what());
+	throw;
+      }
+    }
+
+    PySequence_Ref& operator=(const T& v)
+    {
+      PySequence_SetItem(_seq, _index, swig::from<T>(v));
+      return *this;
+    }
+
+  private:
+    PyObject* _seq;
+    int _index;
+  };
+
+  template <class T>
+  struct PySequence_ArrowProxy
+  {
+    PySequence_ArrowProxy(const T& x): m_value(x) {}
+    const T* operator->() const { return &m_value; }
+    operator const T*() const { return &m_value; }
+    T m_value;
+  };
+
+  template <class T, class Reference >
+  struct PySequence_InputIterator
+  {
+    typedef PySequence_InputIterator<T, Reference > self;
+
+    typedef std::random_access_iterator_tag iterator_category;
+    typedef Reference reference;
+    typedef T value_type;
+    typedef T* pointer;
+    typedef int difference_type;
+
+    PySequence_InputIterator()
+    {
+    }
+
+    PySequence_InputIterator(PyObject* seq, int index)
+      : _seq(seq), _index(index)
+    {
+    }
+
+    reference operator*() const
+    {
+      return reference(_seq, _index);
+    }
+
+    PySequence_ArrowProxy<T>
+    operator->() const {
+      return PySequence_ArrowProxy<T>(operator*());
+    }
+
+    bool operator==(const self& ri) const
+    {
+      return (_index == ri._index) && (_seq == ri._seq);
+    }
+
+    bool operator!=(const self& ri) const
+    {
+      return !(operator==(ri));
+    }
+
+    self& operator ++ ()
+    {
+      ++_index;
+      return *this;
+    }
+
+    self& operator -- ()
+    {
+      --_index;
+      return *this;
+    }
+
+    self& operator += (difference_type n)
+    {
+      _index += n;
+      return *this;
+    }
+
+    self operator +(difference_type n) const
+    {
+      return self(_seq, _index + n);
+    }
+
+    self& operator -= (difference_type n)
+    {
+      _index -= n;
+      return *this;
+    }
+
+    self operator -(difference_type n) const
+    {
+      return self(_seq, _index - n);
+    }
+
+    difference_type operator - (const self& ri) const
+    {
+      return _index - ri._index;
+    }
+
+    bool operator < (const self& ri) const
+    {
+      return _index < ri._index;
+    }
+
+    reference
+    operator[](difference_type n) const
+    {
+      return reference(_seq, _index + n);
+    }
+
+  private:
+    PyObject* _seq;
+    difference_type _index;
+  };
+
+  template <class T>
+  struct PySequence_Cont
+  {
+    typedef PySequence_Ref<T> reference;
+    typedef const PySequence_Ref<T> const_reference;
+    typedef T value_type;
+    typedef T* pointer;
+    typedef int difference_type;
+    typedef int size_type;
+    typedef const pointer const_pointer;
+    typedef PySequence_InputIterator<T, reference> iterator;
+    typedef PySequence_InputIterator<T, const_reference> const_iterator;
+
+    PySequence_Cont(PyObject* seq) : _seq(0)
+    {
+      if (!PySequence_Check(seq)) {
+	throw std::invalid_argument("a sequence is expected");
+      }
+      _seq = seq;
+      Py_INCREF(_seq);
+    }
+
+    ~PySequence_Cont()
+    {
+      Py_XDECREF(_seq);
+    }
+
+    size_type size() const
+    {
+      return static_cast<size_type>(PySequence_Size(_seq));
+    }
+
+    bool empty() const
+    {
+      return size() == 0;
+    }
+
+    iterator begin()
+    {
+      return iterator(_seq, 0);
+    }
+
+    const_iterator begin() const
+    {
+      return const_iterator(_seq, 0);
+    }
+
+    iterator end()
+    {
+      return iterator(_seq, size());
+    }
+
+    const_iterator end() const
+    {
+      return const_iterator(_seq, size());
+    }
+
+    reference operator[](difference_type n)
+    {
+      return reference(_seq, n);
+    }
+
+    const_reference operator[](difference_type n)  const
+    {
+      return const_reference(_seq, n);
+    }
+
+    bool check(bool set_err = true) const
+    {
+      int s = size();
+      for (int i = 0; i < s; ++i) {
+	swig::PyObject_var item = PySequence_GetItem(_seq, i);
+	if (!swig::check<value_type>(item)) {
+	  if (set_err) {
+	    char msg[1024];
+	    sprintf(msg, "in sequence element %d", i);
+	    SWIG_Error(SWIG_RuntimeError, msg);
+	  }
+	  return false;
+	}
+      }
+      return true;
+    }
+
+  private:
+    PyObject* _seq;
+  };
+
+}
 
 
 CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
@@ -4077,34 +5081,34 @@ static void icvPyTrackbarCB9(int pos){
 
 
 	PyCvTrackbar my_trackbar_cb_funcs[ICV_PY_MAX_CB] = {
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB0, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB1, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB2, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB3, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB4, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB5, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB6, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB7, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB8, NULL, NULL }
 /*@SWIG@*/,
-		/*@SWIG:../../../../interfaces/swig/python/highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
+		/*@SWIG:highgui.i,176,%ICV_PY_CB_TAB_ENTRY@*/
 	{(CvTrackbarCallback) icvPyTrackbarCB9, NULL, NULL }
 /*@SWIG@*/
 	};
@@ -5360,35 +6364,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_cvReleaseCapture(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvCapture **arg1 = (CvCapture **) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseCapture",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_p_CvCapture, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvReleaseCapture" "', argument " "1"" of type '" "CvCapture **""'"); 
-  }
-  arg1 = reinterpret_cast< CvCapture ** >(argp1);
-  {
-    try {
-      cvReleaseCapture(arg1); 
-    } 
-    catch (...) 
-    {
-      SWIG_fail;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_cvGetCaptureProperty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CvCapture *arg1 = (CvCapture *) 0 ;
@@ -5591,35 +6566,6 @@ SWIGINTERN PyObject *_wrap_cvWriteFrame(PyObject *SWIGUNUSEDPARM(self), PyObject
     } 
   }
   resultobj = SWIG_From_int(static_cast< int >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_cvReleaseVideoWriter(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CvVideoWriter **arg1 = (CvVideoWriter **) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:cvReleaseVideoWriter",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_p_CvVideoWriter, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvReleaseVideoWriter" "', argument " "1"" of type '" "CvVideoWriter **""'"); 
-  }
-  arg1 = reinterpret_cast< CvVideoWriter ** >(argp1);
-  {
-    try {
-      cvReleaseVideoWriter(arg1); 
-    } 
-    catch (...) 
-    {
-      SWIG_fail;
-    } 
-  }
-  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
@@ -6650,64 +7596,82 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"CvRNG_Wrapper_ref", _wrap_CvRNG_Wrapper_ref, METH_VARARGS, NULL},
 	 { (char *)"CvRNG_Wrapper___eq__", _wrap_CvRNG_Wrapper___eq__, METH_VARARGS, NULL},
 	 { (char *)"CvRNG_Wrapper___ne__", _wrap_CvRNG_Wrapper___ne__, METH_VARARGS, NULL},
-	 { (char *)"delete_CvRNG_Wrapper", _wrap_delete_CvRNG_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"delete_CvRNG_Wrapper", _wrap_delete_CvRNG_Wrapper, METH_VARARGS, (char *)"delete_CvRNG_Wrapper(CvRNG_Wrapper self)"},
 	 { (char *)"CvRNG_Wrapper_swigregister", CvRNG_Wrapper_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_CvSubdiv2DEdge_Wrapper", _wrap_new_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
 	 { (char *)"CvSubdiv2DEdge_Wrapper_ptr", _wrap_CvSubdiv2DEdge_Wrapper_ptr, METH_VARARGS, NULL},
 	 { (char *)"CvSubdiv2DEdge_Wrapper_ref", _wrap_CvSubdiv2DEdge_Wrapper_ref, METH_VARARGS, NULL},
 	 { (char *)"CvSubdiv2DEdge_Wrapper___eq__", _wrap_CvSubdiv2DEdge_Wrapper___eq__, METH_VARARGS, NULL},
 	 { (char *)"CvSubdiv2DEdge_Wrapper___ne__", _wrap_CvSubdiv2DEdge_Wrapper___ne__, METH_VARARGS, NULL},
-	 { (char *)"delete_CvSubdiv2DEdge_Wrapper", _wrap_delete_CvSubdiv2DEdge_Wrapper, METH_VARARGS, NULL},
+	 { (char *)"delete_CvSubdiv2DEdge_Wrapper", _wrap_delete_CvSubdiv2DEdge_Wrapper, METH_VARARGS, (char *)"delete_CvSubdiv2DEdge_Wrapper(CvSubdiv2DEdge_Wrapper self)"},
 	 { (char *)"CvSubdiv2DEdge_Wrapper_swigregister", CvSubdiv2DEdge_Wrapper_swigregister, METH_VARARGS, NULL},
 	 { (char *)"cvSetMouseCallback", _wrap_cvSetMouseCallback, METH_VARARGS, NULL},
 	 { (char *)"cvWaitKey", _wrap_cvWaitKey, METH_VARARGS, NULL},
-	 { (char *)"cvLoadImage", _wrap_cvLoadImage, METH_VARARGS, NULL},
-	 { (char *)"cvRetrieveFrame", _wrap_cvRetrieveFrame, METH_VARARGS, NULL},
-	 { (char *)"cvQueryFrame", _wrap_cvQueryFrame, METH_VARARGS, NULL},
-	 { (char *)"CV_FOURCC", _wrap_CV_FOURCC, METH_VARARGS, NULL},
-	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, NULL},
-	 { (char *)"cvStartWindowThread", _wrap_cvStartWindowThread, METH_VARARGS, NULL},
-	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, NULL},
-	 { (char *)"cvShowImage", _wrap_cvShowImage, METH_VARARGS, NULL},
-	 { (char *)"cvResizeWindow", _wrap_cvResizeWindow, METH_VARARGS, NULL},
-	 { (char *)"cvMoveWindow", _wrap_cvMoveWindow, METH_VARARGS, NULL},
-	 { (char *)"cvDestroyWindow", _wrap_cvDestroyWindow, METH_VARARGS, NULL},
-	 { (char *)"cvDestroyAllWindows", _wrap_cvDestroyAllWindows, METH_VARARGS, NULL},
-	 { (char *)"cvGetWindowHandle", _wrap_cvGetWindowHandle, METH_VARARGS, NULL},
-	 { (char *)"cvGetWindowName", _wrap_cvGetWindowName, METH_VARARGS, NULL},
-	 { (char *)"cvCreateTrackbar", _wrap_cvCreateTrackbar, METH_VARARGS, NULL},
-	 { (char *)"cvGetTrackbarPos", _wrap_cvGetTrackbarPos, METH_VARARGS, NULL},
-	 { (char *)"cvSetTrackbarPos", _wrap_cvSetTrackbarPos, METH_VARARGS, NULL},
-	 { (char *)"cvSetMouseCallbackOld", _wrap_cvSetMouseCallbackOld, METH_VARARGS, NULL},
-	 { (char *)"cvLoadImageM", _wrap_cvLoadImageM, METH_VARARGS, NULL},
-	 { (char *)"cvSaveImage", _wrap_cvSaveImage, METH_VARARGS, NULL},
-	 { (char *)"cvConvertImage", _wrap_cvConvertImage, METH_VARARGS, NULL},
-	 { (char *)"cvWaitKeyC", _wrap_cvWaitKeyC, METH_VARARGS, NULL},
-	 { (char *)"cvCreateFileCapture", _wrap_cvCreateFileCapture, METH_VARARGS, NULL},
-	 { (char *)"cvCreateCameraCapture", _wrap_cvCreateCameraCapture, METH_VARARGS, NULL},
-	 { (char *)"cvGrabFrame", _wrap_cvGrabFrame, METH_VARARGS, NULL},
-	 { (char *)"cvRetrieveFrame__Deprecated", _wrap_cvRetrieveFrame__Deprecated, METH_VARARGS, NULL},
-	 { (char *)"cvQueryFrame__Deprecated", _wrap_cvQueryFrame__Deprecated, METH_VARARGS, NULL},
-	 { (char *)"cvReleaseCapture", _wrap_cvReleaseCapture, METH_VARARGS, NULL},
-	 { (char *)"cvGetCaptureProperty", _wrap_cvGetCaptureProperty, METH_VARARGS, NULL},
-	 { (char *)"cvSetCaptureProperty", _wrap_cvSetCaptureProperty, METH_VARARGS, NULL},
-	 { (char *)"cvCreateVideoWriter", _wrap_cvCreateVideoWriter, METH_VARARGS, NULL},
-	 { (char *)"cvWriteFrame", _wrap_cvWriteFrame, METH_VARARGS, NULL},
-	 { (char *)"cvReleaseVideoWriter", _wrap_cvReleaseVideoWriter, METH_VARARGS, NULL},
-	 { (char *)"new_CvvImage", _wrap_new_CvvImage, METH_VARARGS, NULL},
-	 { (char *)"delete_CvvImage", _wrap_delete_CvvImage, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Create", _wrap_CvvImage_Create, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Load", _wrap_CvvImage_Load, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_LoadRect", _wrap_CvvImage_LoadRect, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Save", _wrap_CvvImage_Save, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_CopyOf", _wrap_CvvImage_CopyOf, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_GetImage", _wrap_CvvImage_GetImage, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Destroy", _wrap_CvvImage_Destroy, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Width", _wrap_CvvImage_Width, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Height", _wrap_CvvImage_Height, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Bpp", _wrap_CvvImage_Bpp, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Fill", _wrap_CvvImage_Fill, METH_VARARGS, NULL},
-	 { (char *)"CvvImage_Show", _wrap_CvvImage_Show, METH_VARARGS, NULL},
+	 { (char *)"cvLoadImage", _wrap_cvLoadImage, METH_VARARGS, (char *)"\n"
+		"cvLoadImage(char filename, int iscolor=1) -> CvMat\n"
+		"cvLoadImage(char filename) -> CvMat\n"
+		""},
+	 { (char *)"cvRetrieveFrame", _wrap_cvRetrieveFrame, METH_VARARGS, (char *)"cvRetrieveFrame(CvCapture capture) -> CvMat"},
+	 { (char *)"cvQueryFrame", _wrap_cvQueryFrame, METH_VARARGS, (char *)"cvQueryFrame(CvCapture capture) -> CvMat"},
+	 { (char *)"CV_FOURCC", _wrap_CV_FOURCC, METH_VARARGS, (char *)"CV_FOURCC(char c1, char c2, char c3, char c4) -> int"},
+	 { (char *)"cvInitSystem", _wrap_cvInitSystem, METH_VARARGS, (char *)"cvInitSystem(int argc, char argv) -> int"},
+	 { (char *)"cvStartWindowThread", _wrap_cvStartWindowThread, METH_VARARGS, (char *)"cvStartWindowThread() -> int"},
+	 { (char *)"cvNamedWindow", _wrap_cvNamedWindow, METH_VARARGS, (char *)"cvNamedWindow(char name, int flags=1) -> int"},
+	 { (char *)"cvShowImage", _wrap_cvShowImage, METH_VARARGS, (char *)"cvShowImage(char name, CvArr image)"},
+	 { (char *)"cvResizeWindow", _wrap_cvResizeWindow, METH_VARARGS, (char *)"cvResizeWindow(char name, int width, int height)"},
+	 { (char *)"cvMoveWindow", _wrap_cvMoveWindow, METH_VARARGS, (char *)"cvMoveWindow(char name, int x, int y)"},
+	 { (char *)"cvDestroyWindow", _wrap_cvDestroyWindow, METH_VARARGS, (char *)"cvDestroyWindow(char name)"},
+	 { (char *)"cvDestroyAllWindows", _wrap_cvDestroyAllWindows, METH_VARARGS, (char *)"cvDestroyAllWindows()"},
+	 { (char *)"cvGetWindowHandle", _wrap_cvGetWindowHandle, METH_VARARGS, (char *)"cvGetWindowHandle(char name) -> void"},
+	 { (char *)"cvGetWindowName", _wrap_cvGetWindowName, METH_VARARGS, (char *)"cvGetWindowName(void window_handle) -> char"},
+	 { (char *)"cvCreateTrackbar", _wrap_cvCreateTrackbar, METH_VARARGS, (char *)"\n"
+		"cvCreateTrackbar(char trackbar_name, char window_name, int value, int count, \n"
+		"    CvTrackbarCallback on_change) -> int\n"
+		""},
+	 { (char *)"cvGetTrackbarPos", _wrap_cvGetTrackbarPos, METH_VARARGS, (char *)"cvGetTrackbarPos(char trackbar_name, char window_name) -> int"},
+	 { (char *)"cvSetTrackbarPos", _wrap_cvSetTrackbarPos, METH_VARARGS, (char *)"cvSetTrackbarPos(char trackbar_name, char window_name, int pos)"},
+	 { (char *)"cvSetMouseCallbackOld", _wrap_cvSetMouseCallbackOld, METH_VARARGS, (char *)"cvSetMouseCallbackOld(char window_name, CvMouseCallback on_mouse, void param=None)"},
+	 { (char *)"cvLoadImageM", _wrap_cvLoadImageM, METH_VARARGS, (char *)"cvLoadImageM(char filename, int iscolor=1) -> CvMat"},
+	 { (char *)"cvSaveImage", _wrap_cvSaveImage, METH_VARARGS, (char *)"cvSaveImage(char filename, CvArr image) -> int"},
+	 { (char *)"cvConvertImage", _wrap_cvConvertImage, METH_VARARGS, (char *)"cvConvertImage(CvArr src, CvArr dst, int flags=0)"},
+	 { (char *)"cvWaitKeyC", _wrap_cvWaitKeyC, METH_VARARGS, (char *)"cvWaitKeyC(int delay=0) -> int"},
+	 { (char *)"cvCreateFileCapture", _wrap_cvCreateFileCapture, METH_VARARGS, (char *)"cvCreateFileCapture(char filename) -> CvCapture"},
+	 { (char *)"cvCreateCameraCapture", _wrap_cvCreateCameraCapture, METH_VARARGS, (char *)"cvCreateCameraCapture(int index) -> CvCapture"},
+	 { (char *)"cvGrabFrame", _wrap_cvGrabFrame, METH_VARARGS, (char *)"cvGrabFrame(CvCapture capture) -> int"},
+	 { (char *)"cvRetrieveFrame__Deprecated", _wrap_cvRetrieveFrame__Deprecated, METH_VARARGS, (char *)"cvRetrieveFrame__Deprecated(CvCapture capture)"},
+	 { (char *)"cvQueryFrame__Deprecated", _wrap_cvQueryFrame__Deprecated, METH_VARARGS, (char *)"cvQueryFrame__Deprecated(CvCapture capture)"},
+	 { (char *)"cvGetCaptureProperty", _wrap_cvGetCaptureProperty, METH_VARARGS, (char *)"cvGetCaptureProperty(CvCapture capture, int property_id) -> double"},
+	 { (char *)"cvSetCaptureProperty", _wrap_cvSetCaptureProperty, METH_VARARGS, (char *)"cvSetCaptureProperty(CvCapture capture, int property_id, double value) -> int"},
+	 { (char *)"cvCreateVideoWriter", _wrap_cvCreateVideoWriter, METH_VARARGS, (char *)"\n"
+		"cvCreateVideoWriter(char filename, int fourcc, double fps, CvSize frame_size, \n"
+		"    int is_color=1) -> CvVideoWriter\n"
+		""},
+	 { (char *)"cvWriteFrame", _wrap_cvWriteFrame, METH_VARARGS, (char *)"cvWriteFrame(CvVideoWriter writer,  image) -> int"},
+	 { (char *)"new_CvvImage", _wrap_new_CvvImage, METH_VARARGS, (char *)"new_CvvImage() -> CvvImage"},
+	 { (char *)"delete_CvvImage", _wrap_delete_CvvImage, METH_VARARGS, (char *)"delete_CvvImage(CvvImage self)"},
+	 { (char *)"CvvImage_Create", _wrap_CvvImage_Create, METH_VARARGS, (char *)"\n"
+		"Create(int width, int height, int bits_per_pixel, int image_origin=0) -> bool\n"
+		"CvvImage_Create(CvvImage self, int width, int height, int bits_per_pixel) -> bool\n"
+		""},
+	 { (char *)"CvvImage_Load", _wrap_CvvImage_Load, METH_VARARGS, (char *)"\n"
+		"Load(char filename, int desired_color=1) -> bool\n"
+		"CvvImage_Load(CvvImage self, char filename) -> bool\n"
+		""},
+	 { (char *)"CvvImage_LoadRect", _wrap_CvvImage_LoadRect, METH_VARARGS, (char *)"CvvImage_LoadRect(CvvImage self, char filename, int desired_color, CvRect r) -> bool"},
+	 { (char *)"CvvImage_Save", _wrap_CvvImage_Save, METH_VARARGS, (char *)"CvvImage_Save(CvvImage self, char filename) -> bool"},
+	 { (char *)"CvvImage_CopyOf", _wrap_CvvImage_CopyOf, METH_VARARGS, (char *)"\n"
+		"CopyOf(CvvImage image, int desired_color=-1)\n"
+		"CopyOf(CvvImage image)\n"
+		"CopyOf( img, int desired_color=-1)\n"
+		"CvvImage_CopyOf(CvvImage self,  img)\n"
+		""},
+	 { (char *)"CvvImage_GetImage", _wrap_CvvImage_GetImage, METH_VARARGS, (char *)"CvvImage_GetImage(CvvImage self)"},
+	 { (char *)"CvvImage_Destroy", _wrap_CvvImage_Destroy, METH_VARARGS, (char *)"CvvImage_Destroy(CvvImage self)"},
+	 { (char *)"CvvImage_Width", _wrap_CvvImage_Width, METH_VARARGS, (char *)"CvvImage_Width(CvvImage self) -> int"},
+	 { (char *)"CvvImage_Height", _wrap_CvvImage_Height, METH_VARARGS, (char *)"CvvImage_Height(CvvImage self) -> int"},
+	 { (char *)"CvvImage_Bpp", _wrap_CvvImage_Bpp, METH_VARARGS, (char *)"CvvImage_Bpp(CvvImage self) -> int"},
+	 { (char *)"CvvImage_Fill", _wrap_CvvImage_Fill, METH_VARARGS, (char *)"CvvImage_Fill(CvvImage self, int color)"},
+	 { (char *)"CvvImage_Show", _wrap_CvvImage_Show, METH_VARARGS, (char *)"CvvImage_Show(CvvImage self, char window)"},
 	 { (char *)"CvvImage_swigregister", CvvImage_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
@@ -6715,6 +7679,33 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
+static void *_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvTuple< CvPoint,2 > > *) x));
+}
+static void *_p_CvTypedSeqT_CvTupleT_float_2_t_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvTuple< float,2 > > *) x));
+}
+static void *_p_CvTypedSeqT_CvConnectedComp_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvConnectedComp > *) x));
+}
+static void *_p_CvTypedSeqT_CvRect_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvRect > *) x));
+}
+static void *_p_CvTypedSeqT_CvPoint_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvPoint > *) x));
+}
+static void *_p_CvTypedSeqT_CvTupleT_float_3_t_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvTuple< float,3 > > *) x));
+}
+static void *_p_CvTypedSeqT_CvSeq_p_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvSeq * > *) x));
+}
+static void *_p_CvTypedSeqT_CvQuadEdge2D_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvQuadEdge2D > *) x));
+}
+static void *_p_CvTypedSeqT_CvPoint2D32f_tTo_p_CvSeq(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((CvSeq *)  ((CvTypedSeq< CvPoint2D32f > *) x));
+}
 static swig_type_info _swigt__p_Cv32suf = {"_p_Cv32suf", "Cv32suf *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Cv64suf = {"_p_Cv64suf", "Cv64suf *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvAttrList = {"_p_CvAttrList", "CvAttrList *", 0, 0, (void*)0, 0};
@@ -6771,6 +7762,15 @@ static swig_type_info _swigt__p_CvSURFParams = {"_p_CvSURFParams", "CvSURFParams
 static swig_type_info _swigt__p_CvSURFPoint = {"_p_CvSURFPoint", "CvSURFPoint *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvScalar = {"_p_CvScalar", "CvScalar *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeq = {"_p_CvSeq", "CvSeq *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t = {"_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvTupleT_float_2_t_t = {"_p_CvTypedSeqT_CvTupleT_float_2_t_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvRect_t = {"_p_CvTypedSeqT_CvRect_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvPoint_t = {"_p_CvTypedSeqT_CvPoint_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvQuadEdge2D_t = {"_p_CvTypedSeqT_CvQuadEdge2D_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvSeq_p_t = {"_p_CvTypedSeqT_CvSeq_p_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvPoint2D32f_t = {"_p_CvTypedSeqT_CvPoint2D32f_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvTupleT_float_3_t_t = {"_p_CvTypedSeqT_CvTupleT_float_3_t_t", 0, 0, 0, 0, 0};
+static swig_type_info _swigt__p_CvTypedSeqT_CvConnectedComp_t = {"_p_CvTypedSeqT_CvConnectedComp_t", 0, 0, 0, 0, 0};
 static swig_type_info _swigt__p_CvSeqBlock = {"_p_CvSeqBlock", "CvSeqBlock *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeqReader = {"_p_CvSeqReader", "CvSeqReader *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSeqWriter = {"_p_CvSeqWriter", "CvSeqWriter *", 0, 0, (void*)0, 0};
@@ -6800,20 +7800,22 @@ static swig_type_info _swigt__p__IplConvKernelFP = {"_p__IplConvKernelFP", "_Ipl
 static swig_type_info _swigt__p__IplImage = {"_p__IplImage", "_IplImage *|IplImage *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p__IplROI = {"_p__IplROI", "_IplROI *|IplROI *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p__IplTileInfo = {"_p__IplTileInfo", "_IplTileInfo *|IplTileInfo *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocator_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_difference_type = {"_p_difference_type", "difference_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_int__void = {"_p_f_int__void", "void (*)(int)|CvTrackbarCallback", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_int_int_int_int_p_void__void = {"_p_f_int_int_int_int_p_void__void", "void (*)(int,int,int,int,void *)|CvMouseCallback", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_float = {"_p_float", "float *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "CvHistType *|int *|CVStatus *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long_long = {"_p_long_long", "int64 *|long long *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_p_CvCapture = {"_p_p_CvCapture", "CvCapture **", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_p_CvVideoWriter = {"_p_p_CvVideoWriter", "CvVideoWriter **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_char = {"_p_p_char", "char **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_signed_char = {"_p_signed_char", "schar *|signed char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_t = {"_p_size_t", "size_t *|CvSubdiv2DEdge *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "uchar *|unsigned char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_long_long = {"_p_unsigned_long_long", "uint64 *|unsigned long long *|CvRNG *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_short = {"_p_unsigned_short", "unsigned short *|ushort *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_void = {"_p_void", "CvArr *|void *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
@@ -6895,6 +7897,15 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvTermCriteria,
   &_swigt__p_CvTreeNodeIterator,
   &_swigt__p_CvTypeInfo,
+  &_swigt__p_CvTypedSeqT_CvConnectedComp_t,
+  &_swigt__p_CvTypedSeqT_CvPoint2D32f_t,
+  &_swigt__p_CvTypedSeqT_CvPoint_t,
+  &_swigt__p_CvTypedSeqT_CvQuadEdge2D_t,
+  &_swigt__p_CvTypedSeqT_CvRect_t,
+  &_swigt__p_CvTypedSeqT_CvSeq_p_t,
+  &_swigt__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,
+  &_swigt__p_CvTypedSeqT_CvTupleT_float_2_t_t,
+  &_swigt__p_CvTypedSeqT_CvTupleT_float_3_t_t,
   &_swigt__p_CvVideoWriter,
   &_swigt__p_CvvImage,
   &_swigt__p__IplConvKernel,
@@ -6902,20 +7913,22 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p__IplImage,
   &_swigt__p__IplROI,
   &_swigt__p__IplTileInfo,
+  &_swigt__p_allocator_type,
   &_swigt__p_char,
+  &_swigt__p_difference_type,
   &_swigt__p_f_int__void,
   &_swigt__p_f_int_int_int_int_p_void__void,
   &_swigt__p_float,
   &_swigt__p_int,
   &_swigt__p_long_long,
-  &_swigt__p_p_CvCapture,
-  &_swigt__p_p_CvVideoWriter,
   &_swigt__p_p_char,
   &_swigt__p_signed_char,
   &_swigt__p_size_t,
+  &_swigt__p_size_type,
   &_swigt__p_unsigned_char,
   &_swigt__p_unsigned_long_long,
   &_swigt__p_unsigned_short,
+  &_swigt__p_value_type,
   &_swigt__p_void,
 };
 
@@ -6974,7 +7987,16 @@ static swig_cast_info _swigc__p_CvRect[] = {  {&_swigt__p_CvRect, 0, 0, 0},{0, 0
 static swig_cast_info _swigc__p_CvSURFParams[] = {  {&_swigt__p_CvSURFParams, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSURFPoint[] = {  {&_swigt__p_CvSURFPoint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvScalar[] = {  {&_swigt__p_CvScalar, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_CvSeq[] = {  {&_swigt__p_CvSeq, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t[] = {{&_swigt__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvTupleT_float_2_t_t[] = {{&_swigt__p_CvTypedSeqT_CvTupleT_float_2_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvRect_t[] = {{&_swigt__p_CvTypedSeqT_CvRect_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvPoint_t[] = {{&_swigt__p_CvTypedSeqT_CvPoint_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvQuadEdge2D_t[] = {{&_swigt__p_CvTypedSeqT_CvQuadEdge2D_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvSeq_p_t[] = {{&_swigt__p_CvTypedSeqT_CvSeq_p_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvPoint2D32f_t[] = {{&_swigt__p_CvTypedSeqT_CvPoint2D32f_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvTupleT_float_3_t_t[] = {{&_swigt__p_CvTypedSeqT_CvTupleT_float_3_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvTypedSeqT_CvConnectedComp_t[] = {{&_swigt__p_CvTypedSeqT_CvConnectedComp_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvSeq[] = {  {&_swigt__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t, _p_CvTypedSeqT_CvTupleT_CvPoint_2_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvTupleT_float_2_t_t, _p_CvTypedSeqT_CvTupleT_float_2_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvRect_t, _p_CvTypedSeqT_CvRect_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvPoint_t, _p_CvTypedSeqT_CvPoint_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvQuadEdge2D_t, _p_CvTypedSeqT_CvQuadEdge2D_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvSeq_p_t, _p_CvTypedSeqT_CvSeq_p_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvPoint2D32f_t, _p_CvTypedSeqT_CvPoint2D32f_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvSeq, 0, 0, 0},  {&_swigt__p_CvTypedSeqT_CvTupleT_float_3_t_t, _p_CvTypedSeqT_CvTupleT_float_3_t_tTo_p_CvSeq, 0, 0},  {&_swigt__p_CvTypedSeqT_CvConnectedComp_t, _p_CvTypedSeqT_CvConnectedComp_tTo_p_CvSeq, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqBlock[] = {  {&_swigt__p_CvSeqBlock, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqReader[] = {  {&_swigt__p_CvSeqReader, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSeqWriter[] = {  {&_swigt__p_CvSeqWriter, 0, 0, 0},{0, 0, 0, 0}};
@@ -7004,20 +8026,22 @@ static swig_cast_info _swigc__p__IplConvKernelFP[] = {  {&_swigt__p__IplConvKern
 static swig_cast_info _swigc__p__IplImage[] = {  {&_swigt__p__IplImage, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p__IplROI[] = {  {&_swigt__p__IplROI, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p__IplTileInfo[] = {  {&_swigt__p__IplTileInfo, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_difference_type[] = {  {&_swigt__p_difference_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_int__void[] = {  {&_swigt__p_f_int__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_int_int_int_int_p_void__void[] = {  {&_swigt__p_f_int_int_int_int_p_void__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_float[] = {  {&_swigt__p_float, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_p_CvCapture[] = {  {&_swigt__p_p_CvCapture, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_p_CvVideoWriter[] = {  {&_swigt__p_p_CvVideoWriter, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_signed_char[] = {  {&_swigt__p_signed_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_t[] = {  {&_swigt__p_size_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_long_long[] = {  {&_swigt__p_unsigned_long_long, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_short[] = {  {&_swigt__p_unsigned_short, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_void[] = {  {&_swigt__p_void, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
@@ -7099,6 +8123,15 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvTermCriteria,
   _swigc__p_CvTreeNodeIterator,
   _swigc__p_CvTypeInfo,
+  _swigc__p_CvTypedSeqT_CvConnectedComp_t,
+  _swigc__p_CvTypedSeqT_CvPoint2D32f_t,
+  _swigc__p_CvTypedSeqT_CvPoint_t,
+  _swigc__p_CvTypedSeqT_CvQuadEdge2D_t,
+  _swigc__p_CvTypedSeqT_CvRect_t,
+  _swigc__p_CvTypedSeqT_CvSeq_p_t,
+  _swigc__p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t,
+  _swigc__p_CvTypedSeqT_CvTupleT_float_2_t_t,
+  _swigc__p_CvTypedSeqT_CvTupleT_float_3_t_t,
   _swigc__p_CvVideoWriter,
   _swigc__p_CvvImage,
   _swigc__p__IplConvKernel,
@@ -7106,20 +8139,22 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p__IplImage,
   _swigc__p__IplROI,
   _swigc__p__IplTileInfo,
+  _swigc__p_allocator_type,
   _swigc__p_char,
+  _swigc__p_difference_type,
   _swigc__p_f_int__void,
   _swigc__p_f_int_int_int_int_p_void__void,
   _swigc__p_float,
   _swigc__p_int,
   _swigc__p_long_long,
-  _swigc__p_p_CvCapture,
-  _swigc__p_p_CvVideoWriter,
   _swigc__p_p_char,
   _swigc__p_signed_char,
   _swigc__p_size_t,
+  _swigc__p_size_type,
   _swigc__p_unsigned_char,
   _swigc__p_unsigned_long_long,
   _swigc__p_unsigned_short,
+  _swigc__p_value_type,
   _swigc__p_void,
 };
 

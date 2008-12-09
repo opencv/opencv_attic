@@ -44,11 +44,12 @@
  *
  * Measure performance of classifier
  */
-#include "cv.h"
-#include <stdio.h>
-#include <math.h>
+#include <cv.h>
 #include <highgui.h>
-#include <time.h>
+
+#include <cstdio>
+#include <cmath>
+#include <ctime>
 
 #ifdef _WIN32
 /* use clock() function insted of time() */

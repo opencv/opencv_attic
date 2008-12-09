@@ -91,7 +91,7 @@ PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-dist_octave_DATA = opencv-1.1.0.tar.gz
+nodist_octave_DATA = opencv-1.1.0.tar.gz
 
 opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 	mkdir -p $(PKG_NAME)
@@ -107,11 +107,11 @@ opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
 
 cv.oct: cv_wrap.cpp cvshadow.cpp octerror.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/cv/.libs -lcv $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lcv $^
 ml.oct: ml_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/ml/.libs -lml $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lml $^
 highgui.oct: highgui_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/highgui/.libs -lhighgui $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lhighgui $^
 
 endif
 

@@ -117,20 +117,20 @@ _cv_la_SOURCES    = _cv.cpp error.cpp error.h pyhelpers.cpp pyhelpers.h \
                     pycvseq.hpp cvshadow.cpp cvshadow.h \
                     cv.i imagedata.i cvarr.i nointpb.i pytypemaps.i cvseq.i cvshadow.i
 _cv_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_cv_la_LIBADD     = $(top_builddir)/src/cv/libcv.la
+_cv_la_LIBADD     = $(top_builddir)/src/libcv.la
 _cv_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                     -L$(SWIG_PYTHON_LIBS)
 
 _ml_la_SOURCES    = _ml.cpp pyhelpers.cpp pyhelpers.h
 _ml_la_CXXFLAGS   = $(PYTHON_CSPEC)
-_ml_la_LIBADD     = $(top_builddir)/src/ml/libml.la
+_ml_la_LIBADD     = $(top_builddir)/src/libml.la
 _ml_la_LDFLAGS    = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                     -L$(SWIG_PYTHON_LIBS)
 
 _highgui_la_SOURCES    = _highgui.cpp pyhelpers.cpp pyhelpers.h \
                          highgui.i
 _highgui_la_CXXFLAGS     = $(PYTHON_CSPEC)
-_highgui_la_LIBADD       = $(top_builddir)/src/highgui/libhighgui.la
+_highgui_la_LIBADD       = $(top_builddir)/src/libhighgui.la
 _highgui_la_LDFLAGS      = -module -avoid-version -no-undefined $(PYTHON_LSPEC) \
                            -L$(SWIG_PYTHON_LIBS)
 
