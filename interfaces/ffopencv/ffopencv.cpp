@@ -519,33 +519,15 @@ That's all there is to it!
 
 #include "ffopencv.h"
 
-#undef cvCreateVideoWriter
-#define cvCreateVideoWriter cvCreateVideoWriter_FFMPEG
-
-#undef cvWriteFrame
-#define cvWriteFrame cvWriteFrame_FFMPEG
-
-#undef cvReleaseVideoWriter
-#define cvReleaseVideoWriter cvReleaseVideoWriter_FFMPEG
-
 #if defined _MSC_VER && _MSC_VER >= 1200
 
-#pragma comment(lib, "libavformat.a")
-#pragma comment(lib, "libavcodec.a")
-#pragma comment(lib, "libavutil.a")
-#pragma comment(lib, "libgcc.a")
-#pragma comment(lib, "libmingwex.a")
+#pragma comment(lib, "libavformat.lib")
+#pragma comment(lib, "libavcodec.lib")
+#pragma comment(lib, "libavutil.lib")
+#pragma comment(lib, "libgcc.lib")
+#pragma comment(lib, "libmingwex.lib")
 
 #endif
-
-#undef cvCreateVideoWriter
-#define cvCreateVideoWriter cvCreateVideoWriter_FFMPEG
-
-#undef cvWriteFrame
-#define cvWriteFrame cvWriteFrame_FFMPEG
-
-#undef cvReleaseVideoWriter
-#define cvReleaseVideoWriter cvReleaseVideoWriter_FFMPEG
 
 #undef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS 1
@@ -553,7 +535,51 @@ That's all there is to it!
 #undef snprintf
 #define snprintf _snprintf
 
-#include "stdint.h"
+#include "msc_stdint.h"
 #include "errno.h"
 
 #include "cvcap_ffmpeg.cpp"
+
+void cvReleaseCapture_FFMPEG(CvCapture** capture)
+{
+    if( capture && *capture )
+    {
+        delete *capture;
+        *capture = 0;
+    }
+}
+
+int cvSetCaptureProperty_FFMPEG(CvCapture* capture, int prop_id, double value)
+{
+    return capture->setProperty(prop_id, value);
+}
+
+double cvGetCaptureProperty_FFMPEG(CvCapture* capture, int prop_id)
+{
+    return capture->getProperty(prop_id);
+}
+
+int cvGrabFrame_FFMPEG(CvCapture* capture)
+{
+    return capture->grabFrame();
+}
+
+IplImage* cvRetrieveFrame_FFMPEG(CvCapture* capture)
+{
+    return capture->retrieveFrame();
+}
+
+void cvReleaseVideoWriter_FFMPEG( CvVideoWriter** writer )
+{
+    if( writer && *writer )
+    {
+        delete *writer;
+        *writer = 0;
+    }
+}
+
+int cvWriteFrame_FFMPEG( CvVideoWriter* writer, const IplImage* image )
+{
+    return writer->writeFrame(image);
+}
+

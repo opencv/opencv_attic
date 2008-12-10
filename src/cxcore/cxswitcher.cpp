@@ -547,7 +547,7 @@ cvUseOptimized( int load_flag )
     
     // TODO: implement some more elegant way
     // to find the latest and the greatest IPP/MKL libraries
-    static const char* opencv_sfx[] = { "100", "099", "097", 0 };
+    static const char* opencv_sfx[] = { "120", "110", "100", "099", "097", 0 };
     static const char* ipp_sfx_ia32[] = { "-6.1", "-6.0", "-5.3", "-5.2", "-5.1", "", 0 };
     static const char* ipp_sfx_ia64[] = { "64-6.1", "64-6.0", "64-5.3", "64-5.2", "64-5.1", "64", 0 };
     static const char* ipp_sfx_em64t[] = { "em64t-6.1", "em64t-6.0", "em64t-5.3", "em64t-5.2", "em64t-5.1", "em64t", 0 };
@@ -563,7 +563,7 @@ cvUseOptimized( int load_flag )
         plugins[i].basename = 0;
     plugins[CV_PLUGIN_NONE].basename = 0;
     plugins[CV_PLUGIN_NONE].name[0] = '\0';
-    plugins[CV_PLUGIN_OPTCV].basename = "ippopencv";
+    plugins[CV_PLUGIN_OPTCV].basename = "opencv_ipp";
     plugins[CV_PLUGIN_IPPCV].basename = "ippcv";
     plugins[CV_PLUGIN_IPPI].basename = "ippi";
     plugins[CV_PLUGIN_IPPS].basename = "ipps";

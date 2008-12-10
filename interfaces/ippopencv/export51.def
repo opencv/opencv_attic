@@ -400,7 +400,7 @@ EXPORTS
     ippiOpticalFlowPyrLK_8u_C1R
     ippiIntegral_8u32s_C1R
     ippiSqrIntegral_8u32s64f_C1R
-    ippiRectStdDev_32s32f_C1R
+    ippiRectStdDev_32f_C1R
     ippiHaarClassifierInitAlloc_32f
     ippiHaarClassifierFree_32f
-    ippiApplyHaarClassifier_32s32f_C1R
+    ippiApplyHaarClassifier_32f_C1R

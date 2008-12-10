@@ -248,6 +248,28 @@ endif()
 
 endif()
 
+if(MSVC)
+
+set(IPP_FOUND)
+foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
+    if(NOT IPP_FOUND)
+        find_path(IPP_PATH "ippi-${v}.dll"
+            PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
+            DOC "The path to IPP DLLs")
+        if(IPP_PATH)
+            file(GLOB IPP_HDRS "${IPP_PATH}/../include")
+            if(IPP_HDRS)
+                set(IPP_FOUND TRUE)
+            endif()
+        endif()
+    endif()
+endforeach()
+
+message(STATUS "IPP detected: ${IPP_FOUND}")
+set(BUILD_CUSTOM_IPP_LIB ${IPP_FOUND} CACHE BOOL "Build custom opencv_ipp*.dll")
+
+endif()
+
 # ----------------------------------------------------------------------------
 #   				UPDATE CONFIG FILES & SCRIPTS:
 #
@@ -392,6 +414,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory 
 add_subdirectory(src)
 add_subdirectory(apps)
 add_subdirectory(doc)
+add_subdirectory(data)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(samples)
@@ -402,9 +425,7 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(SWIG_FOUND)
-    add_subdirectory(interfaces)
-endif()
+add_subdirectory(interfaces)
 
 if(WIN32)
     add_subdirectory(3rdparty)
@@ -420,7 +441,7 @@ endif()
 #  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
 # -------------------------------------------------------------------------------------------
 
-# Name of libraries is: libcv110.so, etc...
+# Name of libraries is: libcv.so.1.1.0, etc...
 #  OPENCV_DLLVERSION must be set to "110", etc..
 # Already done above.
 
