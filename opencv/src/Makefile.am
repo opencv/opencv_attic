@@ -1,9 +1,9 @@
 # This Makefile now builds everything in the src directory
 
 # use the default c++ flags
-AM_CXXFLAGS=@DEF_CXXFLAGS@
+AM_CXXFLAGS=@DEF_CXXFLAGS@ @GTK_CFLAGS@ @GTHREAD_CFLAGS@ @GSTREAMER_CFLAGS@
 
-INCLUDES = -I. -I$(top_srcdir)/include/opencv
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)/src/cvaux -I$(top_srcdir)/src/cv
 
 # =========================================================================
 
