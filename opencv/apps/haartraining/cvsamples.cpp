@@ -524,8 +524,8 @@ int icvStartSampleDistortion( const char* imgfilename, int bgcolor, int bgthresh
                     pdilate =
                         ( (uchar*)(data->dilate->imageData + r * data->dilate->widthStep)
                                 + c );
-                    de = bgcolor - (*perode);
-                    dd = (*pdilate) - bgcolor;
+                    de = (uchar)(bgcolor - (*perode));
+                    dd = (uchar)((*pdilate) - bgcolor);
                     if( de >= dd && de > bgthreshold )
                     {
                         (*psrc) = (*perode);

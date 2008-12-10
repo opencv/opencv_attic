@@ -28,7 +28,7 @@ add_dependencies(haartraining cxcore cv cvhaartraining)
 target_link_libraries(haartraining cxcore cv cvhaartraining highgui)
 set_target_properties(haartraining PROPERTIES
                       DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-                      OUTPUT_NAME "opencv-haartraining")
+                      OUTPUT_NAME "opencv_haartraining")
 
 # -----------------------------------------------------------
 #  createsamples
@@ -39,7 +39,7 @@ add_dependencies(createsamples cxcore cv cvhaartraining)
 target_link_libraries(createsamples cxcore cv cvhaartraining highgui)
 set_target_properties(createsamples PROPERTIES
                       DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-                      OUTPUT_NAME "opencv-createsamples")
+                      OUTPUT_NAME "opencv_createsamples")
 
 # -----------------------------------------------------------
 #  performance
@@ -49,7 +49,7 @@ add_dependencies(performance cxcore cv highgui cvhaartraining)
 target_link_libraries(performance cxcore cv cvhaartraining highgui)
 set_target_properties(performance PROPERTIES
                       DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-                      OUTPUT_NAME "opencv-performance")
+                      OUTPUT_NAME "opencv_performance")
 
 # -----------------------------------------------------------
 #  Install part
@@ -58,9 +58,3 @@ set_target_properties(performance PROPERTIES
 install(TARGETS haartraining RUNTIME DESTINATION bin)
 install(TARGETS createsamples RUNTIME DESTINATION bin)
 install(TARGETS performance RUNTIME DESTINATION bin)
-
-file(GLOB HAAR_CASCADES ${CMAKE_SOURCE_DIR}/data/haarcascades/*.xml)
-
-if(UNIX)
-    install(FILES ${HAAR_CASCADES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opencv/haarcascades)
-endif()
