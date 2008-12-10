@@ -1,27 +1,18 @@
-This is the project for Visual Studio 6.0 for custom ippopencv DLL,
+This is the project for custom ippopencv DLL,
 a subset of IPP libraries used by OpenCV.
 
 How to build and use it:
 ------------------------
 
-1. You need to have IPP 4.x or 5.x installed.
+1. You need to have IPP 5.1 or later installed.
    <IPP_install_path>\include and
-   <IPP_install_path>\lib must be added to the directory lists in
-   Developer Studio (Tools->Options->Directories in case of Visual Studio 6.0)
+   <IPP_install_path>\lib must be set in your IDE or INCLUDE & LIB environment variables
 
-2. Open ippopencv.dsw with Visual Studio 6.0 or Visual Studio .NET 2003/2005.
-   In the latter case it will be automatically converted to .sln
+2. Open the CMake-generated project and build it.
 
-3. Choose the appropriate configuration
-   ("Release" for IPP 4.x, "Release IPP5" for IPP 5.0.x,
-    "Release IPP5_1" for IPP 5.1.x or later versions)
-   and build it.
-
-4. You will get ippopencv<nnn>.dll in <OpenCV_install_path>\bin that you may
+3. You will get ippopencv<opencv_ver>.dll in <OpenCV_install_path>\bin that you may
    redistribute with your applications instead of the full bunch of IPP DLLs
-   (ipps, ippi etc.). The DLL will combine A6 (for Pentium III or compatible)
-   and W7 (for Pentium 4, Pentium M or compatible) code and the best version
-   will be automatically chosen for the particular CPU.
+   (ipps, ippi etc.).
 
 ------------------------
 
