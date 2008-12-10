@@ -68,11 +68,11 @@ file(GLOB lib_hdrs *.h*)
 
 set(the_target "libtiff")
 
-add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
-
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
+
+add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
 
 set_target_properties(${the_target}
 	PROPERTIES
