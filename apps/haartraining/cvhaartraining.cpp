@@ -2537,7 +2537,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                     tcc->next_idx++;
                     sprintf( suffix, "%d/%s", cur_node->idx, CV_STAGE_CART_FILE_NAME );
                     file = NULL;
-                    if( icvMkDir( stage_name ) && (file = fopen( stage_name, "w" ) ) )
+                    if( icvMkDir( stage_name ) && (file = fopen( stage_name, "w" )) != 0 )
                     {
                         cur_node->stage->save( (CvIntHaarClassifier*) cur_node->stage, file );
                         fprintf( file, "\n%d\n%d\n",

@@ -592,7 +592,7 @@ float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
 {
     CV_FUNCNAME( "cvEvalCARTClassifier" );
 
-    int idx;
+    int idx=0;
 
     __BEGIN__;
 
@@ -601,7 +601,6 @@ float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
     CV_ASSERT( CV_MAT_TYPE( sample->type ) == CV_32FC1 );
     CV_ASSERT( sample->rows == 1 || sample->cols == 1 );
 
-    idx = 0;
     if( sample->rows == 1 )
     {
         do
@@ -645,7 +644,7 @@ float cvEvalCARTClassifierIdx( CvClassifier* classifier, CvMat* sample )
 {
     CV_FUNCNAME( "cvEvalCARTClassifierIdx" );
 
-    int idx;
+    int idx=0;
 
     __BEGIN__;
 
@@ -655,7 +654,6 @@ float cvEvalCARTClassifierIdx( CvClassifier* classifier, CvMat* sample )
     CV_ASSERT( CV_MAT_TYPE( sample->type ) == CV_32FC1 );
     CV_ASSERT( sample->rows == 1 || sample->cols == 1 );
 
-    idx = 0;
     if( sample->rows == 1 )
     {
         do
@@ -1646,7 +1644,7 @@ CvBtTrainer* cvBtStart( CvCARTClassifier** trees,
                         int numclasses,
                         float* param )
 {
-    CvBtTrainer* ptr;
+    CvBtTrainer* ptr=0;
 
     CV_FUNCNAME( "cvBtStart" );
 
@@ -2490,7 +2488,7 @@ float cvEvalBtClassifier2( CvClassifier* classifier, CvMat* sample )
 CV_BOOST_IMPL
 float cvEvalBtClassifierK( CvClassifier* classifier, CvMat* sample )
 {
-    int cls;
+    int cls=0;
 
     CV_FUNCNAME( "cvEvalBtClassifierK" );
 
@@ -2539,7 +2537,6 @@ float cvEvalBtClassifierK( CvClassifier* classifier, CvMat* sample )
         }
     }
 
-    cls = 0;
     max_val = vals[cls];
     for( k = 1; k < numclasses; k++ )
     {
@@ -2587,7 +2584,7 @@ int cvSaveBtClassifier( CvClassifier* classifier, const char* filename )
     CV_ASSERT( classifier );
     CV_ASSERT( filename );
 
-    if( !icvMkDir( filename ) || !(file = fopen( filename, "w" )) )
+    if( !icvMkDir( filename ) || (file = fopen( filename, "w" )) == 0 )
     {
         CV_ERROR( CV_StsError, "Unable to create file" );
     }
@@ -2596,6 +2593,8 @@ int cvSaveBtClassifier( CvClassifier* classifier, const char* filename )
     {
         CV_CALL( cvStartReadSeq( ((CvBtClassifier*) classifier)->seq, &reader ) );
     }
+    else
+        memset(&reader, 0, sizeof(reader));
     fprintf( file, "%d %d\n%d\n%d\n", (int) ((CvBtClassifier*) classifier)->type,
                                       ((CvBtClassifier*) classifier)->numclasses,
                                       ((CvBtClassifier*) classifier)->numfeatures,
@@ -2795,7 +2794,7 @@ CvClassifier* cvCreateBtClassifier( CvMat* trainData,
                                     CvMat* weights,
                                     CvClassifierTrainParams* trainParams )
 {
-    CvBtClassifier* ptr;
+    CvBtClassifier* ptr=0;
 
     CV_FUNCNAME( "cvCreateBtClassifier" );
 
@@ -2876,7 +2875,7 @@ CvClassifier* cvCreateBtClassifier( CvMat* trainData,
 CV_BOOST_IMPL
 CvClassifier* cvCreateBtClassifierFromFile( const char* filename )
 {
-    CvBtClassifier* ptr;
+    CvBtClassifier* ptr=0;
 
     CV_FUNCNAME( "cvCreateBtClassifierFromFile" );
 
@@ -2964,7 +2963,7 @@ CvClassifier* cvCreateBtClassifierFromFile( const char* filename )
 CV_BOOST_IMPL
 CvMat* cvTrimWeights( CvMat* weights, CvMat* idx, float factor )
 {
-    CvMat* ptr;
+    CvMat* ptr=0;
 
     CV_FUNCNAME( "cvTrimWeights" );
     __BEGIN__;
