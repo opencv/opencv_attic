@@ -137,9 +137,10 @@ if(UNIX)
     include(CheckIncludeFile)
 endif()
 
+set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
-    set(OPENCV_ENABLE_PARALLEL OFF CACHE BOOL "Enable parallel mode (requires GCC 4.2.2)")
 	if (NOT MINGW)
 		set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
 	endif(NOT MINGW)
@@ -327,6 +328,10 @@ if(MSVC)
         set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
         set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS} /LTCG")
     endif()
+    
+    if(OPENCV_ENABLE_OPENMP)
+        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS} /openmp")
+    endif()
 
     # Remove unreferenced functions: function level linking
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Gy")
@@ -366,7 +371,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     endif()
 
     # Parallel mode
-    if(OPENCV_ENABLE_PARALLEL)
+    if(OPENCV_ENABLE_OPENMP)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -D_GLIBCXX_PARALLEL -fopenmp")
     endif()
 
