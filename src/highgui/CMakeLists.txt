@@ -48,6 +48,10 @@ if(UNIX)
         set(highgui_srcs ${highgui_srcs} cvcap_xine.cpp)
     endif()
 
+    if(HAVE_DC1394_2)
+        set(highgui_srcs ${highgui_srcs} cvcap_dc1394_v2.cpp)
+    endif()
+
     if(HAVE_DC1394)
         set(highgui_srcs ${highgui_srcs} cvcap_dc1394.cpp)
     endif()
