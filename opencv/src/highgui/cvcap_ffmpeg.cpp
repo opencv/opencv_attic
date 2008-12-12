@@ -271,7 +271,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     void init();
@@ -499,7 +499,7 @@ bool CvCapture_FFMPEG::grabFrame()
 }
 
 
-IplImage* CvCapture_FFMPEG::retrieveFrame()
+IplImage* CvCapture_FFMPEG::retrieveFrame(int)
 {
     if( !video_st || !picture->data[0] )
         return 0;

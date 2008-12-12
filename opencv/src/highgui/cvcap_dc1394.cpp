@@ -8,7 +8,7 @@ THIS EXEPERIMENTAL CODE
 Tested on 2.4.19 with 1394, video1394, v4l, dc1394 and raw1394 support
 
 This set of files adds support for firevre and usb cameras.
-First it tries to install a firewire camera, 
+First it tries to install a firewire camera,
 if that fails it tries a v4l/USB camera
 
 It has been tested with the motempl sample program
@@ -105,7 +105,7 @@ Tested with 2.6.12 with libdc1394-1.0.0, libraw1394-0.10.1 using a Point Grey Fl
 #include <libdc1394/dc1394_control.h>
 
 #ifdef NDEBUG
-#define CV_WARN(message) 
+#define CV_WARN(message)
 #else
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
@@ -154,7 +154,7 @@ CvCaptureCAM_DC1394;
 static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture );
 
 static int icvGrabFrameCAM_DC1394( CvCaptureCAM_DC1394* capture );
-static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture );
+static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture, int );
 
 static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id );
 static int    icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double value );
@@ -167,7 +167,7 @@ static unsigned int icvGetBestFrameRate( CvCaptureCAM_DC1394 * capture, int form
 static int    icvResizeFrame(CvCaptureCAM_DC1394 * capture);
 
 /***********************   Implementations  ***************************************/
-#define MAX_PORTS 3 
+#define MAX_PORTS 3
 #define MAX_CAMERAS 8
 #define NUM_BUFFERS 8
 struct raw1394_portinfo ports[MAX_PORTS];
@@ -187,7 +187,7 @@ static const int preferred_modes[]
     MODE_1600x1200_MONO, MODE_1280x960_MONO, MODE_1600x1200_MONO16, MODE_1280x960_MONO16,
     FORMAT_SVGA_NONCOMPRESSED_1,
     MODE_1024x768_RGB, MODE_1024x768_YUV422, MODE_800x600_RGB, MODE_800x600_YUV422,
-    MODE_1024x768_MONO, MODE_800x600_MONO, MODE_1024x768_MONO16, MODE_800x600_MONO16, 
+    MODE_1024x768_MONO, MODE_800x600_MONO, MODE_1024x768_MONO16, MODE_800x600_MONO16,
     FORMAT_VGA_NONCOMPRESSED,
    MODE_640x480_RGB, MODE_640x480_YUV422, MODE_640x480_YUV411, MODE_320x240_YUV422,
     MODE_160x120_YUV444, MODE_640x480_MONO, MODE_640x480_MONO16,
@@ -295,7 +295,7 @@ static CvCaptureCAM_DC1394 * icvCaptureFromCAM_DC1394 (int index)
 
 	if (pcap->format!=FORMAT_SCALABLE_IMAGE_SIZE) { // everything except Format 7
 		if (dc1394_dma_setup_capture(pcap->handle, pcap->camera->node, index+1 /*channel*/,
-					pcap->format, pcap->mode, SPEED_400, 
+					pcap->format, pcap->mode, SPEED_400,
 					pcap->frame_rate, NUM_BUFFERS,
 #ifdef HAVE_DC1394_095
 					0 /*do_extra_buffering*/,
@@ -350,13 +350,13 @@ static CvCaptureCAM_DC1394 * icvCaptureFromCAM_DC1394 (int index)
 	return pcap;
 
 ERROR:
-	return 0;  
+	return 0;
 };
 
 static void icvCloseCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 	dc1394_stop_iso_transmission(capture->handle, capture->camera->node);
 	dc1394_dma_unlisten (capture->handle, capture->camera);
-	/* Deallocate space for RGBA data */ 
+	/* Deallocate space for RGBA data */
 	if(capture->convert){
 		cvFree(&capture->frame.imageData);
 	}
@@ -384,7 +384,7 @@ static int icvGrabFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 	return 0;
 }
 
-static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
+static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture, int ){
 	if(capture->camera->capture_buffer )
 	{
 		if(capture->convert){
@@ -450,18 +450,18 @@ static IplImage* icvRetrieveFrameCAM_DC1394( CvCaptureCAM_DC1394* capture ){
 			capture->frame.imageData = (char *) capture->camera->capture_buffer;
 			capture->frame.imageDataOrigin = (char *) capture->camera->capture_buffer;
 		}
-		
+
 		// TODO: if convert=0, we are not actually done with the buffer
 		// but this seems to work anyway.
 		dc1394_dma_done_with_buffer(capture->camera);
-		
+
 		return &capture->frame;
 	}
 	return 0;
 };
 
 static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id ){
-	int index=-1;	
+	int index=-1;
 	switch ( property_id ) {
 		case CV_CAP_PROP_CONVERT_RGB:
 			return capture->convert;
@@ -494,13 +494,13 @@ static double icvGetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int proper
 					return 240;
 #endif
 			}
-        default:    
+        default:
 			index = property_id;  // did they pass in a LIBDC1394 feature flag?
 			break;
 	}
 	if(index>=FEATURE_MIN && index<=FEATURE_MAX){
 		dc1394bool_t has_feature;
-		CV_DC1394_CALL( dc1394_is_feature_present(capture->handle, capture->camera->node, 
+		CV_DC1394_CALL( dc1394_is_feature_present(capture->handle, capture->camera->node,
 					                              index, &has_feature));
 		if(!has_feature){
 			CV_WARN("Feature is not supported by this camera");
@@ -525,9 +525,9 @@ static int icvResizeFrame(CvCaptureCAM_DC1394 * capture){
 		   capture->frame.depth != 8 ||
 		   capture->frame.nChannels != 3 ||
 		   capture->frame.imageData == NULL ||
-		   capture->buffer_is_writeable == 0) 
+		   capture->buffer_is_writeable == 0)
 		{
-			if(capture->frame.imageData && capture->buffer_is_writeable){ 
+			if(capture->frame.imageData && capture->buffer_is_writeable){
 				cvReleaseData( &(capture->frame));
 			}
 			cvInitImageHeader( &capture->frame, cvSize( capture->camera->frame_width,
@@ -615,7 +615,7 @@ icvModeSupportedCAM_DC1394(int format, int mode, quadlet_t modes){
 	int format_idx = format - FORMAT_MIN;
 	int mode_format_min = MODE_FORMAT0_MIN + 32*format_idx;
 	int shift = 31 - (mode - mode_format_min);
-	int mask = 0x1 << shift; 
+	int mask = 0x1 << shift;
 	return (modes & mask) != 0;
 }
 
@@ -660,7 +660,7 @@ icvSetModeCAM_DC1394( CvCaptureCAM_DC1394 * capture, int mode ){
 
 	dc1394_dma_unlisten(capture->handle, capture->camera);
 	if (dc1394_dma_setup_capture(capture->handle, capture->camera->node, capture->camera->channel /*channel*/,
-				format, mode, SPEED_400, 
+				format, mode, SPEED_400,
 				frame_rate, NUM_BUFFERS,
 #ifdef HAVE_DC1394_095
 				0 /*do_extra_buffering*/,
@@ -685,8 +685,8 @@ icvSetModeCAM_DC1394( CvCaptureCAM_DC1394 * capture, int mode ){
 // query camera for supported frame rates and select fastest for given format and mode
 static unsigned int icvGetBestFrameRate( CvCaptureCAM_DC1394 * capture, int format, int mode  ){
 	quadlet_t framerates;
-	if (dc1394_query_supported_framerates(capture->handle, capture->camera->node, 
-				format, mode, &framerates)!=DC1394_SUCCESS) 
+	if (dc1394_query_supported_framerates(capture->handle, capture->camera->node,
+				format, mode, &framerates)!=DC1394_SUCCESS)
 	{
 		fprintf(stderr,"%s:%d: Could not query supported framerates\n",__FILE__,__LINE__);
 		framerates = 0;
@@ -705,7 +705,7 @@ icvSetFrameRateCAM_DC1394( CvCaptureCAM_DC1394 * capture, double value ){
 	unsigned int fps=15;
 	if(capture->format == FORMAT_SCALABLE_IMAGE_SIZE)
 		return 0; /* format 7 has no fixed framerates */
-	if (value==-1){ 
+	if (value==-1){
 		fps=icvGetBestFrameRate( capture, capture->format, capture->mode );
 	}
 	else if (value==1.875)
@@ -794,7 +794,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 		unsigned int minval,maxval;
 
 		// Turn the feature on if it is OFF
-		if( dc1394_is_feature_on(capture->handle, capture->camera->node, feature_id, &isOn) 
+		if( dc1394_is_feature_on(capture->handle, capture->camera->node, feature_id, &isOn)
 				== DC1394_FAILURE ) {
 			return 0;
 		}
@@ -806,7 +806,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
                 }
 		}
 
-		// Check if the feature supports auto mode 
+		// Check if the feature supports auto mode
 		dc1394_has_auto_mode(capture->handle, capture->camera->node, feature_id, &hasAutoCapability);
 		if( hasAutoCapability ) {
 
@@ -862,7 +862,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 }
 
 // cvSetCaptureProperty callback function implementation
-static int   
+static int
 icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double value ){
 	int index=-1;
 	switch ( property_id ) {
@@ -875,16 +875,16 @@ icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double 
 		case CV_CAP_PROP_BRIGHTNESS:
 			index = FEATURE_BRIGHTNESS;
 			break;
-		case CV_CAP_PROP_CONTRAST: 
+		case CV_CAP_PROP_CONTRAST:
 			index = FEATURE_GAMMA;
 			break;
-		case CV_CAP_PROP_SATURATION: 
+		case CV_CAP_PROP_SATURATION:
 			index = FEATURE_SATURATION;
 			break;
-		case CV_CAP_PROP_HUE:       
+		case CV_CAP_PROP_HUE:
 			index = FEATURE_HUE;
 			break;
-		case CV_CAP_PROP_GAIN:     
+		case CV_CAP_PROP_GAIN:
 			index = FEATURE_GAIN;
 			break;
 		default:
@@ -899,7 +899,7 @@ icvSetPropertyCAM_DC1394( CvCaptureCAM_DC1394* capture, int property_id, double 
 
 /**********************************************************************
  *
- *  CONVERSION FUNCTIONS TO RGB 24bpp 
+ *  CONVERSION FUNCTIONS TO RGB 24bpp
  *
  **********************************************************************/
 
@@ -1064,7 +1064,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 protected:
 
     CvCaptureCAM_DC1394* captureDC1394;
@@ -1091,9 +1091,9 @@ bool CvCaptureCAM_DC1394_CPP::grabFrame()
     return captureDC1394 ? icvGrabFrameCAM_DC1394( captureDC1394 ) != 0 : false;
 }
 
-IplImage* CvCaptureCAM_DC1394_CPP::retrieveFrame()
+IplImage* CvCaptureCAM_DC1394_CPP::retrieveFrame(int)
 {
-    return captureDC1394 ? (IplImage*)icvRetrieveFrameCAM_DC1394( captureDC1394 ) : 0;
+    return captureDC1394 ? (IplImage*)icvRetrieveFrameCAM_DC1394( captureDC1394, 0 ) : 0;
 }
 
 double CvCaptureCAM_DC1394_CPP::getProperty( int propId )

@@ -256,7 +256,7 @@ CVAPI(int) cvGrabFrame( CvCapture* capture );
   This function may apply some frame processing like
   frame decompression, flipping etc.
   !!!DO NOT RELEASE or MODIFY the retrieved frame!!! */
-CVAPI(IplImage*) cvRetrieveFrame( CvCapture* capture );
+CVAPI(IplImage*) cvRetrieveFrame( CvCapture* capture, int streamIdx CV_DEFAULT(0) );
 
 /* Just a combination of cvGrabFrame and cvRetrieveFrame
    !!!DO NOT RELEASE or MODIFY the retrieved frame!!!      */
@@ -281,7 +281,8 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_HUE           13
 #define CV_CAP_PROP_GAIN          14
 #define CV_CAP_PROP_CONVERT_RGB   15
-
+#define CV_CAP_PROP_WHITE_BALANCE 16
+#define CV_CAP_PROP_RECTIFICATION 17
 
 /* retrieve or set capture properties */
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );

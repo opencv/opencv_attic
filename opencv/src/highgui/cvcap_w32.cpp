@@ -46,7 +46,7 @@ extern "C"
 typedef void* (*CvCreateFileCapture_Plugin)( const char* filename );
 typedef void* (*CvCreateCameraCapture_Plugin)( int index );
 typedef int (*CvGrabFrame_Plugin)( void* capture_handle );
-typedef IplImage* (*CvRetrieveFrame_Plugin)( void* capture_handle );
+typedef IplImage* (*CvRetrieveFrame_Plugin)( void* capture_handle, int );
 typedef int (*CvSetCaptureProperty_Plugin)( void* capture_handle, int prop_id, double value );
 typedef double (*CvGetCaptureProperty_Plugin)( void* capture_handle, int prop_id );
 typedef void (*CvReleaseCapture_Plugin)( void** capture_handle );
@@ -135,9 +135,9 @@ public:
     {
         return ffmpegCapture ? icvGrabFrame_FFMPEG_p(ffmpegCapture)!=0 : false;
     }
-    virtual IplImage* retrieveFrame()
+    virtual IplImage* retrieveFrame(int)
     {
-        return ffmpegCapture ? icvRetrieveFrame_FFMPEG_p(ffmpegCapture) : 0;
+        return ffmpegCapture ? icvRetrieveFrame_FFMPEG_p(ffmpegCapture,0) : 0;
     }
     virtual bool open( const char* filename )
     {
@@ -213,6 +213,6 @@ CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
     if( result->open( filename, fourcc, fps, frameSize, isColor != 0 ))
         return result;
     delete result;
-    
+
     return cvCreateVideoWriter_VFW(filename, fourcc, fps, frameSize, isColor);
 }
