@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -21,7 +23,7 @@ void on_trackbar(int h)
 
     // Run the edge detector on grayscale
     cvCanny(gray, edge, (float)edge_thresh, (float)edge_thresh*3, 3);
-  
+
     cvZero( cedge );
     // copy edge points
     cvCopy( image, cedge, edge );
@@ -32,7 +34,7 @@ void on_trackbar(int h)
 int main( int argc, char** argv )
 {
     char* filename = argc == 2 ? argv[1] : (char*)"fruits.jpg";
-    
+
     if( (image = cvLoadImage( filename, 1)) == 0 )
         return -1;
 
@@ -47,7 +49,7 @@ int main( int argc, char** argv )
     // Create a window
     cvNamedWindow(wndname, 1);
 
-    // create a toolbar 
+    // create a toolbar
     cvCreateTrackbar(tbarname, wndname, &edge_thresh, 100, on_trackbar);
 
     // Show the image

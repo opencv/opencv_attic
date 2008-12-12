@@ -5,6 +5,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -45,7 +47,7 @@ void on_mouse( int event, int x, int y, int flags, void* param )
 int main( int argc, char** argv )
 {
     CvCapture* capture = 0;
-    
+
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
         capture = cvCaptureFromCAM( argc == 2 ? argv[1][0] - '0' : 0 );
     else if( argc == 2 )
@@ -101,7 +103,7 @@ int main( int argc, char** argv )
 
         if( night_mode )
             cvZero( image );
-        
+
         if( need_to_init )
         {
             /* automatic initialization */
@@ -140,10 +142,10 @@ int main( int argc, char** argv )
                         continue;
                     }
                 }
-                
+
                 if( !status[i] )
                     continue;
-                
+
                 points[1][k++] = points[1][i];
                 cvCircle( image, cvPointFrom32f(points[1][i]), 3, CV_RGB(0,255,0), -1, 8,0);
             }

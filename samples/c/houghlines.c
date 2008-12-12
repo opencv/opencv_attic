@@ -1,3 +1,5 @@
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 /* This is a standalone program. Pass an image name as a first parameter of the program.
    Switch between standard and probabilistic Hough transform by changing "#if 1" to "#if 0" and back */
 #include <cv.h>
@@ -16,10 +18,10 @@ int main(int argc, char** argv)
 
     if( !src )
         return -1;
-    
+
     dst = cvCreateImage( cvGetSize(src), 8, 1 );
     color_dst = cvCreateImage( cvGetSize(src), 8, 3 );
-    
+
     cvCanny( src, dst, 50, 200, 3 );
     cvCvtColor( dst, color_dst, CV_GRAY2BGR );
 #if 0

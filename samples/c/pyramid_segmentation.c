@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -28,8 +30,8 @@ CvMemStorage *storage;
 CvPoint pt1, pt2;
 
 void ON_SEGMENT(int a)
-{   
-    cvPyrSegmentation(image0, image1, storage, &comp, 
+{
+    cvPyrSegmentation(image0, image1, storage, &comp,
                       level, threshold1+1, threshold2+1);
 
     /*l_comp = comp->total;
@@ -54,7 +56,7 @@ void ON_SEGMENT(int a)
 int main( int argc, char** argv )
 {
     char* filename = argc == 2 ? argv[1] : (char*)"fruits.jpg";
-    
+
     if( (image[0] = cvLoadImage( filename, 1)) == 0 )
         return -1;
 

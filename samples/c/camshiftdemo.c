@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -40,7 +42,7 @@ void on_mouse( int event, int x, int y, int flags, void* param )
         selection.y = MIN(y,origin.y);
         selection.width = selection.x + CV_IABS(x - origin.x);
         selection.height = selection.y + CV_IABS(y - origin.y);
-        
+
         selection.x = MAX( selection.x, 0 );
         selection.y = MAX( selection.y, 0 );
         selection.width = MIN( selection.width, image->width );
@@ -85,11 +87,11 @@ CvScalar hsv2rgb( float hue )
 int main( int argc, char** argv )
 {
     CvCapture* capture = 0;
-    
+
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
         capture = cvCaptureFromCAM( argc == 2 ? argv[1][0] - '0' : 0 );
     else if( argc == 2 )
-        capture = cvCaptureFromAVI( argv[1] ); 
+        capture = cvCaptureFromAVI( argv[1] );
 
     if( !capture )
     {
@@ -176,14 +178,14 @@ int main( int argc, char** argv )
                         cvTermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1 ),
                         &track_comp, &track_box );
             track_window = track_comp.rect;
-            
+
             if( backproject_mode )
                 cvCvtColor( backproject, image, CV_GRAY2BGR );
             if( !image->origin )
                 track_box.angle = -track_box.angle;
             cvEllipseBox( image, track_box, CV_RGB(255,0,0), 3, CV_AA, 0 );
         }
-        
+
         if( select_object && selection.width > 0 && selection.height > 0 )
         {
             cvSetImageROI( image, selection );

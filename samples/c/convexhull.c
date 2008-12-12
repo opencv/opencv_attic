@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -13,22 +15,22 @@
 int main( int argc, char** argv )
 {
     IplImage* img = cvCreateImage( cvSize( 500, 500 ), 8, 3 );
-#if !ARRAY        
+#if !ARRAY
     CvMemStorage* storage = cvCreateMemStorage(0);
 #endif
 
     cvNamedWindow( "hull", 1 );
-        
+
     for(;;)
     {
         char key;
         int i, count = rand()%100 + 1, hullcount;
         CvPoint pt0;
-#if !ARRAY            
+#if !ARRAY
         CvSeq* ptseq = cvCreateSeq( CV_SEQ_KIND_GENERIC|CV_32SC2, sizeof(CvContour),
                                      sizeof(CvPoint), storage );
         CvSeq* hull;
-    
+
         for( i = 0; i < count; i++ )
         {
             pt0.x = rand() % (img->width/2) + img->width/4;
@@ -55,7 +57,7 @@ int main( int argc, char** argv )
         cvZero( img );
         for( i = 0; i < count; i++ )
         {
-#if !ARRAY                
+#if !ARRAY
             pt0 = *CV_GET_SEQ_ELEM( CvPoint, ptseq, i );
 #else
             pt0 = points[i];
@@ -63,7 +65,7 @@ int main( int argc, char** argv )
             cvCircle( img, pt0, 2, CV_RGB( 255, 0, 0 ), CV_FILLED, CV_AA, 0 );
         }
 
-#if !ARRAY            
+#if !ARRAY
         pt0 = **CV_GET_SEQ_ELEM( CvPoint*, hull, hullcount - 1 );
 #else
         pt0 = points[hull[hullcount-1]];
@@ -71,7 +73,7 @@ int main( int argc, char** argv )
 
         for( i = 0; i < hullcount; i++ )
         {
-#if !ARRAY                
+#if !ARRAY
             CvPoint pt = **CV_GET_SEQ_ELEM( CvPoint*, hull, i );
 #else
             CvPoint pt = points[hull[i]];
@@ -93,7 +95,7 @@ int main( int argc, char** argv )
         free( hull );
 #endif
     }
-    
+
     cvDestroyWindow( "hull" );
     return 0;
 }

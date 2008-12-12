@@ -1,3 +1,5 @@
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifdef _CH_
 #pragma package <opencv>
 #endif
@@ -27,7 +29,7 @@ IplImage* labels = 0;
 // threshold trackbar callback
 void on_trackbar( int dummy )
 {
-    static const uchar colors[][3] = 
+    static const uchar colors[][3] =
     {
         {0,0,0},
         {255,0,0},
@@ -39,7 +41,7 @@ void on_trackbar( int dummy )
         {0,0,255},
         {255,0,255}
     };
-    
+
     int msize = mask_size;
     int _dist_type = build_voronoi ? CV_DIST_L2 : dist_type;
 
@@ -61,7 +63,7 @@ void on_trackbar( int dummy )
         // begin "painting" the distance transform result
         cvConvertScale( dist, dist, 5000.0, 0 );
         cvPow( dist, dist, 0.5 );
-    
+
         cvConvertScale( dist, dist32s, 1.0, 0.5 );
         cvAndS( dist32s, cvScalarAll(255), dist32s, 0 );
         cvConvertScale( dist32s, dist8u1, 1, 0 );
@@ -91,7 +93,7 @@ void on_trackbar( int dummy )
             }
         }
     }
-    
+
     cvShowImage( wndname, dist8u );
 }
 
@@ -128,7 +130,7 @@ int main( int argc, char** argv )
     for(;;)
     {
         int c;
-        
+
         // Call to update the view
         on_trackbar(0);
 
@@ -180,8 +182,8 @@ int main( int argc, char** argv )
     cvReleaseImage( &dist8u2 );
     cvReleaseImage( &dist32s );
     cvReleaseImage( &labels );
-    
+
     cvDestroyWindow( wndname );
-    
+
     return 0;
 }

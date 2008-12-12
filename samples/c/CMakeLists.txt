@@ -1,9 +1,11 @@
 # ----------------------------------------------------------------------------
-#  CMake file for C samples. See root CMakeLists.txt 
+#  CMake file for C samples. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 
 project(c_samples)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
 
 # ---------------------------------------------
 #      Define executable targets

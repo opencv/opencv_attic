@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -40,7 +42,7 @@ void on_mouse( int event, int x, int y, int flags, void* param )
 
             if( is_mask )
                 cvThreshold( mask, mask, 1, 128, CV_THRESH_BINARY );
-            
+
             if( is_color )
             {
                 CvScalar color = CV_RGB( r, g, b );
@@ -82,7 +84,7 @@ int main( int argc, char** argv )
             "\tg - use gradient floodfill with floating(relative) range\n"
             "\t4 - use 4-connectivity mode\n"
             "\t8 - use 8-connectivity mode\n" );
-        
+
     color_img = cvCloneImage( color_img0 );
     gray_img0 = cvCreateImage( cvSize(color_img->width, color_img->height), 8, 1 );
     cvCvtColor( color_img, gray_img0, CV_BGR2GRAY );
@@ -98,7 +100,7 @@ int main( int argc, char** argv )
     for(;;)
     {
         int c;
-        
+
         if( is_color )
             cvShowImage( "image", color_img );
         else

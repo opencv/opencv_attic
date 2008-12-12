@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 // motion templates sample code
 #include "cv.h"
@@ -46,7 +48,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     double count;
     double angle;
     CvPoint center;
-    double magnitude;          
+    double magnitude;
     CvScalar color;
 
     // allocate images at the beginning or
@@ -56,7 +58,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
             buf = (IplImage**)malloc(N*sizeof(buf[0]));
             memset( buf, 0, N*sizeof(buf[0]));
         }
-        
+
         for( i = 0; i < N; i++ ) {
             cvReleaseImage( &buf[i] );
             buf[i] = cvCreateImage( size, IPL_DEPTH_8U, 1 );
@@ -66,7 +68,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
         cvReleaseImage( &orient );
         cvReleaseImage( &segmask );
         cvReleaseImage( &mask );
-        
+
         mhi = cvCreateImage( size, IPL_DEPTH_32F, 1 );
         cvZero( mhi ); // clear MHI at the beginning
         orient = cvCreateImage( size, IPL_DEPTH_32F, 1 );
@@ -81,7 +83,7 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
 
     silh = buf[idx2];
     cvAbsDiff( buf[idx1], buf[idx2], silh ); // get difference between frames
-    
+
     cvThreshold( silh, silh, diff_threshold, 1, CV_THRESH_BINARY ); // and threshold it
     cvUpdateMotionHistory( silh, mhi, timestamp, MHI_DURATION ); // update MHI
 
@@ -89,16 +91,16 @@ void  update_mhi( IplImage* img, IplImage* dst, int diff_threshold )
     cvCvtScale( mhi, mask, 255./MHI_DURATION,
                 (MHI_DURATION - timestamp)*255./MHI_DURATION );
     cvZero( dst );
-    cvCvtPlaneToPix( mask, 0, 0, 0, dst );
+    cvMerge( mask, 0, 0, 0, dst );
 
     // calculate motion gradient orientation and valid orientation mask
     cvCalcMotionGradient( mhi, mask, orient, MAX_TIME_DELTA, MIN_TIME_DELTA, 3 );
-    
+
     if( !storage )
         storage = cvCreateMemStorage(0);
     else
         cvClearMemStorage(storage);
-    
+
     // segment motion: get sequence of motion components
     // segmask is marked motion components map. It is not used further
     seq = cvSegmentMotion( mhi, segmask, storage, timestamp, MAX_TIME_DELTA );
@@ -156,7 +158,7 @@ int main(int argc, char** argv)
 {
     IplImage* motion = 0;
     CvCapture* capture = 0;
-    
+
     if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
         capture = cvCaptureFromCAM( argc == 2 ? argv[1][0] - '0' : 0 );
     else if( argc == 2 )
@@ -165,22 +167,18 @@ int main(int argc, char** argv)
     if( capture )
     {
         cvNamedWindow( "Motion", 1 );
-        
+
         for(;;)
         {
-            IplImage* image;
-            if( !cvGrabFrame( capture ))
+            IplImage* image = cvQueryFrame( capture );
+            if( !image )
                 break;
-            image = cvRetrieveFrame( capture );
 
-            if( image )
+            if( !motion )
             {
-                if( !motion )
-                {
-                    motion = cvCreateImage( cvSize(image->width,image->height), 8, 3 );
-                    cvZero( motion );
-                    motion->origin = image->origin;
-                }
+                motion = cvCreateImage( cvSize(image->width,image->height), 8, 3 );
+                cvZero( motion );
+                motion->origin = image->origin;
             }
 
             update_mhi( image, motion, 30 );
@@ -195,7 +193,7 @@ int main(int argc, char** argv)
 
     return 0;
 }
-                                
+
 #ifdef _EiC
 main(1,"motempl.c");
 #endif
