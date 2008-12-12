@@ -218,7 +218,7 @@ static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 //
 // decode buffer
 //
-static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap)
+static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 {
 	if(!cap->buffer)
 		return 0;
@@ -749,7 +749,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 protected:
 
     CvCapture_GStreamer* captureGS;
@@ -776,9 +776,9 @@ bool CvCapture_GStreamer_CPP::grabFrame()
     return captureGS ? icvGrabFrame_GStreamer( captureGS ) != 0 : false;
 }
 
-IplImage* CvCapture_GStreamer_CPP::retrieveFrame()
+IplImage* CvCapture_GStreamer_CPP::retrieveFrame(int)
 {
-    return captureGS ? (IplImage*)icvRetrieveFrame_GStreamer( captureGS ) : 0;
+    return captureGS ? (IplImage*)icvRetrieveFrame_GStreamer( captureGS, 0 ) : 0;
 }
 
 double CvCapture_GStreamer_CPP::getProperty( int propId )

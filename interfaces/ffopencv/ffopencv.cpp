@@ -514,7 +514,7 @@ necessary.  Here is a sample; alter the names:
   Ty Coon, President of Vice
 
 That's all there is to it!
-  
+
 \****************************************************************************************/
 
 #include "ffopencv.h"
@@ -564,9 +564,9 @@ int cvGrabFrame_FFMPEG(CvCapture* capture)
     return capture->grabFrame();
 }
 
-IplImage* cvRetrieveFrame_FFMPEG(CvCapture* capture)
+IplImage* cvRetrieveFrame_FFMPEG(CvCapture* capture, int streamIdx)
 {
-    return capture->retrieveFrame();
+    return capture->retrieveFrame(streamIdx);
 }
 
 void cvReleaseVideoWriter_FFMPEG( CvVideoWriter** writer )

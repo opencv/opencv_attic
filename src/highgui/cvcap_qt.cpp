@@ -93,7 +93,7 @@ static       int         icvClose_QT_Movie         (CvCapture_QT_Movie * capture
 static       double      icvGetProperty_QT_Movie   (CvCapture_QT_Movie * capture, int property_id);
 static       int         icvSetProperty_QT_Movie   (CvCapture_QT_Movie * capture, int property_id, double value);
 static       int         icvGrabFrame_QT_Movie     (CvCapture_QT_Movie * capture);
-static const void      * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture);
+static const void      * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture, int);
 
 
 static CvCapture_QT_Movie * icvCaptureFromFile_QT (const char * filename)
@@ -479,7 +479,7 @@ static int icvGrabFrame_QT_Movie (CvCapture_QT_Movie * capture)
  * @author Mark Asbach <asbach@ient.rwth-aachen.de>
  * @date   2005-11-06
  */
-static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture)
+static const void * icvRetrieveFrame_QT_Movie (CvCapture_QT_Movie * capture, int)
 {
 	OPENCV_ASSERT (capture,            "icvRetrieveFrame_QT_Movie", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->myMovie,   "icvRetrieveFrame_QT_Movie", "invalid Movie handle");
@@ -575,7 +575,7 @@ static       int         icvClose_QT_Cam         (CvCapture_QT_Cam * capture);
 static       double      icvGetProperty_QT_Cam   (CvCapture_QT_Cam * capture, int property_id);
 static       int         icvSetProperty_QT_Cam   (CvCapture_QT_Cam * capture, int property_id, double value);
 static       int         icvGrabFrame_QT_Cam     (CvCapture_QT_Cam * capture);
-static const void      * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture);
+static const void      * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture, int);
 
 
 /**
@@ -823,7 +823,7 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 	return 1;
 }
 
-static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
+static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture, int)
 {
 	OPENCV_ASSERT (capture, "icvRetrieveFrame_QT_Cam", "'capture' is a NULL-pointer");
 
@@ -1041,7 +1041,7 @@ static int icvGrabFrame_QT_Cam (CvCapture_QT_Cam * capture)
 	return 1;
 }
 
-static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture)
+static const void * icvRetrieveFrame_QT_Cam (CvCapture_QT_Cam * capture, int)
 {
 	OPENCV_ASSERT (capture,            "icvRetrieveFrame_QT_Cam", "'capture' is a NULL-pointer");
 	OPENCV_ASSERT (capture->image_rgb, "icvRetrieveFrame_QT_Cam", "invalid source image");
@@ -1418,7 +1418,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 protected:
 
     CvCapture_QT_Movie* captureQT;
@@ -1445,9 +1445,9 @@ bool CvCapture_QT_Movie_CPP::grabFrame()
     return captureQT ? icvGrabFrame_QT_Movie( captureQT ) != 0 : false;
 }
 
-IplImage* CvCapture_QT_Movie_CPP::retrieveFrame()
+IplImage* CvCapture_QT_Movie_CPP::retrieveFrame(int)
 {
-    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Movie( captureQT ) : 0;
+    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Movie( captureQT, 0 ) : 0;
 }
 
 double CvCapture_QT_Movie_CPP::getProperty( int propId )
@@ -1486,7 +1486,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 protected:
 
     CvCapture_QT_Cam* captureQT;
@@ -1513,9 +1513,9 @@ bool CvCapture_QT_Cam_CPP::grabFrame()
     return captureQT ? icvGrabFrame_QT_Cam( captureQT ) != 0 : false;
 }
 
-IplImage* CvCapture_QT_Cam_CPP::retrieveFrame()
+IplImage* CvCapture_QT_Cam_CPP::retrieveFrame(int)
 {
-    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Cam( captureQT ) : 0;
+    return captureQT ? (IplImage*)icvRetrieveFrame_QT_Cam( captureQT, 0 ) : 0;
 }
 
 double CvCapture_QT_Cam_CPP::getProperty( int propId )

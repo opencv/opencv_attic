@@ -65,7 +65,7 @@ struct CvCapture_Unicap : public CvCapture
   virtual double getProperty(int);
   virtual bool setProperty(int, double);
   virtual bool grabFrame();
-  virtual IplImage* retrieveFrame();
+  virtual IplImage* retrieveFrame(int);
 
   bool shutdownDevice();
   bool initDevice();
@@ -112,7 +112,7 @@ bool CvCapture_Unicap::shutdownDevice() {
 
   if (!SUCCESS(unicap_stop_capture(handle)))
     CV_ERROR(CV_StsError, "unicap: failed to stop capture on device\n");
-  
+
   if (!SUCCESS(unicap_close(handle)))
     CV_ERROR(CV_StsError, "unicap: failed to close the device\n");
 
@@ -149,7 +149,7 @@ bool CvCapture_Unicap::initDevice() {
 
   int i;
   for (i = format.size_count - 1; i > 0; i--)
-    if (format.sizes[i].width == desired_size.width && 
+    if (format.sizes[i].width == desired_size.width &&
 	format.sizes[i].height == desired_size.height)
       break;
   format.size.width = format.sizes[i].width;
@@ -161,12 +161,12 @@ bool CvCapture_Unicap::initDevice() {
   }
 
   memset(&raw_buffer, 0x0, sizeof(unicap_data_buffer_t));
-  raw_frame = cvCreateImage(cvSize(format.size.width, 
-					format.size.height), 
+  raw_frame = cvCreateImage(cvSize(format.size.width,
+					format.size.height),
 				  8, format.bpp / 8);
   memcpy(&raw_buffer.format, &format, sizeof(raw_buffer.format));
   raw_buffer.data = (unsigned char*)raw_frame->imageData;
-  raw_buffer.buffer_size = format.size.width * 
+  raw_buffer.buffer_size = format.size.width *
     format.size.height * format.bpp / 8;
 
   memset(&buffer, 0x0, sizeof(unicap_data_buffer_t));
@@ -178,11 +178,11 @@ bool CvCapture_Unicap::initDevice() {
   //    buffer.format.fourcc = UCIL_FOURCC('G','R','E','Y');
   //    buffer.format.bpp = 8;
 
-  frame = cvCreateImage(cvSize(buffer.format.size.width, 
-				    buffer.format.size.height), 
+  frame = cvCreateImage(cvSize(buffer.format.size.width,
+				    buffer.format.size.height),
 			      8, buffer.format.bpp / 8);
   buffer.data = (unsigned char*)frame->imageData;
-  buffer.buffer_size = buffer.format.size.width * 
+  buffer.buffer_size = buffer.format.size.width *
     buffer.format.size.height * buffer.format.bpp / 8;
 
   if(!SUCCESS(unicap_start_capture(handle))) {
@@ -197,7 +197,7 @@ bool CvCapture_Unicap::initDevice() {
 }
 
 void CvCapture_Unicap::close() {
-  if(device_initialized) 
+  if(device_initialized)
     shutdownDevice();
 }
 
@@ -220,7 +220,7 @@ bool CvCapture_Unicap::grabFrame() {
       result = true;
       EXIT;
     }
-    
+
     CV_WARN("unicap: failed to wait for buffer on device\n");
     usleep(100 * 1000);
   }
@@ -229,7 +229,7 @@ bool CvCapture_Unicap::grabFrame() {
   return result;
 }
 
-IplImage * CvCapture_Unicap::retrieveFrame() {
+IplImage * CvCapture_Unicap::retrieveFrame(int) {
   if (convert_rgb) {
     ucil_convert_buffer(&buffer, &raw_buffer);
     return frame;
@@ -312,7 +312,7 @@ bool CvCapture_Unicap::open(int index)
   desired_format = 0;
   desired_size = cvSize(320, 240);
   convert_rgb = true;
-  
+
   return initDevice();
 }
 

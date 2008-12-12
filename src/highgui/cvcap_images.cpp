@@ -83,7 +83,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     char*  filename; // actually a printf-pattern
@@ -117,11 +117,11 @@ bool CvCapture_Images::grabFrame()
     frame = cvLoadImage(str, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
     if( frame )
         currentframe++;
-    
+
     return frame != 0;
 }
 
-IplImage* CvCapture_Images::retrieveFrame()
+IplImage* CvCapture_Images::retrieveFrame(int)
 {
     return frame;
 }

@@ -225,7 +225,7 @@ static void icvCheckSeekAVI_XINE( CvCaptureAVI_XINE * capture )
 		fprintf( stderr, "(DEBUG) icvCheckSeekAVI_XINE: Input is seekable, using XINE seek implementation.\n" );
 	else
 		fprintf( stderr, "(DEBUG) icvCheckSeekAVI_XINE: Input is NOT seekable, using fallback function.\n" );
-	
+
 	fprintf( stderr, "(DEBUG) icvCheckSeekAVI_XINE ... end\n" );
 #endif
 }
@@ -262,7 +262,7 @@ static int icvOpenAVI_XINE( CvCaptureAVI_XINE* capture, const char* filename )
 	}
 	// reset stream...
 	xine_play( capture->stream, 0, 0 );
-	
+
 
 	// initialize some internals...
 	capture->frame_number = 0;
@@ -290,13 +290,13 @@ static int icvOpenAVI_XINE( CvCaptureAVI_XINE* capture, const char* filename )
 #ifndef NDEBUG
 	fprintf( stderr, "(DEBUG) frame_duration = %f, framerate = %f\n", capture->frame_duration, capture->frame_rate );
 #endif
-	
+
 	OPENCV_ASSERT ( capture->yuv_frame,
                         "icvOpenAVI_XINE( CvCaptureAVI_XINE *, const char *)", "couldn't create yuv frame");
-			
+
 	OPENCV_ASSERT ( capture->bgr_frame,
                         "icvOpenAVI_XINE( CvCaptureAVI_XINE *, const char *)", "couldn't create bgr frame");
-			
+
 #ifndef NDEBUG
 	fprintf( stderr, "(DEBUG) icvOpenAVI_XINE ... end\n" );
 #endif
@@ -327,7 +327,7 @@ static int icvGrabFrameAVI_XINE( CvCaptureAVI_XINE* capture )
 }
 
 
-static const IplImage* icvRetrieveFrameAVI_XINE( CvCaptureAVI_XINE* capture )
+static const IplImage* icvRetrieveFrameAVI_XINE( CvCaptureAVI_XINE* capture, int )
 {
 #ifndef NDEBUG
 	fprintf( stderr, "(DEBUG) icvRetrieveFrameAVI_XINE ... start\n" );
@@ -410,7 +410,7 @@ static int icvOldSeekFrameAVI_XINE( CvCaptureAVI_XINE* capture, int f )
 	OPENCV_ASSERT ( capture->vo_port,
                         "icvOldSeekFrameAVI_XINE( CvCaptureAVI_XINE *, int )", "illegal capture->vo_port");
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream ) return 0;
 
@@ -479,7 +479,7 @@ static int icvSeekFrameAVI_XINE( CvCaptureAVI_XINE* capture, int f )
 	OPENCV_ASSERT ( capture->vo_port,
                         "icvSeekFrameAVI_XINE( CvCaptureAVI_XINE *, int )", "illegal capture->vo_port");
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream ) return 0;
 
@@ -532,12 +532,12 @@ static int icvSeekTimeAVI_XINE( CvCaptureAVI_XINE* capture, int t )
                         "icvSeekTimeAVI_XINE( CvCaptureAVI_XINE *, int )", "illegal capture->stream");
 	OPENCV_ASSERT ( capture->vo_port,
                         "icvSeekTimeAVI_XINE( CvCaptureAVI_XINE *, int )", "illegal capture->vo_port");
-			
+
 #ifndef NDEBUG
 	fprintf( stderr, "(DEBUG) icvSeekTimeAVI_XINE ... start\n" );
-#endif	
+#endif
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream ) return 0;
 
@@ -547,14 +547,14 @@ static int icvSeekTimeAVI_XINE( CvCaptureAVI_XINE* capture, int t )
 		if ( xine_play( capture->stream, 0, t ) )
 		{
 			capture->frame_number = ( int ) ( ( float ) t * capture->frame_rate / 1000 );
-#ifndef NDEBUG			
+#ifndef NDEBUG
 			fprintf( stderr, "(DEBUG) icvSeekFrameAVI_XINE ... end\n" );
 #endif
 			return 1;
 		}
 		else
 		{
-#ifndef NDEBUG		
+#ifndef NDEBUG
 			fprintf( stderr, "(DEBUG) icvSeekFrameAVI_XINE ... failed!\n" );
 #endif
 			return 0;
@@ -563,7 +563,7 @@ static int icvSeekTimeAVI_XINE( CvCaptureAVI_XINE* capture, int t )
 	else
 	{
 		int new_frame = ( int ) ( ( float ) t * capture->frame_rate / 1000 );
-#ifndef NDEBUG				
+#ifndef NDEBUG
 		fprintf( stderr, "(DEBUG) icvSeekFrameAVI_XINE ....end\n" );
 #endif
 		return icvOldSeekFrameAVI_XINE( capture, new_frame );
@@ -584,7 +584,7 @@ static int icvSeekRatioAVI_XINE( CvCaptureAVI_XINE* capture, double ratio )
 	OPENCV_ASSERT ( capture->vo_port,
                         "icvSeekRatioAVI_XINE( CvCaptureAVI_XINE *, double )", "illegal capture->vo_port");
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream ) return 0;
 
@@ -596,7 +596,7 @@ static int icvSeekRatioAVI_XINE( CvCaptureAVI_XINE* capture, double ratio )
 	// TODO: FIX IT, DOESN'T WORK PROPERLY, YET...!
 		int pos_t, pos_l, length;
 		xine_get_pos_length( capture->stream, &pos_l, &pos_t, &length );
-		fprintf( stderr, "ratio on GetProperty(): %n\n", pos_l );
+		fprintf( stderr, "ratio on GetProperty(): %d\n", pos_l );
 
 		/// use xinelib's seek functionality
 		if ( xine_play( capture->stream, (int)(ratio*(float)length), 0 ) )
@@ -646,7 +646,7 @@ static double icvGetPropertyAVI_XINE( CvCaptureAVI_XINE* capture, int property_i
 	OPENCV_ASSERT ( capture->bgr_frame,
                         "icvGetPropertyAVI_XINE( CvCaptureAVI_XINE *, int )", "illegal capture->bgr_frame");
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream || !capture->bgr_frame || !capture->xine || !capture->vo_port ) return 0
 
@@ -726,7 +726,7 @@ static int icvSetPropertyAVI_XINE( CvCaptureAVI_XINE* capture,
 	OPENCV_ASSERT ( capture->vo_port,
                         "icvSetPropertyAVI_XINE( CvCaptureAVI_XINE *, int, double )", "illegal capture->vo_port");
 
-// not needed tnx to asserts...				
+// not needed tnx to asserts...
 	// we need a valid capture context and it's stream to seek through
 //	if ( !capture || !capture->stream || !capture->bgr_frame || !capture->xine || !capture->vo_port ) return 0
 
@@ -753,7 +753,7 @@ static int icvSetPropertyAVI_XINE( CvCaptureAVI_XINE* capture,
 #ifndef NDEBUG
 			fprintf( stderr, "(DEBUG) icvSetPropertyAVI_XINE ... failed!\n" );
 #endif
-			
+
 			return 0;
 	}
 }
@@ -771,7 +771,7 @@ static CvCaptureAVI_XINE* icvCaptureFromFile_XINE( const char* filename )
 
 	OPENCV_ASSERT ( capture,
                         "cvCaptureFromFile_XINE( const char * )", "couldn't create capture");
-		
+
 	return capture;
 
 }
@@ -790,7 +790,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 protected:
 
     CvCaptureAVI_XINE* captureXINE;
@@ -817,9 +817,9 @@ bool CvCaptureAVI_XINE_CPP::grabFrame()
     return captureXINE ? icvGrabFrameAVI_XINE( captureXINE ) != 0 : false;
 }
 
-IplImage* CvCaptureAVI_XINE_CPP::retrieveFrame()
+IplImage* CvCaptureAVI_XINE_CPP::retrieveFrame(int)
 {
-    return captureXINE ? (IplImage*)icvRetrieveFrameAVI_XINE( captureXINE ) : 0;
+    return captureXINE ? (IplImage*)icvRetrieveFrameAVI_XINE( captureXINE, 0 ) : 0;
 }
 
 double CvCaptureAVI_XINE_CPP::getProperty( int propId )

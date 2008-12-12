@@ -57,7 +57,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     void init();
@@ -109,7 +109,7 @@ bool CvCaptureCAM_DShow::grabFrame()
 }
 
 
-IplImage* CvCaptureCAM_DShow::retrieveFrame()
+IplImage* CvCaptureCAM_DShow::retrieveFrame(int)
 {
     if( !frame || VI.getWidth(index) != frame->width || VI.getHeight(index) != frame->height )
     {
@@ -117,7 +117,7 @@ IplImage* CvCaptureCAM_DShow::retrieveFrame()
         int w = VI.getWidth(index), h = VI.getHeight(index);
         frame = cvCreateImage( cvSize(w,h), 8, 3 );
     }
-    
+
     VI.getPixels( index, (uchar*)frame->imageData, false, true );
     return frame;
 }
@@ -139,7 +139,7 @@ double CvCaptureCAM_DShow::getProperty( int property_id )
 bool CvCaptureCAM_DShow::setProperty( int property_id, double value )
 {
     int width = 0, height = 0;
-    
+
     switch( property_id )
     {
     case CV_CAP_PROP_FRAME_WIDTH:

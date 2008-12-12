@@ -71,7 +71,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     C1394Camera* camera();
@@ -92,7 +92,7 @@ protected:
 };
 
 // CMU 1394 camera stuff.
-// This firewire capability added by Philip Gruebele (pgruebele@cox.net) 
+// This firewire capability added by Philip Gruebele (pgruebele@cox.net)
 // and modified by Roman Stanchak (rstanchak@yahoo.com).
 // For this to work you need to install the CMU firewire DCAM drivers,
 // located at http://www-2.cs.cmu.edu/~iwan/1394/.
@@ -119,7 +119,7 @@ C1394Camera     *CMU_theCamera = 0;
 #define CV_CAP_IEEE1394_COLOR_RGB 5
 
 #define CV_CAP_IEEE1394_SIZE_160X120 0
-#define CV_CAP_IEEE1394_SIZE_320X240 1 
+#define CV_CAP_IEEE1394_SIZE_320X240 1
 #define CV_CAP_IEEE1394_SIZE_640X480 2
 #define CV_CAP_IEEE1394_SIZE_800X600 3
 #define CV_CAP_IEEE1394_SIZE_1024X768 4
@@ -139,7 +139,7 @@ static char CV_CAP_IEEE1394_FORMAT[7][6] =
     { 2,  2, -1,  2, -1,  2}  // 1600x1200
 };
 
-// given color, size, output corresponding mode 
+// given color, size, output corresponding mode
 static char CV_CAP_IEEE1394_MODE[7][6] =
 {
     {-1, -1,  0, -1, -1, -1}, // 160x120
@@ -155,12 +155,12 @@ static char CV_CAP_IEEE1394_MODE[7][6] =
 static char CV_CAP_IEEE1394_COLOR[2][8] =
 {
     {
-    CV_CAP_IEEE1394_COLOR_YUV444, 
-    CV_CAP_IEEE1394_COLOR_YUV422, 
-    CV_CAP_IEEE1394_COLOR_YUV411, 
+    CV_CAP_IEEE1394_COLOR_YUV444,
+    CV_CAP_IEEE1394_COLOR_YUV422,
+    CV_CAP_IEEE1394_COLOR_YUV411,
     CV_CAP_IEEE1394_COLOR_YUV422,
     CV_CAP_IEEE1394_COLOR_RGB,
-    CV_CAP_IEEE1394_COLOR_MONO, 
+    CV_CAP_IEEE1394_COLOR_MONO,
     CV_CAP_IEEE1394_COLOR_MONO16
     },
     {
@@ -228,7 +228,7 @@ int CvCaptureCAM_CMU::getDepth()
 // return the number of channels for camera
 int CvCaptureCAM_CMU::getNChannels()
 {
-    C1394Camera* cmucam = camera();	
+    C1394Camera* cmucam = camera();
     int format = cmucam->GetVideoFormat();
     int mode = cmucam->GetVideoMode();
 
@@ -237,7 +237,7 @@ int CvCaptureCAM_CMU::getNChannels()
         return 1;
     }
 
-    // irrelvant to nchannels 
+    // irrelvant to nchannels
     if( format > 1 )
         format = 1;
 
@@ -260,7 +260,7 @@ int CvCaptureCAM_CMU::getNChannels()
 bool CvCaptureCAM_CMU::open( int _index )
 {
     close();
-    
+
     // if first time, then allocate all available cameras
     if( CMU_numCameras == 0 )
     {
@@ -310,7 +310,7 @@ bool CvCaptureCAM_CMU::open( int _index )
             }
         }
 
-        // no empty camera found 
+        // no empty camera found
         if (_index==-1)
             throw 1;
 
@@ -319,7 +319,7 @@ bool CvCaptureCAM_CMU::open( int _index )
 
         if (CMU_theCamera[_index].InitCamera() != CAM_SUCCESS)
             throw 3;
-        
+
         // set initial format -- try to pick best frame rate first, then color, then size
         bool found_format = false;
         for (int rate=5; rate>=0 && !found_format; rate--)
@@ -411,7 +411,7 @@ bool CvCaptureCAM_CMU::grabFrame()
 	}
 }*/
 
-IplImage* CvCaptureCAM_CMU::retrieveFrame()
+IplImage* CvCaptureCAM_CMU::retrieveFrame(int)
 {
     C1394Camera* cmucam = camera();
     if( !cmucam )
@@ -460,7 +460,7 @@ bool CvCaptureCAM_CMU::setMode(int mode)
     cmucam->StopImageAcquisition();
     cmucam->SetVideoMode(mode);
     cmucam->StartImageAcquisition();
-    return true;	
+    return true;
 }
 
 bool CvCaptureCAM_CMU::setFrameRate(int rate)
@@ -476,7 +476,7 @@ bool CvCaptureCAM_CMU::setFrameRate(int rate)
     cmucam->StopImageAcquisition();
     cmucam->SetVideoFrameRate(rate);
     cmucam->StartImageAcquisition();
-    return true;	
+    return true;
 }
 
 bool CvCaptureCAM_CMU::setFormat(int format)
@@ -489,7 +489,7 @@ bool CvCaptureCAM_CMU::setFormat(int format)
     cmucam->StopImageAcquisition();
     cmucam->SetVideoFormat(format);
     cmucam->StartImageAcquisition();
-    return true;	
+    return true;
 }
 
 bool CvCaptureCAM_CMU::setProperty( int property_id, double value )

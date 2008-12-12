@@ -77,8 +77,8 @@ struct CvCapture
     virtual double getProperty(int) { return 0; }
     virtual bool setProperty(int, double) { return 0; }
     virtual bool grabFrame() { return true; }
-    virtual IplImage* retrieveFrame() { return 0; }
-    virtual IplImage* queryFrame() { return grabFrame() ? retrieveFrame() : 0; }
+    virtual IplImage* retrieveFrame(int) { return 0; }
+    virtual IplImage* queryFrame() { return grabFrame() ? retrieveFrame(0) : 0; }
 };
 
 /*************************** CvVideoWriter structure ****************************/
@@ -110,6 +110,10 @@ CvCapture * cvCreateCameraCapture_V4L( int index );
 
 #ifdef HAVE_DC1394
 CvCapture * cvCreateCameraCapture_DC1394( int index );
+#endif
+
+#ifdef HAVE_DC1394_2
+CvCapture * cvCreateCameraCapture_DC1394_2( int index );
 #endif
 
 #ifdef HAVE_MIL
