@@ -1230,22 +1230,23 @@ int CvTS::run( int argc, char** argv )
     // 1. parse command line options
     for( i = 1; i < argc; i++ )
     {
-        if( argv[i] && argv[i][0] != '-' )
+        if( strcmp( argv[i], "-h" ) == 0 || strcmp( argv[i], "--help" ) == 0 )
         {
-            config_name = argv[i];
-            break;
+            print_help();
+            return 0;
         }
-        else
-        {
-            if( strcmp( argv[i], "-w" ) == 0 )
-                write_params = 1;
-            else if( strcmp( argv[i], "-t" ) == 0 )
-                params.test_mode = TIMING_MODE;
-            else if( strcmp( argv[i], "-l" ) == 0 )
-                list_tests = 1;
-            else if( strcmp( argv[i], "-d" ) == 0 )
-                set_data_path(argv[++i]);
-        }
+        else if( strcmp( argv[i], "-f" ) == 0 )
+            config_name = argv[++i];
+        else if( strcmp( argv[i], "-w" ) == 0 )
+            write_params = 1;
+        else if( strcmp( argv[i], "-t" ) == 0 )
+            params.test_mode = TIMING_MODE;
+        else if( strcmp( argv[i], "-O0" ) == 0 || strcmp( argv[i], "-O1" ) == 0 )
+            params.use_optimized = argv[i][2] - '0';
+        else if( strcmp( argv[i], "-l" ) == 0 )
+            list_tests = 1;
+        else if( strcmp( argv[i], "-d" ) == 0 )
+            set_data_path(argv[++i]);
     }
 
     if( write_params )
@@ -1347,15 +1348,8 @@ int CvTS::run( int argc, char** argv )
     // 5. setup all the neccessary handlers and print header
     set_handlers( !params.debug_mode );
 
-    if( params.use_optimized >= 0 )
-    {
-        printf( LOG, params.use_optimized ? "Loading optimized plugins..." : "Unloading optimized plugins..." );
-        if( params.use_optimized == 0 )
-            cvUseOptimized(0);
-        /*else
-            cvUseOptimized(1); // this is done anyway, so we comment it off
-        */
-    }
+    if( params.use_optimized == 0 )
+        cvUseOptimized(0);
 
     if( !params.skip_header )
         print_summary_header( SUMMARY + LOG + CONSOLE + CSV );
@@ -1441,6 +1435,21 @@ _exit_:
 }
 
 
+void CvTS::print_help()
+{
+    ::printf(
+        "Usage: <test_executable> [{-h|--help}][-l] [-w] [-t] [-f <config_name>] [-d <data_path>] [-O{0|1}]\n\n"
+        "-d - specify the test data path\n\n"
+        "-f - use parameters from the provided config XML/YAML file instead of the default parameters\n\n"
+        "-h or --help - print this help information\n\n"
+        "-l - list all the registered tests or subset of the tests, selected in the config file, and exit\n\n"
+        "-O{0|1} - disable/enable on-fly detection of IPP and other supported optimized libs. It's enabled by default\n\n"
+        "-t - switch to the performance testing mode instead of the default algorithmic/correctness testing mode\n\n"
+        "-w - write default parameters of the algorithmic or performance (when -t is passed) tests to the specifed config file (see -f) and exit\n\n"
+        );
+}
+
+
 #ifdef WIN32
 const char* default_data_path = "../tests/cv/testdata/";
 #else
@@ -1466,7 +1475,8 @@ int CvTS::read_params( CvFileStorage* fs )
     params.test_filter_pattern = cvReadStringByName( fs, node, params.test_filter_mode == CHOOSE_FUNCTIONS ?
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
-    params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
+    if( params.use_optimized < 0 )
+        params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
 #ifndef WIN32
     if( !params.data_path || !params.data_path[0] )
     {
