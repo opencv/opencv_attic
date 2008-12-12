@@ -53,10 +53,12 @@ void CV_FeatureTreeTest::run( int start_from ) {
   cvFindFeatures(tr, pts, results, dist, k, emax);
 
   int correct_matches = 0;
+  { // Aisle "j" to avoid error on MSVC6
   for (int j = 0; j < points; ++j) {
     int fi = (int)cvGetReal2D(results, j, 0);
     if (fmap[j] == fi)
       ++correct_matches;
+  }
   }
 
   double correct_perc = correct_matches / (double)points;

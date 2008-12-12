@@ -84,7 +84,7 @@ void CV_CannyTest::get_test_array_types_and_sizes( int test_case_idx,
 
     aperture_size = cvTsRandInt(rng) % 2 ? 5 : 3;
     thresh_range = aperture_size == 3 ? 300 : 1000;
-    
+
     threshold1 = cvTsRandReal(rng)*thresh_range;
     threshold2 = cvTsRandReal(rng)*thresh_range*0.3;
 
@@ -174,7 +174,7 @@ icvTsCanny( const CvMat* src, CvMat* dst,
         const short* _dx = (short*)(dx->data.ptr + dx->step*y);
         const short* _dy = (short*)(dy->data.ptr + dy->step*y);
         float* _mag = (float*)(mag->data.ptr + mag->step*y);
-        
+
         for( x = 0; x < width; x++ )
         {
             float mval = use_true_gradient ?
@@ -190,7 +190,7 @@ icvTsCanny( const CvMat* src, CvMat* dst,
         const short* _dx = (short*)(dx->data.ptr + dx->step*y);
         const short* _dy = (short*)(dy->data.ptr + dy->step*y);
         float* _mag = (float*)(mag->data.ptr + mag->step*y);
-        
+
         for( x = 0; x < width; x++ )
         {
             int y1 = 0, y2 = 0, x1 = 0, x2 = 0;
@@ -229,7 +229,7 @@ icvTsCanny( const CvMat* src, CvMat* dst,
             if( (unsigned)y2 < (unsigned)height && (unsigned)x2 < (unsigned)width )
                 c = (float)fabs((double)mag->data.fl[y2*width+x2]);
 
-            if( (a > b || a == b && (x1 == x+1 && y1 == y || x1 == x && y1 == y+1)) && a > c )
+            if( (a > b || (a == b && ((x1 == x+1 && y1 == y) || (x1 == x && y1 == y+1)))) && a > c )
                 ;
             else
                 _mag[x] = -a;

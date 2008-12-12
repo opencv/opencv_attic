@@ -1,31 +1,21 @@
 # ----------------------------------------------------------------------------
-#  CMake file for highgui. See root CMakeLists.txt 
+#  CMake file for highgui. See root CMakeLists.txt
 #   Some parts taken from version of Hartmut Seichter, HIT Lab NZ.
 #   Jose Luis Blanco, 2008
 # ----------------------------------------------------------------------------
 project(highgui)
 
-# List of C++ files:
-
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR} 
-    ${CMAKE_SOURCE_DIR}/cxcore/include 
-    ${CMAKE_SOURCE_DIR}/cv/include
-    )
-
 if(MSVC)
-    include_directories(
-        ${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
-    )
-endif()    
+    include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+endif()
 
-file(GLOB grfmt_hdrs grfmt*.h)    
+file(GLOB grfmt_hdrs grfmt*.h)
 file(GLOB grfmt_srcs grfmt*.cpp)
 set(grfmt_hdrs bitstrm.h ${grfmt_hdrs})
 set(grfmt_srcs bitstrm.cpp ${grfmt_srcs})
-    
+
 source_group("Src\\grfmts" FILES ${grfmt_hdrs} ${grfmt_srcs})
-		
+
 set(highgui_srcs
     cvcap.cpp
     cvcap_images.cpp
@@ -37,8 +27,8 @@ set(highgui_srcs
     )
 
 set(highgui_hdrs _highgui.h utils.h)
-set(highgui_ext_hdrs highgui.h)
-    
+set(highgui_ext_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h)
+
 if(WIN32)
     set(highgui_srcs ${highgui_srcs} window_w32.cpp cvcap_vfw.cpp cvcap_cmu.cpp cvcap_w32.cpp cvcap_dshow.cpp)
     if(MSVC)
@@ -47,15 +37,19 @@ if(WIN32)
     if(HAVE_MIL)
         set(highgui_srcs ${highgui_srcs} cvcap_mil.cpp)
     endif()
-endif()    
+endif()
 
 if(UNIX)
     if(HAVE_GTK)
-        set(highgui_srcs ${highgui_srcs} window_gtk.cpp)	
+        set(highgui_srcs ${highgui_srcs} window_gtk.cpp)
     endif()
 
     if(HAVE_XINE)
         set(highgui_srcs ${highgui_srcs} cvcap_xine.cpp)
+    endif()
+
+    if(HAVE_DC1394_2)
+        set(highgui_srcs ${highgui_srcs} cvcap_dc1394_v2.cpp)
     endif()
 
     if(HAVE_DC1394)
@@ -95,7 +89,15 @@ if(UNIX)
             add_definitions(-DHAVE_JASPER)
             include_directories(${JASPER_INCLUDE_DIR})
         endif()
-    endif()        
+    endif()
+
+    foreach(P ${HIGHGUI_INCLUDE_DIRS})
+        include_directories(${P})
+    endforeach()
+
+    foreach(P ${HIGHGUI_LIBRARY_DIRS})
+        link_directories(${P})
+    endforeach()
 endif()
 
 if(APPLE)
@@ -107,10 +109,11 @@ source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
 if(MSVC)
-    link_directories("${CMAKE_SOURCE_DIR}/otherlibs/_graphics/lib")
-    link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib")	
-    link_directories("${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib/${ConfigurationName}")
-endif()    
+    link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib"
+        "${CMAKE_BINARY_DIR}/3rdparty/lib"
+        "${CMAKE_BINARY_DIR}/3rdparty/lib/${ConfigurationName}"
+        )
+endif()
 
 set(lib_srcs ${highgui_srcs} ${grfmt_srcs})
 
@@ -130,19 +133,9 @@ if(WIN32 AND MSVC)
                 PROPERTIES
                 COMPILE_FLAGS "/Yu${pch_header}"
                 )
-        endif()        
+        endif()
     endforeach()
-    set(lib_srcs ${lib_srcs} precomp.cpp)
-endif()
-
-if(UNIX)
-    foreach(P ${HIGHGUI_INCLUDE_DIRS})
-        include_directories(${P})
-    endforeach()
-
-    foreach(P ${HIGHGUI_LIBRARY_DIRS})
-        link_directories(${P})
-    endforeach()
+    #set(lib_srcs ${lib_srcs} precomp.cpp)  # Already added above...
 endif()
 
 # ----------------------------------------------------------------------------------
@@ -163,16 +156,16 @@ set_target_properties(${the_target} PROPERTIES
 
 # Additional target properties
 set_target_properties(${the_target} PROPERTIES
-	DEBUG_POSTFIX "d"
+	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-	DEFINE_SYMBOL "CVAPI_EXPORTS"	
+	DEFINE_SYMBOL "CVAPI_EXPORTS"
 	LINK_INTERFACE_LIBRARIES ""
 	)
 
-if(WIN32)
+if(MSVC)
 	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib")
-endif(WIN32)
+endif(MSVC)
 
 # Dependencies of this target:
 add_dependencies(${the_target} cv cxcore)
@@ -182,12 +175,12 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRA
 
 if(WIN32)
     add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
-	target_link_libraries(${the_target} comctl32 gdi32 videoinput)
+	target_link_libraries(${the_target} comctl32 gdi32)
 
 	if (MSVC)
-		target_link_libraries(${the_target} vfw32)
+		target_link_libraries(${the_target} vfw32 videoinput)
 	endif()
-	
+
 	if(MINGW)
 		target_link_libraries(${the_target} vfw32 winmm)
 	endif()
@@ -204,5 +197,5 @@ install(TARGETS ${the_target}
     )
 
 if(UNIX)
-    install(FILES highgui.h DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
+    install(FILES ${highgui_ext_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
 endif()

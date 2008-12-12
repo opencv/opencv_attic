@@ -52,7 +52,7 @@
 class GrFmtJpegReader : public GrFmtReader
 {
 public:
-    
+
     GrFmtJpegReader( const char* filename );
     ~GrFmtJpegReader();
 
@@ -71,144 +71,25 @@ protected:
 class GrFmtJpegWriter : public GrFmtWriter
 {
 public:
-    
+
     GrFmtJpegWriter( const char* filename );
     ~GrFmtJpegWriter();
 
     bool  WriteImage( const uchar* data, int step,
                       int width, int height, int depth, int channels );
 };
-
-#else
-
-/* hand-crafted implementation */
-
-class RJpegBitStream : public RMBitStream
-{
-public:
-    RMByteStream  m_low_strm;
-    
-    RJpegBitStream();
-    ~RJpegBitStream();
-
-    virtual bool  Open( const char* filename );
-    virtual void  Close();
-
-    void  Flush(); // flushes high-level bit stream
-    void  AlignOnByte();
-    int   FindMarker();
-
-protected:
-    virtual void  ReadBlock();
-};
-
-
-//////////////////// JPEG reader /////////////////////
-
-class GrFmtJpegReader : public GrFmtReader
-{
-public:
-    
-    GrFmtJpegReader( const char* filename );
-    ~GrFmtJpegReader();
-
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
-
-protected:
-
-    int   m_offset; // offset of first scan
-    int   m_version; // JFIF version
-    int   m_planes; // 3 (YCrCb) or 1 (Gray)
-    int   m_precision; // 8 or 12-bit per sample
-    int   m_type; // SOF type
-    int   m_MCUs; // MCUs in restart interval
-    int   m_ss, m_se, m_ah, m_al; // progressive JPEG parameters
-    
-    // information about each component
-    struct cmp_info
-    {
-        char h;  // horizontal sampling factor
-        char v;  // vertical   sampling factor
-        char tq; // quantization table index
-        char td, ta; // DC & AC huffman tables
-        int  dc_pred; // DC predictor
-    };
-    
-    cmp_info m_ci[3];
-
-    int     m_tq[4][64];
-    bool    m_is_tq[4];
-    
-    short*  m_td[4];
-    bool    m_is_td[4];
-    
-    short*  m_ta[4];
-    bool    m_is_ta[4];
-    
-    RJpegBitStream  m_strm;
-
-protected:
-
-    bool  LoadQuantTables( int length );
-    bool  LoadHuffmanTables( int length );
-    void  ProcessScan( int* idx, int ns, uchar* data, int step, int color );
-    void  ResetDecoder();
-    void  GetBlock( int* block, int c );
-};
-
-
-//////////////////// JPEG-specific output bitstream ///////////////////////
-
-class WJpegBitStream : public WMBitStream
-{
-public:
-    WMByteStream  m_low_strm;
-    
-    WJpegBitStream();
-    ~WJpegBitStream();
-
-    virtual void  Flush();
-    virtual bool  Open( const char* filename );
-    virtual void  Close();
-
-protected:
-    virtual void  WriteBlock();
-};
-
-
-//////////////////// JPEG reader /////////////////////
-
-class GrFmtJpegWriter : public GrFmtWriter
-{
-public:
-    
-    GrFmtJpegWriter( const char* filename );
-    ~GrFmtJpegWriter();
-
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
-
-protected:
-
-    WJpegBitStream  m_strm;
-};
-
-#endif /* HAVE_JPEG */
-
 
 // JPEG filter factory
 class GrFmtJpeg : public GrFmtFilterFactory
 {
 public:
-    
+
     GrFmtJpeg();
     ~GrFmtJpeg();
 
     GrFmtReader* NewReader( const char* filename );
     GrFmtWriter* NewWriter( const char* filename );
 };
-
+#endif
 
 #endif/*_GRFMT_JPEG_H_*/

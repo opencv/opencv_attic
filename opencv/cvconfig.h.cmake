@@ -28,6 +28,9 @@
 /* libdc1394 0.9.4 or 0.9.5 */
 #cmakedefine HAVE_DC1394_095
 
+/* IEEE1394 capturing support - libdc1394 v2.x */
+#cmakedefine HAVE_DC1394_2
+
 /* FFMpeg video library */
 #cmakedefine  HAVE_FFMPEG
 

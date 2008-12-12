@@ -177,8 +177,7 @@ int CvMat_dataOrder_get(CvMat * m){
 	return 0;
 }
 int CvMat_imageSize_get(CvMat * m){
-	int step = m->step ? m->step : 
-	  step = CV_ELEM_SIZE(m->type) * m->cols;
+	int step = m->step ? m->step : CV_ELEM_SIZE(m->type) * m->cols;
 	return step*m->rows;
 }
 int CvMat_widthStep_get(CvMat * m){

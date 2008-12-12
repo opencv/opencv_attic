@@ -102,7 +102,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     void init();
@@ -175,7 +175,7 @@ bool CvCaptureAVI_VFW::open( const char* filename )
                 size.width = aviinfo.rcFrame.right - aviinfo.rcFrame.left;
                 size.height = aviinfo.rcFrame.bottom - aviinfo.rcFrame.top;
                 BITMAPINFOHEADER bmih = icvBitmapHeader( size.width, size.height, 24 );
-                
+
                 film_range.start_index = (int)aviinfo.dwStart;
                 film_range.end_index = film_range.start_index + (int)aviinfo.dwLength;
                 fps = (double)aviinfo.dwRate/aviinfo.dwScale;
@@ -198,7 +198,7 @@ bool CvCaptureAVI_VFW::grabFrame()
     return bmih != 0;
 }
 
-IplImage* CvCaptureAVI_VFW::retrieveFrame()
+IplImage* CvCaptureAVI_VFW::retrieveFrame(int)
 {
     if( avistream && bmih )
     {
@@ -258,7 +258,7 @@ bool CvCaptureAVI_VFW::setProperty( int property_id, double value )
                 pos = cvRound(value*fps*0.001);
                 break;
             case CV_CAP_PROP_POS_AVI_RATIO:
-                pos = cvRound(value*(film_range.end_index - 
+                pos = cvRound(value*(film_range.end_index -
                                      film_range.start_index) +
                               film_range.start_index);
                 break;
@@ -301,7 +301,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double) { return false; }
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     void init();
@@ -339,7 +339,7 @@ void CvCaptureCAM_VFW::closeHIC()
 
 
 LRESULT PASCAL CvCaptureCAM_VFW::frameCallback( HWND hWnd, VIDEOHDR* hdr )
-{ 
+{
     CvCaptureCAM_VFW* capture = 0;
 
     if (!hWnd) return FALSE;
@@ -347,8 +347,8 @@ LRESULT PASCAL CvCaptureCAM_VFW::frameCallback( HWND hWnd, VIDEOHDR* hdr )
     capture = (CvCaptureCAM_VFW*)capGetUserData(hWnd);
     capture->hdr = hdr;
 
-    return (LRESULT)TRUE; 
-} 
+    return (LRESULT)TRUE;
+}
 
 
 // Initialize camera input
@@ -359,17 +359,17 @@ bool CvCaptureCAM_VFW::open( int wIndex )
     HWND hWndC = 0;
 
     close();
-    
+
     if( (unsigned)wIndex >= 10 )
         wIndex = 0;
 
-    for( ; wIndex < 10; wIndex++ ) 
+    for( ; wIndex < 10; wIndex++ )
     {
-        if( capGetDriverDescription( wIndex, szDeviceName, 
-            sizeof (szDeviceName), szDeviceVersion, 
-            sizeof (szDeviceVersion))) 
+        if( capGetDriverDescription( wIndex, szDeviceName,
+            sizeof (szDeviceName), szDeviceVersion,
+            sizeof (szDeviceVersion)))
         {
-            hWndC = capCreateCaptureWindow ( "My Own Capture Window", 
+            hWndC = capCreateCaptureWindow ( "My Own Capture Window",
                 WS_POPUP | WS_CHILD, 0, 0, 320, 240, 0, 0);
             if( capDriverConnect (hWndC, wIndex))
                 break;
@@ -377,19 +377,19 @@ bool CvCaptureCAM_VFW::open( int wIndex )
             hWndC = 0;
         }
     }
-    
+
     if( hWndC )
     {
         capWnd = hWndC;
         hdr = 0;
         hic = 0;
         fourcc = (DWORD)-1;
-        
+
         memset( &caps, 0, sizeof(caps));
         capDriverGetCaps( hWndC, &caps, sizeof(&caps));
         ::MoveWindow( hWndC, 0, 0, 320, 240, TRUE );
         capSetUserData( hWndC, (size_t)this );
-        capSetCallbackOnFrame( hWndC, frameCallback ); 
+        capSetCallbackOnFrame( hWndC, frameCallback );
         CAPTUREPARMS p;
         capCaptureGetSetup(hWndC,&p,sizeof(CAPTUREPARMS));
         p.dwRequestMicroSecPerFrame = 66667/2;
@@ -406,7 +406,7 @@ void CvCaptureCAM_VFW::close()
 {
     if( capWnd )
     {
-        capSetCallbackOnFrame( capWnd, NULL ); 
+        capSetCallbackOnFrame( capWnd, NULL );
         capDriverDisconnect( capWnd );
         DestroyWindow( capWnd );
         closeHIC();
@@ -427,20 +427,20 @@ bool CvCaptureCAM_VFW::grabFrame()
 }
 
 
-IplImage* CvCaptureCAM_VFW::retrieveFrame()
+IplImage* CvCaptureCAM_VFW::retrieveFrame(int)
 {
     BITMAPINFO vfmt;
     memset( &vfmt, 0, sizeof(vfmt));
     BITMAPINFOHEADER& vfmt0 = vfmt.bmiHeader;
     int sz, prevWidth, prevHeight;
-    
+
     if( !capWnd )
         return 0;
-        
+
     sz = capGetVideoFormat( capWnd, &vfmt, sizeof(vfmt));
     prevWidth = frame ? frame->width : 0;
     prevHeight = frame ? frame->height : 0;
-        
+
     if( !hdr || hdr->lpData == 0 || sz == 0 )
         return 0;
 
@@ -536,7 +536,7 @@ public:
 protected:
     void init();
     bool createStreams( CvSize frameSize, bool isColor );
-    
+
     PAVIFILE      avifile;
     PAVISTREAM    compressed;
     PAVISTREAM    uncompressed;
@@ -581,7 +581,7 @@ struct BITMAPINFO_8Bit
 bool CvVideoWriter_VFW::open( const char* filename, int _fourcc, double _fps, CvSize frameSize, bool isColor )
 {
     close();
-    
+
     icvInitCapture_VFW();
     if( AVIFileOpen( &avifile, filename, OF_CREATE | OF_WRITE, 0 ) == AVIERR_OK )
     {
@@ -628,15 +628,15 @@ bool CvVideoWriter_VFW::createStreams( CvSize frameSize, bool isColor )
     {
         AVICOMPRESSOPTIONS copts, *pcopts = &copts;
         copts.fccType = streamtypeVIDEO;
-        copts.fccHandler = fourcc != -1 ? fourcc : 0; 
-        copts.dwKeyFrameEvery = 1; 
-        copts.dwQuality = (DWORD)-1; 
-        copts.dwBytesPerSecond = 0; 
-        copts.dwFlags = AVICOMPRESSF_VALID; 
-        copts.lpFormat = &bmih; 
+        copts.fccHandler = fourcc != -1 ? fourcc : 0;
+        copts.dwKeyFrameEvery = 1;
+        copts.dwQuality = (DWORD)-1;
+        copts.dwBytesPerSecond = 0;
+        copts.dwFlags = AVICOMPRESSF_VALID;
+        copts.lpFormat = &bmih;
         copts.cbFormat = (isColor ? sizeof(BITMAPINFOHEADER) : sizeof(bmih));
-        copts.lpParms = 0; 
-        copts.cbParms = 0; 
+        copts.lpParms = 0;
+        copts.cbParms = 0;
         copts.dwInterleaveEvery = 0;
 
         if( fourcc != -1 || AVISaveOptions( 0, 0, 1, &uncompressed, &pcopts ) == TRUE )

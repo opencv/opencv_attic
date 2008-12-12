@@ -56,8 +56,7 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 	int depth = CV_MAT_DEPTH(self->type);
 	int cn = CV_MAT_CN(self->type);
 
-	int step = self->step ? self->step : 
-	  step = CV_ELEM_SIZE(self->type) * self->cols;
+	int step = self->step ? self->step : CV_ELEM_SIZE(self->type) * self->cols;
 
 	if (depth == CV_8U && cn==3){
 		// RGB case
@@ -124,25 +123,24 @@ void CvMat_imageData_set(CvMat * self, PyObject* object)
 	else
 	{
 	  // make some noise
-	  SendErrorToPython (SWIG_TypeError, 
-                       "CvMat_imageData_set", 
+	  SendErrorToPython (SWIG_TypeError,
+                       "CvMat_imageData_set",
                        "cannot convert string data to this image format",
                        __FILE__, __LINE__, NULL);
 	}
 }
 
 /// Accessor to convert the imageData into a Python string.
-PyObject* CvMat_imageData_get(CvMat * self) 
+PyObject* CvMat_imageData_get(CvMat * self)
 {
 	if (!self->data.ptr)
 	{
 		PyErr_SetString(PyExc_TypeError, "Data pointer of CvMat is NULL");
 		return NULL;
 	}
-	
- 
-	int step = self->step ? self->step : 
-	  step = CV_ELEM_SIZE(self->type) * self->cols;
+
+
+	int step = self->step ? self->step : CV_ELEM_SIZE(self->type) * self->cols;
 	return PyString_FromStringAndSize((const char *)self->data.ptr, self->rows*step);
 }
 

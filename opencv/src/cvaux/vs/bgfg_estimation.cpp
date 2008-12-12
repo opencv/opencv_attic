@@ -66,8 +66,8 @@ protected:
     void*           m_pFGParam; /* Foreground parameters. */
     CvFGDStatModelParams        m_ParamFGD;
     CvGaussBGStatModelParams    m_ParamMOG;
-    char*                       m_SaveName;
-    char*                       m_LoadName;
+    const char*                       m_SaveName;
+    const char*                       m_LoadName;
 public:
     virtual void SaveState(CvFileStorage* )
     {

@@ -55,7 +55,7 @@ class CvCaptureCAM_TYZX : public CvCapture
 public:
     CvCaptureCAM_TYZX() { index = -1; image = 0; }
     virtual ~CvCaptureCAM_TYZX() { close(); }
-    
+
     virtual bool open( int _index );
     virtual void close();
     bool isOpened() { return index >= 0; }
@@ -63,7 +63,7 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double) { return false; }
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     virtual bool allocateImage();
@@ -79,23 +79,23 @@ int         g_tyzx_refcount = 0;
 bool CvCaptureCAM_TYZX::open( int _index )
 {
 	close();
-    
+
     if(!g_tyzx_camera){
 		g_tyzx_camera = new DeepSeaIF;
 		if(!g_tyzx_camera) return false;
-	
+
 		if(!g_tyzx_camera->initializeSettings(NULL)){
 			delete g_tyzx_camera;
 			return false;
 		}
-	
+
 		// set initial sensor mode
 		// TODO is g_tyzx_camera redundant?
 		g_tyzx_camera->setSensorMode(g_tyzx_camera->getSensorMode());
 
 		// mm's
 		g_tyzx_camera->setZUnits((int) 1000);
-		
+
 	    g_tyzx_camera->enableLeftColor(true);
 		g_tyzx_camera->setColorMode(DeepSeaIF::BGRcolor);
 		g_tyzx_camera->setDoIntensityCrop(true);
@@ -158,7 +158,7 @@ bool CvCaptureCAM_TYZX::allocateImage()
 }
 
 /// Copy 'grabbed' image into capture buffer and return it.
-IplImage * CvCaptureCAM_TYZX::retrieveFrame()
+IplImage * CvCaptureCAM_TYZX::retrieveFrame(int)
 {
 	if(!isOpened() || !g_tyzx_camera) return 0;
 
@@ -201,7 +201,7 @@ double CvCaptureCAM_TYZX::getProperty(int property_id)
 		default:
 			size = cvSize(0,0);
 	}
-	
+
 	switch( property_id )
 	{
 		case CV_CAP_PROP_FRAME_WIDTH:
@@ -209,7 +209,7 @@ double CvCaptureCAM_TYZX::getProperty(int property_id)
 		case CV_CAP_PROP_FRAME_HEIGHT:
 			return size.height;
 	}
-	
+
 	return 0;
 }
 

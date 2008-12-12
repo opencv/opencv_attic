@@ -95,7 +95,7 @@ static void cvTsSimpleSeqShiftAndCopy( CvTsSimpleSeq* seq, int from_idx, int to_
 
     if( from_idx == to_idx )
         return;
-    assert( from_idx > to_idx && !elem || from_idx < to_idx && elem );
+    assert( (from_idx > to_idx && !elem) || (from_idx < to_idx && elem) );
 
     if( from_idx < seq->count )
     {
@@ -1708,10 +1708,10 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
 
             vtx3 = cvGetGraphVtx( graph, idx );
 
-            CV_TS_SEQ_CHECK_CONDITION( CV_IS_SET_ELEM(vtx3) && vtx3->flags == idx &&
-                vtx3->first == 0 || idx == idx0 && vtx3 == vtx2 &&
+            CV_TS_SEQ_CHECK_CONDITION( (CV_IS_SET_ELEM(vtx3) && vtx3->flags == idx &&
+                vtx3->first == 0) || (idx == idx0 && vtx3 == vtx2 &&
                 (!pass_data || pure_vtx_size == 0 ||
-                memcmp(vtx3 + 1, vtx + 1, pure_vtx_size) == 0),
+                memcmp(vtx3 + 1, vtx + 1, pure_vtx_size) == 0)),
                 "The added element is not correct" );
 
             CV_TS_SEQ_CHECK_CONDITION( (!first_free || first_free == (CvSetElem*)vtx3) &&
@@ -1838,8 +1838,8 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
 
             //edge3 = (CvGraphEdge*)cvGetSetElem( graph->edges, idx );
             CV_TS_SEQ_CHECK_CONDITION( res == 1 && edge2 != 0 && CV_IS_SET_ELEM(edge2) &&
-                (edge2->vtx[0] == vtx && edge2->vtx[1] == vtx2 ||
-                !CV_IS_GRAPH_ORIENTED(graph) && edge2->vtx[0] == vtx2 && edge2->vtx[1] == vtx) &&
+                ((edge2->vtx[0] == vtx && edge2->vtx[1] == vtx2) ||
+                (!CV_IS_GRAPH_ORIENTED(graph) && edge2->vtx[0] == vtx2 && edge2->vtx[1] == vtx)) &&
                 (!pass_data || pure_edge_size == 0 || memcmp( edge2 + 1, edge + 1, pure_edge_size ) == 0),
                 "The edge has been added incorrectly" );
 
@@ -1918,8 +1918,8 @@ int  CxCore_GraphTest::test_graph_ops( int iters )
             idx = edge->flags;
 
             CV_TS_SEQ_CHECK_CONDITION( edge != 0 && edge->weight == v_idx[0] + v_idx[1] &&
-                (edge->vtx[0] == vtx && edge->vtx[1] == vtx2 ||
-                !CV_IS_GRAPH_ORIENTED(graph) && edge->vtx[1] == vtx && edge->vtx[0] == vtx2) &&
+                ((edge->vtx[0] == vtx && edge->vtx[1] == vtx2) ||
+                (!CV_IS_GRAPH_ORIENTED(graph) && edge->vtx[1] == vtx && edge->vtx[0] == vtx2)) &&
                 (pure_edge_size == 0 || memcmp(edge + 1, edge_data, pure_edge_size) == 0),
                 "An edge is missing or incorrect" );
 
@@ -2177,7 +2177,7 @@ void CxCore_GraphScanTest::run( int )
             for(;;)
             {
                 int code, a = -1, b = -1;
-                char* event = "";
+                const char* event = "";
                 CV_CALL( code = cvNextGraphItem( scanner ));
 
                 switch( code )

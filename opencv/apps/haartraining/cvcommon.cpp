@@ -39,16 +39,17 @@
 //
 //M*/
 
-#include <_cvcommon.h>
+#include "_cvcommon.h"
 
-#include <string.h>
+#include <cstring>
+#include <ctime>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifdef _WIN32
 #include <direct.h>
 #endif /* _WIN32 */
 
-#include <time.h>
 
 CV_IMPLEMENT_QSORT( icvSort_32f, float, less_than )
 

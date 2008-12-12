@@ -443,6 +443,9 @@ protected:
     // changes the path to test data files
     virtual void set_data_path( const char* data_path );
 
+    // prints the information about command-line parameters
+    virtual void print_help();
+
     // a sequence of tests to run
     CvTestPtrVec* selected_tests;
 
@@ -454,7 +457,7 @@ protected:
 
     // base name for output streams
     char* ostrm_base_name;
-    char* ostrm_suffixes[MAX_IDX];
+    const char* ostrm_suffixes[MAX_IDX];
 
     // parameters that can be read from file storage
     CvFileStorage* fs;

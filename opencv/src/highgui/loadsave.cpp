@@ -299,7 +299,9 @@ CvImageFilters::CvImageFilters()
     m_factories->AddFactory( new GrFmtImageIO() );
 #endif
     m_factories->AddFactory( new GrFmtBmp() );
+#ifdef HAVE_JPEG
     m_factories->AddFactory( new GrFmtJpeg() );
+#endif
     m_factories->AddFactory( new GrFmtSunRaster() );
     m_factories->AddFactory( new GrFmtPxM() );
     m_factories->AddFactory( new GrFmtTiff() );

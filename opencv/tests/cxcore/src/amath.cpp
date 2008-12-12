@@ -2478,8 +2478,8 @@ void CxCore_InvertTest::prepare_to_validation( int )
     else
         cvTsCopy( input, &test_mat[TEMP][1], 0 );
 
-    if( method == CV_LU && result == 0 || method != CV_LU &&
-        det < threshold || result < threshold )
+    if( (method == CV_LU && result == 0) ||
+        ((method != CV_LU && det < threshold) || result < threshold) )
     {
         cvTsZero( &test_mat[OUTPUT][0] );
         cvTsZero( &test_mat[REF_OUTPUT][0] );

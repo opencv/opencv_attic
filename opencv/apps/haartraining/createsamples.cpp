@@ -45,17 +45,17 @@
  * Create test/training samples
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
 
-#include <cvhaartraining.h>
+#include "cvhaartraining.h"
 
 int main( int argc, char* argv[] )
 {
     int i = 0;
-    char* nullname   = "(NULL)";
+    char* nullname   = (char*)"(NULL)";
     char* vecname    = NULL; /* .vec file name */
     char* infoname   = NULL; /* file name with marked up image descriptions */
     char* imagename  = NULL; /* single sample image */
@@ -90,7 +90,7 @@ int main( int argc, char* argv[] )
                 "  [-w <sample_width = %d>]\n  [-h <sample_height = %d>]\n",
                 argv[0], num, bgcolor, bgthreshold, maxintensitydev,
                 maxxangle, maxyangle, maxzangle, scale, width, height );
-        
+
         return 0;
     }
 
@@ -168,7 +168,7 @@ int main( int argc, char* argv[] )
             height = atoi( argv[++i] );
         }
     }
-    
+
     printf( "Info file name: %s\n", ((infoname == NULL) ?   nullname : infoname ) );
     printf( "Img file name: %s\n",  ((imagename == NULL) ?  nullname : imagename ) );
     printf( "Vec file name: %s\n",  ((vecname == NULL) ?    nullname : vecname ) );

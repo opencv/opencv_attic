@@ -18,10 +18,10 @@ EXTRA_DIST = \
 if UPDATE_SWIG_WRAPPERS
 
 CV_HEADER_FILES = \
-  $(top_srcdir)/cxcore/include/cxtypes.h \
-  $(top_srcdir)/cxcore/include/cxcore.h  \
-  $(top_srcdir)/cv/include/cvtypes.h \
-  $(top_srcdir)/cv/include/cv.h          
+  $(top_srcdir)/include/opencv/cxtypes.h \
+  $(top_srcdir)/include/opencv/cxcore.h  \
+  $(top_srcdir)/include/opencv/cvtypes.h \
+  $(top_srcdir)/include/opencv/cv.h          
 
 cvmacros.i: $(CV_HEADER_FILES) Makefile.in
 	$(PYTHON) $(top_srcdir)/utils/extract_macros.py $(CV_HEADER_FILES) > $@

@@ -45,17 +45,17 @@
  * Train cascade classifier
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
-#include <cvhaartraining.h>
+#include "cvhaartraining.h"
 
 int main( int argc, char* argv[] )
 {
     int i = 0;
-    char* nullname = "(NULL)";
-    
+    char* nullname = (char*)"(NULL)";
+
     char* vecname = NULL;
     char* dirname = NULL;
     char* bgname  = NULL;
@@ -105,7 +105,7 @@ int main( int argc, char* argv[] )
                 argv[0], npos, nneg, nstages, nsplits, mem,
                 minhitrate, maxfalsealarm, weightfraction, width, height,
                 maxtreesplits, minpos );
-        
+
         return 0;
     }
 
@@ -170,7 +170,7 @@ int main( int argc, char* argv[] )
         else if( !strcmp( argv[i], "-mode" ) )
         {
             char* tmp = argv[++i];
-            
+
             if( !strcmp( tmp, "CORE" ) )
             {
                 mode = 1;
@@ -179,7 +179,7 @@ int main( int argc, char* argv[] )
             {
                 mode = 2;
             }
-            else 
+            else
             {
                 mode = 0;
             }

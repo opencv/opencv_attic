@@ -168,8 +168,8 @@ cvImageWidget_realize (GtkWidget *widget)
   attributes.height = widget->allocation.height;
   attributes.wclass = GDK_INPUT_OUTPUT;
   attributes.window_type = GDK_WINDOW_CHILD;
-  attributes.event_mask = gtk_widget_get_events (widget) | 
-    GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | 
+  attributes.event_mask = gtk_widget_get_events (widget) |
+    GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK |
     GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK;
   attributes.visual = gtk_widget_get_visual (widget);
   attributes.colormap = gtk_widget_get_colormap (widget);
@@ -193,17 +193,17 @@ static CvSize cvImageWidget_calc_size( int im_width, int im_height, int max_widt
     return cvSize( cvRound(max_height*aspect), max_height );
 }
 
-static void 
+static void
 cvImageWidget_size_request (GtkWidget      *widget,
                        GtkRequisition *requisition)
 {
 	CvImageWidget * image_widget = CV_IMAGE_WIDGET( widget );
-	
+
 	//printf("cvImageWidget_size_request ");
 	// the case the first time cvShowImage called or when AUTOSIZE
-	if( image_widget->original_image && 
+	if( image_widget->original_image &&
 		((image_widget->flags & CV_WINDOW_AUTOSIZE) ||
-		 (image_widget->flags & CV_WINDOW_NO_IMAGE))) 
+		 (image_widget->flags & CV_WINDOW_NO_IMAGE)))
 	{
 		//printf("original ");
 		requisition->width = image_widget->original_image->cols;
@@ -244,7 +244,7 @@ static void cvImageWidget_set_size(GtkWidget * widget, int max_width, int max_he
 	}
 	if( !image_widget->scaled_image ){
 		image_widget->scaled_image = cvCreateMat( scaled_image_size.height, scaled_image_size.width,        CV_8UC3 );
-		
+
 
 	}
 	assert( image_widget->scaled_image );
@@ -263,12 +263,12 @@ cvImageWidget_size_allocate (GtkWidget     *widget,
 
   widget->allocation = *allocation;
   image_widget = CV_IMAGE_WIDGET (widget);
-  
+
 
   if( (image_widget->flags & CV_WINDOW_AUTOSIZE)==0 && image_widget->original_image ){
 	  // (re) allocated scaled image
 	  if( image_widget->flags & CV_WINDOW_NO_IMAGE ){
-		  cvImageWidget_set_size( widget, image_widget->original_image->cols, 
+		  cvImageWidget_set_size( widget, image_widget->original_image->cols,
 				                          image_widget->original_image->rows);
 	  }
 	  else{
@@ -281,13 +281,13 @@ cvImageWidget_size_allocate (GtkWidget     *widget,
     {
       image_widget = CV_IMAGE_WIDGET (widget);
 
-	  if( image_widget->original_image && 
-			  ((image_widget->flags & CV_WINDOW_AUTOSIZE) || 
+	  if( image_widget->original_image &&
+			  ((image_widget->flags & CV_WINDOW_AUTOSIZE) ||
 			   (image_widget->flags & CV_WINDOW_NO_IMAGE)) )
 	  {
 		  widget->allocation.width = image_widget->original_image->cols;
 		  widget->allocation.height = image_widget->original_image->rows;
-		  gdk_window_move_resize( widget->window, allocation->x, allocation->y, 
+		  gdk_window_move_resize( widget->window, allocation->x, allocation->y,
 				  image_widget->original_image->cols, image_widget->original_image->rows );
 		  if(image_widget->flags & CV_WINDOW_NO_IMAGE){
 			  image_widget->flags &= ~CV_WINDOW_NO_IMAGE;
@@ -315,7 +315,7 @@ cvImageWidget_expose( GtkWidget      *widget,
 
   if (event->count > 0)
     return FALSE;
-  
+
   image_widget = CV_IMAGE_WIDGET (widget);
 
   gdk_window_clear_area (widget->window,
@@ -326,17 +326,17 @@ cvImageWidget_expose( GtkWidget      *widget,
 	  // center image in available region
 	  int x0 = (widget->allocation.width - image_widget->scaled_image->cols)/2;
 	  int y0 = (widget->allocation.height - image_widget->scaled_image->rows)/2;
-	  
+
 	  gdk_draw_rgb_image( widget->window, widget->style->fg_gc[GTK_STATE_NORMAL],
-		  x0, y0, MIN(image_widget->scaled_image->cols, widget->allocation.width), 
+		  x0, y0, MIN(image_widget->scaled_image->cols, widget->allocation.width),
 		  MIN(image_widget->scaled_image->rows, widget->allocation.height),
 		  GDK_RGB_DITHER_MAX, image_widget->scaled_image->data.ptr, image_widget->scaled_image->step );
   }
   else if( image_widget->original_image ){
 	  gdk_draw_rgb_image( widget->window, widget->style->fg_gc[GTK_STATE_NORMAL],
-		  0, 0, 
-		  MIN(image_widget->original_image->cols, widget->allocation.width), 
-		   MIN(image_widget->original_image->rows, widget->allocation.height), 
+		  0, 0,
+		  MIN(image_widget->original_image->cols, widget->allocation.width),
+		   MIN(image_widget->original_image->rows, widget->allocation.height),
 		  GDK_RGB_DITHER_MAX, image_widget->original_image->data.ptr, image_widget->original_image->step );
   }
   return TRUE;
@@ -366,7 +366,7 @@ static void cvImageWidget_class_init (CvImageWidgetClass * klass)
 
   object_class = (GtkObjectClass*) klass;
   widget_class = (GtkWidgetClass*) klass;
-  
+
   parent_class = GTK_WIDGET_CLASS( gtk_type_class (gtk_widget_get_type ()) );
 
   object_class->destroy = cvImageWidget_destroy;
@@ -395,7 +395,7 @@ GtkType cvImageWidget_get_type (void){
     {
       static const GtkTypeInfo image_info =
       {
-        "CvImageWidget",
+        (gchar*)"CvImageWidget",
         sizeof (CvImageWidget),
         sizeof (CvImageWidgetClass),
         (GtkClassInitFunc) cvImageWidget_class_init,
@@ -440,7 +440,7 @@ typedef struct CvWindow
     char* name;
     CvWindow* prev;
     CvWindow* next;
-    
+
     int last_key;
     int flags;
 
@@ -478,7 +478,7 @@ static CvWindow* hg_windows = 0;
 
 CV_IMPL int cvInitSystem( int argc, char** argv )
 {
-    static int wasInitialized = 0;    
+    static int wasInitialized = 0;
 
     // check initialization status
     if( !wasInitialized )
@@ -500,13 +500,13 @@ CV_IMPL int cvStartWindowThread(){
 	    /* the GThread system wasn't inited, so init it */
 	    g_thread_init(NULL);
 	}
-	
-	// this mutex protects the window resources 
+
+	// this mutex protects the window resources
 	window_mutex = g_mutex_new();
-	
+
 	// protects the 'last key pressed' variable
 	last_key_mutex = g_mutex_new();
-	
+
 	// conditional that indicates a key has been pressed
 	cond_have_key = g_cond_new();
 
@@ -528,7 +528,7 @@ gpointer icvWindowThreadLoop(){
 		gtk_main_iteration_do(FALSE);
 		g_mutex_unlock(window_mutex);
 
-		// little sleep 
+		// little sleep
 		g_usleep(500);
 
 		g_thread_yield();
@@ -603,7 +603,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     window->prev = 0;
 
 	CV_LOCK_MUTEX();
-	
+
     window->frame = gtk_window_new( GTK_WINDOW_TOPLEVEL );
 
     window->paned = gtk_vbox_new( FALSE, 0 );
@@ -644,7 +644,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 		GdkGeometry geometry;
 		geometry.min_width = 50;
 		geometry.min_height = 50;
-		gtk_window_set_geometry_hints( GTK_WINDOW( window->frame ), GTK_WIDGET( window->widget ), 
+		gtk_window_set_geometry_hints( GTK_WINDOW( window->frame ), GTK_WIDGET( window->widget ),
 			&geometry, (GdkWindowHints) (GDK_HINT_MIN_SIZE));
 	}
 
@@ -660,7 +660,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 static void icvDeleteWindow( CvWindow* window )
 {
     CvTrackbar* trackbar;
-    
+
     if( window->prev )
         window->prev->next = window->next;
     else
@@ -670,9 +670,9 @@ static void icvDeleteWindow( CvWindow* window )
         window->next->prev = window->prev;
 
     window->prev = window->next = 0;
-	
+
 	gtk_widget_destroy( window->frame );
-	
+
     for( trackbar = window->toolbar.first; trackbar != 0; )
     {
         CvTrackbar* next = trackbar->next;
@@ -682,7 +682,7 @@ static void icvDeleteWindow( CvWindow* window )
 
     cvFree( &window );
 #ifdef HAVE_GTHREAD
-	// if last window, send key press signal 
+	// if last window, send key press signal
 	// to jump out of any waiting cvWaitKey's
 	if(hg_windows==0 && thread_started){
 		g_cond_broadcast(cond_have_key);
@@ -694,7 +694,7 @@ static void icvDeleteWindow( CvWindow* window )
 CV_IMPL void cvDestroyWindow( const char* name )
 {
     CV_FUNCNAME( "cvDestroyWindow" );
-    
+
     __BEGIN__;
 
     CvWindow* window;
@@ -710,9 +710,9 @@ CV_IMPL void cvDestroyWindow( const char* name )
 	// if there is a call to cvShowImage in a mouse callback
 	// (this would produce a deadlock on window_mutex)
 	CV_LOCK_MUTEX();
-	
+
 	icvDeleteWindow( window );
-	
+
 	CV_UNLOCK_MUTEX();
 
     __END__;
@@ -735,13 +735,13 @@ cvDestroyAllWindows( void )
 CvSize icvCalcOptimalWindowSize( CvWindow * window, CvSize new_image_size){
 	CvSize window_size;
 	GtkWidget * toplevel = gtk_widget_get_toplevel( window->frame );
-	gdk_drawable_get_size( GDK_DRAWABLE(toplevel->window), 
+	gdk_drawable_get_size( GDK_DRAWABLE(toplevel->window),
 			&window_size.width, &window_size.height );
 
 	window_size.width = window_size.width + new_image_size.width - window->widget->allocation.width;
 	window_size.height = window_size.height + new_image_size.height - window->widget->allocation.height;
 
-	return window_size; 
+	return window_size;
 }
 
 CV_IMPL void
@@ -750,7 +750,7 @@ cvShowImage( const char* name, const CvArr* arr )
     CV_FUNCNAME( "cvShowImage" );
 
     __BEGIN__;
-   	
+
     CvWindow* window;
 
     if( !name )
@@ -774,7 +774,7 @@ CV_IMPL void cvResizeWindow(const char* name, int width, int height )
     CV_FUNCNAME( "cvResizeWindow" );
 
     __BEGIN__;
-    
+
     CvWindow* window;
 	CvImageWidget * image_widget;
 
@@ -786,7 +786,7 @@ CV_IMPL void cvResizeWindow(const char* name, int width, int height )
         EXIT;
 
 	image_widget = CV_IMAGE_WIDGET( window->widget );
-	if(image_widget->flags & CV_WINDOW_AUTOSIZE) 
+	if(image_widget->flags & CV_WINDOW_AUTOSIZE)
 		EXIT;
 
 	CV_LOCK_MUTEX();
@@ -849,7 +849,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     CV_FUNCNAME( "cvCreateTrackbar" );
 
     __BEGIN__;
-    
+
     /*char slider_name[32];*/
     CvWindow* window = 0;
     CvTrackbar* trackbar = 0;
@@ -879,7 +879,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         trackbar->parent = window;
         trackbar->next = window->toolbar.first;
         window->toolbar.first = trackbar;
-        
+
         GtkWidget* hscale_box = gtk_hbox_new( FALSE, 10 );
         GtkWidget* hscale_label = gtk_label_new( trackbar_name );
         GtkWidget* hscale = gtk_hscale_new_with_range( 0, count, 1 );
@@ -897,7 +897,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         gtk_widget_show( hscale_box );
 
 	}
-        
+
     if( val )
     {
         int value = *val;
@@ -909,13 +909,13 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         trackbar->pos = value;
         trackbar->data = val;
     }
-        
+
     trackbar->maxval = count;
     trackbar->notify = on_notify;
     gtk_signal_connect( GTK_OBJECT(trackbar->widget), "value-changed",
                         GTK_SIGNAL_FUNC(icvOnTrackbar), trackbar );
 
-	// queue a widget resize to trigger a window resize to 
+	// queue a widget resize to trigger a window resize to
 	// compensate for the addition of trackbars
 	gtk_widget_queue_resize( GTK_WIDGET(window->widget) );
 
@@ -936,7 +936,7 @@ cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* par
     CV_FUNCNAME( "cvSetMouseCallback" );
 
     __BEGIN__;
-    
+
     CvWindow* window = 0;
 
     if( !window_name )
@@ -956,7 +956,7 @@ cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* par
 CV_IMPL int cvGetTrackbarPos( const char* trackbar_name, const char* window_name )
 {
     int pos = -1;
-    
+
     CV_FUNCNAME( "cvGetTrackbarPos" );
 
     __BEGIN__;
@@ -1018,7 +1018,7 @@ CV_IMPL void cvSetTrackbarPos( const char* trackbar_name, const char* window_nam
 CV_IMPL void* cvGetWindowHandle( const char* window_name )
 {
     void* widget = 0;
-    
+
     CV_FUNCNAME( "cvGetWindowHandle" );
 
     __BEGIN__;
@@ -1036,12 +1036,12 @@ CV_IMPL void* cvGetWindowHandle( const char* window_name )
 
     return widget;
 }
-    
+
 
 CV_IMPL const char* cvGetWindowName( void* window_handle )
 {
     const char* window_name = "";
-    
+
     CV_FUNCNAME( "cvGetWindowName" );
 
     __BEGIN__;
@@ -1064,7 +1064,7 @@ static gboolean icvOnKeyPress( GtkWidget * /*widget*/,
                 GdkEventKey* event, gpointer /*user_data*/ )
 {
     int code = 0;
-    
+
     switch( event->keyval )
     {
     case GDK_Escape:
@@ -1086,9 +1086,9 @@ static gboolean icvOnKeyPress( GtkWidget * /*widget*/,
 #ifdef HAVE_GTHREAD
 	if(thread_started) g_mutex_lock(last_key_mutex);
 #endif
-	
+
 	last_key = code;
-	
+
 #ifdef HAVE_GTHREAD
 	if(thread_started){
 		// signal any waiting threads
@@ -1139,14 +1139,14 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
 	CvImageWidget * image_widget = CV_IMAGE_WIDGET( widget );
 
     if( window->signature != CV_WINDOW_MAGIC_VAL ||
-        window->widget != widget || !window->widget || 
+        window->widget != widget || !window->widget ||
 		!window->on_mouse || !image_widget->original_image)
         return FALSE;
 
     if( event->type == GDK_MOTION_NOTIFY )
     {
         GdkEventMotion* event_motion = (GdkEventMotion*)event;
-        
+
         cv_event = CV_EVENT_MOUSEMOVE;
         pt32f.x = cvRound(event_motion->x);
         pt32f.y = cvRound(event_motion->y);
@@ -1159,8 +1159,8 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
         GdkEventButton* event_button = (GdkEventButton*)event;
         pt32f.x = cvRound(event_button->x);
         pt32f.y = cvRound(event_button->y);
-		
-		
+
+
         if( event_button->type == GDK_BUTTON_PRESS )
         {
             cv_event = event_button->button == 1 ? CV_EVENT_LBUTTONDOWN :
@@ -1183,7 +1183,7 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
     }
 
     if( cv_event >= 0 ){
-		// scale point if image is scaled 
+		// scale point if image is scaled
 		if( (image_widget->flags & CV_WINDOW_AUTOSIZE)==0 &&
 		     image_widget->original_image &&
 			 image_widget->scaled_image ){
@@ -1198,7 +1198,7 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
 		else{
 			pt = cvPointFrom32f( pt32f );
 		}
-		
+
 		if((unsigned)pt.x < (unsigned)(image_widget->original_image->width) &&
 		   (unsigned)pt.y < (unsigned)(image_widget->original_image->height) )
 		{
@@ -1212,7 +1212,7 @@ static gboolean icvOnMouse( GtkWidget *widget, GdkEvent *event, gpointer user_da
 		}
 	}
 
-		return FALSE;    
+		return FALSE;
 	}
 
 
@@ -1231,7 +1231,7 @@ CV_IMPL int cvWaitKey( int delay )
 		int my_last_key;
 
 		// wait for signal or timeout if delay > 0
-		if(delay>0){	
+		if(delay>0){
 			GTimeVal timer;
 			g_get_current_time(&timer);
 			g_time_val_add(&timer, delay*1000);

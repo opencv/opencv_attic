@@ -1,3 +1,5 @@
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #include <cxcore.h>
 #include <cv.h>
 #include <highgui.h>
@@ -19,15 +21,15 @@ void cvShiftDFT(CvArr * src_arr, CvArr * dst_arr )
     CvSize dst_size = cvGetSize(dst_arr);
     int cx, cy;
 
-    if(dst_size.width != size.width || 
+    if(dst_size.width != size.width ||
        dst_size.height != size.height){
-        cvError( CV_StsUnmatchedSizes, "cvShiftDFT", "Source and Destination arrays must have equal sizes", __FILE__, __LINE__ );   
+        cvError( CV_StsUnmatchedSizes, "cvShiftDFT", "Source and Destination arrays must have equal sizes", __FILE__, __LINE__ );
     }
 
     if(src_arr==dst_arr){
         tmp = cvCreateMat(size.height/2, size.width/2, cvGetElemType(src_arr));
     }
-    
+
     cx = size.width/2;
     cy = size.height/2; // image center
 
@@ -42,7 +44,7 @@ void cvShiftDFT(CvArr * src_arr, CvArr * dst_arr )
 
     if(src_arr!=dst_arr){
         if( !CV_ARE_TYPES_EQ( q1, d1 )){
-            cvError( CV_StsUnmatchedFormats, "cvShiftDFT", "Source and Destination arrays must have the same format", __FILE__, __LINE__ ); 
+            cvError( CV_StsUnmatchedFormats, "cvShiftDFT", "Source and Destination arrays must have the same format", __FILE__, __LINE__ );
         }
         cvCopy(q3, d1, 0);
         cvCopy(q4, d2, 0);

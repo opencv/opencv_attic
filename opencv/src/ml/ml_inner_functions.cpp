@@ -61,7 +61,7 @@ void CvStatModel::clear()
 void CvStatModel::save( const char* filename, const char* name )
 {
     CvFileStorage* fs = 0;
-    
+
     CV_FUNCNAME( "CvStatModel::save" );
 
     __BEGIN__;
@@ -81,7 +81,7 @@ void CvStatModel::save( const char* filename, const char* name )
 void CvStatModel::load( const char* filename, const char* name )
 {
     CvFileStorage* fs = 0;
-    
+
     CV_FUNCNAME( "CvStatModel::load" );
 
     __BEGIN__;
@@ -128,14 +128,14 @@ CV_IMPL void cvChol( CvMat* A, CvMat* S )
 
     int i, j, k;
     float sum;
-        
+
     for( i = 0; i < dim; i++ )
-    {   
+    {
         for( j = 0; j < i; j++ )
             CV_MAT_ELEM(*S, float, i, j) = 0;
-                    
+
         sum = 0;
-        for( k = 0; k < i; k++ ) 
+        for( k = 0; k < i; k++ )
             sum += CV_MAT_ELEM(*S, float, k, i) * CV_MAT_ELEM(*S, float, k, i);
 
         CV_MAT_ELEM(*S, float, i, i) = (float)sqrt(CV_MAT_ELEM(*A, float, i, i) - sum);
@@ -143,12 +143,12 @@ CV_IMPL void cvChol( CvMat* A, CvMat* S )
         for( j = i + 1; j < dim; j++ )
         {
             sum = 0;
-            for( k = 0; k < i; k++ ) 
+            for( k = 0; k < i; k++ )
                 sum += CV_MAT_ELEM(*S, float, k, i) * CV_MAT_ELEM(*S, float, k, j);
 
             CV_MAT_ELEM(*S, float, i, j) =
                 (CV_MAT_ELEM(*A, float, i, j) - sum) / CV_MAT_ELEM(*S, float, i, i);
-        
+
         }
     }
 }
@@ -162,7 +162,7 @@ CV_IMPL void cvRandMVNormal( CvMat* mean, CvMat* cov, CvMat* sample, CvRNG* rng 
 
     CvRNG state = rng ? *rng : cvRNG(time(0));
     cvRandArr(&state, sample, CV_RAND_NORMAL, cvScalarAll(0), cvScalarAll(1) );
-    
+
     CvMat* utmat = cvCreateMat(dim, dim, sample->type);
     CvMat* vect = cvCreateMatHeader(1, dim, sample->type);
 
@@ -175,7 +175,7 @@ CV_IMPL void cvRandMVNormal( CvMat* mean, CvMat* cov, CvMat* sample, CvRNG* rng 
         cvMatMulAdd(vect, utmat, mean, vect);
     }
 
-    cvReleaseMat(&vect); 
+    cvReleaseMat(&vect);
     cvReleaseMat(&utmat);
 }
 
@@ -191,7 +191,7 @@ CV_IMPL void cvRandSeries( float probs[], int len, int sample[], int amount )
 
     CvRNG state = cvRNG(-1);
     cvRandArr(&state, univals, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(1) );
-    
+
     knots[0] = probs[0];
     for( i = 1; i < len; i++ )
         knots[i] = knots[i - 1] + probs[i];
@@ -205,12 +205,12 @@ CV_IMPL void cvRandSeries( float probs[], int len, int sample[], int amount )
                 break;
             }
         }
-    
+
     cvFree(&knots);
 }
 
 /* Generates <sample> from gaussian mixture distribution */
-CV_IMPL void cvRandGaussMixture( CvMat* means[], 
+CV_IMPL void cvRandGaussMixture( CvMat* means[],
                                  CvMat* covs[],
                                  float weights[],
                                  int clsnum,
@@ -231,10 +231,10 @@ CV_IMPL void cvRandGaussMixture( CvMat* means[],
         classes = sampClasses;
     else
         classes = cvCreateMat(1, amount, CV_32FC1);
-    
+
     CvRNG state = cvRNG(-1);
     cvRandArr(&state, sample, CV_RAND_NORMAL, cvScalarAll(0), cvScalarAll(1));
-    
+
     cvRandSeries(weights, clsnum, sample_clsnum, amount);
 
     for( i = 0; i < clsnum; i++ )
@@ -242,7 +242,7 @@ CV_IMPL void cvRandGaussMixture( CvMat* means[],
         utmats[i] = cvCreateMat(dim, dim, CV_32FC1);
         cvChol(covs[i], utmats[i]);
     }
-    
+
     for( i = 0; i < amount; i++ )
     {
         CV_MAT_ELEM(*classes, float, 0, i) = (float)sample_clsnum[i];
@@ -257,7 +257,7 @@ CV_IMPL void cvRandGaussMixture( CvMat* means[],
         cvReleaseMat(&utmats[i]);
     cvFree(&utmats);
     cvFree(&sample_clsnum);
-    cvReleaseMat(&vect);    
+    cvReleaseMat(&vect);
 }
 
 
@@ -331,14 +331,14 @@ CV_IMPL void cvRandRoundUni (CvMat* center,
     int dim, size, i, j;
     CvMat *cov, sample;
     CvRNG rng_local;
-    
+
     CV_FUNCNAME("cvRandRoundUni");
     __BEGIN__
 
     rng_local = *rng_state_ptr;
 
-    CV_ASSERT ((radius_small >= 0) && 
-               (radius_large > 0) && 
+    CV_ASSERT ((radius_small >= 0) &&
+               (radius_large > 0) &&
                (radius_small <= radius_large));
     CV_ASSERT (center && desired_matrix && rng_state_ptr);
     CV_ASSERT (center->rows == 1);
@@ -401,7 +401,7 @@ cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, bool check_for_
     uchar* srcb = 0;
     int* srci = 0;
     int* dsti;
-    
+
     if( !CV_IS_MAT(idx_arr) )
         CV_ERROR( CV_StsBadArg, "Invalid index array" );
 
@@ -424,7 +424,7 @@ cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, bool check_for_
         if( idx_total != data_arr_size )
             CV_ERROR( CV_StsUnmatchedSizes,
             "Component mask should contain as many elements as the total number of input variables" );
-        
+
         for( i = 0; i < idx_total; i++ )
             idx_selected += srcb[i*step] != 0;
 
@@ -459,7 +459,7 @@ cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, bool check_for_
 
     CV_CALL( idx = cvCreateMat( 1, idx_selected, CV_32SC1 ));
     dsti = idx->data.i;
-    
+
     if( type < CV_32SC1 )
     {
         for( i = 0; i < idx_total; i++ )
@@ -470,10 +470,10 @@ cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, bool check_for_
     {
         for( i = 0; i < idx_total; i++ )
             dsti[i] = srci[i*step];
-        
+
         if( !is_sorted )
             qsort( dsti, idx_total, sizeof(dsti[0]), icvCmpIntegers );
-        
+
         if( dsti[0] < 0 || dsti[idx_total-1] >= data_arr_size )
             CV_ERROR( CV_StsOutOfRange, "the index array elements are out of range" );
 
@@ -511,7 +511,7 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
     const uchar* src;
     uchar* dst;
     int var_count = var_all;
-        
+
     if( !CV_IS_MAT(var_type) )
         CV_ERROR( var_type ? CV_StsBadArg : CV_StsNullPtr, "Invalid or absent var_type array" );
 
@@ -534,7 +534,7 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
     if( var_idx )
     {
         if( !CV_IS_MAT(var_idx) || CV_MAT_TYPE(var_idx->type) != CV_32SC1 ||
-            var_idx->rows != 1 && var_idx->cols != 1 || !CV_IS_MAT_CONT(var_idx->type) )
+            (var_idx->rows != 1 && var_idx->cols != 1) || !CV_IS_MAT_CONT(var_idx->type) )
             CV_ERROR( CV_StsBadArg, "var index array should be continuous 1-dimensional integer vector" );
         if( var_idx->rows + var_idx->cols - 1 > var_count )
             CV_ERROR( CV_StsBadSize, "var index array is too large" );
@@ -598,7 +598,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
     if( sample_idx )
     {
         if( !CV_IS_MAT(sample_idx) || CV_MAT_TYPE(sample_idx->type) != CV_32SC1 ||
-            sample_idx->rows != 1 && sample_idx->cols != 1 || !CV_IS_MAT_CONT(sample_idx->type) )
+            (sample_idx->rows != 1 && sample_idx->cols != 1) || !CV_IS_MAT_CONT(sample_idx->type) )
             CV_ERROR( CV_StsBadArg, "sample index array should be continuous 1-dimensional integer vector" );
         if( sample_idx->rows + sample_idx->cols - 1 > sample_count )
             CV_ERROR( CV_StsBadSize, "sample index array is too large" );
@@ -607,7 +607,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
     }
 
     CV_CALL( out_responses = cvCreateMat( 1, sample_count, CV_32FC1 ));
-    
+
     dst = out_responses->data.fl;
     if( r_type == CV_32FC1 )
     {
@@ -682,7 +682,7 @@ cvPreprocessCategoricalResponses( const CvMat* responses,
     if( sample_idx )
     {
         if( !CV_IS_MAT(sample_idx) || CV_MAT_TYPE(sample_idx->type) != CV_32SC1 ||
-            sample_idx->rows != 1 && sample_idx->cols != 1 || !CV_IS_MAT_CONT(sample_idx->type) )
+            (sample_idx->rows != 1 && sample_idx->cols != 1) || !CV_IS_MAT_CONT(sample_idx->type) )
             CV_ERROR( CV_StsBadArg, "sample index array should be continuous 1-dimensional integer vector" );
         if( sample_idx->rows + sample_idx->cols - 1 > sample_count )
             CV_ERROR( CV_StsBadSize, "sample index array is too large" );
@@ -756,7 +756,7 @@ cvPreprocessCategoricalResponses( const CvMat* responses,
         }
         *response_ptr[i] = cls_count;
     }
-    
+
     if( cls_counts )
         cls_counts[cls_count] = i - prev_i;
 
@@ -775,11 +775,11 @@ cvGetTrainSamples( const CvMat* train_data, int tflag,
                    bool always_copy_data )
 {
     float** samples = 0;
-    
+
     CV_FUNCNAME( "cvGetTrainSamples" );
 
     __BEGIN__;
-    
+
     int i, j, var_count, sample_count, s_step, v_step;
     bool copy_data;
     const float* data;
@@ -800,7 +800,7 @@ cvGetTrainSamples( const CvMat* train_data, int tflag,
         *_sample_count = sample_count;
 
     copy_data = tflag != CV_ROW_SAMPLE || var_idx || always_copy_data;
-    
+
     CV_CALL( samples = (float**)cvAlloc(sample_count*sizeof(samples[0]) +
                 (copy_data ? 1 : 0)*var_count*sample_count*sizeof(samples[0][0])) );
     data = train_data->data.fl;
@@ -842,7 +842,7 @@ cvGetTrainSamples( const CvMat* train_data, int tflag,
 
 void
 cvCheckTrainData( const CvMat* train_data, int tflag,
-                  const CvMat* missing_mask, 
+                  const CvMat* missing_mask,
                   int* var_all, int* sample_all )
 {
     CV_FUNCNAME( "cvCheckTrainData" );
@@ -873,7 +873,7 @@ cvCheckTrainData( const CvMat* train_data, int tflag,
 
     if( var_all )
         *var_all = tflag == CV_ROW_SAMPLE ? train_data->cols : train_data->rows;
-    
+
     if( sample_all )
         *sample_all = tflag == CV_ROW_SAMPLE ? train_data->rows : train_data->cols;
 
@@ -897,7 +897,7 @@ cvPrepareTrainData( const char* /*funcname*/,
                     CvMat** out_var_idx,
                     CvMat** out_sample_idx )
 {
-    int ok = 0; 
+    int ok = 0;
     CvMat* _var_idx = 0;
     CvMat* _sample_idx = 0;
     CvMat* _responses = 0;
@@ -930,7 +930,7 @@ cvPrepareTrainData( const char* /*funcname*/,
 
     if( _var_all )
         *_var_all = 0;
-    
+
     __BEGIN__;
 
     if( !out_train_samples )
@@ -947,7 +947,7 @@ cvPrepareTrainData( const char* /*funcname*/,
     {
         if( !out_responses )
             CV_ERROR( CV_StsNullPtr, "output response pointer is NULL" );
-        
+
         if( response_type == CV_VAR_NUMERICAL )
         {
             CV_CALL( _responses = cvPreprocessOrderedResponses( responses,
@@ -962,7 +962,7 @@ cvPrepareTrainData( const char* /*funcname*/,
 
     CV_CALL( *out_train_samples =
                 cvGetTrainSamples( train_data, tflag, _var_idx, _sample_idx,
-                                   &var_count, &sample_count, always_copy_data )); 
+                                   &var_count, &sample_count, always_copy_data ));
 
     ok = 1;
 
@@ -1028,7 +1028,7 @@ CV_CDECL icvCmpSampleResponsePairs( const void* a, const void* b )
 
 
 void
-cvSortSamplesByClasses( const float** samples, const CvMat* classes, 
+cvSortSamplesByClasses( const float** samples, const CvMat* classes,
                         int* class_ranges, const uchar** mask )
 {
     CvSampleResponsePair* pairs = 0;
@@ -1046,7 +1046,7 @@ cvSortSamplesByClasses( const float** samples, const CvMat* classes,
 
     sample_count = classes->cols;
     CV_CALL( pairs = (CvSampleResponsePair*)cvAlloc( (sample_count+1)*sizeof(pairs[0])));
-    
+
     for( i = 0; i < sample_count; i++ )
     {
         pairs[i].sample = samples[i];
@@ -1055,7 +1055,7 @@ cvSortSamplesByClasses( const float** samples, const CvMat* classes,
         pairs[i].index = i;
         assert( classes->data.i[i] >= 0 );
     }
-    
+
     qsort( pairs, sample_count, sizeof(pairs[0]), icvCmpSampleResponsePairs );
     pairs[sample_count].response = -1;
     class_ranges[0] = 0;
@@ -1085,7 +1085,7 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
 {
     float* row_sample = 0;
     int* inverse_comp_idx = 0;
-    
+
     CV_FUNCNAME( "cvPreparePredictData" );
 
     __BEGIN__;
@@ -1106,9 +1106,9 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
 
     CV_CALL( d = cvGetDims( sample, sizes ));
 
-    if( !(is_sparse && d == 1 || !is_sparse && d == 2 && (sample->rows == 1 || sample->cols == 1)) )
+    if( !((is_sparse && d == 1) || (!is_sparse && d == 2 && (sample->rows == 1 || sample->cols == 1))) )
         CV_ERROR( CV_StsBadSize, "Input sample must be 1-dimensional vector" );
-    
+
     if( d == 1 )
         sizes[1] = 1;
 
@@ -1124,15 +1124,15 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
         CV_ERROR( CV_StsBadArg, "INTERNAL ERROR: invalid comp_idx" );
 
     dims_selected = comp_idx ? comp_idx->cols : dims_all;
-    
+
     if( prob )
     {
         if( !CV_IS_MAT(prob) )
             CV_ERROR( CV_StsBadArg, "The output matrix of probabilities is invalid" );
 
         if( (prob->rows != 1 && prob->cols != 1) ||
-            CV_MAT_TYPE(prob->type) != CV_32FC1 &&
-            CV_MAT_TYPE(prob->type) != CV_64FC1 )
+            (CV_MAT_TYPE(prob->type) != CV_32FC1 &&
+            CV_MAT_TYPE(prob->type) != CV_64FC1) )
             CV_ERROR( CV_StsBadSize,
             "The matrix of probabilities must be 1-dimensional vector of 32fC1 type" );
 
@@ -1203,7 +1203,7 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
             for( i = 0; i < dims_selected; i++ )
                 inverse_comp_idx[comp_idx->data.i[i]] = i;
         }
-        
+
         if( !as_sparse )
         {
             memset( row_sample, 0, vec_size );
@@ -1223,7 +1223,7 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
         else
         {
             CvSparseVecElem32f* ptr = (CvSparseVecElem32f*)row_sample;
-            
+
             for( ; node != 0; node = cvGetNextSparseNode(&mat_iterator) )
             {
                 int idx = *CV_NODE_IDX( sparse, node );
@@ -1267,7 +1267,7 @@ icvConvertDataToSparse( const uchar* src, int src_step, int src_type,
     CV_FUNCNAME( "icvConvertDataToSparse" );
 
     __BEGIN__;
-    
+
     int i, j;
     src_type = CV_MAT_TYPE(src_type);
     dst_type = CV_MAT_TYPE(dst_type);
@@ -1293,7 +1293,7 @@ icvConvertDataToSparse( const uchar* src, int src_step, int src_type,
     if( src_type == dst_type )
     {
         int full_width = CV_ELEM_SIZE(dst_type)*size.width;
-        
+
         if( full_width == sizeof(int) ) // another common case: copy int's or float's
             for( i = 0; i < size.height; i++, src += src_step )
                 *(int*)(dst + dst_step*(idx ? idx[i] : i)) = *(int*)src;
@@ -1323,8 +1323,8 @@ icvConvertDataToSparse( const uchar* src, int src_step, int src_type,
                 for( j = 0; j < size.width; j++ )
                     ((int*)_dst)[j] = cvRound(((double*)src)[j]);
         }
-    else if( src_type == CV_32FC1 && dst_type == CV_64FC1 ||
-             src_type == CV_64FC1 && dst_type == CV_32FC1 )
+    else if( (src_type == CV_32FC1 && dst_type == CV_64FC1) ||
+             (src_type == CV_64FC1 && dst_type == CV_32FC1) )
         for( i = 0; i < size.height; i++, src += src_step )
         {
             uchar* _dst = dst + dst_step*(idx ? idx[i] : i);
@@ -1389,7 +1389,7 @@ cvWritebackLabels( const CvMat* labels, CvMat* dst_labels,
             CV_ERROR( CV_StsBadSize, "Array of output labels should be 1d vector" );
 
         if( dst_labels->rows + dst_labels->cols - 1 != samples_all )
-            CV_ERROR( CV_StsUnmatchedSizes, 
+            CV_ERROR( CV_StsUnmatchedSizes,
             "Size of vector of output labels is not equal to the total number of input samples" );
 
         CV_ASSERT( labels->cols == samples_selected );
@@ -1402,7 +1402,7 @@ cvWritebackLabels( const CvMat* labels, CvMat* dst_labels,
     if( dst_centers && (!centers || centers->data.ptr != dst_centers->data.ptr) )
     {
         int i;
-        
+
         if( !centers )
             CV_ERROR( CV_StsNullPtr, "NULL centers" );
 
@@ -1457,7 +1457,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
     CvMat* sample_idx_buffer = 0;
     CvSparseMat** sparse_rows = 0;
     int samples_selected = 0;
-    
+
     CV_FUNCNAME( "cvStatModelMultiPredict" );
 
     __BEGIN__;
@@ -1473,7 +1473,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
     CvArr* sample = &predict_input_part;
     CvMat probs_part;
     CvMat* probs1 = probs ? &probs_part : 0;
-    
+
     if( !CV_IS_STAT_MODEL(stat_model) )
         CV_ERROR( !stat_model ? CV_StsNullPtr : CV_StsBadArg, "Invalid statistical model" );
 
@@ -1559,7 +1559,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
         CvSparseNode* node;
         CvSparseMatIterator mat_iterator;
         CvSparseMat* sparse = (CvSparseMat*)predict_input;
-        
+
         if( sample_idx && CV_MAT_TYPE(sample_idx->type) == CV_32SC1 )
         {
             CV_CALL( sample_idx_buffer = cvCreateMat( 1, samples_all, CV_8UC1 ));
@@ -1570,7 +1570,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
             sample_idx = sample_idx_buffer;
             sample_idx_step = 1;
         }
-        
+
         CV_CALL( sparse_rows = (CvSparseMat**)cvAlloc( samples_selected*sizeof(sparse_rows[0])));
         for( i = 0; i < samples_selected; i++ )
         {
@@ -1609,7 +1609,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
     {
         int idx = i;
         float response;
-        
+
         if( sample_idx )
         {
             if( CV_MAT_TYPE(sample_idx->type) == CV_32SC1 )
@@ -1780,7 +1780,7 @@ int icvGetNumberOfCluster( double* prob_vector, int num_of_clusters, float r,
                            float outlier_thresh, int normalize_probs )
 {
     int max_prob_loc = 0;
-   
+
     CV_FUNCNAME("icvGetNumberOfCluster");
     __BEGIN__;
 
@@ -1797,7 +1797,7 @@ int icvGetNumberOfCluster( double* prob_vector, int num_of_clusters, float r,
     {
         prob = prob_vector[i];
         sum += prob;
-        if( prob > maxprob ) 
+        if( prob > maxprob )
         {
             max_prob_loc = i;
             maxprob = prob;

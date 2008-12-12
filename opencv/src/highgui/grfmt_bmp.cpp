@@ -92,7 +92,7 @@ void  GrFmtBmpReader::Close()
 bool  GrFmtBmpReader::ReadHeader()
 {
     bool result = false;
-    
+
     assert( strlen(m_filename) != 0 );
     if( !m_strm.Open( m_filename )) return false;
 
@@ -118,7 +118,7 @@ bool  GrFmtBmpReader::ReadHeader()
                 m_bpp == 24 || m_bpp == 32 ) && m_rle_code == BMP_RGB) ||
                (m_bpp == 16 && (m_rle_code == BMP_RGB || m_rle_code == BMP_BITFIELDS)) ||
                (m_bpp == 4 && m_rle_code == BMP_RLE4) ||
-               (m_bpp == 8 && m_rle_code == BMP_RLE8))) 
+               (m_bpp == 8 && m_rle_code == BMP_RLE8)))
             {
                 m_iscolor = true;
                 result = true;
@@ -155,7 +155,7 @@ bool  GrFmtBmpReader::ReadHeader()
 
             if( m_width > 0 && m_height > 0 &&
                (m_bpp == 1 || m_bpp == 4 || m_bpp == 8 ||
-                m_bpp == 24 || m_bpp == 32 )) 
+                m_bpp == 24 || m_bpp == 32 ))
             {
                 if( m_bpp <= 8 )
                 {
@@ -200,7 +200,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
 
     if( m_offset < 0 || !m_strm.IsOpened())
         return false;
-    
+
     data += (m_height - 1)*step;
     step = -step;
 
@@ -215,11 +215,11 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
         }
         if( m_width*3 + 32 > buffer_size ) bgr = new uchar[m_width*3 + 32];
     }
-    
+
     if( setjmp( m_strm.JmpBuf()) == 0 )
     {
         m_strm.SetPos( m_offset );
-        
+
         switch( m_bpp )
         {
         /************************* 1 BPP ************************/
@@ -233,7 +233,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
             }
             result = true;
             break;
-        
+
         /************************* 4 BPP ************************/
         case 4:
             if( m_rle_code == BMP_RGB )
@@ -263,7 +263,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
                         PaletteEntry clr[2];
                         uchar gray_clr[2];
                         int t = 0;
-                        
+
                         clr[0] = m_palette[code >> 4];
                         clr[1] = m_palette[code & 15];
                         gray_clr[0] = gray_palette[code >> 4];
@@ -301,14 +301,14 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
                             y_shift = m_strm.GetByte();
                         }
 
-                        len = x_shift3 + (y_shift * width3) & ((code == 0) - 1);
+                        len = x_shift3 + ((y_shift * width3) & ((code == 0) - 1));
 
                         if( color )
-                            data = FillUniColor( data, line_end, step, width3, 
+                            data = FillUniColor( data, line_end, step, width3,
                                                  y, m_height, x_shift3,
                                                  m_palette[0] );
                         else
-                            data = FillUniGray( data, line_end, step, width3, 
+                            data = FillUniGray( data, line_end, step, width3,
                                                 y, m_height, x_shift3,
                                                 gray_palette[0] );
 
@@ -351,16 +351,16 @@ decode_rle4_bad: ;
                     {
                         int prev_y = y;
                         len *= nch;
-                        
+
                         if( data + len > line_end )
                             goto decode_rle8_bad;
 
                         if( color )
-                            data = FillUniColor( data, line_end, step, width3, 
+                            data = FillUniColor( data, line_end, step, width3,
                                                  y, m_height, len,
                                                  m_palette[code] );
                         else
-                            data = FillUniGray( data, line_end, step, width3, 
+                            data = FillUniGray( data, line_end, step, width3,
                                                 y, m_height, len,
                                                 gray_palette[code] );
 
@@ -370,7 +370,7 @@ decode_rle4_bad: ;
                     {
                         int prev_y = y;
                         int code3 = code*nch;
-                        
+
                         if( data + code3 > line_end )
                             goto decode_rle8_bad;
                         m_strm.GetBytes( src, (code + 1) & -2 );
@@ -385,7 +385,7 @@ decode_rle4_bad: ;
                     {
                         int x_shift3 = (int)(line_end - data);
                         int y_shift = m_height - y;
-                        
+
                         if( code || !line_end_flag || x_shift3 < width3 )
                         {
                             if( code == 2 )
@@ -400,11 +400,11 @@ decode_rle4_bad: ;
                                 break;
 
                             if( color )
-                                data = FillUniColor( data, line_end, step, width3, 
+                                data = FillUniColor( data, line_end, step, width3,
                                                      y, m_height, x_shift3,
                                                      m_palette[0] );
                             else
-                                data = FillUniGray( data, line_end, step, width3, 
+                                data = FillUniGray( data, line_end, step, width3,
                                                     y, m_height, x_shift3,
                                                     gray_palette[0] );
 
@@ -505,7 +505,7 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         int  paletteSize = channels > 1 ? 0 : 1024;
         int  headerSize = 14 /* fileheader */ + bitmapHeaderSize + paletteSize;
         PaletteEntry palette[256];
-        
+
         // write signature 'BM'
         m_strm.PutBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
 

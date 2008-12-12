@@ -128,13 +128,13 @@ public:
         }
 
         pFVBlob->BlobSeq[0] = pBlob[0];
-        
+
         if(m_Dim>0)
         {   /* Calculate FV position: */
             FV[0] = CV_BLOB_X(pBlob);
             FV[1] = CV_BLOB_Y(pBlob);
         }
-        
+
         if(m_Dim<=2)
         {   /* Add new FV if position is enough: */
             *(int*)(FV+m_Dim) = CV_BLOB_ID(pBlob);
@@ -217,14 +217,14 @@ public:
     virtual int     GetFVNum()
     {
         return m_pFVSeq->total;
-    }; 
+    };
 
     virtual float*  GetFV(int index, int* pFVID)
     {
         float* pFV = (float*)cvGetSeqElem( m_pFVSeq, index );
         if(pFVID)pFVID[0] = *(int*)(pFV+m_Dim);
         return pFV;
-    }; 
+    };
     virtual float*  GetFVMin(){return m_FVMin;}; /* returned pointer to array of minimal values of FV, if return 0 then FVrange is not exist */
     virtual float*  GetFVMax(){return m_FVMax;}; /* returned pointer to array of maximal values of FV, if return 0 then FVrange is not exist */
     virtual float*  GetFVVar(){return m_FVVar;}; /* returned pointer to array of maximal values of FV, if return 0 then FVrange is not exist */
@@ -344,9 +344,9 @@ public:
     void Process(IplImage* pImg, IplImage* /*pFG*/)
     {
         int i;
-        
+
         if(!m_ClearFlag) Clear();
-        
+
         for(i=m_BlobList.GetBlobNum();i>0;--i)
         {   /* Delete unused blob: */
             DefBlobFVN* pFVBlob = (DefBlobFVN*)m_BlobList.GetBlob(i-1);
@@ -362,7 +362,7 @@ public:
                 m_BlobList.DelBlob(i-1);
             }
         } /* Check next blob in list. */
-        
+
         /* Set max min range: */
         m_FVMin[0] = 0;
         m_FVMin[1] = 0;
@@ -385,14 +385,14 @@ public:
     virtual int     GetFVNum()
     {
         return m_pFVSeq->total;
-    }; 
+    };
 
     virtual float*  GetFV(int index, int* pFVID)
     {
         float* pFV = (float*)cvGetSeqElem( m_pFVSeq, index );
         if(pFVID)pFVID[0] = *(int*)(pFV+m_Dim);
         return pFV;
-    }; 
+    };
 
     virtual float*  GetFVMin(){return m_FVMin;}; /* returned pointer to array of minimal values of FV, if return 0 then FVrange is not exist */
     virtual float*  GetFVMax(){return m_FVMax;}; /* returned pointer to array of maximal values of FV, if return 0 then FVrange is not exist */
@@ -478,12 +478,12 @@ public:
         m_Volume = 0;
         m_Max = 0;
     }
-    void Save(char* File)
+    void Save(const char* File)
     {
         if(m_pSparse)cvSave(File, m_pSparse );
         if(m_pND)cvSave(File, m_pND );
     }
-    void Save(CvFileStorage* fs, char* name)
+    void Save(CvFileStorage* fs, const char* name)
     {
         if(m_pSparse)
         {
@@ -494,7 +494,7 @@ public:
             cvWrite(fs, name, m_pND );
         }
     }
-    void Load(char* File)
+    void Load(const char* File)
     {
         CvFileStorage* fs = cvOpenFileStorage( File, NULL, CV_STORAGE_READ );
         if(fs)
@@ -511,8 +511,8 @@ public:
         }
         AfterLoad();
     } /* Load. */
-    
-    void Load(CvFileStorage* fs, CvFileNode* node, char* name)
+
+    void Load(CvFileStorage* fs, CvFileNode* node, const char* name)
     {
         CvFileNode* n = cvGetFileNodeByName(fs,node,name);
         void* ptr = n?cvRead(fs,n):NULL;
@@ -689,14 +689,14 @@ class CvBlobTrackAnalysisHist : public CvBlobTrackAnalysis
 private:
     int                 m_BinNumParam;
     int                 m_SmoothRadius;
-    char*               m_SmoothKernel;
+    const char*         m_SmoothKernel;
     float               m_AbnormalThreshold;
     int                 m_TrackNum;
     int                 m_Frame;
     int                 m_BinNum;
     char                m_DataFileName[1024];
     int                 m_Dim;
-    int*                m_Sizes;                 
+    int*                m_Sizes;
     DefMat              m_HistMat;
     int                 m_HistVolumeSaved;
     int*                m_pFVi;
@@ -724,7 +724,7 @@ private:
         m_pFViVar = (int*)cvAlloc(sizeof(int)*m_Dim);
         m_pFViVarRes = (int*)cvAlloc(sizeof(int)*m_Dim);
         m_Sizes = (int*)cvAlloc(sizeof(int)*m_Dim);
-        
+
         {   /* Create init sparce matrix: */
             int     i;
             for(i=0;i<m_Dim;++i)m_Sizes[i] = m_BinNum;
@@ -867,7 +867,7 @@ public:
             {   /* If it is a new FV then add it to trajectory histogram: */
                 int i,flag = 1;
                 int r = m_SmoothRadius;
-                
+
 //                    printf("BLob %3d NEW FV [", CV_BLOB_ID(pF));
 //                    for(i=0;i<m_Dim;++i) printf("%d,", m_pFVi[i]);
 //                    printf("]");
@@ -922,7 +922,7 @@ public:
                 }   /* Next variation. */
             } /* If new FV. */
         } /* Next FV. */
-        
+
         {   /* Check all blobs on list: */
             int i;
             for(i=m_TrackFGList.GetBlobNum(); i>0; --i)
@@ -945,7 +945,7 @@ public:
             int*        idxs = NULL;
             int         Val = 0;
             IplImage*   pI = cvCloneImage(pImg);
-            
+
             cvZero(pI);
 
             for(Val = m_HistMat.GetNext(&idxs,1); idxs; Val=m_HistMat.GetNext(&idxs,0))
@@ -967,7 +967,7 @@ public:
                     int dy = -2*(idxs[3]-m_BinNum/2);
                     cvLine(pI,cvPoint(x,y),cvPoint(x+dx,y+dy),CV_RGB(0,cvRound(vf*255),1));
                 }
-                if( m_Dim==4 && 
+                if( m_Dim==4 &&
                     m_pFVGen->GetFVMax()[0]==m_pFVGen->GetFVMax()[2] &&
                     m_pFVGen->GetFVMax()[1]==m_pFVGen->GetFVMax()[3])
                 {
@@ -1003,7 +1003,7 @@ public:
                         int dy = -2*(idxs[3]-m_BinNum/2);
                         cvLine(pI,cvPoint(x,y),cvPoint(x+dx,y+dy),CV_RGB(0,0,255));
                     }
-                    if( m_Dim==4 && 
+                    if( m_Dim==4 &&
                         m_pFVGen->GetFVMax()[0]==m_pFVGen->GetFVMax()[2] &&
                         m_pFVGen->GetFVMax()[1]==m_pFVGen->GetFVMax()[3])
                     { /* if SS feature vector */
@@ -1026,15 +1026,15 @@ public:
         return pF?pF->state:0.0f;
     };
 
-    /* Return 0 if trajectory is normal; 
+    /* Return 0 if trajectory is normal;
        rreturn >0 if trajectory abnormal. */
-    virtual char*   GetStateDesc(int BlobID)
+    virtual const char*   GetStateDesc(int BlobID)
     {
         if(GetState(BlobID)>0.5) return "abnormal";
         return NULL;
     }
 
-    virtual void    SetFileName(char* DataBaseName)
+    virtual void    SetFileName(const char* DataBaseName)
     {
         if(m_HistMat.m_Volume!=m_HistVolumeSaved)SaveHist();
         m_DataFileName[0] = 0;
@@ -1070,8 +1070,8 @@ public:
     virtual void LoadState(CvFileStorage* fs, CvFileNode* node)
     {
         CvFileNode* pBLN = cvGetFileNodeByName(fs,node,"BlobList");
-        
-        if(pBLN && CV_NODE_IS_SEQ(pBLN->tag)) 
+
+        if(pBLN && CV_NODE_IS_SEQ(pBLN->tag))
         {
             int b, bN = pBLN->data.seq->total;
             for(b=0; b<bN; ++b)
@@ -1079,11 +1079,11 @@ public:
                 DefTrackFG* pF = NULL;
                 CvBlob      Blob;
                 CvFileNode* pBN = (CvFileNode*)cvGetSeqElem(pBLN->data.seq,b);
-                
+
                 assert(pBN);
                 cvReadStructByName(fs, pBN, "Blob", &Blob, "ffffi");
                 AddBlob(&Blob);
-                pF = (DefTrackFG*)m_TrackFGList.GetBlobByID(Blob.ID);            
+                pF = (DefTrackFG*)m_TrackFGList.GetBlobByID(Blob.ID);
                 if(pF==NULL) continue;
                 assert(pF);
                 pF->state = (float)cvReadIntByName(fs,pBN,"State",cvRound(pF->state));
@@ -1149,11 +1149,11 @@ private:
     void RetrainStatModel()
     {
 ///////// !!!!! TODO !!!!! Repair /////////////
-#if 0        
+#if 0
         float               nu = 0;
         CvSVMModelParams    SVMParams = {0};
         CvStatModel*        pM = NULL;
-        
+
 
         memset(&SVMParams,0,sizeof(SVMParams));
         SVMParams.svm_type = CV_SVM_ONE_CLASS;
@@ -1164,7 +1164,7 @@ private:
         SVMParams.criteria = cvTermCriteria(CV_TERMCRIT_EPS, 100, 1e-3 );
         SVMParams.C = 1;
         SVMParams.p = 0.1;
-             
+
 
         if(m_pTrainData == NULL) return;
         {
@@ -1174,12 +1174,12 @@ private:
             TickCount = cvGetTickCount() - TickCount ;
             printf("SV Count = %d\n",((CvSVMModel*)pM)->sv_total);
             printf("Processing Time = %.1f(ms)\n",TickCount/(1000*cvGetTickFrequency()));
-            
+
         }
         if(pM==NULL) return;
         if(m_pStatModel) cvReleaseStatModel(&m_pStatModel);
         m_pStatModel = pM;
-        
+
         if(m_pTrainData && m_Wnd)
         {
             float       MaxVal = 0;
@@ -1276,11 +1276,11 @@ public:
         m_DataFileName[0] = 0;
         m_pStatImg = NULL;
         m_LastTrainDataSize = 0;
-        
+
         m_NU = 0.2f;
         AddParam("Nu",&m_NU);
         CommentParam("Nu","Parameters that tunes SVM border elastic");
-        
+
         m_RBFWidth = 1;
         AddParam("RBFWidth",&m_RBFWidth);
         CommentParam("RBFWidth","Parameters that tunes RBF kernel function width.");
@@ -1317,7 +1317,7 @@ public:
             //F.pFVGen = m_CreateFVGen();
             F.pMem = cvCreateMemStorage();
             F.pFVSeq = cvCreateSeq(0,sizeof(CvSeq),sizeof(float)*m_Dim,F.pMem);
-            
+
             F.BlobLast.x = -1;
             F.BlobLast.y = -1;
             F.BlobLast.w = -1;
@@ -1335,7 +1335,7 @@ public:
     {
         int     i;
         float*  pFVVar = m_pFVGen->GetFVVar();
-        
+
         m_pFVGen->Process(pImg, pFG);
         m_ImgSize = cvSize(pImg->width,pImg->height);
 
@@ -1349,7 +1349,7 @@ public:
             {   /* Process: */
                 float   dx,dy;
                 CvMat   FVmat;
-                
+
                 pF->state = 0;
 
                 if(m_pStatModel)
@@ -1406,7 +1406,7 @@ public:
                         int t;
                         float*  pTD = (float*)CV_MAT_ELEM_PTR( pTrainData[0], old_height+j*mult+k, 0);
                         memcpy(pTD,pFV,sizeof(float)*m_Dim);
-                        
+
                         if(pFVVar)for(t=0;t<m_Dim;++t)
                         {   /* Scale FV: */
                             pTD[t] /= pFVVar[t];
@@ -1472,9 +1472,9 @@ public:
         return pF?pF->state:0.0f;
     };
 
-    /* Return 0 if trajectory is normal; 
+    /* Return 0 if trajectory is normal;
        return >0 if trajectory abnormal. */
-    virtual char*   GetStateDesc(int BlobID)
+    virtual const char*   GetStateDesc(int BlobID)
     {
         if(GetState(BlobID)>0.5) return "abnormal";
         return NULL;

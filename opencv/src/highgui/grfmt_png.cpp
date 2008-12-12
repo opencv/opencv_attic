@@ -150,7 +150,7 @@ bool  GrFmtPngReader::ReadHeader()
                 {
                     png_uint_32 width, height;
                     int bit_depth, color_type;
-                    
+
                     png_init_io( png_ptr, m_f );
                     png_read_info( png_ptr, info_ptr );
 
@@ -185,13 +185,13 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
     uchar** buffer = 0;
 
     color = color > 0 || ( m_iscolor && color < 0 );
-    
+
     if( m_png_ptr && m_info_ptr && m_end_info && m_width && m_height )
     {
         png_structp png_ptr = (png_structp)m_png_ptr;
         png_infop info_ptr = (png_infop)m_info_ptr;
         png_infop end_info = (png_infop)m_end_info;
-        
+
         if( setjmp(png_ptr->jmpbuf) == 0 )
         {
             int y;
@@ -279,7 +279,7 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
     if( png_ptr )
     {
         info_ptr = png_create_info_struct( png_ptr );
-        
+
         if( info_ptr )
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
@@ -312,7 +312,7 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
                     png_write_end( png_ptr, info_ptr );
 
                     delete[] buffer;
-                
+
                     result = true;
                 }
             }
@@ -329,5 +329,3 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
 #endif
 
 /* End of file. */
-
-

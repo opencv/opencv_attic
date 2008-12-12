@@ -440,7 +440,7 @@ bool  GrFmtJpeg2000Writer::WriteImage( const uchar* data, int step,
         jas_stream_t *stream = jas_stream_fopen( m_filename, "wb" );
         if( stream )
         {
-            result = !jas_image_encode( img, stream, jas_image_strtofmt( "jp2" ), "" );
+            result = !jas_image_encode( img, stream, jas_image_strtofmt( (char*)"jp2" ), (char*)"" );
 
             jas_stream_close( stream );
         }

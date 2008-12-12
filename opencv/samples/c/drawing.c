@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -146,7 +148,7 @@ int main( int argc, char** argv )
         pt1.y=cvRandInt(&rng) % height3 - height;
 
         cvInitFont( &font, cvRandInt(&rng) % 8,
-                    (cvRandInt(&rng)%100)*0.05+0.1, (cvRandInt(&rng)%100)*0.05+0.1, 
+                    (cvRandInt(&rng)%100)*0.05+0.1, (cvRandInt(&rng)%100)*0.05+0.1,
                     (cvRandInt(&rng)%5)*0.1, cvRound(cvRandInt(&rng)%10), line_type );
 
         cvPutText( image, "Testing text rendering!", pt1, &font, random_color(&rng));

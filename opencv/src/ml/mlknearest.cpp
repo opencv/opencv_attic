@@ -103,7 +103,7 @@ bool CvKNearest::train( const CvMat* _train_data, const CvMat* _responses,
     CvVectors* _samples;
     float** _data;
     int _count, _dims, _dims_all, _rsize;
-    
+
     if( !_update_base )
         clear();
 
@@ -121,7 +121,7 @@ bool CvKNearest::train( const CvMat* _train_data, const CvMat* _responses,
     {
         if( _max_k < 1 )
             CV_ERROR( CV_StsOutOfRange, "max_k must be a positive number" );
-        
+
         regression = _is_regression;
         var_count = _dims;
         max_k = _max_k;
@@ -237,7 +237,7 @@ float CvKNearest::write_results( int k, int k1, int start, int end,
             {
                 int prev_start = 0, best_count = 0, cur_count;
                 Cv32suf best_val;
-            
+
                 for( j = 0; j < k1; j++ )
                     sort_buf[j].i = nr[j].i;
 
@@ -254,7 +254,7 @@ float CvKNearest::write_results( int k, int k1, int start, int end,
                     if( !swap_fl )
                         break;
                 }
-            
+
                 best_val.i = 0;
                 for( j = 1; j <= k1; j++ )
                     if( j == k1 || sort_buf[j].i != sort_buf[j-1].i )
@@ -269,7 +269,7 @@ float CvKNearest::write_results( int k, int k1, int start, int end,
                     }
                 r = best_val.f;
             }
-            
+
             if( start+i == 0 )
                 result = r;
 
@@ -299,7 +299,7 @@ float CvKNearest::write_results( int k, int k1, int start, int end,
 
     return result;
 }
-    
+
 
 
 float CvKNearest::find_nearest( const CvMat* _samples, int k, CvMat* _results,
@@ -325,7 +325,7 @@ float CvKNearest::find_nearest( const CvMat* _samples, int k, CvMat* _results,
         CV_ERROR( CV_StsBadArg, "Input samples must be floating-point matrix (<num_samples>x<var_count>)" );
 
     if( _results && (!CV_IS_MAT(_results) ||
-        _results->cols != 1 && _results->rows != 1 ||
+        (_results->cols != 1 && _results->rows != 1) ||
         _results->cols + _results->rows - 1 != _samples->rows) )
         CV_ERROR( CV_StsBadArg,
         "The results must be 1d vector containing as much elements as the number of samples" );

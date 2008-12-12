@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -23,7 +25,7 @@ int main( int argc, char** argv )
     color_tab[4] = CV_RGB(255,255,0);
 
     cvNamedWindow( "clusters", 1 );
-        
+
     for(;;)
     {
         char key;
@@ -31,7 +33,7 @@ int main( int argc, char** argv )
         int i, sample_count = cvRandInt(&rng)%1000 + 1;
         CvMat* points = cvCreateMat( sample_count, 1, CV_32FC2 );
         CvMat* clusters = cvCreateMat( sample_count, 1, CV_32SC1 );
-        
+
         /* generate random sample from multigaussian distribution */
         for( k = 0; k < cluster_count; k++ )
         {
@@ -42,7 +44,7 @@ int main( int argc, char** argv )
             cvGetRows( points, &point_chunk, k*sample_count/cluster_count,
                        k == cluster_count - 1 ? sample_count :
                        (k+1)*sample_count/cluster_count, 1 );
-                        
+
             cvRandArr( &rng, &point_chunk, CV_RAND_NORMAL,
                        cvScalar(center.x,center.y,0,0),
                        cvScalar(img->width*0.1,img->height*0.1,0,0));
@@ -80,7 +82,7 @@ int main( int argc, char** argv )
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
             break;
     }
-    
+
     cvDestroyWindow( "clusters" );
     return 0;
 }

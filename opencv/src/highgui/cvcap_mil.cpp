@@ -40,7 +40,7 @@
 //M*/
 
 #include "_highgui.h"
-#include "mil.h" 
+#include "mil.h"
 
 #if _MSC_VER >= 1200
   #pragma warning( disable: 4711 )
@@ -54,8 +54,8 @@
 
 /********************* Capturing video from camera via MIL *********************/
 
-struct 
-{      
+struct
+{
     MIL_ID MilApplication;
     int MilUser;
 } g_Mil = {0,0}; //global structure for handling MIL application
@@ -72,15 +72,15 @@ public:
     virtual double getProperty(int);
     virtual bool setProperty(int, double) { return false; }
     virtual bool grabFrame();
-    virtual IplImage* retrieveFrame();
+    virtual IplImage* retrieveFrame(int);
 
 protected:
     void init();
 
-    MIL_ID 
+    MIL_ID
         MilSystem,       /* System identifier.       */
         MilDisplay,      /* Display identifier.      */
-        MilDigitizer,    /* Digitizer identifier.    */ 
+        MilDigitizer,    /* Digitizer identifier.    */
         MilImage;        /* Image buffer identifier. */
     IplImage* rgb_frame;
 };
@@ -108,7 +108,7 @@ bool CvCaptureCAM_MIL::open( int wIndex )
         assert(g_Mil.MilUser>0);
         g_Mil.MilUser++;
     }
-    
+
     int dev_table[16] = { M_DEV0, M_DEV1, M_DEV2, M_DEV3,
         M_DEV4, M_DEV5, M_DEV6, M_DEV7,
         M_DEV8, M_DEV9, M_DEV10, M_DEV11,
@@ -117,16 +117,16 @@ bool CvCaptureCAM_MIL::open( int wIndex )
     //set default window size
     int w = 320;
     int h = 240;
-    
-    for( ; wIndex < 16; wIndex++ ) 
+
+    for( ; wIndex < 16; wIndex++ )
     {
         MsysAlloc( M_SYSTEM_SETUP, //we use default system,
-                                   //if this does not work 
-                                   //try to define exact board 
+                                   //if this does not work
+                                   //try to define exact board
                                    //e.g.M_SYSTEM_METEOR,M_SYSTEM_METEOR_II...
-                   dev_table[wIndex], 
-                   M_DEFAULT, 
-                   &MilSystem ); 
+                   dev_table[wIndex],
+                   M_DEFAULT,
+                   &MilSystem );
 
         if( MilSystem != M_NULL )
             break;
@@ -136,19 +136,19 @@ bool CvCaptureCAM_MIL::open( int wIndex )
         MdigAlloc(MilSystem,M_DEFAULT,
                   M_CAMERA_SETUP, //default. May be M_NTSC or other
                   M_DEFAULT,&MilDigitizer);
-        
+
         rgb_frame = cvCreateImage(cvSize(w,h), IPL_DEPTH_8U, 3 );
         MdigControl(MilDigitizer, M_GRAB_SCALE,  1.0 / 2);
-        
-        /*below line enables getting image vertical orientation 
-         consistent with VFW but it introduces some image corruption 
-         on MeteorII, so we left the image as is*/  
+
+        /*below line enables getting image vertical orientation
+         consistent with VFW but it introduces some image corruption
+         on MeteorII, so we left the image as is*/
         //MdigControl(MilDigitizer, M_GRAB_DIRECTION_Y, M_REVERSE );
 
         MilImage = MbufAllocColor(MilSystem, 3, w, h,
             8+M_UNSIGNED, M_IMAGE + M_GRAB, M_NULL);
     }
-    
+
     return MilSystem != M_NULL;
 }
 
@@ -159,8 +159,8 @@ void CvCaptureCAM_MIL::close( CvCaptureCAM_MIL* capture )
         MdigFree( MilDigitizer );
         MbufFree( MilImage );
         MsysFree( MilSystem );
-        cvReleaseImage(&rgb_frame ); 
-        
+        cvReleaseImage(&rgb_frame );
+
         g_Mil.MilUser--;
         if(!g_Mil.MilUser)
             MappFree(g_Mil.MilApplication);
@@ -168,7 +168,7 @@ void CvCaptureCAM_MIL::close( CvCaptureCAM_MIL* capture )
         MilSystem = M_NULL;
         MilDigitizer = M_NULL;
     }
-}         
+}
 
 
 bool CvCaptureCAM_MIL::grabFrame()
@@ -182,9 +182,9 @@ bool CvCaptureCAM_MIL::grabFrame()
 }
 
 
-IplImage* CvCaptureCAM_MIL::retrieveFrame()
+IplImage* CvCaptureCAM_MIL::retrieveFrame(int)
 {
-    MbufGetColor(MilImage, M_BGR24+M_PACKED, M_ALL_BAND, (void*)(rgb_frame->imageData)); 
+    MbufGetColor(MilImage, M_BGR24+M_PACKED, M_ALL_BAND, (void*)(rgb_frame->imageData));
     return rgb_frame;
 }
 
@@ -196,7 +196,7 @@ double CvCaptureCAM_MIL::getProperty( int property_id )
         return rgb_frame ? rgb_frame->width : 0;
 	case CV_CAP_PROP_FRAME_HEIGHT:
 		return rgb_frame ? rgb_frame->height : 0;
-    } 
+    }
     return 0;
 }
 

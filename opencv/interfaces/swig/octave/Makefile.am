@@ -1,9 +1,4 @@
-CV_INCLUDES = \
-  -I$(top_srcdir)/cv/include         \
-  -I$(top_srcdir)/cxcore/include     \
-  -I$(top_srcdir)/ml/include         \
-  -I$(top_srcdir)/otherlibs/highgui	 \
-  -I$(srcdir)
+CV_INCLUDES = -I$(top_srcdir)/include/opencv -I$(srcdir)
 
 AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
@@ -69,7 +64,7 @@ cv_wrap.cpp: cv.i imagedata.i cvarr.i octhelpers.i              \
 ml_wrap.cpp: ml.i octtypemaps.i                                 \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
-              $(top_srcdir)/ml/include/ml.h                     \
+              $(top_srcdir)/include/opencv/ml.h                 \
               Makefile.in
 	$(SWIG) $(SWIG_OCTAVE_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
@@ -78,7 +73,7 @@ highgui_wrap.cpp: highgui.i octtypemaps.i adapters.i            \
               $(top_srcdir)/interfaces/swig/general/highgui.i   \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
-              $(top_srcdir)/otherlibs/highgui/highgui.h         \
+              $(top_srcdir)/include/opencv/highgui.h            \
               Makefile.in
 	$(SWIG) $(SWIG_OCTAVE_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
@@ -96,7 +91,7 @@ PKG_OCT_FILES = cv.oct ml.oct highgui.oct
 PKG_OTHER_FILES = $(srcdir)/COPYING $(srcdir)/DESCRIPTION $(srcdir)/INDEX $(srcdir)/PKG_ADD_template
 
 octavedir=$(pkgdatadir)/octave
-dist_octave_DATA = opencv-1.1.0.tar.gz
+nodist_octave_DATA = opencv-1.1.0.tar.gz
 
 opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 	mkdir -p $(PKG_NAME)
@@ -112,11 +107,11 @@ opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
 
 cv.oct: cv_wrap.cpp cvshadow.cpp octerror.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/cv/src/.libs -lcv $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lcv $^
 ml.oct: ml_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/ml/src/.libs -lml $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lml $^
 highgui.oct: highgui_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/otherlibs/highgui/.libs -lhighgui $^
+	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lhighgui $^
 
 endif
 

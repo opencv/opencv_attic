@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-#  CMake file for cvtest. See root CMakeLists.txt 
+#  CMake file for cvtest. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 project(cvtest)
@@ -25,7 +25,7 @@ if(WIN32 AND MSVC)
                 PROPERTIES
                 COMPILE_FLAGS "/Yu${pch_header}"
                 )
-        endif()        
+        endif()
     endforeach()
 endif()
 
@@ -37,7 +37,7 @@ add_executable(${the_target} ${test_srcs} ${test_hdrs})
 
 # Additional target properties
 set_target_properties(${the_target} PROPERTIES
-	DEBUG_POSTFIX "d"
+	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
 	)
 

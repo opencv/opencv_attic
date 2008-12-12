@@ -5,9 +5,7 @@
 # script language interfaces that SWIG is capable of generating wrappers for
 
 CV_INCLUDES = \
-  -I$(top_srcdir)/cv/include         \
-  -I$(top_srcdir)/cxcore/include     \
-  -I$(top_srcdir)/otherlibs/highgui
+  -I$(top_srcdir)/include/opencv
 
 AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \

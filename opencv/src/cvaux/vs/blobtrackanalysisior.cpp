@@ -49,7 +49,7 @@ class CvBlobTrackAnalysisIOR : public CvBlobTrackAnalysis
 protected:
     struct  DefAn
     {
-        char*                   pName;
+        const char*                   pName;
         CvBlobTrackAnalysis*    pAn;
     } m_Ans[MAX_ANS];
     int m_AnNum;
@@ -98,7 +98,7 @@ public:
         return (float)state;
     };
 
-    virtual char*   GetStateDesc(int BlobID)
+    virtual const char*   GetStateDesc(int BlobID)
     {
         int     rest = MAX_DESC-1;
         int     i;
@@ -106,7 +106,7 @@ public:
 
         for(i=0; i<m_AnNum; ++i)
         {
-            char* str = m_Ans[i].pAn->GetStateDesc(BlobID);
+            const char* str = m_Ans[i].pAn->GetStateDesc(BlobID);
 
             if(str && strlen(m_Ans[i].pName) + strlen(str)+4 < (size_t)rest)
             {
@@ -127,7 +127,7 @@ public:
     {
     };
 
-    int AddAnalyzer(CvBlobTrackAnalysis* pA, char* pName)
+    int AddAnalyzer(CvBlobTrackAnalysis* pA, const char* pName)
     {
         if(m_AnNum<MAX_ANS)
         {

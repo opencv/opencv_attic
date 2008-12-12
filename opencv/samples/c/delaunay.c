@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -228,7 +230,9 @@ void run(void)
 
 int main( int argc, char** argv )
 {
+#ifdef _MSC_VER
     argc, argv;
+#endif
     run();
     return 0;
 }

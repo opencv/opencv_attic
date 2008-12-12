@@ -6,7 +6,7 @@ left01.jpg left02.jpg left03.jpg left04.jpg left05.jpg left06.jpg left07.jpg \
 left08.jpg left09.jpg left11.jpg left12.jpg left13.jpg left14.jpg \
 right01.jpg right02.jpg right03.jpg right04.jpg right05.jpg right06.jpg right07.jpg \
 right08.jpg right09.jpg right11.jpg right12.jpg right13.jpg right14.jpg \
-stereo_calib.txt build_all.sh cvsample.dsp makefile.ms makefile.gnu \
+stereo_calib.txt build_all.sh cvsample.dsp\
 agaricus-lepiota.data letter-recognition.data bgfg_codebook.cpp bgfg_segm.cpp blobtrack.cpp camshiftdemo.c \
 contours.c convexhull.c camshiftdemo.c contours.c convert_cascade.c convexhull.c \
 delaunay.c demhist.c dft.c distrans.c drawing.c edge.c facedetect.c \

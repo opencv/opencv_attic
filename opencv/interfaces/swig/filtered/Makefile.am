@@ -6,9 +6,7 @@
 # script language interfaces that SWIG is capable of generating wrappers for
 
 CV_INCLUDES = \
-  -I$(top_srcdir)/cv/include         \
-  -I$(top_srcdir)/cxcore/include     \
-  -I$(top_srcdir)/otherlibs/highgui
+  -I$(top_srcdir)/include/opencv
 
 AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
@@ -24,30 +22,30 @@ if UPDATE_SWIG_WRAPPERS
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 cv.h: \
-  $(top_srcdir)/cv/include/cv.h \
-  $(top_srcdir)/cv/include/cvtypes.h \
-  $(top_srcdir)/cxcore/include/cxcore.h \
-  $(top_srcdir)/cxcore/include/cxcore.hpp \
-  $(top_srcdir)/cxcore/include/cvver.h \
-  $(top_srcdir)/cxcore/include/cxtypes.h \
-  $(top_srcdir)/cxcore/include/cxerror.h \
+  $(top_srcdir)/include/opencv/cv.h \
+  $(top_srcdir)/include/opencv/cvtypes.h \
+  $(top_srcdir)/include/opencv/cxcore.h \
+  $(top_srcdir)/include/opencv/cxcore.hpp \
+  $(top_srcdir)/include/opencv/cvver.h \
+  $(top_srcdir)/include/opencv/cxtypes.h \
+  $(top_srcdir)/include/opencv/cxerror.h \
   Makefile.in
-	$(CPP) -x c++ -I$(top_builddir) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/cv/include/cv.h
+	$(CPP) -x c++ -I$(top_builddir) $(AM_CPPFLAGS) $(CPPFLAGS) -DSKIP_INCLUDES -o $@ $(top_srcdir)/include/opencv/cv.h
 
 # this rule creates a single SWIG parseable header from cv.h and cxcore.h, etc.
 constants.h: \
-  $(top_srcdir)/cv/include/cv.h \
-  $(top_srcdir)/cv/include/cvtypes.h \
-  $(top_srcdir)/cxcore/include/cxcore.h \
-  $(top_srcdir)/cxcore/include/cxcore.hpp \
-  $(top_srcdir)/cxcore/include/cxtypes.h \
-  $(top_srcdir)/cxcore/include/cxerror.h \
+  $(top_srcdir)/include/opencv/cv.h \
+  $(top_srcdir)/include/opencv/cvtypes.h \
+  $(top_srcdir)/include/opencv/cxcore.h \
+  $(top_srcdir)/include/opencv/cxcore.hpp \
+  $(top_srcdir)/include/opencv/cxtypes.h \
+  $(top_srcdir)/include/opencv/cxerror.h \
   Makefile.in
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxcore.h   > $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cvver.h   >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxtypes.h >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cxcore/include/cxerror.h >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cv.h          >> $@
-	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/cv/include/cvtypes.h     >> $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cxcore.h   > $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cvver.h   >> $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cxtypes.h >> $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cxerror.h >> $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cv.h      >> $@
+	$(PYTHON) $(top_srcdir)/utils/extract_constants.py $(top_srcdir)/include/opencv/cvtypes.h >> $@
 
 endif

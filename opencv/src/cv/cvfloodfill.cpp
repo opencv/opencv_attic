@@ -53,7 +53,7 @@ typedef struct CvFFillSegment
 CvFFillSegment;
 
 #define UP 1
-#define DOWN -1             
+#define DOWN -1
 
 #define ICV_PUSH( Y, L, R, PREV_L, PREV_R, DIR )\
 {                                               \
@@ -97,7 +97,7 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
                       CvFFillSegment* buffer, int buffer_size, int cn )
 {
     uchar* img = pImage + step * seed.y;
-    int i, L, R; 
+    int i, L, R;
     int area = 0;
     int val0[] = {0,0,0};
     uchar newVal[] = {0,0,0};
@@ -125,12 +125,12 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
         assert( cn == 3 );
         ICV_SET_C3( val0, img + L*3 );
         ICV_SET_C3( newVal, _newVal );
-        
+
         ICV_SET_C3( img + L*3, newVal );
-    
+
         while( --L >= 0 && ICV_EQ_C3( img + L*3, val0 ))
             ICV_SET_C3( img + L*3, newVal );
-    
+
         while( ++R < roi.width && ICV_EQ_C3( img + R*3, val0 ))
             ICV_SET_C3( img + R*3, newVal );
     }
@@ -229,7 +229,7 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
                        CvFFillSegment* buffer, int buffer_size, int cn )
 {
     int* img = pImage + (step /= sizeof(pImage[0])) * seed.y;
-    int i, L, R; 
+    int i, L, R;
     int area = 0;
     int val0[] = {0,0,0};
     int newVal[] = {0,0,0};
@@ -257,12 +257,12 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
         assert( cn == 3 );
         ICV_SET_C3( val0, img + L*3 );
         ICV_SET_C3( newVal, _newVal );
-        
+
         ICV_SET_C3( img + L*3, newVal );
-    
+
         while( --L >= 0 && ICV_EQ_C3( img + L*3, val0 ))
             ICV_SET_C3( img + L*3, newVal );
-    
+
         while( ++R < roi.width && ICV_EQ_C3( img + R*3, val0 ))
             ICV_SET_C3( img + R*3, newVal );
     }
@@ -521,7 +521,7 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                     for( i = left; i <= right; i++ )
                     {
                         int idx, val[1];
-                
+
                         if( !mask[i] &&
                             (((val[0] = img[i],
                             (unsigned)(idx = i-L-1) <= length) &&
@@ -917,7 +917,7 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                     {
                         int idx;
                         float val[3];
-                
+
                         if( !mask[i] &&
                             (((ICV_SET_C3( val, img+i*3 ),
                             (unsigned)(idx = i-L-1) <= length) &&
@@ -961,7 +961,7 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                 }
         }
     }
-    
+
     if( region )
     {
         region->area = area;
@@ -969,7 +969,7 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
         region->rect.y = YMin;
         region->rect.width = XMax - XMin + 1;
         region->rect.height = YMax - YMin + 1;
-    
+
         if( fillImage )
             region->value = cvScalar(newVal[0], newVal[1], newVal[2]);
         else
@@ -1099,7 +1099,7 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
         CvFloodFillGradFunc func = (CvFloodFillGradFunc)ffillgrad_tab[idx];
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
-        
+
         if( !mask )
         {
             /* created mask will be 8-byte aligned */

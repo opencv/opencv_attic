@@ -2,7 +2,7 @@
 # 2008-04-19, xavier.delacour@gmail.com
 
 
-EXTRA_DIST = 
+EXTRA_DIST =
 
 MOSTLYCLEANFILES = *.works
 
@@ -15,8 +15,8 @@ noinst_OCTAVE = \
 TESTS_ENVIRONMENT = \
     top_srcdir=$(top_srcdir) \
     top_builddir=$(top_builddir) \
-    LD_LIBRARY_PATH=$(top_builddir)/cxcore/src/.libs:$(top_builddir)/cv/src/.libs:$(top_builddir)/otherlibs/highgui/.libs:$(LD_LIBRARY_PATH) \
-    DYLD_LIBRARY_PATH=$(top_builddir)/cxcore/src/.libs:$(top_builddir)/cv/src/.libs:$(top_builddir)/otherlibs/highgui/.libs:$(LD_LIBRARY_PATH) \
+    LD_LIBRARY_PATH=$(top_builddir)/src/cxcore/.libs:$(top_builddir)/src/cv/.libs:$(top_builddir)/src/highgui/.libs:$(LD_LIBRARY_PATH) \
+    DYLD_LIBRARY_PATH=$(top_builddir)/src/cxcore/.libs:$(top_builddir)/src/cv/.libs:$(top_builddir)/src/highgui/.libs:$(LD_LIBRARY_PATH) \
     OCTAVEPATH=$(top_builddir)/interfaces/swig/octave
 
 # do tests only if we ask for octave

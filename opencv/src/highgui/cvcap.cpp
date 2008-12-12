@@ -72,9 +72,9 @@ CV_IMPL int cvGrabFrame( CvCapture* capture )
     return capture ? capture->grabFrame() : 0;
 }
 
-CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
+CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture, int idx )
 {
-    return capture ? capture->retrieveFrame() : 0;
+    return capture ? capture->retrieveFrame(idx) : 0;
 }
 
 CV_IMPL double cvGetCaptureProperty( CvCapture* capture, int id )
@@ -165,6 +165,11 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 			break;
 
 		case CV_CAP_FIREWIRE:
+		#ifdef HAVE_DC1394_2
+			capture = cvCreateCameraCapture_DC1394_2 (index);
+			if (capture)
+				return capture;
+		#endif
 		#ifdef HAVE_DC1394
 			capture = cvCreateCameraCapture_DC1394 (index);
 			if (capture)
@@ -197,7 +202,7 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 				return capture;
 			break;
 		#endif
-			
+
 		#ifdef HAVE_UNICAP
 		case CV_CAP_UNICAP:
 		  capture = cvCreateCameraCapture_Unicap (index);
@@ -259,7 +264,7 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
 CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color )
 {
-	CV_FUNCNAME( "cvCreateVideoWriter" );
+	//CV_FUNCNAME( "cvCreateVideoWriter" );
 
 	CvVideoWriter *result = 0;
 

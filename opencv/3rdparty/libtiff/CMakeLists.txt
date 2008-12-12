@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-#  CMake file for libtiff. See root CMakeLists.txt 
+#  CMake file for libtiff. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
 project(libtiff)
@@ -7,8 +7,8 @@ project(libtiff)
 # List of C++ files:
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR} 
-	${CMAKE_SOURCE_DIR}/otherlibs/_graphics/include
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	)
 
 # The .cpp files:
@@ -19,7 +19,6 @@ set(lib_srcs
 	tif_write.c
 	tif_warning.c
 	tif_version.c
-	tif_tile.c
 	tif_tile.c
 	tif_thunder.c
 	tif_swab.c
@@ -64,26 +63,20 @@ endif(WIN32)
 if(APPLE)
     set(lib_srcs ${lib_srcs} tif_apple.c)
 endif(APPLE)
-	
+
 file(GLOB lib_hdrs *.h*)
 
 set(the_target "libtiff")
-
-add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
 
-set_target_properties(${the_target} 
-	PROPERTIES 
-	OUTPUT_NAME "${the_target}" 
-	DEBUG_POSTFIX "d"
-	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/otherlibs/_graphics/lib
-	)
+add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
 
-#install(TARGETS ${the_target}
-#	RUNTIME DESTINATION bin
-#	LIBRARY DESTINATION lib
-#	ARCHIVE DESTINATION lib
-#	)
+set_target_properties(${the_target}
+	PROPERTIES
+	OUTPUT_NAME "${the_target}"
+	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
+	)

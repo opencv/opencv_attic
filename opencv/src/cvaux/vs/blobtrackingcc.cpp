@@ -89,7 +89,7 @@ private:
     float           m_Alpha;
     int             m_Collision;
     int             m_ConfidenceType;
-    char*           m_ConfidenceTypeStr;
+    const char*           m_ConfidenceTypeStr;
     CvBlobSeq       m_BlobList;
     CvBlobSeq       m_BlobListNew;
 //  int             m_LastID;
@@ -197,7 +197,7 @@ public:
         m_pImgFG = pImgFG;
 
         if(m_BlobList.GetBlobNum() <= 0 ) return;
-        
+
         /* Clear bloblist for new blobs: */
         m_BlobListNew.Clear();
 
@@ -205,7 +205,7 @@ public:
         cvClearMemStorage(m_pMem);
         assert(pImgFG);
 
-        
+
         /* Find CC: */
 #if 0
         {   // By contour clustering:
@@ -242,7 +242,7 @@ public:
 
             cvReleaseImage(&pBin);
         }
-#endif        
+#endif
         for(i=m_BlobList.GetBlobNum(); i>0; --i)
         {   /* Predict new blob position: */
             CvBlob*         pB=NULL;
@@ -250,10 +250,10 @@ public:
 
             /* Update predictor by previous value of blob: */
             pBT->pPredictor->Update(&(pBT->blob));
-            
+
             /* Predict current position: */
             pB = pBT->pPredictor->Predict();
-            
+
             if(pB)
             {
                 pBT->BlobPredict = pB[0];
@@ -361,9 +361,9 @@ public:
         //CvBlob*         pBBest = NULL;
         //double          DistBest = -1;
         int             BlobID;
-        
+
         if(pB==NULL) return;
-        
+
         BlobID = pB->ID;
 
         if(m_Collision && pBT->Collision)
@@ -391,7 +391,7 @@ public:
         pBlob[0] = pB[0];
         pBlob->ID = ID;
     };
-    
+
     virtual double  GetConfidence(int BlobIndex, CvBlob* pBlob, IplImage* /*pImg*/, IplImage* pImgFG = NULL)
     {
         /* Define coefficients in exp by exp(-XT*K)=VT: */
@@ -412,12 +412,12 @@ public:
         dp2 = dx*dx+dy*dy;
         ds2 = dw*dw+dh*dh;
 
-        if(!pBT->Collision) 
+        if(!pBT->Collision)
         {   /* Confidence for size by nearest blob: */
             W*=exp(-_KS*ds2);
         }
-        
-        if(m_ConfidenceType==0 && !pBT->Collision) 
+
+        if(m_ConfidenceType==0 && !pBT->Collision)
         {   /* Confidence by nearest blob: */
             W*=exp(-_KP*dp2);
         }
@@ -438,7 +438,7 @@ public:
             float   S = 0.2f;
             float   Aver = CalcAverageMask(pBlob, pImgFG );
             double B = sqrt(Aver*pBT->AverFG)+sqrt((1-Aver)*(1-pBT->AverFG));
-            
+
             W *= exp((B-1)/(2*S));
         }   /* Calculate sum of mask. */
 
@@ -448,9 +448,9 @@ public:
     virtual void UpdateBlob(int BlobIndex, CvBlob* /*pBlob*/, IplImage* /*pImg*/, IplImage* pImgFG = NULL)
     {
         DefBlobTracker* pBT = (DefBlobTracker*)m_BlobList.GetBlob(BlobIndex);
-        
+
         if(pImgFG==NULL || pBT==NULL) return;
-        
+
         if(!pBT->Collision)
         {
         //pBT->AverFG = pBT->AverFG * (1-m_Alpha) + m_Alpha * CalcAverageMask(pBlob,pImgFG);
@@ -459,11 +459,11 @@ public:
 
     virtual void ParamUpdate()
     {
-        char*   pCT[3] = {"NearestBlob","AverFG","BC"};
-        int     i;                
-        
+        const char*   pCT[3] = {"NearestBlob","AverFG","BC"};
+        int     i;
+
         CvBlobTracker::ParamUpdate();
-        
+
         for(i=0; i<3; ++i)
         {
             if(cv_stricmp(m_ConfidenceTypeStr,pCT[i])==0)
@@ -521,9 +521,9 @@ private:
         CvBlob*         pBBest = NULL;
         double          DistBest = -1;
         int             j,BlobID;
-        
+
         if(pB==NULL) return NULL;
-        
+
         BlobID = pB->ID;
 
         for(j=m_BlobListNew.GetBlobNum(); j>0; --j)

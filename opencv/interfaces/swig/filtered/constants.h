@@ -40,6 +40,14 @@
 
 #define CV_RAND_NORMAL   1
 
+#define CV_SORT_EVERY_ROW 0
+
+#define CV_SORT_EVERY_COLUMN 1
+
+#define CV_SORT_ASCENDING 0
+
+#define CV_SORT_DESCENDING 16
+
 #define CV_GEMM_A_T 1
 
 #define CV_GEMM_B_T 2
@@ -208,6 +216,8 @@
 
 #define CV_FONT_VECTOR0    CV_FONT_HERSHEY_SIMPLEX
 
+#define CV_KMEANS_USE_INITIAL_LABELS    1
+
 #define CV_ErrModeLeaf     0   
 
 #define CV_ErrModeParent   1   
@@ -216,11 +226,11 @@
 
 #define CV_MAJOR_VERSION    1
 
-#define CV_MINOR_VERSION    0
+#define CV_MINOR_VERSION    1
 
 #define CV_SUBMINOR_VERSION 0
 
-#define CV_VERSION          "1.0.0"
+#define CV_VERSION          "1.1.0"
 
 #define CV_PI   3.1415926535897932384626433832795
 
