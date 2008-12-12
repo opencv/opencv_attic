@@ -1,3 +1,5 @@
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #include "cv.h"
 #include "highgui.h"
 
@@ -82,7 +84,7 @@ int main( int argc, char** argv )
         return -1;
     }
     storage = cvCreateMemStorage(0);
-    
+
     if( !input_name || (isdigit(input_name[0]) && input_name[1] == '\0') )
         capture = cvCaptureFromCAM( !input_name ? 0 : input_name[0] - '0' );
     else if( input_name )
@@ -100,9 +102,7 @@ int main( int argc, char** argv )
     {
         for(;;)
         {
-            if( !cvGrabFrame( capture ))
-                break;
-            frame = cvRetrieveFrame( capture );
+            frame = cvQueryFrame( capture );
             if( !frame )
                 break;
             if( !frame_copy )
@@ -112,7 +112,7 @@ int main( int argc, char** argv )
                 cvCopy( frame, frame_copy, 0 );
             else
                 cvFlip( frame, frame_copy, 0 );
-            
+
             detect_and_draw( frame_copy );
 
             if( cvWaitKey( 10 ) >= 0 )
@@ -146,7 +146,7 @@ _cleanup_:
                     while( len > 0 && isspace(buf[len-1]) )
                         len--;
                     buf[len] = '\0';
-                    printf( "file %s\n", buf ); 
+                    printf( "file %s\n", buf );
                     image = cvLoadImage( buf, 1 );
                     if( image )
                     {
@@ -161,7 +161,7 @@ _cleanup_:
             }
         }
     }
-    
+
     cvDestroyWindow("result");
 
     return 0;
@@ -169,7 +169,7 @@ _cleanup_:
 
 void detect_and_draw( IplImage* img )
 {
-    static CvScalar colors[] = 
+    static CvScalar colors[] =
     {
         {{0,0,255}},
         {{0,128,255}},

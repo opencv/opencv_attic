@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -80,7 +82,7 @@ void update_brightcont( int arg )
         cvRectangle( hist_image, cvPoint(i*bin_w, hist_image->height),
                      cvPoint((i+1)*bin_w, hist_image->height - cvRound(cvGetReal1D(hist->bins,i))),
                      cvScalarAll(0), -1, 8, 0 );
-   
+
     cvShowImage( "histogram", hist_image );
 }
 
@@ -110,7 +112,7 @@ int main( int argc, char** argv )
 
     update_brightcont(0);
     cvWaitKey(0);
-    
+
     cvReleaseImage(&src_image);
     cvReleaseImage(&dst_image);
 

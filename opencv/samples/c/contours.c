@@ -2,6 +2,8 @@
 #pragma package <opencv>
 #endif
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #ifndef _EiC
 #include "cv.h"
 #include "highgui.h"
@@ -76,7 +78,7 @@ int main( int argc, char** argv )
 
     cvNamedWindow( "contours", 1 );
     cvCreateTrackbar( "levels+3", "contours", &levels, 7, on_trackbar );
-    
+
     on_trackbar(0);
     cvWaitKey(0);
     cvReleaseMemStorage( &storage );
