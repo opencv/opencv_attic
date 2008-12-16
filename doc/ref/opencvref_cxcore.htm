@@ -1677,6 +1677,73 @@ The number of iterations (i.e. pairs swapped) is <code>round(iter_factor*rows(ma
 </p>
 
 
+<hr><h3><a name="decl_cvSort">Sort</a></h3>
+<p class="Blurb">Sort array elements in ascending or descending order by row or by column</p>
+<pre>#define CV_SORT_EVERY_ROW 0
+#define CV_SORT_EVERY_COLUMN 1
+#define CV_SORT_ASCENDING 0
+#define CV_SORT_DESCENDING 16
+
+void cvSort( const CvArr* src, CvArr* dst=NULL, CvArr* idxmat=NULL, int flags=0);
+</pre><p></p><dl>
+<dt>src</dt><dd>The source array. It must be a one-channel array.
+</dd><dt>dst</dt><dd>The destination (sorted) array. If not NULL, It should be the same size and the same size as the source array.
+</dd><dt>idxmat</dt><dd>An array of indices. If not NULL, It should be the same size as the source array and the type must be 32SC1.
+</dd><dt>flags</dt><dd>The operation flags, 0 or combination of:<br>
+            CV_SORT_EVERY_ROW: Sort the array by row. CV_SORT_EVERY_ROW and CV_SORT_EVERY_COLUMN are mutually exclusive, of course.<br>
+            CV_SORT_EVERY_COLUMN: Sort the array by column. <br>
+            CV_SORT_ASCENDING: Sort the array in ascending order. CV_SORT_ASCENDING and CV_SORT_DESCENDING are mutually exclusive, of course.<br>
+            CV_SORT_DESCENDING: Sort the arrary in descending order.             
+</dd></dl>
+<p>The function cvSort sort array elements in ascending or descending order by row or by column.
+The function does not support the in-place mode, and at least one of index array or destination array must be non-NULL.</p>
+
+<p>The following sample demonstrates how to sort a matrix:</p>
+<pre>
+#include <cxcore.h>
+#include <stdio.h>
+
+int main()
+{
+    float a[] = { 6,4,8,3,
+                  3,5,2,4};
+    float b[] = { 0,0,0,0,
+                  0,0,0,0};
+    int c[]={0,0,0,0,
+             0,0,0,0};
+    
+    CvMat src, dst, idx;
+    
+    cvInitMatHeader( &src, 2, 4, CV_32FC1, a );
+    cvInitMatHeader( &dst, 2, 4, CV_32FC1, b );
+    cvInitMatHeader( &idx, 2, 4, CV_32SC1, c );
+    
+    cvSort(&src, &dst, &idx);
+    
+    int i,j;
+    for(i =0; i < dst.rows; i++)
+    {
+        for(j=0; j< dst.cols; j++)
+            printf("%.1f  ", CV_MAT_ELEM(dst, float, i,j));
+        printf("\n");
+    }
+
+    for(i =0; i < idx.rows; i++)
+    {
+        for(j=0; j< idx.cols; j++)
+            printf("%d  ", CV_MAT_ELEM(idx, int, i,j));
+        printf("\n");
+    }
+}
+</pre>
+<p>The code should print:</p>
+<pre>
+3.0  4.0  6.0  8.0  
+2.0  3.0  4.0  5.0  
+3  1  0  2  
+2  0  3  1  
+</pre>
+
 <hr><h2><a name="cxcore_arrays_arithm_logic">Arithmetic, Logic and Comparison</a></h2>
 
 
