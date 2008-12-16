@@ -41,7 +41,7 @@
 
 // 2008-04-27 Xavier Delacour <xavier.delacour@gmail.com>
 
-#include <_highgui.h>
+#include "_highgui.h"
 #include <unistd.h>
 #include <unicap.h>
 extern "C" {
