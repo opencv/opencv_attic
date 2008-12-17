@@ -1686,62 +1686,60 @@ The number of iterations (i.e. pairs swapped) is <code>round(iter_factor*rows(ma
 
 void cvSort( const CvArr* src, CvArr* dst=NULL, CvArr* idxmat=NULL, int flags=0);
 </pre><p></p><dl>
-<dt>src</dt><dd>The source array. It must be a one-channel array.
-</dd><dt>dst</dt><dd>The destination (sorted) array. If not NULL, It should be the same size and the same size as the source array.
+<dt>src</dt><dd>The source one-channel array.
+</dd><dt>dst</dt><dd>The destination (sorted) array. If not NULL, it should be the same size and the same type as the source array.
 </dd><dt>idxmat</dt><dd>An array of indices. If not NULL, It should be the same size as the source array and the type must be 32SC1.
-</dd><dt>flags</dt><dd>The operation flags, 0 or combination of:<br>
-            CV_SORT_EVERY_ROW: Sort the array by row. CV_SORT_EVERY_ROW and CV_SORT_EVERY_COLUMN are mutually exclusive, of course.<br>
-            CV_SORT_EVERY_COLUMN: Sort the array by column. <br>
-            CV_SORT_ASCENDING: Sort the array in ascending order. CV_SORT_ASCENDING and CV_SORT_DESCENDING are mutually exclusive, of course.<br>
-            CV_SORT_DESCENDING: Sort the arrary in descending order.             
+</dd><dt>flags</dt><dd>The operation flags, 0 or a combination of:<br>
+            CV_SORT_EVERY_ROW: Sort each row independently. CV_SORT_EVERY_ROW and CV_SORT_EVERY_COLUMN are mutually exclusive, of course.<br>
+            CV_SORT_EVERY_COLUMN: Sort each column independently. <br>
+            CV_SORT_ASCENDING: Sort the elements of each row or column in ascending order. CV_SORT_ASCENDING and CV_SORT_DESCENDING are mutually exclusive, of course.<br>
+            CV_SORT_DESCENDING: Sort the elements of each row or column in descending order.
 </dd></dl>
-<p>The function cvSort sort array elements in ascending or descending order by row or by column.
-The function does not support the in-place mode, and at least one of index array or destination array must be non-NULL.</p>
+<p>The function cvSort sorts elements of each row or column of the input 2D array in ascending or descending order.
+The function supports in-place mode (dst == src).</p>
 
 <p>The following sample demonstrates how to sort a matrix:</p>
 <pre>
-#include <cxcore.h>
-#include <stdio.h>
+#include &lt;cxcore.h&gt;
+#include &lt;stdio.h&gt;
 
 int main()
 {
     float a[] = { 6,4,8,3,
                   3,5,2,4};
-    float b[] = { 0,0,0,0,
-                  0,0,0,0};
-    int c[]={0,0,0,0,
-             0,0,0,0};
-    
+    float b[2*4];
+    int c[2*4];
+
     CvMat src, dst, idx;
-    
-    cvInitMatHeader( &src, 2, 4, CV_32FC1, a );
-    cvInitMatHeader( &dst, 2, 4, CV_32FC1, b );
-    cvInitMatHeader( &idx, 2, 4, CV_32SC1, c );
-    
-    cvSort(&src, &dst, &idx);
-    
+
+    cvInitMatHeader( &amp;src, 2, 4, CV_32FC1, a );
+    cvInitMatHeader( &amp;dst, 2, 4, CV_32FC1, b );
+    cvInitMatHeader( &amp;idx, 2, 4, CV_32SC1, c );
+
+    cvSort(&amp;src, &amp;dst, &amp;idx);
+
     int i,j;
-    for(i =0; i < dst.rows; i++)
+    for(i = 0; i &lt; dst.rows; i++)
     {
-        for(j=0; j< dst.cols; j++)
-            printf("%.1f  ", CV_MAT_ELEM(dst, float, i,j));
+        for(j = 0; j &lt; dst.cols; j++)
+            printf("%.1f  ", CV_MAT_ELEM(dst, float, i, j));
         printf("\n");
     }
 
-    for(i =0; i < idx.rows; i++)
+    for(i = 0; i &lt; idx.rows; i++)
     {
-        for(j=0; j< idx.cols; j++)
-            printf("%d  ", CV_MAT_ELEM(idx, int, i,j));
+        for(j = 0; j &lt; idx.cols; j++)
+            printf("%d  ", CV_MAT_ELEM(idx, int, i, j));
         printf("\n");
     }
 }
 </pre>
 <p>The code should print:</p>
 <pre>
-3.0  4.0  6.0  8.0  
-2.0  3.0  4.0  5.0  
-3  1  0  2  
-2  0  3  1  
+3.0  4.0  6.0  8.0
+2.0  3.0  4.0  5.0
+3  1  0  2
+2  0  3  1
 </pre>
 
 <hr><h2><a name="cxcore_arrays_arithm_logic">Arithmetic, Logic and Comparison</a></h2>
@@ -6690,7 +6688,7 @@ labelings. The algorithm returns labels that yield the best compactness
 (see the last function parameter)
 <dt>rng<dd>Optional external random number generator; can be used to fully
 control the function behaviour.
-<dt>flags<dd>Can be 0 or CV_KMEANS_USE_INITIAL_LABELS. The latter value means that during 
+<dt>flags<dd>Can be 0 or CV_KMEANS_USE_INITIAL_LABELS. The latter value means that during
 the first (and possibly the only) attempt the function uses the user-supplied labels
 as the initial approximation, instead of generating random labels. For the second
 and further attempts the function will use randomly generated labels in any case.
