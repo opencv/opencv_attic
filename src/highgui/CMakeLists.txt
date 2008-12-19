@@ -7,6 +7,7 @@ project(highgui)
 
 if(MSVC)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:libcmt.lib")
 endif()
 
 file(GLOB grfmt_hdrs grfmt*.h)
