@@ -521,11 +521,11 @@ That's all there is to it!
 
 #if defined _MSC_VER && _MSC_VER >= 1200
 
-#pragma comment(lib, "libavformat.lib")
-#pragma comment(lib, "libavcodec.lib")
-#pragma comment(lib, "libavutil.lib")
-#pragma comment(lib, "libgcc.lib")
-#pragma comment(lib, "libmingwex.lib")
+#pragma comment(lib, "libavformat.a")
+#pragma comment(lib, "libavcodec.a")
+#pragma comment(lib, "libavutil.a")
+#pragma comment(lib, "libgcc.a")
+#pragma comment(lib, "libmingwex.a")
 
 #endif
 
