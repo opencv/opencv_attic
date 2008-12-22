@@ -59,11 +59,11 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
 add_dependencies(${the_target} cxcore)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-    )
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
-if(UNIX)
-    install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${lib_hdrs}
+        DESTINATION include/opencv
+        COMPONENT dev)
+

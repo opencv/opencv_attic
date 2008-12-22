@@ -242,7 +242,7 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
 
     string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
     if(UNIX)
-        set(PYTHON_PLUGIN_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
     endif()
     if(WIN32)
         get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
@@ -416,6 +416,12 @@ endif("${CMAKE_CONFIGURE_LDFLAGS}")
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
 
+if(WIN32)
+set(OPENCV_DOC_INSTALL_PATH doc)
+else()
+set(OPENCV_DOC_INSTALL_PATH share/opencv/doc)
+endif()
+
 #-----------------------------------
 # Subdirectories:
 #-----------------------------------
@@ -511,6 +517,37 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
+
+# ----------------------------------------------------------------------------
+#   CPack target
+# ----------------------------------------------------------------------------
+
+option(BUILD_PACKAGE "Build a installer with the SDK")
+
+if(BUILD_PACKAGE)
+
+	configure_file(
+	Package.cmake.in
+	${CMAKE_BINARY_DIR}/.cpack/Package.cmake
+	@ONLY
+	)
+	
+	install(FILES 
+		AUTHORS
+		ChangeLog
+		COPYING
+		INSTALL
+		NEWS
+		README
+		THANKS
+		TODO
+		DESTINATION ${OPENCV_DOC_INSTALL_PATH}
+        COMPONENT doc
+		)
+		
+	include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
+	
+endif()
 
 # ----------------------------------------------------------------------------
 #   Sumary:

@@ -192,11 +192,11 @@ if(APPLE)
 endif()
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-    )
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
-if(UNIX)
-    install(FILES ${highgui_ext_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${highgui_ext_hdrs}
+        DESTINATION include/opencv
+        COMPONENT dev)
+
