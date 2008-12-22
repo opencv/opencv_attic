@@ -121,6 +121,9 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
     CvMat *sum = 0, *tilted = 0, *flatTilted = 0;
     int x, y, i=0, rows = img->rows, cols = img->cols, step;
     int border, npatterns=0, maxIdx=0;
+#ifdef _OPENMP
+    int nthreads = cvGetNumThreads();
+#endif
 
     assert( CV_MAT_TYPE(img->type) == CV_8UC1 &&
         CV_MAT_TYPE(responses->type) == CV_32FC1 &&
@@ -199,8 +202,12 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
         }
     }
 
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(nthreads) schedule(static)
+#endif
     for( y = border; y < rows - border; y++ )
     {
+        int x, i;
         float* r_ptr = (float*)(responses->data.ptr + responses->step*y);
         short* s_ptr = (short*)(sizes->data.ptr + sizes->step*y);
         for( x = 0; x < border; x++ )
@@ -209,7 +216,6 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
             s_ptr[x] = s_ptr[cols - 1 - x] = 0;
         }
 
-        x = border;
 #if CV_SSE2
         for( ; x <= cols - border - 4; x += 4 )
         {
