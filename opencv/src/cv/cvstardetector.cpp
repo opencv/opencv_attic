@@ -103,7 +103,7 @@ static int
 icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* sizes,
                                  const CvStarDetectorParams* params )
 {
-    const int MAX_PATTERN = 16;
+    const int MAX_PATTERN = 17;
     static const int sizes0[] = {1, 2, 3, 4, 6, 8, 11, 12, 16, 22, 23, 32, 45, 46, 64, 90, 128, -1};
     static const int pairs[][2] = {{1, 0}, {3, 1}, {4, 2}, {5, 3}, {7, 4}, {8, 5}, {9, 6},
                                    {11, 8}, {13, 10}, {14, 11}, {15, 12}, {16, 14}, {-1, -1}};
