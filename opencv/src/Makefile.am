@@ -172,6 +172,7 @@ lib_cv_la_SOURCES = \
   cv/cvshapedescr.cpp \
   cv/cvsmooth.cpp \
   cv/cvsnakes.cpp \
+  cv/cvstardetector.cpp \
   cv/cvstereobm.cpp \
   cv/cvstereogc.cpp \
   cv/cvsubdivision2d.cpp \
