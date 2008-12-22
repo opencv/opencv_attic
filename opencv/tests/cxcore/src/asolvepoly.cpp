@@ -27,7 +27,7 @@ CV_SolvePolyTest::CV_SolvePolyTest() : CvTest( "solve-poly", "cvSolvePoly" ) {}
 
 CV_SolvePolyTest::~CV_SolvePolyTest() {}
 
-void CV_SolvePolyTest::run( int start_from )
+void CV_SolvePolyTest::run( int )
 {
     CvRNG rng = cvRNG();
     int fig = 100;
