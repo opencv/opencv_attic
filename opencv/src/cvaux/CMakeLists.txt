@@ -82,11 +82,12 @@ endif()
 add_dependencies(${the_target} cxcore cv)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-	)
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
-if(UNIX)
-    install(FILES ${aux_hdrs_ext} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${aux_hdrs_ext}
+        DESTINATION include/opencv
+        COMPONENT dev)
+
+
