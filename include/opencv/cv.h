@@ -1112,6 +1112,53 @@ CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
                            CvMemStorage* storage, CvSURFParams params );
 
+typedef struct CvStarKeypoint
+{
+    CvPoint pt;
+    int size;
+    float response;
+}
+CvStarKeypoint;
+
+CV_INLINE CvStarKeypoint cvStarKeypoint(CvPoint pt, int size, float response)
+{
+    CvStarKeypoint kpt;
+    kpt.pt = pt;
+    kpt.size = size;
+    kpt.response = response;
+    return kpt;
+}
+
+typedef struct CvStarDetectorParams
+{
+    int maxSize;
+    int responseThreshold;
+    int lineThresholdProjected;
+    int lineThresholdBinarized;
+    int suppressNonmaxSize;
+}
+CvStarDetectorParams;
+
+CV_INLINE CvStarDetectorParams cvStarDetectorParams(
+    int maxSize CV_DEFAULT(45),
+    int responseThreshold CV_DEFAULT(30),
+    int lineThresholdProjected CV_DEFAULT(10),
+    int lineThresholdBinarized CV_DEFAULT(8),
+    int suppressNonmaxSize CV_DEFAULT(5))
+{
+    CvStarDetectorParams params;
+    params.maxSize = maxSize;
+    params.responseThreshold = responseThreshold;
+    params.lineThresholdProjected = lineThresholdProjected;
+    params.lineThresholdBinarized = lineThresholdBinarized;
+    params.suppressNonmaxSize = suppressNonmaxSize;
+
+    return params;
+}
+
+CVAPI(CvSeq*) cvGetStarKeypoints( const CvArr* img, CvMemStorage* storage,
+        CvStarDetectorParams params CV_DEFAULT(cvStarDetectorParams()));
+
 /****************************************************************************************\
 *                         Haar-like Object Detection functions                           *
 \****************************************************************************************/
