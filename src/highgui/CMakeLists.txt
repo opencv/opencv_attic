@@ -102,7 +102,7 @@ if(UNIX)
 endif()
 
 if(APPLE)
-    add_definitions(-DUSE_VDIG_VERSION=1 -DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
+    add_definitions(-DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
     set(highgui_srcs ${highgui_srcs} window_carbon.cpp cvcap_qt.cpp)
 endif(APPLE)
 
