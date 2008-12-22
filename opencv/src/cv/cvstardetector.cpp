@@ -109,6 +109,13 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
                                    {11, 8}, {13, 10}, {14, 11}, {15, 12}, {16, 14}, {-1, -1}};
     float invSizes[MAX_PATTERN][2];
     int sizes1[MAX_PATTERN];
+
+#if CV_SSE2
+    __m128 invSizes4[MAX_PATTERN][2];
+    __m128 sizes1_4[MAX_PATTERN];
+    int absmask = 0x7fffffff;
+    __m128 absmask4 = _mm_set1_ps((float&)absmask);
+#endif
     CvStarFeature f[MAX_PATTERN];
 
     CvMat *sum = 0, *tilted = 0, *flatTilted = 0;
@@ -168,7 +175,16 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
         int outerArea = f[pairs[i][0]].area - innerArea;
         invSizes[i][0] = 1.f/outerArea;
         invSizes[i][1] = 1.f/innerArea;
+#if CV_SSE2
+        _mm_store_ps((float*)&invSizes4[i][0], _mm_set1_ps(invSizes[i][0]));
+        _mm_store_ps((float*)&invSizes4[i][1], _mm_set1_ps(invSizes[i][1]));
     }
+
+    for( i = 0; i <= maxIdx; i++ )
+        _mm_store_ps((float*)&sizes1_4[i], _mm_set1_ps((float)sizes1[i]));
+#else
+    }
+#endif
 
     for( y = 0; y < border; y++ )
     {
@@ -193,7 +209,50 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
             s_ptr[x] = s_ptr[cols - 1 - x] = 0;
         }
 
-        for( x = border; x < cols - border; x++ )
+        x = border;
+#if CV_SSE2
+        for( ; x <= cols - border - 4; x += 4 )
+        {
+            int ofs = y*step + x;
+            __m128 vals[MAX_PATTERN];
+            __m128 bestResponse = _mm_setzero_ps();
+            __m128 bestSize = _mm_setzero_ps();
+
+            for( i = 0; i <= maxIdx; i++ )
+            {
+                const int** p = (const int**)&f[i].p[0];
+                __m128i r0 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[0]+ofs)),
+                                           _mm_loadu_si128((const __m128i*)(p[1]+ofs)));
+                __m128i r1 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[3]+ofs)),
+                                           _mm_loadu_si128((const __m128i*)(p[2]+ofs)));
+                __m128i r2 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[4]+ofs)),
+                                           _mm_loadu_si128((const __m128i*)(p[5]+ofs)));
+                __m128i r3 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[7]+ofs)),
+                                           _mm_loadu_si128((const __m128i*)(p[6]+ofs)));
+                r0 = _mm_add_epi32(_mm_add_epi32(r0,r1), _mm_add_epi32(r2,r3));
+                _mm_store_ps((float*)&vals[i], _mm_cvtepi32_ps(r0));
+            }
+
+            for( i = 0; i < npatterns; i++ )
+            {
+                __m128 inner_sum = vals[pairs[i][1]];
+                __m128 outer_sum = _mm_sub_ps(vals[pairs[i][0]], inner_sum);
+                __m128 response = _mm_sub_ps(_mm_mul_ps(inner_sum, invSizes4[i][1]),
+                    _mm_mul_ps(outer_sum, invSizes4[i][0]));
+                __m128 swapmask = _mm_cmpgt_ps(_mm_and_ps(response,absmask4),
+                    _mm_and_ps(bestResponse,absmask4));
+                bestResponse = _mm_xor_ps(bestResponse,
+                    _mm_and_ps(_mm_xor_ps(response,bestResponse), swapmask));
+                bestSize = _mm_xor_ps(bestSize,
+                    _mm_and_ps(_mm_xor_ps(sizes1_4[pairs[i][0]], bestSize), swapmask));
+            }
+
+            _mm_storeu_ps(r_ptr + x, bestResponse);
+            _mm_storel_epi64((__m128i*)(s_ptr + x),
+                _mm_packs_epi32(_mm_cvtps_epi32(bestSize),_mm_setzero_si128()));
+        }
+#endif        
+        for( ; x < cols - border; x++ )
         {
             int ofs = y*step + x;
             int vals[MAX_PATTERN];
