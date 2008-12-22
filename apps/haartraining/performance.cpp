@@ -222,7 +222,7 @@ int main( int argc, char* argv[] )
         ObjectPos* ref;
         int detcount;
         ObjectPos* det;
-        int error;
+        int error=0;
 
         int* pos;
         int* neg;
