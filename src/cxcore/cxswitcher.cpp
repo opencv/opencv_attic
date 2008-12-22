@@ -54,7 +54,7 @@
 #pragma optimize( "", off )
 #endif
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined WINCE
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -434,7 +434,9 @@ icvUpdatePluginFuncTab( CvPluginFuncInfo* func_tab )
                     else
                         strcpy( name, name_start );
 
+                #if !defined WINCE
                     addr = (uchar*)GetProcAddress( plugins[idx].handle, name );
+                #endif
                     if( addr )
                         break;
                 }
@@ -603,8 +605,12 @@ cvUseOptimized( int load_flag )
                 sprintf( plugins[i].name, DLL_PREFIX "%s%s" DLL_DEBUG_FLAG DLL_SUFFIX,
                     plugins[i].basename, *suffix );
 
+            #if defined WINCE
+				ICV_PRINTF(("Architecture does not allow loading %s...\n", plugins[i].name ));
+            #else
                 ICV_PRINTF(("loading %s...\n", plugins[i].name ));
                 plugins[i].handle = LoadLibrary( plugins[i].name );
+            #endif
                 if( plugins[i].handle != 0 )
                 {
                     ICV_PRINTF(("%s loaded\n", plugins[i].name ));
@@ -729,7 +735,7 @@ CV_IMPL  int64  cvGetTickCount( void )
     if( cpu_info->frequency > 1 &&
         CV_GET_PROC_ARCH(cpu_info->model) == CV_PROC_IA32_GENERIC )
     {
-#ifdef MASM_INLINE_ASSEMBLY
+#if defined MASM_INLINE_ASSEMBLY && !defined WINCE
     #ifdef __BORLANDC__
         __asm db 0fh
         __asm db 31h
@@ -749,7 +755,7 @@ CV_IMPL  int64  cvGetTickCount( void )
     }
     else
     {
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined WINCE
         LARGE_INTEGER counter;
         QueryPerformanceCounter( &counter );
         return (int64)counter.QuadPart;

@@ -72,6 +72,12 @@ set_target_properties(${the_target} PROPERTIES
 # Add the required libraries for linking:
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv)
 
+if(MSVC AND CMAKE_CROSSCOMPILING)
+	set_target_properties(${the_target} PROPERTIES
+		LINK_FLAGS "/NODEFAULTLIB:secchk"
+		)
+endif()
+
 # Dependencies of this target:
 add_dependencies(${the_target} cxcore cv)
 
