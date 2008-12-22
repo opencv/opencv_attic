@@ -122,7 +122,7 @@
 #ifdef __GNUC__
     #undef alloca
     #define alloca __builtin_alloca
-#elif defined WIN32 || defined WIN64
+#elif defined WIN32 || defined WIN64 || defined WINCE
     #if defined _MSC_VER || defined __BORLANDC__
         #include <malloc.h>
     #endif

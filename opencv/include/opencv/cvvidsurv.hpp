@@ -51,6 +51,10 @@
 #if _MSC_VER >= 1200 || defined __BORLANDC__
 #define cv_stricmp stricmp
 #define cv_strnicmp strnicmp
+#if defined WINCE
+#define strdup _strdup
+#define stricmp _stricmp
+#endif
 #elif defined __GNUC__
 #define cv_stricmp strcasecmp
 #define cv_strnicmp strncasecmp

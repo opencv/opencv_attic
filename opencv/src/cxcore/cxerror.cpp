@@ -41,8 +41,9 @@
 
 #include "_cxcore.h"
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || WINCE
 #include <windows.h>
+#include <tchar.h>
 #else
 #include <pthread.h>
 #endif
@@ -90,7 +91,10 @@ icvDestroyContext(CvContext* context)
     free(context);
 }
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined WINCE
+#if defined WINCE
+#	define TLS_OUT_OF_INDEXES ((DWORD)0xFFFFFFFF)
+#endif
     static DWORD g_TlsIndex = TLS_OUT_OF_INDEXES;
 #else
     static pthread_key_t g_TlsIndex;
@@ -173,7 +177,7 @@ CV_IMPL int
 cvGuiBoxReport( int code, const char *func_name, const char *err_msg,
                 const char *file, int line, void* )
 {
-#if !defined WIN32 && !defined WIN64
+#if (!defined WIN32 && !defined WIN64) || defined WINCE
     return cvStdErrReport( code, func_name, err_msg, file, line, 0 );
 #else
     if( code != CV_StsBackTrace && code != CV_StsAutoTrace )
@@ -370,6 +374,7 @@ CV_IMPL void cvError( int code, const char* func_name,
 /**********************DllMain********************************/
 
 #if defined WIN32 || defined WIN64
+#if !defined WINCE
 BOOL WINAPI DllMain( HINSTANCE, DWORD  fdwReason, LPVOID )
 {
     CvContext *pContext;
@@ -411,6 +416,7 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD  fdwReason, LPVOID )
     }
     return TRUE;
 }
+#endif
 #else
 /* POSIX pthread */
 
