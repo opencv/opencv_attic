@@ -122,8 +122,14 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 	// try every possibly installed camera API
 	for (int i = 0; domains[i] >= 0; i++)
 	{
+        #if defined(HAVE_VIDEOINPUT) || defined(HAVE_TYZX) || defined(HAVE_VFW) || \
+	    defined(HAVE_CAMV4L) || defined (HAVE_CAMV4L2) || defined(HAVE_GSTREAMER) || \
+	    defined(HAVE_DC1394_2) || defined(HAVE_DC1394) || defined(HAVE_CMU1394) || \
+	    defined(HAVE_GSTREAMER) || defined(HAVE_MIL) || defined(HAVE_QUICKTIME) || \
+	    defined(HAVE_UNICAP)
 		// local variable to memorize the captured device
 		CvCapture *capture;
+	#endif
 
 		switch (domains[i])
 		{
