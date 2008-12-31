@@ -141,9 +141,9 @@ set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
-	if (NOT MINGW)
+	if (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
 		set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
-	endif(NOT MINGW)
+	endif (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
 endif()
 
 # ===================================================
