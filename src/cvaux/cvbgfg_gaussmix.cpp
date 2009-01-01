@@ -381,7 +381,8 @@ static int icvMatchTest( double* src_pixel, int nChannels, int* match,
     int matchPosition=-1;
     for ( k = 0; k < bg_model_params->n_gauss; k++) match[k]=0;
     
-    for ( k = 0; k < bg_model_params->n_gauss; k++) {
+    for ( k = 0; k < bg_model_params->n_gauss; k++)
+    if (g_point->g_values[k].match_sum > 0) {
         double sum_d2 = 0.0;
         double var_threshold = 0.0;
         for(int m = 0; m < nChannels; m++){
