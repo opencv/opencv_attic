@@ -449,15 +449,19 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 
 static void icvRemoveWindow( CvWindow* window )
 {
-    CvTrackbar* trackbar;
+    CvTrackbar* trackbar = NULL;
     RECT wrect;
 
-    GetWindowRect( window->frame, &wrect );
-    icvSaveWindowPos( window->name, cvRect(wrect.left, wrect.top,
-        wrect.right-wrect.left, wrect.bottom-wrect.top) );
+    if( window->frame )
+        GetWindowRect( window->frame, &wrect );
+    if( window->name )
+        icvSaveWindowPos( window->name, cvRect(wrect.left, wrect.top,
+			    wrect.right-wrect.left, wrect.bottom-wrect.top) );
 
-    icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
-    icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
+    if( window->hwnd )
+        icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
+    if( window->frame )
+	icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
 
     if( window->toolbar.toolbar )
         icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, 0);
@@ -472,7 +476,7 @@ static void icvRemoveWindow( CvWindow* window )
 
     window->prev = window->next = 0;
 
-    if( window->image )
+    if( window->dc && window->image )
         DeleteObject(SelectObject(window->dc,window->image));
 
     if( window->dc )
@@ -481,8 +485,11 @@ static void icvRemoveWindow( CvWindow* window )
     for( trackbar = window->toolbar.first; trackbar != 0; )
     {
         CvTrackbar* next = trackbar->next;
-        icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, 0 );
-        cvFree( &trackbar );
+        if( trackbar->hwnd )
+	{
+            icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, 0 );
+    	    cvFree( &trackbar );
+	}
         trackbar = next;
     }
 
