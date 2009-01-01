@@ -277,7 +277,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     CV_CALL( node_heap = cvCreateSet( 0, sizeof(*node_heap), sizeof(CvDTreeNode), tree_storage ));
 
     nv_size = var_count*sizeof(int);
-    nv_size = MAX( nv_size, (int)sizeof(CvSetElem) );
+    nv_size = cvAlign(MAX( nv_size, (int)sizeof(CvSetElem) ), sizeof(void*));
 
     temp_block_size = nv_size;
 
