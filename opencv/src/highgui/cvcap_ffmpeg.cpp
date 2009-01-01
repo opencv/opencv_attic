@@ -532,6 +532,7 @@ IplImage* CvCapture_FFMPEG::retrieveFrame(int)
              picture->linesize, 0,
              video_st->codec->height,
              rgb_picture.data, rgb_picture.linesize);
+    sws_freeContext(img_convert_ctx);
 #endif
     return &frame;
 }
@@ -1018,6 +1019,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 		    {
 		      CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		    }
+		sws_freeContext(img_convert_ctx);
 #endif
 	}
 	else{
