@@ -499,5 +499,7 @@ calibrate:
 
     if( capture )
         cvReleaseCapture( &capture );
+    if( storage )
+        cvReleaseMemStorage( &storage );
     return 0;
 }
