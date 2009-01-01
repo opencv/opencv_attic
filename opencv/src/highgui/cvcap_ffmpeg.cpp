@@ -1154,7 +1154,8 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 		}
 	}
 #else
-        if( (codec_id = av_codec_get_id((const AVCodecTag**)(&codec_bmp_tags), fourcc)) == CODEC_ID_NONE ){
+	const struct AVCodecTag * tags[] = { codec_bmp_tags, NULL};
+        if( (codec_id = av_codec_get_id(tags, fourcc)) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
