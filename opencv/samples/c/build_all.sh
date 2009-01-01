@@ -1,4 +1,5 @@
 #!/bin/sh
+
 if [[ $# > 0 ]] ; then
 	base=`basename $1 .c`
 	echo "compiling $base"
