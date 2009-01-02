@@ -435,7 +435,7 @@ void CvEM::init_em( const CvVectors& train_data )
             cvMaxS( weights, 0., weights );
             cvMinMaxLoc( weights, 0, &maxval );
             if( maxval < FLT_EPSILON )
-                cvSet( &weights, cvScalar(1./nclusters) );
+                cvSet( weights, cvScalar(1./nclusters) );
             cvNormalize( weights, weights, 1., 0, CV_L1 );
             for( i = 0; i < nclusters; i++ )
                 CV_CALL( cvConvert( params.covs[i], covs[i] ));
