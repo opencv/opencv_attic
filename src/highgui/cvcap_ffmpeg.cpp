@@ -284,6 +284,7 @@ protected:
     AVFrame           * picture;
     int64_t             picture_pts;
     AVFrame             rgb_picture;
+    AVPacket            packet;
     IplImage            frame;
 /*
    'filename' contains the filename of the videosource,
@@ -306,6 +307,7 @@ void CvCapture_FFMPEG::init()
     memset( &rgb_picture, 0, sizeof(rgb_picture) );
     memset( &frame, 0, sizeof(frame) );
     filename = 0;
+    packet.data = NULL;
 }
 
 
@@ -332,6 +334,12 @@ void CvCapture_FFMPEG::close()
 
     if( rgb_picture.data[0] )
         cvFree( &rgb_picture.data[0] );
+	
+    // free last packet if exist
+    if (packet.data) {
+        av_free_packet (&packet);
+    }
+    
 
     init();
 }
@@ -456,44 +464,43 @@ bool CvCapture_FFMPEG::grabFrame()
 {
     bool valid = false;
     static bool bFirstTime = true;
-    static AVPacket pkt;
     int got_picture;
 
     // First time we're called, set packet.data to NULL to indicate it
     // doesn't have to be freed
     if (bFirstTime) {
         bFirstTime = false;
-        pkt.data = NULL;
+        packet.data = NULL;
     }
 
     if( !ic || !video_st )
         return false;
 
     // free last packet if exist
-    if (pkt.data != NULL) {
-        av_free_packet (&pkt);
+    if (packet.data != NULL) {
+        av_free_packet (&packet);
     }
 
     // get the next frame
-    while (!valid && (av_read_frame(ic, &pkt) >= 0)) {
-		if( pkt.stream_index != video_stream ) {
-		        av_free_packet (&pkt);
+    while (!valid && (av_read_frame(ic, &packet) >= 0)) {
+		if( packet.stream_index != video_stream ) {
+		        av_free_packet (&packet);
 		        continue;
     		}
 		
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(video_st->codec,
                              picture, &got_picture,
-                             pkt.data, pkt.size);
+                             packet.data, packet.size);
 #else
         avcodec_decode_video(&video_st->codec,
                              picture, &got_picture,
-                             pkt.data, pkt.size);
+                             packet.data, packet.size);
 #endif
 
         if (got_picture) {
             // we have a new picture, so memorize it
-            picture_pts = pkt.pts;
+            picture_pts = packet.pts;
             valid = 1;
         }
     }
