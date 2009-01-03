@@ -148,7 +148,7 @@ icvCalcOpticalFlowBM_8u32fR( uchar * imgA, uchar * imgB,
     int bufferSize = cvAlign(blSize + 9,16);
     int cmpSize = cvAlign(blSize,4);
     int patch_ofs = blSize & -8;
-    int64 patch_mask = (((int64) 1) << (blSize - patch_ofs * 8)) - 1;
+    int64 patch_mask = (((int64) 1) << ((blSize - patch_ofs) * 8)) - 1;
 
     velStep /= sizeof(velocityX[0]);
 
