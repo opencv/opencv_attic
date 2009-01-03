@@ -630,7 +630,7 @@ bool CvVideoWriter_VFW::createStreams( CvSize frameSize, bool isColor )
         copts.fccType = streamtypeVIDEO;
         copts.fccHandler = fourcc != -1 ? fourcc : 0;
         copts.dwKeyFrameEvery = 1;
-        copts.dwQuality = (DWORD)-1;
+        copts.dwQuality = 10000;
         copts.dwBytesPerSecond = 0;
         copts.dwFlags = AVICOMPRESSF_VALID;
         copts.lpFormat = &bmih;
