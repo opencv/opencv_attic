@@ -476,7 +476,11 @@ bool CvCapture_FFMPEG::grabFrame()
 
     // get the next frame
     while (!valid && (av_read_frame(ic, &pkt) >= 0)) {
-		if( pkt.stream_index != video_stream ) continue;
+		if( pkt.stream_index != video_stream ) {
+		        av_free_packet (&pkt);
+		        continue;
+    		}
+		
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(video_st->codec,
                              picture, &got_picture,
