@@ -295,7 +295,7 @@ typedef struct CvVideoWriter CvVideoWriter;
     (((c1)&255) + (((c2)&255)<<8) + (((c3)&255)<<16) + (((c4)&255)<<24))
 
 #define CV_FOURCC_PROMPT -1  /* Open Codec Selection Dialog (Windows only) */
-#define CV_FOURCC_DEFAULT -1 /* Use default codec for specified filename (Linux only) */
+#define CV_FOURCC_DEFAULT CV_FOURCC('I', 'Y', 'U', 'V') /* Use default codec for specified filename (Linux only) */
 
 /* initialize video file writer */
 CVAPI(CvVideoWriter*) cvCreateVideoWriter( const char* filename, int fourcc,
