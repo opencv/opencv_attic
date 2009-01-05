@@ -242,7 +242,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 		return 0;
 	}
 
-	printf("buffer has %d bpp, endianness %d, rgb %x %x %x, %s\n", bpp, endianness, redmask, greenmask, bluemask, gst_caps_to_string(caps));
+	//printf("buffer has %d bpp, endianness %d, rgb %x %x %x, %s\n", bpp, endianness, redmask, greenmask, bluemask, gst_caps_to_string(caps));
 
 	if(!redmask || !greenmask || !bluemask)
 		return 0;
@@ -263,7 +263,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 
 	unsigned char *data = GST_BUFFER_DATA(cap->buffer);
 
-	printf("generating shifts\n");
+	//printf("generating shifts\n");
 
 	IplImage *frame = cap->frame;
 	unsigned nbyte = bpp >> 3;
@@ -276,7 +276,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 	for(blueshift = 0, mask = bluemask; (mask & 1) == 0; mask >>= 1, blueshift++)
 		;
 
-	printf("shifts: %u %u %u\n", redshift, greenshift, blueshift);
+	//printf("shifts: %u %u %u\n", redshift, greenshift, blueshift);
 
 	for(int r = 0; r < frame->height; r++) {
 		for(int c = 0; c < frame->width; c++, data += nbyte) {
@@ -562,8 +562,9 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 		isInited = true;
 	}
 
-	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
-//	printf("entered capturecreator %s\n", sourcetypes[type]);
+	const char *sourcetypes[] = {"v4l2src", "dv1394src", "v4lsrc", "filesrc"};
+	//printf("entered capturecreator %s\n", sourcetypes[type]);
+
 
 	GstElement *source = gst_element_factory_make(sourcetypes[type], NULL);
 	if(!source)
@@ -623,6 +624,16 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 //	printf("linked, pausing\n");
 
+	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY) ==
+	   GST_STATE_CHANGE_FAILURE) {
+		CV_WARN("GStreamer: unable to set pipeline to paused\n");
+//		icvHandleMessage(capture);
+//		cvReleaseCapture((CvCapture **)(void *)&capture);
+		gst_object_unref(pipeline);
+		return 0;
+	}
+
+
 	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED) ==
 	   GST_STATE_CHANGE_FAILURE) {
 		CV_WARN("GStreamer: unable to set pipeline to paused\n");
@@ -631,6 +642,7 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 		gst_object_unref(pipeline);
 		return 0;
 	}
+
 
 //	printf("state now paused\n");
 
