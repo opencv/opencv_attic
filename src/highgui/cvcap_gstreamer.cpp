@@ -562,7 +562,7 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 		isInited = true;
 	}
 
-	const char *sourcetypes[] = {"v4l2src", "dv1394src", "v4lsrc", "filesrc"};
+	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
 	//printf("entered capturecreator %s\n", sourcetypes[type]);
 
 
