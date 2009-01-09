@@ -10,6 +10,7 @@
 # ----------------------------------------------------------------------------
 
 # it _must_ go before PROJECT(OpenCV) in order to work
+set(CMAKE_INSTALL_PREFIX "/usr")
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL "" CACHE INTERNAL "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "" FORCE)
@@ -141,9 +142,13 @@ set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
-	if (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
-		set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
-	endif (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
+    if (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
+    	if (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+	    set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+    	elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+	    set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+    	endif (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+    endif (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
 endif()
 
 # ===================================================
@@ -382,6 +387,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
 
+    if(OPENCV_USE_SSE)
+	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse")
+    endif()
     if(OPENCV_USE_SSE2)
 	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse2")
     endif()
