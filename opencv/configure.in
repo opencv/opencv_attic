@@ -205,18 +205,21 @@ fi
 DEFAULT_CXXFLAGS=""
 
 ######################################################################
-# SSE2 support
+# SSE(2) support
 
-AC_ARG_ENABLE([sse2],
-              [AS_HELP_STRING([--enable-sse2],[enable SSE2 intrinsics [yes]])],
-              [sse2=$enableval],
-              [sse2=yes])
+AC_ARG_ENABLE([sse],
+              [AS_HELP_STRING([--enable-sse],[enable SSE(2) intrinsics [yes]])],
+              [sse=$enableval],
+              [sse=yes])
 
-if test x"$sse2" = "xyes"; then
+if test x"$sse" = "xyes"; then
   if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
     case $target in
-    i*86-apple-* | i686-*-* | amd64-*-* | x86_64-*-*)
+    amd64-*-* | x86_64-*-*)
       DEFAULT_CXXFLAGS=" -msse2 $DEFAULT_CXXFLAGS"
+        ;;
+    i*86-apple-* | i686-*-*)
+      DEFAULT_CXXFLAGS=" -msse $DEFAULT_CXXFLAGS"
         ;;
     *-*-*)
         ;;
