@@ -1060,20 +1060,27 @@ CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
 struct CvFeatureTree;
 
 /* Constructs kd-tree from set of feature descriptors */
-CVAPI(struct CvFeatureTree*) cvCreateFeatureTree(CvMat* desc);
+CVAPI(struct CvFeatureTree*) cvCreateKDTree(CvMat* desc);
 
-/* Release kd-tree */
+/* Constructs spill-tree from set of feature descriptors */
+CVAPI(struct CvFeatureTree*) cvCreateSpillTree( const CvMat* raw_data,
+						const int naive CV_DEFAULT(50),
+						const double rho CV_DEFAULT(.7),
+						const double tau CV_DEFAULT(.1) );
+
+/* Release feature tree */
 CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
-/* Searches kd-tree for k nearest neighbors of given reference points,
-   searching at most emax leaves. */
+/* Searches feature tree for k nearest neighbors of given reference points,
+   searching (in case of kd-tree/bbf) at most emax leaves. */
 CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
-		    CvMat* results, CvMat* dist, int k CV_DEFAULT(2), int emax CV_DEFAULT(20));
+			   CvMat* results, CvMat* dist, int k CV_DEFAULT(2), int emax CV_DEFAULT(20));
 
-/* Search kd-tree for all points that are inlier to given rect region. */
+/* Search feature tree for all points that are inlier to given rect region.
+   Only implemented for kd trees */
 CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-		    CvMat* bounds_min, CvMat* bounds_max,
-		    CvMat* results);
+			       CvMat* bounds_min, CvMat* bounds_max,
+			       CvMat* results);
 
 typedef struct CvSURFPoint
 {

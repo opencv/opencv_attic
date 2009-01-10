@@ -45,14 +45,9 @@
 
 #if !defined _MSC_VER || defined __ICL || _MSC_VER >= 1400
 #include "_cvkdtree.hpp"
+#include "_cvfeaturetree.h"
 
-// * write up some docs
-
-// * removing __valuetype parameter from CvKDTree and using virtuals instead 
-// * of void* data here could simplify things.
-
-struct CvFeatureTree {
-
+class CvKDTreeWrap : public CvFeatureTree {
   template <class __scalartype, int __cvtype>
   struct deref {
     typedef __scalartype scalar_type;
@@ -129,10 +124,10 @@ struct CvFeatureTree {
     return inbounds.size();
   }
 
-  CvFeatureTree(const CvFeatureTree& x);
-  CvFeatureTree& operator= (const CvFeatureTree& rhs);
+  CvKDTreeWrap(const CvKDTreeWrap& x);
+  CvKDTreeWrap& operator= (const CvKDTreeWrap& rhs);
 public:
-  CvFeatureTree(CvMat* _mat) : mat(_mat) {
+  CvKDTreeWrap(CvMat* _mat) : mat(_mat) {
     // * a flag parameter should tell us whether
     // * (a) user ensures *mat outlives *this and is unchanged, 
     // * (b) we take reference and user ensures mat is unchanged,
@@ -146,7 +141,7 @@ public:
 		    (&tmp[0], &tmp[0] + tmp.size(), mat->cols,
 		     tree_type::deref_type(mat)));
   }
-  ~CvFeatureTree() {
+  ~CvKDTreeWrap() {
     dispatch_cvtype(mat, delete (tree_type*) data);
   }
 
@@ -159,125 +154,101 @@ public:
     return mat->type;
   }
 
-  void find_nn(CvMat* d, int k, int emax, CvMat* results, CvMat* dist) {
-    assert(CV_MAT_TYPE(d->type) == CV_MAT_TYPE(mat->type));
+  void FindFeatures(CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
+    bool free_desc = false;
+
+    __BEGIN__;
+    CV_FUNCNAME("cvFindFeatures");
+  
+    if (desc->cols != dims())
+      CV_ERROR(CV_StsUnmatchedSizes, "desc columns be equal feature dimensions");
+    if (results->rows != desc->rows && results->cols != k)
+      CV_ERROR(CV_StsUnmatchedSizes, "results and desc must be same height");
+    if (dist->rows != desc->rows && dist->cols != k)
+      CV_ERROR(CV_StsUnmatchedSizes, "dist and desc must be same height");
+    if (CV_MAT_TYPE(results->type) != CV_32SC1)
+      CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
+    if (CV_MAT_TYPE(dist->type) != CV_64FC1)
+      CV_ERROR(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
+
+    if (CV_MAT_TYPE(type()) != CV_MAT_TYPE(desc->type)) {
+      CvMat* old_desc = desc;
+      desc = cvCreateMat(desc->rows, desc->cols, type());
+      cvConvert(old_desc, desc);
+      free_desc = true;
+    }
+
+
+    assert(CV_MAT_TYPE(desc->type) == CV_MAT_TYPE(mat->type));
     assert(CV_MAT_TYPE(dist->type) == CV_64FC1);
     assert(CV_MAT_TYPE(results->type) == CV_32SC1);
 
     dispatch_cvtype(mat, find_nn<tree_type>
-		    (d, k, emax, results, dist));
+		    (desc, k, emax, results, dist));
+
+    __END__;
+
+    if (free_desc)
+      cvReleaseMat(&desc);
   }
-  int find_ortho_range(CvMat* bounds_min, CvMat* bounds_max,
-			CvMat* results) {
+  int FindOrthoRange(CvMat* bounds_min, CvMat* bounds_max,
+		     CvMat* results) {
+    bool free_bounds = false;
+    int count = -1;
+
+    __BEGIN__;
+    CV_FUNCNAME("cvFindFeaturesBoxed");
+
+    if (bounds_min->cols * bounds_min->rows != dims() ||
+	bounds_max->cols * bounds_max->rows != dims())
+      CV_ERROR(CV_StsUnmatchedSizes, "bounds_{min,max} must 1 x dims or dims x 1");
+    if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(bounds_max->type))
+      CV_ERROR(CV_StsUnmatchedFormats, "bounds_{min,max} must have same type");
+    if (CV_MAT_TYPE(results->type) != CV_32SC1)
+      CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
+
+    if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(type())) {
+      free_bounds = true;
+
+      CvMat* old_bounds_min = bounds_min;
+      bounds_min = cvCreateMat(bounds_min->rows, bounds_min->cols, type());
+      cvConvert(old_bounds_min, bounds_min);
+
+      CvMat* old_bounds_max = bounds_max;
+      bounds_max = cvCreateMat(bounds_max->rows, bounds_max->cols, type());
+      cvConvert(old_bounds_max, bounds_max);
+    }
+
     assert(CV_MAT_TYPE(bounds_min->type) == CV_MAT_TYPE(mat->type));
     assert(CV_MAT_TYPE(bounds_min->type) == CV_MAT_TYPE(bounds_max->type));
     assert(bounds_min->rows * bounds_min->cols == dims());
     assert(bounds_max->rows * bounds_max->cols == dims());
 
-    int count = 0;
     dispatch_cvtype(mat, count = find_ortho_range<tree_type>
 		    (bounds_min, bounds_max,results));
+
+    __END__;
+    if (free_bounds) {
+      cvReleaseMat(&bounds_min);
+      cvReleaseMat(&bounds_max);
+    }
+
     return count;
   }
 };
 
-
-
-CvFeatureTree* cvCreateFeatureTree(CvMat* desc) {
+CvFeatureTree* cvCreateKDTree(CvMat* desc) {
   __BEGIN__;
-  CV_FUNCNAME("cvCreateFeatureTree");
+  CV_FUNCNAME("cvCreateKDTree");
 
   if (CV_MAT_TYPE(desc->type) != CV_32FC1 &&
       CV_MAT_TYPE(desc->type) != CV_64FC1)
     CV_ERROR(CV_StsUnsupportedFormat, "descriptors must be either CV_32FC1 or CV_64FC1");
 
-  return new CvFeatureTree(desc);
+  return new CvKDTreeWrap(desc);
   __END__;
 
   return 0;
 }
 
-void cvReleaseFeatureTree(CvFeatureTree* tr) {
-  delete tr;
-}
-
-// desc is m x d set of candidate points.
-// results is m x k set of row indices of matching points.
-// dist is m x k distance to matching points.
-void cvFindFeatures(CvFeatureTree* tr, CvMat* desc,
-		    CvMat* results, CvMat* dist, int k, int emax) {
-  bool free_desc = false;
-  int dims = tr->dims();
-  int type = tr->type();
-
-  __BEGIN__;
-  CV_FUNCNAME("cvFindFeatures");
-  
-  if (desc->cols != dims)
-    CV_ERROR(CV_StsUnmatchedSizes, "desc columns be equal feature dimensions");
-  if (results->rows != desc->rows && results->cols != k)
-    CV_ERROR(CV_StsUnmatchedSizes, "results and desc must be same height");
-  if (dist->rows != desc->rows && dist->cols != k)
-    CV_ERROR(CV_StsUnmatchedSizes, "dist and desc must be same height");
-  if (CV_MAT_TYPE(results->type) != CV_32SC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
-  if (CV_MAT_TYPE(dist->type) != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
-
-  if (CV_MAT_TYPE(type) != CV_MAT_TYPE(desc->type)) {
-    CvMat* old_desc = desc;
-    desc = cvCreateMat(desc->rows, desc->cols, type);
-    cvConvert(old_desc, desc);
-    free_desc = true;
-  }
-
-  tr->find_nn(desc, k, emax, results, dist);
-
-  __END__;
-
-  if (free_desc)
-    cvReleaseMat(&desc);
-}
-
-int cvFindFeaturesBoxed(CvFeatureTree* tr,
-			CvMat* bounds_min, CvMat* bounds_max,
-			CvMat* results) {
-  int nr = -1;
-  bool free_bounds = false;
-  int dims = tr->dims();
-  int type = tr->type();
-
-  __BEGIN__;
-  CV_FUNCNAME("cvFindFeaturesBoxed");
-
-  if (bounds_min->cols * bounds_min->rows != dims ||
-      bounds_max->cols * bounds_max->rows != dims)
-    CV_ERROR(CV_StsUnmatchedSizes, "bounds_{min,max} must 1 x dims or dims x 1");
-  if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(bounds_max->type))
-    CV_ERROR(CV_StsUnmatchedFormats, "bounds_{min,max} must have same type");
-  if (CV_MAT_TYPE(results->type) != CV_32SC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
-
-  if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(type)) {
-    free_bounds = true;
-
-    CvMat* old_bounds_min = bounds_min;
-    bounds_min = cvCreateMat(bounds_min->rows, bounds_min->cols, type);
-    cvConvert(old_bounds_min, bounds_min);
-
-    CvMat* old_bounds_max = bounds_max;
-    bounds_max = cvCreateMat(bounds_max->rows, bounds_max->cols, type);
-    cvConvert(old_bounds_max, bounds_max);
-  }
-
-  nr = tr->find_ortho_range(bounds_min, bounds_max, results);
-
-  __END__;
-  if (free_bounds) {
-    cvReleaseMat(&bounds_min);
-    cvReleaseMat(&bounds_max);
-  }
-
-  return nr;
-}
 #endif
