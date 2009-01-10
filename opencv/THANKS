@@ -38,7 +38,7 @@ Conbere, Morgan         ???                        Image I/O on MacOSX
 Cowperthwaite, David    Intel Corp.                3d Tracker
 
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
-Delacour, Xavier        ???                        Octave bindings, some Video I/O components for highgui
+Delacour, Xavier        ???                        Octave bindings, KD trees/BBF search, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
@@ -67,7 +67,7 @@ Kuranov, Alexander      Intel Corp.                Matlab wrappers, face detecti
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
-Liu Liu                 ???                        SURF code
+Liu Liu                 ???                        SURF code, Spill trees
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
 
