@@ -70,7 +70,7 @@ static int PRINTF( const char* fmt, ... )
     va_start(args, fmt);
     return vprintf(fmt, args);
 }
-#include "..//..//otherlibs/highgui/highgui.h"
+#include "..//..//include/opencv/highgui.h"
 #else
 static int PRINTF( const char*, ... )
 {
