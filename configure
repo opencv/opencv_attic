@@ -20657,36 +20657,35 @@ echo "$as_me: TARGET=$target " >&6;}
     i*86-apple-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             # apples g++ fails with '-march=i686' and there are no apple machines older than prescott/core anyway
-            DEFAULT_CXXFLAGS="-g -march=prescott -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
+            DEFAULT_CXXFLAGS="-O3 -g -march=prescott -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     i686-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
           # default to i686/pentiumpro -- people can override this
-          DEFAULT_CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
+          DEFAULT_CXXFLAGS="-O3 -g -march=i686 -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     amd64-*-* | x86_64-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
           # default to i686/pentiumpro -- people can override this
-          DEFAULT_CXXFLAGS="-g $DEFAULT_CXXFLAGS"
+          DEFAULT_CXXFLAGS="-O3 -g -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     powerpc-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
             # default to G3 processors -- people can override this
-            DEFAULT_CXXFLAGS="-g -mcpu=G3 -mtune=G5 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
+            DEFAULT_CXXFLAGS="-O3 -g -mcpu=G3 -mtune=G5 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     *-*-*)
         if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            DEFAULT_CXXFLAGS="-fomit-frame-pointer $DEFAULT_CXXFLAGS"
+            DEFAULT_CXXFLAGS="-O2 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
         fi
         ;;
     esac
 
     CPPFLAGS="-DNDEBUG $CPPFLAGS"
-    DEFAULT_CXXFLAGS="-O3 $DEFAULT_CXXFLAGS"
 fi
 
 if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
