@@ -142,13 +142,29 @@ set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
-    if (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
-    	if (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
-	    set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
-    	elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
-	    set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
-    	endif (${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
-    endif (NOT MINGW AND NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
+    set(OPENCV_USE_OMIT_FRAME_POINTER ON CACHE BOOL "Enable -fomit-frame-pointer for GCC")
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
+        # We can use only -O2 because the -O3 causes gcc crash
+        set(OPENCV_USE_O2 ON CACHE BOOL "Enable -O2 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+        set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES powerpc*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_POWERPC ON CACHE BOOL "Enable PowerPC for GCC")
+    endif ()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES i686* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+    endif ()
 endif()
 
 # ===================================================
@@ -361,12 +377,37 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
     endif()
 
-    # GCC optimization for floating math
-    set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -ffast-math")
-
     # Whole program optimization
     if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION)
         set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fwhole-program --combine")
+    endif()
+
+    # Other optimizations
+    if(OPENCV_USE_OMIT_FRAME_POINTER)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fomit-frame-pointer")
+    endif()
+    if(OPENCV_USE_O2)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -O2")
+    endif()
+    if(OPENCV_USE_O3)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -O3")
+    endif()
+    if(OPENCV_USE_FAST_MATH)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -ffast-math")
+    endif()
+    if(OPENCV_USE_POWERPC)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mcpu=G3 -mtune=G5")
+    endif()
+    if(OPENCV_USE_MMX AND NOT MINGW)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mmmx")
+    endif()
+    # SSE should be disabled under MingW because it generates compiler errors
+    if(OPENCV_USE_SSE AND NOT MINGW)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse")
+    endif()
+    # SSE2 should be disabled under MingW because it generates compiler errors
+    if(OPENCV_USE_SSE2 AND NOT MINGW)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse2")
     endif()
 
     # Profiling?
@@ -386,14 +427,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
-
-    if(OPENCV_USE_SSE)
-	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse")
-    endif()
-    if(OPENCV_USE_SSE2)
-	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse2")
-    endif()
 endif()
+
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
