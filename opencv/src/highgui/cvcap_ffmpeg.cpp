@@ -1157,20 +1157,17 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 	oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
 
 	/* Lookup codec_id for given fourcc */
-	if(fourcc!=CV_FOURCC_DEFAULT){
 #if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
         if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
-	}
 #else
 	const struct AVCodecTag * tags[] = { codec_bmp_tags, NULL};
         if( (codec_id = av_codec_get_id(tags, fourcc)) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
-	}
 #endif
 
     // set a few optimal pixel formats for lossless codecs of interest..
