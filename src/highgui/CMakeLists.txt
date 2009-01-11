@@ -5,8 +5,11 @@
 # ----------------------------------------------------------------------------
 project(highgui)
 
-if(MSVC)
+if(WIN32)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+endif()
+
+if(MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:libcmt.lib")
 endif()
 
@@ -32,9 +35,7 @@ set(highgui_ext_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h)
 
 if(WIN32)
     set(highgui_srcs ${highgui_srcs} window_w32.cpp cvcap_vfw.cpp cvcap_cmu.cpp cvcap_w32.cpp cvcap_dshow.cpp)
-    if(MSVC)
-        add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
-    endif(MSVC)
+    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
     if(HAVE_MIL)
         set(highgui_srcs ${highgui_srcs} cvcap_mil.cpp)
     endif()
@@ -109,7 +110,7 @@ endif(APPLE)
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
-if(MSVC)
+if(WIN32)
     link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib"
         "${CMAKE_BINARY_DIR}/3rdparty/lib"
         "${CMAKE_BINARY_DIR}/3rdparty/lib/${ConfigurationName}"
@@ -176,7 +177,7 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRA
 
 if(WIN32)
     add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
-	target_link_libraries(${the_target} comctl32 gdi32)
+	target_link_libraries(${the_target} comctl32 gdi32 libjasper libjpeg libpng libtiff zlib)
 
 	if (MSVC)
 		target_link_libraries(${the_target} vfw32 videoinput)
