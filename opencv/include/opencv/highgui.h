@@ -291,8 +291,13 @@ CVAPI(int)    cvSetCaptureProperty( CvCapture* capture, int property_id, double 
 /* "black box" video file writer structure */
 typedef struct CvVideoWriter CvVideoWriter;
 
+#ifndef SWIG
 #define CV_FOURCC(c1,c2,c3,c4)  \
     (((c1)&255) + (((c2)&255)<<8) + (((c3)&255)<<16) + (((c4)&255)<<24))
+#else
+  // Prototype for CV_FOURCC so that swig can generate wrapper without mixing up the define
+  int CV_FOURCC(char c1, char c2, char c3, char c4);
+#endif
 
 #define CV_FOURCC_PROMPT -1  /* Open Codec Selection Dialog (Windows only) */
 #define CV_FOURCC_DEFAULT CV_FOURCC('I', 'Y', 'U', 'V') /* Use default codec for specified filename (Linux only) */

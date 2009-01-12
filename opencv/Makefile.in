@@ -266,7 +266,7 @@ top_srcdir = @top_srcdir@
 AM_CXXFLAGS = @DEF_CXXFLAGS@
 
 # tell make where aclocal finds its files in Maintainer Mode
-ACLOCAL_AMFLAGS = -I ./autotools/aclocal
+ACLOCAL_AMFLAGS = -I autotools/aclocal
 @BUILD_APPS_FALSE@APPS_DIR = 
 @BUILD_APPS_TRUE@APPS_DIR = apps
 SUBDIRS = src include utils interfaces $(APPS_DIR) tests samples data doc

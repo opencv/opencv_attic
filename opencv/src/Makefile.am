@@ -143,6 +143,7 @@ lib_cv_la_SOURCES = \
   cv/cvdominants.cpp \
   cv/cvemd.cpp \
   cv/cvfeatureselect.cpp \
+  cv/cvfeaturetree.cpp \
   cv/cvfilter.cpp \
   cv/cvfloodfill.cpp \
   cv/cvfundam.cpp \
@@ -172,6 +173,7 @@ lib_cv_la_SOURCES = \
   cv/cvshapedescr.cpp \
   cv/cvsmooth.cpp \
   cv/cvsnakes.cpp \
+  cv/cvspilltree.cpp \
   cv/cvstardetector.cpp \
   cv/cvstereobm.cpp \
   cv/cvstereogc.cpp \

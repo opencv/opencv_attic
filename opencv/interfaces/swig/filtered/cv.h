@@ -3790,7 +3790,13 @@ extern "C" void cvFitLine( const CvArr* points, int dist_type, double param,
 struct CvFeatureTree;
 
 
-extern "C" struct CvFeatureTree* cvCreateFeatureTree(CvMat* desc);
+extern "C" struct CvFeatureTree* cvCreateKDTree(CvMat* desc);
+
+
+extern "C" struct CvFeatureTree* cvCreateSpillTree( const CvMat* raw_data,
+      const int naive = 50,
+      const double rho = .7,
+      const double tau = .1 );
 
 
 extern "C" void cvReleaseFeatureTree(struct CvFeatureTree* tr);
@@ -3801,9 +3807,10 @@ extern "C" void cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
       CvMat* results, CvMat* dist, int k = 2, int emax = 20);
 
 
+
 extern "C" int cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-      CvMat* bounds_min, CvMat* bounds_max,
-      CvMat* results);
+          CvMat* bounds_min, CvMat* bounds_max,
+          CvMat* results);
 
 typedef struct CvSURFPoint
 {
@@ -3841,6 +3848,53 @@ extern "C" CvSURFParams cvSURFParams( double hessianThreshold, int extended = 0 
 extern "C" void cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
                            CvMemStorage* storage, CvSURFParams params );
+
+typedef struct CvStarKeypoint
+{
+    CvPoint pt;
+    int size;
+    float response;
+}
+CvStarKeypoint;
+
+inline CvStarKeypoint cvStarKeypoint(CvPoint pt, int size, float response)
+{
+    CvStarKeypoint kpt;
+    kpt.pt = pt;
+    kpt.size = size;
+    kpt.response = response;
+    return kpt;
+}
+
+typedef struct CvStarDetectorParams
+{
+    int maxSize;
+    int responseThreshold;
+    int lineThresholdProjected;
+    int lineThresholdBinarized;
+    int suppressNonmaxSize;
+}
+CvStarDetectorParams;
+
+inline CvStarDetectorParams cvStarDetectorParams(
+    int maxSize = 45,
+    int responseThreshold = 30,
+    int lineThresholdProjected = 10,
+    int lineThresholdBinarized = 8,
+    int suppressNonmaxSize = 5)
+{
+    CvStarDetectorParams params;
+    params.maxSize = maxSize;
+    params.responseThreshold = responseThreshold;
+    params.lineThresholdProjected = lineThresholdProjected;
+    params.lineThresholdBinarized = lineThresholdBinarized;
+    params.suppressNonmaxSize = suppressNonmaxSize;
+
+    return params;
+}
+
+extern "C" CvSeq* cvGetStarKeypoints( const CvArr* img, CvMemStorage* storage,
+        CvStarDetectorParams params = cvStarDetectorParams());
 
 
 
@@ -3987,7 +4041,7 @@ extern "C" int cvFindChessboardCorners( const void* image, CvSize pattern_size,
 extern "C" void cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
                                      CvPoint2D32f* corners,
                                      int count, int pattern_was_found );
-# 1272 "../../../include/opencv/cv.h"
+# 1326 "../../../include/opencv/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -4064,7 +4118,7 @@ extern "C" int cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
 extern "C" void cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
-# 1356 "../../../include/opencv/cv.h"
+# 1410 "../../../include/opencv/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = 8,
@@ -4491,4 +4545,4 @@ struct CvLevMarq
     int iters;
     bool completeSymmFlag;
 };
-# 1458 "../../../include/opencv/cv.h" 2
+# 1512 "../../../include/opencv/cv.h" 2

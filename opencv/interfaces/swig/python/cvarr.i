@@ -41,6 +41,7 @@
 
 // 2006-02-17  Roman Stanchak <rstancha@cse.wustl.edu>
 // 2006-07-19  Moved most operators to general/cvarr_operators.i for use with other languages
+// 2009-01-07  Added numpy array interface, Mark Asbach <asbach@ient.rwth-aachen.de>
 
 /*M//////////////////////////////////////////////////////////////////////////////////////////
 // Macros for extending CvMat and IplImage -- primarily for operator overloading 
@@ -377,6 +378,62 @@ def __ne__(self, arg):
 	if not arg:
 		return True
 	return _cv.CvMat___ne__(self, arg)
+
+def __get_array_interface__ (self):
+  """Compose numpy array interface
+  
+  Via the numpy array interface, OpenCV data structures can be directly passed to numpy
+  methods without copying / converting. This tremendously speeds up mixing code from
+  OpenCV and numpy.
+  
+  See: http://numpy.scipy.org/array_interface.shtml
+  
+  @author Mark Asbach <asbach@ient.rwth-aachen.de>
+  @date   2009-01-07
+  """
+  
+  if   self.depth == IPL_DEPTH_8U:
+    typestr = '|u1'
+    bytes_per_pixel = 1
+  elif self.depth == IPL_DEPTH_8S:
+    typestr = '|i1'
+    bytes_per_pixel = 1
+  elif self.depth == IPL_DEPTH_16U:
+    typestr = '|u2'
+    bytes_per_pixel = 2
+  elif self.depth == IPL_DEPTH_16S:
+    typestr = '|i2'
+    bytes_per_pixel = 2
+  elif self.depth == IPL_DEPTH_32S:
+    typestr = '|i4'
+    bytes_per_pixel = 4
+  elif self.depth == IPL_DEPTH_32F:
+    typestr = '|f4'
+    bytes_per_pixel = 4
+  elif self.depth == IPL_DEPTH_64F:
+    typestr = '|f8'
+    bytes_per_pixel = 8
+  else:
+    raise TypeError("unknown resp. unhandled OpenCV image/matrix format")
+  
+  if self.nChannels == 1:
+    # monochrome image, matrix with a single channel
+    return {'shape':  (self.height, self.width), 
+           'typestr': typestr, 
+           'version': 3,
+           
+           'data':    (int (self.data.ptr), False),
+           'strides': (int (self.widthStep), int (bytes_per_pixel))}
+  else:
+    # color image, image with alpha, matrix with multiple channels
+    return {'shape':  (self.height, self.width, self.nChannels), 
+           'typestr': typestr, 
+           'version': 3,
+           
+           'data':    (int (self.data.ptr), False),
+           'strides': (int (self.widthStep), int (self.nChannels * bytes_per_pixel), int (bytes_per_pixel))}
+
+__array_interface__ = property (__get_array_interface__, doc = "numpy array interface description")
 
 %}
 

@@ -66,17 +66,17 @@ am_lib_cv_la_OBJECTS = cvaccum.lo cvadapthresh.lo cvapprox.lo \
 	cvcolor.lo cvcondens.lo cvcontours.lo cvcontourtree.lo \
 	cvconvhull.lo cvcorner.lo cvcornersubpix.lo cvderiv.lo \
 	cvdistransform.lo cvdominants.lo cvemd.lo cvfeatureselect.lo \
-	cvfilter.lo cvfloodfill.lo cvfundam.lo cvgeometry.lo cvhaar.lo \
-	cvhistogram.lo cvhough.lo cvimgwarp.lo cvinpaint.lo \
-	cvkalman.lo cvlinefit.lo cvlkpyramid.lo cvmatchcontours.lo \
-	cvmoments.lo cvmorph.lo cvmotempl.lo cvoptflowbm.lo \
-	cvoptflowhs.lo cvoptflowlk.lo cvpgh.lo cvposit.lo \
-	cvpyramids.lo cvpyrsegmentation.lo cvrotcalipers.lo \
+	cvfeaturetree.lo cvfilter.lo cvfloodfill.lo cvfundam.lo \
+	cvgeometry.lo cvhaar.lo cvhistogram.lo cvhough.lo cvimgwarp.lo \
+	cvinpaint.lo cvkalman.lo cvlinefit.lo cvlkpyramid.lo \
+	cvmatchcontours.lo cvmoments.lo cvmorph.lo cvmotempl.lo \
+	cvoptflowbm.lo cvoptflowhs.lo cvoptflowlk.lo cvpgh.lo \
+	cvposit.lo cvpyramids.lo cvpyrsegmentation.lo cvrotcalipers.lo \
 	cvsamplers.lo cvsegmentation.lo cvshapedescr.lo cvsmooth.lo \
-	cvsnakes.lo cvstereobm.lo cvstereogc.lo cvsubdivision2d.lo \
-	cvsumpixels.lo cvsurf.lo cvswitcher.lo cvtables.lo \
-	cvtemplmatch.lo cvthresh.lo cvundistort.lo cvutils.lo \
-	cvkdtree.lo
+	cvsnakes.lo cvspilltree.lo cvstardetector.lo cvstereobm.lo \
+	cvstereogc.lo cvsubdivision2d.lo cvsumpixels.lo cvsurf.lo \
+	cvswitcher.lo cvtables.lo cvtemplmatch.lo cvthresh.lo \
+	cvundistort.lo cvutils.lo cvkdtree.lo
 lib_cv_la_OBJECTS = $(am_lib_cv_la_OBJECTS)
 lib_cv_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -398,8 +398,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
 # use the default c++ flags
-AM_CXXFLAGS = @DEF_CXXFLAGS@
-INCLUDES = -I. -I$(top_srcdir)/include/opencv
+AM_CXXFLAGS = @DEF_CXXFLAGS@ @GTK_CFLAGS@ @GTHREAD_CFLAGS@ @GSTREAMER_CFLAGS@
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)/src/cvaux -I$(top_srcdir)/src/cv
 
 # =========================================================================
 
@@ -538,6 +538,7 @@ lib_cv_la_SOURCES = \
   cv/cvdominants.cpp \
   cv/cvemd.cpp \
   cv/cvfeatureselect.cpp \
+  cv/cvfeaturetree.cpp \
   cv/cvfilter.cpp \
   cv/cvfloodfill.cpp \
   cv/cvfundam.cpp \
@@ -567,6 +568,8 @@ lib_cv_la_SOURCES = \
   cv/cvshapedescr.cpp \
   cv/cvsmooth.cpp \
   cv/cvsnakes.cpp \
+  cv/cvspilltree.cpp \
+  cv/cvstardetector.cpp \
   cv/cvstereobm.cpp \
   cv/cvstereogc.cpp \
   cv/cvsubdivision2d.cpp \
@@ -930,6 +933,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfacedetection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfacetemplate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfeatureselect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfeaturetree.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfilter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfindface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvfindhandregion.Plo@am__quote@
@@ -978,6 +982,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvshapedescr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsmooth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsnakes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvspilltree.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvstardetector.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvstereobm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvstereogc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvsubdiv2.Plo@am__quote@
@@ -1257,6 +1263,13 @@ cvfeatureselect.lo: cv/cvfeatureselect.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cvfeatureselect.lo `test -f 'cv/cvfeatureselect.cpp' || echo '$(srcdir)/'`cv/cvfeatureselect.cpp
 
+cvfeaturetree.lo: cv/cvfeaturetree.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cvfeaturetree.lo -MD -MP -MF $(DEPDIR)/cvfeaturetree.Tpo -c -o cvfeaturetree.lo `test -f 'cv/cvfeaturetree.cpp' || echo '$(srcdir)/'`cv/cvfeaturetree.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/cvfeaturetree.Tpo $(DEPDIR)/cvfeaturetree.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='cv/cvfeaturetree.cpp' object='cvfeaturetree.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cvfeaturetree.lo `test -f 'cv/cvfeaturetree.cpp' || echo '$(srcdir)/'`cv/cvfeaturetree.cpp
+
 cvfilter.lo: cv/cvfilter.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cvfilter.lo -MD -MP -MF $(DEPDIR)/cvfilter.Tpo -c -o cvfilter.lo `test -f 'cv/cvfilter.cpp' || echo '$(srcdir)/'`cv/cvfilter.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/cvfilter.Tpo $(DEPDIR)/cvfilter.Plo
@@ -1459,6 +1472,20 @@ cvsnakes.lo: cv/cvsnakes.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='cv/cvsnakes.cpp' object='cvsnakes.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cvsnakes.lo `test -f 'cv/cvsnakes.cpp' || echo '$(srcdir)/'`cv/cvsnakes.cpp
+
+cvspilltree.lo: cv/cvspilltree.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cvspilltree.lo -MD -MP -MF $(DEPDIR)/cvspilltree.Tpo -c -o cvspilltree.lo `test -f 'cv/cvspilltree.cpp' || echo '$(srcdir)/'`cv/cvspilltree.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/cvspilltree.Tpo $(DEPDIR)/cvspilltree.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='cv/cvspilltree.cpp' object='cvspilltree.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cvspilltree.lo `test -f 'cv/cvspilltree.cpp' || echo '$(srcdir)/'`cv/cvspilltree.cpp
+
+cvstardetector.lo: cv/cvstardetector.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cvstardetector.lo -MD -MP -MF $(DEPDIR)/cvstardetector.Tpo -c -o cvstardetector.lo `test -f 'cv/cvstardetector.cpp' || echo '$(srcdir)/'`cv/cvstardetector.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/cvstardetector.Tpo $(DEPDIR)/cvstardetector.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='cv/cvstardetector.cpp' object='cvstardetector.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cvstardetector.lo `test -f 'cv/cvstardetector.cpp' || echo '$(srcdir)/'`cv/cvstardetector.cpp
 
 cvstereobm.lo: cv/cvstereobm.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT cvstereobm.lo -MD -MP -MF $(DEPDIR)/cvstereobm.Tpo -c -o cvstereobm.lo `test -f 'cv/cvstereobm.cpp' || echo '$(srcdir)/'`cv/cvstereobm.cpp
