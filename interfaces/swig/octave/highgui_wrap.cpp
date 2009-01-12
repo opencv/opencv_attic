@@ -2098,54 +2098,56 @@ SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *point
 #define SWIGTYPE_p_CvSparseMat swig_types[64]
 #define SWIGTYPE_p_CvSparseMatIterator swig_types[65]
 #define SWIGTYPE_p_CvSparseNode swig_types[66]
-#define SWIGTYPE_p_CvStereoBMState swig_types[67]
-#define SWIGTYPE_p_CvStereoGCState swig_types[68]
-#define SWIGTYPE_p_CvString swig_types[69]
-#define SWIGTYPE_p_CvStringHashNode swig_types[70]
-#define SWIGTYPE_p_CvSubdiv2D swig_types[71]
-#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[72]
-#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[73]
-#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[74]
-#define SWIGTYPE_p_CvTermCriteria swig_types[75]
-#define SWIGTYPE_p_CvTreeNodeIterator swig_types[76]
-#define SWIGTYPE_p_CvTypeInfo swig_types[77]
-#define SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t swig_types[78]
-#define SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t swig_types[79]
-#define SWIGTYPE_p_CvTypedSeqT_CvPoint_t swig_types[80]
-#define SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[81]
-#define SWIGTYPE_p_CvTypedSeqT_CvRect_t swig_types[82]
-#define SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t swig_types[83]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[84]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[85]
-#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[86]
-#define SWIGTYPE_p_CvVideoWriter swig_types[87]
-#define SWIGTYPE_p_CvvImage swig_types[88]
-#define SWIGTYPE_p__IplConvKernel swig_types[89]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[90]
-#define SWIGTYPE_p__IplImage swig_types[91]
-#define SWIGTYPE_p__IplROI swig_types[92]
-#define SWIGTYPE_p__IplTileInfo swig_types[93]
-#define SWIGTYPE_p_allocator_type swig_types[94]
-#define SWIGTYPE_p_char swig_types[95]
-#define SWIGTYPE_p_difference_type swig_types[96]
-#define SWIGTYPE_p_f_int__void swig_types[97]
-#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[98]
-#define SWIGTYPE_p_int swig_types[99]
-#define SWIGTYPE_p_long_long swig_types[100]
-#define SWIGTYPE_p_octave_value swig_types[101]
-#define SWIGTYPE_p_p_CvCapture swig_types[102]
-#define SWIGTYPE_p_p_CvVideoWriter swig_types[103]
-#define SWIGTYPE_p_p_char swig_types[104]
-#define SWIGTYPE_p_signed_char swig_types[105]
-#define SWIGTYPE_p_size_t swig_types[106]
-#define SWIGTYPE_p_size_type swig_types[107]
-#define SWIGTYPE_p_unsigned_char swig_types[108]
-#define SWIGTYPE_p_unsigned_long_long swig_types[109]
-#define SWIGTYPE_p_unsigned_short swig_types[110]
-#define SWIGTYPE_p_value_type swig_types[111]
-#define SWIGTYPE_p_void swig_types[112]
-static swig_type_info *swig_types[114];
-static swig_module_info swig_module = {swig_types, 113, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvStarDetectorParams swig_types[67]
+#define SWIGTYPE_p_CvStarKeypoint swig_types[68]
+#define SWIGTYPE_p_CvStereoBMState swig_types[69]
+#define SWIGTYPE_p_CvStereoGCState swig_types[70]
+#define SWIGTYPE_p_CvString swig_types[71]
+#define SWIGTYPE_p_CvStringHashNode swig_types[72]
+#define SWIGTYPE_p_CvSubdiv2D swig_types[73]
+#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[74]
+#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[75]
+#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[76]
+#define SWIGTYPE_p_CvTermCriteria swig_types[77]
+#define SWIGTYPE_p_CvTreeNodeIterator swig_types[78]
+#define SWIGTYPE_p_CvTypeInfo swig_types[79]
+#define SWIGTYPE_p_CvTypedSeqT_CvConnectedComp_t swig_types[80]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint2D32f_t swig_types[81]
+#define SWIGTYPE_p_CvTypedSeqT_CvPoint_t swig_types[82]
+#define SWIGTYPE_p_CvTypedSeqT_CvQuadEdge2D_t swig_types[83]
+#define SWIGTYPE_p_CvTypedSeqT_CvRect_t swig_types[84]
+#define SWIGTYPE_p_CvTypedSeqT_CvSeq_p_t swig_types[85]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_CvPoint_2_t_t swig_types[86]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_2_t_t swig_types[87]
+#define SWIGTYPE_p_CvTypedSeqT_CvTupleT_float_3_t_t swig_types[88]
+#define SWIGTYPE_p_CvVideoWriter swig_types[89]
+#define SWIGTYPE_p_CvvImage swig_types[90]
+#define SWIGTYPE_p__IplConvKernel swig_types[91]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[92]
+#define SWIGTYPE_p__IplImage swig_types[93]
+#define SWIGTYPE_p__IplROI swig_types[94]
+#define SWIGTYPE_p__IplTileInfo swig_types[95]
+#define SWIGTYPE_p_allocator_type swig_types[96]
+#define SWIGTYPE_p_char swig_types[97]
+#define SWIGTYPE_p_difference_type swig_types[98]
+#define SWIGTYPE_p_f_int__void swig_types[99]
+#define SWIGTYPE_p_f_int_int_int_int_p_void__void swig_types[100]
+#define SWIGTYPE_p_int swig_types[101]
+#define SWIGTYPE_p_long_long swig_types[102]
+#define SWIGTYPE_p_octave_value swig_types[103]
+#define SWIGTYPE_p_p_CvCapture swig_types[104]
+#define SWIGTYPE_p_p_CvVideoWriter swig_types[105]
+#define SWIGTYPE_p_p_char swig_types[106]
+#define SWIGTYPE_p_signed_char swig_types[107]
+#define SWIGTYPE_p_size_t swig_types[108]
+#define SWIGTYPE_p_size_type swig_types[109]
+#define SWIGTYPE_p_unsigned_char swig_types[110]
+#define SWIGTYPE_p_unsigned_long_long swig_types[111]
+#define SWIGTYPE_p_unsigned_short swig_types[112]
+#define SWIGTYPE_p_value_type swig_types[113]
+#define SWIGTYPE_p_void swig_types[114]
+static swig_type_info *swig_types[116];
+static swig_module_info swig_module = {swig_types, 115, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3701,49 +3703,6 @@ CvMat * cvQueryFrame__CvMat( CvCapture * capture ){
 }
 
 
-SWIGINTERN int
-SWIG_AsCharArray(octave_value obj, char *val, size_t size)
-{ 
-  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
-  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
-  if (SWIG_IsOK(res)) {
-    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
-    if (csize <= size) {
-      if (val) {
-	if (csize) memcpy(val, cptr, csize*sizeof(char));
-	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
-      }
-      if (alloc == SWIG_NEWOBJ) {
-	delete[] cptr;
-	res = SWIG_DelNewMask(res);
-      }      
-      return res;
-    }
-    if (alloc == SWIG_NEWOBJ) delete[] cptr;
-  }
-  return SWIG_TypeError;
-}
-
-
-SWIGINTERN int
-SWIG_AsVal_char (octave_value obj, char *val)
-{    
-  int res = SWIG_AsCharArray(obj, val, 1);
-  if (!SWIG_IsOK(res)) {
-    long v;
-    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
-    if (SWIG_IsOK(res)) {
-      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
-	if (val) *val = (char)(v);
-      } else {
-	res = SWIG_OverflowError;
-      }
-    }
-  }
-  return res;
-}
-
-
   SWIGINTERNINLINE octave_value SWIG_From_long    (long value)
     {    
       return octave_value(value);
@@ -3800,6 +3759,49 @@ SWIG_FromCharPtr(const char *cptr)
 	*val = ov.double_value();
       return SWIG_OK;
     }
+
+
+SWIGINTERN int
+SWIG_AsCharArray(octave_value obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
+  if (SWIG_IsOK(res)) {
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
+    }
+    if (alloc == SWIG_NEWOBJ) delete[] cptr;
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char (octave_value obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = (char)(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
 
 
 
@@ -4148,8 +4150,8 @@ const char* _wrap_CV_FOURCC_texinfo = "-*- texinfo -*-\n\
 @var{c1} is of type char. @var{c2} is of type char. @var{c3} is of type char. @var{c4} is of type char. @var{retval} is of type int. \n\
 @end deftypefn";
 const char* _wrap_cvRetrieveFrame__Deprecated_texinfo = "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} @var{retval} = cvRetrieveFrame (@var{capture})\n\
-@var{capture} is of type CvCapture. @var{retval} is of type . \n\
+@deftypefn {Loadable Function} @var{retval} = cvRetrieveFrame (@var{capture}, @var{streamIdx} = 0)\n\
+@var{capture} is of type CvCapture. @var{streamIdx} is of type int. @var{retval} is of type . \n\
 @end deftypefn";
 const char* _wrap_cvQueryFrame__Deprecated_texinfo = "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} @var{retval} = cvQueryFrame (@var{capture})\n\
@@ -5030,63 +5032,6 @@ static octave_value_list _wrap_cvQueryFrame (const octave_value_list& args, int 
     } 
   }
   _outv = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CvMat, 0 |  0 );
-  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
-fail:
-  return _out;
-}
-
-
-static octave_value_list _wrap_CV_FOURCC (const octave_value_list& args, int nargout) {
-  char arg1 ;
-  char arg2 ;
-  char arg3 ;
-  char arg4 ;
-  char val1 ;
-  int ecode1 = 0 ;
-  char val2 ;
-  int ecode2 = 0 ;
-  char val3 ;
-  int ecode3 = 0 ;
-  char val4 ;
-  int ecode4 = 0 ;
-  octave_value_list _out;
-  octave_value_list *_outp=&_out;
-  octave_value _outv;
-  int result;
-  
-  if (!SWIG_check_num_args("CV_FOURCC",args.length(),4,4,0)) {
-    SWIG_fail;
-  }
-  ecode1 = SWIG_AsVal_char(args(0), &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "CV_FOURCC" "', argument " "1"" of type '" "char""'");
-  } 
-  arg1 = (char)(val1);
-  ecode2 = SWIG_AsVal_char(args(1), &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CV_FOURCC" "', argument " "2"" of type '" "char""'");
-  } 
-  arg2 = (char)(val2);
-  ecode3 = SWIG_AsVal_char(args(2), &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CV_FOURCC" "', argument " "3"" of type '" "char""'");
-  } 
-  arg3 = (char)(val3);
-  ecode4 = SWIG_AsVal_char(args(3), &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CV_FOURCC" "', argument " "4"" of type '" "char""'");
-  } 
-  arg4 = (char)(val4);
-  {
-    try {
-      result = (int)CV_FOURCC(arg1,arg2,arg3,arg4); 
-    } 
-    catch (...) 
-    {
-      SWIG_fail;
-    } 
-  }
-  _outv = SWIG_From_int((int)(result));
   if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
 fail:
   return _out;
@@ -5978,14 +5923,17 @@ fail:
 
 static octave_value_list _wrap_cvRetrieveFrame__Deprecated (const octave_value_list& args, int nargout) {
   CvCapture *arg1 = (CvCapture *) 0 ;
+  int arg2 = (int) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
   octave_value_list _out;
   octave_value_list *_outp=&_out;
   octave_value _outv;
   IplImage *result = 0 ;
   
-  if (!SWIG_check_num_args("cvRetrieveFrame__Deprecated",args.length(),1,1,0)) {
+  if (!SWIG_check_num_args("cvRetrieveFrame__Deprecated",args.length(),2,1,0)) {
     SWIG_fail;
   }
   res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvCapture, 0 |  0 );
@@ -5993,9 +5941,16 @@ static octave_value_list _wrap_cvRetrieveFrame__Deprecated (const octave_value_l
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "cvRetrieveFrame__Deprecated" "', argument " "1"" of type '" "CvCapture *""'"); 
   }
   arg1 = (CvCapture *)(argp1);
+  if (1<args.length()) {
+    ecode2 = SWIG_AsVal_int(args(1), &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "cvRetrieveFrame__Deprecated" "', argument " "2"" of type '" "int""'");
+    } 
+    arg2 = (int)(val2);
+  }
   {
     try {
-      result = (IplImage *)cvRetrieveFrame(arg1); 
+      result = (IplImage *)cvRetrieveFrame(arg1,arg2); 
     } 
     catch (...) 
     {
@@ -6157,6 +6112,63 @@ static octave_value_list _wrap_cvSetCaptureProperty (const octave_value_list& ar
   {
     try {
       result = (int)cvSetCaptureProperty(arg1,arg2,arg3); 
+    } 
+    catch (...) 
+    {
+      SWIG_fail;
+    } 
+  }
+  _outv = SWIG_From_int((int)(result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CV_FOURCC (const octave_value_list& args, int nargout) {
+  char arg1 ;
+  char arg2 ;
+  char arg3 ;
+  char arg4 ;
+  char val1 ;
+  int ecode1 = 0 ;
+  char val2 ;
+  int ecode2 = 0 ;
+  char val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  int result;
+  
+  if (!SWIG_check_num_args("CV_FOURCC",args.length(),4,4,0)) {
+    SWIG_fail;
+  }
+  ecode1 = SWIG_AsVal_char(args(0), &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "CV_FOURCC" "', argument " "1"" of type '" "char""'");
+  } 
+  arg1 = (char)(val1);
+  ecode2 = SWIG_AsVal_char(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CV_FOURCC" "', argument " "2"" of type '" "char""'");
+  } 
+  arg2 = (char)(val2);
+  ecode3 = SWIG_AsVal_char(args(2), &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CV_FOURCC" "', argument " "3"" of type '" "char""'");
+  } 
+  arg3 = (char)(val3);
+  ecode4 = SWIG_AsVal_char(args(3), &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CV_FOURCC" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = (char)(val4);
+  {
+    try {
+      result = (int)CV_FOURCC(arg1,arg2,arg3,arg4); 
     } 
     catch (...) 
     {
@@ -7518,7 +7530,6 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvLoadImage",_wrap_cvLoadImage,0,0,2,_wrap_cvLoadImage_texinfo},
 {"cvRetrieveFrame",_wrap_cvRetrieveFrame,0,0,2,_wrap_cvRetrieveFrame_texinfo},
 {"cvQueryFrame",_wrap_cvQueryFrame,0,0,2,_wrap_cvQueryFrame_texinfo},
-{"CV_FOURCC",_wrap_CV_FOURCC,0,0,2,_wrap_CV_FOURCC_texinfo},
 {"cvInitSystem",_wrap_cvInitSystem,0,0,2,_wrap_cvInitSystem_texinfo},
 {"cvStartWindowThread",_wrap_cvStartWindowThread,0,0,2,_wrap_cvStartWindowThread_texinfo},
 {"cvNamedWindow",_wrap_cvNamedWindow,0,0,2,_wrap_cvNamedWindow_texinfo},
@@ -7545,6 +7556,7 @@ static const struct swig_octave_member swig_globals[] = {
 {"cvReleaseCapture",_wrap_cvReleaseCapture,0,0,2,_wrap_cvReleaseCapture_texinfo},
 {"cvGetCaptureProperty",_wrap_cvGetCaptureProperty,0,0,2,_wrap_cvGetCaptureProperty_texinfo},
 {"cvSetCaptureProperty",_wrap_cvSetCaptureProperty,0,0,2,_wrap_cvSetCaptureProperty_texinfo},
+{"CV_FOURCC",_wrap_CV_FOURCC,0,0,2,_wrap_CV_FOURCC_texinfo},
 {"cvCreateVideoWriter",_wrap_cvCreateVideoWriter,0,0,2,_wrap_cvCreateVideoWriter_texinfo},
 {"cvWriteFrame",_wrap_cvWriteFrame,0,0,2,_wrap_cvWriteFrame_texinfo},
 {"cvReleaseVideoWriter",_wrap_cvReleaseVideoWriter,0,0,2,_wrap_cvReleaseVideoWriter_texinfo},
@@ -7674,6 +7686,8 @@ static swig_type_info _swigt__p_CvSlice = {"_p_CvSlice", "CvSlice *", 0, 0, (voi
 static swig_type_info _swigt__p_CvSparseMat = {"_p_CvSparseMat", "CvSparseMat *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseMatIterator = {"_p_CvSparseMatIterator", "CvSparseMatIterator *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseNode = {"_p_CvSparseNode", "CvSparseNode *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarDetectorParams = {"_p_CvStarDetectorParams", "CvStarDetectorParams *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarKeypoint = {"_p_CvStarKeypoint", "CvStarKeypoint *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStereoBMState = {"_p_CvStereoBMState", "CvStereoBMState *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStereoGCState = {"_p_CvStereoGCState", "CvStereoGCState *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvString = {"_p_CvString", "CvString *", 0, 0, (void*)0, 0};
@@ -7780,6 +7794,8 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvSparseMat,
   &_swigt__p_CvSparseMatIterator,
   &_swigt__p_CvSparseNode,
+  &_swigt__p_CvStarDetectorParams,
+  &_swigt__p_CvStarKeypoint,
   &_swigt__p_CvStereoBMState,
   &_swigt__p_CvStereoGCState,
   &_swigt__p_CvString,
@@ -7904,6 +7920,8 @@ static swig_cast_info _swigc__p_CvSlice[] = {  {&_swigt__p_CvSlice, 0, 0, 0},{0,
 static swig_cast_info _swigc__p_CvSparseMat[] = {  {&_swigt__p_CvSparseMat, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseMatIterator[] = {  {&_swigt__p_CvSparseMatIterator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseNode[] = {  {&_swigt__p_CvSparseNode, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarDetectorParams[] = {  {&_swigt__p_CvStarDetectorParams, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarKeypoint[] = {  {&_swigt__p_CvStarKeypoint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoBMState[] = {  {&_swigt__p_CvStereoBMState, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoGCState[] = {  {&_swigt__p_CvStereoGCState, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvString[] = {  {&_swigt__p_CvString, 0, 0, 0},{0, 0, 0, 0}};
@@ -8010,6 +8028,8 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvSparseMat,
   _swigc__p_CvSparseMatIterator,
   _swigc__p_CvSparseNode,
+  _swigc__p_CvStarDetectorParams,
+  _swigc__p_CvStarKeypoint,
   _swigc__p_CvStereoBMState,
   _swigc__p_CvStereoGCState,
   _swigc__p_CvString,
@@ -8426,8 +8446,9 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_HUE",SWIG_From_int((int)(13)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_GAIN",SWIG_From_int((int)(14)));
   SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_CONVERT_RGB",SWIG_From_int((int)(15)));
+  SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_WHITE_BALANCE",SWIG_From_int((int)(16)));
+  SWIG_Octave_SetConstant(module_ns,"CV_CAP_PROP_RECTIFICATION",SWIG_From_int((int)(17)));
   SWIG_Octave_SetConstant(module_ns,"CV_FOURCC_PROMPT",SWIG_From_int((int)(-1)));
-  SWIG_Octave_SetConstant(module_ns,"CV_FOURCC_DEFAULT",SWIG_From_int((int)(-1)));
   SWIG_Octave_SetConstant(module_ns,"HG_AUTOSIZE",SWIG_From_int((int)(1)));
 }
 

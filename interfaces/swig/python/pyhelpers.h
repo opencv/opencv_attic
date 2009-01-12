@@ -8,10 +8,16 @@
 /** convert python index object (tuple, integer, or slice) to CvRect for subsequent cvGetSubMat call */
 CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object);
 
+/// convert object that supports the array protocol to CvMat *
+CvArr * PyArray_to_CvArr (PyObject * obj);
+
+/// convert nested sequences to CvMat *
+CvArr * PySequence_to_CvArr (PyObject * obj);
+
 /** prints array to stdout 
  *  TODO: python __str__ and __repr__ return strings, so this should write to a string 
  */
-void cvArrPrint( CvArr * mat );
+void cvArrPrint (CvArr * mat);
 
 /** Convert an integer array to python tuple */
 PyObject * PyTuple_FromIntArray(int * arr, int len);

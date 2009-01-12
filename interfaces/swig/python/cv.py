@@ -2432,6 +2432,62 @@ class CvMat(_object):
     		return True
     	return _cv.CvMat___ne__(self, arg)
 
+    def __get_array_interface__ (self):
+      """Compose numpy array interface
+      
+      Via the numpy array interface, OpenCV data structures can be directly passed to numpy
+      methods without copying / converting. This tremendously speeds up mixing code from
+      OpenCV and numpy.
+      
+      See: http://numpy.scipy.org/array_interface.shtml
+      
+      @author Mark Asbach <asbach@ient.rwth-aachen.de>
+      @date   2009-01-07
+      """
+      
+      if   self.depth == IPL_DEPTH_8U:
+        typestr = '|u1'
+        bytes_per_pixel = 1
+      elif self.depth == IPL_DEPTH_8S:
+        typestr = '|i1'
+        bytes_per_pixel = 1
+      elif self.depth == IPL_DEPTH_16U:
+        typestr = '|u2'
+        bytes_per_pixel = 2
+      elif self.depth == IPL_DEPTH_16S:
+        typestr = '|i2'
+        bytes_per_pixel = 2
+      elif self.depth == IPL_DEPTH_32S:
+        typestr = '|i4'
+        bytes_per_pixel = 4
+      elif self.depth == IPL_DEPTH_32F:
+        typestr = '|f4'
+        bytes_per_pixel = 4
+      elif self.depth == IPL_DEPTH_64F:
+        typestr = '|f8'
+        bytes_per_pixel = 8
+      else:
+        raise TypeError("unknown resp. unhandled OpenCV image/matrix format")
+      
+      if self.nChannels == 1:
+        # monochrome image, matrix with a single channel
+        return {'shape':  (self.height, self.width), 
+               'typestr': typestr, 
+               'version': 3,
+               
+               'data':    (int (self.data.ptr), False),
+               'strides': (int (self.widthStep), int (bytes_per_pixel))}
+      else:
+        # color image, image with alpha, matrix with multiple channels
+        return {'shape':  (self.height, self.width, self.nChannels), 
+               'typestr': typestr, 
+               'version': 3,
+               
+               'data':    (int (self.data.ptr), False),
+               'strides': (int (self.widthStep), int (self.nChannels * bytes_per_pixel), int (bytes_per_pixel))}
+
+    __array_interface__ = property (__get_array_interface__, doc = "numpy array interface description")
+
 
     __swig_setmethods__["imageData"] = _cv.CvMat_imageData_set
     __swig_getmethods__["imageData"] = _cv.CvMat_imageData_get
@@ -7286,9 +7342,13 @@ def cvFitLine(*args):
     """
   return _cv.cvFitLine(*args)
 
-def cvCreateFeatureTree(*args):
-  """cvCreateFeatureTree(CvMat desc) -> CvFeatureTree"""
-  return _cv.cvCreateFeatureTree(*args)
+def cvCreateKDTree(*args):
+  """cvCreateKDTree(CvMat desc) -> CvFeatureTree"""
+  return _cv.cvCreateKDTree(*args)
+
+def cvCreateSpillTree(*args):
+  """cvCreateSpillTree(CvMat raw_data, int naive=50, double rho=.7, double tau=.1) -> CvFeatureTree"""
+  return _cv.cvCreateSpillTree(*args)
 
 def cvReleaseFeatureTree(*args):
   """cvReleaseFeatureTree(CvFeatureTree tr)"""
@@ -7386,6 +7446,80 @@ def cvExtractSURF(*args):
         CvMemStorage storage, CvSURFParams params)
     """
   return _cv.cvExtractSURF(*args)
+class CvStarKeypoint(_object):
+    """Proxy of C++ CvStarKeypoint class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvStarKeypoint, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvStarKeypoint, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["pt"] = _cv.CvStarKeypoint_pt_set
+    __swig_getmethods__["pt"] = _cv.CvStarKeypoint_pt_get
+    if _newclass:pt = _swig_property(_cv.CvStarKeypoint_pt_get, _cv.CvStarKeypoint_pt_set)
+    __swig_setmethods__["size"] = _cv.CvStarKeypoint_size_set
+    __swig_getmethods__["size"] = _cv.CvStarKeypoint_size_get
+    if _newclass:size = _swig_property(_cv.CvStarKeypoint_size_get, _cv.CvStarKeypoint_size_set)
+    __swig_setmethods__["response"] = _cv.CvStarKeypoint_response_set
+    __swig_getmethods__["response"] = _cv.CvStarKeypoint_response_get
+    if _newclass:response = _swig_property(_cv.CvStarKeypoint_response_get, _cv.CvStarKeypoint_response_set)
+    def __init__(self, *args): 
+        """__init__(self) -> CvStarKeypoint"""
+        this = _cv.new_CvStarKeypoint(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvStarKeypoint
+    __del__ = lambda self : None;
+CvStarKeypoint_swigregister = _cv.CvStarKeypoint_swigregister
+CvStarKeypoint_swigregister(CvStarKeypoint)
+
+
+def cvStarKeypoint(*args):
+  """cvStarKeypoint(CvPoint pt, int size, float response) -> CvStarKeypoint"""
+  return _cv.cvStarKeypoint(*args)
+class CvStarDetectorParams(_object):
+    """Proxy of C++ CvStarDetectorParams class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CvStarDetectorParams, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CvStarDetectorParams, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["maxSize"] = _cv.CvStarDetectorParams_maxSize_set
+    __swig_getmethods__["maxSize"] = _cv.CvStarDetectorParams_maxSize_get
+    if _newclass:maxSize = _swig_property(_cv.CvStarDetectorParams_maxSize_get, _cv.CvStarDetectorParams_maxSize_set)
+    __swig_setmethods__["responseThreshold"] = _cv.CvStarDetectorParams_responseThreshold_set
+    __swig_getmethods__["responseThreshold"] = _cv.CvStarDetectorParams_responseThreshold_get
+    if _newclass:responseThreshold = _swig_property(_cv.CvStarDetectorParams_responseThreshold_get, _cv.CvStarDetectorParams_responseThreshold_set)
+    __swig_setmethods__["lineThresholdProjected"] = _cv.CvStarDetectorParams_lineThresholdProjected_set
+    __swig_getmethods__["lineThresholdProjected"] = _cv.CvStarDetectorParams_lineThresholdProjected_get
+    if _newclass:lineThresholdProjected = _swig_property(_cv.CvStarDetectorParams_lineThresholdProjected_get, _cv.CvStarDetectorParams_lineThresholdProjected_set)
+    __swig_setmethods__["lineThresholdBinarized"] = _cv.CvStarDetectorParams_lineThresholdBinarized_set
+    __swig_getmethods__["lineThresholdBinarized"] = _cv.CvStarDetectorParams_lineThresholdBinarized_get
+    if _newclass:lineThresholdBinarized = _swig_property(_cv.CvStarDetectorParams_lineThresholdBinarized_get, _cv.CvStarDetectorParams_lineThresholdBinarized_set)
+    __swig_setmethods__["suppressNonmaxSize"] = _cv.CvStarDetectorParams_suppressNonmaxSize_set
+    __swig_getmethods__["suppressNonmaxSize"] = _cv.CvStarDetectorParams_suppressNonmaxSize_get
+    if _newclass:suppressNonmaxSize = _swig_property(_cv.CvStarDetectorParams_suppressNonmaxSize_get, _cv.CvStarDetectorParams_suppressNonmaxSize_set)
+    def __init__(self, *args): 
+        """__init__(self) -> CvStarDetectorParams"""
+        this = _cv.new_CvStarDetectorParams(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _cv.delete_CvStarDetectorParams
+    __del__ = lambda self : None;
+CvStarDetectorParams_swigregister = _cv.CvStarDetectorParams_swigregister
+CvStarDetectorParams_swigregister(CvStarDetectorParams)
+
+
+def cvStarDetectorParams(*args):
+  """
+    cvStarDetectorParams(int maxSize=45, int responseThreshold=30, int lineThresholdProjected=10, 
+        int lineThresholdBinarized=8, 
+        int suppressNonmaxSize=5) -> CvStarDetectorParams
+    """
+  return _cv.cvStarDetectorParams(*args)
+
+def cvGetStarKeypoints(*args):
+  """cvGetStarKeypoints(CvArr img, CvMemStorage storage, CvStarDetectorParams params=cvStarDetectorParams()) -> CvSeq"""
+  return _cv.cvGetStarKeypoints(*args)
 
 def cvLoadHaarClassifierCascade(*args):
   """cvLoadHaarClassifierCascade(char directory, CvSize orig_window_size) -> CvHaarClassifierCascade"""
@@ -8943,22 +9077,6 @@ cvDrawCircle=cvCircle
 cvDrawEllipse=cvEllipse
 cvDrawPolyLine=cvPolyLine
 CV_FONT_VECTOR0=CV_FONT_HERSHEY_SIMPLEX
-CV_RGB2RGBA=CV_BGR2BGRA
-CV_RGBA2RGB=CV_BGRA2BGR
-CV_RGB2BGRA=CV_BGR2RGBA
-CV_BGRA2RGB=CV_RGBA2BGR
-CV_RGB2BGR=CV_BGR2RGB
-CV_RGBA2BGRA=CV_BGRA2RGBA
-CV_GRAY2RGB=CV_GRAY2BGR
-CV_GRAY2RGBA=CV_GRAY2BGRA
-CV_BayerBG2RGB=CV_BayerRG2BGR
-CV_BayerGB2RGB=CV_BayerGR2BGR
-CV_BayerRG2RGB=CV_BayerBG2BGR
-CV_BayerGR2RGB=CV_BayerGB2BGR
-CV_FM_LMEDS_ONLY=CV_LMEDS
-CV_FM_RANSAC_ONLY=CV_RANSAC
-CV_FM_LMEDS=CV_LMEDS
-CV_FM_RANSAC=CV_RANSAC
 
 __doc__ = """
 OpenCV is the Intel Open CV library, an open source effort to provide

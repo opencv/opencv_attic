@@ -95,10 +95,6 @@ def cvQueryFrame(*args):
   """cvQueryFrame(CvCapture capture) -> CvMat"""
   return _highgui.cvQueryFrame(*args)
 
-def CV_FOURCC(*args):
-  """CV_FOURCC(char c1, char c2, char c3, char c4) -> int"""
-  return _highgui.CV_FOURCC(*args)
-
 def cvInitSystem(*args):
   """cvInitSystem(int argc, char argv) -> int"""
   return _highgui.cvInitSystem(*args)
@@ -230,7 +226,7 @@ def cvGrabFrame(*args):
   return _highgui.cvGrabFrame(*args)
 
 def cvRetrieveFrame__Deprecated(*args):
-  """cvRetrieveFrame__Deprecated(CvCapture capture)"""
+  """cvRetrieveFrame__Deprecated(CvCapture capture, int streamIdx=0)"""
   return _highgui.cvRetrieveFrame__Deprecated(*args)
 
 def cvQueryFrame__Deprecated(*args):
@@ -252,6 +248,8 @@ CV_CAP_PROP_SATURATION = _highgui.CV_CAP_PROP_SATURATION
 CV_CAP_PROP_HUE = _highgui.CV_CAP_PROP_HUE
 CV_CAP_PROP_GAIN = _highgui.CV_CAP_PROP_GAIN
 CV_CAP_PROP_CONVERT_RGB = _highgui.CV_CAP_PROP_CONVERT_RGB
+CV_CAP_PROP_WHITE_BALANCE = _highgui.CV_CAP_PROP_WHITE_BALANCE
+CV_CAP_PROP_RECTIFICATION = _highgui.CV_CAP_PROP_RECTIFICATION
 
 def cvGetCaptureProperty(*args):
   """cvGetCaptureProperty(CvCapture capture, int property_id) -> double"""
@@ -260,8 +258,11 @@ def cvGetCaptureProperty(*args):
 def cvSetCaptureProperty(*args):
   """cvSetCaptureProperty(CvCapture capture, int property_id, double value) -> int"""
   return _highgui.cvSetCaptureProperty(*args)
+
+def CV_FOURCC(*args):
+  """CV_FOURCC(char c1, char c2, char c3, char c4) -> int"""
+  return _highgui.CV_FOURCC(*args)
 CV_FOURCC_PROMPT = _highgui.CV_FOURCC_PROMPT
-CV_FOURCC_DEFAULT = _highgui.CV_FOURCC_DEFAULT
 
 def cvCreateVideoWriter(*args):
   """
