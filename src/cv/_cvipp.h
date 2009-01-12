@@ -721,7 +721,7 @@ IPCVAPI_EX( CvStatus, icvOpticalFlowPyrLK_8u_C1R,
 *                                 Haar Object Detector                                   *
 \****************************************************************************************/
 
-IPCVAPI_EX( CvStatus, icvIntegral_8u32s_C1R,
+/*IPCVAPI_EX( CvStatus, icvIntegral_8u32s_C1R,
             "ippiIntegral_8u32s_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
             ( const uchar* pSrc, int srcStep, int* pDst, int dstStep,
               CvSize roiSize, int val ))
@@ -730,7 +730,7 @@ IPCVAPI_EX( CvStatus, icvSqrIntegral_8u32s64f_C1R,
             "ippiSqrIntegral_8u32s64f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
             ( const uchar* pSrc, int srcStep,
               int* pDst, int dstStep, double* pSqr, int sqrStep,
-              CvSize roiSize, int val, double valSqr ))
+              CvSize roiSize, int val, double valSqr ))*/
 
 IPCVAPI_EX( CvStatus, icvRectStdDev_32f_C1R,
             "ippiRectStdDev_32f_C1R", CV_PLUGINS1(CV_PLUGIN_IPPCV),
