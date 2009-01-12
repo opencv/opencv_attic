@@ -105,11 +105,11 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/highgui.h
 
 FRAMEWORK_OFILES = \
-  $(top_builddir)/src/cxcore/.libs/lib_cxcore.a  \
-  $(top_builddir)/src/cv/.libs/lib_cv.a          \
-  $(top_builddir)/src/cvaux/.libs/lib_cvaux.a    \
-  $(top_builddir)/src/ml/.libs/lib_ml.a          \
-  $(top_builddir)/src/highgui/.libs/lib_highgui.a
+  $(top_builddir)/src/.libs/lib_cxcore.a  \
+  $(top_builddir)/src/.libs/lib_cv.a          \
+  $(top_builddir)/src/.libs/lib_cvaux.a    \
+  $(top_builddir)/src/.libs/lib_ml.a          \
+  $(top_builddir)/src/.libs/lib_highgui.a
 
 FRAMEWORK_XLIBRARIES = -framework Carbon -framework QuickTime -framework QuartzCore
 
