@@ -327,7 +327,7 @@ public:
 
     // Clone an image which reallocates the image if of a different dimension.
     void CloneFrom(const WImage<T>& src) {
-        Allocate(src.Width(), src.Height());
+        Allocate(src.Width(), src.Height(), src.Channels());
         CopyFrom(src);
     }
 
