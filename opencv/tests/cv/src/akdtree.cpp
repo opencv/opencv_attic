@@ -22,7 +22,7 @@ CV_KdtreeTest::~CV_KdtreeTest() {
 }
 
 
-void CV_KdtreeTest::run( int start_from ) {
+void CV_KdtreeTest::run( int /*start_from*/ ) {
   int dims = 64;
   int features = 2000;
   int k = 1; // * should also test 2nd nn etc.?
@@ -56,12 +56,12 @@ void CV_KdtreeTest::run( int start_from ) {
     for (int j = 0; j < points; ++j) {
       int fi = (int)cvGetReal2D(results, j, 0);
       if (fmap[j] == fi)
-	++correct_matches;
+        ++correct_matches;
     }
   }
 
   double correct_perc = correct_matches / (double)points;
-  std::cout << "correct_perc = " << correct_perc << std::endl;
+  ts->printf( CvTS::LOG, "correct_perc = %d\n", correct_perc );
   if (correct_perc < .8)
     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
 

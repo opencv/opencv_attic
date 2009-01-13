@@ -450,18 +450,18 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 static void icvRemoveWindow( CvWindow* window )
 {
     CvTrackbar* trackbar = NULL;
-    RECT wrect;
+    RECT wrect={0,0,0,0};
 
     if( window->frame )
         GetWindowRect( window->frame, &wrect );
     if( window->name )
         icvSaveWindowPos( window->name, cvRect(wrect.left, wrect.top,
-			    wrect.right-wrect.left, wrect.bottom-wrect.top) );
+            wrect.right-wrect.left, wrect.bottom-wrect.top) );
 
     if( window->hwnd )
         icvSetWindowLongPtr( window->hwnd, CV_USERDATA, 0 );
     if( window->frame )
-	icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
+    icvSetWindowLongPtr( window->frame, CV_USERDATA, 0 );
 
     if( window->toolbar.toolbar )
         icvSetWindowLongPtr(window->toolbar.toolbar, CV_USERDATA, 0);
@@ -486,10 +486,10 @@ static void icvRemoveWindow( CvWindow* window )
     {
         CvTrackbar* next = trackbar->next;
         if( trackbar->hwnd )
-	{
+        {
             icvSetWindowLongPtr( trackbar->hwnd, CV_USERDATA, 0 );
-    	    cvFree( &trackbar );
-	}
+            cvFree( &trackbar );
+        }
         trackbar = next;
     }
 
