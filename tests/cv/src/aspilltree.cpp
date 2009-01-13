@@ -22,8 +22,8 @@ CV_SpilltreeTest::~CV_SpilltreeTest() {
 }
 
 
-void CV_SpilltreeTest::run( int start_from ) {
-
+void CV_SpilltreeTest::run( int /*start_from*/ )
+{
   /*
   int dims = 64;
   int features = 2000;
@@ -80,19 +80,19 @@ void CV_SpilltreeTest::run( int start_from ) {
   CvMat* toy = cvCreateMat( n, d, CV_64FC1 );
   CvRNG rng_state = cvRNG(0xffffffff);
   cvRandArr( &rng_state, toy, CV_RAND_UNI, cvRealScalar(-100), cvRealScalar(100) );
-  printf( "data generated\n" );
+  ts->printf( CvTS::LOG, "data generated\n" );
   long long t;
   t = cvGetTickCount();
   CvFeatureTree* tr = cvCreateSpillTree( toy, 50, .7, .2 );
   t = cvGetTickCount() - t;
-  printf( "spill tree created in %lld ms.\n", t/1000000 );
+  ts->printf( CvTS::LOG, "spill tree created in %lld ms.\n", t/1000000 );
   CvMat* vector = cvCreateMat( 2, d, CV_64FC1 );
   cvRandArr( &rng_state, vector, CV_RAND_UNI, cvRealScalar(-100), cvRealScalar(100) );
   double* vv = vector->data.db;
-  printf( "test drive: " );
+  ts->printf( CvTS::LOG, "test drive: " );
   for ( int i = 0; i < d-1; i++ )
-    printf( "%.2f ", vv[i] );
-  printf( "%.2f\n", vv[d-1] );
+    ts->printf( CvTS::LOG, "%.2f ", vv[i] );
+  ts->printf( CvTS::LOG, "%.2f\n", vv[d-1] );
   CvMat* res = cvCreateMat( 2, k, CV_32SC1 );
   CvMat* dist = cvCreateMat( 2, k, CV_64FC1 );
   t = cvGetTickCount();
