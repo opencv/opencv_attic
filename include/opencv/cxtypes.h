@@ -71,6 +71,10 @@
     #define CV_SSE2 0
   #endif
 
+  #if ((defined __SSE__ || defined __MMX__) && defined __GNUC__ && __GNUC__ >= 3)
+    #include <mmintrin.h>
+  #endif
+
   #if defined __BORLANDC__
     #include <fastmath.h>
   #elif defined WIN64 && !defined EM64T && defined CV_ICC

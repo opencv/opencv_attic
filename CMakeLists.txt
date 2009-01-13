@@ -400,15 +400,15 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     if(OPENCV_USE_POWERPC)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mcpu=G3 -mtune=G5")
     endif()
-    if(OPENCV_USE_MMX AND NOT MINGW)
+    if(OPENCV_USE_MMX)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mmmx")
     endif()
     # SSE should be disabled under MingW because it generates compiler errors
-    if(OPENCV_USE_SSE AND NOT MINGW)
+    if(OPENCV_USE_SSE)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse")
     endif()
     # SSE2 should be disabled under MingW because it generates compiler errors
-    if(OPENCV_USE_SSE2 AND NOT MINGW)
+    if(OPENCV_USE_SSE2)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse2")
     endif()
 
