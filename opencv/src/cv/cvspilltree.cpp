@@ -36,7 +36,7 @@
    * OF SUCH DAMAGE.
    */
 
-#include "cv.h"
+#include "_cv.h"
 #include "_cvfeaturetree.h"
 
 struct CvSpillTreeNode
@@ -444,7 +444,7 @@ public:
     icvReleaseSpillTree(&tr);
   }
 
-  void FindFeatures(CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
+  void FindFeatures(CvMat* desc, int k, int /*emax*/, CvMat* results, CvMat* dist) {
     icvFindSpillTreeFeatures(tr, desc, results, dist, k);
   }
 };
