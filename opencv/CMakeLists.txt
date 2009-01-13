@@ -191,7 +191,9 @@ macro(CHECK_MODULE module_name define)
             endforeach()
 
             foreach(P "${ALIAS_LIBRARY_DIRS}")
-                list(APPEND HIGHGUI_LIBRARY_DIRS ${${P}})
+                if (${${P}})
+                    list(APPEND HIGHGUI_LIBRARY_DIRS ${${P}})
+                endif()
             endforeach()
 
             list(APPEND HIGHGUI_LIBRARIES ${${ALIAS_LIBRARIES}})
