@@ -59,7 +59,11 @@ struct CvSpillTreeNode
 struct CvSpillTree
 {
   CvSpillTreeNode* root;
+  CvMat** refmat; // leaf ref matrix
+  bool* cache; // visited or not
+  int total; // total leaves
   int naive; // under this value, we perform naive search
+  int type; // mat type
   double rho; // under this value, it is a spill tree
   double tau; // the overlapping buffer ratio
 };
@@ -112,6 +116,8 @@ icvAppendSpillTreeNode( CvSpillTreeNode* node,
   node->cc++;
 }
 
+#define _dispatch_mat_ptr(x, step) (CV_MAT_DEPTH((x)->type) == CV_32F ? (void*)((x)->data.fl+(step)) : (CV_MAT_DEPTH((x)->type) == CV_64F ? (void*)((x)->data.db+(step)) : (void*)(0)))
+
 static void
 icvDFSInitSpillTreeNode( const CvSpillTree* tr,
 			 const int d,
@@ -137,12 +143,12 @@ icvDFSInitSpillTreeNode( const CvSpillTree* tr,
   rnode = icvFarthestNode( lnode, node->lc, node->cc );
 
   // u is the projection vector
-  node->u = cvCreateMat( 1, d, CV_64FC1 );
+  node->u = cvCreateMat( 1, d, tr->type );
   cvSub( lnode->center, rnode->center, node->u );
   cvNormalize( node->u, node->u );
 	
   // find the center of node in hyperspace
-  node->center = cvCreateMat( 1, d, CV_64FC1 );
+  node->center = cvCreateMat( 1, d, tr->type );
   cvZero( node->center );
   CvSpillTreeNode* it = node->lc;
   for ( int i = 0; i < node->cc; i++ )
@@ -170,23 +176,36 @@ icvDFSInitSpillTreeNode( const CvSpillTree* tr,
   double ob = (lnode->p-rnode->p)*tr->tau*.5;
   node->ub = node->mp+ob;
   node->lb = node->mp-ob;
-  int l = 0;
-  int r = 0;
+  int sl = 0, l = 0;
+  int sr = 0, r = 0;
   it = node->lc;
   for ( int i = 0; i < node->cc; i++ )
     {
       if ( it->p <= node->ub )
-	l++;
+	sl++;
       if ( it->p >= node->lb )
+	sr++;
+      if ( it->p < node->mp )
+	l++;
+      else
 	r++;
       it = it->rc;
+    }
+  // precision problem, return the node as it is.
+  if (( l == 0 )||( r == 0 ))
+    {
+      cvReleaseMat( &(node->u) );
+      cvReleaseMat( &(node->center) );
+      node->leaf = true;
+      node->spill = false;
+      return;
     }
   CvSpillTreeNode* lc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
   CvSpillTreeNode* rc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
   lc->lc = lc->rc = rc->lc = rc->rc = NULL;
   lc->cc = rc->cc = 0;
   int undo = cvRound(node->cc*tr->rho);
-  if (( l > undo )||( r > undo ))
+  if (( sl >= undo )||( sr >= undo ))
     {
       // it is not a spill point (defeatist search disabled)
       it = node->lc;
@@ -233,19 +252,24 @@ icvCreateSpillTree( const CvMat* raw_data,
 		    const double rho,
 		    const double tau )
 {
-  CvSpillTree* tr = (CvSpillTree*)cvAlloc( sizeof(CvSpillTree) );
-  tr->root = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
-  tr->naive = naive;
-  tr->rho = rho;
-  tr->tau = tau;
-
   int n = raw_data->rows;
   int d = raw_data->cols;
 
+  CvSpillTree* tr = (CvSpillTree*)cvAlloc( sizeof(CvSpillTree) );
+  tr->root = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+  tr->refmat = (CvMat**)cvAlloc( sizeof(CvMat*)*n );
+  tr->cache = (bool*)cvAlloc( sizeof(bool)*n );
+  tr->total = n;
+  tr->naive = naive;
+  tr->rho = rho;
+  tr->tau = tau;
+  tr->type = raw_data->type;
+
   // tie a link-list to the root node
   tr->root->lc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
-  tr->root->lc->center = cvCreateMatHeader( 1, raw_data->cols, CV_64FC1 );
-  cvSetData( tr->root->lc->center, raw_data->data.db, raw_data->step );
+  tr->root->lc->center = cvCreateMatHeader( 1, d, tr->type );
+  cvSetData( tr->root->lc->center, _dispatch_mat_ptr(raw_data, 0), raw_data->step );
+  tr->refmat[0] = tr->root->lc->center;
   tr->root->lc->lc = NULL;
   tr->root->lc->leaf = true;
   tr->root->lc->i = 0;
@@ -253,19 +277,9 @@ icvCreateSpillTree( const CvMat* raw_data,
   for ( int i = 1; i < n; i++ )
     {
       CvSpillTreeNode* newnode = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
-      switch ( CV_MAT_DEPTH( raw_data->type ) )
-	{
-	case CV_32F:
-	  newnode->center = cvCreateMatHeader( 1, d, CV_32FC1 );
-	  cvSetData( newnode->center, raw_data->data.fl+i*d, raw_data->step );
-	  break;
-	case CV_64F:
-	  newnode->center = cvCreateMatHeader( 1, d, CV_64FC1 );
-	  cvSetData( newnode->center, raw_data->data.db+i*d, raw_data->step );
-	  break;
-	default:
-	  assert(0);
-	}
+      newnode->center = cvCreateMatHeader( 1, d, tr->type );
+      cvSetData( newnode->center, _dispatch_mat_ptr(raw_data, i*d), raw_data->step );
+      tr->refmat[i] = newnode->center;
       newnode->lc = node;
       newnode->i = i;
       newnode->leaf = true;
@@ -292,7 +306,7 @@ icvSpillTreeNodeHeapify( CvSpillTreeNode** heap,
   CvSpillTreeNode* inp;
   do {
     i = largest;
-    l = ((i+1)<<1)-1;
+    l = (i+1)<<1-1;
     r = (i+1)<<1;
     if (( l < k )&&(( heap[l] == NULL )||( heap[l]->mp > heap[i]->mp )))
       largest = l;
@@ -304,16 +318,22 @@ icvSpillTreeNodeHeapify( CvSpillTreeNode** heap,
 }
 
 static void
-icvSpillTreeDFSearch( CvSpillTreeNode* node,
+icvSpillTreeDFSearch( CvSpillTree* tr,
+		      CvSpillTreeNode* node,
 		      CvSpillTreeNode** heap,
+		      int* es,
 		      const CvMat* desc,
-		      const int k )
+		      const int k,
+		      const int emax )
 {
+  if ((emax > 0)&&( *es >= emax ))
+    return;
   double dist, p;
   while ( node->spill )
     {
       // defeatist search
-      p = cvDotProduct( node->u, desc );
+      if ( !node->leaf )
+	p = cvDotProduct( node->u, desc );
       if ( p < node->lb )
 	node = node->lc;
       else if ( p > node->ub )
@@ -322,22 +342,25 @@ icvSpillTreeDFSearch( CvSpillTreeNode* node,
 	break;
       if ( NULL == node )
 	return;
-      if ( !node->leaf )
-	p = cvDotProduct( node->u, desc );
     }
   if ( node->leaf )
     {
       // a leaf, naive search
       CvSpillTreeNode* it = node->lc;
       for ( int i = 0; i < node->cc; i++ )
-	{
-	  it->mp = cvNorm( it->center, desc );
-	  if (( heap[0] == NULL)||( it->mp < heap[0]->mp ))
-	    {
-	      heap[0] = it;
-	      icvSpillTreeNodeHeapify( heap, 0, k );
-	    }
-	  it = it->rc;
+        {
+          if ( !tr->cache[it->i] )
+          {
+	    it->mp = cvNorm( it->center, desc );
+            tr->cache[it->i] = true;
+	    if (( heap[0] == NULL)||( it->mp < heap[0]->mp ))
+	      {
+                heap[0] = it;
+	        icvSpillTreeNodeHeapify( heap, 0, k );
+		(*es)++;
+	      }
+          }
+          it = it->rc;
 	}
       return;
     }
@@ -349,11 +372,11 @@ icvSpillTreeDFSearch( CvSpillTreeNode* node,
   // guided dfs
   if ( p < node->mp )
     {
-      icvSpillTreeDFSearch( node->lc, heap, desc, k );
-      icvSpillTreeDFSearch( node->rc, heap, desc, k );
+      icvSpillTreeDFSearch( tr, node->lc, heap, es, desc, k, emax );
+      icvSpillTreeDFSearch( tr, node->rc, heap, es, desc, k, emax );
     } else {
-      icvSpillTreeDFSearch( node->rc, heap, desc, k );
-      icvSpillTreeDFSearch( node->lc, heap, desc, k );
+      icvSpillTreeDFSearch( tr, node->rc, heap, es, desc, k, emax );
+      icvSpillTreeDFSearch( tr, node->lc, heap, es, desc, k, emax );
     }
 }
 
@@ -362,26 +385,19 @@ icvFindSpillTreeFeatures( CvSpillTree* tr,
 			  const CvMat* desc,
 			  CvMat* results,
 			  CvMat* dist,
-			  const int k )
+			  const int k,
+			  const int emax )
 {
+  assert( desc->type == tr->type );
   CvSpillTreeNode** heap = (CvSpillTreeNode**)cvAlloc( k*sizeof(heap[0]) );
   for ( int j = 0; j < desc->rows; j++ )
     {
-      CvMat _desc;
-      switch ( CV_MAT_DEPTH( desc->type ) )
-	{
-	case CV_32F:
-	  _desc = cvMat( 1, desc->cols, CV_32F, desc->data.fl+j*desc->cols );
-	  break;
-	case CV_64F:
-	  _desc = cvMat( 1, desc->cols, CV_64F, desc->data.db+j*desc->cols );
-	  break;
-	default:
-	  assert(0);
-	}
+      CvMat _desc = cvMat( 1, desc->cols, desc->type, _dispatch_mat_ptr(desc, j*desc->cols) );
       for ( int i = 0; i < k; i++ )
 	heap[i] = NULL;
-      icvSpillTreeDFSearch( tr->root, heap, &_desc, k );
+      memset( tr->cache, 0, sizeof(bool)*tr->total );
+      int es = 0;
+      icvSpillTreeDFSearch( tr, tr->root, heap, &es, &_desc, k, emax );
       CvSpillTreeNode* inp;
       for ( int i = k-1; i > 0; i-- )
 	{
@@ -409,8 +425,6 @@ icvDFSReleaseSpillTreeNode( CvSpillTreeNode* node )
       CvSpillTreeNode* it = node->lc;
       for ( int i = 0; i < node->cc; i++ )
 	{
-	  cvReleaseMat( &it->u );
-	  cvReleaseMat( &it->center );
 	  CvSpillTreeNode* s = it;
 	  it = it->rc;
 	  cvFree( &s );
@@ -427,6 +441,10 @@ icvDFSReleaseSpillTreeNode( CvSpillTreeNode* node )
 static void
 icvReleaseSpillTree( CvSpillTree** tr )
 {
+  for ( int i = 0; i < (*tr)->total; i++ )
+    cvReleaseMat( &((*tr)->refmat[i]) );
+  cvFree( &((*tr)->refmat) );
+  cvFree( &((*tr)->cache) );
   icvDFSReleaseSpillTreeNode( (*tr)->root );
   cvFree( tr );
 }
@@ -444,8 +462,8 @@ public:
     icvReleaseSpillTree(&tr);
   }
 
-  void FindFeatures(CvMat* desc, int k, int /*emax*/, CvMat* results, CvMat* dist) {
-    icvFindSpillTreeFeatures(tr, desc, results, dist, k);
+  void FindFeatures(CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
+    icvFindSpillTreeFeatures(tr, desc, results, dist, k, emax);
   }
 };
 
