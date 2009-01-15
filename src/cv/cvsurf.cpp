@@ -387,7 +387,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
                CvMemStorage* storage, CvSURFParams params )
 {
-    CvMat *sum = 0, *mask1 = 0, *mask_sum = 0;
+    CvMat *sum = 0, *mask1 = 0, *mask_sum = 0, **win_bufs = 0;
 
     if( _keypoints )
         *_keypoints = 0;
@@ -411,11 +411,11 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
 
     /* Standard deviation of the Gaussian used to weight the gradient samples
        used to assign an orientation */ 
-    const float ORI_SIGMA = 2.5;
+    const float ORI_SIGMA = 2.5f;
 
     /* Standard deviation of the Gaussian used to weight the gradient samples
        used to build a keypoint descriptor */
-    const float DESC_SIGMA = 3.3;
+    const float DESC_SIGMA = 3.3f;
 
 
     /* X and Y gradient wavelet data */
@@ -438,6 +438,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     CvPoint apt[max_ori_samples];
     float apt_w[max_ori_samples];
     int i, j, k, nangle0 = 0, N;
+    int nthreads = cvGetNumThreads();
 
     CV_ASSERT( img != 0 && CV_MAT_TYPE(img->type) == CV_8UC1 &&
         (mask == 0 || (CV_ARE_SIZES_EQ(img,mask) &&
@@ -494,10 +495,11 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     cvScale( &_DW, &_DW, 1./gs );
     }
 
+    win_bufs = (CvMat**)cvAlloc(nthreads*sizeof(win_bufs[0]));
+    for( i = 0; i < nthreads; i++ )
+        win_bufs[i] = 0;
 
-    {
 #ifdef _OPENMP
-    int nthreads = cvGetNumThreads();
 #pragma omp parallel for num_threads(nthreads) schedule(dynamic)
 #endif
     for( k = 0; k < N; k++ )
@@ -514,6 +516,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         CvMat _patch = cvMat(PATCH_SZ+1, PATCH_SZ+1, CV_8U, PATCH);
         float* vec;
         CvSurfHF dx_t[NX], dy_t[NY];
+        int thread_idx = cvGetThreadNum();
         
         CvSURFPoint* kp = (CvSURFPoint*)cvGetSeqElem( keypoints, k );
         int size = kp->size;
@@ -575,13 +578,18 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
 
         if( !_descriptors )
             continue;
+
         descriptor_dir *= (float)(CV_PI/180);
         
-
         /* Extract a window of pixels around the keypoint of size 20s */
         int win_size = (int)((PATCH_SZ+1)*s);
-        uchar WIN[win_size][win_size];
-        CvMat win = cvMat(win_size, win_size, CV_8U, WIN);
+        if( win_bufs[thread_idx] == 0 || win_bufs[thread_idx]->cols < win_size*win_size )
+        {
+            cvReleaseMat( &win_bufs[thread_idx] );
+            win_bufs[thread_idx] = cvCreateMat( 1, win_size*win_size, CV_8U );
+        }
+        
+        CvMat win = cvMat(win_size, win_size, CV_8U, win_bufs[thread_idx]->data.ptr);
         float sin_dir = sin(descriptor_dir);
         float cos_dir = cos(descriptor_dir) ;
 
@@ -598,6 +606,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         float win_offset = -(float)(win_size-1)/2;
         float start_x = center.x + win_offset*cos_dir + win_offset*sin_dir;
         float start_y = center.y - win_offset*sin_dir + win_offset*cos_dir;
+        uchar* WIN = win.data.ptr;
         for( i=0; i<win_size; i++, start_x+=sin_dir, start_y+=cos_dir )
         {
             float pixel_x = start_x;
@@ -610,7 +619,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                 y = MAX( y, 0 );
                 x = MIN( x, img->cols-1 );
                 y = MIN( y, img->rows-1 );
-                WIN[i][j] = img->data.ptr[y*img->step+x];
+                WIN[i*win_size + j] = img->data.ptr[y*img->step+x];
              }
         }
 
@@ -695,7 +704,9 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         for( kk = 0; kk < descriptor_size; kk++ )
             vec[kk] = (float)(vec[kk]*scale);
     }
-    }
+
+    for( i = 0; i < nthreads; i++ )
+        cvReleaseMat( &win_bufs[i] );
 
     if( _keypoints )
         *_keypoints = keypoints;
@@ -707,5 +718,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     cvReleaseMat( &sum );
     cvReleaseMat( &mask1 );
     cvReleaseMat( &mask_sum );
+    cvFree( &win_bufs );
 }
 

@@ -58,6 +58,7 @@
 // Computational Geometry (Brooklyn, New York, USA, June 08 - 11, 2004). SCG '04. ACM, New York, 
 // NY, 253-262. DOI= http://doi.acm.org/10.1145/997817.997857 
 
+#include "_cv.h"
 #include "cvlsh.hpp"
 #include "cxmisc.h"
 #include <math.h>
