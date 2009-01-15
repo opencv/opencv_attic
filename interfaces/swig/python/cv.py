@@ -2078,26 +2078,36 @@ class CvMat(_object):
     if _newclass:data = _swig_property(_cv.CvMat_data_get)
     __swig_destroy__ = _cv.delete_CvMat
     __del__ = lambda self : None;
+    __swig_setmethods__["depth"] = _cv.CvMat_depth_set
     __swig_getmethods__["depth"] = _cv.CvMat_depth_get
-    if _newclass:depth = _swig_property(_cv.CvMat_depth_get)
+    if _newclass:depth = _swig_property(_cv.CvMat_depth_get, _cv.CvMat_depth_set)
+    __swig_setmethods__["nChannels"] = _cv.CvMat_nChannels_set
     __swig_getmethods__["nChannels"] = _cv.CvMat_nChannels_get
-    if _newclass:nChannels = _swig_property(_cv.CvMat_nChannels_get)
+    if _newclass:nChannels = _swig_property(_cv.CvMat_nChannels_get, _cv.CvMat_nChannels_set)
+    __swig_setmethods__["dataOrder"] = _cv.CvMat_dataOrder_set
     __swig_getmethods__["dataOrder"] = _cv.CvMat_dataOrder_get
-    if _newclass:dataOrder = _swig_property(_cv.CvMat_dataOrder_get)
+    if _newclass:dataOrder = _swig_property(_cv.CvMat_dataOrder_get, _cv.CvMat_dataOrder_set)
+    __swig_setmethods__["origin"] = _cv.CvMat_origin_set
     __swig_getmethods__["origin"] = _cv.CvMat_origin_get
-    if _newclass:origin = _swig_property(_cv.CvMat_origin_get)
+    if _newclass:origin = _swig_property(_cv.CvMat_origin_get, _cv.CvMat_origin_set)
+    __swig_setmethods__["width"] = _cv.CvMat_width_set
     __swig_getmethods__["width"] = _cv.CvMat_width_get
-    if _newclass:width = _swig_property(_cv.CvMat_width_get)
+    if _newclass:width = _swig_property(_cv.CvMat_width_get, _cv.CvMat_width_set)
+    __swig_setmethods__["height"] = _cv.CvMat_height_set
     __swig_getmethods__["height"] = _cv.CvMat_height_get
-    if _newclass:height = _swig_property(_cv.CvMat_height_get)
+    if _newclass:height = _swig_property(_cv.CvMat_height_get, _cv.CvMat_height_set)
+    __swig_setmethods__["imageSize"] = _cv.CvMat_imageSize_set
     __swig_getmethods__["imageSize"] = _cv.CvMat_imageSize_get
-    if _newclass:imageSize = _swig_property(_cv.CvMat_imageSize_get)
+    if _newclass:imageSize = _swig_property(_cv.CvMat_imageSize_get, _cv.CvMat_imageSize_set)
+    __swig_setmethods__["widthStep"] = _cv.CvMat_widthStep_set
     __swig_getmethods__["widthStep"] = _cv.CvMat_widthStep_get
-    if _newclass:widthStep = _swig_property(_cv.CvMat_widthStep_get)
+    if _newclass:widthStep = _swig_property(_cv.CvMat_widthStep_get, _cv.CvMat_widthStep_set)
+    __swig_setmethods__["rows"] = _cv.CvMat_rows_set
     __swig_getmethods__["rows"] = _cv.CvMat_rows_get
-    if _newclass:rows = _swig_property(_cv.CvMat_rows_get)
+    if _newclass:rows = _swig_property(_cv.CvMat_rows_get, _cv.CvMat_rows_set)
+    __swig_setmethods__["cols"] = _cv.CvMat_cols_set
     __swig_getmethods__["cols"] = _cv.CvMat_cols_get
-    if _newclass:cols = _swig_property(_cv.CvMat_cols_get)
+    if _newclass:cols = _swig_property(_cv.CvMat_cols_get, _cv.CvMat_cols_set)
     def __add__(*args):
         """
         __add__(self, CvArr src) -> CvMat

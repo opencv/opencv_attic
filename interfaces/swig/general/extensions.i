@@ -158,46 +158,79 @@ struct CvLSH {};
 int CvMat_cols_get(CvMat * m){
 	return m->cols;
 }
+void CvMat_cols_set(CvMat * m, int cols){
+    m->cols = cols;
+}
 int CvMat_rows_get(CvMat *m){
 	return m->rows;
+}
+void CvMat_rows_set(CvMat *m, int rows){
+    m->rows = rows;
 }
 int CvMat_width_get(CvMat * m){
 	return m->cols;
 }
+void CvMat_width_set(CvMat * m, int width){
+    m->cols = width;
+}
 int CvMat_height_get(CvMat *m){
 	return m->rows;
+}
+void CvMat_height_set(CvMat * m, int height){
+    m->rows = height;
 }
 int CvMat_depth_get(CvMat * m){
 	return cvCvToIplDepth(m->type);
 }
+void CvMat_depth_set(CvMat *m, int depth){
+    cvError(CV_StsNotImplemented, "CvMat_depth_set", "Not Implemented", __FILE__, __LINE__);
+}
 int CvMat_nChannels_get(CvMat * m){
 	return CV_MAT_CN(m->type);
 }
+void CvMat_nChannels_set(CvMat *m, int nChannels){
+    cvError(CV_StsNotImplemented, "CvMat_depth_set", "Not Implemented", __FILE__, __LINE__);
+}
 int CvMat_origin_get(CvMat * m){
-	return 0;
+    cvError(CV_StsNotImplemented, "CvMat_origin_get", "Not Implemented", __FILE__, __LINE__);
+    return 0;
+}
+void CvMat_origin_set(CvMat * m, int origin){
+    cvError(CV_StsNotImplemented, "CvMat_origin_set", "Not Implemented", __FILE__, __LINE__);
 }
 int CvMat_dataOrder_get(CvMat * m){
-	return 0;
+    cvError(CV_StsNotImplemented, "CvMat_dataOrder_get", "Not Implemented", __FILE__, __LINE__);
+    return 0;
+}
+void CvMat_dataOrder_set(CvMat * m, int dataOrder){
+    cvError(CV_StsNotImplemented, "CvMat_dataOrder_get", "Not Implemented", __FILE__, __LINE__);
 }
 int CvMat_imageSize_get(CvMat * m){
 	int step = m->step ? m->step : CV_ELEM_SIZE(m->type) * m->cols;
 	return step*m->rows;
 }
+void CvMat_imageSize_set(CvMat * m, int imageSize){
+    cvError(CV_StsError, "CvMat_imageSize_set", "imageSize is a Read-Only field", __FILE__, __LINE__);
+}
 int CvMat_widthStep_get(CvMat * m){
 	return m->step;
 }
+void CvMat_widthStep_set(CvMat *m, int widthStep){
+    m->step = widthStep;
+}
 %}
+
 %extend CvMat
 {
-	const int depth;
-	const int nChannels;
-	const int dataOrder;
-	const int origin;
-	const int width;
-	const int height;
-	const int imageSize;
-	const int widthStep;
+	int depth;
+	int nChannels;
+	int dataOrder;
+	int origin;
+	int width;
+	int height;
+	int imageSize;
+	int widthStep;
 	// swig doesn't like the embedded union in CvMat, so re-add these
-	const int rows;
-	const int cols;
+	int rows;
+	int cols;
 };
