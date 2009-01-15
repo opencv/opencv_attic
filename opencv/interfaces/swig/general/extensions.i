@@ -45,6 +45,8 @@
 // 2008-05-15, Xavier Delacour   <xavier.delacour@gmail.com>
 
 
+struct CvLSH {};
+
 %extend IplImage       { ~IplImage       () { IplImage       * dummy = self; cvReleaseImage              (& dummy); } }
 %extend CvMat          { ~CvMat          () { CvMat          * dummy = self; cvReleaseMat                (& dummy); } }
 %extend CvMatND        { ~CvMatND        () { CvMatND        * dummy = self; cvReleaseMatND              (& dummy); } }
@@ -59,6 +61,7 @@
 %extend CvHaarClassifierCascade { ~CvHaarClassifierCascade () { CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); } }
 %extend CvPOSITObject  { ~CvPOSITObject  () { CvPOSITObject  * dummy = self; cvReleasePOSITObject        (& dummy); } }
 %extend CvFeatureTree  { ~CvFeatureTree  () { CvFeatureTree  * dummy = self; cvReleaseFeatureTree        (& dummy); } }
+%extend CvLSH          { ~CvLSH          () { CvLSH          * dummy = self; cvReleaseLSH                (& dummy); } }
 
 // string operators for some OpenCV types
 
