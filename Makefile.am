@@ -101,6 +101,7 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/cvmat.hpp      \
   $(top_srcdir)/include/opencv/cvaux.hpp      \
   $(top_srcdir)/include/opencv/cvvidsurv.hpp  \
+  $(top_srcdir)/include/opencv/cvlsh.hpp      \
   $(top_srcdir)/include/opencv/ml.h           \
   $(top_srcdir)/include/opencv/highgui.h
 

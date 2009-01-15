@@ -1082,6 +1082,39 @@ CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
 			       CvMat* bounds_min, CvMat* bounds_max,
 			       CvMat* results);
 
+
+struct CvLSH;
+struct CvLSHOperations;
+
+/* Construct a Locality Sensitive Hash (LSH) table, for indexing d-dimensional vectors of 
+   given type. Vectors will be hashed L times with k-dimensional p-stable (p=2) functions. */
+CVAPI(CvLSH*) cvCreateLSH(CvLSHOperations* ops, int d, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
+			  int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+			  int64 seed CV_DEFAULT(-1));
+
+/* Construct in-memory LSH table, with n bins. */
+CVAPI(CvLSH*) cvCreateMemoryLSH(int d, int n, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
+				int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+				int64 seed CV_DEFAULT(-1));
+
+/* Free the given LSH structure. */
+CVAPI(void) cvReleaseLSH(CvLSH** lsh);
+
+/* Return the number of vectors in the LSH. */
+CVAPI(unsigned int) LSHSize(CvLSH* lsh);
+
+/* Add vectors to the LSH structure, optionally returning indices. */
+CVAPI(void) cvLSHAdd(CvLSH* lsh, const CvArr* data, CvArr* indices CV_DEFAULT(0));
+
+/* Remove vectors from LSH, as addressed by given indices. */
+CVAPI(void) cvLSHRemove(CvLSH* lsh, const CvArr* indices);
+
+/* Query the LSH n times for at most k nearest points; data is n x d,
+   indices and dist are n x k. At most emax stored points will be accessed. */
+CVAPI(void) cvLSHQuery(CvLSH* lsh, const CvArr* query_points,
+		       CvArr* indices, CvArr* dist, int k, int emax);
+
+
 typedef struct CvSURFPoint
 {
     CvPoint2D32f pt;

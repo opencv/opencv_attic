@@ -238,6 +238,7 @@ try:
           (1, cv.IPL_DEPTH_8U)  : numpy.uint8,
           (3, cv.IPL_DEPTH_8U)  : numpy.uint8,
           (1, cv.IPL_DEPTH_32F) : numpy.float32,
+          (1, cv.IPL_DEPTH_32S) : numpy.int32,
           (1, cv.IPL_DEPTH_64F) : numpy.float64
           }
       

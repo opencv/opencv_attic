@@ -1295,3 +1295,50 @@ public:
     *$1 = PyInt_AsLong ($input);
 }
 
+
+/**
+ * take (query_points,k) and return (indices,dist) in cvLSHQuery.
+ */
+%typemap(in, noblock=1) (const CvArr* query_points) (bool freearg=false, int num_query_points)
+{
+  $1 = PyObject_to_CvArr($input, &freearg);
+  num_query_points = ((CvMat*)$1)->rows;
+}
+%typemap(freearg) (const CvArr* query_points) {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+%typemap(in) (CvArr* indices, CvArr* dist, int k)
+{
+  $3 = (int)PyInt_AsLong($input);
+  $1 = cvCreateMat(num_query_points2, $3, CV_32SC1);
+  $2 = cvCreateMat(num_query_points2, $3, CV_64FC1);
+}
+%typemap(argout) (CvArr* indices, CvArr* dist, int k)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+
+/**
+ * take (data) and return (indices) for cvLSHAdd
+ */
+%typemap(in) (const CvArr* data, CvArr* indices) (bool freearg=false)
+{
+  $1 = PyObject_to_CvArr($input, &freearg);
+  CvMat* m = (CvMat*)$1;
+  $2 = cvCreateMat(m->rows, 1, CV_32SC1 );
+}
+%typemap(argout) (const CvArr* data, CvArr* indices)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvArr* data, CvArr* indices) {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+
