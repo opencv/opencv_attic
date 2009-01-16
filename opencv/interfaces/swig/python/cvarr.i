@@ -206,23 +206,30 @@
 %newobject CvMat::__getitem__(PyObject * object);
 %newobject _IplImage::__getitem__(PyObject * object);
 
-// Macro to check bounds of slice and throw error if outside
-%define CHECK_SLICE_BOUNDS(rect,w,h,retval)
+%header %{
+int checkSliceBounds(const CvRect & rect, int w, int h){
 	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", rect.x, rect.y, rect.x+rect.width, rect.y+rect.height, w, h);
 	if(rect.width<=0 || rect.height<=0 ||
 	   	rect.width>w || rect.height>h ||
 	   	rect.x<0 || rect.y<0 ||
 	   	rect.x>= w || rect.y >=h){
 	   	char errstr[256];
+
 		// previous function already set error string
-		if(rect.width==0 && rect.height==0 && rect.x==0 && rect.y==0) return retval;
+		if(rect.width==0 && rect.height==0 && rect.x==0 && rect.y==0) return -1;
+
 	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
 	   		rect.x, rect.y, rect.x+rect.width, rect.y+rect.height, w, h);
 		PyErr_SetString(PyExc_IndexError, errstr);
 		//PyErr_SetString(PyExc_ValueError, errstr);
-		return retval;
+		return -1;
 	}
-else{}
+    return 0;
+}
+%}
+// Macro to check bounds of slice and throw error if outside
+%define CHECK_SLICE_BOUNDS(rect,w,h,retval)
+    if(CheckSliceBounds(&rect,w,h)==-1){ return retval; } else{}
 %enddef
 
 // slice access and assignment for CvMat
@@ -234,6 +241,7 @@ else{}
 		str[0]=0;
 		return str;
 	}
+    
 
 	// scalar assignment
 	void __setitem__(PyObject * object, double val){

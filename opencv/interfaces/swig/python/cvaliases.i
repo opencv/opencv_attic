@@ -1,3 +1,4 @@
+/** This file was automatically generated using util/extract_aliases.py script */
 %module cv
 %pythoncode %{
 IPL_ALIGN_DWORD=IPL_ALIGN_4BYTES

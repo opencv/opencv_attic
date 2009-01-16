@@ -8,6 +8,9 @@
 /** convert python index object (tuple, integer, or slice) to CvRect for subsequent cvGetSubMat call */
 CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object);
 
+/** 1 if rectangle is a subrectangle of [0,0,w,h], 0 otherwise */
+int CheckSliceBounds(CvRect * rect, int w, int h );
+
 /// convert object that supports the array protocol to CvMat *
 CvArr * PyArray_to_CvArr (PyObject * obj);
 

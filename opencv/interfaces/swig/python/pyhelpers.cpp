@@ -273,6 +273,26 @@ CvRect PySlice_to_CvRect(CvArr * src, PyObject * idx_object){
   return cvRect(lower[1],lower[0], upper[1]-lower[1], upper[0]-lower[0]);
 }
 
+int CheckSliceBounds(CvRect * rect, int w, int h){
+	//printf("__setitem__ slice(%d:%d, %d:%d) array(%d,%d)", rect.x, rect.y, rect.x+rect.width, rect.y+rect.height, w, h);
+	if(rect->width<=0 || rect->height<=0 ||
+	   	rect->width>w || rect->height>h ||
+	   	rect->x<0 || rect->y<0 ||
+	   	rect->x>= w || rect->y >=h){
+	   	char errstr[256];
+
+		// previous function already set error string
+		if(rect->width==0 && rect->height==0 && rect->x==0 && rect->y==0) return -1;
+
+	   	sprintf(errstr, "Requested slice [ %d:%d %d:%d ] oversteps array sized [ %d %d ]", 
+	   		rect->x, rect->y, rect->x+rect->width, rect->y+rect->height, w, h);
+		PyErr_SetString(PyExc_IndexError, errstr);
+		//PyErr_SetString(PyExc_ValueError, errstr);
+		return 0;
+	}
+    return 1;
+}
+
 double PyObject_AsDouble(PyObject * obj){
   if(PyNumber_Check(obj)){
     if(PyFloat_Check(obj)){

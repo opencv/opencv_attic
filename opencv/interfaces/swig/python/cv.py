@@ -1010,6 +1010,10 @@ def CV_IS_HAAR_CLASSIFIER(*args):
   """CV_IS_HAAR_CLASSIFIER(void haar) -> int"""
   return _cv.CV_IS_HAAR_CLASSIFIER(*args)
 
+def cvContourPerimeter(*args):
+  """cvContourPerimeter(CvSeq contour) -> double"""
+  return _cv.cvContourPerimeter(*args)
+
 def cvCalcBackProject(*args):
   """cvCalcBackProject( image, CvArr dst, CvHistogram hist)"""
   return _cv.cvCalcBackProject(*args)
@@ -1562,17 +1566,6 @@ def cvCvtSeqToArray(*args):
     cvCvtSeqToArray(CvSeq seq, CvArr elements) -> CvArr
     """
   return _cv.cvCvtSeqToArray(*args)
-
-def cvArcLength(*args):
-  """
-    cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1) -> double
-    cvArcLength(CvSeq seq, CvSlice slice=CV_WHOLE_SEQ) -> double
-    cvArcLength(CvSeq seq) -> double
-    cvArcLength(CvArr arr, CvSlice slice=CV_WHOLE_SEQ, int is_closed=-1) -> double
-    cvArcLength(CvArr arr, CvSlice slice=CV_WHOLE_SEQ) -> double
-    cvArcLength(CvArr arr) -> double
-    """
-  return _cv.cvArcLength(*args)
 
 def cvHaarDetectObjects(*args):
   """
@@ -7065,6 +7058,10 @@ def cvFindDominantPoints(*args):
         double parameter4=0) -> CvSeq
     """
   return _cv.cvFindDominantPoints(*args)
+
+def cvArcLength(*args):
+  """cvArcLength(void curve, CvSlice slice=cvSlice(0, 0x3fffffff), int is_closed=-1) -> double"""
+  return _cv.cvArcLength(*args)
 
 def cvBoundingRect(*args):
   """cvBoundingRect(CvArr points, int update=0) -> CvRect"""

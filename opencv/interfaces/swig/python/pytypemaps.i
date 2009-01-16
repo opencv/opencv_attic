@@ -53,24 +53,7 @@
 
 /* typecheck typemaps */
 %typecheck(SWIG_TYPECHECK_POINTER) CvArr * {
-	void *ptr;
-	if ($input == Py_None) {
-		$1 = 1;
-	}
-	if(PyList_Check($input) || PyTuple_Check($input)) {
-		$1 = 1;
-	}
-	else if (SWIG_ConvertPtr($input, &ptr, $descriptor(CvMat*), 0) != -1){
-		$1 = 1;
-	}
-  else if (PyObject_HasAttrString($input, "__array_interface__"))
-  {
-    $1 = 1;
-  }
-	else {
-		$1 = 0;
-		PyErr_Clear();
-	}
+    $1 = CvArr_Check( $input );
 }
 
 %typecheck(SWIG_TYPECHECK_POINTER) CvScalar {
