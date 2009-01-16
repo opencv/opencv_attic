@@ -150,6 +150,23 @@ static CvScalar PyObject_to_CvScalar(PyObject * obj){
   return cvScalar(-1,-1,-1,-1); 
 }
 
+static int CvArr_Check( PyObject * obj )
+{
+	void *ptr;
+	if( obj == Py_None ||
+	    SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvMat,       0) ) ||
+        SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvSeq,       0) ) ||
+        SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvContour,   0) ) ||
+        SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvSparseMat, 0) ) ||
+        SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvMatND,     0) ) ||
+        PyObject_HasAttrString(obj, "__array_interface__") ||
+        PySequence_Check(obj) ) 
+    { 
+        return 1;
+	}
+    PyErr_Clear();
+    return 0;
+}
 
 /* if python sequence type, convert to CvMat or CvMatND */
 static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
@@ -157,15 +174,13 @@ static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
   CvArr * cvarr = NULL;
   *freearg = false;
 
-  // we accept a couple of different object types now
-  if (PySwigObject_Check (obj))
+  if (SWIG_IsOK( SWIG_ConvertPtr (obj, (void** )& cvarr, SWIGTYPE_p_CvMat, 0) ) ||
+      SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvSeq, 0) ) ||
+      SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvContour, 0) ) ||
+      SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvSparseMat, 0) ) ||
+      SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvMatND, 0) ))
   {
-    // this seems to be never called ... but the one below is
-    SWIG_ConvertPtr (obj, & cvarr, 0, SWIG_POINTER_EXCEPTION);
-  }
-  else if (SWIG_ConvertPtr (obj, (void** )& cvarr, SWIGTYPE_p_CvMat, 0) != -1)
-  {
-    // we got a directly wrapped CvMat *, this is preferred
+    // we got a directly wrapped OpenCV array or sequence type, this is preferred
     return cvarr;
   }
   else if (PyObject_HasAttrString (obj, "__array_interface__"))
@@ -190,8 +205,8 @@ static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
   }
   else 
   {
-    // what's this good for? it's doubling the first entry, hm.
-    SWIG_ConvertPtr (obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+    // TODO, throw an error here
+    return NULL;
   }
   
   return cvarr;

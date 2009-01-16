@@ -19,6 +19,15 @@ double cvArcLength_Shadow( const CvArr * arr, CvSlice slice, int is_closed){
     return cvArcLength( arr, slice, is_closed );
 }
 
+void cvMoments_Shadow( const CvSeq * seq, CvMoments * moments, int binary ){
+	cvMoments( seq, moments, binary );
+}
+
+void cvMoments_Shadow( const CvArr * seq, CvMoments * moments, int binary ){
+	cvMoments( seq, moments, binary );
+}
+
+
 CvTypedSeq<CvRect> * cvHaarDetectObjects_Shadow( const CvArr* image, CvHaarClassifierCascade* cascade,
         CvMemStorage* storage, double scale_factor, int min_neighbors, int flags,
         CvSize min_size )

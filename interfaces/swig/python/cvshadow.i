@@ -54,13 +54,11 @@
 
 // %ignore, %rename must come before %include
 %myshadow(cvCvtSeqToArray);
-%myshadow(cvArcLength);
 %myshadow(cvHaarDetectObjects);
 %myshadow(cvSegmentMotion);
 %myshadow(cvApproxPoly);
-%myshadow(cvContourPerimeter);
 %myshadow(cvConvexHull2);
-%newobject cvConvexHull2; // shadowed functioned always returns new object
+%newobject cvConvexHull2_Shadow; // shadowed functioned always returns new object
 
 /* cvSnakeImage shadow uses a vector<CvPoint> and vector<float> */ 
 %template(FloatVector)   std::vector<float>;

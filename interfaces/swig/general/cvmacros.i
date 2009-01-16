@@ -5,6 +5,11 @@
 // incorrect, it is likely that a name->type mapping will have to be added to the script 
 /////////////////////////////////////////////////////////////////////////////////////////////////M*/
 
+// This file was generated from the following header files: 
+// cxtypes.h
+// cxcore.h
+// cvtypes.h
+// cv.h
 void cvFree(void ** ptr);
 void CV_READ_CHAIN_POINT(CvPoint _pt, CvChainPtReader reader);
 void * CV_MAT_ELEM_PTR(CvMat mat,int row,int col);
@@ -117,5 +122,6 @@ void CV_NEXT_LINE_POINT(CvLineIterator line_iterator);
 void CV_SET_IMAGE_IO_FUNCTIONS();
 void CV_INIT_3X3_DELTAS(double * deltas,int step,int nch);
 int CV_IS_HAAR_CLASSIFIER(void * haar);
+double cvContourPerimeter(CvSeq * contour);
 void cvCalcBackProject(IplImage * image,CvArr * dst,CvHistogram * hist);
 void cvCalcBackProjectPatch(IplImage * image,CvArr * dst,CvSize range,CvHistogram * hist,int method,double factor);
