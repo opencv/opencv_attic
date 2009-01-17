@@ -1,3 +1,5 @@
+// 2008-05-14, Xavier Delacour <xavier.delacour@gmail.com>
+
 #include "cxcoretest.h"
 
 #include <algorithm>

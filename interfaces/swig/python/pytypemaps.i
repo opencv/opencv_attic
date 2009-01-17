@@ -1410,3 +1410,56 @@ public:
 {
   $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
 }
+
+/**
+ * take (coeffs) for (const CvMat* coeffs, CvMat *roots) and return (roots)
+ * for cvSolveCubic
+ */
+%typemap(in) (const CvMat* coeffs, CvMat *roots) (bool freearg=false)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  int m = $1->rows * $1->cols;
+  if (m<2) {
+    PyErr_SetString (PyExc_TypeError,"must give at least 2 coefficients");
+    return NULL;
+  }
+  $2 = cvCreateMat(m-1, 1, CV_MAKETYPE(CV_MAT_DEPTH($1->type),1));
+}
+%typemap(argout) (const CvMat* coeffs, CvMat *roots)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvMat* coeffs, CvMat *roots)
+{
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+
+/**
+ * take (coeffs) for (const CvMat* coeffs, CvMat *roots2) and return (roots2)
+ * for cvSolvePoly
+ */
+%typemap(in) (const CvMat* coeffs, CvMat *roots2) (bool freearg=false)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  int m = $1->rows * $1->cols;
+  if (m<2) {
+    PyErr_SetString (PyExc_TypeError,"must give at least 2 coefficients");
+    return NULL;
+  }
+  $2 = cvCreateMat(m-1, 1, CV_MAKETYPE(CV_MAT_DEPTH($1->type),2));
+}
+%typemap(argout) (const CvMat* coeffs, CvMat *roots2)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvMat* coeffs, CvMat *roots2)
+{
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+
