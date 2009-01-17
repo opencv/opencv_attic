@@ -1,3 +1,5 @@
+// 2009-01-14, Xavier Delacour <xavier.delacour@gmail.com>
+
 #include "cvtest.h"
 
 // * add test for cvFindFeaturesBoxed

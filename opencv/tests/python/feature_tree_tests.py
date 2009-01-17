@@ -22,7 +22,7 @@ def planted_neighbors(query_points, R = .4):
 class feature_tree_test(unittest.TestCase):
 
     def test_kdtree_basic(self):
-        n = 10000;
+        n = 1000;
         d = 64;
         query_points = random.rand(n,d)*2-1;
         data = planted_neighbors(query_points)
@@ -33,8 +33,8 @@ class feature_tree_test(unittest.TestCase):
         correct = sum([i == j for j,i in enumerate(indices)])
         assert(correct >= n * .75);
 
-    def xtest_spilltree_basic(self):
-        n = 100;
+    def test_spilltree_basic(self):
+        n = 1000;
         d = 64;
         query_points = random.rand(n,d)*2-1;
         data = planted_neighbors(query_points)
