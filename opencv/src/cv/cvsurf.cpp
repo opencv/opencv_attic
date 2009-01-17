@@ -440,6 +440,14 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int i, j, k, nangle0 = 0, N;
     int nthreads = cvGetNumThreads();
 
+    CV_ASSERT(img != 0);
+    CV_ASSERT(CV_MAT_TYPE(img->type) == CV_8UC1);
+    CV_ASSERT(mask == 0 || (CV_ARE_SIZES_EQ(img,mask) && CV_MAT_TYPE(mask->type) == CV_8UC1));
+    CV_ASSERT(storage != 0);
+    CV_ASSERT(params.hessianThreshold >= 0);
+    CV_ASSERT(params.nOctaves > 0);
+    CV_ASSERT(params.nOctaveLayers > 0);
+
     CV_ASSERT( img != 0 && CV_MAT_TYPE(img->type) == CV_8UC1 &&
         (mask == 0 || (CV_ARE_SIZES_EQ(img,mask) &&
         CV_MAT_TYPE(mask->type) == CV_8UC1)) &&
