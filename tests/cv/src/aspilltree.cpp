@@ -1,6 +1,6 @@
-#include "cvtest.h"
+// 2009-01-14, Xavier Delacour <xavier.delacour@gmail.com>
 
-// * add test for cvFindFeaturesBoxed
+#include "cvtest.h"
 
 #include <algorithm>
 #include <vector>
@@ -24,7 +24,6 @@ CV_SpilltreeTest::~CV_SpilltreeTest() {
 
 void CV_SpilltreeTest::run( int /*start_from*/ )
 {
-  /*
   int dims = 64;
   int features = 2000;
   int k = 1; // * should also test 2nd nn etc.?
@@ -71,34 +70,7 @@ void CV_SpilltreeTest::run( int /*start_from*/ )
     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
 
   cvReleaseFeatureTree(tr);
-  */
-
-  //  /*
-  int n = 10000;
-  int d = 128;
-  int k = 10;
-  CvMat* toy = cvCreateMat( n, d, CV_64FC1 );
-  CvRNG rng_state = cvRNG(0xffffffff);
-  cvRandArr( &rng_state, toy, CV_RAND_UNI, cvRealScalar(-100), cvRealScalar(100) );
-  ts->printf( CvTS::LOG, "data generated\n" );
-  long long t;
-  t = cvGetTickCount();
-  CvFeatureTree* tr = cvCreateSpillTree( toy, 50, .7, .2 );
-  t = cvGetTickCount() - t;
-  ts->printf( CvTS::LOG, "spill tree created in %lld ms.\n", t/1000000 );
-  CvMat* vector = cvCreateMat( 2, d, CV_64FC1 );
-  cvRandArr( &rng_state, vector, CV_RAND_UNI, cvRealScalar(-100), cvRealScalar(100) );
-  double* vv = vector->data.db;
-  ts->printf( CvTS::LOG, "test drive: " );
-  for ( int i = 0; i < d-1; i++ )
-    ts->printf( CvTS::LOG, "%.2f ", vv[i] );
-  ts->printf( CvTS::LOG, "%.2f\n", vv[d-1] );
-  CvMat* res = cvCreateMat( 2, k, CV_32SC1 );
-  CvMat* dist = cvCreateMat( 2, k, CV_64FC1 );
-  t = cvGetTickCount();
-  cvFindFeatures( tr, vector, res, dist, k );
-  //  */
 }
 
 
-//CV_SpilltreeTest spilltree_test;
+CV_SpilltreeTest spilltree_test;

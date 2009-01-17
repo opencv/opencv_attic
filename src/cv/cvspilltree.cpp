@@ -201,7 +201,9 @@ icvDFSInitSpillTreeNode( const CvSpillTree* tr,
       return;
     }
   CvSpillTreeNode* lc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+  memset(lc, 0, sizeof(CvSpillTreeNode));
   CvSpillTreeNode* rc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+  memset(rc, 0, sizeof(CvSpillTreeNode));
   lc->lc = lc->rc = rc->lc = rc->rc = NULL;
   lc->cc = rc->cc = 0;
   int undo = cvRound(node->cc*tr->rho);
@@ -257,6 +259,7 @@ icvCreateSpillTree( const CvMat* raw_data,
 
   CvSpillTree* tr = (CvSpillTree*)cvAlloc( sizeof(CvSpillTree) );
   tr->root = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+  memset(tr->root, 0, sizeof(CvSpillTreeNode));
   tr->refmat = (CvMat**)cvAlloc( sizeof(CvMat*)*n );
   tr->cache = (bool*)cvAlloc( sizeof(bool)*n );
   tr->total = n;
@@ -267,6 +270,7 @@ icvCreateSpillTree( const CvMat* raw_data,
 
   // tie a link-list to the root node
   tr->root->lc = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+  memset(tr->root->lc, 0, sizeof(CvSpillTreeNode));
   tr->root->lc->center = cvCreateMatHeader( 1, d, tr->type );
   cvSetData( tr->root->lc->center, _dispatch_mat_ptr(raw_data, 0), raw_data->step );
   tr->refmat[0] = tr->root->lc->center;
@@ -277,6 +281,7 @@ icvCreateSpillTree( const CvMat* raw_data,
   for ( int i = 1; i < n; i++ )
     {
       CvSpillTreeNode* newnode = (CvSpillTreeNode*)cvAlloc( sizeof(CvSpillTreeNode) );
+      memset(newnode, 0, sizeof(CvSpillTreeNode));
       newnode->center = cvCreateMatHeader( 1, d, tr->type );
       cvSetData( newnode->center, _dispatch_mat_ptr(raw_data, i*d), raw_data->step );
       tr->refmat[i] = newnode->center;
