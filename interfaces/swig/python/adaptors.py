@@ -78,11 +78,7 @@ try:
   
       if not isinstance(input, cv.CvMat):
           raise TypeError, 'must be called with a cv.CvMat!'
-  
-      # assert that the channels are interleaved
-      if input.dataOrder != 0:
-          raise ValueError, 'dataOrder must be 0 (interleaved)!'
-  
+    
       #orientation
       if input.origin == 0:
           orientation = 1 # top left
@@ -227,11 +223,7 @@ try:
       
       if not isinstance(input, cv.CvMat):
           raise TypeError, 'must be called with a cv.CvMat!'
-      
-      # assert that the channels are interleaved
-      if input.dataOrder != 0:
-          raise ValueError, 'dataOrder must be 0 (interleaved)!'
-      
+            
       # data type dictionary:
       # (channels, depth) : numpy dtype
       ipl2dtype = {
