@@ -50,7 +50,7 @@ void cvReleaseFeatureTree(CvFeatureTree* tr)
 // desc is m x d set of candidate points.
 // results is m x k set of row indices of matching points.
 // dist is m x k distance to matching points.
-void cvFindFeatures(CvFeatureTree* tr, CvMat* desc,
+void cvFindFeatures(CvFeatureTree* tr, const CvMat* desc,
     CvMat* results, CvMat* dist, int k, int emax)
 {
     tr->FindFeatures(desc, k, emax, results, dist);

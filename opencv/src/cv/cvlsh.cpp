@@ -383,11 +383,9 @@ unsigned int LSHSize(CvLSH* lsh) {
 }
 
 
-void cvLSHAdd(CvLSH* lsh, const CvArr* _data, CvArr* _indices) {
+void cvLSHAdd(CvLSH* lsh, const CvMat* data, CvMat* indices) {
   int dims, n;
   int* ret_indices = 0;
-  CvMat* data = (CvMat*)_data;
-  CvMat* indices = (CvMat*)_indices;
 
   __BEGIN__;
   CV_FUNCNAME("cvLSHAdd");
@@ -421,9 +419,8 @@ void cvLSHAdd(CvLSH* lsh, const CvArr* _data, CvArr* _indices) {
   __END__;
 }
 
-void cvLSHRemove(CvLSH* lsh, const CvArr* _indices) {
+void cvLSHRemove(CvLSH* lsh, const CvMat* indices) {
   int n;
-  CvMat* indices = (CvMat*)_indices;
 
   __BEGIN__;
   CV_FUNCNAME("cvLSHRemove");
@@ -439,11 +436,8 @@ void cvLSHRemove(CvLSH* lsh, const CvArr* _indices) {
   __END__;
 }
 
-void cvLSHQuery(CvLSH* lsh, const CvArr* _data, CvArr* _indices, CvArr* _dist, int k, int emax) {
+void cvLSHQuery(CvLSH* lsh, const CvMat* data, CvMat* indices, CvMat* dist, int k, int emax) {
   int dims;
-  CvMat* data = (CvMat*)_data;
-  CvMat* indices = (CvMat*)_indices;
-  CvMat* dist = (CvMat*)_dist;
 
   __BEGIN__;
   CV_FUNCNAME("cvLSHQuery");

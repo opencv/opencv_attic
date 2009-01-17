@@ -3803,14 +3803,14 @@ extern "C" void cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
 
 
-extern "C" void cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
-      CvMat* results, CvMat* dist, int k = 2, int emax = 20);
+extern "C" void cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
+      CvMat* indices, CvMat* dist, int k, int emax = 20);
 
 
 
 extern "C" int cvFindFeaturesBoxed(struct CvFeatureTree* tr,
           CvMat* bounds_min, CvMat* bounds_max,
-          CvMat* results);
+          CvMat* out_indices);
 
 
 struct CvLSH;
@@ -3818,31 +3818,31 @@ struct CvLSHOperations;
 
 
 
-extern "C" CvLSH* cvCreateLSH(CvLSHOperations* ops, int d, int L = 10, int k = 10,
+extern "C" struct CvLSH* cvCreateLSH(struct CvLSHOperations* ops, int d, int L = 10, int k = 10,
      int type = ((6) + (((1)-1) << 3)), double r = 4,
      int64 seed = -1);
 
 
-extern "C" CvLSH* cvCreateMemoryLSH(int d, int n, int L = 10, int k = 10,
-    int type = ((6) + (((1)-1) << 3)), double r = 4,
-    int64 seed = -1);
+extern "C" struct CvLSH* cvCreateMemoryLSH(int d, int n, int L = 10, int k = 10,
+           int type = ((6) + (((1)-1) << 3)), double r = 4,
+           int64 seed = -1);
 
 
-extern "C" void cvReleaseLSH(CvLSH** lsh);
+extern "C" void cvReleaseLSH(struct CvLSH** lsh);
 
 
-extern "C" unsigned int LSHSize(CvLSH* lsh);
+extern "C" unsigned int LSHSize(struct CvLSH* lsh);
 
 
-extern "C" void cvLSHAdd(CvLSH* lsh, const CvArr* data, CvArr* indices = 0);
+extern "C" void cvLSHAdd(struct CvLSH* lsh, const CvMat* data, CvMat* indices = 0);
 
 
-extern "C" void cvLSHRemove(CvLSH* lsh, const CvArr* indices);
+extern "C" void cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
 
 
 
-extern "C" void cvLSHQuery(CvLSH* lsh, const CvArr* query_points,
-         CvArr* indices, CvArr* dist, int k, int emax);
+extern "C" void cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
+         CvMat* indices, CvMat* dist, int k, int emax);
 
 
 typedef struct CvSURFPoint

@@ -75,9 +75,9 @@ class CvKDTreeWrap : public CvFeatureTree {
   void* data;
 
   template <class __treetype>
-  void find_nn(CvMat* d, int k, int emax, CvMat* results, CvMat* dist) {
+  void find_nn(const CvMat* d, int k, int emax, CvMat* results, CvMat* dist) {
     __treetype* tr = (__treetype*) data;
-    uchar* dptr = d->data.ptr;
+    const uchar* dptr = d->data.ptr;
     uchar* resultsptr = results->data.ptr;
     uchar* distptr = dist->data.ptr;
     typename __treetype::bbf_nn_pqueue nn;
@@ -89,7 +89,8 @@ class CvKDTreeWrap : public CvFeatureTree {
     assert(dist->cols == k);
 
     for (int j = 0; j < d->rows; ++j) {
-      typename __treetype::scalar_type* dj = (typename __treetype::scalar_type*) dptr;
+      const typename __treetype::scalar_type* dj =
+	(const typename __treetype::scalar_type*) dptr;
 
       int* resultsj = (int*) resultsptr;
       double* distj = (double*) distptr;
@@ -154,8 +155,8 @@ public:
     return mat->type;
   }
 
-  void FindFeatures(CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
-    bool free_desc = false;
+  void FindFeatures(const CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
+    CvMat* tmp_desc = 0;
 
     __BEGIN__;
     CV_FUNCNAME("cvFindFeatures");
@@ -172,10 +173,9 @@ public:
       CV_ERROR(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
 
     if (CV_MAT_TYPE(type()) != CV_MAT_TYPE(desc->type)) {
-      CvMat* old_desc = desc;
-      desc = cvCreateMat(desc->rows, desc->cols, type());
-      cvConvert(old_desc, desc);
-      free_desc = true;
+      tmp_desc = cvCreateMat(desc->rows, desc->cols, type());
+      cvConvert(desc, tmp_desc);
+      desc = tmp_desc;
     }
 
 
@@ -188,8 +188,8 @@ public:
 
     __END__;
 
-    if (free_desc)
-      cvReleaseMat(&desc);
+    if (tmp_desc)
+      cvReleaseMat(&tmp_desc);
   }
   int FindOrthoRange(CvMat* bounds_min, CvMat* bounds_max,
 		     CvMat* results) {

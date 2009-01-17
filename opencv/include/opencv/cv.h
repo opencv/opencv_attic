@@ -1073,14 +1073,14 @@ CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
 /* Searches feature tree for k nearest neighbors of given reference points,
    searching (in case of kd-tree/bbf) at most emax leaves. */
-CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
-			   CvMat* results, CvMat* dist, int k CV_DEFAULT(2), int emax CV_DEFAULT(20));
+CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
+			   CvMat* indices, CvMat* dist, int k, int emax CV_DEFAULT(20));
 
 /* Search feature tree for all points that are inlier to given rect region.
    Only implemented for kd trees */
 CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
 			       CvMat* bounds_min, CvMat* bounds_max,
-			       CvMat* results);
+			       CvMat* out_indices);
 
 
 struct CvLSH;
@@ -1104,15 +1104,15 @@ CVAPI(void) cvReleaseLSH(struct CvLSH** lsh);
 CVAPI(unsigned int) LSHSize(struct CvLSH* lsh);
 
 /* Add vectors to the LSH structure, optionally returning indices. */
-CVAPI(void) cvLSHAdd(struct CvLSH* lsh, const CvArr* data, CvArr* indices CV_DEFAULT(0));
+CVAPI(void) cvLSHAdd(struct CvLSH* lsh, const CvMat* data, CvMat* indices CV_DEFAULT(0));
 
 /* Remove vectors from LSH, as addressed by given indices. */
-CVAPI(void) cvLSHRemove(struct CvLSH* lsh, const CvArr* indices);
+CVAPI(void) cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
 
 /* Query the LSH n times for at most k nearest points; data is n x d,
    indices and dist are n x k. At most emax stored points will be accessed. */
-CVAPI(void) cvLSHQuery(struct CvLSH* lsh, const CvArr* query_points,
-		       CvArr* indices, CvArr* dist, int k, int emax);
+CVAPI(void) cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
+		       CvMat* indices, CvMat* dist, int k, int emax);
 
 
 typedef struct CvSURFPoint
