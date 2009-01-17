@@ -1325,3 +1325,50 @@ public:
   }
 }
 
+/**
+ * suppress (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage) and return (keypoints, descriptors) 
+ */
+%typemap(in,numinputs=0) (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage)
+     (CvSeq* keypoints = 0, CvSeq* descriptors = 0,CvMemStorage* storage)
+{
+  storage = cvCreateMemStorage();
+  $1 = &keypoints;
+  $2 = &descriptors;
+  $3 = storage;
+}
+%typemap(argout) (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage)
+{
+  const int n1 = 6;
+  int n2 = (*$2)->elem_size / sizeof(float);
+  assert((*$2)->elem_size == 64 * sizeof(float) ||
+	 (*$2)->elem_size == 128 * sizeof(float));
+  assert((*$2)->total == (*$1)->total);
+  CvMat* m1 = cvCreateMat((*$2)->total,n1,CV_32FC1);
+  CvMat* m2 = cvCreateMat((*$2)->total,n2,CV_32FC1);
+  CvSeqReader r1;
+  cvStartReadSeq(*$1, &r1);
+  float* m1p = m1->data.fl;
+  for (int j=0;j<(*$2)->total;++j) {
+    CvSURFPoint* sp = (CvSURFPoint*)r1.ptr;
+    m1p[0] = sp->pt.x;
+    m1p[1] = sp->pt.y;
+    m1p[2] = sp->laplacian;
+    m1p[3] = sp->size;
+    m1p[4] = sp->dir;
+    m1p[5] = sp->hessian;
+    m1p += n1;
+    CV_NEXT_SEQ_ELEM((*$1)->elem_size, r1);
+  }
+  CvSeqReader r2;
+  cvStartReadSeq(*$2, &r2);
+  float* m2p = m2->data.fl;
+  for (int j=0;j<(*$2)->total;++j) {
+    memcpy(m2p,r2.ptr,n2*sizeof(float));
+    m2p += n2;
+    CV_NEXT_SEQ_ELEM((*$2)->elem_size, r2);
+  }
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj(m1, $descriptor(CvMat *), 1) );
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj(m2, $descriptor(CvMat *), 1) );
+  cvReleaseMemStorage(&$3);
+}
+

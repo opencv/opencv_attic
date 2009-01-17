@@ -177,6 +177,8 @@ public:
   ~pstable_l2_func() {
     cvReleaseMat(&a);
     cvReleaseMat(&b);
+    cvReleaseMat(&r1);
+    cvReleaseMat(&r2);
   }
 
   // * factor all L functions into this (reduces number of matrices to 4 total; 
@@ -189,9 +191,9 @@ public:
 
     lsh_hash h;
     h.h1 = h.h2 = 0;
-    for (int j=0;j<k;++j) {
+    for (int j = 0; j < k; ++j) {
       accum_type s = 0;
-      for (int jj=0;jj<d;++jj)
+      for (int jj = 0; jj < d; ++jj)
 	s += aj[jj] * x[jj];
       s += *bj;
       s /= r;
@@ -206,7 +208,7 @@ public:
   }
   accum_type distance(const T* p, const T* q) const {
     accum_type s = 0;
-    for (int j=0;j<d;++j) {
+    for (int j = 0; j < d; ++j) {
       accum_type d1 = p[j] - q[j];
       s += d1 * d1;
     }
@@ -469,7 +471,7 @@ void cvLSHQuery(CvLSH* lsh, const CvArr* _data, CvArr* _indices, CvArr* _dist, i
 
   switch (lsh->type) {
   case CV_32FC1: lsh->u.lsh_32f->query(data->data.fl, data->rows,
-				       k, emax,dist->data.db, indices->data.i); break;
+				       k, emax, dist->data.db, indices->data.i); break;
   case CV_64FC1: lsh->u.lsh_64f->query(data->data.db, data->rows,
 				       k, emax, dist->data.db, indices->data.i); break;
   default: assert(0); return;
