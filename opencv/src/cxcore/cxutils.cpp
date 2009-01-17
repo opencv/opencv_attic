@@ -715,6 +715,7 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
 
     CV_FUNCNAME("cvSolvePoly");
 
+    CV_ASSERT(maxiter > 0);
     if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
         CV_MAT_TYPE(a->type) != CV_64FC1)
         CV_ERROR(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
@@ -727,7 +728,7 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
     if (m - 1 != n)
         CV_ERROR(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
 
-    if( CV_MAT_TYPE(a->type) == CV_32F || !CV_IS_MAT_CONT(a->type))
+    if( CV_MAT_DEPTH(a->type) == CV_32F || !CV_IS_MAT_CONT(a->type))
     {
         ad = (double*)cvStackAlloc(m*sizeof(ad[0]));
         CvMat _a = cvMat( a->rows, a->cols, CV_64F, ad );
@@ -736,7 +737,7 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
     else
         ad = a->data.db;
 
-    if( CV_MAT_TYPE(r->type) == CV_32F || !CV_IS_MAT_CONT(r->type))
+    if( CV_MAT_DEPTH(r->type) == CV_32F || !CV_IS_MAT_CONT(r->type))
         rd = (double*)cvStackAlloc(n*sizeof(ad[0]));
     else
         rd = r->data.db;
@@ -744,7 +745,7 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
     icvFindPolynomialRoots( ad, rd, n, maxiter, fig);
     if( rd != r->data.db )
     {
-        CvMat _r = cvMat( r->rows, r->cols, CV_64F, rd );
+        CvMat _r = cvMat( r->rows, r->cols, CV_64FC2, rd );
         cvConvert( &_r, r );
     }
 

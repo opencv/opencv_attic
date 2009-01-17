@@ -1496,8 +1496,8 @@ extern "C" void cvSort( const CvArr* src, CvArr* dst = NULL,
 extern "C" int cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
 
-extern "C" void cvSolvePoly(const CvMat* coeffs, CvMat *roots,
-   int maxiter = 0, int fig = 0);
+extern "C" void cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
+   int maxiter = 20, int fig = 100);
 
 
 
