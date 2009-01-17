@@ -52,7 +52,7 @@ struct CvFeatureTree {
 
   CvFeatureTree() {}
   virtual ~CvFeatureTree() {}
-  virtual void FindFeatures(CvMat* d, int k, int emax, CvMat* results, CvMat* dist) = 0;
+  virtual void FindFeatures(const CvMat* d, int k, int emax, CvMat* results, CvMat* dist) = 0;
   virtual int FindOrthoRange(CvMat* /*bounds_min*/, CvMat* /*bounds_max*/,CvMat* /*results*/) {
     return 0;
   }

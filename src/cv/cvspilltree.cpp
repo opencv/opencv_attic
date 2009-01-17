@@ -462,7 +462,7 @@ public:
     icvReleaseSpillTree(&tr);
   }
 
-  void FindFeatures(CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
+  void FindFeatures(const CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
     icvFindSpillTreeFeatures(tr, desc, results, dist, k, emax);
   }
 };

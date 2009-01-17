@@ -19,7 +19,7 @@ class homography_test(unittest.TestCase):
 
     def test_ransac_identity(self):
         pts1 = random.rand(100,2);
-        result,H = cvFindHomography(pts1, pts1, CV_RANSAC, 1);
+        result,H = cvFindHomography(pts1, pts1, CV_RANSAC, 1e-5);
         assert(result and all(abs(Ipl2NumPy(H) - eye(3)) < 1e-5));
 
     def test_ransac_0_outliers(self):
