@@ -41,14 +41,23 @@
 %include "exception.i"
 %include "./pyhelpers.i"
 
-%typemap(in) (CvArr *) (bool freearg=false){
-	$1 = PyObject_to_CvArr($input, &freearg);
+%typemap(in) (CvArr *) (bool freearg=false) {
+  $1 = PyObject_to_CvArr($input, &freearg);
 }
 %typemap(freearg) (CvArr *) {
-	if($1!=NULL && freearg$argnum){
-		cvReleaseData( $1 );
-		cvFree(&($1));
-	}
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+%typemap(in) CvMat* (bool freearg=false),const CvMat* (bool freearg=false) {
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+}
+%typemap(freearg) CvMat*,const CvMat* {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
 }
 
 /* typecheck typemaps */
@@ -75,7 +84,7 @@
 
 
 // for cvReshape, cvGetRow, where header is passed, then filled in
-%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) {
+%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) (bool freearg=false) {
 	header = (CvMat *)cvAlloc(sizeof(CvMat));
    	$1 = header;
 }
@@ -1280,7 +1289,8 @@ public:
 
 
 /**
- * take (query_points,k) and return (indices,dist) in cvLSHQuery.
+ * take (query_points,k) and return (indices,dist)
+ * for cvLSHQuery
  */
 %typemap(in, noblock=1) (const CvArr* query_points) (bool freearg=false, int num_query_points)
 {
@@ -1306,7 +1316,8 @@ public:
 }
 
 /**
- * take (data) and return (indices) for cvLSHAdd
+ * take (data) and return (indices)
+ * for cvLSHAdd
  */
 %typemap(in) (const CvArr* data, CvArr* indices) (bool freearg=false)
 {
@@ -1327,6 +1338,7 @@ public:
 
 /**
  * suppress (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage) and return (keypoints, descriptors) 
+ * for cvExtractSURF
  */
 %typemap(in,numinputs=0) (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage)
      (CvSeq* keypoints = 0, CvSeq* descriptors = 0,CvMemStorage* storage)
@@ -1372,3 +1384,15 @@ public:
   cvReleaseMemStorage(&$3);
 }
 
+/**
+ * suppress (CvMat* homography) and return (homography)
+ * for cvFindHomography
+ */
+%typemap(in,numinputs=0) (CvMat* homography) (bool freearg=false)
+{
+  $1 = cvCreateMat(3,3,CV_64FC1);
+}
+%typemap(argout) (CvMat* homography)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
+}
