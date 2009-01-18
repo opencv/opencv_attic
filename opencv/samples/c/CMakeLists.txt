@@ -9,6 +9,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
 endif()
 
+file(GLOB SAMPLE_DATA_FILES *.avi *.data *.jpg *.png stereo_calib.txt)
+install(FILES ${SAMPLE_DATA_FILES} DESTINATION bin COMPONENT dev)
+
 # ---------------------------------------------
 #      Define executable targets
 # ---------------------------------------------

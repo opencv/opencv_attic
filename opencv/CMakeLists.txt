@@ -10,7 +10,14 @@
 # ----------------------------------------------------------------------------
 
 # it _must_ go before PROJECT(OpenCV) in order to work
-set(CMAKE_INSTALL_PREFIX "/usr")
+if (NOT CMAKE_INSTALL_PREFIX)
+    if (WIN32)
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+    elseif()
+        set(CMAKE_INSTALL_PREFIX "/usr" CACHE INTERNAL "" FORCE)
+    endif()
+endif()
+
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL "" CACHE INTERNAL "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "" FORCE)
