@@ -53,10 +53,18 @@ extern "C" {
 #include <errno.h>
 #endif
 
+#if defined(HAVE_GENTOO_FFMPEG)
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#if defined(HAVE_FFMPEG_SWSCALE)
+#include <libswscale/swscale.h>
+#endif
+#else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
 #if defined(HAVE_FFMPEG_SWSCALE)
 #include <ffmpeg/swscale.h>
+#endif
 #endif
 }
 
@@ -334,12 +342,12 @@ void CvCapture_FFMPEG::close()
 
     if( rgb_picture.data[0] )
         cvFree( &rgb_picture.data[0] );
-	
+
     // free last packet if exist
     if (packet.data) {
         av_free_packet (&packet);
     }
-    
+
 
     init();
 }
@@ -487,7 +495,7 @@ bool CvCapture_FFMPEG::grabFrame()
 		        av_free_packet (&packet);
 		        continue;
     		}
-		
+
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(video_st->codec,
                              picture, &got_picture,
