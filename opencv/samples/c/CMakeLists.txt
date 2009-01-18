@@ -5,7 +5,9 @@
 
 project(c_samples)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+endif()
 
 # ---------------------------------------------
 #      Define executable targets
