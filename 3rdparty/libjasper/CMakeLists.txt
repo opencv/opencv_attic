@@ -15,6 +15,7 @@ include_directories(
 # The .cpp files:
 file(GLOB lib_srcs *.c)
 file(GLOB lib_hdrs *.h)
+file(GLOB lib_ext_hdrs ../include/jasper/*.h)
 
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
@@ -22,7 +23,7 @@ file(GLOB lib_hdrs *.h)
 
 set(the_target "libjasper")
 
-add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
+add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")

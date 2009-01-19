@@ -13,10 +13,11 @@ include_directories(
 
 file(GLOB lib_srcs *.c)
 file(GLOB lib_hdrs *.h)
+set(lib_ext_hdrs "../include/zlib.h" "../include/zconf.h")
 
 set(the_target "zlib")
 
-add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
+add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
@@ -26,5 +27,5 @@ set_target_properties(${the_target}
     PROPERTIES
         OUTPUT_NAME "${the_target}"
         DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib"
+#        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib"
     )
