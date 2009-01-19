@@ -89,6 +89,17 @@ videoInput-0.1991 - Video capturing library for Windows using DirectShow as back
 
 ------------------------------------------------------------------------------------
 
+clapack-3.1.1.1 - F2C translation of the Linear Algebra PACKage (LAPACK),
+                  Copyright (c) 1992-2008 The University of Tennessee. All rights reserved.
+                  http://www.netlib.org/lapack/
+                  http://www.netlib.org/clapack/
+
+                  Note, that only a subset of package is used in OpenCV.
+                  It can be extended and/or replaced with future upstream releases
+                  in the future.
+
+------------------------------------------------------------------------------------
+
 The folder lib also contains libvfw_*.a import libraries that enable to
 build vfw camera/avi capture code of highgui with Mingw compiler.
 
