@@ -31,6 +31,9 @@
 /* IEEE1394 capturing support - libdc1394 v2.x */
 #cmakedefine HAVE_DC1394_2
 
+/* ffmpeg in Gentoo */
+#cmakedefine HAVE_GENTOO_FFMPEG
+
 /* FFMpeg video library */
 #cmakedefine  HAVE_FFMPEG
 
