@@ -13,6 +13,7 @@ include_directories(
 
 file(GLOB lib_srcs *.c)
 file(GLOB lib_hdrs *.h)
+set(lib_ext_hdrs "../include/png.h" "../include/pngconf.h")
 
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
@@ -29,5 +30,5 @@ endif()
 set_target_properties(${the_target}
 	PROPERTIES OUTPUT_NAME "${the_target}"
 	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib"
+#	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib"
 	)
