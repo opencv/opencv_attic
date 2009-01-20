@@ -85,7 +85,7 @@ template <typename T>
 void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch, size_t step){
     size_t i,j,k;
     char * cdata = (char *) data;
-    char * chdelim1="", * chdelim2="";
+    const char * chdelim1="", * chdelim2="";
 
     // only output channel parens if > 1
     if(nch>1){
@@ -93,33 +93,33 @@ void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch,
         chdelim2=")";
     }
 
-    fprintf(f,"[");
+    fputs("[",f);
     for(i=0; i<rows; i++){
-    fprintf(f, "[" );
+    fputs("[",f);
 
         // first element
         // out<<chdelim1;
-    fprintf(f, chdelim1);
+    fputs(chdelim1, f);
         fprintf(f, fmt, ((T*)(cdata+i*step))[0]);
         for(k=1; k<nch; k++){
-      fprintf(f, ", ");
+      fputs(", ", f);
       fprintf(f, fmt, ((T*)(cdata+i*step))[k]);
         }
-    fprintf(f, chdelim2);
+    fputs(chdelim2,f);
 
         // remaining elements
         for(j=nch*sizeof(T); j<step; j+=(nch*sizeof(T))){
       fprintf(f, ",%s", chdelim1);
           fprintf(f, fmt, ((T*)(cdata+i*step+j))[0]);
             for(k=1; k<nch; k++){
-        fprintf(f, ", ");
+        fputs(", ", f);
         fprintf(f, fmt, ((T*)(cdata+i*step+j))[k]);
             }
-      fprintf(f, chdelim2);
+      fputs(chdelim2, f);
         }
-    fprintf(f, "]\n" );
+    fputs( "]\n", f );
     }
-  fprintf(f, "]" );
+  fputs( "]", f );
 }
 
 void cvArrPrint(CvArr * arr){
@@ -501,13 +501,21 @@ CvArr * PySequence_to_CvArr (PyObject * obj)
   
   // in contrast to PyTuple_GetItem, PySequence_GetItame returns a NEW reference
   if (container[0])
+  {
     Py_DECREF (container[0]);
+  }
   if (container[1])
+  {
     Py_DECREF (container[1]);
+  }
   if (container[2])
+  {
     Py_DECREF (container[2]);
+  }
   if (container[3])
+  {
     Py_DECREF (container[3]);
+  }
   
   // it only makes sense to support 2 and 3 dimensional data at this time
   if (ndim < 2 || ndim > 3)
