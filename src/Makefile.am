@@ -158,6 +158,7 @@ lib_cv_la_SOURCES = \
   cv/cvlkpyramid.cpp \
   cv/cvlsh.cpp \
   cv/cvmatchcontours.cpp \
+  cv/cvmodelest.cpp \
   cv/cvmoments.cpp \
   cv/cvmorph.cpp \
   cv/cvmotempl.cpp \
