@@ -146,6 +146,7 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -231,7 +232,7 @@ stereo_calib.txt build_all.sh cvsample.dsp\
 agaricus-lepiota.data letter-recognition.data bgfg_codebook.cpp bgfg_segm.cpp blobtrack.cpp camshiftdemo.c \
 contours.c convexhull.c camshiftdemo.c contours.c convert_cascade.c convexhull.c \
 delaunay.c demhist.c dft.c distrans.c drawing.c edge.c facedetect.c \
-facedetect.cmd ffilldemo.c find_obj.cpp fitellipse.c houghlines.c kalman.c kmeans.c image.cpp \
+facedetect.cmd ffilldemo.c find_obj.cpp fitellipse.cpp houghlines.c kalman.c kmeans.c image.cpp \
 inpaint.cpp laplace.c letter_recog.cpp lkdemo.c minarea.c morphology.c motempl.c \
 mushroom.cpp pyramid_segmentation.c squares.c stereo_calib.cpp watershed.cpp
 

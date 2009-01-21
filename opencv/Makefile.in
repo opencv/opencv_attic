@@ -183,6 +183,7 @@ PY_CXXFLAGS = @PY_CXXFLAGS@
 QUICKTIME_CFLAGS = @QUICKTIME_CFLAGS@
 QUICKTIME_LIBS = @QUICKTIME_LIBS@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -321,6 +322,7 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/cvmat.hpp      \
   $(top_srcdir)/include/opencv/cvaux.hpp      \
   $(top_srcdir)/include/opencv/cvvidsurv.hpp  \
+  $(top_srcdir)/include/opencv/cvlsh.hpp      \
   $(top_srcdir)/include/opencv/ml.h           \
   $(top_srcdir)/include/opencv/highgui.h
 
