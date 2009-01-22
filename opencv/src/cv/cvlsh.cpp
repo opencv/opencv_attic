@@ -59,7 +59,7 @@
 // NY, 253-262. DOI= http://doi.acm.org/10.1145/997817.997857 
 
 #include "_cv.h"
-#include "cvlsh.hpp"
+#include "cv.hpp"
 #include "cxmisc.h"
 #include <math.h>
 #include <vector>
@@ -359,8 +359,6 @@ CvLSH* cvCreateMemoryLSH(int d, int n, int L, int k, int type, double r, int64 s
   case CV_64FC1: ops = new memory_hash_ops<double>(d,n); break;
   }
   return cvCreateLSH(ops, d, L, k, type, r, seed);
-
-  return 0;
 }
 
 void cvReleaseLSH(CvLSH** lsh) {
