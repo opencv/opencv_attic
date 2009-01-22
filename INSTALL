@@ -45,7 +45,7 @@
 
   Extra Prerequisities (MacOSX):
   ==============================
-  * Xcode 3.1 or later. It not only includes the required C++ compiler,
+  * Xcode 3.1 or later. It does not only include the required C++ compiler,
     but also Quicktime and Carbon frameworks that make highgui on MacOSX functional.
     Besides, CMake can generate Xcode projects, so you can build OpenCV conveniently from within IDE.
 
@@ -60,9 +60,9 @@
 
   Launch SVN client and checkout either
       a) the current OpenCV snapshot from here:
-         https://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/trunk
+         http://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/trunk
       b) or the latest tested OpenCV snapshot from here:
-         https://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/tags/latest_tested_snapshot
+         http://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/tags/latest_tested_snapshot
 
       In Linux/MacOSX it can be done using command line, e.g.:
         cd ~/<my_working_directory>
@@ -175,7 +175,7 @@
   * Finally, you can use pkg-config and the provided opencv.pc.
      1. Make sure that opencv.pc is found by pkg-config:
           pkg-config opencv --libs  # should print something like -lcxcore -lcv ...
-     2. You can now use in your Makefiles or build scripts, e.g.:
+     2. You can now use it in your Makefiles or build scripts, e.g.:
            g++ -o my_example my_example.cpp `pkg-config opencv --cflags --libs`
 
 ARM notice:
