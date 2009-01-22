@@ -40,25 +40,8 @@
 //M*/
 
 #include "_cxcore.h"
+#include "clapack.h"
 #include <float.h>
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#define icvGivens_64f( n, x, y, c, s ) \
-{                                      \
-    int _i;                            \
-    double* _x = (x);                  \
-    double* _y = (y);                  \
-                                       \
-    for( _i = 0; _i < n; _i++ )        \
-    {                                  \
-        double t0 = _x[_i];            \
-        double t1 = _y[_i];            \
-        _x[_i] = t0*c + t1*s;          \
-        _y[_i] = -t0*s + t1*c;         \
-    }                                  \
-}
-
 
 /* y[0:m,0:n] += diag(a[0:1,0:m]) * x[0:m,0:n] */
 static  void
@@ -85,60 +68,6 @@ icvMatrAXPY_64f( int m, int n, const double* x, int dx,
 
         for( ; j < n; j++ ) y[j] += s*x[j];
     }
-}
-
-
-/* y[1:m,-1] = h*y[1:m,0:n]*x[0:1,0:n]'*x[-1]  (this is used for U&V reconstruction)
-   y[1:m,0:n] += h*y[1:m,0:n]*x[0:1,0:n]'*x[0:1,0:n] */
-static void
-icvMatrAXPY3_64f( int m, int n, const double* x, int l, double* y, double h )
-{
-    int i, j;
-
-    for( i = 1; i < m; i++ )
-    {
-        double s = 0;
-
-        y += l;
-
-        for( j = 0; j <= n - 4; j += 4 )
-            s += x[j]*y[j] + x[j+1]*y[j+1] + x[j+2]*y[j+2] + x[j+3]*y[j+3];
-
-        for( ; j < n; j++ )  s += x[j]*y[j];
-
-        s *= h;
-        y[-1] = s*x[-1];
-
-        for( j = 0; j <= n - 4; j += 4 )
-        {
-            double t0 = y[j]   + s*x[j];
-            double t1 = y[j+1] + s*x[j+1];
-            y[j]   = t0;
-            y[j+1] = t1;
-            t0 = y[j+2] + s*x[j+2];
-            t1 = y[j+3] + s*x[j+3];
-            y[j+2] = t0;
-            y[j+3] = t1;
-        }
-
-        for( ; j < n; j++ ) y[j] += s*x[j];
-    }
-}
-
-
-#define icvGivens_32f( n, x, y, c, s ) \
-{                                      \
-    int _i;                            \
-    float* _x = (x);                   \
-    float* _y = (y);                   \
-                                       \
-    for( _i = 0; _i < n; _i++ )        \
-    {                                  \
-        double t0 = _x[_i];            \
-        double t1 = _y[_i];            \
-        _x[_i] = (float)(t0*c + t1*s); \
-        _y[_i] = (float)(-t0*s + t1*c);\
-    }                                  \
 }
 
 static  void
@@ -170,863 +99,13 @@ icvMatrAXPY_32f( int m, int n, const float* x, int dx,
 
 
 static void
-icvMatrAXPY3_32f( int m, int n, const float* x, int l, float* y, double h )
-{
-    int i, j;
-
-    for( i = 1; i < m; i++ )
-    {
-        double s = 0;
-        y += l;
-
-        for( j = 0; j <= n - 4; j += 4 )
-            s += x[j]*y[j] + x[j+1]*y[j+1] + x[j+2]*y[j+2] + x[j+3]*y[j+3];
-
-        for( ; j < n; j++ )  s += x[j]*y[j];
-
-        s *= h;
-        y[-1] = (float)(s*x[-1]);
-
-        for( j = 0; j <= n - 4; j += 4 )
-        {
-            double t0 = y[j]   + s*x[j];
-            double t1 = y[j+1] + s*x[j+1];
-            y[j]   = (float)t0;
-            y[j+1] = (float)t1;
-            t0 = y[j+2] + s*x[j+2];
-            t1 = y[j+3] + s*x[j+3];
-            y[j+2] = (float)t0;
-            y[j+3] = (float)t1;
-        }
-
-        for( ; j < n; j++ ) y[j] = (float)(y[j] + s*x[j]);
-    }
-}
-
-/* accurate hypotenuse calculation */
-static double
-pythag( double a, double b )
-{
-    a = fabs( a );
-    b = fabs( b );
-    if( a > b )
-    {
-        b /= a;
-        a *= sqrt( 1. + b * b );
-    }
-    else if( b != 0 )
-    {
-        a /= b;
-        a = b * sqrt( 1. + a * a );
-    }
-
-    return a;
-}
-
-/****************************************************************************************/
-/****************************************************************************************/
-
-#define MAX_ITERS  30
-
-static void
-icvSVD_64f( double* a, int lda, int m, int n,
-            double* w,
-            double* uT, int lduT, int nu,
-            double* vT, int ldvT,
-            double* buffer )
-{
-    double* e;
-    double* temp;
-    double *w1, *e1;
-    double *hv;
-    double ku0 = 0, kv0 = 0;
-    double anorm = 0;
-    double *a1, *u0 = uT, *v0 = vT;
-    double scale, h;
-    int i, j, k, l;
-    int nm, m1, n1;
-    int nv = n;
-    int iters = 0;
-    double* hv0 = (double*)cvStackAlloc( (m+2)*sizeof(hv0[0])) + 1; 
-
-    e = buffer;
-    w1 = w;
-    e1 = e + 1;
-    nm = n;
-    
-    temp = buffer + nm;
-
-    memset( w, 0, nm * sizeof( w[0] ));
-    memset( e, 0, nm * sizeof( e[0] ));
-
-    m1 = m;
-    n1 = n;
-
-    /* transform a to bi-diagonal form */
-    for( ;; )
-    {
-        int update_u;
-        int update_v;
-        
-        if( m1 == 0 )
-            break;
-
-        scale = h = 0;
-        update_u = uT && m1 > m - nu;
-        hv = update_u ? uT : hv0;
-
-        for( j = 0, a1 = a; j < m1; j++, a1 += lda )
-        {
-            double t = a1[0];
-            scale += fabs( hv[j] = t );
-        }
-
-        if( scale != 0 )
-        {
-            double f = 1./scale, g, s = 0;
-
-            for( j = 0; j < m1; j++ )
-            {
-                double t = (hv[j] *= f);
-                s += t * t;
-            }
-
-            g = sqrt( s );
-            f = hv[0];
-            if( f >= 0 )
-                g = -g;
-            hv[0] = f - g;
-            h = 1. / (f * g - s);
-
-            memset( temp, 0, n1 * sizeof( temp[0] ));
-
-            /* calc temp[0:n-i] = a[i:m,i:n]'*hv[0:m-i] */
-            icvMatrAXPY_64f( m1, n1 - 1, a + 1, lda, hv, temp + 1, 0 );
-            for( k = 1; k < n1; k++ ) temp[k] *= h;
-
-            /* modify a: a[i:m,i:n] = a[i:m,i:n] + hv[0:m-i]*temp[0:n-i]' */
-            icvMatrAXPY_64f( m1, n1 - 1, temp + 1, 0, hv, a + 1, lda );
-            *w1 = g*scale;
-        }
-        w1++;
-
-        /* store -2/(hv'*hv) */
-        if( update_u )
-        {
-            if( m1 == m )
-                ku0 = h;
-            else
-                hv[-1] = h;
-        }
-
-        a++;
-        n1--;
-        if( vT )
-            vT += ldvT + 1;
-
-        if( n1 == 0 )
-            break;
-
-        scale = h = 0;
-        update_v = vT && n1 > n - nv;
-
-        hv = update_v ? vT : hv0;
-
-        for( j = 0; j < n1; j++ )
-        {
-            double t = a[j];
-            scale += fabs( hv[j] = t );
-        }
-
-        if( scale != 0 )
-        {
-            double f = 1./scale, g, s = 0;
-
-            for( j = 0; j < n1; j++ )
-            {
-                double t = (hv[j] *= f);
-                s += t * t;
-            }
-
-            g = sqrt( s );
-            f = hv[0];
-            if( f >= 0 )
-                g = -g;
-            hv[0] = f - g;
-            h = 1. / (f * g - s);
-            hv[-1] = 0.;
-
-            /* update a[i:m:i+1:n] = a[i:m,i+1:n] + (a[i:m,i+1:n]*hv[0:m-i])*... */
-            icvMatrAXPY3_64f( m1, n1, hv, lda, a, h );
-
-            *e1 = g*scale;
-        }
-        e1++;
-
-        /* store -2/(hv'*hv) */
-        if( update_v )
-        {
-            if( n1 == n )
-                kv0 = h;
-            else
-                hv[-1] = h;
-        }
-
-        a += lda;
-        m1--;
-        if( uT )
-            uT += lduT + 1;
-    }
-
-    m1 -= m1 != 0;
-    n1 -= n1 != 0;
-
-    /* accumulate left transformations */
-    if( uT )
-    {
-        m1 = m - m1;
-        uT = u0 + m1 * lduT;
-        for( i = m1; i < nu; i++, uT += lduT )
-        {
-            memset( uT + m1, 0, (m - m1) * sizeof( uT[0] ));
-            uT[i] = 1.;
-        }
-
-        for( i = m1 - 1; i >= 0; i-- )
-        {
-            double s;
-            int lh = nu - i;
-
-            l = m - i;
-
-            hv = u0 + (lduT + 1) * i;
-            h = i == 0 ? ku0 : hv[-1];
-
-            assert( h <= 0 );
-
-            if( h != 0 )
-            {
-                uT = hv;
-                icvMatrAXPY3_64f( lh, l-1, hv+1, lduT, uT+1, h );
-
-                s = hv[0] * h;
-                for( k = 0; k < l; k++ ) hv[k] *= s;
-                hv[0] += 1;
-            }
-            else
-            {
-                for( j = 1; j < l; j++ )
-                    hv[j] = 0;
-                for( j = 1; j < lh; j++ )
-                    hv[j * lduT] = 0;
-                hv[0] = 1;
-            }
-        }
-        uT = u0;
-    }
-
-    /* accumulate right transformations */
-    if( vT )
-    {
-        n1 = n - n1;
-        vT = v0 + n1 * ldvT;
-        for( i = n1; i < nv; i++, vT += ldvT )
-        {
-            memset( vT + n1, 0, (n - n1) * sizeof( vT[0] ));
-            vT[i] = 1.;
-        }
-
-        for( i = n1 - 1; i >= 0; i-- )
-        {
-            double s;
-            int lh = nv - i;
-
-            l = n - i;
-            hv = v0 + (ldvT + 1) * i;
-            h = i == 0 ? kv0 : hv[-1];
-
-            assert( h <= 0 );
-
-            if( h != 0 )
-            {
-                vT = hv;
-                icvMatrAXPY3_64f( lh, l-1, hv+1, ldvT, vT+1, h );
-
-                s = hv[0] * h;
-                for( k = 0; k < l; k++ ) hv[k] *= s;
-                hv[0] += 1;
-            }
-            else
-            {
-                for( j = 1; j < l; j++ )
-                    hv[j] = 0;
-                for( j = 1; j < lh; j++ )
-                    hv[j * ldvT] = 0;
-                hv[0] = 1;
-            }
-        }
-        vT = v0;
-    }
-
-    for( i = 0; i < nm; i++ )
-    {
-        double tnorm = fabs( w[i] );
-        tnorm += fabs( e[i] );
-
-        if( anorm < tnorm )
-            anorm = tnorm;
-    }
-
-    anorm *= DBL_EPSILON;
-
-    /* diagonalization of the bidiagonal form */
-    for( k = nm - 1; k >= 0; k-- )
-    {
-        double z = 0;
-        iters = 0;
-
-        for( ;; )               /* do iterations */
-        {
-            double c, s, f, g, x, y;
-            int flag = 0;
-
-            /* test for splitting */
-            for( l = k; l >= 0; l-- )
-            {
-                if( fabs(e[l]) <= anorm )
-                {
-                    flag = 1;
-                    break;
-                }
-                assert( l > 0 );
-                if( fabs(w[l - 1]) <= anorm )
-                    break;
-            }
-
-            if( !flag )
-            {
-                c = 0;
-                s = 1;
-
-                for( i = l; i <= k; i++ )
-                {
-                    f = s * e[i];
-
-                    e[i] *= c;
-
-                    if( anorm + fabs( f ) == anorm )
-                        break;
-
-                    g = w[i];
-                    h = pythag( f, g );
-                    w[i] = h;
-                    c = g / h;
-                    s = -f / h;
-
-                    if( uT )
-                        icvGivens_64f( m, uT + lduT * (l - 1), uT + lduT * i, c, s );
-                }
-            }
-
-            z = w[k];
-            if( l == k || iters++ == MAX_ITERS )
-                break;
-
-            /* shift from bottom 2x2 minor */
-            x = w[l];
-            y = w[k - 1];
-            g = e[k - 1];
-            h = e[k];
-            f = 0.5 * (((g + z) / h) * ((g - z) / y) + y / h - h / y);
-            g = pythag( f, 1 );
-            if( f < 0 )
-                g = -g;
-            f = x - (z / x) * z + (h / x) * (y / (f + g) - h);
-            /* next QR transformation */
-            c = s = 1;
-
-            for( i = l + 1; i <= k; i++ )
-            {
-                g = e[i];
-                y = w[i];
-                h = s * g;
-                g *= c;
-                z = pythag( f, h );
-                e[i - 1] = z;
-                c = f / z;
-                s = h / z;
-                f = x * c + g * s;
-                g = -x * s + g * c;
-                h = y * s;
-                y *= c;
-
-                if( vT )
-                    icvGivens_64f( n, vT + ldvT * (i - 1), vT + ldvT * i, c, s );
-
-                z = pythag( f, h );
-                w[i - 1] = z;
-
-                /* rotation can be arbitrary if z == 0 */
-                if( z != 0 )
-                {
-                    c = f / z;
-                    s = h / z;
-                }
-                f = c * g + s * y;
-                x = -s * g + c * y;
-
-                if( uT )
-                    icvGivens_64f( m, uT + lduT * (i - 1), uT + lduT * i, c, s );
-            }
-
-            e[l] = 0;
-            e[k] = f;
-            w[k] = x;
-        }                       /* end of iteration loop */
-
-        if( iters > MAX_ITERS )
-            break;
-
-        if( z < 0 )
-        {
-            w[k] = -z;
-            if( vT )
-            {
-                for( j = 0; j < n; j++ )
-                    vT[j + k * ldvT] = -vT[j + k * ldvT];
-            }
-        }
-    }                           /* end of diagonalization loop */
-
-    /* sort singular values and corresponding values */
-    for( i = 0; i < nm; i++ )
-    {
-        k = i;
-        for( j = i + 1; j < nm; j++ )
-            if( w[k] < w[j] )
-                k = j;
-
-        if( k != i )
-        {
-            double t;
-            CV_SWAP( w[i], w[k], t );
-
-            if( vT )
-                for( j = 0; j < n; j++ )
-                    CV_SWAP( vT[j + ldvT*k], vT[j + ldvT*i], t );
-
-            if( uT )
-                for( j = 0; j < m; j++ )
-                    CV_SWAP( uT[j + lduT*k], uT[j + lduT*i], t );
-        }
-    }
-}
-
-
-static void
-icvSVD_32f( float* a, int lda, int m, int n,
-            float* w,
-            float* uT, int lduT, int nu,
-            float* vT, int ldvT,
-            float* buffer )
-{
-    float* e;
-    float* temp;
-    float *w1, *e1;
-    float *hv;
-    double ku0 = 0, kv0 = 0;
-    double anorm = 0;
-    float *a1, *u0 = uT, *v0 = vT;
-    double scale, h;
-    int i, j, k, l;
-    int nm, m1, n1;
-    int nv = n;
-    int iters = 0;
-    float* hv0 = (float*)cvStackAlloc( (m+2)*sizeof(hv0[0])) + 1;
-
-    e = buffer;
-
-    w1 = w;
-    e1 = e + 1;
-    nm = n;
-    
-    temp = buffer + nm;
-
-    memset( w, 0, nm * sizeof( w[0] ));
-    memset( e, 0, nm * sizeof( e[0] ));
-
-    m1 = m;
-    n1 = n;
-
-    /* transform a to bi-diagonal form */
-    for( ;; )
-    {
-        int update_u;
-        int update_v;
-        
-        if( m1 == 0 )
-            break;
-
-        scale = h = 0;
-
-        update_u = uT && m1 > m - nu;
-        hv = update_u ? uT : hv0;
-
-        for( j = 0, a1 = a; j < m1; j++, a1 += lda )
-        {
-            double t = a1[0];
-            scale += fabs( hv[j] = (float)t );
-        }
-
-        if( scale != 0 )
-        {
-            double f = 1./scale, g, s = 0;
-
-            for( j = 0; j < m1; j++ )
-            {
-                double t = (hv[j] = (float)(hv[j]*f));
-                s += t * t;
-            }
-
-            g = sqrt( s );
-            f = hv[0];
-            if( f >= 0 )
-                g = -g;
-            hv[0] = (float)(f - g);
-            h = 1. / (f * g - s);
-
-            memset( temp, 0, n1 * sizeof( temp[0] ));
-
-            /* calc temp[0:n-i] = a[i:m,i:n]'*hv[0:m-i] */
-            icvMatrAXPY_32f( m1, n1 - 1, a + 1, lda, hv, temp + 1, 0 );
-
-            for( k = 1; k < n1; k++ ) temp[k] = (float)(temp[k]*h);
-
-            /* modify a: a[i:m,i:n] = a[i:m,i:n] + hv[0:m-i]*temp[0:n-i]' */
-            icvMatrAXPY_32f( m1, n1 - 1, temp + 1, 0, hv, a + 1, lda );
-            *w1 = (float)(g*scale);
-        }
-        w1++;
-        
-        /* store -2/(hv'*hv) */
-        if( update_u )
-        {
-            if( m1 == m )
-                ku0 = h;
-            else
-                hv[-1] = (float)h;
-        }
-
-        a++;
-        n1--;
-        if( vT )
-            vT += ldvT + 1;
-
-        if( n1 == 0 )
-            break;
-
-        scale = h = 0;
-        update_v = vT && n1 > n - nv;
-        hv = update_v ? vT : hv0;
-
-        for( j = 0; j < n1; j++ )
-        {
-            double t = a[j];
-            scale += fabs( hv[j] = (float)t );
-        }
-
-        if( scale != 0 )
-        {
-            double f = 1./scale, g, s = 0;
-
-            for( j = 0; j < n1; j++ )
-            {
-                double t = (hv[j] = (float)(hv[j]*f));
-                s += t * t;
-            }
-
-            g = sqrt( s );
-            f = hv[0];
-            if( f >= 0 )
-                g = -g;
-            hv[0] = (float)(f - g);
-            h = 1. / (f * g - s);
-            hv[-1] = 0.f;
-
-            /* update a[i:m:i+1:n] = a[i:m,i+1:n] + (a[i:m,i+1:n]*hv[0:m-i])*... */
-            icvMatrAXPY3_32f( m1, n1, hv, lda, a, h );
-
-            *e1 = (float)(g*scale);
-        }
-        e1++;
-
-        /* store -2/(hv'*hv) */
-        if( update_v )
-        {
-            if( n1 == n )
-                kv0 = h;
-            else
-                hv[-1] = (float)h;
-        }
-
-        a += lda;
-        m1--;
-        if( uT )
-            uT += lduT + 1;
-    }
-
-    m1 -= m1 != 0;
-    n1 -= n1 != 0;
-
-    /* accumulate left transformations */
-    if( uT )
-    {
-        m1 = m - m1;
-        uT = u0 + m1 * lduT;
-        for( i = m1; i < nu; i++, uT += lduT )
-        {
-            memset( uT + m1, 0, (m - m1) * sizeof( uT[0] ));
-            uT[i] = 1.;
-        }
-
-        for( i = m1 - 1; i >= 0; i-- )
-        {
-            double s;
-            int lh = nu - i;
-
-            l = m - i;
-
-            hv = u0 + (lduT + 1) * i;
-            h = i == 0 ? ku0 : hv[-1];
-
-            assert( h <= 0 );
-
-            if( h != 0 )
-            {
-                uT = hv;
-                icvMatrAXPY3_32f( lh, l-1, hv+1, lduT, uT+1, h );
-
-                s = hv[0] * h;
-                for( k = 0; k < l; k++ ) hv[k] = (float)(hv[k]*s);
-                hv[0] += 1;
-            }
-            else
-            {
-                for( j = 1; j < l; j++ )
-                    hv[j] = 0;
-                for( j = 1; j < lh; j++ )
-                    hv[j * lduT] = 0;
-                hv[0] = 1;
-            }
-        }
-        uT = u0;
-    }
-
-    /* accumulate right transformations */
-    if( vT )
-    {
-        n1 = n - n1;
-        vT = v0 + n1 * ldvT;
-        for( i = n1; i < nv; i++, vT += ldvT )
-        {
-            memset( vT + n1, 0, (n - n1) * sizeof( vT[0] ));
-            vT[i] = 1.;
-        }
-
-        for( i = n1 - 1; i >= 0; i-- )
-        {
-            double s;
-            int lh = nv - i;
-
-            l = n - i;
-            hv = v0 + (ldvT + 1) * i;
-            h = i == 0 ? kv0 : hv[-1];
-
-            assert( h <= 0 );
-
-            if( h != 0 )
-            {
-                vT = hv;
-                icvMatrAXPY3_32f( lh, l-1, hv+1, ldvT, vT+1, h );
-
-                s = hv[0] * h;
-                for( k = 0; k < l; k++ ) hv[k] = (float)(hv[k]*s);
-                hv[0] += 1;
-            }
-            else
-            {
-                for( j = 1; j < l; j++ )
-                    hv[j] = 0;
-                for( j = 1; j < lh; j++ )
-                    hv[j * ldvT] = 0;
-                hv[0] = 1;
-            }
-        }
-        vT = v0;
-    }
-
-    for( i = 0; i < nm; i++ )
-    {
-        double tnorm = fabs( w[i] );
-        tnorm += fabs( e[i] );
-
-        if( anorm < tnorm )
-            anorm = tnorm;
-    }
-
-    anorm *= FLT_EPSILON;
-
-    /* diagonalization of the bidiagonal form */
-    for( k = nm - 1; k >= 0; k-- )
-    {
-        double z = 0;
-        iters = 0;
-
-        for( ;; )               /* do iterations */
-        {
-            double c, s, f, g, x, y;
-            int flag = 0;
-
-            /* test for splitting */
-            for( l = k; l >= 0; l-- )
-            {
-                if( fabs( e[l] ) <= anorm )
-                {
-                    flag = 1;
-                    break;
-                }
-                assert( l > 0 );
-                if( fabs( w[l - 1] ) <= anorm )
-                    break;
-            }
-
-            if( !flag )
-            {
-                c = 0;
-                s = 1;
-
-                for( i = l; i <= k; i++ )
-                {
-                    f = s * e[i];
-                    e[i] = (float)(e[i]*c);
-
-                    if( anorm + fabs( f ) == anorm )
-                        break;
-
-                    g = w[i];
-                    h = pythag( f, g );
-                    w[i] = (float)h;
-                    c = g / h;
-                    s = -f / h;
-
-                    if( uT )
-                        icvGivens_32f( m, uT + lduT * (l - 1), uT + lduT * i, c, s );
-                }
-            }
-
-            z = w[k];
-            if( l == k || iters++ == MAX_ITERS )
-                break;
-
-            /* shift from bottom 2x2 minor */
-            x = w[l];
-            y = w[k - 1];
-            g = e[k - 1];
-            h = e[k];
-            f = 0.5 * (((g + z) / h) * ((g - z) / y) + y / h - h / y);
-            g = pythag( f, 1 );
-            if( f < 0 )
-                g = -g;
-            f = x - (z / x) * z + (h / x) * (y / (f + g) - h);
-            /* next QR transformation */
-            c = s = 1;
-
-            for( i = l + 1; i <= k; i++ )
-            {
-                g = e[i];
-                y = w[i];
-                h = s * g;
-                g *= c;
-                z = pythag( f, h );
-                e[i - 1] = (float)z;
-                c = f / z;
-                s = h / z;
-                f = x * c + g * s;
-                g = -x * s + g * c;
-                h = y * s;
-                y *= c;
-
-                if( vT )
-                    icvGivens_32f( n, vT + ldvT * (i - 1), vT + ldvT * i, c, s );
-
-                z = pythag( f, h );
-                w[i - 1] = (float)z;
-
-                /* rotation can be arbitrary if z == 0 */
-                if( z != 0 )
-                {
-                    c = f / z;
-                    s = h / z;
-                }
-                f = c * g + s * y;
-                x = -s * g + c * y;
-
-                if( uT )
-                    icvGivens_32f( m, uT + lduT * (i - 1), uT + lduT * i, c, s );
-            }
-
-            e[l] = 0;
-            e[k] = (float)f;
-            w[k] = (float)x;
-        }                       /* end of iteration loop */
-
-        if( iters > MAX_ITERS )
-            break;
-
-        if( z < 0 )
-        {
-            w[k] = (float)(-z);
-            if( vT )
-            {
-                for( j = 0; j < n; j++ )
-                    vT[j + k * ldvT] = -vT[j + k * ldvT];
-            }
-        }
-    }                           /* end of diagonalization loop */
-
-    /* sort singular values and corresponding vectors */
-    for( i = 0; i < nm; i++ )
-    {
-        k = i;
-        for( j = i + 1; j < nm; j++ )
-            if( w[k] < w[j] )
-                k = j;
-
-        if( k != i )
-        {
-            float t;
-            CV_SWAP( w[i], w[k], t );
-
-            if( vT )
-                for( j = 0; j < n; j++ )
-                    CV_SWAP( vT[j + ldvT*k], vT[j + ldvT*i], t );
-
-            if( uT )
-                for( j = 0; j < m; j++ )
-                    CV_SWAP( uT[j + lduT*k], uT[j + lduT*i], t );
-        }
-    }
-}
-
-
-static void
 icvSVBkSb_64f( int m, int n, const double* w,
                const double* uT, int lduT,
                const double* vT, int ldvT,
                const double* b, int ldb, int nb,
                double* x, int ldx, double* buffer )
 {
-    double threshold = 0;
+    double threshold = w[0]*DBL_EPSILON;
     int i, j, nm = MIN( m, n );
 
     if( !b )
@@ -1035,9 +114,9 @@ icvSVBkSb_64f( int m, int n, const double* w,
     for( i = 0; i < n; i++ )
         memset( x + i*ldx, 0, nb*sizeof(x[0]));
 
-    for( i = 0; i < nm; i++ )
+    /*for( i = 0; i < nm; i++ )
         threshold += w[i];
-    threshold *= 2*DBL_EPSILON;
+    threshold *= 2*DBL_EPSILON;*/
 
     /* vT * inv(w) * uT * b */
     for( i = 0; i < nm; i++, uT += lduT, vT += ldvT )
@@ -1120,7 +199,7 @@ icvSVBkSb_32f( int m, int n, const float* w,
                const float* b, int ldb, int nb,
                float* x, int ldx, float* buffer )
 {
-    float threshold = 0.f;
+    float threshold = w[0]*FLT_EPSILON;
     int i, j, nm = MIN( m, n );
 
     if( !b )
@@ -1129,9 +208,9 @@ icvSVBkSb_32f( int m, int n, const float* w,
     for( i = 0; i < n; i++ )
         memset( x + i*ldx, 0, nb*sizeof(x[0]));
 
-    for( i = 0; i < nm; i++ )
+    /*for( i = 0; i < nm; i++ )
         threshold += w[i];
-    threshold *= 2*FLT_EPSILON;
+    threshold *= 2*FLT_EPSILON;*/
 
     /* vT * inv(w) * uT * b */
     for( i = 0; i < nm; i++, uT += lduT, vT += ldvT )
@@ -1208,7 +287,7 @@ icvSVBkSb_32f( int m, int n, const float* w,
 }
 
 
-CV_IMPL  void
+CV_IMPL void
 cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
 {
     uchar* buffer = 0;
@@ -1218,149 +297,141 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
 
     __BEGIN__;
 
-    CvMat astub, *a = (CvMat*)aarr;
-    CvMat wstub, *w = (CvMat*)warr;
-    CvMat ustub, *u;
-    CvMat vstub, *v;
-    CvMat tmat;
-    uchar* tw = 0;
-    int type;
-    int a_buf_offset = 0, u_buf_offset = 0, buf_size, pix_size;
-    int temp_u = 0, /* temporary storage for U is needed */
-        t_svd; /* special case: a->rows < a->cols */
-    int m, n;
-    int w_rows, w_cols;
-    int u_rows = 0, u_cols = 0;
-    int w_is_mat = 0;
+    CvMat astub0, astub, *a0 = (CvMat*)aarr, *a = a0;
+    CvMat wstub0, wstub, *w0 = (CvMat*)warr, *w = w0;
+    CvMat ustub0, ustub, *u0 = (CvMat*)uarr, *u = u0;
+    CvMat vstub0, vstub, *v0 = (CvMat*)varr, *v = v0;
+
+    integer m, n;
+    int nm, type, elem_size, w_rows, w_cols, w_is_mat = 0, u_rows = 0, u_cols = 0, v_rows = 0, v_cols = 0;
+    int a_ofs = 0, u_ofs = 0, v_ofs = 0, work_ofs=0, iwork_ofs=0, buf_size = 0;
+    int temp_a = 0, temp_u = 0, temp_v = 0, temp_w = 1;
+    double u1=0, v1=0, work1=0;
+    float uf1=0, vf1=0, workf1=0;
+    integer lda, ldu, ldv, lwork=-1, iwork1=0, info=0, *iwork=0;
+    char mode[] = {u || v ? 'S' : 'N', '\0'};
 
     if( !CV_IS_MAT( a ))
-        CV_CALL( a = cvGetMat( a, &astub ));
+        CV_CALL( a0 = a = cvGetMat( a, &astub0 ));
 
     if( !CV_IS_MAT( w ))
-        CV_CALL( w = cvGetMat( w, &wstub ));
+        CV_CALL( w0 = w = cvGetMat( w, &wstub0 ));
 
     if( !CV_ARE_TYPES_EQ( a, w ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    if( a->rows >= a->cols )
-    {
-        m = a->rows;
-        n = a->cols;
-        w_rows = w->rows;
-        w_cols = w->cols;
-        t_svd = 0;
-    }
-    else
-    {
-        CvArr* t;
-        CV_SWAP( uarr, varr, t );
-
-        flags = (flags & CV_SVD_U_T ? CV_SVD_V_T : 0)|
-                (flags & CV_SVD_V_T ? CV_SVD_U_T : 0);
-        m = a->cols;
-        n = a->rows;
-        w_rows = w->cols;
-        w_cols = w->rows;
-        t_svd = 1;
-    }
-
-    u = (CvMat*)uarr;
-    v = (CvMat*)varr;
-
+    m = a->rows;
+    n = a->cols;
+    nm = MIN(m, n);
+    type = CV_MAT_TYPE(a->type);
+    elem_size = CV_ELEM_SIZE(type);
+    w_rows = w->rows;
+    w_cols = w->cols;
     w_is_mat = w_cols > 1 && w_rows > 1;
-
-    if( !w_is_mat && CV_IS_MAT_CONT(w->type) && w_cols + w_rows - 1 == n )
-        tw = w->data.ptr;
 
     if( u )
     {
         if( !CV_IS_MAT( u ))
-            CV_CALL( u = cvGetMat( u, &ustub ));
-
-        if( !(flags & CV_SVD_U_T) )
-        {
-            u_rows = u->rows;
-            u_cols = u->cols;
-        }
-        else
-        {
-            u_rows = u->cols;
-            u_cols = u->rows;
-        }
+            CV_CALL( u0 = u = cvGetMat( u, &ustub0 ));
 
         if( !CV_ARE_TYPES_EQ( a, u ))
             CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-        if( u_rows != m || (u_cols != m && u_cols != n))
-            CV_ERROR( CV_StsUnmatchedSizes, !t_svd ? "U matrix has unappropriate size" :
-                                                     "V matrix has unappropriate size" );
-            
-        temp_u = (u_rows != u_cols && !(flags & CV_SVD_U_T)) || u->data.ptr==a->data.ptr;
-
-        if( w_is_mat && u_cols != w_rows )
-            CV_ERROR( CV_StsUnmatchedSizes, !t_svd ? "U and W have incompatible sizes" :
-                                                     "V and W have incompatible sizes" );
-    }
-    else
-    {
-        u = &ustub;
-        u->data.ptr = 0;
-        u->step = 0;
     }
 
     if( v )
     {
-        int v_rows, v_cols;
-
         if( !CV_IS_MAT( v ))
-            CV_CALL( v = cvGetMat( v, &vstub ));
-
-        if( !(flags & CV_SVD_V_T) )
-        {
-            v_rows = v->rows;
-            v_cols = v->cols;
-        }
-        else
-        {
-            v_rows = v->cols;
-            v_cols = v->rows;
-        }
+            CV_CALL( v0 = v = cvGetMat( v, &vstub0 ));
 
         if( !CV_ARE_TYPES_EQ( a, v ))
             CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-        if( v_rows != n || v_cols != n )
-            CV_ERROR( CV_StsUnmatchedSizes, t_svd ? "U matrix has unappropriate size" :
-                                                    "V matrix has unappropriate size" );
-
-        if( w_is_mat && w_cols != v_cols )
-            CV_ERROR( CV_StsUnmatchedSizes, t_svd ? "U and W have incompatible sizes" :
-                                                    "V and W have incompatible sizes" );
     }
-    else
+
+    if( m != n &&
+        ((u && u->rows == u->cols && u->rows == MAX(m,n)) ||
+         (v && v->rows == v->cols && v->rows == MAX(m,n))))
+        mode[0] = 'A';
+
+    u_rows = m;
+    u_cols = mode[0] == 'A' ? u_rows : nm;
+    v_cols = n;
+    v_rows = mode[0] == 'A' ? v_cols : nm;
+
+    if( !w_is_mat && CV_IS_MAT_CONT(w->type) && w_cols + w_rows - 1 == nm )
+        temp_w = 0;
+
+    if( u || v )
     {
-        v = &vstub;
-        v->data.ptr = 0;
-        v->step = 0;
-    }
+        temp_v = temp_u = 1;
+        if( v && v->rows == v_rows && v->cols == v_cols )
+            temp_v = 0;
+        else if( (flags & CV_SVD_MODIFY_A) && mode[0] != 'A' &&
+            a->rows == v_rows && a->cols == v_cols )
+        {
+            mode[0] = 'O';
+            temp_v = 0;
+        }
 
-    type = CV_MAT_TYPE( a->type );
-    pix_size = CV_ELEM_SIZE(type);
-    buf_size = n*2 + m;
+        if( u && u->rows == u_rows && u->cols == u_cols )
+            temp_u = 0;
+        else if( (flags & CV_SVD_MODIFY_A) && mode[0] != 'A' && mode[0] != 'O' &&
+            a->rows == u_rows && a->cols == u_cols )
+        {
+            mode[0] = 'O';
+            temp_u = 0;
+        }
+    }
 
     if( !(flags & CV_SVD_MODIFY_A) )
     {
-        a_buf_offset = buf_size;
-        buf_size += a->rows*a->cols;
+        if( mode[0] == 'N' || mode[0] == 'A' )
+            temp_a = 1;
+        else if( ((v && CV_ARE_SIZES_EQ(a, v)) || (temp_v && v_rows == a->rows && v_cols == a->cols) ||
+                  (u && CV_ARE_SIZES_EQ(a, u)) || (temp_u && u_rows == a->rows && u_cols == a->cols)) &&
+                  mode[0] == 'S' )
+            mode[0] = 'O';
     }
 
+    lda = a->step/elem_size;
+    ldv = n;
+    ldu = m;
+
+    if( type == CV_32F )
+    {
+        sgesdd_(mode, &n, &m, a->data.fl, &lda, w->data.fl,
+            &vf1, &ldv, &uf1, &ldu, &workf1, &lwork, &iwork1, &info );
+        lwork = cvRound(workf1);
+    }
+    else
+    {
+        dgesdd_(mode, &n, &m, a->data.db, &lda, w->data.db,
+            &v1, &ldv, &u1, &ldu, &work1, &lwork, &iwork1, &info );
+        lwork = cvRound(work1);
+    }
+
+    assert(info == 0);
+    if( temp_w )
+        buf_size += nm*elem_size;
+    if( temp_a )
+    {
+        a_ofs = buf_size;
+        buf_size += n*m*elem_size;
+    }
+    if( temp_v )
+    {
+        v_ofs = buf_size;
+        buf_size += v_rows*v_cols*elem_size;
+    }
     if( temp_u )
     {
-        u_buf_offset = buf_size;
-        buf_size += u->rows*u->cols;
+        u_ofs = buf_size;
+        buf_size += u_rows*u_cols*elem_size;
     }
-
-    buf_size *= pix_size;
+    work_ofs = buf_size;
+    buf_size += lwork*elem_size;
+    buf_size = cvAlign(buf_size, sizeof(iwork[0]));
+    iwork_ofs = buf_size;
+    buf_size += 8*nm*sizeof(integer);
 
     if( buf_size <= CV_MAX_LOCAL_SIZE )
     {
@@ -1371,70 +442,88 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
     {
         CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
     }
-    
-    if( !(flags & CV_SVD_MODIFY_A) )
+
+    if( temp_w )
+        w = &(wstub = cvMat( 1, nm, type, buffer ));
+
+    if( temp_a )
     {
-        cvInitMatHeader( &tmat, m, n, type,
-                         buffer + a_buf_offset*pix_size );
-        if( !t_svd )
-            cvCopy( a, &tmat );
-        else
-            cvT( a, &tmat );
-        a = &tmat;
+        a = &(astub = cvMat( a->rows, a->cols, type, buffer + a_ofs ));
+        cvCopy(a0, a);
     }
+
+    if( temp_v )
+        v = &(vstub = cvMat( v_rows, v_cols, type, buffer + v_ofs ));
 
     if( temp_u )
+        u = &(ustub = cvMat( u_rows, u_cols, type, buffer + u_ofs ));
+
+    if( !(flags & CV_SVD_MODIFY_A) && !temp_a )
     {
-        cvInitMatHeader( &ustub, u_cols, u_rows, type, buffer + u_buf_offset*pix_size );
-        u = &ustub;
+        if( v && CV_ARE_SIZES_EQ(a, v) )
+        {
+            cvCopy(a, v);
+            a = v;
+        }
+        else if( u && CV_ARE_SIZES_EQ(a, u) )
+        {
+            cvCopy(a, u);
+            a = u;
+        }
     }
 
-    if( !tw )
-        tw = buffer + (n + m)*pix_size;
-
-    if( type == CV_32FC1 )
+    if( mode[0] != 'N' )
     {
-        icvSVD_32f( a->data.fl, a->step/sizeof(float), a->rows, a->cols,
-                   (float*)tw, u->data.fl, u->step/sizeof(float), u_cols,
-                   v->data.fl, v->step/sizeof(float), (float*)buffer );
+        if( !v )
+            v = a;
+        else if( !u )
+            u = a;
+        assert( u && v );
+        ldv = v->step/elem_size;
+        ldu = u->step/elem_size;
     }
-    else if( type == CV_64FC1 )
+
+    lda = a->step/elem_size;
+    if( type == CV_32F )
     {
-        icvSVD_64f( a->data.db, a->step/sizeof(double), a->rows, a->cols,
-                    (double*)tw, u->data.db, u->step/sizeof(double), u_cols,
-                    v->data.db, v->step/sizeof(double), (double*)buffer );
+        sgesdd_(mode, &n, &m, a->data.fl, &lda, w->data.fl,
+            v ? v->data.fl : &vf1, &ldv, u ? u->data.fl : &uf1, &ldu,
+            (float*)(buffer + work_ofs), &lwork, (integer*)(buffer + iwork_ofs), &info );
     }
     else
     {
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        dgesdd_(mode, &n, &m, a->data.db, &lda, w->data.db,
+            v ? v->data.db : &v1, &ldv, u ? u->data.db : &u1, &ldu,
+            (double*)(buffer + work_ofs), &lwork, (integer*)(buffer + iwork_ofs), &info );
     }
+    assert(info == 0);
 
-    if( tw != w->data.ptr )
+    if( w != w0 )
     {
-        int shift = w->cols != 1;
-        cvSetZero( w );
+        int shift = w0->cols != 1;
+        cvSetZero( w0 );
         if( type == CV_32FC1 )
             for( int i = 0; i < n; i++ )
-                ((float*)(w->data.ptr + i*w->step))[i*shift] = ((float*)tw)[i];
+                ((float*)(w->data.ptr + i*w->step))[i*shift] = w->data.fl[i];
         else
             for( int i = 0; i < n; i++ )
-                ((double*)(w->data.ptr + i*w->step))[i*shift] = ((double*)tw)[i];
+                ((double*)(w->data.ptr + i*w->step))[i*shift] = w->data.db[i];
     }
 
-    if( uarr )
+    if( u0 )
     {
-        if( !(flags & CV_SVD_U_T))
-            cvT( u, uarr );
-        else if( temp_u )
-            cvCopy( u, uarr );
-        /*CV_CHECK_NANS( uarr );*/
+        if( flags & CV_SVD_U_T )
+            cvTranspose( u, u0 );
+        else if( u != u0 )
+            cvCopy( u, u0 );
     }
 
-    if( varr )
+    if( v0 )
     {
-        if( !(flags & CV_SVD_V_T))
-            cvT( v, varr );
-        /*CV_CHECK_NANS( varr );*/
+        if( !(flags & CV_SVD_V_T) )
+            cvTranspose( v, v0 );
+        else if( v != v0 )
+            cvCopy( v, v0 );
     }
 
     CV_CHECK_NANS( w );
@@ -1444,7 +533,6 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
     if( buffer && !local_alloc )
         cvFree( &buffer );
 }
-
 
 CV_IMPL void
 cvSVBkSb( const CvArr* warr, const CvArr* uarr,

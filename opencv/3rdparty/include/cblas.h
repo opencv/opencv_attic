@@ -15,6 +15,11 @@
 extern "C" {
 #endif
 
+static __inline double r_lg10(real *x)
+{
+    return 0.43429448190325182765*log(*x);
+}
+
 static __inline double d_lg10(doublereal *x)
 {
     return 0.43429448190325182765*log(*x);
