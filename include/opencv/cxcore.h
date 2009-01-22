@@ -761,7 +761,9 @@ CVAPI(void)   cvSVBkSb( const CvArr* W, const CvArr* U,
 #define CV_LU  0
 #define CV_SVD 1
 #define CV_SVD_SYM 2
-#define CV_LSQ 8
+#define CV_CHOLESKY 3
+#define CV_QR  4
+#define CV_NORMAL 16
 
 /* Inverts matrix */
 CVAPI(double)  cvInvert( const CvArr* src, CvArr* dst,

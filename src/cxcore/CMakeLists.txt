@@ -6,6 +6,8 @@ project(cxcore)
 file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
 
+include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+
 set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxtypes.h cvver.h cvwimage.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
@@ -56,7 +58,9 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_lapack)
+
+add_dependencies(${the_target} opencv_lapack)
 
 install(TARGETS ${the_target}
 	RUNTIME DESTINATION bin COMPONENT dev
@@ -67,4 +71,3 @@ install(TARGETS ${the_target}
 install(FILES ${lib_hdrs}
         DESTINATION include/opencv
         COMPONENT dev)
-
