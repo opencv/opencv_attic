@@ -824,7 +824,7 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
 
     if( m <= n )
         is_normal = false;
-    else
+    else if( is_normal )
         m_ = n;
 
     buf_size += (is_normal ? n*n : m*n)*elem_size;
@@ -866,6 +866,7 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
         ;
     else
         CV_ERROR( CV_StsBadArg, "Unknown method" );
+    assert(info == 0);
 
     lwork = cvRound(type == CV_32F ? (double)fwork1 : work1);
     buf_size += lwork*elem_size;
@@ -919,8 +920,8 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
         cvGEMM( src2, src, 1, 0, 0, &xt, CV_GEMM_A_T );
     }
     
-    lda = at.step/elem_size;
-    ldx = xt.rows > 1 ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n);
+    lda = at.step ? at.step/elem_size : at.cols;
+    ldx = xt.step ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n);
 
     if( method == CV_SVD || method == CV_SVD_SYM )
     {
@@ -983,7 +984,7 @@ cvSolve( const CvArr* A, const CvArr* b, CvArr* x, int method )
     }
     else
         assert(0);
-
+    assert(info == 0);
     result = info == 0;
 
     if( !result )

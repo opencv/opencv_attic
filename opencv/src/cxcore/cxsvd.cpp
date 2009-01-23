@@ -105,7 +105,7 @@ icvSVBkSb_64f( int m, int n, const double* w,
                const double* b, int ldb, int nb,
                double* x, int ldx, double* buffer )
 {
-    double threshold = w[0]*DBL_EPSILON;
+    double threshold = 0.;//w[0]*DBL_EPSILON;
     int i, j, nm = MIN( m, n );
 
     if( !b )
@@ -114,9 +114,9 @@ icvSVBkSb_64f( int m, int n, const double* w,
     for( i = 0; i < n; i++ )
         memset( x + i*ldx, 0, nb*sizeof(x[0]));
 
-    /*for( i = 0; i < nm; i++ )
+    for( i = 0; i < nm; i++ )
         threshold += w[i];
-    threshold *= 2*DBL_EPSILON;*/
+    threshold *= 2*DBL_EPSILON;
 
     /* vT * inv(w) * uT * b */
     for( i = 0; i < nm; i++, uT += lduT, vT += ldvT )
@@ -199,7 +199,7 @@ icvSVBkSb_32f( int m, int n, const float* w,
                const float* b, int ldb, int nb,
                float* x, int ldx, float* buffer )
 {
-    float threshold = w[0]*FLT_EPSILON;
+    float threshold = 0.f;//w[0]*FLT_EPSILON;
     int i, j, nm = MIN( m, n );
 
     if( !b )
@@ -208,9 +208,9 @@ icvSVBkSb_32f( int m, int n, const float* w,
     for( i = 0; i < n; i++ )
         memset( x + i*ldx, 0, nb*sizeof(x[0]));
 
-    /*for( i = 0; i < nm; i++ )
+    for( i = 0; i < nm; i++ )
         threshold += w[i];
-    threshold *= 2*FLT_EPSILON;*/
+    threshold *= 2*FLT_EPSILON;
 
     /* vT * inv(w) * uT * b */
     for( i = 0; i < nm; i++, uT += lduT, vT += ldvT )
@@ -369,15 +369,17 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             a->rows == v_rows && a->cols == v_cols )
         {
             mode[0] = 'O';
+            v = a;
             temp_v = 0;
         }
 
         if( u && u->rows == u_rows && u->cols == u_cols )
             temp_u = 0;
         else if( (flags & CV_SVD_MODIFY_A) && mode[0] != 'A' && mode[0] != 'O' &&
-            a->rows == u_rows && a->cols == u_cols )
+            a->rows == u_rows && a->cols == u_cols && m != n )
         {
             mode[0] = 'O';
+            u = a;
             temp_u = 0;
         }
     }
@@ -392,9 +394,9 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             mode[0] = 'O';
     }
 
-    lda = a->step/elem_size;
-    ldv = n;
-    ldu = m;
+    lda = a->cols;
+    ldv = MAX(m,n);
+    ldu = MAX(m,n);
 
     if( type == CV_32F )
     {
@@ -479,11 +481,11 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
         else if( !u )
             u = a;
         assert( u && v );
-        ldv = v->step/elem_size;
-        ldu = u->step/elem_size;
+        ldv = v->step ? v->step/elem_size : v->cols;
+        ldu = u->step ? u->step/elem_size : u->cols;
     }
 
-    lda = a->step/elem_size;
+    lda = a->step ? a->step/elem_size : a->cols;
     if( type == CV_32F )
     {
         sgesdd_(mode, &n, &m, a->data.fl, &lda, w->data.fl,
@@ -503,16 +505,16 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
         int shift = w0->cols != 1;
         cvSetZero( w0 );
         if( type == CV_32FC1 )
-            for( int i = 0; i < n; i++ )
-                ((float*)(w->data.ptr + i*w->step))[i*shift] = w->data.fl[i];
+            for( int i = 0; i < nm; i++ )
+                ((float*)(w0->data.ptr + i*w0->step))[i*shift] = w->data.fl[i];
         else
-            for( int i = 0; i < n; i++ )
-                ((double*)(w->data.ptr + i*w->step))[i*shift] = w->data.db[i];
+            for( int i = 0; i < nm; i++ )
+                ((double*)(w0->data.ptr + i*w0->step))[i*shift] = w->data.db[i];
     }
 
     if( u0 )
     {
-        if( flags & CV_SVD_U_T )
+        if( (flags & CV_SVD_U_T) && u->cols == u0->rows && u->rows == u0->cols )
             cvTranspose( u, u0 );
         else if( u != u0 )
             cvCopy( u, u0 );
@@ -520,7 +522,7 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
 
     if( v0 )
     {
-        if( !(flags & CV_SVD_V_T) )
+        if( !(flags & CV_SVD_V_T) && v->cols == v0->rows && v->rows == v0->cols )
             cvTranspose( v, v0 );
         else if( v != v0 )
             cvCopy( v, v0 );
