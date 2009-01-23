@@ -14,9 +14,7 @@ if(WIN32 AND MSVC)
     set(pch_header "_ml.h")
     set(pch_src "ml.cpp")
     foreach(src_file ${lib_srcs})
-        if(${src_file} MATCHES "dummy.cpp")
-            set(dummy ${src_file})
-        elseif(${src_file} MATCHES ${pch_src})
+        if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(
                 ${src_file}
                 PROPERTIES
@@ -30,7 +28,6 @@ if(WIN32 AND MSVC)
                 )
         endif()
     endforeach()
-    list(REMOVE_ITEM lib_srcs ${dummy})
 endif()
 
 set(the_target "ml")
@@ -59,11 +56,11 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
 add_dependencies(${the_target} cxcore)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-    )
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
-if(UNIX)
-    install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${lib_hdrs}
+        DESTINATION include/opencv
+        COMPONENT dev)
+

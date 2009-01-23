@@ -262,7 +262,7 @@ static void icvPutImage( CvWindow* window )
     
     if (window->imageRef != NULL){
         CGImageRelease(window->imageRef);
-        window->image == NULL;
+        window->imageRef = NULL;
     }
     
     window->imageRef = CGImageCreate( width, height, size , size*nbChannels , window->image->step, colorspace,  kCGImageAlphaNone , provider, NULL, true, kCGRenderingIntentDefault );

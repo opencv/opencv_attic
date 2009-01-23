@@ -41,32 +41,28 @@
 %include "exception.i"
 %include "./pyhelpers.i"
 
-%typemap(in) (CvArr *) (bool freearg=false){
-	$1 = PyObject_to_CvArr($input, &freearg);
+%typemap(in) (CvArr *) (bool freearg=false) {
+  $1 = PyObject_to_CvArr($input, &freearg);
 }
 %typemap(freearg) (CvArr *) {
-	if($1!=NULL && freearg$argnum){
-		cvReleaseData( $1 );
-		cvFree(&($1));
-	}
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+%typemap(in) CvMat* (bool freearg=false),const CvMat* (bool freearg=false) {
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+}
+%typemap(freearg) CvMat*,const CvMat* {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
 }
 
 /* typecheck typemaps */
 %typecheck(SWIG_TYPECHECK_POINTER) CvArr * {
-	void *ptr;
-	if ($input == Py_None) {
-		$1 = 1;
-	}
-	if(PyList_Check($input) || PyTuple_Check($input)) {
-		$1 = 1;
-	}
-	else if (SWIG_ConvertPtr($input, &ptr, $descriptor(CvMat*), 0) != -1){
-		$1 = 1;
-	}
-	else {
-		$1 = 0;
-		PyErr_Clear();
-	}
+    $1 = CvArr_Check( $input );
 }
 
 %typecheck(SWIG_TYPECHECK_POINTER) CvScalar {
@@ -76,10 +72,19 @@
 /* copy built-in swig typemaps for these types */
 %typemap(typecheck) CvPoint = SWIGTYPE;
 %typemap(typecheck) CvPoint2D32f = SWIGTYPE;
+%typemap(typecheck) CvPoint3D32f = SWIGTYPE;
+%typemap(typecheck) CvPoint2D64f = SWIGTYPE;
+%typemap(typecheck) CvPoint3D64f = SWIGTYPE;
+%typemap(typecheck) CvRect = SWIGTYPE;
+%typemap(typecheck) CvSize = SWIGTYPE;
+%typemap(typecheck) CvSize2D32f = SWIGTYPE;
+%typemap(typecheck) CvSlice = SWIGTYPE;
+%typemap(typecheck) CvBox2D = SWIGTYPE;
+%typemap(typecheck) CvTermCriteria = SWIGTYPE;
 
 
 // for cvReshape, cvGetRow, where header is passed, then filled in
-%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) {
+%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) (bool freearg=false) {
 	header = (CvMat *)cvAlloc(sizeof(CvMat));
    	$1 = header;
 }
@@ -126,11 +131,338 @@
 %typemap(in) (CvScalar) {
 	$1 = PyObject_to_CvScalar( $input );
 }
-%typemap(in) (CvPoint) {
-	$1 = PyObject_to_CvPoint($input);
+//%typemap(in) (CvPoint) {
+//	$1 = PyObject_to_CvPoint($input);
+//}
+//%typemap(in) (CvPoint2D32f) {
+//	$1 = PyObject_to_CvPoint2D32f($input);
+//}
+
+
+// ============================================================================================
+
+%define TUPLE_OR_TYPE (item, destination, typename, number, description, ...)
+{
+  if (PySequence_Check(item)  &&  PySequence_Length(item) == number) 
+  {
+    PyObject * as_tuple = PySequence_Tuple (item);
+    if (!PyArg_ParseTuple (as_tuple, __VA_ARGS__)) 
+    {
+      PyErr_SetString(PyExc_TypeError, "each entry must consist of " # number " values " # description);
+      Py_DECREF (as_tuple);
+      return NULL;
+    }
+    Py_DECREF (as_tuple);
+  } 
+  else
+  {
+    typename * ptr;
+    if (SWIG_ConvertPtr (item, (void **) & ptr, $descriptor(typename *), SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError, "expected a sequence of " # number " values " # description " or a " # typename);
+      Py_DECREF (item);
+      return NULL;
+    }
+    destination = *ptr;
+  }
 }
-%typemap(in) (CvPoint2D32f) {
-	$1 = PyObject_to_CvPoint2D32f($input);
+%enddef
+
+%define INPUT_ARRAY_OF_TUPLES_OR_TYPES (typename, number, description, ...) 
+{
+	if(! PySequence_Check ($input))
+  {
+		PyErr_SetString(PyExc_TypeError, "Expected a list or tuple");
+		return NULL;
+	}
+  
+  // TODO: will this ever be freed?
+  int count = PySequence_Size ($input);
+  int array = (typename *) malloc (count * sizeof (typename));
+  
+  // extract all the points values from the list */
+  typename * element = array;
+  for (int i = 0; i < count; i++, element++) 
+  {
+    PyObject * item = PySequence_GetItem ($input, i);
+    
+    // use the macro we have to expand a single entry
+    TUPLE_OR_TYPE (item, *element, typename, number, description, __VA_ARGS__)
+//*corner, "ff", & corner->x, & corner->y
+  }
+  
+  // these are the arguments passed to the OpenCV function
+  $1 = array;
+  $2 = count;
+}
+%enddef
+
+
+// ============================================================================================
+// Tiny typemaps for tiny types ...
+
+%typemap(in) CvRect (CvRect temp) 
+//TUPLE_OR_TYPE ($input, $1, CvRect, 4, "(x,y,w,h)", "iiii", & temp.x, & temp.y, & temp.width, & temp.height)
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"iiii", & temp.x, & temp.y, & temp.width, & temp.height)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 4 integers (x, y, width, height)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvRect * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvRect, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvRect");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvTermCriteria (CvTermCriteria temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"iid", & temp.type, & temp.max_iter, & temp.epsilon)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvTermCriteria * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvPoint (CvPoint temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ii", & temp.x, & temp.y)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (x, y)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvPoint * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvPoint, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvPoint");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvPoint2D32f (CvPoint2D32f temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ff", & temp.x, & temp.y)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 floats (x, y)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvPoint2D32f * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvPoint2D32f, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvPoint2D32f");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvPoint3D32f (CvPoint3D32f temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"fff", & temp.x, & temp.y, &temp.z)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 3 floats (x, y, z)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvPoint3D32f * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvPoint3D32f, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvPoint3D32f");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvPoint2D64f (CvPoint2D64f temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"dd", & temp.x, & temp.y)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 floats (x, y)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvPoint2D64f * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvPoint2D64f, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvPoint2D64f");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvPoint3D64f (CvPoint3D64f temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ddd", & temp.x, & temp.y, &temp.z)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 3 floats (x, y, z)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvPoint3D64f * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvPoint3D64f, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvPoint3D64f");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvSize (CvSize temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ii", & temp.width, & temp.height)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (width, height)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvSize * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvSize, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSize");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvSize2D32f (CvSize2D32f temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ff", & temp.width, & temp.height)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 floats (width, height)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvSize2D32f * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvSize2D32f, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSize2D32f");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvBox2D (CvBox2D temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"fffff",  & temp.center.x, & temp.center.y, & temp.size.width, & temp.size.height, & temp.angle)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 5 floats (center_x, center_y, width, height, angle)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvBox2D * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvBox2D, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvBox2D");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
+}
+
+
+%typemap(in) CvSlice (CvSlice temp) 
+{
+  if (PyTuple_Check($input)) 
+  {
+    if (!PyArg_ParseTuple($input,"ii", & temp.start_index, & temp.end_index)) 
+    {
+      PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (start_index, end_index)");
+      return NULL;
+    }
+    $1 = temp;
+  } 
+  else
+  {
+    CvSlice * ptr;
+    if (SWIG_ConvertPtr ($input, (void **) & ptr, SWIGTYPE_p_CvSlice, SWIG_POINTER_EXCEPTION) == -1)
+    {
+      PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSlice");
+      return NULL;
+    }
+    $1 = *ptr;
+  }
 }
 
 
@@ -339,6 +671,7 @@
 
 %typemap(in, numinputs=1) (CvPoint * points_arg, int numpoints_arg){
 	int i;
+
 	if(!PySequence_Check($input)){
 		SWIG_exception(SWIG_TypeError, "Expected a list for argument $argnum\n");
 		return NULL;
@@ -576,122 +909,135 @@
 
 /* map one list of points to the two parameters dimenssion/sizes
  for cvCalcOpticalFlowPyrLK */
-%typemap(in) (CvPoint2D32f* prev_features) {
-    int i;
-    int size;
-
-    /* get the size of the input array */
-    size = PyList_Size ($input);
-
-    /* allocate the needed memory */
-    $1 = (CvPoint2D32f *)malloc (size * sizeof (CvPoint2D32f));
-
-    /* extract all the points values from the list */
-    for (i = 0; i < size; i++) {
-	PyObject *item = PyList_GetItem ($input, i);
-
-	void * vptr;
-	SWIG_Python_ConvertPtr (item, &vptr,
-				$descriptor(CvPoint2D32f*),
-				SWIG_POINTER_EXCEPTION);
-	CvPoint2D32f *p = (CvPoint2D32f *)vptr;
-	$1 [i].x = p->x;
-	$1 [i].y = p->y;
-    }
-}
-
-/**
- * the corners returned by cvGoodFeaturesToTrack
- */
-%typemap (in, numinputs=1) (CvPoint2D32f* corners, int* corner_count)
-     (int tmpCount) {
-    /* as input, we still need the size of the corners array */
-
-    /* memorize the size of the status corners */
-    tmpCount = (int)PyInt_AsLong ($input);
-
-    /* create the corners array for the C call */
-    $1 = (CvPoint2D32f *)malloc (tmpCount * sizeof (CvPoint2D32f));
-
-    /* the size of the array for the C call */
-    $2 = &tmpCount;
-}
-
-/**
- * the corners returned by cvGoodFeaturesToTrack
- */
-%typemap(argout) (CvPoint2D32f* corners, int* corner_count) {
-    int i;
-    PyObject *to_add;
+%typemap(in) (CvPoint2D32f* prev_features) 
+{
+  int i;
+  int size;
+  
+  /* get the size of the input array */
+  size = PyList_Size ($input);
+  
+  /* allocate the needed memory */
+  CvPoint2D32f * features = (CvPoint2D32f *) malloc (size * sizeof (CvPoint2D32f));
+  
+  /* extract all the points values from the list */
+  for (i = 0; i < size; i++)
+  {
+    PyObject *item = PyList_GetItem ($input, i);
     
-    /* create the list to return */
-    to_add = PyList_New (tmpCount$argnum);
-
-    /* extract all the integer values of the result, and add it to the
-       final resulting list */
-    for (i = 0; i < tmpCount$argnum; i++) {
-	PyList_SetItem (to_add, i,
-			SWIG_NewPointerObj (&($1 [i]),
-					    $descriptor(CvPoint2D32f *), 0));
-    }
-
-    $result = SWIG_AppendResult($result, &to_add, 1);
+    void * vptr;
+    SWIG_Python_ConvertPtr (item, &vptr,
+                            $descriptor(CvPoint2D32f*),
+                            SWIG_POINTER_EXCEPTION);
+    CvPoint2D32f *p = (CvPoint2D32f *)vptr;
+    features[i].x = p->x;
+    features[i].y = p->y;
+  }
+  
+  // these are the arguments passed to the OpenCV function
+  $1 = features;
 }
 
-/* map one list of points to the two parameters dimension/sizes
-   for cvFindCornerSubPix */
-%typemap(in, numinputs=1) (CvPoint2D32f* corners, int count)
-     (int cornersCount, CvPoint2D32f* corners){
-    int i;
+/**
+ * the corners returned by cvGoodFeaturesToTrack
+ */
+%typemap (in, numinputs=1) (CvPoint2D32f* corners, int* corner_count) (int tmpCount) 
+{
+  /* as input, we still need the size of the corners array */
+  
+  /* memorize the size of the status corners */
+  tmpCount = (int) PyInt_AsLong ($input);
+  
+  // these are the arguments passed to the OpenCV function
+  $1 = (CvPoint2D32f *) malloc (tmpCount * sizeof (CvPoint2D32f));
+  $2 = &tmpCount;
+}
 
-	if(!PyList_Check($input)){
-		PyErr_SetString(PyExc_TypeError, "Expected a list");
+/**
+ * the corners returned by cvGoodFeaturesToTrack
+ */
+%typemap(argout) (CvPoint2D32f* corners, int* corner_count) 
+{
+  int i;
+  PyObject *to_add;
+  
+  /* create the list to return */
+  to_add = PyList_New (tmpCount$argnum);
+  
+  /* extract all the integer values of the result, and add it to the final resulting list */
+  for (i = 0; i < tmpCount$argnum; i++)
+    PyList_SetItem (to_add, i, SWIG_NewPointerObj (&($1 [i]), $descriptor(CvPoint2D32f *), 0));
+  
+  $result = SWIG_AppendResult($result, &to_add, 1);
+}
+
+/* map one list of points to the two parameters dimension/sizes for cvFindCornerSubPix */
+%typemap(in, numinputs=1) (CvPoint2D32f* corners, int count) (int cornersCount, CvPoint2D32f* corners)
+{
+	if(! PySequence_Check ($input))
+  {
+		PyErr_SetString(PyExc_TypeError, "Expected a list or tuple");
 		return NULL;
 	}
-
-    /* get the size of the input array */
-    cornersCount = PyList_Size ($input);
-    $2 = cornersCount;
-
-    /* allocate the needed memory */
-    corners = (CvPoint2D32f *)malloc ($2 * sizeof (CvPoint2D32f));
-    $1 = corners;
-
-    /* the size of the array for the C call */
-
-    /* extract all the points values from the list */
-    for (i = 0; i < $2; i++) {
-	PyObject *item = PyList_GetItem ($input, i);
-
-	void *vptr;
-	SWIG_Python_ConvertPtr (item, &vptr,
-				$descriptor(CvPoint2D32f*),
-				SWIG_POINTER_EXCEPTION);
-	CvPoint2D32f *p = (CvPoint2D32f *) vptr;;
-	$1 [i].x = p->x;
-	$1 [i].y = p->y;
+  
+  // TODO: will this ever be freed?
+  cornersCount = PySequence_Size ($input);
+  corners = (CvPoint2D32f *) malloc (cornersCount * sizeof (CvPoint2D32f));
+  
+  // extract all the points values from the list */
+  CvPoint2D32f * corner = corners;
+  for (int i = 0; i < cornersCount; i++, corner++) 
+  {
+    PyObject * item = PySequence_GetItem ($input, i);
+        
+    if (PySequence_Check(item)  &&  PySequence_Length(item) == 2) 
+    {
+      PyObject * tuple = PySequence_Tuple (item);
+      if (!PyArg_ParseTuple (tuple, "ff", & corner->x, & corner->y)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"each entry must consist of 2 floats (x, y)");
+        Py_DECREF (tuple);
+        Py_DECREF (item);
+        return NULL;
+      }
+      Py_DECREF (tuple);
+    } 
+    else
+    {
+      CvPoint2D32f * ptr;
+      if (SWIG_ConvertPtr (item, (void **) & ptr, $descriptor(CvPoint2D32f *), SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a sequence of 2 floats (x, y) or a CvPoint2D32f");
+        Py_DECREF (item);
+        return NULL;
+      }
+      *corner = *ptr;
     }
-
+    
+    Py_DECREF (item);
+  }
+  
+  // these are the arguments passed to the OpenCV function
+  $1 = corners;
+  $2 = cornersCount;
 }
 
 /**
  * the corners returned by cvFindCornerSubPix
  */
-%typemap(argout) (CvPoint2D32f* corners, int count) {
-    int i;
-    PyObject *to_add;
-
-    /* create the list to return */
-    to_add = PyList_New (cornersCount$argnum);
-
-    /* extract all the corner values of the result, and add it to the
-       final resulting list */
-    for (i = 0; i < cornersCount$argnum; i++) {
-	PyList_SetItem (to_add, i,
-			SWIG_NewPointerObj (&(corners$argnum [i]),
-					    $descriptor(CvPoint2D32f *), 0));
-    }
-
+%typemap(argout) (CvPoint2D32f* corners, int count) 
+{
+  int i;
+  PyObject *to_add;
+  
+  /* create the list to return */
+  to_add = PyList_New (cornersCount$argnum);
+  
+  /* extract all the corner values of the result, and add it to the
+   final resulting list */
+  for (i = 0; i < cornersCount$argnum; i++)
+    PyList_SetItem (to_add, i, SWIG_NewPointerObj (&(corners$argnum [i]), $descriptor(CvPoint2D32f *), 0));
+  
 	$result = SWIG_AppendResult( $result, &to_add, 1);
 }
 
@@ -939,5 +1285,181 @@ public:
 {
     $1 = (int *)malloc (sizeof (int));
     *$1 = PyInt_AsLong ($input);
+}
+
+
+/**
+ * take (query_points,k) and return (indices,dist)
+ * for cvLSHQuery, cvFindFeatures
+ */
+%typemap(in, noblock=1) (const CvMat* query_points) (bool freearg=false, int num_query_points)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  num_query_points = $1->rows;
+}
+%typemap(freearg) (const CvMat* query_points) {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+%typemap(in) (CvMat* indices, CvMat* dist, int k)
+{
+  $3 = (int)PyInt_AsLong($input);
+  $1 = cvCreateMat(num_query_points2, $3, CV_32SC1);
+  $2 = cvCreateMat(num_query_points2, $3, CV_64FC1);
+}
+%typemap(argout) (CvMat* indices, CvMat* dist, int k)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+
+/**
+ * take (data) and return (indices)
+ * for cvLSHAdd
+ */
+%typemap(in) (const CvMat* data, CvMat* indices) (bool freearg=false)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  CvMat* m = (CvMat*)$1;
+  $2 = cvCreateMat(m->rows, 1, CV_32SC1 );
+}
+%typemap(argout) (const CvMat* data, CvMat* indices)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvMat* data, CvMat* indices) {
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+
+/**
+ * take (max_out_indices) and return (indices)
+ * for cvFindFeaturesBoxed
+ */
+%typemap(in) (CvMat* out_indices) (bool freearg=false)
+{
+  int max_out_indices = (int)PyInt_AsLong($input);
+  $1 = cvCreateMat(max_out_indices, 1, CV_32SC1 );
+}
+%typemap(argout) (CvMat* out_indices)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
+}
+
+/**
+ * suppress (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage) and return (keypoints, descriptors) 
+ * for cvExtractSURF
+ */
+%typemap(in,numinputs=0) (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage)
+     (CvSeq* keypoints = 0, CvSeq* descriptors = 0,CvMemStorage* storage)
+{
+  storage = cvCreateMemStorage();
+  $1 = &keypoints;
+  $2 = &descriptors;
+  $3 = storage;
+}
+%typemap(argout) (CvSeq** keypoints, CvSeq** descriptors, CvMemStorage* storage)
+{
+  const int n1 = 6;
+  int n2 = (*$2)->elem_size / sizeof(float);
+  assert((*$2)->elem_size == 64 * sizeof(float) ||
+	 (*$2)->elem_size == 128 * sizeof(float));
+  assert((*$2)->total == (*$1)->total);
+  CvMat* m1 = cvCreateMat((*$2)->total,n1,CV_32FC1);
+  CvMat* m2 = cvCreateMat((*$2)->total,n2,CV_32FC1);
+  CvSeqReader r1;
+  cvStartReadSeq(*$1, &r1);
+  float* m1p = m1->data.fl;
+  for (int j=0;j<(*$2)->total;++j) {
+    CvSURFPoint* sp = (CvSURFPoint*)r1.ptr;
+    m1p[0] = sp->pt.x;
+    m1p[1] = sp->pt.y;
+    m1p[2] = sp->laplacian;
+    m1p[3] = sp->size;
+    m1p[4] = sp->dir;
+    m1p[5] = sp->hessian;
+    m1p += n1;
+    CV_NEXT_SEQ_ELEM((*$1)->elem_size, r1);
+  }
+  CvSeqReader r2;
+  cvStartReadSeq(*$2, &r2);
+  float* m2p = m2->data.fl;
+  for (int j=0;j<(*$2)->total;++j) {
+    memcpy(m2p,r2.ptr,n2*sizeof(float));
+    m2p += n2;
+    CV_NEXT_SEQ_ELEM((*$2)->elem_size, r2);
+  }
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj(m1, $descriptor(CvMat *), 1) );
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj(m2, $descriptor(CvMat *), 1) );
+  cvReleaseMemStorage(&$3);
+}
+
+/**
+ * suppress (CvMat* homography) and return (homography)
+ * for cvFindHomography
+ */
+%typemap(in,numinputs=0) (CvMat* homography) (bool freearg=false)
+{
+  $1 = cvCreateMat(3,3,CV_64FC1);
+}
+%typemap(argout) (CvMat* homography)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($1, $descriptor(CvMat *), 1) );
+}
+
+/**
+ * take (coeffs) for (const CvMat* coeffs, CvMat *roots) and return (roots)
+ * for cvSolveCubic
+ */
+%typemap(in) (const CvMat* coeffs, CvMat *roots) (bool freearg=false)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  int m = $1->rows * $1->cols;
+  if (m<2) {
+    PyErr_SetString (PyExc_TypeError,"must give at least 2 coefficients");
+    return NULL;
+  }
+  $2 = cvCreateMat(m-1, 1, CV_MAKETYPE(CV_MAT_DEPTH($1->type),1));
+}
+%typemap(argout) (const CvMat* coeffs, CvMat *roots)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvMat* coeffs, CvMat *roots)
+{
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
+}
+
+/**
+ * take (coeffs) for (const CvMat* coeffs, CvMat *roots2) and return (roots2)
+ * for cvSolvePoly
+ */
+%typemap(in) (const CvMat* coeffs, CvMat *roots2) (bool freearg=false)
+{
+  $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
+  int m = $1->rows * $1->cols;
+  if (m<2) {
+    PyErr_SetString (PyExc_TypeError,"must give at least 2 coefficients");
+    return NULL;
+  }
+  $2 = cvCreateMat(m-1, 1, CV_MAKETYPE(CV_MAT_DEPTH($1->type),2));
+}
+%typemap(argout) (const CvMat* coeffs, CvMat *roots2)
+{
+  $result = SWIG_AppendOutput( $result, SWIG_NewPointerObj($2, $descriptor(CvMat *), 1) );
+}
+%typemap(freearg) (const CvMat* coeffs, CvMat *roots2)
+{
+  if($1!=NULL && freearg$argnum){
+    cvReleaseData( $1 );
+    cvFree(&($1));
+  }
 }
 

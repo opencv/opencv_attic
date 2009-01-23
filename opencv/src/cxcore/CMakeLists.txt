@@ -6,6 +6,8 @@ project(cxcore)
 file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
 
+include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+
 set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxtypes.h cvver.h cvwimage.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
@@ -20,9 +22,7 @@ if(WIN32 AND MSVC)
     set(pch_header "_cxcore.h")
     set(pch_src "cxprecomp.cpp")
     foreach(src_file ${lib_srcs})
-        if(${src_file} MATCHES "dummy.cpp")
-            set(dummy ${src_file})
-        elseif(${src_file} MATCHES ${pch_src})
+        if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(
                 ${src_file}
                 PROPERTIES
@@ -36,7 +36,6 @@ if(WIN32 AND MSVC)
                 )
         endif()
     endforeach()
-    list(REMOVE_ITEM lib_srcs ${dummy})
 endif()
 
 set(the_target "cxcore")
@@ -59,15 +58,16 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS})
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_lapack)
+
+add_dependencies(${the_target} opencv_lapack)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-    )
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
 # install each module headers separately
-if(UNIX)
-    install(FILES ${lib_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${lib_hdrs}
+        DESTINATION include/opencv
+        COMPONENT dev)

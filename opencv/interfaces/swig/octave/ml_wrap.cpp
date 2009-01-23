@@ -2129,45 +2129,47 @@ SWIGRUNTIME void SWIG_Octave_SetModule(void *clientdata, swig_module_info *point
 #define SWIGTYPE_p_CvSparseMat swig_types[95]
 #define SWIGTYPE_p_CvSparseMatIterator swig_types[96]
 #define SWIGTYPE_p_CvSparseNode swig_types[97]
-#define SWIGTYPE_p_CvStatModel swig_types[98]
-#define SWIGTYPE_p_CvStereoBMState swig_types[99]
-#define SWIGTYPE_p_CvStereoGCState swig_types[100]
-#define SWIGTYPE_p_CvString swig_types[101]
-#define SWIGTYPE_p_CvStringHashNode swig_types[102]
-#define SWIGTYPE_p_CvSubdiv2D swig_types[103]
-#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[104]
-#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[105]
-#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[106]
-#define SWIGTYPE_p_CvTermCriteria swig_types[107]
-#define SWIGTYPE_p_CvTreeNodeIterator swig_types[108]
-#define SWIGTYPE_p_CvTypeInfo swig_types[109]
-#define SWIGTYPE_p_CvVectors swig_types[110]
-#define SWIGTYPE_p_CvVectors_data swig_types[111]
-#define SWIGTYPE_p_GetRow swig_types[112]
-#define SWIGTYPE_p_SelectWorkingSet swig_types[113]
-#define SWIGTYPE_p__IplConvKernel swig_types[114]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[115]
-#define SWIGTYPE_p__IplImage swig_types[116]
-#define SWIGTYPE_p__IplROI swig_types[117]
-#define SWIGTYPE_p__IplTileInfo swig_types[118]
-#define SWIGTYPE_p_bool swig_types[119]
-#define SWIGTYPE_p_char swig_types[120]
-#define SWIGTYPE_p_double swig_types[121]
-#define SWIGTYPE_p_float swig_types[122]
-#define SWIGTYPE_p_int swig_types[123]
-#define SWIGTYPE_p_long_long swig_types[124]
-#define SWIGTYPE_p_p_CvMat swig_types[125]
-#define SWIGTYPE_p_p_double swig_types[126]
-#define SWIGTYPE_p_p_float swig_types[127]
-#define SWIGTYPE_p_p_unsigned_char swig_types[128]
-#define SWIGTYPE_p_signed_char swig_types[129]
-#define SWIGTYPE_p_size_t swig_types[130]
-#define SWIGTYPE_p_unsigned_char swig_types[131]
-#define SWIGTYPE_p_unsigned_long_long swig_types[132]
-#define SWIGTYPE_p_unsigned_short swig_types[133]
-#define SWIGTYPE_p_void swig_types[134]
-static swig_type_info *swig_types[136];
-static swig_module_info swig_module = {swig_types, 135, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvStarDetectorParams swig_types[98]
+#define SWIGTYPE_p_CvStarKeypoint swig_types[99]
+#define SWIGTYPE_p_CvStatModel swig_types[100]
+#define SWIGTYPE_p_CvStereoBMState swig_types[101]
+#define SWIGTYPE_p_CvStereoGCState swig_types[102]
+#define SWIGTYPE_p_CvString swig_types[103]
+#define SWIGTYPE_p_CvStringHashNode swig_types[104]
+#define SWIGTYPE_p_CvSubdiv2D swig_types[105]
+#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[106]
+#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[107]
+#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[108]
+#define SWIGTYPE_p_CvTermCriteria swig_types[109]
+#define SWIGTYPE_p_CvTreeNodeIterator swig_types[110]
+#define SWIGTYPE_p_CvTypeInfo swig_types[111]
+#define SWIGTYPE_p_CvVectors swig_types[112]
+#define SWIGTYPE_p_CvVectors_data swig_types[113]
+#define SWIGTYPE_p_GetRow swig_types[114]
+#define SWIGTYPE_p_SelectWorkingSet swig_types[115]
+#define SWIGTYPE_p__IplConvKernel swig_types[116]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[117]
+#define SWIGTYPE_p__IplImage swig_types[118]
+#define SWIGTYPE_p__IplROI swig_types[119]
+#define SWIGTYPE_p__IplTileInfo swig_types[120]
+#define SWIGTYPE_p_bool swig_types[121]
+#define SWIGTYPE_p_char swig_types[122]
+#define SWIGTYPE_p_double swig_types[123]
+#define SWIGTYPE_p_float swig_types[124]
+#define SWIGTYPE_p_int swig_types[125]
+#define SWIGTYPE_p_long_long swig_types[126]
+#define SWIGTYPE_p_p_CvMat swig_types[127]
+#define SWIGTYPE_p_p_double swig_types[128]
+#define SWIGTYPE_p_p_float swig_types[129]
+#define SWIGTYPE_p_p_unsigned_char swig_types[130]
+#define SWIGTYPE_p_signed_char swig_types[131]
+#define SWIGTYPE_p_size_t swig_types[132]
+#define SWIGTYPE_p_unsigned_char swig_types[133]
+#define SWIGTYPE_p_unsigned_long_long swig_types[134]
+#define SWIGTYPE_p_unsigned_short swig_types[135]
+#define SWIGTYPE_p_void swig_types[136]
+static swig_type_info *swig_types[138];
+static swig_module_info swig_module = {swig_types, 137, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -36605,6 +36607,8 @@ static swig_type_info _swigt__p_CvSlice = {"_p_CvSlice", "CvSlice *", 0, 0, (voi
 static swig_type_info _swigt__p_CvSparseMat = {"_p_CvSparseMat", "CvSparseMat *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseMatIterator = {"_p_CvSparseMatIterator", "CvSparseMatIterator *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseNode = {"_p_CvSparseNode", "CvSparseNode *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarDetectorParams = {"_p_CvStarDetectorParams", "CvStarDetectorParams *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarKeypoint = {"_p_CvStarKeypoint", "CvStarKeypoint *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStatModel = {"_p_CvStatModel", "CvStatModel *", 0, 0, (void*)&_wrap_class_CvStatModel, 0};
 static swig_type_info _swigt__p_CvStereoBMState = {"_p_CvStereoBMState", "CvStereoBMState *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStereoGCState = {"_p_CvStereoGCState", "CvStereoGCState *", 0, 0, (void*)0, 0};
@@ -36742,6 +36746,8 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvSparseMat,
   &_swigt__p_CvSparseMatIterator,
   &_swigt__p_CvSparseNode,
+  &_swigt__p_CvStarDetectorParams,
+  &_swigt__p_CvStarKeypoint,
   &_swigt__p_CvStatModel,
   &_swigt__p_CvStereoBMState,
   &_swigt__p_CvStereoGCState,
@@ -36879,6 +36885,8 @@ static swig_cast_info _swigc__p_CvSlice[] = {  {&_swigt__p_CvSlice, 0, 0, 0},{0,
 static swig_cast_info _swigc__p_CvSparseMat[] = {  {&_swigt__p_CvSparseMat, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseMatIterator[] = {  {&_swigt__p_CvSparseMatIterator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseNode[] = {  {&_swigt__p_CvSparseNode, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarDetectorParams[] = {  {&_swigt__p_CvStarDetectorParams, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarKeypoint[] = {  {&_swigt__p_CvStarKeypoint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStatModel[] = {  {&_swigt__p_CvNormalBayesClassifier, _p_CvNormalBayesClassifierTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvANN_MLP, _p_CvANN_MLPTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvStatModel, 0, 0, 0},  {&_swigt__p_CvKNearest, _p_CvKNearestTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvForestTree, _p_CvForestTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvRTrees, _p_CvRTreesTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvBoostTree, _p_CvBoostTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvEM, _p_CvEMTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvSVM, _p_CvSVMTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvDTree, _p_CvDTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvBoost, _p_CvBoostTo_p_CvStatModel, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoBMState[] = {  {&_swigt__p_CvStereoBMState, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoGCState[] = {  {&_swigt__p_CvStereoGCState, 0, 0, 0},{0, 0, 0, 0}};
@@ -37016,6 +37024,8 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvSparseMat,
   _swigc__p_CvSparseMatIterator,
   _swigc__p_CvSparseNode,
+  _swigc__p_CvStarDetectorParams,
+  _swigc__p_CvStarKeypoint,
   _swigc__p_CvStatModel,
   _swigc__p_CvStereoBMState,
   _swigc__p_CvStereoGCState,

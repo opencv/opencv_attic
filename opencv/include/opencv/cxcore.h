@@ -689,8 +689,8 @@ CVAPI(void) cvSort( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
 CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
 /* Finds all real and complex roots of a polynomial equation */
-CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots,
-			int maxiter CV_DEFAULT(0), int fig CV_DEFAULT(0));
+CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
+			int maxiter CV_DEFAULT(20), int fig CV_DEFAULT(100));
 
 /****************************************************************************************\
 *                                Matrix operations                                       *
@@ -761,7 +761,9 @@ CVAPI(void)   cvSVBkSb( const CvArr* W, const CvArr* U,
 #define CV_LU  0
 #define CV_SVD 1
 #define CV_SVD_SYM 2
-#define CV_LSQ 8
+#define CV_CHOLESKY 3
+#define CV_QR  4
+#define CV_NORMAL 16
 
 /* Inverts matrix */
 CVAPI(double)  cvInvert( const CvArr* src, CvArr* dst,

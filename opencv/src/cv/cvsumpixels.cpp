@@ -304,9 +304,6 @@ typedef CvStatus (CV_STDCALL * CvIntegralImageFuncCn)(
     const void* src, int srcstep, void* sum, int sumstep,
     void* sqsum, int sqsumstep, CvSize size, int cn );
 
-icvIntegral_8u32s_C1R_t icvIntegral_8u32s_C1R_p = 0;
-icvSqrIntegral_8u32s64f_C1R_t icvSqrIntegral_8u32s64f_C1R_p = 0;
-
 CV_IMPL void
 cvIntegral( const CvArr* image, CvArr* sumImage,
             CvArr* sumSqImage, CvArr* tiltedSumImage )
@@ -405,19 +402,6 @@ cvIntegral( const CvArr* image, CvArr* sumImage,
 
     if( cn == 1 )
     {
-        if( depth == CV_8U && !tilted && CV_MAT_DEPTH(sum->type) == CV_32S )
-        {
-            if( !sqsum && icvIntegral_8u32s_C1R_p &&
-                icvIntegral_8u32s_C1R_p( src->data.ptr, src_step,
-                            sum->data.i, sum_step, size, 0 ) >= 0 )
-                EXIT;
-            
-            if( sqsum && icvSqrIntegral_8u32s64f_C1R_p &&
-                icvSqrIntegral_8u32s64f_C1R_p( src->data.ptr, src_step, sum->data.i,
-                            sum_step, sqsum->data.db, sqsum_step, size, 0, 0 ) >= 0 )
-                EXIT;
-        }
-
         IPPI_CALL( func_c1( src->data.ptr, src_step, sum->data.ptr, sum_step,
                         sqsum ? sqsum->data.ptr : 0, sqsum_step,
                         tilted ? tilted->data.ptr : 0, tilted_step, size ));

@@ -1060,20 +1060,60 @@ CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
 struct CvFeatureTree;
 
 /* Constructs kd-tree from set of feature descriptors */
-CVAPI(struct CvFeatureTree*) cvCreateFeatureTree(CvMat* desc);
+CVAPI(struct CvFeatureTree*) cvCreateKDTree(CvMat* desc);
 
-/* Release kd-tree */
+/* Constructs spill-tree from set of feature descriptors */
+CVAPI(struct CvFeatureTree*) cvCreateSpillTree( const CvMat* raw_data,
+						const int naive CV_DEFAULT(50),
+						const double rho CV_DEFAULT(.7),
+						const double tau CV_DEFAULT(.1) );
+
+/* Release feature tree */
 CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
-/* Searches kd-tree for k nearest neighbors of given reference points,
-   searching at most emax leaves. */
-CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
-		    CvMat* results, CvMat* dist, int k CV_DEFAULT(2), int emax CV_DEFAULT(20));
+/* Searches feature tree for k nearest neighbors of given reference points,
+   searching (in case of kd-tree/bbf) at most emax leaves. */
+CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
+			   CvMat* indices, CvMat* dist, int k, int emax CV_DEFAULT(20));
 
-/* Search kd-tree for all points that are inlier to given rect region. */
+/* Search feature tree for all points that are inlier to given rect region.
+   Only implemented for kd trees */
 CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-		    CvMat* bounds_min, CvMat* bounds_max,
-		    CvMat* results);
+			       CvMat* bounds_min, CvMat* bounds_max,
+			       CvMat* out_indices);
+
+
+struct CvLSH;
+struct CvLSHOperations;
+
+/* Construct a Locality Sensitive Hash (LSH) table, for indexing d-dimensional vectors of 
+   given type. Vectors will be hashed L times with k-dimensional p-stable (p=2) functions. */
+CVAPI(struct CvLSH*) cvCreateLSH(struct CvLSHOperations* ops, int d, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
+				 int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+				 int64 seed CV_DEFAULT(-1));
+
+/* Construct in-memory LSH table, with n bins. */
+CVAPI(struct CvLSH*) cvCreateMemoryLSH(int d, int n, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
+				       int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+				       int64 seed CV_DEFAULT(-1));
+
+/* Free the given LSH structure. */
+CVAPI(void) cvReleaseLSH(struct CvLSH** lsh);
+
+/* Return the number of vectors in the LSH. */
+CVAPI(unsigned int) LSHSize(struct CvLSH* lsh);
+
+/* Add vectors to the LSH structure, optionally returning indices. */
+CVAPI(void) cvLSHAdd(struct CvLSH* lsh, const CvMat* data, CvMat* indices CV_DEFAULT(0));
+
+/* Remove vectors from LSH, as addressed by given indices. */
+CVAPI(void) cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
+
+/* Query the LSH n times for at most k nearest points; data is n x d,
+   indices and dist are n x k. At most emax stored points will be accessed. */
+CVAPI(void) cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
+		       CvMat* indices, CvMat* dist, int k, int emax);
+
 
 typedef struct CvSURFPoint
 {
@@ -1111,6 +1151,53 @@ CVAPI(CvSURFParams) cvSURFParams( double hessianThreshold, int extended CV_DEFAU
 CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
                            CvMemStorage* storage, CvSURFParams params );
+
+typedef struct CvStarKeypoint
+{
+    CvPoint pt;
+    int size;
+    float response;
+}
+CvStarKeypoint;
+
+CV_INLINE CvStarKeypoint cvStarKeypoint(CvPoint pt, int size, float response)
+{
+    CvStarKeypoint kpt;
+    kpt.pt = pt;
+    kpt.size = size;
+    kpt.response = response;
+    return kpt;
+}
+
+typedef struct CvStarDetectorParams
+{
+    int maxSize;
+    int responseThreshold;
+    int lineThresholdProjected;
+    int lineThresholdBinarized;
+    int suppressNonmaxSize;
+}
+CvStarDetectorParams;
+
+CV_INLINE CvStarDetectorParams cvStarDetectorParams(
+    int maxSize CV_DEFAULT(45),
+    int responseThreshold CV_DEFAULT(30),
+    int lineThresholdProjected CV_DEFAULT(10),
+    int lineThresholdBinarized CV_DEFAULT(8),
+    int suppressNonmaxSize CV_DEFAULT(5))
+{
+    CvStarDetectorParams params;
+    params.maxSize = maxSize;
+    params.responseThreshold = responseThreshold;
+    params.lineThresholdProjected = lineThresholdProjected;
+    params.lineThresholdBinarized = lineThresholdBinarized;
+    params.suppressNonmaxSize = suppressNonmaxSize;
+
+    return params;
+}
+
+CVAPI(CvSeq*) cvGetStarKeypoints( const CvArr* img, CvMemStorage* storage,
+        CvStarDetectorParams params CV_DEFAULT(cvStarDetectorParams()));
 
 /****************************************************************************************\
 *                         Haar-like Object Detection functions                           *

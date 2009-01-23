@@ -76,7 +76,7 @@ extern "C" {
 
 #undef  IPPAPI
 #define IPPAPI(type,name,arg) \
-    static FARPROC d##name; \
+    static FARPROC d##name=0; \
     IPP_EXTERN_C __declspec(naked dllexport) void __stdcall name arg { __asm {jmp d##name } }
 #include "opencvipp_funclist.h"
 
@@ -109,7 +109,7 @@ static BOOL setCpuSpecificLib()
     {
         for( j = 0; j < nfuncs; j++ )
         {
-            if( AddressBook[j].FuncAddr[i] )
+            if( !AddressBook[j].FuncAddr[i] )
                 break;
             *(AddressBook[j].WorkAddr) = AddressBook[j].FuncAddr[i];
         }

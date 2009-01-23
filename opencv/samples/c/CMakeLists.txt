@@ -5,7 +5,12 @@
 
 project(c_samples)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+endif()
+
+file(GLOB SAMPLE_DATA_FILES *.avi *.data *.jpg *.png stereo_calib.txt)
+install(FILES ${SAMPLE_DATA_FILES} DESTINATION bin COMPONENT dev)
 
 # ---------------------------------------------
 #      Define executable targets
@@ -32,7 +37,7 @@ MY_DEFINE_EXAMPLE(edge				edge.c)
 MY_DEFINE_EXAMPLE(facedetect		facedetect.c)
 MY_DEFINE_EXAMPLE(ffilldemo			ffilldemo.c)
 MY_DEFINE_EXAMPLE(find_obj			find_obj.cpp)
-MY_DEFINE_EXAMPLE(fitellipse		fitellipse.c)
+MY_DEFINE_EXAMPLE(fitellipse		fitellipse.cpp)
 MY_DEFINE_EXAMPLE(houghlines		houghlines.c)
 MY_DEFINE_EXAMPLE(image				image.cpp)
 MY_DEFINE_EXAMPLE(inpaint			inpaint.cpp)

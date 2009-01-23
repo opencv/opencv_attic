@@ -148,6 +148,10 @@
 %nodefault CvFeatureTree;
 %newobject cvCreateFeatureTree;
 
+%nodefault CvLSH;
+%newobject cvCreateLSH;
+%newobject cvCreateMemoryLSH;
+
 
 
 /// This hides all members of the IplImage which OpenCV doesn't use.

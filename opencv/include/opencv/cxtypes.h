@@ -71,6 +71,10 @@
     #define CV_SSE2 0
   #endif
 
+  #if ((defined __SSE__ || defined __MMX__) && defined __GNUC__ && __GNUC__ >= 3)
+    #include <mmintrin.h>
+  #endif
+
   #if defined __BORLANDC__
     #include <fastmath.h>
   #elif defined WIN64 && !defined EM64T && defined CV_ICC
@@ -121,14 +125,14 @@
 #ifndef CV_INLINE
 #if defined __cplusplus
     #define CV_INLINE inline
-#elif (defined WIN32 || defined WIN64) && !defined __GNUC__
+#elif (defined WIN32 || defined WIN64 || defined WINCE) && !defined __GNUC__
     #define CV_INLINE __inline
 #else
     #define CV_INLINE static
 #endif
 #endif /* CV_INLINE */
 
-#if (defined WIN32 || defined WIN64) && defined CVAPI_EXPORTS
+#if (defined WIN32 || defined WIN64 || defined WINCE) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
 #else
     #define CV_EXPORTS

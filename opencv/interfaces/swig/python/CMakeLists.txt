@@ -102,7 +102,5 @@ set(pyopencv_files __init__.py adaptors.py matlab_syntax.py
     ${CMAKE_CURRENT_BINARY_DIR}/highgui.py
     ${LOC_CV} ${LOC_ML} ${LOC_HIGHGUI})
 
-if(UNIX)
-    # TODO: need to compile *.py files
-    install(FILES ${pyopencv_files} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH})
-endif(UNIX)
+# TODO: need to compile *.py files
+install(FILES ${pyopencv_files} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT py)

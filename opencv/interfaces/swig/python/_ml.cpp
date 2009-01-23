@@ -2630,45 +2630,47 @@ double PyFloat_AS_DOUBLE (PyObject *obj) {
 #define SWIGTYPE_p_CvSparseMat swig_types[95]
 #define SWIGTYPE_p_CvSparseMatIterator swig_types[96]
 #define SWIGTYPE_p_CvSparseNode swig_types[97]
-#define SWIGTYPE_p_CvStatModel swig_types[98]
-#define SWIGTYPE_p_CvStereoBMState swig_types[99]
-#define SWIGTYPE_p_CvStereoGCState swig_types[100]
-#define SWIGTYPE_p_CvString swig_types[101]
-#define SWIGTYPE_p_CvStringHashNode swig_types[102]
-#define SWIGTYPE_p_CvSubdiv2D swig_types[103]
-#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[104]
-#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[105]
-#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[106]
-#define SWIGTYPE_p_CvTermCriteria swig_types[107]
-#define SWIGTYPE_p_CvTreeNodeIterator swig_types[108]
-#define SWIGTYPE_p_CvTypeInfo swig_types[109]
-#define SWIGTYPE_p_CvVectors swig_types[110]
-#define SWIGTYPE_p_CvVectors_data swig_types[111]
-#define SWIGTYPE_p_GetRow swig_types[112]
-#define SWIGTYPE_p_SelectWorkingSet swig_types[113]
-#define SWIGTYPE_p__IplConvKernel swig_types[114]
-#define SWIGTYPE_p__IplConvKernelFP swig_types[115]
-#define SWIGTYPE_p__IplImage swig_types[116]
-#define SWIGTYPE_p__IplROI swig_types[117]
-#define SWIGTYPE_p__IplTileInfo swig_types[118]
-#define SWIGTYPE_p_bool swig_types[119]
-#define SWIGTYPE_p_char swig_types[120]
-#define SWIGTYPE_p_double swig_types[121]
-#define SWIGTYPE_p_float swig_types[122]
-#define SWIGTYPE_p_int swig_types[123]
-#define SWIGTYPE_p_long_long swig_types[124]
-#define SWIGTYPE_p_p_CvMat swig_types[125]
-#define SWIGTYPE_p_p_double swig_types[126]
-#define SWIGTYPE_p_p_float swig_types[127]
-#define SWIGTYPE_p_p_unsigned_char swig_types[128]
-#define SWIGTYPE_p_signed_char swig_types[129]
-#define SWIGTYPE_p_size_t swig_types[130]
-#define SWIGTYPE_p_unsigned_char swig_types[131]
-#define SWIGTYPE_p_unsigned_long_long swig_types[132]
-#define SWIGTYPE_p_unsigned_short swig_types[133]
-#define SWIGTYPE_p_void swig_types[134]
-static swig_type_info *swig_types[136];
-static swig_module_info swig_module = {swig_types, 135, 0, 0, 0, 0};
+#define SWIGTYPE_p_CvStarDetectorParams swig_types[98]
+#define SWIGTYPE_p_CvStarKeypoint swig_types[99]
+#define SWIGTYPE_p_CvStatModel swig_types[100]
+#define SWIGTYPE_p_CvStereoBMState swig_types[101]
+#define SWIGTYPE_p_CvStereoGCState swig_types[102]
+#define SWIGTYPE_p_CvString swig_types[103]
+#define SWIGTYPE_p_CvStringHashNode swig_types[104]
+#define SWIGTYPE_p_CvSubdiv2D swig_types[105]
+#define SWIGTYPE_p_CvSubdiv2DEdge_Wrapper swig_types[106]
+#define SWIGTYPE_p_CvSubdiv2DPoint swig_types[107]
+#define SWIGTYPE_p_CvSubdiv2DPointLocation swig_types[108]
+#define SWIGTYPE_p_CvTermCriteria swig_types[109]
+#define SWIGTYPE_p_CvTreeNodeIterator swig_types[110]
+#define SWIGTYPE_p_CvTypeInfo swig_types[111]
+#define SWIGTYPE_p_CvVectors swig_types[112]
+#define SWIGTYPE_p_CvVectors_data swig_types[113]
+#define SWIGTYPE_p_GetRow swig_types[114]
+#define SWIGTYPE_p_SelectWorkingSet swig_types[115]
+#define SWIGTYPE_p__IplConvKernel swig_types[116]
+#define SWIGTYPE_p__IplConvKernelFP swig_types[117]
+#define SWIGTYPE_p__IplImage swig_types[118]
+#define SWIGTYPE_p__IplROI swig_types[119]
+#define SWIGTYPE_p__IplTileInfo swig_types[120]
+#define SWIGTYPE_p_bool swig_types[121]
+#define SWIGTYPE_p_char swig_types[122]
+#define SWIGTYPE_p_double swig_types[123]
+#define SWIGTYPE_p_float swig_types[124]
+#define SWIGTYPE_p_int swig_types[125]
+#define SWIGTYPE_p_long_long swig_types[126]
+#define SWIGTYPE_p_p_CvMat swig_types[127]
+#define SWIGTYPE_p_p_double swig_types[128]
+#define SWIGTYPE_p_p_float swig_types[129]
+#define SWIGTYPE_p_p_unsigned_char swig_types[130]
+#define SWIGTYPE_p_signed_char swig_types[131]
+#define SWIGTYPE_p_size_t swig_types[132]
+#define SWIGTYPE_p_unsigned_char swig_types[133]
+#define SWIGTYPE_p_unsigned_long_long swig_types[134]
+#define SWIGTYPE_p_unsigned_short swig_types[135]
+#define SWIGTYPE_p_void swig_types[136]
+static swig_type_info *swig_types[138];
+static swig_module_info swig_module = {swig_types, 137, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2769,255 +2771,219 @@ namespace swig {
 
 
 
-CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
-static CvArr * PySequence_to_CvArr( PyObject * obj );
+#include "pyhelpers.h"
+
+static CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg);
 
 // convert a python sequence/array/list object into a c-array
 #define PyObject_AsArrayImpl(func, ctype, ptype)                              \
-	int func(PyObject * obj, ctype * array, int len){                         \
-	void * mat_vptr=NULL;                                                     \
-	void * im_vptr=NULL;                                                      \
-	if(PyNumber_Check(obj)){                                                  \
-		memset( array, 0, sizeof(ctype)*len );                                \
-		array[0] = PyObject_As##ptype( obj );                                 \
-	}                                                                         \
-	else if(PyList_Check(obj) || PyTuple_Check(obj)){                         \
-		int seqsize = PySequence_Size(obj);                                   \
-		for(int i=0; i<len && i<seqsize; i++){                                \
-			if(i<seqsize){                                                    \
-	            array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
-			}                                                                 \
-			else{                                                             \
-				array[i] = 0;                                                 \
-			}                                                                 \
-		}                                                                     \
-	}                                                                         \
-	else if( SWIG_ConvertPtr(obj, &mat_vptr, SWIGTYPE_p_CvMat, 0)!=-1 ||      \
-	         SWIG_ConvertPtr(obj, &im_vptr, SWIGTYPE_p__IplImage, 0)!=-1)     \
-	{                                                                         \
-		CvMat * mat = (CvMat *) mat_vptr;                                     \
-		CvMat stub;                                                           \
-		if(im_vptr) mat = cvGetMat(im_vptr, &stub);                           \
-		if( mat->rows!=1 && mat->cols!=1 ){                                   \
-			PyErr_SetString( PyExc_TypeError,                                 \
-			     "PyObject_As*Array: CvArr must be row or column vector" );   \
-			return -1;                                                        \
-		}                                                                     \
-		if( mat->rows==1 && mat->cols==1 ){                                   \
-			CvScalar val;                                                     \
-			if( len!=CV_MAT_CN(mat->type) ){                                  \
-				PyErr_SetString( PyExc_TypeError,                             \
-				"PyObject_As*Array: CvArr channels != length" );              \
-				return -1;                                                    \
-			}                                                                 \
-			val = cvGet1D(mat, 0);                                            \
-			for(int i=0; i<len; i++){                                         \
-				array[i] = (ctype) val.val[i];                                \
-			}                                                                 \
-		}                                                                     \
-		else{                                                                 \
-			mat = cvReshape(mat, &stub, -1, mat->rows*mat->cols);             \
-			if( mat->rows != len ){                                           \
-				PyErr_SetString( PyExc_TypeError,                             \
-				 "PyObject_As*Array: CvArr rows or cols must equal length" ); \
-				 return -1;                                                   \
-			}                                                                 \
-			for(int i=0; i<len; i++){                                         \
-				CvScalar val = cvGet1D(mat, i);                               \
-				array[i] = (ctype) val.val[0];                                \
-			}                                                                 \
-		}                                                                     \
-	}                                                                         \
-	else{                                                                     \
-		PyErr_SetString( PyExc_TypeError,                                     \
-				"PyObject_As*Array: Expected a number, sequence or CvArr" );  \
-		return -1;                                                            \
-	}                                                                         \
-	return 0;                                                                 \
+  int func(PyObject * obj, ctype * array, int len){                         \
+  void * mat_vptr=NULL;                                                     \
+  void * im_vptr=NULL;                                                      \
+  if(PyNumber_Check(obj)){                                                  \
+    memset( array, 0, sizeof(ctype)*len );                                \
+    array[0] = PyObject_As##ptype( obj );                                 \
+  }                                                                         \
+  else if(PyList_Check(obj) || PyTuple_Check(obj)){                         \
+    int seqsize = PySequence_Size(obj);                                   \
+    for(int i=0; i<len && i<seqsize; i++){                                \
+      if(i<seqsize){                                                    \
+              array[i] =  PyObject_As##ptype( PySequence_GetItem(obj, i) ); \
+      }                                                                 \
+      else{                                                             \
+        array[i] = 0;                                                 \
+      }                                                                 \
+    }                                                                     \
+  }                                                                         \
+  else if( SWIG_ConvertPtr(obj, &mat_vptr, SWIGTYPE_p_CvMat, 0)!=-1 ||      \
+           SWIG_ConvertPtr(obj, &im_vptr, SWIGTYPE_p__IplImage, 0)!=-1)     \
+  {                                                                         \
+    CvMat * mat = (CvMat *) mat_vptr;                                     \
+    CvMat stub;                                                           \
+    if(im_vptr) mat = cvGetMat(im_vptr, &stub);                           \
+    if( mat->rows!=1 && mat->cols!=1 ){                                   \
+      PyErr_SetString( PyExc_TypeError,                                 \
+           "PyObject_As*Array: CvArr must be row or column vector" );   \
+      return -1;                                                        \
+    }                                                                     \
+    if( mat->rows==1 && mat->cols==1 ){                                   \
+      CvScalar val;                                                     \
+      if( len!=CV_MAT_CN(mat->type) ){                                  \
+        PyErr_SetString( PyExc_TypeError,                             \
+        "PyObject_As*Array: CvArr channels != length" );              \
+        return -1;                                                    \
+      }                                                                 \
+      val = cvGet1D(mat, 0);                                            \
+      for(int i=0; i<len; i++){                                         \
+        array[i] = (ctype) val.val[i];                                \
+      }                                                                 \
+    }                                                                     \
+    else{                                                                 \
+      mat = cvReshape(mat, &stub, -1, mat->rows*mat->cols);             \
+      if( mat->rows != len ){                                           \
+        PyErr_SetString( PyExc_TypeError,                             \
+         "PyObject_As*Array: CvArr rows or cols must equal length" ); \
+         return -1;                                                   \
+      }                                                                 \
+      for(int i=0; i<len; i++){                                         \
+        CvScalar val = cvGet1D(mat, i);                               \
+        array[i] = (ctype) val.val[0];                                \
+      }                                                                 \
+    }                                                                     \
+  }                                                                         \
+  else{                                                                     \
+    PyErr_SetString( PyExc_TypeError,                                     \
+        "PyObject_As*Array: Expected a number, sequence or CvArr" );  \
+    return -1;                                                            \
+  }                                                                         \
+  return 0;                                                                 \
 }
 
 PyObject_AsArrayImpl( PyObject_AsFloatArray, float, Double );
 PyObject_AsArrayImpl( PyObject_AsDoubleArray, double, Double );
 PyObject_AsArrayImpl( PyObject_AsLongArray, int, Long );
 
-CvPoint PyObject_to_CvPoint(PyObject * obj){
-	CvPoint val;
-	CvPoint *ptr;
-	CvPoint2D32f * ptr2D32f;
-	CvScalar * scalar;
+static CvPoint PyObject_to_CvPoint(PyObject * obj){
+  CvPoint val;
+  CvPoint *ptr;
+  CvPoint2D32f * ptr2D32f;
+  CvScalar * scalar;
 
-	if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
-		return *ptr;
-	}
-	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
-		return cvPointFrom32f( *ptr2D32f );
-	}
-	if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
-		return cvPointFrom32f(cvPoint2D32f( scalar->val[0], scalar->val[1] ));
-	}
-	if(PyObject_AsLongArray(obj, (int *) &val, 2) != -1){
-		return val;
-	}
+  if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+    return *ptr;
+  }
+  if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+    return cvPointFrom32f( *ptr2D32f );
+  }
+  if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
+    return cvPointFrom32f(cvPoint2D32f( scalar->val[0], scalar->val[1] ));
+  }
+  if(PyObject_AsLongArray(obj, (int *) &val, 2) != -1){
+    return val;
+  }
 
-	PyErr_SetString( PyExc_TypeError, "could not convert to CvPoint");
-	return cvPoint(0,0);
+  PyErr_SetString( PyExc_TypeError, "could not convert to CvPoint");
+  return cvPoint(0,0);
 }
 
-CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
+static CvPoint2D32f PyObject_to_CvPoint2D32f(PyObject * obj){
     CvPoint2D32f val;
     CvPoint2D32f *ptr2D32f;
-	CvPoint *ptr;
-	CvScalar * scalar;
+  CvPoint *ptr;
+  CvScalar * scalar;
     if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
-		return *ptr2D32f;
-	}
-	if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
-		return cvPointTo32f(*ptr);
-	}
-	if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
-		return cvPoint2D32f( scalar->val[0], scalar->val[1] );
-	}
-	if(PyObject_AsFloatArray(obj, (float *) &val, 2) != -1){
-		return val;
-	}
-	PyErr_SetString(PyExc_TypeError, "could not convert to CvPoint2D32f");
-	return cvPoint2D32f(0,0);
+    return *ptr2D32f;
+  }
+  if( SWIG_ConvertPtr(obj, (void**)&ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
+    return cvPointTo32f(*ptr);
+  }
+  if( SWIG_ConvertPtr(obj, (void**)&scalar, SWIGTYPE_p_CvScalar, 0) != -1) {
+    return cvPoint2D32f( scalar->val[0], scalar->val[1] );
+  }
+  if(PyObject_AsFloatArray(obj, (float *) &val, 2) != -1){
+    return val;
+  }
+  PyErr_SetString(PyExc_TypeError, "could not convert to CvPoint2D32f");
+  return cvPoint2D32f(0,0);
 }
 
 /* Check if this object can be interpreted as a CvScalar */
-bool CvScalar_Check(PyObject * obj){
-	void * vptr;
+static bool CvScalar_Check(PyObject * obj){
+  void * vptr;
     CvScalar val;
-	return SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar,     0 ) != -1 ||
-	       SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0 ) != -1 ||
+  return SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar,     0 ) != -1 ||
+         SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0 ) != -1 ||
            SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint,      0 ) != -1 ||
-	       PyObject_AsDoubleArray(obj, val.val, 4) !=-1;
+         PyObject_AsDoubleArray(obj, val.val, 4) !=-1;
 }
 
-CvScalar PyObject_to_CvScalar(PyObject * obj){
-	CvScalar val;
-	CvScalar * ptr;
+static CvScalar PyObject_to_CvScalar(PyObject * obj){
+  CvScalar val;
+  CvScalar * ptr;
     CvPoint2D32f *ptr2D32f;
-	CvPoint *pt_ptr;
-	void * vptr;
-	if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
-	{
-		ptr = (CvScalar *) vptr;
-		return *ptr;
-	}
-	if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
+  CvPoint *pt_ptr;
+  void * vptr;
+  if( SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0 ) != -1)
+  {
+    ptr = (CvScalar *) vptr;
+    return *ptr;
+  }
+  if( SWIG_ConvertPtr(obj, (void**)&ptr2D32f, SWIGTYPE_p_CvPoint2D32f, 0) != -1) {
         return cvScalar(ptr2D32f->x, ptr2D32f->y);
     }
     if( SWIG_ConvertPtr(obj, (void**)&pt_ptr, SWIGTYPE_p_CvPoint, 0) != -1) {
         return cvScalar(pt_ptr->x, pt_ptr->y);
     }
-	if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
-		return val;
-	}
-	return cvScalar(-1,-1,-1,-1);
+  if(PyObject_AsDoubleArray(obj, val.val, 4)!=-1){
+    return val;
+  }
+  return cvScalar(-1,-1,-1,-1); 
 }
+
 
 /* if python sequence type, convert to CvMat or CvMatND */
-CvArr * PyObject_to_CvArr(PyObject * obj, bool * freearg){
-	CvArr * cvarr;
-	*freearg = false;
+static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
+{
+  CvArr * cvarr = NULL;
+  *freearg = false;
 
-	// check if OpenCV type
-	if( PySwigObject_Check(obj) ){
-		SWIG_ConvertPtr(obj, &cvarr, 0, SWIG_POINTER_EXCEPTION);
-	}
-	else if(PyList_Check(obj) || PyTuple_Check(obj)){
-		cvarr = PySequence_to_CvArr( obj );
-		*freearg = (cvarr != NULL);
-	}
-	else if(PyLong_Check(obj) && PyLong_AsLong(obj)==0){
-		return NULL;
-	}
-	else {
-		SWIG_ConvertPtr(obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
-	}
-	return cvarr;
+  // we accept a couple of different object types now
+  if (PySwigObject_Check (obj))
+  {
+    // this seems to be never called ... but the one below is
+    SWIG_ConvertPtr (obj, & cvarr, 0, SWIG_POINTER_EXCEPTION);
+  }
+  else if (SWIG_ConvertPtr (obj, (void** )& cvarr, SWIGTYPE_p_CvMat, 0) != -1)
+  {
+    // we got a directly wrapped CvMat *, this is preferred
+    return cvarr;
+  }
+  else if (PyObject_HasAttrString (obj, "__array_interface__"))
+  {
+    // if we didn't get our own datatype, let's see if it supports the array protocol
+    // array protocol is great because we just have to create another header but can
+    // use the original data without copying
+    cvarr = PyArray_to_CvArr (obj);
+    *freearg = (cvarr != NULL);
+  }
+  else if (PySequence_Check (obj))
+  {
+    // our next bet is a tuple or list of tuples or lists this has to be copied over, however
+    cvarr = PySequence_to_CvArr (obj);
+    *freearg = (cvarr != NULL);
+  }
+  else if (PyLong_Check (obj) && PyLong_AsLong (obj) == 0)
+  {
+    // explicitly pass a NULL pointer to OpenCV
+    * freearg = false;
+    return NULL;
+  }
+  else 
+  {
+    // what's this good for? it's doubling the first entry, hm.
+    SWIG_ConvertPtr (obj, (void**)&cvarr, 0, SWIG_POINTER_EXCEPTION);
+  }
+  
+  return cvarr;
 }
+
 
 static int PyObject_GetElemType(PyObject * obj){
-	void *vptr;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;
-	if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;
-	if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
-	if(PyLong_Check(obj)) return CV_32S;
-	return CV_32F;
+  void *vptr;
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint, 0) != -1) return CV_32SC2; 
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize, 0) != -1) return CV_32SC2;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvRect, 0) != -1) return CV_32SC4;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvSize2D32f, 0) != -1) return CV_32FC2; 
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D32f, 0) != -1) return CV_32FC2;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D32f, 0) != -1) return CV_32FC3;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint2D64f, 0) != -1) return CV_64FC2;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvPoint3D64f, 0) != -1) return CV_64FC3;  
+  if(SWIG_ConvertPtr(obj, &vptr, SWIGTYPE_p_CvScalar, 0) != -1) return CV_64FC4;  
+  if(PyTuple_Check(obj) || PyList_Check(obj)) return CV_MAKE_TYPE(CV_32F, PySequence_Size( obj ));
+  if(PyLong_Check(obj)) return CV_32S;
+  return CV_32F;
 }
 
-// Would like this to convert Python lists to CvMat
-// Also lists of CvPoints, CvScalars, CvMats? etc
-static CvArr * PySequence_to_CvArr( PyObject * obj ){
-	int dims[CV_MAX_DIM] = {1,1,1};
-	int ndim=0;
-	int cvtype;
-	PyObject * item;
-
-	// figure out dimensions
-	for(item = obj;
-		(PyTuple_Check(item) || PyList_Check(item));
-		item = PySequence_GetItem(item, 0))
-	{
-		dims[ndim] = PySequence_Size( item );
-		ndim++;
-	}
-
-
-	if(ndim==0){
-		PyErr_SetString(PyExc_TypeError, "Cannot convert an empty python object to a CvArr");
-		return NULL;
-	}
-
-	cvtype = PyObject_GetElemType(item);
-	// collapse last dim into NCH if we found a single channel, but the last dim is <=3
-	if(CV_MAT_CN(cvtype)==1 && dims[ndim-1]>1 && dims[ndim-1]<4){
-		cvtype=CV_MAKE_TYPE(cvtype, dims[ndim-1]);
-		dims[ndim-1]=1;
-		ndim--;
-	}
-
-	if(cvtype==-1){
-		PyErr_SetString(PyExc_TypeError, "Could not determine OpenCV element type of Python sequence");
-		return NULL;
-	}
-
-	// CvMat
-	if(ndim<=2){
-		CvMat *m = cvCreateMat(dims[0], dims[1], cvtype);
-		for(int i=0; i<dims[0]; i++){
-			PyObject * rowobj = PySequence_GetItem(obj, i);
-			if( dims[1] > 1 ){
-				// double check size
-				assert((PyTuple_Check(rowobj) || PyList_Check(rowobj)) &&
-						PySequence_Size(rowobj) == dims[1]);
-
-				for(int j=0; j<dims[1]; j++){
-					PyObject * colobj = PySequence_GetItem(rowobj, j);
-					cvSet2D( m, i, j, PyObject_to_CvScalar( colobj ) );
-				}
-			}
-			else{
-				cvSet1D(m, i, PyObject_to_CvScalar( rowobj ) );
-			}
-		}
-		return (CvArr *) m;
-	}
-
-	// CvMatND
-	PyErr_SetString(PyExc_TypeError, "Cannot convert Python Object to CvArr -- ndim > 3");
-	return NULL;
-
-}
 
 
 // Wrapper class
@@ -7643,8 +7609,7 @@ SWIGINTERN PyObject *_wrap_new_CvSVMParams__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   int ecode8 = 0 ;
   void *argp9 = 0 ;
   int res9 = 0 ;
-  void *argp10 ;
-  int res10 = 0 ;
+  CvTermCriteria temp10 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -7704,16 +7669,24 @@ SWIGINTERN PyObject *_wrap_new_CvSVMParams__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   }
   arg9 = reinterpret_cast< CvMat * >(argp9);
   {
-    res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res10)) {
-      SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_CvSVMParams" "', argument " "10"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp10) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvSVMParams" "', argument " "10"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp10);
-      arg10 = *temp;
-      if (SWIG_IsNewObj(res10)) delete temp;
+    if (PyTuple_Check(obj9)) 
+    {
+      if (!PyArg_ParseTuple(obj9,"iid", & temp10.type, & temp10.max_iter, & temp10.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg10 = temp10;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj9, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg10 = *ptr;
     }
   }
   {
@@ -15349,8 +15322,7 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_1(PyObject *SWIGUNUSEDPARM(self)
   int ecode2 = 0 ;
   int val3 ;
   int ecode3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
+  CvTermCriteria temp4 ;
   void *argp5 = 0 ;
   int res5 = 0 ;
   void *argp6 = 0 ;
@@ -15386,16 +15358,24 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_1(PyObject *SWIGUNUSEDPARM(self)
   } 
   arg3 = static_cast< int >(val3);
   {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
+    if (PyTuple_Check(obj3)) 
+    {
+      if (!PyArg_ParseTuple(obj3,"iid", & temp4.type, & temp4.max_iter, & temp4.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg4 = temp4;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj3, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg4 = *ptr;
     }
   }
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
@@ -15449,8 +15429,7 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_2(PyObject *SWIGUNUSEDPARM(self)
   int ecode2 = 0 ;
   int val3 ;
   int ecode3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
+  CvTermCriteria temp4 ;
   void *argp5 = 0 ;
   int res5 = 0 ;
   void *argp6 = 0 ;
@@ -15483,16 +15462,24 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_2(PyObject *SWIGUNUSEDPARM(self)
   } 
   arg3 = static_cast< int >(val3);
   {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
+    if (PyTuple_Check(obj3)) 
+    {
+      if (!PyArg_ParseTuple(obj3,"iid", & temp4.type, & temp4.max_iter, & temp4.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg4 = temp4;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj3, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg4 = *ptr;
     }
   }
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
@@ -15540,8 +15527,7 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_3(PyObject *SWIGUNUSEDPARM(self)
   int ecode2 = 0 ;
   int val3 ;
   int ecode3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
+  CvTermCriteria temp4 ;
   void *argp5 = 0 ;
   int res5 = 0 ;
   void *argp6 = 0 ;
@@ -15571,16 +15557,24 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_3(PyObject *SWIGUNUSEDPARM(self)
   } 
   arg3 = static_cast< int >(val3);
   {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
+    if (PyTuple_Check(obj3)) 
+    {
+      if (!PyArg_ParseTuple(obj3,"iid", & temp4.type, & temp4.max_iter, & temp4.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg4 = temp4;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj3, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg4 = *ptr;
     }
   }
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
@@ -15622,8 +15616,7 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_4(PyObject *SWIGUNUSEDPARM(self)
   int ecode2 = 0 ;
   int val3 ;
   int ecode3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
+  CvTermCriteria temp4 ;
   void *argp5 = 0 ;
   int res5 = 0 ;
   PyObject * obj0 = 0 ;
@@ -15650,16 +15643,24 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_4(PyObject *SWIGUNUSEDPARM(self)
   } 
   arg3 = static_cast< int >(val3);
   {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
+    if (PyTuple_Check(obj3)) 
+    {
+      if (!PyArg_ParseTuple(obj3,"iid", & temp4.type, & temp4.max_iter, & temp4.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg4 = temp4;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj3, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg4 = *ptr;
     }
   }
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_CvMat, 0 |  0 );
@@ -15695,8 +15696,7 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_5(PyObject *SWIGUNUSEDPARM(self)
   int ecode2 = 0 ;
   int val3 ;
   int ecode3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
+  CvTermCriteria temp4 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -15720,16 +15720,24 @@ SWIGINTERN PyObject *_wrap_new_CvEMParams__SWIG_5(PyObject *SWIGUNUSEDPARM(self)
   } 
   arg3 = static_cast< int >(val3);
   {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvEMParams" "', argument " "4"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
+    if (PyTuple_Check(obj3)) 
+    {
+      if (!PyArg_ParseTuple(obj3,"iid", & temp4.type, & temp4.max_iter, & temp4.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg4 = temp4;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj3, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg4 = *ptr;
     }
   }
   {
@@ -32895,8 +32903,7 @@ SWIGINTERN PyObject *_wrap_CvBoost_predict__SWIG_0(PyObject *SWIGUNUSEDPARM(self
   int res3 = 0 ;
   void *argp4 = 0 ;
   int res4 = 0 ;
-  void *argp5 ;
-  int res5 = 0 ;
+  CvSlice temp5 ;
   bool val6 ;
   int ecode6 = 0 ;
   PyObject * obj0 = 0 ;
@@ -32929,16 +32936,24 @@ SWIGINTERN PyObject *_wrap_CvBoost_predict__SWIG_0(PyObject *SWIGUNUSEDPARM(self
   }
   arg4 = reinterpret_cast< CvMat * >(argp4);
   {
-    res5 = SWIG_ConvertPtr(obj4, &argp5, SWIGTYPE_p_CvSlice,  0  | 0);
-    if (!SWIG_IsOK(res5)) {
-      SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "CvBoost_predict" "', argument " "5"" of type '" "CvSlice""'"); 
-    }  
-    if (!argp5) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CvBoost_predict" "', argument " "5"" of type '" "CvSlice""'");
-    } else {
-      CvSlice * temp = reinterpret_cast< CvSlice * >(argp5);
-      arg5 = *temp;
-      if (SWIG_IsNewObj(res5)) delete temp;
+    if (PyTuple_Check(obj4)) 
+    {
+      if (!PyArg_ParseTuple(obj4,"ii", & temp5.start_index, & temp5.end_index)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (start_index, end_index)");
+        return NULL;
+      }
+      arg5 = temp5;
+    } 
+    else
+    {
+      CvSlice * ptr;
+      if (SWIG_ConvertPtr (obj4, (void **) & ptr, SWIGTYPE_p_CvSlice, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSlice");
+        return NULL;
+      }
+      arg5 = *ptr;
     }
   }
   ecode6 = SWIG_AsVal_bool(obj5, &val6);
@@ -32977,8 +32992,7 @@ SWIGINTERN PyObject *_wrap_CvBoost_predict__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   int res3 = 0 ;
   void *argp4 = 0 ;
   int res4 = 0 ;
-  void *argp5 ;
-  int res5 = 0 ;
+  CvSlice temp5 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -33008,16 +33022,24 @@ SWIGINTERN PyObject *_wrap_CvBoost_predict__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   }
   arg4 = reinterpret_cast< CvMat * >(argp4);
   {
-    res5 = SWIG_ConvertPtr(obj4, &argp5, SWIGTYPE_p_CvSlice,  0  | 0);
-    if (!SWIG_IsOK(res5)) {
-      SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "CvBoost_predict" "', argument " "5"" of type '" "CvSlice""'"); 
-    }  
-    if (!argp5) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CvBoost_predict" "', argument " "5"" of type '" "CvSlice""'");
-    } else {
-      CvSlice * temp = reinterpret_cast< CvSlice * >(argp5);
-      arg5 = *temp;
-      if (SWIG_IsNewObj(res5)) delete temp;
+    if (PyTuple_Check(obj4)) 
+    {
+      if (!PyArg_ParseTuple(obj4,"ii", & temp5.start_index, & temp5.end_index)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (start_index, end_index)");
+        return NULL;
+      }
+      arg5 = temp5;
+    } 
+    else
+    {
+      CvSlice * ptr;
+      if (SWIG_ConvertPtr (obj4, (void **) & ptr, SWIGTYPE_p_CvSlice, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSlice");
+        return NULL;
+      }
+      arg5 = *ptr;
     }
   }
   {
@@ -33328,8 +33350,7 @@ SWIGINTERN PyObject *_wrap_CvBoost_prune(PyObject *SWIGUNUSEDPARM(self), PyObjec
   CvSlice arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
+  CvSlice temp2 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -33340,16 +33361,24 @@ SWIGINTERN PyObject *_wrap_CvBoost_prune(PyObject *SWIGUNUSEDPARM(self), PyObjec
   }
   arg1 = reinterpret_cast< CvBoost * >(argp1);
   {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_CvSlice,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CvBoost_prune" "', argument " "2"" of type '" "CvSlice""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CvBoost_prune" "', argument " "2"" of type '" "CvSlice""'");
-    } else {
-      CvSlice * temp = reinterpret_cast< CvSlice * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
+    if (PyTuple_Check(obj1)) 
+    {
+      if (!PyArg_ParseTuple(obj1,"ii", & temp2.start_index, & temp2.end_index)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers (start_index, end_index)");
+        return NULL;
+      }
+      arg2 = temp2;
+    } 
+    else
+    {
+      CvSlice * ptr;
+      if (SWIG_ConvertPtr (obj1, (void **) & ptr, SWIGTYPE_p_CvSlice, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvSlice");
+        return NULL;
+      }
+      arg2 = *ptr;
     }
   }
   {
@@ -33681,8 +33710,7 @@ SWIGINTERN PyObject *_wrap_new_CvANN_MLP_TrainParams__SWIG_1(PyObject *SWIGUNUSE
   int arg2 ;
   double arg3 ;
   double arg4 ;
-  void *argp1 ;
-  int res1 = 0 ;
+  CvTermCriteria temp1 ;
   int val2 ;
   int ecode2 = 0 ;
   double val3 ;
@@ -33697,16 +33725,24 @@ SWIGINTERN PyObject *_wrap_new_CvANN_MLP_TrainParams__SWIG_1(PyObject *SWIGUNUSE
   
   if (!PyArg_ParseTuple(args,(char *)"OOOO:new_CvANN_MLP_TrainParams",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   {
-    res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvANN_MLP_TrainParams" "', argument " "1"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp1) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvANN_MLP_TrainParams" "', argument " "1"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp1);
-      arg1 = *temp;
-      if (SWIG_IsNewObj(res1)) delete temp;
+    if (PyTuple_Check(obj0)) 
+    {
+      if (!PyArg_ParseTuple(obj0,"iid", & temp1.type, & temp1.max_iter, & temp1.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg1 = temp1;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj0, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg1 = *ptr;
     }
   }
   ecode2 = SWIG_AsVal_int(obj1, &val2);
@@ -33745,8 +33781,7 @@ SWIGINTERN PyObject *_wrap_new_CvANN_MLP_TrainParams__SWIG_2(PyObject *SWIGUNUSE
   CvTermCriteria arg1 ;
   int arg2 ;
   double arg3 ;
-  void *argp1 ;
-  int res1 = 0 ;
+  CvTermCriteria temp1 ;
   int val2 ;
   int ecode2 = 0 ;
   double val3 ;
@@ -33758,16 +33793,24 @@ SWIGINTERN PyObject *_wrap_new_CvANN_MLP_TrainParams__SWIG_2(PyObject *SWIGUNUSE
   
   if (!PyArg_ParseTuple(args,(char *)"OOO:new_CvANN_MLP_TrainParams",&obj0,&obj1,&obj2)) SWIG_fail;
   {
-    res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_CvTermCriteria,  0  | 0);
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_CvANN_MLP_TrainParams" "', argument " "1"" of type '" "CvTermCriteria""'"); 
-    }  
-    if (!argp1) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_CvANN_MLP_TrainParams" "', argument " "1"" of type '" "CvTermCriteria""'");
-    } else {
-      CvTermCriteria * temp = reinterpret_cast< CvTermCriteria * >(argp1);
-      arg1 = *temp;
-      if (SWIG_IsNewObj(res1)) delete temp;
+    if (PyTuple_Check(obj0)) 
+    {
+      if (!PyArg_ParseTuple(obj0,"iid", & temp1.type, & temp1.max_iter, & temp1.epsilon)) 
+      {
+        PyErr_SetString(PyExc_TypeError,"tuple must consist of 2 integers and a float (type, max_iter, epsilon)");
+        return NULL;
+      }
+      arg1 = temp1;
+    } 
+    else
+    {
+      CvTermCriteria * ptr;
+      if (SWIG_ConvertPtr (obj0, (void **) & ptr, SWIGTYPE_p_CvTermCriteria, SWIG_POINTER_EXCEPTION) == -1)
+      {
+        PyErr_SetString (PyExc_TypeError,"expected a tuple or a CvTermCriteria");
+        return NULL;
+      }
+      arg1 = *ptr;
     }
   }
   ecode2 = SWIG_AsVal_int(obj1, &val2);
@@ -36647,6 +36690,8 @@ static swig_type_info _swigt__p_CvSlice = {"_p_CvSlice", "CvSlice *", 0, 0, (voi
 static swig_type_info _swigt__p_CvSparseMat = {"_p_CvSparseMat", "CvSparseMat *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseMatIterator = {"_p_CvSparseMatIterator", "CvSparseMatIterator *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvSparseNode = {"_p_CvSparseNode", "CvSparseNode *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarDetectorParams = {"_p_CvStarDetectorParams", "CvStarDetectorParams *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_CvStarKeypoint = {"_p_CvStarKeypoint", "CvStarKeypoint *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStatModel = {"_p_CvStatModel", "CvStatModel *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStereoBMState = {"_p_CvStereoBMState", "CvStereoBMState *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_CvStereoGCState = {"_p_CvStereoGCState", "CvStereoGCState *", 0, 0, (void*)0, 0};
@@ -36784,6 +36829,8 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CvSparseMat,
   &_swigt__p_CvSparseMatIterator,
   &_swigt__p_CvSparseNode,
+  &_swigt__p_CvStarDetectorParams,
+  &_swigt__p_CvStarKeypoint,
   &_swigt__p_CvStatModel,
   &_swigt__p_CvStereoBMState,
   &_swigt__p_CvStereoGCState,
@@ -36921,6 +36968,8 @@ static swig_cast_info _swigc__p_CvSlice[] = {  {&_swigt__p_CvSlice, 0, 0, 0},{0,
 static swig_cast_info _swigc__p_CvSparseMat[] = {  {&_swigt__p_CvSparseMat, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseMatIterator[] = {  {&_swigt__p_CvSparseMatIterator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvSparseNode[] = {  {&_swigt__p_CvSparseNode, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarDetectorParams[] = {  {&_swigt__p_CvStarDetectorParams, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_CvStarKeypoint[] = {  {&_swigt__p_CvStarKeypoint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStatModel[] = {  {&_swigt__p_CvNormalBayesClassifier, _p_CvNormalBayesClassifierTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvANN_MLP, _p_CvANN_MLPTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvStatModel, 0, 0, 0},  {&_swigt__p_CvKNearest, _p_CvKNearestTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvForestTree, _p_CvForestTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvRTrees, _p_CvRTreesTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvBoostTree, _p_CvBoostTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvEM, _p_CvEMTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvSVM, _p_CvSVMTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvDTree, _p_CvDTreeTo_p_CvStatModel, 0, 0},  {&_swigt__p_CvBoost, _p_CvBoostTo_p_CvStatModel, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoBMState[] = {  {&_swigt__p_CvStereoBMState, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_CvStereoGCState[] = {  {&_swigt__p_CvStereoGCState, 0, 0, 0},{0, 0, 0, 0}};
@@ -37058,6 +37107,8 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CvSparseMat,
   _swigc__p_CvSparseMatIterator,
   _swigc__p_CvSparseNode,
+  _swigc__p_CvStarDetectorParams,
+  _swigc__p_CvStarKeypoint,
   _swigc__p_CvStatModel,
   _swigc__p_CvStereoBMState,
   _swigc__p_CvStereoGCState,

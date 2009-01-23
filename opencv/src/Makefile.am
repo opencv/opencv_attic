@@ -90,7 +90,7 @@ lib_cxcore_la_SOURCES = \
   cxcore/cxdxt.cpp \
   cxcore/cxerror.cpp \
   cxcore/cximage.cpp \
-  cxcore/cxjacobieigens.cpp \
+  cxcore/cxlapack.cpp \
   cxcore/cxlogic.cpp \
   cxcore/cxlut.cpp \
   cxcore/cxmathfuncs.cpp \
@@ -143,6 +143,7 @@ lib_cv_la_SOURCES = \
   cv/cvdominants.cpp \
   cv/cvemd.cpp \
   cv/cvfeatureselect.cpp \
+  cv/cvfeaturetree.cpp \
   cv/cvfilter.cpp \
   cv/cvfloodfill.cpp \
   cv/cvfundam.cpp \
@@ -155,7 +156,9 @@ lib_cv_la_SOURCES = \
   cv/cvkalman.cpp \
   cv/cvlinefit.cpp \
   cv/cvlkpyramid.cpp \
+  cv/cvlsh.cpp \
   cv/cvmatchcontours.cpp \
+  cv/cvmodelest.cpp \
   cv/cvmoments.cpp \
   cv/cvmorph.cpp \
   cv/cvmotempl.cpp \
@@ -172,6 +175,8 @@ lib_cv_la_SOURCES = \
   cv/cvshapedescr.cpp \
   cv/cvsmooth.cpp \
   cv/cvsnakes.cpp \
+  cv/cvspilltree.cpp \
+  cv/cvstardetector.cpp \
   cv/cvstereobm.cpp \
   cv/cvstereogc.cpp \
   cv/cvsubdivision2d.cpp \

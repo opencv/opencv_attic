@@ -9,7 +9,17 @@
 #
 # ----------------------------------------------------------------------------
 
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
+
 # it _must_ go before PROJECT(OpenCV) in order to work
+if (NOT CMAKE_INSTALL_PREFIX)
+    if (WIN32)
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+    elseif()
+        set(CMAKE_INSTALL_PREFIX "/usr" CACHE INTERNAL "" FORCE)
+    endif()
+endif()
+
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL "" CACHE INTERNAL "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "" FORCE)
@@ -24,9 +34,8 @@ set(CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "" FORCE)
 
 project(OpenCV)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.4)
 
-set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 if(MSVC)
     set(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "" FORCE)
 endif()
@@ -132,7 +141,7 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "Build all examples")
 set(BUILD_TESTS ON CACHE BOOL "Build tests")
 
 if(UNIX)
-    include(FindPkgConfig OPTIONAL)
+    include(OpenCVFindPkgConfig.cmake OPTIONAL)
     include(CheckFunctionExists)
     include(CheckIncludeFile)
 endif()
@@ -141,9 +150,46 @@ set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
-	if (NOT MINGW)
-		set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
-	endif(NOT MINGW)
+    set(OPENCV_USE_OMIT_FRAME_POINTER ON CACHE BOOL "Enable -fomit-frame-pointer for GCC")
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES arm*)
+        # We can use only -O2 because the -O3 causes gcc crash
+        set(OPENCV_USE_O2 ON CACHE BOOL "Enable -O2 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+        set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+        set(OPENCV_USE_SSE3 ON CACHE BOOL "Enable SSE3 for GCC")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+        set(OPENCV_USE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
+        set(OPENCV_USE_SSE3 ON CACHE BOOL "Enable SSE3 for GCC")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES powerpc*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_POWERPC ON CACHE BOOL "Enable PowerPC for GCC")
+    endif ()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES i686*)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+    endif ()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
+        set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
+        set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
+        set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
+        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+    endif ()
 endif()
 
 # ===================================================
@@ -170,7 +216,9 @@ macro(CHECK_MODULE module_name define)
             endforeach()
 
             foreach(P "${ALIAS_LIBRARY_DIRS}")
-                list(APPEND HIGHGUI_LIBRARY_DIRS ${${P}})
+                if (${${P}})
+                    list(APPEND HIGHGUI_LIBRARY_DIRS ${${P}})
+                endif()
             endforeach()
 
             list(APPEND HIGHGUI_LIBRARIES ${${ALIAS_LIBRARIES}})
@@ -194,6 +242,8 @@ if(UNIX)
     CHECK_MODULE(libavcodec HAVE_FFMPEG_CODEC)
     CHECK_MODULE(libavformat HAVE_FFMPEG_FORMAT)
     CHECK_MODULE(libavutil HAVE_FFMPEG_UTIL)
+    CHECK_MODULE(libswscale HAVE_FFMPEG_SWSCALE)
+    CHECK_INCLUDE_FILE(libavformat/avformat.h HAVE_GENTOO_FFMPEG)
     if(HAVE_FFMPEG_CODEC AND HAVE_FFMPEG_FORMAT AND HAVE_FFMPEG_UTIL)
         set(HAVE_FFMPEG 1)
     endif()
@@ -214,6 +264,10 @@ if(UNIX)
         CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
 
         include(FindPNG)
+        if(PNG_FOUND)
+            CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/png.h HAVE_PNG_H)
+            CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/libpng/png.h HAVE_LIBPNG_PNG_H)
+        endif()
         include(FindJPEG)
         include(FindTIFF)
         include(FindJasper)
@@ -242,7 +296,7 @@ if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
 
     string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
     if(UNIX)
-        set(PYTHON_PLUGIN_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
     endif()
     if(WIN32)
         get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
@@ -320,20 +374,20 @@ if(MSVC)
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /W4 /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE")
     # 64-bit portability warnings, in MSVC8
     if(MSVC80)
-        set(EXTRA_C_FLAGS "${OPENCV_EXTRA_CPP_FLAGS} /Wp64")
+        set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /Wp64")
     endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
 
     # Whole program optimization
-    if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION AND MSVC80)
+    if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION AND MSVC_VERSION GREATER 1300)
         set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /GL")
-        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
-        set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS} /LTCG")
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
+        set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG")
     endif()
 
     if(OPENCV_ENABLE_OPENMP)
-        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS} /openmp")
+        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
     endif()
 
     # Remove unreferenced functions: function level linking
@@ -355,12 +409,41 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
     endif()
 
-    # GCC optimization for floating math
-    set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -ffast-math")
-
     # Whole program optimization
     if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION)
         set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fwhole-program --combine")
+    endif()
+
+    # Other optimizations
+    if(OPENCV_USE_OMIT_FRAME_POINTER)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fomit-frame-pointer")
+    endif()
+    if(OPENCV_USE_O2)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -O2")
+    endif()
+    if(OPENCV_USE_O3)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -O3")
+    endif()
+    if(OPENCV_USE_FAST_MATH)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -ffast-math")
+    endif()
+    if(OPENCV_USE_POWERPC)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mcpu=G3 -mtune=G5")
+    endif()
+    if(OPENCV_USE_MMX)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mmmx")
+    endif()
+    # SSE should be disabled under MingW because it generates compiler errors
+    if(OPENCV_USE_SSE)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse")
+    endif()
+    # SSE2 should be disabled under MingW because it generates compiler errors
+    if(OPENCV_USE_SSE2)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse2")
+    endif()
+    # SSE3 should be disabled under MingW because it generates compiler errors
+    if(OPENCV_USE_SSE3 AND NOT MINGW)
+       set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse3")
     endif()
 
     # Profiling?
@@ -380,11 +463,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
-
-    if(OPENCV_USE_SSE2)
-	   set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse2")
-    endif()
 endif()
+
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
@@ -416,6 +496,12 @@ endif("${CMAKE_CONFIGURE_LDFLAGS}")
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
 
+if(WIN32)
+set(OPENCV_DOC_INSTALL_PATH doc)
+else()
+set(OPENCV_DOC_INSTALL_PATH share/opencv/doc)
+endif()
+
 #-----------------------------------
 # Subdirectories:
 #-----------------------------------
@@ -434,10 +520,7 @@ if(BUILD_TESTS)
 endif()
 
 add_subdirectory(interfaces)
-
-if(WIN32)
-    add_subdirectory(3rdparty)
-endif()
+add_subdirectory(3rdparty)
 
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
@@ -471,7 +554,8 @@ configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/
 set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/include/opencv")
 set(CMAKE_LIB_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/lib")
 
-exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/unix-install/\"")
+#exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/unix-install/\"")
+exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/unix-install/\"")
 configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE)
 
 if(UNIX)
@@ -513,6 +597,37 @@ ADD_CUSTOM_TARGET(uninstall
 
 
 # ----------------------------------------------------------------------------
+#   CPack target
+# ----------------------------------------------------------------------------
+
+option(BUILD_PACKAGE "Build a installer with the SDK")
+
+if(BUILD_PACKAGE)
+
+	configure_file(
+	Package.cmake.in
+	${CMAKE_BINARY_DIR}/.cpack/Package.cmake
+	@ONLY
+	)
+	
+	install(FILES 
+		AUTHORS
+		ChangeLog
+		COPYING
+		INSTALL
+		NEWS
+		README
+		THANKS
+		TODO
+		DESTINATION ${OPENCV_DOC_INSTALL_PATH}
+        COMPONENT doc
+		)
+		
+	include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
+	
+endif()
+
+# ----------------------------------------------------------------------------
 #   Sumary:
 # ----------------------------------------------------------------------------
 message(STATUS "")
@@ -551,6 +666,18 @@ message(STATUS "    GStreamer:                 ${HAVE_GSTREAMER}")
 message(STATUS "    UniCap:                    ${HAVE_UNICAP}")
 message(STATUS "    V4L/V4L2:                  ${HAVE_CAMV4L}/${HAVE_CAMV4L2}")
 message(STATUS "    Xine:                      ${HAVE_XINE}")
+endif()
+message(STATUS "")
+message(STATUS "  Interfaces: ")
+if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
+message(STATUS "    Python:                    1")
+else()
+message(STATUS "    Python:                    0")
+endif()
+if(IPP_FOUND AND BUILD_CUSTOM_IPP_LIB)
+message(STATUS "    Custom IPP Lib:            1")
+else()
+message(STATUS "    Custom IPP Lib:            0")
 endif()
 message(STATUS "")
 message(STATUS "    Install path:              ${CMAKE_INSTALL_PREFIX}")

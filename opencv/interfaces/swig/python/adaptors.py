@@ -78,11 +78,7 @@ try:
   
       if not isinstance(input, cv.CvMat):
           raise TypeError, 'must be called with a cv.CvMat!'
-  
-      # assert that the channels are interleaved
-      if input.dataOrder != 0:
-          raise ValueError, 'dataOrder must be 0 (interleaved)!'
-  
+    
       #orientation
       if input.origin == 0:
           orientation = 1 # top left
@@ -222,23 +218,25 @@ try:
          IPL_DEPTH_8U  x 1 channel
          IPL_DEPTH_8U  x 3 channels
          IPL_DEPTH_32F x 1 channel
+         IPL_DEPTH_32F x 2 channels
+         IPL_DEPTH_32S x 1 channel
          IPL_DEPTH_64F x 1 channel
+         IPL_DEPTH_64F x 2 channels
       """
       
       if not isinstance(input, cv.CvMat):
           raise TypeError, 'must be called with a cv.CvMat!'
-      
-      # assert that the channels are interleaved
-      if input.dataOrder != 0:
-          raise ValueError, 'dataOrder must be 0 (interleaved)!'
-      
+            
       # data type dictionary:
       # (channels, depth) : numpy dtype
       ipl2dtype = {
           (1, cv.IPL_DEPTH_8U)  : numpy.uint8,
           (3, cv.IPL_DEPTH_8U)  : numpy.uint8,
           (1, cv.IPL_DEPTH_32F) : numpy.float32,
-          (1, cv.IPL_DEPTH_64F) : numpy.float64
+          (2, cv.IPL_DEPTH_32F) : numpy.float32,
+          (1, cv.IPL_DEPTH_32S) : numpy.int32,
+          (1, cv.IPL_DEPTH_64F) : numpy.float64,
+          (2, cv.IPL_DEPTH_64F) : numpy.float64
           }
       
       key = (input.nChannels, input.depth)
@@ -250,6 +248,9 @@ try:
       if input.nChannels == 1:
           array_1d = numpy.fromstring(input.imageData, dtype=ipl2dtype[key])
           return numpy.reshape(array_1d, (input.height, input.width))
+      elif input.nChannels == 2:
+          array_1d = numpy.fromstring(input.imageData, dtype=ipl2dtype[key])
+          return numpy.reshape(array_1d, (input.height, input.width, 2))
       elif input.nChannels == 3:
           # Change the order of channels from BGR to RGB
           rgb = cv.cvCreateImage(cv.cvSize(input.width, input.height), input.depth, 3)

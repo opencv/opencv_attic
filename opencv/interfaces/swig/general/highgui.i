@@ -79,9 +79,6 @@ CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
 %typemap_out_CvMat(cvRetrieveFrame, ( CvCapture* capture ), (capture));
 %typemap_out_CvMat(cvQueryFrame, ( CvCapture * capture ), (capture));
 
-/* Prototype for CV_FOURCC so that swig can generate wrapper */
-int CV_FOURCC(char c1, char c2, char c3, char c4);
-
 %include "highgui.h"
 
 %extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }

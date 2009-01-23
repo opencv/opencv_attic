@@ -1416,7 +1416,7 @@ cvInitIntrinsicParams2D( const CvMat* objectPoints,
         bp[0] = -h[2]*v[2]; bp[1] = -d1[2]*d2[2];
     }
 
-    cvSolve( _A, _b, &_f, CV_LSQ | CV_SVD );
+    cvSolve( _A, _b, &_f, CV_NORMAL + CV_SVD );
     a[0] = sqrt(fabs(1./f[0]));
     a[4] = sqrt(fabs(1./f[1]));
     if( aspectRatio != 0 )

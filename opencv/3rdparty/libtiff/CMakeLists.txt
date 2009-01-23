@@ -66,17 +66,19 @@ endif(APPLE)
 
 file(GLOB lib_hdrs *.h*)
 
+set(lib_ext_hdrs "../include/tiff.h" "../include/tiffio.h" "../include/tiffvers.h")
+
 set(the_target "libtiff")
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
 
-add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs})
+add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 set_target_properties(${the_target}
 	PROPERTIES
 	OUTPUT_NAME "${the_target}"
 	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
+#	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
 	)

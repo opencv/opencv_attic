@@ -98,6 +98,16 @@ CvMat * cvCreateImageMat( CvSize size, int depth, int channels ){
 	return cvCreateMat( size.height, size.width, CV_MAKE_TYPE(depth, channels));
 }
 #define cvCloneImageMat( mat ) cvCloneMat( mat )
+
+#ifdef WIN32
+
+CvModuleInfo *CvModule::first=0;
+CvModuleInfo *CvModule::last=0;
+CvTypeInfo *CvType::first=0;
+CvTypeInfo *CvType::last=0;
+
+#endif
+
 %}
 CvMat * cvCloneImageMat( CvMat * mat );
 

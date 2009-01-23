@@ -164,6 +164,15 @@ _cleanup_:
 
     cvDestroyWindow("result");
 
+    if (storage)
+    {
+        cvReleaseMemStorage(&storage);
+    }
+    if (cascade)
+    {
+        cvReleaseHaarClassifierCascade(&cascade);
+    }
+
     return 0;
 }
 
@@ -244,3 +253,4 @@ void detect_and_draw( IplImage* img )
     cvReleaseImage( &gray );
     cvReleaseImage( &small_img );
 }
+

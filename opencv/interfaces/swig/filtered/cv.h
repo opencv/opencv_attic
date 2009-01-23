@@ -1,12 +1,12 @@
 # 1 "../../../include/opencv/cv.h"
 # 1 "<built-in>"
-# 1 "<command line>"
+# 1 "<command-line>"
 # 1 "../../../include/opencv/cv.h"
 # 58 "../../../include/opencv/cv.h"
 # 1 "../../../include/opencv/cxcore.h" 1
 # 69 "../../../include/opencv/cxcore.h"
 # 1 "../../../include/opencv/cxtypes.h" 1
-# 145 "../../../include/opencv/cxtypes.h"
+# 149 "../../../include/opencv/cxtypes.h"
 typedef long long int64;
 typedef unsigned long long uint64;
 
@@ -40,10 +40,10 @@ typedef union Cv64suf
     double f;
 }
 Cv64suf;
-# 210 "../../../include/opencv/cxtypes.h"
+# 214 "../../../include/opencv/cxtypes.h"
 inline int cvRound( double value )
 {
-# 230 "../../../include/opencv/cxtypes.h"
+# 234 "../../../include/opencv/cxtypes.h"
     Cv64suf temp;
     temp.f = value + 6755399441055744.0;
     return (int)temp.u;
@@ -137,7 +137,7 @@ inline double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 ;
 }
-# 365 "../../../include/opencv/cxtypes.h"
+# 369 "../../../include/opencv/cxtypes.h"
 typedef struct _IplImage
 {
     int nSize;
@@ -205,7 +205,7 @@ typedef struct _IplConvKernelFP
     float *values;
 }
 IplConvKernelFP;
-# 543 "../../../include/opencv/cxtypes.h"
+# 547 "../../../include/opencv/cxtypes.h"
 typedef struct CvMat
 {
     int type;
@@ -243,7 +243,7 @@ typedef struct CvMat
 
 }
 CvMat;
-# 621 "../../../include/opencv/cxtypes.h"
+# 625 "../../../include/opencv/cxtypes.h"
 inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 {
     CvMat m;
@@ -260,7 +260,7 @@ inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 
     return m;
 }
-# 651 "../../../include/opencv/cxtypes.h"
+# 655 "../../../include/opencv/cxtypes.h"
 inline double cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
@@ -302,7 +302,7 @@ inline int cvCvToIplDepth( int type )
     return ((((sizeof(size_t)<<28)|0x8442211) >> ((depth) & ((1 << 3) - 1))*4) & 15)*8 | (depth == 1 || depth == 3 ||
            depth == 4 ? 0x80000000 : 0);
 }
-# 704 "../../../include/opencv/cxtypes.h"
+# 708 "../../../include/opencv/cxtypes.h"
 typedef struct CvMatND
 {
     int type;
@@ -328,7 +328,7 @@ typedef struct CvMatND
     dim[32];
 }
 CvMatND;
-# 744 "../../../include/opencv/cxtypes.h"
+# 748 "../../../include/opencv/cxtypes.h"
 struct CvSet;
 
 typedef struct CvSparseMat
@@ -346,7 +346,7 @@ typedef struct CvSparseMat
     int size[32];
 }
 CvSparseMat;
-# 771 "../../../include/opencv/cxtypes.h"
+# 775 "../../../include/opencv/cxtypes.h"
 typedef struct CvSparseNode
 {
     unsigned hashval;
@@ -361,9 +361,9 @@ typedef struct CvSparseMatIterator
     int curidx;
 }
 CvSparseMatIterator;
-# 793 "../../../include/opencv/cxtypes.h"
+# 797 "../../../include/opencv/cxtypes.h"
 typedef int CvHistType;
-# 809 "../../../include/opencv/cxtypes.h"
+# 813 "../../../include/opencv/cxtypes.h"
 typedef struct CvHistogram
 {
     int type;
@@ -373,7 +373,7 @@ typedef struct CvHistogram
     CvMatND mat;
 }
 CvHistogram;
-# 839 "../../../include/opencv/cxtypes.h"
+# 843 "../../../include/opencv/cxtypes.h"
 typedef struct CvRect
 {
     int x;
@@ -731,13 +731,13 @@ typedef struct CvSeqBlock
     schar* data;
 }
 CvSeqBlock;
-# 1221 "../../../include/opencv/cxtypes.h"
+# 1225 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1241 "../../../include/opencv/cxtypes.h"
+# 1245 "../../../include/opencv/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -754,7 +754,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1297 "../../../include/opencv/cxtypes.h"
+# 1301 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -773,7 +773,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1324 "../../../include/opencv/cxtypes.h"
+# 1328 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -804,21 +804,21 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1491 "../../../include/opencv/cxtypes.h"
+# 1495 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max;
 }
 CvSeqWriter;
-# 1509 "../../../include/opencv/cxtypes.h"
+# 1513 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max; int delta_index; schar* prev_elem;
 }
 CvSeqReader;
-# 1629 "../../../include/opencv/cxtypes.h"
+# 1633 "../../../include/opencv/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1639 "../../../include/opencv/cxtypes.h"
+# 1643 "../../../include/opencv/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -837,7 +837,7 @@ inline CvAttrList cvAttrList( const char** attr = NULL,
 }
 
 struct CvTypeInfo;
-# 1692 "../../../include/opencv/cxtypes.h"
+# 1696 "../../../include/opencv/cxtypes.h"
 typedef struct CvString
 {
     int len;
@@ -1496,8 +1496,8 @@ extern "C" void cvSort( const CvArr* src, CvArr* dst = NULL,
 extern "C" int cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
 
-extern "C" void cvSolvePoly(const CvMat* coeffs, CvMat *roots,
-   int maxiter = 0, int fig = 0);
+extern "C" void cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
+   int maxiter = 20, int fig = 100);
 
 
 
@@ -3790,20 +3790,60 @@ extern "C" void cvFitLine( const CvArr* points, int dist_type, double param,
 struct CvFeatureTree;
 
 
-extern "C" struct CvFeatureTree* cvCreateFeatureTree(CvMat* desc);
+extern "C" struct CvFeatureTree* cvCreateKDTree(CvMat* desc);
+
+
+extern "C" struct CvFeatureTree* cvCreateSpillTree( const CvMat* raw_data,
+      const int naive = 50,
+      const double rho = .7,
+      const double tau = .1 );
 
 
 extern "C" void cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
 
 
-extern "C" void cvFindFeatures(struct CvFeatureTree* tr, CvMat* desc,
-      CvMat* results, CvMat* dist, int k = 2, int emax = 20);
+extern "C" void cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
+      CvMat* indices, CvMat* dist, int k, int emax = 20);
+
 
 
 extern "C" int cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-      CvMat* bounds_min, CvMat* bounds_max,
-      CvMat* results);
+          CvMat* bounds_min, CvMat* bounds_max,
+          CvMat* out_indices);
+
+
+struct CvLSH;
+struct CvLSHOperations;
+
+
+
+extern "C" struct CvLSH* cvCreateLSH(struct CvLSHOperations* ops, int d, int L = 10, int k = 10,
+     int type = ((6) + (((1)-1) << 3)), double r = 4,
+     int64 seed = -1);
+
+
+extern "C" struct CvLSH* cvCreateMemoryLSH(int d, int n, int L = 10, int k = 10,
+           int type = ((6) + (((1)-1) << 3)), double r = 4,
+           int64 seed = -1);
+
+
+extern "C" void cvReleaseLSH(struct CvLSH** lsh);
+
+
+extern "C" unsigned int LSHSize(struct CvLSH* lsh);
+
+
+extern "C" void cvLSHAdd(struct CvLSH* lsh, const CvMat* data, CvMat* indices = 0);
+
+
+extern "C" void cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
+
+
+
+extern "C" void cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
+         CvMat* indices, CvMat* dist, int k, int emax);
+
 
 typedef struct CvSURFPoint
 {
@@ -3841,6 +3881,53 @@ extern "C" CvSURFParams cvSURFParams( double hessianThreshold, int extended = 0 
 extern "C" void cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
                            CvMemStorage* storage, CvSURFParams params );
+
+typedef struct CvStarKeypoint
+{
+    CvPoint pt;
+    int size;
+    float response;
+}
+CvStarKeypoint;
+
+inline CvStarKeypoint cvStarKeypoint(CvPoint pt, int size, float response)
+{
+    CvStarKeypoint kpt;
+    kpt.pt = pt;
+    kpt.size = size;
+    kpt.response = response;
+    return kpt;
+}
+
+typedef struct CvStarDetectorParams
+{
+    int maxSize;
+    int responseThreshold;
+    int lineThresholdProjected;
+    int lineThresholdBinarized;
+    int suppressNonmaxSize;
+}
+CvStarDetectorParams;
+
+inline CvStarDetectorParams cvStarDetectorParams(
+    int maxSize = 45,
+    int responseThreshold = 30,
+    int lineThresholdProjected = 10,
+    int lineThresholdBinarized = 8,
+    int suppressNonmaxSize = 5)
+{
+    CvStarDetectorParams params;
+    params.maxSize = maxSize;
+    params.responseThreshold = responseThreshold;
+    params.lineThresholdProjected = lineThresholdProjected;
+    params.lineThresholdBinarized = lineThresholdBinarized;
+    params.suppressNonmaxSize = suppressNonmaxSize;
+
+    return params;
+}
+
+extern "C" CvSeq* cvGetStarKeypoints( const CvArr* img, CvMemStorage* storage,
+        CvStarDetectorParams params = cvStarDetectorParams());
 
 
 
@@ -3987,7 +4074,7 @@ extern "C" int cvFindChessboardCorners( const void* image, CvSize pattern_size,
 extern "C" void cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
                                      CvPoint2D32f* corners,
                                      int count, int pattern_was_found );
-# 1272 "../../../include/opencv/cv.h"
+# 1359 "../../../include/opencv/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -4064,7 +4151,7 @@ extern "C" int cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
 extern "C" void cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
-# 1356 "../../../include/opencv/cv.h"
+# 1443 "../../../include/opencv/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = 8,
@@ -4491,4 +4578,4 @@ struct CvLevMarq
     int iters;
     bool completeSymmFlag;
 };
-# 1458 "../../../include/opencv/cv.h" 2
+# 1545 "../../../include/opencv/cv.h" 2

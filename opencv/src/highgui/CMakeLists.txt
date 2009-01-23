@@ -5,8 +5,12 @@
 # ----------------------------------------------------------------------------
 project(highgui)
 
-if(MSVC)
+if(WIN32)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+endif()
+
+if(MSVC)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:libcmt.lib")
 endif()
 
 file(GLOB grfmt_hdrs grfmt*.h)
@@ -31,9 +35,7 @@ set(highgui_ext_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h)
 
 if(WIN32)
     set(highgui_srcs ${highgui_srcs} window_w32.cpp cvcap_vfw.cpp cvcap_cmu.cpp cvcap_w32.cpp cvcap_dshow.cpp)
-    if(MSVC)
-        add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
-    endif(MSVC)
+    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
     if(HAVE_MIL)
         set(highgui_srcs ${highgui_srcs} cvcap_mil.cpp)
     endif()
@@ -101,14 +103,14 @@ if(UNIX)
 endif()
 
 if(APPLE)
-    add_definitions(-DUSE_VDIG_VERSION=1 -DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
+    add_definitions(-DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
     set(highgui_srcs ${highgui_srcs} window_carbon.cpp cvcap_qt.cpp)
 endif(APPLE)
 
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
-if(MSVC)
+if(WIN32)
     link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib"
         "${CMAKE_BINARY_DIR}/3rdparty/lib"
         "${CMAKE_BINARY_DIR}/3rdparty/lib/${ConfigurationName}"
@@ -175,7 +177,7 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRA
 
 if(WIN32)
     add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
-	target_link_libraries(${the_target} comctl32 gdi32)
+	target_link_libraries(${the_target} comctl32 gdi32 libjasper libjpeg libpng libtiff zlib)
 
 	if (MSVC)
 		target_link_libraries(${the_target} vfw32 videoinput)
@@ -191,11 +193,11 @@ if(APPLE)
 endif()
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-    )
+	RUNTIME DESTINATION bin COMPONENT dev
+	LIBRARY DESTINATION lib COMPONENT dev
+	ARCHIVE DESTINATION lib COMPONENT dev)
 
-if(UNIX)
-    install(FILES ${highgui_ext_hdrs} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/opencv")
-endif()
+install(FILES ${highgui_ext_hdrs}
+        DESTINATION include/opencv
+        COMPONENT dev)
+

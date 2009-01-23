@@ -5234,15 +5234,24 @@ stop_search:
 
     __END__;
 
-    cvReleaseFileStorage( &fs );
     if( cvGetErrStatus() < 0 )
     {
         cvRelease( (void**)&ptr );
         real_name = 0;
     }
 
-    if( _real_name )
-        *_real_name = real_name;
+    if( _real_name)
+    {
+	if (real_name)
+	{
+	    *_real_name = (const char*)cvAlloc(strlen(real_name));
+    	    memcpy((void*)*_real_name, real_name, strlen(real_name));
+	} else {
+	    *_real_name = 0;
+	}
+    }
+
+    cvReleaseFileStorage( &fs );
 
     return ptr;
 }

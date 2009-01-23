@@ -53,10 +53,18 @@ extern "C" {
 #include <errno.h>
 #endif
 
+#if defined(HAVE_GENTOO_FFMPEG)
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#if defined(HAVE_FFMPEG_SWSCALE)
+#include <libswscale/swscale.h>
+#endif
+#else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
 #if defined(HAVE_FFMPEG_SWSCALE)
 #include <ffmpeg/swscale.h>
+#endif
 #endif
 }
 
@@ -284,6 +292,7 @@ protected:
     AVFrame           * picture;
     int64_t             picture_pts;
     AVFrame             rgb_picture;
+    AVPacket            packet;
     IplImage            frame;
 /*
    'filename' contains the filename of the videosource,
@@ -306,6 +315,7 @@ void CvCapture_FFMPEG::init()
     memset( &rgb_picture, 0, sizeof(rgb_picture) );
     memset( &frame, 0, sizeof(frame) );
     filename = 0;
+    packet.data = NULL;
 }
 
 
@@ -332,6 +342,12 @@ void CvCapture_FFMPEG::close()
 
     if( rgb_picture.data[0] )
         cvFree( &rgb_picture.data[0] );
+
+    // free last packet if exist
+    if (packet.data) {
+        av_free_packet (&packet);
+    }
+
 
     init();
 }
@@ -456,40 +472,43 @@ bool CvCapture_FFMPEG::grabFrame()
 {
     bool valid = false;
     static bool bFirstTime = true;
-    static AVPacket pkt;
     int got_picture;
 
     // First time we're called, set packet.data to NULL to indicate it
     // doesn't have to be freed
     if (bFirstTime) {
         bFirstTime = false;
-        pkt.data = NULL;
+        packet.data = NULL;
     }
 
     if( !ic || !video_st )
         return false;
 
     // free last packet if exist
-    if (pkt.data != NULL) {
-        av_free_packet (&pkt);
+    if (packet.data != NULL) {
+        av_free_packet (&packet);
     }
 
     // get the next frame
-    while (!valid && (av_read_frame(ic, &pkt) >= 0)) {
-		if( pkt.stream_index != video_stream ) continue;
+    while (!valid && (av_read_frame(ic, &packet) >= 0)) {
+		if( packet.stream_index != video_stream ) {
+		        av_free_packet (&packet);
+		        continue;
+    		}
+
 #if LIBAVFORMAT_BUILD > 4628
         avcodec_decode_video(video_st->codec,
                              picture, &got_picture,
-                             pkt.data, pkt.size);
+                             packet.data, packet.size);
 #else
         avcodec_decode_video(&video_st->codec,
                              picture, &got_picture,
-                             pkt.data, pkt.size);
+                             packet.data, packet.size);
 #endif
 
         if (got_picture) {
             // we have a new picture, so memorize it
-            picture_pts = pkt.pts;
+            picture_pts = packet.pts;
             valid = 1;
         }
     }
@@ -532,6 +551,7 @@ IplImage* CvCapture_FFMPEG::retrieveFrame(int)
              picture->linesize, 0,
              video_st->codec->height,
              rgb_picture.data, rgb_picture.linesize);
+    sws_freeContext(img_convert_ctx);
 #endif
     return &frame;
 }
@@ -1018,6 +1038,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 		    {
 		      CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		    }
+		sws_freeContext(img_convert_ctx);
 #endif
 	}
 	else{
@@ -1144,15 +1165,15 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 	oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
 
 	/* Lookup codec_id for given fourcc */
-	if(fourcc!=CV_FOURCC_DEFAULT){
 #if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
         if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
-	}
 #else
-        if( (codec_id = av_codec_get_id((const AVCodecTag**)(&codec_bmp_tags), fourcc)) == CODEC_ID_NONE ){
+	{
+	const struct AVCodecTag * tags[] = { codec_bmp_tags, NULL};
+        if( (codec_id = av_codec_get_id(tags, fourcc)) == CODEC_ID_NONE ){
 			CV_ERROR( CV_StsUnsupportedFormat,
 				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
 		}
