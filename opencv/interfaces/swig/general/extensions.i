@@ -189,28 +189,29 @@ int CvMat_nChannels_get(CvMat * m){
 	return CV_MAT_CN(m->type);
 }
 void CvMat_nChannels_set(CvMat *m, int nChannels){
-    cvError(CV_StsNotImplemented, "CvMat_depth_set", "Not Implemented", __FILE__, __LINE__);
+    int depth = CV_MAT_DEPTH(m->type);
+    m->type = CV_MAKETYPE(depth, nChannels);
 }
 int CvMat_origin_get(CvMat * m){
-    cvError(CV_StsNotImplemented, "CvMat_origin_get", "Not Implemented", __FILE__, __LINE__);
+    /* Always 0 - top-left origin */
     return 0;
 }
 void CvMat_origin_set(CvMat * m, int origin){
-    cvError(CV_StsNotImplemented, "CvMat_origin_set", "Not Implemented", __FILE__, __LINE__);
+    cvError(CV_StsNotImplemented, "CvMat_origin_get", "IplImage is replaced by CvMat in Python, so its fields are read-only", __FILE__, __LINE__);
 }
 int CvMat_dataOrder_get(CvMat * m){
     cvError(CV_StsNotImplemented, "CvMat_dataOrder_get", "Not Implemented", __FILE__, __LINE__);
     return 0;
 }
 void CvMat_dataOrder_set(CvMat * m, int dataOrder){
-    cvError(CV_StsNotImplemented, "CvMat_dataOrder_get", "Not Implemented", __FILE__, __LINE__);
+    cvError(CV_StsNotImplemented, "CvMat_dataOrder_get", "IplImage is replaced by CvMat in Python, so its fields are read-only", __FILE__, __LINE__);
 }
 int CvMat_imageSize_get(CvMat * m){
 	int step = m->step ? m->step : CV_ELEM_SIZE(m->type) * m->cols;
 	return step*m->rows;
 }
 void CvMat_imageSize_set(CvMat * m, int imageSize){
-    cvError(CV_StsError, "CvMat_imageSize_set", "imageSize is a Read-Only field", __FILE__, __LINE__);
+    cvError(CV_StsNotImplemented, "CvMat_imageSize_set", "IplImage is not implemented in Python, so origin is read-only", __FILE__, __LINE__);
 }
 int CvMat_widthStep_get(CvMat * m){
 	return m->step;
