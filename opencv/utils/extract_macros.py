@@ -23,6 +23,7 @@ ARG_MAP = {
     "elem_size":"int",
     "edge":"CvGraphEdge *",
     "vertex":"CvGraphVtx *",
+    "contour":"CvSeq *",
     "vtx":"CvGraphVtx *",
     "reader":"CvSeqReader",
     "writer":"CvSeqWriter",
@@ -75,6 +76,7 @@ ARG_MAP = {
     "factor":"double"
 }
 RET_MAP = {
+    "cvContourPerimeter":"double",
     "CV_RGB":"CvScalar",
     "CV_NEXT_GRAPH_EDGE":"CvGraphEdge *",
     "CV_IMIN":"int",
@@ -107,6 +109,10 @@ print """
 // incorrect, it is likely that a name->type mapping will have to be added to the script 
 /////////////////////////////////////////////////////////////////////////////////////////////////M*/
 """
+
+print "// This file was generated from the following header files: "
+print "// %s" % "\n// ".join(sys.argv[1:])
+
 
 def determine_return_type(name, arguments):
     if RET_MAP.has_key( name ):
