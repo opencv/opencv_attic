@@ -6,7 +6,7 @@ import unittest
 from numpy import *;
 from numpy.linalg import *;
 import sys;
-
+import cvtestutils
 from cv import *;
 from adaptors import *;
 
@@ -45,8 +45,10 @@ class feature_tree_test(unittest.TestCase):
         correct = sum([i == j for j,i in enumerate(indices)])
         assert(correct >= n * .75);
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(feature_tree_test)
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(feature_tree_test)
+    suite = suite()
     unittest.TextTestRunner(verbosity=2).run(suite)
 

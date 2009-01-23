@@ -11,6 +11,7 @@ from numpy import *;
 from numpy.linalg import *;
 import sys;
 
+import cvtestutils
 from cv import *;
 from adaptors import *;
 
@@ -113,8 +114,9 @@ class lsh_test(unittest.TestCase):
 # cvWaitKey(0);
 
         
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(lsh_test)
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(lsh_test)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite())
 

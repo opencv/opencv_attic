@@ -7,6 +7,7 @@ from numpy import *;
 from numpy.linalg import *;
 import sys;
 
+import cvtestutils
 from cv import *;
 from adaptors import *;
 
@@ -42,7 +43,9 @@ class roots_test(unittest.TestCase):
         verify(cvSolveCubic(asmatrix([-1,0,0,1]).astype(float64))[1],
                array([[1],[0],[0]]));
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(roots_test)
+
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(roots_test)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite())
 
