@@ -154,6 +154,7 @@ static int CvArr_Check( PyObject * obj )
 {
 	void *ptr;
 	if( obj == Py_None ||
+	    SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_void,       0) ) ||
 	    SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvMat,       0) ) ||
         SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvSeq,       0) ) ||
         SWIG_IsOK( SWIG_ConvertPtr(obj, &ptr, SWIGTYPE_p_CvContour,   0) ) ||
@@ -174,13 +175,19 @@ static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
   CvArr * cvarr = NULL;
   *freearg = false;
 
-  if (SWIG_IsOK( SWIG_ConvertPtr (obj, (void** )& cvarr, SWIGTYPE_p_CvMat, 0) ) ||
+  if ( obj == Py_None )
+  {
+    // Interpret None as NULL pointer 
+    return NULL;
+  }
+  else if( SWIG_IsOK( SWIG_ConvertPtr(obj, (void **)& cvarr, SWIGTYPE_p_void,       0) ) ||
+      SWIG_IsOK( SWIG_ConvertPtr (obj, (void** )& cvarr, SWIGTYPE_p_CvMat, 0) ) ||
       SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvSeq, 0) ) ||
       SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvContour, 0) ) ||
       SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvSparseMat, 0) ) ||
       SWIG_IsOK( SWIG_ConvertPtr (obj, (void **)& cvarr, SWIGTYPE_p_CvMatND, 0) ))
   {
-    // we got a directly wrapped OpenCV array or sequence type, this is preferred
+    // we got a directly wrapped void * pointer, OpenCV array or sequence type
     return cvarr;
   }
   else if (PyObject_HasAttrString (obj, "__array_interface__"))
@@ -199,7 +206,7 @@ static CvArr * PyObject_to_CvArr (PyObject * obj, bool * freearg)
   }
   else if (PyLong_Check (obj) && PyLong_AsLong (obj) == 0)
   {
-    // explicitly pass a NULL pointer to OpenCV
+    // Interpret a '0' integer as a NULL pointer
     * freearg = false;
     return NULL;
   }
