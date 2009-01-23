@@ -90,7 +90,7 @@ lib_cxcore_la_SOURCES = \
   cxcore/cxdxt.cpp \
   cxcore/cxerror.cpp \
   cxcore/cximage.cpp \
-  cxcore/cxjacobieigens.cpp \
+  cxcore/cxlapack.cpp \
   cxcore/cxlogic.cpp \
   cxcore/cxlut.cpp \
   cxcore/cxmathfuncs.cpp \
