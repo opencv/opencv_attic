@@ -7,6 +7,7 @@ from numpy import *;
 from numpy.linalg import *;
 import sys;
 
+import cvtestutils
 from cv import *;
 from adaptors import *;
 
@@ -88,8 +89,9 @@ class homography_test(unittest.TestCase):
         result,H = cvFindHomography(pts1, pts2, CV_LMEDS);
         assert(not result or not all(abs(H1-H)<1e-5))
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(homography_test)
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(homography_test)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite())
 
