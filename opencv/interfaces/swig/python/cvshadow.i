@@ -50,6 +50,7 @@
 %rename (function) function##_Shadow;
 %enddef
 
+
 %include "stl.i"
 
 // %ignore, %rename must come before %include
@@ -64,13 +65,6 @@
 %template(FloatVector)   std::vector<float>;
 %template(CvPointVector) std::vector<CvPoint>;
 %myshadow(cvSnakeImage);
-
-// eliminates need for IplImage ** typemap
-%rename (cvCalcImageHist) cvCalcHist;
-%pythoncode %{
-def cvCalcHist(*args):
-	return cvCalcArrHist(*args)
-%}
 
 // must come after %ignore, %rename
 %include "cvshadow.h"
