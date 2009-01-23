@@ -520,10 +520,7 @@ if(BUILD_TESTS)
 endif()
 
 add_subdirectory(interfaces)
-
-if(WIN32)
-    add_subdirectory(3rdparty)
-endif()
+add_subdirectory(3rdparty)
 
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
