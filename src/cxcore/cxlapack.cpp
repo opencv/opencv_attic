@@ -1015,7 +1015,7 @@ cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double )
     CvMat sstub, *src = (CvMat*)srcarr;
     CvMat estub1, *evects = (CvMat*)evectsarr;
     CvMat estub2, *evals = (CvMat*)evalsarr;
-    integer n, m=0, lda, ldv, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0, type, elem_size;
+    integer i, n, m=0, lda, ldv, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0, type, elem_size;
     integer *isupport, *iwork;
     bool copy_evals;
     char job[] = { evects ? 'V' : 'N', '\0' };
@@ -1082,6 +1082,9 @@ cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double )
             &idummy, &idummy, &abstol, &m, s, evects ? evects->data.fl : 0,
             &ldv, isupport, (float*)work, &lwork, iwork, &liwork, &info );
         assert( info == 0 );
+
+        for( i = 0; i < n/2; i++ )
+            CV_SWAP(s[i], s[n-i-1], work1);
     }
     else if( type == CV_64FC1 )
     {
@@ -1108,6 +1111,9 @@ cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double )
             &idummy, &idummy, &abstol, &m, s, evects ? evects->data.db : 0,
             &ldv, isupport, (double*)work, &lwork, iwork, &liwork, &info );
         assert( info == 0 );
+
+        for( i = 0; i < n/2; i++ )
+            CV_SWAP(s[i], s[n-i-1], work1);
     }
     else
     {
@@ -1119,6 +1125,9 @@ cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double )
         CvMat s = cvMat( evals->rows, evals->cols, type, work + lwork*elem_size );
         cvCopy( &s, evals );
     }
+
+    if( evects )
+        cvFlip(evects, evects, 0);
 
     __END__;
 
