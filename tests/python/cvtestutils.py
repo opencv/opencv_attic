@@ -17,9 +17,6 @@
 # import cvtestutils
 # import cv
 
-# TODO add some mechanism for adding python modules from a directory other
-# than those in the OpenCV tree, or at least disabling auto-adding
-
 import os
 import imp
 import sys
@@ -33,17 +30,31 @@ def top_srcdir():
     # top level dir should be two levels up from this file
     return os.path.realpath( os.path.join( dir, '..', '..' ) )
 
+def top_builddir():
+    """
+    Return a string containing the top-level build directory in the OpenCV tree.
+    Either returns realpath(argv[1]) or top_srcdir();
+    """
+    if len(sys.argv)>1: return os.path.realpath( sys.argv[1] );
+    else: return top_srcdir();
+
 def initpath():
     """
     Prepend the python module directories from the dev tree to sys.path 
     (i.e. PYTHON_PATH)
     """
-    # add path for local OpenCV
+
+    # add path for OpenCV source directory (for adapters.py)
     moduledir = os.path.join(top_srcdir(), 'interfaces','swig','python')
     moduledir = os.path.realpath(moduledir)
     sys.path.insert(0, moduledir) 
 
-    libdir = os.path.join(top_srcdir(), 'lib' )
+    # add path for OpenCV build directory
+    moduledir = os.path.join(top_builddir(), 'interfaces','swig','python')
+    moduledir = os.path.realpath(moduledir)
+    sys.path.insert(0, moduledir) 
+
+    libdir = os.path.join(top_builddir(), 'lib' )
     libdir = os.path.realpath(libdir)
     sys.path.insert(0, libdir)
 
