@@ -155,7 +155,7 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
         int i, goodCount, nmodels;
         if( count > modelPoints )
         {
-            bool found = getSubset( m1, m2, ms1, ms2, modelPoints );
+            bool found = getSubset( m1, m2, ms1, ms2, 300 );
             if( !found )
             {
                 if( iter == 0 )
