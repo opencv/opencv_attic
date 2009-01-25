@@ -57,7 +57,7 @@ cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform
 
     CV_CALL( hist = (CvHistogram *)cvAlloc( sizeof( CvHistogram )));
 
-    hist->type = CV_HIST_MAGIC_VAL;
+    hist->type = CV_HIST_MAGIC_VAL + ((int)type & 1);
     hist->thresh2 = 0;
     hist->bins = 0;
     if( type == CV_HIST_ARRAY )
@@ -2353,156 +2353,156 @@ CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
 /* Implementation of RTTI and Generic Functions for CvHistogram */
 #define CV_TYPE_NAME_HIST "opencv-hist"
 
-static int icvIsHist( const void * ptr ){
-	return CV_IS_HIST( ((CvHistogram*)ptr) );
+static int icvIsHist( const void * ptr )
+{
+    return CV_IS_HIST( ((CvHistogram*)ptr) );
 }
 
-static CvHistogram * icvCloneHist( const CvHistogram * src ){
-	CvHistogram * dst=NULL;
-	cvCopyHist(src, &dst);
-	return dst;
+static CvHistogram * icvCloneHist( const CvHistogram * src )
+{
+    CvHistogram * dst=NULL;
+    cvCopyHist(src, &dst);
+    return dst;
 }
 
-static void *icvReadHist( CvFileStorage * fs, CvFileNode * node ){
-	CvHistogram * h = 0;
-	int is_uniform = 0;
-	int have_ranges = 0;
+static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
+{
+    CvHistogram * h = 0;
+    int type = 0;
+    int is_uniform = 0;
+    int have_ranges = 0;
 
-	CV_FUNCNAME("icvReadHist");
-	__BEGIN__;
+    CV_FUNCNAME("icvReadHist");
+    __BEGIN__;
 
     CV_CALL( h = (CvHistogram *) cvAlloc( sizeof(CvHistogram) ));
 
-	is_uniform = cvReadIntByName( fs, node, "is_uniform", 0 );
-	have_ranges = cvReadIntByName( fs, node, "have_ranges", 0);
-	h->type = CV_HIST_MAGIC_VAL | 
-		      (is_uniform ? CV_HIST_UNIFORM_FLAG : 0) |
-			  (have_ranges ? CV_HIST_RANGES_FLAG : 0);
+    type = cvReadIntByName( fs, node, "type", 0 );
+    is_uniform = cvReadIntByName( fs, node, "is_uniform", 0 );
+    have_ranges = cvReadIntByName( fs, node, "have_ranges", 0 );
+    h->type = CV_HIST_MAGIC_VAL | type |
+        (is_uniform ? CV_HIST_UNIFORM_FLAG : 0) |
+        (have_ranges ? CV_HIST_RANGES_FLAG : 0);
 
-	if(is_uniform){
-		// read histogram bins
-		CvMatND * mat = (CvMatND *) cvReadByName( fs, node, "mat" );
-		int sizes[CV_MAX_DIM];
-		int i;
-		if(!CV_IS_MATND(mat)){
-			CV_ERROR( CV_StsError, "Expected CvMatND");
-		}
-		for(i=0; i<mat->dims; i++){
-			sizes[i] = mat->dim[i].size;
-		}
+    if(type == CV_HIST_ARRAY)
+    {
+        // read histogram bins
+        CvMatND* mat = (CvMatND*)cvReadByName( fs, node, "mat" );
+        int i, sizes[CV_MAX_DIM];
 
-		cvInitMatNDHeader( &(h->mat), mat->dims, sizes, mat->type, mat->data.ptr );
-		h->bins = &(h->mat);
-		
-		// take ownership of refcount pointer as well
-		h->mat.refcount = mat->refcount;
+        if(!CV_IS_MATND(mat))
+            CV_ERROR( CV_StsError, "Expected CvMatND");
 
-		// increase refcount so freeing temp header doesn't free data
-		cvIncRefData( mat ); 
-		
-		// free temporary header
-		cvReleaseMatND( &mat );
-	}
-	else{
-		h->bins = cvReadByName( fs, node, "bins" );
-		if(!CV_IS_SPARSE_MAT(h->bins)){
-			CV_ERROR( CV_StsError, "Unknown Histogram type");
-		}
-	}
+        for(i=0; i<mat->dims; i++)
+            sizes[i] = mat->dim[i].size;
 
-	// read thresholds
-	if(have_ranges){
-		int i;
-		int dims;
-		int size[CV_MAX_DIM];
-		int total = 0;
-		CvSeqReader reader;
-		CvFileNode * thresh_node;
+        cvInitMatNDHeader( &(h->mat), mat->dims, sizes, mat->type, mat->data.ptr );
+        h->bins = &(h->mat);
 
-		CV_CALL( dims = cvGetDims( h->bins, size ));
-		for( i = 0; i < dims; i++ ){
-			total += size[i]+1;
-		}
+        // take ownership of refcount pointer as well
+        h->mat.refcount = mat->refcount;
 
-		thresh_node = cvGetFileNodeByName( fs, node, "thresh" );
-		if(!thresh_node){
-			CV_ERROR( CV_StsError, "'thresh' node is missing");
-		}
-		cvStartReadRawData( fs, thresh_node, &reader );
+        // increase refcount so freeing temp header doesn't free data
+        cvIncRefData( mat ); 
 
-		if(is_uniform){
-			for(i=0; i<dims; i++){
-				cvReadRawDataSlice( fs, &reader, 2, h->thresh[i], "f" );
-			}
+        // free temporary header
+        cvReleaseMatND( &mat );
+    }
+    else
+    {
+        h->bins = cvReadByName( fs, node, "bins" );
+        if(!CV_IS_SPARSE_MAT(h->bins)){
+            CV_ERROR( CV_StsError, "Unknown Histogram type");
+        }
+    }
+
+    // read thresholds
+    if(have_ranges)
+    {
+        int i, dims, size[CV_MAX_DIM], total = 0;
+        CvSeqReader reader;
+        CvFileNode * thresh_node;
+
+        CV_CALL( dims = cvGetDims( h->bins, size ));
+        for( i = 0; i < dims; i++ )
+            total += size[i]+1;
+
+        thresh_node = cvGetFileNodeByName( fs, node, "thresh" );
+        if(!thresh_node)
+            CV_ERROR( CV_StsError, "'thresh' node is missing");
+        cvStartReadRawData( fs, thresh_node, &reader );
+
+        if(is_uniform)
+        {
+            for(i=0; i<dims; i++)
+                cvReadRawDataSlice( fs, &reader, 2, h->thresh[i], "f" );
             h->thresh2 = NULL;
-		}
-		else{
-			float* dim_ranges;
-			CV_CALL( h->thresh2 = (float**)cvAlloc(
-						dims*sizeof(h->thresh2[0])+
-						total*sizeof(h->thresh2[0][0])));
-			dim_ranges = (float*)(h->thresh2 + dims);
-			for(i=0; i < dims; i++){
-				h->thresh2[i] = dim_ranges;
-				cvReadRawDataSlice( fs, &reader, size[i]+1, dim_ranges, "f" );
-				dim_ranges += size[i] + 1;
-			}
-		}
+        }
+        else
+        {
+            float* dim_ranges;
+            CV_CALL( h->thresh2 = (float**)cvAlloc(
+                dims*sizeof(h->thresh2[0])+
+                total*sizeof(h->thresh2[0][0])));
+            dim_ranges = (float*)(h->thresh2 + dims);
+            for(i=0; i < dims; i++)
+            {
+                h->thresh2[i] = dim_ranges;
+                cvReadRawDataSlice( fs, &reader, size[i]+1, dim_ranges, "f" );
+                dim_ranges += size[i] + 1;
+            }
+        }
+    }
 
-	}
-	
-	__END__;
+    __END__;
 
-	return h;
+    return h;
 }
 
-static void icvWriteHist( CvFileStorage* fs, const char* name, const void* struct_ptr, 
-		CvAttrList /*attributes*/ ){
-	const CvHistogram * hist = (const CvHistogram *) struct_ptr;
-	int sizes[CV_MAX_DIM];
-	int dims;
-	int i;
-	int is_uniform, have_ranges;
+static void icvWriteHist( CvFileStorage* fs, const char* name,
+                          const void* struct_ptr, CvAttrList /*attributes*/ )
+{
+    const CvHistogram * hist = (const CvHistogram *) struct_ptr;
+    int sizes[CV_MAX_DIM];
+    int dims;
+    int i;
+    int is_uniform, have_ranges;
 
-	CV_FUNCNAME("icvWriteHist");
-	__BEGIN__;
- 
-	cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_HIST );
+    CV_FUNCNAME("icvWriteHist");
+    __BEGIN__;
 
-	is_uniform = (CV_IS_UNIFORM_HIST(hist) ? 1 : 0);
-	have_ranges = (hist->type & CV_HIST_RANGES_FLAG ? 1 : 0);
-	
-	cvWriteInt( fs, "is_uniform", is_uniform );
-	cvWriteInt( fs, "have_ranges", have_ranges );
-	if(CV_IS_UNIFORM_HIST(hist)){
-		cvWrite( fs, "mat", &(hist->mat) );
-	}
-	else if(CV_IS_SPARSE_HIST(hist)){
-		cvWrite( fs, "bins", hist->bins );
-	}
-	else{
-		CV_ERROR( CV_StsError, "Unknown Histogram Type" );
-	}
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_HIST );
 
-	// write thresholds
-	if(have_ranges){
-		dims = cvGetDims( hist->bins, sizes );
-		cvStartWriteStruct( fs, "thresh", CV_NODE_SEQ + CV_NODE_FLOW );
-		if(is_uniform){
-			for(i=0; i<dims; i++){
-				cvWriteRawData( fs, hist->thresh[i], 2, "f" );
-			}
-		}
-		else{
-			for(i=0; i<dims; i++){
-				cvWriteRawData( fs, hist->thresh2[i], sizes[i]+1, "f" );
-			}
-		}
-		cvEndWriteStruct( fs );
-	}
+    is_uniform = (CV_IS_UNIFORM_HIST(hist) ? 1 : 0);
+    have_ranges = (hist->type & CV_HIST_RANGES_FLAG ? 1 : 0);
 
-	cvEndWriteStruct( fs );
-	__END__;
+    cvWriteInt( fs, "type", (hist->type & 1) );
+    cvWriteInt( fs, "is_uniform", is_uniform );
+    cvWriteInt( fs, "have_ranges", have_ranges );
+    if(!CV_IS_SPARSE_HIST(hist))
+        cvWrite( fs, "mat", &(hist->mat) );
+    else
+        cvWrite( fs, "bins", hist->bins );
+
+    // write thresholds
+    if(have_ranges){
+        dims = cvGetDims( hist->bins, sizes );
+        cvStartWriteStruct( fs, "thresh", CV_NODE_SEQ + CV_NODE_FLOW );
+        if(is_uniform){
+            for(i=0; i<dims; i++){
+                cvWriteRawData( fs, hist->thresh[i], 2, "f" );
+            }
+        }
+        else{
+            for(i=0; i<dims; i++){
+                cvWriteRawData( fs, hist->thresh2[i], sizes[i]+1, "f" );
+            }
+        }
+        cvEndWriteStruct( fs );
+    }
+
+    cvEndWriteStruct( fs );
+    __END__;
 }
 
 
