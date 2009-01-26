@@ -9,7 +9,7 @@ set(the_target opencv_ffmpeg)
 add_library(${the_target} SHARED ffopencv.cpp ffopencv.h)
 
 add_dependencies(${the_target} cxcore)
-target_link_libraries(${the_target} cxcore libavcodec_w32 libavformat_w32 libavutil_w32 libgcc_w32 libmingwex_w32)
+target_link_libraries(${the_target} cxcore) #libavcodec libavformat libavutil libgcc_mingw libmingwex)
 
 set_target_properties(${the_target} PROPERTIES
                       DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
