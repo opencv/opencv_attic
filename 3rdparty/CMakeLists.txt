@@ -1,5 +1,5 @@
 add_subdirectory(lapack)
-if(WIN32)
+if(OPENCV_BUILD_3RDPARTY_LIBS)
     add_subdirectory(libjasper)
     add_subdirectory(libjpeg)
     add_subdirectory(libpng)

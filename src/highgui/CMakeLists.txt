@@ -5,8 +5,9 @@
 # ----------------------------------------------------------------------------
 project(highgui)
 
-if(WIN32)
+if(OPENCV_BUILD_3RDPARTY_LIBS)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
 endif()
 
 if(MSVC)
@@ -35,7 +36,6 @@ set(highgui_ext_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h)
 
 if(WIN32)
     set(highgui_srcs ${highgui_srcs} window_w32.cpp cvcap_vfw.cpp cvcap_cmu.cpp cvcap_w32.cpp cvcap_dshow.cpp)
-    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
     if(HAVE_MIL)
         set(highgui_srcs ${highgui_srcs} cvcap_mil.cpp)
     endif()
@@ -73,7 +73,7 @@ if(UNIX)
 
     set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
 
-    if(NOT APPLE)
+    if(NOT APPLE AND NOT OPENCV_BUILD_3RDPARTY_LIBS)
         if(JPEG_FOUND)
             add_definitions(-DHAVE_JPEG)
             include_directories(${JPEG_INCLUDE_DIR})
@@ -110,8 +110,11 @@ endif(APPLE)
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
-if(WIN32)
-    link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib"
+if(OPENCV_BUILD_3RDPARTY_LIBS)
+    if(WIN32)
+        link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib")
+    endif()
+    link_directories(
         "${CMAKE_BINARY_DIR}/3rdparty/lib"
         "${CMAKE_BINARY_DIR}/3rdparty/lib/${ConfigurationName}"
         )
@@ -175,9 +178,12 @@ add_dependencies(${the_target} cv cxcore)
 # Add the required libraries for linking:
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES})
 
+if(OPENCV_BUILD_3RDPARTY_LIBS)
+	add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
+	target_link_libraries(${the_target} libjasper libjpeg libpng libtiff zlib)
+endif()
 if(WIN32)
-    add_dependencies(${the_target} libjasper libjpeg libpng libtiff zlib)
-	target_link_libraries(${the_target} comctl32 gdi32 libjasper libjpeg libpng libtiff zlib)
+	target_link_libraries(${the_target} comctl32 gdi32)
 
 	if (MSVC)
 		target_link_libraries(${the_target} vfw32 videoinput)

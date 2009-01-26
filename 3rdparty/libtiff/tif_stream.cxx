@@ -28,6 +28,7 @@
  * TIFF Library UNIX-specific Routines.
  */
 #include <iostream>
+#include <cstring>
 #include "tiffiop.h"
 
 using namespace std;

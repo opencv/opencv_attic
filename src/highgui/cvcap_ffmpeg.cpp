@@ -60,10 +60,15 @@ extern "C" {
 #include <libswscale/swscale.h>
 #endif
 #else
+#ifdef WIN32
+#include <ffmpeg_/avformat.h>
+#include <ffmpeg_/avcodec.h>
+#else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
 #if defined(HAVE_FFMPEG_SWSCALE)
 #include <ffmpeg/swscale.h>
+#endif
 #endif
 #endif
 }
