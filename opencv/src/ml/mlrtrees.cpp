@@ -574,6 +574,46 @@ float CvRTrees::predict( const CvMat* sample, const CvMat* missing ) const
     return (float)result;
 }
 
+float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
+{
+    double result = -1;
+	
+    CV_FUNCNAME("CvRTrees::predict_prob");
+    __BEGIN__;
+	
+    int k;
+	
+	if( nclasses == 2 ) //classification
+    {
+        int max_nvotes = 0;
+        int* votes = (int*)alloca( sizeof(int)*nclasses );
+        memset( votes, 0, sizeof(*votes)*nclasses );
+        for( k = 0; k < ntrees; k++ )
+        {
+            CvDTreeNode* predicted_node = trees[k]->predict( sample, missing );
+            int nvotes;
+            int class_idx = predicted_node->class_idx;
+            CV_ASSERT( 0 <= class_idx && class_idx < nclasses );
+			
+            nvotes = ++votes[class_idx];
+            if( nvotes > max_nvotes )
+            {
+                max_nvotes = nvotes;
+                result = predicted_node->value;
+            }
+        }
+		
+		return votes[1];
+    }
+    else // regression
+    {
+		CV_ERROR(CV_StsBadArg, "This function works for binary classification problems only...");
+    }
+	
+    __END__;
+	
+    return -1;
+}
 
 void CvRTrees::write( CvFileStorage* fs, const char* name )
 {

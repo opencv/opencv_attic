@@ -978,6 +978,7 @@ public:
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
     virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
+    virtual float predict_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
