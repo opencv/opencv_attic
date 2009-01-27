@@ -1734,6 +1734,7 @@ public:
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
     virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
+    virtual float predict_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
@@ -1790,6 +1791,18 @@ The input parameters of the prediction method are the same as in
 <a href="#decl_CvDTree_predict">CvDTree::predict</a>, but the return value type is different.
 This method returns the cumulative result from all the trees in the forest
 (the class that receives the majority of voices, or the mean of the regression function estimates).
+</p>
+
+<hr><h3><a name="decl_CvRTrees_predict_prob">CvRTrees::predict_prob</a></h3>
+<p class="Blurb">Predicts the probability of class 1 for the input sample</p>
+<pre>
+double CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing=0 ) const;
+</pre>
+<p>
+The input parameters of the prediction method are the same as in
+<a href="#decl_CvRTrees_predict">CvRTrees::predict</a>, but the return value is different.
+This method returns the fraction of tree votes for class 1. The method works for binary 
+classification problems only.
 </p>
 
 
