@@ -2677,6 +2677,7 @@ protected:
     void get_timing_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool* are_images );
+    double get_success_error_level( int test_case_idx, int i, int j );
     int write_default_params( CvFileStorage* fs );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high );
@@ -2854,6 +2855,14 @@ void CxCore_SVDTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvSc
     *high = cvScalarAll(2.);
 }
 
+double CxCore_SVDTest::get_success_error_level( int test_case_idx, int i, int j )
+{
+    int input_depth = CV_MAT_DEPTH(cvGetElemType( test_array[INPUT][0] ));
+    double input_precision = input_depth < CV_32F ? 0 : input_depth == CV_32F ?
+                            5e-5 : 5e-11;
+    double output_precision = CvArrTest::get_success_error_level( test_case_idx, i, j );
+    return MAX(input_precision, output_precision);
+}
 
 void CxCore_SVDTest::run_func()
 {

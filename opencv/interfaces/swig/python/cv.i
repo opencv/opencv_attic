@@ -77,6 +77,7 @@
 %include "./pycvseq.hpp"
 
 // aliases from #defines
+%include "./cvaliases_autogen.i"
 %include "./cvaliases.i"
 
 %pythoncode 

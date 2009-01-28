@@ -13,6 +13,7 @@ EXCLUDE = { }
 
 # force this to be part of cv module
 # otherwise becomes cv.cvmacros
+print "/** This file was automatically generated using util/extract_aliases.py script */"
 print "%module cv"
 print "%pythoncode %{"
 for fn in sys.argv[1:]:

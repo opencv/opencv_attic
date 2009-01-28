@@ -501,9 +501,6 @@ class CvPointVector(_object):
 CvPointVector_swigregister = _cv.CvPointVector_swigregister
 CvPointVector_swigregister(CvPointVector)
 
-def cvCalcHist(*args):
-	return cvCalcArrHist(*args)
-
 
 def cvSegmentMotion(*args):
   """
@@ -4509,11 +4506,11 @@ def cvSort(*args):
   return _cv.cvSort(*args)
 
 def cvSolveCubic(*args):
-  """cvSolveCubic(CvMat coeffs, CvMat roots) -> int"""
+  """cvSolveCubic(CvMat coeffs) -> int"""
   return _cv.cvSolveCubic(*args)
 
 def cvSolvePoly(*args):
-  """cvSolvePoly(CvMat coeffs, CvMat roots, int maxiter=0, int fig=0)"""
+  """cvSolvePoly(CvMat coeffs, int maxiter=20, int fig=100)"""
   return _cv.cvSolvePoly(*args)
 
 def cvCrossProduct(*args):
@@ -7183,9 +7180,9 @@ def cvCalcArrHist(*args):
   """cvCalcArrHist(CvArr arr, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
   return _cv.cvCalcArrHist(*args)
 
-def cvCalcImageHist(*args):
-  """cvCalcImageHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
-  return _cv.cvCalcImageHist(*args)
+def cvCalcHist(*args):
+  """cvCalcHist( image, CvHistogram hist, int accumulate=0, CvArr mask=None)"""
+  return _cv.cvCalcHist(*args)
 
 def cvCalcArrBackProject(*args):
   """cvCalcArrBackProject(CvArr image, CvArr dst, CvHistogram hist)"""
@@ -7323,15 +7320,15 @@ def cvReleaseFeatureTree(*args):
 
 def cvFindFeatures(*args):
   """
-    cvFindFeatures(CvFeatureTree tr, CvMat desc, CvMat results, CvMat dist, 
-        int k=2, int emax=20)
+    cvFindFeatures(CvFeatureTree tr, CvMat query_points, CvMat indices, 
+        int emax=20)
     """
   return _cv.cvFindFeatures(*args)
 
 def cvFindFeaturesBoxed(*args):
   """
     cvFindFeaturesBoxed(CvFeatureTree tr, CvMat bounds_min, CvMat bounds_max, 
-        CvMat results) -> int
+        CvMat out_indices) -> int
     """
   return _cv.cvFindFeaturesBoxed(*args)
 
@@ -7358,15 +7355,15 @@ def LSHSize(*args):
   return _cv.LSHSize(*args)
 
 def cvLSHAdd(*args):
-  """cvLSHAdd(CvLSH lsh, CvArr data)"""
+  """cvLSHAdd(CvLSH lsh, CvMat data)"""
   return _cv.cvLSHAdd(*args)
 
 def cvLSHRemove(*args):
-  """cvLSHRemove(CvLSH lsh, CvArr indices)"""
+  """cvLSHRemove(CvLSH lsh, CvMat indices)"""
   return _cv.cvLSHRemove(*args)
 
 def cvLSHQuery(*args):
-  """cvLSHQuery(CvLSH lsh, CvArr query_points, CvArr indices, int emax)"""
+  """cvLSHQuery(CvLSH lsh, CvMat query_points, CvMat indices, int emax)"""
   return _cv.cvLSHQuery(*args)
 class CvSURFPoint(_object):
     """Proxy of C++ CvSURFPoint class"""
@@ -7442,10 +7439,7 @@ def cvSURFParams(*args):
   return _cv.cvSURFParams(*args)
 
 def cvExtractSURF(*args):
-  """
-    cvExtractSURF(CvArr img, CvArr mask, CvSeq keypoints, CvSeq descriptors, 
-        CvMemStorage storage, CvSURFParams params)
-    """
+  """cvExtractSURF(CvArr img, CvArr mask, CvSeq keypoints, CvSURFParams params)"""
   return _cv.cvExtractSURF(*args)
 class CvStarKeypoint(_object):
     """Proxy of C++ CvStarKeypoint class"""
@@ -9095,6 +9089,14 @@ cvDrawCircle=cvCircle
 cvDrawEllipse=cvEllipse
 cvDrawPolyLine=cvPolyLine
 CV_FONT_VECTOR0=CV_FONT_HERSHEY_SIMPLEX
+
+cvCalcBackProject = cvCalcArrBackProject;
+
+cvCalcBackProjectPatch = cvCalcArrBackProjectPatch;
+
+cvCalcImageHist = cvCalcArrHist;
+
+cvCalcHist = cvCalcArrHist;
 
 __doc__ = """
 OpenCV is the Intel Open CV library, an open source effort to provide

@@ -30,6 +30,10 @@ if(MSVC)
     add_definitions(-DJAS_WIN_MSVC_BUILD)
 endif()
 
+if(UNIX AND CMAKE_COMPILER_IS_GNUCXX)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+endif()
+
 set_target_properties(${the_target}
 	PROPERTIES
 	OUTPUT_NAME "${the_target}"

@@ -30,14 +30,14 @@ set(opencv_headers
     )
 
 add_custom_command(
-   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cvaliases.i
+   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cvaliases_autogen.i
    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utils/extract_aliases.py
-    ${opencv_headers} > ${CMAKE_CURRENT_BINARY_DIR}/cvaliases.i
+    ${opencv_headers} > ${CMAKE_CURRENT_BINARY_DIR}/cvaliases_autogen.i
    DEPENDS ${opencv_headers}
    )
 
 set(SWIG_MODULE_cv_EXTRA_DEPS
-    imagedata.i cvarr.i ${CMAKE_CURRENT_BINARY_DIR}/cvaliases.i pyhelpers.i
+    imagedata.i cvarr.i ${CMAKE_CURRENT_BINARY_DIR}/cvaliases_autogen.i cvaliases.i pyhelpers.i
     nointpb.i pytypemaps.i cvshadow.i cvseq.i
     ../general/cv.i ../general/memory.i ../general/typemaps.i
     ../general/extensions.i ../general/doublepointers.i

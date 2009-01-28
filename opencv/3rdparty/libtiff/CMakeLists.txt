@@ -60,9 +60,9 @@ if(WIN32)
     set(lib_srcs ${lib_srcs} tif_win32.c)
 endif(WIN32)
 
-if(APPLE)
-    set(lib_srcs ${lib_srcs} tif_apple.c)
-endif(APPLE)
+#if(APPLE)
+#    set(lib_srcs ${lib_srcs} tif_apple.c)
+#endif(APPLE)
 
 file(GLOB lib_hdrs *.h*)
 
@@ -74,11 +74,15 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
 
+if(UNIX AND CMAKE_COMPILER_IS_GNUCXX)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+endif()
+
 add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 set_target_properties(${the_target}
 	PROPERTIES
 	OUTPUT_NAME "${the_target}"
 	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-#	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
+	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/3rdparty/lib/"
 	)

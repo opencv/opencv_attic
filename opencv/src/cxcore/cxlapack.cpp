@@ -43,175 +43,6 @@
 #include "clapack.h"
 
 /****************************************************************************************\
-*                              LU decomposition/back substitution                        *
-\****************************************************************************************/
-
-#define arrtype float
-#define temptype double
-
-typedef  CvStatus (CV_STDCALL * CvLUDecompFunc)( double* A, int stepA, CvSize sizeA,
-                                                 void* B, int stepB, CvSize sizeB,
-                                                 double* det );
-
-typedef  CvStatus (CV_STDCALL * CvLUBackFunc)( double* A, int stepA, CvSize sizeA,
-                                               void* B, int stepB, CvSize sizeB );
-
-
-#define ICV_DEF_LU_DECOMP_FUNC( flavor, arrtype )                               \
-static CvStatus CV_STDCALL                                                      \
-icvLUDecomp_##flavor( double* A, int stepA, CvSize sizeA,                       \
-                      arrtype* B, int stepB, CvSize sizeB, double* _det )       \
-{                                                                               \
-    int n = sizeA.width;                                                        \
-    int m = 0, i;                                                               \
-    double det = 1;                                                             \
-                                                                                \
-    assert( sizeA.width == sizeA.height );                                      \
-                                                                                \
-    if( B )                                                                     \
-    {                                                                           \
-        assert( sizeA.height == sizeB.height );                                 \
-        m = sizeB.width;                                                        \
-    }                                                                           \
-    stepA /= sizeof(A[0]);                                                      \
-    stepB /= sizeof(B[0]);                                                      \
-                                                                                \
-    for( i = 0; i < n; i++, A += stepA, B += stepB )                            \
-    {                                                                           \
-        int j, k = i;                                                           \
-        double* tA = A;                                                         \
-        arrtype* tB = 0;                                                        \
-        double kval = fabs(A[i]), tval;                                         \
-                                                                                \
-        /* find the pivot element */                                            \
-        for( j = i + 1; j < n; j++ )                                            \
-        {                                                                       \
-            tA += stepA;                                                        \
-            tval = fabs(tA[i]);                                                 \
-                                                                                \
-            if( tval > kval )                                                   \
-            {                                                                   \
-                kval = tval;                                                    \
-                k = j;                                                          \
-            }                                                                   \
-        }                                                                       \
-                                                                                \
-        if( kval == 0 )                                                         \
-        {                                                                       \
-            det = 0;                                                            \
-            break;                                                              \
-        }                                                                       \
-                                                                                \
-        /* swap rows */                                                         \
-        if( k != i )                                                            \
-        {                                                                       \
-            tA = A + stepA*(k - i);                                             \
-            det = -det;                                                         \
-                                                                                \
-            for( j = i; j < n; j++ )                                            \
-            {                                                                   \
-                double t;                                                       \
-                CV_SWAP( A[j], tA[j], t );                                      \
-            }                                                                   \
-                                                                                \
-            if( m > 0 )                                                         \
-            {                                                                   \
-                tB = B + stepB*(k - i);                                         \
-                                                                                \
-                for( j = 0; j < m; j++ )                                        \
-                {                                                               \
-                    arrtype t = B[j];                                           \
-                    CV_SWAP( B[j], tB[j], t );                                  \
-                }                                                               \
-            }                                                                   \
-        }                                                                       \
-                                                                                \
-        tval = 1./A[i];                                                         \
-        det *= A[i];                                                            \
-        tA = A;                                                                 \
-        tB = B;                                                                 \
-        A[i] = tval; /* to replace division with multiplication in LUBack */    \
-                                                                                \
-        /* update matrix and the right side of the system */                    \
-        for( j = i + 1; j < n; j++ )                                            \
-        {                                                                       \
-            tA += stepA;                                                        \
-            tB += stepB;                                                        \
-            double alpha = -tA[i]*tval;                                         \
-                                                                                \
-            for( k = i + 1; k < n; k++ )                                        \
-                tA[k] = tA[k] + alpha*A[k];                                     \
-                                                                                \
-            if( m > 0 )                                                         \
-                for( k = 0; k < m; k++ )                                        \
-                    tB[k] = (arrtype)(tB[k] + alpha*B[k]);                      \
-        }                                                                       \
-    }                                                                           \
-                                                                                \
-    if( _det )                                                                  \
-        *_det = det;                                                            \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-ICV_DEF_LU_DECOMP_FUNC( 32f, float )
-ICV_DEF_LU_DECOMP_FUNC( 64f, double )
-
-
-#define ICV_DEF_LU_BACK_FUNC( flavor, arrtype )                                 \
-static CvStatus CV_STDCALL                                                      \
-icvLUBack_##flavor( double* A, int stepA, CvSize sizeA,                         \
-                    arrtype* B, int stepB, CvSize sizeB )                       \
-{                                                                               \
-    int n = sizeA.width;                                                        \
-    int m = sizeB.width, i;                                                     \
-                                                                                \
-    assert( m > 0 && sizeA.width == sizeA.height &&                             \
-            sizeA.height == sizeB.height );                                     \
-    stepA /= sizeof(A[0]);                                                      \
-    stepB /= sizeof(B[0]);                                                      \
-                                                                                \
-    A += stepA*(n - 1);                                                         \
-    B += stepB*(n - 1);                                                         \
-                                                                                \
-    for( i = n - 1; i >= 0; i--, A -= stepA )                                   \
-    {                                                                           \
-        int j, k;                                                               \
-        for( j = 0; j < m; j++ )                                                \
-        {                                                                       \
-            arrtype* tB = B + j;                                                \
-            double x = 0;                                                       \
-                                                                                \
-            for( k = n - 1; k > i; k--, tB -= stepB )                           \
-                x += A[k]*tB[0];                                                \
-                                                                                \
-            tB[0] = (arrtype)((tB[0] - x)*A[i]);                                \
-        }                                                                       \
-    }                                                                           \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-ICV_DEF_LU_BACK_FUNC( 32f, float )
-ICV_DEF_LU_BACK_FUNC( 64f, double )
-
-static CvFuncTable lu_decomp_tab, lu_back_tab;
-static int lu_inittab = 0;
-
-static void icvInitLUTable( CvFuncTable* decomp_tab,
-                            CvFuncTable* back_tab )
-{
-    decomp_tab->fn_2d[0] = (void*)icvLUDecomp_32f;
-    decomp_tab->fn_2d[1] = (void*)icvLUDecomp_64f;
-    back_tab->fn_2d[0] = (void*)icvLUBack_32f;
-    back_tab->fn_2d[1] = (void*)icvLUBack_64f;
-}
-
-
-
-/****************************************************************************************\
 *                                 Determinant of the matrix                              *
 \****************************************************************************************/
 
@@ -232,7 +63,8 @@ cvDet( const CvArr* arr )
     __BEGIN__;
 
     CvMat stub, *mat = (CvMat*)arr;
-    int type;
+    uchar* m;
+    int type, step, rows;
 
     if( !CV_IS_MAT( mat ))
     {
@@ -241,108 +73,105 @@ cvDet( const CvArr* arr )
 
     type = CV_MAT_TYPE( mat->type );
 
-    if( mat->width != mat->height )
+    if( mat->rows != mat->cols )
         CV_ERROR( CV_StsBadSize, "The matrix must be square" );
+
+    m = mat->data.ptr;
+    rows = mat->rows;
+    step = mat->step;
 
     #define Mf( y, x ) ((float*)(m + y*step))[x]
     #define Md( y, x ) ((double*)(m + y*step))[x]
 
-    if( mat->width == 2 )
+    if( type == CV_32F )
     {
-        uchar* m = mat->data.ptr;
-        int step = mat->step;
-
-        if( type == CV_32FC1 )
-        {
+        if( rows == 2 )
             result = det2(Mf);
-        }
-        else if( type == CV_64FC1 )
-        {
-            result = det2(Md);
-        }
-        else
-        {
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-        }
-    }
-    else if( mat->width == 3 )
-    {
-        uchar* m = mat->data.ptr;
-        int step = mat->step;
-        
-        if( type == CV_32FC1 )
-        {
+        else if( rows == 3 )
             result = det3(Mf);
-        }
-        else if( type == CV_64FC1 )
-        {
-            result = det3(Md);
-        }
-        else
-        {
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-        }
-    }
-    else if( mat->width == 1 )
-    {
-        if( type == CV_32FC1 )
-        {
+        else if( rows == 1 )
             result = mat->data.fl[0];
-        }
-        else if( type == CV_64FC1 )
-        {
-            result = mat->data.db[0];
-        }
         else
         {
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+            integer i, n = rows, *ipiv, info=0;
+            int bufSize = n*n*sizeof(float) + (n+1)*sizeof(ipiv[0]), sign=0;
+            CvMat a;
+            
+            if( bufSize <= CV_MAX_LOCAL_SIZE )
+            {
+                buffer = (uchar*)cvStackAlloc( bufSize );
+                local_alloc = 1;
+            }
+            else
+            {
+                CV_CALL( buffer = (uchar*)cvAlloc( bufSize ));
+            }
+
+            a = cvMat(n, n, CV_32F, buffer);
+            cvCopy(mat, &a);
+            ipiv = (integer*)cvAlignPtr(a.data.ptr + a.step*a.rows, sizeof(integer));
+
+            sgetrf_(&n, &n, a.data.fl, &n, ipiv, &info);
+            assert(info >= 0);
+
+            if( info == 0 )
+            {
+                result = 1;
+                for( i = 0; i < n; i++ )
+                {
+                    result *= a.data.fl[i*(n+1)];
+                    sign ^= ipiv[i] != i+1;
+                }
+                result *= sign ? -1 : 1;
+            }
         }
     }
-    else
+    else if( type == CV_64F )
     {
-        CvLUDecompFunc decomp_func;
-        CvSize size = cvGetMatSize( mat );
-        const int worktype = CV_64FC1;
-        int buf_size = size.width*size.height*CV_ELEM_SIZE(worktype);
-        CvMat tmat;
-
-        if( !lu_inittab )
-        {
-            icvInitLUTable( &lu_decomp_tab, &lu_back_tab );
-            lu_inittab = 1;
-        }
-
-        if( CV_MAT_CN( type ) != 1 || CV_MAT_DEPTH( type ) < CV_32F )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-        if( buf_size <= CV_MAX_LOCAL_SIZE )
-        {
-            buffer = (uchar*)cvStackAlloc( buf_size );
-            local_alloc = 1;
-        }
+        if( rows == 2 )
+            result = det2(Md);
+        else if( rows == 3 )
+            result = det3(Md);
+        else if( rows == 1 )
+            result = mat->data.db[0];
         else
         {
-            CV_CALL( buffer = (uchar*)cvAlloc( buf_size ));
+            integer i, n = rows, *ipiv, info=0;
+            int bufSize = n*n*sizeof(double) + (n+1)*sizeof(ipiv[0]), sign=0;
+            CvMat a;
+            
+            if( bufSize <= CV_MAX_LOCAL_SIZE )
+            {
+                buffer = (uchar*)cvStackAlloc( bufSize );
+                local_alloc = 1;
+            }
+            else
+            {
+                CV_CALL( buffer = (uchar*)cvAlloc( bufSize ));
+            }
+
+            a = cvMat(n, n, CV_64F, buffer);
+            cvCopy(mat, &a);
+            ipiv = (integer*)cvAlignPtr(a.data.ptr + a.step*a.rows, sizeof(integer));
+
+            dgetrf_(&n, &n, a.data.db, &n, ipiv, &info);
+            assert(info >= 0);
+
+            if( info == 0 )
+            {
+                result = 1;
+                for( i = 0; i < n; i++ )
+                {
+                    result *= a.data.db[i*(n+1)];
+                    sign ^= ipiv[i] != i+1;
+                }
+                result *= sign ? -1 : 1;
+            }
         }
-
-        CV_CALL( cvInitMatHeader( &tmat, size.height, size.width, worktype, buffer ));
-        if( type == worktype )
-        {
-        	CV_CALL( cvCopy( mat, &tmat ));
-        }
-        else
-            CV_CALL( cvConvert( mat, &tmat ));
-
-        decomp_func = (CvLUDecompFunc)(lu_decomp_tab.fn_2d[CV_MAT_DEPTH(worktype)-CV_32F]);
-        assert( decomp_func );
-
-        IPPI_CALL( decomp_func( tmat.data.db, tmat.step, size, 0, 0, size, &result ));
     }
 
     #undef Mf
     #undef Md
-
-    /*icvCheckVector_64f( &result, 1 );*/
 
     __END__;
 
