@@ -295,9 +295,6 @@ CvImageFilters::CvImageFilters()
 {
     m_factories = new GrFmtFactoriesList;
 
-#ifdef HAVE_IMAGEIO
-    m_factories->AddFactory( new GrFmtImageIO() );
-#endif
     m_factories->AddFactory( new GrFmtBmp() );
 #ifdef HAVE_JPEG
     m_factories->AddFactory( new GrFmtJpeg() );
@@ -313,6 +310,9 @@ CvImageFilters::CvImageFilters()
 #endif
 #ifdef HAVE_ILMIMF
     m_factories->AddFactory( new GrFmtExr() );
+#endif
+#ifdef HAVE_IMAGEIO
+    m_factories->AddFactory( new GrFmtImageIO() );
 #endif
 }
 
