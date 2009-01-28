@@ -647,7 +647,7 @@ float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
             }
         }
 		
-		return votes[1];
+		return float(votes[1])/ntrees;
     }
     else // regression
     {
