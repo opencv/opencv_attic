@@ -3,7 +3,7 @@
 # use the default c++ flags
 AM_CXXFLAGS=@DEF_CXXFLAGS@ @GTK_CFLAGS@ @GTHREAD_CFLAGS@ @GSTREAMER_CFLAGS@
 
-INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)/src/cvaux -I$(top_srcdir)/src/cv
+INCLUDES = -I. -I$(top_srcdir)/include/opencv -I$(top_srcdir)/src/cvaux -I$(top_srcdir)/src/cv -I$(top_srcdir)/3rdparty/include
 
 # =========================================================================
 
@@ -69,7 +69,9 @@ noinst_HEADERS     = \
   highgui/grfmt_tiff.h     \
   highgui/grfmts.h         \
   highgui/utils.h          \
-  highgui/gstappsink.h
+  highgui/gstappsink.h	   \
+  \
+  clapack.h
 
 noinst_LTLIBRARIES = lib_cxcore.la lib_cv.la lib_cvaux.la lib_ml.la lib_highgui.la
 
