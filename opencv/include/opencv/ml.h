@@ -984,6 +984,7 @@ public:
     virtual const CvMat* get_var_importance();
     virtual float get_proximity( const CvMat* sample1, const CvMat* sample2,
         const CvMat* missing1 = 0, const CvMat* missing2 = 0 ) const;
+    virtual float get_train_error();
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );

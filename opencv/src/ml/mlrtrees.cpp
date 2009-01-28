@@ -532,6 +532,50 @@ float CvRTrees::get_proximity( const CvMat* sample1, const CvMat* sample2,
 }
 
 
+float CvRTrees::get_train_error()
+{
+    float err = -1;
+
+    CV_FUNCNAME("CvRTrees::get_train_error");
+    __BEGIN__;
+
+    int sample_count = data->sample_count;
+    int var_count = data->var_count;
+
+    float *values_ptr = (float*)cvAlloc( sizeof(float)*sample_count*var_count );
+    uchar *missing_ptr = (uchar*)cvAlloc( sizeof(uchar)*sample_count*var_count );
+    float *responses_ptr = (float*)cvAlloc( sizeof(float)*sample_count );
+
+    data->get_vectors( 0, values_ptr, missing_ptr, responses_ptr);
+    
+    if (data->is_classifier)
+    {
+        int err_count = 0;
+        float *vp = values_ptr;
+        uchar *mp = missing_ptr;    
+        for (int si = 0; si < sample_count; si++, vp += var_count, mp += var_count)
+        {
+            CvMat sample = cvMat( 1, var_count, CV_32FC1, vp );
+            CvMat missing = cvMat( 1, var_count, CV_8UC1,  mp );
+            float r = predict( &sample, &missing );
+            if (fabs(r - responses_ptr[si]) >= FLT_EPSILON)
+                err_count++;
+        }
+        err = (float)err_count / (float)sample_count;
+    }
+    else
+        CV_ERROR( CV_StsBadArg, "This method is not supported for regression problems" );
+    
+    cvFree( &values_ptr );
+    cvFree( &missing_ptr );
+    cvFree( &responses_ptr ); 
+
+     __END__;
+
+    return err;
+}
+
+
 float CvRTrees::predict( const CvMat* sample, const CvMat* missing ) const
 {
     double result = -1;
