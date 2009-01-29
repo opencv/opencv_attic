@@ -49,6 +49,7 @@ bool  GrFmtImageIO::CheckFile( const char* filename )
     CGImageRef imageRef = CGImageSourceCreateImageAtIndex( sourceRef, 0, NULL );
     CFRelease( sourceRef );
     if( !imageRef ) return false;
+    CGImageRelease(imageRef);
 
     return true;
 }
@@ -68,7 +69,7 @@ GrFmtWriter* GrFmtImageIO::NewWriter( const char* filename )
 
 /////////////////////// GrFmtImageIOReader ///////////////////
 
-GrFmtImageIOReader::GrFmtImageIOReader( const char* filename ) : GrFmtReader( filename )
+GrFmtImageIOReader::GrFmtImageIOReader( const char* filename ) : GrFmtReader( filename ), imageRef(NULL)
 {
     // Nothing to do here
 }
@@ -83,6 +84,7 @@ GrFmtImageIOReader::~GrFmtImageIOReader()
 void  GrFmtImageIOReader::Close()
 {
     CGImageRelease( imageRef );
+    imageRef = NULL;
 
     GrFmtReader::Close();
 }
@@ -92,6 +94,9 @@ bool  GrFmtImageIOReader::ReadHeader()
 {
     CFURLRef         imageURLRef;
     CGImageSourceRef sourceRef;
+    // diciu, if ReadHeader is called twice in a row make sure to release the previously allocated imageRef
+    if (imageRef != NULL)
+        CGImageRelease(imageRef);
     imageRef = NULL;
 
     imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
