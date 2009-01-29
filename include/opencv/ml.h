@@ -652,6 +652,7 @@ struct CvPair32s32f
 struct CvDTreeSplit
 {
     int var_idx;
+    int condensed_idx;
     int inversed;
     float quality;
     CvDTreeSplit* next;
@@ -1102,7 +1103,7 @@ public:
 
     virtual float predict( const CvMat* _sample, const CvMat* _missing=0,
                            CvMat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
-                           bool raw_mode=false ) const;
+                           bool raw_mode=false, bool return_sum=false ) const;
 
     virtual void prune( CvSlice slice );
 
@@ -1110,6 +1111,7 @@ public:
 
     virtual void write( CvFileStorage* storage, const char* name );
     virtual void read( CvFileStorage* storage, CvFileNode* node );
+    virtual const CvMat* get_active_vars(bool absolute_idx=true);
 
     CvSeq* get_weak_predictors();
 
@@ -1129,6 +1131,10 @@ protected:
     CvDTreeTrainData* data;
     CvBoostParams params;
     CvSeq* weak;
+
+    CvMat* active_vars;
+    CvMat* active_vars_abs;
+    bool have_active_cat_vars;
 
     CvMat* orig_response;
     CvMat* sum_response;
