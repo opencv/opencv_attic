@@ -846,6 +846,7 @@ CvDTreeSplit* CvDTreeTrainData::new_split_ord( int vi, float cmp_val,
 {
     CvDTreeSplit* split = (CvDTreeSplit*)cvSetNew( split_heap );
     split->var_idx = vi;
+    split->condensed_idx = INT_MIN;
     split->ord.c = cmp_val;
     split->ord.split_point = split_point;
     split->inversed = inversed;
@@ -862,6 +863,7 @@ CvDTreeSplit* CvDTreeTrainData::new_split_cat( int vi, float quality )
     int i, n = (max_c_count + 31)/32;
 
     split->var_idx = vi;
+    split->condensed_idx = INT_MIN;
     split->inversed = 0;
     split->quality = quality;
     for( i = 0; i < n; i++ )

@@ -796,8 +796,9 @@ CvBoost::CvBoost()
     data = 0;
     weak = 0;
     default_model_name = "my_boost_tree";
-    orig_response = sum_response = weak_eval = subsample_mask =
-        weights = subtree_weights = 0;
+    active_vars = active_vars_abs = orig_response = sum_response = weak_eval =
+        subsample_mask = weights = subtree_weights = 0;
+    have_active_cat_vars = have_subsample = false;
 
     clear();
 }
@@ -836,6 +837,8 @@ void CvBoost::clear()
         delete data;
     weak = 0;
     data = 0;
+    cvReleaseMat( &active_vars );
+    cvReleaseMat( &active_vars_abs );
     cvReleaseMat( &orig_response );
     cvReleaseMat( &sum_response );
     cvReleaseMat( &weak_eval );
@@ -922,6 +925,9 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
 
     set_params( _params );
 
+    cvReleaseMat( &active_vars );
+    cvReleaseMat( &active_vars_abs );
+
     if( !_update || !data )
     {
         clear();
@@ -957,6 +963,7 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
         trim_weights();
     }
 
+    get_active_vars(); // recompute active_vars* maps and condensed_idx's in the splits.
     data->is_classifier = true;
     ok = true;
 
@@ -1258,10 +1265,134 @@ CvBoost::trim_weights()
 }
 
 
+const CvMat* 
+CvBoost::get_active_vars( bool absolute_idx )
+{
+    CvMat* mask = 0;
+    CvMat* inv_map = 0;
+    CvMat* result = 0;
+    
+    CV_FUNCNAME( "CvBoost::get_active_vars" );
+
+    __BEGIN__;
+    
+    if( !weak )
+        CV_ERROR( CV_StsError, "The boosted tree ensemble has not been trained yet" );
+
+    if( !active_vars || !active_vars_abs )
+    {
+        CvSeqReader reader;
+        int i, j, nactive_vars;
+        CvBoostTree* wtree;
+        const CvDTreeNode* node;
+        
+        assert(!active_vars && !active_vars_abs);
+        mask = cvCreateMat( 1, data->var_count, CV_8U );
+        inv_map = cvCreateMat( 1, data->var_count, CV_32S );
+        cvZero( mask );
+        cvSet( inv_map, cvScalar(-1) );
+
+        // first pass: compute the mask of used variables
+        cvStartReadSeq( weak, &reader );
+        for( i = 0; i < weak->total; i++ )
+        {
+            CV_READ_SEQ_ELEM(wtree, reader);
+
+            node = wtree->get_root();
+            assert( node != 0 );
+            for(;;)
+            {
+                const CvDTreeNode* parent;
+                for(;;)
+                {
+                    CvDTreeSplit* split = node->split;
+                    for( ; split != 0; split = split->next )
+                        mask->data.ptr[split->var_idx] = 1;
+                    if( !node->left )
+                        break;
+                    node = node->left;
+                }
+
+                for( parent = node->parent; parent && parent->right == node;
+                    node = parent, parent = parent->parent )
+                    ;
+
+                if( !parent )
+                    break;
+
+                node = parent->right;
+            }
+        }
+
+        nactive_vars = cvCountNonZero(mask);
+        active_vars = cvCreateMat( 1, nactive_vars, CV_32S );
+        active_vars_abs = cvCreateMat( 1, nactive_vars, CV_32S );
+
+        have_active_cat_vars = false;
+
+        for( i = j = 0; i < data->var_count; i++ )
+        {
+            if( mask->data.ptr[i] )
+            {
+                active_vars->data.i[j] = i;
+                active_vars_abs->data.i[j] = data->var_idx ? data->var_idx->data.i[i] : i;
+                inv_map->data.i[i] = j;
+                if( data->var_type->data.i[i] >= 0 )
+                    have_active_cat_vars = true;
+                j++;
+            }
+        }
+
+        // second pass: now compute the condensed indices
+        cvStartReadSeq( weak, &reader );
+        for( i = 0; i < weak->total; i++ )
+        {
+            CV_READ_SEQ_ELEM(wtree, reader);
+            node = wtree->get_root();
+            for(;;)
+            {
+                const CvDTreeNode* parent;
+                for(;;)
+                {
+                    CvDTreeSplit* split = node->split;
+                    for( ; split != 0; split = split->next )
+                    {
+                        split->condensed_idx = inv_map->data.i[split->var_idx];
+                        assert( split->condensed_idx >= 0 );
+                    }
+
+                    if( !node->left )
+                        break;
+                    node = node->left;
+                }
+
+                for( parent = node->parent; parent && parent->right == node;
+                    node = parent, parent = parent->parent )
+                    ;
+
+                if( !parent )
+                    break;
+
+                node = parent->right;
+            }
+        }
+    }
+
+    result = absolute_idx ? active_vars_abs : active_vars;
+
+    __END__;
+
+    cvReleaseMat( &mask );
+    cvReleaseMat( &inv_map );
+
+    return result;
+}
+
+
 float
 CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
                   CvMat* weak_responses, CvSlice slice,
-                  bool raw_mode ) const
+                  bool raw_mode, bool return_sum ) const
 {
     float* buf = 0;
     bool allocated = false;
@@ -1275,11 +1406,11 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     CvMat sample, missing;
     CvSeqReader reader;
     double sum = 0;
-    int cls_idx;
     int wstep = 0;
     const int* vtype;
     const int* cmap;
     const int* cofs;
+    const float* sample_data;
 
     if( !weak )
         CV_ERROR( CV_StsError, "The boosted tree ensemble has not been trained yet" );
@@ -1287,10 +1418,11 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     if( !CV_IS_MAT(_sample) || CV_MAT_TYPE(_sample->type) != CV_32FC1 ||
         (_sample->cols != 1 && _sample->rows != 1) ||
         (_sample->cols + _sample->rows - 1 != data->var_all && !raw_mode) ||
-        (_sample->cols + _sample->rows - 1 != data->var_count && raw_mode) )
+        (_sample->cols + _sample->rows - 1 != active_vars->cols && raw_mode) )
             CV_ERROR( CV_StsBadArg,
         "the input sample must be 1d floating-point vector with the same "
-        "number of elements as the total number of variables used for training" );
+        "number of elements as the total number of variables or "
+        "as the number of variables used for training" );
 
     if( _missing )
     {
@@ -1319,13 +1451,13 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
         wstep = CV_IS_MAT_CONT(weak_responses->type) ? 1 : weak_responses->step/sizeof(float);
     }
 
-    var_count = data->var_count;
+    var_count = active_vars->cols;
     vtype = data->var_type->data.i;
     cmap = data->cat_map->data.i;
     cofs = data->cat_ofs->data.i;
 
     // if need, preprocess the input vector
-    if( !raw_mode && (data->cat_var_count > 0 || data->var_idx) )
+    if( !raw_mode )
     {
         int bufsize;
         int step, mstep = 0;
@@ -1333,7 +1465,8 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
         const uchar* src_mask = 0;
         float* dst_sample;
         uchar* dst_mask;
-        const int* vidx = data->var_idx && !raw_mode ? data->var_idx->data.i : 0;
+        const int* vidx = active_vars->data.i;
+        const int* vidx_abs = active_vars_abs->data.i;
         bool have_mask = _missing != 0;
 
         bufsize = var_count*(sizeof(float) + sizeof(uchar));
@@ -1358,10 +1491,10 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
 
         for( i = 0; i < var_count; i++ )
         {
-            int idx = vidx ? vidx[i] : i;
-            float val = src_sample[idx*step];
-            int ci = vtype[i];
-            uchar m = src_mask ? src_mask[i] : (uchar)0;
+            int idx = vidx[i], idx_abs = vidx_abs[i];
+            float val = src_sample[idx_abs*step];
+            int ci = vtype[idx];
+            uchar m = src_mask ? src_mask[idx_abs*mstep] : (uchar)0;
 
             if( ci >= 0 )
             {
@@ -1406,29 +1539,97 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
             _missing = &missing;
         }
     }
+    else
+    {
+        if( !CV_IS_MAT_CONT(_sample->type & (_missing ? _missing->type : -1)) )
+            CV_ERROR( CV_StsBadArg, "In raw mode the input vectors must be continuous" );
+    }
 
     cvStartReadSeq( weak, &reader );
     cvSetSeqReaderPos( &reader, slice.start_index );
 
-    for( i = 0; i < weak_count; i++ )
+    sample_data = _sample->data.fl;
+
+    if( !have_active_cat_vars && !_missing && !weak_responses )
     {
-        CvBoostTree* wtree;
-        double val;
+        for( i = 0; i < weak_count; i++ )
+        {
+            CvBoostTree* wtree;
+            const CvDTreeNode* node;
+            CV_READ_SEQ_ELEM( wtree, reader );
+            
+            node = wtree->get_root();
+            while( node->left )
+            {
+                CvDTreeSplit* split = node->split;
+                int vi = split->condensed_idx;
+                float val = sample_data[vi];
+                int dir = val <= split->ord.c ? -1 : 1;
+                if( split->inversed )
+                    dir = -dir;
+                node = dir < 0 ? node->left : node->right;
+            }
+            sum += node->value;
+        }
+    }
+    else
+    {
+        const int* avars = active_vars->data.i;
+        const uchar* m = _missing ? _missing->data.ptr : 0;
+        
+        // full-featured version
+        for( i = 0; i < weak_count; i++ )
+        {
+            CvBoostTree* wtree;
+            const CvDTreeNode* node;
+            CV_READ_SEQ_ELEM( wtree, reader );
+            
+            node = wtree->get_root();
+            while( node->left )
+            {
+                const CvDTreeSplit* split = node->split;
+                int dir = 0;
+                for( ; !dir && split != 0; split = split->next )
+                {
+                    int vi = split->condensed_idx;
+                    int ci = vtype[avars[vi]];
+                    float val = sample_data[vi];
+                    if( m && m[vi] )
+                        continue;
+                    if( ci < 0 ) // ordered
+                        dir = val <= split->ord.c ? -1 : 1;
+                    else // categorical
+                    {
+                        int c = cvRound(val);
+                        dir = CV_DTREE_CAT_DIR(c, split->subset);
+                    }
+                    if( split->inversed )
+                        dir = -dir;
+                }
 
-        CV_READ_SEQ_ELEM( wtree, reader );
-
-        val = wtree->predict( _sample, _missing, true )->value;
-        if( weak_responses )
-            weak_responses->data.fl[i*wstep] = (float)val;
-
-        sum += val;
+                if( !dir )
+                {
+                    int diff = node->right->sample_count - node->left->sample_count;
+                    dir = diff < 0 ? -1 : 1;
+                }
+                node = dir < 0 ? node->left : node->right;
+            }
+            if( weak_responses )
+                weak_responses->data.fl[i*wstep] = (float)node->value;
+            sum += node->value;
+        }
     }
 
-    cls_idx = sum >= 0;
-    if( raw_mode )
-        value = (float)cls_idx;
+    if( return_sum )
+        value = (float)sum;
     else
-        value = (float)cmap[cofs[vtype[var_count]] + cls_idx];
+    {
+        int cls_idx = sum >= 0;
+        if( raw_mode )
+            value = (float)cls_idx;
+        else
+            value = (float)cmap[cofs[vtype[var_count]] + cls_idx];
+    }
 
     __END__;
 
