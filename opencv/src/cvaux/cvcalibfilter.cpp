@@ -99,12 +99,18 @@ bool CvCalibFilter::SetEtalon( CvCalibEtalonType type, double* params,
 
     Stop();
 
-    for( i = 0; i < MAX_CAMERAS; i++ )
-        cvFree( latestPoints + i );
+	if (latestPoints != NULL)
+	{
+		for( i = 0; i < MAX_CAMERAS; i++ )
+			cvFree( latestPoints + i );
+	}
 
     if( type == CV_CALIB_ETALON_USER || type != etalonType )
     {
-        cvFree( &etalonParams );
+		if (etalonParams != NULL)
+		{
+			cvFree( &etalonParams );
+		}
     }
 
     etalonType = type;
@@ -148,7 +154,10 @@ bool CvCalibFilter::SetEtalon( CvCalibEtalonType type, double* params,
 
     if( etalonPointCount != pointCount )
     {
-        cvFree( &etalonPoints );
+		if (etalonPoints != NULL)
+		{
+			cvFree( &etalonPoints );
+		}
         etalonPointCount = pointCount;
         etalonPoints = (CvPoint2D32f*)cvAlloc( arrSize );
     }
@@ -175,9 +184,15 @@ bool CvCalibFilter::SetEtalon( CvCalibEtalonType type, double* params,
         break;
 
     case CV_CALIB_ETALON_USER:
-        memcpy( etalonParams, params, arrSize );
-        memcpy( etalonPoints, points, arrSize );
-        break;
+		if (params != NULL)
+		{
+			memcpy( etalonParams, params, arrSize );
+		}
+		if (points != NULL)
+		{
+			memcpy( etalonPoints, points, arrSize );
+		}
+		break;
 
     default:
         assert(0);
@@ -904,3 +919,5 @@ bool CvCalibFilter::Undistort( CvMat** srcarr, CvMat** dstarr )
 
     return true;
 }
+
+ 	  	 
