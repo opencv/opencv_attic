@@ -113,7 +113,8 @@ IplImage* CvCaptureCAM_DShow::retrieveFrame(int)
 {
     if( !frame || VI.getWidth(index) != frame->width || VI.getHeight(index) != frame->height )
     {
-        cvReleaseImage( &frame );
+        if (frame)
+            cvReleaseImage( &frame );
         int w = VI.getWidth(index), h = VI.getHeight(index);
         frame = cvCreateImage( cvSize(w,h), 8, 3 );
     }
