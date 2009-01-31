@@ -45,11 +45,8 @@
 #include "cvshadow.h"
 %}
 
-%define %myshadow(function)
-%ignore function;
-%rename (function) function##_Shadow;
-%enddef
-
+// source %myshadow, %myrelease macros
+%include "cvswigmacros.i"
 
 %include "stl.i"
 
@@ -120,50 +117,22 @@ def cvHoughLines2( *args ):
 // cvSeqSlice
 // cvTreeToNodeSeq
 
-// Elsewhere in this wrapper, the cvRelease* functions are mapped to 
-// the destructors for the corresponding OpenCV object wrapper.  This
-// is done in order to let Python handle memory management.  If the 
-// reference count of the Python object wrapping the OpenCV object 
-// goes to 0, the garbage collector will call the destructor, and 
-// therefore the cvRelease* function, before freeing the Python object.
-// However, if the user explicitly calls the cvRelease* function, we 
-// must prevent the Python garbage collector from calling it again when
-// the refcount reaches 0 -- otherwise a double-free error occurs.
-//
-// Thus, below, we redirect each cvRelease* function to the 
-// corresponding OpenCV object's destructor.  This has the effect of:
-// (1) Calling the corresponding cvRelease* function, and therefore 
-//     immediately releasing the OpenCV object.
-// (2) Telling SWIG to disown memory management for this OpenCV object.  
-//
-// Thus, when the refcount for the Python object reaches 0, the Python
-// object is garbage collected, but since it no longer owns the OpenCV 
-// object, this is not freed again.
-%define %myrelease(Function, Type)
-%ignore Function;
-%rename (Function) Function##_Shadow;
-%pythoncode %{
-Function = _cv.delete_##Type
-%}
-%enddef
-
+// Fix cvRelease* function to play nice w/ Python
 // TODO some of these objects lack the delete method -- why???
-%myrelease(cvReleaseImage, CvMat);  // IplImage is CvMat in Python
-%myrelease(cvReleaseMat, CvMat);
-%myrelease(cvReleaseStructuringElement, IplConvKernel);
-%myrelease(cvReleaseConDensation, CvConDensation);
-%myrelease(cvReleaseKalman, CvKalman);
-%myrelease(cvReleaseHist, CvHistogram);
-%myrelease(cvReleaseHaarClassifierCascade, CvHaarClassifierCascade);
+%myrelease(cv, cvReleaseImage, CvMat);  // IplImage is CvMat in Python
+%myrelease(cv, cvReleaseMat, CvMat);
+%myrelease(cv, cvReleaseStructuringElement, IplConvKernel);
+%myrelease(cv, cvReleaseConDensation, CvConDensation);
+%myrelease(cv, cvReleaseKalman, CvKalman);
+%myrelease(cv, cvReleaseHist, CvHistogram);
+%myrelease(cv, cvReleaseHaarClassifierCascade, CvHaarClassifierCascade);
 //%myrelease(cvReleasePOSITObject, CvPOSITObject);
-%myrelease(cvReleaseImageHeader, CvMat); // IplImage is CvMat
-%myrelease(cvReleaseMatND, CvMatND);
-%myrelease(cvReleaseSparseMat, CvSparseMat);
-%myrelease(cvReleaseMemStorage, CvMemStorage);
-%myrelease(cvReleaseGraphScanner, CvGraphScanner);
+%myrelease(cv, cvReleaseImageHeader, CvMat); // IplImage is CvMat
+%myrelease(cv, cvReleaseMatND, CvMatND);
+%myrelease(cv, cvReleaseSparseMat, CvSparseMat);
+%myrelease(cv, cvReleaseMemStorage, CvMemStorage);
+%myrelease(cv, cvReleaseGraphScanner, CvGraphScanner);
 //%myrelease(cvReleaseFileStorage, CvFileStorage);
-//%myrelease(cvReleaseCapture, CvCapture);
-//%myrelease(cvReleaseVideoWriter, CvVideoWriter);
 
 // TODO implement this
 %ignore cvRelease;

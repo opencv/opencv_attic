@@ -55,6 +55,11 @@
 %include "./nointpb.i"
 %include "./pytypemaps.i"
 %include "exception.i"
+%include "cvswigmacros.i"
+
+// handle camera and video writer destruction
+%myrelease(highgui, cvReleaseCapture, CvCapture);
+%myrelease(highgui, cvReleaseVideoWriter, CvVideoWriter);
 
 /* the wrapping code to enable the use of Python-based mouse callbacks */
 %header %{
