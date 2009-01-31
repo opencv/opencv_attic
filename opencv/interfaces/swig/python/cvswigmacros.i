@@ -39,53 +39,37 @@
 //
 //M*/
 
-
-// 2004-03-16, Gabriel Schreiber <schreiber@ient.rwth-aachen.de>
-//             Mark Asbach       <asbach@ient.rwth-aachen.de>
-//             Institute of Communications Engineering, RWTH Aachen University
+/* This file contains swig macros that are used in several typemap files */
 
 
-%module(package="opencv") highgui
+%define %myshadow(function)
+%ignore function;
+%rename (function) function##_Shadow;
+%enddef
 
-%{
-#include "highgui.h"
+// Elsewhere in this wrapper, the cvRelease* functions are mapped to 
+// the destructors for the corresponding OpenCV object wrapper.  This
+// is done in order to let Python handle memory management.  If the 
+// reference count of the Python object wrapping the OpenCV object 
+// goes to 0, the garbage collector will call the destructor, and 
+// therefore the cvRelease* function, before freeing the Python object.
+// However, if the user explicitly calls the cvRelease* function, we 
+// must prevent the Python garbage collector from calling it again when
+// the refcount reaches 0 -- otherwise a double-free error occurs.
+//
+// Thus, below, we redirect each cvRelease* function to the 
+// corresponding OpenCV object's destructor.  This has the effect of:
+// (1) Calling the corresponding cvRelease* function, and therefore 
+//     immediately releasing the OpenCV object.
+// (2) Telling SWIG to disown memory management for this OpenCV object.  
+//
+// Thus, when the refcount for the Python object reaches 0, the Python
+// object is garbage collected, but since it no longer owns the OpenCV 
+// object, this is not freed again.
+%define %myrelease(module, Function, Type)
+%ignore Function;
+%rename (Function) Function##_Shadow;
+%pythoncode %{
+Function = _##module##.delete_##Type
 %}
-
-%import "./cv.i"
-
-%include "./memory.i"
-%include "./typemaps.i"
-
-%newobject cvLoadImage;
-%newobject cvLoadImageM;
-%newobject cvLoadImageMat;
-
-%nodefault CvCapture;
-%newobject cvCaptureFromFile;
-%newobject cvCaptureFromCAM;
-
-%nodefault CvVideoWriter;
-%newobject cvCreateVideoWriter;
-
-/** modify the following to return CvMat instead of IplImage */
-%ignore cvLoadImage;
-%rename (cvLoadImage) cvLoadImageMat;
-%inline %{
-CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
-	return cvLoadImageM(filename, iscolor);
-}
-%}
-
-%typemap_out_CvMat(cvRetrieveFrame, ( CvCapture* capture ), (capture));
-%typemap_out_CvMat(cvQueryFrame, ( CvCapture * capture ), (capture));
-
-%include "highgui.h"
-
-struct CvCapture {
-};
-struct CvVideoWriter {
-};
-%extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }
-%extend CvVideoWriter { ~CvVideoWriter () { CvVideoWriter * dummy = self; cvReleaseVideoWriter (& dummy); } }
-
-
+%enddef
