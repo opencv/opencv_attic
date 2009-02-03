@@ -1243,9 +1243,9 @@ CvERTreeTrainData::CvERTreeTrainData( const CvMat* _train_data, int _tflag,
 
                  
 void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
-                                                 const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
-                                                 const CvMat* _var_type, const CvMat* _missing_mask, const CvDTreeParams& _params,
-                                                 bool _add_labels, bool _update_data )
+    const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
+    const CvMat* _var_type, const CvMat* _missing_mask, const CvDTreeParams& _params,
+    bool _add_labels, bool _update_data )
 {
     CvMat* sample_idx = 0;
     CvMat* var_type0 = 0;
@@ -1256,13 +1256,14 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     __BEGIN__;
 
-    if (_var_idx || _sample_idx || _missing_mask)
-        CV_ERROR(CV_StsBadArg, "arguments _var_idx, _sample_idx, _missing_mask are not supported");
-
     int sample_all = 0, r_type = 0, cv_n;
     int tree_block_size, temp_block_size, max_split_size, nv_size, cv_size = 0;
     int vi;
     const int *sidx = 0;
+    time_t _time;
+
+    if (_var_idx || _sample_idx || _missing_mask)
+        CV_ERROR(CV_StsBadArg, "arguments _var_idx, _sample_idx, _missing_mask are not supported");
 
     if( _update_data && data_root )
     {
@@ -1295,7 +1296,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     clear();
 
     var_all = 0;
-    time_t _time = time(NULL);
+    _time = time(NULL);
     rng = cvRNG(_time);
 
     CV_CALL( set_params( _params ));
@@ -1460,16 +1461,18 @@ CvERTreeNode* CvERTreeTrainData::subsample_data( const CvMat* _subsample_idx)
 
     __BEGIN__;
 
+    int* smplidx;
+
     _subsample_idx = 0;
     if( !data_root )
         CV_ERROR( CV_StsError, "No training data has been set" );
 
-    int* smplidx = (int*)cvAlloc( sample_count*sizeof(smplidx[0]) );
+    smplidx = (int*)cvAlloc( sample_count*sizeof(smplidx[0]) );
 
     for (int i = 0; i < sample_count; i++)
         smplidx[i] = i;
     root = new_node( 0, 0, 0 );
-    (CvDTreeNode)*root = *data_root;
+    (CvDTreeNode&)*root = *data_root;
     root->sample_count = sample_count;
     root->sample_idx = smplidx;
   
@@ -1568,7 +1571,7 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
 
 
 CvERTreeNode* CvERTreeTrainData::new_node( CvERTreeNode* parent, int count,
-                                        int** sample_idx )
+                                           int** sample_idx )
 {
     CvERTreeNode* node = (CvERTreeNode*)cvSetNew( node_heap );
 
