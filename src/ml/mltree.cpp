@@ -1212,7 +1212,475 @@ void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
     __END__;
 }
 
+///
 
+CvERTreeTrainData::CvERTreeTrainData()
+{
+    pred = resp = class_lables = 0;
+}
+
+
+CvERTreeTrainData::CvERTreeTrainData( const CvMat* _train_data, int _tflag,
+                                     const CvMat* _responses, const CvMat* _var_idx,
+                                     const CvMat* _sample_idx, const CvMat* _var_type,
+                                     const CvMat* _missing_mask, const CvDTreeParams& _params,
+                                     bool _add_labels ) : 
+                    CvDTreeTrainData( _train_data, _tflag,
+                                     _responses, _var_idx,
+                                     _sample_idx, _var_type,
+                                      _missing_mask, _params,
+                                     true, _add_labels )
+{
+    CV_FUNCNAME( "CvERTreeTrainData::CvERTreeTrainData" );
+
+    __BEGIN__;
+
+    if ((!_var_idx) || (!_sample_idx) || (!_missing_mask) || (!_add_labels))
+        CV_ERROR(CV_StsBadArg, "arguments _var_idx, _sample_idx, _missing_mask, _add_labels are not supported");
+
+    __END__;
+}
+
+                 
+void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
+                                                 const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
+                                                 const CvMat* _var_type, const CvMat* _missing_mask, const CvDTreeParams& _params,
+                                                 bool _add_labels, bool _update_data )
+{
+    CvMat* sample_idx = 0;
+    CvMat* var_type0 = 0;
+    int** int_ptr = 0;
+    CvERTreeTrainData* data = 0;
+
+    CV_FUNCNAME( "CvERTreeTrainData::set_data" );
+
+    __BEGIN__;
+
+    if (_var_idx || _sample_idx || _missing_mask)
+        CV_ERROR(CV_StsBadArg, "arguments _var_idx, _sample_idx, _missing_mask are not supported");
+
+    int sample_all = 0, r_type = 0, cv_n;
+    int tree_block_size, temp_block_size, max_split_size, nv_size, cv_size = 0;
+    int vi;
+    const int *sidx = 0;
+
+    if( _update_data && data_root )
+    {
+        data = new CvERTreeTrainData( _train_data, _tflag, _responses, _var_idx,
+            _sample_idx, _var_type, _missing_mask, _params, _add_labels );
+
+        // compare new and old train data
+        if( !(data->var_count == var_count &&
+            cvNorm( data->var_type, var_type, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->resp, resp, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->pred, pred, CV_C ) < FLT_EPSILON) )
+            CV_ERROR( CV_StsBadArg,
+                "The new training data must have the same types and the input and output variables "
+                "and the same categories for categorical variables" );
+       
+        cvReleaseMat( &split_buf );
+        cvReleaseMemStorage( &temp_storage );
+
+        sample_count = data->sample_count;
+
+        split_buf = data->split_buf; data->split_buf = 0;
+        temp_storage = data->temp_storage; data->temp_storage = 0;
+        nv_heap = data->nv_heap; cv_heap = data->cv_heap;
+        
+        data_root = new_node( 0, sample_count, 0);
+
+        EXIT;
+    }
+
+    clear();
+
+    var_all = 0;
+    time_t _time = time(NULL);
+    rng = cvRNG(_time);
+
+    CV_CALL( set_params( _params ));
+
+    // check parameter types and sizes
+    CV_CALL( cvCheckTrainData( _train_data, _tflag, _missing_mask, &var_all, &sample_all ));
+    
+    sample_count = sample_all;
+    var_count = var_all;
+
+    if( !CV_IS_MAT(_responses) ||
+        (CV_MAT_TYPE(_responses->type) != CV_32SC1 &&
+        CV_MAT_TYPE(_responses->type) != CV_32FC1) ||
+        _responses->rows != 1 && _responses->cols != 1 ||
+        _responses->rows + _responses->cols - 1 != sample_all )
+        CV_ERROR( CV_StsBadArg, "The array of _responses must be an integer or "
+        "floating-point vector containing as many elements as "
+        "the total number of samples in the training data matrix" );
+
+    CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_all, &r_type ));
+    CV_CALL( var_type = cvCreateMat( 1, var_count+2, CV_32SC1 ));
+
+    cat_var_count = 0;
+    ord_var_count = -1;
+
+    is_classifier = r_type == CV_VAR_CATEGORICAL;
+    if (!is_classifier)
+        CV_ERROR( CV_StsBadArg, "ERTrees supports classification problems only; is_classifier must be equel true");
+
+    // calculate the number of categorical vars
+    for( vi = 0; vi < var_count; vi++ )
+    {
+        var_type->data.i[vi] = var_type0->data.ptr[vi] == CV_VAR_CATEGORICAL ?
+            cat_var_count++ : ord_var_count--;
+    }
+    ord_var_count = ~ord_var_count;
+    if (cat_var_count)
+        CV_ERROR( CV_StsBadArg, "ERTrees support categorical variables only");
+
+    cv_n = params.cv_folds;
+    if( cv_n )    
+        CV_ERROR( CV_StsBadArg, "pruning is not supported ERTrees, params.cv_folds must be equel 0" );
+
+    var_type->data.i[var_count] = cat_var_count;
+    var_type->data.i[var_count+1] = cat_var_count+1;
+
+    // calculate the maximum size of split,
+    // create memory storage that will keep nodes and splits of the decision tree
+    // allocate root node and the buffer for the whole training data
+    max_split_size = cvAlign(sizeof(CvDTreeSplit) +
+        (MAX(0,sample_count - 33)/32)*sizeof(int),sizeof(void*));
+    tree_block_size = MAX((int)sizeof(CvERTreeNode)*8, max_split_size);
+    tree_block_size = MAX(tree_block_size + block_size_delta, min_block_size);
+    CV_CALL( tree_storage = cvCreateMemStorage( tree_block_size ));
+    CV_CALL( node_heap = cvCreateSet( 0, sizeof(*node_heap), sizeof(CvERTreeNode), tree_storage ));
+
+    nv_size = var_count*sizeof(int);
+    nv_size = MAX( nv_size, (int)sizeof(CvSetElem) );
+
+    temp_block_size = nv_size;
+    temp_block_size = MAX( temp_block_size + block_size_delta, min_block_size );
+    CV_CALL( temp_storage = cvCreateMemStorage( temp_block_size ));
+    CV_CALL( nv_heap = cvCreateSet( 0, sizeof(*nv_heap), nv_size, temp_storage ));
+    if( cv_size )
+        CV_CALL( cv_heap = cvCreateSet( 0, sizeof(*cv_heap), cv_size, temp_storage ));
+    CV_CALL( data_root = new_node( 0, sample_count, 0));
+    CV_CALL( int_ptr = (int**)cvAlloc( sample_count*sizeof(int_ptr[0]) ));
+
+    max_c_count = 1;
+
+    shared = true;
+    
+    if( _tflag == CV_ROW_SAMPLE )
+    {
+        CV_CALL( pred = cvCreateMat( _train_data->rows, _train_data->cols, _train_data->type ));
+        CV_CALL( resp = cvCreateMat( _responses->rows, _responses->cols, CV_32SC1 ));
+        cvCopy( _train_data, pred );
+        cvConvertScale( _responses, resp );
+    }
+    else
+    {
+        CV_CALL( pred = cvCreateMat( _train_data->cols, _train_data->rows, _train_data->type ));
+        CV_CALL( resp = cvCreateMat( _responses->rows, _responses->cols, CV_32SC1 ));
+        cvTranspose( _train_data, pred );
+        cvConvertScale( _responses, resp );
+        cvTranspose( resp, resp );
+    }
+
+    if( is_classifier ) 
+    {
+        // calculate count of categories
+        int *idata = resp->data.i;
+        int step = CV_IS_MAT_CONT(resp->type) ?
+            1 : resp->step / CV_ELEM_SIZE(resp->type);
+        for( int i = 0; i < sample_count; i++ )
+        {
+            int si = sidx ? sidx[i] : i;
+            int_ptr[i] = &idata[si*step];
+        }
+
+        icvSortIntPtr( int_ptr, sample_count, 0 );
+
+        int c_count = 1;
+        for( int i = 1; i < sample_count; i++ )
+            c_count += *int_ptr[i] != *int_ptr[i-1];
+
+        class_lables = cvCreateMat( 1, c_count, resp->type);
+
+        int *lbs = class_lables->data.i;
+        int c_idx = 0;
+        lbs[c_idx] = *int_ptr[0];
+        for( int i = 1; i < sample_count; i++ )
+            if (*int_ptr[i] != *int_ptr[i-1])
+            {
+                c_idx++;
+                lbs[c_idx] = *int_ptr[i];
+            }
+
+            for( int i = 0; i < sample_count; i++ )
+            {
+                int si = sidx ? sidx[i] : i;
+                si = si * step;
+                for(int j = 0; j < c_count; j++ )
+                    if ( abs(lbs[j] - idata[si*step]) < FLT_EPSILON )
+                    {
+                        idata[si*step] = j;
+                        break;
+                    }
+            }
+    }
+
+    max_split_size = cvAlign(sizeof(CvDTreeSplit) +
+        (MAX(0,max_c_count - 33)/32)*sizeof(int),sizeof(void*));
+    CV_CALL( split_heap = cvCreateSet( 0, sizeof(*split_heap), max_split_size, tree_storage ));
+
+    if (params.priors)
+        CV_ERROR( CV_StsBadArg, "priors is not supported ERTrees, params.priors must be equel false" );
+    if( is_classifier )
+    {
+        int m = get_num_classes();
+        CV_CALL( counts = cvCreateMat( 1, m, CV_32SC1 ));
+    }
+
+    CV_CALL( split_buf = cvCreateMat( 1, sample_count, CV_32SC1 ));
+
+    __END__;
+
+    if( data )
+        delete data;
+
+    cvFree( &int_ptr );
+    cvReleaseMat( &sample_idx );
+    cvReleaseMat( &var_type0 );
+}
+
+
+CvERTreeNode* CvERTreeTrainData::subsample_data( const CvMat* _subsample_idx)
+{
+    CvERTreeNode* root = 0;
+
+    CV_FUNCNAME( "CvDTreeTrainData::subsample_data" );
+
+    __BEGIN__;
+
+    _subsample_idx = 0;
+    if( !data_root )
+        CV_ERROR( CV_StsError, "No training data has been set" );
+
+    int* smplidx = (int*)cvAlloc( sample_count*sizeof(smplidx[0]) );
+
+    for (int i = 0; i < sample_count; i++)
+        smplidx[i] = i;
+    root = new_node( 0, 0, 0 );
+    (CvDTreeNode)*root = *data_root;
+    root->sample_count = sample_count;
+    root->sample_idx = smplidx;
+  
+    __END__;
+
+    return root;
+}
+
+void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
+                                   float* values, uchar* missing,
+                                   float* responses, bool get_class_idx )
+{
+    CvMat* subsample_idx = 0;
+    CvMat* subsample_co = 0;
+
+    CV_FUNCNAME( "CvERTreeTrainData::get_vectors" );
+
+    __BEGIN__;
+
+    int i, vi, total = sample_count, count = total, cur_ofs = 0;
+    int* sidx = 0;
+    int* co = 0;
+
+    if( _subsample_idx )
+    {
+        CV_CALL( subsample_idx = cvPreprocessIndexArray( _subsample_idx, sample_count ));
+        sidx = subsample_idx->data.i;
+        CV_CALL( subsample_co = cvCreateMat( 1, sample_count*2, CV_32SC1 ));
+        co = subsample_co->data.i;
+        cvZero( subsample_co );
+        count = subsample_idx->cols + subsample_idx->rows - 1;
+        for( i = 0; i < count; i++ )
+            co[sidx[i]*2]++;
+        for( i = 0; i < total; i++ )
+        {
+            int count_i = co[i*2];
+            if( count_i )
+            {
+                co[i*2+1] = cur_ofs*var_count;
+                cur_ofs += count_i;
+            }
+        }
+    }
+    if( missing )
+        memset( missing, 1, count*var_count );
+    for( vi = 0; vi < var_count; vi++ )
+    {
+        int ci = get_var_type(vi);
+        if( ci >= 0 ) // categorical
+        {
+            CV_ERROR( CV_StsBadArg, "ERTrees do not supprot categorical variables" );
+        }
+        else // ordered
+        {
+            float* dst = values + vi;
+            uchar* m = missing ? missing + vi : 0;
+            int count1 = data_root->get_num_valid(vi);
+
+            for( i = 0; i < count1; i++ ) // count1 == sample_count
+            {
+                cur_ofs = i*var_count;  
+                int step = pred->step / CV_ELEM_SIZE(pred->type);
+                dst[cur_ofs] = pred->data.fl[i*step + vi];
+                if( m )
+                    m[cur_ofs] = 0;
+            }
+        }
+    }
+
+    // copy responses
+    if( responses )
+    {
+        if( is_classifier )
+          for( i = 0; i < count; i++ )// count == sample_count
+            {
+                int idx = sidx ? sidx[i] : i;
+
+                int rstep = resp->step / CV_ELEM_SIZE(resp->type);
+                int cstep = resp->step / CV_ELEM_SIZE(resp->type);
+                int r = resp->data.i[idx*rstep];
+                int val = get_class_idx ? r : class_lables->data.i[r*cstep];
+                    responses[i] = (float)val; 
+                responses[i] = (float)val;
+            }
+        else
+        {
+            CV_ERROR( CV_StsBadArg, "ERTrees do not support regression problems" );
+        }
+    }
+
+    __END__;
+
+    cvReleaseMat( &subsample_idx );
+    cvReleaseMat( &subsample_co );
+}
+
+
+CvERTreeNode* CvERTreeTrainData::new_node( CvERTreeNode* parent, int count,
+                                        int** sample_idx )
+{
+    CvERTreeNode* node = (CvERTreeNode*)cvSetNew( node_heap );
+
+    node->sample_count = count;
+    node->depth = parent ? parent->depth + 1 : 0;
+    node->parent = parent;
+    node->left = node->right = 0;
+    node->split = 0;
+    node->value = 0;
+    node->class_idx = 0;
+    node->maxlr = 0.;
+
+    node->sample_idx = 0;
+    if (sample_idx)
+    {
+        node->sample_idx = *sample_idx;
+        *sample_idx = 0;
+    }
+    node->l_sample_idx = node->r_sample_idx = 0;
+    node->ln = node->rn = 0;
+
+    node->num_valid = 0;
+    node->alpha = node->node_risk = node->tree_risk = node->tree_error = 0.;
+    node->complexity = 0;
+
+   /* if( params.cv_folds > 0 && cv_heap )
+    {
+        int cv_n = params.cv_folds;
+        node->Tn = INT_MAX;
+        node->cv_Tn = (int*)cvSetNew( cv_heap );
+        node->cv_node_risk = (double*)cvAlignPtr(node->cv_Tn + cv_n, sizeof(double));
+        node->cv_node_error = node->cv_node_risk + cv_n;
+    }
+    else*/
+    {
+        node->Tn = 0;
+        node->cv_Tn = 0;
+        node->cv_node_risk = 0;
+        node->cv_node_error = 0;
+    }
+
+    return node;
+}
+
+
+void CvERTreeTrainData::free_node_data( CvDTreeNode* node )
+{
+    cvFree( &((CvERTreeNode*)node)->sample_idx );
+    cvFree( &((CvERTreeNode*)node)->l_sample_idx );
+    cvFree( &((CvERTreeNode*)node)->r_sample_idx );
+    CvDTreeTrainData :: free_node_data(node);
+}
+
+void CvERTreeTrainData::free_train_data()
+{
+    cvReleaseMat( &pred );
+    cvReleaseMat( &resp );
+    cvReleaseMat( &class_lables );
+    CvDTreeTrainData :: free_train_data();
+}
+
+
+void CvERTreeTrainData::clear()
+{
+    free_train_data();
+
+    cvReleaseMemStorage( &tree_storage );
+
+    cvReleaseMat( &var_idx );
+    cvReleaseMat( &var_type );
+    cvReleaseMat( &pred );
+    cvReleaseMat( &resp );
+    cvReleaseMat( &class_lables );
+    cvReleaseMat( &priors );
+    cvReleaseMat( &priors_mult );
+
+    node_heap = split_heap = 0;
+
+    sample_count = var_all = var_count = max_c_count = ord_var_count = cat_var_count = 0;
+    have_labels = have_priors = is_classifier = false;
+
+    shared = false;
+
+    data_root = 0;
+
+    time_t _time = time(NULL);
+    rng = cvRNG(-_time);
+}
+
+
+int CvERTreeTrainData::get_num_classes() const
+{
+    return is_classifier ? class_lables->cols : 0;
+}
+
+void CvERTreeTrainData::write_params( CvFileStorage* fs )
+{
+    CV_FUNCNAME("CvERTreeTrainData::write_params");
+    __BEGIN__;
+    fs = 0;
+    CV_ERROR( CV_StsBadArg, "ERTrees do not support this method" );
+    __END__;
+};
+
+void CvERTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
+{
+    CV_FUNCNAME("CvERTreeTrainData::read_params");
+    __BEGIN__;
+    fs = 0; node = 0;
+    CV_ERROR( CV_StsBadArg, "ERTrees do not support this method" );
+    __END__;
+};
 /////////////////////// Decision Tree /////////////////////////
 
 CvDTree::CvDTree()
