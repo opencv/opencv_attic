@@ -1013,6 +1013,82 @@ protected:
     CvMat* active_var_mask;
 };
 
+/****************************************************************************************\
+*                           Extremely randomized trees Classifier                        *
+\****************************************************************************************/
+
+struct CV_EXPORTS CvERTreeNode : public CvDTreeNode
+{
+    int* sample_idx; // node sample numbers
+    int* l_sample_idx; // node sample numbers of left child
+    int ln; // node samples count of left child
+    int* r_sample_idx; // node sample numbers of right child
+    int rn; // node samples count of right child
+};
+
+struct CV_EXPORTS CvERTreeTrainData : public CvDTreeTrainData
+{
+    CvERTreeTrainData();
+    CvERTreeTrainData( const CvMat* _train_data, int _tflag,
+        const CvMat* _responses, const CvMat* _var_idx=0,
+        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+        const CvMat* _missing_mask=0,
+        const CvDTreeParams& _params=CvDTreeParams(),
+        bool _add_labels=false );
+
+    virtual void set_data( const CvMat* _train_data, int _tflag,
+        const CvMat* _responses, const CvMat* _var_idx=0,
+        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+        const CvMat* _missing_mask=0,
+        const CvDTreeParams& _params=CvDTreeParams(),
+        bool _add_labels=false, bool _update_data=false );
+
+    virtual CvERTreeNode* subsample_data( const CvMat* _subsample_idx = 0);
+
+    virtual void get_vectors( const CvMat* _subsample_idx,
+        float* values, uchar* missing, float* responses, bool get_class_idx=false );
+
+    virtual CvERTreeNode* new_node( CvERTreeNode* parent, int count, int** sample_idx );
+    virtual void free_node_data( CvDTreeNode* node );
+    virtual void free_train_data();
+    virtual void clear();
+
+    int get_num_classes() const;
+
+    virtual void write_params( CvFileStorage* fs );
+    virtual void read_params( CvFileStorage* fs, CvFileNode* node );
+
+    CvMat* pred;
+    CvMat* resp;
+    CvMat* class_lables;
+
+    // TODO add support _var_idx, _sample_idx, _missing_mask, _add_labels,
+    // categorical variables, priors, pruning
+};
+
+class CV_EXPORTS CvForestERTree : public CvForestTree
+{
+protected:
+    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
+    virtual void try_split_node( CvDTreeNode* n );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
+    virtual void calc_node_value( CvDTreeNode* node );
+   virtual void split_node_data( CvDTreeNode* n );
+};
+
+class CV_EXPORTS CvERTrees : public CvRTrees
+{
+public:
+    bool train( const CvMat* _train_data, int _tflag,
+        const CvMat* _responses, const CvMat* _var_idx,
+        const CvMat* _sample_idx, const CvMat* _var_type,
+        const CvMat* _missing_mask, CvRTParams params );
+    virtual void clear();
+    virtual void read( CvFileStorage* fs, CvFileNode* node );
+    virtual void write( CvFileStorage* fs, const char* name );
+protected:
+    bool grow_forest( const CvTermCriteria term_crit );
+};
 
 /****************************************************************************************\
 *                                   Boosted tree classifier                              *

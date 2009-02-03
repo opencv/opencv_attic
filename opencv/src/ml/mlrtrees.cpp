@@ -236,8 +236,7 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
     bool result = false;
 
     CV_FUNCNAME("CvRTrees::train");
-    __BEGIN__;
-
+    __BEGIN__
     int var_count = 0;
 
     clear();
@@ -257,7 +256,6 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
         params.nactive_vars = (int)sqrt((double)var_count);
     else if( params.nactive_vars < 0 )
         CV_ERROR( CV_StsBadArg, "<nactive_vars> must be non-negative" );
-    params.term_crit = cvCheckTermCriteria( params.term_crit, 0.1, 1000 );
 
     // Create mask of active variables at the tree nodes
     CV_CALL(active_var_mask = cvCreateMat( 1, var_count, CV_8UC1 ));
@@ -278,9 +276,9 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
 
     result = true;
 
-    __END__;
-
+    __END__
     return result;
+    
 }
 
 
@@ -358,11 +356,10 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
     {
         int i, oob_samples_count = 0;
         double ncorrect_responses = 0; // used for estimation of variable importance
-        CvMat sample, missing;
         CvForestTree* tree = 0;
 
         cvZero( sample_idx_mask_for_tree );
-        for( i = 0; i < nsamples; i++ ) //form sample for creation one tree
+        for(i = 0; i < nsamples; i++ ) //form sample for creation one tree
         {
             int idx = cvRandInt( &rng ) % nsamples;
             sample_idx_for_tree->data.i[i] = idx;
@@ -372,7 +369,9 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
         trees[ntrees] = new CvForestTree();
         tree = trees[ntrees];
         CV_CALL(tree->train( data, sample_idx_for_tree, this ));
-
+#define RF_OOB
+#ifdef RF_OOB
+        CvMat sample, missing;
         // form array of OOB samples indices and get these samples
         sample   = cvMat( 1, dims, CV_32FC1, samples_ptr );
         missing  = cvMat( 1, dims, CV_8UC1,  missing_ptr );
@@ -480,6 +479,7 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
                     - ncorrect_responses_permuted);
             }
         }
+#endif //RF_OOB
         ntrees++;
         if( term_crit.type != CV_TERMCRIT_ITER && oob_error < max_oob_err )
             break;
@@ -774,4 +774,640 @@ CvForestTree* CvRTrees::get_tree(int i) const
     return (unsigned)i < (unsigned)ntrees ? trees[i] : 0;
 }
 
+
+///
+
+CvDTreeSplit* CvForestERTree::find_best_split( CvDTreeNode* node )
+{
+    int vi;
+    CvDTreeSplit *best_split = 0, *split = 0, *t;
+
+    CV_FUNCNAME("CvForestERTree::find_best_split");
+    __BEGIN__;
+
+    CvMat* active_var_mask = 0;
+    if( forest )
+    {
+        int var_count;
+        CvRNG* rng = forest->get_rng();
+
+        active_var_mask = forest->get_active_var_mask();
+        var_count = active_var_mask->cols;
+
+        CV_ASSERT( var_count == data->var_count );
+
+        for( vi = 0; vi < var_count; vi++ )
+        {
+            uchar temp;
+            int i1 = cvRandInt(rng) % var_count;
+            int i2 = cvRandInt(rng) % var_count;
+            CV_SWAP( active_var_mask->data.ptr[i1],
+                active_var_mask->data.ptr[i2], temp );
+        }
+    }
+    int n = node->sample_count;
+    int* best_l_sample_idx = (int*)cvAlloc(n*sizeof(best_l_sample_idx[0]));
+    int best_ln = 0;
+    int* best_r_sample_idx = (int*)cvAlloc(n*sizeof(best_r_sample_idx[0]));
+    int best_rn = 0;
+
+    for( vi = 0; vi < data->var_count; vi++ )
+    {
+        int ci = data->var_type->data.i[vi];
+        if( /*node->get_num_valid(vi) <= 1
+            || */(active_var_mask && !active_var_mask->data.ptr[vi]) )
+            continue;
+
+        if( data->is_classifier )
+        {
+            if( ci >= 0)
+            {
+                CV_ERROR( CV_StsBadArg, "ERTrees do not support categorical variables" );
+            }
+            else
+            {               
+                split = find_split_ord_class( node, vi); 
+            }
+        }
+        else
+        {
+            CV_ERROR( CV_StsBadArg, "ERTrees do not support regression problems" );
+        }
+
+        if( split )
+        {
+            if( !best_split || best_split->quality < split->quality )
+            {
+                CV_SWAP( best_split, split, t );
+                best_ln = ((CvERTreeNode*)node)->ln;
+                int* tsidx = ((CvERTreeNode*)node)->l_sample_idx;
+                for (int li = 0; li < best_ln; li++)
+                    best_l_sample_idx[li] = tsidx[li];
+                best_rn = ((CvERTreeNode*)node)->rn;
+                tsidx = ((CvERTreeNode*)node)->r_sample_idx;
+                for (int ri = 0; ri < best_rn; ri++)
+                    best_r_sample_idx[ri] = tsidx[ri];
+            }
+            if( split )
+                cvSetRemoveByPtr( data->split_heap, split );
+        }
+    }
+    cvFree( &((CvERTreeNode*)node)->l_sample_idx );
+    cvFree( &((CvERTreeNode*)node)->r_sample_idx );
+
+    ((CvERTreeNode*)node)->l_sample_idx = (int*)cvAlloc(best_ln*sizeof(((CvERTreeNode*)node)->l_sample_idx[0]));
+    ((CvERTreeNode*)node)->ln = best_ln;
+    ((CvERTreeNode*)node)->r_sample_idx = (int*)cvAlloc(best_rn*sizeof(((CvERTreeNode*)node)->r_sample_idx[0]));
+    ((CvERTreeNode*)node)->rn = best_rn;
+    int* tsidx = ((CvERTreeNode*)node)->l_sample_idx;
+    for (int li = 0; li < best_ln; li++)
+        tsidx[li] = best_l_sample_idx[li];
+    tsidx = ((CvERTreeNode*)node)->r_sample_idx;
+    for (int ri = 0; ri < best_rn; ri++)
+        tsidx[ri] = best_r_sample_idx[ri];
+
+    cvFree( &best_l_sample_idx );
+    cvFree( &best_r_sample_idx );
+    
+    __END__;
+
+    return best_split;
+}
+
+
+void CvForestERTree::try_split_node( CvDTreeNode* node )
+{
+    CvDTreeSplit* best_split = 0;
+    int i, n = node->sample_count;
+    bool can_split = true;
+
+    calc_node_value( node );
+
+    if( node->sample_count <= data->params.min_sample_count ||
+        node->depth >= data->params.max_depth )
+        can_split = false;
+
+    if( can_split && data->is_classifier )
+    {
+        int* cls_count = data->counts->data.i;
+        int nz = 0, m = ((CvERTreeTrainData*)data)->get_num_classes();
+        for( i = 0; i < m; i++ )
+            nz += cls_count[i] != 0;
+        if( nz == 1 ) // there is only one class
+            can_split = false;
+    }
+    else if( can_split )
+    {
+        if( sqrt(node->node_risk)/n < data->params.regression_accuracy )
+            can_split = false;
+    }
+
+    if( can_split )
+    {
+        best_split = find_best_split(node);
+        node->split = best_split;
+    }
+
+    if( !can_split || !best_split )
+    {
+        data->free_node_data(node);
+        return;
+    }
+
+    split_node_data( node );
+
+    try_split_node( (CvERTreeNode*)node->left );
+    try_split_node( (CvERTreeNode*)node->right );
+}
+
+
+CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi )
+{
+    const float epsilon = FLT_EPSILON*2;
+    int n = node->sample_count;
+    int m = ((CvERTreeTrainData*)data)->get_num_classes();
+    int* lc = (int*)cvStackAlloc(m*sizeof(lc[0]));
+    int* rc = (int*)cvStackAlloc(m*sizeof(rc[0]));
+    int i;
+    const double* priors = data->have_priors ? data->priors_mult->data.db : 0;
+    double best_val = 0;
+
+    const float* pred = ((CvERTreeTrainData*)data)->pred->data.fl;
+    const int* sidx = ((CvERTreeNode*)node)->sample_idx;
+    const int* resp = ((CvERTreeTrainData*)data)->resp->data.i;
+    int pstep = ((CvERTreeTrainData*)data)->pred->step / CV_ELEM_SIZE(((CvERTreeTrainData*)data)->pred->type);
+    int rstep = ((CvERTreeTrainData*)data)->resp->step / CV_ELEM_SIZE(((CvERTreeTrainData*)data)->resp->type);
+    bool is_find_split = false;
+
+    const float split_delta = (1 + FLT_EPSILON) * FLT_EPSILON;
+    double split_val = 0;
+
+    if( !priors )
+    {
+        float pmin, pmax;
+        pmin = pred[sidx[0]*pstep + vi];
+        pmax = pmin;
+        for (int si = 1; si < n; si++)
+        {
+            float ptemp = pred[sidx[si]*pstep + vi];
+            if ( ptemp < pmin)
+                pmin = ptemp;
+            if ( ptemp > pmax)
+                pmax = ptemp;
+        }
+        float fdiff = pmax-pmin;
+        if (fdiff > epsilon)
+        {
+            is_find_split = true;
+            CvRNG* rng = &data->rng;
+            split_val = pmin + cvRandReal(rng) * fdiff ;
+            if (split_val - pmin <= FLT_EPSILON)
+                split_val = pmin + split_delta;
+            if (pmax - split_val <= FLT_EPSILON)
+                split_val = pmax - split_delta;       
+
+            // init arrays of class instance counters on both sides of the split
+            for( i = 0; i < m; i++ )
+            {
+                lc[i] = 0;
+                rc[i] = 0;
+            }
+
+            if (!((CvERTreeNode*)node)->l_sample_idx)
+            {
+                ((CvERTreeNode*)node)->l_sample_idx = (int*)cvAlloc( sizeof(((CvERTreeNode*)node)->l_sample_idx[0])*n );
+                ((CvERTreeNode*)node)->ln = 0;
+            }
+            if (!((CvERTreeNode*)node)->r_sample_idx)
+            {
+                ((CvERTreeNode*)node)->r_sample_idx = (int*)cvAlloc( sizeof(((CvERTreeNode*)node)->r_sample_idx[0])*n );
+                ((CvERTreeNode*)node)->rn = 0;
+            }
+
+            int* l_sind = ((CvERTreeNode*)node)->l_sample_idx;
+            int* r_sind = ((CvERTreeNode*)node)->r_sample_idx;
+
+            // calculate Gini index
+            double lbest_val = 0, rbest_val = 0;
+            int L = 0, R = 0;
+            for( int si = 0; si < n; si++ )
+            {
+                int r = resp[sidx[si]*rstep];
+                if ((pred[sidx[si]*pstep + vi]) < split_val)
+                {
+                    lc[r]++;
+                    l_sind[L] = sidx[si];
+                    L++;
+                }
+                else
+                {
+                    rc[r]++;
+                    r_sind[R] = sidx[si];
+                    R++;
+                }
+            }
+            for (int i = 0; i < m; i++)
+            {
+                lbest_val += lc[i]*lc[i];
+                rbest_val += rc[i]*rc[i];
+            }
+            lbest_val = lbest_val/L;
+            rbest_val = rbest_val/R;
+            best_val = lbest_val + rbest_val;
+
+            ((CvERTreeNode*)node)->ln = L;
+            ((CvERTreeNode*)node)->rn = R;
+        }
+    }        
+    return is_find_split ? data->new_split_ord( vi, (float)split_val, -1, 0, (float)best_val ) : 0;
+}
+
+void CvForestERTree::calc_node_value( CvDTreeNode* node )
+{
+    CV_FUNCNAME("CvForestERTree::calc_node_value");
+    __BEGIN__;
+
+    int i, j, k, n = node->sample_count, cv_n = data->params.cv_folds;
+
+    if( data->is_classifier )
+    {
+        int* cls_count = data->counts->data.i;
+
+        int m = ((CvERTreeTrainData*)data)->get_num_classes();
+        int* cv_cls_count = (int*)cvStackAlloc(m*cv_n*sizeof(cv_cls_count[0]));
+        double max_val = -1, total_weight = 0;
+        int max_k = -1;
+
+        for( k = 0; k < m; k++ )
+            cls_count[k] = 0;
+        static int inc = 0;
+        inc ++;
+       
+        if (cv_n)
+        {
+             CV_ERROR( CV_StsBadArg, "pruning do not supported ERTrees" );
+        }
+        else
+        {
+            const int* rdata = ((CvERTreeTrainData*)data)->resp->data.i;
+            int step = ((CvERTreeTrainData*)data)->resp->step/CV_ELEM_SIZE(((CvERTreeTrainData*)data)->resp->type);
+            int *sidx = ((CvERTreeNode*)node)->sample_idx;
+            for( i = 0; i < n; i++ )
+                cls_count[rdata[sidx[i]*step]]++;
+        }
+
+   
+        if( data->have_priors )
+        {
+            CV_ERROR( CV_StsBadArg, "priors do not supported ERTrees" );
+        }
+
+        for( k = 0; k < m; k++ )
+        {
+            double val = cls_count[k];
+            total_weight += val;
+            if( max_val < val )
+            {
+                max_val = val;
+                max_k = k;
+            }
+        }
+
+        node->class_idx = max_k;
+        const int* ldata = ((CvERTreeTrainData*)data)->class_lables->data.i;
+        node->value = ldata[max_k]; 
+
+        node->node_risk = total_weight - max_val;
+
+        for( j = 0; j < cv_n; j++ )
+        {
+            double sum_k = 0, sum = 0, max_val_k = 0;
+            max_val = -1; max_k = -1;
+
+            for( k = 0; k < m; k++ )
+            {
+                double val_k = cv_cls_count[j*m + k];
+                double val = cls_count[k] - val_k;
+                sum_k += val_k;
+                sum += val;
+                if( max_val < val )
+                {
+                    max_val = val;
+                    max_val_k = val_k;
+                    max_k = k;
+                }
+            }
+
+            node->cv_Tn[j] = INT_MAX;
+            node->cv_node_risk[j] = sum - max_val;
+            node->cv_node_error[j] = sum_k - max_val_k;
+        }
+    }
+    else
+    {
+        CV_ERROR( CV_StsBadArg, "ERTrees do not support regression problems" );
+    }
+    __END__
+}
+
+void CvForestERTree::split_node_data( CvDTreeNode* node )
+{
+    int ln = ((CvERTreeNode*)node)->ln;
+    int rn = ((CvERTreeNode*)node)->rn;
+    node->left = ((CvERTreeTrainData*)data)->new_node( (CvERTreeNode*)node, ln, &((CvERTreeNode*)node)->l_sample_idx );
+    node->right = ((CvERTreeTrainData*)data)->new_node( (CvERTreeNode*)node, rn, &((CvERTreeNode*)node)->r_sample_idx );
+  
+    data->free_node_data(node);
+}
+
+bool CvERTrees::train( const CvMat* _train_data, int _tflag,
+                      const CvMat* _responses, const CvMat* _var_idx,
+                      const CvMat* _sample_idx, const CvMat* _var_type,
+                      const CvMat* _missing_mask, CvRTParams params )
+{
+    bool result = false;
+
+    CvDTreeParams tree_params( params.max_depth, params.min_sample_count,
+        params.regression_accuracy, params.use_surrogates, params.max_categories,
+        params.cv_folds, params.use_1se_rule, false, params.priors );
+
+    CV_FUNCNAME("CvERTrees::train");
+    __BEGIN__;
+
+    int var_count = 0;
+
+    if (_var_idx || _sample_idx || _missing_mask)
+        CV_ERROR( CV_StsBadArg, "ERTrees do not support _var_idx, _sample_idx, _missing_mask" );
+
+    clear();
+
+    data = new CvERTreeTrainData();
+
+    CV_CALL(((CvERTreeTrainData*)data)->set_data( _train_data, _tflag, _responses, _var_idx,
+        _sample_idx, _var_type, _missing_mask, tree_params));
+
+    var_count = data->var_count;
+    if( params.nactive_vars > var_count )
+        params.nactive_vars = var_count;
+    else if( params.nactive_vars == 0 )
+        params.nactive_vars = (int)sqrt((double)var_count);
+    else if( params.nactive_vars < 0 )
+        CV_ERROR( CV_StsBadArg, "<nactive_vars> must be non-negative" );
+   
+    // Create mask of active variables at the tree nodes
+    CV_CALL(active_var_mask = cvCreateMat( 1, var_count, CV_8UC1 ));
+    if( params.calc_var_importance )
+    {
+        CV_CALL(var_importance  = cvCreateMat( 1, var_count, CV_32FC1 ));
+        cvZero(var_importance);
+    }
+    { // initialize active variables mask
+        CvMat submask1, submask2;
+        cvGetCols( active_var_mask, &submask1, 0, params.nactive_vars );
+        cvSet( &submask1, cvScalar(1) );
+        if (params.nactive_vars < var_count)
+        {
+            cvGetCols( active_var_mask, &submask2, params.nactive_vars, var_count );
+            cvZero( &submask2 );
+        }
+    }
+
+    if( params.calc_var_importance )
+    {
+        CV_CALL(var_importance  = cvCreateMat( 1, var_count, CV_32FC1 ));
+        cvZero(var_importance);
+    }
+
+
+    CV_CALL(result = grow_forest( params.term_crit ));
+
+    result = true;
+
+    __END__;
+    return result;
+    
+}
+
+
+bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
+{
+    bool result = false;
+
+    CvMat* oob_sample_votes	   = 0;
+    CvMat* oob_responses       = 0;
+
+    float* oob_samples_perm_ptr= 0;
+
+    float* samples_ptr     = 0;
+    uchar* missing_ptr     = 0;
+    float* true_resp_ptr   = 0;
+
+    CV_FUNCNAME("CvERTrees::grow_forest");
+    __BEGIN__;
+
+    const int max_ntrees = term_crit.max_iter;
+    const double max_oob_err = term_crit.epsilon;
+
+    const int dims = data->var_count;
+    float maximal_response = 0;
+
+    CvMat oob_predictions_sum = cvMat( 1, 1, CV_32FC1 );
+    CvMat oob_num_of_predictions = cvMat( 1, 1, CV_32FC1 );
+
+    nsamples = data->sample_count;
+    nclasses = ((CvERTreeTrainData*)data)->get_num_classes();
+
+    trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*max_ntrees );
+
+    memset( trees, 0, sizeof(trees[0])*max_ntrees );
+
+    if( data->is_classifier )
+    {
+        CV_CALL(oob_sample_votes = cvCreateMat( nsamples, nclasses, CV_32SC1 ));
+        cvZero(oob_sample_votes);
+    }
+    else
+    {
+        CV_CALL(oob_responses = cvCreateMat( 2, nsamples, CV_32FC1 ));
+        cvZero(oob_responses);
+        cvGetRow( oob_responses, &oob_predictions_sum, 0 );
+        cvGetRow( oob_responses, &oob_num_of_predictions, 1 );
+    }
+    CV_CALL(oob_samples_perm_ptr     = (float*)cvAlloc( sizeof(float)*nsamples*dims ));
+    CV_CALL(samples_ptr              = (float*)cvAlloc( sizeof(float)*nsamples*dims ));
+    CV_CALL(missing_ptr              = (uchar*)cvAlloc( sizeof(uchar)*nsamples*dims ));
+    CV_CALL(true_resp_ptr            = (float*)cvAlloc( sizeof(float)*nsamples ));
+
+    CV_CALL(data->get_vectors( 0, samples_ptr, 0, true_resp_ptr ));
+    {
+        double minval, maxval;
+        CvMat responses = cvMat(1, nsamples, CV_32FC1, true_resp_ptr);
+        cvMinMaxLoc( &responses, &minval, &maxval );
+        maximal_response = (float)MAX( MAX( fabs(minval), fabs(maxval) ), 0 );
+    }
+
+    ntrees = 0;
+    while( ntrees < max_ntrees )
+    {
+        int oob_samples_count = 0;
+        double ncorrect_responses = 0;
+        CvForestERTree* tree = 0;
+
+        trees[ntrees] = new CvForestERTree();
+        tree = (CvForestERTree*)trees[ntrees];
+        CV_CALL(tree->train( data, 0, this ));
+#define ET_OOB
+#ifdef ET_OOB
+        int i;
+        CvMat sample, missing;
+        sample   = cvMat( 1, dims, CV_32FC1, samples_ptr );
+        missing  = cvMat( 1, dims, CV_8UC1,  missing_ptr );
+
+        oob_error = 0;
+        for( i = 0; i < nsamples; i++,
+            sample.data.fl += dims, missing.data.ptr += dims )
+        {
+            CvDTreeNode* predicted_node = 0;
+            // predict oob samples
+            if( !predicted_node )
+                CV_CALL(predicted_node = tree->predict(&sample, &missing, true));
+
+            if( !data->is_classifier ) //regression
+            {
+                CV_ERROR( CV_StsBadArg, "ERTrees do not support regression problems" );
+            }
+            else //classification
+            {
+                double prdct_resp;
+                CvPoint max_loc;
+                CvMat votes;
+
+                cvGetRow(oob_sample_votes, &votes, i);
+                votes.data.i[predicted_node->class_idx]++;
+
+                // compute oob error
+                cvMinMaxLoc( &votes, 0, 0, 0, &max_loc );
+
+                prdct_resp = ((CvERTreeTrainData*)data)->class_lables->data.i[max_loc.x];
+                oob_error += (fabs(prdct_resp - true_resp_ptr[i]) < FLT_EPSILON) ? 0 : 1;
+
+                ncorrect_responses += cvRound(predicted_node->value - true_resp_ptr[i]) == 0;
+            }
+            oob_samples_count++;
+        }
+        if( oob_samples_count > 0 )
+            oob_error /= (double)oob_samples_count;
+
+        // estimate variable importance
+        if( var_importance && oob_samples_count > 0 )
+        {
+            int m;
+
+            memcpy( oob_samples_perm_ptr, samples_ptr, dims*nsamples*sizeof(float));
+            for( m = 0; m < dims; m++ )
+            {
+                double ncorrect_responses_permuted = 0;
+                // randomly permute values of the m-th variable in the oob samples
+                float* mth_var_ptr = oob_samples_perm_ptr + m;
+
+                for( i = 0; i < nsamples; i++ )
+                {
+                    int i1, i2;
+                    float temp;
+
+                    //if( sample_idx_mask_for_tree->data.ptr[i] ) //the sample is not OOB
+                    //    continue;
+                    i1 = cvRandInt( &rng ) % nsamples;
+                    i2 = cvRandInt( &rng ) % nsamples;
+                    CV_SWAP( mth_var_ptr[i1*dims], mth_var_ptr[i2*dims], temp );
+
+                    // turn values of (m-1)-th variable, that were permuted
+                    // at the previous iteration, untouched
+                    if( m > 1 )
+                        oob_samples_perm_ptr[i*dims+m-1] = samples_ptr[i*dims+m-1];
+                }
+
+                // predict "permuted" cases and calculate the number of votes for the
+                // correct class in the variable-m-permuted oob data
+                sample  = cvMat( 1, dims, CV_32FC1, oob_samples_perm_ptr );
+                missing = cvMat( 1, dims, CV_8UC1, missing_ptr );
+                for( i = 0; i < nsamples; i++,
+                    sample.data.fl += dims, missing.data.ptr += dims )
+                {
+                    double predct_resp, true_resp;
+
+                    //if( sample_idx_mask_for_tree->data.ptr[i] ) //the sample is not OOB
+                    //    continue;
+
+                    predct_resp = tree->predict(&sample, &missing, true)->value;
+                    true_resp   = true_resp_ptr[i];
+                    if( data->is_classifier )
+                        ncorrect_responses_permuted += cvRound(true_resp - predct_resp) == 0;
+                    else
+                    {
+                        true_resp = (true_resp - predct_resp)/maximal_response;
+                        ncorrect_responses_permuted += exp( -true_resp*true_resp );
+                    }
+                }
+                var_importance->data.fl[m] += (float)(ncorrect_responses
+                    - ncorrect_responses_permuted);
+            }
+        }
+#endif //ET_OOB
+        ntrees++;
+
+        if( term_crit.type != CV_TERMCRIT_ITER && oob_error < max_oob_err )
+            break;
+    }
+    if( var_importance )
+        CV_CALL(cvConvertScale( var_importance, var_importance, 1./ntrees/nsamples ));
+
+    result = true;
+
+    __END__;
+
+    cvReleaseMat( &oob_sample_votes );
+    cvReleaseMat( &oob_responses );
+
+    cvFree( &oob_samples_perm_ptr );
+    cvFree( &samples_ptr );
+    cvFree( &missing_ptr );
+    cvFree( &true_resp_ptr );
+
+    return result;
+}
+
+
+void CvERTrees::clear()
+{
+    int k;
+    for( k = 0; k < ntrees; k++ )
+        delete (CvForestERTree*)trees[k];
+    cvFree( &trees );
+
+    delete (CvERTreeTrainData*)data;
+    data = 0;
+
+    cvReleaseMat( &active_var_mask );
+    cvReleaseMat( &var_importance );
+    ntrees = 0;  
+}
+
+void CvERTrees::read( CvFileStorage* fs, CvFileNode* node )
+{
+    CV_FUNCNAME("CvERTrees::read");
+    __BEGIN__;
+    fs = 0; node = 0;
+    CV_ERROR( CV_StsBadArg, "ERTrees do not support this method" );
+    __END__;
+};
+
+void CvERTrees::write( CvFileStorage* fs, const char* name )
+{
+    CV_FUNCNAME("CvERTrees::write");
+    __BEGIN__;
+    fs = 0; name = 0;
+    CV_ERROR( CV_StsBadArg, "ERTrees do not support this method" );
+    __END__;
+};
 // End of file.
