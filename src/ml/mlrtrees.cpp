@@ -786,6 +786,13 @@ CvDTreeSplit* CvForestERTree::find_best_split( CvDTreeNode* node )
     __BEGIN__;
 
     CvMat* active_var_mask = 0;
+    int n = node->sample_count;
+    int* best_l_sample_idx = (int*)cvAlloc(n*sizeof(best_l_sample_idx[0]));
+    int best_ln = 0;
+    int* best_r_sample_idx = (int*)cvAlloc(n*sizeof(best_r_sample_idx[0]));
+    int best_rn = 0;
+    int* tsidx = 0;
+
     if( forest )
     {
         int var_count;
@@ -805,11 +812,6 @@ CvDTreeSplit* CvForestERTree::find_best_split( CvDTreeNode* node )
                 active_var_mask->data.ptr[i2], temp );
         }
     }
-    int n = node->sample_count;
-    int* best_l_sample_idx = (int*)cvAlloc(n*sizeof(best_l_sample_idx[0]));
-    int best_ln = 0;
-    int* best_r_sample_idx = (int*)cvAlloc(n*sizeof(best_r_sample_idx[0]));
-    int best_rn = 0;
 
     for( vi = 0; vi < data->var_count; vi++ )
     {
@@ -859,7 +861,7 @@ CvDTreeSplit* CvForestERTree::find_best_split( CvDTreeNode* node )
     ((CvERTreeNode*)node)->ln = best_ln;
     ((CvERTreeNode*)node)->r_sample_idx = (int*)cvAlloc(best_rn*sizeof(((CvERTreeNode*)node)->r_sample_idx[0]));
     ((CvERTreeNode*)node)->rn = best_rn;
-    int* tsidx = ((CvERTreeNode*)node)->l_sample_idx;
+    tsidx = ((CvERTreeNode*)node)->l_sample_idx;
     for (int li = 0; li < best_ln; li++)
         tsidx[li] = best_l_sample_idx[li];
     tsidx = ((CvERTreeNode*)node)->r_sample_idx;
