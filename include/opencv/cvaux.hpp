@@ -51,12 +51,12 @@
 class CV_EXPORTS CvCamShiftTracker
 {
 public:
-    
+
     CvCamShiftTracker();
     virtual ~CvCamShiftTracker();
-    
+
     /**** Characteristics of the object that are calculated by track_object method *****/
-    float   get_orientation() const // orientation of the object in degrees 
+    float   get_orientation() const // orientation of the object in degrees
     { return m_box.angle; }
     float   get_length() const // the larger linear size of the object
     { return m_box.size.height; }
@@ -66,31 +66,31 @@ public:
     { return m_box.center; }
     CvRect get_window() const // bounding rectangle for the object
     { return m_comp.rect; }
-    
+
     /*********************** Tracking parameters ************************/
     int     get_threshold() const // thresholding value that applied to back project
     { return m_threshold; }
 
     int     get_hist_dims( int* dims = 0 ) const // returns number of histogram dimensions and sets
-    { return m_hist ? cvGetDims( m_hist->bins, dims ) : 0; } 
-    
+    { return m_hist ? cvGetDims( m_hist->bins, dims ) : 0; }
+
     int     get_min_ch_val( int channel ) const // get the minimum allowed value of the specified channel
     { return m_min_ch_val[channel]; }
-    
+
     int     get_max_ch_val( int channel ) const // get the maximum allowed value of the specified channel
     { return m_max_ch_val[channel]; }
-    
+
     // set initial object rectangle (must be called before initial calculation of the histogram)
     bool    set_window( CvRect window)
     { m_comp.rect = window; return true; }
-    
+
     bool    set_threshold( int threshold ) // threshold applied to the histogram bins
     { m_threshold = threshold; return true; }
 
     bool    set_hist_bin_range( int dim, int min_val, int max_val );
 
     bool    set_hist_dims( int c_dims, int* dims );// set the histogram parameters
-    
+
     bool    set_min_ch_val( int channel, int val ) // set the minimum allowed value of the specified channel
     { m_min_ch_val[channel] = val; return true; }
     bool    set_max_ch_val( int channel, int val ) // set the maximum allowed value of the specified channel
@@ -99,7 +99,7 @@ public:
     /************************ The processing methods *********************************/
     // update object position
     virtual bool  track_object( const IplImage* cur_frame );
-    
+
     // update object histogram
     virtual bool  update_histogram( const IplImage* cur_frame );
 
@@ -113,11 +113,11 @@ public:
 
     float query( int* bin ) const
     { return m_hist ? (float)cvGetRealND(m_hist->bins, bin) : 0.f; }
-    
+
 protected:
 
     // internal method for color conversion: fills m_color_planes group
-    virtual void color_transform( const IplImage* img ); 
+    virtual void color_transform( const IplImage* img );
 
     CvHistogram* m_hist;
 
@@ -135,6 +135,60 @@ protected:
     IplImage*  m_back_project;
     IplImage*  m_temp;
     IplImage*  m_mask;
+};
+
+class CvAdaptiveSkinDetector
+{
+private:
+	enum {
+		GSD_HUE_LT = 3,
+		GSD_HUE_UT = 33,
+		GSD_INTENSITY_LT = 15,
+		GSD_INTENSITY_UT = 250
+	};
+
+	class Histogram
+	{
+	private:
+		enum {
+			HistogramSize = (GSD_HUE_UT - GSD_HUE_LT + 1)
+		};
+
+	protected:
+		int findCoverageIndex(double surfaceToCover, int defaultValue = 0);
+
+	public:
+		CvHistogram *fHistogram;
+		Histogram();
+		virtual ~Histogram();
+
+		void findCurveThresholds(int &x1, int &x2, double percent = 0.05);
+		void mergeWith(Histogram *source, double weight);
+	};
+
+	int nStartCounter, nFrameCount, nSkinHueLowerBound, nSkinHueUpperBound, nMorphingMethod, nSamplingDivider;
+	double fHistogramMergeFactor, fHuePercentCovered;
+	Histogram histogramHueMotion, skinHueHistogram;
+	IplImage *imgHueFrame, *imgSaturationFrame, *imgLastGrayFrame, *imgMotionFrame, *imgFilteredFrame;
+	IplImage *imgShrinked, *imgTemp, *imgGrayFrame, *imgHSVFrame;
+
+protected:
+	void initData(IplImage *src, int widthDivider, int heightDivider);
+	void adaptiveFilter();
+
+public:
+
+	enum {
+		MORPHING_METHOD_NONE = 0,
+		MORPHING_METHOD_ERODE = 1,
+		MORPHING_METHOD_ERODE_ERODE	= 2,
+		MORPHING_METHOD_ERODE_DILATE = 3
+	};
+
+	CvAdaptiveSkinDetector(int samplingDivider = 1, int morphingMethod = MORPHING_METHOD_NONE);
+	virtual ~CvAdaptiveSkinDetector();
+
+	virtual void process(IplImage *inputBGRImage, IplImage *outputHueMask);
 };
 
 #endif /* __cplusplus */
