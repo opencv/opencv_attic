@@ -46,7 +46,7 @@
 
 #include "_highgui.h"
 
-#if defined __cplusplus && (!defined WIN32 || !defined __GNUC__)
+#if defined __cplusplus
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
