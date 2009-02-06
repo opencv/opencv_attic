@@ -59,6 +59,10 @@ The functionality resides in cvaux library. To use it in your application, place
 <li><a href="#decl_cvEViterbi">EViterbi</a>
 <li><a href="#decl_cvMixSegmL2">MixSegmL2</a>
 </ul>
+<li><a href="#aux_hci">Human Computer Interaction Utilities</a>
+<ul>
+<li><a href="#decl_CvAdaptiveSkinDetector::process">CvAdaptiveSkinDetector::process</a>
+</ul>
 </ul></p>
 
 <hr><h2><a name="aux_stereo">Stereo Correspondence Functions</a></h2>
@@ -756,6 +760,43 @@ components of newly Viterbi algorithm-assigned states. The function uses
 Euclidean distance to group vectors around the existing mixtures centers.
 </p>
 
+<hr><h2><a name="aux_hci">Human Computer Interaction Utilities</a></h2>
+The functions and classes described in this section are miscellaneous utilities and tools, related to HCI applications.
+<br>
+<hr><h3><a name="decl_CvAdaptiveSkinDetector::process">CvAdaptiveSkinDetector::process</a></h3>
+<p class="Blurb">Provides an 8 bit Hue mask corresponding to the input image</p>
+<pre>
+void process(IplImage *inputBGRImage, IplImage *outputHueMask);
+</pre>
+<p>
+<dl>
+<dt>inputBGRImage<dd>Input image captured from a video sequence. The input image must be 3 channel BGR, 8 bit per channel. 
+<dt>outputHueMask<dd>Output image is an 8 bit Hue mask, is filled by Hue factor of the skin color of the person in the <code>inputBGRImage</code>.
+</dl>
+</p>
+
+<p>
+The function <code>CvAdaptiveSkinDetector::process </code>generates a mask for the skin of the user in the 
+<code>inputBGRImage </code>
+using previously observed user’s movements. This algorithm is based on <strong>[Dadgostar06]</strong>.
+</p>
+<p>
+The adaptive skin detector, together with color skin
+tracking, retrains itself based on new data gathered from
+moving regions of the image. It also recalculates the lower and upper
+Hue thresholds for filtering the next frame. The proposed algorithm
+can be used as a component in vision-based applications
+in human–computer interaction. While the user is
+interacting with the computer (using mouse, keyboard,
+and sometimes slight changes in head position), the system
+captures the movements and retrains itself based on the
+user’s skin colour.
+</p>
+
+<ul>
+<li><b>[Dadgostar06] </b>F. Dadgostar, A. Sarrafzadeh. An adaptive real-time skin detector based on Hue thresholding: A comparison on two motion tracking methods.</i> 
+Pattern Recognition Letters, 27(12), 1342-1352, 2006.
+</ul>
 
 </body>
 </html>
