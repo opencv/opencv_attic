@@ -34,7 +34,7 @@
 //
 //M*/
 
-#include <cvaux.h>
+#include "_cvaux.h"
 
 #define ASD_INTENSITY_SET_PIXEL(pointer, qq) {(*pointer) = (unsigned char)qq;}
 
