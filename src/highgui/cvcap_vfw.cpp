@@ -42,6 +42,7 @@
 #include "_highgui.h"
 
 #include <vfw.h>
+
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4711 )
 #endif
@@ -115,7 +116,6 @@ protected:
     CvSlice             film_range;
     double              fps;
     int                 pos;
-    int                 data_offset;
     IplImage*           frame;
     CvSize              size;
 };
@@ -131,7 +131,6 @@ void CvCaptureAVI_VFW::init()
     film_range = cvSlice(0,0);
     fps = 0;
     pos = 0;
-    data_offset = 0;
     frame = 0;
     size = cvSize(0,0);
 }
@@ -170,13 +169,6 @@ bool CvCaptureAVI_VFW::open( const char* filename )
             hr = AVIStreamInfo( avistream, &aviinfo, sizeof(aviinfo));
             if( SUCCEEDED(hr))
             {
-                data_offset = 0;
-		if ((8 == capture->bmih->biBitCount) && (0 != capture->bmih->biSize))
-		{
-		    // Only account for the color map size if we are an 8-bit image and the color map is used
-		    int RGBQUAD_SIZE_PER_BYTE = sizeof(RGBQUAD) / sizeof(BYTE);
-		    data_offset = (int)capture->bmih->biClrUsed*RGBQUAD_SIZE_PER_BYTE+(int)capture->bmih->biSize;
-		}
                 size.width = aviinfo.rcFrame.right - aviinfo.rcFrame.left;
                 size.height = aviinfo.rcFrame.bottom - aviinfo.rcFrame.top;
                 BITMAPINFOHEADER bmih = icvBitmapHeader( size.width, size.height, 24 );
@@ -210,7 +202,7 @@ IplImage* CvCaptureAVI_VFW::retrieveFrame(int)
         IplImage src;
         cvInitImageHeader( &src, cvSize( bmih->biWidth, bmih->biHeight ),
                            IPL_DEPTH_8U, 3, IPL_ORIGIN_BL, 4 );
-        cvSetData( &src, (char*)(bmih + data_offset), src.widthStep );
+        cvSetData( &src, (char*)(bmih + 1), src.widthStep );
         if( !frame || frame->width != src.width || frame->height != src.height )
         {
             cvReleaseImage( &frame );
