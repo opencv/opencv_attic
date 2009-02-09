@@ -1628,7 +1628,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
         if( raw_mode )
             value = (float)cls_idx;
         else
-            value = (float)cmap[cofs[vtype[var_count]] + cls_idx];
+            value = (float)cmap[cofs[vtype[data->var_count]] + cls_idx];
     }
 
     __END__;
@@ -1851,6 +1851,11 @@ CvBoost::get_params() const
 CvSeq* CvBoost::get_weak_predictors()
 {
     return weak;
+}
+
+const CvDTreeTrainData* CvBoost::get_data() const
+{
+    return data;
 }
 
 /* End of file. */
