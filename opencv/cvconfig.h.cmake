@@ -79,6 +79,9 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #cmakedefine  HAVE_LIBPTHREAD 1
 
+/* Define to 1 if you have the `lrint' function. */
+#cmakedefine  HAVE_LRINT 1
+
 /* PNG codec */
 #cmakedefine  HAVE_PNG
 
