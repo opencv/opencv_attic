@@ -2845,8 +2845,8 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
             fs->file = 0;
         }
     }
-
-    cvFree( &xml_buf );
+    if (xml_buf)
+        cvFree( &xml_buf );
 
     return  fs;
 }
