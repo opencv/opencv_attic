@@ -1216,7 +1216,7 @@ void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
 
 CvERTreeTrainData::CvERTreeTrainData()
 {
-    pred = resp = class_lables = 0;
+    ord_pred = cat_pred = resp = 0; class_lables = 0;
 }
 
 
@@ -1241,7 +1241,7 @@ CvERTreeTrainData::CvERTreeTrainData( const CvMat* _train_data, int _tflag,
     __END__;
 }
 
-                 
+
 void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     const CvMat* _responses, const CvMat* _var_idx, const CvMat* _sample_idx,
     const CvMat* _var_type, const CvMat* _missing_mask, const CvDTreeParams& _params,
@@ -1258,9 +1258,12 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     int sample_all = 0, r_type = 0, cv_n;
     int tree_block_size, temp_block_size, max_split_size, nv_size, cv_size = 0;
-    int vi;
+    int vi, _pstep, _rstep, postep, pcstep, rstep;
     const int *sidx = 0;
     time_t _time;
+	int* _idata, *idata;
+    float* _fdata, *fdata;
+    int cat_count_size, cl_size;
 
     if (_var_idx || _sample_idx || _missing_mask)
         CV_ERROR(CV_StsBadArg, "arguments _var_idx, _sample_idx, _missing_mask are not supported");
@@ -1273,8 +1276,9 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         // compare new and old train data
         if( !(data->var_count == var_count &&
             cvNorm( data->var_type, var_type, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->resp, resp, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->pred, pred, CV_C ) < FLT_EPSILON) )
+            cvNorm( data->ord_pred, ord_pred, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->cat_pred, cat_pred, CV_C ) < FLT_EPSILON &&
+            cvNorm( data->resp, resp, CV_C ) < FLT_EPSILON) )
             CV_ERROR( CV_StsBadArg,
                 "The new training data must have the same types and the input and output variables "
                 "and the same categories for categorical variables" );
@@ -1310,7 +1314,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     if( !CV_IS_MAT(_responses) ||
         (CV_MAT_TYPE(_responses->type) != CV_32SC1 &&
         CV_MAT_TYPE(_responses->type) != CV_32FC1) ||
-        _responses->rows != 1 && _responses->cols != 1 ||
+        (_responses->rows != 1 && _responses->cols != 1) ||
         _responses->rows + _responses->cols - 1 != sample_all )
         CV_ERROR( CV_StsBadArg, "The array of _responses must be an integer or "
         "floating-point vector containing as many elements as "
@@ -1333,11 +1337,9 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             cat_var_count++ : ord_var_count--;
     }
     ord_var_count = ~ord_var_count;
-    if (cat_var_count)
-        CV_ERROR( CV_StsBadArg, "ERTrees support categorical variables only");
 
     cv_n = params.cv_folds;
-    if( cv_n )    
+    if( cv_n )
         CV_ERROR( CV_StsBadArg, "pruning is not supported ERTrees, params.cv_folds must be equel 0" );
 
     var_type->data.i[var_count] = cat_var_count;
@@ -1368,44 +1370,128 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     max_c_count = 1;
 
     shared = true;
-    
-    if( _tflag == CV_ROW_SAMPLE )
+
+    if (ord_var_count)
+        CV_CALL( ord_pred = cvCreateMat( sample_count, ord_var_count, CV_32FC1 ));
+    if (cat_var_count)
+        CV_CALL( cat_pred = cvCreateMat( sample_count, cat_var_count, CV_32SC1 ));
+    CV_CALL( resp = cvCreateMat( _responses->rows, _responses->cols, CV_32SC1 ));
+    cat_count_size = is_classifier ? cat_var_count+1 : cat_var_count;
+    CV_CALL( cat_count = cvCreateMat( 1, cat_count_size, CV_32SC1 ));
+
+    CvMat *train_data;
+    CV_CALL( train_data = cvCreateMat( sample_count, var_count, _train_data->type ));
+    if( _tflag == CV_COL_SAMPLE )
     {
-        CV_CALL( pred = cvCreateMat( _train_data->rows, _train_data->cols, _train_data->type ));
-        CV_CALL( resp = cvCreateMat( _responses->rows, _responses->cols, CV_32SC1 ));
-        cvCopy( _train_data, pred );
-        cvConvertScale( _responses, resp );
-    }
-    else
-    {
-        CV_CALL( pred = cvCreateMat( _train_data->cols, _train_data->rows, _train_data->type ));
-        CV_CALL( resp = cvCreateMat( _responses->rows, _responses->cols, CV_32SC1 ));
-        cvTranspose( _train_data, pred );
+        cvTranspose( _train_data, train_data );
         cvConvertScale( _responses, resp );
         cvTranspose( resp, resp );
     }
+    else
+    {
+        cvCopy(_train_data, train_data);
+        cvConvertScale(_responses, resp);
+    }
 
+    _pstep = train_data->step / CV_ELEM_SIZE(train_data->type);
+    _rstep = _responses->step / CV_ELEM_SIZE(_responses->type);
+    postep = ord_pred ? ord_pred->step / CV_ELEM_SIZE(ord_pred->type) : 0;
+    pcstep = cat_pred ? cat_pred->step / CV_ELEM_SIZE(cat_pred->type) : 0;
+    rstep =  resp->type ? resp->step / CV_ELEM_SIZE(resp->type) : 0;
+        
+    _idata = 0; _fdata = 0;
+    if( CV_MAT_TYPE(_train_data->type) == CV_32SC1 )
+        _idata = train_data->data.i;
+    else
+        _fdata = train_data->data.fl;
+
+    idata = cat_pred ? cat_pred->data.i : 0;
+    fdata = ord_pred ? ord_pred->data.fl : 0;
+    for (int vi = 0; vi < var_count; vi++)
+    {
+        int ci = get_var_type(vi);
+        if (ci >= 0)
+        {
+            for (int si = 0; si < sample_count; si++)
+                idata[si*pcstep + ci] = _idata ? _idata[si*_pstep + vi] : cvRound(_fdata[si*_pstep + vi]);
+        }
+        else
+        {
+            int idx = get_ord_var_idx(ci);            
+            for (int si = 0; si < sample_count; si++)
+                fdata[si*postep + idx] = _idata ? (float)_idata[si*_pstep + vi] : _fdata[si*_pstep + vi];
+        }
+    }
+    
+    cl_size = is_classifier ? (cat_var_count + 1) : cat_var_count;
+    if (cl_size)
+        class_lables = (CvMat**)cvAlloc( cl_size * sizeof(class_lables[0]));
+
+    for (int vi = 0; vi < var_count; vi++)
+    {
+        int ci = get_var_type(vi);
+        if (ci >= 0)
+        {
+            int c_count;
+            // calculate count of categories
+            for( int i = 0; i < sample_count; i++ )
+            {
+                int_ptr[i] = &idata[i*pcstep + ci];
+            }
+
+            icvSortIntPtr( int_ptr, sample_count, 0 );
+
+            c_count = 1;
+            for( int i = 1; i < sample_count; i++ )
+                c_count += *int_ptr[i] != *int_ptr[i-1];
+            cat_count->data.i[ci] = c_count;
+
+            class_lables[ci] = cvCreateMat( 1, c_count, _train_data->type);
+
+            int *lbs = class_lables[ci]->data.i;
+            int c_idx = 0;
+            lbs[c_idx] = *int_ptr[0];
+            for( int si = 1; si < sample_count; si++ )
+                if (*int_ptr[si] != *int_ptr[si-1])
+                {
+                    c_idx++;
+                    lbs[c_idx] = *int_ptr[si];
+                }
+
+            for( int si = 0; si < sample_count; si++ )
+            {
+                for(int j = 0; j < c_count; j++ )
+                    if ( abs(lbs[j] - idata[si*pcstep + ci]) < FLT_EPSILON )
+                    {
+                        idata[si*pcstep + ci] = j;
+                        break;
+                    }
+            }
+        }
+    }
+    cvReleaseMat( &train_data );
     if( is_classifier ) 
     {
+        int c_count;
         // calculate count of categories
-        int *idata = resp->data.i;
-        int step = CV_IS_MAT_CONT(resp->type) ?
-            1 : resp->step / CV_ELEM_SIZE(resp->type);
+        idata = resp->data.i;
         for( int i = 0; i < sample_count; i++ )
         {
             int si = sidx ? sidx[i] : i;
-            int_ptr[i] = &idata[si*step];
+            int_ptr[i] = &idata[si*rstep];
         }
 
         icvSortIntPtr( int_ptr, sample_count, 0 );
 
-        int c_count = 1;
+        c_count = 1;
         for( int i = 1; i < sample_count; i++ )
             c_count += *int_ptr[i] != *int_ptr[i-1];
 
-        class_lables = cvCreateMat( 1, c_count, resp->type);
+        cat_count->data.i[cat_var_count] = c_count;
 
-        int *lbs = class_lables->data.i;
+        class_lables[cat_var_count] = cvCreateMat( 1, c_count, _responses->type);
+
+        int *lbs = class_lables[cat_var_count]->data.i;
         int c_idx = 0;
         lbs[c_idx] = *int_ptr[0];
         for( int i = 1; i < sample_count; i++ )
@@ -1415,14 +1501,12 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                 lbs[c_idx] = *int_ptr[i];
             }
 
-            for( int i = 0; i < sample_count; i++ )
+            for( int si = 0; si < sample_count; si++ )
             {
-                int si = sidx ? sidx[i] : i;
-                si = si * step;
-                for(int j = 0; j < c_count; j++ )
-                    if ( abs(lbs[j] - idata[si*step]) < FLT_EPSILON )
+               for(int j = 0; j < c_count; j++ )
+                    if ( abs(lbs[j] - idata[si*rstep]) < FLT_EPSILON )
                     {
-                        idata[si*step] = j;
+                        idata[si*rstep] = j;
                         break;
                     }
             }
@@ -1495,7 +1579,8 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
     int i, vi, total = sample_count, count = total, cur_ofs = 0;
     int* sidx = 0;
     int* co = 0;
-
+    int postep, pcstep, rstep;
+    
     if( _subsample_idx )
     {
         CV_CALL( subsample_idx = cvPreprocessIndexArray( _subsample_idx, sample_count ));
@@ -1518,24 +1603,36 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
     }
     if( missing )
         memset( missing, 1, count*var_count );
+
+    postep = ord_pred ? ord_pred->step/CV_ELEM_SIZE(ord_pred->type) : 0;
+    pcstep = cat_pred ? cat_pred->step/CV_ELEM_SIZE(cat_pred->type) : 0;
+    rstep = resp->step / CV_ELEM_SIZE(resp->type);
+    
     for( vi = 0; vi < var_count; vi++ )
     {
         int ci = get_var_type(vi);
+        float* dst = values + vi;
+        int count1 = data_root->get_num_valid(vi);
+        uchar* m = missing ? missing + vi : 0;  
         if( ci >= 0 ) // categorical
         {
-            CV_ERROR( CV_StsBadArg, "ERTrees do not supprot categorical variables" );
+            for( i = 0; i < count1; i++ ) // count1 == sample_count
+            {        
+                int c = cat_pred->data.i[i*pcstep + ci];
+                int val = get_class_idx ? c : class_lables[ci]->data.i[c];
+                cur_ofs = i*var_count;
+                dst[cur_ofs] = (float) val;
+                if( m )
+                    m[cur_ofs] = 0;
+            }
         }
         else // ordered
         {
-            float* dst = values + vi;
-            uchar* m = missing ? missing + vi : 0;
-            int count1 = data_root->get_num_valid(vi);
-
             for( i = 0; i < count1; i++ ) // count1 == sample_count
             {
+                int idx = get_ord_var_idx(ci);
                 cur_ofs = i*var_count;  
-                int step = pred->step / CV_ELEM_SIZE(pred->type);
-                dst[cur_ofs] = pred->data.fl[i*step + vi];
+                dst[cur_ofs] = ord_pred->data.fl[i*postep + idx];
                 if( m )
                     m[cur_ofs] = 0;
             }
@@ -1547,14 +1644,9 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
     {
         if( is_classifier )
           for( i = 0; i < count; i++ )// count == sample_count
-            {
-                int idx = sidx ? sidx[i] : i;
-
-                int rstep = resp->step / CV_ELEM_SIZE(resp->type);
-                int cstep = resp->step / CV_ELEM_SIZE(resp->type);
-                int r = resp->data.i[idx*rstep];
-                int val = get_class_idx ? r : class_lables->data.i[r*cstep];
-                    responses[i] = (float)val; 
+            {   
+                int c = resp->data.i[i*rstep];
+                int val = get_class_idx ? c : class_lables[cat_var_count]->data.i[c];
                 responses[i] = (float)val;
             }
         else
@@ -1627,9 +1719,14 @@ void CvERTreeTrainData::free_node_data( CvDTreeNode* node )
 
 void CvERTreeTrainData::free_train_data()
 {
-    cvReleaseMat( &pred );
+    cvReleaseMat( &ord_pred );
+    cvReleaseMat( &cat_pred );
     cvReleaseMat( &resp );
-    cvReleaseMat( &class_lables );
+    for (int i = 0; i < cat_var_count; i++)
+        cvReleaseMat( &class_lables[i] );
+    if (is_classifier)
+        cvReleaseMat( &class_lables[cat_var_count] );
+    cvFree(&class_lables);
     CvDTreeTrainData :: free_train_data();
 }
 
@@ -1642,9 +1739,15 @@ void CvERTreeTrainData::clear()
 
     cvReleaseMat( &var_idx );
     cvReleaseMat( &var_type );
-    cvReleaseMat( &pred );
+    cvReleaseMat( &ord_pred );
+    cvReleaseMat( &cat_pred );
+    cvReleaseMat( &cat_count );
     cvReleaseMat( &resp );
-    cvReleaseMat( &class_lables );
+    for (int i = 0; i < cat_var_count; i++)
+        cvReleaseMat( &class_lables[i] );
+    if (is_classifier)
+        cvReleaseMat( &class_lables[cat_var_count] );
+    cvFree(&class_lables);
     cvReleaseMat( &priors );
     cvReleaseMat( &priors_mult );
 
@@ -1664,7 +1767,7 @@ void CvERTreeTrainData::clear()
 
 int CvERTreeTrainData::get_num_classes() const
 {
-    return is_classifier ? class_lables->cols : 0;
+    return is_classifier ? class_lables[cat_var_count]->cols : 0;
 }
 
 void CvERTreeTrainData::write_params( CvFileStorage* fs )
