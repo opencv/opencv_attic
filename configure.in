@@ -336,6 +336,7 @@ AC_C_BIGENDIAN
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h])
 AC_CHECK_HEADERS([assert.h])
+AC_CHECK_FUNCS(lrint)
 
 
 ######################################################################
