@@ -1058,9 +1058,12 @@ struct CV_EXPORTS CvERTreeTrainData : public CvDTreeTrainData
     virtual void write_params( CvFileStorage* fs );
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
-    CvMat* pred;
+    virtual int get_ord_var_idx(int ci) {return 1-ci;};
+
+    CvMat* ord_pred;
+    CvMat* cat_pred;
     CvMat* resp;
-    CvMat* class_lables;
+    CvMat** class_lables;
 
     // TODO add support _var_idx, _sample_idx, _missing_mask, _add_labels,
     // categorical variables, priors, pruning
@@ -1068,10 +1071,14 @@ struct CV_EXPORTS CvERTreeTrainData : public CvDTreeTrainData
 
 class CV_EXPORTS CvForestERTree : public CvForestTree
 {
+public:
+    virtual CvDTreeNode* predict( const CvMat* _sample, const CvMat* _missing_data_mask=0,
+        bool preprocessed_input=false ) const;
 protected:
     virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
     virtual void try_split_node( CvDTreeNode* n );
     virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi );
     virtual void calc_node_value( CvDTreeNode* node );
    virtual void split_node_data( CvDTreeNode* n );
 };
@@ -1079,7 +1086,7 @@ protected:
 class CV_EXPORTS CvERTrees : public CvRTrees
 {
 public:
-    bool train( const CvMat* _train_data, int _tflag,
+    virtual bool train( const CvMat* _train_data, int _tflag,
         const CvMat* _responses, const CvMat* _var_idx,
         const CvMat* _sample_idx, const CvMat* _var_type,
         const CvMat* _missing_mask, CvRTParams params );
