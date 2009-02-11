@@ -14,7 +14,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 # it _must_ go before PROJECT(OpenCV) in order to work
 if (NOT CMAKE_INSTALL_PREFIX)
     if (WIN32)
-        set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} CACHE INTERNAL "" FORCE)
     elseif()
         set(CMAKE_INSTALL_PREFIX "/usr" CACHE INTERNAL "" FORCE)
     endif()
@@ -534,8 +534,9 @@ add_subdirectory(3rdparty)
 
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
-#  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
-#  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use with "make install"
+#  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
+#  Part 2/3: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use with "make install"
+#  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
 # -------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------
@@ -554,7 +555,7 @@ list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/include/opencv")
 
 set(CMAKE_LIB_DIRS_CONFIGCMAKE ${LIBRARY_OUTPUT_PATH})
 
-configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE)
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
@@ -566,11 +567,28 @@ set(CMAKE_LIB_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/lib")
 
 #exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/unix-install/\"")
 exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/unix-install/\"")
-configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE)
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 if(UNIX)
     # For a command "FIND_PACKAGE(FOO)", CMake will look at the directory /usr/share|lib/FOO/FOOConfig.cmake, so:
     install(FILES ${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opencv/)
+endif()
+
+# --------------------------------------------------------------------------------------------
+#  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
+# -------------------------------------------------------------------------------------------
+if(WIN32)
+	# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
+	
+	# This will expand to, for example, <program files>/OpenCV 1.1.0/include
+	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\"")
+
+	# This will expand to, for example, <program files>/OpenCV 1.1.0/lib
+	set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
+
+	#exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/win-install/\"")
+	exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/win-install/\"")
+	configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 endif()
 
 
