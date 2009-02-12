@@ -256,7 +256,7 @@ cvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points1
   }
 	
   // Make sure F uses double precision
-  F_type = ((F_->type & CV_MAT_TYPE_MASK) & 0b111); 
+  F_type = ((F_->type & CV_MAT_TYPE_MASK) & 0x07); // 0b111
   if (F_type != 6) {
     F = cvCreateMat(3,3,CV_64FC1);
     switch (F_type) {
@@ -271,7 +271,7 @@ cvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points1
   else F = F_;
 	
   // Make sure points1 uses double precision
-  p1_type = ((points1_->type & CV_MAT_TYPE_MASK) & 0b111);
+  p1_type = ((points1_->type & CV_MAT_TYPE_MASK) & 0x07); // 0b111
   points1 = points1_;
   if (p1_type != 6) {
     points1 = cvCreateMat(1,points1_->cols,CV_64FC2);
@@ -286,7 +286,7 @@ cvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points1
   }
 	
   // Make sure points2 uses double precision
-  p2_type = ((points2_->type & CV_MAT_TYPE_MASK) & 0b111);
+  p2_type = ((points2_->type & CV_MAT_TYPE_MASK) & 0x07); // 0b111
   points2 = points2_;
   if (p2_type != 6) {
     points2 = cvCreateMat(1,points2_->cols,CV_64FC2);
@@ -309,8 +309,8 @@ cvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points1
   S = cvCreateMat(3,3,CV_64FC1);
   V = cvCreateMat(3,3,CV_64FC1);
   e1 = cvCreateMat(3,1,CV_64FC1), e2 = cvCreateMat(3,1,CV_64FC1);
-  if (new_points1 != NULL) np1_type = ((new_points1->type & CV_MAT_TYPE_MASK) & 0b111);
-  if (new_points2 != NULL) np2_type = ((new_points2->type & CV_MAT_TYPE_MASK) & 0b111);
+  if (new_points1 != NULL) np1_type = ((new_points1->type & CV_MAT_TYPE_MASK) & 0x07); // 0b111
+  if (new_points2 != NULL) np2_type = ((new_points2->type & CV_MAT_TYPE_MASK) & 0x07); // 0b111
 	
   double x1, y1, x2, y2;
   double scale;
