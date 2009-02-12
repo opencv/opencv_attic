@@ -132,9 +132,12 @@ endif()
 # 		CHECK FOR SYSTEM LIBRARIES, OPTIONS, ETC..
 # ----------------------------------------------------------------------------
 
-# Build (or not) some apps:
+# Build/install (or not) some apps:
 # ===================================================
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build all examples")
+set(INSTALL_C_EXAMPLES OFF CACHE BOOL "Install C examples")
+set(INSTALL_PYTHON_EXAMPLES OFF CACHE BOOL "Install Python examples")
+set(INSTALL_OCTAVE_EXAMPLES OFF CACHE BOOL "Install Octave examples")
 
 # Build tests:
 # ===================================================
@@ -520,7 +523,7 @@ add_subdirectory(apps)
 add_subdirectory(doc)
 add_subdirectory(data)
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
     add_subdirectory(samples)
 endif()
 
