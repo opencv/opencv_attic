@@ -60,6 +60,8 @@ Halsall, Chris          Open Source Solutions Inc  O-Reilly papers on OpenCV,
 Hameed, Shameem         University of Michigan     Haar classifiers for eye detection
 Hasler, Nils            Max Planck Institut        16-bit images support, Jasper and OpenEXR bindings in HighGUI
 
+Jacobsen, Jostein       ???                        Hartley/Sturm correction
+
 Kertesz, Csaba          -                          v4l2 interface, bugfixes at almost every area
 Khamenya, Valery        BioVisioN AG               OpenCV CVS repository at SourceForge
 Khudyakov, Vasily       Novosibirsk University     Face feature detection
