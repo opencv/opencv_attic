@@ -1454,6 +1454,17 @@ CVAPI(void) cvComputeCorrespondEpilines( const CvMat* points,
                                          const CvMat* fundamental_matrix,
                                          CvMat* correspondent_lines );
 
+/* Triangulation functions */
+
+CVAPI(void) cvTriangulatePoints(CvMat* projMatr1, CvMat* projMatr2,
+				CvMat* projPoints1, CvMat* projPoints2,
+				CvMat* points4D);
+
+CVAPI(void) cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
+			     CvMat* new_points1, CvMat* new_points2);
+
+
+
 /* stereo correspondence parameters and functions */
 
 #define CV_STEREO_BM_NORMALIZED_RESPONSE  0
