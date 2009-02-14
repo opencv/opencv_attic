@@ -1175,7 +1175,6 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
             /* Could ignore EIO, see spec. */
 
             /* fall through */
-            return 0;
 
         default:
             /* display the error and stop processing */
