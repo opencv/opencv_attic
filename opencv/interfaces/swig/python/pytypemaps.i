@@ -84,7 +84,7 @@
 
 
 // for cvReshape, cvGetRow, where header is passed, then filled in
-%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header) (bool freearg=false) {
+%typemap(in, numinputs=0) CvMat * OUTPUT (CvMat * header, bool freearg=false) {
 	header = (CvMat *)cvAlloc(sizeof(CvMat));
    	$1 = header;
 }
