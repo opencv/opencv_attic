@@ -297,30 +297,30 @@ set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 find_package(SWIG)
 if(SWIG_FOUND)
 
-find_package(PythonInterp)
-find_package(PythonLibs)
-
-# cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
-if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
-    set(PYTHONLIBS_FOUND ON)
-endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
-
-# Build with python if installed:
-# ===================================================
-if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
-              ERROR_VARIABLE PYTHON_VERSION_FULL
-              OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
-    if(UNIX)
-        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+    find_package(PythonInterp)
+    find_package(PythonLibs)
+    
+    # cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
+    if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+        set(PYTHONLIBS_FOUND ON)
+    endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+    
+    # Build with python if installed:
+    # ===================================================
+    if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+                  ERROR_VARIABLE PYTHON_VERSION_FULL
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+    
+        string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
+        if(UNIX)
+            set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        endif()
+        if(WIN32)
+            get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
+            set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
+        endif()
     endif()
-    if(WIN32)
-        get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
-        set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
-    endif()
-endif()
 
 endif()
 
