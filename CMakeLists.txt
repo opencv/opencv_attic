@@ -300,6 +300,11 @@ if(SWIG_FOUND)
 find_package(PythonInterp)
 find_package(PythonLibs)
 
+# cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
+if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+    set(PYTHONLIBS_FOUND ON)
+endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+
 # Build with python if installes:
 # ===================================================
 if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
