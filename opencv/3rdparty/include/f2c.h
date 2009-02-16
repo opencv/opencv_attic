@@ -10,6 +10,10 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
+/* needed for Windows Mobile */
+#ifdef (WINCE)
+#undef complex; 
+#endif
 #include <string.h>
 #include <stdio.h>
 
