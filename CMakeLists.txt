@@ -305,7 +305,7 @@ if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
     set(PYTHONLIBS_FOUND ON)
 endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
 
-# Build with python if installes:
+# Build with python if installed:
 # ===================================================
 if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
