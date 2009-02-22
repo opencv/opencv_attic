@@ -11,7 +11,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 /* needed for Windows Mobile */
-#ifdef (WINCE)
+#ifdef WINCE
 #undef complex; 
 #endif
 #include <string.h>
