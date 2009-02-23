@@ -280,9 +280,10 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_SATURATION    12
 #define CV_CAP_PROP_HUE           13
 #define CV_CAP_PROP_GAIN          14
-#define CV_CAP_PROP_CONVERT_RGB   15
-#define CV_CAP_PROP_WHITE_BALANCE 16
-#define CV_CAP_PROP_RECTIFICATION 17
+#define CV_CAP_PROP_EXPOSURE      15
+#define CV_CAP_PROP_CONVERT_RGB   16
+#define CV_CAP_PROP_WHITE_BALANCE 17
+#define CV_CAP_PROP_RECTIFICATION 18
 
 /* retrieve or set capture properties */
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
