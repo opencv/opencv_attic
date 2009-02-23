@@ -269,6 +269,10 @@ static unsigned int n_buffers = 0;
 #define V4L2_PIX_FMT_SN9C10X  v4l2_fourcc('S','9','1','0') /* SN9C10x cmpr. */
 #endif
 
+#ifndef V4L2_PIX_FMT_SGBRG
+#define V4L2_PIX_FMT_SGBRG v4l2_fourcc('G','B','R','G') /* bayer GBRG   GBGB.. RGRG.. */
+#endif
+
 #endif  /* HAVE_CAMV4L2 */
 
 int  PALETTE_BGR24 = 0,
@@ -278,7 +282,8 @@ int  PALETTE_BGR24 = 0,
      PALETTE_UYVY= 0,
      PALETTE_SBGGR8 = 0,
      PALETTE_SN9C10X = 0,
-     PALETTE_MJPEG = 0;
+     PALETTE_MJPEG = 0,
+     PALETTE_SGBRG = 0;
 
 typedef struct CvCaptureCAM_V4L
 {
@@ -584,8 +589,12 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
   {
     PALETTE_SBGGR8 = 1;
+  } else
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SGBRG) == 0)
+  {
+    PALETTE_SGBRG = 1;
   }
-  else
+      else
   {
 	fprintf(stderr, "HIGHGUI ERROR: V4L2: Pixel format of incoming image is unsupported by OpenCV\n");
     icvCloseCAM_V4L(capture);
@@ -1915,6 +1924,94 @@ void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
 
 }
 
+// SGBRG to RGB24 
+// for some reason, red and blue needs to be swapped
+// at least for  046d:092f Logitech, Inc. QuickCam Express Plus to work
+//see: http://www.siliconimaging.com/RGB%20Bayer.htm
+//and 4.6 at http://tldp.org/HOWTO/html_single/libdc1394-HOWTO/ 
+void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned char *dst)
+{
+    long int i;
+    unsigned char *rawpt, *scanpt;
+    long int size;
+
+    rawpt = src;
+    scanpt = dst;
+    size = WIDTH*HEIGHT;
+
+    for ( i = 0; i < size; i++ )
+    {
+        if ( (i/WIDTH) % 2 == 0 ) //even row
+        { 
+            if ( (i % 2) == 0 ) //even pixel
+            {
+                if ( (i > WIDTH) && ((i % WIDTH) > 0) )
+                {
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;       /* R */
+                    *scanpt++ = *(rawpt);                        /* G */
+                    *scanpt++ = (*(rawpt-WIDTH) + *(rawpt+WIDTH))/2;      /* B */
+                } else
+                {
+                  /* first line or left column */
+        
+                  *scanpt++ = *(rawpt+1);           /* R */
+                  *scanpt++ = *(rawpt);             /* G */
+                  *scanpt++ =  *(rawpt+WIDTH);      /* B */
+                }
+            } else //odd pixel
+            {
+                if ( (i > WIDTH) && ((i % WIDTH) < (WIDTH-1)) )
+                {
+                    *scanpt++ = *(rawpt);       /* R */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1)+*(rawpt-WIDTH)+*(rawpt+WIDTH))/4; /* G */
+                    *scanpt++ = (*(rawpt-WIDTH-1) + *(rawpt-WIDTH+1) + *(rawpt+WIDTH-1) + *(rawpt+WIDTH+1))/4;      /* B */
+                } else
+                {
+                    /* first line or right column */
+                    
+                    *scanpt++ = *(rawpt);       /* R */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+WIDTH))/2; /* G */
+                    *scanpt++ = *(rawpt+WIDTH-1);      /* B */
+                }
+            }
+        } else
+        { //odd row
+            if ( (i % 2) == 0 ) //even pixel
+            {
+                if ( (i < (WIDTH*(HEIGHT-1))) && ((i % WIDTH) > 0) )
+                {
+                    *scanpt++ =  (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+*(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;          /* R */
+                    *scanpt++ =  (*(rawpt-1)+*(rawpt+1)+*(rawpt-WIDTH)+*(rawpt+WIDTH))/4;      /* G */
+                    *scanpt++ =  *(rawpt); /* B */
+                } else
+                {
+                    /* bottom line or left column */
+        
+                    *scanpt++ =  *(rawpt-WIDTH+1);          /* R */
+                    *scanpt++ =  (*(rawpt+1)+*(rawpt-WIDTH))/2;      /* G */
+                    *scanpt++ =  *(rawpt); /* B */
+                }
+            } else
+            { //odd pixel
+                if ( i < (WIDTH*(HEIGHT-1)) && ((i % WIDTH) < (WIDTH-1)) )
+                {
+                    *scanpt++ = (*(rawpt-WIDTH)+*(rawpt+WIDTH))/2;  /* R */
+                    *scanpt++ = *(rawpt);      /* G */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2; /* B */
+                } else
+                {
+                    /* bottom line or right column */
+                    
+                    *scanpt++ = (*(rawpt-WIDTH));  /* R */
+                    *scanpt++ = *(rawpt);      /* G */
+                    *scanpt++ = (*(rawpt-1)); /* B */
+                }
+            }
+        }
+        rawpt++;
+    }
+}
+
 
 #define CLAMP(x)        ((x)<0?0:((x)>255)?255:(x))
 
@@ -2205,6 +2302,14 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture, int) {
                        (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start);
 
       bayer2rgb24(capture->form.fmt.pix.width,
+                  capture->form.fmt.pix.height,
+                  (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start,
+                  (unsigned char*)capture->frame.imageData);
+    }
+
+    if (PALETTE_SGBRG == 1)
+    {
+       sgbrg2rgb24(capture->form.fmt.pix.width,
                   capture->form.fmt.pix.height,
                   (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start,
                   (unsigned char*)capture->frame.imageData);
