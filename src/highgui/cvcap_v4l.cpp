@@ -553,7 +553,8 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
       /* support for MJPEG is only available with libjpeg and gcc,
 	 because it's use libjepg and fmemopen()
       */
-  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0)
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0 || 
+      try_palette_v4l2(capture, V4L2_PIX_FMT_JPEG) == 0)
   {
     PALETTE_MJPEG = 1;
   }
