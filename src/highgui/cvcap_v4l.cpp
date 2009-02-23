@@ -320,6 +320,7 @@ typedef struct CvCaptureCAM_V4L
    int v4l2_saturation, v4l2_saturation_min, v4l2_saturation_max;
    int v4l2_hue, v4l2_hue_min, v4l2_hue_max;
    int v4l2_gain, v4l2_gain_min, v4l2_gain_max;
+   int v4l2_exposure, v4l2_exposure_min, v4l2_exposure_max;
 
 #endif /* HAVE_CAMV4L2 */
 
@@ -717,6 +718,13 @@ static void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         capture->v4l2_gain_max = capture->queryctrl.maximum;
       }
 
+      if (capture->queryctrl.id == V4L2_CID_EXPOSURE)
+      {
+        capture->v4l2_exposure = 1;
+        capture->v4l2_exposure_min = capture->queryctrl.minimum;
+        capture->v4l2_exposure_max = capture->queryctrl.maximum;
+      }
+
       if (capture->queryctrl.type == V4L2_CTRL_TYPE_MENU)
         v4l2_scan_controls_enumerate_menu(capture);
 
@@ -780,6 +788,13 @@ static void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         capture->v4l2_gain_max = capture->queryctrl.maximum;
       }
 
+      if (capture->queryctrl.id == V4L2_CID_EXPOSURE)
+      {
+        capture->v4l2_exposure = 1;
+        capture->v4l2_exposure_min = capture->queryctrl.minimum;
+        capture->v4l2_exposure_max = capture->queryctrl.maximum;
+      }
+
       if (capture->queryctrl.type == V4L2_CTRL_TYPE_MENU)
         v4l2_scan_controls_enumerate_menu(capture);
 
@@ -816,18 +831,21 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
    capture->v4l2_saturation = 0;
    capture->v4l2_hue = 0;
    capture->v4l2_gain = 0;
+   capture->v4l2_exposure = 0;
 
    capture->v4l2_brightness_min = 0;
    capture->v4l2_contrast_min = 0;
    capture->v4l2_saturation_min = 0;
    capture->v4l2_hue_min = 0;
    capture->v4l2_gain_min = 0;
+   capture->v4l2_exposure_min = 0;
 
    capture->v4l2_brightness_max = 0;
    capture->v4l2_contrast_max = 0;
    capture->v4l2_saturation_max = 0;
    capture->v4l2_hue_max = 0;
    capture->v4l2_gain_max = 0;
+   capture->v4l2_exposure_max = 0;
 
    /* Scan V4L2 controls */
    v4l2_scan_controls(capture);
@@ -2401,6 +2419,9 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       case CV_CAP_PROP_GAIN:
           capture->control.id = V4L2_CID_GAIN;
           break;
+      case CV_CAP_PROP_EXPOSURE:
+          capture->control.id = V4L2_CID_EXPOSURE;
+          break;
       default:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L2: getting property #%d is not supported\n",
@@ -2427,6 +2448,9 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
               break;
           case CV_CAP_PROP_GAIN:
               fprintf (stderr, "Gain");
+              break;
+          case CV_CAP_PROP_EXPOSURE:
+              fprintf (stderr, "Exposure");
               break;
           }
           fprintf (stderr, " is not supported by your device\n");
@@ -2456,6 +2480,10 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       case CV_CAP_PROP_GAIN:
           v4l2_min = capture->v4l2_gain_min;
           v4l2_max = capture->v4l2_gain_max;
+          break;
+      case CV_CAP_PROP_EXPOSURE:
+          v4l2_min = capture->v4l2_exposure_min;
+          v4l2_max = capture->v4l2_exposure_max;
           break;
       }
 
@@ -2499,6 +2527,11 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
+        break;
+    case CV_CAP_PROP_EXPOSURE:
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Exposure control in V4L is not supported\n");
         return -1;
         break;
     default:
@@ -2654,6 +2687,9 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         capture->control.id = V4L2_CID_GAIN;
         break;
+    case CV_CAP_PROP_EXPOSURE:
+        capture->control.id = V4L2_CID_EXPOSURE;
+        break;
     default:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
@@ -2691,6 +2727,10 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         v4l2_min = capture->v4l2_gain_min;
         v4l2_max = capture->v4l2_gain_max;
         break;
+    case CV_CAP_PROP_EXPOSURE:
+        v4l2_min = capture->v4l2_exposure_min;
+        v4l2_max = capture->v4l2_exposure_max;
+        break;
     }
 
     /* initialisations */
@@ -2713,6 +2753,9 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         break;
     case CV_CAP_PROP_GAIN:
         capture->control.id = V4L2_CID_GAIN;
+        break;
+    case CV_CAP_PROP_EXPOSURE:
+        capture->control.id = V4L2_CID_EXPOSURE;
         break;
     default:
         fprintf(stderr,
@@ -2755,6 +2798,10 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
+    case CV_CAP_PROP_EXPOSURE:
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Exposure control in V4L is not supported\n");
         return -1;
     default:
         fprintf(stderr,
@@ -2810,6 +2857,7 @@ static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_SATURATION:
     case CV_CAP_PROP_HUE:
     case CV_CAP_PROP_GAIN:
+    case CV_CAP_PROP_EXPOSURE:
         retval = icvSetControl(capture, property_id, value);
         break;
     default:
