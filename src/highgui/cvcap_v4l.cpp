@@ -1200,9 +1200,14 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
             return 0;
 
         case EIO:
-            /* Could ignore EIO, see spec. */
-
-            /* fall through */
+	    if (!(buf.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE)))
+	    {
+	      if (xioctl(capture->deviceHandle, VIDIOC_QBUF, &buf) == -1)
+	      {
+	        return 0;
+	      }	
+	    }
+	    return 0;
 
         default:
             /* display the error and stop processing */
