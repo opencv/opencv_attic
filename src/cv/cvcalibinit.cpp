@@ -85,30 +85,47 @@ static int PRINTF( const char*, ... )
 
 #define MAX_CONTOUR_APPROX  7
 
-typedef struct CvContourEx
+struct CvContourEx
 {
     CV_CONTOUR_FIELDS()
     int counter;
-}
-CvContourEx;
+};
 
 //=====================================================================================
 
 /// Corner info structure
 /** This structure stores information about the chessboard corner.*/
-typedef struct CvCBCorner
+struct CvCBCorner
 {
     CvPoint2D32f pt; // Coordinates of the corner
     int row;         // Board row index
     int count;       // Number of neighbor corners
     struct CvCBCorner* neighbors[4]; // Neighbor corners
-}
-CvCBCorner;
+
+    float meanDist(int *_n) const
+    {
+        float sum = 0;
+        int n = 0;
+        for( int i = 0; i < 4; i++ )
+        {
+            if( neighbors[i] )
+            {
+                float dx = neighbors[i]->pt.x - pt.x;
+                float dy = neighbors[i]->pt.y - pt.y;
+                sum += sqrt(dx*dx + dy*dy);
+                n++;
+            }
+        }
+        if(_n)
+            *_n = n;
+        return sum/MAX(n,1);
+    }
+};
 
 //=====================================================================================
 /// Quadrangle contour info structure
 /** This structure stores information about the chessboard quadrange.*/
-typedef struct CvCBQuad
+struct CvCBQuad
 {
     int count;      // Number of quad neighbors
     int group_idx;  // quad group ID
@@ -118,8 +135,7 @@ typedef struct CvCBQuad
     // neighbors and corners are synced, i.e., neighbor 0 shares corner 0
     CvCBCorner *corners[4]; // Coordinates of quad corners
     struct CvCBQuad *neighbors[4]; // Pointers of quad neighbors
-}
-CvCBQuad;
+};
 
 //=====================================================================================
 
@@ -203,7 +219,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 {
     int k = 0;
     const int min_dilations = 0;
-    const int max_dilations = 3;
+    const int max_dilations = 7;
     int found = 0;
     CvMat* norm_img = 0;
     CvMat* thresh_img = 0;
@@ -216,8 +232,11 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
     CvCBQuad *quads = 0, **quad_group = 0;
     CvCBCorner *corners = 0, **corner_group = 0;
+    CvMat stub, *img = (CvMat*)arr;
 
     int expected_corners_num = (pattern_size.width/2+1)*(pattern_size.height/2+1);
+
+    int prev_sqr_size = 0;
 
     if( out_corner_count )
         *out_corner_count = 0;
@@ -227,8 +246,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     __BEGIN__;
 
     int quad_count = 0, group_idx = 0, i = 0, dilations = 0;
-    CvMat stub, *img = (CvMat*)arr;
-
+    
     CV_CALL( img = cvGetMat( img, &stub ));
     //debug_img = img;
 
@@ -273,13 +291,14 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     // This is necessary because some squares simply do not separate properly with a single dilation.  However,
     // we want to use the minimum number of dilations possible since dilations cause the squares to become smaller,
     // making it difficult to detect smaller squares.
-    for( k = 0; k < 1; k++ )
+    for( k = 0; k < 3; k++ )
     {
         for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
         {
-            if (found) break;		// already found it
+            if (found)
+                break;		// already found it
 
-            if( k == 1 )
+            /*if( k == 1 )
             {
                 //Pattern was not found using binarization
                 // Run multi-level quads extraction
@@ -287,16 +306,17 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                 CV_CALL( quad_count = icvGenerateQuadsEx( &quads, &corners, storage, img, thresh_img, dilations, flags ));
                 PRINTF("EX quad count: %d/%d\n", quad_count, expected_corners_num);
             }
-            else
+            else*/
             {
                 // convert the input grayscale image to binary (black-n-white)
                 if( flags & CV_CALIB_CB_ADAPTIVE_THRESH )
                 {
-                    int block_size = cvRound(MIN(img->cols,img->rows)*0.2)|1;
+                    int block_size = cvRound(prev_sqr_size == 0 ?
+                        MIN(img->cols,img->rows)*0.2 : prev_sqr_size*2.)|1;
 
                     // convert to binary
                     cvAdaptiveThreshold( img, thresh_img, 255,
-                        CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, block_size, 0 );
+                        CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, block_size, k*5 );
                     if (dilations > 0)
                         cvDilate( thresh_img, thresh_img, 0, dilations-1 );
                 }
@@ -314,8 +334,6 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                     cvThreshold( img, thresh_img, thresh_level, 255, CV_THRESH_BINARY );
                     cvDilate( thresh_img, thresh_img, 0, dilations );
                 }
-
-
 
 #ifdef DEBUG_CHESSBOARD
                 cvCvtColor(thresh_img,dbg_img,CV_GRAY2BGR);
@@ -358,7 +376,6 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
             cvShowImage("all_quads", (IplImage*)dbg1_img);
             cvWaitKey();
 #endif
-
 
             if( quad_count <= 0 )
                 continue;
@@ -425,11 +442,23 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                 CV_CALL( count = icvCheckQuadGroup( quad_group, count, corner_group, pattern_size ));
                 PRINTF("Connected group: %d  count: %d  cleaned: %d\n", group_idx, icount, count);
 
+                {
+                int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
+                n = MIN( n, pattern_size.width * pattern_size.height );
+                float sum_dist = 0;
+                int total = 0;
+
+                for( i = 0; i < n; i++ )
+                {
+                    int ni = 0;
+                    float avgi = corner_group[i]->meanDist(&ni);
+                    sum_dist += avgi*ni;
+                    total += ni;
+                }
+                prev_sqr_size = cvRound(sum_dist/MAX(total, 1));
+
                 if( count > 0 || (out_corner_count && -count > *out_corner_count) )
                 {
-                    int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
-                    n = MIN( n, pattern_size.width * pattern_size.height );
-
                     // copy corners to output array
                     for( i = 0; i < n; i++ )
                         out_corners[i] = corner_group[i]->pt;
@@ -437,11 +466,13 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                     if( out_corner_count )
                         *out_corner_count = n;
 
-                    if( count > 0 )
+                    if( count == pattern_size.width*pattern_size.height &&
+                        icvCheckBoardMonotony( out_corners, pattern_size ))
                     {
                         found = 1;
                         break;
                     }
+                }
                 }
             }
 
@@ -454,12 +485,6 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
 
     __END__;
-
-    cvReleaseMemStorage( &storage );
-    cvReleaseMat( &norm_img );
-    cvReleaseMat( &thresh_img );
-    cvFree( &quads );
-    cvFree( &corners );
 
     if( found )
         found = icvCheckBoardMonotony( out_corners, pattern_size );
@@ -478,6 +503,29 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
             }
         }
     }
+
+    if( found )
+    {
+        CvMat* gray = 0;
+        if( CV_MAT_CN(img->type) != 1 )
+        {
+            gray = cvCreateMat(img->rows, img->cols, CV_8UC1);
+            cvCvtColor(img, gray, CV_BGR2GRAY);
+        }
+        else
+            gray = img;
+        int wsize = 2;
+        cvFindCornerSubPix( gray, out_corners, pattern_size.width*pattern_size.height,
+            cvSize(wsize, wsize), cvSize(-1,-1), cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
+        if( gray != img )
+            cvReleaseMat( &gray );
+    }
+
+    cvReleaseMemStorage( &storage );
+    cvReleaseMat( &norm_img );
+    cvReleaseMat( &thresh_img );
+    cvFree( &quads );
+    cvFree( &corners );
 
     return found;
 }
@@ -1616,7 +1664,7 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
     CV_ASSERT( out_corners && out_quads );
 
     // empiric bound for minimal allowed perimeter for squares
-    min_size = cvRound( image->cols * image->rows * .03 * 0.01 * 0.92 );
+    min_size = 25; //cvRound( image->cols * image->rows * .03 * 0.01 * 0.92 );
 
     // create temporary storage for contours and the sequence of pointers to found quadrangles
     CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
