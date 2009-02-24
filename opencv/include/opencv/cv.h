@@ -1321,6 +1321,8 @@ CVAPI(void) cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                           CvMat* rotation_vector,
                                           CvMat* translation_vector );
 
+#define cvSolvePnP cvFindExtrinsicCameraParam2
+
 /* Computes initial estimate of the intrinsic camera parameters
    in case of planar calibration target (e.g. chessboard) */
 CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
