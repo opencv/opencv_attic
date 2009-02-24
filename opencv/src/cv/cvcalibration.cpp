@@ -649,11 +649,17 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
             else
             {
                 t = (R[0] + 1)*0.5;
-                rx = theta*sqrt(MAX(t,0.));
+                rx = sqrt(MAX(t,0.));
                 t = (R[4] + 1)*0.5;
-                ry = theta*sqrt(MAX(t,0.))*(R[1] < 0 ? -1. : 1.);
+                ry = sqrt(MAX(t,0.))*(R[1] < 0 ? -1. : 1.);
                 t = (R[8] + 1)*0.5;
-                rz = theta*sqrt(MAX(t,0.))*(R[2] < 0 ? -1. : 1.);
+                rz = sqrt(MAX(t,0.))*(R[2] < 0 ? -1. : 1.);
+                if( fabs(rx) < fabs(ry) && fabs(rx) < fabs(rz) && (R[5] > 0) != (ry*rz > 0) )
+                    rz = -rz;
+                theta /= sqrt(rx*rx + ry*ry + rz*rz);
+                rx *= theta;
+                ry *= theta;
+                rz *= theta;
             }
 
             if( jacobian )
@@ -1568,7 +1574,7 @@ cvCalibrateCamera2( const CvMat* objectPoints,
     {
         CvScalar mean, sdv;
         cvAvgSdv( _M, &mean, &sdv );
-        if( (fabs(mean.val[2]) > 1e-5 && fabs(mean.val[2] - 1) > 1e-5) || fabs(sdv.val[2]) > 1e-5 )
+        if( fabs(mean.val[2]) > 1e-5 || fabs(sdv.val[2]) > 1e-5 )
             CV_ERROR( CV_StsBadArg,
             "For non-planar calibration rigs the initial intrinsic matrix must be specified" );
         for( i = 0; i < total; i++ )
