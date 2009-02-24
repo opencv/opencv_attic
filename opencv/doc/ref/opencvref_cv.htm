@@ -612,8 +612,8 @@ The function <code>cvWarpAffine</code> transforms source image using the specifi
 matrix:</p>
 <pre>
 dst(x&#146;,y&#146;)&lt;-src(x,y)
-(x&#146;,y&#146;)<sup>T</sup>=map_matrix&bull;(x,y,1)<sup>T</sup>+b if CV_WARP_INVERSE_MAP is not set,
-(x, y)<sup>T</sup>=map_matrix&bull;(x&#146;,y&apos,1)<sup>T</sup>+b otherwise
+(x&#146;,y&#146;)<sup>T</sup>=map_matrix&bull;(x,y,1)<sup>T</sup> if CV_WARP_INVERSE_MAP is not set,
+(x, y)<sup>T</sup>=map_matrix&bull;(x&#146;,y&apos,1)<sup>T</sup> otherwise
 </pre>
 <p>
 The function is similar to <a href="#decl_cvGetQuadrangleSubPix">cvGetQuadrangleSubPix</a> but they are
@@ -5019,7 +5019,7 @@ support for a chess board as a calibration rig
 (see <a href="#decl_cvFindChessboardCorners">cvFindChessboardCorners</a>).
 Currently, initialization of intrinsic parameters (when <code>CV_CALIB_USE_INTRINSIC_GUESS</code>
 is not set) is only implemented for planar calibration rigs (z-coordinates of object points
-must be all 0's or all 1's). 3D rigs can still be used as long as the initial <code>intrinsic_matrix</code>
+must be all 0's). 3D rigs can still be used as long as the initial <code>intrinsic_matrix</code>
 is provided. After the initial values of intrinsic and extrinsic parameters are obtained by the function, they are
 optimized further to minimize the total reprojection error - the sum of squared differences between the
 actual coordinates of image points and the ones computed using
@@ -5062,6 +5062,7 @@ void cvFindExtrinsicCameraParams2( const CvMat* object_points,
                                    const CvMat* distortion_coeffs,
                                    CvMat* rotation_vector,
                                    CvMat* translation_vector );
+#define cvSolvePnP cvFindExtrinsicCameraParam2
 </pre><p><dl>
 <dt>object_points<dd>The array of object points, 3xN or Nx3,
                      where N is the number of points in the view.
@@ -5273,7 +5274,7 @@ theta &lt;- norm(r)
 r &lt;- r/theta
                                                    [0 -r<sub>z</sub> r<sub>y</sub>]
 R = cos(theta)*I + (1-cos(theta))*rr<sup>T</sup> + sin(theta)*[r<sub>z</sub> 0 -r<sub>x</sub>]
-                                                   [r<sub>y</sub> r<sub>x</sub> 0]
+                                                   [-r<sub>y</sub> r<sub>x</sub> 0]
 </pre>
 
 Inverse transformation can also be done easily as
@@ -5282,7 +5283,7 @@ Inverse transformation can also be done easily as
 
 [0 -r<sub>z</sub> r<sub>y</sub>]
 sin(theta)*[r<sub>z</sub> 0 -r<sub>x</sub>] = (R - R<sup>T</sup>)/2
-[r<sub>y</sub> r<sub>x</sub> 0]
+[-r<sub>y</sub> r<sub>x</sub> 0]
 
 </pre>
 
