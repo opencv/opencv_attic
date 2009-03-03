@@ -2281,6 +2281,7 @@ ICV_FILTER( 16u, ushort, int, CV_NOP, cvRound, CV_CAST_16U )
 ICV_FILTER( 16s, short, int, CV_NOP, cvRound, CV_CAST_16S )
 ICV_FILTER( 32f, float, float, CV_NOP, CV_CAST_32F, CV_NOP )
 
+#if 0
 
 /////////////////////// common functions for working with IPP filters ////////////////////
 
@@ -2344,29 +2345,6 @@ int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
     return dy;
 }
 
-
-/////////////////////////////// IPP separable filter functions ///////////////////////////
-
-icvFilterRow_8u_C1R_t icvFilterRow_8u_C1R_p = 0;
-icvFilterRow_8u_C3R_t icvFilterRow_8u_C3R_p = 0;
-icvFilterRow_8u_C4R_t icvFilterRow_8u_C4R_p = 0;
-icvFilterRow_16s_C1R_t icvFilterRow_16s_C1R_p = 0;
-icvFilterRow_16s_C3R_t icvFilterRow_16s_C3R_p = 0;
-icvFilterRow_16s_C4R_t icvFilterRow_16s_C4R_p = 0;
-icvFilterRow_32f_C1R_t icvFilterRow_32f_C1R_p = 0;
-icvFilterRow_32f_C3R_t icvFilterRow_32f_C3R_p = 0;
-icvFilterRow_32f_C4R_t icvFilterRow_32f_C4R_p = 0;
-
-icvFilterColumn_8u_C1R_t icvFilterColumn_8u_C1R_p = 0;
-icvFilterColumn_8u_C3R_t icvFilterColumn_8u_C3R_p = 0;
-icvFilterColumn_8u_C4R_t icvFilterColumn_8u_C4R_p = 0;
-icvFilterColumn_16s_C1R_t icvFilterColumn_16s_C1R_p = 0;
-icvFilterColumn_16s_C3R_t icvFilterColumn_16s_C3R_p = 0;
-icvFilterColumn_16s_C4R_t icvFilterColumn_16s_C4R_p = 0;
-icvFilterColumn_32f_C1R_t icvFilterColumn_32f_C1R_p = 0;
-icvFilterColumn_32f_C3R_t icvFilterColumn_32f_C3R_p = 0;
-icvFilterColumn_32f_C4R_t icvFilterColumn_32f_C4R_p = 0;
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
 typedef CvStatus (CV_STDCALL * CvIPPSepFilterFunc)
@@ -2412,18 +2390,6 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
 
     ksize.width = kernelX->cols + kernelX->rows - 1;
     ksize.height = kernelY->cols + kernelY->rows - 1;
-
-    /*if( ksize.width <= 5 && ksize.height <= 5 )
-    {
-        float* ker = (float*)cvStackAlloc( ksize.width*ksize.height*sizeof(ker[0]));
-        CvMat kernel = cvMat( ksize.height, ksize.width, CV_32F, ker );
-        for( y = 0, i = 0; y < ksize.height; y++ )
-            for( x = 0; x < ksize.width; x++, i++ )
-                ker[i] = kernelY->data.fl[y]*kernelX->data.fl[x];
-
-        CV_CALL( cvFilter2D( src, dst, &kernel, anchor ));
-        EXIT;
-    }*/
 
     type = CV_MAT_TYPE(src->type);
     depth = CV_MAT_DEPTH(type);
@@ -2562,20 +2528,11 @@ int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
     return result;
 }
 
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////// IPP generic filter functions ////////////////////////////
-
-icvFilter_8u_C1R_t icvFilter_8u_C1R_p = 0;
-icvFilter_8u_C3R_t icvFilter_8u_C3R_p = 0;
-icvFilter_8u_C4R_t icvFilter_8u_C4R_p = 0;
-icvFilter_16s_C1R_t icvFilter_16s_C1R_p = 0;
-icvFilter_16s_C3R_t icvFilter_16s_C3R_p = 0;
-icvFilter_16s_C4R_t icvFilter_16s_C4R_p = 0;
-icvFilter_32f_C1R_t icvFilter_32f_C1R_p = 0;
-icvFilter_32f_C3R_t icvFilter_32f_C3R_p = 0;
-icvFilter_32f_C4R_t icvFilter_32f_C4R_p = 0;
-
 
 typedef CvStatus (CV_STDCALL * CvFilterIPPFunc)
 ( const void* src, int srcstep, void* dst, int dststep, CvSize size,
@@ -2590,7 +2547,7 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
     CvMat* ipp_kernel = 0;
     
     // below that approximate size OpenCV is faster
-    const int ipp_lower_limit = 20;
+    //const int ipp_lower_limit = 20;
     CvMat* temp = 0;
 
     CV_FUNCNAME( "cvFilter2D" );
@@ -2631,7 +2588,7 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
         EXIT;
     }
 
-    if( icvFilter_8u_C1R_p && (src->rows >= ipp_lower_limit || src->cols >= ipp_lower_limit) )
+    /*if( icvFilter_8u_C1R_p && (src->rows >= ipp_lower_limit || src->cols >= ipp_lower_limit) )
     {
         CvFilterIPPFunc ipp_func = 
                 type == CV_8UC1 ? (CvFilterIPPFunc)icvFilter_8u_C1R_p :
@@ -2695,7 +2652,7 @@ cvFilter2D( const CvArr* _src, CvArr* _dst, const CvMat* kernel, CvPoint anchor 
             }
             EXIT;
         }
-    }
+    }*/
 
     CV_CALL( filter.init( src->cols, type, type, kernel, anchor ));
     CV_CALL( filter.process( src, dst ));

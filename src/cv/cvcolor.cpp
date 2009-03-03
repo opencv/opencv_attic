@@ -277,34 +277,7 @@ icvBGRx2BGR5x5_8u_CnC2R( const uchar* src, int srcstep,
 
 /////////////////////////// IPP Color Conversion Functions //////////////////////////////
 
-icvRGB2XYZ_8u_C3R_t  icvRGB2XYZ_8u_C3R_p = 0;
-icvRGB2XYZ_16u_C3R_t icvRGB2XYZ_16u_C3R_p = 0;
-icvRGB2XYZ_32f_C3R_t icvRGB2XYZ_32f_C3R_p = 0;
-icvXYZ2RGB_8u_C3R_t  icvXYZ2RGB_8u_C3R_p = 0;
-icvXYZ2RGB_16u_C3R_t icvXYZ2RGB_16u_C3R_p = 0;
-icvXYZ2RGB_32f_C3R_t icvXYZ2RGB_32f_C3R_p = 0;
-
-icvRGB2HSV_8u_C3R_t  icvRGB2HSV_8u_C3R_p = 0;
-icvHSV2RGB_8u_C3R_t  icvHSV2RGB_8u_C3R_p = 0;
-
-icvBGR2Lab_8u_C3R_t  icvBGR2Lab_8u_C3R_p = 0;
-icvLab2BGR_8u_C3R_t  icvLab2BGR_8u_C3R_p = 0;
-
-icvRGB2HLS_8u_C3R_t  icvRGB2HLS_8u_C3R_p = 0;
-icvRGB2HLS_32f_C3R_t icvRGB2HLS_32f_C3R_p = 0;
-icvHLS2RGB_8u_C3R_t  icvHLS2RGB_8u_C3R_p = 0;
-icvHLS2RGB_32f_C3R_t icvHLS2RGB_32f_C3R_p = 0;
-
-icvRGB2Luv_8u_C3R_t  icvRGB2Luv_8u_C3R_p = 0;
-icvLuv2RGB_8u_C3R_t  icvLuv2RGB_8u_C3R_p = 0;
-
-//icvRGB2Luv_32f_C3R_t icvRGB2Luv_32f_C3R_p = 0;
-//icvLuv2RGB_32f_C3R_t icvLuv2RGB_32f_C3R_p = 0;
-//icvRGB2Luv_32f_C3R_t icvRGB2Luv_32f_C3R_p = 0;
-//icvLuv2RGB_32f_C3R_t icvLuv2RGB_32f_C3R_p = 0;
-
-
-#define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                         \
+/*#define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                       \
 static CvStatus CV_STDCALL                                              \
 icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
     arrtype* dst, int dststep, CvSize size, int src_cn,                 \
@@ -400,8 +373,6 @@ icvBGRx2ABC_IPP_8u_CnC3R( const uchar* src, int srcstep,
     return CV_OK;
 }
 
-
-
 //CV_IMPL_BGRx2ABC_IPP( 8u, uchar )
 CV_IMPL_BGRx2ABC_IPP( 16u, ushort )
 CV_IMPL_BGRx2ABC_IPP( 32f, float )
@@ -459,7 +430,7 @@ icvABC2BGRx_IPP_##flavor##_C3CnR( const arrtype* src, int srcstep,      \
 CV_IMPL_ABC2BGRx_IPP( 8u, uchar )
 CV_IMPL_ABC2BGRx_IPP( 16u, ushort )
 CV_IMPL_ABC2BGRx_IPP( 32f, float )
-
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -855,11 +826,6 @@ icvBGRx2XYZ_##flavor##_CnC3R( const arrtype* src, int srcstep,              \
         xyzZb##suffix, xyzZg##suffix, xyzZr##suffix                         \
     };                                                                      \
                                                                             \
-    if( icvRGB2XYZ_##flavor##_C3R_p )                                       \
-        return icvBGRx2ABC_IPP_##flavor##_CnC3R( src, srcstep,              \
-            dst, dststep, size, src_cn, blue_idx,                           \
-            icvRGB2XYZ_##flavor##_C3R_p );                                  \
-                                                                            \
     srcstep /= sizeof(src[0]);                                              \
     dststep /= sizeof(dst[0]);                                              \
     srcstep -= size.width*src_cn;                                           \
@@ -912,11 +878,6 @@ icvXYZ2BGRx_##flavor##_C3CnR( const arrtype* src, int srcstep,              \
         xyzGx##suffix, xyzGy##suffix, xyzGz##suffix,                        \
         xyzRx##suffix, xyzRy##suffix, xyzRz##suffix                         \
     };                                                                      \
-                                                                            \
-    if( icvXYZ2RGB_##flavor##_C3R_p )                                       \
-        return icvABC2BGRx_IPP_##flavor##_C3CnR( src, srcstep,              \
-            dst, dststep, size, dst_cn, blue_idx,                           \
-            icvXYZ2RGB_##flavor##_C3R_p );                                  \
                                                                             \
     srcstep /= sizeof(src[0]);                                              \
     dststep /= sizeof(dst[0]);                                              \
@@ -1190,7 +1151,7 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
     };
 
     int i;
-    if( icvRGB2HSV_8u_C3R_p )
+    /*if( icvRGB2HSV_8u_C3R_p )
     {
         CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
                                                 src_cn, blue_idx, icvRGB2HSV_8u_C3R_p );
@@ -1211,7 +1172,7 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
             }
         }
         return status;
-    }
+    }*/
 
     srcstep -= size.width*src_cn;
     size.width *= 3;
@@ -1359,7 +1320,7 @@ icvHSV2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
 {
     static const float pre_coeffs[] = { 2.f, 0.f, 0.0039215686274509803f, 0.f, 1.f, 0.f };
 
-    if( icvHSV2RGB_8u_C3R_p )
+    /*if( icvHSV2RGB_8u_C3R_p )
     {
         int block_size = MIN(1 << 14, size.width);
         uchar* buffer;
@@ -1405,7 +1366,7 @@ icvHSV2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
         }
 
         return CV_OK;
-    }
+    }*/
 
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvHSV2BGRx_32f_C3CnR, pre_coeffs, 0 );
@@ -1422,7 +1383,7 @@ icvBGRx2HLS_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
 {
     int i;
 
-    if( icvRGB2HLS_32f_C3R_p )
+    /*if( icvRGB2HLS_32f_C3R_p )
     {
         CvStatus status = icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
                                                      src_cn, blue_idx, icvRGB2HLS_32f_C3R_p );
@@ -1445,7 +1406,7 @@ icvBGRx2HLS_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
             }
         }
         return status;
-    }
+    }*/
 
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
@@ -1502,7 +1463,7 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
 
-    if( icvHLS2RGB_32f_C3R_p )
+    /*if( icvHLS2RGB_32f_C3R_p )
     {
         int block_size = MIN(1 << 10, size.width);
         float* buffer;
@@ -1541,7 +1502,7 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
         }
 
         return CV_OK;
-    }
+    }*/
     
     dststep -= size.width*dst_cn;
     size.width *= 3;
@@ -1602,7 +1563,7 @@ icvBGRx2HLS_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
 {
     static const float post_coeffs[] = { 0.5f, 0.f, 255.f, 0.f, 255.f, 0.f };
 
-    if( icvRGB2HLS_8u_C3R_p )
+    /*if( icvRGB2HLS_8u_C3R_p )
     {
         CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
                                                     src_cn, blue_idx, icvRGB2HLS_8u_C3R_p );
@@ -1624,7 +1585,7 @@ icvBGRx2HLS_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
             }
         }
         return status;
-    }
+    }*/
 
     return icvBGRx2ABC_8u_CnC3R( src, srcstep, dst, dststep, size, src_cn, blue_idx,
                                  (CvColorCvtFunc2)icvBGRx2HLS_32f_CnC3R, 1, post_coeffs );
@@ -1638,7 +1599,7 @@ icvHLS2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
     static const float pre_coeffs[] = { 2.f, 0.f, 0.0039215686274509803f, 0.f,
                                         0.0039215686274509803f, 0.f };
 
-    if( icvHLS2RGB_8u_C3R_p )
+    /*if( icvHLS2RGB_8u_C3R_p )
     {
         int block_size = MIN(1 << 14, size.width);
         uchar* buffer;
@@ -1684,7 +1645,7 @@ icvHLS2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
         }
 
         return CV_OK;
-    }
+    }*/
 
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvHLS2BGRx_32f_C3CnR, pre_coeffs, 1 );
@@ -1960,9 +1921,9 @@ icvLab2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
     // b: [0..255] -> [-128..127]
     static const float pre_coeffs[] = { 0.39215686274509809f, 0.f, 1.f, -128.f, 1.f, -128.f };
 
-    if( icvLab2BGR_8u_C3R_p )
+    /*if( icvLab2BGR_8u_C3R_p )
         return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
-                                         dst_cn, blue_idx^2, icvLab2BGR_8u_C3R_p );
+                                         dst_cn, blue_idx^2, icvLab2BGR_8u_C3R_p );*/
 
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvLab2BGRx_32f_C3CnR, pre_coeffs, 1 );
@@ -2097,9 +2058,9 @@ icvBGRx2Luv_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
     static const float post_coeffs[] = { 2.55f, 0.f, 0.72033898305084743f, 96.525423728813564f,
                                          0.99609375f, 139.453125f };
 
-    if( icvRGB2Luv_8u_C3R_p )
+    /*if( icvRGB2Luv_8u_C3R_p )
         return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                         src_cn, blue_idx, icvRGB2Luv_8u_C3R_p );
+                                         src_cn, blue_idx, icvRGB2Luv_8u_C3R_p );*/
 
     return icvBGRx2ABC_8u_CnC3R( src, srcstep, dst, dststep, size, src_cn, blue_idx,
                                  (CvColorCvtFunc2)icvBGRx2Luv_32f_CnC3R, 1, post_coeffs );
@@ -2116,9 +2077,9 @@ icvLuv2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
     static const float pre_coeffs[] = { 0.39215686274509809f, 0.f, 1.388235294117647f, -134.f,
                                         1.003921568627451f, -140.f };
 
-    if( icvLuv2RGB_8u_C3R_p )
+    /*if( icvLuv2RGB_8u_C3R_p )
         return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
-                                         dst_cn, blue_idx, icvLuv2RGB_8u_C3R_p );
+                                         dst_cn, blue_idx, icvLuv2RGB_8u_C3R_p );*/
 
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvLuv2BGRx_32f_C3CnR, pre_coeffs, 1 );

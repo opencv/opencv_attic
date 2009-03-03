@@ -60,14 +60,14 @@ icvUnDistort_8u_CnR( const uchar* src, int srcstep,
 
     for( v = 0; v < size.height; v++, dst += dststep )
     {
-        float y = (v - y0)*ify, y2 = y*y;
+        float y = (v - v0)*ify, y2 = y*y;
 
         for( u = 0; u < size.width; u++ )
         {
-            float x = (u - x0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
+            float x = (u - u0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
             float kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
-            float _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + u0;
-            float _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0;
+            float _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + x0;
+            float _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + y0;
             int ix = cvFloor(_x), iy = cvFloor(_y);
 
             if( (unsigned)iy < (unsigned)(size.height - 1) &&
@@ -95,15 +95,6 @@ icvUnDistort_8u_CnR( const uchar* src, int srcstep,
     return CV_OK;
 }
 
-
-icvUndistortGetSize_t icvUndistortGetSize_p = 0;
-icvCreateMapCameraUndistort_32f_C1R_t icvCreateMapCameraUndistort_32f_C1R_p = 0;
-icvUndistortRadial_8u_C1R_t icvUndistortRadial_8u_C1R_p = 0;
-icvUndistortRadial_8u_C3R_t icvUndistortRadial_8u_C3R_p = 0;
-
-typedef CvStatus (CV_STDCALL * CvUndistortRadialIPPFunc)
-    ( const void* pSrc, int srcStep, void* pDst, int dstStep, CvSize roiSize,
-      float fx, float fy, float cx, float cy, float k1, float k2, uchar *pBuffer );
 
 CV_IMPL void
 cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_coeffs )
@@ -239,14 +230,14 @@ cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
     {
         float* mapx = (float*)(_mapx->data.ptr + _mapx->step*v);
         float* mapy = (float*)(_mapy->data.ptr + _mapy->step*v);
-        float y = (v - y0)*ify, y2 = y*y;
+        float y = (v - v0)*ify, y2 = y*y;
 
         for( u = 0; u < size.width; u++ )
         {
-            float x = (u - x0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
+            float x = (u - u0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
             double kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
-            double _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + u0;
-            double _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0; 
+            double _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + x0;
+            double _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + y0; 
             mapx[u] = (float)_x;
             mapy[u] = (float)_y;
         }
@@ -489,5 +480,3 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 }
 
 /*  End of file  */
-
- 	  	 

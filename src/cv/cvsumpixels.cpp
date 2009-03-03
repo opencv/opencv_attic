@@ -402,14 +402,14 @@ cvIntegral( const CvArr* image, CvArr* sumImage,
 
     if( cn == 1 )
     {
-        IPPI_CALL( func_c1( src->data.ptr, src_step, sum->data.ptr, sum_step,
-                        sqsum ? sqsum->data.ptr : 0, sqsum_step,
-                        tilted ? tilted->data.ptr : 0, tilted_step, size ));
+        func_c1( src->data.ptr, src_step, sum->data.ptr, sum_step,
+                 sqsum ? sqsum->data.ptr : 0, sqsum_step,
+                 tilted ? tilted->data.ptr : 0, tilted_step, size );
     }
     else
     {
-        IPPI_CALL( func_cn( src->data.ptr, src_step, sum->data.ptr, sum_step,
-                        sqsum ? sqsum->data.ptr : 0, sqsum_step, size, cn ));
+        func_cn( src->data.ptr, src_step, sum->data.ptr, sum_step,
+                 sqsum ? sqsum->data.ptr : 0, sqsum_step, size, cn );
     }
 
     __END__;

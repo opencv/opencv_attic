@@ -682,7 +682,7 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
     int pstep = (int)(state->ptrLeft->step/sizeof(GCVtx*));
     int aa[] = { alpha, -alpha };
 
-    double t = (double)cvGetTickCount();
+    //double t = (double)cvGetTickCount();
 
     assert( state->left->step == state->right->step &&
             state->dispLeft->step == state->dispRight->step &&
@@ -809,7 +809,7 @@ static int64 icvAlphaExpand( int64 Eprev, int alpha, CvStereoGCState* state, CvS
         }
     }
 
-    t = (double)cvGetTickCount() - t;
+    //t = (double)cvGetTickCount() - t;
     ebuf[0].weight = ebuf[1].weight = 0;
     E += icvGCMaxFlow( vbuf, nvtx, ebuf, state2->orphans, state2->maxOrphans );
 

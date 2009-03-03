@@ -255,11 +255,6 @@ icvCalcIxIy_32f( const float* src, int src_step, float* dstX, float* dstY, int d
 }
 
 
-icvOpticalFlowPyrLKInitAlloc_8u_C1R_t icvOpticalFlowPyrLKInitAlloc_8u_C1R_p = 0;
-icvOpticalFlowPyrLKFree_8u_C1R_t icvOpticalFlowPyrLKFree_8u_C1R_p = 0;
-icvOpticalFlowPyrLK_8u_C1R_t icvOpticalFlowPyrLK_8u_C1R_p = 0;
-
-
 CV_IMPL void
 cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
                         void* pyrarrA, void* pyrarrB,
@@ -274,8 +269,6 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
     float* _error = 0;
     char* _status = 0;
 
-    void* ipp_optflow_state = 0;
-    
     CV_FUNCNAME( "cvCalcOpticalFlowPyrLK" );
 
     __BEGIN__;
@@ -372,46 +365,6 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
 
     if( !status )
         CV_CALL( status = _status = (char*)cvAlloc( count*sizeof(_status[0]) ));
-
-#if 0
-    if( icvOpticalFlowPyrLKInitAlloc_8u_C1R_p &&
-        icvOpticalFlowPyrLKFree_8u_C1R_p &&
-        icvOpticalFlowPyrLK_8u_C1R_p &&
-        winSize.width == winSize.height &&
-        icvOpticalFlowPyrLKInitAlloc_8u_C1R_p( &ipp_optflow_state, imgSize,
-                                               winSize.width*2+1, cvAlgHintAccurate ) >= 0 )
-    {
-        CvPyramid ipp_pyrA, ipp_pyrB;
-        static const double rate[] = { 1, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125,
-                                       0.00390625, 0.001953125, 0.0009765625, 0.00048828125, 0.000244140625,
-                                       0.0001220703125 };
-        // initialize pyramid structures
-        assert( level < 14 );
-        ipp_pyrA.ptr = imgI;
-        ipp_pyrB.ptr = imgJ;
-        ipp_pyrA.sz = ipp_pyrB.sz = size;
-        ipp_pyrA.rate = ipp_pyrB.rate = (double*)rate;
-        ipp_pyrA.step = ipp_pyrB.step = step;
-        ipp_pyrA.state = ipp_pyrB.state = 0;
-        ipp_pyrA.level = ipp_pyrB.level = level;
-
-        if( !error )
-            CV_CALL( error = _error = (float*)cvAlloc( count*sizeof(_error[0]) ));
-
-        for( i = 0; i < count; i++ )
-            featuresB[i] = featuresA[i];
-
-        if( icvOpticalFlowPyrLK_8u_C1R_p( &ipp_pyrA, &ipp_pyrB,
-            (const float*)featuresA, (float*)featuresB, status, error, count,
-            winSize.width*2 + 1, level, criteria.max_iter,
-            (float)criteria.epsilon, ipp_optflow_state ) >= 0 )
-        {
-            for( i = 0; i < count; i++ )
-                status[i] = status[i] == 0;
-            EXIT;
-        }
-    }
-#endif
 
     /* buffer_size = <size for patches> + <size for pyramids> */
     bufferBytes = (srcPatchLen + patchLen * 3) * sizeof( _patchI[0][0] ) * threadCount;
@@ -638,9 +591,6 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
     } // end of pyramid levels loop (l)
 
     __END__;
-
-    if( ipp_optflow_state )
-        icvOpticalFlowPyrLKFree_8u_C1R_p( ipp_optflow_state );
 
     cvFree( &pyrBuffer );
     cvFree( &buffer );

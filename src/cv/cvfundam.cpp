@@ -991,7 +991,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
             for( i = 0; i < d_count; i++, ws += s_stride )
             {
                 float t = *ws;
-                iw[i] = t ? t : 1.f;
+                iw[i] = fabs((double)t) > FLT_EPSILON ? t : 1.f;
             }
 
             cvDiv( 0, denom, denom );
@@ -1037,7 +1037,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
             for( i = 0; i < d_count; i++, ws += s_stride )
             {
                 double t = *ws;
-                iw[i] = t ? t : 1.;
+                iw[i] = fabs(t) > DBL_EPSILON ? t : 1.;
             }
 
             cvDiv( 0, denom, denom );

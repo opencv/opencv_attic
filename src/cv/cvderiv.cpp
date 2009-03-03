@@ -106,29 +106,9 @@ void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
                              Sobel & Scharr Derivative Filters
 \****************************************************************************************/
 
-/////////////////////////////// Old IPP derivative filters ///////////////////////////////
-// still used in corner detectors (see cvcorner.cpp)
-
-icvFilterSobelVert_8u16s_C1R_t icvFilterSobelVert_8u16s_C1R_p = 0;
-icvFilterSobelHoriz_8u16s_C1R_t icvFilterSobelHoriz_8u16s_C1R_p = 0;
-icvFilterSobelVertSecond_8u16s_C1R_t icvFilterSobelVertSecond_8u16s_C1R_p = 0;
-icvFilterSobelHorizSecond_8u16s_C1R_t icvFilterSobelHorizSecond_8u16s_C1R_p = 0;
-icvFilterSobelCross_8u16s_C1R_t icvFilterSobelCross_8u16s_C1R_p = 0;
-
-icvFilterSobelVert_32f_C1R_t icvFilterSobelVert_32f_C1R_p = 0;
-icvFilterSobelHoriz_32f_C1R_t icvFilterSobelHoriz_32f_C1R_p = 0;
-icvFilterSobelVertSecond_32f_C1R_t icvFilterSobelVertSecond_32f_C1R_p = 0;
-icvFilterSobelHorizSecond_32f_C1R_t icvFilterSobelHorizSecond_32f_C1R_p = 0;
-icvFilterSobelCross_32f_C1R_t icvFilterSobelCross_32f_C1R_p = 0;
-
-icvFilterScharrVert_8u16s_C1R_t icvFilterScharrVert_8u16s_C1R_p = 0;
-icvFilterScharrHoriz_8u16s_C1R_t icvFilterScharrHoriz_8u16s_C1R_p = 0;
-icvFilterScharrVert_32f_C1R_t icvFilterScharrVert_32f_C1R_p = 0;
-icvFilterScharrHoriz_32f_C1R_t icvFilterScharrHoriz_32f_C1R_p = 0;
-
 ///////////////////////////////// New IPP derivative filters /////////////////////////////
 
-#define IPCV_FILTER_PTRS( name )                    \
+/*#define IPCV_FILTER_PTRS( name )                    \
 icvFilter##name##GetBufSize_8u16s_C1R_t             \
     icvFilter##name##GetBufSize_8u16s_C1R_p = 0;    \
 icvFilter##name##Border_8u16s_C1R_t                 \
@@ -145,7 +125,7 @@ IPCV_FILTER_PTRS( SobelNegVert )
 IPCV_FILTER_PTRS( SobelHorizSecond )
 IPCV_FILTER_PTRS( SobelVertSecond )
 IPCV_FILTER_PTRS( SobelCross )
-IPCV_FILTER_PTRS( Laplacian )
+IPCV_FILTER_PTRS( Laplacian )*/
 
 typedef CvStatus (CV_STDCALL * CvDeriv3x3GetBufSizeIPPFunc)
     ( CvSize roi, int* bufsize );
@@ -203,10 +183,9 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_ERROR( CV_StsBadArg, "src and dst have different sizes" );
 
-    if( ((aperture_size == CV_SCHARR || aperture_size == 3 || aperture_size == 5) &&
+    /*if( ((aperture_size == CV_SCHARR || aperture_size == 3 || aperture_size == 5) &&
         dx <= 2 && dy <= 2 && dx + dy <= 2 && icvFilterSobelNegVertBorder_8u16s_C1R_p) &&
-        (src_type == CV_8UC1 && dst_type == CV_16SC1/* ||
-        src_type == CV_32FC1 && dst_type == CV_32FC1*/) )
+        (src_type == CV_8UC1 && dst_type == CV_16SC1) )
     {
         CvDerivGetBufSizeIPPFunc ipp_sobel_getbufsize_func = 0;
         CvDerivIPPFunc_8u ipp_sobel_func_8u = 0;
@@ -333,7 +312,7 @@ cvSobel( const void* srcarr, void* dstarr, int dx, int dy, int aperture_size )
             if( status >= 0 )
                 EXIT;
         }
-    }
+    }*/
 
     CV_CALL( filter.init_deriv( src->cols, src_type, dst_type, dx, dy,
                 aperture_size, origin ? CvSepFilter::FLIP_KERNEL : 0));
@@ -815,9 +794,8 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
     src_type = CV_MAT_TYPE(src->type);
     dst_type = CV_MAT_TYPE(dst->type);
 
-    if( (aperture_size == 3 || aperture_size == 5) &&
-        (src_type == CV_8UC1 && dst_type == CV_16SC1/* ||
-        src_type == CV_32FC1 && dst_type == CV_32FC1*/) )
+    /*if( (aperture_size == 3 || aperture_size == 5) &&
+        (src_type == CV_8UC1 && dst_type == CV_16SC1) )
     {
         CvDerivGetBufSizeIPPFunc ipp_laplace_getbufsize_func = 0;
         CvDerivIPPFunc_8u ipp_laplace_func_8u = 0;
@@ -864,7 +842,7 @@ cvLaplace( const void* srcarr, void* dstarr, int aperture_size )
             if( status >= 0 )
                 EXIT;
         }
-    }
+    }*/
 
     CV_CALL( laplacian.init( src->cols, src_type, dst_type,
                              false, aperture_size ));
