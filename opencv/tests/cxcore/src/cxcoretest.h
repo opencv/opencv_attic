@@ -44,6 +44,8 @@
 
 #if defined WIN32 || defined WIN64
 #include <windows.h>
+#undef min
+#undef max
 #endif
 
 #include "cxcore.h"

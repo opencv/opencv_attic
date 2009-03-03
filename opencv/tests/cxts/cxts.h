@@ -445,6 +445,9 @@ protected:
 
     // prints the information about command-line parameters
     virtual void print_help();
+    
+    // changes the text color in console
+    virtual void set_color(int color);
 
     // a sequence of tests to run
     CvTestPtrVec* selected_tests;
@@ -509,6 +512,9 @@ protected:
 
         // the path to data files used by tests
         char* data_path;
+        
+        // whether the output to console should be colored
+        int color_terminal;
     }
     params;
 

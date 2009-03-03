@@ -7,6 +7,8 @@
 #include <vector>
 #include <iostream>
 
+#if 0
+
 typedef std::complex<double> complex_type;
 
 struct pred_complex {
@@ -117,3 +119,5 @@ void CV_SolvePolyTest::run( int )
 }
 
 CV_SolvePolyTest solve_poly_test;
+
+#endif
