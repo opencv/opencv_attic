@@ -51,9 +51,8 @@ icvSubdiv2DCheck( CvSubdiv2D* subdiv )
 
     __BEGIN__;
 
-    if( !subdiv )
-        CV_ERROR_FROM_STATUS( CV_NULLPTR_ERR );
-
+    CV_Assert( subdiv != 0 );
+    
     for( i = 0; i < total; i++ )
     {
         CvQuadEdge2D* edge = (CvQuadEdge2D*)cvGetSetElem(subdiv->edges,i);
