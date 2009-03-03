@@ -243,7 +243,7 @@ static Scalar meanBlock_( const Mat& srcmat, const Mat& maskmat )
             }
         }
     }
-    return rawToScalar(s0);
+    return rawToScalar(s0)*(1./std::max(pix, 1));
 }
 
 
@@ -264,7 +264,7 @@ static Scalar mean_( const Mat& srcmat, const Mat& maskmat )
             if( mask[x] )
                 s += src[x], pix++;
     }
-    return rawToScalar(s);
+    return rawToScalar(s)*(1./std::max(pix, 1));
 }
 
 typedef Scalar (*MeanMaskFunc)(const Mat& src, const Mat& mask);
