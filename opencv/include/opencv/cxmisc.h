@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -232,7 +233,7 @@
 
 #define  cvUnsupportedFormat "Unsupported format"
 
-CV_INLINE void* cvAlignPtr( const void* ptr, int align=32 )
+CV_INLINE void* cvAlignPtr( const void* ptr, int align CV_DEFAULT(32) )
 {
     assert( (align & (align-1)) == 0 );
     return (void*)( ((size_t)ptr + align - 1) & ~(size_t)(align-1) );
@@ -246,7 +247,9 @@ CV_INLINE int cvAlign( int size, int align )
 
 CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
 {
-    CvSize size = { mat->width, mat->height };
+    CvSize size;
+    size.width = mat->cols;
+    size.height = mat->rows;
     return size;
 }
 
@@ -629,81 +632,9 @@ typedef enum CvStatus
 }
 CvStatus;
 
-#define CV_ERROR_FROM_STATUS( result )                \
-    CV_ERROR( cvErrorFromIppStatus( result ), "OpenCV function failed" )
-
-#define IPPI_CALL( Func )                                              \
-{                                                                      \
-      CvStatus  ippi_call_result;                                      \
-      ippi_call_result = Func;                                         \
-                                                                       \
-      if( ippi_call_result < 0 )                                       \
-            CV_ERROR_FROM_STATUS( (ippi_call_result));                 \
-}
-
-#define CV_PLUGIN_NONE      0
-#define CV_PLUGIN_OPTCV     1 /* custom "emerged" ippopencv library */
-#define CV_PLUGIN_IPPCV     2 /* IPP: computer vision */
-#define CV_PLUGIN_IPPI      3 /* IPP: image processing */
-#define CV_PLUGIN_IPPS      4 /* IPP: signal processing */
-#define CV_PLUGIN_IPPVM     5 /* IPP: vector math functions */
-#define CV_PLUGIN_IPPCC     6 /* IPP: color space conversion */
-#define CV_PLUGIN_MKL       8 /* Intel Math Kernel Library */
-
-#define CV_PLUGIN_MAX      16
-
-#define CV_PLUGINS1(lib1) ((lib1)&15)
-#define CV_PLUGINS2(lib1,lib2) (((lib1)&15)|(((lib2)&15)<<4))
-#define CV_PLUGINS3(lib1,lib2,lib3) (((lib1)&15)|(((lib2)&15)<<4)|(((lib2)&15)<<8))
+#define IPPI_CALL(stmt) CV_Assert((stmt) >= 0)
 
 #define CV_NOTHROW throw()
-
-#ifndef IPCVAPI
-#define IPCVAPI(type,declspec,name,args)                        \
-    /* function pointer */                                      \
-    typedef type (declspec* name##_t) args;                     \
-    extern name##_t name##_p;                                   \
-    type declspec name args;
-#endif
-
-#define IPCVAPI_EX(type,name,ipp_name,ipp_search_modules,args)  \
-    IPCVAPI(type,CV_STDCALL,name,args)
-
-#define IPCVAPI_C_EX(type,name,ipp_name,ipp_search_modules,args)\
-    IPCVAPI(type,CV_CDECL,name,args)
-
-#ifndef IPCVAPI_IMPL
-#define IPCVAPI_IMPL(type,name,args,arg_names)                  \
-    static type CV_STDCALL name##_f args;                       \
-    name##_t name##_p = name##_f;                               \
-    type CV_STDCALL name args { return name##_p arg_names; }    \
-    static type CV_STDCALL name##_f args
-#endif
-
-/* IPP types' enumeration */
-typedef enum CvDataType {
-    cv1u,
-    cv8u, cv8s,
-    cv16u, cv16s, cv16sc,
-    cv32u, cv32s, cv32sc,
-    cv32f, cv32fc,
-    cv64u, cv64s, cv64sc,
-    cv64f, cv64fc
-} CvDataType;
-
-typedef enum CvHintAlgorithm {
-    cvAlgHintNone,
-    cvAlgHintFast,
-    cvAlgHintAccurate
-} CvHintAlgorithm;
-
-typedef enum CvCmpOp {
-    cvCmpLess,
-    cvCmpLessEq,
-    cvCmpEq,
-    cvCmpGreaterEq,
-    cvCmpGreater
-} CvCmpOp;
 
 typedef struct CvFuncTable
 {
@@ -724,195 +655,62 @@ typedef struct CvBtFuncTable
 }
 CvBtFuncTable;
 
-typedef CvStatus (CV_STDCALL *CvFunc2D_1A)(void* arr, int step, CvSize size);
+#define CV_INIT_FUNC_TAB( tab, FUNCNAME, FLAG )         \
+    (tab).fn_2d[CV_8U] = (void*)FUNCNAME##_8u##FLAG;    \
+    (tab).fn_2d[CV_8S] = 0;                             \
+    (tab).fn_2d[CV_16U] = (void*)FUNCNAME##_16u##FLAG;  \
+    (tab).fn_2d[CV_16S] = (void*)FUNCNAME##_16s##FLAG;  \
+    (tab).fn_2d[CV_32S] = (void*)FUNCNAME##_32s##FLAG;  \
+    (tab).fn_2d[CV_32F] = (void*)FUNCNAME##_32f##FLAG;  \
+    (tab).fn_2d[CV_64F] = (void*)FUNCNAME##_64f##FLAG
 
-typedef CvStatus (CV_STDCALL *CvFunc2D_1A1P)(void* arr, int step, CvSize size, void* param);
+#define CV_INIT_BIG_FUNC_TAB( tab, FUNCNAME, FLAG )             \
+    (tab).fn_2d[CV_8UC1]  = (void*)FUNCNAME##_8u_C1##FLAG;      \
+    (tab).fn_2d[CV_8UC2]  = (void*)FUNCNAME##_8u_C2##FLAG;      \
+    (tab).fn_2d[CV_8UC3]  = (void*)FUNCNAME##_8u_C3##FLAG;      \
+    (tab).fn_2d[CV_8UC4]  = (void*)FUNCNAME##_8u_C4##FLAG;      \
+                                                                \
+    (tab).fn_2d[CV_8SC1]  = 0;                                  \
+    (tab).fn_2d[CV_8SC2]  = 0;                                  \
+    (tab).fn_2d[CV_8SC3]  = 0;                                  \
+    (tab).fn_2d[CV_8SC4]  = 0;                                  \
+                                                                \
+    (tab).fn_2d[CV_16UC1] = (void*)FUNCNAME##_16u_C1##FLAG;     \
+    (tab).fn_2d[CV_16UC2] = (void*)FUNCNAME##_16u_C2##FLAG;     \
+    (tab).fn_2d[CV_16UC3] = (void*)FUNCNAME##_16u_C3##FLAG;     \
+    (tab).fn_2d[CV_16UC4] = (void*)FUNCNAME##_16u_C4##FLAG;     \
+                                                                \
+    (tab).fn_2d[CV_16SC1] = (void*)FUNCNAME##_16s_C1##FLAG;     \
+    (tab).fn_2d[CV_16SC2] = (void*)FUNCNAME##_16s_C2##FLAG;     \
+    (tab).fn_2d[CV_16SC3] = (void*)FUNCNAME##_16s_C3##FLAG;     \
+    (tab).fn_2d[CV_16SC4] = (void*)FUNCNAME##_16s_C4##FLAG;     \
+                                                                \
+    (tab).fn_2d[CV_32SC1] = (void*)FUNCNAME##_32s_C1##FLAG;     \
+    (tab).fn_2d[CV_32SC2] = (void*)FUNCNAME##_32s_C2##FLAG;     \
+    (tab).fn_2d[CV_32SC3] = (void*)FUNCNAME##_32s_C3##FLAG;     \
+    (tab).fn_2d[CV_32SC4] = (void*)FUNCNAME##_32s_C4##FLAG;     \
+                                                                \
+    (tab).fn_2d[CV_32FC1] = (void*)FUNCNAME##_32f_C1##FLAG;     \
+    (tab).fn_2d[CV_32FC2] = (void*)FUNCNAME##_32f_C2##FLAG;     \
+    (tab).fn_2d[CV_32FC3] = (void*)FUNCNAME##_32f_C3##FLAG;     \
+    (tab).fn_2d[CV_32FC4] = (void*)FUNCNAME##_32f_C4##FLAG;     \
+                                                                \
+    (tab).fn_2d[CV_64FC1] = (void*)FUNCNAME##_64f_C1##FLAG;     \
+    (tab).fn_2d[CV_64FC2] = (void*)FUNCNAME##_64f_C2##FLAG;     \
+    (tab).fn_2d[CV_64FC3] = (void*)FUNCNAME##_64f_C3##FLAG;     \
+    (tab).fn_2d[CV_64FC4] = (void*)FUNCNAME##_64f_C4##FLAG
 
-typedef CvStatus (CV_STDCALL *CvFunc2D_1A1P1I)(void* arr, int step, CvSize size,
-                                               void* param, int flag);
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_1A1P)( void* arr, int step, CvSize size,
-                                                int cn, int coi, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_1A1P)( void* arr, int step, CvSize size,
-                                                int cn, int coi, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_1A2P)( void* arr, int step, CvSize size,
-                                              void* param1, void* param2 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_1A2P)( void* arr, int step,
-                                                CvSize size, int cn, int coi,
-                                                void* param1, void* param2 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_1A4P)( void* arr, int step, CvSize size,
-                                              void* param1, void* param2,
-                                              void* param3, void* param4 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_1A4P)( void* arr, int step,
-                                                CvSize size, int cn, int coi,
-                                                void* param1, void* param2,
-                                                void* param3, void* param4 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_2A)( void* arr0, int step0,
-                                            void* arr1, int step1, CvSize size );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_2A1P)( void* arr0, int step0,
-                                              void* arr1, int step1,
-                                              CvSize size, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_2A1P)( void* arr0, int step0,
-                                                void* arr1, int step1,
-                                                CvSize size, int cn,
-                                                int coi, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_2A1P)( void* arr0, int step0,
-                                                void* arr1, int step1,
-                                                CvSize size, int cn,
-                                                int coi, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_2A2P)( void* arr0, int step0,
-                                              void* arr1, int step1, CvSize size,
-                                              void* param1, void* param2 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_2A2P)( void* arr0, int step0,
-                                                void* arr1, int step1,
-                                                CvSize size, int cn, int coi,
-                                                void* param1, void* param2 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_2A1P1I)( void* arr0, int step0,
-                                                void* arr1, int step1, CvSize size,
-                                                void* param, int flag );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_2A4P)( void* arr0, int step0,
-                                              void* arr1, int step1, CvSize size,
-                                              void* param1, void* param2,
-                                              void* param3, void* param4 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_2A4P)( void* arr0, int step0,
-                                                void* arr1, int step1, CvSize size,
-                                                int cn, int coi,
-                                                void* param1, void* param2,
-                                                void* param3, void* param4 );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_3A)( void* arr0, int step0,
-                                            void* arr1, int step1,
-                                            void* arr2, int step2, CvSize size );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_3A1P)( void* arr0, int step0,
-                                              void* arr1, int step1,
-                                              void* arr2, int step2,
-                                              CvSize size, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_3A1I)( void* arr0, int step0,
-                                              void* arr1, int step1,
-                                              void* arr2, int step2,
-                                              CvSize size, int flag );
-
-typedef CvStatus (CV_STDCALL *CvFunc2DnC_3A1P)( void* arr0, int step0,
-                                                void* arr1, int step1,
-                                                void* arr2, int step2,
-                                                CvSize size, int cn,
-                                                int coi, void* param );
-
-typedef CvStatus (CV_STDCALL *CvFunc2D_4A)( void* arr0, int step0,
-                                            void* arr1, int step1,
-                                            void* arr2, int step2,
-                                            void* arr3, int step3,
-                                            CvSize size );
-
-typedef CvStatus (CV_STDCALL *CvFunc0D)( const void* src, void* dst, int param );
-
-#define CV_DEF_INIT_FUNC_TAB_2D( FUNCNAME, FLAG )                   \
-static void  icvInit##FUNCNAME##FLAG##Table( CvFuncTable* tab )     \
-{                                                                   \
-    assert( tab );                                                  \
-                                                                    \
-    tab->fn_2d[CV_8U]  = (void*)icv##FUNCNAME##_8u_##FLAG;          \
-    tab->fn_2d[CV_8S]  = (void*)icv##FUNCNAME##_8s_##FLAG;          \
-    tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u_##FLAG;         \
-    tab->fn_2d[CV_16S] = (void*)icv##FUNCNAME##_16s_##FLAG;         \
-    tab->fn_2d[CV_32S] = (void*)icv##FUNCNAME##_32s_##FLAG;         \
-    tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f_##FLAG;         \
-    tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f_##FLAG;         \
-}
-
-
-#define CV_DEF_INIT_BIG_FUNC_TAB_2D( FUNCNAME, FLAG )               \
-static void  icvInit##FUNCNAME##FLAG##Table( CvBigFuncTable* tab )  \
-{                                                                   \
-    assert( tab );                                                  \
-                                                                    \
-    tab->fn_2d[CV_8UC1]  = (void*)icv##FUNCNAME##_8u_C1##FLAG;      \
-    tab->fn_2d[CV_8UC2]  = (void*)icv##FUNCNAME##_8u_C2##FLAG;      \
-    tab->fn_2d[CV_8UC3]  = (void*)icv##FUNCNAME##_8u_C3##FLAG;      \
-    tab->fn_2d[CV_8UC4]  = (void*)icv##FUNCNAME##_8u_C4##FLAG;      \
-                                                                    \
-    tab->fn_2d[CV_8SC1]  = (void*)icv##FUNCNAME##_8s_C1##FLAG;      \
-    tab->fn_2d[CV_8SC2]  = (void*)icv##FUNCNAME##_8s_C2##FLAG;      \
-    tab->fn_2d[CV_8SC3]  = (void*)icv##FUNCNAME##_8s_C3##FLAG;      \
-    tab->fn_2d[CV_8SC4]  = (void*)icv##FUNCNAME##_8s_C4##FLAG;      \
-                                                                    \
-    tab->fn_2d[CV_16UC1] = (void*)icv##FUNCNAME##_16u_C1##FLAG;     \
-    tab->fn_2d[CV_16UC2] = (void*)icv##FUNCNAME##_16u_C2##FLAG;     \
-    tab->fn_2d[CV_16UC3] = (void*)icv##FUNCNAME##_16u_C3##FLAG;     \
-    tab->fn_2d[CV_16UC4] = (void*)icv##FUNCNAME##_16u_C4##FLAG;     \
-                                                                    \
-    tab->fn_2d[CV_16SC1] = (void*)icv##FUNCNAME##_16s_C1##FLAG;     \
-    tab->fn_2d[CV_16SC2] = (void*)icv##FUNCNAME##_16s_C2##FLAG;     \
-    tab->fn_2d[CV_16SC3] = (void*)icv##FUNCNAME##_16s_C3##FLAG;     \
-    tab->fn_2d[CV_16SC4] = (void*)icv##FUNCNAME##_16s_C4##FLAG;     \
-                                                                    \
-    tab->fn_2d[CV_32SC1] = (void*)icv##FUNCNAME##_32s_C1##FLAG;     \
-    tab->fn_2d[CV_32SC2] = (void*)icv##FUNCNAME##_32s_C2##FLAG;     \
-    tab->fn_2d[CV_32SC3] = (void*)icv##FUNCNAME##_32s_C3##FLAG;     \
-    tab->fn_2d[CV_32SC4] = (void*)icv##FUNCNAME##_32s_C4##FLAG;     \
-                                                                    \
-    tab->fn_2d[CV_32FC1] = (void*)icv##FUNCNAME##_32f_C1##FLAG;     \
-    tab->fn_2d[CV_32FC2] = (void*)icv##FUNCNAME##_32f_C2##FLAG;     \
-    tab->fn_2d[CV_32FC3] = (void*)icv##FUNCNAME##_32f_C3##FLAG;     \
-    tab->fn_2d[CV_32FC4] = (void*)icv##FUNCNAME##_32f_C4##FLAG;     \
-                                                                    \
-    tab->fn_2d[CV_64FC1] = (void*)icv##FUNCNAME##_64f_C1##FLAG;     \
-    tab->fn_2d[CV_64FC2] = (void*)icv##FUNCNAME##_64f_C2##FLAG;     \
-    tab->fn_2d[CV_64FC3] = (void*)icv##FUNCNAME##_64f_C3##FLAG;     \
-    tab->fn_2d[CV_64FC4] = (void*)icv##FUNCNAME##_64f_C4##FLAG;     \
-}
-
-#define CV_DEF_INIT_FUNC_TAB_0D( FUNCNAME )                         \
-static void  icvInit##FUNCNAME##Table( CvFuncTable* tab )           \
-{                                                                   \
-    tab->fn_2d[CV_8U]  = (void*)icv##FUNCNAME##_8u;                 \
-    tab->fn_2d[CV_8S]  = (void*)icv##FUNCNAME##_8s;                 \
-    tab->fn_2d[CV_16U] = (void*)icv##FUNCNAME##_16u;                \
-    tab->fn_2d[CV_16S] = (void*)icv##FUNCNAME##_16s;                \
-    tab->fn_2d[CV_32S] = (void*)icv##FUNCNAME##_32s;                \
-    tab->fn_2d[CV_32F] = (void*)icv##FUNCNAME##_32f;                \
-    tab->fn_2d[CV_64F] = (void*)icv##FUNCNAME##_64f;                \
-}
-
-#define CV_DEF_INIT_FUNC_TAB_1D  CV_DEF_INIT_FUNC_TAB_0D
-
-
-#define CV_DEF_INIT_PIXSIZE_TAB_2D( FUNCNAME, FLAG )                \
-static void icvInit##FUNCNAME##FLAG##Table( CvBtFuncTable* table )  \
-{                                                                   \
-    table->fn_2d[1]  = (void*)icv##FUNCNAME##_8u_C1##FLAG;          \
-    table->fn_2d[2]  = (void*)icv##FUNCNAME##_8u_C2##FLAG;          \
-    table->fn_2d[3]  = (void*)icv##FUNCNAME##_8u_C3##FLAG;          \
-    table->fn_2d[4]  = (void*)icv##FUNCNAME##_16u_C2##FLAG;         \
-    table->fn_2d[6]  = (void*)icv##FUNCNAME##_16u_C3##FLAG;         \
-    table->fn_2d[8]  = (void*)icv##FUNCNAME##_32s_C2##FLAG;         \
-    table->fn_2d[12] = (void*)icv##FUNCNAME##_32s_C3##FLAG;         \
-    table->fn_2d[16] = (void*)icv##FUNCNAME##_64s_C2##FLAG;         \
-    table->fn_2d[24] = (void*)icv##FUNCNAME##_64s_C3##FLAG;         \
-    table->fn_2d[32] = (void*)icv##FUNCNAME##_64s_C4##FLAG;         \
-}
-
-#define  CV_GET_FUNC_PTR( func, table_entry )  \
-    func = (table_entry);                      \
-                                               \
-    if( !func )                                \
-        CV_ERROR( CV_StsUnsupportedFormat, "" )
+#define CV_INIT_PIXSIZE_TAB( tab, FUNCNAME, FLAG )      \
+    (tab).fn_2d[1]  = (void*)FUNCNAME##_8u_C1##FLAG;    \
+    (tab).fn_2d[2]  = (void*)FUNCNAME##_8u_C2##FLAG;    \
+    (tab).fn_2d[3]  = (void*)FUNCNAME##_8u_C3##FLAG;    \
+    (tab).fn_2d[4]  = (void*)FUNCNAME##_16u_C2##FLAG;   \
+    (tab).fn_2d[6]  = (void*)FUNCNAME##_16u_C3##FLAG;   \
+    (tab).fn_2d[8]  = (void*)FUNCNAME##_32s_C2##FLAG;   \
+    (tab).fn_2d[12] = (void*)FUNCNAME##_32s_C3##FLAG;   \
+    (tab).fn_2d[16] = (void*)FUNCNAME##_64s_C2##FLAG;   \
+    (tab).fn_2d[24] = (void*)FUNCNAME##_64s_C3##FLAG;   \
+    (tab).fn_2d[32] = (void*)FUNCNAME##_64s_C4##FLAG
 
 
 #endif /*_CXCORE_MISC_H_*/
