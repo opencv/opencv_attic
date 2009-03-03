@@ -1254,7 +1254,7 @@ CvBoost::trim_weights()
     for( i = 0; i < count; i++ )
     {
         double w = weights->data.db[i];
-        int f = w > threshold;
+        int f = w >= threshold;
         subsample_mask->data.ptr[i] = (uchar)f;
         nz_count += f;
     }
