@@ -165,9 +165,9 @@ void CxCore_ExpTest::get_test_array_types_and_sizes( int test_case_idx, CvSize**
 {
     CxCore_MathTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     out_type = types[OUTPUT][0];
-    if( CV_MAT_DEPTH(types[INPUT][0]) == CV_32F && (cvRandInt(ts->get_rng()) & 3) == 0 )
+    /*if( CV_MAT_DEPTH(types[INPUT][0]) == CV_32F && (cvRandInt(ts->get_rng()) & 3) == 0 )
         types[OUTPUT][0] = types[REF_OUTPUT][0] =
-            out_type = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|CV_64F;
+            out_type = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|CV_64F;*/
 }
 
 void CxCore_ExpTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high )
@@ -246,8 +246,8 @@ CxCore_LogTest::CxCore_LogTest()
 void CxCore_LogTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
     CxCore_MathTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    if( CV_MAT_DEPTH(types[INPUT][0]) == CV_32F && (cvRandInt(ts->get_rng()) & 3) == 0 )
-        types[INPUT][0] = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|CV_64F;
+    /*if( CV_MAT_DEPTH(types[INPUT][0]) == CV_32F && (cvRandInt(ts->get_rng()) & 3) == 0 )
+        types[INPUT][0] = (types[INPUT][0] & ~CV_MAT_DEPTH_MASK)|CV_64F;*/
 }
 
 
@@ -1175,7 +1175,7 @@ protected:
 };
 
 CxCore_ScaleAddTest::CxCore_ScaleAddTest() :
-    CxCore_MatrixTest( "matrix-scaleadd", "cvScaleAdd", 3, 1, false, false, 2 )
+    CxCore_MatrixTest( "matrix-scaleadd", "cvScaleAdd", 3, 1, false, false, 4 )
 {
     alpha = cvScalarAll(0);
 }
@@ -1185,6 +1185,7 @@ void CxCore_ScaleAddTest::get_test_array_types_and_sizes( int test_case_idx, CvS
 {
     CxCore_MatrixTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     sizes[INPUT][2] = cvSize(1,1);
+    types[INPUT][2] &= CV_MAT_DEPTH_MASK;
 }
 
 
@@ -1195,6 +1196,7 @@ void CxCore_ScaleAddTest::get_timing_test_array_types_and_sizes( int test_case_i
     CxCore_MatrixTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
                                                               whole_sizes, are_images );
     sizes[INPUT][2] = cvSize(1,1);
+    types[INPUT][2] &= CV_MAT_DEPTH_MASK;
 }
 
 
@@ -1215,50 +1217,9 @@ void CxCore_ScaleAddTest::run_func()
 
 void CxCore_ScaleAddTest::prepare_to_validation( int )
 {
-    int rows = test_mat[INPUT][0].rows;
-    int type = CV_MAT_TYPE(test_mat[INPUT][0].type);
-    int cn = CV_MAT_CN(type);
-    int ncols = test_mat[INPUT][0].cols*cn;
-    int i, j;
-
-    for( i = 0; i < rows; i++ )
-    {
-        uchar* src1 = test_mat[INPUT][0].data.ptr + test_mat[INPUT][0].step*i;
-        uchar* src2 = test_mat[INPUT][1].data.ptr + test_mat[INPUT][1].step*i;
-        uchar* dst = test_mat[REF_OUTPUT][0].data.ptr + test_mat[REF_OUTPUT][0].step*i;
-
-        switch( type )
-        {
-        case CV_32FC1:
-            for( j = 0; j < ncols; j++ )
-                ((float*)dst)[j] = (float)(((float*)src1)[j]*alpha.val[0] + ((float*)src2)[j]);
-            break;
-        case CV_32FC2:
-            for( j = 0; j < ncols; j += 2 )
-            {
-                double re = ((float*)src1)[j];
-                double im = ((float*)src1)[j+1];
-                ((float*)dst)[j] = (float)(re*alpha.val[0] - im*alpha.val[1] + ((float*)src2)[j]);
-                ((float*)dst)[j+1] = (float)(re*alpha.val[1] + im*alpha.val[0] + ((float*)src2)[j+1]);
-            }
-            break;
-        case CV_64FC1:
-            for( j = 0; j < ncols; j++ )
-                ((double*)dst)[j] = ((double*)src1)[j]*alpha.val[0] + ((double*)src2)[j];
-            break;
-        case CV_64FC2:
-            for( j = 0; j < ncols; j += 2 )
-            {
-                double re = ((double*)src1)[j];
-                double im = ((double*)src1)[j+1];
-                ((double*)dst)[j] = (double)(re*alpha.val[0] - im*alpha.val[1] + ((double*)src2)[j]);
-                ((double*)dst)[j+1] = (double)(re*alpha.val[1] + im*alpha.val[0] + ((double*)src2)[j+1]);
-            }
-            break;
-        default:
-            assert(0);
-        }
-    }
+    cvTsAdd( &test_mat[INPUT][0], cvScalarAll(alpha.val[0]),
+             &test_mat[INPUT][1], cvScalarAll(1.),
+             cvScalarAll(0.), &test_mat[REF_OUTPUT][0], 0 );
 }
 
 CxCore_ScaleAddTest scaleadd_test;
@@ -1290,7 +1251,7 @@ protected:
 };
 
 CxCore_GEMMTest::CxCore_GEMMTest() :
-    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
+    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 1 )
 {
     test_case_count = 100;
     default_timing_param_names = matrix_gemm_param_names;
@@ -1589,9 +1550,12 @@ protected:
     void get_timing_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool* are_images );
+    int prepare_test_case( int test_case_idx );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
     void run_func();
     void prepare_to_validation( int test_case_idx );
+    
+    double scale;
 };
 
 
@@ -1621,6 +1585,8 @@ void CxCore_TransformTest::get_test_array_types_and_sizes( int test_case_idx, Cv
     mattype = depth < CV_32S ? CV_32F : depth == CV_64F ? CV_64F : bits & 1 ? CV_32F : CV_64F;
     types[INPUT][1] = mattype;
     types[INPUT][2] = CV_MAKETYPE(mattype, dst_cn);
+    
+    scale = 1./((cvTsRandInt(rng)%4)*50+1);
 
     if( bits & 2 )
     {
@@ -1651,8 +1617,17 @@ void CxCore_TransformTest::get_timing_test_array_types_and_sizes( int test_case_
     sizes[INPUT][1] = cvSize(cn + (cn < 4), cn);
     sizes[INPUT][2] = cvSize(0,0);
     types[INPUT][1] = types[INPUT][2] = CV_64FC1;
+    scale = 1./1000;
 }
 
+int CxCore_TransformTest::prepare_test_case( int test_case_idx )
+{
+    int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
+    if( code > 0 )
+        cvTsAdd(&test_mat[INPUT][1], cvScalarAll(scale), &test_mat[INPUT][1],
+                cvScalarAll(0), cvScalarAll(0), &test_mat[INPUT][1], 0 );
+    return code;
+}
 
 void CxCore_TransformTest::print_timing_params( int test_case_idx, char* ptr, int params_left )
 {
@@ -1995,10 +1970,22 @@ void CxCore_CovarMatrixTest::get_test_array_types_and_sizes( int test_case_idx, 
     single_matrix = flags & CV_COVAR_ROWS;
     t_flag = (bits & 256) != 0;
 
+    const int min_count = 2;
+
     if( !t_flag )
-        len = sizes[INPUT][0].width, count = sizes[INPUT][0].height;
+    {
+        len = sizes[INPUT][0].width;
+        count = sizes[INPUT][0].height;
+        count = std::max(count, min_count);
+        sizes[INPUT][0] = cvSize(len, count);
+    }
     else
-        len = sizes[INPUT][0].height, count = sizes[INPUT][0].width;
+    {
+        len = sizes[INPUT][0].height;
+        count = sizes[INPUT][0].width;
+        count = std::max(count, min_count);
+        sizes[INPUT][0] = cvSize(count, len);
+    }
 
     if( single_matrix && t_flag )
         flags = (flags & ~CV_COVAR_ROWS) | CV_COVAR_COLS;
@@ -2471,7 +2458,7 @@ void CxCore_InvertTest::prepare_to_validation( int )
 {
     CvMat* input = &test_mat[INPUT][0];
     double det = method != CV_LU ? cvTsSVDet( input ) : 0;
-    double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*100;
+    double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
 
     if( CV_MAT_TYPE(input->type) == CV_32FC1 )
         cvTsConvert( input, &test_mat[TEMP][1] );

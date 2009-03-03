@@ -176,6 +176,7 @@ void CxCore_ArithmTestImpl::get_test_array_types_and_sizes( int test_case_idx,
     int cn = cvTsRandInt(rng) % 4 + 1;
     int i, j;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
+    generate_scalars( depth );
     depth += depth == CV_8S;
 
     for( i = 0; i < max_arr; i++ )
@@ -368,14 +369,18 @@ void CxCore_AddWeightedTest::get_test_array_types_and_sizes( int test_case_idx,
 
 double CxCore_AddWeightedTest::get_success_error_level( int test_case_idx, int i, int j )
 {
-    if( CV_MAT_DEPTH(cvGetElemType(test_array[i][j])) <= CV_32S )
+    int type = cvGetElemType(test_array[i][j]), depth = CV_MAT_DEPTH(type);
+    if( depth <= CV_32S )
+        return 2;
+    if( depth == CV_32F )
     {
-        return alpha.val[0] != cvRound(alpha.val[0]) ||
-               beta.val[0] != cvRound(beta.val[0]) ||
-               gamma.val[0] != cvRound(gamma.val[0]);
+        CvScalar low=cvScalarAll(0), high=low;
+        get_minmax_bounds(i,j,type, &low, &high);
+        double a = (fabs(alpha.val[0])+fabs(beta.val[0]))*(fabs(low.val[0])+fabs(high.val[0]));
+        double b = fabs(gamma.val[0]);
+        return (a+b)*500*FLT_EPSILON;
     }
-    else
-        return CvArrTest::get_success_error_level( test_case_idx, i, j );
+    return CvArrTest::get_success_error_level( test_case_idx, i, j );
 }
 
 
@@ -2405,16 +2410,29 @@ void CxCore_CvtBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
 }
 
 
-double CxCore_CvtBaseTestImpl::get_success_error_level( int test_case_idx, int i, int j )
+double CxCore_CvtBaseTestImpl::get_success_error_level( int, int, int )
 {
-    if( CV_MAT_DEPTH(cvGetElemType(test_array[i][j])) <= CV_32S )
-    {
+    if( CV_MAT_DEPTH(test_mat[OUTPUT][0].type) <= CV_32S )
         return alpha.val[0] != cvRound(alpha.val[0]) ||
                beta.val[0] != cvRound(beta.val[0]) ||
                gamma.val[0] != cvRound(gamma.val[0]);
+
+    CvScalar l1, h1, l2, h2;
+    int stype = CV_MAT_TYPE(test_mat[INPUT][0].type);
+    int dtype = CV_MAT_TYPE(test_mat[OUTPUT][0].type);
+    get_minmax_bounds( INPUT, 0, stype, &l1, &h1 );
+    get_minmax_bounds( OUTPUT, 0, dtype, &l2, &h2 );
+    double maxval = 0;
+    for( int i = 0; i < 4; i++ )
+    {
+        maxval = MAX(maxval, fabs(l1.val[i]));
+        maxval = MAX(maxval, fabs(h1.val[i]));
+        maxval = MAX(maxval, fabs(l2.val[i]));
+        maxval = MAX(maxval, fabs(h2.val[i]));
     }
-    else
-        return CvArrTest::get_success_error_level( test_case_idx, i, j );
+    double max_err = (CV_MAT_DEPTH(stype) == CV_64F || CV_MAT_DEPTH(dtype) == CV_64F ?
+        DBL_EPSILON : FLT_EPSILON)*maxval*MAX(fabs(alpha.val[0]), 1.)*100;
+    return max_err;
 }
 
 

@@ -607,7 +607,7 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         sizes[INPUT][0] = sizes[INPUT][1] = size;
         types[INPUT][1] = types[INPUT][0];
     }
-    else if( (cn == 2 && (bits&32)) || (cn == 1 && allow_complex) )
+    else if( /*(cn == 2 && (bits&32)) ||*/ (cn == 1 && allow_complex) )
     {
         types[TEMP][0] = depth + 8; // CV_??FC2
         sizes[TEMP][0] = size;
