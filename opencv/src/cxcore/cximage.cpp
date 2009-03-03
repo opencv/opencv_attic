@@ -76,17 +76,13 @@ icvRetrieveImage( void* obj )
 {
     IplImage* img = 0;
 
-    CV_FUNCNAME( "icvRetrieveImage" );
-
-    __BEGIN__;
-
     if( CV_IS_IMAGE(obj) )
         img = (IplImage*)obj;
     else if( CV_IS_MAT(obj) )
     {
         CvMat* m = (CvMat*)obj;
-        CV_CALL( img = cvCreateImageHeader( cvSize(m->cols,m->rows),
-                        CV_MAT_DEPTH(m->type), CV_MAT_CN(m->type) ));
+        img = cvCreateImageHeader( cvSize(m->cols,m->rows),
+                        CV_MAT_DEPTH(m->type), CV_MAT_CN(m->type) );
         cvSetData( img, m->data.ptr, m->step );
         img->imageDataOrigin = (char*)m->refcount;
         m->data.ptr = 0; m->step = 0;
@@ -95,10 +91,8 @@ icvRetrieveImage( void* obj )
     else if( obj )
     {
         cvRelease( &obj );
-        CV_ERROR( CV_StsUnsupportedFormat, "The object is neither an image, nor a matrix" );
+        CV_Error( CV_StsUnsupportedFormat, "The object is neither an image, nor a matrix" );
     }
-
-    __END__;
 
     return img;
 }
@@ -108,19 +102,15 @@ bool CvImage::load( const char* filename, const char* imgname, int color )
 {
     IplImage* img = 0;
 
-    CV_FUNCNAME( "CvImage::read" );
-
-    __BEGIN__;
-
     if( icvIsXmlOrYaml(filename) )
     {
         img = icvRetrieveImage(cvLoad(filename,0,imgname));
         if( (img->nChannels > 1) != (color == 0) )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "RGB<->Grayscale conversion is not implemented for images stored in XML/YAML" );
         /*{
             IplImage* temp_img = 0;
-            CV_CALL( temp_img = cvCreateImage( cvGetSize(img), img->depth, color > 0 ? 3 : 1 ));
+            temp_img = cvCreateImage( cvGetSize(img), img->depth, color > 0 ? 3 : 1 ));
             cvCvtColor( img, temp_img, color > 0 ? CV_GRAY2BGR : CV_BGR2GRAY );
             cvReleaseImage( &img );
             img = temp_img;
@@ -131,15 +121,12 @@ bool CvImage::load( const char* filename, const char* imgname, int color )
         if( load_image )
             img = load_image( filename, color );
         else
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "Loading an image stored in such a format requires HigGUI.\n"
             "Link it to your program and call any function from it\n" );
     }
 
     attach( img );
-
-    __END__;
-
     return img != 0;
 }
 
@@ -181,9 +168,6 @@ bool CvImage::read( CvFileStorage* fs, const char* seqname, int idx )
 
 void CvImage::save( const char* filename, const char* imgname )
 {
-    CV_FUNCNAME( "CvImage::write" );
-    __BEGIN__;
-
     if( !image )
         return;
     if( icvIsXmlOrYaml( filename ) )
@@ -193,12 +177,10 @@ void CvImage::save( const char* filename, const char* imgname )
         if( save_image )
             save_image( filename, image );
         else
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "Saving an image in such a format requires HigGUI.\n"
             "Link it to your program and call any function from it\n" );
     }
-
-    __END__;
 }
 
 
@@ -211,20 +193,14 @@ void CvImage::write( CvFileStorage* fs, const char* imgname )
 
 void CvImage::show( const char* window_name )
 {
-    CV_FUNCNAME( "CvMatrix::show" );
-
-    __BEGIN__;
-
     if( image )
     {
         if( !show_image )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "CvImage::show method requires HighGUI.\n"
             "Link it to your program and call any function from it\n" );
         show_image( window_name, image );
     }
-
-    __END__;
 }
 
 
@@ -247,27 +223,21 @@ icvRetrieveMatrix( void* obj )
 {
     CvMat* m = 0;
 
-    CV_FUNCNAME( "icvRetrieveMatrix" );
-
-    __BEGIN__;
-
     if( CV_IS_MAT(obj) )
         m = (CvMat*)obj;
     else if( CV_IS_IMAGE(obj) )
     {
         IplImage* img = (IplImage*)obj;
         CvMat hdr, *src = cvGetMat( img, &hdr );
-        CV_CALL( m = cvCreateMat( src->rows, src->cols, src->type ));
-        CV_CALL( cvCopy( src, m ));
+        m = cvCreateMat( src->rows, src->cols, src->type );
+        cvCopy( src, m );
         cvReleaseImage( &img );
     }
     else if( obj )
     {
         cvRelease( &obj );
-        CV_ERROR( CV_StsUnsupportedFormat, "The object is neither an image, nor a matrix" );
+        CV_Error( CV_StsUnsupportedFormat, "The object is neither an image, nor a matrix" );
     }
-
-    __END__;
 
     return m;
 }
@@ -276,21 +246,16 @@ icvRetrieveMatrix( void* obj )
 bool CvMatrix::load( const char* filename, const char* matname, int color )
 {
     CvMat* m = 0;
-
-    CV_FUNCNAME( "CvMatrix::read" );
-
-    __BEGIN__;
-
     if( icvIsXmlOrYaml(filename) )
     {
         m = icvRetrieveMatrix(cvLoad(filename,0,matname));
 
         if( (CV_MAT_CN(m->type) > 1) != (color == 0) )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "RGB<->Grayscale conversion is not implemented for matrices stored in XML/YAML" );
         /*{
             CvMat* temp_mat;
-            CV_CALL( temp_mat = cvCreateMat( m->rows, m->cols,
+            temp_mat = cvCreateMat( m->rows, m->cols,
                 CV_MAKETYPE(CV_MAT_DEPTH(m->type), color > 0 ? 3 : 1 )));
             cvCvtColor( m, temp_mat, color > 0 ? CV_GRAY2BGR : CV_BGR2GRAY );
             cvReleaseMat( &m );
@@ -302,15 +267,12 @@ bool CvMatrix::load( const char* filename, const char* matname, int color )
         if( load_image_m )
             m = load_image_m( filename, color );
         else
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "Loading an image stored in such a format requires HigGUI.\n"
             "Link it to your program and call any function from it\n" );
     }
 
     set( m, false );
-
-    __END__;
-
     return m != 0;
 }
 
@@ -352,9 +314,6 @@ bool CvMatrix::read( CvFileStorage* fs, const char* seqname, int idx )
 
 void CvMatrix::save( const char* filename, const char* matname )
 {
-    CV_FUNCNAME( "CvMatrix::write" );
-    __BEGIN__;
-
     if( !matrix )
         return;
     if( icvIsXmlOrYaml( filename ) )
@@ -364,12 +323,10 @@ void CvMatrix::save( const char* filename, const char* matname )
         if( save_image )
             save_image( filename, matrix );
         else
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "Saving a matrixe in such a format requires HigGUI.\n"
             "Link it to your program and call any function from it\n" );
     }
-
-    __END__;
 }
 
 
@@ -382,20 +339,14 @@ void CvMatrix::write( CvFileStorage* fs, const char* matname )
 
 void CvMatrix::show( const char* window_name )
 {
-    CV_FUNCNAME( "CvMatrix::show" );
-
-    __BEGIN__;
-
     if( matrix )
     {
         if( !show_image )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "CvMatrix::show method requires HighGUI.\n"
             "Link it to your program and call any function from it\n" );
         show_image( window_name, matrix );
     }
-
-    __END__;
 }
 
 
@@ -409,25 +360,6 @@ cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image
     show_image = _show_image;
     return 1;
 }
-
-
-/*void main(void)
-{
-    CvImage a(cvSize(300,200),8,3), b(cvSize(300,200),8,3);
-    CvRNG rng = cvRNG(-1);
-
-    CV_SET_IMAGE_IO_FUNCTIONS();
-
-    cvNamedWindow( "test", 1 );
-    //cvZero( a );
-    cvZero( b );
-    cvRandArr( &rng, a, CV_RAND_UNI, cvScalarAll(0), cvScalarAll(100) );
-    cvCircle( b, cvPoint(100,100), 70, cvScalar(0,255,0), -1, CV_AA, 0 );
-    cvAdd( a, b, a );
-    a.show( "test" );
-
-    cvWaitKey();
-}*/
 
 /* End of file. */
 

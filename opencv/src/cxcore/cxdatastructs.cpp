@@ -82,12 +82,8 @@ static const schar icvPower2ShiftTab[] =
 static void
 icvInitMemStorage( CvMemStorage* storage, int block_size )
 {
-    CV_FUNCNAME( "icvInitMemStorage " );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( block_size <= 0 )
         block_size = CV_STORAGE_BLOCK_SIZE;
@@ -98,8 +94,6 @@ icvInitMemStorage( CvMemStorage* storage, int block_size )
     memset( storage, 0, sizeof( *storage ));
     storage->signature = CV_STORAGE_MAGIC_VAL;
     storage->block_size = block_size;
-
-    __END__;
 }
 
 
@@ -107,20 +101,8 @@ icvInitMemStorage( CvMemStorage* storage, int block_size )
 CV_IMPL CvMemStorage*
 cvCreateMemStorage( int block_size )
 {
-    CvMemStorage *storage = 0;
-
-    CV_FUNCNAME( "cvCreateMemStorage" );
-
-    __BEGIN__;
-
-    CV_CALL( storage = (CvMemStorage *)cvAlloc( sizeof( CvMemStorage )));
-    CV_CALL( icvInitMemStorage( storage, block_size ));
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        cvFree( &storage );
-
+    CvMemStorage* storage = (CvMemStorage *)cvAlloc( sizeof( CvMemStorage ));
+    icvInitMemStorage( storage, block_size );
     return storage;
 }
 
@@ -129,21 +111,11 @@ cvCreateMemStorage( int block_size )
 CV_IMPL CvMemStorage *
 cvCreateChildMemStorage( CvMemStorage * parent )
 {
-    CvMemStorage *storage = 0;
-    CV_FUNCNAME( "cvCreateChildMemStorage" );
-
-    __BEGIN__;
-
     if( !parent )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    CV_CALL( storage = cvCreateMemStorage(parent->block_size));
+    CvMemStorage* storage = cvCreateMemStorage(parent->block_size);
     storage->parent = parent;
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        cvFree( &storage );
 
     return storage;
 }
@@ -153,17 +125,13 @@ cvCreateChildMemStorage( CvMemStorage * parent )
 static void
 icvDestroyMemStorage( CvMemStorage* storage )
 {
-    CV_FUNCNAME( "icvDestroyMemStorage" );
-
-    __BEGIN__;
-
     int k = 0;
 
     CvMemBlock *block;
     CvMemBlock *dst_top = 0;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( storage->parent )
         dst_top = storage->parent->top;
@@ -198,8 +166,6 @@ icvDestroyMemStorage( CvMemStorage* storage )
 
     storage->top = storage->bottom = 0;
     storage->free_space = 0;
-
-    __END__;
 }
 
 
@@ -207,24 +173,12 @@ icvDestroyMemStorage( CvMemStorage* storage )
 CV_IMPL void
 cvReleaseMemStorage( CvMemStorage** storage )
 {
-    CvMemStorage *st;
-    CV_FUNCNAME( "cvReleaseMemStorage" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    st = *storage;
-    *storage = 0;
-
-    if( st )
-    {
-        CV_CALL( icvDestroyMemStorage( st ));
-        cvFree( &st );
-    }
-
-    __END__;
+    if( *storage )
+        icvDestroyMemStorage( *storage );
+    cvFree( storage );
 }
 
 
@@ -232,24 +186,16 @@ cvReleaseMemStorage( CvMemStorage** storage )
 CV_IMPL void
 cvClearMemStorage( CvMemStorage * storage )
 {
-    CV_FUNCNAME( "cvClearMemStorage" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( storage->parent )
-    {
         icvDestroyMemStorage( storage );
-    }
     else
     {
         storage->top = storage->bottom;
         storage->free_space = storage->bottom ? storage->block_size - sizeof(CvMemBlock) : 0;
     }
-
-    __END__;
 }
 
 
@@ -258,12 +204,8 @@ cvClearMemStorage( CvMemStorage * storage )
 static void
 icvGoNextMemBlock( CvMemStorage * storage )
 {
-    CV_FUNCNAME( "icvGoNextMemBlock" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !storage->top || !storage->top->next )
     {
@@ -271,7 +213,7 @@ icvGoNextMemBlock( CvMemStorage * storage )
 
         if( !(storage->parent) )
         {
-            CV_CALL( block = (CvMemBlock *)cvAlloc( storage->block_size ));
+            block = (CvMemBlock *)cvAlloc( storage->block_size );
         }
         else
         {
@@ -279,7 +221,7 @@ icvGoNextMemBlock( CvMemStorage * storage )
             CvMemStoragePos parent_pos;
 
             cvSaveMemStoragePos( parent, &parent_pos );
-            CV_CALL( icvGoNextMemBlock( parent ));
+            icvGoNextMemBlock( parent );
 
             block = parent->top;
             cvRestoreMemStoragePos( parent, &parent_pos );
@@ -313,8 +255,6 @@ icvGoNextMemBlock( CvMemStorage * storage )
         storage->top = storage->top->next;
     storage->free_space = storage->block_size - sizeof(CvMemBlock);
     assert( storage->free_space % CV_STRUCT_ALIGN == 0 );
-
-    __END__;
 }
 
 
@@ -322,17 +262,11 @@ icvGoNextMemBlock( CvMemStorage * storage )
 CV_IMPL void
 cvSaveMemStoragePos( const CvMemStorage * storage, CvMemStoragePos * pos )
 {
-    CV_FUNCNAME( "cvSaveMemStoragePos" );
-
-    __BEGIN__;
-
     if( !storage || !pos )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     pos->top = storage->top;
     pos->free_space = storage->free_space;
-
-    __END__;
 }
 
 
@@ -340,14 +274,10 @@ cvSaveMemStoragePos( const CvMemStorage * storage, CvMemStoragePos * pos )
 CV_IMPL void
 cvRestoreMemStoragePos( CvMemStorage * storage, CvMemStoragePos * pos )
 {
-    CV_FUNCNAME( "cvRestoreMemStoragePos" );
-
-    __BEGIN__;
-
     if( !storage || !pos )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( pos->free_space > storage->block_size )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     /*
     // this breaks icvGoNextMemBlock, so comment it off for now
@@ -375,8 +305,6 @@ cvRestoreMemStoragePos( CvMemStorage * storage, CvMemStoragePos * pos )
         storage->top = storage->bottom;
         storage->free_space = storage->top ? storage->block_size - sizeof(CvMemBlock) : 0;
     }
-
-    __END__;
 }
 
 
@@ -385,16 +313,11 @@ CV_IMPL void*
 cvMemStorageAlloc( CvMemStorage* storage, size_t size )
 {
     schar *ptr = 0;
-
-    CV_FUNCNAME( "cvMemStorageAlloc" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+        CV_Error( CV_StsNullPtr, "NULL storage pointer" );
 
     if( size > INT_MAX )
-        CV_ERROR( CV_StsOutOfRange, "Too large memory block is requested" );
+        CV_Error( CV_StsOutOfRange, "Too large memory block is requested" );
 
     assert( storage->free_space % CV_STRUCT_ALIGN == 0 );
 
@@ -402,16 +325,14 @@ cvMemStorageAlloc( CvMemStorage* storage, size_t size )
     {
         size_t max_free_space = cvAlignLeft(storage->block_size - sizeof(CvMemBlock), CV_STRUCT_ALIGN);
         if( max_free_space < size )
-            CV_ERROR( CV_StsOutOfRange, "requested size is negative or too big" );
+            CV_Error( CV_StsOutOfRange, "requested size is negative or too big" );
 
-        CV_CALL( icvGoNextMemBlock( storage ));
+        icvGoNextMemBlock( storage );
     }
 
     ptr = ICV_FREE_PTR(storage);
     assert( (size_t)ptr % CV_STRUCT_ALIGN == 0 );
     storage->free_space = cvAlignLeft(storage->free_space - (int)size, CV_STRUCT_ALIGN );
-
-    __END__;
 
     return ptr;
 }
@@ -421,16 +342,11 @@ CV_IMPL CvString
 cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int len )
 {
     CvString str;
-    CV_FUNCNAME( "cvMemStorageAllocString" );
-
-    __BEGIN__;
 
     str.len = len >= 0 ? len : (int)strlen(ptr);
-    CV_CALL( str.ptr = (char*)cvMemStorageAlloc( storage, str.len + 1 ));
+    str.ptr = (char*)cvMemStorageAlloc( storage, str.len + 1 );
     memcpy( str.ptr, ptr, str.len );
     str.ptr[str.len] = '\0';
-
-    __END__;
 
     return str;
 }
@@ -446,17 +362,13 @@ cvCreateSeq( int seq_flags, int header_size, int elem_size, CvMemStorage * stora
 {
     CvSeq *seq = 0;
 
-    CV_FUNCNAME( "cvCreateSeq" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( header_size < (int)sizeof( CvSeq ) || elem_size <= 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     /* allocate sequence header */
-    CV_CALL( seq = (CvSeq*)cvMemStorageAlloc( storage, header_size ));
+    seq = (CvSeq*)cvMemStorageAlloc( storage, header_size );
     memset( seq, 0, header_size );
 
     seq->header_size = header_size;
@@ -467,16 +379,14 @@ cvCreateSeq( int seq_flags, int header_size, int elem_size, CvMemStorage * stora
 
         if( elemtype != CV_SEQ_ELTYPE_GENERIC &&
             typesize != 0 && typesize != elem_size )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Specified element size doesn't match to the size of the specified element type "
             "(try to use 0 for element type)" );
     }
     seq->elem_size = elem_size;
     seq->storage = storage;
 
-    CV_CALL( cvSetSeqBlockSize( seq, (1 << 10)/elem_size ));
-
-    __END__;
+    cvSetSeqBlockSize( seq, (1 << 10)/elem_size );
 
     return seq;
 }
@@ -490,14 +400,10 @@ cvSetSeqBlockSize( CvSeq *seq, int delta_elements )
     int elem_size;
     int useful_block_size;
 
-    CV_FUNCNAME( "cvSetSeqBlockSize" );
-
-    __BEGIN__;
-
     if( !seq || !seq->storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( delta_elements < 0 )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     useful_block_size = cvAlignLeft(seq->storage->block_size - sizeof(CvMemBlock) -
                                     sizeof(CvSeqBlock), CV_STRUCT_ALIGN);
@@ -512,13 +418,11 @@ cvSetSeqBlockSize( CvSeq *seq, int delta_elements )
     {
         delta_elements = useful_block_size / elem_size;
         if( delta_elements == 0 )
-            CV_ERROR( CV_StsOutOfRange, "Storage block size is too small "
+            CV_Error( CV_StsOutOfRange, "Storage block size is too small "
                                         "to fit the sequence elements" );
     }
 
     seq->delta_elems = delta_elements;
-
-    __END__;
 }
 
 
@@ -571,12 +475,8 @@ cvSeqElemIdx( const CvSeq* seq, const void* _element, CvSeqBlock** _block )
     CvSeqBlock *first_block;
     CvSeqBlock *block;
 
-    CV_FUNCNAME( "cvSeqElemIdx" );
-
-    __BEGIN__;
-
     if( !seq || !element )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     block = first_block = seq->first;
     elem_size = seq->elem_size;
@@ -598,8 +498,6 @@ cvSeqElemIdx( const CvSeq* seq, const void* _element, CvSeqBlock** _block )
         if( block == first_block )
             break;
     }
-
-    __END__;
 
     return id;
 }
@@ -638,25 +536,21 @@ cvSliceLength( CvSlice slice, const CvSeq* seq )
 CV_IMPL void*
 cvCvtSeqToArray( const CvSeq *seq, void *array, CvSlice slice )
 {
-    CV_FUNCNAME( "cvCvtSeqToArray" );
-
-    __BEGIN__;
-
     int elem_size, total;
     CvSeqReader reader;
     char *dst = (char*)array;
 
     if( !seq || !array )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = seq->elem_size;
     total = cvSliceLength( slice, seq )*elem_size;
 
     if( total == 0 )
-        EXIT;
+        return 0;
 
     cvStartReadSeq( seq, &reader, 0 );
-    CV_CALL( cvSetSeqReaderPos( &reader, slice.start_index, 0 ));
+    cvSetSeqReaderPos( &reader, slice.start_index, 0 );
 
     do
     {
@@ -673,8 +567,6 @@ cvCvtSeqToArray( const CvSeq *seq, void *array, CvSlice slice )
     }
     while( total > 0 );
 
-    __END__;
-
     return array;
 }
 
@@ -687,15 +579,11 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
 {
     CvSeq* result = 0;
 
-    CV_FUNCNAME( "cvMakeSeqHeaderForArray" );
-
-    __BEGIN__;
-
     if( elem_size <= 0 || header_size < (int)sizeof( CvSeq ) || total < 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     if( !seq || ((!array || !block) && total > 0) )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     memset( seq, 0, header_size );
 
@@ -707,7 +595,7 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
 
         if( elemtype != CV_SEQ_ELTYPE_GENERIC &&
             typesize != 0 && typesize != elem_size )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Element size doesn't match to the size of predefined element type "
             "(try to use 0 for sequence element type)" );
     }
@@ -726,8 +614,6 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
 
     result = seq;
 
-    __END__;
-
     return result;
 }
 
@@ -738,14 +624,10 @@ cvMakeSeqHeaderForArray( int seq_flags, int header_size, int elem_size,
 static void
 icvGrowSeq( CvSeq *seq, int in_front_of )
 {
-    CV_FUNCNAME( "icvGrowSeq" );
-
-    __BEGIN__;
-
     CvSeqBlock *block;
 
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     block = seq->free_blocks;
 
     if( !block )
@@ -758,7 +640,7 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
             cvSetSeqBlockSize( seq, delta_elems*2 );
 
         if( !storage )
-            CV_ERROR( CV_StsNullPtr, "The sequence has NULL storage pointer" );
+            CV_Error( CV_StsNullPtr, "The sequence has NULL storage pointer" );
 
         /* If there is a free space just after last allocated block
            and it is big enough then enlarge the last block.
@@ -772,7 +654,7 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
             seq->block_max += delta;
             storage->free_space = cvAlignLeft((int)(((schar*)storage->top + storage->block_size) -
                                               seq->block_max), CV_STRUCT_ALIGN );
-            EXIT;
+            return;
         }
         else
         {
@@ -791,12 +673,12 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
                 }
                 else
                 {
-                    CV_CALL( icvGoNextMemBlock( storage ));
+                    icvGoNextMemBlock( storage );
                     assert( storage->free_space >= delta );
                 }
             }
 
-            CV_CALL( block = (CvSeqBlock*)cvMemStorageAlloc( storage, delta ));
+            block = (CvSeqBlock*)cvMemStorageAlloc( storage, delta );
             block->data = (schar*)cvAlignPtr( block + 1, CV_STRUCT_ALIGN );
             block->count = delta - ICV_ALIGNED_SEQ_BLOCK_SIZE;
             block->prev = block->next = 0;
@@ -861,18 +743,12 @@ icvGrowSeq( CvSeq *seq, int in_front_of )
     }
 
     block->count = 0;
-
-    __END__;
 }
 
 /* Recycle a sequence block: */
 static void
 icvFreeSeqBlock( CvSeq *seq, int in_front_of )
 {
-    /*CV_FUNCNAME( "icvFreeSeqBlock" );*/
-
-    __BEGIN__;
-
     CvSeqBlock *block = seq->first;
 
     assert( (in_front_of ? block : block->prev)->count == 0 );
@@ -922,8 +798,6 @@ icvFreeSeqBlock( CvSeq *seq, int in_front_of )
     assert( block->count > 0 && block->count % seq->elem_size == 0 );
     block->next = seq->free_blocks;
     seq->free_blocks = block;
-
-    __END__;
 }
 
 
@@ -935,12 +809,8 @@ icvFreeSeqBlock( CvSeq *seq, int in_front_of )
 CV_IMPL void
 cvStartAppendToSeq( CvSeq *seq, CvSeqWriter * writer )
 {
-    CV_FUNCNAME( "cvStartAppendToSeq" );
-
-    __BEGIN__;
-
     if( !seq || !writer )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     memset( writer, 0, sizeof( *writer ));
     writer->header_size = sizeof( CvSeqWriter );
@@ -949,8 +819,6 @@ cvStartAppendToSeq( CvSeq *seq, CvSeqWriter * writer )
     writer->block = seq->first ? seq->first->prev : 0;
     writer->ptr = seq->ptr;
     writer->block_max = seq->block_max;
-
-    __END__;
 }
 
 
@@ -959,19 +827,11 @@ CV_IMPL void
 cvStartWriteSeq( int seq_flags, int header_size,
                  int elem_size, CvMemStorage * storage, CvSeqWriter * writer )
 {
-    CvSeq *seq = 0;
-
-    CV_FUNCNAME( "cvStartWriteSeq" );
-
-    __BEGIN__;
-
     if( !storage || !writer )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    CV_CALL( seq = cvCreateSeq( seq_flags, header_size, elem_size, storage ));
+    CvSeq* seq = cvCreateSeq( seq_flags, header_size, elem_size, storage );
     cvStartAppendToSeq( seq, writer );
-
-    __END__;
 }
 
 
@@ -979,16 +839,10 @@ cvStartWriteSeq( int seq_flags, int header_size,
 CV_IMPL void
 cvFlushSeqWriter( CvSeqWriter * writer )
 {
-    CvSeq *seq = 0;
-
-    CV_FUNCNAME( "cvFlushSeqWriter" );
-
-    __BEGIN__;
-
     if( !writer )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    seq = writer->seq;
+    CvSeq* seq = writer->seq;
     seq->ptr = writer->ptr;
 
     if( writer->block )
@@ -1009,8 +863,6 @@ cvFlushSeqWriter( CvSeqWriter * writer )
 
         writer->seq->total = total;
     }
-
-    __END__;
 }
 
 
@@ -1018,17 +870,11 @@ cvFlushSeqWriter( CvSeqWriter * writer )
 CV_IMPL CvSeq *
 cvEndWriteSeq( CvSeqWriter * writer )
 {
-    CvSeq *seq = 0;
-
-    CV_FUNCNAME( "cvEndWriteSeq" );
-
-    __BEGIN__;
-
     if( !writer )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    CV_CALL( cvFlushSeqWriter( writer ));
-    seq = writer->seq;
+    cvFlushSeqWriter( writer );
+    CvSeq* seq = writer->seq;
 
     /* Truncate the last block: */
     if( writer->block && writer->seq->storage )
@@ -1047,9 +893,6 @@ cvEndWriteSeq( CvSeqWriter * writer )
     }
 
     writer->ptr = 0;
-
-    __END__;
-
     return seq;
 }
 
@@ -1058,26 +901,18 @@ cvEndWriteSeq( CvSeqWriter * writer )
 CV_IMPL void
 cvCreateSeqBlock( CvSeqWriter * writer )
 {
-    CV_FUNCNAME( "cvCreateSeqBlock" );
-
-    __BEGIN__;
-
-    CvSeq *seq;
-
     if( !writer || !writer->seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    seq = writer->seq;
+    CvSeq* seq = writer->seq;
 
     cvFlushSeqWriter( writer );
 
-    CV_CALL( icvGrowSeq( seq, 0 ));
+    icvGrowSeq( seq, 0 );
 
     writer->block = seq->first->prev;
     writer->ptr = seq->ptr;
     writer->block_max = seq->block_max;
-
-    __END__;
 }
 
 
@@ -1092,8 +927,6 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
     CvSeqBlock *first_block;
     CvSeqBlock *last_block;
 
-    CV_FUNCNAME( "cvStartReadSeq" );
-
     if( reader )
     {
         reader->seq = 0;
@@ -1101,10 +934,8 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
         reader->ptr = reader->block_max = reader->block_min = 0;
     }
 
-    __BEGIN__;
-
     if( !seq || !reader )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     reader->header_size = sizeof( CvSeqReader );
     reader->seq = (CvSeq*)seq;
@@ -1142,8 +973,6 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
 
         reader->ptr = reader->prev_elem = reader->block_min = reader->block_max = 0;
     }
-
-    __END__;
 }
 
 
@@ -1153,14 +982,10 @@ cvStartReadSeq( const CvSeq *seq, CvSeqReader * reader, int reverse )
 CV_IMPL void
 cvChangeSeqBlock( void* _reader, int direction )
 {
-    CV_FUNCNAME( "cvChangeSeqBlock" );
-
-    __BEGIN__;
-
     CvSeqReader* reader = (CvSeqReader*)_reader;
 
     if( !reader )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( direction > 0 )
     {
@@ -1174,8 +999,6 @@ cvChangeSeqBlock( void* _reader, int direction )
     }
     reader->block_min = reader->block->data;
     reader->block_max = reader->block_min + reader->block->count * reader->seq->elem_size;
-
-    __END__;
 }
 
 
@@ -1186,12 +1009,8 @@ cvGetSeqReaderPos( CvSeqReader* reader )
     int elem_size;
     int index = -1;
 
-    CV_FUNCNAME( "cvGetSeqReaderPos" );
-
-    __BEGIN__;
-
     if( !reader || !reader->ptr )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = reader->seq->elem_size;
     if( elem_size <= ICV_SHIFT_TAB_MAX && (index = icvPower2ShiftTab[elem_size - 1]) >= 0 )
@@ -1200,8 +1019,6 @@ cvGetSeqReaderPos( CvSeqReader* reader )
         index = (int)((reader->ptr - reader->block_min) / elem_size);
 
     index += reader->block->start_index - reader->delta_index;
-
-    __END__;
 
     return index;
 }
@@ -1214,15 +1031,11 @@ cvGetSeqReaderPos( CvSeqReader* reader )
 CV_IMPL void
 cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
 {
-    CV_FUNCNAME( "cvSetSeqReaderPos" );
-
-    __BEGIN__;
-
     CvSeqBlock *block;
     int elem_size, count, total;
 
     if( !reader || !reader->seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     total = reader->seq->total;
     elem_size = reader->seq->elem_size;
@@ -1232,14 +1045,14 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
         if( index < 0 )
         {
             if( index < -total )
-                CV_ERROR( CV_StsOutOfRange, "" );
+                CV_Error( CV_StsOutOfRange, "" );
             index += total;
         }
         else if( index >= total )
         {
             index -= total;
             if( index >= total )
-                CV_ERROR( CV_StsOutOfRange, "" );
+                CV_Error( CV_StsOutOfRange, "" );
         }
 
         block = reader->seq->first;
@@ -1304,8 +1117,6 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
             reader->ptr = ptr + index;
         }
     }
-
-    __END__;
 }
 
 
@@ -1316,19 +1127,15 @@ cvSeqPush( CvSeq *seq, void *element )
     schar *ptr = 0;
     size_t elem_size;
 
-    CV_FUNCNAME( "cvSeqPush" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = seq->elem_size;
     ptr = seq->ptr;
 
     if( ptr >= seq->block_max )
     {
-        CV_CALL( icvGrowSeq( seq, 0 ));
+        icvGrowSeq( seq, 0 );
 
         ptr = seq->ptr;
         assert( ptr + elem_size <= seq->block_max /*&& ptr == seq->block_min */  );
@@ -1339,8 +1146,6 @@ cvSeqPush( CvSeq *seq, void *element )
     seq->first->prev->count++;
     seq->total++;
     seq->ptr = ptr + elem_size;
-
-    __END__;
 
     return ptr;
 }
@@ -1353,14 +1158,10 @@ cvSeqPop( CvSeq *seq, void *element )
     schar *ptr;
     int elem_size;
 
-    CV_FUNCNAME( "cvSeqPop" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( seq->total <= 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     elem_size = seq->elem_size;
     seq->ptr = ptr = seq->ptr - elem_size;
@@ -1375,8 +1176,6 @@ cvSeqPop( CvSeq *seq, void *element )
         icvFreeSeqBlock( seq, 0 );
         assert( seq->ptr == seq->block_max );
     }
-
-    __END__;
 }
 
 
@@ -1388,19 +1187,15 @@ cvSeqPushFront( CvSeq *seq, void *element )
     int elem_size;
     CvSeqBlock *block;
 
-    CV_FUNCNAME( "cvSeqPushFront" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = seq->elem_size;
     block = seq->first;
 
     if( !block || block->start_index == 0 )
     {
-        CV_CALL( icvGrowSeq( seq, 1 ));
+        icvGrowSeq( seq, 1 );
 
         block = seq->first;
         assert( block->start_index > 0 );
@@ -1414,8 +1209,6 @@ cvSeqPushFront( CvSeq *seq, void *element )
     block->start_index--;
     seq->total++;
 
-    __END__;
-
     return ptr;
 }
 
@@ -1427,14 +1220,10 @@ cvSeqPopFront( CvSeq *seq, void *element )
     int elem_size;
     CvSeqBlock *block;
 
-    CV_FUNCNAME( "cvSeqPopFront" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( seq->total <= 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     elem_size = seq->elem_size;
     block = seq->first;
@@ -1446,11 +1235,7 @@ cvSeqPopFront( CvSeq *seq, void *element )
     seq->total--;
 
     if( --(block->count) == 0 )
-    {
         icvFreeSeqBlock( seq, 1 );
-    }
-
-    __END__;
 }
 
 /* Insert new element in middle of sequence: */
@@ -1464,27 +1249,23 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
     int total;
     schar* ret_ptr = 0;
 
-    CV_FUNCNAME( "cvSeqInsert" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     total = seq->total;
     before_index += before_index < 0 ? total : 0;
     before_index -= before_index > total ? total : 0;
 
     if( (unsigned)before_index > (unsigned)total )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     if( before_index == total )
     {
-        CV_CALL( ret_ptr = cvSeqPush( seq, element ));
+        ret_ptr = cvSeqPush( seq, element );
     }
     else if( before_index == 0 )
     {
-        CV_CALL( ret_ptr = cvSeqPushFront( seq, element ));
+        ret_ptr = cvSeqPushFront( seq, element );
     }
     else
     {
@@ -1496,7 +1277,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
 
             if( ptr > seq->block_max )
             {
-                CV_CALL( icvGrowSeq( seq, 0 ));
+                icvGrowSeq( seq, 0 );
 
                 ptr = seq->ptr + elem_size;
                 assert( ptr <= seq->block_max );
@@ -1536,7 +1317,7 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
 
             if( block->start_index == 0 )
             {
-                CV_CALL( icvGrowSeq( seq, 1 ));
+                icvGrowSeq( seq, 1 );
 
                 block = seq->first;
             }
@@ -1571,8 +1352,6 @@ cvSeqInsert( CvSeq *seq, int before_index, void *element )
         seq->total = total + 1;
     }
 
-    __END__;
-
     return ret_ptr;
 }
 
@@ -1588,12 +1367,8 @@ cvSeqRemove( CvSeq *seq, int index )
     int delta_index;
     int total, front = 0;
 
-    CV_FUNCNAME( "cvSeqRemove" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     total = seq->total;
 
@@ -1601,7 +1376,7 @@ cvSeqRemove( CvSeq *seq, int index )
     index -= index >= total ? total : 0;
 
     if( (unsigned) index >= (unsigned) total )
-        CV_ERROR( CV_StsOutOfRange, "Invalid index" );
+        CV_Error( CV_StsOutOfRange, "Invalid index" );
 
     if( index == total - 1 )
     {
@@ -1664,8 +1439,6 @@ cvSeqRemove( CvSeq *seq, int index )
         if( --block->count == 0 )
             icvFreeSeqBlock( seq, front );
     }
-
-    __END__;
 }
 
 
@@ -1675,17 +1448,12 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
 {
     char *elements = (char *) _elements;
 
-    CV_FUNCNAME( "cvSeqPushMulti" );
-
-    __BEGIN__;
-    int elem_size;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "NULL sequence pointer" );
+        CV_Error( CV_StsNullPtr, "NULL sequence pointer" );
     if( count < 0 )
-        CV_ERROR( CV_StsBadSize, "number of removed elements is negative" );
+        CV_Error( CV_StsBadSize, "number of removed elements is negative" );
 
-    elem_size = seq->elem_size;
+    int elem_size = seq->elem_size;
 
     if( !front )
     {
@@ -1709,7 +1477,7 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
             }
 
             if( count > 0 )
-                CV_CALL( icvGrowSeq( seq, 0 ));
+                icvGrowSeq( seq, 0 );
         }
     }
     else
@@ -1722,7 +1490,7 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
 
             if( !block || block->start_index == 0 )
             {
-                CV_CALL( icvGrowSeq( seq, 1 ));
+                icvGrowSeq( seq, 1 );
 
                 block = seq->first;
                 assert( block->start_index > 0 );
@@ -1740,8 +1508,6 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
                 memcpy( block->data, elements + count*elem_size, delta );
         }
     }
-
-    __END__;
 }
 
 
@@ -1751,14 +1517,10 @@ cvSeqPopMulti( CvSeq *seq, void *_elements, int count, int front )
 {
     char *elements = (char *) _elements;
 
-    CV_FUNCNAME( "cvSeqPopMulti" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "NULL sequence pointer" );
+        CV_Error( CV_StsNullPtr, "NULL sequence pointer" );
     if( count < 0 )
-        CV_ERROR( CV_StsBadSize, "number of removed elements is negative" );
+        CV_Error( CV_StsBadSize, "number of removed elements is negative" );
 
     count = MIN( count, seq->total );
 
@@ -1816,8 +1578,6 @@ cvSeqPopMulti( CvSeq *seq, void *_elements, int count, int front )
                 icvFreeSeqBlock( seq, 1 );
         }
     }
-
-    __END__;
 }
 
 
@@ -1825,15 +1585,9 @@ cvSeqPopMulti( CvSeq *seq, void *_elements, int count, int front )
 CV_IMPL void
 cvClearSeq( CvSeq *seq )
 {
-    CV_FUNCNAME( "cvClearSeq" );
-
-    __BEGIN__;
-
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     cvSeqPopMulti( seq, 0, seq->total );
-
-    __END__;
 }
 
 
@@ -1841,23 +1595,18 @@ CV_IMPL CvSeq*
 cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_data )
 {
     CvSeq* subseq = 0;
-
-    CV_FUNCNAME("cvSeqSlice");
-
-    __BEGIN__;
-
     int elem_size, count, length;
     CvSeqReader reader;
     CvSeqBlock *block, *first_block = 0, *last_block = 0;
 
     if( !CV_IS_SEQ(seq) )
-        CV_ERROR( CV_StsBadArg, "Invalid sequence header" );
+        CV_Error( CV_StsBadArg, "Invalid sequence header" );
 
     if( !storage )
     {
         storage = seq->storage;
         if( !storage )
-            CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+            CV_Error( CV_StsNullPtr, "NULL storage pointer" );
     }
 
     elem_size = seq->elem_size;
@@ -1868,9 +1617,9 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
         slice.start_index -= seq->total;
     if( (unsigned)length > (unsigned)seq->total ||
         ((unsigned)slice.start_index >= (unsigned)seq->total && length != 0) )
-        CV_ERROR( CV_StsOutOfRange, "Bad sequence slice" );
+        CV_Error( CV_StsOutOfRange, "Bad sequence slice" );
 
-    CV_CALL( subseq = cvCreateSeq( seq->flags, seq->header_size, elem_size, storage ));
+    subseq = cvCreateSeq( seq->flags, seq->header_size, elem_size, storage );
 
     if( length > 0 )
     {
@@ -1912,8 +1661,6 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
         while( length > 0 );
     }
 
-    __END__;
-
     return subseq;
 }
 
@@ -1923,14 +1670,10 @@ cvSeqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage, int copy_dat
 CV_IMPL void
 cvSeqRemoveSlice( CvSeq* seq, CvSlice slice )
 {
-    CV_FUNCNAME("cvSeqRemoveSlice");
-
-    __BEGIN__;
-
     int total, length;
 
     if( !CV_IS_SEQ(seq) )
-        CV_ERROR( CV_StsBadArg, "Invalid sequence header" );
+        CV_Error( CV_StsBadArg, "Invalid sequence header" );
 
     length = cvSliceLength( slice, seq );
     total = seq->total;
@@ -1941,7 +1684,7 @@ cvSeqRemoveSlice( CvSeq* seq, CvSlice slice )
         slice.start_index -= total;
 
     if( (unsigned)slice.start_index >= (unsigned)total )
-        CV_ERROR( CV_StsOutOfRange, "start slice index is out of range" );
+        CV_Error( CV_StsOutOfRange, "start slice index is out of range" );
 
     slice.end_index = slice.start_index + length;
 
@@ -1990,8 +1733,6 @@ cvSeqRemoveSlice( CvSeq* seq, CvSlice slice )
         cvSeqPopMulti( seq, 0, total - slice.start_index );
         cvSeqPopMulti( seq, 0, slice.end_index - total, 1 );
     }
-
-    __END__;
 }
 
 
@@ -2002,47 +1743,42 @@ cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr )
 {
     CvSeqReader reader_to, reader_from;
     int i, elem_size, total, from_total;
-
-    CV_FUNCNAME("cvSeqInsertSlice");
-
-    __BEGIN__;
-
     CvSeq from_header, *from = (CvSeq*)from_arr;
     CvSeqBlock block;
 
     if( !CV_IS_SEQ(seq) )
-        CV_ERROR( CV_StsBadArg, "Invalid destination sequence header" );
+        CV_Error( CV_StsBadArg, "Invalid destination sequence header" );
 
     if( !CV_IS_SEQ(from))
     {
         CvMat* mat = (CvMat*)from;
         if( !CV_IS_MAT(mat))
-            CV_ERROR( CV_StsBadArg, "Source is not a sequence nor matrix" );
+            CV_Error( CV_StsBadArg, "Source is not a sequence nor matrix" );
 
         if( !CV_IS_MAT_CONT(mat->type) || (mat->rows != 1 && mat->cols != 1) )
-            CV_ERROR( CV_StsBadArg, "The source array must be 1d coninuous vector" );
+            CV_Error( CV_StsBadArg, "The source array must be 1d coninuous vector" );
 
-        CV_CALL( from = cvMakeSeqHeaderForArray( CV_SEQ_KIND_GENERIC, sizeof(from_header),
+        from = cvMakeSeqHeaderForArray( CV_SEQ_KIND_GENERIC, sizeof(from_header),
                                                  CV_ELEM_SIZE(mat->type),
                                                  mat->data.ptr, mat->cols + mat->rows - 1,
-                                                 &from_header, &block ));
+                                                 &from_header, &block );
     }
 
     if( seq->elem_size != from->elem_size )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "Source and destination sequence element sizes are different." );
 
     from_total = from->total;
 
     if( from_total == 0 )
-        EXIT;
+        return;
 
     total = seq->total;
     index += index < 0 ? total : 0;
     index -= index > total ? total : 0;
 
     if( (unsigned)index > (unsigned)total )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     elem_size = seq->elem_size;
 
@@ -2087,8 +1823,6 @@ cvSeqInsertSlice( CvSeq* seq, int index, const CvArr* from_arr )
         CV_NEXT_SEQ_ELEM( elem_size, reader_to );
         CV_NEXT_SEQ_ELEM( elem_size, reader_from );
     }
-
-    __END__;
 }
 
 // Sort the sequence using user-specified comparison function.
@@ -2173,18 +1907,14 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
     }
     stack[48];
 
-    CV_FUNCNAME( "cvSeqSort" );
-
-    __BEGIN__;
-
     if( !CV_IS_SEQ(seq) )
-        CV_ERROR( !seq ? CV_StsNullPtr : CV_StsBadArg, "Bad input sequence" );
+        CV_Error( !seq ? CV_StsNullPtr : CV_StsBadArg, "Bad input sequence" );
 
     if( !cmp_func )
-        CV_ERROR( CV_StsNullPtr, "Null compare function" );
+        CV_Error( CV_StsNullPtr, "Null compare function" );
 
     if( seq->total <= 1 )
-        EXIT;
+        return;
 
     elem_size = seq->elem_size;
     isort_thresh *= elem_size;
@@ -2439,8 +2169,6 @@ cvSeqSort( CvSeq* seq, CvCmpFunc cmp_func, void* aux )
             }
         }
     }
-
-    __END__;
 }
 
 
@@ -2451,24 +2179,22 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
     schar* result = 0;
     const schar* elem = (const schar*)_elem;
     int idx = -1;
+    int i, j;
 
-    CV_FUNCNAME("cvSeqSearch");
-
-    __BEGIN__;
-
-    int elem_size, i, j, total;
+    if( _idx )
+        *_idx = idx;
 
     if( !CV_IS_SEQ(seq) )
-        CV_ERROR( !seq ? CV_StsNullPtr : CV_StsBadArg, "Bad input sequence" );
+        CV_Error( !seq ? CV_StsNullPtr : CV_StsBadArg, "Bad input sequence" );
 
     if( !elem )
-        CV_ERROR( CV_StsNullPtr, "Null element pointer" );
+        CV_Error( CV_StsNullPtr, "Null element pointer" );
 
-    elem_size = seq->elem_size;
-    total = seq->total;
+    int elem_size = seq->elem_size;
+    int total = seq->total;
 
     if( total == 0 )
-        EXIT;
+        return 0;
 
     if( !is_sorted )
     {
@@ -2520,7 +2246,7 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
     else
     {
         if( !cmp_func )
-            CV_ERROR( CV_StsNullPtr, "Null compare function" );
+            CV_Error( CV_StsNullPtr, "Null compare function" );
 
         i = 0, j = total;
 
@@ -2533,7 +2259,9 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
             {
                 result = ptr;
                 idx = k;
-                EXIT;
+                if( _idx )
+                    *_idx = idx;
+                return result;
             }
             if( code < 0 )
                 j = k;
@@ -2542,8 +2270,6 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
         }
         idx = j;
     }
-
-    __END__;
 
     if( _idx )
         *_idx = idx;
@@ -2555,16 +2281,12 @@ cvSeqSearch( CvSeq* seq, const void* _elem, CvCmpFunc cmp_func,
 CV_IMPL void
 cvSeqInvert( CvSeq* seq )
 {
-    CV_FUNCNAME( "cvSeqInvert" );
-
-    __BEGIN__;
-
     CvSeqReader left_reader, right_reader;
     int elem_size;
     int i, count;
 
-    CV_CALL( cvStartReadSeq( seq, &left_reader, 0 ));
-    CV_CALL( cvStartReadSeq( seq, &right_reader, 1 ));
+    cvStartReadSeq( seq, &left_reader, 0 );
+    cvStartReadSeq( seq, &right_reader, 1 );
     elem_size = seq->elem_size;
     count = seq->total >> 1;
 
@@ -2574,8 +2296,6 @@ cvSeqInvert( CvSeq* seq )
         CV_NEXT_SEQ_ELEM( elem_size, left_reader );
         CV_PREV_SEQ_ELEM( elem_size, right_reader );
     }
-
-    __END__;
 }
 
 
@@ -2603,10 +2323,6 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
     CvMemStorage* temp_storage = 0;
     int class_idx = 0;
 
-    CV_FUNCNAME( "cvSeqPartition" );
-
-    __BEGIN__;
-
     CvSeqWriter writer;
     CvSeqReader reader, reader0;
     CvSeq* nodes;
@@ -2614,16 +2330,16 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
     int is_set;
 
     if( !labels )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !seq || !is_equal )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !storage )
         storage = seq->storage;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     is_set = CV_IS_SET(seq);
 
@@ -2740,8 +2456,6 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
 
     cvEndWriteSeq( &writer );
 
-    __END__;
-
     if( labels )
         *labels = result;
 
@@ -2758,23 +2472,15 @@ cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
 CV_IMPL CvSet*
 cvCreateSet( int set_flags, int header_size, int elem_size, CvMemStorage * storage )
 {
-    CvSet *set = 0;
-
-    CV_FUNCNAME( "cvCreateSet" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     if( header_size < (int)sizeof( CvSet ) ||
         elem_size < (int)sizeof(void*)*2 ||
         (elem_size & (sizeof(void*)-1)) != 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
-    set = (CvSet*) cvCreateSeq( set_flags, header_size, elem_size, storage );
+    CvSet* set = (CvSet*) cvCreateSeq( set_flags, header_size, elem_size, storage );
     set->flags = (set->flags & ~CV_MAGIC_MASK) | CV_SET_MAGIC_VAL;
-
-    __END__;
 
     return set;
 }
@@ -2785,22 +2491,17 @@ CV_IMPL int
 cvSetAdd( CvSet* set, CvSetElem* element, CvSetElem** inserted_element )
 {
     int id = -1;
-
-    CV_FUNCNAME( "cvSetAdd" );
-
-    __BEGIN__;
-
     CvSetElem *free_elem;
 
     if( !set )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !(set->free_elems) )
     {
         int count = set->total;
         int elem_size = set->elem_size;
         schar *ptr;
-        CV_CALL( icvGrowSeq( (CvSeq *) set, 0 ));
+        icvGrowSeq( (CvSeq *) set, 0 );
 
         set->free_elems = (CvSetElem*) (ptr = set->ptr);
         for( ; ptr + elem_size <= set->block_max; ptr += elem_size, count++ )
@@ -2828,8 +2529,6 @@ cvSetAdd( CvSet* set, CvSetElem* element, CvSetElem** inserted_element )
     if( inserted_element )
         *inserted_element = free_elem;
 
-    __END__;
-
     return id;
 }
 
@@ -2838,17 +2537,11 @@ cvSetAdd( CvSet* set, CvSetElem* element, CvSetElem** inserted_element )
 CV_IMPL void
 cvSetRemove( CvSet* set, int index )
 {
-    CV_FUNCNAME( "cvSetRemove" );
-
-    __BEGIN__;
-
     CvSetElem* elem = cvGetSetElem( set, index );
     if( elem )
         cvSetRemoveByPtr( set, elem );
     else if( !set )
-        CV_ERROR( CV_StsNullPtr, "" );
-
-    __END__;
+        CV_Error( CV_StsNullPtr, "" );
 }
 
 
@@ -2856,15 +2549,9 @@ cvSetRemove( CvSet* set, int index )
 CV_IMPL void
 cvClearSet( CvSet* set )
 {
-    CV_FUNCNAME( "cvClearSet" );
-
-    __BEGIN__;
-
-    CV_CALL( cvClearSeq( (CvSeq*)set ));
+    cvClearSeq( (CvSeq*)set );
     set->free_elems = 0;
     set->active_count = 0;
-
-    __END__;
 }
 
 
@@ -2879,28 +2566,21 @@ cvCreateGraph( int graph_type, int header_size,
 {
     CvGraph *graph = 0;
     CvSet *edges = 0;
-
-    CV_FUNCNAME( "cvCleateGraph" );
-
-    __BEGIN__;
-
     CvSet *vertices = 0;
 
     if( header_size < (int) sizeof( CvGraph     )
     ||  edge_size   < (int) sizeof( CvGraphEdge )
     ||  vtx_size    < (int) sizeof( CvGraphVtx  )
     ){
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
     }
 
-    CV_CALL( vertices = cvCreateSet( graph_type, header_size, vtx_size, storage ));
-    CV_CALL( edges = cvCreateSet( CV_SEQ_KIND_GENERIC | CV_SEQ_ELTYPE_GRAPH_EDGE,
-                                  sizeof( CvSet ), edge_size, storage ));
+    vertices = cvCreateSet( graph_type, header_size, vtx_size, storage );
+    edges = cvCreateSet( CV_SEQ_KIND_GENERIC | CV_SEQ_ELTYPE_GRAPH_EDGE,
+                                  sizeof( CvSet ), edge_size, storage );
 
     graph = (CvGraph*)vertices;
     graph->edges = edges;
-
-    __END__;
 
     return graph;
 }
@@ -2910,17 +2590,11 @@ cvCreateGraph( int graph_type, int header_size,
 CV_IMPL void
 cvClearGraph( CvGraph * graph )
 {
-    CV_FUNCNAME( "cvClearGraph" );
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     cvClearSet( graph->edges );
     cvClearSet( (CvSet*)graph );
-
-    __END__;
 }
 
 
@@ -2931,12 +2605,8 @@ cvGraphAddVtx( CvGraph* graph, const CvGraphVtx* _vertex, CvGraphVtx** _inserted
     CvGraphVtx *vertex = 0;
     int index = -1;
 
-    CV_FUNCNAME( "cvGraphAddVtx" );
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     vertex = (CvGraphVtx*)cvSetNew((CvSet*)graph);
     if( vertex )
@@ -2951,8 +2621,6 @@ cvGraphAddVtx( CvGraph* graph, const CvGraphVtx* _vertex, CvGraphVtx** _inserted
     if( _inserted_vertex )
         *_inserted_vertex = vertex;
 
-    __END__;
-
     return index;
 }
 
@@ -2963,15 +2631,11 @@ cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx )
 {
     int count = -1;
 
-    CV_FUNCNAME( "cvGraphRemoveVtxByPtr" );
-
-    __BEGIN__;
-
     if( !graph || !vtx )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CV_IS_SET_ELEM(vtx))
-        CV_ERROR( CV_StsBadArg, "The vertex does not belong to the graph" );
+        CV_Error( CV_StsBadArg, "The vertex does not belong to the graph" );
 
     count = graph->edges->active_count;
     for( ;; )
@@ -2984,8 +2648,6 @@ cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx )
     count -= graph->edges->active_count;
     cvSetRemoveByPtr( (CvSet*)graph, vtx );
 
-    __END__;
-
     return count;
 }
 
@@ -2997,16 +2659,12 @@ cvGraphRemoveVtx( CvGraph* graph, int index )
     int count = -1;
     CvGraphVtx *vtx = 0;
 
-    CV_FUNCNAME( "cvGraphRemoveVtx" );
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     vtx = cvGetGraphVtx( graph, index );
     if( !vtx )
-        CV_ERROR( CV_StsBadArg, "The vertex is not found" );
+        CV_Error( CV_StsBadArg, "The vertex is not found" );
 
     count = graph->edges->active_count;
     for( ;; )
@@ -3021,8 +2679,6 @@ cvGraphRemoveVtx( CvGraph* graph, int index )
     count -= graph->edges->active_count;
     cvSetRemoveByPtr( (CvSet*)graph, vtx );
 
-    __END__;
-
     return count;
 }
 
@@ -3033,18 +2689,13 @@ cvFindGraphEdgeByPtr( const CvGraph* graph,
                       const CvGraphVtx* start_vtx,
                       const CvGraphVtx* end_vtx )
 {
-    CvGraphEdge *edge = 0;
-    CV_FUNCNAME( "cvFindGraphEdgeByPtr" );
-
-    __BEGIN__;
-
     int ofs = 0;
 
     if( !graph || !start_vtx || !end_vtx )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( start_vtx == end_vtx )
-        EXIT;
+        return 0;
 
     if( !CV_IS_GRAPH_ORIENTED( graph ) &&
         (start_vtx->flags & CV_SET_ELEM_IDX_MASK) > (end_vtx->flags & CV_SET_ELEM_IDX_MASK) )
@@ -3053,7 +2704,7 @@ cvFindGraphEdgeByPtr( const CvGraph* graph,
         CV_SWAP( start_vtx, end_vtx, t );
     }
 
-    edge = start_vtx->first;
+    CvGraphEdge* edge = start_vtx->first;
     for( ; edge; edge = edge->next[ofs] )
     {
         ofs = start_vtx == edge->vtx[1];
@@ -3061,8 +2712,6 @@ cvFindGraphEdgeByPtr( const CvGraph* graph,
         if( edge->vtx[1] == end_vtx )
             break;
     }
-
-    __END__;
 
     return edge;
 }
@@ -3072,25 +2721,16 @@ cvFindGraphEdgeByPtr( const CvGraph* graph,
 CV_IMPL CvGraphEdge *
 cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx )
 {
-    CvGraphEdge *edge = 0;
     CvGraphVtx *start_vtx;
     CvGraphVtx *end_vtx;
 
-    CV_FUNCNAME( "cvFindGraphEdge" );
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "graph pointer is NULL" );
+        CV_Error( CV_StsNullPtr, "graph pointer is NULL" );
 
     start_vtx = cvGetGraphVtx( graph, start_idx );
     end_vtx = cvGetGraphVtx( graph, end_idx );
 
-    edge = cvFindGraphEdgeByPtr( graph, start_vtx, end_vtx );
-
-    __END__;
-
-    return edge;
+    return cvFindGraphEdgeByPtr( graph, start_vtx, end_vtx );
 }
 
 
@@ -3106,15 +2746,10 @@ cvGraphAddEdgeByPtr( CvGraph* graph,
 {
     CvGraphEdge *edge = 0;
     int result = -1;
-
-    CV_FUNCNAME( "cvGraphAddEdgeByPtr" );
-
-    __BEGIN__;
-
     int delta;
 
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "graph pointer is NULL" );
+        CV_Error( CV_StsNullPtr, "graph pointer is NULL" );
 
     if( !CV_IS_GRAPH_ORIENTED( graph ) &&
         (start_vtx->flags & CV_SET_ELEM_IDX_MASK) > (end_vtx->flags & CV_SET_ELEM_IDX_MASK) )
@@ -3123,18 +2758,20 @@ cvGraphAddEdgeByPtr( CvGraph* graph,
         CV_SWAP( start_vtx, end_vtx, t );
     }
 
-    CV_CALL( edge = cvFindGraphEdgeByPtr( graph, start_vtx, end_vtx ));
+    edge = cvFindGraphEdgeByPtr( graph, start_vtx, end_vtx );
     if( edge )
     {
         result = 0;
-        EXIT;
+        if( _inserted_edge )
+            *_inserted_edge = edge;
+        return result;
     }
 
     if( start_vtx == end_vtx )
-        CV_ERROR( start_vtx ? CV_StsBadArg : CV_StsNullPtr,
+        CV_Error( start_vtx ? CV_StsBadArg : CV_StsNullPtr,
         "vertex pointers coinside (or set to NULL)" );
 
-    CV_CALL( edge = (CvGraphEdge*)cvSetNew( (CvSet*)(graph->edges) ));
+    edge = (CvGraphEdge*)cvSetNew( (CvSet*)(graph->edges) );
     assert( edge->flags >= 0 );
 
     edge->vtx[0] = start_vtx;
@@ -3159,8 +2796,6 @@ cvGraphAddEdgeByPtr( CvGraph* graph,
 
     result = 1;
 
-    __END__;
-
     if( _inserted_edge )
         *_inserted_edge = edge;
 
@@ -3179,23 +2814,14 @@ cvGraphAddEdge( CvGraph* graph,
 {
     CvGraphVtx *start_vtx;
     CvGraphVtx *end_vtx;
-    int result = -1;
-
-    CV_FUNCNAME( "cvGraphAddEdge" );
-
-    __BEGIN__;
 
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     start_vtx = cvGetGraphVtx( graph, start_idx );
     end_vtx = cvGetGraphVtx( graph, end_idx );
 
-    result = cvGraphAddEdgeByPtr( graph, start_vtx, end_vtx, _edge, _inserted_edge );
-
-    __END__;
-
-    return result;
+    return cvGraphAddEdgeByPtr( graph, start_vtx, end_vtx, _edge, _inserted_edge );
 }
 
 
@@ -3203,18 +2829,14 @@ cvGraphAddEdge( CvGraph* graph,
 CV_IMPL void
 cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_vtx )
 {
-    CV_FUNCNAME( "cvGraphRemoveEdgeByPtr" );
-
-    __BEGIN__;
-
     int ofs, prev_ofs;
     CvGraphEdge *edge, *next_edge, *prev_edge;
 
     if( !graph || !start_vtx || !end_vtx )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( start_vtx == end_vtx )
-        EXIT;
+        return;
 
     if( !CV_IS_GRAPH_ORIENTED( graph ) &&
         (start_vtx->flags & CV_SET_ELEM_IDX_MASK) > (end_vtx->flags & CV_SET_ELEM_IDX_MASK) )
@@ -3233,7 +2855,7 @@ cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_v
     }
 
     if( !edge )
-        EXIT;
+        return;
 
     next_edge = edge->next[ofs];
     if( prev_edge )
@@ -3259,8 +2881,6 @@ cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_v
         end_vtx->first = next_edge;
 
     cvSetRemoveByPtr( graph->edges, edge );
-
-    __END__;
 }
 
 
@@ -3271,19 +2891,13 @@ cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx )
     CvGraphVtx *start_vtx;
     CvGraphVtx *end_vtx;
 
-    CV_FUNCNAME( "cvGraphRemoveEdge" );
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     start_vtx = cvGetGraphVtx( graph, start_idx );
     end_vtx = cvGetGraphVtx( graph, end_idx );
 
     cvGraphRemoveEdgeByPtr( graph, start_vtx, end_vtx );
-
-    __END__;
 }
 
 
@@ -3292,22 +2906,16 @@ CV_IMPL int
 cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vertex )
 {
     CvGraphEdge *edge;
-    int count = -1;
-
-    CV_FUNCNAME( "cvGraphVtxDegreeByPtr" );
-
-    __BEGIN__;
+    int count;
 
     if( !graph || !vertex )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     for( edge = vertex->first, count = 0; edge; )
     {
         count++;
         edge = CV_NEXT_GRAPH_EDGE( edge, vertex );
     }
-
-    __END__;
 
     return count;
 }
@@ -3319,26 +2927,20 @@ cvGraphVtxDegree( const CvGraph* graph, int vtx_idx )
 {
     CvGraphVtx *vertex;
     CvGraphEdge *edge;
-    int count = -1;
-
-    CV_FUNCNAME( "cvGraphVtxDegree" );
-
-    __BEGIN__;
+    int count;
 
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     vertex = cvGetGraphVtx( graph, vtx_idx );
     if( !vertex )
-        CV_ERROR( CV_StsObjectNotFound, "" );
+        CV_Error( CV_StsObjectNotFound, "" );
 
     for( edge = vertex->first, count = 0; edge; )
     {
         count++;
         edge = CV_NEXT_GRAPH_EDGE( edge, vertex );
     }
-
-    __END__;
 
     return count;
 }
@@ -3355,23 +2957,19 @@ CvGraphItem;
 static  void
 icvSeqElemsClearFlags( CvSeq* seq, int offset, int clear_mask )
 {
-    CV_FUNCNAME("icvStartScanGraph");
-
-    __BEGIN__;
-
     CvSeqReader reader;
     int i, total, elem_size;
 
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = seq->elem_size;
     total = seq->total;
 
     if( (unsigned)offset > (unsigned)elem_size )
-        CV_ERROR( CV_StsBadArg, "" );
+        CV_Error( CV_StsBadArg, "" );
 
-    CV_CALL( cvStartReadSeq( seq, &reader ));
+    cvStartReadSeq( seq, &reader );
 
     for( i = 0; i < total; i++ )
     {
@@ -3380,8 +2978,6 @@ icvSeqElemsClearFlags( CvSeq* seq, int offset, int clear_mask )
 
         CV_NEXT_SEQ_ELEM( elem_size, reader );
     }
-
-    __END__;
 }
 
 
@@ -3391,25 +2987,21 @@ icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
 {
     schar* elem_ptr = 0;
 
-    CV_FUNCNAME("icvStartScanGraph");
-
-    __BEGIN__;
-
     CvSeqReader reader;
     int total, elem_size, index;
 
     if( !seq || !start_index )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     elem_size = seq->elem_size;
     total = seq->total;
     index = *start_index;
 
     if( (unsigned)offset > (unsigned)elem_size )
-        CV_ERROR( CV_StsBadArg, "" );
+        CV_Error( CV_StsBadArg, "" );
 
     if( total == 0 )
-        EXIT;
+        return 0;
 
     if( (unsigned)index >= (unsigned)total )
     {
@@ -3417,10 +3009,10 @@ icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
         index += index < 0 ? total : 0;
     }
 
-    CV_CALL( cvStartReadSeq( seq, &reader ));
+    cvStartReadSeq( seq, &reader );
 
     if( index != 0 )
-        CV_CALL( cvSetSeqReaderPos( &reader, index ));
+        cvSetSeqReaderPos( &reader, index );
 
     for( index = 0; index < total; index++ )
     {
@@ -3437,8 +3029,6 @@ icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
         *start_index = index;
     }
 
-    __END__;
-
     return  elem_ptr;
 }
 
@@ -3447,19 +3037,12 @@ icvSeqFindNextElem( CvSeq* seq, int offset, int mask,
 CV_IMPL CvGraphScanner*
 cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx, int mask )
 {
-    CvGraphScanner* scanner = 0;
-    CvMemStorage* child_storage = 0;
-
-    CV_FUNCNAME("cvCreateGraphScanner");
-
-    __BEGIN__;
-
     if( !graph )
-        CV_ERROR( CV_StsNullPtr, "Null graph pointer" );
+        CV_Error( CV_StsNullPtr, "Null graph pointer" );
 
-    CV_ASSERT( graph->storage != 0 );
+    CV_Assert( graph->storage != 0 );
 
-    CV_CALL( scanner = (CvGraphScanner*)cvAlloc( sizeof(*scanner) ));
+    CvGraphScanner* scanner = (CvGraphScanner*)cvAlloc( sizeof(*scanner) );
     memset( scanner, 0, sizeof(*scanner));
 
     scanner->graph = graph;
@@ -3467,27 +3050,19 @@ cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx, int mask )
     scanner->vtx = vtx;
     scanner->index = vtx == 0 ? 0 : -1;
 
-    CV_CALL( child_storage = cvCreateChildMemStorage( graph->storage ));
+    CvMemStorage* child_storage = cvCreateChildMemStorage( graph->storage );
 
-    CV_CALL( scanner->stack = cvCreateSeq( 0, sizeof(CvSet),
-                       sizeof(CvGraphItem), child_storage ));
+    scanner->stack = cvCreateSeq( 0, sizeof(CvSet),
+                       sizeof(CvGraphItem), child_storage );
 
-    CV_CALL( icvSeqElemsClearFlags( (CvSeq*)graph,
+    icvSeqElemsClearFlags( (CvSeq*)graph,
                                     CV_FIELD_OFFSET( flags, CvGraphVtx),
                                     CV_GRAPH_ITEM_VISITED_FLAG|
-                                    CV_GRAPH_SEARCH_TREE_NODE_FLAG ));
+                                    CV_GRAPH_SEARCH_TREE_NODE_FLAG );
 
-    CV_CALL( icvSeqElemsClearFlags( (CvSeq*)(graph->edges),
+    icvSeqElemsClearFlags( (CvSeq*)(graph->edges),
                                     CV_FIELD_OFFSET( flags, CvGraphEdge),
-                                    CV_GRAPH_ITEM_VISITED_FLAG ));
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-    {
-        cvReleaseMemStorage( &child_storage );
-        cvFree( &scanner );
-    }
+                                    CV_GRAPH_ITEM_VISITED_FLAG );
 
     return scanner;
 }
@@ -3496,21 +3071,15 @@ cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx, int mask )
 CV_IMPL void
 cvReleaseGraphScanner( CvGraphScanner** scanner )
 {
-    CV_FUNCNAME("cvReleaseGraphScanner");
-
-    __BEGIN__;
-
     if( !scanner )
-        CV_ERROR( CV_StsNullPtr, "Null double pointer to graph scanner" );
+        CV_Error( CV_StsNullPtr, "Null double pointer to graph scanner" );
 
     if( *scanner )
     {
         if( (*scanner)->stack )
-            CV_CALL( cvReleaseMemStorage( &((*scanner)->stack->storage)));
+            cvReleaseMemStorage( &((*scanner)->stack->storage));
         cvFree( scanner );
     }
-
-    __END__;
 }
 
 
@@ -3518,18 +3087,13 @@ CV_IMPL int
 cvNextGraphItem( CvGraphScanner* scanner )
 {
     int code = -1;
-
-    CV_FUNCNAME("cvNextGraphItem");
-
-    __BEGIN__;
-
     CvGraphVtx* vtx;
     CvGraphVtx* dst;
     CvGraphEdge* edge;
     CvGraphItem item;
 
     if( !scanner || !(scanner->stack))
-        CV_ERROR( CV_StsNullPtr, "Null graph scanner" );
+        CV_Error( CV_StsNullPtr, "Null graph scanner" );
 
     dst = scanner->dst;
     vtx = scanner->vtx;
@@ -3551,7 +3115,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                     scanner->edge = vtx->first;
                     scanner->dst = 0;
                     code = CV_GRAPH_VERTEX;
-                    EXIT;
+                    return code;
                 }
             }
 
@@ -3581,7 +3145,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                                 scanner->vtx = vtx;
                                 scanner->dst = dst;
                                 scanner->edge = edge;
-                                EXIT;
+                                return code;
                             }
                             break;
                         }
@@ -3601,7 +3165,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                                     scanner->vtx = vtx;
                                     scanner->dst = dst;
                                     scanner->edge = edge;
-                                    EXIT;
+                                    return code;
                                 }
                             }
                         }
@@ -3640,7 +3204,7 @@ cvNextGraphItem( CvGraphScanner* scanner )
                     scanner->edge = edge;
                     scanner->dst = edge->vtx[vtx == edge->vtx[0]];
                     code = CV_GRAPH_BACKTRACKING;
-                    EXIT;
+                    return code;
                 }
             }
         }
@@ -3669,8 +3233,6 @@ cvNextGraphItem( CvGraphScanner* scanner )
         }
     }
 
-    __END__;
-
     return code;
 }
 
@@ -3682,30 +3244,26 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
     CvGraphVtx** ptr_buffer = 0;
     CvGraph* result = 0;
 
-    CV_FUNCNAME( "cvCloneGraph" );
-
-    __BEGIN__;
-
     int i, k;
     int vtx_size, edge_size;
     CvSeqReader reader;
 
     if( !CV_IS_GRAPH(graph))
-        CV_ERROR( CV_StsBadArg, "Invalid graph pointer" );
+        CV_Error( CV_StsBadArg, "Invalid graph pointer" );
 
     if( !storage )
         storage = graph->storage;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+        CV_Error( CV_StsNullPtr, "NULL storage pointer" );
 
     vtx_size = graph->elem_size;
     edge_size = graph->edges->elem_size;
 
-    CV_CALL( flag_buffer = (int*)cvAlloc( graph->total*sizeof(flag_buffer[0])));
-    CV_CALL( ptr_buffer = (CvGraphVtx**)cvAlloc( graph->total*sizeof(ptr_buffer[0])));
-    CV_CALL( result = cvCreateGraph( graph->flags, graph->header_size,
-                                     vtx_size, edge_size, storage ));
+    flag_buffer = (int*)cvAlloc( graph->total*sizeof(flag_buffer[0]));
+    ptr_buffer = (CvGraphVtx**)cvAlloc( graph->total*sizeof(ptr_buffer[0]));
+    result = cvCreateGraph( graph->flags, graph->header_size,
+                                     vtx_size, edge_size, storage );
     memcpy( result + sizeof(CvGraph), graph + sizeof(CvGraph),
             graph->header_size - sizeof(CvGraph));
 
@@ -3717,7 +3275,7 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
         {
             CvGraphVtx* vtx = (CvGraphVtx*)reader.ptr;
             CvGraphVtx* dstvtx = 0;
-            CV_CALL( cvGraphAddVtx( result, vtx, &dstvtx ));
+            cvGraphAddVtx( result, vtx, &dstvtx );
             flag_buffer[k] = dstvtx->flags = vtx->flags;
             vtx->flags = k;
             ptr_buffer[k++] = dstvtx;
@@ -3735,7 +3293,7 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
             CvGraphEdge* dstedge = 0;
             CvGraphVtx* new_org = ptr_buffer[edge->vtx[0]->flags];
             CvGraphVtx* new_dst = ptr_buffer[edge->vtx[1]->flags];
-            CV_CALL( cvGraphAddEdgeByPtr( result, new_org, new_dst, edge, &dstedge ));
+            cvGraphAddEdgeByPtr( result, new_org, new_dst, edge, &dstedge );
             dstedge->flags = edge->flags;
         }
         CV_NEXT_SEQ_ELEM( edge_size, reader );
@@ -3752,8 +3310,6 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
         }
         CV_NEXT_SEQ_ELEM( vtx_size, reader );
     }
-
-    __END__;
 
     cvFree( &flag_buffer );
     cvFree( &ptr_buffer );
@@ -3774,21 +3330,16 @@ CV_IMPL CvSeq*
 cvTreeToNodeSeq( const void* first, int header_size, CvMemStorage* storage )
 {
     CvSeq* allseq = 0;
-
-    CV_FUNCNAME("cvTreeToNodeSeq");
-
-    __BEGIN__;
-
     CvTreeNodeIterator iterator;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+        CV_Error( CV_StsNullPtr, "NULL storage pointer" );
 
-    CV_CALL( allseq = cvCreateSeq( 0, header_size, sizeof(first), storage ));
+    allseq = cvCreateSeq( 0, header_size, sizeof(first), storage );
 
     if( first )
     {
-        CV_CALL( cvInitTreeNodeIterator( &iterator, first, INT_MAX ));
+        cvInitTreeNodeIterator( &iterator, first, INT_MAX );
 
         for(;;)
         {
@@ -3799,7 +3350,7 @@ cvTreeToNodeSeq( const void* first, int header_size, CvMemStorage* storage )
         }
     }
 
-    __END__;
+    
 
     return allseq;
 }
@@ -3824,15 +3375,11 @@ CvTreeNode;
 CV_IMPL void
 cvInsertNodeIntoTree( void* _node, void* _parent, void* _frame )
 {
-    CV_FUNCNAME( "cvInsertNodeIntoTree" );
-
-    __BEGIN__;
-
     CvTreeNode* node = (CvTreeNode*)_node;
     CvTreeNode* parent = (CvTreeNode*)_parent;
 
     if( !node || !parent )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     node->v_prev = _parent != _frame ? parent : 0;
     node->h_next = parent->v_next;
@@ -3842,8 +3389,6 @@ cvInsertNodeIntoTree( void* _node, void* _parent, void* _frame )
     if( parent->v_next )
         parent->v_next->h_prev = node;
     parent->v_next = node;
-
-    __END__;
 }
 
 
@@ -3851,18 +3396,14 @@ cvInsertNodeIntoTree( void* _node, void* _parent, void* _frame )
 CV_IMPL void
 cvRemoveNodeFromTree( void* _node, void* _frame )
 {
-    CV_FUNCNAME( "cvRemoveNodeFromTree" );
-
-    __BEGIN__;
-
     CvTreeNode* node = (CvTreeNode*)_node;
     CvTreeNode* frame = (CvTreeNode*)_frame;
 
     if( !node )
-        CV_ERROR_FROM_CODE( CV_StsNullPtr );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( node == frame )
-        CV_ERROR( CV_StsBadArg, "frame node could not be deleted" );
+        CV_Error( CV_StsBadArg, "frame node could not be deleted" );
 
     if( node->h_next )
         node->h_next->h_prev = node->h_prev;
@@ -3881,8 +3422,6 @@ cvRemoveNodeFromTree( void* _node, void* _frame )
             parent->v_next = node->h_next;
         }
     }
-
-    __END__;
 }
 
 
@@ -3890,21 +3429,15 @@ CV_IMPL void
 cvInitTreeNodeIterator( CvTreeNodeIterator* treeIterator,
                         const void* first, int max_level )
 {
-    CV_FUNCNAME("icvInitTreeNodeIterator");
-
-    __BEGIN__;
-
     if( !treeIterator || !first )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( max_level < 0 )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     treeIterator->node = (void*)first;
     treeIterator->level = 0;
     treeIterator->max_level = max_level;
-
-    __END__;
 }
 
 
@@ -3912,16 +3445,11 @@ CV_IMPL void*
 cvNextTreeNode( CvTreeNodeIterator* treeIterator )
 {
     CvTreeNode* prevNode = 0;
-
-    CV_FUNCNAME("cvNextTreeNode");
-
-    __BEGIN__;
-
     CvTreeNode* node;
     int level;
 
     if( !treeIterator )
-        CV_ERROR( CV_StsNullPtr, "NULL iterator pointer" );
+        CV_Error( CV_StsNullPtr, "NULL iterator pointer" );
 
     prevNode = node = (CvTreeNode*)treeIterator->node;
     level = treeIterator->level;
@@ -3950,9 +3478,6 @@ cvNextTreeNode( CvTreeNodeIterator* treeIterator )
 
     treeIterator->node = node;
     treeIterator->level = level;
-
-    __END__;
-
     return prevNode;
 }
 
@@ -3961,16 +3486,11 @@ CV_IMPL void*
 cvPrevTreeNode( CvTreeNodeIterator* treeIterator )
 {
     CvTreeNode* prevNode = 0;
-
-    CV_FUNCNAME("cvPrevTreeNode");
-
-    __BEGIN__;
-
     CvTreeNode* node;
     int level;
 
     if( !treeIterator )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     prevNode = node = (CvTreeNode*)treeIterator->node;
     level = treeIterator->level;
@@ -4000,9 +3520,6 @@ cvPrevTreeNode( CvTreeNodeIterator* treeIterator )
 
     treeIterator->node = node;
     treeIterator->level = level;
-
-    __END__;
-
     return prevNode;
 }
 

@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -52,295 +53,316 @@ typedef unsigned long ulong;
 #ifdef __BORLANDC__
     #define     WIN32
     #define     CV_DLL
-    #undef      _CV_ALWAYS_PROFILE_
-    #define     _CV_ALWAYS_NO_PROFILE_
 #endif
 
 #include "cxcore.h"
 #include "cxmisc.h"
-#include "_cxipp.h"
-#include <math.h>
+
 #include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
+#include <ctype.h>
 #include <float.h>
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined WIN32 || defined WINCE
+#include <windows.h>
+#undef small
+#undef min
+#undef max
+#else
+#include <pthread.h>
+#include <sys/mman.h>
+#endif
+
+#ifdef HAVE_CONFIG_H
+#include <cvconfig.h>
+#endif
+
+#ifdef HAVE_IPP
+#include "ipp.h"
+#endif
+
+namespace cv
+{
 
 // -128.f ... 255.f
-extern const float icv8x32fTab[];
-#define CV_8TO32F(x)  icv8x32fTab[(x)+128]
+extern const float g_8x32fTab[];
+#define CV_8TO32F(x)  cv::g_8x32fTab[(x)+128]
 
-extern const ushort icv8x16uSqrTab[];
-#define CV_SQR_8U(x)  icv8x16uSqrTab[(x)+255]
+extern const ushort g_8x16uSqrTab[];
+#define CV_SQR_8U(x)  cv::g_8x16uSqrTab[(x)+255]
 
-extern const char* icvHersheyGlyphs[];
+extern const char* g_HersheyGlyphs[];
 
-extern const signed char icvDepthToType[];
+extern const signed char g_DepthToType[];
+#define IplToCvDepth( depth ) \
+    cv::g_DepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
 
-#define icvIplToCvDepth( depth ) \
-    icvDepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
-
-extern const uchar icvSaturate8u[];
-#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), icvSaturate8u[(t)+256])
+extern const uchar g_Saturate8u[];
+#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), cv::g_Saturate8u[(t)+256])
 #define CV_MIN_8U(a,b)       ((a) - CV_FAST_CAST_8U((a) - (b)))
 #define CV_MAX_8U(a,b)       ((a) + CV_FAST_CAST_8U((b) - (a)))
 
-typedef CvFunc2D_3A1I CvArithmBinMaskFunc2D;
-typedef CvFunc2D_2A1P1I CvArithmUniMaskFunc2D;
+typedef void (*CopyMaskFunc)(const Mat& src, Mat& dst, const Mat& mask);
 
+extern CopyMaskFunc g_copyMaskFuncTab[];
 
-/****************************************************************************************\
-*                                   Complex arithmetics                                  *
-\****************************************************************************************/
-
-struct CvComplex32f;
-struct CvComplex64f;
-
-struct CvComplex32f
+static inline CopyMaskFunc getCopyMaskFunc(int esz)
 {
-    float re, im;
+    CV_Assert( (unsigned)esz <= 32U );
+    CopyMaskFunc func = g_copyMaskFuncTab[esz];
+    CV_Assert( func != 0 );
+    return func;
+}
 
-    CvComplex32f() {}
-    CvComplex32f( float _re, float _im=0 ) : re(_re), im(_im) {}
-    explicit CvComplex32f( const CvComplex64f& v );
-    //CvComplex32f( const CvComplex32f& v ) : re(v.re), im(v.im) {}
-    //CvComplex32f& operator = (const CvComplex32f& v ) { re = v.re; im = v.im; return *this; }
-    operator CvComplex64f() const;
+#ifdef WIN32
+void deleteThreadAllocData();
+void deleteThreadRNGData();
+#endif
+
+template<typename T1, typename T2=T1, typename T3=T1> struct OpAdd
+{
+    typedef T1 type1;
+    typedef T2 type2;
+    typedef T3 rtype;
+    T3 operator ()(T1 a, T2 b) const { return saturate_cast<T3>(a + b); }
 };
 
-struct CvComplex64f
+template<typename T1, typename T2=T1, typename T3=T1> struct OpSub
 {
-    double re, im;
-
-    CvComplex64f() {}
-    CvComplex64f( double _re, double _im=0 ) : re(_re), im(_im) {}
-    explicit CvComplex64f( const CvComplex32f& v );
-    //CvComplex64f( const CvComplex64f& v ) : re(v.re), im(v.im) {}
-    //CvComplex64f& operator = (const CvComplex64f& v ) { re = v.re; im = v.im; return *this; }
-    operator CvComplex32f() const;
+    typedef T1 type1;
+    typedef T2 type2;
+    typedef T3 rtype;
+    T3 operator ()(T1 a, T2 b) const { return saturate_cast<T3>(a - b); }
 };
 
-inline CvComplex32f::CvComplex32f( const CvComplex64f& v ) : re((float)v.re), im((float)v.im) {}
-inline CvComplex64f::CvComplex64f( const CvComplex32f& v ) : re(v.re), im(v.im) {}
-
-inline CvComplex32f operator + (CvComplex32f a, CvComplex32f b)
+template<typename T1, typename T2=T1, typename T3=T1> struct OpRSub
 {
-    return CvComplex32f( a.re + b.re, a.im + b.im );
+    typedef T1 type1;
+    typedef T2 type2;
+    typedef T3 rtype;
+    T3 operator ()(T1 a, T2 b) const { return saturate_cast<T3>(b - a); }
+};
+
+template<typename T1, typename T2=T1, typename T3=T1> struct OpMul
+{
+    typedef T1 type1;
+    typedef T2 type2;
+    typedef T3 rtype;
+    T3 operator ()(T1 a, T2 b) const { return saturate_cast<T3>(a * b); }
+};
+
+template<typename T1, typename T2=T1, typename T3=T1> struct OpDiv
+{
+    typedef T1 type1;
+    typedef T2 type2;
+    typedef T3 rtype;
+    T3 operator ()(T1 a, T2 b) const { return saturate_cast<T3>(a / b); }
+};
+
+template<typename T> struct OpMin
+{
+    typedef T type1;
+    typedef T type2;
+    typedef T rtype;
+    T operator ()(T a, T b) const { return std::min(a, b); }
+};
+
+template<typename T> struct OpMax
+{
+    typedef T type1;
+    typedef T type2;
+    typedef T rtype;
+    T operator ()(T a, T b) const { return std::max(a, b); }
+};
+
+static inline Size getContinuousSize( const Mat& m1, int widthScale=1 )
+{
+    return m1.isContinuous() ? Size(m1.cols*m1.rows*widthScale, 1) :
+        Size(m1.cols*widthScale, m1.rows);
 }
 
-inline CvComplex32f& operator += (CvComplex32f& a, CvComplex32f b)
+static inline Size getContinuousSize( const Mat& m1, const Mat& m2, int widthScale=1 )
 {
-    a.re += b.re;
-    a.im += b.im;
-    return a;
+    return (m1.flags & m2.flags & Mat::CONTINUOUS_FLAG) != 0 ?
+        Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-inline CvComplex32f operator - (CvComplex32f a, CvComplex32f b)
+static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                                      const Mat& m3, int widthScale=1 )
 {
-    return CvComplex32f( a.re - b.re, a.im - b.im );
+    return (m1.flags & m2.flags & m3.flags & Mat::CONTINUOUS_FLAG) != 0 ?
+        Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-inline CvComplex32f& operator -= (CvComplex32f& a, CvComplex32f b)
+static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                                      const Mat& m3, const Mat& m4,
+                                      int widthScale=1 )
 {
-    a.re -= b.re;
-    a.im -= b.im;
-    return a;
+    return (m1.flags & m2.flags & m3.flags & m4.flags & Mat::CONTINUOUS_FLAG) != 0 ?
+        Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-inline CvComplex32f operator - (CvComplex32f a)
+static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                                      const Mat& m3, const Mat& m4,
+                                      const Mat& m5, int widthScale=1 )
 {
-    return CvComplex32f( -a.re, -a.im );
+    return (m1.flags & m2.flags & m3.flags & m4.flags & m5.flags & Mat::CONTINUOUS_FLAG) != 0 ?
+        Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-inline CvComplex32f operator * (CvComplex32f a, CvComplex32f b)
+struct NoVec
 {
-    return CvComplex32f( a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re );
+    int operator()(const void*, const void*, void*, int) const { return 0; }
+};
+
+template<class Op, class VecOp> static void
+binaryOpC1_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat )
+{
+    Op op; VecOp vecOp;
+    typedef typename Op::type1 T1;
+    typedef typename Op::type2 T2;
+    typedef typename Op::rtype DT;
+
+    const T1* src1 = (const T1*)srcmat1.data;
+    const T2* src2 = (const T2*)srcmat2.data;
+    DT* dst = (DT*)dstmat.data;
+    int step1 = srcmat1.step/sizeof(src1[0]);
+    int step2 = srcmat2.step/sizeof(src2[0]);
+    int step = dstmat.step/sizeof(dst[0]);
+    Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
+
+    if( size.width == 1 )
+    {
+        for( ; size.height--; src1 += step1, src2 += step2, dst += step )
+            dst[0] = op( src1[0], src2[0] );
+        return;
+    }
+
+    for( ; size.height--; src1 += step1, src2 += step2, dst += step )
+    {
+        int x = vecOp(src1, src2, dst, size.width);
+        for( ; x <= size.width - 4; x += 4 )
+        {
+            DT f0, f1;
+            f0 = op( src1[x], src2[x] );
+            f1 = op( src1[x+1], src2[x+1] );
+            dst[x] = f0;
+            dst[x+1] = f1;
+            f0 = op(src1[x+2], src2[x+2]);
+            f1 = op(src1[x+3], src2[x+3]);
+            dst[x+2] = f0;
+            dst[x+3] = f1;
+        }
+
+        for( ; x < size.width; x++ )
+            dst[x] = op( src1[x], src2[x] );
+    }
 }
 
-inline double abs(CvComplex32f a)
+typedef void (*BinaryFunc)(const Mat& src1, const Mat& src2, Mat& dst);
+
+template<class Op> static void
+binarySOpCn_( const Mat& srcmat, Mat& dstmat, const Scalar& _scalar )
 {
-    return sqrt( (double)a.re*a.re + (double)a.im*a.im );
+    Op op;
+    typedef typename Op::type1 T;
+    typedef typename Op::type2 WT;
+    typedef typename Op::rtype DT;
+    const T* src0 = (const T*)srcmat.data;
+    DT* dst0 = (DT*)dstmat.data;
+    int step1 = srcmat.step/sizeof(src0[0]);
+    int step = dstmat.step/sizeof(dst0[0]);
+    int cn = dstmat.channels();
+    Size size = getContinuousSize( srcmat, dstmat, cn );
+    WT scalar[12];
+    _scalar.convertTo(scalar, cn, 12);
+
+    for( ; size.height--; src0 += step1, dst0 += step )
+    {
+        int i, len = size.width;
+        const T* src = src0;
+        T* dst = dst0;
+
+        for( ; (len -= 12) >= 0; dst += 12, src += 12 )
+        {
+            DT t0 = op(src[0], scalar[0]);
+            DT t1 = op(src[1], scalar[1]);
+            dst[0] = t0; dst[1] = t1;
+
+            t0 = op(src[2], scalar[2]);
+            t1 = op(src[3], scalar[3]);
+            dst[2] = t0; dst[3] = t1;
+
+            t0 = op(src[4], scalar[4]);
+            t1 = op(src[5], scalar[5]);
+            dst[4] = t0; dst[5] = t1;
+
+            t0 = op(src[6], scalar[6]);
+            t1 = op(src[7], scalar[7]);
+            dst[6] = t0; dst[7] = t1;
+
+            t0 = op(src[8], scalar[8]);
+            t1 = op(src[9], scalar[9]);
+            dst[8] = t0; dst[9] = t1;
+
+            t0 = op(src[10], scalar[10]);
+            t1 = op(src[11], scalar[11]);
+            dst[10] = t0; dst[11] = t1;
+        }
+
+        for( (len) += 12, i = 0; i < (len); i++ )
+            dst[i] = op((WT)src[i], scalar[i]);
+    }
 }
 
-inline CvComplex32f conj(CvComplex32f a)
+template<class Op> static void
+binarySOpC1_( const Mat& srcmat, Mat& dstmat, double _scalar )
 {
-    return CvComplex32f( a.re, -a.im );
+    Op op;
+    typedef typename Op::type1 T;
+    typedef typename Op::type2 WT;
+    typedef typename Op::rtype DT;
+    WT scalar = saturate_cast<WT>(_scalar);
+    const T* src = (const T*)srcmat.data;
+    DT* dst = (DT*)dstmat.data;
+    int step1 = srcmat.step/sizeof(src[0]);
+    int step = dstmat.step/sizeof(dst[0]);
+    Size size = srcmat.size();
+    
+    size.width *= srcmat.channels();
+    if( srcmat.isContinuous() && dstmat.isContinuous() )
+    {
+        size.width *= size.height;
+        size.height = 1;
+    }
+
+    for( ; size.height--; src += step1, dst += step )
+    {
+        int x;
+        for( x = 0; x <= size.width - 4; x += 4 )
+        {
+            DT f0 = op( src[x], scalar );
+            DT f1 = op( src[x+1], scalar );
+            dst[x] = f0;
+            dst[x+1] = f1;
+            f0 = op( src[x+2], scalar );
+            f1 = op( src[x+3], scalar );
+            dst[x+2] = f0;
+            dst[x+3] = f1;
+        }
+
+        for( ; x < size.width; x++ )
+            dst[x] = op( src[x], scalar );
+    }
 }
 
+typedef void (*BinarySFuncCn)(const Mat& src1, Mat& dst, const Scalar& scalar);
+typedef void (*BinarySFuncC1)(const Mat& src1, Mat& dst, double scalar);
 
-inline CvComplex32f operator / (CvComplex32f a, CvComplex32f b)
-{
-    double t = 1./((double)b.re*b.re + (double)b.im*b.im);
-    return CvComplex32f( (float)((a.re*b.re + a.im*b.im)*t),
-                         (float)((-a.re*b.im + a.im*b.re)*t) );
-}
-
-inline CvComplex32f operator * (double a, CvComplex32f b)
-{
-    return CvComplex32f( (float)(a*b.re), (float)(a*b.im) );
-}
-
-inline CvComplex32f operator * (CvComplex32f a, double b)
-{
-    return CvComplex32f( (float)(a.re*b), (float)(a.im*b) );
-}
-
-inline CvComplex32f::operator CvComplex64f() const
-{
-    return CvComplex64f(re,im);
-}
-
-
-inline CvComplex64f operator + (CvComplex64f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re + b.re, a.im + b.im );
-}
-
-inline CvComplex64f& operator += (CvComplex64f& a, CvComplex64f b)
-{
-    a.re += b.re;
-    a.im += b.im;
-    return a;
-}
-
-inline CvComplex64f operator - (CvComplex64f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re - b.re, a.im - b.im );
-}
-
-inline CvComplex64f& operator -= (CvComplex64f& a, CvComplex64f b)
-{
-    a.re -= b.re;
-    a.im -= b.im;
-    return a;
-}
-
-inline CvComplex64f operator - (CvComplex64f a)
-{
-    return CvComplex64f( -a.re, -a.im );
-}
-
-inline CvComplex64f operator * (CvComplex64f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re );
-}
-
-inline double abs(CvComplex64f a)
-{
-    return sqrt( (double)a.re*a.re + (double)a.im*a.im );
-}
-
-inline CvComplex64f operator / (CvComplex64f a, CvComplex64f b)
-{
-    double t = 1./((double)b.re*b.re + (double)b.im*b.im);
-    return CvComplex64f( (a.re*b.re + a.im*b.im)*t,
-                         (-a.re*b.im + a.im*b.re)*t );
-}
-
-inline CvComplex64f operator * (double a, CvComplex64f b)
-{
-    return CvComplex64f( a*b.re, a*b.im );
-}
-
-inline CvComplex64f operator * (CvComplex64f a, double b)
-{
-    return CvComplex64f( a.re*b, a.im*b );
-}
-
-inline CvComplex64f::operator CvComplex32f() const
-{
-    return CvComplex32f((float)re,(float)im);
-}
-
-inline CvComplex64f conj(CvComplex64f a)
-{
-    return CvComplex64f( a.re, -a.im );
-}
-
-inline CvComplex64f operator + (CvComplex64f a, CvComplex32f b)
-{
-    return CvComplex64f( a.re + b.re, a.im + b.im );
-}
-
-inline CvComplex64f operator + (CvComplex32f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re + b.re, a.im + b.im );
-}
-
-inline CvComplex64f operator - (CvComplex64f a, CvComplex32f b)
-{
-    return CvComplex64f( a.re - b.re, a.im - b.im );
-}
-
-inline CvComplex64f operator - (CvComplex32f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re - b.re, a.im - b.im );
-}
-
-inline CvComplex64f operator * (CvComplex64f a, CvComplex32f b)
-{
-    return CvComplex64f( a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re );
-}
-
-inline CvComplex64f operator * (CvComplex32f a, CvComplex64f b)
-{
-    return CvComplex64f( a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re );
-}
-
-
-typedef CvStatus (CV_STDCALL * CvCopyMaskFunc)(const void* src, int src_step,
-                                               void* dst, int dst_step, CvSize size,
-                                               const void* mask, int mask_step);
-
-CvCopyMaskFunc icvGetCopyMaskFunc( int elem_size );
-
-CvStatus CV_STDCALL icvSetZero_8u_C1R( uchar* dst, int dststep, CvSize size );
-
-CvStatus CV_STDCALL icvScale_32f( const float* src, float* dst, int len, float a, float b );
-CvStatus CV_STDCALL icvScale_64f( const double* src, double* dst, int len, double a, double b );
-
-CvStatus CV_STDCALL icvLUT_Transform8u_8u_C1R( const uchar* src, int srcstep, uchar* dst,
-                                               int dststep, CvSize size, const uchar* lut );
-CvStatus CV_STDCALL icvLUT_Transform8u_16u_C1R( const uchar* src, int srcstep, ushort* dst,
-                                                int dststep, CvSize size, const ushort* lut );
-CvStatus CV_STDCALL icvLUT_Transform8u_32s_C1R( const uchar* src, int srcstep, int* dst,
-                                                int dststep, CvSize size, const int* lut );
-CvStatus CV_STDCALL icvLUT_Transform8u_64f_C1R( const uchar* src, int srcstep, double* dst,
-                                                int dststep, CvSize size, const double* lut );
-
-CvStatus CV_STDCALL icvLUT_Transform8u_8u_C2R( const uchar* src, int srcstep, uchar* dst,
-                                               int dststep, CvSize size, const uchar* lut );
-CvStatus CV_STDCALL icvLUT_Transform8u_8u_C3R( const uchar* src, int srcstep, uchar* dst,
-                                               int dststep, CvSize size, const uchar* lut );
-CvStatus CV_STDCALL icvLUT_Transform8u_8u_C4R( const uchar* src, int srcstep, uchar* dst,
-                                               int dststep, CvSize size, const uchar* lut );
-
-typedef CvStatus (CV_STDCALL * CvLUT_TransformFunc)( const void* src, int srcstep, void* dst,
-                                                     int dststep, CvSize size, const void* lut );
-
-CV_INLINE CvStatus
-icvLUT_Transform8u_8s_C1R( const uchar* src, int srcstep, schar* dst,
-                            int dststep, CvSize size, const schar* lut )
-{
-    return icvLUT_Transform8u_8u_C1R( src, srcstep, (uchar*)dst,
-                                      dststep, size, (const uchar*)lut );
-}
-
-CV_INLINE CvStatus
-icvLUT_Transform8u_16s_C1R( const uchar* src, int srcstep, short* dst,
-                            int dststep, CvSize size, const short* lut )
-{
-    return icvLUT_Transform8u_16u_C1R( src, srcstep, (ushort*)dst,
-                                       dststep, size, (const ushort*)lut );
-}
-
-CV_INLINE CvStatus
-icvLUT_Transform8u_32f_C1R( const uchar* src, int srcstep, float* dst,
-                            int dststep, CvSize size, const float* lut )
-{
-    return icvLUT_Transform8u_32s_C1R( src, srcstep, (int*)dst,
-                                       dststep, size, (const int*)lut );
 }
 
 #endif /*_CXCORE_INTERNAL_H_*/
