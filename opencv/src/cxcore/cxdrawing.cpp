@@ -1867,7 +1867,7 @@ void putText( Mat& img, const String& text, Point org,
     scalarToRawData(color, buf, img.type(), 0);
 
     int base_line = -(ascii[0] & 15);
-    int hscale = fontScale*XY_ONE, vscale = hscale;
+    int hscale = cvRound(fontScale*XY_ONE), vscale = hscale;
 
     if( line_type == CV_AA && img.type() != CV_8U )
         line_type = 8;
@@ -1921,7 +1921,7 @@ void putText( Mat& img, const String& text, Point org,
 Size getTextSize( const String& text, int fontFace, double fontScale, int thickness, int* _base_line)
 {
     Size size;
-    float view_x = 0;
+    double view_x = 0;
     const char **faces = cv::g_HersheyGlyphs;
     const int* ascii = getFontData(fontFace);
 

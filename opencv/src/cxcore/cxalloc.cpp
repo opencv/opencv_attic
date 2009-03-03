@@ -482,7 +482,7 @@ void fastFree( void* ptr )
     {
     ThreadData* tls = ThreadData::get();
     Node* node = (Node*)ptr;
-    Block* block = (Block*)((size_t)ptr & -MEM_BLOCK_SIZE);
+    Block* block = (Block*)((size_t)ptr & (size_t)-MEM_BLOCK_SIZE);
     assert( block->signature == MEM_BLOCK_SIGNATURE );
 
     if( block->threadData == tls )

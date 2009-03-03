@@ -357,22 +357,22 @@ Magnitude(const float* x, const float* y, float* mag, int len)
 }
 #endif
 
-static CV_STDCALL CvStatus Sqrt_32f(const float* src, float* dst, int len)
+static CvStatus CV_STDCALL Sqrt_32f(const float* src, float* dst, int len)
 {
     return Sqrt( src, dst, len );
 }
 
-static CV_STDCALL CvStatus InvSqrt_32f(const float* src, float* dst, int len)
+static CvStatus CV_STDCALL InvSqrt_32f(const float* src, float* dst, int len)
 {
     return InvSqrt( src, dst, len );
 }
 
-static CV_STDCALL CvStatus Sqrt_64f(const double* src, double* dst, int len)
+static CvStatus CV_STDCALL Sqrt_64f(const double* src, double* dst, int len)
 {
     return Sqrt( src, dst, len );
 }
 
-static CV_STDCALL CvStatus InvSqrt_64f(const double* src, double* dst, int len)
+static CvStatus CV_STDCALL InvSqrt_64f(const double* src, double* dst, int len)
 {
     return InvSqrt( src, dst, len );
 }
