@@ -45,7 +45,7 @@
 
 #include <limits.h>
 
-#ifndef CV_NO_BACKWARD_COMPATIBILITY
+#ifndef CX_NO_BACKWARD_COMPATIBILITY
 #include "cxcompat.h"
 #endif
 

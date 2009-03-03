@@ -244,7 +244,7 @@ void CvAdaptiveSkinDetector::Histogram::findCurveThresholds(int &x1, int &x2, do
 
 void CvAdaptiveSkinDetector::Histogram::mergeWith(CvAdaptiveSkinDetector::Histogram *source, double weight)
 {
-	float myweight = 1-weight;
+	float myweight = (float)(1-weight);
 	float maxVal1 = 0, maxVal2 = 0, *f1, *f2, ff1, ff2;
 
 	cvGetMinMaxHistValue(source->fHistogram, NULL, &maxVal2);
@@ -272,7 +272,7 @@ void CvAdaptiveSkinDetector::Histogram::mergeWith(CvAdaptiveSkinDetector::Histog
 				if (ff1 < 0)
 					ff1 = -ff1;
 
-				ff2 = ((*f2)/maxVal2)*weight;
+				ff2 = (float)(((*f2)/maxVal2)*weight);
 				if (ff2 < 0)
 					ff2 = -ff2;
 
