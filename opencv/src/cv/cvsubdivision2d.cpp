@@ -56,7 +56,7 @@ cvCreateSubdiv2D( int subdiv_type, int header_size,
     if( header_size < (int)sizeof( *subdiv ) ||
         quadedge_size < (int)sizeof( CvQuadEdge2D ) ||
         vtx_size < (int)sizeof( CvSubdiv2DPoint ))
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     subdiv = (CvSubdiv2D *) cvCreateGraph( subdiv_type, header_size,
                                            vtx_size, quadedge_size, storage );
@@ -266,20 +266,19 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
         CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
+        CV_ERROR( CV_StsBadFlag, "" );
 
     max_edges = subdiv->quad_edges * 4;
     edge = subdiv->recent_edge;
 
     if( max_edges == 0 )
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
-    if( !edge )
-        CV_ERROR_FROM_STATUS( CV_NOTDEFINED_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
+    CV_ASSERT(edge != 0);
 
     location = CV_PTLOC_OUTSIDE_RECT;
     if( pt.x < subdiv->topleft.x || pt.y < subdiv->topleft.y ||
         pt.x >= subdiv->bottomright.x || pt.y >= subdiv->bottomright.y )
-        CV_ERROR_FROM_STATUS( CV_BADRANGE_ERR );
+        CV_ERROR( CV_StsOutOfRange, "" );
 
     location = CV_PTLOC_ERROR;
 
@@ -422,18 +421,17 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
         CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
-
+        CV_ERROR( CV_StsBadFlag, "" );
 
     location = cvSubdiv2DLocate( subdiv, pt, &curr_edge, &curr_point );
 
     switch (location)
     {
     case CV_PTLOC_ERROR:
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     case CV_PTLOC_OUTSIDE_RECT:
-        CV_ERROR_FROM_STATUS( CV_BADRANGE_ERR );
+        CV_ERROR( CV_StsOutOfRange, "" );
 
     case CV_PTLOC_VERTEX:
         point = curr_point;
@@ -498,8 +496,7 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
         }
         break;
     default:
-        assert( 0 );
-        CV_ERROR_FROM_STATUS( CV_NOTDEFINED_ERR );
+        CV_Error_(CV_StsError, ("cvSubdiv2DLocate returned invalid location = %d", location) );
     }
 
     point = curr_point;

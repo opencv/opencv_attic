@@ -704,7 +704,7 @@ cvContourFromContourTree( const CvContourTree*  tree,
         CV_ERROR( CV_StsNullPtr, "" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree ))
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
+        CV_ERROR( CV_StsBadArg, "" );
 
     criteria = cvCheckTermCriteria( criteria, 0., 100 );
 
@@ -726,15 +726,8 @@ cvContourFromContourTree( const CvContourTree*  tree,
     cvStartWriteSeq( seq_flags, out_hearder_size, sizeof( CvPoint ), storage, &writer );
 
     ptr_buf = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * ));
-    if( ptr_buf == NULL )
-        CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
     if( log_iter )
-    {
         level_buf = (int *) cvAlloc( lpt * (sizeof( int )));
-
-        if( level_buf == NULL )
-            CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
-    }
 
     memset( ptr_buf, 0, lpt * sizeof( _CvTrianAttr * ));
 

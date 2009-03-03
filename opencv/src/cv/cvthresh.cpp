@@ -286,13 +286,6 @@ icvGetThreshVal_Otsu( const CvHistogram* hist )
 }
 
 
-icvAndC_8u_C1R_t icvAndC_8u_C1R_p = 0;
-icvCompareC_8u_C1R_cv_t icvCompareC_8u_C1R_cv_p = 0;
-icvThreshold_GTVal_8u_C1R_t icvThreshold_GTVal_8u_C1R_p = 0;
-icvThreshold_GTVal_32f_C1R_t icvThreshold_GTVal_32f_C1R_p = 0;
-icvThreshold_LTVal_8u_C1R_t icvThreshold_LTVal_8u_C1R_p = 0;
-icvThreshold_LTVal_32f_C1R_t icvThreshold_LTVal_32f_C1R_p = 0;
-
 CV_IMPL double
 cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
 {
@@ -414,7 +407,7 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
             }
         }
 
-        if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV )
+        /*if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV )
         {
             if( icvCompareC_8u_C1R_cv_p && icvAndC_8u_C1R_p )
             {
@@ -449,7 +442,7 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
                     dst->data.ptr, dst_step, roi, (uchar)ithresh, 0 ));
                 EXIT;
             }
-        }
+        }*/
 
         icvThresh_8u_C1R( src->data.ptr, src_step,
                           dst->data.ptr, dst_step, roi,
@@ -457,7 +450,7 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
         break;
     case CV_32F:
 
-        if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
+        /*if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
         {
             if( icvThreshold_GTVal_32f_C1R_p )
             {
@@ -475,7 +468,7 @@ cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int
                     dst->data.fl, dst_step, roi, (float)(thresh*(1 + FLT_EPSILON)), 0 ));
                 EXIT;
             }
-        }
+        }*/
 
         icvThresh_32f_C1R( src->data.fl, src_step, dst->data.fl, dst_step, roi,
                            (float)thresh, (float)maxval, type );

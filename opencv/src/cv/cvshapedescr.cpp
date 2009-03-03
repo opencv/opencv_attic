@@ -316,7 +316,7 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
     }
 
     if( sequence->total <= 0 )
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     CV_CALL( cvStartReadSeq( sequence, &reader, 0 ));
 

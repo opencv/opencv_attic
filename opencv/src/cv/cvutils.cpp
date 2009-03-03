@@ -88,25 +88,6 @@ typedef CvStatus (CV_STDCALL * CvCopyNonConstBorderFunc)(
 typedef CvStatus (CV_STDCALL * CvCopyNonConstBorderFuncI)(
     const void*, int, CvSize, CvSize, int, int );
 
-icvCopyReplicateBorder_8u_C1R_t icvCopyReplicateBorder_8u_C1R_p = 0;
-icvCopyReplicateBorder_16s_C1R_t icvCopyReplicateBorder_16s_C1R_p = 0;
-icvCopyReplicateBorder_8u_C3R_t icvCopyReplicateBorder_8u_C3R_p = 0;
-icvCopyReplicateBorder_32s_C1R_t icvCopyReplicateBorder_32s_C1R_p = 0;
-icvCopyReplicateBorder_16s_C3R_t icvCopyReplicateBorder_16s_C3R_p = 0;
-icvCopyReplicateBorder_16s_C4R_t icvCopyReplicateBorder_16s_C4R_p = 0;
-icvCopyReplicateBorder_32s_C3R_t icvCopyReplicateBorder_32s_C3R_p = 0;
-icvCopyReplicateBorder_32s_C4R_t icvCopyReplicateBorder_32s_C4R_p = 0;
-
-icvCopyReplicateBorder_8u_C1IR_t icvCopyReplicateBorder_8u_C1IR_p = 0;
-icvCopyReplicateBorder_16s_C1IR_t icvCopyReplicateBorder_16s_C1IR_p = 0;
-icvCopyReplicateBorder_8u_C3IR_t icvCopyReplicateBorder_8u_C3IR_p = 0;
-icvCopyReplicateBorder_32s_C1IR_t icvCopyReplicateBorder_32s_C1IR_p = 0;
-icvCopyReplicateBorder_16s_C3IR_t icvCopyReplicateBorder_16s_C3IR_p = 0;
-icvCopyReplicateBorder_16s_C4IR_t icvCopyReplicateBorder_16s_C4IR_p = 0;
-icvCopyReplicateBorder_32s_C3IR_t icvCopyReplicateBorder_32s_C3IR_p = 0;
-icvCopyReplicateBorder_32s_C4IR_t icvCopyReplicateBorder_32s_C4IR_p = 0;
-
-
 CvStatus CV_STDCALL
 icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                            uchar* dst, int dststep, CvSize dstroi,
@@ -115,7 +96,7 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
     const int isz = (int)sizeof(int);
     int i, j;
 
-    if( srcstep == dststep && dst + dststep*top + left*cn == src &&
+    /*if( srcstep == dststep && dst + dststep*top + left*cn == src &&
         icvCopyReplicateBorder_8u_C1IR_p )
     {
         CvCopyNonConstBorderFuncI ifunc =
@@ -145,7 +126,7 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
 
         if( func )
             return func( src, srcstep, srcroi, dst, dststep, dstroi, top, left );
-    }
+    }*/
 
     if( (cn | srcstep | dststep | (size_t)src | (size_t)dst) % isz == 0 )
     {

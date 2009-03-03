@@ -41,9 +41,6 @@
 
 #include "_cv.h"
 
-icvCannyGetSize_t icvCannyGetSize_p = 0;
-icvCanny_16s8u_C1R_t icvCanny_16s8u_C1R_p = 0;
-
 CV_IMPL void
 cvCanny( const void* srcarr, void* dstarr,
          double low_thresh, double high_thresh, int aperture_size )
@@ -94,7 +91,7 @@ cvCanny( const void* srcarr, void* dstarr,
     cvSobel( src, dx, 1, 0, aperture_size );
     cvSobel( src, dy, 0, 1, aperture_size );
 
-    if( icvCannyGetSize_p && icvCanny_16s8u_C1R_p && !(flags & CV_CANNY_L2_GRADIENT) )
+    /*if( icvCannyGetSize_p && icvCanny_16s8u_C1R_p && !(flags & CV_CANNY_L2_GRADIENT) )
     {
         int buf_size=  0;
         IPPI_CALL( icvCannyGetSize_p( size, &buf_size ));
@@ -105,7 +102,7 @@ cvCanny( const void* srcarr, void* dstarr,
                                      size, (float)low_thresh,
                                      (float)high_thresh, buffer ));
         EXIT;
-    }
+    }*/
 
     if( flags & CV_CANNY_L2_GRADIENT )
     {
@@ -178,7 +175,7 @@ cvCanny( const void* srcarr, void* dstarr,
             if( !(flags & CV_CANNY_L2_GRADIENT) )
                 for( j = 0; j < size.width; j++ )
                     _mag[j] = abs(_dx[j]) + abs(_dy[j]);
-            else if( icvFilterSobelVert_8u16s_C1R_p != 0 ) // check for IPP
+            /*else if( icvFilterSobelVert_8u16s_C1R_p != 0 ) // check for IPP
             {
                 // use vectorized sqrt
                 mag_row.data.fl = _magf;
@@ -188,13 +185,13 @@ cvCanny( const void* srcarr, void* dstarr,
                     _magf[j] = (float)((double)x*x + (double)y*y);
                 }
                 cvPow( &mag_row, &mag_row, 0.5 );
-            }
+            }*/
             else
             {
                 for( j = 0; j < size.width; j++ )
                 {
                     x = _dx[j]; y = _dy[j];
-                    _magf[j] = (float)sqrt((double)x*x + (double)y*y);
+                    _magf[j] = (float)std::sqrt((double)x*x + (double)y*y);
                 }
             }
         }

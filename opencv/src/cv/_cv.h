@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                          License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -81,14 +82,14 @@ extern const float icv8x32fTab_cv[];
 extern const float icv8x32fSqrTab[];
 #define CV_8TO32F_SQR(x)  icv8x32fSqrTab[(x)+128]
 
-CV_INLINE  CvDataType icvDepthToDataType( int type );
+/*CV_INLINE  CvDataType icvDepthToDataType( int type );
 CV_INLINE  CvDataType icvDepthToDataType( int type )
 {
     return (CvDataType)(
             ((((int)cv8u)|((int)cv8s << 4)|((int)cv16u << 8)|
               ((int)cv16s << 12)|((int)cv32s << 16)|((int)cv32f << 20)|
               ((int)cv64f << 24)) >> CV_MAT_DEPTH(type)*4) & 15);
-}
+}*/
 
 #define CV_HIST_DEFAULT_TYPE CV_32F
 
@@ -107,7 +108,10 @@ typedef struct CvPyramid
 }
 CvPyramid;
 
-#include "_cvipp.h"
+#ifndef IPPI_CALL
+#define IPPI_CALL(func) CV_Assert((func) >= 0)
+#endif
+
 #include "_cvmatrix.h"
 #include "_cvgeom.h"
 #include "_cvimgproc.h"

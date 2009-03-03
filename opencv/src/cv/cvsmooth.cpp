@@ -1289,23 +1289,6 @@ static void icvBilateralFiltering_32f( const CvMat* src, CvMat* dst, int d,
     cvFree( &expLUT );
 }
 
-//////////////////////////////// IPP smoothing functions /////////////////////////////////
-
-icvFilterMedian_8u_C1R_t icvFilterMedian_8u_C1R_p = 0;
-icvFilterMedian_8u_C3R_t icvFilterMedian_8u_C3R_p = 0;
-icvFilterMedian_8u_C4R_t icvFilterMedian_8u_C4R_p = 0;
-
-icvFilterBox_8u_C1R_t icvFilterBox_8u_C1R_p = 0;
-icvFilterBox_8u_C3R_t icvFilterBox_8u_C3R_p = 0;
-icvFilterBox_8u_C4R_t icvFilterBox_8u_C4R_p = 0;
-icvFilterBox_32f_C1R_t icvFilterBox_32f_C1R_p = 0;
-icvFilterBox_32f_C3R_t icvFilterBox_32f_C3R_p = 0;
-icvFilterBox_32f_C4R_t icvFilterBox_32f_C4R_p = 0;
-
-typedef CvStatus (CV_STDCALL * CvSmoothFixedIPPFunc)
-( const void* src, int srcstep, void* dst, int dststep,
-  CvSize size, CvSize ksize, CvPoint anchor );
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
 CV_IMPL void
@@ -1327,7 +1310,6 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
     CvSize size;
     int src_type, dst_type, depth, cn;
     double sigma1 = 0, sigma2 = 0;
-    bool have_ipp = icvFilterMedian_8u_C1R_p != 0;
 
     CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
     CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
@@ -1376,7 +1358,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
         }
     }
 
-    if( have_ipp && (smooth_type == CV_BLUR || (smooth_type == CV_MEDIAN && param1 <= 15)) &&
+    /*if( have_ipp && (smooth_type == CV_BLUR || (smooth_type == CV_MEDIAN && param1 <= 15)) &&
         size.width >= param1 && size.height >= param2 && param1 > 1 && param2 > 1 )
     {
         CvSmoothFixedIPPFunc ipp_median_box_func = 0;
@@ -1424,7 +1406,7 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
             }
             EXIT;
         }
-    }
+    }*/
 
     if( smooth_type == CV_BLUR || smooth_type == CV_BLUR_NO_SCALE )
     {
@@ -1488,16 +1470,6 @@ cvSmooth( const void* srcarr, void* dstarr, int smooth_type,
         else
             KY.data.fl = kx;
         
-        if( have_ipp && size.width >= param1*3 &&
-            size.height >= param2 && param1 > 1 && param2 > 1 )
-        {
-            int done;
-            CV_CALL( done = icvIPPSepFilter( src, dst, &KX, &KY,
-                        cvPoint(ksize.width/2,ksize.height/2)));
-            if( done )
-                EXIT;
-        }
-
         CV_CALL( gaussian_filter.init( src->cols, src_type, dst_type, &KX, &KY ));
         CV_CALL( gaussian_filter.process( src, dst ));
     }

@@ -435,10 +435,9 @@ ICV_DEF_PYR_UP_FUNC( 64f, double, double, PU_SCALE_FLT )
 
 
 static CvStatus CV_STDCALL
-icvPyrUpG5x5_GetBufSize( int roiWidth, CvDataType dataType,
-                         int channels, int *bufSize )
+icvPyrUpG5x5_GetBufSize( int roiWidth, int type, int *bufSize )
 {
-    int bufStep;
+    int bufStep, channels = CV_MAT_CN(type);
 
     if( !bufSize )
         return CV_NULLPTR_ERR;
@@ -451,7 +450,7 @@ icvPyrUpG5x5_GetBufSize( int roiWidth, CvDataType dataType,
 
     bufStep = 2*roiWidth*channels;
 
-    if( dataType == cv64f )
+    if( CV_MAT_DEPTH(type) == CV_64F )
         bufStep *= sizeof(double);
     else
         bufStep *= sizeof(int);
@@ -462,10 +461,9 @@ icvPyrUpG5x5_GetBufSize( int roiWidth, CvDataType dataType,
 
 
 static CvStatus CV_STDCALL
-icvPyrDownG5x5_GetBufSize( int roiWidth, CvDataType dataType,
-                           int channels, int *bufSize )
+icvPyrDownG5x5_GetBufSize( int roiWidth, int type, int *bufSize )
 {
-    int bufStep;
+    int bufStep, channels = CV_MAT_CN(type);
 
     if( !bufSize )
         return CV_NULLPTR_ERR;
@@ -478,7 +476,7 @@ icvPyrDownG5x5_GetBufSize( int roiWidth, CvDataType dataType,
 
     bufStep = 2*roiWidth*channels;
 
-    if( dataType == cv64f )
+    if( CV_MAT_DEPTH(type) == CV_64F )
         bufStep *= sizeof(double);
     else
         bufStep *= sizeof(int);
@@ -897,19 +895,6 @@ typedef CvStatus (CV_STDCALL * CvPyrDownBorderFunc)( const void* src, int srcste
 
 ////////////////////////////// IPP pyramid functions /////////////////////////////////////
 
-icvPyrDown_Gauss5x5_8u_C1R_t icvPyrDown_Gauss5x5_8u_C1R_p = 0; 
-icvPyrDown_Gauss5x5_8u_C3R_t icvPyrDown_Gauss5x5_8u_C3R_p = 0; 
-icvPyrDown_Gauss5x5_32f_C1R_t icvPyrDown_Gauss5x5_32f_C1R_p = 0; 
-icvPyrDown_Gauss5x5_32f_C3R_t icvPyrDown_Gauss5x5_32f_C3R_p = 0; 
-
-icvPyrUp_Gauss5x5_8u_C1R_t icvPyrUp_Gauss5x5_8u_C1R_p = 0; 
-icvPyrUp_Gauss5x5_8u_C3R_t icvPyrUp_Gauss5x5_8u_C3R_p = 0; 
-icvPyrUp_Gauss5x5_32f_C1R_t icvPyrUp_Gauss5x5_32f_C1R_p = 0; 
-icvPyrUp_Gauss5x5_32f_C3R_t icvPyrUp_Gauss5x5_32f_C3R_p = 0; 
-
-icvPyrUpGetBufSize_Gauss5x5_t icvPyrUpGetBufSize_Gauss5x5_p = 0;
-icvPyrDownGetBufSize_Gauss5x5_t icvPyrDownGetBufSize_Gauss5x5_p = 0;
-
 typedef CvStatus (CV_STDCALL * CvPyramidFunc)
 ( const void* src, int srcstep, void* dst,
   int dststep, CvSize size, void* buffer, int cn );
@@ -981,7 +966,7 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    if( icvPyrUpGetBufSize_Gauss5x5_p )
+    /*if( icvPyrUpGetBufSize_Gauss5x5_p )
     {
         ipp_func = type == CV_8UC1 ? icvPyrUp_Gauss5x5_8u_C1R_p :
                    type == CV_8UC3 ? icvPyrUp_Gauss5x5_8u_C3R_p :
@@ -990,10 +975,10 @@ cvPyrUp( const void* srcarr, void* dstarr, int _filter )
 
         use_ipp = ipp_func && icvPyrUpGetBufSize_Gauss5x5_p( size.width,
                     icvDepthToDataType(type), cn, &buffer_size ) >= 0;
-    }
+    }*/
 
     if( !use_ipp )
-        icvPyrUpG5x5_GetBufSize( size.width, icvDepthToDataType(type), cn, &buffer_size );
+        icvPyrUpG5x5_GetBufSize( size.width, type, &buffer_size );
 
     if( buffer_size <= CV_MAX_LOCAL_SIZE )
     {
@@ -1088,7 +1073,7 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
     if( !func )
         CV_ERROR( CV_StsUnsupportedFormat, "" );
 
-    if( icvPyrDownGetBufSize_Gauss5x5_p )
+    /*if( icvPyrDownGetBufSize_Gauss5x5_p )
     {
         ipp_func = type == CV_8UC1 ? icvPyrDown_Gauss5x5_8u_C1R_p :
                    type == CV_8UC3 ? icvPyrDown_Gauss5x5_8u_C3R_p :
@@ -1097,11 +1082,10 @@ cvPyrDown( const void* srcarr, void* dstarr, int _filter )
 
         use_ipp = ipp_func && icvPyrDownGetBufSize_Gauss5x5_p( src_size2.width,
                     icvDepthToDataType(type), cn, &buffer_size ) >= 0;
-    }
+    }*/
 
     if( !use_ipp )
-        icvPyrDownG5x5_GetBufSize( src_size2.width,
-            icvDepthToDataType(type), cn, &buffer_size );
+        icvPyrDownG5x5_GetBufSize( src_size2.width, type, &buffer_size );
 
     if( buffer_size <= CV_MAX_LOCAL_SIZE )
     {

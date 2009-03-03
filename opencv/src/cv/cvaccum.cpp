@@ -42,9 +42,9 @@
 #include "_cv.h"
 
 #define  ICV_DEF_ACC_FUNC( name, srctype, dsttype, cvtmacro )           \
-IPCVAPI_IMPL( CvStatus,                                                 \
-name,( const srctype *src, int srcstep, dsttype *dst,                   \
-       int dststep, CvSize size ), (src, srcstep, dst, dststep, size )) \
+static CvStatus CV_STDCALL                                              \
+name( const srctype *src, int srcstep, dsttype *dst,                    \
+      int dststep, CvSize size )                                        \
                                                                         \
 {                                                                       \
     srcstep /= sizeof(src[0]);                                          \
@@ -79,10 +79,9 @@ ICV_DEF_ACC_FUNC( icvAddSquare_32f_C1IR, float, float, CV_SQR )
 
 
 #define  ICV_DEF_ACCPROD_FUNC( flavor, srctype, dsttype, cvtmacro )         \
-IPCVAPI_IMPL( CvStatus, icvAddProduct_##flavor##_C1IR,                      \
+static CvStatus CV_STDCALL icvAddProduct_##flavor##_C1IR                    \
 ( const srctype *src1, int step1, const srctype *src2, int step2,           \
-  dsttype *dst, int dststep, CvSize size ),                                 \
- (src1, step1, src2, step2, dst, dststep, size) )                           \
+  dsttype *dst, int dststep, CvSize size )                                  \
 {                                                                           \
     step1 /= sizeof(src1[0]);                                               \
     step2 /= sizeof(src2[0]);                                               \
@@ -115,9 +114,9 @@ ICV_DEF_ACCPROD_FUNC( 32f, float, float, CV_NOP )
 
 
 #define  ICV_DEF_ACCWEIGHT_FUNC( flavor, srctype, dsttype, cvtmacro )   \
-IPCVAPI_IMPL( CvStatus, icvAddWeighted_##flavor##_C1IR,                 \
+static CvStatus CV_STDCALL icvAddWeighted_##flavor##_C1IR               \
 ( const srctype *src, int srcstep, dsttype *dst, int dststep,           \
-  CvSize size, dsttype alpha ), (src, srcstep, dst, dststep, size, alpha) )\
+  CvSize size, dsttype alpha )                                          \
 {                                                                       \
     dsttype beta = (dsttype)(1 - alpha);                                \
     srcstep /= sizeof(src[0]);                                          \
@@ -150,10 +149,9 @@ ICV_DEF_ACCWEIGHT_FUNC( 32f, float, float, CV_NOP )
 
 
 #define  ICV_DEF_ACCMASK_FUNC_C1( name, srctype, dsttype, cvtmacro )    \
-IPCVAPI_IMPL( CvStatus,                                                 \
-name,( const srctype *src, int srcstep, const uchar* mask, int maskstep,\
-       dsttype *dst, int dststep, CvSize size ),                        \
-       (src, srcstep, mask, maskstep, dst, dststep, size ))             \
+static CvStatus CV_STDCALL                                              \
+name( const srctype *src, int srcstep, const uchar* mask, int maskstep, \
+      dsttype *dst, int dststep, CvSize size )                          \
 {                                                                       \
     srcstep /= sizeof(src[0]);                                          \
     dststep /= sizeof(dst[0]);                                          \
@@ -186,10 +184,9 @@ ICV_DEF_ACCMASK_FUNC_C1( icvAddSquare_32f_C1IMR, float, float, CV_SQR )
 
 
 #define  ICV_DEF_ACCPRODUCTMASK_FUNC_C1( flavor, srctype, dsttype, cvtmacro )  \
-IPCVAPI_IMPL( CvStatus, icvAddProduct_##flavor##_C1IMR,                 \
+static CvStatus CV_STDCALL icvAddProduct_##flavor##_C1IMR               \
 ( const srctype *src1, int step1, const srctype* src2, int step2,       \
-  const uchar* mask, int maskstep, dsttype *dst, int dststep, CvSize size ),\
-  (src1, step1, src2, step2, mask, maskstep, dst, dststep, size ))      \
+  const uchar* mask, int maskstep, dsttype *dst, int dststep, CvSize size )\
 {                                                                       \
     step1 /= sizeof(src1[0]);                                           \
     step2 /= sizeof(src2[0]);                                           \
@@ -220,10 +217,9 @@ ICV_DEF_ACCPRODUCTMASK_FUNC_C1( 8u32f, uchar, float, CV_8TO32F )
 ICV_DEF_ACCPRODUCTMASK_FUNC_C1( 32f, float, float, CV_NOP )
 
 #define  ICV_DEF_ACCWEIGHTMASK_FUNC_C1( flavor, srctype, dsttype, cvtmacro ) \
-IPCVAPI_IMPL( CvStatus, icvAddWeighted_##flavor##_C1IMR,                \
+static CvStatus CV_STDCALL icvAddWeighted_##flavor##_C1IMR              \
 ( const srctype *src, int srcstep, const uchar* mask, int maskstep,     \
-  dsttype *dst, int dststep, CvSize size, dsttype alpha ),              \
-  (src, srcstep, mask, maskstep, dst, dststep, size, alpha ))           \
+  dsttype *dst, int dststep, CvSize size, dsttype alpha )               \
 {                                                                       \
     dsttype beta = (dsttype)(1 - alpha);                                \
     srcstep /= sizeof(src[0]);                                          \
@@ -254,10 +250,9 @@ ICV_DEF_ACCWEIGHTMASK_FUNC_C1( 32f, float, float, CV_NOP )
 
 
 #define  ICV_DEF_ACCMASK_FUNC_C3( name, srctype, dsttype, cvtmacro )    \
-IPCVAPI_IMPL( CvStatus,                                                 \
-name,( const srctype *src, int srcstep, const uchar* mask, int maskstep,\
-       dsttype *dst, int dststep, CvSize size ),                        \
-       (src, srcstep, mask, maskstep, dst, dststep, size ))             \
+static CvStatus CV_STDCALL                                              \
+name( const srctype *src, int srcstep, const uchar* mask, int maskstep, \
+      dsttype *dst, int dststep, CvSize size )                          \
 {                                                                       \
     srcstep /= sizeof(src[0]);                                          \
     dststep /= sizeof(dst[0]);                                          \
@@ -290,10 +285,9 @@ ICV_DEF_ACCMASK_FUNC_C3( icvAddSquare_32f_C3IMR, float, float, CV_SQR )
 
 
 #define  ICV_DEF_ACCPRODUCTMASK_FUNC_C3( flavor, srctype, dsttype, cvtmacro )  \
-IPCVAPI_IMPL( CvStatus, icvAddProduct_##flavor##_C3IMR,                 \
+static CvStatus CV_STDCALL icvAddProduct_##flavor##_C3IMR               \
 ( const srctype *src1, int step1, const srctype* src2, int step2,       \
-  const uchar* mask, int maskstep, dsttype *dst, int dststep, CvSize size ),\
-  (src1, step1, src2, step2, mask, maskstep, dst, dststep, size ))      \
+  const uchar* mask, int maskstep, dsttype *dst, int dststep, CvSize size ) \
 {                                                                       \
     step1 /= sizeof(src1[0]);                                           \
     step2 /= sizeof(src2[0]);                                           \
@@ -325,10 +319,9 @@ ICV_DEF_ACCPRODUCTMASK_FUNC_C3( 32f, float, float, CV_NOP )
 
 
 #define  ICV_DEF_ACCWEIGHTMASK_FUNC_C3( flavor, srctype, dsttype, cvtmacro ) \
-IPCVAPI_IMPL( CvStatus, icvAddWeighted_##flavor##_C3IMR,                \
+static CvStatus CV_STDCALL icvAddWeighted_##flavor##_C3IMR               \
 ( const srctype *src, int srcstep, const uchar* mask, int maskstep,     \
-  dsttype *dst, int dststep, CvSize size, dsttype alpha ),              \
-  (src, srcstep, mask, maskstep, dst, dststep, size, alpha ))           \
+  dsttype *dst, int dststep, CvSize size, dsttype alpha )               \
 {                                                                       \
     dsttype beta = (dsttype)(1 - alpha);                                \
     srcstep /= sizeof(src[0]);                                          \
@@ -357,7 +350,6 @@ IPCVAPI_IMPL( CvStatus, icvAddWeighted_##flavor##_C3IMR,                \
 ICV_DEF_ACCWEIGHTMASK_FUNC_C3( 8u32f, uchar, float, CV_8TO32F )
 ICV_DEF_ACCWEIGHTMASK_FUNC_C3( 32f, float, float, CV_NOP )
 
-
 #define  ICV_DEF_INIT_ACC_TAB( FUNCNAME )                                           \
 static  void  icvInit##FUNCNAME##Table( CvFuncTable* tab, CvBigFuncTable* masktab ) \
 {                                                                                   \
@@ -377,6 +369,11 @@ ICV_DEF_INIT_ACC_TAB( AddSquare )
 ICV_DEF_INIT_ACC_TAB( AddProduct )
 ICV_DEF_INIT_ACC_TAB( AddWeighted )
 
+typedef CvStatus (CV_STDCALL * CvAccFunc)( const void* src, int srcstep,
+                                           void* dst, int dststep, CvSize size );
+typedef CvStatus (CV_STDCALL * CvAccMaskFunc)( const void* src, int srcstep,
+                                               const void* mask, int maskstep,
+                                               void* dst, int dststep, CvSize size );
 
 CV_IMPL void
 cvAcc( const void* arr, void* sumarr, const void* maskarr )
@@ -432,7 +429,7 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
 
     if( !mask )
     {
-        CvFunc2D_2A func=(CvFunc2D_2A)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
+        CvAccFunc func=(CvAccFunc)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "Unsupported type combination" );
@@ -449,7 +446,7 @@ cvAcc( const void* arr, void* sumarr, const void* maskarr )
     }
     else
     {
-        CvFunc2D_3A func = (CvFunc2D_3A)accmask_tab.fn_2d[type];
+        CvAccMaskFunc func = (CvAccMaskFunc)accmask_tab.fn_2d[type];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
@@ -527,7 +524,7 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
 
     if( !mask )
     {
-        CvFunc2D_2A func = (CvFunc2D_2A)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
+        CvAccFunc func = (CvAccFunc)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
@@ -545,7 +542,7 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
     }
     else
     {
-        CvFunc2D_3A func = (CvFunc2D_3A)accmask_tab.fn_2d[type];
+        CvAccMaskFunc func = (CvAccMaskFunc)accmask_tab.fn_2d[type];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
@@ -574,6 +571,14 @@ cvSquareAcc( const void* arr, void* sq_sum, const void* maskarr )
     __END__;
 }
 
+
+typedef CvStatus (CV_STDCALL * CvMultAccFunc)( const void* src1, int srcstep1,
+                                               const void* src2, int srcstep2,
+                                               void* dst, int dststep, CvSize size );
+typedef CvStatus (CV_STDCALL * CvMultAccMaskFunc)( const void* src1, int srcstep1,
+                                                   const void* src2, int srcstep2,
+                                                   const void* mask, int maskstep,
+                                                   void* dst, int dststep, CvSize size );
 
 CV_IMPL void
 cvMultiplyAcc( const void* arrA, const void* arrB,
@@ -627,7 +632,7 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
 
     if( !mask )
     {
-        CvFunc2D_3A func = (CvFunc2D_3A)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
+        CvMultAccFunc func = (CvMultAccFunc)acc_tab.fn_2d[CV_MAT_DEPTH(type)];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );
@@ -646,7 +651,7 @@ cvMultiplyAcc( const void* arrA, const void* arrB,
     }
     else
     {
-        CvFunc2D_4A func = (CvFunc2D_4A)accmask_tab.fn_2d[type];
+        CvMultAccMaskFunc func = (CvMultAccMaskFunc)accmask_tab.fn_2d[type];
 
         if( !func )
             CV_ERROR( CV_StsUnsupportedFormat, "" );

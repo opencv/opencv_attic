@@ -217,12 +217,13 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
 
     int i, j, y, dst_y = 0, max_dy, delta = 0;
     int aperture_size0 = aperture_size;
-    int temp_step = 0, d_step;
-    uchar* shifted_ptr = 0;
+    int d_step;
+    //uchar* shifted_ptr = 0;
+    //int temp_step = 0;
     int depth, d_depth;
     int stage = CV_START;
-    CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0;
-    CvFilterFixedIPPFunc ipp_scharr_vert = 0, ipp_scharr_horiz = 0;
+    //CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0;
+    //CvFilterFixedIPPFunc ipp_scharr_vert = 0, ipp_scharr_horiz = 0;
     CvSize el_size, size, stripe_size;
     int aligned_width;
     CvPoint el_anchor;
@@ -246,7 +247,7 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     el_size = cvSize( aperture_size, aperture_size );
     el_anchor = cvPoint( aperture_size/2, aperture_size/2 );
 
-    if( aperture_size <= 5 && icvFilterSobelVert_8u16s_C1R_p )
+    /*if( aperture_size <= 5 && icvFilterSobelVert_8u16s_C1R_p )
     {
         if( depth == CV_8U && aperture_size0 == CV_SCHARR )
         {
@@ -281,10 +282,10 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
         max_dy = tempsrc->rows - aperture_size + 1;
         use_ipp = true;
     }
-    else
+    else*/
     {
-        ipp_sobel_vert = ipp_sobel_horiz = 0;
-        ipp_scharr_vert = ipp_scharr_horiz = 0;
+        //ipp_sobel_vert = ipp_sobel_horiz = 0;
+        //ipp_scharr_vert = ipp_scharr_horiz = 0;
 
         CV_CALL( dx_filter.init_deriv( size.width, depth, d_depth, 1, 0, aperture_size0 ));
         CV_CALL( dy_filter.init_deriv( size.width, depth, d_depth, 0, 1, aperture_size0 ));
@@ -311,12 +312,12 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
     if( depth == CV_8U )
         factorx *= 255.;
     factory = factorx = 1./factorx;
-    if( ipp_sobel_vert )
-        factory = -factory;
+    //if( ipp_sobel_vert )
+    //    factory = -factory;
 
     for( y = 0; y < size.height; y += delta )
     {
-        if( !use_ipp )
+        //if( !use_ipp )
         {
             delta = MIN( size.height - y, max_dy );
             if( y + delta == size.height )
@@ -325,7 +326,7 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
             stripe_size.height = dy_filter.process( src, Dy, cvRect(0,y,-1,delta),
                                                     cvPoint(0,0), stage );
         }
-        else
+        /*else
         {
             delta = icvIPPFilterNextStripe( src, tempsrc, y, el_size, el_anchor );
             stripe_size.height = delta;
@@ -339,14 +340,14 @@ icvCornerEigenValsVecs( const CvMat* src, CvMat* eigenv, int block_size,
                         Dy->data.ptr, d_step, stripe_size,
                         aperture_size*10 + aperture_size ));
             }
-            else /*if( ipp_scharr_vert )*/
+            else
             {
                 IPPI_CALL( ipp_scharr_vert( shifted_ptr, temp_step,
                         Dx->data.ptr, d_step, stripe_size ));
                 IPPI_CALL( ipp_scharr_horiz( shifted_ptr, temp_step,
                         Dy->data.ptr, d_step, stripe_size ));
             }
-        }
+        }*/
 
         for( i = 0; i < stripe_size.height; i++ )
         {
@@ -513,13 +514,14 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     __BEGIN__;
 
     int i, j, y, dst_y = 0, max_dy, delta = 0;
-    int temp_step = 0, d_step;
-    uchar* shifted_ptr = 0;
+    int d_step;
+    //uchar* shifted_ptr = 0;
+    //int temp_step = 0;
     int depth, d_depth;
     int stage = CV_START;
-    CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0,
+    /*CvSobelFixedIPPFunc ipp_sobel_vert = 0, ipp_sobel_horiz = 0,
                         ipp_sobel_vert_second = 0, ipp_sobel_horiz_second = 0,
-                        ipp_sobel_cross = 0;
+                        ipp_sobel_cross = 0;*/
     CvSize el_size, size, stripe_size;
     int aligned_width;
     CvPoint el_anchor;
@@ -554,7 +556,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
     el_size = cvSize( aperture_size, aperture_size );
     el_anchor = cvPoint( aperture_size/2, aperture_size/2 );
 
-    if( aperture_size <= 5 && icvFilterSobelVert_8u16s_C1R_p )
+    /*if( aperture_size <= 5 && icvFilterSobelVert_8u16s_C1R_p )
     {
         if( depth == CV_8U )
         {
@@ -584,10 +586,10 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
         max_dy = tempsrc->rows - aperture_size + 1;
         use_ipp = true;
     }
-    else
+    else*/
     {
-        ipp_sobel_vert = ipp_sobel_horiz = 0;
-        ipp_sobel_vert_second = ipp_sobel_horiz_second = ipp_sobel_cross = 0;
+        //ipp_sobel_vert = ipp_sobel_horiz = 0;
+        //ipp_sobel_vert_second = ipp_sobel_horiz_second = ipp_sobel_cross = 0;
         dx_filter.init_deriv( size.width, depth, d_depth, 1, 0, aperture_size );
         dy_filter.init_deriv( size.width, depth, d_depth, 0, 1, aperture_size );
         d2x_filter.init_deriv( size.width, depth, d_depth, 2, 0, aperture_size );
@@ -619,7 +621,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
 
     for( y = 0; y < size.height; y += delta )
     {
-        if( !use_ipp )
+        //if( !use_ipp )
         {
             delta = MIN( size.height - y, max_dy );
             CvRect roi = cvRect(0,y,size.width,delta);
@@ -634,7 +636,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
             d2y_filter.process(src,D2y,roi,origin,stage);
             stripe_size.height = dxy_filter.process(src,Dxy,roi,origin,stage);
         }
-        else
+        /*else
         {
             delta = icvIPPFilterNextStripe( src, tempsrc, y, el_size, el_anchor );
             stripe_size.height = delta;
@@ -649,7 +651,7 @@ cvPreCornerDetect( const void* srcarr, void* dstarr, int aperture_size )
                 D2y->data.ptr, d_step, stripe_size, aperture_size ));
             IPPI_CALL( ipp_sobel_cross( shifted_ptr, temp_step,
                 Dxy->data.ptr, d_step, stripe_size, aperture_size ));
-        }
+        }*/
 
         for( i = 0; i < stripe_size.height; i++, dst_y++ )
         {

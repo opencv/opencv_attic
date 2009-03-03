@@ -603,16 +603,6 @@ typedef CvStatus (CV_STDCALL * CvResizeAreaFunc)
 
 ////////////////////////////////// IPP resize functions //////////////////////////////////
 
-icvResize_8u_C1R_t icvResize_8u_C1R_p = 0;
-icvResize_8u_C3R_t icvResize_8u_C3R_p = 0;
-icvResize_8u_C4R_t icvResize_8u_C4R_p = 0;
-icvResize_16u_C1R_t icvResize_16u_C1R_p = 0;
-icvResize_16u_C3R_t icvResize_16u_C3R_p = 0;
-icvResize_16u_C4R_t icvResize_16u_C4R_p = 0;
-icvResize_32f_C1R_t icvResize_32f_C1R_p = 0;
-icvResize_32f_C3R_t icvResize_32f_C3R_p = 0;
-icvResize_32f_C4R_t icvResize_32f_C4R_p = 0;
-
 typedef CvStatus (CV_STDCALL * CvResizeIPPFunc)
 ( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
   void* dst, int dststep, CvSize dstroi,
@@ -669,7 +659,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
         MIN(ssize.height, dsize.height) <= 4) )
         method = CV_INTER_LINEAR;
 
-    if( icvResize_8u_C1R_p &&
+    /*if( icvResize_8u_C1R_p &&
         MIN(ssize.width, dsize.width) > 4 &&
         MIN(ssize.height, dsize.height) > 4 )
     {
@@ -694,7 +684,7 @@ cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
                                  (double)dsize.height/ssize.height, 1 << method ));
             EXIT;
         }
-    }
+    }*/
 
     if( method == CV_INTER_NN )
     {
@@ -1055,13 +1045,6 @@ static void icvInitWarpAffineTab( CvFuncTable* bilin_tab )
 
 /////////////////////////////// IPP warpaffine functions /////////////////////////////////
 
-icvWarpAffineBack_8u_C1R_t icvWarpAffineBack_8u_C1R_p = 0;
-icvWarpAffineBack_8u_C3R_t icvWarpAffineBack_8u_C3R_p = 0;
-icvWarpAffineBack_8u_C4R_t icvWarpAffineBack_8u_C4R_p = 0;
-icvWarpAffineBack_32f_C1R_t icvWarpAffineBack_32f_C1R_p = 0;
-icvWarpAffineBack_32f_C3R_t icvWarpAffineBack_32f_C3R_p = 0;
-icvWarpAffineBack_32f_C4R_t icvWarpAffineBack_32f_C4R_p = 0;
-
 typedef CvStatus (CV_STDCALL * CvWarpAffineBackIPPFunc)
 ( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
   void* dst, int dststep, CvRect dstroi,
@@ -1085,7 +1068,6 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
     int k, type, depth, cn, *ofs = 0;
     double src_matrix[6], dst_matrix[6];
     double fillbuf[4];
-    int method = flags & 3;
     CvMat srcAb = cvMat( 2, 3, CV_64F, src_matrix ),
           dstAb = cvMat( 2, 3, CV_64F, dst_matrix ),
           A, b, invA, invAb;
@@ -1132,9 +1114,10 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
 
-    if( icvWarpAffineBack_8u_C1R_p && MIN( ssize.width, dsize.width ) >= 4 &&
+    /*if( icvWarpAffineBack_8u_C1R_p && MIN( ssize.width, dsize.width ) >= 4 &&
         MIN( ssize.height, dsize.height ) >= 4 )
     {
+        int method = flags & 3;
         CvWarpAffineBackIPPFunc ipp_func =
             type == CV_8UC1 ? icvWarpAffineBack_8u_C1R_p :
             type == CV_8UC3 ? icvWarpAffineBack_8u_C3R_p :
@@ -1159,7 +1142,7 @@ cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
                           dstAb.data.db, 1 << method ) >= 0 )
                 EXIT;
         }
-    }
+    }*/
 
     cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
     ofs = (int*)cvStackAlloc( dst->cols*2*sizeof(ofs[0]) );
@@ -1324,20 +1307,6 @@ static void icvInitWarpPerspectiveTab( CvFuncTable* bilin_tab )
 
 /////////////////////////// IPP warpperspective functions ////////////////////////////////
 
-icvWarpPerspectiveBack_8u_C1R_t icvWarpPerspectiveBack_8u_C1R_p = 0;
-icvWarpPerspectiveBack_8u_C3R_t icvWarpPerspectiveBack_8u_C3R_p = 0;
-icvWarpPerspectiveBack_8u_C4R_t icvWarpPerspectiveBack_8u_C4R_p = 0;
-icvWarpPerspectiveBack_32f_C1R_t icvWarpPerspectiveBack_32f_C1R_p = 0;
-icvWarpPerspectiveBack_32f_C3R_t icvWarpPerspectiveBack_32f_C3R_p = 0;
-icvWarpPerspectiveBack_32f_C4R_t icvWarpPerspectiveBack_32f_C4R_p = 0;
-
-icvWarpPerspective_8u_C1R_t icvWarpPerspective_8u_C1R_p = 0;
-icvWarpPerspective_8u_C3R_t icvWarpPerspective_8u_C3R_p = 0;
-icvWarpPerspective_8u_C4R_t icvWarpPerspective_8u_C4R_p = 0;
-icvWarpPerspective_32f_C1R_t icvWarpPerspective_32f_C1R_p = 0;
-icvWarpPerspective_32f_C3R_t icvWarpPerspective_32f_C3R_p = 0;
-icvWarpPerspective_32f_C4R_t icvWarpPerspective_32f_C4R_p = 0;
-
 typedef CvStatus (CV_STDCALL * CvWarpPerspectiveBackIPPFunc)
 ( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
   void* dst, int dststep, CvRect dstroi,
@@ -1404,7 +1373,7 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
     
-    if( icvWarpPerspectiveBack_8u_C1R_p )
+    /*if( icvWarpPerspectiveBack_8u_C1R_p )
     {
         CvWarpPerspectiveBackIPPFunc ipp_func =
             type == CV_8UC1 ? icvWarpPerspectiveBack_8u_C1R_p :
@@ -1452,7 +1421,7 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
                     EXIT;
             }
         }
-    }
+    }*/
 
     cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
 
@@ -1768,14 +1737,6 @@ typedef CvStatus (CV_STDCALL * CvRemapIPPFunc)(
     const float* xmap, int xmapstep, const float* ymap, int ymapstep,
     void* dst, int dststep, CvSize dstsize, int interpolation ); 
 
-icvRemap_8u_C1R_t icvRemap_8u_C1R_p = 0;
-icvRemap_8u_C3R_t icvRemap_8u_C3R_p = 0;
-icvRemap_8u_C4R_t icvRemap_8u_C4R_p = 0;
-
-icvRemap_32f_C1R_t icvRemap_32f_C1R_p = 0;
-icvRemap_32f_C3R_t icvRemap_32f_C3R_p = 0;
-icvRemap_32f_C4R_t icvRemap_32f_C4R_p = 0;
-
 /**************************************************************/
 
 #define CV_REMAP_SHIFT 5
@@ -2049,7 +2010,7 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
         EXIT;
     }
 
-    if( icvRemap_8u_C1R_p )
+    /*if( icvRemap_8u_C1R_p )
     {
         CvRemapIPPFunc ipp_func =
             type == CV_8UC1 ? icvRemap_8u_C1R_p :
@@ -2080,7 +2041,7 @@ cvRemap( const CvArr* srcarr, CvArr* dstarr,
             if( status >= 0 )
                 EXIT;
         }
-    }
+    }*/
 
     {
         CvRemapFunc func = method == CV_INTER_CUBIC ?

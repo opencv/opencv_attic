@@ -41,10 +41,9 @@
 
 #include "_cv.h"
 
-IPCVAPI_IMPL( CvStatus, icvUpdateMotionHistory_8u32f_C1IR,
+static CvStatus CV_STDCALL icvUpdateMotionHistory_8u32f_C1IR
     (const uchar * silIm, int silStep, float *mhiIm, int mhiStep,
-     CvSize size, float timestamp, float mhi_duration),
-     (silIm, silStep, mhiIm, mhiStep, size, timestamp, mhi_duration) )
+     CvSize size, float timestamp, float mhi_duration)
 {
     int x, y;
 

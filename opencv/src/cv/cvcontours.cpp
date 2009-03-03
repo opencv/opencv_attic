@@ -63,7 +63,7 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
         CV_ERROR( CV_StsNullPtr, "" );
 
     if( chain->elem_size != 1 || chain->header_size < (int)sizeof(CvChain))
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     cvStartReadSeq( (CvSeq *) chain, (CvSeqReader *) reader, 0 );
     CV_CHECK();
@@ -218,15 +218,12 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
     img = (uchar*)(mat->data.ptr);
 
     if( method < 0 || method > CV_CHAIN_APPROX_TC89_KCOS )
-        CV_ERROR_FROM_STATUS( CV_BADRANGE_ERR );
+        CV_ERROR( CV_StsOutOfRange, "" );
 
     if( header_size < (int) (method == CV_CHAIN_CODE ? sizeof( CvChain ) : sizeof( CvContour )))
-        CV_ERROR_FROM_STATUS( CV_BADSIZE_ERR );
+        CV_ERROR( CV_StsBadSize, "" );
 
     scanner = (CvContourScanner)cvAlloc( sizeof( *scanner ));
-    if( !scanner )
-        CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
-
     memset( scanner, 0, sizeof( *scanner ));
 
     scanner->storage1 = scanner->storage2 = storage;
@@ -303,8 +300,6 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
         scanner->cinfo_storage = cvCreateChildMemStorage( scanner->storage2 );
         scanner->cinfo_set = cvCreateSet( 0, sizeof( CvSet ), sizeof( _CvContourInfo ),
                                           scanner->cinfo_storage );
-        if( scanner->cinfo_storage == 0 || scanner->cinfo_set == 0 )
-            CV_ERROR_FROM_STATUS( CV_OUTOFMEM_ERR );
     }
 
     /* make zero borders */
@@ -959,11 +954,6 @@ cvFindNextContour( CvContourScanner scanner )
 
                 seq = cvCreateSeq( scanner->seq_type1, scanner->header_size1,
                                    scanner->elem_size1, scanner->storage1 );
-                if( !seq )
-                {
-                    result = CV_OUTOFMEM_ERR;
-                    goto exit_func;
-                }
                 seq->flags |= is_hole ? CV_SEQ_FLAG_HOLE : 0;
 
                 /* initialize header */
@@ -1069,7 +1059,7 @@ cvFindNextContour( CvContourScanner scanner )
     if( result != 0 )
         contour = 0;
     if( result < 0 )
-        CV_ERROR_FROM_STATUS( result );
+        CV_ERROR( result, "" );
 
     __END__;
 
