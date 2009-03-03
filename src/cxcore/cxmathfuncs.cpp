@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -41,9 +42,12 @@
 
 #include "_cxcore.h"
 
-#ifdef HAVE_CONFIG_H
-#include <cvconfig.h>
-#endif
+namespace cv
+{
+
+static const int MAX_BLOCK_SIZE = 1024;
+
+typedef CvStatus (CV_STDCALL * MathFunc)(const void* src, void* dst, int len);
 
 #define ICV_MATH_BLOCK_SIZE  256
 
@@ -64,8 +68,7 @@ static const float icvAtanTab[8] = { 0.f + _CV_ATAN_CF2, 90.f - _CV_ATAN_CF2,
 static const int icvAtanSign[8] =
     { 0, 0x80000000, 0x80000000, 0, 0x80000000, 0, 0, 0x80000000 };
 
-CV_IMPL float
-cvFastArctan( float y, float x )
+float fastAtan2( float y, float x )
 {
     Cv32suf _x, _y;
     int ix, iy, ygx, idx;
@@ -97,9 +100,7 @@ cvFastArctan( float y, float x )
     return (float)((_CV_ATAN_CF0*fabs(z) + _CV_ATAN_CF1)*z + icvAtanTab[idx]);
 }
 
-
-IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
-    (const float *__y, const float *__x, float *angle, int len ), (__y, __x, angle, len) )
+static CvStatus CV_STDCALL FastAtan2_32f(const float *__y, const float *__x, float *angle, int len )
 {
     int i = 0;
     const int *y = (const int*)__y, *x = (const int*)__x;
@@ -167,7 +168,7 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
 
     /* process the rest */
     for( ; i < len; i++ )
-        angle[i] = cvFastArctan( __y[i], __x[i] );
+        angle[i] = fastAtan2( __y[i], __x[i] );
 
     return CV_OK;
 }
@@ -177,7 +178,7 @@ IPCVAPI_IMPL( CvStatus, icvFastArctan_32f,
    Fast cube root by Ken Turkowski
    (http://www.worldserver.com/turk/computergraphics/papers.html)
 \* ************************************************************************** */
-CV_IMPL  float  cvCbrt( float value )
+float  cubeRoot( float value )
 {
     float fr;
     Cv32suf v, m;
@@ -214,257 +215,229 @@ CV_IMPL  float  cvCbrt( float value )
     return v.f;
 }
 
-//static const double _0_5 = 0.5, _1_5 = 1.5;
-
-IPCVAPI_IMPL( CvStatus, icvInvSqrt_32f, (const float *src, float *dst, int len), (src, dst, len) )
+template<typename T> static CvStatus CV_STDCALL InvSqrt(const T* src, T* dst, int len)
 {
-    int i = 0;
+    for( int i = 0; i < len; i++ )
+        dst[i] = 1/std::sqrt(src[i]);
+    return CV_OK;
 
-    if( !(src && dst && len >= 0) )
-        return CV_BADFACTOR_ERR;
+}
+
+template<typename T> static CvStatus CV_STDCALL Sqrt(const T* src, T* dst, int len)
+{
+    for( int i = 0; i < len; i++ )
+        dst[i] = std::sqrt(src[i]);
+    return CV_OK;
+}
+
+template<typename T> static CvStatus CV_STDCALL
+Magnitude(const T* x, const T* y, T* mag, int len)
+{
+    int i;
+    for( i = 0; i <= len - 4; i += 4 )
+    {
+        T x0 = x[i], y0 = y[i], x1 = x[i+1], y1 = y[i+1];
+
+        x0 = x0*x0 + y0*y0;
+        x1 = x1*x1 + y1*y1;
+        mag[i] = x0;
+        mag[i+1] = x1;
+        x0 = x[i+2], y0 = y[i+2];
+        x1 = x[i+3], y1 = y[i+3];
+        x0 = x0*x0 + y0*y0;
+        x1 = x1*x1 + y1*y1;
+        mag[i+2] = x0;
+        mag[i+3] = x1;
+    }
 
     for( ; i < len; i++ )
-        dst[i] = (float)(1.f/sqrt(src[i]));
+    {
+        T x0 = x[i], y0 = y[i];
+        mag[i] = x0*x0 + y0*y0;
+    }
+    Sqrt( mag, mag, len );
 
     return CV_OK;
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvSqrt_32f, (const float *src, float *dst, int len), (src, dst, len) )
+#if CV_SSE2
+template<> static CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int len)
 {
     int i = 0;
-
-    if( !(src && dst && len >= 0) )
-        return CV_BADFACTOR_ERR;
-
+    __m128 _0_5 = _mm_set1_ps(0.5f), _1_5 = _mm_set1_ps(1.5f);
+    if( (((size_t)src|(size_t)dst) & 15) == 0 )
+        for( ; i <= len - 8; i += 8 )
+        {
+            __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
+            __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
+            t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
+            t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
+            t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
+            _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
+        }
+    else
+        for( ; i <= len - 8; i += 8 )
+        {
+            __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
+            __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
+            t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
+            t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
+            t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
+            _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
+        }
     for( ; i < len; i++ )
-        dst[i] = (float)sqrt(src[i]);
-
+        dst[i] = 1/std::sqrt(src[i]);
     return CV_OK;
 }
 
-
-IPCVAPI_IMPL( CvStatus, icvSqrt_64f, (const double *src, double *dst, int len), (src, dst, len) )
+template<> static CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
 {
     int i = 0;
-
-    if( !(src && dst && len >= 0) )
-        return CV_BADFACTOR_ERR;
-
+    if( (((size_t)src|(size_t)dst) & 15) == 0 )
+        for( ; i <= len - 8; i += 8 )
+        {
+            __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
+            t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
+            _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
+        }
+    else
+        for( ; i <= len - 8; i += 8 )
+        {
+            __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
+            t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
+            _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
+        }
     for( ; i < len; i++ )
-        dst[i] = sqrt(src[i]);
-
+        dst[i] = std::sqrt(src[i]);
     return CV_OK;
 }
 
-
-IPCVAPI_IMPL( CvStatus, icvInvSqrt_64f, (const double *src, double *dst, int len), (src, dst, len) )
+template<> static CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
 {
     int i = 0;
-
-    if( !(src && dst && len >= 0) )
-        return CV_BADFACTOR_ERR;
-
+    if( (((size_t)src|(size_t)dst) & 15) == 0 )
+        for( ; i <= len - 4; i += 4 )
+        {
+            __m128d t0 = _mm_load_pd(src + i), t1 = _mm_load_pd(src + i + 2);
+            t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
+            _mm_store_pd(dst + i, t0); _mm_store_pd(dst + i + 2, t1);
+        }
+    else
+        for( ; i <= len - 4; i += 4 )
+        {
+            __m128d t0 = _mm_loadu_pd(src + i), t1 = _mm_loadu_pd(src + i + 2);
+            t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
+            _mm_storeu_pd(dst + i, t0); _mm_storeu_pd(dst + i + 2, t1);
+        }
     for( ; i < len; i++ )
-        dst[i] = 1./sqrt(src[i]);
-
+        dst[i] = std::sqrt(src[i]);
     return CV_OK;
 }
 
+template<> static CvStatus CV_STDCALL
+Magnitude(const float* x, const float* y, float* mag, int len)
+{
+    int i = 0;
+    for( ; i <= len - 8; i += 8 )
+    {
+        __m128 x0 = _mm_loadu_ps(x + i), x1 = _mm_loadu_ps(x + i + 4);
+        __m128 y0 = _mm_loadu_ps(y + i), y1 = _mm_loadu_ps(y + i + 4);
+        x0 = _mm_add_ps(_mm_mul_ps(x0, x0), _mm_mul_ps(y0, y0));
+        x1 = _mm_add_ps(_mm_mul_ps(x1, x1), _mm_mul_ps(y1, y1));
+        x0 = _mm_sqrt_ps(x0); x1 = _mm_sqrt_ps(x1);
+        _mm_storeu_ps(mag + i, x0); _mm_storeu_ps(mag + i + 4, x1);
+    }
+    for( ; i < len; i++ )
+    {
+        float x0 = x[i], y0 = y[i];
+        mag[i] = std::sqrt(x0*x0 + y0*y0);
+    }
+    return CV_OK;
+}
+#endif
 
-#define ICV_DEF_SQR_MAGNITUDE_FUNC(flavor, arrtype, magtype)\
-static CvStatus CV_STDCALL                                  \
-icvSqrMagnitude_##flavor(const arrtype* x, const arrtype* y,\
-                         magtype* mag, int len)             \
-{                                                           \
-    int i;                                                  \
-                                                            \
-    for( i = 0; i <= len - 4; i += 4 )                      \
-    {                                                       \
-        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];     \
-        magtype x1 = (magtype)x[i+1], y1 = (magtype)y[i+1]; \
-                                                            \
-        x0 = x0*x0 + y0*y0;                                 \
-        x1 = x1*x1 + y1*y1;                                 \
-        mag[i] = x0;                                        \
-        mag[i+1] = x1;                                      \
-        x0 = (magtype)x[i+2], y0 = (magtype)y[i+2];         \
-        x1 = (magtype)x[i+3], y1 = (magtype)y[i+3];         \
-        x0 = x0*x0 + y0*y0;                                 \
-        x1 = x1*x1 + y1*y1;                                 \
-        mag[i+2] = x0;                                      \
-        mag[i+3] = x1;                                      \
-    }                                                       \
-                                                            \
-    for( ; i < len; i++ )                                   \
-    {                                                       \
-        magtype x0 = (magtype)x[i], y0 = (magtype)y[i];     \
-        mag[i] = x0*x0 + y0*y0;                             \
-    }                                                       \
-                                                            \
-    return CV_OK;                                           \
+static CV_STDCALL CvStatus Sqrt_32f(const float* src, float* dst, int len)
+{
+    return Sqrt( src, dst, len );
 }
 
+static CV_STDCALL CvStatus InvSqrt_32f(const float* src, float* dst, int len)
+{
+    return InvSqrt( src, dst, len );
+}
 
-ICV_DEF_SQR_MAGNITUDE_FUNC( 32f, float, float )
-ICV_DEF_SQR_MAGNITUDE_FUNC( 64f, double, double )
+static CV_STDCALL CvStatus Sqrt_64f(const double* src, double* dst, int len)
+{
+    return Sqrt( src, dst, len );
+}
+
+static CV_STDCALL CvStatus InvSqrt_64f(const double* src, double* dst, int len)
+{
+    return InvSqrt( src, dst, len );
+}
+    
 
 /****************************************************************************************\
 *                                  Cartezian -> Polar                                    *
 \****************************************************************************************/
 
-CV_IMPL void
-cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
-               CvArr* magarr, CvArr* anglearr,
-               int angle_in_degrees )
+void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleInDegrees )
 {
-    CV_FUNCNAME( "cvCartToPolar" );
+    float buf[2][MAX_BLOCK_SIZE];
+    int i, j, type = X.type(), depth = X.depth(), cn = X.channels();
+    double angleScale = angleInDegrees ? 1. : CV_PI/180.;
 
-    __BEGIN__;
+    CV_Assert( X.size() == Y.size() && type == Y.type() && (depth == CV_32F || depth == CV_64F));
+    Mag.create( X.size(), type );
+    Angle.create( X.size(), type );
 
-    float* mag_buffer = 0;
-    float* x_buffer = 0;
-    float* y_buffer = 0;
-    int block_size = 0;
-    CvMat xstub, *xmat = (CvMat*)xarr;
-    CvMat ystub, *ymat = (CvMat*)yarr;
-    CvMat magstub, *mag = (CvMat*)magarr;
-    CvMat anglestub, *angle = (CvMat*)anglearr;
-    int coi1 = 0, coi2 = 0, coi3 = 0, coi4 = 0;
-    int depth;
-    CvSize size;
-    int x, y;
-    int cont_flag = CV_MAT_CONT_FLAG;
-    
-    if( !CV_IS_MAT(xmat))
-        CV_CALL( xmat = cvGetMat( xmat, &xstub, &coi1 ));
-
-    if( !CV_IS_MAT(ymat))
-        CV_CALL( ymat = cvGetMat( ymat, &ystub, &coi2 ));
-
-    if( !CV_ARE_TYPES_EQ( xmat, ymat ) )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-
-    if( !CV_ARE_SIZES_EQ( xmat, ymat ) )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-
-    depth = CV_MAT_DEPTH( xmat->type );
-    if( depth < CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-    if( mag )
-    {
-        CV_CALL( mag = cvGetMat( mag, &magstub, &coi3 ));
-
-        if( !CV_ARE_TYPES_EQ( mag, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-        
-        if( !CV_ARE_SIZES_EQ( mag, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-        cont_flag = mag->type;
-    }
-
-    if( angle )
-    {
-        CV_CALL( angle = cvGetMat( angle, &anglestub, &coi4 ));
-
-        if( !CV_ARE_TYPES_EQ( angle, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-        
-        if( !CV_ARE_SIZES_EQ( angle, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-        cont_flag &= angle->type;
-    }
-
-    if( coi1 != 0 || coi2 != 0 || coi3 != 0 || coi4 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    size = cvGetMatSize(xmat);
-    size.width *= CV_MAT_CN(xmat->type);
-
-    if( CV_IS_MAT_CONT( xmat->type & ymat->type & cont_flag ))
-    {
-        size.width *= size.height;
-        size.height = 1;
-    }
-
-    block_size = MIN( size.width, ICV_MATH_BLOCK_SIZE );
-    if( depth == CV_64F && angle )
-    {
-        x_buffer = (float*)cvStackAlloc( block_size*sizeof(float));
-        y_buffer = (float*)cvStackAlloc( block_size*sizeof(float));
-    }
-    else if( depth == CV_32F && mag )
-    {
-        mag_buffer = (float*)cvStackAlloc( block_size*sizeof(float));
-    }
+    Size size = getContinuousSize( X, Y, Mag, Angle, cn );
 
     if( depth == CV_32F )
     {
-        for( y = 0; y < size.height; y++ )
+        const float *x = (const float*)X.data, *y = (const float*)Y.data;
+        float *mag = (float*)Mag.data, *angle = (float*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
-            float* x_data = (float*)(xmat->data.ptr + xmat->step*y);
-            float* y_data = (float*)(ymat->data.ptr + ymat->step*y);
-            float* mag_data = mag ? (float*)(mag->data.ptr + mag->step*y) : 0;
-            float* angle_data = angle ? (float*)(angle->data.ptr + angle->step*y) : 0;
-
-            for( x = 0; x < size.width; x += block_size )
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
-                int len = MIN( size.width - x, block_size );
-
-                if( mag )
-                    icvSqrMagnitude_32f( x_data + x, y_data + x, mag_buffer, len );
-
-                if( angle )
-                {
-                    icvFastArctan_32f( y_data + x, x_data + x, angle_data + x, len );
-                    if( !angle_in_degrees )
-                        icvScale_32f( angle_data + x, angle_data + x,
-                                      len, (float)(CV_PI/180.), 0 );
-                }
-
-                if( mag )
-                    icvSqrt_32f( mag_buffer, mag_data + x, len );
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                Magnitude( x + i, y + i, mag + i, block_size );
+                FastAtan2_32f( y + i, x + i, angle + i, block_size );
+                if( !angleInDegrees )
+                    for( j = 0; j < block_size; j++ )
+                        angle[i + j] *= (float)angleScale;
             }
         }
     }
     else
     {
-        for( y = 0; y < size.height; y++ )
+        const double *x = (const double*)X.data, *y = (const double*)Y.data;
+        double *mag = (double*)Mag.data, *angle = (double*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
-            double* x_data = (double*)(xmat->data.ptr + xmat->step*y);
-            double* y_data = (double*)(ymat->data.ptr + ymat->step*y);
-            double* mag_data = mag ? (double*)(mag->data.ptr + mag->step*y) : 0;
-            double* angle_data = angle ? (double*)(angle->data.ptr + angle->step*y) : 0;
-
-            for( x = 0; x < size.width; x += block_size )
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
-                int len = MIN( size.width - x, block_size );
-
-                if( angle )
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                Magnitude( x + i, y + i, mag + i, block_size );
+                for( j = 0; j < block_size; j++ )
                 {
-                    icvCvt_64f32f( x_data + x, x_buffer, len );
-                    icvCvt_64f32f( y_data + x, y_buffer, len );
+                    buf[0][j] = (float)x[i + j];
+                    buf[1][j] = (float)y[i + j];
                 }
-
-                if( mag )
-                {
-                    icvSqrMagnitude_64f( x_data + x, y_data + x, mag_data + x, len );
-                    icvSqrt_64f( mag_data + x, mag_data + x, len );
-                }
-
-                if( angle )
-                {
-                    icvFastArctan_32f( y_buffer, x_buffer, x_buffer, len );
-                    if( !angle_in_degrees )
-                        icvScale_32f( x_buffer, x_buffer, len, (float)(CV_PI/180.), 0 );
-                    icvCvt_32f64f( x_buffer, angle_data + x, len );
-                }
+                FastAtan2_32f( buf[1], buf[0], buf[0], block_size );
+                for( j = 0; j < block_size; j++ )
+                    angle[i + j] = buf[0][j]*angleScale;
             }
         }
     }
-
-    __END__;
 }
 
 
@@ -473,8 +446,8 @@ cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
 \****************************************************************************************/
 
 static CvStatus CV_STDCALL
-icvSinCos_32f( const float *angle,float *sinval, float* cosval,
-                int len, int angle_in_degrees )
+SinCos_32f( const float *angle,float *sinval, float* cosval,
+            int len, int angle_in_degrees )
 {
     const int N = 64;
 
@@ -555,151 +528,63 @@ icvSinCos_32f( const float *angle,float *sinval, float* cosval,
 }
 
 
-CV_IMPL void
-cvPolarToCart( const CvArr* magarr, const CvArr* anglearr,
-               CvArr* xarr, CvArr* yarr, int angle_in_degrees )
+void polarToCart( const Mat& Mag, const Mat& Angle, Mat& X, Mat& Y, bool angleInDegrees )
 {
-    CV_FUNCNAME( "cvPolarToCart" );
+    int i, j, type = Angle.type(), depth = Angle.depth();
+    Size size;
 
-    __BEGIN__;
+    CV_Assert( depth == CV_32F || depth == CV_64F );
+    X.create( Angle.size(), type );
+    Y.create( Angle.size(), type );
 
-    float* x_buffer = 0;
-    float* y_buffer = 0;
-    int block_size = 0;
-    CvMat xstub, *xmat = (CvMat*)xarr;
-    CvMat ystub, *ymat = (CvMat*)yarr;
-    CvMat magstub, *mag = (CvMat*)magarr;
-    CvMat anglestub, *angle = (CvMat*)anglearr;
-    int coi1 = 0, coi2 = 0, coi3 = 0, coi4 = 0;
-    int depth;
-    CvSize size;
-    int x, y;
-    int cont_flag;
-    
-    if( !CV_IS_MAT(angle))
-        CV_CALL( angle = cvGetMat( angle, &anglestub, &coi4 ));
-
-    depth = CV_MAT_DEPTH( angle->type );
-    if( depth < CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-    cont_flag = angle->type;
-
-    if( mag )
+    if( Mag.data )
     {
-        if( !CV_IS_MAT(mag))
-            CV_CALL( mag = cvGetMat( mag, &magstub, &coi3 ));
-
-        if( !CV_ARE_TYPES_EQ( angle, mag ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-
-        if( !CV_ARE_SIZES_EQ( angle, mag ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-
-        cont_flag &= mag->type;
+        CV_Assert( Mag.size() == Angle.size() && Mag.type() == Angle.type() );
+        size = getContinuousSize( Mag, Angle, X, Y, Angle.channels() );
     }
-
-    if( xmat )
-    {
-        if( !CV_IS_MAT(xmat))
-            CV_CALL( xmat = cvGetMat( xmat, &xstub, &coi1 ));
-
-        if( !CV_ARE_TYPES_EQ( angle, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-        
-        if( !CV_ARE_SIZES_EQ( angle, xmat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-        
-        cont_flag &= xmat->type;
-    }
-
-    if( ymat )
-    {
-        if( !CV_IS_MAT(ymat))
-            CV_CALL( ymat = cvGetMat( ymat, &ystub, &coi2 ));        
-
-        if( !CV_ARE_TYPES_EQ( angle, ymat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-        
-        if( !CV_ARE_SIZES_EQ( angle, ymat ) )
-            CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-        
-        cont_flag &= ymat->type;
-    }
-
-    if( coi1 != 0 || coi2 != 0 || coi3 != 0 || coi4 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    size = cvGetMatSize(angle);
-    size.width *= CV_MAT_CN(angle->type);
-
-    if( CV_IS_MAT_CONT( cont_flag ))
-    {
-        size.width *= size.height;
-        size.height = 1;
-    }
-
-    block_size = MIN( size.width, ICV_MATH_BLOCK_SIZE );
-    x_buffer = (float*)cvStackAlloc( block_size*sizeof(float));
-    y_buffer = (float*)cvStackAlloc( block_size*sizeof(float));
+    else
+        size = getContinuousSize( Angle, X, Y, Angle.channels() );
 
     if( depth == CV_32F )
     {
-        for( y = 0; y < size.height; y++ )
+        float *x = (float*)X.data, *y = (float*)Y.data;
+        const float *mag = (const float*)Mag.data, *angle = (const float*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
-            float* x_data = (float*)(xmat ? xmat->data.ptr + xmat->step*y : 0);
-            float* y_data = (float*)(ymat ? ymat->data.ptr + ymat->step*y : 0);
-            float* mag_data = (float*)(mag ? mag->data.ptr + mag->step*y : 0);
-            float* angle_data = (float*)(angle->data.ptr + angle->step*y);
-
-            for( x = 0; x < size.width; x += block_size )
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
-                int i, len = MIN( size.width - x, block_size );
-
-                icvSinCos_32f( angle_data+x, y_buffer, x_buffer, len, angle_in_degrees );
-
-                for( i = 0; i < len; i++ )
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                SinCos_32f( angle + i, y + i, x + i, block_size, angleInDegrees );
+                for( j = 0; j < block_size; j++ )
                 {
-                    float tx = x_buffer[i];
-                    float ty = y_buffer[i];
-
-                    if( mag_data )
-                    {
-                        float magval = mag_data[x+i];
-                        tx *= magval;
-                        ty *= magval;
-                    }
-
-                    if( xmat )
-                        x_data[x+i] = tx;
-                    if( ymat )
-                        y_data[x+i] = ty;
+                    float m = mag ? mag[i + j] : 1.f;
+                    float t0 = x[i + j]*m, t1 = y[i + j]*m;
+                    x[i + j] = t0; y[i + j] = t1;
                 }
             }
         }
     }
     else
     {
-        for( y = 0; y < size.height; y++ )
-        {
-            double* x_data = (double*)(xmat ? xmat->data.ptr + xmat->step*y : 0);
-            double* y_data = (double*)(ymat ? ymat->data.ptr + ymat->step*y : 0);
-            double* mag_data = (double*)(mag ? mag->data.ptr + mag->step*y : 0);
-            double* angle_data = (double*)(angle->data.ptr + angle->step*y);
-            double C = angle_in_degrees ? CV_PI/180. : 1;
+        double *x = (double*)X.data, *y = (double*)Y.data;
+        const double *mag = (const double*)Mag.data, *angle = (const double*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        double ascale = angleInDegrees ? CV_PI/180. : 1;
 
-            for( x = 0; x < size.width; x++ )
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
+        {
+            for( j = 0; j < size.width; j++ )
             {
-                double phi = angle_data[x]*C;
-                double magval = mag_data ? mag_data[x] : 1.;
-                if( xmat )
-                    x_data[x] = cos(phi)*magval;
-                if( ymat )
-                    y_data[x] = sin(phi)*magval;
+                double alpha = angle[j]*ascale, m = mag ? mag[j] : 1.;
+                double a = cos(alpha), b = sin(alpha);
+                x[j] = m*a; y[j] = m*b;
             }
         }
     }
-
-    __END__;
 }
 
 /****************************************************************************************\
@@ -721,12 +606,14 @@ typedef union
 }
 DBLINT;
 
+#ifndef HAVE_IPP
+
 #define EXPTAB_SCALE 6
 #define EXPTAB_MASK  ((1 << EXPTAB_SCALE) - 1)
 
 #define EXPPOLY_32F_A0 .9670371139572337719125840413672004409288e-2
 
-static const double icvExpTab[] = {
+static const double expTab[] = {
     1.0 * EXPPOLY_32F_A0,
     1.0108892860517004600204097905619 * EXPPOLY_32F_A0,
     1.0218971486541166782344801347833 * EXPPOLY_32F_A0,
@@ -797,7 +684,7 @@ static const double exp_prescale = 1.4426950408889634073599246810019 * (1 << EXP
 static const double exp_postscale = 1./(1 << EXPTAB_SCALE);
 static const double exp_max_val = 3000.*(1 << EXPTAB_SCALE); // log10(DBL_MAX) < 3000
 
-IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y, n) )
+static CvStatus CV_STDCALL Exp_32f( const float *_x, float *y, int n )
 {
     static const double
         EXPPOLY_32F_A4 = 1.000000000000002438532970795181890933776 / EXPPOLY_32F_A0,
@@ -866,14 +753,14 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
         buf[3].i.hi = t << 20;
 
-        x0 = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
-        x1 = buf[1].d * icvExpTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
+        x0 = buf[0].d * expTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
+        x1 = buf[1].d * expTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
         
         y[i] = (float)x0;
         y[i + 1] = (float)x1;
         
-        x2 = buf[2].d * icvExpTab[val2 & EXPTAB_MASK] * EXPPOLY( x2 );
-        x3 = buf[3].d * icvExpTab[val3 & EXPTAB_MASK] * EXPPOLY( x3 );
+        x2 = buf[2].d * expTab[val2 & EXPTAB_MASK] * EXPPOLY( x2 );
+        x3 = buf[3].d * expTab[val3 & EXPTAB_MASK] * EXPPOLY( x3 );
         
         y[i + 2] = (float)x2;
         y[i + 3] = (float)x3;
@@ -894,14 +781,14 @@ IPCVAPI_IMPL( CvStatus, icvExp_32f, ( const float *_x, float *y, int n ), (_x, y
         buf[0].i.hi = t << 20;
         x0 = (x0 - val0)*exp_postscale;
 
-        y[i] = (float)(buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY(x0));
+        y[i] = (float)(buf[0].d * expTab[val0 & EXPTAB_MASK] * EXPPOLY(x0));
     }
 
     return CV_OK;
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x, y, n) )
+static CvStatus CV_STDCALL Exp_64f( const double *_x, double *y, int n )
 {
     static const double
         A5 = .99999999999999999998285227504999 / EXPPOLY_32F_A0,
@@ -977,14 +864,14 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
         t = (t | ((t < 2047) - 1)) & (((t < 0) - 1) & 2047);
         buf[3].i.hi = t << 20;
 
-        y0 = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
-        y1 = buf[1].d * icvExpTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
+        y0 = buf[0].d * expTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
+        y1 = buf[1].d * expTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
 
         y[i] = y0;
         y[i + 1] = y1;
 
-        y2 = buf[2].d * icvExpTab[val2 & EXPTAB_MASK] * EXPPOLY( x2 );
-        y3 = buf[3].d * icvExpTab[val3 & EXPTAB_MASK] * EXPPOLY( x3 );
+        y2 = buf[2].d * expTab[val2 & EXPTAB_MASK] * EXPPOLY( x2 );
+        y3 = buf[3].d * expTab[val3 & EXPTAB_MASK] * EXPPOLY( x3 );
 
         y[i + 2] = y2;
         y[i + 3] = y3;
@@ -1006,7 +893,7 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
         buf[0].i.hi = t << 20;
         x0 = (x0 - val0)*exp_postscale;
 
-        y[i] = buf[0].d * icvExpTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
+        y[i] = buf[0].d * expTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
     }
 
     return CV_OK;
@@ -1016,85 +903,32 @@ IPCVAPI_IMPL( CvStatus, icvExp_64f, ( const double *_x, double *y, int n ), (_x,
 #undef EXPTAB_MASK
 #undef EXPPOLY_32F_A0
 
-CV_IMPL void cvExp( const CvArr* srcarr, CvArr* dstarr )
+#else
+
+#define Exp_32f ippvmExp_32f_A21
+#define Exp_64f ippvmExp_64f_A50
+
+#endif
+
+void exp( const Mat& src, Mat& dst )
 {
-    CV_FUNCNAME( "cvExp" );
+    int depth = src.depth();
+    dst.create( src.size(), src.type() );
+    Size size = getContinuousSize( src, dst, src.channels() );
 
-    __BEGIN__;
+    MathFunc func = depth == CV_32F ? (MathFunc)Exp_32f : depth == CV_64F ? (MathFunc)Exp_64f : 0;
+    CV_Assert(func != 0);
 
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    int coi1 = 0, coi2 = 0, src_depth, dst_depth;
-    double* buffer = 0;
-    CvSize size;
-    int x, y, dx = 0;
-    
-    if( !CV_IS_MAT(src))
-        CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
-
-    if( !CV_IS_MAT(dst))
-        CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    src_depth = CV_MAT_DEPTH(src->type);
-    dst_depth = CV_MAT_DEPTH(dst->type);
-
-    if( !CV_ARE_CNS_EQ( src, dst ) || src_depth < CV_32F || dst_depth < src_depth )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-
-    if( !CV_ARE_SIZES_EQ( src, dst ) )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-
-    size = cvGetMatSize(src);
-    size.width *= CV_MAT_CN(src->type);
-
-    if( CV_IS_MAT_CONT( src->type & dst->type ))
-    {
-        size.width *= size.height;
-        size.height = 1;
-    }
-
-    if( !CV_ARE_DEPTHS_EQ( src, dst ))
-    {
-        dx = MIN( 1024, size.width );
-        buffer = (double*)cvStackAlloc( dx*sizeof(buffer[0]) );
-    }
-
-    for( y = 0; y < size.height; y++ )
-    {
-        uchar* src_data = src->data.ptr + src->step*y;
-        uchar* dst_data = dst->data.ptr + dst->step*y;
-
-        if( src_depth == CV_64F )
-        {
-            icvExp_64f( (double*)src_data, (double*)dst_data, size.width );
-        }
-        else if( src_depth == dst_depth )
-        {
-            icvExp_32f( (float*)src_data, (float*)dst_data, size.width );
-        }
-        else
-        {
-            for( x = 0; x < size.width; x += dx )
-            {
-                int len = dx;
-                if( x + len > size.width )
-                    len = size.width - x;
-                icvCvt_32f64f( (float*)src_data + x, buffer, len );
-                icvExp_64f( buffer, (double*)dst_data + x, len );
-            }
-        }
-    }
-
-    __END__;
+    for( int y = 0; y < size.height; y++ )
+        func( src.data + src.step*y, dst.data + dst.step*y, size.width );
 }
 
 
 /****************************************************************************************\
 *                                          L O G                                         *
 \****************************************************************************************/
+
+#ifndef HAVE_IPP
 
 #define LOGTAB_SCALE    8
 #define LOGTAB_MASK         ((1 << LOGTAB_SCALE) - 1)
@@ -1365,7 +1199,7 @@ static const double icvLogTab[] = {
 #define LOGTAB_TRANSLATE(x,h) (((x) - 1.)*icvLogTab[(h)+1])
 static const double ln_2 = 0.69314718055994530941723212145818;
 
-IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *_x, float *y, int n ), (_x, y, n) )
+static CvStatus CV_STDCALL Log_32f( const float *_x, float *y, int n )
 {
     static const double shift[] = { 0, -1./512 };
     static const double
@@ -1466,7 +1300,7 @@ IPCVAPI_IMPL( CvStatus, icvLog_32f, ( const float *_x, float *y, int n ), (_x, y
 }
 
 
-IPCVAPI_IMPL( CvStatus, icvLog_64f, ( const double *x, double *y, int n ), (x, y, n) )
+static CvStatus CV_STDCALL Log_64f( const double *x, double *y, int n )
 {
     static const double shift[] = { 0, -1./512 };
     static const double
@@ -1574,80 +1408,24 @@ IPCVAPI_IMPL( CvStatus, icvLog_64f, ( const double *x, double *y, int n ), (x, y
     return CV_OK;
 }
 
+#else
 
-CV_IMPL void cvLog( const CvArr* srcarr, CvArr* dstarr )
+#define Log_32f ippvmLn_32f_A21
+#define Log_64f ippvmLn_64f_A50
+
+#endif
+
+void log( const Mat& src, Mat& dst )
 {
-    CV_FUNCNAME( "cvLog" );
+    int depth = src.depth();
+    dst.create( src.size(), src.type() );
+    Size size = getContinuousSize( src, dst, src.channels() );
 
-    __BEGIN__;
+    MathFunc func = depth == CV_32F ? (MathFunc)Log_32f : depth == CV_64F ? (MathFunc)Log_64f : 0;
+    CV_Assert(func != 0);
 
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    int coi1 = 0, coi2 = 0, src_depth, dst_depth;
-    double* buffer = 0;
-    CvSize size;
-    int x, y, dx = 0;
-    
-    if( !CV_IS_MAT(src))
-        CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
-
-    if( !CV_IS_MAT(dst))
-        CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    src_depth = CV_MAT_DEPTH(src->type);
-    dst_depth = CV_MAT_DEPTH(dst->type);
-
-    if( !CV_ARE_CNS_EQ( src, dst ) || dst_depth < CV_32F || src_depth < dst_depth )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-
-    if( !CV_ARE_SIZES_EQ( src, dst ) )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-
-    size = cvGetMatSize(src);
-    size.width *= CV_MAT_CN(src->type);
-
-    if( CV_IS_MAT_CONT( src->type & dst->type ))
-    {
-        size.width *= size.height;
-        size.height = 1;
-    }
-
-    if( !CV_ARE_DEPTHS_EQ( src, dst ))
-    {
-        dx = MIN( 1024, size.width );
-        buffer = (double*)cvStackAlloc( dx*sizeof(buffer[0]) );
-    }
-
-    for( y = 0; y < size.height; y++ )
-    {
-        uchar* src_data = src->data.ptr + src->step*y;
-        uchar* dst_data = dst->data.ptr + dst->step*y;
-
-        if( dst_depth == CV_64F )
-        {
-            icvLog_64f( (double*)src_data, (double*)dst_data, size.width );
-        }
-        else if( src_depth == dst_depth )
-        {
-            icvLog_32f( (float*)src_data, (float*)dst_data, size.width );
-        }
-        else
-        {
-            for( x = 0; x < size.width; x += dx )
-            {
-                int len = dx;
-                if( x + len > size.width )
-                    len = size.width - x;
-                icvLog_64f( (double*)src_data + x, buffer, len );
-                icvCvt_64f32f( buffer, (float*)dst_data + x, len );
-            }
-        }
-    }
-
-    __END__;
+    for( int y = 0; y < size.height; y++ )
+        func( src.data + src.step*y, dst.data + dst.step*y, size.width );
 }
 
 
@@ -1655,343 +1433,752 @@ CV_IMPL void cvLog( const CvArr* srcarr, CvArr* dstarr )
 *                                    P O W E R                                           *
 \****************************************************************************************/
 
-#define ICV_DEF_IPOW_OP( flavor, arrtype, worktype, cast_macro )                    \
-static CvStatus CV_STDCALL                                                          \
-icvIPow_##flavor( const arrtype* src, arrtype* dst, int len, int power )            \
-{                                                                                   \
-    int i;                                                                          \
-                                                                                    \
-    for( i = 0; i < len; i++ )                                                      \
-    {                                                                               \
-        worktype a = 1, b = src[i];                                                 \
-        int p = power;                                                              \
-        while( p > 1 )                                                              \
-        {                                                                           \
-            if( p & 1 )                                                             \
-                a *= b;                                                             \
-            b *= b;                                                                 \
-            p >>= 1;                                                                \
-        }                                                                           \
-                                                                                    \
-        a *= b;                                                                     \
-        dst[i] = cast_macro(a);                                                     \
-    }                                                                               \
-                                                                                    \
-    return CV_OK;                                                                   \
+template<typename T, typename WT>
+static CvStatus CV_STDCALL
+IPow( const void* _src, void* _dst, int len, int power )
+{
+    int i;
+    const T* src = (const T*)_src;
+    T* dst = (T*)_dst;
+    for( i = 0; i < len; i++ )
+    {
+        WT a = 1, b = src[i];
+        int p = power;
+        while( p > 1 )
+        {
+            if( p & 1 )
+                a *= b;
+            b *= b;
+            p >>= 1;
+        }
+
+        a *= b;
+        dst[i] = saturate_cast<T>(a);
+    }
+    return CV_OK;
 }
 
+typedef CvStatus (CV_STDCALL * IPowFunc)( const void* src, void* dst, int len, int power );
 
-ICV_DEF_IPOW_OP( 8u, uchar, int, CV_CAST_8U )
-ICV_DEF_IPOW_OP( 16u, ushort, int, CV_CAST_16U )
-ICV_DEF_IPOW_OP( 16s, short, int, CV_CAST_16S )
-ICV_DEF_IPOW_OP( 32s, int, int, CV_CAST_32S )
-ICV_DEF_IPOW_OP( 32f, float, double, CV_CAST_32F )
-ICV_DEF_IPOW_OP( 64f, double, double, CV_CAST_64F )
-
-#define icvIPow_8s 0
-
-CV_DEF_INIT_FUNC_TAB_1D( IPow )
-
-typedef CvStatus (CV_STDCALL * CvIPowFunc)( const void* src, void* dst, int len, int power );
-typedef CvStatus (CV_STDCALL * CvSqrtFunc)( const void* src, void* dst, int len );
-
-CV_IMPL void cvPow( const CvArr* srcarr, CvArr* dstarr, double power )
+void pow( const Mat& _src, double power, Mat& dst )
 {
-    static CvFuncTable ipow_tab;
-    static int inittab = 0;
-    
-    CV_FUNCNAME( "cvPow" );
+    int ipower = cvRound( power ), i, j;
+    bool is_ipower = 0;
+    int depth = _src.depth();
+    const Mat* src = &_src;
 
-    __BEGIN__;
-
-    void* temp_buffer = 0;
-    int block_size = 0;
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    int coi1 = 0, coi2 = 0;
-    int depth;
-    CvSize size;
-    int x, y;
-    int ipower = cvRound( power );
-    int is_ipower = 0;
-    
-    if( !CV_IS_MAT(src))
-        CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
-
-    if( !CV_IS_MAT(dst))
-        CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedFormats );
-
-    if( !CV_ARE_SIZES_EQ( src, dst ) )
-        CV_ERROR_FROM_CODE( CV_StsUnmatchedSizes );
-
-    depth = CV_MAT_DEPTH( src->type );
+    dst.create( _src.size(), _src.type() );
 
     if( fabs(ipower - power) < DBL_EPSILON )
     {
-        if( !inittab )
-        {
-            icvInitIPowTable( &ipow_tab );
-            inittab = 1;
-        }
-
         if( ipower < 0 )
         {
-            CV_CALL( cvDiv( 0, src, dst ));
-            
+            divide( 1., _src, dst );
             if( ipower == -1 )
-                EXIT;
+                return;
             ipower = -ipower;
-            src = dst;
+            src = &dst;
         }
         
         switch( ipower )
         {
         case 0:
-            cvSet( dst, cvScalarAll(1));
-            EXIT;
+            dst = Scalar::all(1);
+            return;
         case 1:
-            cvCopy( src, dst );
-            EXIT;
+            src->copyTo(dst);
+            return;
         case 2:
-            cvMul( src, src, dst );
-            EXIT;
+            multiply(*src, *src, dst);
+            return;
         default:
-            is_ipower = 1;
+            is_ipower = true;
         }
     }
-    else if( depth < CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat,
-        "Fractional or negative integer power factor can be used "
-        "with floating-point types only");
+    else
+        CV_Assert( depth == CV_32F || depth == CV_64F );
 
-    size = cvGetMatSize(src);
-    size.width *= CV_MAT_CN(src->type);
-
-    if( CV_IS_MAT_CONT( src->type & dst->type ))
-    {
-        size.width *= size.height;
-        size.height = 1;
-    }
+    Size size = getContinuousSize( *src, dst, src->channels() );
 
     if( is_ipower )
     {
-        CvIPowFunc pow_func = (CvIPowFunc)ipow_tab.fn_2d[depth];
-        if( !pow_func )
-            CV_ERROR( CV_StsUnsupportedFormat, "The data type is not supported" );
-        
-        for( y = 0; y < size.height; y++ )
+        static IPowFunc tab[] =
         {
-            uchar* src_data = src->data.ptr + src->step*y;
-            uchar* dst_data = dst->data.ptr + dst->step*y;
-
-            pow_func( src_data, dst_data, size.width, ipower );
-        }
+            IPow<uchar, int>, 0, IPow<ushort, int>, IPow<short, int>, IPow<int, int>,
+            IPow<float, float>, IPow<double, double>, 0
+        };
+    
+        IPowFunc func = tab[depth];
+        CV_Assert( func != 0 );
+        for( i = 0; i < size.height; i++ )
+            func( src->data + src->step*i, dst.data + dst.step*i, size.width, ipower );
     }
     else if( fabs(fabs(power) - 0.5) < DBL_EPSILON )
     {
-        CvSqrtFunc sqrt_func = power < 0 ? 
-            (depth == CV_32F ? (CvSqrtFunc)icvInvSqrt_32f : (CvSqrtFunc)icvInvSqrt_64f) :
-            (depth == CV_32F ? (CvSqrtFunc)icvSqrt_32f : (CvSqrtFunc)icvSqrt_64f);
+        MathFunc func = power < 0 ? 
+            (depth == CV_32F ? (MathFunc)InvSqrt_32f : (MathFunc)InvSqrt_64f) :
+            (depth == CV_32F ? (MathFunc)Sqrt_32f : (MathFunc)Sqrt_64f);
 
-        for( y = 0; y < size.height; y++ )
+        for( i = 0; i < size.height; i++ )
+            func( src->data + src->step*i, dst.data + dst.step*i, size.width );
+    }
+    else if( depth == CV_32F )
+    {
+        const float *x = (const float*)src->data;
+        float *y = (float*)dst.data;
+        int xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
+        float p = (float)power;
+
+        for( ; size.height--; x += xstep, y += ystep )
         {
-            uchar* src_data = src->data.ptr + src->step*y;
-            uchar* dst_data = dst->data.ptr + dst->step*y;
-
-            sqrt_func( src_data, dst_data, size.width );
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
+            {
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                Log_32f(x + i, y + i, block_size);
+                for( j = 0; j < block_size; j++ )
+                    y[i + j] *= p;
+                Exp_32f(y + i, y + i, block_size);
+            }
         }
     }
     else
     {
-        block_size = MIN( size.width, ICV_MATH_BLOCK_SIZE );
-        temp_buffer = cvStackAlloc( block_size*CV_ELEM_SIZE(depth) );
-
-        for( y = 0; y < size.height; y++ )
+        const double *x = (const double*)src->data;
+        double *y = (double*)dst.data;
+        int xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
+ 
+        for( ; size.height--; x += xstep, y += ystep )
         {
-            uchar* src_data = src->data.ptr + src->step*y;
-            uchar* dst_data = dst->data.ptr + dst->step*y;
-
-            for( x = 0; x < size.width; x += block_size )
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
-                int len = MIN( size.width - x, block_size );
-                if( depth == CV_32F )
-                {
-                    icvLog_32f( (float*)src_data + x, (float*)temp_buffer, len );
-                    icvScale_32f( (float*)temp_buffer, (float*)temp_buffer, len, (float)power, 0 );
-                    icvExp_32f( (float*)temp_buffer, (float*)dst_data + x, len );
-                }
-                else
-                {
-                    icvLog_64f( (double*)src_data + x, (double*)temp_buffer, len );
-                    icvScale_64f( (double*)temp_buffer, (double*)temp_buffer, len, power, 0 );
-                    icvExp_64f( (double*)temp_buffer, (double*)dst_data + x, len );
-                }
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                Log_64f(x + i, y + i, block_size);
+                for( j = 0; j < block_size; j++ )
+                    y[i + j] *= power;
+                Exp_64f(y + i, y + i, block_size);
             }
         }
     }
-
-    __END__;
 }
 
 
 /************************** CheckArray for NaN's, Inf's *********************************/
 
-IPCVAPI_IMPL( CvStatus, icvCheckArray_32f_C1R,
-    ( const float* src, int srcstep, CvSize size, int flags, double min_val, double max_val ),
-     (src, srcstep, size, flags, min_val, max_val) )
+bool checkRange(const Mat& src, bool quiet, Point* pt,
+                double minVal, double maxVal)
 {
-    Cv32suf a, b;
-    int ia, ib;
-    const int* isrc = (const int*)src;
-    
-    if( !src )
-        return CV_NULLPTR_ERR;
+    int depth = src.depth();
+    Point badPt(-1, -1);
+    double badValue = 0;
 
-    if( size.width <= 0 || size.height <= 0 )
-        return CV_BADSIZE_ERR;
-
-    if( flags & CV_CHECK_RANGE )
+    if( depth < CV_32F )
     {
-        a.f = (float)min_val;
-        b.f = (float)max_val;
+        double m = 0, M = 0, badValue = 0;
+        Point mp, MP, badPt(-1,-1);
+        minMaxLoc(src.reshape(1,0), &m, &M, &mp, &MP);
+        if( M >= maxVal )
+        {
+            badPt = MP;
+            badValue = M;
+        }
+        else if( m < minVal )
+        {
+            badPt = mp;
+            badValue = m;
+        }
     }
     else
     {
-        a.f = -FLT_MAX;
-        b.f = FLT_MAX;
-    }
+        int i, loc = 0;
+        Size size = getContinuousSize( src, src.channels() );
 
-    ia = CV_TOGGLE_FLT(a.i);
-    ib = CV_TOGGLE_FLT(b.i);
-
-    srcstep /= sizeof(isrc[0]);
-    for( ; size.height--; isrc += srcstep )
-    {
-        int i;
-        for( i = 0; i < size.width; i++ )
+        if( depth == CV_32F )
         {
-            int val = isrc[i];
-            val = CV_TOGGLE_FLT(val);
+            Cv32suf a, b;
+            int ia, ib;
+            const int* isrc = (const int*)src.data;
+            int step = src.step/sizeof(isrc[0]);
 
-            if( val < ia || val >= ib )
-                return CV_BADRANGE_ERR;
-        }
-    }
+            a.f = (float)std::max(minVal, (double)-FLT_MAX);
+            b.f = (float)std::min(maxVal, (double)FLT_MAX);
 
-    return CV_OK;
-}
+            ia = CV_TOGGLE_FLT(a.i);
+            ib = CV_TOGGLE_FLT(b.i);
 
+            for( ; badPt.x < 0 && size.height--; loc += size.width, isrc += step )
+            {
+                for( i = 0; i < size.width; i++ )
+                {
+                    int val = isrc[i];
+                    val = CV_TOGGLE_FLT(val);
 
-IPCVAPI_IMPL( CvStatus,  icvCheckArray_64f_C1R,
-    ( const double* src, int srcstep, CvSize size, int flags, double min_val, double max_val ),
-    (src, srcstep, size, flags, min_val, max_val) )
-{
-    Cv64suf a, b;
-    int64 ia, ib;
-    const int64* isrc = (const int64*)src;
-    
-    if( !src )
-        return CV_NULLPTR_ERR;
-
-    if( size.width <= 0 || size.height <= 0 )
-        return CV_BADSIZE_ERR;
-
-    if( flags & CV_CHECK_RANGE )
-    {
-        a.f = min_val;
-        b.f = max_val;
-    }
-    else
-    {
-        a.f = -DBL_MAX;
-        b.f = DBL_MAX;
-    }
-
-    ia = CV_TOGGLE_DBL(a.i);
-    ib = CV_TOGGLE_DBL(b.i);
-
-    srcstep /= sizeof(isrc[0]);
-    for( ; size.height--; isrc += srcstep )
-    {
-        int i;
-        for( i = 0; i < size.width; i++ )
-        {
-            int64 val = isrc[i];
-            val = CV_TOGGLE_DBL(val);
-
-            if( val < ia || val >= ib )
-                return CV_BADRANGE_ERR;
-        }
-    }
-
-    return CV_OK;
-}
-
-
-CV_IMPL  int  cvCheckArr( const CvArr* arr, int flags,
-                          double minVal, double maxVal )
-{
-    int result = 0;
-
-    CV_FUNCNAME( "cvCheckArr" );
-
-    __BEGIN__;
-
-    if( arr )
-    {
-        CvStatus status = CV_OK;
-        CvMat stub, *mat = (CvMat*)arr;
-        int type;
-        CvSize size;
-
-        if( !CV_IS_MAT( mat ))
-            CV_CALL( mat = cvGetMat( mat, &stub, 0, 1 ));
-
-        type = CV_MAT_TYPE( mat->type );
-        size = cvGetMatSize( mat );
-
-        size.width *= CV_MAT_CN( type );
-
-        if( CV_IS_MAT_CONT( mat->type ))
-        {
-            size.width *= size.height;
-            size.height = 1;
-        }
-
-        if( CV_MAT_DEPTH(type) == CV_32F )
-        {
-            status = icvCheckArray_32f_C1R( mat->data.fl, mat->step, size,
-                                            flags, minVal, maxVal );
-        }
-        else if( CV_MAT_DEPTH(type) == CV_64F )
-        {
-            status = icvCheckArray_64f_C1R( mat->data.db, mat->step, size,
-                                            flags, minVal, maxVal );
+                    if( val < ia || val >= ib )
+                    {
+                        badPt = Point((loc + i) % src.cols, (loc + i) / src.cols);
+                        badValue = ((const float*)isrc)[i];
+                        break;
+                    }
+                }
+            }
         }
         else
         {
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-        }
+            Cv64suf a, b;
+            int64 ia, ib;
+            const int64* isrc = (const int64*)src.data;
+            int step = src.step/sizeof(isrc[0]);
 
-        if( status < 0 )  
-        {
-            if( status != CV_BADRANGE_ERR || !(flags & CV_CHECK_QUIET))
-                CV_ERROR( CV_StsOutOfRange, "CheckArray failed" );
-            EXIT;
+            a.f = minVal;
+            b.f = maxVal;
+
+            ia = CV_TOGGLE_DBL(a.i);
+            ib = CV_TOGGLE_DBL(b.i);
+
+            for( ; badPt.x < 0 && size.height--; loc += size.width, isrc += step )
+            {
+                for( i = 0; i < size.width; i++ )
+                {
+                    int64 val = isrc[i];
+                    val = CV_TOGGLE_DBL(val);
+
+                    if( val < ia || val >= ib )
+                    {
+                        badPt = Point((loc + i) % src.cols, (loc + i) / src.cols);
+                        badValue = ((const double*)isrc)[i];
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    result = 1;
+    if( badPt.x >= 0 )
+    {
+        if( pt )
+            *pt = badPt;
+        if( !quiet )
+            CV_Error_( CV_StsOutOfRange,
+            ("the value at (%d, %d)=%g is out of range", badPt.x, badPt.y, badValue));
+    }
+    return badPt.x < 0;
+}
+
+}
+
+CV_IMPL float cvCbrt(float value) { return cv::cubeRoot(value); }
+CV_IMPL float cvFastArctan(float y, float x) { return cv::fastAtan2(y, x); }
+
+CV_IMPL void
+cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
+               CvArr* magarr, CvArr* anglearr,
+               int angle_in_degrees )
+{
+    cv::Mat X = cv::cvarrToMat(xarr), Mag, Angle;
+    if( magarr )
+    {
+        Mag = cv::cvarrToMat(magarr);
+        CV_Assert( Mag.size() == X.size() && Mag.type() == X.type() );
+    }
+    if( anglearr )
+    {
+        Angle = cv::cvarrToMat(anglearr);
+        CV_Assert( Angle.size() == X.size() && Angle.type() == X.type() );
+    }
+    cv::cartToPolar( X, cv::cvarrToMat(yarr), Mag, Angle, angle_in_degrees != 0 );
+}
+
+CV_IMPL void
+cvPolarToCart( const CvArr* magarr, const CvArr* anglearr,
+               CvArr* xarr, CvArr* yarr, int angle_in_degrees )
+{
+    cv::Mat X, Y, Angle = cv::cvarrToMat(anglearr), Mag;
+    if( magarr )
+    {
+        Mag = cv::cvarrToMat(magarr);
+        CV_Assert( Mag.size() == Angle.size() && Mag.type() == Angle.type() );
+    }
+    if( xarr )
+    {
+        X = cv::cvarrToMat(xarr);
+        CV_Assert( X.size() == Angle.size() && X.type() == Angle.type() );
+    }
+    if( yarr )
+    {
+        Y = cv::cvarrToMat(yarr);
+        CV_Assert( Y.size() == Angle.size() && Y.type() == Angle.type() );
+    }
+
+    cv::polarToCart( Mag, Angle, X, Y, angle_in_degrees != 0 );
+}
+
+CV_IMPL void cvExp( const CvArr* srcarr, CvArr* dstarr )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
+    cv::exp( src, dst );
+}
+
+CV_IMPL void cvLog( const CvArr* srcarr, CvArr* dstarr )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
+    cv::log( src, dst );
+}
+
+CV_IMPL void cvPow( const CvArr* srcarr, CvArr* dstarr, double power )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
+    cv::pow( src, power, dst );
+}    
+
+CV_IMPL int cvCheckArr( const CvArr* arr, int flags,
+                        double minVal, double maxVal )
+{
+    if( (flags & CV_CHECK_RANGE) == 0 )
+        minVal = -DBL_MAX, maxVal = DBL_MAX;
+    return cv::checkRange(cv::cvarrToMat(arr), (flags & CV_CHECK_QUIET) != 0, 0, minVal, maxVal );
+}
+
+
+/*
+  Finds real roots of cubic, quadratic or linear equation.
+  The original code has been taken from Ken Turkowski web page
+  (http://www.worldserver.com/turk/opensource/) and adopted for OpenCV.
+  Here is the copyright notice.
+
+  -----------------------------------------------------------------------
+  Copyright (C) 1978-1999 Ken Turkowski. <turk@computer.org>
+ 
+    All rights reserved.
+ 
+    Warranty Information
+      Even though I have reviewed this software, I make no warranty
+      or representation, either express or implied, with respect to this
+      software, its quality, accuracy, merchantability, or fitness for a
+      particular purpose.  As a result, this software is provided "as is,"
+      and you, its user, are assuming the entire risk as to its quality
+      and accuracy.
+ 
+    This code may be used and freely distributed as long as it includes
+    this copyright notice and the above warranty information.
+  -----------------------------------------------------------------------
+*/
+CV_IMPL int
+cvSolveCubic( const CvMat* coeffs, CvMat* roots )
+{
+    int n = 0;
+    
+    double a0 = 1., a1, a2, a3;
+    double x0 = 0., x1 = 0., x2 = 0.;
+    int step = 1, coeff_count;
+
+    if( !CV_IS_MAT(coeffs) )
+        CV_Error( !coeffs ? CV_StsNullPtr : CV_StsBadArg, "Input parameter is not a valid matrix" );
+
+    if( !CV_IS_MAT(roots) )
+        CV_Error( !roots ? CV_StsNullPtr : CV_StsBadArg, "Output parameter is not a valid matrix" );
+
+    if( (CV_MAT_TYPE(coeffs->type) != CV_32FC1 && CV_MAT_TYPE(coeffs->type) != CV_64FC1) ||
+        (CV_MAT_TYPE(roots->type) != CV_32FC1 && CV_MAT_TYPE(roots->type) != CV_64FC1) )
+        CV_Error( CV_StsUnsupportedFormat,
+        "Both matrices should be floating-point (single or double precision)" );
+
+    coeff_count = coeffs->rows + coeffs->cols - 1;
+
+    if( (coeffs->rows != 1 && coeffs->cols != 1) || (coeff_count != 3 && coeff_count != 4) )
+        CV_Error( CV_StsBadSize,
+        "The matrix of coefficients must be 1-dimensional vector of 3 or 4 elements" );
+
+    if( (roots->rows != 1 && roots->cols != 1) ||
+        roots->rows + roots->cols - 1 != 3 )
+        CV_Error( CV_StsBadSize,
+        "The matrix of roots must be 1-dimensional vector of 3 elements" );
+
+    if( CV_MAT_TYPE(coeffs->type) == CV_32FC1 )
+    {
+        const float* c = coeffs->data.fl;
+        if( coeffs->rows > 1 )
+            step = coeffs->step/sizeof(c[0]);
+        if( coeff_count == 4 )
+            a0 = c[0], c += step;
+        a1 = c[0];
+        a2 = c[step];
+        a3 = c[step*2];
+    }
+    else
+    {
+        const double* c = coeffs->data.db;
+        if( coeffs->rows > 1 )
+            step = coeffs->step/sizeof(c[0]);
+        if( coeff_count == 4 )
+            a0 = c[0], c += step;
+        a1 = c[0];
+        a2 = c[step];
+        a3 = c[step*2];
+    }
+
+    if( a0 == 0 )
+    {
+        if( a1 == 0 )
+        {
+            if( a2 == 0 )
+                n = a3 == 0 ? -1 : 0;
+            else
+            {
+                // linear equation
+                x0 = a3/a2;
+                n = 1;
+            }
+        }
+        else
+        {
+            // quadratic equation
+            double d = a2*a2 - 4*a1*a3;
+            if( d >= 0 )
+            {
+                d = sqrt(d);
+                double q = (-a2 + (a2 < 0 ? -d : d)) * 0.5;
+                x0 = q / a1;
+                x1 = a3 / q;
+                n = d > 0 ? 2 : 1;
+            }
+        }
+    }
+    else
+    {
+        a0 = 1./a0;
+        a1 *= a0;
+        a2 *= a0;
+        a3 *= a0;
+
+        double Q = (a1 * a1 - 3 * a2) * (1./9);
+        double R = (2 * a1 * a1 * a1 - 9 * a1 * a2 + 27 * a3) * (1./54);
+        double Qcubed = Q * Q * Q;
+        double d = Qcubed - R * R;
+    
+        if( d >= 0 )
+        {
+            double theta = acos(R / sqrt(Qcubed));
+            double sqrtQ = sqrt(Q);
+            double t0 = -2 * sqrtQ;
+            double t1 = theta * (1./3);
+            double t2 = a1 * (1./3);
+            x0 = t0 * cos(t1) - t2;
+            x1 = t0 * cos(t1 + (2.*CV_PI/3)) - t2;
+            x2 = t0 * cos(t1 + (4.*CV_PI/3)) - t2;
+            n = 3;
+        }
+        else
+        {
+            double e;
+            d = sqrt(-d);
+            e = pow(d + fabs(R), 0.333333333333);
+            if( R > 0 )
+                e = -e;
+            x0 = (e + Q / e) - a1 * (1./3);
+            n = 1;
+        }
+    }
+
+    step = 1;
+
+    if( CV_MAT_TYPE(roots->type) == CV_32FC1 )
+    {
+        float* r = roots->data.fl;
+        if( roots->rows > 1 )
+            step = roots->step/sizeof(r[0]);
+        r[0] = (float)x0;
+        r[step] = (float)x1;
+        r[step*2] = (float)x2;
+    }
+    else
+    {
+        double* r = roots->data.db;
+        if( roots->rows > 1 )
+            step = roots->step/sizeof(r[0]);
+        r[0] = x0;
+        r[step] = x1;
+        r[step*2] = x2;
+    }
+
+    return n;
+}
+
+
+/*
+  Finds real and complex roots of polynomials of any degree with real 
+  coefficients. The original code has been taken from Ken Turkowski's web 
+  page (http://www.worldserver.com/turk/opensource/) and adopted for OpenCV.
+  Here is the copyright notice.
+
+  -----------------------------------------------------------------------
+  Copyright (C) 1981-1999 Ken Turkowski. <turk@computer.org>
+
+  All rights reserved.
+
+  Warranty Information
+  Even though I have reviewed this software, I make no warranty
+  or representation, either express or implied, with respect to this
+  software, its quality, accuracy, merchantability, or fitness for a
+  particular purpose.  As a result, this software is provided "as is,"
+  and you, its user, are assuming the entire risk as to its quality
+  and accuracy.
+
+  This code may be used and freely distributed as long as it includes
+  this copyright notice and the above warranty information.
+*/
+
+
+/*******************************************************************************
+ * FindPolynomialRoots
+ *
+ * The Bairstow and Newton correction formulae are used for a simultaneous
+ * linear and quadratic iterated synthetic division.  The coefficients of
+ * a polynomial of degree n are given as a[i] (i=0,i,..., n) where a[0] is
+ * the constant term.  The coefficients are scaled by dividing them by
+ * their geometric mean.  The Bairstow or Newton iteration method will
+ * nearly always converge to the number of figures carried, fig, either to
+ * root values or to their reciprocals.  If the simultaneous Newton and
+ * Bairstow iteration fails to converge on root values or their
+ * reciprocals in maxiter iterations, the convergence requirement will be
+ * successively reduced by one decimal figure.  This program anticipates
+ * and protects against loss of significance in the quadratic synthetic
+ * division.  (Refer to "On Programming the Numerical Solution of
+ * Polynomial Equations," by K. W. Ellenberger, Commun. ACM 3 (Dec. 1960),
+ * 644-647.)  The real and imaginary part of each root is stated as u[i]
+ * and v[i], respectively.
+ *
+ * ACM algorithm #30 - Numerical Solution of the Polynomial Equation
+ * K. W. Ellenberger
+ * Missle Division, North American Aviation, Downey, California
+ * Converted to C, modified, optimized, and structured by
+ * Ken Turkowski
+ * CADLINC, Inc., Palo Alto, California
+ *******************************************************************************/
+
+#define MAXN 16
+
+static void icvFindPolynomialRoots(const double *a, double *u, int n, int maxiter, int fig)
+{
+  int i;
+  int j;
+  double h[MAXN + 3], b[MAXN + 3], c[MAXN + 3], d[MAXN + 3], e[MAXN + 3];
+  // [-2 : n]
+  double K, ps, qs, pt, qt, s, rev, r = 0;
+  int t;
+  double p = 0, q = 0, qq;
+
+  // Zero elements with negative indices
+  b[2 + -1] = b[2 + -2] =
+    c[2 + -1] = c[2 + -2] =
+    d[2 + -1] = d[2 + -2] =
+    e[2 + -1] = e[2 + -2] =
+    h[2 + -1] = h[2 + -2] = 0.0;
+
+  // Copy polynomial coefficients to working storage
+  for (j = n; j >= 0; j--)
+    h[2 + j] = *a++; // Note reversal of coefficients
+
+  t = 1;
+  K = pow(10.0, (double)(fig)); // Relative accuracy
+
+  for (; h[2 + n] == 0.0; n--) { // Look for zero high-order coeff.
+    *u++ = 0.0;
+    *u++ = 0.0;
+  }
+
+ INIT:
+  if (n == 0)
+    return;
+
+  ps = qs = pt = qt = s = 0.0;
+  rev = 1.0;
+  K = pow(10.0, (double)(fig));
+
+  if (n == 1) {
+    r = -h[2 + 1] / h[2 + 0];
+    goto LINEAR;
+  }
+
+  for (j = n; j >= 0; j--) // Find geometric mean of coeff's
+    if (h[2 + j] != 0.0)
+      s += log(fabs(h[2 + j]));
+  s = exp(s / (n + 1));
+
+  for (j = n; j >= 0; j--) // Normalize coeff's by mean
+    h[2 + j] /= s;
+
+  if (fabs(h[2 + 1] / h[2 + 0]) < fabs(h[2 + n - 1] / h[2 + n])) {
+  REVERSE:
+    t = -t;
+    for (j = (n - 1) / 2; j >= 0; j--) {
+      s = h[2 + j];
+      h[2 + j] = h[2 + n - j];
+      h[2 + n - j] = s;
+    }
+  }
+  if (qs != 0.0) {
+    p = ps;
+    q = qs;
+  } else {
+    if (h[2 + n - 2] == 0.0) {
+      q = 1.0;
+      p = -2.0;
+    } else {
+      q = h[2 + n] / h[2 + n - 2];
+      p = (h[2 + n - 1] - q * h[2 + n - 3]) / h[2 + n - 2];
+    }
+    if (n == 2)
+      goto QADRTIC;
+    r = 0.0;
+  }
+ ITERATE:
+  for (i = maxiter; i > 0; i--) {
+
+    for (j = 0; j <= n; j++) { // BAIRSTOW
+      b[2 + j] = h[2 + j] - p * b[2 + j - 1] - q * b[2 + j - 2];
+      c[2 + j] = b[2 + j] - p * c[2 + j - 1] - q * c[2 + j - 2];
+    }
+    if ((h[2 + n - 1] != 0.0) && (b[2 + n - 1] != 0.0)) {
+      if (fabs(h[2 + n - 1] / b[2 + n - 1]) >= K) {
+	b[2 + n] = h[2 + n] - q * b[2 + n - 2];
+      }
+      if (b[2 + n] == 0.0)
+	goto QADRTIC;
+      if (K < fabs(h[2 + n] / b[2 + n]))
+	goto QADRTIC;
+    }
+
+    for (j = 0; j <= n; j++) { // NEWTON
+      d[2 + j] = h[2 + j] + r * d[2 + j - 1]; // Calculate polynomial at r
+      e[2 + j] = d[2 + j] + r * e[2 + j - 1]; // Calculate derivative at r
+    }
+    if (d[2 + n] == 0.0)
+      goto LINEAR;
+    if (K < fabs(h[2 + n] / d[2 + n]))
+      goto LINEAR;
+
+    c[2 + n - 1] = -p * c[2 + n - 2] - q * c[2 + n - 3];
+    s = c[2 + n - 2] * c[2 + n - 2] - c[2 + n - 1] * c[2 + n - 3];
+    if (s == 0.0) {
+      p -= 2.0;
+      q *= (q + 1.0);
+    } else {
+      p += (b[2 + n - 1] * c[2 + n - 2] - b[2 + n] * c[2 + n - 3]) / s;
+      q += (-b[2 + n - 1] * c[2 + n - 1] + b[2 + n] * c[2 + n - 2]) / s;
+    }
+    if (e[2 + n - 1] == 0.0)
+      r -= 1.0; // Minimum step
+    else
+      r -= d[2 + n] / e[2 + n - 1]; // Newton's iteration
+  }
+  ps = pt;
+  qs = qt;
+  pt = p;
+  qt = q;
+  if (rev < 0.0)
+    K /= 10.0;
+  rev = -rev;
+  goto REVERSE;
+
+ LINEAR:
+  if (t < 0)
+    r = 1.0 / r;
+  n--;
+  *u++ = r;
+  *u++ = 0.0;
+
+  for (j = n; j >= 0; j--) { // Polynomial deflation by lin-nomial
+    if ((d[2 + j] != 0.0) && (fabs(h[2 + j] / d[2 + j]) < K))
+      h[2 + j] = d[2 + j];
+    else
+      h[2 + j] = 0.0;
+  }
+
+  if (n == 0)
+    return;
+  goto ITERATE;
+
+ QADRTIC:
+  if (t < 0) {
+    p /= q;
+    q = 1.0 / q;
+  }
+  n -= 2;
+
+  if (0.0 < (q - (p * p / 4.0))) { // Two complex roots
+    s = sqrt(q - (p * p / 4.0));
+    *u++ = -p / 2.0;
+    *u++ = s;
+    *u++ = -p / 2.0;
+    *u++ = -s;
+  } else { // Two real roots
+    s = sqrt(((p * p / 4.0)) - q);
+    if (p < 0.0)
+      *u++ = qq = -p / 2.0 + s;
+    else
+      *u++ = qq = -p / 2.0 - s;
+    *u++ = 0.0;
+    *u++ = q / qq;
+    *u++ = 0.0;
+  }
+
+  for (j = n; j >= 0; j--) { // Polynomial deflation by quadratic
+    if ((b[2 + j] != 0.0) && (fabs(h[2 + j] / b[2 + j]) < K))
+      h[2 + j] = b[2 + j];
+    else
+      h[2 + j] = 0.0;
+  }
+  goto INIT;
+}
+
+#undef MAXN
+
+void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
+{
+    __BEGIN__;
+
+    int m, n;
+    double *ad = 0, *rd = 0;
+
+    CV_FUNCNAME("cvSolvePoly");
+
+    CV_ASSERT(maxiter > 0);
+    if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
+        CV_MAT_TYPE(a->type) != CV_64FC1)
+        CV_Error(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
+    if (CV_MAT_TYPE(r->type) != CV_32FC2 && 
+        CV_MAT_TYPE(r->type) != CV_64FC2)
+        CV_Error(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
+    m = a->rows * a->cols;
+    n = r->rows * r->cols;
+
+    if (m - 1 != n)
+        CV_Error(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
+
+    if( CV_MAT_DEPTH(a->type) == CV_32F || !CV_IS_MAT_CONT(a->type))
+    {
+        ad = (double*)cvStackAlloc(m*sizeof(ad[0]));
+        CvMat _a = cvMat( a->rows, a->cols, CV_64F, ad );
+        cvConvert( a, &_a );
+    }
+    else
+        ad = a->data.db;
+
+    if( CV_MAT_DEPTH(r->type) == CV_32F || !CV_IS_MAT_CONT(r->type))
+        rd = (double*)cvStackAlloc(n*sizeof(ad[0]));
+    else
+        rd = r->data.db;
+
+    icvFindPolynomialRoots( ad, rd, n, maxiter, fig);
+    if( rd != r->data.db )
+    {
+        CvMat _r = cvMat( r->rows, r->cols, CV_64FC2, rd );
+        cvConvert( &_r, r );
+    }
 
     __END__;
-
-    return result;
 }
 
 

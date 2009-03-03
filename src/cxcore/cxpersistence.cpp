@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -165,7 +166,7 @@ CvFileStorage;
 #define CV_CHECK_FILE_STORAGE(fs)                       \
 {                                                       \
     if( !CV_IS_FILE_STORAGE(fs) )                       \
-        CV_ERROR( (fs) ? CV_StsBadArg : CV_StsNullPtr,  \
+        CV_Error( (fs) ? CV_StsBadArg : CV_StsNullPtr,  \
                   "Invalid pointer to file storage" );  \
 }
 
@@ -173,7 +174,7 @@ CvFileStorage;
 {                                                       \
     CV_CHECK_FILE_STORAGE(fs);                          \
     if( !fs->write_mode )                               \
-        CV_ERROR( CV_StsError, "The file storage is opened for reading" ); \
+        CV_Error( CV_StsError, "The file storage is opened for reading" ); \
 }
 
 CV_IMPL const char*
@@ -198,40 +199,29 @@ static CvGenericHash*
 cvCreateMap( int flags, int header_size, int elem_size,
              CvMemStorage* storage, int start_tab_size )
 {
-    CvGenericHash* map = 0;
-
-    CV_FUNCNAME( "cvCreateMap" );
-
-    __BEGIN__;
-
     if( header_size < (int)sizeof(CvGenericHash) )
-        CV_ERROR( CV_StsBadSize, "Too small map header_size" );
+        CV_Error( CV_StsBadSize, "Too small map header_size" );
 
     if( start_tab_size <= 0 )
         start_tab_size = 16;
 
-    CV_CALL( map = (CvGenericHash*)cvCreateSet( flags, header_size, elem_size, storage ));
+    CvGenericHash* map = (CvGenericHash*)cvCreateSet( flags, header_size, elem_size, storage );
 
     map->tab_size = start_tab_size;
     start_tab_size *= sizeof(map->table[0]);
-    CV_CALL( map->table = (void**)cvMemStorageAlloc( storage, start_tab_size ));
+    map->table = (void**)cvMemStorageAlloc( storage, start_tab_size );
     memset( map->table, 0, start_tab_size );
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        map = 0;
 
     return map;
 }
 
-
+#ifdef __GNUC__
 #define CV_PARSE_ERROR( errmsg )                                    \
-{                                                                   \
-    icvParseError( fs, cvFuncName, (errmsg), __FILE__, __LINE__ );  \
-    EXIT;                                                           \
-}
-
+    icvParseError( fs, __func__, (errmsg), __FILE__, __LINE__ )
+#else
+#define CV_PARSE_ERROR( errmsg )                                    \
+    icvParseError( fs, "", (errmsg), __FILE__, __LINE__ )
+#endif
 
 static void
 icvParseError( CvFileStorage* fs, const char* func_name,
@@ -246,10 +236,6 @@ icvParseError( CvFileStorage* fs, const char* func_name,
 static void
 icvFSCreateCollection( CvFileStorage* fs, int tag, CvFileNode* collection )
 {
-    CV_FUNCNAME( "icvFSCreateCollection" );
-
-    __BEGIN__;
-
     if( CV_NODE_IS_MAP(tag) )
     {
         if( collection->tag != CV_NODE_NONE )
@@ -258,13 +244,13 @@ icvFSCreateCollection( CvFileStorage* fs, int tag, CvFileNode* collection )
             CV_PARSE_ERROR( "Sequence element should not have name (use <_></_>)" );
         }
 
-        CV_CALL( collection->data.map = cvCreateMap( 0, sizeof(CvFileNodeHash),
-                            sizeof(CvFileMapNode), fs->memstorage, 16 ));
+        collection->data.map = cvCreateMap( 0, sizeof(CvFileNodeHash),
+                            sizeof(CvFileMapNode), fs->memstorage, 16 );
     }
     else
     {
         CvSeq* seq;
-        CV_CALL( seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvFileNode), fs->memstorage ));
+        seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvFileNode), fs->memstorage );
 
         // if <collection> contains some scalar element, add it to the newly created collection
         if( CV_NODE_TYPE(collection->tag) != CV_NODE_NONE )
@@ -275,8 +261,6 @@ icvFSCreateCollection( CvFileStorage* fs, int tag, CvFileNode* collection )
 
     collection->tag = tag;
     cvSetSeqBlockSize( collection->data.seq, 8 );
-
-    __END__;
 }
 
 
@@ -311,23 +295,16 @@ static char*
 icvFSDoResize( CvFileStorage* fs, char* ptr, int len )
 {
     char* new_ptr = 0;
-    CV_FUNCNAME( "icvFSDoResize" );
-
-    __BEGIN__;
-
     int written_len = (int)(ptr - fs->buffer_start);
     int new_size = (int)((fs->buffer_end - fs->buffer_start)*3/2);
     new_size = MAX( written_len + len, new_size );
-    CV_CALL( new_ptr = (char*)cvAlloc( new_size + 256 ));
+    new_ptr = (char*)cvAlloc( new_size + 256 );
     fs->buffer = new_ptr + (fs->buffer - fs->buffer_start);
     if( written_len > 0 )
         memcpy( new_ptr, fs->buffer_start, written_len );
     fs->buffer_start = new_ptr;
     fs->buffer_end = fs->buffer_start + new_size;
     new_ptr += written_len;
-
-    __END__;
-
     return new_ptr;
 }
 
@@ -371,12 +348,8 @@ icvFSFlush( CvFileStorage* fs )
 CV_IMPL  void
 cvReleaseFileStorage( CvFileStorage** p_fs )
 {
-    CV_FUNCNAME("cvReleaseFileStorage" );
-
-    __BEGIN__;
-
     if( !p_fs )
-        CV_ERROR( CV_StsNullPtr, "NULL double pointer to file storage" );
+        CV_Error( CV_StsNullPtr, "NULL double pointer to file storage" );
 
     if( *p_fs )
     {
@@ -411,8 +384,6 @@ cvReleaseFileStorage( CvFileStorage** p_fs )
         memset( fs, 0, sizeof(*fs) );
         cvFree( &fs );
     }
-
-    __END__;
 }
 
 
@@ -422,16 +393,12 @@ CV_IMPL CvStringHashNode*
 cvGetHashedKey( CvFileStorage* fs, const char* str, int len, int create_missing )
 {
     CvStringHashNode* node = 0;
-    CV_FUNCNAME( "cvGetHashedKey" );
-
-    __BEGIN__;
-
     unsigned hashval = 0;
     int i, tab_size;
     CvStringHash* map = fs->str_hash;
 
     if( !fs )
-        EXIT;
+        return 0;
 
     if( len < 0 )
     {
@@ -461,12 +428,10 @@ cvGetHashedKey( CvFileStorage* fs, const char* str, int len, int create_missing 
     {
         node = (CvStringHashNode*)cvSetNew( (CvSet*)map );
         node->hashval = hashval;
-        CV_CALL( node->str = cvMemStorageAllocString( map->storage, str, len ));
+        node->str = cvMemStorageAllocString( map->storage, str, len );
         node->next = (CvStringHashNode*)(map->table[i]);
         map->table[i] = node;
     }
-
-    __END__;
 
     return node;
 }
@@ -478,25 +443,20 @@ cvGetFileNode( CvFileStorage* fs, CvFileNode* _map_node,
                int create_missing )
 {
     CvFileNode* value = 0;
-
-    CV_FUNCNAME( "cvGetFileNode" );
-
-    __BEGIN__;
-
     int k = 0, attempts = 1;
 
     if( !fs )
-        EXIT;
+        return 0;
 
     CV_CHECK_FILE_STORAGE(fs);
 
     if( !key )
-        CV_ERROR( CV_StsNullPtr, "Null key element" );
+        CV_Error( CV_StsNullPtr, "Null key element" );
 
     if( _map_node )
     {
         if( !fs->roots )
-            EXIT;
+            return 0;
         attempts = fs->roots->total;
     }
 
@@ -514,8 +474,8 @@ cvGetFileNode( CvFileStorage* fs, CvFileNode* _map_node,
         {
             if( (!CV_NODE_IS_SEQ(map_node->tag) || map_node->data.seq->total != 0) &&
                 CV_NODE_TYPE(map_node->tag) != CV_NODE_NONE )
-                CV_ERROR( CV_StsError, "The node is neither a map nor an empty collection" );
-            EXIT;
+                CV_Error( CV_StsError, "The node is neither a map nor an empty collection" );
+            return 0;
         }
 
         map = map_node->data.map;
@@ -532,7 +492,7 @@ cvGetFileNode( CvFileStorage* fs, CvFileNode* _map_node,
                 if( !create_missing )
                 {
                     value = &another->value;
-                    EXIT;
+                    return value;
                 }
                 CV_PARSE_ERROR( "Duplicated key" );
             }
@@ -548,8 +508,6 @@ cvGetFileNode( CvFileStorage* fs, CvFileNode* _map_node,
         }
     }
 
-    __END__;
-
     return value;
 }
 
@@ -558,21 +516,17 @@ CV_IMPL CvFileNode*
 cvGetFileNodeByName( const CvFileStorage* fs, const CvFileNode* _map_node, const char* str )
 {
     CvFileNode* value = 0;
-    CV_FUNCNAME( "cvGetFileNodeByName" );
-
-    __BEGIN__;
-
     int i, len, tab_size;
     unsigned hashval = 0;
     int k = 0, attempts = 1;
 
     if( !fs )
-        EXIT;
+        return 0;
 
     CV_CHECK_FILE_STORAGE(fs);
 
     if( !str )
-        CV_ERROR( CV_StsNullPtr, "Null element name" );
+        CV_Error( CV_StsNullPtr, "Null element name" );
 
     for( i = 0; str[i] != '\0'; i++ )
         hashval = hashval*CV_HASHVAL_SCALE + (unsigned char)str[i];
@@ -582,7 +536,7 @@ cvGetFileNodeByName( const CvFileStorage* fs, const CvFileNode* _map_node, const
     if( !_map_node )
     {
         if( !fs->roots )
-            EXIT;
+            return 0;
         attempts = fs->roots->total;
     }
 
@@ -599,8 +553,8 @@ cvGetFileNodeByName( const CvFileStorage* fs, const CvFileNode* _map_node, const
         {
             if( (!CV_NODE_IS_SEQ(map_node->tag) || map_node->data.seq->total != 0) &&
                 CV_NODE_TYPE(map_node->tag) != CV_NODE_NONE )
-                CV_ERROR( CV_StsError, "The node is neither a map nor an empty collection" );
-            EXIT;
+                CV_Error( CV_StsError, "The node is neither a map nor an empty collection" );
+            return 0;
         }
 
         map = map_node->data.map;
@@ -620,12 +574,10 @@ cvGetFileNodeByName( const CvFileStorage* fs, const CvFileNode* _map_node, const
                 memcmp( key->str.ptr, str, len ) == 0 )
             {
                 value = &another->value;
-                EXIT;
+                return value;
             }
         }
     }
-
-    __END__;
 
     return value;
 }
@@ -634,21 +586,12 @@ cvGetFileNodeByName( const CvFileStorage* fs, const CvFileNode* _map_node, const
 CV_IMPL CvFileNode*
 cvGetRootFileNode( const CvFileStorage* fs, int stream_index )
 {
-    CvFileNode* value = 0;
-    CV_FUNCNAME( "cvGetRootFileNode" );
-
-    __BEGIN__;
-
     CV_CHECK_FILE_STORAGE(fs);
 
     if( !fs->roots || (unsigned)stream_index >= (unsigned)fs->roots->total )
-        EXIT;
+        return 0;
 
-    value = (CvFileNode*)cvGetSeqElem( fs->roots, stream_index );
-
-    __END__;
-
-    return value;
+    return (CvFileNode*)cvGetSeqElem( fs->roots, stream_index );
 }
 
 
@@ -658,11 +601,6 @@ cvGetFileNodeFromSeq( CvFileStorage* fs,
                       CvFileNode* seq_node, int index )
 {
     CvFileNode* value = 0;
-
-    CV_FUNCNAME( "cvGetFileNodeFromSeq" );
-
-    __BEGIN__;
-
     CvSeq* seq;
 
     if( !seq_node )
@@ -670,11 +608,11 @@ cvGetFileNodeFromSeq( CvFileStorage* fs,
     else if( !CV_NODE_IS_SEQ(seq_node->tag) )
     {
         if( CV_NODE_IS_MAP(seq_node->tag) )
-            CV_ERROR( CV_StsError, "The node is map. Use cvGetFileNodeFromMap()." );
+            CV_Error( CV_StsError, "The node is map. Use cvGetFileNodeFromMap()." );
         if( CV_NODE_TYPE(seq_node->tag) == CV_NODE_NONE )
-            CV_ERROR( CV_StsError, "The node is an empty object (None)." );
+            CV_Error( CV_StsError, "The node is an empty object (None)." );
         if( index != 0 && index != -1 )
-            CV_ERROR( CV_StsOutOfRange, "" );
+            CV_Error( CV_StsOutOfRange, "" );
         value = seq_node;
         EXIT;
     }
@@ -682,11 +620,11 @@ cvGetFileNodeFromSeq( CvFileStorage* fs,
         seq = seq_node->data.seq;
 
     if( !seq )
-        CV_ERROR( CV_StsNullPtr, "The file storage is empty" );
+        CV_Error( CV_StsNullPtr, "The file storage is empty" );
 
     value = (CvFileNode*)cvGetSeqElem( seq, index, 0 );
 
-    __END__;
+    
 
     return value;
 }*/
@@ -775,10 +713,6 @@ icvFloatToString( char* buf, float value )
 static void
 icvProcessSpecialDouble( CvFileStorage* fs, char* buf, double* value, char** endptr )
 {
-    CV_FUNCNAME( "icvProcessSpecialDouble" );
-
-    __BEGIN__;
-
     char c = buf[0];
     int inf_hi = 0x7ff00000;
 
@@ -799,8 +733,6 @@ icvProcessSpecialDouble( CvFileStorage* fs, char* buf, double* value, char** end
         CV_PARSE_ERROR( "Bad format of floating-point constant" );
 
     *endptr = buf + 4;
-
-    __END__;
 }
 
 
@@ -833,10 +765,6 @@ static double icv_strtod( CvFileStorage* fs, char* ptr, char** endptr )
 static char*
 icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_indent )
 {
-    CV_FUNCNAME( "icvYMLSkipSpaces" );
-
-    __BEGIN__;
-
     for(;;)
     {
         while( *ptr == ' ' )
@@ -844,7 +772,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
         if( *ptr == '#' )
         {
             if( ptr - fs->buffer_start > max_comment_indent )
-                EXIT;
+                return ptr;
             *ptr = '\0';
         }
         else if( cv_isprint(*ptr) )
@@ -879,8 +807,6 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
             CV_PARSE_ERROR( *ptr == '\t' ? "Tabs are prohibited in YAML!" : "Invalid character" );
     }
 
-    __END__;
-
     return ptr;
 }
 
@@ -889,10 +815,6 @@ static char*
 icvYMLParseKey( CvFileStorage* fs, char* ptr,
                 CvFileNode* map_node, CvFileNode** value_placeholder )
 {
-    CV_FUNCNAME( "icvYMLParseKey" );
-
-    __BEGIN__;
-
     char c;
     char *endptr = ptr - 1, *saveptr;
     CvStringHashNode* str_hash_node;
@@ -914,11 +836,9 @@ icvYMLParseKey( CvFileStorage* fs, char* ptr,
     if( endptr == ptr )
         CV_PARSE_ERROR( "An empty key" );
 
-    CV_CALL( str_hash_node = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 ));
-    CV_CALL( *value_placeholder = cvGetFileNode( fs, map_node, str_hash_node, 1 ));
+    str_hash_node = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 );
+    *value_placeholder = cvGetFileNode( fs, map_node, str_hash_node, 1 );
     ptr = saveptr;
-
-    __END__;
 
     return ptr;
 }
@@ -928,10 +848,6 @@ static char*
 icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                   int parent_flags, int min_indent )
 {
-    CV_FUNCNAME( "icvYMLParseValue" );
-
-    __BEGIN__;
-
     char buf[CV_FS_MAX_LEN + 1024];
     char* endptr = 0;
     char c = ptr[0], d = ptr[1];
@@ -976,13 +892,13 @@ icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
         }
         else if( CV_NODE_IS_USER(value_type) )
         {
-            CV_CALL( node->info = cvFindType( ptr ));
+            node->info = cvFindType( ptr );
             if( !node->info )
                 node->tag &= ~CV_NODE_USER;
         }
 
         *endptr = d;
-        CV_CALL( ptr = icvYMLSkipSpaces( fs, endptr, min_indent, INT_MAX ));
+        ptr = icvYMLSkipSpaces( fs, endptr, min_indent, INT_MAX );
 
         c = *ptr;
 
@@ -1011,7 +927,7 @@ icvYMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
 force_real:
             fval = icv_strtod( fs, ptr, &endptr );
             /*if( endptr == ptr || isalpha(*endptr) )
-                CV_CALL( icvProcessSpecialDouble( fs, endptr, &fval, &endptr ));*/
+                icvProcessSpecialDouble( fs, endptr, &fval, &endptr ));*/
 
             node->tag = CV_NODE_REAL;
             node->data.f = fval;
@@ -1095,7 +1011,7 @@ force_int:
         if( len >= CV_FS_MAX_LEN )
             CV_PARSE_ERROR( "Too long string literal" );
 
-        CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, buf, len ));
+        node->data.str = cvMemStorageAllocString( fs->memstorage, buf, len );
     }
     else if( c == '[' || c == '{' ) // collection as a flow
     {
@@ -1103,8 +1019,8 @@ force_int:
         int struct_flags = CV_NODE_FLOW + (c == '{' ? CV_NODE_MAP : CV_NODE_SEQ);
         int is_simple = 1;
 
-        CV_CALL( icvFSCreateCollection( fs, CV_NODE_TYPE(struct_flags) +
-                                        (node->info ? CV_NODE_USER : 0), node ));
+        icvFSCreateCollection( fs, CV_NODE_TYPE(struct_flags) +
+                                        (node->info ? CV_NODE_USER : 0), node );
 
         d = c == '[' ? ']' : '}';
 
@@ -1112,7 +1028,7 @@ force_int:
         {
             CvFileNode* elem = 0;
 
-            CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, new_min_indent, INT_MAX ));
+            ptr = icvYMLSkipSpaces( fs, ptr, new_min_indent, INT_MAX );
             if( *ptr == '}' || *ptr == ']' )
             {
                 if( *ptr != d )
@@ -1125,13 +1041,13 @@ force_int:
             {
                 if( *ptr != ',' )
                     CV_PARSE_ERROR( "Missing , between the elements" );
-                CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr + 1, new_min_indent, INT_MAX ));
+                ptr = icvYMLSkipSpaces( fs, ptr + 1, new_min_indent, INT_MAX );
             }
 
             if( CV_NODE_IS_MAP(struct_flags) )
             {
-                CV_CALL( ptr = icvYMLParseKey( fs, ptr, node, &elem ));
-                CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, new_min_indent, INT_MAX ));
+                ptr = icvYMLParseKey( fs, ptr, node, &elem );
+                ptr = icvYMLSkipSpaces( fs, ptr, new_min_indent, INT_MAX );
             }
             else
             {
@@ -1139,7 +1055,7 @@ force_int:
                     break;
                 elem = (CvFileNode*)cvSeqPush( node->data.seq, 0 );
             }
-            CV_CALL( ptr = icvYMLParseValue( fs, ptr, elem, struct_flags, new_min_indent ));
+            ptr = icvYMLParseValue( fs, ptr, elem, struct_flags, new_min_indent );
             if( CV_NODE_IS_MAP(struct_flags) )
                 elem->tag |= CV_NODE_NAMED;
             is_simple &= !CV_NODE_IS_COLLECTION(elem->tag);
@@ -1180,17 +1096,17 @@ force_string:
                 do c = *--str_end;
                 while( str_end > ptr && c == ' ' );
                 str_end++;
-                CV_CALL( node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, (int)(str_end - ptr) ));
+                node->data.str = cvMemStorageAllocString( fs->memstorage, ptr, (int)(str_end - ptr) );
                 ptr = endptr;
-                EXIT;
+                return ptr;
             }
             struct_flags = CV_NODE_MAP;
         }
         else
             struct_flags = CV_NODE_SEQ;
 
-        CV_CALL( icvFSCreateCollection( fs, struct_flags +
-                    (node->info ? CV_NODE_USER : 0), node ));
+        icvFSCreateCollection( fs, struct_flags +
+                    (node->info ? CV_NODE_USER : 0), node );
 
         indent = (int)(ptr - fs->buffer_start);
         is_simple = 1;
@@ -1201,7 +1117,7 @@ force_string:
 
             if( CV_NODE_IS_MAP(struct_flags) )
             {
-                CV_CALL( ptr = icvYMLParseKey( fs, ptr, node, &elem ));
+                ptr = icvYMLParseKey( fs, ptr, node, &elem );
             }
             else
             {
@@ -1209,16 +1125,16 @@ force_string:
                 if( c != '-' )
                     CV_PARSE_ERROR( "Block sequence elements must be preceded with \'-\'" );
 
-                CV_CALL( elem = (CvFileNode*)cvSeqPush( node->data.seq, 0 ));
+                elem = (CvFileNode*)cvSeqPush( node->data.seq, 0 );
             }
 
-            CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, indent + 1, INT_MAX ));
-            CV_CALL( ptr = icvYMLParseValue( fs, ptr, elem, struct_flags, indent + 1 ));
+            ptr = icvYMLSkipSpaces( fs, ptr, indent + 1, INT_MAX );
+            ptr = icvYMLParseValue( fs, ptr, elem, struct_flags, indent + 1 );
             if( CV_NODE_IS_MAP(struct_flags) )
                 elem->tag |= CV_NODE_NAMED;
             is_simple &= !CV_NODE_IS_COLLECTION(elem->tag);
 
-            CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX ));
+            ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX );
             if( ptr - fs->buffer_start != indent )
             {
                 if( ptr - fs->buffer_start < indent )
@@ -1233,8 +1149,6 @@ force_string:
         node->data.seq->flags |= is_simple ? CV_NODE_SEQ_SIMPLE : 0;
     }
 
-    __END__;
-
     return ptr;
 }
 
@@ -1242,10 +1156,6 @@ force_string:
 static void
 icvYMLParse( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "icvYMLParse" );
-
-    __BEGIN__;
-
     char* ptr = fs->buffer_start;
     int is_first = 1;
 
@@ -1255,9 +1165,9 @@ icvYMLParse( CvFileStorage* fs )
         // 1. reach the first item
         for(;;)
         {
-            CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX ));
+            ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX );
             if( !ptr )
-                EXIT;
+                return;
 
             if( *ptr == '%' )
             {
@@ -1286,20 +1196,20 @@ icvYMLParse( CvFileStorage* fs )
                 CV_PARSE_ERROR( "Invalid or unsupported syntax" );
         }
 
-        CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX ));
+        ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX );
         if( memcmp( ptr, "...", 3 ) != 0 )
         {
             // 2. parse the collection
             CvFileNode* root_node = (CvFileNode*)cvSeqPush( fs->roots, 0 );
 
-            CV_CALL( ptr = icvYMLParseValue( fs, ptr, root_node, CV_NODE_NONE, 0 ));
+            ptr = icvYMLParseValue( fs, ptr, root_node, CV_NODE_NONE, 0 );
             if( !CV_NODE_IS_COLLECTION(root_node->tag) )
                 CV_PARSE_ERROR( "Only collections as YAML streams are supported by this parser" );
 
             // 3. parse until the end of file or next collection
-            CV_CALL( ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX ));
+            ptr = icvYMLSkipSpaces( fs, ptr, 0, INT_MAX );
             if( !ptr )
-                EXIT;
+                return;
         }
 
         if( fs->dummy_eof )
@@ -1307,8 +1217,6 @@ icvYMLParse( CvFileStorage* fs )
         ptr += 3;
         is_first = 0;
     }
-
-    __END__;
 }
 
 
@@ -1317,12 +1225,8 @@ icvYMLParse( CvFileStorage* fs )
 \****************************************************************************************/
 
 static void
-icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* cvFuncName )
+icvYMLWrite( CvFileStorage* fs, const char* key, const char* data )
 {
-    //CV_FUNCNAME( "icvYMLWrite" );
-
-    __BEGIN__;
-
     int i, keylen = 0;
     int datalen = 0;
     int struct_flags;
@@ -1336,7 +1240,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
     if( CV_NODE_IS_COLLECTION(struct_flags) )
     {
         if( (CV_NODE_IS_MAP(struct_flags) ^ (key != 0)) )
-            CV_ERROR( CV_StsBadArg, "An attempt to add element without a key to a map, "
+            CV_Error( CV_StsBadArg, "An attempt to add element without a key to a map, "
                                     "or add element with key to sequence" );
     }
     else
@@ -1349,10 +1253,10 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
     {
         keylen = (int)strlen(key);
         if( keylen == 0 )
-            CV_ERROR( CV_StsBadArg, "The key is an empty" );
+            CV_Error( CV_StsBadArg, "The key is an empty" );
 
         if( keylen > CV_FS_MAX_LEN )
-            CV_ERROR( CV_StsBadArg, "The key is too long" );
+            CV_Error( CV_StsBadArg, "The key is too long" );
     }
 
     if( data )
@@ -1387,7 +1291,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
     if( key )
     {
         if( !isalpha(key[0]) && key[0] != '_' )
-            CV_ERROR( CV_StsBadArg, "Key must start with a letter or _" );
+            CV_Error( CV_StsBadArg, "Key must start with a letter or _" );
 
         ptr = icvFSResizeWriteBuffer( fs, ptr, keylen );
 
@@ -1397,7 +1301,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
 
             ptr[i] = (char)c;
             if( !isalnum(c) && c != '-' && c != '_' && c != ' ' )
-                CV_ERROR( CV_StsBadArg, "Invalid character occurs in the key" );
+                CV_Error( CV_StsBadArg, "Invalid character occurs in the key" );
         }
 
         ptr += keylen;
@@ -1415,8 +1319,6 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data, const char* c
 
     fs->buffer = ptr;
     fs->struct_flags = struct_flags & ~CV_NODE_EMPTY;
-
-    __END__;
 }
 
 
@@ -1424,17 +1326,13 @@ static void
 icvYMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
                         const char* type_name CV_DEFAULT(0))
 {
-    CV_FUNCNAME( "icvYMLStartWriteStruct" );
-
-    __BEGIN__;
-
     int parent_flags;
     char buf[CV_FS_MAX_LEN + 1024];
     const char* data = 0;
 
     struct_flags = (struct_flags & (CV_NODE_TYPE_MASK|CV_NODE_FLOW)) | CV_NODE_EMPTY;
     if( !CV_NODE_IS_COLLECTION(struct_flags))
-        CV_ERROR( CV_StsBadArg,
+        CV_Error( CV_StsBadArg,
         "Some collection type - CV_NODE_SEQ or CV_NODE_MAP, must be specified" );
 
     if( CV_NODE_IS_FLOW(struct_flags) )
@@ -1457,7 +1355,7 @@ icvYMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
         data = buf;
     }
 
-    CV_CALL( icvYMLWrite( fs, key, data, cvFuncName ));
+    icvYMLWrite( fs, key, data );
 
     parent_flags = fs->struct_flags;
     cvSeqPush( fs->write_stack, &parent_flags );
@@ -1465,24 +1363,18 @@ icvYMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
 
     if( !CV_NODE_IS_FLOW(parent_flags) )
         fs->struct_indent += CV_YML_INDENT + CV_NODE_IS_FLOW(struct_flags);
-
-    __END__;
 }
 
 
 static void
 icvYMLEndWriteStruct( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "icvYMLEndWriteStruct" );
-
-    __BEGIN__;
-
     int parent_flags = 0, struct_flags;
     char* ptr;
 
     struct_flags = fs->struct_flags;
     if( fs->write_stack->total == 0 )
-        CV_ERROR( CV_StsError, "EndWriteStruct w/o matching StartWriteStruct" );
+        CV_Error( CV_StsError, "EndWriteStruct w/o matching StartWriteStruct" );
 
     cvSeqPop( fs->write_stack, &parent_flags );
 
@@ -1506,18 +1398,12 @@ icvYMLEndWriteStruct( CvFileStorage* fs )
     assert( fs->struct_indent >= 0 );
 
     fs->struct_flags = parent_flags;
-
-    __END__;
 }
 
 
 static void
 icvYMLStartNextStream( CvFileStorage* fs )
 {
-    //CV_FUNCNAME( "icvYMLStartNextStream" );
-
-    __BEGIN__;
-
     if( !fs->is_first )
     {
         while( fs->write_stack->total > 0 )
@@ -1529,36 +1415,22 @@ icvYMLStartNextStream( CvFileStorage* fs )
         fputs( "---\n", fs->file );
         fs->buffer = fs->buffer_start;
     }
-
-    __END__;
 }
 
 
 static void
 icvYMLWriteInt( CvFileStorage* fs, const char* key, int value )
 {
-    CV_FUNCNAME( "icvYMLWriteInt" );
-
-    __BEGIN__;
-
     char buf[128];
-    CV_CALL( icvYMLWrite( fs, key, icv_itoa( value, buf, 10 ), cvFuncName ));
-
-    __END__;
+    icvYMLWrite( fs, key, icv_itoa( value, buf, 10 ));
 }
 
 
 static void
 icvYMLWriteReal( CvFileStorage* fs, const char* key, double value )
 {
-    CV_FUNCNAME( "icvYMLWriteReal" );
-
-    __BEGIN__;
-
     char buf[128];
-    CV_CALL( icvYMLWrite( fs, key, icvDoubleToString( buf, value ), cvFuncName ));
-
-    __END__;
+    icvYMLWrite( fs, key, icvDoubleToString( buf, value ));
 }
 
 
@@ -1566,20 +1438,16 @@ static void
 icvYMLWriteString( CvFileStorage* fs, const char* key,
                    const char* str, int quote CV_DEFAULT(0))
 {
-    CV_FUNCNAME( "icvYMLWriteString" );
-
-    __BEGIN__;
-
     char buf[CV_FS_MAX_LEN*4+16];
     char* data = (char*)str;
     int i, len;
 
     if( !str )
-        CV_ERROR( CV_StsNullPtr, "Null string pointer" );
+        CV_Error( CV_StsNullPtr, "Null string pointer" );
 
     len = (int)strlen(str);
     if( len > CV_FS_MAX_LEN )
-        CV_ERROR( CV_StsBadArg, "The written string is too long" );
+        CV_Error( CV_StsBadArg, "The written string is too long" );
 
     if( quote || len == 0 || str[0] != str[len-1] || (str[0] != '\"' && str[0] != '\'') )
     {
@@ -1624,26 +1492,20 @@ icvYMLWriteString( CvFileStorage* fs, const char* key,
         data = buf + !need_quote;
     }
 
-    CV_CALL( icvYMLWrite( fs, key, data, cvFuncName ));
-
-    __END__;
+    icvYMLWrite( fs, key, data );
 }
 
 
 static void
 icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
 {
-    CV_FUNCNAME( "icvYMLWriteComment" );
-
-    __BEGIN__;
-
     int len; //, indent;
     int multiline;
     const char* eol;
     char* ptr;
 
     if( !comment )
-        CV_ERROR( CV_StsNullPtr, "Null comment" );
+        CV_Error( CV_StsNullPtr, "Null comment" );
 
     len = (int)strlen(comment);
     eol = strchr(comment, '\n');
@@ -1678,8 +1540,6 @@ icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
         }
         ptr = icvFSFlush( fs );
     }
-
-    __END__;
 }
 
 
@@ -1694,10 +1554,6 @@ icvYMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
 static char*
 icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
 {
-    CV_FUNCNAME( "icvXMLSkipSpaces" );
-
-    __BEGIN__;
-
     int level = 0;
 
     for(;;)
@@ -1726,7 +1582,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
                 level += c == '<';
                 level -= c == '>';
                 if( level < 0 )
-                    EXIT;
+                    return ptr;
             } while( cv_isprint_or_tab(c) );
         }
         else
@@ -1767,9 +1623,6 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
             fs->lineno++;
         }
     }
-
-    __END__;
-
     return ptr;
 }
 
@@ -1782,10 +1635,6 @@ static char*
 icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                   int value_type CV_DEFAULT(CV_NODE_NONE))
 {
-    CV_FUNCNAME( "icvXMLParseValue" );
-
-    __BEGIN__;
-
     CvFileNode *elem = node;
     int have_space = 1, is_simple = 1;
     int is_user_type = CV_NODE_IS_USER(value_type);
@@ -1800,7 +1649,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
 
         if( isspace(c) || c == '\0' || (c == '<' && ptr[1] == '!' && ptr[2] == '-') )
         {
-            CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, 0 ));
+            ptr = icvXMLSkipSpaces( fs, ptr, 0 );
             have_space = 1;
             c = *ptr;
         }
@@ -1820,7 +1669,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             if( d == '/' )
                 break;
 
-            CV_CALL( ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type ));
+            ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type );
 
             if( tag_type == CV_XML_DIRECTIVE_TAG )
                 CV_PARSE_ERROR( "Directive tags are not allowed here" );
@@ -1840,7 +1689,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                     elem_type = CV_NODE_MAP;
                 else
                 {
-                    CV_CALL( info = cvFindType( type_name ));
+                    info = cvFindType( type_name );
                     if( info )
                         elem_type = CV_NODE_USER;
                 }
@@ -1849,7 +1698,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             is_noname = key->str.len == 1 && key->str.ptr[0] == '_';
             if( !CV_NODE_IS_COLLECTION(node->tag) )
             {
-                CV_CALL( icvFSCreateCollection( fs, is_noname ? CV_NODE_SEQ : CV_NODE_MAP, node ));
+                icvFSCreateCollection( fs, is_noname ? CV_NODE_SEQ : CV_NODE_MAP, node );
             }
             else if( is_noname ^ CV_NODE_IS_SEQ(node->tag) )
                 CV_PARSE_ERROR( is_noname ? "Map element should have a name" :
@@ -1858,14 +1707,14 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             if( is_noname )
                 elem = (CvFileNode*)cvSeqPush( node->data.seq, 0 );
             else
-                CV_CALL( elem = cvGetFileNode( fs, node, key, 1 ));
+                elem = cvGetFileNode( fs, node, key, 1 );
 
-            CV_CALL( ptr = icvXMLParseValue( fs, ptr, elem, elem_type));
+            ptr = icvXMLParseValue( fs, ptr, elem, elem_type);
             if( !is_noname )
                 elem->tag |= CV_NODE_NAMED;
             is_simple &= !CV_NODE_IS_COLLECTION(elem->tag);
             elem->info = info;
-            CV_CALL( ptr = icvXMLParseTag( fs, ptr, &key2, &list, &tag_type ));
+            ptr = icvXMLParseTag( fs, ptr, &key2, &list, &tag_type );
             if( tag_type != CV_XML_CLOSING_TAG || key2 != key )
                 CV_PARSE_ERROR( "Mismatched closing tag" );
             have_space = 1;
@@ -1879,7 +1728,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             if( node->tag != CV_NODE_NONE )
             {
                 if( !CV_NODE_IS_COLLECTION(node->tag) )
-                    CV_CALL( icvFSCreateCollection( fs, CV_NODE_SEQ, node ));
+                    icvFSCreateCollection( fs, CV_NODE_SEQ, node );
 
                 elem = (CvFileNode*)cvSeqPush( node->data.seq, 0 );
                 elem->info = 0;
@@ -1898,7 +1747,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                 {
                     fval = icv_strtod( fs, ptr, &endptr );
                     /*if( endptr == ptr || isalpha(*endptr) )
-                        CV_CALL( icvProcessSpecialDouble( fs, ptr, &fval, &endptr ));*/
+                        icvProcessSpecialDouble( fs, ptr, &fval, &endptr ));*/
                     elem->tag = CV_NODE_REAL;
                     elem->data.f = fval;
                 }
@@ -1990,7 +1839,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                     if( i >= CV_FS_MAX_LEN )
                         CV_PARSE_ERROR( "Too long string literal" );
                 }
-                CV_CALL( elem->data.str = cvMemStorageAllocString( fs->memstorage, buf, i ));
+                elem->data.str = cvMemStorageAllocString( fs->memstorage, buf, i );
             }
 
             if( !CV_NODE_IS_COLLECTION(value_type) && value_type != CV_NODE_NONE )
@@ -2004,8 +1853,8 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
         !CV_NODE_IS_COLLECTION(node->tag))) &&
         CV_NODE_IS_COLLECTION(value_type) )
     {
-        CV_CALL( icvFSCreateCollection( fs, CV_NODE_IS_MAP(value_type) ?
-                                        CV_NODE_MAP : CV_NODE_SEQ, node ));
+        icvFSCreateCollection( fs, CV_NODE_IS_MAP(value_type) ?
+                                        CV_NODE_MAP : CV_NODE_SEQ, node );
     }
 
     if( value_type != CV_NODE_NONE &&
@@ -2016,9 +1865,6 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
             node->data.seq->flags |= CV_NODE_SEQ_SIMPLE;
 
     node->tag |= is_user_type ? CV_NODE_USER : 0;
-
-    __END__;
-
     return ptr;
 }
 
@@ -2032,11 +1878,6 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
     CvAttrList *first = 0, *last = 0;
     int count = 0, max_count = 4;
     int attr_buf_size = (max_count*2 + 1)*sizeof(char*) + sizeof(CvAttrList);
-
-    CV_FUNCNAME( "icvXMLParseTag" );
-
-    __BEGIN__;
-
     char* endptr;
     char c;
     int have_space;
@@ -2077,7 +1918,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
         do c = *++endptr;
         while( isalnum(c) || c == '_' || c == '-' );
 
-        CV_CALL( attrname = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 ));
+        attrname = cvGetHashedKey( fs, ptr, (int)(endptr - ptr), 1 );
         ptr = endptr;
 
         if( !tagname )
@@ -2091,7 +1932,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
             {
                 CvAttrList* chunk;
 
-                CV_CALL( chunk = (CvAttrList*)cvMemStorageAlloc( fs->memstorage, attr_buf_size ));
+                chunk = (CvAttrList*)cvMemStorageAlloc( fs->memstorage, attr_buf_size );
                 memset( chunk, 0, attr_buf_size );
                 chunk->attr = (const char**)(chunk + 1);
                 count = 0;
@@ -2109,7 +1950,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
 
             if( *ptr != '=' )
             {
-                CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG ));
+                ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG );
                 if( *ptr != '=' )
                     CV_PARSE_ERROR( "Attribute name should be followed by \'=\'" );
             }
@@ -2117,7 +1958,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
             c = *++ptr;
             if( c != '\"' && c != '\'' )
             {
-                CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG ));
+                ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG );
                 if( *ptr != '\"' && *ptr != '\'' )
                     CV_PARSE_ERROR( "Attribute value should be put into single or double quotes" );
             }
@@ -2133,7 +1974,7 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
 
         if( c != '>' )
         {
-            CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG ));
+            ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG );
             c = *ptr;
         }
 
@@ -2162,8 +2003,6 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
             CV_PARSE_ERROR( "There should be space between attributes" );
     }
 
-    __END__;
-
     *_tag = tagname;
     *_tag_type = tag_type;
     *_list = first;
@@ -2175,27 +2014,23 @@ icvXMLParseTag( CvFileStorage* fs, char* ptr, CvStringHashNode** _tag,
 static void
 icvXMLParse( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "icvXMLParse" );
-
-    __BEGIN__;
-
     char* ptr = fs->buffer_start;
     CvStringHashNode *key = 0, *key2 = 0;
     CvAttrList* list = 0;
     int tag_type = 0;
 
     // CV_XML_INSIDE_TAG is used to prohibit leading comments
-    CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG ));
+    ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG );
 
     if( memcmp( ptr, "<?xml", 5 ) != 0 )
         CV_PARSE_ERROR( "Valid XML should start with \'<?xml ...?>\'" );
 
-    CV_CALL( ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type ));
+    ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type );
 
     /*{
         const char* version = cvAttrValue( list, "version" );
         if( version && strncmp( version, "1.", 2 ) != 0 )
-            CV_ERROR( CV_StsParseError, "Unsupported version of XML" );
+            CV_Error( CV_StsParseError, "Unsupported version of XML" );
     }*/
     {
         const char* encoding = cvAttrValue( list, "encoding" );
@@ -2205,28 +2040,26 @@ icvXMLParse( CvFileStorage* fs )
 
     while( *ptr != '\0' )
     {
-        CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, 0 ));
+        ptr = icvXMLSkipSpaces( fs, ptr, 0 );
 
         if( *ptr != '\0' )
         {
             CvFileNode* root_node;
-            CV_CALL( ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type ));
+            ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type );
             if( tag_type != CV_XML_OPENING_TAG ||
                 strcmp(key->str.ptr,"opencv_storage") != 0 )
                 CV_PARSE_ERROR( "<opencv_storage> tag is missing" );
 
             root_node = (CvFileNode*)cvSeqPush( fs->roots, 0 );
-            CV_CALL( ptr = icvXMLParseValue( fs, ptr, root_node, CV_NODE_NONE ));
-            CV_CALL( ptr = icvXMLParseTag( fs, ptr, &key2, &list, &tag_type ));
+            ptr = icvXMLParseValue( fs, ptr, root_node, CV_NODE_NONE );
+            ptr = icvXMLParseTag( fs, ptr, &key2, &list, &tag_type );
             if( tag_type != CV_XML_CLOSING_TAG || key != key2 )
                 CV_PARSE_ERROR( "</opencv_storage> tag is missing" );
-            CV_CALL( ptr = icvXMLSkipSpaces( fs, ptr, 0 ));
+            ptr = icvXMLSkipSpaces( fs, ptr, 0 );
         }
     }
 
     assert( fs->dummy_eof != 0 );
-
-    __END__;
 }
 
 
@@ -2239,10 +2072,6 @@ icvXMLParse( CvFileStorage* fs )
 static void
 icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList list )
 {
-    CV_FUNCNAME( "icvXMLWriteTag" );
-
-    __BEGIN__;
-
     char* ptr = fs->buffer;
     int i, len = 0;
     int struct_flags = fs->struct_flags;
@@ -2255,7 +2084,7 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
         if( CV_NODE_IS_COLLECTION(struct_flags) )
         {
             if( CV_NODE_IS_MAP(struct_flags) ^ (key != 0) )
-                CV_ERROR( CV_StsBadArg, "An attempt to add element without a key to a map, "
+                CV_Error( CV_StsBadArg, "An attempt to add element without a key to a map, "
                                         "or add element with key to sequence" );
         }
         else
@@ -2271,26 +2100,26 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
     if( !key )
         key = "_";
     else if( key[0] == '_' && key[1] == '\0' )
-        CV_ERROR( CV_StsBadArg, "A single _ is a reserved tag name" );
+        CV_Error( CV_StsBadArg, "A single _ is a reserved tag name" );
 
     len = (int)strlen( key );
     *ptr++ = '<';
     if( tag_type == CV_XML_CLOSING_TAG )
     {
         if( list.attr )
-            CV_ERROR( CV_StsBadArg, "Closing tag should not include any attributes" );
+            CV_Error( CV_StsBadArg, "Closing tag should not include any attributes" );
         *ptr++ = '/';
     }
 
     if( !isalpha(key[0]) && key[0] != '_' )
-        CV_ERROR( CV_StsBadArg, "Key should start with a letter or _" );
+        CV_Error( CV_StsBadArg, "Key should start with a letter or _" );
 
     ptr = icvFSResizeWriteBuffer( fs, ptr, len );
     for( i = 0; i < len; i++ )
     {
         char c = key[i];
         if( !isalnum(c) && c != '_' && c != '-' )
-            CV_ERROR( CV_StsBadArg, "Invalid character in the key" );
+            CV_Error( CV_StsBadArg, "Invalid character in the key" );
         ptr[i] = c;
     }
     ptr += len;
@@ -2324,8 +2153,6 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
     *ptr++ = '>';
     fs->buffer = ptr;
     fs->struct_flags = struct_flags & ~CV_NODE_EMPTY;
-
-    __END__;
 }
 
 
@@ -2333,17 +2160,13 @@ static void
 icvXMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
                         const char* type_name CV_DEFAULT(0))
 {
-    CV_FUNCNAME( "icvXMLStartWriteStruct" );
-
-    __BEGIN__;
-
     CvXMLStackRecord parent;
     const char* attr[10];
     int idx = 0;
 
     struct_flags = (struct_flags & (CV_NODE_TYPE_MASK|CV_NODE_FLOW)) | CV_NODE_EMPTY;
     if( !CV_NODE_IS_COLLECTION(struct_flags))
-        CV_ERROR( CV_StsBadArg,
+        CV_Error( CV_StsBadArg,
         "Some collection type: CV_NODE_SEQ or CV_NODE_MAP must be specified" );
 
     if( type_name )
@@ -2353,7 +2176,7 @@ icvXMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
     }
     attr[idx++] = 0;
 
-    CV_CALL( icvXMLWriteTag( fs, key, CV_XML_OPENING_TAG, cvAttrList(attr,0) ));
+    icvXMLWriteTag( fs, key, CV_XML_OPENING_TAG, cvAttrList(attr,0) );
 
     parent.struct_flags = fs->struct_flags & ~CV_NODE_EMPTY;
     parent.struct_indent = fs->struct_indent;
@@ -2368,49 +2191,37 @@ icvXMLStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
     fs->struct_flags = struct_flags;
     if( key )
     {
-        CV_CALL( fs->struct_tag = cvMemStorageAllocString( fs->strstorage, (char*)key, -1 ));
+        fs->struct_tag = cvMemStorageAllocString( fs->strstorage, (char*)key, -1 );
     }
     else
     {
         fs->struct_tag.ptr = 0;
         fs->struct_tag.len = 0;
     }
-
-    __END__;
 }
 
 
 static void
 icvXMLEndWriteStruct( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "icvXMLStartWriteStruct" );
-
-    __BEGIN__;
-
     CvXMLStackRecord parent;
 
     if( fs->write_stack->total == 0 )
-        CV_ERROR( CV_StsError, "An extra closing tag" );
+        CV_Error( CV_StsError, "An extra closing tag" );
 
-    CV_CALL( icvXMLWriteTag( fs, fs->struct_tag.ptr, CV_XML_CLOSING_TAG, cvAttrList(0,0) ));
+    icvXMLWriteTag( fs, fs->struct_tag.ptr, CV_XML_CLOSING_TAG, cvAttrList(0,0) );
     cvSeqPop( fs->write_stack, &parent );
 
     fs->struct_indent = parent.struct_indent;
     fs->struct_flags = parent.struct_flags;
     fs->struct_tag = parent.struct_tag;
     cvRestoreMemStoragePos( fs->strstorage, &parent.pos );
-
-    __END__;
 }
 
 
 static void
 icvXMLStartNextStream( CvFileStorage* fs )
 {
-    //CV_FUNCNAME( "icvXMLStartNextStream" );
-
-    __BEGIN__;
-
     if( !fs->is_first )
     {
         while( fs->write_stack->total > 0 )
@@ -2426,18 +2237,12 @@ icvXMLStartNextStream( CvFileStorage* fs )
         fputs( "<opencv_storage>\n", fs->file );*/
         fs->buffer = fs->buffer_start;
     }
-
-    __END__;
 }
 
 
 static void
 icvXMLWriteScalar( CvFileStorage* fs, const char* key, const char* data, int len )
 {
-    CV_FUNCNAME( "icvXMLWriteScalar" );
-
-    __BEGIN__;
-
     if( CV_NODE_IS_MAP(fs->struct_flags) ||
         (!CV_NODE_IS_COLLECTION(fs->struct_flags) && key) )
     {
@@ -2453,7 +2258,7 @@ icvXMLWriteScalar( CvFileStorage* fs, const char* key, const char* data, int len
         int new_offset = (int)(ptr - fs->buffer_start) + len;
 
         if( key )
-            CV_ERROR( CV_StsBadArg, "elements with keys can not be written to sequence" );
+            CV_Error( CV_StsBadArg, "elements with keys can not be written to sequence" );
 
         fs->struct_flags = CV_NODE_SEQ;
 
@@ -2468,58 +2273,40 @@ icvXMLWriteScalar( CvFileStorage* fs, const char* key, const char* data, int len
         memcpy( ptr, data, len );
         fs->buffer = ptr + len;
     }
-
-    __END__;
 }
 
 
 static void
 icvXMLWriteInt( CvFileStorage* fs, const char* key, int value )
 {
-    //CV_FUNCNAME( "cvXMLWriteInt" );
-
-    __BEGIN__;
-
     char buf[128], *ptr = icv_itoa( value, buf, 10 );
     int len = (int)strlen(ptr);
     icvXMLWriteScalar( fs, key, ptr, len );
-
-    __END__;
 }
 
 
 static void
 icvXMLWriteReal( CvFileStorage* fs, const char* key, double value )
 {
-    //CV_FUNCNAME( "cvXMLWriteReal" );
-
-    __BEGIN__;
-
     char buf[128];
     int len = (int)strlen( icvDoubleToString( buf, value ));
     icvXMLWriteScalar( fs, key, buf, len );
-
-    __END__;
 }
 
 
 static void
 icvXMLWriteString( CvFileStorage* fs, const char* key, const char* str, int quote )
 {
-    CV_FUNCNAME( "cvXMLWriteString" );
-
-    __BEGIN__;
-
     char buf[CV_FS_MAX_LEN*6+16];
     char* data = (char*)str;
     int i, len;
 
     if( !str )
-        CV_ERROR( CV_StsNullPtr, "Null string pointer" );
+        CV_Error( CV_StsNullPtr, "Null string pointer" );
 
     len = (int)strlen(str);
     if( len > CV_FS_MAX_LEN )
-        CV_ERROR( CV_StsBadArg, "The written string is too long" );
+        CV_Error( CV_StsBadArg, "The written string is too long" );
 
     if( quote || len == 0 || str[0] != '\"' || str[0] != str[len-1] )
     {
@@ -2585,28 +2372,22 @@ icvXMLWriteString( CvFileStorage* fs, const char* key, const char* str, int quot
     }
 
     icvXMLWriteScalar( fs, key, data, len );
-
-    __END__;
 }
 
 
 static void
 icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
 {
-    CV_FUNCNAME( "cvXMLWriteComment" );
-
-    __BEGIN__;
-
     int len;
     int multiline;
     const char* eol;
     char* ptr;
 
     if( !comment )
-        CV_ERROR( CV_StsNullPtr, "Null comment" );
+        CV_Error( CV_StsNullPtr, "Null comment" );
 
     if( strstr(comment, "--") != 0 )
-        CV_ERROR( CV_StsBadArg, "Double hyphen \'--\' is not allowed in the comments" );
+        CV_Error( CV_StsBadArg, "Double hyphen \'--\' is not allowed in the comments" );
 
     len = (int)strlen(comment);
     eol = strchr(comment, '\n');
@@ -2660,8 +2441,6 @@ icvXMLWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
         fs->buffer = ptr + 3;
         icvXMLFlush( fs );
     }
-
-    __END__;
 }
 
 
@@ -2674,31 +2453,26 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
 {
     CvFileStorage* fs = 0;
     char* xml_buf = 0;
-
-    CV_FUNCNAME("cvOpenFileStorage" );
-
-    __BEGIN__;
-
     int default_block_size = 1 << 18;
     bool append = (flags & 3) == CV_STORAGE_APPEND;
 
     if( !filename )
-        CV_ERROR( CV_StsNullPtr, "NULL filename" );
+        CV_Error( CV_StsNullPtr, "NULL filename" );
 
-    CV_CALL( fs = (CvFileStorage*)cvAlloc( sizeof(*fs) ));
+    fs = (CvFileStorage*)cvAlloc( sizeof(*fs) );
     memset( fs, 0, sizeof(*fs));
 
-    CV_CALL( fs->memstorage = cvCreateMemStorage( default_block_size ));
+    fs->memstorage = cvCreateMemStorage( default_block_size );
     fs->dststorage = dststorage ? dststorage : fs->memstorage;
 
-    CV_CALL( fs->filename = (char*)cvMemStorageAlloc( fs->memstorage, strlen(filename)+1 ));
+    fs->filename = (char*)cvMemStorageAlloc( fs->memstorage, strlen(filename)+1 );
     strcpy( fs->filename, filename );
 
     fs->flags = CV_FILE_STORAGE;
     fs->write_mode = (flags & 3) != 0;
     fs->file = fopen( fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
     if( !fs->file )
-        EXIT;
+        goto _exit_;
 
     fs->roots = 0;
     fs->struct_indent = 0;
@@ -2723,12 +2497,12 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         fs->is_first = 1;
         fs->struct_indent = 0;
         fs->struct_flags = CV_NODE_EMPTY;
-        CV_CALL( fs->buffer_start = fs->buffer = (char*)cvAlloc( buf_size + 1024 ));
+        fs->buffer_start = fs->buffer = (char*)cvAlloc( buf_size + 1024 );
         fs->buffer_end = fs->buffer_start + buf_size;
         if( fs->is_xml )
         {
             int file_size = (int)ftell( fs->file );
-            CV_CALL( fs->strstorage = cvCreateChildMemStorage( fs->memstorage ));
+            fs->strstorage = cvCreateChildMemStorage( fs->memstorage );
             if( !append || file_size == 0 )
             {
                 fputs( "<?xml version=\"1.0\"?>\n", fs->file );
@@ -2741,7 +2515,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                 int last_occurence = -1;
                 xml_buf_size = MIN(xml_buf_size, file_size);
                 fseek( fs->file, -xml_buf_size, SEEK_END );
-                CV_CALL(xml_buf = (char*)cvAlloc( xml_buf_size+2 ));
+                xml_buf = (char*)cvAlloc( xml_buf_size+2 );
                 // find the last occurence of </opencv_storage>
                 for(;;)
                 {
@@ -2760,7 +2534,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                     }
                 }
                 if( last_occurence < 0 )
-                    CV_ERROR( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
+                    CV_Error( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
                 fclose( fs->file );
                 fs->file = fopen( fs->filename, "r+t" );
                 fseek( fs->file, last_occurence, SEEK_SET );
@@ -2807,13 +2581,13 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         buf_size = MIN( buf_size, (1 << 20) );
         buf_size = MAX( buf_size, CV_FS_MAX_LEN*2 + 1024 );
 
-        CV_CALL( fs->str_hash = cvCreateMap( 0, sizeof(CvStringHash),
-                        sizeof(CvStringHashNode), fs->memstorage, 256 ));
+        fs->str_hash = cvCreateMap( 0, sizeof(CvStringHash),
+                        sizeof(CvStringHashNode), fs->memstorage, 256 );
 
-        CV_CALL( fs->roots = cvCreateSeq( 0, sizeof(CvSeq),
-                        sizeof(CvFileNode), fs->memstorage ));
+        fs->roots = cvCreateSeq( 0, sizeof(CvSeq),
+                        sizeof(CvFileNode), fs->memstorage );
 
-        CV_CALL( fs->buffer = fs->buffer_start = (char*)cvAlloc( buf_size + 256 ));
+        fs->buffer = fs->buffer_start = (char*)cvAlloc( buf_size + 256 );
         fs->buffer_end = fs->buffer_start + buf_size;
         fs->buffer[0] = '\n';
         fs->buffer[1] = '\0';
@@ -2830,9 +2604,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         cvFree( &fs->buffer_start );
         fs->buffer = fs->buffer_end = 0;
     }
-
-    __END__;
-
+_exit_:
     if( fs )
     {
         if( cvGetErrStatus() < 0 || !fs->file )
@@ -2845,9 +2617,8 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
             fs->file = 0;
         }
     }
-    if (xml_buf)
-        cvFree( &xml_buf );
 
+    cvFree( &xml_buf );
     return  fs;
 }
 
@@ -2856,98 +2627,56 @@ CV_IMPL void
 cvStartWriteStruct( CvFileStorage* fs, const char* key, int struct_flags,
                     const char* type_name, CvAttrList /*attributes*/ )
 {
-    CV_FUNCNAME( "cvStartWriteStruct" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->start_write_struct( fs, key, struct_flags, type_name ));
-
-    __END__;
+    fs->start_write_struct( fs, key, struct_flags, type_name );
 }
 
 
 CV_IMPL void
 cvEndWriteStruct( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "cvEndWriteStruct" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->end_write_struct( fs ));
-
-    __END__;
+    fs->end_write_struct( fs );
 }
 
 
 CV_IMPL void
 cvWriteInt( CvFileStorage* fs, const char* key, int value )
 {
-    CV_FUNCNAME( "cvWriteInt" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->write_int( fs, key, value ));
-
-    __END__;
+    fs->write_int( fs, key, value );
 }
 
 
 CV_IMPL void
 cvWriteReal( CvFileStorage* fs, const char* key, double value )
 {
-    CV_FUNCNAME( "cvWriteReal" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->write_real( fs, key, value ));
-
-    __END__;
+    fs->write_real( fs, key, value );
 }
 
 
 CV_IMPL void
 cvWriteString( CvFileStorage* fs, const char* key, const char* value, int quote )
 {
-    CV_FUNCNAME( "cvWriteString" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->write_string( fs, key, value, quote ));
-
-    __END__;
+    fs->write_string( fs, key, value, quote );
 }
 
 
 CV_IMPL void
 cvWriteComment( CvFileStorage* fs, const char* comment, int eol_comment )
 {
-    CV_FUNCNAME( "cvWriteComment" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->write_comment( fs, comment, eol_comment ));
-
-    __END__;
+    fs->write_comment( fs, comment, eol_comment );
 }
 
 
 CV_IMPL void
 cvStartNextStream( CvFileStorage* fs )
 {
-    CV_FUNCNAME( "cvStartNextStream" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
-    CV_CALL( fs->start_next_stream( fs ));
-
-    __END__;
+    fs->start_next_stream( fs );
 }
 
 
@@ -2965,14 +2694,10 @@ static int
 icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
 {
     int fmt_pair_count = 0;
-    CV_FUNCNAME( "icvDecodeFormat" );
-
-    __BEGIN__;
-
     int i = 0, k = 0, len = dt ? (int)strlen(dt) : 0;
 
     if( !dt || !len )
-        EXIT;
+        return 0;
 
     assert( fmt_pairs != 0 && max_len > 0 );
     fmt_pairs[0] = 0;
@@ -2993,7 +2718,7 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
             }
 
             if( count <= 0 )
-                CV_ERROR( CV_StsBadArg, "Invalid data type specification" );
+                CV_Error( CV_StsBadArg, "Invalid data type specification" );
 
             fmt_pairs[i] = count;
         }
@@ -3001,7 +2726,7 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
         {
             const char* pos = strchr( icvTypeSymbol, c );
             if( !pos )
-                CV_ERROR( CV_StsBadArg, "Invalid data type specification" );
+                CV_Error( CV_StsBadArg, "Invalid data type specification" );
             if( fmt_pairs[i] == 0 )
                 fmt_pairs[i] = 1;
             fmt_pairs[i+1] = (int)(pos - icvTypeSymbol);
@@ -3011,16 +2736,13 @@ icvDecodeFormat( const char* dt, int* fmt_pairs, int max_len )
             {
                 i += 2;
                 if( i >= max_len )
-                    CV_ERROR( CV_StsBadArg, "Too long data type specification" );
+                    CV_Error( CV_StsBadArg, "Too long data type specification" );
             }
             fmt_pairs[i] = 0;
         }
     }
 
     fmt_pair_count = i/2;
-
-    __END__;
-
     return fmt_pair_count;
 }
 
@@ -3029,14 +2751,10 @@ static int
 icvCalcElemSize( const char* dt, int initial_size )
 {
     int size = 0;
-    CV_FUNCNAME( "icvCalcElemSize" );
-
-    __BEGIN__;
-
     int fmt_pairs[CV_FS_MAX_FMT_PAIRS], i, fmt_pair_count;
     int comp_size;
 
-    CV_CALL( fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+    fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS );
     fmt_pair_count *= 2;
     for( i = 0, size = initial_size; i < fmt_pair_count; i += 2 )
     {
@@ -3049,9 +2767,6 @@ icvCalcElemSize( const char* dt, int initial_size )
         comp_size = CV_ELEM_SIZE(fmt_pairs[1]);
         size = cvAlign( size, comp_size );
     }
-
-    __END__;
-
     return size;
 }
 
@@ -3060,20 +2775,13 @@ static int
 icvDecodeSimpleFormat( const char* dt )
 {
     int elem_type = -1;
-
-    CV_FUNCNAME( "icvDecodeSimpleFormat" );
-
-    __BEGIN__;
-
     int fmt_pairs[CV_FS_MAX_FMT_PAIRS], fmt_pair_count;
 
-    CV_CALL( fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+    fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS );
     if( fmt_pair_count != 1 || fmt_pairs[0] > 4 )
-        CV_ERROR( CV_StsError, "Too complex format for the matrix" );
+        CV_Error( CV_StsError, "Too complex format for the matrix" );
 
     elem_type = CV_MAKETYPE( fmt_pairs[1], fmt_pairs[0] );
-
-    __END__;
 
     return elem_type;
 }
@@ -3083,11 +2791,6 @@ CV_IMPL void
 cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
 {
     const char* data0 = (const char*)_data;
-
-    CV_FUNCNAME( "cvWriteRawData" );
-
-    __BEGIN__;
-
     int offset = 0;
     int fmt_pairs[CV_FS_MAX_FMT_PAIRS*2], k, fmt_pair_count;
     char buf[256] = "";
@@ -3095,15 +2798,15 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
     CV_CHECK_OUTPUT_FILE_STORAGE( fs );
 
     if( !data0 )
-        CV_ERROR( CV_StsNullPtr, "Null data pointer" );
+        CV_Error( CV_StsNullPtr, "Null data pointer" );
 
     if( len < 0 )
-        CV_ERROR( CV_StsOutOfRange, "Negative number of elements" );
+        CV_Error( CV_StsOutOfRange, "Negative number of elements" );
 
-    CV_CALL( fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+    fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS );
 
     if( !len )
-        EXIT;
+        return;
 
     if( fmt_pair_count == 1 )
     {
@@ -3161,38 +2864,32 @@ cvWriteRawData( CvFileStorage* fs, const void* _data, int len, const char* dt )
                     break;
                 default:
                     assert(0);
-                    EXIT;
+                    return;
                 }
 
                 if( fs->is_xml )
                 {
                     int buf_len = (int)strlen(ptr);
-                    CV_CALL( icvXMLWriteScalar( fs, 0, ptr, buf_len ));
+                    icvXMLWriteScalar( fs, 0, ptr, buf_len );
                 }
                 else
-                    CV_CALL( icvYMLWrite( fs, 0, ptr, cvFuncName ));
+                    icvYMLWrite( fs, 0, ptr );
             }
 
             offset = (int)(data - data0);
         }
     }
-
-    __END__;
 }
 
 
 CV_IMPL void
 cvStartReadRawData( const CvFileStorage* fs, const CvFileNode* src, CvSeqReader* reader )
 {
-    CV_FUNCNAME( "cvStartReadRawData" );
-
-    __BEGIN__;
-
     int node_type;
     CV_CHECK_FILE_STORAGE( fs );
 
     if( !src || !reader )
-        CV_ERROR( CV_StsNullPtr, "Null pointer to source file node or reader" );
+        CV_Error( CV_StsNullPtr, "Null pointer to source file node or reader" );
 
     node_type = CV_NODE_TYPE(src->tag);
     if( node_type == CV_NODE_INT || node_type == CV_NODE_REAL )
@@ -3205,16 +2902,14 @@ cvStartReadRawData( const CvFileStorage* fs, const CvFileNode* src, CvSeqReader*
     }
     else if( node_type == CV_NODE_SEQ )
     {
-        CV_CALL( cvStartReadSeq( src->data.seq, reader, 0 ));
+        cvStartReadSeq( src->data.seq, reader, 0 );
     }
     else if( node_type == CV_NODE_NONE )
     {
         memset( reader, 0, sizeof(*reader) );
     }
     else
-        CV_ERROR( CV_StsBadArg, "The file node should be a numerical scalar or a sequence" );
-
-    __END__;
+        CV_Error( CV_StsBadArg, "The file node should be a numerical scalar or a sequence" );
 }
 
 
@@ -3223,22 +2918,18 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                     int len, void* _data, const char* dt )
 {
     char* data0 = (char*)_data;
-    CV_FUNCNAME( "cvReadRawDataSlice" );
-
-    __BEGIN__;
-
     int fmt_pairs[CV_FS_MAX_FMT_PAIRS*2], k = 0, fmt_pair_count;
     int i = 0, offset = 0, count = 0;
 
     CV_CHECK_FILE_STORAGE( fs );
 
     if( !reader || !data0 )
-        CV_ERROR( CV_StsNullPtr, "Null pointer to reader or destination array" );
+        CV_Error( CV_StsNullPtr, "Null pointer to reader or destination array" );
 
     if( !reader->seq && len != 1 )
-        CV_ERROR( CV_StsBadSize, "The readed sequence is a scalar, thus len must be 1" );
+        CV_Error( CV_StsBadSize, "The readed sequence is a scalar, thus len must be 1" );
 
-    CV_CALL( fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+    fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS );
 
     for(;;)
     {
@@ -3294,7 +2985,7 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                         break;
                     default:
                         assert(0);
-                        EXIT;
+                        return;
                     }
                 }
                 else if( CV_NODE_IS_REAL(node->tag) )
@@ -3343,11 +3034,11 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                         break;
                     default:
                         assert(0);
-                        EXIT;
+                        return;
                     }
                 }
                 else
-                    CV_ERROR( CV_StsError,
+                    CV_Error( CV_StsError,
                     "The sequence element is not a numerical scalar" );
 
                 CV_NEXT_SEQ_ELEM( sizeof(CvFileNode), *reader );
@@ -3361,13 +3052,11 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
 
 end_loop:
     if( i != count - 1 || k != fmt_pair_count - 1 )
-        CV_ERROR( CV_StsBadSize,
+        CV_Error( CV_StsBadSize,
         "The sequence slice does not fit an integer number of records" );
 
     if( !reader->seq )
         reader->ptr -= sizeof(CvFileNode);
-
-    __END__;
 }
 
 
@@ -3375,20 +3064,14 @@ CV_IMPL void
 cvReadRawData( const CvFileStorage* fs, const CvFileNode* src,
                void* data, const char* dt )
 {
-    CV_FUNCNAME( "cvReadRawData" );
-
-    __BEGIN__;
-
     CvSeqReader reader;
 
     if( !src || !data )
-        CV_ERROR( CV_StsNullPtr, "Null pointers to source file node or destination array" );
+        CV_Error( CV_StsNullPtr, "Null pointers to source file node or destination array" );
 
-    CV_CALL( cvStartReadRawData( fs, src, &reader ));
+    cvStartReadRawData( fs, src, &reader );
     cvReadRawDataSlice( fs, &reader, CV_NODE_IS_SEQ(src->tag) ?
                         src->data.seq->total : 1, data, dt );
-
-    __END__;
 }
 
 
@@ -3420,10 +3103,6 @@ icvWriteCollection( CvFileStorage* fs, const CvFileNode* node )
 static void
 icvWriteFileNode( CvFileStorage* fs, const char* name, const CvFileNode* node )
 {
-    CV_FUNCNAME( "icvWriteFileNode" );
-
-    __BEGIN__;
-
     switch( CV_NODE_TYPE(node->tag) )
     {
     case CV_NODE_INT:
@@ -3448,10 +3127,8 @@ icvWriteFileNode( CvFileStorage* fs, const char* name, const CvFileNode* node )
         fs->end_write_struct( fs );
         break;
     default:
-        CV_ERROR( CV_StsBadFlag, "Unknown type of file node" );
+        CV_Error( CV_StsBadFlag, "Unknown type of file node" );
     }
-
-    __END__;
 }
 
 
@@ -3460,23 +3137,18 @@ cvWriteFileNode( CvFileStorage* fs, const char* new_node_name,
                  const CvFileNode* node, int embed )
 {
     CvFileStorage* dst = 0;
-
-    CV_FUNCNAME( "cvWriteFileNode" );
-
-    __BEGIN__;
-
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
 
     if( !node )
-        EXIT;
+        return;
 
     if( CV_NODE_IS_COLLECTION(node->tag) && embed )
     {
-        CV_CALL( icvWriteCollection( fs, node ));
+        icvWriteCollection( fs, node );
     }
     else
     {
-        CV_CALL( icvWriteFileNode( fs, new_node_name, node ));
+        icvWriteFileNode( fs, new_node_name, node );
     }
     /*
     int i, stream_count;
@@ -3488,9 +3160,6 @@ cvWriteFileNode( CvFileStorage* fs, const char* new_node_name,
         if( i < stream_count - 1 )
             dst->start_next_stream( dst );
     }*/
-
-    __END__;
-
     cvReleaseFileStorage( &dst );
 }
 
@@ -3526,10 +3195,6 @@ static void
 icvWriteMat( CvFileStorage* fs, const char* name,
              const void* struct_ptr, CvAttrList /*attr*/ )
 {
-    CV_FUNCNAME( "icvWriteMat" );
-
-    __BEGIN__;
-
     const CvMat* mat = (const CvMat*)struct_ptr;
     char dt[16];
     CvSize size;
@@ -3537,7 +3202,7 @@ icvWriteMat( CvFileStorage* fs, const char* name,
 
     assert( CV_IS_MAT(mat) );
 
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_MAT ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_MAT );
     cvWriteInt( fs, "rows", mat->rows );
     cvWriteInt( fs, "cols", mat->cols );
     cvWriteString( fs, "dt", icvEncodeFormat( CV_MAT_TYPE(mat->type), dt ), 0 );
@@ -3554,8 +3219,6 @@ icvWriteMat( CvFileStorage* fs, const char* name,
         cvWriteRawData( fs, mat->data.ptr + y*mat->step, size.width, dt );
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
-
-    __END__;
 }
 
 
@@ -3571,39 +3234,32 @@ static void*
 icvReadMat( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadMat" );
-
-    __BEGIN__;
-
     CvMat* mat;
     const char* dt;
     CvFileNode* data;
     int rows, cols, elem_type;
 
-    CV_CALL( rows = cvReadIntByName( fs, node, "rows", 0 ));
+    rows = cvReadIntByName( fs, node, "rows", 0 );
     cols = cvReadIntByName( fs, node, "cols", 0 );
     dt = cvReadStringByName( fs, node, "dt", 0 );
 
     if( rows == 0 || cols == 0 || dt == 0 )
-        CV_ERROR( CV_StsError, "Some of essential matrix attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential matrix attributes are absent" );
 
-    CV_CALL( elem_type = icvDecodeSimpleFormat( dt ));
+    elem_type = icvDecodeSimpleFormat( dt );
 
     data = cvGetFileNodeByName( fs, node, "data" );
     if( !data )
-        CV_ERROR( CV_StsError, "The matrix data is not found in file storage" );
+        CV_Error( CV_StsError, "The matrix data is not found in file storage" );
 
     if( icvFileNodeSeqLen( data ) != rows*cols*CV_MAT_CN(elem_type) )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "The matrix size does not match to the number of stored elements" );
 
-    CV_CALL( mat = cvCreateMat( rows, cols, elem_type ));
-    CV_CALL( cvReadRawData( fs, data, mat->data.ptr, dt ));
+    mat = cvCreateMat( rows, cols, elem_type );
+    cvReadRawData( fs, data, mat->data.ptr, dt );
 
     ptr = mat;
-
-    __END__;
-
     return ptr;
 }
 
@@ -3621,10 +3277,6 @@ static void
 icvWriteMatND( CvFileStorage* fs, const char* name,
                const void* struct_ptr, CvAttrList /*attr*/ )
 {
-    CV_FUNCNAME( "icvWriteMatND" );
-
-    __BEGIN__;
-
     void* mat = (void*)struct_ptr;
     CvMatND stub;
     CvNArrayIterator iterator;
@@ -3633,7 +3285,7 @@ icvWriteMatND( CvFileStorage* fs, const char* name,
 
     assert( CV_IS_MATND(mat) );
 
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_MATND ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_MATND );
     dims = cvGetDims( mat, sizes );
     cvStartWriteStruct( fs, "sizes", CV_NODE_SEQ + CV_NODE_FLOW );
     cvWriteRawData( fs, sizes, dims, "i" );
@@ -3641,15 +3293,13 @@ icvWriteMatND( CvFileStorage* fs, const char* name,
     cvWriteString( fs, "dt", icvEncodeFormat( cvGetElemType(mat), dt ), 0 );
     cvStartWriteStruct( fs, "data", CV_NODE_SEQ + CV_NODE_FLOW );
 
-    CV_CALL( cvInitNArrayIterator( 1, &mat, 0, &stub, &iterator ));
+    cvInitNArrayIterator( 1, &mat, 0, &stub, &iterator );
 
     do
         cvWriteRawData( fs, iterator.ptr[0], iterator.size.width, dt );
     while( cvNextNArraySlice( &iterator ));
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
-
-    __END__;
 }
 
 
@@ -3657,10 +3307,6 @@ static void*
 icvReadMatND( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadMatND" );
-
-    __BEGIN__;
-
     CvMatND* mat;
     const char* dt;
     CvFileNode* data;
@@ -3668,39 +3314,36 @@ icvReadMatND( CvFileStorage* fs, CvFileNode* node )
     int sizes[CV_MAX_DIM], dims, elem_type;
     int i, total_size;
 
-    CV_CALL( sizes_node = cvGetFileNodeByName( fs, node, "sizes" ));
+    sizes_node = cvGetFileNodeByName( fs, node, "sizes" );
     dt = cvReadStringByName( fs, node, "dt", 0 );
 
     if( !sizes_node || !dt )
-        CV_ERROR( CV_StsError, "Some of essential matrix attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential matrix attributes are absent" );
 
     dims = CV_NODE_IS_SEQ(sizes_node->tag) ? sizes_node->data.seq->total :
            CV_NODE_IS_INT(sizes_node->tag) ? 1 : -1;
 
     if( dims <= 0 || dims > CV_MAX_DIM )
-        CV_ERROR( CV_StsParseError, "Could not determine the matrix dimensionality" );
+        CV_Error( CV_StsParseError, "Could not determine the matrix dimensionality" );
 
-    CV_CALL( cvReadRawData( fs, sizes_node, sizes, "i" ));
-    CV_CALL( elem_type = icvDecodeSimpleFormat( dt ));
+    cvReadRawData( fs, sizes_node, sizes, "i" );
+    elem_type = icvDecodeSimpleFormat( dt );
 
     data = cvGetFileNodeByName( fs, node, "data" );
     if( !data )
-        CV_ERROR( CV_StsError, "The matrix data is not found in file storage" );
+        CV_Error( CV_StsError, "The matrix data is not found in file storage" );
 
     for( total_size = CV_MAT_CN(elem_type), i = 0; i < dims; i++ )
         total_size *= sizes[i];
 
     if( icvFileNodeSeqLen( data ) != total_size )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "The matrix size does not match to the number of stored elements" );
 
-    CV_CALL( mat = cvCreateMatND( dims, sizes, elem_type ));
-    CV_CALL( cvReadRawData( fs, data, mat->data.ptr, dt ));
+    mat = cvCreateMatND( dims, sizes, elem_type );
+    cvReadRawData( fs, data, mat->data.ptr, dt );
 
     ptr = mat;
-
-    __END__;
-
     return ptr;
 }
 
@@ -3737,11 +3380,6 @@ icvWriteSparseMat( CvFileStorage* fs, const char* name,
                    const void* struct_ptr, CvAttrList /*attr*/ )
 {
     CvMemStorage* memstorage = 0;
-
-    CV_FUNCNAME( "icvWriteSparseMat" );
-
-    __BEGIN__;
-
     const CvSparseMat* mat = (const CvSparseMat*)struct_ptr;
     CvSparseMatIterator iterator;
     CvSparseNode* node;
@@ -3753,9 +3391,9 @@ icvWriteSparseMat( CvFileStorage* fs, const char* name,
 
     assert( CV_IS_SPARSE_MAT(mat) );
 
-    CV_CALL( memstorage = cvCreateMemStorage());
+    memstorage = cvCreateMemStorage();
 
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SPARSE_MAT ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SPARSE_MAT );
     dims = cvGetDims( mat, 0 );
 
     cvStartWriteStruct( fs, "sizes", CV_NODE_SEQ + CV_NODE_FLOW );
@@ -3803,9 +3441,6 @@ icvWriteSparseMat( CvFileStorage* fs, const char* name,
 
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
-
-    __END__;
-
     cvReleaseMemStorage( &memstorage );
 }
 
@@ -3814,10 +3449,6 @@ static void*
 icvReadSparseMat( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadSparseMat" );
-
-    __BEGIN__;
-
     CvSparseMat* mat;
     const char* dt;
     CvFileNode* data;
@@ -3828,27 +3459,27 @@ icvReadSparseMat( CvFileStorage* fs, CvFileNode* node )
     int* sizes = 0, dims, elem_type, cn;
     int i;
 
-    CV_CALL( sizes_node = cvGetFileNodeByName( fs, node, "sizes" ));
+    sizes_node = cvGetFileNodeByName( fs, node, "sizes" );
     dt = cvReadStringByName( fs, node, "dt", 0 );
 
     if( !sizes_node || !dt )
-        CV_ERROR( CV_StsError, "Some of essential matrix attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential matrix attributes are absent" );
 
     dims = CV_NODE_IS_SEQ(sizes_node->tag) ? sizes_node->data.seq->total :
            CV_NODE_IS_INT(sizes_node->tag) ? 1 : -1;
 
     if( dims <= 0 || dims > CV_MAX_DIM_HEAP )
-        CV_ERROR( CV_StsParseError, "Could not determine sparse matrix dimensionality" );
+        CV_Error( CV_StsParseError, "Could not determine sparse matrix dimensionality" );
 
-    sizes = (int*)alloca( dims*sizeof(sizes[0]));
-    CV_CALL( cvReadRawData( fs, sizes_node, sizes, "i" ));
-    CV_CALL( elem_type = icvDecodeSimpleFormat( dt ));
+    sizes = (int*)cvStackAlloc( dims*sizeof(sizes[0]));
+    cvReadRawData( fs, sizes_node, sizes, "i" );
+    elem_type = icvDecodeSimpleFormat( dt );
 
     data = cvGetFileNodeByName( fs, node, "data" );
     if( !data || !CV_NODE_IS_SEQ(data->tag) )
-        CV_ERROR( CV_StsError, "The matrix data is not found in file storage" );
+        CV_Error( CV_StsError, "The matrix data is not found in file storage" );
 
-    CV_CALL( mat = cvCreateSparseMat( dims, sizes, elem_type ));
+    mat = cvCreateSparseMat( dims, sizes, elem_type );
 
     cn = CV_MAT_CN(elem_type);
     idx = (int*)alloca( dims*sizeof(idx[0]) );
@@ -3861,7 +3492,7 @@ icvReadSparseMat( CvFileStorage* fs, CvFileNode* node )
         uchar* val;
         int k;
         if( !CV_NODE_IS_INT(elem->tag ))
-            CV_ERROR( CV_StsParseError, "Sparse matrix data is corrupted" );
+            CV_Error( CV_StsParseError, "Sparse matrix data is corrupted" );
         k = elem->data.i;
         if( i > 0 && k >= 0 )
             idx[dims-1] = k;
@@ -3877,21 +3508,18 @@ icvReadSparseMat( CvFileStorage* fs, CvFileNode* node )
                 i++;
                 elem = (CvFileNode*)reader.ptr;
                 if( !CV_NODE_IS_INT(elem->tag ) || elem->data.i < 0 )
-                    CV_ERROR( CV_StsParseError, "Sparse matrix data is corrupted" );
+                    CV_Error( CV_StsParseError, "Sparse matrix data is corrupted" );
                 idx[k] = elem->data.i;
             }
         }
         CV_NEXT_SEQ_ELEM( elements->elem_size, reader );
         i++;
-        CV_CALL( val = cvPtrND( mat, idx, 0, 1, 0 ));
-        CV_CALL( cvReadRawDataSlice( fs, &reader, cn, val, dt ));
+        val = cvPtrND( mat, idx, 0, 1, 0 );
+        cvReadRawDataSlice( fs, &reader, cn, val, dt );
         i += cn;
     }
 
     ptr = mat;
-
-    __END__;
-
     return ptr;
 }
 
@@ -3908,10 +3536,6 @@ static void
 icvWriteImage( CvFileStorage* fs, const char* name,
                const void* struct_ptr, CvAttrList /*attr*/ )
 {
-    CV_FUNCNAME( "icvWriteImage" );
-
-    __BEGIN__;
-
     const IplImage* image = (const IplImage*)struct_ptr;
     char dt_buf[16], *dt;
     CvSize size;
@@ -3920,10 +3544,10 @@ icvWriteImage( CvFileStorage* fs, const char* name,
     assert( CV_IS_IMAGE(image) );
 
     if( image->dataOrder == IPL_DATA_ORDER_PLANE )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "Images with planar data layout are not supported" );
 
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_IMAGE ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_IMAGE );
     cvWriteInt( fs, "width", image->width );
     cvWriteInt( fs, "height", image->height );
     cvWriteString( fs, "origin", image->origin == IPL_ORIGIN_TL
@@ -3941,7 +3565,7 @@ icvWriteImage( CvFileStorage* fs, const char* name,
         cvEndWriteStruct( fs );
     }
 
-    depth = icvIplToCvDepth(image->depth);
+    depth = IplToCvDepth(image->depth);
     sprintf( dt_buf, "%d%c", image->nChannels, icvTypeSymbol[depth] );
     dt = dt_buf + (dt_buf[2] == '\0' && dt_buf[0] == '1');
     cvWriteString( fs, "dt", dt, 0 );
@@ -3958,8 +3582,6 @@ icvWriteImage( CvFileStorage* fs, const char* name,
         cvWriteRawData( fs, image->imageData + y*image->widthStep, size.width, dt );
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
-
-    __END__;
 }
 
 
@@ -3967,10 +3589,6 @@ static void*
 icvReadImage( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadImage" );
-
-    __BEGIN__;
-
     IplImage* image;
     const char* dt;
     CvFileNode* data;
@@ -3980,29 +3598,29 @@ icvReadImage( CvFileStorage* fs, CvFileNode* node )
     int y, width, height, elem_type, coi, depth;
     const char* origin, *data_order;
 
-    CV_CALL( width = cvReadIntByName( fs, node, "width", 0 ));
+    width = cvReadIntByName( fs, node, "width", 0 );
     height = cvReadIntByName( fs, node, "height", 0 );
     dt = cvReadStringByName( fs, node, "dt", 0 );
     origin = cvReadStringByName( fs, node, "origin", 0 );
 
     if( width == 0 || height == 0 || dt == 0 || origin == 0 )
-        CV_ERROR( CV_StsError, "Some of essential image attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential image attributes are absent" );
 
-    CV_CALL( elem_type = icvDecodeSimpleFormat( dt ));
+    elem_type = icvDecodeSimpleFormat( dt );
     data_order = cvReadStringByName( fs, node, "layout", "interleaved" );
     if( strcmp( data_order, "interleaved" ) != 0 )
-        CV_ERROR( CV_StsError, "Only interleaved images can be read" );
+        CV_Error( CV_StsError, "Only interleaved images can be read" );
 
     data = cvGetFileNodeByName( fs, node, "data" );
     if( !data )
-        CV_ERROR( CV_StsError, "The image data is not found in file storage" );
+        CV_Error( CV_StsError, "The image data is not found in file storage" );
 
     if( icvFileNodeSeqLen( data ) != width*height*CV_MAT_CN(elem_type) )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "The matrix size does not match to the number of stored elements" );
 
     depth = cvCvToIplDepth(elem_type);
-    CV_CALL( image = cvCreateImage( cvSize(width,height), depth, CV_MAT_CN(elem_type) ));
+    image = cvCreateImage( cvSize(width,height), depth, CV_MAT_CN(elem_type) );
 
     roi_node = cvGetFileNodeByName( fs, node, "roi" );
     if( roi_node )
@@ -4027,14 +3645,11 @@ icvReadImage( CvFileStorage* fs, CvFileNode* node )
     cvStartReadRawData( fs, data, &reader );
     for( y = 0; y < height; y++ )
     {
-        CV_CALL( cvReadRawDataSlice( fs, &reader, width,
-            image->imageData + y*image->widthStep, dt ));
+        cvReadRawDataSlice( fs, &reader, width,
+            image->imageData + y*image->widthStep, dt );
     }
 
     ptr = image;
-
-    __END__;
-
     return ptr;
 }
 
@@ -4051,16 +3666,9 @@ icvIsSeq( const void* ptr )
 static void
 icvReleaseSeq( void** ptr )
 {
-    CV_FUNCNAME( "icvReleaseSeq" );
-
-    __BEGIN__;
-
     if( !ptr )
-        CV_ERROR( CV_StsNullPtr, "NULL double pointer" );
-
+        CV_Error( CV_StsNullPtr, "NULL double pointer" );
     *ptr = 0; // it's impossible now to release seq, so just clear the pointer
-
-    __END__;
 }
 
 
@@ -4076,19 +3684,15 @@ static void
 icvWriteHeaderData( CvFileStorage* fs, const CvSeq* seq,
                     CvAttrList* attr, int initial_header_size )
 {
-    CV_FUNCNAME( "icvWriteHeaderData" );
-
-    __BEGIN__;
-
     char header_dt_buf[128];
     const char* header_dt = cvAttrValue( attr, "header_dt" );
 
     if( header_dt )
     {
         int dt_header_size;
-        CV_CALL( dt_header_size = icvCalcElemSize( header_dt, initial_header_size ));
+        dt_header_size = icvCalcElemSize( header_dt, initial_header_size );
         if( dt_header_size > seq->header_size )
-            CV_ERROR( CV_StsUnmatchedSizes,
+            CV_Error( CV_StsUnmatchedSizes,
             "The size of header calculated from \"header_dt\" is greater than header_size" );
     }
     else if( seq->header_size > initial_header_size )
@@ -4136,8 +3740,6 @@ icvWriteHeaderData( CvFileStorage* fs, const CvSeq* seq,
         cvWriteRawData( fs, (uchar*)seq + sizeof(CvSeq), 1, header_dt );
         cvEndWriteStruct( fs );
     }
-
-    __END__;
 }
 
 
@@ -4146,19 +3748,14 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
               int initial_elem_size, char* dt_buf )
 {
     char* dt = 0;
-
-    CV_FUNCNAME( "icvWriteFormat" );
-
-    __BEGIN__;
-
     dt = (char*)cvAttrValue( attr, dt_key );
 
     if( dt )
     {
         int dt_elem_size;
-        CV_CALL( dt_elem_size = icvCalcElemSize( dt, initial_elem_size ));
+        dt_elem_size = icvCalcElemSize( dt, initial_elem_size );
         if( dt_elem_size != seq->elem_size )
-            CV_ERROR( CV_StsUnmatchedSizes,
+            CV_Error( CV_StsUnmatchedSizes,
             "The size of element calculated from \"dt\" and "
             "the elem_size do not match" );
     }
@@ -4167,7 +3764,7 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
         int align = CV_MAT_DEPTH(seq->flags) == CV_64F ? sizeof(double) : sizeof(size_t);
         int full_elem_size = cvAlign(CV_ELEM_SIZE(seq->flags) + initial_elem_size, align);
         if( seq->elem_size != full_elem_size )
-            CV_ERROR( CV_StsUnmatchedSizes,
+            CV_Error( CV_StsUnmatchedSizes,
             "Size of sequence element (elem_size) is inconsistent with seq->flags" );
         dt = icvEncodeFormat( CV_MAT_TYPE(seq->flags), dt_buf );
     }
@@ -4182,8 +3779,6 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
         dt = dt_buf;
     }
 
-    __END__;
-
     return dt;
 }
 
@@ -4193,17 +3788,13 @@ icvWriteSeq( CvFileStorage* fs, const char* name,
              const void* struct_ptr,
              CvAttrList attr, int level )
 {
-    CV_FUNCNAME( "icvWriteSeq" );
-
-    __BEGIN__;
-
     const CvSeq* seq = (CvSeq*)struct_ptr;
     CvSeqBlock* block;
     char buf[128];
     char dt_buf[128], *dt;
 
     assert( CV_IS_SEQ( seq ));
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SEQ ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SEQ );
 
     if( level >= 0 )
         cvWriteInt( fs, "level", level );
@@ -4211,10 +3802,10 @@ icvWriteSeq( CvFileStorage* fs, const char* name,
     sprintf( buf, "%08x", seq->flags );
     cvWriteString( fs, "flags", buf, 1 );
     cvWriteInt( fs, "count", seq->total );
-    CV_CALL( dt = icvGetFormat( seq, "dt", &attr, 0, dt_buf ));
+    dt = icvGetFormat( seq, "dt", &attr, 0, dt_buf );
     cvWriteString( fs, "dt", dt, 0 );
 
-    CV_CALL( icvWriteHeaderData( fs, seq, &attr, sizeof(CvSeq) ));
+    icvWriteHeaderData( fs, seq, &attr, sizeof(CvSeq) );
     cvStartWriteStruct( fs, "data", CV_NODE_SEQ + CV_NODE_FLOW );
 
     for( block = seq->first; block; block = block->next )
@@ -4225,8 +3816,6 @@ icvWriteSeq( CvFileStorage* fs, const char* name,
     }
     cvEndWriteStruct( fs );
     cvEndWriteStruct( fs );
-
-    __END__;
 }
 
 
@@ -4234,10 +3823,6 @@ static void
 icvWriteSeqTree( CvFileStorage* fs, const char* name,
                  const void* struct_ptr, CvAttrList attr )
 {
-    CV_FUNCNAME( "icvWriteSeqTree" );
-
-    __BEGIN__;
-
     const CvSeq* seq = (CvSeq*)struct_ptr;
     const char* recursive_value = cvAttrValue( &attr, "recursive" );
     int is_recursive = recursive_value &&
@@ -4250,29 +3835,27 @@ icvWriteSeqTree( CvFileStorage* fs, const char* name,
 
     if( !is_recursive )
     {
-        CV_CALL( icvWriteSeq( fs, name, seq, attr, -1 ));
+        icvWriteSeq( fs, name, seq, attr, -1 );
     }
     else
     {
         CvTreeNodeIterator tree_iterator;
 
-        CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SEQ_TREE ));
-        CV_CALL( cvStartWriteStruct( fs, "sequences", CV_NODE_SEQ ));
+        cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_SEQ_TREE );
+        cvStartWriteStruct( fs, "sequences", CV_NODE_SEQ );
         cvInitTreeNodeIterator( &tree_iterator, seq, INT_MAX );
 
         for(;;)
         {
             if( !tree_iterator.node )
                 break;
-            CV_CALL( icvWriteSeq( fs, 0, tree_iterator.node, attr, tree_iterator.level ));
+            icvWriteSeq( fs, 0, tree_iterator.node, attr, tree_iterator.level );
             cvNextTreeNode( &tree_iterator );
         }
 
         cvEndWriteStruct( fs );
         cvEndWriteStruct( fs );
     }
-
-    __END__;
 }
 
 
@@ -4280,10 +3863,6 @@ static void*
 icvReadSeq( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadSeq" );
-
-    __BEGIN__;
-
     CvSeq* seq;
     CvSeqBlock* block;
     CvFileNode *data, *header_node, *rect_node, *origin_node;
@@ -4297,45 +3876,45 @@ icvReadSeq( CvFileStorage* fs, CvFileNode* node )
     const char* dt;
     char* endptr = 0;
 
-    CV_CALL( flags_str = cvReadStringByName( fs, node, "flags", 0 ));
+    flags_str = cvReadStringByName( fs, node, "flags", 0 );
     total = cvReadIntByName( fs, node, "count", -1 );
     dt = cvReadStringByName( fs, node, "dt", 0 );
 
     if( !flags_str || total == -1 || !dt )
-        CV_ERROR( CV_StsError, "Some of essential sequence attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential sequence attributes are absent" );
 
     flags = (int)strtol( flags_str, &endptr, 16 );
     if( endptr == flags_str || (flags & CV_MAGIC_MASK) != CV_SEQ_MAGIC_VAL )
-        CV_ERROR( CV_StsError, "The sequence flags are invalid" );
+        CV_Error( CV_StsError, "The sequence flags are invalid" );
 
     header_dt = cvReadStringByName( fs, node, "header_dt", 0 );
     header_node = cvGetFileNodeByName( fs, node, "header_user_data" );
 
     if( (header_dt != 0) ^ (header_node != 0) )
-        CV_ERROR( CV_StsError,
+        CV_Error( CV_StsError,
         "One of \"header_dt\" and \"header_user_data\" is there, while the other is not" );
 
     rect_node = cvGetFileNodeByName( fs, node, "rect" );
     origin_node = cvGetFileNodeByName( fs, node, "origin" );
 
     if( (header_node != 0) + (rect_node != 0) + (origin_node != 0) > 1 )
-        CV_ERROR( CV_StsError, "Only one of \"header_user_data\", \"rect\" and \"origin\" tags may occur" );
+        CV_Error( CV_StsError, "Only one of \"header_user_data\", \"rect\" and \"origin\" tags may occur" );
 
     if( header_dt )
     {
-        CV_CALL( header_size = icvCalcElemSize( header_dt, header_size ));
+        header_size = icvCalcElemSize( header_dt, header_size );
     }
     else if( rect_node )
         header_size = sizeof(CvPoint2DSeq);
     else if( origin_node )
         header_size = sizeof(CvChain);
 
-    CV_CALL( elem_size = icvCalcElemSize( dt, 0 ));
-    CV_CALL( seq = cvCreateSeq( flags, header_size, elem_size, fs->dststorage ));
+    elem_size = icvCalcElemSize( dt, 0 );
+    seq = cvCreateSeq( flags, header_size, elem_size, fs->dststorage );
 
     if( header_node )
     {
-        CV_CALL( cvReadRawData( fs, header_node, (char*)seq + sizeof(CvSeq), header_dt ));
+        cvReadRawData( fs, header_node, (char*)seq + sizeof(CvSeq), header_dt );
     }
     else if( rect_node )
     {
@@ -4354,17 +3933,17 @@ icvReadSeq( CvFileStorage* fs, CvFileNode* node )
     }
 
     cvSeqPushMulti( seq, 0, total, 0 );
-    CV_CALL( fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+    fmt_pair_count = icvDecodeFormat( dt, fmt_pairs, CV_FS_MAX_FMT_PAIRS );
     fmt_pair_count *= 2;
     for( i = 0; i < fmt_pair_count; i += 2 )
         items_per_elem += fmt_pairs[i];
 
     data = cvGetFileNodeByName( fs, node, "data" );
     if( !data )
-        CV_ERROR( CV_StsError, "The image data is not found in file storage" );
+        CV_Error( CV_StsError, "The image data is not found in file storage" );
 
     if( icvFileNodeSeqLen( data ) != total*items_per_elem )
-        CV_ERROR( CV_StsError, "The number of stored elements does not match to \"count\"" );
+        CV_Error( CV_StsError, "The number of stored elements does not match to \"count\"" );
 
     cvStartReadRawData( fs, data, &reader );
     for( block = seq->first; block; block = block->next )
@@ -4376,9 +3955,6 @@ icvReadSeq( CvFileStorage* fs, CvFileNode* node )
     }
 
     ptr = seq;
-
-    __END__;
-
     return ptr;
 }
 
@@ -4387,10 +3963,6 @@ static void*
 icvReadSeqTree( CvFileStorage* fs, CvFileNode* node )
 {
     void* ptr = 0;
-    CV_FUNCNAME( "icvReadSeqTree" );
-
-    __BEGIN__;
-
     CvFileNode *sequences_node = cvGetFileNodeByName( fs, node, "sequences" );
     CvSeq* sequences;
     CvSeq* root = 0;
@@ -4401,7 +3973,7 @@ icvReadSeqTree( CvFileStorage* fs, CvFileNode* node )
     int prev_level = 0;
 
     if( !sequences_node || !CV_NODE_IS_SEQ(sequences_node->tag) )
-        CV_ERROR( CV_StsParseError,
+        CV_Error( CV_StsParseError,
         "opencv-sequence-tree instance should contain a field \"sequences\" that should be a sequence" );
 
     sequences = sequences_node->data.seq;
@@ -4413,10 +3985,10 @@ icvReadSeqTree( CvFileStorage* fs, CvFileNode* node )
         CvFileNode* elem = (CvFileNode*)reader.ptr;
         CvSeq* seq;
         int level;
-        CV_CALL( seq = (CvSeq*)cvRead( fs, elem ));
-        CV_CALL( level = cvReadIntByName( fs, elem, "level", -1 ));
+        seq = (CvSeq*)cvRead( fs, elem );
+        level = cvReadIntByName( fs, elem, "level", -1 );
         if( level < 0 )
-            CV_ERROR( CV_StsParseError, "All the sequence tree nodes should contain \"level\" field" );
+            CV_Error( CV_StsParseError, "All the sequence tree nodes should contain \"level\" field" );
         if( !root )
             root = seq;
         if( level > prev_level )
@@ -4443,9 +4015,6 @@ icvReadSeqTree( CvFileStorage* fs, CvFileNode* node )
     }
 
     ptr = root;
-
-    __END__;
-
     return ptr;
 }
 
@@ -4461,16 +4030,10 @@ icvIsGraph( const void* ptr )
 static void
 icvReleaseGraph( void** ptr )
 {
-    CV_FUNCNAME( "icvReleaseGraph" );
-
-    __BEGIN__;
-
     if( !ptr )
-        CV_ERROR( CV_StsNullPtr, "NULL double pointer" );
+        CV_Error( CV_StsNullPtr, "NULL double pointer" );
 
     *ptr = 0; // it's impossible now to release graph, so just clear the pointer
-
-    __END__;
 }
 
 
@@ -4487,10 +4050,6 @@ icvWriteGraph( CvFileStorage* fs, const char* name,
 {
     int* flag_buf = 0;
     char* write_buf = 0;
-    CV_FUNCNAME( "icvWriteGraph" );
-
-    __BEGIN__;
-
     const CvGraph* graph = (const CvGraph*)struct_ptr;
     CvSeqReader reader;
     char buf[128];
@@ -4502,7 +4061,7 @@ icvWriteGraph( CvFileStorage* fs, const char* name,
     assert( CV_IS_GRAPH(graph) );
     vtx_count = cvGraphGetVtxCount( graph );
     edge_count = cvGraphGetEdgeCount( graph );
-    CV_CALL( flag_buf = (int*)cvAlloc( vtx_count*sizeof(flag_buf[0])));
+    flag_buf = (int*)cvAlloc( vtx_count*sizeof(flag_buf[0]));
 
     // count vertices
     cvStartReadSeq( (CvSeq*)graph, &reader );
@@ -4518,29 +4077,29 @@ icvWriteGraph( CvFileStorage* fs, const char* name,
     }
 
     // write header
-    CV_CALL( cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_GRAPH ));
+    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_GRAPH );
 
     sprintf( buf, "%08x", graph->flags );
     cvWriteString( fs, "flags", buf, 1 );
 
     cvWriteInt( fs, "vertex_count", vtx_count );
-    CV_CALL( vtx_dt = icvGetFormat( (CvSeq*)graph, "vertex_dt",
-                    &attr, sizeof(CvGraphVtx), vtx_dt_buf ));
+    vtx_dt = icvGetFormat( (CvSeq*)graph, "vertex_dt",
+                    &attr, sizeof(CvGraphVtx), vtx_dt_buf );
     if( vtx_dt )
         cvWriteString( fs, "vertex_dt", vtx_dt, 0 );
 
     cvWriteInt( fs, "edge_count", edge_count );
-    CV_CALL( edge_dt = icvGetFormat( (CvSeq*)graph->edges, "edge_dt",
-                                &attr, sizeof(CvGraphEdge), buf ));
+    edge_dt = icvGetFormat( (CvSeq*)graph->edges, "edge_dt",
+                                &attr, sizeof(CvGraphEdge), buf );
     sprintf( edge_dt_buf, "2if%s", edge_dt ? edge_dt : "" );
     edge_dt = edge_dt_buf;
     cvWriteString( fs, "edge_dt", edge_dt, 0 );
 
-    CV_CALL( icvWriteHeaderData( fs, (CvSeq*)graph, &attr, sizeof(CvGraph) ));
+    icvWriteHeaderData( fs, (CvSeq*)graph, &attr, sizeof(CvGraph) );
 
     write_buf_size = MAX( 3*graph->elem_size, 1 << 16 );
     write_buf_size = MAX( 3*graph->edges->elem_size, write_buf_size );
-    CV_CALL( write_buf = (char*)cvAlloc( write_buf_size ));
+    write_buf = (char*)cvAlloc( write_buf_size );
 
     // as vertices and edges are written in similar way,
     // do it as a parametrized 2-iteration loop
@@ -4618,8 +4177,6 @@ icvWriteGraph( CvFileStorage* fs, const char* name,
         CV_NEXT_SEQ_ELEM( graph->elem_size, reader );
     }
 
-    __END__;
-
     cvFree( &write_buf );
     cvFree( &flag_buf );
 }
@@ -4631,10 +4188,6 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
     void* ptr = 0;
     char* read_buf = 0;
     CvGraphVtx** vtx_buf = 0;
-    CV_FUNCNAME( "icvReadGraph" );
-
-    __BEGIN__;
-
     CvGraph* graph;
     CvFileNode *header_node, *vtx_node, *edge_node;
     int flags, vtx_count, edge_count;
@@ -4651,36 +4204,36 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
     const char* edge_dt;
     char* endptr = 0;
 
-    CV_CALL( flags_str = cvReadStringByName( fs, node, "flags", 0 ));
+    flags_str = cvReadStringByName( fs, node, "flags", 0 );
     vtx_dt = cvReadStringByName( fs, node, "vertex_dt", 0 );
     edge_dt = cvReadStringByName( fs, node, "edge_dt", 0 );
     vtx_count = cvReadIntByName( fs, node, "vertex_count", -1 );
     edge_count = cvReadIntByName( fs, node, "edge_count", -1 );
 
     if( !flags_str || vtx_count == -1 || edge_count == -1 || !edge_dt )
-        CV_ERROR( CV_StsError, "Some of essential sequence attributes are absent" );
+        CV_Error( CV_StsError, "Some of essential sequence attributes are absent" );
 
     flags = (int)strtol( flags_str, &endptr, 16 );
     if( endptr == flags_str ||
         (flags & (CV_SEQ_KIND_MASK|CV_MAGIC_MASK)) != (CV_GRAPH|CV_SET_MAGIC_VAL))
-        CV_ERROR( CV_StsError, "Invalid graph signature" );
+        CV_Error( CV_StsError, "Invalid graph signature" );
 
     header_dt = cvReadStringByName( fs, node, "header_dt", 0 );
     header_node = cvGetFileNodeByName( fs, node, "header_user_data" );
 
     if( (header_dt != 0) ^ (header_node != 0) )
-        CV_ERROR( CV_StsError,
+        CV_Error( CV_StsError,
         "One of \"header_dt\" and \"header_user_data\" is there, while the other is not" );
 
     if( header_dt )
-        CV_CALL( header_size = icvCalcElemSize( header_dt, header_size ));
+        header_size = icvCalcElemSize( header_dt, header_size );
 
     if( vtx_dt > 0 )
     {
-        CV_CALL( src_vtx_size = icvCalcElemSize( vtx_dt, 0 ));
-        CV_CALL( vtx_size = icvCalcElemSize( vtx_dt, vtx_size ));
-        CV_CALL( fmt_pair_count = icvDecodeFormat( edge_dt,
-                            fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+        src_vtx_size = icvCalcElemSize( vtx_dt, 0 );
+        vtx_size = icvCalcElemSize( vtx_dt, vtx_size );
+        fmt_pair_count = icvDecodeFormat( edge_dt,
+                            fmt_pairs, CV_FS_MAX_FMT_PAIRS );
         fmt_pair_count *= 2;
         for( i = 0; i < fmt_pair_count; i += 2 )
             vtx_items_per_elem += fmt_pairs[i];
@@ -4690,12 +4243,12 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
         char dst_edge_dt_buf[128];
         const char* dst_edge_dt = 0;
 
-        CV_CALL( fmt_pair_count = icvDecodeFormat( edge_dt,
-                            fmt_pairs, CV_FS_MAX_FMT_PAIRS ));
+        fmt_pair_count = icvDecodeFormat( edge_dt,
+                            fmt_pairs, CV_FS_MAX_FMT_PAIRS );
         if( fmt_pair_count < 2 ||
             fmt_pairs[0] != 2 || fmt_pairs[1] != CV_32S ||
             fmt_pairs[2] < 1 || fmt_pairs[3] != CV_32F )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "Graph edges should start with 2 integers and a float" );
 
         // alignment of user part of the edge data following 2if
@@ -4715,26 +4268,26 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
             dst_edge_dt = dst_edge_dt_buf;
         }
 
-        CV_CALL( edge_size = icvCalcElemSize( dst_edge_dt, sizeof(CvGraphEdge) ));
-        CV_CALL( src_edge_size = icvCalcElemSize( edge_dt, 0 ));
+        edge_size = icvCalcElemSize( dst_edge_dt, sizeof(CvGraphEdge) );
+        src_edge_size = icvCalcElemSize( edge_dt, 0 );
     }
 
-    CV_CALL( graph = cvCreateGraph( flags, header_size, vtx_size, edge_size, fs->dststorage ));
+    graph = cvCreateGraph( flags, header_size, vtx_size, edge_size, fs->dststorage );
 
     if( header_node )
-        CV_CALL( cvReadRawData( fs, header_node, (char*)graph + sizeof(CvGraph), header_dt ));
+        cvReadRawData( fs, header_node, (char*)graph + sizeof(CvGraph), header_dt );
 
     read_buf_size = MAX( src_vtx_size*3, 1 << 16 );
     read_buf_size = MAX( src_edge_size*3, read_buf_size );
-    CV_CALL( read_buf = (char*)cvAlloc( read_buf_size ));
-    CV_CALL( vtx_buf = (CvGraphVtx**)cvAlloc( vtx_count * sizeof(vtx_buf[0]) ));
+    read_buf = (char*)cvAlloc( read_buf_size );
+    vtx_buf = (CvGraphVtx**)cvAlloc( vtx_count * sizeof(vtx_buf[0]) );
 
     vtx_node = cvGetFileNodeByName( fs, node, "vertices" );
     edge_node = cvGetFileNodeByName( fs, node, "edges" );
     if( !edge_node )
-        CV_ERROR( CV_StsBadArg, "No edges data" );
+        CV_Error( CV_StsBadArg, "No edges data" );
     if( vtx_dt && !vtx_node )
-        CV_ERROR( CV_StsBadArg, "No vertices data" );
+        CV_Error( CV_StsBadArg, "No vertices data" );
 
     // as vertices and edges are read in similar way,
     // do it as a parametrized 2-iteration loop
@@ -4777,14 +4330,14 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
 
                 if( (unsigned)vtx1 >= (unsigned)vtx_count ||
                     (unsigned)vtx2 >= (unsigned)vtx_count )
-                    CV_ERROR( CV_StsOutOfRange,
+                    CV_Error( CV_StsOutOfRange,
                     "Some of stored vertex indices are out of range" );
 
-                CV_CALL( result = cvGraphAddEdgeByPtr( graph,
-                    vtx_buf[vtx1], vtx_buf[vtx2], 0, &edge ));
+                result = cvGraphAddEdgeByPtr( graph,
+                    vtx_buf[vtx1], vtx_buf[vtx2], 0, &edge );
 
                 if( result == 0 )
-                    CV_ERROR( CV_StsBadArg, "Duplicated edge has occured" );
+                    CV_Error( CV_StsBadArg, "Duplicated edge has occured" );
 
                 edge->weight = *(float*)(dst_ptr + sizeof(int)*2);
                 if( elem_size > (int)sizeof(CvGraphEdge) )
@@ -4801,9 +4354,6 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
     }
 
     ptr = graph;
-
-    __END__;
-
     cvFree( &read_buf );
     cvFree( &vtx_buf );
 
@@ -4868,10 +4418,6 @@ CvType matnd_type( CV_TYPE_NAME_MATND, icvIsMatND, (CvReleaseFunc)cvReleaseMatND
 CV_IMPL  void
 cvRegisterType( const CvTypeInfo* _info )
 {
-    CV_FUNCNAME("cvRegisterType" );
-
-    __BEGIN__;
-
     CvTypeInfo* info = 0;
     int i, len;
     char c;
@@ -4880,17 +4426,17 @@ cvRegisterType( const CvTypeInfo* _info )
     //    icvCreateStandardTypes();
 
     if( !_info || _info->header_size != sizeof(CvTypeInfo) )
-        CV_ERROR( CV_StsBadSize, "Invalid type info" );
+        CV_Error( CV_StsBadSize, "Invalid type info" );
 
     if( !_info->is_instance || !_info->release ||
         !_info->read || !_info->write )
-        CV_ERROR( CV_StsNullPtr,
+        CV_Error( CV_StsNullPtr,
         "Some of required function pointers "
         "(is_instance, release, read or write) are NULL");
 
     c = _info->type_name[0];
     if( !isalpha(c) && c != '_' )
-        CV_ERROR( CV_StsBadArg, "Type name should start with a letter or _" );
+        CV_Error( CV_StsBadArg, "Type name should start with a letter or _" );
 
     len = (int)strlen(_info->type_name);
 
@@ -4898,11 +4444,11 @@ cvRegisterType( const CvTypeInfo* _info )
     {
         c = _info->type_name[i];
         if( !isalnum(c) && c != '-' && c != '_' )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "Type name should contain only letters, digits, - and _" );
     }
 
-    CV_CALL( info = (CvTypeInfo*)cvAlloc( sizeof(*info) + len + 1 ));
+    info = (CvTypeInfo*)malloc( sizeof(*info) + len + 1 );
 
     *info = *_info;
     info->type_name = (char*)(info + 1);
@@ -4916,21 +4462,15 @@ cvRegisterType( const CvTypeInfo* _info )
     else
         CvType::last = info;
     CvType::first = info;
-
-    __END__;
 }
 
 
 CV_IMPL void
 cvUnregisterType( const char* type_name )
 {
-    CV_FUNCNAME("cvUnregisterType" );
-
-    __BEGIN__;
-
     CvTypeInfo* info;
 
-    CV_CALL( info = cvFindType( type_name ));
+    info = cvFindType( type_name );
     if( info )
     {
         if( info->prev )
@@ -4946,10 +4486,8 @@ cvUnregisterType( const char* type_name )
         if( !CvType::first || !CvType::last )
             CvType::first = CvType::last = 0;
 
-        cvFree( &info );
+        free( info );
     }
-
-    __END__;
 }
 
 
@@ -4990,54 +4528,40 @@ cvTypeOf( const void* struct_ptr )
 CV_IMPL void
 cvRelease( void** struct_ptr )
 {
-    CV_FUNCNAME("cvRelease" );
-
-    __BEGIN__;
-
     CvTypeInfo* info;
 
     if( !struct_ptr )
-        CV_ERROR( CV_StsNullPtr, "NULL double pointer" );
+        CV_Error( CV_StsNullPtr, "NULL double pointer" );
 
     if( *struct_ptr )
     {
-        CV_CALL( info = cvTypeOf( *struct_ptr ));
+        info = cvTypeOf( *struct_ptr );
         if( !info )
-            CV_ERROR( CV_StsError, "Unknown object type" );
+            CV_Error( CV_StsError, "Unknown object type" );
         if( !info->release )
-            CV_ERROR( CV_StsError, "release function pointer is NULL" );
+            CV_Error( CV_StsError, "release function pointer is NULL" );
 
-        CV_CALL( info->release( struct_ptr ));
+        info->release( struct_ptr );
         *struct_ptr = 0;
     }
-
-    __END__;
 }
 
 
 void* cvClone( const void* struct_ptr )
 {
     void* struct_copy = 0;
-
-    CV_FUNCNAME("cvClone" );
-
-    __BEGIN__;
-
     CvTypeInfo* info;
 
     if( !struct_ptr )
-        CV_ERROR( CV_StsNullPtr, "NULL structure pointer" );
+        CV_Error( CV_StsNullPtr, "NULL structure pointer" );
 
-    CV_CALL( info = cvTypeOf( struct_ptr ));
+    info = cvTypeOf( struct_ptr );
     if( !info )
-        CV_ERROR( CV_StsError, "Unknown object type" );
+        CV_Error( CV_StsError, "Unknown object type" );
     if( !info->clone )
-        CV_ERROR( CV_StsError, "clone function pointer is NULL" );
+        CV_Error( CV_StsError, "clone function pointer is NULL" );
 
-    CV_CALL( struct_copy = info->clone( struct_ptr ));
-
-    __END__;
-
+    struct_copy = info->clone( struct_ptr );
     return struct_copy;
 }
 
@@ -5047,23 +4571,15 @@ CV_IMPL void*
 cvRead( CvFileStorage* fs, CvFileNode* node, CvAttrList* list )
 {
     void* obj = 0;
-
-    CV_FUNCNAME( "cvRead" );
-
-    __BEGIN__;
-
     CV_CHECK_FILE_STORAGE( fs );
 
     if( !node )
-        EXIT;
+        return 0;
 
     if( !CV_NODE_IS_USER(node->tag) || !node->info )
-        CV_ERROR( CV_StsError, "The node does not represent a user object (unknown type?)" );
+        CV_Error( CV_StsError, "The node does not represent a user object (unknown type?)" );
 
-    CV_CALL( obj = node->info->read( fs, node ));
-
-    __END__;
-
+    obj = node->info->read( fs, node );
     if( list )
         *list = cvAttrList(0,0);
 
@@ -5076,27 +4592,21 @@ CV_IMPL void
 cvWrite( CvFileStorage* fs, const char* name,
          const void* ptr, CvAttrList attributes )
 {
-    CV_FUNCNAME( "cvWrite" );
-
-    __BEGIN__;
-
     CvTypeInfo* info;
 
     CV_CHECK_OUTPUT_FILE_STORAGE( fs );
 
     if( !ptr )
-        CV_ERROR( CV_StsNullPtr, "Null pointer to the written object" );
+        CV_Error( CV_StsNullPtr, "Null pointer to the written object" );
 
-    CV_CALL( info = cvTypeOf( ptr ));
+    info = cvTypeOf( ptr );
     if( !info )
-        CV_ERROR( CV_StsBadArg, "Unknown object" );
+        CV_Error( CV_StsBadArg, "Unknown object" );
 
     if( !info->write )
-        CV_ERROR( CV_StsBadArg, "The object does not have write function" );
+        CV_Error( CV_StsBadArg, "The object does not have write function" );
 
-    CV_CALL( info->write( fs, name, ptr, attributes ));
-
-    __END__;
+    info->write( fs, name, ptr, attributes );
 }
 
 
@@ -5106,20 +4616,15 @@ cvSave( const char* filename, const void* struct_ptr,
         const char* _name, const char* comment, CvAttrList attributes )
 {
     CvFileStorage* fs = 0;
-
-    CV_FUNCNAME( "cvSave" );
-
-    __BEGIN__;
-
     char name_buf[CV_FS_MAX_LEN + 256];
     char* name = (char*)_name;
 
     if( !struct_ptr )
-        CV_ERROR( CV_StsNullPtr, "NULL object pointer" );
+        CV_Error( CV_StsNullPtr, "NULL object pointer" );
 
-    CV_CALL( fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE ));
+    fs = cvOpenFileStorage( filename, 0, CV_STORAGE_WRITE );
     if( !fs )
-        CV_ERROR( CV_StsError, "Could not open the file storage. Check the path and permissions" );
+        CV_Error( CV_StsError, "Could not open the file storage. Check the path and permissions" );
 
     if( !name )
     {
@@ -5135,7 +4640,7 @@ cvSave( const char* filename, const void* struct_ptr,
         }
         ptr++;
         if( ptr == ptr2 )
-            CV_ERROR( CV_StsBadArg, "Invalid filename" );
+            CV_Error( CV_StsBadArg, "Invalid filename" );
 
         name=name_buf;
 
@@ -5158,11 +4663,8 @@ cvSave( const char* filename, const void* struct_ptr,
     }
 
     if( comment )
-        CV_CALL( cvWriteComment( fs, comment, 0 ));
-    CV_CALL( cvWrite( fs, name, struct_ptr, attributes ));
-
-    __END__;
-
+        cvWriteComment( fs, comment, 0 );
+    cvWrite( fs, name, struct_ptr, attributes );
     cvReleaseFileStorage( &fs );
 }
 
@@ -5175,19 +4677,15 @@ cvLoad( const char* filename, CvMemStorage* memstorage,
     const char* real_name = 0;
     CvFileStorage* fs = 0;
 
-    CV_FUNCNAME( "cvLoad" );
-
-    __BEGIN__;
-
     CvFileNode* node = 0;
-    CV_CALL( fs = cvOpenFileStorage( filename, memstorage, CV_STORAGE_READ ));
+    fs = cvOpenFileStorage( filename, memstorage, CV_STORAGE_READ );
 
     if( !fs )
-        EXIT;
+        return 0;
 
     if( name )
     {
-        CV_CALL( node = cvGetFileNodeByName( fs, 0, name ));
+        node = cvGetFileNodeByName( fs, 0, name );
     }
     else
     {
@@ -5222,17 +4720,15 @@ stop_search:
     }
 
     if( !node )
-        CV_ERROR( CV_StsObjectNotFound, "Could not find the/an object in file storage" );
+        CV_Error( CV_StsObjectNotFound, "Could not find the/an object in file storage" );
 
     real_name = cvGetFileNodeName( node );
-    CV_CALL( ptr = cvRead( fs, node, 0 ));
+    ptr = cvRead( fs, node, 0 );
 
     // sanity check
     if( !memstorage && (CV_IS_SEQ( ptr ) || CV_IS_SET( ptr )) )
-        CV_ERROR( CV_StsNullPtr,
+        CV_Error( CV_StsNullPtr,
         "NULL memory storage is passed - the loaded dynamic structure can not be stored" );
-
-    __END__;
 
     if( cvGetErrStatus() < 0 )
     {
@@ -5250,10 +4746,298 @@ stop_search:
 	    *_real_name = 0;
 	}
     }
-
+exit:
     cvReleaseFileStorage( &fs );
 
     return ptr;
+}
+
+
+///////////////////////// new C++ interface for CvFileStorage ///////////////////////////
+
+namespace cv
+{
+
+static void getElemSize( const String& fmt, size_t& elemSize, size_t& cn )
+{
+    const char* dt = fmt.c_str();
+    cn = 1;
+    if( isdigit(dt[0]) )
+    {
+        cn = dt[0] - '0';
+        dt++;
+    }
+    char c = dt[0];
+    elemSize = cn*(c == 'u' || c == 'c' ? sizeof(uchar) : c == 'w' || c == 's' ? sizeof(ushort) :
+        c == 'i' ? sizeof(int) : c == 'f' ? sizeof(float) : c == 'd' ? sizeof(double) :
+        c == 'r' ? sizeof(void*) : (size_t)0);
+}
+
+FileStorage::FileStorage()
+{
+    state = UNDEFINED;
+}
+
+FileStorage::FileStorage(const String& filename, int flags)
+{
+    state = UNDEFINED;
+    open( filename, flags );
+}
+
+FileStorage::FileStorage(CvFileStorage* _fs)
+{
+    fs = ObjPtr<CvFileStorage>(_fs);
+    state = fs.obj ? NAME_EXPECTED + INSIDE_MAP : UNDEFINED;
+}
+
+FileStorage::~FileStorage()
+{
+    while( structs.size() > 0 )
+    {
+        cvEndWriteStruct(fs.obj);
+        structs.pop_back();
+    }
+}
+
+bool FileStorage::open(const String& filename, int flags)
+{
+    release();
+    fs = ObjPtr<CvFileStorage>(cvOpenFileStorage( filename.c_str(), 0, flags ));
+    state = fs.obj ? NAME_EXPECTED + INSIDE_MAP : UNDEFINED;
+    return fs.obj != 0;
+}
+
+bool FileStorage::isOpened() const
+{
+    return fs.obj != 0;
+}
+
+void FileStorage::release()
+{
+    fs.release();
+    structs.clear();
+    state = UNDEFINED;
+}
+
+FileNode FileStorage::root(int streamidx) const
+{
+    return fs.obj ? FileNode(fs.obj, cvGetRootFileNode(fs.obj, streamidx)) : FileNode();
+}
+
+template<> FileStorage& operator << (FileStorage& fs, const String& str)
+{
+    enum { NAME_EXPECTED = FileStorage::NAME_EXPECTED,
+        VALUE_EXPECTED = FileStorage::VALUE_EXPECTED,
+        INSIDE_MAP = FileStorage::INSIDE_MAP };
+    const char* _str = str.c_str();
+    if( !fs.isOpened() || !_str )
+        return fs;
+    if( *_str == '}' || *_str == ']' )
+    {
+        if( fs.structs.empty() )
+            CV_Error_( CV_StsError, ("Extra closing '%c'", *_str) );
+        if( (*_str == ']' ? '[' : '{') != fs.structs.back() )
+            CV_Error_( CV_StsError,
+            ("The closing '%c' does not match the opening '%c'", *_str, fs.structs.back()));
+        fs.structs.pop_back();
+        fs.state = fs.structs.empty() || fs.structs.back() == '{' ?
+            INSIDE_MAP + NAME_EXPECTED : VALUE_EXPECTED;
+        cvEndWriteStruct( *fs );
+        fs.elname = String();
+    }
+    else if( fs.state == NAME_EXPECTED + INSIDE_MAP )
+    {
+        if( !isalpha(*_str) )
+            CV_Error_( CV_StsError, ("Incorrect element name %s", _str) );
+        fs.elname = str;
+        fs.state = VALUE_EXPECTED + INSIDE_MAP;
+    }
+    else if( (fs.state & 3) == VALUE_EXPECTED )
+    {
+        if( *_str == '{' || *_str == '[' )
+        {
+            fs.structs.push_back(*_str);
+            int flags = *_str++ == '{' ? CV_NODE_MAP : CV_NODE_SEQ;
+            fs.state = flags == CV_NODE_MAP ? INSIDE_MAP +
+                NAME_EXPECTED : VALUE_EXPECTED;
+            if( *_str == ':' )
+            {
+                flags |= CV_NODE_FLOW;
+                _str++;
+            }
+            cvStartWriteStruct( *fs, fs.elname.size() > 0 ? fs.elname.c_str() : 0,
+                flags, *_str ? _str : 0 );
+            fs.elname = String();
+        }
+        else
+        {
+            write( fs, fs.elname, (_str[0] == '\\' && (_str[1] == '{' || _str[1] == '}' ||
+                _str[1] == '[' || _str[1] == ']')) ? String(_str+1) : str );
+            if( fs.state == INSIDE_MAP + VALUE_EXPECTED )
+                fs.state = INSIDE_MAP + NAME_EXPECTED;
+        }
+    }
+    else
+        CV_Error( CV_StsError, "Invalid fs.state" );
+    return fs;
+}
+
+
+void FileStorage::writeRaw( const String& fmt, const Vector<uchar>& vec )
+{
+    if( !isOpened() )
+        return;
+    size_t elemSize, cn;
+    getElemSize( fmt, elemSize, cn );
+    CV_Assert( vec.size() % elemSize == 0 );
+    cvWriteRawData( fs.obj, &*vec, (int)(vec.size()/elemSize), fmt.c_str());
+}
+
+
+void FileStorage::writeObj( const String& name, const void* obj )
+{
+    if( !isOpened() )
+        return;
+    cvWrite( fs.obj, name.size() > 0 ? name.c_str() : 0, obj );
+}
+
+
+void* FileNode::readObj() const
+{
+    if( !fs || !node )
+        return 0;
+    return cvRead( (CvFileStorage*)fs, (CvFileNode*)node );
+}
+
+
+FileNodeIterator::FileNodeIterator()
+{
+    fs = 0;
+    container = 0;
+    reader.ptr = 0;
+    remaining = 0;
+}
+
+FileNodeIterator::FileNodeIterator(const CvFileStorage* _fs,
+                                   const CvFileNode* _node, size_t _ofs)
+{
+    if( _fs && _node )
+    {
+        int node_type = _node->tag & FileNode::TYPE_MASK;
+        fs = _fs;
+        container = _node;
+        if( node_type == FileNode::SEQ || node_type == FileNode::MAP )
+        {
+            cvStartReadSeq( _node->data.seq, &reader );
+            remaining = FileNode(_fs, _node).count();
+        }
+        else
+        {
+            reader.ptr = (schar*)_node;
+            reader.seq = 0;
+            remaining = 1;
+        }
+        (*this) += (int)_ofs;
+    }
+    else
+    {
+        fs = 0;
+        container = 0;
+        reader.ptr = 0;
+        remaining = 0;
+    }
+}
+
+FileNodeIterator::FileNodeIterator(const FileNodeIterator& it)
+{
+    fs = it.fs;
+    container = it.container;
+    reader = it.reader;
+    remaining = it.remaining;
+}
+
+FileNodeIterator& FileNodeIterator::operator ++()
+{
+    if( remaining > 0 )
+    {
+        if( reader.seq )
+            CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        remaining--;
+    }
+    return *this;
+}
+
+FileNodeIterator FileNodeIterator::operator ++(int)
+{
+    FileNodeIterator it = *this;
+    ++(*this);
+    return it;
+}
+
+FileNodeIterator& FileNodeIterator::operator --()
+{
+    if( remaining < FileNode(fs, container).count() )
+    {
+        if( reader.seq )
+            CV_PREV_SEQ_ELEM( reader.seq->elem_size, reader );
+        remaining++;
+    }
+    return *this;
+}
+
+FileNodeIterator FileNodeIterator::operator --(int)
+{
+    FileNodeIterator it = *this;
+    --(*this);
+    return it;
+}
+
+FileNodeIterator& FileNodeIterator::operator += (int ofs)
+{
+    if( ofs == 0 )
+        return *this;
+    if( ofs > 0 )
+        ofs = std::min(ofs, (int)remaining);
+    else
+    {
+        size_t count = FileNode(fs, container).count();
+        ofs = (int)(remaining - std::min(remaining - ofs, count));
+    }
+    if( reader.seq )
+        cvSetSeqReaderPos( &reader, ofs, 1 );
+    return *this;
+}
+
+FileNodeIterator& FileNodeIterator::operator -= (int ofs)
+{
+    return operator += (-ofs);
+}
+
+
+FileNodeIterator& FileNodeIterator::readRaw( const String& fmt, Vector<uchar>& vec, size_t maxCount )
+{
+    if( fs && container && remaining > 0 )
+    {
+        size_t elem_size, cn;
+        getElemSize( fmt, elem_size, cn );
+        CV_Assert( elem_size > 0 );
+        size_t count = std::min(remaining, maxCount);
+        vec.resize( count*elem_size );
+        
+        if( reader.seq )
+        {
+            cvReadRawDataSlice( fs, &reader, (int)count, &vec[0], fmt.c_str() );
+            remaining -= count*cn;
+        }
+        else
+        {
+            cvReadRawData( fs, container, &vec[0], fmt.c_str() );
+            remaining = 0;
+        }
+    }
+    return *this;
+}
+
 }
 
 /* End of file. */
