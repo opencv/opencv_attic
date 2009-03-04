@@ -65,73 +65,73 @@ template<typename T> static inline T saturate_cast(int v) { return T(v); }
 template<typename T> static inline T saturate_cast(float v) { return T(v); }
 template<typename T> static inline T saturate_cast(double v) { return T(v); }
 
-template<> static inline uchar saturate_cast<uchar>(schar v)
+template<> inline uchar saturate_cast<uchar>(schar v)
 { return (uchar)std::max((int)v, 0); }
-template<> static inline uchar saturate_cast<uchar>(ushort v)
+template<> inline uchar saturate_cast<uchar>(ushort v)
 { return (uchar)std::min((unsigned)v, (unsigned)UCHAR_MAX); }
-template<> static inline uchar saturate_cast<uchar>(int v)
+template<> inline uchar saturate_cast<uchar>(int v)
 { return (uchar)((unsigned)v <= UCHAR_MAX ? v : v > 0 ? UCHAR_MAX : 0); }
-template<> static inline uchar saturate_cast<uchar>(short v)
+template<> inline uchar saturate_cast<uchar>(short v)
 { return saturate_cast<uchar>((int)v); }
-template<> static inline uchar saturate_cast<uchar>(unsigned v)
+template<> inline uchar saturate_cast<uchar>(unsigned v)
 { return (uchar)std::min(v, (unsigned)UCHAR_MAX); }
-template<> static inline uchar saturate_cast<uchar>(float v)
+template<> inline uchar saturate_cast<uchar>(float v)
 { int iv = cvRound(v); return saturate_cast<uchar>(iv); }
-template<> static inline uchar saturate_cast<uchar>(double v)
+template<> inline uchar saturate_cast<uchar>(double v)
 { int iv = cvRound(v); return saturate_cast<uchar>(iv); }
 
-template<> static inline schar saturate_cast<schar>(uchar v)
+template<> inline schar saturate_cast<schar>(uchar v)
 { return (schar)std::min((int)v, SCHAR_MAX); }
-template<> static inline schar saturate_cast<schar>(ushort v)
+template<> inline schar saturate_cast<schar>(ushort v)
 { return (schar)std::min((unsigned)v, (unsigned)SCHAR_MAX); }
-template<> static inline schar saturate_cast<schar>(int v)
+template<> inline schar saturate_cast<schar>(int v)
 {
     return (schar)((unsigned)(v-SCHAR_MIN) <= (unsigned)UCHAR_MAX ?
                 v : v > 0 ? SCHAR_MAX : SCHAR_MIN);
 }
-template<> static inline schar saturate_cast<schar>(short v)
+template<> inline schar saturate_cast<schar>(short v)
 { return saturate_cast<schar>((int)v); }
-template<> static inline schar saturate_cast<schar>(unsigned v)
+template<> inline schar saturate_cast<schar>(unsigned v)
 { return (schar)std::min(v, (unsigned)SCHAR_MAX); }
 
-template<> static inline schar saturate_cast<schar>(float v)
+template<> inline schar saturate_cast<schar>(float v)
 { int iv = cvRound(v); return saturate_cast<schar>(iv); }
-template<> static inline schar saturate_cast<schar>(double v)
+template<> inline schar saturate_cast<schar>(double v)
 { int iv = cvRound(v); return saturate_cast<schar>(iv); }
 
-template<> static inline ushort saturate_cast<ushort>(schar v)
+template<> inline ushort saturate_cast<ushort>(schar v)
 { return (ushort)std::max((int)v, 0); }
-template<> static inline ushort saturate_cast<ushort>(short v)
+template<> inline ushort saturate_cast<ushort>(short v)
 { return (ushort)std::max((int)v, 0); }
-template<> static inline ushort saturate_cast<ushort>(int v)
+template<> inline ushort saturate_cast<ushort>(int v)
 { return (ushort)((unsigned)v <= (unsigned)USHRT_MAX ? v : v > 0 ? USHRT_MAX : 0); }
-template<> static inline ushort saturate_cast<ushort>(unsigned v)
+template<> inline ushort saturate_cast<ushort>(unsigned v)
 { return (ushort)std::min(v, (unsigned)USHRT_MAX); }
-template<> static inline ushort saturate_cast<ushort>(float v)
+template<> inline ushort saturate_cast<ushort>(float v)
 { int iv = cvRound(v); return saturate_cast<ushort>(iv); }
-template<> static inline ushort saturate_cast<ushort>(double v)
+template<> inline ushort saturate_cast<ushort>(double v)
 { int iv = cvRound(v); return saturate_cast<ushort>(iv); }
 
-template<> static inline short saturate_cast<short>(ushort v)
+template<> inline short saturate_cast<short>(ushort v)
 { return (short)std::min((int)v, SHRT_MAX); }
-template<> static inline short saturate_cast<short>(int v)
+template<> inline short saturate_cast<short>(int v)
 {
     return (short)((unsigned)(v - SHRT_MIN) <= (unsigned)USHRT_MAX ?
             v : v > 0 ? SHRT_MAX : SHRT_MIN);
 }
-template<> static inline short saturate_cast<short>(unsigned v)
+template<> inline short saturate_cast<short>(unsigned v)
 { return (short)std::min(v, (unsigned)SHRT_MAX); }
-template<> static inline short saturate_cast<short>(float v)
+template<> inline short saturate_cast<short>(float v)
 { int iv = cvRound(v); return saturate_cast<short>(iv); }
-template<> static inline short saturate_cast<short>(double v)
+template<> inline short saturate_cast<short>(double v)
 { int iv = cvRound(v); return saturate_cast<short>(iv); }
 
-template<> static inline int saturate_cast<int>(float v) { return cvRound(v); }
-template<> static inline int saturate_cast<int>(double v) { return cvRound(v); }
+template<> inline int saturate_cast<int>(float v) { return cvRound(v); }
+template<> inline int saturate_cast<int>(double v) { return cvRound(v); }
 
 // we intentionally do not clip negative numbers, to make -1 become 0xffffffff etc.
-template<> static inline unsigned saturate_cast<unsigned>(float v){ return cvRound(v); }
-template<> static inline unsigned saturate_cast<unsigned>(double v) { return cvRound(v); }
+template<> inline unsigned saturate_cast<unsigned>(float v){ return cvRound(v); }
+template<> inline unsigned saturate_cast<unsigned>(double v) { return cvRound(v); }
 
 
 /////////////////////////// short vector (Vec_) /////////////////////////////
@@ -725,7 +725,7 @@ template<typename T> template<typename T2> inline void Scalar_<T>::convertTo(T2*
         buf[i] = saturate_cast<T2>(this->val[i]);
     for( ; i < unroll_to; i++ )
         buf[i] = buf[i-cn];
-}    
+}
 
 static inline void scalarToRawData(const Scalar& s, void* buf, int type, int unroll_to=0)
 {
@@ -757,7 +757,7 @@ static inline void scalarToRawData(const Scalar& s, void* buf, int type, int unr
         CV_Error(CV_StsUnsupportedFormat,"");
     }
 }
-    
+
 
 template<typename T> static inline Scalar_<T> operator + (const Scalar_<T>& a, const Scalar_<T>& b)
 {
@@ -986,7 +986,7 @@ template <typename T> inline void Vector<T>::clear() { resize(0); }
 
 inline Mat::Mat()
     : flags(0), rows(0), cols(0), step(0), data(0), refcount(0), datastart(0), dataend(0) {}
-    
+
 inline Mat::Mat(int _rows, int _cols, int _type)
     : flags(0), rows(0), cols(0), step(0), data(0), refcount(0), datastart(0), dataend(0)
 {
@@ -1012,7 +1012,7 @@ inline Mat::Mat(Size _size, int _type)
 
 inline Mat::Mat(const Mat& m)
     : flags(m.flags), rows(m.rows), cols(m.cols), step(m.step), data(m.data),
-    refcount(m.refcount), datastart(m.datastart), dataend(m.dataend) 
+    refcount(m.refcount), datastart(m.datastart), dataend(m.dataend)
 {
     if( refcount )
         ++*refcount;
@@ -1155,7 +1155,7 @@ inline Mat Mat::diag(int d) const
     Mat m = *this;
     int esz = elemSize();
     int len;
-    
+
     if( d >= 0 )
     {
         len = std::min(cols - d, rows);
@@ -1563,7 +1563,7 @@ template<typename E, typename M> struct CV_EXPORTS MatExpr_ : MatExpr_Base
     ~MatExpr_() {}
     operator M() const { return (M)e; }
     void assignTo(Mat& m, int type=-1) const { e.assignTo(m, type); }
-    
+
     M row(int y) const { return ((M)e).row(y); }
     M col(int x) const { return ((M)e).col(x); }
     M diag(int d=0) const { return ((M)e).diag(d); }
@@ -1623,7 +1623,7 @@ inline Mat::operator MatExpr_<Mat, Mat>() const
 template<typename M> struct CV_EXPORTS MatOp_Sub_
 {
     MatOp_Sub_() {}
-    
+
     static void apply(const M& a, const M& b, M& c, int type=-1)
     {
         if( type == a.type() || type < 0 )
@@ -1642,7 +1642,7 @@ template<typename M> struct CV_EXPORTS MatOp_Sub_
 template<typename M> struct CV_EXPORTS MatOp_Scale_
 {
     MatOp_Scale_() {}
-    
+
     static void apply(const M& a, double alpha, M& c, int type=-1)
     {
         a.convertTo(c, type, alpha, 0);
@@ -1652,7 +1652,7 @@ template<typename M> struct CV_EXPORTS MatOp_Scale_
 template<typename M> struct CV_EXPORTS MatOp_ScaleAddS_
 {
     MatOp_ScaleAddS_() {}
-    
+
     static void apply(const M& a, double alpha, double beta, M& c, int type=-1)
     {
         a.convertTo(c, type, alpha, beta);
@@ -1662,7 +1662,7 @@ template<typename M> struct CV_EXPORTS MatOp_ScaleAddS_
 template<typename M> struct CV_EXPORTS MatOp_AddS_
 {
     MatOp_AddS_() {}
-    
+
     static void apply(const M& a, const Scalar& s, M& c, int type=-1)
     {
         if( type == a.type() || type < 0 )
@@ -1681,7 +1681,7 @@ template<typename M> struct CV_EXPORTS MatOp_AddS_
 template<typename M> struct CV_EXPORTS MatOp_AddEx_
 {
     MatOp_AddEx_() {}
-    
+
     static void apply(const M& a, double alpha, const M& b,
                       double beta, double gamma, M& c, int type=-1)
     {
@@ -1769,7 +1769,7 @@ template<typename M> struct CV_EXPORTS MatOp_BinS_
 template<typename M> struct CV_EXPORTS MatOp_T_
 {
     MatOp_T_() {}
-    
+
     static void apply(const M& a, double scale, M& c, int type=-1)
     {
         if( type == a.type() || type < 0 )
@@ -1791,7 +1791,7 @@ template<typename M> struct CV_EXPORTS MatOp_T_
 template<typename M> struct CV_EXPORTS MatOp_MatMul_
 {
     MatOp_MatMul_() {}
-    
+
     static void apply(const M& a, const M& b, double scale, int flags, M& c, int type=-1)
     {
         if( type == a.type() || type < 0 )
@@ -1811,7 +1811,7 @@ template<typename M> struct CV_EXPORTS MatOp_MatMul_
 template<typename M> struct CV_EXPORTS MatOp_MatMulAdd_
 {
     MatOp_MatMulAdd_() {}
-    
+
     static void apply(const M& a, const M& b, double alpha,
         const M& c, double beta, int flags, M& d, int type=-1)
     {
@@ -1832,7 +1832,7 @@ template<typename M> struct CV_EXPORTS MatOp_MatMulAdd_
 template<typename M> struct CV_EXPORTS MatOp_Cmp_
 {
     MatOp_Cmp_() {}
-    
+
     static void apply(const M& a, const M& b, int op, M& c, int type=-1)
     {
         if( type == CV_8UC1 || type == -1 )
@@ -1851,7 +1851,7 @@ template<typename M> struct CV_EXPORTS MatOp_Cmp_
 template<typename M> struct CV_EXPORTS MatOp_CmpS_
 {
     MatOp_CmpS_() {}
-    
+
     static void apply(const M& a, double alpha, int op, M& c, int type=-1)
     {
         if( type == CV_8UC1 || type == -1 )
@@ -1870,7 +1870,7 @@ template<typename M> struct CV_EXPORTS MatOp_CmpS_
 template<typename M> struct CV_EXPORTS MatOp_MulDiv_
 {
     MatOp_MulDiv_() {}
-    
+
     static void apply(const M& a, const M& b, double alpha, char op, M& c, int type=-1)
     {
         if( type == a.type() || type == -1 )
@@ -1892,7 +1892,7 @@ template<typename M> struct CV_EXPORTS MatOp_MulDiv_
 template<typename M> struct CV_EXPORTS MatOp_DivRS_
 {
     MatOp_DivRS_() {}
-    
+
     static void apply(const M& a, double alpha, M& c, int type=-1)
     {
         if( type == a.type() || type == -1 )
@@ -1913,7 +1913,7 @@ template<typename M> struct CV_EXPORTS MatOp_DivRS_
 template<typename M> struct CV_EXPORTS MatOp_Inv_
 {
     MatOp_Inv_() {}
-    
+
     static void apply(const M& a, int method, M& c, int type=-1)
     {
         if( type == a.type() || type == -1 )
@@ -1933,7 +1933,7 @@ template<typename M> struct CV_EXPORTS MatOp_Inv_
 template<typename M> struct CV_EXPORTS MatOp_Solve_
 {
     MatOp_Solve_() {}
-    
+
     static void apply(const M& a, const M& b, int method, M& c, int type=-1)
     {
         if( type == a.type() || type == -1 )
@@ -4345,7 +4345,7 @@ template<typename T> inline MatIterator_<T> Mat_<T>::end()
 template<typename T> struct CV_EXPORTS MatOp_Iter_
 {
     MatOp_Iter_() {}
-    
+
     static void apply(const MatIterator_<T>& a, Mat& c, int type=-1)
     {
         if( type < 0 )
@@ -4372,7 +4372,7 @@ template<typename T> inline MatCommaInitializer_<T>::operator Mat_<T>() const
     assert( this->e.a1 == this->e.a1.m->end() );
     return *this->e.a1.m;
 }
-    
+
 template<typename T> inline Mat_<T> MatCommaInitializer_<T>::operator *() const
 {
     assert( this->e.a1 == this->e.a1.m->end() );
@@ -4410,8 +4410,8 @@ template<typename T> inline VectorCommaInitializer_<T>::operator Vector<T>() con
 { return *vec; }
 
 template<typename T> inline Vector<T> VectorCommaInitializer_<T>::operator *() const
-{ return *vec; }  
-    
+{ return *vec; }
+
 template<typename T, typename T2> static inline VectorCommaInitializer_<T>
 operator << (const Vector<T>& vec, T2 val)
 {
@@ -4493,7 +4493,7 @@ template<typename T> inline void ObjPtr<T>::delete_obj()
 }
 
 template<typename T> inline ObjPtr<T>::~ObjPtr() { release(); }
-    
+
 template<typename T> inline ObjPtr<T>::ObjPtr(const ObjPtr<T>& ptr)
 {
     obj = ptr.obj;
@@ -4538,16 +4538,16 @@ static inline void write( FileStorage& fs, const String& name, const String& val
 template<typename T> static inline void write(FileStorage& fs, const T& value)
 { write(fs, String(), value); }
 
-template<> static inline void write(FileStorage& fs, const int& value )
+template<> inline void write(FileStorage& fs, const int& value )
 { cvWriteInt( *fs, 0, value ); }
 
-template<> static inline void write(FileStorage& fs, const float& value )
+template<> inline void write(FileStorage& fs, const float& value )
 { cvWriteReal( *fs, 0, value ); }
 
-template<> static inline void write(FileStorage& fs, const double& value )
+template<> inline void write(FileStorage& fs, const double& value )
 { cvWriteReal( *fs, 0, value ); }
 
-template<> static inline void write(FileStorage& fs, const String& value )
+template<> inline void write(FileStorage& fs, const String& value )
 { cvWriteString( *fs, 0, value.c_str() ); }
 
 template<typename T, int numflag> struct CV_EXPORTS VecWriterProxy

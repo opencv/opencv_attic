@@ -548,7 +548,7 @@ typedef void (*GEMMBlockMulFunc)( const void* src1, size_t step1,
 typedef void (*GEMMStoreFunc)( const void* src1, size_t step1,
                    const void* src2, size_t step2, void* dst, size_t dststep,
                    Size dstsize, double alpha, double beta, int flags );
-                   
+
 static void GEMMSingleMul_32f( const float* a_data, size_t a_step,
               const float* b_data, size_t b_step,
               const float* c_data, size_t c_step,
@@ -607,8 +607,8 @@ static void GEMMStore_64f( const double* c_data, size_t c_step,
                       double alpha, double beta, int flags )
 {
     GEMMStore(c_data, c_step, d_buf, d_buf_step, d_data, d_step, d_size, alpha, beta, flags);
-}    
-    
+}
+
 
 void gemm( const Mat& A, const Mat& B, double alpha,
            const Mat& _C, double beta, Mat& D, int flags )
@@ -792,7 +792,7 @@ void gemm( const Mat& A, const Mat& B, double alpha,
                 return;
             }
         }
-        
+
         if( type == CV_64F )
         {
             double* d = (double*)D.data;
@@ -1303,7 +1303,7 @@ transformC4_( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 
 
 #if CV_SSE2
-    
+
 static inline void
 load3x3Matrix( const float* m, __m128& m0, __m128& m1, __m128& m2, __m128& m3 )
 {
@@ -1323,7 +1323,7 @@ load4x4Matrix( const float* m, __m128& m0, __m128& m1, __m128& m2, __m128& m3, _
     m4 = _mm_setr_ps(m[4], m[9], m[14], m[19]);
 }
 
-template<> static void
+template<> void
 transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 {
     typedef uchar T;
@@ -1334,7 +1334,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     const float* m = (const float*)tmat.data;
     int dst_cn = dstmat.channels();
     int x, y, k;
-    
+
     if( dst_cn == 3 &&
         std::abs(m[0]) < MAX_M && std::abs(m[1]) < MAX_M && std::abs(m[2]) < MAX_M && std::abs(m[3]) < MAX_M*256 &&
         std::abs(m[4]) < MAX_M && std::abs(m[5]) < MAX_M && std::abs(m[6]) < MAX_M && std::abs(m[7]) < MAX_M*256 &&
@@ -1348,18 +1348,18 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
             m22 = saturate_cast<short>(m[10]*SCALE);
         int m03 = saturate_cast<int>((m[3]+0.5f)*SCALE), m13 = saturate_cast<int>((m[7]+0.5f)*SCALE ),
             m23 = saturate_cast<int>((m[11]+0.5f)*SCALE);
-        
+
         __m128i m0 = _mm_setr_epi16(0, m00, m01, m02, m00, m01, m02, 0);
         __m128i m1 = _mm_setr_epi16(0, m10, m11, m12, m10, m11, m12, 0);
         __m128i m2 = _mm_setr_epi16(0, m20, m21, m22, m20, m21, m22, 0);
         __m128i m3 = _mm_setr_epi32(m03, m13, m23, 0);
-        
+
         for( y = 0; y < size.height; y++ )
         {
             const T* src = (const T*)(srcmat.data + srcmat.step*y);
             T* dst = (T*)(dstmat.data + dstmat.step*y);
             int x = 0;
-            
+
             for( ; x <= (size.width - 8)*3; x += 8*3 )
             {
                 __m128i z = _mm_setzero_si128(), t0, t1, t2, r0, r1;
@@ -1369,12 +1369,12 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 v0 = _mm_unpacklo_epi8(v0, z); // b0 g0 r0 b1 g1 r1 b2 g2
                 v1 = _mm_unpacklo_epi8(v1, z); // r2 b3 g3 r3 b4 g4 r4 b5
                 v2 = _mm_unpacklo_epi8(v2, z); // g5 r5 b6 g6 r6 b7 g7 r7
-                
+
                 v3 = _mm_srli_si128(v2, 2); // ? b6 g6 r6 b7 g7 r7 0
                 v2 = _mm_or_si128(_mm_slli_si128(v2, 10), _mm_srli_si128(v1, 6)); // ? b4 g4 r4 b5 g5 r5 ?
                 v1 = _mm_or_si128(_mm_slli_si128(v1, 6), _mm_srli_si128(v0, 10)); // ? b2 g2 r2 b3 g3 r3 ?
                 v0 = _mm_slli_si128(v0, 2); // 0 b0 g0 r0 b1 g1 r1 ?
-                
+
                 // process pixels 0 & 1
                 t0 = _mm_madd_epi16(v0, m0); // a0 b0 a1 b1
                 t1 = _mm_madd_epi16(v0, m1); // c0 d0 c1 d1
@@ -1388,7 +1388,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 r0 = _mm_srai_epi32(r0, BITS);
                 r1 = _mm_srai_epi32(r1, BITS);
                 v0 = _mm_packus_epi16(_mm_packs_epi32(_mm_slli_si128(r0, 4), r1), z); // 0 B0 G0 R0 B1 G1 R1 0
-                
+
                 // process pixels 2 & 3
                 t0 = _mm_madd_epi16(v1, m0); // a0 b0 a1 b1
                 t1 = _mm_madd_epi16(v1, m1); // c0 d0 c1 d1
@@ -1402,7 +1402,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 r0 = _mm_srai_epi32(r0, BITS);
                 r1 = _mm_srai_epi32(r1, BITS);
                 v1 = _mm_packus_epi16(_mm_packs_epi32(_mm_slli_si128(r0, 4), r1), z); // 0 B2 G2 R2 B3 G3 R3 0
-                
+
                 // process pixels 4 & 5
                 t0 = _mm_madd_epi16(v2, m0); // a0 b0 a1 b1
                 t1 = _mm_madd_epi16(v2, m1); // c0 d0 c1 d1
@@ -1416,7 +1416,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 r0 = _mm_srai_epi32(r0, BITS);
                 r1 = _mm_srai_epi32(r1, BITS);
                 v2 = _mm_packus_epi16(_mm_packs_epi32(_mm_slli_si128(r0, 4), r1), z); // 0 B4 G4 R4 B5 G5 R5 0
-                
+
                 // process pixels 6 & 7
                 t0 = _mm_madd_epi16(v3, m0); // a0 b0 a1 b1
                 t1 = _mm_madd_epi16(v3, m1); // c0 d0 c1 d1
@@ -1430,7 +1430,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 r0 = _mm_srai_epi32(r0, BITS);
                 r1 = _mm_srai_epi32(r1, BITS);
                 v3 = _mm_packus_epi16(_mm_packs_epi32(_mm_slli_si128(r0, 4), r1), z); // 0 B6 G6 R6 B7 G7 R7 0
-                
+
                 v0 = _mm_or_si128(_mm_srli_si128(v0, 1), _mm_slli_si128(v1, 5));
                 v1 = _mm_or_si128(_mm_srli_si128(v1, 3), _mm_slli_si128(v2, 3));
                 v2 = _mm_or_si128(_mm_srli_si128(v2, 5), _mm_slli_si128(v3, 1));
@@ -1438,7 +1438,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 _mm_storel_epi64((__m128i*)(dst + x + 8), v1);
                 _mm_storel_epi64((__m128i*)(dst + x + 16), v2);
             }
-            
+
             for( ; x < size.width*3; x += 3 )
             {
                 int v0 = src[x], v1 = src[x+1], v2 = src[x+2];
@@ -1450,12 +1450,12 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
         }
         return;
     }
-    
+
     for( y = 0; y < size.height; y++ )
     {
         const T* src = (const T*)(srcmat.data + srcmat.step*y);
         T* dst = (T*)(dstmat.data + dstmat.step*y);
-        
+
         if( dst_cn == 1 )
             for( x = 0; x < size.width; x++, src += 3 )
                 dst[x] = saturate_cast<T>(m[0]*CV_8TO32F(src[0]) +
@@ -1471,7 +1471,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     }
 }
 
-template<> static void
+template<> void
 transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 {
     typedef ushort T;
@@ -1480,20 +1480,20 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     const float* m = (const float*)tmat.data;
     int dst_cn = dstmat.channels();
     int x, y, k;
-    
+
     if( dst_cn == 3 )
     {
         __m128 m0, m1, m2, m3;
         __m128i delta = _mm_setr_epi16(0,-32768,-32768,-32768,-32768,-32768,-32768,0);
         load3x3Matrix(m, m0, m1, m2, m3);
         m3 = _mm_sub_ps(m3, _mm_setr_ps(32768.f, 32768.f, 32768.f, 0.f));
-        
+
         for( y = 0; y < size.height; y++ )
         {
             const T* src = (const T*)(srcmat.data + srcmat.step*y);
             T* dst = (T*)(dstmat.data + dstmat.step*y);
             int x = 0;
-            
+
             for( ; x <= (size.width - 4)*3; x += 4*3 )
             {
                 __m128i z = _mm_setzero_si128();
@@ -1524,7 +1524,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                             _mm_mul_ps(m2, _mm_shuffle_ps(x3,x3,_MM_SHUFFLE(2,2,2,2)))), m3);
                 v0 = _mm_cvtps_epi32(y0); v1 = _mm_cvtps_epi32(y1);
                 v2 = _mm_cvtps_epi32(y2); v3 = _mm_cvtps_epi32(y3);
-                
+
                 v0 = _mm_add_epi16(_mm_packs_epi32(_mm_slli_si128(v0,4), v1), delta); // 0 b0 g0 r0 b1 g1 r1 0
                 v2 = _mm_add_epi16(_mm_packs_epi32(_mm_slli_si128(v2,4), v3), delta); // 0 b2 g2 r2 b3 g3 r3 0
                 v1 = _mm_or_si128(_mm_srli_si128(v0,2), _mm_slli_si128(v2,10)); // b0 g0 r0 b1 g1 r1 b2 g2
@@ -1532,7 +1532,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 _mm_storeu_si128((__m128i*)(dst + x), v1);
                 _mm_storel_epi64((__m128i*)(dst + x + 8), v2);
             }
-            
+
             for( ; x < size.width*3; x += 3 )
             {
                 WT v0 = src[x], v1 = src[x+1], v2 = src[x+2];
@@ -1543,13 +1543,13 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
             }
         }
         return;
-    }    
-    
+    }
+
     for( y = 0; y < size.height; y++ )
     {
         const T* src = (const T*)(srcmat.data + srcmat.step*y);
         T* dst = (T*)(dstmat.data + dstmat.step*y);
-        
+
         if( dst_cn == 1 )
             for( x = 0; x < size.width; x++, src += 3 )
                 dst[x] = saturate_cast<T>(m[0]*src[0] + m[1]*src[1] + m[2]*src[2] + m[3]);
@@ -1563,7 +1563,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     }
 }
 
-template<> static void
+template<> void
 transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 {
     typedef float T;
@@ -1572,18 +1572,18 @@ transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     const float* m = (const float*)tmat.data;
     int dst_cn = dstmat.channels();
     int x, y, k;
-    
+
     if( dst_cn == 3 )
     {
         __m128 m0, m1, m2, m3;
         load3x3Matrix(m, m0, m1, m2, m3);
-        
+
         for( y = 0; y < size.height; y++ )
         {
             const T* src = (const T*)(srcmat.data + srcmat.step*y);
             T* dst = (T*)(dstmat.data + dstmat.step*y);
             int x = 0;
-            
+
             for( ; x < (size.width - 1)*3; x += 3 )
             {
                 __m128 x0 = _mm_loadu_ps(src + x);
@@ -1594,7 +1594,7 @@ transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                 _mm_storel_pi((__m64*)(dst + x), y0);
                 _mm_store_ss(dst + x + 2, _mm_movehl_ps(y0,y0));
             }
-            
+
             for( ; x < size.width*3; x += 3 )
             {
                 WT v0 = src[x], v1 = src[x+1], v2 = src[x+2];
@@ -1605,13 +1605,13 @@ transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
             }
         }
         return;
-    }    
-    
+    }
+
     for( y = 0; y < size.height; y++ )
     {
         const T* src = (const T*)(srcmat.data + srcmat.step*y);
         T* dst = (T*)(dstmat.data + dstmat.step*y);
-        
+
         if( dst_cn == 1 )
             for( x = 0; x < size.width; x++, src += 3 )
                 dst[x] = saturate_cast<T>(m[0]*src[0] + m[1]*src[1] + m[2]*src[2] + m[3]);
@@ -1626,7 +1626,7 @@ transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 }
 
 
-template<> static void
+template<> void
 transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
 {
     typedef float T;
@@ -1635,12 +1635,12 @@ transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     const WT* m = (const WT*)tmat.data;
     int dst_cn = dstmat.channels();
     int x, y, k;
-    
+
     if( dst_cn == 4 )
     {
         __m128 m0, m1, m2, m3, m4;
         load4x4Matrix(m, m0, m1, m2, m3, m4);
-    
+
         for( y = 0; y < size.height; y++ )
         {
             const T* src = (const T*)(srcmat.data + srcmat.step*y);
@@ -1658,7 +1658,7 @@ transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
         }
         return;
     }
-    
+
     for( y = 0; y < size.height; y++ )
     {
         const T* src = (const T*)(srcmat.data + srcmat.step*y);
@@ -1670,8 +1670,8 @@ transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                                                  _m[2]*src[x*4+2] + _m[3]*src[x*4+3] + _m[4]);
     }
 }
-  
-    
+
+
 #endif
 
 
@@ -1838,7 +1838,7 @@ void transform( const Mat& src, Mat& dst, const Mat& _m )
             return;
         }
     }
-    
+
     TransformFunc func = tab[0][type];
     CV_Assert( func != 0 );
     func( src, dst, m );
@@ -1885,7 +1885,7 @@ perspectiveTransform3_( const Mat& srcmat, Mat& dstmat, const double* mat )
     {
         const T* src = (const T*)(srcmat.data + srcmat.step*i);
         T* dst = (T*)(dstmat.data + dstmat.step*i);
-        
+
         for( int j = 0; j < size.width; j += 3 )
         {
             T x = src[j], y = src[j + 1], z = src[j + 2];
@@ -1957,7 +1957,7 @@ void perspectiveTransform( const Mat& src, Mat& dst, const Mat& _m )
     {
         if(depth == CV_32F)
             func = perspectiveTransform2_<float>;
-        else    
+        else
             func = perspectiveTransform2_<double>;
     }
     else if( scn == 2 && dcn == 3 )
@@ -1971,7 +1971,7 @@ void perspectiveTransform( const Mat& src, Mat& dst, const Mat& _m )
     {
         if(depth == CV_32F)
             func = perspectiveTransform3_<float>;
-        else    
+        else
             func = perspectiveTransform3_<double>;
     }
     else
@@ -2230,7 +2230,7 @@ MulTransposedR( const Mat& srcmat, Mat& dstmat, const Mat& deltamat, double scal
     int srcstep = srcmat.step/sizeof(src[0]);
     int dststep = dstmat.step/sizeof(dst[0]);
     int deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
-    int delta_cols = deltamat.cols;   
+    int delta_cols = deltamat.cols;
     Size size = srcmat.size();
     dT* tdst = dst;
     dT* col_buf = 0;
@@ -2350,7 +2350,7 @@ MulTransposedL( const Mat& srcmat, Mat& dstmat, const Mat& deltamat, double scal
     int dststep = dstmat.step/sizeof(dst[0]);
     int deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
     int delta_cols = deltamat.cols;
-    Size size = srcmat.size();    
+    Size size = srcmat.size();
     dT* tdst = dst;
 
     if( !delta )
@@ -2460,14 +2460,14 @@ void mulTransposed( const Mat& src, Mat& dst, bool ata,
         {
             if(ata)
                 func = MulTransposedR<uchar,float>;
-            else    
+            else
                 func = MulTransposedL<uchar,float>;
         }
         else if(stype == CV_8U && dtype == CV_64F)
         {
             if(ata)
                 func = MulTransposedR<uchar,double>;
-            else    
+            else
                 func = MulTransposedL<uchar,double>;
         }
         else if(stype == CV_16U && dtype == CV_32F)
@@ -2579,7 +2579,7 @@ double Mat::dot(const Mat& mat) const
         dotprod_<int, double, double>,
         dotprod_<float, double, double>,
         dotprod_<double, double, double>, 0 };
-    
+
     DotProductFunc func = tab[depth()];
     CV_Assert( mat.type() == type() && mat.size() == size() && func != 0 );
     return func( *this, mat );
@@ -2656,7 +2656,7 @@ PCA& PCA::operator()(const Mat& data, const Mat& _mean, int flags, int maxCompon
             subtract( data, tmp_mean, tmp_mean );
             tmp_data = tmp_mean;
         }
-        
+
         Mat evects1(count, len, ctype);
         gemm( eigenvectors, tmp_data, 1, Mat(), 0, evects1,
             (flags & CV_PCA_DATA_AS_COL) ? CV_GEMM_B_T : 0);
@@ -2700,7 +2700,7 @@ Mat PCA::project(const Mat& data) const
         gemm( tmp_data, eigenvectors, 1, Mat(), 0, tmp_data, GEMM_2_T );
     else
         gemm( eigenvectors, tmp_data, 1, Mat(), 0, tmp_data, 0 );
-    return tmp_data;   
+    return tmp_data;
 }
 
 
@@ -2709,7 +2709,7 @@ Mat PCA::backProject(const Mat& data) const
     CV_Assert( mean.data && eigenvectors.data &&
         ((mean.rows == 1 && eigenvectors.rows == data.cols) ||
          (mean.cols == 1 && eigenvectors.rows == data.rows)));
-    
+
     Mat tmp_data, tmp_mean;
     data.convertTo(tmp_data, mean.type());
     if( mean.rows == 1 )
@@ -2797,7 +2797,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
 
     if( avgarr )
         mean = mean0 = cv::cvarrToMat(avgarr);
-    
+
     if( count == 1 || (flags & CV_COVAR_COLS) != 0 || (flags & CV_COVAR_ROWS) != 0 )
     {
         cv::Mat data = cv::cvarrToMat(vecarr[0]);

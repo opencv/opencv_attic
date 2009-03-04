@@ -95,7 +95,7 @@ float fastAtan2( float y, float x )
 
     /* ix = ix != 0 ? ix : 1.f */
     _x.i = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
-    
+
     z = _y.f / _x.f;
     return (float)((_CV_ATAN_CF0*fabs(z) + _CV_ATAN_CF1)*z + icvAtanTab[idx]);
 }
@@ -134,7 +134,7 @@ static CvStatus CV_STDCALL FastAtan2_32f(const float *__y, const float *__x, flo
             ix ^= iy & ygx;
             iy ^= ix & ygx;
             ix ^= iy & ygx;
-            
+
             _y.i = iy ^ icvAtanSign[k];
 
             /* ix = ix != 0 ? ix : 1.f */
@@ -262,7 +262,7 @@ Magnitude(const T* x, const T* y, T* mag, int len)
 
 
 #if CV_SSE2
-template<> static CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int len)
+template<> CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int len)
 {
     int i = 0;
     __m128 _0_5 = _mm_set1_ps(0.5f), _1_5 = _mm_set1_ps(1.5f);
@@ -291,7 +291,7 @@ template<> static CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int 
     return CV_OK;
 }
 
-template<> static CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
+template<> CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
 {
     int i = 0;
     if( (((size_t)src|(size_t)dst) & 15) == 0 )
@@ -313,7 +313,7 @@ template<> static CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len
     return CV_OK;
 }
 
-template<> static CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
+template<> CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
 {
     int i = 0;
     if( (((size_t)src|(size_t)dst) & 15) == 0 )
@@ -335,7 +335,7 @@ template<> static CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int l
     return CV_OK;
 }
 
-template<> static CvStatus CV_STDCALL
+template<>  CvStatus CV_STDCALL
 Magnitude(const float* x, const float* y, float* mag, int len)
 {
     int i = 0;
@@ -376,7 +376,7 @@ static CvStatus CV_STDCALL InvSqrt_64f(const double* src, double* dst, int len)
 {
     return InvSqrt( src, dst, len );
 }
-    
+
 
 /****************************************************************************************\
 *                                  Cartezian -> Polar                                    *
@@ -452,7 +452,7 @@ SinCos_32f( const float *angle,float *sinval, float* cosval,
     const int N = 64;
 
     static const double sin_table[] =
-    { 
+    {
      0.00000000000000000000,     0.09801714032956060400,
      0.19509032201612825000,     0.29028467725446233000,
      0.38268343236508978000,     0.47139673682599764000,
@@ -488,7 +488,7 @@ SinCos_32f( const float *angle,float *sinval, float* cosval,
     };
 
     static const double k2 = (2*CV_PI)/N;
-    
+
     static const double sin_a0 = -0.166630293345647*k2*k2*k2;
     static const double sin_a2 = k2;
 
@@ -755,13 +755,13 @@ static CvStatus CV_STDCALL Exp_32f( const float *_x, float *y, int n )
 
         x0 = buf[0].d * expTab[val0 & EXPTAB_MASK] * EXPPOLY( x0 );
         x1 = buf[1].d * expTab[val1 & EXPTAB_MASK] * EXPPOLY( x1 );
-        
+
         y[i] = (float)x0;
         y[i + 1] = (float)x1;
-        
+
         x2 = buf[2].d * expTab[val2 & EXPTAB_MASK] * EXPPOLY( x2 );
         x3 = buf[3].d * expTab[val3 & EXPTAB_MASK] * EXPPOLY( x3 );
-        
+
         y[i + 2] = (float)x2;
         y[i + 3] = (float)x3;
     }
@@ -1217,7 +1217,7 @@ static CvStatus CV_STDCALL Log_32f( const float *_x, float *y, int n )
         float f;
     }
     buf[4];
-    
+
     const int* x = (const int*)_x;
 
     if( !x || !y )
@@ -1335,7 +1335,7 @@ static CvStatus CV_STDCALL Log_64f( const double *x, double *y, int n )
         h1 = X[i + 1].i.lo;
         buf[0].i.lo = h0;
         buf[1].i.lo = h1;
-        
+
         h0 = X[i].i.hi;
         h1 = X[i + 1].i.hi;
         buf[0].i.hi = (h0 & LOGTAB_MASK2) | (1023 << 20);
@@ -1479,7 +1479,7 @@ void pow( const Mat& _src, double power, Mat& dst )
             ipower = -ipower;
             src = &dst;
         }
-        
+
         switch( ipower )
         {
         case 0:
@@ -1507,7 +1507,7 @@ void pow( const Mat& _src, double power, Mat& dst )
             IPow<uchar, int>, 0, IPow<ushort, int>, IPow<short, int>, IPow<int, int>,
             IPow<float, float>, IPow<double, double>, 0
         };
-    
+
         IPowFunc func = tab[depth];
         CV_Assert( func != 0 );
         for( i = 0; i < size.height; i++ )
@@ -1515,7 +1515,7 @@ void pow( const Mat& _src, double power, Mat& dst )
     }
     else if( fabs(fabs(power) - 0.5) < DBL_EPSILON )
     {
-        MathFunc func = power < 0 ? 
+        MathFunc func = power < 0 ?
             (depth == CV_32F ? (MathFunc)InvSqrt_32f : (MathFunc)InvSqrt_64f) :
             (depth == CV_32F ? (MathFunc)Sqrt_32f : (MathFunc)Sqrt_64f);
 
@@ -1546,7 +1546,7 @@ void pow( const Mat& _src, double power, Mat& dst )
         const double *x = (const double*)src->data;
         double *y = (double*)dst.data;
         int xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
- 
+
         for( ; size.height--; x += xstep, y += ystep )
         {
             for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
@@ -1730,7 +1730,7 @@ CV_IMPL void cvPow( const CvArr* srcarr, CvArr* dstarr, double power )
     cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
     CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
     cv::pow( src, power, dst );
-}    
+}
 
 CV_IMPL int cvCheckArr( const CvArr* arr, int flags,
                         double minVal, double maxVal )
@@ -1749,9 +1749,9 @@ CV_IMPL int cvCheckArr( const CvArr* arr, int flags,
 
   -----------------------------------------------------------------------
   Copyright (C) 1978-1999 Ken Turkowski. <turk@computer.org>
- 
+
     All rights reserved.
- 
+
     Warranty Information
       Even though I have reviewed this software, I make no warranty
       or representation, either express or implied, with respect to this
@@ -1759,7 +1759,7 @@ CV_IMPL int cvCheckArr( const CvArr* arr, int flags,
       particular purpose.  As a result, this software is provided "as is,"
       and you, its user, are assuming the entire risk as to its quality
       and accuracy.
- 
+
     This code may be used and freely distributed as long as it includes
     this copyright notice and the above warranty information.
   -----------------------------------------------------------------------
@@ -1768,7 +1768,7 @@ CV_IMPL int
 cvSolveCubic( const CvMat* coeffs, CvMat* roots )
 {
     int n = 0;
-    
+
     double a0 = 1., a1, a2, a3;
     double x0 = 0., x1 = 0., x2 = 0.;
     int step = 1, coeff_count;
@@ -1856,7 +1856,7 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
         double R = (2 * a1 * a1 * a1 - 9 * a1 * a2 + 27 * a3) * (1./54);
         double Qcubed = Q * Q * Q;
         double d = Qcubed - R * R;
-    
+
         if( d >= 0 )
         {
             double theta = acos(R / sqrt(Qcubed));
@@ -1907,8 +1907,8 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
 
 
 /*
-  Finds real and complex roots of polynomials of any degree with real 
-  coefficients. The original code has been taken from Ken Turkowski's web 
+  Finds real and complex roots of polynomials of any degree with real
+  coefficients. The original code has been taken from Ken Turkowski's web
   page (http://www.worldserver.com/turk/opensource/) and adopted for OpenCV.
   Here is the copyright notice.
 
@@ -2145,10 +2145,10 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
     CV_FUNCNAME("cvSolvePoly");
 
     CV_ASSERT(maxiter > 0);
-    if (CV_MAT_TYPE(a->type) != CV_32FC1 && 
+    if (CV_MAT_TYPE(a->type) != CV_32FC1 &&
         CV_MAT_TYPE(a->type) != CV_64FC1)
         CV_Error(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
-    if (CV_MAT_TYPE(r->type) != CV_32FC2 && 
+    if (CV_MAT_TYPE(r->type) != CV_32FC2 &&
         CV_MAT_TYPE(r->type) != CV_64FC2)
         CV_Error(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
     m = a->rows * a->cols;
