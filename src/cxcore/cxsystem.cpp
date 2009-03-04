@@ -81,7 +81,7 @@ int64 getTickCount()
 #elif defined __linux || defined __linux__
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
-    return (int64)tv.tv_sec*1000000000 + tv.tv_nsec;
+    return (int64)tp.tv_sec*1000000000 + tp.tv_nsec;
 #else
     struct timeval tv;
     struct timezone tz;
@@ -114,7 +114,7 @@ int getNumThreads(void)
 }
 
 void setNumThreads( int
-#ifdef _OPENMP                             
+#ifdef _OPENMP
                              threads
 #endif
                   )

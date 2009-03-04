@@ -285,7 +285,7 @@ if(UNIX)
 			include(FindJasper)
 		endif()
 
-        set(OPENCV_LINKER_LIBS dl m pthread)
+        set(OPENCV_LINKER_LIBS dl m pthread rt)
     else()
         add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
     endif()
