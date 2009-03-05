@@ -68,6 +68,9 @@ typedef unsigned long ulong;
 #include <string.h>
 
 #if defined WIN32 || defined WINCE
+#ifndef _WIN32_WINNT         // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
+#define _WIN32_WINNT 0x0400  // http://msdn.microsoft.com/en-us/library/ms686857(VS.85).aspx
+#endif
 #include <windows.h>
 #undef small
 #undef min
