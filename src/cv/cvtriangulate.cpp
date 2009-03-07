@@ -198,6 +198,44 @@ cvTriangulatePoints(CvMat* projMatr1, CvMat* projMatr2, CvMat* projPoints1, CvMa
 }
 
 
+static void writePoint( double x, double y, CvMat* ptvec, int p )
+{
+    uchar* ptr = ptvec->data.ptr;
+    int depth = CV_MAT_DEPTH(ptvec->type);
+    switch (depth) {
+    case CV_64F:
+        ((double*)ptr)[p*2] = x;
+        ((double*)ptr)[p*2+1] = y;
+        break;
+    case CV_32F:
+        ((float*)ptr)[p*2] = (float)x;
+        ((float*)ptr)[p*2+1] = (float)y;
+        break;
+    case CV_32S:
+        ((int*)ptr)[p*2] = cv::saturate_cast<int>(x);
+        ((int*)ptr)[p*2+1] = cv::saturate_cast<int>(y);
+        break;
+    case CV_16U:
+        ((ushort*)ptr)[p*2] = cv::saturate_cast<ushort>(x);
+        ((ushort*)ptr)[p*2+1] = cv::saturate_cast<ushort>(y);
+        break;
+    case CV_16S:
+        ((short*)ptr)[p*2] = cv::saturate_cast<short>(x);
+        ((short*)ptr)[p*2+1] = cv::saturate_cast<short>(y);
+        break;
+    case CV_8S:
+        ((schar*)ptr)[p*2] = cv::saturate_cast<schar>(x);
+        ((schar*)ptr)[p*2+1] = cv::saturate_cast<schar>(y);
+        break;
+    case CV_8U:
+        ((uchar*)ptr)[p*2] = cv::saturate_cast<uchar>(x);
+        ((uchar*)ptr)[p*2+1] = cv::saturate_cast<uchar>(y);
+        break;
+    default:
+        CV_Assert(0);
+    }
+}
+
 /*
  *	The Optimal Triangulation Method (see HZ for details)
  *		For each given point correspondence points1[i] <-> points2[i], and a fundamental matrix F,
@@ -448,73 +486,8 @@ cvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points1
     y2 = tmp31_2->data.db[1];
 		
     // Return the points in the matrix format that the user wants
-    switch (np1_type) {
-    case 6: new_points1->data.db[p*2]	=	x1;
-      new_points1->data.db[p*2+1]	=	y1; break;
-    case 5: new_points1->data.fl[p*2]	=	x1;
-      new_points1->data.fl[p*2+1]	=	y1; break;
-    case 4: new_points1->data.i[p*2]	=	x1;
-      new_points1->data.i[p*2+1]	=	y1; break;
-    case 3: new_points1->data.s[p*2]	=	(unsigned short)x1;
-      new_points1->data.s[p*2+1]	=	(unsigned short)y1; break;
-    case 2: new_points1->data.s[p*2]	=	x1;
-      new_points1->data.s[p*2+1]	=	y1; break;
-    case 1: new_points1->data.ptr[p*2]	=	(unsigned char)x1;
-      new_points1->data.ptr[p*2+1]=	(unsigned char)y1; break;
-    case 0: new_points1->data.ptr[p*2]	=	x1;
-      new_points1->data.ptr[p*2+1]=	y1; break;
-    case -1:
-      switch (p1_type) {
-      case 6: points1_->data.db[p*2]	=	x1;
-	points1_->data.db[p*2+1]	=	y1; break;
-      case 5: points1_->data.fl[p*2]	=	x1;
-	points1_->data.fl[p*2+1]	=	y1; break;
-      case 4: points1_->data.i[p*2]	=	x1;
-	points1_->data.i[p*2+1]	=	y1; break;
-      case 3: points1_->data.s[p*2]	=	(unsigned short)x1;
-	points1_->data.s[p*2+1]	=	(unsigned short)y1; break;
-      case 2: points1_->data.s[p*2]	=	x1;
-	points1_->data.s[p*2+1]	=	y1; break;
-      case 1: points1_->data.ptr[p*2]	=	(unsigned char)x1;
-	points1_->data.ptr[p*2+1]=	(unsigned char)y1; break;
-      case 0: points1_->data.ptr[p*2]	=	x1;
-	points1_->data.ptr[p*2+1]=	y1; break;
-      }
-    }
-		
-    switch (np2_type) {
-    case 6: new_points2->data.db[p*2]	=	x2;
-      new_points2->data.db[p*2+1]	=	y2; break;
-    case 5: new_points2->data.fl[p*2]	=	x2;
-      new_points2->data.fl[p*2+1]	=	y2; break;
-    case 4: new_points2->data.i[p*2]	=	x2;
-      new_points2->data.i[p*2+1]	=	y2; break;
-    case 3: new_points2->data.s[p*2]	=	(unsigned short)x2;
-      new_points2->data.s[p*2+1]	=	(unsigned short)y2; break;
-    case 2: new_points2->data.s[p*2]	=	x2;
-      new_points2->data.s[p*2+1]	=	y2; break;
-    case 1: new_points2->data.ptr[p*2]	=	(unsigned char)x2;
-      new_points2->data.ptr[p*2+1]=	(unsigned char)y2; break;
-    case 0: new_points2->data.ptr[p*2]	=	x2;
-      new_points2->data.ptr[p*2+1]=	y2; break;
-    case -1:
-      switch (p2_type) {
-      case 6: points2_->data.db[p*2]	=	x2;
-	points2_->data.db[p*2+1]	=	y2; break;
-      case 5: points2_->data.fl[p*2]	=	x2;
-	points2_->data.fl[p*2+1]	=	y2; break;
-      case 4: points2_->data.i[p*2]	=	x2;
-	points2_->data.i[p*2+1]	=	y2; break;
-      case 3: points2_->data.s[p*2]	=	(unsigned short)x2;
-	points2_->data.s[p*2+1]	=	(unsigned short)y2; break;
-      case 2: points2_->data.s[p*2]	=	x2;
-	points2_->data.s[p*2+1]	=	y2; break;
-      case 1: points2_->data.ptr[p*2]	=	(unsigned char)x2;
-	points2_->data.ptr[p*2+1]=	(unsigned char)y2; break;
-      case 0: points2_->data.ptr[p*2]	=	x2;
-	points2_->data.ptr[p*2+1]=	y2; break;
-      }
-    }
+    writePoint(x1, y1, new_points1 ? new_points1 : points1_, p);
+    writePoint(x2, y2, new_points2 ? new_points2 : points2_, p);
   }
 	
   cvReleaseMat(&e1);
