@@ -45,10 +45,6 @@
 
 #include <limits.h>
 
-#ifndef CX_NO_BACKWARD_COMPATIBILITY
-#include "cxcompat.h"
-#endif
-
 #ifdef __cplusplus
 
 namespace cv
