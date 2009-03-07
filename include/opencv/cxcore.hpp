@@ -43,9 +43,6 @@
 #ifndef _CXCORE_HPP_
 #define _CXCORE_HPP_
 
-#include "cxtypes.h"
-#include "cxerror.h"
-#include "cvver.h"
 #include "cxmisc.h"
 
 #ifdef __cplusplus

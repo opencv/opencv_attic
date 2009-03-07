@@ -324,7 +324,7 @@ if(SWIG_FOUND)
 
 endif()
 
-if(MSVC)
+if(WIN32)
 
 set(IPP_FOUND)
 foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
@@ -342,7 +342,16 @@ foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
 endforeach()
 
 message(STATUS "IPP detected: ${IPP_FOUND}")
-set(BUILD_CUSTOM_IPP_LIB ${IPP_FOUND} CACHE BOOL "Build custom opencv_ipp*.dll")
+set(USE_IPP ${IPP_FOUND} CACHE BOOL "Use IPP when available")
+
+if(IPP_FOUND AND USE_IPP)
+    add_definitions(-DHAVE_IPP)
+    include_directories("${IPP_PATH}/../include")
+    link_directories("${IPP_PATH}/../lib")
+    set(IPP_LIBS ippsmerged.lib ippsemerged.lib ippimerged.lib ippiemerged.lib
+        ippvmmerged.lib ippvmemerged.lib ippccmerged.lib ippccemerged.lib
+        ippcvmerged.lib ippcvemerged.lib ippcorel.lib)
+endif()
 
 endif()
 
@@ -718,10 +727,10 @@ message(STATUS "    Python:                    1")
 else()
 message(STATUS "    Python:                    0")
 endif()
-if(IPP_FOUND AND BUILD_CUSTOM_IPP_LIB)
-message(STATUS "    Custom IPP Lib:            1")
+if(IPP_FOUND AND USE_IPP)
+message(STATUS "    Use IPP:                   1")
 else()
-message(STATUS "    Custom IPP Lib:            0")
+message(STATUS "    Use IPP:                   0")
 endif()
 message(STATUS "")
 message(STATUS "    Install path:              ${CMAKE_INSTALL_PREFIX}")
