@@ -71,7 +71,11 @@ if(UNIX)
         set(highgui_srcs ${highgui_srcs} cvcap_unicap.cpp)
     endif()
 
-    set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
+	if(HAVE_LIBV4L)
+		set(highgui_srcs ${highgui_srcs} cvcap_libv4l.cpp)
+	else()
+		set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
+	endif()
 
     if(NOT APPLE AND NOT OPENCV_BUILD_3RDPARTY_LIBS)
         if(JPEG_FOUND)
