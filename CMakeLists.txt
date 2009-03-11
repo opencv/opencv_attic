@@ -191,15 +191,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+	# SSE/SSE2 is not available on AMD processors
     endif ()
     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
         set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+	# SSE/SSE2 is not available on AMD processors
     endif ()
 endif()
 
