@@ -229,7 +229,7 @@ private:
 
   static accum_type comp_dist(const std::pair<int,accum_type>& x,
 			      const std::pair<int,accum_type>& y) {
-    return x.second > y.second;
+    return x.second < y.second;
   }
 
   lsh_table(const lsh_table& x);
