@@ -231,6 +231,8 @@ typedef NoVec VSub8u;
 typedef NoVec VMin8u;
 typedef NoVec VMax8u;
 typedef NoVec VAbsDiff8u;
+typedef NoVec VCmpEQ8u;
+typedef NoVec VCmpGT8u;
 
 typedef NoVec VAdd16u;
 typedef NoVec VSub16u;
