@@ -101,7 +101,7 @@ icvSnake8uC1R( unsigned char *src,
     uchar *map = NULL;
     int map_width = ((roi.width - 1) >> 3) + 1;
     int map_height = ((roi.height - 1) >> 3) + 1;
-    CvSepFilter pX, pY;
+    cv::Ptr<cv::FilterEngine> pX, pY;
     #define WTILE_SIZE 8
     #define TILE_SIZE (WTILE_SIZE + 2)        
     short dx[TILE_SIZE*TILE_SIZE], dy[TILE_SIZE*TILE_SIZE];
@@ -143,19 +143,12 @@ icvSnake8uC1R( unsigned char *src,
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        pX.init_deriv( TILE_SIZE+2, CV_8UC1, CV_16SC1, 1, 0, 3 );
-        pY.init_deriv( TILE_SIZE+2, CV_8UC1, CV_16SC1, 0, 1, 3 );
+        pX = cv::createDerivFilter( CV_8U, CV_16S, 1, 0, 3 );
+        pY = cv::createDerivFilter( CV_8U, CV_16S, 0, 1, 3 );
 
         gradient = (float *) cvAlloc( roi.height * roi.width * sizeof( float ));
 
-        if( !gradient )
-            return CV_OUTOFMEM_ERR;
         map = (uchar *) cvAlloc( map_width * map_height );
-        if( !map )
-        {
-            cvFree( &gradient );
-            return CV_OUTOFMEM_ERR;
-        }
         /* clear map - no gradient computed */
         memset( (void *) map, 0, map_width * map_height );
     }
@@ -305,8 +298,12 @@ icvSnake8uC1R( unsigned char *src,
                             CvMat _src1;
                             cvGetSubArr( &_src, &_src1, g_roi );
 
-                            pX.process( &_src1, &_dx );
-                            pY.process( &_src1, &_dy );
+                            cv::Mat _src_ = cv::cvarrToMat(&_src1);
+                            cv::Mat _dx_ = cv::cvarrToMat(&_dx);
+                            cv::Mat _dy_ = cv::cvarrToMat(&_dy);
+
+                            pX->apply( _src_, _dx_ );
+                            pY->apply( _src_, _dy_ );
 
                             for( l = 0; l < WTILE_SIZE + bottomshift; l++ )
                             {

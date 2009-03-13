@@ -232,7 +232,7 @@ static void writePoint( double x, double y, CvMat* ptvec, int p )
         ((uchar*)ptr)[p*2+1] = cv::saturate_cast<uchar>(y);
         break;
     default:
-        CV_Assert(0);
+        CV_Error(CV_StsUnsupportedFormat, "");
     }
 }
 

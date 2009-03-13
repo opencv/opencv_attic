@@ -73,20 +73,13 @@ typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
 
 void
 icvCrossCorr( const CvArr* _img, const CvArr* _templ,
-              CvArr* _corr, CvPoint anchor=cvPoint(0,0) );
+              CvArr* _corr, CvPoint anchor=cvPoint(0,0),
+              double delta=0, int borderType=IPL_BORDER_REPLICATE);
 
 CvStatus CV_STDCALL
 icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                            uchar* dst, int dststep, CvSize dstroi,
                            int left, int right, int cn, const uchar* value = 0 );
-
-CvMat* icvIPPFilterInit( const CvMat* src, int stripe_size, CvSize ksize );
-
-int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
-                            CvSize ksize, CvPoint anchor );
-
-int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
-                     const CvMat* kernelY, CvPoint anchor );
 
 #define ICV_WARP_SHIFT          10
 #define ICV_WARP_MASK           ((1 << ICV_WARP_SHIFT) - 1)

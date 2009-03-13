@@ -394,10 +394,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     if( _descriptors )
         *_descriptors = 0;
 
-    CV_FUNCNAME( "cvExtractSURF" );
-
-    __BEGIN__;
-
     /* Radius of the circle in which to sample gradients to assign an 
        orientation */
     const int ORI_RADIUS = 6; 
@@ -431,8 +427,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int descriptor_size = params.extended ? 128 : 64;
     const int descriptor_data_type = CV_32F;
     const int PATCH_SZ = 20;
-    float G[2*ORI_RADIUS+1]; 
-    CvMat _G = cvMat(1, (2*ORI_RADIUS+1), CV_32F, G);
     float DW[PATCH_SZ][PATCH_SZ];
     CvMat _DW = cvMat(PATCH_SZ, PATCH_SZ, CV_32F, DW);
     CvPoint apt[max_ori_samples];
@@ -440,13 +434,13 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int i, j, k, nangle0 = 0, N;
     int nthreads = cvGetNumThreads();
 
-    CV_ASSERT(img != 0);
-    CV_ASSERT(CV_MAT_TYPE(img->type) == CV_8UC1);
-    CV_ASSERT(mask == 0 || (CV_ARE_SIZES_EQ(img,mask) && CV_MAT_TYPE(mask->type) == CV_8UC1));
-    CV_ASSERT(storage != 0);
-    CV_ASSERT(params.hessianThreshold >= 0);
-    CV_ASSERT(params.nOctaves > 0);
-    CV_ASSERT(params.nOctaveLayers > 0);
+    CV_Assert(img != 0);
+    CV_Assert(CV_MAT_TYPE(img->type) == CV_8UC1);
+    CV_Assert(mask == 0 || (CV_ARE_SIZES_EQ(img,mask) && CV_MAT_TYPE(mask->type) == CV_8UC1));
+    CV_Assert(storage != 0);
+    CV_Assert(params.hessianThreshold >= 0);
+    CV_Assert(params.nOctaves > 0);
+    CV_Assert(params.nOctaveLayers > 0);
 
     sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
     cvIntegral( img, sum );
@@ -467,7 +461,9 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     }
 
     /* Coordinates and weights of samples used to calculate orientation */
-    CvSepFilter::init_gaussian_kernel( &_G, ORI_SIGMA );
+    cv::Mat _G = cv::getGaussianKernel( 2*ORI_RADIUS+1, ORI_SIGMA, CV_32F );
+    const float* G = (const float*)_G.data;
+    
     for( i = -ORI_RADIUS; i <= ORI_RADIUS; i++ )
     {
         for( j = -ORI_RADIUS; j <= ORI_RADIUS; j++ )
@@ -714,8 +710,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         *_keypoints = keypoints;
     if( _descriptors )
         *_descriptors = descriptors;
-
-    __END__;
 
     cvReleaseMat( &sum );
     cvReleaseMat( &mask1 );
