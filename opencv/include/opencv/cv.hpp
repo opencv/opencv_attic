@@ -44,326 +44,234 @@
 
 #ifdef __cplusplus
 
-/****************************************************************************************\
-*                    CvBaseImageFilter: Base class for filtering operations              *
-\****************************************************************************************/
-
-#define CV_WHOLE   0
-#define CV_START   1
-#define CV_END     2
-#define CV_MIDDLE  4
-#define CV_ISOLATED_ROI 8
-
-typedef void (*CvRowFilterFunc)( const uchar* src, uchar* dst, void* params );
-typedef void (*CvColumnFilterFunc)( uchar** src, uchar* dst, int dst_step, int count, void* params );
-
-class CV_EXPORTS CvBaseImageFilter
+namespace cv
 {
-public:
-    CvBaseImageFilter();
-    /* calls init() */
-    CvBaseImageFilter( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvBaseImageFilter();
 
-    /* initializes the class for processing an image of maximal width _max_width,
-       input image has data type _src_type, the output will have _dst_type.
-       _is_separable != 0 if the filter is separable
-       (specific behaviour is defined in a derived class), 0 otherwise.
-       _ksize and _anchor specify the kernel size and the anchor point. _anchor=(-1,-1) means
-       that the anchor is at the center.
-       to get interpolate pixel values outside the image _border_mode=IPL_BORDER_*** is used,
-       _border_value specify the pixel value in case of IPL_BORDER_CONSTANT border mode.
-       before initialization clear() is called if necessary.
-    */
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-    /* releases all the internal buffers.
-       for the further use of the object, init() needs to be called. */
-    virtual void clear();
-    /* processes input image or a part of it.
-       input is represented either as matrix (CvMat* src)
-       or a list of row pointers (uchar** src2).
-       in the later case width, _src_y1 and _src_y2 are used to specify the size.
-       _dst is the output image/matrix.
-       _src_roi specifies the roi inside the input image to process,
-          (0,0,-1,-1) denotes the whole image.
-       _dst_origin is the upper-left corner of the filtered roi within the output image.
-       _phase is either CV_START, or CV_END, or CV_MIDDLE, or CV_START|CV_END, or CV_WHOLE,
-          which is the same as CV_START|CV_END.
-          CV_START means that the input is the first (top) stripe of the processed image [roi],
-          CV_END - the input is the last (bottom) stripe of the processed image [roi],
-          CV_MIDDLE - the input is neither first nor last stripe.
-          CV_WHOLE - the input is the whole processed image [roi].
-    */
-    virtual int process( const CvMat* _src, CvMat* _dst,
-                         CvRect _src_roi=cvRect(0,0,-1,-1),
-                         CvPoint _dst_origin=cvPoint(0,0), int _flags=0 );
-    /* retrieve various parameters of the filtering object */
-    int get_src_type() const { return src_type; }
-    int get_dst_type() const { return dst_type; }
-    int get_work_type() const { return work_type; }
-    CvSize get_kernel_size() const { return ksize; }
-    CvPoint get_anchor() const { return anchor; }
-    int get_width() const { return prev_x_range.end_index - prev_x_range.start_index; }
-    CvRowFilterFunc get_x_filter_func() const { return x_func; }
-    CvColumnFilterFunc get_y_filter_func() const { return y_func; }
+enum { BORDER_REPLICATE=IPL_BORDER_REPLICATE, BORDER_CONSTANT=IPL_BORDER_CONSTANT,
+       BORDER_REFLECT=IPL_BORDER_REFLECT, BORDER_REFLECT_101=IPL_BORDER_REFLECT_101,
+       BORDER_REFLECT101=BORDER_REFLECT_101, BORDER_WRAP=IPL_BORDER_WRAP,
+       BORDER_DEFAULT=BORDER_REFLECT_101, BORDER_ISOLATED=16 };
 
-protected:
-    /* initializes work_type, buf_size and max_rows */ 
-    virtual void get_work_params();
-    /* it is called (not always) from process when _phase=CV_START or CV_WHOLE.
-       the method initializes ring buffer (buf_end, buf_head, buf_tail, buf_count, rows),
-       prev_width, prev_x_range, const_row, border_tab, border_tab_sz* */
-    virtual void start_process( CvSlice x_range, int width );
-    /* forms pointers to "virtual rows" above or below the processed roi using the specified
-       border mode */
-    virtual void make_y_border( int row_count, int top_rows, int bottom_rows );
+struct CV_EXPORTS BaseRowFilter
+{
+    BaseRowFilter();
+    virtual ~BaseRowFilter();
+    virtual void operator()(const uchar* src, uchar* dst,
+                            int width, int cn) = 0;
+    int ksize, anchor;
+};
 
-    virtual int fill_cyclic_buffer( const uchar* src, int src_step,
-                                    int y, int y1, int y2 );
 
-    enum { ALIGN=32 };
+struct CV_EXPORTS BaseColumnFilter
+{
+    BaseColumnFilter();
+    virtual ~BaseColumnFilter();
+    virtual void operator()(const uchar** src, uchar* dst, int dststep,
+                            int dstcount, int width) = 0;
+    virtual void reset();
+    int ksize, anchor;
+};
+
+
+struct CV_EXPORTS BaseFilter
+{
+    BaseFilter();
+    virtual ~BaseFilter();
+    virtual void operator()(const uchar** src, uchar* dst, int dststep,
+                            int dstcount, int width, int cn) = 0;
+    virtual void reset();
+    Size ksize;
+    Point anchor;
+};
+
+
+struct CV_EXPORTS FilterEngine
+{
+    FilterEngine();
+    FilterEngine(const Ptr<BaseFilter>& _filter2D,
+                 const Ptr<BaseRowFilter>& _rowFilter,
+                 const Ptr<BaseColumnFilter>& _columnFilter,
+                 int srcType, int dstType, int bufType,
+                 int _rowBorderType=BORDER_REPLICATE, int _columnBorderType=-1,
+                 const Scalar& _borderValue=Scalar(), int maxBufRows=-1);
+    virtual ~FilterEngine();
+    void init(const Ptr<BaseFilter>& _filter2D,
+              const Ptr<BaseRowFilter>& _rowFilter,
+              const Ptr<BaseColumnFilter>& _columnFilter,
+              int srcType, int dstType, int bufType,
+              int _rowBorderType=BORDER_REPLICATE, int _columnBorderType=-1,
+              const Scalar& _borderValue=Scalar(), int maxBufRows=-1);
+    virtual void setROI(Size wholeSize, Rect roi);
+    virtual int setROI(const Mat& src, const Rect& srcRoi=Rect(0,0,-1,-1));
+    virtual int put(const uchar* src, int srcstep, int count);
+    virtual int get(uchar* dst, int dststep, int maxCount);
+    virtual void apply( const Mat& src, Mat& dst,
+                        const Rect& srcRoi=Rect(0,0,-1,-1),
+                        Point dstOfs=Point(0,0));
+    bool isSeparable() const { return filter2D.obj == 0; }
     
-    int max_width;
-    /* currently, work_type must be the same as src_type in case of non-separable filters */
-    int min_depth, src_type, dst_type, work_type;
-
-    /* pointers to convolution functions, initialized by init method.
-       for non-separable filters only y_conv should be set */
-    CvRowFilterFunc x_func;
-    CvColumnFilterFunc y_func;
-
-    uchar* buffer;
-    uchar** rows;
-    int top_rows, bottom_rows, max_rows;
-    uchar *buf_start, *buf_end, *buf_head, *buf_tail;
-    int buf_size, buf_step, buf_count, buf_max_count;
-
-    bool is_separable;
-    CvSize ksize;
-    CvPoint anchor;
-    int max_ky, border_mode;
-    CvScalar border_value;
-    uchar* const_row;
-    int* border_tab;
-    int border_tab_sz1, border_tab_sz;
-
-    CvSlice prev_x_range;
-    int prev_width;
+    int srcType, dstType, bufType;
+    Size ksize;
+    Point anchor;
+    int maxWidth;
+    Size wholeSize;
+    Rect roi;
+    int dx1, dx2;
+    int rowBorderType, columnBorderType;
+    Vector<int> borderTab;
+    int borderElemSize;
+    Vector<uchar> ringBuf;
+    Vector<uchar> srcRow;
+    Vector<uchar> constBorderValue;
+    Vector<uchar> constBorderRow;
+    int bufStep, startY, startY0, endY, rowCount, dstY, lostRows;
+    int firstStripeSize, nextStripeSize;
+    Vector<uchar*> rows;
+    
+    Ptr<BaseFilter> filter2D;
+    Ptr<BaseRowFilter> rowFilter;
+    Ptr<BaseColumnFilter> columnFilter;
 };
 
+enum { KERNEL_GENERAL=0, KERNEL_SYMMETRICAL=1, KERNEL_ASYMMETRICAL=2,
+       KERNEL_SMOOTH=4, KERNEL_INTEGER=8 };
 
-/* Derived class, for linear separable filtering. */
-class CV_EXPORTS CvSepFilter : public CvBaseImageFilter
+CV_EXPORTS int getKernelType(const Mat& kernel, Point anchor);
+
+CV_EXPORTS Ptr<BaseRowFilter> getLinearRowFilter(int srcType, int bufType,
+                                            const Mat& kernel, int anchor,
+                                            int symmetryType);
+
+CV_EXPORTS Ptr<BaseColumnFilter> getLinearColumnFilter(int bufType, int dstType,
+                                            const Mat& kernel, int anchor,
+                                            int symmetryType, double delta=0,
+                                            int bits=0);
+
+CV_EXPORTS Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
+                                           const Mat& kernel,
+                                           Point anchor=Point(-1,-1),
+                                           double delta=0, int bits=0);
+
+CV_EXPORTS Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstType,
+                          const Mat& rowKernel, const Mat& columnKernel,
+                          Point _anchor=Point(-1,-1), double delta=0,
+                          int _rowBorderType=BORDER_DEFAULT,
+                          int _columnBorderType=-1,
+                          const Scalar& _borderValue=Scalar(),
+                          int maxBufRows=-1);
+
+CV_EXPORTS Ptr<FilterEngine> createLinearFilter(int srcType, int dstType,
+                 const Mat& kernel, Point _anchor=Point(-1,-1),
+                 double delta=0, int _rowBorderType=BORDER_DEFAULT,
+                 int _columnBorderType=-1, const Scalar& _borderValue=Scalar(),
+                 int maxBufRows=-1);
+
+CV_EXPORTS Mat getGaussianKernel( int ksize, double sigma, int ktype=CV_64F );
+
+CV_EXPORTS Ptr<FilterEngine> createGaussianFilter( int type, Size ksize,
+                                    double sigma1, double sigma2=0,
+                                    int borderType=BORDER_DEFAULT);
+
+CV_EXPORTS void getDerivKernels( Mat& kx, Mat& ky, int dx, int dy, int ksize,
+                                 bool normalize=false, int ktype=CV_32F );
+
+CV_EXPORTS Ptr<FilterEngine> createDerivFilter( int srcType, int dstType,
+                                        int dx, int dy, int ksize,
+                                        int borderType=BORDER_DEFAULT );
+
+CV_EXPORTS Ptr<BaseRowFilter> getRowSumFilter(int srcType, int sumType,
+                                                 int ksize, int anchor=-1);
+CV_EXPORTS Ptr<BaseColumnFilter> getColumnSumFilter(int sumType, int dstType,
+                                                       int ksize, int anchor=-1,
+                                                       double scale=1);
+CV_EXPORTS Ptr<FilterEngine> createBoxFilter( int srcType, int dstType, Size ksize,
+                                                 Point anchor=Point(-1,-1),
+                                                 bool normalize=true,
+                                                 int borderType=BORDER_DEFAULT);
+
+enum { MORPH_ERODE=0, MORPH_DILATE=1, MORPH_OPEN=2, MORPH_CLOSE=3,
+       MORPH_GRADIENT=4, MORPH_TOPHAT=5, MORPH_BLACKHAT=6 };
+
+CV_EXPORTS Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int anchor=-1);
+CV_EXPORTS Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int anchor=-1);
+CV_EXPORTS Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel,
+                                                  Point anchor=Point(-1,-1));
+
+static inline Scalar morphologyDefaultBorderValue() { return Scalar::all(DBL_MAX); }
+
+CV_EXPORTS Ptr<FilterEngine> createMorphologyFilter(int op, int type, const Mat& kernel,
+                    Point anchor=Point(-1,-1), int _rowBorderType=BORDER_CONSTANT,
+                    int _columnBorderType=-1,
+                    const Scalar& _borderValue=morphologyDefaultBorderValue(),
+                    int maxBufRows=-1);
+
+enum { MORPH_RECT=0, MORPH_CROSS=1, MORPH_ELLIPSE=2 };
+CV_EXPORTS Mat getStructuringElement(int shape, Size ksize, Point anchor=Point(-1,-1));
+
+CV_EXPORTS void copyMakeBorder( const Mat& src, Mat& dst,
+                                int top, int bottom, int left, int right,
+                                int borderType );
+
+CV_EXPORTS void medianBlur( const Mat& src, Mat& dst, int ksize );
+CV_EXPORTS void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
+                              double sigma1, double sigma2=0,
+                              int borderType=BORDER_DEFAULT );
+CV_EXPORTS void bilateralFilter( const Mat& src, Mat& dst, int d,
+                                 double sigmaColor, double sigmaSpace,
+                                 int borderType=BORDER_DEFAULT );
+CV_EXPORTS void boxFilter( const Mat& src, Mat& dst, int ddepth,
+                           Size ksize, Point anchor=Point(-1,-1),
+                           bool normalize=true,
+                           int borderType=BORDER_DEFAULT );
+static inline void blur( const Mat& src, Mat& dst,
+                         Size ksize, Point anchor=Point(-1,-1),
+                         int borderType=BORDER_DEFAULT )
 {
-public:
-    CvSepFilter();
-    CvSepFilter( int _max_width, int _src_type, int _dst_type,
-                 const CvMat* _kx, const CvMat* _ky,
-                 CvPoint _anchor=cvPoint(-1,-1),
-                 int _border_mode=IPL_BORDER_REPLICATE,
-                 CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvSepFilter();
+    boxFilter( src, dst, -1, ksize, anchor, true, borderType );
+}
 
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kx, const CvMat* _ky,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-    virtual void init_deriv( int _max_width, int _src_type, int _dst_type,
-                             int dx, int dy, int aperture_size, int flags=0 );
-    virtual void init_gaussian( int _max_width, int _src_type, int _dst_type,
-                                int gaussian_size, double sigma );
+CV_EXPORTS void filter2D( const Mat& src, Mat& dst, int ddepth,
+                          const Mat& kernel, Point anchor=Point(-1,-1),
+                          double delta=0, int borderType=BORDER_DEFAULT );
 
-    /* dummy method to avoid compiler warnings */
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
+CV_EXPORTS void sepFilter2D( const Mat& src, Mat& dst, int ddepth,
+                             const Mat& kernelX, const Mat& kernelY,
+                             Point anchor=Point(-1,-1),
+                             double delta=0, int borderType=BORDER_DEFAULT );
 
-    virtual void clear();
-    const CvMat* get_x_kernel() const { return kx; }
-    const CvMat* get_y_kernel() const { return ky; }
-    int get_x_kernel_flags() const { return kx_flags; }
-    int get_y_kernel_flags() const { return ky_flags; }
+CV_EXPORTS void Sobel( const Mat& src, Mat& dst, int ddepth,
+                       int dx, int dy, int ksize=3,
+                       double scale=1, double delta=0,
+                       int borderType=BORDER_DEFAULT );
 
-    enum { GENERIC=0, ASYMMETRICAL=1, SYMMETRICAL=2, POSITIVE=4, SUM_TO_1=8, INTEGER=16 };
-    enum { NORMALIZE_KERNEL=1, FLIP_KERNEL=2 };
+CV_EXPORTS void Scharr( const Mat& src, Mat& dst, int ddepth,
+                        int dx, int dy, double scale=1, double delta=0,
+                        int borderType=BORDER_DEFAULT );
 
-    static void init_gaussian_kernel( CvMat* kernel, double sigma=-1 );
-    static void init_sobel_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
-    static void init_scharr_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
+CV_EXPORTS void Laplacian( const Mat& src, Mat& dst, int ddepth,
+                           int ksize=1, double scale=1, double delta=0,
+                           int borderType=BORDER_DEFAULT );
 
-protected:
-    CvMat *kx, *ky;
-    int kx_flags, ky_flags;
-};
+CV_EXPORTS void erode( const Mat& src, Mat& dst, const Mat& kernel,
+                       Point anchor=Point(-1,-1), int iterations=1,
+                       int borderType=BORDER_CONSTANT,
+                       const Scalar& borderValue=morphologyDefaultBorderValue() );
+CV_EXPORTS void dilate( const Mat& src, Mat& dst, const Mat& kernel,
+                        Point anchor=Point(-1,-1), int iterations=1,
+                        int borderType=BORDER_CONSTANT,
+                        const Scalar& borderValue=morphologyDefaultBorderValue() );
+CV_EXPORTS void morphologyEx( const Mat& src, Mat& dst, int op, const Mat& kernel,
+                              Point anchor=Point(-1,-1), int iterations=1,
+                              int borderType=BORDER_CONSTANT,
+                              const Scalar& borderValue=morphologyDefaultBorderValue() );
 
+CV_EXPORTS void resize( const Mat& src, Mat& dst, int interpolation );
+CV_EXPORTS void warpAffine( const Mat& src, Mat& dst,
+                            const Mat& M, int interpolation );
+CV_EXPORTS void warpPerspective( const Mat& src, Mat& dst,
+                                 const Mat& M, int interpolation );
 
-/* Derived class, for linear non-separable filtering. */
-class CV_EXPORTS CvLinearFilter : public CvBaseImageFilter
-{
-public:
-    CvLinearFilter();
-    CvLinearFilter( int _max_width, int _src_type, int _dst_type,
-                    const CvMat* _kernel,
-                    CvPoint _anchor=cvPoint(-1,-1),
-                    int _border_mode=IPL_BORDER_REPLICATE,
-                    CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvLinearFilter();
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kernel,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    /* dummy method to avoid compiler warnings */
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void clear();
-    const CvMat* get_kernel() const { return kernel; }
-    uchar* get_kernel_sparse_buf() { return k_sparse; }
-    int get_kernel_sparse_count() const { return k_sparse_count; }
-
-protected:
-    CvMat *kernel;
-    uchar* k_sparse;
-    int k_sparse_count;
-};
-
-
-/* Box filter ("all 1's", optionally normalized) filter. */
-class CV_EXPORTS CvBoxFilter : public CvBaseImageFilter
-{
-public:
-    CvBoxFilter();
-    CvBoxFilter( int _max_width, int _src_type, int _dst_type,
-                 bool _normalized, CvSize _ksize,
-                 CvPoint _anchor=cvPoint(-1,-1),
-                 int _border_mode=IPL_BORDER_REPLICATE,
-                 CvScalar _border_value=cvScalarAll(0) );
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _normalized, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual ~CvBoxFilter();
-    bool is_normalized() const { return normalized; }
-    double get_scale() const { return scale; }
-    uchar* get_sum_buf() { return sum; }
-    int* get_sum_count_ptr() { return &sum_count; }
-
-protected:
-    virtual void start_process( CvSlice x_range, int width );
-
-    uchar* sum;
-    int sum_count;
-    bool normalized;
-    double scale;
-};
-
-
-/* Laplacian operator: (d2/dx + d2/dy)I. */
-class CV_EXPORTS CvLaplaceFilter : public CvSepFilter
-{
-public:
-    CvLaplaceFilter();
-    CvLaplaceFilter( int _max_width, int _src_type, int _dst_type,
-                     bool _normalized, int _ksize,
-                     int _border_mode=IPL_BORDER_REPLICATE,
-                     CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvLaplaceFilter();
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _normalized, int _ksize,
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    /* dummy methods to avoid compiler warnings */
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kx, const CvMat* _ky,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    bool is_normalized() const { return normalized; }
-    bool is_basic_laplacian() const { return basic_laplacian; }
-protected:
-    void get_work_params();
-
-    bool basic_laplacian;
-    bool normalized;
-};
-
-
-/* basic morphological operations: erosion & dilation */
-class CV_EXPORTS CvMorphology : public CvBaseImageFilter
-{
-public:
-    CvMorphology();
-    CvMorphology( int _operation, int _max_width, int _src_dst_type,
-                  int _element_shape, CvMat* _element,
-                  CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
-                  int _border_mode=IPL_BORDER_REPLICATE,
-                  CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvMorphology();
-    virtual void init( int _operation, int _max_width, int _src_dst_type,
-                       int _element_shape, CvMat* _element,
-                       CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    /* dummy method to avoid compiler warnings */
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=IPL_BORDER_REPLICATE,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void clear();
-    const CvMat* get_element() const { return element; }
-    int get_element_shape() const { return el_shape; }
-    int get_operation() const { return operation; }
-    uchar* get_element_sparse_buf() { return el_sparse; }
-    int get_element_sparse_count() const { return el_sparse_count; }
-
-    enum { RECT=0, CROSS=1, ELLIPSE=2, CUSTOM=100, BINARY = 0, GRAYSCALE=256 };
-    enum { ERODE=0, DILATE=1 };
-
-    static void init_binary_element( CvMat* _element, int _element_shape,
-                                     CvPoint _anchor=cvPoint(-1,-1) );
-protected:
-
-    void start_process( CvSlice x_range, int width );
-    int fill_cyclic_buffer( const uchar* src, int src_step,
-                            int y0, int y1, int y2 );
-    uchar* el_sparse;
-    int el_sparse_count;
-
-    CvMat *element;
-    int el_shape;
-    int operation;
-};
-
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
