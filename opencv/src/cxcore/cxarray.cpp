@@ -587,7 +587,8 @@ cvReleaseSparseMat( CvSparseMat** array )
 
         *array = 0;
 
-        cvReleaseMemStorage( &arr->heap->storage );
+        CvMemStorage* storage = arr->heap->storage;
+        cvReleaseMemStorage( &storage );
         cvFree( &arr->hashtable );
         cvFree( &arr );
     }
