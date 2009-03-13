@@ -2638,7 +2638,7 @@ PCA& PCA::operator()(const Mat& data, const Mat& _mean, int flags, int maxCompon
         _mean.convertTo(mean, ctype);
     }
 
-    calcCovariation( data, covar, mean, ctype );
+    calcCovariation( data, covar, mean, covar_flags, ctype );
     eigen( covar, eigenvalues, eigenvectors );
 
     if( !(covar_flags & CV_COVAR_NORMAL) )
