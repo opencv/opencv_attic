@@ -46,6 +46,9 @@
 
 #ifdef WIN32
 #define JAS_WIN_MSVC_BUILD 1
+#ifdef __GNUC__
+#define HAVE_STDINT_H 1
+#endif
 #endif
 
 #include <jasper/jasper.h>
