@@ -4786,7 +4786,7 @@ FileStorage::FileStorage(const String& filename, int flags)
 
 FileStorage::FileStorage(CvFileStorage* _fs)
 {
-    fs = ObjPtr<CvFileStorage>(_fs);
+    fs = Ptr<CvFileStorage>(_fs);
     state = fs.obj ? NAME_EXPECTED + INSIDE_MAP : UNDEFINED;
 }
 
@@ -4802,7 +4802,7 @@ FileStorage::~FileStorage()
 bool FileStorage::open(const String& filename, int flags)
 {
     release();
-    fs = ObjPtr<CvFileStorage>(cvOpenFileStorage( filename.c_str(), 0, flags ));
+    fs = Ptr<CvFileStorage>(cvOpenFileStorage( filename.c_str(), 0, flags ));
     state = fs.obj ? NAME_EXPECTED + INSIDE_MAP : UNDEFINED;
     return fs.obj != 0;
 }
