@@ -4612,7 +4612,7 @@ template<typename T> static inline FileStorage& operator << (FileStorage& fs, co
     return fs;
 }
 
-template<> CV_EXPORTS FileStorage& operator << (FileStorage& fs, const String& str);
+CV_EXPORTS FileStorage& operator << (FileStorage& fs, const String& str);
 
 static inline FileStorage& operator << (FileStorage& fs, const char* str)
 { return (fs << String(str)); }
