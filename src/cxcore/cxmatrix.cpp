@@ -79,11 +79,11 @@ Mat::Mat(const IplImage* img, bool copyData)
             CV_Error(CV_BadCOI, "When copyData=false, COI must not be set");*/
 
         *this = Mat(m.rows, m.cols, CV_MAT_TYPE(m.type), m.data.ptr, m.step);
-        if( img->roi )
+        /*if( img->roi )
         {
             datastart = (uchar*)img->imageData;
             dataend = datastart + img->imageSize;
-        }
+        }*/
     }
 }
 
