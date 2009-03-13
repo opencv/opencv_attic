@@ -649,13 +649,7 @@ cvCreateContourTree( const CvSeq* contour, CvMemStorage* storage, double thresho
 {
     CvContourTree* tree = 0;
     
-    CV_FUNCNAME( "cvCreateContourTree" );
-    __BEGIN__;
-
     IPPI_CALL( icvCreateContourTree( contour, storage, &tree, threshold ));
-
-    __CLEANUP__;
-    __END__;
 
     return tree;
 }

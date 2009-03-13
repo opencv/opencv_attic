@@ -335,15 +335,7 @@ CV_IMPL CvPOSITObject *
 cvCreatePOSITObject( CvPoint3D32f * points, int numPoints )
 {
     CvPOSITObject *pObject = 0;
-
-    CV_FUNCNAME( "cvCreatePOSITObject" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvCreatePOSITObject( points, numPoints, &pObject ));
-
-    __END__;
-
     return pObject;
 }
 
@@ -353,26 +345,14 @@ cvPOSIT( CvPOSITObject * pObject, CvPoint2D32f * imagePoints,
          double focalLength, CvTermCriteria criteria,
          CvMatr32f rotation, CvVect32f translation )
 {
-    CV_FUNCNAME( "cvPOSIT" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvPOSIT( pObject, imagePoints,(float) focalLength, criteria,
                          rotation, translation ));
-
-    __END__;
 }
 
 CV_IMPL void
 cvReleasePOSITObject( CvPOSITObject ** ppObject )
 {
-    CV_FUNCNAME( "cvReleasePOSITObject" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvReleasePOSITObject( ppObject ));
-
-    __END__;
 }
 
 /* End of file. */

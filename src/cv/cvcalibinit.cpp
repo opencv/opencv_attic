@@ -144,9 +144,9 @@ struct CvCBQuad
 static int icvGenerateQuads( CvCBQuad **quads, CvCBCorner **corners,
                              CvMemStorage *storage, CvMat *image, int flags );
 
-static int
+/*static int
 icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
-    CvMemStorage *storage, CvMat *image, CvMat *thresh_img, int dilation, int flags );
+    CvMemStorage *storage, CvMat *image, CvMat *thresh_img, int dilation, int flags );*/
 
 static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count );
 
@@ -1800,6 +1800,7 @@ icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
 
 //=====================================================================================
 
+#if 0
 static int is_equal_quad( const void* _a, const void* _b, void* )
 {
     CvRect a = (*((CvContour**)_a))->rect;
@@ -2022,7 +2023,7 @@ icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
     cvReleaseMemStorage( &temp_storage );
     return quad_count;
 }
-
+#endif
 
 CV_IMPL void
 cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
