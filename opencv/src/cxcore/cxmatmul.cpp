@@ -1811,7 +1811,7 @@ void transform( const Mat& src, Mat& dst, const Mat& _m )
             }
         }
 
-        if( isDiag && depth == depth == CV_8U )
+        if( isDiag && depth == CV_8U )
         {
             Mat lut(1, 256, CV_8UC(scn));
             for( i = 0; i < scn; i++ )

@@ -905,8 +905,8 @@ static CvStatus CV_STDCALL Exp_64f( const double *_x, double *y, int n )
 
 #else
 
-#define Exp_32f ippvmExp_32f_A21
-#define Exp_64f ippvmExp_64f_A50
+#define Exp_32f ippsExp_32f_A21
+#define Exp_64f ippsExp_64f_A50
 
 #endif
 
@@ -1410,8 +1410,8 @@ static CvStatus CV_STDCALL Log_64f( const double *x, double *y, int n )
 
 #else
 
-#define Log_32f ippvmLn_32f_A21
-#define Log_64f ippvmLn_64f_A50
+#define Log_32f ippsLn_32f_A21
+#define Log_64f ippsLn_64f_A50
 
 #endif
 

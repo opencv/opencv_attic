@@ -1138,6 +1138,7 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
         svd.vt.size() == cv::Size(mn, mn))) ? cv::SVD::FULL_UV : 0));
 
     if( u.data )
+    {
         if( flags & CV_SVD_U_T )
             cv::transpose( svd.u, u );
         else if( u.data != svd.u.data )
@@ -1145,8 +1146,10 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             CV_Assert( u.size() == svd.u.size() );
             svd.u.copyTo(u);
         }
+    }
 
     if( v.data )
+    {
         if( !(flags & CV_SVD_V_T) )
             cv::transpose( svd.vt, v );
         else if( v.data != svd.vt.data )
@@ -1154,6 +1157,7 @@ cvSVD( CvArr* aarr, CvArr* warr, CvArr* uarr, CvArr* varr, int flags )
             CV_Assert( v.size() == svd.vt.size() );
             svd.vt.copyTo(v);
         }
+    }
 
     if( w.data != svd.w.data )
     {
