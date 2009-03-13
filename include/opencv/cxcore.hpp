@@ -621,13 +621,13 @@ protected:
 
 //////////////////// Generic ref-cointing pointer class for C/C++ objects ////////////////////////
 
-template<typename T> struct CV_EXPORTS ObjPtr
+template<typename T> struct CV_EXPORTS Ptr
 {
-    ObjPtr();
-    ObjPtr(T* _obj);
-    ~ObjPtr();
-    ObjPtr(const ObjPtr& ptr);
-    ObjPtr& operator = (const ObjPtr& ptr);
+    Ptr();
+    Ptr(T* _obj);
+    ~Ptr();
+    Ptr(const Ptr& ptr);
+    Ptr& operator = (const Ptr& ptr);
     void addref();
     void release();
     void delete_obj();
@@ -745,7 +745,7 @@ struct CV_EXPORTS Mat
     void create(Size _size, int _type);
     void release();
 
-    void locateROI( int& drow, int& allrows, int& dcol, int& allcols );
+    void locateROI( Size& wholeSize, Point& ofs ) const;
     Mat& adjustROI( int dtop, int dbottom, int dleft, int dright );
     Mat operator()( Range rowRange, Range colRange ) const;
     Mat operator()( const Rect& roi ) const;
@@ -833,6 +833,7 @@ CV_EXPORTS void convertScaleAbs(const Mat& a, Mat& c, double alpha=1, double bet
 CV_EXPORTS void LUT(const Mat& a, const Mat& lut, Mat& b);
 
 CV_EXPORTS Scalar sum(const Mat& m);
+CV_EXPORTS int countNonZero( const Mat& m );
 
 CV_EXPORTS Scalar mean(const Mat& m);
 CV_EXPORTS Scalar mean(const Mat& m, const Mat& mask);
@@ -1256,7 +1257,7 @@ struct CV_EXPORTS FileStorage
     void writeRaw( const String& fmt, const Vector<uchar>& vec );
     void writeObj( const String& name, const void* obj );
 
-    ObjPtr<CvFileStorage> fs;
+    Ptr<CvFileStorage> fs;
     String elname;
     Vector<char> structs;
     int state;

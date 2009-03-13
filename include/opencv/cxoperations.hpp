@@ -713,6 +713,18 @@ template<typename T> inline Scalar_<T> Scalar_<T>::mul(const Scalar_<T>& t, doub
                        saturate_cast<T>(this->val[3]*t.val[3]*scale));
 }
 
+template<typename T> static inline bool operator == ( const Scalar_<T>& a, const Scalar_<T>& b )
+{
+    return a.val[0] == b.val[0] && a.val[1] == b.val[1] && 
+        a.val[2] == b.val[2] && a.val[3] == b.val[3];
+}
+
+template<typename T> static inline bool operator != ( const Scalar_<T>& a, const Scalar_<T>& b )
+{
+    return a.val[0] != b.val[0] || a.val[1] != b.val[1] || 
+        a.val[2] != b.val[2] || a.val[3] != b.val[3];
+}
+
 template<typename T> template<typename T2> inline void Scalar_<T>::convertTo(T2* buf, int cn, int unroll_to) const
 {
     int i;
@@ -1031,7 +1043,7 @@ inline Mat::Mat(int _rows, int _cols, int _type, void* _data, int _step)
         assert( step >= minstep );
         flags |= step == minstep ? CONTINUOUS_FLAG : 0;
     }
-    dataend += (step-1)*rows + minstep;
+    dataend += step*(rows-1) + minstep;
 }
 
 inline Mat::Mat(Size _size, int _type, void* _data, int _step)
@@ -1051,7 +1063,7 @@ inline Mat::Mat(Size _size, int _type, void* _data, int _step)
         assert( step >= minstep );
         flags |= step == minstep ? CONTINUOUS_FLAG : 0;
     }
-    dataend += (step-1)*rows + minstep;
+    dataend += step*(rows-1) + minstep;
 }
 
 inline Mat::Mat(const Mat& m, const Range& rowRange, const Range& colRange)
@@ -1105,7 +1117,8 @@ inline Mat::Mat(const CvMat* m, bool copyData)
 {
     if( step == 0 )
         step = cols*elemSize();
-    dataend += step*rows;
+    int minstep = cols*elemSize();
+    dataend += step*(rows-1) + minstep;
     if( copyData )
     {
         refcount = 0;
@@ -1236,34 +1249,34 @@ inline void Mat::release()
     refcount = 0;
 }
 
-inline void Mat::locateROI( int& drow, int& allrows, int& dcol, int& allcols )
+inline void Mat::locateROI( Size& wholeSize, Point& ofs ) const
 {
     int esz = elemSize(), minstep;
     ptrdiff_t delta1 = data - datastart, delta2 = dataend - datastart;
     assert( step > 0 );
     if( delta1 == 0 )
-        drow = dcol = 0;
+        ofs.x = ofs.y = 0;
     else
     {
-        drow = (int)(delta1/step);
-        dcol = (int)((delta1 - step*drow)/esz);
-        assert( data == datastart + drow*step + dcol );
+        ofs.y = (int)(delta1/step);
+        ofs.x = (int)((delta1 - step*ofs.y)/esz);
+        assert( data == datastart + ofs.y*step + ofs.x*esz );
     }
-    minstep = (dcol + cols)*esz;
-    allrows = (int)((delta2 - minstep)/step + 1);
-    allrows = MAX(allrows, drow + rows);
-    allcols = (delta2 - step*(allrows-1))/esz;
-    allcols = MAX(allcols, dcol + cols);
+    minstep = (ofs.x + cols)*esz;
+    wholeSize.height = (int)((delta2 - minstep)/step + 1);
+    wholeSize.height = std::max(wholeSize.height, ofs.y + rows);
+    wholeSize.width = (delta2 - step*(wholeSize.height-1))/esz;
+    wholeSize.width = std::max(wholeSize.width, ofs.x + cols);
 }
 
 inline Mat& Mat::adjustROI( int dtop, int dbottom, int dleft, int dright )
 {
-    int drow, allrows, dcol, allcols;
+    Size wholeSize; Point ofs;
     int esz = elemSize();
-    locateROI( drow, allrows, dcol, allcols );
-    int row1 = std::max(drow - dtop, 0), row2 = std::min(drow + rows + dbottom, allrows);
-    int col1 = std::max(dcol - dleft, 0), col2 = std::min(dcol + cols + dright, allcols);
-    data += (row1 - drow)*step + (col1 - dcol)*esz;
+    locateROI( wholeSize, ofs );
+    int row1 = std::max(ofs.y - dtop, 0), row2 = std::min(ofs.y + rows + dbottom, wholeSize.height);
+    int col1 = std::max(ofs.x - dleft, 0), col2 = std::min(ofs.x + cols + dright, wholeSize.width);
+    data += (row1 - ofs.y)*step + (col1 - ofs.x)*esz;
     rows = row2 - row1; cols = col2 - col1;
     if( esz*cols == step )
         flags |= CONTINUOUS_FLAG;
@@ -1284,7 +1297,7 @@ inline Mat::operator CvMat() const
 {
     CvMat m = cvMat(rows, cols, type(), data);
     m.step = step;
-    m.type |= flags & CONTINUOUS_FLAG;
+    m.type = (m.type & ~CONTINUOUS_FLAG) | (flags & CONTINUOUS_FLAG);
     return m;
 }
 
@@ -4455,10 +4468,10 @@ template<typename T, size_t fixed_size> inline AutoBuffer<T, fixed_size>::operat
 { return ptr; }
 
 
-/////////////////////////////////// ObjPtr ////////////////////////////////////////
+/////////////////////////////////// Ptr ////////////////////////////////////////
 
-template<typename T> inline ObjPtr<T>::ObjPtr() : obj(0), refcount(0) {}
-template<typename T> inline ObjPtr<T>::ObjPtr(T* _obj) : obj(_obj)
+template<typename T> inline Ptr<T>::Ptr() : obj(0), refcount(0) {}
+template<typename T> inline Ptr<T>::Ptr(T* _obj) : obj(_obj)
 {
     if(obj)
     {
@@ -4469,10 +4482,10 @@ template<typename T> inline ObjPtr<T>::ObjPtr(T* _obj) : obj(_obj)
         refcount = 0;
 }
 
-template<typename T> inline void ObjPtr<T>::addref()
+template<typename T> inline void Ptr<T>::addref()
 { if( refcount ) ++*refcount; }
 
-template<typename T> inline void ObjPtr<T>::release()
+template<typename T> inline void Ptr<T>::release()
 {
     if( refcount && --*refcount == 0 )
     {
@@ -4483,21 +4496,21 @@ template<typename T> inline void ObjPtr<T>::release()
     obj = 0;
 }
 
-template<typename T> inline void ObjPtr<T>::delete_obj()
+template<typename T> inline void Ptr<T>::delete_obj()
 {
     if( obj ) delete obj;
 }
 
-template<typename T> inline ObjPtr<T>::~ObjPtr() { release(); }
+template<typename T> inline Ptr<T>::~Ptr() { release(); }
 
-template<typename T> inline ObjPtr<T>::ObjPtr(const ObjPtr<T>& ptr)
+template<typename T> inline Ptr<T>::Ptr(const Ptr<T>& ptr)
 {
     obj = ptr.obj;
     refcount = ptr.refcount;
     addref();
 }
 
-template<typename T> inline ObjPtr<T>& ObjPtr<T>::operator = (const ObjPtr<T>& ptr)
+template<typename T> inline Ptr<T>& Ptr<T>::operator = (const Ptr<T>& ptr)
 {
     int* _refcount = ptr.refcount;
     if( _refcount )
@@ -4508,15 +4521,15 @@ template<typename T> inline ObjPtr<T>& ObjPtr<T>::operator = (const ObjPtr<T>& p
     return *this;
 }
 
-template<typename T> inline T* ObjPtr<T>::operator -> () { return obj; }
-template<typename T> inline const T* ObjPtr<T>::operator -> () const { return obj; }
+template<typename T> inline T* Ptr<T>::operator -> () { return obj; }
+template<typename T> inline const T* Ptr<T>::operator -> () const { return obj; }
 
-template<typename T> inline ObjPtr<T>::operator T* () { return obj; }
-template<typename T> inline ObjPtr<T>::operator const T*() const { return obj; }
+template<typename T> inline Ptr<T>::operator T* () { return obj; }
+template<typename T> inline Ptr<T>::operator const T*() const { return obj; }
 
 //////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
 
-template<> inline void ObjPtr<CvFileStorage>::delete_obj()
+template<> inline void Ptr<CvFileStorage>::delete_obj()
 { cvReleaseFileStorage(&obj); }
 
 static inline void write( FileStorage& fs, const String& name, int value )
