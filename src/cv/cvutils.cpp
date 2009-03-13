@@ -96,38 +96,6 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
     const int isz = (int)sizeof(int);
     int i, j;
 
-    /*if( srcstep == dststep && dst + dststep*top + left*cn == src &&
-        icvCopyReplicateBorder_8u_C1IR_p )
-    {
-        CvCopyNonConstBorderFuncI ifunc =
-               cn == 1 ? icvCopyReplicateBorder_8u_C1IR_p :
-               cn == 2 ? icvCopyReplicateBorder_16s_C1IR_p :
-               cn == 3 ? icvCopyReplicateBorder_8u_C3IR_p :
-               cn == 4 ? icvCopyReplicateBorder_32s_C1IR_p :
-               cn == 6 ? icvCopyReplicateBorder_16s_C3IR_p :
-               cn == 8 ? icvCopyReplicateBorder_16s_C4IR_p :
-               cn == 12 ? icvCopyReplicateBorder_32s_C3IR_p :
-               cn == 16 ? icvCopyReplicateBorder_32s_C4IR_p : 0;
-
-        if( ifunc )
-            return ifunc( src, srcstep, srcroi, dstroi, top, left );
-    }
-    else if( icvCopyReplicateBorder_8u_C1R_p )
-    {
-        CvCopyNonConstBorderFunc func =
-               cn == 1 ? icvCopyReplicateBorder_8u_C1R_p :
-               cn == 2 ? icvCopyReplicateBorder_16s_C1R_p :
-               cn == 3 ? icvCopyReplicateBorder_8u_C3R_p :
-               cn == 4 ? icvCopyReplicateBorder_32s_C1R_p :
-               cn == 6 ? icvCopyReplicateBorder_16s_C3R_p :
-               cn == 8 ? icvCopyReplicateBorder_16s_C4R_p :
-               cn == 12 ? icvCopyReplicateBorder_32s_C3R_p :
-               cn == 16 ? icvCopyReplicateBorder_32s_C4R_p : 0;
-
-        if( func )
-            return func( src, srcstep, srcroi, dst, dststep, dstroi, top, left );
-    }*/
-
     if( (cn | srcstep | dststep | (size_t)src | (size_t)dst) % isz == 0 )
     {
         const int* isrc = (const int*)src;
@@ -516,6 +484,19 @@ cvCopyMakeBorder( const CvArr* srcarr, CvArr* dstarr, CvPoint offset,
         CV_ERROR( CV_StsBadFlag, "Unknown/unsupported border type" );
     
     __END__;
+}
+
+namespace cv
+{
+
+void copyMakeBorder( const Mat& src, Mat& dst, int top, int bottom,
+                     int left, int right, int borderType )
+{
+    dst.create( src.rows + top + bottom, src.cols + left + right, src.type() );
+    CvMat _src = src, _dst = dst;
+    cvCopyMakeBorder( &_src, &_dst, Point(left, top), borderType );
+}
+
 }
 
 /* End of file. */

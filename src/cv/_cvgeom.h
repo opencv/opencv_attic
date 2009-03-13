@@ -48,7 +48,7 @@ CV_INLINE  float  icvDistanceL2_32f( CvPoint2D32f pt1, CvPoint2D32f pt2 )
     float dx = pt2.x - pt1.x;
     float dy = pt2.y - pt1.y;
 
-    return cvSqrt( dx*dx + dy*dy );
+    return std::sqrt( dx*dx + dy*dy );
 }
 
 

@@ -103,6 +103,8 @@ static CvStatus  icvSegmentClusterC3( CvSeq* cmp_seq, CvSeq* res_seq,
                                  _CvPyramidC3* first_level_end,
                                  CvSize first_level_size );
 
+typedef void (CV_CDECL * CvWriteNodeFunction)(void* seq,void* node);
+
 static CvStatus icvUpdatePyrLinks_8u_C1
     (int layer, void *layer_data, CvSize size, void *parent_layer,
      void *_writer, float threshold, int is_last_iter, void *_stub, CvWriteNodeFunction /*func*/);

@@ -42,7 +42,8 @@
 #include "_cv.h"
 
 void
-icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anchor )
+icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
+              CvPoint anchor, double delta, int borderType )
 {
     const double block_scale = 4.5;
     const int min_block_size = 256;
@@ -94,6 +95,9 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
     templ_cn = CV_MAT_CN(templ->type);
     corr_depth = CV_MAT_DEPTH(corr->type);
     corr_cn = CV_MAT_CN(corr->type);
+
+    CV_Assert( corr_cn == 1 || delta == 0 );
+
     max_depth = MAX( max_depth, templ_depth );
     max_depth = MAX( max_depth, depth );
     max_depth = MAX( max_depth, corr_depth );
@@ -241,7 +245,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
                 cvConvert( src, dst1 );
 
             if( dst != dst1 )
-                cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), IPL_BORDER_REPLICATE );
+                cvCopyMakeBorder( dst1, dst, cvPoint(x1 - x0, y1 - y0), borderType );
 
             if( dftsize.width > isz.width )
             {
@@ -267,7 +271,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
                 {
                     planes[i] = cvInitMatHeader( &temp, csz.height, csz.width,
                                                  corr_depth, _buf );
-                    cvConvert( src, planes[i] );
+                    cvConvertScale( src, planes[i], 1, delta );
                 }
                 cvMerge( planes[0], planes[1], planes[2], planes[3], dst );
                 planes[i] = 0;                    
@@ -275,7 +279,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
             else
             {
                 if( i == 0 )
-                    cvConvert( src, dst );
+                    cvConvertScale( src, dst, 1, delta );
                 else
                 {
                     if( max_depth > corr_depth )
@@ -301,6 +305,14 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr, CvPoint anch
         cvReleaseMat( &dft_img[k] );
         cvFree( &buf[k] );
     }
+}
+
+void
+cv::crossCorr( const Mat& img, const Mat& templ, Mat& corr,
+           Point anchor, double delta, int borderType )
+{
+    CvMat _img = img, _templ = templ, _corr = corr;
+    icvCrossCorr( &_img, &_templ, &_corr, anchor, delta, borderType );
 }
 
 
