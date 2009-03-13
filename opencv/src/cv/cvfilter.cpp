@@ -571,7 +571,7 @@ template<typename ST, typename DT> struct RowFilter : public BaseRowFilter
 template<typename ST, typename DT> struct SymmRowFilter : public RowFilter<ST, DT>
 {
     SymmRowFilter( const Mat& _kernel, int _anchor, int _symmetryType )
-        : RowFilter( _kernel, _anchor )
+        : RowFilter<ST, DT>( _kernel, _anchor )
     {
         symmetryType = _symmetryType;
         CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
@@ -579,8 +579,8 @@ template<typename ST, typename DT> struct SymmRowFilter : public RowFilter<ST, D
     
     void operator()(const uchar* src, uchar* dst, int width, int cn)
     {
-        int ksize2 = ksize/2, ksize2n = ksize2*cn;
-        const DT* kx = (const DT*)kernel.data + ksize2;
+        int ksize2 = this->ksize/2, ksize2n = ksize2*cn;
+        const DT* kx = (const DT*)this->kernel.data + ksize2;
         bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
         const ST* S = (const ST*)src + ksize2n;
         DT* D = (DT*)dst;
@@ -650,16 +650,16 @@ template<typename ST, typename DT> struct SymmRowFilter : public RowFilter<ST, D
 template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFilter<ST, DT>
 {
     SymmRowSmallFilter( const Mat& _kernel, int _anchor, int _symmetryType )
-        : SymmRowFilter( _kernel, _anchor, _symmetryType )
+        : SymmRowFilter<ST, DT>( _kernel, _anchor, _symmetryType )
     {
-        CV_Assert( ksize <= 5 );
+        CV_Assert( this->ksize <= 5 );
     }
     
     void operator()(const uchar* src, uchar* dst, int width, int cn)
     {
-        int ksize2 = ksize/2, ksize2n = ksize2*cn;
-        const DT* kx = (const DT*)kernel.data + ksize2;
-        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        int ksize2 = this->ksize/2, ksize2n = ksize2*cn;
+        const DT* kx = (const DT*)this->kernel.data + ksize2;
+        bool symmetrical = (this->symmetryType & KERNEL_SYMMETRICAL) != 0;
         const ST* S = (const ST*)src + ksize2n;
         DT* D = (DT*)dst;
         int i = 0, j, k;
@@ -667,7 +667,7 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
 
         if( symmetrical )
         {
-            if( ksize == 1 && kx[0] == 1 )
+            if( this->ksize == 1 && kx[0] == 1 )
             {
                 for( ; i <= width - 2; i += 2 )
                 {
@@ -676,7 +676,7 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
                 }
                 S += i;
             }
-            else if( ksize == 3 )
+            else if( this->ksize == 3 )
             {
                 if( kx[0] == 2 && kx[1] == 1 )
                     for( ; i <= width - 2; i += 2, S += 2 )
@@ -700,7 +700,7 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
                     }
                 }
             }
-            else if( ksize == 5 )
+            else if( this->ksize == 5 )
             {
                 DT k0 = kx[0], k1 = kx[1], k2 = kx[2];
                 if( k0 == -2 && k1 == 0 && k2 == 1 )
@@ -729,7 +729,7 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
         }
         else
         {
-            if( ksize == 3 )
+            if( this->ksize == 3 )
             {
                 if( kx[0] == 0 && kx[1] == 1 )
                     for( ; i <= width - 2; i += 2, S += 2 )
@@ -747,7 +747,7 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
                     }
                 }
             }
-            else if( ksize == 5 )
+            else if( this->ksize == 5 )
             {
                 DT k1 = kx[1], k2 = kx[2];
                 for( ; i <= width - 2; i += 2, S += 2 )
@@ -837,9 +837,12 @@ template<class CastOp> struct ColumnFilter : public BaseColumnFilter
 
 template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
 {
+    typedef typename CastOp::type1 ST;
+    typedef typename CastOp::rtype DT;
+
     SymmColumnFilter( const Mat& _kernel, int _anchor,
         double _delta, int _symmetryType, const CastOp& _castOp=CastOp() )
-        : ColumnFilter( _kernel, _anchor, _delta, _castOp )
+        : ColumnFilter<CastOp>( _kernel, _anchor, _delta, _castOp )
     {
         symmetryType = _symmetryType;
         CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
@@ -847,12 +850,12 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
 
     void operator()(const uchar** src, uchar* dst, int dststep, int count, int width)
     {
-        int ksize2 = ksize/2;
-        const ST* ky = (const ST*)kernel.data + ksize2;
+        int ksize2 = this->ksize/2;
+        const ST* ky = (const ST*)this->kernel.data + ksize2;
         int i, k;
         bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
-        ST _delta = delta;
-        CastOp castOp = castOp0;
+        ST _delta = this->delta;
+        CastOp castOp = this->castOp0;
 
         src += ksize2;
 
@@ -938,26 +941,29 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
 template<class CastOp>
 struct SymmColumnSmallFilter : public SymmColumnFilter<CastOp>
 {
+    typedef typename CastOp::type1 ST;
+    typedef typename CastOp::rtype DT;
+    
     SymmColumnSmallFilter( const Mat& _kernel, int _anchor,
                            double _delta, int _symmetryType,
                            const CastOp& _castOp=CastOp() )
-        : SymmColumnFilter( _kernel, _anchor, _delta, _symmetryType, _castOp )
+        : SymmColumnFilter<CastOp>( _kernel, _anchor, _delta, _symmetryType, _castOp )
     {
-        CV_Assert( ksize == 3 );
+        CV_Assert( this->ksize == 3 );
     }
 
     void operator()(const uchar** src, uchar* dst, int dststep, int count, int width)
     {
-        int ksize2 = ksize/2;
-        const ST* ky = (const ST*)kernel.data + ksize2;
+        int ksize2 = this->ksize/2;
+        const ST* ky = (const ST*)this->kernel.data + ksize2;
         int i;
-        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        bool symmetrical = (this->symmetryType & KERNEL_SYMMETRICAL) != 0;
         bool is_1_2_1 = ky[0] == 1 && ky[1] == 2;
         bool is_1_m2_1 = ky[0] == 1 && ky[1] == -2;
         bool is_m1_0_1 = ky[1] == 1 || ky[1] == -1;
         ST f0 = ky[0], f1 = ky[1];
-        ST _delta = delta;
-        CastOp castOp = castOp0;
+        ST _delta = this->delta;
+        CastOp castOp = this->castOp0;
 
         src += ksize2;
 

@@ -2470,9 +2470,6 @@ static void icvWriteHist( CvFileStorage* fs, const char* name,
     int i;
     int is_uniform, have_ranges;
 
-    CV_FUNCNAME("icvWriteHist");
-    __BEGIN__;
-
     cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_HIST );
 
     is_uniform = (CV_IS_UNIFORM_HIST(hist) ? 1 : 0);
@@ -2504,7 +2501,6 @@ static void icvWriteHist( CvFileStorage* fs, const char* name,
     }
 
     cvEndWriteStruct( fs );
-    __END__;
 }
 
 
