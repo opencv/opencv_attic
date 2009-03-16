@@ -74,11 +74,508 @@ template<typename T> struct MaxOp
 template<> inline uchar MinOp<uchar>::operator ()(uchar a, uchar b) const { return CV_MIN_8U(a, b); }
 template<> inline uchar MaxOp<uchar>::operator ()(uchar a, uchar b) const { return CV_MAX_8U(a, b); }
 
-template<class Op> struct MorphRowFilter : public BaseRowFilter
+#if CV_SSE2
+
+template<class VecUpdate> struct MorphRowIVec
+{
+    enum { ESZ = VecUpdate::ESZ };
+    
+    MorphRowIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
+    int operator()(const uchar* src, uchar* dst, int width, int cn) const
+    {
+        cn *= ESZ;
+        int i, k, _ksize = ksize*cn;
+        width *= cn;
+        VecUpdate updateOp;
+
+        for( i = 0; i <= width - 16; i += 16 )
+        {
+            __m128i s = _mm_loadu_si128((const __m128i*)(src + i));
+            for( k = cn; k < _ksize; k += cn )
+            {
+                __m128i x = _mm_loadu_si128((const __m128i*)(src + i + k));
+                s = updateOp(s, x);
+            }
+            _mm_storeu_si128((__m128i*)(dst + i), s);
+        }
+
+        for( ; i <= width - 4; i += 4 )
+        {
+            __m128i s = _mm_cvtsi32_si128(*(const int*)(src + i));
+            for( k = cn; k < _ksize; k += cn )
+            {
+                __m128i x = _mm_cvtsi32_si128(*(const int*)(src + i + k));
+                s = updateOp(s, x);
+            }
+            *(int*)(dst + i) = _mm_cvtsi128_si32(s);
+        }
+        
+        return i/ESZ;
+    }
+
+    int ksize, anchor;
+};
+
+
+template<class VecUpdate> struct MorphRowFVec
+{
+    MorphRowFVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
+    int operator()(const uchar* src, uchar* dst, int width, int cn) const
+    {
+        int i, k, _ksize = ksize*cn;
+        width *= cn;
+        VecUpdate updateOp;
+
+        for( i = 0; i <= width - 4; i += 4 )
+        {
+            __m128 s = _mm_loadu_ps((const float*)src + i);
+            for( k = cn; k < _ksize; k += cn )
+            {
+                __m128 x = _mm_loadu_ps((const float*)src + i + k);
+                s = updateOp(s, x);
+            }
+            _mm_storeu_ps((float*)dst + i, s);
+        }
+        
+        return i;
+    }
+
+    int ksize, anchor;
+};
+
+
+template<class VecUpdate> struct MorphColumnIVec
+{
+    enum { ESZ = VecUpdate::ESZ };
+    
+    MorphColumnIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
+    int operator()(const uchar** src, uchar* dst, int dststep, int count, int width) const
+    {
+        int i = 0, k, _ksize = ksize;
+        width *= ESZ;
+        VecUpdate updateOp;
+
+        for( i = 0; i < count + ksize - 1; i++ )
+            CV_Assert( ((size_t)src[i] & 15) == 0 );
+
+        for( ; _ksize > 1 && count > 1; count -= 2, dst += dststep*2, src += 2 )
+        {
+            for( i = 0; i <= width - 32; i += 32 )
+            {
+                const uchar* sptr = src[1] + i;
+                __m128i s0 = _mm_load_si128((const __m128i*)sptr);
+                __m128i s1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                __m128i x0, x1;
+
+                for( k = 2; k < _ksize; k++ )
+                {
+                    sptr = src[k] + i;
+                    x0 = _mm_load_si128((const __m128i*)sptr);
+                    x1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                    s0 = updateOp(s0, x0);
+                    s1 = updateOp(s1, x1);
+                }
+
+                sptr = src[0] + i;
+                x0 = _mm_load_si128((const __m128i*)sptr);
+                x1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                _mm_storeu_si128((__m128i*)(dst + i), updateOp(s0, x0));
+                _mm_storeu_si128((__m128i*)(dst + i + 16), updateOp(s1, x1));
+
+                sptr = src[k] + i;
+                x0 = _mm_load_si128((const __m128i*)sptr);
+                x1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                _mm_storeu_si128((__m128i*)(dst + dststep + i), updateOp(s0, x0));
+                _mm_storeu_si128((__m128i*)(dst + dststep + i + 16), updateOp(s1, x1));
+            }
+
+            for( ; i <= width - 8; i += 8 )
+            {
+                __m128i s0 = _mm_loadl_epi64((const __m128i*)(src[1] + i)), x0;
+
+                for( k = 2; k < _ksize; k++ )
+                {
+                    x0 = _mm_loadl_epi64((const __m128i*)(src[k] + i));
+                    s0 = updateOp(s0, x0);
+                }
+
+                x0 = _mm_loadl_epi64((const __m128i*)(src[0] + i));
+                _mm_storel_epi64((__m128i*)(dst + i), updateOp(s0, x0));
+                x0 = _mm_loadl_epi64((const __m128i*)(src[k] + i));
+                _mm_storel_epi64((__m128i*)(dst + dststep + i), updateOp(s0, x0));
+            }
+        }
+
+        for( ; count > 0; count--, dst += dststep, src++ )
+        {
+            for( i = 0; i <= width - 32; i += 32 )
+            {
+                const uchar* sptr = src[0] + i;
+                __m128i s0 = _mm_load_si128((const __m128i*)sptr);
+                __m128i s1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                __m128i x0, x1;
+
+                for( k = 1; k < _ksize; k++ )
+                {
+                    sptr = src[k] + i;
+                    x0 = _mm_load_si128((const __m128i*)sptr);
+                    x1 = _mm_load_si128((const __m128i*)(sptr + 16));
+                    s0 = updateOp(s0, x0);
+                    s1 = updateOp(s1, x1);
+                }
+                _mm_storeu_si128((__m128i*)(dst + i), s0);
+                _mm_storeu_si128((__m128i*)(dst + i + 16), s1);
+            }
+
+            for( ; i <= width - 8; i += 8 )
+            {
+                __m128i s0 = _mm_loadl_epi64((const __m128i*)(src[0] + i)), x0;
+
+                for( k = 1; k < _ksize; k++ )
+                {
+                    x0 = _mm_loadl_epi64((const __m128i*)(src[k] + i));
+                    s0 = updateOp(s0, x0);
+                }
+                _mm_storel_epi64((__m128i*)(dst + i), s0);
+            }
+        }
+
+        return i/ESZ;
+    }
+
+    int ksize, anchor;
+};
+
+
+template<class VecUpdate> struct MorphColumnFVec
+{
+    MorphColumnFVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
+    int operator()(const uchar** _src, uchar* _dst, int dststep, int count, int width) const
+    {
+        int i = 0, k, _ksize = ksize;
+        VecUpdate updateOp;
+
+        for( i = 0; i < count + ksize - 1; i++ )
+            CV_Assert( ((size_t)_src[i] & 15) == 0 );
+
+        const float** src = (const float**)_src;
+        float* dst = (float*)_dst;
+        dststep /= sizeof(dst[0]);
+
+        for( ; _ksize > 1 && count > 1; count -= 2, dst += dststep*2, src += 2 )
+        {
+            for( i = 0; i <= width - 16; i += 16 )
+            {
+                const float* sptr = src[1] + i;
+                __m128 s0 = _mm_load_ps(sptr);
+                __m128 s1 = _mm_load_ps(sptr + 4);
+                __m128 s2 = _mm_load_ps(sptr + 8);
+                __m128 s3 = _mm_load_ps(sptr + 12);
+                __m128 x0, x1, x2, x3;
+
+                for( k = 2; k < _ksize; k++ )
+                {
+                    sptr = src[k] + i;
+                    x0 = _mm_load_ps(sptr);
+                    x1 = _mm_load_ps(sptr + 4);
+                    s0 = updateOp(s0, x0);
+                    s1 = updateOp(s1, x1);
+                    x2 = _mm_load_ps(sptr + 8);
+                    x3 = _mm_load_ps(sptr + 12);
+                    s2 = updateOp(s2, x2);
+                    s3 = updateOp(s3, x3);
+                }
+
+                sptr = src[0] + i;
+                x0 = _mm_load_ps(sptr);
+                x1 = _mm_load_ps(sptr + 4);
+                x2 = _mm_load_ps(sptr + 8);
+                x3 = _mm_load_ps(sptr + 12);
+                _mm_storeu_ps(dst + i, updateOp(s0, x0));
+                _mm_storeu_ps(dst + i + 4, updateOp(s1, x1));
+                _mm_storeu_ps(dst + i + 8, updateOp(s2, x2));
+                _mm_storeu_ps(dst + i + 12, updateOp(s3, x3));
+
+                sptr = src[k] + i;
+                x0 = _mm_load_ps(sptr);
+                x1 = _mm_load_ps(sptr + 4);
+                x2 = _mm_load_ps(sptr + 8);
+                x3 = _mm_load_ps(sptr + 12);
+                _mm_storeu_ps(dst + dststep + i, updateOp(s0, x0));
+                _mm_storeu_ps(dst + dststep + i + 4, updateOp(s1, x1));
+                _mm_storeu_ps(dst + dststep + i + 8, updateOp(s2, x2));
+                _mm_storeu_ps(dst + dststep + i + 12, updateOp(s3, x3));
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                __m128 s0 = _mm_load_ps(src[1] + i), x0;
+
+                for( k = 2; k < _ksize; k++ )
+                {
+                    x0 = _mm_load_ps(src[k] + i);
+                    s0 = updateOp(s0, x0);
+                }
+
+                x0 = _mm_load_ps(src[0] + i);
+                _mm_storeu_ps(dst + i, updateOp(s0, x0));
+                x0 = _mm_load_ps(src[k] + i);
+                _mm_storeu_ps(dst + dststep + i, updateOp(s0, x0));
+            }
+        }
+
+        for( ; count > 0; count--, dst += dststep, src++ )
+        {
+            for( i = 0; i <= width - 16; i += 16 )
+            {
+                const float* sptr = src[0] + i;
+                __m128 s0 = _mm_load_ps(sptr);
+                __m128 s1 = _mm_load_ps(sptr + 4);
+                __m128 s2 = _mm_load_ps(sptr + 8);
+                __m128 s3 = _mm_load_ps(sptr + 12);
+                __m128 x0, x1, x2, x3;
+
+                for( k = 1; k < _ksize; k++ )
+                {
+                    sptr = src[k] + i;
+                    x0 = _mm_load_ps(sptr);
+                    x1 = _mm_load_ps(sptr + 4);
+                    s0 = updateOp(s0, x0);
+                    s1 = updateOp(s1, x1);
+                    x0 = _mm_load_ps(sptr + 8);
+                    x1 = _mm_load_ps(sptr + 12);
+                    s2 = updateOp(s2, x2);
+                    s3 = updateOp(s3, x3);
+                }
+                _mm_storeu_ps(dst + i, s0);
+                _mm_storeu_ps(dst + i + 4, s1);
+                _mm_storeu_ps(dst + i + 8, s2);
+                _mm_storeu_ps(dst + i + 12, s3);
+            }
+
+            for( i = 0; i <= width - 4; i += 4 )
+            {
+                __m128 s0 = _mm_load_ps(src[0] + i), x0;
+                for( k = 1; k < _ksize; k++ )
+                {
+                    x0 = _mm_load_ps(src[k] + i);
+                    s0 = updateOp(s0, x0);
+                }
+                _mm_storeu_ps(dst + i, s0);
+            }
+        }
+
+        return i;
+    }
+
+    int ksize, anchor;
+};
+
+
+template<class VecUpdate> struct MorphIVec
+{
+    enum { ESZ = VecUpdate::ESZ };
+    
+    int operator()(uchar** src, int nz, uchar* dst, int width) const
+    {
+        int i, k;
+        width *= ESZ;
+        VecUpdate updateOp;
+
+        for( i = 0; i <= width - 32; i += 32 )
+        {
+            const uchar* sptr = src[0] + i;
+            __m128i s0 = _mm_loadu_si128((const __m128i*)sptr);
+            __m128i s1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
+            __m128i x0, x1;
+
+            for( k = 1; k < nz; k++ )
+            {
+                sptr = src[k] + i;
+                x0 = _mm_loadu_si128((const __m128i*)sptr);
+                x1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
+                s0 = updateOp(s0, x0);
+                s1 = updateOp(s1, x1);
+            }
+            _mm_storeu_si128((__m128i*)(dst + i), s0);
+            _mm_storeu_si128((__m128i*)(dst + i + 16), s1);
+        }
+
+        for( ; i <= width - 8; i += 8 )
+        {
+            __m128i s0 = _mm_loadl_epi64((const __m128i*)(src[0] + i)), x0;
+
+            for( k = 1; k < nz; k++ )
+            {
+                x0 = _mm_loadl_epi64((const __m128i*)(src[k] + i));
+                s0 = updateOp(s0, x0);
+            }
+            _mm_storel_epi64((__m128i*)(dst + i), s0);
+        }
+
+        return i/ESZ;
+    }
+};
+
+
+template<class VecUpdate> struct MorphFVec
+{
+    int operator()(uchar** _src, int nz, uchar* _dst, int width) const
+    {
+        const float** src = (const float**)_src;
+        float* dst = (float*)_dst;
+        int i, k;
+        VecUpdate updateOp;
+
+        for( i = 0; i <= width - 16; i += 16 )
+        {
+            const float* sptr = src[0] + i;
+            __m128 s0 = _mm_loadu_ps(sptr);
+            __m128 s1 = _mm_loadu_ps(sptr + 4);
+            __m128 s2 = _mm_loadu_ps(sptr + 8);
+            __m128 s3 = _mm_loadu_ps(sptr + 12);
+            __m128 x0, x1, x2, x3;
+
+            for( k = 1; k < nz; k++ )
+            {
+                sptr = src[k] + i;
+                x0 = _mm_loadu_ps(sptr);
+                x1 = _mm_loadu_ps(sptr + 4);
+                x2 = _mm_loadu_ps(sptr + 8);
+                x3 = _mm_loadu_ps(sptr + 12);
+                s0 = updateOp(s0, x0);
+                s1 = updateOp(s1, x1);
+                s2 = updateOp(s2, x2);
+                s3 = updateOp(s3, x3);
+            }
+            _mm_storeu_ps(dst + i, s0);
+            _mm_storeu_ps(dst + i + 4, s1);
+            _mm_storeu_ps(dst + i + 8, s2);
+            _mm_storeu_ps(dst + i + 12, s3);
+        }
+
+        for( ; i <= width - 4; i += 4 )
+        {
+            __m128 s0 = _mm_loadu_ps(src[0] + i), x0;
+
+            for( k = 1; k < nz; k++ )
+            {
+                x0 = _mm_loadu_ps(src[k] + i);
+                s0 = updateOp(s0, x0);
+            }
+            _mm_storeu_ps(dst + i, s0);
+        }
+
+        for( ; i < width; i++ )
+        {
+            __m128 s0 = _mm_load_ss(src[0] + i), x0;
+
+            for( k = 1; k < nz; k++ )
+            {
+                x0 = _mm_load_ss(src[k] + i);
+                s0 = updateOp(s0, x0);
+            }
+            _mm_store_ss(dst + i, s0);
+        }
+
+        return i;
+    }
+};
+
+
+struct VMin8u
+{
+    enum { ESZ = 1 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const { return _mm_min_epu8(a,b); }
+};
+struct VMax8u
+{
+    enum { ESZ = 1 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const { return _mm_max_epu8(a,b); }
+};
+struct VMin16u
+{
+    enum { ESZ = 2 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const
+    { return _mm_subs_epu16(a,_mm_subs_epu16(a,b)); }
+};
+struct VMax16u
+{
+    enum { ESZ = 2 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const
+    { return _mm_adds_epu16(_mm_subs_epu16(a,b),b); }
+};
+struct VMin32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_min_ps(a,b); }};
+struct VMax32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_max_ps(a,b); }};
+
+typedef MorphRowIVec<VMin8u> ErodeRowVec8u;
+typedef MorphRowIVec<VMax8u> DilateRowVec8u;
+typedef MorphRowIVec<VMin16u> ErodeRowVec16u;
+typedef MorphRowIVec<VMax16u> DilateRowVec16u;
+typedef MorphRowFVec<VMin32f> ErodeRowVec32f;
+typedef MorphRowFVec<VMax32f> DilateRowVec32f;
+
+typedef MorphColumnIVec<VMin8u> ErodeColumnVec8u;
+typedef MorphColumnIVec<VMax8u> DilateColumnVec8u;
+typedef MorphColumnIVec<VMin16u> ErodeColumnVec16u;
+typedef MorphColumnIVec<VMax16u> DilateColumnVec16u;
+typedef MorphColumnFVec<VMin32f> ErodeColumnVec32f;
+typedef MorphColumnFVec<VMax32f> DilateColumnVec32f;
+
+typedef MorphIVec<VMin8u> ErodeVec8u;
+typedef MorphIVec<VMax8u> DilateVec8u;
+typedef MorphIVec<VMin16u> ErodeVec16u;
+typedef MorphIVec<VMax16u> DilateVec16u;
+typedef MorphFVec<VMin32f> ErodeVec32f;
+typedef MorphFVec<VMax32f> DilateVec32f;
+
+#else
+
+struct MorphRowNoVec
+{
+    MorphRowNoVec(int, int) {}
+    int operator()(const uchar*, uchar*, int, int) const { return 0; }
+};
+
+struct MorphColumnNoVec
+{
+    MorphColumnNoVec(int, int) {}
+    int operator()(const uchar**, uchar*, int, int, int) const { return 0; }
+};
+
+struct MorphNoVec
+{
+    int operator()(uchar**, int, uchar*, int) const { return 0; }
+};
+
+typedef MorphRowNoVec ErodeRowVec8u;
+typedef MorphRowNoVec DilateRowVec8u;
+typedef MorphRowNoVec ErodeRowVec16u;
+typedef MorphRowNoVec DilateRowVec16u;
+typedef MorphRowNoVec ErodeRowVec32f;
+typedef MorphRowNoVec DilateRowVec32f;
+
+typedef MorphColumnNoVec ErodeColumnVec8u;
+typedef MorphColumnNoVec DilateColumnVec8u;
+typedef MorphColumnNoVec ErodeColumnVec16u;
+typedef MorphColumnNoVec DilateColumnVec16u;
+typedef MorphColumnNoVec ErodeColumnVec32f;
+typedef MorphColumnNoVec DilateColumnVec32f;
+
+typedef MorphNoVec ErodeVec8u;
+typedef MorphNoVec DilateVec8u;
+typedef MorphNoVec ErodeVec16u;
+typedef MorphNoVec DilateVec16u;
+typedef MorphNoVec ErodeVec32f;
+typedef MorphNoVec DilateVec32f;
+
+#endif
+
+template<class Op, class VecOp> struct MorphRowFilter : public BaseRowFilter
 {
     typedef typename Op::rtype T;
     
-    MorphRowFilter( int _ksize, int _anchor )
+    MorphRowFilter( int _ksize, int _anchor ) : vecOp(_ksize, _anchor)
     {
         ksize = _ksize;
         anchor = _anchor;
@@ -90,18 +587,20 @@ template<class Op> struct MorphRowFilter : public BaseRowFilter
         const T* S = (const T*)src;
         Op op;
         T* D = (T*)dst;
-        width *= cn;
 
         if( _ksize == cn )
         {
-            for( i = 0; i < width; i++ )
+            for( i = 0; i < width*cn; i++ )
                 D[i] = S[i];
             return;
         }
 
+        int i0 = vecOp(src, dst, width, cn);
+        width *= cn;
+
         for( k = 0; k < cn; k++, S++, D++ )
         {
-            for( i = 0; i <= width - cn*2; i += cn*2 )
+            for( i = i0; i <= width - cn*2; i += cn*2 )
             {
                 const T* s = S + i;
                 T m = s[cn];
@@ -121,14 +620,16 @@ template<class Op> struct MorphRowFilter : public BaseRowFilter
             }
         }
     }
+
+    VecOp vecOp;
 };
 
 
-template<class Op> struct MorphColumnFilter : public BaseColumnFilter
+template<class Op, class VecOp> struct MorphColumnFilter : public BaseColumnFilter
 {
     typedef typename Op::rtype T;
     
-    MorphColumnFilter( int _ksize, int _anchor )
+    MorphColumnFilter( int _ksize, int _anchor ) : vecOp(_ksize, _anchor)
     {
         ksize = _ksize;
         anchor = _anchor;
@@ -140,11 +641,13 @@ template<class Op> struct MorphColumnFilter : public BaseColumnFilter
         const T** src = (const T**)_src;
         T* D = (T*)dst;
         Op op;
+
+        int i0 = vecOp(_src, dst, dststep, count, width);
         dststep /= sizeof(D[0]);
 
         for( ; _ksize > 1 && count > 1; count -= 2, D += dststep*2, src += 2 )
         {
-            for( i = 0; i <= width - 4; i += 4 )
+            for( i = i0; i <= width - 4; i += 4 )
             {
                 const T* sptr = src[1] + i;
                 T s0 = sptr[0], s1 = sptr[1], s2 = sptr[2], s3 = sptr[3];
@@ -183,7 +686,7 @@ template<class Op> struct MorphColumnFilter : public BaseColumnFilter
 
         for( ; count > 0; count--, D += dststep, src++ )
         {
-            for( i = 0; i <= width - 4; i += 4 )
+            for( i = i0; i <= width - 4; i += 4 )
             {
                 const T* sptr = src[0] + i;
                 T s0 = sptr[0], s1 = sptr[1], s2 = sptr[2], s3 = sptr[3];
@@ -208,10 +711,12 @@ template<class Op> struct MorphColumnFilter : public BaseColumnFilter
             }
         }
     }
+
+    VecOp vecOp;
 };
 
 
-template<class Op> struct MorphFilter : BaseFilter
+template<class Op, class VecOp> struct MorphFilter : BaseFilter
 {
     typedef typename Op::rtype T;
     
@@ -242,7 +747,9 @@ template<class Op> struct MorphFilter : BaseFilter
             for( k = 0; k < nz; k++ )
                 kp[k] = (const T*)src[pt[k].y] + pt[k].x*cn;
 
-            for( i = 0; i <= width - 4; i += 4 )
+            i = vecOp(&ptrs[0], nz, dst, width);
+
+            for( ; i <= width - 4; i += 4 )
             {
                 const T* sptr = kp[0] + i;
                 T s0 = sptr[0], s1 = sptr[1], s2 = sptr[2], s3 = sptr[3];
@@ -270,6 +777,7 @@ template<class Op> struct MorphFilter : BaseFilter
 
     Vector<Point> coords;
     Vector<uchar*> ptrs;
+    VecOp vecOp;
 };
 
 /////////////////////////////////// External Interface /////////////////////////////////////
@@ -283,20 +791,26 @@ Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int ancho
     if( op == MORPH_ERODE )
     {
         if( depth == CV_8U )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<uchar> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<uchar>,
+                ErodeRowVec8u>(ksize, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<ushort> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<ushort>,
+                ErodeRowVec16u>(ksize, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<float> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<float>,
+                ErodeRowVec32f>(ksize, anchor));
     }
     else
     {
         if( depth == CV_8U )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<uchar> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<uchar>,
+                DilateRowVec8u>(ksize, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<ushort> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<ushort>,
+                DilateRowVec16u>(ksize, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<float> >(ksize, anchor));
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<float>,
+                DilateRowVec32f>(ksize, anchor));
     }
 
     CV_Error_( CV_StsNotImplemented, ("Unsupported data type (=%d)", type));
@@ -312,20 +826,26 @@ Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int
     if( op == MORPH_ERODE )
     {
         if( depth == CV_8U )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<uchar> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<uchar>,
+                ErodeColumnVec8u>(ksize, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<ushort> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<ushort>,
+                ErodeColumnVec16u>(ksize, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<float> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<float>,
+                ErodeColumnVec32f>(ksize, anchor));
     }
     else
     {
         if( depth == CV_8U )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<uchar> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<uchar>,
+                DilateColumnVec8u>(ksize, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<ushort> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<ushort>,
+                DilateColumnVec16u>(ksize, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<float> >(ksize, anchor));
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<float>,
+                DilateColumnVec32f>(ksize, anchor));
     }
 
     CV_Error_( CV_StsNotImplemented, ("Unsupported data type (=%d)", type));
@@ -341,20 +861,20 @@ Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel, Point a
     if( op == MORPH_ERODE )
     {
         if( depth == CV_8U )
-            return Ptr<BaseFilter>(new MorphFilter<MinOp<uchar> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MinOp<uchar>, ErodeVec8u>(kernel, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseFilter>(new MorphFilter<MinOp<ushort> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MinOp<ushort>, ErodeVec16u>(kernel, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseFilter>(new MorphFilter<MinOp<float> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MinOp<float>, ErodeVec32f>(kernel, anchor));
     }
     else
     {
         if( depth == CV_8U )
-            return Ptr<BaseFilter>(new MorphFilter<MaxOp<uchar> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MaxOp<uchar>, DilateVec8u>(kernel, anchor));
         if( depth == CV_16U )
-            return Ptr<BaseFilter>(new MorphFilter<MaxOp<ushort> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MaxOp<ushort>, DilateVec16u>(kernel, anchor));
         if( depth == CV_32F )
-            return Ptr<BaseFilter>(new MorphFilter<MaxOp<float> >(kernel, anchor));
+            return Ptr<BaseFilter>(new MorphFilter<MaxOp<float>, DilateVec32f>(kernel, anchor));
     }
 
     CV_Error_( CV_StsNotImplemented, ("Unsupported data type (=%d)", type));
@@ -364,7 +884,7 @@ Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel, Point a
 
 Ptr<FilterEngine> createMorphologyFilter( int op, int type, const Mat& kernel,
          Point anchor, int _rowBorderType, int _columnBorderType,
-         const Scalar& _borderValue, int maxBufRows )
+         const Scalar& _borderValue )
 {
     anchor = normalizeAnchor(anchor, kernel.size());
     
@@ -396,7 +916,7 @@ Ptr<FilterEngine> createMorphologyFilter( int op, int type, const Mat& kernel,
     }
 
     return Ptr<FilterEngine>(new FilterEngine(filter2D, rowFilter, columnFilter,
-        type, type, type, _rowBorderType, _columnBorderType, borderValue, maxBufRows ));
+        type, type, type, _rowBorderType, _columnBorderType, borderValue ));
 }
 
 

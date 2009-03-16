@@ -92,23 +92,28 @@ struct CV_EXPORTS FilterEngine
                  const Ptr<BaseRowFilter>& _rowFilter,
                  const Ptr<BaseColumnFilter>& _columnFilter,
                  int srcType, int dstType, int bufType,
-                 int _rowBorderType=BORDER_REPLICATE, int _columnBorderType=-1,
-                 const Scalar& _borderValue=Scalar(), int maxBufRows=-1);
+                 int _rowBorderType=BORDER_REPLICATE,
+                 int _columnBorderType=-1,
+                 const Scalar& _borderValue=Scalar());
     virtual ~FilterEngine();
     void init(const Ptr<BaseFilter>& _filter2D,
               const Ptr<BaseRowFilter>& _rowFilter,
               const Ptr<BaseColumnFilter>& _columnFilter,
               int srcType, int dstType, int bufType,
               int _rowBorderType=BORDER_REPLICATE, int _columnBorderType=-1,
-              const Scalar& _borderValue=Scalar(), int maxBufRows=-1);
-    virtual void setROI(Size wholeSize, Rect roi);
-    virtual int setROI(const Mat& src, const Rect& srcRoi=Rect(0,0,-1,-1));
-    virtual int put(const uchar* src, int srcstep, int count);
-    virtual int get(uchar* dst, int dststep, int maxCount);
+              const Scalar& _borderValue=Scalar());
+    virtual int start(Size wholeSize, Rect roi, int maxBufRows=-1);
+    virtual int start(const Mat& src, const Rect& srcRoi=Rect(0,0,-1,-1),
+                      bool isolated=false, int maxBufRows=-1);
+    virtual int proceed(const uchar* src, int srcStep, int srcCount,
+                        uchar* dst, int dstStep);
     virtual void apply( const Mat& src, Mat& dst,
                         const Rect& srcRoi=Rect(0,0,-1,-1),
-                        Point dstOfs=Point(0,0));
+                        Point dstOfs=Point(0,0),
+                        bool isolated=false);
     bool isSeparable() const { return filter2D.obj == 0; }
+    int remainingInputRows() const;
+    int remainingOutputRows() const;
     
     int srcType, dstType, bufType;
     Size ksize;
@@ -124,8 +129,7 @@ struct CV_EXPORTS FilterEngine
     Vector<uchar> srcRow;
     Vector<uchar> constBorderValue;
     Vector<uchar> constBorderRow;
-    int bufStep, startY, startY0, endY, rowCount, dstY, lostRows;
-    int firstStripeSize, nextStripeSize;
+    int bufStep, startY, startY0, endY, rowCount, dstY;
     Vector<uchar*> rows;
     
     Ptr<BaseFilter> filter2D;
@@ -157,14 +161,12 @@ CV_EXPORTS Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstTyp
                           Point _anchor=Point(-1,-1), double delta=0,
                           int _rowBorderType=BORDER_DEFAULT,
                           int _columnBorderType=-1,
-                          const Scalar& _borderValue=Scalar(),
-                          int maxBufRows=-1);
+                          const Scalar& _borderValue=Scalar());
 
 CV_EXPORTS Ptr<FilterEngine> createLinearFilter(int srcType, int dstType,
                  const Mat& kernel, Point _anchor=Point(-1,-1),
                  double delta=0, int _rowBorderType=BORDER_DEFAULT,
-                 int _columnBorderType=-1, const Scalar& _borderValue=Scalar(),
-                 int maxBufRows=-1);
+                 int _columnBorderType=-1, const Scalar& _borderValue=Scalar());
 
 CV_EXPORTS Mat getGaussianKernel( int ksize, double sigma, int ktype=CV_64F );
 
@@ -195,15 +197,14 @@ enum { MORPH_ERODE=0, MORPH_DILATE=1, MORPH_OPEN=2, MORPH_CLOSE=3,
 CV_EXPORTS Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int anchor=-1);
 CV_EXPORTS Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int anchor=-1);
 CV_EXPORTS Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel,
-                                                  Point anchor=Point(-1,-1));
+                                               Point anchor=Point(-1,-1));
 
 static inline Scalar morphologyDefaultBorderValue() { return Scalar::all(DBL_MAX); }
 
 CV_EXPORTS Ptr<FilterEngine> createMorphologyFilter(int op, int type, const Mat& kernel,
                     Point anchor=Point(-1,-1), int _rowBorderType=BORDER_CONSTANT,
                     int _columnBorderType=-1,
-                    const Scalar& _borderValue=morphologyDefaultBorderValue(),
-                    int maxBufRows=-1);
+                    const Scalar& _borderValue=morphologyDefaultBorderValue());
 
 enum { MORPH_RECT=0, MORPH_CROSS=1, MORPH_ELLIPSE=2 };
 CV_EXPORTS Mat getStructuringElement(int shape, Size ksize, Point anchor=Point(-1,-1));
