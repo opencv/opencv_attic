@@ -176,9 +176,13 @@ cvReleaseMemStorage( CvMemStorage** storage )
     if( !storage )
         CV_Error( CV_StsNullPtr, "" );
 
-    if( *storage )
-        icvDestroyMemStorage( *storage );
-    cvFree( storage );
+    CvMemStorage* st = *storage;
+    *storage = 0;
+    if( st )
+    {
+        icvDestroyMemStorage( st );
+        cvFree( &st );
+    }
 }
 
 
