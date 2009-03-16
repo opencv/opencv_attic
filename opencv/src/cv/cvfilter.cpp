@@ -105,8 +105,7 @@ FilterEngine::FilterEngine()
 {
     srcType = dstType = bufType = -1;
     rowBorderType = columnBorderType = BORDER_REPLICATE;
-    bufStep = startY = startY0 = endY = rowCount = lostRows = dstY = 0;
-    firstStripeSize = nextStripeSize = 0;
+    bufStep = startY = startY0 = endY = rowCount = dstY = 0;
     maxWidth = 0;
 
     wholeSize = Size(-1,-1);
@@ -118,10 +117,10 @@ FilterEngine::FilterEngine( const Ptr<BaseFilter>& _filter2D,
                             const Ptr<BaseColumnFilter>& _columnFilter,
                             int _srcType, int _dstType, int _bufType,
                             int _rowBorderType, int _columnBorderType,
-                            const Scalar& _borderValue, int _maxBufRows )
+                            const Scalar& _borderValue )
 {
     init(_filter2D, _rowFilter, _columnFilter, _srcType, _dstType, _bufType,
-         _rowBorderType, _columnBorderType, _borderValue, _maxBufRows);
+         _rowBorderType, _columnBorderType, _borderValue);
 }
     
 FilterEngine::~FilterEngine()
@@ -134,7 +133,7 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
                          const Ptr<BaseColumnFilter>& _columnFilter,
                          int _srcType, int _dstType, int _bufType,
                          int _rowBorderType, int _columnBorderType,
-                         const Scalar& _borderValue, int _maxBufRows )
+                         const Scalar& _borderValue )
 {
     _srcType = CV_MAT_TYPE(_srcType);
     _bufType = CV_MAT_TYPE(_bufType);
@@ -179,12 +178,6 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
     maxWidth = bufStep = 0;
     constBorderRow.clear();
 
-    if( _maxBufRows < 0 )
-        _maxBufRows = ksize.height + 3;
-
-    _maxBufRows = std::max(_maxBufRows, std::max(anchor.y, ksize.height-anchor.y-1)*2+1);
-    rows.resize(_maxBufRows);
-
     if( rowBorderType == BORDER_CONSTANT || columnBorderType == BORDER_CONSTANT )
     {
         constBorderValue.resize(srcElemSize*(ksize.width - 1));
@@ -196,7 +189,7 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
 }
 
     
-void FilterEngine::setROI(Size _wholeSize, Rect _roi)
+int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
 {
     int i, j;
     
@@ -210,9 +203,14 @@ void FilterEngine::setROI(Size _wholeSize, Rect _roi)
     int bufElemSize = getElemSize(bufType);
     const uchar* constVal = !constBorderValue.empty() ? &constBorderValue[0] : 0;
 
-    if( maxWidth < roi.width )
+    if( _maxBufRows < 0 )
+        _maxBufRows = ksize.height + 3;
+    _maxBufRows = std::max(_maxBufRows, std::max(anchor.y, ksize.height-anchor.y-1)*2+1);
+
+    if( maxWidth < roi.width || _maxBufRows != (int)rows.size() )
     {
-        maxWidth = roi.width;
+        rows.resize(_maxBufRows);
+        maxWidth = std::max(maxWidth, roi.width);
         int cn = CV_MAT_CN(srcType);
         srcRow.resize(esz*(maxWidth + ksize.width - 1));
         if( columnBorderType == BORDER_CONSTANT )
@@ -286,100 +284,122 @@ void FilterEngine::setROI(Size _wholeSize, Rect _roi)
         }
     }
 
-    rowCount = lostRows = dstY = 0;
+    rowCount = dstY = 0;
     startY = startY0 = std::max(roi.y - anchor.y, 0);
     endY = std::min(roi.y + roi.height + ksize.height - anchor.y - 1, wholeSize.height);
-    firstStripeSize = std::min(roi.y + (int)rows.size() - anchor.y, endY) - startY;
-    nextStripeSize = rows.size() - ksize.height + 1;
+    /*firstStripeSize = std::min(roi.y + (int)rows.size() - anchor.y, endY) - startY;
+    nextStripeSize = rows.size() - ksize.height + 1;*/
     if( columnFilter.obj )
         columnFilter->reset();
     if( filter2D.obj )
         filter2D->reset();
-}
-    
 
-int FilterEngine::put( const uchar* src, int srcstep, int count )
+    return startY;
+}
+
+
+int FilterEngine::start(const Mat& src, const Rect& _srcRoi,
+                        bool isolated, int maxBufRows)
+{
+    Rect srcRoi = _srcRoi;
+    
+    if( srcRoi == Rect(0,0,-1,-1) )
+        srcRoi = Rect(0,0,src.cols,src.rows);
+    
+    CV_Assert( srcRoi.x >= 0 && srcRoi.y >= 0 &&
+        srcRoi.width >= 0 && srcRoi.height >= 0 &&
+        srcRoi.x + srcRoi.width <= src.cols &&
+        srcRoi.y + srcRoi.height <= src.rows );
+
+    Point ofs;
+    Size wholeSize(src.cols, src.rows);
+    if( !isolated )
+        src.locateROI( wholeSize, ofs );
+    start( wholeSize, srcRoi + ofs, maxBufRows );
+
+    return startY - ofs.y;
+}
+
+
+int FilterEngine::remainingInputRows() const
+{
+    return endY - startY - rowCount;
+}
+
+int FilterEngine::remainingOutputRows() const
+{
+    return roi.height - dstY;
+}
+
+int FilterEngine::proceed( const uchar* src, int srcstep, int count,
+                           uchar* dst, int dststep )
 {
     CV_Assert( wholeSize.width > 0 && wholeSize.height > 0 );
     
     const int *btab = &borderTab[0];
     int esz = getElemSize(srcType), btab_esz = borderElemSize;
+    uchar** brows = &rows[0];
     int bufRows = (int)rows.size();
-    int i, j, width = roi.width, kwidth = ksize.width;
+    int cn = CV_MAT_CN(bufType);
+    int width = roi.width, kwidth = ksize.width;
+    int kheight = ksize.height, ay = anchor.y;
     int _dx1 = dx1, _dx2 = dx2;
     int width1 = roi.width + kwidth - 1;
     int xofs1 = std::min(roi.x, anchor.x);
     bool isSep = isSeparable();
     bool makeBorder = (_dx1 > 0 || _dx2 > 0) && rowBorderType != BORDER_CONSTANT;
-    
+    int dy = 0, i = 0;
+
     src -= xofs1*esz;
-    count = std::min(count, endY - startY - rowCount);
+    count = std::min(count, remainingInputRows());
 
-    for( i = 0; i < count; i++, src += srcstep )
+    CV_Assert( src && dst && count > 0 );
+
+    for(;; dst += dststep*i, dy += i)
     {
-        int bi = (startY - startY0 + rowCount) % bufRows;
-        uchar* brow = &ringBuf[0] + bi*bufStep;
-        uchar* row = isSep ? &srcRow[0] : brow;
-        
-        if( ++rowCount > bufRows )
+        int dcount = bufRows - ay - startY - rowCount + roi.y;
+        dcount = dcount > 0 ? dcount : bufRows - kheight + 1;
+        dcount = std::min(dcount, count);
+        count -= dcount;
+        for( ; dcount-- > 0; src += srcstep )
         {
-            --rowCount;
-            ++startY;
+            int bi = (startY - startY0 + rowCount) % bufRows;
+            uchar* brow = &ringBuf[0] + bi*bufStep;
+            uchar* row = isSep ? &srcRow[0] : brow;
+            
+            if( ++rowCount > bufRows )
+            {
+                --rowCount;
+                ++startY;
+            }
+
+            memcpy( row + _dx1*esz, src, (width1 - _dx2 - _dx1)*esz );
+
+            if( makeBorder )
+            {
+                if( btab_esz*(int)sizeof(int) == esz )
+                {
+                    const int* isrc = (const int*)src;
+                    int* irow = (int*)row;
+
+                    for( i = 0; i < _dx1*btab_esz; i++ )
+                        irow[i] = isrc[btab[i]];
+                    for( i = 0; i < _dx2*btab_esz; i++ )
+                        irow[i + (width1 - _dx2)*btab_esz] = isrc[btab[i+_dx1*btab_esz]];
+                }
+                else
+                {
+                    for( i = 0; i < _dx1*esz; i++ )
+                        row[i] = src[btab[i]];
+                    for( i = 0; i < _dx2*esz; i++ )
+                        row[i + (width1 - _dx2)*esz] = src[btab[i+_dx1*esz]];
+                }
+            }
+            
+            if( isSep )
+                (*rowFilter)(row, brow, width, CV_MAT_CN(srcType));
         }
 
-        memcpy( row + _dx1*esz, src, (width1 - _dx2 - _dx1)*esz );
-
-        if( makeBorder )
-        {
-            if( btab_esz*(int)sizeof(int) == esz )
-            {
-                const int* isrc = (const int*)src;
-                int* irow = (int*)row;
-
-                for( j = 0; j < _dx1*btab_esz; j++ )
-                    irow[j] = isrc[btab[j]];
-                for( j = 0; j < _dx2*btab_esz; j++ )
-                    irow[j + (width1 - _dx2)*btab_esz] = isrc[btab[j+_dx1*btab_esz]];
-            }
-            else
-            {
-                for( j = 0; j < _dx1*esz; j++ )
-                    row[j] = src[btab[j]];
-                for( j = 0; j < _dx2*esz; j++ )
-                    row[j + (width1 - _dx2)*esz] = src[btab[j+_dx1*esz]];
-            }
-        }
-        
-        if( isSep )
-            (*rowFilter)(row, brow, width, CV_MAT_CN(srcType));
-    }
-
-    return count;
-}
-
-
-int FilterEngine::get(uchar* dst, int dststep, int maxCount)
-{
-    CV_Assert( wholeSize.width > 0 && wholeSize.height > 0 );
-    
-    int bufRows = (int)rows.size();
-    int kheight = ksize.height, ay = anchor.y;
-    uchar** brows = &rows[0];
-    int cn = CV_MAT_CN(bufType);
-
-    int minY = std::max(dstY + roi.y - ay, 0);
-
-    if( startY > minY )
-    {
-        lostRows += startY - minY;
-        dstY += startY - minY;
-    }
-
-    maxCount = std::min(maxCount, roi.height - dstY);
-    
-    int i = 0, dy = 0;
-    for( ; dy < maxCount; dst += i*dststep, dy += i )
-    {
         int max_i = std::min(bufRows, roi.height - (dstY + dy) + (kheight - 1));
         for( i = 0; i < max_i; i++ )
         {
@@ -407,7 +427,22 @@ int FilterEngine::get(uchar* dst, int dststep, int maxCount)
 
     dstY += dy;
     CV_Assert( dstY <= roi.height );
+    return dy;
+}
+
+
+/*int FilterEngine::get(uchar* dst, int dststep, int maxCount)
+{
+    CV_Assert( wholeSize.width > 0 && wholeSize.height > 0 );
     
+    int bufRows = (int)rows.size();
+    if( startY > minY )
+    {
+        lostRows += startY - minY;
+        dstY += startY - minY;
+    }
+
+    dstY += dy;
     if( dstY == roi.height )
     {
         // prepare for the next filtering operation
@@ -417,32 +452,10 @@ int FilterEngine::get(uchar* dst, int dststep, int maxCount)
     }
 
     return dy;
-}
-
-
-int FilterEngine::setROI(const Mat& src, const Rect& _srcRoi)
-{
-    Rect srcRoi = _srcRoi;
-    
-    if( srcRoi == Rect(0,0,-1,-1) )
-        srcRoi = Rect(0,0,src.cols,src.rows);
-    
-    CV_Assert( srcRoi.x >= 0 && srcRoi.y >= 0 &&
-        srcRoi.width >= 0 && srcRoi.height >= 0 &&
-        srcRoi.x + srcRoi.width <= src.cols &&
-        srcRoi.y + srcRoi.height <= src.rows );
-
-    Point ofs;
-    Size wholeSize;
-    src.locateROI( wholeSize, ofs );
-    setROI( wholeSize, srcRoi + ofs );
-
-    return startY - ofs.y;
-}
-
+}*/
 
 void FilterEngine::apply(const Mat& src, Mat& dst,
-                    const Rect& _srcRoi, Point dstOfs)
+    const Rect& _srcRoi, Point dstOfs, bool isolated)
 {
     CV_Assert( src.type() == srcType && dst.type() == dstType );
     
@@ -454,19 +467,8 @@ void FilterEngine::apply(const Mat& src, Mat& dst,
         dstOfs.x + srcRoi.width <= dst.cols &&
         dstOfs.y + srcRoi.height <= dst.rows );
 
-    int y = setROI(src, srcRoi), dy = 0;
-    const uchar* sptr = src.data + y*src.step;
-    uchar* dptr = dst.data + dstOfs.y*dst.step;
-
-    for( y = 0; y < srcRoi.height; y += dy )
-    {
-        int sdy = put( sptr, src.step, y == 0 ?
-            firstStripeSize : nextStripeSize );
-        sptr += sdy*src.step;
-        dy = get( dptr, dst.step, nextStripeSize );
-        CV_Assert( dy > 0 );
-        dptr += dy*dst.step;
-    }
+    int y = start(src, srcRoi, isolated);
+    proceed( src.data + y*src.step, src.step, endY - startY, dst.data, dst.step );
 }
 
 
@@ -1265,7 +1267,7 @@ Ptr<FilterEngine> createSeparableLinearFilter(
     const Mat& _rowKernel, const Mat& _columnKernel,
     Point _anchor, double _delta,
     int _rowBorderType, int _columnBorderType,
-    const Scalar& _borderValue, int _maxBufRows )
+    const Scalar& _borderValue )
 {
     _srcType = CV_MAT_TYPE(_srcType);
     _dstType = CV_MAT_TYPE(_dstType);
@@ -1322,8 +1324,7 @@ Ptr<FilterEngine> createSeparableLinearFilter(
         _bufType, _dstType, columnKernel, _anchor.y, ctype, _delta, bits );
 
     return Ptr<FilterEngine>( new FilterEngine(Ptr<BaseFilter>(0), _rowFilter, _columnFilter,
-        _srcType, _dstType, _bufType, _rowBorderType, _columnBorderType,
-        _borderValue, _maxBufRows ));
+        _srcType, _dstType, _bufType, _rowBorderType, _columnBorderType, _borderValue ));
 }
 
 
@@ -1519,7 +1520,7 @@ Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
 Ptr<FilterEngine> createLinearFilter( int _srcType, int _dstType, const Mat& _kernel,
                          Point _anchor, double _delta,
                          int _rowBorderType, int _columnBorderType,
-                         const Scalar& _borderValue, int _maxBufRows )
+                         const Scalar& _borderValue )
 {
     _srcType = CV_MAT_TYPE(_srcType);
     _dstType = CV_MAT_TYPE(_dstType);
@@ -1543,7 +1544,7 @@ Ptr<FilterEngine> createLinearFilter( int _srcType, int _dstType, const Mat& _ke
 
     return Ptr<FilterEngine>(new FilterEngine(_filter2D, Ptr<BaseRowFilter>(0),
         Ptr<BaseColumnFilter>(0), _srcType, _dstType, _srcType,
-        _rowBorderType, _columnBorderType, _borderValue, _maxBufRows ));
+        _rowBorderType, _columnBorderType, _borderValue ));
 }
 
 

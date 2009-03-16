@@ -292,15 +292,6 @@ void Laplacian( const Mat& src, Mat& dst, int ddepth, int ksize,
     }
     else
     {
-#if 0
-        Mat D2x, D2y;
-        int depth = src.depth();
-        int wdepth = depth == CV_8U && ksize <= 5 ? CV_16S : depth <= CV_32F ? CV_32F : CV_64F;
-        Sobel( src, D2x, wdepth, 2, 0, ksize, 1, 0, borderType );
-        Sobel( src, D2y, wdepth, 0, 2, ksize, 1, 0, borderType );
-        D2x += D2y;
-        D2x.convertTo( dst, ddepth, scale, delta );
-#else
         const int STRIPE_SIZE = 1 << 14;
 
         int depth = src.depth();
@@ -316,34 +307,29 @@ void Laplacian( const Mat& src, Mat& dst, int ddepth, int ksize,
 
         int dy0 = std::min(STRIPE_SIZE/(getElemSize(src.type())*src.cols), src.rows);
         Ptr<FilterEngine> fx = createSeparableLinearFilter(src.type(),
-            wtype, kd, ks, Point(-1,-1), 0, borderType, borderType, Scalar(), dy0 ); 
+            wtype, kd, ks, Point(-1,-1), 0, borderType, borderType, Scalar() ); 
         Ptr<FilterEngine> fy = createSeparableLinearFilter(src.type(),
-            wtype, ks, kd, Point(-1,-1), 0, borderType, borderType, Scalar(), dy0 );
+            wtype, ks, kd, Point(-1,-1), 0, borderType, borderType, Scalar() );
 
-        int y = fx->setROI(src), ddy = 0;
-        fy->setROI(src);
+        int y = fx->start(src), dsty = 0, dy = 0;
+        fy->start(src);
         const uchar* sptr = src.data + y*src.step;
 
-        Mat d2x( fx->nextStripeSize, src.cols, wtype );
-        Mat d2y( fx->nextStripeSize, src.cols, wtype );
+        Mat d2x( dy0 + kd.rows - 1, src.cols, wtype );
+        Mat d2y( dy0 + kd.rows - 1, src.cols, wtype );
 
-        for( y = 0; y < src.rows; y += ddy )
+        for( ; dsty < src.rows; sptr += dy0*src.step, dsty += dy )
         {
-            int sdy = y == 0 ? fx->firstStripeSize : fx->nextStripeSize;
-            fx->put( sptr, src.step, sdy );
-            ddy = fx->get( d2x.data, d2x.step, fx->nextStripeSize );
-            sdy = fy->put( sptr, src.step, sdy );
-            fy->get( d2y.data, d2y.step, fx->nextStripeSize );
-            sptr += src.step*sdy;
-            if( ddy > 0 )
+            fx->proceed( sptr, src.step, dy0, d2x.data, d2x.step );
+            dy = fy->proceed( sptr, src.step, dy0, d2y.data, d2y.step );
+            if( dy > 0 )
             {
-                Mat dstripe = dst.rowRange(y, y + ddy);
-                d2x.rows = d2y.rows = ddy; // modify the headers, which should work
+                Mat dstripe = dst.rowRange(dsty, dsty + dy);
+                d2x.rows = d2y.rows = dy; // modify the headers, which should work
                 d2x += d2y;
                 d2x.convertTo( dstripe, dtype, scale, delta );
             }
         }
-#endif
     }
 }
 
