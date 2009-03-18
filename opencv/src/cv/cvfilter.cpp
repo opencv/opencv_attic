@@ -287,8 +287,6 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
     rowCount = dstY = 0;
     startY = startY0 = std::max(roi.y - anchor.y, 0);
     endY = std::min(roi.y + roi.height + ksize.height - anchor.y - 1, wholeSize.height);
-    /*firstStripeSize = std::min(roi.y + (int)rows.size() - anchor.y, endY) - startY;
-    nextStripeSize = rows.size() - ksize.height + 1;*/
     if( columnFilter.obj )
         columnFilter->reset();
     if( filter2D.obj )
@@ -431,29 +429,6 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
 }
 
 
-/*int FilterEngine::get(uchar* dst, int dststep, int maxCount)
-{
-    CV_Assert( wholeSize.width > 0 && wholeSize.height > 0 );
-    
-    int bufRows = (int)rows.size();
-    if( startY > minY )
-    {
-        lostRows += startY - minY;
-        dstY += startY - minY;
-    }
-
-    dstY += dy;
-    if( dstY == roi.height )
-    {
-        // prepare for the next filtering operation
-        // with the same parameters
-        rowCount = lostRows = dstY = 0;
-        startY = startY0;
-    }
-
-    return dy;
-}*/
-
 void FilterEngine::apply(const Mat& src, Mat& dst,
     const Rect& _srcRoi, Point dstOfs, bool isolated)
 {
@@ -506,15 +481,1246 @@ int getKernelType(const Mat& _kernel, Point anchor)
         sum += a;
     }
 
-    if( fabs(sum - 1) > DBL_EPSILON*(fabs(sum) + 1) )
+    if( fabs(sum - 1) > FLT_EPSILON*(fabs(sum) + 1) )
         type &= ~KERNEL_SMOOTH;
     return type;
 }
 
 
-template<typename ST, typename DT> struct RowFilter : public BaseRowFilter
+struct RowNoVec
 {
-    RowFilter( const Mat& _kernel, int _anchor )
+    RowNoVec() {}
+    RowNoVec(const Mat&) {}
+    int operator()(const uchar*, uchar*, int, int) const { return 0; }
+};
+
+struct ColumnNoVec
+{
+    ColumnNoVec() {}
+    ColumnNoVec(const Mat&, int, int, double) {}
+    int operator()(const uchar**, uchar*, int) const { return 0; }
+};
+
+struct SymmRowSmallNoVec
+{
+    SymmRowSmallNoVec() {}
+    SymmRowSmallNoVec(const Mat&, int) {}
+    int operator()(const uchar*, uchar*, int, int) const { return 0; }
+};
+
+struct SymmColumnSmallNoVec
+{
+    SymmColumnSmallNoVec() {}
+    SymmColumnSmallNoVec(const Mat&, int, int, double) {}
+    int operator()(const uchar**, uchar*, int) const { return 0; }
+};
+
+
+#if CV_SSE2
+
+///////////////////////////////////// 8u-16s & 8u-8u //////////////////////////////////
+
+struct RowVec_8u32s
+{
+    RowVec_8u32s() { smallValues = false; }
+    RowVec_8u32s( const Mat& _kernel )
+    {
+        kernel = _kernel;
+        smallValues = true;
+        int k, ksize = kernel.rows + kernel.cols - 1;
+        for( k = 0; k < ksize; k++ )
+        {
+            int v = ((const int*)kernel.data)[k];
+            if( v < SHRT_MIN || v > SHRT_MAX )
+            {
+                smallValues = false;
+                break;
+            }
+        }
+    }
+
+    int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
+    {
+        int i = 0, k, _ksize = kernel.rows + kernel.cols - 1;
+        int* dst = (int*)_dst;
+        const int* _kx = (const int*)kernel.data;
+        width *= cn;
+
+        if( smallValues )
+        {
+            for( ; i <= width - 16; i += 16 )
+            {
+                const uchar* src = _src + i;
+                __m128i f, z = _mm_setzero_si128(), s0 = z, s1 = z, s2 = z, s3 = z;
+                __m128i x0, x1, x2, x3;
+
+                for( k = 0; k < _ksize; k++, src += cn )
+                {
+                    f = _mm_cvtsi32_si128(_kx[k]);
+                    f = _mm_shuffle_epi32(f, 0);
+                    f = _mm_packs_epi32(f, f);
+
+                    x0 = _mm_loadu_si128((const __m128i*)src);
+                    x2 = _mm_unpackhi_epi8(x0, z);
+                    x0 = _mm_unpacklo_epi8(x0, z);
+                    x1 = _mm_mulhi_epi16(x0, f);
+                    x3 = _mm_mulhi_epi16(x2, f);
+                    x0 = _mm_mullo_epi16(x0, f);
+                    x2 = _mm_mullo_epi16(x2, f);
+
+                    s0 = _mm_add_epi32(s0, _mm_unpacklo_epi16(x0, x1));
+                    s1 = _mm_add_epi32(s1, _mm_unpackhi_epi16(x0, x1));
+                    s2 = _mm_add_epi32(s2, _mm_unpacklo_epi16(x2, x3));
+                    s3 = _mm_add_epi32(s3, _mm_unpackhi_epi16(x2, x3));
+                }
+                
+                _mm_store_si128((__m128i*)(dst + i), s0);
+                _mm_store_si128((__m128i*)(dst + i + 4), s1);
+                _mm_store_si128((__m128i*)(dst + i + 8), s2);
+                _mm_store_si128((__m128i*)(dst + i + 12), s3);
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                const uchar* src = _src + i;
+                __m128i f, z = _mm_setzero_si128(), s0 = z, x0, x1;
+
+                for( k = 0; k < _ksize; k++, src += cn )
+                {
+                    f = _mm_cvtsi32_si128(_kx[k]);
+                    f = _mm_shuffle_epi32(f, 0);
+                    f = _mm_packs_epi32(f, f);
+
+                    x0 = _mm_cvtsi32_si128(*(const int*)src);
+                    x0 = _mm_unpacklo_epi8(x0, z);
+                    x1 = _mm_mulhi_epi16(x0, f);
+                    x0 = _mm_mullo_epi16(x0, f);
+                    s0 = _mm_add_epi32(s0, _mm_unpacklo_epi16(x0, x1));
+                }
+                _mm_store_si128((__m128i*)(dst + i), s0);
+            }
+        }
+        return i;
+    }
+
+    Mat kernel;
+    bool smallValues;
+};
+
+
+struct SymmRowSmallVec_8u32s
+{
+    SymmRowSmallVec_8u32s() { smallValues = false; }
+    SymmRowSmallVec_8u32s( const Mat& _kernel, int _symmetryType )
+    {
+        kernel = _kernel;
+        symmetryType = _symmetryType;
+        smallValues = true;
+        int k, ksize = kernel.rows + kernel.cols - 1;
+        for( k = 0; k < ksize; k++ )
+        {
+            int v = ((const int*)kernel.data)[k];
+            if( v < SHRT_MIN || v > SHRT_MAX )
+            {
+                smallValues = false;
+                break;
+            }
+        }
+    }
+
+    int operator()(const uchar* src, uchar* _dst, int width, int cn) const
+    {
+        int i = 0, j, k, _ksize = kernel.rows + kernel.cols - 1;
+        int* dst = (int*)_dst;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const int* kx = (const int*)kernel.data + _ksize/2;
+        if( !smallValues )
+            return 0;
+
+        src += (_ksize/2)*cn;
+        width *= cn;
+
+        __m128i z = _mm_setzero_si128();
+        if( symmetrical )
+        {
+            if( _ksize == 1 )
+                return 0;
+            if( _ksize == 3 )
+            {
+                if( kx[0] == 2 && kx[1] == 1 )
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        y0 = _mm_unpackhi_epi8(x0, z);
+                        x0 = _mm_unpacklo_epi8(x0, z);
+                        y1 = _mm_unpackhi_epi8(x1, z);
+                        x1 = _mm_unpacklo_epi8(x1, z);
+                        y2 = _mm_unpackhi_epi8(x2, z);
+                        x2 = _mm_unpacklo_epi8(x2, z);
+                        x0 = _mm_add_epi16(x0, _mm_add_epi16(_mm_add_epi16(x1, x1), x2));
+                        y0 = _mm_add_epi16(y0, _mm_add_epi16(_mm_add_epi16(y1, y1), y2));
+                        _mm_store_si128((__m128i*)(dst + i), _mm_unpacklo_epi16(x0, z));
+                        _mm_store_si128((__m128i*)(dst + i + 4), _mm_unpackhi_epi16(x0, z));
+                        _mm_store_si128((__m128i*)(dst + i + 8), _mm_unpacklo_epi16(y0, z));
+                        _mm_store_si128((__m128i*)(dst + i + 12), _mm_unpackhi_epi16(y0, z));
+                    }
+                else if( kx[0] == -2 && kx[1] == 1 )
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        y0 = _mm_unpackhi_epi8(x0, z);
+                        x0 = _mm_unpacklo_epi8(x0, z);
+                        y1 = _mm_unpackhi_epi8(x1, z);
+                        x1 = _mm_unpacklo_epi8(x1, z);
+                        y2 = _mm_unpackhi_epi8(x2, z);
+                        x2 = _mm_unpacklo_epi8(x2, z);
+                        x0 = _mm_add_epi16(x0, _mm_sub_epi16(x2, _mm_add_epi16(x1, x1)));
+                        y0 = _mm_add_epi16(y0, _mm_sub_epi16(y2, _mm_add_epi16(y1, y1)));
+                        _mm_store_si128((__m128i*)(dst + i), _mm_srai_epi32(_mm_unpacklo_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 4), _mm_srai_epi32(_mm_unpackhi_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 8), _mm_srai_epi32(_mm_unpacklo_epi16(y0, y0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 12), _mm_srai_epi32(_mm_unpackhi_epi16(y0, y0),16));
+                    }
+                else
+                {
+                    __m128i k0 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[0]), 0),
+                            k1 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[1]), 0);
+                    k0 = _mm_packs_epi32(k0, k0);
+                    k1 = _mm_packs_epi32(k1, k1);
+
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
+                        x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
+                        y1 = _mm_unpackhi_epi8(x1, z);
+                        x1 = _mm_unpacklo_epi8(x1, z);
+
+                        t1 = _mm_mulhi_epi16(x1, k0);
+                        t0 = _mm_mullo_epi16(x1, k0);
+                        x2 = _mm_mulhi_epi16(x0, k1);
+                        x0 = _mm_mullo_epi16(x0, k1);
+                        z0 = _mm_unpacklo_epi16(t0, t1);
+                        z1 = _mm_unpackhi_epi16(t0, t1);
+                        z0 = _mm_add_epi32(z0, _mm_unpacklo_epi16(x0, x2));
+                        z1 = _mm_add_epi32(z1, _mm_unpackhi_epi16(x0, x2));
+
+                        t1 = _mm_mulhi_epi16(y1, k0);
+                        t0 = _mm_mullo_epi16(y1, k0);
+                        y1 = _mm_mulhi_epi16(y0, k1);
+                        y0 = _mm_mullo_epi16(y0, k1);
+                        z2 = _mm_unpacklo_epi16(t0, t1);
+                        z3 = _mm_unpackhi_epi16(t0, t1);
+                        z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
+                        z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
+                        _mm_store_si128((__m128i*)(dst + i), z0);
+                        _mm_store_si128((__m128i*)(dst + i + 4), z1);
+                        _mm_store_si128((__m128i*)(dst + i + 8), z2);
+                        _mm_store_si128((__m128i*)(dst + i + 12), z3);
+                    }
+                }
+            }
+            else if( _ksize == 5 )
+            {
+                if( kx[0] == -2 && kx[1] == 0 && kx[2] == 1 )
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                        y0 = _mm_unpackhi_epi8(x0, z);
+                        x0 = _mm_unpacklo_epi8(x0, z);
+                        y1 = _mm_unpackhi_epi8(x1, z);
+                        x1 = _mm_unpacklo_epi8(x1, z);
+                        y2 = _mm_unpackhi_epi8(x2, z);
+                        x2 = _mm_unpacklo_epi8(x2, z);
+                        x0 = _mm_add_epi16(x0, _mm_sub_epi16(x2, _mm_add_epi16(x1, x1)));
+                        y0 = _mm_add_epi16(y0, _mm_sub_epi16(y2, _mm_add_epi16(y1, y1)));
+                        _mm_store_si128((__m128i*)(dst + i), _mm_srai_epi32(_mm_unpacklo_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 4), _mm_srai_epi32(_mm_unpackhi_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 8), _mm_srai_epi32(_mm_unpacklo_epi16(y0, y0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 12), _mm_srai_epi32(_mm_unpackhi_epi16(y0, y0),16));
+                    }
+                else
+                {
+                    __m128i k0 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[0]), 0),
+                            k1 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[1]), 0),
+                            k2 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[2]), 0);
+                    k0 = _mm_packs_epi32(k0, k0);
+                    k1 = _mm_packs_epi32(k1, k1);
+                    k2 = _mm_packs_epi32(k2, k2);
+
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
+                        x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
+                        y1 = _mm_unpackhi_epi8(x1, z);
+                        x1 = _mm_unpacklo_epi8(x1, z);
+
+                        t1 = _mm_mulhi_epi16(x1, k0);
+                        t0 = _mm_mullo_epi16(x1, k0);
+                        x2 = _mm_mulhi_epi16(x0, k1);
+                        x0 = _mm_mullo_epi16(x0, k1);
+                        z0 = _mm_unpacklo_epi16(t0, t1);
+                        z1 = _mm_unpackhi_epi16(t0, t1);
+                        z0 = _mm_add_epi32(z0, _mm_unpacklo_epi16(x0, x2));
+                        z1 = _mm_add_epi32(z1, _mm_unpackhi_epi16(x0, x2));
+
+                        t1 = _mm_mulhi_epi16(y1, k0);
+                        t0 = _mm_mullo_epi16(y1, k0);
+                        y1 = _mm_mulhi_epi16(y0, k1);
+                        y0 = _mm_mullo_epi16(y0, k1);
+                        z2 = _mm_unpacklo_epi16(t0, t1);
+                        z3 = _mm_unpackhi_epi16(t0, t1);
+                        z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
+                        z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
+
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                        y1 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
+                        y0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
+
+                        t1 = _mm_mulhi_epi16(y0, k2);
+                        t0 = _mm_mullo_epi16(y0, k2);
+                        y0 = _mm_mullo_epi16(y1, k2);
+                        y1 = _mm_mulhi_epi16(y1, k2);
+                        z0 = _mm_add_epi32(z0, _mm_unpacklo_epi16(t0, t1));
+                        z1 = _mm_add_epi32(z1, _mm_unpackhi_epi16(t0, t1));
+                        z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
+                        z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
+
+                        _mm_store_si128((__m128i*)(dst + i), z0);
+                        _mm_store_si128((__m128i*)(dst + i + 4), z1);
+                        _mm_store_si128((__m128i*)(dst + i + 8), z2);
+                        _mm_store_si128((__m128i*)(dst + i + 12), z3);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if( _ksize == 3 )
+            {
+                if( kx[0] == 0 && kx[1] == 1 )
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, y0;
+                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
+                        y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
+                        x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
+                        _mm_store_si128((__m128i*)(dst + i), _mm_srai_epi32(_mm_unpacklo_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 4), _mm_srai_epi32(_mm_unpackhi_epi16(x0, x0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 8), _mm_srai_epi32(_mm_unpacklo_epi16(y0, y0),16));
+                        _mm_store_si128((__m128i*)(dst + i + 12), _mm_srai_epi32(_mm_unpackhi_epi16(y0, y0),16));
+                    }
+                else
+                {
+                    __m128i k1 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[1]), 0);
+                    k1 = _mm_packs_epi32(k1, k1);
+
+                    for( ; i <= width - 16; i += 16, src += 16 )
+                    {
+                        __m128i x0, x1, y0, y1, z0, z1, z2, z3;
+                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
+                        y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
+                        x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
+
+                        x1 = _mm_mulhi_epi16(x0, k1);
+                        x0 = _mm_mullo_epi16(x0, k1);
+                        z0 = _mm_unpacklo_epi16(x0, x1);
+                        z1 = _mm_unpackhi_epi16(x0, x1);
+
+                        y1 = _mm_mulhi_epi16(y0, k1);
+                        y0 = _mm_mullo_epi16(y0, k1);
+                        z2 = _mm_unpacklo_epi16(y0, y1);
+                        z3 = _mm_unpackhi_epi16(y0, y1);
+                        _mm_store_si128((__m128i*)(dst + i), z0);
+                        _mm_store_si128((__m128i*)(dst + i + 4), z1);
+                        _mm_store_si128((__m128i*)(dst + i + 8), z2);
+                        _mm_store_si128((__m128i*)(dst + i + 12), z3);
+                    }
+                }
+            }
+            else if( _ksize == 5 )
+            {
+                __m128i k0 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[0]), 0),
+                        k1 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[1]), 0),
+                        k2 = _mm_shuffle_epi32(_mm_cvtsi32_si128(kx[2]), 0);
+                k0 = _mm_packs_epi32(k0, k0);
+                k1 = _mm_packs_epi32(k1, k1);
+                k2 = _mm_packs_epi32(k2, k2);
+
+                for( ; i <= width - 16; i += 16, src += 16 )
+                {
+                    __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
+                    x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                    x2 = _mm_loadu_si128((__m128i*)(src - cn));
+                    y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
+                    x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
+
+                    x2 = _mm_mulhi_epi16(x0, k1);
+                    x0 = _mm_mullo_epi16(x0, k1);
+                    z0 = _mm_unpacklo_epi16(x0, x2);
+                    z1 = _mm_unpackhi_epi16(x0, x2);
+                    y1 = _mm_mulhi_epi16(y0, k1);
+                    y0 = _mm_mullo_epi16(y0, k1);
+                    z2 = _mm_unpacklo_epi16(y0, y1);
+                    z3 = _mm_unpackhi_epi16(y0, y1);
+
+                    x0 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                    x1 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                    y1 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
+                    y0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
+
+                    t1 = _mm_mulhi_epi16(y0, k2);
+                    t0 = _mm_mullo_epi16(y0, k2);
+                    y0 = _mm_mullo_epi16(y1, k2);
+                    y1 = _mm_mulhi_epi16(y1, k2);
+                    z0 = _mm_add_epi32(z0, _mm_unpacklo_epi16(t0, t1));
+                    z1 = _mm_add_epi32(z1, _mm_unpackhi_epi16(t0, t1));
+                    z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
+                    z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
+
+                    _mm_store_si128((__m128i*)(dst + i), z0);
+                    _mm_store_si128((__m128i*)(dst + i + 4), z1);
+                    _mm_store_si128((__m128i*)(dst + i + 8), z2);
+                    _mm_store_si128((__m128i*)(dst + i + 12), z3);
+                }
+            }
+        }
+
+        src -= (_ksize/2)*cn;
+        kx -= _ksize/2;
+        for( ; i <= width - 4; i += 4, src += 4 )
+        {
+            __m128i f, s0 = z, x0, x1;
+
+            for( k = j = 0; k < _ksize; k++, j += cn )
+            {
+                f = _mm_cvtsi32_si128(kx[k]);
+                f = _mm_shuffle_epi32(f, 0);
+                f = _mm_packs_epi32(f, f);
+
+                x0 = _mm_cvtsi32_si128(*(const int*)(src + j));
+                x0 = _mm_unpacklo_epi8(x0, z);
+                x1 = _mm_mulhi_epi16(x0, f);
+                x0 = _mm_mullo_epi16(x0, f);
+                s0 = _mm_add_epi32(s0, _mm_unpacklo_epi16(x0, x1));
+            }
+            _mm_store_si128((__m128i*)(dst + i), s0);
+        }
+
+        return i;
+    }
+
+    Mat kernel;
+    int symmetryType;
+    bool smallValues;
+};
+
+
+struct SymmColumnVec_32s8u
+{
+    SymmColumnVec_32s8u() { symmetryType=0; }
+    SymmColumnVec_32s8u(const Mat& _kernel, int _symmetryType, int _bits, double _delta)
+    {
+        symmetryType = _symmetryType;
+        _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
+        delta = (float)(_delta/(1 << _bits));
+        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
+    }
+
+    int operator()(const uchar** _src, uchar* dst, int width) const
+    {
+        int ksize2 = (kernel.rows + kernel.cols - 1)/2;
+        const float* ky = (const float*)kernel.data + ksize2;
+        int i = 0, k;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const int** src = (const int**)_src;
+        const __m128i *S, *S2;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        if( symmetrical )
+        {
+            for( ; i <= width - 16; i += 16 )
+            {
+                __m128 f = _mm_load_ss(ky);
+                f = _mm_shuffle_ps(f, f, 0);
+                __m128 s0, s1, s2, s3;
+                __m128i x0, x1;
+                S = (const __m128i*)(src[0] + i);
+                s0 = _mm_cvtepi32_ps(_mm_load_si128(S));
+                s1 = _mm_cvtepi32_ps(_mm_load_si128(S+1));
+                s0 = _mm_add_ps(_mm_mul_ps(s0, f), d4);
+                s1 = _mm_add_ps(_mm_mul_ps(s1, f), d4);
+                s2 = _mm_cvtepi32_ps(_mm_load_si128(S+2));
+                s3 = _mm_cvtepi32_ps(_mm_load_si128(S+3));
+                s2 = _mm_add_ps(_mm_mul_ps(s2, f), d4);
+                s3 = _mm_add_ps(_mm_mul_ps(s3, f), d4);
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = (const __m128i*)(src[k] + i);
+                    S2 = (const __m128i*)(src[-k] + i);
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_add_epi32(_mm_load_si128(S), _mm_load_si128(S2));
+                    x1 = _mm_add_epi32(_mm_load_si128(S+1), _mm_load_si128(S2+1));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(_mm_cvtepi32_ps(x1), f));
+                    x0 = _mm_add_epi32(_mm_load_si128(S+2), _mm_load_si128(S2+2));
+                    x1 = _mm_add_epi32(_mm_load_si128(S+3), _mm_load_si128(S2+3));
+                    s2 = _mm_add_ps(s2, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                    s3 = _mm_add_ps(s3, _mm_mul_ps(_mm_cvtepi32_ps(x1), f));
+                }
+
+                x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+                x1 = _mm_packs_epi32(_mm_cvtps_epi32(s2), _mm_cvtps_epi32(s3));
+                x0 = _mm_packus_epi16(x0, x1);
+                _mm_storeu_si128((__m128i*)(dst + i), x0);
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                __m128 f = _mm_load_ss(ky);
+                f = _mm_shuffle_ps(f, f, 0);
+                __m128i x0;
+                __m128 s0 = _mm_cvtepi32_ps(_mm_load_si128((const __m128i*)(src[0] + i)));
+                s0 = _mm_add_ps(_mm_mul_ps(s0, f), d4);
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = (const __m128i*)(src[k] + i);
+                    S2 = (const __m128i*)(src[-k] + i);
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_add_epi32(_mm_load_si128(S), _mm_load_si128(S2));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                }
+
+                x0 = _mm_cvtps_epi32(s0);
+                x0 = _mm_packs_epi32(x0, x0);
+                x0 = _mm_packus_epi16(x0, x0);
+                *(int*)(dst + i) = _mm_cvtsi128_si32(x0);
+            }
+        }
+        else
+        {
+            for( ; i <= width - 16; i += 16 )
+            {
+                __m128 f, s0 = d4, s1 = d4, s2 = d4, s3 = d4;
+                __m128i x0, x1;
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = (const __m128i*)(src[k] + i);
+                    S2 = (const __m128i*)(src[-k] + i);
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_sub_epi32(_mm_load_si128(S), _mm_load_si128(S2));
+                    x1 = _mm_sub_epi32(_mm_load_si128(S+1), _mm_load_si128(S2+1));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(_mm_cvtepi32_ps(x1), f));
+                    x0 = _mm_sub_epi32(_mm_load_si128(S+2), _mm_load_si128(S2+2));
+                    x1 = _mm_sub_epi32(_mm_load_si128(S+3), _mm_load_si128(S2+3));
+                    s2 = _mm_add_ps(s2, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                    s3 = _mm_add_ps(s3, _mm_mul_ps(_mm_cvtepi32_ps(x1), f));
+                }
+
+                x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+                x1 = _mm_packs_epi32(_mm_cvtps_epi32(s2), _mm_cvtps_epi32(s3));
+                x0 = _mm_packus_epi16(x0, x1);
+                _mm_storeu_si128((__m128i*)(dst + i), x0);
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                __m128 f, s0 = d4;
+                __m128i x0;
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = (const __m128i*)(src[k] + i);
+                    S2 = (const __m128i*)(src[-k] + i);
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_sub_epi32(_mm_load_si128(S), _mm_load_si128(S2));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0), f));
+                }
+
+                x0 = _mm_cvtps_epi32(s0);
+                x0 = _mm_packs_epi32(x0, x0);
+                x0 = _mm_packus_epi16(x0, x0);
+                *(int*)(dst + i) = _mm_cvtsi128_si32(x0);
+            }
+        }
+
+        return i;
+    }
+
+    int symmetryType;
+    float delta;
+    Mat kernel;
+};
+
+
+struct SymmColumnSmallVec_32s16s
+{
+    SymmColumnSmallVec_32s16s() { symmetryType=0; }
+    SymmColumnSmallVec_32s16s(const Mat& _kernel, int _symmetryType, int _bits, double _delta)
+    {
+        symmetryType = _symmetryType;
+        _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
+        delta = (float)(_delta/(1 << _bits));
+        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
+    }
+
+    int operator()(const uchar** _src, uchar* _dst, int width) const
+    {
+        int ksize2 = (kernel.rows + kernel.cols - 1)/2;
+        const float* ky = (const float*)kernel.data + ksize2;
+        int i = 0;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const int** src = (const int**)_src;
+        const int *S0 = src[-1], *S1 = src[0], *S2 = src[1];
+        short* dst = (short*)_dst;
+        __m128 df4 = _mm_set1_ps(delta);
+        __m128i d4 = _mm_cvtps_epi32(df4);
+
+        if( symmetrical )
+        {
+            if( ky[0] == 2 && ky[1] == 1 )
+            {
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128i s0, s1, s2, s3, s4, s5;
+                    s0 = _mm_load_si128((__m128i*)(S0 + i));
+                    s1 = _mm_load_si128((__m128i*)(S0 + i + 4));
+                    s2 = _mm_load_si128((__m128i*)(S1 + i));
+                    s3 = _mm_load_si128((__m128i*)(S1 + i + 4));
+                    s4 = _mm_load_si128((__m128i*)(S2 + i));
+                    s5 = _mm_load_si128((__m128i*)(S2 + i + 4));
+                    s0 = _mm_add_epi32(s0, _mm_add_epi32(s4, _mm_add_epi32(s2, s2)));
+                    s1 = _mm_add_epi32(s1, _mm_add_epi32(s5, _mm_add_epi32(s3, s3)));
+                    s0 = _mm_add_epi32(s0, d4);
+                    s1 = _mm_add_epi32(s1, d4);
+                    _mm_storeu_si128((__m128i*)(dst + i), _mm_packs_epi32(s0, s1));
+                }
+            }
+            else if( ky[0] == -2 && ky[1] == 1 )
+            {
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128i s0, s1, s2, s3, s4, s5;
+                    s0 = _mm_load_si128((__m128i*)(S0 + i));
+                    s1 = _mm_load_si128((__m128i*)(S0 + i + 4));
+                    s2 = _mm_load_si128((__m128i*)(S1 + i));
+                    s3 = _mm_load_si128((__m128i*)(S1 + i + 4));
+                    s4 = _mm_load_si128((__m128i*)(S2 + i));
+                    s5 = _mm_load_si128((__m128i*)(S2 + i + 4));
+                    s0 = _mm_add_epi32(s0, _mm_sub_epi32(s4, _mm_add_epi32(s2, s2)));
+                    s1 = _mm_add_epi32(s1, _mm_sub_epi32(s5, _mm_add_epi32(s3, s3)));
+                    s0 = _mm_add_epi32(s0, d4);
+                    s1 = _mm_add_epi32(s1, d4);
+                    _mm_storeu_si128((__m128i*)(dst + i), _mm_packs_epi32(s0, s1));
+                }
+            }
+            else
+            {
+                __m128 k0 = _mm_set1_ps(ky[0]), k1 = _mm_set1_ps(ky[1]);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0, s1;
+                    s0 = _mm_cvtepi32_ps(_mm_load_si128((__m128i*)(S1 + i)));
+                    s1 = _mm_cvtepi32_ps(_mm_load_si128((__m128i*)(S1 + i + 4)));
+                    s0 = _mm_add_ps(_mm_mul_ps(s0, k0), df4);
+                    s1 = _mm_add_ps(_mm_mul_ps(s1, k0), df4);
+                    __m128i x0, x1;
+                    x0 = _mm_add_epi32(_mm_load_si128((__m128i*)(S0 + i)),
+                                       _mm_load_si128((__m128i*)(S2 + i)));
+                    x1 = _mm_add_epi32(_mm_load_si128((__m128i*)(S0 + i + 4)),
+                                       _mm_load_si128((__m128i*)(S2 + i + 4)));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0),k1));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(_mm_cvtepi32_ps(x1),k1));
+                    x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+                    _mm_storeu_si128((__m128i*)(dst + i), x0);
+                }
+            }
+        }
+        else
+        {
+            if( fabs(ky[1]) == 1 && ky[1] == -ky[-1] )
+            {
+                if( ky[1] < 0 )
+                    std::swap(S0, S2);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128i s0, s1, s2, s3;
+                    s0 = _mm_load_si128((__m128i*)(S2 + i));
+                    s1 = _mm_load_si128((__m128i*)(S2 + i + 4));
+                    s2 = _mm_load_si128((__m128i*)(S0 + i));
+                    s3 = _mm_load_si128((__m128i*)(S0 + i + 4));
+                    s0 = _mm_add_epi32(_mm_sub_epi32(s0, s2), d4);
+                    s1 = _mm_add_epi32(_mm_sub_epi32(s1, s3), d4);
+                    _mm_storeu_si128((__m128i*)(dst + i), _mm_packs_epi32(s0, s1));
+                }
+            }
+            else
+            {
+                __m128 k1 = _mm_set1_ps(ky[1]);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0 = df4, s1 = df4;
+                    __m128i x0, x1;
+                    x0 = _mm_sub_epi32(_mm_load_si128((__m128i*)(S0 + i)),
+                                       _mm_load_si128((__m128i*)(S2 + i)));
+                    x1 = _mm_sub_epi32(_mm_load_si128((__m128i*)(S0 + i + 4)),
+                                       _mm_load_si128((__m128i*)(S2 + i + 4)));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(_mm_cvtepi32_ps(x0),k1));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(_mm_cvtepi32_ps(x1),k1));
+                    x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+                    _mm_storeu_si128((__m128i*)(dst + i), x0);
+                }
+            }
+        }
+
+        return i;
+    }
+
+    int symmetryType;
+    float delta;
+    Mat kernel;
+};
+
+
+/////////////////////////////////////// 32f //////////////////////////////////
+
+struct RowVec_32f
+{
+    RowVec_32f() {}
+    RowVec_32f( const Mat& _kernel )
+    {
+        kernel = _kernel;
+    }
+
+    int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
+    {
+        int i = 0, k, _ksize = kernel.rows + kernel.cols - 1;
+        float* dst = (float*)_dst;
+        const float* _kx = (const float*)kernel.data;
+        width *= cn;
+
+        for( ; i <= width - 8; i += 8 )
+        {
+            const float* src = (const float*)_src + i;
+            __m128 f, s0 = _mm_setzero_ps(), s1 = s0, x0, x1;
+            for( k = 0; k < _ksize; k++, src += cn )
+            {
+                f = _mm_load_ss(_kx+k);
+                f = _mm_shuffle_ps(f, f, 0);
+
+                x0 = _mm_loadu_ps(src);
+                x1 = _mm_loadu_ps(src + 4);
+                s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
+                s1 = _mm_add_ps(s1, _mm_mul_ps(x1, f));
+            }
+            _mm_store_ps(dst + i, s0);
+            _mm_store_ps(dst + i + 4, s1);
+        }
+        return i;
+    }
+
+    Mat kernel;
+};
+
+
+struct SymmRowSmallVec_32f
+{
+    SymmRowSmallVec_32f() {}
+    SymmRowSmallVec_32f( const Mat& _kernel, int _symmetryType )
+    {
+        kernel = _kernel;
+        symmetryType = _symmetryType;
+    }
+
+    int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
+    {
+        int i = 0, _ksize = kernel.rows + kernel.cols - 1;
+        float* dst = (float*)_dst;
+        const float* src = (const float*)_src + (_ksize/2)*cn;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const float* kx = (const float*)kernel.data + _ksize/2;
+        width *= cn;
+
+        if( symmetrical )
+        {
+            if( _ksize == 1 )
+                return 0;
+            if( _ksize == 3 )
+            {
+                if( kx[0] == 2 && kx[1] == 1 )
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_ps(src - cn);
+                        x1 = _mm_loadu_ps(src);
+                        x2 = _mm_loadu_ps(src + cn);
+                        y0 = _mm_loadu_ps(src - cn + 4);
+                        y1 = _mm_loadu_ps(src + 4);
+                        y2 = _mm_loadu_ps(src + cn + 4);
+                        x0 = _mm_add_ps(x0, _mm_add_ps(_mm_add_ps(x1, x1), x2));
+                        y0 = _mm_add_ps(y0, _mm_add_ps(_mm_add_ps(y1, y1), y2));
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                else if( kx[0] == -2 && kx[1] == 1 )
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_ps(src - cn);
+                        x1 = _mm_loadu_ps(src);
+                        x2 = _mm_loadu_ps(src + cn);
+                        y0 = _mm_loadu_ps(src - cn + 4);
+                        y1 = _mm_loadu_ps(src + 4);
+                        y2 = _mm_loadu_ps(src + cn + 4);
+                        x0 = _mm_add_ps(x0, _mm_sub_ps(x2, _mm_add_ps(x1, x1)));
+                        y0 = _mm_add_ps(y0, _mm_sub_ps(y2, _mm_add_ps(y1, y1)));
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                else
+                {
+                    __m128 k0 = _mm_set1_ps(kx[0]), k1 = _mm_set1_ps(kx[1]);
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_ps(src - cn);
+                        x1 = _mm_loadu_ps(src);
+                        x2 = _mm_loadu_ps(src + cn);
+                        y0 = _mm_loadu_ps(src - cn + 4);
+                        y1 = _mm_loadu_ps(src + 4);
+                        y2 = _mm_loadu_ps(src + cn + 4);
+
+                        x0 = _mm_mul_ps(_mm_add_ps(x0, x2), k1);
+                        y0 = _mm_mul_ps(_mm_add_ps(y0, y2), k1);
+                        x0 = _mm_add_ps(x0, _mm_mul_ps(x1, k0));
+                        y0 = _mm_add_ps(y0, _mm_mul_ps(y1, k0));
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                }
+            }
+            else if( _ksize == 5 )
+            {
+                if( kx[0] == -2 && kx[1] == 0 && kx[2] == 1 )
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_ps(src - cn*2);
+                        x1 = _mm_loadu_ps(src);
+                        x2 = _mm_loadu_ps(src + cn*2);
+                        y0 = _mm_loadu_ps(src - cn*2 + 4);
+                        y1 = _mm_loadu_ps(src + 4);
+                        y2 = _mm_loadu_ps(src + cn*2 + 4);
+                        x0 = _mm_add_ps(x0, _mm_sub_ps(x2, _mm_add_ps(x1, x1)));
+                        y0 = _mm_add_ps(y0, _mm_sub_ps(y2, _mm_add_ps(y1, y1)));
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                else
+                {
+                    __m128 k0 = _mm_set1_ps(kx[0]), k1 = _mm_set1_ps(kx[1]), k2 = _mm_set1_ps(kx[2]);
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x1, x2, y0, y1, y2;
+                        x0 = _mm_loadu_ps(src - cn);
+                        x1 = _mm_loadu_ps(src);
+                        x2 = _mm_loadu_ps(src + cn);
+                        y0 = _mm_loadu_ps(src - cn + 4);
+                        y1 = _mm_loadu_ps(src + 4);
+                        y2 = _mm_loadu_ps(src + cn + 4);
+
+                        x0 = _mm_mul_ps(_mm_add_ps(x0, x2), k1);
+                        y0 = _mm_mul_ps(_mm_add_ps(y0, y2), k1);
+                        x0 = _mm_add_ps(x0, _mm_mul_ps(x1, k0));
+                        y0 = _mm_add_ps(y0, _mm_mul_ps(y1, k0));
+                        
+                        x2 = _mm_add_ps(_mm_loadu_ps(src + cn*2), _mm_loadu_ps(src - cn*2));
+                        y2 = _mm_add_ps(_mm_loadu_ps(src + cn*2 + 4), _mm_loadu_ps(src - cn*2 + 4));
+                        x0 = _mm_add_ps(x0, _mm_mul_ps(x2, k2));
+                        y0 = _mm_add_ps(y0, _mm_mul_ps(y2, k2));
+                        
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if( _ksize == 3 )
+            {
+                if( kx[0] == 0 && kx[1] == 1 )
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x2, y0, y2;
+                        x0 = _mm_loadu_ps(src + cn);
+                        x2 = _mm_loadu_ps(src - cn);
+                        y0 = _mm_loadu_ps(src + cn + 4);
+                        y2 = _mm_loadu_ps(src - cn + 4);
+                        x0 = _mm_sub_ps(x0, x2);
+                        y0 = _mm_sub_ps(y0, y2);
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                else
+                {
+                    __m128 k1 = _mm_set1_ps(kx[1]);
+                    for( ; i <= width - 8; i += 8, src += 8 )
+                    {
+                        __m128 x0, x2, y0, y2;
+                        x0 = _mm_loadu_ps(src + cn);
+                        x2 = _mm_loadu_ps(src - cn);
+                        y0 = _mm_loadu_ps(src + cn + 4);
+                        y2 = _mm_loadu_ps(src - cn + 4);
+
+                        x0 = _mm_mul_ps(_mm_sub_ps(x0, x2), k1);
+                        y0 = _mm_mul_ps(_mm_sub_ps(y0, y2), k1);
+                        _mm_store_ps(dst + i, x0);
+                        _mm_store_ps(dst + i + 4, y0);
+                    }
+                }
+            }
+            else if( _ksize == 5 )
+            {
+                __m128 k1 = _mm_set1_ps(kx[1]), k2 = _mm_set1_ps(kx[2]);
+                for( ; i <= width - 8; i += 8, src += 8 )
+                {
+                    __m128 x0, x2, y0, y2;
+                    x0 = _mm_loadu_ps(src + cn);
+                    x2 = _mm_loadu_ps(src - cn);
+                    y0 = _mm_loadu_ps(src + cn + 4);
+                    y2 = _mm_loadu_ps(src - cn + 4);
+
+                    x0 = _mm_mul_ps(_mm_sub_ps(x0, x2), k1);
+                    y0 = _mm_mul_ps(_mm_sub_ps(y0, y2), k1);
+                    
+                    x2 = _mm_sub_ps(_mm_loadu_ps(src + cn*2), _mm_loadu_ps(src - cn*2));
+                    y2 = _mm_sub_ps(_mm_loadu_ps(src + cn*2 + 4), _mm_loadu_ps(src - cn*2 + 4));
+                    x0 = _mm_add_ps(x0, _mm_mul_ps(x2, k2));
+                    y0 = _mm_add_ps(y0, _mm_mul_ps(y2, k2));
+                    
+                    _mm_store_ps(dst + i, x0);
+                    _mm_store_ps(dst + i + 4, y0);
+                }
+            }
+        }
+
+        return i;
+    }
+
+    Mat kernel;
+    int symmetryType;
+};
+
+
+struct SymmColumnVec_32f
+{
+    SymmColumnVec_32f() { symmetryType=0; }
+    SymmColumnVec_32f(const Mat& _kernel, int _symmetryType, int, double _delta)
+    {
+        symmetryType = _symmetryType;
+        kernel = _kernel;
+        delta = (float)_delta;
+        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
+    }
+
+    int operator()(const uchar** _src, uchar* _dst, int width) const
+    {
+        int ksize2 = (kernel.rows + kernel.cols - 1)/2;
+        const float* ky = (const float*)kernel.data + ksize2;
+        int i = 0, k;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const float** src = (const float**)_src;
+        const float *S, *S2;
+        float* dst = (float*)_dst;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        if( symmetrical )
+        {
+            for( ; i <= width - 16; i += 16 )
+            {
+                __m128 f = _mm_load_ss(ky);
+                f = _mm_shuffle_ps(f, f, 0);
+                __m128 s0, s1, s2, s3;
+                __m128 x0, x1;
+                S = src[0] + i;
+                s0 = _mm_load_ps(S);
+                s1 = _mm_load_ps(S+4);
+                s0 = _mm_add_ps(_mm_mul_ps(s0, f), d4);
+                s1 = _mm_add_ps(_mm_mul_ps(s1, f), d4);
+                s2 = _mm_load_ps(S+8);
+                s3 = _mm_load_ps(S+12);
+                s2 = _mm_add_ps(_mm_mul_ps(s2, f), d4);
+                s3 = _mm_add_ps(_mm_mul_ps(s3, f), d4);
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = src[k] + i;
+                    S2 = src[-k] + i;
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_add_ps(_mm_load_ps(S), _mm_load_ps(S2));
+                    x1 = _mm_add_ps(_mm_load_ps(S+4), _mm_load_ps(S2+4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1, f));
+                    x0 = _mm_add_ps(_mm_load_ps(S+8), _mm_load_ps(S2+8));
+                    x1 = _mm_add_ps(_mm_load_ps(S+12), _mm_load_ps(S2+12));
+                    s2 = _mm_add_ps(s2, _mm_mul_ps(x0, f));
+                    s3 = _mm_add_ps(s3, _mm_mul_ps(x1, f));
+                }
+
+                _mm_storeu_ps(dst + i, s0);
+                _mm_storeu_ps(dst + i + 4, s1);
+                _mm_storeu_ps(dst + i + 8, s2);
+                _mm_storeu_ps(dst + i + 12, s3);
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                __m128 f = _mm_load_ss(ky);
+                f = _mm_shuffle_ps(f, f, 0);
+                __m128 x0, s0 = _mm_load_ps(src[0] + i);
+                s0 = _mm_add_ps(_mm_mul_ps(s0, f), d4);
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    S = src[k] + i;
+                    S2 = src[-k] + i;
+                    x0 = _mm_add_ps(_mm_load_ps(src[k]+i), _mm_load_ps(src[-k] + i));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
+                }
+
+                _mm_storeu_ps(dst + i, s0);
+            }
+        }
+        else
+        {
+            for( ; i <= width - 16; i += 16 )
+            {
+                __m128 f, s0 = d4, s1 = d4, s2 = d4, s3 = d4;
+                __m128 x0, x1;
+                S = src[0] + i;
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    S = src[k] + i;
+                    S2 = src[-k] + i;
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    x0 = _mm_sub_ps(_mm_load_ps(S), _mm_load_ps(S2));
+                    x1 = _mm_sub_ps(_mm_load_ps(S+4), _mm_load_ps(S2+4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1, f));
+                    x0 = _mm_sub_ps(_mm_load_ps(S+8), _mm_load_ps(S2+8));
+                    x1 = _mm_sub_ps(_mm_load_ps(S+12), _mm_load_ps(S2+12));
+                    s2 = _mm_add_ps(s2, _mm_mul_ps(x0, f));
+                    s3 = _mm_add_ps(s3, _mm_mul_ps(x1, f));
+                }
+
+                _mm_storeu_ps(dst + i, s0);
+                _mm_storeu_ps(dst + i + 4, s1);
+                _mm_storeu_ps(dst + i + 8, s2);
+                _mm_storeu_ps(dst + i + 12, s3);
+            }
+
+            for( ; i <= width - 4; i += 4 )
+            {
+                __m128 f, x0, s0 = d4;
+
+                for( k = 1; k <= ksize2; k++ )
+                {
+                    f = _mm_load_ss(ky+k);
+                    f = _mm_shuffle_ps(f, f, 0);
+                    S = src[k] + i;
+                    S2 = src[-k] + i;
+                    x0 = _mm_sub_ps(_mm_load_ps(src[k]+i), _mm_load_ps(src[-k] + i));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
+                }
+
+                _mm_storeu_ps(dst + i, s0);
+            }
+        }
+
+        return i;
+    }
+
+    int symmetryType;
+    float delta;
+    Mat kernel;
+};
+
+
+struct SymmColumnSmallVec_32f
+{
+    SymmColumnSmallVec_32f() { symmetryType=0; }
+    SymmColumnSmallVec_32f(const Mat& _kernel, int _symmetryType, int, double _delta)
+    {
+        symmetryType = _symmetryType;
+        kernel = _kernel;
+        delta = (float)_delta;
+        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
+    }
+
+    int operator()(const uchar** _src, uchar* _dst, int width) const
+    {
+        int ksize2 = (kernel.rows + kernel.cols - 1)/2;
+        const float* ky = (const float*)kernel.data + ksize2;
+        int i = 0;
+        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
+        const float** src = (const float**)_src;
+        const float *S0 = src[-1], *S1 = src[0], *S2 = src[1];
+        float* dst = (float*)_dst;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        if( symmetrical )
+        {
+            if( ky[0] == 2 && ky[1] == 1 )
+            {
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0, s1, s2, s3, s4, s5;
+                    s0 = _mm_load_ps(S0 + i);
+                    s1 = _mm_load_ps(S0 + i + 4);
+                    s2 = _mm_load_ps(S1 + i);
+                    s3 = _mm_load_ps(S1 + i + 4);
+                    s4 = _mm_load_ps(S2 + i);
+                    s5 = _mm_load_ps(S2 + i + 4);
+                    s0 = _mm_add_ps(s0, _mm_add_ps(s4, _mm_add_ps(s2, s2)));
+                    s1 = _mm_add_ps(s1, _mm_add_ps(s5, _mm_add_ps(s3, s3)));
+                    s0 = _mm_add_ps(s0, d4);
+                    s1 = _mm_add_ps(s1, d4);
+                    _mm_storeu_ps(dst + i, s0);
+                    _mm_storeu_ps(dst + i + 4, s1);
+                }
+            }
+            else if( ky[0] == -2 && ky[1] == 1 )
+            {
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0, s1, s2, s3, s4, s5;
+                    s0 = _mm_load_ps(S0 + i);
+                    s1 = _mm_load_ps(S0 + i + 4);
+                    s2 = _mm_load_ps(S1 + i);
+                    s3 = _mm_load_ps(S1 + i + 4);
+                    s4 = _mm_load_ps(S2 + i);
+                    s5 = _mm_load_ps(S2 + i + 4);
+                    s0 = _mm_add_ps(s0, _mm_sub_ps(s4, _mm_add_ps(s2, s2)));
+                    s1 = _mm_add_ps(s1, _mm_sub_ps(s5, _mm_add_ps(s3, s3)));
+                    s0 = _mm_add_ps(s0, d4);
+                    s1 = _mm_add_ps(s1, d4);
+                    _mm_storeu_ps(dst + i, s0);
+                    _mm_storeu_ps(dst + i + 4, s1);
+                }
+            }
+            else
+            {
+                __m128 k0 = _mm_set1_ps(ky[0]), k1 = _mm_set1_ps(ky[1]);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0, s1, x0, x1;
+                    s0 = _mm_load_ps(S1 + i);
+                    s1 = _mm_load_ps(S1 + i + 4);
+                    s0 = _mm_add_ps(_mm_mul_ps(s0, k0), d4);
+                    s1 = _mm_add_ps(_mm_mul_ps(s1, k0), d4);
+                    x0 = _mm_add_ps(_mm_load_ps(S0 + i), _mm_load_ps(S2 + i));
+                    x1 = _mm_add_ps(_mm_load_ps(S0 + i + 4), _mm_load_ps(S2 + i + 4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0,k1));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1,k1));
+                    _mm_storeu_ps(dst + i, s0);
+                    _mm_storeu_ps(dst + i + 4, s1);
+                }
+            }
+        }
+        else
+        {
+            if( fabs(ky[1]) == 1 && ky[1] == -ky[-1] )
+            {
+                if( ky[1] < 0 )
+                    std::swap(S0, S2);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0, s1, s2, s3;
+                    s0 = _mm_load_ps(S2 + i);
+                    s1 = _mm_load_ps(S2 + i + 4);
+                    s2 = _mm_load_ps(S0 + i);
+                    s3 = _mm_load_ps(S0 + i + 4);
+                    s0 = _mm_add_ps(_mm_sub_ps(s0, s2), d4);
+                    s1 = _mm_add_ps(_mm_sub_ps(s1, s3), d4);
+                    _mm_storeu_ps(dst + i, s0);
+                    _mm_storeu_ps(dst + i + 4, s1);
+                }
+            }
+            else
+            {
+                __m128 k1 = _mm_set1_ps(ky[1]);
+                for( ; i <= width - 8; i += 8 )
+                {
+                    __m128 s0 = d4, s1 = d4, x0, x1;
+                    x0 = _mm_sub_ps(_mm_load_ps(S0 + i), _mm_load_ps(S2 + i));
+                    x1 = _mm_sub_ps(_mm_load_ps(S0 + i + 4), _mm_load_ps(S2 + i + 4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0,k1));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1,k1));
+                    _mm_storeu_ps(dst + i, s0);
+                    _mm_storeu_ps(dst + i + 4, s1);
+                }
+            }
+        }
+
+        return i;
+    }
+
+    int symmetryType;
+    float delta;
+    Mat kernel;
+};
+
+
+#else
+
+typedef RowNoVec RowVec_8u32s;
+typedef RowNoVec RowVec_32f;
+typedef SymmRowSmallNoVec SymmRowSmallVec_8u32s;
+typedef SymmRowSmallNoVec SymmRowSmallVec_32f;
+typedef ColumnNoVec SymmColumnVec_32s8u;
+typedef ColumnNoVec SymmColumnVec_32f;
+typedef SymmColumnSmallNoVec SymmColumnSmallVec_32s16s;
+typedef SymmColumnSmallNoVec SymmColumnSmallVec_32f;
+
+#endif
+
+
+template<typename ST, typename DT, class VecOp> struct RowFilter : public BaseRowFilter
+{
+    RowFilter( const Mat& _kernel, int _anchor, const VecOp& _vecOp=VecOp() )
     {
         if( _kernel.isContinuous() )
             kernel = _kernel;
@@ -524,6 +1730,7 @@ template<typename ST, typename DT> struct RowFilter : public BaseRowFilter
         ksize = kernel.rows + kernel.cols - 1;
         CV_Assert( kernel.type() == DataType<DT>::type &&
                    (kernel.rows == 1 || kernel.cols == 1));
+        vecOp = _vecOp;
     }
     
     void operator()(const uchar* src, uchar* dst, int width, int cn)
@@ -532,7 +1739,9 @@ template<typename ST, typename DT> struct RowFilter : public BaseRowFilter
         const DT* kx = (const DT*)kernel.data;
         const ST* S;
         DT* D = (DT*)dst;
-        int i = 0, k;
+        int i, k;
+
+        i = vecOp(src, dst, width, cn);
         width *= cn;
 
         for( ; i <= width - 4; i += 4 )
@@ -567,94 +1776,19 @@ template<typename ST, typename DT> struct RowFilter : public BaseRowFilter
     }
 
     Mat kernel;
+    VecOp vecOp;
 };
 
 
-template<typename ST, typename DT> struct SymmRowFilter : public RowFilter<ST, DT>
+template<typename ST, typename DT, class VecOp> struct SymmRowSmallFilter :
+    public RowFilter<ST, DT, VecOp>
 {
-    SymmRowFilter( const Mat& _kernel, int _anchor, int _symmetryType )
-        : RowFilter<ST, DT>( _kernel, _anchor )
+    SymmRowSmallFilter( const Mat& _kernel, int _anchor, int _symmetryType,
+                        const VecOp& _vecOp = VecOp())
+        : RowFilter<ST, DT, VecOp>( _kernel, _anchor, _vecOp )
     {
         symmetryType = _symmetryType;
-        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
-    }
-    
-    void operator()(const uchar* src, uchar* dst, int width, int cn)
-    {
-        int ksize2 = this->ksize/2, ksize2n = ksize2*cn;
-        const DT* kx = (const DT*)this->kernel.data + ksize2;
-        bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
-        const ST* S = (const ST*)src + ksize2n;
-        DT* D = (DT*)dst;
-        int i = 0, j, k;
-        width *= cn;
-
-        if( symmetrical )
-        {
-            for( ; i <= width - 4; i += 4, S += 4 )
-            {
-                DT f = kx[0];
-                DT s0=f*S[0], s1=f*S[1],
-                   s2=f*S[2], s3=f*S[3];
-                for( k = 1, j = cn; k <= ksize2; k++, j += cn )
-                {
-                    f = kx[k];
-                    s0 += f*(S[j] + S[-j]);
-                    s1 += f*(S[j+1] + S[-j+1]);
-                    s2 += f*(S[j+2] + S[-j+2]);
-                    s3 += f*(S[j+3] + S[-j+3]);
-                }
-
-                D[i] = s0; D[i+1] = s1;
-                D[i+2] = s2; D[i+3] = s3;
-            }
-
-            for( ; i < width; i++, S++ )
-            {
-                DT s0 = kx[0]*S[0];
-                for( k = 1, j = cn; k <= ksize2; k++, j += cn )
-                    s0 += kx[k]*(S[j] + S[-j]);
-                D[i] = s0;
-            }
-        }
-        else
-        {
-            for( ; i <= width - 4; i += 4, S += 4 )
-            {
-                DT s0 = 0, s1 = 0, s2 = 0, s3 = 0;
-                for( k = 1, j = cn; k <= ksize2; k++, j += cn )
-                {
-                    DT f = kx[k];
-                    s0 += f*(S[j] - S[-j]);
-                    s1 += f*(S[j+1] - S[-j+1]);
-                    s2 += f*(S[j+2] - S[-j+2]);
-                    s3 += f*(S[j+3] - S[-j+3]);
-                }
-
-                D[i] = s0; D[i+1] = s1;
-                D[i+2] = s2; D[i+3] = s3;
-            }
-
-            for( ; i < width; i++, S++ )
-            {
-                DT s0 = 0;
-                for( k = 1, j = cn; k <= ksize2; k++, j += cn )
-                    s0 += kx[k]*(S[j] - S[-j]);
-                D[i] = s0;
-            }
-        }
-    }
-
-    int symmetryType;
-};
-
-
-template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFilter<ST, DT>
-{
-    SymmRowSmallFilter( const Mat& _kernel, int _anchor, int _symmetryType )
-        : SymmRowFilter<ST, DT>( _kernel, _anchor, _symmetryType )
-    {
-        CV_Assert( this->ksize <= 5 );
+        CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 && this->ksize <= 5 );
     }
     
     void operator()(const uchar* src, uchar* dst, int width, int cn)
@@ -662,9 +1796,9 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
         int ksize2 = this->ksize/2, ksize2n = ksize2*cn;
         const DT* kx = (const DT*)this->kernel.data + ksize2;
         bool symmetrical = (this->symmetryType & KERNEL_SYMMETRICAL) != 0;
-        const ST* S = (const ST*)src + ksize2n;
         DT* D = (DT*)dst;
-        int i = 0, j, k;
+        int i = vecOp(src, dst, width, cn), j, k;
+        const ST* S = (const ST*)src + i + ksize2n;
         width *= cn;
 
         if( symmetrical )
@@ -769,16 +1903,19 @@ template<typename ST, typename DT> struct SymmRowSmallFilter : public SymmRowFil
             }
         }
     }
+
+    int symmetryType;
 };
 
 
-template<class CastOp> struct ColumnFilter : public BaseColumnFilter
+template<class CastOp, class VecOp> struct ColumnFilter : public BaseColumnFilter
 {
     typedef typename CastOp::type1 ST;
     typedef typename CastOp::rtype DT;
     
     ColumnFilter( const Mat& _kernel, int _anchor,
-        double _delta, const CastOp& _castOp=CastOp() )
+        double _delta, const CastOp& _castOp=CastOp(),
+        const VecOp& _vecOp=VecOp() )
     {
         if( _kernel.isContinuous() )
             kernel = _kernel;
@@ -788,6 +1925,7 @@ template<class CastOp> struct ColumnFilter : public BaseColumnFilter
         ksize = kernel.rows + kernel.cols - 1;
         delta = saturate_cast<ST>(_delta);
         castOp0 = _castOp;
+        vecOp = _vecOp;
         CV_Assert( kernel.type() == DataType<ST>::type &&
                    (kernel.rows == 1 || kernel.cols == 1));
     }
@@ -803,7 +1941,8 @@ template<class CastOp> struct ColumnFilter : public BaseColumnFilter
         for( ; count--; dst += dststep, src++ )
         {
             DT* D = (DT*)dst;
-            for( i = 0; i <= width - 4; i += 4 )
+            i = vecOp(src, dst, width);
+            for( ; i <= width - 4; i += 4 )
             {
                 ST f = ky[0];
                 const ST* S = (const ST*)src[0] + i;
@@ -833,18 +1972,21 @@ template<class CastOp> struct ColumnFilter : public BaseColumnFilter
 
     Mat kernel;
     CastOp castOp0;
+    VecOp vecOp;
     ST delta;
 };
 
 
-template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
+template<class CastOp, class VecOp> struct SymmColumnFilter : public ColumnFilter<CastOp, VecOp>
 {
     typedef typename CastOp::type1 ST;
     typedef typename CastOp::rtype DT;
 
     SymmColumnFilter( const Mat& _kernel, int _anchor,
-        double _delta, int _symmetryType, const CastOp& _castOp=CastOp() )
-        : ColumnFilter<CastOp>( _kernel, _anchor, _delta, _castOp )
+        double _delta, int _symmetryType,
+        const CastOp& _castOp=CastOp(),
+        const VecOp& _vecOp=VecOp())
+        : ColumnFilter<CastOp, VecOp>( _kernel, _anchor, _delta, _castOp, _vecOp )
     {
         symmetryType = _symmetryType;
         CV_Assert( (symmetryType & (KERNEL_SYMMETRICAL | KERNEL_ASYMMETRICAL)) != 0 );
@@ -858,7 +2000,6 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
         bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
         ST _delta = this->delta;
         CastOp castOp = this->castOp0;
-
         src += ksize2;
 
         if( symmetrical )
@@ -866,8 +2007,9 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
             for( ; count--; dst += dststep, src++ )
             {
                 DT* D = (DT*)dst;
+                i = (this->vecOp)(src, dst, width);
 
-                for( i = 0; i <= width - 4; i += 4 )
+                for( ; i <= width - 4; i += 4 )
                 {
                     ST f = ky[0];
                     const ST* S = (const ST*)src[0] + i, *S2;
@@ -903,8 +2045,9 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
             for( ; count--; dst += dststep, src++ )
             {
                 DT* D = (DT*)dst;
+                i = vecOp(src, dst, width);
 
-                for( i = 0; i <= width - 4; i += 4 )
+                for( ; i <= width - 4; i += 4 )
                 {
                     ST f = ky[0];
                     const ST *S, *S2;
@@ -940,16 +2083,17 @@ template<class CastOp> struct SymmColumnFilter : public ColumnFilter<CastOp>
 };
 
 
-template<class CastOp>
-struct SymmColumnSmallFilter : public SymmColumnFilter<CastOp>
+template<class CastOp, class VecOp>
+struct SymmColumnSmallFilter : public SymmColumnFilter<CastOp, VecOp>
 {
     typedef typename CastOp::type1 ST;
     typedef typename CastOp::rtype DT;
     
     SymmColumnSmallFilter( const Mat& _kernel, int _anchor,
                            double _delta, int _symmetryType,
-                           const CastOp& _castOp=CastOp() )
-        : SymmColumnFilter<CastOp>( _kernel, _anchor, _delta, _symmetryType, _castOp )
+                           const CastOp& _castOp=CastOp(),
+                           const VecOp& _vecOp=VecOp())
+        : SymmColumnFilter<CastOp, VecOp>( _kernel, _anchor, _delta, _symmetryType, _castOp, _vecOp )
     {
         CV_Assert( this->ksize == 3 );
     }
@@ -966,13 +2110,12 @@ struct SymmColumnSmallFilter : public SymmColumnFilter<CastOp>
         ST f0 = ky[0], f1 = ky[1];
         ST _delta = this->delta;
         CastOp castOp = this->castOp0;
-
         src += ksize2;
 
         for( ; count--; dst += dststep, src++ )
         {
             DT* D = (DT*)dst;
-            i = 0;
+            i = (this->vecOp)(src, dst, width);
             const ST* S0 = (const ST*)src[-1];
             const ST* S1 = (const ST*)src[0];
             const ST* S2 = (const ST*)src[1];
@@ -1111,60 +2254,38 @@ Ptr<BaseRowFilter> getLinearRowFilter( int srcType, int bufType,
     CV_Assert( cn == CV_MAT_CN(bufType) &&
         ddepth >= std::max(sdepth, CV_32S) &&
         kernel.type() == ddepth );
+    int ksize = kernel.rows + kernel.cols - 1;
 
-    if( !(symmetryType & (KERNEL_SYMMETRICAL|KERNEL_ASYMMETRICAL)) )
+    if( (symmetryType & (KERNEL_SYMMETRICAL|KERNEL_ASYMMETRICAL)) != 0 && ksize <= 5 )
     {
         if( sdepth == CV_8U && ddepth == CV_32S )
-            return Ptr<BaseRowFilter>(new RowFilter<uchar, int>(kernel, anchor));
-        if( sdepth == CV_8U && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new RowFilter<uchar, float>(kernel, anchor));
-        if( sdepth == CV_8U && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new RowFilter<uchar, double>(kernel, anchor));
-        if( sdepth == CV_16U && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new RowFilter<ushort, float>(kernel, anchor));
-        if( sdepth == CV_16U && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new RowFilter<ushort, double>(kernel, anchor));
-        if( sdepth == CV_16S && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new RowFilter<short, float>(kernel, anchor));
-        if( sdepth == CV_16S && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new RowFilter<short, double>(kernel, anchor));
+            return Ptr<BaseRowFilter>(new SymmRowSmallFilter<uchar, int, SymmRowSmallVec_8u32s>
+                (kernel, anchor, symmetryType, SymmRowSmallVec_8u32s(kernel, symmetryType)));
         if( sdepth == CV_32F && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new RowFilter<float, float>(kernel, anchor));
-        if( sdepth == CV_64F && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new RowFilter<double, double>(kernel, anchor));
+            return Ptr<BaseRowFilter>(new SymmRowSmallFilter<float, float, SymmRowSmallVec_32f>
+                (kernel, anchor, symmetryType, SymmRowSmallVec_32f(kernel, symmetryType)));
     }
-    else
-    {
-        int ksize = kernel.rows + kernel.cols - 1;
-        if( ksize <= 5 )
-        {
-            if( sdepth == CV_8U && ddepth == CV_32S )
-                return Ptr<BaseRowFilter>(new SymmRowSmallFilter<uchar, int>
-                    (kernel, anchor, symmetryType));
-            if( sdepth == CV_32F && ddepth == CV_32F )
-                return Ptr<BaseRowFilter>(new SymmRowSmallFilter<float, float>
-                    (kernel, anchor, symmetryType));
-        }
-
-        if( sdepth == CV_8U && ddepth == CV_32S )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<uchar, int>(kernel, anchor, symmetryType));
-        if( sdepth == CV_8U && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<uchar, float>(kernel, anchor, symmetryType));
-        if( sdepth == CV_8U && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<uchar, double>(kernel, anchor, symmetryType));
-        if( sdepth == CV_16U && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<ushort, float>(kernel, anchor, symmetryType));
-        if( sdepth == CV_16U && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<ushort, double>(kernel, anchor, symmetryType));
-        if( sdepth == CV_16S && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<short, float>(kernel, anchor, symmetryType));
-        if( sdepth == CV_16S && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<short, double>(kernel, anchor, symmetryType));
-        if( sdepth == CV_32F && ddepth == CV_32F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<float, float>(kernel, anchor, symmetryType));
-        if( sdepth == CV_64F && ddepth == CV_64F )
-            return Ptr<BaseRowFilter>(new SymmRowFilter<double, double>(kernel, anchor, symmetryType));
-    }
+        
+    if( sdepth == CV_8U && ddepth == CV_32S )
+        return Ptr<BaseRowFilter>(new RowFilter<uchar, int, RowVec_8u32s>
+            (kernel, anchor, RowVec_8u32s(kernel)));
+    if( sdepth == CV_8U && ddepth == CV_32F )
+        return Ptr<BaseRowFilter>(new RowFilter<uchar, float, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_8U && ddepth == CV_64F )
+        return Ptr<BaseRowFilter>(new RowFilter<uchar, double, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_16U && ddepth == CV_32F )
+        return Ptr<BaseRowFilter>(new RowFilter<ushort, float, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_16U && ddepth == CV_64F )
+        return Ptr<BaseRowFilter>(new RowFilter<ushort, double, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_16S && ddepth == CV_32F )
+        return Ptr<BaseRowFilter>(new RowFilter<short, float, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_16S && ddepth == CV_64F )
+        return Ptr<BaseRowFilter>(new RowFilter<short, double, RowNoVec>(kernel, anchor));
+    if( sdepth == CV_32F && ddepth == CV_32F )
+        return Ptr<BaseRowFilter>(new RowFilter<float, float, RowVec_32f>
+            (kernel, anchor, RowVec_32f(kernel)));
+    if( sdepth == CV_64F && ddepth == CV_64F )
+        return Ptr<BaseRowFilter>(new RowFilter<double, double, RowNoVec>(kernel, anchor));
 
     CV_Error_( CV_StsNotImplemented,
         ("Unsupported combination of source format (=%d), and buffer format (=%d)",
@@ -1188,24 +2309,24 @@ Ptr<BaseColumnFilter> getLinearColumnFilter( int bufType, int dstType,
     if( !(symmetryType & (KERNEL_SYMMETRICAL|KERNEL_ASYMMETRICAL)) )
     {
         if( ddepth == CV_8U && sdepth == CV_32S )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<FixedPtCastEx<int, uchar> >
+            return Ptr<BaseColumnFilter>(new ColumnFilter<FixedPtCastEx<int, uchar>, ColumnNoVec>
             (kernel, anchor, delta, FixedPtCastEx<int, uchar>(bits)));
         if( ddepth == CV_8U && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, uchar> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, uchar>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_8U && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, uchar> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, uchar>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_16U && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, ushort> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, ushort>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_16U && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, ushort> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, ushort>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_16S && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, short> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, short>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_16S && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, short> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, short>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_32F && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, float> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<float, float>, ColumnNoVec>(kernel, anchor, delta));
         if( ddepth == CV_64F && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, double> >(kernel, anchor, delta));
+            return Ptr<BaseColumnFilter>(new ColumnFilter<Cast<double, double>, ColumnNoVec>(kernel, anchor, delta));
     }
     else
     {
@@ -1213,44 +2334,51 @@ Ptr<BaseColumnFilter> getLinearColumnFilter( int bufType, int dstType,
         if( ksize == 3 )
         {
             if( ddepth == CV_8U && sdepth == CV_32S )
-                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<FixedPtCastEx<int, uchar> >
-                    (kernel, anchor, delta, symmetryType, FixedPtCastEx<int, uchar>(bits)));
+                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<
+                    FixedPtCastEx<int, uchar>, SymmColumnVec_32s8u>
+                    (kernel, anchor, delta, symmetryType, FixedPtCastEx<int, uchar>(bits),
+                    SymmColumnVec_32s8u(kernel, symmetryType, bits, delta)));
             if( ddepth == CV_16S && sdepth == CV_32S && bits == 0 )
-                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<Cast<int, short> >
-                    (kernel, anchor, delta, symmetryType));
+                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<Cast<int, short>,
+                    SymmColumnSmallVec_32s16s>(kernel, anchor, delta, symmetryType,
+                        Cast<int, short>(), SymmColumnSmallVec_32s16s(kernel, symmetryType, bits, delta)));
             if( ddepth == CV_32F && sdepth == CV_32F )
-                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<Cast<float, float> >
-                    (kernel, anchor, delta, symmetryType));
+                return Ptr<BaseColumnFilter>(new SymmColumnSmallFilter<
+                    Cast<float, float>,SymmColumnSmallVec_32f>
+                    (kernel, anchor, delta, symmetryType, Cast<float, float>(),
+                    SymmColumnSmallVec_32f(kernel, symmetryType, 0, delta)));
         }
         if( ddepth == CV_8U && sdepth == CV_32S )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<FixedPtCastEx<int, uchar> >
-                (kernel, anchor, delta, symmetryType, FixedPtCastEx<int, uchar>(bits)));
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<FixedPtCastEx<int, uchar>, SymmColumnVec_32s8u>
+                (kernel, anchor, delta, symmetryType, FixedPtCastEx<int, uchar>(bits),
+                SymmColumnVec_32s8u(kernel, symmetryType, bits, delta)));
         if( ddepth == CV_8U && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, uchar> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, uchar>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_8U && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, uchar> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, uchar>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_16U && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, ushort> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, ushort>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_16U && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, ushort> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, ushort>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_16S && sdepth == CV_32S )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<int, short> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<int, short>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_16S && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, short> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, short>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_16S && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, short> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, short>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
         if( ddepth == CV_32F && sdepth == CV_32F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, float> >
-                (kernel, anchor, delta, symmetryType));
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<float, float>, SymmColumnVec_32f>
+                (kernel, anchor, delta, symmetryType, Cast<float, float>(),
+                SymmColumnVec_32f(kernel, symmetryType, 0, delta)));
         if( ddepth == CV_64F && sdepth == CV_64F )
-            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, double> >
+            return Ptr<BaseColumnFilter>(new SymmColumnFilter<Cast<double, double>, ColumnNoVec>
                 (kernel, anchor, delta, symmetryType));
     }
 
