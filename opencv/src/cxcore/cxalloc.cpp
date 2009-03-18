@@ -327,6 +327,10 @@ struct ThreadData
     Block* bins[MAX_BIN+1];
 
 #ifdef WIN32
+#ifdef WINCE
+#	define TLS_OUT_OF_INDEXES ((DWORD)0xFFFFFFFF)
+#endif
+
     static DWORD tlsKey;
     static ThreadData* get()
     {
