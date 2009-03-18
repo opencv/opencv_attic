@@ -1797,7 +1797,7 @@ template<typename ST, typename DT, class VecOp> struct SymmRowSmallFilter :
         const DT* kx = (const DT*)this->kernel.data + ksize2;
         bool symmetrical = (this->symmetryType & KERNEL_SYMMETRICAL) != 0;
         DT* D = (DT*)dst;
-        int i = vecOp(src, dst, width, cn), j, k;
+        int i = this->vecOp(src, dst, width, cn), j, k;
         const ST* S = (const ST*)src + i + ksize2n;
         width *= cn;
 
@@ -2045,7 +2045,7 @@ template<class CastOp, class VecOp> struct SymmColumnFilter : public ColumnFilte
             for( ; count--; dst += dststep, src++ )
             {
                 DT* D = (DT*)dst;
-                i = vecOp(src, dst, width);
+                i = this->vecOp(src, dst, width);
 
                 for( ; i <= width - 4; i += 4 )
                 {
