@@ -515,6 +515,13 @@ struct SymmColumnSmallNoVec
     int operator()(const uchar**, uchar*, int) const { return 0; }
 };
 
+struct FilterNoVec
+{
+    FilterNoVec() {}
+    FilterNoVec(const Mat&, int, double) {}
+    int operator()(const uchar**, uchar*, int) const { return 0; }
+};
+
 
 #if CV_SSE2
 
@@ -1704,6 +1711,239 @@ struct SymmColumnSmallVec_32f
 };
 
 
+/////////////////////////////// non-separable filters ///////////////////////////////
+
+///////////////////////////////// 8u<->8u, 8u<->16s /////////////////////////////////
+
+struct FilterVec_8u
+{
+    FilterVec_8u() {}
+    FilterVec_8u(const Mat& _kernel, int _bits, double _delta)
+    {
+        Mat kernel;
+        _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
+        delta = (float)(_delta/(1 << _bits));
+        Vector<Point> coords;
+        preprocess2DKernel(kernel, coords, coeffs);
+        _nz = (int)coords.size();
+    }
+
+    int operator()(const uchar** src, uchar* dst, int width) const
+    {
+        const float* kf = (const float*)(const uchar*)coeffs;
+        int i = 0, k, nz = _nz;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        for( ; i <= width - 16; i += 16 )
+        {
+            __m128 s0 = d4, s1 = d4, s2 = d4, s3 = d4;
+            __m128i x0, x1, z = _mm_setzero_si128();
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0, t1;
+                f = _mm_shuffle_ps(f, f, 0);
+
+                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
+                x1 = _mm_unpackhi_epi8(x0, z);
+                x0 = _mm_unpacklo_epi8(x0, z);
+
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x0, z));
+                t1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(x0, z));
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+                s1 = _mm_add_ps(s1, _mm_mul_ps(t1, f));
+
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x1, z));
+                t1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(x1, z));
+                s2 = _mm_add_ps(s2, _mm_mul_ps(t0, f));
+                s3 = _mm_add_ps(s3, _mm_mul_ps(t1, f));
+            }
+
+            x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+            x1 = _mm_packs_epi32(_mm_cvtps_epi32(s2), _mm_cvtps_epi32(s3));
+            x0 = _mm_packus_epi16(x0, x1);
+            _mm_storeu_si128((__m128i*)(dst + i), x0);
+        }
+
+        for( ; i <= width - 4; i += 4 )
+        {
+            __m128 s0 = d4;
+            __m128i x0, z = _mm_setzero_si128();
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0;
+                f = _mm_shuffle_ps(f, f, 0);
+
+                x0 = _mm_cvtsi32_si128(*(const int*)(src[k] + i));
+                x0 = _mm_unpacklo_epi8(x0, z);
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x0, z));
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+            }
+
+            x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), z);
+            x0 = _mm_packus_epi16(x0, x0);
+            *(int*)(dst + i) = _mm_cvtsi128_si32(x0);
+        }
+
+        return i;
+    }
+
+    int _nz;
+    Vector<uchar> coeffs;
+    float delta;
+};
+
+
+struct FilterVec_8u16s
+{
+    FilterVec_8u16s() {}
+    FilterVec_8u16s(const Mat& _kernel, int _bits, double _delta)
+    {
+        Mat kernel;
+        _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
+        delta = (float)(_delta/(1 << _bits));
+        Vector<Point> coords;
+        preprocess2DKernel(kernel, coords, coeffs);
+        _nz = (int)coords.size();
+    }
+
+    int operator()(const uchar** src, uchar* _dst, int width) const
+    {
+        const float* kf = (const float*)(const uchar*)coeffs;
+        short* dst = (short*)_dst;
+        int i = 0, k, nz = _nz;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        for( ; i <= width - 16; i += 16 )
+        {
+            __m128 s0 = d4, s1 = d4, s2 = d4, s3 = d4;
+            __m128i x0, x1, z = _mm_setzero_si128();
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0, t1;
+                f = _mm_shuffle_ps(f, f, 0);
+
+                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
+                x1 = _mm_unpackhi_epi8(x0, z);
+                x0 = _mm_unpacklo_epi8(x0, z);
+
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x0, z));
+                t1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(x0, z));
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+                s1 = _mm_add_ps(s1, _mm_mul_ps(t1, f));
+
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x1, z));
+                t1 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(x1, z));
+                s2 = _mm_add_ps(s2, _mm_mul_ps(t0, f));
+                s3 = _mm_add_ps(s3, _mm_mul_ps(t1, f));
+            }
+
+            x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), _mm_cvtps_epi32(s1));
+            x1 = _mm_packs_epi32(_mm_cvtps_epi32(s2), _mm_cvtps_epi32(s3));
+            _mm_storeu_si128((__m128i*)(dst + i), x0);
+            _mm_storeu_si128((__m128i*)(dst + i + 8), x1);
+        }
+
+        for( ; i <= width - 4; i += 4 )
+        {
+            __m128 s0 = d4;
+            __m128i x0, z = _mm_setzero_si128();
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0;
+                f = _mm_shuffle_ps(f, f, 0);
+
+                x0 = _mm_cvtsi32_si128(*(const int*)(src[k] + i));
+                x0 = _mm_unpacklo_epi8(x0, z);
+                t0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(x0, z));
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+            }
+
+            x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), z);
+            _mm_storeu_si128((__m128i*)(dst + i), x0);
+        }
+
+        return i;
+    }
+
+    int _nz;
+    Vector<uchar> coeffs;
+    float delta;
+};
+
+
+struct FilterVec_32f
+{
+    FilterVec_32f() {}
+    FilterVec_32f(const Mat& _kernel, int, double _delta)
+    {
+        delta = (float)_delta;
+        Vector<Point> coords;
+        preprocess2DKernel(_kernel, coords, coeffs);
+        _nz = (int)coords.size();
+    }
+
+    int operator()(const uchar** _src, uchar* _dst, int width) const
+    {
+        const float* kf = (const float*)(const uchar*)coeffs;
+        const float** src = (const float**)_src;
+        float* dst = (float*)_dst;
+        int i = 0, k, nz = _nz;
+        __m128 d4 = _mm_set1_ps(delta);
+
+        for( ; i <= width - 16; i += 16 )
+        {
+            __m128 s0 = d4, s1 = d4, s2 = d4, s3 = d4;
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0, t1;
+                f = _mm_shuffle_ps(f, f, 0);
+                const float* S = src[k] + i;
+
+                t0 = _mm_loadu_ps(S);
+                t1 = _mm_loadu_ps(S + 4);
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+                s1 = _mm_add_ps(s1, _mm_mul_ps(t1, f));
+
+                t0 = _mm_loadu_ps(S + 8);
+                t1 = _mm_loadu_ps(S + 12);
+                s2 = _mm_add_ps(s2, _mm_mul_ps(t0, f));
+                s3 = _mm_add_ps(s3, _mm_mul_ps(t1, f));
+            }
+
+            _mm_storeu_ps(dst + i, s0);
+            _mm_storeu_ps(dst + i + 4, s1);
+            _mm_storeu_ps(dst + i + 8, s2);
+            _mm_storeu_ps(dst + i + 12, s3);
+        }
+
+        for( ; i <= width - 4; i += 4 )
+        {
+            __m128 s0 = d4;
+
+            for( k = 0; k < nz; k++ )
+            {
+                __m128 f = _mm_load_ss(kf+k), t0;
+                f = _mm_shuffle_ps(f, f, 0);
+                t0 = _mm_loadu_ps(src[k] + i);
+                s0 = _mm_add_ps(s0, _mm_mul_ps(t0, f));
+            }
+            _mm_storeu_ps(dst + i, s0);
+        }
+
+        return i;
+    }
+
+    int _nz;
+    Vector<uchar> coeffs;
+    float delta;
+};
+
+
 #else
 
 typedef RowNoVec RowVec_8u32s;
@@ -1714,6 +1954,9 @@ typedef ColumnNoVec SymmColumnVec_32s8u;
 typedef ColumnNoVec SymmColumnVec_32f;
 typedef SymmColumnSmallNoVec SymmColumnSmallVec_32s16s;
 typedef SymmColumnSmallNoVec SymmColumnSmallVec_32f;
+typedef FilterNoVec FilterVec_8u;
+typedef FilterNoVec FilterVec_8u16s;
+typedef FilterNoVec FilterVec_32f;
 
 #endif
 
@@ -2512,18 +2755,20 @@ void preprocess2DKernel( const Mat& kernel, Vector<Point>& coords, Vector<uchar>
 }
 
 
-template<typename ST, class CastOp> struct Filter2D : public BaseFilter
+template<typename ST, class CastOp, class VecOp> struct Filter2D : public BaseFilter
 {
     typedef typename CastOp::type1 KT;
     typedef typename CastOp::rtype DT;
     
     Filter2D( const Mat& _kernel, Point _anchor,
-        double _delta, const CastOp& _castOp=CastOp() )
+        double _delta, const CastOp& _castOp=CastOp(),
+        const VecOp& _vecOp=VecOp() )
     {
         anchor = _anchor;
         ksize = _kernel.size();
         delta = saturate_cast<KT>(_delta);
         castOp0 = _castOp;
+        vecOp = _vecOp;
         CV_Assert( _kernel.type() == DataType<KT>::type );
         preprocess2DKernel( _kernel, coords, coeffs );
         ptrs.resize( coords.size() );
@@ -2546,7 +2791,8 @@ template<typename ST, class CastOp> struct Filter2D : public BaseFilter
             for( k = 0; k < nz; k++ )
                 kp[k] = (const ST*)src[pt[k].y] + pt[k].x*cn;
 
-            i = 0;
+            i = vecOp((const uchar**)kp, dst, width);
+
             for( ; i <= width - 4; i += 4 )
             {
                 KT s0 = _delta, s1 = _delta, s2 = _delta, s3 = _delta;
@@ -2580,6 +2826,7 @@ template<typename ST, class CastOp> struct Filter2D : public BaseFilter
     Vector<uchar*> ptrs;
     KT delta;
     CastOp castOp0;
+    VecOp vecOp;
 };
 
 
@@ -2594,11 +2841,13 @@ Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
     anchor = normalizeAnchor(anchor, _kernel.size());
 
     if( sdepth == CV_8U && ddepth == CV_8U && kdepth == CV_32S )
-        return Ptr<BaseFilter>(new Filter2D<uchar, FixedPtCastEx<int, uchar> >
-            (_kernel, anchor, delta, FixedPtCastEx<int, uchar>(bits)));
+        return Ptr<BaseFilter>(new Filter2D<uchar, FixedPtCastEx<int, uchar>, FilterVec_8u>
+            (_kernel, anchor, delta, FixedPtCastEx<int, uchar>(bits),
+            FilterVec_8u(_kernel, bits, delta)));
     if( sdepth == CV_8U && ddepth == CV_16S && kdepth == CV_32S )
-        return Ptr<BaseFilter>(new Filter2D<uchar, FixedPtCastEx<int, short> >
-            (_kernel, anchor, delta, FixedPtCastEx<int, short>(bits)));
+        return Ptr<BaseFilter>(new Filter2D<uchar, FixedPtCastEx<int, short>, FilterVec_8u16s>
+            (_kernel, anchor, delta, FixedPtCastEx<int, short>(bits),
+            FilterVec_8u16s(_kernel, bits, delta)));
 
     kdepth = sdepth == CV_64F || ddepth == CV_64F ? CV_64F : CV_32F;
     Mat kernel;
@@ -2608,34 +2857,47 @@ Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
         _kernel.convertTo(kernel, kdepth, _kernel.type() == CV_32S ? 1./(1 << bits) : 1.);
     
     if( sdepth == CV_8U && ddepth == CV_8U )
-        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, uchar> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, uchar>, FilterVec_8u>
+            (kernel, anchor, delta, Cast<float, uchar>(), FilterVec_8u(kernel, 0, delta)));
     if( sdepth == CV_8U && ddepth == CV_16U )
-        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, ushort> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<uchar,
+            Cast<float, ushort>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_8U && ddepth == CV_16S )
-        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, short> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, short>, FilterVec_8u16s>
+            (kernel, anchor, delta, Cast<float, short>(), FilterVec_8u16s(kernel, 0, delta)));
     if( sdepth == CV_8U && ddepth == CV_32F )
-        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<float, float> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<uchar,
+            Cast<float, float>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_8U && ddepth == CV_64F )
-        return Ptr<BaseFilter>(new Filter2D<uchar, Cast<double, double> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<uchar,
+            Cast<double, double>, FilterNoVec>(kernel, anchor, delta));
 
     if( sdepth == CV_16U && ddepth == CV_16U )
-        return Ptr<BaseFilter>(new Filter2D<ushort, Cast<float, ushort> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<ushort,
+            Cast<float, ushort>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_16U && ddepth == CV_32F )
-        return Ptr<BaseFilter>(new Filter2D<ushort, Cast<float, float> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<ushort,
+            Cast<float, float>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_16U && ddepth == CV_64F )
-        return Ptr<BaseFilter>(new Filter2D<ushort, Cast<double, double> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<ushort,
+            Cast<double, double>, FilterNoVec>(kernel, anchor, delta));
 
     if( sdepth == CV_16S && ddepth == CV_16S )
-        return Ptr<BaseFilter>(new Filter2D<short, Cast<float, short> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<short,
+            Cast<float, short>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_16S && ddepth == CV_32F )
-        return Ptr<BaseFilter>(new Filter2D<short, Cast<float, float> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<short,
+            Cast<float, float>, FilterNoVec>(kernel, anchor, delta));
     if( sdepth == CV_16S && ddepth == CV_64F )
-        return Ptr<BaseFilter>(new Filter2D<short, Cast<double, double> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<short,
+            Cast<double, double>, FilterNoVec>(kernel, anchor, delta));
 
     if( sdepth == CV_32F && ddepth == CV_32F )
-        return Ptr<BaseFilter>(new Filter2D<float, Cast<float, float> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<float, Cast<float, float>, FilterVec_32f>
+            (kernel, anchor, delta, Cast<float, float>(), FilterVec_32f(kernel, 0, delta)));
     if( sdepth == CV_64F && ddepth == CV_64F )
-        return Ptr<BaseFilter>(new Filter2D<double, Cast<double, double> >(kernel, anchor, delta));
+        return Ptr<BaseFilter>(new Filter2D<double,
+            Cast<double, double>, FilterNoVec>(kernel, anchor, delta));
 
     CV_Error_( CV_StsNotImplemented,
         ("Unsupported combination of source format (=%d), and destination format (=%d)",
@@ -2680,10 +2942,15 @@ void filter2D( const Mat& src, Mat& dst, int ddepth,
                const Mat& kernel, Point anchor,
                double delta, int borderType )
 {
-    const int dft_filter_size = 100;
-
     if( ddepth < 0 )
         ddepth = src.depth();
+
+#if CV_SSE2
+    int dft_filter_size = (src.depth() == CV_8U && (ddepth == CV_8U || ddepth == CV_16S)) ||
+        (src.depth() == CV_32F && ddepth == CV_32F) ? 130 : 50;
+#else
+    int dft_filter_size = 50;
+#endif
 
     dst.create( src.size(), CV_MAKETYPE(ddepth, src.channels()) );
     anchor = normalizeAnchor(anchor, kernel.size());
