@@ -528,7 +528,15 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
            sampled in a circle of radius 6s using wavelets of size 4s.
            We ensure the gradient wavelet size is even to ensure the 
            wavelet pattern is balanced and symmetric around its center */
-        int grad_wav_size = 2*cvRound( 2*s ); 
+        int grad_wav_size = 2*cvRound( 2*s );
+        if ( sum->rows < grad_wav_size || sum->cols < grad_wav_size )
+        {
+            /* when grad_wav_size is too big,
+	     * the sampling of gradient will be meaningless
+	     * mark keypoint for deletion. */
+            kp->size = -1;
+            continue;
+        }
         icvResizeHaarPattern( dx_s, dx_t, NX, 4, grad_wav_size, sum->cols );
         icvResizeHaarPattern( dy_s, dy_t, NY, 4, grad_wav_size, sum->cols );
         for( kk = 0, nangle = 0; kk < nangle0; kk++ )
@@ -537,14 +545,23 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
             float vx, vy;
             x = cvRound( center.x + apt[kk].x*s - (float)(grad_wav_size-1)/2 );
             y = cvRound( center.y + apt[kk].y*s - (float)(grad_wav_size-1)/2 );
-            if( (unsigned)y >= (unsigned)sum->rows - grad_wav_size ||
-                (unsigned)x >= (unsigned)sum->cols - grad_wav_size )
+            if( (unsigned)y >= (unsigned)(sum->rows - grad_wav_size) ||
+                (unsigned)x >= (unsigned)(sum->cols - grad_wav_size) )
                 continue;
             ptr = sum_ptr + x + y*sum_cols;
             vx = icvCalcHaarPattern( ptr, dx_t, 2 );
             vy = icvCalcHaarPattern( ptr, dy_t, 2 );
             X[nangle] = vx*apt_w[kk]; Y[nangle] = vy*apt_w[kk];
             nangle++;
+        }
+        if ( nangle == 0 )
+        {
+            /* No gradient could be sampled because the keypoint is too
+	     * near too one or more of the sides of the image. As we
+	     * therefore cannot find a dominant direction, we skip this
+	     * keypoint and mark it for later deletion from the sequence. */
+            kp->size = -1;
+            continue;
         }
         _X.cols = _Y.cols = _angle.cols = nangle;
         cvCartToPolar( &_X, &_Y, 0, &_angle, 1 );
@@ -701,6 +718,20 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         double scale = 1./(sqrt(square_mag) + DBL_EPSILON);
         for( kk = 0; kk < descriptor_size; kk++ )
             vec[kk] = (float)(vec[kk]*scale);
+    }
+    
+    /* remove keypoints that were marked for deletion */
+    for ( i = 0; i < N; i++ )
+    {
+        CvSURFPoint* kp = (CvSURFPoint*)cvGetSeqElem( keypoints, i );
+        if ( kp->size == -1 )
+        {
+            cvSeqRemove( keypoints, i );
+            if ( _descriptors )
+                cvSeqRemove( descriptors, i );
+            k--;
+	    N--;
+        }
     }
 
     for( i = 0; i < nthreads; i++ )
