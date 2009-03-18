@@ -60,6 +60,13 @@ set_target_properties(${the_target} PROPERTIES
 # Add the required libraries for linking:
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack)
 
+# Linker flag needed for Windows Mobile 5 and 6 SDKs
+if(MSVC AND CMAKE_CROSSCOMPILING)
+	set_target_properties(${the_target} PROPERTIES
+		LINK_FLAGS "/NODEFAULTLIB:secchk"
+		)
+endif()
+
 add_dependencies(${the_target} opencv_lapack)
 
 install(TARGETS ${the_target}

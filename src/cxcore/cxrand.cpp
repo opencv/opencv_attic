@@ -492,6 +492,9 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
 
 
 #ifdef WIN32
+#ifdef WINCE
+#	define TLS_OUT_OF_INDEXES ((DWORD)0xFFFFFFFF)
+#endif
 static DWORD tlsRNGKey = TLS_OUT_OF_INDEXES;
 
 void deleteThreadRNGData()
