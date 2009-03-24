@@ -109,7 +109,7 @@ public:
     return data.size() / d - free_data.size();
   }
 
-  virtual void hash_insert(lsh_hash h, int l, int i) {
+  virtual void hash_insert(lsh_hash h, int /*l*/, int i) {
     int ii;
     if (free_nodes.empty()) {
       ii = nodes.size();
@@ -125,7 +125,7 @@ public:
     n.next = bins[h1];
     bins[h1] = ii;
   }
-  virtual void hash_remove(lsh_hash h, int l, int i) {
+  virtual void hash_remove(lsh_hash h, int /*l*/, int i) {
     int h1 = h.h1 % bins.size();
     for (int ii = bins[h1], iin, iip = -1; ii != -1; iip = ii, ii = iin) {
       iin = nodes[ii].next;
@@ -138,7 +138,7 @@ public:
       }
     }
   }
-  virtual int hash_lookup(lsh_hash h, int l, int* ret_i, int ret_i_max) {
+  virtual int hash_lookup(lsh_hash h, int /*l*/, int* ret_i, int ret_i_max) {
     int h1 = h.h1 % bins.size();
     int k = 0;
     for (int ii = bins[h1]; ii != -1 && k < ret_i_max; ii = nodes[ii].next)
@@ -196,7 +196,7 @@ public:
       for (int jj = 0; jj < d; ++jj)
 	s += aj[jj] * x[jj];
       s += *bj;
-      s /= r;
+      s = accum_type(s/r);
       int si = int(s);
       h.h1 += r1->data.i[j] * si;
       h.h2 += r2->data.i[j] * si;

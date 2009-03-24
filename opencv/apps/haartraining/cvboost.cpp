@@ -353,7 +353,7 @@ icvCalcWSums( const float* wdata,
  */
 CV_BOOST_IMPL
 CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
-                      int flags,
+                      int /*flags*/,
                       CvMat* trainClasses,
                       CvMat* ,
                       CvMat* ,
@@ -1022,7 +1022,7 @@ typedef struct CvBoostTrainer
 CV_BOOST_IMPL
 CvBoostTrainer* icvBoostStartTraining( CvMat* trainClasses,
                                        CvMat* weakTrainVals,
-                                       CvMat* weights,
+                                       CvMat* /*weights*/,
                                        CvMat* sampleIdx,
                                        CvBoostType type )
 {
@@ -1100,7 +1100,7 @@ CvBoostTrainer* icvBoostStartTraining( CvMat* trainClasses,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierDAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
@@ -1174,7 +1174,7 @@ float icvBoostNextWeakClassifierDAB( CvMat* weakEvalVals,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierRAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
@@ -1406,7 +1406,7 @@ float icvBoostNextWeakClassifierLB( CvMat* weakEvalVals,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierGAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
