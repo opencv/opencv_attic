@@ -316,10 +316,10 @@ void transpose( const Mat& src, Mat& dst )
     int esz = src.elemSize();
     CV_Assert( esz <= 32 );
 
-    if( dst.data == src.data )
+    if( dst.data == src.data && dst.cols == dst.rows )
     {
         TransposeInplaceFunc func = itab[esz];
-        CV_Assert( src.rows == src.cols && func != 0 );
+        CV_Assert( func != 0 );
         func( dst );
     }
     else
