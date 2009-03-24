@@ -41,320 +41,194 @@
 
 #include "_cv.h"
 
-static CvStatus
-icvUnDistort_8u_CnR( const uchar* src, int srcstep,
-                     uchar* dst, int dststep, CvSize size,
-                     const float* intrinsic_matrix,
-                     const float* dist_coeffs, int cn )
+namespace cv
 {
-    int u, v, i;
-    float u0 = intrinsic_matrix[2], v0 = intrinsic_matrix[5];
-    float x0 = (size.width-1)*0.5f, y0 = (size.height-1)*0.5f;
-    float fx = intrinsic_matrix[0], fy = intrinsic_matrix[4];
-    float ifx = 1.f/fx, ify = 1.f/fy;
-    float k1 = dist_coeffs[0], k2 = dist_coeffs[1], k3 = dist_coeffs[4];
-    float p1 = dist_coeffs[2], p2 = dist_coeffs[3];
 
-    srcstep /= sizeof(src[0]);
-    dststep /= sizeof(dst[0]);
-
-    for( v = 0; v < size.height; v++, dst += dststep )
-    {
-        float y = (v - y0)*ify, y2 = y*y;
-
-        for( u = 0; u < size.width; u++ )
-        {
-            float x = (u - x0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
-            float kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
-            float _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + u0;
-            float _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0;
-            int ix = cvFloor(_x), iy = cvFloor(_y);
-
-            if( (unsigned)iy < (unsigned)(size.height - 1) &&
-                (unsigned)ix < (unsigned)(size.width - 1) )
-            {
-                const uchar* ptr = src + iy*srcstep + ix*cn;
-                _x -= ix; _y -= iy;
-                for( i = 0; i < cn; i++ )
-                {
-                    float t0 = CV_8TO32F(ptr[i]), t1 = CV_8TO32F(ptr[i+srcstep]);
-                    t0 += _x*(CV_8TO32F(ptr[i+cn]) - t0);
-                    t1 += _x*(CV_8TO32F(ptr[i + srcstep + cn]) - t1);
-                    dst[u*cn + i] = (uchar)cvRound(t0 + _y*(t1 - t0));
-                }
-            }
-            else
-            {
-                for( i = 0; i < cn; i++ )
-                    dst[u*cn + i] = 0;
-            }
-            
-        }
-    }
-
-    return CV_OK;
+static Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize )
+{
+    Mat_<double> Ar(3, 3);
+    Ar << A(0,0), 0., (imgsize.width-1)*0.5,
+          0., A(1,1), (imgsize.height-1)*0.5,
+          0., 0., 1.;
+    return Ar;
 }
 
-
-CV_IMPL void
-cvUndistort2( const CvArr* _src, CvArr* _dst, const CvMat* A, const CvMat* dist_coeffs )
+void initUndistortRectifyMap( const Mat& _cameraMatrix, const Mat& _distCoeffs,
+                              const Mat& _R, const Mat& _newCameraMatrix,
+                              Size size, int m1type, Mat& map1, Mat& map2 )
 {
-    static int inittab = 0;
-
-    CV_FUNCNAME( "cvUndistort2" );
-
-    __BEGIN__;
-
-    float a[9], k[5]={0,0,0,0,0};
-    int coi1 = 0, coi2 = 0;
-    CvMat srcstub, *src = (CvMat*)_src;
-    CvMat dststub, *dst = (CvMat*)_dst;
-    CvMat _a = cvMat( 3, 3, CV_32F, a ), _k;
-    int cn, src_step, dst_step;
-    CvSize size;
-
-    if( !inittab )
-    {
-        icvInitLinearCoeffTab();
-        icvInitCubicCoeffTab();
-        inittab = 1;
-    }
-
-    CV_CALL( src = cvGetMat( src, &srcstub, &coi1 ));
-    CV_CALL( dst = cvGetMat( dst, &dststub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "The function does not support COI" );
-
-    if( CV_MAT_DEPTH(src->type) != CV_8U )
-        CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit images are supported" );
-
-    if( src->data.ptr == dst->data.ptr )
-        CV_ERROR( CV_StsNotImplemented, "In-place undistortion is not implemented" );
-
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
-
-    if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-        (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
-        CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
-
-    if( !CV_IS_MAT(dist_coeffs) || (dist_coeffs->rows != 1 && dist_coeffs->cols != 1) ||
-        (dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5) ||
-        (CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F) )
-        CV_ERROR( CV_StsBadArg,
-            "Distortion coefficients must be 1x4, 4x1, 1x5 or 5x1 floating-point vector" );
-
-    cvConvert( A, &_a );
-    _k = cvMat( dist_coeffs->rows, dist_coeffs->cols,
-                CV_MAKETYPE(CV_32F, CV_MAT_CN(dist_coeffs->type)), k );
-    cvConvert( dist_coeffs, &_k );
-
-    cn = CV_MAT_CN(src->type);
-    size = cvGetMatSize(src);
-    src_step = src->step ? src->step : CV_STUB_STEP;
-    dst_step = dst->step ? dst->step : CV_STUB_STEP;
-
-    icvUnDistort_8u_CnR( src->data.ptr, src_step,
-        dst->data.ptr, dst_step, size, a, k, cn );
-
-    __END__;
-}
-
-
-CV_IMPL void
-cvInitUndistortMap( const CvMat* A, const CvMat* dist_coeffs,
-                    CvArr* mapxarr, CvArr* mapyarr )
-{
-    CV_FUNCNAME( "cvInitUndistortMap" );
-
-    __BEGIN__;
-    
-    float a[9], k[5]={0,0,0,0,0};
-    int coi1 = 0, coi2 = 0;
-    CvMat mapxstub, *_mapx = (CvMat*)mapxarr;
-    CvMat mapystub, *_mapy = (CvMat*)mapyarr;
-    CvMat _a = cvMat( 3, 3, CV_32F, a ), _k;
-    int u, v;
-    float u0, v0, fx, fy, ifx, ify, x0, y0, k1, k2, k3, p1, p2;
-    CvSize size;
-
-    CV_CALL( _mapx = cvGetMat( _mapx, &mapxstub, &coi1 ));
-    CV_CALL( _mapy = cvGetMat( _mapy, &mapystub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "The function does not support COI" );
-
-    if( CV_MAT_TYPE(_mapx->type) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "Both maps must have 32fC1 type" );
-
-    if( !CV_ARE_TYPES_EQ( _mapx, _mapy ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( !CV_ARE_SIZES_EQ( _mapx, _mapy ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
-
-    size = cvGetMatSize(_mapx);
-
-    if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-        (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
-        CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
-
-    if( !CV_IS_MAT(dist_coeffs) || (dist_coeffs->rows != 1 && dist_coeffs->cols != 1) ||
-        (dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 4 &&
-        dist_coeffs->rows*dist_coeffs->cols*CV_MAT_CN(dist_coeffs->type) != 5) ||
-        (CV_MAT_DEPTH(dist_coeffs->type) != CV_64F &&
-        CV_MAT_DEPTH(dist_coeffs->type) != CV_32F) )
-        CV_ERROR( CV_StsBadArg,
-            "Distortion coefficients must be 1x4, 4x1, 1x5 or 5x1 floating-point vector" );
-
-    cvConvert( A, &_a );
-    _k = cvMat( dist_coeffs->rows, dist_coeffs->cols,
-                CV_MAKETYPE(CV_32F, CV_MAT_CN(dist_coeffs->type)), k );
-    cvConvert( dist_coeffs, &_k );
-
-    u0 = a[2]; v0 = a[5];
-    fx = a[0]; fy = a[4];
-    ifx = 1.f/fx; ify = 1.f/fy;
-    k1 = k[0]; k2 = k[1]; k3 = k[4];
-    p1 = k[2]; p2 = k[3];
-    x0 = (size.width-1)*0.5f;
-    y0 = (size.height-1)*0.5f;
-
-    for( v = 0; v < size.height; v++ )
-    {
-        float* mapx = (float*)(_mapx->data.ptr + _mapx->step*v);
-        float* mapy = (float*)(_mapy->data.ptr + _mapy->step*v);
-        float y = (v - y0)*ify, y2 = y*y;
-
-        for( u = 0; u < size.width; u++ )
-        {
-            float x = (u - x0)*ifx, x2 = x*x, r2 = x2 + y2, _2xy = 2*x*y;
-            double kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
-            double _x = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + u0;
-            double _y = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0; 
-            mapx[u] = (float)_x;
-            mapy[u] = (float)_y;
-        }
-    }
-
-    __END__;
-}
-
-
-void
-cvInitUndistortRectifyMap( const CvMat* A, const CvMat* distCoeffs,
-    const CvMat *R, const CvMat* Ar, CvArr* mapxarr, CvArr* mapyarr )
-{
-    CV_FUNCNAME( "cvInitUndistortMap" );
-
-    __BEGIN__;
-    
-    double a[9], ar[9], r[9], ir[9], k[5]={0,0,0,0,0};
-    int coi1 = 0, coi2 = 0;
-    CvMat mapxstub, *_mapx = (CvMat*)mapxarr;
-    CvMat mapystub, *_mapy = (CvMat*)mapyarr;
-    CvMat _a = cvMat( 3, 3, CV_64F, a );
-    CvMat _k = cvMat( 4, 1, CV_64F, k );
-    CvMat _ar = cvMat( 3, 3, CV_64F, ar );
-    CvMat _r = cvMat( 3, 3, CV_64F, r );
-    CvMat _ir = cvMat( 3, 3, CV_64F, ir );
-    int i, j;
-    double fx, fy, u0, v0, k1, k2, k3, p1, p2;
-    CvSize size;
-
-    CV_CALL( _mapx = cvGetMat( _mapx, &mapxstub, &coi1 ));
-    CV_CALL( _mapy = cvGetMat( _mapy, &mapystub, &coi2 ));
-
-    if( coi1 != 0 || coi2 != 0 )
-        CV_ERROR( CV_BadCOI, "The function does not support COI" );
-
-    if( CV_MAT_TYPE(_mapx->type) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "Both maps must have 32fC1 type" );
-
-    if( !CV_ARE_TYPES_EQ( _mapx, _mapy ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( !CV_ARE_SIZES_EQ( _mapx, _mapy ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
-
-    if( A )
-    {
-        if( !CV_IS_MAT(A) || A->rows != 3 || A->cols != 3  ||
-            (CV_MAT_TYPE(A->type) != CV_32FC1 && CV_MAT_TYPE(A->type) != CV_64FC1) )
-            CV_ERROR( CV_StsBadArg, "Intrinsic matrix must be a valid 3x3 floating-point matrix" );
-        cvConvert( A, &_a );
-    }
+    if( m1type <= 0 )
+        m1type = CV_16SC2;
+    CV_Assert( m1type == CV_16SC2 || m1type == CV_32FC1 || m1type == CV_32FC2 );
+    map1.create( size, m1type );
+    if( m1type != CV_32FC2 )
+        map2.create( size, m1type == CV_16SC2 ? CV_16UC1 : CV_32FC1 );
     else
-        cvSetIdentity( &_a );
+        map2.release();
 
-    if( Ar )
-    {
-        CvMat Ar33;
-        if( !CV_IS_MAT(Ar) || Ar->rows != 3 || (Ar->cols != 3 && Ar->cols != 4) ||
-            (CV_MAT_TYPE(Ar->type) != CV_32FC1 && CV_MAT_TYPE(Ar->type) != CV_64FC1) )
-            CV_ERROR( CV_StsBadArg, "The new intrinsic matrix must be a valid 3x3 floating-point matrix" );
-        cvGetCols( Ar, &Ar33, 0, 3 );
-        cvConvert( &Ar33, &_ar );
-    }
+    Mat_<double> R = Mat_<double>::eye(3, 3), distCoeffs;
+    Mat_<double> A = Mat_<double>(_cameraMatrix), Ar;
+
+    if( _newCameraMatrix.data )
+        Ar = Mat_<double>(_newCameraMatrix);
     else
-        cvSetIdentity( &_ar );
+        Ar = getDefaultNewCameraMatrix( A, size );
 
-    if( !CV_IS_MAT(R) || R->rows != 3 || R->cols != 3  ||
-        (CV_MAT_TYPE(R->type) != CV_32FC1 && CV_MAT_TYPE(R->type) != CV_64FC1) )
-        CV_ERROR( CV_StsBadArg, "Rotaion/homography matrix must be a valid 3x3 floating-point matrix" );
+    if( _R.data )
+        R = Mat_<double>(_R);
 
-    if( distCoeffs )
-    {
-        CV_ASSERT( CV_IS_MAT(distCoeffs) &&
-            (distCoeffs->rows == 1 || distCoeffs->cols == 1) &&
-            (distCoeffs->rows*distCoeffs->cols*CV_MAT_CN(distCoeffs->type) == 4 ||
-            distCoeffs->rows*distCoeffs->cols*CV_MAT_CN(distCoeffs->type) == 5) &&
-            (CV_MAT_DEPTH(distCoeffs->type) == CV_64F ||
-            CV_MAT_DEPTH(distCoeffs->type) == CV_32F) );
-        _k = cvMat( distCoeffs->rows, distCoeffs->cols,
-                CV_MAKETYPE(CV_64F, CV_MAT_CN(distCoeffs->type)), k );
-        cvConvert( distCoeffs, &_k );
-    }
+    if( _distCoeffs.data )
+        distCoeffs = Mat_<double>(_distCoeffs);
     else
-        cvZero( &_k );
+    {
+        distCoeffs.create(5, 1);
+        distCoeffs = 0.;
+    }
+
+    CV_Assert( A.size() == Size(3,3) && A.size() == Ar.size() && A.size() == R.size() );
+    Mat_<double> iR = (Ar*R).inv(DECOMP_LU);
+    const double* ir = &iR(0,0);
     
-    cvConvert( R, &_r );    // rectification matrix
-    cvMatMul( &_ar, &_r, &_r ); // Ar*R
-    cvInvert( &_r, &_ir );  // inverse: R^-1*Ar^-1
+    double u0 = A(0, 2),  v0 = A(1, 2);
+    double fx = A(0, 0),  fy = A(1, 1);
 
-    u0 = a[2]; v0 = a[5];
-    fx = a[0]; fy = a[4];
-    k1 = k[0]; k2 = k[1]; k3 = k[4];
-    p1 = k[2]; p2 = k[3];
+    CV_Assert( distCoeffs.size() == Size(1, 4) || distCoeffs.size() == Size(1, 5) ||
+               distCoeffs.size() == Size(4, 1) || distCoeffs.size() == Size(5, 1));
 
-    size = cvGetMatSize(_mapx);
+    if( distCoeffs.rows != 1 && !distCoeffs.isContinuous() )
+        distCoeffs = distCoeffs.t();
 
-    for( i = 0; i < size.height; i++ )
+    double k1 = ((double*)distCoeffs.data)[0];
+    double k2 = ((double*)distCoeffs.data)[1];
+    double p1 = ((double*)distCoeffs.data)[2];
+    double p2 = ((double*)distCoeffs.data)[3];
+    double k3 = distCoeffs.cols + distCoeffs.rows - 1 == 5 ? ((double*)distCoeffs.data)[4] : 0.;
+
+    for( int i = 0; i < size.height; i++ )
     {
-        float* mapx = (float*)(_mapx->data.ptr + _mapx->step*i);
-        float* mapy = (float*)(_mapy->data.ptr + _mapy->step*i);
+        float* m1f = (float*)(map1.data + map1.step*i);
+        float* m2f = (float*)(map2.data + map2.step*i);
+        short* m1 = (short*)m1f;
+        ushort* m2 = (ushort*)m2f;
         double _x = i*ir[1] + ir[2], _y = i*ir[4] + ir[5], _w = i*ir[7] + ir[8];
 
-        for( j = 0; j < size.width; j++, _x += ir[0], _y += ir[3], _w += ir[6] )
+        for( int j = 0; j < size.width; j++, _x += ir[0], _y += ir[3], _w += ir[6] )
         {
             double w = 1./_w, x = _x*w, y = _y*w;
             double x2 = x*x, y2 = y*y;
             double r2 = x2 + y2, _2xy = 2*x*y;
             double kr = 1 + ((k3*r2 + k2)*r2 + k1)*r2;
             double u = fx*(x*kr + p1*_2xy + p2*(r2 + 2*x2)) + u0;
-            double v = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0; 
-            mapx[j] = (float)u;
-            mapy[j] = (float)v;
+            double v = fy*(y*kr + p1*(r2 + 2*y2) + p2*_2xy) + v0;
+            if( m1type == CV_16SC2 )
+            {
+                int iu = saturate_cast<int>(u*INTER_TAB_SIZE);
+                int iv = saturate_cast<int>(v*INTER_TAB_SIZE);
+                m1[j*2] = (short)(iu >> INTER_BITS);
+                m1[j*2+1] = (short)(iv >> INTER_BITS);
+                m2[j] = (ushort)((iv & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE + (iu & (INTER_TAB_SIZE-1)));
+            }
+            else if( m1type == CV_32FC1 )
+            {
+                m1f[j] = (float)u;
+                m2f[j] = (float)v;
+            }
+            else
+            {
+                m1f[j*2] = (float)u;
+                m1f[j*2+1] = (float)v;
+            }
         }
     }
+}
 
-    __END__;
+
+void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
+                const Mat& _distCoeffs, const Mat& _newCameraMatrix )
+{
+    dst.create( src.size(), src.type() );
+
+    int stripe_size0 = std::min((1 << 12)/std::max(src.cols, 1), src.rows);
+    Mat map1(stripe_size0, src.cols, CV_16SC2), map2(stripe_size0, src.cols, CV_16UC1);
+
+    Mat_<double> A, distCoeffs, Ar, I = Mat_<double>::eye(3,3);
+
+    _cameraMatrix.convertTo(A, CV_64F);
+    if( _distCoeffs.data )
+        distCoeffs = Mat_<double>(_distCoeffs);
+    else
+    {
+        distCoeffs.create(5, 1);
+        distCoeffs = 0.;
+    }
+
+    if( _newCameraMatrix.data )
+        Ar = Mat_<double>(_newCameraMatrix);
+    else
+        Ar = getDefaultNewCameraMatrix(A, src.size() );
+
+    double v0 = Ar(1, 2);
+    for( int y = 0; y < src.rows; y += stripe_size0 )
+    {
+        int stripe_size = std::min( stripe_size0, src.rows - y );
+        Ar(1, 2) = v0 - y;
+        Mat map1_part = map1.rowRange(0, stripe_size),
+            map2_part = map2.rowRange(0, stripe_size),
+            dst_part = dst.rowRange(y, y + stripe_size);
+        
+        initUndistortRectifyMap( A, distCoeffs, I, Ar, Size(src.cols, stripe_size),
+                                 map1_part.type(), map1_part, map2_part );
+        remap( src, dst_part, map1_part, map2_part, INTER_LINEAR, BORDER_REPLICATE );
+    }
+}
+
+}
+
+
+CV_IMPL void
+cvUndistort2( const CvArr* srcarr, CvArr* dstarr, const CvMat* Aarr, const CvMat* dist_coeffs )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), dst0 = dst;
+    cv::Mat A = cv::cvarrToMat(Aarr), distCoeffs = cv::cvarrToMat(dist_coeffs);
+
+    CV_Assert( src.size() == dst.size() && src.type() == dst.type() );
+    cv::undistort( src, dst, A, distCoeffs, cv::Mat() );
+}
+
+
+CV_IMPL void cvInitUndistortMap( const CvMat* Aarr, const CvMat* dist_coeffs,
+                                 CvArr* mapxarr, CvArr* mapyarr )
+{
+    cv::Mat A = cv::cvarrToMat(Aarr), distCoeffs = cv::cvarrToMat(dist_coeffs);
+    cv::Mat mapx = cv::cvarrToMat(mapxarr), mapy, mapx0 = mapx, mapy0;
+
+    if( mapyarr )
+        mapy0 = mapy = cv::cvarrToMat(mapyarr);
+
+    cv::initUndistortRectifyMap( A, distCoeffs, cv::Mat(), cv::Mat(),
+                                 mapx.size(), mapx.type(), mapx, mapy );
+    CV_Assert( mapx0.data == mapx.data && mapy0.data == mapy.data );
+}
+
+void
+cvInitUndistortRectifyMap( const CvMat* Aarr, const CvMat* dist_coeffs,
+    const CvMat *Rarr, const CvMat* ArArr, CvArr* mapxarr, CvArr* mapyarr )
+{
+    cv::Mat A = cv::cvarrToMat(Aarr), distCoeffs, R, Ar;
+    cv::Mat mapx = cv::cvarrToMat(mapxarr), mapy, mapx0 = mapx, mapy0;
+
+    if( mapyarr )
+        mapy0 = mapy = cv::cvarrToMat(mapyarr);
+
+    if( dist_coeffs )
+        distCoeffs = cv::cvarrToMat(dist_coeffs);
+    if( Rarr )
+        R = cv::cvarrToMat(Rarr);
+    if( ArArr )
+        Ar = cv::cvarrToMat(ArArr);
+
+    cv::initUndistortRectifyMap( A, distCoeffs, R, Ar, mapx.size(), mapx.type(), mapx, mapy );
+    CV_Assert( mapx0.data == mapx.data && mapy0.data == mapy.data );
 }
 
 
@@ -480,5 +354,3 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 }
 
 /*  End of file  */
-
- 	  	 

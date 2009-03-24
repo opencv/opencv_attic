@@ -68,7 +68,7 @@ void BaseFilter::reset() {}
     * BORDER_WRAP:          cdefgh|abcdefgh|abcdefg        
     * BORDER_CONSTANT:      iiiiii|abcdefgh|iiiiiii  with some specified 'i'
 */
-static int calcBorderPos( int p, int len, int borderType )
+int borderInterpolate( int p, int len, int borderType )
 {
     if( (unsigned)p < (unsigned)len )
         ;
@@ -270,14 +270,14 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
             
             for( i = 0; i < dx1; i++ )
             {
-                int p0 = calcBorderPos(i-dx1, wholeWidth, rowBorderType)*btab_esz;
+                int p0 = borderInterpolate(i-dx1, wholeWidth, rowBorderType)*btab_esz;
                 for( j = 0; j < btab_esz; j++ )
                     btab[i*btab_esz + j] = p0 + j;
             }
 
             for( i = 0; i < dx2; i++ )
             {
-                int p0 = calcBorderPos(wholeWidth + i, wholeWidth, rowBorderType)*btab_esz;
+                int p0 = borderInterpolate(wholeWidth + i, wholeWidth, rowBorderType)*btab_esz;
                 for( j = 0; j < btab_esz; j++ )
                     btab[(i + dx1)*btab_esz + j] = p0 + j;
             }
@@ -401,7 +401,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
         int max_i = std::min(bufRows, roi.height - (dstY + dy) + (kheight - 1));
         for( i = 0; i < max_i; i++ )
         {
-            int srcY = calcBorderPos(dstY + dy + i + roi.y - ay,
+            int srcY = borderInterpolate(dstY + dy + i + roi.y - ay,
                             wholeSize.height, columnBorderType);
             if( srcY < 0 ) // can happen only with constant border type
                 brows[i] = &constBorderRow[0];

@@ -538,6 +538,8 @@ template<typename T> static inline Size_<T>& operator -= (Size_<T>& a, const Siz
 
 template<typename T> static inline bool operator == (const Size_<T>& a, const Size_<T>& b)
 { return a.width == b.width && a.height == b.height; }
+template<typename T> static inline bool operator != (const Size_<T>& a, const Size_<T>& b)
+{ return a.width != b.width || a.height != b.height; }
 
 template<> inline Size_<int>::operator CvSize() const { return cvSize(width,height); }
 
@@ -1076,6 +1078,7 @@ inline Mat::Mat(const Mat& m, const Range& rowRange, const Range& colRange)
         rows = m.rows;
     else
     {
+        CV_Assert( 0 <= rowRange.start && rowRange.start <= rowRange.end && rowRange.end <= m.rows );
         rows = rowRange.size();
         data += step*rowRange.start;
     }
@@ -1084,6 +1087,7 @@ inline Mat::Mat(const Mat& m, const Range& rowRange, const Range& colRange)
         cols = m.cols;
     else
     {
+        CV_Assert( 0 <= rowRange.start && rowRange.start <= rowRange.end && rowRange.end <= m.rows );
         cols = colRange.size();
         data += colRange.start*elemSize();
         flags &= cols < m.cols ? ~CONTINUOUS_FLAG : -1;
@@ -1102,7 +1106,7 @@ inline Mat::Mat(const Mat& m, const Rect& roi)
 {
     flags &= roi.width < m.cols ? ~CONTINUOUS_FLAG : -1;
     data += roi.x*elemSize();
-    assert( 0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols &&
+    CV_Assert( 0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols &&
         0 <= roi.y && 0 <= roi.height && roi.y + roi.height <= m.rows );
     if( refcount )
         ++*refcount;
@@ -1586,7 +1590,7 @@ template<typename E, typename M> struct CV_EXPORTS MatExpr_ : MatExpr_Base
 
     MatExpr_<MatExpr_Op2_<M, double, M, MatOp_T_<Mat> >, M> t() const
     { return ((M)e).t(); }
-    MatExpr_<MatExpr_Op2_<M, int, M, MatOp_T_<Mat> >, M> inv(int method=DECOMP_LU) const
+    MatExpr_<MatExpr_Op2_<M, int, M, MatOp_Inv_<Mat> >, M> inv(int method=DECOMP_LU) const
     { return ((M)e).inv(method); }
 
     MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
