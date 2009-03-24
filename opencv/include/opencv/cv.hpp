@@ -50,7 +50,9 @@ namespace cv
 enum { BORDER_REPLICATE=IPL_BORDER_REPLICATE, BORDER_CONSTANT=IPL_BORDER_CONSTANT,
        BORDER_REFLECT=IPL_BORDER_REFLECT, BORDER_REFLECT_101=IPL_BORDER_REFLECT_101,
        BORDER_REFLECT101=BORDER_REFLECT_101, BORDER_WRAP=IPL_BORDER_WRAP,
-       BORDER_DEFAULT=BORDER_REFLECT_101, BORDER_ISOLATED=16 };
+       BORDER_TRANSPARENT, BORDER_DEFAULT=BORDER_REFLECT_101, BORDER_ISOLATED=16 };
+
+CV_EXPORTS int borderInterpolate( int p, int len, int borderType );
 
 struct CV_EXPORTS BaseRowFilter
 {
@@ -266,11 +268,34 @@ CV_EXPORTS void morphologyEx( const Mat& src, Mat& dst, int op, const Mat& kerne
                               int borderType=BORDER_CONSTANT,
                               const Scalar& borderValue=morphologyDefaultBorderValue() );
 
-CV_EXPORTS void resize( const Mat& src, Mat& dst, int interpolation );
+enum { INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3,
+       INTER_LANCZOS4=4, INTER_MAX=7, WARP_INVERSE_MAP=16 };
+
+CV_EXPORTS void resize( const Mat& src, Mat& dst,
+                        Size dsize=Size(), double fx=0, double fy=0,
+                        int interpolation=INTER_LINEAR );
+
 CV_EXPORTS void warpAffine( const Mat& src, Mat& dst,
-                            const Mat& M, int interpolation );
+                            const Mat& M, Size dsize,
+                            int flags=INTER_LINEAR,
+                            int borderMode=BORDER_CONSTANT,
+                            const Scalar& borderValue=Scalar());
 CV_EXPORTS void warpPerspective( const Mat& src, Mat& dst,
-                                 const Mat& M, int interpolation );
+                                 const Mat& M, Size dsize,
+                                 int flags=INTER_LINEAR,
+                                 int borderMode=BORDER_CONSTANT,
+                                 const Scalar& borderValue=Scalar());
+
+CV_EXPORTS void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
+                       int interpolation, int borderMode=BORDER_CONSTANT,
+                       const Scalar& borderValue=Scalar());
+
+CV_EXPORTS void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat& dstmap2,
+                             int dstmap1type, bool nninterpolation=false );
+
+CV_EXPORTS Mat getRotationMatrix2D( Point2f center, double angle, double scale );
+CV_EXPORTS Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] );
+CV_EXPORTS Mat getAffineTransform( const Point2f src[], const Point2f dst[] );
 
 }
 

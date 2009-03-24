@@ -649,7 +649,7 @@ inline  double cvTsRandReal( CvRNG* rng )
 }
 
 // fills c with zeros
-CV_EXPORTS void cvTsZero( CvMat* c );
+CV_EXPORTS void cvTsZero( CvMat* c, const CvMat* mask=0 );
 
 // initializes scaled identity matrix
 CV_EXPORTS void cvTsSetIdentity( CvMat* c, CvScalar diag_value );

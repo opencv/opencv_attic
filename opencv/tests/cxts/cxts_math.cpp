@@ -156,12 +156,23 @@ void cvTsRandUni( CvRNG* rng, CvMat* a, CvScalar param0, CvScalar param1 )
 }
 
 
-void cvTsZero( CvMat* c )
+void cvTsZero( CvMat* c, const CvMat* mask )
 {
-    int i, width;
-    width = c->cols*CV_ELEM_SIZE(c->type);
+    int i, j, elem_size = CV_ELEM_SIZE(c->type), width = c->cols;
+    
     for( i = 0; i < c->rows; i++ )
-        memset( c->data.ptr + i*c->step, 0, width );
+    {
+        if( !mask )
+            memset( c->data.ptr + i*c->step, 0, width*elem_size );
+        else
+        {
+            const uchar* mrow = mask->data.ptr + mask->step*i;
+            uchar* cptr = c->data.ptr + c->step*i;
+            for( j = 0; j < width; j++, cptr += elem_size )
+                if( mrow[j] )
+                    memset( cptr, 0, elem_size );
+        }
+    }
 }
 
 

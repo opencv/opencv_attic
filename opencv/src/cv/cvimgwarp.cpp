@@ -47,1398 +47,2499 @@
 
 #include "_cv.h"
 
-
-/************** interpolation constants and tables ***************/
-
-#define ICV_WARP_MUL_ONE_8U(x)  ((x) << ICV_WARP_SHIFT)
-#define ICV_WARP_DESCALE_8U(x)  CV_DESCALE((x), ICV_WARP_SHIFT*2)
-#define ICV_WARP_CLIP_X(x)      ((unsigned)(x) < (unsigned)ssize.width ? \
-                                (x) : (x) < 0 ? 0 : ssize.width - 1)
-#define ICV_WARP_CLIP_Y(y)      ((unsigned)(y) < (unsigned)ssize.height ? \
-                                (y) : (y) < 0 ? 0 : ssize.height - 1)
-
-float icvLinearCoeffs[(ICV_LINEAR_TAB_SIZE+1)*2];
-
-void icvInitLinearCoeffTab()
+namespace cv
 {
-    static int inittab = 0;
-    if( !inittab )
-    {
-        for( int i = 0; i <= ICV_LINEAR_TAB_SIZE; i++ )
-        {
-            float x = (float)i/ICV_LINEAR_TAB_SIZE;
-            icvLinearCoeffs[i*2] = x;
-            icvLinearCoeffs[i*2+1] = 1.f - x;
-        }
 
-        inittab = 1;
+/************** interpolation formulas and tables ***************/
+
+const int INTER_COEF_RESIZE_BITS=11;
+const int INTER_COEF_RESIZE_SCALE=1 << INTER_COEF_RESIZE_BITS;
+
+const int INTER_COEF_REMAP_BITS=15;
+const int INTER_COEF_REMAP_SCALE=1 << INTER_COEF_REMAP_BITS;
+
+static uchar NNDeltaTab_i[INTER_TAB_SIZE2][2];
+
+static float BilinearTab_f[INTER_TAB_SIZE2][2][2];
+static short BilinearTab_i[INTER_TAB_SIZE2][2][2];
+
+static float BicubicTab_f[INTER_TAB_SIZE2][4][4];
+static short BicubicTab_i[INTER_TAB_SIZE2][4][4];
+
+static float Lanczos4Tab_f[INTER_TAB_SIZE2][8][8];
+static short Lanczos4Tab_i[INTER_TAB_SIZE2][8][8];
+
+static inline void interpolateLinear( float x, float* coeffs )
+{
+    coeffs[0] = 1.f - x;
+    coeffs[1] = x;
+}
+
+static inline void interpolateCubic( float x, float* coeffs )
+{
+    const float A = -0.75f;
+
+    coeffs[0] = ((A*(x + 1) - 5*A)*(x + 1) + 8*A)*(x + 1) - 4*A;
+    coeffs[1] = ((A + 2)*x - (A + 3))*x*x + 1;
+    coeffs[2] = ((A + 2)*(1 - x) - (A + 3))*(1 - x)*(1 - x) + 1;
+    coeffs[3] = 1.f - coeffs[0] - coeffs[1] - coeffs[2];
+}
+
+static inline void interpolateLanczos4( float x, float* coeffs )
+{
+    static const double s45 = 0.70710678118654752440084436210485;
+    static const double cs[][2]=
+    {{1, 0}, {-s45, -s45}, {0, 1}, {s45, -s45}, {-1, 0}, {s45, s45}, {0, -1}, {-s45, s45}};
+    
+    int i;
+    if( x < FLT_EPSILON )
+    {
+        for( int i = 0; i < 8; i++ )
+            coeffs[i] = 0;
+        coeffs[3] = 1;
+        return;
     }
+
+    float sum = 0;
+    double y0=-(x+3)*CV_PI*0.25, s0 = sin(y0), c0=cos(y0);
+    for( i = 0; i < 8; i++ )
+    {
+        double y = -(x+3-i)*CV_PI*0.25;
+        coeffs[i] = (float)((cs[i][0]*s0 + cs[i][1]*c0)/(y*y));
+        sum += coeffs[i];
+    }
+
+    sum = 1.f/sum;
+    for( i = 0; i < 8; i++ )
+        coeffs[i] *= sum;
+}
+
+static void initInterTab1D(int method, float* tab, int tabsz)
+{
+    float scale = 1.f/tabsz;
+    if( method == INTER_LINEAR )
+    {
+        for( int i = 0; i < tabsz; i++, tab += 2 )
+            interpolateLinear( i*scale, tab );
+    }
+    else if( method == INTER_CUBIC )
+    {
+        for( int i = 0; i < tabsz; i++, tab += 4 )
+            interpolateCubic( i*scale, tab );
+    }
+    else if( method == INTER_LANCZOS4 )
+    {
+        for( int i = 0; i < tabsz; i++, tab += 8 )
+            interpolateLanczos4( i*scale, tab );
+    }
+    else
+        CV_Error( CV_StsBadArg, "Unknown interpolation method" );
 }
 
 
-float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
-
-void icvInitCubicCoeffTab()
+static const void* initInterTab2D( int method, bool fixpt )
 {
-    static int inittab = 0;
-    if( !inittab )
+    static bool inittab[INTER_MAX+1] = {false};
+    float* tab = 0;
+    short* itab = 0;
+    int ksize = 0;
+    if( method == INTER_LINEAR )
+        tab = BilinearTab_f[0][0], itab = BilinearTab_i[0][0], ksize=2;
+    else if( method == INTER_CUBIC )
+        tab = BicubicTab_f[0][0], itab = BicubicTab_i[0][0], ksize=4;
+    else if( method == INTER_LANCZOS4 )
+        tab = Lanczos4Tab_f[0][0], itab = Lanczos4Tab_i[0][0], ksize=8;
+    else
+        CV_Error( CV_StsBadArg, "Unknown/unsupported interpolation type" );
+
+    if( !inittab[method] )
     {
-#if 0
-        // classical Mitchell-Netravali filter
-        const double B = 1./3;
-        const double C = 1./3;
-        const double p0 = (6 - 2*B)/6.;
-        const double p2 = (-18 + 12*B + 6*C)/6.;
-        const double p3 = (12 - 9*B - 6*C)/6.;
-        const double q0 = (8*B + 24*C)/6.;
-        const double q1 = (-12*B - 48*C)/6.;
-        const double q2 = (6*B + 30*C)/6.;
-        const double q3 = (-B - 6*C)/6.;
+        AutoBuffer<float> _tab(INTER_TAB_SIZE);
+        int i, j, k1, k2;
+        initInterTab1D(method, _tab, INTER_TAB_SIZE);
+        for( i = 0; i < INTER_TAB_SIZE; i++ )
+            for( j = 0; j < INTER_TAB_SIZE; j++, tab += ksize*ksize, itab += ksize*ksize )
+            {
+                int isum = 0;
+                NNDeltaTab_i[i*INTER_TAB_SIZE+j][0] = j < INTER_TAB_SIZE/2;
+                NNDeltaTab_i[i*INTER_TAB_SIZE+j][1] = i < INTER_TAB_SIZE/2;
 
-        #define ICV_CUBIC_1(x)  (((x)*p3 + p2)*(x)*(x) + p0)
-        #define ICV_CUBIC_2(x)  ((((x)*q3 + q2)*(x) + q1)*(x) + q0)
-#else
-        // alternative "sharp" filter
-        const double A = -0.75;
-        #define ICV_CUBIC_1(x)  (((A + 2)*(x) - (A + 3))*(x)*(x) + 1)
-        #define ICV_CUBIC_2(x)  (((A*(x) - 5*A)*(x) + 8*A)*(x) - 4*A)
-#endif
-        for( int i = 0; i <= ICV_CUBIC_TAB_SIZE; i++ )
-        {
-            float x = (float)i/ICV_CUBIC_TAB_SIZE;
-            icvCubicCoeffs[i*2] = (float)ICV_CUBIC_1(x);
-            x += 1.f;
-            icvCubicCoeffs[i*2+1] = (float)ICV_CUBIC_2(x);
-        }
-
-        inittab = 1;
+                for( k1 = 0; k1 < ksize; k1++ )
+                {
+                    float vy = _tab[i*ksize + k1];
+                    for( k2 = 0; k2 < ksize; k2++ )
+                    {
+                        float v = vy*_tab[j*ksize + k2];
+                        tab[k1*ksize + k2] = v;
+                        isum += itab[k1*ksize + k2] = saturate_cast<short>(v*INTER_COEF_REMAP_SCALE);
+                    }
+                }
+                
+                if( isum != INTER_COEF_REMAP_SCALE )
+                {
+                    int diff = isum - INTER_COEF_REMAP_SCALE;
+                    int ksize2 = ksize/2, Mk1=ksize2, Mk2=ksize2, mk1=ksize2, mk2=ksize2;
+                    for( k1 = ksize2; k1 < ksize2+2; k1++ )
+                        for( k2 = ksize2; k2 < ksize2+2; k2++ )
+                        {
+                            if( itab[k1*ksize+k2] < itab[mk1*ksize+mk2] )
+                                mk1 = k1, mk2 = k2;
+                            else if( itab[k1*ksize+k2] > itab[Mk1*ksize+Mk2] )
+                                Mk1 = k1, Mk2 = k2;
+                        }
+                    if( diff < 0 )
+                        itab[Mk1*ksize + Mk2] = (short)(itab[Mk1*ksize + Mk2] - diff);
+                    else
+                        itab[mk1*ksize + mk2] = (short)(itab[mk1*ksize + mk2] - diff);
+                }
+            }
+        tab -= INTER_TAB_SIZE2*ksize*ksize;
+        itab -= INTER_TAB_SIZE2*ksize*ksize;
+        inittab[method] = true;
     }
+    return fixpt ? (const void*)itab : (const void*)tab;
 }
 
+
+template<typename ST, typename DT> struct Cast
+{
+    typedef ST type1;
+    typedef DT rtype;
+
+    DT operator()(ST val) const { return saturate_cast<DT>(val); }
+};
+
+template<typename ST, typename DT, int bits> struct FixedPtCast
+{
+    typedef ST type1;
+    typedef DT rtype;
+    enum { SHIFT = bits, DELTA = 1 << (bits-1) };
+
+    DT operator()(ST val) const { return saturate_cast<DT>((val + DELTA)>>SHIFT); }
+};
 
 /****************************************************************************************\
 *                                         Resize                                         *
 \****************************************************************************************/
 
-static CvStatus CV_STDCALL
-icvResize_NN_8u_C1R( const uchar* src, int srcstep, CvSize ssize,
-                     uchar* dst, int dststep, CvSize dsize, int pix_size )
+static void
+resizeNN( const Mat& src, Mat& dst, double fx, double fy )
 {
-    int* x_ofs = (int*)cvStackAlloc( dsize.width * sizeof(x_ofs[0]) );
+    Size ssize = src.size(), dsize = dst.size();
+    AutoBuffer<int> _x_ofs(dsize.width);
+    int* x_ofs = _x_ofs;
+    int pix_size = src.elemSize();
     int pix_size4 = pix_size / sizeof(int);
-    int x, y, t;
+    double ifx = 1./fx, ify = 1./fy;
+    int x, y;
 
     for( x = 0; x < dsize.width; x++ )
     {
-        t = (ssize.width*x*2 + MIN(ssize.width, dsize.width) - 1)/(dsize.width*2);
-        t -= t >= ssize.width;
-        x_ofs[x] = t*pix_size;
+        int sx = saturate_cast<int>(x*ifx);
+        x_ofs[x] = std::min(sx, ssize.width-1)*pix_size;
     }
 
-    for( y = 0; y < dsize.height; y++, dst += dststep )
+    for( y = 0; y < dsize.height; y++ )
     {
-        const uchar* tsrc;
-        t = (ssize.height*y*2 + MIN(ssize.height, dsize.height) - 1)/(dsize.height*2);
-        t -= t >= ssize.height;
-        tsrc = src + srcstep*t;
+        uchar* D = dst.data + dst.step*y;
+        int sy = std::min(saturate_cast<int>(y*ify), ssize.height-1);
+        const uchar* S = src.data + src.step*sy;
 
         switch( pix_size )
         {
         case 1:
             for( x = 0; x <= dsize.width - 2; x += 2 )
             {
-                uchar t0 = tsrc[x_ofs[x]];
-                uchar t1 = tsrc[x_ofs[x+1]];
-
-                dst[x] = t0;
-                dst[x+1] = t1;
+                uchar t0 = S[x_ofs[x]];
+                uchar t1 = S[x_ofs[x+1]];
+                D[x] = t0;
+                D[x+1] = t1;
             }
 
             for( ; x < dsize.width; x++ )
-                dst[x] = tsrc[x_ofs[x]];
+                D[x] = S[x_ofs[x]];
             break;
         case 2:
             for( x = 0; x < dsize.width; x++ )
-                *(ushort*)(dst + x*2) = *(ushort*)(tsrc + x_ofs[x]);
+                *(ushort*)(D + x*2) = *(ushort*)(S + x_ofs[x]);
             break;
         case 3:
-            for( x = 0; x < dsize.width; x++ )
+            for( x = 0; x < dsize.width; x++, D += 3 )
             {
-                const uchar* _tsrc = tsrc + x_ofs[x];
-                dst[x*3] = _tsrc[0]; dst[x*3+1] = _tsrc[1]; dst[x*3+2] = _tsrc[2];
+                const uchar* _tS = S + x_ofs[x];
+                D[0] = _tS[0]; D[1] = _tS[1]; D[2] = _tS[2];
             }
             break;
         case 4:
             for( x = 0; x < dsize.width; x++ )
-                *(int*)(dst + x*4) = *(int*)(tsrc + x_ofs[x]);
+                *(int*)(D + x*4) = *(int*)(S + x_ofs[x]);
             break;
         case 6:
-            for( x = 0; x < dsize.width; x++ )
+            for( x = 0; x < dsize.width; x++, D += 6 )
             {
-                const ushort* _tsrc = (const ushort*)(tsrc + x_ofs[x]);
-                ushort* _tdst = (ushort*)(dst + x*6);
-                _tdst[0] = _tsrc[0]; _tdst[1] = _tsrc[1]; _tdst[2] = _tsrc[2];
+                const ushort* _tS = (const ushort*)(S + x_ofs[x]);
+                ushort* _tD = (ushort*)D;
+                _tD[0] = _tS[0]; _tD[1] = _tS[1]; _tD[2] = _tS[2];
+            }
+            break;
+        case 8:
+            for( x = 0; x < dsize.width; x++, D += 8 )
+            {
+                const int* _tS = (const int*)(S + x_ofs[x]);
+                int* _tD = (int*)D;
+                _tD[0] = _tS[0]; _tD[1] = _tS[1];
+            }
+            break;
+        case 12:
+            for( x = 0; x < dsize.width; x++, D += 12 )
+            {
+                const int* _tS = (const int*)(S + x_ofs[x]);
+                int* _tD = (int*)D;
+                _tD[0] = _tS[0]; _tD[1] = _tS[1]; _tD[2] = _tS[2];
             }
             break;
         default:
-            for( x = 0; x < dsize.width; x++ )
-                CV_MEMCPY_INT( dst + x*pix_size, tsrc + x_ofs[x], pix_size4 );
+            for( x = 0; x < dsize.width; x++, D += pix_size )
+            {
+                const int* _tS = (const int*)(S + x_ofs[x]);
+                int* _tD = (int*)D;
+                for( int k = 0; k < pix_size4; k++ )
+                    _tD[k] = _tS[k];
+            }
         }
     }
-
-    return CV_OK;
 }
 
 
-typedef struct CvResizeAlpha
+struct VResizeNoVec
 {
-    int idx;
-    union
+    int operator()(const uchar**, uchar*, const uchar*, int ) const { return 0; }
+};
+
+struct HResizeNoVec
+{
+    int operator()(const uchar**, uchar**, int, const int*,
+        const uchar*, int, int, int, int, int) const { return 0; }
+};
+
+#if CV_SSE2
+
+struct VResizeLinearVec_32s8u
+{
+    int operator()(const uchar** _src, uchar* dst, const uchar* _beta, int width ) const
     {
-        float alpha;
-        int ialpha;
-    };
+        const int** src = (const int**)_src;
+        const short* beta = (const short*)_beta;
+        const int *S0 = src[0], *S1 = src[1];
+        int x = 0;
+        __m128i b0 = _mm_set1_epi16(beta[0]), b1 = _mm_set1_epi16(beta[1]);
+        __m128i delta = _mm_set1_epi16(2);
+
+        if( (((size_t)S0|(size_t)S1)&15) == 0 )
+            for( ; x <= width - 16; x += 16 )
+            {
+                __m128i x0, x1, x2, y0, y1, y2;
+                x0 = _mm_load_si128((const __m128i*)(S0 + x));
+                x1 = _mm_load_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_load_si128((const __m128i*)(S1 + x));
+                y1 = _mm_load_si128((const __m128i*)(S1 + x + 4));
+                x0 = _mm_packs_epi32(_mm_srai_epi32(x0, 4), _mm_srai_epi32(x1, 4));
+                y0 = _mm_packs_epi32(_mm_srai_epi32(y0, 4), _mm_srai_epi32(y1, 4));
+
+                x1 = _mm_load_si128((const __m128i*)(S0 + x + 8));
+                x2 = _mm_load_si128((const __m128i*)(S0 + x + 12));
+                y1 = _mm_load_si128((const __m128i*)(S1 + x + 8));
+                y2 = _mm_load_si128((const __m128i*)(S1 + x + 12));
+                x1 = _mm_packs_epi32(_mm_srai_epi32(x1, 4), _mm_srai_epi32(x2, 4));
+                y1 = _mm_packs_epi32(_mm_srai_epi32(y1, 4), _mm_srai_epi32(y2, 4));
+
+                x0 = _mm_adds_epi16(_mm_mulhi_epi16( x0, b0 ), _mm_mulhi_epi16( y0, b1 ));
+                x1 = _mm_adds_epi16(_mm_mulhi_epi16( x1, b0 ), _mm_mulhi_epi16( y1, b1 ));
+
+                x0 = _mm_srai_epi16(_mm_adds_epi16(x0, delta), 2);
+                x1 = _mm_srai_epi16(_mm_adds_epi16(x1, delta), 2);
+                _mm_storeu_si128( (__m128i*)(dst + x), _mm_packus_epi16(x0, x1));
+            }
+        else
+            for( ; x <= width - 16; x += 16 )
+            {
+                __m128i x0, x1, x2, y0, y1, y2;
+                x0 = _mm_loadu_si128((const __m128i*)(S0 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S1 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 4));
+                x0 = _mm_packs_epi32(_mm_srai_epi32(x0, 4), _mm_srai_epi32(x1, 4));
+                y0 = _mm_packs_epi32(_mm_srai_epi32(y0, 4), _mm_srai_epi32(y1, 4));
+
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 8));
+                x2 = _mm_loadu_si128((const __m128i*)(S0 + x + 12));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 8));
+                y2 = _mm_loadu_si128((const __m128i*)(S1 + x + 12));
+                x1 = _mm_packs_epi32(_mm_srai_epi32(x1, 4), _mm_srai_epi32(x2, 4));
+                y1 = _mm_packs_epi32(_mm_srai_epi32(y1, 4), _mm_srai_epi32(y2, 4));
+
+                x0 = _mm_adds_epi16(_mm_mulhi_epi16( x0, b0 ), _mm_mulhi_epi16( y0, b1 ));
+                x1 = _mm_adds_epi16(_mm_mulhi_epi16( x1, b0 ), _mm_mulhi_epi16( y1, b1 ));
+
+                x0 = _mm_srai_epi16(_mm_adds_epi16(x0, delta), 2);
+                x1 = _mm_srai_epi16(_mm_adds_epi16(x1, delta), 2);
+                _mm_storeu_si128( (__m128i*)(dst + x), _mm_packus_epi16(x0, x1));
+            }
+
+        for( ; x < width - 4; x += 4 )
+        {
+            __m128i x0, y0;
+            x0 = _mm_srai_epi32(_mm_loadu_si128((const __m128i*)(S0 + x)), 4);
+            y0 = _mm_srai_epi32(_mm_loadu_si128((const __m128i*)(S1 + x)), 4);
+            x0 = _mm_packs_epi32(x0, x0);
+            y0 = _mm_packs_epi32(y0, y0);
+            x0 = _mm_adds_epi16(_mm_mulhi_epi16(x0, b0), _mm_mulhi_epi16(y0, b1));
+            x0 = _mm_srai_epi16(_mm_adds_epi16(x0, delta), 2);
+            x0 = _mm_packus_epi16(x0, x0);
+            *(int*)(dst + x) = _mm_cvtsi128_si32(x0);
+        }
+        
+        return x;
+    }
+};
+
+
+struct VResizeLinearVec_32f16u
+{
+    int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
+    {
+        const float** src = (const float**)_src;
+        const float* beta = (const float*)_beta;
+        const float *S0 = src[0], *S1 = src[1];
+        ushort* dst = (ushort*)_dst;
+        int x = 0;
+
+        __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]);
+        __m128i preshift = _mm_set1_epi32(SHRT_MIN);
+        __m128i postshift = _mm_set1_epi16(SHRT_MIN);
+
+        if( (((size_t)S0|(size_t)S1)&15) == 0 )
+            for( ; x <= width - 16; x += 16 )
+            {
+                __m128 x0, x1, y0, y1;
+                __m128i t0, t1, t2;
+                x0 = _mm_load_ps(S0 + x);
+                x1 = _mm_load_ps(S0 + x + 4);
+                y0 = _mm_load_ps(S1 + x);
+                y1 = _mm_load_ps(S1 + x + 4);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+                t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
+                t2 = _mm_add_epi32(_mm_cvtps_epi32(x1), preshift);
+                t0 = _mm_add_epi16(_mm_packs_epi32(t0, t2), postshift);
+
+                x0 = _mm_load_ps(S0 + x + 8);
+                x1 = _mm_load_ps(S0 + x + 12);
+                y0 = _mm_load_ps(S1 + x + 8);
+                y1 = _mm_load_ps(S1 + x + 12);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+                t1 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
+                t2 = _mm_add_epi32(_mm_cvtps_epi32(x1), preshift);
+                t1 = _mm_add_epi16(_mm_packs_epi32(t1, t2), postshift);
+
+                _mm_storeu_si128( (__m128i*)(dst + x), t0);
+                _mm_storeu_si128( (__m128i*)(dst + x + 8), t1);
+            }
+        else
+            for( ; x <= width - 16; x += 16 )
+            {
+                __m128 x0, x1, y0, y1;
+                __m128i t0, t1, t2;
+                x0 = _mm_loadu_ps(S0 + x);
+                x1 = _mm_loadu_ps(S0 + x + 4);
+                y0 = _mm_loadu_ps(S1 + x);
+                y1 = _mm_loadu_ps(S1 + x + 4);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+                t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
+                t2 = _mm_add_epi32(_mm_cvtps_epi32(x1), preshift);
+                t0 = _mm_add_epi16(_mm_packs_epi32(t0, t2), postshift);
+
+                x0 = _mm_loadu_ps(S0 + x + 8);
+                x1 = _mm_loadu_ps(S0 + x + 12);
+                y0 = _mm_loadu_ps(S1 + x + 8);
+                y1 = _mm_loadu_ps(S1 + x + 12);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+                t1 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
+                t2 = _mm_add_epi32(_mm_cvtps_epi32(x1), preshift);
+                t1 = _mm_add_epi16(_mm_packs_epi32(t1, t2), postshift);
+
+                _mm_storeu_si128( (__m128i*)(dst + x), t0);
+                _mm_storeu_si128( (__m128i*)(dst + x + 8), t1);
+            }
+
+        for( ; x < width - 4; x += 4 )
+        {
+            __m128 x0, y0;
+            __m128i t0;
+            x0 = _mm_loadu_ps(S0 + x);
+            y0 = _mm_loadu_ps(S1 + x);
+            
+            x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+            t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
+            t0 = _mm_add_epi16(_mm_packs_epi32(t0, t0), postshift);
+            _mm_storel_epi64( (__m128i*)(dst + x), t0);
+        }
+        
+        return x;
+    }
+};
+
+
+struct VResizeLinearVec_32f
+{
+    int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
+    {
+        const float** src = (const float**)_src;
+        const float* beta = (const float*)_beta;
+        const float *S0 = src[0], *S1 = src[1];
+        float* dst = (float*)_dst;
+        int x = 0;
+
+        __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]);
+
+        if( (((size_t)S0|(size_t)S1)&15) == 0 )
+            for( ; x <= width - 8; x += 8 )
+            {
+                __m128 x0, x1, y0, y1;
+                x0 = _mm_load_ps(S0 + x);
+                x1 = _mm_load_ps(S0 + x + 4);
+                y0 = _mm_load_ps(S1 + x);
+                y1 = _mm_load_ps(S1 + x + 4);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+
+                _mm_storeu_ps( dst + x, x0);
+                _mm_storeu_ps( dst + x + 4, x1);
+            }
+        else
+            for( ; x <= width - 8; x += 8 )
+            {
+                __m128 x0, x1, y0, y1;
+                x0 = _mm_loadu_ps(S0 + x);
+                x1 = _mm_loadu_ps(S0 + x + 4);
+                y0 = _mm_loadu_ps(S1 + x);
+                y1 = _mm_loadu_ps(S1 + x + 4);
+                
+                x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
+                x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
+
+                _mm_storeu_ps( dst + x, x0);
+                _mm_storeu_ps( dst + x + 4, x1);
+            }
+        
+        return x;
+    }
+};
+
+
+struct VResizeCubicVec_32s8u
+{
+    int operator()(const uchar** _src, uchar* dst, const uchar* _beta, int width ) const
+    {
+        const int** src = (const int**)_src;
+        const short* beta = (const short*)_beta;
+        const int *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
+        int x = 0;
+        float scale = 1.f/(INTER_COEF_RESIZE_SCALE*INTER_COEF_RESIZE_SCALE);
+        __m128 b0 = _mm_set1_ps(beta[0]*scale), b1 = _mm_set1_ps(beta[1]*scale),
+            b2 = _mm_set1_ps(beta[2]*scale), b3 = _mm_set1_ps(beta[3]*scale);
+
+        if( (((size_t)S0|(size_t)S1|(size_t)S2|(size_t)S3)&15) == 0 )
+            for( ; x <= width - 8; x += 8 )
+            {
+                __m128i x0, x1, y0, y1;
+                __m128 s0, s1, f0, f1;
+                x0 = _mm_load_si128((const __m128i*)(S0 + x));
+                x1 = _mm_load_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_load_si128((const __m128i*)(S1 + x));
+                y1 = _mm_load_si128((const __m128i*)(S1 + x + 4));
+                
+                s0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b0);
+                s1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b0);
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b1);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(y1), b1);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+
+                x0 = _mm_load_si128((const __m128i*)(S2 + x));
+                x1 = _mm_load_si128((const __m128i*)(S2 + x + 4));
+                y0 = _mm_load_si128((const __m128i*)(S3 + x));
+                y1 = _mm_load_si128((const __m128i*)(S3 + x + 4));
+                
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b2);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b2);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b3);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(y1), b3);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+
+                x0 = _mm_cvtps_epi32(s0);
+                x1 = _mm_cvtps_epi32(s1);
+
+                x0 = _mm_packs_epi32(x0, x1);
+                _mm_storel_epi64( (__m128i*)(dst + x), _mm_packus_epi16(x0, x0));
+            }
+        else
+            for( ; x <= width - 8; x += 8 )
+            {
+                __m128i x0, x1, y0, y1;
+                __m128 s0, s1, f0, f1;
+                x0 = _mm_loadu_si128((const __m128i*)(S0 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S1 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 4));
+                
+                s0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b0);
+                s1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b0);
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b1);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(y1), b1);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+
+                x0 = _mm_loadu_si128((const __m128i*)(S2 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S2 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S3 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S3 + x + 4));
+                
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b2);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b2);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+                f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b3);
+                f1 = _mm_mul_ps(_mm_cvtepi32_ps(y1), b3);
+                s0 = _mm_add_ps(s0, f0);
+                s1 = _mm_add_ps(s1, f1);
+
+                x0 = _mm_cvtps_epi32(s0);
+                x1 = _mm_cvtps_epi32(s1);
+
+                x0 = _mm_packs_epi32(x0, x1);
+                _mm_storel_epi64( (__m128i*)(dst + x), _mm_packus_epi16(x0, x0));
+            }
+        
+        return x;
+    }
+};
+
+
+struct VResizeCubicVec_32f16u
+{
+    int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
+    {
+        const float** src = (const float**)_src;
+        const float* beta = (const float*)_beta;
+        const float *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
+        ushort* dst = (ushort*)_dst;
+        int x = 0;
+        __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]),
+            b2 = _mm_set1_ps(beta[2]), b3 = _mm_set1_ps(beta[3]);
+        __m128i preshift = _mm_set1_epi32(SHRT_MIN);
+        __m128i postshift = _mm_set1_epi16(SHRT_MIN);
+
+        for( ; x <= width - 8; x += 8 )
+        {
+            __m128 x0, x1, y0, y1, s0, s1;
+            __m128i t0, t1;
+            x0 = _mm_loadu_ps(S0 + x);
+            x1 = _mm_loadu_ps(S0 + x + 4);
+            y0 = _mm_loadu_ps(S1 + x);
+            y1 = _mm_loadu_ps(S1 + x + 4);
+            
+            s0 = _mm_mul_ps(x0, b0);
+            s1 = _mm_mul_ps(x1, b0);
+            y0 = _mm_mul_ps(y0, b1);
+            y1 = _mm_mul_ps(y1, b1);
+            s0 = _mm_add_ps(s0, y0);
+            s1 = _mm_add_ps(s1, y1);
+
+            x0 = _mm_loadu_ps(S2 + x);
+            x1 = _mm_loadu_ps(S2 + x + 4);
+            y0 = _mm_loadu_ps(S3 + x);
+            y1 = _mm_loadu_ps(S3 + x + 4);
+            
+            x0 = _mm_mul_ps(x0, b2);
+            x1 = _mm_mul_ps(x1, b2);
+            y0 = _mm_mul_ps(y0, b3);
+            y1 = _mm_mul_ps(y1, b3);
+            s0 = _mm_add_ps(s0, x0);
+            s1 = _mm_add_ps(s1, x1);
+            s0 = _mm_add_ps(s0, y0);
+            s1 = _mm_add_ps(s1, y1);
+
+            t0 = _mm_add_epi32(_mm_cvtps_epi32(s0), preshift);
+            t1 = _mm_add_epi32(_mm_cvtps_epi32(s1), preshift);
+
+            t0 = _mm_add_epi16(_mm_packs_epi32(t0, t1), postshift);
+            _mm_storeu_si128( (__m128i*)(dst + x), t0);
+        }
+        
+        return x;
+    }
+};
+
+
+struct VResizeCubicVec_32f
+{
+    int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
+    {
+        const float** src = (const float**)_src;
+        const float* beta = (const float*)_beta;
+        const float *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
+        float* dst = (float*)_dst;
+        int x = 0;
+        __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]),
+            b2 = _mm_set1_ps(beta[2]), b3 = _mm_set1_ps(beta[3]);
+
+        for( ; x <= width - 8; x += 8 )
+        {
+            __m128 x0, x1, y0, y1, s0, s1;
+            x0 = _mm_loadu_ps(S0 + x);
+            x1 = _mm_loadu_ps(S0 + x + 4);
+            y0 = _mm_loadu_ps(S1 + x);
+            y1 = _mm_loadu_ps(S1 + x + 4);
+            
+            s0 = _mm_mul_ps(x0, b0);
+            s1 = _mm_mul_ps(x1, b0);
+            y0 = _mm_mul_ps(y0, b1);
+            y1 = _mm_mul_ps(y1, b1);
+            s0 = _mm_add_ps(s0, y0);
+            s1 = _mm_add_ps(s1, y1);
+
+            x0 = _mm_loadu_ps(S2 + x);
+            x1 = _mm_loadu_ps(S2 + x + 4);
+            y0 = _mm_loadu_ps(S3 + x);
+            y1 = _mm_loadu_ps(S3 + x + 4);
+            
+            x0 = _mm_mul_ps(x0, b2);
+            x1 = _mm_mul_ps(x1, b2);
+            y0 = _mm_mul_ps(y0, b3);
+            y1 = _mm_mul_ps(y1, b3);
+            s0 = _mm_add_ps(s0, x0);
+            s1 = _mm_add_ps(s1, x1);
+            s0 = _mm_add_ps(s0, y0);
+            s1 = _mm_add_ps(s1, y1);
+
+            _mm_storeu_ps( dst + x, s0);
+            _mm_storeu_ps( dst + x + 4, s1);
+        }
+        
+        return x;
+    }
+};
+
+typedef HResizeNoVec HResizeLinearVec_8u32s;
+typedef HResizeNoVec HResizeLinearVec_16u32f;
+typedef HResizeNoVec HResizeLinearVec_32f;
+
+#else
+
+typedef HResizeNoVec HResizeLinearVec_8u32s;
+typedef HResizeNoVec HResizeLinearVec_16u32f;
+typedef HResizeNoVec HResizeLinearVec_32f;
+
+typedef VResizeNoVec VResizeLinearVec_32s8u;
+typedef VResizeNoVec VResizeLinearVec_32f16u;
+typedef VResizeNoVec VResizeLinearVec_32f;
+
+typedef VResizeNoVec VResizeCubicVec_32s8u;
+typedef VResizeNoVec VResizeCubicVec_32f16u;
+typedef VResizeNoVec VResizeCubicVec_32f;
+
+#endif
+
+
+template<typename T, typename WT, typename AT, int ONE, class VecOp>
+struct HResizeLinear
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+    
+    void operator()(const T** src, WT** dst, int count,
+                    const int* xofs, const AT* alpha,
+                    int swidth, int dwidth, int cn, int xmin, int xmax ) const
+    {
+        int dx, k;
+        VecOp vecOp;
+
+        int dx0 = vecOp((const uchar**)src, (uchar**)dst, count,
+            xofs, (const uchar*)alpha, swidth, dwidth, cn, xmin, xmax );
+
+        for( k = 0; k <= count - 2; k++ )
+        {
+            const T *S0 = src[k], *S1 = src[k+1];
+            WT *D0 = dst[k], *D1 = dst[k+1];
+            for( dx = dx0; dx < xmax; dx++ )
+            {
+                int sx = xofs[dx];
+                WT a0 = alpha[dx*2], a1 = alpha[dx*2+1];
+                WT t0 = S0[sx]*a0 + S0[sx + cn]*a1;
+                WT t1 = S1[sx]*a0 + S1[sx + cn]*a1;
+                D0[dx] = t0; D1[dx] = t1;
+            }
+
+            for( ; dx < dwidth; dx++ )
+            {
+                int sx = xofs[dx];
+                D0[dx] = WT(S0[sx]*ONE); D1[dx] = WT(S1[sx]*ONE);
+            }
+        }
+
+        for( ; k < count; k++ )
+        {
+            const T *S = src[k];
+            WT *D = dst[k];
+            for( dx = 0; dx < xmax; dx++ )
+            {
+                int sx = xofs[dx];
+                D[dx] = S[sx]*alpha[dx*2] + S[sx+cn]*alpha[dx*2+1];
+            }
+
+            for( ; dx < dwidth; dx++ )
+                D[dx] = WT(S[xofs[dx]]*ONE);
+        }
+    }
+};
+
+
+template<typename T, typename WT, typename AT, class CastOp, class VecOp>
+struct VResizeLinear
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+
+    void operator()(const WT** src, T* dst, const AT* beta, int width ) const
+    {
+        WT b0 = beta[0], b1 = beta[1];
+        const WT *S0 = src[0], *S1 = src[1];
+        CastOp castOp;
+        VecOp vecOp;
+
+        int x = vecOp((const uchar**)src, (uchar*)dst, (const uchar*)beta, width);
+        for( ; x <= width - 4; x += 4 )
+        {
+            WT t0, t1;
+            t0 = S0[x]*b0 + S1[x]*b1;
+            t1 = S0[x+1]*b0 + S1[x+1]*b1;
+            dst[x] = castOp(t0); dst[x+1] = castOp(t1);
+            t0 = S0[x+2]*b0 + S1[x+2]*b1;
+            t1 = S0[x+3]*b0 + S1[x+3]*b1;
+            dst[x+2] = castOp(t0); dst[x+3] = castOp(t1);
+        }
+
+        for( ; x < width; x++ )
+            dst[x] = castOp(S0[x]*b0 + S1[x]*b1);
+    }
+};
+
+
+template<typename T, typename WT, typename AT>
+struct HResizeCubic
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+    
+    void operator()(const T** src, WT** dst, int count,
+                    const int* xofs, const AT* alpha,
+                    int swidth, int dwidth, int cn, int xmin, int xmax ) const
+    {
+        for( int k = 0; k < count; k++ )
+        {
+            const T *S = src[k];
+            WT *D = dst[k];
+            int dx = 0, limit = xmin;
+            for(;;)
+            {
+                for( ; dx < limit; dx++, alpha += 4 )
+                {
+                    int j, sx = xofs[dx] - cn;
+                    WT v = 0;
+                    for( j = 0; j < 4; j++ )
+                    {
+                        int sxj = sx + j*cn;
+                        if( (unsigned)sxj >= (unsigned)swidth )
+                        {
+                            while( sxj < 0 )
+                                sxj += cn;
+                            while( sxj >= swidth )
+                                sxj -= cn;
+                        }
+                        v += S[sxj]*alpha[j];
+                    }
+                    D[dx] = v;
+                }
+                if( limit == dwidth )
+                    break;
+                for( ; dx < xmax; dx++, alpha += 4 )
+                {
+                    int sx = xofs[dx];
+                    D[dx] = S[sx-cn]*alpha[0] + S[sx]*alpha[1] +
+                        S[sx+cn]*alpha[2] + S[sx+cn*2]*alpha[3];
+                }
+                limit = dwidth;
+            }
+            alpha -= dwidth*4;
+        }
+    }
+};
+
+
+template<typename T, typename WT, typename AT, class CastOp, class VecOp>
+struct VResizeCubic
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+    
+    void operator()(const WT** src, T* dst, const AT* beta, int width ) const
+    {
+        WT b0 = beta[0], b1 = beta[1], b2 = beta[2], b3 = beta[3];
+        const WT *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
+        CastOp castOp;
+        VecOp vecOp;
+
+        int x = vecOp((const uchar**)src, (uchar*)dst, (const uchar*)beta, width);
+        for( ; x < width; x++ )
+            dst[x] = castOp(S0[x]*b0 + S1[x]*b1 + S2[x]*b2 + S3[x]*b3);
+    }
+};
+
+
+template<typename T, typename WT, typename AT>
+struct HResizeLanczos4
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+    
+    void operator()(const T** src, WT** dst, int count,
+                    const int* xofs, const AT* alpha,
+                    int swidth, int dwidth, int cn, int xmin, int xmax ) const
+    {
+        for( int k = 0; k < count; k++ )
+        {
+            const T *S = src[k];
+            WT *D = dst[k];
+            int dx = 0, limit = xmin;
+            for(;;)
+            {
+                for( ; dx < limit; dx++, alpha += 8 )
+                {
+                    int j, sx = xofs[dx] - cn*3;
+                    WT v = 0;
+                    for( j = 0; j < 8; j++ )
+                    {
+                        int sxj = sx + j*cn;
+                        if( (unsigned)sxj >= (unsigned)swidth )
+                        {
+                            while( sxj < 0 )
+                                sxj += cn;
+                            while( sxj >= swidth )
+                                sxj -= cn;
+                        }
+                        v += S[sxj]*alpha[j];
+                    }
+                    D[dx] = v;
+                }
+                if( limit == dwidth )
+                    break;
+                for( ; dx < xmax; dx++, alpha += 8 )
+                {
+                    int sx = xofs[dx];
+                    D[dx] = S[sx-cn*3]*alpha[0] + S[sx-cn*2]*alpha[1] +
+                        S[sx-cn]*alpha[2] + S[sx]*alpha[3] +
+                        S[sx+cn]*alpha[4] + S[sx+cn*2]*alpha[5] +
+                        S[sx+cn*3]*alpha[6] + S[sx+cn*4]*alpha[7];
+                }
+                limit = dwidth;
+            }
+            alpha -= dwidth*8;
+        }
+    }
+};
+
+
+template<typename T, typename WT, typename AT, class CastOp, class VecOp>
+struct VResizeLanczos4
+{
+    typedef T value_type;
+    typedef WT buf_type;
+    typedef AT alpha_type;
+    
+    void operator()(const WT** src, T* dst, const AT* beta, int width ) const
+    {
+        CastOp castOp;
+        VecOp vecOp;
+        int k, x = vecOp((const uchar**)src, (uchar*)dst, (const uchar*)beta, width);
+
+        for( ; x <= width - 4; x += 4 )
+        {
+            WT b = beta[0];
+            const WT* S = src[0];
+            WT s0 = S[x]*b, s1 = S[x+1]*b, s2 = S[x+2]*b, s3 = S[x+3]*b;
+
+            for( k = 1; k < 8; k++ )
+            {
+                b = beta[k]; S = src[k];
+                s0 += S[x]*b; s1 += S[x+1]*b;
+                s2 += S[x+2]*b; s3 += S[x+3]*b;
+            }
+
+            dst[x] = castOp(s0); dst[x+1] = castOp(s1);
+            dst[x+2] = castOp(s2); dst[x+3] = castOp(s3);
+        }
+
+        for( ; x < width; x++ )
+        {
+            dst[x] = castOp(src[0][x]*beta[0] + src[1][x]*beta[1] +
+                src[2][x]*beta[2] + src[3][x]*beta[3] + src[4][x]*beta[4] +
+                src[5][x]*beta[5] + src[6][x]*beta[6] + src[7][x]*beta[7]);
+        }
+    }
+};
+
+
+static inline int clip(int x, int a, int b)
+{
+    return x >= a ? (x < b ? x : b-1) : a;
 }
-CvResizeAlpha;
 
+static const int MAX_ESIZE=16;
 
-#define  ICV_DEF_RESIZE_BILINEAR_FUNC( flavor, arrtype, worktype, alpha_field,  \
-                                       mul_one_macro, descale_macro )           \
-static CvStatus CV_STDCALL                                                      \
-icvResize_Bilinear_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,\
-                                   arrtype* dst, int dststep, CvSize dsize,     \
-                                   int cn, int xmax,                            \
-                                   const CvResizeAlpha* xofs,                   \
-                                   const CvResizeAlpha* yofs,                   \
-                                   worktype* buf0, worktype* buf1 )             \
-{                                                                               \
-    int prev_sy0 = -1, prev_sy1 = -1;                                           \
-    int k, dx, dy;                                                              \
-                                                                                \
-    srcstep /= sizeof(src[0]);                                                  \
-    dststep /= sizeof(dst[0]);                                                  \
-    dsize.width *= cn;                                                          \
-    xmax *= cn;                                                                 \
-                                                                                \
-    for( dy = 0; dy < dsize.height; dy++, dst += dststep )                      \
-    {                                                                           \
-        worktype fy = yofs[dy].alpha_field, *swap_t;                            \
-        int sy0 = yofs[dy].idx, sy1 = sy0 + (fy > 0 && sy0 < ssize.height-1);   \
-                                                                                \
-        if( sy0 == prev_sy0 && sy1 == prev_sy1 )                                \
-            k = 2;                                                              \
-        else if( sy0 == prev_sy1 )                                              \
-        {                                                                       \
-            CV_SWAP( buf0, buf1, swap_t );                                      \
-            k = 1;                                                              \
-        }                                                                       \
-        else                                                                    \
-            k = 0;                                                              \
-                                                                                \
-        for( ; k < 2; k++ )                                                     \
-        {                                                                       \
-            worktype* _buf = k == 0 ? buf0 : buf1;                              \
-            const arrtype* _src;                                                \
-            int sy = k == 0 ? sy0 : sy1;                                        \
-            if( k == 1 && sy1 == sy0 )                                          \
-            {                                                                   \
-                memcpy( buf1, buf0, dsize.width*sizeof(buf0[0]) );              \
-                continue;                                                       \
-            }                                                                   \
-                                                                                \
-            _src = src + sy*srcstep;                                            \
-            for( dx = 0; dx < xmax; dx++ )                                      \
-            {                                                                   \
-                int sx = xofs[dx].idx;                                          \
-                worktype fx = xofs[dx].alpha_field;                             \
-                worktype t = _src[sx];                                          \
-                _buf[dx] = mul_one_macro(t) + fx*(_src[sx+cn] - t);             \
-            }                                                                   \
-                                                                                \
-            for( ; dx < dsize.width; dx++ )                                     \
-                _buf[dx] = mul_one_macro(_src[xofs[dx].idx]);                   \
-        }                                                                       \
-                                                                                \
-        prev_sy0 = sy0;                                                         \
-        prev_sy1 = sy1;                                                         \
-                                                                                \
-        if( sy0 == sy1 )                                                        \
-            for( dx = 0; dx < dsize.width; dx++ )                               \
-                dst[dx] = (arrtype)descale_macro( mul_one_macro(buf0[dx]));     \
-        else                                                                    \
-            for( dx = 0; dx < dsize.width; dx++ )                               \
-                dst[dx] = (arrtype)descale_macro( mul_one_macro(buf0[dx]) +     \
-                                                  fy*(buf1[dx] - buf0[dx]));    \
-    }                                                                           \
-                                                                                \
-    return CV_OK;                                                               \
+template<class HResize, class VResize>
+static void resizeGeneric_( const Mat& src, Mat& dst,
+                            const int* xofs, const void* _alpha,
+                            const int* yofs, const void* _beta,
+                            int xmin, int xmax, int ksize )
+{
+    typedef typename HResize::value_type T;
+    typedef typename HResize::buf_type WT;
+    typedef typename HResize::alpha_type AT;
+    
+    const AT* alpha = (const AT*)_alpha;
+    const AT* beta = (const AT*)_beta;
+    Size ssize = src.size(), dsize = dst.size();
+    int cn = src.channels();
+    ssize.width *= cn;
+    dsize.width *= cn;
+    int bufstep = (int)alignSize(dsize.width, 16);
+    AutoBuffer<WT> _buffer(bufstep*ksize);
+    const T* srows[MAX_ESIZE]={0};
+    WT* rows[MAX_ESIZE]={0};
+    int prev_sy[MAX_ESIZE];
+    int k, dy;
+    xmin *= cn;
+    xmax *= cn;
+    
+    HResize hresize;
+    VResize vresize;
+
+    for( k = 0; k < ksize; k++ )
+    {
+        prev_sy[k] = -1;
+        rows[k] = (WT*)_buffer + bufstep*k;
+    }
+
+    // image resize is a separable operation. In case of not too strong
+    for( dy = 0; dy < dsize.height; dy++, beta += ksize )
+    {
+        int sy0 = yofs[dy], k, k0=ksize, k1=0, ksize2 = ksize/2;
+
+        for( k = 0; k < ksize; k++ )
+        {
+            int sy = clip(sy0 - ksize2 + 1 + k, 0, ssize.height);
+            for( k1 = std::max(k1, k); k1 < ksize; k1++ )
+            {
+                if( sy == prev_sy[k1] ) // if the sy-th row has been computed already, reuse it.
+                {
+                    if( k1 > k )
+                        memcpy( rows[k], rows[k1], bufstep*sizeof(rows[0][0]) );
+                    break;
+                }
+            }
+            if( k1 == ksize )
+                k0 = std::min(k0, k); // remember the first row that needs to be computed
+            srows[k] = (const T*)(src.data + src.step*sy);
+            prev_sy[k] = sy;
+        }
+
+        if( k0 < ksize )
+            hresize( srows + k0, rows + k0, ksize - k0, xofs, alpha,
+                     ssize.width, dsize.width, cn, xmin, xmax );
+
+        vresize( (const WT**)rows, (T*)(dst.data + dst.step*dy), beta, dsize.width );
+    }
 }
 
 
-typedef struct CvDecimateAlpha
+template<typename T, typename WT>
+static void resizeAreaFast_( const Mat& src, Mat& dst, const int* ofs, const int* xofs )
+{
+    Size ssize = src.size(), dsize = dst.size();
+    int cn = src.channels();
+    int dy, dx, k = 0;
+    int scale_x = ssize.width/dsize.width;
+    int scale_y = ssize.height/dsize.height;
+    int area = scale_x*scale_y;
+    float scale = 1.f/(scale_x*scale_y);
+    dsize.width *= cn;
+
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        T* D = (T*)(dst.data + dst.step*dy);
+        for( dx = 0; dx < dsize.width; dx++ )
+        {
+            const T* S = (const T*)(src.data + src.step*dy*scale_y) + xofs[dx];
+            WT sum = 0;
+            for( k = 0; k <= area - 4; k += 4 )
+                sum += S[ofs[k]] + S[ofs[k+1]] + S[ofs[k+2]] + S[ofs[k+3]];
+            for( ; k < area; k++ )
+                sum += S[ofs[k]];
+
+            D[dx] = saturate_cast<T>(sum*scale);
+        }
+    }
+}
+
+struct DecimateAlpha
 {
     int si, di;
     float alpha;
-}
-CvDecimateAlpha;
+};
 
-
-#define  ICV_DEF_RESIZE_AREA_FAST_FUNC( flavor, arrtype, worktype, cast_macro ) \
-static CvStatus CV_STDCALL                                                      \
-icvResize_AreaFast_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,\
-                              arrtype* dst, int dststep, CvSize dsize, int cn,  \
-                              const int* ofs, const int* xofs )                 \
-{                                                                               \
-    int dy, dx, k = 0;                                                          \
-    int scale_x = ssize.width/dsize.width;                                      \
-    int scale_y = ssize.height/dsize.height;                                    \
-    int area = scale_x*scale_y;                                                 \
-    float scale = 1.f/(scale_x*scale_y);                                        \
-                                                                                \
-    srcstep /= sizeof(src[0]);                                                  \
-    dststep /= sizeof(dst[0]);                                                  \
-    dsize.width *= cn;                                                          \
-                                                                                \
-    for( dy = 0; dy < dsize.height; dy++, dst += dststep )                      \
-        for( dx = 0; dx < dsize.width; dx++ )                                   \
-        {                                                                       \
-            const arrtype* _src = src + dy*scale_y*srcstep + xofs[dx];          \
-            worktype sum = 0;                                                   \
-                                                                                \
-            for( k = 0; k <= area - 4; k += 4 )                                 \
-                sum += _src[ofs[k]] + _src[ofs[k+1]] +                          \
-                       _src[ofs[k+2]] + _src[ofs[k+3]];                         \
-                                                                                \
-            for( ; k < area; k++ )                                              \
-                sum += _src[ofs[k]];                                            \
-                                                                                \
-            dst[dx] = (arrtype)cast_macro( sum*scale );                         \
-        }                                                                       \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-#define  ICV_DEF_RESIZE_AREA_FUNC( flavor, arrtype, load_macro, cast_macro )    \
-static CvStatus CV_STDCALL                                                      \
-icvResize_Area_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,   \
-                               arrtype* dst, int dststep, CvSize dsize,         \
-                               int cn, const CvDecimateAlpha* xofs,             \
-                               int xofs_count, float* buf, float* sum )         \
-{                                                                               \
-    int k, sy, dx, cur_dy = 0;                                                  \
-    float scale_y = (float)ssize.height/dsize.height;                           \
-                                                                                \
-    srcstep /= sizeof(src[0]);                                                  \
-    dststep /= sizeof(dst[0]);                                                  \
-    dsize.width *= cn;                                                          \
-                                                                                \
-    for( sy = 0; sy < ssize.height; sy++, src += srcstep )                      \
-    {                                                                           \
-        if( cn == 1 )                                                           \
-            for( k = 0; k < xofs_count; k++ )                                   \
-            {                                                                   \
-                int dxn = xofs[k].di;                                           \
-                float alpha = xofs[k].alpha;                                    \
-                buf[dxn] = buf[dxn] + load_macro(src[xofs[k].si])*alpha;        \
-            }                                                                   \
-        else if( cn == 2 )                                                      \
-            for( k = 0; k < xofs_count; k++ )                                   \
-            {                                                                   \
-                int sxn = xofs[k].si;                                           \
-                int dxn = xofs[k].di;                                           \
-                float alpha = xofs[k].alpha;                                    \
-                float t0 = buf[dxn] + load_macro(src[sxn])*alpha;               \
-                float t1 = buf[dxn+1] + load_macro(src[sxn+1])*alpha;           \
-                buf[dxn] = t0; buf[dxn+1] = t1;                                 \
-            }                                                                   \
-        else if( cn == 3 )                                                      \
-            for( k = 0; k < xofs_count; k++ )                                   \
-            {                                                                   \
-                int sxn = xofs[k].si;                                           \
-                int dxn = xofs[k].di;                                           \
-                float alpha = xofs[k].alpha;                                    \
-                float t0 = buf[dxn] + load_macro(src[sxn])*alpha;               \
-                float t1 = buf[dxn+1] + load_macro(src[sxn+1])*alpha;           \
-                float t2 = buf[dxn+2] + load_macro(src[sxn+2])*alpha;           \
-                buf[dxn] = t0; buf[dxn+1] = t1; buf[dxn+2] = t2;                \
-            }                                                                   \
-        else                                                                    \
-            for( k = 0; k < xofs_count; k++ )                                   \
-            {                                                                   \
-                int sxn = xofs[k].si;                                           \
-                int dxn = xofs[k].di;                                           \
-                float alpha = xofs[k].alpha;                                    \
-                float t0 = buf[dxn] + load_macro(src[sxn])*alpha;               \
-                float t1 = buf[dxn+1] + load_macro(src[sxn+1])*alpha;           \
-                buf[dxn] = t0; buf[dxn+1] = t1;                                 \
-                t0 = buf[dxn+2] + load_macro(src[sxn+2])*alpha;                 \
-                t1 = buf[dxn+3] + load_macro(src[sxn+3])*alpha;                 \
-                buf[dxn+2] = t0; buf[dxn+3] = t1;                               \
-            }                                                                   \
-                                                                                \
-        if( (cur_dy + 1)*scale_y <= sy + 1 || sy == ssize.height - 1 )          \
-        {                                                                       \
-            float beta = sy + 1 - (cur_dy+1)*scale_y, beta1;                    \
-            beta = MAX( beta, 0 );                                              \
-            beta1 = 1 - beta;                                                   \
-            if( fabs(beta) < 1e-3 )                                             \
-                for( dx = 0; dx < dsize.width; dx++ )                           \
-                {                                                               \
-                    dst[dx] = (arrtype)cast_macro(sum[dx] + buf[dx]);           \
-                    sum[dx] = buf[dx] = 0;                                      \
-                }                                                               \
-            else                                                                \
-                for( dx = 0; dx < dsize.width; dx++ )                           \
-                {                                                               \
-                    dst[dx] = (arrtype)cast_macro(sum[dx] + buf[dx]*beta1);     \
-                    sum[dx] = buf[dx]*beta;                                     \
-                    buf[dx] = 0;                                                \
-                }                                                               \
-            dst += dststep;                                                     \
-            cur_dy++;                                                           \
-        }                                                                       \
-        else                                                                    \
-            for( dx = 0; dx < dsize.width; dx += 2 )                            \
-            {                                                                   \
-                float t0 = sum[dx] + buf[dx];                                   \
-                float t1 = sum[dx+1] + buf[dx+1];                               \
-                sum[dx] = t0; sum[dx+1] = t1;                                   \
-                buf[dx] = buf[dx+1] = 0;                                        \
-            }                                                                   \
-    }                                                                           \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-#define  ICV_DEF_RESIZE_BICUBIC_FUNC( flavor, arrtype, worktype, load_macro,    \
-                                      cast_macro1, cast_macro2 )                \
-static CvStatus CV_STDCALL                                                      \
-icvResize_Bicubic_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,\
-                                  arrtype* dst, int dststep, CvSize dsize,      \
-                                  int cn, int xmin, int xmax,                   \
-                                  const CvResizeAlpha* xofs, float** buf )      \
-{                                                                               \
-    float scale_y = (float)ssize.height/dsize.height;                           \
-    int dx, dy, sx, sy, sy2, ify;                                               \
-    int prev_sy2 = -2;                                                          \
-                                                                                \
-    xmin *= cn; xmax *= cn;                                                     \
-    dsize.width *= cn;                                                          \
-    ssize.width *= cn;                                                          \
-    srcstep /= sizeof(src[0]);                                                  \
-    dststep /= sizeof(dst[0]);                                                  \
-                                                                                \
-    for( dy = 0; dy < dsize.height; dy++, dst += dststep )                      \
-    {                                                                           \
-        float w0, w1, w2, w3;                                                   \
-        float fy, x, sum;                                                       \
-        float *row, *row0, *row1, *row2, *row3;                                 \
-        int k1, k = 4;                                                          \
-                                                                                \
-        fy = dy*scale_y;                                                        \
-        sy = cvFloor(fy);                                                       \
-        fy -= sy;                                                               \
-        ify = cvRound(fy*ICV_CUBIC_TAB_SIZE);                                   \
-        sy2 = sy + 2;                                                           \
-                                                                                \
-        if( sy2 > prev_sy2 )                                                    \
-        {                                                                       \
-            int delta = prev_sy2 - sy + 2;                                      \
-            for( k = 0; k < delta; k++ )                                        \
-                CV_SWAP( buf[k], buf[k+4-delta], row );                         \
-        }                                                                       \
-                                                                                \
-        for( sy += k - 1; k < 4; k++, sy++ )                                    \
-        {                                                                       \
-            const arrtype* _src = src + sy*srcstep;                             \
-                                                                                \
-            row = buf[k];                                                       \
-            if( sy < 0 )                                                        \
-                continue;                                                       \
-            if( sy >= ssize.height )                                            \
-            {                                                                   \
-                assert( k > 0 );                                                \
-                memcpy( row, buf[k-1], dsize.width*sizeof(row[0]) );            \
-                continue;                                                       \
-            }                                                                   \
-                                                                                \
-            for( dx = 0; dx < xmin; dx++ )                                      \
-            {                                                                   \
-                int ifx = xofs[dx].ialpha, sx0 = xofs[dx].idx;                  \
-                sx = sx0 + cn*2;                                                \
-                while( sx >= ssize.width )                                      \
-                    sx -= cn;                                                   \
-                x = load_macro(_src[sx]);                                       \
-                sum = x*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE - ifx)*2 + 1];       \
-                if( (unsigned)(sx = sx0 + cn) < (unsigned)ssize.width )         \
-                    x = load_macro(_src[sx]);                                   \
-                sum += x*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE - ifx)*2];          \
-                if( (unsigned)(sx = sx0) < (unsigned)ssize.width )              \
-                    x = load_macro(_src[sx]);                                   \
-                sum += x*icvCubicCoeffs[ifx*2];                                 \
-                if( (unsigned)(sx = sx0 - cn) < (unsigned)ssize.width )         \
-                    x = load_macro(_src[sx]);                                   \
-                row[dx] = sum + x*icvCubicCoeffs[ifx*2 + 1];                    \
-            }                                                                   \
-                                                                                \
-            for( ; dx < xmax; dx++ )                                            \
-            {                                                                   \
-                int ifx = xofs[dx].ialpha;                                      \
-                int sx0 = xofs[dx].idx;                                         \
-                row[dx] = _src[sx0 - cn]*icvCubicCoeffs[ifx*2 + 1] +            \
-                    _src[sx0]*icvCubicCoeffs[ifx*2] +                           \
-                    _src[sx0 + cn]*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2] + \
-                    _src[sx0 + cn*2]*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1];\
-            }                                                                   \
-                                                                                \
-            for( ; dx < dsize.width; dx++ )                                     \
-            {                                                                   \
-                int ifx = xofs[dx].ialpha, sx0 = xofs[dx].idx;                  \
-                x = load_macro(_src[sx0 - cn]);                                 \
-                sum = x*icvCubicCoeffs[ifx*2 + 1];                              \
-                if( (unsigned)(sx = sx0) < (unsigned)ssize.width )              \
-                    x = load_macro(_src[sx]);                                   \
-                sum += x*icvCubicCoeffs[ifx*2];                                 \
-                if( (unsigned)(sx = sx0 + cn) < (unsigned)ssize.width )         \
-                    x = load_macro(_src[sx]);                                   \
-                sum += x*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE - ifx)*2];          \
-                if( (unsigned)(sx = sx0 + cn*2) < (unsigned)ssize.width )       \
-                    x = load_macro(_src[sx]);                                   \
-                row[dx] = sum + x*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1]; \
-            }                                                                   \
-                                                                                \
-            if( sy == 0 )                                                       \
-                for( k1 = 0; k1 < k; k1++ )                                     \
-                    memcpy( buf[k1], row, dsize.width*sizeof(row[0]));          \
-        }                                                                       \
-                                                                                \
-        prev_sy2 = sy2;                                                         \
-                                                                                \
-        row0 = buf[0]; row1 = buf[1];                                           \
-        row2 = buf[2]; row3 = buf[3];                                           \
-                                                                                \
-        w0 = icvCubicCoeffs[ify*2+1];                                           \
-        w1 = icvCubicCoeffs[ify*2];                                             \
-        w2 = icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE - ify)*2];                      \
-        w3 = icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE - ify)*2 + 1];                  \
-                                                                                \
-        for( dx = 0; dx < dsize.width; dx++ )                                   \
-        {                                                                       \
-            worktype val = cast_macro1( row0[dx]*w0 + row1[dx]*w1 +             \
-                                        row2[dx]*w2 + row3[dx]*w3 );            \
-            dst[dx] = cast_macro2(val);                                         \
-        }                                                                       \
-    }                                                                           \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-ICV_DEF_RESIZE_BILINEAR_FUNC( 8u, uchar, int, ialpha,
-                              ICV_WARP_MUL_ONE_8U, ICV_WARP_DESCALE_8U )
-ICV_DEF_RESIZE_BILINEAR_FUNC( 16u, ushort, float, alpha, CV_NOP, cvRound )
-ICV_DEF_RESIZE_BILINEAR_FUNC( 32f, float, float, alpha, CV_NOP, CV_NOP )
-
-ICV_DEF_RESIZE_BICUBIC_FUNC( 8u, uchar, int, CV_8TO32F, cvRound, CV_CAST_8U )
-ICV_DEF_RESIZE_BICUBIC_FUNC( 16u, ushort, int, CV_NOP, cvRound, CV_CAST_16U )
-ICV_DEF_RESIZE_BICUBIC_FUNC( 32f, float, float, CV_NOP, CV_NOP, CV_NOP )
-
-ICV_DEF_RESIZE_AREA_FAST_FUNC( 8u, uchar, int, cvRound )
-ICV_DEF_RESIZE_AREA_FAST_FUNC( 16u, ushort, int, cvRound )
-ICV_DEF_RESIZE_AREA_FAST_FUNC( 32f, float, float, CV_NOP )
-
-ICV_DEF_RESIZE_AREA_FUNC( 8u, uchar, CV_8TO32F, cvRound )
-ICV_DEF_RESIZE_AREA_FUNC( 16u, ushort, CV_NOP, cvRound )
-ICV_DEF_RESIZE_AREA_FUNC( 32f, float, CV_NOP, CV_NOP )
-
-
-static void icvInitResizeTab( CvFuncTable* bilin_tab,
-                              CvFuncTable* bicube_tab,
-                              CvFuncTable* areafast_tab,
-                              CvFuncTable* area_tab )
+template<typename T>
+static void resizeArea_( const Mat& src, Mat& dst, const DecimateAlpha* xofs, int xofs_count )
 {
-    bilin_tab->fn_2d[CV_8U] = (void*)icvResize_Bilinear_8u_CnR;
-    bilin_tab->fn_2d[CV_16U] = (void*)icvResize_Bilinear_16u_CnR;
-    bilin_tab->fn_2d[CV_32F] = (void*)icvResize_Bilinear_32f_CnR;
+    Size ssize = src.size(), dsize = dst.size();
+    int cn = src.channels();
+    dsize.width *= cn;
+    AutoBuffer<float> _buffer(dsize.width*2);
+    float *buf = _buffer, *sum = buf + dsize.width;
+    int k, sy, dx, cur_dy = 0;
+    float scale_y = (float)ssize.height/dsize.height;
 
-    bicube_tab->fn_2d[CV_8U] = (void*)icvResize_Bicubic_8u_CnR;
-    bicube_tab->fn_2d[CV_16U] = (void*)icvResize_Bicubic_16u_CnR;
-    bicube_tab->fn_2d[CV_32F] = (void*)icvResize_Bicubic_32f_CnR;
+    CV_Assert( cn <= 4 );
+    for( dx = 0; dx < dsize.width; dx++ )
+        buf[dx] = sum[dx] = 0;
 
-    areafast_tab->fn_2d[CV_8U] = (void*)icvResize_AreaFast_8u_CnR;
-    areafast_tab->fn_2d[CV_16U] = (void*)icvResize_AreaFast_16u_CnR;
-    areafast_tab->fn_2d[CV_32F] = (void*)icvResize_AreaFast_32f_CnR;
+    for( sy = 0; sy < ssize.height; sy++ )
+    {
+        const T* S = (const T*)(src.data + src.step*sy);
+        if( cn == 1 )
+            for( k = 0; k < xofs_count; k++ )
+            {
+                int dxn = xofs[k].di;
+                float alpha = xofs[k].alpha;
+                buf[dxn] += S[xofs[k].si]*alpha;
+            }
+        else if( cn == 2 )
+            for( k = 0; k < xofs_count; k++ )
+            {
+                int sxn = xofs[k].si;
+                int dxn = xofs[k].di;
+                float alpha = xofs[k].alpha;
+                float t0 = buf[dxn] + S[sxn]*alpha;
+                float t1 = buf[dxn+1] + S[sxn+1]*alpha;
+                buf[dxn] = t0; buf[dxn+1] = t1;
+            }
+        else if( cn == 3 )
+            for( k = 0; k < xofs_count; k++ )
+            {
+                int sxn = xofs[k].si;
+                int dxn = xofs[k].di;
+                float alpha = xofs[k].alpha;
+                float t0 = buf[dxn] + S[sxn]*alpha;
+                float t1 = buf[dxn+1] + S[sxn+1]*alpha;
+                float t2 = buf[dxn+2] + S[sxn+2]*alpha;
+                buf[dxn] = t0; buf[dxn+1] = t1; buf[dxn+2] = t2;
+            }
+        else
+            for( k = 0; k < xofs_count; k++ )
+            {
+                int sxn = xofs[k].si;
+                int dxn = xofs[k].di;
+                float alpha = xofs[k].alpha;
+                float t0 = buf[dxn] + S[sxn]*alpha;
+                float t1 = buf[dxn+1] + S[sxn+1]*alpha;
+                buf[dxn] = t0; buf[dxn+1] = t1;
+                t0 = buf[dxn+2] + S[sxn+2]*alpha;
+                t1 = buf[dxn+3] + S[sxn+3]*alpha;
+                buf[dxn+2] = t0; buf[dxn+3] = t1;
+            }
 
-    area_tab->fn_2d[CV_8U] = (void*)icvResize_Area_8u_CnR;
-    area_tab->fn_2d[CV_16U] = (void*)icvResize_Area_16u_CnR;
-    area_tab->fn_2d[CV_32F] = (void*)icvResize_Area_32f_CnR;
+        if( (cur_dy + 1)*scale_y <= sy + 1 || sy == ssize.height - 1 )
+        {
+            float beta = std::max(sy + 1 - (cur_dy+1)*scale_y, 0.f);
+            float beta1 = 1 - beta;
+            T* D = (T*)(dst.data + dst.step*cur_dy);
+            if( fabs(beta) < 1e-3 )
+                for( dx = 0; dx < dsize.width; dx++ )
+                {
+                    D[dx] = saturate_cast<T>(sum[dx] + buf[dx]);
+                    sum[dx] = buf[dx] = 0;
+                }
+            else
+                for( dx = 0; dx < dsize.width; dx++ )
+                {
+                    D[dx] = saturate_cast<T>(sum[dx] + buf[dx]*beta1);
+                    sum[dx] = buf[dx]*beta;
+                    buf[dx] = 0;
+                }
+            cur_dy++;
+        }
+        else
+        {
+            for( dx = 0; dx <= dsize.width - 2; dx += 2 )
+            {
+                float t0 = sum[dx] + buf[dx];
+                float t1 = sum[dx+1] + buf[dx+1];
+                sum[dx] = t0; sum[dx+1] = t1;
+                buf[dx] = buf[dx+1] = 0;
+            }
+            for( ; dx < dsize.width; dx++ )
+            {
+                sum[dx] += buf[dx];
+                buf[dx] = 0;
+            }
+        }
+    }
 }
 
 
-typedef CvStatus (CV_STDCALL * CvResizeBilinearFunc)
-                    ( const void* src, int srcstep, CvSize ssize,
-                      void* dst, int dststep, CvSize dsize,
-                      int cn, int xmax, const CvResizeAlpha* xofs,
-                      const CvResizeAlpha* yofs, float* buf0, float* buf1 );
+typedef void (*ResizeFunc)( const Mat& src, Mat& dst,
+                            const int* xofs, const void* alpha,
+                            const int* yofs, const void* beta,
+                            int xmin, int xmax, int ksize );
 
-typedef CvStatus (CV_STDCALL * CvResizeBicubicFunc)
-                    ( const void* src, int srcstep, CvSize ssize,
-                      void* dst, int dststep, CvSize dsize,
-                      int cn, int xmin, int xmax,
-                      const CvResizeAlpha* xofs, float** buf );
+typedef void (*ResizeAreaFastFunc)( const Mat& src, Mat& dst,
+                                    const int* ofs, const int *xofs );
 
-typedef CvStatus (CV_STDCALL * CvResizeAreaFastFunc)
-                    ( const void* src, int srcstep, CvSize ssize,
-                      void* dst, int dststep, CvSize dsize,
-                      int cn, const int* ofs, const int *xofs );
-
-typedef CvStatus (CV_STDCALL * CvResizeAreaFunc)
-                    ( const void* src, int srcstep, CvSize ssize,
-                      void* dst, int dststep, CvSize dsize,
-                      int cn, const CvDecimateAlpha* xofs,
-                      int xofs_count, float* buf, float* sum );
-
-
-////////////////////////////////// IPP resize functions //////////////////////////////////
-
-typedef CvStatus (CV_STDCALL * CvResizeIPPFunc)
-( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
-  void* dst, int dststep, CvSize dstroi,
-  double xfactor, double yfactor, int interpolation );
+typedef void (*ResizeAreaFunc)( const Mat& src, Mat& dst,
+                                const DecimateAlpha* xofs, int xofs_count );
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-CV_IMPL void
-cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
+void resize( const Mat& src, Mat& dst, Size dsize,
+             double inv_scale_x, double inv_scale_y, int interpolation )
 {
-    static CvFuncTable bilin_tab, bicube_tab, areafast_tab, area_tab;
-    static int inittab = 0;
-    void* temp_buf = 0;
+    static ResizeFunc linear_tab[] =
+    {
+        resizeGeneric_<
+            HResizeLinear<uchar, int, short,
+                INTER_COEF_RESIZE_SCALE,
+                HResizeLinearVec_8u32s>,
+            VResizeLinear<uchar, int, short,
+                FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+                VResizeLinearVec_32s8u> >,
+        0,
+        resizeGeneric_<
+            HResizeLinear<ushort, float, float, 1,
+                HResizeLinearVec_16u32f>,
+            VResizeLinear<ushort, float, float, Cast<float, ushort>,
+                VResizeLinearVec_32f16u> >,
+        0, 0,
+        resizeGeneric_<
+            HResizeLinear<float, float, float, 1,
+                HResizeLinearVec_32f>,
+            VResizeLinear<float, float, float, Cast<float, float>,
+                VResizeLinearVec_32f> >,
+        0, 0
+    };    
 
-    CV_FUNCNAME( "cvResize" );
+    static ResizeFunc cubic_tab[] =
+    {
+        resizeGeneric_<
+            HResizeCubic<uchar, int, short>,
+            VResizeCubic<uchar, int, short,
+                FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+                VResizeCubicVec_32s8u> >,
+        0,
+        resizeGeneric_<
+            HResizeCubic<ushort, float, float>,
+            VResizeCubic<ushort, float, float, Cast<float, ushort>,
+            VResizeCubicVec_32f16u> >,
+        0, 0,
+        resizeGeneric_<
+            HResizeCubic<float, float, float>,
+            VResizeCubic<float, float, float, Cast<float, float>,
+            VResizeCubicVec_32f> >,
+        0, 0
+    };
 
-    __BEGIN__;
+    static ResizeFunc lanczos4_tab[] =
+    {
+        resizeGeneric_<HResizeLanczos4<uchar, int, short>,
+            VResizeLanczos4<uchar, int, short,
+            FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+            VResizeNoVec> >,
+        0,
+        resizeGeneric_<HResizeLanczos4<ushort, float, float>,
+            VResizeLanczos4<ushort, float, float, Cast<float, ushort>,
+            VResizeNoVec> >,
+        0, 0,
+        resizeGeneric_<HResizeLanczos4<float, float, float>,
+            VResizeLanczos4<float, float, float, Cast<float, float>,
+            VResizeNoVec> >,
+        0, 0
+    };
+
+    static ResizeAreaFastFunc areafast_tab[] =
+    {
+        resizeAreaFast_<uchar, int>, 0, resizeAreaFast_<ushort, float>,
+        0, 0, resizeAreaFast_<float, float>, 0, 0
+    };
+
+    static ResizeAreaFunc area_tab[] =
+    {
+        resizeArea_<uchar>, 0, resizeArea_<ushort>, 0, 0, resizeArea_<float>, 0, 0
+    };
     
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    CvSize ssize, dsize;
-    float scale_x, scale_y;
+    CV_Assert( !(dsize == Size()) || (inv_scale_x > 0 && inv_scale_y > 0) );
+    if( dsize == Size() )
+    {
+        dsize = Size(saturate_cast<int>(src.cols*inv_scale_x),
+            saturate_cast<int>(src.rows*inv_scale_y));
+    }
+    else
+    {
+        inv_scale_x = (double)dst.cols/src.cols;
+        inv_scale_y = (double)dst.rows/src.rows;
+    }
+    dst.create(dsize, src.type());
+
+    Size ssize = src.size();
+    int depth = src.depth(), cn = src.channels();
+    double scale_x = 1./inv_scale_x, scale_y = 1./inv_scale_y;
     int k, sx, sy, dx, dy;
-    int type, depth, cn;
-    
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-    
-    if( CV_ARE_SIZES_EQ( src, dst ))
+
+    if( interpolation == INTER_NEAREST )
     {
-        CV_CALL( cvCopy( src, dst ));
-        EXIT;
+        resizeNN( src, dst, inv_scale_x, inv_scale_y );
+        return;
     }
 
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( !inittab )
+    // true "area" interpolation is only implemented for the case (scale_x <= 1 && scale_y <= 1).
+    // In other cases it is emulated using some variant of bilinear interpolation
+    if( interpolation == INTER_AREA && scale_x >= 1 && scale_y >= 1 )
     {
-        icvInitResizeTab( &bilin_tab, &bicube_tab, &areafast_tab, &area_tab );
-        inittab = 1;
-    }
+        int iscale_x = saturate_cast<int>(scale_x);
+        int iscale_y = saturate_cast<int>(scale_y);
 
-    ssize = cvGetMatSize( src );
-    dsize = cvGetMatSize( dst );
-    type = CV_MAT_TYPE(src->type);
-    depth = CV_MAT_DEPTH(type);
-    cn = CV_MAT_CN(type);
-    scale_x = (float)ssize.width/dsize.width;
-    scale_y = (float)ssize.height/dsize.height;
-
-    if( method == CV_INTER_CUBIC &&
-        (MIN(ssize.width, dsize.width) <= 4 ||
-        MIN(ssize.height, dsize.height) <= 4) )
-        method = CV_INTER_LINEAR;
-
-    /*if( icvResize_8u_C1R_p &&
-        MIN(ssize.width, dsize.width) > 4 &&
-        MIN(ssize.height, dsize.height) > 4 )
-    {
-        CvResizeIPPFunc ipp_func =
-            type == CV_8UC1 ? icvResize_8u_C1R_p :
-            type == CV_8UC3 ? icvResize_8u_C3R_p :
-            type == CV_8UC4 ? icvResize_8u_C4R_p :
-            type == CV_16UC1 ? icvResize_16u_C1R_p :
-            type == CV_16UC3 ? icvResize_16u_C3R_p :
-            type == CV_16UC4 ? icvResize_16u_C4R_p :
-            type == CV_32FC1 ? icvResize_32f_C1R_p :
-            type == CV_32FC3 ? icvResize_32f_C3R_p :
-            type == CV_32FC4 ? icvResize_32f_C4R_p : 0;
-        if( ipp_func && (CV_INTER_NN < method && method < CV_INTER_AREA))
+        if( std::abs(scale_x - iscale_x) < DBL_EPSILON &&
+            std::abs(scale_y - iscale_y) < DBL_EPSILON )
         {
-            int srcstep = src->step ? src->step : CV_STUB_STEP;
-            int dststep = dst->step ? dst->step : CV_STUB_STEP;
-            IPPI_CALL( ipp_func( src->data.ptr, ssize, srcstep,
-                                 cvRect(0,0,ssize.width,ssize.height),
-                                 dst->data.ptr, dststep, dsize,
-                                 (double)dsize.width/ssize.width,
-                                 (double)dsize.height/ssize.height, 1 << method ));
-            EXIT;
-        }
-    }*/
-
-    if( method == CV_INTER_NN )
-    {
-        IPPI_CALL( icvResize_NN_8u_C1R( src->data.ptr, src->step, ssize,
-                                        dst->data.ptr, dst->step, dsize,
-                                        CV_ELEM_SIZE(src->type)));
-    }
-    else if( method == CV_INTER_LINEAR || method == CV_INTER_AREA )
-    {
-        if( method == CV_INTER_AREA &&
-            ssize.width >= dsize.width && ssize.height >= dsize.height )
-        {
-            // "area" method for (scale_x > 1 & scale_y > 1)
-            int iscale_x = cvRound(scale_x);
-            int iscale_y = cvRound(scale_y);
-
-            if( fabs(scale_x - iscale_x) < DBL_EPSILON &&
-                fabs(scale_y - iscale_y) < DBL_EPSILON )
-            {
-                int area = iscale_x*iscale_y;
-                int srcstep = src->step / CV_ELEM_SIZE(depth);
-                int* ofs = (int*)cvStackAlloc( (area + dsize.width*cn)*sizeof(int) );
-                int* xofs = ofs + area;
-                CvResizeAreaFastFunc func = (CvResizeAreaFastFunc)areafast_tab.fn_2d[depth];
-
-                if( !func )
-                    CV_ERROR( CV_StsUnsupportedFormat, "" );
-                
-                for( sy = 0, k = 0; sy < iscale_y; sy++ )
-                    for( sx = 0; sx < iscale_x; sx++ )
-                        ofs[k++] = sy*srcstep + sx*cn;
-
-                for( dx = 0; dx < dsize.width; dx++ )
-                {
-                    sx = dx*iscale_x*cn;
-                    for( k = 0; k < cn; k++ )
-                        xofs[dx*cn + k] = sx + k;
-                }
-
-                IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                                 dst->step, dsize, cn, ofs, xofs ));
-            }
-            else
-            {
-                int buf_len = dsize.width*cn + 4, buf_size, xofs_count = 0;
-                float scale = 1.f/(scale_x*scale_y);
-                float *buf, *sum;
-                CvDecimateAlpha* xofs;
-                CvResizeAreaFunc func = (CvResizeAreaFunc)area_tab.fn_2d[depth];
-
-                if( !func || cn > 4 )
-                    CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-                buf_size = buf_len*2*sizeof(float) + ssize.width*2*sizeof(CvDecimateAlpha);
-                if( buf_size < CV_MAX_LOCAL_SIZE )
-                    buf = (float*)cvStackAlloc(buf_size);
-                else
-                    CV_CALL( temp_buf = buf = (float*)cvAlloc(buf_size));
-                sum = buf + buf_len;
-                xofs = (CvDecimateAlpha*)(sum + buf_len);
-
-                for( dx = 0, k = 0; dx < dsize.width; dx++ )
-                {
-                    float fsx1 = dx*scale_x, fsx2 = fsx1 + scale_x;
-                    int sx1 = cvCeil(fsx1), sx2 = cvFloor(fsx2);
-
-                    assert( (unsigned)sx1 < (unsigned)ssize.width );
-
-                    if( sx1 > fsx1 )
-                    {
-                        assert( k < ssize.width*2 );            
-                        xofs[k].di = dx*cn;
-                        xofs[k].si = (sx1-1)*cn;
-                        xofs[k++].alpha = (sx1 - fsx1)*scale;
-                    }
-
-                    for( sx = sx1; sx < sx2; sx++ )
-                    {
-                        assert( k < ssize.width*2 );
-                        xofs[k].di = dx*cn;
-                        xofs[k].si = sx*cn;
-                        xofs[k++].alpha = scale;
-                    }
-
-                    if( fsx2 - sx2 > 1e-3 )
-                    {
-                        assert( k < ssize.width*2 );
-                        assert((unsigned)sx2 < (unsigned)ssize.width );
-                        xofs[k].di = dx*cn;
-                        xofs[k].si = sx2*cn;
-                        xofs[k++].alpha = (fsx2 - sx2)*scale;
-                    }
-                }
-
-                xofs_count = k;
-                memset( sum, 0, buf_len*sizeof(float) );
-                memset( buf, 0, buf_len*sizeof(float) );
-
-                IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                                 dst->step, dsize, cn, xofs, xofs_count, buf, sum ));
-            }
-        }
-        else // true "area" method for the cases (scale_x > 1 & scale_y < 1) and
-             // (scale_x < 1 & scale_y > 1) is not implemented.
-             // instead, it is emulated via some variant of bilinear interpolation.
-        {
-            float inv_scale_x = (float)dsize.width/ssize.width;
-            float inv_scale_y = (float)dsize.height/ssize.height;
-            int xmax = dsize.width, width = dsize.width*cn, buf_size;
-            float *buf0, *buf1;
-            CvResizeAlpha *xofs, *yofs;
-            int area_mode = method == CV_INTER_AREA;
-            float fx, fy;
-            CvResizeBilinearFunc func = (CvResizeBilinearFunc)bilin_tab.fn_2d[depth];
-
-            if( !func )
-                CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-            buf_size = width*2*sizeof(float) + (width + dsize.height)*sizeof(CvResizeAlpha);
-            if( buf_size < CV_MAX_LOCAL_SIZE )
-                buf0 = (float*)cvStackAlloc(buf_size);
-            else
-                CV_CALL( temp_buf = buf0 = (float*)cvAlloc(buf_size));
-            buf1 = buf0 + width;
-            xofs = (CvResizeAlpha*)(buf1 + width);
-            yofs = xofs + width;
+            int area = iscale_x*iscale_y;
+            int srcstep = src.step / src.elemSize1();
+            AutoBuffer<int> _ofs(area + dsize.width*cn);
+            int* ofs = _ofs;
+            int* xofs = ofs + area;
+            ResizeAreaFastFunc func = areafast_tab[depth];
+            CV_Assert( func != 0 );
+            
+            for( sy = 0, k = 0; sy < iscale_y; sy++ )
+                for( sx = 0; sx < iscale_x; sx++ )
+                    ofs[k++] = sy*srcstep + sx*cn;
 
             for( dx = 0; dx < dsize.width; dx++ )
             {
-                if( !area_mode )
-                {
-                    fx = (float)((dx+0.5)*scale_x - 0.5);
-                    sx = cvFloor(fx);
-                    fx -= sx;
-                }
-                else
-                {
-                    sx = cvFloor(dx*scale_x);
-                    fx = (dx+1) - (sx+1)*inv_scale_x;
-                    fx = fx <= 0 ? 0.f : fx - cvFloor(fx);
-                }
-
-                if( sx < 0 )
-                    fx = 0, sx = 0;
-
-                if( sx >= ssize.width-1 )
-                {
-                    fx = 0, sx = ssize.width-1;
-                    if( xmax >= dsize.width )
-                        xmax = dx;
-                }
-
-                if( depth != CV_8U )
-                    for( k = 0, sx *= cn; k < cn; k++ )
-                        xofs[dx*cn + k].idx = sx + k, xofs[dx*cn + k].alpha = fx;
-                else
-                    for( k = 0, sx *= cn; k < cn; k++ )
-                        xofs[dx*cn + k].idx = sx + k,
-                        xofs[dx*cn + k].ialpha = CV_FLT_TO_FIX(fx, ICV_WARP_SHIFT);
+                sx = dx*iscale_x*cn;
+                for( k = 0; k < cn; k++ )
+                    xofs[dx*cn + k] = sx + k;
             }
 
-            for( dy = 0; dy < dsize.height; dy++ )
-            {
-                if( !area_mode )
-                {
-                    fy = (float)((dy+0.5)*scale_y - 0.5);
-                    sy = cvFloor(fy);
-                    fy -= sy;
-                    if( sy < 0 )
-                        sy = 0, fy = 0;
-                }
-                else
-                {
-                    sy = cvFloor(dy*scale_y);
-                    fy = (dy+1) - (sy+1)*inv_scale_y;
-                    fy = fy <= 0 ? 0.f : fy - cvFloor(fy);
-                }
-
-                yofs[dy].idx = sy;
-                if( depth != CV_8U )
-                    yofs[dy].alpha = fy;
-                else
-                    yofs[dy].ialpha = CV_FLT_TO_FIX(fy, ICV_WARP_SHIFT);
-            }
-
-            IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                             dst->step, dsize, cn, xmax, xofs, yofs, buf0, buf1 ));
+            func( src, dst, ofs, xofs );
+            return;
         }
-    }
-    else if( method == CV_INTER_CUBIC )
-    {
-        int width = dsize.width*cn, buf_size;
-        int xmin = dsize.width, xmax = -1;
-        CvResizeAlpha* xofs;
-        float* buf[4];
-        CvResizeBicubicFunc func = (CvResizeBicubicFunc)bicube_tab.fn_2d[depth];
 
-        if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-        
-        buf_size = width*(4*sizeof(float) + sizeof(xofs[0]));
-        if( buf_size < CV_MAX_LOCAL_SIZE )
-            buf[0] = (float*)cvStackAlloc(buf_size);
-        else
-            CV_CALL( temp_buf = buf[0] = (float*)cvAlloc(buf_size));
+        ResizeAreaFunc func = area_tab[depth];
+        CV_Assert( func != 0 && cn <= 4 );
 
-        for( k = 1; k < 4; k++ )
-            buf[k] = buf[k-1] + width;
-        xofs = (CvResizeAlpha*)(buf[3] + width);
+        AutoBuffer<DecimateAlpha> _xofs(ssize.width*2);
+        DecimateAlpha* xofs = _xofs;
+        double scale = 1.f/(scale_x*scale_y);
 
-        icvInitCubicCoeffTab();
-
-        for( dx = 0; dx < dsize.width; dx++ )
+        for( dx = 0, k = 0; dx < dsize.width; dx++ )
         {
-            float fx = dx*scale_x;
+            double fsx1 = dx*scale_x, fsx2 = fsx1 + scale_x;
+            int sx1 = cvCeil(fsx1), sx2 = cvFloor(fsx2);
+            sx1 = std::min(sx1, ssize.width-1);
+            sx2 = std::min(sx2, ssize.width-1);
+
+            if( sx1 > fsx1 )
+            {
+                assert( k < ssize.width*2 );            
+                xofs[k].di = dx*cn;
+                xofs[k].si = (sx1-1)*cn;
+                xofs[k++].alpha = (float)((sx1 - fsx1)*scale);
+            }
+
+            for( sx = sx1; sx < sx2; sx++ )
+            {
+                assert( k < ssize.width*2 );
+                xofs[k].di = dx*cn;
+                xofs[k].si = sx*cn;
+                xofs[k++].alpha = (float)scale;
+            }
+
+            if( fsx2 - sx2 > 1e-3 )
+            {
+                assert( k < ssize.width*2 );
+                xofs[k].di = dx*cn;
+                xofs[k].si = sx2*cn;
+                xofs[k++].alpha = (float)((fsx2 - sx2)*scale);
+            }
+        }
+
+        func( src, dst, xofs, k );
+        return;
+    }
+        
+    int xmin = 0, xmax = dsize.width, width = dsize.width*cn;
+    bool area_mode = interpolation == INTER_AREA;
+    bool fixpt = depth == CV_8U;
+    float fx, fy;
+    ResizeFunc func=0;
+    int ksize=0, ksize2;
+    if( interpolation == INTER_CUBIC )
+        ksize = 4, func = cubic_tab[depth];
+    else if( interpolation == INTER_LANCZOS4 )
+        ksize = 8, func = lanczos4_tab[depth];
+    else if( interpolation == INTER_LINEAR || interpolation == INTER_AREA )
+        ksize = 2, func = linear_tab[depth];
+    else
+        CV_Error( CV_StsBadArg, "Unknown interpolation method" );
+    ksize2 = ksize/2;
+
+    CV_Assert( func != 0 );
+
+    AutoBuffer<uchar> _buffer((width + dsize.height)*(sizeof(int) + sizeof(float)*ksize));
+    int* xofs = (int*)(uchar*)_buffer;
+    int* yofs = xofs + width;
+    float* alpha = (float*)(yofs + dsize.height);
+    short* ialpha = (short*)alpha;
+    float* beta = alpha + width*ksize;
+    short* ibeta = ialpha + width*ksize;
+    float cbuf[MAX_ESIZE];
+
+    for( dx = 0; dx < dsize.width; dx++ )
+    {
+        if( !area_mode )
+        {
+            fx = (float)((dx+0.5)*scale_x - 0.5);
             sx = cvFloor(fx);
             fx -= sx;
-            int ifx = cvRound(fx*ICV_CUBIC_TAB_SIZE);
-            if( sx-1 >= 0 && xmin > dx )
-                xmin = dx;
-            if( sx+2 < ssize.width )
-                xmax = dx + 1;
-        
-            // at least one of 4 points should be within the image - to
-            // be able to set other points to the same value. see the loops
-            // for( dx = 0; dx < xmin; dx++ ) ... and for( ; dx < width; dx++ ) ...
-            if( sx < -2 )
-                sx = -2;
-            else if( sx > ssize.width )
-                sx = ssize.width;
-
-            for( k = 0; k < cn; k++ )
-            {
-                xofs[dx*cn + k].idx = sx*cn + k;
-                xofs[dx*cn + k].ialpha = ifx;
-            }
         }
-    
-        IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                         dst->step, dsize, cn, xmin, xmax, xofs, buf ));
+        else
+        {
+            sx = cvFloor(dx*scale_x);
+            fx = (float)((dx+1) - (sx+1)*inv_scale_x);
+            fx = fx <= 0 ? 0.f : fx - cvFloor(fx);
+        }
+
+        if( sx < ksize2-1 )
+        {
+            xmin = dx+1;
+            if( sx < 0 )
+                fx = 0, sx = 0;
+        }
+
+        if( sx + ksize2 >= ssize.width )
+        {
+            xmax = std::min( xmax, dx );
+            if( sx >= ssize.width-1 )
+                fx = 0, sx = ssize.width-1;
+        }
+
+        for( k = 0, sx *= cn; k < cn; k++ )
+            xofs[dx*cn + k] = sx + k;
+
+        if( interpolation == INTER_CUBIC )
+            interpolateCubic( fx, cbuf );
+        else if( interpolation == INTER_LANCZOS4 )
+            interpolateLanczos4( fx, cbuf );
+        else
+        {
+            cbuf[0] = 1.f - fx;
+            cbuf[1] = fx;
+        }
+        if( fixpt )
+        {
+            for( k = 0; k < ksize; k++ )
+                ialpha[dx*cn*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_COEF_RESIZE_SCALE);
+            for( ; k < cn*ksize; k++ )
+                ialpha[dx*cn*ksize + k] = ialpha[dx*cn*ksize + k - ksize];
+        }
+        else
+        {
+            for( k = 0; k < ksize; k++ )
+                alpha[dx*cn*ksize + k] = cbuf[k];
+            for( ; k < cn*ksize; k++ )
+                alpha[dx*cn*ksize + k] = alpha[dx*cn*ksize + k - ksize];
+        }
     }
-    else
-        CV_ERROR( CV_StsBadFlag, "Unknown/unsupported interpolation method" );
 
-    __END__;
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        if( !area_mode )
+        {
+            fy = (float)((dy+0.5)*scale_y - 0.5);
+            sy = cvFloor(fy);
+            fy -= sy;
+        }
+        else
+        {
+            sy = cvFloor(dy*scale_y);
+            fy = (float)((dy+1) - (sy+1)*inv_scale_y);
+            fy = fy <= 0 ? 0.f : fy - cvFloor(fy);
+        }
 
-    cvFree( &temp_buf );
+        yofs[dy] = sy;
+        if( interpolation == INTER_CUBIC )
+            interpolateCubic( fy, cbuf );
+        else if( interpolation == INTER_LANCZOS4 )
+            interpolateLanczos4( fy, cbuf );
+        else
+        {
+            cbuf[0] = 1.f - fy;
+            cbuf[1] = fy;
+        }
+
+        if( fixpt )
+        {
+            for( k = 0; k < ksize; k++ )
+                ibeta[dy*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_COEF_RESIZE_SCALE);
+        }
+        else
+        {
+            for( k = 0; k < ksize; k++ )
+                beta[dy*ksize + k] = cbuf[k];
+        }
+    }
+
+    func( src, dst, xofs, fixpt ? (void*)ialpha : (void*)alpha, yofs,
+          fixpt ? (void*)ibeta : (void*)beta, xmin, xmax, ksize );
 }
 
 
 /****************************************************************************************\
-*                                     WarpAffine                                         *
+*                       General warping (affine, perspective, remap)                     *
 \****************************************************************************************/
 
-#define ICV_DEF_WARP_AFFINE_BILINEAR_FUNC( flavor, arrtype, worktype,       \
-            scale_alpha_macro, mul_one_macro, descale_macro, cast_macro )   \
-static CvStatus CV_STDCALL                                                  \
-icvWarpAffine_Bilinear_##flavor##_CnR(                                      \
-    const arrtype* src, int step, CvSize ssize,                             \
-    arrtype* dst, int dststep, CvSize dsize,                                \
-    const double* matrix, int cn,                                           \
-    const arrtype* fillval, const int* ofs )                                \
-{                                                                           \
-    int x, y, k;                                                            \
-    double  A12 = matrix[1], b1 = matrix[2];                                \
-    double  A22 = matrix[4], b2 = matrix[5];                                \
-                                                                            \
-    step /= sizeof(src[0]);                                                 \
-    dststep /= sizeof(dst[0]);                                              \
-                                                                            \
-    for( y = 0; y < dsize.height; y++, dst += dststep )                     \
-    {                                                                       \
-        int xs = CV_FLT_TO_FIX( A12*y + b1, ICV_WARP_SHIFT );               \
-        int ys = CV_FLT_TO_FIX( A22*y + b2, ICV_WARP_SHIFT );               \
-                                                                            \
-        for( x = 0; x < dsize.width; x++ )                                  \
-        {                                                                   \
-            int ixs = xs + ofs[x*2];                                        \
-            int iys = ys + ofs[x*2+1];                                      \
-            worktype a = scale_alpha_macro( ixs & ICV_WARP_MASK );          \
-            worktype b = scale_alpha_macro( iys & ICV_WARP_MASK );          \
-            worktype p0, p1;                                                \
-            ixs >>= ICV_WARP_SHIFT;                                         \
-            iys >>= ICV_WARP_SHIFT;                                         \
-                                                                            \
-            if( (unsigned)ixs < (unsigned)(ssize.width - 1) &&              \
-                (unsigned)iys < (unsigned)(ssize.height - 1) )              \
-            {                                                               \
-                const arrtype* ptr = src + step*iys + ixs*cn;               \
-                                                                            \
-                for( k = 0; k < cn; k++ )                                   \
-                {                                                           \
-                    p0 = mul_one_macro(ptr[k]) +                            \
-                        a * (ptr[k+cn] - ptr[k]);                           \
-                    p1 = mul_one_macro(ptr[k+step]) +                       \
-                        a * (ptr[k+cn+step] - ptr[k+step]);                 \
-                    p0 = descale_macro(mul_one_macro(p0) + b*(p1 - p0));    \
-                    dst[x*cn+k] = (arrtype)cast_macro(p0);                  \
-                }                                                           \
-            }                                                               \
-            else if( (unsigned)(ixs+1) < (unsigned)(ssize.width+1) &&       \
-                     (unsigned)(iys+1) < (unsigned)(ssize.height+1))        \
-            {                                                               \
-                int x0 = ICV_WARP_CLIP_X( ixs );                            \
-                int y0 = ICV_WARP_CLIP_Y( iys );                            \
-                int x1 = ICV_WARP_CLIP_X( ixs + 1 );                        \
-                int y1 = ICV_WARP_CLIP_Y( iys + 1 );                        \
-                const arrtype* ptr0, *ptr1, *ptr2, *ptr3;                   \
-                                                                            \
-                ptr0 = src + y0*step + x0*cn;                               \
-                ptr1 = src + y0*step + x1*cn;                               \
-                ptr2 = src + y1*step + x0*cn;                               \
-                ptr3 = src + y1*step + x1*cn;                               \
-                                                                            \
-                for( k = 0; k < cn; k++ )                                   \
-                {                                                           \
-                    p0 = mul_one_macro(ptr0[k]) + a * (ptr1[k] - ptr0[k]);  \
-                    p1 = mul_one_macro(ptr2[k]) + a * (ptr3[k] - ptr2[k]);  \
-                    p0 = descale_macro( mul_one_macro(p0) + b*(p1 - p0) );  \
-                    dst[x*cn+k] = (arrtype)cast_macro(p0);                  \
-                }                                                           \
-            }                                                               \
-            else if( fillval )                                              \
-                for( k = 0; k < cn; k++ )                                   \
-                    dst[x*cn+k] = fillval[k];                               \
-        }                                                                   \
-    }                                                                       \
-                                                                            \
-    return CV_OK;                                                           \
-}
-
-
-#define ICV_WARP_SCALE_ALPHA(x) ((x)*(1./(ICV_WARP_MASK+1)))
-
-ICV_DEF_WARP_AFFINE_BILINEAR_FUNC( 8u, uchar, int, CV_NOP, ICV_WARP_MUL_ONE_8U,
-                                   ICV_WARP_DESCALE_8U, CV_NOP )
-//ICV_DEF_WARP_AFFINE_BILINEAR_FUNC( 8u, uchar, double, ICV_WARP_SCALE_ALPHA, CV_NOP,
-//                                   CV_NOP, ICV_WARP_CAST_8U )
-ICV_DEF_WARP_AFFINE_BILINEAR_FUNC( 16u, ushort, double, ICV_WARP_SCALE_ALPHA, CV_NOP,
-                                   CV_NOP, cvRound )
-ICV_DEF_WARP_AFFINE_BILINEAR_FUNC( 32f, float, double, ICV_WARP_SCALE_ALPHA, CV_NOP,
-                                   CV_NOP, CV_NOP )
-
-
-typedef CvStatus (CV_STDCALL * CvWarpAffineFunc)(
-    const void* src, int srcstep, CvSize ssize,
-    void* dst, int dststep, CvSize dsize,
-    const double* matrix, int cn,
-    const void* fillval, const int* ofs );
-
-static void icvInitWarpAffineTab( CvFuncTable* bilin_tab )
+template<typename T>
+static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
+                          int borderType, const Scalar& _borderValue )
 {
-    bilin_tab->fn_2d[CV_8U] = (void*)icvWarpAffine_Bilinear_8u_CnR;
-    bilin_tab->fn_2d[CV_16U] = (void*)icvWarpAffine_Bilinear_16u_CnR;
-    bilin_tab->fn_2d[CV_32F] = (void*)icvWarpAffine_Bilinear_32f_CnR;
-}
+    Size ssize = _src.size(), dsize = _dst.size();
+    int cn = _src.channels();
+    const T* S0 = (const T*)_src.data;
+    int sstep = _src.step/sizeof(S0[0]);
+    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
+        saturate_cast<T>(_borderValue[1]),
+        saturate_cast<T>(_borderValue[2]),
+        saturate_cast<T>(_borderValue[3]));
+    int dx, dy;
 
+    unsigned width1 = ssize.width, height1 = ssize.height;
 
-/////////////////////////////// IPP warpaffine functions /////////////////////////////////
-
-typedef CvStatus (CV_STDCALL * CvWarpAffineBackIPPFunc)
-( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
-  void* dst, int dststep, CvRect dstroi,
-  const double* coeffs, int interpolation );
-
-//////////////////////////////////////////////////////////////////////////////////////////
-
-CV_IMPL void
-cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* matrix,
-              int flags, CvScalar fillval )
-{
-    static CvFuncTable bilin_tab;
-    static int inittab = 0;
-
-    CV_FUNCNAME( "cvWarpAffine" );
-
-    __BEGIN__;
-    
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    int k, type, depth, cn, *ofs = 0;
-    double src_matrix[6], dst_matrix[6];
-    double fillbuf[4];
-    CvMat srcAb = cvMat( 2, 3, CV_64F, src_matrix ),
-          dstAb = cvMat( 2, 3, CV_64F, dst_matrix ),
-          A, b, invA, invAb;
-    CvWarpAffineFunc func;
-    CvSize ssize, dsize;
-    
-    if( !inittab )
+    if( _dst.isContinuous() && _xy.isContinuous() )
     {
-        icvInitWarpAffineTab( &bilin_tab );
-        inittab = 1;
+        dsize.width *= dsize.height;
+        dsize.height = 1;
     }
 
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        T* D = (T*)(_dst.data + _dst.step*dy);
+        const short* XY = (const short*)(_xy.data + _xy.step*dy);
+
+        if( cn == 1 )
+        {
+            for( dx = 0; dx < dsize.width; dx++ )
+            {
+                int sx = XY[dx*2], sy = XY[dx*2+1];
+                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+                    D[dx] = S0[sy*sstep + sx];
+                else
+                {
+                    if( borderType == BORDER_REPLICATE )
+                    {
+                        sx = clip(sx, 0, ssize.width);
+                        sy = clip(sy, 0, ssize.height);
+                        D[dx] = S0[sy*sstep + sx];
+                    }
+                    else if( borderType != BORDER_TRANSPARENT )
+                    {
+                        sx = borderInterpolate(sx, ssize.width, borderType);
+                        sy = borderInterpolate(sy, ssize.height, borderType);
+                        D[dx] = sx >= 0 && sy >= 0 ? S0[sy*sstep + sx] : cval[0];
+                    }
+                }
+            }
+        }
+        else
+        {
+            for( dx = 0; dx < dsize.width; dx++, D += cn )
+            {
+                int sx = XY[dx*2], sy = XY[dx*2+1], k;
+                const T *S;
+                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+                {
+                    if( cn == 3 )
+                    {
+                        S = S0 + sy*sstep + sx*3;
+                        D[0] = S[0], D[1] = S[1], D[2] = S[2];
+                    }
+                    else
+                    {
+                        S = S0 + sy*sstep + sx*cn;
+                        for( k = 0; k < cn; k++ )
+                            D[k] = S[k];
+                    }
+                }
+                else if( borderType != BORDER_TRANSPARENT )
+                {
+                    if( borderType == BORDER_REPLICATE )
+                    {
+                        sx = clip(sx, 0, ssize.width);
+                        sy = clip(sy, 0, ssize.height);
+                        S = S0 + sy*sstep + sx*cn;
+                    }
+                    else
+                    {
+                        sx = borderInterpolate(sx, ssize.width, borderType);
+                        sy = borderInterpolate(sy, ssize.height, borderType);
+                        S = sx >= 0 && sy >= 0 ? S0 + sy*sstep + sx*cn : &cval[0];
+                    }
+                    for( k = 0; k < cn; k++ )
+                        D[k] = S[k];
+                }
+            }
+        }
+    }
+}
+
+
+template<class CastOp, typename AT>
+static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
+                           const Mat& _fxy, const void* _wtab,
+                           int borderType, const Scalar& _borderValue )
+{
+    typedef typename CastOp::rtype T;
+    typedef typename CastOp::type1 WT;
+    Size ssize = _src.size(), dsize = _dst.size();
+    int cn = _src.channels();
+    const AT* wtab = (const AT*)_wtab;
+    const T* S0 = (const T*)_src.data;
+    int sstep = _src.step/sizeof(S0[0]);
+    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
+        saturate_cast<T>(_borderValue[1]),
+        saturate_cast<T>(_borderValue[2]),
+        saturate_cast<T>(_borderValue[3]));
+    int dx, dy;
+    CastOp castOp;
+
+    unsigned width1 = std::max(ssize.width-1, 0), height1 = std::max(ssize.height-1, 0);
+
+    if( _dst.isContinuous() && _xy.isContinuous() && _fxy.isContinuous() )
+    {
+        dsize.width *= dsize.height;
+        dsize.height = 1;
+    }
+
+    volatile int ntransparent = 0;
+
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        T* D = (T*)(_dst.data + _dst.step*dy);
+        const short* XY = (const short*)(_xy.data + _xy.step*dy);
+        const ushort* FXY = (const ushort*)(_fxy.data + _fxy.step*dy);
+
+        if( cn == 1 )
+        {
+            for( dx = 0; dx < dsize.width; dx++ )
+            {
+                int sx = XY[dx*2], sy = XY[dx*2+1];
+                const AT* w = wtab + FXY[dx]*4;
+
+                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+                {
+                    const T* S = S0 + sy*sstep + sx;
+                    D[dx] = castOp(WT(S[0]*w[0] + S[1]*w[1] + S[sstep]*w[2] + S[sstep+1]*w[3]));
+                }
+                else if( borderType != BORDER_TRANSPARENT )
+                {
+                    int sx0, sx1, sy0, sy1;
+                    T v0, v1, v2, v3;
+                    if( borderType == BORDER_REPLICATE )
+                    {
+                        sx0 = clip(sx, 0, ssize.width);
+                        sx1 = clip(sx+1, 0, ssize.width);
+                        sy0 = clip(sy, 0, ssize.height);
+                        sy1 = clip(sy+1, 0, ssize.height);
+                        v0 = S0[sy0*sstep + sx0];
+                        v1 = S0[sy0*sstep + sx1];
+                        v2 = S0[sy1*sstep + sx0];
+                        v3 = S0[sy1*sstep + sx1];
+                    }
+                    else
+                    {
+                        sx0 = borderInterpolate(sx, ssize.width, borderType);
+                        sx1 = borderInterpolate(sx+1, ssize.width, borderType);
+                        sy0 = borderInterpolate(sy, ssize.height, borderType);
+                        sy1 = borderInterpolate(sy+1, ssize.height, borderType);
+                        v0 = sx0 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx0] : cval[0];
+                        v1 = sx1 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx1] : cval[0];
+                        v2 = sx0 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx0] : cval[0];
+                        v3 = sx1 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx1] : cval[0];
+                    }
+                    D[dx] = castOp(WT(v0*w[0] + v1*w[1] + v2*w[2] + v3*w[3]));
+                }
+            }
+        }
+        else
+        {
+            for( dx = 0; dx < dsize.width; dx++, D += cn )
+            {
+                int sx = XY[dx*2], sy = XY[dx*2+1], k;
+                const AT* w = wtab + FXY[dx]*4;
+
+                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+                {
+                    if( cn == 2 )
+                    {
+                        const T* S = S0 + sy*sstep + sx*2;
+                        WT t0 = S[0]*w[0] + S[2]*w[1] + S[sstep]*w[2] + S[sstep+2]*w[3];
+                        WT t1 = S[1]*w[0] + S[3]*w[1] + S[sstep+1]*w[2] + S[sstep+3]*w[3];
+                        D[0] = castOp(t0); D[1] = castOp(t1);
+                    }
+                    else if( cn == 3 )
+                    {
+                        const T* S = S0 + sy*sstep + sx*3;
+                        WT t0 = S[0]*w[0] + S[3]*w[1] + S[sstep]*w[2] + S[sstep+3]*w[3];
+                        WT t1 = S[1]*w[0] + S[4]*w[1] + S[sstep+1]*w[2] + S[sstep+4]*w[3];
+                        WT t2 = S[2]*w[0] + S[5]*w[1] + S[sstep+2]*w[2] + S[sstep+5]*w[3];
+                        D[0] = castOp(t0); D[1] = castOp(t1); D[2] = castOp(t2);
+                    }
+                    else
+                    {
+                        const T* S = S0 + sy*sstep + sx*4;
+                        WT t0 = S[0]*w[0] + S[4]*w[1] + S[sstep]*w[2] + S[sstep+4]*w[3];
+                        WT t1 = S[1]*w[0] + S[5]*w[1] + S[sstep+1]*w[2] + S[sstep+5]*w[3];
+                        D[0] = castOp(t0); D[1] = castOp(t1);
+                        t0 = S[2]*w[0] + S[6]*w[1] + S[sstep+2]*w[2] + S[sstep+6]*w[3];
+                        t1 = S[3]*w[0] + S[7]*w[1] + S[sstep+3]*w[2] + S[sstep+7]*w[3];
+                        D[2] = castOp(t0); D[3] = castOp(t1);
+                    }
+                }
+                else if( borderType != BORDER_TRANSPARENT )
+                {
+                    int sx0, sx1, sy0, sy1;
+                    const T *v0, *v1, *v2, *v3;
+                    if( borderType == BORDER_REPLICATE )
+                    {
+                        sx0 = clip(sx, 0, ssize.width);
+                        sx1 = clip(sx+1, 0, ssize.width);
+                        sy0 = clip(sy, 0, ssize.height);
+                        sy1 = clip(sy+1, 0, ssize.height);
+                        v0 = S0 + sy0*sstep + sx0*cn;
+                        v1 = S0 + sy0*sstep + sx1*cn;
+                        v2 = S0 + sy1*sstep + sx0*cn;
+                        v3 = S0 + sy1*sstep + sx1*cn;
+                    }
+                    else
+                    {
+                        sx0 = borderInterpolate(sx, ssize.width, borderType);
+                        sx1 = borderInterpolate(sx+1, ssize.width, borderType);
+                        sy0 = borderInterpolate(sy, ssize.height, borderType);
+                        sy1 = borderInterpolate(sy+1, ssize.height, borderType);
+                        v0 = sx0 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx0*cn : &cval[0];
+                        v1 = sx1 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx1*cn : &cval[0];
+                        v2 = sx0 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx0*cn : &cval[0];
+                        v3 = sx1 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx1*cn : &cval[0];
+                    }
+                    for( k = 0; k < cn; k++ )
+                        D[k] = castOp(WT(v0[k]*w[0] + v1[k]*w[1] + v2[k]*w[2] + v3[k]*w[3]));
+                }
+                else
+                    ntransparent++;
+            }
+        }
+    }
+}
+
+
+template<class CastOp, typename AT>
+static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
+                          const Mat& _fxy, const void* _wtab,
+                          int borderType, const Scalar& _borderValue )
+{
+    typedef typename CastOp::rtype T;
+    typedef typename CastOp::type1 WT;
+    Size ssize = _src.size(), dsize = _dst.size();
+    int cn = _src.channels();
+    const AT* wtab = (const AT*)_wtab;
+    const T* S0 = (const T*)_src.data;
+    int sstep = _src.step/sizeof(S0[0]);
+    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
+        saturate_cast<T>(_borderValue[1]),
+        saturate_cast<T>(_borderValue[2]),
+        saturate_cast<T>(_borderValue[3]));
+    int dx, dy;
+    CastOp castOp;
+
+    unsigned width1 = std::max(ssize.width-3, 0), height1 = std::max(ssize.height-3, 0);
+
+    if( _dst.isContinuous() && _xy.isContinuous() && _fxy.isContinuous() )
+    {
+        dsize.width *= dsize.height;
+        dsize.height = 1;
+    }
+
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        T* D = (T*)(_dst.data + _dst.step*dy);
+        const short* XY = (const short*)(_xy.data + _xy.step*dy);
+        const ushort* FXY = (const ushort*)(_fxy.data + _fxy.step*dy);
+
+        for( dx = 0; dx < dsize.width; dx++, D += cn )
+        {
+            int sx = XY[dx*2]-1, sy = XY[dx*2+1]-1;
+            const AT* w = wtab + FXY[dx]*16;
+            int i, k;
+            if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+            {
+                const T* v = S0 + sy*sstep + sx*cn;
+                for( k = 0; k < cn; k++ )
+                {
+                    WT sum = v[0]*w[0] + v[cn]*w[1] + v[cn*2]*w[2] + v[cn*3]*w[3];
+                    v += sstep;
+                    sum += v[0]*w[4] + v[cn]*w[5] + v[cn*2]*w[6] + v[cn*3]*w[7];
+                    v += sstep;
+                    sum += v[0]*w[8] + v[cn]*w[9] + v[cn*2]*w[10] + v[cn*3]*w[11];
+                    v += sstep;
+                    sum += v[0]*w[12] + v[cn]*w[13] + v[cn*2]*w[14] + v[cn*3]*w[15];
+                    v += 1 - sstep*3;
+                    D[k] = castOp(sum);
+                }
+            }
+            else
+            {
+                int x[4], y[4];
+                if( borderType == BORDER_TRANSPARENT &&
+                    ((unsigned)(sx+1) >= (unsigned)ssize.width ||
+                    (unsigned)(sy+1) >= (unsigned)ssize.height) )
+                    continue;
+
+                for( i = 0; i < 4; i++ )
+                {
+                    x[i] = borderInterpolate(sx + i, ssize.width, borderType)*cn;
+                    y[i] = borderInterpolate(sy + i, ssize.height, borderType);
+                }
+
+                for( k = 0; k < cn; k++, S0++, w -= 16 )
+                {
+                    WT cv = cval[k], sum = cv;
+                    for( i = 0; i < 4; i++, w += 4 )
+                    {
+                        int yi = y[i];
+                        const T* v = S0 + yi*sstep;
+                        if( yi < 0 )
+                            continue;
+                        if( x[0] >= 0 )
+                            sum += (v[x[0]] - cv)*w[0];
+                        if( x[1] >= 0 )
+                            sum += (v[x[1]] - cv)*w[1];
+                        if( x[2] >= 0 )
+                            sum += (v[x[2]] - cv)*w[2];
+                        if( x[3] >= 0 )
+                            sum += (v[x[3]] - cv)*w[3];
+                    }
+                    D[k] = castOp(sum);
+                }
+                S0 -= cn;
+            }
+        }
+    }
+}
+
+
+template<class CastOp, typename AT>
+static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
+                           const Mat& _fxy, const void* _wtab,
+                           int borderType, const Scalar& _borderValue )
+{
+    typedef typename CastOp::rtype T;
+    typedef typename CastOp::type1 WT;
+    Size ssize = _src.size(), dsize = _dst.size();
+    int cn = _src.channels();
+    const AT* wtab = (const AT*)_wtab;
+    const T* S0 = (const T*)_src.data;
+    int sstep = _src.step/sizeof(S0[0]);
+    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
+        saturate_cast<T>(_borderValue[1]),
+        saturate_cast<T>(_borderValue[2]),
+        saturate_cast<T>(_borderValue[3]));
+    int dx, dy;
+    CastOp castOp;
+
+    unsigned width1 = std::max(ssize.width-7, 0), height1 = std::max(ssize.height-7, 0);
+
+    if( _dst.isContinuous() && _xy.isContinuous() && _fxy.isContinuous() )
+    {
+        dsize.width *= dsize.height;
+        dsize.height = 1;
+    }
+
+    for( dy = 0; dy < dsize.height; dy++ )
+    {
+        T* D = (T*)(_dst.data + _dst.step*dy);
+        const short* XY = (const short*)(_xy.data + _xy.step*dy);
+        const ushort* FXY = (const ushort*)(_fxy.data + _fxy.step*dy);
+
+        for( dx = 0; dx < dsize.width; dx++, D += cn )
+        {
+            int sx = XY[dx*2]-3, sy = XY[dx*2+1]-3;
+            const AT* w = wtab + FXY[dx]*64;
+            const T* v = S0 + sy*sstep + sx*cn;
+            int i, k;
+            if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+            {
+                for( k = 0; k < cn; k++ )
+                {
+                    WT sum = 0;
+                    for( int r = 0; r < 8; r++, v += sstep, w += 8 )
+                        sum += v[0]*w[0] + v[cn]*w[1] + v[cn*2]*w[2] + v[cn*3]*w[3] +
+                            v[cn*4]*w[4] + v[cn*5]*w[5] + v[cn*6]*w[6] + v[cn*7]*w[7];
+                    w -= 64;
+                    v -= sstep*8 - 1;
+                    D[k] = castOp(sum);
+                }
+            }
+            else
+            {
+                int x[8], y[8];
+                if( borderType == BORDER_TRANSPARENT &&
+                    ((unsigned)(sx+3) >= (unsigned)ssize.width ||
+                    (unsigned)(sy+3) >= (unsigned)ssize.height) )
+                    continue;
+
+                for( i = 0; i < 8; i++ )
+                {
+                    x[i] = borderInterpolate(sx + i, ssize.width, borderType);
+                    y[i] = borderInterpolate(sy + i, ssize.height, borderType);
+                }
+
+                for( k = 0; k < cn; k++, S0++, w -= 64 )
+                {
+                    WT cv = cval[k], sum = cv;
+                    for( i = 0; i < 8; i++, w += 8 )
+                    {
+                        int yi = y[i];
+                        const T* v = S0 + yi*sstep;
+                        if( yi < 0 )
+                            continue;
+                        if( x[0] >= 0 )
+                            sum += (v[x[0]] - cv)*w[0];
+                        if( x[1] >= 0 )
+                            sum += (v[x[1]] - cv)*w[1];
+                        if( x[2] >= 0 )
+                            sum += (v[x[2]] - cv)*w[2];
+                        if( x[3] >= 0 )
+                            sum += (v[x[3]] - cv)*w[3];
+                        if( x[4] >= 0 )
+                            sum += (v[x[4]] - cv)*w[4];
+                        if( x[5] >= 0 )
+                            sum += (v[x[5]] - cv)*w[5];
+                        if( x[6] >= 0 )
+                            sum += (v[x[6]] - cv)*w[6];
+                        if( x[7] >= 0 )
+                            sum += (v[x[7]] - cv)*w[7];
+                    }
+                    D[k] = castOp(sum);
+                }
+                S0 -= cn;
+            }
+        }
+    }
+}
+
+
+typedef void (*RemapNNFunc)(const Mat& _src, Mat& _dst, const Mat& _xy,
+                            int borderType, const Scalar& _borderValue );
+
+typedef void (*RemapFunc)(const Mat& _src, Mat& _dst, const Mat& _xy,
+                          const Mat& _fxy, const void* _wtab,
+                          int borderType, const Scalar& _borderValue);
+
+void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
+            int interpolation, int borderType, const Scalar& borderValue )
+{
+    static RemapNNFunc nn_tab[] =
+    {
+        remapNearest<uchar>, remapNearest<uchar>, remapNearest<ushort>, remapNearest<ushort>,
+        remapNearest<int>, remapNearest<int>, remapNearest<double>, 0
+    };
+
+    static RemapFunc linear_tab[] =
+    {
+        remapBilinear<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
+        remapBilinear<Cast<float, ushort>, float>, 0, 0,
+        remapBilinear<Cast<float, float>, float>, 0, 0
+    };
+
+    static RemapFunc cubic_tab[] =
+    {
+        remapBicubic<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
+        remapBicubic<Cast<float, ushort>, float>, 0, 0,
+        remapBicubic<Cast<float, float>, float>, 0, 0
+    };
+
+    static RemapFunc lanczos4_tab[] =
+    {
+        remapLanczos4<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
+        remapLanczos4<Cast<float, ushort>, float>, 0, 0,
+        remapLanczos4<Cast<float, float>, float>, 0, 0
+    };
     
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+    CV_Assert( (!map2.data || map2.size() == map1.size()));
+    dst.create( map1.size(), src.type() );
 
-    if( !CV_IS_MAT(matrix) || CV_MAT_CN(matrix->type) != 1 ||
-        CV_MAT_DEPTH(matrix->type) < CV_32F || matrix->rows != 2 || matrix->cols != 3 )
-        CV_ERROR( CV_StsBadArg,
-        "Transformation matrix should be 2x3 floating-point single-channel matrix" );
+    int depth = src.depth(), map_depth = map1.depth();
+    RemapNNFunc nnfunc = 0;
+    RemapFunc ifunc = 0;
+    const void* ctab = 0;
+    bool fixpt = depth == CV_8U;
+    bool planar_input = false;
 
-    if( flags & CV_WARP_INVERSE_MAP )
-        cvConvertScale( matrix, &dstAb );
+    if( interpolation == INTER_NEAREST )
+    {
+        nnfunc = nn_tab[depth];
+        CV_Assert( nnfunc != 0 );
+        
+        if( map1.type() == CV_16SC2 && !map2.data ) // the data is already in the right format
+        {
+            nnfunc( src, dst, map1, borderType, borderValue );
+            return;
+        }
+    }
     else
     {
-        // [R|t] -> [R^-1 | -(R^-1)*t]
-        cvConvertScale( matrix, &srcAb );
-        cvGetCols( &srcAb, &A, 0, 2 );
-        cvGetCol( &srcAb, &b, 2 );
-        cvGetCols( &dstAb, &invA, 0, 2 );
-        cvGetCol( &dstAb, &invAb, 2 );
-        cvInvert( &A, &invA, CV_SVD );
-        cvGEMM( &invA, &b, -1, 0, 0, &invAb );
-    }
-
-    type = CV_MAT_TYPE(src->type);
-    depth = CV_MAT_DEPTH(type);
-    cn = CV_MAT_CN(type);
-    if( cn > 4 )
-        CV_ERROR( CV_BadNumChannels, "" );
-
-    ssize = cvGetMatSize(src);
-    dsize = cvGetMatSize(dst);
-
-    /*if( icvWarpAffineBack_8u_C1R_p && MIN( ssize.width, dsize.width ) >= 4 &&
-        MIN( ssize.height, dsize.height ) >= 4 )
-    {
-        int method = flags & 3;
-        CvWarpAffineBackIPPFunc ipp_func =
-            type == CV_8UC1 ? icvWarpAffineBack_8u_C1R_p :
-            type == CV_8UC3 ? icvWarpAffineBack_8u_C3R_p :
-            type == CV_8UC4 ? icvWarpAffineBack_8u_C4R_p :
-            type == CV_32FC1 ? icvWarpAffineBack_32f_C1R_p :
-            type == CV_32FC3 ? icvWarpAffineBack_32f_C3R_p :
-            type == CV_32FC4 ? icvWarpAffineBack_32f_C4R_p : 0;
+        if( interpolation == INTER_AREA )
+            interpolation = INTER_LINEAR;
         
-        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA )
+        if( interpolation == INTER_LINEAR )
+            ifunc = linear_tab[depth];
+        else if( interpolation == INTER_CUBIC )
+            ifunc = cubic_tab[depth];
+        else if( interpolation == INTER_LANCZOS4 )
+            ifunc = lanczos4_tab[depth];
+        else
+            CV_Error( CV_StsBadArg, "Unknown interpolation method" );
+        CV_Assert( ifunc != 0 );
+        ctab = initInterTab2D( interpolation, fixpt );
+    }
+
+    const Mat *m1 = &map1, *m2 = &map2;
+
+    if( (map1.type() == CV_16SC2 && (map2.type() == CV_16UC1 || map2.type() == CV_16SC1)) ||
+        (map2.type() == CV_16SC2 && (map1.type() == CV_16UC1 || map1.type() == CV_16SC1)) )
+    {
+        if( map1.type() != CV_16SC2 )
+            std::swap(m1, m2);
+        if( ifunc )
         {
-            int srcstep = src->step ? src->step : CV_STUB_STEP;
-            int dststep = dst->step ? dst->step : CV_STUB_STEP;
-            CvRect srcroi = {0, 0, ssize.width, ssize.height};
-            CvRect dstroi = {0, 0, dsize.width, dsize.height};
-
-            // this is not the most efficient way to fill outliers
-            if( flags & CV_WARP_FILL_OUTLIERS )
-                cvSet( dst, fillval );
-
-            if( ipp_func( src->data.ptr, ssize, srcstep, srcroi,
-                          dst->data.ptr, dststep, dstroi,
-                          dstAb.data.db, 1 << method ) >= 0 )
-                EXIT;
+            ifunc( src, dst, *m1, *m2, ctab, borderType, borderValue );
+            return;
         }
-    }*/
-
-    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
-    ofs = (int*)cvStackAlloc( dst->cols*2*sizeof(ofs[0]) );
-    for( k = 0; k < dst->cols; k++ )
+    }
+    else
     {
-        ofs[2*k] = CV_FLT_TO_FIX( dst_matrix[0]*k, ICV_WARP_SHIFT );
-        ofs[2*k+1] = CV_FLT_TO_FIX( dst_matrix[3]*k, ICV_WARP_SHIFT );
+        CV_Assert( (map1.type() == CV_32FC2 && !map2.data) ||
+            (map1.type() == CV_32FC1 && map2.type() == CV_32FC1) );
+        planar_input = map1.channels() == 1;
     }
 
-    /*if( method == CV_INTER_LINEAR )*/
+    int x, y, x1, y1;
+    const int buf_size = 1 << 14;
+    int brows0 = std::min(128, dst.rows);
+    int bcols0 = std::min(buf_size/brows0, dst.cols);
+    brows0 = std::min(buf_size/bcols0, dst.rows);
+
+    Mat _bufxy(brows0, bcols0, CV_16SC2), _bufa;
+    if( !nnfunc )
+        _bufa.create(brows0, bcols0, CV_16UC1);
+
+    for( y = 0; y < dst.rows; y += brows0 )
     {
-        func = (CvWarpAffineFunc)bilin_tab.fn_2d[depth];
-        if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+        for( x = 0; x < dst.cols; x += bcols0 )
+        {
+            int brows = std::min(brows0, dst.rows - y);
+            int bcols = std::min(bcols0, dst.cols - x);
+            Mat dpart(dst, Rect(x, y, bcols, brows));
+            Mat bufxy(_bufxy, Rect(0, 0, bcols, brows));
 
-        IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                         dst->step, dsize, dst_matrix, cn,
-                         flags & CV_WARP_FILL_OUTLIERS ? fillbuf : 0, ofs ));
+            if( nnfunc )
+            {
+                if( map_depth != CV_32F )
+                {
+                    for( y1 = 0; y1 < brows; y1++ )
+                    {
+                        short* XY = (short*)(bufxy.data + bufxy.step*y1);
+                        const short* sXY = (const short*)(m1->data + m1->step*(y+y1)) + x*2;
+                        const ushort* sA = (const ushort*)(m2->data + m2->step*(y+y1)) + x;
+
+                        for( x1 = 0; x1 < bcols; x1++ )
+                        {
+                            int a = sA[x1] & (INTER_TAB_SIZE2-1);
+                            XY[x1*2] = sXY[x1*2] + NNDeltaTab_i[a][0];
+                            XY[x1*2+1] = sXY[x1*2+1] + NNDeltaTab_i[a][1];
+                        }
+                    }
+                }
+                else if( !planar_input )
+                    map1(Rect(0,0,bcols,brows)).convertTo(bufxy, bufxy.depth());
+                else
+                {
+                    for( y1 = 0; y1 < brows; y1++ )
+                    {
+                        short* XY = (short*)(bufxy.data + bufxy.step*y1);
+                        const float* sX = (const float*)(map1.data + map1.step*(y+y1)) + x;
+                        const float* sY = (const float*)(map2.data + map2.step*(y+y1)) + x;
+
+                        for( x1 = 0; x1 < bcols; x1++ )
+                        {
+                            XY[x1*2] = saturate_cast<short>(sX[x1]);
+                            XY[x1*2+1] = saturate_cast<short>(sY[x1]);
+                        }
+                    }
+                }
+                nnfunc( src, dpart, bufxy, borderType, borderValue );
+                continue;
+            }
+
+            Mat bufa(_bufa, Rect(0,0,bcols, brows));
+            for( y1 = 0; y1 < brows; y1++ )
+            {
+                short* XY = (short*)(bufxy.data + bufxy.step*y1);
+                ushort* A = (ushort*)(bufa.data + bufa.step*y1);
+                x1 = 0;
+
+                if( planar_input )
+                {
+                    const float* sX = (const float*)(map1.data + map1.step*(y+y1)) + x;
+                    const float* sY = (const float*)(map2.data + map2.step*(y+y1)) + x;
+
+                #if CV_SSE2
+                    __m128 scale = _mm_set1_ps((float)INTER_TAB_SIZE);
+                    __m128i mask = _mm_set1_epi32(INTER_TAB_SIZE-1);
+                    for( ; x1 <= bcols - 8; x1 += 8 )
+                    {
+                        __m128 fx0 = _mm_loadu_ps(sX + x1);
+                        __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
+                        __m128 fy0 = _mm_loadu_ps(sY + x1);
+                        __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
+                        __m128i ix0 = _mm_cvtps_epi32(_mm_mul_ps(fx0, scale));
+                        __m128i ix1 = _mm_cvtps_epi32(_mm_mul_ps(fx1, scale));
+                        __m128i iy0 = _mm_cvtps_epi32(_mm_mul_ps(fy0, scale));
+                        __m128i iy1 = _mm_cvtps_epi32(_mm_mul_ps(fy1, scale));
+                        __m128i mx0 = _mm_and_si128(ix0, mask);
+                        __m128i mx1 = _mm_and_si128(ix1, mask);
+                        __m128i my0 = _mm_and_si128(iy0, mask);
+                        __m128i my1 = _mm_and_si128(iy1, mask);
+                        mx0 = _mm_packs_epi32(mx0, mx1);
+                        my0 = _mm_packs_epi32(my0, my1);
+                        my0 = _mm_slli_epi16(my0, INTER_BITS);
+                        mx0 = _mm_or_si128(mx0, my0);
+                        _mm_storeu_si128((__m128i*)(A + x1), mx0);
+                        ix0 = _mm_srai_epi32(ix0, INTER_BITS);
+                        ix1 = _mm_srai_epi32(ix1, INTER_BITS);
+                        iy0 = _mm_srai_epi32(iy0, INTER_BITS);
+                        iy1 = _mm_srai_epi32(iy1, INTER_BITS);
+                        ix0 = _mm_packs_epi32(ix0, ix1);
+                        iy0 = _mm_packs_epi32(iy0, iy1);
+                        ix1 = _mm_unpacklo_epi16(ix0, iy0);
+                        iy1 = _mm_unpackhi_epi16(ix0, iy0);
+                        _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
+                        _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                    }
+                #endif
+
+                    for( ; x1 < bcols; x1++ )
+                    {
+                        int sx = cvRound(sX[x1]*INTER_TAB_SIZE);
+                        int sy = cvRound(sY[x1]*INTER_TAB_SIZE);
+                        int v = (sy & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE + (sx & (INTER_TAB_SIZE-1));
+                        XY[x1*2] = (short)(sx >> INTER_BITS);
+                        XY[x1*2+1] = (short)(sy >> INTER_BITS);
+                        A[x1] = (ushort)v;
+                    }
+                }
+                else
+                {
+                    const float* sXY = (const float*)(map1.data + map1.step*(y+y1)) + x*2;
+
+                    for( x1 = 0; x1 < bcols; x1++ )
+                    {
+                        int sx = cvRound(sXY[x1*2]*INTER_TAB_SIZE);
+                        int sy = cvRound(sXY[x1*2+1]*INTER_TAB_SIZE);
+                        int v = (sy & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE + (sx & (INTER_TAB_SIZE-1));
+                        XY[x1*2] = (short)(sx >> INTER_BITS);
+                        XY[x1*2+1] = (short)(sy >> INTER_BITS);
+                        A[x1] = (ushort)v;
+                    }
+                }
+            }
+            ifunc(src, dpart, bufxy, bufa, ctab, borderType, borderValue);
+        }
     }
-
-    __END__;
 }
 
 
-CV_IMPL CvMat*
-cv2DRotationMatrix( CvPoint2D32f center, double angle,
-                    double scale, CvMat* matrix )
+void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat& dstmap2,
+                  int dstm1type, bool nninterpolate )
 {
-    CV_FUNCNAME( "cvGetRotationMatrix" );
+    Size size = map1.size();
+    const Mat *m1 = &map1, *m2 = &map2;
+    int m1type = m1->type(), m2type = m2->type();
 
-    __BEGIN__;
+    CV_Assert( (m1type == CV_16SC2 && (nninterpolate || m2type == CV_16UC1 || m2type == CV_16SC1)) ||
+               (m2type == CV_16SC2 && (nninterpolate || m1type == CV_16UC1 || m1type == CV_16SC1)) ||
+               (m1type == CV_32FC1 && m2type == CV_32FC1) ||
+               (m1type == CV_32FC2 && !m2->data) );
 
-    double m[2][3];
-    CvMat M = cvMat( 2, 3, CV_64FC1, m );
-    double alpha, beta;
+    if( m2type == CV_16SC2 )
+    {
+        std::swap( m1, m2 );
+        std::swap( m1type, m2type );
+    }
 
-    if( !matrix )
-        CV_ERROR( CV_StsNullPtr, "" );
+    if( dstm1type <= 0 )
+        dstm1type = m1type == CV_16SC2 ? CV_32FC2 : CV_16SC2;
+    CV_Assert( dstm1type == CV_16SC2 || dstm1type == CV_32FC1 || dstm1type == CV_32FC2 );
+    dstmap1.create( size, dstm1type );
+    if( !nninterpolate && dstm1type != CV_32FC2 )
+        dstmap2.create( size, dstm1type == CV_16SC2 ? CV_16UC1 : CV_32FC1 );
+    else
+        dstmap2.release();
 
+    if( m1type == dstm1type || (nninterpolate &&
+        ((m1type == CV_16SC2 && dstm1type == CV_32FC2) ||
+        (m1type == CV_32FC2 && dstm1type == CV_16SC2))) )
+    {
+        m1->convertTo( dstmap1, dstmap1.type() );
+        if( dstmap2.data && dstmap2.type() == m2->type() )
+            m2->copyTo( dstmap2 );
+        return;
+    }
+
+    if( m1type == CV_32FC1 && dstm1type == CV_32FC2 )
+    {
+        Mat vdata[] = { *m1, *m2 };
+        merge( Vector<Mat>(vdata, 2), dstmap1 );
+        return;
+    }
+
+    if( m1type == CV_32FC2 && dstm1type == CV_32FC1 )
+    {
+        Mat vdata[] = { dstmap1, dstmap2 };
+        Vector<Mat> mv(vdata, 2);
+        split( *m1, mv );
+        return;
+    }
+
+    if( m1->isContinuous() && (!m2->data || m2->isContinuous()) &&
+        dstmap1.isContinuous() && (!dstmap2.data || dstmap2.isContinuous()) )
+    {
+        size.width *= size.height;
+        size.height = 1;
+    }
+
+    const float scale = 1.f/INTER_TAB_SIZE;
+    int x, y;
+    for( y = 0; y < size.height; y++ )
+    {
+        const float* src1f = (const float*)(m1->data + m1->step*y);
+        const float* src2f = (const float*)(m2->data + m2->step*y);
+        const short* src1 = (const short*)src1f;
+        const ushort* src2 = (const ushort*)src2f;
+
+        float* dst1f = (float*)(dstmap1.data + dstmap1.step*y);
+        float* dst2f = (float*)(dstmap2.data + dstmap2.step*y);
+        short* dst1 = (short*)dst1f;
+        ushort* dst2 = (ushort*)dst2f;
+
+        if( m1type == CV_32FC1 && dstm1type == CV_16SC2 )
+        {
+            if( nninterpolate )
+                for( x = 0; x < size.width; x++ )
+                {
+                    dst1[x*2] = saturate_cast<short>(src1f[x]);
+                    dst1[x*2+1] = saturate_cast<short>(src2f[x]);
+                }
+            else
+                for( x = 0; x < size.width; x++ )
+                {
+                    int ix = saturate_cast<int>(src1f[x]*INTER_TAB_SIZE);
+                    int iy = saturate_cast<int>(src2f[x]*INTER_TAB_SIZE);
+                    dst1[x*2] = (short)(ix >> INTER_BITS);
+                    dst1[x*2+1] = (short)(iy >> INTER_BITS);
+                    dst2[x] = (ushort)((iy & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE + (ix & (INTER_TAB_SIZE-1)));
+                }
+        }
+        else if( m1type == CV_32FC2 && dstm1type == CV_16SC2 )
+        {
+            if( nninterpolate )
+                for( x = 0; x < size.width; x++ )
+                {
+                    dst1[x*2] = saturate_cast<short>(src1f[x*2]);
+                    dst1[x*2+1] = saturate_cast<short>(src1f[x*2+1]);
+                }
+            else
+                for( x = 0; x < size.width; x++ )
+                {
+                    int ix = saturate_cast<int>(src1f[x*2]*INTER_TAB_SIZE);
+                    int iy = saturate_cast<int>(src1f[x*2+1]*INTER_TAB_SIZE);
+                    dst1[x*2] = (short)(ix >> INTER_BITS);
+                    dst1[x*2+1] = (short)(iy >> INTER_BITS);
+                    dst2[x] = (ushort)((iy & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE + (ix & (INTER_TAB_SIZE-1)));
+                }
+        }
+        else if( m1type == CV_16SC2 && dstm1type == CV_32FC1 )
+        {
+            for( x = 0; x < size.width; x++ )
+            {
+                int fxy = src2 ? src2[x] : 0;
+                dst1f[x] = src1[x*2] + (fxy & (INTER_TAB_SIZE-1))*scale;
+                dst2f[x] = src1[x*2+1] + (fxy >> INTER_BITS)*scale;
+            }
+        }
+        else if( m1type == CV_16SC2 && dstm1type == CV_32FC2 )
+        {
+            for( x = 0; x < size.width; x++ )
+            {
+                int fxy = src2 ? src2[x] : 0;
+                dst1f[x*2] = src1[x*2] + (fxy & (INTER_TAB_SIZE-1))*scale;
+                dst1f[x*2+1] = src1[x*2+1] + (fxy >> INTER_BITS)*scale;
+            }
+        }
+        else
+            CV_Error( CV_StsNotImplemented, "Unsupported combination of input/output matrices" );
+    }
+}
+
+
+void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
+                 int flags, int borderType, const Scalar& borderValue )
+{
+    dst.create( dsize, src.type() );
+
+    const int BLOCK_SZ = 64;
+    short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
+    double M[6];
+    Mat _M(2, 3, CV_64F, M);
+    int interpolation = flags & INTER_MAX;
+    if( interpolation == INTER_AREA )
+        interpolation = INTER_LINEAR;
+    
+    CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 2 && M0.cols == 3 );
+    M0.convertTo(_M, _M.type());
+
+    if( !(flags & WARP_INVERSE_MAP) )
+    {
+        double D = M[0]*M[4] - M[1]*M[3];
+        D = D != 0 ? 1./D : 0;
+        double A11 = M[4]*D, A22=M[0]*D;
+        M[0] = A11; M[1] *= -D;
+        M[3] *= -D; M[4] = A22;
+        double b1 = -M[0]*M[2] - M[1]*M[5];
+        double b2 = -M[3]*M[2] - M[4]*M[5];
+        M[2] = b1; M[5] = b2;
+    }
+
+    int x, y, x1, y1, width = dst.cols, height = dst.rows;
+    AutoBuffer<int> _abdelta(width*2);
+    int* abdelta = &_abdelta[0];
+    const int AB_BITS = std::max(10, (int)INTER_BITS);
+    const int AB_SCALE = 1 << AB_BITS;
+    int round_delta = interpolation == INTER_NEAREST ? AB_SCALE/2 : AB_SCALE/INTER_TAB_SIZE/2;
+
+    for( x = 0; x < width; x++ )
+    {
+        abdelta[x*2] = saturate_cast<int>(M[0]*x*AB_SCALE);
+        abdelta[x*2+1] = saturate_cast<int>(M[3]*x*AB_SCALE);
+    }
+    
+    int bh0 = std::min(BLOCK_SZ, height);
+    int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
+    bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
+
+    for( y = 0; y < height; y += bh0 )
+    {
+        for( x = 0; x < width; x += bw0 )
+        {
+            int bw = std::min( bw0, width - x);
+            int bh = std::min( bh0, height - y);
+
+            Mat _XY(bh, bw, CV_16SC2, XY), _A;
+            Mat dpart(dst, Rect(x, y, bw, bh));
+
+            for( y1 = 0; y1 < bh; y1++ )
+            {
+                short* xy = XY + y1*bw*2;
+                int X0 = saturate_cast<int>((M[1]*(y + y1) + M[2])*AB_SCALE) + round_delta;
+                int Y0 = saturate_cast<int>((M[4]*(y + y1) + M[5])*AB_SCALE) + round_delta;
+
+                if( interpolation == INTER_NEAREST )
+                    for( x1 = 0; x1 < bw; x1++ )
+                    {
+                        int X = (X0 + abdelta[(x+x1)*2]) >> AB_BITS;
+                        int Y = (Y0 + abdelta[(x+x1)*2+1]) >> AB_BITS;
+                        xy[x1*2] = (short)X;
+                        xy[x1*2+1] = (short)Y;
+                    }
+                else
+                {
+                    short* alpha = A + y1*bw;
+                    for( x1 = 0; x1 < bw; x1++ )
+                    {
+                        int X = (X0 + abdelta[(x+x1)*2]) >> (AB_BITS - INTER_BITS);
+                        int Y = (Y0 + abdelta[(x+x1)*2+1]) >> (AB_BITS - INTER_BITS);
+                        xy[x1*2] = (short)(X >> INTER_BITS);
+                        xy[x1*2+1] = (short)(Y >> INTER_BITS);
+                        alpha[x1] = (short)((Y & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE +
+                                (X & (INTER_TAB_SIZE-1)));
+                    }
+                }
+            }
+
+            if( interpolation == INTER_NEAREST )
+                remap( src, dpart, _XY, Mat(), interpolation, borderType, borderValue );
+            else
+            {
+                Mat _A(bh, bw, CV_16U, A);
+                remap( src, dpart, _XY, _A, interpolation, borderType, borderValue );
+            }
+        }
+    }
+}
+
+
+void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
+                      int flags, int borderType, const Scalar& borderValue )
+{
+    dst.create( dsize, src.type() );
+
+    const int BLOCK_SZ = 64;
+    short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
+    double M[9];
+    Mat _M(3, 3, CV_64F, M);
+    int interpolation = flags & INTER_MAX;
+    if( interpolation == INTER_AREA )
+        interpolation = INTER_LINEAR;
+    
+    CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 3 && M0.cols == 3 );
+    M0.convertTo(_M, _M.type());
+
+    if( !(flags & WARP_INVERSE_MAP) )
+         invert(_M, _M);
+ 
+    int x, y, x1, y1, width = dst.cols, height = dst.rows;
+    
+    int bh0 = std::min(BLOCK_SZ, height);
+    int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
+    bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
+
+    for( y = 0; y < height; y += bh0 )
+    {
+        for( x = 0; x < width; x += bw0 )
+        {
+            int bw = std::min( bw0, width - x);
+            int bh = std::min( bh0, height - y);
+
+            Mat _XY(bh, bw, CV_16SC2, XY), _A;
+            Mat dpart(dst, Rect(x, y, bw, bh));
+
+            for( y1 = 0; y1 < bh; y1++ )
+            {
+                short* xy = XY + y1*bw*2;
+                double X0 = M[0]*x + M[1]*(y + y1) + M[2];
+                double Y0 = M[3]*x + M[4]*(y + y1) + M[5];
+                double W0 = M[6]*x + M[7]*(y + y1) + M[8];
+
+                if( interpolation == INTER_NEAREST )
+                    for( x1 = 0; x1 < bw; x1++ )
+                    {
+                        double W = W0 + M[6]*x1;
+                        W = W ? 1./W : 0;
+                        int X = saturate_cast<int>((X0 + M[0]*x1)*W);
+                        int Y = saturate_cast<int>((Y0 + M[3]*x1)*W);
+                        xy[x1*2] = (short)X;
+                        xy[x1*2+1] = (short)Y;
+                    }
+                else
+                {
+                    short* alpha = A + y1*bw;
+                    for( x1 = 0; x1 < bw; x1++ )
+                    {
+                        double W = W0 + M[6]*x1;
+                        W = W ? INTER_TAB_SIZE/W : 0;
+                        int X = saturate_cast<int>((X0 + M[0]*x1)*W);
+                        int Y = saturate_cast<int>((Y0 + M[3]*x1)*W);
+                        xy[x1*2] = (short)(X >> INTER_BITS);
+                        xy[x1*2+1] = (short)(Y >> INTER_BITS);
+                        alpha[x1] = (short)((Y & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE +
+                                (X & (INTER_TAB_SIZE-1)));
+                    }
+                }
+            }
+
+            if( interpolation == INTER_NEAREST )
+                remap( src, dpart, _XY, Mat(), interpolation, borderType, borderValue );
+            else
+            {
+                Mat _A(bh, bw, CV_16U, A);
+                remap( src, dpart, _XY, _A, interpolation, borderType, borderValue );
+            }
+        }
+    }
+}
+
+
+Mat getRotationMatrix2D( Point2f center, double angle, double scale )
+{
     angle *= CV_PI/180;
-    alpha = cos(angle)*scale;
-    beta = sin(angle)*scale;
+    double alpha = cos(angle)*scale;
+    double beta = sin(angle)*scale;
 
-    m[0][0] = alpha;
-    m[0][1] = beta;
-    m[0][2] = (1-alpha)*center.x - beta*center.y;
-    m[1][0] = -beta;
-    m[1][1] = alpha;
-    m[1][2] = beta*center.x + (1-alpha)*center.y;
+    Mat M(2, 3, CV_64F);
+    double* m = (double*)M.data;
 
-    cvConvert( &M, matrix );
+    m[0] = alpha;
+    m[1] = beta;
+    m[2] = (1-alpha)*center.x - beta*center.y;
+    m[3] = -beta;
+    m[4] = alpha;
+    m[5] = beta*center.x + (1-alpha)*center.y;
 
-    __END__;
-
-    return matrix;
+    return M;
 }
-
-
-/****************************************************************************************\
-*                                    WarpPerspective                                     *
-\****************************************************************************************/
-
-#define ICV_DEF_WARP_PERSPECTIVE_BILINEAR_FUNC( flavor, arrtype, load_macro, cast_macro )\
-static CvStatus CV_STDCALL                                                  \
-icvWarpPerspective_Bilinear_##flavor##_CnR(                                 \
-    const arrtype* src, int step, CvSize ssize,                             \
-    arrtype* dst, int dststep, CvSize dsize,                                \
-    const double* matrix, int cn,                                           \
-    const arrtype* fillval )                                                \
-{                                                                           \
-    int x, y, k;                                                            \
-    float A11 = (float)matrix[0], A12 = (float)matrix[1], A13 = (float)matrix[2];\
-    float A21 = (float)matrix[3], A22 = (float)matrix[4], A23 = (float)matrix[5];\
-    float A31 = (float)matrix[6], A32 = (float)matrix[7], A33 = (float)matrix[8];\
-                                                                            \
-    step /= sizeof(src[0]);                                                 \
-    dststep /= sizeof(dst[0]);                                              \
-                                                                            \
-    for( y = 0; y < dsize.height; y++, dst += dststep )                     \
-    {                                                                       \
-        float xs0 = A12*y + A13;                                            \
-        float ys0 = A22*y + A23;                                            \
-        float ws = A32*y + A33;                                             \
-                                                                            \
-        for( x = 0; x < dsize.width; x++, xs0 += A11, ys0 += A21, ws += A31 )\
-        {                                                                   \
-            float inv_ws = 1.f/ws;                                          \
-            float xs = xs0*inv_ws;                                          \
-            float ys = ys0*inv_ws;                                          \
-            int ixs = cvFloor(xs);                                          \
-            int iys = cvFloor(ys);                                          \
-            float a = xs - ixs;                                             \
-            float b = ys - iys;                                             \
-            float p0, p1;                                                   \
-                                                                            \
-            if( (unsigned)ixs < (unsigned)(ssize.width - 1) &&              \
-                (unsigned)iys < (unsigned)(ssize.height - 1) )              \
-            {                                                               \
-                const arrtype* ptr = src + step*iys + ixs*cn;               \
-                                                                            \
-                for( k = 0; k < cn; k++ )                                   \
-                {                                                           \
-                    p0 = load_macro(ptr[k]) +                               \
-                        a * (load_macro(ptr[k+cn]) - load_macro(ptr[k]));   \
-                    p1 = load_macro(ptr[k+step]) +                          \
-                        a * (load_macro(ptr[k+cn+step]) -                   \
-                             load_macro(ptr[k+step]));                      \
-                    dst[x*cn+k] = (arrtype)cast_macro(p0 + b*(p1 - p0));    \
-                }                                                           \
-            }                                                               \
-            else if( (unsigned)(ixs+1) < (unsigned)(ssize.width+1) &&       \
-                     (unsigned)(iys+1) < (unsigned)(ssize.height+1))        \
-            {                                                               \
-                int x0 = ICV_WARP_CLIP_X( ixs );                            \
-                int y0 = ICV_WARP_CLIP_Y( iys );                            \
-                int x1 = ICV_WARP_CLIP_X( ixs + 1 );                        \
-                int y1 = ICV_WARP_CLIP_Y( iys + 1 );                        \
-                const arrtype* ptr0, *ptr1, *ptr2, *ptr3;                   \
-                                                                            \
-                ptr0 = src + y0*step + x0*cn;                               \
-                ptr1 = src + y0*step + x1*cn;                               \
-                ptr2 = src + y1*step + x0*cn;                               \
-                ptr3 = src + y1*step + x1*cn;                               \
-                                                                            \
-                for( k = 0; k < cn; k++ )                                   \
-                {                                                           \
-                    p0 = load_macro(ptr0[k]) +                              \
-                        a * (load_macro(ptr1[k]) - load_macro(ptr0[k]));    \
-                    p1 = load_macro(ptr2[k]) +                              \
-                        a * (load_macro(ptr3[k]) - load_macro(ptr2[k]));    \
-                    dst[x*cn+k] = (arrtype)cast_macro(p0 + b*(p1 - p0));    \
-                }                                                           \
-            }                                                               \
-            else if( fillval )                                              \
-                for( k = 0; k < cn; k++ )                                   \
-                    dst[x*cn+k] = fillval[k];                               \
-        }                                                                   \
-    }                                                                       \
-                                                                            \
-    return CV_OK;                                                           \
-}
-
-
-#define ICV_WARP_SCALE_ALPHA(x) ((x)*(1./(ICV_WARP_MASK+1)))
-
-ICV_DEF_WARP_PERSPECTIVE_BILINEAR_FUNC( 8u, uchar, CV_8TO32F, cvRound )
-ICV_DEF_WARP_PERSPECTIVE_BILINEAR_FUNC( 16u, ushort, CV_NOP, cvRound )
-ICV_DEF_WARP_PERSPECTIVE_BILINEAR_FUNC( 32f, float, CV_NOP, CV_NOP )
-
-typedef CvStatus (CV_STDCALL * CvWarpPerspectiveFunc)(
-    const void* src, int srcstep, CvSize ssize,
-    void* dst, int dststep, CvSize dsize,
-    const double* matrix, int cn, const void* fillval );
-
-static void icvInitWarpPerspectiveTab( CvFuncTable* bilin_tab )
-{
-    bilin_tab->fn_2d[CV_8U] = (void*)icvWarpPerspective_Bilinear_8u_CnR;
-    bilin_tab->fn_2d[CV_16U] = (void*)icvWarpPerspective_Bilinear_16u_CnR;
-    bilin_tab->fn_2d[CV_32F] = (void*)icvWarpPerspective_Bilinear_32f_CnR;
-}
-
-
-/////////////////////////// IPP warpperspective functions ////////////////////////////////
-
-typedef CvStatus (CV_STDCALL * CvWarpPerspectiveBackIPPFunc)
-( const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
-  void* dst, int dststep, CvRect dstroi,
-  const double* coeffs, int interpolation );
-
-//////////////////////////////////////////////////////////////////////////////////////////
-
-CV_IMPL void
-cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
-                   const CvMat* matrix, int flags, CvScalar fillval )
-{
-    static CvFuncTable bilin_tab;
-    static int inittab = 0;
-
-    CV_FUNCNAME( "cvWarpPerspective" );
-
-    __BEGIN__;
-    
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    int type, depth, cn;
-    int method = flags & 3;
-    double src_matrix[9], dst_matrix[9];
-    double fillbuf[4];
-    CvMat A = cvMat( 3, 3, CV_64F, src_matrix ),
-          invA = cvMat( 3, 3, CV_64F, dst_matrix );
-    CvWarpPerspectiveFunc func;
-    CvSize ssize, dsize;
-
-    if( method == CV_INTER_NN || method == CV_INTER_AREA )
-        method = CV_INTER_LINEAR;
-    
-    if( !inittab )
-    {
-        icvInitWarpPerspectiveTab( &bilin_tab );
-        inittab = 1;
-    }
-
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-    
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( !CV_IS_MAT(matrix) || CV_MAT_CN(matrix->type) != 1 ||
-        CV_MAT_DEPTH(matrix->type) < CV_32F || matrix->rows != 3 || matrix->cols != 3 )
-        CV_ERROR( CV_StsBadArg,
-        "Transformation matrix should be 3x3 floating-point single-channel matrix" );
-
-    if( flags & CV_WARP_INVERSE_MAP )
-        cvConvertScale( matrix, &invA );
-    else
-    {
-        cvConvertScale( matrix, &A );
-        cvInvert( &A, &invA, CV_SVD );
-    }
-
-    type = CV_MAT_TYPE(src->type);
-    depth = CV_MAT_DEPTH(type);
-    cn = CV_MAT_CN(type);
-    if( cn > 4 )
-        CV_ERROR( CV_BadNumChannels, "" );
-    
-    ssize = cvGetMatSize(src);
-    dsize = cvGetMatSize(dst);
-    
-    /*if( icvWarpPerspectiveBack_8u_C1R_p )
-    {
-        CvWarpPerspectiveBackIPPFunc ipp_func =
-            type == CV_8UC1 ? icvWarpPerspectiveBack_8u_C1R_p :
-            type == CV_8UC3 ? icvWarpPerspectiveBack_8u_C3R_p :
-            type == CV_8UC4 ? icvWarpPerspectiveBack_8u_C4R_p :
-            type == CV_32FC1 ? icvWarpPerspectiveBack_32f_C1R_p :
-            type == CV_32FC3 ? icvWarpPerspectiveBack_32f_C3R_p :
-            type == CV_32FC4 ? icvWarpPerspectiveBack_32f_C4R_p : 0;
-        
-        if( ipp_func && CV_INTER_NN <= method && method <= CV_INTER_AREA &&
-            MIN(ssize.width,ssize.height) >= 4 && MIN(dsize.width,dsize.height) >= 4 )
-        {
-            int srcstep = src->step ? src->step : CV_STUB_STEP;
-            int dststep = dst->step ? dst->step : CV_STUB_STEP;
-            CvStatus status;
-            CvRect srcroi = {0, 0, ssize.width, ssize.height};
-            CvRect dstroi = {0, 0, dsize.width, dsize.height};
-
-            // this is not the most efficient way to fill outliers
-            if( flags & CV_WARP_FILL_OUTLIERS )
-                cvSet( dst, fillval );
-
-            status = ipp_func( src->data.ptr, ssize, srcstep, srcroi,
-                               dst->data.ptr, dststep, dstroi,
-                               invA.data.db, 1 << method );
-            if( status >= 0 )
-                EXIT;
-
-            ipp_func = type == CV_8UC1 ? icvWarpPerspective_8u_C1R_p :
-                type == CV_8UC3 ? icvWarpPerspective_8u_C3R_p :
-                type == CV_8UC4 ? icvWarpPerspective_8u_C4R_p :
-                type == CV_32FC1 ? icvWarpPerspective_32f_C1R_p :
-                type == CV_32FC3 ? icvWarpPerspective_32f_C3R_p :
-                type == CV_32FC4 ? icvWarpPerspective_32f_C4R_p : 0;
-
-            if( ipp_func )
-            {
-                if( flags & CV_WARP_INVERSE_MAP )
-                    cvInvert( &invA, &A, CV_SVD );
-
-                status = ipp_func( src->data.ptr, ssize, srcstep, srcroi,
-                               dst->data.ptr, dststep, dstroi,
-                               A.data.db, 1 << method );
-                if( status >= 0 )
-                    EXIT;
-            }
-        }
-    }*/
-
-    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
-
-    /*if( method == CV_INTER_LINEAR )*/
-    {
-        func = (CvWarpPerspectiveFunc)bilin_tab.fn_2d[depth];
-        if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-        IPPI_CALL( func( src->data.ptr, src->step, ssize, dst->data.ptr,
-                         dst->step, dsize, dst_matrix, cn,
-                         flags & CV_WARP_FILL_OUTLIERS ? fillbuf : 0 ));
-    }
-
-    __END__;
-}
-
 
 /* Calculates coefficients of perspective transformation
  * which maps (xi,yi) to (ui,vi), (i=1,2,3,4):
@@ -1464,28 +2565,13 @@ cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr,
  * where:
  *   cij - matrix coefficients, c22 = 1
  */
-CV_IMPL CvMat*
-cvGetPerspectiveTransform( const CvPoint2D32f* src,
-                          const CvPoint2D32f* dst,
-                          CvMat* matrix )
+Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] )
 {
-    CV_FUNCNAME( "cvGetPerspectiveTransform" );
+    Mat M(3, 3, CV_64F), X(8, 1, CV_64F, M.data);
+    double a[8][8], b[8];
+    Mat A(8, 8, CV_64F, a), B(8, 1, CV_64F, b);
 
-    __BEGIN__;
-
-    double a[8][8];
-    double b[8], x[9];
-
-    CvMat A = cvMat( 8, 8, CV_64FC1, a );
-    CvMat B = cvMat( 8, 1, CV_64FC1, b );
-    CvMat X = cvMat( 8, 1, CV_64FC1, x );
-
-    int i;
-
-    if( !src || !dst || !matrix )
-        CV_ERROR( CV_StsNullPtr, "" );
-
-    for( i = 0; i < 4; ++i )
+    for( int i = 0; i < 4; ++i )
     {
         a[i][0] = a[i+4][3] = src[i].x;
         a[i][1] = a[i+4][4] = src[i].y;
@@ -1500,15 +2586,10 @@ cvGetPerspectiveTransform( const CvPoint2D32f* src,
         b[i+4] = dst[i].y;
     }
 
-    cvSolve( &A, &B, &X, CV_SVD );
-    x[8] = 1;
-    
-    X = cvMat( 3, 3, CV_64FC1, x );
-    cvConvert( &X, matrix );
+    solve( A, B, X, DECOMP_SVD );
+    ((double*)M.data)[8] = 1.;
 
-    __END__;
-
-    return matrix;
+    return M;
 }
 
 /* Calculates coefficients of affine transformation
@@ -1529,214 +2610,31 @@ cvGetPerspectiveTransform( const CvPoint2D32f* src,
  * where:
  *   cij - matrix coefficients
  */
-CV_IMPL CvMat*
-cvGetAffineTransform( const CvPoint2D32f * src, const CvPoint2D32f * dst, CvMat * map_matrix )
+Mat getAffineTransform( const Point2f src[], const Point2f dst[] )
 {
-    CV_FUNCNAME( "cvGetAffineTransform" );
+    Mat M(2, 3, CV_64F), X(6, 1, CV_64F, M.data);
+    double a[6*6], b[6];
+    Mat A(6, 6, CV_64F, a), B(6, 1, CV_64F, b);
 
-    __BEGIN__;
-
-    CvMat mA, mX, mB;
-    double A[6*6];
-    double B[6];
-	double x[6];
-    int i;
-
-    cvInitMatHeader(&mA, 6, 6, CV_64F, A);
-    cvInitMatHeader(&mB, 6, 1, CV_64F, B);
-	cvInitMatHeader(&mX, 6, 1, CV_64F, x);
-
-	if( !src || !dst || !map_matrix )
-		CV_ERROR( CV_StsNullPtr, "" );
-
-    for( i = 0; i < 3; i++ )
+    for( int i = 0; i < 3; i++ )
     {
         int j = i*12;
         int k = i*12+6;
-        A[j] = A[k+3] = src[i].x;
-        A[j+1] = A[k+4] = src[i].y;
-        A[j+2] = A[k+5] = 1;
-        A[j+3] = A[j+4] = A[j+5] = 0;
-        A[k] = A[k+1] = A[k+2] = 0;
-        B[i*2] = dst[i].x;
-        B[i*2+1] = dst[i].y;
+        a[j] = a[k+3] = src[i].x;
+        a[j+1] = a[k+4] = src[i].y;
+        a[j+2] = a[k+5] = 1;
+        a[j+3] = a[j+4] = a[j+5] = 0;
+        a[k] = a[k+1] = a[k+2] = 0;
+        b[i*2] = dst[i].x;
+        b[i*2+1] = dst[i].y;
     }
-    cvSolve(&mA, &mB, &mX);
 
-    mX = cvMat( 2, 3, CV_64FC1, x );
-	cvConvert( &mX, map_matrix );
-
-	__END__;
-    return map_matrix;
-}
-
-/****************************************************************************************\
-*                          Generic Geometric Transformation: Remap                       *
-\****************************************************************************************/
-
-#define  ICV_DEF_REMAP_BILINEAR_FUNC( flavor, arrtype, load_macro, cast_macro ) \
-static CvStatus CV_STDCALL                                                      \
-icvRemap_Bilinear_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize,\
-                         arrtype* dst, int dststep, CvSize dsize,           \
-                         const float* mapx, int mxstep,                     \
-                         const float* mapy, int mystep,                     \
-                         int cn, const arrtype* fillval )                   \
-{                                                                           \
-    int i, j, k;                                                            \
-    ssize.width--;                                                          \
-    ssize.height--;                                                         \
-                                                                            \
-    srcstep /= sizeof(src[0]);                                              \
-    dststep /= sizeof(dst[0]);                                              \
-    mxstep /= sizeof(mapx[0]);                                              \
-    mystep /= sizeof(mapy[0]);                                              \
-                                                                            \
-    for( i = 0; i < dsize.height; i++, dst += dststep,                      \
-                                  mapx += mxstep, mapy += mystep )          \
-    {                                                                       \
-        for( j = 0; j < dsize.width; j++ )                                  \
-        {                                                                   \
-            float _x = mapx[j], _y = mapy[j];                               \
-            int ix = cvFloor(_x), iy = cvFloor(_y);                         \
-                                                                            \
-            if( (unsigned)ix < (unsigned)ssize.width &&                     \
-                (unsigned)iy < (unsigned)ssize.height )                     \
-            {                                                               \
-                const arrtype* s = src + iy*srcstep + ix*cn;                \
-                _x -= ix; _y -= iy;                                         \
-                for( k = 0; k < cn; k++, s++ )                              \
-                {                                                           \
-                    float t0 = load_macro(s[0]), t1 = load_macro(s[srcstep]); \
-                    t0 += _x*(load_macro(s[cn]) - t0);                      \
-                    t1 += _x*(load_macro(s[srcstep + cn]) - t1);            \
-                    dst[j*cn + k] = (arrtype)cast_macro(t0 + _y*(t1 - t0)); \
-                }                                                           \
-            }                                                               \
-            else if( fillval )                                              \
-                for( k = 0; k < cn; k++ )                                   \
-                    dst[j*cn + k] = fillval[k];                             \
-        }                                                                   \
-    }                                                                       \
-                                                                            \
-    return CV_OK;                                                           \
+    solve( A, B, X );
+    return M;
 }
 
 
-#define  ICV_DEF_REMAP_BICUBIC_FUNC( flavor, arrtype, worktype,                 \
-                                     load_macro, cast_macro1, cast_macro2 )     \
-static CvStatus CV_STDCALL                                                      \
-icvRemap_Bicubic_##flavor##_CnR( const arrtype* src, int srcstep, CvSize ssize, \
-                         arrtype* dst, int dststep, CvSize dsize,               \
-                         const float* mapx, int mxstep,                         \
-                         const float* mapy, int mystep,                         \
-                         int cn, const arrtype* fillval )                       \
-{                                                                               \
-    int i, j, k;                                                                \
-    ssize.width = MAX( ssize.width - 3, 0 );                                    \
-    ssize.height = MAX( ssize.height - 3, 0 );                                  \
-                                                                                \
-    srcstep /= sizeof(src[0]);                                                  \
-    dststep /= sizeof(dst[0]);                                                  \
-    mxstep /= sizeof(mapx[0]);                                                  \
-    mystep /= sizeof(mapy[0]);                                                  \
-                                                                                \
-    for( i = 0; i < dsize.height; i++, dst += dststep,                          \
-                                  mapx += mxstep, mapy += mystep )              \
-    {                                                                           \
-        for( j = 0; j < dsize.width; j++ )                                      \
-        {                                                                       \
-            int ix = cvRound(mapx[j]*(1 << ICV_WARP_SHIFT));                    \
-            int iy = cvRound(mapy[j]*(1 << ICV_WARP_SHIFT));                    \
-            int ifx = ix & ICV_WARP_MASK;                                       \
-            int ify = iy & ICV_WARP_MASK;                                       \
-            ix >>= ICV_WARP_SHIFT;                                              \
-            iy >>= ICV_WARP_SHIFT;                                              \
-                                                                                \
-            if( (unsigned)(ix-1) < (unsigned)ssize.width &&                     \
-                (unsigned)(iy-1) < (unsigned)ssize.height )                     \
-            {                                                                   \
-                for( k = 0; k < cn; k++ )                                       \
-                {                                                               \
-                    const arrtype* s = src + (iy-1)*srcstep + ix*cn + k;        \
-                                                                                \
-                    float t0 = load_macro(s[-cn])*icvCubicCoeffs[ifx*2 + 1] +   \
-                               load_macro(s[0])*icvCubicCoeffs[ifx*2] +         \
-                               load_macro(s[cn])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2] +\
-                               load_macro(s[cn*2])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1];\
-                                                                                \
-                    s += srcstep;                                               \
-                                                                                \
-                    float t1 = load_macro(s[-cn])*icvCubicCoeffs[ifx*2 + 1] +   \
-                               load_macro(s[0])*icvCubicCoeffs[ifx*2] +         \
-                               load_macro(s[cn])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2] +\
-                               load_macro(s[cn*2])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1];\
-                                                                                \
-                    s += srcstep;                                               \
-                                                                                \
-                    float t2 = load_macro(s[-cn])*icvCubicCoeffs[ifx*2 + 1] +   \
-                               load_macro(s[0])*icvCubicCoeffs[ifx*2] +         \
-                               load_macro(s[cn])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2] +\
-                               load_macro(s[cn*2])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1];\
-                                                                                \
-                    s += srcstep;                                               \
-                                                                                \
-                    float t3 = load_macro(s[-cn])*icvCubicCoeffs[ifx*2 + 1] +   \
-                               load_macro(s[0])*icvCubicCoeffs[ifx*2] +         \
-                               load_macro(s[cn])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2] +\
-                               load_macro(s[cn*2])*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ifx)*2+1];\
-                                                                                \
-                    worktype t = cast_macro1( t0*icvCubicCoeffs[ify*2 + 1] +    \
-                               t1*icvCubicCoeffs[ify*2] +                       \
-                               t2*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ify)*2] +  \
-                               t3*icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE-ify)*2+1] );\
-                                                                                \
-                    dst[j*cn + k] = cast_macro2(t);                             \
-                }                                                               \
-            }                                                                   \
-            else if( fillval )                                                  \
-                for( k = 0; k < cn; k++ )                                       \
-                    dst[j*cn + k] = fillval[k];                                 \
-        }                                                                       \
-    }                                                                           \
-                                                                                \
-    return CV_OK;                                                               \
-}
-
-
-ICV_DEF_REMAP_BILINEAR_FUNC( 8u, uchar, CV_8TO32F, cvRound )
-ICV_DEF_REMAP_BILINEAR_FUNC( 16u, ushort, CV_NOP, cvRound )
-ICV_DEF_REMAP_BILINEAR_FUNC( 32f, float, CV_NOP, CV_NOP )
-
-ICV_DEF_REMAP_BICUBIC_FUNC( 8u, uchar, int, CV_8TO32F, cvRound, CV_FAST_CAST_8U )
-ICV_DEF_REMAP_BICUBIC_FUNC( 16u, ushort, int, CV_NOP, cvRound, CV_CAST_16U )
-ICV_DEF_REMAP_BICUBIC_FUNC( 32f, float, float, CV_NOP, CV_NOP, CV_NOP )
-
-typedef CvStatus (CV_STDCALL * CvRemapFunc)(
-    const void* src, int srcstep, CvSize ssize,
-    void* dst, int dststep, CvSize dsize,
-    const float* mapx, int mxstep,
-    const float* mapy, int mystep,
-    int cn, const void* fillval );
-
-static void icvInitRemapTab( CvFuncTable* bilinear_tab, CvFuncTable* bicubic_tab )
-{
-    bilinear_tab->fn_2d[CV_8U] = (void*)icvRemap_Bilinear_8u_CnR;
-    bilinear_tab->fn_2d[CV_16U] = (void*)icvRemap_Bilinear_16u_CnR;
-    bilinear_tab->fn_2d[CV_32F] = (void*)icvRemap_Bilinear_32f_CnR;
-
-    bicubic_tab->fn_2d[CV_8U] = (void*)icvRemap_Bicubic_8u_CnR;
-    bicubic_tab->fn_2d[CV_16U] = (void*)icvRemap_Bicubic_16u_CnR;
-    bicubic_tab->fn_2d[CV_32F] = (void*)icvRemap_Bicubic_32f_CnR;
-}
-
-
-/******************** IPP remap functions *********************/
-
-typedef CvStatus (CV_STDCALL * CvRemapIPPFunc)(
-    const void* src, CvSize srcsize, int srcstep, CvRect srcroi,
-    const float* xmap, int xmapstep, const float* ymap, int ymapstep,
-    void* dst, int dststep, CvSize dstsize, int interpolation ); 
-
+#if 0
 /**************************************************************/
 
 #define CV_REMAP_SHIFT 5
@@ -1932,173 +2830,109 @@ static void icvRemapFixedPt_8u( const CvMat* src, CvMat* dst,
         }
     }
 }
+#endif
 
+}
+
+CV_IMPL void
+cvResize( const CvArr* srcarr, CvArr* dstarr, int method )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    CV_Assert( src.type() == dst.type() );
+    cv::resize( src, dst, dst.size(), (double)dst.cols/src.cols,
+        (double)dst.rows/src.rows, method );
+}
+
+
+CV_IMPL void
+cvWarpAffine( const CvArr* srcarr, CvArr* dstarr, const CvMat* marr,
+              int flags, CvScalar fillval )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    cv::Mat matrix = cv::cvarrToMat(marr);
+    CV_Assert( src.type() == dst.type() );
+    cv::warpAffine( src, dst, matrix, dst.size(), flags,
+        (flags & CV_WARP_FILL_OUTLIERS) ? cv::BORDER_CONSTANT : cv::BORDER_TRANSPARENT,
+        fillval );
+}
+
+CV_IMPL void
+cvWarpPerspective( const CvArr* srcarr, CvArr* dstarr, const CvMat* marr,
+                   int flags, CvScalar fillval )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    cv::Mat matrix = cv::cvarrToMat(marr);
+    CV_Assert( src.type() == dst.type() );
+    cv::warpPerspective( src, dst, matrix, dst.size(), flags,
+        (flags & CV_WARP_FILL_OUTLIERS) ? cv::BORDER_CONSTANT : cv::BORDER_TRANSPARENT,
+        fillval );
+}
 
 CV_IMPL void
 cvRemap( const CvArr* srcarr, CvArr* dstarr,
          const CvArr* _mapx, const CvArr* _mapy,
          int flags, CvScalar fillval )
 {
-    static CvFuncTable bilinear_tab;
-    static CvFuncTable bicubic_tab;
-    static int inittab = 0;
-
-    CV_FUNCNAME( "cvRemap" );
-
-    __BEGIN__;
-    
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
-    CvMat mxstub, *mapx = (CvMat*)_mapx;
-    CvMat mystub, *mapy = (CvMat*)_mapy;
-    int type, depth, cn;
-    bool fltremap;
-    int method = flags & 3;
-    double fillbuf[4];
-    CvSize ssize, dsize;
-
-    if( !inittab )
-    {
-        icvInitRemapTab( &bilinear_tab, &bicubic_tab );
-        icvInitLinearCoeffTab();
-        icvInitCubicCoeffTab();
-        inittab = 1;
-    }
-
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-    CV_CALL( mapx = cvGetMat( mapx, &mxstub ));
-    CV_CALL( mapy = cvGetMat( mapy, &mystub ));
-    
-    if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
-
-    if( CV_MAT_TYPE(mapx->type) == CV_16SC1 && CV_MAT_TYPE(mapy->type) == CV_16SC2 )
-    {
-        CvMat* temp;
-        CV_SWAP(mapx, mapy, temp);
-    }
-
-    if( (CV_MAT_TYPE(mapx->type) != CV_32FC1 || CV_MAT_TYPE(mapy->type) != CV_32FC1) &&
-        (CV_MAT_TYPE(mapx->type) != CV_16SC2 || CV_MAT_TYPE(mapy->type) != CV_16SC1))
-        CV_ERROR( CV_StsUnmatchedFormats, "Either both map arrays must have 32fC1 type, "
-        "or one of them must be 16sC2 and the other one must be 16sC1" );
-
-    if( !CV_ARE_SIZES_EQ( mapx, mapy ) || !CV_ARE_SIZES_EQ( mapx, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes,
-        "Both map arrays and the destination array must have the same size" );
-
-    fltremap = CV_MAT_TYPE(mapx->type) == CV_32FC1;
-    type = CV_MAT_TYPE(src->type);
-    depth = CV_MAT_DEPTH(type);
-    cn = CV_MAT_CN(type);
-    if( cn > 4 )
-        CV_ERROR( CV_BadNumChannels, "" );
-    
-    ssize = cvGetMatSize(src);
-    dsize = cvGetMatSize(dst);
-    
-    cvScalarToRawData( &fillval, fillbuf, CV_MAT_TYPE(src->type), 0 );
-
-    if( !fltremap )
-    {
-        if( CV_MAT_TYPE(src->type) != CV_8UC1 && CV_MAT_TYPE(src->type) != CV_8UC3 &&
-            CV_MAT_TYPE(src->type) != CV_8UC4 )
-            CV_ERROR( CV_StsUnsupportedFormat,
-            "Only 8-bit input/output is supported by the fixed-point variant of cvRemap" );
-        icvRemapFixedPt_8u( src, dst, mapx, mapy, (uchar*)fillbuf );
-        EXIT;
-    }
-
-    /*if( icvRemap_8u_C1R_p )
-    {
-        CvRemapIPPFunc ipp_func =
-            type == CV_8UC1 ? icvRemap_8u_C1R_p :
-            type == CV_8UC3 ? icvRemap_8u_C3R_p :
-            type == CV_8UC4 ? icvRemap_8u_C4R_p :
-            type == CV_32FC1 ? icvRemap_32f_C1R_p :
-            type == CV_32FC3 ? icvRemap_32f_C3R_p :
-            type == CV_32FC4 ? icvRemap_32f_C4R_p : 0;
-        
-        if( ipp_func )
-        {
-            int srcstep = src->step ? src->step : CV_STUB_STEP;
-            int dststep = dst->step ? dst->step : CV_STUB_STEP;
-            int mxstep = mapx->step ? mapx->step : CV_STUB_STEP;
-            int mystep = mapy->step ? mapy->step : CV_STUB_STEP;
-            CvStatus status;
-            CvRect srcroi = {0, 0, ssize.width, ssize.height};
-
-            // this is not the most efficient way to fill outliers
-            if( flags & CV_WARP_FILL_OUTLIERS )
-                cvSet( dst, fillval );
-
-            status = ipp_func( src->data.ptr, ssize, srcstep, srcroi,
-                               mapx->data.fl, mxstep, mapy->data.fl, mystep,
-                               dst->data.ptr, dststep, dsize,
-                               1 << (method == CV_INTER_NN || method == CV_INTER_LINEAR ||
-                               method == CV_INTER_CUBIC ? method : CV_INTER_LINEAR) );
-            if( status >= 0 )
-                EXIT;
-        }
-    }*/
-
-    {
-        CvRemapFunc func = method == CV_INTER_CUBIC ?
-            (CvRemapFunc)bicubic_tab.fn_2d[depth] :
-            (CvRemapFunc)bilinear_tab.fn_2d[depth];
-
-        if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
-
-        func( src->data.ptr, src->step, ssize, dst->data.ptr, dst->step, dsize,
-              mapx->data.fl, mapx->step, mapy->data.fl, mapy->step,
-              cn, flags & CV_WARP_FILL_OUTLIERS ? fillbuf : 0 );
-    }
-
-    __END__;
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), dst0 = dst;
+    cv::Mat mapx = cv::cvarrToMat(_mapx), mapy = cv::cvarrToMat(_mapy);
+    CV_Assert( src.type() == dst.type() && dst.size() == mapx.size() );
+    cv::remap( src, dst, mapx, mapy, flags & cv::INTER_MAX,
+        (flags & CV_WARP_FILL_OUTLIERS) ? cv::BORDER_CONSTANT : cv::BORDER_TRANSPARENT,
+        fillval );
+    CV_Assert( dst0.data == dst.data );
 }
+
+
+CV_IMPL CvMat*
+cv2DRotationMatrix( CvPoint2D32f center, double angle,
+                    double scale, CvMat* matrix )
+{
+    cv::Mat M0 = cv::cvarrToMat(matrix), M = cv::getRotationMatrix2D(center, angle, scale);
+    CV_Assert( M.size() == M.size() );
+    M.convertTo(M0, M0.type());
+    return matrix;
+}
+
+
+CV_IMPL CvMat*
+cvGetPerspectiveTransform( const CvPoint2D32f* src,
+                          const CvPoint2D32f* dst,
+                          CvMat* matrix )
+{
+    cv::Mat M0 = cv::cvarrToMat(matrix),
+        M = cv::getPerspectiveTransform((const cv::Point2f*)src, (const cv::Point2f*)dst);
+    CV_Assert( M.size() == M.size() );
+    M.convertTo(M0, M0.type());
+    return matrix;
+}
+
+
+CV_IMPL CvMat*
+cvGetAffineTransform( const CvPoint2D32f* src,
+                          const CvPoint2D32f* dst,
+                          CvMat* matrix )
+{
+    cv::Mat M0 = cv::cvarrToMat(matrix),
+        M = cv::getPerspectiveTransform((const cv::Point2f*)src, (const cv::Point2f*)dst);
+    CV_Assert( M.size() == M.size() );
+    M.convertTo(M0, M0.type());
+    return matrix;
+}
+
 
 CV_IMPL void
-cvConvertMaps( const CvArr* arrx, const CvArr* arry,
-               CvArr* arrxy, CvArr* arra )
+cvConvertMaps( const CvArr* arr1, const CvArr* arr2, CvArr* dstarr1, CvArr* dstarr2 )
 {
-    CV_FUNCNAME( "cvConvertMaps" );
+    cv::Mat map1 = cv::cvarrToMat(arr1), map2;
+    cv::Mat dstmap1 = cv::cvarrToMat(dstarr1), dstmap2;
 
-    __BEGIN__;
+    if( arr2 )
+        map2 = cv::cvarrToMat(arr2);
+    if( dstarr2 )
+        dstmap2 = cv::cvarrToMat(dstarr2);
 
-    CvMat xstub, *mapx = cvGetMat( arrx, &xstub );
-    CvMat ystub, *mapy = cvGetMat( arry, &ystub );
-    CvMat xystub, *mapxy = cvGetMat( arrxy, &xystub );
-    CvMat astub, *mapa = cvGetMat( arra, &astub );
-    int x, y, cols = mapx->cols, rows = mapx->rows;
-
-    CV_ASSERT( CV_ARE_SIZES_EQ(mapx, mapy) && CV_ARE_TYPES_EQ(mapx, mapy) &&
-        CV_MAT_TYPE(mapx->type) == CV_32FC1 &&
-        CV_ARE_SIZES_EQ(mapxy, mapx) && CV_ARE_SIZES_EQ(mapxy, mapa) &&
-        CV_MAT_TYPE(mapxy->type) == CV_16SC2 &&
-        CV_MAT_TYPE(mapa->type) == CV_16SC1 );
-
-    for( y = 0; y < rows; y++ )
-    {
-        const float* xrow = (const float*)(mapx->data.ptr + mapx->step*y);
-        const float* yrow = (const float*)(mapy->data.ptr + mapy->step*y);
-        short* xy = (short*)(mapxy->data.ptr + mapxy->step*y);
-        short* alpha = (short*)(mapa->data.ptr + mapa->step*y);
-
-        for( x = 0; x < cols; x++ )
-        {
-            int xi = cvRound(xrow[x]*(1 << CV_REMAP_SHIFT));
-            int yi = cvRound(yrow[x]*(1 << CV_REMAP_SHIFT));
-            xy[x*2] = (short)(xi >> CV_REMAP_SHIFT);
-            xy[x*2+1] = (short)(yi >> CV_REMAP_SHIFT);
-            alpha[x] = (short)((xi & CV_REMAP_MASK) + ((yi & CV_REMAP_MASK)<<CV_REMAP_SHIFT));
-        }
-    }
-
-    __END__;
+    cv::convertMaps( map1, map2, dstmap1, dstmap2, dstmap1.type(), false );
 }
-
 
 /****************************************************************************************\
 *                                   Log-Polar Transform                                  *
@@ -2145,7 +2979,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
         CV_CALL( exp_tab = (double*)cvAlloc( dsize.width*sizeof(exp_tab[0])) );
 
         for( rho = 0; rho < dst->width; rho++ )
-            exp_tab[rho] = exp(rho/M);
+            exp_tab[rho] = std::exp(rho/M);
     
         for( phi = 0; phi < dsize.height; phi++ )
         {

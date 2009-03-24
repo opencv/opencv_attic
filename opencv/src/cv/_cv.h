@@ -82,6 +82,10 @@ extern const float icv8x32fSqrTab[];
 namespace cv
 {
 
+enum { INTER_BITS=5, INTER_BITS2=INTER_BITS*2,
+       INTER_TAB_SIZE=(1<<INTER_BITS),
+       INTER_TAB_SIZE2=INTER_TAB_SIZE*INTER_TAB_SIZE };
+
 static inline Point normalizeAnchor( Point anchor, Size ksize )
 {
     if( anchor == Point(-1,-1) )
