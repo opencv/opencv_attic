@@ -135,6 +135,14 @@
     #error "No alloca!"
 #endif
 
+#ifdef __GNUC__
+#define CV_DECL_ALIGNED(x) __attribute__ ((aligned (x)))
+#elif defined _MSC_VER
+#define CV_DECL_ALIGNED(x) __declspec(align(x))
+#else
+#define CV_DECL_ALIGNED(x)
+#endif
+
 /* ! DO NOT make it an inline function */
 #define cvStackAlloc(size) cvAlignPtr( alloca((size) + CV_MALLOC_ALIGN), CV_MALLOC_ALIGN )
 
@@ -219,18 +227,6 @@
 
 #define  CV_DIM(static_array) ((int)(sizeof(static_array)/sizeof((static_array)[0])))
 
-#define  CV_UN_ENTRY_C1(worktype)           \
-    worktype s0 = scalar[0]
-
-#define  CV_UN_ENTRY_C2(worktype)           \
-    worktype s0 = scalar[0], s1 = scalar[1]
-
-#define  CV_UN_ENTRY_C3(worktype)           \
-    worktype s0 = scalar[0], s1 = scalar[1], s2 = scalar[2]
-
-#define  CV_UN_ENTRY_C4(worktype)           \
-    worktype s0 = scalar[0], s1 = scalar[1], s2 = scalar[2], s3 = scalar[3]
-
 #define  cvUnsupportedFormat "Unsupported format"
 
 CV_INLINE void* cvAlignPtr( const void* ptr, int align CV_DEFAULT(32) )
@@ -256,39 +252,6 @@ CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
 #define  CV_DESCALE(x,n)     (((x) + (1 << ((n)-1))) >> (n))
 #define  CV_FLT_TO_FIX(x,n)  cvRound((x)*(1<<(n)))
 
-#if 0
-/* This is a small engine for performing fast division of multiple numbers
-   by the same constant. Most compilers do it too if they know the divisor value
-   at compile-time. The algorithm was taken from Agner Fog's optimization guide
-   at http://www.agner.org/assem */
-typedef struct CvFastDiv
-{
-    unsigned delta, scale, divisor;
-}
-CvFastDiv;
-
-#define CV_FAST_DIV_SHIFT 32
-
-CV_INLINE CvFastDiv cvFastDiv( int divisor )
-{
-    CvFastDiv fastdiv;
-
-    assert( divisor >= 1 );
-    uint64 temp = ((uint64)1 << CV_FAST_DIV_SHIFT)/divisor;
-
-    fastdiv.divisor = divisor;
-    fastdiv.delta = (unsigned)(((temp & 1) ^ 1) + divisor - 1);
-    fastdiv.scale = (unsigned)((temp + 1) >> 1);
-
-    return fastdiv;
-}
-
-#define CV_FAST_DIV( x, fastdiv )  \
-    ((int)(((int64)((x)*2 + (int)(fastdiv).delta))*(int)(fastdiv).scale>>CV_FAST_DIV_SHIFT))
-
-#define CV_FAST_UDIV( x, fastdiv )  \
-    ((int)(((uint64)((x)*2 + (fastdiv).delta))*(fastdiv).scale>>CV_FAST_DIV_SHIFT))
-#endif
 
 #define CV_MEMCPY_CHAR( dst, src, len )                                             \
 {                                                                                   \
@@ -648,13 +611,6 @@ typedef struct CvBigFuncTable
 }
 CvBigFuncTable;
 
-
-typedef struct CvBtFuncTable
-{
-    void*   fn_2d[33];
-}
-CvBtFuncTable;
-
 #define CV_INIT_FUNC_TAB( tab, FUNCNAME, FLAG )         \
     (tab).fn_2d[CV_8U] = (void*)FUNCNAME##_8u##FLAG;    \
     (tab).fn_2d[CV_8S] = 0;                             \
@@ -663,54 +619,5 @@ CvBtFuncTable;
     (tab).fn_2d[CV_32S] = (void*)FUNCNAME##_32s##FLAG;  \
     (tab).fn_2d[CV_32F] = (void*)FUNCNAME##_32f##FLAG;  \
     (tab).fn_2d[CV_64F] = (void*)FUNCNAME##_64f##FLAG
-
-#define CV_INIT_BIG_FUNC_TAB( tab, FUNCNAME, FLAG )             \
-    (tab).fn_2d[CV_8UC1]  = (void*)FUNCNAME##_8u_C1##FLAG;      \
-    (tab).fn_2d[CV_8UC2]  = (void*)FUNCNAME##_8u_C2##FLAG;      \
-    (tab).fn_2d[CV_8UC3]  = (void*)FUNCNAME##_8u_C3##FLAG;      \
-    (tab).fn_2d[CV_8UC4]  = (void*)FUNCNAME##_8u_C4##FLAG;      \
-                                                                \
-    (tab).fn_2d[CV_8SC1]  = 0;                                  \
-    (tab).fn_2d[CV_8SC2]  = 0;                                  \
-    (tab).fn_2d[CV_8SC3]  = 0;                                  \
-    (tab).fn_2d[CV_8SC4]  = 0;                                  \
-                                                                \
-    (tab).fn_2d[CV_16UC1] = (void*)FUNCNAME##_16u_C1##FLAG;     \
-    (tab).fn_2d[CV_16UC2] = (void*)FUNCNAME##_16u_C2##FLAG;     \
-    (tab).fn_2d[CV_16UC3] = (void*)FUNCNAME##_16u_C3##FLAG;     \
-    (tab).fn_2d[CV_16UC4] = (void*)FUNCNAME##_16u_C4##FLAG;     \
-                                                                \
-    (tab).fn_2d[CV_16SC1] = (void*)FUNCNAME##_16s_C1##FLAG;     \
-    (tab).fn_2d[CV_16SC2] = (void*)FUNCNAME##_16s_C2##FLAG;     \
-    (tab).fn_2d[CV_16SC3] = (void*)FUNCNAME##_16s_C3##FLAG;     \
-    (tab).fn_2d[CV_16SC4] = (void*)FUNCNAME##_16s_C4##FLAG;     \
-                                                                \
-    (tab).fn_2d[CV_32SC1] = (void*)FUNCNAME##_32s_C1##FLAG;     \
-    (tab).fn_2d[CV_32SC2] = (void*)FUNCNAME##_32s_C2##FLAG;     \
-    (tab).fn_2d[CV_32SC3] = (void*)FUNCNAME##_32s_C3##FLAG;     \
-    (tab).fn_2d[CV_32SC4] = (void*)FUNCNAME##_32s_C4##FLAG;     \
-                                                                \
-    (tab).fn_2d[CV_32FC1] = (void*)FUNCNAME##_32f_C1##FLAG;     \
-    (tab).fn_2d[CV_32FC2] = (void*)FUNCNAME##_32f_C2##FLAG;     \
-    (tab).fn_2d[CV_32FC3] = (void*)FUNCNAME##_32f_C3##FLAG;     \
-    (tab).fn_2d[CV_32FC4] = (void*)FUNCNAME##_32f_C4##FLAG;     \
-                                                                \
-    (tab).fn_2d[CV_64FC1] = (void*)FUNCNAME##_64f_C1##FLAG;     \
-    (tab).fn_2d[CV_64FC2] = (void*)FUNCNAME##_64f_C2##FLAG;     \
-    (tab).fn_2d[CV_64FC3] = (void*)FUNCNAME##_64f_C3##FLAG;     \
-    (tab).fn_2d[CV_64FC4] = (void*)FUNCNAME##_64f_C4##FLAG
-
-#define CV_INIT_PIXSIZE_TAB( tab, FUNCNAME, FLAG )      \
-    (tab).fn_2d[1]  = (void*)FUNCNAME##_8u_C1##FLAG;    \
-    (tab).fn_2d[2]  = (void*)FUNCNAME##_8u_C2##FLAG;    \
-    (tab).fn_2d[3]  = (void*)FUNCNAME##_8u_C3##FLAG;    \
-    (tab).fn_2d[4]  = (void*)FUNCNAME##_16u_C2##FLAG;   \
-    (tab).fn_2d[6]  = (void*)FUNCNAME##_16u_C3##FLAG;   \
-    (tab).fn_2d[8]  = (void*)FUNCNAME##_32s_C2##FLAG;   \
-    (tab).fn_2d[12] = (void*)FUNCNAME##_32s_C3##FLAG;   \
-    (tab).fn_2d[16] = (void*)FUNCNAME##_64s_C2##FLAG;   \
-    (tab).fn_2d[24] = (void*)FUNCNAME##_64s_C3##FLAG;   \
-    (tab).fn_2d[32] = (void*)FUNCNAME##_64s_C4##FLAG
-
 
 #endif /*_CXCORE_MISC_H_*/
