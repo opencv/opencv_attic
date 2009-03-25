@@ -1606,6 +1606,11 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
                         S = S0 + sy*sstep + sx*3;
                         D[0] = S[0], D[1] = S[1], D[2] = S[2];
                     }
+                    else if( cn == 4 )
+                    {
+                        S = S0 + sy*sstep + sx*4;
+                        D[0] = S[0], D[1] = S[1], D[2] = S[2], D[3] = S[3];
+                    }
                     else
                     {
                         S = S0 + sy*sstep + sx*cn;
@@ -1636,7 +1641,99 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
 }
 
 
-template<class CastOp, typename AT>
+struct RemapNoVec
+{
+    int operator()( const Mat&, void*, const short*, const ushort*,
+                    const void*, int ) const { return 0; }
+};
+
+#if CV_SSE2
+
+struct RemapVec_8u
+{
+    int operator()( const Mat& _src, void* _dst, const short* XY,
+                    const ushort* FXY, const void* _wtab, int width ) const
+    {
+        if( _src.channels() > 1 )
+            return 0;
+        
+        const uchar *S0 = _src.data, *S1 = _src.data + _src.step;
+        const short* wtab = (const short*)_wtab;
+        uchar* D = (uchar*)_dst;
+        int x, sstep = _src.step;
+        __m128i delta = _mm_set1_epi32(INTER_COEF_REMAP_SCALE/2);
+        __m128i xy2ofs = _mm_set1_epi32(1 + (sstep << 16));
+        __m128i z = _mm_setzero_si128();
+        int CV_DECL_ALIGNED(16) iofs0[4], iofs1[4];
+
+        for( x = 0; x <= width - 8; x += 8 )
+        {
+            __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
+            __m128i xy1 = _mm_loadu_si128( (const __m128i*)(XY + x*2 + 8));
+            __m128i v0, v1, v2, v3, a0, a1, b0, b1;
+            unsigned i0, i1;
+
+            // 0|0|0|0|... <= x0|y0|x1|y1|... < cols-1|rows-1|cols-1|rows-1|... ?
+            xy0 = _mm_madd_epi16( xy0, xy2ofs );
+            xy1 = _mm_madd_epi16( xy1, xy2ofs );
+            _mm_store_si128( (__m128i*)iofs0, xy0 );
+            _mm_store_si128( (__m128i*)iofs1, xy1 );
+            
+            i0 = *(ushort*)(S0 + iofs0[0]) + (*(ushort*)(S0 + iofs0[1]) << 16);
+            i1 = *(ushort*)(S0 + iofs0[2]) + (*(ushort*)(S0 + iofs0[3]) << 16);
+            v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+            i0 = *(ushort*)(S1 + iofs0[0]) + (*(ushort*)(S1 + iofs0[1]) << 16);
+            i1 = *(ushort*)(S1 + iofs0[2]) + (*(ushort*)(S1 + iofs0[3]) << 16);
+            v1 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+            v0 = _mm_unpacklo_epi8(v0, z);
+            v1 = _mm_unpacklo_epi8(v1, z);
+
+            a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x]*4)),
+                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+1]*4)));
+            a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+2]*4)),
+                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+3]*4)));
+            b0 = _mm_unpacklo_epi64(a0, a1);
+            b1 = _mm_unpackhi_epi64(a0, a1);
+            v0 = _mm_madd_epi16(v0, b0);
+            v1 = _mm_madd_epi16(v1, b1);
+            v0 = _mm_add_epi32(_mm_add_epi32(v0, v1), delta);
+
+            i0 = *(ushort*)(S0 + iofs1[0]) + (*(ushort*)(S0 + iofs1[1]) << 16);
+            i1 = *(ushort*)(S0 + iofs1[2]) + (*(ushort*)(S0 + iofs1[3]) << 16);
+            v2 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+            i0 = *(ushort*)(S1 + iofs1[0]) + (*(ushort*)(S1 + iofs1[1]) << 16);
+            i1 = *(ushort*)(S1 + iofs1[2]) + (*(ushort*)(S1 + iofs1[3]) << 16);
+            v3 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+            v2 = _mm_unpacklo_epi8(v2, z);
+            v3 = _mm_unpacklo_epi8(v3, z);
+
+            a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+4]*4)),
+                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+5]*4)));
+            a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+6]*4)),
+                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+7]*4)));
+            b0 = _mm_unpacklo_epi64(a0, a1);
+            b1 = _mm_unpackhi_epi64(a0, a1);
+            v2 = _mm_madd_epi16(v2, b0);
+            v3 = _mm_madd_epi16(v3, b1);
+            v2 = _mm_add_epi32(_mm_add_epi32(v2, v3), delta);
+
+            v0 = _mm_srai_epi32(v0, INTER_COEF_REMAP_BITS);
+            v2 = _mm_srai_epi32(v2, INTER_COEF_REMAP_BITS);
+            v0 = _mm_packus_epi16(_mm_packs_epi32(v0, v2), z);
+            _mm_storel_epi64( (__m128i*)(D + x), v0 );
+        }
+        return x;
+    }
+};
+
+#else
+
+typedef RemapNoVec RemapVec_8u;
+
+#endif
+
+
+template<class CastOp, class VecOp, typename AT>
 static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
                            const Mat& _fxy, const void* _wtab,
                            int borderType, const Scalar& _borderValue )
@@ -1654,91 +1751,74 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
         saturate_cast<T>(_borderValue[3]));
     int dx, dy;
     CastOp castOp;
+    VecOp vecOp;
 
     unsigned width1 = std::max(ssize.width-1, 0), height1 = std::max(ssize.height-1, 0);
-
-    if( _dst.isContinuous() && _xy.isContinuous() && _fxy.isContinuous() )
-    {
-        dsize.width *= dsize.height;
-        dsize.height = 1;
-    }
-
-    volatile int ntransparent = 0;
+    CV_Assert( cn <= 4 );
 
     for( dy = 0; dy < dsize.height; dy++ )
     {
         T* D = (T*)(_dst.data + _dst.step*dy);
         const short* XY = (const short*)(_xy.data + _xy.step*dy);
         const ushort* FXY = (const ushort*)(_fxy.data + _fxy.step*dy);
-
-        if( cn == 1 )
+        int X0 = 0;
+        bool prevInlier = false;
+        
+        for( dx = 0; dx <= dsize.width; dx++ )
         {
-            for( dx = 0; dx < dsize.width; dx++ )
-            {
-                int sx = XY[dx*2], sy = XY[dx*2+1];
-                const AT* w = wtab + FXY[dx]*4;
+            bool curInlier = dx < dsize.width ?
+                (unsigned)XY[dx*2] < width1 &&
+                (unsigned)XY[dx*2+1] < height1 : !prevInlier;
+            if( curInlier == prevInlier )
+                continue;
 
-                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
-                {
-                    const T* S = S0 + sy*sstep + sx;
-                    D[dx] = castOp(WT(S[0]*w[0] + S[1]*w[1] + S[sstep]*w[2] + S[sstep+1]*w[3]));
-                }
-                else if( borderType != BORDER_TRANSPARENT )
-                {
-                    int sx0, sx1, sy0, sy1;
-                    T v0, v1, v2, v3;
-                    if( borderType == BORDER_REPLICATE )
-                    {
-                        sx0 = clip(sx, 0, ssize.width);
-                        sx1 = clip(sx+1, 0, ssize.width);
-                        sy0 = clip(sy, 0, ssize.height);
-                        sy1 = clip(sy+1, 0, ssize.height);
-                        v0 = S0[sy0*sstep + sx0];
-                        v1 = S0[sy0*sstep + sx1];
-                        v2 = S0[sy1*sstep + sx0];
-                        v3 = S0[sy1*sstep + sx1];
-                    }
-                    else
-                    {
-                        sx0 = borderInterpolate(sx, ssize.width, borderType);
-                        sx1 = borderInterpolate(sx+1, ssize.width, borderType);
-                        sy0 = borderInterpolate(sy, ssize.height, borderType);
-                        sy1 = borderInterpolate(sy+1, ssize.height, borderType);
-                        v0 = sx0 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx0] : cval[0];
-                        v1 = sx1 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx1] : cval[0];
-                        v2 = sx0 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx0] : cval[0];
-                        v3 = sx1 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx1] : cval[0];
-                    }
-                    D[dx] = castOp(WT(v0*w[0] + v1*w[1] + v2*w[2] + v3*w[3]));
-                }
-            }
-        }
-        else
-        {
-            for( dx = 0; dx < dsize.width; dx++, D += cn )
-            {
-                int sx = XY[dx*2], sy = XY[dx*2+1], k;
-                const AT* w = wtab + FXY[dx]*4;
+            int X1 = dx;
+            dx = X0;
+            X0 = X1;
+            prevInlier = curInlier;
 
-                if( (unsigned)sx < width1 && (unsigned)sy < height1 )
+            if( !curInlier )
+            {
+                int len = vecOp( _src, D, XY + dx*2, FXY + dx, wtab, X1 - dx );
+                D += len*cn;
+                dx += len;
+
+                if( cn == 1 )
                 {
-                    if( cn == 2 )
+                    for( ; dx < X1; dx++, D++ )
                     {
+                        int sx = XY[dx*2], sy = XY[dx*2+1];
+                        const AT* w = wtab + FXY[dx]*4;
+                        const T* S = S0 + sy*sstep + sx;
+                        *D = castOp(WT(S[0]*w[0] + S[1]*w[1] + S[sstep]*w[2] + S[sstep+1]*w[3]));
+                    }
+                }
+                else if( cn == 2 )
+                    for( ; dx < X1; dx++, D += 2 )
+                    {
+                        int sx = XY[dx*2], sy = XY[dx*2+1];
+                        const AT* w = wtab + FXY[dx]*4;
                         const T* S = S0 + sy*sstep + sx*2;
                         WT t0 = S[0]*w[0] + S[2]*w[1] + S[sstep]*w[2] + S[sstep+2]*w[3];
                         WT t1 = S[1]*w[0] + S[3]*w[1] + S[sstep+1]*w[2] + S[sstep+3]*w[3];
                         D[0] = castOp(t0); D[1] = castOp(t1);
                     }
-                    else if( cn == 3 )
+                else if( cn == 3 )
+                    for( ; dx < X1; dx++, D += 3 )
                     {
+                        int sx = XY[dx*2], sy = XY[dx*2+1];
+                        const AT* w = wtab + FXY[dx]*4;
                         const T* S = S0 + sy*sstep + sx*3;
                         WT t0 = S[0]*w[0] + S[3]*w[1] + S[sstep]*w[2] + S[sstep+3]*w[3];
                         WT t1 = S[1]*w[0] + S[4]*w[1] + S[sstep+1]*w[2] + S[sstep+4]*w[3];
                         WT t2 = S[2]*w[0] + S[5]*w[1] + S[sstep+2]*w[2] + S[sstep+5]*w[3];
                         D[0] = castOp(t0); D[1] = castOp(t1); D[2] = castOp(t2);
                     }
-                    else
+                else
+                    for( ; dx < X1; dx++, D += 4 )    
                     {
+                        int sx = XY[dx*2], sy = XY[dx*2+1];
+                        const AT* w = wtab + FXY[dx]*4;
                         const T* S = S0 + sy*sstep + sx*4;
                         WT t0 = S[0]*w[0] + S[4]*w[1] + S[sstep]*w[2] + S[sstep+4]*w[3];
                         WT t1 = S[1]*w[0] + S[5]*w[1] + S[sstep+1]*w[2] + S[sstep+5]*w[3];
@@ -1747,45 +1827,63 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
                         t1 = S[3]*w[0] + S[7]*w[1] + S[sstep+3]*w[2] + S[sstep+7]*w[3];
                         D[2] = castOp(t0); D[3] = castOp(t1);
                     }
-                }
-                else if( borderType != BORDER_TRANSPARENT )
+            }
+            else
+            {
+                if( borderType == BORDER_TRANSPARENT )
                 {
-                    int sx0, sx1, sy0, sy1;
-                    const T *v0, *v1, *v2, *v3;
-                    if( borderType == BORDER_REPLICATE )
+                    D += (X1 - dx)*cn;
+                    dx = X1;
+                    continue;
+                }
+                for( ; dx < X1; dx++, D += cn )
+                {
+                    int sx = XY[dx*2], sy = XY[dx*2+1], k;
+                    if( borderType == BORDER_CONSTANT &&
+                        (sx >= ssize.width || sx+1 < 0 ||
+                         sy >= ssize.height || sy+1 < 0) )
                     {
-                        sx0 = clip(sx, 0, ssize.width);
-                        sx1 = clip(sx+1, 0, ssize.width);
-                        sy0 = clip(sy, 0, ssize.height);
-                        sy1 = clip(sy+1, 0, ssize.height);
-                        v0 = S0 + sy0*sstep + sx0*cn;
-                        v1 = S0 + sy0*sstep + sx1*cn;
-                        v2 = S0 + sy1*sstep + sx0*cn;
-                        v3 = S0 + sy1*sstep + sx1*cn;
+                        for( k = 0; k < cn; k++ )
+                            D[k] = cval[k];
                     }
                     else
                     {
-                        sx0 = borderInterpolate(sx, ssize.width, borderType);
-                        sx1 = borderInterpolate(sx+1, ssize.width, borderType);
-                        sy0 = borderInterpolate(sy, ssize.height, borderType);
-                        sy1 = borderInterpolate(sy+1, ssize.height, borderType);
-                        v0 = sx0 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx0*cn : &cval[0];
-                        v1 = sx1 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx1*cn : &cval[0];
-                        v2 = sx0 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx0*cn : &cval[0];
-                        v3 = sx1 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx1*cn : &cval[0];
+                        int sx0, sx1, sy0, sy1;
+                        const T *v0, *v1, *v2, *v3;
+                        const AT* w = wtab + FXY[dx]*4;
+                        if( borderType == BORDER_REPLICATE )
+                        {
+                            sx0 = clip(sx, 0, ssize.width);
+                            sx1 = clip(sx+1, 0, ssize.width);
+                            sy0 = clip(sy, 0, ssize.height);
+                            sy1 = clip(sy+1, 0, ssize.height);
+                            v0 = S0 + sy0*sstep + sx0*cn;
+                            v1 = S0 + sy0*sstep + sx1*cn;
+                            v2 = S0 + sy1*sstep + sx0*cn;
+                            v3 = S0 + sy1*sstep + sx1*cn;
+                        }
+                        else
+                        {
+                            sx0 = borderInterpolate(sx, ssize.width, borderType);
+                            sx1 = borderInterpolate(sx+1, ssize.width, borderType);
+                            sy0 = borderInterpolate(sy, ssize.height, borderType);
+                            sy1 = borderInterpolate(sy+1, ssize.height, borderType);
+                            v0 = sx0 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx0*cn : &cval[0];
+                            v1 = sx1 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx1*cn : &cval[0];
+                            v2 = sx0 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx0*cn : &cval[0];
+                            v3 = sx1 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx1*cn : &cval[0];
+                        }
+                        for( k = 0; k < cn; k++ )
+                            D[k] = castOp(WT(v0[k]*w[0] + v1[k]*w[1] + v2[k]*w[2] + v3[k]*w[3]));
                     }
-                    for( k = 0; k < cn; k++ )
-                        D[k] = castOp(WT(v0[k]*w[0] + v1[k]*w[1] + v2[k]*w[2] + v3[k]*w[3]));
                 }
-                else
-                    ntransparent++;
             }
         }
     }
 }
 
 
-template<class CastOp, typename AT>
+template<class CastOp, typename AT, int ONE>
 static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
                           const Mat& _fxy, const void* _wtab,
                           int borderType, const Scalar& _borderValue )
@@ -1825,17 +1923,17 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
             int i, k;
             if( (unsigned)sx < width1 && (unsigned)sy < height1 )
             {
-                const T* v = S0 + sy*sstep + sx*cn;
+                const T* S = S0 + sy*sstep + sx*cn;
                 for( k = 0; k < cn; k++ )
                 {
-                    WT sum = v[0]*w[0] + v[cn]*w[1] + v[cn*2]*w[2] + v[cn*3]*w[3];
-                    v += sstep;
-                    sum += v[0]*w[4] + v[cn]*w[5] + v[cn*2]*w[6] + v[cn*3]*w[7];
-                    v += sstep;
-                    sum += v[0]*w[8] + v[cn]*w[9] + v[cn*2]*w[10] + v[cn*3]*w[11];
-                    v += sstep;
-                    sum += v[0]*w[12] + v[cn]*w[13] + v[cn*2]*w[14] + v[cn*3]*w[15];
-                    v += 1 - sstep*3;
+                    WT sum = S[0]*w[0] + S[cn]*w[1] + S[cn*2]*w[2] + S[cn*3]*w[3];
+                    S += sstep;
+                    sum += S[0]*w[4] + S[cn]*w[5] + S[cn*2]*w[6] + S[cn*3]*w[7];
+                    S += sstep;
+                    sum += S[0]*w[8] + S[cn]*w[9] + S[cn*2]*w[10] + S[cn*3]*w[11];
+                    S += sstep;
+                    sum += S[0]*w[12] + S[cn]*w[13] + S[cn*2]*w[14] + S[cn*3]*w[15];
+                    S += 1 - sstep*3;
                     D[k] = castOp(sum);
                 }
             }
@@ -1847,6 +1945,15 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
                     (unsigned)(sy+1) >= (unsigned)ssize.height) )
                     continue;
 
+                if( borderType == BORDER_CONSTANT &&
+                    (sx >= ssize.width || sx+4 <= 0 ||
+                    sy >= ssize.height || sy+4 <= 0))
+                {
+                    for( k = 0; k < cn; k++ )
+                        D[k] = cval[k];
+                    continue;
+                }
+
                 for( i = 0; i < 4; i++ )
                 {
                     x[i] = borderInterpolate(sx + i, ssize.width, borderType)*cn;
@@ -1855,21 +1962,21 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
 
                 for( k = 0; k < cn; k++, S0++, w -= 16 )
                 {
-                    WT cv = cval[k], sum = cv;
+                    WT cv = cval[k], sum = cv*ONE;
                     for( i = 0; i < 4; i++, w += 4 )
                     {
                         int yi = y[i];
-                        const T* v = S0 + yi*sstep;
+                        const T* S = S0 + yi*sstep;
                         if( yi < 0 )
                             continue;
                         if( x[0] >= 0 )
-                            sum += (v[x[0]] - cv)*w[0];
+                            sum += (S[x[0]] - cv)*w[0];
                         if( x[1] >= 0 )
-                            sum += (v[x[1]] - cv)*w[1];
+                            sum += (S[x[1]] - cv)*w[1];
                         if( x[2] >= 0 )
-                            sum += (v[x[2]] - cv)*w[2];
+                            sum += (S[x[2]] - cv)*w[2];
                         if( x[3] >= 0 )
-                            sum += (v[x[3]] - cv)*w[3];
+                            sum += (S[x[3]] - cv)*w[3];
                     }
                     D[k] = castOp(sum);
                 }
@@ -1880,7 +1987,7 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
 }
 
 
-template<class CastOp, typename AT>
+template<class CastOp, typename AT, int ONE>
 static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
                            const Mat& _fxy, const void* _wtab,
                            int borderType, const Scalar& _borderValue )
@@ -1917,18 +2024,18 @@ static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
         {
             int sx = XY[dx*2]-3, sy = XY[dx*2+1]-3;
             const AT* w = wtab + FXY[dx]*64;
-            const T* v = S0 + sy*sstep + sx*cn;
+            const T* S = S0 + sy*sstep + sx*cn;
             int i, k;
             if( (unsigned)sx < width1 && (unsigned)sy < height1 )
             {
                 for( k = 0; k < cn; k++ )
                 {
                     WT sum = 0;
-                    for( int r = 0; r < 8; r++, v += sstep, w += 8 )
-                        sum += v[0]*w[0] + v[cn]*w[1] + v[cn*2]*w[2] + v[cn*3]*w[3] +
-                            v[cn*4]*w[4] + v[cn*5]*w[5] + v[cn*6]*w[6] + v[cn*7]*w[7];
+                    for( int r = 0; r < 8; r++, S += sstep, w += 8 )
+                        sum += S[0]*w[0] + S[cn]*w[1] + S[cn*2]*w[2] + S[cn*3]*w[3] +
+                            S[cn*4]*w[4] + S[cn*5]*w[5] + S[cn*6]*w[6] + S[cn*7]*w[7];
                     w -= 64;
-                    v -= sstep*8 - 1;
+                    S -= sstep*8 - 1;
                     D[k] = castOp(sum);
                 }
             }
@@ -1940,37 +2047,46 @@ static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
                     (unsigned)(sy+3) >= (unsigned)ssize.height) )
                     continue;
 
+                if( borderType == BORDER_CONSTANT &&
+                    (sx >= ssize.width || sx+8 <= 0 ||
+                    sy >= ssize.height || sy+8 <= 0))
+                {
+                    for( k = 0; k < cn; k++ )
+                        D[k] = cval[k];
+                    continue;
+                }
+
                 for( i = 0; i < 8; i++ )
                 {
-                    x[i] = borderInterpolate(sx + i, ssize.width, borderType);
+                    x[i] = borderInterpolate(sx + i, ssize.width, borderType)*cn;
                     y[i] = borderInterpolate(sy + i, ssize.height, borderType);
                 }
 
                 for( k = 0; k < cn; k++, S0++, w -= 64 )
                 {
-                    WT cv = cval[k], sum = cv;
+                    WT cv = cval[k], sum = cv*ONE;
                     for( i = 0; i < 8; i++, w += 8 )
                     {
                         int yi = y[i];
-                        const T* v = S0 + yi*sstep;
+                        const T* S = S0 + yi*sstep;
                         if( yi < 0 )
                             continue;
                         if( x[0] >= 0 )
-                            sum += (v[x[0]] - cv)*w[0];
+                            sum += (S[x[0]] - cv)*w[0];
                         if( x[1] >= 0 )
-                            sum += (v[x[1]] - cv)*w[1];
+                            sum += (S[x[1]] - cv)*w[1];
                         if( x[2] >= 0 )
-                            sum += (v[x[2]] - cv)*w[2];
+                            sum += (S[x[2]] - cv)*w[2];
                         if( x[3] >= 0 )
-                            sum += (v[x[3]] - cv)*w[3];
+                            sum += (S[x[3]] - cv)*w[3];
                         if( x[4] >= 0 )
-                            sum += (v[x[4]] - cv)*w[4];
+                            sum += (S[x[4]] - cv)*w[4];
                         if( x[5] >= 0 )
-                            sum += (v[x[5]] - cv)*w[5];
+                            sum += (S[x[5]] - cv)*w[5];
                         if( x[6] >= 0 )
-                            sum += (v[x[6]] - cv)*w[6];
+                            sum += (S[x[6]] - cv)*w[6];
                         if( x[7] >= 0 )
-                            sum += (v[x[7]] - cv)*w[7];
+                            sum += (S[x[7]] - cv)*w[7];
                     }
                     D[k] = castOp(sum);
                 }
@@ -1999,23 +2115,23 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
 
     static RemapFunc linear_tab[] =
     {
-        remapBilinear<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
-        remapBilinear<Cast<float, ushort>, float>, 0, 0,
-        remapBilinear<Cast<float, float>, float>, 0, 0
+        remapBilinear<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, RemapVec_8u, short>, 0,
+        remapBilinear<Cast<float, ushort>, RemapNoVec, float>, 0, 0,
+        remapBilinear<Cast<float, float>, RemapNoVec, float>, 0, 0
     };
 
     static RemapFunc cubic_tab[] =
     {
-        remapBicubic<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
-        remapBicubic<Cast<float, ushort>, float>, 0, 0,
-        remapBicubic<Cast<float, float>, float>, 0, 0
+        remapBicubic<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short, INTER_COEF_REMAP_SCALE>, 0,
+        remapBicubic<Cast<float, ushort>, float, 1>, 0, 0,
+        remapBicubic<Cast<float, float>, float, 1>, 0, 0
     };
 
     static RemapFunc lanczos4_tab[] =
     {
-        remapLanczos4<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short>, 0,
-        remapLanczos4<Cast<float, ushort>, float>, 0, 0,
-        remapLanczos4<Cast<float, float>, float>, 0, 0
+        remapLanczos4<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short, INTER_COEF_REMAP_SCALE>, 0,
+        remapLanczos4<Cast<float, ushort>, float, 1>, 0, 0,
+        remapLanczos4<Cast<float, float>, float, 1>, 0, 0
     };
     
     CV_Assert( (!map2.data || map2.size() == map1.size()));
@@ -2122,8 +2238,29 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
                         short* XY = (short*)(bufxy.data + bufxy.step*y1);
                         const float* sX = (const float*)(map1.data + map1.step*(y+y1)) + x;
                         const float* sY = (const float*)(map2.data + map2.step*(y+y1)) + x;
+                        x1 = 0;
 
-                        for( x1 = 0; x1 < bcols; x1++ )
+                    #if CV_SSE2
+                        for( ; x1 <= bcols - 8; x1 += 8 )
+                        {
+                            __m128 fx0 = _mm_loadu_ps(sX + x1);
+                            __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
+                            __m128 fy0 = _mm_loadu_ps(sY + x1);
+                            __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
+                            __m128i ix0 = _mm_cvtps_epi32(fx0);
+                            __m128i ix1 = _mm_cvtps_epi32(fx1);
+                            __m128i iy0 = _mm_cvtps_epi32(fy0);
+                            __m128i iy1 = _mm_cvtps_epi32(fy1);
+                            ix0 = _mm_packs_epi32(ix0, ix1);
+                            iy0 = _mm_packs_epi32(iy0, iy1);
+                            ix1 = _mm_unpacklo_epi16(ix0, iy0);
+                            iy1 = _mm_unpackhi_epi16(ix0, iy0);
+                            _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
+                            _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                        }
+                    #endif
+
+                        for( ; x1 < bcols; x1++ )
                         {
                             XY[x1*2] = saturate_cast<short>(sX[x1]);
                             XY[x1*2+1] = saturate_cast<short>(sY[x1]);
@@ -2139,13 +2276,13 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
             {
                 short* XY = (short*)(bufxy.data + bufxy.step*y1);
                 ushort* A = (ushort*)(bufa.data + bufa.step*y1);
-                x1 = 0;
 
                 if( planar_input )
                 {
                     const float* sX = (const float*)(map1.data + map1.step*(y+y1)) + x;
                     const float* sY = (const float*)(map2.data + map2.step*(y+y1)) + x;
 
+                    x1 = 0;
                 #if CV_SSE2
                     __m128 scale = _mm_set1_ps((float)INTER_TAB_SIZE);
                     __m128i mask = _mm_set1_epi32(INTER_TAB_SIZE-1);
@@ -2375,20 +2512,23 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
 
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
     AutoBuffer<int> _abdelta(width*2);
-    int* abdelta = &_abdelta[0];
+    int* adelta = &_abdelta[0], *bdelta = adelta + width;
     const int AB_BITS = std::max(10, (int)INTER_BITS);
     const int AB_SCALE = 1 << AB_BITS;
     int round_delta = interpolation == INTER_NEAREST ? AB_SCALE/2 : AB_SCALE/INTER_TAB_SIZE/2;
 
     for( x = 0; x < width; x++ )
     {
-        abdelta[x*2] = saturate_cast<int>(M[0]*x*AB_SCALE);
-        abdelta[x*2+1] = saturate_cast<int>(M[3]*x*AB_SCALE);
+        adelta[x] = saturate_cast<int>(M[0]*x*AB_SCALE);
+        bdelta[x] = saturate_cast<int>(M[3]*x*AB_SCALE);
     }
     
     int bh0 = std::min(BLOCK_SZ, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
+#if CV_SSE2
+    __m128i fxy_mask = _mm_set1_epi32(INTER_TAB_SIZE - 1);
+#endif
 
     for( y = 0; y < height; y += bh0 )
     {
@@ -2409,18 +2549,49 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                 if( interpolation == INTER_NEAREST )
                     for( x1 = 0; x1 < bw; x1++ )
                     {
-                        int X = (X0 + abdelta[(x+x1)*2]) >> AB_BITS;
-                        int Y = (Y0 + abdelta[(x+x1)*2+1]) >> AB_BITS;
+                        int X = (X0 + adelta[x+x1]) >> AB_BITS;
+                        int Y = (Y0 + bdelta[x+x1]) >> AB_BITS;
                         xy[x1*2] = (short)X;
                         xy[x1*2+1] = (short)Y;
                     }
                 else
                 {
                     short* alpha = A + y1*bw;
-                    for( x1 = 0; x1 < bw; x1++ )
+                    x1 = 0;
+                #if CV_SSE2
+                    __m128i XX = _mm_set1_epi32(X0), YY = _mm_set1_epi32(Y0);
+                    for( ; x1 <= bw - 8; x1 += 8 )
                     {
-                        int X = (X0 + abdelta[(x+x1)*2]) >> (AB_BITS - INTER_BITS);
-                        int Y = (Y0 + abdelta[(x+x1)*2+1]) >> (AB_BITS - INTER_BITS);
+                        __m128i tx0, tx1, ty0, ty1;
+                        tx0 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(adelta + x + x1)), XX);
+                        ty0 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(bdelta + x + x1)), YY);
+                        tx1 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(adelta + x + x1 + 4)), XX);
+                        ty1 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(bdelta + x + x1 + 4)), YY);
+
+                        tx0 = _mm_srai_epi32(tx0, AB_BITS - INTER_BITS);
+                        ty0 = _mm_srai_epi32(ty0, AB_BITS - INTER_BITS);
+                        tx1 = _mm_srai_epi32(tx1, AB_BITS - INTER_BITS);
+                        ty1 = _mm_srai_epi32(ty1, AB_BITS - INTER_BITS);
+                        
+                        __m128i fx_ = _mm_packs_epi32(_mm_and_si128(tx0, fxy_mask),
+                                                      _mm_and_si128(tx1, fxy_mask));
+                        __m128i fy_ = _mm_packs_epi32(_mm_and_si128(ty0, fxy_mask),
+                                                      _mm_and_si128(ty1, fxy_mask));
+                        tx0 = _mm_packs_epi32(_mm_srai_epi32(tx0, INTER_BITS),
+                                                      _mm_srai_epi32(tx1, INTER_BITS));
+                        ty0 = _mm_packs_epi32(_mm_srai_epi32(ty0, INTER_BITS),
+                                              _mm_srai_epi32(ty1, INTER_BITS));
+                        fx_ = _mm_add_epi16(fx_, _mm_slli_epi16(fy_, INTER_BITS));
+
+                        _mm_storeu_si128((__m128i*)(xy + x1*2), _mm_unpacklo_epi16(tx0, ty0));
+                        _mm_storeu_si128((__m128i*)(xy + x1*2 + 8), _mm_unpackhi_epi16(tx0, ty0));
+                        _mm_storeu_si128((__m128i*)(alpha + x1), fx_);
+                    }
+                #endif
+                    for( ; x1 < bw; x1++ )
+                    {
+                        int X = (X0 + adelta[x+x1]) >> (AB_BITS - INTER_BITS);
+                        int Y = (Y0 + bdelta[x+x1]) >> (AB_BITS - INTER_BITS);
                         xy[x1*2] = (short)(X >> INTER_BITS);
                         xy[x1*2+1] = (short)(Y >> INTER_BITS);
                         alpha[x1] = (short)((Y & (INTER_TAB_SIZE-1))*INTER_TAB_SIZE +
@@ -2632,205 +2803,6 @@ Mat getAffineTransform( const Point2f src[], const Point2f dst[] )
     solve( A, B, X );
     return M;
 }
-
-
-#if 0
-/**************************************************************/
-
-#define CV_REMAP_SHIFT 5
-#define CV_REMAP_MASK ((1 << CV_REMAP_SHIFT) - 1)
-
-#if defined __GNUC__ && __GNUC__*10 + __GNUC_MINOR__ < 42
-#undef CV_SSE2
-#endif
-
-#if CV_SSE2 && defined(__GNUC__)
-#define align(x) __attribute__ ((aligned (x)))
-#elif CV_SSE2 && (defined(__ICL) || defined _MSC_VER && _MSC_VER >= 1300)
-#define align(x) __declspec(align(x))
-#else
-#define align(x)
-#endif
-
-static void icvRemapFixedPt_8u( const CvMat* src, CvMat* dst,
-    const CvMat* xymap, const CvMat* amap, const uchar* fillval )
-{
-    const int TABSZ = 1 << (CV_REMAP_SHIFT*2);
-    static ushort align(8) atab[TABSZ][4];
-    static int inittab = 0;
-
-    int x, y, cols = src->cols, rows = src->rows;
-    const uchar* sptr0 = src->data.ptr;
-    int sstep = src->step;
-    uchar fv0 = fillval[0], fv1 = fillval[1], fv2 = fillval[2], fv3 = fillval[3];
-    int cn = CV_MAT_CN(src->type);
-#if CV_SSE2
-    const uchar* sptr1 = sptr0 + sstep;
-    __m128i br = _mm_set1_epi32((cols-2) + ((rows-2)<<16));
-    __m128i xy2ofs = _mm_set1_epi32(1 + (sstep << 16));
-    __m128i z = _mm_setzero_si128();
-    int align(16) iofs0[4], iofs1[4];
-#endif
-
-    if( !inittab )
-    {
-        for( y = 0; y <= CV_REMAP_MASK; y++ )
-            for( x = 0; x <= CV_REMAP_MASK; x++ )
-            {
-                int k = (y << CV_REMAP_SHIFT) + x;
-                atab[k][0] = (ushort)((CV_REMAP_MASK+1 - y)*(CV_REMAP_MASK+1 - x));
-                atab[k][1] = (ushort)((CV_REMAP_MASK+1 - y)*x);
-                atab[k][2] = (ushort)(y*(CV_REMAP_MASK+1 - x));
-                atab[k][3] = (ushort)(y*x);
-            }
-        inittab = 1;
-    }
-
-    for( y = 0; y < rows; y++ )
-    {
-        const short* xy = (const short*)(xymap->data.ptr + xymap->step*y);
-        const ushort* alpha = (const ushort*)(amap->data.ptr + amap->step*y);
-        uchar* dptr = (uchar*)(dst->data.ptr + dst->step*y);
-        int x = 0;
-
-        if( cn == 1 )
-        {
-    #if CV_SSE2
-            for( ; x <= cols - 8; x += 8 )
-            {
-                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(xy + x*2));
-                __m128i xy1 = _mm_loadu_si128( (const __m128i*)(xy + x*2 + 8));
-                // 0|0|0|0|... <= x0|y0|x1|y1|... < cols-1|rows-1|cols-1|rows-1|... ?
-                __m128i mask0 = _mm_cmpeq_epi32(_mm_or_si128(_mm_cmpgt_epi16(z, xy0),
-                                                _mm_cmpgt_epi16(xy0,br)), z);
-                __m128i mask1 = _mm_cmpeq_epi32(_mm_or_si128(_mm_cmpgt_epi16(z, xy1),
-                                                _mm_cmpgt_epi16(xy1,br)), z);
-                __m128i ofs0 = _mm_and_si128(_mm_madd_epi16( xy0, xy2ofs ), mask0 );
-                __m128i ofs1 = _mm_and_si128(_mm_madd_epi16( xy1, xy2ofs ), mask1 );
-                unsigned i0, i1;
-                __m128i v0, v1, v2, v3, a0, a1, b0, b1;
-                _mm_store_si128( (__m128i*)iofs0, ofs0 );
-                _mm_store_si128( (__m128i*)iofs1, ofs1 );
-                i0 = *(ushort*)(sptr0 + iofs0[0]) + (*(ushort*)(sptr0 + iofs0[1]) << 16);
-                i1 = *(ushort*)(sptr0 + iofs0[2]) + (*(ushort*)(sptr0 + iofs0[3]) << 16);
-                v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-                i0 = *(ushort*)(sptr1 + iofs0[0]) + (*(ushort*)(sptr1 + iofs0[1]) << 16);
-                i1 = *(ushort*)(sptr1 + iofs0[2]) + (*(ushort*)(sptr1 + iofs0[3]) << 16);
-                v1 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-                v0 = _mm_unpacklo_epi8(v0, z);
-                v1 = _mm_unpacklo_epi8(v1, z);
-
-                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x]]),
-                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+1]]));
-                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+2]]),
-                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+3]]));
-                b0 = _mm_unpacklo_epi64(a0, a1);
-                b1 = _mm_unpackhi_epi64(a0, a1);
-                v0 = _mm_madd_epi16(v0, b0);
-                v1 = _mm_madd_epi16(v1, b1);
-                v0 = _mm_and_si128(_mm_add_epi32(v0, v1), mask0);
-
-                i0 = *(ushort*)(sptr0 + iofs1[0]) + (*(ushort*)(sptr0 + iofs1[1]) << 16);
-                i1 = *(ushort*)(sptr0 + iofs1[2]) + (*(ushort*)(sptr0 + iofs1[3]) << 16);
-                v2 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-                i0 = *(ushort*)(sptr1 + iofs1[0]) + (*(ushort*)(sptr1 + iofs1[1]) << 16);
-                i1 = *(ushort*)(sptr1 + iofs1[2]) + (*(ushort*)(sptr1 + iofs1[3]) << 16);
-                v3 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-                v2 = _mm_unpacklo_epi8(v2, z);
-                v3 = _mm_unpacklo_epi8(v3, z);
-
-                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+4]]),
-                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+5]]));
-                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)atab[alpha[x+6]]),
-                                        _mm_loadl_epi64((__m128i*)atab[alpha[x+7]]));
-                b0 = _mm_unpacklo_epi64(a0, a1);
-                b1 = _mm_unpackhi_epi64(a0, a1);
-                v2 = _mm_madd_epi16(v2, b0);
-                v3 = _mm_madd_epi16(v3, b1);
-                v2 = _mm_and_si128(_mm_add_epi32(v2, v3), mask1);
-
-                v0 = _mm_srai_epi32(v0, CV_REMAP_SHIFT*2);
-                v2 = _mm_srai_epi32(v2, CV_REMAP_SHIFT*2);
-                v0 = _mm_packus_epi16(_mm_packs_epi32(v0, v2), z);
-                _mm_storel_epi64( (__m128i*)(dptr + x), v0 );
-            }
-    #endif
-
-            for( ; x < cols; x++ )
-            {
-                int xi = xy[x*2], yi = xy[x*2+1];
-                if( (unsigned)yi >= (unsigned)(rows - 1) ||
-                    (unsigned)xi >= (unsigned)(cols - 1))
-                {
-                    dptr[x] = fv0;
-                }
-                else
-                {
-                    const uchar* sptr = sptr0 + sstep*yi + xi;
-                    const ushort* a = atab[alpha[x]];
-                    dptr[x] = (uchar)((sptr[0]*a[0] + sptr[1]*a[1] + sptr[sstep]*a[2] +
-                                      sptr[sstep+1]*a[3])>>CV_REMAP_SHIFT*2);
-                }
-            }
-        }
-        else if( cn == 3 )
-        {
-            for( ; x < cols; x++ )
-            {
-                int xi = xy[x*2], yi = xy[x*2+1];
-                if( (unsigned)yi >= (unsigned)(rows - 1) ||
-                    (unsigned)xi >= (unsigned)(cols - 1))
-                {
-                    dptr[x*3] = fv0; dptr[x*3+1] = fv1; dptr[x*3+2] = fv2;
-                }
-                else
-                {
-                    const uchar* sptr = sptr0 + sstep*yi + xi*3;
-                    const ushort* a = atab[alpha[x]];
-                    int v0, v1, v2;
-                    v0 = (sptr[0]*a[0] + sptr[3]*a[1] +
-                        sptr[sstep]*a[2] + sptr[sstep+3]*a[3])>>CV_REMAP_SHIFT*2;
-                    v1 = (sptr[1]*a[0] + sptr[4]*a[1] +
-                        sptr[sstep+1]*a[2] + sptr[sstep+4]*a[3])>>CV_REMAP_SHIFT*2;
-                    v2 = (sptr[2]*a[0] + sptr[5]*a[1] +
-                        sptr[sstep+2]*a[2] + sptr[sstep+5]*a[3])>>CV_REMAP_SHIFT*2;
-                    dptr[x*3] = (uchar)v0; dptr[x*3+1] = (uchar)v1; dptr[x*3+2] = (uchar)v2;
-                }
-            }
-        }
-        else
-        {
-            assert( cn == 4 );
-            for( ; x < cols; x++ )
-            {
-                int xi = xy[x*2], yi = xy[x*2+1];
-                if( (unsigned)yi >= (unsigned)(rows - 1) ||
-                    (unsigned)xi >= (unsigned)(cols - 1))
-                {
-                    dptr[x*4] = fv0; dptr[x*4+1] = fv1;
-                    dptr[x*4+2] = fv2; dptr[x*4+3] = fv3;
-                }
-                else
-                {
-                    const uchar* sptr = sptr0 + sstep*yi + xi*3;
-                    const ushort* a = atab[alpha[x]];
-                    int v0, v1;
-                    v0 = (sptr[0]*a[0] + sptr[4]*a[1] +
-                        sptr[sstep]*a[2] + sptr[sstep+3]*a[3])>>CV_REMAP_SHIFT*2;
-                    v1 = (sptr[1]*a[0] + sptr[5]*a[1] +
-                        sptr[sstep+1]*a[2] + sptr[sstep+5]*a[3])>>CV_REMAP_SHIFT*2;
-                    dptr[x*4] = (uchar)v0; dptr[x*4+1] = (uchar)v1;
-                    v0 = (sptr[2]*a[0] + sptr[6]*a[1] +
-                        sptr[sstep+2]*a[2] + sptr[sstep+6]*a[3])>>CV_REMAP_SHIFT*2;
-                    v1 = (sptr[3]*a[0] + sptr[7]*a[1] +
-                        sptr[sstep+3]*a[2] + sptr[sstep+7]*a[3])>>CV_REMAP_SHIFT*2;
-                    dptr[x*4+2] = (uchar)v0; dptr[x*4+3] = (uchar)v1;
-                }
-            }
-        }
-    }
-}
-#endif
 
 }
 
