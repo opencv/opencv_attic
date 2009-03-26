@@ -122,6 +122,8 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& _J, CvMat*& _err )
 {
     double change;
 
+    _J = _err = 0;
+
     assert( err != 0 );
     if( state == DONE )
     {
@@ -181,8 +183,9 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& _J, CvMat*& _err )
     _param = param;
     cvZero(J);
     _J = J;
+    _err = err;
     state = CALC_J;
-    return false;
+    return true;
 }
 
 
@@ -270,8 +273,14 @@ void CvLevMarq::step()
 
     if( !err )
         cvCompleteSymm( JtJ, completeSymmFlag );
-    cvSetIdentity( JtJN, cvRealScalar(lambda) );
+#if 1
+    cvCopy( JtJ, JtJN );
+    for( i = 0; i < nparams; i++ )
+        JtJN->data.db[(nparams+1)*i] *= 1. + lambda;
+#else
+    cvSetIdentity(JtJN, cvRealScalar(lambda));
     cvAdd( JtJ, JtJN, JtJN );
+#endif
     cvSVD( JtJN, JtJW, 0, JtJV, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
     cvSVBkSb( JtJW, JtJV, JtJV, JtErr, param, CV_SVD_U_T + CV_SVD_V_T );
     for( i = 0; i < nparams; i++ )
@@ -1291,11 +1300,12 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     cvReshape( _M, _M, 3, 1 );
     cvReshape( _mn, _mn, 2, 1 );
 
+    // refine extrinsic parameters using iterative algorithm
+#if 0
     CV_CALL( _J = cvCreateMat( 2*count, 6, CV_64FC1 ));
     cvGetCols( _J, &_dpdr, 0, 3 );
     cvGetCols( _J, &_dpdt, 3, 6 );
 
-    // refine extrinsic parameters using iterative algorithm
     for( i = 0; i < max_iter; i++ )
     {
         double n1, n2;
@@ -1304,6 +1314,7 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
                           _mn, &_dpdr, &_dpdt, 0, 0, 0 );
         cvSub( _m, _mn, _mn );
         cvReshape( _mn, _mn, 1, 2*count );
+        //printf("reproj err=%g\n", cvNorm(_mn, 0, CV_C));
 
         cvMulTransposed( _J, &_JtJ, 1 );
         cvGEMM( _J, _mn, 1, 0, 0, &_JtErr, CV_GEMM_A_T );
@@ -1312,12 +1323,45 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
             break;
         cvSVBkSb( &_JtJW, &_JtJV, &_JtJV, &_JtErr,
                   &_delta, CV_SVD_U_T + CV_SVD_V_T );
-        cvAdd( &_delta, &_param, &_param );
+        cvAdd( &_param, &_delta, &_param );
         n1 = cvNorm( &_delta );
         n2 = cvNorm( &_param );
         if( n1/n2 < 1e-10 )
             break;
     }
+    printf("max reproj err=%g\n", cvNorm(_mn, 0, CV_C));
+#else
+    {
+    CvLevMarq solver( 6, count*2, cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,max_iter,FLT_EPSILON), true);
+    cvCopy( &_param, solver.param );
+
+    for(;;)
+    {
+        CvMat *_J = 0, *_err = 0;
+        const CvMat *__param = 0;
+        bool proceed = solver.update( __param, _J, _err );
+        cvCopy( __param, &_param );
+        if( !proceed || !_err )
+            break;
+        cvReshape( _err, _err, 2, 1 );
+        if( _J )
+        {
+            cvGetCols( _J, &_dpdr, 0, 3 );
+            cvGetCols( _J, &_dpdt, 3, 6 );
+            cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
+                              _err, &_dpdr, &_dpdt, 0, 0, 0 );
+        }
+        else
+        {
+            cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
+                              _err, 0, 0, 0, 0, 0 );
+        }
+        cvSub(_err, _m, _err);
+        cvReshape( _err, _err, 1, 2*count );
+    }
+    cvCopy( solver.param, &_param );
+    }
+#endif
 
     _r = cvMat( rvec->rows, rvec->cols,
         CV_MAKETYPE(CV_64F,CV_MAT_CN(rvec->type)), param );
