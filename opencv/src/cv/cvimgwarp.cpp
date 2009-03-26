@@ -52,16 +52,20 @@ namespace cv
 
 /************** interpolation formulas and tables ***************/
 
-const int INTER_COEF_RESIZE_BITS=11;
-const int INTER_COEF_RESIZE_SCALE=1 << INTER_COEF_RESIZE_BITS;
+const int INTER_RESIZE_COEF_BITS=11;
+const int INTER_RESIZE_COEF_SCALE=1 << INTER_RESIZE_COEF_BITS;
 
-const int INTER_COEF_REMAP_BITS=15;
-const int INTER_COEF_REMAP_SCALE=1 << INTER_COEF_REMAP_BITS;
+const int INTER_REMAP_COEF_BITS=15;
+const int INTER_REMAP_COEF_SCALE=1 << INTER_REMAP_COEF_BITS;
 
 static uchar NNDeltaTab_i[INTER_TAB_SIZE2][2];
 
 static float BilinearTab_f[INTER_TAB_SIZE2][2][2];
 static short BilinearTab_i[INTER_TAB_SIZE2][2][2];
+
+#if CV_SSE2
+static short CV_DECL_ALIGNED(16) BilinearTab_iC4[INTER_TAB_SIZE2][2][8];
+#endif
 
 static float BicubicTab_f[INTER_TAB_SIZE2][4][4];
 static short BicubicTab_i[INTER_TAB_SIZE2][4][4];
@@ -171,13 +175,13 @@ static const void* initInterTab2D( int method, bool fixpt )
                     {
                         float v = vy*_tab[j*ksize + k2];
                         tab[k1*ksize + k2] = v;
-                        isum += itab[k1*ksize + k2] = saturate_cast<short>(v*INTER_COEF_REMAP_SCALE);
+                        isum += itab[k1*ksize + k2] = saturate_cast<short>(v*INTER_REMAP_COEF_SCALE);
                     }
                 }
                 
-                if( isum != INTER_COEF_REMAP_SCALE )
+                if( isum != INTER_REMAP_COEF_SCALE )
                 {
-                    int diff = isum - INTER_COEF_REMAP_SCALE;
+                    int diff = isum - INTER_REMAP_COEF_SCALE;
                     int ksize2 = ksize/2, Mk1=ksize2, Mk2=ksize2, mk1=ksize2, mk2=ksize2;
                     for( k1 = ksize2; k1 < ksize2+2; k1++ )
                         for( k2 = ksize2; k2 < ksize2+2; k2++ )
@@ -195,6 +199,19 @@ static const void* initInterTab2D( int method, bool fixpt )
             }
         tab -= INTER_TAB_SIZE2*ksize*ksize;
         itab -= INTER_TAB_SIZE2*ksize*ksize;
+#if CV_SSE2
+        if( method == INTER_LINEAR )
+        {
+            for( i = 0; i < INTER_TAB_SIZE2; i++ )
+                for( j = 0; j < 4; j++ )
+                {
+                    BilinearTab_iC4[i][0][j*2] = BilinearTab_i[i][0][0];
+                    BilinearTab_iC4[i][0][j*2+1] = BilinearTab_i[i][0][1];
+                    BilinearTab_iC4[i][1][j*2] = BilinearTab_i[i][1][0];
+                    BilinearTab_iC4[i][1][j*2+1] = BilinearTab_i[i][1][1];
+                }
+        }
+#endif
         inittab[method] = true;
     }
     return fixpt ? (const void*)itab : (const void*)tab;
@@ -553,7 +570,7 @@ struct VResizeCubicVec_32s8u
         const short* beta = (const short*)_beta;
         const int *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
         int x = 0;
-        float scale = 1.f/(INTER_COEF_RESIZE_SCALE*INTER_COEF_RESIZE_SCALE);
+        float scale = 1.f/(INTER_RESIZE_COEF_SCALE*INTER_RESIZE_COEF_SCALE);
         __m128 b0 = _mm_set1_ps(beta[0]*scale), b1 = _mm_set1_ps(beta[1]*scale),
             b2 = _mm_set1_ps(beta[2]*scale), b3 = _mm_set1_ps(beta[3]*scale);
 
@@ -1243,10 +1260,10 @@ void resize( const Mat& src, Mat& dst, Size dsize,
     {
         resizeGeneric_<
             HResizeLinear<uchar, int, short,
-                INTER_COEF_RESIZE_SCALE,
+                INTER_RESIZE_COEF_SCALE,
                 HResizeLinearVec_8u32s>,
             VResizeLinear<uchar, int, short,
-                FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+                FixedPtCast<int, uchar, INTER_RESIZE_COEF_BITS*2>,
                 VResizeLinearVec_32s8u> >,
         0,
         resizeGeneric_<
@@ -1268,7 +1285,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         resizeGeneric_<
             HResizeCubic<uchar, int, short>,
             VResizeCubic<uchar, int, short,
-                FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+                FixedPtCast<int, uchar, INTER_RESIZE_COEF_BITS*2>,
                 VResizeCubicVec_32s8u> >,
         0,
         resizeGeneric_<
@@ -1287,7 +1304,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
     {
         resizeGeneric_<HResizeLanczos4<uchar, int, short>,
             VResizeLanczos4<uchar, int, short,
-            FixedPtCast<int, uchar, INTER_COEF_RESIZE_BITS*2>,
+            FixedPtCast<int, uchar, INTER_RESIZE_COEF_BITS*2>,
             VResizeNoVec> >,
         0,
         resizeGeneric_<HResizeLanczos4<ushort, float, float>,
@@ -1482,7 +1499,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         if( fixpt )
         {
             for( k = 0; k < ksize; k++ )
-                ialpha[dx*cn*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_COEF_RESIZE_SCALE);
+                ialpha[dx*cn*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_RESIZE_COEF_SCALE);
             for( ; k < cn*ksize; k++ )
                 ialpha[dx*cn*ksize + k] = ialpha[dx*cn*ksize + k - ksize];
         }
@@ -1524,7 +1541,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         if( fixpt )
         {
             for( k = 0; k < ksize; k++ )
-                ibeta[dy*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_COEF_RESIZE_SCALE);
+                ibeta[dy*ksize + k] = saturate_cast<short>(cbuf[k]*INTER_RESIZE_COEF_SCALE);
         }
         else
         {
@@ -1584,11 +1601,13 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
                         sy = clip(sy, 0, ssize.height);
                         D[dx] = S0[sy*sstep + sx];
                     }
+                    else if( borderType == BORDER_CONSTANT )
+                        D[dx] = cval[0];
                     else if( borderType != BORDER_TRANSPARENT )
                     {
                         sx = borderInterpolate(sx, ssize.width, borderType);
                         sy = borderInterpolate(sy, ssize.height, borderType);
-                        D[dx] = sx >= 0 && sy >= 0 ? S0[sy*sstep + sx] : cval[0];
+                        D[dx] = S0[sy*sstep + sx];
                     }
                 }
             }
@@ -1626,11 +1645,13 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
                         sy = clip(sy, 0, ssize.height);
                         S = S0 + sy*sstep + sx*cn;
                     }
+                    else if( borderType == BORDER_CONSTANT )
+                        S = &cval[0];
                     else
                     {
                         sx = borderInterpolate(sx, ssize.width, borderType);
                         sy = borderInterpolate(sy, ssize.height, borderType);
-                        S = sx >= 0 && sy >= 0 ? S0 + sy*sstep + sx*cn : &cval[0];
+                        S = S0 + sy*sstep + sx*cn;
                     }
                     for( k = 0; k < cn; k++ )
                         D[k] = S[k];
@@ -1654,74 +1675,195 @@ struct RemapVec_8u
     int operator()( const Mat& _src, void* _dst, const short* XY,
                     const ushort* FXY, const void* _wtab, int width ) const
     {
-        if( _src.channels() > 1 )
+        int cn = _src.channels();
+
+        if( cn != 1 && cn != 3 && cn != 4 )
             return 0;
         
         const uchar *S0 = _src.data, *S1 = _src.data + _src.step;
-        const short* wtab = (const short*)_wtab;
+        const short* wtab = cn == 1 ? (const short*)_wtab : &BilinearTab_iC4[0][0][0];
         uchar* D = (uchar*)_dst;
-        int x, sstep = _src.step;
-        __m128i delta = _mm_set1_epi32(INTER_COEF_REMAP_SCALE/2);
-        __m128i xy2ofs = _mm_set1_epi32(1 + (sstep << 16));
+        int x = 0, sstep = _src.step;
+        __m128i delta = _mm_set1_epi32(INTER_REMAP_COEF_SCALE/2);
+        __m128i xy2ofs = _mm_set1_epi32(cn + (sstep << 16));
         __m128i z = _mm_setzero_si128();
         int CV_DECL_ALIGNED(16) iofs0[4], iofs1[4];
 
-        for( x = 0; x <= width - 8; x += 8 )
+        if( cn == 1 )
         {
-            __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
-            __m128i xy1 = _mm_loadu_si128( (const __m128i*)(XY + x*2 + 8));
-            __m128i v0, v1, v2, v3, a0, a1, b0, b1;
-            unsigned i0, i1;
+            for( ; x <= width - 8; x += 8 )
+            {
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i xy1 = _mm_loadu_si128( (const __m128i*)(XY + x*2 + 8));
+                __m128i v0, v1, v2, v3, a0, a1, b0, b1;
+                unsigned i0, i1;
 
-            // 0|0|0|0|... <= x0|y0|x1|y1|... < cols-1|rows-1|cols-1|rows-1|... ?
-            xy0 = _mm_madd_epi16( xy0, xy2ofs );
-            xy1 = _mm_madd_epi16( xy1, xy2ofs );
-            _mm_store_si128( (__m128i*)iofs0, xy0 );
-            _mm_store_si128( (__m128i*)iofs1, xy1 );
-            
-            i0 = *(ushort*)(S0 + iofs0[0]) + (*(ushort*)(S0 + iofs0[1]) << 16);
-            i1 = *(ushort*)(S0 + iofs0[2]) + (*(ushort*)(S0 + iofs0[3]) << 16);
-            v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-            i0 = *(ushort*)(S1 + iofs0[0]) + (*(ushort*)(S1 + iofs0[1]) << 16);
-            i1 = *(ushort*)(S1 + iofs0[2]) + (*(ushort*)(S1 + iofs0[3]) << 16);
-            v1 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-            v0 = _mm_unpacklo_epi8(v0, z);
-            v1 = _mm_unpacklo_epi8(v1, z);
+                xy0 = _mm_madd_epi16( xy0, xy2ofs );
+                xy1 = _mm_madd_epi16( xy1, xy2ofs );
+                _mm_store_si128( (__m128i*)iofs0, xy0 );
+                _mm_store_si128( (__m128i*)iofs1, xy1 );
+                
+                i0 = *(ushort*)(S0 + iofs0[0]) + (*(ushort*)(S0 + iofs0[1]) << 16);
+                i1 = *(ushort*)(S0 + iofs0[2]) + (*(ushort*)(S0 + iofs0[3]) << 16);
+                v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                i0 = *(ushort*)(S1 + iofs0[0]) + (*(ushort*)(S1 + iofs0[1]) << 16);
+                i1 = *(ushort*)(S1 + iofs0[2]) + (*(ushort*)(S1 + iofs0[3]) << 16);
+                v1 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                v0 = _mm_unpacklo_epi8(v0, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
 
-            a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x]*4)),
-                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+1]*4)));
-            a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+2]*4)),
-                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+3]*4)));
-            b0 = _mm_unpacklo_epi64(a0, a1);
-            b1 = _mm_unpackhi_epi64(a0, a1);
-            v0 = _mm_madd_epi16(v0, b0);
-            v1 = _mm_madd_epi16(v1, b1);
-            v0 = _mm_add_epi32(_mm_add_epi32(v0, v1), delta);
+                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x]*4)),
+                                        _mm_loadl_epi64((__m128i*)(wtab+FXY[x+1]*4)));
+                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+2]*4)),
+                                        _mm_loadl_epi64((__m128i*)(wtab+FXY[x+3]*4)));
+                b0 = _mm_unpacklo_epi64(a0, a1);
+                b1 = _mm_unpackhi_epi64(a0, a1);
+                v0 = _mm_madd_epi16(v0, b0);
+                v1 = _mm_madd_epi16(v1, b1);
+                v0 = _mm_add_epi32(_mm_add_epi32(v0, v1), delta);
 
-            i0 = *(ushort*)(S0 + iofs1[0]) + (*(ushort*)(S0 + iofs1[1]) << 16);
-            i1 = *(ushort*)(S0 + iofs1[2]) + (*(ushort*)(S0 + iofs1[3]) << 16);
-            v2 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-            i0 = *(ushort*)(S1 + iofs1[0]) + (*(ushort*)(S1 + iofs1[1]) << 16);
-            i1 = *(ushort*)(S1 + iofs1[2]) + (*(ushort*)(S1 + iofs1[3]) << 16);
-            v3 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
-            v2 = _mm_unpacklo_epi8(v2, z);
-            v3 = _mm_unpacklo_epi8(v3, z);
+                i0 = *(ushort*)(S0 + iofs1[0]) + (*(ushort*)(S0 + iofs1[1]) << 16);
+                i1 = *(ushort*)(S0 + iofs1[2]) + (*(ushort*)(S0 + iofs1[3]) << 16);
+                v2 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                i0 = *(ushort*)(S1 + iofs1[0]) + (*(ushort*)(S1 + iofs1[1]) << 16);
+                i1 = *(ushort*)(S1 + iofs1[2]) + (*(ushort*)(S1 + iofs1[3]) << 16);
+                v3 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
+                v2 = _mm_unpacklo_epi8(v2, z);
+                v3 = _mm_unpacklo_epi8(v3, z);
 
-            a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+4]*4)),
-                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+5]*4)));
-            a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+6]*4)),
-                                    _mm_loadl_epi64((__m128i*)(wtab+FXY[x+7]*4)));
-            b0 = _mm_unpacklo_epi64(a0, a1);
-            b1 = _mm_unpackhi_epi64(a0, a1);
-            v2 = _mm_madd_epi16(v2, b0);
-            v3 = _mm_madd_epi16(v3, b1);
-            v2 = _mm_add_epi32(_mm_add_epi32(v2, v3), delta);
+                a0 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+4]*4)),
+                                        _mm_loadl_epi64((__m128i*)(wtab+FXY[x+5]*4)));
+                a1 = _mm_unpacklo_epi32(_mm_loadl_epi64((__m128i*)(wtab+FXY[x+6]*4)),
+                                        _mm_loadl_epi64((__m128i*)(wtab+FXY[x+7]*4)));
+                b0 = _mm_unpacklo_epi64(a0, a1);
+                b1 = _mm_unpackhi_epi64(a0, a1);
+                v2 = _mm_madd_epi16(v2, b0);
+                v3 = _mm_madd_epi16(v3, b1);
+                v2 = _mm_add_epi32(_mm_add_epi32(v2, v3), delta);
 
-            v0 = _mm_srai_epi32(v0, INTER_COEF_REMAP_BITS);
-            v2 = _mm_srai_epi32(v2, INTER_COEF_REMAP_BITS);
-            v0 = _mm_packus_epi16(_mm_packs_epi32(v0, v2), z);
-            _mm_storel_epi64( (__m128i*)(D + x), v0 );
+                v0 = _mm_srai_epi32(v0, INTER_REMAP_COEF_BITS);
+                v2 = _mm_srai_epi32(v2, INTER_REMAP_COEF_BITS);
+                v0 = _mm_packus_epi16(_mm_packs_epi32(v0, v2), z);
+                _mm_storel_epi64( (__m128i*)(D + x), v0 );
+            }
         }
+        else if( cn == 3 )
+        {
+            for( ; x <= width - 5; x += 4, D += 12 )
+            {
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i u0, v0, u1, v1;
+
+                xy0 = _mm_madd_epi16( xy0, xy2ofs );
+                _mm_store_si128( (__m128i*)iofs0, xy0 );
+                const __m128i *w0, *w1;
+                w0 = (const __m128i*)(wtab + FXY[x]*16);
+                w1 = (const __m128i*)(wtab + FXY[x+1]*16);
+
+                u0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[0])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[0] + 3)));
+                v0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[0])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[0] + 3)));
+                u1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[1])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[1] + 3)));
+                v1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[1])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[1] + 3)));
+                u0 = _mm_unpacklo_epi8(u0, z);
+                v0 = _mm_unpacklo_epi8(v0, z);
+                u1 = _mm_unpacklo_epi8(u1, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
+                u0 = _mm_add_epi32(_mm_madd_epi16(u0, w0[0]), _mm_madd_epi16(v0, w0[1]));
+                u1 = _mm_add_epi32(_mm_madd_epi16(u1, w1[0]), _mm_madd_epi16(v1, w1[1]));
+                u0 = _mm_srai_epi32(_mm_add_epi32(u0, delta), INTER_REMAP_COEF_BITS);
+                u1 = _mm_srai_epi32(_mm_add_epi32(u1, delta), INTER_REMAP_COEF_BITS);
+                u0 = _mm_slli_si128(u0, 4);
+                u0 = _mm_packs_epi32(u0, u1);
+                u0 = _mm_packus_epi16(u0, u0);
+                _mm_storel_epi64((__m128i*)D, _mm_srli_si128(u0,1));
+
+                w0 = (const __m128i*)(wtab + FXY[x+2]*16);
+                w1 = (const __m128i*)(wtab + FXY[x+3]*16);
+
+                u0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[2])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[2] + 3)));
+                v0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[2])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[2] + 3)));
+                u1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[3])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[3] + 3)));
+                v1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[3])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[3] + 3)));
+                u0 = _mm_unpacklo_epi8(u0, z);
+                v0 = _mm_unpacklo_epi8(v0, z);
+                u1 = _mm_unpacklo_epi8(u1, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
+                u0 = _mm_add_epi32(_mm_madd_epi16(u0, w0[0]), _mm_madd_epi16(v0, w0[1]));
+                u1 = _mm_add_epi32(_mm_madd_epi16(u1, w1[0]), _mm_madd_epi16(v1, w1[1]));
+                u0 = _mm_srai_epi32(_mm_add_epi32(u0, delta), INTER_REMAP_COEF_BITS);
+                u1 = _mm_srai_epi32(_mm_add_epi32(u1, delta), INTER_REMAP_COEF_BITS);
+                u0 = _mm_slli_si128(u0, 4);
+                u0 = _mm_packs_epi32(u0, u1);
+                u0 = _mm_packus_epi16(u0, u0);
+                _mm_storel_epi64((__m128i*)(D + 6), _mm_srli_si128(u0,1));
+            }
+        }
+        else if( cn == 4 )
+        {
+            for( ; x <= width - 4; x += 4, D += 16 )
+            {
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i u0, v0, u1, v1;
+
+                xy0 = _mm_madd_epi16( xy0, xy2ofs );
+                _mm_store_si128( (__m128i*)iofs0, xy0 );
+                const __m128i *w0, *w1;
+                w0 = (const __m128i*)(wtab + FXY[x]*16);
+                w1 = (const __m128i*)(wtab + FXY[x+1]*16);
+
+                u0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[0])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[0] + 4)));
+                v0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[0])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[0] + 4)));
+                u1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[1])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[1] + 4)));
+                v1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[1])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[1] + 4)));
+                u0 = _mm_unpacklo_epi8(u0, z);
+                v0 = _mm_unpacklo_epi8(v0, z);
+                u1 = _mm_unpacklo_epi8(u1, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
+                u0 = _mm_add_epi32(_mm_madd_epi16(u0, w0[0]), _mm_madd_epi16(v0, w0[1]));
+                u1 = _mm_add_epi32(_mm_madd_epi16(u1, w1[0]), _mm_madd_epi16(v1, w1[1]));
+                u0 = _mm_srai_epi32(_mm_add_epi32(u0, delta), INTER_REMAP_COEF_BITS);
+                u1 = _mm_srai_epi32(_mm_add_epi32(u1, delta), INTER_REMAP_COEF_BITS);
+                u0 = _mm_packs_epi32(u0, u1);
+                u0 = _mm_packus_epi16(u0, u0);
+                _mm_storel_epi64((__m128i*)D, u0);
+
+                w0 = (const __m128i*)(wtab + FXY[x+2]*16);
+                w1 = (const __m128i*)(wtab + FXY[x+3]*16);
+
+                u0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[2])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[2] + 4)));
+                v0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[2])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[2] + 4)));
+                u1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S0 + iofs0[3])),
+                                       _mm_cvtsi32_si128(*(int*)(S0 + iofs0[3] + 4)));
+                v1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(int*)(S1 + iofs0[3])),
+                                       _mm_cvtsi32_si128(*(int*)(S1 + iofs0[3] + 4)));
+                u0 = _mm_unpacklo_epi8(u0, z);
+                v0 = _mm_unpacklo_epi8(v0, z);
+                u1 = _mm_unpacklo_epi8(u1, z);
+                v1 = _mm_unpacklo_epi8(v1, z);
+                u0 = _mm_add_epi32(_mm_madd_epi16(u0, w0[0]), _mm_madd_epi16(v0, w0[1]));
+                u1 = _mm_add_epi32(_mm_madd_epi16(u1, w1[0]), _mm_madd_epi16(v1, w1[1]));
+                u0 = _mm_srai_epi32(_mm_add_epi32(u0, delta), INTER_REMAP_COEF_BITS);
+                u1 = _mm_srai_epi32(_mm_add_epi32(u1, delta), INTER_REMAP_COEF_BITS);
+                u0 = _mm_packs_epi32(u0, u1);
+                u0 = _mm_packus_epi16(u0, u0);
+                _mm_storel_epi64((__m128i*)(D + 8), u0);
+            }
+        }
+
         return x;
     }
 };
@@ -1755,6 +1897,10 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
 
     unsigned width1 = std::max(ssize.width-1, 0), height1 = std::max(ssize.height-1, 0);
     CV_Assert( cn <= 4 );
+#if CV_SSE2
+    if( _src.type() == CV_8UC3 )
+        width1 = std::max(ssize.width-2, 0);
+#endif
 
     for( dy = 0; dy < dsize.height; dy++ )
     {
@@ -1830,53 +1976,99 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
             }
             else
             {
-                if( borderType == BORDER_TRANSPARENT )
+                if( borderType == BORDER_TRANSPARENT && cn != 3 )
                 {
                     D += (X1 - dx)*cn;
                     dx = X1;
                     continue;
                 }
-                for( ; dx < X1; dx++, D += cn )
-                {
-                    int sx = XY[dx*2], sy = XY[dx*2+1], k;
-                    if( borderType == BORDER_CONSTANT &&
-                        (sx >= ssize.width || sx+1 < 0 ||
-                         sy >= ssize.height || sy+1 < 0) )
+                
+                if( cn == 1 )
+                    for( ; dx < X1; dx++, D++ )
                     {
-                        for( k = 0; k < cn; k++ )
-                            D[k] = cval[k];
-                    }
-                    else
-                    {
-                        int sx0, sx1, sy0, sy1;
-                        const T *v0, *v1, *v2, *v3;
-                        const AT* w = wtab + FXY[dx]*4;
-                        if( borderType == BORDER_REPLICATE )
+                        int sx = XY[dx*2], sy = XY[dx*2+1];
+                        if( borderType == BORDER_CONSTANT &&
+                            (sx >= ssize.width || sx+1 < 0 ||
+                             sy >= ssize.height || sy+1 < 0) )
                         {
-                            sx0 = clip(sx, 0, ssize.width);
-                            sx1 = clip(sx+1, 0, ssize.width);
-                            sy0 = clip(sy, 0, ssize.height);
-                            sy1 = clip(sy+1, 0, ssize.height);
-                            v0 = S0 + sy0*sstep + sx0*cn;
-                            v1 = S0 + sy0*sstep + sx1*cn;
-                            v2 = S0 + sy1*sstep + sx0*cn;
-                            v3 = S0 + sy1*sstep + sx1*cn;
+                            D[0] = cval[0];
                         }
                         else
                         {
-                            sx0 = borderInterpolate(sx, ssize.width, borderType);
-                            sx1 = borderInterpolate(sx+1, ssize.width, borderType);
-                            sy0 = borderInterpolate(sy, ssize.height, borderType);
-                            sy1 = borderInterpolate(sy+1, ssize.height, borderType);
-                            v0 = sx0 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx0*cn : &cval[0];
-                            v1 = sx1 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx1*cn : &cval[0];
-                            v2 = sx0 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx0*cn : &cval[0];
-                            v3 = sx1 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx1*cn : &cval[0];
+                            int sx0, sx1, sy0, sy1;
+                            T v0, v1, v2, v3;
+                            const AT* w = wtab + FXY[dx]*4;
+                            if( borderType == BORDER_REPLICATE )
+                            {
+                                sx0 = clip(sx, 0, ssize.width);
+                                sx1 = clip(sx+1, 0, ssize.width);
+                                sy0 = clip(sy, 0, ssize.height);
+                                sy1 = clip(sy+1, 0, ssize.height);
+                                v0 = S0[sy0*sstep + sx0];
+                                v1 = S0[sy0*sstep + sx1];
+                                v2 = S0[sy1*sstep + sx0];
+                                v3 = S0[sy1*sstep + sx1];
+                            }
+                            else
+                            {
+                                sx0 = borderInterpolate(sx, ssize.width, borderType);
+                                sx1 = borderInterpolate(sx+1, ssize.width, borderType);
+                                sy0 = borderInterpolate(sy, ssize.height, borderType);
+                                sy1 = borderInterpolate(sy+1, ssize.height, borderType);
+                                v0 = sx0 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx0] : cval[0];
+                                v1 = sx1 >= 0 && sy0 >= 0 ? S0[sy0*sstep + sx1] : cval[0];
+                                v2 = sx0 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx0] : cval[0];
+                                v3 = sx1 >= 0 && sy1 >= 0 ? S0[sy1*sstep + sx1] : cval[0];
+                            }
+                            D[0] = castOp(WT(v0*w[0] + v1*w[1] + v2*w[2] + v3*w[3]));
                         }
-                        for( k = 0; k < cn; k++ )
-                            D[k] = castOp(WT(v0[k]*w[0] + v1[k]*w[1] + v2[k]*w[2] + v3[k]*w[3]));
                     }
-                }
+                else
+                    for( ; dx < X1; dx++, D += cn )
+                    {
+                        int sx = XY[dx*2], sy = XY[dx*2+1], k;
+                        if( borderType == BORDER_CONSTANT &&
+                            (sx >= ssize.width || sx+1 < 0 ||
+                             sy >= ssize.height || sy+1 < 0) )
+                        {
+                            for( k = 0; k < cn; k++ )
+                                D[k] = cval[k];
+                        }
+                        else
+                        {
+                            int sx0, sx1, sy0, sy1;
+                            const T *v0, *v1, *v2, *v3;
+                            const AT* w = wtab + FXY[dx]*4;
+                            if( borderType == BORDER_REPLICATE )
+                            {
+                                sx0 = clip(sx, 0, ssize.width);
+                                sx1 = clip(sx+1, 0, ssize.width);
+                                sy0 = clip(sy, 0, ssize.height);
+                                sy1 = clip(sy+1, 0, ssize.height);
+                                v0 = S0 + sy0*sstep + sx0*cn;
+                                v1 = S0 + sy0*sstep + sx1*cn;
+                                v2 = S0 + sy1*sstep + sx0*cn;
+                                v3 = S0 + sy1*sstep + sx1*cn;
+                            }
+                            else if( borderType == BORDER_TRANSPARENT &&
+                                (unsigned)sx >= (unsigned)(ssize.width-1) &&
+                                (unsigned)sy >= (unsigned)(ssize.height-1))
+                                continue;
+                            else
+                            {
+                                sx0 = borderInterpolate(sx, ssize.width, borderType);
+                                sx1 = borderInterpolate(sx+1, ssize.width, borderType);
+                                sy0 = borderInterpolate(sy, ssize.height, borderType);
+                                sy1 = borderInterpolate(sy+1, ssize.height, borderType);
+                                v0 = sx0 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx0*cn : &cval[0];
+                                v1 = sx1 >= 0 && sy0 >= 0 ? S0 + sy0*sstep + sx1*cn : &cval[0];
+                                v2 = sx0 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx0*cn : &cval[0];
+                                v3 = sx1 >= 0 && sy1 >= 0 ? S0 + sy1*sstep + sx1*cn : &cval[0];
+                            }
+                            for( k = 0; k < cn; k++ )
+                                D[k] = castOp(WT(v0[k]*w[0] + v1[k]*w[1] + v2[k]*w[2] + v3[k]*w[3]));
+                        }
+                    }
             }
         }
     }
@@ -2115,21 +2307,21 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
 
     static RemapFunc linear_tab[] =
     {
-        remapBilinear<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, RemapVec_8u, short>, 0,
+        remapBilinear<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, RemapVec_8u, short>, 0,
         remapBilinear<Cast<float, ushort>, RemapNoVec, float>, 0, 0,
         remapBilinear<Cast<float, float>, RemapNoVec, float>, 0, 0
     };
 
     static RemapFunc cubic_tab[] =
     {
-        remapBicubic<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short, INTER_COEF_REMAP_SCALE>, 0,
+        remapBicubic<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, short, INTER_REMAP_COEF_SCALE>, 0,
         remapBicubic<Cast<float, ushort>, float, 1>, 0, 0,
         remapBicubic<Cast<float, float>, float, 1>, 0, 0
     };
 
     static RemapFunc lanczos4_tab[] =
     {
-        remapLanczos4<FixedPtCast<int, uchar, INTER_COEF_REMAP_BITS>, short, INTER_COEF_REMAP_SCALE>, 0,
+        remapLanczos4<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, short, INTER_REMAP_COEF_SCALE>, 0,
         remapLanczos4<Cast<float, ushort>, float, 1>, 0, 0,
         remapLanczos4<Cast<float, float>, float, 1>, 0, 0
     };
@@ -2523,7 +2715,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
         bdelta[x] = saturate_cast<int>(M[3]*x*AB_SCALE);
     }
     
-    int bh0 = std::min(BLOCK_SZ, height);
+    int bh0 = std::min(BLOCK_SZ/2, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
 #if CV_SSE2
@@ -2633,7 +2825,7 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
  
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
     
-    int bh0 = std::min(BLOCK_SZ, height);
+    int bh0 = std::min(BLOCK_SZ/2, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
 
