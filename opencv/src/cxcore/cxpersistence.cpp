@@ -1686,7 +1686,7 @@ icvXMLParseValue( CvFileStorage* fs, char* ptr, CvFileNode* node,
                 else if( strcmp( type_name, "map" ) == 0 )
                     elem_type = CV_NODE_MAP;
                 else if( strcmp( type_name, "seq" ) == 0 )
-                    elem_type = CV_NODE_MAP;
+                    elem_type = CV_NODE_SEQ;
                 else
                 {
                     info = cvFindType( type_name );
