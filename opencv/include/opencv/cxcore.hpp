@@ -47,12 +47,14 @@
 
 #ifdef __cplusplus
 
+#ifndef SKIP_INCLUDES
 #include <algorithm>
 #include <complex>
 #include <map>
 #include <new>
 #include <string>
 #include <vector>
+#endif // SKIP_INCLUDES
 
 namespace cv {
 

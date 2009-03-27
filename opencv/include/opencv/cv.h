@@ -1552,7 +1552,9 @@ CVAPI(void)  cvReprojectImageTo3D( const CvArr* disparityImage,
 #endif
 
 #ifdef __cplusplus
+#ifndef SKIP_INCLUDES // for now only expose old interface to swig
 #include "cv.hpp"
+#endif // SKIP_INCLUDES
 #endif
 
 /****************************************************************************************\

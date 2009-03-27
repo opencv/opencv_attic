@@ -2111,6 +2111,8 @@ struct CV_EXPORTS CvType
 
 #endif
 
+#ifndef SKIP_INCLUDES // for now only expose old interface to swig
 #include "cxcore.hpp"
+#endif // SKIP_INCLUDES
 
 #endif /*_CXCORE_H_*/

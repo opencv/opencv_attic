@@ -1,12 +1,12 @@
 # 1 "../../../include/opencv/cv.h"
 # 1 "<built-in>"
-# 1 "<command-line>"
+# 1 "<command line>"
 # 1 "../../../include/opencv/cv.h"
 # 58 "../../../include/opencv/cv.h"
 # 1 "../../../include/opencv/cxcore.h" 1
-# 69 "../../../include/opencv/cxcore.h"
+# 70 "../../../include/opencv/cxcore.h"
 # 1 "../../../include/opencv/cxtypes.h" 1
-# 149 "../../../include/opencv/cxtypes.h"
+# 150 "../../../include/opencv/cxtypes.h"
 typedef long long int64;
 typedef unsigned long long uint64;
 
@@ -40,10 +40,10 @@ typedef union Cv64suf
     double f;
 }
 Cv64suf;
-# 214 "../../../include/opencv/cxtypes.h"
+# 215 "../../../include/opencv/cxtypes.h"
 inline int cvRound( double value )
 {
-# 234 "../../../include/opencv/cxtypes.h"
+# 235 "../../../include/opencv/cxtypes.h"
     Cv64suf temp;
     temp.f = value + 6755399441055744.0;
     return (int)temp.u;
@@ -127,7 +127,7 @@ inline CvRNG cvRNG( int64 seed = -1)
 inline unsigned cvRandInt( CvRNG* rng )
 {
     uint64 temp = *rng;
-    temp = (uint64)(unsigned)temp*1554115554 + (temp >> 32);
+    temp = (uint64)(unsigned)temp*4164903690U + (temp >> 32);
     *rng = temp;
     return (unsigned)temp;
 }
@@ -137,7 +137,7 @@ inline double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 ;
 }
-# 369 "../../../include/opencv/cxtypes.h"
+# 370 "../../../include/opencv/cxtypes.h"
 typedef struct _IplImage
 {
     int nSize;
@@ -205,7 +205,7 @@ typedef struct _IplConvKernelFP
     float *values;
 }
 IplConvKernelFP;
-# 547 "../../../include/opencv/cxtypes.h"
+# 548 "../../../include/opencv/cxtypes.h"
 typedef struct CvMat
 {
     int type;
@@ -243,7 +243,7 @@ typedef struct CvMat
 
 }
 CvMat;
-# 625 "../../../include/opencv/cxtypes.h"
+# 626 "../../../include/opencv/cxtypes.h"
 inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 {
     CvMat m;
@@ -260,7 +260,7 @@ inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 
     return m;
 }
-# 655 "../../../include/opencv/cxtypes.h"
+# 656 "../../../include/opencv/cxtypes.h"
 inline double cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
@@ -302,7 +302,7 @@ inline int cvCvToIplDepth( int type )
     return ((((sizeof(size_t)<<28)|0x8442211) >> ((depth) & ((1 << 3) - 1))*4) & 15)*8 | (depth == 1 || depth == 3 ||
            depth == 4 ? 0x80000000 : 0);
 }
-# 708 "../../../include/opencv/cxtypes.h"
+# 709 "../../../include/opencv/cxtypes.h"
 typedef struct CvMatND
 {
     int type;
@@ -328,7 +328,7 @@ typedef struct CvMatND
     dim[32];
 }
 CvMatND;
-# 748 "../../../include/opencv/cxtypes.h"
+# 749 "../../../include/opencv/cxtypes.h"
 struct CvSet;
 
 typedef struct CvSparseMat
@@ -346,7 +346,7 @@ typedef struct CvSparseMat
     int size[32];
 }
 CvSparseMat;
-# 775 "../../../include/opencv/cxtypes.h"
+# 776 "../../../include/opencv/cxtypes.h"
 typedef struct CvSparseNode
 {
     unsigned hashval;
@@ -361,9 +361,9 @@ typedef struct CvSparseMatIterator
     int curidx;
 }
 CvSparseMatIterator;
-# 797 "../../../include/opencv/cxtypes.h"
+# 798 "../../../include/opencv/cxtypes.h"
 typedef int CvHistType;
-# 813 "../../../include/opencv/cxtypes.h"
+# 814 "../../../include/opencv/cxtypes.h"
 typedef struct CvHistogram
 {
     int type;
@@ -373,7 +373,7 @@ typedef struct CvHistogram
     CvMatND mat;
 }
 CvHistogram;
-# 843 "../../../include/opencv/cxtypes.h"
+# 844 "../../../include/opencv/cxtypes.h"
 typedef struct CvRect
 {
     int x;
@@ -731,13 +731,13 @@ typedef struct CvSeqBlock
     schar* data;
 }
 CvSeqBlock;
-# 1225 "../../../include/opencv/cxtypes.h"
+# 1226 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1245 "../../../include/opencv/cxtypes.h"
+# 1246 "../../../include/opencv/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -754,7 +754,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1301 "../../../include/opencv/cxtypes.h"
+# 1302 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -773,7 +773,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1328 "../../../include/opencv/cxtypes.h"
+# 1329 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -804,21 +804,21 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1495 "../../../include/opencv/cxtypes.h"
+# 1496 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max;
 }
 CvSeqWriter;
-# 1513 "../../../include/opencv/cxtypes.h"
+# 1514 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max; int delta_index; schar* prev_elem;
 }
 CvSeqReader;
-# 1633 "../../../include/opencv/cxtypes.h"
+# 1634 "../../../include/opencv/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1643 "../../../include/opencv/cxtypes.h"
+# 1644 "../../../include/opencv/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -837,7 +837,7 @@ inline CvAttrList cvAttrList( const char** attr = NULL,
 }
 
 struct CvTypeInfo;
-# 1696 "../../../include/opencv/cxtypes.h"
+# 1697 "../../../include/opencv/cxtypes.h"
 typedef struct CvString
 {
     int len;
@@ -923,17 +923,17 @@ typedef struct CvModuleInfo
     CvPluginFuncInfo* func_tab;
 }
 CvModuleInfo;
-# 70 "../../../include/opencv/cxcore.h" 2
+# 71 "../../../include/opencv/cxcore.h" 2
 # 1 "../../../include/opencv/cxerror.h" 1
 # 47 "../../../include/opencv/cxerror.h"
 typedef int CVStatus;
-# 71 "../../../include/opencv/cxcore.h" 2
-# 1 "../../../include/opencv/cvver.h" 1
 # 72 "../../../include/opencv/cxcore.h" 2
+# 1 "../../../include/opencv/cvver.h" 1
+# 73 "../../../include/opencv/cxcore.h" 2
 
 
 extern "C" {
-# 85 "../../../include/opencv/cxcore.h"
+# 86 "../../../include/opencv/cxcore.h"
 extern "C" void* cvAlloc( size_t size );
 
 
@@ -1153,7 +1153,7 @@ typedef struct CvNArrayIterator
 
 }
 CvNArrayIterator;
-# 312 "../../../include/opencv/cxcore.h"
+# 313 "../../../include/opencv/cxcore.h"
 extern "C" int cvInitNArrayIterator( int count, CvArr** arrs,
                                  const CvArr* mask, CvMatND* stubs,
                                  CvNArrayIterator* array_iterator,
@@ -1233,7 +1233,7 @@ extern "C" CvMat* cvGetMat( const CvArr* arr, CvMat* header,
 
 
 extern "C" IplImage* cvGetImage( const CvArr* arr, IplImage* image_header );
-# 403 "../../../include/opencv/cxcore.h"
+# 404 "../../../include/opencv/cxcore.h"
 extern "C" CvArr* cvReshapeMatND( const CvArr* arr,
                              int sizeof_header, CvArr* header,
                              int new_cn, int new_dims, int* new_sizes );
@@ -1309,7 +1309,7 @@ extern "C" void cvMixChannels( const CvArr** src, int src_count,
 extern "C" void cvConvertScale( const CvArr* src, CvArr* dst,
                              double scale = 1,
                              double shift = 0 );
-# 488 "../../../include/opencv/cxcore.h"
+# 489 "../../../include/opencv/cxcore.h"
 extern "C" void cvConvertScaleAbs( const CvArr* src, CvArr* dst,
                                 double scale = 1,
                                 double shift = 0 );
@@ -1410,7 +1410,7 @@ extern "C" void cvInRange( const CvArr* src, const CvArr* lower,
 
 extern "C" void cvInRangeS( const CvArr* src, CvScalar lower,
                        CvScalar upper, CvArr* dst );
-# 600 "../../../include/opencv/cxcore.h"
+# 601 "../../../include/opencv/cxcore.h"
 extern "C" void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp_op );
 
 
@@ -1433,7 +1433,7 @@ extern "C" void cvAbsDiff( const CvArr* src1, const CvArr* src2, CvArr* dst );
 
 
 extern "C" void cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
-# 630 "../../../include/opencv/cxcore.h"
+# 631 "../../../include/opencv/cxcore.h"
 extern "C" void cvCartToPolar( const CvArr* x, const CvArr* y,
                             CvArr* magnitude, CvArr* angle = NULL,
                             int angle_in_degrees = 0);
@@ -1505,7 +1505,7 @@ extern "C" void cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
 
 
 extern "C" void cvCrossProduct( const CvArr* src1, const CvArr* src2, CvArr* dst );
-# 711 "../../../include/opencv/cxcore.h"
+# 712 "../../../include/opencv/cxcore.h"
 extern "C" void cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
                      const CvArr* src3, double beta, CvArr* dst,
                      int tABC = 0);
@@ -1539,7 +1539,7 @@ extern "C" void cvCompleteSymm( CvMat* matrix, int LtoR = 0 );
 
 extern "C" void cvFlip( const CvArr* src, CvArr* dst = NULL,
                      int flip_mode = 0);
-# 752 "../../../include/opencv/cxcore.h"
+# 753 "../../../include/opencv/cxcore.h"
 extern "C" void cvSVD( CvArr* A, CvArr* W, CvArr* U = NULL,
                      CvArr* V = NULL, int flags = 0);
 
@@ -1548,13 +1548,7 @@ extern "C" void cvSVD( CvArr* A, CvArr* W, CvArr* U = NULL,
 extern "C" void cvSVBkSb( const CvArr* W, const CvArr* U,
                         const CvArr* V, const CvArr* B,
                         CvArr* X, int flags );
-
-
-
-
-
-
-
+# 770 "../../../include/opencv/cxcore.h"
 extern "C" double cvInvert( const CvArr* src, CvArr* dst,
                          int method = 0);
 
@@ -1579,7 +1573,7 @@ extern "C" void cvSetIdentity( CvArr* mat, CvScalar value = cvRealScalar(1) );
 
 
 extern "C" CvArr* cvRange( CvArr* mat, double start, double end );
-# 812 "../../../include/opencv/cxcore.h"
+# 815 "../../../include/opencv/cxcore.h"
 extern "C" void cvCalcCovarMatrix( const CvArr** vects, int count,
                                 CvArr* cov_mat, CvArr* avg, int flags );
 
@@ -1596,7 +1590,7 @@ extern "C" void cvBackProjectPCA( const CvArr* proj, const CvArr* mean,
                                const CvArr* eigenvects, CvArr* result );
 
 
-extern "C" double cvMahalanobis( const CvArr* vec1, const CvArr* vec2, CvArr* mat );
+extern "C" double cvMahalanobis( const CvArr* vec1, const CvArr* vec2, const CvArr* mat );
 
 
 
@@ -1621,7 +1615,7 @@ extern "C" void cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
                           CvPoint* min_loc = NULL,
                           CvPoint* max_loc = NULL,
                           const CvArr* mask = NULL );
-# 871 "../../../include/opencv/cxcore.h"
+# 874 "../../../include/opencv/cxcore.h"
 extern "C" double cvNorm( const CvArr* arr1, const CvArr* arr2 = NULL,
                        int norm_type = 4,
                        const CvArr* mask = NULL );
@@ -1639,7 +1633,7 @@ extern "C" void cvNormalize( const CvArr* src, CvArr* dst,
 
 extern "C" void cvReduce( const CvArr* src, CvArr* dst, int dim = -1,
                        int op = 0 );
-# 905 "../../../include/opencv/cxcore.h"
+# 908 "../../../include/opencv/cxcore.h"
 extern "C" void cvDFT( const CvArr* src, CvArr* dst, int flags,
                     int nonzero_rows = 0 );
 
@@ -1939,7 +1933,7 @@ extern "C" void cvClearGraph( CvGraph* graph );
 
 extern "C" int cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
 extern "C" int cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
-# 1239 "../../../include/opencv/cxcore.h"
+# 1242 "../../../include/opencv/cxcore.h"
 typedef struct CvGraphScanner
 {
     CvGraphVtx* vtx;
@@ -1966,7 +1960,7 @@ extern "C" int cvNextGraphItem( CvGraphScanner* scanner );
 
 
 extern "C" CvGraph* cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
-# 1286 "../../../include/opencv/cxcore.h"
+# 1289 "../../../include/opencv/cxcore.h"
 extern "C" void cvLine( CvArr* img, CvPoint pt1, CvPoint pt2,
                      CvScalar color, int thickness = 1,
                      int line_type = 8, int shift = 0 );
@@ -2016,7 +2010,7 @@ extern "C" void cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours, 
 extern "C" void cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours,
                          int is_closed, CvScalar color, int thickness = 1,
                          int line_type = 8, int shift = 0 );
-# 1345 "../../../include/opencv/cxcore.h"
+# 1348 "../../../include/opencv/cxcore.h"
 extern "C" int cvClipLine( CvSize img_size, CvPoint* pt1, CvPoint* pt2 );
 
 
@@ -2026,7 +2020,7 @@ extern "C" int cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
                                 CvLineIterator* line_iterator,
                                 int connectivity = 8,
                                 int left_to_right = 0);
-# 1382 "../../../include/opencv/cxcore.h"
+# 1385 "../../../include/opencv/cxcore.h"
 typedef struct CvFont
 {
     int font_face;
@@ -2080,10 +2074,10 @@ extern "C" int cvEllipse2Poly( CvPoint center, CvSize axes,
 
 
 extern "C" void cvDrawContours( CvArr *img, CvSeq* contour,
-                            CvScalar external_color, CvScalar hole_color,
-                            int max_level, int thickness = 1,
-                            int line_type = 8,
-                            CvPoint offset = cvPoint(0,0));
+                             CvScalar external_color, CvScalar hole_color,
+                             int max_level, int thickness = 1,
+                             int line_type = 8,
+                             CvPoint offset = cvPoint(0,0));
 
 
 
@@ -2219,7 +2213,7 @@ extern "C" void cvSetIPLAllocators( Cv_iplCreateImageHeader create_header,
                                Cv_iplDeallocate deallocate,
                                Cv_iplCreateROI create_roi,
                                Cv_iplCloneImage clone_image );
-# 1586 "../../../include/opencv/cxcore.h"
+# 1589 "../../../include/opencv/cxcore.h"
 extern "C" CvFileStorage* cvOpenFileStorage( const char* filename,
                                           CvMemStorage* memstorage,
                                           int flags );
@@ -2414,8 +2408,6 @@ extern "C" int cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMF
 
 }
 
-# 1 "../../../include/opencv/cxcore.hpp" 1
-# 46 "../../../include/opencv/cxcore.hpp"
 class CvImage
 {
 public:
@@ -2744,7 +2736,6 @@ struct CvType
     static CvTypeInfo* first;
     static CvTypeInfo* last;
 };
-# 1781 "../../../include/opencv/cxcore.h" 2
 # 59 "../../../include/opencv/cv.h" 2
 # 1 "../../../include/opencv/cvtypes.h" 1
 # 51 "../../../include/opencv/cvtypes.h"
@@ -4168,9 +4159,13 @@ extern "C" void cvComputeCorrespondEpilines( const CvMat* points,
 
 
 
+extern "C" void cvTriangulatePoints(CvMat* projMatr1, CvMat* projMatr2,
+    CvMat* projPoints1, CvMat* projPoints2,
+    CvMat* points4D);
 
-
-
+extern "C" void cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
+        CvMat* new_points1, CvMat* new_points2);
+# 1473 "../../../include/opencv/cv.h"
 typedef struct CvStereoBMState
 {
 
@@ -4250,332 +4245,3 @@ extern "C" void cvReprojectImageTo3D( const CvArr* disparityImage,
 
 
 }
-
-
-
-# 1 "../../../include/opencv/cv.hpp" 1
-# 57 "../../../include/opencv/cv.hpp"
-typedef void (*CvRowFilterFunc)( const uchar* src, uchar* dst, void* params );
-typedef void (*CvColumnFilterFunc)( uchar** src, uchar* dst, int dst_step, int count, void* params );
-
-class CvBaseImageFilter
-{
-public:
-    CvBaseImageFilter();
-
-    CvBaseImageFilter( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvBaseImageFilter();
-# 82 "../../../include/opencv/cv.hpp"
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-
-    virtual void clear();
-# 105 "../../../include/opencv/cv.hpp"
-    virtual int process( const CvMat* _src, CvMat* _dst,
-                         CvRect _src_roi=cvRect(0,0,-1,-1),
-                         CvPoint _dst_origin=cvPoint(0,0), int _flags=0 );
-
-    int get_src_type() const { return src_type; }
-    int get_dst_type() const { return dst_type; }
-    int get_work_type() const { return work_type; }
-    CvSize get_kernel_size() const { return ksize; }
-    CvPoint get_anchor() const { return anchor; }
-    int get_width() const { return prev_x_range.end_index - prev_x_range.start_index; }
-    CvRowFilterFunc get_x_filter_func() const { return x_func; }
-    CvColumnFilterFunc get_y_filter_func() const { return y_func; }
-
-protected:
-
-    virtual void get_work_params();
-
-
-
-    virtual void start_process( CvSlice x_range, int width );
-
-
-    virtual void make_y_border( int row_count, int top_rows, int bottom_rows );
-
-    virtual int fill_cyclic_buffer( const uchar* src, int src_step,
-                                    int y, int y1, int y2 );
-
-    enum { ALIGN=32 };
-
-    int max_width;
-
-    int min_depth, src_type, dst_type, work_type;
-
-
-
-    CvRowFilterFunc x_func;
-    CvColumnFilterFunc y_func;
-
-    uchar* buffer;
-    uchar** rows;
-    int top_rows, bottom_rows, max_rows;
-    uchar *buf_start, *buf_end, *buf_head, *buf_tail;
-    int buf_size, buf_step, buf_count, buf_max_count;
-
-    bool is_separable;
-    CvSize ksize;
-    CvPoint anchor;
-    int max_ky, border_mode;
-    CvScalar border_value;
-    uchar* const_row;
-    int* border_tab;
-    int border_tab_sz1, border_tab_sz;
-
-    CvSlice prev_x_range;
-    int prev_width;
-};
-
-
-
-class CvSepFilter : public CvBaseImageFilter
-{
-public:
-    CvSepFilter();
-    CvSepFilter( int _max_width, int _src_type, int _dst_type,
-                 const CvMat* _kx, const CvMat* _ky,
-                 CvPoint _anchor=cvPoint(-1,-1),
-                 int _border_mode=1,
-                 CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvSepFilter();
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kx, const CvMat* _ky,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-    virtual void init_deriv( int _max_width, int _src_type, int _dst_type,
-                             int dx, int dy, int aperture_size, int flags=0 );
-    virtual void init_gaussian( int _max_width, int _src_type, int _dst_type,
-                                int gaussian_size, double sigma );
-
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void clear();
-    const CvMat* get_x_kernel() const { return kx; }
-    const CvMat* get_y_kernel() const { return ky; }
-    int get_x_kernel_flags() const { return kx_flags; }
-    int get_y_kernel_flags() const { return ky_flags; }
-
-    enum { GENERIC=0, ASYMMETRICAL=1, SYMMETRICAL=2, POSITIVE=4, SUM_TO_1=8, INTEGER=16 };
-    enum { NORMALIZE_KERNEL=1, FLIP_KERNEL=2 };
-
-    static void init_gaussian_kernel( CvMat* kernel, double sigma=-1 );
-    static void init_sobel_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
-    static void init_scharr_kernel( CvMat* _kx, CvMat* _ky, int dx, int dy, int flags=0 );
-
-protected:
-    CvMat *kx, *ky;
-    int kx_flags, ky_flags;
-};
-
-
-
-class CvLinearFilter : public CvBaseImageFilter
-{
-public:
-    CvLinearFilter();
-    CvLinearFilter( int _max_width, int _src_type, int _dst_type,
-                    const CvMat* _kernel,
-                    CvPoint _anchor=cvPoint(-1,-1),
-                    int _border_mode=1,
-                    CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvLinearFilter();
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kernel,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void clear();
-    const CvMat* get_kernel() const { return kernel; }
-    uchar* get_kernel_sparse_buf() { return k_sparse; }
-    int get_kernel_sparse_count() const { return k_sparse_count; }
-
-protected:
-    CvMat *kernel;
-    uchar* k_sparse;
-    int k_sparse_count;
-};
-
-
-
-class CvBoxFilter : public CvBaseImageFilter
-{
-public:
-    CvBoxFilter();
-    CvBoxFilter( int _max_width, int _src_type, int _dst_type,
-                 bool _normalized, CvSize _ksize,
-                 CvPoint _anchor=cvPoint(-1,-1),
-                 int _border_mode=1,
-                 CvScalar _border_value=cvScalarAll(0) );
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _normalized, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual ~CvBoxFilter();
-    bool is_normalized() const { return normalized; }
-    double get_scale() const { return scale; }
-    uchar* get_sum_buf() { return sum; }
-    int* get_sum_count_ptr() { return &sum_count; }
-
-protected:
-    virtual void start_process( CvSlice x_range, int width );
-
-    uchar* sum;
-    int sum_count;
-    bool normalized;
-    double scale;
-};
-
-
-
-class CvLaplaceFilter : public CvSepFilter
-{
-public:
-    CvLaplaceFilter();
-    CvLaplaceFilter( int _max_width, int _src_type, int _dst_type,
-                     bool _normalized, int _ksize,
-                     int _border_mode=1,
-                     CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvLaplaceFilter();
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _normalized, int _ksize,
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       const CvMat* _kx, const CvMat* _ky,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    bool is_normalized() const { return normalized; }
-    bool is_basic_laplacian() const { return basic_laplacian; }
-protected:
-    void get_work_params();
-
-    bool basic_laplacian;
-    bool normalized;
-};
-
-
-
-class CvMorphology : public CvBaseImageFilter
-{
-public:
-    CvMorphology();
-    CvMorphology( int _operation, int _max_width, int _src_dst_type,
-                  int _element_shape, CvMat* _element,
-                  CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
-                  int _border_mode=1,
-                  CvScalar _border_value=cvScalarAll(0) );
-    virtual ~CvMorphology();
-    virtual void init( int _operation, int _max_width, int _src_dst_type,
-                       int _element_shape, CvMat* _element,
-                       CvSize _ksize=cvSize(0,0), CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-
-    virtual void init( int _max_width, int _src_type, int _dst_type,
-                       bool _is_separable, CvSize _ksize,
-                       CvPoint _anchor=cvPoint(-1,-1),
-                       int _border_mode=1,
-                       CvScalar _border_value=cvScalarAll(0) );
-
-    virtual void clear();
-    const CvMat* get_element() const { return element; }
-    int get_element_shape() const { return el_shape; }
-    int get_operation() const { return operation; }
-    uchar* get_element_sparse_buf() { return el_sparse; }
-    int get_element_sparse_count() const { return el_sparse_count; }
-
-    enum { RECT=0, CROSS=1, ELLIPSE=2, CUSTOM=100, BINARY = 0, GRAYSCALE=256 };
-    enum { ERODE=0, DILATE=1 };
-
-    static void init_binary_element( CvMat* _element, int _element_shape,
-                                     CvPoint _anchor=cvPoint(-1,-1) );
-protected:
-
-    void start_process( CvSlice x_range, int width );
-    int fill_cyclic_buffer( const uchar* src, int src_step,
-                            int y0, int y1, int y2 );
-    uchar* el_sparse;
-    int el_sparse_count;
-
-    CvMat *element;
-    int el_shape;
-    int operation;
-};
-
-
-
-
-struct CvLevMarq
-{
-    CvLevMarq();
-    CvLevMarq( int nparams, int nerrs, CvTermCriteria criteria=
-        cvTermCriteria(2 +1,30,DBL_EPSILON),
-        bool completeSymmFlag=false );
-    ~CvLevMarq();
-    void init( int nparams, int nerrs, CvTermCriteria criteria=
-        cvTermCriteria(2 +1,30,DBL_EPSILON),
-        bool completeSymmFlag=false );
-    bool update( const CvMat*& param, CvMat*& J, CvMat*& err );
-    bool updateAlt( const CvMat*& param, CvMat*& JtJ, CvMat*& JtErr, double*& errNorm );
-
-    void clear();
-    void step();
-    enum { DONE=0, STARTED=1, CALC_J=2, CHECK_ERR=3 };
-
-    CvMat* mask;
-    CvMat* prevParam;
-    CvMat* param;
-    CvMat* J;
-    CvMat* err;
-    CvMat* JtJ;
-    CvMat* JtJN;
-    CvMat* JtErr;
-    CvMat* JtJV;
-    CvMat* JtJW;
-    double prevErrNorm, errNorm;
-    int lambdaLg10;
-    CvTermCriteria criteria;
-    int state;
-    int iters;
-    bool completeSymmFlag;
-};
-# 1545 "../../../include/opencv/cv.h" 2
