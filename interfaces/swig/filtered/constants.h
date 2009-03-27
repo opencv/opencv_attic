@@ -74,7 +74,11 @@
 
 #define CV_SVD_SYM 2
 
-#define CV_LSQ 8
+#define CV_CHOLESKY 3
+
+#define CV_QR  4
+
+#define CV_NORMAL 16
 
 #define cvInv cvInvert
 
@@ -665,6 +669,8 @@
 #define CV_StsNotImplemented         -213 
 
 #define CV_StsBadMemBlock            -214 
+
+#define CV_StsAssert                 -215 
 
 #define CV_BLUR_NO_SCALE 0
 

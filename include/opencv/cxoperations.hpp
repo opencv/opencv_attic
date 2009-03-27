@@ -43,7 +43,9 @@
 #ifndef _CXCORE_OPERATIONS_H_
 #define _CXCORE_OPERATIONS_H_
 
+#ifndef SKIP_INCLUDES
 #include <limits.h>
+#endif // SKIP_INCLUDES
 
 #ifdef __cplusplus
 
