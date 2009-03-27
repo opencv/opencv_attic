@@ -852,7 +852,7 @@ static inline Range operator - (const Range& r1, int delta)
 }
 
 
-template <typename T> inline Vector<T>::Vector() {};
+template <typename T> inline Vector<T>::Vector() {}
 template <typename T> inline Vector<T>::Vector(size_t _size) { resize(_size); }
 template <typename T> inline Vector<T>::Vector(size_t _size, const T& val)
 {
