@@ -299,6 +299,13 @@ void boxFilter( const Mat& src, Mat& dst, int ddepth,
     if( ddepth < 0 )
         ddepth = sdepth;
     dst.create( src.size(), CV_MAKETYPE(ddepth, cn) );
+    if( borderType != BORDER_CONSTANT && normalize )
+    {
+        if( src.rows == 1 )
+            ksize.height = 1;
+        if( src.cols == 1 )
+            ksize.width = 1;
+    }
     Ptr<FilterEngine> f = createBoxFilter( src.type(), dst.type(),
                         ksize, anchor, normalize, borderType );
     f->apply( src, dst );
@@ -403,6 +410,13 @@ void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
     }
 
     dst.create( src.size(), src.type() );
+    if( borderType != BORDER_CONSTANT )
+    {
+        if( src.rows == 1 )
+            ksize.height = 1;
+        if( src.cols == 1 )
+            ksize.width = 1;
+    }
     Ptr<FilterEngine> f = createGaussianFilter( src.type(), ksize, sigma1, sigma2, borderType );
     f->apply( src, dst );
 }
@@ -412,30 +426,18 @@ void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
                                       Median Filter
 \****************************************************************************************/
 
-#define CV_MINMAX_8U(a,b) \
-    (t = CV_FAST_CAST_8U((a) - (b)), (b) += t, a -= t)
-
-#if CV_SSE2 && !defined __SSE2__
-#define __SSE2__ 1
-#include "emmintrin.h"
-#endif
+//#undef CV_SSE2
 
 #if defined(__VEC__) || defined(__ALTIVEC__)
 #include <altivec.h>
 #undef bool
 #endif
 
-#if defined(__GNUC__)
-#define align(x) __attribute__ ((aligned (x)))
-#elif CV_SSE2 && (defined(__ICL) || (_MSC_VER >= 1300))
-#define align(x) __declspec(align(x))
-#else
-#define align(x)
-#endif
-
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4244 )
 #endif
+
+typedef ushort HT;
 
 /**
  * This structure represents a two-tier histogram. The first tier (known as the
@@ -447,23 +449,12 @@ void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
  * instructions. Each bucket is 16 bit wide, which means that extra care must be
  * taken to prevent overflow.
  */
-typedef struct align(16)
+typedef struct
 {
-    ushort coarse[16];
-    ushort fine[16][16];
+    HT coarse[16];
+    HT fine[16][16];
 } Histogram;
 
-/**
- * HOP is short for Histogram OPeration. This macro makes an operation \a op on
- * histogram \a h for pixel value \a x. It takes care of handling both levels.
- */
-#define HOP(h,x,op) \
-    h.coarse[x>>4] op; \
-    *((ushort*) h.fine + x) op;
-
-#define COP(c,j,x,op) \
-    h_coarse[ 16*(n*c+j) + (x>>4) ] op; \
-    h_fine[ 16 * (n*(16*c+(x>>4)) + j) + (x & 0xF) ] op;
 
 #if CV_SSE2 || defined __MMX__ || defined __ALTIVEC__
 #define MEDIAN_HAVE_SIMD 1
@@ -472,54 +463,39 @@ typedef struct align(16)
 #endif
 
 /**
- * Adds histograms \a x and \a y and stores the result in \a y. Makes use of
- * SSE2, MMX or Altivec, if available.
+ * histogram_add - adds histograms x and y.
+ * histogram_sub - subtracts histogram x from y.
  */
 #if CV_SSE2
-static inline void histogram_add( const ushort x[16], ushort y[16] )
+static inline void histogram_add( const HT x[16], HT y[16] )
 {
-    _mm_store_si128( (__m128i*) &y[0], _mm_add_epi16(
-        _mm_load_si128((__m128i*) &y[0]), _mm_load_si128((__m128i*) &x[0] )));
-    _mm_store_si128( (__m128i*) &y[8], _mm_add_epi16(
-        _mm_load_si128((__m128i*) &y[8]), _mm_load_si128((__m128i*) &x[8] )));
+    const __m128i* rx = (const __m128i*)x;
+    __m128i* ry = (__m128i*)y;
+    __m128i r0 = _mm_add_epi16(_mm_load_si128(ry+0),_mm_load_si128(rx+0));
+    __m128i r1 = _mm_add_epi16(_mm_load_si128(ry+1),_mm_load_si128(rx+1));
+    _mm_store_si128(ry+0, r0);
+    _mm_store_si128(ry+1, r1);
+}
+
+static inline void histogram_sub( const HT x[16], HT y[16] )
+{
+    const __m128i* rx = (const __m128i*)x;
+    __m128i* ry = (__m128i*)y;
+    __m128i r0 = _mm_sub_epi16(_mm_load_si128(ry+0),_mm_load_si128(rx+0));
+    __m128i r1 = _mm_sub_epi16(_mm_load_si128(ry+1),_mm_load_si128(rx+1));
+    _mm_store_si128(ry+0, r0);
+    _mm_store_si128(ry+1, r1);
 }
 #elif defined(__MMX__)
-static inline void histogram_add( const ushort x[16], ushort y[16] )
+static inline void histogram_add( const HT x[16], HT y[16] )
 {
     *(__m64*) &y[0]  = _mm_add_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
     *(__m64*) &y[4]  = _mm_add_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
     *(__m64*) &y[8]  = _mm_add_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
     *(__m64*) &y[12] = _mm_add_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
 }
-#elif defined(__ALTIVEC__)
-static inline void histogram_add( const ushort x[16], ushort y[16] )
-{
-    *(vector ushort*) &y[0] = vec_add( *(vector ushort*) &y[0], *(vector ushort*) &x[0] );
-    *(vector ushort*) &y[8] = vec_add( *(vector ushort*) &y[8], *(vector ushort*) &x[8] );
-}
-#else
-static inline void histogram_add( const ushort x[16], ushort y[16] )
-{
-    int i;
-    for( i = 0; i < 16; ++i )
-        y[i] = (ushort)(y[i] + x[i]);
-}
-#endif
 
-/**
- * Subtracts histogram \a x from \a y and stores the result in \a y. Makes use
- * of SSE2, MMX or Altivec, if available.
- */
-#if CV_SSE2
-static inline void histogram_sub( const ushort x[16], ushort y[16] )
-{
-    _mm_store_si128( (__m128i*) &y[0], _mm_sub_epi16(
-        _mm_load_si128((__m128i*) &y[0]), _mm_load_si128((__m128i*) &x[0] )));
-    _mm_store_si128( (__m128i*) &y[8], _mm_sub_epi16(
-        _mm_load_si128((__m128i*) &y[8]), _mm_load_si128((__m128i*) &x[8] )));
-}
-#elif defined(__MMX__)
-static inline void histogram_sub( const ushort x[16], ushort y[16] )
+static inline void histogram_sub( const HT x[16], HT y[16] )
 {
     *(__m64*) &y[0]  = _mm_sub_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
     *(__m64*) &y[4]  = _mm_sub_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
@@ -527,161 +503,174 @@ static inline void histogram_sub( const ushort x[16], ushort y[16] )
     *(__m64*) &y[12] = _mm_sub_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
 }
 #elif defined(__ALTIVEC__)
-static inline void histogram_sub( const ushort x[16], ushort y[16] )
+static inline void histogram_add( const HT x[16], HT y[16] )
 {
-    *(vector ushort*) &y[0] = vec_sub( *(vector ushort*) &y[0], *(vector ushort*) &x[0] );
-    *(vector ushort*) &y[8] = vec_sub( *(vector ushort*) &y[8], *(vector ushort*) &x[8] );
+    *(vector HT*) &y[0] = vec_add( *(vector HT*) &y[0], *(vector HT*) &x[0] );
+    *(vector HT*) &y[8] = vec_add( *(vector HT*) &y[8], *(vector HT*) &x[8] );
+}
+
+static inline void histogram_sub( const HT x[16], HT y[16] )
+{
+    *(vector HT*) &y[0] = vec_sub( *(vector HT*) &y[0], *(vector HT*) &x[0] );
+    *(vector HT*) &y[8] = vec_sub( *(vector HT*) &y[8], *(vector HT*) &x[8] );
 }
 #else
-static inline void histogram_sub( const ushort x[16], ushort y[16] )
+static inline void histogram_add( const HT x[16], HT y[16] )
 {
     int i;
     for( i = 0; i < 16; ++i )
-        y[i] = (ushort)(y[i] - x[i]);
+        y[i] = (HT)(y[i] + x[i]);
+}
+
+static inline void histogram_sub( const HT x[16], HT y[16] )
+{
+    int i;
+    for( i = 0; i < 16; ++i )
+        y[i] = (HT)(y[i] - x[i]);
 }
 #endif
 
-static inline void histogram_muladd( int a, const ushort x[16],
-        ushort y[16] )
+static inline void histogram_muladd( int a, const HT x[16],
+        HT y[16] )
 {
-    int i;
-    for ( i = 0; i < 16; ++i )
-        y[i] = (ushort)(y[i] + a * x[i]);
+    for( int i = 0; i < 16; ++i )
+        y[i] = (HT)(y[i] + a * x[i]);
 }
 
 static void
-medianBlur_8u_CnR_O1( uchar* src, int src_step, uchar* dst, int dst_step,
-                      Size size, int kernel_size, int cn,
-                      int pad_left, int pad_right )
+medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
 {
-    int r = (kernel_size-1)/2;
-    const int m = size.height, n = size.width;
-    int i, j, k, c;
-    const uchar *p, *q;
-    Histogram H[4];
-    ushort luc[4][16];
+/**
+ * HOP is short for Histogram OPeration. This macro makes an operation \a op on
+ * histogram \a h for pixel value \a x. It takes care of handling both levels.
+ */
+#define HOP(h,x,op) \
+    h.coarse[x>>4] op, \
+    *((HT*)h.fine + x) op
 
-    CV_Assert( size.height >= r && size.width >= r );
+#define COP(c,j,x,op) \
+    h_coarse[ 16*(n*c+j) + (x>>4) ] op, \
+    h_fine[ 16 * (n*(16*c+(x>>4)) + j) + (x & 0xF) ] op
 
-    assert( src );
-    assert( dst );
-    assert( r >= 0 );
-    assert( size.width >= 2*r+1 );
-    assert( size.height >= 2*r+1 );
-    assert( src_step != 0 );
-    assert( dst_step != 0 );
+    int cn = _dst.channels(), m = _dst.rows, r = (ksize-1)/2;
+    int sstep = _src.step, dstep = _dst.step;
+    Histogram CV_DECL_ALIGNED(16) H[4];
+    HT luc[4][16];
 
-    Vector<ushort> _h_coarse(1 * 16 * n * cn, (ushort)0);
-    Vector<ushort> _h_fine(16 * 16 * n * cn, (ushort)0); 
-    ushort* h_coarse = &_h_coarse[0];
-    ushort* h_fine = &_h_fine[0];
+    const int STRIPE_SIZE = 256/cn;
 
-    /* First row initialization */
-    for ( j = 0; j < n; ++j ) {
-        for ( c = 0; c < cn; ++c ) {
-            COP( c, j, src[cn*j+c], += r+1 );
+    Vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn);
+    Vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn);
+    HT* h_coarse = &_h_coarse[0];
+    HT* h_fine = &_h_fine[0];
+
+    for( int x = 0; x < _dst.cols; x += STRIPE_SIZE )
+    {
+        int i, j, k, c, n = std::min(_dst.cols - x, STRIPE_SIZE) + r*2;
+        const uchar* src = _src.data + x*cn;
+        uchar* dst = _dst.data + (x - r)*cn;
+
+        memset( h_coarse, 0, 16*n*cn*sizeof(h_coarse[0]) );
+        memset( h_fine, 0, 16*16*n*cn*sizeof(h_fine[0]) );
+
+        // First row initialization
+        for( c = 0; c < cn; c++ )
+        {
+            for( j = 0; j < n; j++ )
+                COP( c, j, src[cn*j+c], += r+2 );
+
+            for( i = 1; i < r; i++ )
+            {
+                const uchar* p = src + sstep*std::min(i, m-1);
+                for ( j = 0; j < n; j++ )
+                    COP( c, j, p[cn*j+c], ++ );
+            }
+        }
+
+        for( i = 0; i < m; i++ )
+        {
+            const uchar* p0 = src + sstep * std::max( 0, i-r-1 );
+            const uchar* p1 = src + sstep * std::min( m-1, i+r );
+
+            memset( H, 0, cn*sizeof(H[0]) );
+            memset( luc, 0, cn*sizeof(luc[0]) );
+            for( c = 0; c < cn; c++ )
+            {
+                // Update column histograms for the entire row.
+                for( j = 0; j < n; j++ )
+                {
+                    COP( c, j, p0[j*cn + c], -- );
+                    COP( c, j, p1[j*cn + c], ++ );
+                }
+
+                // First column initialization
+                for( j = 0; j < 2*r; ++j )
+                    histogram_add( &h_coarse[16*(n*c+j)], H[c].coarse );
+                for( k = 0; k < 16; ++k )
+                    histogram_muladd( 2*r+1, &h_fine[16*n*(16*c+k)], &H[c].fine[k][0] );
+
+                for( j = r; j < n-r; j++ )
+                {
+                    int t = 2*r*r + 2*r, b, sum = 0;
+                    HT* segment;
+
+                    histogram_add( &h_coarse[16*(n*c + std::min(j+r,n-1))], H[c].coarse );
+
+                    // Find median at coarse level
+                    for ( k = 0; k < 16 ; ++k )
+                    {
+                        sum += H[c].coarse[k];
+                        if ( sum > t )
+                        {
+                            sum -= H[c].coarse[k];
+                            break;
+                        }
+                    }
+                    assert( k < 16 );
+
+                    /* Update corresponding histogram segment */
+                    if ( luc[c][k] <= j-r )
+                    {
+                        memset( &H[c].fine[k], 0, 16 * sizeof(HT) );
+                        for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] )
+                            histogram_add( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
+
+                        if ( luc[c][k] < j+r+1 )
+                        {
+                            histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
+                            luc[c][k] = (HT)(j+r+1);
+                        }
+                    }
+                    else
+                    {
+                        for ( ; luc[c][k] < j+r+1; ++luc[c][k] )
+                        {
+                            histogram_sub( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
+                            histogram_add( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
+                        }
+                    }
+
+                    histogram_sub( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
+
+                    /* Find median in segment */
+                    segment = H[c].fine[k];
+                    for ( b = 0; b < 16 ; b++ )
+                    {
+                        sum += segment[b];
+                        if ( sum > t )
+                        {
+                            dst[dstep*i+cn*j+c] = (uchar)(16*k + b);
+                            break;
+                        }
+                    }
+                    assert( b < 16 );
+                }
+            }
         }
     }
-    for ( i = 0; i < r; ++i ) {
-        for ( j = 0; j < n; ++j ) {
-            for ( c = 0; c < cn; ++c ) {
-                COP( c, j, src[src_step*i+cn*j+c], ++ );
-            }
-        }
-    }
-
-    for ( i = 0; i < m; ++i ) {
-
-        /* Update column histograms for entire row. */
-        p = src + src_step * MAX( 0, i-r-1 );
-        q = p + cn * n;
-        for ( j = 0; p != q; ++j ) {
-            for ( c = 0; c < cn; ++c, ++p ) {
-                COP( c, j, *p, -- );
-            }
-        }
-
-        p = src + src_step * MIN( m-1, i+r );
-        q = p + cn * n;
-        for ( j = 0; p != q; ++j ) {
-            for ( c = 0; c < cn; ++c, ++p ) {
-                COP( c, j, *p, ++ );
-            }
-        }
-
-        /* First column initialization */
-        memset( H, 0, cn*sizeof(H[0]) );
-        memset( luc, 0, cn*sizeof(luc[0]) );
-        if ( pad_left ) {
-            for ( c = 0; c < cn; ++c ) {
-                histogram_muladd( r, &h_coarse[16*n*c], H[c].coarse );
-            }
-        }
-        for ( j = 0; j < (pad_left ? r : 2*r); ++j ) {
-            for ( c = 0; c < cn; ++c ) {
-                histogram_add( &h_coarse[16*(n*c+j)], H[c].coarse );
-            }
-        }
-        for ( c = 0; c < cn; ++c ) {
-            for ( k = 0; k < 16; ++k ) {
-                histogram_muladd( 2*r+1, &h_fine[16*n*(16*c+k)], &H[c].fine[k][0] );
-            }
-        }
-
-        for ( j = pad_left ? 0 : r; j < (pad_right ? n : n-r); ++j ) {
-            for ( c = 0; c < cn; ++c ) {
-                int t = 2*r*r + 2*r, b, sum = 0;
-                ushort* segment;
-
-                histogram_add( &h_coarse[16*(n*c + MIN(j+r,n-1))], H[c].coarse );
-
-                /* Find median at coarse level */
-                for ( k = 0; k < 16 ; ++k ) {
-                    sum += H[c].coarse[k];
-                    if ( sum > t ) {
-                        sum -= H[c].coarse[k];
-                        break;
-                    }
-                }
-                assert( k < 16 );
-
-                /* Update corresponding histogram segment */
-                if ( luc[c][k] <= j-r ) {
-                    memset( &H[c].fine[k], 0, 16 * sizeof(ushort) );
-                    for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] ) {
-                        histogram_add( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
-                    }
-                    if ( luc[c][k] < j+r+1 ) {
-                        histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
-                        luc[c][k] = (ushort)(j+r+1);
-                    }
-                }
-                else {
-                    for ( ; luc[c][k] < j+r+1; ++luc[c][k] ) {
-                        histogram_sub( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
-                        histogram_add( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
-                    }
-                }
-
-                histogram_sub( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
-
-                /* Find median in segment */
-                segment = H[c].fine[k];
-                for ( b = 0; b < 16 ; ++b ) {
-                    sum += segment[b];
-                    if ( sum > t ) {
-                        dst[dst_step*i+cn*j+c] = (uchar)(16*k + b);
-                        break;
-                    }
-                }
-                assert( b < 16 );
-            }
-        }
-    }
-
-#if defined(__MMX__)
-    _mm_empty();
-#endif
+    #if defined(__MMX__)
+        _mm_empty();
+    #endif
 
 #undef HOP
 #undef COP
@@ -692,19 +681,20 @@ medianBlur_8u_CnR_O1( uchar* src, int src_step, uchar* dst, int dst_step,
 #pragma warning( default: 4244 )
 #endif
 
-
 static void
-medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
-                      Size size, int m, int cn )
+medianBlur_8u_Om( const Mat& _src, Mat& _dst, int m )
 {
     #define N  16
     int     zone0[4][N];
     int     zone1[4][N*N];
     int     x, y;
     int     n2 = m*m/2;
-    int     nx = (m + 1)/2 - 1;
-    uchar*  src_max = src + size.height*src_step;
-    uchar*  src_right = src + size.width*cn;
+    Size    size = _dst.size();
+    const uchar* src = _src.data;
+    uchar*  dst = _dst.data;
+    int     src_step = _src.step, dst_step = _dst.step;
+    int     cn = _src.channels();
+    const uchar*  src_max = src + size.height*src_step;
 
     #define UPDATE_ACC01( pix, cn, op ) \
     {                                   \
@@ -713,77 +703,13 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
         zone0[cn][p >> 4] op;           \
     }
 
-    CV_Assert( size.height >= nx && size.width >= nx );
-
-    if( m == 3 )
-    {
-        size.width *= cn;
-
-        // special case for 3x3 aperture, uses bitonic sort
-        for( y = 0; y < size.height; y++, dst += dst_step )
-        {
-            const uchar* src0 = src + src_step*(y-1);
-            const uchar* src1 = src0 + src_step;
-            const uchar* src2 = src1 + src_step;
-            if( y == 0 )
-                src0 = src1;
-            else if( y == size.height - 1 )
-                src2 = src1;
-
-            for( x = 0; x < 2*cn; x++ )
-            {
-                int x0 = x < cn ? x : size.width - 3*cn + x;
-                int x2 = x < cn ? x + cn : size.width - 2*cn + x;
-                int x1 = x < cn ? x0 : x2, t;
-
-                int p0 = src0[x0], p1 = src0[x1], p2 = src0[x2];
-                int p3 = src1[x0], p4 = src1[x1], p5 = src1[x2];
-                int p6 = src2[x0], p7 = src2[x1], p8 = src2[x2];
-
-                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p1);
-                CV_MINMAX_8U(p3, p4); CV_MINMAX_8U(p6, p7);
-                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p3);
-                CV_MINMAX_8U(p5, p8); CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p3, p6); CV_MINMAX_8U(p1, p4);
-                CV_MINMAX_8U(p2, p5); CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p4, p2); CV_MINMAX_8U(p6, p4);
-                CV_MINMAX_8U(p4, p2);
-                dst[x1] = (uchar)p4;
-            }
-
-            for( x = cn; x < size.width - cn; x++ )
-            {
-                int p0 = src0[x-cn], p1 = src0[x], p2 = src0[x+cn];
-                int p3 = src1[x-cn], p4 = src1[x], p5 = src1[x+cn];
-                int p6 = src2[x-cn], p7 = src2[x], p8 = src2[x+cn];
-                int t;
-
-                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p1);
-                CV_MINMAX_8U(p3, p4); CV_MINMAX_8U(p6, p7);
-                CV_MINMAX_8U(p1, p2); CV_MINMAX_8U(p4, p5);
-                CV_MINMAX_8U(p7, p8); CV_MINMAX_8U(p0, p3);
-                CV_MINMAX_8U(p5, p8); CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p3, p6); CV_MINMAX_8U(p1, p4);
-                CV_MINMAX_8U(p2, p5); CV_MINMAX_8U(p4, p7);
-                CV_MINMAX_8U(p4, p2); CV_MINMAX_8U(p6, p4);
-                CV_MINMAX_8U(p4, p2);
-
-                dst[x] = (uchar)p4;
-            }
-        }
-        return;
-    }
-
-    for( x = 0; x < size.width; x++, dst += cn )
+    //CV_Assert( size.height >= nx && size.width >= nx );
+    for( x = 0; x < size.width; x++, src += cn, dst += cn )
     {
         uchar* dst_cur = dst;
-        uchar* src_top = src;
-        uchar* src_bottom = src;
+        const uchar* src_top = src;
+        const uchar* src_bottom = src;
         int    k, c;
-        int    x0 = -1;
         int    src_step1 = src_step, dst_step1 = dst_step;
 
         if( x % 2 != 0 )
@@ -793,12 +719,6 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
             src_step1 = -src_step1;
             dst_step1 = -dst_step1;
         }
-
-        if( x <= m/2 )
-            nx++;
-
-        if( nx < m )
-            x0 = x < m/2 ? 0 : (nx-1)*cn;
 
         // init accumulator
         memset( zone0, 0, sizeof(zone0[0])*cn );
@@ -810,16 +730,12 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
             {
                 if( y > 0 )
                 {
-                    if( x0 >= 0 )
-                        UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
-                    for( k = 0; k < nx*cn; k += cn )
+                    for( k = 0; k < m*cn; k += cn )
                         UPDATE_ACC01( src_bottom[k+c], c, ++ );
                 }
                 else
                 {
-                    if( x0 >= 0 )
-                        UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx)*(m/2+1) );
-                    for( k = 0; k < nx*cn; k += cn )
+                    for( k = 0; k < m*cn; k += cn )
                         UPDATE_ACC01( src_bottom[k+c], c, += m/2+1 );
                 }
             }
@@ -856,7 +772,7 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
 
             if( cn == 1 )
             {
-                for( k = 0; k < nx; k++ )
+                for( k = 0; k < m; k++ )
                 {
                     int p = src_top[k];
                     int q = src_bottom[k];
@@ -868,7 +784,7 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
             }
             else if( cn == 3 )
             {
-                for( k = 0; k < nx*3; k += 3 )
+                for( k = 0; k < m*3; k += 3 )
                 {
                     UPDATE_ACC01( src_top[k], 0, -- );
                     UPDATE_ACC01( src_top[k+1], 1, -- );
@@ -882,7 +798,7 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
             else
             {
                 assert( cn == 4 );
-                for( k = 0; k < nx*4; k += 4 )
+                for( k = 0; k < m*4; k += 4 )
                 {
                     UPDATE_ACC01( src_top[k], 0, -- );
                     UPDATE_ACC01( src_top[k+1], 1, -- );
@@ -896,15 +812,6 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
                 }
             }
 
-            if( x0 >= 0 )
-            {
-                for( c = 0; c < cn; c++ )
-                {
-                    UPDATE_ACC01( src_top[x0+c], c, -= (m - nx) );
-                    UPDATE_ACC01( src_bottom[x0+c], c, += (m - nx) );
-                }
-            }
-
             if( (src_step1 > 0 && src_bottom + src_step1 < src_max) ||
                 (src_step1 < 0 && src_bottom + src_step1 >= src) )
                 src_bottom += src_step1;
@@ -912,56 +819,349 @@ medianBlur_8u_CnR_Om( uchar* src, int src_step, uchar* dst, int dst_step,
             if( y >= m/2 )
                 src_top += src_step1;
         }
-
-        if( x >= m/2 )
-            src += cn;
-        if( src + nx*cn > src_right ) nx--;
     }
 #undef N
 #undef UPDATE_ACC
 }
 
 
-void medianBlur( const Mat& src, Mat& dst, int ksize )
+struct MinMax8u
 {
-    Size size = src.size();
-    int cn = src.channels();
+    typedef uchar value_type;
+    typedef int arg_type;
+    enum { SIZE = 1 };
+    arg_type load(const uchar* ptr) { return *ptr; }
+    void store(uchar* ptr, arg_type val) { *ptr = (uchar)val; }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        int t = CV_FAST_CAST_8U(a - b);
+        b += t; a -= t;
+    }
+};
+
+struct MinMax16u
+{
+    typedef ushort value_type;
+    typedef int arg_type;
+    enum { SIZE = 1 };
+    arg_type load(const ushort* ptr) { return *ptr; }
+    void store(ushort* ptr, arg_type val) { *ptr = (ushort)val; }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = std::min(a, b);
+        b = std::max(b, t);
+    }
+};
+
+struct MinMax32f
+{
+    typedef float value_type;
+    typedef float arg_type;
+    enum { SIZE = 1 };
+    arg_type load(const float* ptr) { return *ptr; }
+    void store(float* ptr, arg_type val) { *ptr = val; }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = std::min(a, b);
+        b = std::max(b, t);
+    }
+};
+
+#if CV_SSE2
+
+struct MinMaxVec8u
+{
+    typedef uchar value_type;
+    typedef __m128i arg_type;
+    enum { SIZE = 16 };
+    arg_type load(const uchar* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
+    void store(uchar* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = _mm_min_epu8(a, b);
+        b = _mm_max_epu8(b, t);
+    }
+};
+
+
+struct MinMaxVec16u
+{
+    typedef ushort value_type;
+    typedef __m128i arg_type;
+    enum { SIZE = 8 };
+    arg_type load(const ushort* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
+    void store(ushort* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = _mm_subs_epu16(a, b);
+        a = _mm_subs_epu16(a, t);
+        b = _mm_adds_epu16(b, t);
+    }
+};
+
+
+struct MinMaxVec32f
+{
+    typedef float value_type;
+    typedef __m128 arg_type;
+    enum { SIZE = 4 };
+    arg_type load(const float* ptr) { return _mm_loadu_ps(ptr); }
+    void store(float* ptr, arg_type val) { _mm_storeu_ps(ptr, val); }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = _mm_min_ps(a, b);
+        b = _mm_max_ps(b, t);
+    }
+};
+
+
+#else
+
+typedef MinMax8u MinMaxVec8u;
+typedef MinMax16u MinMaxVec16u;
+typedef MinMax32f MinMaxVec32f;
+
+#endif
+
+template<class Op, class VecOp>
+static void
+medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
+{
+    typedef typename Op::value_type T;
+    typedef typename Op::arg_type WT;
+    typedef typename VecOp::arg_type VT;
+
+    const T* src = (const T*)_src.data;
+    T* dst = (T*)_dst.data;
+    int sstep = _src.step/sizeof(T);
+    int dstep = _dst.step/sizeof(T);
+    Size size = _dst.size();
+    int i, j, k, cn = _src.channels();
+    Op op;
+    VecOp vop;
+
+    if( m == 3 )
+    {
+        if( size.width == 1 || size.height == 1 )
+        {
+            int len = size.width + size.height - 1;
+            int sdelta = size.height == 1 ? cn : sstep;
+            int sdelta0 = size.height == 1 ? 0 : sstep - cn;
+            int ddelta = size.height == 1 ? cn : dstep;
+
+            if( size.height == 1 )
+                src += cn;
+
+            for( i = 0; i < len; i++, src += sdelta0, dst += ddelta )
+                for( j = 0; j < cn; j++, src++ )
+                {
+                    WT p0 = src[i > 0 ? -sdelta : 0];
+                    WT p1 = src[0];
+                    WT p2 = src[i < len - 1 ? sdelta : 0];
+
+                    op(p0, p1); op(p1, p2); op(p0, p1);
+                    dst[j] = (T)p1;
+                }
+            return;
+        }
+        
+        size.width *= cn;
+        src += cn;
+        for( i = 0; i < size.height; i++, dst += dstep )
+        {
+            const T* row0 = src + std::max(i - 1, 0)*sstep;
+            const T* row1 = src + i*sstep;
+            const T* row2 = src + std::min(i + 1, size.height-1)*sstep;
+            
+            for( j = 0; j <= size.width - VecOp::SIZE - cn; j += VecOp::SIZE )
+            {
+                VT p0 = vop.load(row0+j-cn), p1 = vop.load(row0+j), p2 = vop.load(row0+j+cn);
+                VT p3 = vop.load(row1+j-cn), p4 = vop.load(row1+j), p5 = vop.load(row1+j+cn);
+                VT p6 = vop.load(row2+j-cn), p7 = vop.load(row2+j), p8 = vop.load(row2+j+cn);
+
+                vop(p1, p2); vop(p4, p5); vop(p7, p8); vop(p0, p1);
+                vop(p3, p4); vop(p6, p7); vop(p1, p2); vop(p4, p5);
+                vop(p7, p8); vop(p0, p3); vop(p5, p8); vop(p4, p7);
+                vop(p3, p6); vop(p1, p4); vop(p2, p5); vop(p4, p7);
+                vop(p4, p2); vop(p6, p4); vop(p4, p2);
+                vop.store(dst+j, p4);
+            }
+
+            for( ; j < size.width; j++ )
+            {
+                WT p0 = row0[j-cn], p1 = row0[j], p2 = row0[j+cn];
+                WT p3 = row1[j-cn], p4 = row1[j], p5 = row1[j+cn];
+                WT p6 = row2[j-cn], p7 = row2[j], p8 = row2[j+cn];
+
+                op(p1, p2); op(p4, p5); op(p7, p8); op(p0, p1);
+                op(p3, p4); op(p6, p7); op(p1, p2); op(p4, p5);
+                op(p7, p8); op(p0, p3); op(p5, p8); op(p4, p7);
+                op(p3, p6); op(p1, p4); op(p2, p5); op(p4, p7);
+                op(p4, p2); op(p6, p4); op(p4, p2);
+                dst[j] = (T)p4;
+            }
+        }
+    }
+    else if( m == 5 )
+    {
+        if( size.width == 1 || size.height == 1 )
+        {
+            int len = size.width + size.height - 1;
+            int sdelta = size.height == 1 ? cn : sstep;
+            int sdelta0 = size.height == 1 ? 0 : sstep - cn;
+            int ddelta = size.height == 1 ? cn : dstep;
+
+            if( size.height == 1 )
+                src += cn*2;
+
+            for( i = 0; i < len; i++, src += sdelta0, dst += ddelta )
+                for( j = 0; j < cn; j++, src++ )
+                {
+                    int i1 = i > 0 ? -sdelta : 0;
+                    int i0 = i > 1 ? -sdelta*2 : i1;
+                    int i3 = i < len-1 ? sdelta : 0;
+                    int i4 = i < len-2 ? sdelta*2 : i3;
+                    WT p0 = src[i0], p1 = src[i1], p2 = src[0], p3 = src[i3], p4 = src[i4];
+
+                    op(p0, p1); op(p3, p4); op(p2, p3); op(p3, p4); op(p0, p2);
+                    op(p2, p4); op(p1, p3); op(p1, p2);
+                    dst[j] = (T)p2;
+                }
+            return;
+        }
+
+        size.width *= cn;
+        src += cn*2;
+        for( i = 0; i < size.height; i++, dst += dstep )
+        {
+            const T* row[5];
+            row[0] = src + std::max(i - 2, 0)*sstep;
+            row[1] = src + std::max(i - 1, 0)*sstep;
+            row[2] = src + i*sstep;
+            row[3] = src + std::min(i + 1, size.height-1)*sstep;
+            row[4] = src + std::min(i + 2, size.height-1)*sstep;
+
+            for( j = 0; j <= size.width - VecOp::SIZE - cn*2; j += VecOp::SIZE )
+            {
+                VT p[25];
+                for( k = 0; k < 5; k++ )
+                {
+                    const T* rowk = row[k];
+                    p[k*5] = vop.load(rowk+j-cn*2); p[k*5+1] = vop.load(rowk+j-cn);
+                    p[k*5+2] = vop.load(rowk+j); p[k*5+3] = vop.load(rowk+j+cn);
+                    p[k*5+4] = vop.load(rowk+j+cn*2);
+                }
+                
+                vop(p[1], p[2]); vop(p[0], p[1]); vop(p[1], p[2]); vop(p[4], p[5]); vop(p[3], p[4]);
+                vop(p[4], p[5]); vop(p[0], p[3]); vop(p[2], p[5]); vop(p[2], p[3]); vop(p[1], p[4]);
+                vop(p[1], p[2]); vop(p[3], p[4]); vop(p[7], p[8]); vop(p[6], p[7]); vop(p[7], p[8]);
+                vop(p[10], p[11]); vop(p[9], p[10]); vop(p[10], p[11]); vop(p[6], p[9]); vop(p[8], p[11]);
+                vop(p[8], p[9]); vop(p[7], p[10]); vop(p[7], p[8]); vop(p[9], p[10]); vop(p[0], p[6]);
+                vop(p[4], p[10]); vop(p[4], p[6]); vop(p[2], p[8]); vop(p[2], p[4]); vop(p[6], p[8]);
+                vop(p[1], p[7]); vop(p[5], p[11]); vop(p[5], p[7]); vop(p[3], p[9]); vop(p[3], p[5]);
+                vop(p[7], p[9]); vop(p[1], p[2]); vop(p[3], p[4]); vop(p[5], p[6]); vop(p[7], p[8]);
+                vop(p[9], p[10]); vop(p[13], p[14]); vop(p[12], p[13]); vop(p[13], p[14]); vop(p[16], p[17]);
+                vop(p[15], p[16]); vop(p[16], p[17]); vop(p[12], p[15]); vop(p[14], p[17]); vop(p[14], p[15]);
+                vop(p[13], p[16]); vop(p[13], p[14]); vop(p[15], p[16]); vop(p[19], p[20]); vop(p[18], p[19]);
+                vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[21], p[23]); vop(p[22], p[24]);
+                vop(p[22], p[23]); vop(p[18], p[21]); vop(p[20], p[23]); vop(p[20], p[21]); vop(p[19], p[22]);
+                vop(p[22], p[24]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[12], p[18]);
+                vop(p[16], p[22]); vop(p[16], p[18]); vop(p[14], p[20]); vop(p[20], p[24]); vop(p[14], p[16]);
+                vop(p[18], p[20]); vop(p[22], p[24]); vop(p[13], p[19]); vop(p[17], p[23]); vop(p[17], p[19]);
+                vop(p[15], p[21]); vop(p[15], p[17]); vop(p[19], p[21]); vop(p[13], p[14]); vop(p[15], p[16]);
+                vop(p[17], p[18]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[0], p[12]);
+                vop(p[8], p[20]); vop(p[8], p[12]); vop(p[4], p[16]); vop(p[16], p[24]); vop(p[12], p[16]);
+                vop(p[2], p[14]); vop(p[10], p[22]); vop(p[10], p[14]); vop(p[6], p[18]); vop(p[6], p[10]);
+                vop(p[10], p[12]); vop(p[1], p[13]); vop(p[9], p[21]); vop(p[9], p[13]); vop(p[5], p[17]);
+                vop(p[13], p[17]); vop(p[3], p[15]); vop(p[11], p[23]); vop(p[11], p[15]); vop(p[7], p[19]);
+                vop(p[7], p[11]); vop(p[11], p[13]); vop(p[11], p[12]);
+                vop.store(dst+j, p[12]);
+            }
+            
+            for( ; j < size.width; j++ )
+            {
+                WT p[25];
+                for( k = 0; k < 5; k++ )
+                {
+                    const T* rowk = row[k];
+                    p[k*5] = rowk[j-cn*2]; p[k*5+1] = rowk[j-cn];
+                    p[k*5+2] = rowk[j]; p[k*5+3] = rowk[j+cn];
+                    p[k*5+4] = rowk[j+cn*2];
+                }
+                
+                op(p[1], p[2]); op(p[0], p[1]); op(p[1], p[2]); op(p[4], p[5]); op(p[3], p[4]);
+                op(p[4], p[5]); op(p[0], p[3]); op(p[2], p[5]); op(p[2], p[3]); op(p[1], p[4]);
+                op(p[1], p[2]); op(p[3], p[4]); op(p[7], p[8]); op(p[6], p[7]); op(p[7], p[8]);
+                op(p[10], p[11]); op(p[9], p[10]); op(p[10], p[11]); op(p[6], p[9]); op(p[8], p[11]);
+                op(p[8], p[9]); op(p[7], p[10]); op(p[7], p[8]); op(p[9], p[10]); op(p[0], p[6]);
+                op(p[4], p[10]); op(p[4], p[6]); op(p[2], p[8]); op(p[2], p[4]); op(p[6], p[8]);
+                op(p[1], p[7]); op(p[5], p[11]); op(p[5], p[7]); op(p[3], p[9]); op(p[3], p[5]);
+                op(p[7], p[9]); op(p[1], p[2]); op(p[3], p[4]); op(p[5], p[6]); op(p[7], p[8]);
+                op(p[9], p[10]); op(p[13], p[14]); op(p[12], p[13]); op(p[13], p[14]); op(p[16], p[17]);
+                op(p[15], p[16]); op(p[16], p[17]); op(p[12], p[15]); op(p[14], p[17]); op(p[14], p[15]);
+                op(p[13], p[16]); op(p[13], p[14]); op(p[15], p[16]); op(p[19], p[20]); op(p[18], p[19]);
+                op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[21], p[23]); op(p[22], p[24]);
+                op(p[22], p[23]); op(p[18], p[21]); op(p[20], p[23]); op(p[20], p[21]); op(p[19], p[22]);
+                op(p[22], p[24]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[12], p[18]);
+                op(p[16], p[22]); op(p[16], p[18]); op(p[14], p[20]); op(p[20], p[24]); op(p[14], p[16]);
+                op(p[18], p[20]); op(p[22], p[24]); op(p[13], p[19]); op(p[17], p[23]); op(p[17], p[19]);
+                op(p[15], p[21]); op(p[15], p[17]); op(p[19], p[21]); op(p[13], p[14]); op(p[15], p[16]);
+                op(p[17], p[18]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[0], p[12]);
+                op(p[8], p[20]); op(p[8], p[12]); op(p[4], p[16]); op(p[16], p[24]); op(p[12], p[16]);
+                op(p[2], p[14]); op(p[10], p[22]); op(p[10], p[14]); op(p[6], p[18]); op(p[6], p[10]);
+                op(p[10], p[12]); op(p[1], p[13]); op(p[9], p[21]); op(p[9], p[13]); op(p[5], p[17]);
+                op(p[13], p[17]); op(p[3], p[15]); op(p[11], p[23]); op(p[11], p[15]); op(p[7], p[19]);
+                op(p[7], p[11]); op(p[11], p[13]); op(p[11], p[12]);
+                dst[j] = (T)p[12];
+            }
+        }
+    }
+}
+
+
+void medianBlur( const Mat& src0, Mat& dst, int ksize )
+{
+    if( ksize <= 1 )
+    {
+        src0.copyTo(dst);
+        return;
+    }
+    
+    Size size = src0.size();
+    int cn = src0.channels();
     double img_size_mp = (double)(size.width*size.height)/(1 << 20);
 
-    dst.create( src.size(), src.type() );
+    dst.create( src0.size(), src0.type() );
+    Mat src;
+    cv::copyMakeBorder( src0, src, 0, 0, ksize/2, ksize/2, BORDER_REPLICATE );
 
-    CV_Assert( src.depth() == CV_8U && (cn == 1 || cn == 3 || cn == 4) && src.data != dst.data );
+    if( ksize == 3
+        || (ksize == 5
+#if !CV_SSE2
+            && src.depth() > CV_8U
+#endif
+        ))
+    {
+        if( src.depth() == CV_8U )
+            medianBlur_SortNet<MinMax8u, MinMaxVec8u>( src, dst, ksize );
+        else if( src.depth() == CV_16U )
+            medianBlur_SortNet<MinMax16u, MinMaxVec16u>( src, dst, ksize );
+        else if( src.depth() == CV_32F )
+            medianBlur_SortNet<MinMax32f, MinMaxVec32f>( src, dst, ksize );
+        return;
+    }
+
+    CV_Assert( src.depth() == CV_8U && (cn == 1 || cn == 3 || cn == 4) );
 
     if( size.width < ksize*2 || size.height < ksize*2 ||
         ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
-    {
-        medianBlur_8u_CnR_Om( src.data, src.step, dst.data, dst.step, size, ksize, cn );
-    }
+        medianBlur_8u_Om( src, dst, ksize );
     else
-    {
-        const int r = (ksize - 1) / 2;
-        const int CACHE_SIZE = (int)(0.95 * 512 * 1024 / cn); // assume 512 kB cache size
-        const int STRIPES = (int) cvCeil( (double)(size.width - 2*r) /
-                (CACHE_SIZE / sizeof(Histogram) - 2*r) );
-        const int STRIPE_SIZE = (int) cvCeil(
-                (double) (size.width + STRIPES*2*r - 2*r ) / STRIPES);
-
-        for( int i = 0; i < size.width; i += STRIPE_SIZE - 2*r )
-        {
-            int stripe = STRIPE_SIZE;
-            // Make sure that the filter kernel fits into one stripe.
-            if( i + STRIPE_SIZE - 2*r >= size.width ||
-                size.width - (i + STRIPE_SIZE - 2*r) < 2*r+1 )
-                stripe = size.width - i;
-
-            medianBlur_8u_CnR_O1( src.data + cn*i, src.step,
-                dst.data + cn*i, dst.step, Size(stripe, size.height),
-                ksize, cn, i == 0, stripe == size.width - i );
-
-            if( stripe == size.width - i )
-                break;
-        }
-    }
+        medianBlur_8u_O1( src, dst, ksize );
 }
 
 /****************************************************************************************\
