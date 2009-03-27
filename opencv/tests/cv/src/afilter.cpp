@@ -1329,8 +1329,6 @@ void CV_MedianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
     anchor.x = anchor.y = aperture_size.width / 2;
     sizes[INPUT][1] = cvSize(aperture_size.width,aperture_size.height);
 
-    sizes[INPUT][0].width = MAX( sizes[INPUT][0].width, aperture_size.width );
-    sizes[INPUT][0].height = MAX( sizes[INPUT][0].height, aperture_size.width );
     sizes[OUTPUT][0] = sizes[INPUT][0];
     sizes[REF_OUTPUT][0] = sizes[INPUT][0];
 
