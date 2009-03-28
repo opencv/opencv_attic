@@ -43,7 +43,7 @@
 
 /*
  * This file includes the code, contributed by Simon Perreault
- * (the function icvMedianBlur_8u_CnR_O1)
+ * (the function icvMedianBlur_8u_O1)
  *
  * Constant-time median filtering -- http://nomis80.org/ctmf.html
  * Copyright (C) 2006 Simon Perreault
@@ -953,9 +953,6 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
             int sdelta0 = size.height == 1 ? 0 : sstep - cn;
             int ddelta = size.height == 1 ? cn : dstep;
 
-            if( size.height == 1 )
-                src += cn;
-
             for( i = 0; i < len; i++, src += sdelta0, dst += ddelta )
                 for( j = 0; j < cn; j++, src++ )
                 {
@@ -970,39 +967,49 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
         }
         
         size.width *= cn;
-        src += cn;
         for( i = 0; i < size.height; i++, dst += dstep )
         {
             const T* row0 = src + std::max(i - 1, 0)*sstep;
             const T* row1 = src + i*sstep;
             const T* row2 = src + std::min(i + 1, size.height-1)*sstep;
-            
-            for( j = 0; j <= size.width - VecOp::SIZE - cn; j += VecOp::SIZE )
+            int limit = cn;
+
+            for(j = 0;; )
             {
-                VT p0 = vop.load(row0+j-cn), p1 = vop.load(row0+j), p2 = vop.load(row0+j+cn);
-                VT p3 = vop.load(row1+j-cn), p4 = vop.load(row1+j), p5 = vop.load(row1+j+cn);
-                VT p6 = vop.load(row2+j-cn), p7 = vop.load(row2+j), p8 = vop.load(row2+j+cn);
+                for( ; j < limit; j++ )
+                {
+                    int j0 = j >= cn ? j - cn : j;
+                    int j2 = j < size.width - cn ? j + cn : j;
+                    WT p0 = row0[j0], p1 = row0[j], p2 = row0[j2];
+                    WT p3 = row1[j0], p4 = row1[j], p5 = row1[j2];
+                    WT p6 = row2[j0], p7 = row2[j], p8 = row2[j2];
 
-                vop(p1, p2); vop(p4, p5); vop(p7, p8); vop(p0, p1);
-                vop(p3, p4); vop(p6, p7); vop(p1, p2); vop(p4, p5);
-                vop(p7, p8); vop(p0, p3); vop(p5, p8); vop(p4, p7);
-                vop(p3, p6); vop(p1, p4); vop(p2, p5); vop(p4, p7);
-                vop(p4, p2); vop(p6, p4); vop(p4, p2);
-                vop.store(dst+j, p4);
-            }
+                    op(p1, p2); op(p4, p5); op(p7, p8); op(p0, p1);
+                    op(p3, p4); op(p6, p7); op(p1, p2); op(p4, p5);
+                    op(p7, p8); op(p0, p3); op(p5, p8); op(p4, p7);
+                    op(p3, p6); op(p1, p4); op(p2, p5); op(p4, p7);
+                    op(p4, p2); op(p6, p4); op(p4, p2);
+                    dst[j] = (T)p4;
+                }
 
-            for( ; j < size.width; j++ )
-            {
-                WT p0 = row0[j-cn], p1 = row0[j], p2 = row0[j+cn];
-                WT p3 = row1[j-cn], p4 = row1[j], p5 = row1[j+cn];
-                WT p6 = row2[j-cn], p7 = row2[j], p8 = row2[j+cn];
+                if( limit == size.width )
+                    break;
 
-                op(p1, p2); op(p4, p5); op(p7, p8); op(p0, p1);
-                op(p3, p4); op(p6, p7); op(p1, p2); op(p4, p5);
-                op(p7, p8); op(p0, p3); op(p5, p8); op(p4, p7);
-                op(p3, p6); op(p1, p4); op(p2, p5); op(p4, p7);
-                op(p4, p2); op(p6, p4); op(p4, p2);
-                dst[j] = (T)p4;
+                for( ; j <= size.width - VecOp::SIZE - cn; j += VecOp::SIZE )
+                {
+                    VT p0 = vop.load(row0+j-cn), p1 = vop.load(row0+j), p2 = vop.load(row0+j+cn);
+                    VT p3 = vop.load(row1+j-cn), p4 = vop.load(row1+j), p5 = vop.load(row1+j+cn);
+                    VT p6 = vop.load(row2+j-cn), p7 = vop.load(row2+j), p8 = vop.load(row2+j+cn);
+
+                    vop(p1, p2); vop(p4, p5); vop(p7, p8); vop(p0, p1);
+                    vop(p3, p4); vop(p6, p7); vop(p1, p2); vop(p4, p5);
+                    vop(p7, p8); vop(p0, p3); vop(p5, p8); vop(p4, p7);
+                    vop(p3, p6); vop(p1, p4); vop(p2, p5); vop(p4, p7);
+                    vop(p4, p2); vop(p6, p4); vop(p4, p2);
+                    vop.store(dst+j, p4);
+                }
+
+                limit = size.width;
             }
         }
     }
@@ -1014,9 +1021,6 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
             int sdelta = size.height == 1 ? cn : sstep;
             int sdelta0 = size.height == 1 ? 0 : sstep - cn;
             int ddelta = size.height == 1 ? cn : dstep;
-
-            if( size.height == 1 )
-                src += cn*2;
 
             for( i = 0; i < len; i++, src += sdelta0, dst += ddelta )
                 for( j = 0; j < cn; j++, src++ )
@@ -1035,7 +1039,6 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
         }
 
         size.width *= cn;
-        src += cn*2;
         for( i = 0; i < size.height; i++, dst += dstep )
         {
             const T* row[5];
@@ -1044,79 +1047,92 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
             row[2] = src + i*sstep;
             row[3] = src + std::min(i + 1, size.height-1)*sstep;
             row[4] = src + std::min(i + 2, size.height-1)*sstep;
+            int limit = cn*2;
 
-            for( j = 0; j <= size.width - VecOp::SIZE - cn*2; j += VecOp::SIZE )
+            for(j = 0;; )
             {
-                VT p[25];
-                for( k = 0; k < 5; k++ )
+                for( ; j < limit; j++ )
                 {
-                    const T* rowk = row[k];
-                    p[k*5] = vop.load(rowk+j-cn*2); p[k*5+1] = vop.load(rowk+j-cn);
-                    p[k*5+2] = vop.load(rowk+j); p[k*5+3] = vop.load(rowk+j+cn);
-                    p[k*5+4] = vop.load(rowk+j+cn*2);
+                    WT p[25];
+                    int j1 = j >= cn ? j - cn : j;
+                    int j0 = j >= cn*2 ? j - cn*2 : j1;
+                    int j3 = j < size.width - cn ? j + cn : j;
+                    int j4 = j < size.width - cn*2 ? j + cn*2 : j3;
+                    for( k = 0; k < 5; k++ )
+                    {
+                        const T* rowk = row[k];
+                        p[k*5] = rowk[j0]; p[k*5+1] = rowk[j1];
+                        p[k*5+2] = rowk[j]; p[k*5+3] = rowk[j3];
+                        p[k*5+4] = rowk[j4];
+                    }
+                    
+                    op(p[1], p[2]); op(p[0], p[1]); op(p[1], p[2]); op(p[4], p[5]); op(p[3], p[4]);
+                    op(p[4], p[5]); op(p[0], p[3]); op(p[2], p[5]); op(p[2], p[3]); op(p[1], p[4]);
+                    op(p[1], p[2]); op(p[3], p[4]); op(p[7], p[8]); op(p[6], p[7]); op(p[7], p[8]);
+                    op(p[10], p[11]); op(p[9], p[10]); op(p[10], p[11]); op(p[6], p[9]); op(p[8], p[11]);
+                    op(p[8], p[9]); op(p[7], p[10]); op(p[7], p[8]); op(p[9], p[10]); op(p[0], p[6]);
+                    op(p[4], p[10]); op(p[4], p[6]); op(p[2], p[8]); op(p[2], p[4]); op(p[6], p[8]);
+                    op(p[1], p[7]); op(p[5], p[11]); op(p[5], p[7]); op(p[3], p[9]); op(p[3], p[5]);
+                    op(p[7], p[9]); op(p[1], p[2]); op(p[3], p[4]); op(p[5], p[6]); op(p[7], p[8]);
+                    op(p[9], p[10]); op(p[13], p[14]); op(p[12], p[13]); op(p[13], p[14]); op(p[16], p[17]);
+                    op(p[15], p[16]); op(p[16], p[17]); op(p[12], p[15]); op(p[14], p[17]); op(p[14], p[15]);
+                    op(p[13], p[16]); op(p[13], p[14]); op(p[15], p[16]); op(p[19], p[20]); op(p[18], p[19]);
+                    op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[21], p[23]); op(p[22], p[24]);
+                    op(p[22], p[23]); op(p[18], p[21]); op(p[20], p[23]); op(p[20], p[21]); op(p[19], p[22]);
+                    op(p[22], p[24]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[12], p[18]);
+                    op(p[16], p[22]); op(p[16], p[18]); op(p[14], p[20]); op(p[20], p[24]); op(p[14], p[16]);
+                    op(p[18], p[20]); op(p[22], p[24]); op(p[13], p[19]); op(p[17], p[23]); op(p[17], p[19]);
+                    op(p[15], p[21]); op(p[15], p[17]); op(p[19], p[21]); op(p[13], p[14]); op(p[15], p[16]);
+                    op(p[17], p[18]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[0], p[12]);
+                    op(p[8], p[20]); op(p[8], p[12]); op(p[4], p[16]); op(p[16], p[24]); op(p[12], p[16]);
+                    op(p[2], p[14]); op(p[10], p[22]); op(p[10], p[14]); op(p[6], p[18]); op(p[6], p[10]);
+                    op(p[10], p[12]); op(p[1], p[13]); op(p[9], p[21]); op(p[9], p[13]); op(p[5], p[17]);
+                    op(p[13], p[17]); op(p[3], p[15]); op(p[11], p[23]); op(p[11], p[15]); op(p[7], p[19]);
+                    op(p[7], p[11]); op(p[11], p[13]); op(p[11], p[12]);
+                    dst[j] = (T)p[12];
                 }
-                
-                vop(p[1], p[2]); vop(p[0], p[1]); vop(p[1], p[2]); vop(p[4], p[5]); vop(p[3], p[4]);
-                vop(p[4], p[5]); vop(p[0], p[3]); vop(p[2], p[5]); vop(p[2], p[3]); vop(p[1], p[4]);
-                vop(p[1], p[2]); vop(p[3], p[4]); vop(p[7], p[8]); vop(p[6], p[7]); vop(p[7], p[8]);
-                vop(p[10], p[11]); vop(p[9], p[10]); vop(p[10], p[11]); vop(p[6], p[9]); vop(p[8], p[11]);
-                vop(p[8], p[9]); vop(p[7], p[10]); vop(p[7], p[8]); vop(p[9], p[10]); vop(p[0], p[6]);
-                vop(p[4], p[10]); vop(p[4], p[6]); vop(p[2], p[8]); vop(p[2], p[4]); vop(p[6], p[8]);
-                vop(p[1], p[7]); vop(p[5], p[11]); vop(p[5], p[7]); vop(p[3], p[9]); vop(p[3], p[5]);
-                vop(p[7], p[9]); vop(p[1], p[2]); vop(p[3], p[4]); vop(p[5], p[6]); vop(p[7], p[8]);
-                vop(p[9], p[10]); vop(p[13], p[14]); vop(p[12], p[13]); vop(p[13], p[14]); vop(p[16], p[17]);
-                vop(p[15], p[16]); vop(p[16], p[17]); vop(p[12], p[15]); vop(p[14], p[17]); vop(p[14], p[15]);
-                vop(p[13], p[16]); vop(p[13], p[14]); vop(p[15], p[16]); vop(p[19], p[20]); vop(p[18], p[19]);
-                vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[21], p[23]); vop(p[22], p[24]);
-                vop(p[22], p[23]); vop(p[18], p[21]); vop(p[20], p[23]); vop(p[20], p[21]); vop(p[19], p[22]);
-                vop(p[22], p[24]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[12], p[18]);
-                vop(p[16], p[22]); vop(p[16], p[18]); vop(p[14], p[20]); vop(p[20], p[24]); vop(p[14], p[16]);
-                vop(p[18], p[20]); vop(p[22], p[24]); vop(p[13], p[19]); vop(p[17], p[23]); vop(p[17], p[19]);
-                vop(p[15], p[21]); vop(p[15], p[17]); vop(p[19], p[21]); vop(p[13], p[14]); vop(p[15], p[16]);
-                vop(p[17], p[18]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[0], p[12]);
-                vop(p[8], p[20]); vop(p[8], p[12]); vop(p[4], p[16]); vop(p[16], p[24]); vop(p[12], p[16]);
-                vop(p[2], p[14]); vop(p[10], p[22]); vop(p[10], p[14]); vop(p[6], p[18]); vop(p[6], p[10]);
-                vop(p[10], p[12]); vop(p[1], p[13]); vop(p[9], p[21]); vop(p[9], p[13]); vop(p[5], p[17]);
-                vop(p[13], p[17]); vop(p[3], p[15]); vop(p[11], p[23]); vop(p[11], p[15]); vop(p[7], p[19]);
-                vop(p[7], p[11]); vop(p[11], p[13]); vop(p[11], p[12]);
-                vop.store(dst+j, p[12]);
-            }
-            
-            for( ; j < size.width; j++ )
-            {
-                WT p[25];
-                for( k = 0; k < 5; k++ )
+
+                if( limit == size.width )
+                    break;
+
+                for( ; j <= size.width - VecOp::SIZE - cn*2; j += VecOp::SIZE )
                 {
-                    const T* rowk = row[k];
-                    p[k*5] = rowk[j-cn*2]; p[k*5+1] = rowk[j-cn];
-                    p[k*5+2] = rowk[j]; p[k*5+3] = rowk[j+cn];
-                    p[k*5+4] = rowk[j+cn*2];
+                    VT p[25];
+                    for( k = 0; k < 5; k++ )
+                    {
+                        const T* rowk = row[k];
+                        p[k*5] = vop.load(rowk+j-cn*2); p[k*5+1] = vop.load(rowk+j-cn);
+                        p[k*5+2] = vop.load(rowk+j); p[k*5+3] = vop.load(rowk+j+cn);
+                        p[k*5+4] = vop.load(rowk+j+cn*2);
+                    }
+                    
+                    vop(p[1], p[2]); vop(p[0], p[1]); vop(p[1], p[2]); vop(p[4], p[5]); vop(p[3], p[4]);
+                    vop(p[4], p[5]); vop(p[0], p[3]); vop(p[2], p[5]); vop(p[2], p[3]); vop(p[1], p[4]);
+                    vop(p[1], p[2]); vop(p[3], p[4]); vop(p[7], p[8]); vop(p[6], p[7]); vop(p[7], p[8]);
+                    vop(p[10], p[11]); vop(p[9], p[10]); vop(p[10], p[11]); vop(p[6], p[9]); vop(p[8], p[11]);
+                    vop(p[8], p[9]); vop(p[7], p[10]); vop(p[7], p[8]); vop(p[9], p[10]); vop(p[0], p[6]);
+                    vop(p[4], p[10]); vop(p[4], p[6]); vop(p[2], p[8]); vop(p[2], p[4]); vop(p[6], p[8]);
+                    vop(p[1], p[7]); vop(p[5], p[11]); vop(p[5], p[7]); vop(p[3], p[9]); vop(p[3], p[5]);
+                    vop(p[7], p[9]); vop(p[1], p[2]); vop(p[3], p[4]); vop(p[5], p[6]); vop(p[7], p[8]);
+                    vop(p[9], p[10]); vop(p[13], p[14]); vop(p[12], p[13]); vop(p[13], p[14]); vop(p[16], p[17]);
+                    vop(p[15], p[16]); vop(p[16], p[17]); vop(p[12], p[15]); vop(p[14], p[17]); vop(p[14], p[15]);
+                    vop(p[13], p[16]); vop(p[13], p[14]); vop(p[15], p[16]); vop(p[19], p[20]); vop(p[18], p[19]);
+                    vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[21], p[23]); vop(p[22], p[24]);
+                    vop(p[22], p[23]); vop(p[18], p[21]); vop(p[20], p[23]); vop(p[20], p[21]); vop(p[19], p[22]);
+                    vop(p[22], p[24]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[12], p[18]);
+                    vop(p[16], p[22]); vop(p[16], p[18]); vop(p[14], p[20]); vop(p[20], p[24]); vop(p[14], p[16]);
+                    vop(p[18], p[20]); vop(p[22], p[24]); vop(p[13], p[19]); vop(p[17], p[23]); vop(p[17], p[19]);
+                    vop(p[15], p[21]); vop(p[15], p[17]); vop(p[19], p[21]); vop(p[13], p[14]); vop(p[15], p[16]);
+                    vop(p[17], p[18]); vop(p[19], p[20]); vop(p[21], p[22]); vop(p[23], p[24]); vop(p[0], p[12]);
+                    vop(p[8], p[20]); vop(p[8], p[12]); vop(p[4], p[16]); vop(p[16], p[24]); vop(p[12], p[16]);
+                    vop(p[2], p[14]); vop(p[10], p[22]); vop(p[10], p[14]); vop(p[6], p[18]); vop(p[6], p[10]);
+                    vop(p[10], p[12]); vop(p[1], p[13]); vop(p[9], p[21]); vop(p[9], p[13]); vop(p[5], p[17]);
+                    vop(p[13], p[17]); vop(p[3], p[15]); vop(p[11], p[23]); vop(p[11], p[15]); vop(p[7], p[19]);
+                    vop(p[7], p[11]); vop(p[11], p[13]); vop(p[11], p[12]);
+                    vop.store(dst+j, p[12]);
                 }
-                
-                op(p[1], p[2]); op(p[0], p[1]); op(p[1], p[2]); op(p[4], p[5]); op(p[3], p[4]);
-                op(p[4], p[5]); op(p[0], p[3]); op(p[2], p[5]); op(p[2], p[3]); op(p[1], p[4]);
-                op(p[1], p[2]); op(p[3], p[4]); op(p[7], p[8]); op(p[6], p[7]); op(p[7], p[8]);
-                op(p[10], p[11]); op(p[9], p[10]); op(p[10], p[11]); op(p[6], p[9]); op(p[8], p[11]);
-                op(p[8], p[9]); op(p[7], p[10]); op(p[7], p[8]); op(p[9], p[10]); op(p[0], p[6]);
-                op(p[4], p[10]); op(p[4], p[6]); op(p[2], p[8]); op(p[2], p[4]); op(p[6], p[8]);
-                op(p[1], p[7]); op(p[5], p[11]); op(p[5], p[7]); op(p[3], p[9]); op(p[3], p[5]);
-                op(p[7], p[9]); op(p[1], p[2]); op(p[3], p[4]); op(p[5], p[6]); op(p[7], p[8]);
-                op(p[9], p[10]); op(p[13], p[14]); op(p[12], p[13]); op(p[13], p[14]); op(p[16], p[17]);
-                op(p[15], p[16]); op(p[16], p[17]); op(p[12], p[15]); op(p[14], p[17]); op(p[14], p[15]);
-                op(p[13], p[16]); op(p[13], p[14]); op(p[15], p[16]); op(p[19], p[20]); op(p[18], p[19]);
-                op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[21], p[23]); op(p[22], p[24]);
-                op(p[22], p[23]); op(p[18], p[21]); op(p[20], p[23]); op(p[20], p[21]); op(p[19], p[22]);
-                op(p[22], p[24]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[12], p[18]);
-                op(p[16], p[22]); op(p[16], p[18]); op(p[14], p[20]); op(p[20], p[24]); op(p[14], p[16]);
-                op(p[18], p[20]); op(p[22], p[24]); op(p[13], p[19]); op(p[17], p[23]); op(p[17], p[19]);
-                op(p[15], p[21]); op(p[15], p[17]); op(p[19], p[21]); op(p[13], p[14]); op(p[15], p[16]);
-                op(p[17], p[18]); op(p[19], p[20]); op(p[21], p[22]); op(p[23], p[24]); op(p[0], p[12]);
-                op(p[8], p[20]); op(p[8], p[12]); op(p[4], p[16]); op(p[16], p[24]); op(p[12], p[16]);
-                op(p[2], p[14]); op(p[10], p[22]); op(p[10], p[14]); op(p[6], p[18]); op(p[6], p[10]);
-                op(p[10], p[12]); op(p[1], p[13]); op(p[9], p[21]); op(p[9], p[13]); op(p[5], p[17]);
-                op(p[13], p[17]); op(p[3], p[15]); op(p[11], p[23]); op(p[11], p[15]); op(p[7], p[19]);
-                op(p[7], p[11]); op(p[11], p[13]); op(p[11], p[12]);
-                dst[j] = (T)p[12];
+
+                limit = size.width;
             }
         }
     }
@@ -1130,21 +1146,30 @@ void medianBlur( const Mat& src0, Mat& dst, int ksize )
         src0.copyTo(dst);
         return;
     }
+
+    CV_Assert( ksize % 2 == 1 );
     
     Size size = src0.size();
     int cn = src0.channels();
-    double img_size_mp = (double)(size.width*size.height)/(1 << 20);
+    bool useSortNet = ksize == 3 || (ksize == 5
+#if !CV_SSE2
+            && src0.depth() > CV_8U
+#endif
+        );
 
     dst.create( src0.size(), src0.type() );
     Mat src;
-    cv::copyMakeBorder( src0, src, 0, 0, ksize/2, ksize/2, BORDER_REPLICATE );
+    if( useSortNet )
+    {
+        if( dst.data != src0.data )
+            src = src0;
+        else
+            src0.copyTo(src);
+    }
+    else
+        cv::copyMakeBorder( src0, src, 0, 0, ksize/2, ksize/2, BORDER_REPLICATE );
 
-    if( ksize == 3
-        || (ksize == 5
-#if !CV_SSE2
-            && src.depth() > CV_8U
-#endif
-        ))
+    if( useSortNet )
     {
         if( src.depth() == CV_8U )
             medianBlur_SortNet<MinMax8u, MinMaxVec8u>( src, dst, ksize );
@@ -1157,6 +1182,7 @@ void medianBlur( const Mat& src0, Mat& dst, int ksize )
 
     CV_Assert( src.depth() == CV_8U && (cn == 1 || cn == 3 || cn == 4) );
 
+    double img_size_mp = (double)(size.width*size.height)/(1 << 20);
     if( size.width < ksize*2 || size.height < ksize*2 ||
         ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
         medianBlur_8u_Om( src, dst, ksize );
