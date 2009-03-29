@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -41,52 +42,183 @@
 
 #include "_cv.h"
 
-static CvStatus CV_STDCALL
-icvThresh_8u_C1R( const uchar* src, int src_step, uchar* dst, int dst_step,
-                  CvSize roi, uchar thresh, uchar maxval, int type )
+namespace cv
+{
+
+static void
+thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
 {
     int i, j;
     uchar tab[256];
+    Size roi = _src.size();
+    roi.width *= _src.channels();
+#if CV_SSE2
+    __m128i _x80 = _mm_set1_epi8('\x80');
+    __m128i thresh_u = _mm_set1_epi8(thresh);
+    __m128i thresh_s = _mm_set1_epi8(thresh ^ 0x80);
+    __m128i maxval_ = _mm_set1_epi8(maxval);
+#endif
+
+    if( _src.isContinuous() && _dst.isContinuous() )
+    {
+        roi.width *= roi.height;
+        roi.height = 1;
+    }
 
     switch( type )
     {
-    case CV_THRESH_BINARY:
+    case THRESH_BINARY:
         for( i = 0; i <= thresh; i++ )
             tab[i] = 0;
         for( ; i < 256; i++ )
             tab[i] = maxval;
         break;
-    case CV_THRESH_BINARY_INV:
+    case THRESH_BINARY_INV:
         for( i = 0; i <= thresh; i++ )
             tab[i] = maxval;
         for( ; i < 256; i++ )
             tab[i] = 0;
         break;
-    case CV_THRESH_TRUNC:
+    case THRESH_TRUNC:
         for( i = 0; i <= thresh; i++ )
             tab[i] = (uchar)i;
         for( ; i < 256; i++ )
             tab[i] = thresh;
         break;
-    case CV_THRESH_TOZERO:
+    case THRESH_TOZERO:
         for( i = 0; i <= thresh; i++ )
             tab[i] = 0;
         for( ; i < 256; i++ )
             tab[i] = (uchar)i;
         break;
-    case CV_THRESH_TOZERO_INV:
+    case THRESH_TOZERO_INV:
         for( i = 0; i <= thresh; i++ )
             tab[i] = (uchar)i;
         for( ; i < 256; i++ )
             tab[i] = 0;
         break;
     default:
-        return CV_BADFLAG_ERR;
+        CV_Error( CV_StsBadArg, "Unknown threshold type" );
     }
 
-    for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
+    for( i = 0; i < roi.height; i++ )
     {
-        for( j = 0; j <= roi.width - 4; j += 4 )
+        const uchar* src = (const uchar*)(_src.data + _src.step*i);
+        uchar* dst = (uchar*)(_dst.data + _dst.step*i);
+        j = 0;
+
+    #if CV_SSE2
+        switch( type )
+        {
+        case THRESH_BINARY:
+            for( ; j <= roi.width - 32; j += 32 )
+            {
+                __m128i v0, v1;
+                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
+                v0 = _mm_and_si128( v0, maxval_ );
+                v1 = _mm_and_si128( v1, maxval_ );
+                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+            }
+
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                v0 = _mm_and_si128( v0, maxval_ );
+                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            }
+            break;
+
+        case THRESH_BINARY_INV:
+            for( ; j <= roi.width - 32; j += 32 )
+            {
+                __m128i v0, v1;
+                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
+                v0 = _mm_andnot_si128( v0, maxval_ );
+                v1 = _mm_andnot_si128( v1, maxval_ );
+                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+            }
+
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                v0 = _mm_andnot_si128( v0, maxval_ );
+                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            }
+            break;
+
+        case THRESH_TRUNC:
+            for( ; j <= roi.width - 32; j += 32 )
+            {
+                __m128i v0, v1;
+                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
+                v1 = _mm_subs_epu8( v1, _mm_subs_epu8( v1, thresh_u ));
+                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+            }
+
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
+                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            }
+            break;
+
+        case THRESH_TOZERO:
+            for( ; j <= roi.width - 32; j += 32 )
+            {
+                __m128i v0, v1;
+                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
+                v1 = _mm_and_si128( v1, _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ));
+                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+            }
+
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
+                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            }
+            break;
+
+        case THRESH_TOZERO_INV:
+            for( ; j <= roi.width - 32; j += 32 )
+            {
+                __m128i v0, v1;
+                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
+                v1 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ), v1 );
+                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+            }
+
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
+                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            }
+            break;
+        }
+    #endif        
+
+        for( ; j <= roi.width - 4; j += 4 )
         {
             uchar t0 = tab[src[j]];
             uchar t1 = tab[src[j+1]];
@@ -104,385 +236,344 @@ icvThresh_8u_C1R( const uchar* src, int src_step, uchar* dst, int dst_step,
         for( ; j < roi.width; j++ )
             dst[j] = tab[src[j]];
     }
-
-    return CV_NO_ERR;
 }
 
 
-static CvStatus CV_STDCALL
-icvThresh_32f_C1R( const float *src, int src_step, float *dst, int dst_step,
-                   CvSize roi, float thresh, float maxval, int type )
+static void
+thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
 {
     int i, j;
-    const int* isrc = (const int*)src;
-    int* idst = (int*)dst;
-    Cv32suf v;
-    int iThresh, iMax;
+    Size roi = _src.size();
+    roi.width *= _src.channels();
+    const float* src = (const float*)_src.data;
+    float* dst = (float*)_dst.data;
+    int src_step = _src.step/sizeof(src[0]);
+    int dst_step = _dst.step/sizeof(dst[0]);
+#if CV_SSE2
+    __m128 thresh4 = _mm_set1_ps(thresh), maxval4 = _mm_set1_ps(maxval);
+#endif
 
-    v.f = thresh; iThresh = CV_TOGGLE_FLT(v.i);
-    v.f = maxval; iMax = v.i;
-
-    src_step /= sizeof(src[0]);
-    dst_step /= sizeof(dst[0]);
+    if( _src.isContinuous() && _dst.isContinuous() )
+    {
+        roi.width *= roi.height;
+        roi.height = 1;
+    }
 
     switch( type )
     {
-    case CV_THRESH_BINARY:
-        for( i = 0; i < roi.height; i++, isrc += src_step, idst += dst_step )
-        {
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = isrc[j];
-                idst[j] = ((CV_TOGGLE_FLT(temp) <= iThresh) - 1) & iMax;
-            }
-        }
-        break;
-
-    case CV_THRESH_BINARY_INV:
-        for( i = 0; i < roi.height; i++, isrc += src_step, idst += dst_step )
-        {
-            for( j = 0; j < roi.width; j++ )
-            {
-                int temp = isrc[j];
-                idst[j] = ((CV_TOGGLE_FLT(temp) > iThresh) - 1) & iMax;
-            }
-        }
-        break;
-
-    case CV_THRESH_TRUNC:
+    case THRESH_BINARY:
         for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
         {
-            for( j = 0; j < roi.width; j++ )
+            j = 0;
+        #if CV_SSE2
+            for( ; j <= roi.width - 8; j += 8 )
             {
-                float temp = src[j];
-
-                if( temp > thresh )
-                    temp = thresh;
-                dst[j] = temp;
+                __m128 v0, v1;
+                v0 = _mm_loadu_ps( src + j );
+                v1 = _mm_loadu_ps( src + j + 4 );
+                v0 = _mm_cmpgt_ps( v0, thresh4 );
+                v1 = _mm_cmpgt_ps( v1, thresh4 );
+                v0 = _mm_and_ps( v0, maxval4 );
+                v1 = _mm_and_ps( v1, maxval4 );
+                _mm_storeu_ps( dst + j, v0 );
+                _mm_storeu_ps( dst + j + 4, v1 );
             }
+        #endif
+
+            for( ; j < roi.width; j++ )
+                dst[j] = src[j] > thresh ? maxval : 0;
         }
         break;
 
-    case CV_THRESH_TOZERO:
-        for( i = 0; i < roi.height; i++, isrc += src_step, idst += dst_step )
+    case THRESH_BINARY_INV:
+        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
         {
-            for( j = 0; j < roi.width; j++ )
+            j = 0;
+        #if CV_SSE2
+            for( ; j <= roi.width - 8; j += 8 )
             {
-                int temp = isrc[j];
-                idst[j] = ((CV_TOGGLE_FLT( temp ) <= iThresh) - 1) & temp;
+                __m128 v0, v1;
+                v0 = _mm_loadu_ps( src + j );
+                v1 = _mm_loadu_ps( src + j + 4 );
+                v0 = _mm_cmple_ps( v0, thresh4 );
+                v1 = _mm_cmple_ps( v1, thresh4 );
+                v0 = _mm_and_ps( v0, maxval4 );
+                v1 = _mm_and_ps( v1, maxval4 );
+                _mm_storeu_ps( dst + j, v0 );
+                _mm_storeu_ps( dst + j + 4, v1 );
             }
+        #endif            
+            
+            for( ; j < roi.width; j++ )
+                dst[j] = src[j] <= thresh ? maxval : 0;
         }
         break;
 
-    case CV_THRESH_TOZERO_INV:
-        for( i = 0; i < roi.height; i++, isrc += src_step, idst += dst_step )
+    case THRESH_TRUNC:
+        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
         {
-            for( j = 0; j < roi.width; j++ )
+            j = 0;
+        #if CV_SSE2
+            for( ; j <= roi.width - 8; j += 8 )
             {
-                int temp = isrc[j];
-                idst[j] = ((CV_TOGGLE_FLT( temp ) > iThresh) - 1) & temp;
+                __m128 v0, v1;
+                v0 = _mm_loadu_ps( src + j );
+                v1 = _mm_loadu_ps( src + j + 4 );
+                v0 = _mm_min_ps( v0, thresh4 );
+                v1 = _mm_min_ps( v1, thresh4 );
+                _mm_storeu_ps( dst + j, v0 );
+                _mm_storeu_ps( dst + j + 4, v1 );
+            }
+        #endif            
+            
+            for( ; j < roi.width; j++ )
+                dst[j] = std::min(src[j], thresh);
+        }
+        break;
+
+    case THRESH_TOZERO:
+        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
+        {
+            j = 0;
+        #if CV_SSE2
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128 v0, v1;
+                v0 = _mm_loadu_ps( src + j );
+                v1 = _mm_loadu_ps( src + j + 4 );
+                v0 = _mm_and_ps(v0, _mm_cmpgt_ps(v0, thresh4));
+                v1 = _mm_and_ps(v1, _mm_cmpgt_ps(v1, thresh4));
+                _mm_storeu_ps( dst + j, v0 );
+                _mm_storeu_ps( dst + j + 4, v1 );
+            }
+        #endif
+            
+            for( ; j < roi.width; j++ )
+            {
+                float v = src[j];
+                dst[j] = v > thresh ? v : 0;
             }
         }
         break;
 
+    case THRESH_TOZERO_INV:
+        for( i = 0; i < roi.height; i++, src += src_step, dst += dst_step )
+        {
+            j = 0;
+        #if CV_SSE2
+            for( ; j <= roi.width - 8; j += 8 )
+            {
+                __m128 v0, v1;
+                v0 = _mm_loadu_ps( src + j );
+                v1 = _mm_loadu_ps( src + j + 4 );
+                v0 = _mm_and_ps(v0, _mm_cmple_ps(v0, thresh4));
+                v1 = _mm_and_ps(v1, _mm_cmple_ps(v1, thresh4));
+                _mm_storeu_ps( dst + j, v0 );
+                _mm_storeu_ps( dst + j + 4, v1 );
+            }
+        #endif
+            for( ; j < roi.width; j++ )
+            {
+                float v = src[j];
+                dst[j] = v <= thresh ? v : 0;
+            }
+        }
+        break;
     default:
-        return CV_BADFLAG_ERR;
+        return CV_Error( CV_StsBadArg, "" );
     }
-
-    return CV_OK;
 }
 
 
 static double
-icvGetThreshVal_Otsu( const CvHistogram* hist )
+getThreshVal_Otsu_8u( const Mat& _src )
 {
-    double max_val = 0;
+    Size size = _src.size();
+    if( _src.isContinuous() )
+    {
+        size.width *= size.height;
+        size.height = 1;
+    }
+    const int N = 256;
+    int i, j, h[N] = {0};
+    for( i = 0; i < size.height; i++ )
+    {
+        const uchar* src = _src.data + _src.step*i;
+        for( j = 0; j <= size.width - 4; j += 4 )
+        {
+            int v0 = src[j], v1 = src[j+1];
+            h[v0]++; h[v1]++;
+            v0 = src[j+2]; v1 = src[j+3];
+            h[v0]++; h[v1]++;
+        }
+        for( ; j < size.width; j++ )
+            h[src[j]]++;
+    }
+
+    double mu = 0, scale = 1./(size.width*size.height);
+    for( i = 0; i < N; i++ )
+        mu += i*h[i];
     
-    CV_FUNCNAME( "icvGetThreshVal_Otsu" );
-
-    __BEGIN__;
-
-    int i, count;
-    const float* h;
-    double sum = 0, mu = 0;
-    bool uniform = false;
-    double low = 0, high = 0, delta = 0;
-    float* nu_thresh = 0;
+    mu *= scale;
     double mu1 = 0, q1 = 0;
-    double max_sigma = 0;
+    double max_sigma = 0, max_val = 0;
 
-    if( !CV_IS_HIST(hist) || CV_IS_SPARSE_HIST(hist) || hist->mat.dims != 1 )
-        CV_ERROR( CV_StsBadArg,
-        "The histogram in Otsu method must be a valid dense 1D histogram" );
-
-    count = hist->mat.dim[0].size;
-    h = (float*)cvPtr1D( hist->bins, 0 );
-
-    if( !CV_HIST_HAS_RANGES(hist) || CV_IS_UNIFORM_HIST(hist) )
+    for( i = 0; i < N; i++ )
     {
-        if( CV_HIST_HAS_RANGES(hist) )
-        {
-            low = hist->thresh[0][0];
-            high = hist->thresh[0][1];
-        }
-        else
-        {
-            low = 0;
-            high = count;
-        }
+        double p_i, q2, mu2, sigma;
 
-        delta = (high-low)/count;
-        low += delta*0.5;
-        uniform = true;
-    }
-    else
-        nu_thresh = hist->thresh2[0];
-
-    for( i = 0; i < count; i++ )
-    {
-        sum += h[i];
-        if( uniform )
-            mu += (i*delta + low)*h[i];
-        else
-            mu += (nu_thresh[i*2] + nu_thresh[i*2+1])*0.5*h[i];
-    }
-    
-    sum = fabs(sum) > FLT_EPSILON ? 1./sum : 0;
-    mu *= sum;
-
-    mu1 = 0;
-    q1 = 0;
-
-    for( i = 0; i < count; i++ )
-    {
-        double p_i, q2, mu2, val_i, sigma;
-
-        p_i = h[i]*sum;
+        p_i = h[i]*scale;
         mu1 *= q1;
         q1 += p_i;
         q2 = 1. - q1;
 
-        if( MIN(q1,q2) < FLT_EPSILON || MAX(q1,q2) > 1. - FLT_EPSILON )
+        if( std::min(q1,q2) < FLT_EPSILON || std::max(q1,q2) > 1. - FLT_EPSILON )
             continue;
 
-        if( uniform )
-            val_i = i*delta + low;
-        else
-            val_i = (nu_thresh[i*2] + nu_thresh[i*2+1])*0.5;
-
-        mu1 = (mu1 + val_i*p_i)/q1;
+        mu1 = (mu1 + i*p_i)/q1;
         mu2 = (mu - q1*mu1)/q2;
         sigma = q1*q2*(mu1 - mu2)*(mu1 - mu2);
         if( sigma > max_sigma )
         {
             max_sigma = sigma;
-            max_val = val_i;
+            max_val = i;
         }
     }
-
-    __END__;
 
     return max_val;
 }
 
 
-CV_IMPL double
-cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
+double threshold( const Mat& _src, Mat& _dst, double thresh, double maxval, int type )
 {
-    CvHistogram* hist = 0;
-    
-    CV_FUNCNAME( "cvThreshold" );
-
-    __BEGIN__;
-
-    CvSize roi;
-    int src_step, dst_step;
-    CvMat src_stub, *src = (CvMat*)srcarr;
-    CvMat dst_stub, *dst = (CvMat*)dstarr;
-    CvMat src0, dst0;
-    int coi1 = 0, coi2 = 0;
-    int ithresh, imaxval, cn;
-    bool use_otsu;
-
-    CV_CALL( src = cvGetMat( src, &src_stub, &coi1 ));
-    CV_CALL( dst = cvGetMat( dst, &dst_stub, &coi2 ));
-
-    if( coi1 + coi2 )
-        CV_ERROR( CV_BadCOI, "COI is not supported by the function" );
-
-    if( !CV_ARE_CNS_EQ( src, dst ) )
-        CV_ERROR( CV_StsUnmatchedFormats, "Both arrays must have equal number of channels" );
-
-    cn = CV_MAT_CN(src->type);
-    if( cn > 1 )
-    {
-        src = cvReshape( src, &src0, 1 );
-        dst = cvReshape( dst, &dst0, 1 );
-    }
-
-    use_otsu = (type & ~CV_THRESH_MASK) == CV_THRESH_OTSU;
-    type &= CV_THRESH_MASK;
+    bool use_otsu = (type & THRESH_OTSU) != 0;
+    type &= THRESH_MASK;
 
     if( use_otsu )
     {
-        float _ranges[] = { 0, 256 };
-        float* ranges = _ranges;
-        int hist_size = 256;
-        void* srcarr0 = src;
-
-        if( CV_MAT_TYPE(src->type) != CV_8UC1 )
-            CV_ERROR( CV_StsNotImplemented, "Otsu method can only be used with 8uC1 images" );
-
-        CV_CALL( hist = cvCreateHist( 1, &hist_size, CV_HIST_ARRAY, &ranges ));
-        cvCalcArrHist( &srcarr0, hist );
-        thresh = cvFloor(icvGetThreshVal_Otsu( hist ));
+        CV_Assert( _src.type() == CV_8UC1 );
+        thresh = getThreshVal_Otsu_8u(_src);
     }
-
-    if( !CV_ARE_DEPTHS_EQ( src, dst ) )
+  
+    _dst.create( _src.size(), _src.type() );
+    if( _src.depth() == CV_8U )
     {
-        if( CV_MAT_TYPE(dst->type) != CV_8UC1 )
-            CV_ERROR( CV_StsUnsupportedFormat, "In case of different types destination should be 8uC1" );
-
-        if( type != CV_THRESH_BINARY && type != CV_THRESH_BINARY_INV )
-            CV_ERROR( CV_StsBadArg,
-            "In case of different types only CV_THRESH_BINARY "
-            "and CV_THRESH_BINARY_INV thresholding types are supported" );
-
-        if( maxval < 0 )
-        {
-            CV_CALL( cvSetZero( dst ));
-        }
-        else
-        {
-            CV_CALL( cvCmpS( src, thresh, dst, type == CV_THRESH_BINARY ? CV_CMP_GT : CV_CMP_LE ));
-            if( maxval < 255 )
-                CV_CALL( cvAndS( dst, cvScalarAll( maxval ), dst ));
-        }
-        EXIT;
-    }
-
-    if( !CV_ARE_SIZES_EQ( src, dst ) )
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
-
-    roi = cvGetMatSize( src );
-    if( CV_IS_MAT_CONT( src->type & dst->type ))
-    {
-        roi.width *= roi.height;
-        roi.height = 1;
-        src_step = dst_step = CV_STUB_STEP;
-    }
-    else
-    {
-        src_step = src->step;
-        dst_step = dst->step;
-    }
-
-    switch( CV_MAT_DEPTH(src->type) )
-    {
-    case CV_8U:
-        
-        ithresh = cvFloor(thresh);
-        imaxval = cvRound(maxval);
-        if( type == CV_THRESH_TRUNC )
+        int ithresh = cvFloor(thresh);
+        thresh = ithresh;
+        int imaxval = cvRound(maxval);
+        if( type == THRESH_TRUNC )
             imaxval = ithresh;
-        imaxval = CV_CAST_8U(imaxval);
+        imaxval = saturate_cast<uchar>(imaxval);
 
         if( ithresh < 0 || ithresh >= 255 )
         {
-            if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV ||
-                ((type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV) && ithresh < 0) ||
-                (type == CV_THRESH_TOZERO && ithresh >= 255) )
+            if( type == THRESH_BINARY || type == THRESH_BINARY_INV ||
+                ((type == THRESH_TRUNC || type == THRESH_TOZERO_INV) && ithresh < 0) ||
+                (type == THRESH_TOZERO && ithresh >= 255) )
             {
-                int v = type == CV_THRESH_BINARY ? (ithresh >= 255 ? 0 : imaxval) :
-                        type == CV_THRESH_BINARY_INV ? (ithresh >= 255 ? imaxval : 0) :
-                        type == CV_THRESH_TRUNC ? imaxval : 0;
-
-                cvSet( dst, cvScalarAll(v) );
-                EXIT;
+                int v = type == THRESH_BINARY ? (ithresh >= 255 ? 0 : imaxval) :
+                        type == THRESH_BINARY_INV ? (ithresh >= 255 ? imaxval : 0) :
+                        type == THRESH_TRUNC ? imaxval : 0;
+                _dst = Scalar::all(v);
             }
             else
-            {
-                cvCopy( src, dst );
-                EXIT;
-            }
-        }
-
-        /*if( type == CV_THRESH_BINARY || type == CV_THRESH_BINARY_INV )
-        {
-            if( icvCompareC_8u_C1R_cv_p && icvAndC_8u_C1R_p )
-            {
-                IPPI_CALL( icvCompareC_8u_C1R_cv_p( src->data.ptr, src_step,
-                    (uchar)ithresh, dst->data.ptr, dst_step, roi,
-                    type == CV_THRESH_BINARY ? cvCmpGreater : cvCmpLessEq ));
-
-                if( imaxval < 255 )
-                    IPPI_CALL( icvAndC_8u_C1R_p( dst->data.ptr, dst_step,
-                    (uchar)imaxval, dst->data.ptr, dst_step, roi ));
-                EXIT;
-            }
-        }
-        else if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
-        {
-            if( icvThreshold_GTVal_8u_C1R_p )
-            {
-                IPPI_CALL( icvThreshold_GTVal_8u_C1R_p( src->data.ptr, src_step,
-                    dst->data.ptr, dst_step, roi, (uchar)ithresh,
-                    (uchar)(type == CV_THRESH_TRUNC ? ithresh : 0) ));
-                EXIT;
-            }
+                _src.copyTo(_dst);
         }
         else
-        {
-            assert( type == CV_THRESH_TOZERO );
-            if( icvThreshold_LTVal_8u_C1R_p )
-            {
-                ithresh = cvFloor(thresh+1.);
-                ithresh = CV_CAST_8U(ithresh);
-                IPPI_CALL( icvThreshold_LTVal_8u_C1R_p( src->data.ptr, src_step,
-                    dst->data.ptr, dst_step, roi, (uchar)ithresh, 0 ));
-                EXIT;
-            }
-        }*/
-
-        icvThresh_8u_C1R( src->data.ptr, src_step,
-                          dst->data.ptr, dst_step, roi,
-                          (uchar)ithresh, (uchar)imaxval, type );
-        break;
-    case CV_32F:
-
-        /*if( type == CV_THRESH_TRUNC || type == CV_THRESH_TOZERO_INV )
-        {
-            if( icvThreshold_GTVal_32f_C1R_p )
-            {
-                IPPI_CALL( icvThreshold_GTVal_32f_C1R_p( src->data.fl, src_step,
-                    dst->data.fl, dst_step, roi, (float)thresh,
-                    type == CV_THRESH_TRUNC ? (float)thresh : 0 ));
-                EXIT;
-            }
-        }
-        else if( type == CV_THRESH_TOZERO )
-        {
-            if( icvThreshold_LTVal_32f_C1R_p )
-            {
-                IPPI_CALL( icvThreshold_LTVal_32f_C1R_p( src->data.fl, src_step,
-                    dst->data.fl, dst_step, roi, (float)(thresh*(1 + FLT_EPSILON)), 0 ));
-                EXIT;
-            }
-        }*/
-
-        icvThresh_32f_C1R( src->data.fl, src_step, dst->data.fl, dst_step, roi,
-                           (float)thresh, (float)maxval, type );
-        break;
-    default:
-        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
+            thresh_8u( _src, _dst, (uchar)ithresh, (uchar)imaxval, type );
     }
-
-    __END__;
-
-    if( hist )
-        cvReleaseHist( &hist );
+    else if( _src.depth() == CV_32F )
+        thresh_32f( _src, _dst, (float)thresh, (float)maxval, type );
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     return thresh;
+}
+
+
+void adaptiveThreshold( const Mat& _src, Mat& _dst, double maxValue,
+                        int method, int type, int blockSize, double delta )
+{
+    CV_Assert( _src.type() == CV_8UC1 );
+    CV_Assert( blockSize % 2 == 1 && blockSize > 1 );
+    Size size = _src.size();
+
+    _dst.create( size, _src.type() );
+
+    if( maxValue < 0 )
+    {
+        _dst = Scalar(0);
+        return;
+    }
+    
+    Mat _mean;
+
+    if( _src.data != _dst.data )
+        _mean = _dst;
+
+    if( method == ADAPTIVE_THRESH_MEAN_C )
+        boxFilter( _src, _mean, _src.type(), Size(blockSize, blockSize),
+                   Point(-1,-1), true, BORDER_REPLICATE );
+    else if( method == ADAPTIVE_THRESH_GAUSSIAN_C )
+        GaussianBlur( _src, _mean, Size(blockSize, blockSize), 0, 0, BORDER_REPLICATE );
+    else
+        CV_Error( CV_StsBadFlag, "Unknown/unsupported adaptive threshold method" );
+
+    int i, j;
+    uchar imaxval = saturate_cast<uchar>(maxValue);
+    int idelta = type == THRESH_BINARY ? cvCeil(delta) : cvFloor(delta);
+    uchar tab[768];    
+
+    if( type == CV_THRESH_BINARY )
+        for( i = 0; i < 768; i++ )
+            tab[i] = (uchar)(i - 255 > -idelta ? imaxval : 0);
+    else if( type == CV_THRESH_BINARY_INV )
+        for( i = 0; i < 768; i++ )
+            tab[i] = (uchar)(i - 255 <= -idelta ? imaxval : 0);
+    else
+        CV_Error( CV_StsBadFlag, "Unknown/unsupported threshold type" );
+
+    if( _src.isContinuous() && _mean.isContinuous() && _dst.isContinuous() )
+    {
+        size.width *= size.height;
+        size.height = 1;
+    }
+
+    for( i = 0; i < size.height; i++ )
+    {
+        const uchar* src = _src.data + _src.step*i;
+        const uchar* mean = _mean.data + _mean.step*i;
+        uchar* dst = _dst.data + _dst.step*i;
+
+        for( j = 0; j < size.width; j++ )
+            dst[j] = tab[src[j] - mean[j] + 255];
+    }
+}
+
+}
+
+CV_IMPL double
+cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
+{
+    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), dst0 = dst;
+
+    CV_Assert( src.size() == dst.size() && src.channels() == dst.channels() &&
+        (src.depth() == dst.depth() || dst.depth() == CV_8U));
+
+    thresh = cv::threshold( src, dst, thresh, maxval, type );
+    if( dst0.data != dst.data )
+        dst.convertTo( dst0, dst0.depth() );
+    return thresh;
+}
+
+
+CV_IMPL void
+cvAdaptiveThreshold( const void *srcIm, void *dstIm, double maxValue,
+                     int method, int type, int blockSize, double delta )
+{
+    cv::Mat src = cv::cvarrToMat(srcIm), dst = cv::cvarrToMat(dstIm);
+    CV_Assert( src.size() == dst.size() && src.type() == dst.type() );
+    cv::adaptiveThreshold( src, dst, maxValue, method, type, blockSize, delta );
 }
 
 /* End of file. */

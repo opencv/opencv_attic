@@ -224,6 +224,27 @@ operator - (const Vec_<T, cn>& a, const Vec_<T, cn>& b)
     return c -= b;
 }
 
+template<typename T> static inline
+Vec_<T, 2>& operator *= (Vec_<T, 2>& a, T alpha)
+{
+    a[0] *= alpha; a[1] *= alpha;
+    return a;
+}
+
+template<typename T> static inline
+Vec_<T, 3>& operator *= (Vec_<T, 3>& a, T alpha)
+{
+    a[0] *= alpha; a[1] *= alpha; a[2] *= alpha;
+    return a;
+}
+
+template<typename T> static inline
+Vec_<T, 4>& operator *= (Vec_<T, 4>& a, T alpha)
+{
+    a[0] *= alpha; a[1] *= alpha; a[2] *= alpha; a[3] *= alpha;
+    return a;
+}
+
 template<typename T, int cn> static inline Vec_<T, cn>
 operator * (const Vec_<T, cn>& a, T alpha)
 {

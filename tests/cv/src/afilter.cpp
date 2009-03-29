@@ -2456,7 +2456,7 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
     if( cvTsRandInt(rng) % 3 > 0 )
     {
         sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] = sum_size;
-        if( cvTsRandInt(rng) % 2 > 0 && cn == 1 )
+        if( cvTsRandInt(rng) % 2 > 0 )
             sizes[REF_OUTPUT][2] = sizes[OUTPUT][2] = sum_size;
     }
 
