@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -557,7 +558,7 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
     Histogram CV_DECL_ALIGNED(16) H[4];
     HT luc[4][16];
 
-    const int STRIPE_SIZE = 256/cn;
+    int STRIPE_SIZE = std::min( _dst.cols, 512/cn );
 
     Vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn);
     Vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn);
@@ -1183,8 +1184,7 @@ void medianBlur( const Mat& src0, Mat& dst, int ksize )
     CV_Assert( src.depth() == CV_8U && (cn == 1 || cn == 3 || cn == 4) );
 
     double img_size_mp = (double)(size.width*size.height)/(1 << 20);
-    if( size.width < ksize*2 || size.height < ksize*2 ||
-        ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
+    if( ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
         medianBlur_8u_Om( src, dst, ksize );
     else
         medianBlur_8u_O1( src, dst, ksize );

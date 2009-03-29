@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -1152,7 +1153,7 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     double a[9], ar[9]={1,0,0,0,1,0,0,0,1}, R[9];
     double MM[9], U[9], V[9], W[3];
     CvScalar Mc;
-    double JtJ[6*6], JtErr[6], JtJW[6], JtJV[6*6], delta[6], param[6];
+    double param[6];
     CvMat _A = cvMat( 3, 3, CV_64F, a );
     CvMat _Ar = cvMat( 3, 3, CV_64F, ar );
     CvMat _R = cvMat( 3, 3, CV_64F, R );
@@ -1163,11 +1164,6 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     CvMat _U = cvMat( 3, 3, CV_64F, U );
     CvMat _V = cvMat( 3, 3, CV_64F, V );
     CvMat _W = cvMat( 3, 1, CV_64F, W );
-    CvMat _JtJ = cvMat( 6, 6, CV_64F, JtJ );
-    CvMat _JtErr = cvMat( 6, 1, CV_64F, JtErr );
-    CvMat _JtJW = cvMat( 6, 1, CV_64F, JtJW );
-    CvMat _JtJV = cvMat( 6, 6, CV_64F, JtJV );
-    CvMat _delta = cvMat( 6, 1, CV_64F, delta );
     CvMat _param = cvMat( 6, 1, CV_64F, param );
     CvMat _dpdr, _dpdt;
 
@@ -1301,36 +1297,6 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     cvReshape( _mn, _mn, 2, 1 );
 
     // refine extrinsic parameters using iterative algorithm
-#if 0
-    CV_CALL( _J = cvCreateMat( 2*count, 6, CV_64FC1 ));
-    cvGetCols( _J, &_dpdr, 0, 3 );
-    cvGetCols( _J, &_dpdt, 3, 6 );
-
-    for( i = 0; i < max_iter; i++ )
-    {
-        double n1, n2;
-        cvReshape( _mn, _mn, 2, 1 );
-        cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
-                          _mn, &_dpdr, &_dpdt, 0, 0, 0 );
-        cvSub( _m, _mn, _mn );
-        cvReshape( _mn, _mn, 1, 2*count );
-        //printf("reproj err=%g\n", cvNorm(_mn, 0, CV_C));
-
-        cvMulTransposed( _J, &_JtJ, 1 );
-        cvGEMM( _J, _mn, 1, 0, 0, &_JtErr, CV_GEMM_A_T );
-        cvSVD( &_JtJ, &_JtJW, 0, &_JtJV, CV_SVD_MODIFY_A + CV_SVD_V_T );
-        if( JtJW[5]/JtJW[0] < 1e-12 )
-            break;
-        cvSVBkSb( &_JtJW, &_JtJV, &_JtJV, &_JtErr,
-                  &_delta, CV_SVD_U_T + CV_SVD_V_T );
-        cvAdd( &_param, &_delta, &_param );
-        n1 = cvNorm( &_delta );
-        n2 = cvNorm( &_param );
-        if( n1/n2 < 1e-10 )
-            break;
-    }
-    printf("max reproj err=%g\n", cvNorm(_mn, 0, CV_C));
-#else
     {
     CvLevMarq solver( 6, count*2, cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,max_iter,FLT_EPSILON), true);
     cvCopy( &_param, solver.param );
@@ -1361,7 +1327,6 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     }
     cvCopy( solver.param, &_param );
     }
-#endif
 
     _r = cvMat( rvec->rows, rvec->cols,
         CV_MAKETYPE(CV_64F,CV_MAT_CN(rvec->type)), param );

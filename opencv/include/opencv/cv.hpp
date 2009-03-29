@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -296,6 +297,28 @@ CV_EXPORTS void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat
 CV_EXPORTS Mat getRotationMatrix2D( Point2f center, double angle, double scale );
 CV_EXPORTS Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] );
 CV_EXPORTS Mat getAffineTransform( const Point2f src[], const Point2f dst[] );
+
+CV_EXPORTS void integral( const Mat& src, Mat& sum, int sdepth=-1 );
+CV_EXPORTS void integral( const Mat& src, Mat& sum, Mat& sqsum, int sdepth=-1 );
+CV_EXPORTS void integral( const Mat& src, Mat& sum, Mat& sqsum, Mat& tilted, int sdepth=-1 );
+
+CV_EXPORTS void accumulate( const Mat& src, Mat& dst, const Mat& mask=Mat() );
+CV_EXPORTS void accumulateSquare( const Mat& src, Mat& dst, const Mat& mask=Mat() );
+CV_EXPORTS void accumulateProduct( const Mat& src1, const Mat& src2,
+                                   Mat& dst, const Mat& mask=Mat() );
+CV_EXPORTS void accumulateWeighted( const Mat& src, Mat& dst,
+                                    double alpha, const Mat& mask=Mat() );
+
+enum { THRESH_BINARY=0, THRESH_BINARY_INV=1, THRESH_TRUNC=2, THRESH_TOZERO=3,
+       THRESH_TOZERO_INV=4, THRESH_MASK=7, THRESH_OTSU=8 };
+
+CV_EXPORTS double threshold( const Mat& src, Mat& dst, double thresh, double maxval, int type );
+
+enum { ADAPTIVE_THRESH_MEAN_C=0, ADAPTIVE_THRESH_GAUSSIAN_C=1 };
+
+CV_EXPORTS void adaptiveThreshold( const Mat& src, Mat& dst, double maxValue,
+                                   int adaptiveMethod, int thresholdType,
+                                   int blockSize, double C );
 
 }
 

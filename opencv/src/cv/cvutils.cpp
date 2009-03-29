@@ -112,8 +112,7 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
         for( i = 0; i < dstroi.height; i++, idst += dststep )
         {
             if( idst + left != isrc )
-                for( j = 0; j < srcroi.width; j++ )
-                    idst[j + left] = isrc[j];
+                memcpy( idst + left, isrc, srcroi.width*sizeof(idst[0]) );
             for( j = left - 1; j >= 0; j-- )
                 idst[j] = idst[j + cn];
             for( j = left+srcroi.width; j < dstroi.width; j++ )
@@ -131,8 +130,7 @@ icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
         for( i = 0; i < dstroi.height; i++, dst += dststep )
         {
             if( dst + left != src )
-                for( j = 0; j < srcroi.width; j++ )
-                    dst[j + left] = src[j];
+                memcpy( dst + left, src, srcroi.width );
             for( j = left - 1; j >= 0; j-- )
                 dst[j] = dst[j + cn];
             for( j = left+srcroi.width; j < dstroi.width; j++ )
@@ -206,8 +204,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
         for( i = 0; i < srcroi.height; i++, isrc += srcstep, idst += dststep )
         {
             if( idst + left != isrc )
-                for( j = 0; j < srcroi.width; j++ )
-                    idst[j + left] = isrc[j];
+                memcpy( idst + left, isrc, srcroi.width*sizeof(idst[0]) );
             for( j = 0; j < left; j++ )
             {
                 k = tab[j]; 
@@ -228,8 +225,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
         for( i = 0; i < srcroi.height; i++, src += srcstep, dst += dststep )
         {
             if( dst + left != src )
-                for( j = 0; j < srcroi.width; j++ )
-                    dst[j + left] = src[j];
+                memcpy( dst + left, src, srcroi.width );
             for( j = 0; j < left; j++ )
             {
                 k = tab[j]; 

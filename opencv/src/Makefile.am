@@ -125,7 +125,6 @@ libcxcore_la_LIBADD  = lib_cxcore.la @LTLIBOBJS@
 # convenience library for cv
 lib_cv_la_SOURCES = \
   cv/cvaccum.cpp \
-  cv/cvadapthresh.cpp \
   cv/cvapprox.cpp \
   cv/cvcalccontrasthistogram.cpp \
   cv/cvcalcimagehomography.cpp \
