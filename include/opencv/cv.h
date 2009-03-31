@@ -1064,9 +1064,9 @@ CVAPI(struct CvFeatureTree*) cvCreateKDTree(CvMat* desc);
 
 /* Constructs spill-tree from set of feature descriptors */
 CVAPI(struct CvFeatureTree*) cvCreateSpillTree( const CvMat* raw_data,
-						const int naive CV_DEFAULT(50),
-						const double rho CV_DEFAULT(.7),
-						const double tau CV_DEFAULT(.1) );
+                                    const int naive CV_DEFAULT(50),
+                                    const double rho CV_DEFAULT(.7),
+                                    const double tau CV_DEFAULT(.1) );
 
 /* Release feature tree */
 CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
@@ -1074,13 +1074,13 @@ CVAPI(void) cvReleaseFeatureTree(struct CvFeatureTree* tr);
 /* Searches feature tree for k nearest neighbors of given reference points,
    searching (in case of kd-tree/bbf) at most emax leaves. */
 CVAPI(void) cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
-			   CvMat* indices, CvMat* dist, int k, int emax CV_DEFAULT(20));
+                           CvMat* indices, CvMat* dist, int k, int emax CV_DEFAULT(20));
 
 /* Search feature tree for all points that are inlier to given rect region.
    Only implemented for kd trees */
 CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-			       CvMat* bounds_min, CvMat* bounds_max,
-			       CvMat* out_indices);
+                               CvMat* bounds_min, CvMat* bounds_max,
+                               CvMat* out_indices);
 
 
 struct CvLSH;
@@ -1088,14 +1088,15 @@ struct CvLSHOperations;
 
 /* Construct a Locality Sensitive Hash (LSH) table, for indexing d-dimensional vectors of 
    given type. Vectors will be hashed L times with k-dimensional p-stable (p=2) functions. */
-CVAPI(struct CvLSH*) cvCreateLSH(struct CvLSHOperations* ops, int d, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
-				 int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
-				 int64 seed CV_DEFAULT(-1));
+CVAPI(struct CvLSH*) cvCreateLSH(struct CvLSHOperations* ops, int d,
+                                 int L CV_DEFAULT(10), int k CV_DEFAULT(10),
+                                 int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+                                 int64 seed CV_DEFAULT(-1));
 
 /* Construct in-memory LSH table, with n bins. */
 CVAPI(struct CvLSH*) cvCreateMemoryLSH(int d, int n, int L CV_DEFAULT(10), int k CV_DEFAULT(10),
-				       int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
-				       int64 seed CV_DEFAULT(-1));
+                                       int type CV_DEFAULT(CV_64FC1), double r CV_DEFAULT(4),
+                                       int64 seed CV_DEFAULT(-1));
 
 /* Free the given LSH structure. */
 CVAPI(void) cvReleaseLSH(struct CvLSH** lsh);
@@ -1112,7 +1113,7 @@ CVAPI(void) cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
 /* Query the LSH n times for at most k nearest points; data is n x d,
    indices and dist are n x k. At most emax stored points will be accessed. */
 CVAPI(void) cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
-		       CvMat* indices, CvMat* dist, int k, int emax);
+                       CvMat* indices, CvMat* dist, int k, int emax);
 
 
 typedef struct CvSURFPoint
@@ -1151,6 +1152,40 @@ CVAPI(CvSURFParams) cvSURFParams( double hessianThreshold, int extended CV_DEFAU
 CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
                            CvMemStorage* storage, CvSURFParams params );
+
+typedef struct CvMSERParams
+{
+    // delta, in the code, it compares (size_{i}-size_{i-delta})/size_{i-delta}
+    int delta;
+    // prune the area which bigger/smaller than max_area/min_area
+    int maxArea;
+    int minArea;
+    // prune the area have simliar size to its children
+    float maxVariation;
+    // trace back to cut off mser with diversity < min_diversity
+    float minDiversity;
+    /* the next few params for MSER of color image */
+    // for color image, the evolution steps
+    int maxEvolution;
+    // the area threshold to cause re-initialize
+    double areaThreshold;
+    // ignore too small margin
+    double minMargin;
+    // the aperture size for edge blur
+    int edgeBlurSize;
+}
+CvMSERParams;
+
+CvMSERParams cvMSERParams( int delta CV_DEFAULT(5), int min_area CV_DEFAULT(60),
+                           int max_area CV_DEFAULT(14400), float max_variation CV_DEFAULT(.25f),
+                           float min_diversity CV_DEFAULT(.2f), int max_evolution CV_DEFAULT(200),
+                           double area_threshold CV_DEFAULT(1.01),
+                           double min_margin CV_DEFAULT(.003),
+                           int edge_blur_size CV_DEFAULT(5) );
+
+// Extracts the contours of Maximally Stable Extremal Regions
+void cvExtractMSER( CvArr* _img, CvArr* _mask, CvSeq** contours, CvMemStorage* storage, CvMSERParams params );
+
 
 typedef struct CvStarKeypoint
 {
@@ -1457,13 +1492,11 @@ CVAPI(void) cvComputeCorrespondEpilines( const CvMat* points,
 /* Triangulation functions */
 
 CVAPI(void) cvTriangulatePoints(CvMat* projMatr1, CvMat* projMatr2,
-				CvMat* projPoints1, CvMat* projPoints2,
-				CvMat* points4D);
+                                CvMat* projPoints1, CvMat* projPoints2,
+                                CvMat* points4D);
 
 CVAPI(void) cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
-			     CvMat* new_points1, CvMat* new_points2);
-
-
+                             CvMat* new_points1, CvMat* new_points2);
 
 /* stereo correspondence parameters and functions */
 
