@@ -564,6 +564,8 @@ public:
     typedef T value_type;
     typedef T* iterator;
     typedef const T* const_iterator;
+    typedef T& reference;
+    typedef const T& const_reference;
 
     struct CV_EXPORTS Hdr
     {
