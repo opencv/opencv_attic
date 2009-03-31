@@ -191,6 +191,78 @@ public:
 	virtual void process(IplImage *inputBGRImage, IplImage *outputHueMask);
 };
 
+
+namespace cv
+{
+
+class CV_EXPORTS OctTree
+{
+
+public:    
+	struct Node
+	{
+        int begin, end;
+        float x_min, x_max, y_min, y_max, z_min, z_max;		
+        int maxLevels;
+        bool isLeaf;
+        int children[8];
+	};
+
+    OctTree();
+    OctTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
+    virtual ~OctTree();
+
+    virtual void buildTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
+    virtual void getPointsWithinSphere( const Point3f& center, float radius,
+                                        Vector<Point3f>& points ) const;
+
+    const Node* getRoot() const;
+private:
+    int minPoints;
+    Vector<Point3f> points;
+    Vector<Node> nodes;
+	
+	virtual void buildNext(Node& node);
+};
+
+
+CV_EXPORTS void computeNormals( const OctTree& octtree, 
+                     const Vector<Point3f>& centers, 
+                     Vector<Point3f>& normals, 
+                     Vector<uchar>& mask, 
+                     float normalRadius,
+                     int minNeighbors = 20);
+
+CV_EXPORTS void computeSpinImages( const OctTree& octtree, 
+                        const Vector<Point3f>& points,
+                        const Vector<Point3f>& normals,
+                        Vector<uchar>& mask,
+                        Mat& spinImages,						  
+                        float support, 
+                        float pixelsPerMeter );
+
+struct CV_EXPORTS HOGParams
+{
+    HOGParams();
+    HOGParams( int cell_n, int cell_x, int cell_y,
+               int bin_num, int stride_x, int stride_y );
+    
+    int histSize() const { return cellN * cellN * nbins; }
+
+    int cellN; // each block will have cell_n * cell_n cells;
+    int cellX; // cell width in pixels
+    int cellY; // cell height in pixels
+
+    int nbins; // number of histogram bins per cell
+    int strideX; // horizontal block shift
+    int strideY; // vertical block shift 
+};
+
+CV_EXPORTS void extractHOG( const Mat& image, Mat& hogs,
+                const HOGParams& params = HOGParams()); 
+
+}
+
 #endif /* __cplusplus */
 
 #endif /* __CVAUX_HPP__ */
