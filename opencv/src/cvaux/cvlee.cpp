@@ -2117,7 +2117,7 @@ template<class T>
 int _cvConstructExtSites(CvVoronoiDiagramInt* pVoronoiDiagram,
                          CvSeq* ContourSeq,
                          int orientation,
-                         T type)
+                         T /*type*/)
 {
     const double angl_eps = 0.03;
     CvSeq* SiteSeq = pVoronoiDiagram->SiteSeq;
@@ -2261,7 +2261,7 @@ int _cvConstructIntSites(CvVoronoiDiagramInt* pVoronoiDiagram,
                                  CvSeq* CurrContourSeq,
                                  pCvVoronoiSite &pTopSite,
                                  int orientation,
-                                 T type)
+                                 T /*type*/)
 {
     const double angl_eps = 0.03;
     float min_x = (float)999999999;

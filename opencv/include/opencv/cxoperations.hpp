@@ -884,7 +884,7 @@ template <typename T> inline Vector<T>::Vector(size_t _size, const T& val)
 template <typename T> inline Vector<T>::Vector(T* _data, size_t _size, bool _copyData)
 { set(_data, _size, _copyData); }
 template <typename T> inline Vector<T>::Vector(const std::vector<T>& vec, bool _copyData)
-{ set(vec[0], vec.size(), _copyData); }
+{ set(&vec[0], vec.size(), _copyData); }
 template <typename T> inline Vector<T>::Vector(const Vector& d)
 { *this = d; }
 template <typename T> inline Vector<T>::Vector(const Vector& d, const Range& r)
@@ -922,14 +922,14 @@ template <typename T> inline Vector<T> Vector<T>::clone() const
 template <typename T> inline Vector<T>::operator T* () { return hdr.data; }
 template <typename T> inline Vector<T>::operator const T* () const { return hdr.data; }
 template <typename T> inline T& Vector<T>::operator [] (size_t i) { assert( i < size() ); return hdr.data[i]; }
-template <typename T> inline T Vector<T>::operator [] (size_t i) const { assert( i < size() ); return hdr.data[i]; }
+template <typename T> inline const T& Vector<T>::operator [] (size_t i) const { assert( i < size() ); return hdr.data[i]; }
 template <typename T> inline T& Vector<T>::operator [] (int i) { assert( (size_t)i < size() ); return hdr.data[i]; }
-template <typename T> inline T Vector<T>::operator [] (int i) const { assert( (size_t)i < size() ); return hdr.data[i]; }
+template <typename T> inline const T& Vector<T>::operator [] (int i) const { assert( (size_t)i < size() ); return hdr.data[i]; }
 template <typename T> inline Vector<T> Vector<T>::operator() (const Range& r) const { return Vector(*this, r); }
 template <typename T> inline T& Vector<T>::back() { assert(!empty()); return hdr.data[hdr.size-1]; }
-template <typename T> inline T Vector<T>::back() const { assert(!empty()); return hdr.data[hdr.size-1]; }
+template <typename T> inline const T& Vector<T>::back() const { assert(!empty()); return hdr.data[hdr.size-1]; }
 template <typename T> inline T& Vector<T>::front() { assert(!empty()); return hdr.data[0]; }
-template <typename T> inline T Vector<T>::front() const { assert(!empty()); return hdr.data[0]; }
+template <typename T> inline const T& Vector<T>::front() const { assert(!empty()); return hdr.data[0]; }
 
 template <typename T> inline T* Vector<T>::begin() { return hdr.data; }
 template <typename T> inline T* Vector<T>::end() { return hdr.data + hdr.size; }

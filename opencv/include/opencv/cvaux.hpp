@@ -197,16 +197,16 @@ namespace cv
 
 class CV_EXPORTS OctTree
 {
-
 public:    
-	struct Node
-	{
+    struct Node
+    {
+        Node() {}
         int begin, end;
         float x_min, x_max, y_min, y_max, z_min, z_max;		
         int maxLevels;
         bool isLeaf;
         int children[8];
-	};
+    };
 
     OctTree();
     OctTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
@@ -215,8 +215,7 @@ public:
     virtual void buildTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
     virtual void getPointsWithinSphere( const Point3f& center, float radius,
                                         Vector<Point3f>& points ) const;
-
-    const Node* getRoot() const;
+    const Vector<Node>& getNodes() const { return nodes; }
 private:
     int minPoints;
     Vector<Point3f> points;

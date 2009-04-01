@@ -593,14 +593,14 @@ public:
     operator T* ();
     operator const T* () const;
     T& operator [] (size_t i);
-    T operator [] (size_t i) const;
+    const T& operator [] (size_t i) const;
     T& operator [] (int i);
-    T operator [] (int i) const;
+    const T& operator [] (int i) const;
     Vector operator() (const Range& r) const;
     T& back();
-    T back() const;
+    const T& back() const;
     T& front();
-    T front() const;
+    const T& front() const;
 
     T* begin();
     T* end();
