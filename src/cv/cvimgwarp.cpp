@@ -95,7 +95,7 @@ static inline void interpolateLanczos4( float x, float* coeffs )
     static const double s45 = 0.70710678118654752440084436210485;
     static const double cs[][2]=
     {{1, 0}, {-s45, -s45}, {0, 1}, {s45, -s45}, {-1, 0}, {s45, s45}, {0, -1}, {-s45, s45}};
-    
+
     int i;
     if( x < FLT_EPSILON )
     {
@@ -179,7 +179,7 @@ static const void* initInterTab2D( int method, bool fixpt )
                         isum += itab[k1*ksize + k2] = saturate_cast<short>(v*INTER_REMAP_COEF_SCALE);
                     }
                 }
-                
+
                 if( isum != INTER_REMAP_COEF_SCALE )
                 {
                     int diff = isum - INTER_REMAP_COEF_SCALE;
@@ -416,7 +416,7 @@ struct VResizeLinearVec_32s8u
             x0 = _mm_packus_epi16(x0, x0);
             *(int*)(dst + x) = _mm_cvtsi128_si32(x0);
         }
-        
+
         return x;
     }
 };
@@ -445,7 +445,7 @@ struct VResizeLinearVec_32f16u
                 x1 = _mm_load_ps(S0 + x + 4);
                 y0 = _mm_load_ps(S1 + x);
                 y1 = _mm_load_ps(S1 + x + 4);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
                 t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
@@ -456,7 +456,7 @@ struct VResizeLinearVec_32f16u
                 x1 = _mm_load_ps(S0 + x + 12);
                 y0 = _mm_load_ps(S1 + x + 8);
                 y1 = _mm_load_ps(S1 + x + 12);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
                 t1 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
@@ -475,7 +475,7 @@ struct VResizeLinearVec_32f16u
                 x1 = _mm_loadu_ps(S0 + x + 4);
                 y0 = _mm_loadu_ps(S1 + x);
                 y1 = _mm_loadu_ps(S1 + x + 4);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
                 t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
@@ -486,7 +486,7 @@ struct VResizeLinearVec_32f16u
                 x1 = _mm_loadu_ps(S0 + x + 12);
                 y0 = _mm_loadu_ps(S1 + x + 8);
                 y1 = _mm_loadu_ps(S1 + x + 12);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
                 t1 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
@@ -503,13 +503,13 @@ struct VResizeLinearVec_32f16u
             __m128i t0;
             x0 = _mm_loadu_ps(S0 + x);
             y0 = _mm_loadu_ps(S1 + x);
-            
+
             x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
             t0 = _mm_add_epi32(_mm_cvtps_epi32(x0), preshift);
             t0 = _mm_add_epi16(_mm_packs_epi32(t0, t0), postshift);
             _mm_storel_epi64( (__m128i*)(dst + x), t0);
         }
-        
+
         return x;
     }
 };
@@ -535,7 +535,7 @@ struct VResizeLinearVec_32f
                 x1 = _mm_load_ps(S0 + x + 4);
                 y0 = _mm_load_ps(S1 + x);
                 y1 = _mm_load_ps(S1 + x + 4);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
 
@@ -550,14 +550,14 @@ struct VResizeLinearVec_32f
                 x1 = _mm_loadu_ps(S0 + x + 4);
                 y0 = _mm_loadu_ps(S1 + x);
                 y1 = _mm_loadu_ps(S1 + x + 4);
-                
+
                 x0 = _mm_add_ps(_mm_mul_ps(x0, b0), _mm_mul_ps(y0, b1));
                 x1 = _mm_add_ps(_mm_mul_ps(x1, b0), _mm_mul_ps(y1, b1));
 
                 _mm_storeu_ps( dst + x, x0);
                 _mm_storeu_ps( dst + x + 4, x1);
             }
-        
+
         return x;
     }
 };
@@ -584,7 +584,7 @@ struct VResizeCubicVec_32s8u
                 x1 = _mm_load_si128((const __m128i*)(S0 + x + 4));
                 y0 = _mm_load_si128((const __m128i*)(S1 + x));
                 y1 = _mm_load_si128((const __m128i*)(S1 + x + 4));
-                
+
                 s0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b0);
                 s1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b0);
                 f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b1);
@@ -596,7 +596,7 @@ struct VResizeCubicVec_32s8u
                 x1 = _mm_load_si128((const __m128i*)(S2 + x + 4));
                 y0 = _mm_load_si128((const __m128i*)(S3 + x));
                 y1 = _mm_load_si128((const __m128i*)(S3 + x + 4));
-                
+
                 f0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b2);
                 f1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b2);
                 s0 = _mm_add_ps(s0, f0);
@@ -621,7 +621,7 @@ struct VResizeCubicVec_32s8u
                 x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 4));
                 y0 = _mm_loadu_si128((const __m128i*)(S1 + x));
                 y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 4));
-                
+
                 s0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b0);
                 s1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b0);
                 f0 = _mm_mul_ps(_mm_cvtepi32_ps(y0), b1);
@@ -633,7 +633,7 @@ struct VResizeCubicVec_32s8u
                 x1 = _mm_loadu_si128((const __m128i*)(S2 + x + 4));
                 y0 = _mm_loadu_si128((const __m128i*)(S3 + x));
                 y1 = _mm_loadu_si128((const __m128i*)(S3 + x + 4));
-                
+
                 f0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b2);
                 f1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b2);
                 s0 = _mm_add_ps(s0, f0);
@@ -649,7 +649,7 @@ struct VResizeCubicVec_32s8u
                 x0 = _mm_packs_epi32(x0, x1);
                 _mm_storel_epi64( (__m128i*)(dst + x), _mm_packus_epi16(x0, x0));
             }
-        
+
         return x;
     }
 };
@@ -677,7 +677,7 @@ struct VResizeCubicVec_32f16u
             x1 = _mm_loadu_ps(S0 + x + 4);
             y0 = _mm_loadu_ps(S1 + x);
             y1 = _mm_loadu_ps(S1 + x + 4);
-            
+
             s0 = _mm_mul_ps(x0, b0);
             s1 = _mm_mul_ps(x1, b0);
             y0 = _mm_mul_ps(y0, b1);
@@ -689,7 +689,7 @@ struct VResizeCubicVec_32f16u
             x1 = _mm_loadu_ps(S2 + x + 4);
             y0 = _mm_loadu_ps(S3 + x);
             y1 = _mm_loadu_ps(S3 + x + 4);
-            
+
             x0 = _mm_mul_ps(x0, b2);
             x1 = _mm_mul_ps(x1, b2);
             y0 = _mm_mul_ps(y0, b3);
@@ -705,7 +705,7 @@ struct VResizeCubicVec_32f16u
             t0 = _mm_add_epi16(_mm_packs_epi32(t0, t1), postshift);
             _mm_storeu_si128( (__m128i*)(dst + x), t0);
         }
-        
+
         return x;
     }
 };
@@ -730,7 +730,7 @@ struct VResizeCubicVec_32f
             x1 = _mm_loadu_ps(S0 + x + 4);
             y0 = _mm_loadu_ps(S1 + x);
             y1 = _mm_loadu_ps(S1 + x + 4);
-            
+
             s0 = _mm_mul_ps(x0, b0);
             s1 = _mm_mul_ps(x1, b0);
             y0 = _mm_mul_ps(y0, b1);
@@ -742,7 +742,7 @@ struct VResizeCubicVec_32f
             x1 = _mm_loadu_ps(S2 + x + 4);
             y0 = _mm_loadu_ps(S3 + x);
             y1 = _mm_loadu_ps(S3 + x + 4);
-            
+
             x0 = _mm_mul_ps(x0, b2);
             x1 = _mm_mul_ps(x1, b2);
             y0 = _mm_mul_ps(y0, b3);
@@ -755,7 +755,7 @@ struct VResizeCubicVec_32f
             _mm_storeu_ps( dst + x, s0);
             _mm_storeu_ps( dst + x + 4, s1);
         }
-        
+
         return x;
     }
 };
@@ -787,7 +787,7 @@ struct HResizeLinear
     typedef T value_type;
     typedef WT buf_type;
     typedef AT alpha_type;
-    
+
     void operator()(const T** src, WT** dst, int count,
                     const int* xofs, const AT* alpha,
                     int swidth, int dwidth, int cn, int xmin, int xmax ) const
@@ -873,7 +873,7 @@ struct HResizeCubic
     typedef T value_type;
     typedef WT buf_type;
     typedef AT alpha_type;
-    
+
     void operator()(const T** src, WT** dst, int count,
                     const int* xofs, const AT* alpha,
                     int swidth, int dwidth, int cn, int xmin, int xmax ) const
@@ -925,7 +925,7 @@ struct VResizeCubic
     typedef T value_type;
     typedef WT buf_type;
     typedef AT alpha_type;
-    
+
     void operator()(const WT** src, T* dst, const AT* beta, int width ) const
     {
         WT b0 = beta[0], b1 = beta[1], b2 = beta[2], b3 = beta[3];
@@ -946,7 +946,7 @@ struct HResizeLanczos4
     typedef T value_type;
     typedef WT buf_type;
     typedef AT alpha_type;
-    
+
     void operator()(const T** src, WT** dst, int count,
                     const int* xofs, const AT* alpha,
                     int swidth, int dwidth, int cn, int xmin, int xmax ) const
@@ -1000,7 +1000,7 @@ struct VResizeLanczos4
     typedef T value_type;
     typedef WT buf_type;
     typedef AT alpha_type;
-    
+
     void operator()(const WT** src, T* dst, const AT* beta, int width ) const
     {
         CastOp castOp;
@@ -1050,7 +1050,7 @@ static void resizeGeneric_( const Mat& src, Mat& dst,
     typedef typename HResize::value_type T;
     typedef typename HResize::buf_type WT;
     typedef typename HResize::alpha_type AT;
-    
+
     const AT* alpha = (const AT*)_alpha;
     const AT* beta = (const AT*)_beta;
     Size ssize = src.size(), dsize = dst.size();
@@ -1065,7 +1065,7 @@ static void resizeGeneric_( const Mat& src, Mat& dst,
     int k, dy;
     xmin *= cn;
     xmax *= cn;
-    
+
     HResize hresize;
     VResize vresize;
 
@@ -1279,7 +1279,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
             VResizeLinear<float, float, float, Cast<float, float>,
                 VResizeLinearVec_32f> >,
         0, 0
-    };    
+    };
 
     static ResizeFunc cubic_tab[] =
     {
@@ -1328,7 +1328,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
     {
         resizeArea_<uchar>, 0, resizeArea_<ushort>, 0, 0, resizeArea_<float>, 0, 0
     };
-    
+
     CV_Assert( !(dsize == Size()) || (inv_scale_x > 0 && inv_scale_y > 0) );
     if( dsize == Size() )
     {
@@ -1370,7 +1370,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
             int* xofs = ofs + area;
             ResizeAreaFastFunc func = areafast_tab[depth];
             CV_Assert( func != 0 );
-            
+
             for( sy = 0, k = 0; sy < iscale_y; sy++ )
                 for( sx = 0; sx < iscale_x; sx++ )
                     ofs[k++] = sy*srcstep + sx*cn;
@@ -1402,7 +1402,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
 
             if( sx1 > fsx1 )
             {
-                assert( k < ssize.width*2 );            
+                assert( k < ssize.width*2 );
                 xofs[k].di = dx*cn;
                 xofs[k].si = (sx1-1)*cn;
                 xofs[k++].alpha = (float)((sx1 - fsx1)*scale);
@@ -1428,7 +1428,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         func( src, dst, xofs, k );
         return;
     }
-        
+
     int xmin = 0, xmax = dsize.width, width = dsize.width*cn;
     bool area_mode = interpolation == INTER_AREA;
     bool fixpt = depth == CV_8U;
@@ -1680,7 +1680,7 @@ struct RemapVec_8u
 
         if( cn != 1 && cn != 3 && cn != 4 )
             return 0;
-        
+
         const uchar *S0 = _src.data, *S1 = _src.data + _src.step;
         const short* wtab = cn == 1 ? (const short*)_wtab : &BilinearTab_iC4[0][0][0];
         uchar* D = (uchar*)_dst;
@@ -1703,7 +1703,7 @@ struct RemapVec_8u
                 xy1 = _mm_madd_epi16( xy1, xy2ofs );
                 _mm_store_si128( (__m128i*)iofs0, xy0 );
                 _mm_store_si128( (__m128i*)iofs1, xy1 );
-                
+
                 i0 = *(ushort*)(S0 + iofs0[0]) + (*(ushort*)(S0 + iofs0[1]) << 16);
                 i1 = *(ushort*)(S0 + iofs0[2]) + (*(ushort*)(S0 + iofs0[3]) << 16);
                 v0 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(i0), _mm_cvtsi32_si128(i1));
@@ -1910,7 +1910,7 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
         const ushort* FXY = (const ushort*)(_fxy.data + _fxy.step*dy);
         int X0 = 0;
         bool prevInlier = false;
-        
+
         for( dx = 0; dx <= dsize.width; dx++ )
         {
             bool curInlier = dx < dsize.width ?
@@ -1962,7 +1962,7 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
                         D[0] = castOp(t0); D[1] = castOp(t1); D[2] = castOp(t2);
                     }
                 else
-                    for( ; dx < X1; dx++, D += 4 )    
+                    for( ; dx < X1; dx++, D += 4 )
                     {
                         int sx = XY[dx*2], sy = XY[dx*2+1];
                         const AT* w = wtab + FXY[dx]*4;
@@ -1983,7 +1983,7 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
                     dx = X1;
                     continue;
                 }
-                
+
                 if( cn == 1 )
                     for( ; dx < X1; dx++, D++ )
                     {
@@ -2326,7 +2326,7 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
         remapLanczos4<Cast<float, ushort>, float, 1>, 0, 0,
         remapLanczos4<Cast<float, float>, float, 1>, 0, 0
     };
-    
+
     CV_Assert( (!map2.data || map2.size() == map1.size()));
     dst.create( map1.size(), src.type() );
 
@@ -2341,7 +2341,7 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
     {
         nnfunc = nn_tab[depth];
         CV_Assert( nnfunc != 0 );
-        
+
         if( map1.type() == CV_16SC2 && !map2.data ) // the data is already in the right format
         {
             nnfunc( src, dst, map1, borderType, borderValue );
@@ -2352,7 +2352,7 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
     {
         if( interpolation == INTER_AREA )
             interpolation = INTER_LINEAR;
-        
+
         if( interpolation == INTER_LINEAR )
             ifunc = linear_tab[depth];
         else if( interpolation == INTER_CUBIC )
@@ -2687,7 +2687,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     int interpolation = flags & INTER_MAX;
     if( interpolation == INTER_AREA )
         interpolation = INTER_LINEAR;
-    
+
     CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 2 && M0.cols == 3 );
     M0.convertTo(_M, _M.type());
 
@@ -2715,7 +2715,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
         adelta[x] = saturate_cast<int>(M[0]*x*AB_SCALE);
         bdelta[x] = saturate_cast<int>(M[3]*x*AB_SCALE);
     }
-    
+
     int bh0 = std::min(BLOCK_SZ/2, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
@@ -2765,7 +2765,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                         ty0 = _mm_srai_epi32(ty0, AB_BITS - INTER_BITS);
                         tx1 = _mm_srai_epi32(tx1, AB_BITS - INTER_BITS);
                         ty1 = _mm_srai_epi32(ty1, AB_BITS - INTER_BITS);
-                        
+
                         __m128i fx_ = _mm_packs_epi32(_mm_and_si128(tx0, fxy_mask),
                                                       _mm_and_si128(tx1, fxy_mask));
                         __m128i fy_ = _mm_packs_epi32(_mm_and_si128(ty0, fxy_mask),
@@ -2817,15 +2817,15 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     int interpolation = flags & INTER_MAX;
     if( interpolation == INTER_AREA )
         interpolation = INTER_LINEAR;
-    
+
     CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 3 && M0.cols == 3 );
     M0.convertTo(_M, _M.type());
 
     if( !(flags & WARP_INVERSE_MAP) )
          invert(_M, _M);
- 
+
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
-    
+
     int bh0 = std::min(BLOCK_SZ/2, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
@@ -2958,7 +2958,7 @@ Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] )
 
 /* Calculates coefficients of affine transformation
  * which maps (xi,yi) to (ui,vi), (i=1,2,3):
- *      
+ *
  * ui = c00*xi + c01*yi + c02
  *
  * vi = c10*xi + c11*yi + c12
@@ -3113,7 +3113,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     CvMat* mapy = 0;
     double* exp_tab = 0;
     float* buf = 0;
-    
+
     CV_FUNCNAME( "cvLogPolar" );
 
     __BEGIN__;
@@ -3124,7 +3124,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
 
     CV_CALL( src = cvGetMat( srcarr, &srcstub ));
     CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-    
+
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
@@ -3140,16 +3140,16 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     if( !(flags & CV_WARP_INVERSE_MAP) )
     {
         int phi, rho;
-        
+
         CV_CALL( exp_tab = (double*)cvAlloc( dsize.width*sizeof(exp_tab[0])) );
 
         for( rho = 0; rho < dst->width; rho++ )
             exp_tab[rho] = std::exp(rho/M);
-    
+
         for( phi = 0; phi < dsize.height; phi++ )
         {
-            double cp = cos(phi*2*CV_PI/dsize.height);
-            double sp = sin(phi*2*CV_PI/dsize.height);
+            double cp = cos(phi*2*CV_PI/(dsize.height-1));
+            double sp = sin(phi*2*CV_PI/(dsize.height-1));
             float* mx = (float*)(mapx->data.ptr + phi*mapx->step);
             float* my = (float*)(mapy->data.ptr + phi*mapy->step);
 
@@ -3168,7 +3168,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     {
         int x, y;
         CvMat bufx, bufy, bufp, bufa;
-        double ascale = (ssize.width-1)/(2*CV_PI);
+        double ascale = (ssize.height-1)/(2*CV_PI);
 
         CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
 
@@ -3184,7 +3184,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
         {
             float* mx = (float*)(mapx->data.ptr + y*mapx->step);
             float* my = (float*)(mapy->data.ptr + y*mapy->step);
-            
+
             for( x = 0; x < dsize.width; x++ )
                 bufy.data.fl[x] = (float)y - center.y;
 
@@ -3195,7 +3195,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
                 bufp.data.fl[x] += 1.f;
 
             cvLog( &bufp, &bufp );
-            
+
             for( x = 0; x < dsize.width; x++ )
             {
                 double rho = bufp.data.fl[x]*M;
@@ -3232,5 +3232,109 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     cvReleaseMat( &mapx );
     cvReleaseMat( &mapy );
 }
+
+
+/****************************************************************************************
+                                   Linear-Polar Transform
+  J.L. Blanco, Apr 2009
+ ****************************************************************************************/
+CV_IMPL
+void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
+            CvPoint2D32f center, int flags )
+{
+    CvMat* mapx = 0;
+    CvMat* mapy = 0;
+    float* buf = 0;
+
+    CV_FUNCNAME( "cvLinPolar" );
+
+    __BEGIN__;
+
+    CvMat srcstub, *src = (CvMat*)srcarr;
+    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvSize ssize, dsize;
+
+    CV_CALL( src = cvGetMat( srcarr, &srcstub,0,0 ));
+    CV_CALL( dst = cvGetMat( dstarr, &dststub,0,0 ));
+
+    if( !CV_ARE_TYPES_EQ( src, dst ))
+        CV_ERROR( CV_StsUnmatchedFormats, "" );
+
+    ssize = cvGetMatSize(src);
+    dsize = cvGetMatSize(dst);
+
+    CV_CALL( mapx = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+    CV_CALL( mapy = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+
+    if( !(flags & CV_WARP_INVERSE_MAP) )
+    {
+        int phi, rho;
+
+        for( phi = 0; phi < dsize.height; phi++ )
+        {
+            double cp = cos(phi*2*CV_PI/(dsize.height-1));
+            double sp = sin(phi*2*CV_PI/(dsize.height-1));
+            float* mx = (float*)(mapx->data.ptr + phi*mapx->step);
+            float* my = (float*)(mapy->data.ptr + phi*mapy->step);
+
+            for( rho = 0; rho < dsize.width; rho++ )
+            {
+                double r = rho;
+                double x = r*cp + center.x;
+                double y = r*sp + center.y;
+
+                mx[rho] = (float)x;
+                my[rho] = (float)y;
+            }
+        }
+    }
+    else
+    {
+        int x, y;
+        CvMat bufx, bufy, bufp, bufa;
+        double ascale = (ssize.height-1)/(2*CV_PI);
+
+        CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
+
+        bufx = cvMat( 1, dsize.width, CV_32F, buf );
+        bufy = cvMat( 1, dsize.width, CV_32F, buf + dsize.width );
+        bufp = cvMat( 1, dsize.width, CV_32F, buf + dsize.width*2 );
+        bufa = cvMat( 1, dsize.width, CV_32F, buf + dsize.width*3 );
+
+        for( x = 0; x < dsize.width; x++ )
+            bufx.data.fl[x] = (float)x - center.x;
+
+        for( y = 0; y < dsize.height; y++ )
+        {
+            float* mx = (float*)(mapx->data.ptr + y*mapx->step);
+            float* my = (float*)(mapy->data.ptr + y*mapy->step);
+
+            for( x = 0; x < dsize.width; x++ )
+                bufy.data.fl[x] = (float)y - center.y;
+
+            cvCartToPolar( &bufx, &bufy, &bufp, &bufa, 0 );
+
+            for( x = 0; x < dsize.width; x++ )
+                bufp.data.fl[x] += 1.f;
+
+            for( x = 0; x < dsize.width; x++ )
+            {
+                double rho = bufp.data.fl[x];
+                double phi = bufa.data.fl[x]*ascale;
+                mx[x] = (float)rho;
+                my[x] = (float)phi;
+            }
+        }
+    }
+
+    cvRemap( src, dst, mapx, mapy, flags, cvScalarAll(0) );
+
+    __END__;
+
+    cvFree( &buf );
+    cvReleaseMat( &mapx );
+    cvReleaseMat( &mapy );
+}
+
 
 /* End of file. */
