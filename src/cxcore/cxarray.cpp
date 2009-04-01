@@ -1924,7 +1924,8 @@ cvGet1D( const CvArr* arr, int idx )
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, &idx, &type, 0, 0 );
 
-    cvRawDataToScalar( ptr, type, &scalar );
+    if( ptr )
+        cvRawDataToScalar( ptr, type, &scalar );
 
     return scalar;
 }
@@ -1957,7 +1958,8 @@ cvGet2D( const CvArr* arr, int y, int x )
         ptr = icvGetNodePtr( (CvSparseMat*)arr, idx, &type, 0, 0 );
     }
 
-    cvRawDataToScalar( ptr, type, &scalar );
+    if( ptr )
+        cvRawDataToScalar( ptr, type, &scalar );
 
     return scalar;
 }
@@ -1978,8 +1980,9 @@ cvGet3D( const CvArr* arr, int z, int y, int x )
         int idx[] = { z, y, x };
         ptr = icvGetNodePtr( (CvSparseMat*)arr, idx, &type, 0, 0 );
     }
-
-    cvRawDataToScalar( ptr, type, &scalar );
+    
+    if( ptr )
+        cvRawDataToScalar( ptr, type, &scalar );
     return scalar;
 }
 
@@ -1997,7 +2000,8 @@ cvGetND( const CvArr* arr, const int* idx )
     else
         ptr = icvGetNodePtr( (CvSparseMat*)arr, idx, &type, 0, 0 );
 
-    cvRawDataToScalar( ptr, type, &scalar );
+    if( ptr )
+        cvRawDataToScalar( ptr, type, &scalar );
 
     return scalar;
 }
