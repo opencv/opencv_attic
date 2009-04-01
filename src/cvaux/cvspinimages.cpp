@@ -72,7 +72,7 @@ static void transform(const Point3f& in, float matrix[9], Point3f& out)
     out.z = in.x * matrix[3*2+0] + in.y * matrix[3*2+1] + in.z * matrix[3*2+2];
 }
 
-#ifdef CV_SSE2
+#if CV_SSE2
 static void convertTransformMatrix(const float* matrix, float* sseMatrix)
 {
     sseMatrix[0] = matrix[0]; sseMatrix[1] = matrix[3]; sseMatrix[2] = matrix[6]; sseMatrix[3] = 0;
@@ -185,7 +185,7 @@ void computeNormals( const OctTree& octtree,
 void computeSpinImages( const OctTree& octtree, 
                        const Vector<Point3f>& points,
                        const Vector<Point3f>& normals,
-                       Vector<char>& mask,
+                       Vector<uchar>& mask,
                        Mat& spinImages,
                        float support, 
                        float pixelsPerMeter)

@@ -45,12 +45,6 @@ CV_IMPL int
 icvSubdiv2DCheck( CvSubdiv2D* subdiv )
 {
     int i, j, total = subdiv->edges->total;
-    int check_result = 0;
-    
-    CV_FUNCNAME("icvSubdiv2DCheck");
-
-    __BEGIN__;
-
     CV_Assert( subdiv != 0 );
     
     for( i = 0; i < total; i++ )
@@ -69,35 +63,31 @@ icvSubdiv2DCheck( CvSubdiv2D* subdiv )
 
                 // check points
                 if( cvSubdiv2DEdgeOrg(e) != cvSubdiv2DEdgeOrg(o_next))
-                    EXIT;
+                    return 0;
                 if( cvSubdiv2DEdgeOrg(e) != cvSubdiv2DEdgeOrg(o_prev))
-                    EXIT;
+                    return 0;
                 if( cvSubdiv2DEdgeDst(e) != cvSubdiv2DEdgeDst(d_next))
-                    EXIT;
+                    return 0;
                 if( cvSubdiv2DEdgeDst(e) != cvSubdiv2DEdgeDst(d_prev))
-                    EXIT;
+                    return 0;
                 if( j % 2 == 0 )
                 {
                     if( cvSubdiv2DEdgeDst(o_next) != cvSubdiv2DEdgeOrg(d_prev))
-                        EXIT;
+                        return 0;
                     if( cvSubdiv2DEdgeDst(o_prev) != cvSubdiv2DEdgeOrg(d_next))
-                        EXIT;
+                        return 0;
                     if( cvSubdiv2DGetEdge(cvSubdiv2DGetEdge(cvSubdiv2DGetEdge(
                         e,CV_NEXT_AROUND_LEFT),CV_NEXT_AROUND_LEFT),CV_NEXT_AROUND_LEFT) != e )
-                        EXIT;
+                        return 0;
                     if( cvSubdiv2DGetEdge(cvSubdiv2DGetEdge(cvSubdiv2DGetEdge(
                         e,CV_NEXT_AROUND_RIGHT),CV_NEXT_AROUND_RIGHT),CV_NEXT_AROUND_RIGHT) != e)
-                        EXIT;
+                        return 0;
                 }
             }
         }
     }
 
-    check_result = 1;
-
-    __END__;
-
-    return check_result;
+    return 1;
 }
 
 
