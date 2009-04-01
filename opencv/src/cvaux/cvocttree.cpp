@@ -190,7 +190,7 @@ void OctTree::getPointsWithinSphere( const Point3f& center, float radius, Vector
 
     while(pos >= 0)
     {
-        Node cur = nodes[stack[pos--]];
+        const Node& cur = nodes[stack[pos--]];
 
         if (checkIfNodeOutsideSphere(cur, center, radius))		
             continue;
