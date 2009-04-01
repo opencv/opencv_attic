@@ -19,8 +19,8 @@ static CvFGDetector* cvCreateFGDetector1      () { return cvCreateFGDetectorBase
 typedef struct DefModule_FGDetector
 {
     CvFGDetector* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_FGDetector;
 
 DefModule_FGDetector FGDetector_Modules[] =
@@ -35,8 +35,8 @@ DefModule_FGDetector FGDetector_Modules[] =
 typedef struct DefModule_BlobDetector
 {
     CvBlobDetector* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_BlobDetector;
 
 DefModule_BlobDetector BlobDetector_Modules[] =
@@ -50,8 +50,8 @@ DefModule_BlobDetector BlobDetector_Modules[] =
 typedef struct DefModule_BlobTracker
 {
     CvBlobTracker* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_BlobTracker;
 
 DefModule_BlobTracker BlobTracker_Modules[] =
@@ -68,8 +68,8 @@ DefModule_BlobTracker BlobTracker_Modules[] =
 typedef struct DefModule_BlobTrackGen
 {
     CvBlobTrackGen* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_BlobTrackGen;
 
 DefModule_BlobTrackGen BlobTrackGen_Modules[] =
@@ -83,8 +83,8 @@ DefModule_BlobTrackGen BlobTrackGen_Modules[] =
 typedef struct DefModule_BlobTrackPostProc
 {
     CvBlobTrackPostProc* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_BlobTrackPostProc;
 
 DefModule_BlobTrackPostProc BlobTrackPostProc_Modules[] =
@@ -102,8 +102,8 @@ CvBlobTrackAnalysis* cvCreateModuleBlobTrackAnalysisDetector();
 typedef struct DefModule_BlobTrackAnalysis
 {
     CvBlobTrackAnalysis* (*create)();
-    char* nickname;
-    char* description;
+    const char* nickname;
+    const char* description;
 } DefModule_BlobTrackAnalysis;
 
 DefModule_BlobTrackAnalysis BlobTrackAnalysis_Modules[] =
@@ -257,7 +257,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
                 }
 
             }   /* Next blob. */;
-            
+
             cvNamedWindow( "Tracking", 0);
             cvShowImage( "Tracking",pI );
 
@@ -287,7 +287,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
 /* Read parameters from command line
  * and transfer to specified module:
  */
-static void set_params(int argc, char* argv[], CvVSModule* pM, char* prefix, char* module)
+static void set_params(int argc, char* argv[], CvVSModule* pM, const char* prefix, const char* module)
 {
     int prefix_len = strlen(prefix);
     int i;
@@ -326,7 +326,7 @@ static void set_params(int argc, char* argv[], CvVSModule* pM, char* prefix, cha
 }   /* set_params */
 
 /* Print all parameter values for given module: */
-static void print_params(CvVSModule* pM, char* module, char* log_name)
+static void print_params(CvVSModule* pM, const char* module, const char* log_name)
 {
     FILE* log = log_name?fopen(log_name,"at"):NULL;
     int i;
@@ -367,19 +367,19 @@ int main(int argc, char* argv[])
     CvBlobTrackerAuto*          pTracker = NULL;
 
     float       scale = 1;
-    char*       scale_name = NULL;
+    const char* scale_name = NULL;
     char*       yml_name = NULL;
     char**      yml_video_names = NULL;
     int         yml_video_num = 0;
     char*       avi_name = NULL;
-    char*       fg_name = NULL;
+    const char* fg_name = NULL;
     char*       fgavi_name = NULL;
     char*       btavi_name = NULL;
-    char*       bd_name = NULL;
-    char*       bt_name = NULL;
-    char*       btgen_name = NULL;
-    char*       btpp_name = NULL;
-    char*       bta_name = NULL;
+    const char* bd_name = NULL;
+    const char* bt_name = NULL;
+    const char* btgen_name = NULL;
+    const char* btpp_name = NULL;
+    const char* bta_name = NULL;
     char*       bta_data_name = NULL;
     char*       track_name = NULL;
     char*       comment_name = NULL;
@@ -387,7 +387,7 @@ int main(int argc, char* argv[])
     char*       log_name = NULL;
     char*       savestate_name = NULL;
     char*       loadstate_name = NULL;
-    char*       bt_corr = NULL;
+    const char* bt_corr = NULL;
     DefModule_FGDetector*           pFGModule = NULL;
     DefModule_BlobDetector*         pBDModule = NULL;
     DefModule_BlobTracker*          pBTModule = NULL;
@@ -507,7 +507,7 @@ int main(int argc, char* argv[])
         if(!scale_name) scale_name = "1";
     }
 
-    if(scale_name) 
+    if(scale_name)
         scale = (float)atof(scale_name);
 
     for(pFGModule=FGDetector_Modules; pFGModule->nickname; ++pFGModule)
@@ -526,7 +526,7 @@ int main(int argc, char* argv[])
         if( bta_name && MY_STRICMP(bta_name,pBTAnalysisModule->nickname)==0 ) break;
 
     /* Create source video: */
-    if(avi_name) 
+    if(avi_name)
         pCap = cvCaptureFromFile(avi_name);
 
     if(pCap==NULL)
@@ -566,7 +566,7 @@ int main(int argc, char* argv[])
             printf("ConfigFile: %s\n",yml_name);
             printf("BG: %s\n",yml_video_names[0]);
             printf("FG: ");
-            for(i=1;i<(yml_video_num);++i){printf(yml_video_names[i]);if((i+1)<yml_video_num)printf("|");};
+            for(i=1;i<(yml_video_num);++i){printf("%s",yml_video_names[i]);if((i+1)<yml_video_num)printf("|");};
             printf("\n");
         }
         if(avi_name)
@@ -656,10 +656,10 @@ int main(int argc, char* argv[])
         if(!pTracker)
             puts("Can not create BlobTrackerAuto");
     }
-    
+
     {   /* Load states of each module from state file: */
         CvFileStorage* fs = NULL;
-        if(loadstate_name) 
+        if(loadstate_name)
             fs=cvOpenFileStorage(loadstate_name,NULL,CV_STORAGE_READ);
         if(fs)
         {
@@ -669,7 +669,7 @@ int main(int argc, char* argv[])
                 CvFileNode* fn = cvGetFileNodeByName(fs,NULL,"BlobTracker");
                 param.pBT->LoadState(fs,fn);
             }
-            
+
             if(param.pBTA)
             {
                 CvFileNode* fn = cvGetFileNodeByName(fs,NULL,"BlobTrackAnalyser");
@@ -691,7 +691,7 @@ int main(int argc, char* argv[])
         struct DefMMM
         {
             CvVSModule* pM;
-            char* name;
+            const char* name;
         } Modules[] = {
             {(CvVSModule*)param.pFG,"FGdetector"},
             {(CvVSModule*)param.pBD,"BlobDetector"},
@@ -711,7 +711,7 @@ int main(int argc, char* argv[])
 
     /* Run pipeline: */
     RunBlobTrackingAuto( pCap, pTracker, fgavi_name, btavi_name );
-        
+
     {   /* Save state and release modules: */
         CvFileStorage* fs = NULL;
         if(savestate_name)

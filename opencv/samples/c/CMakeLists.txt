@@ -56,6 +56,7 @@ if (BUILD_EXAMPLES)
     MY_DEFINE_EXAMPLE(squares			squares.c)
     MY_DEFINE_EXAMPLE(stereo_calib		stereo_calib.cpp)
     MY_DEFINE_EXAMPLE(watershed			watershed.cpp)
+    MY_DEFINE_EXAMPLE(polar_transforms	polar_transforms.c)
 endif(BUILD_EXAMPLES)
 
 if (INSTALL_C_EXAMPLES)

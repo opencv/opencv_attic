@@ -102,7 +102,7 @@ CVAPI(void) cvIntegral( const CvArr* image, CvArr* sum,
 CVAPI(void)  cvPyrDown( const CvArr* src, CvArr* dst,
                         int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
 
-/* 
+/*
    Up-samples image and smoothes the result with gaussian kernel.
    dst_width = src_width*2,
    dst_height = src_height*2
@@ -131,7 +131,7 @@ CVAPI(void) cvPyrSegmentation( IplImage* src, IplImage* dst,
                               double threshold2 );
 
 /* Filters image using meanshift algorithm */
-CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst, 
+CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst,
     double sp, double sr, int max_level CV_DEFAULT(1),
     CvTermCriteria termcrit CV_DEFAULT(cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1)));
 
@@ -269,14 +269,14 @@ CVAPI(void)  cvCvtColor( const CvArr* src, CvArr* dst, int code );
 CVAPI(void)  cvResize( const CvArr* src, CvArr* dst,
                        int interpolation CV_DEFAULT( CV_INTER_LINEAR ));
 
-/* Warps image with affine transform */ 
+/* Warps image with affine transform */
 CVAPI(void)  cvWarpAffine( const CvArr* src, CvArr* dst, const CvMat* map_matrix,
                            int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
                            CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
 
 /* Computes affine transform matrix for mapping src[i] to dst[i] (i=0,1,2) */
-CVAPI(CvMat*) cvGetAffineTransform( const CvPoint2D32f * src, 
-                                    const CvPoint2D32f * dst, 
+CVAPI(CvMat*) cvGetAffineTransform( const CvPoint2D32f * src,
+                                    const CvPoint2D32f * dst,
                                     CvMat * map_matrix );
 
 /* Computes rotation_matrix matrix */
@@ -306,6 +306,11 @@ CVAPI(void)  cvConvertMaps( const CvArr* mapx, const CvArr* mapy,
 /* Performs forward or inverse log-polar image transform */
 CVAPI(void)  cvLogPolar( const CvArr* src, CvArr* dst,
                          CvPoint2D32f center, double M,
+                         int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
+
+/* Performs forward or inverse linear-polar image transform */
+CVAPI(void)  cvLinearPolar( const CvArr* src, CvArr* dst,
+                         CvPoint2D32f center,
                          int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
 
 #define  CV_SHAPE_RECT      0
@@ -535,7 +540,7 @@ CVAPI(void)    cvCalcMotionGradient( const CvArr* mhi, CvArr* mask, CvArr* orien
                                      double delta1, double delta2,
                                      int aperture_size CV_DEFAULT(3));
 
-/* Calculates average motion direction within a selected motion region 
+/* Calculates average motion direction within a selected motion region
    (region can be selected by setting ROIs and/or by composing a valid gradient mask
    with the region mask) */
 CVAPI(double)  cvCalcGlobalOrientation( const CvArr* orientation, const CvArr* mask,
@@ -1039,7 +1044,7 @@ CVAPI(void)  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
    rho, theta and threshold are used for each of those methods;
    param1 ~ line length, param2 ~ line gap - for probabilistic,
    param1 ~ srn, param2 ~ stn - for multi-scale */
-CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method, 
+CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double rho, double theta, int threshold,
                               double param1 CV_DEFAULT(0), double param2 CV_DEFAULT(0));
 
@@ -1086,7 +1091,7 @@ CVAPI(int) cvFindFeaturesBoxed(struct CvFeatureTree* tr,
 struct CvLSH;
 struct CvLSHOperations;
 
-/* Construct a Locality Sensitive Hash (LSH) table, for indexing d-dimensional vectors of 
+/* Construct a Locality Sensitive Hash (LSH) table, for indexing d-dimensional vectors of
    given type. Vectors will be hashed L times with k-dimensional p-stable (p=2) functions. */
 CVAPI(struct CvLSH*) cvCreateLSH(struct CvLSHOperations* ops, int d,
                                  int L CV_DEFAULT(10), int k CV_DEFAULT(10),
@@ -1247,7 +1252,7 @@ CVAPI(void) cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
 
 #define CV_HAAR_DO_CANNY_PRUNING    1
 #define CV_HAAR_SCALE_IMAGE         2
-#define CV_HAAR_FIND_BIGGEST_OBJECT 4 
+#define CV_HAAR_FIND_BIGGEST_OBJECT 4
 #define CV_HAAR_DO_ROUGH_SEARCH     8
 
 CVAPI(CvSeq*) cvHaarDetectObjects( const CvArr* image,
@@ -1366,7 +1371,7 @@ CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
 
 #define CV_CALIB_CB_ADAPTIVE_THRESH  1
 #define CV_CALIB_CB_NORMALIZE_IMAGE  2
-#define CV_CALIB_CB_FILTER_QUADS     4 
+#define CV_CALIB_CB_FILTER_QUADS     4
 
 /* Detects corners on a chessboard calibration pattern */
 CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
@@ -1509,12 +1514,12 @@ typedef struct CvStereoBMState
     int preFilterType; // =CV_STEREO_BM_NORMALIZED_RESPONSE now
     int preFilterSize; // averaging window size: ~5x5..21x21
     int preFilterCap; // the output of pre-filtering is clipped by [-preFilterCap,preFilterCap]
-    
+
     // correspondence using Sum of Absolute Difference (SAD)
     int SADWindowSize; // ~5x5..21x21
-    int minDisparity;  // minimum disparity (can be negative) 
+    int minDisparity;  // minimum disparity (can be negative)
     int numberOfDisparities; // maximum disparity - minimum disparity (> 0)
-    
+
     // post-filtering
     int textureThreshold;  // the disparity is only computed for pixels
                            // with textured enough neighborhood
@@ -1571,8 +1576,8 @@ CVAPI(CvStereoGCState*) cvCreateStereoGCState( int numberOfDisparities, int maxI
 CVAPI(void) cvReleaseStereoGCState( CvStereoGCState** state );
 
 CVAPI(void) cvFindStereoCorrespondenceGC( const CvArr* left, const CvArr* right,
-                                          CvArr* disparityLeft, CvArr* disparityRight, 
-                                          CvStereoGCState* state, 
+                                          CvArr* disparityLeft, CvArr* disparityRight,
+                                          CvStereoGCState* state,
                                           int useDisparityGuess CV_DEFAULT(0) );
 
 /* Reprojects the computed disparity image to the 3D space using the specified 4x4 matrix */

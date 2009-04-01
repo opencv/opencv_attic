@@ -21,7 +21,7 @@ Alekseev, Aleksey       Intel Corp.                IppCV testing
 Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 
 Baksheev, Anatoly       Argus CV                   CMake support for OpenCV
-Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV
+Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; add cvLinearPolar
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
