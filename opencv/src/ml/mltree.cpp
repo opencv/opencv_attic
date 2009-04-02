@@ -39,6 +39,7 @@
 //M*/
 
 #include "_ml.h"
+#include <ctype.h>
 
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
@@ -3359,11 +3360,6 @@ void CvDTree::free_tree()
         root = 0;
     }
 }
-
-
-#include <conio.h>
-#include <ctype.h>
-
 
 CvDTreeNode* CvDTree::predict( const CvMat* _sample,
     const CvMat* _missing, bool preprocessed_input ) const
