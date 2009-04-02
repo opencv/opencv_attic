@@ -638,11 +638,10 @@ protected:
 /****************************************************************************************\
 *                                      Decision Tree                                     *
 \****************************************************************************************/
-
-struct CvPair32s32f
+struct CvPair16u32s
 {
-    int i;
-    float val;
+    unsigned short* u;
+    int* i;
 };
 
 
@@ -753,6 +752,7 @@ struct CV_EXPORTS CvDTreeTrainData
                           const CvDTreeParams& _params=CvDTreeParams(),
                           bool _shared=false, bool _add_labels=false,
                           bool _update_data=false );
+    virtual void do_responses_copy();
 
     virtual void get_vectors( const CvMat* _subsample_idx,
          float* values, uchar* missing, float* responses, bool get_class_idx=false );
@@ -767,13 +767,15 @@ struct CV_EXPORTS CvDTreeTrainData
 
     int get_num_classes() const;
     int get_var_type(int vi) const;
-    int get_work_var_count() const;
+    int get_work_var_count() const {return work_var_count;}
 
-    virtual int* get_class_labels( CvDTreeNode* n );
-    virtual float* get_ord_responses( CvDTreeNode* n );
-    virtual int* get_labels( CvDTreeNode* n );
-    virtual int* get_cat_var_data( CvDTreeNode* n, int vi );
-    virtual CvPair32s32f* get_ord_var_data( CvDTreeNode* n, int vi );
+    virtual void get_ord_responses( CvDTreeNode* n, float* values_buf, const float** values );    
+    virtual void get_class_labels( CvDTreeNode* n, int* labels_buf, const int** labels );
+    virtual void get_cv_labels( CvDTreeNode* n, int* labels_buf, const int** labels );
+    virtual void get_sample_indices( CvDTreeNode* n, int* indices_buf, const int** labels );
+    virtual int get_cat_var_data( CvDTreeNode* n, int vi, int* cat_values_buf, const int** cat_values );
+    virtual int get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* indices_buf,
+        const float** ord_values, const int** indices );
     virtual int get_child_buf_idx( CvDTreeNode* n );
 
     ////////////////////////////////////
@@ -789,14 +791,28 @@ struct CV_EXPORTS CvDTreeTrainData
     virtual void free_train_data();
     virtual void free_node( CvDTreeNode* node );
 
+    // inner arrays for getting predictors and responses
+    float* pred_float_buf;
+    int* pred_int_buf;
+    float* resp_float_buf;
+    int* resp_int_buf;
+    int* cv_lables_buf;
+    int* sample_idx_buf;
+
     int sample_count, var_all, var_count, max_c_count;
-    int ord_var_count, cat_var_count;
+    int ord_var_count, cat_var_count, work_var_count;
     bool have_labels, have_priors;
     bool is_classifier;
+    int tflag;
+
+    const CvMat* train_data;
+    const CvMat* responses;
+    CvMat* responses_copy; // used in Boosting
 
     int buf_count, buf_size;
     bool shared;
-
+    int is_buf_16u;
+    
     CvMat* cat_count;
     CvMat* cat_ofs;
     CvMat* cat_map;
@@ -1016,71 +1032,36 @@ protected:
 /****************************************************************************************\
 *                           Extremely randomized trees Classifier                        *
 \****************************************************************************************/
-
-struct CV_EXPORTS CvERTreeNode : public CvDTreeNode
-{
-    int* sample_idx; // node sample numbers
-    int* l_sample_idx; // node sample numbers of left child
-    int ln; // node samples count of left child
-    int* r_sample_idx; // node sample numbers of right child
-    int rn; // node samples count of right child
-};
-
 struct CV_EXPORTS CvERTreeTrainData : public CvDTreeTrainData
 {
-    CvERTreeTrainData();
-    CvERTreeTrainData( const CvMat* _train_data, int _tflag,
-        const CvMat* _responses, const CvMat* _var_idx=0,
-        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
-        const CvMat* _missing_mask=0,
-        const CvDTreeParams& _params=CvDTreeParams(),
-        bool _add_labels=false );
-
     virtual void set_data( const CvMat* _train_data, int _tflag,
-        const CvMat* _responses, const CvMat* _var_idx=0,
-        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
-        const CvMat* _missing_mask=0,
-        const CvDTreeParams& _params=CvDTreeParams(),
-        bool _add_labels=false, bool _update_data=false );
-
-    virtual CvERTreeNode* subsample_data( const CvMat* _subsample_idx = 0);
-
+                          const CvMat* _responses, const CvMat* _var_idx=0,
+                          const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+                          const CvMat* _missing_mask=0,
+                          const CvDTreeParams& _params=CvDTreeParams(),
+                          bool _shared=false, bool _add_labels=false,
+                          bool _update_data=false );
+    virtual int get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, uchar* missing_buf,
+        const float** ord_values, const uchar** missing );
+    virtual void get_sample_indices( CvDTreeNode* n, int* indices_buf, const int** indices );
+    virtual void get_cv_labels( CvDTreeNode* n, int* labels_buf, const int** labels );
+    virtual int get_cat_var_data( CvDTreeNode* n, int vi, int* cat_values_buf, const int** cat_values );
     virtual void get_vectors( const CvMat* _subsample_idx,
-        float* values, uchar* missing, float* responses, bool get_class_idx=false );
-
-    virtual CvERTreeNode* new_node( CvERTreeNode* parent, int count, int** sample_idx );
-    virtual void free_node_data( CvDTreeNode* node );
-    virtual void free_train_data();
-    virtual void clear();
-
-    int get_num_classes() const;
-
-    virtual void write_params( CvFileStorage* fs );
-    virtual void read_params( CvFileStorage* fs, CvFileNode* node );
-
-    virtual int get_ord_var_idx(int ci) {return 1-ci;};
-
-    CvMat* ord_pred;
-    CvMat* cat_pred;
-    CvMat* resp;
-    CvMat** class_lables;
-
-    // TODO add support _var_idx, _sample_idx, _missing_mask, _add_labels,
-    // categorical variables, priors, pruning
+         float* values, uchar* missing, float* responses, bool get_class_idx=false );
+    virtual CvDTreeNode* subsample_data( const CvMat* _subsample_idx );
+    const CvMat* missing_mask;
 };
 
 class CV_EXPORTS CvForestERTree : public CvForestTree
 {
-public:
-    virtual CvDTreeNode* predict( const CvMat* _sample, const CvMat* _missing_data_mask=0,
-        bool preprocessed_input=false ) const;
 protected:
-    virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
-    virtual void try_split_node( CvDTreeNode* n );
-    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi );
-    virtual void calc_node_value( CvDTreeNode* node );
-   virtual void split_node_data( CvDTreeNode* n );
+    virtual double calc_node_dir( CvDTreeNode* node );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* node, int vi );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* node, int vi );
+    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* node, int vi );
+    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* node, int vi );
+    virtual void complete_node_dir( CvDTreeNode* node );
+    virtual void split_node_data( CvDTreeNode* n );
 };
 
 class CV_EXPORTS CvERTrees : public CvRTrees
@@ -1091,11 +1072,10 @@ public:
         const CvMat* _sample_idx, const CvMat* _var_type,
         const CvMat* _missing_mask, CvRTParams params );
     virtual void clear();
-    virtual void read( CvFileStorage* fs, CvFileNode* node );
-    virtual void write( CvFileStorage* fs, const char* name );
 protected:
     bool grow_forest( const CvTermCriteria term_crit );
 };
+
 
 /****************************************************************************************\
 *                                   Boosted tree classifier                              *

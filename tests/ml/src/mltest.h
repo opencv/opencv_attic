@@ -51,6 +51,53 @@
 #include "cxmisc.h"
 #include "cxts.h"
 #include "ml.h"
+#include <map>
+#include <string>
+#include <iostream>
+
+
+using namespace std;
+
+class CV_TreesBaseTest : public CvTest
+{
+public:
+    CV_TreesBaseTest( const char* test_name, const char* test_funcs );
+    virtual ~CV_TreesBaseTest();
+protected:
+    virtual int read_params( CvFileStorage* fs );
+    float str_to_flt_elem( char* token );
+    int load_data( const char* filename);
+    void mix_train_and_test_idx();
+    virtual void run( int start_from );
+    int get_var_type(const char* str, int var_count);
+    virtual int prepare_test_case( int test_case_idx );
+    virtual int run_test_case( int test_case_idx );
+    virtual bool train( int test_case_idx ) = 0;
+    virtual int validate_test_results( int test_case_idx );
+    virtual float predict(const CvMat* sample, const CvMat* missing_data_mask) = 0;
+    float get_error(CvMat* sample_idx);    
+    virtual void clear();
+
+    CvMat* data;
+    CvMat* responses;
+    CvMat* missing;
+    CvMat* var_type;
+    bool is_classifier;
+
+    CvMat* train_sample_idx;
+    CvMat* test_sample_idx;
+    int* idx; // data of train_sample_idx and test_sample_idx
+
+    CvSeq* data_sets;
+
+    float case_result;
+
+    int total_class_count;
+    map<string, int> *class_map;
+    FILE* res_file;
+
+    CvRNG rng;
+};
 
 #endif /* _ML_TEST_H_ */
 
