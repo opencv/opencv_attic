@@ -5856,8 +5856,11 @@ void  cvStartWriteStruct( CvFileStorage* fs, const char* name,
                           CvAttrList attributes=cvAttrList());
 </pre><p><dl>
 <dt>fs<dd>File storage.
-<dt>name<dd>Name of the written structure. The structure can be accessed by this name when
-            the storage is read.
+<dt>name<dd><a name="xml_yml_name_rules"></a>Name of the written structure. The structure can be accessed by this name when
+            the storage is read. The name must start with a letter [a-zA-Z] or underscore ('_')
+            and may only contain alphanumeric characters [a-zA-Z0-9], underscore or dash ('-').
+            In case of YML the name may also contain spaces (' '). In case of XML the name must be different
+            from "_" (a single underscore), which is used by OpenCV for tagging complex sequence elements.
 <dt>struct_flags<dd>A combination one of the following values:<br>
               <code>CV_NODE_SEQ</code> - the written structure is a sequence (see discussion of
                 <a href="#decl_CvFileStorage">CvFileStorage</a>), that is,
@@ -5907,7 +5910,9 @@ void  cvWriteInt( CvFileStorage* fs, const char* name, int value );
 </pre><p><dl>
 <dt>fs<dd>File storage.
 <dt>name<dd>Name of the written value. Should be NULL if and only if the
-            parent structure is a sequence.
+            parent structure is a sequence. The name, when not NULL,
+            must satisfy the same restrictions as in
+            <a href="#xml_yml_name_rules">cvStartWriteStruct</a>.
 <dt>value<dd>The written value.
 </dl><p>
 The function <code>cvWriteInt</code> writes a single integer value
@@ -5921,7 +5926,9 @@ void  cvWriteReal( CvFileStorage* fs, const char* name, double value );
 </pre><p><dl>
 <dt>fs<dd>File storage.
 <dt>name<dd>Name of the written value. Should be NULL if and only if the
-            parent structure is a sequence.
+            parent structure is a sequence. The name, when not NULL,
+            must satisfy the same restrictions as in
+            <a href="#xml_yml_name_rules">cvStartWriteStruct</a>.
 <dt>value<dd>The written value.
 </dl><p>
 The function <code>cvWriteReal</code> writes a single
@@ -5953,7 +5960,9 @@ void  cvWriteString( CvFileStorage* fs, const char* name,
 </pre><p><dl>
 <dt>fs<dd>File storage.
 <dt>name<dd>Name of the written string. Should be NULL if and only if the
-            parent structure is a sequence.
+            parent structure is a sequence. The name, when not NULL,
+            must satisfy the same restrictions as in
+            <a href="#xml_yml_name_rules">cvStartWriteStruct</a>.
 <dt>str<dd>The written text string.
 <dt>quote<dd>If non-zero, the written string is put in quotes, regardless of whether
              they are required or not. Otherwise, if the flag is zero, quotes are used
@@ -5994,23 +6003,32 @@ is useful for concatenating files or for resuming the writing process.</p>
 
 
 <hr><h3><a name="decl_cvWrite">Write</a></h3>
-<p class="Blurb">Writes user object</p>
+<p class="Blurb">Writes an object</p>
 <pre>
 void  cvWrite( CvFileStorage* fs, const char* name,
                const void* ptr, CvAttrList attributes=cvAttrList() );
 </pre><p><dl>
 <dt>fs<dd>File storage.
 <dt>name<dd>Name, of the written object. Should be NULL if and only if the parent
-            structure is a sequence.
+            structure is a sequence. The name, when not NULL,
+            must satisfy the same restrictions as in
+            <a href="#xml_yml_name_rules">cvStartWriteStruct</a>.
 <dt>ptr<dd>Pointer to the object.
 <dt>attributes<dd>The attributes of the object. They are specific for each particular
            type (see the discussion).
 </dl><p>
-The function <code>cvWrite</code> writes the object to file storage.
-First, the appropriate type info is found using <a href="#decl_cvTypeOf">cvTypeOf</a>.
-Then, <code>write</code> method of the type info is called.
+The function <code>cvWrite</code> writes the specified object to file storage.
+First, the function identifies type of the object using <a href="#decl_cvTypeOf">cvTypeOf</a>.
+If the type info is found, the method <code>CvType::write</code> is called. For standard OpenCV
+structures, such as <code>CvMat</code>, <code>IplImage</code>, <code>CvSparseMat</code>,
+<code>CvSeq</code> there is already registered <code>CvType</code> structure, so you can
+simply call the function <code>cvWrite</code> for these types.
+In case of user-defined structures the corresponding <code>CvType</code> structure should
+be registered using <a name="#decl_cvRegisterType">cvRegisterType</a> in order to make
+<code>cvWrite</code> recognize this type.
+
 </p><p>
-Attributes are used to customize the writing procedure.
+User can pass the optional attributes that will be put to the opening tag (for XML backend only).
 The standard types support the following attributes
 (all the <code>*dt</code> attributes have the same format as in
 <a href="#decl_cvWriteRawData">cvWriteRawData</a>):
