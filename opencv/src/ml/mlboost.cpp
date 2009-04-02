@@ -168,7 +168,9 @@ CvBoostTree::try_split_node( CvDTreeNode* node )
         // if the node has not been split,
         // store the responses for the corresponding training samples
         double* weak_eval = ensemble->get_weak_response()->data.db;
-        int* labels = data->get_labels( node );
+        int* labels_buf = data->cv_lables_buf;
+        const int* labels = 0;
+        data->get_cv_labels( node, labels_buf, &labels );
         int i, count = node->sample_count;
         double value = node->value;
 
@@ -190,13 +192,15 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
 
     if( data->get_var_type(vi) >= 0 ) // split on categorical var
     {
-        const int* cat_labels = data->get_cat_var_data( node, vi );
+        int* cat_labels_buf = data->pred_int_buf;
+        const int* cat_labels = 0;
+        data->get_cat_var_data( node, vi, cat_labels_buf, &cat_labels );
         const int* subset = node->split->subset;
         double sum = 0, sum_abs = 0;
 
         for( i = 0; i < n; i++ )
         {
-            int idx = cat_labels[i];
+            int idx = ((cat_labels[i] == 65535) && data->is_buf_16u) ? -1 : cat_labels[i];
             double w = weights[i];
             int d = idx >= 0 ? CV_DTREE_CAT_DIR(idx,subset) : 0;
             sum += d*w; sum_abs += (d & 1)*w;
@@ -208,7 +212,11 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
     }
     else // split on ordered var
     {
-        const CvPair32s32f* sorted = data->get_ord_var_data(node,vi);
+        float* values_buf = data->pred_float_buf;
+        const float* values = 0;
+        int* indices_buf = data->pred_int_buf;
+        const int* indices = 0;
+        data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
         int split_point = node->split->ord.split_point;
         int n1 = node->get_num_valid(vi);
 
@@ -217,7 +225,7 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
 
         for( i = 0; i <= split_point; i++ )
         {
-            int idx = sorted[i].i;
+            int idx = indices[i];
             double w = weights[idx];
             dir[idx] = (char)-1;
             L += w;
@@ -225,14 +233,14 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
 
         for( ; i < n1; i++ )
         {
-            int idx = sorted[i].i;
+            int idx = indices[i];
             double w = weights[idx];
             dir[idx] = (char)1;
             R += w;
         }
 
         for( ; i < n; i++ )
-            dir[sorted[i].i] = (char)0;
+            dir[indices[i]] = (char)0;
     }
 
     node->maxlr = MAX( L, R );
@@ -244,11 +252,18 @@ CvDTreeSplit*
 CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
 {
     const float epsilon = FLT_EPSILON*2;
-    const CvPair32s32f* sorted = data->get_ord_var_data(node, vi);
-    const int* responses = data->get_class_labels(node);
+
     const double* weights = ensemble->get_subtree_weights()->data.db;
     int n = node->sample_count;
     int n1 = node->get_num_valid(vi);
+    float* values_buf = data->pred_float_buf;
+    const float* values = 0;
+    int* indices_buf = data->pred_int_buf;
+    const int* indices = 0;
+    data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
+    int* responses_buf = data->resp_int_buf;
+    const int* responses = 0;
+    data->get_class_labels( node, responses_buf, &responses);
     const double* rcw0 = weights + n;
     double lcw[2] = {0,0}, rcw[2];
     int i, best_i = -1;
@@ -259,7 +274,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
     rcw[0] = rcw0[0]; rcw[1] = rcw0[1];
     for( i = n1; i < n; i++ )
     {
-        int idx = sorted[i].i;
+        int idx = indices[i];
         double w = weights[idx];
         rcw[responses[idx]] -= w;
     }
@@ -274,7 +289,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
 
         for( i = 0; i < n1 - 1; i++ )
         {
-            int idx = sorted[i].i;
+            int idx = indices[i];
             double w = weights[idx], w2 = w*w;
             double lv, rv;
             idx = responses[idx];
@@ -284,7 +299,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
             rsum2 -= 2*rv*w - w2;
             lcw[idx] = lv + w; rcw[idx] = rv - w;
 
-            if( sorted[i].val + epsilon < sorted[i+1].val )
+            if( values[i] + epsilon < values[i+1] )
             {
                 double val = (lsum2*R + rsum2*L)/(L*R);
                 if( best_val < val )
@@ -299,13 +314,13 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
     {
         for( i = 0; i < n1 - 1; i++ )
         {
-            int idx = sorted[i].i;
+            int idx = indices[i];
             double w = weights[idx];
             idx = responses[idx];
             lcw[idx] += w;
             rcw[idx] -= w;
 
-            if( sorted[i].val + epsilon < sorted[i+1].val )
+            if( values[i] + epsilon < values[i+1] )
             {
                 double val = lcw[0] + rcw[1], val2 = lcw[1] + rcw[0];
                 val = MAX(val, val2);
@@ -319,7 +334,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi )
     }
 
     return best_i >= 0 ? data->new_split_ord( vi,
-        (sorted[best_i].val + sorted[best_i+1].val)*0.5f, best_i,
+        (values[best_i] + values[best_i+1])*0.5f, best_i,
         0, (float)best_val ) : 0;
 }
 
@@ -331,11 +346,15 @@ CvDTreeSplit*
 CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi )
 {
     CvDTreeSplit* split;
-    const int* cat_labels = data->get_cat_var_data(node, vi);
-    const int* responses = data->get_class_labels(node);
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int mi = data->cat_count->data.i[ci];
+    int* cat_labels_buf = data->pred_int_buf;
+    const int* cat_labels = 0;
+    data->get_cat_var_data(node, vi, cat_labels_buf, &cat_labels);
+    int* responses_buf = data->resp_int_buf;
+    const int* responses = 0;
+    data->get_class_labels(node, responses_buf, &responses);
     double lcw[2]={0,0}, rcw[2]={0,0};
     double* cjk = (double*)cvStackAlloc(2*(mi+1)*sizeof(cjk[0]))+2;
     const double* weights = ensemble->get_subtree_weights()->data.db;
@@ -355,7 +374,7 @@ CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi )
     for( i = 0; i < n; i++ )
     {
         double w = weights[i];
-        j = cat_labels[i];
+        j = ((cat_labels[i] == 65535) && data->is_buf_16u) ? -1 : cat_labels[i];
         k = responses[i];
         cjk[j*2 + k] += w;
     }
@@ -440,11 +459,19 @@ CvDTreeSplit*
 CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi )
 {
     const float epsilon = FLT_EPSILON*2;
-    const CvPair32s32f* sorted = data->get_ord_var_data(node, vi);
-    const float* responses = data->get_ord_responses(node);
     const double* weights = ensemble->get_subtree_weights()->data.db;
     int n = node->sample_count;
     int n1 = node->get_num_valid(vi);
+
+    float* values_buf = data->pred_float_buf;
+    const float* values = 0;
+    int* indices_buf = data->pred_int_buf;
+    const int* indices = 0;
+    data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
+    float* responses_buf = data->resp_float_buf;
+    const float* responses = 0;
+    data->get_ord_responses(node, responses_buf, &responses);
+
     int i, best_i = -1;
     double best_val = 0, lsum = 0, rsum = node->value*n;
     double L = 0, R = weights[n];
@@ -452,7 +479,7 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     // compensate for missing values
     for( i = n1; i < n; i++ )
     {
-        int idx = sorted[i].i;
+        int idx = indices[i];
         double w = weights[idx];
         rsum -= responses[idx]*w;
         R -= w;
@@ -461,13 +488,13 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     // find the optimal split
     for( i = 0; i < n1 - 1; i++ )
     {
-        int idx = sorted[i].i;
+        int idx = indices[i];
         double w = weights[idx];
         double t = responses[idx]*w;
         L += w; R -= w;
         lsum += t; rsum -= t;
 
-        if( sorted[i].val + epsilon < sorted[i+1].val )
+        if( values[i] + epsilon < values[i+1] )
         {
             double val = (lsum*lsum*R + rsum*rsum*L)/(L*R);
             if( best_val < val )
@@ -479,7 +506,7 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     }
 
     return best_i >= 0 ? data->new_split_ord( vi,
-        (sorted[best_i].val + sorted[best_i+1].val)*0.5f, best_i,
+        (values[best_i] + values[best_i+1])*0.5f, best_i,
         0, (float)best_val ) : 0;
 }
 
@@ -488,12 +515,17 @@ CvDTreeSplit*
 CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi )
 {
     CvDTreeSplit* split;
-    const int* cat_labels = data->get_cat_var_data(node, vi);
-    const float* responses = data->get_ord_responses(node);
     const double* weights = ensemble->get_subtree_weights()->data.db;
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int mi = data->cat_count->data.i[ci];
+    int* cat_labels_buf = data->pred_int_buf;
+    const int* cat_labels = 0;
+    data->get_cat_var_data(node, vi, cat_labels_buf, &cat_labels);
+    float* responses_buf = data->resp_float_buf;
+    const float* responses = 0;
+    data->get_ord_responses(node, responses_buf, &responses);
+
     double* sum = (double*)cvStackAlloc( (mi+1)*sizeof(sum[0]) ) + 1;
     double* counts = (double*)cvStackAlloc( (mi+1)*sizeof(counts[0]) ) + 1;
     double** sum_ptr = (double**)cvStackAlloc( mi*sizeof(sum_ptr[0]) );
@@ -506,7 +538,7 @@ CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi )
     // calculate sum response and weight of each category of the input var
     for( i = 0; i < n; i++ )
     {
-        int idx = cat_labels[i];
+        int idx = ((cat_labels[i] == 65535) && data->is_buf_16u) ? -1 : cat_labels[i];
         double w = weights[i];
         double s = sum[idx] + responses[i]*w;
         double nc = counts[idx] + w;
@@ -571,7 +603,12 @@ CvDTreeSplit*
 CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
 {
     const float epsilon = FLT_EPSILON*2;
-    const CvPair32s32f* sorted = data->get_ord_var_data(node, vi);
+    float* values_buf = data->pred_float_buf;;
+    const float* values = 0;
+    int* indices_buf = data->pred_int_buf;
+    const int* indices = 0;
+    data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
+
     const double* weights = ensemble->get_subtree_weights()->data.db;
     const char* dir = (char*)data->direction->data.ptr;
     int n1 = node->get_num_valid(vi);
@@ -588,7 +625,7 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
 
     for( i = 0; i < n1; i++ )
     {
-        int idx = sorted[i].i;
+        int idx = indices[i];
         double w = weights[idx];
         int d = dir[idx];
         sum += d*w; sum_abs += (d & 1)*w;
@@ -603,14 +640,14 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
     // now iteratively compute LL, LR, RL and RR for every possible surrogate split value.
     for( i = 0; i < n1 - 1; i++ )
     {
-        int idx = sorted[i].i;
+        int idx = indices[i];
         double w = weights[idx];
         int d = dir[idx];
 
         if( d < 0 )
         {
             LL += w; LR -= w;
-            if( LL + RR > best_val && sorted[i].val + epsilon < sorted[i+1].val )
+            if( LL + RR > best_val && values[i] + epsilon < values[i+1] )
             {
                 best_val = LL + RR;
                 best_i = i; best_inversed = 0;
@@ -619,7 +656,7 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
         else if( d > 0 )
         {
             RL += w; RR -= w;
-            if( RL + LR > best_val && sorted[i].val + epsilon < sorted[i+1].val )
+            if( RL + LR > best_val && values[i] + epsilon < values[i+1] )
             {
                 best_val = RL + LR;
                 best_i = i; best_inversed = 1;
@@ -628,7 +665,7 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
     }
 
     return best_i >= 0 && best_val > node->maxlr ? data->new_split_ord( vi,
-        (sorted[best_i].val + sorted[best_i+1].val)*0.5f, best_i,
+        (values[best_i] + values[best_i+1])*0.5f, best_i,
         best_inversed, (float)best_val ) : 0;
 }
 
@@ -636,10 +673,13 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
 CvDTreeSplit*
 CvBoostTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 {
-    const int* cat_labels = data->get_cat_var_data(node, vi);
     const char* dir = (char*)data->direction->data.ptr;
     const double* weights = ensemble->get_subtree_weights()->data.db;
     int n = node->sample_count;
+    int* cat_labels_buf = data->pred_int_buf;
+    const int* cat_labels = 0;
+    data->get_cat_var_data(node, vi, cat_labels_buf, &cat_labels);
+
     // LL - number of samples that both the primary and the surrogate splits send to the left
     // LR - ... primary split sends to the left and the surrogate split sends to the right
     // RL - ... primary split sends to the right and the surrogate split sends to the left
@@ -657,7 +697,7 @@ CvBoostTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     // sent to the left (lc) and to the right (rc) by the primary split
     for( i = 0; i < n; i++ )
     {
-        int idx = cat_labels[i];
+        int idx = ((cat_labels[i] == 65535) && data->is_buf_16u) ? -1 : cat_labels[i];
         double w = weights[i];
         int d = dir[i];
         double sum = lc[idx] + d*w;
@@ -698,23 +738,26 @@ CvBoostTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 void
 CvBoostTree::calc_node_value( CvDTreeNode* node )
 {
-    int i, count = node->sample_count;
+    int i, n = node->sample_count;
     const double* weights = ensemble->get_weights()->data.db;
-    const int* labels = data->get_labels(node);
+    int* labels_buf = data->cv_lables_buf;
+    const int* labels = 0;
+    data->get_cv_labels(node, labels_buf, &labels);
     double* subtree_weights = ensemble->get_subtree_weights()->data.db;
     double rcw[2] = {0,0};
     int boost_type = ensemble->get_params().boost_type;
-    //const double* priors = data->priors->data.db;
 
     if( data->is_classifier )
     {
-        const int* responses = data->get_class_labels(node);
+        int* _responses_buf = data->resp_int_buf;
+        const int* _responses = 0;
+        data->get_class_labels(node, _responses_buf, &_responses);
 
-        for( i = 0; i < count; i++ )
+        for( i = 0; i < n; i++ )
         {
             int idx = labels[i];
-            double w = weights[idx]/*priors[responses[i]]*/;
-            rcw[responses[i]] += w;
+            double w = weights[idx];
+            rcw[_responses[i]] += w;
             subtree_weights[i] = w;
         }
 
@@ -742,9 +785,11 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         //    n is the number of samples in the node.
         //  * node risk is the sum of squared errors: sum_i((Y_i - <node_value>)^2)
         double sum = 0, sum2 = 0, iw;
-        const float* values = data->get_ord_responses(node);
+        float* values_buf = data->resp_float_buf;
+        const float* values = 0;
+        data->get_ord_responses(node, values_buf, &values);
 
-        for( i = 0; i < count; i++ )
+        for( i = 0; i < n; i++ )
         {
             int idx = labels[i];
             double w = weights[idx]/*priors[values[i] > 0]*/;
@@ -761,12 +806,12 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
 
         // renormalize the risk, as in try_split_node the unweighted formula
         // sqrt(risk)/n is used, rather than sqrt(risk)/sum(weights_i)
-        node->node_risk *= count*iw*count*iw;
+        node->node_risk *= n*iw*n*iw;
     }
 
     // store summary weights
-    subtree_weights[count] = rcw[0];
-    subtree_weights[count+1] = rcw[1];
+    subtree_weights[n] = rcw[0];
+    subtree_weights[n+1] = rcw[1];
 }
 
 
@@ -922,7 +967,7 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
     __BEGIN__;
 
     int i;
-
+    
     set_params( _params );
 
     cvReleaseMat( &active_vars );
@@ -947,6 +992,9 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
             _sample_idx, _var_type, _missing_mask, _params, true, true, true );
     }
 
+    if ( (_params.boost_type == LOGIT) || (_params.boost_type == GENTLE) )
+        data->do_responses_copy();
+    
     update_weights( 0 );
 
     for( i = 0; i < params.weak_count; i++ )
@@ -980,17 +1028,34 @@ CvBoost::update_weights( CvBoostTree* tree )
 
     __BEGIN__;
 
-    int i, count = data->sample_count;
+    int i, n = data->sample_count;
     double sumw = 0.;
-
+    int step = 0;
+    float* fdata = 0;
+    int *sample_idx_buf;
+    const int* sample_idx = 0;
+    if ( (params.boost_type == LOGIT) || (params.boost_type == GENTLE) )
+    {
+        step = CV_IS_MAT_CONT(data->responses_copy->type) ?
+            1 : data->responses_copy->step / CV_ELEM_SIZE(data->responses_copy->type);
+        fdata = data->responses_copy->data.fl;
+        sample_idx_buf = (int*)cvStackAlloc(data->sample_count*sizeof(sample_idx_buf[0]));
+        data->get_sample_indices( data->data_root, sample_idx_buf, &sample_idx );    
+    }
+    CvMat* buf = data->buf;
     if( !tree ) // before training the first tree, initialize weights and other parameters
     {
-        const int* class_labels = data->get_class_labels(data->data_root);
+        int n = data->sample_count;
+        int* class_labels_buf = data->resp_int_buf;
+        const int* class_labels = 0;
+        data->get_class_labels(data->data_root, class_labels_buf, &class_labels);
         // in case of logitboost and gentle adaboost each weak tree is a regression tree,
         // so we need to convert class labels to floating-point values
-        float* responses = data->get_ord_responses(data->data_root);
-        int* labels = data->get_labels(data->data_root);
-        double w0 = 1./count;
+        float* responses_buf = data->resp_float_buf;
+        const float* responses = 0;
+        data->get_ord_responses(data->data_root, responses_buf, &responses);
+        
+        double w0 = 1./n;
         double p[2] = { 1, 1 };
 
         cvReleaseMat( &orig_response );
@@ -999,46 +1064,70 @@ CvBoost::update_weights( CvBoostTree* tree )
         cvReleaseMat( &subsample_mask );
         cvReleaseMat( &weights );
 
-        CV_CALL( orig_response = cvCreateMat( 1, count, CV_32S ));
-        CV_CALL( weak_eval = cvCreateMat( 1, count, CV_64F ));
-        CV_CALL( subsample_mask = cvCreateMat( 1, count, CV_8U ));
-        CV_CALL( weights = cvCreateMat( 1, count, CV_64F ));
-        CV_CALL( subtree_weights = cvCreateMat( 1, count + 2, CV_64F ));
+        CV_CALL( orig_response = cvCreateMat( 1, n, CV_32S ));
+        CV_CALL( weak_eval = cvCreateMat( 1, n, CV_64F ));
+        CV_CALL( subsample_mask = cvCreateMat( 1, n, CV_8U ));
+        CV_CALL( weights = cvCreateMat( 1, n, CV_64F ));
+        CV_CALL( subtree_weights = cvCreateMat( 1, n + 2, CV_64F ));
 
         if( data->have_priors )
         {
             // compute weight scale for each class from their prior probabilities
             int c1 = 0;
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
                 c1 += class_labels[i];
-            p[0] = data->priors->data.db[0]*(c1 < count ? 1./(count - c1) : 0.);
+            p[0] = data->priors->data.db[0]*(c1 < n ? 1./(n - c1) : 0.);
             p[1] = data->priors->data.db[1]*(c1 > 0 ? 1./c1 : 0.);
             p[0] /= p[0] + p[1];
             p[1] = 1. - p[0];
         }
 
-        for( i = 0; i < count; i++ )
+        if (data->is_buf_16u)
         {
-            // save original categorical responses {0,1}, convert them to {-1,1}
-            orig_response->data.i[i] = class_labels[i]*2 - 1;
-            // make all the samples active at start.
-            // later, in trim_weights() deactivate/reactive again some, if need
-            subsample_mask->data.ptr[i] = (uchar)1;
-            // make all the initial weights the same.
-            weights->data.db[i] = w0*p[class_labels[i]];
-            // set the labels to find (from within weak tree learning proc)
-            // the particular sample weight, and where to store the response.
-            labels[i] = i;
+            unsigned short* labels = (unsigned short*)(buf->data.s + data->data_root->buf_idx*buf->cols + 
+                data->data_root->offset + (data->work_var_count-1)*data->sample_count);
+            for( i = 0; i < n; i++ )
+            {
+                // save original categorical responses {0,1}, convert them to {-1,1}
+                orig_response->data.i[i] = class_labels[i]*2 - 1;
+                // make all the samples active at start.
+                // later, in trim_weights() deactivate/reactive again some, if need
+                subsample_mask->data.ptr[i] = (uchar)1;
+                // make all the initial weights the same.
+                weights->data.db[i] = w0*p[class_labels[i]];
+                // set the labels to find (from within weak tree learning proc)
+                // the particular sample weight, and where to store the response.
+                labels[i] = (unsigned short)i;
+            }
+        }
+        else
+        {
+            int* labels = buf->data.i + data->data_root->buf_idx*buf->cols + 
+                data->data_root->offset + (data->work_var_count-1)*data->sample_count;
+
+            for( i = 0; i < n; i++ )
+            {
+                // save original categorical responses {0,1}, convert them to {-1,1}
+                orig_response->data.i[i] = class_labels[i]*2 - 1;
+                // make all the samples active at start.
+                // later, in trim_weights() deactivate/reactive again some, if need
+                subsample_mask->data.ptr[i] = (uchar)1;
+                // make all the initial weights the same.
+                weights->data.db[i] = w0*p[class_labels[i]];
+                // set the labels to find (from within weak tree learning proc)
+                // the particular sample weight, and where to store the response.
+                labels[i] = i;
+            }
         }
 
         if( params.boost_type == LOGIT )
         {
-            CV_CALL( sum_response = cvCreateMat( 1, count, CV_64F ));
+            CV_CALL( sum_response = cvCreateMat( 1, n, CV_64F ));
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 sum_response->data.db[i] = 0;
-                responses[i] = orig_response->data.i[i] > 0 ? 2.f : -2.f;
+                fdata[sample_idx[i]*step] = orig_response->data.i[i] > 0 ? 2.f : -2.f;
             }
 
             // in case of logitboost each weak tree is a regression tree.
@@ -1047,8 +1136,8 @@ CvBoost::update_weights( CvBoostTree* tree )
         }
         else if( params.boost_type == GENTLE )
         {
-            for( i = 0; i < count; i++ )
-                responses[i] = (float)orig_response->data.i[i];
+            for( i = 0; i < n; i++ )
+                fdata[sample_idx[i]*step] = (float)orig_response->data.i[i];
 
             data->is_classifier = false;
         }
@@ -1059,20 +1148,21 @@ CvBoost::update_weights( CvBoostTree* tree )
         // recent weak classifier we know the responses. For other samples we need to compute them
         if( have_subsample )
         {
-            float* values = (float*)(data->buf->data.ptr + data->buf->step);
-            uchar* missing = data->buf->data.ptr + data->buf->step*2;
+            float* values0, *values = (float*)cvStackAlloc(data->buf->step*sizeof(float));
+            uchar* missing0, *missing = (uchar*)cvStackAlloc(data->buf->step*sizeof(uchar));
             CvMat _sample, _mask;
+            values0 = values;
+            missing0 = missing;
 
             // invert the subsample mask
             cvXorS( subsample_mask, cvScalar(1.), subsample_mask );
             data->get_vectors( subsample_mask, values, missing, 0 );
-            //data->get_vectors( 0, values, missing, 0 );
-
+           
             _sample = cvMat( 1, data->var_count, CV_32F );
             _mask = cvMat( 1, data->var_count, CV_8U );
 
             // run tree through all the non-processed samples
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
                 if( subsample_mask->data.ptr[i] )
                 {
                     _sample.data.fl = values;
@@ -1095,7 +1185,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             double C, err = 0.;
             double scale[] = { 1., 0. };
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double w = weights->data.db[i];
                 sumw += w;
@@ -1108,7 +1198,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             scale[1] = exp(err);
 
             sumw = 0;
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double w = weights->data.db[i]*
                     scale[weak_eval->data.db[i] != orig_response->data.i[i]];
@@ -1124,12 +1214,12 @@ CvBoost::update_weights( CvBoostTree* tree )
             //   weak_eval[i] = f(x_i) = 0.5*log(p(x_i)/(1-p(x_i))), p(x_i)=P(y=1|x_i)
             //   w_i *= exp(-y_i*f(x_i))
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
             cvExp( weak_eval, weak_eval );
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double w = weights->data.db[i]*weak_eval->data.db[i];
                 sumw += w;
@@ -1150,12 +1240,14 @@ CvBoost::update_weights( CvBoostTree* tree )
 
             const double lb_weight_thresh = FLT_EPSILON;
             const double lb_z_max = 10.;
-            float* responses = data->get_ord_responses(data->data_root);
+            float* responses_buf = data->resp_float_buf;
+            const float* responses = 0;
+            data->get_ord_responses(data->data_root, responses_buf, &responses);
 
             /*if( weak->total == 7 )
                 putchar('*');*/
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double s = sum_response->data.db[i] + 0.5*weak_eval->data.db[i];
                 sum_response->data.db[i] = s;
@@ -1164,7 +1256,7 @@ CvBoost::update_weights( CvBoostTree* tree )
 
             cvExp( weak_eval, weak_eval );
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double p = 1./(1. + weak_eval->data.db[i]);
                 double w = p*(1 - p), z;
@@ -1174,12 +1266,12 @@ CvBoost::update_weights( CvBoostTree* tree )
                 if( orig_response->data.i[i] > 0 )
                 {
                     z = 1./p;
-                    responses[i] = (float)MIN(z, lb_z_max);
+                    fdata[sample_idx[i]*step] = (float)MIN(z, lb_z_max);
                 }
                 else
                 {
                     z = 1./(1-p);
-                    responses[i] = (float)-MIN(z, lb_z_max);
+                    fdata[sample_idx[i]*step] = (float)-MIN(z, lb_z_max);
                 }
             }
         }
@@ -1190,12 +1282,12 @@ CvBoost::update_weights( CvBoostTree* tree )
             //   w_i *= exp(-y_i*f(x_i))
             assert( params.boost_type == GENTLE );
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
             cvExp( weak_eval, weak_eval );
 
-            for( i = 0; i < count; i++ )
+            for( i = 0; i < n; i++ )
             {
                 double w = weights->data.db[i] * weak_eval->data.db[i];
                 weights->data.db[i] = w;
@@ -1208,7 +1300,7 @@ CvBoost::update_weights( CvBoostTree* tree )
     if( sumw > FLT_EPSILON )
     {
         sumw = 1./sumw;
-        for( i = 0; i < count; ++i )
+        for( i = 0; i < n; ++i )
             weights->data.db[i] *= sumw;
     }
 
@@ -1325,6 +1417,7 @@ CvBoost::get_active_vars( bool absolute_idx )
         }
 
         nactive_vars = cvCountNonZero(mask);
+        
         active_vars = cvCreateMat( 1, nactive_vars, CV_32S );
         active_vars_abs = cvCreateMat( 1, nactive_vars, CV_32S );
 
@@ -1342,6 +1435,7 @@ CvBoost::get_active_vars( bool absolute_idx )
                 j++;
             }
         }
+        
 
         // second pass: now compute the condensed indices
         cvStartReadSeq( weak, &reader );
@@ -1418,7 +1512,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     if( !CV_IS_MAT(_sample) || CV_MAT_TYPE(_sample->type) != CV_32FC1 ||
         (_sample->cols != 1 && _sample->rows != 1) ||
         (_sample->cols + _sample->rows - 1 != data->var_all && !raw_mode) ||
-        (_sample->cols + _sample->rows - 1 != active_vars->cols && raw_mode) )
+        (active_vars && _sample->cols + _sample->rows - 1 != active_vars->cols && raw_mode) )
             CV_ERROR( CV_StsBadArg,
         "the input sample must be 1d floating-point vector with the same "
         "number of elements as the total number of variables or "
@@ -1498,11 +1592,12 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
 
             if( ci >= 0 )
             {
-                int a = cofs[ci], b = cofs[ci+1], c = a;
+                int a = cofs[ci], b = (ci+1 >= data->cat_ofs->cols) ? data->cat_map->cols : cofs[ci+1],
+                    c = a;
                 int ival = cvRound(val);
-                if( ival != val )
+                if ( (ival != val) && (!m) )
                     CV_ERROR( CV_StsBadArg,
-                    "one of input categorical variable is not an integer" );
+                        "one of input categorical variable is not an integer" );
 
                 while( a < b )
                 {
