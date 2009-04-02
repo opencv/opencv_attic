@@ -1301,7 +1301,7 @@ icvYMLWrite( CvFileStorage* fs, const char* key, const char* data )
 
             ptr[i] = (char)c;
             if( !isalnum(c) && c != '-' && c != '_' && c != ' ' )
-                CV_Error( CV_StsBadArg, "Invalid character occurs in the key" );
+                CV_Error( CV_StsBadArg, "Key names may only contain alphanumeric characters [a-zA-Z0-9], '-', '_' and ' '" );
         }
 
         ptr += keylen;
@@ -2119,7 +2119,7 @@ icvXMLWriteTag( CvFileStorage* fs, const char* key, int tag_type, CvAttrList lis
     {
         char c = key[i];
         if( !isalnum(c) && c != '_' && c != '-' )
-            CV_Error( CV_StsBadArg, "Invalid character in the key" );
+            CV_Error( CV_StsBadArg, "Key name may only contain alphanumeric characters [a-zA-Z0-9], '-' and '_'" );
         ptr[i] = c;
     }
     ptr += len;
