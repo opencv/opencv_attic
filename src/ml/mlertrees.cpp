@@ -78,7 +78,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     int ds_step, dv_step, ms_step = 0, mv_step = 0; // {data|mask}{sample|var}_step
     int vi, i, size;
     char err[100];
-    const int *sidx, *vidx = 0;
+    const int *sidx = 0, *vidx = 0;
     
     if ( _params.use_surrogates )
         CV_ERROR(CV_StsBadArg, "CvERTrees do not support surrogate splits");
