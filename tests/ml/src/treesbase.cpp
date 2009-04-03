@@ -60,10 +60,20 @@ CV_TreesBaseTest :: ~CV_TreesBaseTest()
 
 int CV_TreesBaseTest :: read_params( CvFileStorage* fs )
 {
-    CvFileNode* run_params = cvGetFileNodeByName( fs, 0, "run_params" );
+    int code = CvTS::OK;
+    CvFileNode* run_params = 0;
+    const char* data_path = ts->get_data_path();
+    if (!fs || !data_path)
+    {
+        ts->printf( CvTS::LOG, "config file and data_path must be defined" );
+        code = CvTS::FAIL_INVALID_TEST_DATA;
+        ts->set_failed_test_info( code );
+        return code;
+    }
+    run_params = cvGetFileNodeByName( fs, 0, "run_params" );
     data_sets = cvGetFileNodeByName( fs, run_params, name )->data.seq;
     test_case_count = data_sets->total;
-    return 0;
+    return code;
 }
 
 float CV_TreesBaseTest :: str_to_flt_elem(char* token)
@@ -280,10 +290,11 @@ int CV_TreesBaseTest :: prepare_test_case( int test_case_idx )
     char filepath[1000];
     char filename[1000];
     const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, test_case_idx ))->data.str.ptr;     
-
+    const char* data_path = ts->get_data_path();
+     
     clear();
 
-    sprintf( filepath, "%s", ts->get_data_path() );
+    sprintf( filepath, "%s", data_path );
     sprintf( filename, "%s%s.data", filepath, data_name );
 
     var_count = load_data(filename);
@@ -334,8 +345,13 @@ int CV_TreesBaseTest :: run_test_case( int test_case_idx )
         {
 #endif
             mix_train_and_test_idx();
-            train( test_case_idx );
-            case_result = get_error( test_sample_idx );
+            if ( train( test_case_idx ) )
+                case_result = get_error( test_sample_idx );
+            else
+            {
+                ts->printf( CvTS::LOG, "model training was failed" );
+                code = CvTS::FAIL_INVALID_OUTPUT;
+            }
 #ifdef GET_STAT
             res[k] = case_result;
         }
