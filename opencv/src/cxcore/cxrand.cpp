@@ -555,7 +555,7 @@ randShuffle_( Mat& _arr, RNG& rng, double iterFactor )
         T* arr = (T*)_arr.data;
         for( int i = 0; i < iters; i++ )
         {
-            int j = (int)rng % sz, k = (int)rng % sz;
+            int j = (unsigned)rng % sz, k = (unsigned)rng % sz;
             std::swap( arr[j], arr[k] );
         }
     }
@@ -565,7 +565,7 @@ randShuffle_( Mat& _arr, RNG& rng, double iterFactor )
         int step = _arr.step, cols = _arr.cols;
         for( int i = 0; i < iters; i++ )
         {
-            int j1 = (int)rng % sz, k1 = (int)rng % sz;
+            int j1 = (unsigned)rng % sz, k1 = (unsigned)rng % sz;
             int j0 = j1/cols, k0 = k1/cols;
             j1 -= j0*cols; k1 -= k0*cols;
             std::swap( ((T*)(data + step*j0))[j1], ((T*)(data + step*k0))[k1] );
