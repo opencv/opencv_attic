@@ -53,6 +53,10 @@
 #include "assert.h"
 #include "math.h"
 
+#if _MSC_VER >= 1400
+#pragma warning(disable: 4512) // suppress "assignment operator could not be generated"
+#endif
+
 // J.S. Beis and D.G. Lowe. Shape indexing using approximate nearest-neighbor search 
 // in highdimensional spaces. In Proc. IEEE Conf. Comp. Vision Patt. Recog., 
 // pages 1000--1006, 1997. http://citeseer.ist.psu.edu/beis97shape.html 

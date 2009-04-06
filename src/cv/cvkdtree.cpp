@@ -47,6 +47,10 @@
 #include "_cvkdtree.hpp"
 #include "_cvfeaturetree.h"
 
+#if _MSC_VER >= 1400
+#pragma warning(disable:4996) // suppress "function call with parameters may be unsafe" in std::copy
+#endif
+
 class CvKDTreeWrap : public CvFeatureTree {
   template <class __scalartype, int __cvtype>
   struct deref {
