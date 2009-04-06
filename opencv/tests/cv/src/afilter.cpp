@@ -1505,12 +1505,14 @@ CV_PyramidBaseTest::CV_PyramidBaseTest( const char* test_name, const char* test_
     : CV_FilterBaseTest( test_name, test_funcs, true ), downsample(_downsample)
 {
     test_array[TEMP].push(NULL);
+    size_list = filter_sizes;
     depth_list = smooth_depths;
     cn_list = pyramid_channels;
     default_timing_param_names = 0;
     if( strcmp( test_funcs, "" ) != 0 )
     {
         default_timing_param_names = pyramid_param_names;
+        size_list = 0;
         cn_list = 0;
         depth_list = 0;
     }
@@ -2679,5 +2681,3 @@ void CV_IntegralTest::prepare_to_validation( int /*test_case_idx*/ )
 
 
 CV_IntegralTest integral_test;
-
-
