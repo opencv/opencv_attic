@@ -45,7 +45,7 @@
 namespace cv
 {
 
-static Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize )
+Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize )
 {
     Mat_<double> Ar(3, 3);
     Ar << A(0,0), 0., (imgsize.width-1)*0.5,
