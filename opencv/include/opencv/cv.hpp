@@ -324,6 +324,11 @@ CV_EXPORTS void pyrDown( const Mat& src, Mat& dst, const Size& dstsize=Size());
 CV_EXPORTS void pyrUp( const Mat& src, Mat& dst, const Size& dstsize=Size());
 CV_EXPORTS void buildPyramid( const Mat& src, Vector<Mat>& dst, int maxlevel );
 
+
+CV_EXPORTS void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
+                           const Mat& distCoeffs, const Mat& newCameraMatrix=Mat() );
+CV_EXPORTS Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize );
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
