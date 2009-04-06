@@ -320,6 +320,10 @@ CV_EXPORTS void adaptiveThreshold( const Mat& src, Mat& dst, double maxValue,
                                    int adaptiveMethod, int thresholdType,
                                    int blockSize, double C );
 
+CV_EXPORTS void pyrDown( const Mat& src, Mat& dst, const Size& dstsize=Size());
+CV_EXPORTS void pyrUp( const Mat& src, Mat& dst, const Size& dstsize=Size());
+CV_EXPORTS void buildPyramid( const Mat& src, Vector<Mat>& dst, int maxlevel );
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

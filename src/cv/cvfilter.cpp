@@ -77,7 +77,9 @@ int borderInterpolate( int p, int len, int borderType )
         p = p < 0 ? 0 : len - 1;
     else if( borderType == BORDER_REFLECT || borderType == BORDER_REFLECT_101 )
     {
-        int delta = borderType == BORDER_REFLECT;
+        int delta = borderType == BORDER_REFLECT_101;
+        if( len == 1 )
+            return 0;
         do
         {
             if( p < 0 )
