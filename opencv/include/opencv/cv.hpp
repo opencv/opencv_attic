@@ -327,6 +327,9 @@ CV_EXPORTS void buildPyramid( const Mat& src, Vector<Mat>& dst, int maxlevel );
 
 CV_EXPORTS void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
                            const Mat& distCoeffs, const Mat& newCameraMatrix=Mat() );
+CV_EXPORTS void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& distCoeffs,
+                           const Mat& R, const Mat& newCameraMatrix,
+                           Size size, int m1type, Mat& map1, Mat& map2 );
 CV_EXPORTS Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize );
 
 }
