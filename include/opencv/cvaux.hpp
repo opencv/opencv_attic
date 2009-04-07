@@ -45,7 +45,7 @@
 #ifdef __cplusplus
 
 /****************************************************************************************\
-*                                      Image class                                       *
+*                                       CamShiftTracker                                  *
 \****************************************************************************************/
 
 class CV_EXPORTS CvCamShiftTracker
@@ -137,6 +137,10 @@ protected:
     IplImage*  m_mask;
 };
 
+/****************************************************************************************\
+*                                   Adaptive Skin Detector                               *
+\****************************************************************************************/
+
 class CvAdaptiveSkinDetector
 {
 private:
@@ -189,6 +193,150 @@ public:
 	virtual ~CvAdaptiveSkinDetector();
 
 	virtual void process(IplImage *inputBGRImage, IplImage *outputHueMask);
+};
+
+
+/****************************************************************************************\
+*                                  Fuzzy MeanShift Tracker                               *
+\****************************************************************************************/
+
+class CvFuzzyPoint {
+public:
+	double x, y, value;
+
+	CvFuzzyPoint(double _x, double _y);
+};
+
+class CvFuzzyCurve {
+private:
+    std::vector<CvFuzzyPoint> points;
+	double value, centre;
+
+	bool between(double x, double x1, double x2);
+
+public:
+	CvFuzzyCurve();
+	~CvFuzzyCurve();
+
+	void setCentre(double _centre);
+	double getCentre();
+	void clear();
+	void addPoint(double x, double y);
+	double calcValue(double param);
+	double getValue();
+	void setValue(double _value);
+};
+
+class CvFuzzyFunction {
+public:
+    std::vector<CvFuzzyCurve> curves;
+
+	CvFuzzyFunction();
+	~CvFuzzyFunction();
+	void addCurve(CvFuzzyCurve *curve, double value = 0);
+	void resetValues();
+	double calcValue();
+	CvFuzzyCurve *newCurve();
+};
+
+class CvFuzzyRule {
+private:
+	CvFuzzyCurve *fuzzyInput1, *fuzzyInput2;
+	CvFuzzyCurve *fuzzyOutput;
+public:
+	CvFuzzyRule();
+	~CvFuzzyRule();
+	void setRule(CvFuzzyCurve *c1, CvFuzzyCurve *c2, CvFuzzyCurve *o1);
+	double calcValue(double param1, double param2);
+	CvFuzzyCurve *getOutputCurve();
+};
+
+class CvFuzzyController {
+private:
+    std::vector<CvFuzzyRule*> rules;
+public:
+	CvFuzzyController();
+	~CvFuzzyController();
+	void addRule(CvFuzzyCurve *c1, CvFuzzyCurve *c2, CvFuzzyCurve *o1);
+	double calcOutput(double param1, double param2);
+};
+
+class CvFuzzyMeanShiftTracker
+{
+private:
+	class FuzzyResizer
+	{
+	private:
+		CvFuzzyFunction iInput, iOutput;
+		CvFuzzyController fuzzyController;
+	public:
+		FuzzyResizer();
+		int calcOutput(double edgeDensity, double density);
+	};
+
+	class SearchWindow
+	{
+	public:
+		FuzzyResizer *fuzzyResizer;
+		int x, y;
+		int width, height, maxWidth, maxHeight, ellipseHeight, ellipseWidth;
+		int ldx, ldy, ldw, ldh, numShifts, numIters;
+		int xGc, yGc;
+		long m00, m01, m10, m11, m02, m20;
+		double ellipseAngle;
+		double density;
+		unsigned int depthLow, depthHigh;
+		int verticalEdgeLeft, verticalEdgeRight, horizontalEdgeTop, horizontalEdgeBottom;
+
+		SearchWindow();
+		~SearchWindow();
+		void setSize(int _x, int _y, int _width, int _height);
+		void initDepthValues(IplImage *maskImage, IplImage *depthMap);
+		bool shift();
+		void extractInfo(IplImage *maskImage, IplImage *depthMap, bool initDepth);
+		void getResizeAttribsEdgeDensityLinear(int &resizeDx, int &resizeDy, int &resizeDw, int &resizeDh);
+		void getResizeAttribsInnerDensity(int &resizeDx, int &resizeDy, int &resizeDw, int &resizeDh);
+		void getResizeAttribsEdgeDensityFuzzy(int &resizeDx, int &resizeDy, int &resizeDw, int &resizeDh);
+		bool meanShift(IplImage *maskImage, IplImage *depthMap, int maxIteration, bool initDepth);
+	};
+
+public:
+	enum TrackingState
+	{
+		tsNone 			= 0,
+		tsSearching 	= 1,
+		tsTracking 		= 2,
+		tsSetWindow 	= 3,
+		tsDisabled		= 10
+	};
+
+	enum ResizeMethod {
+		rmEdgeDensityLinear		= 0,
+		rmEdgeDensityFuzzy		= 1,
+		rmInnerDensity			= 2
+	};
+
+	enum {
+		MinKernelMass			= 1000
+	};
+
+	SearchWindow kernel;
+	int searchMode;
+
+private:
+	enum
+	{
+		MaxMeanShiftIteration 	= 5,
+		MaxSetSizeIteration 	= 5
+	};
+
+	void findOptimumSearchWindow(SearchWindow &searchWindow, IplImage *maskImage, IplImage *depthMap, int maxIteration, int resizeMethod, bool initDepth);
+
+public:
+	CvFuzzyMeanShiftTracker();
+	~CvFuzzyMeanShiftTracker();
+
+	void track(IplImage *maskImage, IplImage *depthMap, int resizeMethod, bool resetSearch, int minKernelMass = MinKernelMass);
 };
 
 
