@@ -332,6 +332,12 @@ CV_EXPORTS void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& dis
                            Size size, int m1type, Mat& map1, Mat& map2 );
 CV_EXPORTS Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize );
 
+
+enum { OPTFLOW_USE_INITIAL_FLOW=4, OPTFLOW_FARNERBACK_GAUSSIAN=256 };
+CV_EXPORTS void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
+                               Mat& flow0, double pyr_scale, int levels, int winsize,
+                               int iterations, int poly_n, double poly_sigma, int flags );
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

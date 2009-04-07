@@ -1337,8 +1337,8 @@ void resize( const Mat& src, Mat& dst, Size dsize,
     }
     else
     {
-        inv_scale_x = (double)dst.cols/src.cols;
-        inv_scale_y = (double)dst.rows/src.rows;
+        inv_scale_x = (double)dsize.width/src.cols;
+        inv_scale_y = (double)dsize.height/src.rows;
     }
     dst.create(dsize, src.type());
 
