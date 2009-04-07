@@ -919,8 +919,6 @@ template <typename T> inline Vector<T> Vector<T>::clone() const
     return Vector(hdr.data, hdr.size, true);
 }
 
-template <typename T> inline Vector<T>::operator T* () { return hdr.data; }
-template <typename T> inline Vector<T>::operator const T* () const { return hdr.data; }
 template <typename T> inline T& Vector<T>::operator [] (size_t i) { assert( i < size() ); return hdr.data[i]; }
 template <typename T> inline const T& Vector<T>::operator [] (size_t i) const { assert( i < size() ); return hdr.data[i]; }
 template <typename T> inline T& Vector<T>::operator [] (int i) { assert( (size_t)i < size() ); return hdr.data[i]; }
