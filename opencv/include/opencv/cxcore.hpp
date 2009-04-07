@@ -590,8 +590,6 @@ public:
     ~Vector();
     Vector clone() const;
 
-    operator T* ();
-    operator const T* () const;
     T& operator [] (size_t i);
     const T& operator [] (size_t i) const;
     T& operator [] (int i);

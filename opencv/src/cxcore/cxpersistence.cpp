@@ -4890,7 +4890,7 @@ void FileStorage::writeRaw( const String& fmt, const Vector<uchar>& vec )
     size_t elemSize, cn;
     getElemSize( fmt, elemSize, cn );
     CV_Assert( vec.size() % elemSize == 0 );
-    cvWriteRawData( fs.obj, &*vec, (int)(vec.size()/elemSize), fmt.c_str());
+    cvWriteRawData( fs.obj, &vec[0], (int)(vec.size()/elemSize), fmt.c_str());
 }
 
 

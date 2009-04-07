@@ -1733,7 +1733,7 @@ struct FilterVec_8u
 
     int operator()(const uchar** src, uchar* dst, int width) const
     {
-        const float* kf = (const float*)(const uchar*)coeffs;
+        const float* kf = (const float*)&coeffs[0];
         int i = 0, k, nz = _nz;
         __m128 d4 = _mm_set1_ps(delta);
 
@@ -1813,7 +1813,7 @@ struct FilterVec_8u16s
 
     int operator()(const uchar** src, uchar* _dst, int width) const
     {
-        const float* kf = (const float*)(const uchar*)coeffs;
+        const float* kf = (const float*)&coeffs[0];
         short* dst = (short*)_dst;
         int i = 0, k, nz = _nz;
         __m128 d4 = _mm_set1_ps(delta);
@@ -1891,7 +1891,7 @@ struct FilterVec_32f
 
     int operator()(const uchar** _src, uchar* _dst, int width) const
     {
-        const float* kf = (const float*)(const uchar*)coeffs;
+        const float* kf = (const float*)&coeffs[0];
         const float** src = (const float**)_src;
         float* dst = (float*)_dst;
         int i = 0, k, nz = _nz;
