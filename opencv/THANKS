@@ -20,7 +20,7 @@ Abrosimov, Dmitry       Intel Corp.                Optimization, Eigen objects
 Alekseev, Aleksey       Intel Corp.                IppCV testing
 Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 
-Baksheev, Anatoly       Argus CV                   CMake support for OpenCV
+Baksheev, Anatoly       Argus CV                   CMake support for OpenCV, Spin Images
 Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; add cvLinearPolar
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
@@ -37,6 +37,7 @@ Chudinovich, Boris      Intel Corp.                Ideas and algorithms on conto
 Conbere, Morgan         ???                        Image I/O on MacOSX
 Cowperthwaite, David    Intel Corp.                3d Tracker
 
+Dadgostar, Farhad       ???                        Adaptive Skin Detector, Fuzzy MeanShift Tracker
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Delacour, Xavier        ???                        Octave bindings, KD trees/BBF search, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
@@ -70,7 +71,7 @@ Kuranov, Alexander      Intel Corp.                Matlab wrappers, face detecti
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 
 Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
-Liu Liu                 ???                        SURF code, Spill trees
+Liu Liu                 ???                        SURF, Spill trees, MSERs
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
 
