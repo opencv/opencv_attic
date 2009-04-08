@@ -274,23 +274,23 @@ void OctTree::buildTree( const Vector<Point3f>& points3d, int maxLevels, int min
     if (maxLevels != 1 && (root.end - root.begin) > minPoints)
     {
         root.isLeaf = false;
-        buildNext(root);
+        buildNext(0);
     }
 }
 
-void  OctTree::buildNext(Node& node)
+void  OctTree::buildNext(size_t node_ind)
 {	
-    size_t size = node.end - node.begin;
+    size_t size = nodes[node_ind].end - nodes[node_ind].begin;
 
     Vector<size_t> boxBorders(9, 0);
     Vector<size_t> boxIndeces(size);
     Vector<Point3f> tempPoints(size);
 
-    for(int i = node.begin, j = 0; i < node.end; ++i, ++j)
+    for(int i = nodes[node_ind].begin, j = 0; i < nodes[node_ind].end; ++i, ++j)
     {
         const Point3f& p = points[i];
 
-        size_t subbox_ind = findSubboxForPoint(p, node);
+        size_t subbox_ind = findSubboxForPoint(p, nodes[node_ind]);
 
         boxBorders[subbox_ind+1]++;
         boxIndeces[j] = subbox_ind;
@@ -300,14 +300,14 @@ void  OctTree::buildNext(Node& node)
     for(size_t i = 1; i < boxBorders.size(); ++i)
         boxBorders[i] += boxBorders[i-1];
 
-    Vector<size_t> writeInds(boxBorders);
-
+    Vector<size_t> writeInds(boxBorders.begin(), boxBorders.size(), true);
+    
     for(size_t i = 0; i < size; ++i)
     {
         size_t boxIndex = boxIndeces[i];
         Point3f& curPoint = tempPoints[i];
 
-        size_t copyTo = node.begin + writeInds[boxIndex]++;
+        size_t copyTo = nodes[node_ind].begin + writeInds[boxIndex]++;
         points[copyTo] = curPoint;
     }
 
@@ -318,21 +318,21 @@ void  OctTree::buildNext(Node& node)
 
         nodes.push_back(Node());
         Node& child = nodes.back();
-        initChildBox(node, i, child);
+        initChildBox(nodes[node_ind], i, child);
 
         child.isLeaf = true;
-        child.maxLevels = node.maxLevels - 1;		
-        child.begin = node.begin + boxBorders[i+0];
-        child.end   = node.begin + boxBorders[i+1];
+        child.maxLevels = nodes[node_ind].maxLevels - 1;		
+        child.begin = nodes[node_ind].begin + boxBorders[i+0];
+        child.end   = nodes[node_ind].begin + boxBorders[i+1];
         for( int k = 0; k < 8; k++ )
             child.children[k] = 0;
 
         if (child.maxLevels != 1 && (child.end - child.begin) > minPoints )
         {
             child.isLeaf = false;
-            buildNext(child);
+            buildNext(nodes.size() - 1);
         }
-        node.children[i] = (int)(nodes.size() - 1);		
+        nodes[node_ind].children[i] = (int)(nodes.size() - 1);		
     }
 }
 

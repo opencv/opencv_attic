@@ -369,7 +369,7 @@ private:
     Vector<Point3f> points;
     Vector<Node> nodes;
 	
-	virtual void buildNext(Node& node);
+	virtual void buildNext(size_t node_ind);
 };
 
 
