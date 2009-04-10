@@ -179,7 +179,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                   "the total number of samples in the training data matrix" );
    
   
-    CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_all, &r_type ));
+    CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_count, &r_type ));
 
     CV_CALL( var_type = cvCreateMat( 1, var_count+2, CV_32SC1 ));
    
@@ -569,28 +569,30 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
 int CvERTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, uchar* missing_buf, const float** ord_values, const uchar** missing )
 {
+    int vidx = var_idx->data.i[vi];
     int node_sample_count = n->sample_count; 
     int* sample_indices_buf = sample_idx_buf;
     const int* sample_indices = 0;
 
     get_sample_indices(n, sample_indices_buf, &sample_indices);
 
-    int td_cols = train_data->cols;
+    int td_step = train_data->step/CV_ELEM_SIZE(train_data->type);
+    int m_step = missing_mask ? missing_mask->step/CV_ELEM_SIZE(missing_mask->type) : 1;
     if( tflag == CV_ROW_SAMPLE )
     {
         for( int i = 0; i < node_sample_count; i++ )
         {
             int idx = sample_indices[i];
-            missing_buf[i] = *(missing_mask->data.ptr + idx * td_cols + vi);
-            ord_values_buf[i] = *(train_data->data.fl + idx * td_cols + vi);
+            missing_buf[i] = missing_mask ? *(missing_mask->data.ptr + idx * m_step + vi) : 0;
+            ord_values_buf[i] = *(train_data->data.fl + idx * td_step + vidx);
         }
     }
     else
         for( int i = 0; i < node_sample_count; i++ )
         {
             int idx = sample_indices[i];
-            missing_buf[i] = *(missing_mask->data.ptr + vi* td_cols + idx);
-            ord_values_buf[i] = *(train_data->data.fl + vi* td_cols + idx);
+            missing_buf[i] = missing_mask ? *(missing_mask->data.ptr + vi* m_step + idx) : 0;
+            ord_values_buf[i] = *(train_data->data.fl + vidx* td_step + idx);
         }
     *ord_values = ord_values_buf;
     *missing = missing_buf;
@@ -1658,6 +1660,28 @@ bool CvERTrees::train( const CvMat* _train_data, int _tflag,
     
 }
 
+bool CvERTrees::train( CvMLData* data, CvRTParams params)
+{
+   bool result = false;
+
+    CV_FUNCNAME( "CvERTrees::train" );
+
+    __BEGIN__;
+
+    const CvMat* values = data->get_values();
+    const CvMat* response = data->get_response();
+    const CvMat* missing = data->get_missing();
+    const CvMat* var_types = data->get_var_types();
+    const CvMat* train_sidx = data->get_train_sample_idx();
+    const CvMat* var_idx = data->get_var_idx();
+
+    CV_CALL( result = train( values, CV_ROW_SAMPLE, response, var_idx,
+        train_sidx, var_types, missing, params ) );
+
+    __END__;
+
+    return result;
+}
 
 bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
 {
@@ -1852,8 +1876,12 @@ bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
         if( term_crit.type != CV_TERMCRIT_ITER && oob_error < max_oob_err )
             break;
     }
+
+    for ( int vi = 0; vi < var_importance->cols; vi++ )
+            var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
+                var_importance->data.fl[vi] : 0;
     if( var_importance )
-        CV_CALL(cvConvertScale( var_importance, var_importance, 1./ntrees/nsamples ));
+        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
 
     result = true;
     

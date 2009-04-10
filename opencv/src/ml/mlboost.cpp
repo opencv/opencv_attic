@@ -752,12 +752,18 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
         int* _responses_buf = data->resp_int_buf;
         const int* _responses = 0;
         data->get_class_labels(node, _responses_buf, &_responses);
+        int m = data->get_num_classes();
+        int* cls_count = data->counts->data.i;
+        for( int k = 0; k < m; k++ )
+            cls_count[k] = 0;
 
         for( i = 0; i < n; i++ )
         {
             int idx = labels[i];
             double w = weights[idx];
-            rcw[_responses[i]] += w;
+            int r = _responses[i];
+            rcw[r] += w;
+            cls_count[r]++;
             subtree_weights[i] = w;
         }
 
@@ -1020,6 +1026,30 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
     return ok;
 }
 
+bool CvBoost::train( CvMLData* _data,
+             CvBoostParams params,
+             bool update )
+{
+    bool result = false;
+
+    CV_FUNCNAME( "CvBoost::train" );
+
+    __BEGIN__;
+
+    const CvMat* values = _data->get_values();
+    const CvMat* response = _data->get_response();
+    const CvMat* missing = _data->get_missing();
+    const CvMat* var_types = _data->get_var_types();
+    const CvMat* train_sidx = _data->get_train_sample_idx();
+    const CvMat* var_idx = _data->get_var_idx();
+
+    CV_CALL( result = train( values, CV_ROW_SAMPLE, response, var_idx,
+        train_sidx, var_types, missing, params, update ) );
+
+    __END__;
+
+    return result;
+}
 
 void
 CvBoost::update_weights( CvBoostTree* tree )
@@ -1418,56 +1448,59 @@ CvBoost::get_active_vars( bool absolute_idx )
 
         nactive_vars = cvCountNonZero(mask);
         
-        active_vars = cvCreateMat( 1, nactive_vars, CV_32S );
-        active_vars_abs = cvCreateMat( 1, nactive_vars, CV_32S );
-
-        have_active_cat_vars = false;
-
-        for( i = j = 0; i < data->var_count; i++ )
+        //if ( nactive_vars > 0 )
         {
-            if( mask->data.ptr[i] )
+            active_vars = cvCreateMat( 1, nactive_vars, CV_32S );
+            active_vars_abs = cvCreateMat( 1, nactive_vars, CV_32S );
+
+            have_active_cat_vars = false;
+
+            for( i = j = 0; i < data->var_count; i++ )
             {
-                active_vars->data.i[j] = i;
-                active_vars_abs->data.i[j] = data->var_idx ? data->var_idx->data.i[i] : i;
-                inv_map->data.i[i] = j;
-                if( data->var_type->data.i[i] >= 0 )
-                    have_active_cat_vars = true;
-                j++;
+                if( mask->data.ptr[i] )
+                {
+                    active_vars->data.i[j] = i;
+                    active_vars_abs->data.i[j] = data->var_idx ? data->var_idx->data.i[i] : i;
+                    inv_map->data.i[i] = j;
+                    if( data->var_type->data.i[i] >= 0 )
+                        have_active_cat_vars = true;
+                    j++;
+                }
             }
-        }
-        
+            
 
-        // second pass: now compute the condensed indices
-        cvStartReadSeq( weak, &reader );
-        for( i = 0; i < weak->total; i++ )
-        {
-            CV_READ_SEQ_ELEM(wtree, reader);
-            node = wtree->get_root();
-            for(;;)
+            // second pass: now compute the condensed indices
+            cvStartReadSeq( weak, &reader );
+            for( i = 0; i < weak->total; i++ )
             {
-                const CvDTreeNode* parent;
+                CV_READ_SEQ_ELEM(wtree, reader);
+                node = wtree->get_root();
                 for(;;)
                 {
-                    CvDTreeSplit* split = node->split;
-                    for( ; split != 0; split = split->next )
+                    const CvDTreeNode* parent;
+                    for(;;)
                     {
-                        split->condensed_idx = inv_map->data.i[split->var_idx];
-                        assert( split->condensed_idx >= 0 );
+                        CvDTreeSplit* split = node->split;
+                        for( ; split != 0; split = split->next )
+                        {
+                            split->condensed_idx = inv_map->data.i[split->var_idx];
+                            assert( split->condensed_idx >= 0 );
+                        }
+
+                        if( !node->left )
+                            break;
+                        node = node->left;
                     }
 
-                    if( !node->left )
+                    for( parent = node->parent; parent && parent->right == node;
+                        node = parent, parent = parent->parent )
+                        ;
+
+                    if( !parent )
                         break;
-                    node = node->left;
+
+                    node = parent->right;
                 }
-
-                for( parent = node->parent; parent && parent->right == node;
-                    node = parent, parent = parent->parent )
-                    ;
-
-                if( !parent )
-                    break;
-
-                node = parent->right;
             }
         }
     }
@@ -1544,7 +1577,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
             "floating-point vector of the same number of components as the length of input slice" );
         wstep = CV_IS_MAT_CONT(weak_responses->type) ? 1 : weak_responses->step/sizeof(float);
     }
-
+    
     var_count = active_vars->cols;
     vtype = data->var_type->data.i;
     cmap = data->cat_map->data.i;
@@ -1734,7 +1767,55 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     return value;
 }
 
+float CvBoost::calc_error( CvMLData* _data, int type )
+{
+    CV_FUNCNAME( "CvBoost::::calc_error" );
 
+    __BEGIN__;
+    float err = 0;
+    const CvMat* values = _data->get_values();
+    const CvMat* response = _data->get_response();
+    const CvMat* missing = _data->get_missing();
+    const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
+    const CvMat* var_types = _data->get_var_types();
+    int* sidx = sample_idx->data.i;
+    int r_step = CV_IS_MAT_CONT(response->type) ?
+                1 : response->step / CV_ELEM_SIZE(response->type);
+    bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
+    if ( is_classifier )
+    {
+        for( int i = 0; i < sample_idx->cols; i++ )
+        {
+            CvMat sample, miss;
+            int si = sidx[i];
+            cvGetRow( values, &sample, si ); 
+            if( missing ) 
+                cvGetRow( missing, &miss, si );             
+            float r = (float)predict( &sample, missing ? &miss : 0 );
+            int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
+            err += d;
+        }
+        err = err / (float)sample_idx->cols * 100;
+    }
+    else
+    {
+        for( int i = 0; i < sample_idx->cols; i++ )
+        {
+            CvMat sample, miss;
+            int si = sidx[i];
+            cvGetRow( data, &sample, sidx[i] ); 
+            if( missing ) 
+                cvGetRow( missing, &miss, si );             
+            float r = (float)predict( &sample, missing ? &miss : 0 );
+            float d = r - response->data.fl[si];
+            err += d*d;
+        }
+        err = err / (float)sample_idx->cols;    
+    }
+    return err;
+
+    __END__;
+}
 
 void CvBoost::write_params( CvFileStorage* fs )
 {

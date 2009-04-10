@@ -496,7 +496,7 @@ cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, bool check_for_
 
 CvMat*
 cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
-                     int var_all, int* response_type )
+                     int var_count, int* response_type )
 {
     CvMat* out_var_type = 0;
     CV_FUNCNAME( "cvPreprocessVarType" );
@@ -507,10 +507,9 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
     __BEGIN__;
 
     int i, tm_size, tm_step;
-    int* map = 0;
+    //int* map = 0;
     const uchar* src;
     uchar* dst;
-    int var_count = var_all;
 
     if( !CV_IS_MAT(var_type) )
         CV_ERROR( var_type ? CV_StsBadArg : CV_StsNullPtr, "Invalid or absent var_type array" );
@@ -538,7 +537,7 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
             CV_ERROR( CV_StsBadArg, "var index array should be continuous 1-dimensional integer vector" );
         if( var_idx->rows + var_idx->cols - 1 > var_count )
             CV_ERROR( CV_StsBadSize, "var index array is too large" );
-        map = var_idx->data.i;
+        //map = var_idx->data.i;
         var_count = var_idx->rows + var_idx->cols - 1;
     }
 
@@ -548,9 +547,9 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
 
     for( i = 0; i < var_count; i++ )
     {
-        int idx = map ? map[i] : i;
-        assert( (unsigned)idx < (unsigned)tm_size );
-        dst[i] = (uchar)(src[idx*tm_step] != 0);
+        //int idx = map ? map[i] : i;
+        assert( (unsigned)/*idx*/i < (unsigned)tm_size );
+        dst[i] = (uchar)(src[/*idx*/i*tm_step] != 0);
     }
 
     __END__;
