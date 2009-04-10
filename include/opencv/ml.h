@@ -184,6 +184,9 @@ CV_INLINE CvParamLattice cvDefaultParamLattice( void )
 #define CV_TYPE_NAME_ML_CNN         "opencv-ml-cnn"
 #define CV_TYPE_NAME_ML_RTREES      "opencv-ml-random-trees"
 
+#define CV_TRAIN_ERROR  0
+#define CV_TEST_ERROR   1
+
 class CV_EXPORTS CvStatModel
 {
 public:
@@ -637,7 +640,9 @@ protected:
 
 /****************************************************************************************\
 *                                      Decision Tree                                     *
-\****************************************************************************************/
+\****************************************************************************************/\
+class CvMLData;
+
 struct CvPair16u32s
 {
     unsigned short* u;
@@ -857,6 +862,10 @@ public:
                         const CvMat* _missing_mask=0,
                         CvDTreeParams params=CvDTreeParams() );
 
+    virtual bool train( CvMLData* _data, CvDTreeParams _params=CvDTreeParams() );
+
+    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
 
     virtual CvDTreeNode* predict( const CvMat* _sample, const CvMat* _missing_data_mask=0,
@@ -994,6 +1003,7 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
+    virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
     virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual float predict_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual void clear();
@@ -1001,7 +1011,10 @@ public:
     virtual const CvMat* get_var_importance();
     virtual float get_proximity( const CvMat* sample1, const CvMat* sample2,
         const CvMat* missing1 = 0, const CvMat* missing2 = 0 ) const;
-    virtual float get_train_error();
+    
+    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+
+    virtual float get_train_error();    
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void write( CvFileStorage* fs, const char* name );
@@ -1071,6 +1084,7 @@ public:
         const CvMat* _responses, const CvMat* _var_idx,
         const CvMat* _sample_idx, const CvMat* _var_type,
         const CvMat* _missing_mask, CvRTParams params );
+    virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
     virtual void clear();
 protected:
     bool grow_forest( const CvTermCriteria term_crit );
@@ -1116,8 +1130,8 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvDTreeParams params=CvDTreeParams() );
-
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
+
     virtual void read( CvFileStorage* fs, CvFileNode* node );
     virtual void read( CvFileStorage* fs, CvFileNode* node,
                        CvDTreeTrainData* data );
@@ -1164,9 +1178,15 @@ public:
              CvBoostParams params=CvBoostParams(),
              bool update=false );
 
+    virtual bool train( CvMLData* data,
+             CvBoostParams params=CvBoostParams(),
+             bool update=false );
+
     virtual float predict( const CvMat* _sample, const CvMat* _missing=0,
                            CvMat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
                            bool raw_mode=false, bool return_sum=false ) const;
+
+    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual void prune( CvSlice slice );
 
@@ -1626,7 +1646,119 @@ CVAPI(void) cvCreateTestSet( int type, CvMat** samples,
                  CvMat** responses,
                  int num_classes, ... );
 
+
 #endif
+
+/****************************************************************************************\
+*                                      Data                                             *
+\****************************************************************************************/
+
+#include <map>
+#include <string>
+#include <iostream>
+using namespace std;
+
+#define CV_COUNT     0
+#define CV_PORTION   1
+
+struct CV_EXPORTS CvTrainTestSplit
+{
+public:
+    CvTrainTestSplit();
+    CvTrainTestSplit( int _train_sample_count, bool _mix = true);
+    CvTrainTestSplit( float _train_sample_portion, bool _mix = true);
+
+    union
+    {
+        int count;
+        float portion;
+    } train_sample_part;
+    int train_sample_part_mode;
+
+    union
+    {
+        int *count;
+        float *portion;
+    } *class_part;
+    int class_part_mode;
+
+    bool mix;    
+};
+
+class CV_EXPORTS CvMLData
+{
+public:
+    CvMLData();
+    ~CvMLData();
+
+    void read_csv(const char* filename);
+
+    const CvMat* get_values(){ return values; };
+
+    const CvMat* get_response();
+
+    const CvMat* get_missing(){ return missing; };
+
+    void set_response_idx( int idx ); // idx < 0 to set all vars as predictors
+    int get_response_idx() { return response_idx; }
+
+    const CvMat* get_train_sample_idx() { return train_sample_idx; };
+    const CvMat* get_test_sample_idx() { return test_sample_idx; };
+    void mix_train_and_test_idx();
+    void set_train_test_split( const CvTrainTestSplit * spl);
+    
+    const CvMat* get_var_idx();
+    void chahge_var_idx( int vi, bool state );
+
+    const CvMat* get_var_types();
+    int get_var_type( int var_idx ) { return var_types->data.ptr[var_idx]; };
+    // following 2 methods enable to change vars type
+    // use these methods to assign CV_VAR_CATEGORICAL type for categorical variable
+    // with numerical labels; in the other cases var types are correctly determined automatically
+    void set_var_types( const char* str );  // str examples:
+                                            // "ord[0-17],cat[18]", "ord[0,2,4,10-12], cat[1,3,5-9,13,14]",
+                                            // "cat", "ord" (all vars are categorical/ordered)
+    void change_var_type( int var_idx, int type); // type in { CV_VAR_ORDERED, CV_VAR_CATEGORICAL }    
+ 
+    void set_delimiter( char ch );
+    char get_delimiter() { return delimiter; };
+
+    void set_miss_ch( char ch );
+    char get_miss_ch() { return miss_ch; };
+    
+protected:
+    virtual void clear();
+
+    void str_to_flt_elem( const char* token, float& flt_elem, int& type);
+    void free_train_test_idx();
+    
+    char delimiter;
+    char miss_ch;
+    //char flt_separator;
+
+    CvMat* values;
+    CvMat* missing;
+    CvMat* var_types;
+    CvMat* var_idx_mask;
+
+    CvMat* response_out; // header
+    CvMat* var_idx_out; // mat
+    CvMat* var_types_out; // mat
+
+    int response_idx;
+
+    int train_sample_count;
+    bool mix;
+   
+    int total_class_count;
+    map<string, int> *class_map;
+
+    CvMat* train_sample_idx;
+    CvMat* test_sample_idx;
+    int* sample_idx; // data of train_sample_idx and test_sample_idx
+
+    CvRNG rng;
+};
 
 #endif /*__ML_H__*/
 /* End of file. */

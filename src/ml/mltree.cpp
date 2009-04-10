@@ -228,7 +228,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     sample_count = sample_all;
     var_count = var_all;
-    is_buf_16u = false;
+    
     if (_train_data->rows + _train_data->cols -1 < 65536) 
         is_buf_16u = true;                                
     
@@ -256,7 +256,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                   "the total number of samples in the training data matrix" );
    
   
-    CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_all, &r_type ));
+    CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_count, &r_type ));
 
     CV_CALL( var_type = cvCreateMat( 1, var_count+2, CV_32SC1 ));
    
@@ -301,7 +301,8 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         CV_CALL( int_ptr = (int**)cvAlloc( sample_count*sizeof(int_ptr[0]) ));
     }    
 
-    size = is_classifier ? cat_var_count+1 : cat_var_count;
+    size = is_classifier ? (cat_var_count+1) : cat_var_count;
+    size = !size ? 1 : size;
     CV_CALL( cat_count = cvCreateMat( 1, size, CV_32SC1 ));
     CV_CALL( cat_ofs = cvCreateMat( 1, size, CV_32SC1 ));
         
@@ -1152,9 +1153,11 @@ int CvDTreeTrainData::get_var_type(int vi) const
 
 int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* indices_buf, const float** ord_values, const int** indices )
 {
+    int vidx = var_idx->data.i[vi];
     int node_sample_count = n->sample_count; 
     int* sample_indices_buf = sample_idx_buf;
     const int* sample_indices = 0;
+    int td_step = train_data->step/CV_ELEM_SIZE(train_data->type);
 
     get_sample_indices(n, sample_indices_buf, &sample_indices);
 
@@ -1169,7 +1172,6 @@ int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_value
         *indices = indices_buf;
     }
     
-    int td_cols = train_data->cols;
     if( tflag == CV_ROW_SAMPLE )
     {
         for( int i = 0; i < node_sample_count && 
@@ -1177,7 +1179,7 @@ int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_value
         {
             int idx = (*indices)[i];
             idx = sample_indices[idx];
-            ord_values_buf[i] = *(train_data->data.fl + idx * td_cols + vi);
+            ord_values_buf[i] = *(train_data->data.fl + idx * td_step + vidx);
         }
     }
     else
@@ -1186,7 +1188,7 @@ int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_value
         {
             int idx = (*indices)[i];
             idx = sample_indices[idx];
-            ord_values_buf[i] = *(train_data->data.fl + vi* td_cols + idx);
+            ord_values_buf[i] = *(train_data->data.fl + vidx* td_step + idx);
         }
     
     *ord_values = ord_values_buf;
@@ -1211,7 +1213,7 @@ void CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, con
     int* indices_buf = sample_idx_buf;
     const int* indices = 0;
 
-    int r_cols = responses->cols;
+    int r_step = responses->step/CV_ELEM_SIZE(responses->type);
 
     get_sample_indices(n, indices_buf, &indices);
 
@@ -1220,7 +1222,7 @@ void CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, con
         (((indices[i] >= 0) && !is_buf_16u) || ((indices[i] != 65535) && is_buf_16u)); i++ )
     {
         int idx = indices[i];
-        values_buf[i] = *(responses->data.fl + idx * r_cols);
+        values_buf[i] = *(responses->data.fl + idx * r_step);
     }
     
     *values = values_buf;    
@@ -1537,13 +1539,35 @@ bool CvDTree::train( const CvMat* _train_data, int _tflag,
     data = new CvDTreeTrainData( _train_data, _tflag, _responses,
                                  _var_idx, _sample_idx, _var_type,
                                  _missing_mask, _params, false );
-    CV_CALL( result = do_train(0));
+    CV_CALL( result = do_train(0) );
 
     __END__;
 
     return result;
 }
 
+bool CvDTree::train( CvMLData* _data, CvDTreeParams _params )
+{
+   bool result = false;
+
+    CV_FUNCNAME( "CvDTree::train" );
+
+    __BEGIN__;
+
+    const CvMat* values = _data->get_values();
+    const CvMat* response = _data->get_response();
+    const CvMat* missing = _data->get_missing();
+    const CvMat* var_types = _data->get_var_types();
+    const CvMat* train_sidx = _data->get_train_sample_idx();
+    const CvMat* var_idx = _data->get_var_idx();
+
+    CV_CALL( result = train( values, CV_ROW_SAMPLE, response, var_idx,
+        train_sidx, var_types, missing, _params ) );
+
+    __END__;
+
+    return result;
+}
 
 bool CvDTree::train( CvDTreeTrainData* _data, const CvMat* _subsample_idx )
 {
@@ -2035,7 +2059,7 @@ void CvDTree::cluster_categories( const int* vectors, int n, int m,
 
 CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
 {
-    CvDTreeSplit* split;
+    CvDTreeSplit* split = 0;
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int m = data->get_num_classes();
@@ -2068,9 +2092,9 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
 
     for( i = 0; i < n; i++ )
     {
-        j = ( (labels[i] == 65535) && (data->is_buf_16u) ) ? -1 : labels[i];
-        k = responses[i];
-        cjk[j*m + k]++;
+       j = ( labels[i] == 65535 && data->is_buf_16u) ? -1 : labels[i];
+       k = responses[i];
+       cjk[j*m + k]++;
     }
 
     if( m > 2 )
@@ -2284,7 +2308,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
     // calculate sum response and weight of each category of the input var
     for( i = 0; i < n; i++ )
     {
-        int idx = labels[i];
+        int idx = ( (labels[i] == 65535) && data->is_buf_16u ) ? -1 : labels[i];
         double s = sum[idx] + responses[i];
         int nc = counts[idx] + 1;
         sum[idx] = s;
@@ -3117,6 +3141,55 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     data->free_node_data(node);    
 }
 
+float CvDTree::calc_error( CvMLData* _data, int type )
+{
+    CV_FUNCNAME( "CvDTree::calc_error" );
+
+    __BEGIN__;
+    float err = 0;
+    const CvMat* values = _data->get_values();
+    const CvMat* response = _data->get_response();
+    const CvMat* missing = _data->get_missing();
+    const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
+    const CvMat* var_types = _data->get_var_types();
+    int* sidx = sample_idx->data.i;
+    int r_step = CV_IS_MAT_CONT(response->type) ?
+                1 : response->step / CV_ELEM_SIZE(response->type);
+    bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
+    if ( is_classifier )
+    {
+        for( int i = 0; i < sample_idx->cols; i++ )
+        {
+            CvMat sample, miss;
+            int si = sidx[i];
+            cvGetRow( values, &sample, si ); 
+            if( missing ) 
+                cvGetRow( missing, &miss, si );             
+            float r = (float)predict( &sample, missing ? &miss : 0 )->value;
+            int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
+            err += d;
+        }
+        err = err / (float)sample_idx->cols * 100;
+    }
+    else
+    {
+        for( int i = 0; i < sample_idx->cols; i++ )
+        {
+            CvMat sample, miss;
+            int si = sidx[i];
+            cvGetRow( data, &sample, sidx[i] ); 
+            if( missing ) 
+                cvGetRow( missing, &miss, si );             
+            float r = (float)predict( &sample, missing ? &miss : 0 )->value;
+            float d = r - response->data.fl[si];
+            err += d*d;
+        }
+        err = err / (float)sample_idx->cols;    
+    }
+    return err;
+
+    __END__;
+}
 
 void CvDTree::prune_cv()
 {
