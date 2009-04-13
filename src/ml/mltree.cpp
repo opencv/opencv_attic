@@ -229,6 +229,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     sample_count = sample_all;
     var_count = var_all;
     
+    is_buf_16u = false;     
     if (_train_data->rows + _train_data->cols -1 < 65536) 
         is_buf_16u = true;                                
     

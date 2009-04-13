@@ -513,11 +513,14 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
             break;
     }
 
-    for ( int vi = 0; vi < var_importance->cols; vi++ )
-            var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
-                var_importance->data.fl[vi] : 0;
-    if( var_importance )
-        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+    if ( is_oob_or_vimportance )
+    {
+        for ( int vi = 0; vi < var_importance->cols; vi++ )
+                var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
+                    var_importance->data.fl[vi] : 0;
+        if( var_importance )
+            cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+    }
 
     result = true;
     
@@ -575,16 +578,18 @@ float CvRTrees::calc_error( CvMLData* _data, int type )
     const CvMat* missing = _data->get_missing();
     const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
     const CvMat* var_types = _data->get_var_types();
-    int* sidx = sample_idx->data.i;
+    int* sidx = sample_idx ? sample_idx->data.i : 0;
     int r_step = CV_IS_MAT_CONT(response->type) ?
                 1 : response->step / CV_ELEM_SIZE(response->type);
     bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
+    int sample_count = sample_idx ? sample_idx->cols : 0;
+    sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : 0;
     if ( is_classifier )
     {
-        for( int i = 0; i < sample_idx->cols; i++ )
+        for( int i = 0; i < sample_count; i++ )
         {
             CvMat sample, miss;
-            int si = sidx[i];
+            int si = sidx ? sidx[i] : i;
             cvGetRow( values, &sample, si ); 
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
@@ -592,14 +597,14 @@ float CvRTrees::calc_error( CvMLData* _data, int type )
             int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
             err += d;
         }
-        err = err / (float)sample_idx->cols * 100;
+        err = sample_count ? err / (float)sample_count * 100 : -FLT_MAX;
     }
     else
     {
-        for( int i = 0; i < sample_idx->cols; i++ )
+        for( int i = 0; i < sample_count; i++ )
         {
             CvMat sample, miss;
-            int si = sidx[i];
+            int si = sidx ? sidx[i] : i;
             cvGetRow( data, &sample, sidx[i] ); 
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
@@ -607,7 +612,7 @@ float CvRTrees::calc_error( CvMLData* _data, int type )
             float d = r - response->data.fl[si];
             err += d*d;
         }
-        err = err / (float)sample_idx->cols;    
+        err = sample_count ? err / (float)sample_count : -FLT_MAX;    
     }
     return err;
 
