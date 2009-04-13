@@ -151,6 +151,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
     sample_count = sample_all;
     var_count = var_all;
+
     is_buf_16u = false;
     if (_train_data->rows + _train_data->cols -1 < 65536) 
         is_buf_16u = true;                                
@@ -1876,12 +1877,14 @@ bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
         if( term_crit.type != CV_TERMCRIT_ITER && oob_error < max_oob_err )
             break;
     }
-
-    for ( int vi = 0; vi < var_importance->cols; vi++ )
-            var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
-                var_importance->data.fl[vi] : 0;
-    if( var_importance )
-        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+    if ( is_oob_or_vimportance )
+    {
+        for ( int vi = 0; vi < var_importance->cols; vi++ )
+                var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
+                    var_importance->data.fl[vi] : 0;
+        if( var_importance )
+            cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+    }
 
     result = true;
     
