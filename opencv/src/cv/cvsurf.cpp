@@ -385,11 +385,12 @@ static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
 CV_IMPL void
 cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
-               CvMemStorage* storage, CvSURFParams params )
+               CvMemStorage* storage, CvSURFParams params,
+			   int useProvidedKeyPts)
 {
     CvMat *sum = 0, *mask1 = 0, *mask_sum = 0, **win_bufs = 0;
 
-    if( _keypoints )
+    if( _keypoints && !useProvidedKeyPts ) // If useProvidedKeyPts!=0 we'll use current contents of "*_keypoints"
         *_keypoints = 0;
     if( _descriptors )
         *_descriptors = 0;
@@ -444,14 +445,25 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
 
     sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
     cvIntegral( img, sum );
-    if( mask )
-    {
-        mask1 = cvCreateMat( img->height, img->width, CV_8UC1 );
-        mask_sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
-        cvMinS( mask, 1, mask1 );
-        cvIntegral( mask1, mask_sum );
-    }
-    keypoints = icvFastHessianDetector( sum, mask_sum, storage, &params );
+	
+	// Compute keypoints only if we are not asked for evaluating the descriptors are some given locations:
+	if (!useProvidedKeyPts)
+	{
+		if( mask )
+		{
+			mask1 = cvCreateMat( img->height, img->width, CV_8UC1 );
+			mask_sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
+			cvMinS( mask, 1, mask1 );
+			cvIntegral( mask1, mask_sum );
+		}
+		keypoints = icvFastHessianDetector( sum, mask_sum, storage, &params );
+	}
+	else
+	{
+		CV_Assert(useProvidedKeyPts && (_keypoints != 0) && (*_keypoints != 0));
+		keypoints = *_keypoints;
+	}
+
     N = keypoints->total;
     if( _descriptors )
     {
@@ -737,14 +749,14 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     for( i = 0; i < nthreads; i++ )
         cvReleaseMat( &win_bufs[i] );
 
-    if( _keypoints )
+    if( _keypoints && !useProvidedKeyPts )
         *_keypoints = keypoints;
     if( _descriptors )
         *_descriptors = descriptors;
 
     cvReleaseMat( &sum );
-    cvReleaseMat( &mask1 );
-    cvReleaseMat( &mask_sum );
+    if (mask1) cvReleaseMat( &mask1 );
+    if (mask_sum) cvReleaseMat( &mask_sum );
     cvFree( &win_bufs );
 }
 

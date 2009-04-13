@@ -1154,9 +1154,12 @@ typedef struct CvSURFParams
 CvSURFParams;
 
 CVAPI(CvSURFParams) cvSURFParams( double hessianThreshold, int extended CV_DEFAULT(0) );
+
+// If useProvidedKeyPts!=0, keypoints are not detected, but descriptors are computed
+//  at the locations provided in keypoints (a CvSeq of CvSURFPoint).
 CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
-                           CvMemStorage* storage, CvSURFParams params );
+                           CvMemStorage* storage, CvSURFParams params, int useProvidedKeyPts CV_DEFAULT(0)  );
 
 typedef struct CvMSERParams
 {
