@@ -3240,7 +3240,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
  ****************************************************************************************/
 CV_IMPL
 void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
-            CvPoint2D32f center, int flags )
+            CvPoint2D32f center, double maxRadius, int flags )
 {
     CvMat* mapx = 0;
     CvMat* mapy = 0;
@@ -3260,8 +3260,10 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
     if( !CV_ARE_TYPES_EQ( src, dst ))
         CV_ERROR( CV_StsUnmatchedFormats, "" );
 
-    ssize = cvGetMatSize(src);
-    dsize = cvGetMatSize(dst);
+	ssize.width = src->cols;
+    ssize.height = src->rows;
+    dsize.width = dst->cols;
+    dsize.height = dst->rows;
 
     CV_CALL( mapx = cvCreateMat( dsize.height, dsize.width, CV_32F ));
     CV_CALL( mapy = cvCreateMat( dsize.height, dsize.width, CV_32F ));
@@ -3279,7 +3281,7 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
 
             for( rho = 0; rho < dsize.width; rho++ )
             {
-                double r = rho;
+                double r = maxRadius*(rho+1)/double(dsize.width-1);
                 double x = r*cp + center.x;
                 double y = r*sp + center.y;
 
@@ -3292,7 +3294,8 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
     {
         int x, y;
         CvMat bufx, bufy, bufp, bufa;
-        double ascale = (ssize.height-1)/(2*CV_PI);
+        const double ascale = (ssize.height-1)/(2*CV_PI);
+        const double pscale = (ssize.width-1)/maxRadius;
 
         CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
 
@@ -3319,7 +3322,7 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
 
             for( x = 0; x < dsize.width; x++ )
             {
-                double rho = bufp.data.fl[x];
+                double rho = bufp.data.fl[x]*pscale;
                 double phi = bufa.data.fl[x]*ascale;
                 mx[x] = (float)rho;
                 my[x] = (float)phi;

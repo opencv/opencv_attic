@@ -310,7 +310,7 @@ CVAPI(void)  cvLogPolar( const CvArr* src, CvArr* dst,
 
 /* Performs forward or inverse linear-polar image transform */
 CVAPI(void)  cvLinearPolar( const CvArr* src, CvArr* dst,
-                         CvPoint2D32f center,
+                         CvPoint2D32f center, double maxRadius,
                          int flags CV_DEFAULT(CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
 
 #define  CV_SHAPE_RECT      0

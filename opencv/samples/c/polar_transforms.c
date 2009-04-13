@@ -55,12 +55,12 @@ int main( int argc, char** argv )
         }
 
         cvLogPolar(frame,log_polar_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1),70, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS);
-        cvLinearPolar(frame,lin_polar_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1), CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS);
+        cvLinearPolar(frame,lin_polar_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1),70, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS);
 
 #if 0
 		cvLogPolar(log_polar_img,recovered_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1),70, CV_WARP_INVERSE_MAP+CV_INTER_LINEAR);
 #else
-        cvLinearPolar(lin_polar_img,recovered_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1), CV_WARP_INVERSE_MAP+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS);
+        cvLinearPolar(lin_polar_img,recovered_img,cvPoint2D32f(frame->width >> 1,frame->height >> 1),70, CV_WARP_INVERSE_MAP+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS);
 #endif
 
         cvShowImage("Log-Polar", log_polar_img );
