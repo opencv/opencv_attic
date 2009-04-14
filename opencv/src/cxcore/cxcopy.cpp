@@ -463,7 +463,28 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
         return;
     }
     cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
-    CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
+    CV_Assert( src.depth() == dst.depth() && src.size() == dst.size() );
+    
+    int coi1 = 0, coi2 = 0;
+    if( CV_IS_IMAGE(srcarr) )
+        coi1 = cvGetImageCOI((const IplImage*)srcarr);
+    if( CV_IS_IMAGE(dstarr) )
+        coi2 = cvGetImageCOI((const IplImage*)dstarr);
+    
+    if( coi1 || coi2 )
+    {
+        CV_Assert( (coi1 != 0 || src.channels() == 1) &&
+            (coi2 != 0 || dst.channels() == 1) );
+        
+        cv::Vector<cv::Mat> svec(1), dvec(1);
+        svec[0] = src; dvec[0] = dst;
+        int pair[] = { std::max(coi1-1, 0), std::max(coi2-1, 0) };
+        cv::mixChannels( svec, dvec, cv::Vector<int>(pair, 2) );
+        return;
+    }
+    else
+        CV_Assert( src.channels() == dst.channels() );
+    
     if( !maskarr )
         src.copyTo(dst);
     else
