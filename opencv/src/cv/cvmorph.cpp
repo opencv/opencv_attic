@@ -506,6 +506,18 @@ struct VMax16u
     __m128i operator()(const __m128i& a, const __m128i& b) const
     { return _mm_adds_epu16(_mm_subs_epu16(a,b),b); }
 };
+struct VMin16s
+{
+    enum { ESZ = 2 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const
+    { return _mm_min_epi16(a, b); }
+};
+struct VMax16s
+{
+    enum { ESZ = 2 };
+    __m128i operator()(const __m128i& a, const __m128i& b) const
+    { return _mm_max_epi16(a, b); }
+};
 struct VMin32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_min_ps(a,b); }};
 struct VMax32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_max_ps(a,b); }};
 
@@ -513,13 +525,17 @@ typedef MorphRowIVec<VMin8u> ErodeRowVec8u;
 typedef MorphRowIVec<VMax8u> DilateRowVec8u;
 typedef MorphRowIVec<VMin16u> ErodeRowVec16u;
 typedef MorphRowIVec<VMax16u> DilateRowVec16u;
+typedef MorphRowIVec<VMin16s> ErodeRowVec16s;
+typedef MorphRowIVec<VMax16s> DilateRowVec16s;
 typedef MorphRowFVec<VMin32f> ErodeRowVec32f;
 typedef MorphRowFVec<VMax32f> DilateRowVec32f;
 
 typedef MorphColumnIVec<VMin8u> ErodeColumnVec8u;
 typedef MorphColumnIVec<VMax8u> DilateColumnVec8u;
 typedef MorphColumnIVec<VMin16u> ErodeColumnVec16u;
-typedef MorphColumnIVec<VMax16u> DilateColumnVec16u;
+typedef MorphColumnIVec<VMax16u> DilateColumnVec16s;
+typedef MorphColumnIVec<VMin16s> ErodeColumnVec16s;
+typedef MorphColumnIVec<VMax16s> DilateColumnVec16u;
 typedef MorphColumnFVec<VMin32f> ErodeColumnVec32f;
 typedef MorphColumnFVec<VMax32f> DilateColumnVec32f;
 
@@ -527,6 +543,8 @@ typedef MorphIVec<VMin8u> ErodeVec8u;
 typedef MorphIVec<VMax8u> DilateVec8u;
 typedef MorphIVec<VMin16u> ErodeVec16u;
 typedef MorphIVec<VMax16u> DilateVec16u;
+typedef MorphIVec<VMin16s> ErodeVec16s;
+typedef MorphIVec<VMax16s> DilateVec16s;
 typedef MorphFVec<VMin32f> ErodeVec32f;
 typedef MorphFVec<VMax32f> DilateVec32f;
 
@@ -553,6 +571,8 @@ typedef MorphRowNoVec ErodeRowVec8u;
 typedef MorphRowNoVec DilateRowVec8u;
 typedef MorphRowNoVec ErodeRowVec16u;
 typedef MorphRowNoVec DilateRowVec16u;
+typedef MorphRowNoVec ErodeRowVec16s;
+typedef MorphRowNoVec DilateRowVec16s;
 typedef MorphRowNoVec ErodeRowVec32f;
 typedef MorphRowNoVec DilateRowVec32f;
 
@@ -560,6 +580,8 @@ typedef MorphColumnNoVec ErodeColumnVec8u;
 typedef MorphColumnNoVec DilateColumnVec8u;
 typedef MorphColumnNoVec ErodeColumnVec16u;
 typedef MorphColumnNoVec DilateColumnVec16u;
+typedef MorphColumnNoVec ErodeColumnVec16s;
+typedef MorphColumnNoVec DilateColumnVec16s;
 typedef MorphColumnNoVec ErodeColumnVec32f;
 typedef MorphColumnNoVec DilateColumnVec32f;
 
@@ -567,6 +589,8 @@ typedef MorphNoVec ErodeVec8u;
 typedef MorphNoVec DilateVec8u;
 typedef MorphNoVec ErodeVec16u;
 typedef MorphNoVec DilateVec16u;
+typedef MorphNoVec ErodeVec16s;
+typedef MorphNoVec DilateVec16s;
 typedef MorphNoVec ErodeVec32f;
 typedef MorphNoVec DilateVec32f;
 
@@ -797,6 +821,9 @@ Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int ancho
         if( depth == CV_16U )
             return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<ushort>,
                 ErodeRowVec16u>(ksize, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<short>,
+                ErodeRowVec16s>(ksize, anchor));
         if( depth == CV_32F )
             return Ptr<BaseRowFilter>(new MorphRowFilter<MinOp<float>,
                 ErodeRowVec32f>(ksize, anchor));
@@ -809,6 +836,9 @@ Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int ancho
         if( depth == CV_16U )
             return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<ushort>,
                 DilateRowVec16u>(ksize, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<short>,
+                DilateRowVec16s>(ksize, anchor));
         if( depth == CV_32F )
             return Ptr<BaseRowFilter>(new MorphRowFilter<MaxOp<float>,
                 DilateRowVec32f>(ksize, anchor));
@@ -832,6 +862,9 @@ Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int
         if( depth == CV_16U )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<ushort>,
                 ErodeColumnVec16u>(ksize, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<short>,
+                ErodeColumnVec16s>(ksize, anchor));
         if( depth == CV_32F )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MinOp<float>,
                 ErodeColumnVec32f>(ksize, anchor));
@@ -843,6 +876,9 @@ Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int
                 DilateColumnVec8u>(ksize, anchor));
         if( depth == CV_16U )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<ushort>,
+                DilateColumnVec16u>(ksize, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<short>,
                 DilateColumnVec16u>(ksize, anchor));
         if( depth == CV_32F )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<float>,
@@ -865,6 +901,8 @@ Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel, Point a
             return Ptr<BaseFilter>(new MorphFilter<MinOp<uchar>, ErodeVec8u>(kernel, anchor));
         if( depth == CV_16U )
             return Ptr<BaseFilter>(new MorphFilter<MinOp<ushort>, ErodeVec16u>(kernel, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseFilter>(new MorphFilter<MinOp<short>, ErodeVec16s>(kernel, anchor));
         if( depth == CV_32F )
             return Ptr<BaseFilter>(new MorphFilter<MinOp<float>, ErodeVec32f>(kernel, anchor));
     }
@@ -874,6 +912,8 @@ Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& kernel, Point a
             return Ptr<BaseFilter>(new MorphFilter<MaxOp<uchar>, DilateVec8u>(kernel, anchor));
         if( depth == CV_16U )
             return Ptr<BaseFilter>(new MorphFilter<MaxOp<ushort>, DilateVec16u>(kernel, anchor));
+        if( depth == CV_16S )
+            return Ptr<BaseFilter>(new MorphFilter<MaxOp<short>, DilateVec16s>(kernel, anchor));
         if( depth == CV_32F )
             return Ptr<BaseFilter>(new MorphFilter<MaxOp<float>, DilateVec32f>(kernel, anchor));
     }
@@ -1141,7 +1181,7 @@ CV_IMPL void
 cvErode( const CvArr* srcarr, CvArr* dstarr, IplConvKernel* element, int iterations )
 {
     cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), kernel;
-    CV_Assert( element && src.size() == dst.size() && src.type() == dst.type() );
+    CV_Assert( src.size() == dst.size() && src.type() == dst.type() );
     cv::Point anchor;
     convertConvKernel( element, kernel, anchor );
     cv::erode( src, dst, kernel, anchor, iterations, cv::BORDER_REPLICATE );
