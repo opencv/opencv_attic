@@ -45,6 +45,8 @@
 namespace cv
 {
 
+//#undef CV_SSE2
+
 template<typename T, int shift> struct FixPtCast
 {
     typedef int type1;
@@ -73,6 +75,8 @@ struct PyrDownVec_32s8u
         int x = 0;
         const int** src = (const int**)_src;
         const int *row0 = src[0], *row1 = src[1], *row2 = src[2], *row3 = src[3], *row4 = src[4];
+        __m128i delta = _mm_set1_epi16(128);
+
         for( ; x <= width - 16; x += 16 )
         {
             __m128i r0, r1, r2, r3, r4, t0, t1;
@@ -104,8 +108,8 @@ struct PyrDownVec_32s8u
             r1 = _mm_add_epi16(_mm_add_epi16(r1, r3), r2);
             r0 = _mm_add_epi16(r0, _mm_add_epi16(r2, r2));
             t1 = _mm_add_epi16(r0, _mm_slli_epi16(r1, 2));
-            t0 = _mm_srli_epi16(t0, 8);
-            t1 = _mm_srli_epi16(t1, 8);
+            t0 = _mm_srli_epi16(_mm_add_epi16(t0, delta), 8);
+            t1 = _mm_srli_epi16(_mm_add_epi16(t1, delta), 8);
             _mm_storeu_si128((__m128i*)(dst + x), _mm_packus_epi16(t0, t1));
         }
 
@@ -121,7 +125,7 @@ struct PyrDownVec_32s8u
             r1 = _mm_add_epi16(_mm_add_epi16(r1, r3), r2);
             r0 = _mm_add_epi16(r0, _mm_add_epi16(r2, r2));
             r0 = _mm_add_epi16(r0, _mm_slli_epi16(r1, 2));
-            r0 = _mm_srli_epi16(r0, 8);
+            r0 = _mm_srli_epi16(_mm_add_epi16(r0, delta), 8);
             *(int*)(dst + x) = _mm_cvtsi128_si32(_mm_packus_epi16(r0, r0));
         }
 
