@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -44,6 +45,9 @@
 
 #include "grfmt_base.h"
 
+namespace cv
+{
+
 enum BmpCompression
 {
     BMP_RGB = 0,
@@ -54,16 +58,18 @@ enum BmpCompression
 
 
 // Windows Bitmap reader
-class GrFmtBmpReader : public GrFmtReader
+class BmpDecoder : public BaseImageDecoder
 {
 public:
     
-    GrFmtBmpReader( const char* filename );
-    ~GrFmtBmpReader();
+    BmpDecoder();
+    ~BmpDecoder();
     
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readData( Mat& img );
+    bool  readHeader();
+    void  close();
+
+    ImageDecoder newDecoder() const;
 
 protected:
     
@@ -76,32 +82,18 @@ protected:
 
 
 // ... writer
-class GrFmtBmpWriter : public GrFmtWriter
+class BmpEncoder : public BaseImageEncoder
 {
 public:
-    
-    GrFmtBmpWriter( const char* filename );
-    ~GrFmtBmpWriter();
-    
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
-protected:
+    BmpEncoder();
+    ~BmpEncoder();
+     
+    bool  write( const String& filename,
+        const Mat& img, const Vector<int>& params );
 
-    WLByteStream  m_strm;
+    ImageEncoder newEncoder() const;
 };
 
-
-// ... and filter factory
-class GrFmtBmp : public GrFmtFilterFactory
-{
-public:
-    
-    GrFmtBmp();
-    ~GrFmtBmp();
-
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
-
-};
+}
 
 #endif/*_GRFMT_BMP_H_*/

@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -43,17 +44,18 @@
 #define _BITSTRM_H_
 
 #include <stdio.h>
-#include <setjmp.h>
 
-#if _MSC_VER >= 1200
-    #pragma warning( disable: 4711 4324 )
-#endif
+namespace cv
+{
 
-#define  RBS_THROW_EOS    -123  /* <end of stream> exception code */
-#define  RBS_THROW_FORB   -124  /* <forrbidden huffman code> exception code */
-#define  RBS_HUFF_FORB    2047  /* forrbidden huffman code "value" */
+enum
+{
+    RBS_THROW_EOS=-123,  // <end of stream> exception code
+    RBS_THROW_FORB=-124,  // <forrbidden huffman code> exception code
+    RBS_HUFF_FORB=2047,  // forrbidden huffman code "value"
+    RBS_BAD_HEADER=-125, // invalid header
+};
 
-typedef unsigned char uchar;
 typedef unsigned long ulong;
 
 // class RBaseStream - base class for other reading streams.
@@ -64,31 +66,28 @@ public:
     RBaseStream();
     virtual ~RBaseStream();
     
-    virtual bool  Open( const char* filename );
-    virtual void  Close();
-    void          SetBlockSize( int block_size, int unGetsize = 4 );
-    bool          IsOpened();
-    void          SetPos( int pos );
-    int           GetPos();
-    void          Skip( int bytes );
-    jmp_buf&      JmpBuf();
+    virtual bool  open( const String& filename );
+    virtual void  close();
+    void          setBlockSize( int block_size, int unGetsize = 4 );
+    bool          isOpened();
+    void          setPos( int pos );
+    int           getPos();
+    void          skip( int bytes );
     
 protected:
     
-    jmp_buf m_jmp_buf;
     uchar*  m_start;
     uchar*  m_end;
     uchar*  m_current;
     FILE*   m_file;
-    int     m_unGetsize;
+    int     m_ungetsize;
     int     m_block_size;
     int     m_block_pos;
-    bool    m_jmp_set;
     bool    m_is_opened;
 
-    virtual void  ReadBlock();
-    virtual void  Release();
-    virtual void  Allocate();
+    virtual void  readBlock();
+    virtual void  release();
+    virtual void  allocate();
 };
 
 
@@ -99,10 +98,10 @@ class RLByteStream : public RBaseStream
 public:
     virtual ~RLByteStream();
     
-    int     GetByte();
-    void    GetBytes( void* buffer, int count, int* readed = 0 );
-    int     GetWord();
-    int     GetDWord(); 
+    int     getByte();
+    void    getBytes( void* buffer, int count, int* readed = 0 );
+    int     getWord();
+    int     getDWord(); 
 };
 
 // class RMBitStream - uchar-oriented stream.
@@ -112,49 +111,9 @@ class RMByteStream : public RLByteStream
 public:
     virtual ~RMByteStream();
 
-    int     GetWord();
-    int     GetDWord(); 
+    int     getWord();
+    int     getDWord(); 
 };
-
-// class RLBitStream - bit-oriented stream.
-// l in prefix means that the least significant bit of a multi-bit value goes first
-class RLBitStream : public RBaseStream
-{
-public:
-    virtual ~RLBitStream();
-    
-    void    SetPos( int pos );
-    int     GetPos();
-    int     Get( int bits );
-    int     Show( int bits );
-    int     GetHuff( const short* table );
-    void    Move( int shift );
-    void    Skip( int bytes );
-        
-protected:
-    int     m_bit_idx;
-    virtual void  ReadBlock();
-};
-
-// class RMBitStream - bit-oriented stream.
-// m in prefix means that the most significant bit of a multi-bit value goes first
-class RMBitStream : public RLBitStream
-{
-public:
-    virtual ~RMBitStream();
-    
-    void    SetPos( int pos );
-    int     GetPos();
-    int     Get( int bits );
-    int     Show( int bits );
-    int     GetHuff( const short* table );
-    void    Move( int shift );
-    void    Skip( int bytes );
-
-protected:
-    virtual void  ReadBlock();
-};
-
 
 // WBaseStream - base class for output streams
 class WBaseStream
@@ -164,11 +123,11 @@ public:
     WBaseStream();
     virtual ~WBaseStream();
     
-    virtual bool  Open( const char* filename );
-    virtual void  Close();
-    void          SetBlockSize( int block_size );
-    bool          IsOpened();
-    int           GetPos();
+    virtual bool  open( const String& filename );
+    virtual void  close();
+    void          setBlockSize( int block_size );
+    bool          isOpened();
+    int           getPos();
     
 protected:
     
@@ -180,9 +139,9 @@ protected:
     FILE*   m_file;
     bool    m_is_opened;
     
-    virtual void  WriteBlock();
-    virtual void  Release();
-    virtual void  Allocate();
+    virtual void  writeBlock();
+    virtual void  release();
+    virtual void  allocate();
 };
 
 
@@ -193,10 +152,10 @@ class WLByteStream : public WBaseStream
 public:
     virtual ~WLByteStream();
 
-    void    PutByte( int val );
-    void    PutBytes( const void* buffer, int count );
-    void    PutWord( int val );
-    void    PutDWord( int val ); 
+    void  putByte( int val );
+    void  putBytes( const void* buffer, int count );
+    void  putWord( int val );
+    void  putDWord( int val ); 
 };
 
 
@@ -206,67 +165,18 @@ class WMByteStream : public WLByteStream
 {
 public:
     virtual ~WMByteStream();
-
-    void    PutWord( int val );
-    void    PutDWord( int val ); 
+    void  putWord( int val );
+    void  putDWord( int val ); 
 };
 
-
-// class WLBitStream - bit-oriented stream.
-// l in prefix means that the least significant bit of a multi-bit value goes first
-class WLBitStream : public WBaseStream
+inline unsigned BSWAP(unsigned v)
 {
-public:
-    virtual ~WLBitStream();
-    
-    int     GetPos();
-    void    Put( int val, int bits );
-    void    PutHuff( int val, const int* table );
-        
-protected:
-    int     m_bit_idx;
-    int     m_val;
-    virtual void  WriteBlock();
-};
-
-
-// class WMBitStream - bit-oriented stream.
-// l in prefix means that the least significant bit of a multi-bit value goes first
-class WMBitStream : public WBaseStream
-{
-public:
-    WMBitStream();
-    virtual ~WMBitStream();
-    
-    bool    Open( const char* filename );
-    void    Close();
-    virtual void  Flush();
-
-    int     GetPos();
-    void    Put( int val, int bits );
-    void    PutHuff( int val, const ulong* table );
-        
-protected:
-    int     m_bit_idx;
-    ulong   m_pad_val;
-    ulong   m_val;
-    virtual void  WriteBlock();
-    void    ResetBuffer();
-};
-
-
-
-#define BSWAP(v)    (((v)<<24)|(((v)&0xff00)<<8)| \
-                    (((v)>>8)&0xff00)|((unsigned)(v)>>24))
-
-int* bsCreateSourceHuffmanTable( const uchar* src, int* dst, 
-                                 int max_bits, int first_bits );
-bool bsCreateDecodeHuffmanTable( const int* src, short* dst, int max_size );
-bool bsCreateEncodeHuffmanTable( const int* src, ulong* dst, int max_size );
+    return (v<<24)|((v&0xff00)<<8)|((v>>8)&0xff00)|((unsigned)v>>24);
+}
 
 void bsBSwapBlock( uchar *start, uchar *end );
 bool bsIsBigEndian( void );
 
-extern const ulong bs_bit_mask[];
+}
 
 #endif/*_BITSTRM_H_*/

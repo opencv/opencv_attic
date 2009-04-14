@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -57,54 +58,32 @@
 #endif
 #include "grfmt_png.h"
 
-// PNG Filter Factory
-GrFmtPng::GrFmtPng()
+namespace cv
 {
-    m_sign_len = 8;
+
+/////////////////////// PngDecoder ///////////////////
+
+PngDecoder::PngDecoder()
+{
     m_signature = "\x89\x50\x4e\x47\xd\xa\x1a\xa";
-    m_description = "Portable Network Graphics files (*.png)";
-}
-
-
-GrFmtPng::~GrFmtPng()
-{
-}
-
-
-GrFmtReader* GrFmtPng::NewReader( const char* filename )
-{
-    return new GrFmtPngReader( filename );
-}
-
-
-GrFmtWriter* GrFmtPng::NewWriter( const char* filename )
-{
-    return new GrFmtPngWriter( filename );
-}
-
-
-bool  GrFmtPng::CheckSignature( const char* signature )
-{
-    return png_check_sig( (uchar*)signature, m_sign_len ) != 0;
-}
-
-/////////////////////// GrFmtPngReader ///////////////////
-
-GrFmtPngReader::GrFmtPngReader( const char* filename ) : GrFmtReader( filename )
-{
-    m_color_type = m_bit_depth = 0;
+    m_color_type = 0;
     m_png_ptr = 0;
     m_info_ptr = m_end_info = 0;
     m_f = 0;
 }
 
 
-GrFmtPngReader::~GrFmtPngReader()
+PngDecoder::~PngDecoder()
 {
+    close();
 }
 
+ImageDecoder PngDecoder::newDecoder() const
+{
+    return new PngDecoder;
+}
 
-void  GrFmtPngReader::Close()
+void  PngDecoder::close()
 {
     if( m_f )
     {
@@ -120,15 +99,13 @@ void  GrFmtPngReader::Close()
         png_destroy_read_struct( &png_ptr, &info_ptr, &end_info );
         m_png_ptr = m_info_ptr = m_end_info = 0;
     }
-    GrFmtReader::Close();
 }
 
 
-bool  GrFmtPngReader::ReadHeader()
+bool  PngDecoder::readHeader()
 {
     bool result = false;
-
-    Close();
+    close();
 
     png_structp png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, 0, 0, 0 );
 
@@ -145,7 +122,7 @@ bool  GrFmtPngReader::ReadHeader()
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                m_f = fopen( m_filename, "rb" );
+                m_f = fopen( m_filename.c_str(), "rb" );
                 if( m_f )
                 {
                     png_uint_32 width, height;
@@ -157,34 +134,40 @@ bool  GrFmtPngReader::ReadHeader()
                     png_get_IHDR( png_ptr, info_ptr, &width, &height,
                                   &bit_depth, &color_type, 0, 0, 0 );
 
-                    m_iscolor = color_type == PNG_COLOR_TYPE_RGB ||
-                                color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
-                                color_type == PNG_COLOR_TYPE_PALETTE;
-
                     m_width = (int)width;
                     m_height = (int)height;
                     m_color_type = color_type;
                     m_bit_depth = bit_depth;
 
-                    result = true;
+                    if( bit_depth <= 8 || bit_depth == 16 )
+                    {
+                        m_type = color_type == PNG_COLOR_TYPE_RGB ||
+                             color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
+                             color_type == PNG_COLOR_TYPE_PALETTE ? CV_8UC3 : CV_8UC1;
+                        if( bit_depth == 16 )
+                            m_type = CV_MAKETYPE(CV_16U, CV_MAT_CN(m_type));
+                        result = true;
+                    }
                 }
             }
         }
     }
 
     if( !result )
-        Close();
+        close();
 
     return result;
 }
 
 
-bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
+bool  PngDecoder::readData( Mat& img )
 {
     bool result = false;
-    uchar** buffer = 0;
-
-    color = color > 0 || ( m_iscolor && color < 0 );
+    AutoBuffer<uchar*> _buffer(m_height);
+    uchar** buffer = _buffer;
+    int color = img.channels() > 1;
+    uchar* data = img.data;
+    int step = img.step;
 
     if( m_png_ptr && m_info_ptr && m_end_info && m_width && m_height )
     {
@@ -196,7 +179,7 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
         {
             int y;
 
-            if( m_bit_depth > 8 && !m_native_depth )
+            if( img.depth() == CV_8U && m_bit_depth == 16 )
                 png_set_strip_16( png_ptr );
             else if( !isBigEndian() )
                 png_set_swap( png_ptr );
@@ -217,7 +200,7 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
             if( m_color_type == PNG_COLOR_TYPE_GRAY && m_bit_depth < 8 )
                 png_set_gray_1_2_4_to_8( png_ptr );
 
-            if( m_iscolor && color )
+            if( CV_MAT_CN(m_type) > 1 && color )
                 png_set_bgr( png_ptr ); // convert RGB to BGR
             else if( color )
                 png_set_gray_to_rgb( png_ptr ); // Gray->RGB
@@ -225,8 +208,6 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
                 png_set_rgb_to_gray( png_ptr, 1, -1, -1 ); // RGB->Gray
 
             png_read_update_info( png_ptr, info_ptr );
-
-            buffer = new uchar*[m_height];
 
             for( y = 0; y < m_height; y++ )
                 buffer[y] = data + y*step;
@@ -238,42 +219,57 @@ bool  GrFmtPngReader::ReadData( uchar* data, int step, int color )
         }
     }
 
-    Close();
-    delete[] buffer;
-
+    close();
     return result;
 }
 
 
-/////////////////////// GrFmtPngWriter ///////////////////
+/////////////////////// PngEncoder ///////////////////
 
 
-GrFmtPngWriter::GrFmtPngWriter( const char* filename ) : GrFmtWriter( filename )
+PngEncoder::PngEncoder()
+{
+    m_description = "Portable Network Graphics files (*.png)";
+}
+
+
+PngEncoder::~PngEncoder()
 {
 }
 
 
-GrFmtPngWriter::~GrFmtPngWriter()
+bool  PngEncoder::isFormatSupported( int depth )
 {
+    return depth == CV_8U || depth == CV_16U;
 }
 
-
-bool  GrFmtPngWriter::IsFormatSupported( int depth )
+ImageEncoder PngEncoder::newEncoder() const
 {
-    return depth == IPL_DEPTH_8U || depth == IPL_DEPTH_16U;
+    return new PngEncoder;
 }
 
-bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int depth, int channels )
+bool  PngEncoder::write( const String& filename,
+                         const Mat& img, const Vector<int>& params )
 {
+    int compression_level = MAX_MEM_LEVEL;
+
+    for( size_t i = 0; i < params.size(); i += 2 )
+    {
+        if( params[i] == CV_IMWRITE_PNG_COMPRESSION )
+        {
+            compression_level = params[i+1];
+            compression_level = MIN(MAX(compression_level, 0), MAX_MEM_LEVEL);
+        }
+    }
+
     png_structp png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, 0, 0, 0 );
     png_infop info_ptr = 0;
     FILE* f = 0;
-    uchar** buffer = 0;
-    int y;
+    int y, width = img.cols, height = img.rows;
+    int depth = img.depth(), channels = img.channels();
     bool result = false;
 
-    if( depth != IPL_DEPTH_8U && depth != IPL_DEPTH_16U )
+    if( depth != CV_8U && depth != CV_16U )
         return false;
 
     if( png_ptr )
@@ -284,15 +280,15 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                f = fopen( m_filename, "wb" );
+                f = fopen( filename.c_str(), "wb" );
 
                 if( f )
                 {
                     png_init_io( png_ptr, f );
 
-                    png_set_compression_mem_level( png_ptr, MAX_MEM_LEVEL );
+                    png_set_compression_mem_level( png_ptr, compression_level );
 
-                    png_set_IHDR( png_ptr, info_ptr, width, height, depth,
+                    png_set_IHDR( png_ptr, info_ptr, width, height, depth == CV_8U ? 8 : 16,
                         channels == 1 ? PNG_COLOR_TYPE_GRAY :
                         channels == 3 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGBA,
                         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
@@ -304,14 +300,12 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
                     if( !isBigEndian() )
                         png_set_swap( png_ptr );
 
-                    buffer = new uchar*[height];
+                    AutoBuffer<uchar*> buffer(height);
                     for( y = 0; y < height; y++ )
-                        buffer[y] = (uchar*)(data + y*step);
+                        buffer[y] = img.data + y*img.step;
 
                     png_write_image( png_ptr, buffer );
                     png_write_end( png_ptr, info_ptr );
-
-                    delete[] buffer;
 
                     result = true;
                 }
@@ -320,10 +314,11 @@ bool  GrFmtPngWriter::WriteImage( const uchar* data, int step,
     }
 
     png_destroy_write_struct( &png_ptr, &info_ptr );
-
     if(f) fclose( f );
 
     return result;
+}
+
 }
 
 #endif

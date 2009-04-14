@@ -45,293 +45,289 @@
 
 #include "_highgui.h"
 #include "grfmts.h"
+#undef min
+#undef max
 
-#if 0
 /****************************************************************************************\
-*                              Path class (list of search folders)                       *
+*                                      Image Codecs                                      *
 \****************************************************************************************/
 
-class  CvFilePath
+namespace cv
 {
-public:
-    CvFilePath();
-    ~CvFilePath();
 
-    // preprocess folder or file name - calculate its length,
-    // check for invalid symbols in the name and substitute
-    // all backslashes with simple slashes.
-    // the result is put into the specified buffer
-    static int Preprocess( const char* filename, char* buffer );
+static Vector<ImageDecoder> decoders;
+static Vector<ImageEncoder> encoders;
 
-    // add folder to the path
-    bool Add( const char* path );
-
-    // clear the path
-    void Clear();
-
-    // return the path - string, where folders are separated by ';'
-    const char* Get() const { return m_path; };
-
-    // find the file in the path
-    const char* Find( const char* filename, char* buffer ) const;
-
-    // return the first folder from the path
-    // the returned string is not terminated by '\0'!!!
-    // its length is returned via len parameter
-    const char* First( int& len ) const;
-
-    // return the folder, next in the path after the specified folder.
-    // see also note to First() method
-    const char* Next( const char* folder, int& len ) const;
-
-protected:
-
-    char* m_path;
-    int m_maxsize;
-    int m_len;
-};
-
-
-void CvFilePath::Clear()
+ImageDecoder findDecoder( const String& filename )
 {
-    delete[] m_path;
-    m_maxsize = m_len = 0;
-}
-
-
-CvFilePath::CvFilePath()
-{
-    m_path = 0;
-    m_maxsize = m_len = 0;
-}
-
-
-CvFilePath::~CvFilePath()
-{
-    Clear();
-}
-
-
-bool  CvFilePath::Add( const char* path )
-{
-    char buffer[_MAX_PATH + 1];
-    int len = Preprocess( path, buffer );
-
-    if( len < 0 )
-        return false;
-
-    if( m_len + len + 3 // +1 for one more ';',
-                        // another +1 for possible additional '/',
-                        // and the last +1 is for '\0'
-                      > m_maxsize )
+    size_t i, maxlen = 0;
+    for( i = 0; i < decoders.size(); i++ )
     {
-        int new_size = (m_len + len + 3 + 1023) & -1024;
-        char* new_path = new char[new_size];
-
-        if( m_path )
-        {
-            memcpy( new_path, m_path, m_len );
-            delete[] m_path;
-        }
-
-        m_path = new_path;
-        m_maxsize = new_size;
+        size_t len = decoders[i]->signatureLength();
+        maxlen = std::max(maxlen, len);
     }
 
-    m_path[m_len++] = ';';
-    memcpy( m_path + m_len, buffer, len );
-    m_len += len;
+    FILE* f = fopen( filename.c_str(), "rb" );
+    if( !f )
+        return ImageDecoder();
+    String signature(maxlen, ' ');
+    maxlen = fread( &signature[0], 1, maxlen, f );
+    fclose(f);
+    signature = signature.substr(0, maxlen);
 
-    if( m_path[m_len] != '/' )
-        m_path[m_len++] = '/';
-
-    m_path[m_len] = '\0'; // '\0' is not counted in m_len.
-
-    return true;
-}
-
-
-const char* CvFilePath::First( int& len ) const
-{
-    const char* path = (const char*)(m_path ? m_path : "");
-    const char* path_end = path;
-
-    while( *path_end && *path_end != ';' )
-        path_end++;
-
-    len = path_end - path;
-    return path;
-}
-
-
-const char* CvFilePath::Next( const char* folder, int& len ) const
-{
-    if( !folder || folder < m_path || folder >= m_path + m_len )
-        return 0;
-
-    folder = strchr( folder, ';' );
-    if( folder )
+    for( i = 0; i < decoders.size(); i++ )
     {
-        const char* folder_end = ++folder;
-        while( *folder_end && *folder_end != ';' )
-            folder_end++;
-
-        len = folder_end - folder;
+        if( decoders[i]->checkSignature(signature) )
+            return decoders[i]->newDecoder();
     }
 
-    return folder;
+    return ImageDecoder();
 }
 
-
-const char* CvFilePath::Find( const char* filename, char* buffer ) const
+ImageDecoder findDecoder( const Vector<uchar>& buf )
 {
-    char path0[_MAX_PATH + 1];
-    int len = Preprocess( filename, path0 );
-    int folder_len = 0;
-    const char* folder = First( folder_len );
-    char* name_only = 0;
-    char* name = path0;
-    FILE* f = 0;
-
-    if( len < 0 )
-        return 0;
-
-    do
+    size_t i, maxlen = 0;
+    for( i = 0; i < decoders.size(); i++ )
     {
-        if( folder_len + len <= _MAX_PATH )
-        {
-            memcpy( buffer, folder, folder_len );
-            strcpy( buffer + folder_len, name );
+        size_t len = decoders[i]->signatureLength();
+        maxlen = std::max(maxlen, len);
+    }
 
-            f = fopen( buffer, "rb" );
-            if( f )
+    maxlen = std::min(maxlen, buf.size());
+    String signature(maxlen, ' ');
+    memcpy( &signature[0], &buf[0], maxlen );
+
+    for( i = 0; i < decoders.size(); i++ )
+    {
+        if( decoders[i]->checkSignature(signature) )
+            return decoders[i]->newDecoder();
+    }
+
+    return ImageDecoder();
+}
+
+ImageEncoder findEncoder( const String& _ext )
+{
+    if( _ext.size() <= 1 )
+        return ImageEncoder();
+
+    const char* ext = strrchr( _ext.c_str(), '.' );
+    if( !ext )
+        return ImageEncoder();
+    int len = 0;
+    for( ext++; isalnum(ext[len]) && len < _MAX_PATH; len++ )
+        ;
+
+    for( size_t i = 0; i < encoders.size(); i++ )
+    {
+        String description = encoders[i]->getDescription();
+        const char* descr = strchr( description.c_str(), '(' );
+
+        while( descr )
+        {
+            descr = strchr( descr + 1, '.' );
+            if( !descr )
                 break;
-        }
-
-        if( name != name_only )
-        {
-            name_only = strrchr( path0, '/' );
-            if( !name_only )
-                name_only = path0;
-            else
-                name_only++;
-            len = strlen( name_only );
-            name = name_only;
+            int j = 0;
+            for( descr++; isalnum(descr[j]) && j < len; j++ )
+            {
+                int c1 = tolower(ext[j]);
+                int c2 = tolower(descr[j]);
+                if( c1 != c2 )
+                    break;
+            }
+            if( j == len )
+                return encoders[i]->newEncoder();
+            descr += j;
         }
     }
-    while( (folder = Next( folder, folder_len )) != 0 );
 
-    filename = 0;
-
-    if( f )
-    {
-        filename = (const char*)buffer;
-        fclose(f);
-    }
-
-    return filename;
+    return ImageEncoder();
 }
 
-
-int CvFilePath::Preprocess( const char* str, char* buffer )
+struct ImageCodecInitializer
 {
-    int i;
-
-    if( !str || !buffer )
-        return -1;
-
-    for( i = 0; i <= _MAX_PATH; i++ )
+    ImageCodecInitializer()
     {
-        buffer[i] = str[i];
-
-        if( isalnum(str[i])) // fast check to skip most of characters
-            continue;
-
-        if( str[i] == '\0' )
-            break;
-
-        if( str[i] == '\\' ) // convert back slashes to simple slashes
-                             // (for Win32-*NIX compatibility)
-            buffer[i] = '/';
-
-        if (str[i] == '*' || str[i] == '?' || str[i] == '\"' ||
-            str[i] == '>' || str[i] == '<' ||
-            str[i] == ';' || /* used as a separator in the path */
-        #ifndef WIN32
-            str[i] == ',' || str[i] == '%' ||
-        #endif
-            str[i] == '|')
-            return -1;
+        decoders.push_back( new BmpDecoder );
+        encoders.push_back( new BmpEncoder );
+    #ifdef HAVE_JPEG
+        decoders.push_back( new JpegDecoder );
+        encoders.push_back( new JpegEncoder );
+    #endif
+        decoders.push_back( new SunRasterDecoder );
+        encoders.push_back( new SunRasterEncoder );
+        decoders.push_back( new PxMDecoder );
+        encoders.push_back( new PxMEncoder );
+    #ifdef HAVE_TIFF
+        decoders.push_back( new TiffDecoder );
+    #endif
+        encoders.push_back( new PxMEncoder );
+    #ifdef HAVE_PNG
+        decoders.push_back( new PngDecoder );
+        encoders.push_back( new PngEncoder );
+    #endif
+    #ifdef HAVE_JASPER
+        decoders.push_back( new Jpeg2KDecoder );
+        encoders.push_back( new Jpeg2KEncoder );
+    #endif
+    #ifdef HAVE_ILMIMF
+        decoders.push_back( new ExrDecoder );
+        encoders.push_back( new ExrEncoder );
+    #endif
+    // because it is a generic image I/O API, supporting many formats,
+    // it should be last in the list.
+    #ifdef HAVE_IMAGEIO
+        decoders.push_back( new ImageIODecoder );
+        encoders.push_back( new ImageIOEncoder );
+    #endif
     }
-
-    return i <= _MAX_PATH ? i : -1;
-}
-#endif
-
-/****************************************************************************************\
-*                              Image Readers & Writers Class                             *
-\****************************************************************************************/
-
-class  CvImageFilters
-{
-public:
-
-    CvImageFilters();
-    ~CvImageFilters();
-
-    GrFmtReader* FindReader( const char* filename ) const;
-    GrFmtWriter* FindWriter( const char* filename ) const;
-
-    //const CvFilePath& Path() const { return (const CvFilePath&)m_path; };
-    //CvFilePath& Path() { return m_path; };
-
-protected:
-
-    GrFmtFactoriesList*  m_factories;
 };
 
+static ImageCodecInitializer initialize_codecs;
 
-CvImageFilters::CvImageFilters()
+
+enum { LOAD_CVMAT=0, LOAD_IMAGE=1, LOAD_MAT=2 };
+
+static void*
+imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
 {
-    m_factories = new GrFmtFactoriesList;
+    IplImage* image = 0;
+    CvMat *matrix = 0;
+    Mat temp, *data = &temp;
 
-    m_factories->AddFactory( new GrFmtBmp() );
-#ifdef HAVE_JPEG
-    m_factories->AddFactory( new GrFmtJpeg() );
-#endif
-    m_factories->AddFactory( new GrFmtSunRaster() );
-    m_factories->AddFactory( new GrFmtPxM() );
-    m_factories->AddFactory( new GrFmtTiff() );
-#ifdef HAVE_PNG
-    m_factories->AddFactory( new GrFmtPng() );
-#endif
-#ifdef HAVE_JASPER
-    m_factories->AddFactory( new GrFmtJpeg2000() );
-#endif
-#ifdef HAVE_ILMIMF
-    m_factories->AddFactory( new GrFmtExr() );
-#endif
-#ifdef HAVE_IMAGEIO
-    m_factories->AddFactory( new GrFmtImageIO() );
-#endif
+    ImageDecoder decoder = findDecoder(filename);
+    if( !decoder.obj )
+        return 0;
+    decoder->setSource(filename);
+    if( !decoder->readHeader() )
+        return 0;
+
+    CvSize size;
+    size.width = decoder->width();
+    size.height = decoder->height();
+
+    int type = decoder->type();
+    if( flags != -1 )
+    {
+        if( (flags & CV_LOAD_IMAGE_ANYDEPTH) == 0 )
+            type = CV_MAKETYPE(CV_8U, CV_MAT_CN(type));
+        
+        if( (flags & CV_LOAD_IMAGE_COLOR) != 0 ||
+           ((flags & CV_LOAD_IMAGE_ANYCOLOR) != 0 && CV_MAT_CN(type) > 1) )
+            type = CV_MAKETYPE(CV_MAT_DEPTH(type), 3);
+        else
+            type = CV_MAKETYPE(CV_MAT_DEPTH(type), 1);
+    }
+
+    if( hdrtype == LOAD_CVMAT || hdrtype == LOAD_MAT )
+    {
+        if( hdrtype == LOAD_CVMAT )
+        {
+            matrix = cvCreateMat( size.height, size.width, type );
+            temp = cvarrToMat(matrix);
+        }
+        else
+        {
+            mat->create( size.height, size.width, type );
+            data = mat;
+        }
+    }
+    else
+    {
+        image = cvCreateImage( size, cvCvToIplDepth(type), CV_MAT_CN(type) );
+        temp = cvarrToMat(image);
+    }
+
+    if( !decoder->readData( *data ))
+    {
+        cvReleaseImage( &image );
+        cvReleaseMat( &matrix );
+        if( mat )
+            mat->release();
+        return 0;
+    }
+
+    return hdrtype == LOAD_CVMAT ? (void*)matrix :
+        hdrtype == LOAD_IMAGE ? (void*)image : (void*)mat;
+}
+
+Mat imread( const String& filename, int flags )
+{
+    Mat img;
+    imread_( filename, flags, LOAD_MAT, &img );
+    return img;
 }
 
 
-CvImageFilters::~CvImageFilters()
+static bool imwrite_( const String& filename, const Mat& image,
+                      const Vector<int>& params, bool flipv )
 {
-    delete m_factories;
+    Mat temp;
+    const Mat* pimage = &image;
+
+    CV_Assert( image.channels() == 1 || image.channels() == 3 || image.channels() == 4 );
+
+    ImageEncoder encoder = findEncoder( filename );
+    if( !encoder.obj )
+        CV_Error( CV_StsError, "could not find a writer for the specified extension" );
+
+    if( !encoder->isFormatSupported(image.depth()) )
+    {
+        CV_Assert( encoder->isFormatSupported(CV_8U) );
+        image.convertTo( temp, CV_8U );
+        pimage = &temp;
+    }
+
+    if( flipv )
+    {
+        flip(*pimage, temp, 0);
+        pimage = &temp;
+    }
+
+    bool code = encoder->write( filename, *pimage, params );
+
+    CV_Assert( code );
+    return code;
 }
 
-
-GrFmtReader* CvImageFilters::FindReader( const char* filename ) const
+bool imwrite( const String& filename, const Mat& img,
+              const Vector<int>& params )
 {
-    return m_factories->FindReader( filename );
+    return imwrite_(filename, img, params, false);
 }
 
-
-GrFmtWriter* CvImageFilters::FindWriter( const char* filename ) const
+bool imdecode( const Vector<uchar>&, Mat&, int )
 {
-    return m_factories->FindWriter( filename );
+    return false;
+}
+
+bool imencode( const Mat& image, const String& ext,
+               Vector<uchar>& data, const Vector<int>& params )
+{
+    Mat temp;
+    const Mat* pimage = &image;
+
+    int channels = image.channels();
+    CV_Assert( channels == 1 || channels == 3 || channels == 4 );
+
+    ImageEncoder encoder = findEncoder( ext );
+    if( !encoder.obj )
+        CV_Error( CV_StsError, "could not find a writer for the specified extension" );
+
+    if( !encoder->isFormatSupported(image.depth()) )
+    {
+        CV_Assert( encoder->isFormatSupported(CV_8U) );
+        image.convertTo(temp, CV_8U);
+        pimage = &temp;
+    }
+
+    bool code = encoder->encode( *pimage, data, params );
+
+    CV_Assert( code );
+    return code;
+}
+
 }
 
 /****************************************************************************************\
@@ -345,213 +341,46 @@ static int icvSetCXCOREBindings(void)
 
 int cxcore_bindings_initialized = icvSetCXCOREBindings();
 
-// global image I/O filters
-static CvImageFilters  g_Filters;
-
-#if 0
-CV_IMPL void
-cvAddSearchPath( const char* path )
-{
-    CV_FUNCNAME( "cvAddSearchPath" );
-
-    __BEGIN__;
-
-    if( !path || strlen(path) == 0 )
-        CV_ERROR( CV_StsNullPtr, "Null path" );
-
-    g_Filters.AddPath( path );
-
-    __END__;
-}
-#endif
-
 CV_IMPL int
 cvHaveImageReader( const char* filename )
 {
-    GrFmtReader* reader = g_Filters.FindReader( filename );
-    if( reader ) {
-        delete reader;
-        return 1;
-    }
-    return 0;
+    cv::ImageDecoder decoder = cv::findDecoder(filename);
+    return decoder.obj != 0;
 }
 
 CV_IMPL int cvHaveImageWriter( const char* filename )
 {
-    GrFmtWriter* writer = g_Filters.FindWriter( filename );
-    if( writer ) {
-        delete writer;
-        return 1;
-    }
-    return 0;
+    cv::ImageEncoder encoder = cv::findEncoder(filename);
+    return encoder.obj != 0;
 }
 
-static void*
-icvLoadImage( const char* filename, int flags, bool load_as_matrix )
-{
-    GrFmtReader* reader = 0;
-    IplImage* image = 0;
-    CvMat hdr, *matrix = 0;
-    int depth = 8;
-
-    CV_FUNCNAME( "cvLoadImage" );
-
-    __BEGIN__;
-
-    CvSize size;
-    int iscolor;
-    int cn;
-
-    if( !filename || strlen(filename) == 0 )
-        CV_ERROR( CV_StsNullPtr, "null filename" );
-
-    reader = g_Filters.FindReader( filename );
-    if( !reader )
-        EXIT;
-
-    if( !reader->ReadHeader() )
-        EXIT;
-
-    size.width = reader->GetWidth();
-    size.height = reader->GetHeight();
-
-    if( flags == -1 )
-        iscolor = reader->IsColor();
-    else
-    {
-        if( (flags & CV_LOAD_IMAGE_COLOR) != 0 ||
-           ((flags & CV_LOAD_IMAGE_ANYCOLOR) != 0 && reader->IsColor()) )
-            iscolor = 1;
-        else
-            iscolor = 0;
-
-        if( (flags & CV_LOAD_IMAGE_ANYDEPTH) != 0 )
-        {
-            reader->UseNativeDepth(true);
-            depth = reader->GetDepth();
-        }
-    }
-
-    cn = iscolor ? 3 : 1;
-
-    if( load_as_matrix )
-    {
-        int type;
-        if(reader->IsFloat() && depth != 8)
-            type = CV_32F;
-        else
-            type = ( depth <= 8 ) ? CV_8U : ( depth <= 16 ) ? CV_16U : CV_32S;
-        CV_CALL( matrix = cvCreateMat( size.height, size.width, CV_MAKETYPE(type, cn) ));
-    }
-    else
-    {
-        int type;
-        if(reader->IsFloat() && depth != 8)
-            type = IPL_DEPTH_32F;
-        else
-            type = ( depth <= 8 ) ? IPL_DEPTH_8U : ( depth <= 16 ) ? IPL_DEPTH_16U : IPL_DEPTH_32S;
-        CV_CALL( image = cvCreateImage( size, type, cn ));
-        matrix = cvGetMat( image, &hdr );
-    }
-
-    if( !reader->ReadData( matrix->data.ptr, matrix->step, iscolor ))
-    {
-        if( load_as_matrix )
-            cvReleaseMat( &matrix );
-        else
-            cvReleaseImage( &image );
-        EXIT;
-    }
-
-    __END__;
-
-    delete reader;
-
-    if( cvGetErrStatus() < 0 )
-    {
-        if( load_as_matrix )
-            cvReleaseMat( &matrix );
-        else
-            cvReleaseImage( &image );
-    }
-
-    return load_as_matrix ? (void*)matrix : (void*)image;
-}
 
 
 CV_IMPL IplImage*
 cvLoadImage( const char* filename, int iscolor )
 {
-    return (IplImage*)icvLoadImage( filename, iscolor, false );
+    return (IplImage*)cv::imread_(filename, iscolor, cv::LOAD_IMAGE );
 }
 
 CV_IMPL CvMat*
 cvLoadImageM( const char* filename, int iscolor )
 {
-    return (CvMat*)icvLoadImage( filename, iscolor, true );
+    return (CvMat*)cv::imread_( filename, iscolor, cv::LOAD_CVMAT );
 }
-
 
 CV_IMPL int
-cvSaveImage( const char* filename, const CvArr* arr )
+cvSaveImage( const char* filename, const CvArr* arr, const int* _params )
 {
-    int origin = 0;
-    GrFmtWriter* writer = 0;
-    CvMat *temp = 0, *temp2 = 0;
-
-    CV_FUNCNAME( "cvSaveImage" );
-
-    __BEGIN__;
-
-    CvMat stub, *image;
-    int channels, ipl_depth;
-
-    if( !filename || strlen(filename) == 0 )
-        CV_ERROR( CV_StsNullPtr, "null filename" );
-
-    CV_CALL( image = cvGetMat( arr, &stub ));
-
-    if( CV_IS_IMAGE( arr ))
-        origin = ((IplImage*)arr)->origin;
-
-    channels = CV_MAT_CN( image->type );
-    if( channels != 1 && channels != 3 && channels != 4 )
-        CV_ERROR( CV_BadNumChannels, "" );
-
-    writer = g_Filters.FindWriter( filename );
-    if( !writer )
-        CV_ERROR( CV_StsError, "could not find a filter for the specified extension" );
-
-    if( origin )
+    int i = 0;
+    if( _params )
     {
-        CV_CALL( temp = cvCreateMat(image->rows, image->cols, image->type) );
-        CV_CALL( cvFlip( image, temp, 0 ));
-        image = temp;
+        for( ; _params[i] > 0; i += 2 )
+            ;
     }
-
-    ipl_depth = cvCvToIplDepth(image->type);
-
-    if( !writer->IsFormatSupported(ipl_depth) )
-    {
-        assert( writer->IsFormatSupported(IPL_DEPTH_8U) );
-        CV_CALL( temp2 = cvCreateMat(image->rows,
-            image->cols, CV_MAKETYPE(CV_8U,channels)) );
-        CV_CALL( cvConvertImage( image, temp2 ));
-        image = temp2;
-        ipl_depth = IPL_DEPTH_8U;
-    }
-
-    if( !writer->WriteImage( image->data.ptr, image->step, image->width,
-                             image->height, ipl_depth, channels ))
-        CV_ERROR( CV_StsError, "could not save the image" );
-
-    __END__;
-
-    delete writer;
-    cvReleaseMat( &temp );
-    cvReleaseMat( &temp2 );
-
-    return cvGetErrStatus() >= 0;
+    return cv::imwrite_(filename, cv::cvarrToMat(arr),
+        i > 0 ? cv::Vector<int>((int*)_params, i) : cv::Vector<int>(),
+        CV_IS_IMAGE(arr) && ((const IplImage*)arr)->origin == IPL_ORIGIN_BL );
 }
+
 
 /* End of file. */

@@ -43,6 +43,26 @@
 
 // in later times, use this file as a dispatcher to implementations like cvcap.cpp
 
+namespace cv
+{
+
+void namedWindow( const String& winname, int flags )
+{
+    cvNamedWindow( winname.c_str(), flags );
+}
+
+void imshow( const String& winname, const Mat& img )
+{
+    CvMat _img = img;
+    cvShowImage( winname.c_str(), &_img );
+}
+
+int waitKey(int delay)
+{
+    return cvWaitKey(delay);
+}
+
+}
 
 #if   defined (WIN32)         // see window_w32.cpp
 #elif defined (HAVE_GTK)      // see window_gtk.cpp

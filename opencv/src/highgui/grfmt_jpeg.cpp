@@ -44,39 +44,6 @@
 
 #ifdef HAVE_JPEG
 
-// JPEG filter factory
-
-GrFmtJpeg::GrFmtJpeg()
-{
-    m_sign_len = 3;
-    m_signature = "\xFF\xD8\xFF";
-    m_description = "JPEG files (*.jpeg;*.jpg;*.jpe)";
-}
-
-
-GrFmtJpeg::~GrFmtJpeg()
-{
-}
-
-
-GrFmtReader* GrFmtJpeg::NewReader( const char* filename )
-{
-    return new GrFmtJpegReader( filename );
-}
-
-
-GrFmtWriter* GrFmtJpeg::NewWriter( const char* filename )
-{
-    return new GrFmtJpegWriter( filename );
-}
-
-
-/****************************************************************************************\
-    This part of the file implements JPEG codec on base of IJG libjpeg library,
-    in particular, this is the modified example.doc from libjpeg package.
-    See otherlibs/_graphics/readme.txt for copyright notice.
-\****************************************************************************************/
-
 #include <stdio.h>
 #include <setjmp.h>
 
@@ -94,6 +61,9 @@ typedef unsigned char boolean;
 extern "C" {
 #include "jpeglib.h"
 }
+
+namespace cv
+{
 
 /////////////////////// Error processing /////////////////////
 
@@ -115,22 +85,23 @@ error_exit( j_common_ptr cinfo )
 }
 
 
-/////////////////////// GrFmtJpegReader ///////////////////
+/////////////////////// JpegDecoder ///////////////////
 
 
-GrFmtJpegReader::GrFmtJpegReader( const char* filename ) : GrFmtReader( filename )
+JpegDecoder::JpegDecoder()
 {
+    m_signature = "\xFF\xD8\xFF";
     m_cinfo = 0;
     m_f = 0;
 }
 
 
-GrFmtJpegReader::~GrFmtJpegReader()
+JpegDecoder::~JpegDecoder()
 {
 }
 
 
-void  GrFmtJpegReader::Close()
+void  JpegDecoder::close()
 {
     if( m_f )
     {
@@ -149,14 +120,17 @@ void  GrFmtJpegReader::Close()
         m_cinfo = 0;
         m_jerr = 0;
     }
-    GrFmtReader::Close();
 }
 
+ImageDecoder JpegDecoder::newDecoder() const
+{
+    return new JpegDecoder;
+}
 
-bool  GrFmtJpegReader::ReadHeader()
+bool  JpegDecoder::readHeader()
 {
     bool result = false;
-    Close();
+    close();
 
     jpeg_decompress_struct* cinfo = new jpeg_decompress_struct;
     GrFmtJpegErrorMgr* jerr = new GrFmtJpegErrorMgr;
@@ -171,7 +145,7 @@ bool  GrFmtJpegReader::ReadHeader()
     {
         jpeg_create_decompress( cinfo );
 
-        m_f = fopen( m_filename, "rb" );
+        m_f = fopen( m_filename.c_str(), "rb" );
         if( m_f )
         {
             jpeg_stdio_src( cinfo, m_f );
@@ -179,14 +153,14 @@ bool  GrFmtJpegReader::ReadHeader()
 
             m_width = cinfo->image_width;
             m_height = cinfo->image_height;
-            m_iscolor = cinfo->num_components > 1;
+            m_type = cinfo->num_components > 1 ? CV_8UC3 : CV_8UC1;
 
             result = true;
         }
     }
 
     if( !result )
-        Close();
+        close();
 
     return result;
 }
@@ -325,11 +299,12 @@ int my_jpeg_load_dht (struct jpeg_decompress_struct *info, unsigned char *dht,
  * based on a message of Laurent Pinchart on the video4linux mailing list
  ***************************************************************************/
 
-bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
+bool  JpegDecoder::readData( Mat& img )
 {
     bool result = false;
-
-    color = color > 0 || (m_iscolor && color < 0);
+    uchar* data = img.data;
+    int step = img.step;
+    bool color = img.channels() > 1;
 
     if( m_cinfo && m_jerr && m_width && m_height )
     {
@@ -353,9 +328,8 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
                     cinfo->dc_huff_tbl_ptrs );
             }
 
-            if( color > 0 || (m_iscolor && color < 0) )
+            if( color )
             {
-                color = 1;
                 if( cinfo->num_components != 4 )
                 {
                     cinfo->out_color_space = JCS_RGB;
@@ -369,7 +343,6 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
             }
             else
             {
-                color = 0;
                 if( cinfo->num_components != 4 )
                 {
                     cinfo->out_color_space = JCS_GRAYSCALE;
@@ -410,34 +383,49 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
         }
     }
 
-    Close();
+    close();
     return result;
 }
 
 
-/////////////////////// GrFmtJpegWriter ///////////////////
+/////////////////////// JpegEncoder ///////////////////
 
-GrFmtJpegWriter::GrFmtJpegWriter( const char* filename ) : GrFmtWriter( filename )
+JpegEncoder::JpegEncoder()
 {
+    m_description = "JPEG files (*.jpeg;*.jpg;*.jpe)";
 }
 
 
-GrFmtJpegWriter::~GrFmtJpegWriter()
+JpegEncoder::~JpegEncoder()
 {
 }
 
-
-bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, int /*depth*/, int _channels )
+ImageEncoder JpegEncoder::newEncoder() const
 {
-    const int default_quality = 95;
+    return new JpegEncoder;
+}
+
+bool  JpegEncoder::write( const String& filename,
+                          const Mat& img, const Vector<int>& params )
+{
+    int quality = 95;
     struct jpeg_compress_struct cinfo;
     GrFmtJpegErrorMgr jerr;
 
+    for( size_t i = 0; i < params.size(); i += 2 )
+    {
+        if( params[i] == CV_IMWRITE_JPEG_QUALITY )
+        {
+            quality = params[i+1];
+            quality = MIN(MAX(quality, 0), 100);
+        }
+    }
+
     bool result = false;
     FILE* f = 0;
+    int _channels = img.channels();
     int channels = _channels > 1 ? 3 : 1;
-    uchar* buffer = 0; // temporary buffer for row flipping
+    int width = img.cols, height = img.rows;
 
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = error_exit;
@@ -445,7 +433,7 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     if( setjmp( jerr.setjmp_buffer ) == 0 )
     {
         jpeg_create_compress(&cinfo);
-        f = fopen( m_filename, "wb" );
+        f = fopen( filename.c_str(), "wb" );
 
         if( f )
         {
@@ -457,16 +445,18 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
             cinfo.in_color_space = channels > 1 ? JCS_RGB : JCS_GRAYSCALE;
 
             jpeg_set_defaults( &cinfo );
-            jpeg_set_quality( &cinfo, default_quality,
+            jpeg_set_quality( &cinfo, quality,
                               TRUE /* limit to baseline-JPEG values */ );
             jpeg_start_compress( &cinfo, TRUE );
 
+            AutoBuffer<uchar> _buffer;
             if( channels > 1 )
-                buffer = new uchar[width*channels];
+                _buffer.allocate(width*channels);
+            uchar* buffer = _buffer;
 
-            for( ; height--; data += step )
+            for( int y = 0; y < height; y++ )
             {
-                uchar* ptr = (uchar*)data;
+                uchar *data = img.data + img.step*y, *ptr = data;
 
                 if( _channels == 3 )
                 {
@@ -490,8 +480,9 @@ bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
     if(f) fclose(f);
     jpeg_destroy_compress( &cinfo );
 
-    delete[] buffer;
     return result;
+}
+
 }
 
 #endif
