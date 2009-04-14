@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -47,22 +48,25 @@
 #include "grfmt_base.h"
 #include "bitstrm.h"
 
-/* libpng version only */
+namespace cv
+{
 
-class GrFmtPngReader : public GrFmtReader
+class PngDecoder : public BaseImageDecoder
 {
 public:
     
-    GrFmtPngReader( const char* filename );
-    ~GrFmtPngReader();
+    PngDecoder();
+    virtual ~PngDecoder();
 
-    bool  CheckFormat( const char* signature );
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readData( Mat& img );
+    bool  readHeader();
+    void  close();
+
+    ImageDecoder newDecoder() const;
 
 protected:
 
+    int   m_bit_depth;
     void* m_png_ptr;  // pointer to decompression structure
     void* m_info_ptr; // pointer to image information structure
     void* m_end_info; // pointer to one more image information structure
@@ -71,32 +75,20 @@ protected:
 };
 
 
-class GrFmtPngWriter : public GrFmtWriter
+class PngEncoder : public BaseImageEncoder
 {
 public:
-    
-    GrFmtPngWriter( const char* filename );
-    ~GrFmtPngWriter();
+    PngEncoder();
+    virtual ~PngEncoder();
 
-    bool  IsFormatSupported( int depth );
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
-protected:
+    bool  isFormatSupported( int depth );
+    bool  write( const cv::String& filename,
+        const cv::Mat& img, const cv::Vector<int>& params );
+    
+    ImageEncoder newEncoder() const;
 };
 
-
-// PNG filter factory
-class GrFmtPng : public GrFmtFilterFactory
-{
-public:
-    
-    GrFmtPng();
-    ~GrFmtPng();
-
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
-    bool CheckSignature( const char* signature );
-};
+}
 
 #endif
 

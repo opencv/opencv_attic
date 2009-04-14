@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -44,6 +45,9 @@
 
 #include "grfmt_base.h"
 
+namespace cv
+{
+
 enum SunRasType
 {
     RAS_OLD = 0,
@@ -60,54 +64,43 @@ enum SunRasMapType
 
 
 // Sun Raster Reader
-class GrFmtSunRasterReader : public GrFmtReader
+class SunRasterDecoder : public BaseImageDecoder
 {
 public:
 
-    GrFmtSunRasterReader( const char* filename );
-    ~GrFmtSunRasterReader();
+    SunRasterDecoder();
+    virtual ~SunRasterDecoder();
 
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readData( Mat& img );
+    bool  readHeader();
+    void  close();
+
+    ImageDecoder newDecoder() const;
 
 protected:
-    
+   
     RMByteStream    m_strm;
     PaletteEntry    m_palette[256];
     int             m_bpp;
     int             m_offset;
-    SunRasType      m_type;
+    SunRasType      m_encoding;
     SunRasMapType   m_maptype;
     int             m_maplength;
 };
 
 
-class GrFmtSunRasterWriter : public GrFmtWriter
+class SunRasterEncoder : public BaseImageEncoder
 {
 public:
-    
-    GrFmtSunRasterWriter( const char* filename );
-    ~GrFmtSunRasterWriter();
+    SunRasterEncoder();
+    virtual ~SunRasterEncoder();
 
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
-protected:
+    bool write( const String& filename,
+        const Mat& img, const Vector<int>& params );
 
-    WMByteStream  m_strm;
+    ImageEncoder newEncoder() const;
 };
 
-
-// ... and filter factory
-class GrFmtSunRaster : public GrFmtFilterFactory
-{
-public:
-    
-    GrFmtSunRaster();
-    ~GrFmtSunRaster();
-
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
-};
+}
 
 #endif/*_GRFMT_SUNRAS_H_*/

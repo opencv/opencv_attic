@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -44,6 +45,8 @@
 
 #include "grfmt_base.h"
 
+namespace cv
+{
 
 // native simple TIFF codec
 enum TiffCompression
@@ -84,95 +87,47 @@ enum TiffFieldType
 };
 
 
-
 #ifdef HAVE_TIFF
 
 // libtiff based TIFF codec
 
-class GrFmtTiffReader : public GrFmtReader
+class TiffDecoder : public BaseImageDecoder
 {
 public:
-    
-    GrFmtTiffReader( const char* filename );
-    ~GrFmtTiffReader();
+    TiffDecoder();
+    virtual ~TiffDecoder();
 
-    bool  CheckFormat( const char* signature );
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readHeader();
+    bool  readData( Mat& img );
+    void  close();
+
+    size_t signatureLength() const;
+    bool checkSignature( const String& signature ) const;
+    ImageDecoder newDecoder() const;
 
 protected:
-
     void* m_tif;
-};
-
-
-#else
-
-class GrFmtTiffReader : public GrFmtReader
-{
-public:
-    
-    GrFmtTiffReader( const char* filename );
-    ~GrFmtTiffReader();
-
-    bool  CheckFormat( const char* signature );
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
-
-protected:
-    
-    RLByteStream     m_strm;
-    PaletteEntry     m_palette[256];
-    int              m_bpp;
-    int*             m_temp_palette;
-    int              m_max_pal_length;
-    int*             m_offsets;
-    int              m_maxoffsets;
-    int              m_strips;
-    int              m_rows_per_strip;
-    TiffCompression  m_compression;
-    TiffByteOrder    m_byteorder;
-
-    int  GetWordEx();
-    int  GetDWordEx();
-    int  ReadTable( int offset, int count, TiffFieldType fieldtype,
-                    int*& array, int& arraysize );
 };
 
 #endif
 
 // ... and writer
-class GrFmtTiffWriter : public GrFmtWriter
+class TiffEncoder : public BaseImageEncoder
 {
 public:
-    
-    GrFmtTiffWriter( const char* filename );
-    ~GrFmtTiffWriter();
+    TiffEncoder();
+    virtual ~TiffEncoder();
 
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
+    bool  write( const String& filename,
+        const Mat& img, const Vector<int>& params );
+    ImageEncoder newEncoder() const;
+
 protected:
-
-    WLByteStream  m_strm;
-
-    void  WriteTag( TiffTag tag, TiffFieldType fieldType,
+    void  writeTag( WLByteStream& strm, TiffTag tag,
+                    TiffFieldType fieldType,
                     int count, int value );
 };
 
-
-// TIFF filter factory
-class GrFmtTiff : public GrFmtFilterFactory
-{
-public:
-    
-    GrFmtTiff();
-    ~GrFmtTiff();
-
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
-    bool CheckSignature( const char* signature );
-};
+}
 
 #endif/*_GRFMT_TIFF_H_*/

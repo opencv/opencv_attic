@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -57,25 +58,25 @@
 #undef ulong
 #include "grfmt_base.h"
 
+namespace cv
+{
 
-/* libpng version only */
-
-class GrFmtJpeg2000Reader : public GrFmtReader
+class Jpeg2KDecoder : public BaseImageDecoder
 {
 public:
 
-    GrFmtJpeg2000Reader( const char* filename );
-    ~GrFmtJpeg2000Reader();
+    Jpeg2KDecoder();
+    virtual ~Jpeg2KDecoder();
 
-    bool  CheckFormat( const char* signature );
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readData( Mat& img );
+    bool  readHeader();
+    void  close();
+    ImageDecoder newDecoder() const;
 
 protected:
-    bool  ReadComponent8u( uchar *data, jas_matrix_t *buffer, int step, int cmpt,
+    bool  readComponent8u( uchar *data, jas_matrix_t *buffer, int step, int cmpt,
                            int maxval, int offset, int ncmpts );
-    bool  ReadComponent16u( unsigned short *data, jas_matrix_t *buffer, int step, int cmpt,
+    bool  readComponent16u( unsigned short *data, jas_matrix_t *buffer, int step, int cmpt,
                             int maxval, int offset, int ncmpts );
 
     jas_stream_t *m_stream;
@@ -83,35 +84,22 @@ protected:
 };
 
 
-class GrFmtJpeg2000Writer : public GrFmtWriter
+class Jpeg2KEncoder : public BaseImageEncoder
 {
 public:
+    Jpeg2KEncoder();
+    virtual ~Jpeg2KEncoder();
 
-    GrFmtJpeg2000Writer( const char* filename );
-    ~GrFmtJpeg2000Writer();
+    bool  isFormatSupported( int depth );
+    bool  write( const String& filename,
+        const Mat& img, const Vector<int>& params );
 
-    bool  IsFormatSupported( int depth );
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
 protected:
-    bool  WriteComponent8u( jas_image_t *img, const uchar *data,
-                            int step, int ncmpts, int w, int h );
-    bool  WriteComponent16u( jas_image_t *img, const unsigned short *data,
-                             int step, int ncmpts, int w, int h );
+    bool  writeComponent8u( jas_image_t *img, const Mat& _img );
+    bool  writeComponent16u( jas_image_t *img, const Mat& _img );
 };
 
-
-// PNG filter factory
-class GrFmtJpeg2000 : public GrFmtFilterFactory
-{
-public:
-
-    GrFmtJpeg2000();
-    ~GrFmtJpeg2000();
-
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
-};
+}
 
 #endif
 

@@ -14,25 +14,33 @@
 #include <iostream>
 using namespace std;
 
-// ImageIO filter factory
-
-GrFmtImageIO::GrFmtImageIO()
+namespace cv
 {
-    m_sign_len = 0;
-    m_signature = NULL;
-    m_description = "Apple ImageIO (*.bmp;*.dib;*.exr;*.jpeg;*.jpg;*.jpe;*.jp2;*.pdf;*.png;*.tiff;*.tif)";
+
+/////////////////////// ImageIODecoder ///////////////////
+
+ImageIODecoder::ImageIODecoder()
+{
+    imageRef = NULL;
+}
+
+ImageIODecoder::~ImageIODecoder()
+{
+    close();
 }
 
 
-GrFmtImageIO::~GrFmtImageIO()
+void  ImageIODecoder::close()
 {
+    CGImageRelease( imageRef );
+    imageRef = NULL;
 }
 
 
-bool  GrFmtImageIO::CheckFile( const char* filename )
+bool  ImageIODecoder::checkSignature( const String& signature )
 {
-    if( !filename ) return false;
-
+    return true;
+    /*
     // If a CFImageRef can be retrieved from an image file, it is
     // readable by ImageIO.  Effectively this is using ImageIO
     // to check the signatures and determine the file format for us.
@@ -51,46 +59,15 @@ bool  GrFmtImageIO::CheckFile( const char* filename )
     if( !imageRef ) return false;
     CGImageRelease(imageRef);
 
-    return true;
+    return true;*/
 }
 
-
-GrFmtReader* GrFmtImageIO::NewReader( const char* filename )
+ImageDecoder ImageIODecoder::newDecoder()
 {
-    return new GrFmtImageIOReader( filename );
+    return new ImageIODecoder;
 }
 
-
-GrFmtWriter* GrFmtImageIO::NewWriter( const char* filename )
-{
-    return new GrFmtImageIOWriter( filename );
-}
-
-
-/////////////////////// GrFmtImageIOReader ///////////////////
-
-GrFmtImageIOReader::GrFmtImageIOReader( const char* filename ) : GrFmtReader( filename ), imageRef(NULL)
-{
-    // Nothing to do here
-}
-
-
-GrFmtImageIOReader::~GrFmtImageIOReader()
-{
-    Close();
-}
-
-
-void  GrFmtImageIOReader::Close()
-{
-    CGImageRelease( imageRef );
-    imageRef = NULL;
-
-    GrFmtReader::Close();
-}
-
-
-bool  GrFmtImageIOReader::ReadHeader()
+bool ImageIODecoder::readHeader()
 {
     CFURLRef         imageURLRef;
     CGImageSourceRef sourceRef;
@@ -121,18 +98,19 @@ bool  GrFmtImageIOReader::ReadHeader()
     if( !colorSpace )
         return false;
 
-    m_iscolor = ( CGColorSpaceGetNumberOfComponents( colorSpace ) > 1 );
+    m_type = CGColorSpaceGetNumberOfComponents( colorSpace ) > 1 ? CV_8UC3 : CV_8UC1;
 
     return true;
 }
 
 
-bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
+bool  ImageIODecoder::readData( Mat& img )
 {
+    uchar* data = img.data;
+    int step = img.step;
+    bool color = img.channels() > 1;
     int bpp; // Bytes per pixel
-
-    // Set color to either CV_IMAGE_LOAD_COLOR or CV_IMAGE_LOAD_GRAYSCALE if unchanged
-    color = color > 0 || ( m_iscolor && color < 0 );
+    int bit_depth = 8;
 
     // Get Height, Width, and color information
     if( !ReadHeader() )
@@ -170,7 +148,7 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
     context = CGBitmapContextCreate( (void *)bitmap,
                                      m_width,        /* width */
                                      m_height,       /* height */
-                                     m_bit_depth,    /* bit depth */
+                                     bit_depth,    /* bit depth */
                                      bpp * m_width,  /* bytes per row */
                                      colorSpace,     /* color space */
                                      alphaInfo);
@@ -231,17 +209,16 @@ bool  GrFmtImageIOReader::ReadData( uchar* data, int step, int color )
 }
 
 
-/////////////////////// GrFmtImageIOWriter ///////////////////
+/////////////////////// ImageIOEncoder ///////////////////
 
-GrFmtImageIOWriter::GrFmtImageIOWriter( const char* filename ) : GrFmtWriter( filename )
+ImageIOEncoder::ImageIOEncoder()
 {
-    // Nothing to do here
+    m_description = "Apple ImageIO (*.bmp;*.dib;*.exr;*.jpeg;*.jpg;*.jpe;*.jp2;*.pdf;*.png;*.tiff;*.tif)"
 }
 
 
-GrFmtImageIOWriter::~GrFmtImageIOWriter()
+ImageIOEncoder::~ImageIOEncoder()
 {
-    // Nothing to do here
 }
 
 
@@ -290,9 +267,14 @@ CFStringRef  FilenameToUTI( const char* filename )
 }
 
 
-bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
-                                      int width, int height, int /*depth*/, int _channels )
+bool  ImageIOEncoder::WriteImage( const cv::String& filename,
+        const cv::Mat& img, const cv::Vector<int>& params )
 {
+    int width = img.cols, height = img.rows;
+    int _channels = img.channels();
+    const uchar* data = img.data;
+    int step = img.step;
+    
     // Determine the appropriate UTI based on the filename extension
     CFStringRef imageUTI = FilenameToUTI( m_filename );
 
@@ -409,6 +391,8 @@ bool  GrFmtImageIOWriter::WriteImage( const uchar* data, int step,
     free( bitmapData );
 
     return true;
+}
+
 }
 
 #endif /* HAVE_IMAGEIO */

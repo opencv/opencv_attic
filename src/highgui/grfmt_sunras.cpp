@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -42,73 +43,53 @@
 #include "_highgui.h"
 #include "grfmt_sunras.h"
 
+namespace cv
+{
+
 static const char* fmtSignSunRas = "\x59\xA6\x6A\x95";
-
-// Sun Raster filter factory
-
-GrFmtSunRaster::GrFmtSunRaster()
-{
-    m_sign_len = 4;
-    m_signature = fmtSignSunRas;
-    m_description = "Sun raster files (*.sr;*.ras)";
-}
-
-
-GrFmtSunRaster::~GrFmtSunRaster()
-{
-}
-
-
-GrFmtReader* GrFmtSunRaster::NewReader( const char* filename )
-{
-    return new GrFmtSunRasterReader( filename );
-}
-
-
-GrFmtWriter* GrFmtSunRaster::NewWriter( const char* filename )
-{
-    return new GrFmtSunRasterWriter( filename );
-}
-
 
 /************************ Sun Raster reader *****************************/
 
-GrFmtSunRasterReader::GrFmtSunRasterReader( const char* filename ) : GrFmtReader( filename )
+SunRasterDecoder::SunRasterDecoder()
 {
     m_offset = -1;
+    m_signature = fmtSignSunRas;
 }
 
 
-GrFmtSunRasterReader::~GrFmtSunRasterReader()
+SunRasterDecoder::~SunRasterDecoder()
 {
 }
 
-
-void  GrFmtSunRasterReader::Close()
+ImageDecoder SunRasterDecoder::newDecoder() const
 {
-    m_strm.Close();
+    return new SunRasterDecoder;
+}
+
+void  SunRasterDecoder::close()
+{
+    m_strm.close();
 }
 
 
-bool  GrFmtSunRasterReader::ReadHeader()
+bool  SunRasterDecoder::readHeader()
 {
     bool result = false;
 
-    assert( strlen(m_filename) != 0 );
-    if( !m_strm.Open( m_filename )) return false;
+    if( !m_strm.open( m_filename )) return false;
 
-    if( setjmp( m_strm.JmpBuf()) == 0 )
+    try
     {
-        m_strm.Skip( 4 );
-        m_width  = m_strm.GetDWord();
-        m_height = m_strm.GetDWord();
-        m_bpp    = m_strm.GetDWord();
+        m_strm.skip( 4 );
+        m_width  = m_strm.getDWord();
+        m_height = m_strm.getDWord();
+        m_bpp    = m_strm.getDWord();
         int palSize = 3*(1 << m_bpp);
 
-        m_strm.Skip( 4 );
-        m_type   = (SunRasType)m_strm.GetDWord();
-        m_maptype = (SunRasMapType)m_strm.GetDWord();
-        m_maplength = m_strm.GetDWord();
+        m_strm.skip( 4 );
+        m_encoding = (SunRasType)m_strm.getDWord();
+        m_maptype = (SunRasMapType)m_strm.getDWord();
+        m_maplength = m_strm.getDWord();
 
         if( m_width > 0 && m_height > 0 &&
             (m_bpp == 1 || m_bpp == 8 || m_bpp == 24 || m_bpp == 32) &&
@@ -124,7 +105,7 @@ bool  GrFmtSunRasterReader::ReadHeader()
                 int readed;
                 uchar buffer[256*3];
 
-                m_strm.GetBytes( buffer, m_maplength, &readed );
+                m_strm.getBytes( buffer, m_maplength, &readed );
                 if( readed == m_maplength )
                 {
                     int i;
@@ -138,8 +119,8 @@ bool  GrFmtSunRasterReader::ReadHeader()
                         m_palette[i].a = 0;
                     }
 
-                    m_iscolor = IsColorPalette( m_palette, m_bpp );
-                    m_offset = m_strm.GetPos();
+                    m_type = IsColorPalette( m_palette, m_bpp ) ? CV_8UC3 : CV_8UC1;
+                    m_offset = m_strm.getPos();
 
                     assert( m_offset == 32 + m_maplength );
                     result = true;
@@ -147,58 +128,58 @@ bool  GrFmtSunRasterReader::ReadHeader()
             }
             else
             {
-                m_iscolor = m_bpp > 8;
+                m_type = m_bpp > 8 ? CV_8UC3 : CV_8UC1;
 
-                if( !m_iscolor )
+                if( CV_MAT_CN(m_type) == 1 )
                     FillGrayPalette( m_palette, m_bpp );
 
-                m_offset = m_strm.GetPos();
+                m_offset = m_strm.getPos();
 
                 assert( m_offset == 32 + m_maplength );
                 result = true;
             }
         }
     }
+    catch(...)
+    {
+    }
 
     if( !result )
     {
         m_offset = -1;
         m_width = m_height = -1;
-        m_strm.Close();
+        m_strm.close();
     }
     return result;
 }
 
 
-bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
+bool  SunRasterDecoder::readData( Mat& img )
 {
-    const  int buffer_size = 1 << 12;
-    uchar  buffer[buffer_size];
-    uchar  bgr_buffer[buffer_size];
+    int color = img.channels() > 1;
+    uchar* data = img.data;
+    int step = img.step;
     uchar  gray_palette[256];
     bool   result = false;
-    uchar* src = buffer;
-    uchar* bgr = bgr_buffer;
     int  src_pitch = ((m_width*m_bpp + 7)/8 + 1) & -2;
     int  nch = color ? 3 : 1;
     int  width3 = m_width*nch;
     int  y;
 
-    if( m_offset < 0 || !m_strm.IsOpened())
+    if( m_offset < 0 || !m_strm.isOpened())
         return false;
 
-    if( src_pitch+32 > buffer_size )
-        src = new uchar[src_pitch+32];
-
-    if( m_width*3 + 32 > buffer_size )
-        bgr = new uchar[m_width*3 + 32];
+    AutoBuffer<uchar> _src(src_pitch + 32);
+    uchar* src = _src;
+    AutoBuffer<uchar> _bgr(m_width*3 + 32);
+    uchar* bgr = _bgr;
 
     if( !color && m_maptype == RMT_EQUAL_RGB )
         CvtPaletteToGray( m_palette, gray_palette, 1 << m_bpp );
 
-    if( setjmp( m_strm.JmpBuf()) == 0 )
+    try
     {
-        m_strm.SetPos( m_offset );
+        m_strm.setPos( m_offset );
 
         switch( m_bpp )
         {
@@ -208,7 +189,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
             {
                 for( y = 0; y < m_height; y++, data += step )
                 {
-                    m_strm.GetBytes( src, src_pitch );
+                    m_strm.getBytes( src, src_pitch );
                     if( color )
                         FillColorRow1( data, src, m_width, m_palette );
                     else
@@ -229,10 +210,10 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
 
                     do
                     {
-                        code = m_strm.GetByte();
+                        code = m_strm.getByte();
                         if( code == 0x80 )
                         {
-                            len = m_strm.GetByte();
+                            len = m_strm.getByte();
                             if( len != 0 ) break;
                         }
                         tsrc[len1] = (uchar)code;
@@ -244,7 +225,7 @@ bool  GrFmtSunRasterReader::ReadData( uchar* data, int step, int color )
                     if( len > 0 ) // encoded mode
                     {
                         ++len;
-                        code = m_strm.GetByte();
+                        code = m_strm.getByte();
                         if( len > line_end - tsrc )
                         {
                             assert(0);
@@ -277,7 +258,7 @@ bad_decoding_1bpp:
             {
                 for( y = 0; y < m_height; y++, data += step )
                 {
-                    m_strm.GetBytes( src, src_pitch );
+                    m_strm.getBytes( src, src_pitch );
                     if( color )
                         FillColorRow8( data, src, m_width, m_palette );
                     else
@@ -298,10 +279,10 @@ bad_decoding_1bpp:
 
                     do
                     {
-                        code = m_strm.GetByte();
+                        code = m_strm.getByte();
                         if( code == 0x80 )
                         {
-                            len = m_strm.GetByte();
+                            len = m_strm.getByte();
                             if( len != 0 ) break;
                         }
                         *tsrc++ = (uchar)code;
@@ -322,7 +303,7 @@ bad_decoding_1bpp:
                     if( len > 0 ) // encoded mode
                     {
                         len = (len + 1)*nch;
-                        code = m_strm.GetByte();
+                        code = m_strm.getByte();
 
                         if( color )
                             data = FillUniColor( data, line_end, step, width3,
@@ -338,7 +319,7 @@ bad_decoding_1bpp:
 
                     if( data == line_end )
                     {
-                        if( m_strm.GetByte() != 0 )
+                        if( m_strm.getByte() != 0 )
                             goto bad_decoding_end;
                         line_end += step;
                         data = line_end - width3;
@@ -355,7 +336,7 @@ bad_decoding_end:
         case 24:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( color ? data : bgr, src_pitch );
+                m_strm.getBytes( color ? data : bgr, src_pitch );
 
                 if( color )
                 {
@@ -376,7 +357,7 @@ bad_decoding_end:
             {
                 /* hack: a0 b0 g0 r0 a1 b1 g1 r1 ... are written to src + 3,
                    so when we look at src + 4, we see b0 g0 r0 x b1 g1 g1 x ... */
-                m_strm.GetBytes( src + 3, src_pitch );
+                m_strm.getBytes( src + 3, src_pitch );
 
                 if( color )
                     icvCvt_BGRA2BGR_8u_C4C3R( src + 4, 0, data, 0, cvSize(m_width,1),
@@ -391,9 +372,9 @@ bad_decoding_end:
             assert(0);
         }
     }
-
-    if( src != buffer ) delete[] src;
-    if( bgr != bgr_buffer ) delete[] bgr;
+    catch( ... )
+    {
+    }
 
     return result;
 }
@@ -401,42 +382,47 @@ bad_decoding_end:
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtSunRasterWriter::GrFmtSunRasterWriter( const char* filename ) : GrFmtWriter( filename )
+SunRasterEncoder::SunRasterEncoder()
 {
+    m_description = "Sun raster files (*.sr;*.ras)";
 }
 
 
-GrFmtSunRasterWriter::~GrFmtSunRasterWriter()
+ImageEncoder SunRasterEncoder::newEncoder() const
+{
+    return new SunRasterEncoder;
+}
+
+SunRasterEncoder::~SunRasterEncoder()
 {
 }
 
-
-bool  GrFmtSunRasterWriter::WriteImage( const uchar* data, int step,
-                                        int width, int height, int /*depth*/, int channels )
+bool  SunRasterEncoder::write( const String& filename,
+                               const Mat& img, const Vector<int>& )
 {
     bool result = false;
-    int  fileStep = (width*channels + 1) & -2;
-    int  y;
+    int y, width = img.cols, height = img.rows, channels = img.channels();
+    int fileStep = (width*channels + 1) & -2;
+    WMByteStream  strm;
 
-    assert( data && width > 0 && height > 0 && step >= fileStep);
-
-    if( m_strm.Open( m_filename ) )
+    if( strm.open(filename) )
     {
-        m_strm.PutBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) );
-        m_strm.PutDWord( width );
-        m_strm.PutDWord( height );
-        m_strm.PutDWord( channels*8 );
-        m_strm.PutDWord( fileStep*height );
-        m_strm.PutDWord( RAS_STANDARD );
-        m_strm.PutDWord( RMT_NONE );
-        m_strm.PutDWord( 0 );
+        strm.putBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) );
+        strm.putDWord( width );
+        strm.putDWord( height );
+        strm.putDWord( channels*8 );
+        strm.putDWord( fileStep*height );
+        strm.putDWord( RAS_STANDARD );
+        strm.putDWord( RMT_NONE );
+        strm.putDWord( 0 );
 
-        for( y = 0; y < height; y++, data += step )
-            m_strm.PutBytes( data, fileStep );
+        for( y = 0; y < height; y++ )
+            strm.putBytes( img.data + img.step*y, fileStep );
 
-        m_strm.Close();
+        strm.close();
         result = true;
     }
     return result;
 }
 
+}

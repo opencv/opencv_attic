@@ -44,262 +44,77 @@
 #include "grfmt_base.h"
 #include "bitstrm.h"
 
-
-GrFmtReader::GrFmtReader( const char* filename )
+namespace cv
 {
-    strncpy( m_filename, filename, sizeof(m_filename) - 1 );
-    m_filename[sizeof(m_filename)-1] = '\0';
-    m_width = m_height = 0;
-    m_iscolor = false;
-    m_bit_depth = 8;
-    m_native_depth = false;
-    m_isfloat = false;
-}
 
-
-GrFmtReader::~GrFmtReader()
-{
-    Close();
-}
-
-
-void GrFmtReader::Close()
+BaseImageDecoder::BaseImageDecoder()
 {
     m_width = m_height = 0;
-    m_iscolor = false;
+    m_type = -1;
 }
 
-
-GrFmtWriter::GrFmtWriter( const char* filename )
+void BaseImageDecoder::setSource( const String& filename )
 {
-    strncpy( m_filename, filename, sizeof(m_filename) - 1 );
-    m_filename[sizeof(m_filename)-1] = '\0';
+    m_filename = filename;
+    m_buf.release();
 }
 
-
-bool  GrFmtWriter::IsFormatSupported( int depth )
+void BaseImageDecoder::setSource( const Vector<uchar>& buf )
 {
-    return depth == IPL_DEPTH_8U;
+    m_filename = String();
+    m_buf = buf;
 }
 
-
-GrFmtFilterFactory::GrFmtFilterFactory()
+size_t BaseImageDecoder::signatureLength() const
 {
-    m_description = m_signature = 0;
-    m_sign_len = 0;
+    return m_signature.size();
 }
 
-
-bool  GrFmtFilterFactory::CheckFile( const char* filename )
+bool BaseImageDecoder::checkSignature( const String& signature ) const
 {
-	FILE* f = 0;
-	char signature[4096];
-	int sign_len = 0;
-	int cur_sign_len = GetSignatureLength();
-	
-	if( !filename ) return false;
-	
-	assert( cur_sign_len <= (int)sizeof( signature ) );
-	f = fopen( filename, "rb" );
-	
-	if( f )
-	{
-		sign_len = (int)fread( signature, 1, cur_sign_len, f );
-		fclose( f );
-		
-		if( cur_sign_len <= sign_len && CheckSignature( signature ) )
-            return true;
-	}
-	
-	return false;
+    size_t len = signatureLength();
+    return signature.size() >= len && memcmp( signature.c_str(), m_signature.c_str(), len ) == 0;
 }
 
-
-bool GrFmtFilterFactory::CheckSignature( const char* signature )
+ImageDecoder BaseImageDecoder::newDecoder() const
 {
-    return m_sign_len > 0 && signature != 0 &&
-           memcmp( signature, m_signature, m_sign_len ) == 0;
+    return ImageDecoder();
 }
 
-
-static int GetExtensionLength( const char* buffer )
+bool  BaseImageEncoder::isFormatSupported( int depth ) const
 {
-    int len = 0;
-
-    if( buffer )
-    {
-        const char* ext = strchr( buffer, '.');
-        if( ext++ )
-            while( isalnum(ext[len]) && len < _MAX_PATH )
-                len++;
-    }
-
-    return len;
+    return depth == CV_8U;
 }
 
-
-bool GrFmtFilterFactory::CheckExtension( const char* format )
+String BaseImageEncoder::getDescription() const
 {
-    const char* descr = 0;
-    int len = 0;
-        
-    if( !format || !m_description )
+    return m_description;
+}
+
+ImageEncoder BaseImageEncoder::newEncoder() const
+{
+    return ImageEncoder();
+}
+
+bool BaseImageEncoder::encode( const Mat& img, Vector<uchar>& buf, const Vector<int>& params )
+{
+    char fnamebuf[L_tmpnam];
+    const char* filename = tmpnam(fnamebuf);
+
+    if( !write( filename, img, params ))
         return false;
+    FILE* f = fopen( filename, "rb" );
+    CV_Assert(f != 0);
+    fseek( f, 0, SEEK_END );
+    long pos = ftell(f);
+    buf.resize((size_t)pos);
+    buf.resize(fread( &buf[0], 1, buf.size(), f ));
+    fclose(f);
+    unlink(filename);
 
-    // find the right-most extension of the passed format string
-    for(;;)
-    {
-        const char* ext = strchr( format + 1, '.' );
-        if( !ext ) break;
-        format = ext;
-    }
-
-    len = GetExtensionLength( format );
-
-    if( format[0] != '.' || len == 0 )
-        return false;
-
-    descr = strchr( m_description, '(' );
-
-    while( descr )
-    {
-        descr = strchr( descr + 1, '.' );
-        int i, len2 = GetExtensionLength( descr ); 
-
-        if( len2 == 0 )
-            break;
-
-        if( len2 == len )
-        {
-            for( i = 0; i < len; i++ )
-            {
-                int c1 = tolower(format[i+1]);
-                int c2 = tolower(descr[i+1]);
-
-                if( c1 != c2 )
-                    break;
-            }
-            if( i == len )
-                return true;
-        }
-    }
-
-    return false;
-}
-
-
-
-///////////////////// GrFmtFilterList //////////////////////////
-
-GrFmtFactoriesList::GrFmtFactoriesList()
-{
-    m_factories = 0;
-    RemoveAll();
-}
-
-
-GrFmtFactoriesList::~GrFmtFactoriesList()
-{
-    RemoveAll();
-}
-
-
-void  GrFmtFactoriesList::RemoveAll()
-{
-    if( m_factories )
-    {
-        for( int i = 0; i < m_curFactories; i++ ) delete m_factories[i];
-        delete[] m_factories;
-    }
-    m_factories = 0;
-    m_maxFactories = m_curFactories = 0;
-}
-
-
-bool  GrFmtFactoriesList::AddFactory( GrFmtFilterFactory* factory )
-{
-    assert( factory != 0 );
-    if( m_curFactories == m_maxFactories )
-    {
-        // reallocate the factorys pointers storage
-        int newMaxFactories = 2*m_maxFactories;
-        if( newMaxFactories < 16 ) newMaxFactories = 16;
-
-        GrFmtFilterFactory** newFactories = new GrFmtFilterFactory*[newMaxFactories];
-
-        for( int i = 0; i < m_curFactories; i++ ) newFactories[i] = m_factories[i];
-
-        delete[] m_factories;
-        m_factories = newFactories;
-        m_maxFactories = newMaxFactories;
-    }
-
-    m_factories[m_curFactories++] = factory;
     return true;
 }
 
-
-ListPosition  GrFmtFactoriesList::GetFirstFactoryPos()
-{
-    return (ListPosition)m_factories;
-}
-
-
-GrFmtFilterFactory* GrFmtFactoriesList::GetNextFactory( ListPosition& pos )
-{
-    GrFmtFilterFactory* factory = 0;
-    GrFmtFilterFactory** temp = (GrFmtFilterFactory**)pos;
-
-    assert( temp == 0 || (m_factories <= temp && temp < m_factories + m_curFactories));
-    if( temp )
-    {
-        factory = *temp++;
-        pos = (ListPosition)(temp < m_factories + m_curFactories ? temp : 0);
-    }
-    return factory;
-}
-
-
-GrFmtReader* GrFmtFactoriesList::FindReader( const char* filename )
-{
-	if( !filename ) return 0;
-	
-	GrFmtReader* reader = 0;
-	ListPosition pos = GetFirstFactoryPos();
-	
-	while( pos )
-	{
-		GrFmtFilterFactory* tempFactory = GetNextFactory( pos );
-		if( tempFactory->CheckFile( filename ) )
-		{
-			reader = tempFactory->NewReader( filename );
-			break;
-		}
-	}
-	
-    return reader;
-}
-
-
-GrFmtWriter* GrFmtFactoriesList::FindWriter( const char* filename )
-{
-    GrFmtWriter* writer = 0;
-    ListPosition pos = GetFirstFactoryPos();
-
-    if( !filename ) return 0;
-
-    while( pos )
-    {
-        GrFmtFilterFactory* tempFactory = GetNextFactory(pos);
-        if( tempFactory->CheckExtension( filename ))
-        {
-            writer = tempFactory->NewWriter( filename );
-            break;
-        }
-    }
-
-    return writer;
 }
 
 /* End of file. */
-

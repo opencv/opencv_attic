@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -69,59 +70,35 @@
 
 #endif
 
-// Exr Filter Factory
-GrFmtExr::GrFmtExr()
+namespace cv
 {
-    m_sign_len = 4;
+
+/////////////////////// ExrDecoder ///////////////////
+
+ExrDecoder::ExrDecoder()
+{
     m_signature = "\x76\x2f\x31\x01";
-    m_description = "OpenEXR Image files (*.exr)";
-}
-
-
-GrFmtExr::~GrFmtExr()
-{
-}
-
-
-GrFmtReader* GrFmtExr::NewReader( const char* filename )
-{
-    return new GrFmtExrReader( filename );
-}
-
-
-GrFmtWriter* GrFmtExr::NewWriter( const char* filename )
-{
-    return new GrFmtExrWriter( filename );
-}
-
-
-/////////////////////// GrFmtExrReader ///////////////////
-
-GrFmtExrReader::GrFmtExrReader( const char* filename ) : GrFmtReader( filename )
-{
     m_file = new InputFile( filename );
     m_red = m_green = m_blue = 0;
 }
 
 
-GrFmtExrReader::~GrFmtExrReader()
+ExrDecoder::~ExrDecoder()
 {
-    Close();
+    close();
 }
 
 
-void  GrFmtExrReader::Close()
+void  ExrDecoder::close()
 {
     if( m_file )
     {
         delete m_file;
         m_file = 0;
     }
-
-    GrFmtReader::Close();
 }
 
-bool  GrFmtExrReader::ReadHeader()
+bool  ExrDecoder::readHeader()
 {
     bool result = false;
 
@@ -195,8 +172,11 @@ bool  GrFmtExrReader::ReadHeader()
 }
 
 
-bool  GrFmtExrReader::ReadData( uchar* data, int step, int color )
+bool  ExrDecoder::readData( Mat& img )
 {
+    bool color = img.channels() > 1;
+    uchar* data = img.data;
+    int step = img.step;
     bool justcopy = m_native_depth;
     bool chromatorgb = false;
     bool rgbtogray = false;
@@ -398,7 +378,7 @@ bool  GrFmtExrReader::ReadData( uchar* data, int step, int color )
 // on entry pixel values are stored packed in the upper left corner of the image
 // this functions expands them by duplication to cover the whole image
  */
-void  GrFmtExrReader::UpSample( uchar *data, int xstep, int ystep, int xsample, int ysample )
+void  ExrDecoder::UpSample( uchar *data, int xstep, int ystep, int xsample, int ysample )
 {
     for( int y = (m_height - 1) / ysample, yre = m_height - ysample; y >= 0; y--, yre -= ysample )
     {
@@ -424,7 +404,7 @@ void  GrFmtExrReader::UpSample( uchar *data, int xstep, int ystep, int xsample, 
 // on entry pixel values are stored packed in the upper left corner of the image
 // this functions expands them by duplication to cover the whole image
  */
-void  GrFmtExrReader::UpSampleX( float *data, int xstep, int xsample )
+void  ExrDecoder::UpSampleX( float *data, int xstep, int xsample )
 {
     for( int x = (m_width - 1) / xsample, xre = m_width - xsample; x >= 0; x--, xre -= xsample )
     {
@@ -442,7 +422,7 @@ void  GrFmtExrReader::UpSampleX( float *data, int xstep, int xsample )
 // on entry pixel values are stored packed in the upper left corner of the image
 // this functions expands them by duplication to cover the whole image
  */
-void  GrFmtExrReader::UpSampleY( uchar *data, int xstep, int ystep, int ysample )
+void  ExrDecoder::UpSampleY( uchar *data, int xstep, int ystep, int ysample )
 {
     for( int y = m_height - ysample, yre = m_height - ysample; y >= 0; y -= ysample, yre -= ysample )
     {
@@ -464,7 +444,7 @@ void  GrFmtExrReader::UpSampleY( uchar *data, int xstep, int ystep, int ysample 
 /**
 // algorithm from ImfRgbaYca.cpp
  */
-void  GrFmtExrReader::ChromaToBGR( float *data, int numlines, int step )
+void  ExrDecoder::ChromaToBGR( float *data, int numlines, int step )
 {
     int x, y, t;
     
@@ -527,7 +507,7 @@ void  GrFmtExrReader::ChromaToBGR( float *data, int numlines, int step )
 /**
 // convert one row to gray
 */
-void  GrFmtExrReader::RGBToGray( float *in, float *out )
+void  ExrDecoder::RGBToGray( float *in, float *out )
 {
     if( m_type == FLOAT )
     {
@@ -563,47 +543,48 @@ void  GrFmtExrReader::RGBToGray( float *in, float *out )
     }
 }
 
-/////////////////////// GrFmtExrWriter ///////////////////
+/////////////////////// ExrEncoder ///////////////////
 
 
-GrFmtExrWriter::GrFmtExrWriter( const char* filename ) : GrFmtWriter( filename )
+ExrEncoder::ExrEncoder()
+{
+    m_description = "OpenEXR Image files (*.exr)";
+}
+
+
+ExrEncoder::~ExrEncoder()
 {
 }
 
 
-GrFmtExrWriter::~GrFmtExrWriter()
+bool  ExrEncoder::isFormatSupported( int depth )
 {
-}
-
-
-bool  GrFmtExrWriter::IsFormatSupported( int depth )
-{
-    return depth == IPL_DEPTH_8U || depth == IPL_DEPTH_8S ||
-           depth == IPL_DEPTH_16U || depth == IPL_DEPTH_16S ||
-           depth == IPL_DEPTH_32S || depth == IPL_DEPTH_32F;
-           // TODO: do (or should) we support 64f?
+    return CV_MAT_DEPTH(depth) >= CV_8U && CV_MAT_DEPTH(depth) < CV_64F;
 }
 
 
 // TODO scale appropriately
-bool  GrFmtExrWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int depth, int channels )
+bool  ExrEncoder::writeImage( const String& filename,
+                                  const Mat& img, const Vector<int>& )
 {
+    int width = img.cols, height = img.rows;
+    int depth = img.depth(), channels = img.channels();
     bool result = false;
+    bool issigned = depth == CV_8S || depth == CV_16S || depth == CV_32S;
+    bool isfloat = depth == CV_32F || depth == CV_64F;
+    depth = CV_ELEM_SIZE1(depth)*8;
+    uchar* data = img.data;
+    int step = img.step;
 
     Header header( width, height );
     PixelType type;
-    bool issigned = depth < 0;
-    bool isfloat = depth == IPL_DEPTH_32F || depth == IPL_DEPTH_64F;
 
-    if(depth == IPL_DEPTH_8U || depth == IPL_DEPTH_8S)
+    if(depth == 8)
         type = HALF;
     else if(isfloat)
         type = FLOAT;
     else
         type = UINT;
-
-    depth &= 255;
 
     if( channels == 3 )
     {
@@ -618,7 +599,7 @@ bool  GrFmtExrWriter::WriteImage( const uchar* data, int step,
         //printf("gray\n");
     }
 
-    OutputFile file( m_filename, header );
+    OutputFile file( filename.c_str(), header );
 
     FrameBuffer frame;
 
@@ -730,6 +711,8 @@ bool  GrFmtExrWriter::WriteImage( const uchar* data, int step,
     }
 
     return result;
+}
+
 }
 
 #endif

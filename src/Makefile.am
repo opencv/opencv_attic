@@ -84,34 +84,21 @@ lib_cxcore_la_SOURCES = \
   cxcore/cxalloc.cpp \
   cxcore/cxarithm.cpp \
   cxcore/cxarray.cpp \
-  cxcore/cxcmp.cpp \
   cxcore/cxconvert.cpp \
   cxcore/cxcopy.cpp \
   cxcore/cxdatastructs.cpp \
   cxcore/cxdrawing.cpp \
   cxcore/cxdxt.cpp \
-  cxcore/cxerror.cpp \
   cxcore/cximage.cpp \
   cxcore/cxlapack.cpp \
-  cxcore/cxlogic.cpp \
-  cxcore/cxlut.cpp \
   cxcore/cxmathfuncs.cpp \
   cxcore/cxmatmul.cpp \
   cxcore/cxmatrix.cpp \
-  cxcore/cxmean.cpp \
-  cxcore/cxmeansdv.cpp \
-  cxcore/cxminmaxloc.cpp \
-  cxcore/cxnorm.cpp \
-  cxcore/cxouttext.cpp \
   cxcore/cxpersistence.cpp \
   cxcore/cxrand.cpp \
-  cxcore/cxsumpixels.cpp \
-  cxcore/cxsvd.cpp \
-  cxcore/cxswitcher.cpp \
-  cxcore/cxtables.cpp \
-  cxcore/cxutils.cpp
-
-#  cxcore/cxprecomp.cpp
+  cxcore/cxstat.cpp \
+  cxcore/cxsystem.cpp \
+  cxcore/cxtables.cpp        
 
 lib_cxcore_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -124,74 +111,75 @@ libcxcore_la_LIBADD  = lib_cxcore.la @LTLIBOBJS@
 
 # convenience library for cv
 lib_cv_la_SOURCES = \
-  cv/cvaccum.cpp \
-  cv/cvapprox.cpp \
-  cv/cvcalccontrasthistogram.cpp \
-  cv/cvcalcimagehomography.cpp \
-  cv/cvcalibinit.cpp \
-  cv/cvcalibration.cpp \
-  cv/cvcamshift.cpp \
-  cv/cvcanny.cpp \
-  cv/cvcolor.cpp \
-  cv/cvcondens.cpp \
-  cv/cvcontours.cpp \
-  cv/cvcontourtree.cpp \
-  cv/cvconvhull.cpp \
-  cv/cvcorner.cpp \
-  cv/cvcornersubpix.cpp \
-  cv/cvderiv.cpp \
-  cv/cvdistransform.cpp \
-  cv/cvdominants.cpp \
-  cv/cvemd.cpp \
-  cv/cvfeatureselect.cpp \
-  cv/cvfeaturetree.cpp \
-  cv/cvfilter.cpp \
-  cv/cvfloodfill.cpp \
-  cv/cvfundam.cpp \
-  cv/cvgeometry.cpp \
-  cv/cvhaar.cpp \
-  cv/cvhistogram.cpp \
-  cv/cvhough.cpp \
-  cv/cvimgwarp.cpp \
-  cv/cvinpaint.cpp \
-  cv/cvkalman.cpp \
-  cv/cvlinefit.cpp \
-  cv/cvlkpyramid.cpp \
-  cv/cvlsh.cpp \
-  cv/cvmatchcontours.cpp \
-  cv/cvmodelest.cpp \
-  cv/cvmoments.cpp \
-  cv/cvmorph.cpp \
-  cv/cvmotempl.cpp \
-  cv/cvoptflowbm.cpp \
-  cv/cvoptflowhs.cpp \
-  cv/cvoptflowlk.cpp \
-  cv/cvpgh.cpp \
-  cv/cvposit.cpp \
-  cv/cvpyramids.cpp \
-  cv/cvpyrsegmentation.cpp \
-  cv/cvrotcalipers.cpp \
-  cv/cvsamplers.cpp \
-  cv/cvsegmentation.cpp \
-  cv/cvshapedescr.cpp \
-  cv/cvsmooth.cpp \
-  cv/cvsnakes.cpp \
-  cv/cvspilltree.cpp \
-  cv/cvstardetector.cpp \
-  cv/cvstereobm.cpp \
-  cv/cvstereogc.cpp \
-  cv/cvsubdivision2d.cpp \
-  cv/cvsumpixels.cpp \
-  cv/cvsurf.cpp \
-  cv/cvswitcher.cpp \
-  cv/cvtables.cpp \
-  cv/cvtemplmatch.cpp \
-  cv/cvthresh.cpp \
-  cv/cvundistort.cpp \
-  cv/cvutils.cpp \
-  cv/cvkdtree.cpp
-
-#  cv/cvprecomp.cpp
+  cv/cvaccum.cpp \ 
+  cv/cvapprox.cpp \ 
+  cv/cvcalccontrasthistogram.cpp \ 
+  cv/cvcalcimagehomography.cpp \ 
+  cv/cvcalibinit.cpp \ 
+  cv/cvcalibration.cpp \ 
+  cv/cvcamshift.cpp \ 
+  cv/cvcanny.cpp \ 
+  cv/cvcolor.cpp \ 
+  cv/cvcondens.cpp \ 
+  cv/cvcontours.cpp \ 
+  cv/cvcontourtree.cpp \ 
+  cv/cvconvhull.cpp \ 
+  cv/cvcorner.cpp \ 
+  cv/cvcornersubpix.cpp \ 
+  cv/cvderiv.cpp \ 
+  cv/cvdistransform.cpp \ 
+  cv/cvdominants.cpp \ 
+  cv/cvemd.cpp \ 
+  cv/cvfeatureselect.cpp \ 
+  cv/cvfeaturetree.cpp \ 
+  cv/cvfilter.cpp \ 
+  cv/cvfloodfill.cpp \ 
+  cv/cvfundam.cpp \ 
+  cv/cvgeometry.cpp \ 
+  cv/cvhaar.cpp \ 
+  cv/cvhistogram.cpp \ 
+  cv/cvhough.cpp \ 
+  cv/cvimgwarp.cpp \ 
+  cv/cvinpaint.cpp \ 
+  cv/cvkalman.cpp \ 
+  cv/cvkdtree.cpp \ 
+  cv/cvlinefit.cpp \ 
+  cv/cvlkpyramid.cpp \ 
+  cv/cvlsh.cpp \ 
+  cv/cvmatchcontours.cpp \ 
+  cv/cvmodelest.cpp \ 
+  cv/cvmoments.cpp \ 
+  cv/cvmorph.cpp \ 
+  cv/cvmotempl.cpp \ 
+  cv/cvmser.cpp \ 
+  cv/cvoptflowbbw.cpp \ 
+  cv/cvoptflowbm.cpp \ 
+  cv/cvoptflowgf.cpp \ 
+  cv/cvoptflowhs.cpp \ 
+  cv/cvoptflowlk.cpp \ 
+  cv/cvpgh.cpp \ 
+  cv/cvposit.cpp \ 
+  cv/cvpyramids.cpp \ 
+  cv/cvpyrsegmentation.cpp \ 
+  cv/cvrotcalipers.cpp \ 
+  cv/cvsamplers.cpp \ 
+  cv/cvsegmentation.cpp \ 
+  cv/cvshapedescr.cpp \ 
+  cv/cvsmooth.cpp \ 
+  cv/cvsnakes.cpp \ 
+  cv/cvspilltree.cpp \ 
+  cv/cvstardetector.cpp \ 
+  cv/cvstereobm.cpp \ 
+  cv/cvstereogc.cpp \ 
+  cv/cvsubdivision2d.cpp \ 
+  cv/cvsumpixels.cpp \ 
+  cv/cvsurf.cpp \ 
+  cv/cvtables.cpp \ 
+  cv/cvtemplmatch.cpp \ 
+  cv/cvthresh.cpp \ 
+  cv/cvtriangulate.cpp \ 
+  cv/cvundistort.cpp \ 
+  cv/cvutils.cpp
 
 lib_cv_la_LDFLAGS = -no-undefined @LDFLAGS@
 
@@ -204,71 +192,75 @@ libcv_la_LIBADD = lib_cv.la libcxcore.la @LTLIBOBJS@
 
 # convenience library for cvaux
 lib_cvaux_la_SOURCES = \
-  cvaux/camshift.cpp \
-  cvaux/cv3dtracker.cpp \
-  cvaux/cvaux.cpp \
-  cvaux/cvauxutils.cpp \
-  cvaux/cvbgfg_acmmm2003.cpp \
-  cvaux/cvbgfg_codebook.cpp \
-  cvaux/cvbgfg_common.cpp \
-  cvaux/cvbgfg_gaussmix.cpp \
-  cvaux/cvcalibfilter.cpp \
-  cvaux/cvclique.cpp \
-  cvaux/cvcorrespond.cpp \
-  cvaux/cvcorrimages.cpp \
-  cvaux/cvcreatehandmask.cpp \
-  cvaux/cvdpstereo.cpp \
-  cvaux/cveigenobjects.cpp \
-  cvaux/cvepilines.cpp \
-  cvaux/cvface.cpp \
-  cvaux/cvfacedetection.cpp \
-  cvaux/cvfacetemplate.cpp \
-  cvaux/cvfindface.cpp \
-  cvaux/cvfindhandregion.cpp \
-  cvaux/cvhmm1d.cpp \
-  cvaux/cvhmm.cpp \
-  cvaux/cvhmmobs.cpp \
-  cvaux/cvlcm.cpp \
-  cvaux/cvlee.cpp \
-  cvaux/cvlevmar.cpp \
-  cvaux/cvlevmarprojbandle.cpp \
-  cvaux/cvlevmartrif.cpp \
-  cvaux/cvlines.cpp \
-  cvaux/cvlmeds.cpp \
-  cvaux/cvmat.cpp \
-  cvaux/cvmorphcontours.cpp \
-  cvaux/cvmorphing.cpp \
-  cvaux/cvprewarp.cpp \
-  cvaux/cvscanlines.cpp \
-  cvaux/cvsegment.cpp \
-  cvaux/cvsubdiv2.cpp \
-  cvaux/cvtexture.cpp \
-  cvaux/cvtrifocal.cpp \
-  cvaux/cvvecfacetracking.cpp \
-  cvaux/cvvideo.cpp \
-  cvaux/decomppoly.cpp \
-  cvaux/enmin.cpp \
-  cvaux/extendededges.cpp \
-  \
-  cvaux/vs/bgfg_estimation.cpp              \
-  cvaux/vs/blobtrackanalysis.cpp            \
-  cvaux/vs/blobtrackanalysishist.cpp        \
-  cvaux/vs/blobtrackanalysisior.cpp         \
-  cvaux/vs/blobtrackanalysistrackdist.cpp   \
-  cvaux/vs/blobtrackgen1.cpp                \
-  cvaux/vs/blobtrackgenyml.cpp              \
-  cvaux/vs/blobtrackingauto.cpp             \
-  cvaux/vs/blobtrackingcc.cpp               \
-  cvaux/vs/blobtrackingccwithcr.cpp         \
-  cvaux/vs/blobtrackingkalman.cpp           \
-  cvaux/vs/blobtrackinglist.cpp             \
-  cvaux/vs/blobtrackingmsfg.cpp             \
-  cvaux/vs/blobtrackingmsfgs.cpp            \
-  cvaux/vs/blobtrackpostprockalman.cpp      \
-  cvaux/vs/blobtrackpostproclinear.cpp      \
-  cvaux/vs/blobtrackpostproclist.cpp        \
-  cvaux/vs/enteringblobdetection.cpp        \
-  cvaux/vs/enteringblobdetectionreal.cpp    \
+  cvaux/camshift.cpp \ 
+  cvaux/cv3dtracker.cpp \ 
+  cvaux/cvadaptiveskindetector.cpp \ 
+  cvaux/cvaux.cpp \ 
+  cvaux/cvauxutils.cpp \ 
+  cvaux/cvbgfg_acmmm2003.cpp \ 
+  cvaux/cvbgfg_codebook.cpp \ 
+  cvaux/cvbgfg_common.cpp \ 
+  cvaux/cvbgfg_gaussmix.cpp \ 
+  cvaux/cvcalibfilter.cpp \ 
+  cvaux/cvclique.cpp \ 
+  cvaux/cvcorrespond.cpp \ 
+  cvaux/cvcorrimages.cpp \ 
+  cvaux/cvcreatehandmask.cpp \ 
+  cvaux/cvdpstereo.cpp \ 
+  cvaux/cveigenobjects.cpp \ 
+  cvaux/cvepilines.cpp \ 
+  cvaux/cvface.cpp \ 
+  cvaux/cvfacedetection.cpp \ 
+  cvaux/cvfacetemplate.cpp \ 
+  cvaux/cvfindface.cpp \ 
+  cvaux/cvfindhandregion.cpp \ 
+  cvaux/cvfuzzymeanshifttracker.cpp \ 
+  cvaux/cvhmm.cpp \ 
+  cvaux/cvhmm1d.cpp \ 
+  cvaux/cvhmmobs.cpp \ 
+  cvaux/cvhog.cpp \ 
+  cvaux/cvlcm.cpp \ 
+  cvaux/cvlee.cpp \ 
+  cvaux/cvlevmar.cpp \ 
+  cvaux/cvlevmarprojbandle.cpp \ 
+  cvaux/cvlevmartrif.cpp \ 
+  cvaux/cvlines.cpp \ 
+  cvaux/cvlmeds.cpp \ 
+  cvaux/cvmat.cpp \ 
+  cvaux/cvmorphcontours.cpp \ 
+  cvaux/cvmorphing.cpp \ 
+  cvaux/cvocttree.cpp \ 
+  cvaux/cvprewarp.cpp \ 
+  cvaux/cvscanlines.cpp \ 
+  cvaux/cvsegment.cpp \ 
+  cvaux/cvspinimages.cpp \ 
+  cvaux/cvsubdiv2.cpp \ 
+  cvaux/cvtexture.cpp \ 
+  cvaux/cvtrifocal.cpp \ 
+  cvaux/cvvecfacetracking.cpp \ 
+  cvaux/cvvideo.cpp \ 
+  cvaux/decomppoly.cpp \ 
+  cvaux/enmin.cpp \ 
+  cvaux/extendededges.cpp \ 
+  cvaux/vs/bgfg_estimation.cpp \ 
+  cvaux/vs/blobtrackanalysis.cpp \ 
+  cvaux/vs/blobtrackanalysishist.cpp \ 
+  cvaux/vs/blobtrackanalysisior.cpp \ 
+  cvaux/vs/blobtrackanalysistrackdist.cpp \ 
+  cvaux/vs/blobtrackgen1.cpp \ 
+  cvaux/vs/blobtrackgenyml.cpp \ 
+  cvaux/vs/blobtrackingauto.cpp \ 
+  cvaux/vs/blobtrackingcc.cpp \ 
+  cvaux/vs/blobtrackingccwithcr.cpp \ 
+  cvaux/vs/blobtrackingkalman.cpp \ 
+  cvaux/vs/blobtrackinglist.cpp \ 
+  cvaux/vs/blobtrackingmsfg.cpp \ 
+  cvaux/vs/blobtrackingmsfgs.cpp \ 
+  cvaux/vs/blobtrackpostprockalman.cpp \ 
+  cvaux/vs/blobtrackpostproclinear.cpp \ 
+  cvaux/vs/blobtrackpostproclist.cpp \ 
+  cvaux/vs/enteringblobdetection.cpp \ 
+  cvaux/vs/enteringblobdetectionreal.cpp \ 
   cvaux/vs/testseq.cpp
 
 #  cvaux/precomp.cpp
@@ -284,18 +276,18 @@ libcvaux_la_LIBADD  = lib_cvaux.la libcxcore.la libcv.la @LTLIBOBJS@
 
 # convenience library for ml
 lib_ml_la_SOURCES = \
-  ml/ml.cpp \
-  ml/mlann_mlp.cpp \
-  ml/mlboost.cpp \
-  ml/mlcnn.cpp \
-  ml/mlem.cpp \
-  ml/mlestimate.cpp \
-  ml/mlknearest.cpp \
-  ml/mlnbayes.cpp \
-  ml/mlrtrees.cpp \
-  ml/mlsvm.cpp \
-  ml/mltestset.cpp \
-  ml/mltree.cpp \
+  ml/mlann_mlp.cpp \ 
+  ml/mlboost.cpp \ 
+  ml/mlcnn.cpp \ 
+  ml/mlem.cpp \ 
+  ml/mlertrees.cpp \ 
+  ml/mlestimate.cpp \ 
+  ml/mlknearest.cpp \ 
+  ml/mlnbayes.cpp \ 
+  ml/mlrtrees.cpp \ 
+  ml/mlsvm.cpp \ 
+  ml/mltestset.cpp \ 
+  ml/mltree.cpp \ 
   ml/ml_inner_functions.cpp
 
 lib_ml_la_LDFLAGS = -no-undefined @LDFLAGS@

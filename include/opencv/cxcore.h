@@ -1768,7 +1768,8 @@ CVAPI(int)  cvGetThreadNum( void );
 
 typedef IplImage* (CV_CDECL * CvLoadImageFunc)( const char* filename, int colorness );
 typedef CvMat* (CV_CDECL * CvLoadImageMFunc)( const char* filename, int colorness );
-typedef int (CV_CDECL * CvSaveImageFunc)( const char* filename, const CvArr* image );
+typedef int (CV_CDECL * CvSaveImageFunc)( const char* filename, const CvArr* image,
+                                          const int* params );
 typedef void (CV_CDECL * CvShowImageFunc)( const char* windowname, const CvArr* image );
 
 CVAPI(int) cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
@@ -1856,7 +1857,7 @@ public:
     bool load( const char* filename, const char* imgname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* imgname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void save( const char* filename, const char* imgname );
+    void save( const char* filename, const char* imgname, const int* params=0 );
     void write( CvFileStorage* fs, const char* imgname );
 
     void show( const char* window_name );
@@ -2039,7 +2040,7 @@ public:
     bool load( const char* filename, const char* matname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* matname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void save( const char* filename, const char* matname );
+    void save( const char* filename, const char* matname, const int* params=0 );
     void write( CvFileStorage* fs, const char* matname );
 
     void show( const char* window_name );

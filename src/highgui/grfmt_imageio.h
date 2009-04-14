@@ -14,45 +14,37 @@
 #include "grfmt_base.h"
 #include <ApplicationServices/ApplicationServices.h>
 
-class GrFmtImageIOReader : public GrFmtReader
+namespace cv
+{
+
+class ImageIODecoder : public BaseImageDecoder
 {
 public:
     
-    GrFmtImageIOReader( const char* filename );
-    ~GrFmtImageIOReader();
+    ImageIODecoder();
+    ~ImageIODecoder();
     
-    bool  ReadData( uchar* data, int step, int color );
-    bool  ReadHeader();
-    void  Close();
+    bool  readData( Mat& img );
+    bool  readHeader();
+    void  close();
+
+    ImageDecoder newDecoder() const;
 
 protected:
     
     CGImageRef imageRef;
 };
 
-class GrFmtImageIOWriter : public GrFmtWriter
+class ImageIOEncoder : public BaseImageEncoder
 {
 public:
-    
-    GrFmtImageIOWriter( const char* filename );
-    ~GrFmtImageIOWriter();
+    ImageIOEncoder();
+    ~ImageIOEncoder();
 
-    bool  WriteImage( const uchar* data, int step,
-                      int width, int height, int depth, int channels );
-};
+    bool  write( const String& filename,
+        const Mat& img, const Vector<int>& params );
 
-// ImageIO filter factory
-class GrFmtImageIO :public GrFmtFilterFactory
-{
-public:
-    
-    GrFmtImageIO();
-    ~GrFmtImageIO();
-    
-    bool CheckFile( const char* filename );
-    
-    GrFmtReader* NewReader( const char* filename );
-    GrFmtWriter* NewWriter( const char* filename );
+    ImageEncoder newEncoder() const;
 };
 
 #endif/*HAVE_IMAGEIO*/

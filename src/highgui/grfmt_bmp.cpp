@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -42,76 +43,58 @@
 #include "_highgui.h"
 #include "grfmt_bmp.h"
 
+namespace cv
+{
+
 static const char* fmtSignBmp = "BM";
 
-GrFmtBmp::GrFmtBmp()
+/************************ BMP decoder *****************************/
+
+BmpDecoder::BmpDecoder()
 {
-    m_sign_len = 2;
     m_signature = fmtSignBmp;
-    m_description = "Windows bitmap (*.bmp;*.dib)";
-}
-
-
-GrFmtBmp::~GrFmtBmp()
-{
-}
-
-
-GrFmtReader* GrFmtBmp::NewReader( const char* filename )
-{
-    return new GrFmtBmpReader( filename );
-}
-
-
-GrFmtWriter* GrFmtBmp::NewWriter( const char* filename )
-{
-    return new GrFmtBmpWriter( filename );
-}
-
-
-/************************ BMP reader *****************************/
-
-GrFmtBmpReader::GrFmtBmpReader( const char* filename ) : GrFmtReader( filename )
-{
     m_offset = -1;
 }
 
 
-GrFmtBmpReader::~GrFmtBmpReader()
+BmpDecoder::~BmpDecoder()
 {
 }
 
 
-void  GrFmtBmpReader::Close()
+void  BmpDecoder::close()
 {
-    m_strm.Close();
-    GrFmtReader::Close();
+    m_strm.close();
 }
 
+ImageDecoder BmpDecoder::newDecoder() const
+{
+    return new BmpDecoder;
+}
 
-bool  GrFmtBmpReader::ReadHeader()
+bool  BmpDecoder::readHeader()
 {
     bool result = false;
+    bool iscolor = false;
 
-    assert( strlen(m_filename) != 0 );
-    if( !m_strm.Open( m_filename )) return false;
+    if( !m_strm.open( m_filename )) return false;
 
-    if( setjmp( m_strm.JmpBuf()) == 0 )
+    try
     {
-        m_strm.Skip( 10 );
-        m_offset = m_strm.GetDWord();
+        m_strm.skip( 10 );
+        m_offset = m_strm.getDWord();
 
-        int  size = m_strm.GetDWord();
+        int  size = m_strm.getDWord();
 
         if( size >= 36 )
         {
-            m_width  = m_strm.GetDWord();
-            m_height = m_strm.GetDWord();
-            m_bpp    = m_strm.GetDWord() >> 16;
-            m_rle_code = (BmpCompression)m_strm.GetDWord();
-            m_strm.Skip(12);
-            int clrused = m_strm.GetDWord();
-            m_strm.Skip( size - 36 );
+            m_width  = m_strm.getDWord();
+            m_height = m_strm.getDWord();
+            m_bpp    = m_strm.getDWord() >> 16;
+            m_rle_code = (BmpCompression)m_strm.getDWord();
+            m_strm.skip(12);
+            int clrused = m_strm.getDWord();
+            m_strm.skip( size - 36 );
 
             if( m_width > 0 && m_height > 0 &&
              (((m_bpp == 1 || m_bpp == 4 || m_bpp == 8 ||
@@ -120,20 +103,20 @@ bool  GrFmtBmpReader::ReadHeader()
                (m_bpp == 4 && m_rle_code == BMP_RLE4) ||
                (m_bpp == 8 && m_rle_code == BMP_RLE8)))
             {
-                m_iscolor = true;
+                iscolor = true;
                 result = true;
 
                 if( m_bpp <= 8 )
                 {
                     memset( m_palette, 0, sizeof(m_palette));
-                    m_strm.GetBytes( m_palette, (clrused == 0? 1<<m_bpp : clrused)*4 );
-                    m_iscolor = IsColorPalette( m_palette, m_bpp );
+                    m_strm.getBytes( m_palette, (clrused == 0? 1<<m_bpp : clrused)*4 );
+                    iscolor = IsColorPalette( m_palette, m_bpp );
                 }
                 else if( m_bpp == 16 && m_rle_code == BMP_BITFIELDS )
                 {
-                    int redmask = m_strm.GetDWord();
-                    int greenmask = m_strm.GetDWord();
-                    int bluemask = m_strm.GetDWord();
+                    int redmask = m_strm.getDWord();
+                    int greenmask = m_strm.getDWord();
+                    int bluemask = m_strm.getDWord();
 
                     if( bluemask == 0x1f && greenmask == 0x3e0 && redmask == 0x7c00 )
                         m_bpp = 15;
@@ -148,9 +131,9 @@ bool  GrFmtBmpReader::ReadHeader()
         }
         else if( size == 12 )
         {
-            m_width  = m_strm.GetWord();
-            m_height = m_strm.GetWord();
-            m_bpp    = m_strm.GetDWord() >> 16;
+            m_width  = m_strm.getWord();
+            m_height = m_strm.getWord();
+            m_bpp    = m_strm.getDWord() >> 16;
             m_rle_code = BMP_RGB;
 
             if( m_width > 0 && m_height > 0 &&
@@ -161,7 +144,7 @@ bool  GrFmtBmpReader::ReadHeader()
                 {
                     uchar buffer[256*3];
                     int j, clrused = 1 << m_bpp;
-                    m_strm.GetBytes( buffer, clrused*3 );
+                    m_strm.getBytes( buffer, clrused*3 );
                     for( j = 0; j < clrused; j++ )
                     {
                         m_palette[j].b = buffer[3*j+0];
@@ -173,39 +156,41 @@ bool  GrFmtBmpReader::ReadHeader()
             }
         }
     }
+    catch(...)
+    {
+    }
 
+    m_type = iscolor ? CV_8UC3 : CV_8UC1;
     if( !result )
     {
         m_offset = -1;
         m_width = m_height = -1;
-        m_strm.Close();
+        m_strm.close();
     }
     return result;
 }
 
 
-bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
+bool  BmpDecoder::readData( Mat& img )
 {
-    const  int buffer_size = 1 << 12;
-    uchar  buffer[buffer_size];
-    uchar  bgr_buffer[buffer_size];
+    uchar* data = img.data;
+    int step = img.step;
+    bool color = img.channels() > 1;
     uchar  gray_palette[256];
     bool   result = false;
-    uchar* src = buffer;
-    uchar* bgr = bgr_buffer;
     int  src_pitch = ((m_width*(m_bpp != 15 ? m_bpp : 16) + 7)/8 + 3) & -4;
     int  nch = color ? 3 : 1;
-    int  width3 = m_width*nch;
-    int  y;
+    int  y, width3 = m_width*nch;
 
-    if( m_offset < 0 || !m_strm.IsOpened())
+    if( m_offset < 0 || !m_strm.isOpened())
         return false;
 
     data += (m_height - 1)*step;
     step = -step;
 
-    if( (m_bpp != 24 || !color) && src_pitch+32 > buffer_size )
-        src = new uchar[src_pitch+32];
+    AutoBuffer<uchar> _src, _bgr;
+    if( (m_bpp != 24 || !color) )
+        _src.allocate(src_pitch + 32);
 
     if( !color )
     {
@@ -213,12 +198,13 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
         {
             CvtPaletteToGray( m_palette, gray_palette, 1 << m_bpp );
         }
-        if( m_width*3 + 32 > buffer_size ) bgr = new uchar[m_width*3 + 32];
+        _bgr.allocate(m_width*3 + 32);
     }
+    uchar *src = _src, *bgr = _bgr;
 
-    if( setjmp( m_strm.JmpBuf()) == 0 )
+    try
     {
-        m_strm.SetPos( m_offset );
+        m_strm.setPos( m_offset );
 
         switch( m_bpp )
         {
@@ -226,7 +212,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
         case 1:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( src, src_pitch );
+                m_strm.getBytes( src, src_pitch );
                 FillColorRow1( color ? data : bgr, src, m_width, m_palette );
                 if( !color )
                     icvCvt_BGR2Gray_8u_C3C1R( bgr, 0, data, 0, cvSize(m_width,1) );
@@ -240,7 +226,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
             {
                 for( y = 0; y < m_height; y++, data += step )
                 {
-                    m_strm.GetBytes( src, src_pitch );
+                    m_strm.getBytes( src, src_pitch );
                     if( color )
                         FillColorRow4( data, src, m_width, m_palette );
                     else
@@ -255,7 +241,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
 
                 for(;;)
                 {
-                    int code = m_strm.GetWord();
+                    int code = m_strm.getWord();
                     int len = code & 255;
                     code >>= 8;
                     if( len != 0 ) // encoded mode
@@ -284,7 +270,7 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
                     else if( code > 2 ) // absolute mode
                     {
                         if( data + code*nch > line_end ) goto decode_rle4_bad;
-                        m_strm.GetBytes( src, (((code + 1)>>1) + 1) & -2 );
+                        m_strm.getBytes( src, (((code + 1)>>1) + 1) & -2 );
                         if( color )
                             data = FillColorRow4( data, src, code, m_palette );
                         else
@@ -297,8 +283,8 @@ bool  GrFmtBmpReader::ReadData( uchar* data, int step, int color )
 
                         if( code == 2 )
                         {
-                            x_shift3 = m_strm.GetByte()*nch;
-                            y_shift = m_strm.GetByte();
+                            x_shift3 = m_strm.getByte()*nch;
+                            y_shift = m_strm.getByte();
                         }
 
                         len = x_shift3 + ((y_shift * width3) & ((code == 0) - 1));
@@ -328,7 +314,7 @@ decode_rle4_bad: ;
             {
                 for( y = 0; y < m_height; y++, data += step )
                 {
-                    m_strm.GetBytes( src, src_pitch );
+                    m_strm.getBytes( src, src_pitch );
                     if( color )
                         FillColorRow8( data, src, m_width, m_palette );
                     else
@@ -344,7 +330,7 @@ decode_rle4_bad: ;
 
                 for(;;)
                 {
-                    int code = m_strm.GetWord();
+                    int code = m_strm.getWord();
                     int len = code & 255;
                     code >>= 8;
                     if( len != 0 ) // encoded mode
@@ -373,7 +359,7 @@ decode_rle4_bad: ;
 
                         if( data + code3 > line_end )
                             goto decode_rle8_bad;
-                        m_strm.GetBytes( src, (code + 1) & -2 );
+                        m_strm.getBytes( src, (code + 1) & -2 );
                         if( color )
                             data = FillColorRow8( data, src, code, m_palette );
                         else
@@ -390,8 +376,8 @@ decode_rle4_bad: ;
                         {
                             if( code == 2 )
                             {
-                                x_shift3 = m_strm.GetByte()*nch;
-                                y_shift = m_strm.GetByte();
+                                x_shift3 = m_strm.getByte()*nch;
+                                y_shift = m_strm.getByte();
                             }
 
                             x_shift3 += (y_shift * width3) & ((code == 0) - 1);
@@ -424,7 +410,7 @@ decode_rle8_bad: ;
         case 15:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( src, src_pitch );
+                m_strm.getBytes( src, src_pitch );
                 if( !color )
                     icvCvt_BGR5552Gray_8u_C2C1R( src, 0, data, 0, cvSize(m_width,1) );
                 else
@@ -436,7 +422,7 @@ decode_rle8_bad: ;
         case 16:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( src, src_pitch );
+                m_strm.getBytes( src, src_pitch );
                 if( !color )
                     icvCvt_BGR5652Gray_8u_C2C1R( src, 0, data, 0, cvSize(m_width,1) );
                 else
@@ -448,7 +434,7 @@ decode_rle8_bad: ;
         case 24:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( color ? data : src, src_pitch );
+                m_strm.getBytes( color ? data : src, src_pitch );
                 if( !color )
                     icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1) );
             }
@@ -458,7 +444,7 @@ decode_rle8_bad: ;
         case 32:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.GetBytes( src, src_pitch );
+                m_strm.getBytes( src, src_pitch );
 
                 if( !color )
                     icvCvt_BGRA2Gray_8u_C4C1R( src, 0, data, 0, cvSize(m_width,1) );
@@ -471,35 +457,41 @@ decode_rle8_bad: ;
             assert(0);
         }
     }
+    catch(...)
+    {
+    }
 
-    if( src != buffer ) delete[] src;
-    if( bgr != bgr_buffer ) delete[] bgr;
     return result;
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-GrFmtBmpWriter::GrFmtBmpWriter( const char* filename ) : GrFmtWriter( filename )
+BmpEncoder::BmpEncoder()
 {
+    m_description = "Windows bitmap (*.bmp;*.dib)";
 }
 
 
-GrFmtBmpWriter::~GrFmtBmpWriter()
+BmpEncoder::~BmpEncoder()
 {
 }
 
+ImageEncoder BmpEncoder::newEncoder() const
+{
+    return new BmpEncoder;
+}
 
-bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
-                                  int width, int height, int /*depth*/, int channels )
+bool  BmpEncoder::write( const String& filename,
+                         const Mat& img, const Vector<int>& )
 {
     bool result = false;
+    int width = img.cols, height = img.rows, channels = img.channels();
     int fileStep = (width*channels + 3) & -4;
     uchar zeropad[] = "\0\0\0\0";
+    WLByteStream strm;
 
-    assert( data && width > 0 && height > 0 && step >= fileStep );
-
-    if( m_strm.Open( m_filename ) )
+    if( strm.open(filename) )
     {
         int  bitmapHeaderSize = 40;
         int  paletteSize = channels > 1 ? 0 : 1024;
@@ -507,45 +499,45 @@ bool  GrFmtBmpWriter::WriteImage( const uchar* data, int step,
         PaletteEntry palette[256];
 
         // write signature 'BM'
-        m_strm.PutBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
+        strm.putBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
 
         // write file header
-        m_strm.PutDWord( fileStep*height + headerSize ); // file size
-        m_strm.PutDWord( 0 );
-        m_strm.PutDWord( headerSize );
+        strm.putDWord( fileStep*height + headerSize ); // file size
+        strm.putDWord( 0 );
+        strm.putDWord( headerSize );
 
         // write bitmap header
-        m_strm.PutDWord( bitmapHeaderSize );
-        m_strm.PutDWord( width );
-        m_strm.PutDWord( height );
-        m_strm.PutWord( 1 );
-        m_strm.PutWord( channels << 3 );
-        m_strm.PutDWord( BMP_RGB );
-        m_strm.PutDWord( 0 );
-        m_strm.PutDWord( 0 );
-        m_strm.PutDWord( 0 );
-        m_strm.PutDWord( 0 );
-        m_strm.PutDWord( 0 );
+        strm.putDWord( bitmapHeaderSize );
+        strm.putDWord( width );
+        strm.putDWord( height );
+        strm.putWord( 1 );
+        strm.putWord( channels << 3 );
+        strm.putDWord( BMP_RGB );
+        strm.putDWord( 0 );
+        strm.putDWord( 0 );
+        strm.putDWord( 0 );
+        strm.putDWord( 0 );
+        strm.putDWord( 0 );
 
         if( channels == 1 )
         {
             FillGrayPalette( palette, 8 );
-            m_strm.PutBytes( palette, sizeof(palette));
+            strm.putBytes( palette, sizeof(palette));
         }
 
         width *= channels;
-        data += step*(height - 1);
-        for( ; height--; data -= step )
+        for( int y = height - 1; y >= 0; y-- )
         {
-            m_strm.PutBytes( data, width );
+            strm.putBytes( img.data + img.step*y, width );
             if( fileStep > width )
-                m_strm.PutBytes( zeropad, fileStep - width );
+                strm.putBytes( zeropad, fileStep - width );
         }
 
-        m_strm.Close();
+        strm.close();
         result = true;
     }
     return result;
 }
 
+}
 

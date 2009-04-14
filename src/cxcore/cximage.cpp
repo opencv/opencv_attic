@@ -166,7 +166,7 @@ bool CvImage::read( CvFileStorage* fs, const char* seqname, int idx )
 }
 
 
-void CvImage::save( const char* filename, const char* imgname )
+void CvImage::save( const char* filename, const char* imgname, const int* params )
 {
     if( !image )
         return;
@@ -175,7 +175,7 @@ void CvImage::save( const char* filename, const char* imgname )
     else
     {
         if( save_image )
-            save_image( filename, image );
+            save_image( filename, image, params );
         else
             CV_Error( CV_StsNotImplemented,
             "Saving an image in such a format requires HigGUI.\n"
@@ -312,7 +312,7 @@ bool CvMatrix::read( CvFileStorage* fs, const char* seqname, int idx )
 }
 
 
-void CvMatrix::save( const char* filename, const char* matname )
+void CvMatrix::save( const char* filename, const char* matname, const int* params )
 {
     if( !matrix )
         return;
@@ -321,7 +321,7 @@ void CvMatrix::save( const char* filename, const char* matname )
     else
     {
         if( save_image )
-            save_image( filename, matrix );
+            save_image( filename, matrix, params );
         else
             CV_Error( CV_StsNotImplemented,
             "Saving a matrixe in such a format requires HigGUI.\n"

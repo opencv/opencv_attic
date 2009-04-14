@@ -196,8 +196,13 @@ CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mous
 CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 CVAPI(CvMat*) cvLoadImageM( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 
+#define CV_IMWRITE_JPEG_QUALITY 1
+#define CV_IMWRITE_PNG_COMPRESSION 16
+#define CV_IMWRITE_PXM_BINARY 32
+
 /* save image to file */
-CVAPI(int) cvSaveImage( const char* filename, const CvArr* image );
+CVAPI(int) cvSaveImage( const char* filename, const CvArr* image,
+                        const int* params CV_DEFAULT(0) );
 
 #define CV_CVTIMG_FLIP      1
 #define CV_CVTIMG_SWAP_RB   2
@@ -500,5 +505,12 @@ protected:
 };
 
 #endif /* __cplusplus */
+
+
+/****************************************************************************************\
+*                                    New interface                                       *
+\****************************************************************************************/
+
+#include "highgui.hpp"
 
 #endif /* _HIGH_GUI_ */
