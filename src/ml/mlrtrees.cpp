@@ -583,7 +583,7 @@ float CvRTrees::calc_error( CvMLData* _data, int type )
                 1 : response->step / CV_ELEM_SIZE(response->type);
     bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
     int sample_count = sample_idx ? sample_idx->cols : 0;
-    sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : 0;
+    sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : sample_count;
     if ( is_classifier )
     {
         for( int i = 0; i < sample_count; i++ )
@@ -605,11 +605,11 @@ float CvRTrees::calc_error( CvMLData* _data, int type )
         {
             CvMat sample, miss;
             int si = sidx ? sidx[i] : i;
-            cvGetRow( data, &sample, sidx[i] ); 
+            cvGetRow( values, &sample, si );
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 );
-            float d = r - response->data.fl[si];
+            float d = r - response->data.fl[si*r_step];
             err += d*d;
         }
         err = sample_count ? err / (float)sample_count : -FLT_MAX;    
