@@ -57,7 +57,7 @@ CV_EXPORTS Mat imread( const String& filename, int flags );
 CV_EXPORTS bool imwrite( const String& filename, const Mat& img,
               const Vector<int>& params=Vector<int>());
 CV_EXPORTS Mat imdecode( const Vector<uchar>& buf, int flags );
-CV_EXPORTS bool imencode( const Mat& img, const String& ext,
+CV_EXPORTS bool imencode( const String& ext, const Mat& img,
                           Vector<uchar>& buf,
                           const Vector<int>& params=Vector<int>());
 

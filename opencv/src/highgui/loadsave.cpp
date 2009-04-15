@@ -394,7 +394,7 @@ Mat imdecode( const Vector<uchar>& buf, int flags )
 }
 
 
-bool imencode( const Mat& image, const String& ext,
+bool imencode( const String& ext, const Mat& image,
                Vector<uchar>& buf, const Vector<int>& params )
 {
     Mat temp;
@@ -493,5 +493,49 @@ cvSaveImage( const char* filename, const CvArr* arr, const int* _params )
         CV_IS_IMAGE(arr) && ((const IplImage*)arr)->origin == IPL_ORIGIN_BL );
 }
 
+/* decode image stored in the buffer */
+CV_IMPL IplImage*
+cvDecodeImage( const CvMat* _buf, int iscolor )
+{
+    CV_Assert( _buf && CV_IS_MAT_CONT(_buf->type) );
+    cv::Vector<uchar> buf(_buf->data.ptr, _buf->cols*_buf->rows*CV_ELEM_SIZE(_buf->type));
+    return (IplImage*)cv::imdecode_(buf, iscolor, cv::LOAD_IMAGE );
+}
+
+CV_IMPL CvMat*
+cvDecodeImageM( const CvMat* _buf, int iscolor )
+{
+    CV_Assert( _buf && CV_IS_MAT_CONT(_buf->type) );
+    cv::Vector<uchar> buf(_buf->data.ptr, _buf->cols*_buf->rows*CV_ELEM_SIZE(_buf->type));
+    return (CvMat*)cv::imdecode_(buf, iscolor, cv::LOAD_CVMAT );
+}
+
+CV_IMPL CvMat*
+cvEncodeImage( const char* ext, const CvArr* arr, const int* _params )
+{
+    int i = 0;
+    if( _params )
+    {
+        for( ; _params[i] > 0; i += 2 )
+            ;
+    }
+    cv::Mat img = cv::cvarrToMat(arr);
+    if( CV_IS_IMAGE(arr) && ((const IplImage*)arr)->origin == IPL_ORIGIN_BL )
+    {
+        cv::Mat temp;
+        cv::flip(img, temp, 0);
+        img = temp;
+    }
+    cv::Vector<uchar> buf;
+
+    bool code = cv::imencode(ext, img, buf,
+        i > 0 ? cv::Vector<int>((int*)_params, i) : cv::Vector<int>() );
+    if( !code )
+        return 0;
+    CvMat* _buf = cvCreateMat(1, (int)buf.size(), CV_8U);
+    memcpy( _buf->data.ptr, &buf[0], buf.size() );
+
+    return _buf;
+}
 
 /* End of file. */

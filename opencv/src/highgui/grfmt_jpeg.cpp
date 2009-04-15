@@ -171,8 +171,9 @@ void  JpegDecoder::close()
 {
     if( m_state )
     {
-        jpeg_destroy_decompress( &((JpegState*)m_state)->cinfo );
-        delete m_state;
+        JpegState* state = (JpegState*)m_state;
+        jpeg_destroy_decompress( &state->cinfo );
+        delete state;
         m_state = 0;
     }
 
@@ -205,11 +206,11 @@ bool  JpegDecoder::readHeader()
     {
         jpeg_create_decompress( &state->cinfo );
 
-        if( m_buf )
+        if( m_buf.size() )
         {
             jpeg_buffer_src(&state->cinfo, &state->source);
-            state->source.pub.next_input_byte = &(*m_buf)[0];
-            state->source.pub.bytes_in_buffer = m_buf->size();
+            state->source.pub.next_input_byte = &m_buf[0];
+            state->source.pub.bytes_in_buffer = m_buf.size();
         }
         else
         {
@@ -560,7 +561,6 @@ bool  JpegEncoder::write( const Mat& img, const Vector<int>& params )
     }
     else
     {
-        m_buf->clear();
         dest.dst = m_buf;
         dest.buf = &out_buf;
 

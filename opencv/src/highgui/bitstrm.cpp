@@ -48,19 +48,6 @@ namespace cv
 
 const int BS_DEF_BLOCK_SIZE = 1<<15;
 
-void bsBSwapBlock( uchar *start, uchar *end )
-{
-    ulong* data = (ulong*)start;
-    int i, size = (int)(end - start+3)/4;
-
-    for( i = 0; i < size; i++ )
-    {
-        ulong temp = data[i];
-        temp = BSWAP( temp );
-        data[i] = temp;
-    }
-}
-
 bool  bsIsBigEndian( void )
 {
     return (((const int*)"\0\x1\x2\x3\x4\x5\x6\x7")[0] & 255) != 0;
@@ -75,13 +62,13 @@ bool  RBaseStream::isOpened()
 
 void  RBaseStream::allocate()
 {
-    if( !m_start )
+    if( !m_allocated )
     {
-        m_start = new uchar[m_block_size + m_ungetsize];
-        m_start+= m_ungetsize;
+        m_start = new uchar[m_block_size];
+        m_end = m_start + m_block_size;
+        m_current = m_end;
+        m_allocated = true;
     }
-    m_end = m_start + m_block_size;
-    m_current = m_end;
 }
 
 
@@ -90,8 +77,8 @@ RBaseStream::RBaseStream()
     m_start = m_end = m_current = 0;
     m_file = 0;
     m_block_size = BS_DEF_BLOCK_SIZE;
-    m_ungetsize = 4; // 32 bits
     m_is_opened = false;
+    m_allocated = false;
 }
 
 
@@ -104,20 +91,19 @@ RBaseStream::~RBaseStream()
 
 void  RBaseStream::readBlock()
 {
-    size_t readed;
-    assert( m_file != 0 );
-
-    // copy unget buffer
-    if( m_start )
-        memcpy( m_start - m_ungetsize, m_end - m_ungetsize, m_ungetsize );
-
     setPos( getPos() ); // normalize position
 
+    if( m_file == 0 )
+    {
+        if( m_block_pos == 0 && m_current < m_end )
+            return;
+        throw RBS_THROW_EOS;
+    }
+
     fseek( m_file, m_block_pos, SEEK_SET );
-    readed = fread( m_start, 1, m_block_size, m_file );
+    size_t readed = fread( m_start, 1, m_block_size, m_file );
     m_end = m_start + readed;
-    m_current   -= m_block_size;
-    m_block_pos += m_block_size;
+    m_current = m_start;
 
     if( readed == 0 || m_current >= m_end )
         throw RBS_THROW_EOS;
@@ -135,8 +121,23 @@ bool  RBaseStream::open( const String& filename )
     {
         m_is_opened = true;
         setPos(0);
+        readBlock();
     }
     return m_file != 0;
+}
+
+bool  RBaseStream::open( const Vector<uchar>& buf )
+{
+    close();
+    if( !buf.size() )
+        return false;
+    m_start = (uchar*)&buf[0];
+    m_end = m_start + buf.size();
+    m_allocated = false;
+    m_is_opened = true;
+    setPos(0);
+
+    return true;
 }
 
 void  RBaseStream::close()
@@ -147,55 +148,41 @@ void  RBaseStream::close()
         m_file = 0;
     }
     m_is_opened = false;
+    if( !m_allocated )
+        m_start = m_end = m_current = 0;
 }
 
 
 void  RBaseStream::release()
 {
-    if( m_start )
-    {
-        delete[] (m_start - m_ungetsize);
-    }
+    if( m_allocated )
+        delete[] m_start;
     m_start = m_end = m_current = 0;
-}
-
-
-void  RBaseStream::setBlockSize( int block_size, int unGetsize )
-{
-    assert( unGetsize >= 0 && block_size > 0 &&
-           (block_size & (block_size-1)) == 0 );
-
-    if( m_start && block_size == m_block_size && unGetsize == m_ungetsize ) return;
-    release();
-    m_block_size = block_size;
-    m_ungetsize = unGetsize;
-    allocate();
+    m_allocated = false;
 }
 
 
 void  RBaseStream::setPos( int pos )
 {
-    int offset = pos & (m_block_size - 1);
-    int block_pos = pos - offset;
-    
     assert( isOpened() && pos >= 0 );
-    
-    if( m_current < m_end && block_pos == m_block_pos - m_block_size )
+
+    if( !m_file )
     {
-        m_current = m_start + offset;
+        m_current = m_start + pos;
+        m_block_pos = 0;
+        return;
     }
-    else
-    {
-        m_block_pos = block_pos;
-        m_current = m_start + m_block_size + offset;
-    }
+
+    int offset = pos % m_block_size;
+    m_block_pos = pos - offset;
+    m_current = m_start + offset;
 }
 
 
 int  RBaseStream::getPos()
 {
     assert( isOpened() );
-    return m_block_pos - m_block_size + (int)(m_current - m_start);
+    return m_block_pos + (int)(m_current - m_start);
 }
 
 void  RBaseStream::skip( int bytes )
@@ -227,13 +214,12 @@ int  RLByteStream::getByte()
 }
 
 
-void  RLByteStream::getBytes( void* buffer, int count, int* readed )
+int RLByteStream::getBytes( void* buffer, int count )
 {
     uchar*  data = (uchar*)buffer;
+    int readed = 0;
     assert( count >= 0 );
     
-    if( readed) *readed = 0;
-
     while( count > 0 )
     {
         int l;
@@ -249,8 +235,9 @@ void  RLByteStream::getBytes( void* buffer, int count, int* readed )
         m_current += l;
         data += l;
         count -= l;
-        if( readed ) *readed += l;
+        readed += l;
     }
+    return readed;
 }
 
 
@@ -351,6 +338,7 @@ WBaseStream::WBaseStream()
     m_file = 0;
     m_block_size = BS_DEF_BLOCK_SIZE;
     m_is_opened = false;
+    m_buf = 0;
 }
 
 
@@ -380,14 +368,22 @@ void  WBaseStream::allocate()
 void  WBaseStream::writeBlock()
 {
     int size = (int)(m_current - m_start);
-    assert( m_file != 0 );
-
-    //fseek( m_file, m_block_pos, SEEK_SET );
-    fwrite( m_start, 1, size, m_file );
-    m_current = m_start;
-
-    /*if( written < size ) throw RBS_THROW_EOS;*/
     
+    assert( isOpened() );
+    if( size == 0 )
+        return;
+
+    if( m_buf )
+    {
+        size_t sz = m_buf->size();
+        m_buf->resize( sz + size );
+        memcpy( &(*m_buf)[sz], m_start, size );
+    }
+    else
+    {
+        fwrite( m_start, 1, size, m_file );
+    }
+    m_current = m_start;
     m_block_pos += size;
 }
 
@@ -408,15 +404,29 @@ bool  WBaseStream::open( const String& filename )
     return m_file != 0;
 }
 
+bool  WBaseStream::open( Vector<uchar>& buf )
+{
+    close();
+    allocate();
+    
+    m_buf = &buf;
+    m_is_opened = true;
+    m_block_pos = 0;
+    m_current = m_start;
+
+    return true;
+}
 
 void  WBaseStream::close()
 {
+    if( m_is_opened )
+        writeBlock();
     if( m_file )
     {
-        writeBlock();
         fclose( m_file );
         m_file = 0;
     }
+    m_buf = 0;
     m_is_opened = false;
 }
 
@@ -424,21 +434,8 @@ void  WBaseStream::close()
 void  WBaseStream::release()
 {
     if( m_start )
-    {
         delete[] m_start;
-    }
     m_start = m_end = m_current = 0;
-}
-
-
-void  WBaseStream::setBlockSize( int block_size )
-{
-    assert( block_size > 0 && (block_size & (block_size-1)) == 0 );
-
-    if( m_start && block_size == m_block_size ) return;
-    release();
-    m_block_size = block_size;
-    allocate();
 }
 
 
