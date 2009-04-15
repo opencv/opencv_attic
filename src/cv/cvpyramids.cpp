@@ -195,19 +195,18 @@ pyrDown_( const Mat& _src, Mat& _dst )
     int bufstep = (int)alignSize(dsize.width*cn, 16);
     AutoBuffer<WT> _buf(bufstep*PD_SZ + 16);
     WT* buf = alignPtr((WT*)_buf, 16);
-    int tabL[CV_CN_MAX*PD_SZ], tabR[CV_CN_MAX*PD_SZ];
+    int tabL[CV_CN_MAX*(PD_SZ+2)], tabR[CV_CN_MAX*(PD_SZ+2)];
     AutoBuffer<int> _tabM(dsize.width*cn);
     int* tabM = _tabM;
     WT* rows[PD_SZ];
     CastOp castOp;
     VecOp vecOp;
 
-    CV_Assert( std::abs(dsize.width*2 - ssize.width) == ssize.width % 2 &&
-               std::abs(dsize.height*2 - ssize.height) == ssize.height % 2);
-    int k, x, sy0 = -PD_SZ/2, sy = sy0, width0 = dsize.width - 1;
-    width0 += width0*2 + PD_SZ/2 < ssize.width;
+    CV_Assert( std::abs(dsize.width*2 - ssize.width) <= 2 &&
+               std::abs(dsize.height*2 - ssize.height) <= 2 );
+    int k, x, sy0 = -PD_SZ/2, sy = sy0, width0 = std::min((ssize.width-PD_SZ/2-1)/2 + 1, dsize.width);
 
-    for( x = 0; x < PD_SZ; x++ )
+    for( x = 0; x <= PD_SZ+1; x++ )
     {
         int sx0 = borderInterpolate(x - PD_SZ/2, ssize.width, BORDER_REFLECT_101)*cn;
         int sx1 = borderInterpolate(x + width0*2 - PD_SZ/2, ssize.width, BORDER_REFLECT_101)*cn;
