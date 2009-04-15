@@ -56,10 +56,10 @@ CV_EXPORTS void imshow( const String& winname, const Mat& mat );
 CV_EXPORTS Mat imread( const String& filename, int flags );
 CV_EXPORTS bool imwrite( const String& filename, const Mat& img,
               const Vector<int>& params=Vector<int>());
+CV_EXPORTS Mat imdecode( const Vector<uchar>& buf, int flags );
 CV_EXPORTS bool imencode( const Mat& img, const String& ext,
-                          Vector<uchar>& data,
+                          Vector<uchar>& buf,
                           const Vector<int>& params=Vector<int>());
-CV_EXPORTS bool imdecode( const Vector<uchar>& data, Mat& img, int flags );
 
 CV_EXPORTS int waitKey(int delay=0);
 

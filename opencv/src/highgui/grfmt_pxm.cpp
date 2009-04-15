@@ -359,8 +359,7 @@ bool  PxMEncoder::isFormatSupported( int depth )
 }
 
 
-bool  PxMEncoder::write( const String& filename,
-                         const Mat& img, const Vector<int>& params )
+bool  PxMEncoder::write( const Mat& img, const Vector<int>& params )
 {
     bool isBinary = true;
     bool result = false;
@@ -377,7 +376,7 @@ bool  PxMEncoder::write( const String& filename,
 
     WLByteStream strm;
 
-    if( strm.open(filename) )
+    if( strm.open(m_filename) )
     {
         int  lineLength;
         int  bufferSize = 128; // buffer that should fit a header

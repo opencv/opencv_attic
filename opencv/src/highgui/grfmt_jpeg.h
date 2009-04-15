@@ -48,10 +48,10 @@
 
 #ifdef HAVE_JPEG
 
+// IJG-based Jpeg codec
+
 namespace cv
 {
-
-/* IJG-based version */
 
 class JpegDecoder : public BaseImageDecoder
 {
@@ -68,9 +68,8 @@ public:
 
 protected:
 
-    void* m_cinfo; // pointer to IJG JPEG codec structure
-    void* m_jerr; // pointer to error processing manager state
     FILE* m_f;
+    void* m_state;
 };
 
 
@@ -80,9 +79,7 @@ public:
     JpegEncoder();
     virtual ~JpegEncoder();
 
-    bool  write( const String& filename,
-        const Mat& img, const Vector<int>& params );
-
+    bool  write( const Mat& img, const Vector<int>& params );
     ImageEncoder newEncoder() const;
 };
 

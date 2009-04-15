@@ -397,15 +397,14 @@ SunRasterEncoder::~SunRasterEncoder()
 {
 }
 
-bool  SunRasterEncoder::write( const String& filename,
-                               const Mat& img, const Vector<int>& )
+bool  SunRasterEncoder::write( const Mat& img, const Vector<int>& )
 {
     bool result = false;
     int y, width = img.cols, height = img.rows, channels = img.channels();
     int fileStep = (width*channels + 1) & -2;
     WMByteStream  strm;
 
-    if( strm.open(filename) )
+    if( strm.open(m_filename) )
     {
         strm.putBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) );
         strm.putDWord( width );

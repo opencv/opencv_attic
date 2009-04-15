@@ -91,8 +91,8 @@ public:
     virtual ~Jpeg2KEncoder();
 
     bool  isFormatSupported( int depth );
-    bool  write( const String& filename,
-        const Mat& img, const Vector<int>& params );
+    bool  write( const Mat& img, const Vector<int>& params );
+    ImageEncoder newEncoder() const;
 
 protected:
     bool  writeComponent8u( jas_image_t *img, const Mat& _img );
