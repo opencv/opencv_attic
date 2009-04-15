@@ -988,7 +988,8 @@ template <typename T> inline void Vector<T>::resize(size_t newSize)
     newSize = std::max(newSize, (size_t)0);
     if( (!hdr.refcount || *hdr.refcount == 1) && hdr.size == newSize )
         return;
-    reserve(newSize);
+    if( newSize > hdr.capacity )
+        reserve(std::max(newSize, std::max((size_t)4, hdr.capacity*2)));
     for( i = hdr.size; i < newSize; i++ )
         hdr.data[i] = T();
     hdr.size = newSize;
@@ -997,7 +998,7 @@ template <typename T> inline void Vector<T>::resize(size_t newSize)
 template <typename T> inline Vector<T>& Vector<T>::push_back(const T& elem)
 {
     if( hdr.size == hdr.capacity )
-        reserve( std::max((size_t)8, hdr.capacity*3/2) );
+        reserve( std::max((size_t)4, hdr.capacity*2) );
     hdr.data[hdr.size++] = elem;
     return *this;
 }
@@ -1108,7 +1109,7 @@ inline Mat::Mat(const Mat& m, const Range& rowRange, const Range& colRange)
         cols = m.cols;
     else
     {
-        CV_Assert( 0 <= rowRange.start && rowRange.start <= rowRange.end && rowRange.end <= m.rows );
+        CV_Assert( 0 <= colRange.start && colRange.start <= colRange.end && colRange.end <= m.cols );
         cols = colRange.size();
         data += colRange.start*elemSize();
         flags &= cols < m.cols ? ~CONTINUOUS_FLAG : -1;
