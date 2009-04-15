@@ -1532,10 +1532,15 @@ typedef struct CvStereoBMState
     int speckleWindowSize; // disparity variation window
     int speckleRange; // acceptable range of variation in window
 
+    int trySmallerWindows; // if 1, the results may be more accurate,
+                           // at the expense of slower processing 
+
     // temporary buffers
     CvMat* preFilteredImg0;
     CvMat* preFilteredImg1;
     CvMat* slidingSumBuf;
+    CvMat* dbmin;
+    CvMat* dbmax;
 }
 CvStereoBMState;
 
