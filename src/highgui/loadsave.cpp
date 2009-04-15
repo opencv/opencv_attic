@@ -87,6 +87,10 @@ ImageDecoder findDecoder( const String& filename )
 ImageDecoder findDecoder( const Vector<uchar>& buf )
 {
     size_t i, maxlen = 0;
+
+    if( buf.size() < 1 )
+        return ImageDecoder();
+
     for( i = 0; i < decoders.size(); i++ )
     {
         size_t len = decoders[i]->signatureLength();
@@ -136,7 +140,7 @@ ImageEncoder findEncoder( const String& _ext )
                 if( c1 != c2 )
                     break;
             }
-            if( j == len )
+            if( j == len && !isalnum(descr[j]))
                 return encoders[i]->newEncoder();
             descr += j;
         }
@@ -162,7 +166,7 @@ struct ImageCodecInitializer
     #ifdef HAVE_TIFF
         decoders.push_back( new TiffDecoder );
     #endif
-        encoders.push_back( new PxMEncoder );
+        encoders.push_back( new TiffEncoder );
     #ifdef HAVE_PNG
         decoders.push_back( new PngDecoder );
         encoders.push_back( new PngEncoder );
@@ -259,7 +263,6 @@ Mat imread( const String& filename, int flags )
     return img;
 }
 
-
 static bool imwrite_( const String& filename, const Mat& image,
                       const Vector<int>& params, bool flipv )
 {
@@ -285,7 +288,8 @@ static bool imwrite_( const String& filename, const Mat& image,
         pimage = &temp;
     }
 
-    bool code = encoder->write( filename, *pimage, params );
+    encoder->setDestination( filename );
+    bool code = encoder->write( *pimage, params );
 
     CV_Assert( code );
     return code;
@@ -297,13 +301,101 @@ bool imwrite( const String& filename, const Mat& img,
     return imwrite_(filename, img, params, false);
 }
 
-bool imdecode( const Vector<uchar>&, Mat&, int )
+static void*
+imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
 {
-    return false;
+    IplImage* image = 0;
+    CvMat *matrix = 0;
+    Mat temp, *data = &temp;
+    char fnamebuf[L_tmpnam];
+    const char* filename = 0;
+
+    ImageDecoder decoder = findDecoder(buf);
+    if( !decoder.obj )
+        return 0;
+
+    if( !decoder->setSource(buf) )
+    {
+        filename = tmpnam(fnamebuf);
+        FILE* f = fopen( filename, "wb" );
+        if( !f )
+            return 0;
+        fwrite( &buf[0], 1, buf.size(), f );
+        fclose(f);
+        decoder->setSource(filename);
+    }
+
+    if( !decoder->readHeader() )
+    {
+        if( filename )
+            unlink(filename);
+        return 0;
+    }
+
+    CvSize size;
+    size.width = decoder->width();
+    size.height = decoder->height();
+
+    int type = decoder->type();
+    if( flags != -1 )
+    {
+        if( (flags & CV_LOAD_IMAGE_ANYDEPTH) == 0 )
+            type = CV_MAKETYPE(CV_8U, CV_MAT_CN(type));
+        
+        if( (flags & CV_LOAD_IMAGE_COLOR) != 0 ||
+           ((flags & CV_LOAD_IMAGE_ANYCOLOR) != 0 && CV_MAT_CN(type) > 1) )
+            type = CV_MAKETYPE(CV_MAT_DEPTH(type), 3);
+        else
+            type = CV_MAKETYPE(CV_MAT_DEPTH(type), 1);
+    }
+
+    if( hdrtype == LOAD_CVMAT || hdrtype == LOAD_MAT )
+    {
+        if( hdrtype == LOAD_CVMAT )
+        {
+            matrix = cvCreateMat( size.height, size.width, type );
+            temp = cvarrToMat(matrix);
+        }
+        else
+        {
+            mat->create( size.height, size.width, type );
+            data = mat;
+        }
+    }
+    else
+    {
+        image = cvCreateImage( size, cvCvToIplDepth(type), CV_MAT_CN(type) );
+        temp = cvarrToMat(image);
+    }
+
+    bool code = decoder->readData( *data );
+    if( filename )
+        unlink(filename);
+
+    if( !code )
+    {
+        cvReleaseImage( &image );
+        cvReleaseMat( &matrix );
+        if( mat )
+            mat->release();
+        return 0;
+    }
+
+    return hdrtype == LOAD_CVMAT ? (void*)matrix :
+        hdrtype == LOAD_IMAGE ? (void*)image : (void*)mat;
 }
 
+
+Mat imdecode( const Vector<uchar>& buf, int flags )
+{
+    Mat img;
+    imdecode_( buf, flags, LOAD_MAT, &img );
+    return img;
+}
+
+
 bool imencode( const Mat& image, const String& ext,
-               Vector<uchar>& data, const Vector<int>& params )
+               Vector<uchar>& buf, const Vector<int>& params )
 {
     Mat temp;
     const Mat* pimage = &image;
@@ -313,7 +405,7 @@ bool imencode( const Mat& image, const String& ext,
 
     ImageEncoder encoder = findEncoder( ext );
     if( !encoder.obj )
-        CV_Error( CV_StsError, "could not find a writer for the specified extension" );
+        CV_Error( CV_StsError, "could not find encoder for the specified extension" );
 
     if( !encoder->isFormatSupported(image.depth()) )
     {
@@ -322,9 +414,30 @@ bool imencode( const Mat& image, const String& ext,
         pimage = &temp;
     }
 
-    bool code = encoder->encode( *pimage, data, params );
-
-    CV_Assert( code );
+    bool code;
+    if( encoder->setDestination(buf) )
+    {
+        code = encoder->write(image, params);
+        CV_Assert( code );
+    }
+    else
+    {
+        char fnamebuf[L_tmpnam];
+        const char* filename = tmpnam(fnamebuf);
+        code = encoder->setDestination(filename);
+        CV_Assert( code );
+        code = encoder->write(image, params);
+        CV_Assert( code );
+        FILE* f = fopen( filename, "rb" );
+        CV_Assert(f != 0);
+        fseek( f, 0, SEEK_END );
+        long pos = ftell(f);
+        buf.resize((size_t)pos);
+        fseek( f, 0, SEEK_SET );
+        buf.resize(fread( &buf[0], 1, buf.size(), f ));
+        fclose(f);
+        unlink(filename);
+    }
     return code;
 }
 
@@ -353,8 +466,6 @@ CV_IMPL int cvHaveImageWriter( const char* filename )
     cv::ImageEncoder encoder = cv::findEncoder(filename);
     return encoder.obj != 0;
 }
-
-
 
 CV_IMPL IplImage*
 cvLoadImage( const char* filename, int iscolor )

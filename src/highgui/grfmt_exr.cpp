@@ -564,8 +564,7 @@ bool  ExrEncoder::isFormatSupported( int depth )
 
 
 // TODO scale appropriately
-bool  ExrEncoder::writeImage( const String& filename,
-                                  const Mat& img, const Vector<int>& )
+bool  ExrEncoder::write( const Mat& img, const Vector<int>& )
 {
     int width = img.cols, height = img.rows;
     int depth = img.depth(), channels = img.channels();
@@ -599,7 +598,7 @@ bool  ExrEncoder::writeImage( const String& filename,
         //printf("gray\n");
     }
 
-    OutputFile file( filename.c_str(), header );
+    OutputFile file( m_filename.c_str(), header );
 
     FrameBuffer frame;
 

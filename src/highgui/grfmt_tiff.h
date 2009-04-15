@@ -118,8 +118,7 @@ public:
     TiffEncoder();
     virtual ~TiffEncoder();
 
-    bool  write( const String& filename,
-        const Mat& img, const Vector<int>& params );
+    bool  write( const Mat& img, const Vector<int>& params );
     ImageEncoder newEncoder() const;
 
 protected:

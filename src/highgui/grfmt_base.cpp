@@ -51,18 +51,23 @@ BaseImageDecoder::BaseImageDecoder()
 {
     m_width = m_height = 0;
     m_type = -1;
+    m_buf_supported = false;
 }
 
-void BaseImageDecoder::setSource( const String& filename )
+bool BaseImageDecoder::setSource( const String& filename )
 {
     m_filename = filename;
-    m_buf.release();
+    m_buf = 0;
+    return true;
 }
 
-void BaseImageDecoder::setSource( const Vector<uchar>& buf )
+bool BaseImageDecoder::setSource( const Vector<uchar>& buf )
 {
+    if( !m_buf_supported )
+        return false;
     m_filename = String();
-    m_buf = buf;
+    m_buf = &buf;
+    return true;
 }
 
 size_t BaseImageDecoder::signatureLength() const
@@ -81,6 +86,11 @@ ImageDecoder BaseImageDecoder::newDecoder() const
     return ImageDecoder();
 }
 
+BaseImageEncoder::BaseImageEncoder()
+{
+    m_buf_supported = false;
+}
+
 bool  BaseImageEncoder::isFormatSupported( int depth ) const
 {
     return depth == CV_8U;
@@ -91,28 +101,25 @@ String BaseImageEncoder::getDescription() const
     return m_description;
 }
 
+bool BaseImageEncoder::setDestination( const String& filename )
+{
+    m_filename = filename;
+    m_buf = 0;
+    return true;
+}
+
+bool BaseImageEncoder::setDestination( Vector<uchar>& buf )
+{
+    if( !m_buf_supported )
+        return false;
+    m_buf = &buf;
+    m_filename = String();
+    return true;
+}
+
 ImageEncoder BaseImageEncoder::newEncoder() const
 {
     return ImageEncoder();
-}
-
-bool BaseImageEncoder::encode( const Mat& img, Vector<uchar>& buf, const Vector<int>& params )
-{
-    char fnamebuf[L_tmpnam];
-    const char* filename = tmpnam(fnamebuf);
-
-    if( !write( filename, img, params ))
-        return false;
-    FILE* f = fopen( filename, "rb" );
-    CV_Assert(f != 0);
-    fseek( f, 0, SEEK_END );
-    long pos = ftell(f);
-    buf.resize((size_t)pos);
-    buf.resize(fread( &buf[0], 1, buf.size(), f ));
-    fclose(f);
-    unlink(filename);
-
-    return true;
 }
 
 }

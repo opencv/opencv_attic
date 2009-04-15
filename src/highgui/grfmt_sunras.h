@@ -95,8 +95,7 @@ public:
     SunRasterEncoder();
     virtual ~SunRasterEncoder();
 
-    bool write( const String& filename,
-        const Mat& img, const Vector<int>& params );
+    bool write( const Mat& img, const Vector<int>& params );
 
     ImageEncoder newEncoder() const;
 };

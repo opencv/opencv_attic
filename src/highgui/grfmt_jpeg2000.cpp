@@ -379,6 +379,10 @@ Jpeg2KEncoder::~Jpeg2KEncoder()
 {
 }
 
+ImageEncoder Jpeg2KEncoder::newEncoder() const
+{
+    return new Jpeg2KEncoder;
+}
 
 bool  Jpeg2KEncoder::isFormatSupported( int depth )
 {
@@ -386,8 +390,7 @@ bool  Jpeg2KEncoder::isFormatSupported( int depth )
 }
 
 
-bool  Jpeg2KEncoder::write( const String& filename,
-                            const Mat& _img, const Vector<int>& )
+bool  Jpeg2KEncoder::write( const Mat& _img, const Vector<int>& )
 {
     int width = _img.cols, height = _img.rows;
     int depth = _img.depth(), channels = _img.channels();
@@ -428,7 +431,7 @@ bool  Jpeg2KEncoder::write( const String& filename,
         result = writeComponent16u( img, _img );
     if( result )
     {
-        jas_stream_t *stream = jas_stream_fopen( filename.c_str(), "wb" );
+        jas_stream_t *stream = jas_stream_fopen( m_filename.c_str(), "wb" );
         if( stream )
         {
             result = !jas_image_encode( img, stream, jas_image_strtofmt( (char*)"jp2" ), (char*)"" );

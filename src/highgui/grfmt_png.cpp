@@ -248,8 +248,7 @@ ImageEncoder PngEncoder::newEncoder() const
     return new PngEncoder;
 }
 
-bool  PngEncoder::write( const String& filename,
-                         const Mat& img, const Vector<int>& params )
+bool  PngEncoder::write( const Mat& img, const Vector<int>& params )
 {
     int compression_level = MAX_MEM_LEVEL;
 
@@ -268,6 +267,7 @@ bool  PngEncoder::write( const String& filename,
     int y, width = img.cols, height = img.rows;
     int depth = img.depth(), channels = img.channels();
     bool result = false;
+    AutoBuffer<uchar*> buffer;
 
     if( depth != CV_8U && depth != CV_16U )
         return false;
@@ -280,7 +280,7 @@ bool  PngEncoder::write( const String& filename,
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                f = fopen( filename.c_str(), "wb" );
+                f = fopen( m_filename.c_str(), "wb" );
 
                 if( f )
                 {
@@ -300,7 +300,7 @@ bool  PngEncoder::write( const String& filename,
                     if( !isBigEndian() )
                         png_set_swap( png_ptr );
 
-                    AutoBuffer<uchar*> buffer(height);
+                    buffer.allocate(height);
                     for( y = 0; y < height; y++ )
                         buffer[y] = img.data + y*img.step;
 

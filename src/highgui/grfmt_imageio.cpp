@@ -45,9 +45,7 @@ bool  ImageIODecoder::checkSignature( const String& signature )
     // readable by ImageIO.  Effectively this is using ImageIO
     // to check the signatures and determine the file format for us.
     CFURLRef imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
-                                                                    (const UInt8*)filename,
-                                                                    strlen( filename ),
-                                                                    false );
+        (const UInt8*)m_filename.c_str(), m_filename.size(), false );
     if( !imageURLRef ) return false;
 
     CGImageSourceRef sourceRef = CGImageSourceCreateWithURL( imageURLRef, NULL );
@@ -77,9 +75,7 @@ bool ImageIODecoder::readHeader()
     imageRef = NULL;
 
     imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
-                                                           (const UInt8*)m_filename,
-                                                           strlen(m_filename),
-                                                           false );
+        (const UInt8*)m_filename.c_str(), m_filename.size(), false );
 
     sourceRef = CGImageSourceCreateWithURL( imageURLRef, NULL );
     CFRelease( imageURLRef );
@@ -267,8 +263,7 @@ CFStringRef  FilenameToUTI( const char* filename )
 }
 
 
-bool  ImageIOEncoder::WriteImage( const cv::String& filename,
-        const cv::Mat& img, const cv::Vector<int>& params )
+bool  ImageIOEncoder::write( const Mat& img, const Vector<int>& params )
 {
     int width = img.cols, height = img.rows;
     int _channels = img.channels();
@@ -356,9 +351,7 @@ bool  ImageIOEncoder::WriteImage( const cv::String& filename,
 
     // Write the imageRef to a file based on the UTI
     CFURLRef imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
-                                                                    (const UInt8*)m_filename,
-                                                                    strlen(m_filename),
-                                                                    false );
+        (const UInt8*)m_filename.c_str(), m_filename.size(), false );
     if( !imageURLRef )
     {
         CGImageRelease( imageRef );

@@ -82,8 +82,7 @@ public:
     virtual ~PxMEncoder();
 
     bool  isFormatSupported( int depth );
-    bool  write( const cv::String& filename,
-        const cv::Mat& img, const cv::Vector<int>& params );
+    bool  write( const cv::Mat& img, const cv::Vector<int>& params );
 
     ImageEncoder newEncoder() const;
 };

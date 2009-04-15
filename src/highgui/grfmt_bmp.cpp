@@ -482,8 +482,7 @@ ImageEncoder BmpEncoder::newEncoder() const
     return new BmpEncoder;
 }
 
-bool  BmpEncoder::write( const String& filename,
-                         const Mat& img, const Vector<int>& )
+bool  BmpEncoder::write( const Mat& img, const Vector<int>& )
 {
     bool result = false;
     int width = img.cols, height = img.rows, channels = img.channels();
@@ -491,7 +490,7 @@ bool  BmpEncoder::write( const String& filename,
     uchar zeropad[] = "\0\0\0\0";
     WLByteStream strm;
 
-    if( strm.open(filename) )
+    if( strm.open(m_filename) )
     {
         int  bitmapHeaderSize = 40;
         int  paletteSize = channels > 1 ? 0 : 1024;

@@ -246,8 +246,7 @@ void  TiffEncoder::writeTag( WLByteStream& strm, TiffTag tag,
 }
 
 
-bool  TiffEncoder::write( const String& filename,
-                          const Mat& img, const Vector<int>& )
+bool  TiffEncoder::write( const Mat& img, const Vector<int>& )
 {
     bool result = false;
     int channels = img.channels();
@@ -255,7 +254,7 @@ bool  TiffEncoder::write( const String& filename,
     int fileStep = width*channels;
     WLByteStream strm;
 
-    if( strm.open(filename) )
+    if( strm.open(m_filename) )
     {
         int rowsPerStrip = (1 << 13)/fileStep;
 
@@ -375,7 +374,7 @@ bool  TiffEncoder::write( const String& filename,
         strm.close();
 
         // write directory offset
-        FILE* f = fopen( filename.c_str(), "r+b" );
+        FILE* f = fopen( m_filename.c_str(), "r+b" );
         buffer[0] = (uchar)directoryOffset;
         buffer[1] = (uchar)(directoryOffset >> 8);
         buffer[2] = (uchar)(directoryOffset >> 16);
