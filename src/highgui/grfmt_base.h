@@ -80,7 +80,7 @@ protected:
     int  m_type;
     String m_filename;
     String m_signature;
-    const Vector<uchar>* m_buf;
+    Vector<uchar> m_buf;
     bool m_buf_supported;
 };
 

@@ -54,6 +54,7 @@ BmpDecoder::BmpDecoder()
 {
     m_signature = fmtSignBmp;
     m_offset = -1;
+    m_buf_supported = true;
 }
 
 
@@ -77,7 +78,13 @@ bool  BmpDecoder::readHeader()
     bool result = false;
     bool iscolor = false;
 
-    if( !m_strm.open( m_filename )) return false;
+    if( m_buf.size() )
+    {
+        if( !m_strm.open( m_buf ) )
+            return false;
+    }
+    else if( !m_strm.open( m_filename ))
+        return false;
 
     try
     {
@@ -470,6 +477,7 @@ decode_rle8_bad: ;
 BmpEncoder::BmpEncoder()
 {
     m_description = "Windows bitmap (*.bmp;*.dib)";
+    m_buf_supported = true;
 }
 
 
@@ -484,58 +492,65 @@ ImageEncoder BmpEncoder::newEncoder() const
 
 bool  BmpEncoder::write( const Mat& img, const Vector<int>& )
 {
-    bool result = false;
     int width = img.cols, height = img.rows, channels = img.channels();
     int fileStep = (width*channels + 3) & -4;
     uchar zeropad[] = "\0\0\0\0";
     WLByteStream strm;
 
-    if( strm.open(m_filename) )
+    if( m_buf )
     {
-        int  bitmapHeaderSize = 40;
-        int  paletteSize = channels > 1 ? 0 : 1024;
-        int  headerSize = 14 /* fileheader */ + bitmapHeaderSize + paletteSize;
-        PaletteEntry palette[256];
-
-        // write signature 'BM'
-        strm.putBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
-
-        // write file header
-        strm.putDWord( fileStep*height + headerSize ); // file size
-        strm.putDWord( 0 );
-        strm.putDWord( headerSize );
-
-        // write bitmap header
-        strm.putDWord( bitmapHeaderSize );
-        strm.putDWord( width );
-        strm.putDWord( height );
-        strm.putWord( 1 );
-        strm.putWord( channels << 3 );
-        strm.putDWord( BMP_RGB );
-        strm.putDWord( 0 );
-        strm.putDWord( 0 );
-        strm.putDWord( 0 );
-        strm.putDWord( 0 );
-        strm.putDWord( 0 );
-
-        if( channels == 1 )
-        {
-            FillGrayPalette( palette, 8 );
-            strm.putBytes( palette, sizeof(palette));
-        }
-
-        width *= channels;
-        for( int y = height - 1; y >= 0; y-- )
-        {
-            strm.putBytes( img.data + img.step*y, width );
-            if( fileStep > width )
-                strm.putBytes( zeropad, fileStep - width );
-        }
-
-        strm.close();
-        result = true;
+        if( !strm.open( *m_buf ) )
+            return false;
     }
-    return result;
+    else if( !strm.open( m_filename ))
+        return false;
+
+    int  bitmapHeaderSize = 40;
+    int  paletteSize = channels > 1 ? 0 : 1024;
+    int  headerSize = 14 /* fileheader */ + bitmapHeaderSize + paletteSize;
+    int  fileSize = fileStep*height + headerSize;
+    PaletteEntry palette[256];
+
+    if( m_buf )
+        m_buf->reserve( alignSize(fileSize + 16, 256) );
+
+    // write signature 'BM'
+    strm.putBytes( fmtSignBmp, (int)strlen(fmtSignBmp) );
+
+    // write file header
+    strm.putDWord( fileSize ); // file size
+    strm.putDWord( 0 );
+    strm.putDWord( headerSize );
+
+    // write bitmap header
+    strm.putDWord( bitmapHeaderSize );
+    strm.putDWord( width );
+    strm.putDWord( height );
+    strm.putWord( 1 );
+    strm.putWord( channels << 3 );
+    strm.putDWord( BMP_RGB );
+    strm.putDWord( 0 );
+    strm.putDWord( 0 );
+    strm.putDWord( 0 );
+    strm.putDWord( 0 );
+    strm.putDWord( 0 );
+
+    if( channels == 1 )
+    {
+        FillGrayPalette( palette, 8 );
+        strm.putBytes( palette, sizeof(palette));
+    }
+
+    width *= channels;
+    for( int y = height - 1; y >= 0; y-- )
+    {
+        strm.putBytes( img.data + img.step*y, width );
+        if( fileStep > width )
+            strm.putBytes( zeropad, fileStep - width );
+    }
+
+    strm.close();
+    return true;
 }
 
 }

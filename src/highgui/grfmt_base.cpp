@@ -57,7 +57,7 @@ BaseImageDecoder::BaseImageDecoder()
 bool BaseImageDecoder::setSource( const String& filename )
 {
     m_filename = filename;
-    m_buf = 0;
+    m_buf.release();
     return true;
 }
 
@@ -66,7 +66,7 @@ bool BaseImageDecoder::setSource( const Vector<uchar>& buf )
     if( !m_buf_supported )
         return false;
     m_filename = String();
-    m_buf = &buf;
+    m_buf = buf;
     return true;
 }
 
@@ -113,6 +113,7 @@ bool BaseImageEncoder::setDestination( Vector<uchar>& buf )
     if( !m_buf_supported )
         return false;
     m_buf = &buf;
+    m_buf->clear();
     m_filename = String();
     return true;
 }

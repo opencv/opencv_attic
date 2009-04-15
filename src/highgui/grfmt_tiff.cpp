@@ -224,6 +224,7 @@ bool  TiffDecoder::readData( Mat& img )
 TiffEncoder::TiffEncoder()
 {
     m_description = "TIFF Files (*.tiff;*.tif)";
+    m_buf_supported = true;
 }
 
 TiffEncoder::~TiffEncoder()
@@ -248,131 +249,149 @@ void  TiffEncoder::writeTag( WLByteStream& strm, TiffTag tag,
 
 bool  TiffEncoder::write( const Mat& img, const Vector<int>& )
 {
-    bool result = false;
     int channels = img.channels();
     int width = img.cols, height = img.rows;
     int fileStep = width*channels;
     WLByteStream strm;
 
-    if( strm.open(m_filename) )
+    if( m_buf )
     {
-        int rowsPerStrip = (1 << 13)/fileStep;
+        if( !strm.open(*m_buf) )
+            return false;
+    }
+    else if( !strm.open(m_filename) )
+        return false;
 
-        if( rowsPerStrip < 1 )
-            rowsPerStrip = 1;
+    int rowsPerStrip = (1 << 13)/fileStep;
 
-        if( rowsPerStrip > height )
-            rowsPerStrip = height;
+    if( rowsPerStrip < 1 )
+        rowsPerStrip = 1;
 
-        int i, stripCount = (height + rowsPerStrip - 1) / rowsPerStrip;
+    if( rowsPerStrip > height )
+        rowsPerStrip = height;
+
+    int i, stripCount = (height + rowsPerStrip - 1) / rowsPerStrip;
+
+    if( m_buf )
+        m_buf->reserve( alignSize(stripCount*8 + fileStep*height + 256, 256) );
+
 /*#if defined _DEBUG || !defined WIN32
-        int uncompressedRowSize = rowsPerStrip * fileStep;
+    int uncompressedRowSize = rowsPerStrip * fileStep;
 #endif*/
-        int directoryOffset = 0;
+    int directoryOffset = 0;
 
-        AutoBuffer<int,1024> stripOffsets(stripCount);
-        AutoBuffer<short,1024> stripCounts(stripCount);
-        AutoBuffer<uchar,1024> _buffer(fileStep+32);
-        uchar* buffer = _buffer;
-        int  stripOffsetsOffset = 0;
-        int  stripCountsOffset = 0;
-        int  bitsPerSample = 8; // TODO support 16 bit
-        int  y = 0;
+    AutoBuffer<int,1024> stripOffsets(stripCount);
+    AutoBuffer<short,1024> stripCounts(stripCount);
+    AutoBuffer<uchar,1024> _buffer(fileStep+32);
+    uchar* buffer = _buffer;
+    int  stripOffsetsOffset = 0;
+    int  stripCountsOffset = 0;
+    int  bitsPerSample = 8; // TODO support 16 bit
+    int  y = 0;
 
-        strm.putBytes( fmtSignTiffII, 4 );
-        strm.putDWord( directoryOffset );
+    strm.putBytes( fmtSignTiffII, 4 );
+    strm.putDWord( directoryOffset );
 
-        // write an image data first (the most reasonable way
-        // for compressed images)
+    // write an image data first (the most reasonable way
+    // for compressed images)
+    for( i = 0; i < stripCount; i++ )
+    {
+        int limit = y + rowsPerStrip;
+
+        if( limit > height )
+            limit = height;
+
+        stripOffsets[i] = strm.getPos();
+
+        for( ; y < limit; y++ )
+        {
+            if( channels == 3 )
+                icvCvt_BGR2RGB_8u_C3R( img.data + img.step*y, 0, buffer, 0, cvSize(width,1) );
+            else if( channels == 4 )
+                icvCvt_BGRA2RGBA_8u_C4R( img.data + img.step*y, 0, buffer, 0, cvSize(width,1) );
+
+            strm.putBytes( channels > 1 ? buffer : img.data + img.step*y, fileStep );
+        }
+
+        stripCounts[i] = (short)(strm.getPos() - stripOffsets[i]);
+        /*assert( stripCounts[i] == uncompressedRowSize ||
+                stripCounts[i] < uncompressedRowSize &&
+                i == stripCount - 1);*/
+    }
+
+    if( stripCount > 2 )
+    {
+        stripOffsetsOffset = strm.getPos();
         for( i = 0; i < stripCount; i++ )
+            strm.putDWord( stripOffsets[i] );
+
+        stripCountsOffset = strm.getPos();
+        for( i = 0; i < stripCount; i++ )
+            strm.putWord( stripCounts[i] );
+    }
+    else if(stripCount == 2)
+    {
+        stripOffsetsOffset = strm.getPos();
+        for (i = 0; i < stripCount; i++)
         {
-            int limit = y + rowsPerStrip;
-
-            if( limit > height )
-                limit = height;
-
-            stripOffsets[i] = strm.getPos();
-
-            for( ; y < limit; y++ )
-            {
-                if( channels == 3 )
-                    icvCvt_BGR2RGB_8u_C3R( img.data + img.step*y, 0, buffer, 0, cvSize(width,1) );
-                else if( channels == 4 )
-                    icvCvt_BGRA2RGBA_8u_C4R( img.data + img.step*y, 0, buffer, 0, cvSize(width,1) );
-
-                strm.putBytes( channels > 1 ? buffer : img.data + img.step*y, fileStep );
-            }
-
-            stripCounts[i] = (short)(strm.getPos() - stripOffsets[i]);
-            /*assert( stripCounts[i] == uncompressedRowSize ||
-                    stripCounts[i] < uncompressedRowSize &&
-                    i == stripCount - 1);*/
+            strm.putDWord (stripOffsets [i]);
         }
+        stripCountsOffset = stripCounts [0] + (stripCounts [1] << 16);
+    }
+    else
+    {
+        stripOffsetsOffset = stripOffsets[0];
+        stripCountsOffset = stripCounts[0];
+    }
 
-        if( stripCount > 2 )
-        {
-            stripOffsetsOffset = strm.getPos();
-            for( i = 0; i < stripCount; i++ )
-                strm.putDWord( stripOffsets[i] );
-
-            stripCountsOffset = strm.getPos();
-            for( i = 0; i < stripCount; i++ )
-                strm.putWord( stripCounts[i] );
-        }
-        else if(stripCount == 2)
-        {
-            stripOffsetsOffset = strm.getPos();
-            for (i = 0; i < stripCount; i++)
-            {
-                strm.putDWord (stripOffsets [i]);
-            }
-            stripCountsOffset = stripCounts [0] + (stripCounts [1] << 16);
-        }
-        else
-        {
-            stripOffsetsOffset = stripOffsets[0];
-            stripCountsOffset = stripCounts[0];
-        }
-
-        if( channels > 1 )
-        {
-            bitsPerSample = strm.getPos();
+    if( channels > 1 )
+    {
+        bitsPerSample = strm.getPos();
+        strm.putWord(8);
+        strm.putWord(8);
+        strm.putWord(8);
+        if( channels == 4 )
             strm.putWord(8);
-            strm.putWord(8);
-            strm.putWord(8);
-            if( channels == 4 )
-                strm.putWord(8);
-        }
+    }
 
-        directoryOffset = strm.getPos();
+    directoryOffset = strm.getPos();
 
-        // write header
-        strm.putWord( 9 );
+    // write header
+    strm.putWord( 9 );
 
-        /* warning: specification 5.0 of Tiff want to have tags in
-           ascending order. This is a non-fatal error, but this cause
-           warning with some tools. So, keep this in ascending order */
+    /* warning: specification 5.0 of Tiff want to have tags in
+       ascending order. This is a non-fatal error, but this cause
+       warning with some tools. So, keep this in ascending order */
 
-        writeTag( strm, TIFF_TAG_WIDTH, TIFF_TYPE_LONG, 1, width );
-        writeTag( strm, TIFF_TAG_HEIGHT, TIFF_TYPE_LONG, 1, height );
-        writeTag( strm, TIFF_TAG_BITS_PER_SAMPLE,
-                  TIFF_TYPE_SHORT, channels, bitsPerSample );
-        writeTag( strm, TIFF_TAG_COMPRESSION, TIFF_TYPE_LONG, 1, TIFF_UNCOMP );
-        writeTag( strm, TIFF_TAG_PHOTOMETRIC, TIFF_TYPE_SHORT, 1, channels > 1 ? 2 : 1 );
+    writeTag( strm, TIFF_TAG_WIDTH, TIFF_TYPE_LONG, 1, width );
+    writeTag( strm, TIFF_TAG_HEIGHT, TIFF_TYPE_LONG, 1, height );
+    writeTag( strm, TIFF_TAG_BITS_PER_SAMPLE,
+              TIFF_TYPE_SHORT, channels, bitsPerSample );
+    writeTag( strm, TIFF_TAG_COMPRESSION, TIFF_TYPE_LONG, 1, TIFF_UNCOMP );
+    writeTag( strm, TIFF_TAG_PHOTOMETRIC, TIFF_TYPE_SHORT, 1, channels > 1 ? 2 : 1 );
 
-        writeTag( strm, TIFF_TAG_STRIP_OFFSETS, TIFF_TYPE_LONG,
-                  stripCount, stripOffsetsOffset );
+    writeTag( strm, TIFF_TAG_STRIP_OFFSETS, TIFF_TYPE_LONG,
+              stripCount, stripOffsetsOffset );
 
-        writeTag( strm, TIFF_TAG_SAMPLES_PER_PIXEL, TIFF_TYPE_SHORT, 1, channels );
-        writeTag( strm, TIFF_TAG_ROWS_PER_STRIP, TIFF_TYPE_LONG, 1, rowsPerStrip );
+    writeTag( strm, TIFF_TAG_SAMPLES_PER_PIXEL, TIFF_TYPE_SHORT, 1, channels );
+    writeTag( strm, TIFF_TAG_ROWS_PER_STRIP, TIFF_TYPE_LONG, 1, rowsPerStrip );
 
-        writeTag( strm, TIFF_TAG_STRIP_COUNTS,
-                  stripCount > 1 ? TIFF_TYPE_SHORT : TIFF_TYPE_LONG,
-                  stripCount, stripCountsOffset );
+    writeTag( strm, TIFF_TAG_STRIP_COUNTS,
+              stripCount > 1 ? TIFF_TYPE_SHORT : TIFF_TYPE_LONG,
+              stripCount, stripCountsOffset );
 
-        strm.putDWord(0);
-        strm.close();
+    strm.putDWord(0);
+    strm.close();
 
+    if( m_buf )
+    {
+        (*m_buf)[4] = (uchar)directoryOffset;
+        (*m_buf)[5] = (uchar)(directoryOffset >> 8);
+        (*m_buf)[6] = (uchar)(directoryOffset >> 16);
+        (*m_buf)[7] = (uchar)(directoryOffset >> 24);
+    }
+    else
+    {
         // write directory offset
         FILE* f = fopen( m_filename.c_str(), "r+b" );
         buffer[0] = (uchar)directoryOffset;
@@ -383,10 +402,9 @@ bool  TiffEncoder::write( const Mat& img, const Vector<int>& )
         fseek( f, 4, SEEK_SET );
         fwrite( buffer, 1, 4, f );
         fclose(f);
-
-        result = true;
     }
-    return result;
+
+    return true;
 }
 
 }

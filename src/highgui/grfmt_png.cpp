@@ -70,6 +70,8 @@ PngDecoder::PngDecoder()
     m_png_ptr = 0;
     m_info_ptr = m_end_info = 0;
     m_f = 0;
+    m_buf_supported = true;
+    m_buf_pos = 0;
 }
 
 
@@ -102,6 +104,20 @@ void  PngDecoder::close()
 }
 
 
+void  PngDecoder::readDataFromBuf( void* _png_ptr, uchar* dst, size_t size )
+{
+    png_structp png_ptr = (png_structp)_png_ptr;
+    PngDecoder* decoder = (PngDecoder*)(png_ptr->io_ptr);
+    CV_Assert( decoder );
+    if( decoder->m_buf_pos + size > decoder->m_buf.size() )
+    {
+        png_error(png_ptr, "PNG input buffer is incomplete");
+        return;
+    }
+    memcpy( dst, &decoder->m_buf[decoder->m_buf_pos], size );
+    decoder->m_buf_pos += size;
+}
+
 bool  PngDecoder::readHeader()
 {
     bool result = false;
@@ -117,18 +133,26 @@ bool  PngDecoder::readHeader()
         m_png_ptr = png_ptr;
         m_info_ptr = info_ptr;
         m_end_info = end_info;
+        m_buf_pos = 0;
 
         if( info_ptr && end_info )
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                m_f = fopen( m_filename.c_str(), "rb" );
-                if( m_f )
+                if( m_buf.size() )
+                    png_set_read_fn(png_ptr, this, (png_rw_ptr)readDataFromBuf );
+                else
+                {
+                    m_f = fopen( m_filename.c_str(), "rb" );
+                    if( m_f )
+                        png_init_io( png_ptr, m_f );
+                }
+
+                if( m_buf.size() || m_f )
                 {
                     png_uint_32 width, height;
                     int bit_depth, color_type;
-
-                    png_init_io( png_ptr, m_f );
+                    
                     png_read_info( png_ptr, info_ptr );
 
                     png_get_IHDR( png_ptr, info_ptr, &width, &height,
@@ -230,6 +254,7 @@ bool  PngDecoder::readData( Mat& img )
 PngEncoder::PngEncoder()
 {
     m_description = "Portable Network Graphics files (*.png)";
+    m_buf_supported = true;
 }
 
 
@@ -248,6 +273,24 @@ ImageEncoder PngEncoder::newEncoder() const
     return new PngEncoder;
 }
 
+
+void PngEncoder::writeDataToBuf(void* _png_ptr, uchar* src, size_t size)
+{
+    if( size == 0 )
+        return;
+    png_structp png_ptr = (png_structp)_png_ptr;
+    PngEncoder* encoder = (PngEncoder*)(png_ptr->io_ptr);
+    CV_Assert( encoder && encoder->m_buf );
+    size_t cursz = encoder->m_buf->size();
+    encoder->m_buf->resize(cursz + size);
+    memcpy( &(*encoder->m_buf)[cursz], src, size );
+}
+
+
+void PngEncoder::flushBuf(void*)
+{
+}
+
 bool  PngEncoder::write( const Mat& img, const Vector<int>& params )
 {
     int compression_level = MAX_MEM_LEVEL;
@@ -257,7 +300,7 @@ bool  PngEncoder::write( const Mat& img, const Vector<int>& params )
         if( params[i] == CV_IMWRITE_PNG_COMPRESSION )
         {
             compression_level = params[i+1];
-            compression_level = MIN(MAX(compression_level, 0), MAX_MEM_LEVEL);
+            compression_level = MIN(MAX(compression_level, 1), MAX_MEM_LEVEL);
         }
     }
 
@@ -280,12 +323,20 @@ bool  PngEncoder::write( const Mat& img, const Vector<int>& params )
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                f = fopen( m_filename.c_str(), "wb" );
-
-                if( f )
+                if( m_buf )
                 {
-                    png_init_io( png_ptr, f );
+                    png_set_write_fn(png_ptr, this,
+                        (png_rw_ptr)writeDataToBuf, (png_flush_ptr)flushBuf);
+                }
+                else
+                {
+                    f = fopen( m_filename.c_str(), "wb" );
+                    if( f )
+                        png_init_io( png_ptr, f );
+                }
 
+                if( m_buf || f )
+                {
                     png_set_compression_mem_level( png_ptr, compression_level );
 
                     png_set_IHDR( png_ptr, info_ptr, width, height, depth == CV_8U ? 8 : 16,

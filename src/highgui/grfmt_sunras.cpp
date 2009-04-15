@@ -102,11 +102,9 @@ bool  SunRasterDecoder::readHeader()
 
             if( m_maplength != 0 )
             {
-                int readed;
                 uchar buffer[256*3];
 
-                m_strm.getBytes( buffer, m_maplength, &readed );
-                if( readed == m_maplength )
+                if( m_strm.getBytes( buffer, m_maplength ) == m_maplength )
                 {
                     int i;
                     palSize = m_maplength/3;

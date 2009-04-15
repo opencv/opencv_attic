@@ -67,8 +67,8 @@ public:
     virtual ~RBaseStream();
     
     virtual bool  open( const String& filename );
+    virtual bool  open( const Vector<uchar>& buf );
     virtual void  close();
-    void          setBlockSize( int block_size, int unGetsize = 4 );
     bool          isOpened();
     void          setPos( int pos );
     int           getPos();
@@ -76,11 +76,11 @@ public:
     
 protected:
     
+    bool    m_allocated;
     uchar*  m_start;
     uchar*  m_end;
     uchar*  m_current;
     FILE*   m_file;
-    int     m_ungetsize;
     int     m_block_size;
     int     m_block_pos;
     bool    m_is_opened;
@@ -99,7 +99,7 @@ public:
     virtual ~RLByteStream();
     
     int     getByte();
-    void    getBytes( void* buffer, int count, int* readed = 0 );
+    int     getBytes( void* buffer, int count );
     int     getWord();
     int     getDWord(); 
 };
@@ -124,8 +124,8 @@ public:
     virtual ~WBaseStream();
     
     virtual bool  open( const String& filename );
+    virtual bool  open( Vector<uchar>& buf );
     virtual void  close();
-    void          setBlockSize( int block_size );
     bool          isOpened();
     int           getPos();
     
@@ -138,6 +138,7 @@ protected:
     int     m_block_pos;
     FILE*   m_file;
     bool    m_is_opened;
+    Vector<uchar>* m_buf;
     
     virtual void  writeBlock();
     virtual void  release();
@@ -174,7 +175,6 @@ inline unsigned BSWAP(unsigned v)
     return (v<<24)|((v&0xff00)<<8)|((v>>8)&0xff00)|((unsigned)v>>24);
 }
 
-void bsBSwapBlock( uchar *start, uchar *end );
 bool bsIsBigEndian( void );
 
 }
