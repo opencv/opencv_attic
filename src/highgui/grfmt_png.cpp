@@ -51,10 +51,10 @@
     and png2bmp sample from libpng distribution (Copyright (C) 1999-2001 MIYASAKA Masaru)
 \****************************************************************************************/
 
-#if defined WIN32 || defined HAVE_PNG_H
-#include <png.h>
-#else
+#ifdef HAVE_LIBPNG_PNG_H
 #include <libpng/png.h>
+#else
+#include <png.h>
 #endif
 #include "grfmt_png.h"
 
@@ -152,7 +152,7 @@ bool  PngDecoder::readHeader()
                 {
                     png_uint_32 width, height;
                     int bit_depth, color_type;
-                    
+
                     png_read_info( png_ptr, info_ptr );
 
                     png_get_IHDR( png_ptr, info_ptr, &width, &height,
