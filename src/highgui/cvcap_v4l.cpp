@@ -553,7 +553,7 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
       /* support for MJPEG is only available with libjpeg and gcc,
 	 because it's use libjepg and fmemopen()
       */
-  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0 || 
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0 ||
       try_palette_v4l2(capture, V4L2_PIX_FMT_JPEG) == 0)
   {
     PALETTE_MJPEG = 1;
@@ -1205,7 +1205,7 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
 	      if (xioctl(capture->deviceHandle, VIDIOC_QBUF, &buf) == -1)
 	      {
 	        return 0;
-	      }	
+	      }
 	    }
 	    return 0;
 
@@ -1733,112 +1733,6 @@ uyvy_to_rgb24 (int width, int height, unsigned char *src, unsigned char *dst)
 }
 
 #ifdef HAVE_JPEG
-#ifdef __USE_GNU
-/* support for MJPEG is only available with libjpeg and gcc,
-   because it's use libjepg and fmemopen()
-*/
-
-/* include headers to be able to use libjpeg and GrFmtJpegReader */
-#include "grfmts.h"
-extern "C" {
-#include "jpeglib.h"
-}
-
-/* define a new class for using fmemopen() instead of fopen() */
-class MyMJpegReader : public GrFmtJpegReader {
-public:
-    MyMJpegReader (unsigned char *src, size_t src_size);
-    bool  ReadHeader ();
-protected:
-    unsigned char *my_src;
-    size_t my_src_size;
-};
-
-/////////////////////// Error processing /////////////////////
-
-typedef struct GrFmtJpegErrorMgr
-{
-    struct jpeg_error_mgr pub;    /* "parent" structure */
-    jmp_buf setjmp_buffer;        /* jump label */
-}
-GrFmtJpegErrorMgr;
-
-
-METHODDEF(void)
-error_exit( j_common_ptr cinfo )
-{
-    GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
-
-    /* Return control to the setjmp point */
-    longjmp( err_mgr->setjmp_buffer, 1 );
-}
-
-#ifdef V4L_ABORT_BADJPEG
-void emit_message (j_common_ptr cinfo, int msg_level) {
-  char buffer[JMSG_LENGTH_MAX];
-  GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
-  if (msg_level >= 0) {
-    return;
-  };
-  (*cinfo->err->format_message) (cinfo, buffer);
-  fprintf(stderr, "Camera decode error (%d): %s\n", msg_level, buffer);
-  longjmp( err_mgr->setjmp_buffer, 1 );
-};
-#endif
-
-/////////////////////// MyMJpegReader ///////////////////
-
-/* constructor just call the parent constructor, but without real filename */
-MyMJpegReader::MyMJpegReader (unsigned char *src, size_t src_size)
-    : GrFmtJpegReader ("/dev/null") {
-    /* memorize the given src memory area, with it's size */
-    my_src = src;
-    my_src_size = src_size;
-}
-
-/*
-   MyMJpegReader::ReadHeader is almost like GrFmtJpegReader::ReadHeader,
-   just use fmemopen() instead of fopen()
-*/
-bool  MyMJpegReader::ReadHeader () {
-    bool result = false;
-    Close();
-
-    jpeg_decompress_struct* cinfo = new jpeg_decompress_struct;
-    GrFmtJpegErrorMgr* jerr = new GrFmtJpegErrorMgr;
-
-    cinfo->err = jpeg_std_error(&jerr->pub);
-    jerr->pub.error_exit = error_exit;
-#ifdef V4L_ABORT_BADJPEG
-    jerr->pub.emit_message = emit_message;
-#endif
-
-    m_cinfo = cinfo;
-    m_jerr = jerr;
-
-    if( setjmp( jerr->setjmp_buffer ) == 0 )
-    {
-        jpeg_create_decompress( cinfo );
-
-        m_f = fmemopen( my_src, my_src_size, "rb" );
-        if( m_f )
-        {
-            jpeg_stdio_src( cinfo, m_f );
-            jpeg_read_header( cinfo, TRUE );
-
-            m_width = cinfo->image_width;
-            m_height = cinfo->image_height;
-            m_iscolor = cinfo->num_components > 1;
-
-            result = true;
-        }
-    }
-
-    if( !result )
-        Close();
-
-    return result;
-}
 
 /* convert from mjpeg to rgb24 */
 static bool
@@ -1846,25 +1740,13 @@ mjpeg_to_rgb24 (int width, int height,
 		unsigned char *src, int length,
 		unsigned char *dst)
 {
-    /* use a MyMJpegReader reader for doing the conversion */
-    MyMJpegReader* reader = 0;
-    bool ok;
-    reader = new MyMJpegReader (src, length);
-    ok = reader->ReadHeader ();
-    if (ok) {
-      ok = reader->ReadData (dst, width * 3, 1 );
-    };
-    delete reader;
-    return ok;
-    /*
-    if (!ok) {
-      fprintf(stderr, "Camera returned bad header\n");
-      memset(dst, 0, width * 3 * height);
-    };
-    */
+    cv::Mat temp=cv::imdecode(cv::Vector<uchar>(src, length), 1);
+    if( !temp.data || temp.cols != width || temp.rows != height )
+       return false;
+    memcpy(dst, temp.data, width*height*3);
+    return true;
 }
 
-#endif
 #endif
 
 /*
@@ -1948,11 +1830,11 @@ void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
 
 }
 
-// SGBRG to RGB24 
+// SGBRG to RGB24
 // for some reason, red and blue needs to be swapped
 // at least for  046d:092f Logitech, Inc. QuickCam Express Plus to work
 //see: http://www.siliconimaging.com/RGB%20Bayer.htm
-//and 4.6 at http://tldp.org/HOWTO/html_single/libdc1394-HOWTO/ 
+//and 4.6 at http://tldp.org/HOWTO/html_single/libdc1394-HOWTO/
 void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned char *dst)
 {
     long int i;
@@ -1966,7 +1848,7 @@ void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
     for ( i = 0; i < size; i++ )
     {
         if ( (i/WIDTH) % 2 == 0 ) //even row
-        { 
+        {
             if ( (i % 2) == 0 ) //even pixel
             {
                 if ( (i > WIDTH) && ((i % WIDTH) > 0) )
@@ -1977,7 +1859,7 @@ void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
                 } else
                 {
                   /* first line or left column */
-        
+
                   *scanpt++ = *(rawpt+1);           /* R */
                   *scanpt++ = *(rawpt);             /* G */
                   *scanpt++ =  *(rawpt+WIDTH);      /* B */
@@ -1992,7 +1874,7 @@ void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
                 } else
                 {
                     /* first line or right column */
-                    
+
                     *scanpt++ = *(rawpt);       /* R */
                     *scanpt++ = (*(rawpt-1)+*(rawpt+WIDTH))/2; /* G */
                     *scanpt++ = *(rawpt+WIDTH-1);      /* B */
@@ -2010,7 +1892,7 @@ void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
                 } else
                 {
                     /* bottom line or left column */
-        
+
                     *scanpt++ =  *(rawpt-WIDTH+1);          /* R */
                     *scanpt++ =  (*(rawpt+1)+*(rawpt-WIDTH))/2;      /* G */
                     *scanpt++ =  *(rawpt); /* B */
@@ -2025,7 +1907,7 @@ void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
                 } else
                 {
                     /* bottom line or right column */
-                    
+
                     *scanpt++ = (*(rawpt-WIDTH));  /* R */
                     *scanpt++ = *(rawpt);      /* G */
                     *scanpt++ = (*(rawpt-1)); /* B */
