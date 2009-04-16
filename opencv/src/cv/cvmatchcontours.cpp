@@ -196,7 +196,7 @@ cvMatchShapes( const void* contour1, const void* contour2,
             break;
         }
     default:
-        CV_ERROR_FROM_STATUS( CV_BADCOEF_ERR );
+        CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
     }
 
     __END__;

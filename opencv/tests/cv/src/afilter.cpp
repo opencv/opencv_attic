@@ -1329,8 +1329,6 @@ void CV_MedianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
     anchor.x = anchor.y = aperture_size.width / 2;
     sizes[INPUT][1] = cvSize(aperture_size.width,aperture_size.height);
 
-    sizes[INPUT][0].width = MAX( sizes[INPUT][0].width, aperture_size.width );
-    sizes[INPUT][0].height = MAX( sizes[INPUT][0].height, aperture_size.width );
     sizes[OUTPUT][0] = sizes[INPUT][0];
     sizes[REF_OUTPUT][0] = sizes[INPUT][0];
 
@@ -1507,12 +1505,14 @@ CV_PyramidBaseTest::CV_PyramidBaseTest( const char* test_name, const char* test_
     : CV_FilterBaseTest( test_name, test_funcs, true ), downsample(_downsample)
 {
     test_array[TEMP].push(NULL);
+    size_list = filter_sizes;
     depth_list = smooth_depths;
     cn_list = pyramid_channels;
     default_timing_param_names = 0;
     if( strcmp( test_funcs, "" ) != 0 )
     {
         default_timing_param_names = pyramid_param_names;
+        size_list = 0;
         cn_list = 0;
         depth_list = 0;
     }
@@ -2458,7 +2458,7 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
     if( cvTsRandInt(rng) % 3 > 0 )
     {
         sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] = sum_size;
-        if( cvTsRandInt(rng) % 2 > 0 && cn == 1 )
+        if( cvTsRandInt(rng) % 2 > 0 )
             sizes[REF_OUTPUT][2] = sizes[OUTPUT][2] = sum_size;
     }
 
@@ -2478,7 +2478,7 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
 double CV_IntegralTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[i][j].type);
-    return depth == CV_32S ? 0 : 1e-10;
+    return depth == CV_32S ? 0 : FLT_EPSILON;
 }
 
 
@@ -2681,5 +2681,3 @@ void CV_IntegralTest::prepare_to_validation( int /*test_case_idx*/ )
 
 
 CV_IntegralTest integral_test;
-
-

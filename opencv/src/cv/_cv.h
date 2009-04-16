@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                          License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -57,9 +58,6 @@
 #include <limits.h>
 #include <float.h>
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-
 #ifdef __BORLANDC__
     #define     WIN32
     #define     CV_DLL
@@ -81,20 +79,28 @@ extern const float icv8x32fTab_cv[];
 extern const float icv8x32fSqrTab[];
 #define CV_8TO32F_SQR(x)  icv8x32fSqrTab[(x)+128]
 
-CV_INLINE  CvDataType icvDepthToDataType( int type );
-CV_INLINE  CvDataType icvDepthToDataType( int type )
+namespace cv
 {
-    return (CvDataType)(
-            ((((int)cv8u)|((int)cv8s << 4)|((int)cv16u << 8)|
-              ((int)cv16s << 12)|((int)cv32s << 16)|((int)cv32f << 20)|
-              ((int)cv64f << 24)) >> CV_MAT_DEPTH(type)*4) & 15);
+
+enum { INTER_BITS=5, INTER_BITS2=INTER_BITS*2,
+       INTER_TAB_SIZE=(1<<INTER_BITS),
+       INTER_TAB_SIZE2=INTER_TAB_SIZE*INTER_TAB_SIZE };
+
+static inline Point normalizeAnchor( Point anchor, Size ksize )
+{
+    if( anchor == Point(-1,-1) )
+        anchor = Point(ksize.width/2, ksize.height/2);
+    else
+        CV_Assert( anchor.inside(Rect(0, 0, ksize.width, ksize.height)) );
+    return anchor;
 }
 
-#define CV_HIST_DEFAULT_TYPE CV_32F
+void preprocess2DKernel( const Mat& kernel, Vector<Point>& coords, Vector<uchar>& coeffs );
+void crossCorr( const Mat& src, const Mat& templ, Mat& dst,
+                Point anchor=Point(0,0), double delta=0,
+                int borderType=BORDER_REFLECT_101 );
 
-CV_EXTERN_C_FUNCPTR( void (CV_CDECL * CvWriteNodeFunction)(void* seq,void* node) )
-
-#define _CvConvState CvFilterState
+}
 
 typedef struct CvPyramid
 {
@@ -107,12 +113,12 @@ typedef struct CvPyramid
 }
 CvPyramid;
 
-#include "_cvipp.h"
+#ifndef IPPI_CALL
+#define IPPI_CALL(func) CV_Assert((func) >= 0)
+#endif
+
 #include "_cvmatrix.h"
 #include "_cvgeom.h"
 #include "_cvimgproc.h"
-
-// default face cascade
-//extern const char* icvDefaultFaceCascade[];
 
 #endif /*_CV_INTERNAL_H_*/

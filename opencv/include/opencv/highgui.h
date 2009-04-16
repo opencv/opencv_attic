@@ -196,8 +196,21 @@ CVAPI(void) cvSetMouseCallback( const char* window_name, CvMouseCallback on_mous
 CVAPI(IplImage*) cvLoadImage( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 CVAPI(CvMat*) cvLoadImageM( const char* filename, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
 
+#define CV_IMWRITE_JPEG_QUALITY 1
+#define CV_IMWRITE_PNG_COMPRESSION 16
+#define CV_IMWRITE_PXM_BINARY 32
+
 /* save image to file */
-CVAPI(int) cvSaveImage( const char* filename, const CvArr* image );
+CVAPI(int) cvSaveImage( const char* filename, const CvArr* image,
+                        const int* params CV_DEFAULT(0) );
+
+/* decode image stored in the buffer */
+CVAPI(IplImage*) cvDecodeImage( const CvMat* buf, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
+CVAPI(CvMat*) cvDecodeImageM( const CvMat* buf, int iscolor CV_DEFAULT(CV_LOAD_IMAGE_COLOR));
+
+/* encode image and store the result as a byte vector (single-row 8uC1 matrix) */
+CVAPI(CvMat*) cvEncodeImage( const char* ext, const CvArr* image,
+                             const int* params CV_DEFAULT(0) );
 
 #define CV_CVTIMG_FLIP      1
 #define CV_CVTIMG_SWAP_RB   2
@@ -280,9 +293,10 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 #define CV_CAP_PROP_SATURATION    12
 #define CV_CAP_PROP_HUE           13
 #define CV_CAP_PROP_GAIN          14
-#define CV_CAP_PROP_CONVERT_RGB   15
-#define CV_CAP_PROP_WHITE_BALANCE 16
-#define CV_CAP_PROP_RECTIFICATION 17
+#define CV_CAP_PROP_EXPOSURE      15
+#define CV_CAP_PROP_CONVERT_RGB   16
+#define CV_CAP_PROP_WHITE_BALANCE 17
+#define CV_CAP_PROP_RECTIFICATION 18
 
 /* retrieve or set capture properties */
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
@@ -435,7 +449,7 @@ CV_INLINE IplROI RectToROI( RECT r )
 #endif /* __cplusplus */
 
 
-#if defined __cplusplus && (!defined WIN32 || !defined (__GNUC__)) && !defined CV_NO_CVV_IMAGE
+#if defined __cplusplus && !defined CV_NO_CVV_IMAGE
 
 #define CImage CvvImage
 
@@ -499,5 +513,12 @@ protected:
 };
 
 #endif /* __cplusplus */
+
+
+/****************************************************************************************\
+*                                    New interface                                       *
+\****************************************************************************************/
+
+#include "highgui.hpp"
 
 #endif /* _HIGH_GUI_ */

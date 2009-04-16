@@ -311,7 +311,7 @@ icvSpillTreeNodeHeapify( CvSpillTreeNode** heap,
   CvSpillTreeNode* inp;
   do {
     i = largest;
-    l = (i+1)<<1-1;
+    l = (i+1)<<(1-1);
     r = (i+1)<<1;
     if (( l < k )&&(( heap[l] == NULL )||( heap[l]->mp > heap[i]->mp )))
       largest = l;

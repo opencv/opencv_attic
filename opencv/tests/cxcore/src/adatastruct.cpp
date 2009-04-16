@@ -499,12 +499,12 @@ void CxCore_DynStructBaseTest::update_progressbar()
     if( test_progress < 0 )
     {
         test_progress = 0;
-        cpu_freq = cvGetTickFrequency();
-        start_time = cvGetTickCount();
+        cpu_freq = cv::getTickFrequency();
+        start_time = cv::getTickCount();
     }
 
-    t = cvGetTickCount();
-    test_progress = update_progress( test_progress, 0, 0, ((double)(t - start_time))/(cpu_freq*1000) );
+    t = cv::getTickCount();
+    test_progress = update_progress( test_progress, 0, 0, (double)(t - start_time)/cpu_freq );
 }
 
 

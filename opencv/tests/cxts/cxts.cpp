@@ -927,10 +927,10 @@ int CvTest::update_progress( int progress, int test_case_idx, int count, double 
             progress = t;
         }
     }
-    else if( cvRound(dt*0.001) > progress )
+    else if( cvRound(dt) > progress )
     {
         ts->printf( CvTS::CONSOLE, "." );
-        progress = cvRound(dt*0.001);
+        progress = cvRound(dt);
     }
 
     return progress;
@@ -1010,6 +1010,7 @@ void CvTS::clear()
     params.test_mode = CORRECTNESS_CHECK_MODE;
     params.timing_mode = MIN_TIME;
     params.use_optimized = -1;
+    params.color_terminal = 1;
 
     if( memory_manager )
         memory_manager->clear_and_check();
@@ -1030,7 +1031,6 @@ CvTS::~CvTS()
 
     delete selected_tests;
     delete failed_tests;
-    cvSetMemoryManager( 0, 0 );
 }
 
 
@@ -1247,6 +1247,8 @@ int CvTS::run( int argc, char** argv )
             list_tests = 1;
         else if( strcmp( argv[i], "-d" ) == 0 )
             set_data_path(argv[++i]);
+        else if( strcmp( argv[i], "-nc" ) == 0 )
+            params.color_terminal = 0;
     }
 
     if( write_params )
@@ -1388,17 +1390,17 @@ int CvTS::run( int argc, char** argv )
             if( !params.print_only_failed )
             {
                 printf( SUMMARY + CONSOLE, "\t" );
-                change_color( CV_TS_GREEN );
+                set_color( CV_TS_GREEN );
                 printf( SUMMARY + CONSOLE, "Ok\n" );
-                change_color( CV_TS_NORMAL );
+                set_color( CV_TS_NORMAL );
             }
         }
         else
         {
             printf( SUMMARY + CONSOLE, "\t" );
-            change_color( CV_TS_RED );
+            set_color( CV_TS_RED );
             printf( SUMMARY + CONSOLE, "FAIL(%s)\n", str_from_code(code) );
-            change_color( CV_TS_NORMAL );
+            set_color( CV_TS_NORMAL );
             printf( LOG, "context: test case = %d, seed = %08x%08x\n",
                     current_test_info.test_case_idx,
                     (unsigned)(current_test_info.rng_seed>>32),
@@ -1443,6 +1445,7 @@ void CvTS::print_help()
         "-f - use parameters from the provided config XML/YAML file instead of the default parameters\n\n"
         "-h or --help - print this help information\n\n"
         "-l - list all the registered tests or subset of the tests, selected in the config file, and exit\n\n"
+        "-nc - do not use colors in the console output\n\n"     
         "-O{0|1} - disable/enable on-fly detection of IPP and other supported optimized libs. It's enabled by default\n\n"
         "-t - switch to the performance testing mode instead of the default algorithmic/correctness testing mode\n\n"
         "-w - write default parameters of the algorithmic or performance (when -t is passed) tests to the specifed config file (see -f) and exit\n\n"
@@ -1684,6 +1687,11 @@ void CvTS::printf( int streams, const char* fmt, ... )
     }
 }
 
+void CvTS::set_color(int color)
+{
+    if( params.color_terminal )
+        change_color(color);
+}
 
 static char* cv_strnstr( const char* str, int len,
                          const char* pattern,

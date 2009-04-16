@@ -52,53 +52,21 @@
 void icvSepConvSmall3_32f( float* src, int src_step, float* dst, int dst_step,
             CvSize src_size, const float* kx, const float* ky, float* buffer );
 
-typedef CvStatus (CV_STDCALL * CvSobelFixedIPPFunc)
-( const void* src, int srcstep, void* dst, int dststep, CvSize roi, int aperture );
-
-typedef CvStatus (CV_STDCALL * CvFilterFixedIPPFunc)
-( const void* src, int srcstep, void* dst, int dststep, CvSize roi );
-
 #undef   CV_CALC_MIN
 #define  CV_CALC_MIN(a, b) if((a) > (b)) (a) = (b)
 
 #undef   CV_CALC_MAX
 #define  CV_CALC_MAX(a, b) if((a) < (b)) (a) = (b)
 
-#define CV_MORPH_ALIGN  4
-
-#define CV_WHOLE   0
-#define CV_START   1
-#define CV_END     2
-#define CV_MIDDLE  4
-
 void
 icvCrossCorr( const CvArr* _img, const CvArr* _templ,
-              CvArr* _corr, CvPoint anchor=cvPoint(0,0) );
+              CvArr* _corr, CvPoint anchor=cvPoint(0,0),
+              double delta=0, int borderType=IPL_BORDER_REPLICATE);
 
 CvStatus CV_STDCALL
 icvCopyReplicateBorder_8u( const uchar* src, int srcstep, CvSize srcroi,
                            uchar* dst, int dststep, CvSize dstroi,
                            int left, int right, int cn, const uchar* value = 0 );
-
-CvMat* icvIPPFilterInit( const CvMat* src, int stripe_size, CvSize ksize );
-
-int icvIPPFilterNextStripe( const CvMat* src, CvMat* temp, int y,
-                            CvSize ksize, CvPoint anchor );
-
-int icvIPPSepFilter( const CvMat* src, CvMat* dst, const CvMat* kernelX,
-                     const CvMat* kernelY, CvPoint anchor );
-
-#define ICV_WARP_SHIFT          10
-#define ICV_WARP_MASK           ((1 << ICV_WARP_SHIFT) - 1)
-
-#define ICV_LINEAR_TAB_SIZE     (ICV_WARP_MASK+1)
-extern float icvLinearCoeffs[(ICV_LINEAR_TAB_SIZE+1)*2];
-void icvInitLinearCoeffTab();
-
-#define ICV_CUBIC_TAB_SIZE   (ICV_WARP_MASK+1)
-extern float icvCubicCoeffs[(ICV_CUBIC_TAB_SIZE+1)*2];
-
-void icvInitCubicCoeffTab();
 
 CvStatus CV_STDCALL icvGetRectSubPix_8u_C1R
 ( const uchar* src, int src_step, CvSize src_size,

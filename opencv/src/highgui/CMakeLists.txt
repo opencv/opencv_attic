@@ -7,7 +7,7 @@ project(highgui)
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
-    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_PNG_H -DHAVE_TIFF -DHAVE_JASPER)
+    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
 endif()
 
 if(MSVC)
@@ -32,7 +32,12 @@ set(highgui_srcs
     )
 
 set(highgui_hdrs _highgui.h utils.h)
-set(highgui_ext_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/highgui.h)
+
+set(lib_hdr_names highgui.h highgui.hpp)
+set(highgui_ext_hdrs)
+foreach(h ${lib_hdr_names})
+    list(APPEND highgui_ext_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+endforeach()
 
 if(WIN32)
     set(highgui_srcs ${highgui_srcs} window_w32.cpp cvcap_vfw.cpp cvcap_cmu.cpp cvcap_w32.cpp cvcap_dshow.cpp)
@@ -71,7 +76,11 @@ if(UNIX)
         set(highgui_srcs ${highgui_srcs} cvcap_unicap.cpp)
     endif()
 
-    set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
+	if(HAVE_LIBV4L)
+		set(highgui_srcs ${highgui_srcs} cvcap_libv4l.cpp)
+	else()
+		set(highgui_srcs ${highgui_srcs} cvcap_v4l.cpp)
+	endif()
 
     if(NOT APPLE AND NOT OPENCV_BUILD_3RDPARTY_LIBS)
         if(JPEG_FOUND)

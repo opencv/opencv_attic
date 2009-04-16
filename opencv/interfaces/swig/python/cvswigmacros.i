@@ -39,21 +39,37 @@
 //
 //M*/
 
-#include "_cv.h"
+/* This file contains swig macros that are used in several typemap files */
 
-#undef IPCVAPI_EX
-#define IPCVAPI_EX(type,func_name,names,modules,arg) \
-    { (void**)&func_name##_p, (void*)(size_t)-1, names, modules, 0 },
 
-static CvPluginFuncInfo cv_ipp_tab[] =
-{
-#undef _CV_IPP_H_
-#include "_cvipp.h"
-#undef _CV_IPP_H_
-    {0, 0, 0, 0, 0}
-};
+%define %myshadow(function)
+%ignore function;
+%rename (function) function##_Shadow;
+%enddef
 
-static CvModuleInfo cv_info = { 0, "cv", CV_VERSION, cv_ipp_tab };
-CvModule cv_module( &cv_info );
-
-/* End of file. */
+// Elsewhere in this wrapper, the cvRelease* functions are mapped to 
+// the destructors for the corresponding OpenCV object wrapper.  This
+// is done in order to let Python handle memory management.  If the 
+// reference count of the Python object wrapping the OpenCV object 
+// goes to 0, the garbage collector will call the destructor, and 
+// therefore the cvRelease* function, before freeing the Python object.
+// However, if the user explicitly calls the cvRelease* function, we 
+// must prevent the Python garbage collector from calling it again when
+// the refcount reaches 0 -- otherwise a double-free error occurs.
+//
+// Thus, below, we redirect each cvRelease* function to the 
+// corresponding OpenCV object's destructor.  This has the effect of:
+// (1) Calling the corresponding cvRelease* function, and therefore 
+//     immediately releasing the OpenCV object.
+// (2) Telling SWIG to disown memory management for this OpenCV object.  
+//
+// Thus, when the refcount for the Python object reaches 0, the Python
+// object is garbage collected, but since it no longer owns the OpenCV 
+// object, this is not freed again.
+%define %myrelease(module, Function, Type)
+%ignore Function;
+%rename (Function) Function##_Shadow;
+%pythoncode %{
+Function = _##module##.delete_##Type
+%}
+%enddef

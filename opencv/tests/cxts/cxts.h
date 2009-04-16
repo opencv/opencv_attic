@@ -445,6 +445,9 @@ protected:
 
     // prints the information about command-line parameters
     virtual void print_help();
+    
+    // changes the text color in console
+    virtual void set_color(int color);
 
     // a sequence of tests to run
     CvTestPtrVec* selected_tests;
@@ -509,6 +512,9 @@ protected:
 
         // the path to data files used by tests
         char* data_path;
+        
+        // whether the output to console should be colored
+        int color_terminal;
     }
     params;
 
@@ -643,7 +649,7 @@ inline  double cvTsRandReal( CvRNG* rng )
 }
 
 // fills c with zeros
-CV_EXPORTS void cvTsZero( CvMat* c );
+CV_EXPORTS void cvTsZero( CvMat* c, const CvMat* mask=0 );
 
 // initializes scaled identity matrix
 CV_EXPORTS void cvTsSetIdentity( CvMat* c, CvScalar diag_value );

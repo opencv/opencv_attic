@@ -385,18 +385,15 @@ static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
 CV_IMPL void
 cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
-               CvMemStorage* storage, CvSURFParams params )
+               CvMemStorage* storage, CvSURFParams params,
+			   int useProvidedKeyPts)
 {
     CvMat *sum = 0, *mask1 = 0, *mask_sum = 0, **win_bufs = 0;
 
-    if( _keypoints )
+    if( _keypoints && !useProvidedKeyPts ) // If useProvidedKeyPts!=0 we'll use current contents of "*_keypoints"
         *_keypoints = 0;
     if( _descriptors )
         *_descriptors = 0;
-
-    CV_FUNCNAME( "cvExtractSURF" );
-
-    __BEGIN__;
 
     /* Radius of the circle in which to sample gradients to assign an 
        orientation */
@@ -431,8 +428,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int descriptor_size = params.extended ? 128 : 64;
     const int descriptor_data_type = CV_32F;
     const int PATCH_SZ = 20;
-    float G[2*ORI_RADIUS+1]; 
-    CvMat _G = cvMat(1, (2*ORI_RADIUS+1), CV_32F, G);
     float DW[PATCH_SZ][PATCH_SZ];
     CvMat _DW = cvMat(PATCH_SZ, PATCH_SZ, CV_32F, DW);
     CvPoint apt[max_ori_samples];
@@ -440,24 +435,35 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     int i, j, k, nangle0 = 0, N;
     int nthreads = cvGetNumThreads();
 
-    CV_ASSERT(img != 0);
-    CV_ASSERT(CV_MAT_TYPE(img->type) == CV_8UC1);
-    CV_ASSERT(mask == 0 || (CV_ARE_SIZES_EQ(img,mask) && CV_MAT_TYPE(mask->type) == CV_8UC1));
-    CV_ASSERT(storage != 0);
-    CV_ASSERT(params.hessianThreshold >= 0);
-    CV_ASSERT(params.nOctaves > 0);
-    CV_ASSERT(params.nOctaveLayers > 0);
+    CV_Assert(img != 0);
+    CV_Assert(CV_MAT_TYPE(img->type) == CV_8UC1);
+    CV_Assert(mask == 0 || (CV_ARE_SIZES_EQ(img,mask) && CV_MAT_TYPE(mask->type) == CV_8UC1));
+    CV_Assert(storage != 0);
+    CV_Assert(params.hessianThreshold >= 0);
+    CV_Assert(params.nOctaves > 0);
+    CV_Assert(params.nOctaveLayers > 0);
 
     sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
     cvIntegral( img, sum );
-    if( mask )
-    {
-        mask1 = cvCreateMat( img->height, img->width, CV_8UC1 );
-        mask_sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
-        cvMinS( mask, 1, mask1 );
-        cvIntegral( mask1, mask_sum );
-    }
-    keypoints = icvFastHessianDetector( sum, mask_sum, storage, &params );
+	
+	// Compute keypoints only if we are not asked for evaluating the descriptors are some given locations:
+	if (!useProvidedKeyPts)
+	{
+		if( mask )
+		{
+			mask1 = cvCreateMat( img->height, img->width, CV_8UC1 );
+			mask_sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
+			cvMinS( mask, 1, mask1 );
+			cvIntegral( mask1, mask_sum );
+		}
+		keypoints = icvFastHessianDetector( sum, mask_sum, storage, &params );
+	}
+	else
+	{
+		CV_Assert(useProvidedKeyPts && (_keypoints != 0) && (*_keypoints != 0));
+		keypoints = *_keypoints;
+	}
+
     N = keypoints->total;
     if( _descriptors )
     {
@@ -467,7 +473,9 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     }
 
     /* Coordinates and weights of samples used to calculate orientation */
-    CvSepFilter::init_gaussian_kernel( &_G, ORI_SIGMA );
+    cv::Mat _G = cv::getGaussianKernel( 2*ORI_RADIUS+1, ORI_SIGMA, CV_32F );
+    const float* G = (const float*)_G.data;
+    
     for( i = -ORI_RADIUS; i <= ORI_RADIUS; i++ )
     {
         for( j = -ORI_RADIUS; j <= ORI_RADIUS; j++ )
@@ -532,7 +540,15 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
            sampled in a circle of radius 6s using wavelets of size 4s.
            We ensure the gradient wavelet size is even to ensure the 
            wavelet pattern is balanced and symmetric around its center */
-        int grad_wav_size = 2*cvRound( 2*s ); 
+        int grad_wav_size = 2*cvRound( 2*s );
+        if ( sum->rows < grad_wav_size || sum->cols < grad_wav_size )
+        {
+            /* when grad_wav_size is too big,
+	     * the sampling of gradient will be meaningless
+	     * mark keypoint for deletion. */
+            kp->size = -1;
+            continue;
+        }
         icvResizeHaarPattern( dx_s, dx_t, NX, 4, grad_wav_size, sum->cols );
         icvResizeHaarPattern( dy_s, dy_t, NY, 4, grad_wav_size, sum->cols );
         for( kk = 0, nangle = 0; kk < nangle0; kk++ )
@@ -541,14 +557,23 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
             float vx, vy;
             x = cvRound( center.x + apt[kk].x*s - (float)(grad_wav_size-1)/2 );
             y = cvRound( center.y + apt[kk].y*s - (float)(grad_wav_size-1)/2 );
-            if( (unsigned)y >= (unsigned)sum->rows - grad_wav_size ||
-                (unsigned)x >= (unsigned)sum->cols - grad_wav_size )
+            if( (unsigned)y >= (unsigned)(sum->rows - grad_wav_size) ||
+                (unsigned)x >= (unsigned)(sum->cols - grad_wav_size) )
                 continue;
             ptr = sum_ptr + x + y*sum_cols;
             vx = icvCalcHaarPattern( ptr, dx_t, 2 );
             vy = icvCalcHaarPattern( ptr, dy_t, 2 );
             X[nangle] = vx*apt_w[kk]; Y[nangle] = vy*apt_w[kk];
             nangle++;
+        }
+        if ( nangle == 0 )
+        {
+            /* No gradient could be sampled because the keypoint is too
+	     * near too one or more of the sides of the image. As we
+	     * therefore cannot find a dominant direction, we skip this
+	     * keypoint and mark it for later deletion from the sequence. */
+            kp->size = -1;
+            continue;
         }
         _X.cols = _Y.cols = _angle.cols = nangle;
         cvCartToPolar( &_X, &_Y, 0, &_angle, 1 );
@@ -706,20 +731,32 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         for( kk = 0; kk < descriptor_size; kk++ )
             vec[kk] = (float)(vec[kk]*scale);
     }
+    
+    /* remove keypoints that were marked for deletion */
+    for ( i = 0; i < N; i++ )
+    {
+        CvSURFPoint* kp = (CvSURFPoint*)cvGetSeqElem( keypoints, i );
+        if ( kp->size == -1 )
+        {
+            cvSeqRemove( keypoints, i );
+            if ( _descriptors )
+                cvSeqRemove( descriptors, i );
+            k--;
+	    N--;
+        }
+    }
 
     for( i = 0; i < nthreads; i++ )
         cvReleaseMat( &win_bufs[i] );
 
-    if( _keypoints )
+    if( _keypoints && !useProvidedKeyPts )
         *_keypoints = keypoints;
     if( _descriptors )
         *_descriptors = descriptors;
 
-    __END__;
-
     cvReleaseMat( &sum );
-    cvReleaseMat( &mask1 );
-    cvReleaseMat( &mask_sum );
+    if (mask1) cvReleaseMat( &mask1 );
+    if (mask_sum) cvReleaseMat( &mask_sum );
     cvFree( &win_bufs );
 }
 

@@ -177,12 +177,6 @@ CvStatus CV_STDCALL icvGetRectSubPix_##flavor##_C1R                         \
         /* extracted rectangle is totally inside the image */               \
         src += ip.y * src_step + ip.x;                                      \
                                                                             \
-        if( icvCopySubpix_##flavor##_C1R_p &&                               \
-            icvCopySubpix_##flavor##_C1R_p( src, src_step*sizeof(src[0]),   \
-                                            dst, dst_step*sizeof(dst[0]),   \
-                                            win_size, a, b ) >= 0 )         \
-            return CV_OK;                                                   \
-                                                                            \
         for( i = 0; i < win_size.height; i++, src += src_step,              \
                                               dst += dst_step )             \
         {                                                                   \
@@ -501,9 +495,9 @@ CvStatus CV_STDCALL icvGetRectSubPix_8u32f_C1R
 #define ICV_MUL_SCALE(x,y)    (((x)*(y) + (1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
 #define ICV_DESCALE(x)        (((x)+(1 << (ICV_SHIFT-1))) >> ICV_SHIFT)
 
-icvCopySubpix_8u_C1R_t icvCopySubpix_8u_C1R_p = 0;
+/*icvCopySubpix_8u_C1R_t icvCopySubpix_8u_C1R_p = 0;
 icvCopySubpix_8u32f_C1R_t icvCopySubpix_8u32f_C1R_p = 0;
-icvCopySubpix_32f_C1R_t icvCopySubpix_32f_C1R_p = 0;
+icvCopySubpix_32f_C1R_t icvCopySubpix_32f_C1R_p = 0;*/
 
 ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u, uchar, uchar, int, CV_NOP, ICV_SCALE, ICV_DESCALE )
 //ICV_DEF_GET_RECT_SUB_PIX_FUNC( 8u32f, uchar, float, float, CV_8TO32F, CV_NOP, CV_NOP )

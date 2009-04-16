@@ -396,7 +396,7 @@ cvFindDominantPoints( CvSeq * contour, CvMemStorage * storage, int method,
         }
         break;
     default:
-        CV_ERROR_FROM_STATUS( CV_BADFLAG_ERR );
+        CV_ERROR( CV_StsBadArg, "" );
     }
 
     __END__;

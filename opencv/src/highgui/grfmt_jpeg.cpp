@@ -44,39 +44,6 @@
 
 #ifdef HAVE_JPEG
 
-// JPEG filter factory
-
-GrFmtJpeg::GrFmtJpeg()
-{
-    m_sign_len = 3;
-    m_signature = "\xFF\xD8\xFF";
-    m_description = "JPEG files (*.jpeg;*.jpg;*.jpe)";
-}
-
-
-GrFmtJpeg::~GrFmtJpeg()
-{
-}
-
-
-GrFmtReader* GrFmtJpeg::NewReader( const char* filename )
-{
-    return new GrFmtJpegReader( filename );
-}
-
-
-GrFmtWriter* GrFmtJpeg::NewWriter( const char* filename )
-{
-    return new GrFmtJpegWriter( filename );
-}
-
-
-/****************************************************************************************\
-    This part of the file implements JPEG codec on base of IJG libjpeg library,
-    in particular, this is the modified example.doc from libjpeg package.
-    See otherlibs/_graphics/readme.txt for copyright notice.
-\****************************************************************************************/
-
 #include <stdio.h>
 #include <setjmp.h>
 
@@ -95,98 +62,172 @@ extern "C" {
 #include "jpeglib.h"
 }
 
+namespace cv
+{
+
+struct JpegErrorMgr
+{
+    struct jpeg_error_mgr pub;
+    jmp_buf setjmp_buffer;
+};
+
+struct JpegSource
+{
+    struct jpeg_source_mgr pub;
+    int skip;
+};
+
+struct JpegState
+{
+    jpeg_decompress_struct cinfo; // IJG JPEG codec structure
+    JpegErrorMgr jerr; // error processing manager state
+    JpegSource source; // memory buffer source
+};
+
 /////////////////////// Error processing /////////////////////
 
-typedef struct GrFmtJpegErrorMgr
+METHODDEF(void)
+stub(j_decompress_ptr)
 {
-    struct jpeg_error_mgr pub;    /* "parent" structure */
-    jmp_buf setjmp_buffer;        /* jump label */
 }
-GrFmtJpegErrorMgr;
+
+METHODDEF(boolean)
+fill_input_buffer(j_decompress_ptr)
+{
+    return FALSE;
+}
+
+// emulating memory input stream
+
+METHODDEF(void)
+skip_input_data(j_decompress_ptr cinfo, long num_bytes)
+{
+    JpegSource* source = (JpegSource*) cinfo->src;
+
+    if( num_bytes > (long)source->pub.bytes_in_buffer )
+    {
+        // We need to skip more data than we have in the buffer.
+        // This will force the JPEG library to suspend decoding.
+        source->skip = num_bytes - source->pub.bytes_in_buffer;
+        source->pub.next_input_byte += source->pub.bytes_in_buffer;
+        source->pub.bytes_in_buffer = 0;
+    }
+    else
+    {
+        // Skip portion of the buffer
+        source->pub.bytes_in_buffer -= num_bytes;
+        source->pub.next_input_byte += num_bytes;
+        source->skip = 0;
+    }
+}
+
+
+GLOBAL(void)
+jpeg_buffer_src(j_decompress_ptr cinfo, JpegSource* source)
+{
+    cinfo->src = &source->pub;
+
+    // Prepare for suspending reader
+    source->pub.init_source = stub;
+    source->pub.fill_input_buffer = fill_input_buffer;
+    source->pub.skip_input_data = skip_input_data;
+    source->pub.resync_to_restart = jpeg_resync_to_restart;
+    source->pub.term_source = stub;
+    source->pub.bytes_in_buffer = 0; // forces fill_input_buffer on first read
+
+    source->skip = 0;
+}
 
 
 METHODDEF(void)
 error_exit( j_common_ptr cinfo )
 {
-    GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
+    JpegErrorMgr* err_mgr = (JpegErrorMgr*)(cinfo->err);
 
     /* Return control to the setjmp point */
     longjmp( err_mgr->setjmp_buffer, 1 );
 }
 
 
-/////////////////////// GrFmtJpegReader ///////////////////
+/////////////////////// JpegDecoder ///////////////////
 
 
-GrFmtJpegReader::GrFmtJpegReader( const char* filename ) : GrFmtReader( filename )
+JpegDecoder::JpegDecoder()
 {
-    m_cinfo = 0;
+    m_signature = "\xFF\xD8\xFF";
+    m_state = 0;
     m_f = 0;
+    m_buf_supported = true;
 }
 
 
-GrFmtJpegReader::~GrFmtJpegReader()
+JpegDecoder::~JpegDecoder()
 {
+    close();
 }
 
 
-void  GrFmtJpegReader::Close()
+void  JpegDecoder::close()
 {
+    if( m_state )
+    {
+        JpegState* state = (JpegState*)m_state;
+        jpeg_destroy_decompress( &state->cinfo );
+        delete state;
+        m_state = 0;
+    }
+
     if( m_f )
     {
         fclose( m_f );
         m_f = 0;
     }
 
-    if( m_cinfo )
-    {
-        jpeg_decompress_struct* cinfo = (jpeg_decompress_struct*)m_cinfo;
-        GrFmtJpegErrorMgr* jerr = (GrFmtJpegErrorMgr*)m_jerr;
-
-        jpeg_destroy_decompress( cinfo );
-        delete cinfo;
-        delete jerr;
-        m_cinfo = 0;
-        m_jerr = 0;
-    }
-    GrFmtReader::Close();
+    m_width = m_height = 0;
+    m_type = -1;
 }
 
+ImageDecoder JpegDecoder::newDecoder() const
+{
+    return new JpegDecoder;
+}
 
-bool  GrFmtJpegReader::ReadHeader()
+bool  JpegDecoder::readHeader()
 {
     bool result = false;
-    Close();
+    close();
 
-    jpeg_decompress_struct* cinfo = new jpeg_decompress_struct;
-    GrFmtJpegErrorMgr* jerr = new GrFmtJpegErrorMgr;
+    JpegState* state = new JpegState;
+    m_state = state;
+    state->cinfo.err = jpeg_std_error(&state->jerr.pub);
+    state->jerr.pub.error_exit = error_exit;
 
-    cinfo->err = jpeg_std_error(&jerr->pub);
-    jerr->pub.error_exit = error_exit;
-
-    m_cinfo = cinfo;
-    m_jerr = jerr;
-
-    if( setjmp( jerr->setjmp_buffer ) == 0 )
+    if( setjmp( state->jerr.setjmp_buffer ) == 0 )
     {
-        jpeg_create_decompress( cinfo );
+        jpeg_create_decompress( &state->cinfo );
 
-        m_f = fopen( m_filename, "rb" );
-        if( m_f )
+        if( m_buf.size() )
         {
-            jpeg_stdio_src( cinfo, m_f );
-            jpeg_read_header( cinfo, TRUE );
-
-            m_width = cinfo->image_width;
-            m_height = cinfo->image_height;
-            m_iscolor = cinfo->num_components > 1;
-
-            result = true;
+            jpeg_buffer_src(&state->cinfo, &state->source);
+            state->source.pub.next_input_byte = &m_buf[0];
+            state->source.pub.bytes_in_buffer = m_buf.size();
         }
+        else
+        {
+            m_f = fopen( m_filename.c_str(), "rb" );
+            if( m_f )
+                jpeg_stdio_src( &state->cinfo, m_f );
+        }
+        jpeg_read_header( &state->cinfo, TRUE );
+
+        m_width = state->cinfo.image_width;
+        m_height = state->cinfo.image_height;
+        m_type = state->cinfo.num_components > 1 ? CV_8UC3 : CV_8UC1;
+        result = true;
     }
 
     if( !result )
-        Close();
+        close();
 
     return result;
 }
@@ -325,16 +366,18 @@ int my_jpeg_load_dht (struct jpeg_decompress_struct *info, unsigned char *dht,
  * based on a message of Laurent Pinchart on the video4linux mailing list
  ***************************************************************************/
 
-bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
+bool  JpegDecoder::readData( Mat& img )
 {
     bool result = false;
+    uchar* data = img.data;
+    int step = img.step;
+    bool color = img.channels() > 1;
+    JpegState* state = (JpegState*)m_state;
 
-    color = color > 0 || (m_iscolor && color < 0);
-
-    if( m_cinfo && m_jerr && m_width && m_height )
+    if( state && m_width && m_height )
     {
-        jpeg_decompress_struct* cinfo = (jpeg_decompress_struct*)m_cinfo;
-        GrFmtJpegErrorMgr* jerr = (GrFmtJpegErrorMgr*)m_jerr;
+        jpeg_decompress_struct* cinfo = &state->cinfo;
+        JpegErrorMgr* jerr = &state->jerr;
         JSAMPARRAY buffer = 0;
 
         if( setjmp( jerr->setjmp_buffer ) == 0 )
@@ -353,9 +396,8 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
                     cinfo->dc_huff_tbl_ptrs );
             }
 
-            if( color > 0 || (m_iscolor && color < 0) )
+            if( color )
             {
-                color = 1;
                 if( cinfo->num_components != 4 )
                 {
                     cinfo->out_color_space = JCS_RGB;
@@ -369,7 +411,6 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
             }
             else
             {
-                color = 0;
                 if( cinfo->num_components != 4 )
                 {
                     cinfo->out_color_space = JCS_GRAYSCALE;
@@ -410,88 +451,170 @@ bool  GrFmtJpegReader::ReadData( uchar* data, int step, int color )
         }
     }
 
-    Close();
+    close();
     return result;
 }
 
 
-/////////////////////// GrFmtJpegWriter ///////////////////
+/////////////////////// JpegEncoder ///////////////////
 
-GrFmtJpegWriter::GrFmtJpegWriter( const char* filename ) : GrFmtWriter( filename )
+struct JpegDestination
+{
+    struct jpeg_destination_mgr pub;
+    Vector<uchar> *buf, *dst;
+};
+
+METHODDEF(void)
+stub(j_compress_ptr)
 {
 }
 
-
-GrFmtJpegWriter::~GrFmtJpegWriter()
+METHODDEF(void)
+term_destination (j_compress_ptr cinfo)
 {
-}
-
-
-bool  GrFmtJpegWriter::WriteImage( const uchar* data, int step,
-                                   int width, int height, int /*depth*/, int _channels )
-{
-    const int default_quality = 95;
-    struct jpeg_compress_struct cinfo;
-    GrFmtJpegErrorMgr jerr;
-
-    bool result = false;
-    FILE* f = 0;
-    int channels = _channels > 1 ? 3 : 1;
-    uchar* buffer = 0; // temporary buffer for row flipping
-
-    cinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = error_exit;
-
-    if( setjmp( jerr.setjmp_buffer ) == 0 )
+    JpegDestination* dest = (JpegDestination*)cinfo->dest;
+    size_t sz = dest->dst->size(), bufsz = dest->buf->size() - dest->pub.free_in_buffer;
+    if( bufsz > 0 )
     {
-        jpeg_create_compress(&cinfo);
-        f = fopen( m_filename, "wb" );
+        dest->dst->resize(sz + bufsz);
+        memcpy( &(*dest->dst)[0] + sz, &(*dest->buf)[0], bufsz);
+    }
+}
 
-        if( f )
+METHODDEF(boolean)
+empty_output_buffer (j_compress_ptr cinfo)
+{
+    JpegDestination* dest = (JpegDestination*)cinfo->dest;
+    size_t sz = dest->dst->size(), bufsz = dest->buf->size();
+    dest->dst->resize(sz + bufsz);
+    memcpy( &(*dest->dst)[0] + sz, &(*dest->buf)[0], bufsz);
+
+    dest->pub.next_output_byte = &(*dest->buf)[0];
+    dest->pub.free_in_buffer = bufsz;
+    return TRUE;
+}
+
+GLOBAL(void)
+jpeg_buffer_dest(j_compress_ptr cinfo, JpegDestination* destination)
+{
+    cinfo->dest = &destination->pub;
+
+    destination->pub.init_destination = stub;
+    destination->pub.empty_output_buffer = empty_output_buffer;
+    destination->pub.term_destination = term_destination;
+}
+
+
+JpegEncoder::JpegEncoder()
+{
+    m_description = "JPEG files (*.jpeg;*.jpg;*.jpe)";
+    m_buf_supported = true;
+}
+
+
+JpegEncoder::~JpegEncoder()
+{
+}
+
+ImageEncoder JpegEncoder::newEncoder() const
+{
+    return new JpegEncoder;
+}
+
+bool  JpegEncoder::write( const Mat& img, const Vector<int>& params )
+{
+    int quality = 95;
+
+    for( size_t i = 0; i < params.size(); i += 2 )
+    {
+        if( params[i] == CV_IMWRITE_JPEG_QUALITY )
         {
-            jpeg_stdio_dest( &cinfo, f );
-
-            cinfo.image_width = width;
-            cinfo.image_height = height;
-            cinfo.input_components = channels;
-            cinfo.in_color_space = channels > 1 ? JCS_RGB : JCS_GRAYSCALE;
-
-            jpeg_set_defaults( &cinfo );
-            jpeg_set_quality( &cinfo, default_quality,
-                              TRUE /* limit to baseline-JPEG values */ );
-            jpeg_start_compress( &cinfo, TRUE );
-
-            if( channels > 1 )
-                buffer = new uchar[width*channels];
-
-            for( ; height--; data += step )
-            {
-                uchar* ptr = (uchar*)data;
-
-                if( _channels == 3 )
-                {
-                    icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
-                    ptr = buffer;
-                }
-                else if( _channels == 4 )
-                {
-                    icvCvt_BGRA2BGR_8u_C4C3R( data, 0, buffer, 0, cvSize(width,1), 2 );
-                    ptr = buffer;
-                }
-
-                jpeg_write_scanlines( &cinfo, &ptr, 1 );
-            }
-
-            jpeg_finish_compress( &cinfo );
-            result = true;
+            quality = params[i+1];
+            quality = MIN(MAX(quality, 0), 100);
         }
     }
 
+    bool result = false;
+    FILE* f = 0;
+    int _channels = img.channels();
+    int channels = _channels > 1 ? 3 : 1;
+    int width = img.cols, height = img.rows;
+
+    Vector<uchar> out_buf(1 << 12);
+    AutoBuffer<uchar> _buffer;
+    uchar* buffer;
+
+    struct jpeg_compress_struct cinfo;
+    JpegErrorMgr jerr;
+    JpegDestination dest;
+
+    jpeg_create_compress(&cinfo);
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = error_exit;
+
+    if( !m_buf )
+    {
+        f = fopen( m_filename.c_str(), "wb" );
+        if( !f )
+            goto _exit_;
+        jpeg_stdio_dest( &cinfo, f );
+    }
+    else
+    {
+        dest.dst = m_buf;
+        dest.buf = &out_buf;
+
+        jpeg_buffer_dest( &cinfo, &dest );
+
+        dest.pub.next_output_byte = &out_buf[0];
+        dest.pub.free_in_buffer = out_buf.size();
+    }
+
+    if( setjmp( jerr.setjmp_buffer ) == 0 )
+    {
+        cinfo.image_width = width;
+        cinfo.image_height = height;
+        cinfo.input_components = channels;
+        cinfo.in_color_space = channels > 1 ? JCS_RGB : JCS_GRAYSCALE;
+
+        jpeg_set_defaults( &cinfo );
+        jpeg_set_quality( &cinfo, quality,
+                          TRUE /* limit to baseline-JPEG values */ );
+        jpeg_start_compress( &cinfo, TRUE );
+
+        if( channels > 1 )
+            _buffer.allocate(width*channels);
+        buffer = _buffer;
+
+        for( int y = 0; y < height; y++ )
+        {
+            uchar *data = img.data + img.step*y, *ptr = data;
+
+            if( _channels == 3 )
+            {
+                icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
+                ptr = buffer;
+            }
+            else if( _channels == 4 )
+            {
+                icvCvt_BGRA2BGR_8u_C4C3R( data, 0, buffer, 0, cvSize(width,1), 2 );
+                ptr = buffer;
+            }
+
+            jpeg_write_scanlines( &cinfo, &ptr, 1 );
+        }
+
+        jpeg_finish_compress( &cinfo );
+        result = true;
+    }
+
+_exit_:
     if(f) fclose(f);
     jpeg_destroy_compress( &cinfo );
 
-    delete[] buffer;
     return result;
+}
+
 }
 
 #endif

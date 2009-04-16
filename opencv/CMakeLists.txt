@@ -14,7 +14,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 # it _must_ go before PROJECT(OpenCV) in order to work
 if (NOT CMAKE_INSTALL_PREFIX)
     if (WIN32)
-        set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} CACHE INTERNAL "" FORCE)
     elseif()
         set(CMAKE_INSTALL_PREFIX "/usr" CACHE INTERNAL "" FORCE)
     endif()
@@ -132,9 +132,12 @@ endif()
 # 		CHECK FOR SYSTEM LIBRARIES, OPTIONS, ETC..
 # ----------------------------------------------------------------------------
 
-# Build (or not) some apps:
+# Build/install (or not) some apps:
 # ===================================================
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build all examples")
+set(INSTALL_C_EXAMPLES OFF CACHE BOOL "Install C examples")
+set(INSTALL_PYTHON_EXAMPLES OFF CACHE BOOL "Install Python examples")
+set(INSTALL_OCTAVE_EXAMPLES OFF CACHE BOOL "Install Octave examples")
 
 # Build tests:
 # ===================================================
@@ -188,15 +191,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+	# SSE/SSE2 is not available on AMD processors
     endif ()
     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
         set(OPENCV_USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(OPENCV_USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(OPENCV_USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE for GCC")
-        set(OPENCV_USE_SSE ON CACHE BOOL "Enable SSE2 for GCC")
+	# SSE/SSE2 is not available on AMD processors
     endif ()
 endif()
 
@@ -268,6 +269,7 @@ if(UNIX)
         CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
 
         CHECK_MODULE(libxine HAVE_XINE)
+		CHECK_MODULE(libv4l1 HAVE_LIBV4L)
         CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
         CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
 
@@ -282,7 +284,7 @@ if(UNIX)
 			include(FindJasper)
 		endif()
 
-        set(OPENCV_LINKER_LIBS dl m pthread)
+        set(OPENCV_LINKER_LIBS dl m pthread rt)
     else()
         add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
     endif()
@@ -294,29 +296,34 @@ set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 find_package(SWIG)
 if(SWIG_FOUND)
 
-find_package(PythonInterp)
-find_package(PythonLibs)
-
-# Build with python if installes:
-# ===================================================
-if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
-              ERROR_VARIABLE PYTHON_VERSION_FULL
-              OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
-    if(UNIX)
-        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+    find_package(PythonInterp)
+    find_package(PythonLibs)
+    
+    # cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
+    if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+        set(PYTHONLIBS_FOUND ON)
+    endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+    
+    # Build with python if installed:
+    # ===================================================
+    if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+                  ERROR_VARIABLE PYTHON_VERSION_FULL
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+    
+        string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
+        if(UNIX)
+            set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        endif()
+        if(WIN32)
+            get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
+            set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
+        endif()
     endif()
-    if(WIN32)
-        get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
-        set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
-    endif()
+
 endif()
 
-endif()
-
-if(MSVC)
+if(WIN32)
 
 set(IPP_FOUND)
 foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
@@ -334,7 +341,16 @@ foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
 endforeach()
 
 message(STATUS "IPP detected: ${IPP_FOUND}")
-set(BUILD_CUSTOM_IPP_LIB ${IPP_FOUND} CACHE BOOL "Build custom opencv_ipp*.dll")
+set(USE_IPP ${IPP_FOUND} CACHE BOOL "Use IPP when available")
+
+if(IPP_FOUND AND USE_IPP)
+    add_definitions(-DHAVE_IPP)
+    include_directories("${IPP_PATH}/../include")
+    link_directories("${IPP_PATH}/../lib")
+    set(IPP_LIBS ippsmerged.lib ippsemerged.lib ippimerged.lib ippiemerged.lib
+        ippvmmerged.lib ippvmemerged.lib ippccmerged.lib ippccemerged.lib
+        ippcvmerged.lib ippcvemerged.lib ippcorel.lib)
+endif()
 
 endif()
 
@@ -478,12 +494,12 @@ endif()
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
-set(OPENCV_EXTRA_C_FLAGS ${EXTRA_C_FLAGS} CACHE STRING "Extra compiler options")
-set(OPENCV_EXTRA_C_FLAGS_RELEASE ${EXTRA_C_FLAGS_RELEASE} CACHE STRING "Extra compiler options for Release build")
-set(OPENCV_EXTRA_C_FLAGS_DEBUG ${EXTRA_C_FLAGS_DEBUG} CACHE STRING "Extra compiler options for Debug build")
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS ${EXTRA_EXE_LINKER_FLAGS} CACHE STRING "Extra linker flags")
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE ${EXTRA_EXE_LINKER_FLAGS_RELEASE} CACHE STRING "Extra linker flags for Release build")
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG ${EXTRA_EXE_LINKER_FLAGS_DEBUG} CACHE STRING "Extra linker flags for Debug build")
+set(OPENCV_EXTRA_C_FLAGS ${EXTRA_C_FLAGS} CACHE STRING "Extra compiler options" FORCE)
+set(OPENCV_EXTRA_C_FLAGS_RELEASE ${EXTRA_C_FLAGS_RELEASE} CACHE STRING "Extra compiler options for Release build" FORCE)
+set(OPENCV_EXTRA_C_FLAGS_DEBUG ${EXTRA_C_FLAGS_DEBUG} CACHE STRING "Extra compiler options for Debug build" FORCE)
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS ${EXTRA_EXE_LINKER_FLAGS} CACHE STRING "Extra linker flags" FORCE)
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE ${EXTRA_EXE_LINKER_FLAGS_RELEASE} CACHE STRING "Extra linker flags for Release build" FORCE)
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG ${EXTRA_EXE_LINKER_FLAGS_DEBUG} CACHE STRING "Extra linker flags for Debug build" FORCE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
@@ -520,7 +536,7 @@ add_subdirectory(apps)
 add_subdirectory(doc)
 add_subdirectory(data)
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
     add_subdirectory(samples)
 endif()
 
@@ -534,8 +550,9 @@ add_subdirectory(3rdparty)
 
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
-#  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
-#  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use with "make install"
+#  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
+#  Part 2/3: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use with "make install"
+#  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
 # -------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------
@@ -554,7 +571,7 @@ list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_SOURCE_DIR}/include/opencv")
 
 set(CMAKE_LIB_DIRS_CONFIGCMAKE ${LIBRARY_OUTPUT_PATH})
 
-configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE)
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
@@ -566,11 +583,28 @@ set(CMAKE_LIB_DIRS_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/lib")
 
 #exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/unix-install/\"")
 exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/unix-install/\"")
-configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE)
+configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 if(UNIX)
     # For a command "FIND_PACKAGE(FOO)", CMake will look at the directory /usr/share|lib/FOO/FOOConfig.cmake, so:
     install(FILES ${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opencv/)
+endif()
+
+# --------------------------------------------------------------------------------------------
+#  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
+# -------------------------------------------------------------------------------------------
+if(WIN32)
+	# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
+	
+	# This will expand to, for example, <program files>/OpenCV 1.1.0/include
+	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\"")
+
+	# This will expand to, for example, <program files>/OpenCV 1.1.0/lib
+	set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
+
+	#exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/win-install/\"")
+	exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/win-install/\"")
+	configure_file("${CMAKE_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 endif()
 
 
@@ -682,7 +716,11 @@ message(STATUS "    DC1394 2.x:                ${HAVE_DC1394_2}")
 message(STATUS "    FFMPEG:                    ${HAVE_FFMPEG}")
 message(STATUS "    GStreamer:                 ${HAVE_GSTREAMER}")
 message(STATUS "    UniCap:                    ${HAVE_UNICAP}")
+if(HAVE_LIBV4L)
+message(STATUS "    V4L/V4L2:                  Using libv4l")
+else()
 message(STATUS "    V4L/V4L2:                  ${HAVE_CAMV4L}/${HAVE_CAMV4L2}")
+endif()
 message(STATUS "    Xine:                      ${HAVE_XINE}")
 endif()
 message(STATUS "")
@@ -692,10 +730,10 @@ message(STATUS "    Python:                    1")
 else()
 message(STATUS "    Python:                    0")
 endif()
-if(IPP_FOUND AND BUILD_CUSTOM_IPP_LIB)
-message(STATUS "    Custom IPP Lib:            1")
+if(IPP_FOUND AND USE_IPP)
+message(STATUS "    Use IPP:                   1")
 else()
-message(STATUS "    Custom IPP Lib:            0")
+message(STATUS "    Use IPP:                   0")
 endif()
 message(STATUS "")
 message(STATUS "    Install path:              ${CMAKE_INSTALL_PREFIX}")

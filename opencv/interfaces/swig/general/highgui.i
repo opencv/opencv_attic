@@ -81,6 +81,10 @@ CvMat * cvLoadImageMat(const char* filename, int iscolor=CV_LOAD_IMAGE_COLOR ){
 
 %include "highgui.h"
 
+struct CvCapture {
+};
+struct CvVideoWriter {
+};
 %extend CvCapture     { ~CvCapture ()     { CvCapture *     dummy = self; cvReleaseCapture     (& dummy); } }
 %extend CvVideoWriter { ~CvVideoWriter () { CvVideoWriter * dummy = self; cvReleaseVideoWriter (& dummy); } }
 

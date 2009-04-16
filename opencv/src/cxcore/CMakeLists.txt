@@ -8,7 +8,7 @@ source_group("Src" FILES ${lib_srcs})
 
 include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
 
-set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxtypes.h cvver.h cvwimage.h)
+set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
     list(APPEND lib_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
@@ -58,7 +58,14 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_lapack)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack)
+
+# Linker flag needed for Windows Mobile 5 and 6 SDKs
+if(MSVC AND CMAKE_CROSSCOMPILING)
+	set_target_properties(${the_target} PROPERTIES
+		LINK_FLAGS "/NODEFAULTLIB:secchk"
+		)
+endif()
 
 add_dependencies(${the_target} opencv_lapack)
 

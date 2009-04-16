@@ -47,9 +47,14 @@
 
 extern "C" {
 #ifndef WIN32
+// some versions of FFMPEG assume a C99 compiler, and don't define INT64_C
+#ifndef INT64_C
 #define INT64_C
 #define __STDC_CONSTANT_MACROS
+// force re-inclusion of stdint.h to get INT64_C macro
+#undef _STDINT_H
 #include <stdint.h>
+#endif
 #include <errno.h>
 #endif
 

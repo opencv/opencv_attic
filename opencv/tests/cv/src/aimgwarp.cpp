@@ -427,9 +427,9 @@ CV_ResizeTest warp_resize_test;
 
 /////////////////////////
 
-void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
+void cvTsRemap( const CvMat* src, CvMat* dst,
                 const CvMat* mapx, const CvMat* mapy,
-                int interpolation=CV_INTER_LINEAR )
+                CvMat* mask, int interpolation=CV_INTER_LINEAR )
 {
     int x, y, k;
     int drows = dst->rows, dcols = dst->cols;
@@ -452,11 +452,18 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
         srows = MAX(srows - 3, 0);
     }
 
+    int scols1 = MAX(scols - 2, 0);
+    int srows1 = MAX(srows - 2, 0);
+
+    if( mask )
+        cvTsZero(mask);
+
     for( y = 0; y < drows; y++ )
     {
         uchar* dptr = dst->data.ptr + dst->step*y;
         const float* mx = (const float*)(mapx->data.ptr + mapx->step*y);
         const float* my = (const float*)(mapy->data.ptr + mapy->step*y);
+        uchar* m = mask ? mask->data.ptr + mask->step*y : 0;
 
         for( x = 0; x < dcols; x++, dptr += elem_size )
         {
@@ -465,18 +472,14 @@ void cvTsRemap( const CvMat* src, CvMat* dst, CvMat* dst0,
             int ixs = cvFloor(xs);
             int iys = cvFloor(ys);
 
-            if( (unsigned)(ixs - delta) >= (unsigned)scols ||
-                (unsigned)(iys - delta) >= (unsigned)srows )
+            if( (unsigned)(ixs - delta - 1) >= (unsigned)scols1 ||
+                (unsigned)(iys - delta - 1) >= (unsigned)srows1 )
             {
-                for( k = 0; k < elem_size; k++ )
-                    dptr[k] = 0;
-                if( dst0 )
-                {
-                    uchar* dptr0 = dst0->data.ptr + dst0->step*y + x*elem_size;
-                    for( k = 0; k < elem_size; k++ )
-                        dptr0[k] = 0;
-                }
-                continue;
+                if( m )
+                    m[x] = 1;
+                if( (unsigned)(ixs - delta) >= (unsigned)scols ||
+                    (unsigned)(iys - delta) >= (unsigned)srows )
+                    continue;
             }
 
             xs -= ixs;
@@ -738,7 +741,11 @@ void CV_WarpAffineTest::prepare_to_validation( int /*test_case_idx*/ )
         }
     }
 
-    cvTsRemap( src, dst, dst0, mapx, mapy );
+    CvMat* mask = cvCreateMat( dst->rows, dst->cols, CV_8U );
+    cvTsRemap( src, dst, mapx, mapy, mask );
+    cvTsZero( dst, mask );
+    cvTsZero( dst0, mask );
+    cvReleaseMat( &mask );
 }
 
 
@@ -946,7 +953,11 @@ void CV_WarpPerspectiveTest::prepare_to_validation( int /*test_case_idx*/ )
         }
     }
 
-    cvTsRemap( src, dst, dst0, mapx, mapy );
+    CvMat* mask = cvCreateMat( dst->rows, dst->cols, CV_8U );
+    cvTsRemap( src, dst, mapx, mapy, mask );
+    cvTsZero( dst, mask );
+    cvTsZero( dst0, mask );
+    cvReleaseMat( &mask );
 }
 
 
@@ -979,15 +990,15 @@ void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMa
         
         for( u = 0; u < mapy->cols; u++ )
         {
-            double x = (u - cx)*ifx;
-            double y = (v - cy)*ify;
+            double x = (u - cxn)*ifx;
+            double y = (v - cyn)*ify;
             double x2 = x*x, y2 = y*y;
             double r2 = x2 + y2;
             double cdist = 1 + (k[0] + (k[1] + k[4]*r2)*r2)*r2;
             double x1 = x*cdist + k[2]*2*x*y + k[3]*(r2 + 2*x2);
             double y1 = y*cdist + k[3]*2*x*y + k[2]*(r2 + 2*y2);
-            mx[u] = (float)(x1*fx + cxn);
-            my[u] = (float)(y1*fy + cyn);
+            mx[u] = (float)(x1*fx + cx);
+            my[u] = (float)(y1*fy + cy);
         }
     }
 }
@@ -1141,21 +1152,13 @@ void CV_RemapTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
     CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
-    int nr = interpolation == CV_INTER_CUBIC ? 3 : 3, nc = nr;
-    CvMat part;
-    cvTsRemap( &test_mat[INPUT][0], dst, dst0,
+    CvMat* mask = cvCreateMat( dst->rows, dst->cols, CV_8U );
+    cvTsRemap( &test_mat[INPUT][0], dst,
                &test_mat[INPUT][1], &test_mat[INPUT][2],
-               interpolation );
-    nr = MIN(nr, dst->rows);
-    nc = MIN(nc, dst->cols);
-    cvGetRows( dst, &part, dst->rows - nr, dst->rows ); 
-    cvTsZero( &part );
-    cvGetRows( dst0, &part, dst->rows - nr, dst->rows ); 
-    cvTsZero( &part );
-    cvGetCols( dst, &part, dst->cols - nc, dst->cols ); 
-    cvTsZero( &part );
-    cvGetCols( dst0, &part, dst->cols - nc, dst->cols ); 
-    cvTsZero( &part );
+               mask, interpolation );
+    cvTsZero( dst, mask );
+    cvTsZero( dst0, mask );
+    cvReleaseMat( &mask );
 }
 
 
@@ -1328,33 +1331,16 @@ void CV_UndistortTest::prepare_to_validation( int /*test_case_idx*/ )
     CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
     CvMat* mapx = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
     CvMat* mapy = cvCreateMat( dst->rows, dst->cols, CV_32FC1 );
-    CvMat part;
-    int nr = 2, nc = nr;
     cvTsInitUndistortMap( &test_mat[INPUT][1], &test_mat[INPUT][2],
                           mapx, mapy );
-    cvTsRemap( src, dst, dst0, mapx, mapy, interpolation );
-    nr = MIN(nr, dst->rows);
-    nc = MIN(nc, dst->cols);
-    cvGetRows( dst, &part, 0, nr ); 
-    cvTsZero( &part );
-    cvGetRows( dst0, &part, 0, nr ); 
-    cvTsZero( &part );
-    cvGetRows( dst, &part, dst->rows - nr, dst->rows ); 
-    cvTsZero( &part );
-    cvGetRows( dst0, &part, dst->rows - nr, dst->rows ); 
-    cvTsZero( &part );
-
-    cvGetCols( dst, &part, 0, nc ); 
-    cvTsZero( &part );
-    cvGetCols( dst0, &part, 0, nc ); 
-    cvTsZero( &part );
-    cvGetCols( dst, &part, dst->cols - nc, dst->cols ); 
-    cvTsZero( &part );
-    cvGetCols( dst0, &part, dst->cols - nc, dst->cols ); 
-    cvTsZero( &part );
+    CvMat* mask = cvCreateMat( dst->rows, dst->cols, CV_8U );
+    cvTsRemap( src, dst, mapx, mapy, mask, interpolation );
+    cvTsZero( dst, mask );
+    cvTsZero( dst0, mask );
 
     cvReleaseMat( &mapx );
     cvReleaseMat( &mapy );
+    cvReleaseMat( &mask );
 }
 
 
@@ -1468,7 +1454,7 @@ void CV_UndistortMapTest::run_func()
 
 double CV_UndistortMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 1e-4;
+    return 1e-3;
 }
 
 

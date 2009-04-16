@@ -73,8 +73,10 @@ cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
     state->textureThreshold = 10;
     state->uniquenessRatio = 15;
     state->speckleRange = state->speckleWindowSize = 0;
+    state->trySmallerWindows = 0;
 
     state->preFilteredImg0 = state->preFilteredImg1 = state->slidingSumBuf = 0;
+    state->dbmin = state->dbmax = 0;
 
     __END__;
 
@@ -100,6 +102,8 @@ cvReleaseStereoBMState( CvStereoBMState** state )
     cvReleaseMat( &(*state)->preFilteredImg0 );
     cvReleaseMat( &(*state)->preFilteredImg1 );
     cvReleaseMat( &(*state)->slidingSumBuf );
+    cvReleaseMat( &(*state)->dbmin );
+    cvReleaseMat( &(*state)->dbmax );
     cvFree( state );
 
     __END__;
@@ -175,11 +179,12 @@ static const int DISPARITY_SHIFT = 4;
 #if CV_SSE2
 static void
 icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
-                                    CvMat* disp, CvStereoBMState* state,
-                                    uchar* buf, int _dy0, int _dy1 )
+                                    CvMat* disp, const CvMat* dbmin,
+                                    const CvMat* dbmax, CvStereoBMState* state,
+                                    int realSADWin, uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
-    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int wsz = realSADWin, wsz2 = wsz/2;
     int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
@@ -191,6 +196,7 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
     int textureThreshold = state->textureThreshold;
     int uniquenessRatio = state->uniquenessRatio;
     short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
+    int DELTA = (state->numberOfDisparities - 1 - state->minDisparity) << DISPARITY_SHIFT;
 
     ushort *sad, *hsad0, *hsad, *hsad_sub;
     int *htext;
@@ -343,7 +349,8 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
             tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
             if( tsum < textureThreshold )
             {
-                dptr[y*dstep] = FILTERED;
+                if( !dbmin )
+                    dptr[y*dstep] = FILTERED;
                 continue;
             }
 
@@ -365,11 +372,22 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
                 }
                 if( d < ndisp )
                 {
-                    dptr[y*dstep] = FILTERED;
+                    if( !dbmin )
+                        dptr[y*dstep] = FILTERED;
                     continue;
                 }
             }
             
+            if( dbmin )
+            {
+                int maxval = ((const short*)(dbmin->data.ptr + dbmin->step*y))[x];
+                int minval = ((const short*)(dbmax->data.ptr + dbmax->step*y))[x];
+                minval = (DELTA - minval) >> DISPARITY_SHIFT;
+                maxval = (DELTA - maxval + (1<<DISPARITY_SHIFT)-1) >> DISPARITY_SHIFT;
+                if( d < minval || d > maxval )
+                    continue;
+            }
+
             {
             sad[-1] = sad[1];
             sad[ndisp] = sad[ndisp-2];
@@ -383,11 +401,12 @@ icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
 
 static void
 icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
-                               CvMat* disp, CvStereoBMState* state,
-                               uchar* buf, int _dy0, int _dy1 )
+                               CvMat* disp, const CvMat* dbmin,
+                               const CvMat* dbmax, CvStereoBMState* state,
+                               int realSADWin, uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
-    int wsz = state->SADWindowSize, wsz2 = wsz/2;
+    int wsz = realSADWin, wsz2 = wsz/2;
     int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
@@ -399,6 +418,7 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
     int textureThreshold = state->textureThreshold;
     int uniquenessRatio = state->uniquenessRatio;
     short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
+    int DELTA = (state->numberOfDisparities - 1 - state->minDisparity) << DISPARITY_SHIFT;
 
     int *sad, *hsad0, *hsad, *hsad_sub, *htext;
     uchar *cbuf0, *cbuf;
@@ -514,7 +534,8 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
             tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
             if( tsum < textureThreshold )
             {
-                dptr[y*dstep] = FILTERED;
+                if( !dbmin )
+                    dptr[y*dstep] = FILTERED;
                 continue;
             }
 
@@ -528,9 +549,20 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
                 }
                 if( d < ndisp )
                 {
-                    dptr[y*dstep] = FILTERED;
+                    if( !dbmin )
+                        dptr[y*dstep] = FILTERED;
                     continue;
                 }
+            }
+
+            if( dbmin )
+            {
+                int maxval = ((const short*)(dbmin->data.ptr + dbmin->step*y))[x];
+                int minval = ((const short*)(dbmax->data.ptr + dbmax->step*y))[x];
+                minval = (DELTA - minval) >> DISPARITY_SHIFT;
+                maxval = (DELTA - maxval + (1<<DISPARITY_SHIFT)-1) >> DISPARITY_SHIFT;
+                if( d < minval || d > maxval )
+                    continue;
             }
             
             {
@@ -542,7 +574,6 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
         }
     }
 }
-
 
 CV_IMPL void
 cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
@@ -559,6 +590,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     int bufSize0, bufSize1, bufSize, width, width1, height;
     int wsz, ndisp, mindisp, lofs, rofs;
     int i, n = cvGetNumThreads();
+    int FILTERED, SMALL_WIN_SIZE;
 
     if( !CV_ARE_SIZES_EQ(left0, right0) ||
         !CV_ARE_SIZES_EQ(disp, left0) )
@@ -614,9 +646,10 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     lofs = MAX(ndisp - 1 + mindisp, 0);
     rofs = -MIN(ndisp - 1 + mindisp, 0);
     width1 = width - rofs - ndisp + 1;
+    FILTERED = (short)((state->minDisparity - 1) << DISPARITY_SHIFT);
+
     if( lofs >= width || rofs >= width || width1 < 1 )
     {
-        int FILTERED = (short)((state->minDisparity - 1) << DISPARITY_SHIFT);
         cvSet( disp, cvScalarAll(FILTERED) );
         EXIT;
     }
@@ -664,14 +697,82 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     #if CV_SSE2
         if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
         {
-            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i, &disp_i, state,
-                state->slidingSumBuf->data.ptr + thread_id*bufSize0, row0, left.rows-row1 );
+            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i, &disp_i, 0, 0, state,
+                state->SADWindowSize, state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+                row0, left.rows-row1 );
         }
         else
     #endif
         {
-            icvFindStereoCorrespondenceBM( &left_i, &right_i, &disp_i, state,
-                state->slidingSumBuf->data.ptr + thread_id*bufSize0, row0, left.rows-row1 );
+            icvFindStereoCorrespondenceBM( &left_i, &right_i, &disp_i, 0, 0, state,
+                state->SADWindowSize, state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+                row0, left.rows-row1 );
+        }
+    }
+
+    SMALL_WIN_SIZE = MAX((state->SADWindowSize/2)|1, 9);
+
+    if( !state->trySmallerWindows || SMALL_WIN_SIZE >= state->SADWindowSize )
+        EXIT;
+
+    if( !state->dbmin || !CV_ARE_SIZES_EQ(state->dbmin, disp) )
+    {
+        cvReleaseMat( &state->dbmin );
+        cvReleaseMat( &state->dbmax );
+        state->dbmin = cvCreateMat( disp->rows, disp->cols, CV_16SC1 );
+        state->dbmax = cvCreateMat( disp->rows, disp->cols, CV_16SC1 );
+    }
+    
+    for( i = 0; i < disp->rows; i++ )
+    {
+        int j;
+        short* minptr = (short*)(state->dbmin->data.ptr + state->dbmin->step*i);
+        short* maxptr = (short*)(state->dbmax->data.ptr + state->dbmax->step*i);
+
+        for( j = 0; j < disp->cols; j++ )
+        {
+            short dval = ((const short*)(disp->data.ptr + disp->step*i))[j];
+            if( dval < (state->minDisparity << DISPARITY_SHIFT) )
+                minptr[j] = maxptr[j] = dval;
+            else
+            {
+                minptr[j] = SHRT_MAX;
+                maxptr[j] = SHRT_MIN;
+            }
+        }
+    }
+
+    cvErode(state->dbmin, state->dbmin, 0, SMALL_WIN_SIZE );
+    cvDilate(state->dbmax, state->dbmax, 0, SMALL_WIN_SIZE );
+
+#ifdef _OPENMP
+    #pragma omp parallel for num_threads(n) schedule(static)
+#endif
+    for( i = 0; i < n; i++ )
+    {
+        int thread_id = cvGetThreadNum();
+        CvMat left_i, right_i, disp_i, dbmin_i, dbmax_i;
+        int row0 = i*left.rows/n, row1 = (i+1)*left.rows/n;
+        cvGetRows( &left, &left_i, row0, row1 );
+        cvGetRows( &right, &right_i, row0, row1 );
+        cvGetRows( disp, &disp_i, row0, row1 );
+        cvGetRows( state->dbmin, &dbmin_i, row0, row1 );
+        cvGetRows( state->dbmax, &dbmax_i, row0, row1 );
+    #if CV_SSE2
+        if( state->preFilterCap <= 31 && SMALL_WIN_SIZE <= 21 )
+        {
+            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i,
+                &disp_i, &dbmin_i, &dbmax_i, state, SMALL_WIN_SIZE,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+                row0, left.rows-row1 );
+        }
+        else
+    #endif
+        {
+            icvFindStereoCorrespondenceBM( &left_i, &right_i,
+                &disp_i, &dbmin_i, &dbmax_i, state, SMALL_WIN_SIZE,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+                row0, left.rows-row1 );
         }
     }
 

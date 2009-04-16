@@ -269,6 +269,10 @@ static unsigned int n_buffers = 0;
 #define V4L2_PIX_FMT_SN9C10X  v4l2_fourcc('S','9','1','0') /* SN9C10x cmpr. */
 #endif
 
+#ifndef V4L2_PIX_FMT_SGBRG
+#define V4L2_PIX_FMT_SGBRG v4l2_fourcc('G','B','R','G') /* bayer GBRG   GBGB.. RGRG.. */
+#endif
+
 #endif  /* HAVE_CAMV4L2 */
 
 int  PALETTE_BGR24 = 0,
@@ -278,7 +282,8 @@ int  PALETTE_BGR24 = 0,
      PALETTE_UYVY= 0,
      PALETTE_SBGGR8 = 0,
      PALETTE_SN9C10X = 0,
-     PALETTE_MJPEG = 0;
+     PALETTE_MJPEG = 0,
+     PALETTE_SGBRG = 0;
 
 typedef struct CvCaptureCAM_V4L
 {
@@ -315,6 +320,7 @@ typedef struct CvCaptureCAM_V4L
    int v4l2_saturation, v4l2_saturation_min, v4l2_saturation_max;
    int v4l2_hue, v4l2_hue_min, v4l2_hue_max;
    int v4l2_gain, v4l2_gain_min, v4l2_gain_max;
+   int v4l2_exposure, v4l2_exposure_min, v4l2_exposure_max;
 
 #endif /* HAVE_CAMV4L2 */
 
@@ -547,7 +553,8 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
       /* support for MJPEG is only available with libjpeg and gcc,
 	 because it's use libjepg and fmemopen()
       */
-  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0)
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_MJPEG) == 0 ||
+      try_palette_v4l2(capture, V4L2_PIX_FMT_JPEG) == 0)
   {
     PALETTE_MJPEG = 1;
   }
@@ -584,8 +591,12 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
   {
     PALETTE_SBGGR8 = 1;
+  } else
+  if (try_palette_v4l2(capture, V4L2_PIX_FMT_SGBRG) == 0)
+  {
+    PALETTE_SGBRG = 1;
   }
-  else
+      else
   {
 	fprintf(stderr, "HIGHGUI ERROR: V4L2: Pixel format of incoming image is unsupported by OpenCV\n");
     icvCloseCAM_V4L(capture);
@@ -708,6 +719,13 @@ static void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         capture->v4l2_gain_max = capture->queryctrl.maximum;
       }
 
+      if (capture->queryctrl.id == V4L2_CID_EXPOSURE)
+      {
+        capture->v4l2_exposure = 1;
+        capture->v4l2_exposure_min = capture->queryctrl.minimum;
+        capture->v4l2_exposure_max = capture->queryctrl.maximum;
+      }
+
       if (capture->queryctrl.type == V4L2_CTRL_TYPE_MENU)
         v4l2_scan_controls_enumerate_menu(capture);
 
@@ -771,6 +789,13 @@ static void v4l2_scan_controls(CvCaptureCAM_V4L* capture)
         capture->v4l2_gain_max = capture->queryctrl.maximum;
       }
 
+      if (capture->queryctrl.id == V4L2_CID_EXPOSURE)
+      {
+        capture->v4l2_exposure = 1;
+        capture->v4l2_exposure_min = capture->queryctrl.minimum;
+        capture->v4l2_exposure_max = capture->queryctrl.maximum;
+      }
+
       if (capture->queryctrl.type == V4L2_CTRL_TYPE_MENU)
         v4l2_scan_controls_enumerate_menu(capture);
 
@@ -807,18 +832,21 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
    capture->v4l2_saturation = 0;
    capture->v4l2_hue = 0;
    capture->v4l2_gain = 0;
+   capture->v4l2_exposure = 0;
 
    capture->v4l2_brightness_min = 0;
    capture->v4l2_contrast_min = 0;
    capture->v4l2_saturation_min = 0;
    capture->v4l2_hue_min = 0;
    capture->v4l2_gain_min = 0;
+   capture->v4l2_exposure_min = 0;
 
    capture->v4l2_brightness_max = 0;
    capture->v4l2_contrast_max = 0;
    capture->v4l2_saturation_max = 0;
    capture->v4l2_hue_max = 0;
    capture->v4l2_gain_max = 0;
+   capture->v4l2_exposure_max = 0;
 
    /* Scan V4L2 controls */
    v4l2_scan_controls(capture);
@@ -1172,9 +1200,14 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
             return 0;
 
         case EIO:
-            /* Could ignore EIO, see spec. */
-
-            /* fall through */
+	    if (!(buf.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE)))
+	    {
+	      if (xioctl(capture->deviceHandle, VIDIOC_QBUF, &buf) == -1)
+	      {
+	        return 0;
+	      }
+	    }
+	    return 0;
 
         default:
             /* display the error and stop processing */
@@ -1700,112 +1733,6 @@ uyvy_to_rgb24 (int width, int height, unsigned char *src, unsigned char *dst)
 }
 
 #ifdef HAVE_JPEG
-#ifdef __USE_GNU
-/* support for MJPEG is only available with libjpeg and gcc,
-   because it's use libjepg and fmemopen()
-*/
-
-/* include headers to be able to use libjpeg and GrFmtJpegReader */
-#include "grfmts.h"
-extern "C" {
-#include "jpeglib.h"
-}
-
-/* define a new class for using fmemopen() instead of fopen() */
-class MyMJpegReader : public GrFmtJpegReader {
-public:
-    MyMJpegReader (unsigned char *src, size_t src_size);
-    bool  ReadHeader ();
-protected:
-    unsigned char *my_src;
-    size_t my_src_size;
-};
-
-/////////////////////// Error processing /////////////////////
-
-typedef struct GrFmtJpegErrorMgr
-{
-    struct jpeg_error_mgr pub;    /* "parent" structure */
-    jmp_buf setjmp_buffer;        /* jump label */
-}
-GrFmtJpegErrorMgr;
-
-
-METHODDEF(void)
-error_exit( j_common_ptr cinfo )
-{
-    GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
-
-    /* Return control to the setjmp point */
-    longjmp( err_mgr->setjmp_buffer, 1 );
-}
-
-#ifdef V4L_ABORT_BADJPEG
-void emit_message (j_common_ptr cinfo, int msg_level) {
-  char buffer[JMSG_LENGTH_MAX];
-  GrFmtJpegErrorMgr* err_mgr = (GrFmtJpegErrorMgr*)(cinfo->err);
-  if (msg_level >= 0) {
-    return;
-  };
-  (*cinfo->err->format_message) (cinfo, buffer);
-  fprintf(stderr, "Camera decode error (%d): %s\n", msg_level, buffer);
-  longjmp( err_mgr->setjmp_buffer, 1 );
-};
-#endif
-
-/////////////////////// MyMJpegReader ///////////////////
-
-/* constructor just call the parent constructor, but without real filename */
-MyMJpegReader::MyMJpegReader (unsigned char *src, size_t src_size)
-    : GrFmtJpegReader ("/dev/null") {
-    /* memorize the given src memory area, with it's size */
-    my_src = src;
-    my_src_size = src_size;
-}
-
-/*
-   MyMJpegReader::ReadHeader is almost like GrFmtJpegReader::ReadHeader,
-   just use fmemopen() instead of fopen()
-*/
-bool  MyMJpegReader::ReadHeader () {
-    bool result = false;
-    Close();
-
-    jpeg_decompress_struct* cinfo = new jpeg_decompress_struct;
-    GrFmtJpegErrorMgr* jerr = new GrFmtJpegErrorMgr;
-
-    cinfo->err = jpeg_std_error(&jerr->pub);
-    jerr->pub.error_exit = error_exit;
-#ifdef V4L_ABORT_BADJPEG
-    jerr->pub.emit_message = emit_message;
-#endif
-
-    m_cinfo = cinfo;
-    m_jerr = jerr;
-
-    if( setjmp( jerr->setjmp_buffer ) == 0 )
-    {
-        jpeg_create_decompress( cinfo );
-
-        m_f = fmemopen( my_src, my_src_size, "rb" );
-        if( m_f )
-        {
-            jpeg_stdio_src( cinfo, m_f );
-            jpeg_read_header( cinfo, TRUE );
-
-            m_width = cinfo->image_width;
-            m_height = cinfo->image_height;
-            m_iscolor = cinfo->num_components > 1;
-
-            result = true;
-        }
-    }
-
-    if( !result )
-        Close();
-
-    return result;
-}
 
 /* convert from mjpeg to rgb24 */
 static bool
@@ -1813,25 +1740,13 @@ mjpeg_to_rgb24 (int width, int height,
 		unsigned char *src, int length,
 		unsigned char *dst)
 {
-    /* use a MyMJpegReader reader for doing the conversion */
-    MyMJpegReader* reader = 0;
-    bool ok;
-    reader = new MyMJpegReader (src, length);
-    ok = reader->ReadHeader ();
-    if (ok) {
-      ok = reader->ReadData (dst, width * 3, 1 );
-    };
-    delete reader;
-    return ok;
-    /*
-    if (!ok) {
-      fprintf(stderr, "Camera returned bad header\n");
-      memset(dst, 0, width * 3 * height);
-    };
-    */
+    cv::Mat temp=cv::imdecode(cv::Vector<uchar>(src, length), 1);
+    if( !temp.data || temp.cols != width || temp.rows != height )
+       return false;
+    memcpy(dst, temp.data, width*height*3);
+    return true;
 }
 
-#endif
 #endif
 
 /*
@@ -1913,6 +1828,94 @@ void bayer2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned c
   rawpt++;
     }
 
+}
+
+// SGBRG to RGB24
+// for some reason, red and blue needs to be swapped
+// at least for  046d:092f Logitech, Inc. QuickCam Express Plus to work
+//see: http://www.siliconimaging.com/RGB%20Bayer.htm
+//and 4.6 at http://tldp.org/HOWTO/html_single/libdc1394-HOWTO/
+void sgbrg2rgb24(long int WIDTH, long int HEIGHT, unsigned char *src, unsigned char *dst)
+{
+    long int i;
+    unsigned char *rawpt, *scanpt;
+    long int size;
+
+    rawpt = src;
+    scanpt = dst;
+    size = WIDTH*HEIGHT;
+
+    for ( i = 0; i < size; i++ )
+    {
+        if ( (i/WIDTH) % 2 == 0 ) //even row
+        {
+            if ( (i % 2) == 0 ) //even pixel
+            {
+                if ( (i > WIDTH) && ((i % WIDTH) > 0) )
+                {
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2;       /* R */
+                    *scanpt++ = *(rawpt);                        /* G */
+                    *scanpt++ = (*(rawpt-WIDTH) + *(rawpt+WIDTH))/2;      /* B */
+                } else
+                {
+                  /* first line or left column */
+
+                  *scanpt++ = *(rawpt+1);           /* R */
+                  *scanpt++ = *(rawpt);             /* G */
+                  *scanpt++ =  *(rawpt+WIDTH);      /* B */
+                }
+            } else //odd pixel
+            {
+                if ( (i > WIDTH) && ((i % WIDTH) < (WIDTH-1)) )
+                {
+                    *scanpt++ = *(rawpt);       /* R */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1)+*(rawpt-WIDTH)+*(rawpt+WIDTH))/4; /* G */
+                    *scanpt++ = (*(rawpt-WIDTH-1) + *(rawpt-WIDTH+1) + *(rawpt+WIDTH-1) + *(rawpt+WIDTH+1))/4;      /* B */
+                } else
+                {
+                    /* first line or right column */
+
+                    *scanpt++ = *(rawpt);       /* R */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+WIDTH))/2; /* G */
+                    *scanpt++ = *(rawpt+WIDTH-1);      /* B */
+                }
+            }
+        } else
+        { //odd row
+            if ( (i % 2) == 0 ) //even pixel
+            {
+                if ( (i < (WIDTH*(HEIGHT-1))) && ((i % WIDTH) > 0) )
+                {
+                    *scanpt++ =  (*(rawpt-WIDTH-1)+*(rawpt-WIDTH+1)+*(rawpt+WIDTH-1)+*(rawpt+WIDTH+1))/4;          /* R */
+                    *scanpt++ =  (*(rawpt-1)+*(rawpt+1)+*(rawpt-WIDTH)+*(rawpt+WIDTH))/4;      /* G */
+                    *scanpt++ =  *(rawpt); /* B */
+                } else
+                {
+                    /* bottom line or left column */
+
+                    *scanpt++ =  *(rawpt-WIDTH+1);          /* R */
+                    *scanpt++ =  (*(rawpt+1)+*(rawpt-WIDTH))/2;      /* G */
+                    *scanpt++ =  *(rawpt); /* B */
+                }
+            } else
+            { //odd pixel
+                if ( i < (WIDTH*(HEIGHT-1)) && ((i % WIDTH) < (WIDTH-1)) )
+                {
+                    *scanpt++ = (*(rawpt-WIDTH)+*(rawpt+WIDTH))/2;  /* R */
+                    *scanpt++ = *(rawpt);      /* G */
+                    *scanpt++ = (*(rawpt-1)+*(rawpt+1))/2; /* B */
+                } else
+                {
+                    /* bottom line or right column */
+
+                    *scanpt++ = (*(rawpt-WIDTH));  /* R */
+                    *scanpt++ = *(rawpt);      /* G */
+                    *scanpt++ = (*(rawpt-1)); /* B */
+                }
+            }
+        }
+        rawpt++;
+    }
 }
 
 
@@ -2210,6 +2213,14 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture, int) {
                   (unsigned char*)capture->frame.imageData);
     }
 
+    if (PALETTE_SGBRG == 1)
+    {
+       sgbrg2rgb24(capture->form.fmt.pix.width,
+                  capture->form.fmt.pix.height,
+                  (unsigned char*)capture->buffers[(capture->bufferIndex+1) % capture->req.count].start,
+                  (unsigned char*)capture->frame.imageData);
+    }
+
   } else
 #endif /* HAVE_CAMV4L2 */
   {
@@ -2296,6 +2307,9 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       case CV_CAP_PROP_GAIN:
           capture->control.id = V4L2_CID_GAIN;
           break;
+      case CV_CAP_PROP_EXPOSURE:
+          capture->control.id = V4L2_CID_EXPOSURE;
+          break;
       default:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L2: getting property #%d is not supported\n",
@@ -2322,6 +2336,9 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
               break;
           case CV_CAP_PROP_GAIN:
               fprintf (stderr, "Gain");
+              break;
+          case CV_CAP_PROP_EXPOSURE:
+              fprintf (stderr, "Exposure");
               break;
           }
           fprintf (stderr, " is not supported by your device\n");
@@ -2351,6 +2368,10 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
       case CV_CAP_PROP_GAIN:
           v4l2_min = capture->v4l2_gain_min;
           v4l2_max = capture->v4l2_gain_max;
+          break;
+      case CV_CAP_PROP_EXPOSURE:
+          v4l2_min = capture->v4l2_exposure_min;
+          v4l2_max = capture->v4l2_exposure_max;
           break;
       }
 
@@ -2394,6 +2415,11 @@ static double icvGetPropertyCAM_V4L (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
+        break;
+    case CV_CAP_PROP_EXPOSURE:
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Exposure control in V4L is not supported\n");
         return -1;
         break;
     default:
@@ -2549,6 +2575,9 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         capture->control.id = V4L2_CID_GAIN;
         break;
+    case CV_CAP_PROP_EXPOSURE:
+        capture->control.id = V4L2_CID_EXPOSURE;
+        break;
     default:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L2: setting property #%d is not supported\n",
@@ -2586,6 +2615,10 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         v4l2_min = capture->v4l2_gain_min;
         v4l2_max = capture->v4l2_gain_max;
         break;
+    case CV_CAP_PROP_EXPOSURE:
+        v4l2_min = capture->v4l2_exposure_min;
+        v4l2_max = capture->v4l2_exposure_max;
+        break;
     }
 
     /* initialisations */
@@ -2608,6 +2641,9 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         break;
     case CV_CAP_PROP_GAIN:
         capture->control.id = V4L2_CID_GAIN;
+        break;
+    case CV_CAP_PROP_EXPOSURE:
+        capture->control.id = V4L2_CID_EXPOSURE;
         break;
     default:
         fprintf(stderr,
@@ -2650,6 +2686,10 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_GAIN:
         fprintf(stderr,
                 "HIGHGUI ERROR: V4L: Gain control in V4L is not supported\n");
+        return -1;
+    case CV_CAP_PROP_EXPOSURE:
+        fprintf(stderr,
+                "HIGHGUI ERROR: V4L: Exposure control in V4L is not supported\n");
         return -1;
     default:
         fprintf(stderr,
@@ -2705,6 +2745,7 @@ static int icvSetPropertyCAM_V4L( CvCaptureCAM_V4L* capture,
     case CV_CAP_PROP_SATURATION:
     case CV_CAP_PROP_HUE:
     case CV_CAP_PROP_GAIN:
+    case CV_CAP_PROP_EXPOSURE:
         retval = icvSetControl(capture, property_id, value);
         break;
     default:

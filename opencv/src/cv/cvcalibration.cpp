@@ -7,10 +7,11 @@
 //  copy or use the software.
 //
 //
-//                        Intel License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
+// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -23,7 +24,7 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//   * The name of Intel Corporation may not be used to endorse or promote products
+//   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
@@ -122,6 +123,8 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& _J, CvMat*& _err )
 {
     double change;
 
+    _J = _err = 0;
+
     assert( err != 0 );
     if( state == DONE )
     {
@@ -181,8 +184,9 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& _J, CvMat*& _err )
     _param = param;
     cvZero(J);
     _J = J;
+    _err = err;
     state = CALC_J;
-    return false;
+    return true;
 }
 
 
@@ -270,8 +274,14 @@ void CvLevMarq::step()
 
     if( !err )
         cvCompleteSymm( JtJ, completeSymmFlag );
-    cvSetIdentity( JtJN, cvRealScalar(lambda) );
+#if 1
+    cvCopy( JtJ, JtJN );
+    for( i = 0; i < nparams; i++ )
+        JtJN->data.db[(nparams+1)*i] *= 1. + lambda;
+#else
+    cvSetIdentity(JtJN, cvRealScalar(lambda));
     cvAdd( JtJ, JtJN, JtJN );
+#endif
     cvSVD( JtJN, JtJW, 0, JtJV, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
     cvSVBkSb( JtJW, JtJV, JtJV, JtErr, param, CV_SVD_U_T + CV_SVD_V_T );
     for( i = 0; i < nparams; i++ )
@@ -649,11 +659,17 @@ cvRodrigues2( const CvMat* src, CvMat* dst, CvMat* jacobian )
             else
             {
                 t = (R[0] + 1)*0.5;
-                rx = theta*sqrt(MAX(t,0.));
+                rx = sqrt(MAX(t,0.));
                 t = (R[4] + 1)*0.5;
-                ry = theta*sqrt(MAX(t,0.))*(R[1] < 0 ? -1. : 1.);
+                ry = sqrt(MAX(t,0.))*(R[1] < 0 ? -1. : 1.);
                 t = (R[8] + 1)*0.5;
-                rz = theta*sqrt(MAX(t,0.))*(R[2] < 0 ? -1. : 1.);
+                rz = sqrt(MAX(t,0.))*(R[2] < 0 ? -1. : 1.);
+                if( fabs(rx) < fabs(ry) && fabs(rx) < fabs(rz) && (R[5] > 0) != (ry*rz > 0) )
+                    rz = -rz;
+                theta /= sqrt(rx*rx + ry*ry + rz*rz);
+                rx *= theta;
+                ry *= theta;
+                rz *= theta;
             }
 
             if( jacobian )
@@ -1137,7 +1153,7 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     double a[9], ar[9]={1,0,0,0,1,0,0,0,1}, R[9];
     double MM[9], U[9], V[9], W[3];
     CvScalar Mc;
-    double JtJ[6*6], JtErr[6], JtJW[6], JtJV[6*6], delta[6], param[6];
+    double param[6];
     CvMat _A = cvMat( 3, 3, CV_64F, a );
     CvMat _Ar = cvMat( 3, 3, CV_64F, ar );
     CvMat _R = cvMat( 3, 3, CV_64F, R );
@@ -1148,11 +1164,6 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     CvMat _U = cvMat( 3, 3, CV_64F, U );
     CvMat _V = cvMat( 3, 3, CV_64F, V );
     CvMat _W = cvMat( 3, 1, CV_64F, W );
-    CvMat _JtJ = cvMat( 6, 6, CV_64F, JtJ );
-    CvMat _JtErr = cvMat( 6, 1, CV_64F, JtErr );
-    CvMat _JtJW = cvMat( 6, 1, CV_64F, JtJW );
-    CvMat _JtJV = cvMat( 6, 6, CV_64F, JtJV );
-    CvMat _delta = cvMat( 6, 1, CV_64F, delta );
     CvMat _param = cvMat( 6, 1, CV_64F, param );
     CvMat _dpdr, _dpdt;
 
@@ -1285,32 +1296,36 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     cvReshape( _M, _M, 3, 1 );
     cvReshape( _mn, _mn, 2, 1 );
 
-    CV_CALL( _J = cvCreateMat( 2*count, 6, CV_64FC1 ));
-    cvGetCols( _J, &_dpdr, 0, 3 );
-    cvGetCols( _J, &_dpdt, 3, 6 );
-
     // refine extrinsic parameters using iterative algorithm
-    for( i = 0; i < max_iter; i++ )
     {
-        double n1, n2;
-        cvReshape( _mn, _mn, 2, 1 );
-        cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
-                          _mn, &_dpdr, &_dpdt, 0, 0, 0 );
-        cvSub( _m, _mn, _mn );
-        cvReshape( _mn, _mn, 1, 2*count );
+    CvLevMarq solver( 6, count*2, cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,max_iter,FLT_EPSILON), true);
+    cvCopy( &_param, solver.param );
 
-        cvMulTransposed( _J, &_JtJ, 1 );
-        cvGEMM( _J, _mn, 1, 0, 0, &_JtErr, CV_GEMM_A_T );
-        cvSVD( &_JtJ, &_JtJW, 0, &_JtJV, CV_SVD_MODIFY_A + CV_SVD_V_T );
-        if( JtJW[5]/JtJW[0] < 1e-12 )
+    for(;;)
+    {
+        CvMat *_J = 0, *_err = 0;
+        const CvMat *__param = 0;
+        bool proceed = solver.update( __param, _J, _err );
+        cvCopy( __param, &_param );
+        if( !proceed || !_err )
             break;
-        cvSVBkSb( &_JtJW, &_JtJV, &_JtJV, &_JtErr,
-                  &_delta, CV_SVD_U_T + CV_SVD_V_T );
-        cvAdd( &_delta, &_param, &_param );
-        n1 = cvNorm( &_delta );
-        n2 = cvNorm( &_param );
-        if( n1/n2 < 1e-10 )
-            break;
+        cvReshape( _err, _err, 2, 1 );
+        if( _J )
+        {
+            cvGetCols( _J, &_dpdr, 0, 3 );
+            cvGetCols( _J, &_dpdt, 3, 6 );
+            cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
+                              _err, &_dpdr, &_dpdt, 0, 0, 0 );
+        }
+        else
+        {
+            cvProjectPoints2( _M, &_r, &_t, &_A, distCoeffs,
+                              _err, 0, 0, 0, 0, 0 );
+        }
+        cvSub(_err, _m, _err);
+        cvReshape( _err, _err, 1, 2*count );
+    }
+    cvCopy( solver.param, &_param );
     }
 
     _r = cvMat( rvec->rows, rvec->cols,
@@ -1568,7 +1583,7 @@ cvCalibrateCamera2( const CvMat* objectPoints,
     {
         CvScalar mean, sdv;
         cvAvgSdv( _M, &mean, &sdv );
-        if( (fabs(mean.val[2]) > 1e-5 && fabs(mean.val[2] - 1) > 1e-5) || fabs(sdv.val[2]) > 1e-5 )
+        if( fabs(mean.val[2]) > 1e-5 || fabs(sdv.val[2]) > 1e-5 )
             CV_ERROR( CV_StsBadArg,
             "For non-planar calibration rigs the initial intrinsic matrix must be specified" );
         for( i = 0; i < total; i++ )
