@@ -53,6 +53,14 @@
 #endif
 #endif
 
+#undef PACKAGE
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
+#undef VERSION
+
 #include <jasper/jasper.h>
 // FIXME bad hack
 #undef uchar
@@ -112,7 +120,7 @@ bool  Jpeg2KDecoder::readHeader()
     close();
     jas_stream_t* stream = jas_stream_fopen( m_filename.c_str(), "rb" );
     m_stream = stream;
-    
+
     if( stream )
     {
         jas_image_t* image = jas_image_decode( stream, -1, 0 );
@@ -415,7 +423,7 @@ bool  Jpeg2KEncoder::write( const Mat& _img, const Vector<int>& )
     int width = _img.cols, height = _img.rows;
     int depth = _img.depth(), channels = _img.channels();
     depth = depth == CV_8U ? 8 : 16;
-    
+
     if( channels > 3 || channels < 1 )
         return false;
 
