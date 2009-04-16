@@ -7,7 +7,10 @@ project(highgui)
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
     include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
-    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_PNG_H -DHAVE_TIFF -DHAVE_JASPER)
+    add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
+    if(WIN32)
+        add_definitions(-DHAVE_PNG_H)
+    endif()
 endif()
 
 if(MSVC)

@@ -119,7 +119,7 @@ ImageEncoder findEncoder( const String& _ext )
     if( !ext )
         return ImageEncoder();
     int len = 0;
-    for( ext++; isalnum(ext[len]) && len < _MAX_PATH; len++ )
+    for( ext++; isalnum(ext[len]) && len < 128; len++ )
         ;
 
     for( size_t i = 0; i < encoders.size(); i++ )
@@ -216,7 +216,7 @@ imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
     {
         if( (flags & CV_LOAD_IMAGE_ANYDEPTH) == 0 )
             type = CV_MAKETYPE(CV_8U, CV_MAT_CN(type));
-        
+
         if( (flags & CV_LOAD_IMAGE_COLOR) != 0 ||
            ((flags & CV_LOAD_IMAGE_ANYCOLOR) != 0 && CV_MAT_CN(type) > 1) )
             type = CV_MAKETYPE(CV_MAT_DEPTH(type), 3);
@@ -341,7 +341,7 @@ imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
     {
         if( (flags & CV_LOAD_IMAGE_ANYDEPTH) == 0 )
             type = CV_MAKETYPE(CV_8U, CV_MAT_CN(type));
-        
+
         if( (flags & CV_LOAD_IMAGE_COLOR) != 0 ||
            ((flags & CV_LOAD_IMAGE_ANYCOLOR) != 0 && CV_MAT_CN(type) > 1) )
             type = CV_MAKETYPE(CV_MAT_DEPTH(type), 3);
