@@ -46,25 +46,25 @@
 
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
-//    Name:      icvSnake8uC1R     
-//    Purpose:   
-//    Context:   
+//    Name:      icvSnake8uC1R
+//    Purpose:
+//    Context:
 //    Parameters:
 //               src - source image,
 //               srcStep - its step in bytes,
 //               roi - size of ROI,
 //               pt - pointer to snake points array
-//               n - size of points array, 
-//               alpha - pointer to coefficient of continuity energy, 
-//               beta - pointer to coefficient of curvature energy,  
-//               gamma - pointer to coefficient of image energy,  
+//               n - size of points array,
+//               alpha - pointer to coefficient of continuity energy,
+//               beta - pointer to coefficient of curvature energy,
+//               gamma - pointer to coefficient of image energy,
 //               coeffUsage - if CV_VALUE - alpha, beta, gamma point to single value
 //                            if CV_MATAY - point to arrays
 //               criteria - termination criteria.
 //               scheme - image energy scheme
 //                         if _CV_SNAKE_IMAGE - image intensity is energy
 //                         if _CV_SNAKE_GRAD  - magnitude of gradient is energy
-//    Returns:   
+//    Returns:
 //F*/
 
 static CvStatus
@@ -87,7 +87,7 @@ icvSnake8uC1R( unsigned char *src,
     float invn;
     int iteration = 0;
     int converged = 0;
-	
+
 
     float *Econt;
     float *Ecurv;
@@ -101,13 +101,13 @@ icvSnake8uC1R( unsigned char *src,
     uchar *map = NULL;
     int map_width = ((roi.width - 1) >> 3) + 1;
     int map_height = ((roi.height - 1) >> 3) + 1;
-    cv::Ptr<cv::FilterEngine> pX, pY;
     #define WTILE_SIZE 8
-    #define TILE_SIZE (WTILE_SIZE + 2)        
+    #define TILE_SIZE (WTILE_SIZE + 2)
     short dx[TILE_SIZE*TILE_SIZE], dy[TILE_SIZE*TILE_SIZE];
     CvMat _dx = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dx );
     CvMat _dy = cvMat( TILE_SIZE, TILE_SIZE, CV_16SC1, dy );
     CvMat _src = cvMat( roi.height, roi.width, CV_8UC1, src );
+    cv::Ptr<cv::FilterEngine> pX, pY;
 
     /* inner buffer of convolution process */
     //char ConvBuffer[400];
@@ -143,9 +143,8 @@ icvSnake8uC1R( unsigned char *src,
 
     if( scheme == _CV_SNAKE_GRAD )
     {
-        pX = cv::createDerivFilter( CV_8U, CV_16S, 1, 0, 3 );
-        pY = cv::createDerivFilter( CV_8U, CV_16S, 0, 1, 3 );
-
+        pX = cv::createDerivFilter( CV_8U, CV_16S, 1, 0, 3, cv::BORDER_REPLICATE );
+        pY = cv::createDerivFilter( CV_8U, CV_16S, 0, 1, 3, cv::BORDER_REPLICATE );
         gradient = (float *) cvAlloc( roi.height * roi.width * sizeof( float ));
 
         map = (uchar *) cvAlloc( map_width * map_height );
@@ -286,7 +285,7 @@ icvSnake8uC1R( unsigned char *src,
 
                         if( map[y * map_width + x] == 0 )
                         {
-                            int l, m;							
+                            int l, m;
 
                             /* evaluate block location */
                             int upshift = y ? 1 : 0;
@@ -302,8 +301,8 @@ icvSnake8uC1R( unsigned char *src,
                             cv::Mat _dx_ = cv::cvarrToMat(&_dx);
                             cv::Mat _dy_ = cv::cvarrToMat(&_dy);
 
-                            pX->apply( _src_, _dx_ );
-                            pY->apply( _src_, _dy_ );
+                            pX->apply( _src_, _dx_, cv::Rect(0,0,-1,-1), cv::Point(), true );
+                            pY->apply( _src_, _dy_, cv::Rect(0,0,-1,-1), cv::Point(), true );
 
                             for( l = 0; l < WTILE_SIZE + bottomshift; l++ )
                             {
@@ -348,7 +347,7 @@ icvSnake8uC1R( unsigned char *src,
                 _gamma = *gamma;
             }
             else
-            {                   
+            {
                 _alpha = alpha[i];
                 _beta = beta[i];
                 _gamma = gamma[i];

@@ -2478,7 +2478,7 @@ void CV_IntegralTest::get_test_array_types_and_sizes( int test_case_idx,
 double CV_IntegralTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[i][j].type);
-    return depth == CV_32S ? 0 : 1e-10;
+    return depth == CV_32S ? 0 : FLT_EPSILON;
 }
 
 
