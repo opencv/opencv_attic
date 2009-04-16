@@ -27,6 +27,9 @@ public:
     bool  readData( Mat& img );
     bool  readHeader();
     void  close();
+    
+    size_t signatureLength() const;
+    bool checkSignature( const String& signature ) const;
 
     ImageDecoder newDecoder() const;
 
@@ -45,6 +48,8 @@ public:
 
     ImageEncoder newEncoder() const;
 };
+
+}
 
 #endif/*HAVE_IMAGEIO*/
 

@@ -184,10 +184,10 @@ CvCapture * cvCreateCameraCapture_Unicap  (const int     index);
 
 #endif
 
-namespace cv
+/*namespace cv
 {
 
-/*class CV_EXPORTS BaseWindow
+class CV_EXPORTS BaseWindow
 {
 public:
     BaseWindow(const String& name, int flags=0);
@@ -215,8 +215,8 @@ public:
     virtual void addTrackbar( const String& trackbar, int low, int high, int step );
 };
 
-typedef Ptr<BaseWindow> Window;*/
+typedef Ptr<BaseWindow> Window;
 
-}
+}*/
 
 #endif /* __HIGHGUI_H_ */
