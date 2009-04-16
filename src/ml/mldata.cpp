@@ -125,7 +125,7 @@ void CvMLData :: clear()
     train_sample_count = -1;
 }
 
-void CvMLData :: read_csv(const char* filename)
+int CvMLData :: read_csv(const char* filename)
 {
     const int M = 10000;
     const char str_delimiter[3] = { ' ', delimiter, '\0' };
@@ -148,24 +148,23 @@ void CvMLData :: read_csv(const char* filename)
     file = fopen( filename, "rt" );
     
     if( !file )
-    {
-        char msg[100];
-        sprintf( msg, "%s file can not be opened", filename );
-        CV_ERROR( CV_StsNullPtr, msg );
-    }
+        return -1;
 
     // read the first line and determine the number of variables
     buf = new char[M];
     if( !fgets( buf, M, file ))
     {
         fclose(file);
-        CV_ERROR(CV_StsNullPtr, "function fgets returns NULL");
+        return 1;
     }
     for( ptr = buf; *ptr != '\0'; ptr++ )
         cols_count += (*ptr == delimiter);
 
     if ( cols_count == 0)
-        CV_ERROR( CV_StsInternal, "variables count is equel to 0; check delimiter" );
+    {
+        fclose(file);
+        return 1;
+    }
     cols_count++;
 
     // create temporary memory storage to store the whole database
@@ -185,7 +184,7 @@ void CvMLData :: read_csv(const char* filename)
         if (!token) 
         {
              fclose(file);
-             return;
+             return 1;
         }
         for (int i = 0; i < cols_count-1; i++)
         {
@@ -196,7 +195,7 @@ void CvMLData :: read_csv(const char* filename)
             if (!token)
             {
                 fclose(file);
-                CV_ERROR(CV_StsNullPtr, "token is NULL that is file is not correct");
+                return 1;
             }
         }
         str_to_flt_elem( token, el_ptr[cols_count-1], type);
@@ -236,6 +235,7 @@ void CvMLData :: read_csv(const char* filename)
     cvReleaseMemStorage( &storage );
     delete []el_ptr;
     delete []buf;
+    return 0;
 }
 
 void CvMLData :: str_to_flt_elem( const char* token, float& flt_elem, int& type)
@@ -299,7 +299,7 @@ void CvMLData :: set_response_idx( int idx )
     __BEGIN__;
 
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     if ( idx >= values->cols)
         CV_ERROR( CV_StsBadArg, "idx value is not correct" );
@@ -322,7 +322,7 @@ void CvMLData :: change_var_type( int var_idx, int type )
     int var_count = 0;
 
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
     
      var_count = values->cols;
 
@@ -350,7 +350,7 @@ void CvMLData :: set_var_types( const char* str )
     const char* ord = 0, *cat = 0;
     int var_count = 0, set_var_type_count = 0;
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     var_count = values->cols;
 
@@ -475,7 +475,7 @@ const CvMat* CvMLData :: get_var_types()
     uchar *var_types_out_ptr = 0;
     int avcount, vt_size;
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     assert( var_idx_mask );
 
@@ -514,7 +514,7 @@ const CvMat* CvMLData :: get_response()
     int var_count = 0;
 
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
     var_count = values->cols;
     
     if ( response_idx < 0 || response_idx >= var_count )
@@ -541,7 +541,7 @@ void CvMLData :: set_train_test_split( const CvTrainTestSplit * spl)
         CV_ERROR( CV_StsBadArg, "this division type is not supported yet" );
     
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     sample_count = values->rows;
     
@@ -617,7 +617,7 @@ const CvMat* CvMLData :: get_var_idx()
     int avcount = 0;
 
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     assert( var_idx_mask );
     
@@ -657,7 +657,7 @@ void CvMLData :: chahge_var_idx( int vi, bool state )
     int var_count = 0;
 
     if ( !values )
-        CV_ERROR( CV_StsInternal, "data array is empty" );
+        CV_ERROR( CV_StsInternal, "data is empty" );
 
     var_count = values->cols;
 
