@@ -1691,7 +1691,10 @@ public:
     CvMLData();
     ~CvMLData();
 
-    void read_csv(const char* filename);
+    // returns:
+    // 0 - OK  
+    // 1 - file can not be opened or is not correct
+    int read_csv(const char* filename);
 
     const CvMat* get_values(){ return values; };
 

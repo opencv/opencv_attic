@@ -48,8 +48,8 @@ public:
     ~CV_BoostTest();
 protected:
     int str_to_boost_type(const char* str);
-    virtual bool train( int test_case_idx );
-    virtual float predict(const CvMat* sample, const CvMat* missing_data_mask);
+    virtual int train( int test_case_idx );
+    virtual float get_error() { return boost->calc_error( &data ); };
     CvBoost* boost;
 };
 
@@ -76,34 +76,63 @@ int CV_BoostTest :: str_to_boost_type(const char* str)
     return CvBoost::REAL;
 }
 
-bool CV_BoostTest :: train( int test_case_idx )
+int CV_BoostTest :: train( int test_case_idx )
 {
     int BOOST_TYPE, WEAK_COUNT, MAX_DEPTH;
     float WEIGHT_TRIM_RATE;
     bool USE_SURROGATE;
 
-    const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, test_case_idx ))->data.str.ptr;     
+    const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
 
     // read validation params
     CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* prms = cvGetFileNodeByName( fs, 0, "validation" );
-    prms = cvGetFileNodeByName( fs, prms, name );
-    prms = cvGetFileNodeByName( fs, prms, data_name );
-    prms = cvGetFileNodeByName( fs, prms, "model_params" );
-    BOOST_TYPE = str_to_boost_type(cvGetFileNodeByName( fs, prms, "type" )->data.str.ptr);
-    WEAK_COUNT = cvGetFileNodeByName( fs, prms, "weak_count" )->data.i;
-    WEIGHT_TRIM_RATE = (float)cvGetFileNodeByName( fs, prms, "weight_trim_rate" )->data.f;
-    MAX_DEPTH = cvGetFileNodeByName( fs, prms, "max_depth" )->data.i;
-    USE_SURROGATE = (cvGetFileNodeByName( fs, prms, "use_surrogate" )->data.i != 0);
+    CvFileNode* fnode = cvGetFileNodeByName( fs, 0, "validation" ), *fnode1 = 0;
+    fnode = cvGetFileNodeByName( fs, fnode, name );
+    fnode = cvGetFileNodeByName( fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( fs, fnode, "model_params" );
+    fnode1 = cvGetFileNodeByName( fs, fnode, "type" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "BOOST_TYPE can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    BOOST_TYPE = str_to_boost_type(fnode1->data.str.ptr);
+    fnode1 = cvGetFileNodeByName( fs, fnode, "weak_count" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "WEAK_COUNT can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    WEAK_COUNT = fnode1->data.i;
+    fnode1 = cvGetFileNodeByName( fs, fnode, "weight_trim_rate" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "WEIGHT_TRIM_RATE can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    WEIGHT_TRIM_RATE = (float)fnode1->data.f;
+    fnode1 = cvGetFileNodeByName( fs, fnode, "max_depth" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "MAX_DEPTH can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    MAX_DEPTH = fnode1->data.i;
+    fnode1 = cvGetFileNodeByName( fs, fnode, "use_surrogate" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "USE_SURROGATE can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    USE_SURROGATE = (fnode1->data.i != 0);
 
-    return   boost->train( data, CV_ROW_SAMPLE, responses, 0, train_sample_idx, var_type, missing,
-        CvBoostParams(BOOST_TYPE, WEAK_COUNT, WEIGHT_TRIM_RATE, MAX_DEPTH, USE_SURROGATE, 0) );
-}
-
-float CV_BoostTest :: predict(const CvMat* sample, const CvMat* missing_data_mask)
-{
-    assert(boost);
-    return (float)boost->predict(sample, missing_data_mask);
+    if ( !boost->train( &data,
+        CvBoostParams(BOOST_TYPE, WEAK_COUNT, WEIGHT_TRIM_RATE, MAX_DEPTH, USE_SURROGATE, 0) ) )
+    {
+        ts->printf( CvTS::LOG, "in test case %d model training  was failed", test_case_idx );
+        return CvTS::FAIL_INVALID_OUTPUT;
+    }
+    return CvTS::OK;
 }
 
 CV_BoostTest boost_test;
