@@ -45,17 +45,6 @@
 
 #ifdef HAVE_JASPER
 
-#ifdef WIN32
-#define JAS_WIN_MSVC_BUILD 1
-#ifdef __GNUC__
-#define HAVE_STDINT_H 1
-#endif
-#endif
-
-#include <jasper/jasper.h>
-// FIXME bad hack
-#undef uchar
-#undef ulong
 #include "grfmt_base.h"
 
 namespace cv
@@ -74,13 +63,13 @@ public:
     ImageDecoder newDecoder() const;
 
 protected:
-    bool  readComponent8u( uchar *data, jas_matrix_t *buffer, int step, int cmpt,
+    bool  readComponent8u( uchar *data, void *buffer, int step, int cmpt,
                            int maxval, int offset, int ncmpts );
-    bool  readComponent16u( unsigned short *data, jas_matrix_t *buffer, int step, int cmpt,
+    bool  readComponent16u( unsigned short *data, void *buffer, int step, int cmpt,
                             int maxval, int offset, int ncmpts );
 
-    jas_stream_t *m_stream;
-    jas_image_t  *m_image;
+    void *m_stream;
+    void *m_image;
 };
 
 
@@ -95,8 +84,8 @@ public:
     ImageEncoder newEncoder() const;
 
 protected:
-    bool  writeComponent8u( jas_image_t *img, const Mat& _img );
-    bool  writeComponent16u( jas_image_t *img, const Mat& _img );
+    bool  writeComponent8u( void *img, const Mat& _img );
+    bool  writeComponent16u( void *img, const Mat& _img );
 };
 
 }

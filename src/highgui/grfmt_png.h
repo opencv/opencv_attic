@@ -85,7 +85,7 @@ public:
     virtual ~PngEncoder();
 
     bool  isFormatSupported( int depth );
-    bool  write( const cv::Mat& img, const cv::Vector<int>& params );
+    bool  write( const Mat& img, const Vector<int>& params );
     
     ImageEncoder newEncoder() const;
 

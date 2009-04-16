@@ -11,8 +11,6 @@
 #ifdef HAVE_IMAGEIO
 
 #include "grfmt_imageio.h"
-#include <iostream>
-using namespace std;
 
 namespace cv
 {
@@ -37,30 +35,18 @@ void  ImageIODecoder::close()
 }
 
 
-bool  ImageIODecoder::checkSignature( const String& signature )
+size_t ImageIODecoder::signatureLength() const
 {
-    return true;
-    /*
-    // If a CFImageRef can be retrieved from an image file, it is
-    // readable by ImageIO.  Effectively this is using ImageIO
-    // to check the signatures and determine the file format for us.
-    CFURLRef imageURLRef = CFURLCreateFromFileSystemRepresentation( NULL,
-        (const UInt8*)m_filename.c_str(), m_filename.size(), false );
-    if( !imageURLRef ) return false;
-
-    CGImageSourceRef sourceRef = CGImageSourceCreateWithURL( imageURLRef, NULL );
-    CFRelease( imageURLRef );
-    if( !sourceRef ) return false;
-
-    CGImageRef imageRef = CGImageSourceCreateImageAtIndex( sourceRef, 0, NULL );
-    CFRelease( sourceRef );
-    if( !imageRef ) return false;
-    CGImageRelease(imageRef);
-
-    return true;*/
+    return 12;
 }
 
-ImageDecoder ImageIODecoder::newDecoder()
+bool ImageIODecoder::checkSignature( const String& signature ) const
+{
+    // TODO: implement real signature check
+    return true;
+}
+    
+ImageDecoder ImageIODecoder::newDecoder() const
 {
     return new ImageIODecoder;
 }
@@ -109,7 +95,7 @@ bool  ImageIODecoder::readData( Mat& img )
     int bit_depth = 8;
 
     // Get Height, Width, and color information
-    if( !ReadHeader() )
+    if( !readHeader() )
         return false;
 
     CGContextRef     context = NULL; // The bitmap context
@@ -209,7 +195,7 @@ bool  ImageIODecoder::readData( Mat& img )
 
 ImageIOEncoder::ImageIOEncoder()
 {
-    m_description = "Apple ImageIO (*.bmp;*.dib;*.exr;*.jpeg;*.jpg;*.jpe;*.jp2;*.pdf;*.png;*.tiff;*.tif)"
+    m_description = "Apple ImageIO (*.bmp;*.dib;*.exr;*.jpeg;*.jpg;*.jpe;*.jp2;*.pdf;*.png;*.tiff;*.tif)";
 }
 
 
@@ -218,6 +204,11 @@ ImageIOEncoder::~ImageIOEncoder()
 }
 
 
+ImageEncoder ImageIOEncoder::newEncoder() const
+{
+    return new ImageIOEncoder;
+}
+    
 static
 CFStringRef  FilenameToUTI( const char* filename )
 {
@@ -271,7 +262,7 @@ bool  ImageIOEncoder::write( const Mat& img, const Vector<int>& params )
     int step = img.step;
     
     // Determine the appropriate UTI based on the filename extension
-    CFStringRef imageUTI = FilenameToUTI( m_filename );
+    CFStringRef imageUTI = FilenameToUTI( m_filename.c_str() );
 
     // Determine the Bytes Per Pixel
     int bpp = (_channels == 1) ? 1 : 4;
@@ -368,14 +359,14 @@ bool  ImageIOEncoder::write( const Mat& img, const Vector<int>& params )
     {
         CGImageRelease( imageRef );
         free( bitmapData );
-        std::cerr << "!destRef" << std::endl << std::flush;
+        fprintf(stderr, "!destRef\n");
         return false;
     }
 
     CGImageDestinationAddImage(destRef, imageRef, NULL);
     if( !CGImageDestinationFinalize(destRef) )
     {
-        std::cerr << "Finalize failed" << std::endl << std::flush;
+        fprintf(stderr, "Finalize failed\n");
         return false;
     }
 
