@@ -1419,6 +1419,7 @@ public:
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
     virtual IplImage* retrieveFrame(int);
+	virtual int getCaptureDomain() { return CV_CAP_QT; } // Return the type of the capture object: CV_CAP_VFW, etc...
 protected:
 
     CvCapture_QT_Movie* captureQT;
@@ -1487,6 +1488,7 @@ public:
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
     virtual IplImage* retrieveFrame(int);
+	virtual int getCaptureDomain() { return CV_CAP_QT; } // Return the type of the capture object: CV_CAP_VFW, etc...
 protected:
 
     CvCapture_QT_Cam* captureQT;
