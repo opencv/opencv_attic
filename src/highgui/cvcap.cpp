@@ -87,6 +87,11 @@ CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
     return capture ? capture->setProperty(id, value) : 0;
 }
 
+CV_IMPL int cvGetCaptureDomain( CvCapture* capture)
+{
+    return capture ? capture->getCaptureDomain() : 0;
+}
+
 
 /**
  * Camera dispatching method: index is the camera number.

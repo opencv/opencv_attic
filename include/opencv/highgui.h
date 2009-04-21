@@ -302,6 +302,9 @@ CVAPI(void) cvReleaseCapture( CvCapture** capture );
 CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
 CVAPI(int)    cvSetCaptureProperty( CvCapture* capture, int property_id, double value );
 
+// Return the type of the capturer (eg, CV_CAP_V4W, CV_CAP_UNICAP), which is unknown if created with CV_CAP_ANY
+CVAPI(int)    cvGetCaptureDomain( CvCapture* capture);  
+
 /* "black box" video file writer structure */
 typedef struct CvVideoWriter CvVideoWriter;
 
