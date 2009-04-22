@@ -343,9 +343,9 @@ icvSpillTreeDFSearch( CvSpillTree* tr,
       // defeatist search
       if ( !node->leaf )
 	p = cvDotProduct( node->u, desc );
-      if ( p < node->lb )
+      if ( p < node->lb && node->lc->cc >= k ) // check the number of children larger than k otherwise you'll skip over better neighbor
 	node = node->lc;
-      else if ( p > node->ub )
+      else if ( p > node->ub && node->rc->cc >= k )
 	node = node->rc;
       else
 	break;
