@@ -4824,7 +4824,7 @@ FileNode FileStorage::root(int streamidx) const
     return fs.obj ? FileNode(fs.obj, cvGetRootFileNode(fs.obj, streamidx)) : FileNode();
 }
 
-template<> FileStorage& operator << (FileStorage& fs, const String& str)
+FileStorage& operator << (FileStorage& fs, const String& str)
 {
     enum { NAME_EXPECTED = FileStorage::NAME_EXPECTED,
         VALUE_EXPECTED = FileStorage::VALUE_EXPECTED,
