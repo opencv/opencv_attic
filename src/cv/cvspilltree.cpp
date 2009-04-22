@@ -305,18 +305,22 @@ icvSpillTreeNodeHeapify( CvSpillTreeNode** heap,
 {
   if ( heap[i] == NULL )
     return;
-  int l = 0;
-  int r = 0;
-  int largest = i;
+  int l, r, largest = i;
   CvSpillTreeNode* inp;
   do {
     i = largest;
-    l = (i+1)<<(1-1);
     r = (i+1)<<1;
-    if (( l < k )&&(( heap[l] == NULL )||( heap[l]->mp > heap[i]->mp )))
+    l = r-1;
+    if (( l < k )&&( heap[l] == NULL ))
       largest = l;
-    else if (( r < k )&&(( heap[r] == NULL )||( heap[r]->mp > heap[i]->mp )))
+    else if (( r < k )&&( heap[r] == NULL ))
       largest = r;
+	else {
+      if (( l < k )&&( heap[l]->mp > heap[i]->mp ))
+        largest = l;
+      if (( r < k )&&( heap[r]->mp > heap[largest]->mp ))
+        largest = r;
+    }
     if ( largest != i )
       CV_SWAP( heap[largest], heap[i], inp );
   } while ( largest != i );
