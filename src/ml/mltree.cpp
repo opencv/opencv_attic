@@ -229,10 +229,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     sample_count = sample_all;
     var_count = var_all;
     
-    is_buf_16u = false;     
-    if (_train_data->rows + _train_data->cols -1 < 65536) 
-        is_buf_16u = true;                                
-    
     if( _sample_idx )
     {
         CV_CALL( sample_indices = cvPreprocessIndexArray( _sample_idx, sample_all ));
@@ -247,6 +243,10 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         var_count = var_idx->rows + var_idx->cols - 1;
     }
 
+    is_buf_16u = false;     
+    if ( sample_count < 65536 ) 
+        is_buf_16u = true;                                
+    
     if( !CV_IS_MAT(_responses) ||
         (CV_MAT_TYPE(_responses->type) != CV_32SC1 &&
          CV_MAT_TYPE(_responses->type) != CV_32FC1) ||

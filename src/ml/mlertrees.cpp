@@ -152,10 +152,6 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     sample_count = sample_all;
     var_count = var_all;
 
-    is_buf_16u = false;
-    if (_train_data->rows + _train_data->cols -1 < 65536) 
-        is_buf_16u = true;                                
-    
     if( _sample_idx )
     {
         CV_CALL( sample_indices = cvPreprocessIndexArray( _sample_idx, sample_all ));
@@ -179,6 +175,10 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                   "floating-point vector containing as many elements as "
                   "the total number of samples in the training data matrix" );
    
+    is_buf_16u = false;
+    if ( sample_count < 65536 )  
+        is_buf_16u = true;                                
+    
   
     CV_CALL( var_type0 = cvPreprocessVarType( _var_type, var_idx, var_count, &r_type ));
 
