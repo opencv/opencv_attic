@@ -507,6 +507,10 @@ bool CvCaptureCAM_DC1394_v2_CPP::grabFrame()
         cvInitImageHeader(&fhdr, cvSize(fc->size[0], fc->size[1]), 8, nch);
         cvSetData(&fhdr, fc->image, fc->size[0]*nch);
 
+	// Swap R&B channels:
+	if (nch==3)
+		cvConvertImage(&fhdr,&fhdr,CV_CVTIMG_SWAP_RB);
+
         if( rectify && cameraId == VIDERE && nimages == 2 )
         {
             if( !maps[0][0] || maps[0][0]->width != img[i]->width || maps[0][0]->height != img[i]->height )
