@@ -180,7 +180,7 @@ void CvMat_height_set(CvMat * m, int height){
     m->rows = height;
 }
 int CvMat_depth_get(CvMat * m){
-	return cvCvToIplDepth(m->type);
+	return cvIplDepth(m->type);
 }
 void CvMat_depth_set(CvMat *m, int depth){
     cvError(CV_StsNotImplemented, "CvMat_depth_set", "Not Implemented", __FILE__, __LINE__);
