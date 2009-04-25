@@ -607,7 +607,7 @@ void add(const Mat& src1, const Scalar& s, Mat& dst, const Mat& mask)
     binarySMaskOp(src1, s, dst, mask, addSTab[depth]);
 }
 
-void subtract(const Scalar& s, Mat& src1, Mat& dst, const Mat& mask)
+void subtract(const Scalar& s, const Mat& src1, Mat& dst, const Mat& mask)
 {
     static BinarySFuncCn rsubSTab[] =
     {

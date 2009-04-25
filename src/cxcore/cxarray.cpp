@@ -664,19 +664,22 @@ icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
     tabidx = hashval & (mat->hashsize - 1);
     hashval &= INT_MAX;
 
-    for( node = (CvSparseNode*)mat->hashtable[tabidx];
-         node != 0; node = node->next )
+    if( create_node >= 0 )
     {
-        if( node->hashval == hashval )
+        for( node = (CvSparseNode*)mat->hashtable[tabidx];
+             node != 0; node = node->next )
         {
-            int* nodeidx = CV_NODE_IDX(mat,node);
-            for( i = 0; i < mat->dims; i++ )
-                if( idx[i] != nodeidx[i] )
-                    break;
-            if( i == mat->dims )
+            if( node->hashval == hashval )
             {
-                ptr = (uchar*)CV_NODE_VAL(mat,node);
-                break;
+                int* nodeidx = CV_NODE_IDX(mat,node);
+                for( i = 0; i < mat->dims; i++ )
+                    if( idx[i] != nodeidx[i] )
+                        break;
+                if( i == mat->dims )
+                {
+                    ptr = (uchar*)CV_NODE_VAL(mat,node);
+                    break;
+                }
             }
         }
     }
@@ -2772,7 +2775,7 @@ cvGetImage( const CvArr* array, IplImage* img )
         if( mat->data.ptr == 0 )
             CV_Error( CV_StsNullPtr, "" );
 
-        depth = cvCvToIplDepth(mat->type);
+        depth = cvIplDepth(mat->type);
 
         cvInitImageHeader( img, cvSize(mat->cols, mat->rows),
                            depth, CV_MAT_CN(mat->type) );
