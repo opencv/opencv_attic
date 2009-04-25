@@ -292,7 +292,7 @@ void Laplacian( const Mat& src, Mat& dst, int ddepth, int ksize,
     }
     else
     {
-        const int STRIPE_SIZE = 1 << 14;
+        const size_t STRIPE_SIZE = 1 << 14;
 
         int depth = src.depth();
         int ktype = std::max(CV_32F, std::max(ddepth, depth));
@@ -305,7 +305,7 @@ void Laplacian( const Mat& src, Mat& dst, int ddepth, int ksize,
         int dtype = CV_MAKETYPE(ddepth, src.channels());
         dst.create( src.size(), dtype );
 
-        int dy0 = std::min(STRIPE_SIZE/(getElemSize(src.type())*src.cols), src.rows);
+        int dy0 = std::min((int)(STRIPE_SIZE/(getElemSize(src.type())*src.cols)), src.rows);
         Ptr<FilterEngine> fx = createSeparableLinearFilter(src.type(),
             wtype, kd, ks, Point(-1,-1), 0, borderType, borderType, Scalar() ); 
         Ptr<FilterEngine> fy = createSeparableLinearFilter(src.type(),

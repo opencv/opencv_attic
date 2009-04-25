@@ -479,7 +479,7 @@ IplConvKernelFP;
 #define CV_64F  6
 #define CV_USRTYPE1 7
 
-#define CV_MAKETYPE(depth,cn) ((depth) + (((cn)-1) << CV_CN_SHIFT))
+#define CV_MAKETYPE(depth,cn) (CV_MAT_DEPTH(depth) + (((cn)-1) << CV_CN_SHIFT))
 #define CV_MAKE_TYPE CV_MAKETYPE
 
 #define CV_8UC1 CV_MAKETYPE(CV_8U,1)
@@ -688,7 +688,7 @@ CV_INLINE  void  cvmSet( CvMat* mat, int row, int col, double value )
 }
 
 
-CV_INLINE int cvCvToIplDepth( int type )
+CV_INLINE int cvIplDepth( int type )
 {
     int depth = CV_MAT_DEPTH(type);
     return CV_ELEM_SIZE1(depth)*8 | (depth == CV_8S || depth == CV_16S ||

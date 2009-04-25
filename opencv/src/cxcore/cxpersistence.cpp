@@ -3619,7 +3619,7 @@ icvReadImage( CvFileStorage* fs, CvFileNode* node )
         CV_Error( CV_StsUnmatchedSizes,
         "The matrix size does not match to the number of stored elements" );
 
-    depth = cvCvToIplDepth(elem_type);
+    depth = cvIplDepth(elem_type);
     image = cvCreateImage( cvSize(width,height), depth, CV_MAT_CN(elem_type) );
 
     roi_node = cvGetFileNodeByName( fs, node, "roi" );

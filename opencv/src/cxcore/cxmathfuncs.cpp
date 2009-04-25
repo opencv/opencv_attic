@@ -1561,6 +1561,10 @@ void pow( const Mat& _src, double power, Mat& dst )
     }
 }
 
+void sqrt(const Mat& a, Mat& b)
+{
+    pow(a, 0.5, b);
+}
 
 /************************** CheckArray for NaN's, Inf's *********************************/
 
