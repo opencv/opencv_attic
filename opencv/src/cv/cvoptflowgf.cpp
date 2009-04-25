@@ -611,7 +611,7 @@ void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
         {
             img[i]->convertTo(fimg, CV_32F);
             GaussianBlur(fimg, fimg, Size(smooth_sz, smooth_sz), sigma, sigma);
-            resize( fimg, I, Size(height, width), CV_INTER_LINEAR );
+            resize( fimg, I, Size(width, height), CV_INTER_LINEAR );
             FarnebackPolyExp( I, R[i], poly_n, poly_sigma );
         }
         
