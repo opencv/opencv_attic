@@ -1283,38 +1283,51 @@ MatND MatND::reshape(int, const Vector<int>&) const
 
 MatND::operator Mat() const
 {
-    int i, d = dims, d1, rows = 1, cols = dim[d-1].size;
-
-    for( d1 = 0; d1 < d; d1++ )
-        if( dim[d1].size > 1 )
-            break;
-
-    for( i = d-1; i > d1; i-- )
-    {
-        int64 cols1 = (int64)cols*dim[i-1].size;
-        if( cols1 != (int)cols1 || dim[i].size*dim[i].step != dim[i-1].step )
-            break;
-        cols = (int)cols1;
-    }
-
+    int i, d = dims, d1, rows, cols;
     size_t step = Mat::AUTO_STEP;
-    if( i > d1 )
+    
+    if( d <= 2 )
     {
-        --i;
-        step = dim[i].step;
-        rows = dim[i].size;
-        for( ; i > d1; i-- )
-        {
-            int64 rows1 = (int64)rows*dim[i-1].size;
-            if( rows1 != (int)rows1 || dim[i].size*dim[i].step != dim[i-1].step )
+        rows = dim[0].size;
+        cols = d == 2 ? dim[1].size : 1;
+        if( d == 2 )
+            step = dim[0].step;
+    }
+    else
+    {
+        rows = 1;
+        cols = dim[d-1].size;
+
+        for( d1 = 0; d1 < d; d1++ )
+            if( dim[d1].size > 1 )
                 break;
-            rows = (int)rows1;
+
+        for( i = d-1; i > d1; i-- )
+        {
+            int64 cols1 = (int64)cols*dim[i-1].size;
+            if( cols1 != (int)cols1 || dim[i].size*dim[i].step != dim[i-1].step )
+                break;
+            cols = (int)cols1;
         }
 
         if( i > d1 )
-            CV_Error( CV_StsBadArg,
-            "The nD matrix can not be represented as 2D matrix due "
-            "to its layout in memory; you may use (Mat)the_matnd.clone() instead" );
+        {
+            --i;
+            step = dim[i].step;
+            rows = dim[i].size;
+            for( ; i > d1; i-- )
+            {
+                int64 rows1 = (int64)rows*dim[i-1].size;
+                if( rows1 != (int)rows1 || dim[i].size*dim[i].step != dim[i-1].step )
+                    break;
+                rows = (int)rows1;
+            }
+
+            if( i > d1 )
+                CV_Error( CV_StsBadArg,
+                "The nD matrix can not be represented as 2D matrix due "
+                "to its layout in memory; you may use (Mat)the_matnd.clone() instead" );
+        }
     }
 
     Mat m(rows, cols, type(), data, step);
@@ -1701,7 +1714,7 @@ void normalize( const MatND& src, MatND& dst, double a, double b,
     {
         double smin = 0, smax = 0;
         double dmin = std::min( a, b ), dmax = std::max( a, b );
-        minMax( src, &smin, &smax, mask );
+        minMaxLoc( src, &smin, &smax, 0, 0, mask );
         scale = (dmax - dmin)*(smax - smin > DBL_EPSILON ? 1./(smax - smin) : 0);
         shift = dmin - smin*scale;
     }
@@ -1724,24 +1737,50 @@ void normalize( const MatND& src, MatND& dst, double a, double b,
     }
 }
 
-void minMax(const MatND& a, double* minVal,
-            double* maxVal, const MatND& mask)
+static void ofs2idx(const MatND& a, size_t ofs, int* idx)
+{
+    int i, d = a.dims;
+    for( i = 0; i < d; i++ )
+    {
+        idx[i] = (int)(ofs / a.dim[i].step);
+        ofs %= a.dim[i].step;
+    }
+}
+    
+    
+void minMaxLoc(const MatND& a, double* minVal,
+               double* maxVal, int* minLoc, int* maxLoc,
+               const MatND& mask)
 {
     NAryMatNDIterator it((Vector<MatND>() << a, mask));
     double minval = DBL_MAX, maxval = -DBL_MAX;
-
+    size_t minofs = 0, maxofs = 0, esz = a.elemSize();
+    
     for( int i = 0; i < it.nplanes; i++, ++it )
     {
         double val0 = 0, val1 = 0;
-        minMaxLoc( it.planes[0], &val0, &val1, 0, 0, it.planes[1] );
-        minval = std::min(minval, val0);
-        maxval = std::max(maxval, val1);
+        Point pt0, pt1;
+        minMaxLoc( it.planes[0], &val0, &val1, &pt0, &pt1, it.planes[1] );
+        if( val0 < minval )
+        {
+            minval = val0;
+            minofs = (it.planes[0].data - a.data) + pt0.x*esz;
+        }
+        if( val1 > minval )
+        {
+            maxval = val1;
+            maxofs = (it.planes[0].data - a.data) + pt1.x*esz;
+        }
     }
 
     if( minVal )
         *minVal = minval;
     if( maxVal )
         *maxVal = maxval;
+    if( minLoc )
+        ofs2idx(a, minofs, minLoc);
+    if( maxLoc )
+        ofs2idx(a, maxofs, maxLoc);
 }
 
 void merge(const Vector<MatND>& mv, MatND& dst)
@@ -2304,7 +2343,7 @@ void SparseMat::copyTo( SparseMat& m ) const
     }
     m.create( size(), type() );
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount, esz = elemSize();
+    size_t i, N = nzcount(), esz = elemSize();
 
     for( i = 0; i < N; i++, ++from )
     {
@@ -2321,7 +2360,7 @@ void SparseMat::copyTo( Mat& m ) const
     m = Scalar(0);
 
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount, esz = elemSize();
+    size_t i, N = nzcount(), esz = elemSize();
 
     if( hdr->dims == 2 )
     {
@@ -2350,7 +2389,7 @@ void SparseMat::copyTo( MatND& m ) const
     m = Scalar(0);
 
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount, esz = elemSize();
+    size_t i, N = nzcount(), esz = elemSize();
 
     for( i = 0; i < N; i++, ++from )
     {
@@ -2378,7 +2417,7 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
     m.create( size(), rtype );
     
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount;
+    size_t i, N = nzcount();
 
     if( alpha == 1 )
     {
@@ -2415,7 +2454,7 @@ void SparseMat::convertTo( Mat& m, int rtype, double alpha, double beta ) const
     m = Scalar(beta);
 
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount, esz = CV_ELEM_SIZE(rtype);
+    size_t i, N = nzcount(), esz = CV_ELEM_SIZE(rtype);
 
     if( alpha == 1 && beta == 0 )
     {
@@ -2477,7 +2516,7 @@ void SparseMat::convertTo( MatND& m, int rtype, double alpha, double beta ) cons
     m = Scalar(beta);
 
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount;
+    size_t i, N = nzcount();
 
     if( alpha == 1 && beta == 0 )
     {
@@ -2514,7 +2553,7 @@ SparseMat::operator CvSparseMat*() const
     CvSparseMat* m = cvCreateSparseMat(hdr->dims, hdr->size, type());
 
     SparseMatConstIterator from = begin();
-    size_t i, N = hdr->nodeCount, esz = elemSize();
+    size_t i, N = nzcount(), esz = elemSize();
 
     for( i = 0; i < N; i++, ++from )
     {
@@ -2840,6 +2879,135 @@ SparseMatConstIterator& SparseMatConstIterator::operator ++()
     return *this;
 }
 
+
+double norm( const SparseMat& src, int normType )
+{
+    SparseMatConstIterator it;
+    
+    size_t i, N = src.nzcount();
+    normType &= NORM_TYPE_MASK;
+    int type = src.type();
+    double result = 0;
+    
+    CV_Assert( normType == NORM_INF || normType == NORM_L1 || normType == NORM_L2 );
+    
+    if( type == CV_32F )
+    {
+        if( normType == NORM_INF )
+            for( i = 0; i < N; i++, ++it )
+                result = std::max(result, (double)*(const float*)it.ptr);
+        else if( normType == NORM_L1 )
+            for( i = 0; i < N; i++, ++it )
+                result += std::abs(*(const float*)it.ptr);
+        else
+            for( i = 0; i < N; i++, ++it )
+            {
+                double v = *(const float*)it.ptr; 
+                result += v*v;
+            }
+    }
+    else if( type == CV_64F )
+    {
+        if( normType == NORM_INF )
+            for( i = 0; i < N; i++, ++it )
+                result = std::max(result, *(const double*)it.ptr);
+        else if( normType == NORM_L1 )
+            for( i = 0; i < N; i++, ++it )
+                result += std::abs(*(const double*)it.ptr);
+        else
+            for( i = 0; i < N; i++, ++it )
+            {
+                double v = *(const double*)it.ptr; 
+                result += v*v;
+            }
+    }
+    else
+        CV_Error( CV_StsUnsupportedFormat, "Only 32f and 64f are supported" );
+    
+    if( normType == NORM_L2 )
+        result = std::sqrt(result);
+    return result;
+}
+    
+void minMaxLoc( const SparseMat& src, double* _minval, double* _maxval, int* _minidx, int* _maxidx )
+{
+    SparseMatConstIterator it;
+    
+    size_t i, N = src.nzcount(), d = src.hdr ? src.hdr->dims : 0;
+    int type = src.type();
+    const int *minidx = 0, *maxidx = 0;
+    
+    if( type == CV_32F )
+    {
+        float minval = FLT_MAX, maxval = -FLT_MAX;
+        for( i = 0; i < N; i++, ++it )
+        {
+            float v = *(const float*)it.ptr;
+            if( v < minval )
+            {
+                minval = v;
+                minidx = it.node()->idx;
+            }
+            if( v > maxval )
+            {
+                maxval = v;
+                maxidx = it.node()->idx;
+            }
+        }
+        if( _minval )
+            *_minval = minval;
+        if( _maxval )
+            *_maxval = maxval;
+    }
+    else if( type == CV_64F )
+    {
+        double minval = DBL_MAX, maxval = -DBL_MAX;
+        for( i = 0; i < N; i++, ++it )
+        {
+            double v = *(const double*)it.ptr;
+            if( v < minval )
+            {
+                minval = v;
+                minidx = it.node()->idx;
+            }
+            if( v > maxval )
+            {
+                maxval = v;
+                maxidx = it.node()->idx;
+            }
+        }
+        if( _minval )
+            *_minval = minval;
+        if( _maxval )
+            *_maxval = maxval;
+    }
+    else
+        CV_Error( CV_StsUnsupportedFormat, "Only 32f and 64f are supported" );
+    
+    if( _minidx )
+        for( i = 0; i < d; i++ )
+            _minidx[i] = minidx[i];
+    if( _maxidx )
+        for( i = 0; i < d; i++ )
+            _maxidx[i] = maxidx[i];
+}
+
+    
+void normalize( const SparseMat& src, SparseMat& dst, double a, int norm_type )
+{
+    double scale = 1;
+    if( norm_type == CV_L2 || norm_type == CV_L1 || norm_type == CV_C )
+    {
+        scale = norm( src, norm_type );
+        scale = scale > DBL_EPSILON ? a/scale : 0.;
+    }
+    else
+        CV_Error( CV_StsBadArg, "Unknown/unsupported norm type" );
+    
+    src.convertTo( dst, -1, scale );
+}
+    
+    
 }
 
 /* End of file. */

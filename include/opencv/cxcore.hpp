@@ -680,7 +680,7 @@ static inline size_t getElemSize(int type) { return CV_ELEM_SIZE(type); }
 
 // matrix decomposition types
 enum { DECOMP_LU=0, DECOMP_SVD=1, DECOMP_EIG=2, DECOMP_CHOLESKY=3, DECOMP_QR=4, DECOMP_NORMAL=16 };
-enum { NORM_INF=1, NORM_L1=2, NORM_L2=4, NORM_RELATIVE=8};
+enum { NORM_INF=1, NORM_L1=2, NORM_L2=4, NORM_TYPE_MASK=7, NORM_RELATIVE=8};
 enum { CMP_EQ=0, CMP_GT=1, CMP_GE=2, CMP_LT=3, CMP_LE=4, CMP_NE=5 };
 enum { GEMM_1_T=1, GEMM_2_T=2, GEMM_3_T=4 };
 enum { DFT_INVERSE=1, DFT_SCALE=2, DFT_ROWS=4, DFT_COMPLEX_OUTPUT=16, DFT_REAL_OUTPUT=32,
@@ -1354,10 +1354,11 @@ CV_EXPORTS double norm(const MatND& a, int normType=NORM_L2, const MatND& mask=M
 CV_EXPORTS double norm(const MatND& a, const MatND& b,
                        int normType=NORM_L2, const MatND& mask=MatND());
 CV_EXPORTS void normalize( const MatND& a, MatND& b, double alpha=1, double beta=0,
-                          int norm_type=NORM_L2, int rtype=-1, const MatND& mask=MatND());
+                           int norm_type=NORM_L2, int rtype=-1, const MatND& mask=MatND());
 
-CV_EXPORTS void minMax(const MatND& a, double* minVal,
-                       double* maxVal, const MatND& mask=MatND());
+CV_EXPORTS void minMaxLoc(const MatND& a, double* minVal,
+                       double* maxVal, int* minIdx=0, int* maxIdx=0,
+                       const MatND& mask=MatND());
 CV_EXPORTS void merge(const Vector<MatND>& mv, MatND& dst);
 CV_EXPORTS void split(const MatND& m, Vector<MatND>& mv);
 CV_EXPORTS void mixChannels(const Vector<MatND>& src, Vector<MatND>& dst,
@@ -1498,7 +1499,9 @@ struct CV_EXPORTS SparseMat
     int channels() const;
     Vector<int> size() const;
     int size(int i) const;
-
+    int dims() const;
+    size_t nzcount() const;
+    
     size_t hash(int i0) const;
     size_t hash(int i0, int i1) const;
     size_t hash(int i0, int i1, int i2) const;
@@ -1534,6 +1537,12 @@ struct CV_EXPORTS SparseMat
     int flags;
     Hdr* hdr;
 };
+
+
+CV_EXPORTS void minMaxLoc(const SparseMat& a, double* minVal,
+                          double* maxVal, int* minIdx=0, int* maxIdx=0);
+CV_EXPORTS double norm( const SparseMat& src, int normType );
+CV_EXPORTS void normalize( const SparseMat& src, SparseMat& dst, double alpha, int normType );
 
 struct CV_EXPORTS SparseMatConstIterator
 {
