@@ -5038,6 +5038,16 @@ inline int SparseMat::size(int i) const
     return 0;
 }
 
+inline int SparseMat::dims() const
+{
+    return hdr ? hdr->dims : 0;
+}
+    
+inline size_t SparseMat::nzcount() const
+{
+    return hdr ? hdr->nodeCount : 0;
+}
+    
 inline size_t SparseMat::hash(int i0) const
 {
     return (size_t)i0;
