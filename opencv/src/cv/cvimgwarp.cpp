@@ -3078,8 +3078,8 @@ cvGetAffineTransform( const CvPoint2D32f* src,
                           CvMat* matrix )
 {
     cv::Mat M0 = cv::cvarrToMat(matrix),
-        M = cv::getPerspectiveTransform((const cv::Point2f*)src, (const cv::Point2f*)dst);
-    CV_Assert( M.size() == M.size() );
+        M = cv::getAffineTransform((const cv::Point2f*)src, (const cv::Point2f*)dst);
+    CV_Assert( M.size() == M0.size() );
     M.convertTo(M0, M0.type());
     return matrix;
 }
