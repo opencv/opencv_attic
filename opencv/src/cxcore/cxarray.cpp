@@ -2573,7 +2573,7 @@ cvReshapeMatND( const CvArr* arr,
             CV_Error( CV_StsBadArg, "The total matrix width is not "
                             "divisible by the new number of columns" );
 
-        header->type = CV_MAKETYPE( mat->type & ~CV_MAT_CN_MASK, new_cn );
+        header->type = (mat->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
         header->step = header->cols * CV_ELEM_SIZE(mat->type);
         header->step &= new_rows > 1 ? -1 : 0;
         header->refcount = refcount;
@@ -2609,7 +2609,7 @@ cvReshapeMatND( const CvArr* arr,
             }
 
             header->dim[header->dims-1].size = new_size;
-            header->type = CV_MAKETYPE( header->type & ~CV_MAT_CN_MASK, new_cn );
+            header->type = (header->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(header->type, new_cn);
             }
         }
         else
@@ -2747,7 +2747,7 @@ cvReshape( const CvArr* array, CvMat* header,
         "The total width is not divisible by the new number of channels" );
 
     header->cols = new_width;
-    header->type = CV_MAKETYPE( mat->type & ~CV_MAT_CN_MASK, new_cn );
+    header->type = (mat->type  & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
 
     result = header;
     return  result;
