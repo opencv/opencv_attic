@@ -1034,15 +1034,17 @@ static void morphOp( int op, const Mat& src, Mat& dst, const Mat& _kernel,
 
     if( !_kernel.data )
     {
-       kernel = getStructuringElement(MORPH_RECT, Size(1+iterations*2,1+iterations*2));
-       iterations = 1;
+        kernel = getStructuringElement(MORPH_RECT, Size(1+iterations*2,1+iterations*2));
+        anchor = Point(iterations, iterations);
+        iterations = 1;
     }
     else if( iterations > 1 && countNonZero(_kernel) == _kernel.rows*_kernel.cols )
     {
+        anchor = Point(anchor.x*iterations, anchor.y*iterations);
         kernel = getStructuringElement(MORPH_RECT,
                 Size(ksize.width + iterations*(ksize.width-1),
                      ksize.height + iterations*(ksize.height-1)),
-                Point(anchor.x*iterations, anchor.y*iterations));
+                anchor);
         iterations = 1;
     }
     else
