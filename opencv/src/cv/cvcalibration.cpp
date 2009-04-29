@@ -1140,7 +1140,8 @@ CV_IMPL void
 cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
                   const CvMat* imagePoints, const CvMat* A,
                   const CvMat* distCoeffs,
-                  CvMat* rvec, CvMat* tvec )
+                  CvMat* rvec, CvMat* tvec,
+                  int useExtrinsicGuess )
 {
     const int max_iter = 20;
     CvMat *_M = 0, *_Mxy = 0, *_m = 0, *_mn = 0, *_L = 0, *_J = 0;
@@ -1191,106 +1192,118 @@ cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
     // (unapply the intrinsic matrix transformation and distortion)
     cvUndistortPoints( _m, _mn, &_A, distCoeffs, 0, &_Ar );
 
-    Mc = cvAvg(_M);
-    cvReshape( _M, _M, 1, count );
-    cvMulTransposed( _M, &_MM, 1, &_Mc );
-    cvSVD( &_MM, &_W, 0, &_V, CV_SVD_MODIFY_A + CV_SVD_V_T );
-
-    // initialize extrinsic parameters
-    if( W[2]/W[1] < 1e-3 || count < 4 )
+    if( useExtrinsicGuess )
     {
-        // a planar structure case (all M's lie in the same plane)
-        double tt[3], h[9], h1_norm, h2_norm;
-        CvMat* R_transform = &_V;
-        CvMat T_transform = cvMat( 3, 1, CV_64F, tt );
-        CvMat _H = cvMat( 3, 3, CV_64F, h );
-        CvMat _h1, _h2, _h3;
-
-        if( V[2]*V[2] + V[5]*V[5] < 1e-10 )
-            cvSetIdentity( R_transform );
-
-        if( cvDet(R_transform) < 0 )
-            cvScale( R_transform, R_transform, -1 );
-
-        cvGEMM( R_transform, &_Mc, -1, 0, 0, &T_transform, CV_GEMM_B_T );
-
-        for( i = 0; i < count; i++ )
-        {
-            const double* Rp = R_transform->data.db;
-            const double* Tp = T_transform.data.db;
-            const double* src = _M->data.db + i*3;
-            double* dst = _Mxy->data.db + i*2;
-
-            dst[0] = Rp[0]*src[0] + Rp[1]*src[1] + Rp[2]*src[2] + Tp[0];
-            dst[1] = Rp[3]*src[0] + Rp[4]*src[1] + Rp[5]*src[2] + Tp[1];
-        }
-
-        cvFindHomography( _Mxy, _mn, &_H );
-
-        cvGetCol( &_H, &_h1, 0 );
-        _h2 = _h1; _h2.data.db++;
-        _h3 = _h2; _h3.data.db++;
-        h1_norm = sqrt(h[0]*h[0] + h[3]*h[3] + h[6]*h[6]);
-        h2_norm = sqrt(h[1]*h[1] + h[4]*h[4] + h[7]*h[7]);
-
-        cvScale( &_h1, &_h1, 1./h1_norm );
-        cvScale( &_h2, &_h2, 1./h2_norm );
-        cvScale( &_h3, &_t, 2./(h1_norm + h2_norm));
-        cvCrossProduct( &_h1, &_h2, &_h3 );
-
-        cvRodrigues2( &_H, &_r );
-        cvRodrigues2( &_r, &_H );
-        cvMatMulAdd( &_H, &T_transform, &_t, &_t );
-        cvMatMul( &_H, R_transform, &_R );
-        cvRodrigues2( &_R, &_r );
+        CvMat _r_temp = cvMat(rvec->rows, rvec->cols,
+            CV_MAKETYPE(CV_64F,CV_MAT_CN(rvec->type)), param );
+        CvMat _t_temp = cvMat(tvec->rows, tvec->cols,
+            CV_MAKETYPE(CV_64F,CV_MAT_CN(tvec->type)), param + 3);
+        cvConvert( rvec, &_r_temp );
+        cvConvert( tvec, &_t_temp );
     }
     else
     {
-        // non-planar structure. Use DLT method
-        double* L;
-        double LL[12*12], LW[12], LV[12*12], sc;
-        CvMat _LL = cvMat( 12, 12, CV_64F, LL );
-        CvMat _LW = cvMat( 12, 1, CV_64F, LW );
-        CvMat _LV = cvMat( 12, 12, CV_64F, LV );
-        CvMat _RRt, _RR, _tt;
-        CvPoint3D64f* M = (CvPoint3D64f*)_M->data.db;
-        CvPoint2D64f* mn = (CvPoint2D64f*)_mn->data.db;
+        Mc = cvAvg(_M);
+        cvReshape( _M, _M, 1, count );
+        cvMulTransposed( _M, &_MM, 1, &_Mc );
+        cvSVD( &_MM, &_W, 0, &_V, CV_SVD_MODIFY_A + CV_SVD_V_T );
 
-        CV_CALL( _L = cvCreateMat( 2*count, 12, CV_64F ));
-        L = _L->data.db;
-
-        for( i = 0; i < count; i++, L += 24 )
+        // initialize extrinsic parameters
+        if( W[2]/W[1] < 1e-3 || count < 4 )
         {
-            double x = -mn[i].x, y = -mn[i].y;
-            L[0] = L[16] = M[i].x;
-            L[1] = L[17] = M[i].y;
-            L[2] = L[18] = M[i].z;
-            L[3] = L[19] = 1.;
-            L[4] = L[5] = L[6] = L[7] = 0.;
-            L[12] = L[13] = L[14] = L[15] = 0.;
-            L[8] = x*M[i].x;
-            L[9] = x*M[i].y;
-            L[10] = x*M[i].z;
-            L[11] = x;
-            L[20] = y*M[i].x;
-            L[21] = y*M[i].y;
-            L[22] = y*M[i].z;
-            L[23] = y;
-        }
+            // a planar structure case (all M's lie in the same plane)
+            double tt[3], h[9], h1_norm, h2_norm;
+            CvMat* R_transform = &_V;
+            CvMat T_transform = cvMat( 3, 1, CV_64F, tt );
+            CvMat _H = cvMat( 3, 3, CV_64F, h );
+            CvMat _h1, _h2, _h3;
 
-        cvMulTransposed( _L, &_LL, 1 );
-        cvSVD( &_LL, &_LW, 0, &_LV, CV_SVD_MODIFY_A + CV_SVD_V_T );
-        _RRt = cvMat( 3, 4, CV_64F, LV + 11*12 );
-        cvGetCols( &_RRt, &_RR, 0, 3 );
-        cvGetCol( &_RRt, &_tt, 3 );
-        if( cvDet(&_RR) < 0 )
-            cvScale( &_RRt, &_RRt, -1 );
-        sc = cvNorm(&_RR);
-        cvSVD( &_RR, &_W, &_U, &_V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
-        cvGEMM( &_U, &_V, 1, 0, 0, &_R, CV_GEMM_A_T );
-        cvScale( &_tt, &_t, cvNorm(&_R)/sc );
-        cvRodrigues2( &_R, &_r );
-        cvReleaseMat( &_L );
+            if( V[2]*V[2] + V[5]*V[5] < 1e-10 )
+                cvSetIdentity( R_transform );
+
+            if( cvDet(R_transform) < 0 )
+                cvScale( R_transform, R_transform, -1 );
+
+            cvGEMM( R_transform, &_Mc, -1, 0, 0, &T_transform, CV_GEMM_B_T );
+
+            for( i = 0; i < count; i++ )
+            {
+                const double* Rp = R_transform->data.db;
+                const double* Tp = T_transform.data.db;
+                const double* src = _M->data.db + i*3;
+                double* dst = _Mxy->data.db + i*2;
+
+                dst[0] = Rp[0]*src[0] + Rp[1]*src[1] + Rp[2]*src[2] + Tp[0];
+                dst[1] = Rp[3]*src[0] + Rp[4]*src[1] + Rp[5]*src[2] + Tp[1];
+            }
+
+            cvFindHomography( _Mxy, _mn, &_H );
+
+            cvGetCol( &_H, &_h1, 0 );
+            _h2 = _h1; _h2.data.db++;
+            _h3 = _h2; _h3.data.db++;
+            h1_norm = sqrt(h[0]*h[0] + h[3]*h[3] + h[6]*h[6]);
+            h2_norm = sqrt(h[1]*h[1] + h[4]*h[4] + h[7]*h[7]);
+
+            cvScale( &_h1, &_h1, 1./h1_norm );
+            cvScale( &_h2, &_h2, 1./h2_norm );
+            cvScale( &_h3, &_t, 2./(h1_norm + h2_norm));
+            cvCrossProduct( &_h1, &_h2, &_h3 );
+
+            cvRodrigues2( &_H, &_r );
+            cvRodrigues2( &_r, &_H );
+            cvMatMulAdd( &_H, &T_transform, &_t, &_t );
+            cvMatMul( &_H, R_transform, &_R );
+            cvRodrigues2( &_R, &_r );
+        }
+        else
+        {
+            // non-planar structure. Use DLT method
+            double* L;
+            double LL[12*12], LW[12], LV[12*12], sc;
+            CvMat _LL = cvMat( 12, 12, CV_64F, LL );
+            CvMat _LW = cvMat( 12, 1, CV_64F, LW );
+            CvMat _LV = cvMat( 12, 12, CV_64F, LV );
+            CvMat _RRt, _RR, _tt;
+            CvPoint3D64f* M = (CvPoint3D64f*)_M->data.db;
+            CvPoint2D64f* mn = (CvPoint2D64f*)_mn->data.db;
+
+            CV_CALL( _L = cvCreateMat( 2*count, 12, CV_64F ));
+            L = _L->data.db;
+
+            for( i = 0; i < count; i++, L += 24 )
+            {
+                double x = -mn[i].x, y = -mn[i].y;
+                L[0] = L[16] = M[i].x;
+                L[1] = L[17] = M[i].y;
+                L[2] = L[18] = M[i].z;
+                L[3] = L[19] = 1.;
+                L[4] = L[5] = L[6] = L[7] = 0.;
+                L[12] = L[13] = L[14] = L[15] = 0.;
+                L[8] = x*M[i].x;
+                L[9] = x*M[i].y;
+                L[10] = x*M[i].z;
+                L[11] = x;
+                L[20] = y*M[i].x;
+                L[21] = y*M[i].y;
+                L[22] = y*M[i].z;
+                L[23] = y;
+            }
+
+            cvMulTransposed( _L, &_LL, 1 );
+            cvSVD( &_LL, &_LW, 0, &_LV, CV_SVD_MODIFY_A + CV_SVD_V_T );
+            _RRt = cvMat( 3, 4, CV_64F, LV + 11*12 );
+            cvGetCols( &_RRt, &_RR, 0, 3 );
+            cvGetCol( &_RRt, &_tt, 3 );
+            if( cvDet(&_RR) < 0 )
+                cvScale( &_RRt, &_RRt, -1 );
+            sc = cvNorm(&_RR);
+            cvSVD( &_RR, &_W, &_U, &_V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+            cvGEMM( &_U, &_V, 1, 0, 0, &_R, CV_GEMM_A_T );
+            cvScale( &_tt, &_t, cvNorm(&_R)/sc );
+            cvRodrigues2( &_R, &_r );
+            cvReleaseMat( &_L );
+        }
     }
 
     cvReshape( _M, _M, 3, 1 );
