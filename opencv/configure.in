@@ -2,8 +2,8 @@
 
 # Set various version strings
 m4_define([opencv_major_version],    [1])
-m4_define([opencv_minor_version],    [1])
-m4_define([opencv_subminor_version], [0])
+m4_define([opencv_minor_version],    [2])
+m4_define([opencv_subminor_version], [1])
 m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
 
 # Before making a release, the LT_VERSION string should be modified.
@@ -30,10 +30,11 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 # This is an abuse that only fosters misunderstanding of the purpose of library versions. Instead,
 # use the -release flag (see Release numbers), but be warned that every release of your package will
 # not be binary compatible with any other release.
-m4_define([opencv_lt_version],       [2:0:0])
+m4_define([opencv_lt_version], [3:0:0])
 
 # init autotools
-AC_PREREQ(2.60)
+# we need autoconf >= 2.62 beause of several macros in there
+AC_PREREQ(2.63)
 AC_INIT([opencv],[opencv_version],[opencvlibrary-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([opencv.pc.in])
 AC_CONFIG_AUX_DIR([autotools])
@@ -52,7 +53,7 @@ AC_CONFIG_HEADERS([cvconfig.h])
 AM_INIT_AUTOMAKE([1.9])
 AC_PROG_MAKE_SET
 
-# use 'gly maintainer-mode flag to help CVS users that do not want to
+# use ugly maintainer-mode flag to help CVS users that do not want to
 # help developing OpenCV but just need to compile the latest version
 # AM_MAINTAINER_MODE
 
@@ -68,13 +69,15 @@ AC_SUBST(LT_VERSION, [opencv_lt_version])
 AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 
+# Do compilation tests using CXX and CXXCPP and use extension .C for test programs. 
+# Use compilation flags: CPPFLAGS with CXXCPP, and both CPPFLAGS and CXXFLAGS with CXX. 
+AC_LANG(C++)
+
 # checks for programs.
+AC_PROG_CXXCPP
 AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_LIBTOOL
-# AC_SUBST(LD)
-# AC_SUBST(CXXLD)
+
 
 ######################################################################
 # the following interpret 'with' and 'enable' switches.
@@ -84,8 +87,20 @@ AC_PROG_LIBTOOL
 # does the user want aggressive optimization?
 AC_ARG_ENABLE([debug],
               [AS_HELP_STRING([--enable-debug],[build debug version without optimization [no]])],
-              [debug=$enableval],
-              [debug=no])
+              [enable_debug=$enableval],
+              [enable_debug=no])
+
+# does the user want to have automatic guess of suitable optimization options
+AC_ARG_ENABLE([optimization],
+              [AS_HELP_STRING([--enable-optimization],[automatic guess of suitable optimization options [yes]])],
+              [enable_optimization=$enableval],
+              [enable_optimization=yes])
+
+# does the user want to have SSE / SSE2 / SSE3 specified?
+AC_ARG_ENABLE([sse],
+              [AS_HELP_STRING([--enable-sse],[enable SSE(2) intrinsics [yes]])],
+              [enable_sse=$enableval],
+              [enable_sse=yes])
 
 # does the user want to build demo applications?
 AC_ARG_ENABLE([apps],
@@ -100,6 +115,20 @@ AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 # subsystem. On some platforms there are ambiguities that a user
 # can influence. There is also additional logic to be found in code
 # later code lines that tries to do sensible decisions on what to use
+
+# does the user want to compile python modules as well?
+AC_ARG_WITH([lapack],
+            [AS_HELP_STRING([--with-lapack],[use external BLAS and LAPACK libraries [no]])],
+            [with_lapack=$withval],
+            [with_lapack=no])
+
+# compile and link against OpenMP
+# because of this: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=28482
+# we disable OpenMP by default. But one may enable it explicitly with --with-openmp
+#AC_ARG_WITH([openmp],
+#            [AS_HELP_STRING([--with-openmp],[use OpenMP threading [no]])],
+#            [with_openmp=$withval],
+#            [with_openmp=no])
 
 # does the user want to compile python modules as well?
 AC_ARG_WITH([swig],
@@ -185,143 +214,140 @@ AC_ARG_WITH([gthread],
             [with_gthread=$withval],
             [with_gthread=auto])
 
-######################################################################
-# getting the code to compile
-
-# cure annoying default arguments for CFLAGS and CXXFLAGS
-# that autoconf automatically sets in GNU environments if
-# no CFLAGS or CXXFLAGS were manually given
-if test x"$CFLAGS" = "x-g -O2" ; then
-    CFLAGS=""
-fi
-if test x"$CXXFLAGS" = "x-g -O2" ; then
-    CXXFLAGS=""
-fi
-
-# set the default c++ flags for all the compilations
-# we don't append CXXFLAGS, because it's done at compile time
-# see http://www.gnu.org/software/libtool/manual/automake/Flag-Variables-Ordering.html
-# for more information
-DEFAULT_CXXFLAGS=""
 
 ######################################################################
-# SSE(2) support
+# Compiler options
 
-AC_ARG_ENABLE([sse],
-              [AS_HELP_STRING([--enable-sse],[enable SSE(2) intrinsics [yes]])],
-              [sse=$enableval],
-              [sse=yes])
+# OpenMP support
+# macro sets OPENMP_CXXFLAGS
+# and brings its own enabel/disable switch
+AC_OPENMP
 
-if test x"$sse" = "xyes"; then
+# SSE/SSE2/SSE3 support
+AC_MSG_CHECKING([whether to enable SSE/SSE2/SSE3 instruction set])
+SIMD_FLAGS=""
+if test x"$enable_sse" = "xyes"; then
+
+  # This macro calls:
+  #   AC_SUBST(SIMD_FLAGS)
+  # And defines:
+  #   HAVE_MMX / HAVE_SSE / HAVE_SSE2 / HAVE_SSE3 / HAVE_SSSE3
+  #
+  # macro is broken currently ...
+  # AX_EXT
   if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-    case $target in
-    amd64-*-* | x86_64-*-*)
-      DEFAULT_CXXFLAGS=" -msse2 $DEFAULT_CXXFLAGS"
-        ;;
-    i*86-apple-* | i686-*-*)
-      DEFAULT_CXXFLAGS=" -msse $DEFAULT_CXXFLAGS"
-        ;;
+    # Due to a misconception, until SVN revision r1713, the case statement
+    # used the value of '--target', not of '--host'
+    case $host in
+    i386-apple-*)
+      # all intel macs have at least prescott instruction set, allowing SSE3
+      SIMD_FLAGS="-msse3 -mfpmath=sse"
+      AC_MSG_RESULT([yes])
+      ;;
+    x86_64-apple-*)
+      # all 64bit intel macs have at least nocona instruction set, allowing SSSE3
+      SIMD_FLAGS="-mssse3 -mfpmath=sse"
+      AC_MSG_RESULT([yes])
+      ;;
+    amd64-*-* | x86_64-*-* | i?86-*-*)
+      # okay, we use this default together with the specification of the target architecture
+      # let us just assume, a Pentium 4 would be the minimum platform for OpenCV,
+      # then SSE2 instruction set is available
+      SIMD_FLAGS="-msse2"
+      AC_MSG_RESULT([yes])
+      ;;
     *-*-*)
-        ;;
+      AC_MSG_RESULT([no])
+      ;;
     esac
   fi
-fi
-
-
-######################################################################
-# OpenMP support
-
-AC_MSG_CHECKING(for OpenMP support)
-AC_LINK_IFELSE([
-AC_LANG_PROGRAM([[
-#include <omp.h>
-void f(int* a, int* b, int n) {
-  int i;
-  #pragma parallel for
-  for(i = 0; i < n; i++)
-     a[i] += b[i];
-}
-]])],
-[have_openmp=yes],
-[have_openmp=no])
-
-# because of this: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=28482
-# we disable OpenMP by default. But one may enable it explicitly with --enable-openmp=yes
-have_openmp=no
-
-AC_MSG_RESULT($have_openmp)
-
-AC_ARG_ENABLE([openmp],
-              [AS_HELP_STRING([--enable-openmp],[enable OpenMP threading [automatic]])],
-              [openmp=$enableval],
-              [openmp=$have_openmp])
-
-if test x"$openmp" = "xyes"; then
- if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-    DEFAULT_CXXFLAGS=" -fopenmp $DEFAULT_CXXFLAGS"
-    AC_CHECK_LIB(gomp,omp_get_num_threads)
- fi
-fi
-
-# see if the user wants aggressive optimizations of the code,
-# check whether to include debugging code
-AC_MSG_CHECKING([whether to build debug version (no optimization)])
-if test x"$debug" = "xyes"; then
-    AC_MSG_RESULT([yes])
-    if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-        CPPFLAGS="-DDEBUG -D_DEBUG $CPPFLAGS"
-        DEFAULT_CXXFLAGS="-ggdb -O0 $DEFAULT_CXXFLAGS"
-    fi
 else
-    AC_MSG_RESULT([no])
-    AC_MSG_NOTICE( TARGET=$target )
-    case $target in
-    i*86-apple-*)
-        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            # apples g++ fails with '-march=i686' and there are no apple machines older than prescott/core anyway
-            DEFAULT_CXXFLAGS="-O3 -g -march=prescott -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
-        fi
-        ;;
-    i686-*-*)
-        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-          # default to i686/pentiumpro -- people can override this
-          DEFAULT_CXXFLAGS="-O3 -g -march=i686 -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
-        fi
-        ;;
-    amd64-*-* | x86_64-*-*)
-        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-          # default to i686/pentiumpro -- people can override this
-          DEFAULT_CXXFLAGS="-O3 -g -ffast-math -fomit-frame-pointer $DEFAULT_CXXFLAGS"
-        fi
-        ;;
+  AC_MSG_RESULT([disabled])
+fi
+AC_SUBST(SIMD_FLAGS)
+
+
+## check whether to include debugging compiler flags
+AC_MSG_CHECKING([whether to build debug version])
+DEBUG_CPPFLAGS=""
+DEBUG_CXXFLAGS=""
+if test x"$enable_debug" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  
+  if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    DEBUG_CXXFLAGS="-ggdb"
+  fi
+  
+  DEBUG_CPPFLAGS="-DDEBUG -D_DEBUG"
+else
+  AC_MSG_RESULT([no])
+fi
+AC_SUBST(DEBUG_CPPFLAGS)
+AC_SUBST(DEBUG_CXXFLAGS)
+
+
+## see if the user wants aggressive optimizations of the code
+AC_MSG_CHECKING([whether to enable aggressive optimization flags])
+OPTIMIZATION_CPPFLAGS=""
+OPTIMIZATION_CXXFLAGS=""
+if test x"$enable_optimization" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  
+  # cure annoying default arguments for CFLAGS and CXXFLAGS
+  # that autoconf automatically sets in GNU environments if
+  # no CFLAGS or CXXFLAGS were manually given
+  #
+  # this is a more or less a hack ...
+  if test x"$CFLAGS" = x"-g -O2" ; then
+    CFLAGS=""
+  fi
+  if test x"$CXXFLAGS" = x"-g -O2" ; then
+    CXXFLAGS=""
+  fi
+  
+  if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    # Due to a misconception, until SVN revision r1713, the case statement
+    # used the value of '--target', not of '--host'
+    case $host in
+    i386-apple-*)
+      # all intel macs have at least prescott instruction set
+      OPTIMIZATION_CXXFLAGS="-fast -g -march=prescott"
+      ;;
+    x86_64-apple-*)
+      # all 64bit intel macs have at least nocona instruction set
+      OPTIMIZATION_CXXFLAGS="-fast -g -march=nocona"
+      ;;
+    amd64-*-* | x86_64-*-* | i?86-*-*)
+      # okay, we use this default together with the specification of the target architecture
+      # let us just assume, a Pentium 4 would be the minimum platform for OpenCV,
+      # then SSE2 instruction set is available also
+      OPTIMIZATION_CXXFLAGS="-O3 -g -march=pentium4 -ffast-math -fomit-frame-pointer"
+      ;;
+    powerpc-apple-*)
+      # Mac OS X 10.4 runs on CPUs >= G4 only
+      OPTIMIZATION_CXXFLAGS="-O3 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -falign-loops=16 -falign-jumps=16 -falign-functions=16 -ffast-math -fstrict-aliasing -funroll-loops -ftree-loop-linear -ftree-loop-memset -mcpu=G4 -mpowerpc-gpopt -mtune=G5 -fsched-interblock -fgcse-sm -g"
+      ;;
+    powerpc64-apple-*)
+      # There are no 64bit Macs with a CPU that's not a G5
+      OPTIMIZATION_CXXFLAGS="-O3 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -falign-loops=16 -falign-jumps=16 -falign-functions=16 -ffast-math -fstrict-aliasing -funroll-loops -ftree-loop-linear -ftree-loop-memset -mcpu=G5 -mpowerpc-gpopt -fsched-interblock -fgcse-sm -m64 -g"
+      ;;
     powerpc-*-*)
-        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            # default to G3 processors -- people can override this
-            DEFAULT_CXXFLAGS="-O3 -g -mcpu=G3 -mtune=G5 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
-        fi
-        ;;
+      # generic PowerPCs don't have Apple's 'fast' or 'fastf' switch
+      OPTIMIZATION_CXXFLAGS="-O3 -g -mcpu=G3 -mtune=G4 -fomit-frame-pointer"
+      ;;
     *-*-*)
-        if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-            DEFAULT_CXXFLAGS="-O2 -fomit-frame-pointer $DEFAULT_CXXFLAGS"
-        fi
-        ;;
+      OPTIMIZATION_CXXFLAGS="-O2 -fomit-frame-pointer"
+      ;;
     esac
-
-    CPPFLAGS="-DNDEBUG $CPPFLAGS"
-fi
-
-if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-    PY_CXXFLAGS="-Wall -pipe $DEFAULT_CXXFLAGS"
-    OCT_CXXFLAGS="-fno-strict-aliasing -Wall -Wno-uninitialized -pipe $DEFAULT_CXXFLAGS"
-    DEF_CXXFLAGS="-Wall -fno-rtti -pipe $DEFAULT_CXXFLAGS"
+  fi
+  
+  OPTIMIZATION_CPPFLAGS="-DNDEBUG"
 else
-    PY_CXXFLAGS="$DEFAULT_CXXFLAGS"
-    OCT_CXXFLAGS="$DEFAULT_CXXFLAGS"
-    DEF_CXXFLAGS="$DEFAULT_CXXFLAGS"
+  AC_MSG_RESULT([no])
 fi
-AC_SUBST(PY_CXXFLAGS)
-AC_SUBST(OCT_CXXFLAGS)
-AC_SUBST(DEF_CXXFLAGS)
+AC_SUBST(OPTIMIZATION_CPPFLAGS)
+AC_SUBST(OPTIMIZATION_CXXFLAGS)
+
 
 # add libm because it is used by several libraries and OpenCV itself
 AC_CHECK_LIB(m,pow)
@@ -337,6 +363,36 @@ AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h])
 AC_CHECK_HEADERS([assert.h])
 AC_CHECK_FUNCS(lrint)
+#AC_CHECK_FUNC(clock_gettime,, [AC_CHECK_LIB(rt, clock_gettime, [LIBRT="-lrt"])])
+#AC_SUBST(LIBRT)
+AC_SEARCH_LIBS([clock_gettime],[rt])
+
+######################################################################
+# BLAS and LAPACK
+
+LAPACK_LIBS=""
+have_lapack=no
+
+if test x"$with_lapack" = "xyes"; then
+  # check for Accellerate framework on Mac OS X
+  # 
+  # As of Mac OS X 10.5 blas and lapack exist as standard shared 
+  # libraries, so this check could be replaced by separate checks for
+  # those two libraries as it may be helpful for Linux/Unix variants
+  # as well.
+  AC_CHECK_HEADER([vecLib/clapack.h],
+                [
+                  AC_DEFINE(HAVE_VECLIB,,[BLAS and LAPACK from Accelerate/vecLib framework])
+                  LAPACK_LIBS="-Xlinker -framework -Xlinker vecLib"
+                  have_lapack=yes
+                ],
+                [
+                  have_lapack=no
+                ])
+fi
+
+AC_SUBST(LAPACK_LIBS)
+AM_CONDITIONAL([EXTERNAL_LAPACK], [test x"$have_lapack" = "xyes"])
 
 
 ######################################################################
@@ -401,17 +457,16 @@ else
 
         # pkg-config is needed for GTK+
         AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
-        if test x"$PKG_CONFIG" == "xno"; then
-            AC_MSG_ERROR([You have to install pkg-config to compile OpenCV with GTK+])
+        if test x"$PKG_CONFIG" = x"no"; then
+            AC_MSG_WARN([You have to install pkg-config to compile OpenCV with GTK+])
+        else
+            PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0",
+                              [
+                                have_gtk=yes
+                                AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])
+                              ],
+                              [ have_gtk=no ])
         fi
-
-        PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0",
-                          [
-                            have_gtk=yes
-                            AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])
-                          ],
-                          [ have_gtk=no ])
-
     else
         # if we get here then --with-gtk was not called with 'yes','no' or 'auto'
         AC_MSG_WARN([unexpected arguments for option --with-gtk, continuing assuming 'no'])
@@ -1025,21 +1080,6 @@ else
 fi
 AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS], [test x"$have_swig" = "xyes"])
 
-
-######################################################################
-# Parallelization
-#
-#CXXOPENMP="no"
-#
-#AC_ARG_WITH(openmp, dnl
-#  [--with-openmp=COMPILER  use OpenMP supporting compiler [default=no] ],
-#    [CXXOPENMP="$withval"],[CXXOPENMP="no"])
-#if test "$CXXOPENMP" = "no"; then
-#    CXXOPENMP="$CXX"
-#fi
-#
-#AC_SUBST(CXXOPENMP)
-
 AC_SUBST(DEBUG)
 
 AC_CONFIG_FILES([Makefile
@@ -1048,6 +1088,7 @@ opencv.spec
 doc/Makefile
 data/Makefile
 include/Makefile
+3rdparty/Makefile
 src/Makefile
 apps/Makefile
 interfaces/Makefile
@@ -1057,31 +1098,28 @@ interfaces/swig/general/Makefile
 interfaces/swig/python/Makefile
 interfaces/swig/octave/Makefile
 tests/Makefile
-tests/python/Makefile
-tests/octave/Makefile
-tests/cv/Makefile
-tests/cv/src/Makefile
-tests/cxts/Makefile
-tests/cxcore/Makefile
-tests/cxcore/src/Makefile
 utils/Makefile
 samples/Makefile
-samples/c/Makefile
-samples/python/Makefile
-samples/octave/Makefile
 ])
 
 AC_OUTPUT
 
 AC_MSG_RESULT([
 General configuration ================================================
-    Compiler:                 ${CXX}
+
+    CXX:                      ${CXX}
+    CXXCPP:                   ${CXXCPP}
+    CPPFLAGS:                 ${CPPFLAGS}
     CXXFLAGS:                 ${CXXFLAGS}
-    DEF_CXXFLAGS:             ${DEF_CXXFLAGS}
-    PY_CXXFLAGS:              ${PY_CXXFLAGS}
-    OCT_CXXFLAGS:             ${OCT_CXXFLAGS}
+    LDFLAGS:                  ${LDFLAGS}
 
     Install path:             ${prefix}
+
+    Debug flags               ${DEBUG_CPPFLAGS} ${DEBUG_CXXFLAGS}
+    Optimization flags        ${OPTIMIZATION_CPPFLAGS} ${OPTIMIZATION_CXXFLAGS}
+    MMX/SSE/SSE2/SSE3:        ${SIMD_FLAGS}
+    OpenMP support:           ${OPENMP_CXXFLAGS}
+    External BLAS & LAPACK:   ${have_lapack}
 
 HighGUI configuration ================================================
 
@@ -1097,7 +1135,7 @@ HighGUI configuration ================================================
     Use libpng:               ${have_png}
     Use libtiff:              ${have_tiff}
     Use libjasper:            ${have_jasper}
-    Use libIlmImf:            ${have_ilmimf}
+    Use libIlmImf/OpenEXR:    ${have_ilmimf}
 
     Video I/O ---------------------
     Use QuickTime / Mac OS X: ${have_quicktime}
@@ -1110,11 +1148,13 @@ HighGUI configuration ================================================
     Use unicap:               ${have_unicap}
 
 Wrappers for other languages =========================================
+
     SWIG                      ${SWIG}
     Python                    ${have_python}
     Octave                    ${have_octave}
 
 Additional build settings ============================================
+
     Build demo apps           ${enable_apps}
 
 Now run make ...

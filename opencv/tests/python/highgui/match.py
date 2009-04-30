@@ -4,9 +4,9 @@ if these to images are "equal enough"
 """
 
 # import the necessary things for OpenCV
-import python
-from python.cv import *
-from python.highgui import *
+from cv import *
+from highgui import *
+
 import frames
 import sys
 import os

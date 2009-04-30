@@ -26,7 +26,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/cv" ".")
 
 if(WIN32 AND MSVC)
     set(pch_header "_cvaux.h")
-    set(pch_src "precomp.cpp")
+    set(pch_src "cvauxprecomp.cpp")
     foreach(src_file ${lib_srcs})
         if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(

@@ -5,11 +5,12 @@ for different video formats
 
 # import the necessary things for OpenCV and comparson routine
 import os
-import python
-from python.highgui import *
-from python.cv import *
+#import python
+#from python.highgui import *
+#from python.cv import *
 import match
-
+from highgui import *
+from cv import *
 
 # path to videos and images we need
 PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/"
@@ -34,7 +35,7 @@ def seek_frame_ok(FILENAME,ERRORS):
 
   if show_frames:
     cvNamedWindow("test", CV_WINDOW_AUTOSIZE)
-
+  
   # skip 2 frames and read 3rd frame each until EOF and check if the read image is ok
   for k in [0,3,6,9,12,15,18,21,24,27]:
     cvSetCaptureProperty(video, CV_CAP_PROP_POS_FRAMES, k)
@@ -43,7 +44,7 @@ def seek_frame_ok(FILENAME,ERRORS):
     image=cvQueryFrame(video)
 
     if image is None:
-    # returned image is NULL (FAIL)
+      # returned image is NULL (FAIL)
       return 1
 
     compresult = match.match(image,k,ERRORS[k])

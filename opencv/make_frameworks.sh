@@ -17,12 +17,14 @@
 # http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/Tasks/CreatingFrameworks.html#//apple_ref/doc/uid/20002258-106880-BAJJBIEF
 
 # the current directory should not be configured
-if test -x Makefile; then make distclean; fi
+if test -e Makefile; then make distclean; fi
 
 # (re-)create directories
-rm -rf build_ppc build_i386 OpenCV.framework
+rm -rf build_ppc build_ppc64 build_i386 build_x86_64 OpenCV.framework
 mkdir build_ppc
 mkdir build_i386
+#mkdir build_ppc64
+#mkdir build_x86_64
 
 # find out how many parallel processes we want to use for make
 # see http://freshmeat.net/projects/kernbench/, we use a slightly different 'optimum' guess
@@ -33,16 +35,42 @@ export FRAMEWORK_INSTALL_PATH="@executable_path/../Frameworks"
 #export FRAMEWORK_INSTALL_PATH="/Library/Frameworks"
 #export FRAMEWORK_INSTALL_PATH="/Users/your_login_name_here/Library/Frameworks"
 
+# set up a couple of additional build settings
+export SETTINGS="CC=gcc-4.2 CXX=g++-4.2 \
+ --without-swig --without-python --without-octave --without-gstreamer --without-xine --without-ffmpeg --without-1394libs --without-v4l --without-unicap --without-gtk --without-gthread \
+ --with-imageio --without-lapack \
+ --disable-apps \
+ --enable-optimization --enable-sse --disable-openmp \
+ --build=`arch`"
+export SYSROOT="--sysroot=/Developer/SDKs/MacOSX10.5.sdk"
+
 # build powerpc version
 echo "Building ppc version of the OpenCV framework"
 echo "============================================"
-cd build_ppc && ../configure --build=`arch` --host="powerpc-apple-darwin8" CXXFLAGS="-arch ppc" --without-python --without-swig --disable-apps && make -j $parallel_jobs framework FRAMEWORK_ARCH=ppc
+cd build_ppc \
+ && ../configure --host=ppc-apple-darwin9 $SETTINGS --with-quicktime --with-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch ppc" LDFLAGS="$SYSROOT -arch ppc"\
+ && make -j $parallel_jobs framework FRAMEWORK_ARCH=ppc
+
+# build powerpc 64bit version
+#echo "Building 64bit ppc version of the OpenCV framework"
+#echo "============================================"
+#if test -d ../build_ppc64; then cd ../build_ppc64; fi
+#../configure --host=ppc64-apple-darwin9 $SETTINGS --without-quicktime --without-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch ppc64" LDFLAGS="$SYSROOT -arch ppc64"\
+# && make -j $parallel_jobs framework FRAMEWORK_ARCH=ppc64
 
 # build intel version
 echo "Building i386 version of the OpenCV framework"
 echo "============================================="
 if test -d ../build_i386; then cd ../build_i386; fi
-../configure --build=`arch` --host="i686-apple-darwin8" CXXFLAGS="-arch i386"  --without-python --without-swig --disable-apps && make -j $parallel_jobs framework FRAMEWORK_ARCH=i386
+../configure --host=i386-apple-darwin9 $SETTINGS --with-quicktime --with-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch i386" LDFLAGS="$SYSROOT -arch i386"\
+ && make -j $parallel_jobs framework FRAMEWORK_ARCH=i386
+
+# build intel version
+#echo "Building x86_64 version of the OpenCV framework"
+#echo "============================================="
+#if test -d ../build_x86_64; then cd ../build_x86_64; fi
+#../configure --host=x86_64-apple-darwin9 $SETTINGS --without-quicktime --without-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch x86_64" LDFLAGS="$SYSROOT -arch x86_64"\
+#  && make -j $parallel_jobs framework FRAMEWORK_ARCH=x86_64
 
 # build universal version
 echo "Creating universal Framework"
@@ -50,6 +78,7 @@ echo "============================================="
 if test -d ../build_i386; then cd .. ; fi
 cp -Rp build_ppc/OpenCV.framework ./
 lipo -create build_ppc/OpenCV.framework/OpenCV build_i386/OpenCV.framework/OpenCV -output OpenCV.framework/Versions/A/OpenCV
+#lipo -create build_ppc/OpenCV.framework/OpenCV build_ppc64/OpenCV.framework/OpenCV build_i386/OpenCV.framework/OpenCV build_x86_64/OpenCV.framework/OpenCV -output OpenCV.framework/Versions/A/OpenCV
 
 # finalize
 echo "Done!"

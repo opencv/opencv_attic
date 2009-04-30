@@ -6,10 +6,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////M*/
 
 // This file was generated from the following header files: 
-// cxtypes.h
-// cxcore.h
-// cvtypes.h
-// cv.h
+// ../../../include/opencv/cxtypes.h
+// ../../../include/opencv/cxcore.h
+// ../../../include/opencv/cvtypes.h
+// ../../../include/opencv/cv.h
 void cvFree(void ** ptr);
 void CV_READ_CHAIN_POINT(CvPoint _pt, CvChainPtReader reader);
 void * CV_MAT_ELEM_PTR(CvMat mat,int row,int col);

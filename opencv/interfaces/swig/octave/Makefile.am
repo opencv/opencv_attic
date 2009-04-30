@@ -7,10 +7,14 @@ AM_CPPFLAGS = \
 AM_CXXFLAGS = @OCT_CXXFLAGS@
 
 EXTRA_DIST = \
+  \
+  CMakeLists.txt   \
+  \
   DESCRIPTION      \
   INDEX            \
   PKG_ADD_template \
   COPYING          \
+  \
   opencv.m         \
   \
   adapters.i       \

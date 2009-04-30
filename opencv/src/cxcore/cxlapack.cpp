@@ -41,7 +41,16 @@
 //M*/
 
 #include "_cxcore.h"
-#include "clapack.h"
+
+#ifdef HAVE_VECLIB
+  #include <vecLib/clapack.h>
+  
+  typedef __CLPK_integer    integer;
+  typedef __CLPK_real       real;
+#else
+  #include "clapack.h"
+#endif
+
 #undef max
 #undef min
 

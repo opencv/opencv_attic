@@ -21,8 +21,7 @@ if not works.check_files(REQUIRED, TESTNAME):
 
 
 # import the necessary things for OpenCV
-import python
-from python.highgui import *
+from highgui import *
 
 # request some user input
 print "(INFO) Press anykey within the next 20 seconds to 'PASS' this test." 

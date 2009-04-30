@@ -21,8 +21,7 @@ if not works.check_files(REQUIRED, TESTNAME):
 print sys.path
 
 # import the necessary things for OpenCV
-import python
-from python import highgui
+import highgui
 
 # try to initialize the highgui system
 # res = highgui.cvInitSystem(globals["0,characs)

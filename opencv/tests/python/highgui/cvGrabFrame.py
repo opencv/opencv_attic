@@ -22,9 +22,8 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import python
-from python.highgui import *
-from python.cv import *
+from highgui import *
+from cv import *
 
 
 # create a video reader using the tiny video 'uncompressed.avi'

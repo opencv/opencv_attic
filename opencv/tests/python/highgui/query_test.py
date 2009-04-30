@@ -5,9 +5,8 @@ for different video formats
 
 # import the necessary things for OpenCV and comparson routine
 import os
-import python
-from python.highgui import *
-from python.cv import *
+from highgui import *
+from cv import *
 import match
 
 # path to videos and images we need
