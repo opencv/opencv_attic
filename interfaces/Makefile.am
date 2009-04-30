@@ -7,3 +7,4 @@
 # that SWIG is able to wrap libraries for.
 
 SUBDIRS = swig
+EXTRA_DIST = CMakeLists.txt ffopencv ippopencv

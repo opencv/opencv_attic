@@ -41,18 +41,25 @@
 %include "exception.i"
 %include "./pyhelpers.i"
 
-%typemap(in) (CvArr *) (bool freearg=false) {
+%typemap(in) (CvArr *) (bool freearg=false) 
+{
   $1 = PyObject_to_CvArr($input, &freearg);
 }
-%typemap(freearg) (CvArr *) {
-  if($1!=NULL && freearg$argnum){
+
+%typemap(freearg) (CvArr *) 
+{
+  if($1!=NULL && freearg$argnum)
+  {
     cvReleaseData( $1 );
     cvFree(&($1));
   }
 }
-%typemap(in) CvMat* (bool freearg=false),const CvMat* (bool freearg=false) {
+
+%typemap(in) CvMat* (bool freearg=false), const CvMat* (bool freearg=false)
+{
   $1 = (CvMat*)PyObject_to_CvArr($input, &freearg);
 }
+
 %typemap(freearg) CvMat*,const CvMat* {
   if($1!=NULL && freearg$argnum){
     cvReleaseData( $1 );
@@ -88,6 +95,10 @@
 	header = (CvMat *)cvAlloc(sizeof(CvMat));
    	$1 = header;
 }
+
+%apply CvMat * OUTPUT {CvMat * header};
+%apply CvMat * OUTPUT {CvMat * submat};
+
 %newobject cvReshape;
 %newobject cvGetRow;
 %newobject cvGetRows;
@@ -95,9 +106,6 @@
 %newobject cvGetCols;
 %newobject cvGetSubRect;
 %newobject cvGetDiag;
-
-%apply CvMat *OUTPUT {CvMat * header};
-%apply CvMat *OUTPUT {CvMat * submat};
 
 /**
  * In C, these functions assume input will always be around at least as long as header,
@@ -116,21 +124,26 @@
  * the header and data.  The new header is left pointing to invalid data.  To avoid this, need to add
  * refcount field to the returned header.
 */
-%typemap(argout) (const CvArr* arr, CvMat* header) {
+%typemap(argout) (const CvArr* arr, CvMat* header) 
+{
 	$2->hdr_refcount = ((CvMat *)$1)->hdr_refcount;
 	$2->refcount = ((CvMat *)$1)->refcount;
 	cvIncRefData($2);
 }
-%typemap(argout) (const CvArr* arr, CvMat* submat) {
+
+%typemap(argout) (const CvArr* arr, CvMat* submat) 
+{
 	$2->hdr_refcount = ((CvMat *)$1)->hdr_refcount;
 	$2->refcount = ((CvMat *)$1)->refcount;
 	cvIncRefData($2);
 }
 
 /* map scalar or sequence to CvScalar, CvPoint2D32f, CvPoint */
-%typemap(in) (CvScalar) {
+%typemap(in) (CvScalar) 
+{
 	$1 = PyObject_to_CvScalar( $input );
 }
+
 //%typemap(in) (CvPoint) {
 //	$1 = PyObject_to_CvPoint($input);
 //}

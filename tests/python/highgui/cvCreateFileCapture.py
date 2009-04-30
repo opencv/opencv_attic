@@ -9,10 +9,9 @@ import sys
 import works
 from works import *
 
-#import the necessary things for OpenCV
-import python
-from python.highgui import *
-from python.cv import *
+# import the necessary things for OpenCV
+from highgui import *
+from cv import *
 
 
 # some defines

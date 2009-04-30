@@ -1,8 +1,5 @@
 # The top-level input Makefile for OpenCV
 
-# use the default c++ flags
-AM_CXXFLAGS=@DEF_CXXFLAGS@
-
 # tell make where aclocal finds its files in Maintainer Mode
 ACLOCAL_AMFLAGS = -I autotools/aclocal
 
@@ -12,39 +9,39 @@ if BUILD_APPS
 else
   APPS_DIR =
 endif
-SUBDIRS = src include utils interfaces $(APPS_DIR) tests samples data doc
+SUBDIRS = 3rdparty src include utils interfaces $(APPS_DIR) tests samples data doc
 
 # All the rest of the distributed files
-#EXTRA_DIST = THANKS COPYING INSTALL README NEWS ChangeLog \
-EXTRA_DIST = THANKS TODO \
-             opencv.spec opencv.spec.in opencv.pc.in opencv.pc \
-             apps make_frameworks.sh
+EXTRA_DIST = \
+  THANKS \
+  TODO \
+  opencv.spec \
+  opencv.spec.in \
+  opencv.pc \
+  opencv.pc.in \
+  \
+  make_frameworks.sh \
+  \
+  CMakeLists.txt \
+  opencv.pc.cmake.in \
+  Package.cmake.in \
+  cmake_uninstall.cmake.in \
+  OpenCVConfig.cmake.in \
+  OpenCVFindPkgConfig.cmake \
+  cvconfig.h.cmake
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
-
-# The directory where the include files will be installed
-libcvincludedir = $(includedir)/opencv
-
-# Which header files to install
-libcvinclude_HEADERS =
 
 # Rule to build tar-gzipped distribution package
 $(PACKAGE)-$(VERSION).tar.gz: dist
 
 dist-hook:
-	rm -rf `find $(distdir) -name CVS`
-#	chmod u+x $(srcdir)/utils/unix2dos.py
-#	find $(distdir) -name *.dsw -exec $(srcdir)/utils/unix2dos.py {} \;
-#	find $(distdir) -name *.dsp -exec $(srcdir)/utils/unix2dos.py {} \;
+	rm -rf `find $(distdir) -name .svn`
 
 # Rule to build RPM distribution package
 rpm: $(PACKAGE)-$(VERSION).tar.gz
 	rpm -ta $(PACKAGE)-$(VERSION).tar.gz
-
-# Rule to force automake to rebuild the library
-changed:
-	@echo "This build target is no longer necessary"
 
 # Rule to install the libraries only - prevent rebuilding apps
 install-lib:
@@ -74,7 +71,7 @@ clean-local: clean-framework
 
 FRAMEWORK_NAME = OpenCV
 FRAMEWORK_VERSION = A
-FRAMEWORK_CURRENT_VERSION = 1
+FRAMEWORK_CURRENT_VERSION = 2
 FRAMEWORK_COMPAT_VERSION = 1
 
 # install path to be set in calling script
@@ -87,29 +84,34 @@ FRAMEWORK_INSTALL_NAME = $(FRAMEWORK_INSTALL_PATH)/$(FRAMEWORK_NAME).framework/V
 
 FRAMEWORK_XHEADERS = \
   $(top_srcdir)/autotools/darwin/OpenCV.h     \
-  $(top_srcdir)/include/opencv/cxcore.h       \
-  $(top_srcdir)/include/opencv/cxerror.h      \
-  $(top_srcdir)/include/opencv/cxtypes.h      \
-  $(top_srcdir)/include/opencv/cxmisc.h       \
-  $(top_srcdir)/include/opencv/cxcore.hpp     \
-  $(top_srcdir)/include/opencv/cvver.h        \
   $(top_srcdir)/include/opencv/cv.h           \
-  $(top_srcdir)/include/opencv/cvcompat.h     \
-  $(top_srcdir)/include/opencv/cvtypes.h      \
   $(top_srcdir)/include/opencv/cv.hpp         \
   $(top_srcdir)/include/opencv/cvaux.h        \
-  $(top_srcdir)/include/opencv/cvmat.hpp      \
+  $(top_srcdir)/include/opencv/cvcompat.h     \
+  $(top_srcdir)/include/opencv/cvstreams.h    \
   $(top_srcdir)/include/opencv/cvaux.hpp      \
+  $(top_srcdir)/include/opencv/cvmat.hpp      \
+  $(top_srcdir)/include/opencv/cvtypes.h      \
+  $(top_srcdir)/include/opencv/cvver.h        \
   $(top_srcdir)/include/opencv/cvvidsurv.hpp  \
-  $(top_srcdir)/include/opencv/cvlsh.hpp      \
-  $(top_srcdir)/include/opencv/ml.h           \
-  $(top_srcdir)/include/opencv/highgui.h
+  $(top_srcdir)/include/opencv/cvwimage.h     \
+  $(top_srcdir)/include/opencv/cxcore.h       \
+  $(top_srcdir)/include/opencv/cxcore.hpp     \
+  $(top_srcdir)/include/opencv/cxerror.h      \
+  $(top_srcdir)/include/opencv/cxmisc.h       \
+  $(top_srcdir)/include/opencv/cxoperations.hpp \
+  $(top_srcdir)/include/opencv/cxtypes.h      \
+  $(top_srcdir)/include/opencv/highgui.h      \
+  $(top_srcdir)/include/opencv/highgui.hpp    \
+  $(top_srcdir)/include/opencv/ml.h
+
 
 FRAMEWORK_OFILES = \
-  $(top_builddir)/src/.libs/lib_cxcore.a  \
-  $(top_builddir)/src/.libs/lib_cv.a          \
-  $(top_builddir)/src/.libs/lib_cvaux.a    \
-  $(top_builddir)/src/.libs/lib_ml.a          \
+  $(top_builddir)/3rdparty/.libs/lib_clapack.a  \
+  $(top_builddir)/src/.libs/lib_cxcore.a        \
+  $(top_builddir)/src/.libs/lib_cv.a            \
+  $(top_builddir)/src/.libs/lib_cvaux.a         \
+  $(top_builddir)/src/.libs/lib_ml.a            \
   $(top_builddir)/src/.libs/lib_highgui.a
 
 FRAMEWORK_XLIBRARIES = -framework Carbon -framework QuickTime -framework QuartzCore
@@ -150,4 +152,4 @@ framework: all clean-framework
 	cp $(top_srcdir)/autotools/darwin/Info.plist $(FRAMEWORK_NAME).framework/Resources/
 
 clean-framework:
-	rm -rf $(FRAMEWORK_NAME).framework
+	rm -rf $(FRAMEWORK_NAME).framework build_i386 build_ppc build_x86_64 build_ppc64

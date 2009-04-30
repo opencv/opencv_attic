@@ -2396,7 +2396,8 @@ extern "C" int cvGetThreadNum( void );
 
 typedef IplImage* ( * CvLoadImageFunc)( const char* filename, int colorness );
 typedef CvMat* ( * CvLoadImageMFunc)( const char* filename, int colorness );
-typedef int ( * CvSaveImageFunc)( const char* filename, const CvArr* image );
+typedef int ( * CvSaveImageFunc)( const char* filename, const CvArr* image,
+                                          const int* params );
 typedef void ( * CvShowImageFunc)( const char* windowname, const CvArr* image );
 
 extern "C" int cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
@@ -2484,7 +2485,7 @@ public:
     bool load( const char* filename, const char* imgname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* imgname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void save( const char* filename, const char* imgname );
+    void save( const char* filename, const char* imgname, const int* params=0 );
     void write( CvFileStorage* fs, const char* imgname );
 
     void show( const char* window_name );
@@ -2667,7 +2668,7 @@ public:
     bool load( const char* filename, const char* matname=0, int color=-1 );
     bool read( CvFileStorage* fs, const char* mapname, const char* matname );
     bool read( CvFileStorage* fs, const char* seqname, int idx );
-    void save( const char* filename, const char* matname );
+    void save( const char* filename, const char* matname, const int* params=0 );
     void write( CvFileStorage* fs, const char* matname );
 
     void show( const char* window_name );
@@ -3135,6 +3136,11 @@ extern "C" void cvLogPolar( const CvArr* src, CvArr* dst,
                          int flags = 1 +8);
 
 
+extern "C" void cvLinearPolar( const CvArr* src, CvArr* dst,
+                         CvPoint2D32f center, double maxRadius,
+                         int flags = 1 +8);
+
+
 
 
 
@@ -3158,7 +3164,7 @@ extern "C" void cvErode( const CvArr* src, CvArr* dst,
 extern "C" void cvDilate( const CvArr* src, CvArr* dst,
                        IplConvKernel* element = NULL,
                        int iterations = 1 );
-# 343 "../../../include/opencv/cv.h"
+# 348 "../../../include/opencv/cv.h"
 extern "C" void cvMorphologyEx( const CvArr* src, CvArr* dst,
                              CvArr* temp, IplConvKernel* element,
                              int operation, int iterations = 1 );
@@ -3195,7 +3201,7 @@ extern "C" void cvGetRectSubPix( const CvArr* src, CvArr* dst, CvPoint2D32f cent
 
 extern "C" void cvGetQuadrangleSubPix( const CvArr* src, CvArr* dst,
                                     const CvMat* map_matrix );
-# 390 "../../../include/opencv/cv.h"
+# 395 "../../../include/opencv/cv.h"
 extern "C" void cvMatchTemplate( const CvArr* image, const CvArr* templ,
                               CvArr* result, int method );
 
@@ -3261,7 +3267,7 @@ extern "C" void cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader 
 
 
 extern "C" CvPoint cvReadChainPoint( CvChainPtReader* reader );
-# 464 "../../../include/opencv/cv.h"
+# 469 "../../../include/opencv/cv.h"
 extern "C" void cvCalcOpticalFlowLK( const CvArr* prev, const CvArr* curr,
                                   CvSize win_size, CvArr* velx, CvArr* vely );
 
@@ -3275,7 +3281,7 @@ extern "C" void cvCalcOpticalFlowBM( const CvArr* prev, const CvArr* curr,
 extern "C" void cvCalcOpticalFlowHS( const CvArr* prev, const CvArr* curr,
                                   int use_previous, CvArr* velx, CvArr* vely,
                                   double lambda, CvTermCriteria criteria );
-# 488 "../../../include/opencv/cv.h"
+# 493 "../../../include/opencv/cv.h"
 extern "C" void cvCalcOpticalFlowPyrLK( const CvArr* prev, const CvArr* curr,
                                      CvArr* prev_pyr, CvArr* curr_pyr,
                                      const CvPoint2D32f* prev_features,
@@ -3303,7 +3309,7 @@ extern "C" void cvCalcAffineFlowPyrLK( const CvArr* prev, const CvArr* curr,
 
 extern "C" int cvEstimateRigidTransform( const CvArr* A, const CvArr* B,
                                       CvMat* M, int full_affine );
-# 529 "../../../include/opencv/cv.h"
+# 534 "../../../include/opencv/cv.h"
 extern "C" void cvUpdateMotionHistory( const CvArr* silhouette, CvArr* mhi,
                                       double timestamp, double duration );
 
@@ -3343,7 +3349,7 @@ extern "C" void cvMultiplyAcc( const CvArr* image1, const CvArr* image2, CvArr* 
 
 extern "C" void cvRunningAvg( const CvArr* image, CvArr* acc, double alpha,
                            const CvArr* mask = NULL );
-# 576 "../../../include/opencv/cv.h"
+# 581 "../../../include/opencv/cv.h"
 extern "C" int cvCamShift( const CvArr* prob_image, CvRect window,
                        CvTermCriteria criteria, CvConnectedComp* comp,
                        CvBox2D* box = NULL );
@@ -3474,7 +3480,7 @@ inline double cvTriangleArea( CvPoint2D32f a, CvPoint2D32f b, CvPoint2D32f c )
 {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
-# 716 "../../../include/opencv/cv.h"
+# 721 "../../../include/opencv/cv.h"
 extern "C" CvSeq* cvApproxPoly( const void* src_seq,
                              int header_size, CvMemStorage* storage,
                              int method, double parameter,
@@ -3697,11 +3703,11 @@ extern "C" void cvDistTransform( const CvArr* src, CvArr* dst,
                               int mask_size = 3,
                               const float* mask = NULL,
                               CvArr* labels = NULL);
-# 953 "../../../include/opencv/cv.h"
+# 958 "../../../include/opencv/cv.h"
 extern "C" double cvThreshold( const CvArr* src, CvArr* dst,
                             double threshold, double max_value,
                             int threshold_type );
-# 965 "../../../include/opencv/cv.h"
+# 970 "../../../include/opencv/cv.h"
 extern "C" void cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double max_value,
                                   int adaptive_method = 0,
                                   int threshold_type = 0,
@@ -3718,7 +3724,7 @@ extern "C" void cvFloodFill( CvArr* image, CvPoint seed_point,
                           CvConnectedComp* comp = NULL,
                           int flags = 4,
                           CvArr* mask = NULL);
-# 989 "../../../include/opencv/cv.h"
+# 994 "../../../include/opencv/cv.h"
 extern "C" void cvCanny( const CvArr* image, CvArr* edges, double threshold1,
                       double threshold2, int aperture_size = 3 );
 
@@ -3759,7 +3765,7 @@ extern "C" void cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
                                    int block_size = 3,
                                    int use_harris = 0,
                                    double k = 0.04 );
-# 1042 "../../../include/opencv/cv.h"
+# 1047 "../../../include/opencv/cv.h"
 extern "C" CvSeq* cvHoughLines2( CvArr* image, void* line_storage, int method,
                               double rho, double theta, int threshold,
                               double param1 = 0, double param2 = 0);
@@ -3785,9 +3791,9 @@ extern "C" struct CvFeatureTree* cvCreateKDTree(CvMat* desc);
 
 
 extern "C" struct CvFeatureTree* cvCreateSpillTree( const CvMat* raw_data,
-      const int naive = 50,
-      const double rho = .7,
-      const double tau = .1 );
+                                    const int naive = 50,
+                                    const double rho = .7,
+                                    const double tau = .1 );
 
 
 extern "C" void cvReleaseFeatureTree(struct CvFeatureTree* tr);
@@ -3795,13 +3801,13 @@ extern "C" void cvReleaseFeatureTree(struct CvFeatureTree* tr);
 
 
 extern "C" void cvFindFeatures(struct CvFeatureTree* tr, const CvMat* query_points,
-      CvMat* indices, CvMat* dist, int k, int emax = 20);
+                           CvMat* indices, CvMat* dist, int k, int emax = 20);
 
 
 
 extern "C" int cvFindFeaturesBoxed(struct CvFeatureTree* tr,
-          CvMat* bounds_min, CvMat* bounds_max,
-          CvMat* out_indices);
+                               CvMat* bounds_min, CvMat* bounds_max,
+                               CvMat* out_indices);
 
 
 struct CvLSH;
@@ -3809,14 +3815,15 @@ struct CvLSHOperations;
 
 
 
-extern "C" struct CvLSH* cvCreateLSH(struct CvLSHOperations* ops, int d, int L = 10, int k = 10,
-     int type = ((6) + (((1)-1) << 3)), double r = 4,
-     int64 seed = -1);
+extern "C" struct CvLSH* cvCreateLSH(struct CvLSHOperations* ops, int d,
+                                 int L = 10, int k = 10,
+                                 int type = ((6) + (((1)-1) << 3)), double r = 4,
+                                 int64 seed = -1);
 
 
 extern "C" struct CvLSH* cvCreateMemoryLSH(int d, int n, int L = 10, int k = 10,
-           int type = ((6) + (((1)-1) << 3)), double r = 4,
-           int64 seed = -1);
+                                       int type = ((6) + (((1)-1) << 3)), double r = 4,
+                                       int64 seed = -1);
 
 
 extern "C" void cvReleaseLSH(struct CvLSH** lsh);
@@ -3833,7 +3840,7 @@ extern "C" void cvLSHRemove(struct CvLSH* lsh, const CvMat* indices);
 
 
 extern "C" void cvLSHQuery(struct CvLSH* lsh, const CvMat* query_points,
-         CvMat* indices, CvMat* dist, int k, int emax);
+                       CvMat* indices, CvMat* dist, int k, int emax);
 
 
 typedef struct CvSURFPoint
@@ -3869,9 +3876,46 @@ typedef struct CvSURFParams
 CvSURFParams;
 
 extern "C" CvSURFParams cvSURFParams( double hessianThreshold, int extended = 0 );
+
+
+
 extern "C" void cvExtractSURF( const CvArr* img, const CvArr* mask,
                            CvSeq** keypoints, CvSeq** descriptors,
-                           CvMemStorage* storage, CvSURFParams params );
+                           CvMemStorage* storage, CvSURFParams params, int useProvidedKeyPts = 0 );
+
+typedef struct CvMSERParams
+{
+
+    int delta;
+
+    int maxArea;
+    int minArea;
+
+    float maxVariation;
+
+    float minDiversity;
+
+
+    int maxEvolution;
+
+    double areaThreshold;
+
+    double minMargin;
+
+    int edgeBlurSize;
+}
+CvMSERParams;
+
+CvMSERParams cvMSERParams( int delta = 5, int min_area = 60,
+                           int max_area = 14400, float max_variation = .25f,
+                           float min_diversity = .2f, int max_evolution = 200,
+                           double area_threshold = 1.01,
+                           double min_margin = .003,
+                           int edge_blur_size = 5 );
+
+
+void cvExtractMSER( CvArr* _img, CvArr* _mask, CvSeq** contours, CvMemStorage* storage, CvMSERParams params );
+
 
 typedef struct CvStarKeypoint
 {
@@ -4065,7 +4109,7 @@ extern "C" int cvFindChessboardCorners( const void* image, CvSize pattern_size,
 extern "C" void cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
                                      CvPoint2D32f* corners,
                                      int count, int pattern_was_found );
-# 1359 "../../../include/opencv/cv.h"
+# 1402 "../../../include/opencv/cv.h"
 extern "C" void cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
@@ -4142,7 +4186,7 @@ extern "C" int cvRANSACUpdateNumIters( double p, double err_prob,
                                    int model_points, int max_iters );
 
 extern "C" void cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst );
-# 1443 "../../../include/opencv/cv.h"
+# 1486 "../../../include/opencv/cv.h"
 extern "C" int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
                                  CvMat* fundamental_matrix,
                                  int method = 8,
@@ -4160,12 +4204,17 @@ extern "C" void cvComputeCorrespondEpilines( const CvMat* points,
 
 
 extern "C" void cvTriangulatePoints(CvMat* projMatr1, CvMat* projMatr2,
-    CvMat* projPoints1, CvMat* projPoints2,
-    CvMat* points4D);
+                                CvMat* projPoints1, CvMat* projPoints2,
+                                CvMat* points4D);
 
 extern "C" void cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
-        CvMat* new_points1, CvMat* new_points2);
-# 1473 "../../../include/opencv/cv.h"
+                             CvMat* new_points1, CvMat* new_points2);
+
+
+
+
+
+
 typedef struct CvStereoBMState
 {
 
@@ -4187,10 +4236,15 @@ typedef struct CvStereoBMState
     int speckleWindowSize;
     int speckleRange;
 
+    int trySmallerWindows;
+
+
 
     CvMat* preFilteredImg0;
     CvMat* preFilteredImg1;
     CvMat* slidingSumBuf;
+    CvMat* dbmin;
+    CvMat* dbmax;
 }
 CvStereoBMState;
 

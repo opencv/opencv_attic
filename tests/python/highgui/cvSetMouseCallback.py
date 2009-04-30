@@ -18,9 +18,8 @@ if not works.check_files(REQUIRED,TESTNAME):
 	sys.exit(77)
 
 # import the necessary things for OpenCV
-import python
-from python.highgui import *
-from python.cv import *
+from highgui import *
+from cv import *
 
 # global variable which stores information about the pressed mousebuttons
 mouse_events = [False,False,False,False,False,False,False,False,False,False]
