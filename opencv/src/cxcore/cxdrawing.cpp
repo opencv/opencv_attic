@@ -1925,7 +1925,7 @@ Size getTextSize( const String& text, int fontFace, double fontScale, int thickn
     const char **faces = cv::g_HersheyGlyphs;
     const int* ascii = getFontData(fontFace);
 
-    int base_line = -(ascii[0] & 15);
+    int base_line = (ascii[0] & 15);
     int cap_line = (ascii[0] >> 4) & 15;
     size.height = cvRound((cap_line + base_line)*fontScale + thickness);
 
