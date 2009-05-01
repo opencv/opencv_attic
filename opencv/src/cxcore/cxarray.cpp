@@ -634,7 +634,7 @@ cvInitSparseMatIterator( const CvSparseMat* mat, CvSparseMatIterator* iterator )
     return node;
 }
 
-#define ICV_SPARSE_MAT_HASH_MULTIPLIER  33
+#define ICV_SPARSE_MAT_HASH_MULTIPLIER  cv::SparseMat::HASH_SCALE
 
 static uchar*
 icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
@@ -664,7 +664,7 @@ icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
     tabidx = hashval & (mat->hashsize - 1);
     hashval &= INT_MAX;
 
-    if( create_node >= 0 )
+    if( create_node >= -1 )
     {
         for( node = (CvSparseNode*)mat->hashtable[tabidx];
              node != 0; node = node->next )

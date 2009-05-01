@@ -337,7 +337,32 @@ enum { OPTFLOW_USE_INITIAL_FLOW=4, OPTFLOW_FARNEBACK_GAUSSIAN=256 };
 CV_EXPORTS void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
                                Mat& flow0, double pyr_scale, int levels, int winsize,
                                int iterations, int poly_n, double poly_sigma, int flags );
+    
+    
+CV_EXPORTS void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
+                          const Mat& mask, MatND& hist, const Vector<int>& histSize,
+                          const Vector<Vector<float> >& ranges,
+                          bool uniform=true, bool accumulate=false );
 
+CV_EXPORTS void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
+                          const Mat& mask, SparseMat& hist, const Vector<int>& histSize,
+                          const Vector<Vector<float> >& ranges,
+                          bool uniform=true, bool accumulate=false );
+    
+CV_EXPORTS void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
+                                 const MatND& hist, Mat& backProject,
+                                 const Vector<Vector<float> >& ranges,
+                                 double scale=1, bool uniform=true );
+    
+CV_EXPORTS void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
+                                 const SparseMat& hist, Mat& backProject,
+                                 const Vector<Vector<float> >& ranges,
+                                 double scale=1, bool uniform=true );
+
+CV_EXPORTS double compareHist( const MatND& H1, const MatND& H2, int method );
+
+CV_EXPORTS double compareHist( const SparseMat& H1, const SparseMat& H2, int method );
+    
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

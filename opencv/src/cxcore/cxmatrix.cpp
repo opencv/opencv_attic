@@ -2214,6 +2214,7 @@ void SparseMat::Hdr::clear()
     hashtab.clear();
     hashtab.resize(HASH_SIZE0);
     pool.clear();
+    pool.resize(nodeSize);
     nodeCount = freeList = 0;
 }
 
@@ -2558,7 +2559,7 @@ SparseMat::operator CvSparseMat*() const
     for( i = 0; i < N; i++, ++from )
     {
         const Node* n = from.node();
-        uchar* to = cvPtrND(m, n->idx, 0, -1, 0);
+        uchar* to = cvPtrND(m, n->idx, 0, -2, 0);
         copyElem(from.ptr, to, esz);
     }
     return m;
@@ -2567,16 +2568,7 @@ SparseMat::operator CvSparseMat*() const
 uchar* SparseMat::ptr(int i0, int i1, bool createMissing, size_t* hashval)
 {
     CV_Assert( hdr && hdr->dims == 2 );
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(i0, i1);
-    }
-    else
-        h = hash(i0, i1);
+    size_t h = hashval ? *hashval : hash(i0, i1);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx];
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
@@ -2598,16 +2590,7 @@ uchar* SparseMat::ptr(int i0, int i1, bool createMissing, size_t* hashval)
 uchar* SparseMat::ptr(int i0, int i1, int i2, bool createMissing, size_t* hashval)
 {
     CV_Assert( hdr && hdr->dims == 3 );
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(i0, i1, i2);
-    }
-    else
-        h = hash(i0, i1, i2);
+    size_t h = hashval ? *hashval : hash(i0, i1, i2);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx];
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
@@ -2631,16 +2614,7 @@ uchar* SparseMat::ptr(const int* idx, bool createMissing, size_t* hashval)
 {
     CV_Assert( hdr );
     int i, d = hdr->dims;
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(idx);
-    }
-    else
-        h = hash(idx);
+    size_t h = hashval ? *hashval : hash(idx);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx];
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
@@ -2663,16 +2637,7 @@ uchar* SparseMat::ptr(const int* idx, bool createMissing, size_t* hashval)
 void SparseMat::erase(int i0, int i1, size_t* hashval)
 {
     CV_Assert( hdr && hdr->dims == 2 );
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(i0, i1);
-    }
-    else
-        h = hash(i0, i1);
+    size_t h = hashval ? *hashval : hash(i0, i1);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx], previdx=0;
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
@@ -2691,16 +2656,7 @@ void SparseMat::erase(int i0, int i1, size_t* hashval)
 void SparseMat::erase(int i0, int i1, int i2, size_t* hashval)
 {
     CV_Assert( hdr && hdr->dims == 3 );
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(i0, i1, i2);
-    }
-    else
-        h = hash(i0, i1, i2);
+    size_t h = hashval ? *hashval : hash(i0, i1, i2);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx], previdx=0;
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
@@ -2721,16 +2677,7 @@ void SparseMat::erase(const int* idx, size_t* hashval)
 {
     CV_Assert( hdr );
     int i, d = hdr->dims;
-    size_t h;
-    if( hashval )
-    {
-        if( *hashval )
-            h = *hashval;
-        else
-            *hashval = h = hash(idx);
-    }
-    else
-        h = hash(idx);
+    size_t h = hashval ? *hashval : hash(idx);
     size_t hidx = h & (hdr->hashtab.size() - 1), nidx = hdr->hashtab[hidx], previdx=0;
     uchar* pool = &hdr->pool[0];
     while( nidx != 0 )
