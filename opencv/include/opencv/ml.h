@@ -1689,7 +1689,7 @@ class CV_EXPORTS CvMLData
 {
 public:
     CvMLData();
-    ~CvMLData();
+    virtual ~CvMLData();
 
     // returns:
     // 0 - OK  
