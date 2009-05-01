@@ -99,6 +99,12 @@ CV_EXPORTS void error( const Exception& exc );
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, "", __FILE__, __LINE__) )
 #define CV_Assert( expr ) { if(!(expr)) cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) ); }
 #endif
+    
+#ifdef _DEBUG
+#define CV_DbgAssert(expr) CV_Assert(expr)
+#else
+#define CV_DbgAssert(expr)
+#endif
 
 CV_EXPORTS void setNumThreads(int);
 CV_EXPORTS int getNumThreads();
@@ -1532,7 +1538,7 @@ struct CV_EXPORTS SparseMat
     void removeNode(size_t hidx, size_t nidx, size_t previdx);
     void resizeHashTab(size_t newsize);
 
-    enum { MAGIC_VAL=0x42FD0000, MAX_DIM=CV_MAX_DIM, HASH_SCALE=0x5bd1e995 };
+    enum { MAGIC_VAL=0x42FD0000, MAX_DIM=CV_MAX_DIM, HASH_SCALE=0x5bd1e995, HASH_BIT=0x80000000 };
 
     int flags;
     Hdr* hdr;

@@ -1575,7 +1575,7 @@ CV_CalcBackProjectPatchTest::CV_CalcBackProjectPatchTest() :
     hist_count = 1;
     gen_random_hist = 0;
     init_ranges = 1;
-    img_max_log_size = 7;
+    img_max_log_size = 6;
 
     for( i = 0; i < CV_MAX_DIM+2; i++ )
     {
