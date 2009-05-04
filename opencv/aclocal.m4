@@ -1056,6 +1056,9 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+m4_include([autotools/aclocal/ax_check_compiler_flags.m4])
+m4_include([autotools/aclocal/ax_ext.m4])
+m4_include([autotools/aclocal/ax_gcc_x86_cpuid.m4])
 m4_include([autotools/aclocal/az_python.m4])
 m4_include([autotools/aclocal/libtool1.m4])
 m4_include([autotools/aclocal/pkg.m4])

@@ -40,10 +40,14 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = interfaces/swig/python
-DIST_COMMON = $(am__pkgpython_PYTHON_DIST) $(noinst_PYTHON) \
+DIST_COMMON = $(am__pkgpyexec_PYTHON_DIST) $(noinst_PYTHON) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
+am__aclocal_m4_deps =  \
+	$(top_srcdir)/autotools/aclocal/ax_check_compiler_flags.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
+	$(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
@@ -60,10 +64,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(pkgpythondir)" \
-	"$(DESTDIR)$(pkgpythondir)"
-pkgpythonLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(pkgpython_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(pkgpyexecdir)" \
+	"$(DESTDIR)$(pkgpyexecdir)"
+pkgpyexecLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(pkgpyexec_LTLIBRARIES)
 @BUILD_PYTHON_WRAPPERS_TRUE@_cv_la_DEPENDENCIES =  \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/src/libcv.la \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/src/libcxcore.la
@@ -78,7 +82,7 @@ _cv_la_OBJECTS = $(am__cv_la_OBJECTS)
 _cv_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(_cv_la_CXXFLAGS) $(CXXFLAGS) \
 	$(_cv_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_rpath = -rpath $(pkgpythondir)
+@BUILD_PYTHON_WRAPPERS_TRUE@am__cv_la_rpath = -rpath $(pkgpyexecdir)
 @BUILD_PYTHON_WRAPPERS_TRUE@_highgui_la_DEPENDENCIES =  \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/src/libhighgui.la
 am___highgui_la_SOURCES_DIST = _highgui.cpp pyhelpers.cpp pyhelpers.h \
@@ -91,7 +95,7 @@ _highgui_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(_highgui_la_CXXFLAGS) \
 	$(CXXFLAGS) $(_highgui_la_LDFLAGS) $(LDFLAGS) -o $@
 @BUILD_PYTHON_WRAPPERS_TRUE@am__highgui_la_rpath = -rpath \
-@BUILD_PYTHON_WRAPPERS_TRUE@	$(pkgpythondir)
+@BUILD_PYTHON_WRAPPERS_TRUE@	$(pkgpyexecdir)
 @BUILD_PYTHON_WRAPPERS_TRUE@_ml_la_DEPENDENCIES =  \
 @BUILD_PYTHON_WRAPPERS_TRUE@	$(top_builddir)/src/libml.la
 am___ml_la_SOURCES_DIST = _ml.cpp pyhelpers.cpp pyhelpers.h
@@ -101,7 +105,7 @@ _ml_la_OBJECTS = $(am__ml_la_OBJECTS)
 _ml_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(_ml_la_CXXFLAGS) $(CXXFLAGS) \
 	$(_ml_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_PYTHON_WRAPPERS_TRUE@am__ml_la_rpath = -rpath $(pkgpythondir)
+@BUILD_PYTHON_WRAPPERS_TRUE@am__ml_la_rpath = -rpath $(pkgpyexecdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -126,9 +130,9 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 SOURCES = $(_cv_la_SOURCES) $(_highgui_la_SOURCES) $(_ml_la_SOURCES)
 DIST_SOURCES = $(am___cv_la_SOURCES_DIST) \
 	$(am___highgui_la_SOURCES_DIST) $(am___ml_la_SOURCES_DIST)
-am__pkgpython_PYTHON_DIST = __init__.py cv.py ml.py highgui.py \
+am__pkgpyexec_PYTHON_DIST = __init__.py cv.py ml.py highgui.py \
 	adaptors.py matlab_syntax.py
-pkgpythonPYTHON_INSTALL = $(INSTALL_DATA)
+pkgpyexecPYTHON_INSTALL = $(INSTALL_DATA)
 py_compile = $(top_srcdir)/autotools/py-compile
 ETAGS = etags
 CTAGS = ctags
@@ -170,6 +174,7 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@
@@ -351,8 +356,8 @@ EXTRA_DIST = \
 
 
 # Conditional targets #######################################################
-@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_LTLIBRARIES = _cv.la _ml.la _highgui.la
-@BUILD_PYTHON_WRAPPERS_TRUE@pkgpython_PYTHON = \
+@BUILD_PYTHON_WRAPPERS_TRUE@pkgpyexec_LTLIBRARIES = _cv.la _ml.la _highgui.la
+@BUILD_PYTHON_WRAPPERS_TRUE@pkgpyexec_PYTHON = \
 @BUILD_PYTHON_WRAPPERS_TRUE@  __init__.py    \
 @BUILD_PYTHON_WRAPPERS_TRUE@  cv.py          \
 @BUILD_PYTHON_WRAPPERS_TRUE@  ml.py          \
@@ -410,28 +415,28 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-pkgpythonLTLIBRARIES: $(pkgpython_LTLIBRARIES)
+install-pkgpyexecLTLIBRARIES: $(pkgpyexec_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(pkgpythondir)" || $(MKDIR_P) "$(DESTDIR)$(pkgpythondir)"
-	@list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(pkgpyexecdir)" || $(MKDIR_P) "$(DESTDIR)$(pkgpyexecdir)"
+	@list='$(pkgpyexec_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pkgpythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(pkgpythondir)/$$f'"; \
-	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pkgpythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(pkgpythondir)/$$f"; \
+	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pkgpyexecLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(pkgpyexecdir)/$$f'"; \
+	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pkgpyexecLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(pkgpyexecdir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-pkgpythonLTLIBRARIES:
+uninstall-pkgpyexecLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+	@list='$(pkgpyexec_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(pkgpythondir)/$$p'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(pkgpythondir)/$$p"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(pkgpyexecdir)/$$p'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(pkgpyexecdir)/$$p"; \
 	done
 
-clean-pkgpythonLTLIBRARIES:
-	-test -z "$(pkgpython_LTLIBRARIES)" || rm -f $(pkgpython_LTLIBRARIES)
-	@list='$(pkgpython_LTLIBRARIES)'; for p in $$list; do \
+clean-pkgpyexecLTLIBRARIES:
+	-test -z "$(pkgpyexec_LTLIBRARIES)" || rm -f $(pkgpyexec_LTLIBRARIES)
+	@list='$(pkgpyexec_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
@@ -541,33 +546,33 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-pkgpythonPYTHON: $(pkgpython_PYTHON)
+install-pkgpyexecPYTHON: $(pkgpyexec_PYTHON)
 	@$(NORMAL_INSTALL)
-	test -z "$(pkgpythondir)" || $(MKDIR_P) "$(DESTDIR)$(pkgpythondir)"
-	@list='$(pkgpython_PYTHON)'; dlist=''; for p in $$list; do\
+	test -z "$(pkgpyexecdir)" || $(MKDIR_P) "$(DESTDIR)$(pkgpyexecdir)"
+	@list='$(pkgpyexec_PYTHON)'; dlist=''; for p in $$list; do\
 	  if test -f "$$p"; then b=; else b="$(srcdir)/"; fi; \
 	  if test -f $$b$$p; then \
 	    f=$(am__strip_dir) \
 	    dlist="$$dlist $$f"; \
-	    echo " $(pkgpythonPYTHON_INSTALL) '$$b$$p' '$(DESTDIR)$(pkgpythondir)/$$f'"; \
-	    $(pkgpythonPYTHON_INSTALL) "$$b$$p" "$(DESTDIR)$(pkgpythondir)/$$f"; \
+	    echo " $(pkgpyexecPYTHON_INSTALL) '$$b$$p' '$(DESTDIR)$(pkgpyexecdir)/$$f'"; \
+	    $(pkgpyexecPYTHON_INSTALL) "$$b$$p" "$(DESTDIR)$(pkgpyexecdir)/$$f"; \
 	  else :; fi; \
 	done; \
 	if test -n "$$dlist"; then \
 	  if test -z "$(DESTDIR)"; then \
-	    PYTHON=$(PYTHON) $(py_compile) --basedir "$(pkgpythondir)" $$dlist; \
+	    PYTHON=$(PYTHON) $(py_compile) --basedir "$(pkgpyexecdir)" $$dlist; \
 	  else \
-	    PYTHON=$(PYTHON) $(py_compile) --destdir "$(DESTDIR)" --basedir "$(pkgpythondir)" $$dlist; \
+	    PYTHON=$(PYTHON) $(py_compile) --destdir "$(DESTDIR)" --basedir "$(pkgpyexecdir)" $$dlist; \
 	  fi; \
 	else :; fi
 
-uninstall-pkgpythonPYTHON:
+uninstall-pkgpyexecPYTHON:
 	@$(NORMAL_UNINSTALL)
-	@list='$(pkgpython_PYTHON)'; dlist=''; for p in $$list; do\
+	@list='$(pkgpyexec_PYTHON)'; dlist=''; for p in $$list; do\
 	  f=$(am__strip_dir) \
-	  rm -f "$(DESTDIR)$(pkgpythondir)/$$f"; \
-	  rm -f "$(DESTDIR)$(pkgpythondir)/$${f}c"; \
-	  rm -f "$(DESTDIR)$(pkgpythondir)/$${f}o"; \
+	  rm -f "$(DESTDIR)$(pkgpyexecdir)/$$f"; \
+	  rm -f "$(DESTDIR)$(pkgpyexecdir)/$${f}c"; \
+	  rm -f "$(DESTDIR)$(pkgpyexecdir)/$${f}o"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -647,7 +652,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(pkgpythondir)" "$(DESTDIR)$(pkgpythondir)"; do \
+	for dir in "$(DESTDIR)$(pkgpyexecdir)" "$(DESTDIR)$(pkgpyexecdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -676,7 +681,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-pkgpythonLTLIBRARIES \
+clean-am: clean-generic clean-libtool clean-pkgpyexecLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -695,11 +700,11 @@ info: info-am
 
 info-am:
 
-install-data-am: install-pkgpythonLTLIBRARIES install-pkgpythonPYTHON
+install-data-am:
 
 install-dvi: install-dvi-am
 
-install-exec-am:
+install-exec-am: install-pkgpyexecLTLIBRARIES install-pkgpyexecPYTHON
 
 install-html: install-html-am
 
@@ -731,24 +736,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkgpythonLTLIBRARIES uninstall-pkgpythonPYTHON
+uninstall-am: uninstall-pkgpyexecLTLIBRARIES uninstall-pkgpyexecPYTHON
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-pkgpythonLTLIBRARIES ctags distclean \
+	clean-libtool clean-pkgpyexecLTLIBRARIES ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkgpythonLTLIBRARIES \
-	install-pkgpythonPYTHON install-ps install-ps-am install-strip \
+	install-pdf install-pdf-am install-pkgpyexecLTLIBRARIES \
+	install-pkgpyexecPYTHON install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-pkgpythonLTLIBRARIES \
-	uninstall-pkgpythonPYTHON
+	tags uninstall uninstall-am uninstall-pkgpyexecLTLIBRARIES \
+	uninstall-pkgpyexecPYTHON
 
 
 # SWIG #######################################################################

@@ -219,52 +219,18 @@ AC_ARG_WITH([gthread],
 # Compiler options
 
 # OpenMP support
-# macro sets OPENMP_CXXFLAGS
-# and brings its own enabel/disable switch
+# macro calls AC_SUBST(OPENMP_CXXFLAGS)
+# and brings its own enable/disable switch ("--disable-openmp")
 AC_OPENMP
 
 # SSE/SSE2/SSE3 support
-AC_MSG_CHECKING([whether to enable SSE/SSE2/SSE3 instruction set])
-SIMD_FLAGS=""
 if test x"$enable_sse" = "xyes"; then
-
   # This macro calls:
   #   AC_SUBST(SIMD_FLAGS)
   # And defines:
   #   HAVE_MMX / HAVE_SSE / HAVE_SSE2 / HAVE_SSE3 / HAVE_SSSE3
-  #
-  # macro is broken currently ...
-  # AX_EXT
-  if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
-    # Due to a misconception, until SVN revision r1713, the case statement
-    # used the value of '--target', not of '--host'
-    case $host in
-    i386-apple-*)
-      # all intel macs have at least prescott instruction set, allowing SSE3
-      SIMD_FLAGS="-msse3 -mfpmath=sse"
-      AC_MSG_RESULT([yes])
-      ;;
-    x86_64-apple-*)
-      # all 64bit intel macs have at least nocona instruction set, allowing SSSE3
-      SIMD_FLAGS="-mssse3 -mfpmath=sse"
-      AC_MSG_RESULT([yes])
-      ;;
-    amd64-*-* | x86_64-*-* | i?86-*-*)
-      # okay, we use this default together with the specification of the target architecture
-      # let us just assume, a Pentium 4 would be the minimum platform for OpenCV,
-      # then SSE2 instruction set is available
-      SIMD_FLAGS="-msse2"
-      AC_MSG_RESULT([yes])
-      ;;
-    *-*-*)
-      AC_MSG_RESULT([no])
-      ;;
-    esac
-  fi
-else
-  AC_MSG_RESULT([disabled])
+  AX_EXT
 fi
-AC_SUBST(SIMD_FLAGS)
 
 
 ## check whether to include debugging compiler flags
@@ -290,6 +256,7 @@ AC_SUBST(DEBUG_CXXFLAGS)
 AC_MSG_CHECKING([whether to enable aggressive optimization flags])
 OPTIMIZATION_CPPFLAGS=""
 OPTIMIZATION_CXXFLAGS=""
+FLOAT_STORE_CFLAGS=""
 if test x"$enable_optimization" = "xyes"; then
   AC_MSG_RESULT([yes])
   
@@ -306,6 +273,10 @@ if test x"$enable_optimization" = "xyes"; then
   fi
   
   if test x"$ac_cv_c_compiler_gnu" = "xyes"; then
+    
+    # special flag for gcc to work around excess precision bug in cLapack
+    FLOAT_STORE_CFLAGS="-ffloat-store"
+
     # Due to a misconception, until SVN revision r1713, the case statement
     # used the value of '--target', not of '--host'
     case $host in
@@ -347,6 +318,7 @@ else
 fi
 AC_SUBST(OPTIMIZATION_CPPFLAGS)
 AC_SUBST(OPTIMIZATION_CXXFLAGS)
+AC_SUBST(FLOAT_STORE_CFLAGS)
 
 
 # add libm because it is used by several libraries and OpenCV itself
@@ -372,7 +344,6 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 
 LAPACK_LIBS=""
 have_lapack=no
-
 if test x"$with_lapack" = "xyes"; then
   # check for Accellerate framework on Mac OS X
   # 

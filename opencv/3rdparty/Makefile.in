@@ -41,7 +41,11 @@ subdir = 3rdparty
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
+am__aclocal_m4_deps =  \
+	$(top_srcdir)/autotools/aclocal/ax_check_compiler_flags.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
+	$(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
@@ -53,7 +57,7 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/autotools/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-lib_clapack_la_LIBADD =
+lib_clapack_la_DEPENDENCIES = lib_clapack_floatstore.la
 am_lib_clapack_la_OBJECTS = dasum.lo daxpy.lo dbdsdc.lo dbdsqr.lo \
 	dcopy.lo ddot.lo dgebd2.lo dgebrd.lo dgelq2.lo dgelqf.lo \
 	dgels.lo dgelsd.lo dgemm.lo dgemv.lo dgeqr2.lo dgeqrf.lo \
@@ -62,53 +66,64 @@ am_lib_clapack_la_OBJECTS = dasum.lo daxpy.lo dbdsdc.lo dbdsqr.lo \
 	dlaed0.lo dlaed1.lo dlaed2.lo dlaed3.lo dlaed4.lo dlaed5.lo \
 	dlaed6.lo dlaed7.lo dlaed8.lo dlaed9.lo dlaeda.lo dlaev2.lo \
 	dlagtf.lo dlagts.lo dlaisnan.lo dlals0.lo dlalsa.lo dlalsd.lo \
-	dlamch.lo dlamrg.lo dlaneg.lo dlange.lo dlanst.lo dlansy.lo \
-	dlapy2.lo dlar1v.lo dlarf.lo dlarfb.lo dlarfg.lo dlarft.lo \
-	dlarnv.lo dlarra.lo dlarrb.lo dlarrc.lo dlarrd.lo dlarre.lo \
-	dlarrf.lo dlarrj.lo dlarrk.lo dlarrr.lo dlarrv.lo dlartg.lo \
-	dlaruv.lo dlas2.lo dlascl.lo dlasd0.lo dlasd1.lo dlasd2.lo \
-	dlasd3.lo dlasd4.lo dlasd5.lo dlasd6.lo dlasd7.lo dlasd8.lo \
-	dlasda.lo dlasdq.lo dlasdt.lo dlaset.lo dlasq1.lo dlasq2.lo \
-	dlasq3.lo dlasq4.lo dlasq5.lo dlasq6.lo dlasr.lo dlasrt.lo \
-	dlassq.lo dlasv2.lo dlaswp.lo dlatrd.lo dlauu2.lo dlauum.lo \
-	dlazq3.lo dlazq4.lo dnrm2.lo dorg2r.lo dorgbr.lo dorgl2.lo \
-	dorglq.lo dorgqr.lo dorm2l.lo dorm2r.lo dormbr.lo dorml2.lo \
-	dormlq.lo dormql.lo dormqr.lo dormtr.lo dpotf2.lo dpotrf.lo \
-	dpotri.lo dpotrs.lo drot.lo dscal.lo dstebz.lo dstein.lo \
-	dstemr.lo dsteqr.lo dsterf.lo dswap.lo dsyevr.lo dsymv.lo \
-	dsyr2.lo dsyr2k.lo dsyrk.lo dsytd2.lo dsytrd.lo dtrmm.lo \
-	dtrmv.lo dtrsm.lo dtrti2.lo dtrtri.lo dtrtrs.lo f77_aloc.lo \
-	idamax.lo ieeeck.lo ilaenv.lo iparmq.lo isamax.lo pow_di.lo \
-	pow_ii.lo pow_ri.lo precomp.lo s_cat.lo s_cmp.lo s_copy.lo \
-	sasum.lo saxpy.lo sbdsdc.lo sbdsqr.lo scopy.lo sdot.lo \
-	sgebd2.lo sgebrd.lo sgelq2.lo sgelqf.lo sgels.lo sgelsd.lo \
-	sgemm.lo sgemv.lo sgeqr2.lo sgeqrf.lo sger.lo sgesdd.lo \
-	sgesv.lo sgetf2.lo sgetrf.lo sgetri.lo sgetrs.lo slabad.lo \
-	slabrd.lo slacpy.lo slae2.lo slaebz.lo slaed0.lo slaed1.lo \
-	slaed2.lo slaed3.lo slaed4.lo slaed5.lo slaed6.lo slaed7.lo \
-	slaed8.lo slaed9.lo slaeda.lo slaev2.lo slagtf.lo slagts.lo \
-	slaisnan.lo slals0.lo slalsa.lo slalsd.lo slamch.lo slamrg.lo \
-	slaneg.lo slange.lo slanst.lo slansy.lo slapy2.lo slar1v.lo \
-	slarf.lo slarfb.lo slarfg.lo slarft.lo slarnv.lo slarra.lo \
-	slarrb.lo slarrc.lo slarrd.lo slarre.lo slarrf.lo slarrj.lo \
-	slarrk.lo slarrr.lo slarrv.lo slartg.lo slaruv.lo slas2.lo \
-	slascl.lo slasd0.lo slasd1.lo slasd2.lo slasd3.lo slasd4.lo \
-	slasd5.lo slasd6.lo slasd7.lo slasd8.lo slasda.lo slasdq.lo \
-	slasdt.lo slaset.lo slasq1.lo slasq2.lo slasq3.lo slasq4.lo \
-	slasq5.lo slasq6.lo slasr.lo slasrt.lo slassq.lo slasv2.lo \
-	slaswp.lo slatrd.lo slauu2.lo slauum.lo slazq3.lo slazq4.lo \
-	snrm2.lo sorg2r.lo sorgbr.lo sorgl2.lo sorglq.lo sorgqr.lo \
-	sorm2l.lo sorm2r.lo sormbr.lo sorml2.lo sormlq.lo sormql.lo \
-	sormqr.lo sormtr.lo spotf2.lo spotrf.lo spotri.lo spotrs.lo \
-	srot.lo sscal.lo sstebz.lo sstein.lo sstemr.lo ssteqr.lo \
-	ssterf.lo sswap.lo ssyevr.lo ssymv.lo ssyr2.lo ssyr2k.lo \
-	ssyrk.lo ssytd2.lo ssytrd.lo strmm.lo strmv.lo strsm.lo \
-	strti2.lo strtri.lo strtrs.lo xerbla.lo
+	dlamrg.lo dlaneg.lo dlange.lo dlanst.lo dlansy.lo dlapy2.lo \
+	dlar1v.lo dlarf.lo dlarfb.lo dlarfg.lo dlarft.lo dlarnv.lo \
+	dlarra.lo dlarrb.lo dlarrc.lo dlarrd.lo dlarre.lo dlarrf.lo \
+	dlarrj.lo dlarrk.lo dlarrr.lo dlarrv.lo dlartg.lo dlaruv.lo \
+	dlas2.lo dlascl.lo dlasd0.lo dlasd1.lo dlasd2.lo dlasd3.lo \
+	dlasd4.lo dlasd5.lo dlasd6.lo dlasd7.lo dlasd8.lo dlasda.lo \
+	dlasdq.lo dlasdt.lo dlaset.lo dlasq1.lo dlasq2.lo dlasq3.lo \
+	dlasq4.lo dlasq5.lo dlasq6.lo dlasr.lo dlasrt.lo dlassq.lo \
+	dlasv2.lo dlaswp.lo dlatrd.lo dlauu2.lo dlauum.lo dlazq3.lo \
+	dlazq4.lo dnrm2.lo dorg2r.lo dorgbr.lo dorgl2.lo dorglq.lo \
+	dorgqr.lo dorm2l.lo dorm2r.lo dormbr.lo dorml2.lo dormlq.lo \
+	dormql.lo dormqr.lo dormtr.lo dpotf2.lo dpotrf.lo dpotri.lo \
+	dpotrs.lo drot.lo dscal.lo dstebz.lo dstein.lo dstemr.lo \
+	dsteqr.lo dsterf.lo dswap.lo dsyevr.lo dsymv.lo dsyr2.lo \
+	dsyr2k.lo dsyrk.lo dsytd2.lo dsytrd.lo dtrmm.lo dtrmv.lo \
+	dtrsm.lo dtrti2.lo dtrtri.lo dtrtrs.lo f77_aloc.lo idamax.lo \
+	ieeeck.lo ilaenv.lo iparmq.lo isamax.lo pow_di.lo pow_ii.lo \
+	pow_ri.lo precomp.lo s_cat.lo s_cmp.lo s_copy.lo sasum.lo \
+	saxpy.lo sbdsdc.lo sbdsqr.lo scopy.lo sdot.lo sgebd2.lo \
+	sgebrd.lo sgelq2.lo sgelqf.lo sgels.lo sgelsd.lo sgemm.lo \
+	sgemv.lo sgeqr2.lo sgeqrf.lo sger.lo sgesdd.lo sgesv.lo \
+	sgetf2.lo sgetrf.lo sgetri.lo sgetrs.lo slabad.lo slabrd.lo \
+	slacpy.lo slae2.lo slaebz.lo slaed0.lo slaed1.lo slaed2.lo \
+	slaed3.lo slaed4.lo slaed5.lo slaed6.lo slaed7.lo slaed8.lo \
+	slaed9.lo slaeda.lo slaev2.lo slagtf.lo slagts.lo slaisnan.lo \
+	slals0.lo slalsa.lo slalsd.lo slamrg.lo slaneg.lo slange.lo \
+	slanst.lo slansy.lo slapy2.lo slar1v.lo slarf.lo slarfb.lo \
+	slarfg.lo slarft.lo slarnv.lo slarra.lo slarrb.lo slarrc.lo \
+	slarrd.lo slarre.lo slarrf.lo slarrj.lo slarrk.lo slarrr.lo \
+	slarrv.lo slartg.lo slaruv.lo slas2.lo slascl.lo slasd0.lo \
+	slasd1.lo slasd2.lo slasd3.lo slasd4.lo slasd5.lo slasd6.lo \
+	slasd7.lo slasd8.lo slasda.lo slasdq.lo slasdt.lo slaset.lo \
+	slasq1.lo slasq2.lo slasq3.lo slasq4.lo slasq5.lo slasq6.lo \
+	slasr.lo slasrt.lo slassq.lo slasv2.lo slaswp.lo slatrd.lo \
+	slauu2.lo slauum.lo slazq3.lo slazq4.lo snrm2.lo sorg2r.lo \
+	sorgbr.lo sorgl2.lo sorglq.lo sorgqr.lo sorm2l.lo sorm2r.lo \
+	sormbr.lo sorml2.lo sormlq.lo sormql.lo sormqr.lo sormtr.lo \
+	spotf2.lo spotrf.lo spotri.lo spotrs.lo srot.lo sscal.lo \
+	sstebz.lo sstein.lo sstemr.lo ssteqr.lo ssterf.lo sswap.lo \
+	ssyevr.lo ssymv.lo ssyr2.lo ssyr2k.lo ssyrk.lo ssytd2.lo \
+	ssytrd.lo strmm.lo strmv.lo strsm.lo strti2.lo strtri.lo \
+	strtrs.lo xerbla.lo
 lib_clapack_la_OBJECTS = $(am_lib_clapack_la_OBJECTS)
 lib_clapack_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(lib_clapack_la_LDFLAGS) $(LDFLAGS) -o $@
 @EXTERNAL_LAPACK_FALSE@am_lib_clapack_la_rpath =
+lib_clapack_floatstore_la_LIBADD =
+am_lib_clapack_floatstore_la_OBJECTS =  \
+	lib_clapack_floatstore_la-dlamch.lo \
+	lib_clapack_floatstore_la-slamch.lo
+lib_clapack_floatstore_la_OBJECTS =  \
+	$(am_lib_clapack_floatstore_la_OBJECTS)
+lib_clapack_floatstore_la_LINK = $(LIBTOOL) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) \
+	$(lib_clapack_floatstore_la_LDFLAGS) $(LDFLAGS) -o $@
+@EXTERNAL_LAPACK_FALSE@am_lib_clapack_floatstore_la_rpath =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -121,8 +136,10 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(lib_clapack_la_SOURCES)
-DIST_SOURCES = $(lib_clapack_la_SOURCES)
+SOURCES = $(lib_clapack_la_SOURCES) \
+	$(lib_clapack_floatstore_la_SOURCES)
+DIST_SOURCES = $(lib_clapack_la_SOURCES) \
+	$(lib_clapack_floatstore_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -164,6 +181,7 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@
@@ -346,11 +364,18 @@ noinst_HEADERS = \
    include/clapack.h \
    include/f2c.h
 
-@EXTERNAL_LAPACK_FALSE@TMP_LAPACK = lib_clapack.la
+@EXTERNAL_LAPACK_FALSE@TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la
 
 # all we want to build here is the single library
 @EXTERNAL_LAPACK_TRUE@TMP_LAPACK = 
 noinst_LTLIBRARIES = $(TMP_LAPACK)
+
+# sources of the cLapack convenience library part with special flags
+lib_clapack_floatstore_la_SOURCES = \
+  lapack/dlamch.c   lapack/slamch.c   
+
+lib_clapack_floatstore_la_CFLAGS = $(AM_CFLAGS) @FLOAT_STORE_CFLAGS@
+lib_clapack_floatstore_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS@
 
 # sources of the cLapack convenience library
 lib_clapack_la_SOURCES = \
@@ -359,7 +384,7 @@ lib_clapack_la_SOURCES = \
   lapack/dger.c     lapack/dgesdd.c   lapack/dgesv.c    lapack/dgetf2.c   lapack/dgetrf.c   lapack/dgetri.c   lapack/dgetrs.c   lapack/dlabad.c   \
   lapack/dlabrd.c   lapack/dlacpy.c   lapack/dlae2.c    lapack/dlaebz.c   lapack/dlaed0.c   lapack/dlaed1.c   lapack/dlaed2.c   lapack/dlaed3.c   \
   lapack/dlaed4.c   lapack/dlaed5.c   lapack/dlaed6.c   lapack/dlaed7.c   lapack/dlaed8.c   lapack/dlaed9.c   lapack/dlaeda.c   lapack/dlaev2.c   \
-  lapack/dlagtf.c   lapack/dlagts.c   lapack/dlaisnan.c lapack/dlals0.c   lapack/dlalsa.c   lapack/dlalsd.c   lapack/dlamch.c   lapack/dlamrg.c   \
+  lapack/dlagtf.c   lapack/dlagts.c   lapack/dlaisnan.c lapack/dlals0.c   lapack/dlalsa.c   lapack/dlalsd.c   lapack/dlamrg.c   \
   lapack/dlaneg.c   lapack/dlange.c   lapack/dlanst.c   lapack/dlansy.c   lapack/dlapy2.c   lapack/dlar1v.c   lapack/dlarf.c    lapack/dlarfb.c   \
   lapack/dlarfg.c   lapack/dlarft.c   lapack/dlarnv.c   lapack/dlarra.c   lapack/dlarrb.c   lapack/dlarrc.c   lapack/dlarrd.c   lapack/dlarre.c   \
   lapack/dlarrf.c   lapack/dlarrj.c   lapack/dlarrk.c   lapack/dlarrr.c   lapack/dlarrv.c   lapack/dlartg.c   lapack/dlaruv.c   lapack/dlas2.c    \
@@ -379,7 +404,7 @@ lib_clapack_la_SOURCES = \
   lapack/sgetrs.c   lapack/slabad.c   lapack/slabrd.c   lapack/slacpy.c   lapack/slae2.c    lapack/slaebz.c   lapack/slaed0.c   lapack/slaed1.c   \
   lapack/slaed2.c   lapack/slaed3.c   lapack/slaed4.c   lapack/slaed5.c   lapack/slaed6.c   lapack/slaed7.c   lapack/slaed8.c   lapack/slaed9.c   \
   lapack/slaeda.c   lapack/slaev2.c   lapack/slagtf.c   lapack/slagts.c   lapack/slaisnan.c lapack/slals0.c   lapack/slalsa.c   lapack/slalsd.c   \
-  lapack/slamch.c   lapack/slamrg.c   lapack/slaneg.c   lapack/slange.c   lapack/slanst.c   lapack/slansy.c   lapack/slapy2.c   lapack/slar1v.c   \
+  lapack/slamrg.c   lapack/slaneg.c   lapack/slange.c   lapack/slanst.c   lapack/slansy.c   lapack/slapy2.c   lapack/slar1v.c   \
   lapack/slarf.c    lapack/slarfb.c   lapack/slarfg.c   lapack/slarft.c   lapack/slarnv.c   lapack/slarra.c   lapack/slarrb.c   lapack/slarrc.c   \
   lapack/slarrd.c   lapack/slarre.c   lapack/slarrf.c   lapack/slarrj.c   lapack/slarrk.c   lapack/slarrr.c   lapack/slarrv.c   lapack/slartg.c   \
   lapack/slaruv.c   lapack/slas2.c    lapack/slascl.c   lapack/slasd0.c   lapack/slasd1.c   lapack/slasd2.c   lapack/slasd3.c   lapack/slasd4.c   \
@@ -395,6 +420,7 @@ lib_clapack_la_SOURCES = \
 
 # the cLapack convenience library
 lib_clapack_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS@
+lib_clapack_la_LIBADD = lib_clapack_floatstore.la
 all: all-am
 
 .SUFFIXES:
@@ -439,6 +465,8 @@ clean-noinstLTLIBRARIES:
 	done
 lib_clapack.la: $(lib_clapack_la_OBJECTS) $(lib_clapack_la_DEPENDENCIES) 
 	$(lib_clapack_la_LINK) $(am_lib_clapack_la_rpath) $(lib_clapack_la_OBJECTS) $(lib_clapack_la_LIBADD) $(LIBS)
+lib_clapack_floatstore.la: $(lib_clapack_floatstore_la_OBJECTS) $(lib_clapack_floatstore_la_DEPENDENCIES) 
+	$(lib_clapack_floatstore_la_LINK) $(am_lib_clapack_floatstore_la_rpath) $(lib_clapack_floatstore_la_OBJECTS) $(lib_clapack_floatstore_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -492,7 +520,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlals0.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlalsa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlalsd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlamch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlamrg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlaneg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlange.Plo@am__quote@
@@ -593,6 +620,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ilaenv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iparmq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/isamax.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_clapack_floatstore_la-dlamch.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_clapack_floatstore_la-slamch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow_di.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow_ii.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow_ri.Plo@am__quote@
@@ -646,7 +675,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slals0.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slalsa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slalsd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slamch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slamrg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slaneg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slange.Plo@am__quote@
@@ -1085,13 +1113,6 @@ dlalsd.lo: lapack/dlalsd.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dlalsd.c' object='dlalsd.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dlalsd.lo `test -f 'lapack/dlalsd.c' || echo '$(srcdir)/'`lapack/dlalsd.c
-
-dlamch.lo: lapack/dlamch.c
-@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dlamch.lo -MD -MP -MF $(DEPDIR)/dlamch.Tpo -c -o dlamch.lo `test -f 'lapack/dlamch.c' || echo '$(srcdir)/'`lapack/dlamch.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dlamch.Tpo $(DEPDIR)/dlamch.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dlamch.c' object='dlamch.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dlamch.lo `test -f 'lapack/dlamch.c' || echo '$(srcdir)/'`lapack/dlamch.c
 
 dlamrg.lo: lapack/dlamrg.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dlamrg.lo -MD -MP -MF $(DEPDIR)/dlamrg.Tpo -c -o dlamrg.lo `test -f 'lapack/dlamrg.c' || echo '$(srcdir)/'`lapack/dlamrg.c
@@ -2164,13 +2185,6 @@ slalsd.lo: lapack/slalsd.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o slalsd.lo `test -f 'lapack/slalsd.c' || echo '$(srcdir)/'`lapack/slalsd.c
 
-slamch.lo: lapack/slamch.c
-@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT slamch.lo -MD -MP -MF $(DEPDIR)/slamch.Tpo -c -o slamch.lo `test -f 'lapack/slamch.c' || echo '$(srcdir)/'`lapack/slamch.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/slamch.Tpo $(DEPDIR)/slamch.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/slamch.c' object='slamch.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o slamch.lo `test -f 'lapack/slamch.c' || echo '$(srcdir)/'`lapack/slamch.c
-
 slamrg.lo: lapack/slamrg.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT slamrg.lo -MD -MP -MF $(DEPDIR)/slamrg.Tpo -c -o slamrg.lo `test -f 'lapack/slamrg.c' || echo '$(srcdir)/'`lapack/slamrg.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/slamrg.Tpo $(DEPDIR)/slamrg.Plo
@@ -2835,6 +2849,20 @@ xerbla.lo: lapack/xerbla.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/xerbla.c' object='xerbla.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xerbla.lo `test -f 'lapack/xerbla.c' || echo '$(srcdir)/'`lapack/xerbla.c
+
+lib_clapack_floatstore_la-dlamch.lo: lapack/dlamch.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) -MT lib_clapack_floatstore_la-dlamch.lo -MD -MP -MF $(DEPDIR)/lib_clapack_floatstore_la-dlamch.Tpo -c -o lib_clapack_floatstore_la-dlamch.lo `test -f 'lapack/dlamch.c' || echo '$(srcdir)/'`lapack/dlamch.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/lib_clapack_floatstore_la-dlamch.Tpo $(DEPDIR)/lib_clapack_floatstore_la-dlamch.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dlamch.c' object='lib_clapack_floatstore_la-dlamch.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) -c -o lib_clapack_floatstore_la-dlamch.lo `test -f 'lapack/dlamch.c' || echo '$(srcdir)/'`lapack/dlamch.c
+
+lib_clapack_floatstore_la-slamch.lo: lapack/slamch.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) -MT lib_clapack_floatstore_la-slamch.lo -MD -MP -MF $(DEPDIR)/lib_clapack_floatstore_la-slamch.Tpo -c -o lib_clapack_floatstore_la-slamch.lo `test -f 'lapack/slamch.c' || echo '$(srcdir)/'`lapack/slamch.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/lib_clapack_floatstore_la-slamch.Tpo $(DEPDIR)/lib_clapack_floatstore_la-slamch.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/slamch.c' object='lib_clapack_floatstore_la-slamch.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) -c -o lib_clapack_floatstore_la-slamch.lo `test -f 'lapack/slamch.c' || echo '$(srcdir)/'`lapack/slamch.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
