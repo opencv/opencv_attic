@@ -103,9 +103,9 @@ endif
 
 if BUILD_PYTHON_WRAPPERS
 
-pkgpython_LTLIBRARIES = _cv.la _ml.la _highgui.la
+pkgpyexec_LTLIBRARIES = _cv.la _ml.la _highgui.la
 
-pkgpython_PYTHON = \
+pkgpyexec_PYTHON = \
   __init__.py    \
   cv.py          \
   ml.py          \

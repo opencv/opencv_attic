@@ -39,7 +39,11 @@ subdir = data
 DIST_COMMON = $(nobase_dist_pkgdata_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/autotools/aclocal/az_python.m4 \
+am__aclocal_m4_deps =  \
+	$(top_srcdir)/autotools/aclocal/ax_check_compiler_flags.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
+	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
+	$(top_srcdir)/autotools/aclocal/az_python.m4 \
 	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
@@ -99,6 +103,7 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@

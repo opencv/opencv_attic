@@ -54,10 +54,16 @@ noinst_HEADERS     = \
 if EXTERNAL_LAPACK
   TMP_LAPACK = 
 else
-  TMP_LAPACK = lib_clapack.la
+  TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la
 endif
 
 noinst_LTLIBRARIES = $(TMP_LAPACK)
+
+# sources of the cLapack convenience library part with special flags
+lib_clapack_floatstore_la_SOURCES = \
+  lapack/dlamch.c   lapack/slamch.c   
+lib_clapack_floatstore_la_CFLAGS  = $(AM_CFLAGS) @FLOAT_STORE_CFLAGS@
+lib_clapack_floatstore_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS@
 
 # sources of the cLapack convenience library
 lib_clapack_la_SOURCES = \
@@ -66,7 +72,7 @@ lib_clapack_la_SOURCES = \
   lapack/dger.c     lapack/dgesdd.c   lapack/dgesv.c    lapack/dgetf2.c   lapack/dgetrf.c   lapack/dgetri.c   lapack/dgetrs.c   lapack/dlabad.c   \
   lapack/dlabrd.c   lapack/dlacpy.c   lapack/dlae2.c    lapack/dlaebz.c   lapack/dlaed0.c   lapack/dlaed1.c   lapack/dlaed2.c   lapack/dlaed3.c   \
   lapack/dlaed4.c   lapack/dlaed5.c   lapack/dlaed6.c   lapack/dlaed7.c   lapack/dlaed8.c   lapack/dlaed9.c   lapack/dlaeda.c   lapack/dlaev2.c   \
-  lapack/dlagtf.c   lapack/dlagts.c   lapack/dlaisnan.c lapack/dlals0.c   lapack/dlalsa.c   lapack/dlalsd.c   lapack/dlamch.c   lapack/dlamrg.c   \
+  lapack/dlagtf.c   lapack/dlagts.c   lapack/dlaisnan.c lapack/dlals0.c   lapack/dlalsa.c   lapack/dlalsd.c   lapack/dlamrg.c   \
   lapack/dlaneg.c   lapack/dlange.c   lapack/dlanst.c   lapack/dlansy.c   lapack/dlapy2.c   lapack/dlar1v.c   lapack/dlarf.c    lapack/dlarfb.c   \
   lapack/dlarfg.c   lapack/dlarft.c   lapack/dlarnv.c   lapack/dlarra.c   lapack/dlarrb.c   lapack/dlarrc.c   lapack/dlarrd.c   lapack/dlarre.c   \
   lapack/dlarrf.c   lapack/dlarrj.c   lapack/dlarrk.c   lapack/dlarrr.c   lapack/dlarrv.c   lapack/dlartg.c   lapack/dlaruv.c   lapack/dlas2.c    \
@@ -86,7 +92,7 @@ lib_clapack_la_SOURCES = \
   lapack/sgetrs.c   lapack/slabad.c   lapack/slabrd.c   lapack/slacpy.c   lapack/slae2.c    lapack/slaebz.c   lapack/slaed0.c   lapack/slaed1.c   \
   lapack/slaed2.c   lapack/slaed3.c   lapack/slaed4.c   lapack/slaed5.c   lapack/slaed6.c   lapack/slaed7.c   lapack/slaed8.c   lapack/slaed9.c   \
   lapack/slaeda.c   lapack/slaev2.c   lapack/slagtf.c   lapack/slagts.c   lapack/slaisnan.c lapack/slals0.c   lapack/slalsa.c   lapack/slalsd.c   \
-  lapack/slamch.c   lapack/slamrg.c   lapack/slaneg.c   lapack/slange.c   lapack/slanst.c   lapack/slansy.c   lapack/slapy2.c   lapack/slar1v.c   \
+  lapack/slamrg.c   lapack/slaneg.c   lapack/slange.c   lapack/slanst.c   lapack/slansy.c   lapack/slapy2.c   lapack/slar1v.c   \
   lapack/slarf.c    lapack/slarfb.c   lapack/slarfg.c   lapack/slarft.c   lapack/slarnv.c   lapack/slarra.c   lapack/slarrb.c   lapack/slarrc.c   \
   lapack/slarrd.c   lapack/slarre.c   lapack/slarrf.c   lapack/slarrj.c   lapack/slarrk.c   lapack/slarrr.c   lapack/slarrv.c   lapack/slartg.c   \
   lapack/slaruv.c   lapack/slas2.c    lapack/slascl.c   lapack/slasd0.c   lapack/slasd1.c   lapack/slasd2.c   lapack/slasd3.c   lapack/slasd4.c   \
@@ -101,3 +107,4 @@ lib_clapack_la_SOURCES = \
 
 # the cLapack convenience library
 lib_clapack_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS@
+lib_clapack_la_LIBADD  = lib_clapack_floatstore.la
