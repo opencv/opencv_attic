@@ -11,7 +11,7 @@ import frames
 import sys
 import os
 
-PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
+PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
 
 
 DisplayImages=False

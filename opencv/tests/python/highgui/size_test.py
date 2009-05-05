@@ -12,7 +12,7 @@ from highgui import *
 
 
 # path to images and videos  we need
-PREFIX		=os.environ["top_srcdir"]+"/tests/python/testdata/"
+PREFIX		=os.path.join(os.environ["srcdir"],"python/testdata/")
 
 
 # this is the folder with the videos and images

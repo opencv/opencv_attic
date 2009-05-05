@@ -44,7 +44,7 @@ def callback_function(event,x,y,flag,param):
 # create a window ('cvNamedWindow.works' exists, so it must work)
 cvNamedWindow(win_name,CV_WINDOW_AUTOSIZE)
 # show the baboon in the window
-PREFIX = os.environ["top_srcdir"]+"/tests/python/testdata/images/"
+PREFIX = os.path.join(os.environ["srcdir"],"python/testdata/images/")
 cvShowImage(win_name, cvLoadImage(PREFIX+"cvSetMouseCallback.jpg"))
 # assign callback function 'callback_function' to window, no parameters used here
 cvSetMouseCallback( win_name, callback_function )

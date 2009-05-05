@@ -51,7 +51,7 @@ noinst_HEADERS     = \
    include/f2c.h
 
 # all we want to build here is the single library
-if EXTERNAL_LAPACK
+if NATIVE_LAPACK
   TMP_LAPACK = 
 else
   TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la

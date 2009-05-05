@@ -20,7 +20,7 @@ TESTNAME = "cvLoadImage"
 REQUIRED = []
 
 # path to imagefiles we need
-PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/baboon_256x256"
+PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/baboon_256x256")
 
 
 # this functions tries to open an imagefile

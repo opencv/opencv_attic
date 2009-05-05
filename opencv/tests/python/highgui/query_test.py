@@ -10,7 +10,7 @@ from cv import *
 import match
 
 # path to videos and images we need
-PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/"
+PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/")
 
 # this is the folder with the videos and images
 # and name of output window

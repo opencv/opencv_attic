@@ -17,7 +17,7 @@ from cv import *
 # some defines
 TESTNAME = "cvCreateFileCapture"
 REQUIRED = []
-PREFIX   = os.environ["top_srcdir"]+"/tests/python/testdata/videos/qcif_"
+PREFIX   = os.path.join(os.environ["srcdir"],"python/testdata/videos/qcif_")
 EXTENSION= ".avi"
 
 

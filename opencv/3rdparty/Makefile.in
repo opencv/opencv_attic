@@ -112,7 +112,7 @@ lib_clapack_la_OBJECTS = $(am_lib_clapack_la_OBJECTS)
 lib_clapack_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(lib_clapack_la_LDFLAGS) $(LDFLAGS) -o $@
-@EXTERNAL_LAPACK_FALSE@am_lib_clapack_la_rpath =
+@NATIVE_LAPACK_FALSE@am_lib_clapack_la_rpath =
 lib_clapack_floatstore_la_LIBADD =
 am_lib_clapack_floatstore_la_OBJECTS =  \
 	lib_clapack_floatstore_la-dlamch.lo \
@@ -123,7 +123,7 @@ lib_clapack_floatstore_la_LINK = $(LIBTOOL) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lib_clapack_floatstore_la_CFLAGS) $(CFLAGS) \
 	$(lib_clapack_floatstore_la_LDFLAGS) $(LDFLAGS) -o $@
-@EXTERNAL_LAPACK_FALSE@am_lib_clapack_floatstore_la_rpath =
+@NATIVE_LAPACK_FALSE@am_lib_clapack_floatstore_la_rpath =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -364,10 +364,10 @@ noinst_HEADERS = \
    include/clapack.h \
    include/f2c.h
 
-@EXTERNAL_LAPACK_FALSE@TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la
+@NATIVE_LAPACK_FALSE@TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la
 
 # all we want to build here is the single library
-@EXTERNAL_LAPACK_TRUE@TMP_LAPACK = 
+@NATIVE_LAPACK_TRUE@TMP_LAPACK = 
 noinst_LTLIBRARIES = $(TMP_LAPACK)
 
 # sources of the cLapack convenience library part with special flags

@@ -117,10 +117,10 @@ AM_CONDITIONAL([BUILD_APPS], [test x"$enable_apps" = x"yes"])
 # later code lines that tries to do sensible decisions on what to use
 
 # does the user want to compile python modules as well?
-AC_ARG_WITH([lapack],
-            [AS_HELP_STRING([--with-lapack],[use external BLAS and LAPACK libraries [no]])],
-            [with_lapack=$withval],
-            [with_lapack=no])
+AC_ARG_WITH([native-lapack],
+            [AS_HELP_STRING([--with-native-lapack],[use platform native BLAS and LAPACK [no]])],
+            [with_native_lapack=$withval],
+            [with_native_lapack=no])
 
 # compile and link against OpenMP
 # because of this: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=28482
@@ -343,8 +343,8 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 # BLAS and LAPACK
 
 LAPACK_LIBS=""
-have_lapack=no
-if test x"$with_lapack" = "xyes"; then
+have_native_lapack=no
+if test x"$with_native_lapack" = "xyes"; then
   # check for Accellerate framework on Mac OS X
   # 
   # As of Mac OS X 10.5 blas and lapack exist as standard shared 
@@ -355,15 +355,15 @@ if test x"$with_lapack" = "xyes"; then
                 [
                   AC_DEFINE(HAVE_VECLIB,,[BLAS and LAPACK from Accelerate/vecLib framework])
                   LAPACK_LIBS="-Xlinker -framework -Xlinker vecLib"
-                  have_lapack=yes
+                  have_native_lapack=yes
                 ],
                 [
-                  have_lapack=no
+                  have_native_lapack=no
                 ])
 fi
 
 AC_SUBST(LAPACK_LIBS)
-AM_CONDITIONAL([EXTERNAL_LAPACK], [test x"$have_lapack" = "xyes"])
+AM_CONDITIONAL([NATIVE_LAPACK], [test x"$have_native_lapack" = "xyes"])
 
 
 ######################################################################
@@ -1090,7 +1090,7 @@ General configuration ================================================
     Optimization flags        ${OPTIMIZATION_CPPFLAGS} ${OPTIMIZATION_CXXFLAGS}
     MMX/SSE/SSE2/SSE3:        ${SIMD_FLAGS}
     OpenMP support:           ${OPENMP_CXXFLAGS}
-    External BLAS & LAPACK:   ${have_lapack}
+    External BLAS & LAPACK:   ${have_native_lapack}
 
 HighGUI configuration ================================================
 
