@@ -85,38 +85,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         
     if( _update_data && data_root )
     {
-        data = new CvDTreeTrainData( _train_data, _tflag, _responses, _var_idx,
-            _sample_idx, _var_type, _missing_mask, _params, _shared, _add_labels );
-
-        // compare new and old train data
-        if( !(data->var_count == var_count &&
-            cvNorm( data->var_type, var_type, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->cat_count, cat_count, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->cat_map, cat_map, CV_C ) < FLT_EPSILON) )
-            CV_ERROR( CV_StsBadArg,
-            "The new training data must have the same types and the input and output variables "
-            "and the same categories for categorical variables" );
-
-        cvReleaseMat( &priors );
-        cvReleaseMat( &priors_mult );
-        cvReleaseMat( &buf );
-        cvReleaseMat( &direction );
-        cvReleaseMat( &split_buf );
-        cvReleaseMemStorage( &temp_storage );
-
-        priors = data->priors; data->priors = 0;
-        priors_mult = data->priors_mult; data->priors_mult = 0;
-        buf = data->buf; data->buf = 0;
-        buf_count = data->buf_count; buf_size = data->buf_size;
-        sample_count = data->sample_count;
-
-        direction = data->direction; data->direction = 0;
-        split_buf = data->split_buf; data->split_buf = 0;
-        temp_storage = data->temp_storage; data->temp_storage = 0;
-        nv_heap = data->nv_heap; cv_heap = data->cv_heap;
-
-        data_root = new_node( 0, sample_count, 0, 0 );
-        EXIT;
+        CV_ERROR(CV_StsBadArg, "CvERTrees do not support data update");
     }
 
     clear();
@@ -568,9 +537,9 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     cvReleaseMat( &tmp_map );
 }
 
-int CvERTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, uchar* missing_buf, const float** ord_values, const uchar** missing )
+int CvERTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* missing_buf, const float** ord_values, const int** missing )
 {
-    int vidx = var_idx->data.i[vi];
+    int vidx = var_idx ? var_idx->data.i[vi] : vi;
     int node_sample_count = n->sample_count; 
     int* sample_indices_buf = sample_idx_buf;
     const int* sample_indices = 0;
@@ -696,10 +665,12 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         else // ordered
         {
             float* dst_buf = values + vi;
-            uchar* m_buf = missing ? missing + vi : (uchar*)pred_int_buf;
+            int* m_buf = pred_int_buf;
             const float *dst = 0;
-            const uchar* m = 0;
-            get_ord_var_data(data_root, vi, dst_buf, m_buf, &dst, &m);   
+            const int* m = 0;
+            get_ord_var_data(data_root, vi, dst_buf, m_buf, &dst, &m);
+            for (int si = 0; si < total; si++)
+                *(missing + vi + si) = m[si] == 0 ? 0 : 1;
         }
     }
 
@@ -719,7 +690,7 @@ void CvERTreeTrainData::get_vectors( const CvMat* _subsample_idx,
                 responses[i] = (float)val;
             }
         }
-        else
+        else           
         {
             float *_values_buf = resp_float_buf;
             const float* _values = 0;
@@ -830,9 +801,9 @@ double CvForestERTree::calc_node_dir( CvDTreeNode* node )
         float split_val = node->split->ord.c;
         float* val_buf = data->pred_float_buf;
         const float* val = 0;
-        uchar* missing_buf = (uchar*)data->pred_int_buf;
-        const uchar* missing = 0;
-        ((CvERTreeTrainData*)data)->get_ord_var_data( node, vi, val_buf, missing_buf, &val, &missing );
+        int* missing_buf = (int*)data->pred_int_buf;
+        const int* missing = 0;
+        data->get_ord_var_data( node, vi, val_buf, missing_buf, &val, &missing );
 
         if( !data->have_priors )
         {
@@ -899,9 +870,9 @@ CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi )
 
     float* values_buf = data->pred_float_buf;
     const float* values = 0;
-    uchar* missing_buf = (uchar*)data->pred_int_buf;
-    const uchar* missing = 0;
-    ((CvERTreeTrainData*)data)->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
+    int* missing_buf = data->pred_int_buf;
+    const int* missing = 0;
+    data->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
     int* responses_buf =  data->resp_int_buf;
     const int* responses = 0;
     data->get_class_labels( node, responses_buf, &responses );
@@ -1182,9 +1153,9 @@ CvDTreeSplit* CvForestERTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     int n = node->sample_count;
     float* values_buf = data->pred_float_buf;
     const float* values = 0;
-    uchar* missing_buf = (uchar*)data->pred_int_buf;
-    const uchar* missing = 0;
-    ((CvERTreeTrainData*)data)->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
+    int* missing_buf = data->pred_int_buf;
+    const int* missing = 0;
+    data->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
     float* responses_buf =  data->resp_float_buf;
     const float* responses = 0;
     data->get_ord_responses( node, responses_buf, &responses );
@@ -1338,87 +1309,87 @@ CvDTreeSplit* CvForestERTree::find_split_cat_reg( CvDTreeNode* node, int vi )
     return split;
 }
 
-void CvForestERTree::complete_node_dir( CvDTreeNode* node )
-{
-    int vi, i, n = node->sample_count, nl, nr, d0 = 0, d1 = -1;
-    int nz = n - node->get_num_valid(node->split->var_idx);
-    char* dir = (char*)data->direction->data.ptr;
-
-    // try to complete direction using surrogate splits
-    if( nz && data->params.use_surrogates )
-    {
-        CvDTreeSplit* split = node->split->next;
-        for( ; split != 0 && nz; split = split->next )
-        {
-            int inversed_mask = split->inversed ? -1 : 0;
-            vi = split->var_idx;
-
-            if( data->get_var_type(vi) >= 0 ) // split on categorical var
-            {
-                int* labels_buf = data->pred_int_buf;
-                const int* labels = 0;
-                data->get_cat_var_data(node, vi, labels_buf, &labels);
-                const int* subset = split->subset;
-
-                for( i = 0; i < n; i++ )
-                {
-                    int idx = labels[i];
-                    if( !dir[i] && ( ((idx >= 0)&&(!data->is_buf_16u)) || ((idx != 65535)&&(data->is_buf_16u)) ))
-                        
-                    {
-                        int d = CV_DTREE_CAT_DIR(idx,subset);
-                        dir[i] = (char)((d ^ inversed_mask) - inversed_mask);
-                        if( --nz )
-                            break;
-                    }
-                }
-            }
-            else // split on ordered var
-            {
-                float* values_buf = data->pred_float_buf;
-                const float* values = 0;
-                uchar* missing_buf = (uchar*)data->pred_int_buf;
-                const uchar* missing = 0;
-                ((CvERTreeTrainData*)data)->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
-                float split_val = node->split->ord.c;
-                
-                for( i = 0; i < n; i++ )
-                {
-                    if( !dir[i] && !missing[i])
-                    {
-                        int d = values[i] <= split_val ? -1 : 1;
-                        dir[i] = (char)((d ^ inversed_mask) - inversed_mask);
-                        if( --nz )
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
-    // find the default direction for the rest
-    if( nz )
-    {
-        for( i = nr = 0; i < n; i++ )
-            nr += dir[i] > 0;
-        nl = n - nr - nz;
-        d0 = nl > nr ? -1 : nr > nl;
-    }
-
-    // make sure that every sample is directed either to the left or to the right
-    for( i = 0; i < n; i++ )
-    {
-        int d = dir[i];
-        if( !d )
-        {
-            d = d0;
-            if( !d )
-                d = d1, d1 = -d1;
-        }
-        d = d > 0;
-        dir[i] = (char)d; // remap (-1,1) to (0,1)
-    }
-}
+//void CvForestERTree::complete_node_dir( CvDTreeNode* node )
+//{
+//    int vi, i, n = node->sample_count, nl, nr, d0 = 0, d1 = -1;
+//    int nz = n - node->get_num_valid(node->split->var_idx);
+//    char* dir = (char*)data->direction->data.ptr;
+//
+//    // try to complete direction using surrogate splits
+//    if( nz && data->params.use_surrogates )
+//    {
+//        CvDTreeSplit* split = node->split->next;
+//        for( ; split != 0 && nz; split = split->next )
+//        {
+//            int inversed_mask = split->inversed ? -1 : 0;
+//            vi = split->var_idx;
+//
+//            if( data->get_var_type(vi) >= 0 ) // split on categorical var
+//            {
+//                int* labels_buf = data->pred_int_buf;
+//                const int* labels = 0;
+//                data->get_cat_var_data(node, vi, labels_buf, &labels);
+//                const int* subset = split->subset;
+//
+//                for( i = 0; i < n; i++ )
+//                {
+//                    int idx = labels[i];
+//                    if( !dir[i] && ( ((idx >= 0)&&(!data->is_buf_16u)) || ((idx != 65535)&&(data->is_buf_16u)) ))
+//                        
+//                    {
+//                        int d = CV_DTREE_CAT_DIR(idx,subset);
+//                        dir[i] = (char)((d ^ inversed_mask) - inversed_mask);
+//                        if( --nz )
+//                            break;
+//                    }
+//                }
+//            }
+//            else // split on ordered var
+//            {
+//                float* values_buf = data->pred_float_buf;
+//                const float* values = 0;
+//                uchar* missing_buf = (uchar*)data->pred_int_buf;
+//                const uchar* missing = 0;
+//                data->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
+//                float split_val = node->split->ord.c;
+//                
+//                for( i = 0; i < n; i++ )
+//                {
+//                    if( !dir[i] && !missing[i])
+//                    {
+//                        int d = values[i] <= split_val ? -1 : 1;
+//                        dir[i] = (char)((d ^ inversed_mask) - inversed_mask);
+//                        if( --nz )
+//                            break;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    // find the default direction for the rest
+//    if( nz )
+//    {
+//        for( i = nr = 0; i < n; i++ )
+//            nr += dir[i] > 0;
+//        nl = n - nr - nz;
+//        d0 = nl > nr ? -1 : nr > nl;
+//    }
+//
+//    // make sure that every sample is directed either to the left or to the right
+//    for( i = 0; i < n; i++ )
+//    {
+//        int d = dir[i];
+//        if( !d )
+//        {
+//            d = d0;
+//            if( !d )
+//                d = d1, d1 = -d1;
+//        }
+//        d = d > 0;
+//        dir[i] = (char)d; // remap (-1,1) to (0,1)
+//    }
+//}
 
 void CvForestERTree::split_node_data( CvDTreeNode* node )
 {
@@ -1438,7 +1409,6 @@ void CvForestERTree::split_node_data( CvDTreeNode* node )
         nl += d^1;
     }
 
-
     bool split_input_data;
     node->left = left = data->new_node( node, nl, new_buf_idx, node->offset );
     node->right = right = data->new_node( node, nr, new_buf_idx, node->offset + nl );
@@ -1457,9 +1427,9 @@ void CvForestERTree::split_node_data( CvDTreeNode* node )
 
         float* values_buf = data->pred_float_buf;
         const float* values = 0;
-        uchar* missing_buf = (uchar*)data->pred_int_buf;
-        const uchar* missing = 0;
-        ((CvERTreeTrainData*)data)->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
+        int* missing_buf = data->pred_int_buf;
+        const int* missing = 0;
+        data->get_ord_var_data( node, vi, values_buf, missing_buf, &values, &missing );
 
         for( i = 0; i < n; i++ )
             nr1 += (!missing[i] & dir[i]);
@@ -1550,7 +1520,7 @@ void CvForestERTree::split_node_data( CvDTreeNode* node )
     const int* sample_idx_src = 0;
     if (split_input_data)
     {
-        ((CvERTreeTrainData*)data)->get_sample_indices(node, sample_idx_src_buf, &sample_idx_src);
+        data->get_sample_indices(node, sample_idx_src_buf, &sample_idx_src);
 
         for(i = 0; i < n; i++)
             temp_buf[i] = sample_idx_src[i];
@@ -1626,7 +1596,7 @@ bool CvERTrees::train( const CvMat* _train_data, int _tflag,
         params.cv_folds, params.use_1se_rule, false, params.priors );
 
     data = new CvERTreeTrainData();
-    CV_CALL(((CvERTreeTrainData*)data)->set_data( _train_data, _tflag, _responses, _var_idx,
+    CV_CALL(data->set_data( _train_data, _tflag, _responses, _var_idx,
         _sample_idx, _var_type, _missing_mask, tree_params, true));
 
     var_count = data->var_count;
@@ -1669,15 +1639,7 @@ bool CvERTrees::train( CvMLData* data, CvRTParams params)
 
     __BEGIN__;
 
-    const CvMat* values = data->get_values();
-    const CvMat* response = data->get_response();
-    const CvMat* missing = data->get_missing();
-    const CvMat* var_types = data->get_var_types();
-    const CvMat* train_sidx = data->get_train_sample_idx();
-    const CvMat* var_idx = data->get_var_idx();
-
-    CV_CALL( result = train( values, CV_ROW_SAMPLE, response, var_idx,
-        train_sidx, var_types, missing, params ) );
+    CV_CALL( result = CvRTrees::train( data, params) );
 
     __END__;
 
@@ -1743,7 +1705,7 @@ bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
         CV_CALL(missing_ptr              = (uchar*)cvAlloc( sizeof(uchar)*nsamples*dims ));
         CV_CALL(true_resp_ptr            = (float*)cvAlloc( sizeof(float)*nsamples ));            
 
-        CV_CALL(((CvERTreeTrainData*)data)->get_vectors( 0, samples_ptr, missing_ptr, true_resp_ptr ));
+        CV_CALL(data->get_vectors( 0, samples_ptr, missing_ptr, true_resp_ptr ));
         {
             double minval, maxval;
             CvMat responses = cvMat(1, nsamples, CV_32FC1, true_resp_ptr);
@@ -1902,22 +1864,6 @@ bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
 
     return result;
 }
-
-void CvERTrees::clear()
-{
-    int k;
-    for( k = 0; k < ntrees; k++ )
-        delete (CvForestERTree*)trees[k];
-    cvFree( &trees );
-
-    delete (CvForestERTree*)data;
-    data = 0;
-
-    cvReleaseMat( &active_var_mask );
-    cvReleaseMat( &var_importance );
-    ntrees = 0;
-}
-
 
 // End of file.
 

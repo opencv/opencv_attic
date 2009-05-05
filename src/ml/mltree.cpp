@@ -915,7 +915,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
                 *dst = (float)val;
                 if( m )
                 {
-                    *m = val < 0;
+                    *m = (!is_buf_16u && val < 0) || (is_buf_16u && (val == 65535));
                     m += var_count;
                 }
             }
@@ -1154,7 +1154,7 @@ int CvDTreeTrainData::get_var_type(int vi) const
 
 int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* indices_buf, const float** ord_values, const int** indices )
 {
-    int vidx = var_idx->data.i[vi];
+    int vidx = var_idx ? var_idx->data.i[vi] : vi;
     int node_sample_count = n->sample_count; 
     int* sample_indices_buf = sample_idx_buf;
     const int* sample_indices = 0;

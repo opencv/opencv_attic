@@ -1027,7 +1027,7 @@ public:
 
 protected:
 
-    bool grow_forest( const CvTermCriteria term_crit );
+    virtual bool grow_forest( const CvTermCriteria term_crit );
 
     // array of the trees of the forest
     CvForestTree** trees;
@@ -1054,8 +1054,8 @@ struct CV_EXPORTS CvERTreeTrainData : public CvDTreeTrainData
                           const CvDTreeParams& _params=CvDTreeParams(),
                           bool _shared=false, bool _add_labels=false,
                           bool _update_data=false );
-    virtual int get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, uchar* missing_buf,
-        const float** ord_values, const uchar** missing );
+    virtual int get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* missing_buf,
+        const float** ord_values, const int** missing );
     virtual void get_sample_indices( CvDTreeNode* n, int* indices_buf, const int** indices );
     virtual void get_cv_labels( CvDTreeNode* n, int* labels_buf, const int** labels );
     virtual int get_cat_var_data( CvDTreeNode* n, int vi, int* cat_values_buf, const int** cat_values );
@@ -1073,7 +1073,7 @@ protected:
     virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* node, int vi );
     virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* node, int vi );
     virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* node, int vi );
-    virtual void complete_node_dir( CvDTreeNode* node );
+    //virtual void complete_node_dir( CvDTreeNode* node );
     virtual void split_node_data( CvDTreeNode* n );
 };
 
@@ -1081,13 +1081,13 @@ class CV_EXPORTS CvERTrees : public CvRTrees
 {
 public:
     virtual bool train( const CvMat* _train_data, int _tflag,
-        const CvMat* _responses, const CvMat* _var_idx,
-        const CvMat* _sample_idx, const CvMat* _var_type,
-        const CvMat* _missing_mask, CvRTParams params );
+                        const CvMat* _responses, const CvMat* _var_idx=0,
+                        const CvMat* _sample_idx=0, const CvMat* _var_type=0,
+                        const CvMat* _missing_mask=0,
+                        CvRTParams params=CvRTParams());
     virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
-    virtual void clear();
 protected:
-    bool grow_forest( const CvTermCriteria term_crit );
+    virtual bool grow_forest( const CvTermCriteria term_crit );
 };
 
 
