@@ -2544,7 +2544,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 
         for( i = 0; i < n; i++ )
         {
-            int idx = labels[i];
+            int idx = ( (labels[i] == 65535) && (data->is_buf_16u) ) ? -1 : labels[i];
             double w = priors[responses[i]];
             int d = dir[i];
             double sum = lc[idx] + d*w;
