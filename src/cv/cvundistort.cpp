@@ -48,8 +48,10 @@ namespace cv
 Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize )
 {
     Mat_<double> Ar(3, 3);
-    Ar << A(0,0), 0., (imgsize.width-1)*0.5,
-          0., A(1,1), (imgsize.height-1)*0.5,
+//    Ar << A(0,0), 0., (imgsize.width-1)*0.5,
+//          0., A(1,1), (imgsize.height-1)*0.5,
+    Ar << A(0,0), 0., A(0,2),
+          0., A(1,1), A(1,2),
           0., 0., 1.;
     return Ar;
 }
@@ -89,7 +91,7 @@ void initUndistortRectifyMap( const Mat& _cameraMatrix, const Mat& _distCoeffs,
     CV_Assert( A.size() == Size(3,3) && A.size() == Ar.size() && A.size() == R.size() );
     Mat_<double> iR = (Ar*R).inv(DECOMP_LU);
     const double* ir = &iR(0,0);
-    
+
     double u0 = A(0, 2),  v0 = A(1, 2);
     double fx = A(0, 0),  fy = A(1, 1);
 
@@ -176,7 +178,7 @@ void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
         Mat map1_part = map1.rowRange(0, stripe_size),
             map2_part = map2.rowRange(0, stripe_size),
             dst_part = dst.rowRange(y, y + stripe_size);
-        
+
         initUndistortRectifyMap( A, distCoeffs, I, Ar, Size(src.cols, stripe_size),
                                  map1_part.type(), map1_part, map2_part );
         remap( src, dst_part, map1_part, map2_part, INTER_LINEAR, BORDER_REPLICATE );
@@ -286,7 +288,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
         cvConvert( cvGetCols(_P, &_P3x3, 0, 3), &_PP );
         cvMatMul( &_PP, &_RR, &_RR );
     }
-    
+
     srcf = (const CvPoint2D32f*)_src->data.ptr;
     srcd = (const CvPoint2D64f*)_src->data.ptr;
     dstf = (CvPoint2D32f*)_dst->data.ptr;
@@ -295,7 +297,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
     dtype = CV_MAT_TYPE(_dst->type);
     sstep = _src->rows == 1 ? 1 : _src->step/CV_ELEM_SIZE(stype);
     dstep = _dst->rows == 1 ? 1 : _dst->step/CV_ELEM_SIZE(dtype);
-    
+
     n = _src->rows + _src->cols - 1;
 
     fx = A[0][0];
@@ -318,7 +320,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
             x = srcd[i*sstep].x;
             y = srcd[i*sstep].y;
         }
-        
+
         x0 = x = (x - cx)*ifx;
         y0 = y = (y - cy)*ify;
 
@@ -332,7 +334,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
             x = (x0 - deltaX)*icdist;
             y = (y0 - deltaY)*icdist;
         }
-        
+
         double xx = RR[0][0]*x + RR[0][1]*y + RR[0][2];
         double yy = RR[1][0]*x + RR[1][1]*y + RR[1][2];
         double ww = 1./(RR[2][0]*x + RR[2][1]*y + RR[2][2]);
