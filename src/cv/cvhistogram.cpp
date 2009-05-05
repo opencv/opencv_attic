@@ -1502,6 +1502,7 @@ cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform
 
     hist = (CvHistogram *)cvAlloc( sizeof( CvHistogram ));
     hist->type = CV_HIST_MAGIC_VAL + ((int)type & 1);
+	if (uniform) hist->type|= CV_HIST_UNIFORM_FLAG;
     hist->thresh2 = 0;
     hist->bins = 0;
     if( type == CV_HIST_ARRAY )
