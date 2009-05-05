@@ -7,24 +7,22 @@ check_PROGRAMS    = cxcoretest cvtest mltest
 check_SCRIPTS     = $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
 TESTS             = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_LDFLAGS        = @OPENMP_CXXFLAGS@
-
 clean-local:
 	-rm -rf *.lst *.sum python/*.pyc python/*.works python/highgui/*.pyc python/highgui/*.works
 
 
 TESTS_ENVIRONMENT = \
-    top_srcdir=$(top_srcdir) \
-    top_builddir=$(top_builddir) \
-    LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
-    DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
-    OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
-    PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
+  LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
+  DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
+  OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
+  PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
 
 
 AM_CPPFLAGS = \
-    -I$(top_srcdir)/tests/cxts        \
-    -I$(top_srcdir)/include/opencv
+  -I$(top_srcdir)/tests/cxts        \
+  -I$(top_srcdir)/include/opencv
+
+AM_LDFLAGS = @OPENMP_CXXFLAGS@
 
 
 EXTRA_DIST = \

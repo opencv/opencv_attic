@@ -18,8 +18,6 @@ import works
 if not works.check_files(REQUIRED, TESTNAME):
 	sys.exit(77)
 
-print sys.path
-
 # import the necessary things for OpenCV
 import highgui
 

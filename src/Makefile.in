@@ -236,7 +236,8 @@ libcvaux_la_OBJECTS = $(am_libcvaux_la_OBJECTS)
 libcvaux_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libcvaux_la_LDFLAGS) $(LDFLAGS) -o $@
-@EXTERNAL_LAPACK_FALSE@am__DEPENDENCIES_1 = $(top_builddir)/3rdparty/lib_clapack.la
+@NATIVE_LAPACK_FALSE@am__DEPENDENCIES_1 =  \
+@NATIVE_LAPACK_FALSE@	$(top_builddir)/3rdparty/lib_clapack.la
 libcxcore_la_DEPENDENCIES = lib_cxcore.la $(am__DEPENDENCIES_1) \
 	@LTLIBOBJS@ $(am__empty)
 am_libcxcore_la_OBJECTS = cxprecomp.lo
@@ -462,12 +463,12 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@EXTERNAL_LAPACK_FALSE@LAPACK = $(top_builddir)/3rdparty/lib_clapack.la
+@NATIVE_LAPACK_FALSE@LAPACK = $(top_builddir)/3rdparty/lib_clapack.la
 
-# use external lapack libraries or the one shipped with OpenCV
-@EXTERNAL_LAPACK_TRUE@LAPACK = @LAPACK_LIBS@
-@EXTERNAL_LAPACK_FALSE@LAPACK_INCL = -I$(top_srcdir)/3rdparty/include
-@EXTERNAL_LAPACK_TRUE@LAPACK_INCL = 
+# use platform native lapack libraries or the one shipped with OpenCV
+@NATIVE_LAPACK_TRUE@LAPACK = @LAPACK_LIBS@
+@NATIVE_LAPACK_FALSE@LAPACK_INCL = -I$(top_srcdir)/3rdparty/include
+@NATIVE_LAPACK_TRUE@LAPACK_INCL = 
 AM_CPPFLAGS = @OPTIMIZATION_CPPFLAGS@ @DEBUG_CPPFLAGS@ -I$(top_srcdir)/include/opencv
 AM_CXXFLAGS = @OPTIMIZATION_CXXFLAGS@ @DEBUG_CXXFLAGS@
 

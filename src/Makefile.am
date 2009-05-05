@@ -1,7 +1,7 @@
 # This Makefile now builds everything in the src directory
 
-# use external lapack libraries or the one shipped with OpenCV
-if EXTERNAL_LAPACK
+# use platform native lapack libraries or the one shipped with OpenCV
+if NATIVE_LAPACK
   LAPACK = @LAPACK_LIBS@
   LAPACK_INCL =
 else

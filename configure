@@ -861,8 +861,8 @@ BUILD_CARBON_FALSE
 BUILD_CARBON_TRUE
 CARBON_LIBS
 CARBON_CFLAGS
-EXTERNAL_LAPACK_FALSE
-EXTERNAL_LAPACK_TRUE
+NATIVE_LAPACK_FALSE
+NATIVE_LAPACK_TRUE
 LAPACK_LIBS
 ALLOCA
 FLOAT_STORE_CFLAGS
@@ -1005,7 +1005,7 @@ enable_debug
 enable_optimization
 enable_sse
 enable_apps
-with_lapack
+with_native_lapack
 with_swig
 with_python
 with_octave
@@ -1691,7 +1691,7 @@ Optional Packages:
   --with-pic              try to use only PIC/non-PIC objects [default=use
                           both]
   --with-tags[=TAGS]      include additional configurations [automatic]
-  --with-lapack           use external BLAS and LAPACK libraries [no]
+  --with-native-lapack    use platform native BLAS and LAPACK [no]
   --with-swig             use swig wrapper generator [no]
   --with-python           use python for wrapping [yes]
   --with-octave           use octave for wrapping [no]
@@ -21147,11 +21147,11 @@ fi
 
 # does the user want to compile python modules as well?
 
-# Check whether --with-lapack was given.
-if test "${with_lapack+set}" = set; then
-  withval=$with_lapack; with_lapack=$withval
+# Check whether --with-native-lapack was given.
+if test "${with_native_lapack+set}" = set; then
+  withval=$with_native_lapack; with_native_lapack=$withval
 else
-  with_lapack=no
+  with_native_lapack=no
 fi
 
 
@@ -23628,8 +23628,8 @@ fi
 # BLAS and LAPACK
 
 LAPACK_LIBS=""
-have_lapack=no
-if test x"$with_lapack" = "xyes"; then
+have_native_lapack=no
+if test x"$with_native_lapack" = "xyes"; then
   # check for Accellerate framework on Mac OS X
   #
   # As of Mac OS X 10.5 blas and lapack exist as standard shared
@@ -23776,11 +23776,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
                   LAPACK_LIBS="-Xlinker -framework -Xlinker vecLib"
-                  have_lapack=yes
+                  have_native_lapack=yes
 
 else
 
-                  have_lapack=no
+                  have_native_lapack=no
 
 fi
 
@@ -23788,12 +23788,12 @@ fi
 fi
 
 
- if test x"$have_lapack" = "xyes"; then
-  EXTERNAL_LAPACK_TRUE=
-  EXTERNAL_LAPACK_FALSE='#'
+ if test x"$have_native_lapack" = "xyes"; then
+  NATIVE_LAPACK_TRUE=
+  NATIVE_LAPACK_FALSE='#'
 else
-  EXTERNAL_LAPACK_TRUE='#'
-  EXTERNAL_LAPACK_FALSE=
+  NATIVE_LAPACK_TRUE='#'
+  NATIVE_LAPACK_FALSE=
 fi
 
 
@@ -29606,10 +29606,10 @@ Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-if test -z "${EXTERNAL_LAPACK_TRUE}" && test -z "${EXTERNAL_LAPACK_FALSE}"; then
-  { { $as_echo "$as_me:$LINENO: error: conditional \"EXTERNAL_LAPACK\" was never defined.
+if test -z "${NATIVE_LAPACK_TRUE}" && test -z "${NATIVE_LAPACK_FALSE}"; then
+  { { $as_echo "$as_me:$LINENO: error: conditional \"NATIVE_LAPACK\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-$as_echo "$as_me: error: conditional \"EXTERNAL_LAPACK\" was never defined.
+$as_echo "$as_me: error: conditional \"NATIVE_LAPACK\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -31076,7 +31076,7 @@ General configuration ================================================
     Optimization flags        ${OPTIMIZATION_CPPFLAGS} ${OPTIMIZATION_CXXFLAGS}
     MMX/SSE/SSE2/SSE3:        ${SIMD_FLAGS}
     OpenMP support:           ${OPENMP_CXXFLAGS}
-    External BLAS & LAPACK:   ${have_lapack}
+    External BLAS & LAPACK:   ${have_native_lapack}
 
 HighGUI configuration ================================================
 
@@ -31131,7 +31131,7 @@ General configuration ================================================
     Optimization flags        ${OPTIMIZATION_CPPFLAGS} ${OPTIMIZATION_CXXFLAGS}
     MMX/SSE/SSE2/SSE3:        ${SIMD_FLAGS}
     OpenMP support:           ${OPENMP_CXXFLAGS}
-    External BLAS & LAPACK:   ${have_lapack}
+    External BLAS & LAPACK:   ${have_native_lapack}
 
 HighGUI configuration ================================================
 

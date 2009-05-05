@@ -434,19 +434,17 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 check_LTLIBRARIES = libcxts.la
 check_SCRIPTS = $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
-AM_LDFLAGS = @OPENMP_CXXFLAGS@
 TESTS_ENVIRONMENT = \
-    top_srcdir=$(top_srcdir) \
-    top_builddir=$(top_builddir) \
-    LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
-    DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
-    OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
-    PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
+  LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
+  DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
+  OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
+  PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
 
 AM_CPPFLAGS = \
-    -I$(top_srcdir)/tests/cxts        \
-    -I$(top_srcdir)/include/opencv
+  -I$(top_srcdir)/tests/cxts        \
+  -I$(top_srcdir)/include/opencv
 
+AM_LDFLAGS = @OPENMP_CXXFLAGS@
 EXTRA_DIST = \
   CMakeLists.txt \
   cv/CMakeLists.txt \
