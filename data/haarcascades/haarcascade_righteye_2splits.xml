@@ -2,7 +2,7 @@
 <!--
     Tree-based 20x20 right eye detector.
     The detector is trained by 6665 positive samples from FERET, VALID and BioID face databases. 
-    Created by Shiqi Yu (http://yushiqi.cn).
+    Created by Shiqi Yu (http://yushiqi.cn/research/eyedetection).
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
