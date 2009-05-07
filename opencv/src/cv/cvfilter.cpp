@@ -1866,7 +1866,7 @@ struct FilterVec_8u16s
             }
 
             x0 = _mm_packs_epi32(_mm_cvtps_epi32(s0), z);
-            _mm_storeu_si128((__m128i*)(dst + i), x0);
+            _mm_storel_epi64((__m128i*)(dst + i), x0);
         }
 
         return i;
