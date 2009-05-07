@@ -980,8 +980,8 @@ void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMa
     cvTsConvert( _k0, &_k );
     fx = a[0]; fy = a[4]; cx = a[2]; cy = a[5];
     ifx = 1./fx; ify = 1./fy;
-    cxn = (mapy->cols - 1)*0.5;
-    cyn = (mapy->rows - 1)*0.5;
+    cxn = cx;//(mapy->cols - 1)*0.5;
+    cyn = cy;//(mapy->rows - 1)*0.5;
 
     for( v = 0; v < mapy->rows; v++ )
     {
