@@ -49,7 +49,7 @@ if(MSVC)
 endif()
 
 if(UNIX AND CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wno-parentheses")
     set_source_files_properties(dlamch.c slamch.c PROPERTIES COMPILE_FLAGS "-ffloat-store")
 endif()
 
