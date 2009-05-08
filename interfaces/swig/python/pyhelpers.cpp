@@ -341,15 +341,15 @@ CvArr * PyArray_to_CvArr (PyObject * obj)
   // the array interface should be a dict
   if (PyMapping_Check (interface))
   {
-    if (PyMapping_HasKeyString (interface, "version") &&
-        PyMapping_HasKeyString (interface, "shape")   &&
-        PyMapping_HasKeyString (interface, "typestr") &&
-        PyMapping_HasKeyString (interface, "data"))
+    if (PyMapping_HasKeyString (interface, (char*)"version") &&
+        PyMapping_HasKeyString (interface, (char*)"shape")   &&
+        PyMapping_HasKeyString (interface, (char*)"typestr") &&
+        PyMapping_HasKeyString (interface, (char*)"data"))
     {
-      PyObject * version = PyMapping_GetItemString (interface, "version");
-      PyObject * shape   = PyMapping_GetItemString (interface, "shape");
-      PyObject * typestr = PyMapping_GetItemString (interface, "typestr");
-      PyObject * data    = PyMapping_GetItemString (interface, "data");
+      PyObject * version = PyMapping_GetItemString (interface, (char*)"version");
+      PyObject * shape   = PyMapping_GetItemString (interface, (char*)"shape");
+      PyObject * typestr = PyMapping_GetItemString (interface, (char*)"typestr");
+      PyObject * data    = PyMapping_GetItemString (interface, (char*)"data");
       
       if (!PyInt_Check (version)  ||  PyInt_AsLong (version) != 3)
         PyErr_SetString(PyExc_TypeError, "OpenCV understands version 3 of the __array_interface__ only");
@@ -431,9 +431,9 @@ CvArr * PyArray_to_CvArr (PyObject * obj)
                 // handle strides if given
                 // TODO: implement stride handling
                 step = cols * channels * element_size;
-                if (PyMapping_HasKeyString (interface, "strides"))
+                if (PyMapping_HasKeyString (interface, (char*)"strides"))
                 {
-                  PyObject * strides = PyMapping_GetItemString (interface, "strides");
+                  PyObject * strides = PyMapping_GetItemString (interface, (char*)"strides");
                   
                   if (strides != Py_None)
                   {
