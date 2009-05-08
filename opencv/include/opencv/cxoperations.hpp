@@ -378,7 +378,7 @@ Complex<_Tp>& operator *= (Complex<_Tp>& a, _Tp b)
 
 template<typename _Tp> static inline
 double abs(const Complex<_Tp>& a)
-{ return std::sqrt( (double)a.re.a.re + (double)a.im*a.im); }
+{ return std::sqrt( (double)a.re*a.re + (double)a.im*a.im); }
 
 template<typename _Tp> static inline
 Complex<_Tp> operator / (const Complex<_Tp>& a, const Complex<_Tp>& b)
@@ -740,13 +740,13 @@ template<typename _Tp> inline Scalar_<_Tp> Scalar_<_Tp>::mul(const Scalar_<_Tp>&
 
 template<typename _Tp> static inline bool operator == ( const Scalar_<_Tp>& a, const Scalar_<_Tp>& b )
 {
-    return a.val[0] == b.val[0] && a.val[1] == b.val[1] && 
+    return a.val[0] == b.val[0] && a.val[1] == b.val[1] &&
         a.val[2] == b.val[2] && a.val[3] == b.val[3];
 }
 
 template<typename _Tp> static inline bool operator != ( const Scalar_<_Tp>& a, const Scalar_<_Tp>& b )
 {
-    return a.val[0] != b.val[0] || a.val[1] != b.val[1] || 
+    return a.val[0] != b.val[0] || a.val[1] != b.val[1] ||
         a.val[2] != b.val[2] || a.val[3] != b.val[3];
 }
 
@@ -4971,7 +4971,7 @@ inline SparseMat& SparseMat::operator = (const SparseMat& m)
         flags = m.flags;
         hdr = m.hdr;
     }
-    return *this;    
+    return *this;
 }
 
 inline SparseMat& SparseMat::operator = (const Mat& m)
@@ -5042,12 +5042,12 @@ inline int SparseMat::dims() const
 {
     return hdr ? hdr->dims : 0;
 }
-    
+
 inline size_t SparseMat::nzcount() const
 {
     return hdr ? hdr->nodeCount : 0;
 }
-    
+
 inline size_t SparseMat::hash(int i0) const
 {
     return (size_t)i0;
