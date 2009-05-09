@@ -70,105 +70,63 @@ static const int icvAtanSign[8] =
 
 float fastAtan2( float y, float x )
 {
-    Cv32suf _x, _y;
-    int ix, iy, ygx, idx;
-    double z;
-
-    _x.f = x; _y.f = y;
-    ix = _x.i; iy = _y.i;
-    idx = (ix < 0) * 2 + (iy < 0) * 4;
-
-    ix &= 0x7fffffff;
-    iy &= 0x7fffffff;
-
-    ygx = (iy <= ix) - 1;
-    idx -= ygx;
-
-    idx &= ((ix == 0) - 1) | ((iy == 0) - 1);
-
-    /* swap ix and iy if ix < iy */
-    ix ^= iy & ygx;
-    iy ^= ix & ygx;
-    ix ^= iy & ygx;
-
-    _y.i = iy ^ icvAtanSign[idx];
-
-    /* ix = ix != 0 ? ix : 1.f */
-    _x.i = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
-
-    z = _y.f / _x.f;
-    return (float)((_CV_ATAN_CF0*fabs(z) + _CV_ATAN_CF1)*z + icvAtanTab[idx]);
+	double a, x2 = (double)x*x, y2 = (double)y*y;
+	if( y2 <= x2 )
+	{
+		a = (180./CV_PI)*x*y/(x2 + 0.28*y2 + DBL_EPSILON);
+		return (float)(x < 0 ? a + 180 : y >= 0 ? a : 360+a);
+	}
+	a = (180./CV_PI)*x*y/(y2 + 0.28*x2 + DBL_EPSILON);
+	return (float)(y >= 0 ? 90 - a : 270 - a);
 }
 
-static CvStatus CV_STDCALL FastAtan2_32f(const float *__y, const float *__x, float *angle, int len )
+static CvStatus CV_STDCALL FastAtan2_32f(const float *Y, const float *X, float *angle, int len, bool angleInDegrees=true )
 {
-    int i = 0;
-    const int *y = (const int*)__y, *x = (const int*)__x;
-
-    if( !(y && x && angle && len >= 0) )
+    if( !Y || !X || !angle || len < 0 )
         return CV_BADFACTOR_ERR;
+	
+	int i = 0;
+	float scale = angleInDegrees ? (float)(180/CV_PI) : 1.f;
 
-    /* unrolled by 4 loop */
-    for( ; i <= len - 4; i += 4 )
-    {
-        int j, idx[4];
-        float xf[4], yf[4];
-        double d = 1.;
-
-        /* calc numerators and denominators */
-        for( j = 0; j < 4; j++ )
-        {
-            int ix = x[i + j], iy = y[i + j];
-            int ygx, k = (ix < 0) * 2 + (iy < 0) * 4;
-            Cv32suf _x, _y;
-
-            ix &= 0x7fffffff;
-            iy &= 0x7fffffff;
-
-            ygx = (iy <= ix) - 1;
-            k -= ygx;
-
-            k &= ((ix == 0) - 1) | ((iy == 0) - 1);
-
-            /* swap ix and iy if ix < iy */
-            ix ^= iy & ygx;
-            iy ^= ix & ygx;
-            ix ^= iy & ygx;
-
-            _y.i = iy ^ icvAtanSign[k];
-
-            /* ix = ix != 0 ? ix : 1.f */
-            _x.i = ((ix ^ CV_1F) & ((ix == 0) - 1)) ^ CV_1F;
-            idx[j] = k;
-            yf[j] = _y.f;
-            d *= (xf[j] = _x.f);
-        }
-
-        d = 1. / d;
-
-        {
-            double b = xf[2] * xf[3], a = xf[0] * xf[1];
-
-            float z0 = (float) (yf[0] * xf[1] * b * d);
-            float z1 = (float) (yf[1] * xf[0] * b * d);
-            float z2 = (float) (yf[2] * xf[3] * a * d);
-            float z3 = (float) (yf[3] * xf[2] * a * d);
-
-            z0 = (float)((_CV_ATAN_CF0*fabs(z0) + _CV_ATAN_CF1)*z0 + icvAtanTab[idx[0]]);
-            z1 = (float)((_CV_ATAN_CF0*fabs(z1) + _CV_ATAN_CF1)*z1 + icvAtanTab[idx[1]]);
-            z2 = (float)((_CV_ATAN_CF0*fabs(z2) + _CV_ATAN_CF1)*z2 + icvAtanTab[idx[2]]);
-            z3 = (float)((_CV_ATAN_CF0*fabs(z3) + _CV_ATAN_CF1)*z3 + icvAtanTab[idx[3]]);
-
-            angle[i] = z0;
-            angle[i+1] = z1;
-            angle[i+2] = z2;
-            angle[i+3] = z3;
-        }
-    }
-
-    /* process the rest */
-    for( ; i < len; i++ )
-        angle[i] = fastAtan2( __y[i], __x[i] );
+#if CV_SSE2
+	static const int CV_DECL_ALIGNED(16) iabsmask[] = {0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff};
+	__m128 eps = _mm_set1_ps((float)DBL_EPSILON), absmask = _mm_load_ps((const float*)iabsmask);
+	__m128 _90 = _mm_set1_ps((float)(CV_PI*0.5)), _180 = _mm_set1_ps((float)CV_PI), _360 = _mm_set1_ps((float)(CV_PI*2));
+	__m128 zero = _mm_setzero_ps(), _0_28 = _mm_set1_ps(0.28f), scale4 = _mm_set1_ps(scale);
+	
+	for( ; i <= len - 4; i += 4 )
+	{
+		__m128 x4 = _mm_loadu_ps(X + i), y4 = _mm_loadu_ps(Y + i);
+		__m128 xq4 = _mm_mul_ps(x4, x4), yq4 = _mm_mul_ps(y4, y4);
+		__m128 xly = _mm_cmplt_ps(xq4, yq4);
+		__m128 z4 = _mm_div_ps(_mm_mul_ps(x4, y4), _mm_add_ps(_mm_add_ps(_mm_max_ps(xq4, yq4),
+			_mm_mul_ps(_mm_min_ps(xq4, yq4), _0_28)), eps));
+		
+		// a4 <- x < y ? 90 : 0;
+		__m128 a4 = _mm_and_ps(xly, _90);
+		// a4 <- (y < 0 ? 360 - a4 : a4) == ((x < y ? y < 0 ? 270 : 90) : (y < 0 ? 360 : 0))
+		__m128 mask = _mm_cmplt_ps(y4, zero);
+		a4 = _mm_or_ps(_mm_and_ps(_mm_sub_ps(_360, a4), mask), _mm_andnot_ps(mask, a4));
+		// a4 <- (x < 0 && !(x < y) ? 180 : a4)
+		mask = _mm_andnot_ps(xly, _mm_cmplt_ps(x4, zero));
+		a4 = _mm_or_ps(_mm_and_ps(_180, mask), _mm_andnot_ps(mask, a4));
+		
+		// a4 <- (x < y ? a4 - z4 : a4 + z4)
+		a4 = _mm_mul_ps(_mm_add_ps(_mm_xor_ps(z4, _mm_andnot_ps(absmask, xly)), a4), scale4);
+		_mm_storeu_ps(angle + i, a4);
+	}
+#endif
+	
+	for( ; i < len; i++ )
+	{
+		float x = X[i], y = Y[i];
+		float a, x2 = x*x, y2 = y*y;
+		if( y2 <= x2 )
+			a = x*y/(x2 + 0.28f*y2 + (float)DBL_EPSILON) + (float)(x < 0 ? CV_PI : y >= 0 ? 0 : CV_PI*2);
+		else
+			a = (float)(y >= 0 ? CV_PI*0.5 : CV_PI*1.5) - x*y/(y2 + 0.28f*x2 + (float)DBL_EPSILON);
+		angle[i] = a*scale;
+	}
 
     return CV_OK;
 }
@@ -382,11 +340,85 @@ static CvStatus CV_STDCALL InvSqrt_64f(const double* src, double* dst, int len)
 *                                  Cartezian -> Polar                                    *
 \****************************************************************************************/
 
+void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
+{
+	int i, j, type = X.type(), depth = X.depth(), cn = X.channels();
+	CV_Assert( X.size() == Y.size() && type == Y.type() && (depth == CV_32F || depth == CV_64F));
+    Mag.create( X.size(), type );
+
+    Size size = getContinuousSize( X, Y, Mag, cn );
+
+    if( depth == CV_32F )
+    {
+        const float *x = (const float*)X.data, *y = (const float*)Y.data;
+        float *mag = (float*)Mag.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep )
+            Magnitude( x, y, mag, size.width );
+    }
+    else
+    {
+        const double *x = (const double*)X.data, *y = (const double*)Y.data;
+        double *mag = (double*)Mag.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int mstep = Mag.step/sizeof(mag[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, mag += mstep )
+            Magnitude( x, y, mag, size.width );
+    }
+}
+
+void phase( const Mat& X, const Mat& Y, Mat& Angle, bool angleInDegrees )
+{
+    float buf[2][MAX_BLOCK_SIZE];
+    int i, j, type = X.type(), depth = X.depth(), cn = X.channels();
+
+    CV_Assert( X.size() == Y.size() && type == Y.type() && (depth == CV_32F || depth == CV_64F));
+    Angle.create( X.size(), type );
+
+    Size size = getContinuousSize( X, Y, Angle, cn );
+
+    if( depth == CV_32F )
+    {
+        const float *x = (const float*)X.data, *y = (const float*)Y.data;
+        float *angle = (float*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int astep = Angle.step/sizeof(angle[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, angle += astep )
+            FastAtan2_32f( y, x, angle, size.width, angleInDegrees );
+    }
+    else
+    {
+        const double *x = (const double*)X.data, *y = (const double*)Y.data;
+        double *angle = (double*)Angle.data;
+        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        int astep = Angle.step/sizeof(angle[0]);
+
+        for( ; size.height--; x += xstep, y += ystep, angle += astep )
+        {
+            for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
+            {
+                int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
+                for( j = 0; j < block_size; j++ )
+                {
+                    buf[0][j] = (float)x[i + j];
+                    buf[1][j] = (float)y[i + j];
+                }
+                FastAtan2_32f( buf[1], buf[0], buf[0], block_size, angleInDegrees );
+                for( j = 0; j < block_size; j++ )
+					angle[i + j] = buf[0][j];
+            }
+        }
+    }
+}
+
 void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleInDegrees )
 {
     float buf[2][MAX_BLOCK_SIZE];
     int i, j, type = X.type(), depth = X.depth(), cn = X.channels();
-    double angleScale = angleInDegrees ? 1. : CV_PI/180.;
 
     CV_Assert( X.size() == Y.size() && type == Y.type() && (depth == CV_32F || depth == CV_64F));
     Mag.create( X.size(), type );
@@ -407,10 +439,7 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
             {
                 int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
                 Magnitude( x + i, y + i, mag + i, block_size );
-                FastAtan2_32f( y + i, x + i, angle + i, block_size );
-                if( !angleInDegrees )
-                    for( j = 0; j < block_size; j++ )
-                        angle[i + j] *= (float)angleScale;
+                FastAtan2_32f( y + i, x + i, angle + i, block_size, angleInDegrees );
             }
         }
     }
@@ -432,9 +461,9 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
                     buf[0][j] = (float)x[i + j];
                     buf[1][j] = (float)y[i + j];
                 }
-                FastAtan2_32f( buf[1], buf[0], buf[0], block_size );
-                for( j = 0; j < block_size; j++ )
-                    angle[i + j] = buf[0][j]*angleScale;
+                FastAtan2_32f( buf[1], buf[0], buf[0], block_size, angleInDegrees );
+				for( j = 0; j < block_size; j++ )
+					angle[i + j] = buf[0][j];
             }
         }
     }
@@ -1677,7 +1706,7 @@ cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
                CvArr* magarr, CvArr* anglearr,
                int angle_in_degrees )
 {
-    cv::Mat X = cv::cvarrToMat(xarr), Mag, Angle;
+    cv::Mat X = cv::cvarrToMat(xarr), Y = cv::cvarrToMat(yarr), Mag, Angle;
     if( magarr )
     {
         Mag = cv::cvarrToMat(magarr);
@@ -1688,7 +1717,15 @@ cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
         Angle = cv::cvarrToMat(anglearr);
         CV_Assert( Angle.size() == X.size() && Angle.type() == X.type() );
     }
-    cv::cartToPolar( X, cv::cvarrToMat(yarr), Mag, Angle, angle_in_degrees != 0 );
+	if( magarr )
+	{
+		if( anglearr )
+			cv::cartToPolar( X, Y, Mag, Angle, angle_in_degrees != 0 );
+		else
+			cv::magnitude( X, Y, Mag );
+	}
+	else
+		cv::phase( X, Y, Angle, angle_in_degrees != 0 );
 }
 
 CV_IMPL void
