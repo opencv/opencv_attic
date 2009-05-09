@@ -905,8 +905,11 @@ CV_EXPORTS float fastAtan2(float y, float x);
 CV_EXPORTS void polarToCart(const Mat& magnitude, const Mat& angle,
                             Mat& x, Mat& y, bool angleInDegrees=false);
 CV_EXPORTS void cartToPolar(const Mat& x, const Mat& y,
-                            const Mat& magnitude, const Mat& angle,
+                            Mat& magnitude, Mat& angle,
                             bool angleInDegrees=false);
+CV_EXPORTS void phase(const Mat& x, const Mat& y, Mat& angle,
+                            bool angleInDegrees=false);
+CV_EXPORTS void magnitude(const Mat& x, const Mat& y, Mat& magnitude);
 CV_EXPORTS bool checkRange(const Mat& a, bool quiet=true, Point* pt=0,
                            double minVal=-DBL_MAX, double maxVal=DBL_MAX);
 
