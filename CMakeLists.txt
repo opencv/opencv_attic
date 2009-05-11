@@ -403,10 +403,10 @@ set(EXTRA_EXE_LINKER_FLAGS_RELEASE "")
 set(EXTRA_EXE_LINKER_FLAGS_DEBUG "")
 
 if(MSVC)
-    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /W4 /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE")
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE")
     # 64-bit portability warnings, in MSVC8
     if(MSVC80)
-        set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /Wp64")
+        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Wp64")
     endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
@@ -433,7 +433,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     # The -Wno-long-long is required in 64bit systems when including sytem headers.
     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
-    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
+        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
     endif()
 
     # We need pthread's
@@ -511,6 +511,8 @@ set(OPENCV_EXTRA_EXE_LINKER_FLAGS ${EXTRA_EXE_LINKER_FLAGS} CACHE STRING "Extra 
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE ${EXTRA_EXE_LINKER_FLAGS_RELEASE} CACHE STRING "Extra linker flags for Release build" FORCE)
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG ${EXTRA_EXE_LINKER_FLAGS_DEBUG} CACHE STRING "Extra linker flags for Debug build" FORCE)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OPENCV_EXTRA_C_FLAGS_DEBUG}")
@@ -519,17 +521,24 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_EXTRA_EXE_LINKER_
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG}")
 
-# If GCC, if the user does not setup CMAKE_BUILD_TYPE, assume it's Release:
-if (CMAKE_COMPILER_IS_GNUCXX)
-	if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
-		set(CMAKE_CXX_FLAGS "")  # JL: Check if the original contents were not null!
-		set(CMAKE_C_FLAGS "")
-	else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_RELEASE}")
-	endif()
+# In case of Makefiles if the user does not setup CMAKE_BUILD_TYPE, assume it's Release:
+if (${CMAKE_GENERATOR} MATCHES ".*Makefiles")
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+        set(CMAKE_BUILD_TYPE Release)
+        #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+        #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    endif()
 endif()
 
+if (WIN32 AND MSVC)
+    # avoid warnings from MSVC about overriding the /W* option
+    # we replace /W3 with /W4 only for C++ files,
+    # since all the 3rd-party libraries OpenCV uses are in C,
+    # and we do not care about their warnings.
+    string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+endif()
 
 if("${CMAKE_CONFIGURE_LDFLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_CONFIGURE_LDFLAGS}")
