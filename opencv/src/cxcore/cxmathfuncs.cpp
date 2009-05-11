@@ -342,7 +342,7 @@ static CvStatus CV_STDCALL InvSqrt_64f(const double* src, double* dst, int len)
 
 void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
 {
-	int i, j, type = X.type(), depth = X.depth(), cn = X.channels();
+	int type = X.type(), depth = X.depth(), cn = X.channels();
 	CV_Assert( X.size() == Y.size() && type == Y.type() && (depth == CV_32F || depth == CV_64F));
     Mag.create( X.size(), type );
 
