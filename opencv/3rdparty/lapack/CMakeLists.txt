@@ -19,6 +19,8 @@ set(lib_ext_hdrs "../include/f2c.h" "../include/cblas.h" "../include/clapack.h")
 if(WIN32 AND MSVC)
     set(pch_header "clapack.h")
     set(pch_src "precomp.c")
+    list(REMOVE_ITEM lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src})
+    set(lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src} ${lib_srcs})
     foreach(src_file ${lib_srcs})
         if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(
