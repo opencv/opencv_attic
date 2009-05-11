@@ -962,12 +962,13 @@ template <typename _Tp> inline void Vector<_Tp>::reserve(size_t newCapacity)
     newCapacity = std::max(newCapacity, oldSize);
     size_t datasize = alignSize(newCapacity*sizeof(_Tp), (size_t)sizeof(*newRefcount));
     newData = (_Tp*)fastMalloc(datasize + sizeof(*newRefcount));
-    for( i = 0; i < newCapacity; i++ )
-        ::new(newData + i) _Tp();
+    for( i = 0; i < oldSize; i++ )
+        ::new(newData + i) _Tp(hdr.data[i]);
+    _Tp dummy = _Tp();
+    for( ; i < newCapacity; i++ )
+        ::new(newData + i) _Tp(dummy);
     newRefcount = (int*)((uchar*)newData + datasize);
     *newRefcount = 1;
-    for( i = 0; i < oldSize; i++ )
-        newData[i] = hdr.data[i];
     release();
     hdr.data = hdr.datastart = newData;
     hdr.capacity = newCapacity;
@@ -1197,11 +1198,7 @@ inline Mat Mat::diag(int d) const
         len = std::min(rows + d, cols);
         m.data -= step*d;
     }
-    if( len <= 0 )
-    {
-        CV_DbgAssert(0);
-        return Mat();
-    }
+    CV_DbgAssert( len > 0 );
     m.rows = len;
     m.cols = 1;
     m.step += esz;
@@ -1760,7 +1757,7 @@ template<typename M> struct CV_EXPORTS MatOp_Bin_
             else if( op == 'a' )
                 absdiff( a, b, c );
             else
-                CV_DbgAssert(0);
+                assert(0);
         }
         else
         {
@@ -1795,7 +1792,7 @@ template<typename M> struct CV_EXPORTS MatOp_BinS_
             else if( op == '~' )
                 bitwise_not( a, c );
             else
-                CV_DbgAssert(0);
+                assert(0);
         }
         else
         {
