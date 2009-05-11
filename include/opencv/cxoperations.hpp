@@ -902,16 +902,6 @@ template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d, const Range&
     }
 }
 
-template <typename _Tp> inline Vector<_Tp>& Vector<_Tp>::operator = (const Vector& d)
-{
-    if( this == &d )
-        return *this;
-    if( d.hdr.refcount )
-        ++*d.hdr.refcount;
-    release();
-    hdr = d.hdr;
-    return *this;
-}
 
 template <typename _Tp> inline Vector<_Tp>::~Vector() { release(); }
 template <typename _Tp> inline Vector<_Tp> Vector<_Tp>::clone() const
