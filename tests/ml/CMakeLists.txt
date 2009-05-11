@@ -12,6 +12,8 @@ source_group("Include" FILES ${test_hdrs})
 if(WIN32 AND MSVC)
     set(pch_header "mltest.h")
     set(pch_src "precomp.cpp")
+    list(REMOVE_ITEM test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${pch_src})
+    set(test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${pch_src} ${test_srcs})
     foreach(src_file ${test_srcs})
         if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(
