@@ -592,7 +592,15 @@ public:
     Vector(const Vector& d, const Range& r);
 
     inline Vector<_Tp>& operator = (const Vector& d)
-    {        if( this == &d )            return *this;        if( d.hdr.refcount )            ++*d.hdr.refcount;        release();        hdr = d.hdr;        return *this;    }
+    {        
+        if( this == &d )
+            return *this;
+        if( d.hdr.refcount )
+            ++*d.hdr.refcount;        
+        release();        
+        hdr = d.hdr;        
+        return *this;   
+    }
     ~Vector();
     Vector clone() const;
 
