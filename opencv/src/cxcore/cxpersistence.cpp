@@ -2958,6 +2958,7 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                         break;
                     case CV_8S:
                         *(char*)data = CV_CAST_8S(ival);
+                        data++;
                         break;
                     case CV_16U:
                         *(ushort*)data = CV_CAST_16U(ival);
@@ -3003,6 +3004,7 @@ cvReadRawDataSlice( const CvFileStorage* fs, CvSeqReader* reader,
                     case CV_8S:
                         ival = cvRound(fval);
                         *(char*)data = CV_CAST_8S(ival);
+                        data++;
                         break;
                     case CV_16U:
                         ival = cvRound(fval);
