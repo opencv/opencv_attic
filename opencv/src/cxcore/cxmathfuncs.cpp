@@ -425,6 +425,7 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
     Angle.create( X.size(), type );
 
     Size size = getContinuousSize( X, Y, Mag, Angle, cn );
+    bool inplace = Mag.data == X.data || Mag.data == Y.data;
 
     if( depth == CV_32F )
     {
@@ -438,8 +439,11 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
             for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
                 int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
-                Magnitude( x + i, y + i, mag + i, block_size );
+                Magnitude( x + i, y + i, inplace ? buf[0] : mag + i, block_size );
                 FastAtan2_32f( y + i, x + i, angle + i, block_size, angleInDegrees );
+                if( inplace )
+                    for( j = 0; j < block_size; j++ )
+                        mag[i + j] = buf[0][j];
             }
         }
     }
@@ -455,13 +459,13 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
             for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
                 int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
-                Magnitude( x + i, y + i, mag + i, block_size );
                 for( j = 0; j < block_size; j++ )
                 {
                     buf[0][j] = (float)x[i + j];
                     buf[1][j] = (float)y[i + j];
                 }
                 FastAtan2_32f( buf[1], buf[0], buf[0], block_size, angleInDegrees );
+                Magnitude( x + i, y + i, mag + i, block_size );
 				for( j = 0; j < block_size; j++ )
 					angle[i + j] = buf[0][j];
             }
