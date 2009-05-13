@@ -45,14 +45,18 @@
 namespace cv
 {
 
-Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize )
+Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize,
+                                        bool centerPrincipalPoint )
 {
     Mat_<double> Ar(3, 3);
-//    Ar << A(0,0), 0., (imgsize.width-1)*0.5,
-//          0., A(1,1), (imgsize.height-1)*0.5,
-    Ar << A(0,0), 0., A(0,2),
-          0., A(1,1), A(1,2),
-          0., 0., 1.;
+    if( centerPrincipalPoint )
+        Ar << A(0,0), 0., (imgsize.width-1)*0.5,
+              0., A(1,1), (imgsize.height-1)*0.5,
+              0., 0., 1.;
+    else
+        Ar << A(0,0), 0., A(0,2),
+              0., A(1,1), A(1,2),
+              0., 0., 1.;
     return Ar;
 }
 
@@ -75,7 +79,7 @@ void initUndistortRectifyMap( const Mat& _cameraMatrix, const Mat& _distCoeffs,
     if( _newCameraMatrix.data )
         Ar = Mat_<double>(_newCameraMatrix);
     else
-        Ar = getDefaultNewCameraMatrix( A, size );
+        Ar = getDefaultNewCameraMatrix( A, size, true );
 
     if( _R.data )
         R = Mat_<double>(_R);
