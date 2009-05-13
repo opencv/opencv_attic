@@ -53,7 +53,7 @@ namespace cv
 CV_EXPORTS void namedWindow( const String& winname, int flags );
 CV_EXPORTS void imshow( const String& winname, const Mat& mat );
 
-CV_EXPORTS Mat imread( const String& filename, int flags );
+CV_EXPORTS Mat imread( const String& filename, int flags=1 );
 CV_EXPORTS bool imwrite( const String& filename, const Mat& img,
               const Vector<int>& params=Vector<int>());
 CV_EXPORTS Mat imdecode( const Vector<uchar>& buf, int flags );

@@ -114,8 +114,12 @@ bool  RBaseStream::open( const String& filename )
 {
     close();
     allocate();
-    
+
+#ifdef WIN32
+    m_file = _wfopen( toUtf16(filename).c_str(), L"rb" );
+#else
     m_file = fopen( filename.c_str(), "rb" );
+#endif
     
     if( m_file )
     {
@@ -393,7 +397,11 @@ bool  WBaseStream::open( const String& filename )
     close();
     allocate();
     
+#ifdef WIN32
+    m_file = _wfopen( toUtf16(filename).c_str(), L"wb" );
+#else
     m_file = fopen( filename.c_str(), "wb" );
+#endif
     
     if( m_file )
     {

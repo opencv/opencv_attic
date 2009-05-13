@@ -902,6 +902,17 @@ template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d, const Range&
     }
 }
 
+template <typename _Tp> inline Vector<_Tp>& Vector<_Tp>::operator = (const Vector<_Tp>& d)
+{
+    if( this != &d )
+    {
+        if( d.hdr.refcount )
+            ++*d.hdr.refcount;
+        release();
+        hdr = d.hdr;
+    }
+    return *this;
+}
 
 template <typename _Tp> inline Vector<_Tp>::~Vector() { release(); }
 template <typename _Tp> inline Vector<_Tp> Vector<_Tp>::clone() const
@@ -1007,6 +1018,23 @@ template <typename _Tp> inline size_t Vector<_Tp>::size() const { return hdr.siz
 template <typename _Tp> inline size_t Vector<_Tp>::capacity() const { return hdr.capacity; }
 template <typename _Tp> inline bool Vector<_Tp>::empty() const { return hdr.size == 0; }
 template <typename _Tp> inline void Vector<_Tp>::clear() { resize(0); }
+
+template<typename _Tp> inline typename DataType<_Tp>::work_type
+dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
+{
+    typedef typename DataType<_Tp>::work_type _Tw;
+    size_t i, n = v1.size();
+    assert(v1.size() == v2.size());
+
+    _Tw s = 0;
+    const _Tp *ptr1 = &v1[0], *ptr2 = &v2[0];
+    for( i = 0; i <= n - 4; i++ )
+        s += (_Tw)ptr1[i]*ptr2[i] + (_Tw)ptr1[i+1]*ptr2[i+1] +
+            (_Tw)ptr1[i+2]*ptr2[i+2] + (_Tw)ptr1[i+3]*ptr2[i+3];
+    for( ; i < n; i++ )
+        s += (_Tw)ptr1[i]*ptr2[i];
+    return s;
+}
 
 //////////////////////////////// Mat ////////////////////////////////
 
@@ -5466,6 +5494,132 @@ template<> inline void write(FileStorage& fs, const double& value )
 template<> inline void write(FileStorage& fs, const String& value )
 { cvWriteString( *fs, 0, value.c_str() ); }
 
+template<typename _Tp> inline void write(FileStorage& fs, const Point_<_Tp>& pt )
+{
+    write(fs, pt.x);
+    write(fs, pt.y);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const Point3_<_Tp>& pt )
+{
+    write(fs, pt.x);
+    write(fs, pt.y);
+    write(fs, pt.z);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const Size_<_Tp>& sz )
+{
+    write(fs, sz.width);
+    write(fs, sz.height);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const Complex<_Tp>& c )
+{
+    write(fs, c.re);
+    write(fs, c.im);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const Rect_<_Tp>& r )
+{
+    write(fs, r.x);
+    write(fs, r.y);
+    write(fs, r.width);
+    write(fs, r.height);
+}
+
+template<typename _Tp, int cn> inline void write(FileStorage& fs, const Vec_<_Tp, cn>& v )
+{
+    for(int i = 0; i < cn; i++)
+        write(fs, v.val[i]);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const Scalar_<_Tp>& s )
+{
+    write(fs, s.val[0]);
+    write(fs, s.val[1]);
+    write(fs, s.val[2]);
+    write(fs, s.val[3]);
+}
+
+inline void write(FileStorage& fs, const Range& r )
+{
+    write(fs, r.start);
+    write(fs, r.end);
+}
+
+struct CV_EXPORTS WriteStructContext
+{
+    WriteStructContext(FileStorage& _fs, const String& name,
+        int flags, const String& typeName=String()) : fs(&_fs)
+    {
+        cvStartWriteStruct(**fs, !name.empty() ? name.c_str() : 0, flags,
+            !typeName.empty() ? typeName.c_str() : 0);
+    }
+    ~WriteStructContext() { cvEndWriteStruct(**fs); }
+    FileStorage* fs;
+};
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Point_<_Tp>& pt )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, pt.x);
+    write(fs, pt.y);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Point3_<_Tp>& pt )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, pt.x);
+    write(fs, pt.y);
+    write(fs, pt.z);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Size_<_Tp>& sz )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, sz.width);
+    write(fs, sz.height);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Complex<_Tp>& c )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, c.re);
+    write(fs, c.im);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Rect_<_Tp>& r )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, r.x);
+    write(fs, r.y);
+    write(fs, r.width);
+    write(fs, r.height);
+}
+
+template<typename _Tp, int cn> inline void write(FileStorage& fs, const String& name, const Vec_<_Tp, cn>& v )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    for(int i = 0; i < cn; i++)
+        write(fs, v.val[i]);
+}
+
+template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Scalar_<_Tp>& s )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, s.val[0]);
+    write(fs, s.val[1]);
+    write(fs, s.val[2]);
+    write(fs, s.val[3]);
+}
+
+inline void write(FileStorage& fs, const String& name, const Range& r )
+{
+    WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
+    write(fs, r.start);
+    write(fs, r.end);
+}
+
 template<typename _Tp, int numflag> struct CV_EXPORTS VecWriterProxy
 {
     VecWriterProxy( FileStorage* _fs ) : fs(_fs) {}
@@ -5485,7 +5639,7 @@ template<typename _Tp> struct CV_EXPORTS VecWriterProxy<_Tp,1>
     {
         int _fmt = DataType<_Tp>::fmt;
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
-        fs->writeRaw( String(fmt), Vector<uchar>((uchar*)&*vec, vec.size()*sizeof(_Tp)) );
+        fs->writeRaw( String(fmt), Vector<uchar>((uchar*)&vec[0], vec.size()*sizeof(_Tp)) );
     }
     FileStorage* fs;
 };
@@ -5573,6 +5727,9 @@ inline size_t FileNode::count() const
         t == SEQ ? node->data.seq->total : node != 0;
 }
 
+static inline void read(const FileNode& node, bool& value, bool default_value)
+{ value = cvReadInt(node.node, default_value) != 0; }
+
 static inline void read(const FileNode& node, uchar& value, uchar default_value)
 { value = saturate_cast<uchar>(cvReadInt(node.node, default_value)); }
 
@@ -5642,7 +5799,7 @@ template<typename _Tp> struct CV_EXPORTS VecReaderProxy<_Tp,1>
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
         count = std::min(count, remaining/cn);
         vec.resize(count);
-        Vector<uchar> _vec((uchar*)&*vec, count*sizeof(_Tp), false);
+        Vector<uchar> _vec((uchar*)&vec[0], count*sizeof(_Tp), false);
         it->readRaw( String(fmt), _vec, count );
     }
     FileNodeIterator* it;
@@ -5877,11 +6034,11 @@ template<typename _Tp, class _LT> void sort( Vector<_Tp>& vec, _LT LT=_LT() )
                     goto insert_sort;
                 }
 
-                n = MIN( (int)(left1 - left0), (int)(left - left1) );
+                n = std::min( (int)(left1 - left0), (int)(left - left1) );
                 for( i = 0; i < n; i++ )
                     std::swap( left0[i], left[i-n] );
 
-                n = MIN( (int)(right0 - right1), (int)(right1 - right) );
+                n = std::min( (int)(right0 - right1), (int)(right1 - right) );
                 for( i = 0; i < n; i++ )
                     std::swap( left[i], right0[i-n+1] );
                 n = (int)(left - left1);
@@ -5938,6 +6095,101 @@ template<typename _Tp> struct CV_EXPORTS GreaterEqIdx
     bool operator()(int a, int b) const { return arr[a] >= arr[b]; }
     const _Tp* arr;
 };
+
+// This function splits the input sequence or set into one or more equivalence classes.
+// is_equal(a,b,...) returns non-zero if the two sequence elements
+// belong to the same class.  The function returns sequence of integers -
+// 0-based class indexes for each element.
+//
+// The algorithm is described in "Introduction to Algorithms"
+// by Cormen, Leiserson and Rivest, the chapter "Data structures for disjoint sets"
+template<typename _Tp, class _EqPredicate> int
+partition( const Vector<_Tp>& _vec, Vector<int>& labels,
+           _EqPredicate predicate=_EqPredicate())
+{
+    struct PartitionTreeNode
+    {
+        PartitionTreeNode() : parent(-1), rank(0) {}
+        int parent;
+        int rank;
+    };
+
+    int i, j, N = (int)_vec.size();
+    const _Tp* vec = &_vec[0];
+
+    // Initially we have N single-vertex trees
+    Vector<PartitionTreeNode> _nodes(N);
+    PartitionTreeNode* nodes = &_nodes[0];
+   
+    // The main O(N^2) pass. Merge connected components.
+    for( i = 0; i < N; i++ )
+    {
+        int root = i;
+
+        // find root
+        while( nodes[root].parent >= 0 )
+            root = nodes[root].parent;
+
+        for( j = 0; j < N; j++ )
+        {
+            if( i == j || !predicate(vec[i], vec[j]))
+                continue;
+            int root2 = j;
+
+            while( nodes[root2].parent >= 0 )
+                root2 = nodes[root2].parent;
+
+            if( root2 != root )
+            {
+                // unite both trees
+                int rank = nodes[root].rank, rank2 = nodes[root2].rank;
+                if( rank > rank2 )
+                    nodes[root2].parent = root;
+                else
+                {
+                    nodes[root].parent = root2;
+                    nodes[root2].rank += rank == rank2;
+                    root = root2;
+                }
+                assert( nodes[root].parent < 0 );
+
+                int k = j, parent;
+
+                // Compress path from node2 to the root:
+                while( (parent = nodes[k].parent) >= 0 )
+                {
+                    nodes[k].parent = root;
+                    k = parent;
+                }
+
+                // Compress path from node to the root:
+                k = i;
+                while( (parent = nodes[k].parent) >= 0 )
+                {
+                    nodes[k].parent = root;
+                    k = parent;
+                }
+            }
+        }
+    }
+
+    // Final O(N) pass (enumerate classes).
+    labels.resize(N);
+    int nclasses = 0;
+
+    for( i = 0; i < N; i++ )
+    {
+        int root = i;
+        while( nodes[root].parent >= 0 )
+            root = nodes[root].parent;
+        // re-use the rank as the class label
+        if( nodes[root].rank >= 0 )
+            nodes[root].rank = ~nclasses++;
+        labels[i] = ~nodes[root].rank;
+    }
+
+    return nclasses;
+}
 
 }
 

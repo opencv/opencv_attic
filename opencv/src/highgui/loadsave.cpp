@@ -66,7 +66,11 @@ ImageDecoder findDecoder( const String& filename )
         maxlen = std::max(maxlen, len);
     }
 
-    FILE* f = fopen( filename.c_str(), "rb" );
+#ifdef WIN32
+    FILE* f = _wfopen( toUtf16(filename).c_str(), L"rb" );
+#else
+    FILE* f= fopen( filename.c_str(), "rb" ):
+#endif
     if( !f )
         return ImageDecoder();
     String signature(maxlen, ' ');
@@ -427,7 +431,11 @@ bool imencode( const String& ext, const Mat& image,
         CV_Assert( code );
         code = encoder->write(image, params);
         CV_Assert( code );
-        FILE* f = fopen( filename, "rb" );
+    #ifdef WIN32
+        FILE* f = _wfopen( toUtf16(filename).c_str(), L"rb" );
+    #else
+        FILE* f = fopen( filename.c_str(), "rb" );
+    #endif
         CV_Assert(f != 0);
         fseek( f, 0, SEEK_END );
         long pos = ftell(f);

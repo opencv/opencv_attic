@@ -42,6 +42,7 @@
 
 #include "_cxcore.h"
 #include <ctype.h>
+#include <wchar.h>
 
 /****************************************************************************************\
 *                            Common macros and type definitions                          *
@@ -71,6 +72,73 @@ static char* icv_itoa( int _val, char* buffer, int /*radix*/ )
     return ptr;
 }
 
+cv::String cv::FileStorage::getDefaultObjectName(const String& _filename)
+{
+    static const char* stubname = "unnamed";
+    const char* filename = _filename.c_str();
+    const char* ptr2 = filename + _filename.size();
+    const char* ptr = ptr2 - 1;
+    cv::AutoBuffer<char> name_buf(_filename.size()+1);
+
+    while( ptr >= filename && *ptr != '\\' && *ptr != '/' && *ptr != ':' )
+    {
+        if( *ptr == '.' && !*ptr2 )
+            ptr2 = ptr;
+        ptr--;
+    }
+    ptr++;
+    if( ptr == ptr2 )
+        CV_Error( CV_StsBadArg, "Invalid filename" );
+
+    char* name = name_buf;
+
+    // name must start with letter or '_'
+    if( !isalpha(*ptr) && *ptr!= '_' ){
+        *name++ = '_';
+    }
+
+    while( ptr < ptr2 )
+    {
+        char c = *ptr++;
+        if( !isalnum(c) && c != '-' && c != '_' )
+            c = '_';
+        *name++ = c;
+    }
+    *name = '\0';
+    name = name_buf;
+    if( strcmp( name, "_" ) == 0 )
+        strcpy( name, stubname );
+    return cv::String(name);
+}
+
+namespace cv
+{
+
+String fromUtf16(const WString& str)
+{
+    cv::AutoBuffer<char> _buf(str.size()*4 + 1);
+    char* buf = _buf;
+        
+    size_t sz = wcstombs(buf, str.c_str(), str.size());
+    if( sz == (size_t)-1 )
+        return String();
+    buf[sz] = '\0';
+    return String(buf);
+}
+
+WString toUtf16(const String& str)
+{
+    cv::AutoBuffer<wchar_t> _buf(str.size() + 1);
+    wchar_t* buf = _buf;
+        
+    size_t sz = mbstowcs(buf, str.c_str(), str.size());
+    if( sz == (size_t)-1 )
+        return WString();
+    buf[sz] = '\0';
+    return WString(buf);
+}
+
+}
 
 typedef struct CvGenericHash
 {
@@ -2470,7 +2538,11 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
 
     fs->flags = CV_FILE_STORAGE;
     fs->write_mode = (flags & 3) != 0;
-    fs->file = fopen( fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
+#ifdef WIN32
+    fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(), !fs->write_mode ? L"rt" : !append ? L"wt" : L"a+t" );
+#else
+    fs->file = fopen(fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
+#endif
     if( !fs->file )
         goto _exit_;
 
@@ -2536,7 +2608,11 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                 if( last_occurence < 0 )
                     CV_Error( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
                 fclose( fs->file );
+            #ifdef WIN32
+                fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(), L"r+t" );
+            #else
                 fs->file = fopen( fs->filename, "r+t" );
+            #endif
                 fseek( fs->file, last_occurence, SEEK_SET );
                 // replace the last "</opencv_storage>" with " <!-- resumed -->", which has the same length
                 fputs( " <!-- resumed -->", fs->file );
@@ -4618,8 +4694,6 @@ cvSave( const char* filename, const void* struct_ptr,
         const char* _name, const char* comment, CvAttrList attributes )
 {
     CvFileStorage* fs = 0;
-    char name_buf[CV_FS_MAX_LEN + 256];
-    char* name = (char*)_name;
 
     if( !struct_ptr )
         CV_Error( CV_StsNullPtr, "NULL object pointer" );
@@ -4628,48 +4702,13 @@ cvSave( const char* filename, const void* struct_ptr,
     if( !fs )
         CV_Error( CV_StsError, "Could not open the file storage. Check the path and permissions" );
 
-    if( !name )
-    {
-        static const char* stubname = "unnamed";
-        const char* ptr2 = filename + strlen( filename );
-        const char* ptr = ptr2 - 1;
-
-        while( ptr >= filename && *ptr != '\\' && *ptr != '/' && *ptr != ':' )
-        {
-            if( *ptr == '.' && !*ptr2 )
-                ptr2 = ptr;
-            ptr--;
-        }
-        ptr++;
-        if( ptr == ptr2 )
-            CV_Error( CV_StsBadArg, "Invalid filename" );
-
-        name=name_buf;
-
-        // name must start with letter or '_'
-        if( !isalpha(*ptr) && *ptr!= '_' ){
-            *name++ = '_';
-        }
-
-        while( ptr < ptr2 )
-        {
-            char c = *ptr++;
-            if( !isalnum(c) && c != '-' && c != '_' )
-                c = '_';
-            *name++ = c;
-        }
-        *name = '\0';
-        name = name_buf;
-        if( strcmp( name, "_" ) == 0 )
-            strcpy( name, stubname );
-    }
+    cv::String name = _name ? cv::String(_name) : cv::FileStorage::getDefaultObjectName(filename);
 
     if( comment )
         cvWriteComment( fs, comment, 0 );
-    cvWrite( fs, name, struct_ptr, attributes );
+    cvWrite( fs, name.c_str(), struct_ptr, attributes );
     cvReleaseFileStorage( &fs );
 }
-
 
 CV_IMPL void*
 cvLoad( const char* filename, CvMemStorage* memstorage,
