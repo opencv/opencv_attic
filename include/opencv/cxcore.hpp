@@ -63,6 +63,10 @@ template<typename _Tp> struct CV_EXPORTS Point_;
 template<typename _Tp> struct CV_EXPORTS Rect_;
 
 typedef std::string String;
+typedef std::basic_string<wchar_t> WString;
+
+CV_EXPORTS String fromUtf16(const WString& str);
+CV_EXPORTS WString toUtf16(const String& str);
 
 struct CV_EXPORTS Exception
 {
@@ -181,6 +185,7 @@ public :
 
 template<typename _Tp> struct CV_EXPORTS DataDepth { enum { value = -1, fmt=(int)'\0' }; };
 
+template<> struct DataDepth<bool> { enum { value = CV_8U, fmt=(int)'u' }; };
 template<> struct DataDepth<uchar> { enum { value = CV_8U, fmt=(int)'u' }; };
 template<> struct DataDepth<schar> { enum { value = CV_8S, fmt=(int)'c' }; };
 template<> struct DataDepth<ushort> { enum { value = CV_16U, fmt=(int)'w' }; };
@@ -406,6 +411,17 @@ struct CV_EXPORTS Range
 template<typename _Tp> struct DataType
 {
     typedef _Tp value_type;
+    typedef value_type work_type;
+    typedef value_type channel_type;
+    enum { depth = DataDepth<channel_type>::value, channels = 1,
+           fmt=DataDepth<channel_type>::fmt,
+           type = CV_MAKETYPE(depth, channels) };
+};
+
+template<> struct DataType<bool>
+{
+    typedef bool value_type;
+    typedef int work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -415,6 +431,7 @@ template<typename _Tp> struct DataType
 template<> struct DataType<uchar>
 {
     typedef uchar value_type;
+    typedef int work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -424,6 +441,7 @@ template<> struct DataType<uchar>
 template<> struct DataType<schar>
 {
     typedef schar value_type;
+    typedef int work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -433,6 +451,7 @@ template<> struct DataType<schar>
 template<> struct DataType<ushort>
 {
     typedef ushort value_type;
+    typedef int work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -442,6 +461,7 @@ template<> struct DataType<ushort>
 template<> struct DataType<short>
 {
     typedef short value_type;
+    typedef int work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -451,6 +471,7 @@ template<> struct DataType<short>
 template<> struct DataType<int>
 {
     typedef int value_type;
+    typedef value_type work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -460,6 +481,7 @@ template<> struct DataType<int>
 template<> struct DataType<float>
 {
     typedef float value_type;
+    typedef value_type work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -469,6 +491,7 @@ template<> struct DataType<float>
 template<> struct DataType<double>
 {
     typedef double value_type;
+    typedef value_type work_type;
     typedef value_type channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
@@ -478,6 +501,7 @@ template<> struct DataType<double>
 template<typename _Tp, int cn> struct DataType<Vec_<_Tp, cn> >
 {
     typedef Vec_<_Tp, cn> value_type;
+    typedef Vec_<typename DataType<_Tp>::work_type, cn> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = cn,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -487,6 +511,7 @@ template<typename _Tp, int cn> struct DataType<Vec_<_Tp, cn> >
 template<typename _Tp> struct DataType<std::complex<_Tp> >
 {
     typedef std::complex<_Tp> value_type;
+    typedef value_type work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -496,6 +521,7 @@ template<typename _Tp> struct DataType<std::complex<_Tp> >
 template<typename _Tp> struct DataType<Complex<_Tp> >
 {
     typedef Complex<_Tp> value_type;
+    typedef value_type work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -505,6 +531,7 @@ template<typename _Tp> struct DataType<Complex<_Tp> >
 template<typename _Tp> struct DataType<Point_<_Tp> >
 {
     typedef Point_<_Tp> value_type;
+    typedef Point_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -514,6 +541,7 @@ template<typename _Tp> struct DataType<Point_<_Tp> >
 template<typename _Tp> struct DataType<Point3_<_Tp> >
 {
     typedef Point3_<_Tp> value_type;
+    typedef Point3_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 3,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -523,6 +551,7 @@ template<typename _Tp> struct DataType<Point3_<_Tp> >
 template<typename _Tp> struct DataType<Size_<_Tp> >
 {
     typedef Size_<_Tp> value_type;
+    typedef Size_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -532,6 +561,7 @@ template<typename _Tp> struct DataType<Size_<_Tp> >
 template<typename _Tp> struct DataType<Rect_<_Tp> >
 {
     typedef Rect_<_Tp> value_type;
+    typedef Rect_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 4,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -541,6 +571,7 @@ template<typename _Tp> struct DataType<Rect_<_Tp> >
 template<typename _Tp> struct DataType<Scalar_<_Tp> >
 {
     typedef Scalar_<_Tp> value_type;
+    typedef Scalar_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 4,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -550,6 +581,7 @@ template<typename _Tp> struct DataType<Scalar_<_Tp> >
 template<> struct DataType<Range>
 {
     typedef Range value_type;
+    typedef value_type work_type;
     typedef int channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
@@ -591,16 +623,7 @@ public:
     Vector(const Vector& d);
     Vector(const Vector& d, const Range& r);
 
-    inline Vector<_Tp>& operator = (const Vector& d)
-    {        
-        if( this == &d )
-            return *this;
-        if( d.hdr.refcount )
-            ++*d.hdr.refcount;        
-        release();        
-        hdr = d.hdr;        
-        return *this;   
-    }
+    Vector<_Tp>& operator = (const Vector& d);
     ~Vector();
     Vector clone() const;
 
@@ -1697,6 +1720,8 @@ struct CV_EXPORTS FileStorage
     const CvFileStorage* operator *() const { return fs.obj; }
     void writeRaw( const String& fmt, const Vector<uchar>& vec );
     void writeObj( const String& name, const void* obj );
+
+    static String getDefaultObjectName(const String& filename);
 
     Ptr<CvFileStorage> fs;
     String elname;
