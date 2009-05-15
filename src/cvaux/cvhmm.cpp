@@ -1623,13 +1623,7 @@ cvCreate2DHMM( int *state_number, int *num_mix, int obs_size )
 {
     CvEHMM* hmm = 0;
 
-    CV_FUNCNAME( "cvCreate2DHMM" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvCreate2DHMM( &hmm, state_number, num_mix, obs_size ));
-
-    __END__;
 
     return hmm;
 }
@@ -1637,26 +1631,15 @@ cvCreate2DHMM( int *state_number, int *num_mix, int obs_size )
 CV_IMPL void
 cvRelease2DHMM( CvEHMM ** hmm )
 {
-    CV_FUNCNAME( "cvRelease2DHMM" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvRelease2DHMM( hmm ));
-    __END__;
 }
 
 CV_IMPL CvImgObsInfo*
 cvCreateObsInfo( CvSize num_obs, int obs_size )
 {
     CvImgObsInfo *obs_info = 0;
-    
-    CV_FUNCNAME( "cvCreateObsInfo" );
-
-    __BEGIN__;
 
     IPPI_CALL( icvCreateObsInfo( &obs_info, num_obs, obs_size ));
-
-    __END__;
 
     return obs_info;
 }
@@ -1664,106 +1647,53 @@ cvCreateObsInfo( CvSize num_obs, int obs_size )
 CV_IMPL void
 cvReleaseObsInfo( CvImgObsInfo ** obs_info )
 {
-    CV_FUNCNAME( "cvReleaseObsInfo" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvReleaseObsInfo( obs_info ));
-
-    __END__;
 }
 
 
 CV_IMPL void
 cvUniformImgSegm( CvImgObsInfo * obs_info, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvUniformImgSegm" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvUniformImgSegm( obs_info, hmm ));
-    __CLEANUP__;
-    __END__;
 }
 
 CV_IMPL void
 cvInitMixSegm( CvImgObsInfo ** obs_info_array, int num_img, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvInitMixSegm" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvInitMixSegm( obs_info_array, num_img, hmm ));
-
-    __END__;
 }
 
 CV_IMPL void
 cvEstimateHMMStateParams( CvImgObsInfo ** obs_info_array, int num_img, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvEstimateHMMStateParams" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvEstimateHMMStateParams( obs_info_array, num_img, hmm ));
-
-    __END__;
 }
 
 CV_IMPL void
 cvEstimateTransProb( CvImgObsInfo ** obs_info_array, int num_img, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvEstimateTransProb" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvEstimateTransProb( obs_info_array, num_img, hmm ));
-
-    __END__;
-
 }
 
 CV_IMPL void
 cvEstimateObsProb( CvImgObsInfo * obs_info, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvEstimateObsProb" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvEstimateObsProb( obs_info, hmm ));
-
-    __END__;
 }
 
 CV_IMPL float
 cvEViterbi( CvImgObsInfo * obs_info, CvEHMM * hmm )
 {
-    float result = FLT_MAX;
-
-    CV_FUNCNAME( "cvEViterbi" );
-
-    __BEGIN__;
-
     if( (obs_info == NULL) || (hmm == NULL) )
-        CV_ERROR( CV_BadDataPtr, "Null pointer." );
+        CV_Error( CV_BadDataPtr, "Null pointer." );
 
-    result = icvEViterbi( obs_info, hmm );
-    
-    __END__;
-    
-    return result;
+    return icvEViterbi( obs_info, hmm );
 }
 
 CV_IMPL void
 cvMixSegmL2( CvImgObsInfo ** obs_info_array, int num_img, CvEHMM * hmm )
 {
-    CV_FUNCNAME( "cvMixSegmL2" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvMixSegmL2( obs_info_array, num_img, hmm ));
-
-    __END__;
 }
 
 /* End of file */
