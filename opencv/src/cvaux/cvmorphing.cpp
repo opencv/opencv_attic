@@ -373,9 +373,6 @@ cvMorphEpilinesMulti( int lines,        /* number of lines             */
                       int *second_corr  /* correspond information for the 2nd seq     */
      )
 {
-    CV_FUNCNAME( "cvMorphEpilinesMulti" );
-    __BEGIN__;
-
     IPPI_CALL( icvMorphEpilines8uC3Multi( lines,        /* number of lines                           */
                                           first_pix,    /* raster epilines from the first image      */
                                           first_num,    /* numbers of pixel in first line            */
@@ -391,6 +388,5 @@ cvMorphEpilinesMulti( int lines,        /* number of lines             */
                                           second_runs, first_corr,      /* correspond information for the 1st seq    */
                                           second_corr   /* correspond information for the 2nd seq     */
                 ));
-    __END__;
 }
 

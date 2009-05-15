@@ -151,9 +151,6 @@ cvFindRuns( int numLines,       /* number of scanlines   */
             int *num_runs_1,    /* numbers of first runs */
             int *num_runs_2 )
 {
-    CV_FUNCNAME( "cvFindRuns" );
-    __BEGIN__;
-
     IPPI_CALL( icvFindRuns( numLines,   /* number of scanlines   */
                             prewarp_1,  /* prewarp image 1       */
                             prewarp_2,  /* prewarp image 2       */
@@ -163,6 +160,4 @@ cvFindRuns( int numLines,       /* number of scanlines   */
                             runs_2,     /* result runs  2        */
                             num_runs_1, /* numbers of first runs */
                             num_runs_2 ));
-    __CLEANUP__;
-    __END__;
 }

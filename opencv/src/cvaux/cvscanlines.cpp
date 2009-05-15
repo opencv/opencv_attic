@@ -2000,13 +2000,8 @@ cvMakeScanlines( const CvMatrix3* matrix, CvSize imgSize,
                  int *scanlines_1, int *scanlines_2,
                  int *lens_1, int *lens_2, int *numlines )
 {
-    CV_FUNCNAME( "cvMakeScanlines" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvMakeScanlines( (CvMatrix3*)matrix, imgSize, scanlines_1,
                                  scanlines_2, lens_1, lens_2, numlines ));
-    __END__;
 }
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -2022,12 +2017,6 @@ cvMakeAlphaScanlines( int *scanlines_1,
                       int *scanlines_2,
                       int *scanlines_a, int *lens, int numlines, float alpha )
 {
-    CV_FUNCNAME( "cvMakeAlphaScanlines" );
-
-    __BEGIN__;
-
     IPPI_CALL( icvMakeAlphaScanlines( scanlines_1, scanlines_2, scanlines_a,
                                       lens, numlines, alpha ));
-
-    __END__;
 }
