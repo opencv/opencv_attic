@@ -3094,7 +3094,11 @@ cvConvertMaps( const CvArr* arr1, const CvArr* arr2, CvArr* dstarr1, CvArr* dsta
     if( arr2 )
         map2 = cv::cvarrToMat(arr2);
     if( dstarr2 )
+    {
         dstmap2 = cv::cvarrToMat(dstarr2);
+        if( dstmap2.type() == CV_16SC1 )
+            dstmap2 = cv::Mat(dstmap2.size(), CV_16UC1, dstmap2.data, dstmap2.step);
+    }
 
     cv::convertMaps( map1, map2, dstmap1, dstmap2, dstmap1.type(), false );
 }
