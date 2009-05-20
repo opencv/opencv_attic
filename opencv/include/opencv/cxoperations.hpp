@@ -1028,7 +1028,7 @@ dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
 
     _Tw s = 0;
     const _Tp *ptr1 = &v1[0], *ptr2 = &v2[0];
-    for( i = 0; i <= n - 4; i++ )
+    for( i = 0; i <= n - 4; i += 4 )
         s += (_Tw)ptr1[i]*ptr2[i] + (_Tw)ptr1[i+1]*ptr2[i+1] +
             (_Tw)ptr1[i+2]*ptr2[i+2] + (_Tw)ptr1[i+3]*ptr2[i+3];
     for( ; i < n; i++ )
@@ -1444,13 +1444,20 @@ inline LineIterator LineIterator::operator ++(int)
 ///////////////////////////////// Mat_<_Tp> ////////////////////////////////////
 
 template<typename _Tp> inline Mat_<_Tp>::Mat_() :
-Mat() { flags = (flags & ~CV_MAT_TYPE_MASK) | DataType<_Tp>::type; }
+    Mat() { flags = (flags & ~CV_MAT_TYPE_MASK) | DataType<_Tp>::type; }
+    
 template<typename _Tp> inline Mat_<_Tp>::Mat_(int _rows, int _cols) :
     Mat(_rows, _cols, DataType<_Tp>::type) {}
 
 template<typename _Tp> inline Mat_<_Tp>::Mat_(int _rows, int _cols, const _Tp& value) :
     Mat(_rows, _cols, DataType<_Tp>::type) { *this = value; }
 
+template<typename _Tp> inline Mat_<_Tp>::Mat_(Size _size) :
+    Mat(_size.height, _size.width, DataType<_Tp>::type) {}
+    
+template<typename _Tp> inline Mat_<_Tp>::Mat_(Size _size, const _Tp& value) :
+    Mat(_size.height, _size.width, DataType<_Tp>::type) { *this = value; }
+    
 template<typename _Tp> inline Mat_<_Tp>::Mat_(const Mat& m) : Mat()
 { flags = (flags & ~CV_MAT_TYPE_MASK) | DataType<_Tp>::type; *this = m; }
 
@@ -5869,6 +5876,22 @@ static inline bool operator < (const FileNodeIterator& it1, const FileNodeIterat
     return it1.remaining > it2.remaining;
 }
 
+    
+//////////////////////////////////////// Various algorithms ////////////////////////////////////
+    
+template<typename _Tp> static inline _Tp gcd(_Tp a, _Tp b)
+{
+    if( a < b )
+        std::swap(a, b);
+    while( b > 0 )
+    {
+        _Tp r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
+}
+
 /****************************************************************************************\
 
   Generic implementation of QuickSort algorithm
@@ -6096,10 +6119,10 @@ template<typename _Tp> struct CV_EXPORTS GreaterEqIdx
     const _Tp* arr;
 };
 
-// This function splits the input sequence or set into one or more equivalence classes.
-// is_equal(a,b,...) returns non-zero if the two sequence elements
-// belong to the same class.  The function returns sequence of integers -
-// 0-based class indexes for each element.
+    
+// This function splits the input sequence or set into one or more equivalence classes and
+// returns the vector of labels - 0-based class indexes for each element.
+// predicate(a,b) returns true if the two sequence elements certainly belong to the same class.
 //
 // The algorithm is described in "Introduction to Algorithms"
 // by Cormen, Leiserson and Rivest, the chapter "Data structures for disjoint sets"
@@ -6107,90 +6130,92 @@ template<typename _Tp, class _EqPredicate> int
 partition( const Vector<_Tp>& _vec, Vector<int>& labels,
            _EqPredicate predicate=_EqPredicate())
 {
-    struct PartitionTreeNode
-    {
-        PartitionTreeNode() : parent(-1), rank(0) {}
-        int parent;
-        int rank;
-    };
-
     int i, j, N = (int)_vec.size();
     const _Tp* vec = &_vec[0];
-
-    // Initially we have N single-vertex trees
-    Vector<PartitionTreeNode> _nodes(N);
-    PartitionTreeNode* nodes = &_nodes[0];
-   
-    // The main O(N^2) pass. Merge connected components.
+    
+    const int PARENT=0;
+    const int RANK=1;
+    
+    Vector<int> _nodes(N*2);
+    int (*nodes)[2] = (int(*)[2])&_nodes[0];
+    
+    // The first O(N) pass: create N single-vertex trees
+    for(i = 0; i < N; i++)
+    {
+        nodes[i][PARENT]=-1;
+        nodes[i][RANK] = 0;
+    }
+    
+    // The main O(N^2) pass: merge connected components
     for( i = 0; i < N; i++ )
     {
         int root = i;
-
+        
         // find root
-        while( nodes[root].parent >= 0 )
-            root = nodes[root].parent;
-
+        while( nodes[root][PARENT] >= 0 )
+            root = nodes[root][PARENT];
+        
         for( j = 0; j < N; j++ )
         {
             if( i == j || !predicate(vec[i], vec[j]))
                 continue;
             int root2 = j;
-
-            while( nodes[root2].parent >= 0 )
-                root2 = nodes[root2].parent;
-
+            
+            while( nodes[root2][PARENT] >= 0 )
+                root2 = nodes[root2][PARENT];
+            
             if( root2 != root )
             {
                 // unite both trees
-                int rank = nodes[root].rank, rank2 = nodes[root2].rank;
+                int rank = nodes[root][RANK], rank2 = nodes[root2][RANK];
                 if( rank > rank2 )
-                    nodes[root2].parent = root;
+                    nodes[root2][PARENT] = root;
                 else
                 {
-                    nodes[root].parent = root2;
-                    nodes[root2].rank += rank == rank2;
+                    nodes[root][PARENT] = root2;
+                    nodes[root2][RANK] += rank == rank2;
                     root = root2;
                 }
-                assert( nodes[root].parent < 0 );
-
+                assert( nodes[root][PARENT] < 0 );
+                
                 int k = j, parent;
-
-                // Compress path from node2 to the root:
-                while( (parent = nodes[k].parent) >= 0 )
+                
+                // compress the path from node2 to root
+                while( (parent = nodes[k][PARENT]) >= 0 )
                 {
-                    nodes[k].parent = root;
+                    nodes[k][PARENT] = root;
                     k = parent;
                 }
-
-                // Compress path from node to the root:
+                
+                // compress the path from node to root
                 k = i;
-                while( (parent = nodes[k].parent) >= 0 )
+                while( (parent = nodes[k][PARENT]) >= 0 )
                 {
-                    nodes[k].parent = root;
+                    nodes[k][PARENT] = root;
                     k = parent;
                 }
             }
         }
     }
-
-    // Final O(N) pass (enumerate classes).
+    
+    // Final O(N) pass: enumerate classes
     labels.resize(N);
     int nclasses = 0;
-
+    
     for( i = 0; i < N; i++ )
     {
         int root = i;
-        while( nodes[root].parent >= 0 )
-            root = nodes[root].parent;
+        while( nodes[root][PARENT] >= 0 )
+            root = nodes[root][PARENT];
         // re-use the rank as the class label
-        if( nodes[root].rank >= 0 )
-            nodes[root].rank = ~nclasses++;
-        labels[i] = ~nodes[root].rank;
+        if( nodes[root][RANK] >= 0 )
+            nodes[root][RANK] = ~nclasses++;
+        labels[i] = ~nodes[root][RANK];
     }
-
+    
     return nclasses;
 }
-
+    
 }
 
 #endif

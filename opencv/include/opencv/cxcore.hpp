@@ -1112,6 +1112,8 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     Mat_();
     Mat_(int _rows, int _cols);
     Mat_(int _rows, int _cols, const _Tp& value);
+    Mat_(Size _size);
+    Mat_(Size _size, const _Tp& value);
     Mat_(const Mat& m);
     Mat_(const Mat_& m);
     Mat_(int _rows, int _cols, _Tp* _data, size_t _step=AUTO_STEP);
