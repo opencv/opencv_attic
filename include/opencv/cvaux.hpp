@@ -388,25 +388,75 @@ CV_EXPORTS void computeSpinImages( const OctTree& octtree,
                         float support, 
                         float pixelsPerMeter );
 
-struct CV_EXPORTS HOGParams
+
+/****************************************************************************************\
+*            HOG (Histogram-of-Oriented-Gradients) Descriptor and Object Detector        *
+\****************************************************************************************/
+
+struct CV_EXPORTS HOGDescriptor
 {
-    HOGParams();
-    HOGParams( int cell_n, int cell_x, int cell_y,
-               int bin_num, int stride_x, int stride_y );
-    
-    int histSize() const { return cellN * cellN * nbins; }
+    enum { L2Hys=0 };
 
-    int cellN; // each block will have cell_n * cell_n cells;
-    int cellX; // cell width in pixels
-    int cellY; // cell height in pixels
+    HOGDescriptor() : winSize(64,128), blockSize(16,16), blockStride(8,8),
+        cellSize(8,8), nbins(9), derivAperture(1), winSigma(-1),
+        histogramNormType(L2Hys), L2HysThreshold(0.2), gammaCorrection(true)
+    {}
 
-    int nbins; // number of histogram bins per cell
-    int strideX; // horizontal block shift
-    int strideY; // vertical block shift 
+    HOGDescriptor(Size _winSize, Size _blockSize, Size _blockStride,
+        int _nbins, int _derivAperture=1, double _winSigma=-1,
+        int _histogramNormType=L2Hys, double _L2HysThreshold=0.2, bool _gammaCorrection=false)
+        : winSize(_winSize), blockSize(_blockSize), blockStride(_blockStride),
+        nbins(_nbins), derivAperture(_derivAperture), winSigma(_winSigma),
+        histogramNormType(_histogramNormType), L2HysThreshold(_L2HysThreshold),
+        gammaCorrection(_gammaCorrection)
+    {}
+
+    HOGDescriptor(const String& filename)
+    {
+        load(filename);
+    }
+
+    virtual ~HOGDescriptor() {}
+
+    size_t getDescriptorSize() const;
+    bool checkDetectorSize() const;
+    double getWinSigma() const;
+
+    virtual void setSVMDetector(const Vector<float>& _svmdetector);
+
+    virtual bool load(const String& filename, const String& objname=String());
+    virtual void save(const String& filename, const String& objname=String()) const;
+
+    virtual void compute(const Mat& img,
+                         Vector<float>& descriptors,
+                         Size winStride=Size(), Size padding=Size(),
+                         const Vector<Point>& locations=Vector<Point>()) const;
+    virtual void detect(const Mat& img, Vector<Point>& foundLocations,
+                        double hitThreshold=0, Size winStride=Size(),
+                        Size padding=Size(),
+                        const Vector<Point>& searchLocations=Vector<Point>()) const;
+    virtual void detectMultiScale(const Mat& img, Vector<Rect>& foundLocations,
+                                  double hitThreshold=0, Size winStride=Size(),
+                                  Size padding=Size(), double scale=1.05,
+                                  int groupThreshold=2) const;
+    virtual void computeGradient(const Mat& img, Mat& grad, Mat& angleOfs,
+                                 Size paddingTL=Size(), Size paddingBR=Size()) const;
+    virtual void normalizeBlockHistogram(Vector<float>& histogram) const;
+
+    static Vector<float> getDefaultPeopleDetector();
+
+    Size winSize;
+    Size blockSize;
+    Size blockStride;
+    Size cellSize;
+    int nbins;
+    int derivAperture;
+    double winSigma;
+    int histogramNormType;
+    double L2HysThreshold;
+    bool gammaCorrection;
+    Vector<float> svmDetector;
 };
-
-CV_EXPORTS void extractHOG( const Mat& image, Mat& hogs,
-                const HOGParams& params = HOGParams()); 
 
 }
 

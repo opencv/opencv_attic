@@ -98,6 +98,7 @@ dist_csamples_DATA = \
   c/morphology.c \
   c/motempl.c \
   c/mushroom.cpp \
+  c/peopledetect.cpp \
   c/polar_transforms.c \
   c/pyramid_segmentation.c \
   c/squares.c \
