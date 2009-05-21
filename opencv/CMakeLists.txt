@@ -157,7 +157,17 @@ if(UNIX)
     include(CheckIncludeFile)
 endif()
 
-set(OPENCV_ENABLE_OPENMP OFF CACHE BOOL "")
+# Default value for OPENMP:
+#  MSVC: Yes
+#  Others: No
+# ===================================================
+if(MSVC)
+	set(DEFAULT_OPENCV_ENABLE_OPENMP ON)
+else()
+	set(DEFAULT_OPENCV_ENABLE_OPENMP OFF)
+endif()
+
+set(OPENCV_ENABLE_OPENMP ${DEFAULT_OPENCV_ENABLE_OPENMP} CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(OPENCV_ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
@@ -665,6 +675,11 @@ CONFIGURE_FILE(
 
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+
+# Make sure the system libraries are also copied when doing an "INSTALL":
+# ----------------------------------------------------------------------------
+include(InstallRequiredSystemLibraries)
 
 
 # ----------------------------------------------------------------------------
