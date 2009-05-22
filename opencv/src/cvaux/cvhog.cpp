@@ -804,7 +804,13 @@ struct SimilarRects
     double eps;
 };
 
-    
+struct HOGThreadData
+{
+    Vector<Rect> rectangles;
+    Vector<Point> locations;
+    Mat smallerImgBuf;
+};
+
 void HOGDescriptor::detectMultiScale(
     const Mat& img, Vector<Rect>& foundLocations,
     double hitThreshold, Size winStride, Size padding,
@@ -815,15 +821,8 @@ void HOGDescriptor::detectMultiScale(
     int i, levels = 0;
     const int maxLevels = 64;
 
-    struct ThreadData
-    {
-        Vector<Rect> rectangles;
-        Vector<Point> locations;
-        Mat smallerImgBuf;
-    };
-
     int t, nthreads = getNumThreads();
-    Vector<ThreadData> threadData(nthreads);
+    Vector<HOGThreadData> threadData(nthreads);
 
     for( t = 0; t < nthreads; t++ )
         threadData[t].smallerImgBuf.create(img.size(), img.type());
@@ -847,7 +846,7 @@ void HOGDescriptor::detectMultiScale(
 #endif // _OPENMP
     for( i = 0; i < levels; i++ )
     {
-        ThreadData& tdata = threadData[getThreadNum()];
+        HOGThreadData& tdata = threadData[getThreadNum()];
         double scale = levelScale[i];
         Size sz(cvRound(img.cols/scale), cvRound(img.rows/scale));
         Mat smallerImg(sz, img.type(), tdata.smallerImgBuf.data);
@@ -867,7 +866,7 @@ void HOGDescriptor::detectMultiScale(
 
     for( t = 0; t < nthreads; t++ )
     {
-        ThreadData& tdata = threadData[t];
+        HOGThreadData& tdata = threadData[t];
         std::copy(tdata.rectangles.begin(), tdata.rectangles.end(),
             std::back_inserter(foundLocations));
     }
