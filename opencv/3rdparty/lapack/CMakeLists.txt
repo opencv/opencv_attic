@@ -55,7 +55,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-parentheses")
-    set_source_files_properties(dlamch.c slamch.c PROPERTIES COMPILE_FLAGS "-ffloat-store")
+    set_source_files_properties(dlamch.c slamch.c PROPERTIES COMPILE_FLAGS "-ffloat-store -O0")
 endif()
 
 set_target_properties(${the_target}
