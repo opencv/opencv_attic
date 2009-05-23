@@ -212,7 +212,7 @@ CV_IMPL void cvInitUndistortMap( const CvMat* Aarr, const CvMat* dist_coeffs,
     if( mapyarr )
         mapy0 = mapy = cv::cvarrToMat(mapyarr);
 
-    cv::initUndistortRectifyMap( A, distCoeffs, cv::Mat(), cv::Mat(),
+    cv::initUndistortRectifyMap( A, distCoeffs, cv::Mat(), A,
                                  mapx.size(), mapx.type(), mapx, mapy );
     CV_Assert( mapx0.data == mapx.data && mapy0.data == mapy.data );
 }
