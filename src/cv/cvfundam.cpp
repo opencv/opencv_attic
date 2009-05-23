@@ -571,7 +571,7 @@ void CvFMEstimator::computeReprojError( const CvMat* _m1, const CvMat* _m2,
         s1 = 1./(a*a + b*b);
         d1 = m1[i].x*a + m1[i].y*b + c;
 
-        err[i] = (float)(d1*d1*s1 + d2*d2*s2);
+        err[i] = (float)std::max(d1*d1*s1, d2*d2*s2);
     }
 }
 
