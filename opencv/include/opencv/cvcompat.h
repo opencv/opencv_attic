@@ -654,7 +654,7 @@ CV_INLINE void cvFindExtrinsicCameraParams( int point_count,
     a[8] = 1.f;
 
     cvFindExtrinsicCameraParams2( &object_points, &image_points, &camera_matrix,
-        &dist_coeffs, &rotation_vector, &translation_vector );
+        &dist_coeffs, &rotation_vector, &translation_vector, 0 );
 }
 
 
@@ -679,7 +679,7 @@ CV_INLINE void cvFindExtrinsicCameraParams_64d( int point_count,
     a[8] = 1.;
 
     cvFindExtrinsicCameraParams2( &object_points, &image_points, &camera_matrix,
-        &dist_coeffs, &rotation_vector, &translation_vector );
+        &dist_coeffs, &rotation_vector, &translation_vector, 0 );
 }
 
 
