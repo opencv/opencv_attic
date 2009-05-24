@@ -704,7 +704,6 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
     }
     else
         assert(0);
-    assert(info == 0);
     result = info == 0;
 
     if( !result )
@@ -774,7 +773,6 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
         ssyevr_(job, A, L, &n, (float*)src.data, &lda, &dummy, &dummy,
             &idummy, &idummy, &abstol, &m, s, (float*)evects.data,
             &ldv, isupport, (float*)work, &lwork, iwork, &liwork, &info );
-        assert( info == 0 );
         result = info == 0;
 
         for( i = 0; i < n/2; i++ )
@@ -807,7 +805,6 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
         dsyevr_(job, A, L, &n, (double*)src.data, &lda, &dummy, &dummy,
             &idummy, &idummy, &abstol, &m, s, (double*)evects.data,
             &ldv, isupport, (double*)work, &lwork, iwork, &liwork, &info );
-        assert( info == 0 );
         result = info == 0;
 
         for( i = 0; i < n/2; i++ )
@@ -1035,7 +1032,7 @@ SVD& SVD::operator ()(const Mat& a, int flags)
             (double*)vt.data, &ldv, (double*)u.data, &ldu,
             (double*)(buffer + work_ofs), &lwork, (integer*)(buffer + iwork_ofs), &info );
     }
-    assert(info == 0);
+    CV_Assert(info == 0);
     return *this;
 }
 
