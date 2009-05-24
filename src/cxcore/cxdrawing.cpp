@@ -149,7 +149,14 @@ LineIterator::LineIterator(const Mat& img, Point pt1, Point pt2,
         (unsigned)pt2.x >= (unsigned)(img.cols) ||
         (unsigned)pt1.y >= (unsigned)(img.rows) ||
         (unsigned)pt2.y >= (unsigned)(img.rows) )
-        clipLine( img.size(), pt1, pt2 );
+    {
+        if( !clipLine( img.size(), pt1, pt2 ) )
+        {
+            ptr = img.data;
+            err = plusDelta = minusDelta = plusStep = minusStep = count = 0;
+            return;
+        }
+    }
 
     int bt_pix0 = img.elemSize(), bt_pix = bt_pix0;
     int step = img.step;
@@ -2164,7 +2171,7 @@ cvInitLineIterator( const CvArr* img, CvPoint pt1, CvPoint pt2,
 
     iterator->err = li.err;
     iterator->minus_delta = li.minusDelta;
-    iterator->plus_delta = li.minusDelta;
+    iterator->plus_delta = li.plusDelta;
     iterator->minus_step = li.minusStep;
     iterator->plus_step = li.plusStep;
     iterator->ptr = li.ptr;
