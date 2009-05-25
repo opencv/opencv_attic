@@ -1217,7 +1217,7 @@ void MatND::create(const Vector<int>& _sizes, int _type)
         dim[i].step = total;
         total1 = (int64)total*sz;
         CV_Assert( sz > 0 );
-        if( total1 != (size_t)total1 )
+        if( (uint64)total1 != (size_t)total1 )
             CV_Error( CV_StsOutOfRange, "The total matrix size does not fit to \"size_t\" type" );
         total = (size_t)total1;
     }
