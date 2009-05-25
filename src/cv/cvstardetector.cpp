@@ -113,8 +113,9 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
 #if CV_SSE2
     __m128 invSizes4[MAX_PATTERN][2];
     __m128 sizes1_4[MAX_PATTERN];
-    int absmask = 0x7fffffff;
-    __m128 absmask4 = _mm_set1_ps((float&)absmask);
+    Cv32suf absmask;
+    absmask.i = 0x7fffffff;
+    __m128 absmask4 = _mm_set1_ps(absmask.f);
 #endif
     CvStarFeature f[MAX_PATTERN];
 
