@@ -1413,7 +1413,7 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
                 result += v2;
         }
     }
-    else if( method == method == CV_COMP_CORREL )
+    else if( method == CV_COMP_CORREL )
     {
         double s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0;
         
