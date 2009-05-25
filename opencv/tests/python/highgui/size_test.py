@@ -5,12 +5,14 @@ for correct returnvalues of width and height information for different video for
 
 # import the necessary things for OpenCV and comparson routine
 import os
-import python
-from python.highgui import *
+from cv import *
+from highgui import *
+#import python
+#from python.highgui import *
 
 
 # path to images and videos  we need
-PREFIX		=os.environ["top_srcdir"]+"/tests/python/testdata/"
+PREFIX		=os.path.join(os.environ["srcdir"],"python/testdata/")
 
 
 # this is the folder with the videos and images
@@ -34,7 +36,12 @@ def size_ok(FILENAME):
 
   # get an image to compare
   image=cvQueryFrame(video)
-
+  
+  if image is None:
+    return 1
+  
+  image = cvCloneImage (image)
+  
   if (w!=image.width) or (h!=image.height):
     # dimensions don't match parameters (FAIL)
     return 1

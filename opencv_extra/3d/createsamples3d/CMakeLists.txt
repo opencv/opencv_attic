@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.6)
+find_package(OpenCV REQUIRED)
+project(createsamples3d)
+set(createsamples3d_files createsamplesfromvideo.cpp createsamples3D.cpp calibration.cpp calibration.h createsamples3d.h createsamplesfromvideo.h)
+add_executable(createsamples3d ${createsamples3d_files})
+target_link_libraries(createsamples3d ${OpenCV_LIBS})

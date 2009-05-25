@@ -594,9 +594,6 @@ cvFindHandRegion( CvPoint3D32f * points, int count,
                   float *line, CvSize2D32f size, int flag,
                   CvPoint3D32f * center, CvMemStorage * storage, CvSeq ** numbers )
 {
-    CV_FUNCNAME( "cvFindHandRegion" );
-    __BEGIN__;
-
     if(flag == 0 || flag == -1)
 	{
 		IPPI_CALL( icvFindHandRegion( points, count, indexs, line, size, -flag,
@@ -605,9 +602,6 @@ cvFindHandRegion( CvPoint3D32f * points, int count,
 	else 
 		IPPI_CALL( icvFindHandRegionA( points, count, indexs, line, size, flag,
 			                            center, storage, numbers ));
-
-    __CLEANUP__;
-    __END__;
 }
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -634,12 +628,7 @@ cvFindHandRegionA( CvPoint3D32f * points, int count,
                    float *line, CvSize2D32f size, int jc,
                    CvPoint3D32f * center, CvMemStorage * storage, CvSeq ** numbers )
 {
-    CV_FUNCNAME( "cvFindHandRegionA" );
-    __BEGIN__;
-
     IPPI_CALL( icvFindHandRegionA( points, count, indexs, line, size, jc,
                                     center, storage, numbers ));
-    __CLEANUP__;
-    __END__;
 }
 

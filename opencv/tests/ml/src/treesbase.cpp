@@ -43,287 +43,156 @@
 
 CV_TreesBaseTest :: CV_TreesBaseTest( const char* test_name, const char* test_funcs ) : 
     CvTest( test_name, test_funcs )
-{
-    data = responses = missing = var_type = train_sample_idx = test_sample_idx = 0;
-    total_class_count = 0;
-    class_map = new map<string, int>();
-    time_t t;
-    time( &t );
-    rng = cvRNG( -t );
+{   
 }
 
 CV_TreesBaseTest :: ~CV_TreesBaseTest()
 {
-    clear();
-    delete class_map;
 }
 
 int CV_TreesBaseTest :: read_params( CvFileStorage* fs )
 {
     int code = CvTS::OK;
-    CvFileNode* run_params = 0;
-    const char* data_path = ts->get_data_path();
-    if (!fs || !data_path)
-    {
-        ts->printf( CvTS::LOG, "config file and data_path must be defined" );
-        code = CvTS::FAIL_INVALID_TEST_DATA;
-        ts->set_failed_test_info( code );
-        return code;
-    }
-    run_params = cvGetFileNodeByName( fs, 0, "run_params" );
-    data_sets = cvGetFileNodeByName( fs, run_params, name )->data.seq;
-    test_case_count = data_sets->total;
+    CvFileNode* run_params = fs ? cvGetFileNodeByName( fs, 0, "run_params" ) : 0;
+    data_sets_names = (fs && run_params ) ? cvGetFileNodeByName( fs, run_params, name )->data.seq : 0;
+    test_case_count = data_sets_names ? data_sets_names->total : -1;
     return code;
-}
-
-float CV_TreesBaseTest :: str_to_flt_elem(char* token)
-{
-    
-    char* stopstring = NULL;
-    float val = (float)strtod( token, &stopstring );
-    if ( !strcmp( stopstring, "?" ) ) // missed value
-        val = FLT_MAX;
-    else
-    {
-        if ( (*stopstring != 0) && (*stopstring != '\n')) // not number
-        {
-            int idx = (*class_map)[token];
-            if ( idx == 0)
-            {
-                total_class_count++;
-                idx = total_class_count;
-                (*class_map)[token] = idx;
-            }
-            val = (float)idx;
-        }
-    }
-    return val;
-}
-
-int CV_TreesBaseTest :: load_data( const char* filename)
-{
-    const int M = 10000;
-    FILE* f = fopen( filename, "rt" );
-    CvMemStorage* storage;
-    CvSeq* seq;
-    char *buf;
-    char *ptr;
-    float* el_ptr;
-    CvSeqReader reader;
-    int var_count = 0;
-
-    if( !f ) 
-        return -1;
-
-    // read the first line and determine the number of variables
-    buf = new char[M];
-    if( !fgets( buf, M, f ))
-    {
-        fclose(f);
-        return -1;
-    }
-    for( ptr = buf; *ptr != '\0'; ptr++ )
-        var_count += (*ptr == ',');
-
-    // create temporary memory storage to store the whole database
-    el_ptr = new float[var_count+1];
-    storage = cvCreateMemStorage();
-    seq = cvCreateSeq( 0, sizeof(*seq), (var_count+1)*sizeof(float), storage );
-
-    for(;;)
-    {
-        char *token = NULL;
-        token = strtok(buf, " ,");
-        if (!token) return -1;
-        for (int i = 0; i < var_count; i++)
-        {
-            el_ptr[i] = str_to_flt_elem(token);
-            token = strtok(NULL, " ,\0");
-            if (!token)
-                return -1;
-        }
-        el_ptr[var_count] = str_to_flt_elem(token);
-        cvSeqPush( seq, el_ptr );
-        if( !fgets( buf, M, f ) || !strchr( buf, ',' ) )
-            break;
-    }
-    fclose(f);
-
-    // allocate the output matrices and copy the base there
-    data = cvCreateMat( seq->total, var_count, CV_32F );
-    missing = cvCreateMat( seq->total, var_count, CV_8U );
-    responses = cvCreateMat( seq->total, 1, CV_32F );
-
-    cvStartReadSeq( seq, &reader );
-    for(int i = 0; i < seq->total; i++ )
-    {
-        const float* sdata = (float*)reader.ptr;
-        float* ddata = data->data.fl + var_count*i;
-        float* dr = responses->data.fl + i;
-        uchar* dm = missing->data.ptr + var_count*i;
-
-        for( int j = 0; j < var_count; j++ )
-        {
-            ddata[j] = sdata[j];
-            dm[j] = ( FLT_MAX - sdata[j] < FLT_EPSILON );
-        }
-        *dr = sdata[var_count];
-        CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
-    }
-    cvReleaseMemStorage( &storage );
-    delete []el_ptr;
-    delete []buf;
-    return var_count;
-}
-
-void CV_TreesBaseTest :: mix_train_and_test_idx()
-{
-    int n = train_sample_idx->cols + test_sample_idx->cols;
-    assert( idx );
-    for (int i = 0; i < n; i++)
-    {
-        int a = cvRandInt( &rng ) % n;
-        int b = cvRandInt( &rng ) % n;
-        int t;
-        CV_SWAP( idx[a], idx[b], t );
-    }
 }
 
 void CV_TreesBaseTest :: run( int start_from )
 {
     int code = CvTS::OK;
-    /*char filepath[1000];
-    char filename[1000];
-    sprintf( filepath, "%s", ts->get_data_path() );
-    sprintf( filename, "%s%s_res.txt", filepath, name );
-    
-    FILE *f = fopen( filename, "wt" ); 
-    */start_from = 0;
+    start_from = 0;
     
     for (int i = 0; i < test_case_count; i++)
     {
-        
         int temp_code = run_test_case( i );
         if (temp_code == CvTS::OK)
             temp_code = validate_test_results( i );
-       /* if (f)
-        {
-            const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, i ))->data.str.ptr; 
-            fprintf( f, "%s,%f,%d\n", data_name, case_result, temp_code);
-        }*/
         if (temp_code != CvTS::OK)
             code = temp_code;
     }
-   /* if (f) fclose( f );*/
-    ts->set_failed_test_info( code );
-}
-
-
-int CV_TreesBaseTest :: get_var_type(const char* str, int var_count)
-{
-    // suppose that string str has correct format!
-    int step;
-    var_type = cvCreateMat( var_count+1, 1, CV_8U);
-    step = var_type->step/CV_ELEM_SIZE(var_type->type);
-    cvSet( var_type, cvScalarAll(CV_VAR_CATEGORICAL) );
-    const char* op = strstr( str, "ord" );    
-    if (op)
+    if ( test_case_count <= 0)
     {
-        if ( strlen(op) == 3)
-            cvSet( var_type, cvScalarAll(CV_VAR_ORDERED) );
-        else
-        {
-            char* stopstring = NULL;            
-            op += 4; // pass "ord["
-
-            do
-            {
-                int b1 = (int)strtod( op, &stopstring );
-                op = stopstring + 1;
-                if ( (stopstring[0] == ',') || (stopstring[0] == ']'))
-                    var_type->data.ptr[b1*step] = CV_VAR_ORDERED;
-                else 
-                {
-                    if ( stopstring[0] == '-') 
-                    {
-                        int b2 = (int)strtod( op, &stopstring);
-                        for (int i = b1; i <= b2; i++)
-                            var_type->data.ptr[i*step] = CV_VAR_ORDERED;
-                    }
-                }
-            }
-            while (stopstring[0] != ']');
-        }
-    }    
-
-    return 1;    
+        ts->printf( CvTS::LOG, "config file is not determined or not correct" );
+        code = CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    ts->set_failed_test_info( code );
 }
 
 int CV_TreesBaseTest :: validate_test_results( int test_case_idx )
 {
-    int code = CvTS::OK;
     float mean, sigma6;
     int iters;
-    const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, test_case_idx ))->data.str.ptr;     
+    const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
 
     // read validation params
     CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* prms = cvGetFileNodeByName( fs, 0, "validation" );
-    prms = cvGetFileNodeByName( fs, prms, name );
-    prms = cvGetFileNodeByName( fs, prms, data_name );
-    prms = cvGetFileNodeByName( fs, prms, "result" );
-    iters = cvGetFileNodeByName( fs, prms, "iter_count" )->data.i; 
-    if (iters)
+    CvFileNode* fnode = cvGetFileNodeByName( fs, 0, "validation" ), *fnode1 = 0;
+    fnode = cvGetFileNodeByName( fs, fnode, name );
+    fnode = cvGetFileNodeByName( fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( fs, fnode, "result" );
+    fnode1 = cvGetFileNodeByName( fs, fnode, "iter_count" );
+    if ( !fnode1 )
     {
-        mean = (float)cvGetFileNodeByName( fs, prms, "mean" )->data.f;
-        sigma6 = 6*(float)cvGetFileNodeByName( fs, prms, "sigma" )->data.f;
-        
-        if ( abs(case_result - mean) > sigma6 )
-            code = CvTS::FAIL_BAD_ARG_CHECK;
+        ts->printf( CvTS::LOG, "iter_count can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
     }
-    return code;
+    iters = fnode1->data.i; 
+    if ( iters > 0)
+    {
+        fnode1 = cvGetFileNodeByName( fs, fnode, "mean" );
+        if ( !fnode1 )
+        {
+            ts->printf( CvTS::LOG, "mean can not be read from config file" );
+            return CvTS::FAIL_INVALID_TEST_DATA;
+        }
+        mean = (float)fnode1->data.f;
+        fnode1 = cvGetFileNodeByName( fs, fnode, "sigma" );
+        if ( !fnode1 )
+        {
+            ts->printf( CvTS::LOG, "sigma can not be read from config file" );
+            return CvTS::FAIL_INVALID_TEST_DATA;
+        }
+        sigma6 = 6*(float)fnode1->data.f;
+        if ( abs(get_error() - mean) > sigma6 )
+        {
+            ts->printf( CvTS::LOG, "in test case %d test error is out of range", test_case_idx);
+            return CvTS::FAIL_BAD_ACCURACY;
+        }
+    }
+    else
+    {
+        ts->printf( CvTS::LOG, "validation info is not suitable" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    return CvTS::OK;
 }
 
 int CV_TreesBaseTest :: prepare_test_case( int test_case_idx )
 {
-    int var_count, lsize, tsize, n;
+    int train_sample_count, resp_idx;
     char filepath[1000];
     char filename[1000];
-    const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, test_case_idx ))->data.str.ptr;     
-    const char* data_path = ts->get_data_path();
-     
+    CvFileNode* fnode = data_sets_names ? (CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ) : 0, *fnode1 = 0;    
+    const char* data_path = ts->get_data_path(), * data_name;
+    const char* var_types = 0;
+
+    assert( fnode ); 
+    
+    if ( !data_path )
+    {
+        ts->printf( CvTS::LOG, "data_path is empty" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    
     clear();
+
+    data_name = fnode->data.str.ptr;         
 
     sprintf( filepath, "%s", data_path );
     sprintf( filename, "%s%s.data", filepath, data_name );
 
-    var_count = load_data(filename);
-    if (var_count < 0)
+    if ( data.read_csv( filename ) != 0)
     {
-        ts->printf( CvTS::LOG, "%s can not be readed or is not valid", filename );
+        char msg[100];
+        sprintf( msg, "file %s can not be read", filename );
+        ts->printf( CvTS::LOG, msg );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
 
     // read model params
     CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* prms = cvGetFileNodeByName( fs, 0, "validation" );
-    prms = cvGetFileNodeByName( fs, prms, name );
-    prms = cvGetFileNodeByName( fs, prms, data_name );
-    prms = cvGetFileNodeByName( fs, prms, "data_params" );
-    lsize = cvGetFileNodeByName( fs, prms, "LS" )->data.i;
-    tsize = cvGetFileNodeByName( fs, prms, "TS" )->data.i;
-    if ( !get_var_type(cvGetFileNodeByName( fs, prms, "types" )->data.str.ptr, var_count) )
+    fnode = cvGetFileNodeByName( fs, 0, "validation" );
+    fnode = cvGetFileNodeByName( fs, fnode, name );
+    fnode = cvGetFileNodeByName( fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( fs, fnode, "data_params" );
+    fnode1 = cvGetFileNodeByName( fs, fnode, "LS" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "LS can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
-    is_classifier = var_type->data.ptr[var_count*var_type->step/CV_ELEM_SIZE(var_type->type)] == CV_VAR_CATEGORICAL;
-    
-    n = lsize + tsize;
-    idx = (int*)cvAlloc( n*sizeof(idx[0]) );
-    for (int i = 0; i < n; i++ )
-        idx[i] = i;
-    train_sample_idx = cvCreateMatHeader( 1, lsize, CV_32SC1 );
-    test_sample_idx = cvCreateMatHeader( 1, tsize, CV_32SC1 );
-    *train_sample_idx = cvMat( 1, lsize, CV_32SC1, &idx[0] );
-    *test_sample_idx = cvMat( 1, tsize, CV_32SC1, &idx[lsize] );
+    }
+    train_sample_count =  fnode1->data.i;
+    CvTrainTestSplit spl(train_sample_count);
+    data.set_train_test_split( &spl );
+    fnode1 = cvGetFileNodeByName( fs, fnode, "resp_idx" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "resp_idx can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    resp_idx = fnode1->data.i;
+    data.set_response_idx( resp_idx );
+    fnode1 = cvGetFileNodeByName( fs, fnode, "types" );
+    if ( !fnode1 )
+    {
+        ts->printf( CvTS::LOG, "types can not be read from config file" );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    var_types = fnode1->data.str.ptr;
+    data.set_var_types( var_types );
+
     return CvTS::OK;
 }
 
@@ -337,22 +206,18 @@ int CV_TreesBaseTest :: run_test_case( int test_case_idx )
     {
 //#define GET_STAT
 #ifdef GET_STAT
-        const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets, test_case_idx ))->data.str.ptr;     
+        const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
         printf("%s, %s      ", name, data_name);
         const int icount = 100;
         float res[icount];
         for (int k = 0; k < icount; k++)
         {
 #endif
-            mix_train_and_test_idx();
-            if ( train( test_case_idx ) )
-                case_result = get_error( test_sample_idx );
-            else
-            {
-                ts->printf( CvTS::LOG, "model training was failed" );
-                code = CvTS::FAIL_INVALID_OUTPUT;
-            }
+            data.mix_train_and_test_idx();
+            code = train( test_case_idx );            
 #ifdef GET_STAT
+            float case_result = get_error();
+
             res[k] = case_result;
         }
         float mean = 0, sigma = 0;
@@ -370,55 +235,6 @@ int CV_TreesBaseTest :: run_test_case( int test_case_idx )
 #endif
     }
     return code;
-}
-
-float CV_TreesBaseTest :: get_error(CvMat* sample_idx)
-{
-    float err = 0;
-    int* sidx = sample_idx->data.i;
-    if ( is_classifier )
-    {
-        for( int i = 0; i < sample_idx->cols; i++ )
-        {
-            CvMat sample, miss;
-            cvGetRow( data, &sample, sidx[i] ); 
-            cvGetRow( missing, &miss, sidx[i] ); 
-            float r = predict( &sample, &miss );
-            int d = fabs((double)r - responses->data.fl[sidx[i]]) <= FLT_EPSILON ? 0 : 1;
-            err += d;
-        }
-        err = err / (float)sample_idx->cols * 100;
-    }
-    else
-    {
-        for( int i = 0; i < sample_idx->cols; i++ )
-        {
-            CvMat sample, miss;
-            cvGetRow( data, &sample, sidx[i] ); 
-            cvGetRow( missing, &miss, sidx[i] ); 
-            float r = predict( &sample, &miss );
-            float d = r - responses->data.fl[sidx[i]];
-            err += d*d;
-        }
-        err = err / (float)sample_idx->cols;    
-    }
-    return err;
-}
-
-void CV_TreesBaseTest :: clear()
-{
-    if ( !class_map->empty() )
-        class_map->clear();
-
-    cvReleaseMat( &data );
-    cvReleaseMat( &responses );
-    cvReleaseMat( &missing );
-    cvReleaseMat( &var_type );
-
-    cvReleaseMat( &train_sample_idx );
-    cvReleaseMat( &test_sample_idx );
-    idx = 0;
-    total_class_count = 0;
 }
 
 /* End of file. */

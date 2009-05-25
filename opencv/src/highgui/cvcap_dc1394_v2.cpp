@@ -204,6 +204,8 @@ public:
     virtual bool setProperty(int, double);
     virtual bool grabFrame();
     virtual IplImage* retrieveFrame(int);
+	virtual int getCaptureDomain() { return CV_CAP_DC1394; } // Return the type of the capture object: CV_CAP_VFW, etc...
+	
 
 protected:
     virtual bool startCapture();
@@ -504,6 +506,10 @@ bool CvCaptureCAM_DC1394_v2_CPP::grabFrame()
             img[i] = cvCreateImage(cvSize(fc->size[0], fc->size[1]), 8, nch);
         cvInitImageHeader(&fhdr, cvSize(fc->size[0], fc->size[1]), 8, nch);
         cvSetData(&fhdr, fc->image, fc->size[0]*nch);
+
+	// Swap R&B channels:
+	if (nch==3)
+		cvConvertImage(&fhdr,&fhdr,CV_CVTIMG_SWAP_RB);
 
         if( rectify && cameraId == VIDERE && nimages == 2 )
         {

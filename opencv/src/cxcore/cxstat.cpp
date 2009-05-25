@@ -1316,11 +1316,11 @@ cvNorm( const void* imgA, const void* imgB, int normType, const void* maskarr )
         a = cv::extractImageCOI(imgA);
 
     if( !imgB )
-        return cv::norm(a, normType, mask);
+        return !maskarr ? cv::norm(a, normType) : cv::norm(a, normType, mask);
 
     cv::Mat b = cv::cvarrToMat(imgB);
     if( b.channels() > 1 && CV_IS_IMAGE(imgB) && cvGetImageCOI((const IplImage*)imgB) > 0 )
         b = cv::extractImageCOI(imgB);
 
-    return cv::norm(a, b, normType, mask);
+    return !maskarr ? cv::norm(a, b, normType) : cv::norm(a, b, normType, mask);
 }

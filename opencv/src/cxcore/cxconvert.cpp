@@ -692,7 +692,7 @@ void Mat::convertTo(Mat& dst, int _type, double alpha, double beta) const
     if( _type < 0 )
         _type = type();
     else
-        CV_Assert( CV_MAT_CN(_type) == channels() );
+        _type = CV_MAKETYPE(CV_MAT_DEPTH(_type), channels());
 
     int sdepth = depth(), ddepth = CV_MAT_DEPTH(_type);
     if( sdepth == ddepth && noScale )

@@ -255,7 +255,7 @@ void OctTree::getPointsWithinSphere( const Point3f& center, float radius, Vector
 
 void OctTree::buildTree( const Vector<Point3f>& points3d, int maxLevels, int minPoints)
 {
-    assert( maxLevels * 8 < MAX_STACK_SIZE );
+    assert( (size_t)maxLevels * 8 < MAX_STACK_SIZE );
     points = points3d;
     this->minPoints = minPoints;
 

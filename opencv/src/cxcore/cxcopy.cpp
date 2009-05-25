@@ -519,7 +519,14 @@ cvSetZero( CvArr* arr )
 CV_IMPL void
 cvFlip( const CvArr* srcarr, CvArr* dstarr, int flip_mode )
 {
-    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr);
+    cv::Mat src = cv::cvarrToMat(srcarr);
+    cv::Mat dst;
+    
+    if (!dstarr)
+      dst = src;
+    else
+      dst = cv::cvarrToMat(dstarr);
+    
     CV_Assert( src.type() == dst.type() && src.size() == dst.size() );
     cv::flip( src, dst, flip_mode );
 }

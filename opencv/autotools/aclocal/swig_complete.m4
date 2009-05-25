@@ -163,7 +163,7 @@ AC_DEFUN([SWIG_PYTHON],[
     if test x"$ac_version_at_least" = "xyes"; then
       SWIG_PYTHON_LIBS=""
     else
-      SWIG_PYTHON_LIBS="$SWIG_RUNTIME_LIBS_DIR -lswigpy"
+      SWIG_PYTHON_LIBS="-L$SWIG_RUNTIME_LIBS_DIR -lswigpy"
     fi
   else
     AC_MSG_ERROR([SWIG version number unknown - cannot set python libs])

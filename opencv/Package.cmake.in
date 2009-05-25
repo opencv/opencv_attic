@@ -4,8 +4,6 @@
 # (c) Copyrights 2008 Hartmut Seichter, HIT Lab NZ
 #
 
-include(InstallRequiredSystemLibraries)
-
 set(CPACK_PACKAGE_NAME "OpenCV")
 set(CPACK_PACKAGE_VENDOR "OpenCV project opencvlibrary.sourceforge.net")
 

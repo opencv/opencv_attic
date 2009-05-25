@@ -634,7 +634,7 @@ cvInitSparseMatIterator( const CvSparseMat* mat, CvSparseMatIterator* iterator )
     return node;
 }
 
-#define ICV_SPARSE_MAT_HASH_MULTIPLIER  33
+#define ICV_SPARSE_MAT_HASH_MULTIPLIER  cv::SparseMat::HASH_SCALE
 
 static uchar*
 icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
@@ -664,19 +664,22 @@ icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
     tabidx = hashval & (mat->hashsize - 1);
     hashval &= INT_MAX;
 
-    for( node = (CvSparseNode*)mat->hashtable[tabidx];
-         node != 0; node = node->next )
+    if( create_node >= -1 )
     {
-        if( node->hashval == hashval )
+        for( node = (CvSparseNode*)mat->hashtable[tabidx];
+             node != 0; node = node->next )
         {
-            int* nodeidx = CV_NODE_IDX(mat,node);
-            for( i = 0; i < mat->dims; i++ )
-                if( idx[i] != nodeidx[i] )
-                    break;
-            if( i == mat->dims )
+            if( node->hashval == hashval )
             {
-                ptr = (uchar*)CV_NODE_VAL(mat,node);
-                break;
+                int* nodeidx = CV_NODE_IDX(mat,node);
+                for( i = 0; i < mat->dims; i++ )
+                    if( idx[i] != nodeidx[i] )
+                        break;
+                if( i == mat->dims )
+                {
+                    ptr = (uchar*)CV_NODE_VAL(mat,node);
+                    break;
+                }
             }
         }
     }
@@ -2570,7 +2573,7 @@ cvReshapeMatND( const CvArr* arr,
             CV_Error( CV_StsBadArg, "The total matrix width is not "
                             "divisible by the new number of columns" );
 
-        header->type = CV_MAKETYPE( mat->type & ~CV_MAT_CN_MASK, new_cn );
+        header->type = (mat->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
         header->step = header->cols * CV_ELEM_SIZE(mat->type);
         header->step &= new_rows > 1 ? -1 : 0;
         header->refcount = refcount;
@@ -2606,7 +2609,7 @@ cvReshapeMatND( const CvArr* arr,
             }
 
             header->dim[header->dims-1].size = new_size;
-            header->type = CV_MAKETYPE( header->type & ~CV_MAT_CN_MASK, new_cn );
+            header->type = (header->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(header->type, new_cn);
             }
         }
         else
@@ -2744,7 +2747,7 @@ cvReshape( const CvArr* array, CvMat* header,
         "The total width is not divisible by the new number of channels" );
 
     header->cols = new_width;
-    header->type = CV_MAKETYPE( mat->type & ~CV_MAT_CN_MASK, new_cn );
+    header->type = (mat->type  & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
 
     result = header;
     return  result;
@@ -2772,7 +2775,7 @@ cvGetImage( const CvArr* array, IplImage* img )
         if( mat->data.ptr == 0 )
             CV_Error( CV_StsNullPtr, "" );
 
-        depth = cvCvToIplDepth(mat->type);
+        depth = cvIplDepth(mat->type);
 
         cvInitImageHeader( img, cvSize(mat->cols, mat->rows),
                            depth, CV_MAT_CN(mat->type) );

@@ -66,7 +66,11 @@ ImageDecoder findDecoder( const String& filename )
         maxlen = std::max(maxlen, len);
     }
 
-    FILE* f = fopen( filename.c_str(), "rb" );
+#ifdef WIN32
+    FILE* f = _wfopen( toUtf16(filename).c_str(), L"rb" );
+#else
+    FILE* f= fopen( filename.c_str(), "rb" );
+#endif
     if( !f )
         return ImageDecoder();
     String signature(maxlen, ' ');
@@ -238,7 +242,7 @@ imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
     }
     else
     {
-        image = cvCreateImage( size, cvCvToIplDepth(type), CV_MAT_CN(type) );
+        image = cvCreateImage( size, cvIplDepth(type), CV_MAT_CN(type) );
         temp = cvarrToMat(image);
     }
 
@@ -363,7 +367,7 @@ imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
     }
     else
     {
-        image = cvCreateImage( size, cvCvToIplDepth(type), CV_MAT_CN(type) );
+        image = cvCreateImage( size, cvIplDepth(type), CV_MAT_CN(type) );
         temp = cvarrToMat(image);
     }
 

@@ -1769,9 +1769,6 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
 
 float CvBoost::calc_error( CvMLData* _data, int type )
 {
-    CV_FUNCNAME( "CvBoost::calc_error" );
-
-    __BEGIN__;
     float err = 0;
     const CvMat* values = _data->get_values();
     const CvMat* response = _data->get_response();
@@ -1815,8 +1812,6 @@ float CvBoost::calc_error( CvMLData* _data, int type )
         err = sample_count ? err / (float)sample_count : -FLT_MAX;    
     }
     return err;
-
-    __END__;
 }
 
 void CvBoost::write_params( CvFileStorage* fs )

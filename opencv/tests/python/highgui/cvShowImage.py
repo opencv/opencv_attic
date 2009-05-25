@@ -14,7 +14,7 @@ import sys
 import works
 
 # path to imagefiles we need
-PREFIX=os.environ["top_srcdir"]+"/tests/python/testdata/images/"
+PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
 
 # check requirements and delete old flag file, if it exists
 if not works.check_files(REQUIRED,TESTNAME):
@@ -22,9 +22,8 @@ if not works.check_files(REQUIRED,TESTNAME):
 
 
 # import the necessary things for OpenCV
-import python
-from python.highgui import *
-from python.cv import *
+from highgui import *
+from cv import *
 
 # defined window name
 win_name = "testing..."

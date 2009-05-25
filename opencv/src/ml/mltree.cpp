@@ -229,10 +229,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     sample_count = sample_all;
     var_count = var_all;
     
-    is_buf_16u = false;     
-    if (_train_data->rows + _train_data->cols -1 < 65536) 
-        is_buf_16u = true;                                
-    
     if( _sample_idx )
     {
         CV_CALL( sample_indices = cvPreprocessIndexArray( _sample_idx, sample_all ));
@@ -247,6 +243,10 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
         var_count = var_idx->rows + var_idx->cols - 1;
     }
 
+    is_buf_16u = false;     
+    if ( sample_count < 65536 ) 
+        is_buf_16u = true;                                
+    
     if( !CV_IS_MAT(_responses) ||
         (CV_MAT_TYPE(_responses->type) != CV_32SC1 &&
          CV_MAT_TYPE(_responses->type) != CV_32FC1) ||
@@ -915,7 +915,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
                 *dst = (float)val;
                 if( m )
                 {
-                    *m = val < 0;
+                    *m = (!is_buf_16u && val < 0) || (is_buf_16u && (val == 65535));
                     m += var_count;
                 }
             }
@@ -1154,7 +1154,7 @@ int CvDTreeTrainData::get_var_type(int vi) const
 
 int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_values_buf, int* indices_buf, const float** ord_values, const int** indices )
 {
-    int vidx = var_idx->data.i[vi];
+    int vidx = var_idx ? var_idx->data.i[vi] : vi;
     int node_sample_count = n->sample_count; 
     int* sample_indices_buf = sample_idx_buf;
     const int* sample_indices = 0;
@@ -2544,7 +2544,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 
         for( i = 0; i < n; i++ )
         {
-            int idx = labels[i];
+            int idx = ( (labels[i] == 65535) && (data->is_buf_16u) ) ? -1 : labels[i];
             double w = priors[responses[i]];
             int d = dir[i];
             double sum = lc[idx] + d*w;
@@ -3144,9 +3144,6 @@ void CvDTree::split_node_data( CvDTreeNode* node )
 
 float CvDTree::calc_error( CvMLData* _data, int type )
 {
-    CV_FUNCNAME( "CvDTree::calc_error" );
-
-    __BEGIN__;
     float err = 0;
     const CvMat* values = _data->get_values();
     const CvMat* response = _data->get_response();
@@ -3190,8 +3187,6 @@ float CvDTree::calc_error( CvMLData* _data, int type )
         err = sample_count ? err / (float)sample_count : -FLT_MAX;    
     }
     return err;
-
-    __END__;
 }
 
 void CvDTree::prune_cv()

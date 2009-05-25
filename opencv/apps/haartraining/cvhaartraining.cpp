@@ -45,17 +45,18 @@
  * training of cascade of boosted classifiers based on haar features
  */
 
-#include <cvhaartraining.h>
-#include <_cvhaartraining.h>
+#include "cvhaartraining.h"
+#include "_cvhaartraining.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <climits>
+
 #include <highgui.h>
-#include <limits.h>
 
 #ifdef CV_VERBOSE
-#include <time.h>
+#include <ctime>
 
 #ifdef _WIN32
 /* use clock() function insted of time() */

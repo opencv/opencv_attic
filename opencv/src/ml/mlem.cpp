@@ -153,7 +153,7 @@ void CvEM::set_params( const CvEMParams& _params, const CvVectors& train_data )
 
     if( params.probs )
     {
-        const CvMat* p = params.weights;
+        const CvMat* p = params.probs;
         if( !CV_IS_MAT(p) ||
             (CV_MAT_TYPE(p->type) != CV_32FC1  &&
             CV_MAT_TYPE(p->type) != CV_64FC1) ||

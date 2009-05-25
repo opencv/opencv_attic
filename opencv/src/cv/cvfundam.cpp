@@ -571,7 +571,7 @@ void CvFMEstimator::computeReprojError( const CvMat* _m1, const CvMat* _m2,
         s1 = 1./(a*a + b*b);
         d1 = m1[i].x*a + m1[i].y*b + c;
 
-        err[i] = (float)(d1*d1*s1 + d2*d2*s2);
+        err[i] = (float)std::max(d1*d1*s1, d2*d2*s2);
     }
 }
 
@@ -611,7 +611,8 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
         CV_ASSERT( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
             (mask->rows == 1 || mask->cols == 1) &&
             mask->rows*mask->cols == count );
-        tempMask = mask;
+        tempMask = cvCreateMatHeader(1, count, CV_8U);
+        cvSetData(tempMask, mask->data.ptr, 0);
     }
     else if( count > 8 )
         tempMask = cvCreateMat( 1, count, CV_8U );
@@ -637,11 +638,11 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
             result = estimator.runLMeDS(m1, m2, &_F3x3, tempMask, param2 );
         if( result <= 0 )
             EXIT;
-        icvCompressPoints( (CvPoint2D64f*)m1->data.ptr, tempMask->data.ptr, 1, count );
+        /*icvCompressPoints( (CvPoint2D64f*)m1->data.ptr, tempMask->data.ptr, 1, count );
         count = icvCompressPoints( (CvPoint2D64f*)m2->data.ptr, tempMask->data.ptr, 1, count );
         assert( count >= 8 );
         m1->cols = m2->cols = count;
-        estimator.run8Point(m1, m2, &_F3x3);
+        estimator.run8Point(m1, m2, &_F3x3);*/
     }
     }
 

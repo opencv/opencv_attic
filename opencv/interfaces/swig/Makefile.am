@@ -11,6 +11,12 @@ AM_CPPFLAGS = \
   $(CV_INCLUDES)                     \
   -DCV_NO_BACKWARD_COMPATIBILITY
 
-SUBDIRS = filtered general python octave
+if BUILD_OCTAVE_WRAPPERS
+  TMP_OCTAVE_DIR = octave
+else
+  TMP_OCTAVE_DIR =
+endif
 
-EXTRA_DIST = README
+SUBDIRS = filtered general python $(TMP_OCTAVE_DIR)
+
+EXTRA_DIST = README CMakeLists.txt

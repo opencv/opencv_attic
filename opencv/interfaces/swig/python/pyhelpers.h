@@ -39,4 +39,6 @@ int PyObject_AsDoubleArray(PyObject * obj, double * array, int len);
 int PyObject_AsLongArray(  PyObject * obj, int * array, int len);
 int PyObject_AsFloatArray(PyObject * obj, float * array, int len);
 
+static inline int cvCvToIplDepth(int type) { return cvIplDepth(type); }
+
 #endif //PYHELPERS_H

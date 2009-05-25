@@ -9,7 +9,7 @@
 // src & dst arrays of equal size & type
 void cvShiftDFT(CvArr * src_arr, CvArr * dst_arr )
 {
-    CvMat * tmp;
+    CvMat * tmp=0;
     CvMat q1stub, q2stub;
     CvMat q3stub, q4stub;
     CvMat d1stub, d2stub;

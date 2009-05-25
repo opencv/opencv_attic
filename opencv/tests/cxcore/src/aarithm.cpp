@@ -1174,7 +1174,7 @@ int CxCore_SplitMergeBaseTest::prepare_test_case( int test_case_idx )
             if( coi < 0 || coi == i )
             {
                 if( are_images )
-                    hdrs[i] = cvCreateImageHeader( sz, cvCvToIplDepth(depth), 1 );
+                    hdrs[i] = cvCreateImageHeader( sz, cvIplDepth(depth), 1 );
                 else
                     hdrs[i] = cvCreateMatHeader( sz.height, sz.width, depth );
                 cvSetData( hdrs[i], planes->data.ptr + planes->step*y, planes->step );

@@ -47,7 +47,7 @@
 			</model_params>
             <data_params>
                 <LS> 4000 </LS>
-                <TS> 4124 </TS>
+                <resp_idx> 0 </resp_idx>
                 <types> cat </types>
 			</data_params>
             <result>
@@ -67,7 +67,7 @@
 			</model_params>
             <data_params>
                 <LS> 22561 </LS>
-                <TS> 10000 </TS>
+                <resp_idx> 14 </resp_idx>
                 <types> ord[0,2,4,10-12],cat[1,3,5-9,13,14] </types>
 			</data_params>
             <result>
@@ -87,7 +87,7 @@
 			</model_params>
             <data_params>
                 <LS> 761 </LS>
-                <TS> 85 </TS>
+                <resp_idx> 18 </resp_idx>
                 <types> ord[0-17],cat[18] </types>
 			</data_params>
             <result>
@@ -107,7 +107,7 @@
 			</model_params>
             <data_params>
                 <LS> 3133 </LS>
-                <TS> 1044 </TS>
+                <resp_idx> 8 </resp_idx>
                 <types> ord[1-8],cat[0] </types>
 			</data_params>
             <result>
@@ -128,7 +128,7 @@
 			</model_params>
             <data_params>
                 <LS> 22561 </LS>
-                <TS> 10000 </TS>
+                <resp_idx> 14 </resp_idx>
                 <types> ord[0,2,4,10-12],cat[1,3,5-9,13,14] </types>
 			</data_params>
             <result>
@@ -147,7 +147,7 @@
 			</model_params>
             <data_params>
                 <LS> 4000 </LS>
-                <TS> 4124 </TS>
+                <resp_idx> 0 </resp_idx>
                 <types> cat </types>
 			</data_params>
             <result>
@@ -166,7 +166,7 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 7100 </TS>
+                <resp_idx> 20 </resp_idx>
                 <types> ord[0-19],cat[20] </types>
 			</data_params>
             <result>
@@ -185,7 +185,7 @@
 			</model_params>
             <data_params>
                 <LS> 3221 </LS>
-                <TS> 1380 </TS>
+                <resp_idx> 57 </resp_idx>
                 <types> ord[0-56],cat[57] </types>
 			</data_params>
             <result>
@@ -209,13 +209,13 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 4700 </TS>
+                <resp_idx> 21 </resp_idx>
                 <types> ord[0-20],cat[21] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 17.100641 </mean>
+                <sigma> 0.630052 </sigma>
 			</result>
 		</waveform>
         <mushroom>
@@ -231,13 +231,13 @@
 			</model_params>
             <data_params>
                 <LS> 4000 </LS>
-                <TS> 4124 </TS>
+                <resp_idx> 0 </resp_idx>
                 <types> cat </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 0.006547 </mean>
+                <sigma> 0.028248 </sigma>
 			</result>
 		</mushroom>
         <adult>
@@ -253,13 +253,13 @@
 			</model_params>
             <data_params>
                 <LS> 22561 </LS>
-                <TS> 10000 </TS>
+                <resp_idx> 14 </resp_idx>
                 <types> ord[0,2,4,10-12],cat[1,3,5-9,13,14] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 13.5129 </mean>
+                <sigma> 0.266065 </sigma>
 			</result>
 		</adult>
         <abalone>
@@ -275,13 +275,13 @@
 			</model_params>
             <data_params>
                 <LS> 3133 </LS>
-                <TS> 1044 </TS>
+                <resp_idx> 8 </resp_idx>
                 <types> ord[1-8],cat[0] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 4.745199 </mean>
+                <sigma> 0.282112 </sigma>
 			</result>
 		</abalone>
         <vehicle>
@@ -297,13 +297,13 @@
 			</model_params>
             <data_params>
                 <LS> 761 </LS>
-                <TS> 85 </TS>
+                <resp_idx> 18 </resp_idx>
                 <types> ord[0-17],cat[18] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 24.964712 </mean>
+                <sigma> 4.469287 </sigma>
 			</result>
 		</vehicle>
         <elevators>
@@ -319,7 +319,7 @@
 			</model_params>
             <data_params>
                 <LS> 5000 </LS>
-                <TS> 11559 </TS>
+                <resp_idx> 18 </resp_idx>
                 <types> ord </types>
 			</data_params>
             <result>
@@ -341,13 +341,13 @@
 			</model_params>
             <data_params>
                 <LS> 10000 </LS>
-                <TS> 10000 </TS>
+                <resp_idx> 16 </resp_idx>
                 <types> ord[0-15],cat[16] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 5.334999 </mean>
+                <sigma> 0.261142 </sigma>
 			</result>
 		</letter>
         <ringnorm>
@@ -363,13 +363,13 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 7100 </TS>
+                <resp_idx> 20 </resp_idx>
                 <types> ord[0-19],cat[20] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 6.248733 </mean>
+                <sigma> 0.904713 </sigma>
 			</result>
 		</ringnorm>
         <twonorm>
@@ -385,13 +385,13 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 7100 </TS>
+                <resp_idx> 20 </resp_idx>
                 <types> ord[0-19],cat[20] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 4.506479 </mean>
+                <sigma> 0.449739 </sigma>
 			</result>
 		</twonorm>
         <spambase>
@@ -407,37 +407,15 @@
 			</model_params>
             <data_params>
                 <LS> 3221 </LS>
-                <TS> 1380 </TS>
+                <resp_idx> 57 </resp_idx>
                 <types> ord[0-56],cat[57] </types>
 			</data_params>
             <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
+                <iter_count> 100 </iter_count>
+                <mean> 5.243477 </mean>
+                <sigma> 0.54232 </sigma>
 			</result>
 		</spambase>
-        <big>
-            <model_params>
-                <max_depth> 2 </max_depth>
-                <min_sample_count> 2 </min_sample_count>
-                <use_surrogate> 0 </use_surrogate>
-                <max_categories> 2 </max_categories>
-                <cv_folds> 0 </cv_folds>
-                <is_pruned> 0 </is_pruned>
-                <nactive_vars> 0 </nactive_vars>
-                <max_trees_num> 2 </max_trees_num>
-			</model_params>
-            <data_params>
-                <LS> 99900 </LS>
-                <TS> 100 </TS>
-                <types> ord[1-999],cat[0,1000] </types>
-			</data_params>
-            <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
-			</result>
-		</big>
 	</rtrees>
     <ertrees>
         <waveform>
@@ -453,7 +431,7 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 4700 </TS>
+                <resp_idx> 21 </resp_idx>
                 <types> ord[0-20],cat[21] </types>
 			</data_params>
             <result>
@@ -475,7 +453,7 @@
 			</model_params>
             <data_params>
                 <LS> 3133 </LS>
-                <TS> 1044 </TS>
+                <resp_idx> 8 </resp_idx>
                 <types> ord[1-8],cat[0] </types>
 			</data_params>
             <result>
@@ -497,7 +475,7 @@
 			</model_params>
             <data_params>
                 <LS> 761 </LS>
-                <TS> 85 </TS>
+                <resp_idx> 18 </resp_idx>
                 <types> ord[0-17],cat[18] </types>
 			</data_params>
             <result>
@@ -519,7 +497,7 @@
 			</model_params>
             <data_params>
                 <LS> 5000 </LS>
-                <TS> 11559 </TS>
+                <resp_idx> 18 </resp_idx>
                 <types> ord </types>
 			</data_params>
             <result>
@@ -541,7 +519,7 @@
 			</model_params>
             <data_params>
                 <LS> 10000 </LS>
-                <TS> 10000 </TS>
+                <resp_idx> 16 </resp_idx>
                 <types> ord[0-15],cat[16] </types>
 			</data_params>
             <result>
@@ -563,7 +541,7 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 7100 </TS>
+                <resp_idx> 20 </resp_idx>
                 <types> ord[0-19],cat[20] </types>
 			</data_params>
             <result>
@@ -585,7 +563,7 @@
 			</model_params>
             <data_params>
                 <LS> 300 </LS>
-                <TS> 7100 </TS>
+                <resp_idx> 20 </resp_idx>
                 <types> ord[0-19],cat[20] </types>
 			</data_params>
             <result>
@@ -607,7 +585,7 @@
 			</model_params>
             <data_params>
                 <LS> 3221 </LS>
-                <TS> 1380 </TS>
+                <resp_idx> 57 </resp_idx>
                 <types> ord[0-56],cat[57] </types>
 			</data_params>
             <result>
@@ -616,28 +594,6 @@
                 <sigma> 0.738573 </sigma>
 			</result>
 		</spambase>
-        <big>
-            <model_params>
-                <max_depth> 2 </max_depth>
-                <min_sample_count> 2 </min_sample_count>
-                <use_surrogate> 0 </use_surrogate>
-                <max_categories> 2 </max_categories>
-                <cv_folds> 0 </cv_folds>
-                <is_pruned> 0 </is_pruned>
-                <nactive_vars> 0 </nactive_vars>
-                <max_trees_num> 2 </max_trees_num>
-			</model_params>
-            <data_params>
-                <LS> 99900 </LS>
-                <TS> 100 </TS>
-                <types> ord[1-999],cat[0,1000] </types>
-			</data_params>
-            <result>
-                <iter_count> 0 </iter_count>
-                <mean> 0 </mean>
-                <sigma> 0 </sigma>
-			</result>
-		</big>
 	</ertrees>
 </validation>
 </opencv_storage>

@@ -42,7 +42,7 @@
 
 #include "_cv.h"
 
-// Gunnar Farnerback 2D dense optical flow algorithm
+// Gunnar Farneback 2D dense optical flow algorithm
 
 namespace cv
 {
@@ -611,7 +611,7 @@ void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
         {
             img[i]->convertTo(fimg, CV_32F);
             GaussianBlur(fimg, fimg, Size(smooth_sz, smooth_sz), sigma, sigma);
-            resize( fimg, I, Size(height, width), CV_INTER_LINEAR );
+            resize( fimg, I, Size(width, height), CV_INTER_LINEAR );
             FarnebackPolyExp( I, R[i], poly_n, poly_sigma );
         }
         
@@ -619,7 +619,7 @@ void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
 
         for( i = 0; i < iterations; i++ )
         {
-            if( flags & OPTFLOW_FARNERBACK_GAUSSIAN )
+            if( flags & OPTFLOW_FARNEBACK_GAUSSIAN )
                 FarnebackUpdateFlow_GaussianBlur( R[0], R[1], flow, M, winsize, i < iterations - 1 );
             else
                 FarnebackUpdateFlow_Blur( R[0], R[1], flow, M, winsize, i < iterations - 1 );

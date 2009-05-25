@@ -50,14 +50,13 @@
 
 namespace cv
 {
+static const char fmtSignTiffII[] = "II\x2a\x00";
+static const char fmtSignTiffMM[] = "MM\x00\x2a";
 
 #ifdef HAVE_TIFF
 
 #include "tiff.h"
 #include "tiffio.h"
-
-static const char fmtSignTiffII[] = "II\x2a\x00";
-static const char fmtSignTiffMM[] = "MM\x00\x2a";
 
 static int grfmt_tiff_err_handler_init = 0;
 static void GrFmtSilentTIFFErrorHandler( const char*, const char*, va_list ) {}
@@ -393,7 +392,11 @@ bool  TiffEncoder::write( const Mat& img, const Vector<int>& )
     else
     {
         // write directory offset
+    #ifdef WIN32
+        FILE* f = _wfopen( toUtf16(m_filename).c_str(), L"r+b" );
+    #else
         FILE* f = fopen( m_filename.c_str(), "r+b" );
+    #endif
         buffer[0] = (uchar)directoryOffset;
         buffer[1] = (uchar)(directoryOffset >> 8);
         buffer[2] = (uchar)(directoryOffset >> 16);

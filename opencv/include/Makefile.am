@@ -1,22 +1,24 @@
+# these headers will be installed in /usr/local/include/opencv typically
+# the OpenCV Framework might only bring a subset, listed in the toplevel opencv/Makefile.am in FRAMEWORK_XHEADERS
 
 pkginclude_HEADERS = \
   opencv/cv.h          \
+  opencv/cv.hpp        \
+  opencv/cvaux.h       \
   opencv/cvaux.hpp     \
+  opencv/cvcompat.h    \
   opencv/cvstreams.h   \
+  opencv/cvmat.hpp     \
+  opencv/cvtypes.h     \
+  opencv/cvver.h       \
   opencv/cvvidsurv.hpp \
+  opencv/cvwimage.h    \
+  opencv/cxcore.h      \
   opencv/cxcore.hpp    \
+  opencv/cxerror.h     \
+  opencv/cxmisc.h      \
   opencv/cxoperations.hpp \
   opencv/cxtypes.h     \
-  opencv/cv.hpp        \
-  opencv/cvcompat.h    \
-  opencv/cvtypes.h     \
-  opencv/cvwimage.h    \
-  opencv/cxerror.h     \
   opencv/highgui.h     \
   opencv/highgui.hpp   \
-  opencv/cvaux.h       \
-  opencv/cvmat.hpp     \
-  opencv/cvver.h       \
-  opencv/cxcore.h      \
-  opencv/cxmisc.h      \
   opencv/ml.h

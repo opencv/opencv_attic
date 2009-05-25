@@ -134,6 +134,8 @@ set(lib_srcs ${highgui_srcs} ${grfmt_srcs})
 if(WIN32 AND MSVC)
     set(pch_header "_highgui.h")
     set(pch_src "precomp.cpp")
+    list(REMOVE_ITEM lib_srcs ${pch_src})
+    set(lib_srcs ${pch_src} ${lib_srcs})
     foreach(src_file ${lib_srcs})
         if(${src_file} MATCHES ${pch_src})
             set_source_files_properties(

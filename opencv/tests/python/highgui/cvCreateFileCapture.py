@@ -9,16 +9,15 @@ import sys
 import works
 from works import *
 
-#import the necessary things for OpenCV
-import python
-from python.highgui import *
-from python.cv import *
+# import the necessary things for OpenCV
+from highgui import *
+from cv import *
 
 
 # some defines
 TESTNAME = "cvCreateFileCapture"
 REQUIRED = []
-PREFIX   = os.environ["top_srcdir"]+"/tests/python/testdata/videos/qcif_"
+PREFIX   = os.path.join(os.environ["srcdir"],"python/testdata/videos/qcif_")
 EXTENSION= ".avi"
 
 

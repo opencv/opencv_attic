@@ -66,6 +66,7 @@ struct CvCapture_Unicap : public CvCapture
   virtual bool setProperty(int, double);
   virtual bool grabFrame();
   virtual IplImage* retrieveFrame(int);
+  virtual int getCaptureDomain() { return CV_CAP_UNICAP; } // Return the type of the capture object: CV_CAP_VFW, etc...
 
   bool shutdownDevice();
   bool initDevice();
