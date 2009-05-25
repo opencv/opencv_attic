@@ -390,14 +390,9 @@ cvDynamicCorrespondMulti( int lines,    /* number of scanlines */
                           int *second, int *second_runs, int *first_corr,       /* s0'|e0'|s1'|e1'|... */
                           int *second_corr )
 {
-    CV_FUNCNAME( "cvDynamicCorrespondMulti" );
-    __BEGIN__;
-
     IPPI_CALL( icvDynamicCorrespondMulti( lines,        /* number of scanlines */
                                           first,        /* s0|w0|s1|w1|...s(n-1)|w(n-1)|sn */
                                           first_runs,   /* numbers of runs */
                                           second, second_runs, first_corr,      /* s0'|e0'|s1'|e1'|... */
                                           second_corr ));
-    __CLEANUP__;
-    __END__;
 }

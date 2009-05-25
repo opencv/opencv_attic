@@ -139,10 +139,6 @@ int CvMLData :: read_csv(const char* filename)
     int cols_count = 0;    
     uchar *var_types_ptr = 0;
 
-    CV_FUNCNAME( "CvMLData :: read_csv" );
-
-    __BEGIN__;
-
     clear();
 
     file = fopen( filename, "rt" );
@@ -229,8 +225,6 @@ int CvMLData :: read_csv(const char* filename)
 
     if ( cvNorm( missing, 0, CV_L1 ) < FLT_EPSILON )
         cvReleaseMat( &missing );
-
-    __END__;
 
     cvReleaseMemStorage( &storage );
     delete []el_ptr;
