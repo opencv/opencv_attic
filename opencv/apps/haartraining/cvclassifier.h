@@ -48,8 +48,8 @@
 #ifndef _CVCLASSIFIER_H_
 #define _CVCLASSIFIER_H_
 
-#include <cxcore.h>
 #include <cmath>
+#include <opencv/cxcore.h>
 
 #define CV_BOOST_API
 

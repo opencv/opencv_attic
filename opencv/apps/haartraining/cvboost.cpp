@@ -87,7 +87,6 @@ CV_BOOST_IMPL
 void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
 {
     int idxtype = 0;
-    uchar* data = NULL;
     size_t istep = 0;
     size_t jstep = 0;
 
@@ -443,8 +442,6 @@ CvClassifier* cvCreateStumpClassifier( CvMat* trainData,
     int i = 0;
     
     float sumw   = FLT_MAX;
-    float sumw1  = FLT_MAX;
-    float sumw0  = FLT_MAX;
     float sumwy  = FLT_MAX;
     float sumwyy = FLT_MAX;
 
