@@ -30,7 +30,9 @@
 }{}
 }
 
-\newcommand{\cross}[1]{#1 (page \pageref{#1})}
+%\newcommand{\cross}[1]{#1 (page \pageref{#1})}
+\newcommand{\cross}[1]{ \hyperref[#1]{#1} }
+
 \newcommand{\matTT}[9]{
 \[
 \left|\begin{array}{ccc}

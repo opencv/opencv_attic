@@ -85,7 +85,7 @@ inline CvPoint3D32f cvPoint3D32f( double x, double y, double z );
 
 \end{lstlisting}
 
-\cvfunc{CvPoint2D64f}
+\cvfunc{CvPoint2D64f}\label{CvPoint2D64f}
 
 2D point with double precision floating-point coordinates
 
@@ -495,7 +495,7 @@ The \cross{IplImage} structure was inherited from the Intel Image Processing Lib
 
 In addition to the above restrictions, OpenCV handles ROIs differently. OpenCV functions require that the image size or ROI size of all source and destination images match exactly. On the other hand, the Intel Image Processing Library processes the area of intersection between the source and destination images (or ROIs), allowing them to vary independently. 
 
-\cvfunc{CvArr}
+\cvfunc{CvArr}\label{CvArr}
 
 Arbitrary array
 
@@ -599,7 +599,7 @@ if( image )
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
 
 
-\cvfunc{ReleaseImage}
+\cvfunc{ReleaseImage}\label{ReleaseImage}
 
 Deallocates the image header and the image data.
 
@@ -696,7 +696,7 @@ int cvGetImageCOI( const IplImage* image );
 
 Returns the channel of interest of in an IplImage. Returned values correspond to the \texttt{coi} in \cross{SetImageCOI}.
 
-\cvfunc{SetImageROI}
+\cvfunc{SetImageROI}\label{SetImageROI}
 
 Sets an image Region Of Interest (ROI) to a given rectangle
 
@@ -1041,7 +1041,7 @@ header is part of a larger matrix or image, or the header was converted from an 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cvfunc{IncRefData}
+\cvfunc{IncRefData}\label{IncRefData}
 
 Increments array data reference counter
 
@@ -1060,7 +1060,7 @@ The function \texttt{cvIncRefData} increments \cross{CvMat} or
 \cross{CvMatND} data reference counter and returns the new counter value
 if the reference counter pointer is not NULL, otherwise it returns zero.
 
-\cvfunc{CreateData}
+\cvfunc{CreateData}\label{CreateData}
 
 Allocates array data
 
@@ -1081,7 +1081,7 @@ allocation functions are used and in case of IplImage they are used
 too unless \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} was called. In the
 latter case IPL functions are used to allocate the data
 
-\cvfunc{ReleaseData}
+\cvfunc{ReleaseData}\label{ReleaseData}
 
 Releases array data
 
@@ -1098,7 +1098,7 @@ void cvReleaseData( CvArr* arr );
 
 The function \texttt{cvReleaseData} releases the array data. In case of \cross{CvMat} or \cross{CvMatND} it simply calls cvDecRefData(), that is the function can not deallocate external data. See also the note to \cross{CreateData}.
 
-\cvfunc{SetData}
+\cvfunc{SetData}\label{SetData}
 
 Assigns user data to the array header
 
@@ -1117,7 +1117,7 @@ void cvSetData( CvArr* arr, void* data, int step );
 
 The function \texttt{cvSetData} assigns user data to the array header. Header should be initialized before using cvCreate*Header, cvInit*Header or \cross{Mat} (in case of matrix) function.
 
-\cvfunc{GetRawData}
+\cvfunc{GetRawData}\label{GetRawData}
 
 Retrieves low-level information about the array
 
@@ -1159,7 +1159,7 @@ for( y = 0; y < size.height; y++, data += step )
 \end{lstlisting}
 
 
-\cvfunc{GetMat}
+\cvfunc{GetMat}\label{GetMat}
 
 Returns matrix header for arbitrary array
 
@@ -1184,7 +1184,7 @@ Input array must have underlying data allocated or attached, otherwise the funct
 
 If the input array is \texttt{IplImage} with planar data layout and COI set, the function returns pointer to the selected plane and COI = 0. It enables per-plane processing of multi-channel images with planar data layout using OpenCV functions.
 
-\cvfunc{GetImage}
+\cvfunc{GetImage}\label{GetImage}
 
 Returns image header for arbitrary array
 
@@ -1209,7 +1209,7 @@ IplImage, we can get different headers if the ROI is set, and thus some
 IPL functions that calculate image stride from its width and align may
 fail on the resultant image.
 
-\cvfunc{CreateSparseMat}
+\cvfunc{CreateSparseMat}\label{CreateSparseMat}
 
 Creates sparse array
 
@@ -1227,7 +1227,7 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 
 The function \texttt{cvCreateSparseMat} allocates multi-dimensional sparse array. Initially the array contain no elements, that is cross{Get} or \cross{GetReadl} return zero for every index
 
-\cvfunc{ReleaseSparseMat}
+\cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
 Deallocates sparse array
 
@@ -1245,7 +1245,7 @@ void cvReleaseSparseMat( CvSparseMat** mat );
 The function \texttt{cvReleaseSparseMat} releases the sparse array and clears the array pointer upon exit
 
 
-\cvfunc{CloneSparseMat}
+\cvfunc{CloneSparseMat}\label{CloneSparseMat}
 
 Creates full copy of sparse array
 
@@ -1263,7 +1263,7 @@ The function \texttt{cvCloneSparseMat} creates a copy of the input array and ret
 
 \subsection{Accessing Elements and sub-Arrays}
 
-\cvfunc{GetSubRect}
+\cvfunc{GetSubRect}\label{GetSubRect}
 
 Returns matrix header corresponding to the rectangular sub-array of input image or matrix
 
@@ -1285,7 +1285,7 @@ the user to treat a rectangular part of input array as a stand-alone
 array. ROI is taken into account by the function so the sub-array of
 ROI is actually extracted.
 
-\cvfunc{GetRow, GetRows}
+\cvfunc{GetRow, GetRows}\label{GetRow, GetRows}
 
 Returns array row or row span
 
@@ -1315,7 +1315,7 @@ cvGetRow( arr, submat, row ) ~ cvGetRows( arr, submat, row, row + 1, 1 );
 \end{lstlisting}
 
 
-\cvfunc{GetCol, GetCols}
+\cvfunc{GetCol, GetCols}\label{GetCol, GetCols}
 
 Returns array column or column span
 
@@ -1342,7 +1342,7 @@ cvGetCol( arr, submat, col ); // ~ cvGetCols( arr, submat, col, col + 1 );
 
 \end{lstlisting}
 
-\cvfunc{GetDiag}
+\cvfunc{GetDiag}\label{GetDiag}
 
 Returns one of array diagonals
 
@@ -1360,7 +1360,7 @@ CvMat* cvGetDiag( const CvArr* arr, CvMat* submat, int diag=0 );
 
 The function \texttt{cvGetDiag} returns the header, corresponding to a specified diagonal of the input array.
 
-\cvfunc{GetSize}
+\cvfunc{GetSize}\label{GetSize}
 
 Returns size of matrix or image ROI
 
@@ -1377,7 +1377,7 @@ CvSize cvGetSize( const CvArr* arr );
 The function \texttt{cvGetSize} returns number of rows (CvSize::height) and number of columns (CvSize::width) of the input matrix or image. In case of image the size of ROI is returned.
 
 
-\cvfunc{InitSparseMatIterator}
+\cvfunc{InitSparseMatIterator}\label{InitSparseMatIterator}
 
 Initializes sparse array elements iterator
 
@@ -1397,7 +1397,7 @@ The function \texttt{cvInitSparseMatIterator} initializes iterator of
 sparse array elements and returns pointer to the first element, or NULL
 if the array is empty.
 
-\cvfunc{GetNextSparseNode}
+\cvfunc{GetNextSparseNode}\label{GetNextSparseNode}
 
 Initializes sparse array elements iterator
 
@@ -1442,7 +1442,7 @@ printf( "\nTotal sum = %g\n", sum );
 \end{lstlisting}
 
 
-\cvfunc{GetElemType}
+\cvfunc{GetElemType}\label{GetElemType}
 
 Returns type of array elements
 
@@ -1464,7 +1464,7 @@ CV\_8UC1 ... CV\_64FC4
 \end{lstlisting}
 
 
-\cvfunc{GetDims, GetDimSize}
+\cvfunc{GetDims, GetDimSize}\label{GetDims, GetDimSize}
 
 Return number of array dimensions and their sizes or the size of particular dimension
 
@@ -1502,7 +1502,7 @@ for( i = 0; i < dims; i++ )
 \end{lstlisting}
 
 
-\cvfunc{PtrnD}
+\cvfunc{PtrnD}\label{PtrnD}
 
 Return pointer to the particular array element
 
@@ -1532,7 +1532,7 @@ The functions can be used for sparse arrays as well - if the requested node does
 
 All these as well as other functions accessing array elements (cross{Get}, \cross{GetReal}, \cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
 
-\cvfunc{Get*D}
+\cvfunc{Get*D}\label{Get*D}
 
 Return the particular array element
 
@@ -1556,7 +1556,7 @@ CvScalar cvGetND( const CvArr* arr, int* idx );
 
 The functions \texttt{cvGet*D} return the particular array element. In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions)
 
-\cvfunc{GetReal*D}
+\cvfunc{GetReal*D}\label{GetReal*D}
 
 Return the particular element of single-channel array
 
@@ -1582,7 +1582,7 @@ The functions \texttt{cvGetReal*D} return the particular element of single-chann
 
 In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions)
 
-\cvfunc{mGet}
+\cvfunc{mGet}\label{mGet}
 
 Return the particular element of single-channel floating-point matrix
 
@@ -1603,7 +1603,7 @@ in case of single-channel floating-point matrices. It is faster because
 it is inline, it does less checks for array type and array element type
 and it checks for the row and column ranges only in debug mode.
 
-\cvfunc{SetnD}
+\cvfunc{SetnD}\label{SetnD}
 
 Change the particular array element
 
@@ -1628,7 +1628,7 @@ void cvSetND( CvArr* arr, int* idx, CvScalar value );
 
 The functions \texttt{cvSetnD} assign the new value to the particular element of array. In case of sparse array the functions create the node if it does not exist yet
 
-\cvfunc{SetRealnD}
+\cvfunc{SetRealnD}\label{SetRealnD}
 
 Change the particular array element
 
@@ -1658,7 +1658,7 @@ are a bit slower.
 
 In case of sparse array the functions create the node if it does not exist yet
 
-\cvfunc{mSet}
+\cvfunc{mSet}\label{mSet}
 
 Return the particular element of single-channel floating-point matrix
 
@@ -1681,7 +1681,7 @@ in case of single-channel floating-point matrices. It is faster because
 it is inline, it does less checks for array type and array element type
 and it checks for the row and column ranges only in debug mode.
 
-\cvfunc{ClearND}
+\cvfunc{ClearND}\label{ClearND}
 
 Clears the particular array element
 
@@ -1703,7 +1703,7 @@ The function \cross{ClearND} clears (sets to zero) the particular element of den
 \subsection{Copying and Filling}
 
 
-\cvfunc{Copy}
+\cvfunc{Copy}\label{Copy}
 
 Copies one array to another
 
@@ -1731,7 +1731,7 @@ and COI fields are used. Both arrays must have the same type, the same
 number of dimensions and the same size. The function can also copy sparse
 arrays (mask is not supported in this case).
 
-\cvfunc{Set}
+\cvfunc{Set}\label{Set}
 
 Sets every element of array to given value
 
@@ -1756,7 +1756,7 @@ The function \texttt{cvSet} copies scalar \texttt{value} to every selected eleme
 
 If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI must not be set.
 
-\cvfunc{SetZero}
+\cvfunc{SetZero}\label{SetZero}
 
 Clears the array
 
@@ -1777,7 +1777,7 @@ In case of sparse arrays all the elements are removed.
 
 \subsection{Transforms and Permutations}
 
-\cvfunc{Reshape}
+\cvfunc{Reshape}\label{Reshape}
 
 Changes shape of matrix/image without copying data
 
@@ -1818,7 +1818,7 @@ row = cvReshape( mat, &row_header, 0, 1 );
 
 \end{lstlisting}
 
-\cvfunc{ReshapeMatND}
+\cvfunc{ReshapeMatND}\label{ReshapeMatND}
 
 Changes shape of multi-dimensional array w/o copying data
 
@@ -1864,7 +1864,7 @@ row = cvReshapeND( mat, &row\_header, 0, 1, 0 );
 
 \end{lstlisting}
 
-\cvfunc{Repeat}
+\cvfunc{Repeat}\label{Repeat}
 
 Fill destination array with tiled source array
 
@@ -1889,7 +1889,7 @@ dst(i,j)=src(i mod rows(src), j mod cols(src))
 So the destination array may be as larger as well as smaller than the source array.
 
 
-\cvfunc{Flip}
+\cvfunc{Flip}\label{Flip}
 
 Flip a 2D array around vertical, horizontall or both axises
 
@@ -1926,7 +1926,7 @@ The example cenaria of the function use are:
   \item reversing the order of 1d point arrays(flip\_mode > 0)
 \end{itemize}
 
-\cvfunc{Split}
+\cvfunc{Split}\label{Split}
 
 Divides multi-channel array into several single-channel arrays or extracts a single channel from the array
 
@@ -1956,7 +1956,7 @@ IplImage \cross{Copy} with COI set can be also used to extract a single
 channel from the image.
 
 
-\cvfunc{Merge}
+\cvfunc{Merge}\label{Merge}
 
 Composes multi-channel array from several single-channel arrays or inserts a single channel into the array
 
@@ -1980,7 +1980,7 @@ The function \texttt{cvMerge} is the opposite to the previous. If the destinatio
 
 \subsection{Arithmetic, Logic and Comparison}
 
-\cvfunc{LUT}
+\cvfunc{LUT}\label{LUT}
 
 Performs look-up table transform of array
 
@@ -2007,7 +2007,7 @@ dst(I)=lut[src(I)+DELTA]
 
 where \texttt{DELTA=0} if \texttt{src} has depth \texttt{CV\_8U}, and `DELTA=128` if \texttt{src} has depth \texttt{CV\_8S}.
 
-\cvfunc{ConvertScale}
+\cvfunc{ConvertScale}\label{ConvertScale}
 
 Converts one array to another with optional linear transformation
 
@@ -2050,7 +2050,7 @@ source and destination array types have equal types, this is also a
 special case that can be used to scale and shift a matrix or an image
 and that fits to \cross{Scale} synonym.
 
-\cvfunc{ConvertScaleAbs}
+\cvfunc{ConvertScaleAbs}\label{ConvertScaleAbs}
 
 Converts input array elements to 8-bit unsigned integer another with optional linear transformation
 
@@ -2078,7 +2078,7 @@ The function \texttt{cvConvertScaleAbs} is similar to the previous one, but it s
 
 The function supports only destination arrays of 8u (8-bit unsigned integers) type, for other types the function can be emulated by combination of \cross{ConvertScale} and \cross{Abs} functions.
 
-\cvfunc{Add}
+\cvfunc{Add}\label{Add}
 
 Computes per-element sum of two arrays
 
@@ -2104,7 +2104,7 @@ dst(I)=src1(I)+src2(I) if mask(I)!=0
 All the arrays must have the same type, except the mask, and the same size (or ROI size)
 
 
-\cvfunc{AddS}
+\cvfunc{AddS}\label{AddS}
 
 Computes sum of array and scalar
 
@@ -2131,7 +2131,7 @@ dst(I)=src(I)+value if mask(I)!=0
 All the arrays must have the same type, except the mask, and the same size (or ROI size)
 
 
-\cvfunc{AddWeighted}
+\cvfunc{AddWeighted}\label{AddWeighted}
 
 Computes weighted sum of two arrays
 
@@ -2161,7 +2161,7 @@ dst(I)=src1(I)*alpha+src2(I)*beta+gamma
 All the arrays must have the same type and the same size (or ROI size)
 
 
-\cvfunc{Sub}
+\cvfunc{Sub}\label{Sub}
 
 Computes per-element difference between two arrays
 
@@ -2187,7 +2187,7 @@ dst(I)=src1(I)-src2(I) if mask(I)!=0
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size)
 
-\cvfunc{SubS}
+\cvfunc{SubS}\label{SubS}
 
 Computes difference between array and scalar
 
@@ -2213,7 +2213,7 @@ dst(I)=src(I)-value if mask(I)!=0
 All the arrays must have the same type, except the mask, and the same size (or ROI size)
 
 
-\cvfunc{SubRS}
+\cvfunc{SubRS}\label{SubRS}
 
 Computes difference between scalar and array
 
@@ -2239,7 +2239,7 @@ dst(I)=value-src(I) if mask(I)!=0
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size)
 
-\cvfunc{Mul}
+\cvfunc{Mul}\label{Mul}
 
 Calculates per-element product of two arrays
 
@@ -2265,7 +2265,7 @@ The function \texttt{cvMul} calculates per-element product of two arrays:
 
 All the arrays must have the same type, and the same size (or ROI size)
 
-\cvfunc{Div}
+\cvfunc{Div}\label{Div}
 
 Performs per-element division of two arrays
 
@@ -2293,7 +2293,7 @@ The function \texttt{cvDiv} divides one array by another:
 All the arrays must have the same type, and the same size (or ROI size)
 
 
-\cvfunc{And}
+\cvfunc{And}\label{And}
 
 Calculates per-element bit-wise conjunction of two arrays
 
@@ -2319,7 +2319,7 @@ dst(I)=src1(I)&src2(I) if mask(I)!=0
 
 In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
-\cvfunc{AndS}
+\cvfunc{AndS}\label{AndS}
 
 Calculates per-element bit-wise conjunction of array and scalar
 
@@ -2364,7 +2364,7 @@ The code should print:
 \end{lstlisting}
 
 
-\cvfunc{Or}
+\cvfunc{Or}\label{Or}
 
 Calculates per-element bit-wise disjunction of two arrays
 
@@ -2390,7 +2390,7 @@ dst(I)=src1(I)|src2(I)
 
 In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
 
-\cvfunc{OrS}
+\cvfunc{OrS}\label{OrS}
 
 Calculates per-element bit-wise disjunction of array and scalar
 
@@ -2417,7 +2417,7 @@ dst(I)=src(I)|value if mask(I)!=0
 Prior to the actual operation the scalar is converted to the same type as the arrays. In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
 
 
-\cvfunc{Xor}
+\cvfunc{Xor}\label{Xor}
 
 Performs per-element bit-wise "exclusive or" operation on two arrays
 
@@ -2442,7 +2442,7 @@ dst(I)=src1(I)^src2(I) if mask(I)!=0
 
 In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
 
-\cvfunc{XorS}
+\cvfunc{XorS}\label{XorS}
 
 Performs per-element bit-wise "exclusive or" operation on array and scalar
 
@@ -2487,7 +2487,7 @@ The code should print:
 (1.0,0.0) (0.0,-1.0) (-1.0,0.0) (0.0,1.0)
 \end{lstlisting}
 
-\cvfunc{Not}
+\cvfunc{Not}\label{Not}
 
 Performs per-element bit-wise inversion of array elements
 
@@ -2510,7 +2510,7 @@ dst(I)=~src(I)
 \end{lstlisting}
 
 
-\cvfunc{Cmp}
+\cvfunc{Cmp}\label{Cmp}
 
 Performs per-element comparison of two arrays
 
@@ -2538,7 +2538,7 @@ dst(I)=src1(I) op src2(I),
 
 \texttt{dst(I)} is set to 0xff (all \texttt{1}-bits) if the particular relation between the elements is true and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size)
 
-\cvfunc{CmpS}
+\cvfunc{CmpS}\label{CmpS}
 
 Performs per-element comparison of array and scalar
 
@@ -2575,7 +2575,7 @@ where \texttt{op} is $=$, $>$, $\ge$, $<$, $\le$ or $\ne$.
 
 dst(I) is set to 0xff (all \texttt{1}-bits) if the particular relation between the elements is true and 0 otherwise. All the arrays must have the same size (or ROI size)
 
-\cvfunc{InRange}
+\cvfunc{InRange}\label{InRange}
 
 Checks that array elements lie between elements of two other arrays
 
@@ -2612,7 +2612,7 @@ for two-channel arrays etc.
 dst(I) is set to 0xff (all \texttt{1}-bits) if src(I) is within the range and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size)
 
 
-\cvfunc{InRangeS}
+\cvfunc{InRangeS}\label{InRangeS}
 
 Checks that array elements lie between two scalars
 
@@ -2648,7 +2648,7 @@ for two-channel arrays etc.
 
 `dst(I)` is set to 0xff (all \texttt{1}-bits) if `src(I)` is within the range and 0 otherwise. All the arrays must have the same size (or ROI size)
 
-\cvfunc{Max}
+\cvfunc{Max}\label{Max}
 
 Finds per-element maximum of two arrays
 
@@ -2673,7 +2673,7 @@ The function \texttt{cvMax} calculates per-element maximum of two arrays:
 All the arrays must have a single channel, the same data type and the same size (or ROI size).
 
 
-\cvfunc{MaxS}
+\cvfunc{MaxS}\label{MaxS}
 
 Finds per-element maximum of array and scalar
 
@@ -2698,7 +2698,7 @@ The function \texttt{cvMaxS} calculates per-element maximum of array and scalar:
 All the arrays must have a single channel, the same data type and the same size (or ROI size).
 
 
-\cvfunc{Min}
+\cvfunc{Min}\label{Min}
 
 Finds per-element minimum of two arrays
 
@@ -2724,7 +2724,7 @@ The function \texttt{cvMin} calculates per-element minimum of two arrays:
 All the arrays must have a single channel, the same data type and the same size (or ROI size).
 
 
-\cvfunc{MinS}
+\cvfunc{MinS}\label{MinS}
 
 Finds per-element minimum of array and scalar
 
@@ -2748,7 +2748,7 @@ The function \texttt{cvMinS} calculates minimum of array and scalar:
 
 All the arrays must have a single channel, the same data type and the same size (or ROI size).
 
-\cvfunc{AbsDiff}
+\cvfunc{AbsDiff}\label{AbsDiff}
 
 Calculates absolute difference between two arrays
 
@@ -2770,7 +2770,7 @@ The function \texttt{cvAbsDiff} calculates absolute difference between two array
 
 All the arrays must have the same data type and the same size (or ROI size).
 
-\cvfunc{AbsDiffS}
+\cvfunc{AbsDiffS}\label{AbsDiffS}
 
 Calculates absolute difference between array and scalar
 
@@ -2797,7 +2797,7 @@ All the arrays must have the same data type and the same size (or ROI size).
 
 \subsection{Statistics}
 
-\cvfunc{CountNonZero}
+\cvfunc{CountNonZero}\label{CountNonZero}
 
 Counts non-zero array elements
 
@@ -2819,7 +2819,7 @@ The function \texttt{cvCountNonZero} returns the number of non-zero elements in 
 In case of \texttt{IplImage} both ROI and COI are supported.
 
 
-\cvfunc{Sum}
+\cvfunc{Sum}\label{Sum}
 
 Summarizes array elements
 
@@ -2840,7 +2840,7 @@ The function \texttt{cvSum} calculates sum \texttt{S} of array elements, indepen
 
 If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the sum to the first scalar component $S_0$.
 
-\cvfunc{Avg}
+\cvfunc{Avg}\label{Avg}
 
 Calculates average (mean) of array elements
 
@@ -2867,7 +2867,7 @@ M_c = \frac{\sum_{ I, \, \texttt{mask}(I) \ne 0} \texttt{arr}(I)_c}{N}
 
 If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average to the first scalar component $S_0$.
 
-\cvfunc{AvgSdv}
+\cvfunc{AvgSdv}\label{AvgSdv}
 
 Calculates average (mean) of array elements
 
@@ -2896,7 +2896,7 @@ std\_dev_c = \sqrt{\sum_{ I, \, \texttt{mask}(I) \ne 0} (\texttt{arr}(I)_c - mea
 
 If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average and standard deviation to the first compoenents of output scalars ($mean_0$ and $std\_dev_0$).
 
-\cvfunc{MinMaxLoc}
+\cvfunc{MinMaxLoc}\label{MinMaxLoc}
 
 Finds global minimum and maximum in array or subarray
 
@@ -2924,7 +2924,7 @@ more than one channel, it must be \texttt{IplImage} with \texttt{COI}
 set. In case if multi-dimensional arrays \texttt{min\_loc->x} and \texttt{max\_loc->x}
 will contain raw (linear) positions of the extremums.
 
-\cvfunc{Norm}
+\cvfunc{Norm}\label{Norm}
 
 Calculates absolute array norm, absolute difference norm or relative difference norm
 
@@ -2971,7 +2971,7 @@ The function \texttt{Norm} returns the calculated norm. The multiple-channel arr
 
 \subsection{Linear Algebra}
 
-\cvfunc{SetIdentity}
+\cvfunc{SetIdentity}\label{SetIdentity}
 
 Initializes scaled identity matrix
 
@@ -2992,7 +2992,7 @@ The function \texttt{cvSetIdentity} initializes scaled identity matrix:
 \texttt{arr}(i,j)=\fork{\texttt{value}}{ if $i=j$}{0}{otherwise}
 \]
 
-\cvfunc{DotProduct}
+\cvfunc{DotProduct}\label{DotProduct}
 
 Calculates dot product of two arrays in Euclidian metrics
 
@@ -3016,7 +3016,7 @@ src1 \bullet src2 = \sum_I (\texttt{src1}(I) \texttt{src2}(I))
 In case of multiple channel arrays the results for all channels are accumulated. In particular, \texttt{cvDotProduct(a,a)} where \texttt{a} is a complex vector, will return $||\texttt{a}||^2$.
 The function can process multi-dimensional arrays, row by row, layer by layer and so on.
 
-\cvfunc{CrossProduct}
+\cvfunc{CrossProduct}\label{CrossProduct}
 
 Calculates cross product of two 3D vectors
 
@@ -3045,7 +3045,7 @@ or:
 \end{array}
 \]
 
-\cvfunc{ScaleAdd}
+\cvfunc{ScaleAdd}\label{ScaleAdd}
 
 Calculates sum of scaled array and another array
 
@@ -3073,7 +3073,7 @@ The function \texttt{cvScaleAdd} calculates sum of scaled array and another arra
 
 All array parameters should have the same type and the same size.
 
-\cvfunc{GEMM}
+\cvfunc{GEMM}\label{GEMM}
 
 Performs generalized matrix multiplication
 
@@ -3113,7 +3113,7 @@ The function \texttt{cvGEMM} performs generalized matrix multiplication:
 
 All the matrices should have the same data type and the coordinated sizes. Real or complex floating-point matrices are supported
 
-\cvfunc{Transform}
+\cvfunc{Transform}\label{Transform}
 
 Performs matrix transform of every array element
 
@@ -3153,7 +3153,7 @@ The function may be used for geometrical transformation of \texttt{N}D
 point set, arbitrary linear color space transformation, shuffling the
 channels etc.
 
-\cvfunc{PerspectiveTransform}
+\cvfunc{PerspectiveTransform}\label{PerspectiveTransform}
 
 Performs perspective matrix transform of vector array
 
@@ -3185,7 +3185,7 @@ x & y & z & 1
 and
 \[ w = \fork{w'}{if $w' \ne 0$}{\infty}{otherwise} \]
 
-\cvfunc{MulTransposed}
+\cvfunc{MulTransposed}\label{MulTransposed}
 
 Calculates product of array and transposed array
 
@@ -3220,7 +3220,7 @@ if $\texttt{order}=0$, and
 
 otherwise.
 
-\cvfunc{Trace}
+\cvfunc{Trace}\label{Trace}
 
 Returns trace of matrix
 
@@ -3239,7 +3239,7 @@ The function \texttt{cvTrace} returns sum of diagonal elements of the matrix \te
 
 \[ tr(\texttt{mat}) = \sum_i \texttt{mat}(i,i) \]
 
-\cvfunc{Transpose}
+\cvfunc{Transpose}\label{Transpose}
 
 Transposes matrix
 
@@ -3266,7 +3266,7 @@ Note that no complex conjugation is done in case of complex
 matrix. Conjugation should be done separately: look at the sample code
 in \cross{XorS} for example
 
-\cvfunc{Det}
+\cvfunc{Det}\label{Det}
 
 Returns determinant of matrix
 
@@ -3284,7 +3284,7 @@ The function \texttt{cvDet} returns determinant of the square matrix \texttt{mat
 \cross{SVD}
 with $U = V = 0$ and then calculate determinant as a product of the diagonal elements of $W$.
 
-\cvfunc{Invert}
+\cvfunc{Invert}\label{Invert}
 
 Finds inverse or pseudo-inverse of matrix
 
@@ -3315,7 +3315,7 @@ In case of \texttt{LU} method the function returns \texttt{src1} determinant (sr
 In case of \texttt{SVD} methods the function returns the inversed condition number of \texttt{src1} (ratio of the smallest singular value to the largest singular value) and 0 if \texttt{src1} is all zeros. The SVD methods calculate a pseudo-inverse matrix if \texttt{src1} is singular
 
 
-\cvfunc{Solve}
+\cvfunc{Solve}\label{Solve}
 
 Solves linear system or least-squares problem
 
@@ -3345,7 +3345,7 @@ The function \texttt{cvSolve} solves linear system or least-squares problem (the
 
 If \texttt{CV\_LU} method is used, the function returns 1 if \texttt{src1} is non-singular and 0 otherwise, in the latter case \texttt{dst} is not valid
 
-\cvfunc{SVD}
+\cvfunc{SVD}\label{SVD}
 
 Performs singular value decomposition of real floating-point matrix
 
@@ -3394,52 +3394,48 @@ SVD algorithm is numerically robust and its typical applications include:
   \item accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), determinant (absolute value of determinant is equal to the product of singular values). All the things listed in this item do not require calculation of $U$ and $V$ matrices.
 \end{itemize}
 
-\cvfunc{SVBkSb}
-\begin{verbatim}
+\cvfunc{SVBkSb}\label{SVBkSb}
 
 Performs singular value back substitution
 
 \cvexp{
 
-void  cvSVBkSb( const CvArr* W, const CvArr* U, const CvArr* V,
-                const CvArr* B, CvArr* X, int flags );
+void  cvSVBkSb( \par const CvArr* W,\par const CvArr* U,\par const CvArr* V,\par const CvArr* B,\par CvArr* X,\par int flags );
 
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{W}{Matrix or vector of singular values}
-\cvarg{U}{Left orthogonal matrix (tranposed, perhaps)V}
-\cvarg{}{Right orthogonal matrix (tranposed, perhaps)B}
-\cvarg{}{The matrix to multiply the pseudo-inverse of the original matrix \texttt{A} by}
-. This is the optional parameter. If it is omitted then it is assumed to be an identity matrix of an appropriate size (So \texttt{X} will be the reconstructed pseudo-inverse of \texttt{A}).\cvarg{X}{The destination matrix}
-: result of back substitution.\cvarg{flags}{Operation flags, should match exactly to the \texttt{flags} passed to \cross{SVD}}
+\cvarg{U}{Left orthogonal matrix (tranposed, perhaps)}
+\cvarg{V}{Right orthogonal matrix (tranposed, perhaps)}
+\cvarg{B}{The matrix to multiply the pseudo-inverse of the original matrix \texttt{A} by. This is the optional parameter. If it is omitted then it is assumed to be an identity matrix of an appropriate size (So \texttt{X} will be the reconstructed pseudo-inverse of \texttt{A}).}
+\cvarg{X}{The destination matrix: result of back substitution.}
+\cvarg{flags}{Operation flags, should match exactly to the \texttt{flags} passed to \cross{SVD}}
 \end{description}
-
 
 The function \texttt{cvSVBkSb} calculates back substitution for decomposed matrix \texttt{A} (see \cross{SVD} description) and matrix \texttt{B}:
 
-\cvexp{
+\[
+\texttt{X} = \texttt{V} \texttt{W}^{-1} \texttt{U}^T \texttt{B}
+\]
 
-X=V*W^-1^*U^T^*B
+where
 
-}{CPP}{PYTHON}
+\[
+W^{-1}_{(i,i)}=
+\fork
+{1/W_{(i,i)}}{if $W_{(i,i)} > \epsilon \sum_i{W_{(i,i)}}$ }
+{0}{otherwise}
+\]
 
-Where
+And $\epsilon$ is a small number that depends on the matrix data type.
 
-\cvexp{
+This function together with \cross{SVD} is used inside \cross{Invert}
+and \cross{Solve}, and the possible reason to use these (svd and bksb)
+"low-level" function is to avoid temporary matrices allocation inside
+the high-level counterparts (inv and solve).
 
-W^-1^(i,i)=1/W(i,i) if W(i,i) > epsilon \cdot sum,,i,,W(i,i),
-                    0        otherwise
-
-}{CPP}{PYTHON}
-
-And \texttt{epsilon} is a small number that depends on the matrix data type.
-
-This function together with \cross{SVD} is used inside \cross{Invert} and \cross{Solve}, and the possible reason to use these (svd & bksb) "low-level" function is to avoid temporary matrices allocation inside the high-level counterparts (inv & solve).
-
-
-\end{verbatim}
-\cvfunc{EigenVV}
+\cvfunc{EigenVV}\label{EigenVV}
 \begin{verbatim}
 
 Computes eigenvalues and eigenvectors of symmetric matrix
@@ -3470,7 +3466,7 @@ Currently the function is slower than \cross{SVD} yet less accurate, so if \text
 
 
 \end{verbatim}
-\cvfunc{CalcCovarMatrix}
+\cvfunc{CalcCovarMatrix}\label{CalcCovarMatrix}
 \begin{verbatim}
 
 Calculates covariation matrix of the set of vectors
@@ -3494,7 +3490,7 @@ The function \texttt{cvCalcCovarMatrix} calculates the covariation matrix and, o
 
 
 \end{verbatim}
-\cvfunc{Mahalonobis}
+\cvfunc{Mahalonobis}\label{Mahalonobis}
 \begin{verbatim}
 
 Calculates Mahalonobis distance between two vectors
@@ -3529,7 +3525,7 @@ The covariation matrix may be calculated using \cross{CalcCovarMatrix} function 
 
 
 \end{verbatim}
-\cvfunc{Round, Floor, Ceil}
+\cvfunc{Round, Floor, Ceil}\label{Round, Floor, Ceil}
 \begin{verbatim}
 
 Converts floating-point number to integer
@@ -3551,7 +3547,7 @@ The functions `cvRound, cvFloor` and \texttt{cvCeil} convert input floating-poin
 
 
 \end{verbatim}
-\cvfunc{Sqrt}
+\cvfunc{Sqrt}\label{Sqrt}
 \begin{verbatim}
 
 Calculates square root
@@ -3571,7 +3567,7 @@ The function \texttt{cvSqrt} calculates square root of the argument. If the argu
 
 
 \end{verbatim}
-\cvfunc{InvSqrt}
+\cvfunc{InvSqrt}\label{InvSqrt}
 \begin{verbatim}
 
 Calculates inverse square root
@@ -3591,7 +3587,7 @@ The function \texttt{cvInvSqrt} calculates inverse square root of the argument, 
 
 
 \end{verbatim}
-\cvfunc{Cbrt}
+\cvfunc{Cbrt}\label{Cbrt}
 \begin{verbatim}
 
 Calculates cubic root
@@ -3611,7 +3607,7 @@ The function \texttt{cvCbrt} calculates cubic root of the argument, and normally
 
 
 \end{verbatim}
-\cvfunc{FastArctan}
+\cvfunc{FastArctan}\label{FastArctan}
 \begin{verbatim}
 
 Calculates angle of 2D vector
@@ -3632,7 +3628,7 @@ The function \texttt{cvFastArctan} calculates full-range angle of input 2D vecto
 
 
 \end{verbatim}
-\cvfunc{IsNaN}
+\cvfunc{IsNaN}\label{IsNaN}
 \begin{verbatim}
 
 Determines if the argument is Not A Number
@@ -3652,7 +3648,7 @@ The function \texttt{cvIsNaN} returns 1 if the argument is Not A Number (as defi
 
 
 \end{verbatim}
-\cvfunc{IsInf}
+\cvfunc{IsInf}\label{IsInf}
 \begin{verbatim}
 
 Determines if the argument is Infinity
@@ -3672,7 +3668,7 @@ The function \texttt{cvIsInf} returns 1 if the argument is ±Infinity (as define
 
 
 \end{verbatim}
-\cvfunc{CartToPolar}
+\cvfunc{CartToPolar}\label{CartToPolar}
 \begin{verbatim}
 
 Calculates magnitude and/or angle of 2d vectors
@@ -3706,7 +3702,7 @@ The angles are calculated with ≈0.1° accuracy. For (0,0) point the angle is s
 
 
 \end{verbatim}
-\cvfunc{PolarToCart}
+\cvfunc{PolarToCart}\label{PolarToCart}
 \begin{verbatim}
 
 Calculates cartesian coordinates of 2d vectors represented in polar form
@@ -3738,7 +3734,7 @@ y(I)=magnitude(I)*sin(angle(I))
 
 
 \end{verbatim}
-\cvfunc{Pow}
+\cvfunc{Pow}\label{Pow}
 \begin{verbatim}
 
 Raises every array element to power
@@ -3782,7 +3778,7 @@ For some values of \texttt{power}, such as integer values, 0.5 and -0.5, special
 
 
 \end{verbatim}
-\cvfunc{Exp}
+\cvfunc{Exp}\label{Exp}
 \begin{verbatim}
 
 Calculates exponent of every array element
@@ -3811,7 +3807,7 @@ Maximum relative error is ≈7e-6. Currently, the function converts denormalized
 
 
 \end{verbatim}
-\cvfunc{Log}
+\cvfunc{Log}\label{Log}
 \begin{verbatim}
 
 Calculates natural logarithm of every array element absolute value
@@ -3841,7 +3837,7 @@ Where \texttt{C} is large negative number (≈-700 in the current implementation
 
 
 \end{verbatim}
-\cvfunc{SolveCubic}
+\cvfunc{SolveCubic}\label{SolveCubic}
 \begin{verbatim}
 
 Finds real roots of a cubic equation
@@ -3881,7 +3877,7 @@ The function returns the number of real roots found. The roots are stored to \te
 
 
 \end{verbatim}
-\cvfunc{RNG}
+\cvfunc{RNG}\label{RNG}
 \begin{verbatim}
 
 Initializes random number generator state
@@ -3901,7 +3897,7 @@ The function \texttt{cvRNG} initializes random number generator and returns the 
 
 
 \end{verbatim}
-\cvfunc{RandArr}
+\cvfunc{RandArr}\label{RandArr}
 \begin{verbatim}
 
 Fills array with random numbers and updates the RNG state
@@ -3972,7 +3968,7 @@ cvReleaseMat( &values );
 
 
 \end{verbatim}
-\cvfunc{RandInt}
+\cvfunc{RandInt}\label{RandInt}
 \begin{verbatim}
 
 Returns 32-bit unsigned integer and updates RNG
@@ -4029,7 +4025,7 @@ practice of working with small, fixed-size matrices */
 
 
 \end{verbatim}
-\cvfunc{RandReal}
+\cvfunc{RandReal}\label{RandReal}
 \begin{verbatim}
 
 Returns floating-point random number and updates RNG
@@ -4054,7 +4050,7 @@ The function \texttt{cvRandReal} returns uniformly-distributed random floating-p
 
 
 \end{verbatim}
-\cvfunc{DFT}
+\cvfunc{DFT}\label{DFT}
 \begin{verbatim}
 
 Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-point array
@@ -4171,7 +4167,7 @@ cvCopy( &tmp, conv );
 
 
 \end{verbatim}
-\cvfunc{GetOptimalDFTSize}
+\cvfunc{GetOptimalDFTSize}\label{GetOptimalDFTSize}
 \begin{verbatim}
 
 Returns optimal DFT size for given vector size
@@ -4193,7 +4189,7 @@ The function returns a negative number if \texttt{size0} is too large (very clos
 
 
 \end{verbatim}
-\cvfunc{MulSpectrums}
+\cvfunc{MulSpectrums}\label{MulSpectrums}
 \begin{verbatim}
 
 Performs per-element multiplication of two Fourier spectrums
@@ -4218,7 +4214,7 @@ The function, together with \cross{DFT}, may be used to calculate convolution of
 
 
 \end{verbatim}
-\cvfunc{DCT}
+\cvfunc{DCT}\label{DCT}
 \begin{verbatim}
 
 Performs forward or inverse Discrete Cosine transform of 1D or 2D floating-point array
@@ -4270,7 +4266,7 @@ X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 
 
 \end{verbatim}
-\cvfunc{CvMemStorage}
+\cvfunc{CvMemStorage}\label{CvMemStorage}
 \begin{verbatim}
 
 Growing memory storage
@@ -4296,7 +4292,7 @@ If there is no more free blocks, a new block is allocated (or borrowed from pare
 
 
 \end{verbatim}
-\cvfunc{CvMemBlock}
+\cvfunc{CvMemBlock}\label{CvMemBlock}
 \begin{verbatim}
 
 Memory storage block
@@ -4315,7 +4311,7 @@ The structure \cross{CvMemBlock} represents a single block of memory storage. Ac
 
 
 \end{verbatim}
-\cvfunc{CvMemStoragePos}
+\cvfunc{CvMemStoragePos}\label{CvMemStoragePos}
 \begin{verbatim}
 
 Memory storage position
@@ -4334,7 +4330,7 @@ The structure described below stores the position of the stack top that can be s
 
 
 \end{verbatim}
-\cvfunc{CreateMemStorage}
+\cvfunc{CreateMemStorage}\label{CreateMemStorage}
 \begin{verbatim}
 
 Creates memory storage
@@ -4354,7 +4350,7 @@ The function \texttt{cvCreateMemStorage} creates a memory storage and returns po
 
 
 \end{verbatim}
-\cvfunc{CreateChildMemStorage}
+\cvfunc{CreateChildMemStorage}\label{CreateChildMemStorage}
 \begin{verbatim}
 
 Creates child memory storage
@@ -4386,7 +4382,7 @@ Dynamic data processing using a child storage
 
 
 \end{verbatim}
-\cvfunc{ReleaseMemStorage}
+\cvfunc{ReleaseMemStorage}\label{ReleaseMemStorage}
 \begin{verbatim}
 
 Releases memory storage
@@ -4406,7 +4402,7 @@ The function \texttt{cvReleaseMemStorage} deallocates all storage memory blocks 
 
 
 \end{verbatim}
-\cvfunc{ClearMemStorage}
+\cvfunc{ClearMemStorage}\label{ClearMemStorage}
 \begin{verbatim}
 
 Clears memory storage
@@ -4426,7 +4422,7 @@ The function \texttt{cvClearMemStorage} resets the top (free space boundary) of 
 
 
 \end{verbatim}
-\cvfunc{MemStorageAlloc}
+\cvfunc{MemStorageAlloc}\label{MemStorageAlloc}
 \begin{verbatim}
 
 Allocates memory buffer in the storage
@@ -4447,7 +4443,7 @@ The function \texttt{cvMemStorageAlloc} allocates memory buffer in the storage. 
 
 
 \end{verbatim}
-\cvfunc{MemStorageAllocString}
+\cvfunc{MemStorageAllocString}\label{MemStorageAllocString}
 \begin{verbatim}
 
 Allocates text string in the storage
@@ -4476,7 +4472,7 @@ The function \texttt{cvMemStorageAllocString} creates copy of the string in the 
 
 
 \end{verbatim}
-\cvfunc{SaveMemStoragePos}
+\cvfunc{SaveMemStoragePos}\label{SaveMemStoragePos}
 \begin{verbatim}
 
 Saves memory storage position
@@ -4497,7 +4493,7 @@ The function \texttt{cvSaveMemStoragePos} saves the current position of the stor
 
 
 \end{verbatim}
-\cvfunc{RestoreMemStoragePos}
+\cvfunc{RestoreMemStoragePos}\label{RestoreMemStoragePos}
 \begin{verbatim}
 
 Restores memory storage position
@@ -4523,7 +4519,7 @@ The function \texttt{cvRestoreMemStoragePos} restores the position of the storag
 
 
 \end{verbatim}
-\cvfunc{CvSeq}
+\cvfunc{CvSeq}\label{CvSeq}
 \begin{verbatim}
 
 Growable sequence of elements
@@ -4610,7 +4606,7 @@ The remaining bits are used to identify different features specific to certain s
 
 
 \end{verbatim}
-\cvfunc{CvSeqBlock}
+\cvfunc{CvSeqBlock}\label{CvSeqBlock}
 \begin{verbatim}
 
 Continuous sequence block
@@ -4633,7 +4629,7 @@ Sequence blocks make up a circular double-linked list, so the pointers \texttt{p
 
 
 \end{verbatim}
-\cvfunc{CvSlice}
+\cvfunc{CvSlice}\label{CvSlice}
 \begin{verbatim}
 
 A sequence slice
@@ -4661,7 +4657,7 @@ If a function does not take slice argument, but you want to process only a part 
 
 
 \end{verbatim}
-\cvfunc{CreateSeq}
+\cvfunc{CreateSeq}\label{CreateSeq}
 \begin{verbatim}
 
 Creates sequence
@@ -4685,7 +4681,7 @@ The function \texttt{cvCreateSeq} creates a sequence and returns the pointer to 
 
 
 \end{verbatim}
-\cvfunc{SetSeqBlockSize}
+\cvfunc{SetSeqBlockSize}\label{SetSeqBlockSize}
 \begin{verbatim}
 
 Sets up sequence block size
@@ -4706,7 +4702,7 @@ The function \texttt{cvSetSeqBlockSize} affects memory allocation granularity. W
 
 
 \end{verbatim}
-\cvfunc{SeqPush}
+\cvfunc{SeqPush}\label{SeqPush}
 \begin{verbatim}
 
 Adds element to sequence end
@@ -4751,7 +4747,7 @@ The function \texttt{cvSeqPush} has O(1) complexity, but there is a faster metho
 
 
 \end{verbatim}
-\cvfunc{SeqPop}
+\cvfunc{SeqPop}\label{SeqPop}
 \begin{verbatim}
 
 Removes element from sequence end
@@ -4772,7 +4768,7 @@ The function \texttt{cvSeqPop} removes an element from the sequence. The functio
 
 
 \end{verbatim}
-\cvfunc{SeqPushFront}
+\cvfunc{SeqPushFront}\label{SeqPushFront}
 \begin{verbatim}
 
 Adds element to sequence beginning
@@ -4793,7 +4789,7 @@ The function \texttt{cvSeqPushFront} is similar to \cross{SeqPush} but it adds t
 
 
 \end{verbatim}
-\cvfunc{SeqPopFront}
+\cvfunc{SeqPopFront}\label{SeqPopFront}
 \begin{verbatim}
 
 Removes element from sequence beginning
@@ -4814,7 +4810,7 @@ The function \texttt{cvSeqPopFront} removes an element from the beginning of the
 
 
 \end{verbatim}
-\cvfunc{SeqPushMulti}
+\cvfunc{SeqPushMulti}\label{SeqPushMulti}
 \begin{verbatim}
 
 Pushes several elements to the either end of sequence
@@ -4837,7 +4833,7 @@ The function \texttt{cvSeqPushMulti} adds several elements to either end of the 
 
 
 \end{verbatim}
-\cvfunc{SeqPopMulti}
+\cvfunc{SeqPopMulti}\label{SeqPopMulti}
 \begin{verbatim}
 
 Removes several elements from the either end of sequence
@@ -4860,7 +4856,7 @@ The function \texttt{cvSeqPopMulti} removes several elements from either end of 
 
 
 \end{verbatim}
-\cvfunc{SeqInsert}
+\cvfunc{SeqInsert}\label{SeqInsert}
 \begin{verbatim}
 
 Inserts element in sequence middle
@@ -4882,7 +4878,7 @@ The function \texttt{cvSeqInsert} shifts the sequence elements from the inserted
 
 
 \end{verbatim}
-\cvfunc{SeqRemove}
+\cvfunc{SeqRemove}\label{SeqRemove}
 \begin{verbatim}
 
 Removes element from sequence middle
@@ -4903,7 +4899,7 @@ The function \texttt{cvSeqRemove} removes elements with the given index. If the 
 
 
 \end{verbatim}
-\cvfunc{ClearSeq}
+\cvfunc{ClearSeq}\label{ClearSeq}
 \begin{verbatim}
 
 Clears sequence
@@ -4923,7 +4919,7 @@ The function \texttt{cvClearSeq} removes all elements from the sequence. The fun
 
 
 \end{verbatim}
-\cvfunc{GetSeqElem}
+\cvfunc{GetSeqElem}\label{GetSeqElem}
 \begin{verbatim}
 
 Returns pointer to sequence element by its index
@@ -4945,7 +4941,7 @@ The function \texttt{cvGetSeqElem} finds the element with the given index in the
 
 
 \end{verbatim}
-\cvfunc{SeqElemIdx}
+\cvfunc{SeqElemIdx}\label{SeqElemIdx}
 \begin{verbatim}
 
 Returns index of concrete sequence element
@@ -4967,7 +4963,7 @@ The function \texttt{cvSeqElemIdx} returns the index of a sequence element or a 
 
 
 \end{verbatim}
-\cvfunc{CvtSeqToArray}
+\cvfunc{CvtSeqToArray}\label{CvtSeqToArray}
 \begin{verbatim}
 
 Copies sequence to one continuous block of memory
@@ -4989,7 +4985,7 @@ The function \texttt{cvCvtSeqToArray} copies the entire sequence or subsequence 
 
 
 \end{verbatim}
-\cvfunc{MakeSeqHeaderForArray}
+\cvfunc{MakeSeqHeaderForArray}\label{MakeSeqHeaderForArray}
 \begin{verbatim}
 
 Constructs sequence from array
@@ -5017,7 +5013,7 @@ The function \texttt{cvMakeSeqHeaderForArray} initializes sequence header for ar
 
 
 \end{verbatim}
-\cvfunc{SeqSlice}
+\cvfunc{SeqSlice}\label{SeqSlice}
 \begin{verbatim}
 
 Makes separate header for the sequence slice
@@ -5041,7 +5037,7 @@ The function \texttt{cvSeqSlice} creates a sequence that represents the specifie
 
 
 \end{verbatim}
-\cvfunc{CloneSeq}
+\cvfunc{CloneSeq}\label{CloneSeq}
 \begin{verbatim}
 
 Creates a copy of sequence
@@ -5062,7 +5058,7 @@ The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and
 
 
 \end{verbatim}
-\cvfunc{SeqRemoveSlice}
+\cvfunc{SeqRemoveSlice}\label{SeqRemoveSlice}
 \begin{verbatim}
 
 Removes sequence slice
@@ -5083,7 +5079,7 @@ The function \texttt{cvSeqRemoveSlice} removes slice from the sequence.
 
 
 \end{verbatim}
-\cvfunc{SeqInsertSlice}
+\cvfunc{SeqInsertSlice}\label{SeqInsertSlice}
 \begin{verbatim}
 
 Inserts array in the middle of sequence
@@ -5105,7 +5101,7 @@ The function \texttt{cvSeqInsertSlice} inserts all \texttt{from\_arr} array elem
 
 
 \end{verbatim}
-\cvfunc{SeqInvert}
+\cvfunc{SeqInvert}\label{SeqInvert}
 \begin{verbatim}
 
 Reverses the order of sequence elements
@@ -5125,7 +5121,7 @@ The function \texttt{cvSeqInvert} reverses the sequence in-place - makes the fir
 
 
 \end{verbatim}
-\cvfunc{SeqSort}
+\cvfunc{SeqSort}\label{SeqSort}
 \begin{verbatim}
 
 Sorts sequence element using the specified comparison function
@@ -5189,7 +5185,7 @@ cvReleaseMemStorage( &storage );
 
 
 \end{verbatim}
-\cvfunc{SeqSearch}
+\cvfunc{SeqSearch}\label{SeqSearch}
 \begin{verbatim}
 
 Searches element in sequence
@@ -5218,7 +5214,7 @@ The function \texttt{cvSeqSearch} searches the element in the sequence. If the s
 
 
 \end{verbatim}
-\cvfunc{StartAppendToSeq}
+\cvfunc{StartAppendToSeq}\label{StartAppendToSeq}
 \begin{verbatim}
 
 Initializes process of writing data to sequence
@@ -5239,7 +5235,7 @@ The function \texttt{cvStartAppendToSeq} initializes the process of writing data
 
 
 \end{verbatim}
-\cvfunc{StartWriteSeq}
+\cvfunc{StartWriteSeq}\label{StartWriteSeq}
 \begin{verbatim}
 
 Creates new sequence and initializes writer for it
@@ -5264,7 +5260,7 @@ The function \texttt{cvStartWriteSeq} is a composition of \cross{CreateSeq} and 
 
 
 \end{verbatim}
-\cvfunc{EndWriteSeq}
+\cvfunc{EndWriteSeq}\label{EndWriteSeq}
 \begin{verbatim}
 
 Finishes process of writing sequence
@@ -5284,7 +5280,7 @@ The function \texttt{cvEndWriteSeq} finishes the writing process and returns the
 
 
 \end{verbatim}
-\cvfunc{FlushSeqWriter}
+\cvfunc{FlushSeqWriter}\label{FlushSeqWriter}
 \begin{verbatim}
 
 Updates sequence headers from the writer state
@@ -5304,7 +5300,7 @@ The function \texttt{cvFlushSeqWriter} is intended to enable the user to read se
 
 
 \end{verbatim}
-\cvfunc{StartReadSeq}
+\cvfunc{StartReadSeq}\label{StartReadSeq}
 \begin{verbatim}
 
 Initializes process of sequential reading from sequence
@@ -5362,7 +5358,7 @@ cvReleaseStorage( &storage );
 
 
 \end{verbatim}
-\cvfunc{GetSeqReaderPos}
+\cvfunc{GetSeqReaderPos}\label{GetSeqReaderPos}
 \begin{verbatim}
 
 Returns the current reader position
@@ -5382,7 +5378,7 @@ The function \texttt{cvGetSeqReaderPos} returns the current reader position (wit
 
 
 \end{verbatim}
-\cvfunc{SetSeqReaderPos}
+\cvfunc{SetSeqReaderPos}\label{SetSeqReaderPos}
 \begin{verbatim}
 
 Moves the reader to specified position
@@ -5409,7 +5405,7 @@ The function \texttt{cvSetSeqReaderPos} moves the read position to the absolute 
 
 
 \end{verbatim}
-\cvfunc{CvSet}
+\cvfunc{CvSet}\label{CvSet}
 \begin{verbatim}
 
 Collection of nodes
@@ -5445,7 +5441,7 @@ In OpenCV \cross{CvSet} is used for representing graphs (\cross{CvGraph}), spars
 
 
 \end{verbatim}
-\cvfunc{CreateSet}
+\cvfunc{CreateSet}\label{CreateSet}
 \begin{verbatim}
 
 Creates empty set
@@ -5469,7 +5465,7 @@ The function \texttt{cvCreateSet} creates an empty set with a specified header s
 
 
 \end{verbatim}
-\cvfunc{SetAdd}
+\cvfunc{SetAdd}\label{SetAdd}
 \begin{verbatim}
 
 Occupies a node in the set
@@ -5491,7 +5487,7 @@ The function \texttt{cvSetAdd} allocates a new node, optionally copies input ele
 
 
 \end{verbatim}
-\cvfunc{SetRemove}
+\cvfunc{SetRemove}\label{SetRemove}
 \begin{verbatim}
 
 Removes element from set
@@ -5512,7 +5508,7 @@ The function \texttt{cvSetRemove} removes an element with a specified index from
 
 
 \end{verbatim}
-\cvfunc{SetNew}
+\cvfunc{SetNew}\label{SetNew}
 \begin{verbatim}
 
 Adds element to set (fast variant)
@@ -5532,7 +5528,7 @@ The function \texttt{cvSetNew} is inline light-weight variant of \cross{SetAdd}.
 
 
 \end{verbatim}
-\cvfunc{SetRemoveByPtr}
+\cvfunc{SetRemoveByPtr}\label{SetRemoveByPtr}
 \begin{verbatim}
 
 Removes set element given its pointer
@@ -5553,7 +5549,7 @@ The function \texttt{cvSetRemoveByPtr} is inline light-weight variant of \cross{
 
 
 \end{verbatim}
-\cvfunc{GetSetElem}
+\cvfunc{GetSetElem}\label{GetSetElem}
 \begin{verbatim}
 
 Finds set element by its index
@@ -5574,7 +5570,7 @@ The function \texttt{cvGetSetElem} finds a set element by index. The function re
 
 
 \end{verbatim}
-\cvfunc{ClearSet}
+\cvfunc{ClearSet}\label{ClearSet}
 \begin{verbatim}
 
 Clears set
@@ -5599,7 +5595,7 @@ The function \texttt{cvClearSet} removes all elements from set. It has O(1) time
 
 
 \end{verbatim}
-\cvfunc{CvGraph}
+\cvfunc{CvGraph}\label{CvGraph}
 \begin{verbatim}
 
 Oriented or unoriented weigted graph
@@ -5653,7 +5649,7 @@ The graph may be oriented or unoriented. In the latter case there is no disticti
 
 
 \end{verbatim}
-\cvfunc{CreateGraph}
+\cvfunc{CreateGraph}\label{CreateGraph}
 \begin{verbatim}
 
 Creates empty graph
@@ -5678,7 +5674,7 @@ The function \texttt{cvCreateGraph} creates an empty graph and returns pointer t
 
 
 \end{verbatim}
-\cvfunc{GraphAddVtx}
+\cvfunc{GraphAddVtx}\label{GraphAddVtx}
 \begin{verbatim}
 
 Adds vertex to graph
@@ -5701,7 +5697,7 @@ The function \texttt{cvGraphAddVtx} adds a vertex to the graph and returns the v
 
 
 \end{verbatim}
-\cvfunc{GraphRemoveVtx}
+\cvfunc{GraphRemoveVtx}\label{GraphRemoveVtx}
 \begin{verbatim}
 
 Removes vertex from graph
@@ -5722,7 +5718,7 @@ The function \texttt{cvGraphRemoveAddVtx} removes a vertex from the graph togeth
 
 
 \end{verbatim}
-\cvfunc{GraphRemoveVtxByPtr}
+\cvfunc{GraphRemoveVtxByPtr}\label{GraphRemoveVtxByPtr}
 \begin{verbatim}
 
 Removes vertex from graph
@@ -5743,7 +5739,7 @@ The function \texttt{cvGraphRemoveVtxByPtr} removes a vertex from the graph toge
 
 
 \end{verbatim}
-\cvfunc{GetGraphVtx}
+\cvfunc{GetGraphVtx}\label{GetGraphVtx}
 \begin{verbatim}
 
 Finds graph vertex by index
@@ -5764,7 +5760,7 @@ The function \texttt{cvGetGraphVtx} finds the graph vertex by index and returns 
 
 
 \end{verbatim}
-\cvfunc{GraphVtxIdx}
+\cvfunc{GraphVtxIdx}\label{GraphVtxIdx}
 \begin{verbatim}
 
 Returns index of graph vertex
@@ -5785,7 +5781,7 @@ The function \texttt{cvGraphVtxIdx} returns index of the graph vertex.
 
 
 \end{verbatim}
-\cvfunc{GraphAddEdge}
+\cvfunc{GraphAddEdge}\label{GraphAddEdge}
 \begin{verbatim}
 
 Adds edge to graph
@@ -5810,7 +5806,7 @@ The function \texttt{cvGraphAddEdge} connects two specified vertices. The functi
 
 
 \end{verbatim}
-\cvfunc{GraphAddEdgeByPtr}
+\cvfunc{GraphAddEdgeByPtr}\label{GraphAddEdgeByPtr}
 \begin{verbatim}
 
 Adds edge to graph
@@ -5835,7 +5831,7 @@ The function \texttt{cvGraphAddEdge} connects two specified vertices. The functi
 
 
 \end{verbatim}
-\cvfunc{GraphRemoveEdge}
+\cvfunc{GraphRemoveEdge}\label{GraphRemoveEdge}
 \begin{verbatim}
 
 Removes edge from graph
@@ -5857,7 +5853,7 @@ The function \texttt{cvGraphRemoveEdge} removes the edge connecting two specifie
 
 
 \end{verbatim}
-\cvfunc{GraphRemoveEdgeByPtr}
+\cvfunc{GraphRemoveEdgeByPtr}\label{GraphRemoveEdgeByPtr}
 \begin{verbatim}
 
 Removes edge from graph
@@ -5879,7 +5875,7 @@ The function \texttt{cvGraphRemoveEdgeByPtr} removes the edge connecting two spe
 
 
 \end{verbatim}
-\cvfunc{FindGraphEdge}
+\cvfunc{FindGraphEdge}\label{FindGraphEdge}
 \begin{verbatim}
 
 Finds edge in graph
@@ -5902,7 +5898,7 @@ The function \texttt{cvFindGraphEdge} finds the graph edge connecting two specif
 
 
 \end{verbatim}
-\cvfunc{FindGraphEdgeByPtr}
+\cvfunc{FindGraphEdgeByPtr}\label{FindGraphEdgeByPtr}
 \begin{verbatim}
 
 Finds edge in graph
@@ -5926,7 +5922,7 @@ The function \texttt{cvFindGraphEdge} finds the graph edge connecting two specif
 
 
 \end{verbatim}
-\cvfunc{GraphEdgeIdx}
+\cvfunc{GraphEdgeIdx}\label{GraphEdgeIdx}
 \begin{verbatim}
 
 Returns index of graph edge
@@ -5947,7 +5943,7 @@ The function \texttt{cvGraphEdgeIdx} returns index of the graph edge.
 
 
 \end{verbatim}
-\cvfunc{GraphVtxDegree}
+\cvfunc{GraphVtxDegree}\label{GraphVtxDegree}
 \begin{verbatim}
 
 Counts edges indicent to the vertex
@@ -5981,7 +5977,7 @@ The macro `CV\_NEXT\_GRAPH\_EDGE( edge, vertex )` returns the edge incident to \
 
 
 \end{verbatim}
-\cvfunc{GraphVtxDegreeByPtr}
+\cvfunc{GraphVtxDegreeByPtr}\label{GraphVtxDegreeByPtr}
 \begin{verbatim}
 
 Finds edge in graph
@@ -6002,7 +5998,7 @@ The function \texttt{cvGraphVtxDegree} returns the number of edges incident to t
 
 
 \end{verbatim}
-\cvfunc{ClearGraph}
+\cvfunc{ClearGraph}\label{ClearGraph}
 \begin{verbatim}
 
 Clears graph
@@ -6022,7 +6018,7 @@ The function \texttt{cvClearGraph} removes all vertices and edges from the graph
 
 
 \end{verbatim}
-\cvfunc{CloneGraph}
+\cvfunc{CloneGraph}\label{CloneGraph}
 \begin{verbatim}
 
 Clone graph
@@ -6043,7 +6039,7 @@ The function \texttt{cvCloneGraph} creates full copy of the graph. If the graph 
 
 
 \end{verbatim}
-\cvfunc{CvGraphScanner}
+\cvfunc{CvGraphScanner}\label{CvGraphScanner}
 \begin{verbatim}
 
 Graph traversal state
@@ -6069,7 +6065,7 @@ The structure \cross{CvGraphScanner} is used for depth-first graph traversal. Se
 
 
 \end{verbatim}
-\cvfunc{CreateGraphScanner}
+\cvfunc{CreateGraphScanner}\label{CreateGraphScanner}
 \begin{verbatim}
 
 Creates structure for depth-first graph traversal
@@ -6100,7 +6096,7 @@ The function \texttt{cvCreateGraphScanner} creates structure for depth-first gra
 
 
 \end{verbatim}
-\cvfunc{NextGraphItem}
+\cvfunc{NextGraphItem}\label{NextGraphItem}
 \begin{verbatim}
 
 Makes one or more steps of the graph traversal procedure
@@ -6120,7 +6116,7 @@ The function \texttt{cvNextGraphItem} traverses through the graph until an event
 
 
 \end{verbatim}
-\cvfunc{ReleaseGraphScanner}
+\cvfunc{ReleaseGraphScanner}\label{ReleaseGraphScanner}
 \begin{verbatim}
 
 Finishes graph traversal procedure
@@ -6145,7 +6141,7 @@ The function \texttt{cvGraphScanner} finishes graph traversal procedure and rele
 
 
 \end{verbatim}
-\cvfunc{CV\_TREE\_NODE\_FIELDS}
+\cvfunc{CV\_TREE\_NODE\_FIELDS}\label{CV_TREE_NODE_FIELDS}
 \begin{verbatim}
 
 Helper macro for a tree node type declaration
@@ -6166,7 +6162,7 @@ The macro `CV\_TREE\_NODE\_FIELDS()` is used to declare structures that can be o
 
 
 \end{verbatim}
-\cvfunc{CvTreeNodeIterator}
+\cvfunc{CvTreeNodeIterator}\label{CvTreeNodeIterator}
 \begin{verbatim}
 
 Opens existing or creates new file storage
@@ -6187,7 +6183,7 @@ The structure \cross{CvTreeNodeIterator} is used to traverse trees. The tree nod
 
 
 \end{verbatim}
-\cvfunc{InitTreeNodeIterator}
+\cvfunc{InitTreeNodeIterator}\label{InitTreeNodeIterator}
 \begin{verbatim}
 
 Initializes tree node iterator
@@ -6210,7 +6206,7 @@ The function \texttt{cvInitTreeNodeIterator} initializes tree iterator. The tree
 
 
 \end{verbatim}
-\cvfunc{NextTreeNode}
+\cvfunc{NextTreeNode}\label{NextTreeNode}
 \begin{verbatim}
 
 Returns the currently observed node and moves iterator toward the next node
@@ -6230,7 +6226,7 @@ The function \texttt{cvNextTreeNode} returns the currently observed node and the
 
 
 \end{verbatim}
-\cvfunc{PrevTreeNode}
+\cvfunc{PrevTreeNode}\label{PrevTreeNode}
 \begin{verbatim}
 
 Returns the currently observed node and moves iterator toward the previous node
@@ -6250,7 +6246,7 @@ The function \texttt{cvPrevTreeNode} returns the currently observed node and the
 
 
 \end{verbatim}
-\cvfunc{TreeToNodeSeq}
+\cvfunc{TreeToNodeSeq}\label{TreeToNodeSeq}
 \begin{verbatim}
 
 Gathers all node pointers to the single sequence
@@ -6272,7 +6268,7 @@ The function \texttt{cvTreeToNodeSeq} puts pointers of all nodes reacheable from
 
 
 \end{verbatim}
-\cvfunc{InsertNodeIntoTree}
+\cvfunc{InsertNodeIntoTree}\label{InsertNodeIntoTree}
 \begin{verbatim}
 
 Adds new node to the tree
@@ -6294,7 +6290,7 @@ The function \texttt{cvInsertNodeIntoTree} adds another node into tree. The func
 
 
 \end{verbatim}
-\cvfunc{RemoveNodeFromTree}
+\cvfunc{RemoveNodeFromTree}\label{RemoveNodeFromTree}
 \begin{verbatim}
 
 Removes node from tree
@@ -6329,7 +6325,7 @@ If a drawn figure is partially or completely outside the image, it is clipped. F
 
 
 \end{verbatim}
-\cvfunc{CV\_RGB}
+\cvfunc{CV\_RGB}\label{CV_RGB}
 \begin{verbatim}
 
 Constructs a color value
@@ -6342,7 +6338,7 @@ Constructs a color value
 
 
 \end{verbatim}
-\cvfunc{Line}
+\cvfunc{Line}\label{Line}
 \begin{verbatim}
 
 Draws a line segment connecting two points
@@ -6388,7 +6384,7 @@ The function \texttt{cvLine} draws the line segment between \texttt{pt1} and \te
 
 
 \end{verbatim}
-\cvfunc{Rectangle}
+\cvfunc{Rectangle}\label{Rectangle}
 \begin{verbatim}
 
 Draws simple, thick or filled rectangle
@@ -6414,7 +6410,7 @@ The function \texttt{cvRectangle} draws a rectangle with two opposite corners \t
 
 
 \end{verbatim}
-\cvfunc{Circle}
+\cvfunc{Circle}\label{Circle}
 \begin{verbatim}
 
 Draws a circle
@@ -6440,7 +6436,7 @@ The function \texttt{cvCircle} draws a simple or filled circle with given center
 
 
 \end{verbatim}
-\cvfunc{Ellipse}
+\cvfunc{Ellipse}\label{Ellipse}
 \begin{verbatim}
 
 Draws simple or thick elliptic arc or fills ellipse sector
@@ -6475,7 +6471,7 @@ Parameters of Elliptic Arc
 
 
 \end{verbatim}
-\cvfunc{FillPoly}
+\cvfunc{FillPoly}\label{FillPoly}
 \begin{verbatim}
 
 Fills polygons interior
@@ -6502,7 +6498,7 @@ The function \texttt{cvFillPoly} fills an area bounded by several polygonal cont
 
 
 \end{verbatim}
-\cvfunc{FillConvexPoly}
+\cvfunc{FillConvexPoly}\label{FillConvexPoly}
 \begin{verbatim}
 
 Fills convex polygon
@@ -6527,7 +6523,7 @@ The function \texttt{cvFillConvexPoly} fills convex polygon interior. This funct
 
 
 \end{verbatim}
-\cvfunc{PolyLine}
+\cvfunc{PolyLine}\label{PolyLine}
 \begin{verbatim}
 
 Draws simple or thick polygons
@@ -6562,7 +6558,7 @@ The function \texttt{cvPolyLine} draws a single or multiple polygonal curves.
 
 
 \end{verbatim}
-\cvfunc{InitFont}
+\cvfunc{InitFont}\label{InitFont}
 \begin{verbatim}
 
 Initializes font structure
@@ -6590,7 +6586,7 @@ The function \texttt{cvInitFont} initializes the font structure that can be pass
 
 
 \end{verbatim}
-\cvfunc{PutText}
+\cvfunc{PutText}\label{PutText}
 \begin{verbatim}
 
 Draws text string
@@ -6614,7 +6610,7 @@ The function \texttt{cvPutText} renders the text in the image with the specified
 
 
 \end{verbatim}
-\cvfunc{GetTextSize}
+\cvfunc{GetTextSize}\label{GetTextSize}
 \begin{verbatim}
 
 Retrieves width and height of text string
@@ -6642,7 +6638,7 @@ The function \texttt{cvGetTextSize} calculates the binding rectangle for the giv
 
 
 \end{verbatim}
-\cvfunc{DrawContours}
+\cvfunc{DrawContours}\label{DrawContours}
 \begin{verbatim}
 
 Draws contour outlines or interiors in the image
@@ -6670,7 +6666,7 @@ void cvDrawContours( CvArr *img, CvSeq* contour,
 The function \texttt{cvDrawContours} draws contour outlines in the image if \texttt{thickness}>=0 or fills area bounded by the contours if \texttt{thickness}<0.
 
 =\end{verbatim}
-\cvfunc{Example. Connected component detection via contour functions}
+\cvfunc{Example. Connected component detection via contour functions}\label{Example. Connected component detection via contour functions}
 \begin{verbatim}=
 
 \cvexp{
@@ -6714,7 +6710,7 @@ Replace CV\_FILLED with 1 in the sample below to see the contour outlines
 
 
 \end{verbatim}
-\cvfunc{InitLineIterator}
+\cvfunc{InitLineIterator}\label{InitLineIterator}
 \begin{verbatim}
 
 Initializes line iterator
@@ -6740,7 +6736,7 @@ int cvInitLineIterator( const CvArr* image, CvPoint pt1, CvPoint pt2,
 The function \texttt{cvInitLineIterator} initializes the line iterator and returns the number of pixels between two end points. Both points must be inside the image. After the iterator has been initialized, all the points on the raster line that connects the two ending points may be retrieved by successive calls of \texttt{CV\_NEXT\_LINE\_POINT} point. The points on the line are calculated one by one using 4-connected or 8-connected Bresenham algorithm.
 
 =\end{verbatim}
-\cvfunc{Example. Using line iterator to calculate sum of pixel values along the color line}
+\cvfunc{Example. Using line iterator to calculate sum of pixel values along the color line}\label{Example. Using line iterator to calculate sum of pixel values along the color line}
 \begin{verbatim}=
 
 \cvexp{
@@ -6774,7 +6770,7 @@ CvScalar sum\_line\_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 
 
 \end{verbatim}
-\cvfunc{ClipLine}
+\cvfunc{ClipLine}\label{ClipLine}
 \begin{verbatim}
 
 Clips the line against the image rectangle
@@ -6796,7 +6792,7 @@ The function \texttt{cvClipLine} calculates a part of the line segment which is 
 
 
 \end{verbatim}
-\cvfunc{Ellipse2Poly}
+\cvfunc{Ellipse2Poly}\label{Ellipse2Poly}
 \begin{verbatim}
 
 Approximates elliptic arc with polyline
@@ -6824,7 +6820,7 @@ The function \texttt{cvEllipse2Poly} computes vertices of the polyline that appr
 
 
 \end{verbatim}
-\cvfunc{ClipLine}
+\cvfunc{ClipLine}\label{ClipLine}
 \begin{verbatim}
 
 CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes, int angle, int arc\_start, int arc\_end, CvPoint * pts, int delta );
@@ -6841,7 +6837,7 @@ CVAPI(int) cvEllipse2Poly( CvPoint center, CvSize axes, int angle, int arc\_star
 
 
 \end{verbatim}
-\cvfunc{CvFileStorage}
+\cvfunc{CvFileStorage}\label{CvFileStorage}
 \begin{verbatim}
 
 File Storage
@@ -6889,7 +6885,7 @@ The same CXCore functions can read and write data in both formats, the particula
 
 
 \end{verbatim}
-\cvfunc{CvFileNode}
+\cvfunc{CvFileNode}\label{CvFileNode}
 \begin{verbatim}
 
 File Storage Node
@@ -6988,7 +6984,7 @@ A user (custom) object is instance of either one of standard CxCore types, such 
 
 
 \end{verbatim}
-\cvfunc{CvAttrList}
+\cvfunc{CvAttrList}\label{CvAttrList}
 \begin{verbatim}
 
 List of attributes
@@ -7014,7 +7010,7 @@ In the current implementation attributes are used to pass extra parameters when 
 
 
 \end{verbatim}
-\cvfunc{OpenFileStorage}
+\cvfunc{OpenFileStorage}\label{OpenFileStorage}
 \begin{verbatim}
 
 Opens file storage for reading or writing data
@@ -7036,7 +7032,7 @@ The function \texttt{cvOpenFileStorage} opens file storage for reading or writin
 
 
 \end{verbatim}
-\cvfunc{ReleaseFileStorage}
+\cvfunc{ReleaseFileStorage}\label{ReleaseFileStorage}
 \begin{verbatim}
 
 Releases file storage
@@ -7061,7 +7057,7 @@ The function \texttt{cvReleaseFileStorage} closes the file associated with the s
 
 
 \end{verbatim}
-\cvfunc{StartWriteStruct}
+\cvfunc{StartWriteStruct}\label{StartWriteStruct}
 \begin{verbatim}
 
 Starts writing a new structure
@@ -7087,7 +7083,7 @@ The function \texttt{cvStartWriteStruct} starts writing a compound structure (co
 
 
 \end{verbatim}
-\cvfunc{EndWriteStruct}
+\cvfunc{EndWriteStruct}\label{EndWriteStruct}
 \begin{verbatim}
 
 Ends writing a structure
@@ -7107,7 +7103,7 @@ The function \texttt{cvEndWriteStruct} finishes the currently written structure.
 
 
 \end{verbatim}
-\cvfunc{WriteInt}
+\cvfunc{WriteInt}\label{WriteInt}
 \begin{verbatim}
 
 Writes an integer value
@@ -7127,7 +7123,7 @@ The function \texttt{cvWriteInt} writes a single integer value (with or without 
 
 
 \end{verbatim}
-\cvfunc{WriteReal}
+\cvfunc{WriteReal}\label{WriteReal}
 \begin{verbatim}
 
 Writes a floating-point value
@@ -7167,7 +7163,7 @@ void write\_termcriteria( CvFileStorage* fs, const char* struct\_name,
 
 
 \end{verbatim}
-\cvfunc{WriteString}
+\cvfunc{WriteString}\label{WriteString}
 \begin{verbatim}
 
 Writes a text string
@@ -7191,7 +7187,7 @@ The function \texttt{cvWriteString} writes a text string to the file storage.
 
 
 \end{verbatim}
-\cvfunc{WriteComment}
+\cvfunc{WriteComment}\label{WriteComment}
 \begin{verbatim}
 
 Writes comment
@@ -7213,7 +7209,7 @@ The function \texttt{cvWriteComment} writes a comment into the file storage. The
 
 
 \end{verbatim}
-\cvfunc{StartNextStream}
+\cvfunc{StartNextStream}\label{StartNextStream}
 \begin{verbatim}
 
 Starts the next stream
@@ -7233,7 +7229,7 @@ The function \texttt{cvStartNextStream} starts the next stream in the file stora
 
 
 \end{verbatim}
-\cvfunc{Write}
+\cvfunc{Write}\label{Write}
 \begin{verbatim}
 
 Writes user object
@@ -7288,7 +7284,7 @@ int main( int argc, char** argv )
 
 
 \end{verbatim}
-\cvfunc{WriteRawData}
+\cvfunc{WriteRawData}\label{WriteRawData}
 \begin{verbatim}
 
 Writes multiple numbers
@@ -7321,7 +7317,7 @@ The function \texttt{cvWriteRawData} writes array, which elements consist of a s
 
 
 \end{verbatim}
-\cvfunc{WriteFileNode}
+\cvfunc{WriteFileNode}\label{WriteFileNode}
 \begin{verbatim}
 
 Writes file node to another file storage
@@ -7352,7 +7348,7 @@ Data are retrieved from file storage in 2 steps: first, the file node containing
 
 
 \end{verbatim}
-\cvfunc{GetRootFileNode}
+\cvfunc{GetRootFileNode}\label{GetRootFileNode}
 \begin{verbatim}
 
 Retrieves one of top-level nodes of the file storage
@@ -7373,7 +7369,7 @@ The function \texttt{cvGetRootFileNode} returns one of top-level file nodes. The
 
 
 \end{verbatim}
-\cvfunc{GetFileNodeByName}
+\cvfunc{GetFileNodeByName}\label{GetFileNodeByName}
 \begin{verbatim}
 
 Finds node in the map or file storage
@@ -7397,7 +7393,7 @@ The function \texttt{cvGetFileNodeByName} finds a file node by \texttt{name}. Th
 
 
 \end{verbatim}
-\cvfunc{GetHashedKey}
+\cvfunc{GetHashedKey}\label{GetHashedKey}
 \begin{verbatim}
 
 Returns a unique pointer for given name
@@ -7435,7 +7431,7 @@ points:
 Then, it is possible to get hashed "x" and "y" pointers to speed up decoding of the points.
 
 =\end{verbatim}
-\cvfunc{Example. Reading an array of structures from file storage}
+\cvfunc{Example. Reading an array of structures from file storage}\label{Example. Reading an array of structures from file storage}
 \begin{verbatim}=
 
 \cvexp{
@@ -7490,7 +7486,7 @@ Please note that, whatever method of accessing map you are using, it is still \t
 
 
 \end{verbatim}
-\cvfunc{GetFileNode}
+\cvfunc{GetFileNode}\label{GetFileNode}
 \begin{verbatim}
 
 Finds node in the map or file storage
@@ -7514,7 +7510,7 @@ The function \texttt{cvGetFileNode} finds a file node. It is a faster version \c
 
 
 \end{verbatim}
-\cvfunc{GetFileNodeName}
+\cvfunc{GetFileNodeName}\label{GetFileNodeName}
 \begin{verbatim}
 
 Returns name of file node
@@ -7534,7 +7530,7 @@ The function \texttt{cvGetFileNodeName} returns name of the file node or NULL, i
 
 
 \end{verbatim}
-\cvfunc{ReadInt}
+\cvfunc{ReadInt}\label{ReadInt}
 \begin{verbatim}
 
 Retrieves integer value from file node
@@ -7555,7 +7551,7 @@ The function \texttt{cvReadInt} returns integer that is represented by the file 
 
 
 \end{verbatim}
-\cvfunc{ReadIntByName}
+\cvfunc{ReadIntByName}\label{ReadIntByName}
 \begin{verbatim}
 
 Finds file node and returns its value
@@ -7579,7 +7575,7 @@ The function \texttt{cvReadIntByName} is a simple superposition of \cross{GetFil
 
 
 \end{verbatim}
-\cvfunc{ReadReal}
+\cvfunc{ReadReal}\label{ReadReal}
 \begin{verbatim}
 
 Retrieves floating-point value from file node
@@ -7600,7 +7596,7 @@ The function \texttt{cvReadReal} returns floating-point value that is represente
 
 
 \end{verbatim}
-\cvfunc{ReadRealByName}
+\cvfunc{ReadRealByName}\label{ReadRealByName}
 \begin{verbatim}
 
 Finds file node and returns its value
@@ -7624,7 +7620,7 @@ The function \texttt{cvReadRealByName} is a simple superposition of \cross{GetFi
 
 
 \end{verbatim}
-\cvfunc{ReadString}
+\cvfunc{ReadString}\label{ReadString}
 \begin{verbatim}
 
 Retrieves text string from file node
@@ -7645,7 +7641,7 @@ The function \texttt{cvReadString} returns text string that is represented by th
 
 
 \end{verbatim}
-\cvfunc{ReadStringByName}
+\cvfunc{ReadStringByName}\label{ReadStringByName}
 \begin{verbatim}
 
 Finds file node and returns its value
@@ -7669,7 +7665,7 @@ The function \texttt{cvReadStringByName} is a simple superposition of \cross{Get
 
 
 \end{verbatim}
-\cvfunc{Read}
+\cvfunc{Read}\label{Read}
 \begin{verbatim}
 
 Decodes object and returns pointer to it
@@ -7692,7 +7688,7 @@ The function \texttt{cvRead} decodes user object (creates object in a native rep
 
 
 \end{verbatim}
-\cvfunc{ReadByName}
+\cvfunc{ReadByName}\label{ReadByName}
 \begin{verbatim}
 
 Finds object and decodes it
@@ -7716,7 +7712,7 @@ The function \texttt{cvReadByName} is a simple superposition of \cross{GetFileNo
 
 
 \end{verbatim}
-\cvfunc{ReadRawData}
+\cvfunc{ReadRawData}\label{ReadRawData}
 \begin{verbatim}
 
 Reads multiple numbers
@@ -7740,7 +7736,7 @@ The function \texttt{cvReadRawData} reads elements from a file node that represe
 
 
 \end{verbatim}
-\cvfunc{StartReadRawData}
+\cvfunc{StartReadRawData}\label{StartReadRawData}
 \begin{verbatim}
 
 Initializes file node sequence reader
@@ -7763,7 +7759,7 @@ The function \texttt{cvStartReadRawData} initializes sequence reader to read dat
 
 
 \end{verbatim}
-\cvfunc{ReadRawDataSlice}
+\cvfunc{ReadRawDataSlice}\label{ReadRawDataSlice}
 \begin{verbatim}
 
 Initializes file node sequence reader
@@ -7793,7 +7789,7 @@ The function \texttt{cvReadRawDataSlice} reads one or more elements from the fil
 
 
 \end{verbatim}
-\cvfunc{CvTypeInfo}
+\cvfunc{CvTypeInfo}\label{CvTypeInfo}
 \begin{verbatim}
 
 Type information
@@ -7832,7 +7828,7 @@ The structure \cross{CvTypeInfo} contains information about one of standard or u
 
 
 \end{verbatim}
-\cvfunc{RegisterType}
+\cvfunc{RegisterType}\label{RegisterType}
 \begin{verbatim}
 
 Registers new type
@@ -7852,7 +7848,7 @@ The function \texttt{cvRegisterType} registers a new type, which is described by
 
 
 \end{verbatim}
-\cvfunc{UnregisterType}
+\cvfunc{UnregisterType}\label{UnregisterType}
 \begin{verbatim}
 
 Unregisters the type
@@ -7872,7 +7868,7 @@ The function \texttt{cvUnregisterType} unregisters the type with the specified n
 
 
 \end{verbatim}
-\cvfunc{FirstType}
+\cvfunc{FirstType}\label{FirstType}
 \begin{verbatim}
 
 Returns the beginning of type list
@@ -7887,7 +7883,7 @@ The function \texttt{cvFirstType} returns the first type of the list of register
 
 
 \end{verbatim}
-\cvfunc{FindType}
+\cvfunc{FindType}\label{FindType}
 \begin{verbatim}
 
 Finds type by its name
@@ -7907,7 +7903,7 @@ The function \texttt{cvFindType} finds a registered type by its name. It returns
 
 
 \end{verbatim}
-\cvfunc{TypeOf}
+\cvfunc{TypeOf}\label{TypeOf}
 \begin{verbatim}
 
 Returns type of the object
@@ -7927,7 +7923,7 @@ The function \texttt{cvTypeOf} finds the type of given object. It iterates throu
 
 
 \end{verbatim}
-\cvfunc{Release}
+\cvfunc{Release}\label{Release}
 \begin{verbatim}
 
 Releases the object
@@ -7947,7 +7943,7 @@ The function \texttt{cvRelease} finds the type of given object and calls \texttt
 
 
 \end{verbatim}
-\cvfunc{Clone}
+\cvfunc{Clone}\label{Clone}
 \begin{verbatim}
 
 Makes a clone of the object
@@ -7967,7 +7963,7 @@ The function \texttt{cvClone} finds the type of given object and calls \texttt{c
 
 
 \end{verbatim}
-\cvfunc{Save}
+\cvfunc{Save}\label{Save}
 \begin{verbatim}
 
 Saves object to file
@@ -7994,7 +7990,7 @@ The function \texttt{cvSave} saves object to file. It provides a simple interfac
 
 
 \end{verbatim}
-\cvfunc{Load}
+\cvfunc{Load}\label{Load}
 \begin{verbatim}
 
 Loads object from file
@@ -8023,7 +8019,7 @@ The function \texttt{cvLoad} loads object from file. It provides a simple interf
 
 
 \end{verbatim}
-\cvfunc{CheckArr}
+\cvfunc{CheckArr}\label{CheckArr}
 \begin{verbatim}
 
 Checks every element of input array for invalid values
@@ -8048,7 +8044,7 @@ The function \texttt{cvCheckArr} checks that every array element is neither NaN 
 
 
 \end{verbatim}
-\cvfunc{KMeans2}
+\cvfunc{KMeans2}\label{KMeans2}
 \begin{verbatim}
 
 Splits set of vectors by given number of clusters
@@ -8071,7 +8067,7 @@ void cvKMeans2( const CvArr* samples, int cluster\_count,
 The function \texttt{cvKMeans2} implements k-means algorithm that finds centers of \texttt{cluster\_count} clusters and groups the input samples around the clusters. On output `labels(i)` contains a cluster index for sample stored in the i-th row of \texttt{samples} matrix.
 
 =\end{verbatim}
-\cvfunc{Example. Clustering random samples of multi-gaussian distribution with k-means}
+\cvfunc{Example. Clustering random samples of multi-gaussian distribution with k-means}\label{Example. Clustering random samples of multi-gaussian distribution with k-means}
 \begin{verbatim}=
 
 \cvexp{
@@ -8151,7 +8147,7 @@ void main( int argc, char** argv )
 
 
 \end{verbatim}
-\cvfunc{SeqPartition}
+\cvfunc{SeqPartition}\label{SeqPartition}
 \begin{verbatim}
 
 Splits sequence into equivalency classes
@@ -8176,7 +8172,7 @@ int cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
 The function \texttt{cvSeqPartition} implements quadratic algorithm for splitting a set into one or more classes of equivalency. The function returns the number of equivalency classes.
 
 =\end{verbatim}
-\cvfunc{Example. Partitioning 2d point set.}
+\cvfunc{Example. Partitioning 2d point set.}\label{Example. Partitioning 2d point set.}
 \begin{verbatim}=
 
 \cvexp{
@@ -8272,7 +8268,7 @@ Actually, the semantics of \texttt{}Leaf\texttt{} and \texttt{}Parent\texttt{} m
 
 
 \end{verbatim}
-\cvfunc{ERROR Handling Macros}
+\cvfunc{ERROR Handling Macros}\label{ERROR Handling Macros}
 \begin{verbatim}
 
 Macros for raising an error, checking for errors etc.
@@ -8330,7 +8326,7 @@ Macros for raising an error, checking for errors etc.
 Instead of a discussion, here are the documented example of typical CXCORE function and the example of the function use.
 
 =\end{verbatim}
-\cvfunc{Use of Error Handling Macros}
+\cvfunc{Use of Error Handling Macros}\label{Use of Error Handling Macros}
 \begin{verbatim}=
 
 \cvexp{
@@ -8399,7 +8395,7 @@ int main( int argc, char** argv )
 
 
 \end{verbatim}
-\cvfunc{GetErrStatus}
+\cvfunc{GetErrStatus}\label{GetErrStatus}
 \begin{verbatim}
 
 Returns the current error status
@@ -8414,7 +8410,7 @@ The function \texttt{cvGetErrStatus} returns the current error status - the valu
 
 
 \end{verbatim}
-\cvfunc{SetErrStatus}
+\cvfunc{SetErrStatus}\label{SetErrStatus}
 \begin{verbatim}
 
 Sets the error status
@@ -8434,7 +8430,7 @@ The function \texttt{cvSetErrStatus} sets the error status to the specified valu
 
 
 \end{verbatim}
-\cvfunc{GetErrMode}
+\cvfunc{GetErrMode}\label{GetErrMode}
 \begin{verbatim}
 
 Returns the current error mode
@@ -8449,7 +8445,7 @@ The function \texttt{cvGetErrMode} returns the current error mode - the value se
 
 
 \end{verbatim}
-\cvfunc{SetErrMode}
+\cvfunc{SetErrMode}\label{SetErrMode}
 \begin{verbatim}
 
 Sets the error mode
@@ -8472,7 +8468,7 @@ The function \texttt{cvSetErrMode} sets the specified error mode. For descriptio
 
 
 \end{verbatim}
-\cvfunc{Error}
+\cvfunc{Error}\label{Error}
 \begin{verbatim}
 
 Raises an error
@@ -8497,7 +8493,7 @@ The function \texttt{cvError} sets the error status to the specified value (via 
 
 
 \end{verbatim}
-\cvfunc{ErrorStr}
+\cvfunc{ErrorStr}\label{ErrorStr}
 \begin{verbatim}
 
 Returns textual description of error status code
@@ -8517,7 +8513,7 @@ The function \texttt{cvErrorStr} returns the textual description for the specifi
 
 
 \end{verbatim}
-\cvfunc{RedirectError}
+\cvfunc{RedirectError}\label{RedirectError}
 \begin{verbatim}
 
 Sets a new error handler
@@ -8543,7 +8539,7 @@ The function \texttt{cvRedirectError} sets a new error handler that can be one o
 
 
 \end{verbatim}
-\cvfunc{cvNulDevReport cvStdErrReport cvGuiBoxReport}
+\cvfunc{cvNulDevReport cvStdErrReport cvGuiBoxReport}\label{cvNulDevReport cvStdErrReport cvGuiBoxReport}
 \begin{verbatim}
 
 Provide standard error handling
@@ -8577,7 +8573,7 @@ int cvGuiBoxReport( int status, const char* func\_name,
 The functions `cvNullDevReport, cvStdErrReport` and \texttt{cvGuiBoxReport} provide standard error handling. \texttt{cvGuiBoxReport} is the default error handler on Win32 systems, \texttt{cvStdErrReport} - on other systems. \texttt{cvGuiBoxReport} pops up message box with the error description and suggest a few options. Below is the sample message box that may be recieved with the sample code above, if one introduce an error as described in the sample
 
 =\end{verbatim}
-\cvfunc{Error Message Box}
+\cvfunc{Error Message Box}\label{Error Message Box}
 \begin{verbatim}=
 
 {{http://opencvlibrary.sourceforge.net/pics/errmsg.png}}
@@ -8603,7 +8599,7 @@ Terminating the application...
 
 
 \end{verbatim}
-\cvfunc{Alloc}
+\cvfunc{Alloc}\label{Alloc}
 \begin{verbatim}
 
 Allocates memory buffer
@@ -8623,7 +8619,7 @@ The function \texttt{cvAlloc} allocates \texttt{size} bytes and returns pointer 
 
 
 \end{verbatim}
-\cvfunc{Free}
+\cvfunc{Free}\label{Free}
 \begin{verbatim}
 
 Deallocates memory buffer
@@ -8643,7 +8639,7 @@ The function \texttt{cvFree} deallocates memory buffer allocated by \cross{Alloc
 
 
 \end{verbatim}
-\cvfunc{GetTickCount}
+\cvfunc{GetTickCount}\label{GetTickCount}
 \begin{verbatim}
 
 Returns number of tics
@@ -8658,7 +8654,7 @@ The function \texttt{cvGetTickCount} returns number of tics starting from some p
 
 
 \end{verbatim}
-\cvfunc{GetTickFrequency}
+\cvfunc{GetTickFrequency}\label{GetTickFrequency}
 \begin{verbatim}
 
 Returns number of tics per microsecond
@@ -8673,7 +8669,7 @@ The function \texttt{cvGetTickFrequency} returns number of tics per microsecond.
 
 
 \end{verbatim}
-\cvfunc{RegisterModule}
+\cvfunc{RegisterModule}\label{RegisterModule}
 \begin{verbatim}
 
 Registers another module
@@ -8712,7 +8708,7 @@ The function \texttt{cvRegisterModule} adds module to the list of registered mod
 
 
 \end{verbatim}
-\cvfunc{GetModuleInfo}
+\cvfunc{GetModuleInfo}\label{GetModuleInfo}
 \begin{verbatim}
 
 Retrieves information about the registered module(s) and plugins
@@ -8736,7 +8732,7 @@ The function \texttt{cvGetModuleInfo} returns information about one of or all of
 
 
 \end{verbatim}
-\cvfunc{UseOptimized}
+\cvfunc{UseOptimized}\label{UseOptimized}
 \begin{verbatim}
 
 Switches between optimized/non-optimized modes
@@ -8756,7 +8752,7 @@ The function \texttt{cvUseOptimized} switches between the mode, where only pure 
 
 
 \end{verbatim}
-\cvfunc{SetMemoryManager}
+\cvfunc{SetMemoryManager}\label{SetMemoryManager}
 \begin{verbatim}
 
 Assings custom/default memory managing functions
@@ -8785,7 +8781,7 @@ If \texttt{alloc\_func} and \texttt{free\_func} pointers are \texttt{NULL}, the 
 
 
 \end{verbatim}
-\cvfunc{SetIPLAllocators}
+\cvfunc{SetIPLAllocators}\label{SetIPLAllocators}
 \begin{verbatim}
 
 Switches to IPL functions for image allocation/deallocation
