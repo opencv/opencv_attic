@@ -3346,26 +3346,27 @@ The function \texttt{cvSolve} solves linear system or least-squares problem (the
 If \texttt{CV\_LU} method is used, the function returns 1 if \texttt{src1} is non-singular and 0 otherwise, in the latter case \texttt{dst} is not valid
 
 \cvfunc{SVD}
-\begin{verbatim}
 
 Performs singular value decomposition of real floating-point matrix
 
 \cvexp{
 
-void cvSVD( CvArr* A, CvArr* W, CvArr* U=NULL, CvArr* V=NULL, int flags=0 );
+void cvSVD( \par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0 );
 
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{A}{Source \texttt{M}×\texttt{N} matrix}
-\cvarg{W}{Resulting singular value matrix (\texttt{M}×\texttt{N} or \texttt{N}×\texttt{N}) or vector (\texttt{N}×\texttt{1})}
-\cvarg{U}{Optional left orthogonal matrix (\texttt{M}×\texttt{M} or \texttt{M}×\texttt{N})}
-. If CV\_SVD\_U\_T is specified, the number of rows and columns in the sentence above should be swapped.\cvarg{V}{Optional right orthogonal matrix (\texttt{N}×\texttt{N})flags}
-\cvarg{}{Operation flags; can be 0 or combination of the following values}
-:
-  * \texttt{CV\_SVD\_MODIFY\_A} enables modification of matrix \texttt{src1} during the operation. It speeds up the processing.
-  * \texttt{CV\_SVD\_U\_T} means that the tranposed matrix \texttt{U} is returned. Specifying the flag speeds up the processing.
-  * \texttt{CV\_SVD\_V\_T} means that the tranposed matrix \texttt{V} is returned. Specifying the flag speeds up the processing.
+\cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
+\cvarg{W}{Resulting singular value matrix ($\texttt{M} \times \texttt{N}$ or $\texttt{N} \times \texttt{N}$) or vector ($\texttt{N} \times 1$)}
+\cvarg{U}{Optional left orthogonal matrix ($\texttt{M} \times \texttt{M}$ or $\texttt{M} \times \texttt{N}$)
+If \texttt{CV\_SVD\_U\_T} is specified, the number of rows and columns in the sentence above should be swapped.}
+\cvarg{V}{Optional right orthogonal matrix ($\texttt{N} \times \texttt{N}$)}
+\cvarg{flags}{Operation flags; can be 0 or combination of the following values:
+\begin{description}
+  \cvarg{CV\_SVD\_MODIFY\_A}{enables modification of matrix \texttt{src1} during the operation. It speeds up the processing.}
+  \cvarg{CV\_SVD\_U\_T}{means that the tranposed matrix \texttt{U} is returned. Specifying the flag speeds up the processing.}
+  \cvarg{CV\_SVD\_V\_T}{means that the tranposed matrix \texttt{V} is returned. Specifying the flag speeds up the processing.}
+\end{description}}
 \end{description}
 
 The function \texttt{cvSVD} decomposes matrix \texttt{A} into a product of a diagonal matrix and two orthogonal matrices:
@@ -3381,13 +3382,18 @@ in descenting order.
 
 SVD algorithm is numerically robust and its typical applications include:
 
-  * accurate eigenvalue problem solution when matrix \texttt{A} is square, symmetric and positively defined matrix, for example, when it is a covariation matrix. \texttt{W} in this case will be a vector of eigen values, and \texttt{U}=\texttt{V} is matrix of eigen vectors (thus, only one of \texttt{U} or \texttt{V} needs to be calculated if the eigen vectors are required)
-  * accurate solution of poor-conditioned linear systems
-  * least-squares solution of overdetermined linear systems. This and previous is done by \cross{Solve} function with \texttt{CV\_SVD} method
-  * accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), determinant (absolute value of determinant is equal to the product of singular values). All the things listed in this item do not require calculation of \texttt{U} and \texttt{V} matrices.
+\begin{itemize}
+  \item accurate eigenvalue problem solution when matrix \texttt{A}
+  is square, symmetric and positively defined matrix, for example, when
+  it is a covariation matrix. $W$ in this case will be a vector
+  of eigen values, and $U = V$
+  (thus, only one of $U$ or $V$ needs to be calculated if
+  the eigen vectors are required)
+  \item accurate solution of poor-conditioned linear systems
+  \item least-squares solution of overdetermined linear systems. This and previous is done by \cross{Solve} function with \texttt{CV\_SVD} method
+  \item accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), determinant (absolute value of determinant is equal to the product of singular values). All the things listed in this item do not require calculation of $U$ and $V$ matrices.
+\end{itemize}
 
-
-\end{verbatim}
 \cvfunc{SVBkSb}
 \begin{verbatim}
 
@@ -3481,7 +3487,7 @@ void cvCalcCovarMatrix( const CvArr** vects, int count, CvArr* cov\_mat, CvArr* 
 \cvarg{cov\_mat}{The output covariation matrix that should be floating-point and square}
 \cvarg{avg}{The input or output (depending on the flags) array - the mean (average) vector of the input vectors}
 \cvarg{flags}{The operation flags, a combination of the following values}
-:<<BR>>\texttt{CV\_COVAR\_SCRAMBLED} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]^T^*[vects[0]-avg,vects[1]-avg,...]`,<<BR>> that is, the covariation matrix is \texttt{count}×\texttt{count}. Such an unusual covariation matrix is used for fast PCA of a set of very large vectors (see, for example, EigenFaces technique for face recognition). Eigenvalues of this "scrambled" matrix will match to the eigenvalues of the true covariation matrix and the "true" eigenvectors can be easily calculated from the eigenvectors of the "scrambled" covariation matrix.<<BR>>\texttt{CV\_COVAR\_NORMAL} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]*[vects[0]-avg,vects[1]-avg,...]^T^`,<<BR>> that is, \texttt{cov\_mat} will be a usual covariation matrix with the same linear size as the total number of elements in every input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and \texttt{CV\_COVAR\_NORMAL} must be specified<<BR>>\texttt{CV\_COVAR\_USE\_AVG} - if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.<<BR>>\texttt{CV\_COVAR\_SCALE} - if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is `1./count`, in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled (`scale=1`).
+:<<BR>>\texttt{CV\_COVAR\_SCRAMBLED} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]^T^*[vects[0]-avg,vects[1]-avg,...]`,<<BR>> that is, the covariation matrix is \texttt{count} \times \texttt{count}. Such an unusual covariation matrix is used for fast PCA of a set of very large vectors (see, for example, EigenFaces technique for face recognition). Eigenvalues of this "scrambled" matrix will match to the eigenvalues of the true covariation matrix and the "true" eigenvectors can be easily calculated from the eigenvectors of the "scrambled" covariation matrix.<<BR>>\texttt{CV\_COVAR\_NORMAL} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]*[vects[0]-avg,vects[1]-avg,...]^T^`,<<BR>> that is, \texttt{cov\_mat} will be a usual covariation matrix with the same linear size as the total number of elements in every input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and \texttt{CV\_COVAR\_NORMAL} must be specified<<BR>>\texttt{CV\_COVAR\_USE\_AVG} - if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.<<BR>>\texttt{CV\_COVAR\_SCALE} - if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is `1./count`, in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled (`scale=1`).
 \end{description}
 
 The function \texttt{cvCalcCovarMatrix} calculates the covariation matrix and, optionally, mean vector of the set of input vectors. The function can be used for PCA, for comparing vectors using Mahalanobis distance etc.
@@ -4085,10 +4091,10 @@ Inverse Fourier transform of 1D vector of N elements:
 x'= (F^(N)^)^-1^ \cdot y = conj(F^(N)^) \cdot y
 x = (1/N) \cdot x
 
-Forward Fourier transform of 2D vector of M×N elements:
+Forward Fourier transform of 2D vector of M \times N elements:
 Y = F^(M)^ \cdot X \cdot F^(N)^
 
-Inverse Fourier transform of 2D vector of M×N elements:
+Inverse Fourier transform of 2D vector of M \times N elements:
 X'= conj(F^(M)^) \cdot Y \cdot conj(F^(N)^)
 X = (1/(M \cdot N)) \cdot X'
 
@@ -4119,7 +4125,7 @@ Computing 2D Convolution using DFT
 CvMat* A = cvCreateMat( M1, N1, CV\_32F );
 CvMat* B = cvCreateMat( M2, N2, A->type );
 
-// it is also possible to have only abs(M2-M1)+1×abs(N2-N1)+1
+// it is also possible to have only abs(M2-M1)+1 \times abs(N2-N1)+1
 // part of the full convolution result
 CvMat* conv = cvCreateMat( A->rows + B->rows - 1, A->cols + B->cols - 1, A->type );
 
@@ -4181,7 +4187,7 @@ int cvGetOptimalDFTSize( int size0 );
 \end{description}
 
 
-The function \texttt{cvGetOptimalDFTSize} returns the minimum number \texttt{N} that is greater to equal to \texttt{size0}, such that DFT of a vector of size \texttt{N} can be computed fast. In the current implementation `N=2^p^×3^q^×5^r^` for some `p, q, r`.
+The function \texttt{cvGetOptimalDFTSize} returns the minimum number \texttt{N} that is greater to equal to \texttt{size0}, such that DFT of a vector of size \texttt{N} can be computed fast. In the current implementation `N=2^p^ \times 3^q^ \times 5^r^` for some `p, q, r`.
 
 The function returns a negative number if \texttt{size0} is too large (very close to \texttt{INT\_MAX})
 
@@ -4244,10 +4250,10 @@ y = C^(N)^ \cdot x, where C^(N)^,,jk,,=sqrt((j==0?1:2)/N) \cdot cos(Pi \cdot (2k
 Inverse Cosine transform of 1D vector of N elements:
 x = (C^(N)^)^-1^ \cdot y = (C^(N)^)^T^ \cdot y
 
-Forward Cosine transform of 2D vector of M×N elements:
+Forward Cosine transform of 2D vector of M \times N elements:
 Y = (C^(M)^) \cdot X \cdot (C^(N)^)^T^
 
-Inverse Cosine transform of 2D vector of M×N elements:
+Inverse Cosine transform of 2D vector of M \times N elements:
 X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 
 }{CPP}{PYTHON}
@@ -6851,7 +6857,10 @@ typedef struct CvFileStorage
 
 The structure \cross{CvFileStorage} is "black box" representation of file storage that is associated with a file on disk. Several functions that are described below take \texttt{CvFileStorage} on input and allow user to save or to load hierarchical collections that consist of scalar values, standard CXCore objects (such as matrices, sequences, graphs) and user-defined objects.
 
-CXCore can read and write data in XML (http://www.w3c.org/XML) or YAML (http://www.yaml.org) formats. Below is the example of 3×3 floating-point identity matrix \texttt{A}, stored in XML and YAML files using CXCore functions:
+CXCore can read and write data in XML (http://www.w3c.org/XML) or YAML
+(http://www.yaml.org) formats. Below is the example of $3 \times 3$
+floating-point identity matrix \texttt{A}, stored in XML and YAML files
+using CXCore functions:
 
 \texttt{}'XML:\cvarg{\texttt{}'}\cvexp{{}
 
