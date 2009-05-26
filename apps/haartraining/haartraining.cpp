@@ -60,6 +60,7 @@ int main( int argc, char* argv[] )
     char* dirname = NULL;
     char* bgname  = NULL;
 
+    bool bg_vecfile = false;
     int npos    = 2000;
     int nneg    = 2000;
     int nstages = 14;
@@ -85,6 +86,7 @@ int main( int argc, char* argv[] )
         printf( "Usage: %s\n  -data <dir_name>\n"
                 "  -vec <vec_file_name>\n"
                 "  -bg <background_file_name>\n"
+                "  [-bg-vecfile]\n"
                 "  [-npos <number_of_positive_samples = %d>]\n"
                 "  [-nneg <number_of_negative_samples = %d>]\n"
                 "  [-nstages <number_of_stages = %d>]\n"
@@ -122,6 +124,10 @@ int main( int argc, char* argv[] )
         else if( !strcmp( argv[i], "-bg" ) )
         {
             bgname = argv[++i];
+        }
+        else if( !strcmp( argv[i], "-bg-vecfile" ) )
+        {
+            bg_vecfile = true;
         }
         else if( !strcmp( argv[i], "-npos" ) )
         {
@@ -240,7 +246,7 @@ int main( int argc, char* argv[] )
 
     printf( "Data dir name: %s\n", ((dirname == NULL) ? nullname : dirname ) );
     printf( "Vec file name: %s\n", ((vecname == NULL) ? nullname : vecname ) );
-    printf( "BG  file name: %s\n", ((bgname == NULL) ? nullname : bgname ) );
+    printf( "BG  file name: %s, is a vecfile: %s\n", ((bgname == NULL) ? nullname : bgname ), bg_vecfile ? "yes" : "no" );
     printf( "Num pos: %d\n", npos );
     printf( "Num neg: %d\n", nneg );
     printf( "Num stages: %d\n", nstages );
@@ -270,7 +276,7 @@ int main( int argc, char* argv[] )
                                mode, symmetric,
                                equalweights, width, height,
                                boosttype, stumperror,
-                               maxtreesplits, minpos );
+                               maxtreesplits, minpos, bg_vecfile );
 
     return 0;
 }

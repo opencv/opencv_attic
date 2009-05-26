@@ -53,7 +53,7 @@
 #include <cmath>
 #include <climits>
 
-#include <highgui.h>
+#include <opencv/highgui.h>
 
 #ifdef CV_VERBOSE
 #include <ctime>
@@ -654,8 +654,6 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
 
     if( numprecalculated > 0 )
     {
-        int portion = CV_STUMP_TRAIN_PORTION;
-        int idx = 0;
         //size_t datasize;
         int m;
         CvUserdata userdata;
@@ -666,6 +664,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
         CvMat t_idx;
         int first;
         int t_portion;
+        int portion = CV_STUMP_TRAIN_PORTION;
         #endif /* _OPENMP */
 
         m = data->sum.rows;
@@ -846,7 +845,6 @@ CvIntHaarClassifier* icvCreateCARTStageClassifier( CvHaarTrainingData* data,
     CvMat eval;
     int n = 0;
     int m = 0;
-    size_t datasize = 0;
     int numpos = 0;
     int numneg = 0;
     int numfalse = 0;
@@ -1316,7 +1314,6 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
                                    CvBackgroundReader* reader )
 {
     IplImage* img = NULL;
-    char* filename = NULL;
     size_t datasize = 0;
     int round = 0;
     int i = 0;
@@ -1585,77 +1582,6 @@ void icvGetAuxImages( CvMat* img, CvMat* sum, CvMat* tilted,
 }
 
 
-/*
- * icvGetHaarTrainingData
- *
- * Fill <data> with samples, passed <cascade>
- */
-static
-int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
-                            CvIntHaarClassifier* cascade,
-                            CvGetHaarTrainingDataCallback callback, void* userdata,
-                            int* consumed )
-{
-    int i = 0;
-    int next = 1;
-    int getcount = 0;
-    int consumedcount = 0;
-
-    CvMat img;
-    CvMat sum;
-    CvMat tilted;
-    CvMat sqsum;
-    sum_type* sumdata    = NULL;
-    sum_type* tilteddata = NULL;
-    float*    normfactor = NULL;
-
-    assert( data != NULL );
-    assert( first + count <= data->maxnum );
-    assert( cascade != NULL );
-    assert( callback != NULL );
-
-    img = cvMat( data->winsize.height, data->winsize.width, CV_8UC1,
-        cvAlloc( sizeof( uchar ) * data->winsize.height * data->winsize.width ) );
-    sum = cvMat( data->winsize.height + 1, data->winsize.width + 1,
-                 CV_SUM_MAT_TYPE, NULL );
-    tilted = cvMat( data->winsize.height + 1, data->winsize.width + 1,
-                    CV_SUM_MAT_TYPE, NULL );
-    sqsum = cvMat( data->winsize.height + 1, data->winsize.width + 1, CV_SQSUM_MAT_TYPE,
-                   cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
-                                                 * (data->winsize.width + 1) ) );
-    next = 1;
-    consumedcount = 0;
-    getcount = 0;
-    for( i = first; (i < first + count) && next; i++ )
-    {
-        for( ; ; )
-        {
-            next = callback( &img, userdata );
-            
-            if( !next ) break;
-
-            consumedcount++;
-            sumdata = (sum_type*) (data->sum.data.ptr + i * data->sum.step);
-            tilteddata = (sum_type*) (data->tilted.data.ptr + i * data->tilted.step);
-            normfactor = data->normfactor.data.fl + i;
-            sum.data.ptr = (uchar*) sumdata;
-            tilted.data.ptr = (uchar*) tilteddata;
-            icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );            
-            if( cascade->eval( cascade, sumdata, tilteddata, *normfactor ) != 0.0F )
-            {
-                getcount++;
-                break;
-            }
-        }        
-    }
-    if( consumed != NULL ) (*consumed) = consumedcount;
-
-    cvFree( &(img.data.ptr) );
-    cvFree( &(sqsum.data.ptr) );
-
-    return getcount;
-}
-
 /* consumed counter */
 typedef uint64 ccounter_t;
 
@@ -1666,51 +1592,63 @@ typedef uint64 ccounter_t;
 #define CCOUNTER_DIV(cc0, cc1) ( ((cc1) == 0) ? 0 : ( ((double)(cc0))/(double)(int64)(cc1) ) )
 
 
+
 /*
- * icvGetHaarTrainingDataFromBG
+ * icvGetHaarTrainingData
  *
- * Fill <data> with background samples, passed <cascade>
- * Background reading process must be initialized before call.
+ * Unified method that can now be used for vec file, bg file and bg vec file
+ *
+ * Fill <data> with samples, passed <cascade>
  */
 static
-int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
-                                  CvIntHaarClassifier* cascade, double* acceptance_ratio )
+int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
+                            CvIntHaarClassifier* cascade,
+                            CvGetHaarTrainingDataCallback callback, void* userdata,
+                            int* consumed, double* acceptance_ratio )
 {
     int i = 0;
-    ccounter_t consumed_count;
-
+    int next = 1;
+    ccounter_t getcount = 0;
+    ccounter_t thread_getcount = 0;
+    ccounter_t consumed_count; 
+    ccounter_t thread_consumed_count;
+    
     /* private variables */
     CvMat img;
     CvMat sum;
     CvMat tilted;
     CvMat sqsum;
-
+    
     sum_type* sumdata;
     sum_type* tilteddata;
     float*    normfactor;
-
-    ccounter_t thread_consumed_count;
+    
     /* end private variables */
-
+    
     assert( data != NULL );
     assert( first + count <= data->maxnum );
     assert( cascade != NULL );
-
-    if( !cvbgdata ) return 0;
-
+    assert( callback != NULL );
+    
+    // if( !cvbgdata ) return 0; this check needs to be done in the callback for BG
+    
+    CCOUNTER_SET_ZERO(getcount);
+    CCOUNTER_SET_ZERO(thread_getcount);
     CCOUNTER_SET_ZERO(consumed_count);
     CCOUNTER_SET_ZERO(thread_consumed_count);
 
     #ifdef _OPENMP
     #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
-                                 normfactor, thread_consumed_count)
+                                 normfactor, thread_consumed_count, thread_getcount, next)
     #endif /* _OPENMP */
     {
         sumdata    = NULL;
         tilteddata = NULL;
         normfactor = NULL;
 
+        CCOUNTER_SET_ZERO(thread_getcount);
         CCOUNTER_SET_ZERO(thread_consumed_count);
+        next       = 1;
 
         img = cvMat( data->winsize.height, data->winsize.width, CV_8UC1,
             cvAlloc( sizeof( uchar ) * data->winsize.height * data->winsize.width ) );
@@ -1718,20 +1656,21 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                      CV_SUM_MAT_TYPE, NULL );
         tilted = cvMat( data->winsize.height + 1, data->winsize.width + 1,
                         CV_SUM_MAT_TYPE, NULL );
-        sqsum = cvMat( data->winsize.height + 1, data->winsize.width + 1,
-                       CV_SQSUM_MAT_TYPE,
+        sqsum = cvMat( data->winsize.height + 1, data->winsize.width + 1, CV_SQSUM_MAT_TYPE,
                        cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
                                                      * (data->winsize.width + 1) ) );
-        
+
         #ifdef _OPENMP
         #pragma omp for schedule(static, 1)
         #endif /* _OPENMP */
-        for( i = first; i < first + count; i++ )
+        for( i = first; (i < first + count) && next; i++ )
         {
             for( ; ; )
             {
-                icvGetBackgroundImage( cvbgdata, cvbgreader, &img );
+                next = callback( &img, userdata );
                 
+                if( !next ) break;
+
                 CCOUNTER_INC(thread_consumed_count);
 
                 sumdata = (sum_type*) (data->sum.data.ptr + i * data->sum.step);
@@ -1742,10 +1681,11 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                 icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );            
                 if( cascade->eval( cascade, sumdata, tilteddata, *normfactor ) != 0.0F )
                 {
+                    CCOUNTER_INC(thread_getcount);
                     break;
                 }
             }
-
+            
 #ifdef CV_VERBOSE
             if( (i - first) % 500 == 0 )
             {
@@ -1753,7 +1693,6 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
                 fflush( stderr );
             }
 #endif /* CV_VERBOSE */
-            
         }
 
         cvFree( &(img.data.ptr) );
@@ -1764,9 +1703,15 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
         #endif /* _OPENMP */
         {
             /* consumed_count += thread_consumed_count; */
+            CCOUNTER_ADD(getcount, thread_getcount);
             CCOUNTER_ADD(consumed_count, thread_consumed_count);
         }
     } /* omp parallel */
+    
+    if( consumed != NULL )
+    {
+        *consumed = consumed_count;
+    }
 
     if( acceptance_ratio != NULL )
     {
@@ -1774,9 +1719,119 @@ int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count
         *acceptance_ratio = CCOUNTER_DIV(count, consumed_count);
     }
     
-    return count;
+    return static_cast<int>(getcount);
 }
 
+/*
+ * icvGetHaarTrainingDataFromBG
+ *
+ * Fill <data> with background samples, passed <cascade>
+ * Background reading process must be initialized before call.
+ */
+//static
+//int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
+//                                  CvIntHaarClassifier* cascade, double* acceptance_ratio )
+//{
+//    int i = 0;
+//    ccounter_t consumed_count;
+//    ccounter_t thread_consumed_count;
+//
+//    /* private variables */
+//    CvMat img;
+//    CvMat sum;
+//    CvMat tilted;
+//    CvMat sqsum;
+//
+//    sum_type* sumdata;
+//    sum_type* tilteddata;
+//    float*    normfactor;
+//
+//    /* end private variables */
+//
+//    assert( data != NULL );
+//    assert( first + count <= data->maxnum );
+//    assert( cascade != NULL );
+//
+//    if( !cvbgdata ) return 0;
+//
+//    CCOUNTER_SET_ZERO(consumed_count);
+//    CCOUNTER_SET_ZERO(thread_consumed_count);
+//
+//    #ifdef _OPENMP
+//    #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
+//                                 normfactor, thread_consumed_count)
+//    #endif /* _OPENMP */
+//    {
+//        sumdata    = NULL;
+//        tilteddata = NULL;
+//        normfactor = NULL;
+//
+//        CCOUNTER_SET_ZERO(thread_consumed_count);
+//
+//        img = cvMat( data->winsize.height, data->winsize.width, CV_8UC1,
+//            cvAlloc( sizeof( uchar ) * data->winsize.height * data->winsize.width ) );
+//        sum = cvMat( data->winsize.height + 1, data->winsize.width + 1,
+//                     CV_SUM_MAT_TYPE, NULL );
+//        tilted = cvMat( data->winsize.height + 1, data->winsize.width + 1,
+//                        CV_SUM_MAT_TYPE, NULL );
+//        sqsum = cvMat( data->winsize.height + 1, data->winsize.width + 1,
+//                       CV_SQSUM_MAT_TYPE,
+//                       cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
+//                                                     * (data->winsize.width + 1) ) );
+//        
+//        #ifdef _OPENMP
+//        #pragma omp for schedule(static, 1)
+//        #endif /* _OPENMP */
+//        for( i = first; i < first + count; i++ )
+//        {
+//            for( ; ; )
+//            {
+//                icvGetBackgroundImage( cvbgdata, cvbgreader, &img );
+//                
+//                CCOUNTER_INC(thread_consumed_count);
+//
+//                sumdata = (sum_type*) (data->sum.data.ptr + i * data->sum.step);
+//                tilteddata = (sum_type*) (data->tilted.data.ptr + i * data->tilted.step);
+//                normfactor = data->normfactor.data.fl + i;
+//                sum.data.ptr = (uchar*) sumdata;
+//                tilted.data.ptr = (uchar*) tilteddata;
+//                icvGetAuxImages( &img, &sum, &tilted, &sqsum, normfactor );            
+//                if( cascade->eval( cascade, sumdata, tilteddata, *normfactor ) != 0.0F )
+//                {
+//                    break;
+//                }
+//            }
+//
+//#ifdef CV_VERBOSE
+//            if( (i - first) % 500 == 0 )
+//            {
+//                fprintf( stderr, "%3d%%\r", (int) ( 100.0 * (i - first) / count ) );
+//                fflush( stderr );
+//            }
+//#endif /* CV_VERBOSE */
+//            
+//        }
+//
+//        cvFree( &(img.data.ptr) );
+//        cvFree( &(sqsum.data.ptr) );
+//
+//        #ifdef _OPENMP
+//        #pragma omp critical (c_consumed_count)
+//        #endif /* _OPENMP */
+//        {
+//            /* consumed_count += thread_consumed_count; */
+//            CCOUNTER_ADD(consumed_count, thread_consumed_count);
+//        }
+//    } /* omp parallel */
+//
+//    if( acceptance_ratio != NULL )
+//    {
+//        /* *acceptance_ratio = ((double) count) / consumed_count; */
+//        *acceptance_ratio = CCOUNTER_DIV(count, consumed_count);
+//    }
+//    
+//    return count;
+//}
 
 int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
 {
@@ -1805,6 +1860,25 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
         }
     }
 
+    return 1;
+}
+
+int icvGetHaarTrainingDataFromBGCallback ( CvMat* img, void* userdata )
+{
+    if (! cvbgdata)
+      return 0;
+    
+    if (! cvbgreader)
+      return 0;
+    
+    // just in case icvGetBackgroundImage is not thread-safe ...
+    #ifdef _OPENMP
+    #pragma omp critical (get_background_image_callback)
+    #endif /* _OPENMP */
+    {
+      icvGetBackgroundImage( cvbgdata, cvbgreader, img );
+    }
+    
     return 1;
 }
 
@@ -1847,7 +1921,7 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
             file.last = 0;
             file.vector = (short*) cvAlloc( sizeof( *file.vector ) * file.vecsize );
             getcount = icvGetHaarTrainingData( data, first, count, cascade,
-                icvGetHaarTraininDataFromVecCallback, &file, consumed );
+                icvGetHaarTraininDataFromVecCallback, &file, consumed, NULL);
             cvFree( &file.vector );
         }
         fclose( file.input );
@@ -1858,6 +1932,62 @@ int icvGetHaarTrainingDataFromVec( CvHaarTrainingData* data, int first, int coun
     return getcount;
 }
 
+/*
+ * icvGetHaarTrainingDataFromBG
+ *
+ * Fill <data> with background samples, passed <cascade>
+ * Background reading process must be initialized before call, alternaly, a file
+ * name to a vec file may be passed, a NULL filename indicates old behaviour
+ */
+static
+int icvGetHaarTrainingDataFromBG( CvHaarTrainingData* data, int first, int count,
+                                  CvIntHaarClassifier* cascade, double* acceptance_ratio, const char * filename = NULL )
+{
+    CV_FUNCNAME( "icvGetHaarTrainingDataFromBG" );
+
+    __BEGIN__;
+
+    if (filename)
+    {
+        CvVecFile file;
+        short tmp = 0;    
+        
+        file.input = NULL;
+        if( filename ) file.input = fopen( filename, "rb" );
+
+        if( file.input != NULL )
+        {
+            fread( &file.count, sizeof( file.count ), 1, file.input );
+            fread( &file.vecsize, sizeof( file.vecsize ), 1, file.input );
+            fread( &tmp, sizeof( tmp ), 1, file.input );
+            fread( &tmp, sizeof( tmp ), 1, file.input );
+            if( !feof( file.input ) )
+            {
+                if( file.vecsize != data->winsize.width * data->winsize.height )
+                {
+                    fclose( file.input );
+                    CV_ERROR( CV_StsError, "Vec file sample size mismatch" );
+                }
+
+                file.last = 0;
+                file.vector = (short*) cvAlloc( sizeof( *file.vector ) * file.vecsize );
+                icvGetHaarTrainingData( data, first, count, cascade,
+                    icvGetHaarTraininDataFromVecCallback, &file, NULL, acceptance_ratio);
+                cvFree( &file.vector );
+            }
+            fclose( file.input );
+        }
+    }
+    else
+    {
+        icvGetHaarTrainingData( data, first, count, cascade,
+            icvGetHaarTrainingDataFromBGCallback, NULL, NULL, acceptance_ratio);
+    }
+
+    __END__;
+
+    return count;
+}
 
 void cvCreateCascadeClassifier( const char* dirname,
                                 const char* vecfilename,
@@ -1876,7 +2006,6 @@ void cvCreateCascadeClassifier( const char* dirname,
     CvHaarTrainingData* data = NULL;
     CvIntHaarFeatures* haar_features;
     CvSize winsize;
-    size_t datasize = 0;
     int i = 0;
     int j = 0;
     int poscount = 0;
@@ -2214,7 +2343,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                                     int equalweights,
                                     int winwidth, int winheight,
                                     int boosttype, int stumperror,
-                                    int maxtreesplits, int minpos )
+                                    int maxtreesplits, int minpos, bool bg_vecfile )
 {
     CvTreeCascadeClassifier* tcc = NULL;
     CvIntHaarFeatures* haar_features = NULL;
@@ -2278,9 +2407,10 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
     sprintf( stage_name, "%s/", dirname );
     suffix = stage_name + strlen( stage_name );
-
-    if( !icvInitBackgroundReaders( bgfilename, winsize ) && nstages > 0 )
-        CV_ERROR( CV_StsError, "Unable to read negative images" );
+    
+    if (! bg_vecfile)
+      if( !icvInitBackgroundReaders( bgfilename, winsize ) && nstages > 0 )
+          CV_ERROR( CV_StsError, "Unable to read negative images" );
     
     if( nstages > 0 )
     {
@@ -2330,7 +2460,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
                 nneg = (int) (neg_ratio * poscount);
                 negcount = icvGetHaarTrainingDataFromBG( training_data, poscount, nneg,
-                    (CvIntHaarClassifier*) tcc, &false_alarm );
+                    (CvIntHaarClassifier*) tcc, &false_alarm, bg_vecfile ? bgfilename : NULL );
                 printf( "NEG: %d %g\n", negcount, false_alarm );
 
                 printf( "BACKGROUND PROCESSING TIME: %.2f\n", (proctime + TIME( 0 )) );
@@ -2669,7 +2799,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
     proctime = -TIME( 0 );
 
     negcount = icvGetHaarTrainingDataFromBG( training_data, poscount, nneg,
-        (CvIntHaarClassifier*) tcc, &false_alarm );
+        (CvIntHaarClassifier*) tcc, &false_alarm, bg_vecfile ? bgfilename : NULL );
 
     printf( "NEG: %d %g\n", negcount, false_alarm );
 
@@ -2680,7 +2810,8 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
 
     __END__;
 
-    icvDestroyBackgroundReaders();
+    if (! bg_vecfile)
+      icvDestroyBackgroundReaders();
 
     if( tcc ) tcc->release( (CvIntHaarClassifier**) &tcc );
     icvReleaseIntHaarFeatures( &haar_features );

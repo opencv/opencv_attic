@@ -134,6 +134,7 @@ void cvShowVecSamples( const char* filename, int winwidth, int winheight, double
  *   It must exist and contain subdirectories 0, 1, 2, ... (nstages-1).
  * vecfilename      - name of .vec file with object's images
  * bgfilename       - name of background description file
+ * bg_vecfile       - true if bgfilename represents a vec file with discrete negatives
  * npos             - number of positive samples used in training of each stage
  * nneg             - number of negative samples used in training of each stage
  * nstages          - number of stages
@@ -186,6 +187,6 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                                     int equalweights,
                                     int winwidth, int winheight,
                                     int boosttype, int stumperror,
-                                    int maxtreesplits, int minpos );
+                                    int maxtreesplits, int minpos, bool bg_vecfile = false );
 
 #endif /* _CVHAARTRAINING_H_ */
