@@ -1,0 +1,591 @@
+\chapter{CvAux}
+
+\begin{verbatim}
+\end{verbatim}
+\section{Stereo Correspondence Functions}
+\begin{verbatim}
+----
+\end{verbatim}
+\subsection{FindStereoCorrespondence}
+\begin{verbatim}
+Calculates disparity for stereo-pair
+
+\cvexp{
+cvFindStereoCorrespondence(
+                   const  CvArr* leftImage, const  CvArr* rightImage,
+                   int     mode, CvArr*  depthImage,
+                   int     maxDisparity,
+                   double  param1, double  param2, double  param3,
+                   double  param4, double  param5  );
+
+}{CPP}{PYTHON}
+
+\cvarg{leftImage}{Left image of stereo pair, rectified grayscale 8-bit imagerightImage}\cvarg{}{Right image of stereo pair, rectified grayscale 8-bit imagemode}\cvarg{}{Algorithm used to find a disparity (now only CV\_DISPARITY\_BIRCHFIELD is supported)depthImage}\cvarg{}{Destination depth image, grayscale 8-bit image that codes the scaled disparity, so that the zero disparity (corresponding to the points that are very far from the cameras) maps to 0, maximum disparity maps to 255}.\cvarg{maxDisparity}{Maximum possible disparity}. The closer the objects to the cameras, the larger value should be specified here. Too big values slow down the process significantly.\cvarg{param1, param2, param3, param4, param5}{- parameters of algorithm}. For example, param1 is the constant occlusion penalty, param2 is the constant match reward, param3 defines a highly reliable region (set of contiguous pixels whose reliability is at least param3), param4 defines a moderately reliable region, param5 defines a slightly reliable region. If some parameter is omitted default value is used. In Birchfield's algorithm param1 = 25, param2 = 5, param3 = 12, param4 = 15, param5 = 25 (These values have been taken from "Depth Discontinuities by Pixel-to-Pixel Stereo" Stanford University Technical Report STAN-CS-TR-96-1573, July 1996.)
+
+The function \cvexp{cvFindStereoCorrespondence}{CPP}{PYTHON} calculates disparity map for two rectified grayscale images.
+
+Example. Calculating disparity for pair of 8-bit color images
+
+\cvexp{
+/*---------------------------------------------------------------------------------*/
+IplImage* srcLeft = cvLoadImage("left.jpg",1);
+IplImage* srcRight = cvLoadImage("right.jpg",1);
+IplImage* leftImage = cvCreateImage(cvGetSize(srcLeft), IPL\_DEPTH\_8U, 1);
+IplImage* rightImage = cvCreateImage(cvGetSize(srcRight), IPL\_DEPTH\_8U, 1);
+IplImage* depthImage = cvCreateImage(cvGetSize(srcRight), IPL\_DEPTH\_8U, 1);
+
+cvCvtColor(srcLeft, leftImage, CV\_BGR2GRAY);
+cvCvtColor(srcRight, rightImage, CV\_BGR2GRAY);
+
+cvFindStereoCorrespondence( leftImage, rightImage, CV\_DISPARITY\_BIRCHFIELD, depthImage, 50, 15, 3, 6, 8, 15 );
+/*---------------------------------------------------------------------------------*/
+
+}{CPP}{PYTHON}
+
+And here is the example stereo pair that can be used to test the example
+
+{{http://opencvlibrary.sourceforge.net/pics/left.jpg}} {{http://opencvlibrary.sourceforge.net/pics/right.jpg}}
+
+----
+\end{verbatim}
+\section{View Morphing Functions}
+\begin{verbatim}
+----
+\end{verbatim}
+\subsection{MakeScanlines}
+\begin{verbatim}
+Calculates scanlines coordinates for two cameras by fundamental matrix
+
+\cvexp{
+void cvMakeScanlines( const CvMatrix3* matrix, CvSize img\_size, int* scanlines1,
+                      int* scanlines2, int* lengths1, int* lengths2, int* line\_count );
+
+}{CPP}{PYTHON}
+
+\cvarg{matrix}{Fundamental matrix}.\cvarg{imgSize}{Size of the image}.\cvarg{scanlines1}{Pointer to the array of calculated scanlines of the first image}.\cvarg{scanlines2}{Pointer to the array of calculated scanlines of the second image}.\cvarg{lengths1}{Pointer to the array of calculated lengths (in pixels) of the first image scanlines}.\cvarg{lengths2}{Pointer to the array of calculated lengths (in pixels) of the second image scanlines}.\cvarg{line\_count}{Pointer to the variable that stores the number of scanlines}.
+
+The function \cvexp{cvMakeScanlines}{CPP}{PYTHON} finds coordinates of scanlines for two images.
+
+This function returns the number of scanlines. The function does nothing except calculating the number of scanlines if the pointers \cvexp{scanlines1}{CPP}{PYTHON} or {{{scanlines2}}} are equal to zero.
+
+----
+\end{verbatim}
+\subsection{PreWarpImage}
+\begin{verbatim}
+Rectifies image
+
+\cvexp{
+void cvPreWarpImage( int line\_count, IplImage* img, uchar* dst,
+                     int* dst\_nums, int* scanlines );
+
+}{CPP}{PYTHON}
+
+\cvarg{line\_count}{Number of scanlines for the image}.\cvarg{img}{Image to prewarp}.\cvarg{dst}{Data to store for the prewarp image}.\cvarg{dst\_nums}{Pointer to the array of lengths of scanlines}.\cvarg{scanlines}{Pointer to the array of coordinates of scanlines}.
+
+The function \cvexp{cvPreWarpImage}{CPP}{PYTHON} rectifies the image so that the scanlines in the rectified image are horizontal. The output buffer of size {{{max(width,height)*line\_count*3}}} must be allocated before calling the function.
+
+----
+\end{verbatim}
+\subsection{FindRuns}
+\begin{verbatim}
+Retrieves scanlines from rectified image and breaks them down into runs
+
+\cvexp{
+void cvFindRuns( int line\_count, uchar* prewarp1, uchar* prewarp2,
+                 int* line\_lengths1, int* line\_lengths2,
+                 int* runs1, int* runs2,
+                 int* num\_runs1, int* num\_runs2 );
+
+}{CPP}{PYTHON}
+
+\cvarg{line\_count}{Number of the scanlines}.\cvarg{prewarp1}{Prewarp data of the first image}.\cvarg{prewarp2}{Prewarp data of the second image}.\cvarg{line\_lengths1}{Array of lengths of scanlines in the first image}.\cvarg{line\_lengths2}{Array of lengths of scanlines in the second image}.\cvarg{runs1}{Array of runs in each scanline in the first image}.\cvarg{runs2}{Array of runs in each scanline in the second image}.\cvarg{num\_runs1}{Array of numbers of runs in each scanline in the first image}.\cvarg{num\_runs2}{Array of numbers of runs in each scanline in the second image}.
+
+The function \cvexp{cvFindRuns}{CPP}{PYTHON} retrieves scanlines from the rectified image and breaks each scanline down into several runs, that is, series of pixels of almost the same brightness.
+
+----
+\end{verbatim}
+\subsection{DynamicCorrespondMulti}
+\begin{verbatim}
+Finds correspondence between two sets of runs of two warped images
+
+\cvexp{
+void cvDynamicCorrespondMulti( int line\_count, int* first, int* first\_runs,
+                               int* second, int* second\_runs,
+                               int* first\_corr, int* second\_corr );
+
+}{CPP}{PYTHON}
+
+\cvarg{line\_count}{Number of scanlines}.\cvarg{first}{Array of runs of the first image}.\cvarg{first\_runs}{Array of numbers of runs in each scanline of the first image}.\cvarg{second}{Array of runs of the second image}.\cvarg{second\_runs}{Array of numbers of runs in each scanline of the second image}.\cvarg{first\_corr}{Pointer to the array of correspondence information found for the first runs}.\cvarg{second\_corr}{Pointer to the array of correspondence information found for the second runs}.
+
+The function \cvexp{cvDynamicCorrespondMulti}{CPP}{PYTHON} finds correspondence between two sets of runs of two images. Memory must be allocated before calling this function. Memory size for one array of correspondence information is
+
+\cvexp{max( width,height )* numscanlines*3*sizeof ( int )}{CPP}{PYTHON} .
+
+----
+\end{verbatim}
+\subsection{MakeAlphaScanlines}
+\begin{verbatim}
+Calculates coordinates of scanlines of image from virtual camera
+
+\cvexp{
+void cvMakeAlphaScanlines( int* scanlines1, int* scanlines2,
+                           int* scanlinesA, int* lengths,
+                           int line\_count, float alpha );
+
+}{CPP}{PYTHON}
+
+\cvarg{scanlines1}{Pointer to the array of the first scanlines}.\cvarg{scanlines2}{Pointer to the array of the second scanlines}.\cvarg{scanlinesA}{Pointer to the array of the scanlines found in the virtual image}.\cvarg{lengths}{Pointer to the array of lengths of the scanlines found in the virtual image}.\cvarg{line\_count}{Number of scanlines}.\cvarg{alpha}{Position of virtual camera \cvexp{(0}.0 - 1.0)}{CPP}{PYTHON} .
+
+The function \cvexp{cvMakeAlphaScanlines}{CPP}{PYTHON} finds coordinates of scanlines for the virtual camera with the given camera position.
+
+Memory must be allocated before calling this function. Memory size for the array of correspondence runs is \cvexp{numscanlines*2*4*sizeof(int)}{CPP}{PYTHON} . Memory size for the array of the scanline lengths is {{{numscanlines*2*4*sizeof(int)}}} .
+
+----
+\end{verbatim}
+\subsection{MorphEpilinesMulti}
+\begin{verbatim}
+Morphs two pre-warped images using information about stereo correspondence
+
+\cvexp{
+void cvMorphEpilinesMulti( int line\_count, uchar* first\_pix, int* first\_num,
+                           uchar* second\_pix, int* second\_num,
+                           uchar* dst\_pix, int* dst\_num,
+                           float alpha, int* first, int* first\_runs,
+                           int* second, int* second\_runs,
+                           int* first\_corr, int* second\_corr );
+
+}{CPP}{PYTHON}
+
+\cvarg{line\_count}{Number of scanlines in the prewarp image}.\cvarg{first\_pix}{Pointer to the first prewarp image}.\cvarg{first\_num}{Pointer to the array of numbers of points in each scanline in the first image}.\cvarg{second\_pix}{Pointer to the second prewarp image}.\cvarg{second\_num}{Pointer to the array of numbers of points in each scanline in the second image}.\cvarg{dst\_pix}{Pointer to the resulting morphed warped image}.\cvarg{dst\_num}{Pointer to the array of numbers of points in each line}.\cvarg{alpha}{Virtual camera position \cvexp{(0}.0 - 1.0)}{CPP}{PYTHON} .\cvarg{first}{First sequence of runs}.\cvarg{first\_runs}{Pointer to the number of runs in each scanline in the first image}.\cvarg{second}{Second sequence of runs}.\cvarg{second\_runs}{Pointer to the number of runs in each scanline in the second image}.\cvarg{first\_corr}{Pointer to the array of correspondence information found for the first runs}.\cvarg{second\_corr}{Pointer to the array of correspondence information found for the second runs}.
+
+The function \cvexp{cvMorphEpilinesMulti}{CPP}{PYTHON} morphs two pre-warped images using information about correspondence between the scanlines of two images.
+
+----
+\end{verbatim}
+\subsection{PostWarpImage}
+\begin{verbatim}
+Warps rectified morphed image back
+
+\cvexp{
+void cvPostWarpImage( int line\_count, uchar* src, int* src\_nums,
+                      IplImage* img, int* scanlines );
+
+}{CPP}{PYTHON}
+
+\cvarg{line\_count}{Number of the scanlines}.\cvarg{src}{Pointer to the prewarp image virtual image}.\cvarg{src\_nums}{Number of the scanlines in the image}.\cvarg{img}{Resulting unwarp image}.\cvarg{scanlines}{Pointer to the array of scanlines data}.
+
+The function \cvexp{cvPostWarpImage}{CPP}{PYTHON} warps the resultant image from the virtual camera by storing its rows across the scanlines whose coordinates are calculated by [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cvMakeAlphaScanlines|cvMakeAlphaScanlines]].
+
+----
+\end{verbatim}
+\subsection{DeleteMoire}
+\begin{verbatim}
+Deletes moire in given image
+
+\cvexp{
+void cvDeleteMoire( IplImage* img );
+
+}{CPP}{PYTHON}
+
+\cvarg{img}{Image}.
+
+The function \cvexp{cvDeleteMoire}{CPP}{PYTHON} deletes moire from the given image. The post-warped image may have black (un-covered) points because of possible holes between neighboring scanlines. The function deletes moire (black pixels) from the image by substituting neighboring pixels for black pixels. If all the scanlines are horizontal, the function may be omitted.
+
+----
+\end{verbatim}
+\section{3D Tracking Functions}
+\begin{verbatim}
+The section discusses functions for tracking objects in 3d space using a stereo camera. Besides C API, there is DirectShow [[http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerFilter.htm|3dTracker]] filter and the wrapper application [[http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTracker.htm|3dTracker]]. [[http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerTesting.htm|Here]] you may find a description how to test the filter on sample data.
+
+----
+\end{verbatim}
+\subsection{3dTrackerCalibrateCameras}
+\begin{verbatim}
+Simultaneously determines position and orientation of multiple cameras
+
+\cvexp{
+CvBool cv3dTrackerCalibrateCameras(int num\_cameras,
+           const Cv3dTrackerCameraIntrinsics camera\_intrinsics[],
+           CvSize checkerboard\_size,
+           IplImage *samples[],
+           Cv3dTrackerCameraInfo camera\_info[]);
+
+}{CPP}{PYTHON}
+
+\cvarg{num\_cameras}{the number of cameras to calibrate}. This is the size of each of the three array parameters.\cvarg{camera\_intrinsics}{camera intrinsics for each camera, such as determined by CalibFilter}.\cvarg{checkerboard\_size}{the width and height (in number of squares) of the checkerboard}.\cvarg{samples}{images from each camera, with a view of the checkerboard}.\cvarg{camera\_info}{filled in with the results of the camera calibration}. This is passed into [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cv3dTrackerLocateObjects|3dTrackerLocateObjects]] to do tracking.
+
+The function \cvexp{cv3dTrackerCalibrateCameras}{CPP}{PYTHON} searches for a checkerboard of the specified size in each of the images. For each image in which it finds the checkerboard, it fills in the corresponding slot in {{{camera\_info}}} with the position and orientation of the camera relative to the checkerboard and sets the {{{valid}}} flag. If it finds the checkerboard in all the images, it returns true; otherwise it returns false.
+
+This function does not change the members of the \cvexp{camera\_info}{CPP}{PYTHON} array that correspond to images in which the checkerboard was not found. This allows you to calibrate each camera independently, instead of simultaneously. To accomplish this, do the following:
+
+ 1. clear all the \cvexp{valid}{CPP}{PYTHON} flags before calling this function the first time;
+ 1. call this function with each set of images;
+ 1. check all the \cvexp{valid}{CPP}{PYTHON} flags after each call. When all the {{{valid}}} flags are set, calibration is complete.
+
+ . Note that this method works well only if the checkerboard is rigidly mounted; if it is handheld, all the cameras should be calibrated simultanously to get an accurate result. To ensure that all cameras are calibrated simultaneously, ignore the \cvexp{valid}{CPP}{PYTHON} flags and use the return value to decide when calibration is complete.
+
+----
+\end{verbatim}
+\subsection{3dTrackerLocateObjects}
+\begin{verbatim}
+Determines 3d location of tracked objects
+
+\cvexp{
+int  cv3dTrackerLocateObjects(int num\_cameras,
+         int num\_objects,
+         const Cv3dTrackerCameraInfo camera\_info[],
+         const Cv3dTracker2dTrackedObject tracking\_info[],
+         Cv3dTrackerTrackedObject tracked\_objects[]);
+
+}{CPP}{PYTHON}
+
+\cvarg{num\_cameras}{the number of cameras}.\cvarg{num\_objects}{the maximum number of objects found by any camera}. (Also the maximum number of objects returned in \cvexp{tracked\_objects}{CPP}{PYTHON}.\cvarg{)camera\_info}{camera position and location information for each camera, as determined by [[http}://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cv3dTrackerCalibrateCameras|3dTrackerCalibrateCameras]].\cvarg{tracking\_info}{the 2d position of each object as seen by each camera}. Although this is specified as a one-dimensional array, it is actually a two-dimensional array: {{{const Cv3dTracker2dTrackedObject tracking\_info[num\_cameras][num\_objects]}}}. The {{{id}}} field of any unused slots must be -1. Ids need not be ordered or consecutive.\cvarg{tracked\_objects}{filled in with the results}.
+
+The function \cvexp{cv3dTrackerLocateObjects}{CPP}{PYTHON} determines the 3d position of tracked objects based on the 2d tracking information from multiple cameras and the camera position and orientation information computed by [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_3dTrackerCalibrateCameras|3dTrackerCalibrateCameras]]. It locates any objects with the same {{{id}}} that are tracked by more than one camera. It fills in the {{{tracked\_objects}}} array and returns the number of objects located. The {{{id}}} fields of any unused slots in {{{tracked\_objects}}} are set to -1.
+
+----
+\end{verbatim}
+\section{Eigen Objects (PCA) Functions}
+\begin{verbatim}
+The functions described in this section do PCA analysis and compression for a set of 8-bit images that may not fit into memory all together. If your data fits into memory and the vectors are not 8-bit (or you want a simpler interface), use [[http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm#decl\_cvCalcCovarMatrix|cvCalcCovarMatrix]], [[http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm#decl\_cvSVD|cvSVD]] and [[http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm#decl\_cvGEMM|cvGEMM]] to do PCA
+
+----
+\end{verbatim}
+\subsection{CalcCovarMatrixEx}
+\begin{verbatim}
+Calculates covariance matrix for group of input objects
+
+\cvexp{
+void cvCalcCovarMatrixEx( int object\_count, void* input, int io\_flags,
+                          int iobuf\_size, uchar* buffer, void* userdata,
+                          IplImage* avg, float* covar\_matrix );
+
+}{CPP}{PYTHON}
+
+\cvarg{object\_count}{Number of source objects}.\cvarg{input}{Pointer either to the array of \cvexp{IplImage}{CPP}{PYTHON} input objects or to the read callback function according to the value of the parameter {{{ioFlags}}}}.\cvarg{io\_flags}{Input/output flags}.\cvarg{iobuf\_size}{Input/output buffer size}.\cvarg{buffer}{Pointer to the input/output buffer}.\cvarg{userdata}{Pointer to the structure that contains all necessary data for thecallback}\cvarg{}{functions}.\cvarg{avg}{Averaged object}.\cvarg{covar\_matrix}{Covariance matrix}. An output parameter; must be allocated before the call.
+
+The function \cvexp{cvCalcCovarMatrixEx}{CPP}{PYTHON} calculates a covariance matrix of the input objects group using previously calculated averaged object. Depending on {{{ioFlags}}} parameter it may be used either in direct access or callback mode. If {{{ioFlags}}} is not {{{CV\_EIGOBJ\_NO\_CALLBACK}}}, buffer must be allocated before calling the function.
+
+----
+\end{verbatim}
+\subsection{CalcEigenObjects}
+\begin{verbatim}
+Calculates orthonormal eigen basis and averaged object for group of input objects
+
+\cvexp{
+void cvCalcEigenObjects( int nObjects, void* input, void* output, int ioFlags,
+                         int ioBufSize, void* userData, CvTermCriteria* calcLimit,
+                         IplImage* avg, float* eigVals );
+
+}{CPP}{PYTHON}
+
+\cvarg{nObjects}{Number of source objects}.\cvarg{input}{Pointer either to the array of \cvexp{IplImage}{CPP}{PYTHON} input objects or to the read callback function according to the value of the parameter {{{ioFlags}}}}.\cvarg{output}{Pointer either to the array of eigen objects or to the write callback function according to the value of the parameter ioFlags }.\cvarg{ioFlags}{Input/output flags}.\cvarg{ioBufSize}{Input/output buffer size in bytes}. The size is zero, if unknown.\cvarg{userData}{Pointer to the structure that contains all necessary data for the callback functions}.\cvarg{calcLimit}{Criteria that determine when to stop calculation of eigen objects}.\cvarg{avg}{Averaged object}.\cvarg{eigVals}{Pointer to the eigenvalues array in the descending order; may be {{{NULL}}} }.
+
+The function \cvexp{cvCalcEigenObjects}{CPP}{PYTHON} calculates orthonormal eigen basis and the averaged object for a group of the input objects. Depending on {{{ioFlags}}} parameter it may be used either in direct access or callback mode. Depending on the parameter {{{calcLimit}}}, calculations are finished either after first {{{calcLimit.max\_iter}}} dominating eigen objects are retrieved or if the ratio of the current eigenvalue to the largest eigenvalue comes down to {{{calcLimit.epsilon}}} threshold. The value {{{calcLimit -> type}}} must be {{{CV\_TERMCRIT\_NUMB, CV\_TERMCRIT\_EPS}}}, or {{{CV\_TERMCRIT\_NUMB | CV\_TERMCRIT\_EPS}}} . The function returns the real values {{{calcLimit->max\_iter}}} and {{{calcLimit->epsilon}}} .
+
+The function also calculates the averaged object, which must be created previously. Calculated eigen objects are arranged according to the corresponding eigenvalues in the descending order.
+
+ . The parameter \cvexp{eigVals}{CPP}{PYTHON} may be equal to {{{NULL}}}, if eigenvalues are not needed.
+
+The function \cvexp{cvCalcEigenObjects}{CPP}{PYTHON} uses the function [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cvCalcCovarMatrixEx|cvCalcCovarMatrixEx]].
+
+----
+\end{verbatim}
+\subsection{CalcDecompCoeff}
+\begin{verbatim}
+Calculates decomposition coefficient of input object
+
+\cvexp{
+double cvCalcDecompCoeff( IplImage* obj, IplImage* eigObj, IplImage* avg );
+
+}{CPP}{PYTHON}
+
+\cvarg{obj}{Input object}.\cvarg{eigObj}{Eigen object}.\cvarg{avg}{Averaged object}.
+
+The function \cvexp{cvCalcDecompCoeff}{CPP}{PYTHON} calculates one decomposition coefficient of the input object using the previously calculated eigen object and the averaged object.
+
+----
+\end{verbatim}
+\subsection{EigenDecomposite}
+\begin{verbatim}
+Calculates all decomposition coefficients for input object
+
+\cvexp{
+void cvEigenDecomposite( IplImage* obj, int eigenvec\_count, void* eigInput,
+                         int ioFlags, void* userData, IplImage* avg, float* coeffs );
+
+}{CPP}{PYTHON}
+
+\cvarg{obj}{Input object}.\cvarg{eigenvec\_count}{Number of eigen objects}.\cvarg{eigInput}{Pointer either to the array of \cvexp{IplImage}{CPP}{PYTHON} input objects or to the read callback function according to the value of the parameter {{{ioFlags}}}}.\cvarg{ioFlags}{Input/output flags}.\cvarg{userData}{Pointer to the structure that contains all necessary data for the callback functions}.\cvarg{avg}{Averaged object}.\cvarg{coeffs}{Calculated coefficients; an output parameter}.
+
+The function \cvexp{cvEigenDecomposite}{CPP}{PYTHON} calculates all decomposition coefficients for the input object using the previously calculated eigen objects basis and the averaged object. Depending on {{{ioFlags}}} parameter it may be used either in direct access or callback mode.
+
+----
+\end{verbatim}
+\subsection{EigenProjection}
+\begin{verbatim}
+Calculates object projection to the eigen sub-space
+
+\cvexp{
+void cvEigenProjection( void* input\_vecs, int eigenvec\_count, int io\_flags, void* userdata,
+                        float* coeffs, IplImage* avg, IplImage* proj );
+
+}{CPP}{PYTHON}
+
+\cvarg{input\_vec}{Pointer to either an array of \cvexp{IplImage}{CPP}{PYTHON} input objects or to a callback function, depending on {{{io\_flags}}}}.\cvarg{eigenvec\_count}{Number of eigenvectors}.\cvarg{io\_flags}{Input/output flags; see [[http}://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cvCalcEigenObjects|cvCalcEigenObjects]].\cvarg{userdata}{Pointer to the structure that contains all necessary data for the callback functions}.\cvarg{coeffs}{Previously calculated decomposition coefficients}.\cvarg{avg}{Average vector, calculated by [[http}://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_cvCalcEigenObjects|cvCalcEigenObjects]].\cvarg{proj}{Projection to the eigen sub-space}.
+
+The function \cvexp{cvEigenProjection}{CPP}{PYTHON} calculates an object projection to the eigen sub-space or, in other words, restores an object using previously calculated eigen objects basis, averaged object, and decomposition coefficients of the restored object. Depending on {{{io\_flags}}} parameter it may be used either in direct access or callback mode.
+
+----
+\end{verbatim}
+\section{Embedded Hidden Markov Models Functions}
+\begin{verbatim}
+In order to support embedded models the user must define structures to represent 1D HMM and 2D embedded HMM model.
+
+----
+\end{verbatim}
+\subsection{CvHMM}
+\begin{verbatim}
+Embedded HMM Structure
+
+\cvexp{
+    typedef struct \_CvEHMM
+    {
+        int level;
+        int num\_states;
+        float* transP;
+        float** obsProb;
+        union
+        {
+            CvEHMMState* state;
+            struct \_CvEHMM* ehmm;
+        } u;
+    } CvEHMM;
+
+}{CPP}{PYTHON}
+
+\cvarg{level}{Level of embedded HMM}. If \cvexp{level ==0}{CPP}{PYTHON}, HMM is most external. In 2D HMM there are two types of HMM: 1 external and several embedded. External HMM has {{{level ==1}}}, embedded HMMs have {{{level ==0}}} .\cvarg{num\_states}{Number of states in 1D HMM}.\cvarg{transP}{State-to-state transition probability, square matrix {{{(num\_state×num\_state )}}}}.\cvarg{obsProb}{Observation probability matrix}.\cvarg{state}{Array of HMM states}. For the last-level HMM, that is, an HMM without embedded HMMs, HMM states are real.\cvarg{ehmm}{Array of embedded HMMs}. If HMM is not last-level, then HMM states are not real and they are HMMs.
+
+For representation of observations the following structure is defined:
+
+----
+\end{verbatim}
+\subsection{CvImgObsInfo}
+\begin{verbatim}
+Image Observation Structure
+
+\cvexp{
+    typedef struct CvImgObsInfo
+    {
+        int obs\_x;
+        int obs\_y;
+        int obs\_size;
+        float** obs;
+        int* state;
+        int* mix;
+    } CvImgObsInfo;
+
+}{CPP}{PYTHON}
+
+\cvarg{obs\_x}{Number of observations in the horizontal direction}.\cvarg{obs\_y}{Number of observations in the vertical direction}.\cvarg{obs\_size}{Length of every observation vector}.\cvarg{obs}{Pointer to observation vectors stored consequently}. Number of vectors is \cvexp{obs\_x*obs\_y}{CPP}{PYTHON} .\cvarg{state}{Array of indices of states, assigned to every observation vector}.\cvarg{mix}{Index of mixture component, corresponding to the observation vector within an assigned state}.
+
+----
+\end{verbatim}
+\subsection{Create2DHMM}
+\begin{verbatim}
+Creates 2D embedded HMM
+
+\cvexp{
+CvEHMM* cvCreate2DHMM( int* stateNumber, int* numMix, int obsSize );
+
+}{CPP}{PYTHON}
+
+\cvarg{stateNumber}{Array, the first element of the which specifies the number of superstates in the HMM}. All subsequent elements specify the number of states in every embedded HMM, corresponding to each superstate. So, the length of the array is \cvexp{stateNumber [0]+1}{CPP}{PYTHON} .\cvarg{numMix}{Array with numbers of Gaussian mixture components per each internal state}. The number of elements in the array is equal to number of internal states in the HMM, that is, superstates are not counted here.\cvarg{obsSize}{Size of observation vectors to be used with created HMM}.
+
+The function \cvexp{cvCreate2DHMM}{CPP}{PYTHON} returns the created structure of the type [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_CvEHMM|CvEHMM]] with specified parameters.
+
+----
+\end{verbatim}
+\subsection{Release2DHMM}
+\begin{verbatim}
+Releases 2D embedded HMM
+
+\cvexp{
+void cvRelease2DHMM(CvEHMM** hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{hmm}{Address of pointer to HMM to be released}.
+
+The function \cvexp{cvRelease2DHMM}{CPP}{PYTHON} frees all the memory used by HMM and clears the pointer to HMM.
+
+----
+\end{verbatim}
+\subsection{CreateObsInfo}
+\begin{verbatim}
+Creates structure to store image observation vectors
+
+\cvexp{
+CvImgObsInfo* cvCreateObsInfo( CvSize numObs, int obsSize );
+
+}{CPP}{PYTHON}
+
+\cvarg{numObs}{Numbers of observations in the horizontal and vertical directions}. For the given image and scheme of extracting observations the parameter can be computed via the macro \cvexp{CV\_COUNT\_OBS( roi, dctSize, delta, numObs )}{CPP}{PYTHON}, where {{{roi, dctSize, delta, numObs}}} are the pointers to structures of the type [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_CvSize|CvSize ]]. The pointer {{{roi}}} means size of {{{roi}}} of image observed, {{{numObs}}} is the output parameter of the macro.\cvarg{obsSize}{Size of observation vectors to be stored in the structure}.
+
+The function \cvexp{cvCreateObsInfo}{CPP}{PYTHON} creates new structures to store image observation vectors. For definitions of the parameters {{{roi, dctSize}}}, and {{{delta}}} see the specification of The function {{{cvImgToObs\_DCT}}}.
+
+----
+\end{verbatim}
+\subsection{ReleaseObsInfo}
+\begin{verbatim}
+Releases observation vectors structure
+
+\cvexp{
+void cvReleaseObsInfo( CvImgObsInfo** obsInfo );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfo}{Address of the pointer to the structure [[http}://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_CvImgObsInfo|CvImgObsInfo]] .
+
+The function \cvexp{cvReleaseObsInfo}{CPP}{PYTHON} frees all memory used by observations and clears pointer to the structure [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_CvImgObsInfo|CvImgObsInfo]] .
+
+----
+\end{verbatim}
+\subsection{ImgToObs\_DCT}
+\begin{verbatim}
+Extracts observation vectors from image
+
+\cvexp{
+void cvImgToObs\_DCT( IplImage* image, float* obs, CvSize dctSize,
+                     CvSize obsSize, CvSize delta );
+
+}{CPP}{PYTHON}
+
+\cvarg{image}{Input image}.\cvarg{obs}{Pointer to consequently stored observation vectors}.\cvarg{dctSize}{Size of image blocks for which DCT (Discrete Cosine Transform) coefficients are to be computed}.\cvarg{obsSize}{Number of the lowest DCT coefficients in the horizontal and vertical directions to be put into the observation vector}.\cvarg{delta}{Shift in pixels between two consecutive image blocks in the horizontal and vertical directions}.
+
+The function \cvexp{cvImgToObs\_DCT}{CPP}{PYTHON} extracts observation vectors, that is, DCT coefficients, from the image. The user must pass {{{obsInfo.obs}}} as the parameter {{{obs}}} to use this function with other HMM functions and use the structure {{{obsInfo}}} of the [[http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cvaux.htm#decl\_CvImgObsInfo|CvImgObsInfo]] type.
+
+\cvexp{Calculating Observations for HMM}{CPP}{PYTHON}
+
+\cvexp{
+    CvImgObsInfo* obs\_info;
+
+        ...
+
+        cvImgToObs\_DCT( image,obs\_info->obs, //!!!
+
+        dctSize, obsSize, delta );
+
+}{CPP}{PYTHON}
+
+----
+\end{verbatim}
+\subsection{UniformImgSegm}
+\begin{verbatim}
+Performs uniform segmentation of image observations by HMM states
+
+\cvexp{
+void cvUniformImgSegm( CvImgObsInfo* obsInfo, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfo}{Observations structure}.\cvarg{hmm}{HMM structure}.
+
+The function \cvexp{cvUniformImgSegm}{CPP}{PYTHON} segments image observations by HMM states uniformly (see \_\_Initial Segmentation\_\_ for 2D Embedded HMM for 2D embedded HMM with 5 superstates and 3, 6, 6, 6, 3 internal states of every corresponding superstate).
+
+Initial Segmentation for 2D Embedded HMM
+
+{{http://opencvlibrary.sourceforge.net/pics/face.png}}
+
+----
+\end{verbatim}
+\subsection{InitMixSegm}
+\begin{verbatim}
+Segments all observations within every internal state of HMM by state mixture components
+
+\cvexp{
+void cvInitMixSegm( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfoArray}{Array of pointers to the observation structures}.\cvarg{numImg}{Length of above array}.\cvarg{hmm}{HMM}.
+
+The function \cvexp{cvInitMixSegm}{CPP}{PYTHON} takes a group of observations from several training images already segmented by states and splits a set of observation vectors within every internal HMM state into as many clusters as the number of mixture components in the state.
+
+----
+\end{verbatim}
+\subsection{EstimateHMMStateParams}
+\begin{verbatim}
+Estimates all parameters of every HMM state
+
+\cvexp{
+void cvEstimateHMMStateParams( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfoArray}{Array of pointers to the observation structures}.\cvarg{numImg}{Length of the array}.\cvarg{hmm}{HMM}.
+
+The function \cvexp{cvEstimateHMMStateParams}{CPP}{PYTHON} computes all inner parameters of every HMM state, including Gaussian means, variances, etc.
+
+----
+\end{verbatim}
+\subsection{EstimateTransProb}
+\begin{verbatim}
+Computes transition probability matrices for embedded HMM
+
+\cvexp{
+void cvEstimateTransProb( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfoArray}{Array of pointers to the observation structures}.\cvarg{numImg}{Length of the above array}.\cvarg{hmm}{HMM}.
+
+The function \cvexp{cvEstimateTransProb}{CPP}{PYTHON} uses current segmentation of image observations to compute transition probability matrices for all embedded and external HMMs.
+
+----
+\end{verbatim}
+\subsection{EstimateObsProb}
+\begin{verbatim}
+Computes probability of every observation of several images
+
+\cvexp{
+void cvEstimateObsProb( CvImgObsInfo* obsInfo, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfo}{Observation structure}.\cvarg{hmm}{HMM structure}.
+
+The function \cvexp{cvEstimateObsProb}{CPP}{PYTHON} computes Gaussian probabilities of each observation to occur in each of the internal HMM states.
+
+----
+\end{verbatim}
+\subsection{EViterbi}
+\begin{verbatim}
+Executes Viterbi algorithm for embedded HMM
+
+\cvexp{
+float cvEViterbi( CvImgObsInfo* obsInfo, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfo}{Observation structure}.\cvarg{hmm}{HMM structure}.
+
+The function \cvexp{cvEViterbi}{CPP}{PYTHON} executes Viterbi algorithm for embedded HMM. Viterbi algorithm evaluates the likelihood of the best match between the given image observations and the given HMM and performs segmentation of image observations by HMM states. The segmentation is done on the basis of the match found.
+
+----
+\end{verbatim}
+\subsection{MixSegmL2}
+\begin{verbatim}
+Segments observations from all training images by mixture components of newly assigned states
+
+\cvexp{
+void cvMixSegmL2( CvImgObsInfo** obsInfoArray, int numImg, CvEHMM* hmm );
+
+}{CPP}{PYTHON}
+
+\cvarg{obsInfoArray}{Array of pointers to the observation structures}.\cvarg{numImg}{Length of the array}.\cvarg{hmm}{HMM}.
+
+The function \cvexp{cvMixSegmL2}{CPP}{PYTHON} segments observations from all training images by mixture components of newly Viterbi algorithm-assigned states. The function uses Euclidean distance to group vectors around the existing mixtures centers.
+----
+<<Include(QuickLinks,,0)>>
+\end{verbatim}
