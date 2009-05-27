@@ -2331,39 +2331,50 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
 }
 
 
-CV_IMPL void cvEqualizeHist( const CvArr* src, CvArr* dst )
+CV_IMPL void cvEqualizeHist( const CvArr* srcarr, CvArr* dstarr )
 {
-    CvHistogram* hist = 0;
-    CvMat* lut = 0;
+    CvMat sstub, *src = cvGetMat(srcarr, &sstub);
+    CvMat dstub, *dst = cvGetMat(dstarr, &dstub);
     
-    int i, hist_sz = 256;
-    CvSize img_sz;
-    float scale;
-    float* h;
-    int sum = 0;
-    
-    int type = cvGetElemType( src );
-    if( type != CV_8UC1 )
-        CV_Error( CV_StsUnsupportedFormat, "Only 8uC1 images are supported" );
-
-    hist = cvCreateHist( 1, &hist_sz, CV_HIST_ARRAY );
-    lut = cvCreateMat( 1, 256, CV_8UC1 );
-    cvCalcArrHist( (CvArr**)&src, hist );
-    img_sz = cvGetSize( src );
-    scale = 255.f/(img_sz.width*img_sz.height);
-    h = (float*)cvPtr1D( hist->bins, 0 );
-
-    for( i = 0; i < hist_sz; i++ )
+    CV_Assert( CV_ARE_SIZES_EQ(src, dst) && CV_ARE_TYPES_EQ(src, dst) &&
+               CV_MAT_TYPE(src->type) == CV_8UC1 );
+    CvSize size = cvGetMatSize(src);
+    if( CV_IS_MAT_CONT(src->type & dst->type) )
     {
-        sum += cvRound(h[i]);
-        lut->data.ptr[i] = (uchar)cvRound(sum*scale);
+        size.width *= size.height;
+        size.height = 1;
+    }
+    int x, y;
+    const int hist_sz = 256;
+    int hist[hist_sz];
+    memset(hist, 0, sizeof(hist));
+    
+    for( y = 0; y < size.height; y++ )
+    {
+        const uchar* sptr = src->data.ptr + src->step*y;
+        for( x = 0; x < size.width; x++ )
+            hist[sptr[x]]++;
+    }
+    
+    float scale = 255.f/(size.width*size.height);
+    int sum = 0;
+    uchar lut[hist_sz+1];
+
+    for( int i = 0; i < hist_sz; i++ )
+    {
+        sum += hist[i];
+        int val = cvRound(sum*scale);
+        lut[i] = CV_CAST_8U(val);
     }
 
-    lut->data.ptr[0] = 0;
-    cvLUT( src, dst, lut );
-
-    cvReleaseHist(&hist);
-    cvReleaseMat(&lut);
+    lut[0] = 0;
+    for( y = 0; y < size.height; y++ )
+    {
+        const uchar* sptr = src->data.ptr + src->step*y;
+        uchar* dptr = dst->data.ptr + dst->step*y;
+        for( x = 0; x < size.width; x++ )
+            dptr[x] = lut[sptr[x]];
+    }
 }
 
 /* Implementation of RTTI and Generic Functions for CvHistogram */
