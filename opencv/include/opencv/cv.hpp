@@ -334,6 +334,18 @@ CV_EXPORTS Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size i
                                                    bool centerPrincipalPoint=false );
 
 enum { OPTFLOW_USE_INITIAL_FLOW=4, OPTFLOW_FARNEBACK_GAUSSIAN=256 };
+
+CV_EXPORTS void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
+                           const Vector<Point2f>& prevPts,
+                           Vector<Point2f>& nextPts,
+                           Vector<bool>& status, Vector<float>& err,
+                           Size winSize=Size(15,15), int maxLevel=3,
+                           TermCriteria criteria=TermCriteria(
+                            TermCriteria::COUNT+TermCriteria::EPS,
+                            30, 0.01),
+                           double derivLambda=0.5,
+                           int flags=0 );
+
 CV_EXPORTS void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
                                Mat& flow0, double pyr_scale, int levels, int winsize,
                                int iterations, int poly_n, double poly_sigma, int flags );
