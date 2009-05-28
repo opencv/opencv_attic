@@ -97,6 +97,11 @@ extern "C" {
 static struct SwsContext *img_convert_ctx = NULL;
 #endif
 
+/* PIX_FMT_RGBA32 macro changed in newer ffmpeg versions */
+#ifndef PIX_FMT_RGBA32
+#define PIX_FMT_RGBA32 PIX_FMT_RGB32
+#endif
+
 
 
 char * FOURCC2str( int fourcc )
@@ -796,7 +801,7 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 	picture = avcodec_alloc_frame();
 	if (!picture)
 		return NULL;
-	size = avpicture_get_size(pix_fmt, width, height);
+	size = avpicture_get_size( (PixelFormat) pix_fmt, width, height);
 	if(alloc){
 		picture_buf = (uint8_t *) cvAlloc(size);
 		if (!picture_buf)
@@ -805,7 +810,7 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 			return NULL;
 		}
 		avpicture_fill((AVPicture *)picture, picture_buf,
-				pix_fmt, width, height);
+				(PixelFormat) pix_fmt, width, height);
 	}
 	else {
 	}
