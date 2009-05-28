@@ -448,7 +448,7 @@ template<typename _Tp> static inline Point_<_Tp>&
 operator -= (Point_<_Tp>& a, const Point_<_Tp>& b) { a.x -= b.x; a.y -= b.y; return a; }
 
 template<typename _Tp> static inline double norm(const Point_<_Tp>& pt)
-{ return sqrt((double)pt.x*pt.x + (double)pt.y*pt.y); }
+{ return std::sqrt((double)pt.x*pt.x + (double)pt.y*pt.y); }
 
 template<typename _Tp> static inline bool operator == (const Point_<_Tp>& a, const Point_<_Tp>& b)
 { return a.x == b.x && a.y == b.y; }
@@ -506,7 +506,7 @@ template<typename _Tp> static inline Point3_<_Tp>&
 operator -= (Point3_<_Tp>& a, const Point3_<_Tp>& b) { a -= b.x; a -= b.y; a -= b.z; return a; }
 
 template<typename _Tp> static inline double norm(const Point3_<_Tp>& pt)
-{ return sqrt((double)pt.x*pt.x + (double)pt.y*pt.y + (double)pt.z*pt.z); }
+{ return std::sqrt((double)pt.x*pt.x + (double)pt.y*pt.y + (double)pt.z*pt.z); }
 
 template<typename _Tp> static inline bool operator == (const Point3_<_Tp>& a, const Point3_<_Tp>& b)
 { return a.x == b.x && a.y == b.y && a.z == b.z; }
