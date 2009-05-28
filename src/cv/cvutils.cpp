@@ -217,7 +217,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             }
         }
         isrc -= srcroi.height*srcstep;
-        idst -= (top - srcroi.height)*dststep;
+        idst -= (top + srcroi.height)*dststep;
     }
     else
     {
@@ -238,7 +238,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             }
         }
         src -= srcroi.height*srcstep;
-        dst -= (top - srcroi.height)*dststep;
+        dst -= (top + srcroi.height)*dststep;
     }
 
     for( t = 0; t < 2; t++ )
