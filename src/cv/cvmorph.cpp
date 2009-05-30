@@ -80,7 +80,7 @@ template<> inline uchar MaxOp<uchar>::operator ()(uchar a, uchar b) const { retu
 template<class VecUpdate> struct MorphRowIVec
 {
     enum { ESZ = VecUpdate::ESZ };
-    
+
     MorphRowIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar* src, uchar* dst, int width, int cn) const
     {
@@ -110,7 +110,7 @@ template<class VecUpdate> struct MorphRowIVec
             }
             *(int*)(dst + i) = _mm_cvtsi128_si32(s);
         }
-        
+
         return i/ESZ;
     }
 
@@ -137,7 +137,7 @@ template<class VecUpdate> struct MorphRowFVec
             }
             _mm_storeu_ps((float*)dst + i, s);
         }
-        
+
         return i;
     }
 
@@ -148,7 +148,7 @@ template<class VecUpdate> struct MorphRowFVec
 template<class VecUpdate> struct MorphColumnIVec
 {
     enum { ESZ = VecUpdate::ESZ };
-    
+
     MorphColumnIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar** src, uchar* dst, int dststep, int count, int width) const
     {
@@ -376,7 +376,7 @@ template<class VecUpdate> struct MorphColumnFVec
 template<class VecUpdate> struct MorphIVec
 {
     enum { ESZ = VecUpdate::ESZ };
-    
+
     int operator()(uchar** src, int nz, uchar* dst, int width) const
     {
         int i, k;
@@ -599,13 +599,13 @@ typedef MorphNoVec DilateVec32f;
 template<class Op, class VecOp> struct MorphRowFilter : public BaseRowFilter
 {
     typedef typename Op::rtype T;
-    
+
     MorphRowFilter( int _ksize, int _anchor ) : vecOp(_ksize, _anchor)
     {
         ksize = _ksize;
         anchor = _anchor;
     }
-    
+
     void operator()(const uchar* src, uchar* dst, int width, int cn)
     {
         int i, j, k, _ksize = ksize*cn;
@@ -653,13 +653,13 @@ template<class Op, class VecOp> struct MorphRowFilter : public BaseRowFilter
 template<class Op, class VecOp> struct MorphColumnFilter : public BaseColumnFilter
 {
     typedef typename Op::rtype T;
-    
+
     MorphColumnFilter( int _ksize, int _anchor ) : vecOp(_ksize, _anchor)
     {
         ksize = _ksize;
         anchor = _anchor;
     }
-    
+
     void operator()(const uchar** _src, uchar* dst, int dststep, int count, int width)
     {
         int i, k, _ksize = ksize;
@@ -744,19 +744,19 @@ template<class Op, class VecOp> struct MorphColumnFilter : public BaseColumnFilt
 template<class Op, class VecOp> struct MorphFilter : BaseFilter
 {
     typedef typename Op::rtype T;
-    
+
     MorphFilter( const Mat& _kernel, Point _anchor )
     {
         anchor = _anchor;
         ksize = _kernel.size();
         CV_Assert( _kernel.type() == CV_8U );
-        
+
         Vector<uchar> coeffs; // we do not really the values of non-zero
-                              // kernel elements, just their locations 
+                              // kernel elements, just their locations
         preprocess2DKernel( _kernel, coords, coeffs );
         ptrs.resize( coords.size() );
     }
-    
+
     void operator()(const uchar** src, uchar* dst, int dststep, int count, int width, int cn)
     {
         const Point* pt = &coords[0];
@@ -928,14 +928,14 @@ Ptr<FilterEngine> createMorphologyFilter( int op, int type, const Mat& kernel,
          const Scalar& _borderValue )
 {
     anchor = normalizeAnchor(anchor, kernel.size());
-    
+
     Ptr<BaseRowFilter> rowFilter;
     Ptr<BaseColumnFilter> columnFilter;
     Ptr<BaseFilter> filter2D;
 
     if( countNonZero(kernel) == kernel.rows*kernel.cols )
     {
-        // rectangular structuring element 
+        // rectangular structuring element
         rowFilter = getMorphologyRowFilter(op, type, kernel.cols, anchor.x);
         columnFilter = getMorphologyColumnFilter(op, type, kernel.rows, anchor.y);
     }
@@ -1106,7 +1106,7 @@ void morphologyEx( const Mat& src, Mat& dst, int op, const Mat& kernel,
         if( src.data != dst.data )
             temp = dst;
         dilate( src, temp, kernel, anchor, iterations, borderType, borderValue );
-        erode( temp, temp, kernel, anchor, iterations, borderType, borderValue );        
+        erode( temp, temp, kernel, anchor, iterations, borderType, borderValue );
         dst = temp - src;
         break;
     default:
@@ -1206,9 +1206,20 @@ cvMorphologyEx( const void* srcarr, void* dstarr, void*,
                 IplConvKernel* element, int op, int iterations )
 {
     cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), kernel;
-    CV_Assert( element && src.size() == dst.size() && src.type() == dst.type() );
+    CV_Assert( src.size() == dst.size() && src.type() == dst.type() );
     cv::Point anchor;
-    convertConvKernel( element, kernel, anchor );
+	IplConvKernel* temp_element = NULL;
+    if (!element)
+    {
+    	temp_element = cvCreateStructuringElementEx(3, 3, 1, 1, CV_SHAPE_RECT);
+    } else {
+    	temp_element = element;
+    }
+    convertConvKernel( temp_element, kernel, anchor );
+    if (!element)
+    {
+    	cvReleaseStructuringElement(&temp_element);
+    }
     cv::morphologyEx( src, dst, op, kernel, anchor, iterations, cv::BORDER_REPLICATE );
 }
 
