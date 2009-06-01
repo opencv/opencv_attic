@@ -160,7 +160,7 @@ CV_IMPL void cvRandMVNormal( CvMat* mean, CvMat* cov, CvMat* sample, CvRNG* rng 
     int dim = sample->cols;
     int amount = sample->rows;
 
-    CvRNG state = rng ? *rng : cvRNG(time(0));
+    CvRNG state = rng ? *rng : cvRNG( cvGetTickCount() );
     cvRandArr(&state, sample, CV_RAND_NORMAL, cvScalarAll(0), cvScalarAll(1) );
 
     CvMat* utmat = cvCreateMat(dim, dim, sample->type);

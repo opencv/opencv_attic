@@ -84,9 +84,7 @@ CvMLData :: CvMLData()
     //flt_separator = '.';
 
     class_map = new map<string, int>();
-    time_t t;
-    time( &t );
-    rng = cvRNG( -t );
+    rng = cvRNG( -cvGetTickCount() );
 }
 
 CvMLData :: ~CvMLData()
