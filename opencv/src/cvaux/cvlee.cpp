@@ -1479,7 +1479,7 @@ static int  _cvLee(CvSeq* ContourSeq,
     int attempt = 0;
     CvVoronoiStorageInt VoronoiStorageInt;
 
-    srand((int)time(NULL));
+    srand((int)cvGetTickCount());
 
 NEXTATTEMPT:
     VoronoiStorageInt.SiteStorage = cvCreateChildMemStorage(VoronoiStorage);

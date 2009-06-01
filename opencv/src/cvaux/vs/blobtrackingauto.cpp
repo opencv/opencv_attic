@@ -219,13 +219,19 @@ void CvBlobTrackerAuto1::Process(IplImage* pImg, IplImage* pMask)
 
         if(Count%100==0)
         {
+#ifndef WINCE
             time_t ltime;
             time( &ltime );
+			char* stime = ctime( &ltime );
+#else
+			/* WINCE does not have above POSIX functions (time,ctime) */
+			const char* stime = " wince ";
+#endif
             FILE* out = fopen(m_TimesFile,"at");
             double Time;
             TickCount = cvGetTickCount()-TickCount;
             Time = TickCount/FREQ;
-            if(out){fprintf(out,"- %sFrame: %d ALL_TIME - %f\n",ctime( &ltime ),Count,Time/1000);fclose(out);}
+            if(out){fprintf(out,"- %sFrame: %d ALL_TIME - %f\n",stime,Count,Time/1000);fclose(out);}
 
             TimeSum = 0;
             TickCount = cvGetTickCount();
