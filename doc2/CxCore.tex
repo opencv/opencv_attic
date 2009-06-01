@@ -8015,45 +8015,44 @@ The function \texttt{cvLoad} loads object from file. It provides a simple interf
 
 \end{verbatim}
 \section{Miscellaneous Functions}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{CheckArr}\label{CheckArr}
-\begin{verbatim}
 
 Checks every element of input array for invalid values
 
 \cvexp{
 
-int  cvCheckArr( const CvArr* arr, int flags=0,
-                 double min\_val=0, double max\_val=0);
-#define cvCheckArray cvCheckArr
-
+int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\par double max\_val=0);
 }{CPP}{PYTHON}
+\begin{lstlisting}
+#define cvCheckArray cvCheckArr
+\end{lstlisting}
 
 \begin{description}
 \cvarg{arr}{The array to check}
-\cvarg{flags}{The operation flags, 0 or combination of}
-:<<BR>>\texttt{CV\_CHECK\_RANGE} - if set, the function checks that every value of array is within [minVal,maxVal) range, otherwise it just checks that every element is neigther NaN nor ±Infinity.\cvarg{<<BR>>\texttt{CV\_CHECK\_QUIET} - if set, the function does not raises an error if an element is invalid or out of rangemin\_val}{The inclusive lower boundary of valid values range}
-. It is used only if \texttt{CV\_CHECK\_RANGE} is set.\cvarg{max\_val}{The exclusive upper boundary of valid values range}
-. It is used only if \texttt{CV\_CHECK\_RANGE} is set.
+\cvarg{flags}{The operation flags, 0 or combination of:
+\begin{description}
+\cvarg{CV\_CHECK\_RANGE}{if set, the function checks that every value of array is within [minVal,maxVal) range, otherwise it just checks that every element is neither NaN nor $\pm \infty$.}
+\cvarg{CV\_CHECK\_QUIET}{if set, the function does not raises an error if an element is invalid or out of range}
+\end{description}}
+\cvarg{min\_val}{The inclusive lower boundary of valid values range. It is used only if \texttt{CV\_CHECK\_RANGE} is set.}
+\cvarg{max\_val}{The exclusive upper boundary of valid values range. It is used only if \texttt{CV\_CHECK\_RANGE} is set.}
 \end{description}
 
-The function \texttt{cvCheckArr} checks that every array element is neither NaN nor ±Infinity. If \texttt{CV\_CHECK\_RANGE} is set, it also checks that every element is greater than or equal to \texttt{minVal} and less than \texttt{maxVal}. The function returns nonzero if the check succeeded, i.e. all elements are valid and within the range, and zero otherwise. In the latter case if \texttt{CV\_CHECK\_QUIET} flag is not set, the function raises runtime error.
+The function \texttt{cvCheckArr} checks that every array element is
+neither NaN nor $\pm \infty$. If \texttt{CV\_CHECK\_RANGE} is set, it also
+checks that every element is greater than or equal to \texttt{minVal}
+and less than \texttt{maxVal}. The function returns nonzero if the
+check succeeded, i.e. all elements are valid and within the range,
+and zero otherwise. In the latter case if \texttt{CV\_CHECK\_QUIET}
+flag is not set, the function raises runtime error.
 
-
-\end{verbatim}
 \cvfunc{KMeans2}\label{KMeans2}
-\begin{verbatim}
 
 Splits set of vectors by given number of clusters
 
 \cvexp{
-
-void cvKMeans2( const CvArr* samples, int cluster\_count,
-                CvArr* labels, CvTermCriteria termcrit );
-
+void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* labels,\par CvTermCriteria termcrit );
 }{CPP}{PYTHON}
 
 \begin{description}
@@ -8061,75 +8060,101 @@ void cvKMeans2( const CvArr* samples, int cluster\_count,
 \cvarg{cluster\_count}{Number of clusters to split the set by}
 \cvarg{labels}{Output integer vector storing cluster indices for every sample}
 \cvarg{termcrit}{Specifies maximum number of iterations and/or accuracy (distance the centers move by between the subsequent iterations)}
+\cvarg{attempts}{How many times the algorithm is executed using different initial labelings. The algorithm returns labels that yield the best compactness (see the last function parameter)}
+\cvarg{rng}{Optional external random number generator; can be used to fully control the function behaviour. }
+\cvarg{flags}{Can be 0 or \texttt{CV\_KMEANS\_USE\_INITIAL\_LABELS}. The latter
+value means that during the first (and possibly the only) attempt the
+function uses the user-supplied labels as the initial approximation,
+instead of generating random labels. For the second and further attempts
+the function will use randomly generated labels in any case.}
+\cvarg{centers}{The optional output array of the cluster centers. }
+\cvarg{compactness}{The optional output parameter, which is computed as
+\[
+\sum_i ||\texttt{samples}_i - \texttt{centers}_{\texttt{labels}_i}||^2
+\]
+after every attempt; the best (minimum) value is chosen and the
+corresponding labels are returned by the function. Basically,
+user can use only the core of the function, set the number of
+attempts to 1, initialize labels each time using a custom algorithm
+(\texttt{flags}=\texttt{CV\_KMEAN\_USE\_INITIAL\_LABELS}) and, based on the output compactness
+or any other criteria, choose the best clustering.}
 \end{description}
 
+The function \texttt{cvKMeans2} implements k-means algorithm that finds
+centers of \texttt{cluster\_count} clusters and groups the input samples
+around the clusters. On output $\texttt{labels}_i$ contains a cluster index for
+sample stored in the row $i$ of \texttt{samples} matrix.
 
-The function \texttt{cvKMeans2} implements k-means algorithm that finds centers of \texttt{cluster\_count} clusters and groups the input samples around the clusters. On output `labels(i)` contains a cluster index for sample stored in the i-th row of \texttt{samples} matrix.
-
-=\end{verbatim}
-\cvfunc{Example. Clustering random samples of multi-gaussian distribution with k-means}\label{Example. Clustering random samples of multi-gaussian distribution with k-means}
-\begin{verbatim}=
-
-\cvexp{
-
+% Example. Clustering random samples of multi-gaussian distribution with k-means
+\begin{lstlisting}
 #include "cxcore.h"
 #include "highgui.h"
 
 void main( int argc, char** argv )
 {
-    #define MAX\_CLUSTERS 5
-    CvScalar color\_tab[MAX\_CLUSTERS];
+    #define MAX_CLUSTERS 5
+    CvScalar color_tab[MAX_CLUSTERS];
     IplImage* img = cvCreateImage( cvSize( 500, 500 ), 8, 3 );
     CvRNG rng = cvRNG(0xffffffff);
 
-    color\_tab[0] = CV\_RGB(255,0,0);
-    color\_tab[1] = CV\_RGB(0,255,0);
-    color\_tab[2] = CV\_RGB(100,100,255);
-    color\_tab[3] = CV\_RGB(255,0,255);
-    color\_tab[4] = CV\_RGB(255,255,0);
+    color_tab[0] = CV_RGB(255,0,0);
+    color_tab[1] = CV_RGB(0,255,0);
+    color_tab[2] = CV_RGB(100,100,255);
+    color_tab[3] = CV_RGB(255,0,255);
+    color_tab[4] = CV_RGB(255,255,0);
 
     cvNamedWindow( "clusters", 1 );
 
     for(;;)
     {
-        int k, cluster\_count = cvRandInt(&rng)%MAX\_CLUSTERS + 1;
-        int i, sample\_count = cvRandInt(&rng)%1000 + 1;
-        CvMat* points = cvCreateMat( sample\_count, 1, CV\_32FC2 );
-        CvMat* clusters = cvCreateMat( sample\_count, 1, CV\_32SC1 );
+        int k, cluster_count = cvRandInt(&rng)%MAX_CLUSTERS + 1;
+        int i, sample_count = cvRandInt(&rng)%1000 + 1;
+        CvMat* points = cvCreateMat( sample_count, 1, CV_32FC2 );
+        CvMat* clusters = cvCreateMat( sample_count, 1, CV_32SC1 );
 
         /* generate random sample from multigaussian distribution */
-        for( k = 0; k < cluster\_count; k++ )
+        for( k = 0; k < cluster_count; k++ )
         {
             CvPoint center;
-            CvMat point\_chunk;
+            CvMat point_chunk;
             center.x = cvRandInt(&rng)%img->width;
             center.y = cvRandInt(&rng)%img->height;
-            cvGetRows( points, &point\_chunk, k*sample\_count/cluster\_count,
-                       k == cluster\_count - 1 ? sample\_count : (k+1)*sample\_count/cluster\_count );
-            cvRandArr( &rng, &point\_chunk, CV\_RAND\_NORMAL,
+            cvGetRows( points,
+                       &point_chunk,
+                       k*sample_count/cluster_count,
+                       (k == (cluster_count - 1)) ?
+                           sample_count :
+                           (k+1)*sample_count/cluster_count );
+            cvRandArr( &rng, &point_chunk, CV_RAND_NORMAL,
                        cvScalar(center.x,center.y,0,0),
                        cvScalar(img->width/6, img->height/6,0,0) );
         }
 
         /* shuffle samples */
-        for( i = 0; i < sample\_count/2; i++ )
+        for( i = 0; i < sample_count/2; i++ )
         {
-            CvPoint2D32f* pt1 = (CvPoint2D32f*)points->data.fl + cvRandInt(&rng)%sample\_count;
-            CvPoint2D32f* pt2 = (CvPoint2D32f*)points->data.fl + cvRandInt(&rng)%sample\_count;
+            CvPoint2D32f* pt1 =
+                (CvPoint2D32f*)points->data.fl + cvRandInt(&rng)%sample_count;
+            CvPoint2D32f* pt2 =
+                (CvPoint2D32f*)points->data.fl + cvRandInt(&rng)%sample_count;
             CvPoint2D32f temp;
-            CV\_SWAP( *pt1, *pt2, temp );
+            CV_SWAP( *pt1, *pt2, temp );
         }
 
-        cvKMeans2( points, cluster\_count, clusters,
-                   cvTermCriteria( CV\_TERMCRIT\_EPS+CV\_TERMCRIT\_ITER, 10, 1.0 ));
+        cvKMeans2( points, cluster_count, clusters,
+                   cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ));
 
         cvZero( img );
 
-        for( i = 0; i < sample\_count; i++ )
+        for( i = 0; i < sample_count; i++ )
         {
             CvPoint2D32f pt = ((CvPoint2D32f*)points->data.fl)[i];
-            int cluster\_idx = clusters->data.i[i];
-            cvCircle( img, cvPointFrom32f(pt), 2, color\_tab[cluster\_idx], CV\_FILLED );
+            int cluster_idx = clusters->data.i[i];
+            cvCircle( img,
+                      cvPointFrom32f(pt),
+                      2,
+                      color_tab[cluster_idx],
+                      CV_FILLED );
         }
 
         cvReleaseMat( &points );
@@ -8138,73 +8163,72 @@ void main( int argc, char** argv )
         cvShowImage( "clusters", img );
 
         int key = cvWaitKey(0);
-        if( key == 27 ) // \texttt{ESC}
+        if( key == 27 )
             break;
     }
 }
+\end{lstlisting}
 
-}{CPP}{PYTHON}
-
-
-\end{verbatim}
 \cvfunc{SeqPartition}\label{SeqPartition}
-\begin{verbatim}
 
 Splits sequence into equivalency classes
 
+\begin{lstlisting}
+typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
+\end{lstlisting}
+
 \cvexp{
-
-typedef int (CV\_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
-int cvSeqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels,
-                    CvCmpFunc is\_equal, void* userdata );
-
+int cvSeqPartition( \par const CvSeq* seq,\par CvMemStorage* storage,\par CvSeq** labels,\par CvCmpFunc is\_equal,\par void* userdata );
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{seq}{The sequence to partition}
-\cvarg{storage}{The storage to store the sequence of equivalency classes}
-. If it is NULL, the function uses `seq->storage` for output labels.\cvarg{labels}{Ouput parameter}
-. Double pointer to the sequence of 0-based labels of input sequence elements.\cvarg{is\_equal}{The relation function that should return non-zero if the two particular sequence elements are from the same class, and zero overwise}
-. The partitioning algorithm uses transitive closure of the relation function as equivalency critria.\cvarg{userdata}{Pointer that is transparently passed to the \texttt{is\_equal} function}
+\cvarg{storage}{The storage to store the sequence of equivalency classes. If it is NULL, the function uses \texttt{seq->storage} for output labels.}
+\cvarg{labels}{Ouput parameter. Double pointer to the sequence of 0-based labels of input sequence elements.}
+\cvarg{is\_equal}{The relation function that should return non-zero if the two particular sequence elements are from the same class, and zero overwise. The partitioning algorithm uses transitive closure of the relation function as equivalency critria.}
+\cvarg{userdata}{Pointer that is transparently passed to the \texttt{is\_equal} function}
 \end{description}
 
+The function \texttt{cvSeqPartition} implements quadratic algorithm for
+splitting a set into one or more classes of equivalency. The function
+returns the number of equivalency classes.
 
-The function \texttt{cvSeqPartition} implements quadratic algorithm for splitting a set into one or more classes of equivalency. The function returns the number of equivalency classes.
-
-=\end{verbatim}
-\cvfunc{Example. Partitioning 2d point set.}\label{Example. Partitioning 2d point set.}
-\begin{verbatim}=
-
-\cvexp{
+% Example. Partitioning 2d point set.
+\begin{lstlisting}
 
 #include "cxcore.h"
 #include "highgui.h"
 #include <stdio.h>
 
-CvSeq* point\_seq = 0;
+CvSeq* point_seq = 0;
 IplImage* canvas = 0;
 CvScalar* colors = 0;
 int pos = 10;
 
-int is\_equal( const void* \_a, const void* \_b, void* userdata )
+int is_equal( const void* _a, const void* _b, void* userdata )
 {
-    CvPoint a = *(const CvPoint*)\_a;
-    CvPoint b = *(const CvPoint*)\_b;
+    CvPoint a = *(const CvPoint*)_a;
+    CvPoint b = *(const CvPoint*)_b;
     double threshold = *(double*)userdata;
-    return (double)(a.x - b.x)*(a.x - b.x) + (double)(a.y - b.y)*(a.y - b.y) <= threshold;
+    return (double)((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y)) <=
+        threshold;
 }
 
-void on\_track( int pos )
+void on_track( int pos )
 {
     CvSeq* labels = 0;
     double threshold = pos*pos;
-    int i, class\_count = cvSeqPartition( point\_seq, 0, &labels, is\_equal, &threshold );
-    printf("%4d classes\n", class\_count );
+    int i, class_count = cvSeqPartition( point_seq,
+                                         0,
+                                         &labels,
+                                         is_equal,
+                                         &threshold );
+    printf("%4d classes\n", class_count );
     cvZero( canvas );
 
     for( i = 0; i < labels->total; i++ )
     {
-        CvPoint pt = *(CvPoint*)cvGetSeqElem( point\_seq, i, 0 );
+        CvPoint pt = *(CvPoint*)cvGetSeqElem( point_seq, i, 0 );
         CvScalar color = colors[*(int*)cvGetSeqElem( labels, i, 0 )];
         cvCircle( canvas, pt, 1, color, -1 );
     }
@@ -8215,7 +8239,10 @@ void on\_track( int pos )
 int main( int argc, char** argv )
 {
     CvMemStorage* storage = cvCreateMemStorage(0);
-    point\_seq = cvCreateSeq( CV\_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage );
+    point_seq = cvCreateSeq( CV_32SC2,
+                             sizeof(CvSeq),
+                             sizeof(CvPoint),
+                             storage );
     CvRNG rng = cvRNG(0xffffffff);
 
     int width = 500, height = 500;
@@ -8229,161 +8256,173 @@ int main( int argc, char** argv )
         int icolor;
         pt.x = cvRandInt( &rng ) % width;
         pt.y = cvRandInt( &rng ) % height;
-        cvSeqPush( point\_seq, &pt );
+        cvSeqPush( point_seq, &pt );
         icolor = cvRandInt( &rng ) | 0x00404040;
-        colors[i] = CV\_RGB(icolor & 255, (icolor >> 8)&255, (icolor >> 16)&255);
+        colors[i] = CV_RGB(icolor & 255,
+                           (icolor >> 8)&255,
+                           (icolor >> 16)&255);
     }
 
     cvNamedWindow( "points", 1 );
-    cvCreateTrackbar( "threshold", "points", &pos, 50, on\_track );
-    on\_track(pos);
+    cvCreateTrackbar( "threshold", "points", &pos, 50, on_track );
+    on_track(pos);
     cvWaitKey(0);
     return 0;
 }
+\end{lstlisting}
 
-}{CPP}{PYTHON}
 
-
-\end{verbatim}
 \section{Error Handling and System Functions}
-\begin{verbatim}
 
-
-\end{verbatim}
 \subsection{Error Handling}
-\begin{verbatim}
 
-Error handling in OpenCV is similar to IPL (Image Processing Library). In case of error functions do not return the error code. Instead, they raise an error using [[#error\_macros|CV\_ERROR]] macro that calls \cross{Error} that, in its turn, sets the error status with \cross{SetErrStatus} and calls a standard or user-defined error handler (that can display a message box, write to log etc., see \cross{RedirectError}, [[#cvNulDevReport|cvNulDevReport, cvStdErrReport, cvGuiBoxReport]]). There is global variable, one per each program thread, that contains current error status (an integer value). The status can be retrieved with \cross{GetErrStatus} function.
+Error handling in OpenCV is similar to IPL (Image Processing
+Library). In case of error functions do not return the error
+code. Instead, they raise an error using \texttt{CV\_ERROR}
+macro that calls \cross{Error} that, in its turn, sets the error
+status with \cross{SetErrStatus} and calls a standard or user-defined
+error handler (that can display a message box, write to log etc., see
+\cross{RedirectError}, There is global variable, one per each program
+thread, that contains current error status (an integer value). The status
+can be retrieved with \cross{GetErrStatus} function.
 
-There are three modes of error handling (see \cross{SetErrMode} and \cross{GetErrMode}):
+There are three modes of error handling (see \cross{SetErrMode} and
+\cross{GetErrMode}):
 
 \begin{description}
-\cvarg{Leaf}{The program is terminated after error handler is called}
-. \texttt{}This is the default value\texttt{}. It is useful for debugging, as the error is signalled immediately after it occurs. However, for production systems other two methods may be prefferable as they provide more control.\cvarg{Parent}{The program is not terminated, but the error handler is called}
-. The stack is unwinded (it is done w/o using C++ exception mechanism). User may check error code after calling CxCore function with \cross{GetErrStatus} and react.\cvarg{Silent}{Similar to \texttt{}Parent\texttt{} mode, but no error handler is called}
+\cvarg{Leaf}{The program is terminated after error handler is
+called. This is the default value. It is useful for debugging, as the
+error is signalled immediately after it occurs. However, for production
+systems other two methods may be preferable as they provide more
+control.}
+\cvarg{Parent}{The program is not terminated, but the error handler
+is called. The stack is unwinded (it is done w/o using C++ exception
+mechanism). User may check error code after calling CxCore function with
+\cross{GetErrStatus} and react.}
+\cvarg{Silent}{Similar to \texttt{Parent} mode, but no error handler
+is called}
 \end{description}
 
+Actually, the semantics of \texttt{Leaf} and \texttt{Parent} modes is implemented by error handlers and the above description is true for . \cross{GuiBoxReport} behaves slightly differently, and some custom error handler may implement quite different semantics.  XXX - unintelligible; rewrite 
 
-Actually, the semantics of \texttt{}Leaf\texttt{} and \texttt{}Parent\texttt{} modes is implemented by error handlers and the above description is true for [[#cvNulDevReport|cvNulDevReport, cvStdErrReport]]. \cross{GuiBoxReport} behaves slightly differently, and some custom error handler may implement quite different semantics.
-
-
-\end{verbatim}
 \cvfunc{ERROR Handling Macros}\label{ERROR Handling Macros}
-\begin{verbatim}
 
 Macros for raising an error, checking for errors etc.
 
-\cvexp{
+\begin{lstlisting}
 
 /* special macros for enclosing processing statements within a function and separating
    them from prologue (resource initialization) and epilogue (guaranteed resource release) */
-#define \_\_BEGIN\_\_       {
-#define \_\_END\_\_         goto exit; exit: ; }
+#define __BEGIN__       {
+#define __END__         goto exit; exit: ; }
 /* proceeds to "resource release" stage */
 #define EXIT            goto exit
 
-/* Declares locally the function name for CV\_ERROR() use */
-#define CV\_FUNCNAME( Name )  \
+/* Declares locally the function name for CV_ERROR() use */
+#define CV_FUNCNAME( Name )  \
     static char cvFuncName[] = Name
 
 /* Raises an error within the current context */
-#define CV\_ERROR( Code, Msg )                                       \
+#define CV_ERROR( Code, Msg )                                       \
 {                                                                   \
-     cvError( (Code), cvFuncName, Msg, \_\_FILE\_\_, \_\_LINE\_\_ );        \
+     cvError( (Code), cvFuncName, Msg, __FILE__, __LINE__ );        \
      EXIT;                                                          \
 }
 
 /* Checks status after calling CXCORE function */
-#define CV\_CHECK()                                                  \
+#define CV_CHECK()                                                  \
 {                                                                   \
     if( cvGetErrStatus() < 0 )                                   \
-        CV\_ERROR( CV\_StsBackTrace, "Inner function failed." );      \
+        CV_ERROR( CV_StsBackTrace, "Inner function failed." );      \
 }
 
-/* Provies shorthand for CXCORE function call and CV\_CHECK() */
-#define CV\_CALL( Statement )                                        \
+/* Provies shorthand for CXCORE function call and CV_CHECK() */
+#define CV_CALL( Statement )                                        \
 {                                                                   \
     Statement;                                                      \
-    CV\_CHECK();                                                     \
+    CV_CHECK();                                                     \
 }
 
 /* Checks some condition in both debug and release configurations */
-#define CV\_ASSERT( Condition )                                          \
+#define CV_ASSERT( Condition )                                          \
 {                                                                       \
     if( !(Condition) )                                                  \
-        CV\_ERROR( CV\_StsInternal, "Assertion: " #Condition " failed" ); \
+        CV_ERROR( CV_StsInternal, "Assertion: " #Condition " failed" ); \
 }
 
-/* these macros are similar to their CV\_... counterparts, but they
+/* these macros are similar to their CV_... counterparts, but they
    do not need exit label nor cvFuncName to be defined */
-#define OPENCV\_ERROR(status,func\_name,err\_msg) ...
-#define OPENCV\_ERRCHK(func\_name,err\_msg) ...
-#define OPENCV\_ASSERT(condition,func\_name,err\_msg) ...
-#define OPENCV\_CALL(statement) ...
+#define OPENCV_ERROR(status,func_name,err_msg) ...
+#define OPENCV_ERRCHK(func_name,err_msg) ...
+#define OPENCV_ASSERT(condition,func_name,err_msg) ...
+#define OPENCV_CALL(statement) ...
 
-}{CPP}{PYTHON}
+\end{lstlisting}
 
 Instead of a discussion, here are the documented example of typical CXCORE function and the example of the function use.
 
-=\end{verbatim}
-\cvfunc{Use of Error Handling Macros}\label{Use of Error Handling Macros}
-\begin{verbatim}=
-
-\cvexp{
+% Example: Use of Error Handling Macros
+\begin{lstlisting}
 
 #include "cxcore.h"
 #include <stdio.h>
 
-void cvResizeDCT( CvMat* input\_array, CvMat* output\_array )
+void cvResizeDCT( CvMat* input_array, CvMat* output_array )
 {
-    CvMat* temp\_array = 0; // declare pointer that should be released anyway.
+    CvMat* temp_array = 0; // declare pointer that should be released anyway.
 
-    CV\_FUNCNAME( "cvResizeDCT" ); // declare cvFuncName
+    CV_FUNCNAME( "cvResizeDCT" ); // declare cvFuncName
 
-    \_\_BEGIN\_\_; // start processing. There may be some declarations just after this macro,
+    __BEGIN__; // start processing. There may be some declarations just after this macro,
                // but they couldn't be accessed from the epilogue.
 
-    if( !CV\_IS\_MAT(input\_array) || !CV\_IS\_MAT(output\_array) )
-        // use CV\_ERROR() to raise an error
-        CV\_ERROR( CV\_StsBadArg, "input\_array or output\_array are not valid matrices" );
+    if( !CV_IS_MAT(input_array) || !CV_IS_MAT(output_array) )
+        // use CV_ERROR() to raise an error
+        CV_ERROR( CV_StsBadArg, "input_array or output_array are not valid matrices" );
 
-    // some restrictions that are going to be removed later, may be checked with CV\_ASSERT()
-    CV\_ASSERT( input\_array->rows == 1 && output\_array->rows == 1 );
+    // some restrictions that are going to be removed later, may be checked with CV_ASSERT()
+    CV_ASSERT( input_array->rows == 1 && output_array->rows == 1 );
 
-    // use CV\_CALL for safe function call
-    CV\_CALL( temp\_array = cvCreateMat( input\_array->rows, MAX(input\_array->cols,output\_array->cols),
-                                       input\_array->type ));
+    // use CV_CALL for safe function call
+    CV_CALL( temp_array = cvCreateMat( input_array->rows,
+                                       MAX(input_array->cols,output_array->cols),
+                                       input_array->type ));
 
-    if( output\_array->cols > input\_array->cols )
-        CV\_CALL( cvZero( temp\_array ));
+    if( output_array->cols > input_array->cols )
+        CV_CALL( cvZero( temp_array ));
 
-    temp\_array->cols = input\_array->cols;
-    CV\_CALL( cvDCT( input\_array, temp\_array, CV\_DXT\_FORWARD ));
-    temp\_array->cols = output\_array->cols;
-    CV\_CALL( cvDCT( temp\_array, output\_array, CV\_DXT\_INVERSE ));
-    CV\_CALL( cvScale( output\_array, output\_array, 1./sqrt((double)input\_array->cols*output\_array->cols), 0 ));
+    temp_array->cols = input_array->cols;
+    CV_CALL( cvDCT( input_array, temp_array, CV_DXT_FORWARD ));
+    temp_array->cols = output_array->cols;
+    CV_CALL( cvDCT( temp_array, output_array, CV_DXT_INVERSE ));
+    CV_CALL( cvScale( output_array,
+                      output_array,
+                      1./sqrt((double)input_array->cols*output_array->cols), 0 ));
 
-    \_\_END\_\_; // finish processing. Epilogue follows after the macro.
+    __END__; // finish processing. Epilogue follows after the macro.
 
-    // release temp\_array. If temp\_array has not been allocated before an error occured, cvReleaseMat
+    // release temp_array. If temp_array has not been allocated
+    // before an error occured, cvReleaseMat
     // takes care of it and does nothing in this case.
-    cvReleaseMat( &temp\_array );
+    cvReleaseMat( &temp_array );
 }
 
 int main( int argc, char** argv )
 {
-    CvMat* src = cvCreateMat( 1, 512, CV\_32F );
+    CvMat* src = cvCreateMat( 1, 512, CV_32F );
 #if 1 /* no errors */
-    CvMat* dst = cvCreateMat( 1, 256, CV\_32F );
+    CvMat* dst = cvCreateMat( 1, 256, CV_32F );
 #else
     CvMat* dst = 0; /* test error processing mechanism */
 #endif
     cvSet( src, cvRealScalar(1.), 0 );
 #if 0 /* change 0 to 1 to suppress error handler invocation */
-    cvSetErrMode( CV\_ErrModeSilent );
+    cvSetErrMode( CV_ErrModeSilent );
 #endif
-    cvResizeDCT( src, dst ); // if some error occurs, the message box will popup, or a message will be
-                             // written to log, or some user-defined processing will be done
+    cvResizeDCT( src, dst ); // if some error occurs, the message
+                             // box will popup, or a message will be
+                             // written to log, or some user-defined
+                             // processing will be done
     if( cvGetErrStatus() < 0 )
         printf("Some error occured" );
     else
@@ -8391,93 +8430,73 @@ int main( int argc, char** argv )
     return 0;
 }
 
-}{CPP}{PYTHON}
+\end{lstlisting}
 
-
-\end{verbatim}
 \cvfunc{GetErrStatus}\label{GetErrStatus}
-\begin{verbatim}
 
 Returns the current error status
 
 \cvexp{
-
 int cvGetErrStatus( void );
-
 }{CPP}{PYTHON}
 
-The function \texttt{cvGetErrStatus} returns the current error status - the value set with the last \cross{SetErrStatus} call. Note, that in \texttt{}Leaf\texttt{} mode the program terminates immediately after error occured, so to always get control after the function call, one should call \cross{SetErrMode} and set \texttt{}Parent\texttt{} or \texttt{}Silent\texttt{} error mode.
+The function \texttt{cvGetErrStatus} returns the current error status -
+the value set with the last \cross{SetErrStatus} call. Note, that in
+\texttt{Leaf} mode the program terminates immediately after
+error occured, so to always get control after the function call,
+one should call \cross{SetErrMode} and set \texttt{Parent}
+or \texttt{Silent} error mode.
 
-
-\end{verbatim}
 \cvfunc{SetErrStatus}\label{SetErrStatus}
-\begin{verbatim}
 
 Sets the error status
 
 \cvexp{
-
 void cvSetErrStatus( int status );
-
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{status}{The error status}
 \end{description}
 
+The function \texttt{cvSetErrStatus} sets the error status to the specified value. Mostly, the function is used to reset the error status (set to it \texttt{CV\_StsOk}) to recover after error. In other cases it is more natural to call \cross{Error} or \texttt{CV\_ERROR}.
 
-The function \texttt{cvSetErrStatus} sets the error status to the specified value. Mostly, the function is used to reset the error status (set to it \texttt{CV\_StsOk}) to recover after error. In other cases it is more natural to call \cross{Error} or [[#error\_macros|CV\_ERROR]].
-
-
-\end{verbatim}
 \cvfunc{GetErrMode}\label{GetErrMode}
-\begin{verbatim}
 
 Returns the current error mode
 
 \cvexp{
-
 int cvGetErrMode( void );
-
 }{CPP}{PYTHON}
 
 The function \texttt{cvGetErrMode} returns the current error mode - the value set with the last \cross{SetErrMode} call.
 
-
-\end{verbatim}
 \cvfunc{SetErrMode}\label{SetErrMode}
-\begin{verbatim}
 
 Sets the error mode
 
+\begin{lstlisting}
+#define CV_ErrModeLeaf    0
+#define CV_ErrModeParent  1
+#define CV_ErrModeSilent  2
+\end{lstlisting}
+
 \cvexp{
-
-#define CV\_ErrModeLeaf    0
-#define CV\_ErrModeParent  1
-#define CV\_ErrModeSilent  2
 int cvSetErrMode( int mode );
-
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{mode}{The error mode}
 \end{description}
 
+The function \texttt{cvSetErrMode} sets the specified error mode. For description of different error modes see the beginning of the error section.
 
-The function \texttt{cvSetErrMode} sets the specified error mode. For description of different error modes see the beginning of the [[#cxcore\_system\_error|section]].
-
-
-\end{verbatim}
 \cvfunc{Error}\label{Error}
-\begin{verbatim}
 
 Raises an error
 
 \cvexp{
-
-int cvError( int status, const char* func\_name,
-             const char* err\_msg, const char* file\_name, int line );
-
+int cvError( \par int status,\par const char* func\_name,\par const char* err\_msg,\par const char* file\_name,\par int line );
 }{CPP}{PYTHON}
 
 \begin{description}
@@ -8488,77 +8507,73 @@ int cvError( int status, const char* func\_name,
 \cvarg{line}{Line number, where the error occured}
 \end{description}
 
+The function \texttt{cvError} sets the error status to the specified value (via \cross{SetErrStatus}) and, if the error mode is not \texttt{Silent}, calls the error handler.
 
-The function \texttt{cvError} sets the error status to the specified value (via \cross{SetErrStatus}) and, if the error mode is not \texttt{}Silent\texttt{}, calls the error handler.
-
-
-\end{verbatim}
 \cvfunc{ErrorStr}\label{ErrorStr}
-\begin{verbatim}
 
 Returns textual description of error status code
 
 \cvexp{
-
 const char* cvErrorStr( int status );
-
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{status}{The error status}
 \end{description}
 
+The function \texttt{cvErrorStr} returns the textual description for
+the specified error status code. In case of unknown status the function
+returns NULL pointer.
 
-The function \texttt{cvErrorStr} returns the textual description for the specified error status code. In case of unknown status the function returns NULL pointer.
-
-
-\end{verbatim}
 \cvfunc{RedirectError}\label{RedirectError}
-\begin{verbatim}
 
 Sets a new error handler
 
+\begin{lstlisting}
+typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
+                    const char* err_msg, const char* file_name, int line );
+\end{lstlisting}
+
 \cvexp{
-
-typedef int (CV\_CDECL *CvErrorCallback)( int status, const char* func\_name,
-                    const char* err\_msg, const char* file\_name, int line );
-
-CvErrorCallback cvRedirectError( CvErrorCallback error\_handler,
-                                 void* userdata=NULL, void** prev\_userdata=NULL );
-
+CvErrorCallback cvRedirectError( \par CvErrorCallback error\_handler,\par void* userdata=NULL,\par void** prev\_userdata=NULL );
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{error\_handler}{The new error\_handler}
-\cvarg{userdata}{Arbitrary pointer that is transparetly passed to the error handler}
+\cvarg{userdata}{Arbitrary pointer that is transparently passed to the error handler}
 \cvarg{prev\_userdata}{Pointer to the previously assigned user data pointer}
 \end{description}
 
+The function \texttt{cvRedirectError} sets a new error handler that
+can be one of standard handlers or a custom handler
+that has the certain interface. The handler takes the same parameters
+as \cross{Error} function. If the handler returns non-zero value, the
+program is terminated, otherwise, it continues. The error handler may
+check the current error mode with \cross{GetErrMode} to make a decision.
 
-The function \texttt{cvRedirectError} sets a new error handler that can be one of [[#cvNulDevReport|standard handlers]] or a custom handler that has the certain interface. The handler takes the same parameters as \cross{Error} function. If the handler returns non-zero value, the program is terminated, otherwise, it continues. The error handler may check the current error mode with \cross{GetErrMode} to make a decision.
 
-
-\end{verbatim}
-\cvfunc{cvNulDevReport cvStdErrReport cvGuiBoxReport}\label{cvNulDevReport cvStdErrReport cvGuiBoxReport}
-\begin{verbatim}
+\cvfunc{cvNulDevReport cvStdErrReport cvGuiBoxReport}
+\label{cvNulDevReport}
+\label{cvStdErrReport}
+\label{cvGuiBoxReport}
 
 Provide standard error handling
 
-\cvexp{
+\begin{lstlisting}
 
-int cvNulDevReport( int status, const char* func\_name,
-                    const char* err\_msg, const char* file\_name,
+int cvNulDevReport( int status, const char* func_name,
+                    const char* err_msg, const char* file_name,
                     int line, void* userdata );
 
-int cvStdErrReport( int status, const char* func\_name,
-                    const char* err\_msg, const char* file\_name,
+int cvStdErrReport( int status, const char* func_name,
+                    const char* err_msg, const char* file_name,
                     int line, void* userdata );
 
-int cvGuiBoxReport( int status, const char* func\_name,
-                    const char* err\_msg, const char* file\_name,
+int cvGuiBoxReport( int status, const char* func_name,
+                    const char* err_msg, const char* file_name,
                     int line, void* userdata );
 
-}{CPP}{PYTHON}
+\end{lstlisting}
 
 \begin{description}
 \cvarg{status}{The error status}
@@ -8570,57 +8585,51 @@ int cvGuiBoxReport( int status, const char* func\_name,
 . Ignored by the standard handlers.
 \end{description}
 
-The functions `cvNullDevReport, cvStdErrReport` and \texttt{cvGuiBoxReport} provide standard error handling. \texttt{cvGuiBoxReport} is the default error handler on Win32 systems, \texttt{cvStdErrReport} - on other systems. \texttt{cvGuiBoxReport} pops up message box with the error description and suggest a few options. Below is the sample message box that may be recieved with the sample code above, if one introduce an error as described in the sample
+The functions \texttt{cvNullDevReport}, \texttt{cvStdErrReport}
+and \texttt{cvGuiBoxReport} provide standard error
+handling. \texttt{cvGuiBoxReport} is the default error
+handler on Win32 systems, \texttt{cvStdErrReport} - on other
+systems. \texttt{cvGuiBoxReport} pops up message box with the error
+description and suggest a few options. Below is the sample message box
+that may be recieved with the sample code above, if one introduce an
+error as described in the sample
 
-=\end{verbatim}
-\cvfunc{Error Message Box}\label{Error Message Box}
-\begin{verbatim}=
+Error Message Box
 
-{{http://opencvlibrary.sourceforge.net/pics/errmsg.png}}
+\includegraphics[width=0.5\textwidth]{pics/errmsg.png}
 
 If the error handler is set \texttt{cvStdErrReport}, the above message will be printed to standard error output and program will be terminated or continued, depending on the current error mode.
 
-=\end{verbatim}
-\cvfunc{Error Message printed to Standard Error Output (in \texttt{}Leaf\texttt{} mode)}
-\begin{verbatim}=
+Error Message printed to Standard Error Output (in \texttt{Leaf} mode)
 
-\cvexp{
-
-OpenCV ERROR: Bad argument (input\_array or output\_array are not valid matrices)
+\begin{verbatim}
+OpenCV ERROR: Bad argument (input_array or output_array are not valid matrices)
         in function cvResizeDCT, D:\User\VP\Projects\avl\_proba\a.cpp(75)
 Terminating the application...
-
-}{CPP}{PYTHON}
-
-
 \end{verbatim}
+
 \subsection{System and Utility Functions}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{Alloc}\label{Alloc}
-\begin{verbatim}
 
 Allocates memory buffer
 
 \cvexp{
-
 void* cvAlloc( size\_t size );
-
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{size}{Buffer size in bytes}
 \end{description}
 
+The function \texttt{cvAlloc} allocates \texttt{size} bytes and returns
+pointer to the allocated buffer. In case of error the function reports an
+error and returns NULL pointer. By default \texttt{cvAlloc} calls
+\texttt{icvAlloc} which
+itself calls malloc, however it is possible to assign user-defined memory
+allocation/deallocation functions using \cross{SetMemoryManager} function.
 
-The function \texttt{cvAlloc} allocates \texttt{size} bytes and returns pointer to the allocated buffer. In case of error the function reports an error and returns NULL pointer. By default cvAlloc calls icvAlloc which itself calls malloc, however it is possible to assign user-defined memory allocation/deallocation functions using \cross{SetMemoryManager} function.
-
-
-\end{verbatim}
 \cvfunc{Free}\label{Free}
-\begin{verbatim}
 
 Deallocates memory buffer
 
@@ -8631,33 +8640,27 @@ void cvFree( void** ptr );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{buffer}{Double pointer to released buffer}
+\cvarg{ptr}{Double pointer to released buffer}
 \end{description}
 
+The function \texttt{cvFree} deallocates memory buffer allocated by
+\cross{Alloc}. It clears the pointer to buffer upon exit, that is why
+the double pointer is used. If \texttt{*buffer} is already NULL, the function
+does nothing
 
-The function \texttt{cvFree} deallocates memory buffer allocated by \cross{Alloc}. It clears the pointer to buffer upon exit, that is why the double pointer is used. If *buffer is already NULL, the function does nothing
-
-
-\end{verbatim}
 \cvfunc{GetTickCount}\label{GetTickCount}
-\begin{verbatim}
 
-Returns number of tics
+Returns number of ticks
 
 \cvexp{
-
 int64 cvGetTickCount( void );
-
 }{CPP}{PYTHON}
 
-The function \texttt{cvGetTickCount} returns number of tics starting from some platform-dependent event (number of CPU ticks from the startup, number of milliseconds from 1970th year etc.). The function is useful for accurate measurement of a function/user-code execution time. To convert the number of tics to time units, use \cross{GetTickFrequency}.
+The function \texttt{cvGetTickCount} returns number of ticks starting from some platform-dependent event (number of CPU ticks from the startup, number of milliseconds from 1970th year etc.). The function is useful for accurate measurement of a function/user-code execution time. To convert the number of ticks to time units, use \cross{GetTickFrequency}.
 
-
-\end{verbatim}
 \cvfunc{GetTickFrequency}\label{GetTickFrequency}
-\begin{verbatim}
 
-Returns number of tics per microsecond
+Returns number of ticks per microsecond
 
 \cvexp{
 
@@ -8665,24 +8668,20 @@ double cvGetTickFrequency( void );
 
 }{CPP}{PYTHON}
 
-The function \texttt{cvGetTickFrequency} returns number of tics per microsecond. Thus, the quotient of \cross{GetTickCount}() and \cross{GetTickFrequency}() will give a number of microseconds starting from the platform-dependent event.
+The function \texttt{cvGetTickFrequency} returns number of ticks per microsecond. Thus, the quotient of \cross{GetTickCount}() and \cross{GetTickFrequency}() will give a number of microseconds starting from the platform-dependent event.
 
-
-\end{verbatim}
 \cvfunc{RegisterModule}\label{RegisterModule}
-\begin{verbatim}
 
 Registers another module
 
-\cvexp{
-
+\begin{lstlisting}
 typedef struct CvPluginFuncInfo
 {
-    void** func\_addr;
-    void* default\_func\_addr;
-    const char* func\_names;
-    int search\_modules;
-    int loaded\_from;
+    void** func_addr;
+    void* default_func_addr;
+    const char* func_names;
+    int search_modules;
+    int loaded_from;
 }
 CvPluginFuncInfo;
 
@@ -8691,49 +8690,51 @@ typedef struct CvModuleInfo
     struct CvModuleInfo* next;
     const char* name;
     const char* version;
-    CvPluginFuncInfo* func\_tab;
+    CvPluginFuncInfo* func_tab;
 }
 CvModuleInfo;
+\end{lstlisting}
 
+\cvexp{
 int cvRegisterModule( const CvModuleInfo* module\_info );
-
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{module\_info}{Information about the module}
 \end{description}
 
+The function \texttt{cvRegisterModule} adds module to the list of
+registered modules. After the module is registered, information about
+it can be retrieved using \cross{GetModuleInfo} function. Also, the
+registered module makes full use of optimized plugins (IPP, MKL, ...),
+supported by CXCORE. CXCORE itself, CV (computer vision), CVAUX (auxilary
+computer vision) and HIGHGUI (visualization and image/video acquisition) are
+examples of modules. Registration is usually done then the shared library
+is loaded. See \texttt{cxcore/src/cxswitcher.cpp} and
+\texttt{cv/src/cvswitcher.cpp} for details, how registration is done
+and look at \texttt{cxcore/src/cxswitcher.cpp}, \texttt{cxcore/src/\_cxipp.h}
+on how IPP and MKL are connected to the modules.
 
-The function \texttt{cvRegisterModule} adds module to the list of registered modules. After the module is registered, information about it can be retrieved using \cross{GetModuleInfo} function. Also, the registered module makes full use of optimized plugins (IPP, MKL, ...), supported by CXCORE. CXCORE itself, CV (computer vision), CVAUX (auxilary computer vision) and HIGHGUI (visualization & image/video acquisition) are examples of modules. Registration is usually done then the shared library is loaded. See cxcore/src/cxswitcher.cpp and cv/src/cvswitcher.cpp for details, how registration is done and look at cxcore/src/cxswitcher.cpp, cxcore/src/\_cxipp.h on how IPP and MKL are connected to the modules.
-
-
-\end{verbatim}
 \cvfunc{GetModuleInfo}\label{GetModuleInfo}
-\begin{verbatim}
 
 Retrieves information about the registered module(s) and plugins
 
 \cvexp{
-
-void  cvGetModuleInfo( const char* module\_name,
-                       const char** version,
-                       const char** loaded\_addon\_plugins );
-
+void  cvGetModuleInfo( \par const char* module\_name,\par const char** version,\par const char** loaded\_addon\_plugins );
 }{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{module\_name}{Name of the module of interest, or NULL, which means all the modules}
-\cvarg{version}{The output parameter}
-. Information about the module(s), including version.\cvarg{loaded\_addon\_plugins}{The list of names and versions of the optimized plugins that CXCORE was able to find and load}
+\cvarg{version}{The output parameter. Information about the module(s), including version.}
+\cvarg{loaded\_addon\_plugins}{The list of names and versions of the optimized plugins that CXCORE was able to find and load}
 \end{description}
 
+The function \texttt{cvGetModuleInfo} returns information about one of or
+all of the registered modules. The returned information is stored inside
+the libraries, so user should not deallocate or modify the returned
+text strings.
 
-The function \texttt{cvGetModuleInfo} returns information about one of or all of the registered modules. The returned information is stored inside the libraries, so user should not deallocate or modify the returned text strings.
-
-
-\end{verbatim}
 \cvfunc{UseOptimized}\label{UseOptimized}
-\begin{verbatim}
 
 Switches between optimized/non-optimized modes
 
@@ -8744,28 +8745,30 @@ int cvUseOptimized( int on\_off );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{on\_off}{Use optimized (<>0) or not (0)}
+\cvarg{on\_off}{Use optimized ($\ne 0$) or not ($=0$)}
 \end{description}
 
+The function \texttt{cvUseOptimized} switches between the mode, where
+only pure C implementations from cxcore, OpenCV etc. are used, and
+the mode, where IPP and MKL functions are used if available. When
+\texttt{cvUseOptimized(0)} is called, all the optimized libraries are
+unloaded. The function may be useful for debugging, IPP and MKL upgrade on
+the fly, online speed comparisons etc. It returns the number of optimized
+functions loaded. Note that by default the optimized plugins are loaded,
+so it is not necessary to call \texttt{cvUseOptimized(1)} in the beginning of
+the program (actually, it will only increase the startup time)
 
-The function \texttt{cvUseOptimized} switches between the mode, where only pure C implementations from cxcore, OpenCV etc. are used, and the mode, where IPP and MKL functions are used if available. When `cvUseOptimized(0)` is called, all the optimized libraries are unloaded. The function may be useful for debugging, IPP&MKL upgrade on the fly, online speed comparisons etc. It returns the number of optimized functions loaded. Note that by default the optimized plugins are loaded, so it is not necessary to call `cvUseOptimized(1)` in the beginning of the program (actually, it will only increase the startup time)
-
-
-\end{verbatim}
 \cvfunc{SetMemoryManager}\label{SetMemoryManager}
-\begin{verbatim}
 
 Assings custom/default memory managing functions
 
+\begin{lstlisting}
+typedef void* (CV_CDECL *CvAllocFunc)(size_t size, void* userdata);
+typedef int (CV_CDECL *CvFreeFunc)(void* pptr, void* userdata);
+\end{lstlisting}
+
 \cvexp{
-
-typedef void* (CV\_CDECL *CvAllocFunc)(size\_t size, void* userdata);
-typedef int (CV\_CDECL *CvFreeFunc)(void* pptr, void* userdata);
-
-void cvSetMemoryManager( CvAllocFunc alloc\_func=NULL,
-                         CvFreeFunc free\_func=NULL,
-                         void* userdata=NULL );
-
+void cvSetMemoryManager( \par CvAllocFunc alloc\_func=NULL,\par CvFreeFunc free\_func=NULL,\par void* userdata=NULL );
 }{CPP}{PYTHON}
 
 \begin{description}
@@ -8774,38 +8777,42 @@ void cvSetMemoryManager( CvAllocFunc alloc\_func=NULL,
 \cvarg{userdata}{User data that is transparetly passed to the custom functions}
 \end{description}
 
+The function \texttt{cvSetMemoryManager} sets user-defined memory
+managment functions (substitutors for malloc and free) that will be called
+by cvAlloc, cvFree and higher-level functions (e.g. cvCreateImage). Note,
+that the function should be called when there is data allocated using
+cvAlloc. Also, to avoid infinite recursive calls, it is not
+allowed to call cvAlloc and \cross{Free} from the custom
+allocation/deallocation functions.
 
-The function \texttt{cvSetMemoryManager} sets user-defined memory managment functions (substitutors for malloc and free) that will be called by cvAlloc, cvFree and higher-level functions (e.g. cvCreateImage). Note, that the function should be called when there is data allocated using [[#cvAlloc|cvAlloc. Also, to avoid infinite recursive calls, it is not allowed to call [#cvAlloc cvAlloc]] and \cross{Free} from the custom allocation/deallocation functions.]
+If \texttt{alloc\_func} and \texttt{free\_func} pointers are
+\texttt{NULL}, the default memory managing functions are restored.
 
-If \texttt{alloc\_func} and \texttt{free\_func} pointers are \texttt{NULL}, the default memory managing functions are restored.
-
-
-\end{verbatim}
 \cvfunc{SetIPLAllocators}\label{SetIPLAllocators}
-\begin{verbatim}
 
 Switches to IPL functions for image allocation/deallocation
 
-\cvexp{
-
-typedef IplImage* (CV\_STDCALL* Cv\_iplCreateImageHeader)
+\begin{lstlisting}
+typedef IplImage* (CV_STDCALL* Cv_iplCreateImageHeader)
                             (int,int,int,char*,char*,int,int,int,int,int,
                             IplROI*,IplImage*,void*,IplTileInfo*);
-typedef void (CV\_STDCALL* Cv\_iplAllocateImageData)(IplImage*,int,int);
-typedef void (CV\_STDCALL* Cv\_iplDeallocate)(IplImage*,int);
-typedef IplROI* (CV\_STDCALL* Cv\_iplCreateROI)(int,int,int,int,int);
-typedef IplImage* (CV\_STDCALL* Cv\_iplCloneImage)(const IplImage*);
+typedef void (CV_STDCALL* Cv_iplAllocateImageData)(IplImage*,int,int);
+typedef void (CV_STDCALL* Cv_iplDeallocate)(IplImage*,int);
+typedef IplROI* (CV_STDCALL* Cv_iplCreateROI)(int,int,int,int,int);
+typedef IplImage* (CV_STDCALL* Cv_iplCloneImage)(const IplImage*);
 
-void cvSetIPLAllocators( Cv\_iplCreateImageHeader create\_header,
-                         Cv\_iplAllocateImageData allocate\_data,
-                         Cv\_iplDeallocate deallocate,
-                         Cv\_iplCreateROI create\_roi,
-                         Cv\_iplCloneImage clone\_image );
-
-#define CV\_TURN\_ON\_IPL\_COMPATIBILITY()                                  \
+#define CV_TURN_ON_IPL_COMPATIBILITY()                                  \
     cvSetIPLAllocators( iplCreateImageHeader, iplAllocateImage,         \
                         iplDeallocate, iplCreateROI, iplCloneImage )
+\end{lstlisting}
 
+\cvexp{
+void cvSetIPLAllocators( \par
+                         Cv\_iplCreateImageHeader create\_header, \par
+                         Cv\_iplAllocateImageData allocate\_data, \par
+                         Cv\_iplDeallocate deallocate, \par
+                         Cv\_iplCreateROI create\_roi, \par
+                         Cv\_iplCloneImage clone\_image );
 }{CPP}{PYTHON}
 
 \begin{description}
@@ -8817,5 +8824,12 @@ void cvSetIPLAllocators( Cv\_iplCreateImageHeader create\_header,
 \end{description}
 
 
-The function \texttt{cvSetIPLAllocators} makes CXCORE to use IPL functions for image allocation/deallocation operations. For convenience, there is the wrapping macro \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY}. The function is useful for applications where IPL and CXCORE/OpenCV are used together and still there are calls to \texttt{iplCreateImageHeader} etc. The function is not necessary if IPL is called only for data processing and all the allocation/deallocation is done by CXCORE, or if all the allocation/deallocation is done by IPL and some of OpenCV functions are used to process the data.
-\end{verbatim}
+The function \texttt{cvSetIPLAllocators} makes CXCORE to use IPL functions
+for image allocation/deallocation operations. For convenience, there
+is the wrapping macro \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY}. The
+function is useful for applications where IPL and CXCORE/OpenCV are used
+together and still there are calls to \texttt{iplCreateImageHeader}
+etc. The function is not necessary if IPL is called only for data
+processing and all the allocation/deallocation is done by CXCORE, or
+if all the allocation/deallocation is done by IPL and some of OpenCV
+functions are used to process the data.
