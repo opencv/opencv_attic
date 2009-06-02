@@ -33,26 +33,26 @@ haar_flags = 0
 
 def detect_and_draw( img ):
     # allocate temporary images
-    gray = cvCreateImage( cvSize(img.width,img.height), 8, 1 );
-    small_img = cvCreateImage( cvSize( cvRound (img.width/image_scale),
-						               cvRound (img.height/image_scale)), 8, 1 );
+    gray = cvCreateImage( cvSize(img.width,img.height), 8, 1 )
+    small_img = cvCreateImage((cvRound(img.width/image_scale),
+			       cvRound (img.height/image_scale)), 8, 1 )
 
     # convert color input image to grayscale
-    cvCvtColor( img, gray, CV_BGR2GRAY );
+    cvCvtColor( img, gray, CV_BGR2GRAY )
 
     # scale input image for faster processing
-    cvResize( gray, small_img, CV_INTER_LINEAR );
+    cvResize( gray, small_img, CV_INTER_LINEAR )
 
-    cvEqualizeHist( small_img, small_img );
+    cvEqualizeHist( small_img, small_img )
     
-    cvClearMemStorage( storage );
+    cvClearMemStorage( storage )
 
     if( cascade ):
-        t = cvGetTickCount();
+        t = cvGetTickCount()
         faces = cvHaarDetectObjects( small_img, cascade, storage,
-                                     haar_scale, min_neighbors, haar_flags, min_size );
-        t = cvGetTickCount() - t;
-        print "detection time = %gms" % (t/(cvGetTickFrequency()*1000.));
+                                     haar_scale, min_neighbors, haar_flags, min_size )
+        t = cvGetTickCount() - t
+        print "detection time = %gms" % (t/(cvGetTickFrequency()*1000.))
         if faces:
             for face_rect in faces:
                 # the input to cvHaarDetectObjects was resized, so scale the 
@@ -60,9 +60,9 @@ def detect_and_draw( img ):
                 pt1 = cvPoint( int(face_rect.x*image_scale), int(face_rect.y*image_scale))
                 pt2 = cvPoint( int((face_rect.x+face_rect.width)*image_scale),
                                int((face_rect.y+face_rect.height)*image_scale) )
-                cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 );
+                cvRectangle( img, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0 )
 
-    cvShowImage( "result", img );
+    cvShowImage( "result", img )
 
 
 if __name__ == '__main__':
@@ -75,7 +75,7 @@ if __name__ == '__main__':
                 input_name = sys.argv[2]
 
         elif sys.argv[1] == "--help" or sys.argv[1] == "-h":
-            print "Usage: facedetect --cascade=\"<cascade_path>\" [filename|camera_index]\n" ;
+            print "Usage: facedetect --cascade=\"<cascade_path>\" [filename|camera_index]\n" 
             sys.exit(-1)
 
         else:
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     # the OpenCV API says this function is obsolete, but we can't
     # cast the output of cvLoad to a HaarClassifierCascade, so use this anyways
     # the size parameter is ignored
-    cascade = cvLoadHaarClassifierCascade( cascade_name, cvSize(1,1) );
+    cascade = cvLoadHaarClassifierCascade( cascade_name, cvSize(1,1) )
     
     if not cascade:
         print "ERROR: Could not load classifier cascade"
@@ -94,35 +94,35 @@ if __name__ == '__main__':
     if input_name.isdigit():
         capture = cvCreateCameraCapture( int(input_name) )
     else:
-        capture = cvCreateFileCapture( input_name ); 
+        capture = cvCreateFileCapture( input_name ) 
 
-    cvNamedWindow( "result", 1 );
+    cvNamedWindow( "result", 1 )
 
-    if( capture ):
+    if capture:
         frame_copy = None
-        while True: 
-            frame = cvQueryFrame( capture );
-            if( not frame ):
-                break;
-            if( not frame_copy ):
+        while True:
+            frame = cvQueryFrame( capture )
+            if not frame:
+                cvWaitKey(0)
+                break
+            if not frame_copy:
                 frame_copy = cvCreateImage( cvSize(frame.width,frame.height),
-                                            IPL_DEPTH_8U, frame.nChannels );
-            if( frame.origin == IPL_ORIGIN_TL ):
-                cvCopy( frame, frame_copy );
+                                            IPL_DEPTH_8U, frame.nChannels )
+            if frame.origin == IPL_ORIGIN_TL:
+                cvCopy( frame, frame_copy )
             else:
-                cvFlip( frame, frame_copy, 0 );
+                cvFlip( frame, frame_copy, 0 )
             
-            detect_and_draw( frame_copy );
+            detect_and_draw( frame_copy )
 
             if( cvWaitKey( 10 ) >= 0 ):
-                break;
+                break
 
     else:
-        image = cvLoadImage( input_name, 1 );
+        image = cvLoadImage( input_name, 1 )
 
-        if( image ):
-            
-            detect_and_draw( image );
-            cvWaitKey(0);
-    
-    cvDestroyWindow("result");
+        if image:
+            detect_and_draw( image )
+            cvWaitKey(0)
+
+    cvDestroyWindow("result")

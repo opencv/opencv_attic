@@ -23,6 +23,9 @@ add_remove_pt = False
 flags = 0
 night_mode = False
 need_to_init = False
+# the default parameters
+quality = 0.01
+min_distance = 10
 
 #############################################################################
 # the mouse callback
@@ -37,10 +40,6 @@ def on_mouse (event, x, y, flags, param):
     if image is None:
         # not initialized, so skip
         return
-
-    if image.origin != 0:
-        # different origin
-        y = image.height - y
 
     if event == highgui.CV_EVENT_LBUTTONDOWN:
         # user has click, so memorize it
@@ -102,11 +101,12 @@ if __name__ == '__main__':
         if image is None:
             # create the images we need
             image = cv.cvCreateImage (cv.cvGetSize (frame), 8, 3)
-            image.origin = frame.origin
             grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
             prev_grey = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
             pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
             prev_pyramid = cv.cvCreateImage (cv.cvGetSize (frame), 8, 1)
+            eig = cv.cvCreateImage (cv.cvGetSize (frame), cv.IPL_DEPTH_32F, 1)
+            temp = cv.cvCreateImage (cv.cvGetSize (frame), cv.IPL_DEPTH_32F, 1)
             points = [[], []]
 
         # copy the frame, so we can draw on it
@@ -121,21 +121,14 @@ if __name__ == '__main__':
 
         if need_to_init:
             # we want to search all the good points
-
             # create the wanted images
-            eig = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1)
-            temp = cv.cvCreateImage (cv.cvGetSize (grey), 32, 1)
-
-            # the default parameters
-            quality = 0.01
-            min_distance = 10
-
+            
             # search the good points
             points [1] = cv.cvGoodFeaturesToTrack (
                 grey, eig, temp,
                 MAX_COUNT,
                 quality, min_distance, None, 3, 0, 0.04)
-
+            
             # refine the corner locations
             cv.cvFindCornerSubPix (
                 grey,
@@ -143,25 +136,21 @@ if __name__ == '__main__':
                 cv.cvSize (win_size, win_size), cv.cvSize (-1, -1),
                 cv.cvTermCriteria (cv.CV_TERMCRIT_ITER | cv.CV_TERMCRIT_EPS,
                                    20, 0.03))
-
-            # release the temporary images
-            cv.cvReleaseImage (eig)
-            cv.cvReleaseImage (temp)
                                                
         elif len (points [0]) > 0:
             # we have points, so display them
 
             # calculate the optical flow
-            points [1], status = cv.cvCalcOpticalFlowPyrLK (
+            [points [1], status], something = cv.cvCalcOpticalFlowPyrLK (
                 prev_grey, grey, prev_pyramid, pyramid,
                 points [0], len (points [0]),
-                cv.cvSize (win_size, win_size), 3,
+                (win_size, win_size), 3,
                 len (points [0]),
                 None,
                 cv.cvTermCriteria (cv.CV_TERMCRIT_ITER|cv.CV_TERMCRIT_EPS,
                                    20, 0.03),
                 flags)
-
+            
             # initializations
             point_counter = -1
             new_points = []
@@ -188,10 +177,10 @@ if __name__ == '__main__':
 
                 # this point is a correct point
                 new_points.append (the_point)
-                
+
                 # draw the current point
                 cv.cvCircle (image,
-                             [the_point.x, the_point.y],
+                             cv.cvPointFrom32f(the_point),
                              3, cv.cvScalar (0, 255, 0, 0),
                              -1, 8, 0)
 

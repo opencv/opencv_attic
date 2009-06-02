@@ -20,7 +20,7 @@ for fn in sys.argv[1:]:
     f = open( fn, "r" )
     in_define = 0
     for l in f.xreadlines():
-        m = re.match( r"^#define\s+((?:CV_|IPL_|cv)\w+)\s+((?:CV|IPL|cv)\w*)$", l )
+        m = re.match( r"^#define\s+((?:CV_|IPL_|cv)\w+)\s+((?:CV|IPL|cv)\w*)\s*$", l )
         if m and not l.endswith( "\\\n" ) and not EXCLUDE.has_key(m.group(1)):
             print "%s=%s" % (m.group(1), m.group(2))
     f.close()
