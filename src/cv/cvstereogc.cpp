@@ -134,13 +134,13 @@ static int icvGCResizeOrphansBuf( GCVtx**& orphans, int norphans )
 static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphans, int& _maxOrphans )
 {
     const int TERMINAL = -1, ORPHAN = -2;
-    GCVtx stub, *nil = &stub, *first = nil, *last = nil;
+    GCVtx stub, *nilNode = &stub, *first = nilNode, *last = nilNode;
     int i, k;
     int curr_ts = 0;
     int64 flow = 0;
     int norphans = 0, maxOrphans = _maxOrphans;
     GCVtx** orphans = _orphans;
-    stub.next = nil;
+    stub.next = nilNode;
     
     // initialize the active queue and the graph vertices
     for( i = 0; i < nvtx; i++ )
@@ -159,8 +159,8 @@ static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphan
     }
 
     first = first->next;
-    last->next = nil;
-    nil->next = 0;
+    last->next = nilNode;
+    nilNode->next = 0;
 
     // run the search-path -> augment-graph -> restore-trees loop
     for(;;)
@@ -170,7 +170,7 @@ static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphan
         uchar vt;
         
         // grow S & T search trees, find an edge connecting them
-        while( first != nil )
+        while( first != nilNode )
         {
             v = first;
             if( v->parent )
@@ -189,7 +189,7 @@ static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphan
                         u->dist = v->dist + 1;
                         if( !u->next )
                         {
-                            u->next = nil;
+                            u->next = nilNode;
                             last = last->next = u;
                         }
                         continue;
@@ -344,7 +344,7 @@ static int64 icvGCMaxFlow( GCVtx* vtx, int nvtx, GCEdge* edges, GCVtx**& _orphan
                     continue;
                 if( edges[ei^(vt^1)].weight && !u->next )
                 {
-                    u->next = nil;
+                    u->next = nilNode;
                     last = last->next = u;
                 }
                 if( ej > 0 && edges[ej].dst == v )
