@@ -1184,7 +1184,7 @@ typedef struct CvMSERParams
 }
 CvMSERParams;
 
-CvMSERParams cvMSERParams( int delta CV_DEFAULT(5), int min_area CV_DEFAULT(60),
+CVAPI(CvMSERParams) cvMSERParams( int delta CV_DEFAULT(5), int min_area CV_DEFAULT(60),
                            int max_area CV_DEFAULT(14400), float max_variation CV_DEFAULT(.25f),
                            float min_diversity CV_DEFAULT(.2f), int max_evolution CV_DEFAULT(200),
                            double area_threshold CV_DEFAULT(1.01),
@@ -1192,7 +1192,7 @@ CvMSERParams cvMSERParams( int delta CV_DEFAULT(5), int min_area CV_DEFAULT(60),
                            int edge_blur_size CV_DEFAULT(5) );
 
 // Extracts the contours of Maximally Stable Extremal Regions
-void cvExtractMSER( CvArr* _img, CvArr* _mask, CvSeq** contours, CvMemStorage* storage, CvMSERParams params );
+CVAPI(void) cvExtractMSER( CvArr* _img, CvArr* _mask, CvSeq** contours, CvMemStorage* storage, CvMSERParams params );
 
 
 typedef struct CvStarKeypoint
