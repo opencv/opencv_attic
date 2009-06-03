@@ -1131,7 +1131,10 @@ cvKMeans2( const CvArr* samples_arr, int cluster_count, CvArr* labels_arr,
     }
 
     if( best_labels != labels0 )
-        cvCopy( best_labels, labels0 );
+    {
+        if( best_compactness < DBL_MAX )
+            cvCopy( best_labels, labels0 );
+    }
     else
         best_labels = labels;
 
