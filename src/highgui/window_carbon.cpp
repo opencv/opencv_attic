@@ -642,7 +642,7 @@ CV_IMPL void* cvGetWindowHandle( const char* name )
     
     __END__;
     
-    return NULL;
+    return result;
 }
 
 
