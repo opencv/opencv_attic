@@ -3453,7 +3453,6 @@ and \cross{Solve}, and the possible reason to use these (svd and bksb)
 the high-level counterparts (inv and solve).
 
 \cvfunc{EigenVV}\label{EigenVV}
-\begin{verbatim}
 
 Computes eigenvalues and eigenvectors of symmetric matrix
 
@@ -3467,7 +3466,7 @@ void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double
 \cvarg{mat}{The input symmetric square matrix}
 . It is modified during the processing.\cvarg{evects}{The output matrix of eigenvectors, stored as a subsequent rows}
 \cvarg{evals}{The output vector of eigenvalues, stored in the descenting order (order of eigenvalues and eigenvectors is syncronized, of course)}
-\cvarg{eps}{Accuracy of diagonalization (typically, $DBL\_EPSILON= about 10^-15$ is enough)}
+\cvarg{eps}{Accuracy of diagonalization (typically, $ DBL\_EPSILON= about 10^{-15} $ is enough)}
 \end{description}
 
 
@@ -3479,12 +3478,13 @@ mat*evects(i,:)' = evals(i)*evects(i,:)' (in MATLAB notation)
 
 The contents of matrix \texttt{A} is destroyed by the function.
 
-Currently the function is slower than \cross{SVD} yet less accurate, so if \texttt{A} is known to be positively-defined (for example, it is a covariation matrix), it is recommended to use \cross{SVD} to find eigenvalues and eigenvectors of \texttt{A}, especially if eigenvectors are not required.
+Currently the function is slower than \cross{SVD} yet less accurate,
+so if \texttt{A} is known to be positively-defined (for example, it
+is a covariation matrix), it is recommended to use \cross{SVD} to find
+eigenvalues and eigenvectors of \texttt{A}, especially if eigenvectors
+are not required.
 
-
-\end{verbatim}
 \cvfunc{CalcCovarMatrix}\label{CalcCovarMatrix}
-\begin{verbatim}
 
 Calculates covariation matrix of the set of vectors
 
@@ -3495,20 +3495,43 @@ void cvCalcCovarMatrix( \par const CvArr** vects,\par int count,\par CvArr* cov\
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{vects}{The input vectors}
-. They all must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g. images) etc.\cvarg{count}{The number of input vectors}
+\cvarg{vects}{The input vectors. They all must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g. images) etc.}
+\cvarg{count}{The number of input vectors}
 \cvarg{cov\_mat}{The output covariation matrix that should be floating-point and square}
 \cvarg{avg}{The input or output (depending on the flags) array - the mean (average) vector of the input vectors}
-\cvarg{flags}{The operation flags, a combination of the following values}
-:<<BR>>\texttt{CV\_COVAR\_SCRAMBLED} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]^T^*[vects[0]-avg,vects[1]-avg,...]`,<<BR>> that is, the covariation matrix is \texttt{count} \times \texttt{count}. Such an unusual covariation matrix is used for fast PCA of a set of very large vectors (see, for example, EigenFaces technique for face recognition). Eigenvalues of this "scrambled" matrix will match to the eigenvalues of the true covariation matrix and the "true" eigenvectors can be easily calculated from the eigenvectors of the "scrambled" covariation matrix.<<BR>>\texttt{CV\_COVAR\_NORMAL} - the output covaration matrix is calculated as:<<BR>>`scale*[vects[0]-avg,vects[1]-avg,...]*[vects[0]-avg,vects[1]-avg,...]^T^`,<<BR>> that is, \texttt{cov\_mat} will be a usual covariation matrix with the same linear size as the total number of elements in every input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and \texttt{CV\_COVAR\_NORMAL} must be specified<<BR>>\texttt{CV\_COVAR\_USE\_AVG} - if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.<<BR>>\texttt{CV\_COVAR\_SCALE} - if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is `1./count`, in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled (`scale=1`).
+\cvarg{flags}{The operation flags, a combination of the following values
+\begin{description}
+\cvarg{CV\_COVAR\_SCRAMBLED}{the output covaration matrix is calculated as:
+$ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...]^T \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...] $,
+that is, the covariation matrix is
+$\texttt{count} \times \texttt{count}$.
+Such an unusual covariation matrix is used for fast PCA
+of a set of very large vectors (see, for example, EigenFaces technique
+for face recognition). Eigenvalues of this "scrambled" matrix will
+match to the eigenvalues of the true covariation matrix and the "true"
+eigenvectors can be easily calculated from the eigenvectors of the
+"scrambled" covariation matrix.
+}
+\cvarg{CV\_COVAR\_NORMAL}{the output covaration matrix is calculated as:
+$ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...] \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...]^T $,
+that is, \texttt{cov\_mat} will be a usual covariation matrix
+with the same linear size as the total number of elements in every
+input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
+\texttt{CV\_COVAR\_NORMAL} must be specified}
+\cvarg{CV\_COVAR\_USE\_AVG}{if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
+\texttt{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is `1./count`, in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled (`scale=1`).}
+
+\cvarg{CV\_COVAR\_ROWS}{Means that all the input vectors are stored as rows of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-row vector of an appropriate size.}
+\cvarg{CV\_COVAR\_COLS}{Means that all the input vectors are stored as columns of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-column vector of an appropriate size.}
+
+\end{description}}
 \end{description}
 
-The function \texttt{cvCalcCovarMatrix} calculates the covariation matrix and, optionally, mean vector of the set of input vectors. The function can be used for PCA, for comparing vectors using Mahalanobis distance etc.
+The function \texttt{cvCalcCovarMatrix} calculates the covariation matrix
+and, optionally, mean vector of the set of input vectors. The function
+can be used for PCA, for comparing vectors using Mahalanobis distance etc.
 
-
-\end{verbatim}
 \cvfunc{Mahalonobis}\label{Mahalonobis}
-\begin{verbatim}
 
 Calculates Mahalonobis distance between two vectors
 
@@ -3536,14 +3559,9 @@ d(vec1,vec2)=sqrt( sum,,i,j,, {mat(i,j)*(vec1(i)-vec2(i))*(vec1(j)-vec2(j))} )
 The covariation matrix may be calculated using \cross{CalcCovarMatrix} function and further inverted using \cross{Invert} function (CV\_SVD method is the preffered one, because the matrix might be singular).
 
 
-\end{verbatim}
 \subsection{Math Functions}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{Round, Floor, Ceil}\label{Round, Floor, Ceil}
-\begin{verbatim}
 
 Converts floating-point number to integer
 
@@ -3560,12 +3578,18 @@ int cvCeil( double value );
 \end{description}
 
 
-The functions `cvRound, cvFloor` and \texttt{cvCeil} convert input floating-point number to integer using one of the rounding modes. \texttt{cvRound} returns the nearest integer value to the argument. \texttt{cvFloor} returns the maximum integer value that is not larger than the argument. \texttt{cvCeil} returns the minimum integer value that is not smaller than the argument. On some architectures the functions work \texttt{}much\texttt{} faster than the standard cast operations in C. If absolute value of the argument is greater than 2^31^, the result is not determined. Special values ( \pm Inf, NaN) are not handled.
+The functions \texttt{cvRound}, \texttt{cvFloor} and \texttt{cvCeil}
+convert input floating-point number to integer using one of the rounding
+modes. \texttt{cvRound} returns the nearest integer value to the
+argument. \texttt{cvFloor} returns the maximum integer value that is not
+larger than the argument. \texttt{cvCeil} returns the minimum integer
+value that is not smaller than the argument. On some architectures the
+functions work much faster than the standard cast
+operations in C. If absolute value of the argument is greater than
+$2^{31}$, the result is not determined. Special values ( $ \pm \infty$ , NaN)
+are not handled.
 
-
-\end{verbatim}
 \cvfunc{Sqrt}\label{Sqrt}
-\begin{verbatim}
 
 Calculates square root
 
@@ -3582,10 +3606,7 @@ float cvSqrt( float value );
 
 The function \texttt{cvSqrt} calculates square root of the argument. If the argument is negative, the result is not determined.
 
-
-\end{verbatim}
 \cvfunc{InvSqrt}\label{InvSqrt}
-\begin{verbatim}
 
 Calculates inverse square root
 
@@ -3600,12 +3621,9 @@ float cvInvSqrt( float value );
 \end{description}
 
 
-The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than `1./sqrt(value)`. If the argument is zero or negative, the result is not determined. Special values ( \pm Inf, NaN) are not handled.
+The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than \\texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ( $ \pm \infty $ , NaN) are not handled.
 
-
-\end{verbatim}
 \cvfunc{Cbrt}\label{Cbrt}
-\begin{verbatim}
 
 Calculates cubic root
 
@@ -3620,12 +3638,9 @@ float cvCbrt( float value );
 \end{description}
 
 
-The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than `pow(value,1./3)`. Besides, negative arguments are handled properly. Special values ( \pm Inf, NaN) are not handled.
+The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than `pow(value,1./3)`. Besides, negative arguments are handled properly. Special values ( $ \pm \infty $, NaN) are not handled.
 
-
-\end{verbatim}
 \cvfunc{FastArctan}\label{FastArctan}
-\begin{verbatim}
 
 Calculates angle of 2D vector
 
@@ -3641,12 +3656,9 @@ float cvFastArctan( float y, float x );
 \end{description}
 
 
-The function \texttt{cvFastArctan} calculates full-range angle of input 2D vector. The angle is measured in degrees and varies from 0 degree  to 360 degree . The accuracy is ~0.1 degree 
+The function \texttt{cvFastArctan} calculates full-range angle of input 2D vector. The angle is measured in degrees and varies from 0 degree  to 360 degree . The accuracy is about 0.1 degree 
 
-
-\end{verbatim}
 \cvfunc{IsNaN}\label{IsNaN}
-\begin{verbatim}
 
 Determines if the argument is Not A Number
 
@@ -3664,9 +3676,7 @@ int cvIsNaN( double value );
 The function \texttt{cvIsNaN} returns 1 if the argument is Not A Number (as defined by IEEE754 standard), 0 otherwise.
 
 
-\end{verbatim}
 \cvfunc{IsInf}\label{IsInf}
-\begin{verbatim}
 
 Determines if the argument is Infinity
 
@@ -3681,12 +3691,10 @@ int cvIsInf( double value );
 \end{description}
 
 
-The function \texttt{cvIsInf} returns 1 if the argument is  \pm Infinity (as defined by IEEE754 standard), 0 otherwise.
+The function \texttt{cvIsInf} returns 1 if the argument is $ \pm \infty $ (as defined by IEEE754 standard), 0 otherwise.
 
 
-\end{verbatim}
 \cvfunc{CartToPolar}\label{CartToPolar}
-\begin{verbatim}
 
 Calculates magnitude and/or angle of 2d vectors
 
@@ -3697,15 +3705,14 @@ void cvCartToPolar( \par const CvArr* x,\par const CvArr* y,\par CvArr* magnitud
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{x}{The array of x-coordinatesy}
-\cvarg{}{The array of y-coordinatesmagnitude}
-\cvarg{}{The destination array of magnitudes, may be set to NULL if it is not neededangle}
-\cvarg{}{The destination array of angles, may be set to NULL if it is not needed}
-. The angles are measured in radians (0..2 \pi ) or in degrees (0..360 degree ).\cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
+\cvarg{x}{The array of x-coordinates}
+\cvarg{y}{The array of y-coordinates}
+\cvarg{magnitude}{The destination array of magnitudes, may be set to NULL if it is not needed}
+\cvarg{angle}{The destination array of angles, may be set to NULL if it is not needed. The angles are measured in radians $(0..2 \pi )$ or in degrees (0..360 degree).}
+\cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
-
-The function \texttt{cvCartToPolar} calculates either magnitude, angle, or both of every 2d vector `(x(I),y(I))`:
+The function \texttt{cvCartToPolar} calculates either magnitude, angle, or both of every 2d vector (x(I),y(I)):
 
 \begin{lstlisting}
 
@@ -3716,10 +3723,7 @@ angle(I)=atan( y(I)/x(I) )
 
 The angles are calculated with 0.1 degree accuracy. For (0,0) point the angle is set to 0.
 
-
-\end{verbatim}
 \cvfunc{PolarToCart}\label{PolarToCart}
-\begin{verbatim}
 
 Calculates cartesian coordinates of 2d vectors represented in polar form
 
@@ -3737,7 +3741,6 @@ void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvA
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
-
 The function \texttt{cvPolarToCart} calculates either x-coodinate, y-coordinate or both of every vector `magnitude(I)*exp(angle(I)*j), j=sqrt(-1)`:
 
 \begin{lstlisting}
@@ -3748,9 +3751,7 @@ y(I)=magnitude(I)*sin(angle(I))
 \end{lstlisting}
 
 
-\end{verbatim}
 \cvfunc{Pow}\label{Pow}
-\begin{verbatim}
 
 Raises every array element to power
 
@@ -3769,20 +3770,19 @@ void cvPow( \par const CvArr* src,\par CvArr* dst,\par double power );
 
 The function \texttt{cvPow} raises every element of input array to \texttt{p}:
 
-\cvexp{
-
-dst(I)=src(I)^p^, if \texttt{p} is integer
-dst(I)=abs(src(I))^p^, otherwise
-
-}{CPP}{PYTHON}
+\[
+\texttt{dst} [I] = \fork
+{\texttt{src}(I)^p}{if \texttt{p} is integer}
+{|\texttt{src}(I)^p|}{otherwise}
+\]
 
 That is, for non-integer power exponent the absolute values of input array elements are used. However, it is possible to get true values for negative values using some extra operations, as the following sample, computing cube root of array elements, shows:
 
 \begin{lstlisting}
 
 CvSize size = cvGetSize(src);
-CvMat* mask = cvCreateMat( size.height, size.width, CV\_8UC1 );
-cvCmpS( src, 0, mask, CV\_CMP\_LT ); /* find negative elements */
+CvMat* mask = cvCreateMat( size.height, size.width, CVg8UC1 );
+cvCmpS( src, 0, mask, CVgCMPgLT ); /* find negative elements */
 cvPow( src, dst, 1./3 );
 cvSubRS( dst, cvScalarAll(0), dst, mask ); /* negate the results of negative inputs */
 cvReleaseMat( &mask );
@@ -3791,10 +3791,7 @@ cvReleaseMat( &mask );
 
 For some values of \texttt{power}, such as integer values, 0.5 and -0.5, specialized faster algorithms are used.
 
-
-\end{verbatim}
 \cvfunc{Exp}\label{Exp}
-\begin{verbatim}
 
 Calculates exponent of every array element
 
@@ -3812,18 +3809,13 @@ void cvExp( const CvArr* src, CvArr* dst );
 
 The function \texttt{cvExp} calculates exponent of every element of input array:
 
-\begin{lstlisting}
+\[
+\texttt{dst} [I] = e^{\texttt{src}(I)}
+\]
 
-dst(I)=exp(src(I))
+Maximum relative error is about $7 \times 10^{-6}$. Currently, the function converts denormalized values to zeros on output.
 
-\end{lstlisting}
-
-Maximum relative error is about 7e-6. Currently, the function converts denormalized values to zeros on output.
-
-
-\end{verbatim}
 \cvfunc{Log}\label{Log}
-\begin{verbatim}
 
 Calculates natural logarithm of every array element absolute value
 
@@ -3838,22 +3830,17 @@ void cvLog( const CvArr* src, CvArr* dst );
 \cvarg{dst}{The destination array, it should have \texttt{double} type or the same type as the source}
 \end{description}
 
-
 The function \texttt{cvLog} calculates natural logarithm of absolute value of every element of input array:
 
-\begin{lstlisting}
+\[
+\texttt{dst} [I] = \fork
+{\log{|\texttt{src}(I)}}{if $\texttt{src}[I] \ne 0$ }
+{\texttt{C}}{otherwise}
+\]
 
-dst(I)=log(abs(src(I))), src(I)!=0
-dst(I)=C,  src(I)=0
+Where \texttt{C} is large negative number ( about -700 in the current implementation).
 
-\end{lstlisting}
-
-Where \texttt{C} is large negative number ( about -700 in the current implementation)
-
-
-\end{verbatim}
 \cvfunc{SolveCubic}\label{SolveCubic}
-\begin{verbatim}
 
 Finds real roots of a cubic equation
 
@@ -3865,35 +3852,30 @@ void cvSolveCubic( const CvArr* coeffs, CvArr* roots );
 
 \begin{description}
 \cvarg{coeffs}{The equation coefficients, array of 3 or 4 elements}
-\cvarg{roots}{The output array of real roots}
-. Should have 3 elements.
+\cvarg{roots}{The output array of real roots. Should have 3 elements.}
 \end{description}
 
 The function \texttt{cvSolveCubic} finds real roots of a cubic equation:
 
-\begin{lstlisting}
+if coeffs is 4-element vector:
 
-coeffs[0]*x^3^ + coeffs[1]*x^2^ + coeffs[2]*x + coeffs[3] = 0
-(if coeffs is 4-element vector)
+\[
+\texttt{coeffs}[0] x^3 + \texttt{coeffs}[1] x^2 + \texttt{coeffs}[2] x + \texttt{coeffs}[3] = 0
+\]
 
-or
+or if coeffs is 3-element vector:
 
-x^3^ + coeffs[0]*x^2^ + coeffs[1]*x + coeffs[2] = 0
-(if coeffs is 3-element vector)
+\[
+x^3 + \texttt{coeffs}[0] x^2 + \texttt{coeffs}[1] x + \texttt{coeffs}[2] = 0
+\]
 
-\end{lstlisting}
+The function returns the number of real roots found. The roots are
+stored to \texttt{root} array, which is padded with zeros if there is
+only one root.
 
-The function returns the number of real roots found. The roots are stored to \texttt{root} array, which is padded with zeros if there is only one root.
-
-
-\end{verbatim}
 \subsection{Random Number Generation}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{RNG}\label{RNG}
-\begin{verbatim}
 
 Initializes random number generator state
 
@@ -3908,12 +3890,12 @@ CvRNG cvRNG( int64 seed=-1 );
 \end{description}
 
 
-The function \texttt{cvRNG} initializes random number generator and returns the state. Pointer to the state can be then passed to \cross{RandInt}, \cross{RandReal} and \cross{RandArr} functions. In the current implementation a multiply-with-carry generator is used.
+The function \texttt{cvRNG} initializes random number generator
+and returns the state. Pointer to the state can be then passed to
+\cross{RandInt}, \cross{RandReal} and \cross{RandArr} functions. In the
+current implementation a multiply-with-carry generator is used.
 
-
-\end{verbatim}
 \cvfunc{RandArr}\label{RandArr}
-\begin{verbatim}
 
 Fills array with random numbers and updates the RNG state
 
@@ -3926,13 +3908,19 @@ void cvRandArr( \par CvRNG* rng,\par CvArr* arr,\par int dist\_type,\par CvScala
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cross{RNG}}
 \cvarg{arr}{The destination array}
-\cvarg{dist\_type}{Distribution type}
-:\cvarg{<<BR>> CV\_RAND\_UNI - uniform distribution<<BR>> CV\_RAND\_NORMAL - normal or Gaussian distribution<<BR>>param1}{The first parameter of distribution}
-. In case of uniform distribution it is the inclusive lower boundary of random numbers range. In case of normal distribution it is the mean value of random numbers.\cvarg{param2}{The second parameter of distribution}
-. In case of uniform distribution it is the exclusive upper boundary of random numbers range. In case of normal distribution it is the standard deviation of random numbers.
+\cvarg{dist\_type}{Distribution type
+\begin{description}
+\cvarg{CV\_RAND\_UNI}{uniform distribution}
+\cvarg{CV\_RAND\_NORMAL}{normal or Gaussian distribution}
+\end{description}}
+\cvarg{param1}{The first parameter of distribution . In case of uniform distribution it is the inclusive lower boundary of random numbers range. In case of normal distribution it is the mean value of random numbers.}
+\cvarg{param2}{The second parameter of distribution. In case of uniform distribution it is the exclusive upper boundary of random numbers range. In case of normal distribution it is the standard deviation of random numbers.}
 \end{description}
 
-The function \texttt{cvRandArr} fills the destination array with uniformly or normally distributed random numbers. In the sample below the function is used to add a few normally distributed floating-point numbers to random locations within a 2d array
+The function \texttt{cvRandArr} fills the destination array with uniformly
+or normally distributed random numbers. In the sample below the function
+is used to add a few normally distributed floating-point numbers to
+random locations within a 2d array
 
 \begin{lstlisting}
 
@@ -3981,10 +3969,7 @@ cvReleaseMat( &values );
 
 \end{lstlisting}
 
-
-\end{verbatim}
 \cvfunc{RandInt}\label{RandInt}
-\begin{verbatim}
 
 Returns 32-bit unsigned integer and updates RNG
 
@@ -3998,38 +3983,46 @@ unsigned cvRandInt( CvRNG* rng );
 \cvarg{rng}{RNG state initialized by \texttt{RandInit} and, optionally, customized by \texttt{RandSetRange} (though, the latter function does not affect on the discussed function outcome)}
 \end{description}
 
+The function \texttt{cvRandInt} returns uniformly-distributed random
+32-bit unsigned integer and updates RNG state. It is similar to rand()
+function from C runtime library, but it always generates 32-bit number
+whereas rand() returns a number in between 0 and \texttt{RAND\_MAX}
+which is $2^{16}$ or $2^{32}$, depending on the platform.
 
-The function \texttt{cvRandInt} returns uniformly-distributed random 32-bit unsigned integer and updates RNG state. It is similar to rand() function from C runtime library, but it always generates 32-bit number whereas rand() returns a number in between 0 and \texttt{RAND\_MAX} which is 2**16 or 2**32, depending on the platform.
-
-The function is useful for generating scalar random numbers, such as points, patch sizes, table indices etc, where integer numbers of a certain range can be generated using modulo operation and floating-point numbers can be generated by scaling to 0..1 of any other specific range. Here is the example from the previous function discussion rewritten using \cross{RandInt}:
+The function is useful for generating scalar random numbers, such as
+points, patch sizes, table indices etc, where integer numbers of a certain
+range can be generated using modulo operation and floating-point numbers
+can be generated by scaling to 0..1 of any other specific range. Here
+is the example from the previous function discussion rewritten using
+\cross{RandInt}:
 
 \begin{lstlisting}
 
 /* the input and the task is the same as in the previous sample. */
-CvRNG rng\_state = cvRNG(0xffffffff);
+CvRNG rnggstate = cvRNG(0xffffffff);
 int i, pointCount = 1000;
 /* ... - no arrays are allocated here */
-CvSize size = cvGetSize( noisy\_screen );
+CvSize size = cvGetSize( noisygscreen );
 /* make a buffer for normally distributed numbers to reduce call overhead */
 #define bufferSize 16
 float normalValueBuffer[bufferSize];
-CvMat normalValueMat = cvMat( bufferSize, 1, CV\_32F, normalValueBuffer );
+CvMat normalValueMat = cvMat( bufferSize, 1, CVg32F, normalValueBuffer );
 int valuesLeft = 0;
 
 for( i = 0; i < pointCount; i++ )
 {
     CvPoint pt;
     /* generate random point */
-    pt.x = cvRandInt( &rng\_state ) % size.width;
-    pt.y = cvRandInt( &rng\_state ) % size.height;
+    pt.x = cvRandInt( &rnggstate ) % size.width;
+    pt.y = cvRandInt( &rnggstate ) % size.height;
 
     if( valuesLeft <= 0 )
     {
         /* fulfill the buffer with normally distributed numbers if the buffer is empty */
-        cvRandArr( &rng\_state, &normalValueMat, CV\_RAND\_NORMAL, cvRealScalar(100), cvRealScalar(30) );
+        cvRandArr( &rnggstate, &normalValueMat, CV\_RAND\_NORMAL, cvRealScalar(100), cvRealScalar(30) );
         valuesLeft = bufferSize;
     }
-    *((float*)cvPtr2D( noisy\_screen, pt.y, pt.x, 0 ) = normalValueBuffer[--valuesLeft];
+    *((float*)cvPtr2D( noisygscreen, pt.y, pt.x, 0 ) = normalValueBuffer[--valuesLeft];
 }
 
 /* there is no need to deallocate normalValueMat because we have
@@ -4038,10 +4031,7 @@ practice of working with small, fixed-size matrices */
 
 \end{lstlisting}
 
-
-\end{verbatim}
 \cvfunc{RandReal}\label{RandReal}
-\begin{verbatim}
 
 Returns floating-point random number and updates RNG
 
@@ -4058,15 +4048,9 @@ double cvRandReal( CvRNG* rng );
 
 The function \texttt{cvRandReal} returns uniformly-distributed random floating-point number from 0..1 range (1 is not included).
 
-
-\end{verbatim}
 \subsection{Discrete Transforms}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{DFT}\label{DFT}
-\begin{verbatim}
 
 Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-point array
 
@@ -4086,9 +4070,19 @@ void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
 \begin{description}
 \cvarg{src}{Source array, real or complex}
 \cvarg{dst}{Destination array of the same size and same type as the source}
-\cvarg{flags}{Transformation flags, a combination of the following values}
-:<<BR>>\texttt{CV\_DXT\_FORWARD} - do forward 1D or 2D transform. The result is not scaled.<<BR>>\texttt{CV\_DXT\_INVERSE} - do inverse 1D or 2D transform. The result is not scaled. \texttt{CV\_DXT\_FORWARD} and \texttt{CV\_DXT\_INVERSE} are mutually exclusive, of course.<<BR>>\texttt{CV\_DXT\_SCALE} - scale the result: divide it by the number of array elements. Usually, it is combined with \texttt{CV\_DXT\_INVERSE}, and one may use a shortcut \texttt{CV\_DXT\_INV\_SCALE}.<<BR>>\texttt{CV\_DXT\_ROWS} - do forward or inverse transform of every individual row of the input matrix. This flag allows user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms etc.\cvarg{nonzero\_rows}{Number of nonzero rows to in the source array (in case of forward 2d transform), or a number of rows of interest in the destination array (in case of inverse 2d transform)}
-. If the value is negative, zero, or greater than the total number of rows, it is ignored. The parameter can be used to speed up 2d convolution/correlation when computing them via DFT. See the sample below.
+\cvarg{flags}{Transformation flags, a combination of the following values
+\begin{description}
+\cvarg{CV\_DXT\_FORWARD} - do forward 1D or 2D transform. The result is not scaled.
+\cvarg{CV\_DXT\_INVERSE} - do inverse 1D or 2D transform. The result is not scaled. \texttt{CV\_DXT\_FORWARD} and \texttt{CV\_DXT\_INVERSE} are mutually exclusive, of course.
+\cvarg{CV\_DXT\_SCALE} - scale the result: divide it by the number of array elements. Usually, it is combined with \texttt{CV\_DXT\_INVERSE}, and one may use a shortcut \texttt{CV\_DXT\_INV\_SCALE}.
+\cvarg{CV\_DXT\_ROWS} - do forward or inverse transform of every individual row of the input matrix. This flag allows user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms etc.
+\end{description}}
+\cvarg{nonzero\_rows}{Number of nonzero rows to in the source array
+(in case of forward 2d transform), or a number of rows of interest in
+the destination array (in case of inverse 2d transform). If the value
+is negative, zero, or greater than the total number of rows, it is
+ignored. The parameter can be used to speed up 2d convolution/correlation
+when computing them via DFT. See the sample below.}
 \end{description}
 
 The function \texttt{cvDFT} performs forward or inverse transform of 1D or 2D floating-point array:
@@ -4133,7 +4127,7 @@ Computing 2D Convolution using DFT
 
 \begin{lstlisting}
 
-CvMat* A = cvCreateMat( M1, N1, CV\_32F );
+CvMat* A = cvCreateMat( M1, N1, CVg32F );
 CvMat* B = cvCreateMat( M2, N2, A->type );
 
 // it is also possible to have only abs(M2-M1)+1 \times abs(N2-N1)+1
@@ -4143,47 +4137,44 @@ CvMat* conv = cvCreateMat( A->rows + B->rows - 1, A->cols + B->cols - 1, A->type
 // initialize A and B
 ...
 
-int dft\_M = cvGetOptimalDFTSize( A->rows + B->rows - 1 );
-int dft\_N = cvGetOptimalDFTSize( A->cols + B->cols - 1 );
+int dftgM = cvGetOptimalDFTSize( A->rows + B->rows - 1 );
+int dftgN = cvGetOptimalDFTSize( A->cols + B->cols - 1 );
 
-CvMat* dft\_A = cvCreateMat( dft\_M, dft\_N, A->type );
-CvMat* dft\_B = cvCreateMat( dft\_M, dft\_N, B->type );
+CvMat* dftgA = cvCreateMat( dft\_M, dft\_N, A->type );
+CvMat* dftgB = cvCreateMat( dft\_M, dft\_N, B->type );
 CvMat tmp;
 
-// copy A to dft\_A and pad dft\_A with zeros
-cvGetSubRect( dft\_A, &tmp, cvRect(0,0,A->cols,A->rows));
+// copy A to dftgA and pad dft\_A with zeros
+cvGetSubRect( dftgA, &tmp, cvRect(0,0,A->cols,A->rows));
 cvCopy( A, &tmp );
-cvGetSubRect( dft\_A, &tmp, cvRect(A->cols,0,dft\_A->cols - A->cols,A->rows));
+cvGetSubRect( dftgA, &tmp, cvRect(A->cols,0,dft\_A->cols - A->cols,A->rows));
 cvZero( &tmp );
-// no need to pad bottom part of dft\_A with zeros because of
-// use nonzero\_rows parameter in cvDFT() call below
+// no need to pad bottom part of dftgA with zeros because of
+// use nonzerogrows parameter in cvDFT() call below
 
-cvDFT( dft\_A, dft\_A, CV\_DXT\_FORWARD, A->rows );
+cvDFT( dftgA, dft\_A, CV\_DXT\_FORWARD, A->rows );
 
 // repeat the same with the second array
-cvGetSubRect( dft\_B, &tmp, cvRect(0,0,B->cols,B->rows));
+cvGetSubRect( dftgB, &tmp, cvRect(0,0,B->cols,B->rows));
 cvCopy( B, &tmp );
-cvGetSubRect( dft\_B, &tmp, cvRect(B->cols,0,dft\_B->cols - B->cols,B->rows));
+cvGetSubRect( dftgB, &tmp, cvRect(B->cols,0,dft\_B->cols - B->cols,B->rows));
 cvZero( &tmp );
-// no need to pad bottom part of dft\_B with zeros because of
-// use nonzero\_rows parameter in cvDFT() call below
+// no need to pad bottom part of dftgB with zeros because of
+// use nonzerogrows parameter in cvDFT() call below
 
-cvDFT( dft\_B, dft\_B, CV\_DXT\_FORWARD, B->rows );
+cvDFT( dftgB, dft\_B, CV\_DXT\_FORWARD, B->rows );
 
-cvMulSpectrums( dft\_A, dft\_B, dft\_A, 0 /* or CV\_DXT\_MUL\_CONJ to get correlation
+cvMulSpectrums( dftgA, dft\_B, dft\_A, 0 /* or CV\_DXT\_MUL\_CONJ to get correlation
                                           rather than convolution */ );
 
-cvDFT( dft\_A, dft\_A, CV\_DXT\_INV\_SCALE, conv->rows ); // calculate only the top part
-cvGetSubRect( dft\_A, &tmp, cvRect(0,0,conv->cols,conv->rows) );
+cvDFT( dftgA, dft\_A, CV\_DXT\_INV\_SCALE, conv->rows ); // calculate only the top part
+cvGetSubRect( dftgA, &tmp, cvRect(0,0,conv->cols,conv->rows) );
 
 cvCopy( &tmp, conv );
 
 \end{lstlisting}
 
-
-\end{verbatim}
 \cvfunc{GetOptimalDFTSize}\label{GetOptimalDFTSize}
-\begin{verbatim}
 
 Returns optimal DFT size for given vector size
 
@@ -4198,14 +4189,16 @@ int cvGetOptimalDFTSize( int size0 );
 \end{description}
 
 
-The function \texttt{cvGetOptimalDFTSize} returns the minimum number \texttt{N} that is greater to equal to \texttt{size0}, such that DFT of a vector of size \texttt{N} can be computed fast. In the current implementation `N=2^p^ \times 3^q^ \times 5^r^` for some `p, q, r`.
+The function \texttt{cvGetOptimalDFTSize} returns the minimum number
+\texttt{N} that is greater to equal to \texttt{size0}, such that DFT
+of a vector of size \texttt{N} can be computed fast. In the current
+implementation $N=2^p \times 3^q \times 5^r$` for some $p$, $q$, $r$.
 
-The function returns a negative number if \texttt{size0} is too large (very close to \texttt{INT\_MAX})
+The function returns a negative number if \texttt{size0} is too large
+(very close to \texttt{INT\_MAX})
 
 
-\end{verbatim}
 \cvfunc{MulSpectrums}\label{MulSpectrums}
-\begin{verbatim}
 
 Performs per-element multiplication of two Fourier spectrums
 
@@ -4219,8 +4212,12 @@ void cvMulSpectrums( \par const CvArr* src1,\par const CvArr* src2,\par CvArr* d
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array of the same type and the same size of the sources}
-\cvarg{flags}{A combination of the following values}
-:<<BR>>\texttt{CV\_DXT\_ROWS} - treat each row of the arrays as a separate spectrum (see \cross{DFT} parameters description).<<BR>>\texttt{CV\_DXT\_MUL\_CONJ} - conjugate the second source array before the multiplication.<<BR>>
+\cvarg{flags}{A combination of the following values
+\begin{description}
+\cvarg{CV\_DXT\_ROWS}{treat each row of the arrays as a separate spectrum (see \cross{DFT} parameters description).}
+\cvarg{CV\_DXT\_MUL\_CONJ}{conjugate the second source array before the multiplication.}
+\end{description}}
+
 \end{description}
 
 The function \texttt{cvMulSpectrums} performs per-element multiplication of the two CCS-packed or complex matrices that are results of real or complex Fourier transform.
@@ -4228,9 +4225,7 @@ The function \texttt{cvMulSpectrums} performs per-element multiplication of the 
 The function, together with \cross{DFT}, may be used to calculate convolution of two arrays fast.
 
 
-\end{verbatim}
 \cvfunc{DCT}\label{DCT}
-\begin{verbatim}
 
 Performs forward or inverse Discrete Cosine transform of 1D or 2D floating-point array
 
@@ -4247,8 +4242,12 @@ void cvDCT( const CvArr* src, CvArr* dst, int flags );
 \begin{description}
 \cvarg{src}{Source array, real 1D or 2D array}
 \cvarg{dst}{Destination array of the same size and same type as the source}
-\cvarg{flags}{Transformation flags, a combination of the following values}
-:<<BR>>\texttt{CV\_DXT\_FORWARD} - do forward 1D or 2D transform.<<BR>>\texttt{CV\_DXT\_INVERSE} - do inverse 1D or 2D transform.<<BR>>\texttt{CV\_DXT\_ROWS} - do forward or inverse transform of every individual row of the input matrix. This flag allows user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms etc.
+\cvarg{flags}{Transformation flags, a combination of the following values
+\begin{description}
+\cvarg{CV\_DXT\_FORWARD}{do forward 1D or 2D transform.}
+\cvarg{CV\_DXT\_INVERSE}{do inverse 1D or 2D transform.}
+\cvarg{CV\_DXT\_ROWS}{do forward or inverse transform of every individual row of the input matrix. This flag allows user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms etc.}
+\end{description}}
 \end{description}
 
 The function \texttt{cvDCT} performs forward or inverse transform of 1D or 2D floating-point array:
@@ -4270,19 +4269,11 @@ X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 \end{lstlisting}
 
 
-\end{verbatim}
 \section{Dynamic Structures}
-\begin{verbatim}
 
-
-\end{verbatim}
 \subsection{Memory Storages}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{CvMemStorage}\label{CvMemStorage}
-\begin{verbatim}
 
 Growing memory storage
 
@@ -4299,16 +4290,36 @@ typedef struct CvMemStorage
 
 \end{lstlisting}
 
-Memory storage is a low-level structure used to store dynamically growing data structures such as sequences, contours, graphs, subdivisions etc. It is organized as a list of memory blocks of equal size - \texttt{bottom} field is the beginning of the list of blocks and \texttt{top} is the currently used block, but not necessarily the last block of the list. All blocks between \texttt{bottom} and \texttt{top}, not including the latter, are considered fully ocupied; and all blocks between \texttt{top} and the last block, not including \texttt{top}, are considered free and \texttt{top} block itself is partly ocupied - \texttt{free\_space} contains the number of free bytes left in the end of \texttt{top}.
+Memory storage is a low-level structure used to store dynamically growing
+data structures such as sequences, contours, graphs, subdivisions etc. It
+is organized as a list of memory blocks of equal size - \texttt{bottom}
+field is the beginning of the list of blocks and \texttt{top} is the
+currently used block, but not necessarily the last block of the list. All
+blocks between \texttt{bottom} and \texttt{top}, not including the
+latter, are considered fully ocupied; and all blocks between \texttt{top}
+and the last block, not including \texttt{top}, are considered free
+and \texttt{top} block itself is partly ocupied - \texttt{free\_space}
+contains the number of free bytes left in the end of \texttt{top}.
 
-New memory buffer that may be allocated explicitly by \cross{MemStorageAlloc} function or implicitly by higher-level functions, such as \cross{SeqPush}, \cross{GraphAddEdge} etc., \texttt{always} starts in the end of the current block if it fits there. After allocation \texttt{free\_space} is decremented by the size of the allocated buffer plus some padding to keep the proper alignment. When the allocated buffer does not fit into the available part of \texttt{top}, the next storage block from the list is taken as \texttt{top} and \texttt{free\_space} is reset to the whole block size prior to the allocation.
+New memory buffer that may be allocated explicitly by
+\cross{MemStorageAlloc} function or implicitly by higher-level functions,
+such as \cross{SeqPush}, \cross{GraphAddEdge} etc., \texttt{always}
+starts in the end of the current block if it fits there. After allocation
+\texttt{free\_space} is decremented by the size of the allocated buffer
+plus some padding to keep the proper alignment. When the allocated buffer
+does not fit into the available part of \texttt{top}, the next storage
+block from the list is taken as \texttt{top} and \texttt{free\_space}
+is reset to the whole block size prior to the allocation.
 
-If there is no more free blocks, a new block is allocated (or borrowed from parent, see \cross{CreateChildMemStorage}) and added to the end of list. Thus, the storage behaves as a stack with \texttt{bottom} indicating bottom of the stack and the pair (\texttt{top}, \texttt{free\_space}) indicating top of the stack. The stack top may be saved via \cross{SaveMemStoragePos}, restored via \cross{RestoreMemStoragePos} or reset via \cross{ClearStorage}.
+If there is no more free blocks, a new block is allocated (or borrowed
+from parent, see \cross{CreateChildMemStorage}) and added to the end of
+list. Thus, the storage behaves as a stack with \texttt{bottom} indicating
+bottom of the stack and the pair (\texttt{top}, \texttt{free\_space})
+indicating top of the stack. The stack top may be saved via
+\cross{SaveMemStoragePos}, restored via \cross{RestoreMemStoragePos}
+or reset via \cross{ClearStorage}.
 
-
-\end{verbatim}
 \cvfunc{CvMemBlock}\label{CvMemBlock}
-\begin{verbatim}
 
 Memory storage block
 
@@ -4322,12 +4333,13 @@ typedef struct CvMemBlock
 
 \end{lstlisting}
 
-The structure \cross{CvMemBlock} represents a single block of memory storage. Actual data of the memory blocks follows the header, that is, the `i-th` byte of the memory block can be retrieved with the expression `((char*)(mem\_block\_ptr+1))[i]`. However, normally there is no need to access the storage structure fields directly.
+The structure \cross{CvMemBlock} represents a single block of memory
+storage. Actual data of the memory blocks follows the header, that is,
+the $i_{th}$ byte of the memory block can be retrieved with the expression
+\texttt{((char*)(mem\_block\_ptr+1))[i]}. However, normally there is no need
+to access the storage structure fields directly.
 
-
-\end{verbatim}
 \cvfunc{CvMemStoragePos}\label{CvMemStoragePos}
-\begin{verbatim}
 
 Memory storage position
 
@@ -4343,10 +4355,7 @@ typedef struct CvMemStoragePos
 
 The structure described below stores the position of the stack top that can be saved via \cross{SaveMemStoragePos} and restored via \cross{RestoreMemStoragePos}.
 
-
-\end{verbatim}
 \cvfunc{CreateMemStorage}\label{CreateMemStorage}
-\begin{verbatim}
 
 Creates memory storage
 
@@ -4357,16 +4366,13 @@ CvMemStorage* cvCreateMemStorage( int block\_size=0 );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{block\_size}{Size of the storage blocks in bytes}
-. If it is 0, the block size is set to default value - currently it is  about 64K.
+\cvarg{block\_size}{Size of the storage blocks in bytes. If it is 0, the block size is set to default value - currently it is  about 64K.}
 \end{description}
 
 The function \texttt{cvCreateMemStorage} creates a memory storage and returns pointer to it. Initially the storage is empty. All fields of the header, except the \texttt{block\_size}, are set to 0.
 
 
-\end{verbatim}
 \cvfunc{CreateChildMemStorage}\label{CreateChildMemStorage}
-\begin{verbatim}
 
 Creates child memory storage
 
@@ -4381,24 +4387,39 @@ CvMemStorage* cvCreateChildMemStorage( CvMemStorage* parent );
 \end{description}
 
 
-The function \texttt{cvCreateChildMemStorage} creates a child memory storage that is similar to simple memory storage except for the differences in the memory allocation/deallocation mechanism. When a child storage needs a new block to add to the block list, it tries to get this block from the parent. The first unoccupied parent block available is taken and excluded from the parent block list. If no blocks are available, the parent either allocates a block or borrows one from its own parent, if any. In other words, the chain, or a more complex structure, of memory storages where every storage is a child/parent of another is possible. When a child storage is released or even cleared, it returns all blocks to the parent. In other aspects, the child storage is the same as the simple storage.
+The function \texttt{cvCreateChildMemStorage} creates a child memory
+storage that is similar to simple memory storage except for the
+differences in the memory allocation/deallocation mechanism. When a
+child storage needs a new block to add to the block list, it tries
+to get this block from the parent. The first unoccupied parent block
+available is taken and excluded from the parent block list. If no blocks
+are available, the parent either allocates a block or borrows one from
+its own parent, if any. In other words, the chain, or a more complex
+structure, of memory storages where every storage is a child/parent of
+another is possible. When a child storage is released or even cleared,
+it returns all blocks to the parent. In other aspects, the child storage
+is the same as the simple storage.
 
-The children storages are useful in the following situation. Imagine that user needs to process dynamical data resided in some storage and put the result back to the same storage. With the simplest approach, when temporary data is resided in the same storage as the input and output data, the storage will look as following after processing:
+The children storages are useful in the following situation. Imagine
+that user needs to process dynamical data resided in some storage and
+put the result back to the same storage. With the simplest approach,
+when temporary data is resided in the same storage as the input and
+output data, the storage will look as following after processing:
 
 Dynamic data processing without using child storage
 
 \includegraphics[width=0.5\textwidth]{pics/memstorage1.png}
 
-That is, garbage appears in the middle of the storage. However, if one creates a child memory storage in the beginning of the processing, writes temporary data there and releases the child storage in the end, no garbage will appear in the source/destination storage:
+That is, garbage appears in the middle of the storage. However, if
+one creates a child memory storage in the beginning of the processing,
+writes temporary data there and releases the child storage in the end,
+no garbage will appear in the source/destination storage:
 
 Dynamic data processing using a child storage
 
 \includegraphics[width=0.5\textwidth]{pics/memstorage2.png}
 
-
-\end{verbatim}
 \cvfunc{ReleaseMemStorage}\label{ReleaseMemStorage}
-\begin{verbatim}
 
 Releases memory storage
 
@@ -4412,13 +4433,12 @@ void cvReleaseMemStorage( CvMemStorage** storage );
 \cvarg{storage}{Pointer to the released storage}
 \end{description}
 
+The function \texttt{cvReleaseMemStorage} deallocates all storage memory
+blocks or returns them to the parent, if any. Then it deallocates the
+storage header and clears the pointer to the storage. All children of
+the storage must be released before the parent is released.
 
-The function \texttt{cvReleaseMemStorage} deallocates all storage memory blocks or returns them to the parent, if any. Then it deallocates the storage header and clears the pointer to the storage. All children of the storage must be released before the parent is released.
-
-
-\end{verbatim}
 \cvfunc{ClearMemStorage}\label{ClearMemStorage}
-\begin{verbatim}
 
 Clears memory storage
 
@@ -4432,13 +4452,12 @@ void cvClearMemStorage( CvMemStorage* storage );
 \cvarg{storage}{Memory storage}
 \end{description}
 
+The function \texttt{cvClearMemStorage} resets the top (free space
+boundary) of the storage to the very beginning. This function does not
+deallocate any memory. If the storage has a parent, the function returns
+all blocks to the parent.
 
-The function \texttt{cvClearMemStorage} resets the top (free space boundary) of the storage to the very beginning. This function does not deallocate any memory. If the storage has a parent, the function returns all blocks to the parent.
-
-
-\end{verbatim}
 \cvfunc{MemStorageAlloc}\label{MemStorageAlloc}
-\begin{verbatim}
 
 Allocates memory buffer in the storage
 
@@ -4453,13 +4472,12 @@ void* cvMemStorageAlloc( \par CvMemStorage* storage,\par size\_t size );
 \cvarg{size}{Buffer size}
 \end{description}
 
+The function \texttt{cvMemStorageAlloc} allocates memory buffer in
+the storage. The buffer size must not exceed the storage block size,
+otherwise runtime error is raised. The buffer address is aligned by
+\texttt{CV\_STRUCT\_ALIGN=sizeof(double)} for the moment) bytes.
 
-The function \texttt{cvMemStorageAlloc} allocates memory buffer in the storage. The buffer size must not exceed the storage block size, otherwise runtime error is raised. The buffer address is aligned by \texttt{CV\_STRUCT\_ALIGN} (=`sizeof(double)` for the moment) bytes.
-
-
-\end{verbatim}
 \cvfunc{MemStorageAllocString}\label{MemStorageAllocString}
-\begin{verbatim}
 
 Allocates text string in the storage
 
@@ -4479,16 +4497,14 @@ CvString cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int le
 \begin{description}
 \cvarg{storage}{Memory storage}
 \cvarg{ptr}{The string}
-\cvarg{len}{Length of the string (not counting the ending \texttt{\0})}
-. If the parameter is negative, the function computes the length.
+\cvarg{len}{Length of the string (not counting the ending \texttt{NUL}) . If the parameter is negative, the function computes the length.}
 \end{description}
 
-The function \texttt{cvMemStorageAllocString} creates copy of the string in the memory storage. It returns the structure that contains user-passed or computed length of the string and pointer to the copied string.
+The function \texttt{cvMemStorageAllocString} creates copy of the string
+in the memory storage. It returns the structure that contains user-passed
+or computed length of the string and pointer to the copied string.
 
-
-\end{verbatim}
 \cvfunc{SaveMemStoragePos}\label{SaveMemStoragePos}
-\begin{verbatim}
 
 Saves memory storage position
 
@@ -4503,13 +4519,11 @@ void cvSaveMemStoragePos( \par const CvMemStorage* storage,\par CvMemStoragePos*
 \cvarg{pos}{The output position of the storage top}
 \end{description}
 
+The function \texttt{cvSaveMemStoragePos} saves the current position
+of the storage top to the parameter \texttt{pos}. The function
+\texttt{cvRestoreMemStoragePos} can further retrieve this position.
 
-The function \texttt{cvSaveMemStoragePos} saves the current position of the storage top to the parameter \texttt{pos}. The function \texttt{cvRestoreMemStoragePos} can further retrieve this position.
-
-
-\end{verbatim}
 \cvfunc{RestoreMemStoragePos}\label{RestoreMemStoragePos}
-\begin{verbatim}
 
 Restores memory storage position
 
@@ -4524,61 +4538,90 @@ void cvRestoreMemStoragePos( \par CvMemStorage* storage,\par CvMemStoragePos* po
 \cvarg{pos}{New storage top position}
 \end{description}
 
-
 The function \texttt{cvRestoreMemStoragePos} restores the position of the storage top from the parameter \texttt{pos}. This function and The function \texttt{cvClearMemStorage} are the only methods to release memory occupied in memory blocks. Note again that there is no way to free memory in the middle of the occupied part of the storage.
 
-
-\end{verbatim}
 \subsection{Sequences}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{CvSeq}\label{CvSeq}
-\begin{verbatim}
 
 Growable sequence of elements
 
 \begin{lstlisting}
 
-#define CV\_SEQUENCE\_FIELDS() \
+#define CVgSEQUENCE\_FIELDS() \
     int flags; /* micsellaneous flags */ \
-    int header\_size; /* size of sequence header */ \
-    struct CvSeq* h\_prev; /* previous sequence */ \
-    struct CvSeq* h\_next; /* next sequence */ \
-    struct CvSeq* v\_prev; /* 2nd previous sequence */ \
-    struct CvSeq* v\_next; /* 2nd next sequence */ \
+    int headergsize; /* size of sequence header */ \
+    struct CvSeq* hgprev; /* previous sequence */ \
+    struct CvSeq* hgnext; /* next sequence */ \
+    struct CvSeq* vgprev; /* 2nd previous sequence */ \
+    struct CvSeq* vgnext; /* 2nd next sequence */ \
     int total; /* total number of elements */ \
-    int elem\_size;/* size of sequence element in bytes */ \
-    char* block\_max;/* maximal bound of the last block */ \
+    int elemgsize;/* size of sequence element in bytes */ \
+    char* blockgmax;/* maximal bound of the last block */ \
     char* ptr; /* current write pointer */ \
-    int delta\_elems; /* how many elements allocated when the sequence grows (sequence granularity) */ \
+    int deltagelems; /* how many elements allocated when the sequence grows (sequence granularity) */ \
     CvMemStorage* storage; /* where the seq is stored */ \
-    CvSeqBlock* free\_blocks; /* free blocks list */ \
+    CvSeqBlock* freegblocks; /* free blocks list */ \
     CvSeqBlock* first; /* pointer to the first sequence block */
 
 typedef struct CvSeq
 {
-    CV\_SEQUENCE\_FIELDS()
+    CVgSEQUENCE\_FIELDS()
 } CvSeq;
 
 \end{lstlisting}
 
 The structure \cross{CvSeq} is a base for all of OpenCV dynamic data structures.
 
-Such an unusual definition via a helper macro simplifies the extension of the structure \cross{CvSeq} with additional parameters. To extend \cross{CvSeq} the user may define a new structure and put user-defined fields after all \cross{CvSeq} fields that are included via the macro `CV\_SEQUENCE\_FIELDS()`.
+Such an unusual definition via a helper macro simplifies the extension
+of the structure \cross{CvSeq} with additional parameters. To extend
+\cross{CvSeq} the user may define a new structure and put user-defined
+fields after all \cross{CvSeq} fields that are included via the macro
+\texttt{CV\_SEQUENCE\_FIELDS()}.
 
-There are two types of sequences - dense and sparse. Base type for dense sequences is \cross{CvSeq} and such sequences are used to represent growable 1d arrays - vectors, stacks, queues, deques. They have no gaps in the middle - if an element is removed from the middle or inserted into the middle of the sequence the elements from the closer end are shifted. Sparse sequences have \cross{CvSet} base class and they are discussed later in more details. They are sequences of nodes each of those may be either occupied or free as indicated by the node flag. Such sequences are used for unordered data structures such as sets of elements, graphs, hash tables etc.
+There are two types of sequences - dense and sparse. Base type for dense
+sequences is \cross{CvSeq} and such sequences are used to represent
+growable 1d arrays - vectors, stacks, queues, deques. They have no gaps
+in the middle - if an element is removed from the middle or inserted
+into the middle of the sequence the elements from the closer end are
+shifted. Sparse sequences have \cross{CvSet} base class and they are
+discussed later in more details. They are sequences of nodes each of
+those may be either occupied or free as indicated by the node flag. Such
+sequences are used for unordered data structures such as sets of elements,
+graphs, hash tables etc.
 
-The field \texttt{header\_size} contains the actual size of the sequence header and should be greater or equal to `sizeof(CvSeq)`.
+The field \texttt{header\_size} contains the actual size of the sequence
+header and should be greater or equal to \texttt{sizeof(CvSeq)}.
 
-The fields `h\_prev, h\_next, v\_prev, v\_next` can be used to create hierarchical structures from separate sequences. The fields \texttt{h\_prev} and \texttt{h\_next} point to the previous and the next sequences on the same hierarchical level while the fields \texttt{v\_prev} and \texttt{v\_next} point to the previous and the next sequence in the vertical direction, that is, parent and its first child. But these are just names and the pointers can be used in a different way.
+The fields
+\texttt{h\_prev}, \texttt{h\_next}, \texttt{v\_prev}, \texttt{v\_next}
+can be used to create hierarchical structures from separate sequences. The
+fields \texttt{h\_prev} and \texttt{h\_next} point to the previous and
+the next sequences on the same hierarchical level while the fields
+\texttt{v\_prev} and \texttt{v\_next} point to the previous and the
+next sequence in the vertical direction, that is, parent and its first
+child. But these are just names and the pointers can be used in a
+different way.
 
 The field \texttt{first} points to the first sequence block, whose structure is described below.
 
 The field \texttt{total} contains the actual number of dense sequence elements and number of allocated nodes in sparse sequence.
 
-The field \texttt{flags}contain the particular dynamic type signature (\texttt{CV\_SEQ\_MAGIC\_VAL} for dense sequences and \texttt{CV\_SET\_MAGIC\_VAL} for sparse sequences) in the highest 16 bits and miscellaneous information about the sequence. The lowest \texttt{CV\_SEQ\_ELTYPE\_BITS} bits contain the ID of the element type. Most of sequence processing functions do not use element type but element size stored in \texttt{elem\_size}. If sequence contains the numeric data of one of \cross{CvMat} type then the element type matches to the corresponding \cross{CvMat} element type, e.g. CV\_32SC2 may be used for sequence of 2D points, CV\_32FC1 for sequences of floating-point values etc. `CV\_SEQ\_ELTYPE(seq\_header\_ptr)` macro retrieves the type of sequence elements. Processing function that work with numerical sequences check that \texttt{elem\_size} is equal to the calculated from the type element size. Besides \cross{CvMat} compatible types, there are few extra element types defined in [[#cvtypes.h|cvtypes.h]] header:
+The field \texttt{flags}contain the particular dynamic type
+signature (\texttt{CV\_SEQ\_MAGIC\_VAL} for dense sequences and
+\texttt{CV\_SET\_MAGIC\_VAL} for sparse sequences) in the highest 16
+bits and miscellaneous information about the sequence. The lowest
+\texttt{CV\_SEQ\_ELTYPE\_BITS} bits contain the ID of the element
+type. Most of sequence processing functions do not use element type but
+element size stored in \texttt{elem\_size}. If sequence contains the
+numeric data of one of \cross{CvMat} type then the element type matches
+to the corresponding \cross{CvMat} element type, e.g. \texttt{CV\_32SC2} may be
+used for sequence of 2D points, \texttt{CV\_32FC1} for sequences of floating-point
+values etc. \texttt{CV\_SEQ\_ELTYPE(seq\_header\_ptr)} macro retrieves the
+type of sequence elements. Processing function that work with numerical
+sequences check that \texttt{elem\_size} is equal to the calculated from
+the type element size. Besides \cross{CvMat} compatible types, there
+are few extra element types defined in \texttt{cvtypes.h} header:
 
 Standard Types of Sequence Elements
 
@@ -4617,12 +4660,19 @@ Standard Kinds of Sequences
 
 \end{lstlisting}
 
-The remaining bits are used to identify different features specific to certain sequence kinds and element types. For example, curves made of points ( `CV\_SEQ\_KIND\_CURVE|CV\_SEQ\_ELTYPE\_POINT` ), together with the flag \texttt{CV\_SEQ\_FLAG\_CLOSED} belong to the type \texttt{CV\_SEQ\_POLYGON} or, if other flags are used, to its subtype. Many contour processing functions check the type of the input sequence and report an error if they do not support this type. The file [[#cvtypes.h|cvtypes.h]] stores the complete list of all supported predefined sequence types and helper macros designed to get the sequence type of other properties. Below follows the definition of the building block of sequences.
+The remaining bits are used to identify different features specific
+to certain sequence kinds and element types. For example, curves
+made of points ( \texttt{CV\_SEQ\_KIND\_CURVE|CV\_SEQ\_ELTYPE\_POINT} ),
+together with the flag \texttt{CV\_SEQ\_FLAG\_CLOSED} belong to the
+type \texttt{CV\_SEQ\_POLYGON} or, if other flags are used, to its
+subtype. Many contour processing functions check the type of the input
+sequence and report an error if they do not support this type. The
+file \texttt{cvtypes.h} stores the complete list of all supported
+predefined sequence types and helper macros designed to get the sequence
+type of other properties. Below follows the definition of the building
+block of sequences.
 
-
-\end{verbatim}
 \cvfunc{CvSeqBlock}\label{CvSeqBlock}
-\begin{verbatim}
 
 Continuous sequence block
 
@@ -4640,12 +4690,22 @@ typedef struct CvSeqBlock
 
 \end{lstlisting}
 
-Sequence blocks make up a circular double-linked list, so the pointers \texttt{prev} and \texttt{next} are never \texttt{NULL} and point to the previous and the next sequence blocks within the sequence. It means that \texttt{next} of the last block is the first block and \texttt{prev} of the first block is the last block. The fields \texttt{start\_index} and \texttt{count} help to track the block location within the sequence. For example, if the sequence consists of 10 elements and splits into three blocks of 3, 5, and 2 elements, and the first block has the parameter `start\_index = 2`, then pairs `(start\_index, count)` for the sequence blocks are `(2,3), (5, 5)`, and `(10, 2)` correspondingly. The parameter \texttt{start\_index} of the first block is usually \texttt{} unless some elements have been inserted at the beginning of the sequence.
+Sequence blocks make up a circular double-linked list, so the pointers
+\texttt{prev} and \texttt{next} are never \texttt{NULL} and point to the
+previous and the next sequence blocks within the sequence. It means that
+\texttt{next} of the last block is the first block and \texttt{prev} of
+the first block is the last block. The fields \texttt{start\_index} and
+\texttt{count} help to track the block location within the sequence. For
+example, if the sequence consists of 10 elements and splits into three
+blocks of 3, 5, and 2 elements, and the first block has the parameter
+\texttt{start\_index = 2}, then pairs \texttt{(start\_index, count)} for the sequence
+blocks are
+(2,3), (5, 5), and (10, 2)
+correspondingly. The parameter
+\texttt{start\_index} of the first block is usually \texttt{0} unless
+some elements have been inserted at the beginning of the sequence.
 
-
-\end{verbatim}
 \cvfunc{CvSlice}\label{CvSlice}
-\begin{verbatim}
 
 A sequence slice
 
@@ -4666,14 +4726,32 @@ int cvSliceLength( CvSlice slice, const CvSeq* seq );
 
 \end{lstlisting}
 
-Some of functions that operate on sequences take `CvSlice slice` parameter that is often set to the whole sequence (CV\_WHOLE\_SEQ) by default. Either of the \texttt{start\_index} and \texttt{end\_index} may be negative or exceed the sequence length, \texttt{start\_index} is inclusive, \texttt{end\_index} is exclusive boundary. If they are equal, the slice is considered empty (i.e. contains no elements). Because sequences are treated as circular structures, the slice may select a few elements in the end of a sequence followed by a few elements in the beginning of the sequence, for example, `cvSlice(-2, 3)` in case of 10-element sequence will select 5-element slice, containing pre-last (8th), last (9th), the very first (0th), second (1th) and third (2nd) elements. The functions normalize the slice argument in the following way: first, \cross{SliceLength} is called to determine the length of the slice, then, \texttt{start\_index} of the slice is normalized similarly to the argument of \cross{GetSeqElem} (i.e. negative indices are allowed). The actual slice to process starts at the normalized \texttt{start\_index} and lasts \cross{SliceLength} elements (again, assuming the sequence is a circular structure).
+Some of functions that operate on sequences take \texttt{CvSlice slice}
+parameter that is often set to the whole sequence (CV\_WHOLE\_SEQ) by
+default. Either of the \texttt{start\_index} and \texttt{end\_index}
+may be negative or exceed the sequence length, \texttt{start\_index} is
+inclusive, \texttt{end\_index} is exclusive boundary. If they are equal,
+the slice is considered empty (i.e. contains no elements). Because
+sequences are treated as circular structures, the slice may select a
+few elements in the end of a sequence followed by a few elements in the
+beginning of the sequence, for example, \texttt{cvSlice(-2, 3)} in case of
+10-element sequence will select 5-element slice, containing pre-last
+(8th), last (9th), the very first (0th), second (1th) and third (2nd)
+elements. The functions normalize the slice argument in the following way:
+first, \cross{SliceLength} is called to determine the length of the slice,
+then, \texttt{start\_index} of the slice is normalized similarly to the
+argument of \cross{GetSeqElem} (i.e. negative indices are allowed). The
+actual slice to process starts at the normalized \texttt{start\_index}
+and lasts \cross{SliceLength} elements (again, assuming the sequence is
+a circular structure).
 
-If a function does not take slice argument, but you want to process only a part of the sequence, the sub-sequence may be extracted using \cross{SeqSlice} function, or stored as into a continuous buffer with \cross{CvtSeqToArray} (optionally, followed by \cross{MakeSeqHeaderForArray}.
+If a function does not take slice argument, but you want to process
+only a part of the sequence, the sub-sequence may be extracted
+using \cross{SeqSlice} function, or stored as into a continuous
+buffer with \cross{CvtSeqToArray} (optionally, followed by
+\cross{MakeSeqHeaderForArray}.
 
-
-\end{verbatim}
 \cvfunc{CreateSeq}\label{CreateSeq}
-\begin{verbatim}
 
 Creates sequence
 
@@ -4684,19 +4762,22 @@ CvSeq* cvCreateSeq( \par int seq\_flags,\par int header\_size,\par int elem\_siz
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{seq\_flags}{Flags of the created sequence}
-. If the sequence is not passed to any function working with a specific type of sequences, the sequence value may be set to 0, otherwise the appropriate type must be selected from the list of predefined sequence types.\cvarg{header\_size}{Size of the sequence header; must be greater or equal to `sizeof(CvSeq)`}
-. If a specific type or its extension is indicated, this type must fit the base type header.\cvarg{elem\_size}{Size of the sequence elements in bytes}
-. The size must be consistent with the sequence type. For example, for a sequence of points to be created, the element type \texttt{CV\_SEQ\_ELTYPE\_POINT} should be specified and the parameter \texttt{elem\_size} must be equal to `sizeof(CvPoint)`.\cvarg{storage}{Sequence location}
+\cvarg{seq\_flags}{Flags of the created sequence. If the sequence is not passed to any function working with a specific type of sequences, the sequence value may be set to 0, otherwise the appropriate type must be selected from the list of predefined sequence types.}
+\cvarg{header\_size}{Size of the sequence header; must be greater or equal to \texttt{sizeof(CvSeq)}. If a specific type or its extension is indicated, this type must fit the base type header.}
+\cvarg{elem\_size}{Size of the sequence elements in bytes. The size must be consistent with the sequence type. For example, for a sequence of points to be created, the element type \texttt{CV\_SEQ\_ELTYPE\_POINT} should be specified and the parameter \texttt{elem\_size} must be equal to \texttt{sizeof(CvPoint)}}
+\cvarg{storage}{Sequence location}
 \end{description}
 
+The function \texttt{cvCreateSeq} creates a sequence and returns
+the pointer to it. The function allocates the sequence header in
+the storage block as one continuous chunk and sets the structure
+fields \texttt{flags}, \texttt{elem\_size}, \texttt{header\_size} and
+\texttt{storage} to passed values, sets \texttt{delta\_elems} to the
+default value (that may be reassigned using \cross{SetSeqBlockSize}
+function), and clears other header fields, including the space after
+the first \texttt{sizeof(CvSeq)} bytes.
 
-The function \texttt{cvCreateSeq} creates a sequence and returns the pointer to it. The function allocates the sequence header in the storage block as one continuous chunk and sets the structure fields \texttt{flags}, \texttt{elem\_size}, \texttt{header\_size} and \texttt{storage} to passed values, sets \texttt{delta\_elems} to the default value (that may be reassigned using \cross{SetSeqBlockSize} function), and clears other header fields, including the space after the first `sizeof(CvSeq)` bytes.
-
-
-\end{verbatim}
 \cvfunc{SetSeqBlockSize}\label{SetSeqBlockSize}
-\begin{verbatim}
 
 Sets up sequence block size
 
@@ -4712,12 +4793,20 @@ void cvSetSeqBlockSize( \par CvSeq* seq,\par int delta\_elems );
 \end{description}
 
 
-The function \texttt{cvSetSeqBlockSize} affects memory allocation granularity. When the free space in the sequence buffers has run out, the function allocates the space for \texttt{delta\_elems} sequence elements. If this block immediately follows the one previously allocated, the two blocks are concatenated, otherwise, a new sequence block is created. Therefore, the bigger the parameter is, the lower the possible sequence fragmentation, but the more space in the storage is wasted. When the sequence is created, the parameter \texttt{delta\_elems} is set to the default value  about 1K. The function can be called any time after the sequence is created and affects future allocations. The function can modify the passed value of the parameter to meet the memory storage constraints.
+The function \texttt{cvSetSeqBlockSize} affects memory allocation
+granularity. When the free space in the sequence buffers has run out,
+the function allocates the space for \texttt{delta\_elems} sequence
+elements. If this block immediately follows the one previously allocated,
+the two blocks are concatenated, otherwise, a new sequence block is
+created. Therefore, the bigger the parameter is, the lower the possible
+sequence fragmentation, but the more space in the storage is wasted. When
+the sequence is created, the parameter \texttt{delta\_elems} is set to
+the default value  about 1K. The function can be called any time after
+the sequence is created and affects future allocations. The function
+can modify the passed value of the parameter to meet the memory storage
+constraints.
 
-
-\end{verbatim}
 \cvfunc{SeqPush}\label{SeqPush}
-\begin{verbatim}
 
 Adds element to sequence end
 
@@ -4760,9 +4849,7 @@ cvReleaseMemStorage( &storage );
 The function \texttt{cvSeqPush} has O(1) complexity, but there is a faster method for writing large sequences (see \cross{StartWriteSeq} and related functions).
 
 
-\end{verbatim}
 \cvfunc{SeqPop}\label{SeqPop}
-\begin{verbatim}
 
 Removes element from sequence end
 
@@ -4774,16 +4861,12 @@ void cvSeqPop( \par CvSeq* seq,\par void* element=NULL );
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{element}{Optional parameter}
-. If the pointer is not zero, the function copies the removed element to this location.
+\cvarg{element}{Optional parameter . If the pointer is not zero, the function copies the removed element to this location.}
 \end{description}
 
 The function \texttt{cvSeqPop} removes an element from the sequence. The function reports an error if the sequence is already empty. The function has O(1) complexity.
 
-
-\end{verbatim}
 \cvfunc{SeqPushFront}\label{SeqPushFront}
-\begin{verbatim}
 
 Adds element to sequence beginning
 
@@ -4798,13 +4881,9 @@ char* cvSeqPushFront( CvSeq* seq, void* element=NULL );
 \cvarg{element}{Added element}
 \end{description}
 
-
 The function \texttt{cvSeqPushFront} is similar to \cross{SeqPush} but it adds the new element to the beginning of the sequence. The function has O(1) complexity.
 
-
-\end{verbatim}
 \cvfunc{SeqPopFront}\label{SeqPopFront}
-\begin{verbatim}
 
 Removes element from sequence beginning
 
@@ -4816,16 +4895,12 @@ void cvSeqPopFront( \par \par CvSeq* seq,\par\par void* element=NULL );
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{element}{Optional parameter}
-. If the pointer is not zero, the function copies the removed element to this location.
+\cvarg{element}{Optional parameter. If the pointer is not zero, the function copies the removed element to this location.}
 \end{description}
 
 The function \texttt{cvSeqPopFront} removes an element from the beginning of the sequence. The function reports an error if the sequence is already empty. The function has O(1) complexity.
 
-
-\end{verbatim}
 \cvfunc{SeqPushMulti}\label{SeqPushMulti}
-\begin{verbatim}
 
 Pushes several elements to the either end of sequence
 
@@ -4839,16 +4914,19 @@ void cvSeqPushMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int
 \cvarg{seq}{Sequence}
 \cvarg{elements}{Added elements}
 \cvarg{count}{Number of elements to push}
-\cvarg{in\_front}{The flags specifying the modified sequence end}
-:<<BR>> CV\_BACK (=0) - the elements are added to the end of sequence<<BR>> CV\_FRONT(!=0) - the elements are added to the beginning of sequence<<BR>>
+\cvarg{in\_front}{The flags specifying the modified sequence end
+\begin{description}
+\cvarg{CV\_BACK}{the elements are added to the end of sequence}
+\cvarg{CV\_FRONT}{the elements are added to the beginning of sequence}
+\end{description}}
 \end{description}
 
-The function \texttt{cvSeqPushMulti} adds several elements to either end of the sequence. The elements are added to the sequence in the same order as they are arranged in the input array but they can fall into different sequence blocks.
+The function \texttt{cvSeqPushMulti} adds several elements to either
+end of the sequence. The elements are added to the sequence in the same
+order as they are arranged in the input array but they can fall into
+different sequence blocks.
 
-
-\end{verbatim}
 \cvfunc{SeqPopMulti}\label{SeqPopMulti}
-\begin{verbatim}
 
 Removes several elements from the either end of sequence
 
@@ -4862,16 +4940,16 @@ void cvSeqPopMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int 
 \cvarg{seq}{Sequence}
 \cvarg{elements}{Removed elements}
 \cvarg{count}{Number of elements to pop}
-\cvarg{in\_front}{The flags specifying the modified sequence end}
-:<<BR>> CV\_BACK (=0) - the elements are removed from the end of sequence<<BR>> CV\_FRONT(!=0) - the elements are removed from the beginning of sequence<<BR>>
+\cvarg{in\_front}{The flags specifying the modified sequence end
+\begin{description}
+\cvarg{CV\_BACK}{the elements are added to the end of sequence}
+\cvarg{CV\_FRONT}{the elements are added to the beginning of sequence}
+\end{description}}
 \end{description}
 
 The function \texttt{cvSeqPopMulti} removes several elements from either end of the sequence. If the number of the elements to be removed exceeds the total number of elements in the sequence, the function removes as many elements as possible.
 
-
-\end{verbatim}
 \cvfunc{SeqInsert}\label{SeqInsert}
-\begin{verbatim}
 
 Inserts element in sequence middle
 
@@ -4883,17 +4961,13 @@ char* cvSeqInsert( \par CvSeq* seq,\par int before\_index,\par void* element=NUL
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{before\_index}{Index before which the element is inserted}
-. Inserting before 0 (the minimal allowed value of the parameter) is equal to \cross{SeqPushFront} and inserting before `seq->total` (the maximal allowed value of the parameter) is equal to \cross{SeqPush}.\cvarg{element}{Inserted element}
+\cvarg{before\_index}{Index before which the element is inserted. Inserting before 0 (the minimal allowed value of the parameter) is equal to \cross{SeqPushFront} and inserting before \texttt{seq->total} (the maximal allowed value of the parameter) is equal to \cross{SeqPush}.}
+\cvarg{element}{Inserted element} 
 \end{description}
-
 
 The function \texttt{cvSeqInsert} shifts the sequence elements from the inserted position to the nearest end of the sequence and copies the \texttt{element} content there if the pointer is not NULL. The function returns pointer to the inserted element.
 
-
-\end{verbatim}
 \cvfunc{SeqRemove}\label{SeqRemove}
-\begin{verbatim}
 
 Removes element from sequence middle
 
@@ -4909,12 +4983,15 @@ void cvSeqRemove( \par CvSeq* seq,\par int index );
 \end{description}
 
 
-The function \texttt{cvSeqRemove} removes elements with the given index. If the index is out of range the function reports an error. An attempt to remove an element from an empty sequence is a partitial case of this situation. The function removes an element by shifting the sequence elements between the nearest end of the sequence and the \texttt{index}-th position, not counting the latter.
+The function \texttt{cvSeqRemove} removes elements with the given
+index. If the index is out of range the function reports an error. An
+attempt to remove an element from an empty sequence is a partitial
+case of this situation. The function removes an element by shifting
+the sequence elements between the nearest end of the sequence and the
+\texttt{index}-th position, not counting the latter.
 
 
-\end{verbatim}
 \cvfunc{ClearSeq}\label{ClearSeq}
-\begin{verbatim}
 
 Clears sequence
 
@@ -4929,12 +5006,12 @@ void cvClearSeq( CvSeq* seq );
 \end{description}
 
 
-The function \texttt{cvClearSeq} removes all elements from the sequence. The function does not return the memory to the storage, but this memory is reused later when new elements are added to the sequence. This function time complexity is `O(1)`.
+The function \texttt{cvClearSeq} removes all elements from the
+sequence. The function does not return the memory to the storage, but this
+memory is reused later when new elements are added to the sequence. This
+function time complexity is `O(1)`.
 
-
-\end{verbatim}
 \cvfunc{GetSeqElem}\label{GetSeqElem}
-\begin{verbatim}
 
 Returns pointer to sequence element by its index
 
@@ -4951,12 +5028,25 @@ char* cvGetSeqElem( const CvSeq* seq, int index );
 \end{description}
 
 
-The function \texttt{cvGetSeqElem} finds the element with the given index in the sequence and returns the pointer to it. If the element is not found, the function returns 0. The function supports negative indices, where -1 stands for the last sequence element, -2 stands for the one before last, etc. If the sequence is most likely to consist of a single sequence block or the desired element is likely to be located in the first block, then the macro `CV\_GET\_SEQ\_ELEM( elemType, seq, index )` should be used, where the parameter \texttt{elemType} is the type of sequence elements ( \cross{CvPoint} for example), the parameter \texttt{seq} is a sequence, and the parameter \texttt{index} is the index of the desired element. The macro checks first whether the desired element belongs to the first block of the sequence and returns it if it does, otherwise the macro calls the main function \texttt{GetSeqElem}. Negative indices always cause the \cross{GetSeqElem} call. The function has O(1) time complexity assuming that number of blocks is much smaller than the number of elements.
+The function \texttt{cvGetSeqElem} finds the element with the given
+index in the sequence and returns the pointer to it. If the element
+is not found, the function returns 0. The function supports negative
+indices, where -1 stands for the last sequence element, -2 stands for
+the one before last, etc. If the sequence is most likely to consist of
+a single sequence block or the desired element is likely to be located
+in the first block, then the macro
+\texttt{CV\_GET\_SEQ\_ELEM( elemType, seq, index )}
+should be used, where the parameter \texttt{elemType} is the
+type of sequence elements ( \cross{CvPoint} for example), the parameter
+\texttt{seq} is a sequence, and the parameter \texttt{index} is the index
+of the desired element. The macro checks first whether the desired element
+belongs to the first block of the sequence and returns it if it does,
+otherwise the macro calls the main function \texttt{GetSeqElem}. Negative
+indices always cause the \cross{GetSeqElem} call. The function has O(1)
+time complexity assuming that number of blocks is much smaller than the
+number of elements.
 
-
-\end{verbatim}
 \cvfunc{SeqElemIdx}\label{SeqElemIdx}
-\begin{verbatim}
 
 Returns index of concrete sequence element
 
@@ -4969,16 +5059,12 @@ int cvSeqElemIdx( \par const CvSeq* seq,\par const void* element,\par CvSeqBlock
 \begin{description}
 \cvarg{seq}{Sequence}
 \cvarg{element}{Pointer to the element within the sequence}
-\cvarg{block}{Optional argument}
-. If the pointer is not \texttt{NULL}, the address of the sequence block that contains the element is stored in this location.
+\cvarg{block}{Optional argument. If the pointer is not \texttt{NULL}, the address of the sequence block that contains the element is stored in this location.}
 \end{description}
 
 The function \texttt{cvSeqElemIdx} returns the index of a sequence element or a negative number if the element is not found.
 
-
-\end{verbatim}
 \cvfunc{CvtSeqToArray}\label{CvtSeqToArray}
-\begin{verbatim}
 
 Copies sequence to one continuous block of memory
 
@@ -4990,17 +5076,15 @@ void* cvCvtSeqToArray( \par const CvSeq* seq,\par void* elements,\par CvSlice sl
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{elements}{Pointer to the destination array that must be large enough}
-. It should be a pointer to data, not a matrix header.\cvarg{slice}{The sequence part to copy to the array}
+\cvarg{elements}{Pointer to the destination array that must be large enough. It should be a pointer to data, not a matrix header.}
+\cvarg{slice}{The sequence part to copy to the array}
 \end{description}
 
 
 The function \texttt{cvCvtSeqToArray} copies the entire sequence or subsequence to the specified buffer and returns the pointer to the buffer.
 
 
-\end{verbatim}
 \cvfunc{MakeSeqHeaderForArray}\label{MakeSeqHeaderForArray}
-\begin{verbatim}
 
 Constructs sequence from array
 
@@ -5012,21 +5096,23 @@ CvSeq* cvMakeSeqHeaderForArray( \par int seq\_type,\par int header\_size,\par in
 
 \begin{description}
 \cvarg{seq\_type}{Type of the created sequence}
-\cvarg{header\_size}{Size of the header of the sequence}
-. Parameter sequence must point to the structure of that size or greater size.\cvarg{elem\_size}{Size of the sequence element}
+\cvarg{header\_size}{Size of the header of the sequence . Parameter sequence must point to the structure of that size or greater size.}
+\cvarg{elem\_size}{Size of the sequence element}
 \cvarg{elements}{Elements that will form a sequence}
-\cvarg{total}{Total number of elements in the sequence}
-. The number of array elements must be equal to the value of this parameter.\cvarg{seq}{Pointer to the local variable that is used as the sequence header}
+\cvarg{total}{Total number of elements in the sequence. The number of array elements must be equal to the value of this parameter.}
+\cvarg{seq}{Pointer to the local variable that is used as the sequence header}
 \cvarg{block}{Pointer to the local variable that is the header of the single sequence block}
 \end{description}
 
+The function \texttt{cvMakeSeqHeaderForArray} initializes sequence
+header for array. The sequence header as well as the sequence block are
+allocated by the user (for example, on stack). No data is copied by the
+function. The resultant sequence will consists of a single block and
+have NULL storage pointer, thus, it is possible to read its elements,
+but the attempts to add elements to the sequence will raise an error in
+most cases.
 
-The function \texttt{cvMakeSeqHeaderForArray} initializes sequence header for array. The sequence header as well as the sequence block are allocated by the user (for example, on stack). No data is copied by the function. The resultant sequence will consists of a single block and have NULL storage pointer, thus, it is possible to read its elements, but the attempts to add elements to the sequence will raise an error in most cases.
-
-
-\end{verbatim}
 \cvfunc{SeqSlice}\label{SeqSlice}
-\begin{verbatim}
 
 Makes separate header for the sequence slice
 
@@ -5039,17 +5125,14 @@ CvSeq* cvSeqSlice( \par const CvSeq* seq,\par CvSlice slice,\par CvMemStorage* s
 \begin{description}
 \cvarg{seq}{Sequence}
 \cvarg{slice}{The part of the sequence to extract}
-\cvarg{storage}{The destination storage to keep the new sequence header and the copied data if any}
-. If it is NULL, the function uses the storage containing the input sequence.\cvarg{copy\_data}{The flag that indicates whether to copy the elements of the extracted slice (\texttt{copy\_data}!=0) or not (\texttt{copy\_data}=0)}
+\cvarg{storage}{The destination storage to keep the new sequence header and the copied data if any . If it is NULL, the function uses the storage containing the input sequence.}
+\cvarg{copy\_data}{The flag that indicates whether to copy the elements of the extracted slice (\texttt{copy\_data!=0}) or not (\texttt{copy\_data=0})}
 \end{description}
-
 
 The function \texttt{cvSeqSlice} creates a sequence that represents the specified slice of the input sequence. The new sequence either shares the elements with the original sequence or has own copy of the elements. So if one needs to process a part of sequence but the processing function does not have a slice parameter, the required sub-sequence may be extracted using this function.
 
 
-\end{verbatim}
 \cvfunc{CloneSeq}\label{CloneSeq}
-\begin{verbatim}
 
 Creates a copy of sequence
 
@@ -5061,16 +5144,22 @@ CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{storage}{The destination storage to keep the new sequence header and the copied data if any}
-. If it is NULL, the function uses the storage containing the input sequence.
+\cvarg{storage}{The destination storage to keep the new sequence header and the copied data if any. If it is NULL, the function uses the storage containing the input sequence.} 
 \end{description}
 
-The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and returns it. The call `[#cvCloneSeq cvCloneSeq]( seq, storage )` is equivalent to `[#cvSeqSlice cvSeqSlice]( seq, CV\_WHOLE\_SEQ, storage, 1 )`
+The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and returns it. The call
 
+\begin{lstlisting}
+cvCloneSeq( seq, storage )
+\end{lstlisting}
 
-\end{verbatim}
+is equivalent to
+
+\begin{lstlisting}
+cvSeqSlice]( seq, CV\_WHOLE\_SEQ, storage, 1 )
+\end{lstlisting}
+
 \cvfunc{SeqRemoveSlice}\label{SeqRemoveSlice}
-\begin{verbatim}
 
 Removes sequence slice
 
@@ -5088,10 +5177,7 @@ void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
 
 The function \texttt{cvSeqRemoveSlice} removes slice from the sequence.
 
-
-\end{verbatim}
 \cvfunc{SeqInsertSlice}\label{SeqInsertSlice}
-\begin{verbatim}
 
 Inserts array in the middle of sequence
 
@@ -5108,12 +5194,11 @@ void cvSeqInsertSlice( \par CvSeq* seq,\par int before\_index,\par const CvArr* 
 \end{description}
 
 
-The function \texttt{cvSeqInsertSlice} inserts all \texttt{from\_arr} array elements at the specified position of the sequence. The array \texttt{from\_arr} can be a matrix or another sequence.
+The function \texttt{cvSeqInsertSlice} inserts all \texttt{from\_arr}
+array elements at the specified position of the sequence. The array
+\texttt{from\_arr} can be a matrix or another sequence.
 
-
-\end{verbatim}
 \cvfunc{SeqInvert}\label{SeqInvert}
-\begin{verbatim}
 
 Reverses the order of sequence elements
 
@@ -5131,9 +5216,7 @@ void cvSeqInvert( CvSeq* seq );
 The function \texttt{cvSeqInvert} reverses the sequence in-place - makes the first element go last, the last element go first etc.
 
 
-\end{verbatim}
 \cvfunc{SeqSort}\label{SeqSort}
-\begin{verbatim}
 
 Sorts sequence element using the specified comparison function
 
@@ -5148,10 +5231,9 @@ void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );
 
 \begin{description}
 \cvarg{seq}{The sequence to sortfunc}
-\cvarg{}{The comparison function that returns negative, zero or positive value depending on the elements relation (see the above declaration and the example below) - similar function is used by \texttt{qsort} from C runline except that in the latter \texttt{userdata} is not useduserdata}
-\cvarg{}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
+\cvarg{}{The comparison function that returns negative, zero or positive value depending on the elements relation (see the above declaration and the example below) - similar function is used by \texttt{qsort} from C runline except that in the latter \texttt{userdata} is not used}
+\cvarg{userdata}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
 \end{description}
-
 
 The function \texttt{cvSeqSort} sorts the sequence in-place using the specified criteria. Below is the example of the function use:
 
@@ -5195,9 +5277,7 @@ cvReleaseMemStorage( &storage );
 \end{lstlisting}
 
 
-\end{verbatim}
 \cvfunc{SeqSearch}\label{SeqSearch}
-\begin{verbatim}
 
 Searches element in sequence
 
@@ -5212,21 +5292,23 @@ char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
 \end{lstlisting}
 
 \begin{description}
-\cvarg{seq}{The sequenceelem}
-\cvarg{}{The element to look forfunc}
-\cvarg{}{The comparison function that returns negative, zero or positive value depending on the elements relation (see also \cross{SeqSort})}
+\cvarg{seq}{The sequence}
+\cvarg{elem}{The element to look for}
+\cvarg{func}{The comparison function that returns negative, zero or positive value depending on the elements relation (see also \cross{SeqSort})}
 \cvarg{is\_sorted}{Whether the sequence is sorted or not}
 \cvarg{elem\_idx}{Output parameter; index of the found element}
 \cvarg{userdata}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
 \end{description}
 
+The function \texttt{cvSeqSearch} searches the element in the sequence. If
+the sequence is sorted, binary O(log(N)) search is used, otherwise, a
+simple linear search is used. If the element is not found, the function
+returns NULL pointer and the index is set to the number of sequence
+elements if the linear search is used, and to the smallest index
+\texttt{i, seq(i)>elem}
+.
 
-The function \texttt{cvSeqSearch} searches the element in the sequence. If the sequence is sorted, binary O(log(N)) search is used, otherwise, a simple linear search is used. If the element is not found, the function returns NULL pointer and the index is set to the number of sequence elements if the linear search is used, and to the smallest index `i, seq(i)>elem`.
-
-
-\end{verbatim}
 \cvfunc{StartAppendToSeq}\label{StartAppendToSeq}
-\begin{verbatim}
 
 Initializes process of writing data to sequence
 
@@ -5241,13 +5323,16 @@ void cvStartAppendToSeq( \par CvSeq* seq,\par CvSeqWriter* writer );
 \cvarg{writer}{Writer state; initialized by the function}
 \end{description}
 
+The function \texttt{cvStartAppendToSeq} initializes the process of
+writing data to the sequence. Written elements are added to the end of the
+sequence by
+\texttt{CV\_WRITE\_SEQ\_ELEM( written\_elem, writer )}
+macro. Note
+that during the writing process other operations on the sequence may
+yield incorrect result or even corrupt the sequence (see description of
+\cross{FlushSeqWriter} that helps to avoid some of these problems).
 
-The function \texttt{cvStartAppendToSeq} initializes the process of writing data to the sequence. Written elements are added to the end of the sequence by `CV\_WRITE\_SEQ\_ELEM( written\_elem, writer )` macro. Note that during the writing process other operations on the sequence may yield incorrect result or even corrupt the sequence (see description of \cross{FlushSeqWriter} that helps to avoid some of these problems).
-
-
-\end{verbatim}
 \cvfunc{StartWriteSeq}\label{StartWriteSeq}
-\begin{verbatim}
 
 Creates new sequence and initializes writer for it
 
@@ -5258,20 +5343,21 @@ void cvStartWriteSeq( \par int seq\_flags,\par int header\_size,\par int elem\_s
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{seq\_flags}{Flags of the created sequence}
-. If the sequence is not passed to any function working with a specific type of sequences, the sequence value may be equal to 0, otherwise the appropriate type must be selected from the list of predefined sequence types.\cvarg{header\_size}{Size of the sequence header}
-. The parameter value may not be less than `sizeof(CvSeq)`. If a certain type or extension is specified, it must fit the base type header.\cvarg{elem\_size}{Size of the sequence elements in bytes; must be consistent with the sequence type}
-. For example, if the sequence of points is created (element type \texttt{CV\_SEQ\_ELTYPE\_POINT} ), then the parameter elem\_size must be equal to `sizeof(CvPoint)`.\cvarg{storage}{Sequence location}
+\cvarg{seq\_flags}{Flags of the created sequence. If the sequence is not passed to any function working with a specific type of sequences, the sequence value may be equal to 0, otherwise the appropriate type must be selected from the list of predefined sequence types.}
+\cvarg{header\_size}{Size of the sequence header. The parameter value may not be less than \texttt{sizeof(CvSeq)}. If a certain type or extension is specified, it must fit the base type header.}
+\cvarg{elem\_size}{Size of the sequence elements in bytes; must be consistent with the sequence type. For example, if the sequence of points is created (element type \texttt{CV\_SEQ\_ELTYPE\_POINT} ), then the parameter elem\_size must be equal to \texttt{sizeof(CvPoint)}}
+\cvarg{storage}{Sequence location}
 \cvarg{writer}{Writer state; initialized by the function}
 \end{description}
 
+The function \texttt{cvStartWriteSeq} is a composition of
+\cross{CreateSeq} and \cross{StartAppendToSeq}. The pointer to the
+created sequence is stored at
+\texttt{writer->seq}
+and is also returned by
+\cross{EndWriteSeq} function that should be called in the end.
 
-The function \texttt{cvStartWriteSeq} is a composition of \cross{CreateSeq} and \cross{StartAppendToSeq}. The pointer to the created sequence is stored at `writer->seq` and is also returned by \cross{EndWriteSeq} function that should be called in the end.
-
-
-\end{verbatim}
 \cvfunc{EndWriteSeq}\label{EndWriteSeq}
-\begin{verbatim}
 
 Finishes process of writing sequence
 
@@ -5286,12 +5372,13 @@ CvSeq* cvEndWriteSeq( CvSeqWriter* writer );
 \end{description}
 
 
-The function \texttt{cvEndWriteSeq} finishes the writing process and returns the pointer to the written sequence. The function also truncates the last incomplete sequence block to return the remaining part of the block to the memory storage. After that the sequence can be read and modified safely.
+The function \texttt{cvEndWriteSeq} finishes the writing process and
+returns the pointer to the written sequence. The function also truncates
+the last incomplete sequence block to return the remaining part of the
+block to the memory storage. After that the sequence can be read and
+modified safely.
 
-
-\end{verbatim}
 \cvfunc{FlushSeqWriter}\label{FlushSeqWriter}
-\begin{verbatim}
 
 Updates sequence headers from the writer state
 
@@ -5305,13 +5392,15 @@ void cvFlushSeqWriter( CvSeqWriter* writer );
 \cvarg{writer}{Writer state}
 \end{description}
 
+The function \texttt{cvFlushSeqWriter} is intended to enable the user to
+read sequence elements, whenever required, during the writing process,
+e.g., in order to check specific conditions. The function updates the
+sequence headers to make reading from the sequence possible. The writer
+is not closed, however, so that the writing process can be continued
+any time. In some algorithm requires often flush'es, consider using
+\cross{SeqPush} instead.
 
-The function \texttt{cvFlushSeqWriter} is intended to enable the user to read sequence elements, whenever required, during the writing process, e.g., in order to check specific conditions. The function updates the sequence headers to make reading from the sequence possible. The writer is not closed, however, so that the writing process can be continued any time. In some algorithm requires often flush'es, consider using \cross{SeqPush} instead.
-
-
-\end{verbatim}
 \cvfunc{StartReadSeq}\label{StartReadSeq}
-\begin{verbatim}
 
 Initializes process of sequential reading from sequence
 
@@ -5324,11 +5413,26 @@ void cvStartReadSeq( \par const CvSeq* seq,\par CvSeqReader* reader,\par int rev
 \begin{description}
 \cvarg{seq}{Sequence}
 \cvarg{reader}{Reader state; initialized by the function}
-\cvarg{reverse}{Determines the direction of the sequence traversal}
-. If \texttt{reverse} is 0, the reader is positioned at the first sequence element, otherwise it is positioned at the last element.
+\cvarg{reverse}{Determines the direction of the sequence traversal. If \texttt{reverse} is 0, the reader is positioned at the first sequence element, otherwise it is positioned at the last element. }
 \end{description}
 
-The function \texttt{cvStartReadSeq} initializes the reader state. After that all the sequence elements from the first down to the last one can be read by subsequent calls of the macro `CV\_READ\_SEQ\_ELEM( read\_elem, reader )` in case of forward reading and by using `CV\_REV\_READ\_SEQ\_ELEM( read\_elem, reader )` in case of reversed reading. Both macros put the sequence element to \texttt{read\_elem} and move the reading pointer toward the next element. A circular structure of sequence blocks is used for the reading process, that is, after the last element has been read by the macro \texttt{CV\_READ\_SEQ\_ELEM}, the first element is read when the macro is called again. The same applies to `CV\_REV\_READ\_SEQ\_ELEM `. There is no function to finish the reading process, since it neither changes the sequence nor creates any temporary buffers. The reader field \texttt{ptr} points to the current element of the sequence that is to be read next. The code below demonstrates how to use sequence writer and reader.
+The function \texttt{cvStartReadSeq} initializes the reader state. After
+that all the sequence elements from the first down to the last one
+can be read by subsequent calls of the macro
+\texttt{CV\_READ\_SEQ\_ELEM( read\_elem, reader )}
+in case of forward reading and by using
+\texttt{CV\_REV\_READ\_SEQ\_ELEM( read\_elem, reader )}
+in case of reversed
+reading. Both macros put the sequence element to \texttt{read\_elem} and
+move the reading pointer toward the next element. A circular structure
+of sequence blocks is used for the reading process, that is, after the
+last element has been read by the macro \texttt{CV\_READ\_SEQ\_ELEM}, the
+first element is read when the macro is called again. The same applies to
+\texttt{CV\_REV\_READ\_SEQ\_ELEM}. There is no function to finish the reading
+process, since it neither changes the sequence nor creates any temporary
+buffers. The reader field \texttt{ptr} points to the current element of
+the sequence that is to be read next. The code below demonstrates how
+to use sequence writer and reader.
 
 \begin{lstlisting}
 
@@ -5366,10 +5470,7 @@ cvReleaseStorage( &storage );
 
 \end{lstlisting}
 
-
-\end{verbatim}
 \cvfunc{GetSeqReaderPos}\label{GetSeqReaderPos}
-\begin{verbatim}
 
 Returns the current reader position
 
@@ -5384,12 +5485,9 @@ int cvGetSeqReaderPos( CvSeqReader* reader );
 \end{description}
 
 
-The function \texttt{cvGetSeqReaderPos} returns the current reader position (within 0 ... `reader->seq->total` - 1).
+The function \texttt{cvGetSeqReaderPos} returns the current reader position (within 0 ... \texttt{reader->seq->total} - 1).
 
-
-\end{verbatim}
 \cvfunc{SetSeqReaderPos}\label{SetSeqReaderPos}
-\begin{verbatim}
 
 Moves the reader to specified position
 
@@ -5401,22 +5499,15 @@ void cvSetSeqReaderPos( \par CvSeqReader* reader,\par int index,\par int is\_rel
 
 \begin{description}
 \cvarg{reader}{Reader state}
-\cvarg{index}{The destination position}
-. If the positioning mode is used (see the next parameter) the actual position will be \texttt{index} mod `reader->seq->total`.\cvarg{is\_relative}{If it is not zero, then \texttt{index} is a relative to the current position}
+\cvarg{index}{The destination position. If the positioning mode is used (see the next parameter) the actual position will be \texttt{index} mod \texttt{reader->seq->total}.}
+\cvarg{is\_relative}{If it is not zero, then \texttt{index} is a relative to the current position}
 \end{description}
-
 
 The function \texttt{cvSetSeqReaderPos} moves the read position to the absolute position or relative to the current position.
 
-
-\end{verbatim}
 \subsection{Sets}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{CvSet}\label{CvSet}
-\begin{verbatim}
 
 Collection of nodes
 
@@ -5443,16 +5534,39 @@ typedef struct CvSet
 
 The structure \cross{CvSet} is a base for OpenCV sparse data structures.
 
-As follows from the above declaration \cross{CvSet} inherits from \cross{CvSeq} and it adds \texttt{free\_elems} field it to, which is a list of free nodes. Every set node, whether free or not, is the element of the underlying sequence. While there is no restrictions on elements of dense sequences, the set (and derived structures) elements must start with integer field and be able to fit CvSetElem structure, because these two fields (integer followed by the pointer) are required for organization of node set with the list of free nodes. If a node is free, \texttt{flags} field is negative (the most-significant bit, or MSB, of the field is set), and \texttt{next\_free} points to the next free node (the first free node is referenced by \texttt{free\_elems} field of \cross{CvSet}). And if a node is occupied, \texttt{flags} field is positive and contains the node index that may be retrieved using (set\_elem->flags & CV\_SET\_ELEM\_IDX\_MASK) expression, the rest of the node content is determined by the user. In particular, the occupied nodes are not linked as the free nodes are, so the second field can be used for such a link as well as for some different purpose. The macro `CV\_IS\_SET\_ELEM(set\_elem\_ptr)` can be used to determined whether the specified node is occupied or not.
+As follows from the above declaration \cross{CvSet} inherits from
+\cross{CvSeq} and it adds \texttt{free\_elems} field it to, which
+is a list of free nodes. Every set node, whether free or not, is the
+element of the underlying sequence. While there is no restrictions on
+elements of dense sequences, the set (and derived structures) elements
+must start with integer field and be able to fit CvSetElem structure,
+because these two fields (integer followed by the pointer) are required
+for organization of node set with the list of free nodes. If a node is
+free, \texttt{flags} field is negative (the most-significant bit, or
+MSB, of the field is set), and \texttt{next\_free} points to the next
+free node (the first free node is referenced by \texttt{free\_elems}
+field of \cross{CvSet}). And if a node is occupied, \texttt{flags} field
+is positive and contains the node index that may be retrieved using
+(\texttt{set\_elem->flags \& CV\_SET\_ELEM\_IDX\_MASK}) expression, the rest of
+the node content is determined by the user. In particular, the occupied
+nodes are not linked as the free nodes are, so the second field can be
+used for such a link as well as for some different purpose. The macro
+`CV\_IS\_SET\_ELEM(set\_elem\_ptr)` can be used to determined whether
+the specified node is occupied or not.
 
-Initially the set and the list are empty. When a new node is requiested from the set, it is taken from the list of free nodes, which is updated then. If the list appears to be empty, a new sequence block is allocated and all the nodes within the block are joined in the list of free nodes. Thus, \texttt{total} field of the set is the total number of nodes both occupied and free. When an occupied node is released, it is added to the list of free nodes. The node released last will be occupied first.
+Initially the set and the list are empty. When a new node is requiested
+from the set, it is taken from the list of free nodes, which is updated
+then. If the list appears to be empty, a new sequence block is allocated
+and all the nodes within the block are joined in the list of free
+nodes. Thus, \texttt{total} field of the set is the total number of nodes
+both occupied and free. When an occupied node is released, it is added
+to the list of free nodes. The node released last will be occupied first.
 
-In OpenCV \cross{CvSet} is used for representing graphs (\cross{CvGraph}), sparse multi-dimensional arrays (\cross{CvSparseMat}), planar subdivisions ([[#CvSubdiv2D|CvSubdiv2D]]) etc.
+In OpenCV \cross{CvSet} is used for representing graphs (\cross{CvGraph}),
+sparse multi-dimensional arrays (\cross{CvSparseMat}), planar subdivisions
+\cross{CvSubdiv2D}.
 
-
-\end{verbatim}
 \cvfunc{CreateSet}\label{CreateSet}
-\begin{verbatim}
 
 Creates empty set
 
@@ -5464,18 +5578,14 @@ CvSet* cvCreateSet( \par int set\_flags,\par int header\_size,\par int elem\_siz
 
 \begin{description}
 \cvarg{set\_flags}{Type of the created set}
-\cvarg{header\_size}{Set header size; may not be less than `sizeof(CvSet)`}
+\cvarg{header\_size}{Set header size; may not be less than \texttt{sizeof(CvSet)}}
 \cvarg{elem\_size}{Set element size; may not be less than \cross{CvSetElem}}
 \cvarg{storage}{Container for the set}
 \end{description}
 
-
 The function \texttt{cvCreateSet} creates an empty set with a specified header size and element size, and returns the pointer to the set. The function is just a thin layer on top of \cross{CreateSeq}.
 
-
-\end{verbatim}
 \cvfunc{SetAdd}\label{SetAdd}
-\begin{verbatim}
 
 Occupies a node in the set
 
@@ -5487,17 +5597,17 @@ int cvSetAdd( \par CvSet* set\_header,\par CvSetElem* elem=NULL,\par CvSetElem**
 
 \begin{description}
 \cvarg{set\_header}{Set}
-\cvarg{elem}{Optional input argument, inserted element}
-. If not NULL, the function copies the data to the allocated node (The MSB of the first integer field is cleared after copying).\cvarg{inserted\_elem}{Optional output argument; the pointer to the allocated cell}
+\cvarg{elem}{Optional input argument, inserted element. If not NULL, the function copies the data to the allocated node (The MSB of the first integer field is cleared after copying).}
+\cvarg{inserted\_elem}{Optional output argument; the pointer to the allocated cell}
 \end{description}
 
+The function \texttt{cvSetAdd} allocates a new node, optionally copies
+input element data to it, and returns the pointer and the index to the
+node. The index value is taken from the lower bits of \texttt{flags}
+field of the node. The function has O(1) complexity, however there exists
+a faster function for allocating set nodes (see \cross{SetNew}).
 
-The function \texttt{cvSetAdd} allocates a new node, optionally copies input element data to it, and returns the pointer and the index to the node. The index value is taken from the lower bits of \texttt{flags} field of the node. The function has O(1) complexity, however there exists a faster function for allocating set nodes (see \cross{SetNew}).
-
-
-\end{verbatim}
 \cvfunc{SetRemove}\label{SetRemove}
-\begin{verbatim}
 
 Removes element from set
 
@@ -5512,13 +5622,13 @@ void cvSetRemove( \par CvSet* set\_header,\par int index );
 \cvarg{index}{Index of the removed element}
 \end{description}
 
+The function \texttt{cvSetRemove} removes an element with a specified
+index from the set. If the node at the specified location is not occupied
+the function does nothing. The function has O(1) complexity, however,
+\cross{SetRemoveByPtr} provides yet faster way to remove a set element
+if it is located already.
 
-The function \texttt{cvSetRemove} removes an element with a specified index from the set. If the node at the specified location is not occupied the function does nothing. The function has O(1) complexity, however, \cross{SetRemoveByPtr} provides yet faster way to remove a set element if it is located already.
-
-
-\end{verbatim}
 \cvfunc{SetNew}\label{SetNew}
-\begin{verbatim}
 
 Adds element to set (fast variant)
 
@@ -5536,9 +5646,7 @@ CvSetElem* cvSetNew( CvSet* set\_header );
 The function \texttt{cvSetNew} is inline light-weight variant of \cross{SetAdd}. It occupies a new node and returns pointer to it rather than index.
 
 
-\end{verbatim}
 \cvfunc{SetRemoveByPtr}\label{SetRemoveByPtr}
-\begin{verbatim}
 
 Removes set element given its pointer
 
@@ -5553,13 +5661,10 @@ void cvSetRemoveByPtr( \par CvSet* set\_header,\par void* elem );
 \cvarg{elem}{Removed element}
 \end{description}
 
-
 The function \texttt{cvSetRemoveByPtr} is inline light-weight variant of \cross{SetRemove} that takes element pointer. The function does not check whether the node is occupied or not - the user should take care of it.
 
 
-\end{verbatim}
 \cvfunc{GetSetElem}\label{GetSetElem}
-\begin{verbatim}
 
 Finds set element by its index
 
@@ -5574,13 +5679,9 @@ CvSetElem* cvGetSetElem( \par const CvSet* set\_header,\par int index );
 \cvarg{index}{Index of the set element within a sequence}
 \end{description}
 
-
 The function \texttt{cvGetSetElem} finds a set element by index. The function returns the pointer to it or 0 if the index is invalid or the corresponding node is free. The function supports negative indices as it uses \cross{GetSeqElem} to locate the node.
 
-
-\end{verbatim}
 \cvfunc{ClearSet}\label{ClearSet}
-\begin{verbatim}
 
 Clears set
 
@@ -5598,14 +5699,10 @@ void cvClearSet( CvSet* set\_header );
 The function \texttt{cvClearSet} removes all elements from set. It has O(1) time complexity.
 
 
-\end{verbatim}
 \subsection{Graphs}
-\begin{verbatim}
 
 
-\end{verbatim}
 \cvfunc{CvGraph}\label{CvGraph}
-\begin{verbatim}
 
 Oriented or unoriented weigted graph
 
@@ -5650,16 +5747,27 @@ The structure \cross{CvGraph} is a base for graphs used in OpenCV.
 
 Graph structure inherits from \cross{CvSet} - this part describes common graph properties and the graph vertices, and contains another set as a member - this part describes the graph edges.
 
-The vertex, edge and the graph header structures are declared using the same technique as other extendible OpenCV structures - via macros, that simplifies extension and customization of the structures. While the vertex and edge structures do not inherit from \cross{CvSetElem} explicitly, they satisfy both conditions on the set elements - have an integer field in the beginning and fit CvSetElem structure. The \texttt{flags} fields are used as for indicating occupied vertices and edges as well as for other purposes, for example, for graph traversal (see \cross{CreateGraphScanner} et al.), so it is better not to use them directly.
+The vertex, edge and the graph header structures are declared using the
+same technique as other extendible OpenCV structures - via macros, that
+simplifies extension and customization of the structures. While the vertex
+and edge structures do not inherit from \cross{CvSetElem} explicitly, they
+satisfy both conditions on the set elements - have an integer field in
+the beginning and fit CvSetElem structure. The \texttt{flags} fields are
+used as for indicating occupied vertices and edges as well as for other
+purposes, for example, for graph traversal (see \cross{CreateGraphScanner}
+et al.), so it is better not to use them directly.
 
-The graph is represented as a set of edges each of whose has the list of incident edges. The incidence lists for different vertices are interleaved to avoid information duplication as much as posssible.
+The graph is represented as a set of edges each of whose has the list of
+incident edges. The incidence lists for different vertices are interleaved
+to avoid information duplication as much as posssible.
 
-The graph may be oriented or unoriented. In the latter case there is no distiction between edge connecting vertex A with vertex B and the edge connecting vertex B with vertex A - only one of them can exist in the graph at the same moment and it represents both <A, B> and <B, A> edges..
+The graph may be oriented or unoriented. In the latter case there is no
+distiction between edge connecting vertex $A$ with vertex $B$ and the edge
+connecting vertex $B$ with vertex $A$ - only one of them can exist in the
+graph at the same moment and it represents both $A \rightarrow B$ and
+$B \rightarrow A$ edges..
 
-
-\end{verbatim}
 \cvfunc{CreateGraph}\label{CreateGraph}
-\begin{verbatim}
 
 Creates empty graph
 
@@ -5670,20 +5778,17 @@ CvGraph* cvCreateGraph( \par int graph\_flags,\par int header\_size,\par int vtx
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{graph\_flags}{Type of the created graph}
-. Usually, it is either \texttt{CV\_SEQ\_KIND\_GRAPH} for generic unoriented graphs and `CV\_SEQ\_KIND\_GRAPH | CV\_GRAPH\_FLAG\_ORIENTED` for generic oriented graphs.\cvarg{header\_size}{Graph header size; may not be less than `sizeof(CvGraph)}
-\cvarg{`vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use `CV\_GRAPH\_VERTEX\_FIELDS()`)edge\_size}
-\cvarg{}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use `CV\_GRAPH\_EDGE\_FIELDS()`)storage}
-\cvarg{}{The graph container}
+\cvarg{graph\_flags}{Type of the created graph. Usually, it is either \texttt{CV\_SEQ\_KIND\_GRAPH} for generic unoriented graphs and
+\texttt{CV\_SEQ\_KIND\_GRAPH | CV\_GRAPH\_FLAG\_ORIENTED} for generic oriented graphs.}
+\cvarg{header\_size}{Graph header size; may not be less than \texttt{sizeof(CvGraph)}}
+\cvarg{vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use `CV\_GRAPH\_VERTEX\_FIELDS()`)}
+\cvarg{edge\_size}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use `CV\_GRAPH\_EDGE\_FIELDS()`)}
+\cvarg{storage}{The graph container}
 \end{description}
-
 
 The function \texttt{cvCreateGraph} creates an empty graph and returns pointer to it.
 
-
-\end{verbatim}
 \cvfunc{GraphAddVtx}\label{GraphAddVtx}
-\begin{verbatim}
 
 Adds vertex to graph
 
@@ -5696,16 +5801,12 @@ int cvGraphAddVtx( \par CvGraph* graph,\par const CvGraphVtx* vtx=NULL,\par CvGr
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{vtx}{Optional input argument used to initialize the added vertex (only user-defined fields beyond `sizeof(CvGraphVtx)` are copied)}
-\cvarg{inserted\_vertex}{Optional output argument}
-. If not \texttt{NULL}, the address of the new vertex is written there.
+\cvarg{inserted\_vertex}{Optional output argument. If not \texttt{NULL}, the address of the new vertex is written there.}
 \end{description}
 
 The function \texttt{cvGraphAddVtx} adds a vertex to the graph and returns the vertex index.
 
-
-\end{verbatim}
 \cvfunc{GraphRemoveVtx}\label{GraphRemoveVtx}
-\begin{verbatim}
 
 Removes vertex from graph
 
@@ -5720,13 +5821,12 @@ int cvGraphRemoveVtx( \par CvGraph* graph,\par int index );
 \cvarg{vtx\_idx}{Index of the removed vertex}
 \end{description}
 
+The function \texttt{cvGraphRemoveAddVtx} removes a vertex from the graph
+together with all the edges incident to it. The function reports an error,
+if the input vertex does not belong to the graph. The return value is
+number of edges deleted, or -1 if the vertex does not belong to the graph.
 
-The function \texttt{cvGraphRemoveAddVtx} removes a vertex from the graph together with all the edges incident to it. The function reports an error, if the input vertex does not belong to the graph. The return value is number of edges deleted, or -1 if the vertex does not belong to the graph.
-
-
-\end{verbatim}
 \cvfunc{GraphRemoveVtxByPtr}\label{GraphRemoveVtxByPtr}
-\begin{verbatim}
 
 Removes vertex from graph
 
@@ -5744,10 +5844,7 @@ int cvGraphRemoveVtxByPtr( \par CvGraph* graph,\par CvGraphVtx* vtx );
 
 The function \texttt{cvGraphRemoveVtxByPtr} removes a vertex from the graph together with all the edges incident to it. The function reports an error, if the vertex does not belong to the graph. The return value is number of edges deleted, or -1 if the vertex does not belong to the graph.
 
-
-\end{verbatim}
 \cvfunc{GetGraphVtx}\label{GetGraphVtx}
-\begin{verbatim}
 
 Finds graph vertex by index
 
@@ -5766,9 +5863,7 @@ CvGraphVtx* cvGetGraphVtx( \par CvGraph* graph,\par int vtx\_idx );
 The function \texttt{cvGetGraphVtx} finds the graph vertex by index and returns the pointer to it or NULL if the vertex does not belong to the graph.
 
 
-\end{verbatim}
 \cvfunc{GraphVtxIdx}\label{GraphVtxIdx}
-\begin{verbatim}
 
 Returns index of graph vertex
 
@@ -5783,13 +5878,9 @@ int cvGraphVtxIdx( \par CvGraph* graph,\par CvGraphVtx* vtx );
 \cvarg{vtx}{Pointer to the graph vertex}
 \end{description}
 
-
 The function \texttt{cvGraphVtxIdx} returns index of the graph vertex.
 
-
-\end{verbatim}
 \cvfunc{GraphAddEdge}\label{GraphAddEdge}
-\begin{verbatim}
 
 Adds edge to graph
 
@@ -5802,18 +5893,15 @@ int cvGraphAddEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_idx,\p
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_idx}{Index of the starting vertex of the edge}
-\cvarg{end\_idx}{Index of the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.\cvarg{edge}{Optional input parameter, initialization data for the edge}
+\cvarg{end\_idx}{Index of the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
+\cvarg{edge}{Optional input parameter, initialization data for the edge}
 \cvarg{inserted\_edge}{Optional output parameter to contain the address of the inserted edge}
 \end{description}
 
 
 The function \texttt{cvGraphAddEdge} connects two specified vertices. The function returns 1 if the edge has been added successfully, 0 if the edge connecting the two vertices exists already and -1 if either of the vertices was not found, the starting and the ending vertex are the same or there is some other critical situation. In the latter case (i.e. when the result is negative) the function also reports an error by default.
 
-
-\end{verbatim}
 \cvfunc{GraphAddEdgeByPtr}\label{GraphAddEdgeByPtr}
-\begin{verbatim}
 
 Adds edge to graph
 
@@ -5826,18 +5914,19 @@ int cvGraphAddEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\par Cv
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_vtx}{Pointer to the starting vertex of the edge}
-\cvarg{end\_vtx}{Pointer to the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.\cvarg{edge}{Optional input parameter, initialization data for the edge}
+\cvarg{end\_vtx}{Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
+\cvarg{edge}{Optional input parameter, initialization data for the edge}
 \cvarg{inserted\_edge}{Optional output parameter to contain the address of the inserted edge within the edge set}
 \end{description}
 
+The function \texttt{cvGraphAddEdge} connects two specified vertices. The
+function returns 1 if the edge has been added successfully, 0 if the
+edge connecting the two vertices exists already and -1 if either of the
+vertices was not found, the starting and the ending vertex are the same
+or there is some other critical situation. In the latter case (i.e. when
+the result is negative) the function also reports an error by default.
 
-The function \texttt{cvGraphAddEdge} connects two specified vertices. The function returns 1 if the edge has been added successfully, 0 if the edge connecting the two vertices exists already and -1 if either of the vertices was not found, the starting and the ending vertex are the same or there is some other critical situation. In the latter case (i.e. when the result is negative) the function also reports an error by default.
-
-
-\end{verbatim}
 \cvfunc{GraphRemoveEdge}\label{GraphRemoveEdge}
-\begin{verbatim}
 
 Removes edge from graph
 
@@ -5850,16 +5939,12 @@ void cvGraphRemoveEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_id
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_idx}{Index of the starting vertex of the edge}
-\cvarg{end\_idx}{Index of the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.
+\cvarg{end\_idx}{Index of the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
 \end{description}
 
 The function \texttt{cvGraphRemoveEdge} removes the edge connecting two specified vertices. If the vertices are not connected [in that order], the function does nothing.
 
-
-\end{verbatim}
 \cvfunc{GraphRemoveEdgeByPtr}\label{GraphRemoveEdgeByPtr}
-\begin{verbatim}
 
 Removes edge from graph
 
@@ -5872,14 +5957,11 @@ void cvGraphRemoveEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\pa
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_vtx}{Pointer to the starting vertex of the edge}
-\cvarg{end\_vtx}{Pointer to the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.
+\cvarg{end\_vtx}{Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
 \end{description}
 
 The function \texttt{cvGraphRemoveEdgeByPtr} removes the edge connecting two specified vertices. If the vertices are not connected [in that order], the function does nothing.
 
-
-\end{verbatim}
 \cvfunc{FindGraphEdge}\label{FindGraphEdge}
 \begin{verbatim}
 
