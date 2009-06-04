@@ -5963,7 +5963,6 @@ void cvGraphRemoveEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\pa
 The function \texttt{cvGraphRemoveEdgeByPtr} removes the edge connecting two specified vertices. If the vertices are not connected [in that order], the function does nothing.
 
 \cvfunc{FindGraphEdge}\label{FindGraphEdge}
-\begin{verbatim}
 
 Finds edge in graph
 
@@ -5977,16 +5976,12 @@ CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx )
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_idx}{Index of the starting vertex of the edge}
-\cvarg{end\_idx}{Index of the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.
+\cvarg{end\_idx}{Index of the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
 \end{description}
 
 The function \texttt{cvFindGraphEdge} finds the graph edge connecting two specified vertices and returns pointer to it or NULL if the edge does not exists.
 
-
-\end{verbatim}
 \cvfunc{FindGraphEdgeByPtr}\label{FindGraphEdgeByPtr}
-\begin{verbatim}
 
 Finds edge in graph
 
@@ -6003,16 +5998,12 @@ CvGraphEdge* cvFindGraphEdgeByPtr( \par const CvGraph* graph,\par const CvGraphV
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{start\_vtx}{Pointer to the starting vertex of the edge}
-\cvarg{end\_vtx}{Pointer to the ending vertex of the edge}
-. For unoriented graph the order of the vertex parameters does not matter.
+\cvarg{end\_vtx}{Pointer to the ending vertex of the edge. For unoriented graph the order of the vertex parameters does not matter.}
 \end{description}
 
 The function \texttt{cvFindGraphEdge} finds the graph edge connecting two specified vertices and returns pointer to it or NULL if the edge does not exists.
 
-
-\end{verbatim}
 \cvfunc{GraphEdgeIdx}\label{GraphEdgeIdx}
-\begin{verbatim}
 
 Returns index of graph edge
 
@@ -6027,13 +6018,9 @@ int cvGraphEdgeIdx( \par CvGraph* graph,\par CvGraphEdge* edge );
 \cvarg{edge}{Pointer to the graph edge}
 \end{description}
 
-
 The function \texttt{cvGraphEdgeIdx} returns index of the graph edge.
 
-
-\end{verbatim}
 \cvfunc{GraphVtxDegree}\label{GraphVtxDegree}
-\begin{verbatim}
 
 Counts edges indicent to the vertex
 
@@ -6048,7 +6035,6 @@ int cvGraphVtxDegree( const CvGraph* graph, int vtx\_idx );
 \cvarg{vtx}{Index of the graph vertex}
 \end{description}
 
-
 The function \texttt{cvGraphVtxDegree} returns the number of edges incident to the specified vertex, both incoming and outcoming. To count the edges, the following code is used:
 
 \begin{lstlisting}
@@ -6062,12 +6048,9 @@ while( edge )
 
 \end{lstlisting}
 
-The macro `CV\_NEXT\_GRAPH\_EDGE( edge, vertex )` returns the edge incident to \texttt{vertex} that follows after \texttt{edge}.
+The macro \texttt{CV\_NEXT\_GRAPH\_EDGE( edge, vertex )} returns the edge incident to \texttt{vertex} that follows after \texttt{edge}.
 
-
-\end{verbatim}
 \cvfunc{GraphVtxDegreeByPtr}\label{GraphVtxDegreeByPtr}
-\begin{verbatim}
 
 Finds edge in graph
 
@@ -6082,13 +6065,10 @@ int cvGraphVtxDegreeByPtr( \par const CvGraph* graph,\par const CvGraphVtx* vtx 
 \cvarg{vtx}{Pointer to the graph vertex}
 \end{description}
 
-
 The function \texttt{cvGraphVtxDegree} returns the number of edges incident to the specified vertex, both incoming and outcoming.
 
 
-\end{verbatim}
 \cvfunc{ClearGraph}\label{ClearGraph}
-\begin{verbatim}
 
 Clears graph
 
@@ -6102,13 +6082,9 @@ void cvClearGraph( CvGraph* graph );
 \cvarg{graph}{Graph}
 \end{description}
 
-
 The function \texttt{cvClearGraph} removes all vertices and edges from the graph. The function has O(1) time complexity.
 
-
-\end{verbatim}
 \cvfunc{CloneGraph}\label{CloneGraph}
-\begin{verbatim}
 
 Clone graph
 
@@ -6124,12 +6100,14 @@ CvGraph* cvCloneGraph( \par const CvGraph* graph,\par CvMemStorage* storage );
 \end{description}
 
 
-The function \texttt{cvCloneGraph} creates full copy of the graph. If the graph vertices or edges have pointers to some external data, it still be shared between the copies. The vertex and edge indices in the new graph may be different from the original, because the function defragments the vertex and edge sets.
+The function \texttt{cvCloneGraph} creates full copy of the graph. If the
+graph vertices or edges have pointers to some external data, it still be
+shared between the copies. The vertex and edge indices in the new graph
+may be different from the original, because the function defragments
+the vertex and edge sets.
 
 
-\end{verbatim}
 \cvfunc{CvGraphScanner}\label{CvGraphScanner}
-\begin{verbatim}
 
 Graph traversal state
 
@@ -6153,9 +6131,7 @@ CvGraphScanner;
 The structure \cross{CvGraphScanner} is used for depth-first graph traversal. See discussion of the functions below.
 
 
-\end{verbatim}
 \cvfunc{CreateGraphScanner}\label{CreateGraphScanner}
-\begin{verbatim}
 
 Creates structure for depth-first graph traversal
 
@@ -6167,25 +6143,24 @@ CvGraphScanner*  cvCreateGraphScanner( \par CvGraph* graph,\par CvGraphVtx* vtx=
 
 \begin{description}
 \cvarg{graph}{Graph}
-\cvarg{vtx}{Initial vertex to start from}
-. If NULL, the traversal starts from the first vertex (a vertex with the minimal index in the sequence of vertices).\cvarg{mask}{Event mask indicating which events are interesting to the user (where \cross{NextGraphItem} function returns control to the user) It can be \texttt{CV\_GRAPH\_ALL\_ITEMS} (all events are interesting) or combination of the following flags}
-:
-  * CV\_GRAPH\_VERTEX - stop at the graph vertices visited for the first time<<BR>>
-  * CV\_GRAPH\_TREE\_EDGE - stop at tree edges (`tree edge` is the edge connecting the last visited vertex and the vertex to be visited next)<<BR>>
-  * CV\_GRAPH\_BACK\_EDGE - stop at back edges (`back edge` is an edge connecting the last visited vertex with some of its ancestors in the search tree)<<BR>>
-  * CV\_GRAPH\_FORWARD\_EDGE - stop at forward edges (`forward edge` is an edge conecting the last visited vertex with some of its descendants in the search tree). The `forward edges` are only possible during oriented graph traversal)<<BR>>
-  * CV\_GRAPH\_CROSS\_EDGE - stop at cross edges (`cross edge` is an edge connecting different search trees or branches of the same tree. The `cross edges` are only possible during oriented graphs traversal)<<BR>>
-  * CV\_GRAPH\_ANY\_EDGE - stop and any edge (`tree, back, forward` and `cross edges`)<<BR>>
-  * CV\_GRAPH\_NEW\_TREE - stop in the beginning of every new search tree. When the traversal procedure visits all vertices and edges reachible from the initial vertex (the visited vertices together with tree edges make up a tree), it searches for some unvisited vertex in the graph and resumes the traversal process from that vertex. Before starting a new tree (including the very first tree when \texttt{cvNextGraphItem} is called for the first time) it generates \texttt{CV\_GRAPH\_NEW\_TREE} event.<<BR>> For unoriented graphs each search tree corresponds to a connected component of the graph.<<BR>>
-  * CV\_GRAPH\_BACKTRACKING - stop at every already visited vertex during backtracking - returning to already visited vertexes of the traversal tree.<<BR>>
+\cvarg{vtx}{Initial vertex to start from. If NULL, the traversal starts from the first vertex (a vertex with the minimal index in the sequence of vertices).}
+\cvarg{mask}{Event mask indicating which events are interesting to the user (where \cross{NextGraphItem} function returns control to the user) It can be \texttt{CV\_GRAPH\_ALL\_ITEMS} (all events are interesting) or combination of the following flags:
+
+\begin{description}
+\cvarg{CV\_GRAPH\_VERTEX}{stop at the graph vertices visited for the first time}
+\cvarg{CV\_GRAPH\_TREE\_EDGE}{stop at tree edges (`tree edge` is the edge connecting the last visited vertex and the vertex to be visited next)}
+\cvarg{CV\_GRAPH\_BACK\_EDGE}{stop at back edges (`back edge` is an edge connecting the last visited vertex with some of its ancestors in the search tree)}
+\cvarg{CV\_GRAPH\_FORWARD\_EDGE}{stop at forward edges (`forward edge` is an edge conecting the last visited vertex with some of its descendants in the search tree). The `forward edges` are only possible during oriented graph traversal)}
+\cvarg{CV\_GRAPH\_CROSS\_EDGE}{stop at cross edges (`cross edge` is an edge connecting different search trees or branches of the same tree. The `cross edges` are only possible during oriented graphs traversal)}
+\cvarg{CV\_GRAPH\_ANY\_EDGE}{stop and any edge (`tree, back, forward` and `cross edges`)}
+\cvarg{CV\_GRAPH\_NEW\_TREE}{stop in the beginning of every new search tree. When the traversal procedure visits all vertices and edges reachible from the initial vertex (the visited vertices together with tree edges make up a tree), it searches for some unvisited vertex in the graph and resumes the traversal process from that vertex. Before starting a new tree (including the very first tree when \texttt{cvNextGraphItem} is called for the first time) it generates \texttt{CV\_GRAPH\_NEW\_TREE} event. For unoriented graphs each search tree corresponds to a connected component of the graph.}
+\cvarg{CV\_GRAPH\_BACKTRACKING}{stop at every already visited vertex during backtracking - returning to already visited vertexes of the traversal tree.}
+\end{description}}
 \end{description}
 
 The function \texttt{cvCreateGraphScanner} creates structure for depth-first graph traversal/search. The initialized structure is used in \cross{NextGraphItem} function - the incremental traversal procedure.
 
-
-\end{verbatim}
 \cvfunc{NextGraphItem}\label{NextGraphItem}
-\begin{verbatim}
 
 Makes one or more steps of the graph traversal procedure
 
@@ -6196,16 +6171,23 @@ int cvNextGraphItem( CvGraphScanner* scanner );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{scanner}{Graph traversal state}
-. It is updated by the function.
+\cvarg{scanner}{Graph traversal state. It is updated by the function.}
 \end{description}
 
-The function \texttt{cvNextGraphItem} traverses through the graph until an event interesting to the user (that is, an event, specified in the \texttt{mask} in \cross{CreateGraphScanner} call) is met or the traversal is over. In the first case it returns one of the events, listed in the description of \texttt{mask} parameter above and with the next call it resumes the traversal. In the latter case it returns CV\_GRAPH\_OVER (-1). When the event is \texttt{CV\_GRAPH\_VERTEX}, or \texttt{CV\_GRAPH\_BACKTRACKING} or \texttt{CV\_GRAPH\_NEW\_TREE}, the currently observed vertex is stored in `scanner->vtx`. And if the event is edge-related, the edge itself is stored at `scanner->edge`, the previously visited vertex - at `scanner->vtx` and the other ending vertex of the edge - at `scanner->dst`.
+The function \texttt{cvNextGraphItem} traverses through the graph
+until an event interesting to the user (that is, an event, specified
+in the \texttt{mask} in \cross{CreateGraphScanner} call) is met or the
+traversal is over. In the first case it returns one of the events,
+listed in the description of \texttt{mask} parameter above and with
+the next call it resumes the traversal. In the latter case it returns
+\texttt{CV\_GRAPH\_OVER} (-1). When the event is \texttt{CV\_GRAPH\_VERTEX},
+or \texttt{CV\_GRAPH\_BACKTRACKING} or \texttt{CV\_GRAPH\_NEW\_TREE},
+the currently observed vertex is stored in `scanner->vtx`. And if the
+event is edge-related, the edge itself is stored at `scanner->edge`,
+the previously visited vertex - at `scanner->vtx` and the other ending
+vertex of the edge - at `scanner->dst`.
 
-
-\end{verbatim}
 \cvfunc{ReleaseGraphScanner}\label{ReleaseGraphScanner}
-\begin{verbatim}
 
 Finishes graph traversal procedure
 
@@ -6223,14 +6205,10 @@ void cvReleaseGraphScanner( CvGraphScanner** scanner );
 The function \texttt{cvGraphScanner} finishes graph traversal procedure and releases the traverser state.
 
 
-\end{verbatim}
 \subsection{Trees}
-\begin{verbatim}
 
 
-\end{verbatim}
 \cvfunc{CV\_TREE\_NODE\_FIELDS}\label{CV_TREE_NODE_FIELDS}
-\begin{verbatim}
 
 Helper macro for a tree node type declaration
 
@@ -6246,12 +6224,13 @@ Helper macro for a tree node type declaration
 
 \end{lstlisting}
 
-The macro `CV\_TREE\_NODE\_FIELDS()` is used to declare structures that can be organized into hierarchical strucutures (trees), such as \cross{CvSeq} - the basic type for all dynamical structures. The trees made of nodes declared using this macro can be processed using the functions described below in this section.
+The macro \texttt{CV\_TREE\_NODE\_FIELDS()} is used to declare structures
+that can be organized into hierarchical strucutures (trees), such as
+\cross{CvSeq} - the basic type for all dynamical structures. The trees
+made of nodes declared using this macro can be processed using the
+functions described below in this section.
 
-
-\end{verbatim}
 \cvfunc{CvTreeNodeIterator}\label{CvTreeNodeIterator}
-\begin{verbatim}
 
 Opens existing or creates new file storage
 
@@ -6269,10 +6248,7 @@ CvTreeNodeIterator;
 
 The structure \cross{CvTreeNodeIterator} is used to traverse trees. The tree node declaration should start with `CV\_TREE\_NODE\_FIELDS(...)` macro.
 
-
-\end{verbatim}
 \cvfunc{InitTreeNodeIterator}\label{InitTreeNodeIterator}
-\begin{verbatim}
 
 Initializes tree node iterator
 
@@ -6285,16 +6261,12 @@ void cvInitTreeNodeIterator( \par CvTreeNodeIterator* tree\_iterator,\par const 
 \begin{description}
 \cvarg{tree\_iterator}{Tree iterator initialized by the function}
 \cvarg{first}{The initial node to start traversing from}
-\cvarg{max\_level}{The maximal level of the tree (\texttt{first} node assumed to be at the first level) to traverse up to}
-. For example, 1 means that only nodes at the same level as \texttt{first} should be visited, 2 means that the nodes on the same level as \texttt{first} and their direct children should be visited etc.
+\cvarg{max\_level}{The maximal level of the tree (\texttt{first} node assumed to be at the first level) to traverse up to. For example, 1 means that only nodes at the same level as \texttt{first} should be visited, 2 means that the nodes on the same level as \texttt{first} and their direct children should be visited etc.}
 \end{description}
 
 The function \texttt{cvInitTreeNodeIterator} initializes tree iterator. The tree is traversed in depth-first order.
 
-
-\end{verbatim}
 \cvfunc{NextTreeNode}\label{NextTreeNode}
-\begin{verbatim}
 
 Returns the currently observed node and moves iterator toward the next node
 
@@ -6312,9 +6284,7 @@ void* cvNextTreeNode( CvTreeNodeIterator* tree\_iterator );
 The function \texttt{cvNextTreeNode} returns the currently observed node and then updates the iterator - moves it toward the next node. In other words, the function behavior is similar to *p++ expression on usual C pointer or C++ collection iterator. The function returns NULL if there is no more nodes.
 
 
-\end{verbatim}
 \cvfunc{PrevTreeNode}\label{PrevTreeNode}
-\begin{verbatim}
 
 Returns the currently observed node and moves iterator toward the previous node
 
@@ -6332,9 +6302,7 @@ void* cvPrevTreeNode( CvTreeNodeIterator* tree\_iterator );
 The function \texttt{cvPrevTreeNode} returns the currently observed node and then updates the iterator - moves it toward the previous node. In other words, the function behavior is similar to *p-- expression on usual C pointer or C++ collection iterator. The function returns NULL if there is no more nodes.
 
 
-\end{verbatim}
 \cvfunc{TreeToNodeSeq}\label{TreeToNodeSeq}
-\begin{verbatim}
 
 Gathers all node pointers to the single sequence
 
@@ -6350,13 +6318,9 @@ CvSeq* cvTreeToNodeSeq( \par const void* first,\par int header\_size,\par CvMemS
 \cvarg{storage}{Container for the sequence}
 \end{description}
 
-
 The function \texttt{cvTreeToNodeSeq} puts pointers of all nodes reacheable from \texttt{first} to the single sequence. The pointers are written subsequently in the depth-first order.
 
-
-\end{verbatim}
 \cvfunc{InsertNodeIntoTree}\label{InsertNodeIntoTree}
-\begin{verbatim}
 
 Adds new node to the tree
 
@@ -6369,16 +6333,12 @@ void cvInsertNodeIntoTree( \par void* node,\par void* parent,\par void* frame );
 \begin{description}
 \cvarg{node}{The inserted node}
 \cvarg{parent}{The parent node that is already in the tree}
-\cvarg{frame}{The top level node}
-. If \texttt{parent} and \texttt{frame} are the same, \texttt{v\_prev} field of \texttt{node} is set to NULL rather than \texttt{parent}.
+\cvarg{frame}{The top level node. If \texttt{parent} and \texttt{frame} are the same, \texttt{v\_prev} field of \texttt{node} is set to NULL rather than \texttt{parent}.}
 \end{description}
 
 The function \texttt{cvInsertNodeIntoTree} adds another node into tree. The function does not allocate any memory, it can only modify links of the tree nodes.
 
-
-\end{verbatim}
 \cvfunc{RemoveNodeFromTree}\label{RemoveNodeFromTree}
-\begin{verbatim}
 
 Removes node from tree
 
@@ -6390,14 +6350,11 @@ void cvRemoveNodeFromTree( \par void* node,\par void* frame );
 
 \begin{description}
 \cvarg{node}{The removed node}
-\cvarg{frame}{The top level node}
-. If `node->v\_prev = NULL` and `node->h\_prev` is NULL (i.e. if \texttt{node} is the first child of \texttt{frame}), `frame->v\_next` is set to `node->h\_next` (i.e. the first child or frame is changed).
+\cvarg{frame}{The top level node. If `node->v\_prev = NULL` and `node->h\_prev` is NULL (i.e. if \texttt{node} is the first child of \texttt{frame}), `frame->v\_next` is set to `node->h\_next` (i.e. the first child or frame is changed).}
 \end{description}
 
 The function \texttt{cvRemoveNodeFromTree} removes node from tree. The function does not deallocate any memory, it can only modify links of the tree nodes.
 
-
-\end{verbatim}
 \section{Drawing Functions}
 
 Drawing functions work with matrices/images or arbitrary depth.
@@ -6898,20 +6855,23 @@ CXCore can read and write data in XML (http://www.w3c.org/XML) or YAML
 floating-point identity matrix \texttt{A}, stored in XML and YAML files
 using CXCore functions:
 
-\begin{verbatim}
-\texttt{}'XML:\cvarg{\texttt{}'}\cvexp{{}
+XML:
 
+\begin{verbatim}
 <?xml version="1.0">
-<opencv\_storage>
-<A type\_id="opencv-matrix">
+<opencv_storage>
+<A type_id="opencv-matrix">
   <rows>3</rows>
   <cols>3</cols>
   <dt>f</dt>
   <data>1. 0. 0. 0. 1. 0. 0. 0. 1.</data>
 </A>
-</opencv\_storage>
-}{CPP}{PYTHON}\texttt{}'YAML:\cvarg{\texttt{}'}\cvexp{{}
+</opencv_storage>
+\end{verbatim}
 
+YAML:
+
+\begin{verbatim}
 %YAML:1.0
 A: !!opencv-matrix
   rows: 3
@@ -7232,7 +7192,6 @@ void write_termcriteria( CvFileStorage* fs, const char* struct_name,
 \end{lstlisting}
 
 \cvfunc{WriteString}\label{WriteString}
-\begin{verbatim}
 
 Writes a text string
 
@@ -7244,18 +7203,14 @@ void  cvWriteString( \par CvFileStorage* fs,\par const char* name,\par const cha
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{name}{Name of the written string}
-. Should be NULL if and only if the parent structure is a sequence.\cvarg{str}{The written text string}
-\cvarg{quote}{If non-zero, the written string is put in quotes, regardless of whether they are required or not}
-. Otherwise, if the flag is zero, quotes are used only when they are required (e.g. when the string starts with a digit or contains spaces).
+\cvarg{name}{Name of the written string . Should be NULL if and only if the parent structure is a sequence.}
+\cvarg{str}{The written text string}
+\cvarg{quote}{If non-zero, the written string is put in quotes, regardless of whether they are required or not. Otherwise, if the flag is zero, quotes are used only when they are required (e.g. when the string starts with a digit or contains spaces).}
 \end{description}
 
 The function \texttt{cvWriteString} writes a text string to the file storage.
 
-
-\end{verbatim}
 \cvfunc{WriteComment}\label{WriteComment}
-\begin{verbatim}
 
 Writes comment
 
@@ -7268,16 +7223,12 @@ void  cvWriteComment( \par CvFileStorage* fs,\par const char* comment,\par int e
 \begin{description}
 \cvarg{fs}{File storage}
 \cvarg{comment}{The written comment, single-line or multi-line}
-\cvarg{eol\_comment}{If non-zero, the function tries to put the comment in the end of current line}
-. If the flag is zero, if the comment is multi-line, or if it does not fit in the end of the current line, the comment starts from a new line.
+\cvarg{eol\_comment}{If non-zero, the function tries to put the comment in the end of current line. If the flag is zero, if the comment is multi-line, or if it does not fit in the end of the current line, the comment starts from a new line.}
 \end{description}
 
 The function \texttt{cvWriteComment} writes a comment into the file storage. The comments are skipped when the storage is read, so they may be used only for debugging or descriptive purposes.
 
-
-\end{verbatim}
 \cvfunc{StartNextStream}\label{StartNextStream}
-\begin{verbatim}
 
 Starts the next stream
 
@@ -7295,9 +7246,7 @@ void  cvStartNextStream( CvFileStorage* fs );
 The function \texttt{cvStartNextStream} starts the next stream in the file storage. Both YAML and XML supports multiple "streams". This is useful for concatenating files or for resuming the writing process.
 
 
-\end{verbatim}
 \cvfunc{Write}\label{Write}
-\begin{verbatim}
 
 Writes user object
 
@@ -7309,23 +7258,27 @@ void  cvWrite( CvFileStorage* fs,\par const char* name,\par const void* ptr,\par
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{name}{Name, of the written object}
-. Should be NULL if and only if the parent structure is a sequence.\cvarg{ptr}{Pointer to the object}
-\cvarg{attributes}{The attributes of the object}
-. They are specific for each particular type (see the dicsussion).
+\cvarg{name}{Name, of the written object. Should be NULL if and only if the parent structure is a sequence.}
+\cvarg{ptr}{Pointer to the object}
+\cvarg{attributes}{The attributes of the object. They are specific for each particular type (see the dicsussion).}
 \end{description}
 
 The function \texttt{cvWrite} writes the object to file storage. First, the appropriate type info is found using \cross{TypeOf}. Then, \texttt{write} method of the type info is called.
 
-Attributes are used to customize the writing procedure. The standard types support the following attributes (all the `*dt` attributes have the same format as in \cross{WriteRawData}):
+Attributes are used to customize the writing procedure. The standard types support the following attributes (all the \texttt{*dt} attributes have the same format as in \cross{WriteRawData}):
 
-\cvarg{\cross{CvSeq}}{* \texttt{header\_dt} - description of user fields of the sequence header that follow CvSeq, or CvChain (if the sequence is Freeman chain) or CvContour (if the sequence is a contour or point sequence)}
-
-  * \texttt{dt} - description of the sequence elements.
-  * \texttt{recursive} - if the attribute is present and is not equal to "0" or "false", the whole tree of sequences (contours) is stored.\cvarg{\texttt{CvGraph}}{* \texttt{header\_dt} - description of user fields of the graph header that follow CvGraph;}
-
-  * \texttt{vertex\_dt} - description of user fields of graph vertices
-  * \texttt{edge\_dt} - description of user fields of graph edges (note, that edge weight is always written, so there is no need to specify it explicitly)
+CvSeq
+  \begin{description}
+  \cvarg{header\_dt}{description of user fields of the sequence header that follow CvSeq, or CvChain (if the sequence is Freeman chain) or CvContour (if the sequence is a contour or point sequence)}
+  \cvarg{dt}{description of the sequence elements.}
+  \cvarg{recursive}{if the attribute is present and is not equal to "0" or "false", the whole tree of sequences (contours) is stored.}
+  \end{description}
+Cvgraph
+  \begin{description}
+  \cvarg{header\_dt}{description of user fields of the graph header that follow CvGraph;}
+  \cvarg{vertex\_dt}{description of user fields of graph vertices}
+  \cvarg{edge\_dt}{description of user fields of graph edges (note, that edge weight is always written, so there is no need to specify it explicitly)}
+  \end{description}
 
 Below is the code that creates the YAML file shown in \texttt{CvFileStorage} description:
 
@@ -7349,9 +7302,7 @@ int main( int argc, char** argv )
 \end{lstlisting}
 
 
-\end{verbatim}
 \cvfunc{WriteRawData}\label{WriteRawData}
-\begin{verbatim}
 
 Writes multiple numbers
 
@@ -7365,25 +7316,35 @@ void  cvWriteRawData( \par CvFileStorage* fs,\par const void* src,\par int len,\
 \cvarg{fs}{File storage}
 \cvarg{src}{Pointer to the written arraylen}
 \cvarg{}{Number of the array elements to write}
-\cvarg{dt}{Specification of each array element that has the following format}
-: `([count]{\texttt{u}|\texttt{c}|\texttt{w}|\texttt{s}|\texttt{i}|\texttt{f}|\texttt{d}})...`, where the characters correspond to fundamental C types:
-  * \texttt{u} - 8-bit unsigned number
-  * \texttt{c} - 8-bit signed number
-  * \texttt{w} - 16-bit unsigned number
-  * \texttt{s} - 16-bit signed number
-  * \texttt{i} - 32-bit signed number
-  * \texttt{f} - single precision floating-point number
-  * \texttt{d} - double precision floating-point number
-  * \texttt{r} - pointer. 32 lower bits of it are written as a signed integer. The type can be used to store structures with links between the elements.
-\texttt{count} is the optional counter of values of the certain type. For example, `dt=\texttt{2if}` means that each array element is a structure of 2 integers, followed by a single-precision floating-point number. The equivalent notations of the above specification are `\texttt{iif}`, `\texttt{2i1f}` etc. Other examples: `dt=\texttt{u}` means that the array consists of bytes, `dt=\texttt{2d}` - the array consists of pairs of doubles.
+\cvarg{dt}{Specification of each array element that has the following format
+\texttt{([count]\{'u'|'c'|'w'|'s'|'i'|'f'|'d'\})...}
+where the characters correspond to fundamental C types:
+\begin{description}
+ \cvarg{u}{8-bit unsigned number}
+ \cvarg{c}{8-bit signed number}
+ \cvarg{w}{16-bit unsigned number}
+ \cvarg{s}{16-bit signed number}
+ \cvarg{i}{32-bit signed number}
+ \cvarg{f}{single precision floating-point number}
+ \cvarg{d}{double precision floating-point number}
+ \cvarg{r}{pointer. 32 lower bits of it are written as a signed integer. The type can be used to store structures with links between the elements.
+\texttt{count} is the optional counter of values of the certain type. For
+example, \texttt{2if} means that each array element is a structure
+of 2 integers, followed by a single-precision floating-point number. The
+equivalent notations of the above specification are `\texttt{iif}`,
+`\texttt{2i1f}` etc. Other examples: \texttt{u} means that the
+array consists of bytes, \texttt{2d} - the array consists of pairs
+of doubles.}
+\end{description}}
 \end{description}
 
-The function \texttt{cvWriteRawData} writes array, which elements consist of a single of multiple numbers. The function call can be replaced with a loop containing a few \cross{WriteInt} and \cross{WriteReal} calls, but a single call is more efficient. Note, that because none of the elements have a name, they should be written to a sequence rather than a map.
+The function \texttt{cvWriteRawData} writes array, which elements consist
+of a single of multiple numbers. The function call can be replaced with
+a loop containing a few \cross{WriteInt} and \cross{WriteReal} calls, but
+a single call is more efficient. Note, that because none of the elements
+have a name, they should be written to a sequence rather than a map.
 
-
-\end{verbatim}
 \cvfunc{WriteFileNode}\label{WriteFileNode}
-\begin{verbatim}
 
 Writes file node to another file storage
 
@@ -7395,25 +7356,20 @@ void cvWriteFileNode( \par CvFileStorage* fs,\par const char* new\_node\_name,\p
 
 \begin{description}
 \cvarg{fs}{Destination file storage}
-\cvarg{new\_file\_node}{New name of the file node in the destination file storage}
-. To keep the existing name, use `[#cvGetFileNodeName cvGetFileNodeName](node)`.\cvarg{node}{The written nodeembed}
-\cvarg{}{If the written node is a collection and this parameter is not zero, no extra level of hiararchy is created}
-. Instead, all the elements of \texttt{node} are written into the currently written structure. Of course, map elements may be written only to map, and sequence elements may be written only to sequence.
+\cvarg{new\_file\_node}{New name of the file node in the destination file storage. To keep the existing name, use \cross{cvGetFileNodeName}}
+\cvarg{node}{The written node}
+\cvarg{embed}{If the written node is a collection and this parameter is not zero, no extra level of hiararchy is created. Instead, all the elements of \texttt{node} are written into the currently written structure. Of course, map elements may be written only to map, and sequence elements may be written only to sequence.}
 \end{description}
 
 The function \texttt{cvWriteFileNode} writes a copy of file node to file storage. The possible application of the function are: merging several file storages into one. Conversion between XML and YAML formats etc.
 
-
-\end{verbatim}
 \subsection{Reading Data}
-\begin{verbatim}
 
-Data are retrieved from file storage in 2 steps: first, the file node containing the requested data is found; then, data is extracted from the node manually or using custom \texttt{read} method.
+Data are retrieved from file storage in 2 steps: first, the file node
+containing the requested data is found; then, data is extracted from
+the node manually or using custom \texttt{read} method.
 
-
-\end{verbatim}
 \cvfunc{GetRootFileNode}\label{GetRootFileNode}
-\begin{verbatim}
 
 Retrieves one of top-level nodes of the file storage
 
@@ -7425,16 +7381,18 @@ CvFileNode* cvGetRootFileNode( \par const CvFileStorage* fs,\par int stream\_ind
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{stream\_index}{Zero-based index of the stream}
-. See \cross{StartNextStream}. In most cases, there is only one stream in the file, however there can be several.
+\cvarg{stream\_index}{Zero-based index of the stream. See \cross{StartNextStream}. In most cases, there is only one stream in the file, however there can be several.}
 \end{description}
 
-The function \texttt{cvGetRootFileNode} returns one of top-level file nodes. The top-level nodes do not have a name, they correspond to the streams, that are stored one after another in the file storage. If the index is out of range, the function returns NULL pointer, so all the top-level nodes may be iterated by subsequent calls to the function with `stream\_index=0,1,...`, until NULL pointer is returned. This function may be used as a base for recursive traversal of the file storage.
+The function \texttt{cvGetRootFileNode} returns one of top-level file
+nodes. The top-level nodes do not have a name, they correspond to the
+streams, that are stored one after another in the file storage. If the
+index is out of range, the function returns NULL pointer, so all the
+top-level nodes may be iterated by subsequent calls to the function with
+`stream\_index=0,1,...`, until NULL pointer is returned. This function
+may be used as a base for recursive traversal of the file storage.
 
-
-\end{verbatim}
 \cvfunc{GetFileNodeByName}\label{GetFileNodeByName}
-\begin{verbatim}
 
 Finds node in the map or file storage
 
@@ -7446,17 +7404,21 @@ CvFileNode* cvGetFileNodeByName( \par const CvFileStorage* fs,\par const CvFileN
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches in all the top-level nodes (streams), starting from the first one.\cvarg{name}{The file node name}
+\cvarg{map}{The parent map. If it is NULL, the function searches in all the top-level nodes (streams), starting from the first one.}
+\cvarg{name}{The file node name}
 \end{description}
 
 
-The function \texttt{cvGetFileNodeByName} finds a file node by \texttt{name}. The node is searched either in \texttt{map} or, if the pointer is NULL, among the top-level file nodes of the storage. Using this function for maps and \cross{GetSeqElem} (or sequence reader) for sequences, it is possible to nagivate through the file storage. To speed up multiple queries for a certain key (e.g. in case of array of structures) one may use a pair of \cross{GetHashedKey} and \cross{GetFileNode}.
+The function \texttt{cvGetFileNodeByName} finds a file node by
+\texttt{name}. The node is searched either in \texttt{map} or, if the
+pointer is NULL, among the top-level file nodes of the storage. Using
+this function for maps and \cross{GetSeqElem} (or sequence reader)
+for sequences, it is possible to nagivate through the file storage. To
+speed up multiple queries for a certain key (e.g. in case of array
+of structures) one may use a pair of \cross{GetHashedKey} and
+\cross{GetFileNode}.
 
-
-\end{verbatim}
 \cvfunc{GetHashedKey}\label{GetHashedKey}
-\begin{verbatim}
 
 Returns a unique pointer for given name
 
@@ -7473,8 +7435,11 @@ CvStringHashNode* cvGetHashedKey( \par CvFileStorage* fs,\par const char* name,\
 \cvarg{create\_missing}{Flag that specifies, whether an absent key should be added into the hash table, or not}
 \end{description}
 
-
-The function \texttt{cvGetHashedKey} returns the unique pointer for each particular file node name. This pointer can be then passed to \cross{GetFileNode} function that is faster than \cross{GetFileNodeByName} because it compares text strings by comparing pointers rather than the strings' content.
+The function \texttt{cvGetHashedKey} returns the unique pointer for
+each particular file node name. This pointer can be then passed to
+\cross{GetFileNode} function that is faster than \cross{GetFileNodeByName}
+because it compares text strings by comparing pointers rather than the
+strings' content.
 
 Consider the following example: an array of points is encoded as a sequence of 2-entry maps, e.g.:
 
@@ -7491,9 +7456,7 @@ points:
 
 Then, it is possible to get hashed "x" and "y" pointers to speed up decoding of the points.
 
-=\end{verbatim}
 Example. Reading an array of structures from file storage
-\begin{verbatim}=
 
 \begin{lstlisting}
 
@@ -7543,12 +7506,12 @@ int main( int argc, char** argv )
 
 \end{lstlisting}
 
-Please note that, whatever method of accessing map you are using, it is still \texttt{}much\texttt{} slower than using plain sequences, for example, in the above sample, it is more efficient to encode the points as pairs of integers in the single numeric sequence.
+Please note that, whatever method of accessing map you are using, it is
+still much slower than using plain sequences, for example, in the above
+sample, it is more efficient to encode the points as pairs of integers
+in the single numeric sequence.
 
-
-\end{verbatim}
 \cvfunc{GetFileNode}\label{GetFileNode}
-\begin{verbatim}
 
 Finds node in the map or file storage
 
@@ -7560,18 +7523,15 @@ CvFileNode* cvGetFileNode( \par CvFileStorage* fs,\par CvFileNode* map,\par cons
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches a top-level node. If both \texttt{map} and \texttt{key} are NULLs, the function returns the root file node - a map that contains top-level nodes.\cvarg{key}{Unique pointer to the node name, retrieved with \cross{GetHashedKey}}
+\cvarg{map}{The parent map. If it is NULL, the function searches a top-level node. If both \texttt{map} and \texttt{key} are NULLs, the function returns the root file node - a map that contains top-level nodes.}
+\cvarg{key}{Unique pointer to the node name, retrieved with \cross{GetHashedKey}}
 \cvarg{create\_missing}{Flag that specifies, whether an absent node should be added to the map, or not}
 \end{description}
 
 
 The function \texttt{cvGetFileNode} finds a file node. It is a faster version \cross{GetFileNodeByName} (see \cross{GetHashedKey} discussion). Also, the function can insert a new node, if it is not in the map yet (which is used by parsing functions).
 
-
-\end{verbatim}
 \cvfunc{GetFileNodeName}\label{GetFileNodeName}
-\begin{verbatim}
 
 Returns name of file node
 
@@ -7589,9 +7549,7 @@ const char* cvGetFileNodeName( const CvFileNode* node );
 The function \texttt{cvGetFileNodeName} returns name of the file node or NULL, if the file node does not have a name, or if \texttt{node} is \texttt{NULL}.
 
 
-\end{verbatim}
 \cvfunc{ReadInt}\label{ReadInt}
-\begin{verbatim}
 
 Retrieves integer value from file node
 
@@ -7607,12 +7565,16 @@ int cvReadInt( \par const CvFileNode* node,\par int default\_value=0 );
 \end{description}
 
 
-The function \texttt{cvReadInt} returns integer that is represented by the file node. If the file node is NULL, \texttt{default\_value} is returned (thus, it is convenient to call the function right after \cross{GetFileNode} without checking for NULL pointer), otherwise if the file node has type \texttt{CV\_NODE\_INT}, then `node->data.i` is returned, otherwise if the file node has type \texttt{CV\_NODE\_REAL}, then `node->data.f` is converted to integer and returned, otherwise the result is not determined.
+The function \texttt{cvReadInt} returns integer that is represented
+by the file node. If the file node is NULL, \texttt{default\_value}
+is returned (thus, it is convenient to call the function right after
+\cross{GetFileNode} without checking for NULL pointer), otherwise if
+the file node has type \texttt{CV\_NODE\_INT}, then \texttt{node->data.i} is
+returned, otherwise if the file node has type \texttt{CV\_NODE\_REAL},
+then \texttt{node->data.f} is converted to integer and returned, otherwise the
+result is not determined.
 
-
-\end{verbatim}
 \cvfunc{ReadIntByName}\label{ReadIntByName}
-\begin{verbatim}
 
 Finds file node and returns its value
 
@@ -7624,18 +7586,15 @@ int cvReadIntByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\pa
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches a top-level node.\cvarg{name}{The node name}
+\cvarg{map}{The parent map. If it is NULL, the function searches a top-level node.}
+\cvarg{name}{The node name}
 \cvarg{default\_value}{The value that is returned if the file node is not found}
 \end{description}
-
 
 The function \texttt{cvReadIntByName} is a simple superposition of \cross{GetFileNodeByName} and \cross{ReadInt}.
 
 
-\end{verbatim}
 \cvfunc{ReadReal}\label{ReadReal}
-\begin{verbatim}
 
 Retrieves floating-point value from file node
 
@@ -7650,13 +7609,16 @@ double cvReadReal( \par const CvFileNode* node,\par double default\_value=0. );
 \cvarg{default\_value}{The value that is returned if \texttt{node} is NULL}
 \end{description}
 
+The function \texttt{cvReadReal} returns floating-point value
+that is represented by the file node. If the file node is NULL,
+\texttt{default\_value} is returned (thus, it is convenient to call
+the function right after \cross{GetFileNode} without checking for NULL
+pointer), otherwise if the file node has type \texttt{CV\_NODE\_REAL},
+then \texttt{node->data.f} is returned, otherwise if the file node has type
+\texttt{CV\_NODE\_INT}, then `node->data.f` is converted to floating-point
+and returned, otherwise the result is not determined.
 
-The function \texttt{cvReadReal} returns floating-point value that is represented by the file node. If the file node is NULL, \texttt{default\_value} is returned (thus, it is convenient to call the function right after \cross{GetFileNode} without checking for NULL pointer), otherwise if the file node has type \texttt{CV\_NODE\_REAL}, then `node->data.f` is returned, otherwise if the file node has type \texttt{CV\_NODE\_INT}, then `node->data.f` is converted to floating-point and returned, otherwise the result is not determined.
-
-
-\end{verbatim}
 \cvfunc{ReadRealByName}\label{ReadRealByName}
-\begin{verbatim}
 
 Finds file node and returns its value
 
@@ -7668,18 +7630,14 @@ double  cvReadRealByName( \par const CvFileStorage* fs,\par const CvFileNode* ma
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches a top-level node.\cvarg{name}{The node name}
+\cvarg{map}{The parent map. If it is NULL, the function searches a top-level node.}
+\cvarg{name}{The node name}
 \cvarg{default\_value}{The value that is returned if the file node is not found}
 \end{description}
 
-
 The function \texttt{cvReadRealByName} is a simple superposition of \cross{GetFileNodeByName} and \cross{ReadReal}.
 
-
-\end{verbatim}
 \cvfunc{ReadString}\label{ReadString}
-\begin{verbatim}
 
 Retrieves text string from file node
 
@@ -7694,13 +7652,14 @@ const char* cvReadString( \par const CvFileNode* node,\par const char* default\_
 \cvarg{default\_value}{The value that is returned if \texttt{node} is NULL}
 \end{description}
 
+The function \texttt{cvReadString} returns text string that is represented
+by the file node. If the file node is NULL, \texttt{default\_value}
+is returned (thus, it is convenient to call the function right after
+\cross{GetFileNode} without checking for NULL pointer), otherwise if
+the file node has type \texttt{CV\_NODE\_STR}, then `node->data.str.ptr`
+is returned, otherwise the result is not determined.
 
-The function \texttt{cvReadString} returns text string that is represented by the file node. If the file node is NULL, \texttt{default\_value} is returned (thus, it is convenient to call the function right after \cross{GetFileNode} without checking for NULL pointer), otherwise if the file node has type \texttt{CV\_NODE\_STR}, then `node->data.str.ptr` is returned, otherwise the result is not determined.
-
-
-\end{verbatim}
 \cvfunc{ReadStringByName}\label{ReadStringByName}
-\begin{verbatim}
 
 Finds file node and returns its value
 
@@ -7712,18 +7671,14 @@ const char* cvReadStringByName( \par const CvFileStorage* fs,\par const CvFileNo
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches a top-level node.\cvarg{name}{The node name}
+\cvarg{map}{The parent map. If it is NULL, the function searches a top-level node.}
+\cvarg{name}{The node name}
 \cvarg{default\_value}{The value that is returned if the file node is not found}
 \end{description}
 
-
 The function \texttt{cvReadStringByName} is a simple superposition of \cross{GetFileNodeByName} and \cross{ReadString}.
 
-
-\end{verbatim}
 \cvfunc{Read}\label{Read}
-\begin{verbatim}
 
 Decodes object and returns pointer to it
 
@@ -7739,13 +7694,19 @@ void* cvRead( \par CvFileStorage* fs,\par CvFileNode* node,\par CvAttrList* attr
 \cvarg{attributes}{Unused parameter}
 \end{description}
 
+The function \texttt{cvRead} decodes user object (creates object in a
+native representation from the file storage subtree) and returns it. The
+object to be decoded must be an instance of registered type that supports
+\texttt{read} method (see \cross{CvTypeInfo}). Type of the object is
+determined by the type name that is encoded in the file. If the object
+is dynamic structure, it is created either in memory storage, passed to
+\cross{OpenFileStorage} or, if NULL pointer was passed, in temporary
+memory storage, which is release when \cross{ReleaseFileStorage} is
+called. Otherwise, if the object is not a dynamic structure, it is
+created in heap and should be released with a specialized function or
+using generic \cross{Release}.
 
-The function \texttt{cvRead} decodes user object (creates object in a native representation from the file storage subtree) and returns it. The object to be decoded must be an instance of registered type that supports \texttt{read} method (see \cross{CvTypeInfo}). Type of the object is determined by the type name that is encoded in the file. If the object is dynamic structure, it is created either in memory storage, passed to \cross{OpenFileStorage} or, if NULL pointer was passed, in temporary memory storage, which is release when \cross{ReleaseFileStorage} is called. Otherwise, if the object is not a dynamic structure, it is created in heap and should be released with a specialized function or using generic \cross{Release}.
-
-
-\end{verbatim}
 \cvfunc{ReadByName}\label{ReadByName}
-\begin{verbatim}
 
 Finds object and decodes it
 
@@ -7757,18 +7718,14 @@ void* cvReadByName( \par CvFileStorage* fs,\par const CvFileNode* map,\par const
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{map}{The parent map}
-. If it is NULL, the function searches a top-level node.\cvarg{name}{The node name}
+\cvarg{map}{The parent map. If it is NULL, the function searches a top-level node.}
+\cvarg{name}{The node name}
 \cvarg{attributes}{Unused parameter}
 \end{description}
 
-
 The function \texttt{cvReadByName} is a simple superposition of \cross{GetFileNodeByName} and \cross{Read}.
 
-
-\end{verbatim}
 \cvfunc{ReadRawData}\label{ReadRawData}
-\begin{verbatim}
 
 Reads multiple numbers
 
@@ -7782,16 +7739,12 @@ void cvReadRawData( \par const CvFileStorage* fs,\par const CvFileNode* src,\par
 \cvarg{fs}{File storage}
 \cvarg{src}{The file node (a sequence) to read numbers from}
 \cvarg{dst}{Pointer to the destination array}
-\cvarg{dt}{Specification of each array element}
-. It has the same format as in \cross{WriteRawData}.
+\cvarg{dt}{Specification of each array element. It has the same format as in \cross{WriteRawData}.}
 \end{description}
 
 The function \texttt{cvReadRawData} reads elements from a file node that represents a sequence of scalars
 
-
-\end{verbatim}
 \cvfunc{StartReadRawData}\label{StartReadRawData}
-\begin{verbatim}
 
 Initializes file node sequence reader
 
@@ -7807,13 +7760,9 @@ void cvStartReadRawData( \par const CvFileStorage* fs,\par const CvFileNode* src
 \cvarg{reader}{Pointer to the sequence reader}
 \end{description}
 
-
 The function \texttt{cvStartReadRawData} initializes sequence reader to read data from file node. The initialized reader can be then passed to \cross{ReadRawDataSlice}.
 
-
-\end{verbatim}
 \cvfunc{ReadRawDataSlice}\label{ReadRawDataSlice}
-\begin{verbatim}
 
 Initializes file node sequence reader
 
@@ -7825,24 +7774,23 @@ void cvReadRawDataSlice( \par const CvFileStorage* fs,\par CvSeqReader* reader,\
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{reader}{The sequence reader}
-. Initialize it with \cross{StartReadRawData}.\cvarg{count}{The number of elements to read}
+\cvarg{reader}{The sequence reader. Initialize it with \cross{StartReadRawData}.}
+\cvarg{count}{The number of elements to read}
 \cvarg{dst}{Pointer to the destination array}
-\cvarg{dt}{Specification of each array element}
-. It has the same format as in \cross{WriteRawData}.
+\cvarg{dt}{Specification of each array element. It has the same format as in \cross{WriteRawData}.}
 \end{description}
 
-The function \texttt{cvReadRawDataSlice} reads one or more elements from the file node, representing a sequence, to user-specified array. The total number of read sequence elements is a product of \texttt{total} and the number of components in each array element. For example, if `dt=\texttt{2if}`, the function will read `total*3` sequence elements. As with any sequence, some parts of the file node sequence may be skipped or read repeatedly by repositioning the reader using \cross{SetSeqReaderPos}.
+The function \texttt{cvReadRawDataSlice} reads one or more elements from
+the file node, representing a sequence, to user-specified array. The
+total number of read sequence elements is a product of \texttt{total}
+and the number of components in each array element. For example, if
+dt=\texttt{2if}, the function will read total*3 sequence elements. As
+with any sequence, some parts of the file node sequence may be skipped or
+read repeatedly by repositioning the reader using \cross{SetSeqReaderPos}.
 
-
-\end{verbatim}
 \subsection{RTTI and Generic Functions}
-\begin{verbatim}
 
-
-\end{verbatim}
 \cvfunc{CvTypeInfo}\label{CvTypeInfo}
-\begin{verbatim}
 
 Type information
 
@@ -7876,12 +7824,18 @@ CvTypeInfo;
 
 \end{lstlisting}
 
-The structure \cross{CvTypeInfo} contains information about one of standard or user-defined types. Instances of the type may or may not contain pointer to the corresponding \cross{CvTypeInfo} structure. In any case there is a way to find type info structure for given object - using \cross{TypeOf} function. Aternatively, type info can be found by the type name using \cross{FindType}, which is used when object is read from file storage. User can register a new type with \cross{RegisterType} that adds the type information structure into the beginning of the type list - thus, it is possible to create specialized types from generic standard types and override the basic methods.
+The structure \cross{CvTypeInfo} contains information about one of
+standard or user-defined types. Instances of the type may or may not
+contain pointer to the corresponding \cross{CvTypeInfo} structure. In
+any case there is a way to find type info structure for given object -
+using \cross{TypeOf} function. Aternatively, type info can be found by
+the type name using \cross{FindType}, which is used when object is read
+from file storage. User can register a new type with \cross{RegisterType}
+that adds the type information structure into the beginning of the type
+list - thus, it is possible to create specialized types from generic
+standard types and override the basic methods.
 
-
-\end{verbatim}
 \cvfunc{RegisterType}\label{RegisterType}
-\begin{verbatim}
 
 Registers new type
 
@@ -7895,13 +7849,11 @@ void cvRegisterType( const CvTypeInfo* info );
 \cvarg{info}{Type info structure}
 \end{description}
 
+The function \texttt{cvRegisterType} registers a new type, which is
+described by \texttt{info}. The function creates a copy of the structure,
+so user should delete it after calling the function.
 
-The function \texttt{cvRegisterType} registers a new type, which is described by \texttt{info}. The function creates a copy of the structure, so user should delete it after calling the function.
-
-
-\end{verbatim}
 \cvfunc{UnregisterType}\label{UnregisterType}
-\begin{verbatim}
 
 Unregisters the type
 
@@ -7915,13 +7867,13 @@ void cvUnregisterType( const char* type\_name );
 \cvarg{type\_name}{Name of the unregistered type}
 \end{description}
 
+The function \texttt{cvUnregisterType} unregisters the type with
+the specified name. If the name is unknown, it is possible to locate
+the type info by an instance of the type using \cross{TypeOf} or by
+iterating the type list, starting from \cross{FirstType}, and then call
+\texttt{cvUnregisterType(info->type\_name)}.
 
-The function \texttt{cvUnregisterType} unregisters the type with the specified name. If the name is unknown, it is possible to locate the type info by an instance of the type using \cross{TypeOf} or by iterating the type list, starting from \cross{FirstType}, and then call `[#cvUnregisterType cvUnregisterType](info->type\_name)`.
-
-
-\end{verbatim}
 \cvfunc{FirstType}\label{FirstType}
-\begin{verbatim}
 
 Returns the beginning of type list
 
@@ -7933,10 +7885,7 @@ CvTypeInfo* cvFirstType( void );
 
 The function \texttt{cvFirstType} returns the first type of the list of registered types. Navigation through the list can be done via \texttt{prev} and \texttt{next} fields of \cross{CvTypeInfo} structure.
 
-
-\end{verbatim}
 \cvfunc{FindType}\label{FindType}
-\begin{verbatim}
 
 Finds type by its name
 
@@ -7950,13 +7899,10 @@ CvTypeInfo* cvFindType( const char* type\_name );
 \cvarg{type\_name}{Type name}
 \end{description}
 
-
 The function \texttt{cvFindType} finds a registered type by its name. It returns NULL, if there is no type with the specified name.
 
 
-\end{verbatim}
 \cvfunc{TypeOf}\label{TypeOf}
-\begin{verbatim}
 
 Returns type of the object
 
@@ -7970,13 +7916,13 @@ CvTypeInfo* cvTypeOf( const void* struct\_ptr );
 \cvarg{struct\_ptr}{The object pointer}
 \end{description}
 
+The function \texttt{cvTypeOf} finds the type of given object. It iterates
+through the list of registered types and calls \texttt{is\_instance}
+function/method of every type info structure with the object until one
+of them return non-zero or until the whole list has been traversed. In
+the latter case the function returns NULL.
 
-The function \texttt{cvTypeOf} finds the type of given object. It iterates through the list of registered types and calls \texttt{is\_instance} function/method of every type info structure with the object until one of them return non-zero or until the whole list has been traversed. In the latter case the function returns NULL.
-
-
-\end{verbatim}
 \cvfunc{Release}\label{Release}
-\begin{verbatim}
 
 Releases the object
 
@@ -7990,13 +7936,9 @@ void cvRelease( void** struct\_ptr );
 \cvarg{struct\_ptr}{Double pointer to the object}
 \end{description}
 
-
 The function \texttt{cvRelease} finds the type of given object and calls \texttt{release} with the double pointer.
 
-
-\end{verbatim}
 \cvfunc{Clone}\label{Clone}
-\begin{verbatim}
 
 Makes a clone of the object
 
@@ -8010,13 +7952,9 @@ void* cvClone( const void* struct\_ptr );
 \cvarg{struct\_ptr}{The object to clone}
 \end{description}
 
-
 The function \texttt{cvClone} finds the type of given object and calls \texttt{clone} with the passed object.
 
-
-\end{verbatim}
 \cvfunc{Save}\label{Save}
-\begin{verbatim}
 
 Saves object to file
 
@@ -8029,18 +7967,14 @@ void cvSave( \par const char* filename,\par const void* struct\_ptr,\par const c
 \begin{description}
 \cvarg{filename}{File name}
 \cvarg{struct\_ptr}{Object to save}
-\cvarg{name}{Optional object name}
-. If it is NULL, the name will be formed from \texttt{filename}.\cvarg{comment}{Optional comment to put in the beginning of the file}
+\cvarg{name}{Optional object name. If it is NULL, the name will be formed from \texttt{filename}.}
+\cvarg{comment}{Optional comment to put in the beginning of the file}
 \cvarg{attributes}{Optional attributes passed to \cross{Write}}
 \end{description}
 
-
 The function \texttt{cvSave} saves object to file. It provides a simple interface to \cross{Write}.
 
-
-\end{verbatim}
 \cvfunc{Load}\label{Load}
-\begin{verbatim}
 
 Loads object from file
 
@@ -8052,16 +7986,18 @@ void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par 
 
 \begin{description}
 \cvarg{filename}{File name}
-\cvarg{memstorage}{Memory storage for dynamic structures, such as \cross{CvSeq} or \cross{CvGraph}}
-. It is not used for matrices or images.\cvarg{name}{Optional object name}
-. If it is NULL, the first top-level object in the storage will be loaded.\cvarg{real\_name}{Optional output parameter that will contain name of the loaded object (useful if `name=NULL`)}
+\cvarg{memstorage}{Memory storage for dynamic structures, such as \cross{CvSeq} or \cross{CvGraph} . It is not used for matrices or images.}
+\cvarg{name}{Optional object name
+. If it is NULL, the first top-level object in the storage will be loaded.}
+\cvarg{real\_name}{Optional output parameter that will contain name of the loaded object (useful if \texttt{name=NULL})}
 \end{description}
 
+The function \texttt{cvLoad} loads object from file. It provides a
+simple interface to \cross{Read}. After object is loaded, the file
+storage is closed and all the temporary buffers are deleted. Thus,
+to load a dynamic structure, such as sequence, contour or graph, one
+should pass a valid destination memory storage to the function.
 
-The function \texttt{cvLoad} loads object from file. It provides a simple interface to \cross{Read}. After object is loaded, the file storage is closed and all the temporary buffers are deleted. Thus, to load a dynamic structure, such as sequence, contour or graph, one should pass a valid destination memory storage to the function.
-
-
-\end{verbatim}
 \section{Miscellaneous Functions}
 
 \subsection{Miscellaneous Functions}

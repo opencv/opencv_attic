@@ -2406,7 +2406,9 @@ every non-zero pixel the function also finds the nearest connected
 component consisting of zero pixels. The connected components
 themselves are found as contours in the beginning of the function.
 
-In this mode the processing time is still O(N), where N is the number of pixels. Thus, the function provides a very fast way to compute approximate Voronoi diagram for the binary image.
+In this mode the processing time is still O(N), where N is the number of
+pixels. Thus, the function provides a very fast way to compute approximate
+Voronoi diagram for the binary image.
 
 % XXX missing Inpaint
 
@@ -2987,12 +2989,14 @@ The function \texttt{MatchShapes} compares two shapes. The 3 implemented methods
 \end{description}
 
 where
+
 \[
 \begin{array}{l}
 m^A_i = sign(h^A_i) \cdot \log{h^A_i}
 m^B_i = sign(h^B_i) \cdot \log{h^B_i}
 \end{array}
 \]
+
 and $h^A_i, h^B_i$ are Hu moments of $A$ and $B$ respectively.
 
 \cvfunc{CalcEMD2}\label{CalcEMD2}
