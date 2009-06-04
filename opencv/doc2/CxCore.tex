@@ -2,6 +2,8 @@
 
 \section{Basic Structures}
 
+\subsection{Basic Structures}
+
 \cvfunc{CvPoint}\label{CvPoint}
 
 2D point with integer coordinates (usually zero-based)
@@ -27,7 +29,6 @@ inline CvPoint cvPoint( int x, int y );
 /* Conversion from CvPoint2D32f */
 inline CvPoint cvPointFrom32f( CvPoint2D32f point );
 \end{lstlisting}
-
 
 \cvfunc{CvPoint2D32f}\label{CvPoint2D32f}
 
@@ -1200,9 +1201,9 @@ IplImage* cvGetImage( const CvArr* arr, IplImage* image\_header );
 \end{description}
 
 The function \texttt{cvGetImage} returns image header for the input array
-that can be matrix - cross{CvMat}, or image - \texttt{IplImage*}. In
+that can be matrix - \cross{CvMat}, or image - \texttt{IplImage*}. In
 the case of image the function simply returns the input pointer. In the
-case of cross{CvMat} it initializes \texttt{image\_header} structure
+case of \cross{CvMat} it initializes \texttt{image\_header} structure
 with parameters of the input matrix. Note that if we transform
 \texttt{IplImage} to \cross{CvMat} and then transform CvMat back to
 IplImage, we can get different headers if the ROI is set, and thus some
@@ -1225,7 +1226,7 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 \cvarg{type}{Type of array elements. The same as for CvMat}
 \end{description}
 
-The function \texttt{cvCreateSparseMat} allocates multi-dimensional sparse array. Initially the array contain no elements, that is cross{Get} or \cross{GetReadl} return zero for every index
+The function \texttt{cvCreateSparseMat} allocates multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReadl} return zero for every index
 
 \cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
@@ -1457,11 +1458,9 @@ int cvGetElemType( const CvArr* arr );
 \end{description}
 
 
-The functions \texttt{GetElemType} returns type of the array elements as it is described in cvCreateMat discussion:
-
-\begin{lstlisting}
-CV\_8UC1 ... CV\_64FC4
-\end{lstlisting}
+The functions \texttt{GetElemType} returns type of the array elements
+as it is described in \cross{CreateMat} discussion: \texttt{CV\_8UC1}
+... \texttt{CV\_64FC4}.
 
 
 \cvfunc{GetDims, GetDimSize}\label{GetDims, GetDimSize}
@@ -1477,17 +1476,26 @@ int cvGetDimSize( const CvArr* arr, int index );
 
 \begin{description}
 \cvarg{arr}{Input array}
-\cvarg{sizes}{Optional output vector of the array dimension sizes. For 2d arrays the number of rows (height) goes first, number of columns (width) next.}
-\cvarg{index}{Zero-based dimension index (for matrices 0 means number of rows, 1 means number of columns; for images 0 means height, 1 means width)}
+\cvarg{sizes}{Optional output vector of the array dimension sizes. For
+2d arrays the number of rows (height) goes first, number of columns
+(width) next.}
+\cvarg{index}{Zero-based dimension index (for matrices 0 means number
+of rows, 1 means number of columns; for images 0 means height, 1 means
+width)}
 \end{description}
 
 
-The function \texttt{cvGetDims} returns number of array dimensions and their sizes. In case of \texttt{IplImage} or \cross{CvMat} it always returns 2 regardless of number of image/matrix rows. The function \texttt{cvGetDimSize} returns the particular dimension size (number of elements per that dimension). For example, the following code calculates total number of array elements in two ways:
+The function \texttt{cvGetDims} returns number of array dimensions and
+their sizes. In case of \texttt{IplImage} or \cross{CvMat} it always
+returns 2 regardless of number of image/matrix rows. The function
+\texttt{cvGetDimSize} returns the particular dimension size (number of
+elements per that dimension). For example, the following code calculates
+total number of array elements in two ways:
 
 \begin{lstlisting}
 
 // via cvGetDims()
-int sizes[CV\_MAX\_DIM];
+int sizes[CV_MAX_DIM];
 int i, total = 1;
 int dims = cvGetDims( arr, size );
 for( i = 0; i < dims; i++ )
@@ -1547,10 +1555,10 @@ CvScalar cvGetND( const CvArr* arr, int* idx );
 
 \begin{description}
 \cvarg{arr}{Input array}
-\cvarg{idx0}{The first zero-based component of the element indexidx1}
-\cvarg{}{The second zero-based component of the element indexidx2}
-\cvarg{}{The third zero-based component of the element indexidx}
-\cvarg{}{Array of the element indices}
+\cvarg{idx0}{The first zero-based component of the element index}
+\cvarg{idx1}{The second zero-based component of the element index}
+\cvarg{idx2}{The third zero-based component of the element index}
+\cvarg{idx}{Array of the element indices}
 \end{description}
 
 
@@ -1578,7 +1586,7 @@ double cvGetRealND( const CvArr* arr, int* idx );
 \end{description}
 
 
-The functions \texttt{cvGetReal*D} return the particular element of single-channel array. If the array has multiple channels, runtime error is raised. Note that cross{Get} function can be used safely for both single-channel and multiple-channel arrays though they are a bit slower.
+The functions \texttt{cvGetReal*D} return the particular element of single-channel array. If the array has multiple channels, runtime error is raised. Note that \cross{Get} function can be used safely for both single-channel and multiple-channel arrays though they are a bit slower.
 
 In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions)
 
@@ -1723,7 +1731,7 @@ void cvCopy( const CvArr* src, CvArr* dst, const CvArr* mask=NULL );
 The function \texttt{cvCopy} copies selected elements from input array to output array:
 
 \[
-\texttt{dst}(I)=\texttt{src}(I) \text{if} \texttt{mask}(I) \ne 0.
+\texttt{dst}(I)=\texttt{src}(I) \quad \text{if} \quad \texttt{mask}(I) \ne 0.
 \]
 
 If any of the passed arrays is of \texttt{IplImage} type, then its ROI
@@ -1751,7 +1759,7 @@ void cvSet( CvArr* arr, CvScalar value, const CvArr* mask=NULL );
 The function \texttt{cvSet} copies scalar \texttt{value} to every selected element of the destination array:
 
 \[
-\texttt{arr}(I)=\texttt{value} \text{if} \texttt{mask}(I) \ne 0
+\texttt{arr}(I)=\texttt{value} \quad \text{if} \quad \texttt{mask}(I) \ne 0
 \]
 
 If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI must not be set.
@@ -1840,27 +1848,27 @@ CvArr* cvReshapeMatND( const CvArr* arr,
 \cvarg{arr}{Input array}
 \cvarg{sizeof\_header}{Size of output header to distinguish between IplImage, CvMat and CvMatND output headers}
 \cvarg{header}{Output header to be filled}
-\cvarg{new\_cn}{New number of channels}
-. `new\_cn = 0` means that number of channels remains unchanged.\cvarg{new\_dims}{New number of dimensions}
-. `new\_dims = 0` means that number of dimensions remains the same.\cvarg{new\_sizes}{Array of new dimension sizes}
-. Only `new\_dims-1` values are used, because the total number of elements must remain the same. Thus, if `new\_dims = 1`, \texttt{new\_sizes} array is not used
+\cvarg{new\_cn}{New number of channels. $\texttt{new\_cn} = 0$ means that number of channels remains unchanged.}
+\cvarg{new\_dims}{New number of dimensions. $\texttt{new\_dims} = 0$ means that number of dimensions remains the same.}
+\cvarg{new\_sizes}{Array of new dimension sizes. Only $\texttt{new\_dims}-1$ values are used, because the total number of elements must remain the same.
+Thus, if $\texttt{new\_dims} = 1$, \texttt{new\_sizes} array is not used}
 \end{description}
 
 The function \texttt{cvReshapeMatND} is an advanced version of \cross{Reshape} that can work with multi-dimensional arrays as well (though, it can work with ordinary images and matrices) and change the number of dimensions. Below are the two samples from the \cross{Reshape} description rewritten using \cross{ReshapeMatND}:
 
 \begin{lstlisting}
 
-IplImage* color\_img = cvCreateImage( cvSize(320,240), IPL\_DEPTH\_8U, 3 );
-IplImage gray\_img\_hdr, *gray\_img;
-gray\_img = (IplImage*)cvReshapeND( color\_img, &gray\_img\_hdr, 1, 0, 0 );
+IplImage* color_img = cvCreateImage( cvSize(320,240), IPL_DEPTH_8U, 3 );
+IplImage gray_img_hdr, *gray_img;
+gray_img = (IplImage*)cvReshapeND( color_img, &gray_img_hdr, 1, 0, 0 );
 
 ...
 
 /* second example is modified to convert 2x2x2 array to 8x1 vector */
 int size[] = { 2, 2, 2 };
-CvMatND* mat = cvCreateMatND( 3, size, CV\_32F );
-CvMat row\_header, *row;
-row = cvReshapeND( mat, &row\_header, 0, 1, 0 );
+CvMatND* mat = cvCreateMatND( 3, size, CV_32F );
+CvMat row_header, *row;
+row = cvReshapeND( mat, &row_header, 0, 1, 0 );
 
 \end{lstlisting}
 
@@ -2522,10 +2530,17 @@ void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp\_op );
 
 \begin{description}
 \cvarg{src1}{The first source array}
-\cvarg{src2}{The second source array}
-. Both source array must have a single channel.\cvarg{dst}{The destination array, must have 8u or 8s type}
-\cvarg{cmp\_op}{The flag specifying the relation between the elements to be checked}
-:<<BR>> CV\_CMP\_EQ - src1(I) "equal to" src2(I)<<BR>> CV\_CMP\_GT - src1(I) "greater than" src2(I)<<BR>> CV\_CMP\_GE - src1(I) "greater or equal" src2(I)<<BR>> CV\_CMP\_LT - src1(I) "less than" src2(I)<<BR>> CV\_CMP\_LE - src1(I) "less or equal" src2(I)<<BR>> CV\_CMP\_NE - src1(I) "not equal to" src2(I)<<BR>>
+\cvarg{src2}{The second source array. Both source array must have a single channel.}
+\cvarg{dst}{The destination array, must have 8u or 8s type}
+\cvarg{cmp\_op}{The flag specifying the relation between the elements to be checked
+\begin{description}
+ \cvarg{CV\_CMP\_EQ}{src1(I) "equal to" value}
+ \cvarg{CV\_CMP\_GT}{src1(I) "greater than" value}
+ \cvarg{CV\_CMP\_GE}{src1(I) "greater or equal" value}
+ \cvarg{CV\_CMP\_LT}{src1(I) "less than" value}
+ \cvarg{CV\_CMP\_LE}{src1(I) "less or equal" value}
+ \cvarg{CV\_CMP\_NE}{src1(I) "not equal" value}
+\end{description}}
 \end{description}
 
 The function \texttt{cvCmp} compares the corresponding elements of two arrays and fills the destination mask array:
@@ -2838,7 +2853,9 @@ The function \texttt{cvSum} calculates sum \texttt{S} of array elements, indepen
 
 \[ \sum_I \texttt{arr}(I)_c \]
 
-If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the sum to the first scalar component $S_0$.
+If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the sum to the first scalar component
+.
+
 
 \cvfunc{Avg}\label{Avg}
 
@@ -2865,7 +2882,7 @@ M_c = \frac{\sum_{ I, \, \texttt{mask}(I) \ne 0} \texttt{arr}(I)_c}{N}
 \end{array}
 \]
 
-If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average to the first scalar component $S_0$.
+If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average to the first scalar component $ S_0 $ .
 
 \cvfunc{AvgSdv}\label{AvgSdv}
 
@@ -2936,7 +2953,8 @@ double cvNorm( const CvArr* arr1, const CvArr* arr2=NULL, int norm\_type=CV\_L2,
 
 \begin{description}
 \cvarg{arr1}{The first source image}
-\cvarg{arr2}{The second source image. If it is NULL, the absolute norm of \texttt{arr1} is calculated, otherwise absolute or relative norm of \texttt{arr1}-\texttt{arr2} is calculated.\cvarg{normType}{Type of norm, see the discussion}}
+\cvarg{arr2}{The second source image. If it is NULL, the absolute norm of \texttt{arr1} is calculated, otherwise absolute or relative norm of \texttt{arr1}-\texttt{arr2} is calculated.}
+\cvarg{normType}{Type of norm, see the discussion}
 \cvarg{mask}{The optional operation mask}
 \end{description}
 
@@ -3149,7 +3167,7 @@ Both source and destination arrays should have the same depth and the
 same size or selected ROI size. \texttt{transmat} and \texttt{shiftvec}
 should be real floating-point matrices.
 
-The function may be used for geometrical transformation of \texttt{N}D
+The function may be used for geometrical transformation of n dimensional
 point set, arbitrary linear color space transformation, shuffling the
 channels etc.
 
@@ -3197,8 +3215,7 @@ void cvMulTransposed( const CvArr* src, CvArr* dst, int order, const CvArr* delt
 
 \begin{description}
 \cvarg{src}{The source matrix}
-\cvarg{dst}{The destination matrix}
-. Must be \texttt{CV\_32F} or \texttt{CV\_64F}.
+\cvarg{dst}{The destination matrix. Must be \texttt{CV\_32F} or \texttt{CV\_64F}.}
 \cvarg{order}{Order of multipliers}
 \cvarg{delta}{An optional array, subtracted from \texttt{src} before multiplication}
 \cvarg{scale}{An optional scaling}
@@ -3450,7 +3467,7 @@ void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double
 \cvarg{mat}{The input symmetric square matrix}
 . It is modified during the processing.\cvarg{evects}{The output matrix of eigenvectors, stored as a subsequent rows}
 \cvarg{evals}{The output vector of eigenvalues, stored in the descenting order (order of eigenvalues and eigenvectors is syncronized, of course)}
-\cvarg{eps}{Accuracy of diagonalization (typically, DBL\_EPSILON=≈10^-15^ is enough)}
+\cvarg{eps}{Accuracy of diagonalization (typically, $DBL\_EPSILON= about 10^-15$ is enough)}
 \end{description}
 
 
@@ -3543,7 +3560,7 @@ int cvCeil( double value );
 \end{description}
 
 
-The functions `cvRound, cvFloor` and \texttt{cvCeil} convert input floating-point number to integer using one of the rounding modes. \texttt{cvRound} returns the nearest integer value to the argument. \texttt{cvFloor} returns the maximum integer value that is not larger than the argument. \texttt{cvCeil} returns the minimum integer value that is not smaller than the argument. On some architectures the functions work \texttt{}much\texttt{} faster than the standard cast operations in C. If absolute value of the argument is greater than 2^31^, the result is not determined. Special values (±Inf, NaN) are not handled.
+The functions `cvRound, cvFloor` and \texttt{cvCeil} convert input floating-point number to integer using one of the rounding modes. \texttt{cvRound} returns the nearest integer value to the argument. \texttt{cvFloor} returns the maximum integer value that is not larger than the argument. \texttt{cvCeil} returns the minimum integer value that is not smaller than the argument. On some architectures the functions work \texttt{}much\texttt{} faster than the standard cast operations in C. If absolute value of the argument is greater than 2^31^, the result is not determined. Special values ( \pm Inf, NaN) are not handled.
 
 
 \end{verbatim}
@@ -3583,7 +3600,7 @@ float cvInvSqrt( float value );
 \end{description}
 
 
-The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than `1./sqrt(value)`. If the argument is zero or negative, the result is not determined. Special values (±Inf, NaN) are not handled.
+The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than `1./sqrt(value)`. If the argument is zero or negative, the result is not determined. Special values ( \pm Inf, NaN) are not handled.
 
 
 \end{verbatim}
@@ -3603,7 +3620,7 @@ float cvCbrt( float value );
 \end{description}
 
 
-The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than `pow(value,1./3)`. Besides, negative arguments are handled properly. Special values (±Inf, NaN) are not handled.
+The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than `pow(value,1./3)`. Besides, negative arguments are handled properly. Special values ( \pm Inf, NaN) are not handled.
 
 
 \end{verbatim}
@@ -3624,7 +3641,7 @@ float cvFastArctan( float y, float x );
 \end{description}
 
 
-The function \texttt{cvFastArctan} calculates full-range angle of input 2D vector. The angle is measured in degrees and varies from 0° to 360°. The accuracy is ~0.1°
+The function \texttt{cvFastArctan} calculates full-range angle of input 2D vector. The angle is measured in degrees and varies from 0 degree  to 360 degree . The accuracy is ~0.1 degree 
 
 
 \end{verbatim}
@@ -3664,7 +3681,7 @@ int cvIsInf( double value );
 \end{description}
 
 
-The function \texttt{cvIsInf} returns 1 if the argument is ±Infinity (as defined by IEEE754 standard), 0 otherwise.
+The function \texttt{cvIsInf} returns 1 if the argument is  \pm Infinity (as defined by IEEE754 standard), 0 otherwise.
 
 
 \end{verbatim}
@@ -3684,7 +3701,7 @@ void cvCartToPolar( \par const CvArr* x,\par const CvArr* y,\par CvArr* magnitud
 \cvarg{}{The array of y-coordinatesmagnitude}
 \cvarg{}{The destination array of magnitudes, may be set to NULL if it is not neededangle}
 \cvarg{}{The destination array of angles, may be set to NULL if it is not needed}
-. The angles are measured in radians (0..2π) or in degrees (0..360°).\cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
+. The angles are measured in radians (0..2 \pi ) or in degrees (0..360 degree ).\cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
 
@@ -3697,7 +3714,7 @@ angle(I)=atan( y(I)/x(I) )
 
 \end{lstlisting}
 
-The angles are calculated with ≈0.1° accuracy. For (0,0) point the angle is set to 0.
+The angles are calculated with 0.1 degree accuracy. For (0,0) point the angle is set to 0.
 
 
 \end{verbatim}
@@ -3714,7 +3731,7 @@ void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvA
 
 \begin{description}
 \cvarg{magnitude}{The array of magnitudes}
-. If it is NULL, the magnitudes are assumed all 1s.\cvarg{angle}{The array of angles, whether in radians or degrees}
+. If it is NULL, the magnitudes are assumed all 1's.\cvarg{angle}{The array of angles, whether in radians or degrees}
 \cvarg{x}{The destination array of x-coordinates, may be set to NULL if it is not needed}
 \cvarg{y}{The destination array of y-coordinates, mau be set to NULL if it is not needed}
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
@@ -3801,7 +3818,7 @@ dst(I)=exp(src(I))
 
 \end{lstlisting}
 
-Maximum relative error is ≈7e-6. Currently, the function converts denormalized values to zeros on output.
+Maximum relative error is about 7e-6. Currently, the function converts denormalized values to zeros on output.
 
 
 \end{verbatim}
@@ -3831,7 +3848,7 @@ dst(I)=C,  src(I)=0
 
 \end{lstlisting}
 
-Where \texttt{C} is large negative number (≈-700 in the current implementation)
+Where \texttt{C} is large negative number ( about -700 in the current implementation)
 
 
 \end{verbatim}
@@ -4341,7 +4358,7 @@ CvMemStorage* cvCreateMemStorage( int block\_size=0 );
 
 \begin{description}
 \cvarg{block\_size}{Size of the storage blocks in bytes}
-. If it is 0, the block size is set to default value - currently it is ≈64K.
+. If it is 0, the block size is set to default value - currently it is  about 64K.
 \end{description}
 
 The function \texttt{cvCreateMemStorage} creates a memory storage and returns pointer to it. Initially the storage is empty. All fields of the header, except the \texttt{block\_size}, are set to 0.
@@ -4695,7 +4712,7 @@ void cvSetSeqBlockSize( \par CvSeq* seq,\par int delta\_elems );
 \end{description}
 
 
-The function \texttt{cvSetSeqBlockSize} affects memory allocation granularity. When the free space in the sequence buffers has run out, the function allocates the space for \texttt{delta\_elems} sequence elements. If this block immediately follows the one previously allocated, the two blocks are concatenated, otherwise, a new sequence block is created. Therefore, the bigger the parameter is, the lower the possible sequence fragmentation, but the more space in the storage is wasted. When the sequence is created, the parameter \texttt{delta\_elems} is set to the default value ≈1K. The function can be called any time after the sequence is created and affects future allocations. The function can modify the passed value of the parameter to meet the memory storage constraints.
+The function \texttt{cvSetSeqBlockSize} affects memory allocation granularity. When the free space in the sequence buffers has run out, the function allocates the space for \texttt{delta\_elems} sequence elements. If this block immediately follows the one previously allocated, the two blocks are concatenated, otherwise, a new sequence block is created. Therefore, the bigger the parameter is, the lower the possible sequence fragmentation, but the more space in the storage is wasted. When the sequence is created, the parameter \texttt{delta\_elems} is set to the default value  about 1K. The function can be called any time after the sequence is created and affects future allocations. The function can modify the passed value of the parameter to meet the memory storage constraints.
 
 
 \end{verbatim}
@@ -6678,12 +6695,11 @@ int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt
 \cvarg{pt1}{First ending point of the line segment}
 \cvarg{pt2}{Second ending point of the line segment}
 \cvarg{line\_iterator}{Pointer to the line iterator state structure}
-\cvarg{connectivity}{The scanned line connectivity, 4 or 8}
-\cvarg{left\_to\_right}{The flag, indicating whether the line should
+\cvarg{connectivity}{The scanned line connectivity, 4 or 8
 be always scanned from the left-most point to the right-most out
 of \texttt{pt1} and \texttt{pt2} ($ \texttt{left\_to\_right} \ne 0$), or it
 is scanned in the specified order, from \texttt{pt1} to \texttt{pt2}
-($ \texttt{left\_to\_right} = 0$)}
+($ \texttt{left\_to\_right} = 0 $ )}
 \end{description}
 
 The function \texttt{cvInitLineIterator} initializes the line
@@ -7966,6 +7982,8 @@ The function \texttt{cvLoad} loads object from file. It provides a simple interf
 \end{verbatim}
 \section{Miscellaneous Functions}
 
+\subsection{Miscellaneous Functions}
+
 \cvfunc{CheckArr}\label{CheckArr}
 
 Checks every element of input array for invalid values
@@ -7991,7 +8009,8 @@ int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\
 \end{description}
 
 The function \texttt{cvCheckArr} checks that every array element is
-neither NaN nor $\pm \infty$. If \texttt{CV\_CHECK\_RANGE} is set, it also
+neither NaN nor $ \pm \infty $.
+If \texttt{CV\_CHECK\_RANGE} is set, it also
 checks that every element is greater than or equal to \texttt{minVal}
 and less than \texttt{maxVal}. The function returns nonzero if the
 check succeeded, i.e. all elements are valid and within the range,
@@ -8532,8 +8551,7 @@ int cvGuiBoxReport( int status, const char* func_name,
 \cvarg{err\_msg}{Additional information/diagnostics about the error}
 \cvarg{file\_name}{Name of the file where the error occured}
 \cvarg{line}{Line number, where the error occured}
-\cvarg{userdata}{Pointer to the user data}
-. Ignored by the standard handlers.
+\cvarg{userdata}{Pointer to the user data. Ignored by the standard handlers.}
 \end{description}
 
 The functions \texttt{cvNullDevReport}, \texttt{cvStdErrReport}
@@ -8547,7 +8565,7 @@ error as described in the sample
 
 Error Message Box
 
-\includegraphics[width=0.5\textwidth]{pics/errmsg.png}
+\includegraphics[width=0.5 \textwidth]{pics/errmsg.png}
 
 If the error handler is set \texttt{cvStdErrReport}, the above message will be printed to standard error output and program will be terminated or continued, depending on the current error mode.
 
@@ -8619,7 +8637,7 @@ double cvGetTickFrequency( void );
 
 }{CPP}{PYTHON}
 
-The function \texttt{cvGetTickFrequency} returns number of ticks per microsecond. Thus, the quotient of \cross{GetTickCount}() and \cross{GetTickFrequency}() will give a number of microseconds starting from the platform-dependent event.
+The function \texttt{cvGetTickFrequency} returns number of ticks per microsecond. Thus, the quotient of \cross{GetTickCount} and \cross{GetTickFrequency} will give a number of microseconds starting from the platform-dependent event.
 
 \cvfunc{RegisterModule}\label{RegisterModule}
 

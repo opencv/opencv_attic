@@ -30,7 +30,13 @@ int aperture\_size=3 );
 \cvarg{ aperture\_size}{Size of the extended Sobel kernel, must be 1, 3, 5 or 7}
 \end{description}
 
-In all cases except 1, an (\texttt{aperture\_size}$\times$\texttt{aperture\_size}) separable kernel will be used to calculate the derivative. For \texttt{aperture\_size} = 1 $3\times1$ or $1\times3$ kernel is used (Gaussian smoothing is not done). There is also special value \texttt{CV\_SCHARR} (-1) that corresponds to $3\times3$ Scharr filter that may give more accurate results than $3\times3$ Sobel. Scharr aperture is
+In all cases except 1, an $\texttt{aperture\_size} \times
+\texttt{aperture\_size}$ separable kernel will be used to calculate the
+derivative. For $\texttt{aperture\_size} = 1$ a $ 3 \times 1$ or $ 1 \times 3$
+kernel is used (Gaussian smoothing is not done). There is also special
+value \texttt{CV\_SCHARR} (-1) that corresponds to $3\times3$ Scharr
+filter that may give more accurate results than $3\times3$ Sobel. Scharr
+aperture is
 
 \[ \vecthreethree
 {-3}{0}{3}
@@ -46,7 +52,12 @@ The function `cvSobel` calculates the image derivative by convolving the image w
 \texttt{dst}(x,y) = \frac{d^{xorder+yorder} \texttt{src}}{dx^{xorder} \cdot dy^{yorder}}
 \]
 
-The Sobel operators combine Gaussian smoothing and differentiation so the result is more or less robust to the noise. Most often, the function is called with (\texttt{xorder}=1, \texttt{yorder}=0, \texttt{aperture\_size}=3) or (\texttt{xorder}=0, \texttt{yorder}=1, \texttt{aperture\_size}=3) to calculate first x- or y- image derivative. The first case corresponds to
+The Sobel operators combine Gaussian smoothing and differentiation
+so the result is more or less robust to the noise. Most often,
+the function is called with (\texttt{xorder} = 1, \texttt{yorder} = 0,
+\texttt{aperture\_size} = 3) or (\texttt{xorder} = 0, \texttt{yorder} = 1,
+\texttt{aperture\_size} = 3) to calculate first x- or y- image
+derivative. The first case corresponds to
 
 \[ \vecthreethree
 {-1}{0}{1}
@@ -102,7 +113,7 @@ The function \texttt{cvLaplace} calculates Laplacian of the source image by summ
 \texttt{dst}(x,y) = \frac{d^2 \texttt{src}}{dx^2} + \frac{d^2 \texttt{src}}{dy^2}
 \]
 
-Specifying \texttt{aperture\_size}=1 gives the fastest variant that is equal to convolving the image with the following kernel:
+Specifying \texttt{aperture\_size} = 1 gives the fastest variant that is equal to convolving the image with the following kernel:
 
 \[ \vecthreethree {0}{1}{0}{1}{-4}{1}{0}{1}{0} \]
 
@@ -185,7 +196,7 @@ void cvCornerEigenValsAndVecs( \par const CvArr* image,\par CvArr* eigenvv,\par 
 
 \begin{description}
 \cvarg{ image}{Input image}
-\cvarg{ eigenvv}{Image to store the results}. It must be 6 times wider than the input image
+\cvarg{ eigenvv}{Image to store the results. It must be 6 times wider than the input image}
 \cvarg{ block\_size}{Neighborhood size (see discussion)}
 \cvarg{ aperture\_size}{Aperture parameter for Sobel operator (see \cross{Sobel})}
 \end{description}
@@ -224,9 +235,10 @@ int aperture\_size=3 );
 }{CPP}{PYTHON}
 \begin{description}
 \cvarg{ image}{Input image}
-\cvarg{ eigenval}{Image to store the minimal eigen values}. Should have the same size as \texttt{image}
+\cvarg{ eigenval}{Image to store the minimal eigen values. Should have the same size as \texttt{image}}
 \cvarg{ block\_size}{Neighborhood size (see discussion of \cross{CornerEigenValsAndVecs})}
-\cvarg{ aperture\_size}{Aperture parameter for Sobel operator (see \cross{Sobel})}. format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
+\cvarg{ aperture\_size}{Aperture parameter for Sobel operator (see \cross{Sobel}).}
+%  format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
 \end{description}
 
 The function \texttt{cvCornerMinEigenVal} is similar to \cross{CornerEigenValsAndVecs} but it calculates and stores only the minimal eigen value of derivative covariation matrix for every pixel, i.e. $min(\lambda_1, \lambda_2)$ in terms of the previous function.
@@ -251,10 +263,11 @@ double k=0.04 );
 
 \begin{description}
 \cvarg{ image}{Input image}
-\cvarg{ harris\_responce}{Image to store the Harris detector responces}. Should have the same size as \texttt{image}
+\cvarg{ harris\_responce}{Image to store the Harris detector responces. Should have the same size as \texttt{image}}
 \cvarg{ block\_size}{Neighborhood size (see discussion of \cross{CornerEigenValsAndVecs})}
-\cvarg{ aperture\_size}{Aperture parameter for Sobel operator (see \cross{Sobel})}. format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
-\cvarg{ k}{Harris detector free parameter}. See the formula below
+\cvarg{ aperture\_size}{Aperture parameter for Sobel operator (see \cross{Sobel}).}
+% format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
+\cvarg{ k}{Harris detector free parameter. See the formula below.}
 \end{description}
 
 The function \texttt{cvCornerHarris} runs the Harris edge detector on image. Similarly to \cross{CornerMinEigenVal} and \cross{CornerEigenValsAndVecs}, for each pixel it calculates $2\times2$ gradient covariation matrix $M$ over $\texttt{block\_size} \times \texttt{block\_size}$ neighborhood. Then, it stores
@@ -288,9 +301,9 @@ CvTermCriteria criteria );
 \cvarg{ image}{Input image}
 \cvarg{ corners}{Initial coordinates of the input corners and refined coordinates on output}
 \cvarg{ count}{Number of corners}
-\cvarg{ win}{Half sizes of the search window}. For example, if \texttt{win}=(5,5) then 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window is used
-\cvarg{ zero\_zone}{Half size of the dead region in the middle of the search zone over which the summation in formulae below is not done}. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size
-\cvarg{ criteria}{Criteria for termination of the iterative process of corner refinement}. That is, the process of corner position refinement stops either after certain number of iteration or when a required accuracy is achieved. The `criteria` may specify either of or both the maximum number of iteration and the required accuracy
+\cvarg{ win}{Half sizes of the search window. For example, if \texttt{win} =(5,5) then 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window is used}
+\cvarg{ zero\_zone}{Half size of the dead region in the middle of the search zone over which the summation in formulae below is not done. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size}
+\cvarg{ criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after certain number of iteration or when a required accuracy is achieved. The `criteria` may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}
 
 The function \texttt{FindCornerSubPix} iterates to find the sub-pixel accurate location of corners, or radial saddle points, as shown in on the picture below.
@@ -656,13 +669,13 @@ int interpolation=CV\_INTER\_LINEAR );
 \begin{description}
 \cvarg{ src}{Source image}
 \cvarg{ dst}{Destination image}
-\cvarg{ interpolation}{Interpolation method}:
+\cvarg{ interpolation}{Interpolation method:
 \begin{description}
 \cvarg{CV\_INTER\_NN}{nearest-neigbor interpolation}
 \cvarg{CV\_INTER\_LINEAR}{bilinear interpolation (used by default)}
 \cvarg{CV\_INTER\_AREA}{resampling using pixel area relation. It is preferred method for image decimation that gives moire-free results. In case of zooming it is similar to \texttt{CV\_INTER\_NN} method.}
 \cvarg{CV\_INTER\_CUBIC}{bicubic interpolation.}
-\end{description}
+\end{description}}
 \end{description}
 
 The function \texttt{cvResize} resizes image \texttt{src} so that it fits exactly to \texttt{dst}. If ROI is set, the function considers the ROI as supported as usual.
@@ -797,7 +810,7 @@ CvMat* map\_matrix );
 
 \begin{description}
 \cvarg{ center}{Center of the rotation in the source image}
-\cvarg{ angle}{The rotation angle in degrees}. Positive values mean couter-clockwise rotation (the coordiate origin is assumed at top-left corner)
+\cvarg{ angle}{The rotation angle in degrees. Positive values mean couter-clockwise rotation (the coordiate origin is assumed at top-left corner)}
 \cvarg{ scale}{Isotropic scale factor}
 \cvarg{ map\_matrix}{Pointer to the destination $2\times 3$ matrix}
 \end{description}
@@ -842,11 +855,11 @@ CvScalar fillval=cvScalarAll(0) );
 \cvarg{ src}{Source image}
 \cvarg{ dst}{Destination image}
 \cvarg{ map\_matrix}{$3\times 3$ transformation matrix}
-\cvarg{ flags}{A combination of interpolation method and the following optional flags}:
+\cvarg{ flags}{A combination of interpolation method and the following optional flags:
 \begin{description}
   \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fill all the destination image pixels. If some of them correspond to outliers in the source image, they are set to `fillval`}
   \cvarg{CV\_WARP\_INVERSE\_MAP}{indicates that \texttt{matrix} is inverse transform from destination image to source and, thus, can be used directly for pixel interpolation. Otherwise, the function finds the inverse transform from \texttt{map\_matrix}}
-\end{description}
+\end{description}}
 \cvarg{ fillval}{A value used to fill outliers}
 \end{description}
 
@@ -947,10 +960,10 @@ CvScalar fillval=cvScalarAll(0) );
 \cvarg{ dst}{Destination image}
 \cvarg{ mapx}{The map of x-coordinates (32fC1 image)}
 \cvarg{ mapy}{The map of y-coordinates (32fC1 image)}
-\cvarg{ flags}{A combination of interpolation method and the following optional flag(s)}:
+\cvarg{ flags}{A combination of interpolation method and the following optional flag(s):
 \begin{description}
   \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fill all the destination image pixels. If some of them correspond to outliers in the source image, they are set to `fillval`}
-\end{description}
+\end{description}}
 \cvarg{ fillval}{A value used to fill outliers}
 \end{description}
 
@@ -986,11 +999,11 @@ int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS );
 \cvarg{ dst}{Destination image}
 \cvarg{ center}{The transformation center, where the output precision is maximal}
 \cvarg{ M}{Magnitude scale parameter. See below}
-\cvarg{ flags}{A combination of interpolation method and the following optional flags}:
+\cvarg{ flags}{A combination of interpolation method and the following optional flags:
 \begin{description}
   \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fill all the destination image pixels. If some of them correspond to outliers in the source image, they are set to zeros}
   \cvarg{CV\_WARP\_INVERSE\_MAP}{See below}
-\end{description}
+\end{description}}
 \end{description}
 
 The function \texttt{LogPolar} transforms source image using the following transformation:
@@ -1080,7 +1093,7 @@ int* values=NULL );
   \cvarg{CV\_SHAPE\_ELLIPSE}{an elliptic element}
   \cvarg{CV\_SHAPE\_CUSTOM}{a user-defined element. In this case the parameter \texttt{values} specifies the mask, that is, which neighbors of the pixel must be considered}
 \end{description}
-\cvarg{ values}{Pointer to the structuring element data, a plane array, representing row-by-row scanning of the element matrix}. Non-zero values indicate points that belong to the element. If the pointer is \texttt{NULL}, then all values are considered non-zero, that is, the element is of a rectangular shape. This parameter is considered only if the shape is \texttt{CV\_SHAPE\_CUSTOM} 
+\cvarg{ values}{Pointer to the structuring element data, a plane array, representing row-by-row scanning of the element matrix. Non-zero values indicate points that belong to the element. If the pointer is \texttt{NULL}, then all values are considered non-zero, that is, the element is of a rectangular shape. This parameter is considered only if the shape is \texttt{CV\_SHAPE\_CUSTOM} }
 \end{description}
 
 The function CreateStructuringElementEx allocates and fills the structure \texttt{IplConvKernel}, which can be used as a structuring element in the morphological operations.
@@ -1118,7 +1131,7 @@ int iterations=1 );
 \begin{description}
 \cvarg{ src}{Source image}
 \cvarg{ dst}{Destination image}
-\cvarg{ element}{Structuring element used for erosion}. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used
+\cvarg{ element}{Structuring element used for erosion. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
 \cvarg{ iterations}{Number of times erosion is applied}
 \end{description}
 
@@ -1149,7 +1162,7 @@ int iterations=1 );
 \begin{description}
 \cvarg{ src}{Source image}
 \cvarg{ dst}{Destination image}
-\cvarg{ element}{Structuring element used for dilation}. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used
+\cvarg{ element}{Structuring element used for dilation. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
 \cvarg{ iterations}{Number of times dilation is applied}
 \end{description}
 
@@ -1307,8 +1320,8 @@ CvPoint anchor=cvPoint(-1,-1));
 \begin{description}
 \cvarg{ src}{The source image}
 \cvarg{ dst}{The destination image}
-\cvarg{ kernel}{Convolution kernel, single-channel floating point matrix}. If you want to apply different kernels to different channels, split the image using cvSplit into separate color planes and process them individually
-\cvarg{ anchor}{The anchor of the kernel that indicates the relative position of a filtered point within the kernel}. The anchor shoud lie within the kernel. The special default value (-1,-1) means that it is at the kernel center
+\cvarg{ kernel}{Convolution kernel, single-channel floating point matrix. If you want to apply different kernels to different channels, split the image using cvSplit into separate color planes and process them individually}
+\cvarg{ anchor}{The anchor of the kernel that indicates the relative position of a filtered point within the kernel. The anchor shoud lie within the kernel. The special default value (-1,-1) means that it is at the kernel center}
 \end{description}
 
 The function \texttt{cvFilter2D} applies arbitrary linear filter to the image. In-place operation is supported. When the aperture is partially outside the image, the function interpolates outlier pixel values from the nearest pixels that is inside the image.
@@ -1334,10 +1347,10 @@ CvScalar value=cvScalarAll(0) );
 \begin{description}
 \cvarg{ src}{The source image}
 \cvarg{ dst}{The destination image}
-\cvarg{ offset}{Coordinates of the top-left corner (or bottom-left in case of images with bottom-left origin) of the destination image rectangle where the source image (or its ROI) is copied}. Size of the rectanlge matches the source image size/ROI size
-\cvarg{ bordertype}{Type of the border to create around the copied source image rectangle}:
+\cvarg{ offset}{Coordinates of the top-left corner (or bottom-left in case of images with bottom-left origin) of the destination image rectangle where the source image (or its ROI) is copied. Size of the rectanlge matches the source image size/ROI size}
+\cvarg{ bordertype}{Type of the border to create around the copied source image rectangle:
 \begin{description}
-\cvarg{IPL\_BORDER\_CONSTANT}{border is filled with the fixed value, passed as last parameter of the function.
+\cvarg{IPL\_BORDER\_CONSTANT}{border is filled with the fixed value, passed as last parameter of the function.}
 \cvarg{IPL\_BORDER\_REPLICATE}{the pixels from the top and bottom rows, the left-most and right-most columns are replicated to fill the border.}
 \end{description}
 (The other two border types from IPL, \texttt{IPL\_BORDER\_REFLECT} and \texttt{IPL\_BORDER\_WRAP}, are currently unsupported)}
@@ -1407,7 +1420,7 @@ int code );
 
 \begin{description}
 \cvarg{ src}{The source 8-bit (8u), 16-bit (16u) or single-precision floating-point (32f) image}
-\cvarg{ dst}{The destination image of the same data type as the source one}. The number of channels may be different
+\cvarg{ dst}{The destination image of the same data type as the source one. The number of channels may be different}
 \cvarg{ code}{Color conversion operation that can be specifed using CV\_<src\_color\_space>2<dst\_color\_space> constants (see below)}
 \end{description}
 
@@ -1712,14 +1725,14 @@ int block\_size=3,\par double param1=5 );
 \cvarg{ src}{Source image}
 \cvarg{ dst}{Destination image}
 \cvarg{ max\_value}{Maximum value that is used with \texttt{CV\_THRESH\_BINARY} and \texttt{CV\_THRESH\_BINARY\_INV}}
-\cvarg{ adaptive\_method}{Adaptive thresholding algorithm to use}: \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} or \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)
-\cvarg{ threshold\_type}{Thresholding type; must be one of}
+\cvarg{ adaptive\_method}{Adaptive thresholding algorithm to use: \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} or \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)}
+\cvarg{ threshold\_type}{Thresholding type; must be one of
 \begin{description}
   \cvarg{CV\_THRESH\_BINARY}
   \cvarg{CV\_THRESH\_BINARY\_INV}
-\end{description}
+\end{description}}
 \cvarg{ block\_size}{The size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, ..}
-\cvarg{ param1}{The method-dependent parameter}. For the methods \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} and \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is a constant subtracted from mean or weighted mean (see the discussion), though it may be negative
+\cvarg{ param1}{The method-dependent parameter. For the methods \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} and \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is a constant subtracted from mean or weighted mean (see the discussion), though it may be negative}
 \end{description}
 
 The function \texttt{AdaptiveThreshold} transforms grayscale image to binary image according to the formulae:
@@ -1798,8 +1811,10 @@ If the input image has three channels (red, green and blue), then
 \[
   p(c^1,c^2) = 0.30 (c^1_r - c^2_r) +
                0.59 (c^1_g - c^2_g) +
-               0.11 (c^1_b - c^2_b). \]
-There may be more than one connected component per a cluster. The images \texttt{src} and \texttt{dst} should be 8-bit single-channel or 3-channel images or equal size
+               0.11 (c^1_b - c^2_b).
+\]
+
+There may be more than one connected component per a cluster. The images \texttt{src} and \texttt{dst} should be 8-bit single-channel or 3-channel images or equal size.
 
 \subsection{Connected Components and Contour Retrieval}
 
@@ -1836,18 +1851,18 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
 \end{lstlisting}
 
 \begin{description}
-\cvarg{ image}{Input 1- or 3-channel, 8-bit or floating-point image}. It is modified by the function unless \texttt{CV\_FLOODFILL\_MASK\_ONLY} flag is set (see below)
+\cvarg{ image}{Input 1- or 3-channel, 8-bit or floating-point image. It is modified by the function unless \texttt{CV\_FLOODFILL\_MASK\_ONLY} flag is set (see below)}
 \cvarg{ seed\_point}{The starting point}
 \cvarg{ new\_val}{New value of repainted domain pixels}
-\cvarg{ lo\_diff}{Maximal lower brightness/color difference between the currently observed pixel and one of its neighbor belong to the component or seed pixel to add the pixel to component}. In case of 8-bit color images it is packed value
-\cvarg{ up\_diff}{Maximal upper brightness/color difference between the currently observed pixel and one of its neighbor belong to the component or seed pixel to add the pixel to component}. In case of 8-bit color images it is packed value
+\cvarg{ lo\_diff}{Maximal lower brightness/color difference between the currently observed pixel and one of its neighbor belong to the component or seed pixel to add the pixel to component. In case of 8-bit color images it is packed value}
+\cvarg{ up\_diff}{Maximal upper brightness/color difference between the currently observed pixel and one of its neighbor belong to the component or seed pixel to add the pixel to component. In case of 8-bit color images it is packed value}
 \cvarg{ comp}{Pointer to structure the function fills with the information about the repainted domain}
-\cvarg{ flags}{The operation flags}. Lower bits contain connectivity value, 4 (by default) or 8, used within the function. Connectivity determines which neighbors of a pixel are considered. Upper bits can be 0 or combination of the following flags:
+\cvarg{ flags}{The operation flags. Lower bits contain connectivity value, 4 (by default) or 8, used within the function. Connectivity determines which neighbors of a pixel are considered. Upper bits can be 0 or combination of the following flags:
 \begin{description}
   \cvarg{CV\_FLOODFILL\_FIXED\_RANGE}{if set the difference between the current pixel and seed pixel is considered, otherwise difference between neighbor pixels is considered (the range is floating)}
   \cvarg{CV\_FLOODFILL\_MASK\_ONLY}{if set, the function does not fill the image (`new\_val` is ignored), but the fills mask (that must be non-NULL in this case)}
-\end{description}
-\cvarg{ mask}{Operation mask, should be singe-channel 8-bit image, 2 pixels wider and 2 pixels taller than `image`}. If not NULL, the function uses and updates the mask, so user takes responsibility of initializing `mask` content. Floodfilling can't go across non-zero pixels in the mask, for example, an edge detector output can be used as a mask to stop filling at edges. Or it is possible to use the same mask in multiple calls to the function to make sure the filled area do not overlap. ''Note'': because mask is larger than the filled image, pixel in `mask` that corresponds to $(x,y)$ pixel in `image` will have coordinates $(x+1,y+1)$
+\end{description}}
+\cvarg{ mask}{Operation mask, should be singe-channel 8-bit image, 2 pixels wider and 2 pixels taller than `image`. If not NULL, the function uses and updates the mask, so user takes responsibility of initializing `mask` content. Floodfilling can't go across non-zero pixels in the mask, for example, an edge detector output can be used as a mask to stop filling at edges. Or it is possible to use the same mask in multiple calls to the function to make sure the filled area do not overlap. ''Note'': because mask is larger than the filled image, pixel in `mask` that corresponds to $(x,y)$ pixel in `image` will have coordinates $(x+1,y+1)$ }
 \end{description}
 
 The function \texttt{cvFloodFill} fills a connected component starting from the seed point with the specified color. The connectivity is determined by the closeness of pixel values. The pixel at $(x,y)$ is considered to belong to the repainted domain if:
@@ -1888,10 +1903,10 @@ int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** fir
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ image}{The source 8-bit single channel image}. Non-zero pixels are treated as 1's, zero pixels remain 0's - that is image treated as `binary`. To get such a binary image from grayscale, one may use \cross{Threshold}, \cross{AdaptiveThreshold} or \cross{Canny}. The function modifies the source image content
+\cvarg{ image}{The source 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - that is image treated as `binary`. To get such a binary image from grayscale, one may use \cross{Threshold}, \cross{AdaptiveThreshold} or \cross{Canny}. The function modifies the source image content}
 \cvarg{ storage}{Container of the retrieved contours}
 \cvarg{ first\_contour}{Output parameter, will contain the pointer to the first outer contour}
-\cvarg{ header\_size}{Size of the sequence header, $\ge \texttt{sizeof(CvChain)}$ if $\texttt{method}=\texttt{CV\_CHAIN\_CODE}$,
+\cvarg{ header\_size}{Size of the sequence header, $\ge \texttt{sizeof(CvChain)}$ if $\texttt{method} =\texttt{CV\_CHAIN\_CODE}$,
 and $\ge \texttt{sizeof(CvContour)}$ otherwise}
 \cvarg{ mode}{Retrieval mode}
 \begin{description}
@@ -1938,9 +1953,9 @@ CvContourScanner cvStartFindContours(\par CvArr* image,\par CvMemStorage* storag
 \begin{description}
 \cvarg{ image}{The source 8-bit single channel binary image}
 \cvarg{ storage}{Container of the retrieved contours}
-\cvarg{ header\_size}{Size of the sequence header, >=sizeof(CvChain) if \texttt{method}=CV\_CHAIN\_CODE, and >=sizeof(CvContour) otherwise}
+\cvarg{ header\_size}{Size of the sequence header, >=sizeof(CvChain) if \texttt{method} =CV\_CHAIN\_CODE, and >=sizeof(CvContour) otherwise}
 \cvarg{ mode}{Retrieval mode; see \cross{FindContours}}
-\cvarg{ method}{Approximation method}. It has the same meaning as in \cross{FindContours}, but \texttt{CV\_LINK\_RUNS} can not be used here
+\cvarg{ method}{Approximation method. It has the same meaning as in \cross{FindContours}, but \texttt{CV\_LINK\_RUNS} can not be used here}
 \cvarg{ offset}{ROI offset; see \cross{FindContours}}
 \end{description}
 
@@ -2059,7 +2074,9 @@ The function \texttt{cvGetCentralMoment} retrieves the central moment, which in 
 \[
 \mu_{x\_order, \, y\_order} = \sum_{x,y} (I(x,y) \cdot (x-x_c)^{x\_order} \cdot (y-y_c)^{y\_order})
 \]
+
 where $x_c,y_c$ are coordinates of the gravity center:
+
 \[
 x_c=\frac{M_{10}}{M_{00}}, y_c=\frac{M_{01}}{M_{00}}
 \]
@@ -2126,8 +2143,8 @@ CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ image}{The input 8-bit single-channel binary image}. In case of probabilistic method the image is modified by the function
-\cvarg{ line\_storage}{The storage for the lines detected}. It can
+\cvarg{ image}{The input 8-bit single-channel binary image. In case of probabilistic method the image is modified by the function}
+\cvarg{ line\_storage}{The storage for the lines detected. It can
 be a memory storage (in this case a sequence of lines is created in
 the storage and returned by the function) or single row/single column
 matrix (CvMat*) of a particular type (see below) to which the lines'
@@ -2136,28 +2153,28 @@ so its \texttt{cols} or \texttt{rows} will contain a number of lines
 detected. If \texttt{line\_storage} is a matrix and the actual number
 of lines exceeds the matrix size, the maximum possible number of lines
 is returned (in case of standard hough transform the lines are sorted
-by the accumulator value)
-\cvarg{ method}{The Hough transform variant, one of}:
+by the accumulator value)}
+\cvarg{ method}{The Hough transform variant, one of:
 \begin{description}
   \cvarg{CV\_HOUGH\_STANDARD}{classical or standard Hough transform. Every line is represented by two floating-point numbers $(\rho, \theta)$, where $\rho$ is a distance between (0,0) point and the line, and $\theta$ is the angle between x-axis and the normal to the line. Thus, the matrix must be (the created sequence will be) of \texttt{CV\_32FC2} type.}
   \cvarg{CV\_HOUGH\_PROBABILISTIC}{probabilistic Hough transform (more efficient in case if picture contains a few long linear segments). It returns line segments rather than the whole lines. Every segment is represented by starting and ending points, and the matrix must be (the created sequence will be) of \texttt{CV\_32SC4} type.}
   \cvarg{CV\_HOUGH\_MULTI\_SCALE}{multi-scale variant of classical Hough transform. The lines are encoded the same way as in \texttt{CV\_HOUGH\_STANDARD}.}
-\end{description}
+\end{description}}
 \cvarg{ rho}{Distance resolution in pixel-related units}
 \cvarg{ theta}{Angle resolution measured in radians}
-\cvarg{ threshold}{Threshold parameter}. A line is returned by the function if the corresponding accumulator value is greater than \texttt{threshold}
-\cvarg{ param1}{The first method-dependent parameter}:
+\cvarg{ threshold}{Threshold parameter. A line is returned by the function if the corresponding accumulator value is greater than \texttt{threshold}}
+\cvarg{ param1}{The first method-dependent parameter:
 \begin{itemize}
   \item For classical Hough transform it is not used (0).
   \item For probabilistic Hough transform it is the minimum line length.
   \item For multi-scale Hough transform it is divisor for distance resolution $\rho$. (The coarse distance resolution will be $\rho$ and the accurate resolution will be $(\rho / \texttt{param1})$).
-\end{itemize}
-\cvarg{ param2}{The second method-dependent parameter}:
+\end{itemize}}
+\cvarg{ param2}{The second method-dependent parameter:
 \begin{itemize}
   \item For classical Hough transform it is not used (0).
   \item For probabilistic Hough transform it is the maximum gap between line segments lieing on the same line to treat them as the single line segment (i.e. to join them).
   \item For multi-scale Hough transform it is divisor for angle resolution $\theta$. (The coarse angle resolution will be $\theta$ and the accurate resolution will be $(\theta / \texttt{param2})$).
-\end{itemize}
+\end{itemize}}
 \end{description}
 
 The function \texttt{HoughLines2} implements a few variants of Hough transform for line detection.
@@ -2342,12 +2359,14 @@ can be calculated only with some relative error ($5\times 5$ mask
 gives more accurate results), OpenCV uses the values suggested in
 \cite{Borgefors86}:
 
-\begin{description}
-\cvarg{CV\_DIST\_C $(3\times 3)$}{a = 1, b = 1}
-\cvarg{CV\_DIST\_L1 $(3\times 3)$}{a = 1, b = 2}
-\cvarg{CV\_DIST\_L2 $(3\times 3)$}{a=0.955, b=1.3693}
-\cvarg{CV\_DIST\_L2 $(5\times 5)$}{a=1, b=1.4, c=2.1969}
-\end{description}
+
+\begin{tabular}{| c | c | c |}
+\hline
+\texttt{CV\_DIST\_C}  & $(3\times 3)$ & a = 1, b = 1\\ \hline
+\texttt{CV\_DIST\_L1} & $(3\times 3)$ & a = 1, b = 2\\ \hline
+\texttt{CV\_DIST\_L2} & $(3\times 3)$ & a=0.955, b=1.3693\\ \hline
+\texttt{CV\_DIST\_L2} & $(5\times 5)$ & a=1, b=1.4, c=2.1969\\ \hline
+\end{tabular}
 
 And below are samples of distance field (black (0) pixel is in the middle of white square) in case of user-defined distance:
 
@@ -2421,7 +2440,7 @@ CvHistogram* cvCreateHist(\par int dims,\par int* sizes,\par int type,\par float
 \cvarg{ dims}{Number of histogram dimensions}
 \cvarg{ sizes}{Array of histogram dimension sizes}
 \cvarg{ type}{Histogram representation format: \texttt{CV\_HIST\_ARRAY} means that histogram data is represented as an multi-dimensional dense array CvMatND; \texttt{CV\_HIST\_SPARSE} means that histogram data is represented as a multi-dimensional sparse array CvSparseMat}
-\cvarg{ ranges}{Array of ranges for histogram bins}. Its meaning depends on the \texttt{uniform} parameter value. The ranges are used for when histogram is calculated or backprojected to determine, which histogram bin corresponds to which value/tuple of values from the input image[s]
+\cvarg{ ranges}{Array of ranges for histogram bins. Its meaning depends on the \texttt{uniform} parameter value. The ranges are used for when histogram is calculated or backprojected to determine, which histogram bin corresponds to which value/tuple of values from the input image[s]}
 \cvarg{ uniform}{Uniformity flag; if not 0, the histogram has evenly
 spaced bins and for every $0<=i<cDims$ \texttt{ranges[i]}
 is array of two numbers: lower and upper boundaries for the i-th
@@ -2622,13 +2641,13 @@ double cvCompareHist( \par const CvHistogram* hist1,\par const CvHistogram* hist
 \begin{description}
 \cvarg{ hist1}{The first dense histogram}
 \cvarg{ hist2}{The second dense histogram}
-\cvarg{ method}{Comparison method, one of}:
+\cvarg{ method}{Comparison method, one of:
 \begin{description}
   \cvarg{CV\_COMP\_CORREL}{Correlation}
   \cvarg{CV\_COMP\_CHISQR}{Chi-Square}
   \cvarg{CV\_COMP\_INTERSECT}{Intersection}
   \cvarg{CV\_COMP\_BHATTACHARYYA}{Bhattacharyya distance}
-\end{description}
+\end{description}}
 \end{description}
 
 The function \texttt{CompareHist} compares two dense histograms using the specified method as following $H_1$ denotes the first histogram, $H_2$ the second):
@@ -2694,7 +2713,7 @@ void cvCalcHist( \par IplImage** image,\par CvHistogram* hist,\par int accumulat
 \begin{description}
 \cvarg{ image}{Source images (though, you may pass CvMat** as well)}
 \cvarg{ hist}{Pointer to the histogram}
-\cvarg{ accumulate}{Accumulation flag}. If it is set, the histogram is not cleared in the beginning. This feature allows user to compute a single histogram from several images, or to update the histogram online
+\cvarg{ accumulate}{Accumulation flag. If it is set, the histogram is not cleared in the beginning. This feature allows user to compute a single histogram from several images, or to update the histogram online}
 \cvarg{ mask}{The operation mask, determines what pixels of the source images are counted}
 \end{description}
 
@@ -2990,7 +3009,7 @@ typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* user
 
 \begin{description}
 \cvarg{ signature1}{First signature, $\texttt{size1}\times \texttt{dims}+1$ floating-point matrix. Each row stores the point weight followed by the point coordinates. The matrix is allowed to have a single column (weights only) if the user-defined cost matrix is used}
-\cvarg{ signature2}{Second signature of the same format as \texttt{signature1}, though the number of rows may be different}. The total weights may be different, in this case an extra "dummy" point is added to either \texttt{signature1} or \texttt{signature2}
+\cvarg{ signature2}{Second signature of the same format as \texttt{signature1}, though the number of rows may be different. The total weights may be different, in this case an extra "dummy" point is added to either \texttt{signature1} or \texttt{signature2}}
 \cvarg{ distance\_type}{Metrics used; \texttt{CV\_DIST\_L1, CV\_DIST\_L2}, and \texttt{CV\_DIST\_C} stand for one of the standard metrics; \texttt{CV\_DIST\_USER} means that a user-defined function \texttt{distance\_func} or pre-calculated \texttt{cost\_matrix} is used}
 \cvarg{ distance\_func}{The user-defined distance function. It takes coordinates of two points and returns the distance between the points}
 \cvarg{ cost\_matrix}{The user-defined $\texttt{size1}\times \texttt{size2}$ cost matrix. At least one of \texttt{cost\_matrix} and \texttt{distance\_func} must be NULL. Also, if a cost matrix is used, lower boundary (see below) can not be calculated, because it needs a metric function}
@@ -3028,7 +3047,7 @@ CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int 
 \cvarg{ method}{Approximation method (see the description of the function \cross{FindContours})}
 \cvarg{ parameter}{Method parameter (not used now)}
 \cvarg{ minimal\_perimeter}{Approximates only those contours whose perimeters are not less than \texttt{minimal\_perimeter}. Other chains are removed from the resulting structure}
-\cvarg{ recursive}{If not 0, the function approximates all chains that access can be obtained to from \texttt{src\_seq} by \texttt{h\_next} or \texttt{v\_next links}}. If 0, the single chain is approximated
+\cvarg{ recursive}{If not 0, the function approximates all chains that access can be obtained to from \texttt{src\_seq} by \texttt{h\_next} or \texttt{v\_next links}. If 0, the single chain is approximated}
 \end{description}
 
 This is a stand-alone approximation routine. The function \texttt{ApproxChains} works exactly in the same way as \cross{FindContours} with the corresponding approximation flag. The function returns pointer to the first resultant contour. Other approximated contours, if any, can be accessed via \texttt{v\_next} or \texttt{h\_next} fields of the returned structure.
@@ -3068,10 +3087,10 @@ CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemS
 \begin{description}
 \cvarg{ src\_seq}{Sequence of array of points}
 \cvarg{ header\_size}{Header size of approximated curve[s]}
-\cvarg{ storage}{Container for approximated contours}. If it is NULL, the input sequences' storage is used
+\cvarg{ storage}{Container for approximated contours. If it is NULL, the input sequences' storage is used}
 \cvarg{ method}{Approximation method; only \texttt{CV\_POLY\_APPROX\_DP} is supported, that corresponds to Douglas-Peucker algorithm}
 \cvarg{ parameter}{Method-specific parameter; in case of \texttt{CV\_POLY\_APPROX\_DP} it is a desired approximation accuracy}
-\cvarg{ parameter2}{If case if \texttt{src\_seq} is sequence it means whether the single sequence should be approximated or all sequences on the same level or below \texttt{src\_seq} (see \cross{FindContours} for description of hierarchical contour structures)}. And if \texttt{src\_seq} is array CvMat* of points, the parameter specifies whether the curve is closed (\texttt{parameter2}!=0) or not (\texttt{parameter2}=0)
+\cvarg{ parameter2}{If case if \texttt{src\_seq} is sequence it means whether the single sequence should be approximated or all sequences on the same level or below \texttt{src\_seq} (see \cross{FindContours} for description of hierarchical contour structures). And if \texttt{src\_seq} is array CvMat* of points, the parameter specifies whether the curve is closed (\texttt{parameter2}!=0) or not (\texttt{parameter2} =0)}
 \end{description}
 
 The function \texttt{ApproxPoly} approximates one or more curves and returns the approximation result[s]. In case of multiple curves approximation the resultant tree will have the same structure as the input one (1:1 correspondence).
@@ -3086,7 +3105,7 @@ CvRect cvBoundingRect( CvArr* points, int update=0 );
 
 \begin{description}
 \cvarg{ points}{2D point set, either a sequence or vector (\texttt{CvMat}) of points}
-\cvarg{ update}{The update flag}. See below.
+\cvarg{ update}{The update flag. See below.}
 \end{description}
 
 The function \texttt{BoundingRect} returns the up-right bounding rectangle for 2d point set.
@@ -3134,12 +3153,12 @@ double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\pa
 \begin{description}
 \cvarg{ curve}{Sequence or array of the curve points}
 \cvarg{ slice}{Starting and ending points of the curve, by default the whole curve length is calculated}
-\cvarg{ is\_closed}{Indicates whether the curve is closed or not}. There are 3 cases:
+\cvarg{ is\_closed}{Indicates whether the curve is closed or not. There are 3 cases:
 \begin{itemize}
-  \item $\texttt{is\_closed}=0$ the curve is assumed to be unclosed.
+  \item $\texttt{is\_closed} =0$ the curve is assumed to be unclosed.
   \item $\texttt{is\_closed}>0$ the curve is assumed to be closed.
   \item $\texttt{is\_closed}<0$ if curve is sequence, the flag \texttt{CV\_SEQ\_FLAG\_CLOSED} of \texttt{((CvSeq*)curve)->flags} is checked to determine if the curve is closed or not, otherwise (curve is represented by array (CvMat*) of points) it is assumed to be unclosed.
-\end{itemize}
+\end{itemize}}
 \end{description}
 
 The function \texttt{cvArcLength} calculates length or curve as sum of lengths of segments between subsequent points
@@ -3236,8 +3255,8 @@ CvSeq* cvPointSeqFromMat( \par int seq\_kind,\par const CvArr* mat,\par CvContou
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ seq\_kind}{Type of the point sequence}: point set (0), a curve (\texttt{CV\_SEQ\_KIND\_CURVE}), closed curve (\texttt{CV\_SEQ\_KIND\_CURVE+CV\_SEQ\_FLAG\_CLOSED}) etc
-\cvarg{ mat}{Input matrix}. It should be continuous 1-dimensional vector of points, that is, it should have type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}
+\cvarg{ seq\_kind}{Type of the point sequence: point set (0), a curve (\texttt{CV\_SEQ\_KIND\_CURVE}), closed curve (\texttt{CV\_SEQ\_KIND\_CURVE+CV\_SEQ\_FLAG\_CLOSED}) etc.}
+\cvarg{ mat}{Input matrix. It should be continuous 1-dimensional vector of points, that is, it should have type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}}
 \cvarg{ contour\_header}{Contour header, initialized by the function}
 \cvarg{ block}{Sequence block header, initialized by the function}
 \end{description}
@@ -3355,8 +3374,8 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{ points}{Sequence or array of 2D or 3D points with 32-bit integer or floating-point coordinates}
 \cvarg{ dist\_type}{The distance used for fitting (see the discussion)}
 \cvarg{ param}{Numerical parameter (\texttt{C}) for some types of distances, if 0 then some optimal value is chosen}
-\cvarg{ reps, aeps}{Sufficient accuracy for radius (distance between the coordinate origin and the line) and angle, respectively, 0}.01 would be a good defaults for both. is used
-\cvarg{ line}{The output line parameters}. In case of 2d fitting it is array of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the line and \texttt{(x0, y0)} is some point on the line. In case of 3D fitting it is array of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)} where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line and \texttt{(x0, y0, z0)} is some point on the line
+\cvarg{ reps, aeps}{Sufficient accuracy for radius (distance between the coordinate origin and the line) and angle, respectively, 0.01 would be a good defaults for both. is used}
+\cvarg{ line}{The output line parameters. In case of 2d fitting it is array of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the line and \texttt{(x0, y0)} is some point on the line. In case of 3D fitting it is array of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)} where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
 
 The function \texttt{FitLine} fits line to 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is distance between $i$th point and the line and $\rho(r)$ is a distance function, one of:
@@ -3395,8 +3414,8 @@ CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par
 
 \begin{description}
 \cvarg{ points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
-\cvarg{ hull\_storage}{The destination array (CvMat*) or memory storage (CvMemStorage*) that will store the convex hull}. If it is array, it should be 1d and have the same number of elements as the input array/sequence. On output the header is modified so to truncate the array downto the hull size.  If hull\_storage is NULL then the convex hull will be stored in the same storage as the input sequence
-\cvarg{ orientation}{Desired orientation of convex hull}: \texttt{CV\_CLOCKWISE} or \texttt{CV\_COUNTER\_CLOCKWISE}
+\cvarg{ hull\_storage}{The destination array (CvMat*) or memory storage (CvMemStorage*) that will store the convex hull. If it is array, it should be 1d and have the same number of elements as the input array/sequence. On output the header is modified so to truncate the array downto the hull size.  If hull\_storage is NULL then the convex hull will be stored in the same storage as the input sequence}
+\cvarg{ orientation}{Desired orientation of convex hull: \texttt{CV\_CLOCKWISE} or \texttt{CV\_COUNTER\_CLOCKWISE}}
 \cvarg{ return\_points}{If non-zero, the points themselves will be stored in the hull instead of indices if \texttt{hull\_storage} is array, or pointers if \texttt{hull\_storage} is memory storage}
 \end{description}
 
@@ -3538,8 +3557,8 @@ CvSeq* cvConvexityDefects( \par const CvArr* contour,\par const CvArr* convexhul
 
 \begin{description}
 \cvarg{ contour}{Input contour}
-\cvarg{ convexhull}{Convex hull obtained using \cross{ConvexHull2} that should contain pointers or indices to the contour points, not the hull points themselves, i}.e. \texttt{return\_points} parameter in \cross{ConvexHull2} should be 0
-\cvarg{ storage}{Container for output sequence of convexity defects}. If it is NULL, contour or hull (in that order) storage is used
+\cvarg{ convexhull}{Convex hull obtained using \cross{ConvexHull2} that should contain pointers or indices to the contour points, not the hull points themselves, i.e. \texttt{return\_points} parameter in \cross{ConvexHull2} should be 0}
+\cvarg{ storage}{Container for output sequence of convexity defects. If it is NULL, contour or hull (in that order) storage is used}
 \end{description}
 
 The function \texttt{ConvexityDefects} finds all convexity defects of the input contour and returns a sequence of the CvConvexityDefect structures.
@@ -3561,7 +3580,7 @@ double cvPointPolygonTest( \par const CvArr* contour,\par CvPoint2D32f pt,\par i
 The function \texttt{cvPointPolygonTest} determines whether the
 point is inside contour, outside, or lies on an edge (or coinsides
 with a vertex). It returns positive, negative or zero value,
-correspondingly. When $\texttt{measure\_dist}=0$, the return value
+correspondingly. When $\texttt{measure\_dist} =0$, the return value
 is +1, -1 and 0, respectively. When $\texttt{measure\_dist} \ne 0$,
 it is a signed distance between the point and the nearest contour
 edge.
@@ -3598,8 +3617,8 @@ int cvMinEnclosingCircle( \par const CvArr* points,\par CvPoint2D32f* center,\pa
 
 \begin{description}
 \cvarg{ points}{Sequence or array of 2D points}
-\cvarg{ center}{Output parameter}. The center of the enclosing circle
-\cvarg{ radius}{Output parameter}. The radius of the enclosing circle
+\cvarg{ center}{Output parameter. The center of the enclosing circle}
+\cvarg{ radius}{Output parameter. The radius of the enclosing circle}
 \end{description}
 
 The function \texttt{cvMinEnclosingCircle} finds the minimal circumscribed
@@ -3616,7 +3635,7 @@ void cvCalcPGH( const CvSeq* contour, CvHistogram* hist );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ contour}{Input contour}. Currently, only integer point coordinates are allowed
+\cvarg{ contour}{Input contour. Currently, only integer point coordinates are allowed}
 \cvarg{ hist}{Calculated histogram; must be two-dimensional}
 \end{description}
 
@@ -3767,13 +3786,13 @@ CvSubdiv2DEdge  cvSubdiv2DRotateEdge( \par CvSubdiv2DEdge edge,\par int rotate )
 
 \begin{description}
 \cvarg{ edge}{Subdivision edge (not a quad-edge)}
-\cvarg{ type}{Specifies, which of edges of the same quad-edge as the input one to return, one of}:
+\cvarg{ type}{Specifies, which of edges of the same quad-edge as the input one to return, one of:
 \begin{description}
   \cvarg{0}{the input edge (\texttt{e} on the picture above if \texttt{e} is the input edge)}
   \cvarg{1}{the rotated edge (\texttt{eRot})}
   \cvarg{2}{the reversed edge (reversed \texttt{e} (in green))}
   \cvarg{3}{the reversed rotated edge (reversed \texttt{eRot} (in green))}
-\end{description}
+\end{description}}
 \end{description}
 
 The function \texttt{cvSubdiv2DRotateEdge} returns one the edges of the same quad-edge as the input edge.
@@ -3942,7 +3961,7 @@ void cvAcc( \par const CvArr* image,\par CvArr* sum,\par const CvArr* mask=NULL 
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point}. (each channel of multi-channel image is processed independently)
+\cvarg{ image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point. (each channel of multi-channel image is processed independently)}
 \cvarg{ sum}{Accumulator of the same number of channels as input image, 32-bit or 64-bit floating-point}
 \cvarg{ mask}{Optional operation mask}
 \end{description}
@@ -4048,13 +4067,13 @@ void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* or
 
 \begin{description}
 \cvarg{ mhi}{Motion history image}
-\cvarg{ mask}{Mask image; marks pixels where motion gradient data is correct}. Output parameter
+\cvarg{ mask}{Mask image; marks pixels where motion gradient data is correct. Output parameter}
 \cvarg{ orientation}{Motion gradient orientation image; contains angles from 0 to ~360°}
 \cvarg{ delta1, delta2}{The function finds minimum ($m(x,y)$) and maximum ($M(x,y)$) mhi values over each pixel $(x,y)$ neighborhood and assumes the gradient is valid only if
 \[
 \min(\texttt{delta1} , \texttt{delta2} ) \le M(x,y)-m(x,y) \le \max(\texttt{delta1} ,\texttt{delta2} ).
 \]}
-\cvarg{ aperture\_size}{Aperture size of derivative operators used by the function}: CV\_SCHARR, 1, 3, 5 or 7 (see \cross{Sobel})
+\cvarg{ aperture\_size}{Aperture size of derivative operators used by the function: CV\_SCHARR, 1, 3, 5 or 7 (see \cross{Sobel})}
 \end{description}
 
 The function \texttt{cvCalcMotionGradient} calculates the derivatives $Dx$ and $Dy$ of \texttt{mhi} and then calculates gradient orientation as:
@@ -4075,7 +4094,7 @@ double cvCalcGlobalOrientation( \par const CvArr* orientation,\par const CvArr* 
 
 \begin{description}
 \cvarg{ orientation}{Motion gradient orientation image; calculated by the function \cross{CalcMotionGradient}}
-\cvarg{ mask}{Mask image}. It may be a conjunction of valid gradient mask, obtained with \cross{CalcMotionGradient} and mask of the region, whose direction needs to be calculated
+\cvarg{ mask}{Mask image. It may be a conjunction of valid gradient mask, obtained with \cross{CalcMotionGradient} and mask of the region, whose direction needs to be calculated}
 \cvarg{ mhi}{Motion history image}
 \cvarg{ timestamp}{Current time in milliseconds or other units, it is better to store time passed to \cross{UpdateMotionHistory} before and reuse it here, because running \cross{UpdateMotionHistory} and \cross{CalcMotionGradient} on large images may take some time}
 \cvarg{ duration}{Maximal duration of motion track in milliseconds, the same as in \cross{UpdateMotionHistory}}
@@ -4150,7 +4169,7 @@ int cvCamShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCrit
 \cvarg{ window}{Initial search window}
 \cvarg{ criteria}{Criteria applied to determine when the window search should be finished}
 \cvarg{ comp}{Resultant structure that contains converged search window coordinates (\texttt{comp->rect} field) and sum of all pixels inside the window (\texttt{comp->area} field)}
-\cvarg{ box}{Circumscribed box for the object}. If not \texttt{NULL}, contains object size and orientation
+\cvarg{ box}{Circumscribed box for the object. If not \texttt{NULL}, contains object size and orientation}
 \end{description}
 
 The function \texttt{cvCamShift} implements CAMSHIFT object tracking algrorithm
@@ -4179,9 +4198,9 @@ void cvSnakeImage( \par const IplImage* image,\par CvPoint* points,\par int leng
   \cvarg{CV\_VALUE}{indicates that each of \texttt{alpha, beta, gamma} is a pointer to a single value to be used for all points;}
   \cvarg{CV\_ARRAY}{indicates that each of \texttt{alpha, beta, gamma} is a pointer to an array of coefficients different for all the points of the snake. All the arrays must have the size equal to the contour size.}
 \end{description}}
-\cvarg{ win}{Size of neighborhood of every point used to search the minimum, both \texttt{win}.width} and \texttt{win.height} must be odd
+\cvarg{ win}{Size of neighborhood of every point used to search the minimum, both \texttt{win.width} and \texttt{win.height} must be odd}
 \cvarg{ criteria}{Termination criteria}
-\cvarg{ calc\_gradient}{Gradient flag}. If not 0, the function calculates gradient magnitude for every image pixel and consideres it as the energy field, otherwise the input image itself is considered
+\cvarg{ calc\_gradient}{Gradient flag. If not 0, the function calculates gradient magnitude for every image pixel and consideres it as the energy field, otherwise the input image itself is considered}
 \end{description}
 
 The function \texttt{cvSnakeImage} updates snake in order to minimize its
@@ -4286,22 +4305,22 @@ void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par 
 \begin{description}
 \cvarg{ prev}{First frame, at time \texttt{t}}
 \cvarg{ curr}{Second frame, at time \texttt{t + dt} }
-\cvarg{ prev\_pyr}{Buffer for the pyramid for the first frame}. If the pointer is not \texttt{NULL} , the buffer must have a sufficient size to store the pyramid from level \texttt{1} to level \texttt{level} ; the total size of \texttt{(image\_width+8)*image\_height/3} bytes is sufficient
+\cvarg{ prev\_pyr}{Buffer for the pyramid for the first frame. If the pointer is not \texttt{NULL} , the buffer must have a sufficient size to store the pyramid from level \texttt{1} to level \texttt{level} ; the total size of \texttt{(image\_width+8)*image\_height/3} bytes is sufficient}
 \cvarg{ curr\_pyr}{Similar to \texttt{prev\_pyr}, used for the second frame}
 \cvarg{ prev\_features}{Array of points for which the flow needs to be found}
 \cvarg{ curr\_features}{Array of 2D points containing calculated new positions of inputfeatures}\cvarg{}{in the second image}
 \cvarg{ count}{Number of feature points}
 \cvarg{ win\_size}{Size of the search window of each pyramid level}
-\cvarg{ level}{Maximal pyramid level number}. If \texttt{} , pyramids are not used (single level), if \texttt{1} , two levels are used, etc
-\cvarg{ status}{Array}. Every element of the array is set to \texttt{1} if the flow for the corresponding feature has been found, \texttt{} otherwise
-\cvarg{ error}{Array of double numbers containing difference between patches around the original and moved points}. Optional parameter; can be \texttt{NULL }
+\cvarg{ level}{Maximal pyramid level number. If \texttt{} , pyramids are not used (single level), if \texttt{1} , two levels are used, etc}
+\cvarg{ status}{Array. Every element of the array is set to \texttt{1} if the flow for the corresponding feature has been found, \texttt{} otherwise}
+\cvarg{ error}{Array of double numbers containing difference between patches around the original and moved points. Optional parameter; can be \texttt{NULL }}
 \cvarg{ criteria}{Specifies when the iteration process of finding the flow for each point on each pyramid level should be stopped}
-\cvarg{ flags}{Miscellaneous flags}:
+\cvarg{ flags}{Miscellaneous flags:
 \begin{description}
   \cvarg{CV\_LKFLOW\_PYR\_A\_READY}{pyramid for the first frame is precalculated before the call}
   \cvarg{CV\_LKFLOW\_PYR\_B\_READY}{ pyramid for the second frame is precalculated before the call}
   \cvarg{CV\_LKFLOW\_INITIAL\_GUESSES}{array B contains initial coordinates of features before the function call}
-\end{description}
+\end{description}}
 \end{description}
 
 The function \texttt{cvCalcOpticalFlowPyrLK} implements sparse iterative version of Lucas-Kanade optical flow in pyramids
@@ -4457,7 +4476,7 @@ const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=N
 
 \begin{description}
 \cvarg{ kalman}{Kalman filter state}
-\cvarg{ control}{Control vector $u_k$, should be NULL iff there is no external control (\texttt{control\_params}=0)}
+\cvarg{ control}{Control vector $u_k$, should be NULL iff there is no external control (\texttt{control\_params} =0)}
 \end{description}
 
 The function \texttt{KalmanPredict} estimates the subsequent stochastic model state by its current state and stores it at \texttt{kalman->state\_pre}:
@@ -4878,8 +4897,8 @@ CvHaarClassifierCascade* cvLoadHaarClassifierCascade( \par const char* directory
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ directory}{Name of directory containing the description of a trained cascade classifier}
-\cvarg{ orig\_window\_size}{Original size of objects the cascade has been trained on. Note that it is not stored in the cascade and therefore must be specified separately}
+\cvarg{directory}{Name of directory containing the description of a trained cascade classifier}
+\cvarg{orig\_window\_size}{Original size of objects the cascade has been trained on. Note that it is not stored in the cascade and therefore must be specified separately}
 \end{description}
 
 The function \texttt{cvLoadHaarClassifierCascade} loads a trained cascade
@@ -4898,7 +4917,7 @@ void cvReleaseHaarClassifierCascade( \par CvHaarClassifierCascade** cascade );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ cascade}{Double pointer to the released cascade}. The pointer is cleared by the function
+\cvarg{ cascade}{Double pointer to the released cascade. The pointer is cleared by the function}
 \end{description}
 
 The function \texttt{ReleaseHaarClassifierCascade} deallocates the cascade that has been created manually or loaded using \cross{LoadHaarClassifierCascade} or \cross{Load}.
@@ -4924,13 +4943,13 @@ CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade
 \cvarg{ image}{Image to detect objects in}
 \cvarg{ cascade}{Haar classifier cascade in internal representation}
 \cvarg{ storage}{Memory storage to store the resultant sequence of the object candidate rectangles}
-\cvarg{ scale\_factor}{The factor by which the search window is scaled between the subsequent scans, for example, 1.1 means increasing window by 10%
-\cvarg{ min\_neighbors}{Minimum number (minus 1) of neighbor rectangles that makes up an object}. All the groups of a smaller number of rectangles than \texttt{min\_neighbors}-1 are rejected. If \texttt{min\_neighbors} is 0, the function does not any grouping at all and returns all the detected candidate rectangles, which may be useful if the user wants to apply a customized grouping procedure}
-\cvarg{ flags}{Mode of operation}. Currently the only flag that may be specified is \texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}. If it is set, the function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object. The particular threshold values are tuned for face detection and in this case the pruning speeds up the processing
-\cvarg{ min\_size}{Minimum window size}. By default, it is set to the size of samples the classifier has been trained on ($\sim 20\times 20$ for face detection)
+\cvarg{ scale\_factor}{The factor by which the search window is scaled between the subsequent scans, for example, 1.1 means increasing window by 10\% }
+\cvarg{ min\_neighbors}{Minimum number (minus 1) of neighbor rectangles that makes up an object. All the groups of a smaller number of rectangles than \texttt{min\_neighbors}-1 are rejected. If \texttt{min\_neighbors} is 0, the function does not any grouping at all and returns all the detected candidate rectangles, which may be useful if the user wants to apply a customized grouping procedure}
+\cvarg{ flags}{Mode of operation. Currently the only flag that may be specified is \texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}. If it is set, the function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object. The particular threshold values are tuned for face detection and in this case the pruning speeds up the processing}
+\cvarg{ min\_size}{Minimum window size. By default, it is set to the size of samples the classifier has been trained on ($\sim 20\times 20$ for face detection)}
 \end{description}
 
-The function \texttt{cvHaarDetectObjects} finds rectangular regions in the given image that are likely to contain objects the cascade has been trained for and returns those regions as a sequence of rectangles. The function scans the image several times at different scales (see \cross{SetImagesForHaarClassifierCascade}). Each time it considers overlapping regions in the image and applies the classifiers to the regions using \cross{RunHaarClassifierCascade}. It may also apply some heuristics to reduce number of analyzed regions, such as Canny prunning. After it has proceeded and collected the candidate rectangles (regions that passed the classifier cascade), it groups them and returns a sequence of average rectangles for each large enough group. The default parameters (\texttt{scale\_factor}=1.1, \texttt{min\_neighbors}=3, \texttt{flags}=0) are tuned for accurate yet slow object detection. For a faster operation on real video images the settings are: \texttt{scale\_factor}=1.2, \texttt{min\_neighbors}=2, \texttt{flags}=\texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}, \texttt{min\_size}=\textit{minimum possible face size} (for example, $\sim$ 1/4 to 1/16 of the image area in case of video conferencing).
+The function \texttt{cvHaarDetectObjects} finds rectangular regions in the given image that are likely to contain objects the cascade has been trained for and returns those regions as a sequence of rectangles. The function scans the image several times at different scales (see \cross{SetImagesForHaarClassifierCascade}). Each time it considers overlapping regions in the image and applies the classifiers to the regions using \cross{RunHaarClassifierCascade}. It may also apply some heuristics to reduce number of analyzed regions, such as Canny prunning. After it has proceeded and collected the candidate rectangles (regions that passed the classifier cascade), it groups them and returns a sequence of average rectangles for each large enough group. The default parameters (\texttt{scale\_factor} =1.1, \texttt{min\_neighbors} =3, \texttt{flags} =0) are tuned for accurate yet slow object detection. For a faster operation on real video images the settings are: \texttt{scale\_factor} =1.2, \texttt{min\_neighbors} =2, \texttt{flags} =\texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}, \texttt{min\_size} =\textit{minimum possible face size} (for example, $\sim$ 1/4 to 1/16 of the image area in case of video conferencing).
 
 % ===== Example. Using cascade of Haar classifiers to find objects (e.g. faces). =====
 \begin{lstlisting}
@@ -5008,10 +5027,10 @@ void cvSetImagesForHaarClassifierCascade( \par CvHaarClassifierCascade* cascade,
 
 \begin{description}
 \cvarg{ cascade}{Hidden Haar classifier cascade, created by \cross{CreateHidHaarClassifierCascade}}
-\cvarg{ sum}{Integral (sum) single-channel image of 32-bit integer format}. This image as well as the two subsequent images are used for fast feature evaluation and brightness/contrast normalization. They all can be retrieved from input 8-bit or floating point single-channel image using The function \cross{Integral}
+\cvarg{ sum}{Integral (sum) single-channel image of 32-bit integer format. This image as well as the two subsequent images are used for fast feature evaluation and brightness/contrast normalization. They all can be retrieved from input 8-bit or floating point single-channel image using The function \cross{Integral}}
 \cvarg{ sqsum}{Square sum single-channel image of 64-bit floating-point format}
 \cvarg{ tilted\_sum}{Tilted sum single-channel image of 32-bit integer format}
-\cvarg{ scale}{Window scale for the cascade}. If \texttt{scale}=1, original window size is used (objects of that size are searched) - the same size as specified in \cross{LoadHaarClassifierCascade} (24x24 in case of \texttt{default\_face\_cascade}), if \texttt{scale}=2, a two times larger window is used (48x48 in case of default face cascade). While this will speed-up search about four times, faces smaller than 48x48 cannot be detected
+\cvarg{ scale}{Window scale for the cascade. If \texttt{scale} =1, original window size is used (objects of that size are searched) - the same size as specified in \cross{LoadHaarClassifierCascade} (24x24 in case of \texttt{default\_face\_cascade}), if \texttt{scale} =2, a two times larger window is used (48x48 in case of default face cascade). While this will speed-up search about four times, faces smaller than 48x48 cannot be detected}
 \end{description}
 
 The function \texttt{cvSetImagesForHaarClassifierCascade} assigns images and/or window scale to the hidden classifier cascade. If image pointers are NULL, the previously set images are used further (i.e. NULLs mean "do not change images"). Scale parameter has no such a "protection" value, but the previous value can be retrieved by \cross{GetHaarClassifierCascadeScale} function and reused again. The function is used to prepare cascade for detecting object of the particular size in the particular image. The function is called internally by \cross{HaarDetectObjects}, but it can be called by user if there is a need in using lower-level function \cross{RunHaarClassifierCascade}.
@@ -5026,8 +5045,8 @@ int cvRunHaarClassifierCascade( \par CvHaarClassifierCascade* cascade,\par CvPoi
 
 \begin{description}
 \cvarg{ cascade}{Haar classifier cascade}
-\cvarg{ pt}{Top-left corner of the analyzed region}. Size of the region is a original window size scaled by the currenly set scale. The current window size may be retrieved using \cross{GetHaarClassifierCascadeWindowSize} function
-\cvarg{ start\_stage}{Initial zero-based index of the cascade stage to start from}. The function assumes that all the previous stages are passed. This feature is used internally by \cross{HaarDetectObjects} for better processor cache utilization
+\cvarg{ pt}{Top-left corner of the analyzed region. Size of the region is a original window size scaled by the currenly set scale. The current window size may be retrieved using \cross{GetHaarClassifierCascadeWindowSize} function}
+\cvarg{ start\_stage}{Initial zero-based index of the cascade stage to start from. The function assumes that all the previous stages are passed. This feature is used internally by \cross{HaarDetectObjects} for better processor cache utilization}
 \end{description}
 
 The function \texttt{cvRunHaarHaarClassifierCascade} runs Haar classifier
@@ -5232,7 +5251,7 @@ choice.
 
 The function is used to find initial intrinsic and extrinsic matrices.
 Homography matrix is determined up to a scale, thus it is normalized
-to make $h_{33}=1$.
+to make $h_{33} =1$.
 
 \cvfunc{CalibrateCamera2}\label{CalibrateCamera2}
 
@@ -5411,10 +5430,10 @@ int cvFindChessboardCorners( \par const void* image,\par CvSize pattern\_size,\p
 
 \begin{description}
 \cvarg{ image}{Source chessboard view; it must be 8-bit grayscale or color image}
-\cvarg{ pattern\_size}{The number of inner corners '''per''' chessboard row and column}.
+\cvarg{ pattern\_size}{The number of inner corners '''per''' chessboard row and column}
 ( pattern\_size = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
 \cvarg{ corners}{The output array of corners detected}
-\cvarg{ corner\_count}{The output corner counter}. If it is not NULL, the function stores there the number of corners found
+\cvarg{ corner\_count}{The output corner counter. If it is not NULL, the function stores there the number of corners found}
 \cvarg{ flags}{Various operation flags, can be 0 or a combination of the following values:
 \begin{description}
  \cvarg{CV\_CALIB\_CB\_ADAPTIVE\_THRESH}{use adaptive thresholding to convert the image to black-n-white, rather than a fixed threshold level (computed from the average image brightness).}
@@ -5451,7 +5470,7 @@ void cvDrawChessboardCorners( \par CvArr* image,\par CvSize pattern\_size,\par C
 \cvarg{ pattern\_was\_found}{Indicates whether the complete board was found $(\ne 0)$ or not $(=0)$. One may just pass the return value \cross{FindChessboardCorners} here}
 \end{description}
 
-The function \texttt{cvDrawChessboardCorners} draws the individual chessboard corners detected (as red circles) in case if the board was not found $(\texttt{pattern\_was\_found}=0)$ or the colored corners connected with lines when the board was found $(\texttt{pattern\_was\_found} \ne 0)$.
+The function \texttt{cvDrawChessboardCorners} draws the individual chessboard corners detected (as red circles) in case if the board was not found $(\texttt{pattern\_was\_found} =0)$ or the colored corners connected with lines when the board was found $(\texttt{pattern\_was\_found} \ne 0)$.
 
 
 \cvfunc{RQDecomp3x3}\label{RQDecomp3x3}
@@ -5590,9 +5609,9 @@ int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\p
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ points1}{Array of the first image points of \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} size (where \texttt{N} is number of points)}. Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable. The point coordinates should be floating-point (single or double precision)
+\cvarg{ points1}{Array of the first image points of \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} size (where \texttt{N} is number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable. The point coordinates should be floating-point (single or double precision)}
 \cvarg{ points2}{Array of the second image points of the same size and format as \texttt{points1}}
-\cvarg{ fundamental\_matrix}{The output fundamental matrix or matrices}. The size should be 3x3 or 9x3 (7-point method may return up to 3 matrices)
+\cvarg{ fundamental\_matrix}{The output fundamental matrix or matrices. The size should be 3x3 or 9x3 (7-point method may return up to 3 matrices)}
 \cvarg{ method}{Method for computing the fundamental matrix
 \begin{description}
   \cvarg{CV\_FM\_7POINT}{for 7-point algorithm. $N = 7$}
@@ -5654,7 +5673,7 @@ void cvComputeCorrespondEpilines( \par const CvMat* points,\par int which\_image
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ points}{The input points}. \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} array (where \texttt{N} number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable
+\cvarg{ points}{The input points. \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} array (where \texttt{N} number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable}
 \cvarg{ which\_image}{Index of the image (1 or 2) that contains the \texttt{points}}
 \cvarg{ fundamental\_matrix}{Fundamental matrix}
 \cvarg{ correspondent\_lines}{Computed epilines, \texttt{3xN} or \texttt{Nx3} array}
@@ -5672,11 +5691,11 @@ or
 
 From the fundamental matrix definition (see \cross{FindFundamentalMatrix}
 discussion), line $l_1$ for a point $p_1$ in the first image
-$(\texttt{which\_image}=1)$ can be computed as:
+$(\texttt{which\_image} =1)$ can be computed as:
 
 \[ l_2 = F p_1 \]
 
-and the line $l_1$ for a point $p_2$ in the second image $(\texttt{which\_image}=1)$ can be computed as:
+and the line $l_1$ for a point $p_2$ in the second image $(\texttt{which\_image} =1)$ can be computed as:
 
 \[ l_1 = F^T p_2 \]
 
@@ -5691,7 +5710,7 @@ void cvConvertPointsHomogenious( \par const CvMat* src,\par CvMat* dst );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ src}{The input point array, \texttt{2xN, Nx2, 3xN, Nx3, 4xN or Nx4} (where \texttt{N} is the number of points)}. Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable
+\cvarg{ src}{The input point array, \texttt{2xN, Nx2, 3xN, Nx3, 4xN or Nx4 (where \texttt{N} is the number of points)}. Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable}
 \cvarg{ dst}{The output point array, must contain the same number of points as the input; The dimensionality must be the same, 1 less or 1 more than the input, and also within 2..4}
 \end{description}
 
