@@ -1,0 +1,30 @@
+\documentclass[11pt]{book}
+
+\usepackage{myopencv}
+
+\title{OpenCV Documentation}			% used by \maketitle
+\author{Authors}		% used by \maketitle
+\date{May 7, 2009}					% used by \maketitle
+
+\begin{document}
+\maketitle						% automatic title!
+
+\setcounter{tocdepth}{8}
+\tableofcontents
+
+\titleformat{\subsubsection}
+{\titlerule
+\vspace{.8ex}%
+\normalfont\bfseries\Large}
+{\thesection.}{.5em}{}
+
+%%% Chapters %%%
+\include{CxCore}
+% \include{CvReference}
+% \include{CvAux}
+% \include{HighGui}
+% \include{MachineLearning}
+% \include{FAQ}
+%%%%%%%%%%%%%%%%
+
+\end{document}             % End of document.
