@@ -3017,7 +3017,7 @@ typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* user
 \cvarg{ distance\_type}{Metrics used; \texttt{CV\_DIST\_L1, CV\_DIST\_L2}, and \texttt{CV\_DIST\_C} stand for one of the standard metrics; \texttt{CV\_DIST\_USER} means that a user-defined function \texttt{distance\_func} or pre-calculated \texttt{cost\_matrix} is used}
 \cvarg{ distance\_func}{The user-defined distance function. It takes coordinates of two points and returns the distance between the points}
 \cvarg{ cost\_matrix}{The user-defined $\texttt{size1}\times \texttt{size2}$ cost matrix. At least one of \texttt{cost\_matrix} and \texttt{distance\_func} must be NULL. Also, if a cost matrix is used, lower boundary (see below) can not be calculated, because it needs a metric function}
-\cvarg{ flow}{The resultant $\texttt{size1}\times \texttt{size2}$ flow matrix: $\texttt{flow}_{i,j}$ is a flow from $i$th point of \texttt{signature1} to $j$th point of \texttt{signature2}}
+\cvarg{ flow}{The resultant $\texttt{size1} \times \texttt{size2}$ flow matrix: $\texttt{flow}_{i,j}$ is a flow from $i$ th point of \texttt{signature1} to $j$ th point of \texttt{signature2}}
 \cvarg{ lower\_bound}{Optional input/output parameter: lower boundary of distance between the two signatures that is a distance between mass centers. The lower boundary may not be calculated if the user-defined cost matrix is used, the total weights of point configurations are not equal, or there is the signatures consist of weights only (i.e. the signature matrices have a single column). User ''must'' initialize \texttt{*lower\_bound}. If the calculated distance between mass centers is greater or equal to \texttt{*lower\_bound} (it means that the signatures are far enough) the function does not calculate EMD. In any case \texttt{*lower\_bound} is set to the calculated distance between mass centers on return. Thus, if user wants to calculate both distance between mass centers and EMD, \texttt{*lower\_bound} should be set to 0}
 \cvarg{ userdata}{Pointer to optional data that is passed into the user-defined distance function}
 \end{description}
@@ -3382,7 +3382,7 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{ line}{The output line parameters. In case of 2d fitting it is array of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the line and \texttt{(x0, y0)} is some point on the line. In case of 3D fitting it is array of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)} where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
 
-The function \texttt{FitLine} fits line to 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is distance between $i$th point and the line and $\rho(r)$ is a distance function, one of:
+The function \texttt{FitLine} fits line to 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is distance between $i$ th point and the line and $\rho(r)$ is a distance function, one of:
 
 \begin{description}
 
@@ -4072,7 +4072,7 @@ void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* or
 \begin{description}
 \cvarg{ mhi}{Motion history image}
 \cvarg{ mask}{Mask image; marks pixels where motion gradient data is correct. Output parameter}
-\cvarg{ orientation}{Motion gradient orientation image; contains angles from 0 to ~360°}
+\cvarg{ orientation}{Motion gradient orientation image; contains angles from 0 to ~360 degrees }
 \cvarg{ delta1, delta2}{The function finds minimum ($m(x,y)$) and maximum ($M(x,y)$) mhi values over each pixel $(x,y)$ neighborhood and assumes the gradient is valid only if
 \[
 \min(\texttt{delta1} , \texttt{delta2} ) \le M(x,y)-m(x,y) \le \max(\texttt{delta1} ,\texttt{delta2} ).
@@ -4106,7 +4106,7 @@ double cvCalcGlobalOrientation( \par const CvArr* orientation,\par const CvArr* 
 
 The function \texttt{cvCalcGlobalOrientation} calculates the general
 motion direction in the selected region and returns the angle between
-0° and 360°. At first the function builds the orientation histogram
+0 degrees  and 360 degrees . At first the function builds the orientation histogram
 and finds the basic orientation as a coordinate of the histogram
 maximum. After that the function calculates the shift relative to the
 basic orientation as a weighted sum of all orientation vectors: the more
@@ -5729,6 +5729,7 @@ y' = y/w \\
 z' = z/w \quad \text{(if output is 3D)}
 \end{array}
 \]
+
 If the output array dimensionality is larger, an extra 1 is appended to each point.  Otherwise, the input array is simply copied (with optional tranposition) to the output.
 
 \textbf{Note} because the function accepts a large variety of array layouts, it may report an error when input/output array dimensionality is ambiguous. It is always safe to use the function with number of points $\texttt{N} \ge 5$, or to use multi-channel \texttt{Nx1} or \texttt{1xN} arrays.
