@@ -1798,8 +1798,8 @@ CvMat* cvReshape( const CvArr* arr, CvMat* header, int new\_cn, int new\_rows=0 
 \begin{description}
 \cvarg{arr}{Input array}
 \cvarg{header}{Output header to be filled}
-\cvarg{new\_cn}{New number of channels. `new\_cn = 0` means that number of channels remains unchanged.}
-\cvarg{new\_rows}{New number of rows. `new\_rows = 0` means that number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value. destination array to be changed.}
+\cvarg{new\_cn}{New number of channels. 'new\_cn = 0' means that number of channels remains unchanged.}
+\cvarg{new\_rows}{New number of rows. 'new\_rows = 0' means that number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value. destination array to be changed.}
 \end{description}
 
 The function \texttt{cvReshape} initializes CvMat header so that it points to the same data as the original array but has different shape - different number of channels, different number of rows or both.
@@ -2013,7 +2013,7 @@ dst(I)=lut[src(I)+DELTA]
 
 \end{lstlisting}
 
-where \texttt{DELTA=0} if \texttt{src} has depth \texttt{CV\_8U}, and `DELTA=128` if \texttt{src} has depth \texttt{CV\_8S}.
+where \texttt{DELTA=0} if \texttt{src} has depth \texttt{CV\_8U}, and 'DELTA=128' if \texttt{src} has depth \texttt{CV\_8S}.
 
 \cvfunc{ConvertScale}\label{ConvertScale}
 
@@ -2052,7 +2052,7 @@ result of scaling + conversion can not be represented exactly by a value
 of destination array element type, it is set to the nearest representable
 value on the real axis.
 
-In case of `scale=1, shift=0` no prescaling is done. This is a specially
+In case of 'scale=1, shift=0' no prescaling is done. This is a specially
 optimized case and it has the appropriate \cross{Convert} synonym. If
 source and destination array types have equal types, this is also a
 special case that can be used to scale and shift a matrix or an image
@@ -2661,7 +2661,7 @@ for single-channel arrays,
 
 for two-channel arrays etc.
 
-`dst(I)` is set to 0xff (all \texttt{1}-bits) if `src(I)` is within the range and 0 otherwise. All the arrays must have the same size (or ROI size)
+'dst(I)' is set to 0xff (all \texttt{1}-bits) if 'src(I)' is within the range and 0 otherwise. All the arrays must have the same size (or ROI size)
 
 \cvfunc{Max}\label{Max}
 
@@ -3519,7 +3519,7 @@ with the same linear size as the total number of elements in every
 input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
 \texttt{CV\_COVAR\_NORMAL} must be specified}
 \cvarg{CV\_COVAR\_USE\_AVG}{if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
-\texttt{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is `1./count`, in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled (`scale=1`).}
+\texttt{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is '1./count', in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled ('scale=1').}
 
 \cvarg{CV\_COVAR\_ROWS}{Means that all the input vectors are stored as rows of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-row vector of an appropriate size.}
 \cvarg{CV\_COVAR\_COLS}{Means that all the input vectors are stored as columns of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-column vector of an appropriate size.}
@@ -3638,7 +3638,7 @@ float cvCbrt( float value );
 \end{description}
 
 
-The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than `pow(value,1./3)`. Besides, negative arguments are handled properly. Special values ( $ \pm \infty $, NaN) are not handled.
+The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than 'pow(value,1./3)'. Besides, negative arguments are handled properly. Special values ( $ \pm \infty $, NaN) are not handled.
 
 \cvfunc{FastArctan}\label{FastArctan}
 
@@ -3741,7 +3741,7 @@ void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvA
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
-The function \texttt{cvPolarToCart} calculates either x-coodinate, y-coordinate or both of every vector `magnitude(I)*exp(angle(I)*j), j=sqrt(-1)`:
+The function \texttt{cvPolarToCart} calculates either x-coodinate, y-coordinate or both of every vector 'magnitude(I)*exp(angle(I)*j), j=sqrt(-1)':
 
 \begin{lstlisting}
 
@@ -4192,7 +4192,7 @@ int cvGetOptimalDFTSize( int size0 );
 The function \texttt{cvGetOptimalDFTSize} returns the minimum number
 \texttt{N} that is greater to equal to \texttt{size0}, such that DFT
 of a vector of size \texttt{N} can be computed fast. In the current
-implementation $N=2^p \times 3^q \times 5^r$` for some $p$, $q$, $r$.
+implementation $N=2^p \times 3^q \times 5^r$' for some $p$, $q$, $r$.
 
 The function returns a negative number if \texttt{size0} is too large
 (very close to \texttt{INT\_MAX})
@@ -5009,7 +5009,7 @@ void cvClearSeq( CvSeq* seq );
 The function \texttt{cvClearSeq} removes all elements from the
 sequence. The function does not return the memory to the storage, but this
 memory is reused later when new elements are added to the sequence. This
-function time complexity is `O(1)`.
+function time complexity is 'O(1)'.
 
 \cvfunc{GetSeqElem}\label{GetSeqElem}
 
@@ -5551,7 +5551,7 @@ is positive and contains the node index that may be retrieved using
 the node content is determined by the user. In particular, the occupied
 nodes are not linked as the free nodes are, so the second field can be
 used for such a link as well as for some different purpose. The macro
-`CV\_IS\_SET\_ELEM(set\_elem\_ptr)` can be used to determined whether
+'CV\_IS\_SET\_ELEM(set\_elem\_ptr)' can be used to determined whether
 the specified node is occupied or not.
 
 Initially the set and the list are empty. When a new node is requiested
@@ -5781,8 +5781,8 @@ CvGraph* cvCreateGraph( \par int graph\_flags,\par int header\_size,\par int vtx
 \cvarg{graph\_flags}{Type of the created graph. Usually, it is either \texttt{CV\_SEQ\_KIND\_GRAPH} for generic unoriented graphs and
 \texttt{CV\_SEQ\_KIND\_GRAPH | CV\_GRAPH\_FLAG\_ORIENTED} for generic oriented graphs.}
 \cvarg{header\_size}{Graph header size; may not be less than \texttt{sizeof(CvGraph)}}
-\cvarg{vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use `CV\_GRAPH\_VERTEX\_FIELDS()`)}
-\cvarg{edge\_size}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use `CV\_GRAPH\_EDGE\_FIELDS()`)}
+\cvarg{vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use 'CV\_GRAPH\_VERTEX\_FIELDS()')}
+\cvarg{edge\_size}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use 'CV\_GRAPH\_EDGE\_FIELDS()')}
 \cvarg{storage}{The graph container}
 \end{description}
 
@@ -5800,7 +5800,7 @@ int cvGraphAddVtx( \par CvGraph* graph,\par const CvGraphVtx* vtx=NULL,\par CvGr
 
 \begin{description}
 \cvarg{graph}{Graph}
-\cvarg{vtx}{Optional input argument used to initialize the added vertex (only user-defined fields beyond `sizeof(CvGraphVtx)` are copied)}
+\cvarg{vtx}{Optional input argument used to initialize the added vertex (only user-defined fields beyond 'sizeof(CvGraphVtx)' are copied)}
 \cvarg{inserted\_vertex}{Optional output argument. If not \texttt{NULL}, the address of the new vertex is written there.}
 \end{description}
 
@@ -6148,11 +6148,11 @@ CvGraphScanner*  cvCreateGraphScanner( \par CvGraph* graph,\par CvGraphVtx* vtx=
 
 \begin{description}
 \cvarg{CV\_GRAPH\_VERTEX}{stop at the graph vertices visited for the first time}
-\cvarg{CV\_GRAPH\_TREE\_EDGE}{stop at tree edges (`tree edge` is the edge connecting the last visited vertex and the vertex to be visited next)}
-\cvarg{CV\_GRAPH\_BACK\_EDGE}{stop at back edges (`back edge` is an edge connecting the last visited vertex with some of its ancestors in the search tree)}
-\cvarg{CV\_GRAPH\_FORWARD\_EDGE}{stop at forward edges (`forward edge` is an edge conecting the last visited vertex with some of its descendants in the search tree). The `forward edges` are only possible during oriented graph traversal)}
-\cvarg{CV\_GRAPH\_CROSS\_EDGE}{stop at cross edges (`cross edge` is an edge connecting different search trees or branches of the same tree. The `cross edges` are only possible during oriented graphs traversal)}
-\cvarg{CV\_GRAPH\_ANY\_EDGE}{stop and any edge (`tree, back, forward` and `cross edges`)}
+\cvarg{CV\_GRAPH\_TREE\_EDGE}{stop at tree edges ('tree edge' is the edge connecting the last visited vertex and the vertex to be visited next)}
+\cvarg{CV\_GRAPH\_BACK\_EDGE}{stop at back edges ('back edge' is an edge connecting the last visited vertex with some of its ancestors in the search tree)}
+\cvarg{CV\_GRAPH\_FORWARD\_EDGE}{stop at forward edges ('forward edge' is an edge conecting the last visited vertex with some of its descendants in the search tree). The 'forward edges' are only possible during oriented graph traversal)}
+\cvarg{CV\_GRAPH\_CROSS\_EDGE}{stop at cross edges ('cross edge' is an edge connecting different search trees or branches of the same tree. The 'cross edges' are only possible during oriented graphs traversal)}
+\cvarg{CV\_GRAPH\_ANY\_EDGE}{stop and any edge ('tree, back, forward' and 'cross edges')}
 \cvarg{CV\_GRAPH\_NEW\_TREE}{stop in the beginning of every new search tree. When the traversal procedure visits all vertices and edges reachible from the initial vertex (the visited vertices together with tree edges make up a tree), it searches for some unvisited vertex in the graph and resumes the traversal process from that vertex. Before starting a new tree (including the very first tree when \texttt{cvNextGraphItem} is called for the first time) it generates \texttt{CV\_GRAPH\_NEW\_TREE} event. For unoriented graphs each search tree corresponds to a connected component of the graph.}
 \cvarg{CV\_GRAPH\_BACKTRACKING}{stop at every already visited vertex during backtracking - returning to already visited vertexes of the traversal tree.}
 \end{description}}
@@ -6182,10 +6182,10 @@ listed in the description of \texttt{mask} parameter above and with
 the next call it resumes the traversal. In the latter case it returns
 \texttt{CV\_GRAPH\_OVER} (-1). When the event is \texttt{CV\_GRAPH\_VERTEX},
 or \texttt{CV\_GRAPH\_BACKTRACKING} or \texttt{CV\_GRAPH\_NEW\_TREE},
-the currently observed vertex is stored in `scanner->vtx`. And if the
-event is edge-related, the edge itself is stored at `scanner->edge`,
-the previously visited vertex - at `scanner->vtx` and the other ending
-vertex of the edge - at `scanner->dst`.
+the currently observed vertex is stored in 'scanner->vtx'. And if the
+event is edge-related, the edge itself is stored at 'scanner->edge',
+the previously visited vertex - at 'scanner->vtx' and the other ending
+vertex of the edge - at 'scanner->dst'.
 
 \cvfunc{ReleaseGraphScanner}\label{ReleaseGraphScanner}
 
@@ -6246,7 +6246,7 @@ CvTreeNodeIterator;
 
 \end{lstlisting}
 
-The structure \cross{CvTreeNodeIterator} is used to traverse trees. The tree node declaration should start with `CV\_TREE\_NODE\_FIELDS(...)` macro.
+The structure \cross{CvTreeNodeIterator} is used to traverse trees. The tree node declaration should start with 'CV\_TREE\_NODE\_FIELDS(...)' macro.
 
 \cvfunc{InitTreeNodeIterator}\label{InitTreeNodeIterator}
 
@@ -6350,7 +6350,7 @@ void cvRemoveNodeFromTree( \par void* node,\par void* frame );
 
 \begin{description}
 \cvarg{node}{The removed node}
-\cvarg{frame}{The top level node. If `node->v\_prev = NULL` and `node->h\_prev` is NULL (i.e. if \texttt{node} is the first child of \texttt{frame}), `frame->v\_next` is set to `node->h\_next` (i.e. the first child or frame is changed).}
+\cvarg{frame}{The top level node. If 'node->v\_prev = NULL' and 'node->h\_prev' is NULL (i.e. if \texttt{node} is the first child of \texttt{frame}), 'frame->v\_next' is set to 'node->h\_next' (i.e. the first child or frame is changed).}
 \end{description}
 
 The function \texttt{cvRemoveNodeFromTree} removes node from tree. The function does not deallocate any memory, it can only modify links of the tree nodes.
@@ -6593,9 +6593,9 @@ void cvInitFont( \par CvFont* font,\par int font\_face,\par double hscale,\par d
  \cvarg{CV\_FONT\_HERSHEY\_SCRIPT\_COMPLEX}{more complex variant of \texttt{CV\_FONT\_HERSHEY\_SCRIPT\_SIMPLEX}}
  \end{description}
  The parameter can be composited from one of the values above and optional \texttt{CV\_FONT\_ITALIC} flag, that means italic or oblique font.}
-\cvarg{hscale}{Horizontal scale.  If equal to `1.0f`, the characters have the original width depending on the font type. If equal to `0.5f`, the characters are of half the original width.}
-\cvarg{vscale}{Vertical scale. If equal to `1.0f`, the characters have the original height depending on the font type. If equal to `0.5f`, the characters are of half the original height.}
-\cvarg{shear}{Approximate tangent of the character slope relative to the vertical line.  Zero value means a non-italic font, `1.0f` means `≈45°` slope, etc. thickness Thickness of lines composing letters outlines. The function \texttt{cvLine} is used for drawing letters.}
+\cvarg{hscale}{Horizontal scale.  If equal to '1.0f', the characters have the original width depending on the font type. If equal to '0.5f', the characters are of half the original width.}
+\cvarg{vscale}{Vertical scale. If equal to '1.0f', the characters have the original height depending on the font type. If equal to '0.5f', the characters are of half the original height.}
+\cvarg{shear}{Approximate tangent of the character slope relative to the vertical line.  Zero value means a non-italic font, '1.0f' means ' about 45 degrees ' slope, etc. thickness Thickness of lines composing letters outlines. The function \texttt{cvLine} is used for drawing letters.}
 \cvarg{thickness}{Thickness of the text strokes}
 \cvarg{line\_type}{Type of the strokes, see \cross{Line} description}
 \end{description}
@@ -7057,8 +7057,8 @@ If it is NULL, a temporary memory storage is created and used.}
 The function \texttt{cvOpenFileStorage} opens file storage for
 reading or writing data. In the latter case a new file is created
 or existing file is rewritten. Type of the read of written file is
-determined by the filename extension: `.xml` for \texttt{XML}
-and `.yml` or `.yaml` for \texttt{YAML}. The function
+determined by the filename extension: '.xml' for \texttt{XML}
+and '.yml' or '.yaml' for \texttt{YAML}. The function
 returns pointer to \cross{CvFileStorage} structure.
 
 \cvfunc{ReleaseFileStorage}\label{ReleaseFileStorage}
@@ -7331,8 +7331,8 @@ where the characters correspond to fundamental C types:
 \texttt{count} is the optional counter of values of the certain type. For
 example, \texttt{2if} means that each array element is a structure
 of 2 integers, followed by a single-precision floating-point number. The
-equivalent notations of the above specification are `\texttt{iif}`,
-`\texttt{2i1f}` etc. Other examples: \texttt{u} means that the
+equivalent notations of the above specification are '\texttt{iif}',
+'\texttt{2i1f}' etc. Other examples: \texttt{u} means that the
 array consists of bytes, \texttt{2d} - the array consists of pairs
 of doubles.}
 \end{description}}
@@ -7389,7 +7389,7 @@ nodes. The top-level nodes do not have a name, they correspond to the
 streams, that are stored one after another in the file storage. If the
 index is out of range, the function returns NULL pointer, so all the
 top-level nodes may be iterated by subsequent calls to the function with
-`stream\_index=0,1,...`, until NULL pointer is returned. This function
+'stream\_index=0,1,...', until NULL pointer is returned. This function
 may be used as a base for recursive traversal of the file storage.
 
 \cvfunc{GetFileNodeByName}\label{GetFileNodeByName}
@@ -7615,7 +7615,7 @@ that is represented by the file node. If the file node is NULL,
 the function right after \cross{GetFileNode} without checking for NULL
 pointer), otherwise if the file node has type \texttt{CV\_NODE\_REAL},
 then \texttt{node->data.f} is returned, otherwise if the file node has type
-\texttt{CV\_NODE\_INT}, then `node->data.f` is converted to floating-point
+\texttt{CV\_NODE\_INT}, then 'node->data.f' is converted to floating-point
 and returned, otherwise the result is not determined.
 
 \cvfunc{ReadRealByName}\label{ReadRealByName}
@@ -7656,7 +7656,7 @@ The function \texttt{cvReadString} returns text string that is represented
 by the file node. If the file node is NULL, \texttt{default\_value}
 is returned (thus, it is convenient to call the function right after
 \cross{GetFileNode} without checking for NULL pointer), otherwise if
-the file node has type \texttt{CV\_NODE\_STR}, then `node->data.str.ptr`
+the file node has type \texttt{CV\_NODE\_STR}, then 'node->data.str.ptr'
 is returned, otherwise the result is not determined.
 
 \cvfunc{ReadStringByName}\label{ReadStringByName}

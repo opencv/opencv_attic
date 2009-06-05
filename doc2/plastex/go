@@ -1,0 +1,8 @@
+#!/bin/bash
+
+tput clear
+
+#export XHTMLTEMPLATES=render
+#plastex opencv.tex
+TEXINPUTS=../: python renderer.py > a # &&
+TEXINPUTS=$PWD: make html
