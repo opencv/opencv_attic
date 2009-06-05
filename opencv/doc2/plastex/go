@@ -4,5 +4,5 @@ tput clear
 
 #export XHTMLTEMPLATES=render
 #plastex opencv.tex
-TEXINPUTS=../: python renderer.py > a # &&
-TEXINPUTS=$PWD: make html
+TEXINPUTS=../: python renderer.py # &&
+# TEXINPUTS=$PWD: make html
