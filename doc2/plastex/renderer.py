@@ -168,16 +168,20 @@ class reStructuredTextRenderer(BaseRenderer):
     self.indent += 4
     defstr = unicode(node.attributes['def'])
     assert not (u"\xe2" in unicode(defstr))
-    print defstr
     self.indent -= 4
     return u"\n%s*%s*\n%s    %s\n" % (self.ind(), str(node.attributes['item']).strip(), self.ind(), defstr)
 
   def do_bgroup(self, node):
-    # print "bgroup", node.source
-    return u"bgroup"
+    return u"bgroup(%s)" % node.source
+
+  def do_url(self, node):
+    return unicode(node.attributes['loc'])
 
   def do_itemize(self, node):
-    return u"itemize"
+    return unicode(node)
+
+  def do_item(self, node):
+    return u"\n%s* %s" % (self.ind(), unicode(node).strip())
 
   def do_textit(self, node):
     return "*%s*" % unicode(node.attributes['self'])
@@ -201,19 +205,35 @@ class reStructuredTextRenderer(BaseRenderer):
     return u":math:`%s`" % node.source
 
   def do_displaymath(self, node):
-    words = node.source.strip().split()
+    words = self.fix_quotes(node.source).strip().split()
     return u"\n\n%s.. math::\n\n%s   %s\n\n" % (self.ind(), self.ind(), " ".join(words[1:-1]))
+
+  def do_maketitle(self, node):
+    return u""
+  def do_setcounter(self, node):
+    return u""
+  def do_tableofcontents(self, node):
+    return u""
+  def do_titleformat(self, node):
+    return u""
+  def do_subsubsection(self, node):
+    return u""
+  def do_include(self, node):
+    return u""
+
+  def fix_quotes(self, s):
+    s = s.replace(u'\u2013', "'")
+    s = s.replace(u'\u2019', "'")
+    return s
 
   def textDefault(self, node):
     s = unicode(node)
-    s = s.replace(u'\u2013', "'")
-    s = s.replace(u'\u2019', "'")
+    s = self.fix_quotes(s)
     return s
     return node.replace('\\_','_')
 
 
 from plasTeX.TeX import TeX
-
 
 # Instantiate a TeX processor and parse the input text
 tex = TeX()
@@ -232,7 +252,7 @@ if 1:
   tex.input(open("../simple-opencv.tex"))
 else:
   lines = list(open("../CvReference.tex"))
-  LINES = 5785
+  LINES = 80
   tex.input(src0 + "".join(lines[:LINES]) + src1)
 
 document = tex.parse()
@@ -242,5 +262,4 @@ document = tex.parse()
 #renderer.render(document)
 
 rest = reStructuredTextRenderer()
-print rest.keys()
 rest.render(document)

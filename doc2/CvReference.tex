@@ -596,7 +596,7 @@ CvPoint2D32f center );
 The function \texttt{GetRectSubPix} extracts pixels from \texttt{src}:
 
 \[
-dst(x, y) = src(x + center.x - (width(dst)-1)*0.5, y + center.y - (height(dst)-1)*0.5)
+dst(x, y) = src(x + \texttt{center.x} - (width(\texttt{dst})-1)*0.5, y + \texttt{center.y} - (height(\texttt{dst} )-1)*0.5)
 \]
 
 where the values of pixels at non-integer coordinates are retrieved

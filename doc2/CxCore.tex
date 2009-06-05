@@ -1538,7 +1538,7 @@ The functions \texttt{cvPtrnD} return pointer to the particular array element. N
 
 The functions can be used for sparse arrays as well - if the requested node does not exist they create it and set it to zero.
 
-All these as well as other functions accessing array elements (cross{Get}, \cross{GetReal}, \cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
+All these as well as other functions accessing array elements (\cross{Get}, \cross{GetReal}, \cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
 
 \cvfunc{Get*D}\label{Get*D}
 
@@ -2001,8 +2001,7 @@ void cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 \begin{description}
 \cvarg{src}{Source array of 8-bit elements}
 \cvarg{dst}{Destination array of arbitrary depth and of the same number of channels as the source array}
-\cvarg{lut}{Look-up table of 256 elements; should have the same depth as the destination array
-. In case of multi-channel source and destination arrays, the table should either have a single-channel (in this case the same table is used for all channels), or the same number of channels as the source/destination array.}
+\cvarg{lut}{Look-up table of 256 elements; should have the same depth as the destination array. In case of multi-channel source and destination arrays, the table should either have a single-channel (in this case the same table is used for all channels), or the same number of channels as the source/destination array.}
 \end{description}
 
 The function \texttt{cvLUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as following:
@@ -3194,10 +3193,9 @@ The function \texttt{PerspectiveTransform} transforms every element of \texttt{s
 
 where
 
-\[ (x', y', z', w') = \texttt{mat} \cdot
-\begin{bmatrix}
-x & y & z & 1
-\end{bmatrix}
+\[
+(x', y', z', w') = \texttt{mat} \cdot
+\begin{bmatrix} x & y & z & 1 \end{bmatrix}
 \]
 
 and
@@ -3463,10 +3461,10 @@ void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{mat}{The input symmetric square matrix}
-. It is modified during the processing.\cvarg{evects}{The output matrix of eigenvectors, stored as a subsequent rows}
+\cvarg{mat}{The input symmetric square matrix. It is modified during the processing.}
+\cvarg{evects}{The output matrix of eigenvectors, stored as a subsequent rows}
 \cvarg{evals}{The output vector of eigenvalues, stored in the descenting order (order of eigenvalues and eigenvectors is syncronized, of course)}
-\cvarg{eps}{Accuracy of diagonalization (typically, $ DBL\_EPSILON= about 10^{-15} $ is enough)}
+\cvarg{eps}{Accuracy of diagonalization. Typically, \texttt{DBL\_EPSILON} (about $ 10^{-15} $) works well}
 \end{description}
 
 
@@ -3519,7 +3517,7 @@ with the same linear size as the total number of elements in every
 input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
 \texttt{CV\_COVAR\_NORMAL} must be specified}
 \cvarg{CV\_COVAR\_USE\_AVG}{if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
-\texttt{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is '1./count', in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled ('scale=1').}
+\cvarg{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is '1./count', in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled ('scale=1').}
 
 \cvarg{CV\_COVAR\_ROWS}{Means that all the input vectors are stored as rows of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-row vector of an appropriate size.}
 \cvarg{CV\_COVAR\_COLS}{Means that all the input vectors are stored as columns of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-column vector of an appropriate size.}
@@ -3621,7 +3619,7 @@ float cvInvSqrt( float value );
 \end{description}
 
 
-The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than \\texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ( $ \pm \infty $ , NaN) are not handled.
+The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ( $ \pm \infty $ , NaN) are not handled.
 
 \cvfunc{Cbrt}\label{Cbrt}
 
@@ -3651,8 +3649,8 @@ float cvFastArctan( float y, float x );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{x}{x-coordinate of 2D vectory}
-\cvarg{}{y-coordinate of 2D vector}
+\cvarg{x}{x-coordinate of 2D vector}
+\cvarg{y}{y-coordinate of 2D vector}
 \end{description}
 
 
@@ -3734,8 +3732,8 @@ void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvA
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{magnitude}{The array of magnitudes}
-. If it is NULL, the magnitudes are assumed all 1's.\cvarg{angle}{The array of angles, whether in radians or degrees}
+\cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed all 1's.}
+\cvarg{angle}{The array of angles, whether in radians or degrees}
 \cvarg{x}{The destination array of x-coordinates, may be set to NULL if it is not needed}
 \cvarg{y}{The destination array of y-coordinates, mau be set to NULL if it is not needed}
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
@@ -5230,8 +5228,8 @@ void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );
 \end{lstlisting}
 
 \begin{description}
-\cvarg{seq}{The sequence to sortfunc}
-\cvarg{}{The comparison function that returns negative, zero or positive value depending on the elements relation (see the above declaration and the example below) - similar function is used by \texttt{qsort} from C runline except that in the latter \texttt{userdata} is not used}
+\cvarg{seq}{The sequence to sort}
+\cvarg{func}{The comparison function that returns negative, zero or positive value depending on the elements relation (see the above declaration and the example below) - similar function is used by \texttt{qsort} from C runline except that in the latter \texttt{userdata} is not used}
 \cvarg{userdata}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
 \end{description}
 
@@ -7095,9 +7093,11 @@ void  cvStartWriteStruct( CvFileStorage* fs,\par const char* name,\par int struc
 \cvarg{fs}{File storage}
 \cvarg{name}{Name of the written structure. The structure can be accessed by this name when the storage is read.}
 \cvarg{struct\_flags}{A combination one of the following values:
-\texttt{CV\_NODE\_SEQ}{the written structure is a sequence (see discussion of \cross{CvFileStorage}), that is, its elements do not have a name.}
-\texttt{CV\_NODE\_MAP}{the written structure is a map (see discussion of \cross{CvFileStorage}), that is, all its elements have names. One and only one of the two above flags must be specified}
-\cvarg{CV\_NODE\_FLOW}{the optional flag that has sense only for YAML streams. It means that the structure is written as a flow (not as a block), which is more compact. It is recommended to use this flag for structures or arrays whose elements are all scalars.}}
+\begin{description}
+\cvarg{CV\_NODE\_SEQ}{the written structure is a sequence (see discussion of \cross{CvFileStorage}), that is, its elements do not have a name.}
+\cvarg{CV\_NODE\_MAP}{the written structure is a map (see discussion of \cross{CvFileStorage}), that is, all its elements have names. One and only one of the two above flags must be specified}
+\end{description}}
+\cvarg{CV\_NODE\_FLOW}{the optional flag that has sense only for YAML streams. It means that the structure is written as a flow (not as a block), which is more compact. It is recommended to use this flag for structures or arrays whose elements are all scalars.}
 \cvarg{type\_name}{Optional parameter - the object type name. In
 case of XML it is written as \texttt{type\_id} attribute of the
 structure opening tag. In case of YAML it is written after a colon
@@ -7314,8 +7314,8 @@ void  cvWriteRawData( \par CvFileStorage* fs,\par const void* src,\par int len,\
 
 \begin{description}
 \cvarg{fs}{File storage}
-\cvarg{src}{Pointer to the written arraylen}
-\cvarg{}{Number of the array elements to write}
+\cvarg{src}{Pointer to the written array}
+\cvarg{len}{Number of the array elements to write}
 \cvarg{dt}{Specification of each array element that has the following format
 \texttt{([count]\{'u'|'c'|'w'|'s'|'i'|'f'|'d'\})...}
 where the characters correspond to fundamental C types:
@@ -7796,25 +7796,25 @@ Type information
 
 \begin{lstlisting}
 
-typedef int (CV\_CDECL *CvIsInstanceFunc)( const void* struct\_ptr );
-typedef void (CV\_CDECL *CvReleaseFunc)( void** struct\_dblptr );
-typedef void* (CV\_CDECL *CvReadFunc)( CvFileStorage* storage, CvFileNode* node );
-typedef void (CV\_CDECL *CvWriteFunc)( CvFileStorage* storage,
+typedef int (CV_CDECL *CvIsInstanceFunc)( const void* struct_ptr );
+typedef void (CV_CDECL *CvReleaseFunc)( void** struct_dblptr );
+typedef void* (CV_CDECL *CvReadFunc)( CvFileStorage* storage, CvFileNode* node );
+typedef void (CV_CDECL *CvWriteFunc)( CvFileStorage* storage,
                                       const char* name,
-                                      const void* struct\_ptr,
+                                      const void* struct_ptr,
                                       CvAttrList attributes );
-typedef void* (CV\_CDECL *CvCloneFunc)( const void* struct\_ptr );
+typedef void* (CV_CDECL *CvCloneFunc)( const void* struct_ptr );
 
 typedef struct CvTypeInfo
 {
     int flags; /* not used */
-    int header\_size; /* sizeof(CvTypeInfo) */
+    int header_size; /* sizeof(CvTypeInfo) */
     struct CvTypeInfo* prev; /* previous registered type in the list */
     struct CvTypeInfo* next; /* next registered type in the list */
-    const char* type\_name; /* type name, written to file storage */
+    const char* type_name; /* type name, written to file storage */
 
     /* methods */
-    CvIsInstanceFunc is\_instance; /* checks if the passed object belongs to the type */
+    CvIsInstanceFunc is_instance; /* checks if the passed object belongs to the type */
     CvReleaseFunc release; /* releases object (memory etc.) */
     CvReadFunc read; /* reads object from file storage */
     CvWriteFunc write; /* writes object to file storage */
@@ -7987,8 +7987,7 @@ void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par 
 \begin{description}
 \cvarg{filename}{File name}
 \cvarg{memstorage}{Memory storage for dynamic structures, such as \cross{CvSeq} or \cross{CvGraph} . It is not used for matrices or images.}
-\cvarg{name}{Optional object name
-. If it is NULL, the first top-level object in the storage will be loaded.}
+\cvarg{name}{Optional object name. If it is NULL, the first top-level object in the storage will be loaded.}
 \cvarg{real\_name}{Optional output parameter that will contain name of the loaded object (useful if \texttt{name=NULL})}
 \end{description}
 

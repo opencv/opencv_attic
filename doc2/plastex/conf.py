@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # opencv documentation build configuration file, created by
-# sphinx-quickstart on Tue Jun  2 09:28:35 2009.
+# sphinx-quickstart on Thu Jun  4 21:06:43 2009.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -22,7 +22,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.pngmath', 'sphinx.ext.ifconfig']
+extensions = ['sphinx.ext.pngmath']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -38,7 +38,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'opencv'
-copyright = u'2009, authors'
+copyright = u'2009, author'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -110,13 +110,12 @@ html_theme = 'default'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = 'opencv_logo_small.gif'
-html_logo = 'opencv-logo2.png'
+#html_logo = None
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'favicon.ico'
+#html_favicon = None
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -174,7 +173,7 @@ htmlhelp_basename = 'opencvdoc'
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'opencv.tex', u'opencv Documentation',
-   u'authors', 'manual'),
+   u'author', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

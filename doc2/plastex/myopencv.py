@@ -22,6 +22,11 @@ class label(Base.Command):
   def invoke(self, tex):
     Base.Command.invoke(self, tex)
 
+class url(Base.Command):
+  args = 'loc'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
 class cvarg(Base.Command):
   args = 'item def'
   def invoke(self, tex):
