@@ -6752,17 +6752,17 @@ Example. Using line iterator to calculate sum of pixel values along the color li
 
 \begin{lstlisting}
 
-CvScalar sum\_line\_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
+CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 {
     CvLineIterator iterator;
-    int blue\_sum = 0, green\_sum = 0, red\_sum = 0;
+    int blue_sum = 0, green_sum = 0, red_sum = 0;
     int count = cvInitLineIterator( image, pt1, pt2, &iterator, 8, 0 );
 
     for( int i = 0; i < count; i++ ){
-        blue\_sum += iterator.ptr[0];
-        green\_sum += iterator.ptr[1];
-        red\_sum += iterator.ptr[2];
-        CV\_NEXT\_LINE\_POINT(iterator);
+        blue_sum += iterator.ptr[0];
+        green_sum += iterator.ptr[1];
+        red_sum += iterator.ptr[2];
+        CV_NEXT_LINE_POINT(iterator);
 
         /* print the pixel coordinates: demonstrates how to calculate the coordinates */
         {
@@ -6774,7 +6774,7 @@ CvScalar sum\_line\_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
         printf("(%d,%d)\n", x, y );
         }
     }
-    return cvScalar( blue\_sum, green\_sum, red\_sum );
+    return cvScalar( blue_sum, green_sum, red_sum );
 }
 
 \end{lstlisting}
