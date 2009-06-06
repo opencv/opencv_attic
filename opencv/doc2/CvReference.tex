@@ -1376,10 +1376,10 @@ CvArr* tilted\_sum=NULL );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ image}{The source image, $W\times H$, 8-bit or floating-point (32f or 64f) image}
-\cvarg{ sum}{The integral image, $(W+1)\times (H+1)$, 32-bit integer or double precision floating-point (64f)}
-\cvarg{ sqsum}{The integral image for squared pixel values, $(W+1)\times (H+1)$, double precision floating-point (64f)}
-\cvarg{ tilted\_sum}{The integral for the image rotated by 45 degrees, $(W+1)\times (H+1)$, the same data type as `sum`}
+\cvarg{image}{The source image, $W\times H$, 8-bit or floating-point (32f or 64f) image}
+\cvarg{sum}{The integral image, $(W+1)\times (H+1)$, 32-bit integer or double precision floating-point (64f)}
+\cvarg{sqsum}{The integral image for squared pixel values, $(W+1)\times (H+1)$, double precision floating-point (64f)}
+\cvarg{tilted\_sum}{The integral for the image rotated by 45 degrees, $(W+1)\times (H+1)$, the same data type as \texttt{sum}}
 \end{description}
 
 The function \texttt{cvIntegral} calculates one or more integral images for the source image as following:
@@ -1421,7 +1421,7 @@ int code );
 \begin{description}
 \cvarg{ src}{The source 8-bit (8u), 16-bit (16u) or single-precision floating-point (32f) image}
 \cvarg{ dst}{The destination image of the same data type as the source one. The number of channels may be different}
-\cvarg{ code}{Color conversion operation that can be specifed using CV\_<src\_color\_space>2<dst\_color\_space> constants (see below)}
+\cvarg{ code}{Color conversion operation that can be specifed using \texttt{CV\_ \textit{src\_color\_space} 2 \textit{dst\_color\_space}} constants (see below)}
 \end{description}
 
 The function \texttt{cvCvtColor} converts input image from one color
@@ -1454,7 +1454,7 @@ The function can do the following transformations:
  \]
  and
  \[
- \text{Gray->RGB[A]:} R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
+ \text{Gray to RGB[A]:} R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
  \]
 
 The conversion from a RGB image to gray is done with:
@@ -1630,23 +1630,27 @@ The values are then converted to the destination data type:
 \item[32-bit images] L, u, v are left as is
 \end{description}
 
-  The above formulae for converting RGB to/from various color spaces have been taken from multiple sources on Web, primarily from
-  \href{http://opencvlibrary.sourceforge.net/Welcome?action=AttachFile&do=get&target=opencvref\_cv.htm\#paper\_ford98}{Color Space Conversions (Ford98)} document at Charles Poynton site.
+The above formulae for converting RGB to/from various color spaces have been taken from multiple sources on Web, primarily from
+Ford98
+document at Charles Poynton site.
 
  \item Bayer $\rightarrow$ RGB (\texttt{CV\_BayerBG2BGR, CV\_BayerGB2BGR, CV\_BayerRG2BGR, CV\_BayerGR2BGR, CV\_BayerBG2RGB, CV\_BayerGB2RGB, CV\_BayerRG2RGB, CV\_BayerGR2RGB}) Bayer pattern is widely used in CCD and CMOS cameras. It allows to get color picture out of a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
 
 \newcommand{\R}{\color{red}R}
 \newcommand{\G}{\color{green}G}
 \newcommand{\B}{\color{blue}B}
-{\Huge
-\begin{tabular}{ c c c c c }
+
+
+\[
+\definecolor{BackGray}{rgb}{0.8,0.8,0.8}
+\begin{array}{ c c c c c }
 \R&\G&\R&\G&\R\\
-\G&\colorbox{pink}{\B}&\colorbox{pink}{\G}&\B&\G\\
+\G&\colorbox{BackGray}{\B}&\colorbox{BackGray}{\G}&\B&\G\\
 \R&\G&\R&\G&\R\\
 \G&\B&\G&\B&\G\\
 \R&\G&\R&\G&\R
-\end{tabular}
-}
+\end{array}
+\]
 
 The output RGB components of a pixel are interpolated from 1, 2 or
 4 neighbors of the pixel having the same color. There are several
@@ -1654,9 +1658,9 @@ modifications of the above pattern that can be achieved by shifting
 the pattern one pixel left and/or one pixel up. The two letters
 $C_1$ and $C_2$
 in the conversion constants
-\texttt{CV\_Bayer}$C_1 C_2$\texttt{2}\texttt{BGR}
+\texttt{CV\_Bayer} $ C_1 C_2 $ \texttt{2BGR}
 and
-\texttt{CV\_Bayer}$C_1 C_2$\texttt{2}\texttt{RGB}
+\texttt{CV\_Bayer} $ C_1 C_2 $ \texttt{2RGB}
 indicate the particular pattern
 type - these are components from the second row, second and third
 columns, respectively. For example, the above pattern has very

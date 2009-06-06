@@ -80,7 +80,7 @@ class reStructuredTextRenderer(BaseRenderer):
     else:
       pre = "\n" + (" " * self.indent)
       post = "\n"
-    return pre + unicode(node) + post
+    return pre + unicode(node).lstrip() + post
 
   def do_chapter(self, node):
     t = unicode(node.attributes['title'])
@@ -107,12 +107,9 @@ class reStructuredTextRenderer(BaseRenderer):
     return u"\n\n.. image:: ../%s\n\n" % str(node.attributes['file']).strip()
 
   def do_cvfunc(self, node):
-    if 'title' in node.attributes:
-      t = unicode(node.attributes['title'])
-    else:
-      t = "NO_TITLE_IN_CVFUNC"
+    t = str(node.attributes['title']).strip()
     print "====>", t
-    label = u"\n\n.. _%s:\n\n" % str(node.attributes['title']).strip()
+    label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
 
     # Would like to look ahead to reorder things, but cannot see more than 2 ahead
     if 0:
@@ -131,6 +128,9 @@ class reStructuredTextRenderer(BaseRenderer):
       if len(n.childNodes) != 0:
         self.showTree(n.childNodes[0], i + 4)
       n = n.nextSibling
+
+  def do_Huge(self, node):
+    return unicode(node)
 
   def do_tabular(self, node):
     if 0:
@@ -181,7 +181,14 @@ class reStructuredTextRenderer(BaseRenderer):
     return unicode(node)
 
   def do_item(self, node):
-    return u"\n%s* %s" % (self.ind(), unicode(node).strip())
+    if node.attributes['term'] != None:
+      self.indent += 4
+      defstr = unicode(node).strip()
+      assert not (u"\xe2" in unicode(defstr))
+      self.indent -= 4
+      return u"\n%s*%s*\n%s    %s\n" % (self.ind(), unicode(node.attributes['term']).strip(), self.ind(), defstr)
+    else:
+      return u"\n\n%s* %s" % (self.ind(), unicode(node).strip())
 
   def do_textit(self, node):
     return "*%s*" % unicode(node.attributes['self'])
@@ -237,8 +244,8 @@ from plasTeX.TeX import TeX
 
 # Instantiate a TeX processor and parse the input text
 tex = TeX()
-tex.ownerDocument.config['files']['split-level'] = -100
-tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
+tex.ownerDocument.config['files']['split-level'] = 0
+#tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
 
 src0 = r'''
 \documentclass{book}

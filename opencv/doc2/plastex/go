@@ -2,7 +2,7 @@
 
 tput clear
 
-#export XHTMLTEMPLATES=render
-#plastex opencv.tex
-TEXINPUTS=../: python renderer.py # &&
-# TEXINPUTS=$PWD: make html
+TEXINPUTS=../: python renderer.py > a &&
+mv sect0001 cxcore.rst || exit
+mv sect0002 cvreference.rst || exit
+TEXINPUTS=$PWD: make html
