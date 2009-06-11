@@ -1578,6 +1578,14 @@ void CvForestERTree::split_node_data( CvDTreeNode* node )
     data->free_node_data(node);    
 }
 
+CvERTrees::CvERTrees()
+{
+}
+
+CvERTrees::~CvERTrees()
+{
+}
+
 bool CvERTrees::train( const CvMat* _train_data, int _tflag,
                         const CvMat* _responses, const CvMat* _var_idx,
                         const CvMat* _sample_idx, const CvMat* _var_type,
