@@ -1566,7 +1566,6 @@ protected:
 
 #include "cvaux.hpp"
 #include "cvvidsurv.hpp"
-/*#include "cvmat.hpp"*/
 #endif
 
 #endif

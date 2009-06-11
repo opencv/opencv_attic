@@ -403,9 +403,9 @@ struct CV_EXPORTS HOGDescriptor
     {}
 
     HOGDescriptor(Size _winSize, Size _blockSize, Size _blockStride,
-        int _nbins, int _derivAperture=1, double _winSigma=-1,
+        Size _cellSize, int _nbins, int _derivAperture=1, double _winSigma=-1,
         int _histogramNormType=L2Hys, double _L2HysThreshold=0.2, bool _gammaCorrection=false)
-        : winSize(_winSize), blockSize(_blockSize), blockStride(_blockStride),
+        : winSize(_winSize), blockSize(_blockSize), blockStride(_blockStride), cellSize(_cellSize),
         nbins(_nbins), derivAperture(_derivAperture), winSigma(_winSigma),
         histogramNormType(_histogramNormType), L2HysThreshold(_L2HysThreshold),
         gammaCorrection(_gammaCorrection)

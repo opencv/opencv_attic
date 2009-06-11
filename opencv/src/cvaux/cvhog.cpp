@@ -329,7 +329,7 @@ struct HOGCache
     Vector<BlockData> blockData;
 
     bool useCache;
-    int ymaxCached;
+    Vector<int> ymaxCached;
     Size winSize, cacheStride;
     Size nblocks, ncells;
     int blockHistogramSize;
@@ -346,7 +346,6 @@ struct HOGCache
 HOGCache::HOGCache()
 {
     useCache = false;
-    ymaxCached = -1;
     blockHistogramSize = count1 = count2 = count4 = 0;
     descriptor = 0;
 }
@@ -388,7 +387,10 @@ void HOGCache::init(const HOGDescriptor* _descriptor,
                        (winSize.height/cacheStride.height)+1);
         blockCache.create(cacheSize.height, cacheSize.width*blockHistogramSize);
         blockCacheFlags.create(cacheSize);
-        ymaxCached = -1;
+        size_t i, cacheRows = blockCache.rows;
+        ymaxCached.resize(cacheRows);
+        for( i = 0; i < cacheRows; i++ )
+            ymaxCached[i] = -1;
     }
 
     Mat_<float> weights(blockSize);
@@ -550,11 +552,11 @@ const float* HOGCache::getBlock(Point pt, float* buf)
                    pt.y % cacheStride.height == 0 );
         Point cacheIdx(pt.x/cacheStride.width,
                       (pt.y/cacheStride.height) % blockCache.rows);
-        if( pt.y > ymaxCached )
+        if( pt.y != ymaxCached[cacheIdx.y] )
         {
             Mat_<uchar> cacheRow = blockCacheFlags.row(cacheIdx.y);
             cacheRow = (uchar)0;
-            ymaxCached = pt.y;
+            ymaxCached[cacheIdx.y] = pt.y;
         }
 
         blockHist = &blockCache[cacheIdx.y][cacheIdx.x*blockHistogramSize];
