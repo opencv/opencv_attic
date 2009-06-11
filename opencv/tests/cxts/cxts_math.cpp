@@ -3160,7 +3160,7 @@ void cvTsTransform( const CvMat* a, CvMat* b, const CvMat* transmat, const CvMat
     // prepare cn x (cn + 1) transform matrix
     if( mat_depth == CV_32F )
     {
-        shiftstep = shift && shift->step ? shift->step/sizeof(float) : 1;
+        shiftstep = shift && shift->rows > 1 ? shift->step/sizeof(float) : 1;
         for( i = 0; i < transmat->rows; i++ )
         {
             mat[i*(cn+1) + cn] = 0.;
@@ -3174,7 +3174,7 @@ void cvTsTransform( const CvMat* a, CvMat* b, const CvMat* transmat, const CvMat
     {
         assert( mat_depth == CV_64F );
 
-        shiftstep = shift && shift->step ? shift->step/sizeof(double) : 1;
+        shiftstep = shift && shift->rows > 1 ? shift->step/sizeof(double) : 1;
         for( i = 0; i < transmat->rows; i++ )
         {
             mat[i*(cn+1) + cn] = 0.;
