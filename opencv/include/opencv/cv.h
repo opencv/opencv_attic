@@ -1270,8 +1270,8 @@ CVAPI(void) cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* cascad
                                                 const CvArr* tilted_sum, double scale );
 
 /* runs the cascade on the specified window */
-CVAPI(int) cvRunHaarClassifierCascade( CvHaarClassifierCascade* cascade,
-                                      CvPoint pt, int start_stage CV_DEFAULT(0));
+CVAPI(int) cvRunHaarClassifierCascade( const CvHaarClassifierCascade* cascade,
+                                       CvPoint pt, int start_stage CV_DEFAULT(0));
 
 /****************************************************************************************\
 *                      Camera Calibration, Pose Estimation and Stereo                    *

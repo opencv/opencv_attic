@@ -819,3 +819,11 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     cvReleaseMat(&t);
     cvReleaseMat(&f);
 }
+
+void cv::inpaint( const Mat& src, const Mat& mask, Mat& dst,
+                  double inpaintRange, int flags )
+{
+    dst.create( src.size(), src.type() );
+    CvMat _src = src, _mask = mask, _dst = dst;
+    cvInpaint( &_src, &_mask, &_dst, inpaintRange, flags );
+}

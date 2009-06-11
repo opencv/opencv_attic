@@ -849,4 +849,21 @@ cvDistTransform( const void* srcarr, void* dstarr,
     cvReleaseMemStorage( &st );
 }
 
+void cv::distanceTransform( const Mat& src, Mat& dst, Mat& labels,
+                            int distanceType, int maskSize )
+{
+    dst.create(src.size(), CV_32F);
+    dst.create(src.size(), CV_32S);
+    CvMat _src = src, _dst = dst, _labels = labels;
+    cvDistTransform(&_src, &_dst, distanceType, maskSize, 0, &_labels);
+}
+
+void cv::distanceTransform( const Mat& src, Mat& dst,
+                            int distanceType, int maskSize )
+{
+    dst.create(src.size(), CV_32F);
+    CvMat _src = src, _dst = dst;
+    cvDistTransform(&_src, &_dst, distanceType, maskSize, 0, 0);
+}
+
 /* End of file. */

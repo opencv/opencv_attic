@@ -1544,4 +1544,304 @@ cvFindContours( void*  img,  CvMemStorage*  storage,
 }
 
 
+namespace cv
+{
+
+static Vector<Vector<Point> >
+_findContours( const Mat& image, Vector<Vec4i>* hierarchy, int mode, int method, Point offset )
+{
+    MemStorage storage(cvCreateMemStorage());
+    CvMat _image = image;
+    CvSeq* _contours = 0;
+    Vector<Vector<Point> > contours;
+    if( hierarchy )
+        hierarchy->clear();
+    cvFindContours(&_image, storage, &_contours, sizeof(CvContour), mode, method, offset);
+    if( !_contours )
+        return contours;
+    Seq<CvSeq*> all_contours(cvTreeToNodeSeq( _contours, sizeof(CvSeq), storage ));
+    size_t i, total = all_contours.size();
+    contours.resize(total);
+    SeqIterator<CvSeq*> it = all_contours.begin();
+    for( i = 0; i < total; i++, ++it )
+    {
+        CvSeq* c = *it;
+        ((CvContour*)c)->color = (int)i;
+        Seq<Point>(c).copyTo(contours[i]);
+    }
+
+    if( hierarchy )
+    {
+        hierarchy->resize(total);
+        it = all_contours.begin();
+        for( i = 0; i < total; i++, ++it )
+        {
+            CvSeq* c = *it;
+            int h_next = c->h_next ? ((CvContour*)c->h_next)->color : -1;
+            int h_prev = c->h_next ? ((CvContour*)c->h_next)->color : -1;
+            int v_next = c->h_next ? ((CvContour*)c->h_next)->color : -1;
+            int v_prev = c->h_next ? ((CvContour*)c->h_next)->color : -1;
+            (*hierarchy)[i] = Vec4i(h_next, h_prev, v_next, v_prev);
+        }
+    }
+
+    return contours;
+}
+
+Vector<Vector<Point> >
+findContours( const Mat& image, Vector<Vec4i>& hierarchy, int mode, int method, Point offset )
+{
+    return _findContours(image, &hierarchy, mode, method, offset);
+}
+
+Vector<Vector<Point> >
+findContours( const Mat& image, int mode, int method, Point offset)
+{
+    return _findContours(image, 0, mode, method, offset);
+}
+
+void drawContours( Mat& image, const Vector<Vector<Point> >& contours,
+                   const Scalar& color, int thickness,
+                   int lineType, const Vector<Vec4i>& hierarchy,
+                   int maxLevel, Point offset )
+{
+    CvMat _image = image;
+
+    size_t i = 0, count = maxLevel != 0 ? contours.size() : 1;
+    Vector<CvSeq> seq(count);
+    Vector<CvSeqBlock> block(count);
+
+    // TODO: if maxLevel is < 0, we do not have to collect all the contours,
+    //       instead we can just track down the sub-tree of interest.
+    for( i = 0; i < count; i++ )
+    {
+        const Vector<Point>& ci = contours[i];
+        cvMakeSeqHeaderForArray(CV_SEQ_POLYGON, sizeof(CvSeq), sizeof(Point),
+            !ci.empty() ? (void*)&ci[0] : 0, ci.size(), &seq[i], &block[i] );
+    }
+
+    if( hierarchy.empty() || maxLevel == 0 )
+        for( i = 0; i < count; i++ )
+        {
+            seq[i].h_next = i < count-1 ? &seq[i+1] : 0;
+            seq[i].h_prev = i > 0 ? &seq[i-1] : 0;
+        }
+    else
+    {
+        CV_Assert(hierarchy.size() == contours.size());
+        for( i = 0; i < count; i++ )
+        {
+            int h_next = hierarchy[i][0], h_prev = hierarchy[i][1],
+                v_next = hierarchy[i][2], v_prev = hierarchy[i][3];
+            seq[i].h_next = (size_t)h_next < count ? &seq[h_next] : 0;
+            seq[i].h_prev = (size_t)h_prev < count ? &seq[h_prev] : 0;
+            seq[i].v_next = (size_t)v_next < count ? &seq[v_next] : 0;
+            seq[i].v_prev = (size_t)v_prev < count ? &seq[v_prev] : 0;
+        }
+    }
+
+    cvDrawContours( &_image, &seq[0], color, color, maxLevel, thickness, lineType, offset );
+}
+
+void approxPolyDP( const Vector<Point>& curve,
+                   Vector<Point>& approxCurve,
+                   double epsilon, bool closed )
+{
+    CvMat _curve = curve;
+    MemStorage storage(cvCreateMemStorage());
+    Seq<Point> seq(cvApproxPoly(&_curve, sizeof(CvSeq), storage, CV_POLY_APPROX_DP, epsilon, closed));
+    seq.copyTo(approxCurve);
+}
+
+void approxPolyDP( const Vector<Point2f>& curve,
+                   Vector<Point2f>& approxCurve,
+                   double epsilon, bool closed )
+{
+    CvMat _curve = curve;
+    MemStorage storage(cvCreateMemStorage());
+    Seq<Point2f> seq(cvApproxPoly(&_curve, sizeof(CvSeq), storage, CV_POLY_APPROX_DP, epsilon, closed));
+    seq.copyTo(approxCurve);
+}
+
+double arcLength( const Vector<Point>& curve, bool closed )
+{
+    CvMat _curve = curve;
+    return cvArcLength(&_curve, CV_WHOLE_SEQ, closed);
+}
+
+double arcLength( const Vector<Point2f>& curve, bool closed )
+{
+    CvMat _curve = curve;
+    return cvArcLength(&_curve, CV_WHOLE_SEQ, closed);
+}
+
+Rect boundingRect( const Vector<Point>& points )
+{
+    CvMat _points = points;
+    return cvBoundingRect(&_points, 0);
+}
+
+Rect boundingRect( const Vector<Point2f>& points )
+{
+    CvMat _points = points;
+    return cvBoundingRect(&_points, 0);
+}
+
+double contourArea( const Vector<Point>& contour )
+{
+    CvMat _contour = contour;
+    return cvContourArea(&_contour);
+}
+
+double contourArea( const Vector<Point2f>& contour )
+{
+    CvMat _contour = contour;
+    return cvContourArea(&_contour);
+}
+
+RotatedRect minAreaRect( const Vector<Point>& points )
+{
+    CvMat _points = points;
+    return cvMinAreaRect2(&_points, 0);
+}
+
+RotatedRect minAreaRect( const Vector<Point2f>& points )
+{
+    CvMat _points = points;
+    return cvMinAreaRect2(&_points, 0);
+}
+
+void minEnclosingCircle( const Vector<Point>& points,
+                         Point2f center, float& radius )
+{
+    CvMat _points = points;
+    cvMinEnclosingCircle( &_points, (CvPoint2D32f*)&center, &radius );
+}
+
+void minEnclosingCircle( const Vector<Point2f>& points,
+                         Point2f center, float& radius )
+{
+    CvMat _points = points;
+    cvMinEnclosingCircle( &_points, (CvPoint2D32f*)&center, &radius );
+}
+
+double matchShapes( const Vector<Point2f>& contour1,
+                    const Vector<Point2f>& contour2,
+                    int method, double parameter )
+{
+    CvMat c1 = contour1, c2 = contour2;
+    return cvMatchShapes(&c1, &c2, method, parameter);
+}
+
+double matchShapes( const Vector<Point>& contour1,
+                    const Vector<Point>& contour2,
+                    int method, double parameter )
+{
+    CvMat c1 = contour1, c2 = contour2;
+    return cvMatchShapes(&c1, &c2, method, parameter);
+}
+
+void convexHull( const Vector<Point>& points,
+                 Vector<int>& hull, bool clockwise )
+{
+    hull.resize(points.size());
+    CvMat _points = points, _hull=hull;
+    cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
+    hull.resize(_hull.cols);
+}
+
+void convexHull( const Vector<Point>& points,
+                 Vector<Point>& hull, bool clockwise )
+{
+    hull.resize(points.size());
+    CvMat _points = points, _hull=hull;
+    cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 1);
+    hull.resize(_hull.cols);
+}
+
+void convexHull( const Vector<Point2f>& points,
+                 Vector<int>& hull, bool clockwise )
+{
+    hull.resize(points.size());
+    CvMat _points = points, _hull=hull;
+    cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
+    hull.resize(_hull.cols);
+}
+
+void convexHull( const Vector<Point2f>& points,
+                 Vector<Point2f>& hull, bool clockwise )
+{
+    hull.resize(points.size());
+    CvMat _points = points, _hull=hull;
+    cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
+    hull.resize(_hull.cols);
+}
+
+bool isContourConvex( const Vector<Point>& contour )
+{
+    CvMat c = contour;
+    return cvCheckContourConvexity(&c) > 0;
+}
+
+bool isContourConvex( const Vector<Point2f>& contour )
+{
+    CvMat c = contour;
+    return cvCheckContourConvexity(&c) > 0;
+}
+
+RotatedRect fitEllipse( const Vector<Point>& points )
+{
+    CvMat _points = points;
+    return cvFitEllipse2(&_points);
+}
+
+RotatedRect fitEllipse( const Vector<Point2f>& points )
+{
+    CvMat _points = points;
+    return cvFitEllipse2(&_points);
+}
+
+Vec4f fitLine( const Vector<Point> points, int distType,
+               double param, double reps, double aeps )
+{
+    CvMat _points = points;
+    Vec4f line;
+    cvFitLine(&_points, distType, param, reps, aeps, &line[0]);
+    return line;
+}
+
+Vec4f fitLine( const Vector<Point2f> points, int distType,
+               double param, double reps, double aeps )
+{
+    CvMat _points = points;
+    Vec4f line;
+    cvFitLine(&_points, distType, param, reps, aeps, &line[0]);
+    return line;
+}
+
+Vec6f fitLine( const Vector<Point3f> points, int distType,
+               double param, double reps, double aeps )
+{
+    CvMat _points = points;
+    Vec6f line;
+    cvFitLine(&_points, distType, param, reps, aeps, &line[0]);
+    return line;
+}
+
+double pointPolygonTest( const Vector<Point>& contour,
+                         Point2f pt, bool measureDist )
+{
+    CvMat c = contour;
+    return cvPointPolygonTest( &c, pt, measureDist );
+}
+
+double pointPolygonTest( const Vector<Point2f>& contour,
+                         Point2f pt, bool measureDist )
+{
+    CvMat c = contour;
+    return cvPointPolygonTest( &c, pt, measureDist );
+}
+
+}
+
 /* End of file. */

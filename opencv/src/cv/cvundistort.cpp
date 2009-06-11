@@ -45,19 +45,20 @@
 namespace cv
 {
 
-Mat_<double> getDefaultNewCameraMatrix( const Mat_<double>& A, Size imgsize,
-                                        bool centerPrincipalPoint )
+Mat getDefaultNewCameraMatrix( const Mat& cameraMatrix, Size imgsize,
+                               bool centerPrincipalPoint )
 {
-    Mat_<double> Ar(3, 3);
+    if( !centerPrincipalPoint && cameraMatrix.type() == CV_64F )
+        return cameraMatrix;
+    
+    Mat newCameraMatrix;
+    cameraMatrix.convertTo(newCameraMatrix, CV_64F);
     if( centerPrincipalPoint )
-        Ar << A(0,0), 0., (imgsize.width-1)*0.5,
-              0., A(1,1), (imgsize.height-1)*0.5,
-              0., 0., 1.;
-    else
-        Ar << A(0,0), 0., A(0,2),
-              0., A(1,1), A(1,2),
-              0., 0., 1.;
-    return Ar;
+    {
+        ((double*)newCameraMatrix.data)[2] = (imgsize.width-1)*0.5;
+        ((double*)newCameraMatrix.data)[5] = (imgsize.height-1)*0.5;
+    }
+    return newCameraMatrix;
 }
 
 void initUndistortRectifyMap( const Mat& _cameraMatrix, const Mat& _distCoeffs,
@@ -170,9 +171,9 @@ void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
     }
 
     if( _newCameraMatrix.data )
-        Ar = Mat_<double>(_newCameraMatrix);
+        _newCameraMatrix.convertTo(Ar, CV_64F);
     else
-        Ar = getDefaultNewCameraMatrix(A, src.size() );
+        A.copyTo(Ar);
 
     double v0 = Ar(1, 2);
     for( int y = 0; y < src.rows; y += stripe_size0 )
@@ -358,6 +359,22 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
     }
 
     __END__;
+}
+
+
+void cv::undistortPoints( const Vector<Point2f>& src, Vector<Point2f>& dst,
+                          const Mat& cameraMatrix, const Mat& distCoeffs,
+                          const Mat& R, const Mat& P)
+{
+    dst.resize(src.size());
+    CvMat _src = src, _dst = dst;
+    CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
+    CvMat _R, _P, *pR=0, *pP=0;
+    if( R.data )
+        pR = &(_R = R);
+    if( P.data )
+        pP = &(_P = P);
+    cvUndistortPoints(&_src, &_dst, &_cameraMatrix, &_distCoeffs, pR, pP);
 }
 
 /*  End of file  */

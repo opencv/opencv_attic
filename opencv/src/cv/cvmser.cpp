@@ -1265,3 +1265,40 @@ cvExtractMSER( CvArr* _img,
 
 	__END__;
 }
+
+
+namespace cv
+{
+
+MSER::MSER()
+{
+    *(CvMSERParams*)this = cvMSERParams();
+}
+
+MSER::MSER( int _delta, int _min_area, int _max_area,
+      float _max_variation, float _min_diversity,
+      int _max_evolution, double _area_threshold,
+      double _min_margin, int _edge_blur_size )
+{
+    *(CvMSERParams*)this = cvMSERParams(_delta, _min_area, _max_area, _max_variation,
+        _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size);
+}
+
+Vector<Vector<Point> > MSER::operator()(Mat& image, const Mat& mask) const
+{
+    CvMat _image = image, _mask, *pmask = 0;
+    if( mask.data )
+        pmask = &(_mask = mask);
+    MemStorage storage(cvCreateMemStorage(0));
+    Seq<CvSeq*> contours;
+    cvExtractMSER( &_image, pmask, &contours.seq, storage, *(const CvMSERParams*)this );
+    SeqIterator<CvSeq*> it = contours.begin();
+    size_t i, ncontours = contours.size();
+    Vector<Vector<Point> > dstcontours;
+    dstcontours.resize(ncontours);
+    for( i = 0; i < ncontours; i++, ++it )
+        Seq<Point>(*it).copyTo(dstcontours[i]);
+    return dstcontours;
+}
+
+}

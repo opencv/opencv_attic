@@ -1635,5 +1635,17 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     return result;
 }
 
+namespace cv
+{
+Mat estimateRigidTransform( const Vector<Point2f>& A,
+                            const Vector<Point2f>& B,
+                            bool fullAffine )
+{
+    Mat M(2, 3, CV_64F);
+    CvMat _A = A, _B = B, _M = M;
+    cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
+    return M;
+}
+}
 
 /* End of file. */

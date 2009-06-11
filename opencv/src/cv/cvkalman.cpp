@@ -239,3 +239,87 @@ cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement )
 
     return result;
 }
+
+namespace cv
+{
+
+KalmanFilter::KalmanFilter() {}
+KalmanFilter::KalmanFilter(int dynamParams, int measureParams, int controlParams)
+{
+    init(dynamParams, measureParams, controlParams);
+}
+
+void KalmanFilter::init(int DP, int MP, int CP)
+{
+    CV_Assert( DP > 0 && MP > 0 );
+    CP = std::max(CP, 0);
+
+    statePre = Mat::zeros(DP, 1, CV_32F);
+    statePost = Mat::zeros(DP, 1, CV_32F);
+    transitionMatrix = Mat::eye(DP, DP, CV_32F);
+
+    processNoiseCov = Mat::eye(DP, DP, CV_32F);
+    measurementMatrix = Mat::zeros(MP, DP, CV_32F);
+    measurementNoiseCov = Mat::eye(MP, MP, CV_32F);
+
+    errorCovPre = Mat::zeros(DP, DP, CV_32F);
+    errorCovPost = Mat::zeros(DP, DP, CV_32F);
+    gain = Mat::zeros(DP, MP, CV_32F);
+
+    if( CP > 0 )
+        controlMatrix = Mat::zeros(DP, CP, CV_32F);
+    else
+        controlMatrix.release();
+
+    temp1.create(DP, DP, CV_32F);
+    temp2.create(MP, DP, CV_32F);
+    temp3.create(MP, MP, CV_32F);
+    temp4.create(MP, DP, CV_32F);
+    temp5.create(MP, 1, CV_32F);
+}
+
+const Mat& KalmanFilter::predict(const Mat& control)
+{
+    // update the state: x'(k) = A*x(k)
+    statePre = transitionMatrix*statePost;
+
+    if( control.data )
+        // x'(k) = x'(k) + B*u(k)
+        statePre += controlMatrix*control;
+
+    // update error covariance matrices: temp1 = A*P(k)
+    temp1 = transitionMatrix*errorCovPost;
+
+    // P'(k) = temp1*At + Q
+    errorCovPre = temp1*transitionMatrix.t() + processNoiseCov;
+
+    return statePre;
+}
+
+const Mat& KalmanFilter::correct(const Mat& measurement)
+{
+    // temp2 = H*P'(k)
+    temp2 = measurementMatrix * errorCovPre;
+
+    // temp3 = temp2*Ht + R
+    temp3 = temp2*measurementMatrix.t() + measurementNoiseCov;
+
+    // temp4 = inv(temp3)*temp2 = Kt(k)
+    solve(temp3, temp2, temp4, DECOMP_SVD);
+
+    // K(k)
+    gain = temp4.t();
+    
+    // temp5 = z(k) - H*x'(k)
+    temp5 = measurement - measurementMatrix*statePre;
+
+    // x(k) = x'(k) + K(k)*temp5
+    statePost = statePre + gain*temp5;
+
+    // P(k) = P'(k) - K(k)*temp2
+    errorCovPost = errorCovPre - gain*temp2;
+
+    return statePost;
+}
+    
+};

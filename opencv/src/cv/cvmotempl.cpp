@@ -513,4 +513,31 @@ cvSegmentMotion( const CvArr* mhiimg, CvArr* segmask, CvMemStorage* storage,
     return components;
 }
 
+
+void cv::updateMotionHistory( const Mat& silhouette, Mat& mhi,
+                              double timestamp, double duration )
+{
+    CvMat _silhouette = silhouette, _mhi = mhi;
+    cvUpdateMotionHistory( &_silhouette, &_mhi, timestamp, duration );
+}
+
+void cv::calcMotionGradient( const Mat& mhi, Mat& mask,
+                             Mat& orientation,
+                             double delta1, double delta2,
+                             int aperture_size )
+{
+    mask.create(mhi.size(), CV_8U);
+    orientation.create(mhi.size(), CV_32F);
+    CvMat _mhi = mhi, _mask = mask, _orientation = orientation;
+    cvCalcMotionGradient(&_mhi, &_mask, &_orientation, delta1, delta2, aperture_size);
+}
+
+double cv::calcGlobalOrientation( const Mat& orientation, const Mat& mask,
+                                  const Mat& mhi, double timestamp,
+                                  double duration )
+{
+    CvMat _orientation = orientation, _mask = mask, _mhi = mhi;
+    return cvCalcGlobalOrientation(&_orientation, &_mask, &_mhi, timestamp, duration);
+}
+
 /* End of file. */

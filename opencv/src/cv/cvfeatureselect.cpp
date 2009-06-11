@@ -40,195 +40,110 @@
 //M*/
 #include "_cv.h"
 
-#define  cmp_features( f1, f2 )  (*(f1) > *(f2))
-
-static CV_IMPLEMENT_QSORT( icvSortFeatures, int *, cmp_features )
-
-CV_IMPL void
-cvGoodFeaturesToTrack( const void* image, void* eigImage, void* tempImage,
-                       CvPoint2D32f* corners, int *corner_count,
-                       double quality_level, double min_distance,
-                       const void* maskImage, int block_size,
-                       int use_harris, double harris_k )
+namespace cv
 {
-    CvMat* _eigImg = 0;
-    CvMat* _tmpImg = 0;
+
+template<typename T> struct lessThanPtr
+{
+    bool operator()(const T* a, const T* b) const { return *a < *b; }
+};
+
+void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
+                          int maxCorners, double qualityLevel, double minDistance,
+                          const Mat& mask, int blockSize,
+                          bool useHarrisDetector, double harrisK )
+{
+    CV_Assert( qualityLevel > 0 && minDistance >= 0 && maxCorners >= 0 );
+
+    if( mask.data )
+        CV_Assert( mask.type() == CV_8UC1 && mask.size() == image.size() );
+
+    Mat eig, tmp;
+    if( useHarrisDetector )
+        cornerHarris( image, eig, blockSize, 3, harrisK );
+    else
+        cornerMinEigenVal( image, eig, blockSize, 3 );
+
+    double maxVal = 0;
+    minMaxLoc( eig, 0, &maxVal, 0, 0, mask );
+    threshold( eig, eig, maxVal*qualityLevel, 0, THRESH_TOZERO );
+    dilate( eig, tmp, Mat());
+
+    Size imgsize = image.size();
+
+    Vector<const float*> tmpCorners;
+
+    // collect list of pointers to features - put them into temporary image
+    for( int y = 1; y < imgsize.height - 1; y++ )
+    {
+        const float* eig_data = (const float*)eig.ptr(y);
+        const float* tmp_data = (const float*)tmp.ptr(y);
+        const uchar* mask_data = mask.data ? mask.ptr(y) : 0;
+
+        for( int x = 1; x < imgsize.width - 1; x++ )
+        {
+            float val = eig_data[x];
+            if( val != 0 && val == tmp_data[x] && (!mask_data || mask_data[x]) )
+                tmpCorners.push_back(eig_data + x);
+        }
+    }
+
+    sort( tmpCorners, lessThanPtr<float>() );
+    corners.clear();
+    size_t i, j, total = tmpCorners.size(), ncorners = 0;
     
-    CV_FUNCNAME( "cvGoodFeaturesToTrack" );
+    minDistance *= minDistance;
 
-    __BEGIN__;
-
-    double max_val = 0;
-    int max_count = 0;
-    int count = 0;
-    int x, y, i, k = 0;
-    int min_dist;
-    int eig_step, tmp_step;
-
-    /* when selecting points, use integer coordinates */
-    CvPoint *ptr = (CvPoint *) corners;
-
-    /* process floating-point images using integer arithmetics */
-    int *eig_data = 0;
-    int *tmp_data = 0;
-    int **ptr_data = 0;
-    uchar *mask_data = 0;
-    int  mask_step = 0;
-    CvSize size;
-
-    int    coi1 = 0, coi2 = 0, coi3 = 0;
-    CvMat  stub, *img = (CvMat*)image;
-    CvMat  eig_stub, *eig = (CvMat*)eigImage;
-    CvMat  tmp_stub, *tmp = (CvMat*)tempImage;
-    CvMat  mask_stub, *mask = (CvMat*)maskImage;
-
-    if( corner_count )
+    // select the strongest features
+    for( i = 0; i < total; i++ )
     {
-        max_count = *corner_count;
-        *corner_count = 0;
-    }
+        int ofs = (const uchar*)tmpCorners[i] - eig.data;
+        int y = ofs / eig.step;
+        int x = (ofs - y*eig.step)/sizeof(float);
 
-    CV_CALL( img = cvGetMat( img, &stub, &coi1 ));
-    if( eig )
-    {
-        CV_CALL( eig = cvGetMat( eig, &eig_stub, &coi2 ));
-    }
-    else
-    {
-        CV_CALL( _eigImg = cvCreateMat( img->rows, img->cols, CV_32FC1 ));
-        eig = _eigImg;
-    }
-
-    if( tmp )
-    {
-        CV_CALL( tmp = cvGetMat( tmp, &tmp_stub, &coi3 ));
-    }
-    else
-    {
-        CV_CALL( _tmpImg = cvCreateMat( img->rows, img->cols, CV_32FC1 ));
-        tmp = _tmpImg;
-    }
-
-    if( mask )
-    {
-        CV_CALL( mask = cvGetMat( mask, &mask_stub ));
-        if( !CV_IS_MASK_ARR( mask ))
+        if( minDistance > 0 )
         {
-            CV_ERROR( CV_StsBadMask, "" );
-        }
-    }
-
-    if( coi1 != 0 || coi2 != 0 || coi3 != 0 )
-        CV_ERROR( CV_BadCOI, "" );
-
-    if( CV_MAT_CN(img->type) != 1 ||
-        CV_MAT_CN(eig->type) != 1 ||
-        CV_MAT_CN(tmp->type) != 1 )
-        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
-
-    if( CV_MAT_DEPTH(tmp->type) != CV_32F ||
-        CV_MAT_DEPTH(eig->type) != CV_32F )
-        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
-
-    if( !corners || !corner_count )
-        CV_ERROR( CV_StsNullPtr, "" );
-
-    if( max_count <= 0 )
-        CV_ERROR( CV_StsBadArg, "maximal corners number is non positive" );
-
-    if( quality_level <= 0 || min_distance < 0 )
-        CV_ERROR( CV_StsBadArg, "quality level or min distance are non positive" );
-
-    if( use_harris )
-    {
-        CV_CALL( cvCornerHarris( img, eig, block_size, 3, harris_k ));
-    }
-    else
-    {
-        CV_CALL( cvCornerMinEigenVal( img, eig, block_size, 3 ));
-    }
-    CV_CALL( cvMinMaxLoc( eig, 0, &max_val, 0, 0, mask ));
-    CV_CALL( cvThreshold( eig, eig, max_val * quality_level,
-                          0, CV_THRESH_TOZERO ));
-    CV_CALL( cvDilate( eig, tmp ));
-
-    min_dist = cvRound( min_distance * min_distance );
-
-    size = cvGetMatSize( img );
-    ptr_data = (int**)(tmp->data.ptr);
-    eig_data = (int*)(eig->data.ptr);
-    tmp_data = (int*)(tmp->data.ptr);
-    if( mask )
-    {
-        mask_data = (uchar*)(mask->data.ptr);
-        mask_step = mask->step;
-    }
-
-    eig_step = eig->step / sizeof(eig_data[0]);
-    tmp_step = tmp->step / sizeof(tmp_data[0]);
-
-    /* collect list of pointers to features - put them into temporary image */
-    for( y = 1, k = 0; y < size.height - 1; y++ )
-    {
-        eig_data += eig_step;
-        tmp_data += tmp_step;
-        mask_data += mask_step;
-
-        for( x = 1; x < size.width - 1; x++ )
-        {
-            int val = eig_data[x];
-            if( val != 0 && val == tmp_data[x] && (!mask || mask_data[x]) )
-                ptr_data[k++] = eig_data + x;
-        }
-    }
-
-    icvSortFeatures( ptr_data, k, 0 );
-
-    /* select the strongest features */
-    for( i = 0; i < k; i++ )
-    {
-        int j = count, ofs = (int)((uchar*)(ptr_data[i]) - eig->data.ptr);
-        y = ofs / eig->step;
-        x = (ofs - y * eig->step)/sizeof(float);
-
-        if( min_dist != 0 )
-        {
-            for( j = 0; j < count; j++ )
+            for( j = 0; j < ncorners; j++ )
             {
-                int dx = x - ptr[j].x;
-                int dy = y - ptr[j].y;
-                int dist = dx * dx + dy * dy;
-
-                if( dist < min_dist )
+                float dx = x - corners[j].x;
+                float dy = y - corners[j].y;
+                if( dx*dx + dy*dy < minDistance )
                     break;
             }
+            if( j < ncorners )
+                continue;
         }
 
-        if( j == count )
-        {
-            ptr[count].x = x;
-            ptr[count].y = y;
-            if( ++count >= max_count )
-                break;
-        }
+        corners.push_back(Point2f((float)x, (float)y));
+        ++ncorners;
+        if( maxCorners > 0 && (int)ncorners == maxCorners )
+            break;
     }
-    
-    /* convert points to floating-point format */
-    for( i = 0; i < count; i++ )
-    {
-        assert( (unsigned)ptr[i].x < (unsigned)size.width &&
-                (unsigned)ptr[i].y < (unsigned)size.height );
+}
 
-        corners[i].x = (float)ptr[i].x;
-        corners[i].y = (float)ptr[i].y;
-    }
+}
 
-    *corner_count = count;
+CV_IMPL void
+cvGoodFeaturesToTrack( const void* _image, void*, void*,
+                       CvPoint2D32f* _corners, int *_corner_count,
+                       double quality_level, double min_distance,
+                       const void* _maskImage, int block_size,
+                       int use_harris, double harris_k )
+{
+    cv::Mat image = cv::cvarrToMat(_image), mask;
+    cv::Vector<cv::Point2f> corners;
 
-    __END__;
+    if( _maskImage )
+        mask = cv::cvarrToMat(_maskImage);
 
-    cvReleaseMat( &_eigImg );
-    cvReleaseMat( &_tmpImg );
+    CV_Assert( _corners && _corner_count );
+    cv::goodFeaturesToTrack( image, corners, *_corner_count, quality_level,
+        min_distance, mask, block_size, use_harris != 0, harris_k );
+
+    size_t i, ncorners = corners.size();
+    for( i = 0; i < ncorners; i++ )
+        _corners[i] = corners[i];
+    *_corner_count = (int)ncorners;
 }
 
 /* End of file. */

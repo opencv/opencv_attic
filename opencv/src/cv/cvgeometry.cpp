@@ -590,4 +590,64 @@ cvDecomposeProjectionMatrix( const CvMat *projMatr, CvMat *calibMatr,
     cvReleaseMat(&tmpMatrixM);
 }
 
+namespace cv
+{
+
+void RQDecomp3x3( const Mat& M, Mat& R, Mat& Q )
+{
+    R.create(3, 3, M.type());
+    Q.create(3, 3, M.type());
+
+    CvMat _M = M, _R = R, _Q = Q;
+    cvRQDecomp3x3(&_M, &_R, &_Q, 0, 0, 0, 0);
+}
+
+Vec3d RQDecomp3x3( const Mat& M, Mat& R, Mat& Q,
+                   Mat& Qx, Mat& Qy, Mat& Qz )
+{
+    R.create(3, 3, M.type());
+    Q.create(3, 3, M.type());
+    Vec3d eulerAngles;
+
+    CvMat _M = M, _R = R, _Q = Q, _Qx = Qx, _Qy = Qy, _Qz = Qz;
+    cvRQDecomp3x3(&_M, &_R, &_Q, &_Qx, &_Qy, &_Qz, (CvPoint3D64f*)&eulerAngles[0]);
+    return eulerAngles;
+}
+
+void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
+                                Mat& rotMatrix, Mat& transVect )
+{
+    int type = projMatrix.type();
+    cameraMatrix.create(3, 3, type);
+    rotMatrix.create(3, 3, type);
+    transVect.create(3, 3, type);
+    CvMat _projMatrix = projMatrix, _cameraMatrix = cameraMatrix;
+    CvMat _rotMatrix = rotMatrix, _transVect = transVect;
+    cvDecomposeProjectionMatrix(&_projMatrix, &_cameraMatrix, &_rotMatrix,
+                                &_transVect, 0, 0, 0, 0);
+}
+
+void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
+                                Mat& rotMatrix, Mat& transVect,
+                                Mat& rotMatrixX, Mat& rotMatrixY,
+                                Mat& rotMatrixZ, Vec3d& eulerAngles )
+{
+    int type = projMatrix.type();
+    cameraMatrix.create(3, 3, type);
+    rotMatrix.create(3, 3, type);
+    transVect.create(3, 3, type);
+    rotMatrixX.create(3, 3, type);
+    rotMatrixY.create(3, 3, type);
+    rotMatrixZ.create(3, 3, type);
+    CvMat _projMatrix = projMatrix, _cameraMatrix = cameraMatrix;
+    CvMat _rotMatrix = rotMatrix, _transVect = transVect;
+    CvMat _rotMatrixX = rotMatrixX, _rotMatrixY = rotMatrixY;
+    CvMat _rotMatrixZ = rotMatrixZ;
+    cvDecomposeProjectionMatrix(&_projMatrix, &_cameraMatrix, &_rotMatrix,
+                                &_transVect, &_rotMatrixX, &_rotMatrixY,
+                                &_rotMatrixZ, (CvPoint3D64f*)&eulerAngles[0]);
+}
+
+}
+
 /* End of file. */

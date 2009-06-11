@@ -760,3 +760,59 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     cvFree( &win_bufs );
 }
 
+
+namespace cv
+{
+
+SURF::SURF()
+{
+    hessianThreshold = 100;
+    extended = 1;
+    nOctaves = 4;
+    nOctaveLayers = 2;
+}
+
+SURF::SURF(double _threshold, bool _extended)
+{
+    hessianThreshold = _threshold;
+    extended = _extended;
+    nOctaves = 4;
+    nOctaveLayers = 2;
+}
+
+int SURF::descriptorSize() const { return extended ? 128 : 64; }
+
+void SURF::operator()(const Mat& img, const Mat& mask,
+                      Vector<SURFKeypoint>& keypoints) const
+{
+    CvMat _img = img, _mask, *pmask = 0;
+    if( mask.data )
+        pmask = &(_mask = mask);
+    MemStorage storage(cvCreateMemStorage(0));
+    CvSeq* kp = 0;
+    cvExtractSURF(&_img, pmask, &kp, 0, storage, *(const CvSURFParams*)this, 0);
+    Seq<SURFKeypoint>(kp).copyTo(keypoints);
+}
+
+void SURF::operator()(const Mat& img, const Mat& mask,
+                Vector<SURFKeypoint>& keypoints,
+                Vector<float>& descriptors,
+                bool useProvidedKeypoints) const
+{
+    CvMat _img = img, _mask, *pmask = 0;
+    if( mask.data )
+        pmask = &(_mask = mask);
+    MemStorage storage(cvCreateMemStorage(0));
+    CvSeq hdr, *kp = 0, *d = 0;
+    CvSeqBlock block;
+    if( useProvidedKeypoints )
+        kp = cvMakeSeqHeaderForArray(0, sizeof(*kp), sizeof(SURFKeypoint),
+                                     &keypoints[0], keypoints.size(), &hdr, &block);
+    cvExtractSURF(&_img, pmask, &kp, &d, storage,
+        *(const CvSURFParams*)this, useProvidedKeypoints);
+    if( !useProvidedKeypoints )
+        Seq<SURFKeypoint>(kp).copyTo(keypoints);
+    Seq<float>(d).copyTo(descriptors);
+}
+
+}

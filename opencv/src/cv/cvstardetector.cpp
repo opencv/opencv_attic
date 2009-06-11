@@ -432,3 +432,30 @@ cvGetStarKeypoints( const CvArr* _img, CvMemStorage* storage,
 
     return border >= 0 ? keypoints : 0;
 }
+
+namespace cv
+{
+
+StarDetector::StarDetector()
+{
+    *(CvStarDetectorParams*)this = cvStarDetectorParams();
+}
+
+StarDetector::StarDetector(int _maxSize, int _responseThreshold,
+                           int _lineThresholdProjected,
+                           int _lineThresholdBinarized,
+                           int _suppressNonmaxSize)
+{
+    *(CvStarDetectorParams*)this = cvStarDetectorParams(_maxSize, _responseThreshold,
+            _lineThresholdProjected, _lineThresholdBinarized, _suppressNonmaxSize);
+}
+
+void StarDetector::operator()(const Mat& image, Vector<StarKeypoint>& keypoints) const
+{
+    CvMat _image = image;
+    MemStorage storage(cvCreateMemStorage(0));
+    CvSeq* kp = cvGetStarKeypoints( &_image, storage, *(const CvStarDetectorParams*)this);
+    Seq<StarKeypoint>(kp).copyTo(keypoints);
+}
+
+}

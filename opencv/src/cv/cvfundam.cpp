@@ -1070,4 +1070,102 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
     cvReleaseMat( &temp );
 }
 
+namespace cv
+{
+
+static Mat _findHomography( const Vector<Point2f>& srcPoints,
+                            const Vector<Point2f>& dstPoints,
+                            int method, double ransacReprojThreshold,
+                            Vector<bool>* mask )
+{
+    Mat H(3, 3, CV_64F);
+    CvMat _pt1 = srcPoints, _pt2 = dstPoints;
+    CvMat _H = H, _mask, *pmask = 0;
+    if( mask )
+    {
+        mask->resize(srcPoints.size());
+        pmask = &(_mask = cvMat(1, mask->size(), CV_8U, (void*)&(*mask)[0]));
+    }
+    bool ok = cvFindHomography( &_pt1, &_pt2, &_H, method, ransacReprojThreshold, pmask ) > 0;
+    if( !ok )
+        H = Scalar(0);
+    return H;
+}
+
+Mat findHomography( const Vector<Point2f>& srcPoints,
+                    const Vector<Point2f>& dstPoints,
+                    Vector<bool>& mask, int method,
+                    double ransacReprojThreshold )
+{
+    return _findHomography(srcPoints, dstPoints, method, ransacReprojThreshold, &mask);
+}
+
+Mat findHomography( const Vector<Point2f>& srcPoints,
+                    const Vector<Point2f>& dstPoints,
+                    int method, double ransacReprojThreshold )
+{
+    return _findHomography(srcPoints, dstPoints, method, ransacReprojThreshold, 0);
+}
+
+static Mat _findFundamentalMat( const Vector<Point2f>& points1,
+                                const Vector<Point2f>& points2,
+                                int method, double param1, double param2,
+                                Vector<bool>* mask )
+{
+    Mat F(3, 3, CV_64F);
+    CvMat _pt1 = points1, _pt2 = points2;
+    CvMat _F = F, _mask, *pmask = 0;
+    if( mask )
+    {
+        mask->resize(points1.size());
+        pmask = &(_mask = cvMat(1, mask->size(), CV_8U, (void*)&(*mask)[0]));
+    }
+    int n = cvFindFundamentalMat( &_pt1, &_pt2, &_F, method, param1, param2, pmask );
+    if( n <= 0 )
+        F = Scalar(0);
+    return F;
+}
+
+Mat findFundamentalMat( const Vector<Point2f>& points1,
+                        const Vector<Point2f>& points2,
+                        Vector<bool>& mask,
+                        int method, double param1, double param2 )
+{
+    return _findFundamentalMat( points1, points2, method, param1, param2, &mask );
+}
+
+Mat findFundamentalMat( const Vector<Point2f>& points1,
+                        const Vector<Point2f>& points2,
+                        int method, double param1, double param2 )
+{
+    return _findFundamentalMat( points1, points2, method, param1, param2, 0 );
+}
+
+void computeCorrespondEpilines( const Vector<Point2f>& points,
+                                int whichImage, const Mat& F,
+                                Vector<Vec3f>& lines )
+{
+    lines.resize(points.size());
+    CvMat _points = points, _lines = lines, _F = F;
+    cvComputeCorrespondEpilines(&_points, whichImage, &_F, &_lines);
+}
+
+void convertPointsHomogeneous( const Vector<Point2f>& src,
+                               Vector<Point3f>& dst )
+{
+    dst.resize(src.size());
+    CvMat _src = src, _dst = dst;
+    cvConvertPointsHomogeneous(&_src, &_dst);
+}
+
+void convertPointsHomogeneous( const Vector<Point3f>& src,
+                               Vector<Point2f>& dst )
+{
+    dst.resize(src.size());
+    CvMat _src = src, _dst = dst;
+    cvConvertPointsHomogeneous(&_src, &_dst);
+}
+
+}
+
 /* End of file. */
