@@ -8,7 +8,7 @@ pkginclude_HEADERS = \
   opencv/cvaux.hpp     \
   opencv/cvcompat.h    \
   opencv/cvstreams.h   \
-  opencv/cvmat.hpp     \
+  opencv/cxmat.hpp     \
   opencv/cvtypes.h     \
   opencv/cvver.h       \
   opencv/cvvidsurv.hpp \

@@ -632,7 +632,7 @@ CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL)
     m.type = CV_MAT_MAGIC_VAL | CV_MAT_CONT_FLAG | type;
     m.cols = cols;
     m.rows = rows;
-    m.step = rows > 1 ? m.cols*CV_ELEM_SIZE(type) : 0;
+    m.step = m.cols*CV_ELEM_SIZE(type);
     m.data.ptr = (uchar*)data;
     m.refcount = NULL;
     m.hdr_refcount = 0;

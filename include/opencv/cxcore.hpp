@@ -233,10 +233,12 @@ typedef Vec_<int, 4> Vec4i;
 typedef Vec_<float, 2> Vec2f;
 typedef Vec_<float, 3> Vec3f;
 typedef Vec_<float, 4> Vec4f;
+typedef Vec_<float, 6> Vec6f;
 
 typedef Vec_<double, 2> Vec2d;
 typedef Vec_<double, 3> Vec3d;
 typedef Vec_<double, 4> Vec4d;
+typedef Vec_<double, 6> Vec6d;
 
 //////////////////////////////// Complex //////////////////////////////
 
@@ -312,6 +314,7 @@ template<typename _Tp> struct CV_EXPORTS Size_
     Size_(_Tp _width, _Tp _height);
     Size_(const Size_& sz);
     Size_(const CvSize& sz);
+    Size_(const CvSize2D32f& sz);
     Size_(const Point_<_Tp>& pt);
     Size_& operator = (const Size_& sz);
     _Tp area() const;
@@ -320,6 +323,7 @@ template<typename _Tp> struct CV_EXPORTS Size_
     operator Size_<float>() const;
     operator Size_<double>() const;
     operator CvSize() const;
+    operator CvSize2D32f() const;
 
     _Tp width, height;
 };
@@ -369,6 +373,9 @@ struct CV_EXPORTS RotatedRect
 {
     RotatedRect();
     RotatedRect(const Point2f& _center, const Size2f& _size, float _angle);
+    RotatedRect(const CvBox2D& box);
+    Rect boundingRect() const;
+    operator CvBox2D() const;
     Point2f center;
     Size2f size;
     float angle;
@@ -626,7 +633,10 @@ public:
     Vector<_Tp>& operator = (const Vector& d);
     ~Vector();
     Vector clone() const;
-
+    void copyTo(Vector<_Tp>& vec) const;
+    void copyTo(std::vector<_Tp>& vec) const;
+    operator CvMat() const;
+    
     _Tp& operator [] (size_t i);
     const _Tp& operator [] (size_t i) const;
     _Tp& operator [] (int i);
@@ -654,6 +664,7 @@ public:
     size_t capacity() const;
     bool empty() const;
     void clear();
+    int type() const;
 
 protected:
     Hdr hdr;
@@ -845,10 +856,12 @@ struct CV_EXPORTS RNG
 
 struct CV_EXPORTS TermCriteria
 {
-    enum { COUNT=1, EPS=2 };
+    enum { COUNT=1, MAX_ITER=COUNT, EPS=2 };
 
     TermCriteria();
     TermCriteria(int _type, int _maxCount, double _epsilon);
+    TermCriteria(const CvTermCriteria& criteria);
+    operator CvTermCriteria() const;
     
     int type;
     int maxCount;
@@ -1112,7 +1125,7 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     Mat_();
     Mat_(int _rows, int _cols);
     Mat_(int _rows, int _cols, const _Tp& value);
-    Mat_(Size _size);
+    explicit Mat_(Size _size);
     Mat_(Size _size, const _Tp& value);
     Mat_(const Mat& m);
     Mat_(const Mat_& m);
@@ -1120,7 +1133,8 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     Mat_(const Mat_& m, const Range& rowRange, const Range& colRange);
     Mat_(const Mat_& m, const Rect& roi);
     Mat_(const MatExpr_Base& expr);
-    //~Mat_();
+    template<int n> explicit Mat_(const Vec_<_Tp, n>& vec);
+    Mat_(const Vector<_Tp>& vec);
 
     Mat_& operator = (const Mat& m);
     Mat_& operator = (const Mat_& m);
@@ -1180,6 +1194,7 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     _Tp operator ()(int row, int col) const;
 
     operator MatExpr_<Mat_, Mat_>() const;
+    operator Vector<_Tp>() const;
 };
 
 //////////// Iterators & Comma initializers //////////////////
@@ -1794,10 +1809,77 @@ struct CV_EXPORTS FileNodeIterator
     size_t remaining;
 };
 
+////////////// convenient wrappers for operating old-style dynamic structures //////////////
+
+// !!! NOTE that the wrappers are "thin", i.e. they do not call
+// any element constructors/destructors
+
+template<typename _Tp> struct SeqIterator;
+
+template<> inline void Ptr<CvMemStorage>::delete_obj()
+{ cvReleaseMemStorage(&obj); }
+
+typedef Ptr<CvMemStorage> MemStorage;
+
+template<typename _Tp> struct CV_EXPORTS Seq
+{
+    Seq();
+    Seq(const CvSeq* seq);
+    Seq(const MemStorage& storage, int headerSize = sizeof(CvSeq));
+    _Tp& operator [](int idx);
+    const _Tp& operator[](int idx) const;
+    SeqIterator<_Tp> begin() const;
+    SeqIterator<_Tp> end() const;
+    size_t size() const;
+    int type() const;
+    int depth() const;
+    int channels() const;
+    size_t elemSize() const;
+    size_t index(const _Tp& elem) const;
+    void push_back(const _Tp& elem);
+    void push_front(const _Tp& elem);
+    _Tp& front();
+    const _Tp& front() const;
+    _Tp& back();
+    const _Tp& back() const;
+    bool empty() const;
+
+    void clear();
+    void pop_front();
+    void pop_back();
+
+    void copyTo(Vector<_Tp>& vec, const Range& range=Range::all()) const;
+    operator Vector<_Tp>() const;
+    
+    CvSeq* seq;
+};
+
+template<typename _Tp> struct CV_EXPORTS SeqIterator : public CvSeqReader
+{
+    SeqIterator();
+    SeqIterator(const Seq<_Tp>& seq, bool seekEnd=false);
+    void seek(size_t pos);
+    size_t tell() const;
+    _Tp& operator *();
+    const _Tp& operator *() const;
+    SeqIterator& operator ++();
+    SeqIterator operator ++(int) const;
+    SeqIterator& operator --();
+    SeqIterator operator --(int) const;
+
+    SeqIterator& operator +=(int);
+    SeqIterator& operator -=(int);
+
+    // this is index of the current element module seq->total*2
+    // (to distinguish between 0 and seq->total)
+    int index;
+};
+
 }
 
 #endif // __cplusplus
 
 #include "cxoperations.hpp"
+#include "cxmat.hpp"
 
 #endif /*_CXCORE_HPP_*/
