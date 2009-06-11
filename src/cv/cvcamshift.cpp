@@ -297,4 +297,29 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     return itersUsed;
 }
 
+namespace cv
+{
+
+RotatedRect CAMShift( const Mat& probImage, Rect& window,
+                      TermCriteria criteria )
+{
+    CvConnectedComp comp;
+    CvBox2D box;
+    CvMat _probImage = probImage;
+    cvCamShift(&_probImage, window, (CvTermCriteria)criteria, &comp, &box);
+    window = comp.rect;
+    return RotatedRect(Point2f(box.center), Size2f(box.size), box.angle);
+}
+
+int MeanShift( const Mat& probImage, Rect& window, TermCriteria criteria )
+{
+    CvConnectedComp comp;
+    CvMat _probImage = probImage;
+    int iters = cvMeanShift(&_probImage, window, (CvTermCriteria)criteria, &comp );
+    window = comp.rect;
+    return iters;
+}
+
+}
+
 /* End of file. */

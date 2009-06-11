@@ -531,4 +531,12 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     cvReleaseMat( &sqsum );
 }
 
+void cv::matchTemplate( const Mat& image, const Mat& templ, Mat& result, int method )
+{
+    result.create( std::abs(image.rows - templ.rows) + 1,
+                   std::abs(image.cols - templ.cols) + 1, CV_32F );
+    CvMat _image = image, _templ = templ, _result = result;
+    cvMatchTemplate( &_image, &_templ, &_result, method );    
+}
+
 /* End of file. */

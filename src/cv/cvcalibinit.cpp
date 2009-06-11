@@ -2136,5 +2136,30 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
     __END__;
 }
 
+namespace cv
+{
+
+bool findChessboardCorners( const Mat& image, Size patternSize,
+                            Vector<Point2f>& corners, int flags )
+{
+    int count = patternSize.area()*2;
+    corners.resize(count);
+    CvMat _image = image;
+    bool ok = cvFindChessboardCorners(&_image, patternSize,
+        (CvPoint2D32f*)&corners[0], &count, flags ) > 0;
+    corners.resize(count);
+    return ok;
+}
+
+void drawChessboardCorners( Mat& image, Size patternSize,
+                            const Vector<Point2f>& corners,
+                            bool patternWasFound )
+{
+    CvMat _image = image;
+    cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)&corners[0],
+                             corners.size(), patternWasFound );
+}
+
+}
 
 /* End of file. */

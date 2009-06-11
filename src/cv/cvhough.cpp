@@ -1158,4 +1158,47 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     return result;    
 }
 
+
+namespace cv
+{
+
+const int STORAGE_SIZE = 1 << 12;
+
+void HoughLines( Mat& image, Vector<Vec2f>& lines,
+                 double rho, double theta, int threshold,
+                 double srn, double stn )
+{
+    CvMemStorage* storage = cvCreateMemStorage(STORAGE_SIZE);
+    CvMat _image = image;
+    CvSeq* seq = cvHoughLines2( &_image, storage, srn == 0 && stn == 0 ?
+                    CV_HOUGH_STANDARD : CV_HOUGH_MULTI_SCALE,
+                    rho, theta, threshold, srn, stn );
+    Seq<Vec2f>(seq).copyTo(lines);
+}
+
+void HoughLinesP( Mat& image, Vector<Vec4i>& lines,
+                  double rho, double theta, int threshold,
+                  double minLineLength, double maxGap )
+{
+    CvMemStorage* storage = cvCreateMemStorage(STORAGE_SIZE);
+    CvMat _image = image;
+    CvSeq* seq = cvHoughLines2( &_image, storage, CV_HOUGH_PROBABILISTIC,
+                    rho, theta, threshold, minLineLength, maxGap );
+    Seq<Vec4i>(seq).copyTo(lines);
+}
+
+void HoughCircles( Mat& image, Vector<Vec3f>& circles,
+                   int method, double dp, double min_dist,
+                   double param1, double param2,
+                   int minRadius, int maxRadius )
+{
+    CvMemStorage* storage = cvCreateMemStorage(STORAGE_SIZE);
+    CvMat _image = image;
+    CvSeq* seq = cvHoughCircles( &_image, storage, method,
+                    dp, min_dist, param1, param2, minRadius, maxRadius );
+    Seq<Vec3f>(seq).copyTo(circles);
+}
+
+}
+
 /* End of file. */

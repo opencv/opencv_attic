@@ -265,4 +265,13 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     cvFree( &buffer );
 }
 
+void cv::cornerSubPix( const Mat& image, Vector<Point2f>& corners,
+                       Size winSize, Size zeroZone,
+                       TermCriteria criteria )
+{
+    CvMat _image = image;
+    cvFindCornerSubPix(&_image, (CvPoint2D32f*)&corners[0], corners.size(),
+                       winSize, zeroZone, criteria );
+}
+
 /* End of file. */

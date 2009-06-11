@@ -642,4 +642,116 @@ cvGetNormalizedCentralMoment( CvMoments * moments, int x_order, int y_order )
 }
 
 
+namespace cv
+{
+
+Moments::Moments()
+{
+    m00 = m10 = m01 = m20 = m11 = m02 = m30 = m21 = m12 = m03 =
+    mu20 = mu11 = mu02 = mu30 = mu21 = mu12 = mu03 =
+    nu20 = nu11 = nu02 = nu30 = nu21 = nu12 = nu03 = 0.;
+}
+
+Moments::Moments( double _m00, double _m10, double _m01, double _m20, double _m11,
+                  double _m02, double _m30, double _m21, double _m12, double _m03 )
+{
+    m00 = _m00; m10 = _m10; m01 = _m01;
+    m20 = _m20; m11 = _m11; m02 = _m02;
+    m30 = _m30; m21 = _m21; m12 = _m12; m03 = _m03;
+
+    double cx = 0, cy = 0, inv_m00 = 0;
+    if( std::abs(m00) > DBL_EPSILON )
+    {
+        inv_m00 = 1./m00;
+        cx = m10*inv_m00; cy = m01*inv_m00;
+    }
+
+    mu20 = m20 - m10*cx;
+    mu11 = m11 - m10*cy;
+    mu02 = m02 - m01*cy;
+
+    mu30 = m30 - cx*(3*mu20 + cx*m10);
+    mu21 = m21 - cx*(2*mu11 + cx*m01) - cy*mu20;
+    mu12 = m12 - cy*(2*mu11 + cy*m10) - cx*mu02;
+    mu03 = m03 - cy*(3*mu02 + cy*m01);
+
+    double inv_sqrt_m00 = std::sqrt(std::abs(inv_m00));
+    double s2 = inv_m00*inv_m00, s3 = s2*inv_sqrt_m00;
+
+    nu20 = mu20*s2; nu11 = mu11*s2; nu02 = mu02*s2;
+    nu30 = mu30*s3; nu21 = mu21*s3; nu12 = mu12*s3; nu03 = mu03*s3;
+}
+
+Moments::Moments( const CvMoments& m )
+{
+    *this = Moments(m.m00, m.m10, m.m01, m.m20, m.m11, m.m02, m.m30, m.m21, m.m12, m.m03);
+}
+
+Moments::operator CvMoments() const
+{
+    CvMoments m;
+    m.m00 = m00; m.m10 = m10; m.m01 = m01;
+    m.m20 = m20; m.m11 = m11; m.m02 = m02;
+    m.m30 = m30; m.m21 = m21; m.m12 = m12; m.m03 = m03;
+    m.mu20 = mu20; m.mu11 = mu11; m.mu02 = mu02;
+    m.mu30 = mu30; m.mu21 = mu21; m.mu12 = mu12; m.mu03 = mu03;
+    double am00 = std::abs(m00);
+    m.inv_sqrt_m00 = am00 > DBL_EPSILON ? 1./std::sqrt(am00) : 0;
+
+    return m;
+}
+
+Moments moments( const Mat& image, bool binaryImage )
+{
+    CvMoments om;
+    CvMat _image = image;
+    cvMoments(&_image, &om, binaryImage);
+    return om;
+}
+
+Moments moments( const Vector<Point>& points )
+{
+    CvMoments om;
+    CvMat _points = points;
+    cvMoments(&_points, &om, 0);
+    return om;
+}
+
+Moments moments( const Vector<Point2f>& points )
+{
+    CvMoments om;
+    CvMat _points = points;
+    cvMoments(&_points, &om, 0);
+    return om;
+}
+
+void HuMoments( const Moments& m, double hu[7] )
+{
+    double t0 = m.nu30 + m.nu12;
+    double t1 = m.nu21 + m.nu03;
+
+    double q0 = t0 * t0, q1 = t1 * t1;
+
+    double n4 = 4 * m.nu11;
+    double s = m.nu20 + m.nu02;
+    double d = m.nu20 - m.nu02;
+
+    hu[0] = s;
+    hu[1] = d * d + n4 * m.nu11;
+    hu[3] = q0 + q1;
+    hu[5] = d * (q0 - q1) + n4 * t0 * t1;
+
+    t0 *= q0 - 3 * q1;
+    t1 *= 3 * q0 - q1;
+
+    q0 = m.nu30 - 3 * m.nu12;
+    q1 = 3 * m.nu21 - m.nu03;
+
+    hu[2] = q0 * q0 + q1 * q1;
+    hu[4] = q0 * t0 + q1 * t1;
+    hu[6] = q1 * t0 - q0 * t1;
+}
+
+}
+
 /* End of file. */

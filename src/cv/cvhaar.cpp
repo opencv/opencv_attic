@@ -680,7 +680,7 @@ double icvEvalHidHaarClassifier( CvHidHaarClassifier* classifier,
 
 
 CV_IMPL int
-cvRunHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
+cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
                             CvPoint pt, int start_stage )
 {
     int result = -1;
@@ -2318,5 +2318,44 @@ CvType haar_type( CV_TYPE_NAME_HAAR, icvIsHaarClassifier,
                   (CvReleaseFunc)cvReleaseHaarClassifierCascade,
                   icvReadHaarClassifier, icvWriteHaarClassifier,
                   icvCloneHaarClassifier );
+
+namespace cv
+{
+
+HaarClassifierCascade::HaarClassifierCascade() {}
+HaarClassifierCascade::HaarClassifierCascade(const String& filename)
+{ load(filename); }
+    
+bool HaarClassifierCascade::load(const String& filename)
+{
+    cascade = Ptr<CvHaarClassifierCascade>((CvHaarClassifierCascade*)cvLoad(filename.c_str(), 0, 0, 0));
+    return cascade.obj != 0;
+}
+
+void HaarClassifierCascade::detectMultiScale( const Mat& image,
+                       Vector<Rect>& objects, double scaleFactor,
+                       int minNeighbors, int flags,
+                       Size minSize )
+{
+    MemStorage storage(cvCreateMemStorage(0));
+    CvMat _image = image;
+    CvSeq* _objects = cvHaarDetectObjects( &_image, cascade, storage, scaleFactor,
+                                           minNeighbors, flags, minSize );
+    Seq<Rect>(_objects).copyTo(objects);
+}
+
+int HaarClassifierCascade::runAt(Point pt, int startStage, int) const
+{
+    return cvRunHaarClassifierCascade(cascade, pt, startStage);
+}
+
+void HaarClassifierCascade::setImages( const Mat& sum, const Mat& sqsum,
+                                       const Mat& tilted, double scale )
+{
+    CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
+    cvSetImagesForHaarClassifierCascade( cascade, &_sum, &_sqsum, &_tilted, scale );
+}
+
+}
 
 /* End of file. */
