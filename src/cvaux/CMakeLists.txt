@@ -10,7 +10,7 @@ set(lib_srcs ${aux_srcs_vs} ${aux_srcs})
 source_group(Src FILES ${aux_srcs})
 source_group(Src\\VideoSurveillance FILES ${aux_srcs_vs})
 
-set(aux_hdr_names cvaux.h cvaux.hpp cvmat.hpp cvvidsurv.hpp)
+set(aux_hdr_names cvaux.h cvaux.hpp cvvidsurv.hpp)
 set(aux_hdrs_ext)
 foreach(h ${aux_hdr_names})
     list(APPEND aux_hdrs_ext "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
