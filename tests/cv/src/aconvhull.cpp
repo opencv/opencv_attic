@@ -1435,7 +1435,7 @@ CV_ContourMomentsTest::CV_ContourMomentsTest():
 {
     min_log_size = 3;
     max_log_size = 8;
-    max_max_r_scale = 25;
+    max_max_r_scale = 15;
     low_high_range = 200;
     enable_flt_points = false;
 }
