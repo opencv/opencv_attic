@@ -62,6 +62,14 @@ int waitKey(int delay)
     return cvWaitKey(delay);
 }
 
+int createTrackbar(const String& trackbarName, const String& winName,
+                   int* value, int count, TrackbarCallback callback,
+                   void* userdata)
+{
+    return cvCreateTrackbar2(trackbarName.c_str(), winName.c_str(),
+                             value, count, callback, userdata);
+}
+
 }
 
 #if   defined (WIN32)         // see window_w32.cpp
