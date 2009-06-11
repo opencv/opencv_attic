@@ -844,7 +844,7 @@ icvFindTrackbarByName( const CvWindow* window, const char* name )
 
 static int
 icvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                   int* val, int count, CvTrackbarCallback on_notify,
+                   int* val, int count, CvTrackbarCallback on_notify,
                    CvTrackbarCallback2 on_notify2, void* userdata )
 {
     int result = 0;
@@ -946,7 +946,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
 
 CV_IMPL int
 cvCreateTrackbar2( const char* trackbar_name, const char* window_name,
-                   int* val, int count, CvTrackbarCallback2 on_notify2,
+                   int* val, int count, CvTrackbarCallback2 on_notify2,
                    void* userdata )
 {
     return icvCreateTrackbar(trackbar_name, window_name, val, count,
