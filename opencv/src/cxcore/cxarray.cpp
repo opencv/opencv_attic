@@ -118,9 +118,8 @@ cvCreateMatHeader( int rows, int cols, int type )
 
     CvMat* arr = (CvMat*)cvAlloc( sizeof(*arr));
 
-    arr->step = rows == 1 ? 0 : cvAlign(min_step, CV_DEFAULT_MAT_ROW_ALIGN);
-    arr->type = CV_MAT_MAGIC_VAL | type |
-                (arr->step == 0 || arr->step == min_step ? CV_MAT_CONT_FLAG : 0);
+    arr->step = min_step;
+    arr->type = CV_MAT_MAGIC_VAL | type | CV_MAT_CONT_FLAG;
     arr->rows = rows;
     arr->cols = cols;
     arr->data.ptr = 0;
@@ -154,15 +153,14 @@ cvInitMatHeader( CvMat* arr, int rows, int cols,
     arr->refcount = 0;
     arr->hdr_refcount = 0;
 
-    int mask = (arr->rows <= 1) - 1;
     int pix_size = CV_ELEM_SIZE(type);
-    int min_step = arr->cols*pix_size & mask;
+    int min_step = arr->cols*pix_size;
 
     if( step != CV_AUTOSTEP && step != 0 )
     {
         if( step < min_step )
             CV_Error( CV_BadStep, "" );
-        arr->step = step & mask;
+        arr->step = step;
     }
     else
     {
@@ -170,7 +168,7 @@ cvInitMatHeader( CvMat* arr, int rows, int cols,
     }
 
     arr->type = CV_MAT_MAGIC_VAL | type |
-                (arr->step == min_step ? CV_MAT_CONT_FLAG : 0);
+        (arr->rows == 1 || arr->step == min_step ? CV_MAT_CONT_FLAG : 0);
 
     icvCheckHuge( arr );
     return arr;
@@ -887,22 +885,20 @@ cvSetData( CvArr* arr, void* data, int step )
     
         int type = CV_MAT_TYPE(mat->type);
         pix_size = CV_ELEM_SIZE(type);
-        min_step = mat->cols*pix_size & ((mat->rows <= 1) - 1);
+        min_step = mat->cols*pix_size;
 
-        if( step != CV_AUTOSTEP )
+        if( step != CV_AUTOSTEP && step != 0 )
         {
             if( step < min_step && data != 0 )
                 CV_Error( CV_BadStep, "" );
-            mat->step = step & ((mat->rows <= 1) - 1);
+            mat->step = step;
         }
         else
-        {
             mat->step = min_step;
-        }
 
         mat->data.ptr = (uchar*)data;
         mat->type = CV_MAT_MAGIC_VAL | type |
-                    (mat->step==min_step ? CV_MAT_CONT_FLAG : 0);
+                    (mat->rows == 1 || mat->step == min_step ? CV_MAT_CONT_FLAG : 0);
         icvCheckHuge( mat );
     }
     else if( CV_IS_IMAGE_HDR( arr ))
@@ -928,13 +924,9 @@ cvSetData( CvArr* arr, void* data, int step )
 
         if( (((int)(size_t)data | step) & 7) == 0 &&
             cvAlign(img->width * pix_size, 8) == step )
-        {
             img->align = 8;
-        }
         else
-        {
             img->align = 4;
-        }
     }
     else if( CV_IS_MATND_HDR( arr ))
     {
@@ -1057,7 +1049,7 @@ cvGetRawData( const CvArr* arr, uchar** data, int* step, CvSize* roi_size )
             }
 
             if( step )
-                *step = size1 == 1 ? 0 : mat->dim[0].step;
+                *step = mat->dim[0].step;
         }
     }
     else
@@ -1266,9 +1258,9 @@ cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect )
     */
     submat->data.ptr = mat->data.ptr + (size_t)rect.y*mat->step +
                        rect.x*CV_ELEM_SIZE(mat->type);
-    submat->step = mat->step & (rect.height > 1 ? -1 : 0);
+    submat->step = mat->step;
     submat->type = (mat->type & (rect.width < mat->cols ? ~CV_MAT_CONT_FLAG : -1)) |
-                   (submat->step == 0 ? CV_MAT_CONT_FLAG : 0);
+                   (rect.height <= 1 ? CV_MAT_CONT_FLAG : 0);
     submat->rows = rect.height;
     submat->cols = rect.width;
     submat->refcount = 0;
@@ -1309,7 +1301,7 @@ cvGetRows( const CvArr* arr, CvMat* submat,
     if( delta_row == 1 )
     {
         submat->rows = end_row - start_row;
-        submat->step = mat->step & (submat->rows > 1 ? -1 : 0);
+        submat->step = mat->step;
     }
     else
     {
@@ -1320,8 +1312,8 @@ cvGetRows( const CvArr* arr, CvMat* submat,
     submat->cols = mat->cols;
     submat->step &= submat->rows > 1 ? -1 : 0;
     submat->data.ptr = mat->data.ptr + (size_t)start_row*mat->step;
-    submat->type = (mat->type | (submat->step == 0 ? CV_MAT_CONT_FLAG : 0)) &
-                   (delta_row != 1 ? ~CV_MAT_CONT_FLAG : -1);
+    submat->type = (mat->type | (submat->rows == 1 ? CV_MAT_CONT_FLAG : 0)) &
+                   (delta_row != 1 && submat->rows > 1 ? ~CV_MAT_CONT_FLAG : -1);
     submat->refcount = 0;
     submat->hdr_refcount = 0;
     res = submat;
@@ -1361,9 +1353,9 @@ cvGetCols( const CvArr* arr, CvMat* submat, int start_col, int end_col )
     */
     submat->rows = mat->rows;
     submat->cols = end_col - start_col;
-    submat->step = mat->step & (submat->rows > 1 ? -1 : 0);
+    submat->step = mat->step;
     submat->data.ptr = mat->data.ptr + (size_t)start_col*CV_ELEM_SIZE(mat->type);
-    submat->type = mat->type & (submat->step && submat->cols < cols ? ~CV_MAT_CONT_FLAG : -1);
+    submat->type = mat->type & (submat->rows > 1 && submat->cols < cols ? ~CV_MAT_CONT_FLAG : -1);
     submat->refcount = 0;
     submat->hdr_refcount = 0;
     res = submat;
@@ -1421,9 +1413,9 @@ cvGetDiag( const CvArr* arr, CvMat* submat, int diag )
 
     submat->rows = len;
     submat->cols = 1;
-    submat->step = (mat->step + pix_size) & (submat->rows > 1 ? -1 : 0);
+    submat->step = mat->step + (submat->rows > 1 ? pix_size : 0);
     submat->type = mat->type;
-    if( submat->step )
+    if( submat->rows > 1 )
         submat->type &= ~CV_MAT_CONT_FLAG;
     else
         submat->type |= CV_MAT_CONT_FLAG;
@@ -2406,11 +2398,11 @@ cvGetMat( const CvArr* array, CvMat* mat,
                     "Images with planar data layout should be used with COI selected" );
 
                 cvInitMatHeader( mat, img->roi->height,
-                                   img->roi->width, type,
-                                   img->imageData + (img->roi->coi-1)*img->imageSize +
-                                   img->roi->yOffset*img->widthStep +
-                                   img->roi->xOffset*CV_ELEM_SIZE(type),
-                                   img->widthStep );
+                                img->roi->width, type,
+                                img->imageData + (img->roi->coi-1)*img->imageSize +
+                                img->roi->yOffset*img->widthStep +
+                                img->roi->xOffset*CV_ELEM_SIZE(type),
+                                img->widthStep );
             }
             else /* pixel order */
             {
@@ -2422,10 +2414,10 @@ cvGetMat( const CvArr* array, CvMat* mat,
                         "The image is interleaved and has over CV_CN_MAX channels" );
 
                 cvInitMatHeader( mat, img->roi->height, img->roi->width,
-                                          type, img->imageData +
-                                          img->roi->yOffset*img->widthStep +
-                                          img->roi->xOffset*CV_ELEM_SIZE(type),
-                                          img->widthStep );
+                                 type, img->imageData +
+                                 img->roi->yOffset*img->widthStep +
+                                 img->roi->xOffset*CV_ELEM_SIZE(type),
+                                 img->widthStep );
             }
         }
         else
@@ -2436,7 +2428,7 @@ cvGetMat( const CvArr* array, CvMat* mat,
                 CV_Error( CV_StsBadFlag, "Pixel order should be used with coi == 0" );
 
             cvInitMatHeader( mat, img->height, img->width, type,
-                                      img->imageData, img->widthStep );
+                             img->imageData, img->widthStep );
         }
 
         result = mat;

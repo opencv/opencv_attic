@@ -520,11 +520,11 @@ void reduce(const Mat& src, Mat& dst, int dim, int op, int dtype)
             if(sdepth == CV_16U && ddepth == CV_32F)
                 func = reduceR_<ushort,float,OpAdd<float> >;
             if(sdepth == CV_16U && ddepth == CV_64F)
-                func = reduceR_<ushort,double,OpAdd<float> >;
+                func = reduceR_<ushort,double,OpAdd<double> >;
             if(sdepth == CV_16S && ddepth == CV_32F)
                 func = reduceR_<short,float,OpAdd<float> >;
             if(sdepth == CV_16S && ddepth == CV_64F)
-                func = reduceR_<short,double,OpAdd<float> >;
+                func = reduceR_<short,double,OpAdd<double> >;
             if(sdepth == CV_32F && ddepth == CV_32F)
                 func = reduceR_<float,float,OpAdd<float> >;
             if(sdepth == CV_32F && ddepth == CV_64F)
@@ -564,11 +564,11 @@ void reduce(const Mat& src, Mat& dst, int dim, int op, int dtype)
             if(sdepth == CV_16U && ddepth == CV_32F)
                 func = reduceC_<ushort,float,OpAdd<float> >;
             if(sdepth == CV_16U && ddepth == CV_64F)
-                func = reduceC_<ushort,double,OpAdd<float> >;
+                func = reduceC_<ushort,double,OpAdd<double> >;
             if(sdepth == CV_16S && ddepth == CV_32F)
                 func = reduceC_<short,float,OpAdd<float> >;
             if(sdepth == CV_16S && ddepth == CV_64F)
-                func = reduceC_<short,double,OpAdd<float> >;
+                func = reduceC_<short,double,OpAdd<double> >;
             if(sdepth == CV_32F && ddepth == CV_32F)
                 func = reduceC_<float,float,OpAdd<float> >;
             if(sdepth == CV_32F && ddepth == CV_64F)

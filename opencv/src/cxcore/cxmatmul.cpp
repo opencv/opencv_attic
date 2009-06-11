@@ -610,7 +610,7 @@ static void GEMMStore_64f( const double* c_data, size_t c_step,
 }
 
 
-void gemm( const Mat& A, const Mat& B, double alpha,
+void gemm( const Mat& _A, const Mat& _B, double alpha,
            const Mat& _C, double beta, Mat& D, int flags )
 {
     const int block_lin_size = 128;
@@ -618,10 +618,11 @@ void gemm( const Mat& A, const Mat& B, double alpha,
 
     static double zero[] = {0,0,0,0};
     static float zerof[] = {0,0,0,0};
-    int i, len = 0, type = A.type();
 
-    Size a_size = A.size(), d_size;
+    Mat A = _A, B = _B;
     const Mat* C = _C.data && beta != 0 ? &_C : 0;
+    Size a_size = A.size(), d_size;
+    int i, len = 0, type = A.type();
 
     CV_Assert( type == B.type() && (type == CV_32F || type == CV_64F) );
 
@@ -649,8 +650,6 @@ void gemm( const Mat& A, const Mat& B, double alpha,
         break;
     }
 
-    D.create( d_size.height, d_size.width, type );
-
     if( C )
     {
         CV_Assert( C->type() == type &&
@@ -662,6 +661,8 @@ void gemm( const Mat& A, const Mat& B, double alpha,
             flags &= ~GEMM_3_T;
         }
     }
+
+    D.create( d_size.height, d_size.width, type );
 
     if( flags == 0 && 2 <= len && len <= 4 && (len == d_size.width || len == d_size.height) )
     {

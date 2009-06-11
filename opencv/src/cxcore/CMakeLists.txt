@@ -8,7 +8,7 @@ source_group("Src" FILES ${lib_srcs})
 
 include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
 
-set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h)
+set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
     list(APPEND lib_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
