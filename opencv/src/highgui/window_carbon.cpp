@@ -475,7 +475,7 @@ void TrackbarActionProcPtr (ControlRef theControl, ControlPartCode partCode)
 static int icvCreateTrackbar (const char* trackbar_name,
                               const char* window_name,
                               int* val, int count,
-                              CvTrackbarCallback on_notify,
+                              CvTrackbarCallback on_notify,
                               CvTrackbarCallback2 on_notify2,
                               void* userdata)
 {
@@ -574,7 +574,7 @@ static int icvCreateTrackbar (const char* trackbar_name,
 CV_IMPL int cvCreateTrackbar (const char* trackbar_name,
                               const char* window_name,
                               int* val, int count,
-                              CvTrackbarCallback on_notify)
+                              CvTrackbarCallback on_notify)
 {
     return icvCreateTrackbar(trackbar_name, window_name, val, count, on_notify, 0, 0);
 }
@@ -586,7 +586,7 @@ CV_IMPL int cvCreateTrackbar2(const char* trackbar_name,
                               CvTrackbarCallback2 on_notify2,
                               void* userdata)
 {
-    return icvCreateTrackbar(trackbar_name, window_name, val,
+    return icvCreateTrackbar(trackbar_name, window_name, val,
                              count, 0, on_notify2, userdata);
 }
 
