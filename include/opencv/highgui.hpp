@@ -53,6 +53,16 @@ namespace cv
 CV_EXPORTS void namedWindow( const String& winname, int flags );
 CV_EXPORTS void imshow( const String& winname, const Mat& mat );
 
+typedef CvTrackbarCallback2 TrackbarCallback;
+
+CV_EXPORTS int createTrackbar( const String& trackbarname, const String& winname,
+                               int* value, int count,
+                               TrackbarCallback onChange CV_DEFAULT(0),
+                               void* userdata CV_DEFAULT(0));
+
+CV_EXPORTS int getTrackbarPos( const String& trackbarname, const String& winname );
+CV_EXPORTS void setTrackbarPos( const String& trackbarname, const String& winname, int pos );
+
 CV_EXPORTS Mat imread( const String& filename, int flags=1 );
 CV_EXPORTS bool imwrite( const String& filename, const Mat& img,
               const Vector<int>& params=Vector<int>());

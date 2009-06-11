@@ -428,6 +428,8 @@ typedef struct CvTrackbar
     int pos;
     int maxval;
     CvTrackbarCallback notify;
+    CvTrackbarCallback2 notify2;
+    void* userdata;
 }
 CvTrackbar;
 
@@ -840,13 +842,14 @@ icvFindTrackbarByName( const CvWindow* window, const char* name )
     return trackbar;
 }
 
-CV_IMPL int
-cvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                  int* val, int count, CvTrackbarCallback on_notify )
+static int
+icvCreateTrackbar( const char* trackbar_name, const char* window_name,
+                   int* val, int count, CvTrackbarCallback on_notify,
+                   CvTrackbarCallback2 on_notify2, void* userdata )
 {
     int result = 0;
 
-    CV_FUNCNAME( "cvCreateTrackbar" );
+    CV_FUNCNAME( "icvCreateTrackbar" );
 
     __BEGIN__;
 
@@ -912,6 +915,8 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
 
     trackbar->maxval = count;
     trackbar->notify = on_notify;
+    trackbar->notify2 = on_notify2;
+    trackbar->userdata = userdata;
     gtk_signal_connect( GTK_OBJECT(trackbar->widget), "value-changed",
                         GTK_SIGNAL_FUNC(icvOnTrackbar), trackbar );
 
@@ -927,6 +932,25 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     __END__;
 
     return result;
+}
+
+
+CV_IMPL int
+cvCreateTrackbar( const char* trackbar_name, const char* window_name,
+                  int* val, int count, CvTrackbarCallback on_notify )
+{
+    return icvCreateTrackbar(trackbar_name, window_name, val, count,
+                             on_notify, 0, 0);
+}
+
+
+CV_IMPL int
+cvCreateTrackbar2( const char* trackbar_name, const char* window_name,
+                   int* val, int count, CvTrackbarCallback2 on_notify2,
+                   void* userdata )
+{
+    return icvCreateTrackbar(trackbar_name, window_name, val, count,
+                             0, on_notify2, userdata);
 }
 
 
@@ -1112,7 +1136,9 @@ static void icvOnTrackbar( GtkWidget* widget, gpointer user_data )
         trackbar->pos = pos;
         if( trackbar->data )
             *trackbar->data = pos;
-        if( trackbar->notify )
+        if( trackbar->notify2 )
+            trackbar->notify2(pos, trackbar->userdata);
+        else if( trackbar->notify )
             trackbar->notify(pos);
     }
 }

@@ -146,7 +146,13 @@ typedef void (CV_CDECL *CvTrackbarCallback)(int pos);
 
 /* create trackbar and display it on top of given window, set callback */
 CVAPI(int) cvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                             int* value, int count, CvTrackbarCallback on_change );
+                             int* value, int count, CvTrackbarCallback on_change);
+
+typedef void (CV_CDECL *CvTrackbarCallback2)(int pos, void* userdata);
+
+CVAPI(int) cvCreateTrackbar2( const char* trackbar_name, const char* window_name,
+                              int* value, int count, CvTrackbarCallback2 on_change,
+                              void* userdata CV_DEFAULT(0));
 
 /* retrieve or set trackbar position */
 CVAPI(int) cvGetTrackbarPos( const char* trackbar_name, const char* window_name );

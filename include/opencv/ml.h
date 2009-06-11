@@ -1080,6 +1080,8 @@ protected:
 class CV_EXPORTS CvERTrees : public CvRTrees
 {
 public:
+    CvERTrees();
+    virtual ~CvERTrees();
     virtual bool train( const CvMat* _train_data, int _tflag,
                         const CvMat* _responses, const CvMat* _var_idx=0,
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
