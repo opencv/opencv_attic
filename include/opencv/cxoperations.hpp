@@ -946,7 +946,7 @@ template <typename _Tp> inline void Vector<_Tp>::copyTo(std::vector<_Tp>& vec) c
 }
 
 template <typename _Tp> inline Vector<_Tp>::operator CvMat() const
-{ return cvMat(1, (int)size(), type(), (void*)hdr.data); }
+{ return cvMat((int)size(), 1, type(), (void*)hdr.data); }
 
 template <typename _Tp> inline _Tp& Vector<_Tp>::operator [] (size_t i) { CV_DbgAssert( i < size() ); return hdr.data[i]; }
 template <typename _Tp> inline const _Tp& Vector<_Tp>::operator [] (size_t i) const { CV_DbgAssert( i < size() ); return hdr.data[i]; }

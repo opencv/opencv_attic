@@ -1747,7 +1747,7 @@ void convexHull( const Vector<Point>& points,
     hull.resize(points.size());
     CvMat _points = points, _hull=hull;
     cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
-    hull.resize(_hull.cols);
+    hull.resize(_hull.cols + _hull.rows - 1);
 }
 
 void convexHull( const Vector<Point>& points,
@@ -1756,7 +1756,7 @@ void convexHull( const Vector<Point>& points,
     hull.resize(points.size());
     CvMat _points = points, _hull=hull;
     cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 1);
-    hull.resize(_hull.cols);
+    hull.resize(_hull.cols + _hull.rows - 1);
 }
 
 void convexHull( const Vector<Point2f>& points,
@@ -1765,7 +1765,7 @@ void convexHull( const Vector<Point2f>& points,
     hull.resize(points.size());
     CvMat _points = points, _hull=hull;
     cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
-    hull.resize(_hull.cols);
+    hull.resize(_hull.cols + _hull.rows - 1);
 }
 
 void convexHull( const Vector<Point2f>& points,
@@ -1774,7 +1774,7 @@ void convexHull( const Vector<Point2f>& points,
     hull.resize(points.size());
     CvMat _points = points, _hull=hull;
     cvConvexHull2(&_points, &_hull, clockwise ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE, 0);
-    hull.resize(_hull.cols);
+    hull.resize(_hull.cols + _hull.rows - 1);
 }
 
 bool isContourConvex( const Vector<Point>& contour )
