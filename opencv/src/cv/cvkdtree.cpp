@@ -126,7 +126,7 @@ class CvKDTreeWrap : public CvFeatureTree {
     std::copy(inbounds.begin(),
 	      inbounds.begin() + std::min((int)inbounds.size(), rn),
 	      (int*) results->data.ptr);
-    return inbounds.size();
+    return (int)inbounds.size();
   }
 
   CvKDTreeWrap(const CvKDTreeWrap& x);

@@ -211,8 +211,8 @@ void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
             float b = prevPt.y - iprevPt.y;
             float w00 = (1.f - a)*(1.f - b), w01 = a*(1.f - b);
             float w10 = (1.f - a)*b, w11 = a*b;
-            int stepI = derivI.step/derivI.elemSize1();
-            int stepJ = derivJ.step/derivJ.elemSize1();
+            size_t stepI = derivI.step/derivI.elemSize1();
+            size_t stepJ = derivJ.step/derivJ.elemSize1();
             int cnI = cn*6, cnJ = cn*3;
             double A11 = 0, A12 = 0, A22 = 0;
             double iA11 = 0, iA12 = 0, iA22 = 0;

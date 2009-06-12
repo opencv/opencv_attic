@@ -63,8 +63,8 @@
     #define CV_ICC   __ECC
   #endif
 
-  #if defined WIN32 && (!defined WIN64 || defined EM64T) && \
-      (_MSC_VER >= 1400 || defined CV_ICC) \
+  #if (defined WIN32 && defined _WIN64 && \
+      (_MSC_VER >= 1400 || defined CV_ICC)) \
       || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
     #include <emmintrin.h>
     #define CV_SSE2 1
@@ -78,8 +78,6 @@
 
   #if defined __BORLANDC__
     #include <fastmath.h>
-  #elif defined WIN64 && !defined EM64T && defined CV_ICC
-    #include <mathimf.h>
   #else
     #include <math.h>
   #endif
@@ -97,7 +95,7 @@
   #endif
 #endif // SKIP_INCLUDES
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined _WIN64
     #define CV_CDECL __cdecl
     #define CV_STDCALL __stdcall
 #else
@@ -126,14 +124,14 @@
 #ifndef CV_INLINE
 #if defined __cplusplus
     #define CV_INLINE inline
-#elif (defined WIN32 || defined WIN64 || defined WINCE) && !defined __GNUC__
+#elif (defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && !defined __GNUC__
     #define CV_INLINE __inline
 #else
     #define CV_INLINE static
 #endif
 #endif /* CV_INLINE */
 
-#if (defined WIN32 || defined WIN64 || defined WINCE) && defined CVAPI_EXPORTS
+#if (defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
 #else
     #define CV_EXPORTS
@@ -217,7 +215,7 @@ CV_INLINE  int  cvRound( double value )
 #if CV_SSE2
     __m128d t = _mm_load_sd( &value );
     return _mm_cvtsd_si32(t);
-#elif defined WIN32 && !defined WIN64 && defined _MSC_VER
+#elif defined WIN32 && !defined WIN64 && !defined _WIN64 && defined _MSC_VER
     int t;
     __asm
     {
@@ -225,7 +223,7 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif (defined HAVE_LRINT) || (defined WIN64 && !defined EM64T && defined CV_ICC)
+#elif (defined HAVE_LRINT) || defined CV_ICC
     return (int)lrint(value);
 #else
     /*

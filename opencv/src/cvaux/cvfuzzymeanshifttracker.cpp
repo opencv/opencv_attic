@@ -86,7 +86,7 @@ void CvFuzzyCurve::addPoint(double x, double y)
 
 double CvFuzzyCurve::calcValue(double param)
 {
-	int size = points.size();
+	int size = (int)points.size();
 	double x1, y1, x2, y2, m, y;
 	for (int i = 1; i < size; i++)
 	{
@@ -134,7 +134,7 @@ void CvFuzzyFunction::addCurve(CvFuzzyCurve *curve, double value)
 
 void CvFuzzyFunction::resetValues()
 {
-	int numCurves = curves.size();
+	int numCurves = (int)curves.size();
 	for (int i = 0; i < numCurves; i++)
 		curves[i].setValue(0);
 };
@@ -142,7 +142,7 @@ void CvFuzzyFunction::resetValues()
 double CvFuzzyFunction::calcValue()
 {
 	double s1 = 0, s2 = 0, v;
-	int numCurves = curves.size();
+	int numCurves = (int)curves.size();
 	for (int i = 0; i < numCurves; i++)
 	{
 		v = curves[i].getValue();
@@ -218,7 +218,7 @@ CvFuzzyController::CvFuzzyController()
 
 CvFuzzyController::~CvFuzzyController()
 {
-	int size = rules.size();
+	int size = (int)rules.size();
 	for(int i = 0; i < size; i++)
 		delete rules[i];
 };
@@ -234,7 +234,7 @@ double CvFuzzyController::calcOutput(double param1, double param2)
 {
 	double v;
 	CvFuzzyFunction list;
-	int size = rules.size();
+	int size = (int)rules.size();
 
 	for(int i = 0; i < size; i++)
 	{

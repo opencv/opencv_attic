@@ -170,7 +170,7 @@ setIdentity( Mat& m, const Scalar& s )
     {
         float* data = (float*)m.data;
         float val = (float)s[0];
-        int step = m.step/sizeof(data[0]);
+        size_t step = m.step/sizeof(data[0]);
 
         for( i = 0; i < rows; i++, data += step )
         {
@@ -184,7 +184,7 @@ setIdentity( Mat& m, const Scalar& s )
     {
         double* data = (double*)m.data;
         double val = s[0];
-        int step = m.step/sizeof(data[0]);
+        size_t step = m.step/sizeof(data[0]);
 
         for( i = 0; i < rows; i++, data += step )
         {
@@ -209,7 +209,7 @@ Scalar trace( const Mat& m )
     if( type == CV_32FC1 )
     {
         const float* ptr = (const float*)m.data;
-        int step = m.step/sizeof(ptr[0]) + 1;
+        size_t step = m.step/sizeof(ptr[0]) + 1;
         double _s = 0;
         for( i = 0; i < nm; i++ )
             _s += ptr[i*step];
@@ -219,7 +219,7 @@ Scalar trace( const Mat& m )
     if( type == CV_64FC1 )
     {
         const double* ptr = (const double*)m.data;
-        int step = m.step/sizeof(ptr[0]) + 1;
+        size_t step = m.step/sizeof(ptr[0]) + 1;
         double _s = 0;
         for( i = 0; i < nm; i++ )
             _s += ptr[i*step];
@@ -239,7 +239,7 @@ transposeI_( Mat& mat )
 {
     int rows = mat.rows, cols = mat.cols;
     uchar* data = mat.data;
-    int step = mat.step;
+    size_t step = mat.step;
 
     for( int i = 0; i < rows; i++ )
     {
@@ -255,7 +255,7 @@ transpose_( const Mat& src, Mat& dst )
 {
     int rows = dst.rows, cols = dst.cols;
     uchar* data = src.data;
-    int step = src.step;
+    size_t step = src.step;
 
     for( int i = 0; i < rows; i++ )
     {
@@ -313,8 +313,8 @@ void transpose( const Mat& src, Mat& dst )
         transpose_<Vec_<int64,4> > // 32
     };
 
-    int esz = src.elemSize();
-    CV_Assert( esz <= 32 );
+    size_t esz = src.elemSize();
+    CV_Assert( esz <= (size_t)32 );
 
     if( dst.data == src.data && dst.cols == dst.rows )
     {
@@ -341,7 +341,7 @@ void completeSymm( Mat& matrix, bool LtoR )
     if( type == CV_32FC1 || type == CV_32SC1 )
     {
         int* data = (int*)matrix.data;
-        int step = matrix.step/sizeof(data[0]);
+        size_t step = matrix.step/sizeof(data[0]);
         for( i = 0; i < nrows; i++ )
         {
             if( !LtoR ) j1 = i; else j0 = i+1;
@@ -352,7 +352,7 @@ void completeSymm( Mat& matrix, bool LtoR )
     else if( type == CV_64FC1 )
     {
         double* data = (double*)matrix.data;
-        int step = matrix.step/sizeof(data[0]);
+        size_t step = matrix.step/sizeof(data[0]);
         for( i = 0; i < nrows; i++ )
         {
             if( !LtoR ) j1 = i; else j0 = i+1;
@@ -375,8 +375,8 @@ Mat Mat::cross(const Mat& m) const
     {
         const float *a = (const float*)data, *b = (const float*)m.data;
         float* c = (float*)result.data;
-        int lda = rows > 1 ? step/sizeof(a[0]) : 1;
-        int ldb = rows > 1 ? m.step/sizeof(b[0]) : 1;
+        size_t lda = rows > 1 ? step/sizeof(a[0]) : 1;
+        size_t ldb = rows > 1 ? m.step/sizeof(b[0]) : 1;
 
         c[0] = a[lda] * b[ldb*2] - a[lda*2] * b[ldb];
         c[1] = a[lda*2] * b[0] - a[0] * b[ldb*2];
@@ -386,8 +386,8 @@ Mat Mat::cross(const Mat& m) const
     {
         const double *a = (const double*)data, *b = (const double*)m.data;
         double* c = (double*)result.data;
-        int lda = rows > 1 ? step/sizeof(a[0]) : 1;
-        int ldb = rows > 1 ? m.step/sizeof(b[0]) : 1;
+        size_t lda = rows > 1 ? step/sizeof(a[0]) : 1;
+        size_t ldb = rows > 1 ? m.step/sizeof(b[0]) : 1;
 
         c[0] = a[lda] * b[ldb*2] - a[lda*2] * b[ldb];
         c[1] = a[lda*2] * b[0] - a[0] * b[ldb*2];
@@ -412,7 +412,8 @@ reduceR_( const Mat& srcmat, Mat& dstmat )
     WT* buf = buffer;
     ST* dst = (ST*)dstmat.data;
     const T* src = (const T*)srcmat.data;
-    int i, srcstep = srcmat.step/sizeof(src[0]);
+    size_t srcstep = srcmat.step/sizeof(src[0]);
+    int i;
     Op op;
 
     for( i = 0; i < size.width; i++ )
@@ -2199,7 +2200,7 @@ SparseMat::Hdr::Hdr( const Vector<int>& _sizes, int _type )
     refcount = 1;
 
     dims = (int)_sizes.size();
-    valueOffset = alignSize(sizeof(SparseMat::Node) +
+    valueOffset = (int)alignSize(sizeof(SparseMat::Node) +
         sizeof(int)*(dims - CV_MAX_DIM), CV_ELEM_SIZE1(_type));
     nodeSize = alignSize(valueOffset +
         CV_ELEM_SIZE(_type), (int)sizeof(size_t));

@@ -145,7 +145,7 @@ private:
   template < class __instype, class __valuector >
   void median_partition(__instype * first, __instype * last, 
 			__instype * k, int dim, __valuector ctor) {
-    int pivot = (last - first) / 2;
+    int pivot = (int)((last - first) / 2);
 
     std::swap(first[pivot], last[-1]);
     __instype *middle = std::partition(first, last - 1,
@@ -176,7 +176,7 @@ private:
       if (split == last) { // leaf
 	int nexti = -1;
 	for (--split; split >= first; --split) {
-	  int i = nodes.size();
+	  int i = (int)nodes.size();
 	  node & n = *nodes.insert(nodes.end(), node());
 	  n.dim = -1;
 	  n.value = ctor(*split);
@@ -187,7 +187,7 @@ private:
 
 	return nexti;
       } else { // node
-	int i = nodes.size();
+	int i = (int)nodes.size();
 	// note that recursive insert may invalidate this ref
 	node & n = *nodes.insert(nodes.end(), node());
 
@@ -426,7 +426,7 @@ public:
     }
 
     tmp_pq.clear();
-    return ret_nn_pq.size();
+    return (int)ret_nn_pq.size();
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -456,7 +456,7 @@ public:
 		       std::vector < __valuetype > &inbounds) const {
     inbounds.clear();
     find_ortho_range(root_node, bounds_min, bounds_max, inbounds);
-    return inbounds.size();
+    return (int)inbounds.size();
   }
 };
 

@@ -270,7 +270,7 @@ void cv::cornerSubPix( const Mat& image, Vector<Point2f>& corners,
                        TermCriteria criteria )
 {
     CvMat _image = image;
-    cvFindCornerSubPix(&_image, (CvPoint2D32f*)&corners[0], corners.size(),
+    cvFindCornerSubPix(&_image, (CvPoint2D32f*)&corners[0], (int)corners.size(),
                        winSize, zeroZone, criteria );
 }
 

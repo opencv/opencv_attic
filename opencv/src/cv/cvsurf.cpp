@@ -807,7 +807,7 @@ void SURF::operator()(const Mat& img, const Mat& mask,
     CvSeqBlock block;
     if( useProvidedKeypoints )
         kp = cvMakeSeqHeaderForArray(0, sizeof(*kp), sizeof(SURFKeypoint),
-                                     &keypoints[0], keypoints.size(), &hdr, &block);
+                                     &keypoints[0], (int)keypoints.size(), &hdr, &block);
     cvExtractSURF(&_img, pmask, &kp, &d, storage,
         *(const CvSURFParams*)this, useProvidedKeypoints);
     if( !useProvidedKeypoints )

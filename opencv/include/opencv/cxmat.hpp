@@ -184,7 +184,7 @@ inline Mat::Mat(const CvMat* m, bool copyData)
 {
     if( step == 0 )
         step = cols*elemSize();
-    int minstep = cols*elemSize();
+    size_t minstep = cols*elemSize();
     dataend += step*(rows-1) + minstep;
     if( copyData )
     {
@@ -228,7 +228,7 @@ inline Mat Mat::colRange(const Range& r) const
 inline Mat Mat::diag(int d) const
 {
     Mat m = *this;
-    int esz = elemSize();
+    size_t esz = elemSize();
     int len;
 
     if( d >= 0 )
@@ -316,7 +316,7 @@ inline void Mat::release()
 
 inline void Mat::locateROI( Size& wholeSize, Point& ofs ) const
 {
-    int esz = elemSize(), minstep;
+    size_t esz = elemSize(), minstep;
     ptrdiff_t delta1 = data - datastart, delta2 = dataend - datastart;
     CV_DbgAssert( step > 0 );
     if( delta1 == 0 )
@@ -330,7 +330,7 @@ inline void Mat::locateROI( Size& wholeSize, Point& ofs ) const
     minstep = (ofs.x + cols)*esz;
     wholeSize.height = (int)((delta2 - minstep)/step + 1);
     wholeSize.height = std::max(wholeSize.height, ofs.y + rows);
-    wholeSize.width = (delta2 - step*(wholeSize.height-1))/esz;
+    wholeSize.width = (int)((delta2 - step*(wholeSize.height-1))/esz);
     wholeSize.width = std::max(wholeSize.width, ofs.x + cols);
 }
 
@@ -361,7 +361,7 @@ inline Mat Mat::operator()( const Rect& roi ) const
 inline Mat::operator CvMat() const
 {
     CvMat m = cvMat(rows, cols, type(), data);
-    m.step = step;
+    m.step = (int)step;
     m.type = (m.type & ~CONTINUOUS_FLAG) | (flags & CONTINUOUS_FLAG);
     return m;
 }
@@ -370,7 +370,7 @@ inline Mat::operator IplImage() const
 {
     IplImage img;
     cvInitImageHeader(&img, size(), cvIplDepth(flags), channels());
-    cvSetData(&img, data, step);
+    cvSetData(&img, data, (int)step);
     return img;
 }
 

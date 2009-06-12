@@ -42,7 +42,7 @@
 
 #include "_cxcore.h"
 
-#if defined WIN32 || defined WIN64 || WINCE
+#if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
 #include <windows.h>
 #include <tchar.h>
 #else
@@ -74,7 +74,7 @@ bool useOptimized()
 
 int64 getTickCount()
 {
-#if defined WIN32 || defined WIN64 || defined WINCE
+#if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
     LARGE_INTEGER counter;
     QueryPerformanceCounter( &counter );
     return (int64)counter.QuadPart;
@@ -92,7 +92,7 @@ int64 getTickCount()
 
 double getTickFrequency()
 {
-#if defined WIN32 || defined WIN64 || defined WINCE
+#if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
     return (double)freq.QuadPart;

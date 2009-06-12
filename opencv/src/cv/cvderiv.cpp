@@ -320,8 +320,8 @@ void Laplacian( const Mat& src, Mat& dst, int ddepth, int ksize,
 
         for( ; dsty < src.rows; sptr += dy0*src.step, dsty += dy )
         {
-            fx->proceed( sptr, src.step, dy0, d2x.data, d2x.step );
-            dy = fy->proceed( sptr, src.step, dy0, d2y.data, d2y.step );
+            fx->proceed( sptr, (int)src.step, dy0, d2x.data, (int)d2x.step );
+            dy = fy->proceed( sptr, (int)src.step, dy0, d2y.data, (int)d2y.step );
             if( dy > 0 )
             {
                 Mat dstripe = dst.rowRange(dsty, dsty + dy);

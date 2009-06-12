@@ -75,7 +75,7 @@ int icvMkDir( const char* filename )
     p = path;
     for( ; ; )
     {
-        pos = strcspn( p, "/\\" );
+        pos = (int)strcspn( p, "/\\" );
 
         if( pos == (int) strlen( p ) ) break;
         if( pos != 0 )

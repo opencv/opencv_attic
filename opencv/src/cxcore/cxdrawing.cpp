@@ -158,8 +158,8 @@ LineIterator::LineIterator(const Mat& img, Point pt1, Point pt2,
         }
     }
 
-    int bt_pix0 = img.elemSize(), bt_pix = bt_pix0;
-    int step = img.step;
+    int bt_pix0 = (int)img.elemSize(), bt_pix = bt_pix0;
+    size_t step = img.step;
 
     int dx = pt2.x - pt1.x;
     int dy = pt2.y - pt1.y;
@@ -202,7 +202,7 @@ LineIterator::LineIterator(const Mat& img, Point pt1, Point pt2,
         err = dx - (dy + dy);
         plusDelta = dx + dx;
         minusDelta = -(dy + dy);
-        plusStep = step;
+        plusStep = (int)step;
         minusStep = bt_pix;
         count = dx + 1;
     }
@@ -213,7 +213,7 @@ LineIterator::LineIterator(const Mat& img, Point pt1, Point pt2,
         err = 0;
         plusDelta = (dx + dx) + (dy + dy);
         minusDelta = -(dy + dy);
-        plusStep = step - bt_pix;
+        plusStep = (int)step - bt_pix;
         minusStep = bt_pix;
         count = dx + dy + 1;
     }
@@ -230,7 +230,7 @@ Line( Mat& img, Point pt1, Point pt2,
 
     LineIterator iterator(img, pt1, pt2, connectivity, true);
     int i, count = iterator.count;
-    int pix_size = img.elemSize();
+    int pix_size = (int)img.elemSize();
 
     for( i = 0; i < count; i++, ++iterator )
     {
@@ -267,7 +267,7 @@ LineAA( Mat& img, Point pt1, Point pt2, const void* color )
     int _cb, _cg, _cr;
     int nch = img.channels();
     uchar* ptr = img.data;
-    int step = img.step;
+    size_t step = img.step;
     Size size = img.size();
 
     assert( (nch == 1 || nch == 3) && img.depth() == CV_8U );
@@ -528,9 +528,9 @@ Line2( Mat& img, Point pt1, Point pt2, const void* color )
     int cb = ((uchar*)color)[0];
     int cg = ((uchar*)color)[1];
     int cr = ((uchar*)color)[2];
-    int pix_size = img.elemSize();
+    int pix_size = (int)img.elemSize();
     uchar *ptr = img.data, *tptr;
-    int step = img.step;
+    size_t step = img.step;
     Size size = img.size();
 
     //assert( img && (nch == 1 || nch == 3) && img.depth() == CV_8U );
@@ -934,7 +934,7 @@ FillConvexPoly( Mat& img, const Vector<Point>& v, const void* color, int line_ty
     int xmin, xmax, ymin, ymax;
     uchar* ptr = img.data;
     Size size = img.size();
-    int pix_size = img.elemSize();
+    int pix_size = (int)img.elemSize();
     Point p0;
     int delta1, delta2;
 
@@ -1153,7 +1153,7 @@ FillEdgeCollection( Mat& img, Vector<PolyEdge>& edges, const void* color )
     Size size = img.size();
     PolyEdge* e;
     int y_max = INT_MIN, x_max = INT_MIN, y_min = INT_MAX, x_min = INT_MAX;
-    int pix_size = img.elemSize();
+    int pix_size = (int)img.elemSize();
 
     if( total < 2 )
         return;
@@ -1293,8 +1293,8 @@ static void
 Circle( Mat& img, Point center, int radius, const void* color, int fill )
 {
     Size size = img.size();
-    int step = img.step;
-    int pix_size = img.elemSize();
+    size_t step = img.step;
+    int pix_size = (int)img.elemSize();
     uchar* ptr = img.data;
     int err = 0, dx = radius, dy = 0, plus = 1, minus = (radius << 1) - 1;
     int inside = center.x >= radius && center.x < size.width - radius &&

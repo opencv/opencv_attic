@@ -55,9 +55,9 @@ template<typename T> static void
 copyMask_(const Mat& srcmat, Mat& dstmat, const Mat& maskmat)
 {
     const uchar* mask = maskmat.data;
-    int sstep = srcmat.step;
-    int dstep = dstmat.step;
-    int mstep = maskmat.step;
+    size_t sstep = srcmat.step;
+    size_t dstep = dstmat.step;
+    size_t mstep = maskmat.step;
     Size size = getContinuousSize(srcmat, dstmat, maskmat);
 
     for( int y = 0; y < size.height; y++, mask += mstep )
@@ -87,8 +87,8 @@ setMask_(const void* _scalar, Mat& dstmat, const Mat& maskmat)
 {
     T scalar = *(T*)_scalar;
     const uchar* mask = maskmat.data;
-    int dstep = dstmat.step;
-    int mstep = maskmat.step;
+    size_t dstep = dstmat.step;
+    size_t mstep = maskmat.step;
     Size size = dstmat.size();
 
     if( dstmat.isContinuous() && maskmat.isContinuous() )
@@ -174,7 +174,7 @@ void Mat::copyTo( Mat& dst ) const
     const uchar* sptr = data;
     uchar* dptr = dst.data;
 
-    sz.width *= elemSize();
+    sz.width *= (int)elemSize();
     if( isContinuous() && dst.isContinuous() )
     {
         sz.width *= sz.height;
@@ -197,7 +197,7 @@ void Mat::copyTo( Mat& dst, const Mat& mask ) const
     dst.create( size(), type() );
     if( dst.data != data0 ) // do not leave dst uninitialized
         dst = Scalar(0);
-    getCopyMaskFunc(elemSize())(*this, dst, mask);
+    getCopyMaskFunc((int)elemSize())(*this, dst, mask);
 }
 
 Mat& Mat::operator = (const Scalar& s)
@@ -205,7 +205,7 @@ Mat& Mat::operator = (const Scalar& s)
     Size sz = size();
     uchar* dst = data;
 
-    sz.width *= elemSize();
+    sz.width *= (int)elemSize();
     if( isContinuous() )
     {
         sz.width *= sz.height;
@@ -219,7 +219,7 @@ Mat& Mat::operator = (const Scalar& s)
     }
     else
     {
-        int t = type(), esz1 = elemSize1();
+        int t = type(), esz1 = (int)elemSize1();
         double scalar[12];
         scalarToRawData(s, scalar, t, 12);
         int copy_len = 12*esz1;
@@ -266,8 +266,8 @@ template<typename T> static void
 flipHoriz_( const Mat& srcmat, Mat& dstmat, bool flipv )
 {
     uchar* dst0 = dstmat.data;
-    int srcstep = srcmat.step;
-    int dststep = dstmat.step;
+    size_t srcstep = srcmat.step;
+    int dststep = (int)dstmat.step;
     Size size = srcmat.size();
 
     if( flipv )
@@ -296,11 +296,11 @@ flipVert( const Mat& srcmat, Mat& dstmat )
 {
     const uchar* src = srcmat.data;
     uchar* dst = dstmat.data;
-    int srcstep = srcmat.step, dststep = dstmat.step;
+    size_t srcstep = srcmat.step, dststep = dstmat.step;
     Size size = srcmat.size();
     const uchar* src1 = src + (size.height - 1)*srcstep;
     uchar* dst1 = dst + (size.height - 1)*dststep;
-    size.width *= srcmat.elemSize();
+    size.width *= (int)srcmat.elemSize();
 
     for( int y = 0; y < (size.height + 1)/2; y++, src += srcstep, src1 -= srcstep,
                                               dst += dststep, dst1 -= dststep )
@@ -385,7 +385,7 @@ void flip( const Mat& src, Mat& dst, int flip_mode )
         flipVert( src, dst );
     else
     {
-        int esz = src.elemSize();
+        int esz = (int)src.elemSize();
         CV_Assert( esz <= 32 );
         FlipHorizFunc func = tab[esz];
         CV_Assert( func != 0 );
@@ -407,7 +407,7 @@ void repeat(const Mat& src, int ny, int nx, Mat& dst)
 {
     dst.create(src.rows*ny, src.cols*nx, src.type());
     Size ssize = src.size(), dsize = dst.size();
-    int esz = src.elemSize();
+    int esz = (int)src.elemSize();
     int x, y;
     ssize.width *= esz; dsize.width *= esz;
 

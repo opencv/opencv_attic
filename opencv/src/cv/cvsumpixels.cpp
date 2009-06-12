@@ -63,10 +63,10 @@ void integral_( const Mat& _src, Mat& _sum, Mat& _sqsum, Mat& _tilted )
     ST* tilted = (ST*)_tilted.data;
     QT* sqsum = (QT*)_sqsum.data;
 
-    int srcstep = _src.step/sizeof(T);
-    int sumstep = _sum.step/sizeof(ST);
-    int tiltedstep = _tilted.step/sizeof(ST);
-    int sqsumstep = _sqsum.step/sizeof(QT);
+    int srcstep = (int)(_src.step/sizeof(T));
+    int sumstep = (int)(_sum.step/sizeof(ST));
+    int tiltedstep = (int)(_tilted.step/sizeof(ST));
+    int sqsumstep = (int)(_sqsum.step/sizeof(QT));
 
     size.width *= cn;
 

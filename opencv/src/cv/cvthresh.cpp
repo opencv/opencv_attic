@@ -247,8 +247,8 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
     roi.width *= _src.channels();
     const float* src = (const float*)_src.data;
     float* dst = (float*)_dst.data;
-    int src_step = _src.step/sizeof(src[0]);
-    int dst_step = _dst.step/sizeof(dst[0]);
+    size_t src_step = _src.step/sizeof(src[0]);
+    size_t dst_step = _dst.step/sizeof(dst[0]);
 #if CV_SSE2
     __m128 thresh4 = _mm_set1_ps(thresh), maxval4 = _mm_set1_ps(maxval);
 #endif

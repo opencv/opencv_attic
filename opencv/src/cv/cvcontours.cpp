@@ -1617,7 +1617,7 @@ void drawContours( Mat& image, const Vector<Vector<Point> >& contours,
     {
         const Vector<Point>& ci = contours[i];
         cvMakeSeqHeaderForArray(CV_SEQ_POLYGON, sizeof(CvSeq), sizeof(Point),
-            !ci.empty() ? (void*)&ci[0] : 0, ci.size(), &seq[i], &block[i] );
+            !ci.empty() ? (void*)&ci[0] : 0, (int)ci.size(), &seq[i], &block[i] );
     }
 
     if( hierarchy.empty() || maxLevel == 0 )

@@ -293,8 +293,8 @@ bitwiseOp_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat )
     const uchar* src1 = srcmat1.data;
     const uchar* src2 = srcmat2.data;
     uchar* dst = dstmat.data;
-    int step1 = srcmat1.step, step2 = srcmat2.step, step = dstmat.step;
-    Size size = getContinuousSize( srcmat1, srcmat2, dstmat, srcmat1.elemSize() );
+    size_t step1 = srcmat1.step, step2 = srcmat2.step, step = dstmat.step;
+    Size size = getContinuousSize( srcmat1, srcmat2, dstmat, (int)srcmat1.elemSize() );
 
     for( ; size.height--; src1 += step1, src2 += step2, dst += step )
     {
@@ -336,11 +336,11 @@ bitwiseSOp_( const Mat& srcmat, Mat& dstmat, const Scalar& _scalar )
     OPB opb; OPI opi; OPV opv;
     const uchar* src0 = srcmat.data;
     uchar* dst0 = dstmat.data;
-    int step1 = srcmat.step, step = dstmat.step;
-    Size size = getContinuousSize( srcmat, dstmat, srcmat.elemSize() );
+    size_t step1 = srcmat.step, step = dstmat.step;
+    Size size = getContinuousSize( srcmat, dstmat, (int)srcmat.elemSize() );
     const int delta = 96;
     uchar scalar[delta];
-    scalarToRawData(_scalar, scalar, srcmat.type(), delta/srcmat.elemSize1() );
+    scalarToRawData(_scalar, scalar, srcmat.type(), (int)(delta/srcmat.elemSize1()) );
 
     for( ; size.height--; src0 += step1, dst0 += step )
     {
@@ -405,12 +405,12 @@ binaryMaskOp( const Mat& src1, const Mat& src2, Mat& dst,
     else
     {
         AutoBuffer<uchar> buf;
-        int esz = dst.elemSize();
-        CopyMaskFunc copym_func = getCopyMaskFunc(esz);
-        int y, dy, buf_step = dst.cols*esz;
+        size_t esz = dst.elemSize(), buf_step = dst.cols*esz;
+        CopyMaskFunc copym_func = getCopyMaskFunc((int)esz);
+        int y, dy;
 
         CV_Assert(mask.type() == CV_8UC1 && mask.size() == dst.size());
-        dy = std::min(std::max(CV_MAX_LOCAL_SIZE/buf_step, 1), dst.rows);
+        dy = std::min(std::max((int)(CV_MAX_LOCAL_SIZE/buf_step), 1), dst.rows);
         buf.allocate( buf_step*dy );
 
         for( y = 0; y < dst.rows; y += dy )
@@ -437,12 +437,12 @@ binarySMaskOp( const Mat& src1, const Scalar& s, Mat& dst,
     else
     {
         AutoBuffer<uchar> buf;
-        int esz = dst.elemSize();
-        CopyMaskFunc copym_func = getCopyMaskFunc(esz);
-        int y, dy, buf_step = dst.cols*esz;
+        size_t esz = dst.elemSize(), buf_step = dst.cols*esz;
+        CopyMaskFunc copym_func = getCopyMaskFunc((int)esz);
+        int y, dy;
 
         CV_Assert(mask.type() == CV_8UC1 && mask.size() == dst.size());
-        dy = std::min(std::max(CV_MAX_LOCAL_SIZE/buf_step, 1), dst.rows);
+        dy = std::min(std::max((int)(CV_MAX_LOCAL_SIZE/buf_step), 1), dst.rows);
         buf.allocate( buf_step*dy );
 
         for( y = 0; y < dst.rows; y += dy )
@@ -496,7 +496,7 @@ void bitwise_not(const Mat& src, Mat& dst)
     const uchar* sptr = src.data;
     uchar* dptr = dst.data;
     dst.create( src.size(), src.type() );
-    Size size = getContinuousSize( src, dst, src.elemSize() );
+    Size size = getContinuousSize( src, dst, (int)src.elemSize() );
 
     for( ; size.height--; sptr += src.step, dptr += dst.step )
     {
@@ -632,9 +632,9 @@ mul_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat, double _scale )
     const T* src1 = (const T*)srcmat1.data;
     const T* src2 = (const T*)srcmat2.data;
     T* dst = (T*)dstmat.data;
-    int step1 = srcmat1.step/sizeof(src1[0]);
-    int step2 = srcmat2.step/sizeof(src2[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step1 = srcmat1.step/sizeof(src1[0]);
+    size_t step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
 
     if( fabs(_scale - 1.) < DBL_EPSILON )
@@ -704,9 +704,9 @@ div_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat, double scale )
     const T* src1 = (const T*)srcmat1.data;
     const T* src2 = (const T*)srcmat2.data;
     T* dst = (T*)dstmat.data;
-    int step1 = srcmat1.step/sizeof(src1[0]);
-    int step2 = srcmat2.step/sizeof(src2[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step1 = srcmat1.step/sizeof(src1[0]);
+    size_t step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
 
     for( ; size.height--; src1+=step1, src2+=step2, dst+=step )
@@ -767,8 +767,8 @@ recip_( double scale, const Mat& srcmat2, Mat& dstmat )
 {
     const T* src2 = (const T*)srcmat2.data;
     T* dst = (T*)dstmat.data;
-    int step2 = srcmat2.step/sizeof(src2[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = getContinuousSize( srcmat2, dstmat, dstmat.channels() );
 
     for( ; size.height--; src2+=step2, dst+=step )
@@ -836,9 +836,9 @@ addWeighted_( const Mat& srcmat1, double _alpha, const Mat& srcmat2,
     const T* src1 = (const T*)srcmat1.data;
     const T* src2 = (const T*)srcmat2.data;
     T* dst = (T*)dstmat.data;
-    int step1 = srcmat1.step/sizeof(src1[0]);
-    int step2 = srcmat2.step/sizeof(src2[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step1 = srcmat1.step/sizeof(src1[0]);
+    size_t step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
     WT alpha = (WT)_alpha, beta = (WT)_beta, gamma = (WT)_gamma;
 
@@ -877,9 +877,9 @@ addWeighted8u( const Mat& srcmat1, double alpha,
     const uchar* src1 = srcmat1.data;
     const uchar* src2 = srcmat2.data;
     uchar* dst = dstmat.data;
-    int step1 = srcmat1.step;
-    int step2 = srcmat2.step;
-    int step = dstmat.step;
+    size_t step1 = srcmat1.step;
+    size_t step2 = srcmat2.step;
+    size_t step = dstmat.step;
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
 
     int tab1[256], tab2[256];
@@ -1096,7 +1096,7 @@ inRange_( const Mat& srcmat1, const Mat& srcmat2, const Mat& srcmat3, Mat& dstma
 {
     Op op;
     uchar* dst = dstmat.data;
-    int dstep = dstmat.step;
+    size_t dstep = dstmat.step;
     Size size = getContinuousSize( srcmat1, srcmat2, srcmat3, dstmat );
 
     for( int y = 0; y < size.height; y++, dst += dstep )
@@ -1117,7 +1117,7 @@ inRangeS_( const Mat& srcmat1, const Scalar& _a, const Scalar& _b, Mat& dstmat )
     typedef typename DataType<WT>::channel_type WT1;
     WT a, b;
     uchar* dst = dstmat.data;
-    int dstep = dstmat.step;
+    size_t dstep = dstmat.step;
     Size size = getContinuousSize( srcmat1, dstmat );
     int cn = srcmat1.channels();
     _a.convertTo((WT1*)&a, cn);

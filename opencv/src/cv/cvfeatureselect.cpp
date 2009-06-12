@@ -97,9 +97,9 @@ void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
     // select the strongest features
     for( i = 0; i < total; i++ )
     {
-        int ofs = (const uchar*)tmpCorners[i] - eig.data;
-        int y = ofs / eig.step;
-        int x = (ofs - y*eig.step)/sizeof(float);
+        int ofs = (int)((const uchar*)tmpCorners[i] - eig.data);
+        int y = (int)(ofs / eig.step);
+        int x = (int)((ofs - y*eig.step)/sizeof(float));
 
         if( minDistance > 0 )
         {

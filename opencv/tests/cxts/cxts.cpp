@@ -44,7 +44,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <time.h>
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined _WIN64
 #include <io.h>
 #else
 #include <unistd.h>
@@ -65,7 +65,7 @@ int CvTest::test_count = 0;
 #define CV_TS_GREEN  2
 #define CV_TS_RED    4
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined _WIN64
 #include <windows.h>
 
 #ifdef _MSC_VER

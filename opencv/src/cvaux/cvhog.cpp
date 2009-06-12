@@ -706,7 +706,7 @@ void HOGDescriptor::compute(const Mat& img, Vector<float>& descriptors,
         }
         else
         {
-            pt0 = cache.getWindow(paddedImgSize, winStride, i).tl() - Point(padding);
+            pt0 = cache.getWindow(paddedImgSize, winStride, (int)i).tl() - Point(padding);
             CV_Assert(pt0.x % cacheStride.width == 0 && pt0.y % cacheStride.height == 0);
         }
 
@@ -768,7 +768,7 @@ void HOGDescriptor::detect(const Mat& img,
         }
         else
         {
-            pt0 = cache.getWindow(paddedImgSize, winStride, i).tl() - Point(padding);
+            pt0 = cache.getWindow(paddedImgSize, winStride, (int)i).tl() - Point(padding);
             CV_Assert(pt0.x % cacheStride.width == 0 && pt0.y % cacheStride.height == 0);
         }
         double s = rho;
