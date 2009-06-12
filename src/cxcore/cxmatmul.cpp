@@ -50,12 +50,12 @@ namespace cv
 \****************************************************************************************/
 
 static void
-GEMM_CopyBlock( const uchar* src, int src_step,
-                uchar* dst, int dst_step,
-                Size size, int pix_size )
+GEMM_CopyBlock( const uchar* src, size_t src_step,
+                uchar* dst, size_t dst_step,
+                Size size, size_t pix_size )
 {
     int j;
-    size.width = size.width * (pix_size / sizeof(int));
+    size.width *= (int)(pix_size / sizeof(int));
 
     for( ; size.height--; src += src_step, dst += dst_step )
     {
@@ -78,9 +78,9 @@ GEMM_CopyBlock( const uchar* src, int src_step,
 
 
 static void
-GEMM_TransposeBlock( const uchar* src, int src_step,
-                     uchar* dst, int dst_step,
-                     Size size, int pix_size )
+GEMM_TransposeBlock( const uchar* src, size_t src_step,
+                     uchar* dst, size_t dst_step,
+                     Size size, size_t pix_size )
 {
     int i, j;
     for( i = 0; i < size.width; i++, dst += dst_step, src += pix_size )
@@ -672,7 +672,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
             const float *a = (const float*)A.data,
                         *b = (const float*)B.data,
                         *c = (const float*)(C ? C->data : 0);
-            int d_step = D.step/sizeof(d[0]),
+            size_t d_step = D.step/sizeof(d[0]),
                 a_step = A.step/sizeof(a[0]),
                 b_step = B.step/sizeof(b[0]),
                 c_step = C ? C->step/sizeof(c[0]) : 0;
@@ -800,7 +800,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
             const double *a = (const double*)A.data,
                          *b = (const double*)B.data,
                          *c = (const double*)(C ? C->data : 0);
-            int d_step = D.step/sizeof(d[0]),
+            size_t d_step = D.step/sizeof(d[0]),
                 a_step = A.step/sizeof(a[0]),
                 b_step = B.step/sizeof(b[0]),
                 c_step = C ? C->step/sizeof(c[0]) : 0;
@@ -923,13 +923,13 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     }
 
     {
-    int b_step = B.step;
+    size_t b_step = B.step;
     GEMMSingleMulFunc singleMulFunc;
     GEMMBlockMulFunc blockMulFunc;
     GEMMStoreFunc storeFunc;
     Mat *_D = &D, tmat;
     const uchar* Cdata = C ? C->data : 0;
-    int Cstep = C ? C->step : 0;
+    size_t Cstep = C ? C->step : 0;
     AutoBuffer<uchar> buf;
 
     if( type == CV_32F )
@@ -1040,7 +1040,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
         uchar* d_buf = 0;
         int j, k, di = 0, dj = 0, dk = 0;
         int dm0, dn0, dk0;
-        int a_step0, a_step1, b_step0, b_step1, c_step0, c_step1;
+        size_t a_step0, a_step1, b_step0, b_step1, c_step0, c_step1;
         int work_elem_size = elem_size << (CV_MAT_DEPTH(type) == CV_32F ? 1 : 0);
 
         if( !is_a_t )
@@ -1101,7 +1101,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
             {
                 uchar* _d = _D->data + i*_D->step + j*elem_size;
                 const uchar* _c = Cdata + i*c_step0 + j*c_step1;
-                int _d_step = _D->step;
+                size_t _d_step = _D->step;
                 dj = dn0;
 
                 if( j + dj >= d_size.width || 8*(j + dj) + dj > 8*d_size.width )
@@ -1117,9 +1117,9 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
                 for( k = 0; k < len; k += dk )
                 {
                     const uchar* _a = A.data + i*a_step0 + k*a_step1;
-                    int _a_step = A.step;
+                    size_t _a_step = A.step;
                     const uchar* _b = B.data + k*b_step0 + j*b_step1;
-                    int _b_step = b_step;
+                    size_t _b_step = b_step;
                     Size a_bl_size;
 
                     dk = dk0;
@@ -1995,8 +1995,8 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
     {
         const float *s1 = (const float*)src1.data, *s2 = (const float*)src2.data;
         float* d = (float*)dst.data;
-        int step1 = src1.step/sizeof(s1[0]), step2 = src2.step/sizeof(s2[0]);
-        int step = dst.step/sizeof(d[0]);
+        size_t step1 = src1.step/sizeof(s1[0]), step2 = src2.step/sizeof(s2[0]);
+        size_t step = dst.step/sizeof(d[0]);
         float a = (float)alpha;
 
         if( size.width == 1 )
@@ -2029,8 +2029,8 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
     {
         const double *s1 = (const double*)src1.data, *s2 = (const double*)src2.data;
         double* d = (double*)dst.data;
-        int step1 = src1.step/sizeof(s1[0]), step2 = src2.step/sizeof(s2[0]);
-        int step = dst.step/sizeof(d[0]);
+        size_t step1 = src1.step/sizeof(s1[0]), step2 = src2.step/sizeof(s2[0]);
+        size_t step = dst.step/sizeof(d[0]);
 
         if( size.width == 1 )
         {
@@ -2068,10 +2068,10 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
 
 void calcCovariation( const Vector<Mat>& data, Mat& covar, Mat& _mean, int flags, int ctype )
 {
-    int nsamples = data.size();
+    int nsamples = (int)data.size();
     CV_Assert( nsamples > 0 );
     Size size = data[0].size();
-    int sz = size.width*size.height, esz = data[0].elemSize();
+    int sz = size.width*size.height, esz = (int)data[0].elemSize();
     int type = data[0].type();
     Mat mean;
     ctype = std::max(std::max(CV_MAT_DEPTH(ctype >= 0 ? ctype : type), _mean.depth()), CV_32F);
@@ -2158,11 +2158,11 @@ double mahalanobis( const Mat& v1, const Mat& v2, const Mat& icovar )
     {
         const float* src1 = (const float*)v1.data;
         const float* src2 = (const float*)v2.data;
-        int step1 = v1.step/sizeof(src1[0]);
-        int step2 = v2.step/sizeof(src2[0]);
+        size_t step1 = v1.step/sizeof(src1[0]);
+        size_t step2 = v2.step/sizeof(src2[0]);
         float* diff = (float*)(uchar*)buf;
         const float* mat = (const float*)icovar.data;
-        int matstep = icovar.step/sizeof(mat[0]);
+        size_t matstep = icovar.step/sizeof(mat[0]);
 
         for( ; sz.height--; src1 += step1, src2 += step2, diff += sz.width )
         {
@@ -2186,11 +2186,11 @@ double mahalanobis( const Mat& v1, const Mat& v2, const Mat& icovar )
     {
         const double* src1 = (const double*)v1.data;
         const double* src2 = (const double*)v2.data;
-        int step1 = v1.step/sizeof(src1[0]);
-        int step2 = v2.step/sizeof(src2[0]);
+        size_t step1 = v1.step/sizeof(src1[0]);
+        size_t step2 = v2.step/sizeof(src2[0]);
         double* diff = (double*)(uchar*)buf;
         const double* mat = (const double*)icovar.data;
-        int matstep = icovar.step/sizeof(mat[0]);
+        size_t matstep = icovar.step/sizeof(mat[0]);
 
         for( ; sz.height--; src1 += step1, src2 += step2, diff += sz.width )
         {
@@ -2228,9 +2228,9 @@ MulTransposedR( const Mat& srcmat, Mat& dstmat, const Mat& deltamat, double scal
     const sT* src = (const sT*)srcmat.data;
     dT* dst = (dT*)dstmat.data;
     const dT* delta = (const dT*)deltamat.data;
-    int srcstep = srcmat.step/sizeof(src[0]);
-    int dststep = dstmat.step/sizeof(dst[0]);
-    int deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
+    size_t srcstep = srcmat.step/sizeof(src[0]);
+    size_t dststep = dstmat.step/sizeof(dst[0]);
+    size_t deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
     int delta_cols = deltamat.cols;
     Size size = srcmat.size();
     dT* tdst = dst;
@@ -2347,9 +2347,9 @@ MulTransposedL( const Mat& srcmat, Mat& dstmat, const Mat& deltamat, double scal
     const sT* src = (const sT*)srcmat.data;
     dT* dst = (dT*)dstmat.data;
     const dT* delta = (const dT*)deltamat.data;
-    int srcstep = srcmat.step/sizeof(src[0]);
-    int dststep = dstmat.step/sizeof(dst[0]);
-    int deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
+    size_t srcstep = srcmat.step/sizeof(src[0]);
+    size_t dststep = dstmat.step/sizeof(dst[0]);
+    size_t deltastep = deltamat.rows > 1 ? deltamat.step/sizeof(delta[0]) : 0;
     int delta_cols = deltamat.cols;
     Size size = srcmat.size();
     dT* tdst = dst;
@@ -2536,7 +2536,7 @@ template<typename T, typename WT, typename ST> static double
 dotprod_( const Mat& srcmat1, const Mat& srcmat2 )
 {
     const T *src1 = (const T*)srcmat1.data, *src2 = (const T*)srcmat2.data;
-    int step1 = srcmat1.step/sizeof(src1[0]), step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step1 = srcmat1.step/sizeof(src1[0]), step2 = srcmat2.step/sizeof(src2[0]);
     ST sum = 0;
     Size size = getContinuousSize( srcmat1, srcmat2, srcmat1.channels() );
 

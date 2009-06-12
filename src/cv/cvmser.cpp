@@ -541,7 +541,7 @@ icvExtractMSER_8UC1_Pass( int* ioptr,
 			}
 			*imgptr += 0x10000;
 		}
-		int i = imgptr-ioptr;
+		int i = (int)(imgptr-ioptr);
 		ptsptr->pt = cvPoint( i&stepmask, i>>stepgap );
 		// get the current location
 		icvAccumulateMSERComp( comptr, ptsptr );

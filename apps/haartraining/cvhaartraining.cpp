@@ -67,6 +67,10 @@
 
 #endif /* CV_VERBOSE */
 
+#if defined _WIN64 && defined _MSC_VER && !defined CV_ICC
+#undef _OPENMP
+#endif
+
 typedef struct CvBackgroundData
 {
     int    count;

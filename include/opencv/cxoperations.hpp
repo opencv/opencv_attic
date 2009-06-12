@@ -946,7 +946,7 @@ template <typename _Tp> inline void Vector<_Tp>::copyTo(std::vector<_Tp>& vec) c
 }
 
 template <typename _Tp> inline Vector<_Tp>::operator CvMat() const
-{ return cvMat(1, size(), type(), (void*)hdr.data); }
+{ return cvMat(1, (int)size(), type(), (void*)hdr.data); }
 
 template <typename _Tp> inline _Tp& Vector<_Tp>::operator [] (size_t i) { CV_DbgAssert( i < size() ); return hdr.data[i]; }
 template <typename _Tp> inline const _Tp& Vector<_Tp>::operator [] (size_t i) const { CV_DbgAssert( i < size() ); return hdr.data[i]; }
@@ -1636,7 +1636,7 @@ static inline bool operator != (const FileNodeIterator& it1, const FileNodeItera
     return !(it1 == it2);
 }
 
-static inline int operator - (const FileNodeIterator& it1, const FileNodeIterator& it2)
+static inline ptrdiff_t operator - (const FileNodeIterator& it1, const FileNodeIterator& it2)
 {
     return it2.remaining - it1.remaining;
 }
@@ -1714,14 +1714,14 @@ template<typename _Tp, class _LT> void sort( Vector<_Tp>& vec, _LT LT=_LT() )
     }
     stack[48];
 
-    _Tp* array = &vec[0];
-    int total = vec.size();
+    _Tp* arr = &vec[0];
+    size_t total = vec.size();
 
     if( total <= 1 )
         return;
 
-    stack[0].lb = array;
-    stack[0].ub = array + (total - 1);
+    stack[0].lb = arr;
+    stack[0].ub = arr + (total - 1);
 
     while( sp >= 0 )
     {

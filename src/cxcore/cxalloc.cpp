@@ -219,7 +219,7 @@ struct BigBlock
     {
         first = alignPtr((Block*)(this+1), MEM_BLOCK_SIZE);
         next = _next;
-        nblocks = ((char*)this + bigBlockSize - (char*)first)/MEM_BLOCK_SIZE;
+        nblocks = (int)(((char*)this + bigBlockSize - (char*)first)/MEM_BLOCK_SIZE);
         Block* p = 0;
         for( int i = nblocks-1; i >= 0; i-- )
             p = ::new((uchar*)first + i*MEM_BLOCK_SIZE) Block(p);
@@ -460,7 +460,7 @@ void* fastMalloc( size_t size )
         if( data )
             break;
         block = mallocPool.alloc();
-        block->init(bin ? bin->prev : block, bin ? bin : block, size, tls);
+        block->init(bin ? bin->prev : block, bin ? bin : block, (int)size, tls);
         SANITY_CHECK(block);
     }
 

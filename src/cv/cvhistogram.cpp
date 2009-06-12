@@ -123,7 +123,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         CV_Assert( images.size() == dims && channels.size() == dims );
     
     imsize = images[0].size();
-    int depth = images[0].depth(), esz1 = images[0].elemSize1();
+    int depth = images[0].depth(), esz1 = (int)images[0].elemSize1();
     bool isContinuous = true;
     
     ptrs.resize(dims + 1);
@@ -141,7 +141,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         CV_Assert( 0 <= c && c < nch );
         ptrs[i] = images[i].data + c*esz1;
         deltas[i*2] = nch;
-        deltas[i*2+1] = images[i].step/esz1 - imsize.width*deltas[i*2];
+        deltas[i*2+1] = (int)(images[i].step/esz1 - imsize.width*deltas[i*2]);
     }
     
     if( mask.data )
@@ -150,7 +150,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         isContinuous = isContinuous && mask.isContinuous();
         ptrs[dims] = mask.data;
         deltas[dims*2] = 1;
-        deltas[dims*2 + 1] = mask.step/mask.elemSize1();
+        deltas[dims*2 + 1] = (int)(mask.step/mask.elemSize1());
     }
     
     if( isContinuous )
@@ -1382,7 +1382,7 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         std::swap(PH1, PH2);
     
     SparseMatConstIterator it = PH1->begin();
-    int N1 = PH1->nzcount(), N2 = PH2->nzcount();
+    int N1 = (int)PH1->nzcount(), N2 = (int)PH2->nzcount();
     
     if( method == CV_COMP_CHISQR )
     {
@@ -2123,7 +2123,7 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
             cvZero( sparsemat );
         
         cv::SparseMatConstIterator it = sH.begin();
-        int nz = sH.nzcount();
+        int nz = (int)sH.nzcount();
         for( i = 0; i < nz; i++, ++it )
             *(float*)cvPtrND(sparsemat, it.node()->idx, 0, -2) = (float)*(const int*)it.ptr;
     }

@@ -41,7 +41,7 @@
 
 #include "_highgui.h"
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined _WIN64
 
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4710 )
@@ -57,7 +57,7 @@
 static const char* trackbar_text =
 "                                                                                             ";
 
-#if defined WIN64 || defined EM64T
+#if defined WIN64 || defined _WIN64
 
 #define icvGetWindowLongPtr GetWindowLongPtr
 #define icvSetWindowLongPtr( hwnd, id, ptr ) SetWindowLongPtr( hwnd, id, (LONG_PTR)(ptr) )

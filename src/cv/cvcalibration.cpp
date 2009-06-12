@@ -2837,7 +2837,7 @@ void projectPoints( const Vector<Point3f>& objectPoints,
                     Mat& dpdc, Mat& dpddist,
                     double aspectRatio )
 {
-    size_t npoints = objectPoints.size();
+    int npoints = (int)objectPoints.size();
     imagePoints.resize(npoints);
     dpdrot.create(npoints*2, 3, CV_64F);
     dpdt.create(npoints*2, 3, CV_64F);
@@ -2885,16 +2885,16 @@ static void collectCalibrationData( const Vector<Vector<Point3f> >& objectPoints
         total += ni;
     }
 
-    npoints.create(1, nimages, CV_32S);
-    objPtMat.create(1, total, objectPoints[0].type());
-    imgPtMat.create(1, total, imagePoints[0].type());
+    npoints.create(1, (int)nimages, CV_32S);
+    objPtMat.create(1, (int)total, objectPoints[0].type());
+    imgPtMat.create(1, (int)total, imagePoints[0].type());
     if( imgPtMat2 )
-        imgPtMat2->create(1, total, imagePoints2[0].type());
+        imgPtMat2->create(1, (int)total, imagePoints2[0].type());
 
     for( i = 0; i < nimages; i++, j += ni )
     {
         ni = objectPoints[i].size();
-        ((int*)npoints.data)[i] = ni;
+        ((int*)npoints.data)[i] = (int)ni;
         Vector<Point3f> dstObjPt((Point3f*)objPtMat.data + j, ni);
         Vector<Point2f> dstImgPt((Point2f*)imgPtMat.data + j, ni);
         objectPoints[i].copyTo(dstObjPt);
@@ -2953,7 +2953,7 @@ void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
 
     size_t i, nimages = objectPoints.size();
     CV_Assert( nimages > 0 );
-    Mat objPt, imgPt, npoints, rvecM(nimages, 1, CV_32FC3), tvecM(nimages, 1, CV_32FC3);
+    Mat objPt, imgPt, npoints, rvecM((int)nimages, 1, CV_32FC3), tvecM((int)nimages, 1, CV_32FC3);
     collectCalibrationData( objectPoints, imagePoints, Vector<Vector<Point2f> >(),
                             objPt, imgPt, 0, npoints );
     CvMat _objPt = objPt, _imgPt = imgPt, _npoints = npoints;
@@ -2966,8 +2966,8 @@ void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
     tvecs.resize(nimages);
     for( i = 0; i < nimages; i++ )
     {
-        rvecM.row(i).copyTo(rvecs[i]);
-        tvecM.row(i).copyTo(tvecs[i]);
+        rvecM.row((int)i).copyTo(rvecs[i]);
+        tvecM.row((int)i).copyTo(tvecs[i]);
     }
 }
 

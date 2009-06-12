@@ -475,25 +475,16 @@ icvHoughLinesSDiv( const CvMat* img,
 *                              Probabilistic Hough Transform                             *
 \****************************************************************************************/
 
-#if defined WIN64 && defined EM64T && _MSC_VER == 1400 && !defined CV_ICC
-#pragma optimize("",off)
-#endif
-
 static void
 icvHoughLinesProbabalistic( CvMat* image,
                             float rho, float theta, int threshold,
                             int lineLength, int lineGap,
                             CvSeq *lines, int linesMax )
 {
-    CvMat* accum = 0;
-    CvMat* mask = 0;
-    CvMat* trigtab = 0;
-    CvMemStorage* storage = 0;
+    cv::Mat accum, mask;
+    cv::Vector<float> trigtab;
+    cv::MemStorage storage(cvCreateMemStorage(0));
 
-    CV_FUNCNAME( "icvHoughLinesProbalistic" );
-
-    __BEGIN__;
-    
     CvSeq* seq;
     CvSeqWriter writer;
     int width, height;
@@ -506,7 +497,7 @@ icvHoughLinesProbabalistic( CvMat* image,
     const float* ttab;
     uchar* mdata0;
 
-    CV_ASSERT( CV_IS_MAT(image) && CV_MAT_TYPE(image->type) == CV_8UC1 );
+    CV_Assert( CV_IS_MAT(image) && CV_MAT_TYPE(image->type) == CV_8UC1 );
 
     width = image->cols;
     height = image->rows;
@@ -514,22 +505,20 @@ icvHoughLinesProbabalistic( CvMat* image,
     numangle = cvRound(CV_PI / theta);
     numrho = cvRound(((width + height) * 2 + 1) / rho);
 
-    CV_CALL( accum = cvCreateMat( numangle, numrho, CV_32SC1 ));
-    CV_CALL( mask = cvCreateMat( height, width, CV_8UC1 ));
-    CV_CALL( trigtab = cvCreateMat( 1, numangle, CV_32FC2 ));
-    cvZero( accum );
-    
-    CV_CALL( storage = cvCreateMemStorage(0) );
+    accum.create( numangle, numrho, CV_32SC1 );
+    mask.create( height, width, CV_8UC1 );
+    trigtab.resize(numangle*2);
+    accum = cv::Scalar(0);
     
     for( ang = 0, n = 0; n < numangle; ang += theta, n++ )
     {
-        trigtab->data.fl[n*2] = (float)(cos(ang) * irho);
-        trigtab->data.fl[n*2+1] = (float)(sin(ang) * irho);
+        trigtab[n*2] = (float)(cos(ang) * irho);
+        trigtab[n*2+1] = (float)(sin(ang) * irho);
     }
-    ttab = trigtab->data.fl;
-    mdata0 = mask->data.ptr;
+    ttab = &trigtab[0];
+    mdata0 = mask.data;
 
-    CV_CALL( cvStartWriteSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage, &writer )); 
+    cvStartWriteSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage, &writer ); 
 
     // stage 1. collect non-zero image points
     for( pt.y = 0, count = 0; pt.y < height; pt.y++ )
@@ -560,7 +549,7 @@ icvHoughLinesProbabalistic( CvMat* image,
         CvPoint* pt = (CvPoint*)cvGetSeqElem( seq, idx );
         CvPoint line_end[2] = {{0,0}, {0,0}};
         float a, b;
-        int* adata = accum->data.i;
+        int* adata = (int*)accum.data;
         int i, j, k, x0, y0, dx0, dy0, xflag;
         int good_line;
         const int shift = 16;
@@ -696,7 +685,7 @@ icvHoughLinesProbabalistic( CvMat* image,
                 {
                     if( good_line )
                     {
-                        adata = accum->data.i;
+                        adata = (int*)accum.data;
                         for( n = 0; n < numangle; n++, adata += numrho )
                         {
                             r = cvRound( j1 * ttab[n*2] + i1 * ttab[n*2+1] );
@@ -717,23 +706,10 @@ icvHoughLinesProbabalistic( CvMat* image,
             CvRect lr = { line_end[0].x, line_end[0].y, line_end[1].x, line_end[1].y };
             cvSeqPush( lines, &lr );
             if( lines->total >= linesMax )
-                EXIT;
+                return;
         }
     }
-
-    __END__;
-
-    cvReleaseMat( &accum );
-    cvReleaseMat( &mask );
-    cvReleaseMat( &trigtab );
-    cvReleaseMemStorage( &storage );
 }
-
-
-#if defined WIN64 && defined EM64T && _MSC_VER == 1400 && !defined CV_ICC
-#pragma optimize("",on)
-#endif
-
 
 /* Wrapper function for standard hough transform */
 CV_IMPL CvSeq*

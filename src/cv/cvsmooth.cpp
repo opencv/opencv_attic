@@ -554,7 +554,7 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
     h_fine[ 16 * (n*(16*c+(x>>4)) + j) + (x & 0xF) ] op
 
     int cn = _dst.channels(), m = _dst.rows, r = (ksize-1)/2;
-    int sstep = _src.step, dstep = _dst.step;
+    size_t sstep = _src.step, dstep = _dst.step;
     Histogram CV_DECL_ALIGNED(16) H[4];
     HT luc[4][16];
 
@@ -693,7 +693,7 @@ medianBlur_8u_Om( const Mat& _src, Mat& _dst, int m )
     Size    size = _dst.size();
     const uchar* src = _src.data;
     uchar*  dst = _dst.data;
-    int     src_step = _src.step, dst_step = _dst.step;
+    int     src_step = (int)_src.step, dst_step = (int)_dst.step;
     int     cn = _src.channels();
     const uchar*  src_max = src + size.height*src_step;
 
@@ -710,8 +710,8 @@ medianBlur_8u_Om( const Mat& _src, Mat& _dst, int m )
         uchar* dst_cur = dst;
         const uchar* src_top = src;
         const uchar* src_bottom = src;
-        int    k, c;
-        int    src_step1 = src_step, dst_step1 = dst_step;
+        int k, c;
+        int src_step1 = src_step, dst_step1 = dst_step;
 
         if( x % 2 != 0 )
         {
@@ -938,8 +938,8 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
 
     const T* src = (const T*)_src.data;
     T* dst = (T*)_dst.data;
-    int sstep = _src.step/sizeof(T);
-    int dstep = _dst.step/sizeof(T);
+    int sstep = (int)(_src.step/sizeof(T));
+    int dstep = (int)(_dst.step/sizeof(T));
     Size size = _dst.size();
     int i, j, k, cn = _src.channels();
     Op op;
@@ -1243,7 +1243,7 @@ bilateralFilter_8u( const Mat& src, Mat& dst, int d,
             if( r > radius )
                 continue;
             space_weight[maxk] = (float)std::exp(r*r*gauss_space_coeff);
-            space_ofs[maxk++] = i*temp.step + j*cn;
+            space_ofs[maxk++] = (int)(i*temp.step + j*cn);
         }
 
     for( i = 0; i < size.height; i++ )
@@ -1369,7 +1369,7 @@ bilateralFilter_32f( const Mat& src, Mat& dst, int d,
             if( r > radius )
                 continue;
             space_weight[maxk] = (float)std::exp(r*r*gauss_space_coeff);
-            space_ofs[maxk++] = i*(temp.step/sizeof(float)) + j*cn;
+            space_ofs[maxk++] = (int)(i*(temp.step/sizeof(float)) + j*cn);
         }
 
     for( i = 0; i < size.height; i++ )

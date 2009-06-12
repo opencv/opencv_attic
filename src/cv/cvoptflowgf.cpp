@@ -197,7 +197,7 @@ FarnebackUpdateMatrices( const Mat& _R0, const Mat& _R1, const Mat& _flow, Mat& 
 
     int x, y, width = _flow.cols, height = _flow.rows;
     const float* R1 = (float*)_R1.data;
-    int step1 = _R1.step/sizeof(R1[0]);
+    size_t step1 = _R1.step/sizeof(R1[0]);
     
     _M.create(height, width, CV_32FC(5));
 

@@ -70,7 +70,7 @@ double determinant( const Mat& mat )
 {
     double result = 0;
     int type = mat.type(), rows = mat.rows;
-    int step = mat.step;
+    size_t step = mat.step;
     const uchar* m = mat.data;
 
     CV_Assert( mat.rows == mat.cols );
@@ -191,8 +191,8 @@ double invert( const Mat& src, Mat& dst, int method )
         {
             uchar* srcdata = src.data;
             uchar* dstdata = dst.data;
-            int srcstep = src.step;
-            int dststep = dst.step;
+            size_t srcstep = src.step;
+            size_t dststep = dst.step;
 
             if( src.rows == 2 )
             {
@@ -316,7 +316,7 @@ double invert( const Mat& src, Mat& dst, int method )
 
         {
         integer n = dst.cols, lwork=-1, elem_size = CV_ELEM_SIZE(type),
-            lda = dst.step/elem_size, piv1=0, info=0;
+            lda = (int)(dst.step/elem_size), piv1=0, info=0;
 
         if( dst.data == src.data )
         {
@@ -413,9 +413,9 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
         uchar* srcdata = src.data;
         uchar* bdata = src2.data;
         uchar* dstdata = dst.data;
-        int srcstep = src.step;
-        int src2step = src2.step;
-        int dststep = dst.step;
+        size_t srcstep = src.step;
+        size_t src2step = src2.step;
+        size_t dststep = dst.step;
 
         if( src.rows == 2 )
         {
@@ -638,8 +638,8 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
         gemm( src2, src, 1, Mat(), 0, xt, GEMM_1_T );
     }
     
-    lda = at.step ? at.step/elem_size : at.cols;
-    ldx = xt.step ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n);
+    lda = (int)(at.step ? at.step/elem_size : at.cols);
+    ldx = (int)(xt.step ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n));
 
     if( method == DECOMP_SVD || method == DECOMP_EIG )
     {
@@ -730,8 +730,8 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
     AutoBuffer<uchar> buf;
 
     int type = src.type();
-    int elem_size = src.elemSize();
-    lda = src.step/elem_size;
+    int elem_size = (int)src.elemSize();
+    lda = (int)(src.step/elem_size);
     n = ldv = src.rows;
 
     CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
@@ -742,7 +742,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
     if( computeEvects )
     {
         evects.create(n, n, type);
-        ldv = evects.step/elem_size;
+        ldv = (int)(evects.step/elem_size);
     }
 
     bool copy_evals = !evals.isContinuous();
@@ -927,7 +927,7 @@ SVBkSb( int m, int n, const T* w, int incw,
 SVD& SVD::operator ()(const Mat& a, int flags)
 {
     integer m = a.rows, n = a.cols, mn = std::max(m, n), nm = std::min(m, n);
-    int type = a.type(), elem_size = a.elemSize();
+    int type = a.type(), elem_size = (int)a.elemSize();
     
     if( flags & NO_UV )
     {
@@ -1015,11 +1015,11 @@ SVD& SVD::operator ()(const Mat& a, int flags)
 
     if( mode[0] != 'N' )
     {
-        ldv = vt.step ? vt.step/elem_size : vt.cols;
-        ldu = u.step ? u.step/elem_size : u.cols;
+        ldv = (int)(vt.step ? vt.step/elem_size : vt.cols);
+        ldu = (int)(u.step ? u.step/elem_size : u.cols);
     }
 
-    lda = _a.step ? _a.step/elem_size : _a.cols;
+    lda = (int)(_a.step ? _a.step/elem_size : _a.cols);
     if( type == CV_32F )
     {
         sgesdd_(mode, &n, &m, (float*)_a.data, &lda, (float*)w.data,
@@ -1039,7 +1039,7 @@ SVD& SVD::operator ()(const Mat& a, int flags)
 
 void SVD::backSubst( const Mat& rhs, Mat& dst ) const
 {
-    int type = w.type(), esz = w.elemSize();
+    int type = w.type(), esz = (int)w.elemSize();
     int m = u.rows, n = vt.cols, nb = rhs.data ? rhs.cols : m;
     AutoBuffer<double> buffer(nb);
     CV_Assert( u.data && vt.data && w.data );
@@ -1049,13 +1049,13 @@ void SVD::backSubst( const Mat& rhs, Mat& dst ) const
 
     dst.create( n, nb, type );
     if( type == CV_32F )
-        SVBkSb(m, n, (float*)w.data, 1, (float*)u.data, u.step/esz, false,
-            (float*)vt.data, vt.step/esz, true, (float*)rhs.data, rhs.step/esz,
-            nb, (float*)dst.data, dst.step/esz, buffer, 10*FLT_EPSILON );
+        SVBkSb(m, n, (float*)w.data, 1, (float*)u.data, (int)(u.step/esz), false,
+            (float*)vt.data, (int)(vt.step/esz), true, (float*)rhs.data, (int)(rhs.step/esz),
+            nb, (float*)dst.data, (int)(dst.step/esz), buffer, 10*FLT_EPSILON );
     else if( type == CV_64F )
-        SVBkSb(m, n, (double*)w.data, 1, (double*)u.data, u.step/esz, false,
-            (double*)vt.data, vt.step/esz, true, (double*)rhs.data, rhs.step/esz,
-            nb, (double*)dst.data, dst.step/esz, buffer, 2*DBL_EPSILON );
+        SVBkSb(m, n, (double*)w.data, 1, (double*)u.data, (int)(u.step/esz), false,
+            (double*)vt.data, (int)(vt.step/esz), true, (double*)rhs.data, (int)(rhs.step/esz),
+            nb, (double*)dst.data, (int)(dst.step/esz), buffer, 2*DBL_EPSILON );
     else
         CV_Error( CV_StsUnsupportedFormat, "" );
 }
@@ -1191,8 +1191,8 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
     int m = !uT ? u.rows : u.cols;
     int n = vT ? v.cols : v.rows;
     int nm = std::min(n, m), nb;
-    int esz = w.elemSize();
-    int incw = w.size() == cv::Size(nm, 1) ? 1 : w.step/esz + (w.cols > 1 && w.rows > 1);
+    int esz = (int)w.elemSize();
+    int incw = w.size() == cv::Size(nm, 1) ? 1 : (int)(w.step/esz) + (w.cols > 1 && w.rows > 1);
 
     CV_Assert( type == u.type() && type == v.type() &&
         type == dst.type() && dst.rows == n &&
@@ -1213,11 +1213,11 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
     cv::AutoBuffer<double> buffer(nb);
 
     if( type == CV_32F )
-        cv::SVBkSb(m, n, (float*)w.data, incw, (float*)u.data, u.step/esz, uT,
-            (float*)v.data, v.step/esz, vT, (float*)rhs.data, rhs.step/esz,
-            nb, (float*)dst.data, dst.step/esz, buffer, 2*FLT_EPSILON );
+        cv::SVBkSb(m, n, (float*)w.data, incw, (float*)u.data, (int)(u.step/esz), uT,
+            (float*)v.data, (int)(v.step/esz), vT, (float*)rhs.data, (int)(rhs.step/esz),
+            nb, (float*)dst.data, (int)(dst.step/esz), buffer, 2*FLT_EPSILON );
     else
-        cv::SVBkSb(m, n, (double*)w.data, incw, (double*)u.data, u.step/esz, uT,
-            (double*)v.data, v.step/esz, vT, (double*)rhs.data, rhs.step/esz,
-            nb, (double*)dst.data, dst.step/esz, buffer, 2*DBL_EPSILON );
+        cv::SVBkSb(m, n, (double*)w.data, incw, (double*)u.data, (int)(u.step/esz), uT,
+            (double*)v.data, (int)(v.step/esz), vT, (double*)rhs.data, (int)(rhs.step/esz),
+            nb, (double*)dst.data, (int)(dst.step/esz), buffer, 2*DBL_EPSILON );
 }

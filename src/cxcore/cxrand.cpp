@@ -562,7 +562,8 @@ randShuffle_( Mat& _arr, RNG& rng, double iterFactor )
     else
     {
         uchar* data = _arr.data;
-        int step = _arr.step, cols = _arr.cols;
+        size_t step = _arr.step;
+        int cols = _arr.cols;
         for( int i = 0; i < iters; i++ )
         {
             int j1 = (unsigned)rng % sz, k1 = (unsigned)rng % sz;

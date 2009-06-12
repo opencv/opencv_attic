@@ -1084,7 +1084,7 @@ static Mat _findHomography( const Vector<Point2f>& srcPoints,
     if( mask )
     {
         mask->resize(srcPoints.size());
-        pmask = &(_mask = cvMat(1, mask->size(), CV_8U, (void*)&(*mask)[0]));
+        pmask = &(_mask = cvMat(1, (int)mask->size(), CV_8U, (void*)&(*mask)[0]));
     }
     bool ok = cvFindHomography( &_pt1, &_pt2, &_H, method, ransacReprojThreshold, pmask ) > 0;
     if( !ok )
@@ -1118,7 +1118,7 @@ static Mat _findFundamentalMat( const Vector<Point2f>& points1,
     if( mask )
     {
         mask->resize(points1.size());
-        pmask = &(_mask = cvMat(1, mask->size(), CV_8U, (void*)&(*mask)[0]));
+        pmask = &(_mask = cvMat(1, (int)mask->size(), CV_8U, (void*)&(*mask)[0]));
     }
     int n = cvFindFundamentalMat( &_pt1, &_pt2, &_F, method, param1, param2, pmask );
     if( n <= 0 )

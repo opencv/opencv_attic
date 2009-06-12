@@ -2157,7 +2157,7 @@ void drawChessboardCorners( Mat& image, Size patternSize,
 {
     CvMat _image = image;
     cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)&corners[0],
-                             corners.size(), patternWasFound );
+                             (int)corners.size(), patternWasFound );
 }
 
 }

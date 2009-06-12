@@ -52,7 +52,7 @@
 #define capSendMessage(hwnd,m,w,l) (IsWindow(hwnd)?SendMessage(hwnd,m,w,l):0)
 #endif
 
-#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined __ICL
+#if (defined WIN64 || defined _WIN64) && defined _MSC_VER && !defined __ICL
 #pragma optimize("",off)
 #endif
 

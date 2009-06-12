@@ -143,7 +143,7 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
     _dstType = CV_MAT_TYPE(_dstType);
         
     srcType = _srcType;
-    int srcElemSize = getElemSize(srcType);
+    int srcElemSize = (int)getElemSize(srcType);
     dstType = _dstType;
     bufType = _bufType;
     
@@ -202,8 +202,8 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
         roi.x + roi.width <= wholeSize.width &&
         roi.y + roi.height <= wholeSize.height );
 
-    int esz = getElemSize(srcType);
-    int bufElemSize = getElemSize(bufType);
+    int esz = (int)getElemSize(srcType);
+    int bufElemSize = (int)getElemSize(bufType);
     const uchar* constVal = !constBorderValue.empty() ? &constBorderValue[0] : 0;
 
     if( _maxBufRows < 0 )
@@ -338,7 +338,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
     CV_Assert( wholeSize.width > 0 && wholeSize.height > 0 );
     
     const int *btab = &borderTab[0];
-    int esz = getElemSize(srcType), btab_esz = borderElemSize;
+    int esz = (int)getElemSize(srcType), btab_esz = borderElemSize;
     uchar** brows = &rows[0];
     int bufRows = (int)rows.size();
     int cn = CV_MAT_CN(bufType);
@@ -446,7 +446,7 @@ void FilterEngine::apply(const Mat& src, Mat& dst,
         dstOfs.y + srcRoi.height <= dst.rows );
 
     int y = start(src, srcRoi, isolated);
-    proceed( src.data + y*src.step, src.step, endY - startY, dst.data, dst.step );
+    proceed( src.data + y*src.step, (int)src.step, endY - startY, dst.data, (int)dst.step );
 }
 
 

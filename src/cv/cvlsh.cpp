@@ -87,7 +87,7 @@ public:
     const T* p = (const T*)_p;
     int i;
     if (free_data.empty()) {
-      i = data.size();
+      i = (int)data.size();
       data.insert(data.end(), d, 0);
     } else {
       i = free_data.end()[-1];
@@ -106,13 +106,13 @@ public:
     data.reserve(n * d);
   }
   virtual unsigned int vector_count() {
-    return data.size() / d - free_data.size();
+    return (unsigned)(data.size() / d - free_data.size());
   }
 
   virtual void hash_insert(lsh_hash h, int /*l*/, int i) {
     int ii;
     if (free_nodes.empty()) {
-      ii = nodes.size();
+      ii = (int)nodes.size();
       nodes.push_back(node());
     } else {
       ii = free_nodes.end()[-1];

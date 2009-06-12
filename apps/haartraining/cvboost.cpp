@@ -182,15 +182,8 @@ float cvEvalStumpClassifier( CvClassifier* classifier, CvMat* sample )
     if( (CV_MAT_ELEM( (*sample), float, 0,
             ((CvStumpClassifier*) classifier)->compidx )) <
         ((CvStumpClassifier*) classifier)->threshold ) 
-    {
         return ((CvStumpClassifier*) classifier)->left;
-    }
-    else
-    {
-        return ((CvStumpClassifier*) classifier)->right;
-    }
-
-    return 0.0F;
+    return ((CvStumpClassifier*) classifier)->right;
 }
 
 #define ICV_DEF_FIND_STUMP_THRESHOLD( suffix, type, error )                              \

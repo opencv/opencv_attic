@@ -176,7 +176,7 @@ static int countNonZero_( const Mat& srcmat )
 {
     //assert( DataType<T>::type == srcmat.type() );
     const T* src = (const T*)srcmat.data;
-    int step = srcmat.step/sizeof(src[0]);
+    size_t step = srcmat.step/sizeof(src[0]);
     Size size = getContinuousSize( srcmat );
     int nz = 0;
 
@@ -532,7 +532,7 @@ minMaxIndx_( const Mat& srcmat, double* minVal, double* maxVal, int* minLoc, int
 {
     assert( DataType<T>::type == srcmat.type() );
     const T* src = (const T*)srcmat.data;
-    int step = srcmat.step/sizeof(src[0]);
+    size_t step = srcmat.step/sizeof(src[0]);
     T min_val = src[0], max_val = min_val;
     int min_loc = 0, max_loc = 0;
     int x, loc = 0;
@@ -572,8 +572,8 @@ minMaxIndxMask_( const Mat& srcmat, const Mat& maskmat,
         srcmat.size() == maskmat.size() );
     const T* src = (const T*)srcmat.data;
     const uchar* mask = maskmat.data;
-    int step = srcmat.step/sizeof(src[0]);
-    int maskstep = maskmat.step;
+    size_t step = srcmat.step/sizeof(src[0]);
+    size_t maskstep = maskmat.step;
     T min_val = 0, max_val = 0;
     int min_loc = -1, max_loc = -1;
     int x = 0, y, loc = 0;

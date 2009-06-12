@@ -56,7 +56,7 @@
         typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
         typedef int BOOL;
     #endif
-    #if defined WIN32 || defined WIN64
+    #if defined WIN32 || defined WIN64 || defined _WIN64
       #include "ipl.h"
     #else
       #include "ipl/ipl.h"

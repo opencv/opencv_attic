@@ -299,7 +299,7 @@ pyrDown_( const Mat& _src, Mat& _dst )
             rows[k] = buf + ((y*2 - PD_SZ/2 + k - sy0) % PD_SZ)*bufstep;
         row0 = rows[0]; row1 = rows[1]; row2 = rows[2]; row3 = rows[3]; row4 = rows[4];
 
-        x = vecOp((const uchar**)rows, (uchar*)dst, _dst.step, dsize.width);
+        x = vecOp((const uchar**)rows, (uchar*)dst, (int)_dst.step, dsize.width);
         for( ; x < dsize.width; x++ )
             dst[x] = castOp(row2[x]*6 + (row1[x] + row3[x])*4 + row0[x] + row4[x]);
     }
@@ -386,7 +386,7 @@ pyrUp_( const Mat& _src, Mat& _dst )
             rows[k] = buf + ((y - PU_SZ/2 + k - sy0) % PU_SZ)*bufstep;
         row0 = rows[0]; row1 = rows[1]; row2 = rows[2];
 
-        x = vecOp((const uchar**)rows, (uchar*)dst0, _dst.step, dsize.width);
+        x = vecOp((const uchar**)rows, (uchar*)dst0, (int)_dst.step, dsize.width);
         for( ; x < dsize.width; x++ )
         {
             T t1 = castOp((row1[x] + row2[x])*4);
