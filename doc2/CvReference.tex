@@ -1,6 +1,10 @@
 \chapter{CvReference}
 \section{Image Processing}
-Note: The chapter describes functions for image processing and analysis. Most of the functions work with 2d arrays of pixels. We refer to the arrays as "images"; however, they do not have to be of type `IplImage`, they may be `CvMat` or `CvMatND` as well.
+
+Note: The chapter describes functions for image processing and
+analysis. Most of the functions work with 2d arrays of pixels. We refer
+to the arrays as "images"; however, they do not have to be of type
+\cross{IplImage}, they may be \cross{CvMat} or \cross{CvMatND} as well.
 
 \subsection{Gradients, Edges and Corners}
 
@@ -23,11 +27,11 @@ int aperture\_size=3 );
 
 }{CPP}{PYTHON}
 \begin{description}
-\cvarg{ src}{Source image of type CvArr*}
-\cvarg{ dst}{Destination image}
-\cvarg{ xorder}{Order of the derivative x }
-\cvarg{ yorder}{Order of the derivative y }
-\cvarg{ aperture\_size}{Size of the extended Sobel kernel, must be 1, 3, 5 or 7}
+\cvarg{src}{Source image of type CvArr*}
+\cvarg{dst}{Destination image}
+\cvarg{xorder}{Order of the derivative x}
+\cvarg{yorder}{Order of the derivative y}
+\cvarg{aperture\_size}{Size of the extended Sobel kernel, must be 1, 3, 5 or 7}
 \end{description}
 
 In all cases except 1, an $\texttt{aperture\_size} \times
