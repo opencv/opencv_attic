@@ -2706,7 +2706,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
     AutoBuffer<int> _abdelta(width*2);
     int* adelta = &_abdelta[0], *bdelta = adelta + width;
-    const int AB_BITS = std::max(10, (int)INTER_BITS);
+    const int AB_BITS = MAX(10, (int)INTER_BITS);
     const int AB_SCALE = 1 << AB_BITS;
     int round_delta = interpolation == INTER_NEAREST ? AB_SCALE/2 : AB_SCALE/INTER_TAB_SIZE/2;
 
