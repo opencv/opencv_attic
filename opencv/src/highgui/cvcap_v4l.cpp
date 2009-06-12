@@ -239,10 +239,6 @@ make & enjoy!
 #define MAX_V4L_BUFFERS 10
 #define DEFAULT_V4L_BUFFERS 4
 
-// if enabled, copies data from the buffer. this uses a bit more memory,
-//  but much more reliable for some UVC cameras
-#define USE_TEMP_BUFFER
-
 // if enabled, then bad JPEG warnings become errors and cause NULL returned instead of image
 #define V4L_ABORT_BADJPEG
 
@@ -308,7 +304,6 @@ typedef struct CvCaptureCAM_V4L
    struct v4l2_crop crop;
    struct v4l2_cropcap cropcap;
    struct v4l2_requestbuffers req;
-   struct v4l2_jpegcompression compr;
    struct v4l2_control control;
    enum v4l2_buf_type type;
    struct v4l2_queryctrl queryctrl;
@@ -573,19 +568,6 @@ static int autosetup_capture_mode_v4l2(CvCaptureCAM_V4L* capture)
   else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SN9C10X) == 0)
   {
-    CLEAR (capture->compr);
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_G_JPEGCOMP, &capture->compr)) {
-        perror ("VIDIOC_G_JPEGCOMP");
-        return -1;
-    }
-
-    capture->compr.quality = 0;
-
-    if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_JPEGCOMP, &capture->compr)) {
-        perror ("VIDIOC_S_JPEGCOMP");
-        return -1;
-    }
-
     PALETTE_SN9C10X = 1;
   } else
   if (try_palette_v4l2(capture, V4L2_PIX_FMT_SBGGR8) == 0)
@@ -984,12 +966,10 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
            return -1;
        }
 
-#ifdef USE_TEMP_BUFFER
        if (n_buffers == 0) {
 	 capture->buffers[MAX_V4L_BUFFERS].start = malloc( buf.length );
 	 capture->buffers[MAX_V4L_BUFFERS].length = buf.length;
-       };
-#endif
+       }
    }
 
    /* Set up Image data */
@@ -1053,6 +1033,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
      if(capture->capability.channels>0) {
 
        struct video_channel selectedChannel;
+       memset(&selectedChannel, 0, sizeof(selectedChannel));
 
        selectedChannel.channel=CHANNEL_NUMBER;
        if (ioctl(capture->deviceHandle, VIDIOCGCHAN , &selectedChannel) != -1) {
@@ -1218,16 +1199,12 @@ static int read_frame_v4l2(CvCaptureCAM_V4L* capture) {
 
    assert(buf.index < capture->req.count);
 
-#ifdef USE_TEMP_BUFFER
    memcpy(capture->buffers[MAX_V4L_BUFFERS].start,
 	  capture->buffers[buf.index].start,
 	  capture->buffers[MAX_V4L_BUFFERS].length );
    capture->bufferIndex = MAX_V4L_BUFFERS;
    //printf("got data in buff %d, len=%d, flags=0x%X, seq=%d, used=%d)\n",
    //	  buf.index, buf.length, buf.flags, buf.sequence, buf.bytesused);
-#else
-   capture->bufferIndex = buf.index;
-#endif
 
    if (-1 == xioctl (capture->deviceHandle, VIDIOC_QBUF, &buf))
        perror ("VIDIOC_QBUF");
@@ -2789,6 +2766,11 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
            }
        }
 
+       if (capture->buffers[MAX_V4L_BUFFERS].start)
+       {
+    	   free(capture->buffers[MAX_V4L_BUFFERS].start);
+    	   capture->buffers[MAX_V4L_BUFFERS].start = 0;
+       }
      }
 #endif /* HAVE_CAMV4L2 */
 
