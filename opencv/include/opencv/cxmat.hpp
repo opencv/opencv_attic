@@ -453,7 +453,7 @@ template<typename _Tp> template<int n> inline Mat_<_Tp>::Mat_(const Vec_<_Tp, n>
 }
 
 template<typename _Tp> inline Mat_<_Tp>::Mat_(const Vector<_Tp>& vec)
-    : Mat(1, (int)vec.size(), DataType<_Tp>::type, (void*)&vec[0])
+    : Mat((int)vec.size(), 1, DataType<_Tp>::type, (void*)&vec[0])
 {}
 
 template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const Mat& m)
