@@ -679,7 +679,12 @@ void cvSetImageCOI( \par IplImage* image,\par int coi );
 \cvarg{coi}{The channel of interest. 0 - all channels are selected, 1 - first channel is selected, etc. Note that the channel indices become 1-based.}
 \end{description}
 
-If the ROI is set to \texttt{NULL} and the coi is \textit{not} 0, the ROI is allocated. Most OpenCV functions do \textit{not} support the COI setting, so to process an individual image/matrix channel one may copy (via \cross{Copy} or \cross{Split}) the channel to a separate image/matrix, process it and then copy the result back (via \cross{Copy} or \cross{CvtPlaneToPix}) if needed.
+If the ROI is set to \texttt{NULL} and the coi is \textit{not} 0,
+the ROI is allocated. Most OpenCV functions do \textit{not} support
+the COI setting, so to process an individual image/matrix channel one
+may copy (via \cross{Copy} or \cross{Split}) the channel to a separate
+image/matrix, process it and then copy the result back (via \cross{Copy}
+or \cross{Merge}) if needed.
 
 \cvfunc{GetImageCOI}\label{GetImageCOI}
 
@@ -2006,13 +2011,17 @@ void cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 
 The function \texttt{cvLUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as following:
 
-\begin{lstlisting}
+\[
+\texttt{dst}_i \leftarrow \texttt{lut}_{\texttt{src}_i + d}
+\]
 
-dst(I)=lut[src(I)+DELTA]
+where
 
-\end{lstlisting}
-
-where \texttt{DELTA=0} if \texttt{src} has depth \texttt{CV\_8U}, and 'DELTA=128' if \texttt{src} has depth \texttt{CV\_8S}.
+\[
+d = \fork
+{0}{if \texttt{src} has depth \texttt{CV\_8U}}
+{128}{if \texttt{src} has depth \texttt{CV\_8S}}
+\]
 
 \cvfunc{ConvertScale}\label{ConvertScale}
 
