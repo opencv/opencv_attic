@@ -1277,7 +1277,7 @@ template<typename _Tp> struct VectorCommaInitializer_
     int idx;
 };
 
-template<typename _Tp, size_t fixed_size=CV_MAX_LOCAL_SIZE> struct CV_EXPORTS AutoBuffer
+template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> struct CV_EXPORTS AutoBuffer
 {
     typedef _Tp value_type;
 
