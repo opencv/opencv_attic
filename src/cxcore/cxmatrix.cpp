@@ -740,6 +740,204 @@ void sortIdx( const Mat& src, Mat& dst, int flags )
     func( src, dst, flags );
 }
 
+static void generateRandomCenter(const Vector<Vec2f>& box, float* center, RNG& rng)
+{
+    size_t j, dims = box.size();
+    float margin = 1.f/dims;
+    for( j = 0; j < dims; j++ )
+        center[j] = ((float)rng*(1.f+margin*2.f)-margin)*(box[j][1] - box[j][0]) + box[j][0];
+}
+
+double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria criteria,
+               int attempts, RNG* rng, int flags, Mat* _centers )
+{
+    int N = data.rows, dims = data.cols, type = data.type();
+    
+    CV_Assert( type == CV_32F && K > 0 && attempts > 0 );
+
+    Vector<int> labels;
+    if( flags & CV_KMEANS_USE_INITIAL_LABELS )
+    {
+        CV_Assert( best_labels.size() == (size_t)N );
+        best_labels.copyTo(labels);
+    }
+    else
+        labels.resize(N);
+
+    Mat centers(K, dims, type), old_centers(K, dims, type);
+    Vector<int> counters(K);
+    Vector<Vec2f> _box(dims);
+    Vec2f* box = &_box[0];
+
+    double best_compactness = DBL_MAX, compactness = 0;
+    RNG default_rng;
+    if( !rng )
+        rng = &default_rng;
+    int a, iter, i, j, k;
+
+    if( criteria.type & TermCriteria::EPS )
+        criteria.epsilon = std::max(criteria.epsilon, 0.);
+    else
+        criteria.epsilon = FLT_EPSILON;
+    criteria.epsilon *= criteria.epsilon;
+
+    if( criteria.type & TermCriteria::COUNT )
+        criteria.maxCount = std::min(std::max(criteria.maxCount, 2), 100);
+    else
+        criteria.maxCount = 100;
+
+    if( K == 1 )
+    {
+        attempts = 1;
+        criteria.maxCount = 2;
+    }
+
+    const float* sample = (const float*)data.ptr(0);
+    for( j = 0; j < dims; j++ )
+        box[j] = Vec2f(sample[j], sample[j]);
+
+    for( i = 1; i < N; i++ )
+    {
+        sample = (const float*)data.ptr(i);
+        for( j = 0; j < dims; j++ )
+        {
+            float v = sample[j];
+            box[j][0] = std::min(box[j][0], v);
+            box[j][1] = std::max(box[j][1], v);
+        }
+    }
+
+    for( a = 0; a < attempts; a++ )
+    {
+        double max_center_shift = DBL_MAX;
+        for( iter = 0; iter < criteria.maxCount && max_center_shift > criteria.epsilon; iter++ )
+        {
+            swap(centers, old_centers);
+
+            if( iter == 0 && (a > 0 || !(flags & CV_KMEANS_USE_INITIAL_LABELS)) )
+            {
+                for( k = 0; k < K; k++ )
+                    generateRandomCenter(_box, (float*)centers.ptr(k), *rng);
+            }
+            else
+            {
+                if( iter == 0 && a == 0 && (flags & CV_KMEANS_USE_INITIAL_LABELS) )
+                {
+                    for( i = 0; i < N; i++ )
+                        CV_Assert( (unsigned)labels[i] < (unsigned)K );
+                }
+            
+                // compute centers
+                centers = Scalar(0);
+                for( k = 0; k < K; k++ )
+                    counters[k] = 0;
+
+                for( i = 0; i < N; i++ )
+                {
+                    sample = (const float*)data.ptr(i);
+                    k = labels[i];
+                    float* center = (float*)centers.ptr(k);
+                    for( j = 0; j <= dims - 4; j += 4 )
+                    {
+                        float t0 = center[j] + sample[j];
+                        float t1 = center[j+1] + sample[j+1];
+
+                        center[j] = t0;
+                        center[j+1] = t1;
+
+                        t0 = center[j+2] + sample[j+2];
+                        t1 = center[j+3] + sample[j+3];
+
+                        center[j+2] = t0;
+                        center[j+3] = t1;
+                    }
+                    for( ; j < dims; j++ )
+                        center[j] += sample[j];
+                    counters[k]++;
+                }
+
+                if( iter > 0 )
+                    max_center_shift = 0;
+
+                for( k = 0; k < K; k++ )
+                {
+                    float* center = (float*)centers.ptr(k);
+                    if( counters[k] != 0 )
+                    {
+                        float scale = 1.f/counters[k];
+                        for( j = 0; j < dims; j++ )
+                            center[j] *= scale;
+                    }
+                    else
+                        generateRandomCenter(_box, center, *rng);
+                    
+                    if( iter > 0 )
+                    {
+                        double dist = 0;
+                        const float* old_center = (const float*)old_centers.ptr(k);
+                        for( j = 0; j < dims; j++ )
+                        {
+                            double t = center[j] - old_center[j];
+                            dist += t*t;
+                        }
+                        max_center_shift = std::max(max_center_shift, dist);
+                    }
+                }
+            }
+
+            // assign labels
+            compactness = 0;
+            for( i = 0; i < N; i++ )
+            {
+                sample = (const float*)data.ptr(i);
+                int k_best = 0;
+                double min_dist = DBL_MAX;
+
+                for( k = 0; k < K; k++ )
+                {
+                    const float* center = (const float*)centers.ptr(k);
+                    double dist = 0;
+                    
+                    for( j = 0; j <= dims - 4; j += 4 )
+                    {
+                        double t0 = center[j] - sample[j];
+                        double t1 = center[j+1] - sample[j+1];
+                        dist += t0*t0 + t1*t1;
+                        t0 = center[j+2] - sample[j+2];
+                        t1 = center[j+3] - sample[j+3];
+                        dist += t0*t0 + t1*t1;
+                    }
+
+                    for( ; j < dims; j++ )
+                    {
+                        double t = center[j] - sample[j];
+                        dist += t*t;
+                    }
+
+                    if( min_dist > dist )
+                    {
+                        min_dist = dist;
+                        k_best = k;
+                    }
+                }
+
+                compactness += min_dist;
+                labels[i] = k_best;
+            }
+        }
+
+        if( compactness < best_compactness )
+        {
+            best_compactness = compactness;
+            if( _centers )
+                centers.copyTo(*_centers);
+            labels.copyTo(best_labels);
+        }
+    }
+
+    return best_compactness;
+}
+
 }
 
 
@@ -890,264 +1088,24 @@ cvSort( const CvArr* _src, CvArr* _dst, CvArr* _idx, int flags )
 
 
 CV_IMPL int
-cvKMeans2( const CvArr* samples_arr, int cluster_count, CvArr* labels_arr,
+cvKMeans2( const CvArr* _samples, int cluster_count, CvArr* _labels,
            CvTermCriteria termcrit, int attempts, CvRNG* _rng,
-           int flags, CvArr* centers_arr, double* _compactness )
+           int flags, CvArr* _centers, double* _compactness )
 {
-    int best_niters = 0;
-    CvMat* best_labels = 0;
-    CvMat* centers = 0;
-    CvMat* old_centers = 0;
-    CvMat* counters = 0;
-
-    double best_compactness = DBL_MAX;
-    CvTermCriteria termcrit0;
-    CvMat samples_stub, *samples = cvGetMat(samples_arr, &samples_stub);
-    CvMat labels_stub, *labels = cvGetMat(labels_arr, &labels_stub), *labels0 = labels;
-    CvMat centers_stub, *_centers = 0;
-    CvRNG default_rng = CvRNG(-1), *rng = _rng ? _rng : &default_rng;
-    CvMat* temp = 0;
-    int a, i, j, k, sample_count, dims;
-    int ids_delta, iter;
-    double max_dist;
-
-    if( cluster_count < 1 )
-        CV_Error( CV_StsOutOfRange, "Number of clusters should be positive" );
-
-    if( CV_MAT_DEPTH(samples->type) != CV_32F || CV_MAT_TYPE(labels->type) != CV_32SC1 )
-        CV_Error( CV_StsUnsupportedFormat,
-        "samples should be floating-point matrix, cluster_idx - integer vector" );
-
-    if( (labels->rows != 1 && (labels->cols != 1 || !CV_IS_MAT_CONT(labels->type))) ||
-        labels->rows + labels->cols - 1 != samples->rows )
-        CV_Error( CV_StsUnmatchedSizes,
-        "cluster_idx should be 1D vector of the same number of elements as samples' number of rows" );
-
-    termcrit = cvCheckTermCriteria( termcrit, 1e-6, 100 );
-
-    termcrit.epsilon *= termcrit.epsilon;
-    termcrit0 = termcrit;
-    sample_count = samples->rows;
-
-    cluster_count = MIN( cluster_count, sample_count );
-    dims = samples->cols*CV_MAT_CN(samples->type);
-    ids_delta = labels->step ? labels->step/(int)sizeof(int) : 1;
-
-    best_labels = cvCreateMat( sample_count, 1, CV_32SC1 );
-    centers = cvCreateMat( cluster_count, dims, CV_64FC1 );
-    old_centers = cvCreateMat( cluster_count, dims, CV_64FC1 );
-    counters = cvCreateMat( 1, cluster_count, CV_32SC1 );
-
-    if( centers_arr )
-    {
-        _centers = cvGetMat( centers_arr, &centers_stub );
-        if( _centers->rows != cluster_count || _centers->cols != dims ||
-            CV_MAT_CN(_centers->type) != 1 )
-            CV_Error( CV_StsBadSize, "The output array of centers should be 1-channel, "
-            "have as many rows as the number of clusters and "
-            "as many columns as the samples' dimensionality" );
-    }
-
-    counters->cols = cluster_count; // cut down counters
-    max_dist = termcrit.epsilon*2;
-
-    attempts = MAX( attempts, 1 );
-
-    for( a = 0; a < attempts; a++ )
-    {
-        // init labels
-        if( a > 0 || !(flags & CV_KMEANS_USE_INITIAL_LABELS) )
-        {
-            for( i = 0; i < sample_count; i++ )
-                labels->data.i[i] = cvRandInt(rng) % cluster_count;
-        }
-        else
-        {
-            for( i = 0; i < sample_count; i++ )
-                if( (unsigned)labels->data.i[i] >= (unsigned)cluster_count )
-                    CV_Error( CV_StsOutOfRange, "One of provided labels is out of range" );
-        }
-
-        for( iter = 0;; iter++ )
-        {
-            // compute centers
-            cvZero( centers );
-            cvZero( counters );
-
-            for( i = 0; i < sample_count; i++ )
-            {
-                float* s = (float*)(samples->data.ptr + i*samples->step);
-                k = labels->data.i[i*ids_delta];
-                double* c = (double*)(centers->data.ptr + k*centers->step);
-                for( j = 0; j <= dims - 4; j += 4 )
-                {
-                    double t0 = c[j] + s[j];
-                    double t1 = c[j+1] + s[j+1];
-
-                    c[j] = t0;
-                    c[j+1] = t1;
-
-                    t0 = c[j+2] + s[j+2];
-                    t1 = c[j+3] + s[j+3];
-
-                    c[j+2] = t0;
-                    c[j+3] = t1;
-                }
-                for( ; j < dims; j++ )
-                    c[j] += s[j];
-                counters->data.i[k]++;
-            }
-
-            if( iter > 0 )
-                max_dist = 0;
-
-            for( k = 0; k < cluster_count; k++ )
-            {
-                double* c = (double*)(centers->data.ptr + k*centers->step);
-                if( counters->data.i[k] != 0 )
-                {
-                    double scale = 1./counters->data.i[k];
-                    for( j = 0; j < dims; j++ )
-                        c[j] *= scale;
-                }
-                else
-                {
-                    i = cvRandInt( rng ) % sample_count;
-                    float* s = (float*)(samples->data.ptr + i*samples->step);
-                    for( j = 0; j < dims; j++ )
-                        c[j] = s[j];
-                }
-                
-                if( iter > 0 )
-                {
-                    double dist = 0;
-                    double* c_o = (double*)(old_centers->data.ptr + k*old_centers->step);
-                    for( j = 0; j < dims; j++ )
-                    {
-                        double t = c[j] - c_o[j];
-                        dist += t*t;
-                    }
-                    if( max_dist < dist )
-                        max_dist = dist;
-                }
-            }
-
-            if( max_dist < termcrit.epsilon || iter == termcrit.max_iter )
-                break;
-
-            // assign labels
-            for( i = 0; i < sample_count; i++ )
-            {
-                const float* s = (const float*)(samples->data.ptr + i*samples->step);
-                int k_best = 0;
-                double min_dist = DBL_MAX;
-
-                for( k = 0; k < cluster_count; k++ )
-                {
-                    const double* c = (const double*)(centers->data.ptr + k*centers->step);
-                    double dist = 0;
-                    
-                    j = 0;
-                    for( ; j <= dims - 4; j += 4 )
-                    {
-                        double t0 = c[j] - s[j];
-                        double t1 = c[j+1] - s[j+1];
-                        dist += t0*t0 + t1*t1;
-                        t0 = c[j+2] - s[j+2];
-                        t1 = c[j+3] - s[j+3];
-                        dist += t0*t0 + t1*t1;
-                    }
-
-                    for( ; j < dims; j++ )
-                    {
-                        double t = c[j] - s[j];
-                        dist += t*t;
-                    }
-
-                    if( min_dist > dist )
-                    {
-                        min_dist = dist;
-                        k_best = k;
-                    }
-                }
-
-                labels->data.i[i*ids_delta] = k_best;
-            }
-
-            CV_SWAP( centers, old_centers, temp );
-        }
-
-        cvZero( counters );
-        for( i = 0; i < sample_count; i++ )
-            counters->data.i[labels->data.i[i]]++;
-
-        // ensure that we do not have empty clusters
-        for( k = 0; k < cluster_count; k++ )
-            if( counters->data.i[k] == 0 )
-                for(;;)
-                {
-                    i = cvRandInt(rng) % sample_count;
-                    j = labels->data.i[i];
-                    if( counters->data.i[j] > 1 )
-                    {
-                        labels->data.i[i] = k;
-                        counters->data.i[j]--;
-                        counters->data.i[k]++;
-                        break;
-                    }
-                }
-
-        if( attempts == 1 )
-        {
-            if( _centers )
-                cvConvert( centers, _centers );
-            best_niters = iter;
-        }
-
-        if( _compactness || attempts > 1 )
-        {
-            double compactness = 0;
-            for( i = 0; i < sample_count; i++ )
-            {
-                k = labels->data.i[i];
-                const float* s = (const float*)(samples->data.ptr + i*samples->step);
-                const double* c = (const double*)(centers->data.ptr + k*centers->step);
-                double dist = 0;
-                for( j = 0; j < dims; j++ )
-                {
-                    double t = c[j] - s[j];
-                    dist += t*t;
-                }
-                compactness += dist;
-            }
-            if( compactness < best_compactness )
-            {
-                best_compactness = compactness;
-                best_niters = iter;
-                if( _centers )
-                    cvConvert( centers, _centers );
-                CV_SWAP( labels, best_labels, temp );
-            }
-        }
-    }
-
-    if( best_labels != labels0 )
-    {
-        if( best_compactness < DBL_MAX )
-            cvCopy( best_labels, labels0 );
-    }
-    else
-        best_labels = labels;
-
+    cv::Mat data = cv::cvarrToMat(_samples), labels = cv::cvarrToMat(_labels), centers;
+    cv::RNG rng(_rng ? *_rng : (uint64)-1);
+    if( _centers )
+        centers = cv::cvarrToMat(_centers);
+    CV_Assert( labels.isContinuous() && labels.type() == CV_32S &&
+        labels.cols + labels.rows - 1 == data.rows );
+    cv::Vector<int> labelvec((int*)labels.data, (size_t)data.rows);
+    double compactness = cv::kMeans(data, cluster_count, labelvec, termcrit, attempts,
+                                    _rng ? &rng : 0, flags, _centers ? &centers : 0 );
+    if( _rng )
+        *_rng = rng.state;
     if( _compactness )
-        *_compactness = best_compactness;
-
-    cvReleaseMat( &best_labels );
-    cvReleaseMat( &centers );
-    cvReleaseMat( &old_centers );
-    cvReleaseMat( &counters );
-
-    return best_niters;
+        *_compactness = compactness;
+    return 1;
 }
 
 ///////////////////////////// n-dimensional matrices ////////////////////////////
