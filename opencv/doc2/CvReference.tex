@@ -310,7 +310,7 @@ CvTermCriteria criteria );
 \cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after certain number of iteration or when a required accuracy is achieved. The `criteria` may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}
 
-The function \texttt{FindCornerSubPix} iterates to find the sub-pixel accurate location of corners, or radial saddle points, as shown in on the picture below.
+The function \texttt{cvFindCornerSubPix} iterates to find the sub-pixel accurate location of corners, or radial saddle points, as shown in on the picture below.
 
 \includegraphics[width=1.0\textwidth]{pics/cornersubpix.png}
 
@@ -376,7 +376,7 @@ double k=0.04 );
 \cvarg{k}{Free parameter of Harris detector; used only if ($\texttt{use\_harris} != 0$)}
 \end{description}
 
-The function \texttt{GoodFeaturesToTrack} finds corners with big
+The function \texttt{cvGoodFeaturesToTrack} finds corners with big
 eigenvalues in the image. The function first calculates the minimal
 eigenvalue for every source image pixel using \cross{CornerMinEigenVal}
 function and stores them in \texttt{eig\_image}. Then it performs
@@ -403,7 +403,7 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image.}
 \cvarg{mask}{The optional input 8-bit mask. The features are only found in the areas that contain more than 50\% of non-zero mask pixels.}
-\cvarg{keypoints}{The output parameter; double pointer to the sequence of keypoints. This will be the sequence of CvSURFPoint structures: }
+\cvarg{keypoints}{The output parameter; double pointer to the sequence of keypoints. This will be the sequence of CvSURFPoint structures:}
 \begin{lstlisting}
  typedef struct CvSURFPoint
  {
@@ -575,7 +575,7 @@ in case of 4-connected line.}
 \cvarg{connectivity}{The line connectivity, 4 or 8}
 \end{description}
 
-The function \texttt{SampleLine} implements a particular case of application of line iterators. The function reads all the image points lying on the line between \texttt{pt1} and \texttt{pt2}, including the ending points, and stores them into the buffer.
+The function \texttt{cvSampleLine} implements a particular case of application of line iterators. The function reads all the image points lying on the line between \texttt{pt1} and \texttt{pt2}, including the ending points, and stores them into the buffer.
 
 \cvfunc{GetRectSubPix}\label{GetRectSubPix}
 
@@ -597,7 +597,7 @@ CvPoint2D32f center );
 \cvarg{center}{Floating point coordinates of the extracted rectangle center within the source image. The center must be inside the image.}
 \end{description}
 
-The function \texttt{GetRectSubPix} extracts pixels from \texttt{src}:
+The function \texttt{cvGetRectSubPix} extracts pixels from \texttt{src}:
 
 \[
 dst(x, y) = src(x + \texttt{center.x} - (width(\texttt{dst})-1)*0.5, y + \texttt{center.y} - (height(\texttt{dst} )-1)*0.5)
@@ -631,7 +631,7 @@ const CvMat* map\_matrix );
 \cvarg{map\_matrix}{The transformation $2 \times 3$ matrix $[A|b]$ (see the discussion)}
 \end{description}
 
-The function \texttt{GetQuadrangleSubPix} extracts pixels from \texttt{src} at sub-pixel accuracy and stores them to \texttt{dst} as follows:
+The function \texttt{cvGetQuadrangleSubPix} extracts pixels from \texttt{src} at sub-pixel accuracy and stores them to \texttt{dst} as follows:
 
 \[
 dst(x, y)= src( A_{11} x' + A_{12} y' + b_1, A_{21} x' + A_{22} y' + b_2)
@@ -819,7 +819,7 @@ CvMat* map\_matrix );
 \cvarg{map\_matrix}{Pointer to the destination $2\times 3$ matrix}
 \end{description}
 
-The function \texttt{2DRotationMatrix} calculates matrix:
+The function \texttt{cv2DRotationMatrix} calculates matrix:
 
 \[
 \begin{bmatrix}
@@ -1010,7 +1010,7 @@ int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS );
 \end{description}}
 \end{description}
 
-The function \texttt{LogPolar} transforms source image using the following transformation:
+The function \texttt{cvLogPolar} transforms source image using the following transformation:
 
 Forward transformation (\texttt{CV\_WARP\_INVERSE\_MAP} is not set):
 
@@ -1214,7 +1214,7 @@ int iterations=1 );
 \cvarg{iterations}{Number of times erosion and dilation are applied}
 \end{description}
 
-The function \texttt{MorphologyEx} can perform advanced morphological transformations using erosion and dilation as basic operations.
+The function \texttt{cvMorphologyEx} can perform advanced morphological transformations using erosion and dilation as basic operations.
 
 Opening:
 
@@ -1697,7 +1697,7 @@ int threshold\_type );
 \cvarg{threshold\_type}{Thresholding type (see the discussion)}
 \end{description}
 
-The function \texttt{Threshold} applies fixed-level thresholding
+The function \texttt{cvThreshold} applies fixed-level thresholding
 to single-channel array. The function is typically used to get
 bi-level (binary) image out of grayscale image \cross{CmpS} could
 be also used for this purpose) or for removing a noise, i.e. filtering
@@ -1743,7 +1743,7 @@ int block\_size=3,\par double param1=5 );
 \cvarg{param1}{The method-dependent parameter. For the methods \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} and \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is a constant subtracted from mean or weighted mean (see the discussion), though it may be negative}
 \end{description}
 
-The function \texttt{AdaptiveThreshold} transforms grayscale image to binary image according to the formulae:
+The function \texttt{cvAdaptiveThreshold} transforms grayscale image to binary image according to the formulae:
 
 \begin{description}
 \cvarg{CV\_THRESH\_BINARY}{\[ dst(x,y) = \fork{\texttt{max\_value}}{if $src(x,y) > T(x,y)$}{0}{otherwise} \]}
@@ -1772,7 +1772,7 @@ void cvPyrDown(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIA
 \cvarg{filter}{Type of the filter used for convolution; only \texttt{CV\_GAUSSIAN\_5x5} is currently supported}
 \end{description}
 
-The function \texttt{PyrDown} performs downsampling step of Gaussian pyramid decomposition. First it convolves source image with the specified filter and then downsamples the image by rejecting even rows and columns.
+The function \texttt{cvPyrDown} performs downsampling step of Gaussian pyramid decomposition. First it convolves source image with the specified filter and then downsamples the image by rejecting even rows and columns.
 
 \cvfunc{PyrUp}\label{PyrUp}
 
@@ -1788,7 +1788,7 @@ void cvPyrUp(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIAN\
 \cvarg{filter}{Type of the filter used for convolution; only \texttt{CV\_GAUSSIAN\_5x5} is currently supported}
 \end{description}
 
-The function \texttt{PyrUp} performs up-sampling step of Gaussian pyramid decomposition. First it upsamples the source image by injecting even zero rows and columns and then convolves result with the specified filter multiplied by 4 for interpolation. So the destination image is four times larger than the source image.
+The function \texttt{cvPyrUp} performs up-sampling step of Gaussian pyramid decomposition. First it upsamples the source image by injecting even zero rows and columns and then convolves result with the specified filter multiplied by 4 for interpolation. So the destination image is four times larger than the source image.
 
 \cvfunc{PyrSegmentation}\label{PyrSegmentation}
 
@@ -1810,7 +1810,7 @@ void cvPyrSegmentation(\par IplImage* src,\par IplImage* dst,\par
 \cvarg{threshold2}{Error threshold for the segments clustering}
 \end{description}
 
-The function \texttt{PyrSegmentation} implements image segmentation by pyramids. The pyramid builds up to the level \texttt{level}. The links between any pixel \texttt{a} on level \texttt{i} and its candidate father pixel \texttt{b} on the adjacent level are established if
+The function \texttt{cvPyrSegmentation} implements image segmentation by pyramids. The pyramid builds up to the level \texttt{level}. The links between any pixel \texttt{a} on level \texttt{i} and its candidate father pixel \texttt{b} on the adjacent level are established if
 $p(c(a),c(b))<threshold1$.
 After the connected components are defined, they are joined into several clusters.
 Any two segments A and B belong to the same cluster, if $p(c(A),c(B))<threshold2$.
@@ -1826,7 +1826,7 @@ There may be more than one connected component per a cluster. The images \texttt
 
 \subsection{Connected Components and Contour Retrieval}
 
-\cvfunc{CvConnectedComp}\label{CvConnectedComp}
+\cvstruct{CvConnectedComp}\label{CvConnectedComp}
 
 Connected component
 
@@ -1967,7 +1967,7 @@ CvContourScanner cvStartFindContours(\par CvArr* image,\par CvMemStorage* storag
 \cvarg{offset}{ROI offset; see \cross{FindContours}}
 \end{description}
 
-The function \texttt{StartFindContours} initializes and returns pointer to the contour scanner. The scanner is used further in \cross{FindNextContour} to retrieve the rest of contours.
+The function \texttt{cvStartFindContours} initializes and returns pointer to the contour scanner. The scanner is used further in \cross{FindNextContour} to retrieve the rest of contours.
 
 \cvfunc{FindNextContour}\label{FindNextContour}
 
@@ -1996,7 +1996,7 @@ void cvSubstituteContour( \par CvContourScanner scanner, \par CvSeq* new\_contou
 \cvarg{new\_contour}{Substituting contour}
 \end{description}
 
-The function \texttt{SubstituteContour} replaces the retrieved
+The function \texttt{cvSubstituteContour} replaces the retrieved
 contour, that was returned from the preceding call of The function
 \cross{FindNextContour} and stored inside the contour scanner
 state, with the user-specified contour. The contour is inserted
@@ -2055,7 +2055,7 @@ double cvGetSpatialMoment( \par CvMoments* moments, \par int x\_order, \par int 
 \cvarg{y\_order}{y order of the retrieved moment, $\texttt{y\_order} >= 0$ and $\texttt{x\_order} + \texttt{y\_order} <= 3$}
 \end{description}
 
-The function \texttt{GetSpatialMoment} retrieves the spatial moment, which in case of image moments is defined as:
+The function \texttt{cvGetSpatialMoment} retrieves the spatial moment, which in case of image moments is defined as:
 
 \[
 M_{x\_order, \, y\_order} = \sum_{x,y} (I(x,y) \cdot x^{x\_order} \cdot y^{y\_order})
@@ -2103,7 +2103,7 @@ double cvGetNormalizedCentralMoment( \par CvMoments* moments,\par int x\_order,\
 \cvarg{y\_order}{y order of the retrieved moment, $\texttt{y\_order} >= 0$ and $\texttt{x\_order} + \texttt{y\_order} <= 3$}
 \end{description}
 
-The function \texttt{GetNormalizedCentralMoment} retrieves the normalized central moment:
+The function \texttt{cvGetNormalizedCentralMoment} retrieves the normalized central moment:
 
 \[
 \eta_{x\_order, \, y\_order} = \frac{\mu_{x\_order, \, y\_order}}{M_{00}^{(y\_order+x\_order)/2+1}}
@@ -2185,7 +2185,7 @@ by the accumulator value)}
 \end{itemize}}
 \end{description}
 
-The function \texttt{HoughLines2} implements a few variants of Hough transform for line detection.
+The function \texttt{cvHoughLines2} implements a few variants of Hough transform for line detection.
 
 % ===== Example. Detecting lines with Hough transform. =====
 \begin{lstlisting}
@@ -2286,7 +2286,7 @@ CvSeq* cvHoughCircles( \par CvArr* image,\par void* circle\_storage,\par int met
 \cvarg{max\_radius}{Maximum circle radius}
 \end{description}
 
-The function \texttt{HoughCircles} finds circles in grayscale image using some modification of Hough transform.
+The function \texttt{cvHoughCircles} finds circles in grayscale image using some modification of Hough transform.
 
 % ===== Example. Detecting circles with Hough transform. =====
 \begin{lstlisting}
@@ -2350,7 +2350,7 @@ void cvDistTransform( \par const CvArr* src,\par CvArr* dst,\par int distance\_t
 \cvarg{labels}{The optional output 2d array of labels of integer type and the same size as \texttt{src} and \texttt{dst}}
 \end{description}
 
-The function \texttt{DistTransform} calculates the approximated
+The function \texttt{cvDistTransform} calculates the approximated
 distance from every binary image pixel to the nearest zero pixel.
 For zero pixels the function sets the zero distance, for others it
 finds the shortest path consisting of basic shifts: horizontal,
@@ -2473,7 +2473,7 @@ the specified range for a histogram bin, are not counted by
 \cross{CalcHist} and filled with 0 by \cross{CalcBackProject}}
 \end{description}
 
-The function \texttt{CreateHist} creates a histogram of the specified size and returns the pointer to the created histogram. If the array \texttt{ranges} is 0, the histogram bin ranges must be specified later via the function \texttt{SetHistBinRanges}, though \cross{CalcHist} and \cross{CalcBackProject} may process 8-bit images without setting bin ranges, they assume equally spaced in 0..255 bins.
+The function \texttt{CreateHist} creates a histogram of the specified size and returns the pointer to the created histogram. If the array \texttt{ranges} is 0, the histogram bin ranges must be specified later via the function \texttt{cvSetHistBinRanges}, though \cross{CalcHist} and \cross{CalcBackProject} may process 8-bit images without setting bin ranges, they assume equally spaced in 0..255 bins.
 
 \cvfunc{SetHistBinRanges}\label{SetHistBinRanges}
 
@@ -2489,7 +2489,7 @@ void cvSetHistBinRanges( \par CvHistogram* hist,\par float** ranges,\par int uni
 \cvarg{uniform}{Uniformity flag, see \cross{CreateHist}}
 \end{description}
 
-The function \texttt{SetHistBinRanges} is a stand-alone function for setting bin ranges in the histogram. For more detailed description of the parameters \texttt{ranges} and \texttt{uniform} see \cross{CalcHist} function, that can initialize the ranges as well. Ranges for histogram bins must be set before the histogram is calculated or backproject of the histogram is calculated.
+The function \texttt{cvSetHistBinRanges} is a stand-alone function for setting bin ranges in the histogram. For more detailed description of the parameters \texttt{ranges} and \texttt{uniform} see \cross{CalcHist} function, that can initialize the ranges as well. Ranges for histogram bins must be set before the histogram is calculated or backproject of the histogram is calculated.
 
 
 \cvfunc{ReleaseHist}\label{ReleaseHist}
@@ -2537,7 +2537,7 @@ CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHis
 \cvarg{uniform}{Uniformity flag, see \cross{CreateHist}}
 \end{description}
 
-The function \texttt{MakeHistHeaderForArray} initializes the histogram, which header and bins are allocated by user. No \cross{ReleaseHist} need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
+The function \texttt{cvMakeHistHeaderForArray} initializes the histogram, which header and bins are allocated by user. No \cross{ReleaseHist} need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
 
 \cvfunc{QueryHistValue\_nD}\label{QueryHistValue_nD}
 
@@ -2603,7 +2603,7 @@ void cvGetMinMaxHistValue( \par const CvHistogram* hist,\par float* min\_value,\
 \cvarg{max\_idx}{Pointer to the array of coordinates for maximum}
 \end{description}
 
-The function \texttt{GetMinMaxHistValue} finds the minimum and
+The function \texttt{cvGetMinMaxHistValue} finds the minimum and
 maximum histogram bins and their positions. Any of output arguments is
 optional. Among several extremums with the same value the ones with
 minimum index (in lexicographical order) In case of several maximums
@@ -2638,7 +2638,7 @@ void cvThreshHist( CvHistogram* hist, double threshold );
 \cvarg{threshold}{Threshold level}
 \end{description}
 
-The function \texttt{ThreshHist} clears histogram bins that are below the specified threshold.
+The function \texttt{cvThreshHist} clears histogram bins that are below the specified threshold.
 
 \cvfunc{CompareHist}\label{CompareHist}
 
@@ -2881,7 +2881,7 @@ void  cvEqualizeHist( const CvArr* src, CvArr* dst );
 \cvarg{dst}{The output image of the same size and the same data type as \texttt{src}}
 \end{description}
 
-The function \texttt{EqualizeHist} equalizes histogram of the input image using the following algorithm:
+The function \texttt{cvEqualizeHist} equalizes histogram of the input image using the following algorithm:
 
 \begin{enumerate}
 \item calculate histogram $H$ for src.
@@ -2914,7 +2914,7 @@ If \texttt{image} is $W \times H$ and
 \cvarg{method}{Specifies the way the template must be compared with image regions (see below)}
 \end{description}
 
-The function \texttt{MatchTemplate} is similiar to
+The function \texttt{cvMatchTemplate} is similiar to
 \cross{CalcBackProjectPatch}. It slids through \texttt{image}, compares
 overlapped patches of size $w \times h$ against \texttt{templ}
 using the specified method and stores the comparison results to
@@ -2983,7 +2983,7 @@ or
 \cvarg{parameter}{Method-specific parameter (is not used now)}
 \end{description}
 
-The function \texttt{MatchShapes} compares two shapes. The 3 implemented methods all use Hu moments (see \cross{GetHuMoments}) ($A$ is \texttt{object1}, $B$ is \texttt{object2}):
+The function \texttt{cvMatchShapes} compares two shapes. The 3 implemented methods all use Hu moments (see \cross{GetHuMoments}) ($A$ is \texttt{object1}, $B$ is \texttt{object2}):
 
 \begin{description}
 \item[method=CV\_CONTOUR\_MATCH\_I1]
@@ -3062,7 +3062,7 @@ CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int 
 \cvarg{recursive}{If not 0, the function approximates all chains that access can be obtained to from \texttt{src\_seq} by \texttt{h\_next} or \texttt{v\_next links}. If 0, the single chain is approximated}
 \end{description}
 
-This is a stand-alone approximation routine. The function \texttt{ApproxChains} works exactly in the same way as \cross{FindContours} with the corresponding approximation flag. The function returns pointer to the first resultant contour. Other approximated contours, if any, can be accessed via \texttt{v\_next} or \texttt{h\_next} fields of the returned structure.
+This is a stand-alone approximation routine. The function \texttt{cvApproxChains} works exactly in the same way as \cross{FindContours} with the corresponding approximation flag. The function returns pointer to the first resultant contour. Other approximated contours, if any, can be accessed via \texttt{v\_next} or \texttt{h\_next} fields of the returned structure.
 
 \cvfunc{StartReadChainPoints}\label{StartReadChainPoints}
 
@@ -3072,7 +3072,7 @@ Initializes chain reader
 void cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
 }{CPP}{PYTHON}
 
-The function \texttt{StartReadChainPoints} initializes a special reader
+The function \texttt{cvStartReadChainPoints} initializes a special reader
 
 \cvfunc{ReadChainPoint}\label{ReadChainPoint}
 
@@ -3086,7 +3086,7 @@ CvPoint cvReadChainPoint( CvChainPtReader* reader );
 \cvarg{reader}{Chain reader state}
 \end{description}
 
-The function \texttt{ReadChainPoint} returns the current chain point and updates the reader position.
+The function \texttt{cvReadChainPoint} returns the current chain point and updates the reader position.
 
 \cvfunc{ApproxPoly}\label{ApproxPoly}
 
@@ -3105,7 +3105,7 @@ CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemS
 \cvarg{parameter2}{If case if \texttt{src\_seq} is sequence it means whether the single sequence should be approximated or all sequences on the same level or below \texttt{src\_seq} (see \cross{FindContours} for description of hierarchical contour structures). And if \texttt{src\_seq} is array CvMat* of points, the parameter specifies whether the curve is closed (\texttt{parameter2}!=0) or not (\texttt{parameter2} =0)}
 \end{description}
 
-The function \texttt{ApproxPoly} approximates one or more curves and returns the approximation result[s]. In case of multiple curves approximation the resultant tree will have the same structure as the input one (1:1 correspondence).
+The function \texttt{cvApproxPoly} approximates one or more curves and returns the approximation result[s]. In case of multiple curves approximation the resultant tree will have the same structure as the input one (1:1 correspondence).
 
 \cvfunc{BoundingRect}\label{BoundingRect}
 
@@ -3120,7 +3120,7 @@ CvRect cvBoundingRect( CvArr* points, int update=0 );
 \cvarg{update}{The update flag. See below.}
 \end{description}
 
-The function \texttt{BoundingRect} returns the up-right bounding rectangle for 2d point set.
+The function \texttt{cvBoundingRect} returns the up-right bounding rectangle for 2d point set.
 Here is list of possible combination of the flag values and type of \texttt{points}:
 
 \begin{tabular}{|c|c|p{3in}|}
@@ -3390,7 +3390,7 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{line}{The output line parameters. In case of 2d fitting it is array of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the line and \texttt{(x0, y0)} is some point on the line. In case of 3D fitting it is array of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)} where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
 
-The function \texttt{FitLine} fits line to 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is distance between $i$ th point and the line and $\rho(r)$ is a distance function, one of:
+The function \texttt{cvFitLine} fits line to 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is distance between $i$ th point and the line and $\rho(r)$ is a distance function, one of:
 
 \begin{description}
 
@@ -3542,7 +3542,7 @@ int cvCheckContourConvexity( const CvArr* contour );
 
 The function \texttt{cvCheckContourConvexity} tests whether the input contour is convex or not. The contour must be simple, i.e. without self-intersections.
 
-\cvfunc{CvConvexityDefect}\label{CvConvexityDefect}
+\cvstruct{CvConvexityDefect}\label{CvConvexityDefect}
 
 Structure describing a single contour convexity detect
 
@@ -3668,7 +3668,7 @@ definition). The histogram can be used for contour matching.
 
 \subsection{Planar Subdivisions}
 
-\cvfunc{CvSubdiv2D}\label{CvSubdiv2D}
+\cvstruct{CvSubdiv2D}\label{CvSubdiv2D}
 
 Planar subdivision
 
@@ -3712,7 +3712,7 @@ subdivisions can be used for 3d piece-wise transformation of a plane,
 morphing, fast location of points on the plane, building special graphs
 (such as NNG,RNG) etc.
 
-\cvfunc{CvQuadEdge2D}\label{CvQuadEdge2D}
+\cvstruct{CvQuadEdge2D}\label{CvQuadEdge2D}
 
 Quad-edge of planar subdivision
 
@@ -3739,7 +3739,7 @@ Quad-edge is a basic element of subdivision, it contains four edges (e, eRot, re
 
 \includegraphics[width=0.5\textwidth]{pics/quadedge.png}
 
-\cvfunc{CvSubdiv2DPoint}\label{CvSubdiv2DPoint}
+\cvstruct{CvSubdiv2DPoint}\label{CvSubdiv2DPoint}
 
 Point of original or dual subdivision
 
@@ -4491,7 +4491,7 @@ const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=N
 \cvarg{control}{Control vector $u_k$, should be NULL iff there is no external control (\texttt{control\_params} =0)}
 \end{description}
 
-The function \texttt{KalmanPredict} estimates the subsequent stochastic model state by its current state and stores it at \texttt{kalman->state\_pre}:
+The function \texttt{cvKalmanPredict} estimates the subsequent stochastic model state by its current state and stores it at \texttt{kalman->state\_pre}:
 
 \[
 \begin{array}{l}
@@ -4932,7 +4932,7 @@ void cvReleaseHaarClassifierCascade( \par CvHaarClassifierCascade** cascade );
 \cvarg{cascade}{Double pointer to the released cascade. The pointer is cleared by the function}
 \end{description}
 
-The function \texttt{ReleaseHaarClassifierCascade} deallocates the cascade that has been created manually or loaded using \cross{LoadHaarClassifierCascade} or \cross{Load}.
+The function \texttt{cvReleaseHaarClassifierCascade} deallocates the cascade that has been created manually or loaded using \cross{LoadHaarClassifierCascade} or \cross{Load}.
 
 \cvfunc{HaarDetectObjects}\label{HaarDetectObjects}
 
@@ -5181,7 +5181,7 @@ void cvProjectPoints2( \par const CvMat* object\_points,\par const CvMat* rotati
 \cvarg{dpddist}{Optional Nx4 matrix of derivatives of image points w.r.t. distortion coefficients}
 \end{description}
 
-The function \texttt{ProjectPoints2} computes projections of 3D
+The function \texttt{cvProjectPoints2} computes projections of 3D
 points to the image plane given intrinsic and extrinsic camera
 parameters. Optionally, the function computes jacobians - matrices
 of partial derivatives of image points as functions of all the
@@ -5333,7 +5333,7 @@ void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const C
 \cvarg{translation\_vector}{The output 3x1 or 1x3 translation vector}
 \end{description}
 
-The function \texttt{FindExtrinsicCameraParams2} estimates extrinsic camera parameters using known intrinsic parameters and extrinsic parameters for each view. The coordinates of 3D object points and their correspondent 2D projections must be specified. This function also minimizes back-projection error.
+The function \texttt{cvFindExtrinsicCameraParams2} estimates extrinsic camera parameters using known intrinsic parameters and extrinsic parameters for each view. The coordinates of 3D object points and their correspondent 2D projections must be specified. This function also minimizes back-projection error.
 
 % XXX missing StereoCalibrate
 % XXX missing StereoRectify
@@ -5642,7 +5642,7 @@ The epipolar geometry is described by the following equation:
 
 where $F$ is fundamental matrix, $p_1$ and $p_2$ are corresponding points in the first and the second images, respectively.
 
-The function \texttt{FindFundamentalMat} calculates fundamental
+The function \texttt{cvFindFundamentalMat} calculates fundamental
 matrix using one of four methods listed above and returns the number
 of fundamental matrices found (1 or 3) and 0, if no matrix is found.
 

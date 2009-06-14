@@ -4,7 +4,7 @@
 
 \subsection{Basic Structures}
 
-\cvfunc{CvPoint}\label{CvPoint}
+\cvstruct{CvPoint}\label{CvPoint}
 
 2D point with integer coordinates (usually zero-based)
 
@@ -30,7 +30,7 @@ inline CvPoint cvPoint( int x, int y );
 inline CvPoint cvPointFrom32f( CvPoint2D32f point );
 \end{lstlisting}
 
-\cvfunc{CvPoint2D32f}\label{CvPoint2D32f}
+\cvstruct{CvPoint2D32f}\label{CvPoint2D32f}
 
 2D point with floating-point coordinates
 
@@ -59,7 +59,7 @@ inline CvPoint2D32f cvPointTo32f( CvPoint point );
 \end{lstlisting}
 
 
-\cvfunc{CvPoint3D32f}\label{CvPoint3D32f}
+\cvstruct{CvPoint3D32f}\label{CvPoint3D32f}
 
 3D point with floating-point coordinates
 
@@ -86,7 +86,7 @@ inline CvPoint3D32f cvPoint3D32f( double x, double y, double z );
 
 \end{lstlisting}
 
-\cvfunc{CvPoint2D64f}\label{CvPoint2D64f}
+\cvstruct{CvPoint2D64f}\label{CvPoint2D64f}
 
 2D point with double precision floating-point coordinates
 
@@ -114,7 +114,7 @@ inline CvPoint2D64f cvPointTo64f( CvPoint point );
 
 \end{lstlisting}
 
-\cvfunc{CvPoint3D64f}\label{CvPoint3D64f}
+\cvstruct{CvPoint3D64f}\label{CvPoint3D64f}
 
 3D point with double precision floating-point coordinates
 
@@ -141,7 +141,7 @@ inline CvPoint3D64f cvPoint3D64f( double x, double y, double z );
 
 \end{lstlisting}
 
-\cvfunc{CvSize}\label{CvSize}
+\cvstruct{CvSize}\label{CvSize}
 
 Pixel-accurate size of a rectangle.
 
@@ -166,7 +166,7 @@ inline CvSize cvSize( int width, int height );
 
 \end{lstlisting}
 
-\cvfunc{CvSize2D32f}\label{CvSize2D32f}
+\cvstruct{CvSize2D32f}\label{CvSize2D32f}
 
 Sub-pixel accurate size of a rectangle.
 
@@ -191,7 +191,7 @@ inline CvSize2D32f cvSize2D32f( double width, double height );
 
 \end{lstlisting}
 
-\cvfunc{CvRect}\label{CvRect}
+\cvstruct{CvRect}\label{CvRect}
 
 Offset (usually the top-left corner) and size of a rectangle.
 
@@ -220,7 +220,7 @@ inline CvRect cvRect( int x, int y, int width, int height );
 
 \end{lstlisting}
 
-\cvfunc{CvScalar}\label{CvScalar}
+\cvstruct{CvScalar}\label{CvScalar}
 
 A container for 1-,2-,3- or 4-tuples of doubles.
 
@@ -252,7 +252,7 @@ inline CvScalar cvRealScalar( double val0 );
 
 \end{lstlisting}
 
-\cvfunc{CvTermCriteria}\label{CvTermCriteria}
+\cvstruct{CvTermCriteria}\label{CvTermCriteria}
 
 Termination criteria for iterative algorithms.
 
@@ -290,7 +290,7 @@ CvTermCriteria cvCheckTermCriteria( CvTermCriteria criteria,
 
 \end{lstlisting}
 
-\cvfunc{CvMat}\label{CvMat}
+\cvstruct{CvMat}\label{CvMat}
 
 A multi-channel matrix.
 
@@ -346,7 +346,7 @@ typedef struct CvMat
 Matrices are stored row by row. All of the rows are aligned by 4 bytes.
 
 
-\cvfunc{CvMatND}\label{CvMatND}
+\cvstruct{CvMatND}\label{CvMatND}
 
 Multi-dimensional dense multi-channel array.
 
@@ -387,7 +387,7 @@ typedef struct CvMatND
 \cvarg{dim}{For each dimension, the pair (number of elements, distance between elements in bytes)}
 \end{description}
 
-\cvfunc{CvSparseMat}\label{CvSparseMat}
+\cvstruct{CvSparseMat}\label{CvSparseMat}
 
 Multi-dimensional sparse multi-channel array.
 
@@ -423,7 +423,7 @@ typedef struct CvSparseMat
 \cvarg{size}{Array of dimension sizes}
 \end{description}
 
-\cvfunc{IplImage}\label{IplImage}
+\cvstruct{IplImage}\label{IplImage}
 
 IPL image header
 
@@ -496,7 +496,7 @@ The \cross{IplImage} structure was inherited from the Intel Image Processing Lib
 
 In addition to the above restrictions, OpenCV handles ROIs differently. OpenCV functions require that the image size or ROI size of all source and destination images match exactly. On the other hand, the Intel Image Processing Library processes the area of intersection between the source and destination images (or ROIs), allowing them to vary independently. 
 
-\cvfunc{CvArr}\label{CvArr}
+\cvstruct{CvArr}\label{CvArr}
 
 Arbitrary array
 
@@ -1773,11 +1773,14 @@ If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI mu
 
 Clears the array
 
-\begin{lstlisting}
+\cvexp{
 
 void cvSetZero( CvArr* arr );
-#define cvZero cvSetZero
 
+}{CPP}{PYTHON}
+
+\begin{lstlisting}
+#define cvZero cvSetZero
 \end{lstlisting}
 
 \begin{description}
@@ -3572,13 +3575,13 @@ The covariation matrix may be calculated using \cross{CalcCovarMatrix} function 
 
 Converts floating-point number to integer
 
-\begin{lstlisting}
+\cvexp{
 
 int cvRound( double value );
 int cvFloor( double value );
 int cvCeil( double value );
 
-\end{lstlisting}
+}{CPP}{PYTHON}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -4061,6 +4064,12 @@ The function \texttt{cvRandReal} returns uniformly-distributed random floating-p
 
 Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-point array
 
+\cvexp{
+
+void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
+
+}{CPP}{PYTHON}
+
 \begin{lstlisting}
 
 #define CV\_DXT\_FORWARD  0
@@ -4069,8 +4078,6 @@ Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-poin
 #define CV\_DXT\_ROWS     4
 #define CV\_DXT\_INV\_SCALE (CV\_DXT\_SCALE|CV\_DXT\_INVERSE)
 #define CV\_DXT\_INVERSE\_SCALE CV\_DXT\_INV\_SCALE
-
-void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
 
 \end{lstlisting}
 
@@ -4236,13 +4243,17 @@ The function, together with \cross{DFT}, may be used to calculate convolution of
 
 Performs forward or inverse Discrete Cosine transform of 1D or 2D floating-point array
 
+\cvexp{
+
+void cvDCT( const CvArr* src, CvArr* dst, int flags );
+
+}{CPP}{PYTHON}
+
 \begin{lstlisting}
 
 #define CV\_DXT\_FORWARD  0
 #define CV\_DXT\_INVERSE  1
 #define CV\_DXT\_ROWS     4
-
-void cvDCT( const CvArr* src, CvArr* dst, int flags );
 
 \end{lstlisting}
 
@@ -4280,7 +4291,7 @@ X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 
 \subsection{Memory Storages}
 
-\cvfunc{CvMemStorage}\label{CvMemStorage}
+\cvstruct{CvMemStorage}\label{CvMemStorage}
 
 Growing memory storage
 
@@ -4326,7 +4337,7 @@ indicating top of the stack. The stack top may be saved via
 \cross{SaveMemStoragePos}, restored via \cross{RestoreMemStoragePos}
 or reset via \cross{ClearStorage}.
 
-\cvfunc{CvMemBlock}\label{CvMemBlock}
+\cvstruct{CvMemBlock}\label{CvMemBlock}
 
 Memory storage block
 
@@ -4346,7 +4357,7 @@ the $i_{th}$ byte of the memory block can be retrieved with the expression
 \texttt{((char*)(mem\_block\_ptr+1))[i]}. However, normally there is no need
 to access the storage structure fields directly.
 
-\cvfunc{CvMemStoragePos}\label{CvMemStoragePos}
+\cvstruct{CvMemStoragePos}\label{CvMemStoragePos}
 
 Memory storage position
 
@@ -4488,6 +4499,12 @@ otherwise runtime error is raised. The buffer address is aligned by
 
 Allocates text string in the storage
 
+\cvexp{
+
+CvString cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int len=-1 );
+
+}{CPP}{PYTHON}
+
 \begin{lstlisting}
 
 typedef struct CvString
@@ -4496,8 +4513,6 @@ typedef struct CvString
     char* ptr;
 }
 CvString;
-
-CvString cvMemStorageAllocString( CvMemStorage* storage, const char* ptr, int len=-1 );
 
 \end{lstlisting}
 
@@ -4549,7 +4564,7 @@ The function \texttt{cvRestoreMemStoragePos} restores the position of the storag
 
 \subsection{Sequences}
 
-\cvfunc{CvSeq}\label{CvSeq}
+\cvstruct{CvSeq}\label{CvSeq}
 
 Growable sequence of elements
 
@@ -4679,7 +4694,7 @@ predefined sequence types and helper macros designed to get the sequence
 type of other properties. Below follows the definition of the building
 block of sequences.
 
-\cvfunc{CvSeqBlock}\label{CvSeqBlock}
+\cvstruct{CvSeqBlock}\label{CvSeqBlock}
 
 Continuous sequence block
 
@@ -4712,7 +4727,7 @@ correspondingly. The parameter
 \texttt{start\_index} of the first block is usually \texttt{0} unless
 some elements have been inserted at the beginning of the sequence.
 
-\cvfunc{CvSlice}\label{CvSlice}
+\cvstruct{CvSlice}\label{CvSlice}
 
 A sequence slice
 
@@ -5022,11 +5037,14 @@ function time complexity is 'O(1)'.
 
 Returns pointer to sequence element by its index
 
-\begin{lstlisting}
+\cvexp{
 
 char* cvGetSeqElem( const CvSeq* seq, int index );
-#define CV_GET_SEQ_ELEM( TYPE, seq, index )  (TYPE*)cvGetSeqElem( (CvSeq*)(seq), (index) )
 
+}{CPP}{PYTHON}
+
+\begin{lstlisting}
+#define CV_GET_SEQ_ELEM( TYPE, seq, index )  (TYPE*)cvGetSeqElem( (CvSeq*)(seq), (index) )
 \end{lstlisting}
 
 \begin{description}
@@ -5227,13 +5245,15 @@ The function \texttt{cvSeqInvert} reverses the sequence in-place - makes the fir
 
 Sorts sequence element using the specified comparison function
 
-\begin{lstlisting}
-
-/* a < b ? -1 : a > b ? 1 : 0 */
-typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
+\cvexp{
 
 void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );
 
+}{CPP}{PYTHON}
+
+\begin{lstlisting}
+/* a < b ? -1 : a > b ? 1 : 0 */
+typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
 \end{lstlisting}
 
 \begin{description}
@@ -5514,7 +5534,7 @@ The function \texttt{cvSetSeqReaderPos} moves the read position to the absolute 
 
 \subsection{Sets}
 
-\cvfunc{CvSet}\label{CvSet}
+\cvstruct{CvSet}\label{CvSet}
 
 Collection of nodes
 
@@ -5709,7 +5729,7 @@ The function \texttt{cvClearSet} removes all elements from set. It has O(1) time
 \subsection{Graphs}
 
 
-\cvfunc{CvGraph}\label{CvGraph}
+\cvstruct{CvGraph}\label{CvGraph}
 
 Oriented or unoriented weigted graph
 
@@ -5973,9 +5993,14 @@ The function \texttt{cvGraphRemoveEdgeByPtr} removes the edge connecting two spe
 
 Finds edge in graph
 
+\cvexp{
+
+CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start\_idx, int end\_idx );
+
+}{CPP}{PYTHON}
+
 \begin{lstlisting}
 
-CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx );
 #define cvGraphFindEdge cvFindGraphEdge
 
 \end{lstlisting}
@@ -6114,7 +6139,7 @@ may be different from the original, because the function defragments
 the vertex and edge sets.
 
 
-\cvfunc{CvGraphScanner}\label{CvGraphScanner}
+\cvstruct{CvGraphScanner}\label{CvGraphScanner}
 
 Graph traversal state
 
@@ -6215,7 +6240,7 @@ The function \texttt{cvGraphScanner} finishes graph traversal procedure and rele
 \subsection{Trees}
 
 
-\cvfunc{CV\_TREE\_NODE\_FIELDS}\label{CV_TREE_NODE_FIELDS}
+\cvmacro{CV\_TREE\_NODE\_FIELDS}\label{CV_TREE_NODE_FIELDS}
 
 Helper macro for a tree node type declaration
 
@@ -6237,7 +6262,7 @@ that can be organized into hierarchical strucutures (trees), such as
 made of nodes declared using this macro can be processed using the
 functions described below in this section.
 
-\cvfunc{CvTreeNodeIterator}\label{CvTreeNodeIterator}
+\cvstruct{CvTreeNodeIterator}\label{CvTreeNodeIterator}
 
 Opens existing or creates new file storage
 
@@ -6837,7 +6862,7 @@ The function \texttt{cvEllipse2Poly} computes vertices of the polyline that appr
 
 \subsection{File Storage}
 
-\cvfunc{CvFileStorage}\label{CvFileStorage}
+\cvstruct{CvFileStorage}\label{CvFileStorage}
 
 File Storage
 
@@ -6896,7 +6921,7 @@ the particular format is determined by the extension of the opened
 file, .xml for XML files and .yml or .yaml for YAML.
 
 
-\cvfunc{CvFileNode}\label{CvFileNode}
+\cvstruct{CvFileNode}\label{CvFileNode}
 
 File Storage Node
 
@@ -7016,7 +7041,7 @@ object can be decoded (coverted to the native representation) by
 request - when user calls \cross{Read} or \cross{ReadByName} function.
 
 
-\cvfunc{CvAttrList}\label{CvAttrList}
+\cvstruct{CvAttrList}\label{CvAttrList}
 
 List of attributes
 
@@ -7799,7 +7824,7 @@ read repeatedly by repositioning the reader using \cross{SetSeqReaderPos}.
 
 \subsection{RTTI and Generic Functions}
 
-\cvfunc{CvTypeInfo}\label{CvTypeInfo}
+\cvstruct{CvTypeInfo}\label{CvTypeInfo}
 
 Type information
 
@@ -8591,7 +8616,7 @@ error as described in the sample
 
 Error Message Box
 
-\includegraphics[width=0.5 \textwidth]{pics/errmsg.png}
+\includegraphics[width=0.5\textwidth]{pics/errmsg.png}
 
 If the error handler is set \texttt{cvStdErrReport}, the above message will be printed to standard error output and program will be terminated or continued, depending on the current error mode.
 
