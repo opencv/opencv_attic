@@ -2,6 +2,15 @@ import string, re
 import sys
 from plasTeX.Renderers import Renderer
 
+# import generated OpenCV function names
+# if the file function_names.py does not exist, it
+# can be generated using the script find_function_names.sh
+try:
+    from function_names import opencv_function_names
+except:
+    opencv_function_names = []
+    pass
+
 class XmlRenderer(Renderer):
     
     def default(self, node):
@@ -69,6 +78,9 @@ class reStructuredTextRenderer(BaseRenderer):
         self[key[3:]] = getattr(self, key)
 
     self.indent = 0
+    self.in_func = False
+    self.in_cvarg = False
+    self.func_short_desc = ''
 
   def do_document(self, node):
     return unicode(node)
@@ -83,33 +95,64 @@ class reStructuredTextRenderer(BaseRenderer):
     return pre + unicode(node).lstrip() + post
 
   def do_chapter(self, node):
-    t = unicode(node.attributes['title'])
-    return "\n\n%s\n%s\n%s\n\n" % ('*' * len(t), t, '*' * len(t)) + unicode(node)
+    t = str(node.attributes['title'])
+
+    section_files = []
+    for section in node.subsections:
+        try:
+            filename = section.filenameoverride
+            if filename is not None:
+                section_files.append(filename)
+        except:
+            pass
+
+    toc = ".. toctree::\n   :maxdepth: 2\n\n"
+    for file in section_files:
+        if file[-4:] != '.rst':
+            print >>sys.stderr, "WARNING: unexpected file extension:", file
+        else:
+            toc += "   %s\n" % file[:-4]
+    toc += "\n\n"
+
+    return "\n\n%s\n%s\n%s\n\n" % ('*' * len(t), t, '*' * len(t)) + toc + unicode(node)
 
   def do_section(self, node):
-    t = unicode(node.attributes['title'])
+    t = str(node.attributes['title'])
     return "\n\n%s\n%s\n\n" % (t, '=' * len(t)) + unicode(node)
 
   def do_subsection(self, node):
-    t = unicode(node.attributes['title'])
+    t = str(node.attributes['title'])
     return "\n\n%s\n%s\n\n" % (t, '-' * len(t)) + unicode(node)
 
   def do_cvexp(self, node):
     self.indent = -1
-    r = "\n\n.. cfunction:: %s\n\n" % unicode(node.attributes['c'])
-    self.indent = 0
+    self.in_func = False
+    decl = unicode(node.attributes['c']).rstrip(' ;')  # remove trailing ';'
+    r = u"\n\n.. cfunction:: %s\n\n" % decl
+    self.indent = 4
+    if self.func_short_desc != '':
+      r += self.ind() + self.func_short_desc + '\n\n'
+      self.func_short_desc = ''
     return r
 
   def do_description(self, node):
-    return u"\n\n" + unicode(node) + u"\n\n"
+    desc = unicode(node)
+    return u"\n\n" + desc + u"\n\n"
 
   def do_includegraphics(self, node):
-    return u"\n\n.. image:: ../%s\n\n" % str(node.attributes['file']).strip()
+    filename = '../' + str(node.attributes['file']).strip()
+    if not os.path.isfile(filename):
+        print >>sys.stderr, "WARNING: missing image file", filename
+        return u""
+    return u"\n\n.. image:: %s\n\n" % filename
 
   def do_cvfunc(self, node):
     t = str(node.attributes['title']).strip()
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
+    self.in_func = True
+    self.indent = 0
+    return u"" + unicode(node)
 
     # Would like to look ahead to reorder things, but cannot see more than 2 ahead
     if 0:
@@ -120,6 +163,16 @@ class reStructuredTextRenderer(BaseRenderer):
         n = n.nextSibling
       print "-----"
     return label + u"\n\n%s\n%s\n\n" % (t, '^' * len(t)) + unicode(node)
+
+  def do_cvstruct(self, node):
+    t = str(node.attributes['title']).strip()
+    self.indent = 4
+    return u".. ctype:: %s" % t + unicode(node)
+
+  def do_cvmacro(self, node):
+    t = str(node.attributes['title']).strip()
+    self.indent = 4
+    return u".. cmacro:: %s" % t + unicode(node)
 
   def showTree(self, node, i = 0):
     n = node
@@ -158,7 +211,36 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_label(self, node):
     return u""
 
+  def fixup_funcname(self, str):
+    """
+    add parentheses to a function name if not already present
+    """
+    str = str.strip()
+    if str[-1] != ')':
+      return str + '()'
+    return str
+
+  def gen_reference(self, name):
+    """
+    try to guess whether *t* is a function, struct or macro
+    and if yes, generate the appropriate reference markup
+    """
+    name = name.strip()
+    if name[0:2] == 'cv' or name in opencv_function_names:
+        return u":cfunc:`%s`" % self.fixup_funcname(name)
+    elif name[0:2] == 'Cv' or name[0:3] == 'Ipl':
+        return u":ctype:`%s`" % name
+    elif name[0:2] == 'CV':
+        return u":cmacro:`%s`" % name
+    return None
+
   def do_cross(self, node):
+    t = str(node.attributes['name']).strip()
+    # try to guess whether t is a function, struct or macro
+    # and if yes, generate the appropriate reference markup
+    rst_ref = self.gen_reference(t)
+    if rst_ref is not None:
+        return rst_ref
     return u":ref:`%s`" % str(node.attributes['name']).strip()
 
   def ind(self):
@@ -166,10 +248,27 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def do_cvarg(self, node):
     self.indent += 4
+
+    # Nested descriptions occur e.g. when a flag parameter can 
+    # be one of several constants.  We want to render the inner 
+    # description differently than the outer parameter descriptions.
+    if self.in_cvarg:
+      defstr = unicode(node.attributes['def'])
+      assert not (u"\xe2" in unicode(defstr))
+      self.indent -= 4
+      param_str = u"\n%s  * **%s** - %s" 
+      return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip())
+
+    # save that we are in a paramater description
+    self.in_cvarg = True
     defstr = unicode(node.attributes['def'])
     assert not (u"\xe2" in unicode(defstr))
+    self.in_cvarg = False
+
     self.indent -= 4
-    return u"\n%s*%s*\n%s    %s\n" % (self.ind(), str(node.attributes['item']).strip(), self.ind(), defstr)
+    param_str = u"\n%s:param %s: %s"
+    return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip())
+
 
   def do_bgroup(self, node):
     return u"bgroup(%s)" % node.source
@@ -194,7 +293,13 @@ class reStructuredTextRenderer(BaseRenderer):
     return "*%s*" % unicode(node.attributes['self'])
 
   def do_texttt(self, node):
-    return "``%s``" % unicode(node.attributes['self'])
+    t = str(unicode(node))
+    # try to guess whether t is a function, struct or macro
+    # and if yes, generate the appropriate reference markup
+    rst_ref = self.gen_reference(t)
+    if rst_ref is not None:
+        return rst_ref
+    return u"``%s``" % t
 
   def do__underscore(self, node):
     return u"_"
@@ -205,7 +310,7 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def do_lstlisting(self, node):
     lines = node.source.split('\n')
-    body = "".join([("    %s\n" % s) for s in lines[1:-1]])
+    body = "\n".join([u"%s    %s" % (self.ind(), s) for s in lines[1:-1]])
     return u"\n\n::\n\n" + unicode(body) + "\n\n"
 
   def do_math(self, node):
@@ -234,6 +339,10 @@ class reStructuredTextRenderer(BaseRenderer):
     return s
 
   def textDefault(self, node):
+    if self.in_func:
+      self.func_short_desc += self.fix_quotes(unicode(node)).strip()
+      return u""
+
     s = unicode(node)
     s = self.fix_quotes(s)
     return s
@@ -241,32 +350,52 @@ class reStructuredTextRenderer(BaseRenderer):
 
 
 from plasTeX.TeX import TeX
+import os
+import pickle
 
-# Instantiate a TeX processor and parse the input text
-tex = TeX()
-tex.ownerDocument.config['files']['split-level'] = 0
-#tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
+def parse_documentation_source():
+    # Instantiate a TeX processor and parse the input text
+    tex = TeX()
+    tex.ownerDocument.config['files']['split-level'] = 0
+    #tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
 
-src0 = r'''
-\documentclass{book}
-\usepackage{myopencv}
-\begin{document}'''
+    src0 = r'''
+    \documentclass{book}
+    \usepackage{myopencv}
+    \begin{document}'''
 
-src1 = r'''
-\end{document}
-'''
-if 1:
-  tex.input(open("../simple-opencv.tex"))
-else:
-  lines = list(open("../CvReference.tex"))
-  LINES = 80
-  tex.input(src0 + "".join(lines[:LINES]) + src1)
+    src1 = r'''
+    \end{document}
+    '''
+    if 1:
+      tex.input(open("../simple-opencv.tex"))
+    else:
+      lines = list(open("../CvReference.tex"))
+      LINES = 80
+      tex.input(src0 + "".join(lines[:LINES]) + src1)
 
-document = tex.parse()
+    return tex.parse()
 
-# Render the document
-#renderer = Renderer()
-#renderer.render(document)
+# pickling does not work right now
+# plastex will need to be patched up
+#
+#document = None
+#if os.path.exists('document.pickle'):
+#    modified = False
+#    dst_si = os.stat('document.pickle')
+#    for file in ['../CxCore.tex', '../CvReference.tex']:
+#        src_si = os.stat(file)
+#        if src_si.st_mtime > dst_si.st_mtime:
+#            modified = True
+#
+#    if not modified:
+#        document = pickle.load(open('document.pickle', 'rb'))
+
+#if document is None:
+#    document = parse_documentation_source()
+#    pickle.dump(document, open('document.pickle', 'wb'))
+
+document = parse_documentation_source()
 
 rest = reStructuredTextRenderer()
 rest.render(document)
