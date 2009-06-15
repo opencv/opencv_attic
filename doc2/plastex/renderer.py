@@ -229,8 +229,10 @@ class reStructuredTextRenderer(BaseRenderer):
     and if yes, generate the appropriate reference markup
     """
     name = name.strip()
-    if name[0:2] == 'cv' or name in opencv_function_names:
+    if name[0:2] == 'cv':
         return u":cfunc:`%s`" % self.fixup_funcname(name)
+    elif 'cv'+name in opencv_function_names:
+        return u":cfunc:`cv%s`" % self.fixup_funcname(name)
     elif name[0:2] == 'Cv' or name[0:3] == 'Ipl':
         return u":ctype:`%s`" % name
     elif name[0:2] == 'CV':
