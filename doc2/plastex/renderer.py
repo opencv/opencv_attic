@@ -80,6 +80,7 @@ class reStructuredTextRenderer(BaseRenderer):
     self.indent = 0
     self.in_func = False
     self.in_cvarg = False
+    self.after_parameters = False
     self.func_short_desc = ''
 
   def do_document(self, node):
@@ -137,6 +138,7 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def do_description(self, node):
     desc = unicode(node)
+    self.after_parameters = True
     return u"\n\n" + desc + u"\n\n"
 
   def do_includegraphics(self, node):
@@ -151,6 +153,7 @@ class reStructuredTextRenderer(BaseRenderer):
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
     self.in_func = True
+    self.after_parameters = False
     self.indent = 0
     return u"" + unicode(node)
 
@@ -252,12 +255,12 @@ class reStructuredTextRenderer(BaseRenderer):
     # Nested descriptions occur e.g. when a flag parameter can 
     # be one of several constants.  We want to render the inner 
     # description differently than the outer parameter descriptions.
-    if self.in_cvarg:
+    if self.in_cvarg or self.after_parameters:
       defstr = unicode(node.attributes['def'])
       assert not (u"\xe2" in unicode(defstr))
       self.indent -= 4
       param_str = u"\n%s  * **%s** - %s" 
-      return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip())
+      return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip(" "))
 
     # save that we are in a paramater description
     self.in_cvarg = True
