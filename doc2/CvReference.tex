@@ -1736,8 +1736,8 @@ int block\_size=3,\par double param1=5 );
 \cvarg{adaptive\_method}{Adaptive thresholding algorithm to use: \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} or \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)}
 \cvarg{threshold\_type}{Thresholding type; must be one of
 \begin{description}
-  \cvarg{CV\_THRESH\_BINARY}
-  \cvarg{CV\_THRESH\_BINARY\_INV}
+  \cvarg{CV\_THRESH\_BINARY}{xxx}
+  \cvarg{CV\_THRESH\_BINARY\_INV}{xxx}
 \end{description}}
 \cvarg{block\_size}{The size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, ..}
 \cvarg{param1}{The method-dependent parameter. For the methods \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} and \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is a constant subtracted from mean or weighted mean (see the discussion), though it may be negative}
@@ -1916,21 +1916,21 @@ int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** fir
 \cvarg{first\_contour}{Output parameter, will contain the pointer to the first outer contour}
 \cvarg{header\_size}{Size of the sequence header, $\ge \texttt{sizeof(CvChain)}$ if $\texttt{method} =\texttt{CV\_CHAIN\_CODE}$,
 and $\ge \texttt{sizeof(CvContour)}$ otherwise}
-\cvarg{mode}{Retrieval mode}
+\cvarg{mode}{Retrieval mode
 \begin{description}
   \cvarg{CV\_RETR\_EXTERNAL}{retrive only the extreme outer contours}
   \cvarg{CV\_RETR\_LIST}{retrieve all the contours and puts them in the list}
   \cvarg{CV\_RETR\_CCOMP}{retrieve all the contours and organizes them into two-level hierarchy: top level are external boundaries of the components, second level are bounda boundaries of the holes}
   \cvarg{CV\_RETR\_TREE}{retrieve all the contours and reconstructs the full hierarchy of nested contours}
-\end{description}
-\cvarg{method}{Approximation method (for all the modes, except \texttt{CV\_LINK\_RUNS}, which uses built-in approximation)}
+\end{description}}
+\cvarg{method}{Approximation method (for all the modes, except \texttt{CV\_LINK\_RUNS}, which uses built-in approximation)
 \begin{description}
   \cvarg{CV\_CHAIN\_CODE}{output contours in the Freeman chain code. All other methods output polygons (sequences of vertices).}
   \cvarg{CV\_CHAIN\_APPROX\_NONE}{translate all the points from the chain code into points;}
   \cvarg{CV\_CHAIN\_APPROX\_SIMPLE}{compress horizontal, vertical, and diagonal segments, that is, the function leaves only their ending points;}
   \cvarg{CV\_CHAIN\_APPROX\_TC89\_L1,CV\_CHAIN\_APPROX\_TC89\_KCOS}{apply one of the flavors of Teh-Chin chain approximation algorithm.}
   \cvarg{CV\_LINK\_RUNS}{use completely different contour retrieval algorithm via linking of horizontal segments of 1's. Only \texttt{CV\_RETR\_LIST} retrieval mode can be used with this method.}
-\end{description}
+\end{description}}
 \cvarg{offset}{Offset, by which every contour point is shifted. This is useful if the contours are extracted from the image ROI and then they should be analyzed in the whole image context}
 \end{description}
 
