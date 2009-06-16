@@ -1,5 +1,7 @@
-Welcome to OpenCV's Documentation!
-==================================
+OpenCV Reference
+================
+
+The OpenCV Wiki is here: http://opencv.willowgarage.com/
 
 Contents:
 
@@ -8,6 +10,8 @@ Contents:
 
    cxcore
    cvreference
+   cvaux
+   highgui
 
 Indices and tables
 ==================

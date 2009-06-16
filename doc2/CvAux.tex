@@ -1,7 +1,5 @@
 \chapter{CvAux}
 
-\begin{verbatim}
-\end{verbatim}
 \section{Stereo Correspondence Functions}
 
 \cvfunc{FindStereoCorrespondence} % XXX No images at source url's
@@ -28,11 +26,10 @@ cvFindStereoCorrespondence(
 \end{description}
 
 The function \texttt{cvFindStereoCorrespondence} calculates disparity map for two rectified grayscale images.
-\newline
-\newline
+
 Example. Calculating disparity for pair of 8-bit color images
 
-\cvexp{
+\begin{lstlisting}
 /*---------------------------------------------------------------------------------*/
 IplImage* srcLeft = cvLoadImage("left.jpg",1);
 IplImage* srcRight = cvLoadImage("right.jpg",1);
@@ -46,7 +43,7 @@ cvCvtColor(srcRight, rightImage, CV\_BGR2GRAY);
 cvFindStereoCorrespondence( leftImage, rightImage, CV\_DISPARITY\_BIRCHFIELD, depthImage, 50, 15, 3, 6, 8, 15 );
 /*---------------------------------------------------------------------------------*/
 
-}{CPP}{PYTHON}
+\end{lstlisting}
 
 And here is the example stereo pair that can be used to test the example
 
@@ -78,9 +75,8 @@ void cvMakeScanlines( \par const CvMatrix3* matrix, \par CvSize img\_size, \par 
 \end{description}
 
 The function \texttt{cvMakeScanlines} finds coordinates of scanlines for two images.
-\newline
-\newline
-This function returns the number of scanlines. The function does nothing except calculating the number of scanlines if the pointers \texttt{scanlines1}{ or \texttt{scanlines2} are equal to zero.
+
+This function returns the number of scanlines. The function does nothing except calculating the number of scanlines if the pointers \texttt{scanlines1} or \texttt{scanlines2} are equal to zero.
 
 \cvfunc{PreWarpImage}
 
@@ -150,8 +146,7 @@ void cvDynamicCorrespondMulti( \par int line\_count, \par int* first, \par int* 
 \end{description}
 
 The function \texttt{cvDynamicCorrespondMulti} finds correspondence between two sets of runs of two images. Memory must be allocated before calling this function. Memory size for one array of correspondence information is
-\newline
-\newline
+
 \texttt{max( width,height )* numscanlines*3*sizeof ( int ).} 
 
 
@@ -249,7 +244,11 @@ The function \texttt{cvDeleteMoire} deletes moire from the given image. The post
 
 \section{3D Tracking Functions} % XXX Weird URL Formatting, /../?
 
-The section discusses functions for tracking objects in 3d space using a stereo camera. Besides C API, there is DirectShow \href{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerFilter.htm}{3dTracker} filter and the wrapper application \href{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTracker.htm}{3dTracker}. \href{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerTesting.htm}{Here} you may find a description how to test the filter on sample data.
+The section discusses functions for tracking objects in 3d space using a stereo camera. Besides C API, there is DirectShow
+\url{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerFilter.htm}
+filter and the wrapper application
+\url{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTracker.htm}.
+\url{http://opencvlibrary.sourceforge.net/../appPage/3dTracker/3dTrackerTesting.htm} you may find a description how to test the filter on sample data.
 
 \cvfunc{3dTrackerCalibrateCameras} % XXX URL Formatting
 
@@ -275,13 +274,12 @@ CvBool cv3dTrackerCalibrateCameras(\par int num\_cameras,
 The function \texttt{cv3dTrackerCalibrateCameras} searches for a checkerboard of the specified size in each of the images. For each image in which it finds the checkerboard, it fills in the corresponding slot in \texttt{camera\_info} with the position and orientation of the camera relative to the checkerboard and sets the \texttt{valid} flag. If it finds the checkerboard in all the images, it returns true; otherwise it returns false.
 
 This function does not change the members of the \texttt{camera\_info} array that correspond to images in which the checkerboard was not found. This allows you to calibrate each camera independently, instead of simultaneously. To accomplish this, do the following:
-\newline
-\newline
- 1. Clear all the \texttt{valid} flags before calling this function the first time;\newline
- 2. Call this function with each set of images;\newline
- 3. Check all the \texttt{valid} flags after each call. When all the \texttt{valid} flags are set, calibration is complete.
-\newline
-\newline
+\begin{enumerate}
+\item Clear all the \texttt{valid} flags before calling this function the first time;
+\item Call this function with each set of images;
+\item Check all the \texttt{valid} flags after each call. When all the \texttt{valid} flags are set, calibration is complete.
+\end{enumerate}
+
 Note that this method works well only if the checkerboard is rigidly mounted; if it is handheld, all the cameras should be calibrated simultanously to get an accurate result. To ensure that all cameras are calibrated simultaneously, ignore the \texttt{valid} flags and use the return value to decide when calibration is complete.
 
 \cvfunc{3dTrackerLocateObjects}
@@ -300,16 +298,24 @@ int  cv3dTrackerLocateObjects(\par int num\_cameras,
 \begin{description}
 \cvarg{num\_cameras}{the number of cameras.}
 \cvarg{num\_objects}{the maximum number of objects found by any camera. (Also the maximum number of objects returned in \texttt{tracked\_objects}.}
-\cvarg{camera\_info}{camera position and location information for each camera, as determined by \newline \cross{3dTrackerCalibrateCameras}.}
-\cvarg{tracking\_info}{the 2d position of each object as seen by each camera. Although this is specified as a one-dimensional array, it is actually a two-dimensional array: \texttt{const Cv3dTracker\newline2dTrackedObject tracking\_info[num\_cameras][num\_objects]}. The \texttt{id} field of any unused slots must be -$1$. Ids need not be ordered or consecutive.}
+\cvarg{camera\_info}{camera position and location information for each camera, as determined by \cross{3dTrackerCalibrateCameras}.}
+\cvarg{tracking\_info}{the 2d position of each object as seen by each camera. Although this is specified as a one-dimensional array, it is actually a two-dimensional array: \texttt{const Cv3dTracker2dTrackedObject tracking\_info[num\_cameras][num\_objects]}. The \texttt{id} field of any unused slots must be $-1$. Ids need not be ordered or consecutive.}
 \cvarg{tracked\_objects}{filled in with the results.}
 \end{description}
 
-The function \texttt{cv3dTrackerLocateObjects} determines the 3d position of tracked objects based on the 2d tracking information from multiple cameras and the camera position and orientation information computed by \cross{3dTrackerCalibrateCameras}. It locates any objects with the same \texttt{id} that are tracked by more than one camera. It fills in the \texttt{tracked\_objects} array and returns the number of objects located. The \texttt{id} fields of any unused slots in \texttt{tracked\_objects} are set to -$1$.
+The function \texttt{cv3dTrackerLocateObjects} determines the 3d position of tracked objects based on the 2d tracking information from multiple cameras and the camera position and orientation information computed by \cross{3dTrackerCalibrateCameras}. It locates any objects with the same \texttt{id} that are tracked by more than one camera. It fills in the \texttt{tracked\_objects} array and returns the number of objects located. The \texttt{id} fields of any unused slots in \texttt{tracked\_objects} are set to $-1$.
 
 \section{Eigen Objects (PCA) Functions}
 
-The functions described in this section do PCA analysis and compression for a set of 8-bit images that may not fit into memory all together. If your data fits into memory and the vectors are not 8-bit (or you want a simpler interface), use \href{http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm}{cvCalcCovarMatrix}, \href{http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm}{cvSVD} and \href{http://opencvlibrary.sourceforge.net/OpenCVRef\_BasicFuncs.htm}{cvGEMM} to do PCA.
+The functions described in this section do PCA analysis
+and compression for a set of 8-bit images that may not fit
+into memory all together. If your data fits into memory and
+the vectors are not 8-bit (or you want a simpler interface), use
+\cross{CalcCovarMatrix},
+\cross{SVD}
+and
+\cross{GEMM}
+to do PCA.
 
 \cvfunc{CalcCovarMatrixEx}
 
@@ -359,14 +365,11 @@ void cvCalcEigenObjects( \par int nObjects, \par void* input, \par void* output,
 \end{description}
 
 The function \texttt{cvCalcEigenObjects} calculates orthonormal eigen basis and the averaged object for a group of the input objects. Depending on \texttt{ioFlags} parameter it may be used either in direct access or callback mode. Depending on the parameter \texttt{calcLimit}, calculations are finished either after first \texttt{calcLimit.max\_iter} dominating eigen objects are retrieved or if the ratio of the current eigenvalue to the largest eigenvalue comes down to \texttt{calcLimit.epsilon} threshold. The value \texttt{calcLimit -> type} must be \texttt{CV\_TERMCRIT\_NUMB, CV\_TERMCRIT\_EPS}, or \texttt{CV\_TERMCRIT\_NUMB | CV\_TERMCRIT\_EPS} . The function returns the real values \texttt{calcLimit->max\_iter} and \texttt{calcLimit->epsilon} .
-\newline
-\newline
+
 The function also calculates the averaged object, which must be created previously. Calculated eigen objects are arranged according to the corresponding eigenvalues in the descending order.
-\newline
-\newline
+
 The parameter \texttt{eigVals} may be equal to \texttt{NULL}, if eigenvalues are not needed.
-\newline
-\newline
+
 The function \texttt{cvCalcEigenObjects} uses the function \cross{cvCalcCovarMatrixEx}.
 
 \cvfunc{CalcDecompCoeff}
@@ -574,8 +577,7 @@ void cvImgToObs\_DCT( \par IplImage* image, \par float* obs, \par CvSize dctSize
 \end{description}
 
 The function \texttt{cvImgToObs\_DCT} extracts observation vectors, that is, DCT coefficients, from the image. The user must pass \texttt{obsInfo.obs} as the parameter \texttt{obs} to use this function with other HMM functions and use the structure \texttt{obsInfo} of the \cross{CvImgObsInfo} type.
-\newline
-\newline
+
 \texttt{Calculating Observations for HMM}
 
 \cvexp{
@@ -606,7 +608,7 @@ void cvUniformImgSegm( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 The function \texttt{cvUniformImgSegm} segments image observations by HMM states uniformly (see \textcolor{blue}{\underline{Initial Segmentation}} for 2D Embedded HMM for 2D embedded HMM with 5 superstates and 3, 6, 6, 6, 3 internal states of every corresponding superstate).
 
 \textcolor{blue}{Initial Segmentation for 2D Embedded HMM}
-\newline
+
 \url{http://opencvlibrary.sourceforge.net/pics/face.png}
 
 \cvfunc{InitMixSegm}
