@@ -1,31 +1,26 @@
 \chapter{HighGui}
-\begin{verbatim}
-<<Include(QuickLinks,,0)>>
-----
-## Want to make a title that doesn't get included in TOC
-## http://moinmo.in/FeatureRequests/ExcludeHeadingsFromTableOfContent
-## For now we use this workaround
-~+ '''HighGUI Reference Manual''' +~
 
-<<TableOfContents(3)>>
-----
-\end{verbatim}
 \subsection{HighGUI overview}
-\begin{verbatim}
-While OpenCV is intended and designed for being used in production level applications, HighGUI is just an addendum for quick software prototypes and experimentation setups. The general idea behind its design is to have a small set of directly useable functions to interface your computer vision code with the environment.
 
-Usually, you will need to get source images into your program and resulting image out to disk. In addition, simple methods to display images on screen and to allow (limited) user input are provided.
+While OpenCV is intended and designed for being used in production level
+applications, HighGUI is just an addendum for quick software prototypes
+and experimentation setups. The general idea behind its design is to
+have a small set of directly useable functions to interface your computer
+vision code with the environment.
 
-'''''Note: None of the methods implemented in HighGUI allow for building sleek user interfaces with production level error handling.''''' If you intend to build end user applications, don't use HighGUI for this. In the opposite, look at native libraries for your target system. For example: camera input methods in HighGUI are designed to be easily useable. However, there are no means to react on cameras being plugged in or out during run time, etc.
+Usually, you will need to get source images into your program and
+resulting image out to disk. In addition, simple methods to display
+images on screen and to allow (limited) user input are provided.
 
-----
+Note: None of the methods implemented in HighGUI allow for building
+sleek user interfaces with production level error handling.''''' If you
+intend to build end user applications, don't use HighGUI for this. In
+the opposite, look at native libraries for your target system. For
+example: camera input methods in HighGUI are designed to be easily
+useable. However, there are no means to react on cameras being plugged
+in or out during run time, etc.
 
-\end{verbatim}
 \subsection{Simple GUI}
-\begin{verbatim}
-----
-
-\end{verbatim}
 
 \cvfunc{NamedWindow}
 
@@ -438,21 +433,22 @@ double cvGetCaptureProperty( CvCapture* capture, int property\_id );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ capture}{video capturing structure.}
-\cvarg{ property\_id}{property identifier. Can be one of the following:
-
-\texttt{CV\_CAP\_PROP\_POS\_MSEC} - film current position in milliseconds or video capture timestamp\newline
-\texttt{CV\_CAP\_PROP\_POS\_FRAMES} - 0-based index of the frame to be decoded/captured next\newline 
-\texttt{CV\_CAP\_PROP\_POS\_AVI\_RATIO} - relative position of video file (0 - start of the film, 1 - end of the film)\newline 
-\texttt{CV\_CAP\_PROP\_FRAME\_WIDTH} - width of frames in the video stream\newline 
-\texttt{CV\_CAP\_PROP\_FRAME\_HEIGHT} - height of frames in the video stream\newline 
-\texttt{CV\_CAP\_PROP\_FPS} - frame rate\newline 
-\texttt{CV\_CAP\_PROP\_FOURCC} - 4-character code of codec\newline 
-\texttt{CV\_CAP\_PROP\_FRAME\_COUNT} - number of frames in video file\newline 
-\texttt{CV\_CAP\_PROP\_BRIGHTNESS} - brightness of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_CONTRAST} - contrast of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_SATURATION} - saturation of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_HUE} - hue of image (only for cameras) }
+\cvarg{capture}{video capturing structure.}
+\cvarg{property\_id}{property identifier. Can be one of the following:
+\begin{description}
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp\newline}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next\newline }
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)\newline }
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream\newline }
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream\newline }
+\cvarg{CV\_CAP\_PROP\_FPS}{frame rate\newline }
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec\newline }
+\cvarg{CV\_CAP\_PROP\_FRAME\_COUNT}{number of frames in video file\newline }
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_HUE}{hue of image (only for cameras)}
+\end{description} }
 \end{description}
 
 The function \texttt{cvGetCaptureProperty} retrieves the specified property of camera or video file.
@@ -470,17 +466,19 @@ int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par d
 \cvarg{ capture}{video capturing structure.}
 \cvarg{ property\_id}{property identifier. Can be one of the following:
 
-\texttt{CV\_CAP\_PROP\_POS\_MSEC} - film current position in milliseconds or video capture timestamp\newline
-\texttt{CV\_CAP\_PROP\_POS\_FRAMES} - 0-based index of the frame to be decoded/captured next\newline 
-\texttt{CV\_CAP\_PROP\_POS\_AVI\_RATIO} - relative position of video file (0 - start of the film, 1 - end of the film)\newline 
-\texttt{CV\_CAP\_PROP\_FRAME\_WIDTH} - width of frames in the video stream\newline 
-\texttt{CV\_CAP\_PROP\_FRAME\_HEIGHT} - height of frames in the video stream\newline 
-\texttt{CV\_CAP\_PROP\_FPS} - frame rate\newline 
-\texttt{CV\_CAP\_PROP\_FOURCC} - 4-character code of codec\newline 
-\texttt{CV\_CAP\_PROP\_BRIGHTNESS} - brightness of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_CONTRAST} - contrast of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_SATURATION} - saturation of image (only for cameras)\newline 
-\texttt{CV\_CAP\_PROP\_HUE} - hue of image (only for cameras) }
+\begin{description}
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp\newline}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next\newline }
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)\newline }
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream\newline }
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream\newline }
+\cvarg{CV\_CAP\_PROP\_FPS}{frame rate\newline }
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec\newline }
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_HUE}{hue of image (only for cameras)}
+\end{description} }
 
 \cvarg{ value}{value of the property.}
 \end{description}
@@ -560,7 +558,11 @@ int cvInitSystem( int argc, char** argv );
 \cvarg{ argv}{Array of command line arguments}
 \end{description}
 
-The function \texttt{cvInitSystem} initializes HighGUI. If it wasn't called explicitly by the user before the first window is created, it is called implicitly then with \texttt{argc}$=0$, \texttt{argv}$=$NULL. Under Win32 there is no need to call it explicitly. Under X Window the arguments may be used to customize a look of HighGUI windows and controls.
+The function \texttt{cvInitSystem} initializes HighGUI. If it wasn't
+called explicitly by the user before the first window is created, it is
+called implicitly then with $\texttt{argc}=0$, $\texttt{argv}=NULL$. Under
+Win32 there is no need to call it explicitly. Under X Window the arguments
+may be used to customize a look of HighGUI windows and controls.
 
 \cvfunc{ConvertImage} % XXX:TBD
 
@@ -575,104 +577,10 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
 \cvarg{ src}{Source image.}
 \cvarg{ dst}{Destination image. Must be single-channel or 3-channel 8-bit image.}
 \cvarg{ flags}{The operation flags:
-
-\texttt{CV\_CVTIMG\_FLIP} - flip the image vertically
-\texttt{CV\_CVTIMG\_SWAP\_RB} - swap red and blue channels. In OpenCV color images have \texttt{BGR} channel order, however on some systems the order needs to be reversed before displaying the image (\cross{ShowImage} does this automatically).}
+\begin{description}
+\cvarg{CV\_CVTIMG\_FLIP}{flip the image vertically}
+\cvarg{CV\_CVTIMG\_SWAP\_RB}{swap red and blue channels. In OpenCV color images have \texttt{BGR} channel order, however on some systems the order needs to be reversed before displaying the image (\cross{ShowImage} does this automatically).}
+\end{description}}
 \end{description}
 
 The function \texttt{cvConvertImage} converts one image to another and flips the result vertically if required. The function is used by \cross{ShowImage}.
-
-\subsection{Alphabetical List of Functions}
-
-\cvfunc{C} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvCaptureFromCAM|CaptureFromCAM]] ||[[#cvConvertImage|ConvertImage]] ||[[#cvCreateVideoWriter|CreateVideoWriter]] ||
-||[[#cvCaptureFromFile|CaptureFromFile]] ||[[#cvCreateTrackbar|CreateTrackbar]] || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{D} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvDestroyAllWindows|DestroyAllWindows]] ||[[#cvDestroyWindow|DestroyWindow]] || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{G} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvGetCaptureProperty|GetCaptureProperty]] ||[[#cvGetWindowHandle|GetWindowHandle]] ||[[#cvGrabFrame|GrabFrame]] ||
-||[[#cvGetTrackbarPos|GetTrackbarPos]] ||[[#cvGetWindowName|GetWindowName]] || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{I} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvInitSystem|InitSystem]] || || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{L} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvLoadImage|LoadImage]] || || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{M} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvMoveWindow|MoveWindow]] || || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{N} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvNamedWindow|NamedWindow]] || || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{Q} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvQueryFrame|QueryFrame]] || || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{R} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvReleaseCapture|ReleaseCapture]] ||[[#cvResizeWindow|ResizeWindow]] || ||
-||[[#cvReleaseVideoWriter|ReleaseVideoWriter]] ||[[#cvRetrieveFrame|RetrieveFrame]] || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{S} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvSaveImage|SaveImage]] ||[[#cvSetMouseCallback|SetMouseCallback]] ||[[#cvShowImage|ShowImage]] ||
-||[[#cvSetCaptureProperty|SetCaptureProperty]] ||[[#cvSetTrackbarPos|SetTrackbarPos]] || ||
-
-
-----
-
-\end{verbatim}
-\cvfunc{W} % XXX:TBD
-\begin{verbatim}
-||<tablewidth="100%">[[#cvWaitKey|WaitKey]] ||[[#cvWriteFrame|WriteFrame]] || ||
-
-
-----
-<<Include(QuickLinks,,0)>>
-\end{verbatim}

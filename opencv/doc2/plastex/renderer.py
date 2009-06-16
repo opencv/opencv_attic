@@ -346,6 +346,7 @@ class reStructuredTextRenderer(BaseRenderer):
   def fix_quotes(self, s):
     s = s.replace(u'\u2013', "'")
     s = s.replace(u'\u2019', "'")
+    s = s.replace(u'\xd7', "#<d7>")
     return s
 
   def textDefault(self, node):

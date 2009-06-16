@@ -61,7 +61,7 @@ class chapter(Sectioning.chapter):
     def filenameoverride(self):
         if self.attributes['title'] is not None:
             filename = section_filename(str(self.attributes['title']))
-            assert filename in ['cxcore.rst', 'cvreference.rst']
+            #assert filename in ['cxcore.rst', 'cvreference.rst']
             return filename
         raise AttributeError, 'This chapter does not generate a new file'
         
