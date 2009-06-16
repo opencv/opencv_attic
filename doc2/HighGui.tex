@@ -26,8 +26,9 @@ Usually, you will need to get source images into your program and resulting imag
 ----
 
 \end{verbatim}
-\cvfunc{cvNamedWindow} % XXX:TBD
-\begin{verbatim}
+
+\cvfunc{NamedWindow}
+
 Creates window
 
 \cvexp{
@@ -35,17 +36,17 @@ int cvNamedWindow( const char* name, int flags );
 
 }{CPP}{PYTHON}
 
-\cvarg{ name}{Name of the window which is used as window identifier and appears in the window caption}.
-\cvarg{ flags}{Flags of the window}. Currently the only supported flag is \cvexp{CV\_WINDOW\_AUTOSIZE}{CPP}{PYTHON}. If it is set, window size is automatically adjusted to fit the displayed image (see [[#cvShowImage|cvShowImage]]), while user can not change the window size manually.
+\begin{description}
+\cvarg{ name}{Name of the window which maybe is used as window identifier and appears in the window caption.}
+\cvarg{ flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If it is set, window size is automatically adjusted to fit the displayed image (see \cross{ShowImage}), while user can not change the window size manually.}
+\end{description}
 
-The function \cvexp{cvNamedWindow}{CPP}{PYTHON} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred by their names.
+The function \texttt{cvNamedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred by their names.
 
 If the window with such a name already exists, the function does nothing.
 
-----
-\end{verbatim}
-\cvfunc{cvDestroyWindow} % XXX:TBD
-\begin{verbatim}
+\cvfunc{DestroyWindow}
+
 Destroys a window
 
 \cvexp{
@@ -53,14 +54,14 @@ void cvDestroyWindow( const char* name );
 
 }{CPP}{PYTHON}
 
-\cvarg{ name}{Name of the window to be destroyed}.
+\begin{description}
+\cvarg{ name}{Name of the window to be destroyed.}
+\end{description}
 
-The function \cvexp{cvDestroyWindow}{CPP}{PYTHON} destroys the window with a given name.
+The function \texttt{cvDestroyWindow} destroys the window with a given name.
 
-----
-\end{verbatim}
-\cvfunc{cvDestroyAllWindows} % XXX:TBD
-\begin{verbatim}
+\cvfunc{DestroyAllWindows} 
+
 Destroys all the HighGUI windows
 
 \cvexp{
@@ -68,12 +69,10 @@ void cvDestroyAllWindows(void);
 
 }{CPP}{PYTHON}
 
-The function \cvexp{cvDestroyAllWindows}{CPP}{PYTHON} destroys all the opened HighGUI windows.
+The function \texttt{cvDestroyAllWindows} destroys all the opened HighGUI windows.
 
-----
-\end{verbatim}
-\cvfunc{cvResizeWindow} % XXX:TBD
-\begin{verbatim}
+\cvfunc{ResizeWindow} 
+
 Sets window size
 
 \cvexp{
@@ -81,16 +80,16 @@ void cvResizeWindow( const char* name, int width, int height );
 
 }{CPP}{PYTHON}
 
-\cvarg{ name}{Name of the window to be resized}.
+\begin{description}
+\cvarg{ name}{Name of the window to be resized.}
 \cvarg{ width}{New width}
 \cvarg{ height}{New height}
+\end{description}
 
-The function \cvexp{cvResizeWindow}{CPP}{PYTHON} changes size of the window.
+The function \texttt{cvResizeWindow} changes size of the window.
 
-----
-\end{verbatim}
-\cvfunc{cvMoveWindow} % XXX:TBD
-\begin{verbatim}
+\cvfunc{MoveWindow} 
+
 Sets window position
 
 \cvexp{
@@ -98,16 +97,16 @@ void cvMoveWindow( const char* name, int x, int y );
 
 }{CPP}{PYTHON}
 
-\cvarg{ name}{Name of the window to be resized}.
+\begin{description}
+\cvarg{ name}{Name of the window to be resized.}
 \cvarg{ x}{New x coordinate of top-left corner}
 \cvarg{ y}{New y coordinate of top-left corner}
+\end{description}
 
-The function \cvexp{cvMoveWindow}{CPP}{PYTHON} changes position of the window.
+The function \texttt{cvMoveWindow} changes position of the window.
 
-----
-\end{verbatim}
-\cvfunc{cvGetWindowHandle} % XXX:TBD
-\begin{verbatim}
+\cvfunc{GetWindowHandle}
+
 Gets window handle by name
 
 \cvexp{
@@ -115,14 +114,14 @@ void* cvGetWindowHandle( const char* name );
 
 }{CPP}{PYTHON}
 
+\begin{description}
 \cvarg{ name}{Name of the window}.
+\end{description}
 
-The function \cvexp{cvGetWindowHandle}{CPP}{PYTHON} returns native window handle (HWND in case of Win32 and GtkWidget in case of GTK+).
+The function \texttt{cvGetWindowHandle} returns native window handle (HWND in case of Win32 and GtkWidget in case of GTK+).
 
-----
-\end{verbatim}
-\cvfunc{cvGetWindowName} % XXX:TBD
-\begin{verbatim}
+\cvfunc{GetWindowName} 
+
 Gets window name by handle
 
 \cvexp{
@@ -130,14 +129,14 @@ const char* cvGetWindowName( void* window\_handle );
 
 }{CPP}{PYTHON}
 
-\cvarg{ window\_handle}{Handle of the window}.
+\begin{description}
+\cvarg{ window\_handle}{Handle of the window.}
+\end{description}
 
-The function \cvexp{cvGetWindowName}{CPP}{PYTHON} returns the name of window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
+The function \texttt{cvGetWindowName} returns the name of window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
 
-----
-\end{verbatim}
-\cvfunc{cvShowImage} % XXX:TBD
-\begin{verbatim}
+\cvfunc{ShowImage} 
+
 Shows the image in the specified window
 
 \cvexp{
@@ -145,111 +144,119 @@ void cvShowImage( const char* name, const CvArr* image );
 
 }{CPP}{PYTHON}
 
-\cvarg{ name}{Name of the window}.
-\cvarg{ image}{Image to be shown}.
+\begin{description}
+\cvarg{ name}{Name of the window.}
+\cvarg{ image}{Image to be shown.}
+\end{description}
 
-The function \cvexp{cvShowImage}{CPP}{PYTHON} shows the image in the specified window. If the window was created with {{{CV\_WINDOW\_AUTOSIZE}}} flag then the image is shown with its original size, otherwise the image is scaled to fit the window.
+The function \texttt{cvShowImage} shows the image in the specified window. If the window was created with \texttt{CV\_WINDOW\_AUTOSIZE} flag then the image is shown with its original size, otherwise the image is scaled to fit the window.
 
-----
-\end{verbatim}
-\cvfunc{cvCreateTrackbar} % XXX:TBD
-\begin{verbatim}
+\cvfunc{CreateTrackbar} 
+
 Creates the trackbar and attaches it to the specified window
 
 \cvexp{
-CV\_EXTERN\_C\_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
-
-int cvCreateTrackbar( const char* trackbar\_name, const char* window\_name,
-                      int* value, int count, CvTrackbarCallback on\_change );
+int cvCreateTrackbar( \par const char* trackbar\_name, \par const char* window\_name,
+                      \par int* value, \par int count, \par CvTrackbarCallback on\_change );
 
 }{CPP}{PYTHON}
+\begin{lstlisting}
+CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
+\end{lstlisting}
 
-\cvarg{ trackbar\_name}{Name of created trackbar}.
-\cvarg{ window\_name}{Name of the window which will e used as a parent for created trackbar}.
-\cvarg{ value}{Pointer to the integer variable, which value will reflect the position of the slider}. Upon the creation the slider position is defined by this variable.
-\cvarg{ count}{Maximal position of the slider}. Minimal position is always 0.
-\cvarg{ on\_change}{Pointer to the function to be called every time the slider changes the position}. This function should be prototyped as \cvexp{void Foo(int);}{CPP}{PYTHON}Can be NULL if callback is not required.
+\begin{description}
+\cvarg{ trackbar\_name}{Name of created trackbar.}
+\cvarg{ window\_name}{Name of the window which will e used as a parent for created trackbar.}
+\cvarg{ value}{Pointer to the integer variable, which value will reflect the position of the slider. Upon the creation the slider position is defined by this variable.}
+\cvarg{ count}{Maximal position of the slider. Minimal position is always $0$.}
+\cvarg{ on\_change}{Pointer to the function to be called every time the slider changes the position. This function should be prototyped as \texttt{void Foo(int);}Can be NULL if callback is not required.}
+\end{description}
 
-The function \cvexp{cvCreateTrackbar}{CPP}{PYTHON} creates the trackbar (a.k.a. slider or range control) with the specified name and range, assigns the variable to be syncronized with trackbar position and specifies callback function to be called on trackbar position change. The created trackbar is displayed on top of given window.
+The function \texttt{cvCreateTrackbar} creates the trackbar (a.k.a. slider or range control) with the specified name and range, assigns the variable to be syncronized with trackbar position and specifies callback function to be called on trackbar position change. The created trackbar is displayed on top of given window.
 
-----
-\end{verbatim}
-\cvfunc{cvGetTrackbarPos} % XXX:TBD
-\begin{verbatim}
+\cvfunc{GetTrackbarPos} 
+
 Retrieves trackbar position
 
 \cvexp{
-int cvGetTrackbarPos( const char* trackbar\_name, const char* window\_name );
+int cvGetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name );
 
 }{CPP}{PYTHON}
 
-\cvarg{ trackbar\_name}{Name of trackbar}.
-\cvarg{ window\_name}{Name of the window which is the parent of trackbar}.
+\begin{description}
+\cvarg{ trackbar\_name}{Name of trackbar.}
+\cvarg{ window\_name}{Name of the window which is the parent of trackbar.}
+\end{description}
 
-The function \cvexp{cvGetTrackbarPos}{CPP}{PYTHON} returns the ciurrent position of the specified trackbar.
+The function \texttt{cvGetTrackbarPos} returns the ciurrent position of the specified trackbar.
 
-----
-\end{verbatim}
-\cvfunc{cvSetTrackbarPos} % XXX:TBD
-\begin{verbatim}
+\cvfunc{SetTrackbarPos} 
+
 Sets trackbar position
 
 \cvexp{
-void cvSetTrackbarPos( const char* trackbar\_name, const char* window\_name, int pos );
+void cvSetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name, \par int pos );
 
 }{CPP}{PYTHON}
 
-\cvarg{ trackbar\_name}{Name of trackbar}.
-\cvarg{ window\_name}{Name of the window which is the parent of trackbar}.
-\cvarg{ pos}{New position}.
+\begin{description}
+\cvarg{ trackbar\_name}{Name of trackbar.}
+\cvarg{ window\_name}{Name of the window which is the parent of trackbar.}
+\cvarg{ pos}{New position.}
+\end{description}
 
-The function \cvexp{cvSetTrackbarPos}{CPP}{PYTHON} sets the position of the specified trackbar.
+The function \texttt{cvSetTrackbarPos} sets the position of the specified trackbar.
 
-----
-\end{verbatim}
-\cvfunc{cvSetMouseCallback} % XXX:TBD
-\begin{verbatim}
+\cvfunc{SetMouseCallback} %XXX Weird URL Formatting
+
 Assigns callback for mouse events
 
 \cvexp{
-#define CV\_EVENT\_MOUSEMOVE      0
-#define CV\_EVENT\_LBUTTONDOWN    1
-#define CV\_EVENT\_RBUTTONDOWN    2
-#define CV\_EVENT\_MBUTTONDOWN    3
-#define CV\_EVENT\_LBUTTONUP      4
-#define CV\_EVENT\_RBUTTONUP      5
-#define CV\_EVENT\_MBUTTONUP      6
-#define CV\_EVENT\_LBUTTONDBLCLK  7
-#define CV\_EVENT\_RBUTTONDBLCLK  8
-#define CV\_EVENT\_MBUTTONDBLCLK  9
-
-#define CV\_EVENT\_FLAG\_LBUTTON   1
-#define CV\_EVENT\_FLAG\_RBUTTON   2
-#define CV\_EVENT\_FLAG\_MBUTTON   4
-#define CV\_EVENT\_FLAG\_CTRLKEY   8
-#define CV\_EVENT\_FLAG\_SHIFTKEY  16
-#define CV\_EVENT\_FLAG\_ALTKEY    32
-
-CV\_EXTERN\_C\_FUNCPTR( void (*CvMouseCallback )(int event, int x, int y, int flags, void* param) );
-
 void cvSetMouseCallback( const char* window\_name, CvMouseCallback on\_mouse, void* param=NULL );
 }{CPP}{PYTHON}
 
-\cvarg{ window\_name}{Name of the window}.
-\cvarg{ on\_mouse}{Pointer to the function to be called every time mouse event occurs in the specified window}. This function should be prototyped as
+\begin{lstlisting}
+#define CV_EVENT_MOUSEMOVE      0
+#define CV_EVENT_LBUTTONDOWN    1
+#define CV_EVENT_RBUTTONDOWN    2
+#define CV_EVENT_MBUTTONDOWN    3
+#define CV_EVENT_LBUTTONUP      4
+#define CV_EVENT_RBUTTONUP      5
+#define CV_EVENT_MBUTTONUP      6
+#define CV_EVENT_LBUTTONDBLCLK  7
+#define CV_EVENT_RBUTTONDBLCLK  8
+#define CV_EVENT_MBUTTONDBLCLK  9
+
+#define CV_EVENT_FLAG_LBUTTON   1
+#define CV_EVENT_FLAG_RBUTTON   2
+#define CV_EVENT_FLAG_MBUTTON   4
+#define CV_EVENT_FLAG_CTRLKEY   8
+#define CV_EVENT_FLAG_SHIFTKEY  16
+#define CV_EVENT_FLAG_ALTKEY    32
+
+CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, 
+					      int x, 
+					      int y, 
+					      int flags, 
+				              void* param) );
+\end{lstlisting}
+
+\begin{description}
+\cvarg{ window\_name}{Name of the window.}
+\cvarg{ on\_mouse}{Pointer to the function to be called every time mouse event occurs in the specified window. This function should be prototyped as
 
 \cvexp{
 void Foo(int event, int x, int y, int flags, void* param);
 }{CPP}{PYTHON}
 
-where \cvexp{event}{CPP}{PYTHON} is one of {{{CV\_EVENT\_*}}}, {{{x}}} and {{{y}}} are coordinates of mouse pointer in image coordinates (not window coordinates), {{{flags}}} is a combination of {{{CV\_EVENT\_FLAG}}}, and {{{param}}} is a user-defined parameter passed to the {{{cvSetMouseCallback}}} function call.\cvarg{param}{User-defined parameter to be passed to the callback function}.
+where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are coordinates of mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\cvarg{param}{User-defined parameter to be passed to the callback function.}
+\end{description}
 
-The function \cvexp{cvSetMouseCallback}{CPP}{PYTHON} sets the callback function for mouse events occuting within the specified window. To see how it works, look at [[http://opencvlibrary.sourceforge.net/../../samples/c/ffilldemo.c|opencv/samples/c/ffilldemo.c]] demo
+The function \texttt{cvSetMouseCallback} sets the callback function for mouse events occuting within the specified window. To see how it works, look at \url{http://opencvlibrary.sourceforge.net/../../samples/c/ffilldemo.c|opencv/samples/c/ffilldemo.c} 
 
-----
-\end{verbatim}
-\cvfunc{cvWaitKey} % XXX:TBD
-\begin{verbatim}
+\cvfunc{WaitKey} 
+
 Waits for a pressed key
 
 \cvexp{
@@ -257,47 +264,47 @@ int cvWaitKey( int delay=0 );
 
 }{CPP}{PYTHON}
 
-\cvarg{ delay}{Delay in milliseconds}.
+\begin{description}
+\cvarg{ delay}{Delay in milliseconds.}
+\end{description}
 
-The function \cvexp{cvWaitKey}{CPP}{PYTHON} waits for key event infinitely (delay<=0) or for "delay" milliseconds. Returns the code of the pressed key or -1 if no key were pressed until the specified timeout has elapsed.
+The function \texttt{cvWaitKey} waits for key event infinitely (delay<=0) or for "delay" milliseconds. Returns the code of the pressed key or -$1$ if no key were pressed until the specified timeout has elapsed.
 
-'''Note''': This function is the only method in HighGUI to fetch and handle events so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
+\textbf{Note:} This function is the only method in HighGUI to fetch and handle events so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
-----
-\end{verbatim}
 \subsection{Loading and Saving Images}
-\begin{verbatim}
-----
-\end{verbatim}
-\cvfunc{cvLoadImage} % XXX:TBD
-\begin{verbatim}
+
+\cvfunc{LoadImage} % XXX:Doesn't match manual
+
 Loads an image from file
 
 \cvexp{
-#define CV\_LOAD\_IMAGE\_COLOR       1
-#define CV\_LOAD\_IMAGE\_GRAYSCALE   0
-#define CV\_LOAD\_IMAGE\_UNCHANGED  -1
-
-IplImage* cvLoadImage( const char* filename, int iscolor=CV\_LOAD\_IMAGE\_COLOR );
-
+IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );
 }{CPP}{PYTHON}
 
-\cvarg{ filename}{Name of file to be loaded}.
-\cvarg{ iscolor}{Specifies colorness of the loaded image}:<<BR>> if >0, the loaded image is forced to be color 3-channel image;<<BR>> if 0, the loaded image is forced to be grayscale;<<BR>> if <0, the loaded image will be loaded as is (with number of channels depends on the file).
+\begin{lstlisting}
+#define CV_LOAD_IMAGE_COLOR       1
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+#define CV_LOAD_IMAGE_UNCHANGED  -1
+\end{lstlisting}
 
-The function \cvexp{cvLoadImage}{CPP}{PYTHON} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
+\begin{description}
+\cvarg{ filename}{Name of file to be loaded.}
+\cvarg{ iscolor}{Specifies colorness of the loaded image: if $>0$, the loaded image is forced to be color 3-channel image; if $0$, the loaded image is forced to be grayscale; if $<0$, the loaded image will be loaded as is (with number of channels depends on the file).}
+\end{description}
 
- * Windows bitmaps - BMP, DIB
- * JPEG files - JPEG, JPG, JPE
- * Portable Network Graphics - PNG
- * Portable image format - PBM, PGM, PPM
- * Sun rasters - SR, RAS
- * TIFF files - TIFF, TIF
+The function \texttt{cvLoadImage} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
+\begin{itemize}
+\item Windows bitmaps - BMP, DIB
+\item JPEG files - JPEG, JPG, JPE
+\item Portable Network Graphics - PNG
+\item Portable image format - PBM, PGM, PPM
+\item Sun rasters - SR, RAS
+\item TIFF files - TIFF, TIF
+\end{itemize}
 
-----
-\end{verbatim}
-\cvfunc{cvSaveImage} % XXX:TBD
-\begin{verbatim}
+\cvfunc{SaveImage} 
+
 Saves an image to the file
 
 \cvexp{
@@ -305,19 +312,17 @@ int cvSaveImage( const char* filename, const CvArr* image );
 
 }{CPP}{PYTHON}
 
-\cvarg{ filename}{Name of the file}.
-\cvarg{ image}{Image to be saved}.
+\begin{description}
+\cvarg{ filename}{Name of the file.}
+\cvarg{ image}{Image to be saved.}
+\end{description}
 
-The function \cvexp{cvSaveImage}{CPP}{PYTHON} saves the image to the specified file. The image format is chosen depending on the {{{filename}}} extension, see [[#cvLoadImage|cvLoadImage]]. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use {{{cvCvtScale}}} and {{{cvCvtColor}}} to convert it before saving, or use universal {{{cvSave}}} to save the image to XML or YAML format.
+The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen depending on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
-----
-\end{verbatim}
 \subsection{Video I/O functions}
-\begin{verbatim}
-----
-\end{verbatim}
-\cvfunc{CvCapture} % XXX:TBD
-\begin{verbatim}
+
+\cvfunc{Capture} 
+
 Video capturing structure
 
 \cvexp{
@@ -325,12 +330,10 @@ typedef struct CvCapture CvCapture;
 
 }{CPP}{PYTHON}
 
-The structure \cvexp{CvCapture}{CPP}{PYTHON} does not have public interface and is used only as a parameter for video capturing functions.
+The structure \texttt{CvCapture} does not have public interface and is used only as a parameter for video capturing functions.
 
-----
-\end{verbatim}
-\cvfunc{cvCaptureFromFile} % XXX:TBD
-\begin{verbatim}
+\cvfunc{CaptureFromFile} % XXX:Called cvCreateFileCapture in manual
+
 Initializes capturing video from file
 
 \cvexp{
@@ -338,16 +341,17 @@ CvCapture* cvCaptureFromFile( const char* filename );
 
 }{CPP}{PYTHON}
 
-\cvarg{ filename}{Name of the video file}.
+\begin{description}
+\cvarg{ filename}{Name of the video file.}
+\end{description}
 
-The function \cvexp{cvCaptureFromFile}{CPP}{PYTHON} allocates and initialized the CvCapture structure for reading the video stream from the specified file. Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux this is ffmpeg, on Mac OS X the back end is !QuickTime. See VideoCodecs for some discussion on what to expect and how to prepare your video files.
+The function \texttt{cvCaptureFromFile} allocates and initialized the CvCapture structure for reading the video stream from the specified file. Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux this is ffmpeg, on Mac OS X the back end is QuickTime. See VideoCodecs for some discussion on what to expect and how to prepare your video files.
+\newline
+\newline
+After the allocated structure is not used any more it should be released by \cross{ReleaseCapture} function.
 
-After the allocated structure is not used any more it should be released by [[#cvReleaseCapture|cvReleaseCapture]] function.
+\cvfunc{CaptureFromCAM} % XXX:Called cvCreateCameraCapture in manual
 
-----
-\end{verbatim}
-\cvfunc{cvCaptureFromCAM} % XXX:TBD
-\begin{verbatim}
 Initializes capturing video from camera
 
 \cvexp{
@@ -355,16 +359,17 @@ CvCapture* cvCaptureFromCAM( int index );
 
 }{CPP}{PYTHON}
 
-\cvarg{ index}{Index of the camera to be used}. If there is only one camera or it does not matter what camera to use -1 may be passed.
+\begin{description}
+\cvarg{ index}{Index of the camera to be used. If there is only one camera or it does not matter what camera to use -$1$ may be passed.}
+\end{description}
 
-The function \cvexp{cvCaptureFromCAM}{CPP}{PYTHON} allocates and initialized the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and !FireWire (IEEE1394).
+The function \texttt{cvCaptureFromCAM} allocates and initialized the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and !FireWire (IEEE1394).
+\newline
+\newline
+To release the structure, use \cross{ReleaseCapture}.
 
-To release the structure, use [[#cvReleaseCapture|cvReleaseCapture]].
+\cvfunc{ReleaseCapture} 
 
-----
-\end{verbatim}
-\cvfunc{cvReleaseCapture} % XXX:TBD
-\begin{verbatim}
 Releases the CvCapture structure
 
 \cvexp{
@@ -372,14 +377,14 @@ void cvReleaseCapture( CvCapture** capture );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{pointer to video capturing structure}.
+\begin{description}
+\cvarg{ capture}{pointer to video capturing structure.}
+\end{description}
 
-The function \cvexp{cvReleaseCapture}{CPP}{PYTHON} releases the CvCapture structure allocated by [[#cvCaptureFromFile|cvCaptureFromFile]] or [[#cvCaptureFromCAM|cvCaptureFromCAM]].
+The function \texttt{cvReleaseCapture} releases the CvCapture structure allocated by \cross{CaptureFromFile} or \cross{CaptureFromCAM}.
 
-----
-\end{verbatim}
-\cvfunc{cvGrabFrame} % XXX:TBD
-\begin{verbatim}
+\cvfunc{GrabFrame} 
+
 Grabs frame from camera or file
 
 \cvexp{
@@ -387,14 +392,14 @@ int cvGrabFrame( CvCapture* capture );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{video capturing structure}.
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
 
-The function \cvexp{cvGrabFrame}{CPP}{PYTHON} grabs the frame from camera or file. The grabbed frame is stored internally. The purpose of this function is to grab frame ''fast'' that is important for syncronization in case of reading from several cameras simultaneously. The grabbed frames are not exposed because they may be stored in compressed format (as defined by camera/driver). To retrieve the grabbed frame, [[#cvRetrieveFrame|cvRetrieveFrame]] should be used.
+The function \texttt{cvGrabFrame} grabs the frame from camera or file. The grabbed frame is stored internally. The purpose of this function is to grab frame \emph{fast} that is important for syncronization in case of reading from several cameras simultaneously. The grabbed frames are not exposed because they may be stored in compressed format (as defined by camera/driver). To retrieve the grabbed frame, \cross{RetrieveFrame} should be used.
 
-----
-\end{verbatim}
-\cvfunc{cvRetrieveFrame} % XXX:TBD
-\begin{verbatim}
+\cvfunc{RetrieveFrame} % XXX:Different than manual
+
 Gets the image grabbed with cvGrabFrame
 
 \cvexp{
@@ -402,14 +407,14 @@ IplImage* cvRetrieveFrame( CvCapture* capture );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{video capturing structure}.
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
 
-The function \cvexp{cvRetrieveFrame}{CPP}{PYTHON} returns the pointer to the image grabbed with [[#cvGrabFrame|cvGrabFrame]] function. The returned image should not be released or modified by user.
+The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed with \cross{GrabFrame} function. The returned image should not be released or modified by user.
 
-----
-\end{verbatim}
-\cvfunc{cvQueryFrame} % XXX:TBD
-\begin{verbatim}
+\cvfunc{QueryFrame} 
+
 Grabs and returns a frame from camera or file
 
 \cvexp{
@@ -417,14 +422,14 @@ IplImage* cvQueryFrame( CvCapture* capture );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{video capturing structure}.
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
 
-The function \cvexp{cvQueryFrame}{CPP}{PYTHON} grabs a frame from camera or video file, decompresses and returns it. This function is just a combination of [[#cvGrabFrame|cvGrabFrame]] and [[#cvRetrieveFrame|cvRetrieveFrame]] in one call. The returned image should not be released or modified by user.
+The function \texttt{cvQueryFrame} grabs a frame from camera or video file, decompresses and returns it. This function is just a combination of \cross{GrabFrame} and \cross{RetrieveFrame} in one call. The returned image should not be released or modified by user.
 
-----
-\end{verbatim}
-\cvfunc{cvGetCaptureProperty} % XXX:TBD
-\begin{verbatim}
+\cvfunc{GetCaptureProperty}
+
 Gets video capturing properties
 
 \cvexp{
@@ -432,87 +437,84 @@ double cvGetCaptureProperty( CvCapture* capture, int property\_id );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{video capturing structure}.
-\cvarg{ property\_id}{property identifier}. Can be one of the following:
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\cvarg{ property\_id}{property identifier. Can be one of the following:
 
-||\cvexp{CV\_CAP\_PROP\_POS\_MSEC}{CPP}{PYTHON} ||film current position in milliseconds or video capture timestamp ||
-||\cvexp{CV\_CAP\_PROP\_POS\_FRAMES}{CPP}{PYTHON} ||0-based index of the frame to be decoded/captured next ||
-||\cvexp{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{CPP}{PYTHON} ||relative position of video file (0 - start of the film, 1 - end of the film) ||
-||\cvexp{CV\_CAP\_PROP\_FRAME\_WIDTH}{CPP}{PYTHON} ||width of frames in the video stream ||
-||\cvexp{CV\_CAP\_PROP\_FRAME\_HEIGHT}{CPP}{PYTHON} ||height of frames in the video stream ||
-||\cvexp{CV\_CAP\_PROP\_FPS}{CPP}{PYTHON} ||frame rate ||
-||\cvexp{CV\_CAP\_PROP\_FOURCC}{CPP}{PYTHON} ||4-character code of codec ||
-||\cvexp{CV\_CAP\_PROP\_FRAME\_COUNT}{CPP}{PYTHON} ||number of frames in video file ||
-||\cvexp{CV\_CAP\_PROP\_BRIGHTNESS}{CPP}{PYTHON} ||brightness of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_CONTRAST}{CPP}{PYTHON} ||contrast of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_SATURATION}{CPP}{PYTHON} ||saturation of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_HUE}{CPP}{PYTHON} ||hue of image (only for cameras) ||
+\texttt{CV\_CAP\_PROP\_POS\_MSEC} - film current position in milliseconds or video capture timestamp\newline
+\texttt{CV\_CAP\_PROP\_POS\_FRAMES} - 0-based index of the frame to be decoded/captured next\newline 
+\texttt{CV\_CAP\_PROP\_POS\_AVI\_RATIO} - relative position of video file (0 - start of the film, 1 - end of the film)\newline 
+\texttt{CV\_CAP\_PROP\_FRAME\_WIDTH} - width of frames in the video stream\newline 
+\texttt{CV\_CAP\_PROP\_FRAME\_HEIGHT} - height of frames in the video stream\newline 
+\texttt{CV\_CAP\_PROP\_FPS} - frame rate\newline 
+\texttt{CV\_CAP\_PROP\_FOURCC} - 4-character code of codec\newline 
+\texttt{CV\_CAP\_PROP\_FRAME\_COUNT} - number of frames in video file\newline 
+\texttt{CV\_CAP\_PROP\_BRIGHTNESS} - brightness of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_CONTRAST} - contrast of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_SATURATION} - saturation of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_HUE} - hue of image (only for cameras) }
+\end{description}
 
+The function \texttt{cvGetCaptureProperty} retrieves the specified property of camera or video file.
 
-The function \cvexp{cvGetCaptureProperty}{CPP}{PYTHON} retrieves the specified property of camera or video file.
+\cvfunc{SetCaptureProperty} 
 
-----
-<<Anchor(cvSetCaptureProperty)>>
-\end{verbatim}
-\cvfunc{cvSetCaptureProperty} % XXX:TBD
-\begin{verbatim}
 Sets video capturing properties
 
 \cvexp{
-int cvSetCaptureProperty( CvCapture* capture, int property\_id, double value );
+int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );
 
 }{CPP}{PYTHON}
 
-\cvarg{ capture}{video capturing structure}.
-\cvarg{ property\_id}{property identifier}. Can be one of the following:
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\cvarg{ property\_id}{property identifier. Can be one of the following:
 
-||\cvexp{CV\_CAP\_PROP\_POS\_MSEC}{CPP}{PYTHON} ||position in milliseconds from the file beginning ||
-||\cvexp{CV\_CAP\_PROP\_POS\_FRAMES}{CPP}{PYTHON} ||position in frames (only for video files) ||
-||\cvexp{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{CPP}{PYTHON} ||position in relative units (0 - start of the file, 1 - end of the file) ||
-||\cvexp{CV\_CAP\_PROP\_FRAME\_WIDTH}{CPP}{PYTHON} ||width of frames in the video stream (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_FRAME\_HEIGHT}{CPP}{PYTHON} ||height of frames in the video stream (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_FPS}{CPP}{PYTHON} ||frame rate (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_FOURCC}{CPP}{PYTHON} ||4-character code of codec (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_BRIGHTNESS}{CPP}{PYTHON} ||brightness of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_CONTRAST}{CPP}{PYTHON} ||contrast of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_SATURATION}{CPP}{PYTHON} ||saturation of image (only for cameras) ||
-||\cvexp{CV\_CAP\_PROP\_HUE}{CPP}{PYTHON} ||hue of image (only for cameras) ||
+\texttt{CV\_CAP\_PROP\_POS\_MSEC} - film current position in milliseconds or video capture timestamp\newline
+\texttt{CV\_CAP\_PROP\_POS\_FRAMES} - 0-based index of the frame to be decoded/captured next\newline 
+\texttt{CV\_CAP\_PROP\_POS\_AVI\_RATIO} - relative position of video file (0 - start of the film, 1 - end of the film)\newline 
+\texttt{CV\_CAP\_PROP\_FRAME\_WIDTH} - width of frames in the video stream\newline 
+\texttt{CV\_CAP\_PROP\_FRAME\_HEIGHT} - height of frames in the video stream\newline 
+\texttt{CV\_CAP\_PROP\_FPS} - frame rate\newline 
+\texttt{CV\_CAP\_PROP\_FOURCC} - 4-character code of codec\newline 
+\texttt{CV\_CAP\_PROP\_BRIGHTNESS} - brightness of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_CONTRAST} - contrast of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_SATURATION} - saturation of image (only for cameras)\newline 
+\texttt{CV\_CAP\_PROP\_HUE} - hue of image (only for cameras) }
 
+\cvarg{ value}{value of the property.}
+\end{description}
 
-\cvarg{ value}{value of the property}.
+The function \texttt{cvSetCaptureProperty} sets the specified property of video capturing. Currently the function supports only video files: \texttt{CV\_CAP\_PROP\_POS\_MSEC, CV\_CAP\_PROP\_POS\_FRAMES, CV\_CAP\_PROP\_POS\_AVI\_RATIO}.
 
-The function \cvexp{cvSetCaptureProperty}{CPP}{PYTHON} sets the specified property of video capturing. Currently the function supports only video files: {{{CV\_CAP\_PROP\_POS\_MSEC, CV\_CAP\_PROP\_POS\_FRAMES, CV\_CAP\_PROP\_POS\_AVI\_RATIO}}}.
+NB This function currently does nothing when using the latest CVS download on linux with FFMPEG (the function contents are hidden using if $0$ and it returns $0$)
 
-NB This function currently does nothing when using the latest CVS download on linux with FFMPEG (the function contents are hidden using #if 0 and it returns 0)
+\cvfunc{CreateVideoWriter} % XXX Different than manual
 
-----
-<<Anchor(cvCreateVideoWriter)>>
-\end{verbatim}
-\cvfunc{cvCreateVideoWriter} % XXX:TBD
-\begin{verbatim}
 Creates video file writer
 
 \cvexp{
 typedef struct CvVideoWriter CvVideoWriter;
-CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc, double fps, CvSize frame\_size, int is\_color=1 );
+CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, \par double fps, \par CvSize frame\_size, \par int is\_color=1 );
 
 }{CPP}{PYTHON}
 
-\cvarg{ filename}{Name of the output video file}.
-\cvarg{ fourcc}{4-character code of codec used to compress the frames}. For example, \cvexp{CV\_FOURCC('P','I','M','1')}{CPP}{PYTHON} is MPEG-1 codec, {{{CV\_FOURCC('M','J','P','G')}}} is motion-jpeg codec etc. Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if we pass 0 while using an avi filename it will create a video writer that creates uncompressed avi file.
-\cvarg{ fps}{Framerate of the created video stream}.
-\cvarg{ frame\_size}{Size of video frames}.
-\cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only)}.
+\begin{description}
+\cvarg{ filename}{Name of the output video file.}
+\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,\newline \texttt{CV\_FOURCC('P','I','M','1')} is MPEG-1 codec, \texttt{CV\_FOURCC('M','J','P','G')} is motion-jpeg codec etc. Under Win32 it is possible to pass -$1$ in order to choose compression method and additional compression parameters from dialog. Under Win32 if we pass $0
+$ while using an avi filename it will create a video writer that creates uncompressed avi file.}
+\cvarg{ fps}{Framerate of the created video stream.}
+\cvarg{ frame\_size}{Size of video frames.}
+\cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
+\end{description}
 
-The function \cvexp{cvCreateVideoWriter}{CPP}{PYTHON} creates video writer structure.
-
+The function \texttt{cvCreateVideoWriter} creates video writer structure.
+\newline
+\newline
 Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux this is ffmpeg, on Mac OS X the back end is !QuickTime. See VideoCodecs for some discussion on what to expect.
 
-----
-<<Anchor(cvReleaseVideoWriter)>>
-\end{verbatim}
-\cvfunc{cvReleaseVideoWriter} % XXX:TBD
-\begin{verbatim}
+\cvfunc{ReleaseVideoWriter}
+
 Releases AVI writer
 
 \cvexp{
@@ -520,15 +522,14 @@ void cvReleaseVideoWriter( CvVideoWriter** writer );
 
 }{CPP}{PYTHON}
 
-\cvarg{ writer}{pointer to video file writer structure}.
+\begin{description}
+\cvarg{ writer}{pointer to video file writer structure.}
+\end{description}
 
-The function \cvexp{cvReleaseVideoWriter}{CPP}{PYTHON} finishes writing to video file and releases the structure.
+The function \texttt{cvReleaseVideoWriter} finishes writing to video file and releases the structure.
 
-----
-<<Anchor(cvWriteFrame)>>
-\end{verbatim}
-\cvfunc{cvWriteFrame} % XXX:TBD
-\begin{verbatim}
+\cvfunc{WriteFrame} 
+
 Writes a frame to video file
 
 \cvexp{
@@ -536,20 +537,17 @@ int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 
 }{CPP}{PYTHON}
 
-\cvarg{ writer}{video writer structure}.
+\begin{description}
+\cvarg{ writer}{video writer structure.}
 \cvarg{ image}{the written frame}
+\end{description}
 
-The function \cvexp{cvWriteFrame}{CPP}{PYTHON} writes/appends one frame to video file.
+The function \texttt{cvWriteFrame} writes/appends one frame to video file.
 
-----
-\end{verbatim}
 \subsection{Utility and System Functions}
-\begin{verbatim}
-----
-<<Anchor(cvInitSystem)>>
-\end{verbatim}
-\cvfunc{cvInitSystem} % XXX:TBD
-\begin{verbatim}
+
+\cvfunc{InitSystem}
+
 Initializes HighGUI
 
 \cvexp{
@@ -557,16 +555,15 @@ int cvInitSystem( int argc, char** argv );
 
 }{CPP}{PYTHON}
 
-\cvarg{ argc}{Number of command line arguments}.
+\begin{description}
+\cvarg{ argc}{Number of command line arguments.}
 \cvarg{ argv}{Array of command line arguments}
+\end{description}
 
-The function \cvexp{cvInitSystem}{CPP}{PYTHON} initializes HighGUI. If it wasn't called explicitly by the user before the first window is created, it is called implicitly then with {{{argc}}}=0, {{{argv}}}=NULL. Under Win32 there is no need to call it explicitly. Under X Window the arguments may be used to customize a look of HighGUI windows and controls.
+The function \texttt{cvInitSystem} initializes HighGUI. If it wasn't called explicitly by the user before the first window is created, it is called implicitly then with \texttt{argc}$=0$, \texttt{argv}$=$NULL. Under Win32 there is no need to call it explicitly. Under X Window the arguments may be used to customize a look of HighGUI windows and controls.
 
-----
-<<Anchor(cvConvertImage)>>
-\end{verbatim}
-\cvfunc{cvConvertImage} % XXX:TBD
-\begin{verbatim}
+\cvfunc{ConvertImage} % XXX:TBD
+
 Converts one image to another with optional vertical flip
 
 \cvexp{
@@ -574,23 +571,19 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
 
 }{CPP}{PYTHON}
 
-\cvarg{ src}{Source image}.
-\cvarg{ dst}{Destination image}. Must be single-channel or 3-channel 8-bit image.
-\cvarg{ flags}{The operation flags}:
+\begin{description}
+\cvarg{ src}{Source image.}
+\cvarg{ dst}{Destination image. Must be single-channel or 3-channel 8-bit image.}
+\cvarg{ flags}{The operation flags:
 
-||\cvexp{CV\_CVTIMG\_FLIP}{CPP}{PYTHON} ||flip the image vertically ||
-||\cvexp{CV\_CVTIMG\_SWAP\_RB}{CPP}{PYTHON} ||swap red and blue channels. In OpenCV color images have {{{BGR}}} channel order, however on some systems the order needs to be reversed before displaying the image ([[#cvShowImage|cvShowImage]] does this automatically). ||
+\texttt{CV\_CVTIMG\_FLIP} - flip the image vertically
+\texttt{CV\_CVTIMG\_SWAP\_RB} - swap red and blue channels. In OpenCV color images have \texttt{BGR} channel order, however on some systems the order needs to be reversed before displaying the image (\cross{ShowImage} does this automatically).}
+\end{description}
 
+The function \texttt{cvConvertImage} converts one image to another and flips the result vertically if required. The function is used by \cross{ShowImage}.
 
-The function \cvexp{cvConvertImage}{CPP}{PYTHON} converts one image to another and flips the result vertically if required. The function is used by [[#cvShowImage|cvShowImage]].
-
-----
-\end{verbatim}
 \subsection{Alphabetical List of Functions}
-\begin{verbatim}
-----
 
-\end{verbatim}
 \cvfunc{C} % XXX:TBD
 \begin{verbatim}
 ||<tablewidth="100%">[[#cvCaptureFromCAM|CaptureFromCAM]] ||[[#cvConvertImage|ConvertImage]] ||[[#cvCreateVideoWriter|CreateVideoWriter]] ||
