@@ -2,5 +2,5 @@
 
 tput clear
 
-TEXINPUTS=../: python renderer.py > a &&
+TEXINPUTS=../: python renderer.py > a || exit
 TEXINPUTS=$PWD: make html

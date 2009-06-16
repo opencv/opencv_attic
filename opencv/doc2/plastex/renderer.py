@@ -80,6 +80,7 @@ class reStructuredTextRenderer(BaseRenderer):
     self.indent = 0
     self.in_func = False
     self.in_cvarg = False
+    self.descriptions = 0
     self.after_parameters = False
     self.func_short_desc = ''
 
@@ -93,7 +94,7 @@ class reStructuredTextRenderer(BaseRenderer):
     else:
       pre = "\n" + (" " * self.indent)
       post = "\n"
-    return pre + unicode(node).lstrip() + post
+    return pre + unicode(node).lstrip(" ") + post
 
   def do_chapter(self, node):
     t = str(node.attributes['title'])
@@ -137,8 +138,11 @@ class reStructuredTextRenderer(BaseRenderer):
     return r
 
   def do_description(self, node):
+    self.descriptions += 1
     desc = unicode(node)
-    self.after_parameters = True
+    self.descriptions -= 1
+    if self.descriptions == 0:
+      self.after_parameters = True
     return u"\n\n" + desc + u"\n\n"
 
   def do_includegraphics(self, node):
@@ -153,6 +157,7 @@ class reStructuredTextRenderer(BaseRenderer):
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
     self.in_func = True
+    self.descriptions = 0
     self.after_parameters = False
     self.indent = 0
     return u"" + unicode(node)
@@ -261,7 +266,7 @@ class reStructuredTextRenderer(BaseRenderer):
       defstr = unicode(node.attributes['def'])
       assert not (u"\xe2" in unicode(defstr))
       self.indent -= 4
-      param_str = u"\n%s  * **%s** - %s" 
+      param_str = u"\n%s  * **%s** - %s\n" 
       return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip(" "))
 
     # save that we are in a paramater description
@@ -290,7 +295,7 @@ class reStructuredTextRenderer(BaseRenderer):
       defstr = unicode(node).strip()
       assert not (u"\xe2" in unicode(defstr))
       self.indent -= 4
-      return u"\n%s*%s*\n%s    %s\n" % (self.ind(), unicode(node.attributes['term']).strip(), self.ind(), defstr)
+      return u"\n%s* %s *\n%s    %s\n" % (self.ind(), unicode(node.attributes['term']).strip(), self.ind(), defstr)
     else:
       return u"\n\n%s* %s" % (self.ind(), unicode(node).strip())
 
@@ -316,7 +321,7 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_lstlisting(self, node):
     lines = node.source.split('\n')
     body = "\n".join([u"%s    %s" % (self.ind(), s) for s in lines[1:-1]])
-    return u"\n\n::\n\n" + unicode(body) + "\n\n"
+    return u"\n\n%s::\n\n" % self.ind() + unicode(body) + "\n\n"
 
   def do_math(self, node):
     return u":math:`%s`" % node.source
@@ -345,7 +350,7 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def textDefault(self, node):
     if self.in_func:
-      self.func_short_desc += self.fix_quotes(unicode(node)).strip()
+      self.func_short_desc += self.fix_quotes(unicode(node)).strip(" ")
       return u""
 
     s = unicode(node)
