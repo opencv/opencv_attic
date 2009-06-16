@@ -1273,7 +1273,7 @@ double param3=0, double param4=0 );
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image}
-\cvarg{smoothtype}{Type of the smoothing:}
+\cvarg{smoothtype}{Type of the smoothing:
 \begin{description}
   \cvarg{CV\_BLUR\_NO\_SCALE (simple blur with no scaling)}{summation over a pixel $\texttt{param1}\times \texttt{param2}$ neighborhood. If the neighborhood size may vary, one may precompute integral image with \cross{Integral} function}
   \cvarg{CV\_BLUR (simple blur)}{summation over a pixel $\texttt{param1}\times \texttt{param2}$ neighborhood with subsequent scaling by $1/(\texttt{param1} \cdot \texttt{param2})$}
@@ -1282,7 +1282,7 @@ double param3=0, double param4=0 );
   \cvarg{CV\_BILATERAL (bilateral filter)}{applying bilateral $\texttt{param1}\times \texttt{param2}$ filtering with color sigma=\texttt{param3} and space sigma=\texttt{param4}. \texttt{param1} and \texttt{param2} must be equal (square). Information about bilateral filtering can be found at
 \url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}
 }
-\end{description}
+\end{description}}
 \cvarg{param1}{The first parameter of smoothing operation}
 \cvarg{param2}{The second parameter of smoothing operation. In case of simple scaled/non-scaled and Gaussian blur if \texttt{param2} is zero, it is set to \texttt{param1}}
 \cvarg{param3}{In case of Gaussian parameter this parameter may specify Gaussian $\sigma$ (standard deviation). If it is zero, it is calculated from the kernel size:
