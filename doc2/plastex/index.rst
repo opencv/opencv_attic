@@ -12,6 +12,7 @@ Contents:
    cvreference
    cvaux
    highgui
+   faq
 
 Indices and tables
 ==================
