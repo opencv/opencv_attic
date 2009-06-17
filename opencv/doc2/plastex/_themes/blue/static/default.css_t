@@ -35,6 +35,21 @@ div.body {
     padding: 0 20px 30px 20px;
 }
 
+div.feedback {
+    background-color: {{ theme_feedbackbgcolor }};
+    color: {{ theme_feedbacktextcolor }};
+    padding: 20px 20px 30px 20px;
+}
+
+div.feedback h2 {
+    margin: 10px 0 10px 0;
+}
+
+div.feedback a {
+    color: {{ theme_feedbacklinkcolor }};
+    font-weight: bold;
+}
+
 {%- if theme_rightsidebar|tobool %}
 div.bodywrapper {
     margin: 0 230px 0 0;
