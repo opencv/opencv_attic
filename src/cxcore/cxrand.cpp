@@ -195,32 +195,31 @@ Randi_( Mat& _arr, uint64* state, const void* _param )
 }
 
 
-template<typename T, typename iT> static void
-Randf_( Mat& _arr, uint64* state, const void* _param )
+static void Randf_( Mat& _arr, uint64* state, const void* _param )
 {
     uint64 temp = *state;
-    const T* param = (const T*)_param;
+    const float* param = (const float*)_param;
     Size size = getContinuousSize(_arr,_arr.channels());
 
     for( int y = 0; y < size.height; y++ )
     {
-        T* arr = (T*)(_arr.data + _arr.step*y);
+        float* arr = (float*)(_arr.data + _arr.step*y);
         int i, k = 3;
-        const T* p = param;
+        const float* p = param;
         for( i = 0; i <= size.width - 4; i += 4 )
         {
-            T f0, f1;
+            float f0, f1;
 
             temp = RNG_NEXT(temp);
-            f0 = (iT)temp*p[i+12] + p[i];
+            f0 = (int)temp*p[i+12] + p[i];
             temp = RNG_NEXT(temp);
-            f1 = (iT)temp*p[i+13] + p[i+1];
+            f1 = (int)temp*p[i+13] + p[i+1];
             arr[i] = f0; arr[i+1] = f1;
 
             temp = RNG_NEXT(temp);
-            f0 = (iT)temp*p[i+14] + p[i+2];
+            f0 = (int)temp*p[i+14] + p[i+2];
             temp = RNG_NEXT(temp);
-            f1 = (iT)temp*p[i+15] + p[i+3];
+            f1 = (int)temp*p[i+15] + p[i+3];
             arr[i+2] = f0; arr[i+3] = f1;
 
             if( !--k )
@@ -233,13 +232,64 @@ Randf_( Mat& _arr, uint64* state, const void* _param )
         for( ; i < size.width; i++ )
         {
             temp = RNG_NEXT(temp);
-            arr[i] = (iT)temp*p[i+12] + p[i];
+            arr[i] = (int)temp*p[i+12] + p[i];
         }
     }
 
     *state = temp;
 }
 
+
+static void
+Randd_( Mat& _arr, uint64* state, const void* _param )
+{
+    uint64 temp = *state;
+    const double* param = (const double*)_param;
+    Size size = getContinuousSize(_arr,_arr.channels());
+
+    for( int y = 0; y < size.height; y++ )
+    {
+        double* arr = (double*)(_arr.data + _arr.step*y);
+        int i, k = 3;
+        const double* p = param;
+        int64 v;
+        for( i = 0; i <= size.width - 4; i += 4 )
+        {
+            double f0, f1;
+
+            temp = RNG_NEXT(temp);
+            v = (temp >> 32)|(temp << 32);
+            f0 = v*p[i+12] + p[i];
+            temp = RNG_NEXT(temp);
+            v = (temp >> 32)|(temp << 32);
+            f1 = v*p[i+12] + p[i];
+            arr[i] = f0; arr[i+1] = f1;
+
+            temp = RNG_NEXT(temp);
+            v = (temp >> 32)|(temp << 32);
+            f0 = v*p[i+12] + p[i];
+            temp = RNG_NEXT(temp);
+            v = (temp >> 32)|(temp << 32);
+            f1 = v*p[i+12] + p[i];
+            arr[i+2] = f0; arr[i+3] = f1;
+
+            if( !--k )
+            {
+                k = 3;
+                p -= 12;
+            }
+        }
+
+        for( ; i < size.width; i++ )
+        {
+            temp = RNG_NEXT(temp);
+            v = (temp >> 32)|(temp << 32);
+            arr[i] = v*p[i+12] + p[i];
+        }
+    }
+
+    *state = temp;
+}
 
 /***************************************************************************************\
     The code below implements algorithm from the paper:
@@ -368,14 +418,13 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
         {RandBits_<uchar>, 0,
         RandBits_<ushort>,
         RandBits_<short>,
-        RandBits_<int>, 0, 0},
+        RandBits_<int>, 0, 0, 0},
 
         {Randi_<uchar,float>, 0,
         Randi_<ushort,float>,
         Randi_<short,float>,
         Randi_<int,float>,
-        Randf_<float,int>,
-        Randf_<double,int64>, 0},
+        Randf_, Randd_, 0},
 
         {Randn_<uchar,float>, 0,
         Randn_<ushort,float>,
