@@ -150,7 +150,7 @@ class reStructuredTextRenderer(BaseRenderer):
     if not os.path.isfile(filename):
         print >>sys.stderr, "WARNING: missing image file", filename
         return u""
-    return u"\n\n.. image:: %s\n\n" % filename
+    return u"\n\n%s.. image:: %s\n\n" % (self.ind(), filename)
 
   def do_cvfunc(self, node):
     t = unicode(node.attributes['title']).strip()
