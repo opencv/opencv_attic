@@ -153,7 +153,7 @@ class reStructuredTextRenderer(BaseRenderer):
     return u"\n\n.. image:: %s\n\n" % filename
 
   def do_cvfunc(self, node):
-    t = str(node.attributes['title']).strip()
+    t = unicode(node.attributes['title']).strip()
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
     self.in_func = True
@@ -303,7 +303,7 @@ class reStructuredTextRenderer(BaseRenderer):
     return "*%s*" % unicode(node.attributes['self'])
 
   def do_texttt(self, node):
-    t = str(unicode(node))
+    t = unicode(node)
     # try to guess whether t is a function, struct or macro
     # and if yes, generate the appropriate reference markup
     rst_ref = self.gen_reference(t)
@@ -346,6 +346,7 @@ class reStructuredTextRenderer(BaseRenderer):
   def fix_quotes(self, s):
     s = s.replace(u'\u2013', "'")
     s = s.replace(u'\u2019', "'")
+    s = s.replace(u'\u2264', "#<2264>")
     s = s.replace(u'\xd7', "#<d7>")
     return s
 
