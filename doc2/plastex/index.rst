@@ -12,6 +12,7 @@ Contents:
    cvreference
    cvaux
    highgui
+   machine_learning
    faq
 
 Indices and tables
