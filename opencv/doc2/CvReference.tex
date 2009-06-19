@@ -1,4 +1,4 @@
-\chapter{CvReference}
+f\chapter{CvReference}
 \section{Image Processing}
 
 Note: The chapter describes functions for image processing and
@@ -25,7 +25,7 @@ int yorder,
 
 int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{Sobel(src,dst,xorder,yorder,aperture_size = 3)-> None}
 \begin{description}
 \cvarg{src}{Source image of type CvArr*}
 \cvarg{dst}{Destination image}
@@ -104,7 +104,7 @@ CvArr* dst,
 
 int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{Laplace(src,dst,aperture_size=3)-> None}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
@@ -137,7 +137,7 @@ double threshold2,
 
 int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{Canny(image,edges,threshold1,threshold2,aperture_size=3)-> None}
 \begin{description}
 \cvarg{image}{Single-channel input image}
 \cvarg{edges}{Single-channel image to store the edges found by the function}
@@ -160,7 +160,7 @@ CvArr* corners,
 
 int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{PreCornerDetect(image,corners,aperture_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{corners}{Image to store the corner candidates}
@@ -196,7 +196,7 @@ Calculates eigenvalues and eigenvectors of image blocks for corner detection
 \cvexp{
 void cvCornerEigenValsAndVecs( \par const CvArr* image,\par CvArr* eigenvv,\par int block\_size,\par int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{CornerEigenValsAndVecs(image,eigenvv,block_size,aperture_size=3)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -236,7 +236,7 @@ int block\_size,
 
 int aperture\_size=3 );
 
-}{CPP}{PYTHON}
+}{CPP}{CornerMinEigenVal(image,eigenval,block_size,aperture_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{eigenval}{Image to store the minimal eigen values. Should have the same size as \texttt{image}}
@@ -263,7 +263,7 @@ int aperture\_size=3,
 
 double k=0.04 );
 
-}{CPP}{PYTHON}
+}{CPP}{CornerHarris(image,harris_dst,block_size,aperture_size=3,k=0.04)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -299,7 +299,7 @@ CvSize win,
 CvSize zero\_zone,
 
 CvTermCriteria criteria );
-}{CPP}{PYTHON}
+}{CPP}{FindCornerSubPix(image,win,zero_zone,criteria)-> corners}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -360,7 +360,7 @@ int use\_harris=0
 
 double k=0.04 );
 
-}{CPP}{PYTHON}
+}{CPP}{GoodFeaturesToTrack(image,eig_image,temp_image,quality_level,min_distance,mask=NULL,block_size=3,use_harris=0,k=0.04)-> corners}
 
 \begin{description}
 \cvarg{image}{The source 8-bit or floating-point 32-bit, single-channel image}
@@ -398,7 +398,7 @@ Extracts Speeded Up Robust Features from image
 
 \cvexp{
 void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** keypoints,\par CvSeq** descriptors,\par CvMemStorage* storage,\par CvSURFParams params );
-}{CPP}{PYTHON}
+}{CPP}{ExtractSURF(image,mask,storage,params)-> keypoints,descriptors}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image.}
@@ -455,7 +455,7 @@ Retrieves keypoints using StarDetector algorithm
 
 \cvexp{
 CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\par CvStarDetectorParams params=cvStarDetectorParams() );
-}{CPP}{PYTHON}
+}{CPP}{GetStarKeypoints(image,storage,params)-> CvSeqOfStarKeypoint*}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image.}
@@ -589,7 +589,7 @@ const CvArr* src,
 CvArr* dst,
 
 CvPoint2D32f center );
-}{CPP}{PYTHON}
+}{CPP}{GetRectSubPix(src,dst,center)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -623,7 +623,7 @@ CvArr* dst,
 
 const CvMat* map\_matrix );
 
-}{CPP}{PYTHON}
+}{CPP}{GetQuadrangleSubPix(src,dst,map_matrix)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -668,7 +668,7 @@ CvArr* dst,
 
 int interpolation=CV\_INTER\_LINEAR );
 
-}{CPP}{PYTHON}
+}{CPP}{Resize(src,dst,interpolation=CV_INTER_LINEAR)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -701,7 +701,7 @@ int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 
 CvScalar fillval=cvScalarAll(0) );
 
-}{CPP}{PYTHON}
+}{CPP}{WarpAffline(src,dst,map_matrix,flags=CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,fillval=cvScalarAll(0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -763,7 +763,7 @@ const CvPoint2D32f* src,
 const CvPoint2D32f* dst, 
 
 CvMat* map\_matrix );
-}{CPP}{PYTHON}
+}{CPP}{GetAffineTransform(src,dst,map_matrix)-> None}
 
 \begin{description}
 \cvarg{src}{ Coordinates of 3 triangle vertices in the source image}
@@ -810,7 +810,7 @@ double angle,
 double scale,
 
 CvMat* map\_matrix );
-}{CPP}{PYTHON}
+}{CPP}{2DRotationMatrix(center,angle,scale,map_matrix)-> None}
 
 \begin{description}
 \cvarg{center}{Center of the rotation in the source image}
@@ -853,7 +853,9 @@ int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 
 CvScalar fillval=cvScalarAll(0) );
 
-}{CPP}{PYTHON}
+}{CPP}{WarpPerspective(src,dst,map_matrix,flags=CV_I
+NNER_LINEAR+CV_WARP_FILL_OUTLIERS,fillval=cvScalarAll(0
+))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -905,7 +907,7 @@ const CvPoint2D32f* src,
 const CvPoint2D32f* dst,
 
 CvMat* map\_matrix );
-}{CPP}{PYTHON}
+}{CPP}{GetPerspectiveTransform(src,dst,map_matrix)-> None}
 
 \begin{description}
 \cvarg{src}{Coordinates of 4 quadrangle vertices in the source image}
@@ -957,7 +959,7 @@ int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 
 CvScalar fillval=cvScalarAll(0) );
 
-}{CPP}{PYTHON}
+}{CPP}{Remap(src,dst,mapx,mapy,flags=CV_INNER_LINEAR+CV_WARP_FILL_OUTLIERS,fillval=cvScalarAll0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -996,7 +998,7 @@ double M,
 
 int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS );
 
-}{CPP}{PYTHON}
+}{CPP}{LogPolar(src,dst,center,M,flags=CV_INNER_LINEAR+CV_WARP_FILL_OUTLIERS)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -1083,7 +1085,7 @@ int anchor\_y,
 int shape,
 
 int* values=NULL );
-}{CPP}{PYTHON}
+}{CPP}{CreateStructuringElementEx(cols,rows,anchor_x,anchor_y,shape,values={NULL,0})-> IplConvKernel*}
 
 \begin{description}
 \cvarg{cols}{Number of columns in the structuring element}
@@ -1130,7 +1132,7 @@ CvArr* dst,
 IplConvKernel* element=NULL,
 
 int iterations=1 );
-}{CPP}{PYTHON}
+}{CPP}{Erode(src,dst,element=NULL,itertions=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -1161,7 +1163,7 @@ CvArr* dst,
 IplConvKernel* element=NULL,
 
 int iterations=1 );
-}{CPP}{PYTHON}
+}{CPP}{Dilate(src,dst,element=NULL,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -1196,7 +1198,7 @@ IplConvKernel* element,
 int operation,
 
 int iterations=1 );
-}{CPP}{PYTHON}
+}{CPP}{MorphologyEx(src,dst,temp,element,operation,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -1268,7 +1270,7 @@ int param1=3,
 int param2=0,
 
 double param3=0, double param4=0 );
-}{CPP}{PYTHON}
+}{CPP}{Smooth(src,dst,smoothtype=CV_GAUSSIAN,param1=3,param2=0,param3=0,param4=0)-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1319,7 +1321,7 @@ CvArr* dst,
 const CvMat* kernel,
 
 CvPoint anchor=cvPoint(-1,-1));
-}{CPP}{PYTHON}
+}{CPP}{Filter2D(src,dst,kernal,anchor=(-1,-1))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1346,7 +1348,7 @@ CvPoint offset,
 int bordertype,
 
 CvScalar value=cvScalarAll(0) );
-}{CPP}{PYTHON}
+}{CPP}{CopyMakeBorder(src,dst,offset,bordrtype,value=cvScalarAll(0))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1377,7 +1379,7 @@ CvArr* sum,
 CvArr* sqsum=NULL,
 
 CvArr* tilted\_sum=NULL );
-}{CPP}{PYTHON}
+}{CPP}{Integral(image,sum,sqsum=NULL,tilted_sum=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{The source image, $W\times H$, 8-bit or floating-point (32f or 64f) image}
@@ -1420,7 +1422,7 @@ const CvArr* src,
 CvArr* dst,
 
 int code );
-}{CPP}{PYTHON}
+}{CPP}{CvtColor(src,dst,code)-> None}
 
 \begin{description}
 \cvarg{src}{The source 8-bit (8u), 16-bit (16u) or single-precision floating-point (32f) image}
@@ -1687,7 +1689,7 @@ double threshold,
 double max\_value,
 
 int threshold\_type );
-}{CPP}{PYTHON}
+}{CPP}{Threshold(src,dst,threshld,max_value,threshold_type)-> None}
 
 \begin{description}
 \cvarg{src}{Source array (single-channel, 8-bit of 32-bit floating point)}
@@ -1727,7 +1729,7 @@ int adaptive\_method=CV\_ADAPTIVE\_THRESH\_MEAN\_C,\par
 int threshold\_type=CV\_THRESH\_BINARY,\par
 int block\_size=3,\par double param1=5 );
 
-}{CPP}{PYTHON}
+}{CPP}{AdaptiveTheshold(src,dst,max_value, adaptive_method=CV_ADAPTIVE_THRESH_MEAN_C, threshold_type=CV_THRESH_BINARY,block_size=3,param1=5)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -1764,7 +1766,7 @@ Downsamples image
 
 \cvexp{
 void cvPyrDown(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIAN\_5x5 );
-}{CPP}{PYTHON}
+}{CPP}{PyrDown(src,dst,filter=CV_GAUSSIAN_5X5)-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1780,7 +1782,7 @@ Upsamples image
 
 \cvexp{
 void cvPyrUp(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIAN\_5x5 );
-}{CPP}{PYTHON}
+}{CPP}{PyrUp(src,dst,filter=CV_GAUSSIAN_5X5)-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1798,7 +1800,7 @@ Implements image segmentation by pyramids
 void cvPyrSegmentation(\par IplImage* src,\par IplImage* dst,\par
                         CvMemStorage* storage,\par CvSeq** comp,\par
                         int level,\par double threshold1,\par double threshold2 );
-}{CPP}{PYTHON}
+}{CPP}{PyrSegmentation(src,dst,storage,level,threshold1,threshold2)-> comp}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -1851,7 +1853,7 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
                   CvScalar lo\_diff=cvScalarAll(0),\par CvScalar up\_diff=cvScalarAll(0),\par
                   CvConnectedComp* comp=NULL,\par int flags=4,\par CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{FloodFill(image,seed_point,new_val,lo_diff=cvScalarAll(0),up_diff=cvScalarAll(0),flags=4,mask=NULL)-> comp}
 
 \begin{lstlisting}
 \#define CV\_FLOODFILL\_FIXED\_RANGE (1 << 16)
@@ -2148,7 +2150,7 @@ Finds lines in binary image using Hough transform
 
 \cvexp{
 CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
-}{CPP}{PYTHON}
+}{CPP}{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> None}
 
 \begin{description}
 \cvarg{image}{The input 8-bit single-channel binary image. In case of probabilistic method the image is modified by the function}
@@ -2272,7 +2274,7 @@ Finds circles in grayscale image using Hough transform
 
 \cvexp{
 CvSeq* cvHoughCircles( \par CvArr* image,\par void* circle\_storage,\par int method,\par double dp,\par double min\_dist,\par double param1=100,\par double param2=100,\par int min\_radius=0,\par int max\_radius=0 );
-}{CPP}{PYTHON}
+}{CPP}{HoughCircles(image,circle_storage,method,dp,min_dist,param1=100,param2=100,min_radius=0,max_radius=0)-> None}
 
 \begin{description}
 \cvarg{image}{The input 8-bit single-channel grayscale image}
@@ -2339,7 +2341,7 @@ Calculates distance to closest zero pixel for all non-zero pixels of source imag
 
 \cvexp{
 void cvDistTransform( \par const CvArr* src,\par CvArr* dst,\par int distance\_type=CV\_DIST\_L2,\par int mask\_size=3,\par const float* mask=NULL,\par CvArr* labels=NULL );
-}{CPP}{PYTHON}
+}{CPP}{DistTransform(src,dst,distance_type=CV_DIST_L2,mask_size=3,mask={NULL,0},labels=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{Source 8-bit single-channel (binary) image}
@@ -2512,7 +2514,7 @@ Clears histogram
 
 \cvexp{
 void cvClearHist( CvHistogram* hist );
-}{CPP}{PYTHON}
+}{CPP}{ClearHist(hist)-> None}
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -2593,7 +2595,7 @@ Finds minimum and maximum histogram bins
 \cvexp{
 void cvGetMinMaxHistValue( \par const CvHistogram* hist,\par float* min\_value,\par float* max\_value,\par int* min\_idx=NULL,\par int* max\_idx=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{GetMinMaxHistValue(hist)-> min_val,max_val,min_loc,max_loc}
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -2616,7 +2618,7 @@ Normalizes histogram
 
 \cvexp{
 void cvNormalizeHist( CvHistogram* hist, double factor );
-}{CPP}{PYTHON}
+}{CPP}{NormalizeHist(hist,factor)-> None}
 
 \begin{description}
 \cvarg{hist}{Pointer to the histogram}
@@ -2631,7 +2633,7 @@ Thresholds histogram
 
 \cvexp{
 void cvThreshHist( CvHistogram* hist, double threshold );
-}{CPP}{PYTHON}
+}{CPP}{ThreshHist(hist,threshold)-> None}
 
 \begin{description}
 \cvarg{hist}{Pointer to the histogram}
@@ -2646,7 +2648,7 @@ Compares two dense histograms
 
 \cvexp{
 double cvCompareHist( \par const CvHistogram* hist1,\par const CvHistogram* hist2,\par int method );
-}{CPP}{PYTHON}
+}{CPP}{CompareHist(hist1,hist2,method)-> None}
 
 \begin{description}
 \cvarg{hist1}{The first dense histogram}
@@ -2718,7 +2720,7 @@ Calculates histogram of image(s)
 
 \cvexp{
 void cvCalcHist( \par IplImage** image,\par CvHistogram* hist,\par int accumulate=0,\par const CvArr* mask=NULL );
-}{CPP}{PYTHON}
+}{CPP}{CalcHist(image,hist,ccumulate=0,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though, you may pass CvMat** as well)}
@@ -2799,7 +2801,7 @@ Calculates back projection
 
 \cvexp{
 void cvCalcBackProject( \par IplImage** image,\par CvArr* back\_project,\par const CvHistogram* hist );
-}{CPP}{PYTHON}
+}{CPP}{CalcBackProject(image,back_project,hist)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though you may pass CvMat** as well)}
@@ -2823,7 +2825,7 @@ Locates a template within image by histogram comparison
 
 \cvexp{
 void cvCalcBackProjectPatch( \par IplImage** image,\par CvArr* dst,\par CvSize patch\_size,\par CvHistogram* hist,\par int method,\par float factor );
-}{CPP}{PYTHON}
+}{CPP}{CalcBackProjectPatch(images,dst,patch_sze,hist,method,factor)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though, you may pass CvMat** as well)}
@@ -2847,7 +2849,7 @@ Divides one histogram by another
 
 \cvexp{
 void  cvCalcProbDensity( \par const CvHistogram* hist1,\par const CvHistogram* hist2,\par CvHistogram* dst\_hist,\par double scale=255 );
-}{CPP}{PYTHON}
+}{CPP}{CalcProbDensity(hist1,hist2,dst_hst,scale=255)-> None}
 
 \begin{description}
 \cvarg{hist1}{first histogram (the divisor)}
@@ -2874,7 +2876,7 @@ Equalizes histogram of grayscale image
 
 \cvexp{
 void  cvEqualizeHist( const CvArr* src, CvArr* dst );
-}{CPP}{PYTHON}
+}{CPP}{EqualizeHist(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The input 8-bit single-channel image}
@@ -2903,7 +2905,7 @@ Compares template against overlapped image regions
 
 \cvexp{
 void cvMatchTemplate( \par const CvArr* image,\par const CvArr* templ,\par CvArr* result,\par int method );
-}{CPP}{PYTHON}
+}{CPP}{MatchTemplate(image,templ,result,method)-> None}
 
 \begin{description}
 \cvarg{image}{Image where the search is running. It should be 8-bit or 32-bit floating-point}
@@ -2970,7 +2972,7 @@ Compares two shapes
 
 \cvexp{
 double cvMatchShapes( \par const void* object1,\par const void* object2,\par int method,\par double parameter=0 );
-}{CPP}{PYTHON}
+}{CPP}{MatchShapes(object1,object2,method,parameter=0)-> None}
 
 \begin{description}
 \cvarg{object1}{First contour or grayscale image}
@@ -3051,7 +3053,7 @@ Approximates Freeman chain(s) with polygonal curve
 
 \cvexp{
 CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int method=CV\_CHAIN\_APPROX\_SIMPLE,\par double parameter=0,\par int minimal\_perimeter=0,\par int recursive=0 );
-}{CPP}{PYTHON}
+}{CPP}{ApproxChains(src_seq,storage,method=CV_CHAIN_APPROX_SIMPLE,parameter=0,minimal_perimiter=0,recursive=0)-> CvSeq*}
 
 \begin{description}
 \cvarg{src\_seq}{Pointer to the chain that can refer to other chains}
@@ -3113,7 +3115,7 @@ Calculates up-right bounding rectangle of point set
 
 \cvexp{
 CvRect cvBoundingRect( CvArr* points, int update=0 );
-}{CPP}{PYTHON}
+}{CPP}{BoundingRect(points,update=0)-> CvRect}
 
 \begin{description}
 \cvarg{points}{2D point set, either a sequence or vector (\texttt{CvMat}) of points}
@@ -3138,7 +3140,7 @@ Calculates area of the whole contour or contour section
 
 \cvexp{
 double cvContourArea( \par const CvArr* contour, \par CvSlice slice=CV\_WHOLE\_SEQ );
-}{CPP}{PYTHON}
+}{CPP}{ContourAres(contour,slice=CV_WHOLE_SEQ)-> double}
 
 \begin{description}
 \cvarg{contour}{Contour (sequence or array of vertices)}
@@ -3160,7 +3162,7 @@ Calculates contour perimeter or curve length
 
 \cvexp{
 double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\par int is\_closed=-1 );
-}{CPP}{PYTHON}
+}{CPP}{ArcLength(curve,slice-CV_WHOLE_SEQ,is_closed=-1)-> double}
 
 \begin{description}
 \cvarg{curve}{Sequence or array of the curve points}
@@ -3181,7 +3183,7 @@ Creates hierarchical representation of contour
 
 \cvexp{
 CvContourTree* cvCreateContourTree( /par const CvSeq* contour,\par CvMemStorage* storage,\par double threshold );
-}{CPP}{PYTHON}
+}{CPP}{CreateCountourTree(contour,storage,threshold)-> CvContourTree*}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -3197,7 +3199,7 @@ Restores contour from tree
 
 \cvexp{
 CvSeq* cvContourFromContourTree( \par const CvContourTree* tree,\par CvMemStorage* storage,\par CvTermCriteria criteria );
-}{CPP}{PYTHON}
+}{CPP}{ContourFromContourTree(tree,storage,criteria)-> CvSeq*}
 
 \begin{description}
 \cvarg{tree}{Contour tree}
@@ -3213,7 +3215,7 @@ Compares two contours using their tree representations
 
 \cvexp{
 double cvMatchContourTrees( \par const CvContourTree* tree1,\par const CvContourTree* tree2,\par int method,\par double threshold );
-}{CPP}{PYTHON}
+}{CPP}{MatchContourTrees(tree1,tree2,method,threshold)-> double}
 
 \begin{description}
 \cvarg{tree1}{First contour tree}
@@ -3232,7 +3234,7 @@ Finds bounding rectangle for two given rectangles
 
 \cvexp{
 CvRect cvMaxRect( \par const CvRect* rect1,\par const CvRect* rect2 );
-}{CPP}{PYTHON}
+}{CPP}{MaxRect(rect1,rect2)-> CvRect}
 
 \begin{description}
 \cvarg{rect1}{First rectangle}
@@ -3330,7 +3332,7 @@ Finds box vertices
 
 \cvexp{
 void cvBoxPoints( \par CvBox2D box,\par CvPoint2D32f pt[4] );
-}{CPP}{PYTHON}
+}{CPP}{BoxPoints(box)-> pt}
 
 \begin{description}
 \cvarg{box}{Box}
@@ -3362,7 +3364,7 @@ Fits ellipse to set of 2D points
 
 \cvexp{
 CvBox2D cvFitEllipse2( \par const CvArr* points );
-}{CPP}{PYTHON}
+}{CPP}{FitEllipse2(points)-> Box2D}
 
 \begin{description}
 \cvarg{points}{Sequence or array of points}
@@ -3422,7 +3424,7 @@ Finds convex hull of point set
 
 \cvexp{
 CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
-}{CPP}{PYTHON}
+}{CPP}{ConvexHull2(points,storage,orientaton=CV_CLOCKWISE,return_points=0)-> CvSeq*}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
@@ -3534,7 +3536,7 @@ Tests contour convex
 
 \cvexp{
 int cvCheckContourConvexity( const CvArr* contour );
-}{CPP}{PYTHON}
+}{CPP}{CheckContourConvexity(contour)-> int}
 
 \begin{description}
 \cvarg{contour}{Tested contour (sequence or array of points)}
@@ -3565,7 +3567,7 @@ Finds convexity defects of contour
 
 \cvexp{
 CvSeq* cvConvexityDefects( \par const CvArr* contour,\par const CvArr* convexhull,\par CvMemStorage* storage=NULL );
-}{CPP}{PYTHON}
+}{CPP}{ConvexityDefects(contour,convexhull,storage)-> CvSeqOfCvConvexityDefect*}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -3581,7 +3583,7 @@ Point in contour test
 
 \cvexp{
 double cvPointPolygonTest( \par const CvArr* contour,\par CvPoint2D32f pt,\par int measure\_dist );
-}{CPP}{PYTHON}
+}{CPP}{PointPolygonTest(contour,pt,measure_dist)-> double}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -3607,7 +3609,7 @@ Finds circumscribed rectangle of minimal area for given 2D point set
 
 \cvexp{
 CvBox2D  cvMinAreaRect2( \par const CvArr* points,\par CvMemStorage* storage=NULL );
-}{CPP}{PYTHON}
+}{CPP}{MinAreaRect2(points,storage)-> CvBox2D}
 
 \begin{description}
 \cvarg{points}{Sequence or array of points}
@@ -3625,7 +3627,7 @@ Finds circumscribed circle of minimal area for given 2D point set
 
 \cvexp{
 int cvMinEnclosingCircle( \par const CvArr* points,\par CvPoint2D32f* center,\par float* radius );
-}{CPP}{PYTHON}
+}{CPP}{MinEnclosingCircle(points)-> int,center,radius}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points}
@@ -3644,7 +3646,7 @@ Calculates pair-wise geometrical histogram for contour
 
 \cvexp{
 void cvCalcPGH( const CvSeq* contour, CvHistogram* hist );
-}{CPP}{PYTHON}
+}{CPP}{CalcPGH(contour,hist)-> None}
 
 \begin{description}
 \cvarg{contour}{Input contour. Currently, only integer point coordinates are allowed}
@@ -3766,7 +3768,7 @@ Returns one of edges related to given
 CvSubdiv2DEdge  cvSubdiv2DGetEdge( CvSubdiv2DEdge edge, CvNextEdgeType type );
 
 
-}{CPP}{PYTHON}
+}{CPP}{Subdiv2DGetEdge(edge,type)-> CvSubdiv2DEdge}
 \begin{lstlisting}
 #define cvSubdiv2DNextEdge( edge ) cvSubdiv2DGetEdge( edge, CV_NEXT_AROUND_ORG )
 \end{lstlisting}
@@ -3794,7 +3796,7 @@ Returns another edge of the same quad-edge
 
 \cvexp{
 CvSubdiv2DEdge  cvSubdiv2DRotateEdge( \par CvSubdiv2DEdge edge,\par int rotate );
-}{CPP}{PYTHON}
+}{CPP}{Subdiv2DRotateEdge(edge,rotate)-> CvSubdiv2DEdge}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -3815,7 +3817,7 @@ Returns edge origin
 
 \cvexp{
 CvSubdiv2DPoint* cvSubdiv2DEdgeOrg( \par CvSubdiv2DEdge edge );
-}{CPP}{PYTHON}
+}{CPP}{Subdiv2DEdgeOrg(edge)-> CvSubdiv2DPoint*}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -3833,7 +3835,7 @@ Returns edge destination
 
 \cvexp{
 CvSubdiv2DPoint* cvSubdiv2DEdgeDst( \par CvSubdiv2DEdge edge );
-}{CPP}{PYTHON}
+}{CPP}{Subdiv2DEdgeDist(edge)-> CvSubdiv2DPoint*}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -3850,7 +3852,7 @@ Creates empty Delaunay triangulation
 
 \cvexp{
 CvSubdiv2D* cvCreateSubdivDelaunay2D( \par CvRect rect,\par CvMemStorage* storage );
-}{CPP}{PYTHON}
+}{CPP}{CreateSubdivDelaunay2D(rect,storage)-> CvSubdiv2D*}
 
 \begin{description}
 \cvarg{rect}{Rectangle that includes all the 2d points that are to be added to subdivision}
@@ -3868,7 +3870,7 @@ Inserts a single point to Delaunay triangulation
 
 \cvexp{
 CvSubdiv2DPoint*  cvSubdivDelaunay2DInsert( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt);
-}{CPP}{PYTHON}
+}{CPP}{SubdivDelaunay2DInsert(subdiv,pt)-> CvSubdiv2DPoint*}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision created by function \cross{CreateSubdivDelaunay2D}}
@@ -3908,7 +3910,7 @@ Finds the closest subdivision vertex to given point
 
 \cvexp{
 CvSubdiv2DPoint* cvFindNearestPoint2D( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt );
-}{CPP}{PYTHON}
+}{CPP}{FindNearestPoint2D(subdiv,pt)-> CvSubdiv2DPoint*}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
@@ -3928,7 +3930,7 @@ Calculates coordinates of Voronoi diagram cells
 
 \cvexp{
 void cvCalcSubdivVoronoi2D( \par CvSubdiv2D* subdiv );
-}{CPP}{PYTHON}
+}{CPP}{CalcSubdivVoronoi2D(subdiv)-> None}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision, where all the points are added already}
@@ -3945,7 +3947,7 @@ Removes all virtual points
 
 \cvexp{
 void cvClearSubdivVoronoi2D( CvSubdiv2D* subdiv );
-}{CPP}{PYTHON}
+}{CPP}{ClearSubdivVoronoi2D(subdiv)-> None}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision}
@@ -3970,7 +3972,7 @@ Adds frame to accumulator
 
 \cvexp{
 void cvAcc( \par const CvArr* image,\par CvArr* sum,\par const CvArr* mask=NULL );
-}{CPP}{PYTHON}
+}{CPP}{Acc(image,smu,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point. (each channel of multi-channel image is processed independently)}
@@ -3988,7 +3990,7 @@ Adds the square of source image to accumulator
 
 \cvexp{
 void cvSquareAcc( \par const CvArr* image,\par CvArr* sqsum,\par const CvArr* mask=NULL );
-}{CPP}{PYTHON}
+}{CPP}{SquareAcc(image,sqsum,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -4006,7 +4008,7 @@ Adds product of two input images to accumulator
 
 \cvexp{
 void cvMultiplyAcc( \par const CvArr* image1,\par const CvArr* image2,\par CvArr* acc,\par const CvArr* mask=NULL );
-}{CPP}{PYTHON}
+}{CPP}{MulitplyAcc(image1,image2,acc,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image1}{First input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -4025,7 +4027,7 @@ Updates running average
 
 \cvexp{
 void cvRunningAvg( \par const CvArr* image,\par CvArr* acc,\par double alpha,\par const CvArr* mask=NULL );
-}{CPP}{PYTHON}
+}{CPP}{RunningAvg(image,acc,alpha,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -4050,7 +4052,7 @@ Updates motion history image by moving silhouette
 
 \cvexp{
 void cvUpdateMotionHistory( \par const CvArr* silhouette,\par CvArr* mhi,\par double timestamp,\par double duration );
-}{CPP}{PYTHON}
+}{CPP}{UpdateMotionHistory(silhouette,mhi,timestamp,duration)-> None}
 
 \begin{description}
 \cvarg{silhouette}{Silhouette mask that has non-zero pixels where the motion occurs}
@@ -4075,7 +4077,7 @@ Calculates gradient orientation of motion history image
 
 \cvexp{
 void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* orientation,\par double delta1,\par double delta2,\par int aperture\_size=3 );
-}{CPP}{PYTHON}
+}{CPP}{CalcMotionGradient(mhi,mask,orientation,delta1,delta2,aperture_size=3)-> None}
 
 \begin{description}
 \cvarg{mhi}{Motion history image}
@@ -4102,7 +4104,7 @@ Calculates global motion orientation of some selected region
 
 \cvexp{
 double cvCalcGlobalOrientation( \par const CvArr* orientation,\par const CvArr* mask,\par const CvArr* mhi,\par double timestamp,\par double duration );
-}{CPP}{PYTHON}
+}{CPP}{CalcGlobalOrientation(orientation,mask,mhi,timestamp,duration)-> None}
 
 \begin{description}
 \cvarg{orientation}{Motion gradient orientation image; calculated by the function \cross{CalcMotionGradient}}
@@ -4127,7 +4129,7 @@ Segments whole motion into separate moving parts
 
 \cvexp{
 CvSeq* cvSegmentMotion( \par const CvArr* mhi,\par CvArr* seg\_mask,\par CvMemStorage* storage,\par double timestamp,\par double seg\_thresh );
-}{CPP}{PYTHON}
+}{CPP}{SegmentMotion(mhi,seg_mask,storage,timestamp,seg_thresh)-> None}
 
 \begin{description}
 \cvarg{mhi}{Motion history image}
@@ -4153,7 +4155,7 @@ Finds object center on back projection
 
 \cvexp{
 int cvMeanShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCriteria criteria,\par CvConnectedComp* comp );
-}{CPP}{PYTHON}
+}{CPP}{MeanShift(prob_image,window,criteria)-> comp}
 
 \begin{description}
 \cvarg{prob\_image}{Back projection of object histogram (see \cross{CalcBackProject})}
@@ -4174,7 +4176,7 @@ Finds object center, size, and orientation
 
 \cvexp{
 int cvCamShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCriteria criteria,\par CvConnectedComp* comp,\par CvBox2D* box=NULL );
-}{CPP}{PYTHON}
+}{CPP}{CamShift(prob_image,window,criteria,box=NULL)-> comp}
 
 \begin{description}
 \cvarg{prob\_image}{Back projection of object histogram (see \cross{CalcBackProject})}
@@ -4196,7 +4198,7 @@ Changes contour position to minimize its energy
 
 \cvexp{
 void cvSnakeImage( \par const IplImage* image,\par CvPoint* points,\par int length,\par float* alpha,\par float* beta,\par float* gamma,\par int coeff\_usage,\par CvSize win,\par CvTermCriteria criteria,\par int calc\_gradient=1 );
-}{CPP}{PYTHON}
+}{CPP}{SnakeImage(image,points,alpha,beta,gamma,coeff_usage,win,criteria,calc_gradient=1)-> None}
 
 \begin{description}
 \cvarg{image}{The source image or external energy field}
@@ -4238,7 +4240,7 @@ Calculates optical flow for two images
 
 \cvexp{
 void cvCalcOpticalFlowHS( \par const CvArr* prev,\par const CvArr* curr,\par int use\_previous,\par CvArr* velx,\par CvArr* vely,\par double lambda,\par CvTermCriteria criteria );
-}{CPP}{PYTHON}
+}{CPP}{CalcOpticalFlowHS(prev,curr,use_previous,velx,vely,lambda,criteria)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -4259,7 +4261,7 @@ Calculates optical flow for two images
 
 \cvexp{
 void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvSize win\_size,\par CvArr* velx,\par CvArr* vely );
-}{CPP}{PYTHON}
+}{CPP}{CalcObticalFlowLK(prev,curr,win_size,velx,vely)-> None}
 \begin{description}
 
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -4278,7 +4280,7 @@ Calculates optical flow for two images by block matching method
 
 \cvexp{
 void cvCalcOpticalFlowBM( \par const CvArr* prev,\par const CvArr* curr,\par CvSize block\_size,\par CvSize shift\_size,\par CvSize max\_range,\par int use\_previous,\par CvArr* velx,\par CvArr* vely );
-}{CPP}{PYTHON}
+}{CPP}{CalcOpticalFlowBM(prev,curr,block_size,shift_size,max_range,use_previous,velx,vely)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -4949,7 +4951,7 @@ CvAvgComp;
 
 \cvexp{
 CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade* cascade,\par CvMemStorage* storage,\par double scale\_factor=1.1,\par int min\_neighbors=3,\par int flags=0,\par CvSize min\_size=cvSize(0,\par0) );
-}{CPP}{PYTHON}
+}{CPP}{HaarDetectObjects(image,cascade,storage,scale_factor=1.1,min_neighbors=3,flags=0,min_size=(0,0))-> CvSeqOfCvAvgComp*}
 
 \begin{description}
 \cvarg{image}{Image to detect objects in}
@@ -5165,7 +5167,7 @@ Projects 3D points to image plane
 
 \cvexp{
 void cvProjectPoints2( \par const CvMat* object\_points,\par const CvMat* rotation\_vector,\par const CvMat* translation\_vector,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* image\_points,\par CvMat* dpdrot=NULL,\par CvMat* dpdt=NULL,\par CvMat* dpdf=NULL,\par CvMat* dpdc=NULL,\par CvMat* dpddist=NULL );
-}{CPP}{PYTHON}
+}{CPP}{ProjectPoints2(object_points,rotation_vector,translation_vector,intrinsic_matrix,distortion_coeffs, image_points,dpdrot=NULL,dpdt=NULL,dpdf=NULL,dpdc=NULL,dpddist=NULL)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
@@ -5204,7 +5206,7 @@ Finds perspective transformation between two planes
 \cvexp{
 void cvFindHomography( \par const CvMat* src\_points,\par const CvMat* dst\_points,\par CvMat* homography \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* mask=NULL);
-}{CPP}{PYTHON}
+}{CPP}{FindHomography(src_points,dst_points)-> homography}
 
 \begin{description}
 \cvarg{src\_points}{Point coordinates in the original plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates), where N is the number of points}
@@ -5271,7 +5273,7 @@ Finds intrinsic and extrinsic camera parameters using calibration pattern
 
 \cvexp{
 void cvCalibrateCamera2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* point\_counts,\par CvSize image\_size,\par CvMat* intrinsic\_matrix,\par CvMat* distortion\_coeffs,\par CvMat* rotation\_vectors=NULL,\par CvMat* translation\_vectors=NULL,\par int flags=0 );
-}{CPP}{PYTHON}
+}{CPP}{CalibrateCamera2(object_points,image_points,point_counts,image_size,intrinsic_matrix,distortion_coeffs,rotation_vectors,translation_vectors,flags=0)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views}
@@ -5322,7 +5324,7 @@ Finds extrinsic camera parameters for particular view
 
 \cvexp{
 void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* rotation\_vector,\par CvMat* translation\_vector );
-}{CPP}{PYTHON}
+}{CPP}{FindExtrinsicCameraParams2(object_points,image_points,intrinsic_matrix,distortion_coeffs,rotation_vector,translation_vector)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
@@ -5345,7 +5347,7 @@ Converts rotation matrix to rotation vector or vice versa
 
 \cvexp{
 int  cvRodrigues2( \par const CvMat* src,\par CvMat* dst,\par CvMat* jacobian=0 );
-}{CPP}{PYTHON}
+}{CPP}{Rodrigues2(src,dst,jacobian=0)-> None}
 
 \begin{description}
 \cvarg{src}{The input rotation vector (3x1 or 1x3) or rotation matrix (3x3)}
@@ -5391,7 +5393,7 @@ Transforms image to compensate lens distortion
 
 \cvexp{
 void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs );
-}{CPP}{PYTHON}
+}{CPP}{Undistort2(src,dst,intrinsic_matrix,distortion_coeffs)-> None}
 
 \begin{description}
 \cvarg{src}{The input (distorted) image}
@@ -5418,7 +5420,7 @@ Computes undistorion map
 
 \cvexp{
 void cvInitUndistortMap( \par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvArr* mapx,\par CvArr* mapy );
-}{CPP}{PYTHON}
+}{CPP}{InitUndistoryMap(camera_matrix,distortion_coeffs,mapx,mapy)-> None}
 
 \begin{description}
 \cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
@@ -5472,7 +5474,7 @@ Renders the detected chessboard corners
 
 \cvexp{
 void cvDrawChessboardCorners( \par CvArr* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int count,\par int pattern\_was\_found );
-}{CPP}{PYTHON}
+}{CPP}{DrawChessboardCorners(image,pattern_size,corners,pattern_was_found)-> None}
 
 \begin{description}
 \cvarg{image}{The destination image; it must be 8-bit color image}
@@ -5541,7 +5543,7 @@ Initializes structure containing object information
 
 \cvexp{
 CvPOSITObject* cvCreatePOSITObject( \par CvPoint3D32f* points,\par int point\_count );
-}{CPP}{PYTHON}
+}{CPP}{CreatePOSITObject(points)-> CvPOSITObject*}
 
 \begin{description}
 \cvarg{points}{Pointer to the points of the 3D object model}
@@ -5562,7 +5564,7 @@ Implements POSIT algorithm
 
 \cvexp{
 void cvPOSIT( \par CvPOSITObject* posit\_object,\par CvPoint2D32f* image\_points,\par double focal\_length,\par CvTermCriteria criteria,\par CvMatr32f rotation\_matrix,\par CvVect32f translation\_vector );
-}{CPP}{PYTHON}
+}{CPP}{POSIT(posit_object,image_points,focal_length,criteria)-> rotation_matrix,translation_vector}
 
 \begin{description}
 \cvarg{posit\_object}{Pointer to the object structure}
@@ -5598,7 +5600,7 @@ Calculates homography matrix for oblong planar object (e.g. arm)
 
 \cvexp{
 void cvCalcImageHomography( \par float* line,\par CvPoint3D32f* center,\par float* intrinsic,\par float* homography );
-}{CPP}{PYTHON}
+}{CPP}{CalcImageHomography(line,points)-> intrinsic,homography}
 
 \begin{description}
 \cvarg{line}{the main object axis direction (vector (dx,dy,dz))}
