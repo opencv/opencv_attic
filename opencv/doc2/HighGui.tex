@@ -29,7 +29,7 @@ Creates window
 \cvexp{
 int cvNamedWindow( const char* name, int flags );
 
-}{CPP}{PYTHON}
+}{CPP}{NamedWindow(name,flags=CV_WINDOW_AUTOSIZE)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window which maybe is used as window identifier and appears in the window caption.}
@@ -47,7 +47,7 @@ Destroys a window
 \cvexp{
 void cvDestroyWindow( const char* name );
 
-}{CPP}{PYTHON}
+}{CPP}{DestroyWindow(name)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be destroyed.}
@@ -62,7 +62,7 @@ Destroys all the HighGUI windows
 \cvexp{
 void cvDestroyAllWindows(void);
 
-}{CPP}{PYTHON}
+}{CPP}{DestroyAllWindows()-> None}
 
 The function \texttt{cvDestroyAllWindows} destroys all the opened HighGUI windows.
 
@@ -73,7 +73,7 @@ Sets window size
 \cvexp{
 void cvResizeWindow( const char* name, int width, int height );
 
-}{CPP}{PYTHON}
+}{CPP}{ResizeWindow(name,width,height)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be resized.}
@@ -90,7 +90,7 @@ Sets window position
 \cvexp{
 void cvMoveWindow( const char* name, int x, int y );
 
-}{CPP}{PYTHON}
+}{CPP}{MoveWindow(name,x,y)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be resized.}
@@ -137,7 +137,7 @@ Shows the image in the specified window
 \cvexp{
 void cvShowImage( const char* name, const CvArr* image );
 
-}{CPP}{PYTHON}
+}{CPP}{ShowImage(name,image)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window.}
@@ -176,7 +176,7 @@ Retrieves trackbar position
 \cvexp{
 int cvGetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name );
 
-}{CPP}{PYTHON}
+}{CPP}{GetTrackbarPos(trackbar_name,window_name)-> None}
 
 \begin{description}
 \cvarg{ trackbar\_name}{Name of trackbar.}
@@ -192,7 +192,7 @@ Sets trackbar position
 \cvexp{
 void cvSetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name, \par int pos );
 
-}{CPP}{PYTHON}
+}{CPP}{SetTrackbarPos(trackbar_name,window_name)-> None}
 
 \begin{description}
 \cvarg{ trackbar\_name}{Name of trackbar.}
@@ -257,7 +257,7 @@ Waits for a pressed key
 \cvexp{
 int cvWaitKey( int delay=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{WaitKey(delay=0)-> int}
 
 \begin{description}
 \cvarg{ delay}{Delay in milliseconds.}
@@ -305,7 +305,7 @@ Saves an image to the file
 \cvexp{
 int cvSaveImage( const char* filename, const CvArr* image );
 
-}{CPP}{PYTHON}
+}{CPP}{SaveImage(filename,image)-> None}
 
 \begin{description}
 \cvarg{ filename}{Name of the file.}
