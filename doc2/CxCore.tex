@@ -1300,7 +1300,7 @@ CvMat* cvGetRow( const CvArr* arr, CvMat* submat, int row );
 }{CPP}{GetRow(arr,submat,row)-> None}
 \cvexp{
 CvMat* cvGetRows( const CvArr* arr, CvMat* submat, int start\_row, int end\_row, int delta\_row=1 );
-}{CPP}{GetRows(arr,submat,start_row,end_row,delta_row=-1)-> None}
+}{CPP}{GetRows(arr,submat,start\_row,end\_row,delta\_row=-1)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1330,7 +1330,7 @@ CvMat* cvGetCol( const CvArr* arr, CvMat* submat, int col );
 }{CPP}{GetCol(arr,submat,row)-> None}
 \cvexp{
 CvMat* cvGetCols( const CvArr* arr, CvMat* submat, int start\_col, int end\_col );
-}{CPP}{GetCols(arr,submat,start_row,end_row,delta_row=-1)-> None}
+}{CPP}{GetCols(arr,submat,start\_col,end\_col,delta\_col=-1)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1911,7 +1911,7 @@ Flip a 2D array around vertical, horizontall or both axises
 
 \cvexp{
 void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip\_mode=0);
-}{CPP}{Flip(src,dst=NULL,flip_mode=0)-> None}
+}{CPP}{Flip(src,dst=NULL,flip\_mode=0)-> None}
 
 \begin{lstlisting}
 #define cvMirror cvFlip
@@ -2537,7 +2537,7 @@ Performs per-element comparison of two arrays
 
 void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp\_op );
 
-}{CPP}{Cmp(src1,src2,dst,cmp_op)-> None}
+}{CPP}{Cmp(src1,src2,dst,cm\_op)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2572,7 +2572,7 @@ Performs per-element comparison of array and scalar
 
 void cvCmpS( const CvArr* src, double value, CvArr* dst, int cmp\_op );
 
-}{CPP}{CmpS(src1,value,dst,cmp_op)-> None}
+}{CPP}{CmpS(src1,value,dst,cmp\_op)-> None}
 
 \begin{description}
 \cvarg{src}{The source array, must have a single channel}
@@ -2903,7 +2903,7 @@ Calculates average (mean) of array elements
 
 void cvAvgSdv( const CvArr* arr, CvScalar* mean, CvScalar* std\_dev, const CvArr* mask=NULL );
 
-}{CPP}{AvdSdv(arr,mask=NULL)-> mean,std_dev}
+}{CPP}{AvdSdv(arr,mask=NULL)-> mean,std\_dev}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -2933,7 +2933,7 @@ Finds global minimum and maximum in array or subarray
 void cvMinMaxLoc( const CvArr* arr, double* min\_val, double* max\_val,
                   CvPoint* min\_loc=NULL, CvPoint* max\_loc=NULL, const CvArr* mask=NULL );
 
-}{CPP}{MinMaxLoc(arr,mask=NULL)-> min_val,max_val,min_loc,max_loc}
+}{CPP}{MinMaxLoc(arr,mask=NULL)-> min\_val,max\_val,min\_loc,max\_loc}
 
 \begin{description}
 \cvarg{arr}{The source array, single-channel or multi-channel with COI set}
@@ -2960,7 +2960,7 @@ Calculates absolute array norm, absolute difference norm or relative difference 
 
 double cvNorm( const CvArr* arr1, const CvArr* arr2=NULL, int norm\_type=CV\_L2, const CvArr* mask=NULL );
 
-}{CPP}{Norm(arr1,arr2,norm_type+CV_L2,mask=NULL)-> double}
+}{CPP}{Norm(arr1,arr2,norm\_type+CV\_L2,mask=NULL)-> double}
 
 \begin{description}
 \cvarg{arr1}{The first source image}
@@ -3319,7 +3319,7 @@ Finds inverse or pseudo-inverse of matrix
 
 double cvInvert( const CvArr* src, CvArr* dst, int method=CV\_LU );
 
-}{CPP}{Invert(src,dst,method=CV_LU)-> double}
+}{CPP}{Invert(src,dst,method=CV\_LU)-> double}
 \begin{lstlisting}
 #define cvInv cvInvert
 \end{lstlisting}
@@ -3350,7 +3350,7 @@ Solves linear system or least-squares problem
 
 int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV\_LU );
 
-}{CPP}{Solve(A,B,X,method=CV_LU)-> None}
+}{CPP}{Solve(A,B,X,method=CV\_LU)-> None}
 
 \begin{description}
 \cvarg{A}{The source matrix}
@@ -3502,7 +3502,7 @@ Calculates covariation matrix of the set of vectors
 
 void cvCalcCovarMatrix( \par const CvArr** vects,\par int count,\par CvArr* cov\_mat,\par CvArr* avg,\par int flags );
 
-}{CPP}{CalcCovarMatrix(vects,cov_mat,avg,flags)-> None}
+}{CPP}{CalcCovarMatrix(vects,cov\_mat,avg,flags)-> None}
 
 \begin{description}
 \cvarg{vects}{The input vectors. They all must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g. images) etc.}
@@ -3712,7 +3712,7 @@ Calculates magnitude and/or angle of 2d vectors
 
 void cvCartToPolar( \par const CvArr* x,\par const CvArr* y,\par CvArr* magnitude,\par CvArr* angle=NULL,\par int angle\_in\_degrees=0 );
 
-}{CPP}{CartToPolar(x,y,magnitude,angle=NULL,angle_in_degrees)-> None}
+}{CPP}{CartToPolar(x,y,magnitude,angle=NULL,angle\_in\_degrees)-> None}
 
 \begin{description}
 \cvarg{x}{The array of x-coordinates}
@@ -3741,7 +3741,7 @@ Calculates cartesian coordinates of 2d vectors represented in polar form
 
 void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvArr* x,\par CvArr* y,\par int angle\_in\_degrees=0 );
 
-}{CPP}{PolarToCart(magnitude,angle=NULL,x,y,angle_in_degrees)-> None}
+}{CPP}{PolarToCart(magnitude,angle=NULL,x,y,angle\_in\_degrees)-> None}
 
 \begin{description}
 \cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed all 1's.}
@@ -3913,7 +3913,7 @@ Fills array with random numbers and updates the RNG state
 
 void cvRandArr( \par CvRNG* rng,\par CvArr* arr,\par int dist\_type,\par CvScalar param1,\par CvScalar param2 );
 
-}{CPP}{RandArr(rng,arr,dist_type,param1,param2)-> None}
+}{CPP}{RandArr(rng,arr,dist\_type,param1,param2)-> None}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cross{RNG}}
@@ -4068,7 +4068,7 @@ Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-poin
 
 void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
 
-}{CPP}{DFT(src,dst,flags,nonzero_rows=0)-> None}
+}{CPP}{DFT(src,dst,flags,nonzero\_rows=0)-> None}
 
 \begin{lstlisting}
 
@@ -6418,7 +6418,7 @@ Draws a line segment connecting two points
 
 \cvexp{
 void cvLine( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
-}{CPP}{Line(img,pt1,pt2,color,thickness=1,line_type=8,shift=0)-> None}
+}{CPP}{Line(img,pt1,pt2,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -6452,7 +6452,7 @@ Draws simple, thick or filled rectangle
 
 void cvRectangle( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{Rectangle(img,pt1,pt2,color,thickness=1,line_type=8,shift=0)-> None}
+}{CPP}{Rectangle(img,pt1,pt2,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6474,7 +6474,7 @@ Draws a circle
 
 void cvCircle( \par CvArr* img,\par CvPoint center,\par int radius,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{Circle(img,center,radius,color,thickness=1,line_type=8,shift=0)-> None}
+}{CPP}{Circle(img,center,radius,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the circle is drawn}
@@ -6499,7 +6499,7 @@ Draws simple or thick elliptic arc or fills ellipse sector
 
 void cvEllipse( \par CvArr* img,\par CvPoint center,\par CvSize axes,\par double angle,\par double start\_angle,\par double end\_angle,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{Ellipse(img,pt1,axes,angle,start_angle,end_angle,color,thickness=1,line_type=8,shift=0)-> None}
+}{CPP}{Ellipse(img,pt1,axes,angle,start\_angle,end\_angle,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -6532,7 +6532,7 @@ Fills polygons interior
 
 void cvFillPoly( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par CvScalar color,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{FillPoly(img,pts,color,line_type=8,shift=0)-> None}
+}{CPP}{FillPoly(img,pts,color,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6557,7 +6557,7 @@ Fills convex polygon
 
 void cvFillConvexPoly( \par CvArr* img,\par CvPoint* pts,\par int npts,\par CvScalar color,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{FillConvexPoly(img,pn,color,line_type=8,shift=0)-> None}
+}{CPP}{FillConvexPoly(img,pn,color,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6583,7 +6583,7 @@ Draws simple or thick polygons
 
 void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par int is\_closed,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PolyLine(img,pts,is_closed,color,thickness=1,line_type=8,shift=0)-> None}
+}{CPP}{PolyLine(img,pts,is\_closed,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6609,7 +6609,7 @@ Initializes font structure
 
 \cvexp{
 void cvInitFont( \par CvFont* font,\par int font\_face,\par double hscale,\par double vscale,\par double shear=0,\par int thickness=1,\par int line\_type=8 );
-}{CPP}{InitFont(font_face,hscale,vscale,shear=0,thickness=1,line_type=8)-> font}
+}{CPP}{InitFont(font\_face,hscale,vscale,shear=0,thickness=1,line\_type=8)-> font}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure initialized by the function}
@@ -6667,7 +6667,7 @@ Retrieves width and height of text string
 
 void cvGetTextSize( \par const char* text\_string,\par const CvFont* font,\par CvSize* text\_size,\par int* baseline );
 
-}{CPP}{text_string,font)-> text_size,baseline}
+}{CPP}{GetTextSize(text\_string,font)-> text\_size,baseline}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure}
@@ -6688,7 +6688,7 @@ Draws contour outlines or interiors in the image
 
 void cvDrawContours( \par CvArr *img,\par CvSeq* contour,\par CvScalar external\_color,\par CvScalar hole\_color,\par int max\_level,\par int thickness=1,\par int line\_type=8 );
 
-}{CPP}{DrawContours(img,contour,external_color,hole_color,max_level,thickness=1,line_type=8,offset=(0,0)-> None}
+}{CPP}{DrawContours(img,contour,external\_color,hole\_color,max\_level,thickness=1,line\_type=8,offset=(0,0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the contours are to be drawn. Like in any other drawing function, the contours are clipped with the ROI.}
@@ -7996,7 +7996,7 @@ Saves object to file
 
 void cvSave( \par const char* filename,\par const void* struct\_ptr,\par const char* name=NULL,\par const char* comment=NULL,\par CvAttrList attributes=cvAttrList());
 
-}{CPP}{Save(filename,struct_ptr,name=NULL,comment=NULL)-> None}
+}{CPP}{Save(filename,struct\_ptr,name=NULL,comment=NULL)-> None}
 
 \begin{description}
 \cvarg{filename}{File name}
@@ -8043,7 +8043,7 @@ Checks every element of input array for invalid values
 
 int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\par double max\_val=0);
 
-}{CPP}{CheckArr(arr,flags=0,min_val=0,max_val=0)-> int}
+}{CPP}{CheckArr(arr,flags=0,min\_val=0,max\_val=0)-> int}
 \begin{lstlisting}
 #define cvCheckArray cvCheckArr
 \end{lstlisting}
@@ -8074,7 +8074,7 @@ Splits set of vectors by given number of clusters
 
 \cvexp{
 void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* labels,\par CvTermCriteria termcrit );
-}{CPP}{KMeans2(samples,cluster_count,labels,termcrit)-> None}
+}{CPP}{KMeans2(samples,cluster\_count,labels,termcrit)-> None}
 
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
