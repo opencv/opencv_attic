@@ -656,7 +656,7 @@ Makes a full copy of an image, including the header, data, and ROI.
 
 IplImage* cvCloneImage( const IplImage* image );
 
-}{CPP}{PYTHON}
+}{CPP}{CloneImage(image)-> IplImage*}
 
 \begin{description}
 \cvarg{image}{The original image}
@@ -672,7 +672,7 @@ Sets the channel of interest in an IplImage
 
 void cvSetImageCOI( \par IplImage* image,\par int coi );
 
-}{CPP}{PYTHON}
+}{CPP}{SetImageCOI(image, coi)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -694,7 +694,7 @@ Returns the index of the channel of interest.
 
 int cvGetImageCOI( const IplImage* image );
 
-}{CPP}{PYTHON}
+}{CPP}{GetImageCOI(image)-> channel}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -710,7 +710,7 @@ Sets an image Region Of Interest (ROI) to a given rectangle
 
 void cvSetImageROI( \par IplImage* image,\par CvRect rect );
 
-}{CPP}{PYTHON}
+}{CPP}{SetImageROI(image, rect)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -729,7 +729,7 @@ Resets the image ROI to include the entire image and releases the ROI structure.
 
 void cvResetImageROI( IplImage* image );
 
-}{CPP}{PYTHON}
+}{CPP}{ResetImageROI(image)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -753,7 +753,7 @@ Returns the image ROI
 
 CvRect cvGetImageROI( const IplImage* image );
 
-}{CPP}{PYTHON}
+}{CPP}{GetImageROI(image)-> CvRect}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -914,7 +914,7 @@ Creates a full matrix copy
 
 CvMat* cvCloneMat( const CvMat* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{CloneMat(mat)-> CvMat*}
 
 \begin{description}
 \cvarg{mat}{Matrix to be copied}
@@ -1015,7 +1015,7 @@ Creates full copy of a multi-dimensional array and returns a pointer to the copy
 
 CvMatND* cvCloneMatND( const CvMatND* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{CloneMatND(mat)-> CvMatND*}
 
 \begin{description}
 \cvarg{mat}{Input array}
@@ -1297,10 +1297,10 @@ Returns array row or row span
 
 \cvexp{
 CvMat* cvGetRow( const CvArr* arr, CvMat* submat, int row );
-}{CPP}{PYTHON}
+}{CPP}{GetRow(arr,submat,row)-> None}
 \cvexp{
 CvMat* cvGetRows( const CvArr* arr, CvMat* submat, int start\_row, int end\_row, int delta\_row=1 );
-}{CPP}{PYTHON}
+}{CPP}{GetRows(arr,submat,start_row,end_row,delta_row=-1)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1327,10 +1327,10 @@ Returns array column or column span
 
 \cvexp{
 CvMat* cvGetCol( const CvArr* arr, CvMat* submat, int col );
-}{CPP}{PYTHON}
+}{CPP}{GetCol(arr,submat,row)-> None}
 \cvexp{
 CvMat* cvGetCols( const CvArr* arr, CvMat* submat, int start\_col, int end\_col );
-}{CPP}{PYTHON}
+}{CPP}{GetCols(arr,submat,start_row,end_row,delta_row=-1)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1356,7 +1356,7 @@ Returns one of array diagonals
 
 CvMat* cvGetDiag( const CvArr* arr, CvMat* submat, int diag=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{GetDiag(arr,submat,diag=0)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1374,7 +1374,7 @@ Returns size of matrix or image ROI
 
 CvSize cvGetSize( const CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{GetSize(arr)-> CvSize}
 
 \begin{description}
 \cvarg{arr}{array header}
@@ -1456,7 +1456,7 @@ Returns type of array elements
 
 int cvGetElemType( const CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{GetElemType(arr)-> int}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1603,7 +1603,7 @@ Return the particular element of single-channel floating-point matrix
 
 double cvmGet( const CvMat* mat, int row, int col );
 
-}{CPP}{PYTHON}
+}{CPP}{mGet(mat,row,col)-> double}
 
 \begin{description}
 \cvarg{mat}{Input matrix}
@@ -1679,7 +1679,7 @@ Return the particular element of single-channel floating-point matrix
 
 void cvmSet( CvMat* mat, int row, int col, double value );
 
-}{CPP}{PYTHON}
+}{CPP}{mSet(mat,row,col,value)-> None}
 
 \begin{description}
 \cvarg{mat}{The matrix}
@@ -1702,7 +1702,7 @@ Clears the particular array element
 
 void cvClearND( CvArr* arr, int* idx );
 
-}{CPP}{PYTHON}
+}{CPP}{ClearND(arr,idx)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1724,7 +1724,7 @@ Copies one array to another
 
 void cvCopy( const CvArr* src, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Copy(src,dst,msk=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -1752,7 +1752,7 @@ Sets every element of array to given value
 
 void cvSet( CvArr* arr, CvScalar value, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Set(arr,value,msk=NULL)-> None}
 
 \begin{description}
 \cvarg{arr}{The destination array}
@@ -1777,7 +1777,7 @@ Clears the array
 
 void cvSetZero( CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{SetZero(arr)-> None}
 
 \begin{lstlisting}
 #define cvZero cvSetZero
@@ -1888,7 +1888,7 @@ Fill destination array with tiled source array
 
 void cvRepeat( const CvArr* src, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Repeat(scr,dst)-> None}
 
 \begin{description}
 \cvarg{src}{Source array, image or matrix}
@@ -1911,7 +1911,7 @@ Flip a 2D array around vertical, horizontall or both axises
 
 \cvexp{
 void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip\_mode=0);
-}{CPP}{PYTHON}
+}{CPP}{Flip(src,dst=NULL,flip_mode=0)-> None}
 
 \begin{lstlisting}
 #define cvMirror cvFlip
@@ -1950,7 +1950,7 @@ Divides multi-channel array into several single-channel arrays or extracts a sin
 
 void cvSplit( const CvArr* src, CvArr* dst0, CvArr* dst1,
               CvArr* dst2, CvArr* dst3 );
-}{CPP}{PYTHON}
+}{CPP}{Split(src,dst0,dst1,dst2,dst3)-> None}
 
 \begin{lstlisting}
 #define cvCvtPixToPlane cvSplit
@@ -1980,7 +1980,7 @@ Composes multi-channel array from several single-channel arrays or inserts a sin
 
 void cvMerge( const CvArr* src0, const CvArr* src1,
               const CvArr* src2, const CvArr* src3, CvArr* dst );
-}{CPP}{PYTHON}
+}{CPP}{Merge(src0,src1,src2,src3,dst)-> None}
 
 \begin{lstlisting}
 #define cvCvtPlaneToPix cvMerge
@@ -2004,7 +2004,7 @@ Performs look-up table transform of array
 
 void cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 
-}{CPP}{PYTHON}
+}{CPP}{LUT(src,dst,lut)-> None}
 
 \begin{description}
 \cvarg{src}{Source array of 8-bit elements}
@@ -2034,7 +2034,7 @@ Converts one array to another with optional linear transformation
 
 void cvConvertScale( const CvArr* src, CvArr* dst, double scale=1, double shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{ConvertScale(src,dst,scale=1.0,shift=0.0)-> None}
 
 \begin{lstlisting}
 #define cvCvtScale cvConvertScale
@@ -2075,7 +2075,7 @@ Converts input array elements to 8-bit unsigned integer another with optional li
 
 \cvexp{
 void cvConvertScaleAbs( const CvArr* src, CvArr* dst, double scale=1, double shift=0 );
-}{CPP}{PYTHON}
+}{CPP}{ConvertScaleAbs(src,dst,scale=1.0,shift=0.0)-> None}
 
 \begin{lstlisting}
 #define cvCvtScaleAbs cvConvertScaleAbs
@@ -2105,7 +2105,7 @@ Computes per-element sum of two arrays
 
 void cvAdd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Add(src1,src2,sdt,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2131,7 +2131,7 @@ Computes sum of array and scalar
 
 void cvAddS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{AddS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -2160,7 +2160,7 @@ void  cvAddWeighted( const CvArr* src1, double alpha,
                      const CvArr* src2, double beta,
                      double gamma, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{AddWeighted(src1,alpha,src2,beta,gamma,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2188,7 +2188,7 @@ Computes per-element difference between two arrays
 
 void cvSub( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Sub(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2214,7 +2214,7 @@ Computes difference between array and scalar
 
 void cvSubS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{SubS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -2240,7 +2240,7 @@ Computes difference between scalar and array
 
 void cvSubRS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{SubRS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2266,7 +2266,7 @@ Calculates per-element product of two arrays
 
 void cvMul( const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1 );
 
-}{CPP}{PYTHON}
+}{CPP}{Mul(src1,src2,dst,scale)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2292,7 +2292,7 @@ Performs per-element division of two arrays
 
 void cvDiv( const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1 );
 
-}{CPP}{PYTHON}
+}{CPP}{Div(src1,src2,dst,scale)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array. If the pointer is NULL, the array is assumed to be all 1's.}
@@ -2320,7 +2320,7 @@ Calculates per-element bit-wise conjunction of two arrays
 
 void cvAnd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{And(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2346,7 +2346,7 @@ Calculates per-element bit-wise conjunction of array and scalar
 
 void cvAndS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{AndS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -2391,7 +2391,7 @@ Calculates per-element bit-wise disjunction of two arrays
 
 void cvOr( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Or(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2417,7 +2417,7 @@ Calculates per-element bit-wise disjunction of array and scalar
 
 void cvOrS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{OrS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The source array}
@@ -2444,7 +2444,7 @@ Performs per-element bit-wise "exclusive or" operation on two arrays
 
 void cvXor( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Xor(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2469,7 +2469,7 @@ Performs per-element bit-wise "exclusive or" operation on array and scalar
 
 void cvXorS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{XorS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -2514,7 +2514,7 @@ Performs per-element bit-wise inversion of array elements
 
 void cvNot( const CvArr* src, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Not(src,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The source array}
@@ -2537,7 +2537,7 @@ Performs per-element comparison of two arrays
 
 void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp\_op );
 
-}{CPP}{PYTHON}
+}{CPP}{Cmp(src1,src2,dst,cmp_op)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2572,7 +2572,7 @@ Performs per-element comparison of array and scalar
 
 void cvCmpS( const CvArr* src, double value, CvArr* dst, int cmp\_op );
 
-}{CPP}{PYTHON}
+}{CPP}{CmpS(src1,value,dst,cmp_op)-> None}
 
 \begin{description}
 \cvarg{src}{The source array, must have a single channel}
@@ -2609,7 +2609,7 @@ Checks that array elements lie between elements of two other arrays
 
 void cvInRange( const CvArr* src, const CvArr* lower, const CvArr* upper, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{InRange(src,lower,upper,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2646,7 +2646,7 @@ Checks that array elements lie between two scalars
 
 void cvInRangeS( const CvArr* src, CvScalar lower, CvScalar upper, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{InRangeS(src,lower,upper,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2682,7 +2682,7 @@ Finds per-element maximum of two arrays
 
 void cvMax( const CvArr* src1, const CvArr* src2, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Max(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2707,7 +2707,7 @@ Finds per-element maximum of array and scalar
 
 void cvMaxS( const CvArr* src, double value, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{MaxS(src1,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2732,7 +2732,7 @@ Finds per-element minimum of two arrays
 
 void cvMin( const CvArr* src1, const CvArr* src2, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Min(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2758,7 +2758,7 @@ Finds per-element minimum of array and scalar
 
 void cvMinS( const CvArr* src, double value, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{MinS(src1,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2782,7 +2782,7 @@ Calculates absolute difference between two arrays
 
 void cvAbsDiff( const CvArr* src1, const CvArr* src2, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{AbsDiff(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2803,7 +2803,7 @@ Calculates absolute difference between array and scalar
 \cvexp{
 
 void cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
-}{CPP}{PYTHON}
+}{CPP}{AbsDiffS(src1,value,dst)-> None}
 
 \begin{lstlisting}
 #define cvAbs(src, dst) cvAbsDiffS(src, dst, cvScalarAll(0))
@@ -2831,7 +2831,7 @@ Counts non-zero array elements
 
 int cvCountNonZero( const CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{CountNonZero(arr)-> int}
 
 \begin{description}
 \cvarg{arr}{The array, must be single-channel array or multi-channel image with COI set}
@@ -2853,7 +2853,7 @@ Summarizes array elements
 
 CvScalar cvSum( const CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{Sum(arr)-> CvScalar}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -2876,7 +2876,7 @@ Calculates average (mean) of array elements
 
 CvScalar cvAvg( const CvArr* arr, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Avg(arr,mask=NULL)-> CvScalar}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -2903,7 +2903,7 @@ Calculates average (mean) of array elements
 
 void cvAvgSdv( const CvArr* arr, CvScalar* mean, CvScalar* std\_dev, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{AvdSdv(arr,mask=NULL)-> mean,std_dev}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -2933,7 +2933,7 @@ Finds global minimum and maximum in array or subarray
 void cvMinMaxLoc( const CvArr* arr, double* min\_val, double* max\_val,
                   CvPoint* min\_loc=NULL, CvPoint* max\_loc=NULL, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{MinMaxLoc(arr,mask=NULL)-> min_val,max_val,min_loc,max_loc}
 
 \begin{description}
 \cvarg{arr}{The source array, single-channel or multi-channel with COI set}
@@ -2960,7 +2960,7 @@ Calculates absolute array norm, absolute difference norm or relative difference 
 
 double cvNorm( const CvArr* arr1, const CvArr* arr2=NULL, int norm\_type=CV\_L2, const CvArr* mask=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Norm(arr1,arr2,norm_type+CV_L2,mask=NULL)-> double}
 
 \begin{description}
 \cvarg{arr1}{The first source image}
@@ -3008,7 +3008,7 @@ Initializes scaled identity matrix
 
 void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
 
-}{CPP}{PYTHON}
+}{CPP}{SetIdentity(mat,value=cvRealScalar(1))-> None}
 
 \begin{description}
 \cvarg{arr}{The matrix to initialize (not necesserily square)}
@@ -3029,7 +3029,7 @@ Calculates dot product of two arrays in Euclidian metrics
 
 double cvDotProduct( const CvArr* src1, const CvArr* src2 );
 
-}{CPP}{PYTHON}
+}{CPP}{DotProduct(src1,src2)-> double}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -3053,7 +3053,7 @@ Calculates cross product of two 3D vectors
 
 void cvCrossProduct( const CvArr* src1, const CvArr* src2, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{CrossProduct(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source vector}
@@ -3082,7 +3082,7 @@ Calculates sum of scaled array and another array
 
 void cvScaleAdd( const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{ScaleAdd(src1,sclae,src2,dst)-> None}
 \begin{lstlisting}
 #define cvMulAddS cvScaleAdd
 \end{lstlisting}
@@ -3111,7 +3111,7 @@ Performs generalized matrix multiplication
 void  cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
               const CvArr* src3, double beta, CvArr* dst, int tABC=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{GEMM(src1,src2,alphs,src3,beta,dst,tABC=0)-> None}
 \begin{lstlisting}
 #define cvMatMulAdd( src1, src2, src3, dst ) cvGEMM( src1, src2, 1, src3, 1, dst, 0 )
 #define cvMatMul( src1, src2, dst ) cvMatMulAdd( src1, src2, 0, dst )
@@ -3150,7 +3150,7 @@ Performs matrix transform of every array element
 
 void cvTransform( const CvArr* src, CvArr* dst, const CvMat* transmat, const CvMat* shiftvec=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Transform(src,dst,transmat,shiftvec=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -3190,7 +3190,7 @@ Performs perspective matrix transform of vector array
 
 void cvPerspectiveTransform( const CvArr* src, CvArr* dst, const CvMat* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{PerspectiveTransform(src,dst,mat)-> None}
 
 \begin{description}
 \cvarg{src}{The source three-channel floating-point array}
@@ -3221,7 +3221,7 @@ Calculates product of array and transposed array
 
 void cvMulTransposed( const CvArr* src, CvArr* dst, int order, const CvArr* delta=NULL, double scale=1.0 );
 
-}{CPP}{PYTHON}
+}{CPP}{MulTransposed(src,dst,order,delta=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source matrix}
@@ -3255,7 +3255,7 @@ Returns trace of matrix
 
 CvScalar cvTrace( const CvArr* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{Trace(mat)-> CvScalar}
 
 \begin{description}
 \cvarg{mat}{The source matrix}
@@ -3274,7 +3274,7 @@ Transposes matrix
 
 void cvTranspose( const CvArr* src, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Transpose(src,dst)-> None}
 
 \begin{lstlisting}
 #define cvT cvTranspose
@@ -3301,7 +3301,7 @@ Returns determinant of matrix
 
 double cvDet( const CvArr* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{Det(mat)-> double}
 
 \begin{description}
 \cvarg{mat}{The source matrix}
@@ -3319,7 +3319,7 @@ Finds inverse or pseudo-inverse of matrix
 
 double cvInvert( const CvArr* src, CvArr* dst, int method=CV\_LU );
 
-}{CPP}{PYTHON}
+}{CPP}{Invert(src,dst,method=CV_LU)-> double}
 \begin{lstlisting}
 #define cvInv cvInvert
 \end{lstlisting}
@@ -3350,7 +3350,7 @@ Solves linear system or least-squares problem
 
 int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV\_LU );
 
-}{CPP}{PYTHON}
+}{CPP}{Solve(A,B,X,method=CV_LU)-> None}
 
 \begin{description}
 \cvarg{A}{The source matrix}
@@ -3380,7 +3380,7 @@ Performs singular value decomposition of real floating-point matrix
 
 void cvSVD( \par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{SVD(A,flags=0)-> W,U,V}
 
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
@@ -3429,7 +3429,7 @@ Performs singular value back substitution
 
 void  cvSVBkSb( \par const CvArr* W,\par const CvArr* U,\par const CvArr* V,\par const CvArr* B,\par CvArr* X,\par int flags );
 
-}{CPP}{PYTHON}
+}{CPP}{SVBkSb(W,U,V,B,X,flags)-> None}
 
 \begin{description}
 \cvarg{W}{Matrix or vector of singular values}
@@ -3470,7 +3470,7 @@ Computes eigenvalues and eigenvectors of symmetric matrix
 
 void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double eps=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{EigenVV(mat,evects,evals,eps)-> None}
 
 \begin{description}
 \cvarg{mat}{The input symmetric square matrix. It is modified during the processing.}
@@ -3502,7 +3502,7 @@ Calculates covariation matrix of the set of vectors
 
 void cvCalcCovarMatrix( \par const CvArr** vects,\par int count,\par CvArr* cov\_mat,\par CvArr* avg,\par int flags );
 
-}{CPP}{PYTHON}
+}{CPP}{CalcCovarMatrix(vects,cov_mat,avg,flags)-> None}
 
 \begin{description}
 \cvarg{vects}{The input vectors. They all must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g. images) etc.}
@@ -3549,7 +3549,7 @@ Calculates Mahalonobis distance between two vectors
 
 double cvMahalanobis( \par const CvArr* vec1,\par const CvArr* vec2,\par CvArr* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{Mahalonobis(vec1,vec2,mat)-> None}
 
 \begin{description}
 \cvarg{vec1}{The first 1D source vector}
@@ -3581,7 +3581,7 @@ int cvRound( double value );
 int cvFloor( double value );
 int cvCeil( double value );
 
-}{CPP}{PYTHON}
+}{CPP}{Round, Floor, Ceil(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3607,7 +3607,7 @@ Calculates square root
 
 float cvSqrt( float value );
 
-}{CPP}{PYTHON}
+}{CPP}{Sqrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3624,7 +3624,7 @@ Calculates inverse square root
 
 float cvInvSqrt( float value );
 
-}{CPP}{PYTHON}
+}{CPP}{InvSqrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3641,7 +3641,7 @@ Calculates cubic root
 
 float cvCbrt( float value );
 
-}{CPP}{PYTHON}
+}{CPP}{Cbrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3658,7 +3658,7 @@ Calculates angle of 2D vector
 
 float cvFastArctan( float y, float x );
 
-}{CPP}{PYTHON}
+}{CPP}{FastArctan(y,x)-> float}
 
 \begin{description}
 \cvarg{x}{x-coordinate of 2D vector}
@@ -3676,7 +3676,7 @@ Determines if the argument is Not A Number
 
 int cvIsNaN( double value );
 
-}{CPP}{PYTHON}
+}{CPP}{IsNaN(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3694,7 +3694,7 @@ Determines if the argument is Infinity
 
 int cvIsInf( double value );
 
-}{CPP}{PYTHON}
+}{CPP}{IsInf(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3712,7 +3712,7 @@ Calculates magnitude and/or angle of 2d vectors
 
 void cvCartToPolar( \par const CvArr* x,\par const CvArr* y,\par CvArr* magnitude,\par CvArr* angle=NULL,\par int angle\_in\_degrees=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{CartToPolar(x,y,magnitude,angle=NULL,angle_in_degrees)-> None}
 
 \begin{description}
 \cvarg{x}{The array of x-coordinates}
@@ -3741,7 +3741,7 @@ Calculates cartesian coordinates of 2d vectors represented in polar form
 
 void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvArr* x,\par CvArr* y,\par int angle\_in\_degrees=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{PolarToCart(magnitude,angle=NULL,x,y,angle_in_degrees)-> None}
 
 \begin{description}
 \cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed all 1's.}
@@ -3769,7 +3769,7 @@ Raises every array element to power
 
 void cvPow( \par const CvArr* src,\par CvArr* dst,\par double power );
 
-}{CPP}{PYTHON}
+}{CPP}{Pow(src,dst,power)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3809,7 +3809,7 @@ Calculates exponent of every array element
 
 void cvExp( const CvArr* src, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Exp(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3833,7 +3833,7 @@ Calculates natural logarithm of every array element absolute value
 
 void cvLog( const CvArr* src, CvArr* dst );
 
-}{CPP}{PYTHON}
+}{CPP}{Log(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3858,7 +3858,7 @@ Finds real roots of a cubic equation
 
 void cvSolveCubic( const CvArr* coeffs, CvArr* roots );
 
-}{CPP}{PYTHON}
+}{CPP}{SolveCubic(coeffs,roots)-> None}
 
 \begin{description}
 \cvarg{coeffs}{The equation coefficients, array of 3 or 4 elements}
@@ -3893,7 +3893,7 @@ Initializes random number generator state
 
 CvRNG cvRNG( int64 seed=-1 );
 
-}{CPP}{PYTHON}
+}{CPP}{RNG(seed=-1LL)-> CvRNG}
 
 \begin{description}
 \cvarg{seed}{64-bit value used to initiate a random sequence}
@@ -3913,7 +3913,7 @@ Fills array with random numbers and updates the RNG state
 
 void cvRandArr( \par CvRNG* rng,\par CvArr* arr,\par int dist\_type,\par CvScalar param1,\par CvScalar param2 );
 
-}{CPP}{PYTHON}
+}{CPP}{RandArr(rng,arr,dist_type,param1,param2)-> None}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cross{RNG}}
@@ -3987,7 +3987,7 @@ Returns 32-bit unsigned integer and updates RNG
 
 unsigned cvRandInt( CvRNG* rng );
 
-}{CPP}{PYTHON}
+}{CPP}{RandInt(rng)-> unsigned}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \texttt{RandInit} and, optionally, customized by \texttt{RandSetRange} (though, the latter function does not affect on the discussed function outcome)}
@@ -4049,7 +4049,7 @@ Returns floating-point random number and updates RNG
 
 double cvRandReal( CvRNG* rng );
 
-}{CPP}{PYTHON}
+}{CPP}{RandReal(rng)-> double}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cross{RNG}}
@@ -4068,7 +4068,7 @@ Performs forward or inverse Discrete Fourier transform of 1D or 2D floating-poin
 
 void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{DFT(src,dst,flags,nonzero_rows=0)-> None}
 
 \begin{lstlisting}
 
@@ -4196,7 +4196,7 @@ Returns optimal DFT size for given vector size
 
 int cvGetOptimalDFTSize( int size0 );
 
-}{CPP}{PYTHON}
+}{CPP}{GetOptimalDFTSize(size0)-> int}
 
 \begin{description}
 \cvarg{size0}{Vector size}
@@ -4220,7 +4220,7 @@ Performs per-element multiplication of two Fourier spectrums
 
 void cvMulSpectrums( \par const CvArr* src1,\par const CvArr* src2,\par CvArr* dst,\par int flags );
 
-}{CPP}{PYTHON}
+}{CPP}{MulSpectrums(src1,src2,dst,flags)-> None)}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -4247,7 +4247,7 @@ Performs forward or inverse Discrete Cosine transform of 1D or 2D floating-point
 
 void cvDCT( const CvArr* src, CvArr* dst, int flags );
 
-}{CPP}{PYTHON}
+}{CPP}{DCT(src,dst,flags)-> None}
 
 \begin{lstlisting}
 
@@ -4997,7 +4997,7 @@ Removes element from sequence middle
 
 void cvSeqRemove( \par CvSeq* seq,\par int index );
 
-}{CPP}{PYTHON}
+}{CPP}{SeqRemove(seq,index)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -5021,7 +5021,7 @@ Clears sequence
 
 void cvClearSeq( CvSeq* seq );
 
-}{CPP}{PYTHON}
+}{CPP}{ClearSeq(seq)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -5165,7 +5165,7 @@ Creates a copy of sequence
 
 CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{CloneSeq(seq,storage)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -5192,7 +5192,7 @@ Removes sequence slice
 
 void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
 
-}{CPP}{PYTHON}
+}{CPP}{SeqRemoveSlice(seq,slice)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -5231,7 +5231,7 @@ Reverses the order of sequence elements
 
 void cvSeqInvert( CvSeq* seq );
 
-}{CPP}{PYTHON}
+}{CPP}{SeqInvert(seq)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -6410,7 +6410,7 @@ Constructs a color value
 
 \cvexp{
 \#define CV\_RGB( r, g, b )  cvScalar( (b), (g), (r) )
-}{CPP}{PYTHON}
+}{CPP}{\_RGB(red,grn,blu)->CvScalar}
 
 \cvfunc{Line}\label{Line}
 
@@ -6418,7 +6418,7 @@ Draws a line segment connecting two points
 
 \cvexp{
 void cvLine( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
-}{CPP}{PYTHON}
+}{CPP}{Line(img,pt1,pt2,color,thickness=1,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -6452,7 +6452,7 @@ Draws simple, thick or filled rectangle
 
 void cvRectangle( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{Rectangle(img,pt1,pt2,color,thickness=1,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6474,7 +6474,7 @@ Draws a circle
 
 void cvCircle( \par CvArr* img,\par CvPoint center,\par int radius,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{Circle(img,center,radius,color,thickness=1,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the circle is drawn}
@@ -6499,7 +6499,7 @@ Draws simple or thick elliptic arc or fills ellipse sector
 
 void cvEllipse( \par CvArr* img,\par CvPoint center,\par CvSize axes,\par double angle,\par double start\_angle,\par double end\_angle,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{Ellipse(img,pt1,axes,angle,start_angle,end_angle,color,thickness=1,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -6532,7 +6532,7 @@ Fills polygons interior
 
 void cvFillPoly( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par CvScalar color,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{FillPoly(img,pts,color,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6557,7 +6557,7 @@ Fills convex polygon
 
 void cvFillConvexPoly( \par CvArr* img,\par CvPoint* pts,\par int npts,\par CvScalar color,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{FillConvexPoly(img,pn,color,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6583,7 +6583,7 @@ Draws simple or thick polygons
 
 void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par int is\_closed,\par CvScalar color,\par int thickness=1,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{PolyLine(img,pts,is_closed,color,thickness=1,line_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -6609,7 +6609,7 @@ Initializes font structure
 
 \cvexp{
 void cvInitFont( \par CvFont* font,\par int font\_face,\par double hscale,\par double vscale,\par double shear=0,\par int thickness=1,\par int line\_type=8 );
-}{CPP}{PYTHON}
+}{CPP}{InitFont(font_face,hscale,vscale,shear=0,thickness=1,line_type=8)-> font}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure initialized by the function}
@@ -6643,7 +6643,7 @@ Draws text string
 
 void cvPutText( \par CvArr* img,\par const char* text,\par CvPoint org,\par const CvFont* font,\par CvScalar color );
 
-}{CPP}{PYTHON}
+}{CPP}{img,text,org,font,color)-> None}
 
 \begin{description}
 \cvarg{img}{Input image}
@@ -6667,7 +6667,7 @@ Retrieves width and height of text string
 
 void cvGetTextSize( \par const char* text\_string,\par const CvFont* font,\par CvSize* text\_size,\par int* baseline );
 
-}{CPP}{PYTHON}
+}{CPP}{text_string,font)-> text_size,baseline}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure}
@@ -6688,7 +6688,7 @@ Draws contour outlines or interiors in the image
 
 void cvDrawContours( \par CvArr *img,\par CvSeq* contour,\par CvScalar external\_color,\par CvScalar hole\_color,\par int max\_level,\par int thickness=1,\par int line\_type=8 );
 
-}{CPP}{PYTHON}
+}{CPP}{DrawContours(img,contour,external_color,hole_color,max_level,thickness=1,line_type=8,offset=(0,0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the contours are to be drawn. Like in any other drawing function, the contours are clipped with the ROI.}
@@ -7996,7 +7996,7 @@ Saves object to file
 
 void cvSave( \par const char* filename,\par const void* struct\_ptr,\par const char* name=NULL,\par const char* comment=NULL,\par CvAttrList attributes=cvAttrList());
 
-}{CPP}{PYTHON}
+}{CPP}{Save(filename,struct_ptr,name=NULL,comment=NULL)-> None}
 
 \begin{description}
 \cvarg{filename}{File name}
@@ -8016,7 +8016,7 @@ Loads object from file
 
 void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par const char* name=NULL,\par const char** real\_name=NULL );
 
-}{CPP}{PYTHON}
+}{CPP}{Load(filename,storage=NULL,name=NULL)-> generic}
 
 \begin{description}
 \cvarg{filename}{File name}
@@ -8043,7 +8043,7 @@ Checks every element of input array for invalid values
 
 int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\par double max\_val=0);
 
-}{CPP}{PYTHON}
+}{CPP}{CheckArr(arr,flags=0,min_val=0,max_val=0)-> int}
 \begin{lstlisting}
 #define cvCheckArray cvCheckArr
 \end{lstlisting}
@@ -8074,7 +8074,7 @@ Splits set of vectors by given number of clusters
 
 \cvexp{
 void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* labels,\par CvTermCriteria termcrit );
-}{CPP}{PYTHON}
+}{CPP}{KMeans2(samples,cluster_count,labels,termcrit)-> None}
 
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
