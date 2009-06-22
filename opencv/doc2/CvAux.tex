@@ -46,9 +46,9 @@ cvFindStereoCorrespondence( leftImage, rightImage, CV\_DISPARITY\_BIRCHFIELD, de
 \end{lstlisting}
 
 And here is the example stereo pair that can be used to test the example
-\newline
+
 \includegraphics{pics/left.jpg}
-\newline
+
 \includegraphics{pics/right.jpg}
 
 
@@ -167,7 +167,7 @@ void cvMakeAlphaScanlines( \par int* scanlines1, \par int* scanlines2,
 \cvarg{scanlinesA}{Pointer to the array of the scanlines found in the virtual image.}
 \cvarg{lengths}{Pointer to the array of lengths of the scanlines found in the virtual image.}
 \cvarg{line\_count}{Number of scanlines.}
-\cvarg{alpha}{Position of virtual camera \texttt{($0.0 - 1.0$)}.} 
+\cvarg{alpha}{Position of virtual camera \texttt{(0.0 - 1.0)}.} 
 \end{description}
 
 The function \texttt{cvMakeAlphaScanlines} finds coordinates of scanlines for the virtual camera with the given camera position.
@@ -196,7 +196,7 @@ void cvMorphEpilinesMulti( \par int line\_count, \par uchar* first\_pix, \par in
 \cvarg{second\_num}{Pointer to the array of numbers of points in each scanline in the second image.}
 \cvarg{dst\_pix}{Pointer to the resulting morphed warped image.}
 \cvarg{dst\_num}{Pointer to the array of numbers of points in each line.}
-\cvarg{alpha}{Virtual camera position \texttt{($0.0 - 1.0$)}.}
+\cvarg{alpha}{Virtual camera position \texttt{(0.0 - 1.0)}.}
 \cvarg{first}{First sequence of runs.}
 \cvarg{first\_runs}{Pointer to the number of runs in each scanline in the first image.}
 \cvarg{second}{Second sequence of runs.}
@@ -299,11 +299,11 @@ int  cv3dTrackerLocateObjects(\par int num\_cameras,
 \cvarg{num\_cameras}{the number of cameras.}
 \cvarg{num\_objects}{the maximum number of objects found by any camera. (Also the maximum number of objects returned in \texttt{tracked\_objects}.}
 \cvarg{camera\_info}{camera position and location information for each camera, as determined by \cross{3dTrackerCalibrateCameras}.}
-\cvarg{tracking\_info}{the 2d position of each object as seen by each camera. Although this is specified as a one-dimensional array, it is actually a two-dimensional array: \texttt{const Cv3dTracker2dTrackedObject tracking\_info[num\_cameras][num\_objects]}. The \texttt{id} field of any unused slots must be $-1$. Ids need not be ordered or consecutive.}
+\cvarg{tracking\_info}{the 2d position of each object as seen by each camera. Although this is specified as a one-dimensional array, it is actually a two-dimensional array: \texttt{const Cv3dTracker2dTrackedObject tracking\_info[num\_cameras][num\_objects]}. The \texttt{id} field of any unused slots must be -1. Ids need not be ordered or consecutive.}
 \cvarg{tracked\_objects}{filled in with the results.}
 \end{description}
 
-The function \texttt{cv3dTrackerLocateObjects} determines the 3d position of tracked objects based on the 2d tracking information from multiple cameras and the camera position and orientation information computed by \cross{3dTrackerCalibrateCameras}. It locates any objects with the same \texttt{id} that are tracked by more than one camera. It fills in the \texttt{tracked\_objects} array and returns the number of objects located. The \texttt{id} fields of any unused slots in \texttt{tracked\_objects} are set to $-1$.
+The function \texttt{cv3dTrackerLocateObjects} determines the 3d position of tracked objects based on the 2d tracking information from multiple cameras and the camera position and orientation information computed by \cross{3dTrackerCalibrateCameras}. It locates any objects with the same \texttt{id} that are tracked by more than one camera. It fills in the \texttt{tracked\_objects} array and returns the number of objects located. The \texttt{id} fields of any unused slots in \texttt{tracked\_objects} are set to -1.
 
 \section{Eigen Objects (PCA) Functions}
 
@@ -458,7 +458,7 @@ Embedded HMM Structure
 
 
 \begin{description}
-\cvarg{level}{Level of embedded HMM. If \texttt{level $==0$}, HMM is most external. In 2D HMM there are two types of HMM: 1 external and several embedded. External HMM has \texttt{level $==1$}, embedded HMMs have \texttt{level $==0$}.}
+\cvarg{level}{Level of embedded HMM. If \texttt{level ==0}, HMM is most external. In 2D HMM there are two types of HMM: 1 external and several embedded. External HMM has \texttt{level ==1}, embedded HMMs have \texttt{level ==0}.}
 \cvarg{num\_states}{Number of states in 1D HMM.}
 \cvarg{transP}{State-to-state transition probability, square matrix \texttt{(num\_state×num\_state )}.}
 \cvarg{obsProb}{Observation probability matrix.}
@@ -505,7 +505,7 @@ CvEHMM* cvCreate2DHMM( int* stateNumber, int* numMix, int obsSize );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{stateNumber}{Array, the first element of the which specifies the number of superstates in the HMM. All subsequent elements specify the number of states in every embedded HMM, corresponding to each superstate. So, the length of the array is \texttt{stateNumber [$0$]+$1$}.}
+\cvarg{stateNumber}{Array, the first element of the which specifies the number of superstates in the HMM. All subsequent elements specify the number of states in every embedded HMM, corresponding to each superstate. So, the length of the array is \texttt{stateNumber [0]+1}.}
 \cvarg{numMix}{Array with numbers of Gaussian mixture components per each internal state. The number of elements in the array is equal to number of internal states in the HMM, that is, superstates are not counted here.}
 \cvarg{obsSize}{Size of observation vectors to be used with created HMM.}
 \end{description}
