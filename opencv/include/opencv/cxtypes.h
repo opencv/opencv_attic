@@ -63,7 +63,7 @@
     #define CV_ICC   __ECC
   #endif
 
-  #if (defined WIN32 && defined _WIN64 && \
+  #if ((defined WIN32 || defined _WIN64) && \
       (_MSC_VER >= 1400 || defined CV_ICC)) \
       || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
     #include <emmintrin.h>

@@ -9,34 +9,13 @@ project(opencv_lapack)
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    ${CMAKE_CURRENT_BINARY_DIR}
 	)
 
 # The .cpp files:
 file(GLOB lib_srcs *.c)
 file(GLOB lib_hdrs *.h)
 set(lib_ext_hdrs "../include/f2c.h" "../include/cblas.h" "../include/clapack.h")
-
-if(WIN32 AND MSVC)
-    set(pch_header "clapack.h")
-    set(pch_src "precomp.c")
-    list(REMOVE_ITEM lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src})
-    set(lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src} ${lib_srcs})
-    foreach(src_file ${lib_srcs})
-        if(${src_file} MATCHES ${pch_src})
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yc${pch_header}"
-                )
-        else()
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yu${pch_header}"
-                )
-        endif()
-    endforeach()
-endif()
 
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
@@ -45,6 +24,18 @@ endif()
 set(the_target "opencv_lapack")
 
 add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
+
+if(PCHSupport_FOUND)
+    set(pch_header ${CMAKE_SOURCE_DIR}/3rdparty/include/clapack.h)
+    if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
+        if(${CMAKE_GENERATOR} MATCHES "Visual*")
+            set(${the_target}_pch "precomp.c")
+        endif()            
+        add_native_precompiled_header(${the_target} ${pch_header})
+    #elseif(CMAKE_COMPILER_IS_GNUCXX AND ${CMAKE_GENERATOR} MATCHES ".*Makefiles")
+    #    add_precompiled_header(${the_target} ${pch_header})
+    endif()
+endif()
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
