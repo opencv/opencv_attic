@@ -163,7 +163,7 @@ CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \cvarg{ trackbar\_name}{Name of created trackbar.}
 \cvarg{ window\_name}{Name of the window which will e used as a parent for created trackbar.}
 \cvarg{ value}{Pointer to the integer variable, which value will reflect the position of the slider. Upon the creation the slider position is defined by this variable.}
-\cvarg{ count}{Maximal position of the slider. Minimal position is always $0$.}
+\cvarg{ count}{Maximal position of the slider. Minimal position is always 0.}
 \cvarg{ on\_change}{Pointer to the function to be called every time the slider changes the position. This function should be prototyped as \texttt{void Foo(int);}Can be NULL if callback is not required.}
 \end{description}
 
@@ -263,7 +263,7 @@ int cvWaitKey( int delay=0 );
 \cvarg{ delay}{Delay in milliseconds.}
 \end{description}
 
-The function \texttt{cvWaitKey} waits for key event infinitely (delay<=0) or for "delay" milliseconds. Returns the code of the pressed key or -$1$ if no key were pressed until the specified timeout has elapsed.
+The function \texttt{cvWaitKey} waits for key event infinitely (delay<=0) or for "delay" milliseconds. Returns the code of the pressed key or -1 if no key were pressed until the specified timeout has elapsed.
 
 \textbf{Note:} This function is the only method in HighGUI to fetch and handle events so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
@@ -285,7 +285,7 @@ IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMA
 
 \begin{description}
 \cvarg{ filename}{Name of file to be loaded.}
-\cvarg{ iscolor}{Specifies colorness of the loaded image: if $>0$, the loaded image is forced to be color 3-channel image; if $0$, the loaded image is forced to be grayscale; if $<0$, the loaded image will be loaded as is (with number of channels depends on the file).}
+\cvarg{ iscolor}{Specifies colorness of the loaded image: if $>$0, the loaded image is forced to be color 3-channel image; if 0, the loaded image is forced to be grayscale; if $<$0, the loaded image will be loaded as is (with number of channels depends on the file).}
 \end{description}
 
 The function \texttt{cvLoadImage} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
@@ -341,8 +341,7 @@ CvCapture* cvCaptureFromFile( const char* filename );
 \end{description}
 
 The function \texttt{cvCaptureFromFile} allocates and initialized the CvCapture structure for reading the video stream from the specified file. Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux this is ffmpeg, on Mac OS X the back end is QuickTime. See VideoCodecs for some discussion on what to expect and how to prepare your video files.
-\newline
-\newline
+
 After the allocated structure is not used any more it should be released by \cross{ReleaseCapture} function.
 
 \cvfunc{CaptureFromCAM} % XXX:Called cvCreateCameraCapture in manual
@@ -355,12 +354,11 @@ CvCapture* cvCaptureFromCAM( int index );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{ index}{Index of the camera to be used. If there is only one camera or it does not matter what camera to use -$1$ may be passed.}
+\cvarg{ index}{Index of the camera to be used. If there is only one camera or it does not matter what camera to use -1 may be passed.}
 \end{description}
 
 The function \texttt{cvCaptureFromCAM} allocates and initialized the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and !FireWire (IEEE1394).
-\newline
-\newline
+
 To release the structure, use \cross{ReleaseCapture}.
 
 \cvfunc{ReleaseCapture} 
@@ -436,17 +434,17 @@ double cvGetCaptureProperty( CvCapture* capture, int property\_id );
 \cvarg{capture}{video capturing structure.}
 \cvarg{property\_id}{property identifier. Can be one of the following:
 \begin{description}
-\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp\newline}
-\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next\newline }
-\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)\newline }
-\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream\newline }
-\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream\newline }
-\cvarg{CV\_CAP\_PROP\_FPS}{frame rate\newline }
-\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec\newline }
-\cvarg{CV\_CAP\_PROP\_FRAME\_COUNT}{number of frames in video file\newline }
-\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)\newline }
-\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)\newline }
-\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next}
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)}
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FPS}{frame rate}
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec}
+\cvarg{CV\_CAP\_PROP\_FRAME\_COUNT}{number of frames in video file}
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)}
 \cvarg{CV\_CAP\_PROP\_HUE}{hue of image (only for cameras)}
 \end{description} }
 \end{description}
@@ -467,16 +465,16 @@ int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par d
 \cvarg{ property\_id}{property identifier. Can be one of the following:
 
 \begin{description}
-\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp\newline}
-\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next\newline }
-\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)\newline }
-\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream\newline }
-\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream\newline }
-\cvarg{CV\_CAP\_PROP\_FPS}{frame rate\newline }
-\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec\newline }
-\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)\newline }
-\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)\newline }
-\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)\newline }
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{film current position in milliseconds or video capture timestamp}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next}
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{relative position of video file (0 - start of the film, 1 - end of the film)}
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{width of frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{height of frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FPS}{frame rate}
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec}
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{brightness of image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{contrast of image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_SATURATION}{saturation of image (only for cameras)}
 \cvarg{CV\_CAP\_PROP\_HUE}{hue of image (only for cameras)}
 \end{description} }
 
@@ -485,7 +483,7 @@ int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par d
 
 The function \texttt{cvSetCaptureProperty} sets the specified property of video capturing. Currently the function supports only video files: \texttt{CV\_CAP\_PROP\_POS\_MSEC, CV\_CAP\_PROP\_POS\_FRAMES, CV\_CAP\_PROP\_POS\_AVI\_RATIO}.
 
-NB This function currently does nothing when using the latest CVS download on linux with FFMPEG (the function contents are hidden using if $0$ and it returns $0$)
+NB This function currently does nothing when using the latest CVS download on linux with FFMPEG (the function contents are hidden using if 0 and it returns 0)
 
 \cvfunc{CreateVideoWriter} % XXX Different than manual
 
@@ -499,16 +497,14 @@ CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, 
 
 \begin{description}
 \cvarg{ filename}{Name of the output video file.}
-\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,\newline \texttt{CV\_FOURCC('P','I','M','1')} is MPEG-1 codec, \texttt{CV\_FOURCC('M','J','P','G')} is motion-jpeg codec etc. Under Win32 it is possible to pass -$1$ in order to choose compression method and additional compression parameters from dialog. Under Win32 if we pass $0
-$ while using an avi filename it will create a video writer that creates uncompressed avi file.}
+\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,\newline \texttt{CV\_FOURCC('P','I','M','1')} is MPEG-1 codec, \texttt{CV\_FOURCC('M','J','P','G')} is motion-jpeg codec etc. Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if we pass 0 while using an avi filename it will create a video writer that creates uncompressed avi file.}
 \cvarg{ fps}{Framerate of the created video stream.}
 \cvarg{ frame\_size}{Size of video frames.}
 \cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
 \end{description}
 
 The function \texttt{cvCreateVideoWriter} creates video writer structure.
-\newline
-\newline
+
 Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux this is ffmpeg, on Mac OS X the back end is !QuickTime. See VideoCodecs for some discussion on what to expect.
 
 \cvfunc{ReleaseVideoWriter}
@@ -560,7 +556,7 @@ int cvInitSystem( int argc, char** argv );
 
 The function \texttt{cvInitSystem} initializes HighGUI. If it wasn't
 called explicitly by the user before the first window is created, it is
-called implicitly then with $\texttt{argc}=0$, $\texttt{argv}=NULL$. Under
+called implicitly then with \texttt{argc}=0, \texttt{argv}=NULL. Under
 Win32 there is no need to call it explicitly. Under X Window the arguments
 may be used to customize a look of HighGUI windows and controls.
 
