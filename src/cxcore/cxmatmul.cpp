@@ -2681,7 +2681,7 @@ PCA& PCA::operator()(const Mat& data, const Mat& _mean, int flags, int maxCompon
 }
 
 
-Mat PCA::project(const Mat& data) const
+void PCA::project(const Mat& data, Mat& result) const
 {
     CV_Assert( mean.data && eigenvectors.data &&
         ((mean.rows == 1 && mean.cols == data.cols) || (mean.cols == 1 && mean.rows == data.rows)));
@@ -2698,14 +2698,19 @@ Mat PCA::project(const Mat& data) const
         tmp_data = tmp_mean;
     }
     if( mean.rows == 1 )
-        gemm( tmp_data, eigenvectors, 1, Mat(), 0, tmp_data, GEMM_2_T );
+        gemm( tmp_data, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
     else
-        gemm( eigenvectors, tmp_data, 1, Mat(), 0, tmp_data, 0 );
-    return tmp_data;
+        gemm( eigenvectors, tmp_data, 1, Mat(), 0, result, 0 );
 }
 
+Mat PCA::project(const Mat& data) const
+{
+    Mat result;
+    project(data, result);
+    return result;
+}
 
-Mat PCA::backProject(const Mat& data) const
+void PCA::backProject(const Mat& data, Mat& result) const
 {
     CV_Assert( mean.data && eigenvectors.data &&
         ((mean.rows == 1 && eigenvectors.rows == data.cols) ||
@@ -2716,14 +2721,20 @@ Mat PCA::backProject(const Mat& data) const
     if( mean.rows == 1 )
     {
         tmp_mean = repeat(mean, data.rows, 1);
-        gemm( tmp_data, eigenvectors, 1, tmp_mean, 1, tmp_mean, 0 );
+        gemm( tmp_data, eigenvectors, 1, tmp_mean, 1, result, 0 );
     }
     else
     {
         tmp_mean = repeat(mean, 1, data.cols);
-        gemm( eigenvectors, tmp_data, 1, tmp_mean, 1, tmp_data, GEMM_1_T );
+        gemm( eigenvectors, tmp_data, 1, tmp_mean, 1, result, GEMM_1_T );
     }
-    return tmp_mean;
+}
+
+Mat PCA::backProject(const Mat& data) const
+{
+    Mat result;
+    backProject(data, result);
+    return result;
 }
 
 }

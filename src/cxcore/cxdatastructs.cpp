@@ -3527,4 +3527,468 @@ cvPrevTreeNode( CvTreeNodeIterator* treeIterator )
     return prevNode;
 }
 
+
+namespace cv
+{
+
+// This is reimplementation of kd-trees from cvkdtree*.* by Xavier Delacour, cleaned-up and
+// adopted to work with the new OpenCV data structures. It's in cxcore to be shared by
+// both cv (CvFeatureTree) and ml (kNN).
+
+// The algorithm is taken from:
+// J.S. Beis and D.G. Lowe. Shape indexing using approximate nearest-neighbor search 
+// in highdimensional spaces. In Proc. IEEE Conf. Comp. Vision Patt. Recog., 
+// pages 1000--1006, 1997. http://citeseer.ist.psu.edu/beis97shape.html 
+
+const int MAX_TREE_DEPTH = 32;
+
+KDTree::KDTree()
+{
+    maxDepth = -1;
+}
+
+KDTree::KDTree(const Mat& _points, bool _copyData)
+{
+    maxDepth = -1;
+    build(_points, _copyData);
+}
+
+struct SubTree
+{
+    SubTree() : first(0), last(0), nodeIdx(0), depth(0) {}
+    SubTree(int _first, int _last, int _nodeIdx, int _depth)
+        : first(_first), last(_last), nodeIdx(_nodeIdx), depth(_depth) {}
+    int first;
+    int last;
+    int nodeIdx;
+    int depth;
+};
+
+
+static float
+medianPartition( size_t* ofs, int a, int b, const float* vals )
+{
+    int k, a0 = a, b0 = b;
+    int middle = (a + b)/2;
+    while( b > a )
+    {
+        int i0 = a, i1 = (a+b)/2, i2 = b;
+        float v0 = vals[ofs[i0]], v1 = vals[ofs[i1]], v2 = vals[ofs[i2]];
+        int ip = v0 < v1 ? (v1 < v2 ? i1 : v0 < v2 ? i2 : i0) :
+            v0 < v2 ? i0 : (v1 < v2 ? i2 : i1);
+        float pivot = vals[ofs[ip]];
+        std::swap(ofs[ip], ofs[i2]);
+
+        for( i1 = i0, i0--; i1 <= i2; i1++ )
+            if( vals[ofs[i1]] <= pivot )
+            {
+                i0++;
+                std::swap(ofs[i0], ofs[i1]);
+            }
+        if( i0 == middle )
+            break;
+        if( i0 > middle )
+            b = i0 - (b == i0);
+        else
+            a = i0;
+    }
+    
+    float pivot = vals[ofs[middle]];
+    int less = 0, more = 0;
+    for( k = a0; k < middle; k++ )
+    {
+        CV_Assert(vals[ofs[k]] <= pivot);
+        less += vals[ofs[k]] < pivot;
+    }
+    for( k = b0; k > middle; k-- )
+    {
+        CV_Assert(vals[ofs[k]] >= pivot);
+        more += vals[ofs[k]] > pivot;
+    }
+    CV_Assert(std::abs(more - less) <= 1);
+
+    return vals[ofs[middle]];
+}
+
+static void
+computeSums( const Mat& points, const size_t* ofs, int a, int b, double* sums )
+{
+    int i, j, dims = points.cols;
+    const float* data = points.ptr<float>(0);
+    for( j = 0; j < dims; j++ )
+        sums[j*2] = sums[j*2+1] = 0;
+    for( i = a; i <= b; i++ )
+    {
+        const float* row = data + ofs[i];
+        for( j = 0; j < dims; j++ )
+        {
+            double t = row[j], s = sums[j*2] + t, s2 = sums[j*2+1] + t*t;
+            sums[j*2] = s; sums[j*2+1] = s2;
+        }
+    }
+}
+
+
+void KDTree::build(const Mat& _points, bool _copyData)
+{
+    CV_Assert(_points.type() == CV_32F);
+    
+    nodes.release();
+
+    if( !_copyData )
+        points = _points;
+    else
+    {
+        points.release();
+        points.create(_points.size(), _points.type());
+    }
+
+    int i, j, n = _points.rows, dims = _points.cols, top = 0;
+    const float* data = _points.ptr<float>(0);
+    float* dstdata = points.ptr<float>(0);
+    size_t step = _points.step1();
+    size_t dstep = points.step1();
+    int ptpos = 0;
+
+    Mat sumstack(MAX_TREE_DEPTH*2, dims*2, CV_64F);
+    SubTree stack[MAX_TREE_DEPTH*2];
+    
+    Vector<size_t> _ptofs(n);
+    size_t* ptofs = &_ptofs[0];
+
+    for( i = 0; i < n; i++ )
+        ptofs[i] = i*step;
+
+    nodes.push_back(Node());
+    computeSums(points, ptofs, 0, n-1, sumstack.ptr<double>(top));
+    stack[top++] = SubTree(0, n-1, 0, 0);
+    int _maxDepth = 0;
+    
+    while( --top >= 0 )
+    {
+        int first = stack[top].first, last = stack[top].last;
+        int depth = stack[top].depth, nidx = stack[top].nodeIdx;
+        int count = last - first + 1, dim = -1;
+        const double* sums = sumstack.ptr<double>(top);
+        double invCount = 1./count, maxVar = -1.;
+
+        if( count == 1 )
+        {
+            int idx = _copyData ? ptpos++ : (int)(ptofs[first]/step);
+            nodes[nidx].idx = ~idx;
+            if( _copyData )
+            {
+                const float* src = data + ptofs[first];
+                float* dst = dstdata + idx*dstep;
+                for( j = 0; j < dims; j++ )
+                    dst[j] = src[j];
+            }
+            _maxDepth = std::max(_maxDepth, depth);
+            continue;
+        }
+
+        // find the dimensionality with the biggest variance
+        for( j = 0; j < dims; j++ )
+        {
+            double m = sums[j*2]*invCount;
+            double varj = sums[j*2+1]*invCount - m*m;
+            if( maxVar < varj )
+            {
+                maxVar = varj;
+                dim = j;
+            }
+        }
+
+        int left = (int)nodes.size(), right = left + 1;
+        nodes.push_back(Node());
+        nodes.push_back(Node());
+        nodes[nidx].idx = dim;
+        nodes[nidx].left = left;
+        nodes[nidx].right = right;
+        nodes[nidx].boundary = medianPartition(ptofs, first, last, data + dim);
+
+        int middle = (first + last)/2;
+        double *lsums = (double*)sums, *rsums = lsums + dims*2;
+        computeSums(points, ptofs, middle+1, last, rsums);
+        for( j = 0; j < dims*2; j++ )
+            lsums[j] = sums[j] - rsums[j];
+        stack[top++] = SubTree(first, middle, left, depth+1);
+        stack[top++] = SubTree(middle+1, last, right, depth+1);
+    }
+    maxDepth = _maxDepth;
+}
+
+
+void KDTree::findNearest(const Mat& vec, int K, int emax, Vector<int>* neighborsIdx,
+                         Mat* neighbors, Vector<float>* dist) const
+{
+    K = std::min(K, points.rows);
+    int dims = points.cols;
+    CV_Assert(vec.type() == CV_32F && vec.isContinuous() &&
+        (vec.rows == 1 || vec.cols == 1) &&
+        vec.rows + vec.cols - 1 == dims && K > 0 );
+    Vector<float> _vec((float*)vec.data, (size_t)dims);
+    AutoBuffer<int> idxbuf(K);
+    Vector<int> _idx(idxbuf, (size_t)K), *idx = neighborsIdx ? neighborsIdx : &_idx;
+
+    findNearest(_vec, K, emax, idx, 0, dist);
+
+    if( neighbors )
+        getPoints(*idx, *neighbors);
+}
+
+
+struct PQueueElem
+{
+    PQueueElem() : dist(0), idx(0) {}
+    PQueueElem(float _dist, int _idx) : dist(_dist), idx(_idx) {}
+    float dist;
+    int idx;
+};
+
+
+void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
+                         Vector<int>* _neighborsIdx,
+                         Vector<float>* _neighbors,
+                         Vector<float>* _dist) const
+{
+    K = std::min(K, points.rows);
+    int dims = points.cols;
+
+    CV_Assert(_vec.size() == (size_t)dims && K > 0 );
+
+    AutoBuffer<uchar> _buf((K+1)*(sizeof(float) + sizeof(int)));
+    int* idx = (int*)(uchar*)_buf;
+    float* dist = (float*)(idx + K + 1);
+    const float* vec = &_vec[0];
+    int i, j, ncount = 0, e = 0;
+
+    int qsize = 0, maxqsize = 1 << 10;
+    AutoBuffer<uchar> _pqueue(maxqsize*sizeof(PQueueElem));
+    PQueueElem* pqueue = (PQueueElem*)(uchar*)_pqueue;
+    emax = std::max(emax, 1);
+
+    for( e = 0; e < emax; )
+    {
+        float d, alt_d = 0.f;
+        int nidx;
+        
+        if( e == 0 )
+            nidx = 0;
+        else
+        {
+            // take the next node from the priority queue
+            if( qsize == 0 )
+                break;
+            nidx = pqueue[0].idx;
+            alt_d = pqueue[0].dist;
+            if( --qsize > 0 )
+            {
+                std::swap(pqueue[0], pqueue[qsize]);
+                d = pqueue[0].dist;
+                for( i = 0;;)
+                {
+                    int left = i*2 + 1, right = i*2 + 2;
+                    if( left >= qsize )
+                        break;
+                    if( right < qsize && pqueue[right].dist < pqueue[left].dist )
+                        left = right;
+                    if( pqueue[left].dist >= d )
+                        break;
+                    std::swap(pqueue[i], pqueue[left]);
+                    i = left;
+                }
+            }
+            
+            if( ncount == K && alt_d > dist[ncount-1] )
+                continue;
+        }
+
+        for(;;)
+        {
+            if( nidx < 0 )
+                break;
+            const Node& n = nodes[nidx];
+            
+            if( n.idx < 0 )
+            {
+                i = ~n.idx;
+                const float* row = points.ptr<float>(i);
+                for( j = 0, d = 0.f; j < dims; j++ )
+                {
+                    float t = vec[j] - row[j];
+                    d += t*t;
+                }
+                
+                dist[ncount] = d;
+                idx[ncount] = i;
+                for( i = ncount-1; i >= 0; i-- )
+                {
+                    if( dist[i] <= d )
+                        break;
+                    std::swap(dist[i], dist[i+1]);
+                    std::swap(idx[i], idx[i+1]);
+                }
+                ncount += ncount < K;
+                e++;
+                break; 
+            }
+            
+            int alt;
+            if( vec[n.idx] <= n.boundary )
+            {
+                nidx = n.left;
+                alt = n.right;
+            }
+            else
+            {
+                nidx = n.right;
+                alt = n.left;
+            }
+            
+            d = std::abs(vec[n.idx] - n.boundary);
+            d = d*d + alt_d;
+            // subtree prunning
+            if( ncount == K && d > dist[ncount-1] )
+                continue;
+            // add alternative subtree to the priority queue
+            pqueue[qsize] = PQueueElem(d, alt);
+            for( i = qsize; i > 0; )
+            {
+                int parent = (i-1)/2;
+                if( parent < 0 || pqueue[parent].dist <= d )
+                    break;
+                std::swap(pqueue[i], pqueue[parent]);
+                i = parent;
+            }
+            qsize += qsize+1 < maxqsize;
+        }
+    }
+
+    K = std::min(K, ncount);
+    if( _neighborsIdx )
+    {
+        _neighborsIdx->resize(K);
+        for( i = 0; i < K; i++ )
+            (*_neighborsIdx)[i] = idx[i];
+    }
+    if( _dist )
+    {
+        _dist->resize(K);
+        for( i = 0; i < K; i++ )
+            (*_dist)[i] = std::sqrt(dist[i]);
+    }
+
+    if( _neighbors )
+        getPoints(Vector<int>(idx, (size_t)K), *_neighbors);
+}
+
+
+void KDTree::findOrthoRange(const Mat& minBounds, const Mat& maxBounds,
+                            Vector<int>* neighborsIdx, Mat* neighbors) const
+{
+    int dims = points.cols;
+    CV_Assert( minBounds.type() == CV_32F && minBounds.isContinuous() &&
+        (minBounds.cols == 1 || minBounds.rows == 1) &&
+        minBounds.cols + minBounds.rows - 1 == dims &&
+
+        maxBounds.type() == CV_32F && maxBounds.isContinuous() &&
+        (maxBounds.cols == 1 || maxBounds.rows == 1) &&
+        maxBounds.cols + maxBounds.rows - 1 == dims );
+
+    Vector<int> _idx, *idx = neighborsIdx ? neighborsIdx : &_idx;
+
+    findOrthoRange(Vector<float>((float*)minBounds.data, (size_t)dims),
+                   Vector<float>((float*)maxBounds.data, (size_t)dims),
+                   idx, 0);
+
+    if( neighbors )
+        getPoints(*idx, *neighbors);
+}
+
+
+void KDTree::findOrthoRange(const Vector<float>& _minBounds, const Vector<float>& _maxBounds,
+                            Vector<int>* neighborsIdx, Vector<float>* neighbors) const
+{
+    int dims = points.cols;
+    CV_Assert( _minBounds.size() == (size_t)dims && _maxBounds.size() == (size_t)dims );
+    const float *L = &_minBounds[0], *R = &_maxBounds[0];
+    Vector<int> _idx, *idx = neighborsIdx ? neighborsIdx : &_idx;
+    AutoBuffer<int> _stack(MAX_TREE_DEPTH*2 + 1);
+    int* stack = _stack;
+    int top = 0;
+    
+    idx->clear();
+    stack[top++] = 0;
+
+    while( --top >= 0 )
+    {
+        int nidx = stack[top];
+        if( nidx < 0 )
+            break;
+        const Node& n = nodes[nidx];
+        if( n.idx < 0 )
+        {
+            int j, i = ~n.idx;
+            const float* row = points.ptr<float>(i);
+            for( j = 0; j < dims; j++ )
+                if( row[j] < L[j] || row[j] >= R[j] )
+                    break;
+            if( j == dims )
+                idx->push_back(i);
+            continue;
+        }
+        if( L[n.idx] <= n.boundary )
+            stack[top++] = n.left;
+        if( R[n.idx] > n.boundary )
+            stack[top++] = n.right;
+    }
+
+    if( neighbors )
+        getPoints( *idx, *neighbors );
+}
+
+
+void KDTree::getPoints(const Vector<int>& ids, Mat& pts) const
+{
+    int i, j, dims = points.cols, n = (int)ids.size();
+    pts.create( n, dims, points.type());
+    for( i = 0; i < n; i++ )
+    {
+        int idx = ids[i];
+        CV_Assert( (unsigned)idx < (unsigned)points.rows );
+        const float* src = points.ptr<float>(idx);
+        float* dst = pts.ptr<float>(i);
+
+        for( j = 0; j < dims; j++ )
+            dst[j] = src[j];
+    }
+}
+
+
+void KDTree::getPoints(const Vector<int>& ids, Vector<float>& pts) const
+{
+    int i, j, dims = points.cols, n = (int)ids.size();
+    pts.resize( n*dims );
+    for( i = 0; i < n; i++ )
+    {
+        int idx = ids[i];
+        CV_Assert( (unsigned)idx < (unsigned)points.rows );
+        const float* src = points.ptr<float>(idx);
+        float* dst = &pts[i*dims];
+
+        for( j = 0; j < dims; j++ )
+            dst[j] = src[j];
+    }
+}
+
+
+Vector<float> KDTree::at(int ptidx, bool copyData) const
+{
+    CV_Assert( (unsigned)ptidx < (unsigned)points.rows);
+    return Vector<float>((float*)points.ptr<float>(ptidx), (size_t)points.cols, copyData);
+}
+
+}
+
 /* End of file. */

@@ -1089,6 +1089,10 @@ inline RNG::operator double()
     unsigned t = next();
     return (((uint64)t << 32) | next())*5.4210108624275221700372640043497e-20;
 }
+inline int RNG::uniform(int a, int b) { return a == b ? a : next()%(b - a) + a; }
+inline float RNG::uniform(float a, float b) { return ((float)*this)*(b - a) + a; }
+inline double RNG::uniform(double a, double b) { return ((float)*this)*(b - a) + a; }
+
 
 inline TermCriteria::TermCriteria() : type(0), maxCount(0), epsilon(0) {}
 inline TermCriteria::TermCriteria(int _type, int _maxCount, double _epsilon)
@@ -1646,6 +1650,12 @@ static inline bool operator < (const FileNodeIterator& it1, const FileNodeIterat
     return it1.remaining > it2.remaining;
 }
 
+inline FileNode FileStorage::getFirstTopLevelNode() const
+{
+    FileNode r = root();
+    FileNodeIterator it = r.begin();
+    return it != r.end() ? *it : FileNode();
+}
     
 //////////////////////////////////////// Various algorithms ////////////////////////////////////
     

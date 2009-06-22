@@ -748,9 +748,104 @@ static void generateRandomCenter(const Vector<Vec2f>& box, float* center, RNG& r
         center[j] = ((float)rng*(1.f+margin*2.f)-margin)*(box[j][1] - box[j][0]) + box[j][0];
 }
 
-double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria criteria,
+
+static inline float distance(const float* a, const float* b, int n)
+{
+    int j = 0; float d = 0.f;
+#if CV_SSE2
+    float CV_DECL_ALIGNED(16) buf[4];
+    __m128 d0 = _mm_setzero_ps(), d1 = _mm_setzero_ps();
+
+    for( ; j <= n - 8; j += 8 )
+    {
+        __m128 t0 = _mm_sub_ps(_mm_loadu_ps(a + j), _mm_loadu_ps(b + j));
+        __m128 t1 = _mm_sub_ps(_mm_loadu_ps(a + j + 4), _mm_loadu_ps(b + j + 4));
+        d0 = _mm_add_ps(d0, _mm_mul_ps(t0, t0));
+        d1 = _mm_add_ps(d1, _mm_mul_ps(t1, t1));
+    }
+    _mm_store_ps(buf, _mm_add_ps(d0, d1));
+    d = buf[0] + buf[1] + buf[2] + buf[3];
+#else
+    for( ; j <= n - 4; j += 4 )
+    {
+        float t0 = a[j] - b[j], t1 = a[j+1] - b[j+1], t2 = a[j+2] - b[j+2], t3 = a[j+3] - b[j+3];
+        d += t0*t0 + t1*t1 + t2*t2 + t3*t3;
+    }
+#endif
+    for( ; j < n; j++ )
+    {
+        float t = a[j] - b[j];
+        d += t*t;
+    }
+    return d;
+}
+
+/*
+k-means center initialization using the following algorithm:
+Arthur & Vassilvitskii (2007) k-means++: The Advantages of Careful Seeding
+*/
+static void generateCentersSPP(const Mat& _data, Mat& _out_centers, int K, RNG& rng, int trials)
+{
+    int i, j, k, dims = _data.cols, N = _data.rows;
+    const float* data = _data.ptr<float>(0);
+    int step = _data.step/sizeof(data[0]);
+    Vector<int> _centers(K);
+    int* centers = &_centers[0];
+    Vector<float> _dist(N*3);
+    float* dist = &_dist[0], *tdist = dist + N, *tdist2 = tdist + N;
+    double sum0 = 0;
+
+    centers[0] = (unsigned)rng % N;
+
+    for( i = 0; i < N; i++ )
+    {
+        dist[i] = distance(data + step*i, data + step*centers[0], dims);
+        sum0 += dist[i];
+    }
+    
+    for( k = 1; k < K; k++ )
+    {
+        double bestSum = DBL_MAX;
+        int bestCenter = -1;
+
+        for( j = 0; j < trials; j++ )
+        {
+            double p = (double)rng*sum0, s = 0;
+            for( i = 0; i < N-1; i++ )
+                if( (p -= dist[i]) <= 0 )
+                    break;
+            int ci = i;
+            for( i = 0; i < N; i++ )
+            {
+                tdist2[i] = std::min(distance(data + step*i, data + step*ci, dims), dist[i]);
+                s += tdist2[i];
+            }
+            
+            if( s < bestSum )
+            {
+                bestSum = s;
+                bestCenter = ci;
+                std::swap(tdist, tdist2);
+            }
+        }
+        centers[k] = bestCenter;
+        sum0 = bestSum;
+        std::swap(dist, tdist);
+    }
+
+    for( k = 0; k < K; k++ )
+    {
+        const float* src = data + step*centers[k];
+        float* dst = _out_centers.ptr<float>(k);
+        for( j = 0; j < dims; j++ )
+            dst[j] = src[j];
+    }
+}
+
+double kmeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria criteria,
                int attempts, RNG* rng, int flags, Mat* _centers )
 {
+    const int SPP_TRIALS = 3;
     int N = data.rows, dims = data.cols, type = data.type();
     
     CV_Assert( type == CV_32F && K > 0 && attempts > 0 );
@@ -792,13 +887,13 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
         criteria.maxCount = 2;
     }
 
-    const float* sample = (const float*)data.ptr(0);
+    const float* sample = data.ptr<float>(0);
     for( j = 0; j < dims; j++ )
         box[j] = Vec2f(sample[j], sample[j]);
 
     for( i = 1; i < N; i++ )
     {
-        sample = (const float*)data.ptr(i);
+        sample = data.ptr<float>(i);
         for( j = 0; j < dims; j++ )
         {
             float v = sample[j];
@@ -814,14 +909,19 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
         {
             swap(centers, old_centers);
 
-            if( iter == 0 && (a > 0 || !(flags & CV_KMEANS_USE_INITIAL_LABELS)) )
+            if( iter == 0 && (a > 0 || !(flags & KMEANS_USE_INITIAL_LABELS)) )
             {
-                for( k = 0; k < K; k++ )
-                    generateRandomCenter(_box, (float*)centers.ptr(k), *rng);
+                if( flags & KMEANS_CENTERS_SPP )
+                    generateCentersSPP(data, centers, K, *rng, SPP_TRIALS);
+                else
+                {
+                    for( k = 0; k < K; k++ )
+                        generateRandomCenter(_box, centers.ptr<float>(k), *rng);
+                }
             }
             else
             {
-                if( iter == 0 && a == 0 && (flags & CV_KMEANS_USE_INITIAL_LABELS) )
+                if( iter == 0 && a == 0 && (flags & KMEANS_USE_INITIAL_LABELS) )
                 {
                     for( i = 0; i < N; i++ )
                         CV_Assert( (unsigned)labels[i] < (unsigned)K );
@@ -834,9 +934,9 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
 
                 for( i = 0; i < N; i++ )
                 {
-                    sample = (const float*)data.ptr(i);
+                    sample = data.ptr<float>(i);
                     k = labels[i];
-                    float* center = (float*)centers.ptr(k);
+                    float* center = centers.ptr<float>(k);
                     for( j = 0; j <= dims - 4; j += 4 )
                     {
                         float t0 = center[j] + sample[j];
@@ -861,7 +961,7 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
 
                 for( k = 0; k < K; k++ )
                 {
-                    float* center = (float*)centers.ptr(k);
+                    float* center = centers.ptr<float>(k);
                     if( counters[k] != 0 )
                     {
                         float scale = 1.f/counters[k];
@@ -874,7 +974,7 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
                     if( iter > 0 )
                     {
                         double dist = 0;
-                        const float* old_center = (const float*)old_centers.ptr(k);
+                        const float* old_center = old_centers.ptr<float>(k);
                         for( j = 0; j < dims; j++ )
                         {
                             double t = center[j] - old_center[j];
@@ -889,30 +989,14 @@ double kMeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
             compactness = 0;
             for( i = 0; i < N; i++ )
             {
-                sample = (const float*)data.ptr(i);
+                sample = data.ptr<float>(i);
                 int k_best = 0;
                 double min_dist = DBL_MAX;
 
                 for( k = 0; k < K; k++ )
                 {
-                    const float* center = (const float*)centers.ptr(k);
-                    double dist = 0;
-                    
-                    for( j = 0; j <= dims - 4; j += 4 )
-                    {
-                        double t0 = center[j] - sample[j];
-                        double t1 = center[j+1] - sample[j+1];
-                        dist += t0*t0 + t1*t1;
-                        t0 = center[j+2] - sample[j+2];
-                        t1 = center[j+3] - sample[j+3];
-                        dist += t0*t0 + t1*t1;
-                    }
-
-                    for( ; j < dims; j++ )
-                    {
-                        double t = center[j] - sample[j];
-                        dist += t*t;
-                    }
+                    const float* center = centers.ptr<float>(k);
+                    double dist = distance(sample, center, dims);
 
                     if( min_dist > dist )
                     {
@@ -1099,7 +1183,7 @@ cvKMeans2( const CvArr* _samples, int cluster_count, CvArr* _labels,
     CV_Assert( labels.isContinuous() && labels.type() == CV_32S &&
         labels.cols + labels.rows - 1 == data.rows );
     cv::Vector<int> labelvec((int*)labels.data, (size_t)data.rows);
-    double compactness = cv::kMeans(data, cluster_count, labelvec, termcrit, attempts,
+    double compactness = cv::kmeans(data, cluster_count, labelvec, termcrit, attempts,
                                     _rng ? &rng : 0, flags, _centers ? &centers : 0 );
     if( _rng )
         *_rng = rng.state;

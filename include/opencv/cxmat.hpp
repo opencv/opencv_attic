@@ -288,7 +288,10 @@ inline void Mat::create(int _rows, int _cols, int _type)
         rows = _rows;
         cols = _cols;
         step = elemSize()*cols;
-        size_t nettosize = (size_t)step*rows;
+        int64 _nettosize = (int64)step*rows;
+        size_t nettosize = (size_t)_nettosize;
+        if( _nettosize != (int64)nettosize )
+            CV_Error(CV_StsNoMem, "Too big buffer is allocated");
         size_t datasize = alignSize(nettosize, (int)sizeof(*refcount));
         datastart = data = (uchar*)fastMalloc(datasize + sizeof(*refcount));
         dataend = data + nettosize;
@@ -394,6 +397,19 @@ inline const uchar* Mat::ptr(int y) const
     CV_DbgAssert( (unsigned)y < (unsigned)rows );
     return data + step*y;
 }
+
+template<typename _Tp> inline _Tp* Mat::ptr(int y)
+{
+    CV_DbgAssert( (unsigned)y < (unsigned)rows );
+    return (_Tp*)(data + step*y);
+}
+
+template<typename _Tp> inline const _Tp* Mat::ptr(int y) const
+{
+    CV_DbgAssert( (unsigned)y < (unsigned)rows );
+    return (const _Tp*)(data + step*y);
+}
+
 
 static inline void swap( Mat& a, Mat& b )
 {
@@ -557,14 +573,14 @@ template<typename _Tp> inline const _Tp* Mat_<_Tp>::operator [](int y) const
 
 template<typename _Tp> inline _Tp& Mat_<_Tp>::operator ()(int row, int col)
 {
-    CV_DbgAssert( (unsigned)col < (unsigned)cols );
-    return (*this)[row][col];
+    CV_DbgAssert( (unsigned)row < (unsigned)rows && (unsigned)col < (unsigned)cols );
+    return ((_Tp*)(data + step*row))[col];
 }
 
-template<typename _Tp> inline _Tp Mat_<_Tp>::operator ()(int row, int col) const
+template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(int row, int col) const
 {
-    CV_DbgAssert( (unsigned)col < (unsigned)cols );
-    return (*this)[row][col];
+    CV_DbgAssert( (unsigned)row < (unsigned)rows && (unsigned)col < (unsigned)cols );
+    return ((const _Tp*)(data + step*row))[col];
 }
 
 template<typename _Tp> inline Mat_<_Tp>::operator Vector<_Tp>() const

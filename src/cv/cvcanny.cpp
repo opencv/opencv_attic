@@ -351,4 +351,15 @@ cvCanny( const void* srcarr, void* dstarr,
     cvFree( &stack_bottom );
 }
 
+void cv::Canny( const Mat& image, Mat& edges,
+                double threshold1, double threshold2,
+                int apertureSize, bool L2gradient )
+{
+    Mat src = image;
+    edges.create(src.size(), CV_8U);
+    CvMat _src = src, _dst = edges;
+    cvCanny( &_src, &_dst, threshold1, threshold2,
+        apertureSize + (L2gradient ? CV_CANNY_L2_GRADIENT : 0));
+}
+
 /* End of file. */

@@ -801,7 +801,10 @@ cvCreateData( CvArr* arr )
         if( step == 0 )
             step = CV_ELEM_SIZE(mat->type)*mat->cols;
 
-        total_size = step*mat->rows + sizeof(int) + CV_MALLOC_ALIGN;
+        int64 _total_size = (int64)step*mat->rows + sizeof(int) + CV_MALLOC_ALIGN;
+        total_size = (size_t)_total_size;
+        if(_total_size != (int64)total_size)
+            CV_Error(CV_StsNoMem, "Too big buffer is allocated" );
         mat->refcount = (int*)cvAlloc( (size_t)total_size );
         mat->data.ptr = (uchar*)cvAlignPtr( mat->refcount + 1, CV_MALLOC_ALIGN );
         *mat->refcount = 1;

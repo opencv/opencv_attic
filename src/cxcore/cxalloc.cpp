@@ -72,13 +72,12 @@ struct CriticalSection
 
 void* SystemAlloc(size_t size)
 {
-    void* ptr = VirtualAlloc(0, size, MEM_RESERVE + MEM_COMMIT, PAGE_READWRITE);
-    return ptr;
+    return malloc(size);
 }
 
 void SystemFree(void* ptr, size_t)
 {
-    VirtualFree(ptr, 0, MEM_RELEASE);
+    free(ptr);
 }
 #else
 struct CriticalSection

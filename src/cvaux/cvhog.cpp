@@ -86,18 +86,10 @@ void HOGDescriptor::setSVMDetector(const Vector<float>& _svmDetector)
     CV_Assert( checkDetectorSize() );
 }
 
-FileNode getFirstTopLevelNode(FileStorage& fs)
-{
-    FileNode root = fs.root();
-    FileNodeIterator it = root.begin();
-    return it != root.end() ? *it : FileNode();
-}
-
 bool HOGDescriptor::load(const String& filename, const String& objname)
 {
     FileStorage fs(filename, FileStorage::READ);
-    FileNode obj = !objname.empty() ? fs[objname] :
-        getFirstTopLevelNode(fs);
+    FileNode obj = !objname.empty() ? fs[objname] : fs.getFirstTopLevelNode();
     if( !obj.isMap() )
         return false;
     FileNodeIterator it = obj["winSize"].begin();
