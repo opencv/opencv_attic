@@ -151,6 +151,8 @@ else()
 	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
+include(OpenCVPCHSupport.cmake REQUIRED)
+
 if(UNIX)
     include(OpenCVFindPkgConfig.cmake OPTIONAL)
     include(CheckFunctionExists)

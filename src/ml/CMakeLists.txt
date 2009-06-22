@@ -10,31 +10,27 @@ source_group("Include\\External" FILES ${lib_hdrs})
 file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
-if(WIN32 AND MSVC)
-    set(pch_header "_ml.h")
-    set(pch_src "ml.cpp")
-    list(REMOVE_ITEM lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src})
-    set(lib_srcs ${CMAKE_CURRENT_SOURCE_DIR}/${pch_src} ${lib_srcs})
-    foreach(src_file ${lib_srcs})
-        if(${src_file} MATCHES ${pch_src})
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yc${pch_header}"
-                )
-        else()
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yu${pch_header}"
-                )
-        endif()
-    endforeach()
-endif()
+add_definitions(-D CVAPI_EXPORTS)
+
+include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
+                    "${CMAKE_CURRENT_SOURCE_DIR}"
+                    "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(the_target "ml")
 
 add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
+
+if(PCHSupport_FOUND)
+    set(pch_header ${CMAKE_SOURCE_DIR}/src/ml/_ml.h)
+    if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
+        if(${CMAKE_GENERATOR} MATCHES "Visual*")
+            set(${the_target}_pch "ml.cpp")
+        endif()            
+        add_native_precompiled_header(${the_target} ${pch_header})
+    elseif(CMAKE_COMPILER_IS_GNUCXX AND ${CMAKE_GENERATOR} MATCHES ".*Makefiles")
+        add_precompiled_header(${the_target} ${pch_header})
+    endif()
+endif()
 
 # For dynamic link numbering convenions
 set_target_properties(${the_target} PROPERTIES
@@ -48,9 +44,8 @@ set_target_properties(${the_target} PROPERTIES
 	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-	DEFINE_SYMBOL "CVAPI_EXPORTS"
 	)
-	
+
 # Linker flag needed for Windows Mobile 5 and 6 SDKs
 if(MSVC AND CMAKE_CROSSCOMPILING)
 	set_target_properties(${the_target} PROPERTIES
@@ -72,4 +67,3 @@ install(TARGETS ${the_target}
 install(FILES ${lib_hdrs}
         DESTINATION include/opencv
         COMPONENT dev)
-
