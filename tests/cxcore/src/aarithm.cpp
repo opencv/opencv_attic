@@ -1528,9 +1528,9 @@ void CxCore_SortTest::prepare_to_validation(int)
 			for (int j=0;j<ref_indexes->cols;j++)
 			{
 				if (order==1)
-					ref_indexes->data.i[ref_indexes->cols*i+j]=row[j]-&(input->data.db[input->cols*i]);
+					ref_indexes->data.i[ref_indexes->cols*i+j]=(int)(row[j]-&(input->data.db[input->cols*i]));
 				else
-					ref_indexes->data.i[ref_indexes->cols*(i+1)-1-j]=row[j]-&(input->data.db[input->cols*i]);
+					ref_indexes->data.i[ref_indexes->cols*(i+1)-1-j]=(int)(row[j]-&(input->data.db[input->cols*i]));
 			}
 		}
 		delete[] row;
@@ -1546,9 +1546,9 @@ void CxCore_SortTest::prepare_to_validation(int)
 			for (int i=0;i<ref_indexes->rows;i++)
 			{
 				if (order==1)
-					ref_indexes->data.i[ref_indexes->cols*i+j]=(col[i]-&(input->data.db[j]))/(ref_output->cols);
+					ref_indexes->data.i[ref_indexes->cols*i+j]=(int)((col[i]-&(input->data.db[j]))/(ref_output->cols));
 				else
-					ref_indexes->data.i[ref_indexes->cols*(ref_indexes->rows-1-i)+j]=(col[i]-&(input->data.db[j]))/(ref_output->cols);
+					ref_indexes->data.i[ref_indexes->cols*(ref_indexes->rows-1-i)+j]=(int)(col[i]-&(input->data.db[j]))/(ref_output->cols);
 			}
 		}
 		delete[] col;
