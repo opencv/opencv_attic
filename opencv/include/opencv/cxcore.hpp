@@ -818,6 +818,9 @@ struct CV_EXPORTS Mat
     uchar* ptr(int y=0);
     const uchar* ptr(int y=0) const;
 
+    template<typename _Tp> _Tp* ptr(int y=0);
+    template<typename _Tp> const _Tp* ptr(int y=0) const;
+
     enum { MAGIC_VAL=0x42FF0000, AUTO_STEP=0, CONTINUOUS_FLAG=CV_MAT_CONT_FLAG };
 
     int flags;
@@ -849,6 +852,9 @@ struct CV_EXPORTS RNG
     operator int();
     operator float();
     operator double();
+    int uniform(int a, int b);
+    float uniform(float a, float b);
+    double uniform(double a, double b);
     void fill( Mat& mat, int distType, const Scalar& a, const Scalar& b );
 
     uint64 state;
@@ -990,7 +996,9 @@ struct CV_EXPORTS PCA
     PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
     PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
     Mat project(const Mat& vec) const;
+    void project(const Mat& vec, Mat& result) const;
     Mat backProject(const Mat& vec) const;
+    void backProject(const Mat& vec, Mat& result) const;
 
     Mat eigenvectors;
     Mat eigenvalues;
@@ -1022,10 +1030,12 @@ CV_EXPORTS void mulSpectrums(const Mat& a, const Mat& b, Mat& c,
                              int flags, bool conjB=false);
 CV_EXPORTS int getOptimalDFTSize(int vecsize);
 
+enum { KMEANS_CENTERS_RANDOM=0, KMEANS_CENTERS_SPP=2, KMEANS_USE_INITIAL_LABELS=1 };
 CV_EXPORTS int kmeans( const Mat& samples, int K,
                        Mat& labels, Mat& centers,
                        TermCriteria crit, int attempts=1,
-                       int flags=0, double* compactness=0);
+                       int flags=KMEANS_CENTERS_SPP,
+                       double* compactness=0);
 
 CV_EXPORTS void seqToVector( const CvSeq* ptseq, Vector<Point>& pts );
 
@@ -1191,7 +1201,7 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     const _Tp* operator [](int y) const;
 
     _Tp& operator ()(int row, int col);
-    _Tp operator ()(int row, int col) const;
+    const _Tp& operator ()(int row, int col) const;
 
     operator MatExpr_<Mat_, Mat_>() const;
     operator Vector<_Tp>() const;
@@ -1712,6 +1722,42 @@ template<typename _Tp> struct CV_EXPORTS SparseMatIterator_ : SparseMatConstIter
     SparseMatIterator_ operator ++(int);
 };
 
+//////////////////// Fast Nearest-Neighbor Search Structure ////////////////////
+
+struct CV_EXPORTS KDTree
+{
+    struct Node
+    {
+        Node() : idx(-1), left(-1), right(-1), boundary(0.f) {}
+        Node(int _idx, int _left, int _right, float _boundary)
+            : idx(_idx), left(_left), right(_right), boundary(_boundary) {}
+        int idx;            // split dimension; >=0 for nodes (dim),
+                            // < 0 for leaves (index of the point)
+        int left, right;    // node indices of left and right branches
+        float boundary;     // left if vec[dim]<=boundary, otherwise right
+    };
+
+    KDTree();
+    KDTree(const Mat& _points, bool copyPoints=true);
+    void build(const Mat& _points, bool copyPoints=true);
+
+    void findNearest(const Mat& vec, int K, int Emax, Vector<int>* neighborsIdx,
+        Mat* neighbors=0, Vector<float>* dist=0) const;
+    void findNearest(const Vector<float>& vec, int K, int Emax, Vector<int>* neighborsIdx,
+        Vector<float>* neighbors=0, Vector<float>* dist=0) const;
+    void findOrthoRange(const Mat& minBounds, const Mat& maxBounds,
+        Vector<int>* neighborsIdx, Mat* neighbors=0) const;
+    void findOrthoRange(const Vector<float>& minBounds, const Vector<float>& maxBounds,
+        Vector<int>* neighborsIdx, Vector<float>* neighbors=0) const;
+    void getPoints(const Vector<int>& ids, Mat& pts) const;
+    void getPoints(const Vector<int>& ids, Vector<float>& pts) const;
+    Vector<float> at(int ptidx, bool copyData=false) const;
+
+    Vector<Node> nodes;
+    Mat points;
+    int maxDepth;
+};
+
 //////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
 
 struct CV_EXPORTS FileNode;
@@ -1729,6 +1775,7 @@ struct CV_EXPORTS FileStorage
     virtual bool isOpened() const;
     virtual void release();
 
+    FileNode getFirstTopLevelNode() const;
     FileNode root(int streamidx=0) const;
     FileNode operator[](const String& nodename) const;
     FileNode operator[](const char* nodename) const;
