@@ -95,23 +95,23 @@ void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
 
     CvValArray va;
 
-    assert( idx != NULL );
-    assert( val != NULL );
+    CV_Assert( idx != NULL );
+    CV_Assert( val != NULL );
 
     idxtype = CV_MAT_TYPE( idx->type );
-    assert( idxtype == CV_16SC1 || idxtype == CV_32SC1 || idxtype == CV_32FC1 );
-    assert( CV_MAT_TYPE( val->type ) == CV_32FC1 );
+    CV_Assert( idxtype == CV_16SC1 || idxtype == CV_32SC1 || idxtype == CV_32FC1 );
+    CV_Assert( CV_MAT_TYPE( val->type ) == CV_32FC1 );
     if( sortcols )
     {
-        assert( idx->rows == val->cols );
-        assert( idx->cols == val->rows );
+        CV_Assert( idx->rows == val->cols );
+        CV_Assert( idx->cols == val->rows );
         istep = CV_ELEM_SIZE( val->type );
         jstep = val->step;
     }
     else
     {
-        assert( idx->rows == val->rows );
-        assert( idx->cols == val->cols );
+        CV_Assert( idx->rows == val->rows );
+        CV_Assert( idx->cols == val->cols );
         istep = val->step;
         jstep = CV_ELEM_SIZE( val->type );
     }
@@ -409,7 +409,7 @@ CV_BOOST_IMPL
 CvClassifier* cvCreateStumpClassifier( CvMat* trainData,
                       int flags,
                       CvMat* trainClasses,
-                      CvMat* typeMask,
+                      CvMat* /*typeMask*/,
                       CvMat* missedMeasurementsMask,
                       CvMat* compIdx,
                       CvMat* sampleIdx,
@@ -438,15 +438,15 @@ CvClassifier* cvCreateStumpClassifier( CvMat* trainData,
     float sumwy  = FLT_MAX;
     float sumwyy = FLT_MAX;
 
-    assert( trainData != NULL );
-    assert( CV_MAT_TYPE( trainData->type ) == CV_32FC1 );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( missedMeasurementsMask == NULL );
-    assert( compIdx == NULL );
-    assert( weights != NULL );
-    assert( CV_MAT_TYPE( weights->type ) == CV_32FC1 );
-    assert( trainParams != NULL );
+    CV_Assert( trainData != NULL );
+    CV_Assert( CV_MAT_TYPE( trainData->type ) == CV_32FC1 );
+    CV_Assert( trainClasses != NULL );
+    CV_Assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
+    CV_Assert( missedMeasurementsMask == NULL );
+    CV_Assert( compIdx == NULL );
+    CV_Assert( weights != NULL );
+    CV_Assert( CV_MAT_TYPE( weights->type ) == CV_32FC1 );
+    CV_Assert( trainParams != NULL );
 
     data = trainData->data.ptr;
     if( CV_IS_ROW_SAMPLE( flags ) )
@@ -580,7 +580,7 @@ CV_BOOST_IMPL
 CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
                       int flags,
                       CvMat* trainClasses,
-                      CvMat* typeMask,
+                      CvMat* /*typeMask*/,
                       CvMat* missedMeasurementsMask,
                       CvMat* compIdx,
                       CvMat* sampleIdx,
@@ -647,11 +647,11 @@ CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
     int* t_idx;
     /* end private variables */
 
-    assert( trainParams != NULL );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( missedMeasurementsMask == NULL );
-    assert( compIdx == NULL );
+    CV_Assert( trainParams != NULL );
+    CV_Assert( trainClasses != NULL );
+    CV_Assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
+    CV_Assert( missedMeasurementsMask == NULL );
+    CV_Assert( compIdx == NULL );
 
     stumperror = (int) ((CvMTStumpTrainParams*) trainParams)->error;
 
@@ -670,12 +670,12 @@ CvClassifier* cvCreateMTStumpClassifier( CvMat* trainData,
     wdata = weights->data.ptr;
     if( weights->rows == 1 )
     {
-        assert( weights->cols == m );
+        CV_Assert( weights->cols == m );
         wstep = CV_ELEM_SIZE( weights->type );
     }
     else
     {
-        assert( weights->rows == m );
+        CV_Assert( weights->rows == m );
         wstep = weights->step;
     }
 
@@ -1098,7 +1098,7 @@ float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
 {
     CV_FUNCNAME( "cvEvalCARTClassifier" );
 
-    int idx;
+    int idx = 0;
 
     __BEGIN__;
 
@@ -1108,7 +1108,6 @@ float cvEvalCARTClassifier( CvClassifier* classifier, CvMat* sample )
     CV_ASSERT( CV_MAT_TYPE( sample->type ) == CV_32FC1 );
     CV_ASSERT( sample->rows == 1 || sample->cols == 1 );
 
-    idx = 0;
     if( sample->rows == 1 )
     {
         do
@@ -1152,7 +1151,7 @@ float cvEvalCARTClassifierIdx( CvClassifier* classifier, CvMat* sample )
 {
     CV_FUNCNAME( "cvEvalCARTClassifierIdx" );
 
-    int idx;
+    int idx = 0;
 
     __BEGIN__;
 
@@ -1162,7 +1161,6 @@ float cvEvalCARTClassifierIdx( CvClassifier* classifier, CvMat* sample )
     CV_ASSERT( CV_MAT_TYPE( sample->type ) == CV_32FC1 );
     CV_ASSERT( sample->rows == 1 || sample->cols == 1 );
 
-    idx = 0;
     if( sample->rows == 1 )
     {
         do
@@ -1531,7 +1529,7 @@ typedef struct CvBoostTrainer
 CV_BOOST_IMPL
 CvBoostTrainer* icvBoostStartTraining( CvMat* trainClasses,
                                        CvMat* weakTrainVals,
-                                       CvMat* weights,
+                                       CvMat* /*weights*/,
                                        CvMat* sampleIdx,
                                        CvBoostType type )
 {
@@ -1609,7 +1607,7 @@ CvBoostTrainer* icvBoostStartTraining( CvMat* trainClasses,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierDAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
@@ -1628,12 +1626,12 @@ float icvBoostNextWeakClassifierDAB( CvMat* weakEvalVals,
     int i;
     int idx;
 
-    assert( weakEvalVals != NULL );
-    assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( weights != NULL );
-    assert( CV_MAT_TYPE( weights ->type ) == CV_32FC1 );
+    CV_Assert( weakEvalVals != NULL );
+    CV_Assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
+    CV_Assert( trainClasses != NULL );
+    CV_Assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
+    CV_Assert( weights != NULL );
+    CV_Assert( CV_MAT_TYPE( weights ->type ) == CV_32FC1 );
 
     CV_MAT2VEC( *weakEvalVals, evaldata, evalstep, m );
     CV_MAT2VEC( *trainClasses, ydata, ystep, ynum );
@@ -1683,7 +1681,7 @@ float icvBoostNextWeakClassifierDAB( CvMat* weakEvalVals,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierRAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
@@ -1700,19 +1698,19 @@ float icvBoostNextWeakClassifierRAB( CvMat* weakEvalVals,
     float sumw;
     int i, idx;
 
-    assert( weakEvalVals != NULL );
-    assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( weights != NULL );
-    assert( CV_MAT_TYPE( weights ->type ) == CV_32FC1 );
+    CV_Assert( weakEvalVals != NULL );
+    CV_Assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
+    CV_Assert( trainClasses != NULL );
+    CV_Assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
+    CV_Assert( weights != NULL );
+    CV_Assert( CV_MAT_TYPE( weights ->type ) == CV_32FC1 );
 
     CV_MAT2VEC( *weakEvalVals, evaldata, evalstep, m );
     CV_MAT2VEC( *trainClasses, ydata, ystep, ynum );
     CV_MAT2VEC( *weights, wdata, wstep, wnum );
 
-    assert( m == ynum );
-    assert( m == wnum );
+    CV_Assert( m == ynum );
+    CV_Assert( m == wnum );
 
 
     sumw = 0.0F;
@@ -1915,7 +1913,7 @@ float icvBoostNextWeakClassifierLB( CvMat* weakEvalVals,
 CV_BOOST_IMPL
 float icvBoostNextWeakClassifierGAB( CvMat* weakEvalVals,
                                      CvMat* trainClasses,
-                                     CvMat* weakTrainVals,
+                                     CvMat* /*weakTrainVals*/,
                                      CvMat* weights,
                                      CvBoostTrainer* trainer )
 {
@@ -1932,12 +1930,12 @@ float icvBoostNextWeakClassifierGAB( CvMat* weakEvalVals,
     int i, idx;
     float sumw;
 
-    assert( weakEvalVals != NULL );
-    assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
-    assert( trainClasses != NULL );
-    assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
-    assert( weights != NULL );
-    assert( CV_MAT_TYPE( weights->type ) == CV_32FC1 );
+    CV_Assert( weakEvalVals != NULL );
+    CV_Assert( CV_MAT_TYPE( weakEvalVals->type ) == CV_32FC1 );
+    CV_Assert( trainClasses != NULL );
+    CV_Assert( CV_MAT_TYPE( trainClasses->type ) == CV_32FC1 );
+    CV_Assert( weights != NULL );
+    CV_Assert( CV_MAT_TYPE( weights->type ) == CV_32FC1 );
 
     CV_MAT2VEC( *weakEvalVals, evaldata, evalstep, m );
     CV_MAT2VEC( *trainClasses, ydata, ystep, ynum );
@@ -2153,7 +2151,7 @@ CvBtTrainer* cvBtStart( CvCARTClassifier** trees,
                         int numclasses,
                         float* param )
 {
-    CvBtTrainer* ptr;
+    CvBtTrainer* ptr = 0;
 
     CV_FUNCNAME( "cvBtStart" );
 
@@ -2997,7 +2995,7 @@ float cvEvalBtClassifier2( CvClassifier* classifier, CvMat* sample )
 CV_BOOST_IMPL
 float cvEvalBtClassifierK( CvClassifier* classifier, CvMat* sample )
 {
-    int cls;
+    int cls = 0;
 
     CV_FUNCNAME( "cvEvalBtClassifierK" );
 
@@ -3046,7 +3044,6 @@ float cvEvalBtClassifierK( CvClassifier* classifier, CvMat* sample )
         }
     }
 
-    cls = 0;
     max_val = vals[cls];
     for( k = 1; k < numclasses; k++ )
     {
@@ -3089,12 +3086,13 @@ int cvSaveBtClassifier( CvClassifier* classifier, const char* filename )
     FILE* file;
     int i, j;
     CvSeqReader reader;
+    memset(&reader, 0, sizeof(reader));
     CvCARTClassifier* tree;
 
     CV_ASSERT( classifier );
     CV_ASSERT( filename );
     
-    if( !icvMkDir( filename ) || !(file = fopen( filename, "w" )) )
+    if( !icvMkDir( filename ) || (file = fopen( filename, "w" )) == 0 )
     {
         CV_ERROR( CV_StsError, "Unable to create file" );
     }
@@ -3302,7 +3300,7 @@ CvClassifier* cvCreateBtClassifier( CvMat* trainData,
                                     CvMat* weights,
                                     CvClassifierTrainParams* trainParams )
 {
-    CvBtClassifier* ptr;
+    CvBtClassifier* ptr = 0;
 
     CV_FUNCNAME( "cvCreateBtClassifier" );
 
@@ -3383,7 +3381,7 @@ CvClassifier* cvCreateBtClassifier( CvMat* trainData,
 CV_BOOST_IMPL
 CvClassifier* cvCreateBtClassifierFromFile( const char* filename )
 {
-    CvBtClassifier* ptr;
+    CvBtClassifier* ptr = 0;
 
     CV_FUNCNAME( "cvCreateBtClassifierFromFile" );
     
@@ -3471,7 +3469,7 @@ CvClassifier* cvCreateBtClassifierFromFile( const char* filename )
 CV_BOOST_IMPL
 CvMat* cvTrimWeights( CvMat* weights, CvMat* idx, float factor )
 {
-    CvMat* ptr;
+    CvMat* ptr = 0;
 
     CV_FUNCNAME( "cvTrimWeights" );
     __BEGIN__;

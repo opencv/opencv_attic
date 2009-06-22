@@ -67,10 +67,6 @@
 
 #endif /* CV_VERBOSE */
 
-#if defined _WIN64 && defined _MSC_VER && !defined CV_ICC
-#undef _OPENMP
-#endif
-
 typedef struct CvBackgroundData
 {
     int    count;
@@ -1227,7 +1223,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
             *imgfilename = '\0';
             if( !fscanf( input, "%s", imgfilename ))
                 break;
-            len = strlen( imgfilename );
+            len = (int)strlen( imgfilename );
             if( len > 0 )
             {
                 if( (*imgfilename) == '#' ) continue; /* comment */
@@ -1254,7 +1250,7 @@ CvBackgroundData* icvCreateBackgroundData( const char* filename, CvSize winsize 
                 *imgfilename = '\0';
                 if( !fscanf( input, "%s", imgfilename ))
                     break;
-                len = strlen( imgfilename );
+                len = (int)strlen( imgfilename );
                 if( len > 0 )
                 {
                     if( (*imgfilename) == '#' ) continue; /* comment */
@@ -1611,7 +1607,6 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
                             int* consumed, double* acceptance_ratio )
 {
     int i = 0;
-    int next = 1;
     ccounter_t getcount = 0;
     ccounter_t thread_getcount = 0;
     ccounter_t consumed_count; 
@@ -1643,7 +1638,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 
     #ifdef _OPENMP
     #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
-                                 normfactor, thread_consumed_count, thread_getcount, next)
+                                 normfactor, thread_consumed_count, thread_getcount)
     #endif /* _OPENMP */
     {
         sumdata    = NULL;
@@ -1652,7 +1647,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 
         CCOUNTER_SET_ZERO(thread_getcount);
         CCOUNTER_SET_ZERO(thread_consumed_count);
-        next       = 1;
+        int ok = 1;
 
         img = cvMat( data->winsize.height, data->winsize.width, CV_8UC1,
             cvAlloc( sizeof( uchar ) * data->winsize.height * data->winsize.width ) );
@@ -1667,13 +1662,15 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
         #ifdef _OPENMP
         #pragma omp for schedule(static, 1)
         #endif /* _OPENMP */
-        for( i = first; (i < first + count) && next; i++ )
+        for( i = first; (i < first + count); i++ )
         {
+            if( !ok )
+                continue;
             for( ; ; )
             {
-                next = callback( &img, userdata );
-                
-                if( !next ) break;
+                ok = callback( &img, userdata );
+                if( !ok )
+                    break;
 
                 CCOUNTER_INC(thread_consumed_count);
 
@@ -1714,7 +1711,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
     
     if( consumed != NULL )
     {
-        *consumed = consumed_count;
+        *consumed = (int)consumed_count;
     }
 
     if( acceptance_ratio != NULL )
@@ -1867,7 +1864,7 @@ int icvGetHaarTraininDataFromVecCallback( CvMat* img, void* userdata )
     return 1;
 }
 
-int icvGetHaarTrainingDataFromBGCallback ( CvMat* img, void* userdata )
+int icvGetHaarTrainingDataFromBGCallback ( CvMat* img, void* /*userdata*/ )
 {
     if (! cvbgdata)
       return 0;
@@ -2175,7 +2172,7 @@ void cvCreateCascadeClassifier( const char* dirname,
         if( i == nstages )
         {
             char xml_path[1024];
-            int len = strlen(dirname);
+            int len = (int)strlen(dirname);
             CvHaarClassifierCascade* cascade = 0;
             strcpy( xml_path, dirname );
             if( xml_path[len-1] == '\\' || xml_path[len-1] == '/' )
@@ -2735,7 +2732,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
                     tcc->next_idx++;
                     sprintf( suffix, "%d/%s", cur_node->idx, CV_STAGE_CART_FILE_NAME );
                     file = NULL;
-                    if( icvMkDir( stage_name ) && (file = fopen( stage_name, "w" ) ) )
+                    if( icvMkDir( stage_name ) && (file = fopen( stage_name, "w" )) != 0 )
                     {
                         cur_node->stage->save( (CvIntHaarClassifier*) cur_node->stage, file );
                         fprintf( file, "\n%d\n%d\n",
@@ -2770,7 +2767,7 @@ void cvCreateTreeCascadeClassifier( const char* dirname,
         /* save the cascade to xml file */
         {
             char xml_path[1024];
-            int len = strlen(dirname);
+            int len = (int)strlen(dirname);
             CvHaarClassifierCascade* cascade = 0;
             strcpy( xml_path, dirname );
             if( xml_path[len-1] == '\\' || xml_path[len-1] == '/' )
