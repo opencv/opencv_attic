@@ -455,7 +455,7 @@ Retrieves keypoints using StarDetector algorithm
 
 \cvexp{
 CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\par CvStarDetectorParams params=cvStarDetectorParams() );
-}{CPP}{GetStarKeypoints(image,storage,params)-> CvSeqOfStarKeypoint*}
+}{CPP}{GetStarKeypoints(image,storage,params)-> keypoints}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image.}
@@ -477,7 +477,7 @@ CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\p
 \end{lstlisting}
 \end{description}
 
-The function cvGetStarKeypoints extracts keypoints that are local
+The function GetStarKeypoints extracts keypoints that are local
 scale-space extremas. The scale-space is constructed by computing
 approximate values of laplacians with different sigma's at each
 pixel. Instead of using pyramids, a popular approach to save computing
@@ -1085,7 +1085,7 @@ int anchor\_y,
 int shape,
 
 int* values=NULL );
-}{CPP}{CreateStructuringElementEx(cols,rows,anchor\_x,anchor\_y,shape,values={NULL,0})-> IplConvKernel*}
+}{CPP}{CreateStructuringElementEx(cols,rows,anchor\_x,anchor\_y,shape,values={NULL,0})-> kernel}
 
 \begin{description}
 \cvarg{cols}{Number of columns in the structuring element}
@@ -2022,8 +2022,62 @@ CvSeq* cvEndFindContours( \par CvContourScanner* scanner );
 
 The function \texttt{cvEndFindContours} finishes the scanning process and returns the pointer to the first contour on the highest level.
 
-% XXX missing PyrMeanShiftFiltering
-% XXX missing Watershed
+\cvfunc{PyrMeanShiftFiltering}
+
+Does meanshift image segmentation
+
+\cvexp{
+
+void cvPyrMeanShiftFiltering( \par const CvArr* src, \par CvArr* dst,
+     \par double sp, \par double sr, \par int max\_level=1,
+     \par CvTermCriteria termcrit=\par cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1));
+
+}{CPP}{PyrMeanShiftFiltering(src,dst,sp,sr,max\_level=1,
+       termcrit=\par cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1))-> None}
+
+\begin{description}
+\cvarg{src}{The source 8-bit, 3-channel image.}
+\cvarg{dst}{The destination image of the same format and the same size as the source.}
+\cvarg{sp}{The spatial window radius.}
+\cvarg{sr}{The color window radius.}
+\cvarg{max\_level}{Maximum level of the pyramid for the segmentation.}
+\cvarg{termcrit}{Termination criteria: when to stop meanshift iterations.}
+\end{description}
+
+The function \texttt{cvPyrMeanShiftFiltering} implements the filtering stage of meanshift segmentation, that is, the output of the function is the filtered "posterized" image with color gradients and fine-grain texture flattened. At every pixel $(X,Y)$ of the input image (or down-sized input image, see below) the function executes meanshift iterations, that is, the pixel $(X,Y)$ neighborhood in the joint space-color hyperspace is considered: 
+
+{$(x,y): X-sp≤x≤X+sp \&\& Y-sp≤y≤Y+sp \&\& ||(R,G,B)-(r,g,b)|| ≤ sr$},
+
+where \texttt{(R,G,B)} and \texttt{(r,g,b)} are the vectors of color components at \texttt{(X,Y)} and \texttt{(x,y)}, respectively (though, the algorithm does not depend on the color space used, so any 3-component color space can be used instead). Over the neighborhood the average spatial value \texttt{(X',Y')} and average color vector \texttt{(R',G',B')} are found and they act as the neighborhood center on the next iteration: 
+
+$(X,Y)~(X',Y'), (R,G,B)~(R',G',B').$
+
+After the iterations over, the color components of the initial pixel (that is, the pixel from where the iterations started) are set to the final value (average color at the last iteration): 
+
+$I(X,Y) <- (R*,G*,B*).$
+
+Then \texttt{max\_level}$>$0, the gaussian pyramid of \texttt{max\_level}+1 levels is built, and the above procedure is run on the smallest layer. After that, the results are propagated to the larger layer and the iterations are run again only on those pixels where the layer colors differ much ($>$\texttt{sr}) from the lower-resolution layer, that is, the boundaries of the color regions are clarified. Note, that the results will be actually different from the ones obtained by running the meanshift procedure on the whole original image (i.e. when \texttt{max\_level}==0).
+
+
+\cvfunc{Watershed}
+
+Does watershed segmentation.
+
+\cvexp{
+
+void cvWatershed( const CvArr* image, CvArr* markers );
+
+
+}{CPP}{Watershed(image,markers)-> None}
+
+\begin{description}
+\cvarg{image}{The input 8-bit 3-channel image.} 
+\cvarg{markers}{The input/output 32-bit single-channel image (map) of markers.}
+\end{description}
+
+The function \texttt{cvWatershed} implements one of the variants of watershed, non-parametric marker-based segmentation algorithm, described in \href{#Meyer92}{[Meyer92]} Before passing the image to the function, user has to outline roughly the desired regions in the image \texttt{markers} with positive ($>$0) indices, i.e. every region is represented as one or more connected components with the pixel values 1, 2, 3 etc. Those components will be "seeds" of the future image regions. All the other pixels in \texttt{markers}, which relation to the outlined regions is not known and should be defined by the algorithm, should be set to 0's. On the output of the function, each pixel in markers is set to one of values of the "seed" components, or to -1 at boundaries between the regions.
+
+Note, that it is not necessary that every two neighbor connected components are separated by a watershed boundary (-1's pixels), for example, in case when such tangent components exist in the initial marker image. Visual demonstration and usage example of the function can be found in OpenCV samples directory; see \texttt{watershed.cpp} demo.
 
 \subsection{Image and Contour moments}
 
@@ -2150,7 +2204,7 @@ Finds lines in binary image using Hough transform
 
 \cvexp{
 CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
-}{CPP}{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> None}
+}{CPP}{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> lines}
 
 \begin{description}
 \cvarg{image}{The input 8-bit single-channel binary image. In case of probabilistic method the image is modified by the function}
@@ -2420,7 +2474,31 @@ In this mode the processing time is still O(N), where N is the number of
 pixels. Thus, the function provides a very fast way to compute approximate
 Voronoi diagram for the binary image.
 
-% XXX missing Inpaint
+\cvfunc{Inpaint}
+
+Inpaints the selected region in the image.
+
+\cvexp{
+
+void cvInpaint( \par const CvArr* src, \par const CvArr* mask, \par CvArr* dst,
+                \par int flags, \par double inpaintRadius );
+
+}{CPP}{Inpaint(src,mask,dst,flags,inpaintRadius)-> None}
+
+\begin{description}
+\cvarg{src}{The input 8-bit 1-channel or 3-channel image.}
+\cvarg{mask}{The inpainting mask, 8-bit 1-channel image. Non-zero pixels indicate the area that needs to be inpainted.}
+\cvarg{dst}{The output image of the same format and the same size as input.}
+\cvarg{flags}{The inpainting method, one of the following:
+\begin{description}
+\cvarg{CV\_INPAINT\_NS}{Navier-Stokes based method.}
+\cvarg{CV\_INPAINT\_TELEA}{The method by Alexandru Telea \href{\#Telea04}{[Telea04]}}
+\end{description}}
+\cvarg{inpaintRadius}{The radius of circlular neighborhood of each point inpainted that is considered by the algorithm.}
+\end{description}
+
+The function \texttt{cvInpaint} reconstructs the selected image area from the pixel near the area boundary. The function may be used to remove dust and scratches from a scanned photo, or to remove undesirable objects from still images or video.
+
 
 \subsection{Histograms}
 
@@ -3053,7 +3131,7 @@ Approximates Freeman chain(s) with polygonal curve
 
 \cvexp{
 CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int method=CV\_CHAIN\_APPROX\_SIMPLE,\par double parameter=0,\par int minimal\_perimeter=0,\par int recursive=0 );
-}{CPP}{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimiter=0,recursive=0)-> CvSeq*}
+}{CPP}{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimiter=0,recursive=0)-> chains}
 
 \begin{description}
 \cvarg{src\_seq}{Pointer to the chain that can refer to other chains}
@@ -3183,7 +3261,7 @@ Creates hierarchical representation of contour
 
 \cvexp{
 CvContourTree* cvCreateContourTree( /par const CvSeq* contour,\par CvMemStorage* storage,\par double threshold );
-}{CPP}{CreateCountourTree(contour,storage,threshold)-> CvContourTree*}
+}{CPP}{CreateCountourTree(contour,storage,threshold)-> contour\_tree}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -3199,7 +3277,7 @@ Restores contour from tree
 
 \cvexp{
 CvSeq* cvContourFromContourTree( \par const CvContourTree* tree,\par CvMemStorage* storage,\par CvTermCriteria criteria );
-}{CPP}{ContourFromContourTree(tree,storage,criteria)-> CvSeq*}
+}{CPP}{ContourFromContourTree(tree,storage,criteria)-> contour}
 
 \begin{description}
 \cvarg{tree}{Contour tree}
@@ -3424,7 +3502,7 @@ Finds convex hull of point set
 
 \cvexp{
 CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
-}{CPP}{ConvexHull2(points,storage,orientaton=CV\_CLOCKWISE,return\_points=0)-> CvSeq*}
+}{CPP}{ConvexHull2(points,storage,orientaton=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
@@ -3567,7 +3645,7 @@ Finds convexity defects of contour
 
 \cvexp{
 CvSeq* cvConvexityDefects( \par const CvArr* contour,\par const CvArr* convexhull,\par CvMemStorage* storage=NULL );
-}{CPP}{ConvexityDefects(contour,convexhull,storage)-> CvSeqOfCvConvexityDefect*}
+}{CPP}{ConvexityDefects(contour,convexhull,storage)-> convexity\_defects}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -3817,7 +3895,7 @@ Returns edge origin
 
 \cvexp{
 CvSubdiv2DPoint* cvSubdiv2DEdgeOrg( \par CvSubdiv2DEdge edge );
-}{CPP}{Subdiv2DEdgeOrg(edge)-> CvSubdiv2DPoint*}
+}{CPP}{Subdiv2DEdgeOrg(edge)-> point}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -3835,7 +3913,7 @@ Returns edge destination
 
 \cvexp{
 CvSubdiv2DPoint* cvSubdiv2DEdgeDst( \par CvSubdiv2DEdge edge );
-}{CPP}{Subdiv2DEdgeDist(edge)-> CvSubdiv2DPoint*}
+}{CPP}{Subdiv2DEdgeDist(edge)-> point}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -3852,7 +3930,7 @@ Creates empty Delaunay triangulation
 
 \cvexp{
 CvSubdiv2D* cvCreateSubdivDelaunay2D( \par CvRect rect,\par CvMemStorage* storage );
-}{CPP}{CreateSubdivDelaunay2D(rect,storage)-> CvSubdiv2D*}
+}{CPP}{CreateSubdivDelaunay2D(rect,storage)-> delaunay\_triangulation}
 
 \begin{description}
 \cvarg{rect}{Rectangle that includes all the 2d points that are to be added to subdivision}
@@ -3870,7 +3948,7 @@ Inserts a single point to Delaunay triangulation
 
 \cvexp{
 CvSubdiv2DPoint*  cvSubdivDelaunay2DInsert( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt);
-}{CPP}{SubdivDelaunay2DInsert(subdiv,pt)-> CvSubdiv2DPoint*}
+}{CPP}{SubdivDelaunay2DInsert(subdiv,pt)-> point}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision created by function \cross{CreateSubdivDelaunay2D}}
@@ -3910,7 +3988,7 @@ Finds the closest subdivision vertex to given point
 
 \cvexp{
 CvSubdiv2DPoint* cvFindNearestPoint2D( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt );
-}{CPP}{FindNearestPoint2D(subdiv,pt)-> CvSubdiv2DPoint*}
+}{CPP}{FindNearestPoint2D(subdiv,pt)-> point}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
@@ -4951,7 +5029,7 @@ CvAvgComp;
 
 \cvexp{
 CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade* cascade,\par CvMemStorage* storage,\par double scale\_factor=1.1,\par int min\_neighbors=3,\par int flags=0,\par CvSize min\_size=cvSize(0,\par0) );
-}{CPP}{HaarDetectObjects(image,cascade,storage,scale\_factor=1.1,min\_neighbors=3,flags=0,min\_size=(0,0))-> CvSeqOfCvAvgComp*}
+}{CPP}{HaarDetectObjects(image,cascade,storage,scale\_factor=1.1,min\_neighbors=3,flags=0,min\_size=(0,0))-> detected\_objects}
 
 \begin{description}
 \cvarg{image}{Image to detect objects in}
@@ -5337,9 +5415,174 @@ void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const C
 
 The function \texttt{cvFindExtrinsicCameraParams2} estimates extrinsic camera parameters using known intrinsic parameters and extrinsic parameters for each view. The coordinates of 3D object points and their correspondent 2D projections must be specified. This function also minimizes back-projection error.
 
-% XXX missing StereoCalibrate
-% XXX missing StereoRectify
-% XXX misssing StereoRectifyUncalibrated
+\cvfunc{StereoCalibrate}
+
+Calibrates stereo camera.
+
+\cvexp{
+
+void cvStereoCalibrate( \par const CvMat* object\_points, \par const CvMat* image\_points1,
+                        \par const CvMat* image\_points2, \par const CvMat* point\_counts,
+                        \par CvMat* camera\_matrix1, \par CvMat* dist\_coeffs1,
+                        \par CvMat* camera\_matrix2, \par CvMat* dist\_coeffs2,
+                       \par CvSize image\_size, \par CvMat* R, \par CvMat* T,
+                        \par CvMat* E=0, \par CvMat* F=0,
+                        \par CvTermCriteria term\_crit=cvTermCriteria(
+                               \par CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),
+                        \par int flags=CV\_CALIB\_FIX\_INTRINSIC );
+
+}{CPP}{StereoCalibrate(\par object\_points,\par image\_points1,\par image\_points2,\par point\_counts,\par camera\_matrix1,\par dist\_coeffs1,\par camera\_matrix2,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par E=NULL,\par F=NULL,\par term\_crit=cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),\par flags=CV\_CALIB\_FIX\_INTRINSIC)-> None}
+
+\begin{description}
+\cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views.}
+\cvarg{image\_points1}{The joint matrix of corresponding image points in the views from the 1st camera, 2xN or Nx2, where N is the total number of points in all views.}
+\cvarg{image\_points2}{The joint matrix of corresponding image points in the views from the 2nd camera, 2xN or Nx2, where N is the total number of points in all views.}
+\cvarg{point\_counts}{Vector containing numbers of points in each view, 1xM or Mx1, where M is the number of views.}
+\cvarg{camera\_matrix1, camera\_matrix2}{The input/output camera matrices [${fx}_k 0 {cx}_k; 0 {fy}_k {cy}_k; 0 0 1$]. If \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} or \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO} are specified, some or all of the elements of the matrices must be initialized.}
+\cvarg{dist\_coeffs1, dist\_coeffs2}{The input/output vectors of distortion coefficients for each camera, \href{\#Pinhole Camera Model, Distortion}{4x1, 1x4, 5x1 or 1x5.}}
+\cvarg{image\_size}{Size of the image, used only to initialize intrinsic camera matrix.} 
+\cvarg{R}{The rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
+\cvarg{T}{The translation vector between the cameras' coordinate systems.}
+\cvarg{E}{The optional output essential matrix.}
+\cvarg{F}{The optional output fundamental matrix.}
+\cvarg{term\_crit}{Termination criteria for the iterative optimiziation algorithm.}
+\cvarg{flags}{Different flags, may be 0 or combination of the following values:
+\begin{description}
+\cvarg{CV\_CALIB\_FIX\_INTRINSIC}{If it is set, \texttt{camera\_matrix1,2}, as well as \texttt{dist\_coeffs1,2} are fixed, so that only extrinsic parameters are optimized.}
+\cvarg{CV\_CALIB\_USE\_INTRINSIC\_GUESS}{The flag allows the function to optimize some or all of the intrinsic parameters, depending on the other flags, but the initial values are provided by the user.}
+\cvarg{CV\_CALIB\_FIX\_PRINCIPAL\_POINT}{The principal points are fixed during the optimization.}
+\cvarg{CV\_CALIB\_FIX\_FOCAL\_LENGTH}{${fx}_k$ and ${fy}_k$ are fixed.}
+\cvarg{CV\_CALIB\_FIX\_ASPECT\_RATIO}{${fy}_k$ is optimized, but the ratio ${fx}_k/{fy}_k$ is fixed.}
+\cvarg{CV\_CALIB\_SAME\_FOCAL\_LENGTH}{Enforces ${fx}_0={fx}_1$ and ${fy}_0={fy}_1$. \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} - Tangential distortion coefficients for each camera are set to zeros and fixed there.}
+\cvarg{CV\_CALIB\_FIX\_K1}{The 0-th distortion coefficients (k1) are fixed.}
+\cvarg{CV\_CALIB\_FIX\_K2}{The 1-st distortion coefficients (k2) are fixed.}
+\cvarg{CV\_CALIB\_FIX\_K3}{The 4-th distortion coefficients (k3) are fixed.}
+\end{description}}
+\end{description}
+
+The function \texttt{cvStereoCalibrate} estimates transformation between the 2 cameras making a stereo pair. If we have a stereo camera, where the relative position and orientatation of the 2 cameras is fixed, and if we computed poses of an object relative to the fist camera and to the second camera, (R1, T1) and (R2, T2), respectively (that can be done with \cross{cvFindExtrinsicCameraParams2}), obviously, those poses will relate to each other, i.e. given ($R_1$, $T_1$) it should be possible to compute ($R_2$, $T_2$) - we only need to know the position and orientation of the 2nd camera relative to the 1st camera. That's what the described function does. It computes ($R$, $T$) such that:
+
+\[
+R_2=R*R_1
+T_2=R*T_1 + T,
+\]
+
+Optionally, it computes the essential matrix E:
+
+\[
+E=
+\vecthreethree
+{0}{-T_2}{T_1}
+{T_2}{0}{-T_0}
+{-T_1}{T_0}{0}
+*R
+\]
+
+where $T_i$ are components of the translation vector $T$: $T=[T_0, T_1, T_2]^T$. And also the function can compute the fundamental matrix F:
+
+$F = inv(camera\_matrix2)^T*E*inv(camera\_matrix1)$
+
+Besides the stereo-related information, the function can also perform full calibration of each of the 2 cameras. However, because of the high dimensionality of the parameter space and noise in the input data the function can diverge from the correct solution. Thus, if intrinsic parameters can be estimated with high accuracy for each of the cameras individually (e.g. using \cross{cvCalibrateCamera2}), it is recommended to do so and then pass \texttt{CV\_CALIB\_FIX\_INTRINSIC} flag to the function along with the computed intrinsic parameters. Otherwise, if all the parameters are estimated at once, it makes sense to restrict some parameters, e.g. pass \texttt{CV\_CALIB\_SAME\_FOCAL\_LENGTH} and \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} flags, which are usually reasonable assumptions. 
+
+\cvfunc{StereoRectify}
+
+Computes rectification transform for stereo camera.
+
+\cvexp{
+
+void cvStereoRectify( \par const CvMat* camera\_matrix1, \par const CvMat* camera\_matrix2,
+                      \par const CvMat* dist\_coeffs1, \par const CvMat* dist\_coeffs2,
+                      \par CvSize image\_size, \par const CvMat* R, \par const CvMat* T,
+                      \par CvMat* R1, \par CvMat* R2, \par CvMat* P1, \par CvMat* P2,
+                      \par CvMat* Q=0, \par int flags=CV\_CALIB\_ZERO\_DISPARITY );
+
+}{CPP}{StereoRectify(\par camera\_matrix1,\par camera\_matrix2,\par dist\_coeffs1,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par R1,\par R2,\par P1,\par P2,\par Q=NULL,\par flags=CV\_CALIB\_ZERO\_DISPARITY)-> None}
+
+\begin{description}
+\cvarg{camera\_matrix1, camera\_matrix2}{The camera matrices [${fx}_k$ 0 ${cx}_k$; 0 ${fy}_k$ ${cy}_k$; 0 0 1].}
+\cvarg{dist\_coeffs1, dist\_coeffs2}{The vectors of distortion coefficients for each camera, \href{\#Pinhole Camera Model, Distortion}{4x1, 1x4, 5x1 or 1x5.}}
+\cvarg{image\_size}{Size of the image used for stereo calibration.}
+\cvarg{R}{The rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
+\cvarg{T}{The translation vector between the cameras' coordinate systems.}
+\cvarg{R1, R2}{3x3 Rectification transforms (rotation matrices) for the first and the second cameras, respectively.}
+\cvarg{P1, P2}{3x4 Projection matrices in the new (rectified) coordinate systems.}
+\cvarg{Q}{The optional output disparity-to-depth mapping matrix, 4x4, see \cross{cvReprojectImageTo3D}.}
+\cvarg{flags}{The operation flags; may be 0 or \texttt{CV\_CALIB\_ZERO\_DISPARITY}. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function can shift one of the image in horizontal or vertical direction (depending on the orientation of epipolar lines) in order to maximise the useful image area. }
+\end{description}
+
+The function \texttt{cvStereoRectify} computes the rotation matrices for each camera that (virtually) make both camera image planes the same plane. Consequently, that makes all the epipolar lines parallel and thus simplifies the dense stereo correspondence problem. On input the function takes the matrices computed by \cross{cvStereoCalibrate} and on output it gives 2 rotation matrices and also 2 projection matrices in the new coordinates. The function is normally called after \cross{cvStereoCalibrate} that computes both camera matrices, the distortion coefficients, R and T. The 2 cases are distinguished by the function: 
+
+\begin{enumerate}
+\item{Horizontal stereo, when 1st and 2nd camera views are shifted relative to each other mainly along the x axis (with possible small vertical shift). Then in the rectified images the corresponding epipolar lines in left and right cameras will be horizontal and have the same y-coordinate. P1 and P2 will look as: 
+
+\[
+P1=
+\begin{array}{cccc}
+f & 0 & cx1 & 0\\
+0 & f & cy & 0\\
+0 & 0 & 1 & 0
+\end{array}
+\]
+\[
+P2=
+\begin{array}{cccc}
+f & 0 & cx2 & Tx*f\\
+0 & f & cy & 0\\
+0 & 0 & 1 & 0
+\end{array}
+,
+\]
+
+where $T_x$ is horizontal shift between the cameras and cx1=cx2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.}
+\item{Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
+
+\[
+P1=
+\begin{array}{cccc}
+f & 0 & cx & 0\\
+0 & f & cy1 & 0\\
+0 & 0 & 1 & 0
+\end{array}
+\]
+\[
+P2=
+\begin{array}{cccc}
+f & 0 & cx & 0\\
+0 & f & cy2 & Ty*f\\
+0 & 0 & 1 & 0
+\end{array}
+,
+\]
+
+where $T_y$ is vertical shift between the cameras and cy1=cy2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.}
+\end{enumerate} 
+
+As you can see, the first 3 columns of P1 and P2 will effectively be the new "rectified" camera matrices. 
+
+\cvfunc{StereoRectifyUncalibrated}
+
+Computes rectification transform for uncalibrated stereo camera.
+
+\cvexp{
+
+void cvStereoRectifyUncalibrated( \par const CvMat* points1, \par const CvMat* points2,
+                                  \par const CvMat* F, \par CvSize image\_size,
+                                  \par CvMat* H1, \par CvMat* H2,
+                                  \par double threshold=5 );
+
+}{CPP}{StereoRectifyUncalibrated(points1,points2,F,image\_size,H1,H2,threshold=5)-> None}
+
+\begin{description}
+\cvarg{points1, points2}{The 2 arrays of corresponding 2D points.}
+\cvarg{F}{Fundamental matrix. It can be computed using the same set of point pairs points1 and points2  using \cross{cvFindFundamentalMat}.}
+\cvarg{image\_size}{Size of the image.}
+\cvarg{H1, H2}{The rectification homography matrices for the first and for the second images.}
+\cvarg{threshold}{Optional threshold used to filter out the outliers. If the parameter is greater than zero, then all the point pairs that do not comply the epipolar geometry well enough (that is, the points for which $fabs(points2[i]^T*F*points1[i])>threshold$) are rejected prior to computing the homographies. }
+\end{description}
+
+The function \texttt{cvStereoRectifyUncalibrated} computes the rectification transformations without knowing intrinsic parameters of the cameras and their relative position in space, hence the suffix "Uncalibrated". Another related difference from \cross{cvStereoRectify} is that the function outputs not the rectification transformations in the object (3D) space, but the planar perspective transformations, encoded by the homography matrices H1 and H2. The function implements the following algorithm \href{\#Hartly99}{[Hartley99]}. 
+
+Note that while the algorithm does not need to know the intrinsic parameters of the cameras, it heavily depends on the epipolar geometry. Therefore, if the camera lenses have significant distortion, it would better be corrected before computing the fundamental matrix and calling this function. For example, distortion coefficients can be estimated for each head of stereo camera separately by using \cross{cvCalibrateCamera2} and then the images can be corrected using \cross{cvUndistort2}. 
 
 \cvfunc{Rodrigues2}\label{Rodrigues2}
 
@@ -5543,7 +5786,7 @@ Initializes structure containing object information
 
 \cvexp{
 CvPOSITObject* cvCreatePOSITObject( \par CvPoint3D32f* points,\par int point\_count );
-}{CPP}{CreatePOSITObject(points)-> CvPOSITObject*}
+}{CPP}{CreatePOSITObject(points)-> POSITObject}
 
 \begin{description}
 \cvarg{points}{Pointer to the points of the 3D object model}
@@ -5744,15 +5987,258 @@ If the output array dimensionality is larger, an extra 1 is appended to each poi
 
 \textbf{Note} because the function accepts a large variety of array layouts, it may report an error when input/output array dimensionality is ambiguous. It is always safe to use the function with number of points $\texttt{N} \ge 5$, or to use multi-channel \texttt{Nx1} or \texttt{1xN} arrays.
 
-% XXX missing: CvStereoBMState
-% XXX missing: CreateStereoBMState
-% XXX missing: ReleaseStereoBMState
-% XXX missing: FindStereoCorrespondenceBM
-% XXX missing: CvStereoGCState
-% XXX missing: CreateStereoGCState
-% XXX missing: ReleaseStereoGCState
-% XXX missing: FindStereoCorrespondenceGC
-% XXX missing: ReprojectImageTo3D
+\cvfunc{CvStereoBMState}
+
+The structure for block matching stereo correspondence algorithm.
+
+\begin{lstlisting}
+typedef struct CvStereoBMState
+{
+    //pre filters (normalize input images):
+    int       preFilterType; // 0 for now
+    int       preFilterSize; // ~5x5..21x21
+    int       preFilterCap;  // up to ~31
+    //correspondence using Sum of Absolute Difference (SAD):
+    int       SADWindowSize; // Could be 5x5..21x21
+    int       minDisparity;  // minimum disparity (=0)
+    int       numberOfDisparities; // maximum disparity - minimum disparity
+    //post filters (knock out bad matches):
+    int       textureThreshold; // areas with no texture are ignored
+    float     uniquenessRatio;// filter out pixels if there are other close matches
+                              // with different disparity
+    int       speckleWindowSize;// Disparity variation window (not used)
+    int       speckleRange; // Acceptable range of variation in window (not used)
+    // internal buffers, do not modify (!)
+    CvMat* preFilteredImg0;
+    CvMat* preFilteredImg1;
+    CvMat* slidingSumBuf;
+}
+CvStereoBMState;
+\end{lstlisting}
+
+The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast one-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and reability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
+
+Note that the algorithm searches for the corresponding blocks in x direction only. It means that the supplied stereo pair should be rectified. Vertical stereo layout is not directly supported, but in such a case the images could be transposed by user.
+
+\cvfunc{CreateStereoBMState}
+
+Creates block matching stereo correspondence structure.
+
+\begin{lstlisting}
+#define CV_STEREO_BM_BASIC 0
+#define CV_STEREO_BM_FISH_EYE 1
+#define CV_STEREO_BM_NARROW 2
+\end{lstlisting}
+
+\cvexp{
+
+CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
+                                        int numberOfDisparities=0 );
+
+}{CPP}{CreateStereoBMState(preset=CV\_STEREO\_BM\_BASIC,numberOfDisparities=0)-> StereoBMState}
+
+\begin{description}
+\cvarg{preset}{ID of one of the pre-defined parameter sets. Any of the parameters can be overridden after creating the structure.}
+\cvarg{numberOfDisparities}{The number of disparities. If the parameter is 0, it is taken from the preset, otherwise the supplied value overrides the one from preset.}
+\end{description}
+
+The function \texttt{cvCreateStereoBMState} creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cross{cvFindStereoCorrespondenceBM}.
+
+\cvfunc{ReleaseStereoBMState}
+
+Releases block matching stereo correspondence structure.
+
+\cvexp{
+
+void cvReleaseStereoBMState( CvStereoBMState** state );
+
+}{CPP}{ReleaseStereoBMState(state)-> None}
+
+\begin{description}
+\cvarg{state}{Double pointer to the released structure.}
+\end{description}
+
+The function \texttt{cvReleaseStereoBMState} releases the stereo correspondence structure and all the associated internal buffers. 
+
+\cvfunc{FindStereoCorrespondenceBM}
+
+Computes the disparity map using block matching algorithm.
+
+\cvexp{
+
+void cvFindStereoCorrespondenceBM( \par const CvArr* left, \par const CvArr* right,
+                                   \par CvArr* disparity, \par CvStereoBMState* state );
+
+}{CPP}{FindStereoCorrespondenceBM(left,right,disparity,state)-> None}
+
+\begin{description}
+\cvarg{left}{The left single-channel, 8-bit image.}
+\cvarg{right}{The right image of the same size and the same type.}
+\cvarg{disparity}{The output single-channel 16-bit signed disparity map of the same size as input images. Its elements will be the computed disparities, multiplied by 16 and rounded to integers.}
+\cvarg{state}{Stereo correspondence structure.}
+\end{description}
+
+The function cvFindStereoCorrespondenceBM computes disparity map for the input rectified stereo pair.
+
+\cvfunc{CvStereoGCState}
+
+The structure for graph cuts-based stereo correspondence algorithm
+
+\begin{lstlisting}
+typedef struct CvStereoGCState
+{
+    int Ithreshold; // threshold for piece-wise linear data cost function (5 by default)
+    int interactionRadius; // radius for smoothness cost function (1 by default; means Potts model)
+    float K, lambda, lambda1, lambda2; // parameters for the cost function
+                                       // (usually computed adaptively from the input data)
+    int occlusionCost; // 10000 by default
+    int minDisparity; // 0 by default; see CvStereoBMState
+    int numberOfDisparities; // defined by user; see CvStereoBMState
+    int maxIters; // number of iterations; defined by user.
+
+    // internal buffers
+    CvMat* left;
+    CvMat* right;
+    CvMat* dispLeft;
+    CvMat* dispRight;
+    CvMat* ptrLeft;
+    CvMat* ptrRight;
+    CvMat* vtxBuf;
+    CvMat* edgeBuf;
+}
+CvStereoGCState;
+\end{lstlisting}
+
+The graph cuts stereo correspondence algorithm, described in \href{\#Kolmogrov03}{[Kolmogorov03]} (as \textbf{KZ1}), is non-realtime stereo correpsondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cross{cvCreateStereoGCState} and then override necessary parameters if needed.
+
+\cvfunc{CreateStereoGCState}
+
+Creates the state of graph cut-based stereo correspondence algorithm.
+
+\cvexp{
+
+CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
+                                        int maxIters );
+
+}{CPP}{CreateStereoGCState(numberOfDispaities,maxIters)-> StereoGCState}
+
+\begin{description}
+\cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be \texttt{state-$>$minDisparity $≤$ disparity $<$ state-$>$minDisparity + state-$>$numberOfDisparities}}
+\cvarg{maxIters}{Maximum number of iterations. On each iteration all possible (or reasonable) alpha-expansions are tried. The algorithm may terminate earlier if it could not find an alpha-expansion that decreases the overall cost function value. See \href{\#Kolmogorov03}{[Kolmogorov03]}  for details. }
+\end{description}
+
+The function \texttt{cvCreateStereoGCState} creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cross{cvFindStereoCorrespondenceGC}.
+
+\cvfunc{ReleaseStereoGCState}
+
+Releases the state structure of the graph cut-based stereo correspondence algorithm.
+
+\cvexp{
+
+void cvReleaseStereoGCState( CvStereoGCState** state );
+
+}{CPP}{ReleaseStereoGCState(state)-> None}
+
+\begin{description}
+\cvarg{state}{Double pointer to the released structure.}
+\end{description}
+
+The function \texttt{cvReleaseStereoGCState} releases the stereo correspondence structure and all the associated internal buffers. 
+
+
+\cvfunc{FindStereoCorrespondenceGC}
+
+Computes the disparity map using graph cut-based algorithm.
+
+\cvexp{
+
+void cvFindStereoCorrespondenceGC( \par const CvArr* left, \par const CvArr* right,
+                                   \par CvArr* dispLeft, \par CvArr* dispRight,
+                                   \par CvStereoGCState* state,
+                                   \par int useDisparityGuess = CV\_DEFAULT(0) );
+
+}{CPP}{FindStereoCorrespondenceGC(\par left,\par right,\par dispLeft,\par dispRight,\par state,\par useDisparityGuess=CV\_DEFAULT(0))-> None}
+
+\begin{description}
+\cvarg{left}{The left single-channel, 8-bit image.}
+\cvarg{right}{The right image of the same size and the same type.}
+\cvarg{dispLeft}{The optional output single-channel 16-bit signed left disparity map of the same size as input images.}
+\cvarg{dispRight}{The optional output single-channel 16-bit signed right disparity map of the same size as input images.}
+\cvarg{state}{Stereo correspondence structure.}
+\cvarg{useDisparityGuess}{If the parameter is not zero, the algorithm will start with pre-defined disparity maps. Both dispLeft and dispRight should be valid disparity maps. Otherwise, the function starts with blank disparity maps (all pixels are marked as occlusions).}
+\end{description}
+
+The function \texttt{cvFindStereoCorrespondenceGC} computes disparity maps for the input rectified stereo pair. Note that the left disparity image will contain values in the following range: 
+
+\texttt{-state-$>$numberOfDisparities-state-$>$minDisparity 
+\newline
+$<$ dispLeft(x,y) $≤$ -state-$>$minDisparity,
+\newline
+or
+\newline
+dispLeft(x,y) == CV\_STEREO\_GC\_OCCLUSION,}
+
+where as for the right disparity image the following will be true: 
+
+\texttt{state-$>$minDisparity $≤$ dispRight(x,y) 
+\newline
+$<$ state-$>$minDisparity+state-$>$numberOfDisparities,
+\newline
+or
+\newline
+dispRight(x,y) == CV\_STEREO\_GC\_OCCLUSION,}
+
+that is, the range for the left disparity image will be inversed, and the pixels for which no good match has been found, will be marked as occlusions.
+
+Here is how the function can be called:
+
+\begin{lstlisting}
+// image_left and image_right are the input 8-bit single-channel images
+// from the left and the right cameras, respectively
+CvSize size = cvGetSize(image_left);
+CvMat* disparity_left = cvCreateMat( size.height, size.width, CV_16S );
+CvMat* disparity_right = cvCreateMat( size.height, size.width, CV_16S );
+CvStereoGCState* state = cvCreateStereoGCState( 16, 2 );
+cvFindStereoCorrespondenceGC( image_left, image_right,
+    disparity_left, disparity_right, state, 0 );
+cvReleaseStereoGCState( &state );
+// now process the computed disparity images as you want ...
+\end{lstlisting}
+
+and this is the output left disparity image computed from the well-known Tsukuba stereo pair and multiplied by -16 (because the values in the left disparity images are usually negative): 
+
+\begin{lstlisting}
+CvMat* disparity_left_visual = cvCreateMat( size.height, size.width, CV_8U );
+cvConvertScale( disparity_left, disparity_left_visual, -16 );
+cvSave( "disparity.png", disparity_left_visual );
+\end{lstlisting}
+
+\includegraphics{pics/disparity.png}
+
+\cvfunc{ReprojectImageTo3D}
+
+Reprojects disparity image to 3D space.
+
+\cvexp{
+
+void cvReprojectImageTo3D( const CvArr* disparity,
+                           CvArr* \_3dImage, const CvMat* Q );
+
+}{CPP}{ReprojectImageTo3D(disparity,\_3dImage,Q)-> None}
+
+\begin{description}
+\cvarg{disparity}{Disparity map.}
+\cvarg{\_3dImage}{3-channel, 16-bit integer or 32-bit floating-point image - the output map of 3D points.}
+\cvarg{Q}{The reprojection 4x4 matrix.}
+\end{description}
+
+The function \texttt{cvReprojectImageTo3D} transforms 1-channel disparity map to 3-channel image, a 3D surface. That is, for each pixel \texttt{(x,y)} and the corresponding disparity d=disparity\texttt{(x,y)} it computes: 
+
+$[X Y Z W]^T = Q*[x y d 1]^T
+\newline
+\_3dImage(x,y) = (X/W, Y/W, Z/W)$
+
+The matrix Q can be arbitrary, e.g. the one, computed by \cross{cvStereoRectify}. To reproject a sparse set of points {(x,y,d),...} to 3D space, use \cross{cvPerspectiveTransform}. 
 
 \section{Bibliography}
 \begin{verbatim}
