@@ -656,7 +656,7 @@ Makes a full copy of an image, including the header, data, and ROI.
 
 IplImage* cvCloneImage( const IplImage* image );
 
-}{CPP}{CloneImage(image)-> IplImage*}
+}{CPP}{CloneImage(image)-> copy}
 
 \begin{description}
 \cvarg{image}{The original image}
@@ -914,7 +914,7 @@ Creates a full matrix copy
 
 CvMat* cvCloneMat( const CvMat* mat );
 
-}{CPP}{CloneMat(mat)-> CvMat*}
+}{CPP}{CloneMat(mat)-> copy}
 
 \begin{description}
 \cvarg{mat}{Matrix to be copied}
@@ -1015,7 +1015,7 @@ Creates full copy of a multi-dimensional array and returns a pointer to the copy
 
 CvMatND* cvCloneMatND( const CvMatND* mat );
 
-}{CPP}{CloneMatND(mat)-> CvMatND*}
+}{CPP}{CloneMatND(mat)-> copy}
 
 \begin{description}
 \cvarg{mat}{Input array}
@@ -2996,7 +2996,31 @@ norm = \forkthree
 
 The function \texttt{Norm} returns the calculated norm. The multiple-channel array are treated as single-channel, that is, the results for all channels are combined.
 
-% XXX missing Reduce
+\cvfunc{Reduce}
+
+Reduces a matrix to a vector.
+
+\cvexp{
+
+void cvReduce( const CvArr* src, CvArr* dst, int op=CV\_REDUCE\_SUM );
+
+}{CPP}{Reduce(src,dst,op=CV\_REDUCE\_SUM)-> None}
+
+\begin{description}
+\cvarg{src}{The input matrix.}
+\cvarg{dst}{The output single-row/single-column vector that accumulates somehow all the matrix rows/columns.}
+\cvarg{dim}{The dimension index along which the matrix is reduced. 0 means that the matrix is reduced to a single row, 1 means that the matrix is reduced to a single column and -1 means that the dimension is chosen automatically by analysing the dst size.}
+\cvarg{op}{The reduction operation. It can take of the following values:
+\begin{description}
+\cvarg{CV\_REDUCE\_SUM}{The output is the sum of all of the matrix's rows/columns.}
+\cvarg{CV\_REDUCE\_AVG}{The output is the mean vector of all of the matrix's rows/columns.}
+\cvarg{CV\_REDUCE\_MAX}{The output is the maximum (column/row-wise) of all of the matrix's rows/columns.}
+\cvarg{CV\_REDUCE\_MIN}{The output is the minimum (column/row-wise) of all of the matrix's rows/columns.}
+\end{description}}
+\end{description}
+
+The function \texttt{cvReduce} reduces matrix to a vector by treating the matrix rows/columns as a set of 1D vectors and performing the specified operation on the vectors until a single row/column is obtained. For example, the function can be used to compute horizontal and vertical projections of an raster image. In case of \texttt{CV\_REDUCE\_SUM} and \texttt{CV\_REDUCE\_AVG} the output may have a larger element bit-depth to preserve accuracy. And multi-channel arrays are also supported in these two reduction modes. 
+
 
 \subsection{Linear Algebra}
 
