@@ -838,6 +838,12 @@ template<typename _Tp> static inline Scalar_<_Tp> operator - (const Scalar_<_Tp>
 
 inline Range::Range() : start(0), end(0) {}
 inline Range::Range(int _start, int _end) : start(_start), end(_end) {}
+inline Range::Range(const CvSlice& slice) : start(slice.start_index), end(slice.end_index)
+{
+    if( start == 0 && end == CV_WHOLE_SEQ_END_INDEX )
+        *this = Range::all();
+}
+
 inline int Range::size() const { return end - start; }
 inline bool Range::empty() const { return start == end; }
 inline Range Range::all() { return Range(INT_MIN, INT_MAX); }
@@ -878,6 +884,9 @@ static inline Range operator - (const Range& r1, int delta)
 {
     return r1 + (-delta);
 }
+
+inline Range::operator CvSlice() const
+{ return *this != Range::all() ? cvSlice(start, end) : CV_WHOLE_SEQ; }
 
 
 template <typename _Tp> inline Vector<_Tp>::Vector() {}
@@ -2075,8 +2084,8 @@ template<typename _Tp> inline void Seq<_Tp>::copyTo(Vector<_Tp>& vec, const Rang
 {
     size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
     vec.resize(len);
-    if( seq )
-        cvCvtSeqToArray(seq, &vec[0], cvSlice(range.start, range.end));
+    if( seq && len )
+        cvCvtSeqToArray(seq, &vec[0], range);
 }
 
 template<typename _Tp> inline Seq<_Tp>::operator Vector<_Tp>() const
