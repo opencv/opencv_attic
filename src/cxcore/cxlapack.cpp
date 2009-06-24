@@ -1032,7 +1032,13 @@ SVD& SVD::operator ()(const Mat& a, int flags)
             (double*)vt.data, &ldv, (double*)u.data, &ldu,
             (double*)(buffer + work_ofs), &lwork, (integer*)(buffer + iwork_ofs), &info );
     }
-    CV_Assert(info == 0);
+    CV_Assert(info >= 0);
+    if(info != 0)
+    {
+        u = Scalar(0.);
+        vt = Scalar(0.);
+        w = Scalar(0.);
+    }
     return *this;
 }
 

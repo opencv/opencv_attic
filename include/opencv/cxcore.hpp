@@ -406,9 +406,11 @@ struct CV_EXPORTS Range
 {
     Range();
     Range(int _start, int _end);
+    Range(const CvSlice& slice);
     int size() const;
     bool empty() const;
     static Range all();
+    operator CvSlice() const;
 
     int start, end;
 };

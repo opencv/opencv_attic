@@ -2906,6 +2906,8 @@ cvProjectPCA( const CvArr* data_arr, const CvArr* avg_arr,
     pca.eigenvectors = evects;
 
     cv::Mat result = pca.project(data);
+    if( result.cols != dst.cols )
+        result = result.reshape(1, 1);
     result.convertTo(dst, dst.type());
 
     CV_Assert(dst0.data == dst.data);
