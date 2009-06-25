@@ -1678,7 +1678,7 @@ popular "BG" type.
 Applies fixed-level threshold to array elements
 
 \cvexp{
-void cvThreshold(
+double cvThreshold(
 
 const CvArr* src,
 
@@ -1714,6 +1714,12 @@ types of thresholding the function supports that are determined by
 \cvarg{CV\_THRESH\_TOZERO}{\[ \texttt{dst}(x,y) = \fork{\texttt{src}(x,y)}{if $\texttt{src}(x,y) > \texttt{threshold}$}{0}{otherwise} \]}
 \cvarg{CV\_THRESH\_TOZERO\_INV}{\[ \texttt{dst}(x,y) = \fork{0}{if $\texttt{src}(x,y) > \texttt{threshold}$}{\texttt{src}(x,y)}{otherwise} \]}
 \end{description}
+
+Also, the special value \texttt{CV\_THRESH\_OTSU} may be combined with
+one of the above values. In this case the function determines the optimal threshold
+value using Otsu's algorithm and uses it instead of the specified \texttt{thresh}.
+The function returns the computed threshold value.
+Currently, Otsu's method is implemented only for 8-bit images.
 
 \includegraphics[width=0.5\textwidth]{pics/threshold.png}
 
