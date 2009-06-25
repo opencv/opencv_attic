@@ -68,7 +68,7 @@ if(UNIX)
     endif()
 
     if(HAVE_GSTREAMER)
-        set(highgui_srcs ${highgui_srcs} cvcap_gstreamer.cpp gstappsink.c)
+        set(highgui_srcs ${highgui_srcs} cvcap_gstreamer.cpp gstappsink.cpp)
         set(highgui_hdrs ${highgui_hdrs} gstappsink.h)
     endif()
 

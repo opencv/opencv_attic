@@ -105,46 +105,20 @@ struct CvVideoWriter
 #endif
 
 
-#if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
 CvCapture * cvCreateCameraCapture_V4L( int index );
-#endif
-
-#ifdef HAVE_DC1394
 CvCapture * cvCreateCameraCapture_DC1394( int index );
-#endif
-
-#ifdef HAVE_DC1394_2
 CvCapture * cvCreateCameraCapture_DC1394_2( int index );
-#endif
-
-#ifdef HAVE_MIL
 CvCapture* cvCreateCameraCapture_MIL( int index );
-#endif
-
-#ifdef HAVE_CMU1394
 CvCapture * cvCreateCameraCapture_CMU( int index );
-#endif
-
-#ifdef HAVE_TYZX
 CV_IMPL CvCapture * cvCreateCameraCapture_TYZX( int index );
-#endif
-
-#ifdef WIN32
 CvCapture* cvCreateFileCapture_Win32( const char* filename );
-
 CvCapture* cvCreateCameraCapture_VFW( int index );
 CvCapture* cvCreateFileCapture_VFW( const char* filename );
-
 CvVideoWriter* cvCreateVideoWriter_Win32( const char* filename, int fourcc,
                                           double fps, CvSize frameSize, int is_color );
 CvVideoWriter* cvCreateVideoWriter_VFW( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
-
-#ifdef HAVE_VIDEOINPUT
 CvCapture* cvCreateCameraCapture_DShow( int index );
-#endif
-
-#endif
 
 CVAPI(int) cvHaveImageReader(const char* filename);
 CVAPI(int) cvHaveImageWriter(const char* filename);
@@ -152,38 +126,26 @@ CVAPI(int) cvHaveImageWriter(const char* filename);
 CvCapture* cvCreateFileCapture_Images(const char* filename);
 CvVideoWriter* cvCreateVideoWriter_Images(const char* filename);
 
-#ifdef HAVE_XINE
 CvCapture* cvCreateFileCapture_XINE (const char* filename);
-#endif
 
-#ifdef HAVE_GSTREAMER
 #define CV_CAP_GSTREAMER_1394		0
 #define CV_CAP_GSTREAMER_V4L		1
 #define CV_CAP_GSTREAMER_V4L2		2
 #define CV_CAP_GSTREAMER_FILE		3
 
 CvCapture * cvCreateCapture_GStreamer(int type, const char *filename);
-#endif
-
-#ifdef HAVE_FFMPEG
 CvCapture* cvCreateFileCapture_FFMPEG (const char* filename);
 
 CvVideoWriter* cvCreateVideoWriter_FFMPEG ( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color );
-#endif
 
-#ifdef HAVE_QUICKTIME
 CvCapture * cvCreateFileCapture_QT (const char  * filename);
 CvCapture * cvCreateCameraCapture_QT  (const int     index);
 
 CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
-#endif
 
-#ifdef HAVE_UNICAP
 CvCapture * cvCreateCameraCapture_Unicap  (const int     index);
-
-#endif
 
 /*namespace cv
 {
