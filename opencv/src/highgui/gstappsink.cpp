@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #if 1
+#include "_highgui.h"
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 #include <gst/gstbuffer.h>
@@ -29,10 +30,10 @@ GST_DEBUG_CATEGORY (app_sink_debug);
 #define GST_CAT_DEFAULT app_sink_debug
 
 static const GstElementDetails app_sink_details =
-GST_ELEMENT_DETAILS ("AppSink",
-    "Generic/Sink",
-    "Allow the application to get access to raw buffer",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com");
+GST_ELEMENT_DETAILS ((gchar*)"AppSink",
+    (gchar*)"Generic/Sink",
+    (gchar*)"Allow the application to get access to raw buffer",
+    (gchar*)"David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com");
 
 enum
 {
@@ -94,6 +95,7 @@ appsink_plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
+#undef PACKAGE
 #define PACKAGE "highgui"
 GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR,
 	"opencv-appsink", "Element application sink",
@@ -164,7 +166,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "The caps of the sink pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+          "The caps of the sink pad", GST_TYPE_CAPS, (GParamFlags)G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_EOS,
       g_param_spec_boolean ("eos", "EOS",
@@ -263,7 +265,7 @@ gst_app_sink_dispose (GObject * obj)
     appsink->preroll = NULL;
   }
   g_mutex_lock (appsink->mutex);
-  while ((buffer = g_queue_pop_head (appsink->queue)))
+  while ((buffer = (GstBuffer*)g_queue_pop_head (appsink->queue)))
     gst_buffer_unref (buffer);
   g_mutex_unlock (appsink->mutex);
 
@@ -338,7 +340,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
   GST_DEBUG_OBJECT (appsink, "flushing appsink");
   appsink->is_eos = FALSE;
   gst_buffer_replace (&appsink->preroll, NULL);
-  while ((buffer = g_queue_pop_head (appsink->queue)))
+  while ((buffer = (GstBuffer*)g_queue_pop_head (appsink->queue)))
     gst_buffer_unref (buffer);
   g_cond_signal (appsink->cond);
 }
@@ -673,7 +675,7 @@ gst_app_sink_pull_buffer (GstAppSink * appsink)
     GST_DEBUG_OBJECT (appsink, "waiting for a buffer");
     g_cond_wait (appsink->cond, appsink->mutex);
   }
-  buf = g_queue_pop_head (appsink->queue);
+  buf = (GstBuffer*)g_queue_pop_head (appsink->queue);
   GST_DEBUG_OBJECT (appsink, "we have a buffer %p", buf);
   g_mutex_unlock (appsink->mutex);
 
@@ -734,7 +736,7 @@ gst_app_sink_peek_buffer (GstAppSink * appsink)
     goto eos;
 
   /* nothing to return, wait */
-  buf = g_queue_pop_head (appsink->queue);
+  buf = (GstBuffer*)g_queue_pop_head (appsink->queue);
   GST_DEBUG_OBJECT (appsink, "we have a buffer %p", buf);
   g_mutex_unlock (appsink->mutex);
 

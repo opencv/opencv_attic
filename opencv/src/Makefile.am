@@ -37,7 +37,7 @@ EXTRA_DIST = \
   highgui/cvcap_ffmpeg.cpp     \
   highgui/cvcap_xine.cpp       \
   highgui/cvcap_gstreamer.cpp  \
-  highgui/gstappsink.c         \
+  highgui/gstappsink.cpp       \
   highgui/cvcap_qt.cpp         \
   highgui/window_carbon.cpp    \
   highgui/window_gtk.cpp       \
