@@ -291,8 +291,6 @@ template<typename _Tp> struct CV_EXPORTS Point3_
     Point3_(const CvPoint3D32f& pt);
     Point3_(const Vec_<_Tp, 3>& t);
     Point3_& operator = (const Point3_& pt);
-    Point3_& operator += (const Point3_& pt);
-    Point3_& operator -= (const Point3_& pt);
     operator Point3_<int>() const;
     operator Point3_<float>() const;
     operator Point3_<double>() const;
