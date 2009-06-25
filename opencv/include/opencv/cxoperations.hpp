@@ -500,9 +500,9 @@ template<typename _Tp> inline double Point3_<_Tp>::ddot(const Point3_& pt) const
 { return (double)x*pt.x + (double)y*pt.y + (double)z*pt.z; }
 
 template<typename _Tp> static inline Point3_<_Tp>&
-operator += (Point3_<_Tp>& a, const Point3_<_Tp>& b) { a += b.x; a += b.y; a += b.z; return a; }
+operator += (Point3_<_Tp>& a, const Point3_<_Tp>& b) { a.x += b.x; a.y += b.y; a.z += b.z; return a; }
 template<typename _Tp> static inline Point3_<_Tp>&
-operator -= (Point3_<_Tp>& a, const Point3_<_Tp>& b) { a -= b.x; a -= b.y; a -= b.z; return a; }
+operator -= (Point3_<_Tp>& a, const Point3_<_Tp>& b) { a.x -= b.x; a.y -= b.y; a.z -= b.z; return a; }
 
 template<typename _Tp> static inline double norm(const Point3_<_Tp>& pt)
 { return std::sqrt((double)pt.x*pt.x + (double)pt.y*pt.y + (double)pt.z*pt.z); }
