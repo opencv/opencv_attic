@@ -67,6 +67,7 @@ lib_clapack_floatstore_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS
 
 # sources of the cLapack convenience library
 lib_clapack_la_SOURCES = \
+  lapack/dlasyf.c   lapack/dsyr.c     lapack/dsytf2.c   lapack/dsytrf.c   lapack/dsytri.c   lapack/dsytrs.c \
   lapack/dasum.c    lapack/daxpy.c    lapack/dbdsdc.c   lapack/dbdsqr.c   lapack/dcopy.c    lapack/ddot.c     lapack/dgebd2.c   lapack/dgebrd.c   \
   lapack/dgelq2.c   lapack/dgelqf.c   lapack/dgels.c    lapack/dgelsd.c   lapack/dgemm.c    lapack/dgemv.c    lapack/dgeqr2.c   lapack/dgeqrf.c   \
   lapack/dger.c     lapack/dgesdd.c   lapack/dgesv.c    lapack/dgetf2.c   lapack/dgetrf.c   lapack/dgetri.c   lapack/dgetrs.c   lapack/dlabad.c   \
