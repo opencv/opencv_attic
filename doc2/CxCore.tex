@@ -629,7 +629,7 @@ if( *image )
 
 \cvfunc{InitImageHeader}\label{InitImageHeader}
 
-Initializes an image header that was previously allocated
+Initializes an image header that was previously allocated.
 
 \cvexp{
 
@@ -666,7 +666,7 @@ The returned \texttt{IplImage*} points to the image copy.
 
 \cvfunc{SetImageCOI}\label{SetImageCOI}
 
-Sets the channel of interest in an IplImage
+Sets the channel of interest in an IplImage.
 
 \cvexp{
 
@@ -704,7 +704,7 @@ Returns the channel of interest of in an IplImage. Returned values correspond to
 
 \cvfunc{SetImageROI}\label{SetImageROI}
 
-Sets an image Region Of Interest (ROI) to a given rectangle
+Sets an image Region Of Interest (ROI) for a given rectangle.
 
 \cvexp{
 
@@ -747,7 +747,7 @@ cvSetImageCOI( image, 0 );
 
 \cvfunc{GetImageROI}\label{GetImageROI}
 
-Returns the image ROI
+Returns the image ROI.
 
 \cvexp{
 
@@ -804,12 +804,12 @@ CvMat* cvCreateMatHeader( \par int rows,\par int cols,\par int type );
 \cvarg{type}{Type of the matrix elements, see \cross{CreateMat}}
 \end{description}
 
-The function \texttt{cvCreateMatHeader} allocates new matrix header and returns pointer to it. The matrix data can then be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
+The function \texttt{cvCreateMatHeader} allocates a new matrix header and returns a pointer to it. The matrix data can then be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
 
 \cvfunc{ReleaseMat}\label{ReleaseMat}
 
-Deallocates a matrix
+Deallocates a matrix.
 
 \cvexp{
 
@@ -835,7 +835,7 @@ cvFree( (void**)mat );
 
 \cvfunc{InitMatHeader}\label{InitMatHeader}
 
-Initializes a pre-allocated matrix header
+Initializes a pre-allocated matrix header.
 
 \cvexp{
 
@@ -879,7 +879,7 @@ cvMatMulAdd( &Ma, &Mb, 0, &Mc );
 
 \cvfunc{Mat}\label{Mat}
 
-Initializes matrix header (light-weight variant)
+Initializes matrix header (lightweight variant).
 
 \cvexp{
 
@@ -908,7 +908,7 @@ cvInitMatHeader( &mat, rows, cols, type, data, CV\_AUTOSTEP );
 
 \cvfunc{CloneMat}\label{CloneMat}
 
-Creates a full matrix copy
+Creates a full matrix copy.
 
 \cvexp{
 
@@ -933,9 +933,9 @@ CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{dims}{Number of array dimensions. this must not exceed CV\_MAX\_DIM (32 by default, but can be changed at build time.)}
-\cvarg{sizes}{Array of dimension sizes}
-\cvarg{type}{Type of array elements, see \cross{CreateMat}. }
+\cvarg{dims}{Number of array dimensions. This must not exceed CV\_MAX\_DIM (32 by default, but can be changed at build time).}
+\cvarg{sizes}{Array of dimension sizes.}
+\cvarg{type}{Type of array elements, see \cross{CreateMat}.}
 \end{description}
 
 This is a short form for:
@@ -963,11 +963,11 @@ CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type )
 \cvarg{type}{Type of array elements, see \cross{CreateMat}}
 \end{description}
 
-The function \texttt{cvCreateMatND} allocates header for multi-dimensional dense array. The array data can further be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
+The function \texttt{cvCreateMatND} allocates a header for a multi-dimensional dense array. The array data can further be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
 \cvfunc{ReleaseMatND}\label{ReleaseMatND}
 
-Deallocates a multi-dimensional array
+Deallocates a multi-dimensional array.
 
 \cvexp{
 
@@ -1024,7 +1024,7 @@ CvMatND* cvCloneMatND( const CvMatND* mat );
 
 \cvfunc{DecRefData}\label{DecRefData}
 
-Decrements an array data reference counter
+Decrements an array data reference counter.
 
 \cvexp{
 
@@ -1049,7 +1049,7 @@ header is part of a larger matrix or image, or the header was converted from an 
 
 \cvfunc{IncRefData}\label{IncRefData}
 
-Increments array data reference counter
+Increments array data reference counter.
 
 \cvexp{
 
@@ -1058,7 +1058,7 @@ int cvIncRefData( CvArr* arr );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{arr}{array header}
+\cvarg{arr}{Array header}
 \end{description}
 
 
@@ -1084,12 +1084,12 @@ void cvCreateData( CvArr* arr );
 The function \texttt{cvCreateData} allocates image, matrix or
 multi-dimensional array data. Note that in case of matrix types OpenCV
 allocation functions are used and in case of IplImage they are used
-too unless \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} was called. In the
-latter case IPL functions are used to allocate the data
+unless \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} was called. In the
+latter case IPL functions are used to allocate the data.
 
 \cvfunc{ReleaseData}\label{ReleaseData}
 
-Releases array data
+Releases array data.
 
 \cvexp{
 
@@ -1106,7 +1106,7 @@ The function \texttt{cvReleaseData} releases the array data. In case of \cross{C
 
 \cvfunc{SetData}\label{SetData}
 
-Assigns user data to the array header
+Assigns user data to the array header.
 
 \cvexp{
 
@@ -1125,7 +1125,7 @@ The function \texttt{cvSetData} assigns user data to the array header. Header sh
 
 \cvfunc{GetRawData}\label{GetRawData}
 
-Retrieves low-level information about the array
+Retrieves low-level information about the array.
 
 \cvexp{
 
@@ -1141,11 +1141,9 @@ void cvGetRawData( const CvArr* arr, uchar** data,
 \cvarg{roi\_size}{Output ROI size}
 \end{description}
 
-The function \texttt{cvGetRawData} fills output variables with low-level information about the array data. All output parameters are optional, so some of the pointers may be set to \texttt{NULL}. If the array is \texttt{IplImage} with ROI set, parameters of ROI are returned.
+The function \texttt{cvGetRawData} fills output variables with low-level information about the array data. All output parameters are optional, so some of the pointers may be set to \texttt{NULL}. If the array is \texttt{IplImage} with ROI set, the parameters of ROI are returned.
 
-The following example shows how to get access to array elements using this function.
-
-Using GetRawData to calculate absolute value of elements of a single-channel floating-point array.
+The following example shows how to get access to array elements. GetRawData calculates the absolute value of the elements in a single-channel, floating-point array.
 
 \begin{lstlisting}
 
@@ -1167,7 +1165,7 @@ for( y = 0; y < size.height; y++, data += step )
 
 \cvfunc{GetMat}\label{GetMat}
 
-Returns matrix header for arbitrary array
+Returns matrix header for arbitrary array.
 
 \cvexp{
 
@@ -1182,17 +1180,19 @@ CvMat* cvGetMat( const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0 )
 \cvarg{allowND}{If non-zero, the function accepts multi-dimensional dense arrays (CvMatND*) and returns 2D (if CvMatND has two dimensions) or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions). The array must be continuous.}
 \end{description}
 
-The function \texttt{cvGetMat} returns matrix header for the input array that can be matrix - \cross{CvMat}, image - \texttt{IplImage} or multi-dimensional dense array - \cross{CvMatND} (latter case is allowed only if \texttt{allowND != 0}) . In the case of matrix the function simply returns the input pointer. In the case of \texttt{IplImage*} or \cross{CvMatND} it initializes \texttt{header} structure with parameters of the current image ROI and returns pointer to this temporary structure. Because COI is not supported by \cross{CvMat}, it is returned separately.
+The function \texttt{cvGetMat} returns a matrix header for the input array that can be a matrix - 
 
-The function provides an easy way to handle both types of array - \texttt{IplImage} and \cross{CvMat} -, using the same code. Reverse transform from \cross{CvMat} to \texttt{IplImage} can be done using \cross{GetImage} function.
+\cross{CvMat}, an image - \texttt{IplImage} or a multi-dimensional dense array - \cross{CvMatND} (latter case is allowed only if \texttt{allowND != 0}) . In the case of matrix the function simply returns the input pointer. In the case of \texttt{IplImage*} or \cross{CvMatND} it initializes the \texttt{header} structure with parameters of the current image ROI and returns the pointer to this temporary structure. Because COI is not supported by \cross{CvMat}, it is returned separately.
+
+The function provides an easy way to handle both types of arrays - \texttt{IplImage} and \cross{CvMat} - using the same code. Reverse transform from \cross{CvMat} to \texttt{IplImage} can be done using the \cross{GetImage} function.
 
 Input array must have underlying data allocated or attached, otherwise the function fails.
 
-If the input array is \texttt{IplImage} with planar data layout and COI set, the function returns pointer to the selected plane and COI = 0. It enables per-plane processing of multi-channel images with planar data layout using OpenCV functions.
+If the input array is \texttt{IplImage} with planar data layout and COI set, the function returns the pointer to the selected plane and COI = 0. It enables per-plane processing of multi-channel images with planar data layout using OpenCV functions.
 
 \cvfunc{GetImage}\label{GetImage}
 
-Returns image header for arbitrary array
+Returns image header for arbitrary array.
 
 \cvexp{
 
@@ -1205,11 +1205,11 @@ IplImage* cvGetImage( const CvArr* arr, IplImage* image\_header );
 \cvarg{image\_header}{Pointer to \texttt{IplImage} structure used as a temporary buffer}
 \end{description}
 
-The function \texttt{cvGetImage} returns image header for the input array
-that can be matrix - \cross{CvMat}, or image - \texttt{IplImage*}. In
-the case of image the function simply returns the input pointer. In the
-case of \cross{CvMat} it initializes \texttt{image\_header} structure
-with parameters of the input matrix. Note that if we transform
+The function \texttt{cvGetImage} returns the image header for the input array
+that can be a matrix - \cross{CvMat}, or an image - \texttt{IplImage*}. In
+the case of an image the function simply returns the input pointer. In the
+case of \cross{CvMat} it initializes an \texttt{image\_header} structure
+with the parameters of the input matrix. Note that if we transform
 \texttt{IplImage} to \cross{CvMat} and then transform CvMat back to
 IplImage, we can get different headers if the ROI is set, and thus some
 IPL functions that calculate image stride from its width and align may
@@ -1217,7 +1217,7 @@ fail on the resultant image.
 
 \cvfunc{CreateSparseMat}\label{CreateSparseMat}
 
-Creates sparse array
+Creates sparse array.
 
 \cvexp{
 
@@ -1226,16 +1226,16 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 }{CPP}{PYTHON}
 
 \begin{description}
-\cvarg{dims}{Number of array dimensions. As opposite to the dense matrix, the number of dimensions is practically unlimited (up to $2^16$).}
+\cvarg{dims}{Number of array dimensions. In contrast to the dense matrix, the number of dimensions is practically unlimited (up to $2^{16}$).}
 \cvarg{sizes}{Array of dimension sizes}
 \cvarg{type}{Type of array elements. The same as for CvMat}
 \end{description}
 
-The function \texttt{cvCreateSparseMat} allocates multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReadl} return zero for every index
+The function \texttt{cvCreateSparseMat} allocates a multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReadl} returns zero for every index.
 
 \cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
-Deallocates sparse array
+Deallocates sparse array.
 
 \cvexp{
 
@@ -1248,12 +1248,12 @@ void cvReleaseSparseMat( CvSparseMat** mat );
 \end{description}
 
 
-The function \texttt{cvReleaseSparseMat} releases the sparse array and clears the array pointer upon exit
+The function \texttt{cvReleaseSparseMat} releases the sparse array and clears the array pointer upon exit.
 
 
 \cvfunc{CloneSparseMat}\label{CloneSparseMat}
 
-Creates full copy of sparse array
+Creates full copy of sparse array.
 
 \cvexp{
 
@@ -1271,7 +1271,7 @@ The function \texttt{cvCloneSparseMat} creates a copy of the input array and ret
 
 \cvfunc{GetSubRect}\label{GetSubRect}
 
-Returns matrix header corresponding to the rectangular sub-array of input image or matrix
+Returns matrix header corresponding to the rectangular sub-array of input image or matrix.
 
 \cvexp{
 
@@ -1293,7 +1293,7 @@ ROI is actually extracted.
 
 \cvfunc{GetRow, GetRows}\label{GetRow, GetRows}
 
-Returns array row or row span
+Returns array row or row span.
 
 \cvexp{
 CvMat* cvGetRow( const CvArr* arr, CvMat* submat, int row );
@@ -1323,7 +1323,7 @@ cvGetRow( arr, submat, row ) ~ cvGetRows( arr, submat, row, row + 1, 1 );
 
 \cvfunc{GetCol, GetCols}\label{GetCol, GetCols}
 
-Returns array column or column span
+Returns array column or column span.
 
 \cvexp{
 CvMat* cvGetCol( const CvArr* arr, CvMat* submat, int col );
@@ -1340,7 +1340,7 @@ CvMat* cvGetCols( const CvArr* arr, CvMat* submat, int start\_col, int end\_col 
 \cvarg{end\_col}{Zero-based index of the ending column (exclusive) of the span}
 \end{description}
 
-The functions \texttt{GetCol} and \texttt{GetCols} return the header, corresponding to a specified column/column span of the input array. Note that \texttt{GetCol} is a shortcut for \cross{GetCols}:
+The functions \texttt{GetCol} and \texttt{GetCols} return the header, corresponding to a specified column span of the input array. Note that \texttt{GetCol} is a shortcut for \cross{GetCols}:
 
 \begin{lstlisting}
 
@@ -1350,7 +1350,7 @@ cvGetCol( arr, submat, col ); // ~ cvGetCols( arr, submat, col, col + 1 );
 
 \cvfunc{GetDiag}\label{GetDiag}
 
-Returns one of array diagonals
+Returns one of array diagonals.
 
 \cvexp{
 
@@ -1361,14 +1361,14 @@ CvMat* cvGetDiag( const CvArr* arr, CvMat* submat, int diag=0 );
 \begin{description}
 \cvarg{arr}{Input array}
 \cvarg{submat}{Pointer to the resulting sub-array header}
-\cvarg{diag}{Array diagonal. Zero corresponds to the main diagonal, -1 corresponds to the diagonal above the main etc., 1 corresponds to the diagonal below the main etc.}
+\cvarg{diag}{Array diagonal. Zero corresponds to the main diagonal, -1 corresponds to the diagonal above the main , 1 corresponds to the diagonal below the main, and so forth.}
 \end{description}
 
 The function \texttt{cvGetDiag} returns the header, corresponding to a specified diagonal of the input array.
 
 \cvfunc{GetSize}\label{GetSize}
 
-Returns size of matrix or image ROI
+Returns size of matrix or image ROI.
 
 \cvexp{
 
@@ -1385,7 +1385,7 @@ The function \texttt{cvGetSize} returns number of rows (CvSize::height) and numb
 
 \cvfunc{InitSparseMatIterator}\label{InitSparseMatIterator}
 
-Initializes sparse array elements iterator
+Initializes sparse array elements iterator.
 
 \cvexp{
 
@@ -1405,7 +1405,7 @@ if the array is empty.
 
 \cvfunc{GetNextSparseNode}\label{GetNextSparseNode}
 
-Initializes sparse array elements iterator
+Initializes sparse array elements iterator.
 
 \cvexp{
 
@@ -1418,7 +1418,7 @@ CvSparseNode* cvGetNextSparseNode( CvSparseMatIterator* mat\_iterator );
 \end{description}
 
 
-The function \texttt{cvGetNextSparseNode} moves iterator to the next sparse matrix element and returns pointer to it. In the current version there is no any particular order of the elements, because they are stored in hash table. The sample below demonstrates how to iterate through the sparse matrix:
+The function \texttt{cvGetNextSparseNode} moves iterator to the next sparse matrix element and returns pointer to it. In the current version there is no any particular order of the elements, because they are stored in the hash table. The sample below demonstrates how to iterate through the sparse matrix:
 
 Using \cross{InitSparseMatIterator} and \cross{GetNextSparseNode} to calculate sum of floating-point sparse array.
 
@@ -1450,7 +1450,7 @@ printf( "\nTotal sum = %g\n", sum );
 
 \cvfunc{GetElemType}\label{GetElemType}
 
-Returns type of array elements
+Returns type of array elements.
 
 \cvexp{
 
@@ -1464,13 +1464,13 @@ int cvGetElemType( const CvArr* arr );
 
 
 The functions \texttt{GetElemType} returns type of the array elements
-as it is described in \cross{CreateMat} discussion: \texttt{CV\_8UC1}
+as described in \cross{CreateMat} discussion: \texttt{CV\_8UC1}
 ... \texttt{CV\_64FC4}.
 
 
 \cvfunc{GetDims, GetDimSize}\label{GetDims, GetDimSize}
 
-Return number of array dimensions and their sizes or the size of particular dimension
+Return number of array dimensions and their sizes or the size of a particular dimension.
 
 \cvexp{
 int cvGetDims( const CvArr* arr, int* sizes=NULL );
@@ -1517,7 +1517,7 @@ for( i = 0; i < dims; i++ )
 
 \cvfunc{PtrnD}\label{PtrnD}
 
-Return pointer to the particular array element
+Return pointer to a particular array element.
 
 \begin{lstlisting}
 
@@ -1539,15 +1539,17 @@ uchar* cvPtrND( const CvArr* arr, int* idx, int* type=NULL, int create\_node=1, 
 \cvarg{precalc\_hashval}{Optional input parameter for sparse matrices. If the pointer is not NULL, the function does not recalculate the node hash value, but takes it from the specified location. It is useful for speeding up pair-wise operations (TODO: provide an example)}
 \end{description}
 
-The functions \texttt{cvPtrnD} return pointer to the particular array element. Number of array dimension should match to the number of indices passed to the function except for \texttt{cvPtr1D} function that can be used for sequential access to 1D, 2D or nD dense arrays.
+The functions \texttt{cvPtrnD} return a pointer to a specific array element. Number of array dimension should match to the number of indices passed to the function except for \texttt{cvPtr1D} function that can be used for sequential access to 1D, 2D or nD dense arrays.
 
 The functions can be used for sparse arrays as well - if the requested node does not exist they create it and set it to zero.
 
-All these as well as other functions accessing array elements (\cross{Get}, \cross{GetReal}, \cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
+All these as well as other functions accessing array elements (\cross{Get}, \cross{GetReal}, 
+
+\cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
 
 \cvfunc{Get*D}\label{Get*D}
 
-Return the particular array element
+Return a specific array element.
 
 \begin{lstlisting}
 
@@ -1567,11 +1569,11 @@ CvScalar cvGetND( const CvArr* arr, int* idx );
 \end{description}
 
 
-The functions \texttt{cvGet*D} return the particular array element. In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions)
+The functions \texttt{cvGet*D} return a specific array element. In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
 
 \cvfunc{GetReal*D}\label{GetReal*D}
 
-Return the particular element of single-channel array
+Return a specific element of single-channel array.
 
 \begin{lstlisting}
 
@@ -1591,13 +1593,13 @@ double cvGetRealND( const CvArr* arr, int* idx );
 \end{description}
 
 
-The functions \texttt{cvGetReal*D} return the particular element of single-channel array. If the array has multiple channels, runtime error is raised. Note that \cross{Get} function can be used safely for both single-channel and multiple-channel arrays though they are a bit slower.
+The functions \texttt{cvGetReal*D} return a specific element of a single-channel array. If the array has multiple channels, a runtime error is raised. Note that \cross{Get} function can be used safely for both single-channel and multiple-channel arrays though they are a bit slower.
 
-In case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions)
+In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
 
 \cvfunc{mGet}\label{mGet}
 
-Return the particular element of single-channel floating-point matrix
+Returns the particular element of single-channel floating-point matrix.
 
 \cvexp{
 
@@ -1612,8 +1614,8 @@ double cvmGet( const CvMat* mat, int row, int col );
 \end{description}
 
 The function \texttt{cvmGet} is a fast replacement for \cross{GetReal2D}
-in case of single-channel floating-point matrices. It is faster because
-it is inline, it does less checks for array type and array element type
+in the case of single-channel floating-point matrices. It is faster because
+it is inline, it does fewer checks for array type and array element type,
 and it checks for the row and column ranges only in debug mode.
 
 \cvfunc{SetnD}\label{SetnD}
@@ -1639,11 +1641,11 @@ void cvSetND( CvArr* arr, int* idx, CvScalar value );
 \end{description}
 
 
-The functions \texttt{cvSetnD} assign the new value to the particular element of array. In case of sparse array the functions create the node if it does not exist yet
+The functions \texttt{cvSetnD} assign the new value to a particular array element. In the case of a sparse array the functions create the node if it does not exist yet.
 
 \cvfunc{SetRealnD}\label{SetRealnD}
 
-Change the particular array element
+Change a specific array element.
 
 \begin{lstlisting}
 
@@ -1663,17 +1665,17 @@ void cvSetRealND( CvArr* arr, int* idx, double value );
 \cvarg{value}{The assigned value}
 \end{description}
 
-The functions \texttt{cvSetRealnD} assign the new value to the particular
-element of single-channel array. If the array has multiple channels,
-runtime error is raised. Note that \cross{SetnD} function can be used
-safely for both single-channel and multiple-channel arrays though they
+The functions \texttt{cvSetRealnD} assign a new value to a specific
+element of a single-channel array. If the array has multiple channels,
+a runtime error is raised. Note that the \cross{SetnD} function can be used
+safely for both single-channel and multiple-channel arrays, though they
 are a bit slower.
 
-In case of sparse array the functions create the node if it does not exist yet
+In the case of a sparse array the functions create the node if it does not yet exist.
 
 \cvfunc{mSet}\label{mSet}
 
-Return the particular element of single-channel floating-point matrix
+Returns a specific element of a single-channel floating-point matrix.
 
 \cvexp{
 
@@ -1690,13 +1692,13 @@ void cvmSet( CvMat* mat, int row, int col, double value );
 
 
 The function \texttt{cvmSet} is a fast replacement for \cross{SetReal2D}
-in case of single-channel floating-point matrices. It is faster because
-it is inline, it does less checks for array type and array element type
+in the case of single-channel floating-point matrices. It is faster because
+it is inline, it does fewer checks for array type and array element type, 
 and it checks for the row and column ranges only in debug mode.
 
 \cvfunc{ClearND}\label{ClearND}
 
-Clears the particular array element
+Clears a specific array element.
 
 \cvexp{
 
@@ -1710,7 +1712,7 @@ void cvClearND( CvArr* arr, int* idx );
 \end{description}
 
 
-The function \cross{ClearND} clears (sets to zero) the particular element of dense array or deletes the element of sparse array. If the element does not exists, the function does nothing.
+The function \cross{ClearND} clears (sets to zero) a specific element of a dense array or deletes the element of a sparse array. If the element does not exists, the function does nothing.
 
 
 \subsection{Copying and Filling}
@@ -1718,7 +1720,7 @@ The function \cross{ClearND} clears (sets to zero) the particular element of den
 
 \cvfunc{Copy}\label{Copy}
 
-Copies one array to another
+Copies one array to another.
 
 \cvexp{
 
@@ -1729,11 +1731,11 @@ void cvCopy( const CvArr* src, CvArr* dst, const CvArr* mask=NULL );
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
-The function \texttt{cvCopy} copies selected elements from input array to output array:
+The function \texttt{cvCopy} copies selected elements from an input array to an output array:
 
 \[
 \texttt{dst}(I)=\texttt{src}(I) \quad \text{if} \quad \texttt{mask}(I) \ne 0.
@@ -1741,12 +1743,12 @@ The function \texttt{cvCopy} copies selected elements from input array to output
 
 If any of the passed arrays is of \texttt{IplImage} type, then its ROI
 and COI fields are used. Both arrays must have the same type, the same
-number of dimensions and the same size. The function can also copy sparse
+number of dimensions, and the same size. The function can also copy sparse
 arrays (mask is not supported in this case).
 
 \cvfunc{Set}\label{Set}
 
-Sets every element of array to given value
+Sets every element of an array to a given value.
 
 \cvexp{
 
@@ -1757,11 +1759,11 @@ void cvSet( CvArr* arr, CvScalar value, const CvArr* mask=NULL );
 \begin{description}
 \cvarg{arr}{The destination array}
 \cvarg{value}{Fill value}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
-The function \texttt{cvSet} copies scalar \texttt{value} to every selected element of the destination array:
+The function \texttt{cvSet} copies the scalar \texttt{value} to every selected element of the destination array:
 
 \[
 \texttt{arr}(I)=\texttt{value} \quad \text{if} \quad \texttt{mask}(I) \ne 0
@@ -1771,7 +1773,7 @@ If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI mu
 
 \cvfunc{SetZero}\label{SetZero}
 
-Clears the array
+Clears the array.
 
 \cvexp{
 
@@ -1784,18 +1786,18 @@ void cvSetZero( CvArr* arr );
 \end{lstlisting}
 
 \begin{description}
-\cvarg{arr}{array to be cleared}
+\cvarg{arr}{Array to be cleared}
 \end{description}
 
-The function \texttt{cvSetZero} clears the array. In case of dense arrays (CvMat, CvMatND or IplImage) cvZero(array) is equivalent to
+The function \texttt{cvSetZero} clears the array. In case of dense arrays (CvMat, CvMatND or IplImage), cvZero(array) is equivalent to
 cvSet(array,cvScalarAll(0),0).
-In case of sparse arrays all the elements are removed.
+In the case of sparse arrays all the elements are removed.
 
 \subsection{Transforms and Permutations}
 
 \cvfunc{Reshape}\label{Reshape}
 
-Changes shape of matrix/image without copying data
+Changes shape of matrix/image without copying data.
 
 \cvexp{
 
@@ -1806,13 +1808,13 @@ CvMat* cvReshape( const CvArr* arr, CvMat* header, int new\_cn, int new\_rows=0 
 \begin{description}
 \cvarg{arr}{Input array}
 \cvarg{header}{Output header to be filled}
-\cvarg{new\_cn}{New number of channels. 'new\_cn = 0' means that number of channels remains unchanged.}
-\cvarg{new\_rows}{New number of rows. 'new\_rows = 0' means that number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value. destination array to be changed.}
+\cvarg{new\_cn}{New number of channels. 'new\_cn = 0' means that the number of channels remains unchanged.}
+\cvarg{new\_rows}{New number of rows. 'new\_rows = 0' means that the number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value.}
 \end{description}
 
-The function \texttt{cvReshape} initializes CvMat header so that it points to the same data as the original array but has different shape - different number of channels, different number of rows or both.
+The function \texttt{cvReshape} initializes the CvMat header so that it points to the same data as the original array but has a different shape - different number of channels, different number of rows, or both.
 
-For example, the following code creates one image buffer and two image headers, first is for 320x240x3 image and the second is for 960x240x1 image:
+For example, the following code creates one image buffer and two image headers, the first is for a 320x240x3 image and the second is for a 960x240x1 image:
 
 \begin{lstlisting}
 
@@ -1824,7 +1826,7 @@ gray_img = cvGetImage( &gray_mat_hdr, &gray_img_hdr );
 
 \end{lstlisting}
 
-And the next example converts 3x3 matrix to a single 1x9 vector
+And the next example converts a 3x3 matrix to a single 1x9 vector:
 
 \begin{lstlisting}
 
@@ -1836,7 +1838,7 @@ row = cvReshape( mat, &row_header, 0, 1 );
 
 \cvfunc{ReshapeMatND}\label{ReshapeMatND}
 
-Changes shape of multi-dimensional array w/o copying data
+Changes the shape of a multi-dimensional array without copying the data.
 
 \cvexp{
 
@@ -1856,13 +1858,13 @@ CvArr* cvReshapeMatND( const CvArr* arr,
 \cvarg{arr}{Input array}
 \cvarg{sizeof\_header}{Size of output header to distinguish between IplImage, CvMat and CvMatND output headers}
 \cvarg{header}{Output header to be filled}
-\cvarg{new\_cn}{New number of channels. $\texttt{new\_cn} = 0$ means that number of channels remains unchanged.}
-\cvarg{new\_dims}{New number of dimensions. $\texttt{new\_dims} = 0$ means that number of dimensions remains the same.}
+\cvarg{new\_cn}{New number of channels. $\texttt{new\_cn} = 0$ means that the number of channels remains unchanged.}
+\cvarg{new\_dims}{New number of dimensions. $\texttt{new\_dims} = 0$ means that the number of dimensions remains the same.}
 \cvarg{new\_sizes}{Array of new dimension sizes. Only $\texttt{new\_dims}-1$ values are used, because the total number of elements must remain the same.
-Thus, if $\texttt{new\_dims} = 1$, \texttt{new\_sizes} array is not used}
+Thus, if $\texttt{new\_dims} = 1$, \texttt{new\_sizes} array is not used.}
 \end{description}
 
-The function \texttt{cvReshapeMatND} is an advanced version of \cross{Reshape} that can work with multi-dimensional arrays as well (though, it can work with ordinary images and matrices) and change the number of dimensions. Below are the two samples from the \cross{Reshape} description rewritten using \cross{ReshapeMatND}:
+The function \texttt{cvReshapeMatND} is an advanced version of \cross{Reshape} that can work with multi-dimensional arrays as well (though it can work with ordinary images and matrices) and change the number of dimensions. Below are the two samples from the \cross{Reshape} description rewritten using \cross{ReshapeMatND}:
 
 \begin{lstlisting}
 
@@ -1882,7 +1884,7 @@ row = cvReshapeND( mat, &row_header, 0, 1, 0 );
 
 \cvfunc{Repeat}\label{Repeat}
 
-Fill destination array with tiled source array
+Fill the destination array with repeated copies of the source array.
 
 \cvexp{
 
@@ -1896,7 +1898,7 @@ void cvRepeat( const CvArr* src, CvArr* dst );
 \end{description}
 
 
-The function \texttt{cvRepeat} fills the destination array with source array tiled:
+The function \texttt{cvRepeat} fills the destination array with repeated copies of the source array:
 
 \begin{lstlisting}
 dst(i,j)=src(i mod rows(src), j mod cols(src))
@@ -1907,7 +1909,7 @@ So the destination array may be as larger as well as smaller than the source arr
 
 \cvfunc{Flip}\label{Flip}
 
-Flip a 2D array around vertical, horizontall or both axises
+Flip a 2D array around vertical, horizontal or both axes.
 
 \cvexp{
 void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip\_mode=0);
@@ -1920,12 +1922,12 @@ void  cvFlip( const CvArr* src, CvArr* dst=NULL, int flip\_mode=0);
 \begin{description}
 \cvarg{src}{Source array}
 \cvarg{dst}{Destination array.
-If $\texttt{dst} = \texttt{NULL}$ the flipping is done inplace.}
-\cvarg{flip\_mode}{Specifies how to flip the array
-0 means flipping around x-axis, positive (e.g. 1) means flipping around y-axis and negative (e.g. -1) means flipping around both axises. See also the discussion below for the formulas}
+If $\texttt{dst} = \texttt{NULL}$ the flipping is done in place.}
+\cvarg{flip\_mode}{Specifies how to flip the array:
+0 means flipping around the x-axis, positive (e.g., 1) means flipping around y-axis, and negative (e.g., -1) means flipping around both axes. See also the discussion below for the formulas:}
 \end{description}
 
-The function \texttt{cvFlip} flips the array in one of different 3 ways (row and column indices are 0-based):
+The function \texttt{cvFlip} flips the array in one of three different ways (row and column indices are 0-based):
 
 \[
 dst(i,j) = \forkthree
@@ -1934,17 +1936,17 @@ dst(i,j) = \forkthree
 {\texttt{src}(rows(\texttt{src})-i-1,cols(\texttt{src})-j-1)}{if $\texttt{flip\_mode} < 0$}
 \]
 
-The example cenaria of the function use are:
+The example scenarios of function use are:
 \begin{itemize}
-  \item vertical flipping of the image (flip\_mode > 0) to switch between top-left and bottom-left image origin, which is typical operation in video processing under Win32 systems.
-  \item horizontal flipping of the image with subsequent horizontal shift and absolute difference calculation to check for a vertical-axis symmetry (flip\_mode > 0)
-  \item simultaneous horizontal and vertical flipping of the image with subsequent shift and absolute difference calculation to check for a central symmetry (flip\_mode < 0)
-  \item reversing the order of 1d point arrays(flip\_mode > 0)
+  \item vertical flipping of the image (flip\_mode > 0) to switch between top-left and bottom-left image origin, which is a typical operation in video processing under Win32 systems.
+  \item horizontal flipping of the image with subsequent horizontal shift and absolute difference calculation to check for a vertical-axis symmetry (flip\_mode $>$ 0)
+  \item simultaneous horizontal and vertical flipping of the image with subsequent shift and absolute difference calculation to check for a central symmetry (flip\_mode $<$ 0)
+  \item reversing the order of 1d point arrays (flip\_mode > 0)
 \end{itemize}
 
 \cvfunc{Split}\label{Split}
 
-Divides multi-channel array into several single-channel arrays or extracts a single channel from the array
+Divides multi-channel array into several single-channel arrays or extracts a single channel from the array.
 
 \cvexp{
 
@@ -1964,17 +1966,17 @@ void cvSplit( const CvArr* src, CvArr* dst0, CvArr* dst1,
 The function \texttt{cvSplit} divides a multi-channel array into separate
 single-channel arrays. Two modes are available for the operation. If the
 source array has N channels then if the first N destination channels
-are not NULL, all they are extracted from the source array, otherwise
+are not NULL, they all are extracted from the source array;
 if only a single destination channel of the first N is not NULL, this
-particular channel is extracted, otherwise an error is raised. Rest
-of destination channels (beyond the first N) must always be NULL. For
+particular channel is extracted; otherwise an error is raised. The rest
+of the destination channels (beyond the first N) must always be NULL. For
 IplImage \cross{Copy} with COI set can be also used to extract a single
 channel from the image.
 
 
 \cvfunc{Merge}\label{Merge}
 
-Composes multi-channel array from several single-channel arrays or inserts a single channel into the array
+Composes a multi-channel array from several single-channel arrays or inserts a single channel into the array.
 
 \cvexp{
 
@@ -1991,14 +1993,14 @@ void cvMerge( const CvArr* src0, const CvArr* src1,
 \cvarg{dst}{Destination array}
 \end{description}
 
-The function \texttt{cvMerge} is the opposite to the previous. If the destination array has N channels then if the first N input channels are not NULL, all they are copied to the destination array, otherwise if only a single source channel of the first N is not NULL, this particular channel is copied into the destination array, otherwise an error is raised. Rest of source channels (beyond the first N) must always be NULL. For IplImage \cross{Copy} with COI set can be also used to insert a single channel into the image.
+The function \texttt{cvMerge} is the opposite to \cross{Split}. If the destination array has N channels then if the first N input channels are not NULL, they all are copied to the destination array; if only a single source channel of the first N is not NULL, this particular channel is copied into the destination array; otherwise an error is raised. The rest of the source channels (beyond the first N) must always be NULL. For IplImage \cross{Copy} with COI set can be also used to insert a single channel into the image.
 
 
 \subsection{Arithmetic, Logic and Comparison}
 
 \cvfunc{LUT}\label{LUT}
 
-Performs look-up table transform of array
+Performs a look-up table transform of an array.
 
 \cvexp{
 
@@ -2008,11 +2010,11 @@ void cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 
 \begin{description}
 \cvarg{src}{Source array of 8-bit elements}
-\cvarg{dst}{Destination array of arbitrary depth and of the same number of channels as the source array}
-\cvarg{lut}{Look-up table of 256 elements; should have the same depth as the destination array. In case of multi-channel source and destination arrays, the table should either have a single-channel (in this case the same table is used for all channels), or the same number of channels as the source/destination array.}
+\cvarg{dst}{Destination array of a given depth and of the same number of channels as the source array}
+\cvarg{lut}{Look-up table of 256 elements; should have the same depth as the destination array. In the case of multi-channel source and destination arrays, the table should either have a single-channel (in this case the same table is used for all channels) or the same number of channels as the source/destination array.}
 \end{description}
 
-The function \texttt{cvLUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as following:
+The function \texttt{cvLUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as follows:
 
 \[
 \texttt{dst}_i \leftarrow \texttt{lut}_{\texttt{src}_i + d}
@@ -2028,7 +2030,7 @@ d = \fork
 
 \cvfunc{ConvertScale}\label{ConvertScale}
 
-Converts one array to another with optional linear transformation
+Converts one array to another with optional linear transformation.
 
 \cvexp{
 
@@ -2050,7 +2052,7 @@ void cvConvertScale( const CvArr* src, CvArr* dst, double scale=1, double shift=
 \end{description}
 
 
-The function \texttt{cvConvertScale} has several different purposes and thus has several synonyms. It copies one array to another with optional scaling, which is performed first, and/or optional type conversion, performed after:
+The function \texttt{cvConvertScale} has several different purposes, and thus has several different names. It copies one array to another with optional scaling, which is performed first, and/or optional type conversion, performed after:
 
 \[
 \texttt{dst}(I) = \texttt{scale} \texttt{src}(I) + (\texttt{shift}_0,\texttt{shift}_1,...)
@@ -2058,20 +2060,20 @@ The function \texttt{cvConvertScale} has several different purposes and thus has
 
 All the channels of multi-channel arrays are processed independently.
 
-The type conversion is done with rounding and saturation, that is if a
+The type of conversion is done with rounding and saturation, that is if the
 result of scaling + conversion can not be represented exactly by a value
-of destination array element type, it is set to the nearest representable
+of the destination array element type, it is set to the nearest representable
 value on the real axis.
 
-In case of 'scale=1, shift=0' no prescaling is done. This is a specially
-optimized case and it has the appropriate \cross{Convert} synonym. If
+In case of \texttt{scale=1, shift=0} no prescaling is done. This is a specially
+optimized case and it has the appropriate \cross{Convert} name. If
 source and destination array types have equal types, this is also a
 special case that can be used to scale and shift a matrix or an image
-and that fits to \cross{Scale} synonym.
+and that is caled \cross{Scale}.
 
 \cvfunc{ConvertScaleAbs}\label{ConvertScaleAbs}
 
-Converts input array elements to 8-bit unsigned integer another with optional linear transformation
+Converts input array elements to another 8-bit unsigned integer with optional linear transformation.
 
 \cvexp{
 void cvConvertScaleAbs( const CvArr* src, CvArr* dst, double scale=1, double shift=0 );
@@ -2089,17 +2091,17 @@ void cvConvertScaleAbs( const CvArr* src, CvArr* dst, double scale=1, double shi
 \end{description}
 
 
-The function \texttt{cvConvertScaleAbs} is similar to the previous one, but it stores absolute values of the conversion results:
+The function \texttt{cvConvertScaleAbs} is similar to \cross{ConvertScale}, but it stores absolute values of the conversion results:
 
 \[
 \texttt{dst}(I) = |\texttt{scale} \texttt{src}(I) + (\texttt{shift}_0,\texttt{shift}_1,...)|
 \]
 
-The function supports only destination arrays of 8u (8-bit unsigned integers) type, for other types the function can be emulated by combination of \cross{ConvertScale} and \cross{Abs} functions.
+The function supports only destination arrays of 8u (8-bit unsigned integers) type; for other types the function can be emulated by a combination of \cross{ConvertScale} and \cross{Abs} functions.
 
 \cvfunc{Add}\label{Add}
 
-Computes per-element sum of two arrays
+Computes the per-element sum of two arrays.
 
 \cvexp{
 
@@ -2111,21 +2113,21 @@ void cvAdd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
-The function \texttt{cvAdd} adds one array to another one:
+The function \texttt{cvAdd} adds one array to another:
 
 \begin{lstlisting}
 dst(I)=src1(I)+src2(I) if mask(I)!=0
 \end{lstlisting}
 
-All the arrays must have the same type, except the mask, and the same size (or ROI size)
+All the arrays must have the same type, except the mask, and the same size (or ROI size).
 
 
 \cvfunc{AddS}\label{AddS}
 
-Computes sum of array and scalar
+Computes the sum of an array and a scalar.
 
 \cvexp{
 
@@ -2137,22 +2139,22 @@ void cvAddS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 \cvarg{src}{The source array}
 \cvarg{value}{Added scalar}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
-The function \texttt{cvAddS} adds scalar \texttt{value} to every element in the source array \texttt{src1} and stores the result in \texttt{dst}
+The function \texttt{cvAddS} adds a scalar \texttt{value} to every element in the source array \texttt{src1} and stores the result in \texttt{dst}
 
 \begin{lstlisting}
 dst(I)=src(I)+value if mask(I)!=0
 \end{lstlisting}
 
-All the arrays must have the same type, except the mask, and the same size (or ROI size)
+All the arrays must have the same type, except the mask, and the same size (or ROI size).
 
 
 \cvfunc{AddWeighted}\label{AddWeighted}
 
-Computes weighted sum of two arrays
+Computes the weighted sum of two arrays.
 
 \cvexp{
 
@@ -2164,25 +2166,25 @@ void  cvAddWeighted( const CvArr* src1, double alpha,
 
 \begin{description}
 \cvarg{src1}{The first source array}
-\cvarg{alpha}{Weight of the first array elements}
+\cvarg{alpha}{Weight for the first array elements}
 \cvarg{src2}{The second source array}
-\cvarg{beta}{Weight of the second array elements}
+\cvarg{beta}{Weight for the second array elements}
 \cvarg{dst}{The destination array}
 \cvarg{gamma}{Scalar, added to each sum}
 \end{description}
 
-The function \texttt{cvAddWeighted} calculated weighted sum of two arrays as following:
+The function \texttt{cvAddWeighted} calculates the weighted sum of two arrays as follows:
 
 \begin{lstlisting}
 dst(I)=src1(I)*alpha+src2(I)*beta+gamma
 \end{lstlisting}
 
-All the arrays must have the same type and the same size (or ROI size)
+All the arrays must have the same type and the same size (or ROI size).
 
 
 \cvfunc{Sub}\label{Sub}
 
-Computes per-element difference between two arrays
+Computes the per-element difference between two arrays.
 
 \cvexp{
 
@@ -2194,7 +2196,7 @@ void cvSub( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
@@ -2204,11 +2206,11 @@ The function \texttt{cvSub} subtracts one array from another one:
 dst(I)=src1(I)-src2(I) if mask(I)!=0
 \end{lstlisting}
 
-All the arrays must have the same type, except the mask, and the same size (or ROI size)
+All the arrays must have the same type, except the mask, and the same size (or ROI size).
 
 \cvfunc{SubS}\label{SubS}
 
-Computes difference between array and scalar
+Computes the difference between an array and a scalar.
 
 \cvexp{
 
@@ -2220,7 +2222,7 @@ void cvSubS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 \cvarg{src}{The source array}
 \cvarg{value}{Subtracted scalar}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 The function \texttt{cvSubS} subtracts a scalar from every element of the source array:
@@ -2229,12 +2231,12 @@ The function \texttt{cvSubS} subtracts a scalar from every element of the source
 dst(I)=src(I)-value if mask(I)!=0
 \end{lstlisting}
 
-All the arrays must have the same type, except the mask, and the same size (or ROI size)
+All the arrays must have the same type, except the mask, and the same size (or ROI size).
 
 
 \cvfunc{SubRS}\label{SubRS}
 
-Computes difference between scalar and array
+Computes the difference between a scalar and an array.
 
 \cvexp{
 
@@ -2246,7 +2248,7 @@ void cvSubRS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NU
 \cvarg{src}{The first source array}
 \cvarg{value}{Scalar to subtract from}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
@@ -2256,11 +2258,11 @@ The function \texttt{cvSubRS} subtracts every element of source array from a sca
 dst(I)=value-src(I) if mask(I)!=0
 \end{lstlisting}
 
-All the arrays must have the same type, except the mask, and the same size (or ROI size)
+All the arrays must have the same type, except the mask, and the same size (or ROI size).
 
 \cvfunc{Mul}\label{Mul}
 
-Calculates per-element product of two arrays
+Calculates the per-element product of two arrays.
 
 \cvexp{
 
@@ -2276,17 +2278,17 @@ void cvMul( const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1 );
 \end{description}
 
 
-The function \texttt{cvMul} calculates per-element product of two arrays:
+The function \texttt{cvMul} calculates the per-element product of two arrays:
 
 \[
 \texttt{dst}(I)=\texttt{scale} \cdot \texttt{src1}(I) \cdot \texttt{src2}(I)
 \]
 
-All the arrays must have the same type, and the same size (or ROI size)
+All the arrays must have the same type and the same size (or ROI size).
 
 \cvfunc{Div}\label{Div}
 
-Performs per-element division of two arrays
+Performs per-element division of two arrays.
 
 \cvexp{
 
@@ -2309,12 +2311,12 @@ The function \texttt{cvDiv} divides one array by another:
 {\texttt{scale}/\texttt{src2}(I)}{otherwise}
 \]
 
-All the arrays must have the same type, and the same size (or ROI size)
+All the arrays must have the same type and the same size (or ROI size).
 
 
 \cvfunc{And}\label{And}
 
-Calculates per-element bit-wise conjunction of two arrays
+Calculates per-element bit-wise conjunction of two arrays.
 
 \cvexp{
 
@@ -2326,7 +2328,7 @@ void cvAnd( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
@@ -2340,7 +2342,7 @@ In the case of floating-point arrays their bit representations are used for the 
 
 \cvfunc{AndS}\label{AndS}
 
-Calculates per-element bit-wise conjunction of array and scalar
+Calculates per-element bit-wise conjunction of an array and a scalar.
 
 \cvexp{
 
@@ -2352,18 +2354,18 @@ void cvAndS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 \cvarg{src}{The source array}
 \cvarg{value}{Scalar to use in the operation}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
-The function AndS calculates per-element bit-wise conjunction of array and scalar:
+The function AndS calculates per-element bit-wise conjunction of an array and a scalar:
 
 \begin{lstlisting}
 dst(I)=src(I)&value if mask(I)!=0
 \end{lstlisting}
 
-Prior to the actual operation the scalar is converted to the same type as the arrays. In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
+Prior to the actual operation, the scalar is converted to the same type as that of the array(s). In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
-The following sample demonstrates how to calculate absolute value of floating-point array elements by clearing the most-significant bit:
+The following sample demonstrates how to calculate the absolute value of floating-point array elements by clearing the most-significant bit:
 
 \begin{lstlisting}
 
@@ -2385,7 +2387,7 @@ The code should print:
 
 \cvfunc{Or}\label{Or}
 
-Calculates per-element bit-wise disjunction of two arrays
+Calculates per-element bit-wise disjunction of two arrays.
 
 \cvexp{
 
@@ -2397,7 +2399,7 @@ void cvOr( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=N
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
@@ -2407,11 +2409,11 @@ The function \texttt{cvOr} calculates per-element bit-wise disjunction of two ar
 dst(I)=src1(I)|src2(I)
 \end{lstlisting}
 
-In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
+In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
 \cvfunc{OrS}\label{OrS}
 
-Calculates per-element bit-wise disjunction of array and scalar
+Calculates a per-element bit-wise disjunction of an array and a scalar.
 
 \cvexp{
 
@@ -2423,22 +2425,22 @@ void cvOrS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL
 \cvarg{src1}{The source array}
 \cvarg{value}{Scalar to use in the operation}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
-The function OrS calculates per-element bit-wise disjunction of array and scalar:
+The function OrS calculates per-element bit-wise disjunction of an array and a scalar:
 
 \begin{lstlisting}
 dst(I)=src(I)|value if mask(I)!=0
 \end{lstlisting}
 
-Prior to the actual operation the scalar is converted to the same type as the arrays. In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
+Prior to the actual operation, the scalar is converted to the same type as that of the array(s). In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
 
 \cvfunc{Xor}\label{Xor}
 
-Performs per-element bit-wise "exclusive or" operation on two arrays
+Performs per-element bit-wise "exclusive or" operation on two arrays.
 
 \cvexp{
 
@@ -2450,7 +2452,7 @@ void cvXor( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 The function \texttt{cvXor} calculates per-element bit-wise logical conjunction of two arrays:
@@ -2459,11 +2461,11 @@ The function \texttt{cvXor} calculates per-element bit-wise logical conjunction 
 dst(I)=src1(I)^src2(I) if mask(I)!=0
 \end{lstlisting}
 
-In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
+In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
 \cvfunc{XorS}\label{XorS}
 
-Performs per-element bit-wise "exclusive or" operation on array and scalar
+Performs per-element bit-wise "exclusive or" operation on an array and a scalar.
 
 \cvexp{
 
@@ -2475,17 +2477,17 @@ void cvXorS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 \cvarg{src}{The source array}
 \cvarg{value}{Scalar to use in the operation}
 \cvarg{dst}{The destination array}
-\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of destination array to be changed}
+\cvarg{mask}{Operation mask, 8-bit single channel array; specifies elements of the destination array to be changed}
 \end{description}
 
 
-The function XorS calculates per-element bit-wise conjunction of array and scalar:
+The function XorS calculates per-element bit-wise conjunction of an array and a scalar:
 
 \begin{lstlisting}
 dst(I)=src(I)^value if mask(I)!=0
 \end{lstlisting}
 
-Prior to the actual operation the scalar is converted to the same type as the arrays. In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
+Prior to the actual operation, the scalar is converted to the same type as that of the array(s). In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
 
 The following sample demonstrates how to conjugate complex vector by switching the most-significant bit of imaging part:
 
@@ -2508,7 +2510,7 @@ The code should print:
 
 \cvfunc{Not}\label{Not}
 
-Performs per-element bit-wise inversion of array elements
+Performs per-element bit-wise inversion of array elements.
 
 \cvexp{
 
@@ -2531,7 +2533,7 @@ dst(I)=~src(I)
 
 \cvfunc{Cmp}\label{Cmp}
 
-Performs per-element comparison of two arrays
+Performs per-element comparison of two arrays.
 
 \cvexp{
 
@@ -2541,7 +2543,7 @@ void cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp\_op );
 
 \begin{description}
 \cvarg{src1}{The first source array}
-\cvarg{src2}{The second source array. Both source array must have a single channel.}
+\cvarg{src2}{The second source array. Both source arrays must have a single channel.}
 \cvarg{dst}{The destination array, must have 8u or 8s type}
 \cvarg{cmp\_op}{The flag specifying the relation between the elements to be checked
 \begin{description}
@@ -2562,11 +2564,11 @@ dst(I)=src1(I) op src2(I),
 
 \end{lstlisting}
 
-\texttt{dst(I)} is set to 0xff (all \texttt{1}-bits) if the particular relation between the elements is true and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size)
+\texttt{dst(I)} is set to 0xff (all \texttt{1}-bits) if the specific relation between the elements is true and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size)
 
 \cvfunc{CmpS}\label{CmpS}
 
-Performs per-element comparison of array and scalar
+Performs per-element comparison of an array and a scalar.
 
 \cvexp{
 
@@ -2589,7 +2591,7 @@ void cvCmpS( const CvArr* src, double value, CvArr* dst, int cmp\_op );
 \end{description}}
 \end{description}
 
-The function \texttt{CmpS} compares the corresponding elements of array and scalar and fills the destination mask array:
+The function \texttt{CmpS} compares the corresponding elements of an array and a scalar and fills the destination mask array:
 
 \begin{lstlisting}
 
@@ -2599,11 +2601,11 @@ dst(I)=src(I) op scalar
 
 where \texttt{op} is $=$, $>$, $\ge$, $<$, $\le$ or $\ne$.
 
-dst(I) is set to 0xff (all \texttt{1}-bits) if the particular relation between the elements is true and 0 otherwise. All the arrays must have the same size (or ROI size)
+dst(I) is set to 0xff (all \texttt{1}-bits) if the specific relation between the elements is true and 0 otherwise. All the arrays must have the same size (or ROI size).
 
 \cvfunc{InRange}\label{InRange}
 
-Checks that array elements lie between elements of two other arrays
+Checks that array elements lie between the elements of two other arrays.
 
 \cvexp{
 
@@ -2625,7 +2627,7 @@ The function \texttt{cvInRange} does the range check for every element of the in
 \texttt{dst}(I)=\texttt{lower}(I)_0 <= \texttt{src}(I)_0 < \texttt{upper}(I)_0
 \]
 
-for single-channel arrays,
+For single-channel arrays,
 
 \[
 \texttt{dst}(I)=
@@ -2633,14 +2635,14 @@ for single-channel arrays,
 \texttt{lower}(I)_1 <= \texttt{src}(I)_1 < \texttt{upper}(I)_1
 \]
 
-for two-channel arrays etc.
+For two-channel arrays and so forth,
 
-dst(I) is set to 0xff (all \texttt{1}-bits) if src(I) is within the range and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size)
+dst(I) is set to 0xff (all \texttt{1}-bits) if src(I) is within the range and 0 otherwise. All the arrays must have the same type, except the destination, and the same size (or ROI size).
 
 
 \cvfunc{InRangeS}\label{InRangeS}
 
-Checks that array elements lie between two scalars
+Checks that array elements lie between two scalars.
 
 \cvexp{
 
@@ -2662,7 +2664,7 @@ The function \texttt{cvInRangeS} does the range check for every element of the i
 \texttt{dst}(I)=\texttt{lower}_0 <= \texttt{src}(I)_0 < \texttt{upper}_0
 \]
 
-for single-channel arrays,
+For single-channel arrays,
 
 \[
 \texttt{dst}(I)=
@@ -2670,13 +2672,13 @@ for single-channel arrays,
 \texttt{lower}_1 <= \texttt{src}(I)_1 < \texttt{upper}_1
 \]
 
-for two-channel arrays etc.
+For two-channel arrays nd so forth,
 
-'dst(I)' is set to 0xff (all \texttt{1}-bits) if 'src(I)' is within the range and 0 otherwise. All the arrays must have the same size (or ROI size)
+'dst(I)' is set to 0xff (all \texttt{1}-bits) if 'src(I)' is within the range and 0 otherwise. All the arrays must have the same size (or ROI size).
 
 \cvfunc{Max}\label{Max}
 
-Finds per-element maximum of two arrays
+Finds per-element maximum of two arrays.
 
 \cvexp{
 
@@ -2701,7 +2703,7 @@ All the arrays must have a single channel, the same data type and the same size 
 
 \cvfunc{MaxS}\label{MaxS}
 
-Finds per-element maximum of array and scalar
+Finds per-element maximum of array and scalar.
 
 \cvexp{
 
@@ -2726,7 +2728,7 @@ All the arrays must have a single channel, the same data type and the same size 
 
 \cvfunc{Min}\label{Min}
 
-Finds per-element minimum of two arrays
+Finds per-element minimum of two arrays.
 
 \cvexp{
 
@@ -2752,7 +2754,7 @@ All the arrays must have a single channel, the same data type and the same size 
 
 \cvfunc{MinS}\label{MinS}
 
-Finds per-element minimum of array and scalar
+Finds per-element minimum of an array and a scalar.
 
 \cvexp{
 
@@ -2766,7 +2768,7 @@ void cvMinS( const CvArr* src, double value, CvArr* dst );
 \cvarg{dst}{The destination array}
 \end{description}
 
-The function \texttt{cvMinS} calculates minimum of array and scalar:
+The function \texttt{cvMinS} calculates minimum of an array and a scalar:
 
 \[
 \texttt{dst}(I)=\min(\texttt{src}(I), \texttt{value})
@@ -2776,7 +2778,7 @@ All the arrays must have a single channel, the same data type and the same size 
 
 \cvfunc{AbsDiff}\label{AbsDiff}
 
-Calculates absolute difference between two arrays
+Calculates absolute difference between two arrays.
 
 \cvexp{
 
@@ -2798,7 +2800,7 @@ All the arrays must have the same data type and the same size (or ROI size).
 
 \cvfunc{AbsDiffS}\label{AbsDiffS}
 
-Calculates absolute difference between array and scalar
+Calculates absolute difference between an array and a scalar.
 
 \cvexp{
 
@@ -2815,7 +2817,7 @@ void cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
 \cvarg{value}{The scalar}
 \end{description}
 
-The function \texttt{cvAbsDiffS} calculates absolute difference between array and scalar.
+The function \texttt{cvAbsDiffS} calculates absolute difference between an array and a scalar.
 
 \[ \texttt{dst}(i)_c = |\texttt{src}(I)_c - \texttt{value}_c| \]
 
@@ -2825,7 +2827,7 @@ All the arrays must have the same data type and the same size (or ROI size).
 
 \cvfunc{CountNonZero}\label{CountNonZero}
 
-Counts non-zero array elements
+Counts non-zero array elements.
 
 \cvexp{
 
@@ -2834,7 +2836,7 @@ int cvCountNonZero( const CvArr* arr );
 }{CPP}{CountNonZero(arr)-> int}
 
 \begin{description}
-\cvarg{arr}{The array, must be single-channel array or multi-channel image with COI set}
+\cvarg{arr}{The array must be a single-channel array or a multi-channel image with COI set}
 \end{description}
 
 
@@ -2847,7 +2849,7 @@ In case of \texttt{IplImage} both ROI and COI are supported.
 
 \cvfunc{Sum}\label{Sum}
 
-Summarizes array elements
+Adds up array elements.
 
 \cvexp{
 
@@ -2860,7 +2862,7 @@ CvScalar cvSum( const CvArr* arr );
 \end{description}
 
 
-The function \texttt{cvSum} calculates sum \texttt{S} of array elements, independently for each channel:
+The function \texttt{cvSum} calculates the sum \texttt{S} of array elements, independently for each channel:
 
 \[ \sum_I \texttt{arr}(I)_c \]
 
@@ -2870,7 +2872,7 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 
 \cvfunc{Avg}\label{Avg}
 
-Calculates average (mean) of array elements
+Calculates average (mean) of array elements.
 
 \cvexp{
 
@@ -2897,7 +2899,7 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 
 \cvfunc{AvgSdv}\label{AvgSdv}
 
-Calculates average (mean) of array elements
+Calculates average (mean) of array elements.
 
 \cvexp{
 
@@ -2922,11 +2924,11 @@ std\_dev_c = \sqrt{\sum_{ I, \, \texttt{mask}(I) \ne 0} (\texttt{arr}(I)_c - mea
 \end{array}
 \]
 
-If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average and standard deviation to the first compoenents of output scalars ($mean_0$ and $std\_dev_0$).
+If the array is \texttt{IplImage} and COI is set, the function processes the selected channel only and stores the average and standard deviation to the first components of the output scalars ($mean_0$ and $std\_dev_0$).
 
 \cvfunc{MinMaxLoc}\label{MinMaxLoc}
 
-Finds global minimum and maximum in array or subarray
+Finds global minimum and maximum in array or subarray.
 
 \cvexp{
 
@@ -2941,20 +2943,20 @@ void cvMinMaxLoc( const CvArr* arr, double* min\_val, double* max\_val,
 \cvarg{max\_val}{Pointer to returned maximum value}
 \cvarg{min\_loc}{Pointer to returned minimum location}
 \cvarg{max\_loc}{Pointer to returned maximum location}
-\cvarg{mask}{The optional mask that is used to select a subarray}
+\cvarg{mask}{The optional mask used to select a subarray}
 \end{description}
 
 The function \texttt{MinMaxLoc} finds minimum and maximum element values
-and their positions. The extremums are searched over the whole array,
-selected \texttt{ROI} (in case of \texttt{IplImage}) or, if \texttt{mask}
+and their positions. The extremums are searched across the whole array,
+selected \texttt{ROI} (in the case of \texttt{IplImage}) or, if \texttt{mask}
 is not \texttt{NULL}, in the specified array region. If the array has
 more than one channel, it must be \texttt{IplImage} with \texttt{COI}
-set. In case if multi-dimensional arrays \texttt{min\_loc->x} and \texttt{max\_loc->x}
+set. In the case of multi-dimensional arrays, \texttt{min\_loc->x} and \texttt{max\_loc->x}
 will contain raw (linear) positions of the extremums.
 
 \cvfunc{Norm}\label{Norm}
 
-Calculates absolute array norm, absolute difference norm or relative difference norm
+Calculates absolute array norm, absolute difference norm, or relative difference norm.
 
 \cvexp{
 
@@ -2964,7 +2966,7 @@ double cvNorm( const CvArr* arr1, const CvArr* arr2=NULL, int norm\_type=CV\_L2,
 
 \begin{description}
 \cvarg{arr1}{The first source image}
-\cvarg{arr2}{The second source image. If it is NULL, the absolute norm of \texttt{arr1} is calculated, otherwise absolute or relative norm of \texttt{arr1}-\texttt{arr2} is calculated.}
+\cvarg{arr2}{The second source image. If it is NULL, the absolute norm of \texttt{arr1} is calculated, otherwise the absolute or relative norm of \texttt{arr1}-\texttt{arr2} is calculated.}
 \cvarg{normType}{Type of norm, see the discussion}
 \cvarg{mask}{The optional operation mask}
 \end{description}
@@ -2994,7 +2996,7 @@ norm = \forkthree
 {\frac{||\texttt{arr1}-\texttt{arr2}||_{L2} }{||\texttt{arr2}||_{L2}}}{if $\texttt{normType} = \texttt{CV\_RELATIVE\_L2}$}
 \]
 
-The function \texttt{Norm} returns the calculated norm. The multiple-channel array are treated as single-channel, that is, the results for all channels are combined.
+The function \texttt{Norm} returns the calculated norm. A multiple-channel array is treated as a single-channel, that is, the results for all channels are combined.
 
 \cvfunc{Reduce}
 
@@ -3026,7 +3028,7 @@ The function \texttt{cvReduce} reduces matrix to a vector by treating the matrix
 
 \cvfunc{SetIdentity}\label{SetIdentity}
 
-Initializes scaled identity matrix
+Initializes a scaled identity matrix.
 
 \cvexp{
 
@@ -3039,7 +3041,7 @@ void cvSetIdentity( CvArr* mat, CvScalar value=cvRealScalar(1) );
 \cvarg{value}{The value to assign to the diagonal elements}
 \end{description}
 
-The function \texttt{cvSetIdentity} initializes scaled identity matrix:
+The function \texttt{cvSetIdentity} initializes a scaled identity matrix:
 
 \[
 \texttt{arr}(i,j)=\fork{\texttt{value}}{ if $i=j$}{0}{otherwise}
@@ -3047,7 +3049,7 @@ The function \texttt{cvSetIdentity} initializes scaled identity matrix:
 
 \cvfunc{DotProduct}\label{DotProduct}
 
-Calculates dot product of two arrays in Euclidian metrics
+Calculates the dot product of two arrays in Euclidian metrics.
 
 \cvexp{
 
@@ -3066,12 +3068,12 @@ The function \texttt{cvDotProduct} calculates and returns the Euclidean dot prod
 src1 \bullet src2 = \sum_I (\texttt{src1}(I) \texttt{src2}(I))
 \]
 
-In case of multiple channel arrays the results for all channels are accumulated. In particular, \texttt{cvDotProduct(a,a)} where \texttt{a} is a complex vector, will return $||\texttt{a}||^2$.
-The function can process multi-dimensional arrays, row by row, layer by layer and so on.
+In case of multiple channel arrays, the results for all channels are accumulated. In particular, \texttt{cvDotProduct(a,a)} where \texttt{a} is a complex vector, will return $||\texttt{a}||^2$.
+The function can process multi-dimensional arrays, row by row, layer by layer, and so on.
 
 \cvfunc{CrossProduct}\label{CrossProduct}
 
-Calculates cross product of two 3D vectors
+Calculates the cross product of two 3D vectors.
 
 \cvexp{
 
@@ -3100,7 +3102,7 @@ or:
 
 \cvfunc{ScaleAdd}\label{ScaleAdd}
 
-Calculates sum of scaled array and another array
+Calculates the sum of a scaled array and another array.
 
 \cvexp{
 
@@ -3118,7 +3120,7 @@ void cvScaleAdd( const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* ds
 \cvarg{dst}{The destination array}
 \end{description}
 
-The function \texttt{cvScaleAdd} calculates sum of scaled array and another array:
+The function \texttt{cvScaleAdd} calculates the sum of a scaled array and another array:
 
 \[
 \texttt{dst}(I)=\texttt{scale} \, \texttt{src1}(I) + \texttt{src2}(I)
@@ -3128,7 +3130,7 @@ All array parameters should have the same type and the same size.
 
 \cvfunc{GEMM}\label{GEMM}
 
-Performs generalized matrix multiplication
+Performs generalized matrix multiplication.
 
 \cvexp{
 
@@ -3146,13 +3148,13 @@ void  cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
 \cvarg{src2}{The second source array}
 \cvarg{src3}{The third source array (shift). Can be NULL, if there is no shift.}
 \cvarg{dst}{The destination array}
-\cvarg{tABC}{The operation flags that can be 0 or combination of the following values
+\cvarg{tABC}{The operation flags that can be 0 or a combination of the following values
 \begin{description}
 \cvarg{CV\_GEMM\_A\_T}{transpose src1}
 \cvarg{CV\_GEMM\_B\_T}{transpose src2}
 \cvarg{CV\_GEMM\_C\_T}{transpose src3}
 \end{description}
-for example, \texttt{CV\_GEMM\_A\_T+CV\_GEMM\_C\_T} corresponds to
+For example, \texttt{CV\_GEMM\_A\_T+CV\_GEMM\_C\_T} corresponds to
 \[
 \texttt{alpha} \, \texttt{src1} ^T \, \texttt{src2} + \texttt{beta} \, \texttt{src3} ^T
 \]}
@@ -3164,11 +3166,11 @@ The function \texttt{cvGEMM} performs generalized matrix multiplication:
 \texttt{dst} = \texttt{alpha} \, op(\texttt{src1}) \, op(\texttt{src2}) + \texttt{beta} \, op(\texttt{src3}) \quad \text{where $op(X)$ is $X$ or $X^T$}
 \]
 
-All the matrices should have the same data type and the coordinated sizes. Real or complex floating-point matrices are supported
+All the matrices should have the same data type and coordinated sizes. Real or complex floating-point matrices are supported.
 
 \cvfunc{Transform}\label{Transform}
 
-Performs matrix transform of every array element
+Performs matrix transformation of every array element.
 
 \cvexp{
 
@@ -3189,13 +3191,13 @@ The function \texttt{cvTransform} performs matrix transformation of every elemen
 dst(I) = transmat \cdot src(I) + shiftvec %  or   dst(I),,k,,=sum,,j,,(transmat(k,j)*src(I),,j,,) + shiftvec(k)
 \]
 
-That is every element of \texttt{N}-channel array \texttt{src} is
-considered as \texttt{N}-element vector, which is transformed using
-matrix $\texttt{M} \times \texttt{N}$ matrix \texttt{transmat} and shift
+That is, every element of an \texttt{N}-channel array \texttt{src} is
+considered as an \texttt{N}-element vector which is transformed using
+a $\texttt{M} \times \texttt{N}$ matrix \texttt{transmat} and shift
 vector \texttt{shiftvec} into an element of \texttt{M}-channel array
 \texttt{dst}. There is an option to embedd \texttt{shiftvec} into
-\texttt{transmat}. In this case \texttt{transmat} should be $\texttt{M}
-\times (N+1)$ matrix and the right-most column is treated as the shift
+\texttt{transmat}. In this case \texttt{transmat} should be a $\texttt{M}
+\times (N+1)$ matrix and the rightmost column is treated as the shift
 vector.
 
 Both source and destination arrays should have the same depth and the
@@ -3204,11 +3206,11 @@ should be real floating-point matrices.
 
 The function may be used for geometrical transformation of n dimensional
 point set, arbitrary linear color space transformation, shuffling the
-channels etc.
+channels and so forth.
 
 \cvfunc{PerspectiveTransform}\label{PerspectiveTransform}
 
-Performs perspective matrix transform of vector array
+Performs perspective matrix transformation of a vector array.
 
 \cvexp{
 
@@ -3239,7 +3241,7 @@ and
 
 \cvfunc{MulTransposed}\label{MulTransposed}
 
-Calculates product of array and transposed array
+Calculates the product of an array and a transposed array.
 
 \cvexp{
 
@@ -3273,7 +3275,7 @@ otherwise.
 
 \cvfunc{Trace}\label{Trace}
 
-Returns trace of matrix
+Returns the trace of a matrix.
 
 \cvexp{
 
@@ -3286,13 +3288,13 @@ CvScalar cvTrace( const CvArr* mat );
 \end{description}
 
 
-The function \texttt{cvTrace} returns sum of diagonal elements of the matrix \texttt{src1}.
+The function \texttt{cvTrace} returns the sum of the diagonal elements of the matrix \texttt{src1}.
 
 \[ tr(\texttt{mat}) = \sum_i \texttt{mat}(i,i) \]
 
 \cvfunc{Transpose}\label{Transpose}
 
-Transposes matrix
+Transposes a matrix.
 
 \cvexp{
 
@@ -3313,13 +3315,13 @@ The function \texttt{cvTranspose} transposes matrix \texttt{src1}:
 
 \[ \texttt{dst}(i,j) = \texttt{src}(j,i) \]
 
-Note that no complex conjugation is done in case of complex
+Note that no complex conjugation is done in the case of a complex
 matrix. Conjugation should be done separately: look at the sample code
-in \cross{XorS} for example
+in \cross{XorS} for an example.
 
 \cvfunc{Det}\label{Det}
 
-Returns determinant of matrix
+Returns the determinant of a matrix.
 
 \cvexp{
 
@@ -3331,13 +3333,13 @@ double cvDet( const CvArr* mat );
 \cvarg{mat}{The source matrix}
 \end{description}
 
-The function \texttt{cvDet} returns determinant of the square matrix \texttt{mat}. The direct method is used for small matrices and Gaussian elimination is used for larger matrices. For symmetric positive-determined matrices it is also possible to run
+The function \texttt{cvDet} returns the determinant of the square matrix \texttt{mat}. The direct method is used for small matrices and Gaussian elimination is used for larger matrices. For symmetric positive-determined matrices, it is also possible to run
 \cross{SVD}
-with $U = V = 0$ and then calculate determinant as a product of the diagonal elements of $W$.
+with $U = V = 0$ and then calculate the determinant as a product of the diagonal elements of $W$.
 
 \cvfunc{Invert}\label{Invert}
 
-Finds inverse or pseudo-inverse of matrix
+Finds the inverse or pseudo-inverse of a matrix.
 
 \cvexp{
 
@@ -3353,22 +3355,22 @@ double cvInvert( const CvArr* src, CvArr* dst, int method=CV\_LU );
 \cvarg{dst}{The destination matrix}
 \cvarg{method}{Inversion method
 \begin{description}
- \cvarg{CV\_LU}{Gaussian elimination with optimal pivot element chose}
+ \cvarg{CV\_LU}{Gaussian elimination with optimal pivot element chosen}
  \cvarg{CV\_SVD}{Singular value decomposition (SVD) method}
  \cvarg{CV\_SVD\_SYM}{SVD method for a symmetric positively-defined matrix}
 \end{description}}
 \end{description}
 
-The function \texttt{cvInvert} inverts matrix \texttt{src1} and stores the result in \texttt{src2}
+The function \texttt{cvInvert} inverts matrix \texttt{src1} and stores the result in \texttt{src2}.
 
-In case of \texttt{LU} method the function returns \texttt{src1} determinant (src1 must be square). If it is 0, the matrix is not inverted and \texttt{src2} is filled with zeros.
+In the case of \texttt{LU} method, the function returns the \texttt{src1} determinant (src1 must be square). If it is 0, the matrix is not inverted and \texttt{src2} is filled with zeros.
 
-In case of \texttt{SVD} methods the function returns the inversed condition number of \texttt{src1} (ratio of the smallest singular value to the largest singular value) and 0 if \texttt{src1} is all zeros. The SVD methods calculate a pseudo-inverse matrix if \texttt{src1} is singular
+In the case of \texttt{SVD} methods, the function returns the inversed condition of \texttt{src1} (ratio of the smallest singular value to the largest singular value) and 0 if \texttt{src1} is all zeros. The SVD methods calculate a pseudo-inverse matrix if \texttt{src1} is singular.
 
 
 \cvfunc{Solve}\label{Solve}
 
-Solves linear system or least-squares problem
+Solves a linear system or least-squares problem.
 
 \cvexp{
 
@@ -3382,23 +3384,23 @@ int cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV\_LU
 \cvarg{X}{The output solution}
 \cvarg{method}{The solution (matrix inversion) method
 \begin{description}
- \cvarg{CV\_LU}{Gaussian elimination with optimal pivot element chose}
+ \cvarg{CV\_LU}{Gaussian elimination with optimal pivot element chosen}
  \cvarg{CV\_SVD}{Singular value decomposition (SVD) method}
  \cvarg{CV\_SVD\_SYM}{SVD method for a symmetric positively-defined matrix.}
 \end{description}}
 \end{description}
 
-The function \texttt{cvSolve} solves linear system or least-squares problem (the latter is possible with SVD methods):
+The function \texttt{cvSolve} solves a linear system or least-squares problem (the latter is possible with SVD methods):
 
 \[
 \texttt{dst} = argmin_X||\texttt{src1} \, \texttt{X} - \texttt{src2}||
 \]
 
-If \texttt{CV\_LU} method is used, the function returns 1 if \texttt{src1} is non-singular and 0 otherwise, in the latter case \texttt{dst} is not valid
+If \texttt{CV\_LU} method is used, the function returns 1 if \texttt{src1} is non-singular and 0 otherwise; in the latter case \texttt{dst} is not valid.
 
 \cvfunc{SVD}\label{SVD}
 
-Performs singular value decomposition of real floating-point matrix
+Performs singular value decomposition of a real floating-point matrix.
 
 \cvexp{
 
@@ -3409,10 +3411,10 @@ void cvSVD( \par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
 \cvarg{W}{Resulting singular value matrix ($\texttt{M} \times \texttt{N}$ or $\texttt{N} \times \texttt{N}$) or vector ($\texttt{N} \times 1$)}
-\cvarg{U}{Optional left orthogonal matrix ($\texttt{M} \times \texttt{M}$ or $\texttt{M} \times \texttt{N}$)
-If \texttt{CV\_SVD\_U\_T} is specified, the number of rows and columns in the sentence above should be swapped.}
+\cvarg{U}{Optional left orthogonal matrix ($\texttt{M} \times \texttt{M}$ or $\texttt{M} \times \texttt{N}$).
+If \texttt{CV\_SVD\_U\_T} is specified, the number of rows and columns in the preceeding sentence should be swapped.}
 \cvarg{V}{Optional right orthogonal matrix ($\texttt{N} \times \texttt{N}$)}
-\cvarg{flags}{Operation flags; can be 0 or combination of the following values:
+\cvarg{flags}{Operation flags; can be 0 or a combination of the following values:
 \begin{description}
   \cvarg{CV\_SVD\_MODIFY\_A}{enables modification of matrix \texttt{src1} during the operation. It speeds up the processing.}
   \cvarg{CV\_SVD\_U\_T}{means that the tranposed matrix \texttt{U} is returned. Specifying the flag speeds up the processing.}
@@ -3420,34 +3422,38 @@ If \texttt{CV\_SVD\_U\_T} is specified, the number of rows and columns in the se
 \end{description}}
 \end{description}
 
-The function \texttt{cvSVD} decomposes matrix \texttt{A} into a product of a diagonal matrix and two orthogonal matrices:
+The function \texttt{cvSVD} decomposes matrix \texttt{A} into the product of a diagonal matrix and two 
+
+orthogonal matrices:
 
 \[
 A=U \, W \, V^T
 \]
 
-Where $W$ is diagonal matrix of singular values that can be coded as a
+where $W$ is a diagonal matrix of singular values that can be coded as a
 1D vector of singular values and $U$ and $V$. All the singular values
-are non-negative and sorted (together with $U$ and and $V$ columns)
-in descenting order.
+are non-negative and sorted (together with $U$ and $V$ columns)
+in descending order.
 
-SVD algorithm is numerically robust and its typical applications include:
+An SVD algorithm is numerically robust and its typical applications include:
 
 \begin{itemize}
   \item accurate eigenvalue problem solution when matrix \texttt{A}
-  is square, symmetric and positively defined matrix, for example, when
-  it is a covariation matrix. $W$ in this case will be a vector
+  is a square, symmetric, and positively defined matrix, for example, when
+  it is a covariance matrix. $W$ in this case will be a vector
   of eigen values, and $U = V$
   (thus, only one of $U$ or $V$ needs to be calculated if
-  the eigen vectors are required)
-  \item accurate solution of poor-conditioned linear systems
-  \item least-squares solution of overdetermined linear systems. This and previous is done by \cross{Solve} function with \texttt{CV\_SVD} method
-  \item accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), determinant (absolute value of determinant is equal to the product of singular values). All the things listed in this item do not require calculation of $U$ and $V$ matrices.
+  the eigen vectors are required).
+  \item accurate solution of poor-conditioned linear systems.
+  \item least-squares solution of overdetermined linear systems. This and the preceeding is done by using the \cross{Solve} function with the \texttt{CV\_SVD} method.
+  \item accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), and determinant (absolute value of determinant is equal to the product of singular values). 
 \end{itemize}
+
+None of the applications above require calculation of the \texttt{U} and \texttt{V} matrices.
 
 \cvfunc{SVBkSb}\label{SVBkSb}
 
-Performs singular value back substitution
+Performs singular value back substitution.
 
 \cvexp{
 
@@ -3459,8 +3465,8 @@ void  cvSVBkSb( \par const CvArr* W,\par const CvArr* U,\par const CvArr* V,\par
 \cvarg{W}{Matrix or vector of singular values}
 \cvarg{U}{Left orthogonal matrix (tranposed, perhaps)}
 \cvarg{V}{Right orthogonal matrix (tranposed, perhaps)}
-\cvarg{B}{The matrix to multiply the pseudo-inverse of the original matrix \texttt{A} by. This is the optional parameter. If it is omitted then it is assumed to be an identity matrix of an appropriate size (So \texttt{X} will be the reconstructed pseudo-inverse of \texttt{A}).}
-\cvarg{X}{The destination matrix: result of back substitution.}
+\cvarg{B}{The matrix to multiply the pseudo-inverse of the original matrix \texttt{A} by. This is an optional parameter. If it is omitted then it is assumed to be an identity matrix of an appropriate size (so that \texttt{X} will be the reconstructed pseudo-inverse of \texttt{A}).}
+\cvarg{X}{The destination matrix: result of back substitution}
 \cvarg{flags}{Operation flags, should match exactly to the \texttt{flags} passed to \cross{SVD}}
 \end{description}
 
@@ -3479,16 +3485,16 @@ W^{-1}_{(i,i)}=
 {0}{otherwise}
 \]
 
-And $\epsilon$ is a small number that depends on the matrix data type.
+and $\epsilon$ is a small number that depends on the matrix data type.
 
 This function together with \cross{SVD} is used inside \cross{Invert}
 and \cross{Solve}, and the possible reason to use these (svd and bksb)
-"low-level" function is to avoid temporary matrices allocation inside
+"low-level" function, is to avoid allocation of temporary matrices inside
 the high-level counterparts (inv and solve).
 
 \cvfunc{EigenVV}\label{EigenVV}
 
-Computes eigenvalues and eigenvectors of symmetric matrix
+Computes eigenvalues and eigenvectors of a symmetric matrix.
 
 \cvexp{
 
@@ -3497,14 +3503,14 @@ void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double
 }{CPP}{EigenVV(mat,evects,evals,eps)-> None}
 
 \begin{description}
-\cvarg{mat}{The input symmetric square matrix. It is modified during the processing.}
-\cvarg{evects}{The output matrix of eigenvectors, stored as a subsequent rows}
-\cvarg{evals}{The output vector of eigenvalues, stored in the descenting order (order of eigenvalues and eigenvectors is syncronized, of course)}
+\cvarg{mat}{The input symmetric square matrix, modified during the processing}
+\cvarg{evects}{The output matrix of eigenvectors, stored as subsequent rows}
+\cvarg{evals}{The output vector of eigenvalues, stored in the descending order (order of eigenvalues and eigenvectors is syncronized, of course)}
 \cvarg{eps}{Accuracy of diagonalization. Typically, \texttt{DBL\_EPSILON} (about $ 10^{-15} $) works well}
 \end{description}
 
 
-The function \texttt{cvEigenVV} computes the eigenvalues and eigenvectors of the matrix \texttt{A}:
+The function \texttt{cvEigenVV} computes the eigenvalues and eigenvectors of matrix \texttt{A}:
 
 \begin{lstlisting}
 mat*evects(i,:)' = evals(i)*evects(i,:)' (in MATLAB notation)
@@ -3514,13 +3520,13 @@ The contents of matrix \texttt{A} is destroyed by the function.
 
 Currently the function is slower than \cross{SVD} yet less accurate,
 so if \texttt{A} is known to be positively-defined (for example, it
-is a covariation matrix), it is recommended to use \cross{SVD} to find
+is a covariance matrix)it is recommended to use \cross{SVD} to find
 eigenvalues and eigenvectors of \texttt{A}, especially if eigenvectors
 are not required.
 
 \cvfunc{CalcCovarMatrix}\label{CalcCovarMatrix}
 
-Calculates covariation matrix of the set of vectors
+Calculates covariance matrix of a set of vectors.
 
 \cvexp{
 
@@ -3529,31 +3535,34 @@ void cvCalcCovarMatrix( \par const CvArr** vects,\par int count,\par CvArr* cov\
 }{CPP}{CalcCovarMatrix(vects,cov\_mat,avg,flags)-> None}
 
 \begin{description}
-\cvarg{vects}{The input vectors. They all must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g. images) etc.}
+\cvarg{vects}{The input vectors, all of which must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g., images) and so forth}
 \cvarg{count}{The number of input vectors}
-\cvarg{cov\_mat}{The output covariation matrix that should be floating-point and square}
+\cvarg{cov\_mat}{The output covariance matrix that should be floating-point and square}
 \cvarg{avg}{The input or output (depending on the flags) array - the mean (average) vector of the input vectors}
 \cvarg{flags}{The operation flags, a combination of the following values
 \begin{description}
-\cvarg{CV\_COVAR\_SCRAMBLED}{the output covaration matrix is calculated as:
-$ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...]^T \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...] $,
-that is, the covariation matrix is
+\cvarg{CV\_COVAR\_SCRAMBLED}{The output covariance matrix is calculated as:
+\[
+ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...]^T \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...] 
+\],
+that is, the covariance matrix is
 $\texttt{count} \times \texttt{count}$.
-Such an unusual covariation matrix is used for fast PCA
-of a set of very large vectors (see, for example, EigenFaces technique
+Such an unusual covariance matrix is used for fast PCA
+of a set of very large vectors (see, for example, the EigenFaces technique
 for face recognition). Eigenvalues of this "scrambled" matrix will
-match to the eigenvalues of the true covariation matrix and the "true"
+match the eigenvalues of the true covariance matrix and the "true"
 eigenvectors can be easily calculated from the eigenvectors of the
-"scrambled" covariation matrix.
-}
-\cvarg{CV\_COVAR\_NORMAL}{the output covaration matrix is calculated as:
-$ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...] \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...]^T $,
-that is, \texttt{cov\_mat} will be a usual covariation matrix
-with the same linear size as the total number of elements in every
+"scrambled" covariance matrix.}
+\cvarg{CV\_COVAR\_NORMAL}{The output covariance matrix is calculated as:
+\[
+ \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...] \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...]^T 
+\],
+that is, \texttt{cov\_mat} will be a covariance matrix
+with the same linear size as the total number of elements in each
 input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
 \texttt{CV\_COVAR\_NORMAL} must be specified}
-\cvarg{CV\_COVAR\_USE\_AVG}{if the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariation matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
-\cvarg{CV\_COVAR\_SCALE}{if the flag is specified, the covariation matrix is scaled. In the "normal" mode \texttt{scale} is '1./count', in the "scrambled" mode \texttt{scale} is reciprocal of the total number of elements in every input vector. By default (if the flag is not specified) the covariation matrix is not scaled ('scale=1').}
+\cvarg{CV\_COVAR\_USE\_AVG}{If the flag is specified, the function does not calculate \texttt{avg} from the input vectors, but, instead, uses the passed \texttt{avg} vector. This is useful if \texttt{avg} has been already calculated somehow, or if the covariance matrix is calculated by parts - in this case, \texttt{avg} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
+\cvarg{CV\_COVAR\_SCALE}{If the flag is specified, the covariance matrix is scaled. In the "normal" mode \texttt{scale} is '1./count'; in the "scrambled" mode \texttt{scale} is the reciprocal of the total number of elements in each input vector. By default (if the flag is not specified) the covariance matrix is not scaled ('scale=1').}
 
 \cvarg{CV\_COVAR\_ROWS}{Means that all the input vectors are stored as rows of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-row vector of an appropriate size.}
 \cvarg{CV\_COVAR\_COLS}{Means that all the input vectors are stored as columns of a single matrix, \texttt{vects[0]}. \texttt{count} is ignored in this case, and \texttt{avg} should be a single-column vector of an appropriate size.}
@@ -3561,13 +3570,13 @@ input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
 \end{description}}
 \end{description}
 
-The function \texttt{cvCalcCovarMatrix} calculates the covariation matrix
-and, optionally, mean vector of the set of input vectors. The function
-can be used for PCA, for comparing vectors using Mahalanobis distance etc.
+The function \texttt{cvCalcCovarMatrix} calculates the covariance matrix
+and, optionally, the mean vector of the set of input vectors. The function
+can be used for PCA, for comparing vectors using Mahalanobis distance and so forth.
 
 \cvfunc{Mahalonobis}\label{Mahalonobis}
 
-Calculates Mahalonobis distance between two vectors
+Calculates the Mahalonobis distance between two vectors.
 
 \cvexp{
 
@@ -3578,11 +3587,11 @@ double cvMahalanobis( \par const CvArr* vec1,\par const CvArr* vec2,\par CvArr* 
 \begin{description}
 \cvarg{vec1}{The first 1D source vector}
 \cvarg{vec2}{The second 1D source vector}
-\cvarg{mat}{The inverse covariation matrix}
+\cvarg{mat}{The inverse covariance matrix}
 \end{description}
 
 
-The function \texttt{cvMahalonobis} calculates the weighted distance between two vectors and returns it:
+The function \texttt{cvMahalonobis} calculates and returns the weighted distance between two vectors:
 
 \begin{lstlisting}
 
@@ -3590,14 +3599,14 @@ d(vec1,vec2)=sqrt( sum,,i,j,, {mat(i,j)*(vec1(i)-vec2(i))*(vec1(j)-vec2(j))} )
 
 \end{lstlisting}
 
-The covariation matrix may be calculated using \cross{CalcCovarMatrix} function and further inverted using \cross{Invert} function (CV\_SVD method is the preffered one, because the matrix might be singular).
+The covariance matrix may be calculated using the \cross{CalcCovarMatrix} function and further inverted using the \cross{Invert} function (CV\_SVD method is the prefered one because the matrix might be singular).
 
 
 \subsection{Math Functions}
 
 \cvfunc{Round, Floor, Ceil}\label{Round, Floor, Ceil}
 
-Converts floating-point number to integer
+Converts a floating-point number to an integer.
 
 \cvexp{
 
@@ -3613,19 +3622,19 @@ int cvCeil( double value );
 
 
 The functions \texttt{cvRound}, \texttt{cvFloor} and \texttt{cvCeil}
-convert input floating-point number to integer using one of the rounding
+convert an input floating-point number to an integer using one of the rounding
 modes. \texttt{cvRound} returns the nearest integer value to the
 argument. \texttt{cvFloor} returns the maximum integer value that is not
 larger than the argument. \texttt{cvCeil} returns the minimum integer
 value that is not smaller than the argument. On some architectures the
 functions work much faster than the standard cast
-operations in C. If absolute value of the argument is greater than
+operations in C. If the absolute value of the argument is greater than
 $2^{31}$, the result is not determined. Special values ( $ \pm \infty$ , NaN)
 are not handled.
 
 \cvfunc{Sqrt}\label{Sqrt}
 
-Calculates square root
+Calculates the square root.
 
 \cvexp{
 
@@ -3638,11 +3647,11 @@ float cvSqrt( float value );
 \end{description}
 
 
-The function \texttt{cvSqrt} calculates square root of the argument. If the argument is negative, the result is not determined.
+The function \texttt{cvSqrt} calculates the square root of the argument. If the argument is negative, the result is not determined.
 
 \cvfunc{InvSqrt}\label{InvSqrt}
 
-Calculates inverse square root
+Calculates the inverse square root.
 
 \cvexp{
 
@@ -3655,11 +3664,11 @@ float cvInvSqrt( float value );
 \end{description}
 
 
-The function \texttt{cvInvSqrt} calculates inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ( $ \pm \infty $ , NaN) are not handled.
+The function \texttt{cvInvSqrt} calculates the inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ( $ \pm \infty $ , NaN) are not handled.
 
 \cvfunc{Cbrt}\label{Cbrt}
 
-Calculates cubic root
+Calculates the cubic root
 
 \cvexp{
 
@@ -3672,11 +3681,11 @@ float cvCbrt( float value );
 \end{description}
 
 
-The function \texttt{cvCbrt} calculates cubic root of the argument, and normally it is faster than 'pow(value,1./3)'. Besides, negative arguments are handled properly. Special values ( $ \pm \infty $, NaN) are not handled.
+The function \texttt{cvCbrt} calculates the cubic root of the argument, and normally it is faster than \texttt{pow(value,1./3)}. In addition, negative arguments are handled properly. Special values ( $ \pm \infty $, NaN) are not handled.
 
 \cvfunc{FastArctan}\label{FastArctan}
 
-Calculates angle of 2D vector
+Calculates the angle of a 2D vector.
 
 \cvexp{
 
@@ -3690,11 +3699,13 @@ float cvFastArctan( float y, float x );
 \end{description}
 
 
-The function \texttt{cvFastArctan} calculates full-range angle of input 2D vector. The angle is measured in degrees and varies from 0 degree  to 360 degree . The accuracy is about 0.1 degree 
+The function \texttt{cvFastArctan} calculates the full-range angle of an input 2D vector. The angle is 
+
+measured in degrees and varies from 0 degrees to 360 degrees . The accuracy is about 0.1 degrees.
 
 \cvfunc{IsNaN}\label{IsNaN}
 
-Determines if the argument is Not A Number
+Determines if the argument is Not A Number.
 
 \cvexp{
 
@@ -3712,7 +3723,7 @@ The function \texttt{cvIsNaN} returns 1 if the argument is Not A Number (as defi
 
 \cvfunc{IsInf}\label{IsInf}
 
-Determines if the argument is Infinity
+Determines if the argument is Infinity.
 
 \cvexp{
 
@@ -3730,7 +3741,7 @@ The function \texttt{cvIsInf} returns 1 if the argument is $ \pm \infty $ (as de
 
 \cvfunc{CartToPolar}\label{CartToPolar}
 
-Calculates magnitude and/or angle of 2d vectors
+Calculates the magnitude and/or angle of 2d vectors.
 
 \cvexp{
 
@@ -3742,11 +3753,11 @@ void cvCartToPolar( \par const CvArr* x,\par const CvArr* y,\par CvArr* magnitud
 \cvarg{x}{The array of x-coordinates}
 \cvarg{y}{The array of y-coordinates}
 \cvarg{magnitude}{The destination array of magnitudes, may be set to NULL if it is not needed}
-\cvarg{angle}{The destination array of angles, may be set to NULL if it is not needed. The angles are measured in radians $(0..2 \pi )$ or in degrees (0..360 degree).}
+\cvarg{angle}{The destination array of angles, may be set to NULL if it is not needed. The angles are measured in radians $(0$ to $2 \pi )$ or in degrees (0 to 360 degrees).}
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
-The function \texttt{cvCartToPolar} calculates either magnitude, angle, or both of every 2d vector (x(I),y(I)):
+The function \texttt{cvCartToPolar} calculates either the magnitude, angle, or both of every 2d vector (x(I),y(I)):
 
 \begin{lstlisting}
 
@@ -3755,11 +3766,11 @@ angle(I)=atan( y(I)/x(I) )
 
 \end{lstlisting}
 
-The angles are calculated with 0.1 degree accuracy. For (0,0) point the angle is set to 0.
+The angles are calculated with 0.1 degree accuracy. For the (0,0) point, the angle is set to 0.
 
 \cvfunc{PolarToCart}\label{PolarToCart}
 
-Calculates cartesian coordinates of 2d vectors represented in polar form
+Calculates Cartesian coordinates of 2d vectors represented in polar form.
 
 \cvexp{
 
@@ -3768,14 +3779,14 @@ void cvPolarToCart( \par const CvArr* magnitude,\par const CvArr* angle,\par CvA
 }{CPP}{PolarToCart(magnitude,angle=NULL,x,y,angle\_in\_degrees)-> None}
 
 \begin{description}
-\cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed all 1's.}
+\cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed to be all 1's.}
 \cvarg{angle}{The array of angles, whether in radians or degrees}
 \cvarg{x}{The destination array of x-coordinates, may be set to NULL if it is not needed}
 \cvarg{y}{The destination array of y-coordinates, mau be set to NULL if it is not needed}
 \cvarg{angle\_in\_degrees}{The flag indicating whether the angles are measured in radians, which is default mode, or in degrees}
 \end{description}
 
-The function \texttt{cvPolarToCart} calculates either x-coodinate, y-coordinate or both of every vector 'magnitude(I)*exp(angle(I)*j), j=sqrt(-1)':
+The function \texttt{cvPolarToCart} calculates either the x-coodinate, y-coordinate or both of every vector \texttt{magnitude(I)*exp(angle(I)*j), j=sqrt(-1)}:
 
 \begin{lstlisting}
 
@@ -3787,7 +3798,7 @@ y(I)=magnitude(I)*sin(angle(I))
 
 \cvfunc{Pow}\label{Pow}
 
-Raises every array element to power
+Raises every array element to a power.
 
 \cvexp{
 
@@ -3802,7 +3813,7 @@ void cvPow( \par const CvArr* src,\par CvArr* dst,\par double power );
 \end{description}
 
 
-The function \texttt{cvPow} raises every element of input array to \texttt{p}:
+The function \texttt{cvPow} raises every element of the input array to \texttt{p}:
 
 \[
 \texttt{dst} [I] = \fork
@@ -3810,7 +3821,7 @@ The function \texttt{cvPow} raises every element of input array to \texttt{p}:
 {|\texttt{src}(I)^p|}{otherwise}
 \]
 
-That is, for non-integer power exponent the absolute values of input array elements are used. However, it is possible to get true values for negative values using some extra operations, as the following sample, computing cube root of array elements, shows:
+That is, for a non-integer power exponent the absolute values of input array elements are used. However, it is possible to get true values for negative values using some extra operations, as the following example, computing the cube root of array elements, shows:
 
 \begin{lstlisting}
 
@@ -3823,11 +3834,11 @@ cvReleaseMat( &mask );
 
 \end{lstlisting}
 
-For some values of \texttt{power}, such as integer values, 0.5 and -0.5, specialized faster algorithms are used.
+For some values of \texttt{power}, such as integer values, 0.5, and -0.5, specialized faster algorithms are used.
 
 \cvfunc{Exp}\label{Exp}
 
-Calculates exponent of every array element
+Calculates the exponent of every array element.
 
 \cvexp{
 
@@ -3841,17 +3852,17 @@ void cvExp( const CvArr* src, CvArr* dst );
 \end{description}
 
 
-The function \texttt{cvExp} calculates exponent of every element of input array:
+The function \texttt{cvExp} calculates the exponent of every element of the input array:
 
 \[
 \texttt{dst} [I] = e^{\texttt{src}(I)}
 \]
 
-Maximum relative error is about $7 \times 10^{-6}$. Currently, the function converts denormalized values to zeros on output.
+The maximum relative error is about $7 \times 10^{-6}$. Currently, the function converts denormalized values to zeros on output.
 
 \cvfunc{Log}\label{Log}
 
-Calculates natural logarithm of every array element absolute value
+Calculates the natural logarithm of every array element's absolute value.
 
 \cvexp{
 
@@ -3872,11 +3883,11 @@ The function \texttt{cvLog} calculates natural logarithm of absolute value of ev
 {\texttt{C}}{otherwise}
 \]
 
-Where \texttt{C} is large negative number ( about -700 in the current implementation).
+Where \texttt{C} is a large negative number ( about -700 in the current implementation).
 
 \cvfunc{SolveCubic}\label{SolveCubic}
 
-Finds real roots of a cubic equation
+Finds the real roots of a cubic equation.
 
 \cvexp{
 
@@ -3885,13 +3896,13 @@ void cvSolveCubic( const CvArr* coeffs, CvArr* roots );
 }{CPP}{SolveCubic(coeffs,roots)-> None}
 
 \begin{description}
-\cvarg{coeffs}{The equation coefficients, array of 3 or 4 elements}
-\cvarg{roots}{The output array of real roots. Should have 3 elements.}
+\cvarg{coeffs}{The equation coefficients, an array of 3 or 4 elements}
+\cvarg{roots}{The output array of real roots which should have 3 elements}
 \end{description}
 
-The function \texttt{cvSolveCubic} finds real roots of a cubic equation:
+The function \texttt{cvSolveCubic} finds the real roots of a cubic equation:
 
-if coeffs is 4-element vector:
+If coeffs is 4-element vector:
 
 \[
 \texttt{coeffs}[0] x^3 + \texttt{coeffs}[1] x^2 + \texttt{coeffs}[2] x + \texttt{coeffs}[3] = 0
@@ -3911,7 +3922,7 @@ only one root.
 
 \cvfunc{RNG}\label{RNG}
 
-Initializes random number generator state
+Initializes a random number generator state.
 
 \cvexp{
 
@@ -6547,6 +6558,27 @@ explains the meaning of the parameters.
 Parameters of Elliptic Arc
 
 \includegraphics[width=0.5\textwidth]{pics/ellipse.png}
+
+\cvfunc{EllipseBox}
+
+Draws simple or thick elliptic arc or fills ellipse sector.
+
+\cvexp{
+
+void cvEllipseBox( \par CvArr* img, \par CvBox2D box, \par CvScalar color,
+                   \par int thickness=1, \par int line\_type=8, \par int shift=0 );
+
+}{CPP}{EllipseBox(img,box,color,thickness=1,line\_type=8,shift=0)-> None}
+
+\begin{description}
+\cvarg{img}{Image}
+\cvarg{box}{The enclosing box of the ellipse drawn}
+\cvarg{thickness}{Thickness of the ellipse boundary}
+\cvarg{line\_type}{Type of the ellipse boundary, see \cross{Line} description}
+\cvarg{shift}{Number of fractional bits in the box vertex coordinates}
+\end{description}
+
+The function \texttt{cvEllipseBox} draws a simple or thick ellipse outline, or fills an ellipse. The functions provides a convenient way to draw an ellipse approximating some shape; that is what \cross{CamShift} and \cross{FitEllipse} do. The ellipse drawn is clipped by ROI rectangle. A piecewise-linear approximation is used for antialiased arcs and thick arcs.
 
 \cvfunc{FillPoly}\label{FillPoly}
 
