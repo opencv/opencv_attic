@@ -784,6 +784,7 @@ Other numerous fields of \texttt{CvDTreeNode} are used internally at the trainin
 
 Decision tree training parameters
 
+\cvexp{A}{B}{C}
 \begin{lstlisting}
 struct CvDTreeParams
 {
@@ -1582,15 +1583,24 @@ int main( void )
 
 The EM (Expectation-Maximization) algorithm estimates the parameters of the multivariate probability density function in a form of the Gaussian mixture distribution with a specified number of mixtures.
 
-Consider the set of the feature vectors {$x_1, x_2,...,x_\texttt{N}$}: \texttt{N} vectors from \texttt{d}-dimensional Euclidean space drawn from a Gaussian mixture:
+Consider the set of the feature vectors $x_1, x_2,...,x_{N}$ : N vectors from d-dimensional Euclidean space drawn from a Gaussian mixture:
 
 \includegraphics[width=0.8\textwidth]{pics/em1.png}
 
-where \texttt{m} is the number of mixtures, $p_k$ is the normal distribution density with the mean $a_k$ and covariance matrix $S_k$, $\pi_k$ is the weight of \texttt{k}-th mixture. Given the number of mixtures \texttt{m} and the samples {$x_i$, $i=1..N$} the algorithm finds the maximum-likelihood estimates (MLE) of the all the mixture parameters, i.e. $a_k$, $S_k$ and $\pi_k$:
+where $m$ is the number of mixtures, $p_k$ is the normal distribution
+density with the mean $a_k$ and covariance matrix $S_k$, $\pi_k$
+is the weight of k-th mixture. Given the number of mixtures
+$M$ and the samples $x_i$, $i=1..N$ the algorithm finds the
+maximum-likelihood estimates (MLE) of the all the mixture parameters,
+i.e. $a_k$, $S_k$ and $\pi_k$ :
 
 \includegraphics[width=0.8\textwidth]{pics/em3.png}
 
-EM algorithm is an iterative procedure. Each iteration of it includes two steps. At the first step (Expectation-step, or E-step), we find a probability $p_{i,k}$ (denoted $\alpha_{i,k}$ in the formula below) of sample \texttt{\#i} to belong to mixture \texttt{\#k} using the currently available mixture parameter estimates:
+EM algorithm is an iterative procedure. Each iteration of it includes
+two steps. At the first step (Expectation-step, or E-step), we find a
+probability $p_{i,k}$ (denoted $\alpha_{i,k}$ in the formula below) of
+sample \texttt{i} to belong to mixture \texttt{k} using the currently
+available mixture parameter estimates:
 
 \includegraphics[width=0.3\textwidth]{pics/em4.png}
 
