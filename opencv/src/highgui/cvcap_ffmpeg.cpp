@@ -93,10 +93,6 @@ extern "C" {
 #define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
 #endif
 
-#if defined(HAVE_FFMPEG_SWSCALE)
-static struct SwsContext *img_convert_ctx = NULL;
-#endif
-
 /* PIX_FMT_RGBA32 macro changed in newer ffmpeg versions */
 #ifndef PIX_FMT_RGBA32
 #define PIX_FMT_RGBA32 PIX_FMT_RGB32
@@ -285,7 +281,7 @@ const AVCodecTag codec_bmp_tags[] = {
 class CvCapture_FFMPEG : public CvCapture
 {
 public:
-    CvCapture_FFMPEG() { init(); }
+    CvCapture_FFMPEG() : img_convert_ctx(0) { init(); }
     virtual ~CvCapture_FFMPEG() { close(); }
 
     virtual bool open( const char* filename );
@@ -309,6 +305,9 @@ protected:
     AVFrame             rgb_picture;
     AVPacket            packet;
     IplImage            frame;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    struct SwsContext *img_convert_ctx;
+#endif
 /*
    'filename' contains the filename of the videosource,
    'filename==NULL' indicates that ffmpeg's seek support works
@@ -725,7 +724,7 @@ CvCapture* cvCreateFileCapture_FFMPEG( const char* filename )
 class CvVideoWriter_FFMPEG : public CvVideoWriter
 {
 public:
-    CvVideoWriter_FFMPEG() { init(); }
+    CvVideoWriter_FFMPEG() : img_convert_ctx(0) { init(); }
     virtual ~CvVideoWriter_FFMPEG() { close(); }
 
     virtual bool open( const char* filename, int fourcc,
@@ -747,6 +746,9 @@ protected:
     AVStream        * video_st;
     int               input_pix_fmt;
     IplImage        * temp_image;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    struct SwsContext *img_convert_ctx;
+#endif
 };
 
 static const char * icvFFMPEGErrStr(int err)
