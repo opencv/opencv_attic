@@ -89,12 +89,14 @@ class CvCaptureAVI_VFW : public CvCapture
 public:
     CvCaptureAVI_VFW()
     {
-        init();
+      CoInitialize(NULL);
+      init();
     }
 
     virtual ~CvCaptureAVI_VFW()
     {
         close();
+        CoUninitialize();
     }
 
     virtual bool open( const char* filename );
@@ -148,7 +150,9 @@ void CvCaptureAVI_VFW::close()
     if( avifile )
         AVIFileRelease( avifile );
 
-    cvReleaseImage( &frame );
+    if (frame)
+        cvReleaseImage( &frame );
+
     init();
 }
 
