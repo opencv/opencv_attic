@@ -291,73 +291,87 @@ Randd_( Mat& _arr, uint64* state, const void* _param )
     *state = temp;
 }
 
-/***************************************************************************************\
-    The code below implements algorithm from the paper:
-
-    G. Marsaglia and W.W. Tsang,
-    The Monty Python method for generating random variables,
-    ACM Transactions on Mathematical Software, Vol. 24, No. 3,
-    Pages 341-350, September, 1998.
-\***************************************************************************************/
-
-static CvStatus CV_STDCALL
+   
+/*
+   The code below implements the algorithm described in
+   "The Ziggurat Method for Generating Random Variables"
+   by Marsaglia and Tsang, Journal of Statistical Software.
+*/
+static void
 Randn_0_1_32f_C1R( float* arr, int len, uint64* state )
 {
+    const float r = 3.442620f; // The start of the right tail
+    const float rng_flt = 2.3283064365386962890625e-10f; // 2^-32
+    static unsigned kn[127];
+    static float wn[128], fn[128];
     uint64 temp = *state;
+    static bool initialized=false;
     int i;
-    temp = RNG_NEXT(temp);
-
+    
+    if( !initialized )
+    {
+        const double m1 = 2147483648.0;
+        double dn = 3.442619855899, tn = dn, vn = 9.91256303526217e-3;
+        
+        // Set up the tables
+        double q = vn/std::exp(-.5*dn*dn);
+        kn[0] = (dn/q)*m1;
+        kn[1] = 0;
+        
+        wn[0] = q/m1;
+        wn[127] = dn/m1;
+        
+        fn[0] = 1.;
+        fn[127] = std::exp(-.5*dn*dn);
+        
+        for(i=126;i>=1;i--)
+        {
+            dn = std::sqrt(-2.*std::log(vn/dn+std::exp(-.5*dn*dn)));
+            kn[i+1] = (dn/tn)*m1;
+            tn = dn;
+            fn[i] = std::exp(-.5*dn*dn);
+            wn[i] = dn/m1;
+        }
+        initialized = true;
+    }
+    
     for( i = 0; i < len; i++ )
     {
-        double x, y, v, ax, bx;
-
+        float x, y;
         for(;;)
         {
-            x = ((int)temp)*1.167239e-9;
+            int hz = (int)temp;
             temp = RNG_NEXT(temp);
-            ax = fabs(x);
-            v = 2.8658 - ax*(2.0213 - 0.3605*ax);
-            y = ((unsigned)temp)*2.328306e-10;
-            temp = RNG_NEXT(temp);
-
-            if( y < v || ax < 1.17741 )
+            int iz = hz & 127;
+            x = hz*wn[iz];
+            if( (unsigned)std::abs(hz) < kn[iz] )
                 break;
-
-            bx = x;
-            x = bx > 0 ? 0.8857913*(2.506628 - ax) : -0.8857913*(2.506628 - ax);
-            
-            if( y > v + 0.0506 )
-                break;
-
-            if( std::log(y) < .6931472 - .5*bx*bx )
+            if( iz == 0) // iz==0, handles the base strip
             {
-                x = bx;
+                do
+                {
+                    x = (unsigned)temp*rng_flt;
+                    temp = RNG_NEXT(temp);
+                    y = (unsigned)temp*rng_flt;
+                    temp = RNG_NEXT(temp);
+                    x = -std::log(x+FLT_MIN)*0.2904764;
+                    y = -std::log(y+FLT_MIN);
+                }	// .2904764 is 1/r
+                while( y + y < x*x );
+                x = hz > 0 ? r + x : -r - x;
                 break;
             }
-
-            if( std::log(1.8857913 - y) < .5718733-.5*x*x )
+            // iz > 0, handle the wedges of other strips
+            y = (unsigned)temp*rng_flt;
+            temp = RNG_NEXT(temp);
+            if( fn[iz] + y*(fn[iz - 1] - fn[iz]) < std::exp(-.5*x*x) )
                 break;
-
-            do
-            {
-                v = ((int)temp)*4.656613e-10;
-                x = -std::log(fabs(v))*.3989423;
-                temp = RNG_NEXT(temp);
-                y = -std::log(((unsigned)temp)*2.328306e-10);
-                temp = RNG_NEXT(temp);
-            }
-            while( y+y < x*x );
-
-            x = v > 0 ? 2.506628 + x : -2.506628 - x;
-            break;
         }
-
-        arr[i] = (float)x;
+        arr[i] = x;
     }
     *state = temp;
-    return CV_OK;
 }
-
+    
 
 template<typename T, typename PT> static void
 Randn_( Mat& _arr, uint64* state, const void* _param )
