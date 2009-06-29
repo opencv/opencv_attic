@@ -840,7 +840,6 @@ struct CV_EXPORTS RNG
     enum { A=4164903690U, UNIFORM=0, NORMAL=1 };
 
     RNG();
-    RNG(unsigned seed);
     RNG(uint64 _state);
     unsigned next();
 
