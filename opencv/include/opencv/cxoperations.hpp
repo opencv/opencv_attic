@@ -1077,7 +1077,6 @@ dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
 
 // Multiply-with-Carry RNG
 inline RNG::RNG() { state = 0xffffffff; }
-inline RNG::RNG(unsigned seed) { state = seed ? seed : 0xffffffff; }
 inline RNG::RNG(uint64 _state) { state = _state ? _state : 0xffffffff; }
 inline unsigned RNG::next()
 {
