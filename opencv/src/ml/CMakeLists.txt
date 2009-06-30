@@ -10,7 +10,7 @@ source_group("Include\\External" FILES ${lib_hdrs})
 file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
-add_definitions(-D CVAPI_EXPORTS)
+add_definitions(-DCVAPI_EXPORTS)
 
 include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"

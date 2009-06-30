@@ -42,8 +42,9 @@
 #ifndef __CVCOMMON_H_
 #define __CVCOMMON_H_
 
-#include <opencv/cv.h>
-#include <opencv/cxmisc.h>
+#include <cxcore.h>
+#include <cv.h>
+#include <cxmisc.h>
 
 #define CV_DECLARE_QSORT( func_name, T, less_than )                     \
 void func_name( T* array, size_t length, int aux );

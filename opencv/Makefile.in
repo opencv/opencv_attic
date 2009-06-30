@@ -327,7 +327,7 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/cvcompat.h     \
   $(top_srcdir)/include/opencv/cvstreams.h    \
   $(top_srcdir)/include/opencv/cvaux.hpp      \
-  $(top_srcdir)/include/opencv/cvmat.hpp      \
+  $(top_srcdir)/include/opencv/cxmat.hpp      \
   $(top_srcdir)/include/opencv/cvtypes.h      \
   $(top_srcdir)/include/opencv/cvver.h        \
   $(top_srcdir)/include/opencv/cvvidsurv.hpp  \

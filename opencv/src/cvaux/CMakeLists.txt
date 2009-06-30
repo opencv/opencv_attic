@@ -22,7 +22,7 @@ set(lib_hdrs ${lib_hdrs} ${aux_hdrs_ext} ${aux_hdrs_int})
 source_group("Include\\External" FILES ${aux_hdrs_ext})
 source_group("Include\\Internal" FILES ${aux_hdrs_int})
 
-add_definitions(-D CVAPI_EXPORTS)
+add_definitions(-DCVAPI_EXPORTS)
 
 include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"

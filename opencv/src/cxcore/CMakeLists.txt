@@ -6,7 +6,7 @@ project(cxcore)
 file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
 
-add_definitions(-D CVAPI_EXPORTS)
+add_definitions(-DCVAPI_EXPORTS)
 
 include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include"
                     "${CMAKE_SOURCE_DIR}/include/opencv"
