@@ -171,8 +171,8 @@
 			</data_params>
             <result>
                 <iter_count> 100 </iter_count>
-                <mean> 22.440710 </mean>
-                <sigma> 1.985238 </sigma>
+                <mean> 9.993943 </mean>
+                <sigma> 0.860256 </sigma>
 			</result>
 		</ringnorm>
         <spambase>
@@ -190,8 +190,8 @@
 			</data_params>
             <result>
                 <iter_count> 100 </iter_count>
-                <mean> 14.735507 </mean>
-                <sigma> 1.667907 </sigma>   
+                <mean> 5.404347 </mean>
+                <sigma> 0.581716 </sigma>   
 			</result>
 		</spambase>
 	</boost>

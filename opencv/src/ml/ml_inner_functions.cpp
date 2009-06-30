@@ -521,7 +521,7 @@ cvPreprocessVarType( const CvMat* var_type, const CvMat* var_idx,
         CV_ERROR( CV_StsUnsupportedFormat, "type mask must be 8uC1 or 8sC1 array" );
 
     tm_size = var_type->rows + var_type->cols - 1;
-    tm_step = var_type->step ? var_type->step/CV_ELEM_SIZE(var_type->type) : 1;
+    tm_step = var_type->rows == 1 ? 1 : var_type->step/CV_ELEM_SIZE(var_type->type);
 
     if( /*tm_size != var_count &&*/ tm_size != var_count + 1 )
         CV_ERROR( CV_StsBadArg,
