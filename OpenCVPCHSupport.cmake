@@ -62,8 +62,10 @@ MACRO(_PCH_GET_COMPILE_FLAGS _out_compile_flags)
   ENDFOREACH(item)
 
   GET_DIRECTORY_PROPERTY(_directory_flags DEFINITIONS)
-  #MESSAGE("_directory_flags ${_directory_flags}" )
+  GET_DIRECTORY_PROPERTY(_global_definitions DIRECTORY ${CMAKE_SOURCE_DIR} DEFINITIONS)
+  #MESSAGE("_directory_flags ${_directory_flags} ${_global_definitions}" )
   LIST(APPEND ${_out_compile_flags} ${_directory_flags})
+  LIST(APPEND ${_out_compile_flags} ${_global_definitions})
   LIST(APPEND ${_out_compile_flags} ${CMAKE_CXX_FLAGS} )
 
   SEPARATE_ARGUMENTS(${_out_compile_flags})

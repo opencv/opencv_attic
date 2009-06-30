@@ -49,7 +49,7 @@
 #define _CVCLASSIFIER_H_
 
 #include <cmath>
-#include <opencv/cxcore.h>
+#include <cxcore.h>
 
 #define CV_BOOST_API
 

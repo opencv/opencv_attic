@@ -281,7 +281,7 @@ const AVCodecTag codec_bmp_tags[] = {
 class CvCapture_FFMPEG : public CvCapture
 {
 public:
-    CvCapture_FFMPEG() : img_convert_ctx(0) { init(); }
+    CvCapture_FFMPEG() { init(); }
     virtual ~CvCapture_FFMPEG() { close(); }
 
     virtual bool open( const char* filename );
@@ -330,6 +330,9 @@ void CvCapture_FFMPEG::init()
     memset( &frame, 0, sizeof(frame) );
     filename = 0;
     packet.data = NULL;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    img_convert_ctx = 0;
+#endif    
 }
 
 
@@ -724,7 +727,7 @@ CvCapture* cvCreateFileCapture_FFMPEG( const char* filename )
 class CvVideoWriter_FFMPEG : public CvVideoWriter
 {
 public:
-    CvVideoWriter_FFMPEG() : img_convert_ctx(0) { init(); }
+    CvVideoWriter_FFMPEG() { init(); }
     virtual ~CvVideoWriter_FFMPEG() { close(); }
 
     virtual bool open( const char* filename, int fourcc,
@@ -788,6 +791,9 @@ void CvVideoWriter_FFMPEG::init()
     video_st = 0;
     input_pix_fmt = 0;
     temp_image = 0;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    img_convert_ctx = 0;
+#endif    
 }
 
 /**
