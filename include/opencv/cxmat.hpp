@@ -3501,7 +3501,10 @@ inline MatND::MatND(const MatND& m)
 {
     int i, d = dims;
     for( i = 0; i < d; i++ )
-        dim[i] = m.dim[i];
+    {
+        dim[i].size = m.dim[i].size;
+        dim[i].step = m.dim[i].step;
+    }
     if( refcount )
         ++*refcount;
 }
@@ -3542,7 +3545,10 @@ inline MatND& MatND::operator = (const MatND& m)
         refcount = m.refcount;
         int i, d = dims;
         for( i = 0; i < d; i++ )
-            dim[i] = m.dim[i];
+        {
+            dim[i].size = m.dim[i].size;
+            dim[i].step = m.dim[i].step;
+        }
     }
     return *this;
 }

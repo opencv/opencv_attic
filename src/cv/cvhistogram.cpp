@@ -602,14 +602,13 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
                const Vector<Vector<float> >& ranges,
                bool uniform, bool accumulate )
 {
+    hist.create(histSize, CV_32F);    
+        
     MatND ihist = hist;
     ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK)|CV_32S;
     
     if( !accumulate )
-    {
-        hist.create(histSize, CV_32F);
         hist = Scalar(0.);
-    }
     else
         hist.convertTo(ihist, CV_32S);
     
@@ -624,9 +623,9 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
     
     int depth = images[0].depth();
     if( depth == CV_8U )
-        calcHist_8u(ptrs, deltas, imsize, hist, ranges, uniranges, uniform );
+        calcHist_8u(ptrs, deltas, imsize, ihist, ranges, uniranges, uniform );
     else if( depth == CV_32F )
-        calcHist_<float>(ptrs, deltas, imsize, hist, ranges, uniranges, uniform );
+        calcHist_<float>(ptrs, deltas, imsize, ihist, ranges, uniranges, uniform );
     
     ihist.convertTo(hist, CV_32F);
 }
