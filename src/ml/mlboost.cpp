@@ -473,9 +473,9 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi )
     data->get_ord_responses(node, responses_buf, &responses);
 
     int i, best_i = -1;
-    double best_val = 0, lsum = 0, rsum = node->value*n;
     double L = 0, R = weights[n];
-
+    double best_val = 0, lsum = 0, rsum = node->value*R;
+    
     // compensate for missing values
     for( i = n1; i < n; i++ )
     {
@@ -1020,6 +1020,8 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
     get_active_vars(); // recompute active_vars* maps and condensed_idx's in the splits.
     data->is_classifier = true;
     ok = true;
+
+    data->free_train_data();
 
     __END__;
 
