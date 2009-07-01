@@ -1981,7 +1981,7 @@ CvContourScanner cvStartFindContours(\par CvArr* image,\par CvMemStorage* storag
 \begin{description}
 \cvarg{image}{The 8-bit, single channel, binary source image}
 \cvarg{storage}{Container of the retrieved contours}
-\cvarg{header\_size}{Size of the sequence header, $>$=sizeof(CvChain) if \texttt{method} =CV\_CHAIN\_CODE, and $>$=sizeof(CvContour) otherwise}
+\cvarg{header\_size}{Size of the sequence header, $>=sizeof(CvChain)$ if \texttt{method} =CV\_CHAIN\_CODE, and $>=sizeof(CvContour)$ otherwise}
 \cvarg{mode}{Retrieval mode; see \cross{FindContours}}
 \cvarg{method}{Approximation method. It has the same meaning in \cross{FindContours}, but \texttt{CV\_LINK\_RUNS} can not be used here}
 \cvarg{offset}{ROI offset; see \cross{FindContours}}
@@ -2062,9 +2062,17 @@ void cvPyrMeanShiftFiltering( \par const CvArr* src, \par CvArr* dst,
 \cvarg{termcrit}{Termination criteria: when to stop meanshift iterations.}
 \end{description}
 
-The function \texttt{cvPyrMeanShiftFiltering} implements the filtering stage of meanshift segmentation, that is, the output of the function is the filtered "posterized" image with color gradients and fine-grain texture flattened. At every pixel $(X,Y)$ of the input image (or down-sized input image, see below) the function executes meanshift iterations, that is, the pixel $(X,Y)$ neighborhood in the joint space-color hyperspace is considered: 
+The function \texttt{cvPyrMeanShiftFiltering} implements the filtering
+stage of meanshift segmentation, that is, the output of the function is
+the filtered "posterized" image with color gradients and fine-grain
+texture flattened. At every pixel $(X,Y)$ of the input image (or
+down-sized input image, see below) the function executes meanshift
+iterations, that is, the pixel $(X,Y)$ neighborhood in the joint
+space-color hyperspace is considered:
 
-{$(x,y): X-sp≤x≤X+sp \&\& Y-sp≤y≤Y+sp \&\& ||(R,G,B)-(r,g,b)|| ≤ sr$},
+\[
+(x,y): X-\texttt{sp} \le x \le X+\texttt{sp} , Y-\texttt{sp} \le y \le Y+\texttt{sp} , ||(R,G,B)-(r,g,b)||  \le  \texttt{sr}
+\]
 
 where \texttt{(R,G,B)} and \texttt{(r,g,b)} are the vectors of color components at \texttt{(X,Y)} and \texttt{(x,y)}, respectively (though, the algorithm does not depend on the color space used, so any 3-component color space can be used instead). Over the neighborhood the average spatial value \texttt{(X',Y')} and average color vector \texttt{(R',G',B')} are found and they act as the neighborhood center on the next iteration: 
 
@@ -2072,10 +2080,17 @@ $(X,Y)~(X',Y'), (R,G,B)~(R',G',B').$
 
 After the iterations over, the color components of the initial pixel (that is, the pixel from where the iterations started) are set to the final value (average color at the last iteration): 
 
-$I(X,Y) <- (R*,G*,B*).$
+$I(X,Y) <- (R*,G*,B*)$
 
-Then \texttt{max\_level}$>$0, the gaussian pyramid of \texttt{max\_level}+1 levels is built, and the above procedure is run on the smallest layer. After that, the results are propagated to the larger layer and the iterations are run again only on those pixels where the layer colors differ much ($>$\texttt{sr}) from the lower-resolution layer, that is, the boundaries of the color regions are clarified. Note, that the results will be actually different from the ones obtained by running the meanshift procedure on the whole original image (i.e. when \texttt{max\_level}==0).
-
+Then $\texttt{max\_level}>0$ , the gaussian pyramid of
+$\texttt{max\_level}+1$ levels is built, and the above procedure is run
+on the smallest layer. After that, the results are propagated to the
+larger layer and the iterations are run again only on those pixels where
+the layer colors differ much ( $>\texttt{sr}$ ) from the lower-resolution
+layer, that is, the boundaries of the color regions are clarified. Note,
+that the results will be actually different from the ones obtained by
+running the meanshift procedure on the whole original image (i.e. when
+$\texttt{max\_level}==0$ ).
 
 \cvfunc{Watershed}
 
@@ -2093,9 +2108,24 @@ void cvWatershed( const CvArr* image, CvArr* markers );
 \cvarg{markers}{The input/output 32-bit single-channel image (map) of markers.}
 \end{description}
 
-The function \texttt{cvWatershed} implements one of the variants of watershed, non-parametric marker-based segmentation algorithm, described in \href{#Meyer92}{[Meyer92]} Before passing the image to the function, user has to outline roughly the desired regions in the image \texttt{markers} with positive ($>$0) indices, i.e. every region is represented as one or more connected components with the pixel values 1, 2, 3 etc. Those components will be "seeds" of the future image regions. All the other pixels in \texttt{markers}, which relation to the outlined regions is not known and should be defined by the algorithm, should be set to 0's. On the output of the function, each pixel in markers is set to one of values of the "seed" components, or to -1 at boundaries between the regions.
+The function \texttt{cvWatershed} implements one of the variants
+of watershed, non-parametric marker-based segmentation algorithm,
+described in \href{Meyer92}{[Meyer92]} Before passing the image to the
+function, user has to outline roughly the desired regions in the image
+\texttt{markers} with positive ($>0$) indices, i.e. every region is
+represented as one or more connected components with the pixel values
+1, 2, 3 etc. Those components will be "seeds" of the future image
+regions. All the other pixels in \texttt{markers}, which relation to the
+outlined regions is not known and should be defined by the algorithm,
+should be set to 0's. On the output of the function, each pixel in
+markers is set to one of values of the "seed" components, or to -1 at
+boundaries between the regions.
 
-Note, that it is not necessary that every two neighbor connected components are separated by a watershed boundary (-1's pixels), for example, in case when such tangent components exist in the initial marker image. Visual demonstration and usage example of the function can be found in OpenCV samples directory; see \texttt{watershed.cpp} demo.
+Note, that it is not necessary that every two neighbor connected
+components are separated by a watershed boundary (-1's pixels), for
+example, in case when such tangent components exist in the initial
+marker image. Visual demonstration and usage example of the function
+can be found in OpenCV samples directory; see \texttt{watershed.cpp} demo.
 
 \subsection{Image and Contour moments}
 
@@ -6220,7 +6250,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
 }{CPP}{CreateStereoGCState(numberOfDispaities,maxIters)-> StereoGCState}
 
 \begin{description}
-\cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be \texttt{state-$>$minDisparity $≤$ disparity $<$ state-$>$minDisparity + state-$>$numberOfDisparities}}
+\cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be $\texttt{state->minDisparity} \le disparity < \texttt{state->minDisparity} + \texttt{state->numberOfDisparities}$}
 \cvarg{maxIters}{Maximum number of iterations. On each iteration all possible (or reasonable) alpha-expansions are tried. The algorithm may terminate earlier if it could not find an alpha-expansion that decreases the overall cost function value. See \href{\#Kolmogorov03}{[Kolmogorov03]}  for details. }
 \end{description}
 
@@ -6267,25 +6297,32 @@ void cvFindStereoCorrespondenceGC( \par const CvArr* left, \par const CvArr* rig
 
 The function \texttt{cvFindStereoCorrespondenceGC} computes disparity maps for the input rectified stereo pair. Note that the left disparity image will contain values in the following range: 
 
-\texttt{-state-$>$numberOfDisparities-state-$>$minDisparity 
-\newline
-$<$ dispLeft(x,y) $≤$ -state-$>$minDisparity,
-\newline
+\[
+-\texttt{state->numberOfDisparities}-\texttt{state->minDisparity}
+< dispLeft(x,y) \le -\texttt{state->minDisparity},
+\]
+
 or
-\newline
-dispLeft(x,y) == CV\_STEREO\_GC\_OCCLUSION,}
+\[
+dispLeft(x,y) == \texttt{CV\_STEREO\_GC\_OCCLUSION}
+\]
 
-where as for the right disparity image the following will be true: 
+and for the right disparity image the following will be true: 
 
-\texttt{state-$>$minDisparity $≤$ dispRight(x,y) 
-\newline
-$<$ state-$>$minDisparity+state-$>$numberOfDisparities,
-\newline
+\[
+\texttt{state->minDisparity} \le dispRight(x,y) 
+< \texttt{state->minDisparity} + \texttt{state->numberOfDisparities}
+\]
+
 or
-\newline
-dispRight(x,y) == CV\_STEREO\_GC\_OCCLUSION,}
 
-that is, the range for the left disparity image will be inversed, and the pixels for which no good match has been found, will be marked as occlusions.
+\[
+dispRight(x,y) == \texttt{CV\_STEREO\_GC\_OCCLUSION}
+\]
+
+that is, the range for the left disparity image will be inversed,
+and the pixels for which no good match has been found, will be marked
+as occlusions.
 
 Here is how the function can be called:
 
