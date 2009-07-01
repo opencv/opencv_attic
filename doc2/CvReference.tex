@@ -1521,7 +1521,7 @@ cvCvtColor(src ,bwsrc, CV_RGB2GRAY)
  \]
 $X$, $Y$ and $Z$ cover the whole value range (in the case of floating-point images $Z$ may exceed 1).
 
- \item RGB$\leftrightarrow$YCrCb JPEG (a.k.a. YCC) (\texttt{CV\_BGR2YCrCb, CV\_RGB2YCrCb, CV\_YCrCb2BGR, CV\_YCrCb2RGB})
+ \item RGB $\leftrightarrow$ YCrCb JPEG (a.k.a. YCC) (\texttt{CV\_BGR2YCrCb, CV\_RGB2YCrCb, CV\_YCrCb2BGR, CV\_YCrCb2RGB})
  \[ Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B \]
  \[  Cr \leftarrow (R-Y) \cdot 0.713 + delta \]
  \[  Cb \leftarrow (B-Y) \cdot 0.564 + delta \]
@@ -1539,7 +1539,7 @@ where
  \]
 Y, Cr and Cb cover the whole value range.
 
- \item RGB$<$=$>$HSV (\texttt{CV\_BGR2HSV, CV\_RGB2HSV, CV\_HSV2BGR, CV\_HSV2RGB})
+ \item RGB $\leftrightarrow$ HSV (\texttt{CV\_BGR2HSV, CV\_RGB2HSV, CV\_HSV2BGR, CV\_HSV2RGB})
   in the case of 8-bit and 16-bit images
   R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range
   \[ V \leftarrow max(R,G,B) \]
