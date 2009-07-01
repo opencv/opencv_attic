@@ -1211,15 +1211,14 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         codec_pix_fmt = input_pix_fmt;
         break;
 #endif
-    case CODEC_ID_FFV1:
-        // no choice... other supported formats are YUV only
-        codec_pix_fmt = PIX_FMT_RGBA32;
+    case CODEC_ID_HUFFYUV:
+        codec_pix_fmt = PIX_FMT_YUV422P;
         break;
-	case CODEC_ID_MJPEG:
-	case CODEC_ID_LJPEG:
-		codec_pix_fmt = PIX_FMT_YUVJ420P;
-		bitrate_scale = 128;
-		break;
+    case CODEC_ID_MJPEG:
+    case CODEC_ID_LJPEG:
+      codec_pix_fmt = PIX_FMT_YUVJ420P;
+      bitrate_scale = 128;
+      break;
     case CODEC_ID_RAWVIDEO:
     default:
         // good for lossy formats, MPEG, etc.
