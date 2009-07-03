@@ -478,6 +478,7 @@ template<typename _Tp> static inline Point_<_Tp> operator * (_Tp a, const Point_
 template<typename _Tp> inline Point3_<_Tp>::Point3_() : x(0), y(0), z(0) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(_Tp _x, _Tp _y, _Tp _z) : x(_x), y(_y), z(_z) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const Point3_& pt) : x(pt.x), y(pt.y), z(pt.z) {}
+template<typename _Tp> inline Point3_<_Tp>::Point3_(const Point_<_Tp>& pt) : x(pt.x), y(pt.y), z(_Tp()) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const CvPoint3D32f& pt) :
     x(saturate_cast<_Tp>(pt.x)), y(saturate_cast<_Tp>(pt.y)), z(saturate_cast<_Tp>(pt.z)) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const Vec_<_Tp, 3>& t) : x(t[0]), y(t[1]), z(t[2]) {}
