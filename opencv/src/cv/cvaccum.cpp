@@ -47,26 +47,26 @@ namespace cv
 
 inline float sqr(uchar a) { return CV_8TO32F_SQR(a); }
 inline float sqr(float a) { return a*a; }
-inline Vec_<float, 3> sqr(const Vec_<uchar, 3>& a)
+inline Vec<float, 3> sqr(const Vec<uchar, 3>& a)
 {
-    return Vec_<float, 3>(CV_8TO32F_SQR(a[0]), CV_8TO32F_SQR(a[1]), CV_8TO32F_SQR(a[2]));
+    return Vec<float, 3>(CV_8TO32F_SQR(a[0]), CV_8TO32F_SQR(a[1]), CV_8TO32F_SQR(a[2]));
 }
-inline Vec_<float, 3> sqr(const Vec_<float, 3>& a)
+inline Vec<float, 3> sqr(const Vec<float, 3>& a)
 {
-    return Vec_<float, 3>(a[0]*a[0], a[1]*a[1], a[2]*a[2]);
+    return Vec<float, 3>(a[0]*a[0], a[1]*a[1], a[2]*a[2]);
 }
 inline float multiply(uchar a, uchar b) { return CV_8TO32F(a)*CV_8TO32F(b); }
 inline float multiply(float a, float b) { return a*b; }
-inline Vec_<float, 3> multiply(const Vec_<uchar, 3>& a, const Vec_<uchar, 3>& b)
+inline Vec<float, 3> multiply(const Vec<uchar, 3>& a, const Vec<uchar, 3>& b)
 {
-    return Vec_<float, 3>(
+    return Vec<float, 3>(
         CV_8TO32F(a[0])*CV_8TO32F(b[0]),
         CV_8TO32F(a[1])*CV_8TO32F(b[1]),
         CV_8TO32F(a[2])*CV_8TO32F(b[2]));
 }
-inline Vec_<float, 3> multiply(const Vec_<float, 3>& a, const Vec_<float, 3>& b)
+inline Vec<float, 3> multiply(const Vec<float, 3>& a, const Vec<float, 3>& b)
 {
-    return Vec_<float, 3>(a[0]*b[0], a[1]*b[1], a[2]*b[2]);
+    return Vec<float, 3>(a[0]*b[0], a[1]*b[1], a[2]*b[2]);
 }
 inline float addw(uchar a, float alpha, float b, float beta)
 {
@@ -76,15 +76,15 @@ inline float addw(float a, float alpha, float b, float beta)
 {
     return b*beta + a*alpha;
 }
-inline Vec_<float, 3> addw(const Vec_<uchar, 3>& a, float alpha, const Vec_<float, 3>& b, float beta)
+inline Vec<float, 3> addw(const Vec<uchar, 3>& a, float alpha, const Vec<float, 3>& b, float beta)
 {
-    return Vec_<float, 3>(b[0]*beta + CV_8TO32F(a[0])*alpha,
+    return Vec<float, 3>(b[0]*beta + CV_8TO32F(a[0])*alpha,
                           b[1]*beta + CV_8TO32F(a[1])*alpha,
                           b[2]*beta + CV_8TO32F(a[2])*alpha);
 }
-inline Vec_<float, 3> addw(const Vec_<float, 3>& a, float alpha, const Vec_<float, 3>& b, float beta)
+inline Vec<float, 3> addw(const Vec<float, 3>& a, float alpha, const Vec<float, 3>& b, float beta)
 {
-    return Vec_<float, 3>(b[0]*beta + a[0]*alpha,
+    return Vec<float, 3>(b[0]*beta + a[0]*alpha,
                           b[1]*beta + a[1]*alpha,
                           b[2]*beta + a[2]*alpha);
 }
@@ -361,11 +361,11 @@ void accumulate( const Mat& src, Mat& dst, const Mat& mask )
         if( src.type() == CV_8UC1 && dst.type() == CV_32FC1 )
             func = accMask_<uchar, float>;
         else if( src.type() == CV_8UC3 && dst.type() == CV_32FC3 )
-            func = accMask_<Vec_<uchar, 3>, Vec_<float, 3> >;
+            func = accMask_<Vec<uchar, 3>, Vec<float, 3> >;
         else if( src.type() == CV_32FC1 && dst.type() == CV_32FC1 )
             func = accMask_<float, float>;
         else if( src.type() == CV_32FC3 && dst.type() == CV_32FC3 )
-            func = accMask_<Vec_<float, 3>, Vec_<float, 3> >;
+            func = accMask_<Vec<float, 3>, Vec<float, 3> >;
         else
             CV_Error( CV_StsUnsupportedFormat, "" );
 
@@ -398,11 +398,11 @@ void accumulateSquare( const Mat& src, Mat& dst, const Mat& mask )
         if( src.type() == CV_8UC1 && dst.type() == CV_32FC1 )
             func = accSqrMask_<uchar, float>;
         else if( src.type() == CV_8UC3 && dst.type() == CV_32FC3 )
-            func = accSqrMask_<Vec_<uchar, 3>, Vec_<float, 3> >;
+            func = accSqrMask_<Vec<uchar, 3>, Vec<float, 3> >;
         else if( src.type() == CV_32FC1 && dst.type() == CV_32FC1 )
             func = accSqrMask_<float, float>;
         else if( src.type() == CV_32FC3 && dst.type() == CV_32FC3 )
-            func = accSqrMask_<Vec_<float, 3>, Vec_<float, 3> >;
+            func = accSqrMask_<Vec<float, 3>, Vec<float, 3> >;
         else
             CV_Error( CV_StsUnsupportedFormat, "" );
 
@@ -436,11 +436,11 @@ void accumulateProduct( const Mat& src1, const Mat& src2, Mat& dst, const Mat& m
         if( src1.type() == CV_8UC1 && dst.type() == CV_32FC1 )
             func = accProdMask_<uchar, float>;
         else if( src1.type() == CV_8UC3 && dst.type() == CV_32FC3 )
-            func = accProdMask_<Vec_<uchar, 3>, Vec_<float, 3> >;
+            func = accProdMask_<Vec<uchar, 3>, Vec<float, 3> >;
         else if( src1.type() == CV_32FC1 && dst.type() == CV_32FC1 )
             func = accProdMask_<float, float>;
         else if( src1.type() == CV_32FC3 && dst.type() == CV_32FC3 )
-            func = accProdMask_<Vec_<float, 3>, Vec_<float, 3> >;
+            func = accProdMask_<Vec<float, 3>, Vec<float, 3> >;
         else
             CV_Error( CV_StsUnsupportedFormat, "" );
 
@@ -473,11 +473,11 @@ void accumulateWeighted( const Mat& src, Mat& dst, double alpha, const Mat& mask
         if( src.type() == CV_8UC1 && dst.type() == CV_32FC1 )
             func = accWMask_<uchar, float>;
         else if( src.type() == CV_8UC3 && dst.type() == CV_32FC3 )
-            func = accWMask_<Vec_<uchar, 3>, Vec_<float, 3> >;
+            func = accWMask_<Vec<uchar, 3>, Vec<float, 3> >;
         else if( src.type() == CV_32FC1 && dst.type() == CV_32FC1 )
             func = accWMask_<float, float>;
         else if( src.type() == CV_32FC3 && dst.type() == CV_32FC3 )
-            func = accWMask_<Vec_<float, 3>, Vec_<float, 3> >;
+            func = accWMask_<Vec<float, 3>, Vec<float, 3> >;
         else
             CV_Error( CV_StsUnsupportedFormat, "" );
 

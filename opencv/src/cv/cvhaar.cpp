@@ -2329,7 +2329,7 @@ HaarClassifierCascade::HaarClassifierCascade(const String& filename)
 bool HaarClassifierCascade::load(const String& filename)
 {
     cascade = Ptr<CvHaarClassifierCascade>((CvHaarClassifierCascade*)cvLoad(filename.c_str(), 0, 0, 0));
-    return cascade.obj != 0;
+    return (CvHaarClassifierCascade*)cascade != 0;
 }
 
 void HaarClassifierCascade::detectMultiScale( const Mat& image,

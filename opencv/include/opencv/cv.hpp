@@ -55,8 +55,9 @@ enum { BORDER_REPLICATE=IPL_BORDER_REPLICATE, BORDER_CONSTANT=IPL_BORDER_CONSTAN
 
 CV_EXPORTS int borderInterpolate( int p, int len, int borderType );
 
-struct CV_EXPORTS BaseRowFilter
+class CV_EXPORTS BaseRowFilter
 {
+public:
     BaseRowFilter();
     virtual ~BaseRowFilter();
     virtual void operator()(const uchar* src, uchar* dst,
@@ -65,8 +66,9 @@ struct CV_EXPORTS BaseRowFilter
 };
 
 
-struct CV_EXPORTS BaseColumnFilter
+class CV_EXPORTS BaseColumnFilter
 {
+public:
     BaseColumnFilter();
     virtual ~BaseColumnFilter();
     virtual void operator()(const uchar** src, uchar* dst, int dststep,
@@ -76,8 +78,9 @@ struct CV_EXPORTS BaseColumnFilter
 };
 
 
-struct CV_EXPORTS BaseFilter
+class CV_EXPORTS BaseFilter
 {
+public:
     BaseFilter();
     virtual ~BaseFilter();
     virtual void operator()(const uchar** src, uchar* dst, int dststep,
@@ -88,8 +91,9 @@ struct CV_EXPORTS BaseFilter
 };
 
 
-struct CV_EXPORTS FilterEngine
+class CV_EXPORTS FilterEngine
 {
+public:
     FilterEngine();
     FilterEngine(const Ptr<BaseFilter>& _filter2D,
                  const Ptr<BaseRowFilter>& _rowFilter,
@@ -114,7 +118,7 @@ struct CV_EXPORTS FilterEngine
                         const Rect& srcRoi=Rect(0,0,-1,-1),
                         Point dstOfs=Point(0,0),
                         bool isolated=false);
-    bool isSeparable() const { return filter2D.obj == 0; }
+    bool isSeparable() const { return (const BaseFilter*)filter2D == 0; }
     int remainingInputRows() const;
     int remainingOutputRows() const;
     
@@ -257,7 +261,7 @@ CV_EXPORTS void Laplacian( const Mat& src, Mat& dst, int ddepth,
                            int borderType=BORDER_DEFAULT );
 
 CV_EXPORTS void Canny( const Mat& image, Mat& edges,
-                       double threshold1, double threshol2,
+                       double threshold1, double threshold2,
                        int apertureSize=3, bool L2gradient=false );
 
 CV_EXPORTS void cornerMinEigenVal( const Mat& src, Mat& dst,
@@ -449,8 +453,9 @@ CV_EXPORTS int floodFill( Mat& image, Mat& mask,
 
 CV_EXPORTS void cvtColor( const Mat& src, Mat& dst, int code, int dstCn=0 );
 
-struct CV_EXPORTS Moments
+class CV_EXPORTS Moments
 {
+public:
     Moments();
     Moments(double m00, double m10, double m01, double m20, double m11,
             double m02, double m30, double m21, double m12, double m03 );
@@ -574,11 +579,12 @@ CV_EXPORTS double calcGlobalOrientation( const Mat& orientation, const Mat& mask
 CV_EXPORTS RotatedRect CAMShift( const Mat& probImage, Rect& window,
                                  TermCriteria criteria );
 
-CV_EXPORTS int MeanShift( const Mat& probImage, Rect& window,
+CV_EXPORTS int meanShift( const Mat& probImage, Rect& window,
                           TermCriteria criteria );
 
-struct CV_EXPORTS KalmanFilter
+class CV_EXPORTS KalmanFilter
 {
+public:
     KalmanFilter();
     KalmanFilter(int dynamParams, int measureParams, int controlParams=0);
     void init(int dynamParams, int measureParams, int controlParams=0);
@@ -615,8 +621,9 @@ struct CV_EXPORTS KalmanFilter
 template<> inline void Ptr<CvHaarClassifierCascade>::delete_obj()
 { cvReleaseHaarClassifierCascade(&obj); }
 
-struct CV_EXPORTS HaarClassifierCascade
+class CV_EXPORTS HaarClassifierCascade
 {
+public:
     enum { DO_CANNY_PRUNING = CV_HAAR_DO_CANNY_PRUNING,
            SCALE_IMAGE = CV_HAAR_SCALE_IMAGE,
            FIND_BIGGEST_OBJECT = CV_HAAR_FIND_BIGGEST_OBJECT,
@@ -812,7 +819,7 @@ template<> inline void Ptr<CvStereoBMState>::delete_obj()
 { cvReleaseStereoBMState(&obj); }
 
 // Block matching stereo correspondence algorithm
-struct CV_EXPORTS StereoBM
+class CV_EXPORTS StereoBM
 {
     enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
         BASIC_PRESET=CV_STEREO_BM_BASIC,
@@ -831,15 +838,17 @@ CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
                                     bool handleMissingValues=false );
 
-struct CV_EXPORTS SURFKeypoint : public CvSURFPoint
+class CV_EXPORTS SURFKeypoint : public CvSURFPoint
 {
+public:
     SURFKeypoint() { pt=Point2f(); laplacian=size=0; dir=hessian=0; }
     SURFKeypoint(Point2f _pt, int _laplacian, int _size, float _dir=0.f, float _hessian=0.f)
     { pt = _pt; laplacian = _laplacian; size = _size; dir = _dir; hessian = _hessian; }
 };
 
-struct CV_EXPORTS SURF : public CvSURFParams
+class CV_EXPORTS SURF : public CvSURFParams
 {
+public:
     SURF();
     SURF(double _hessianThreshold, bool _extended=false);
 
@@ -853,8 +862,9 @@ struct CV_EXPORTS SURF : public CvSURFParams
 };
 
 
-struct CV_EXPORTS MSER : public CvMSERParams
+class CV_EXPORTS MSER : public CvMSERParams
 {
+public:
     MSER();
     MSER( int _delta, int _min_area, int _max_area,
           float _max_variation, float _min_diversity,
@@ -863,8 +873,9 @@ struct CV_EXPORTS MSER : public CvMSERParams
     Vector<Vector<Point> > operator()(Mat& image, const Mat& mask) const;
 };
 
-struct CV_EXPORTS StarKeypoint : public CvStarKeypoint
+class CV_EXPORTS StarKeypoint : public CvStarKeypoint
 {
+public:
     StarKeypoint() { pt = Point(); size = 0; response = 0.f; }
     StarKeypoint(Point _pt, int _size, float _response)
     {
@@ -872,8 +883,9 @@ struct CV_EXPORTS StarKeypoint : public CvStarKeypoint
     }
 };
 
-struct CV_EXPORTS StarDetector : CvStarDetectorParams
+class CV_EXPORTS StarDetector : CvStarDetectorParams
 {
+public:
     StarDetector();
     StarDetector(int _maxSize, int _responseThreshold,
                  int _lineThresholdProjected,
@@ -887,8 +899,9 @@ struct CV_EXPORTS StarDetector : CvStarDetectorParams
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-struct CV_EXPORTS CvLevMarq
+class CV_EXPORTS CvLevMarq
 {
+public:
     CvLevMarq();
     CvLevMarq( int nparams, int nerrs, CvTermCriteria criteria=
         cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER,30,DBL_EPSILON),
@@ -929,7 +942,8 @@ struct lsh_hash {
   int h1, h2;
 };
 
-struct CvLSHOperations {
+struct CvLSHOperations
+{
   virtual ~CvLSHOperations() {}
 
   virtual int vector_add(const void* data) = 0;

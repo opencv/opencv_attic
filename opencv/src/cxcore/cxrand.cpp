@@ -315,22 +315,22 @@ Randn_0_1_32f_C1R( float* arr, int len, uint64* state )
         
         // Set up the tables
         double q = vn/std::exp(-.5*dn*dn);
-        kn[0] = (dn/q)*m1;
+        kn[0] = (unsigned)((dn/q)*m1);
         kn[1] = 0;
         
-        wn[0] = q/m1;
-        wn[127] = dn/m1;
+        wn[0] = (float)(q/m1);
+        wn[127] = (float)(dn/m1);
         
-        fn[0] = 1.;
-        fn[127] = std::exp(-.5*dn*dn);
+        fn[0] = 1.f;
+        fn[127] = (float)std::exp(-.5*dn*dn);
         
         for(i=126;i>=1;i--)
         {
             dn = std::sqrt(-2.*std::log(vn/dn+std::exp(-.5*dn*dn)));
-            kn[i+1] = (dn/tn)*m1;
+            kn[i+1] = (unsigned)((dn/tn)*m1);
             tn = dn;
-            fn[i] = std::exp(-.5*dn*dn);
-            wn[i] = dn/m1;
+            fn[i] = (float)std::exp(-.5*dn*dn);
+            wn[i] = (float)(dn/m1);
         }
         initialized = true;
     }
@@ -354,8 +354,8 @@ Randn_0_1_32f_C1R( float* arr, int len, uint64* state )
                     temp = RNG_NEXT(temp);
                     y = (unsigned)temp*rng_flt;
                     temp = RNG_NEXT(temp);
-                    x = -std::log(x+FLT_MIN)*0.2904764;
-                    y = -std::log(y+FLT_MIN);
+                    x = (float)(-std::log(x+FLT_MIN)*0.2904764);
+                    y = (float)-std::log(y+FLT_MIN);
                 }	// .2904764 is 1/r
                 while( y + y < x*x );
                 x = hz > 0 ? r + x : -r - x;
@@ -646,20 +646,20 @@ void randShuffle( Mat& dst, RNG& rng, double iterFactor )
         0,
         randShuffle_<uchar>, // 1
         randShuffle_<ushort>, // 2
-        randShuffle_<Vec_<uchar,3> >, // 3
+        randShuffle_<Vec<uchar,3> >, // 3
         randShuffle_<int>, // 4
         0,
-        randShuffle_<Vec_<ushort,3> >, // 6
+        randShuffle_<Vec<ushort,3> >, // 6
         0,
         randShuffle_<int64>, // 8
         0, 0, 0,
-        randShuffle_<Vec_<int,3> >, // 12
+        randShuffle_<Vec<int,3> >, // 12
         0, 0, 0,
-        randShuffle_<Vec_<int64,2> >, // 16
+        randShuffle_<Vec<int64,2> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        randShuffle_<Vec_<int64,3> >, // 24
+        randShuffle_<Vec<int64,3> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        randShuffle_<Vec_<int64,4> > // 32
+        randShuffle_<Vec<int64,4> > // 32
     };
 
     CV_Assert( dst.elemSize() <= 32 );

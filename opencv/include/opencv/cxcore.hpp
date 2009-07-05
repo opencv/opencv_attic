@@ -58,9 +58,9 @@
 
 namespace cv {
 
-template<typename _Tp> struct CV_EXPORTS Size_;
-template<typename _Tp> struct CV_EXPORTS Point_;
-template<typename _Tp> struct CV_EXPORTS Rect_;
+template<typename _Tp> class CV_EXPORTS Size_;
+template<typename _Tp> class CV_EXPORTS Point_;
+template<typename _Tp> class CV_EXPORTS Rect_;
 
 typedef std::string String;
 typedef std::basic_string<wchar_t> WString;
@@ -68,8 +68,9 @@ typedef std::basic_string<wchar_t> WString;
 CV_EXPORTS String fromUtf16(const WString& str);
 CV_EXPORTS WString toUtf16(const String& str);
 
-struct CV_EXPORTS Exception
+class CV_EXPORTS Exception
 {
+public:
     Exception() { code = 0; line = 0; }
     Exception(int _code, const String& _err, const String& _func, const String& _file, int _line)
         : code(_code), err(_err), func(_func), file(_file), line(_line) {}
@@ -120,14 +121,14 @@ CV_EXPORTS double getTickFrequency();
 CV_EXPORTS void* fastMalloc(size_t);
 CV_EXPORTS void fastFree(void* ptr);
 
-template<typename _Tp> static inline _Tp* fastMalloc_(size_t n)
+template<typename _Tp> static inline _Tp* allocate(size_t n)
 {
     _Tp* ptr = (_Tp*)fastMalloc(n*sizeof(ptr[0]));
     ::new(ptr) _Tp[n];
     return ptr;
 }
 
-template<typename _Tp> static inline void fastFree_(_Tp* ptr, size_t n)
+template<typename _Tp> static inline void deallocate(_Tp* ptr, size_t n)
 {
     for( size_t i = 0; i < n; i++ ) (ptr+i)->~_Tp();
     fastFree(ptr);
@@ -156,9 +157,8 @@ public:
     typedef const value_type& const_reference;
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
-    template<typename U> struct rebind { typedef Allocator<U> other; };
+    template<typename U> class rebind { typedef Allocator<U> other; };
 
-public : 
     explicit Allocator() {}
     ~Allocator() {}
     explicit Allocator(Allocator const&) {}
@@ -181,36 +181,43 @@ public :
     void destroy(pointer p) { p->~_Tp(); }
 };
 
-/////////////////////// Vec_ (used as element of multi-channel images ///////////////////// 
+/////////////////////// Vec (used as element of multi-channel images ///////////////////// 
 
-template<typename _Tp> struct CV_EXPORTS DataDepth { enum { value = -1, fmt=(int)'\0' }; };
+template<typename _Tp> class CV_EXPORTS DataDepth { public: enum { value = -1, fmt=(int)'\0' }; };
 
-template<> struct DataDepth<bool> { enum { value = CV_8U, fmt=(int)'u' }; };
-template<> struct DataDepth<uchar> { enum { value = CV_8U, fmt=(int)'u' }; };
-template<> struct DataDepth<schar> { enum { value = CV_8S, fmt=(int)'c' }; };
-template<> struct DataDepth<ushort> { enum { value = CV_16U, fmt=(int)'w' }; };
-template<> struct DataDepth<short> { enum { value = CV_16S, fmt=(int)'s' }; };
-template<> struct DataDepth<int> { enum { value = CV_32S, fmt=(int)'i' }; };
-template<> struct DataDepth<float> { enum { value = CV_32F, fmt=(int)'f' }; };
-template<> struct DataDepth<double> { enum { value = CV_64F, fmt=(int)'d' }; };
-template<typename _Tp> struct DataDepth<_Tp*> { enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
+template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+template<> class DataDepth<schar> { public: enum { value = CV_8S, fmt=(int)'c' }; };
+template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w' }; };
+template<> class DataDepth<short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
+template<> class DataDepth<int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
+template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
+template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
 
-template<typename _Tp, int cn> struct CV_EXPORTS Vec_
+template<typename _Tp, int cn> class CV_EXPORTS Vec
 {
+public:
     typedef _Tp value_type;
     enum { depth = DataDepth<_Tp>::value, channels = cn, type = CV_MAKETYPE(depth, channels) };
     
-    Vec_();
-    Vec_(_Tp v0);
-    Vec_(_Tp v0, _Tp v1);
-    Vec_(_Tp v0, _Tp v1, _Tp v2);
-    Vec_(_Tp v0, _Tp v1, _Tp v2, _Tp v3);
-    Vec_(const Vec_<_Tp, cn>& v);
-    static Vec_ all(_Tp alpha);
-    _Tp dot(const Vec_& v) const;
-    double ddot(const Vec_& v) const;
-    Vec_ cross(const Vec_& v) const;
-    template<typename T2> operator Vec_<T2, cn>() const;
+    Vec();
+    Vec(_Tp v0);
+    Vec(_Tp v0, _Tp v1);
+    Vec(_Tp v0, _Tp v1, _Tp v2);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8);
+    Vec(_Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8, _Tp v9);
+    Vec(const Vec<_Tp, cn>& v);
+    static Vec all(_Tp alpha);
+    _Tp dot(const Vec& v) const;
+    double ddot(const Vec& v) const;
+    Vec cross(const Vec& v) const;
+    template<typename T2> operator Vec<T2, cn>() const;
     operator CvScalar() const;
     _Tp operator [](int i) const;
     _Tp& operator[](int i);
@@ -218,36 +225,39 @@ template<typename _Tp, int cn> struct CV_EXPORTS Vec_
     _Tp val[cn];
 };
 
-typedef Vec_<uchar, 2> Vec2b;
-typedef Vec_<uchar, 3> Vec3b;
-typedef Vec_<uchar, 4> Vec4b;
+typedef Vec<uchar, 2> Vec2b;
+typedef Vec<uchar, 3> Vec3b;
+typedef Vec<uchar, 4> Vec4b;
 
-typedef Vec_<short, 2> Vec2s;
-typedef Vec_<short, 3> Vec3s;
-typedef Vec_<short, 4> Vec4s;
+typedef Vec<short, 2> Vec2s;
+typedef Vec<short, 3> Vec3s;
+typedef Vec<short, 4> Vec4s;
 
-typedef Vec_<int, 2> Vec2i;
-typedef Vec_<int, 3> Vec3i;
-typedef Vec_<int, 4> Vec4i;
+typedef Vec<int, 2> Vec2i;
+typedef Vec<int, 3> Vec3i;
+typedef Vec<int, 4> Vec4i;
 
-typedef Vec_<float, 2> Vec2f;
-typedef Vec_<float, 3> Vec3f;
-typedef Vec_<float, 4> Vec4f;
-typedef Vec_<float, 6> Vec6f;
+typedef Vec<float, 2> Vec2f;
+typedef Vec<float, 3> Vec3f;
+typedef Vec<float, 4> Vec4f;
+typedef Vec<float, 6> Vec6f;
 
-typedef Vec_<double, 2> Vec2d;
-typedef Vec_<double, 3> Vec3d;
-typedef Vec_<double, 4> Vec4d;
-typedef Vec_<double, 6> Vec6d;
+typedef Vec<double, 2> Vec2d;
+typedef Vec<double, 3> Vec3d;
+typedef Vec<double, 4> Vec4d;
+typedef Vec<double, 6> Vec6d;
 
 //////////////////////////////// Complex //////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Complex
+template<typename _Tp> class CV_EXPORTS Complex
 {
+public:
     Complex();
     Complex( _Tp _re, _Tp _im=0 );
+    Complex( const std::complex<_Tp>& c );
     template<typename T2> operator Complex<T2>() const;
     Complex conj() const;
+    operator std::complex<_Tp>() const;
 
     _Tp re, im;
 };
@@ -257,8 +267,9 @@ typedef Complex<double> Complexd;
 
 //////////////////////////////// Point_ ////////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Point_
+template<typename _Tp> class CV_EXPORTS Point_
 {
+public:
     typedef _Tp value_type;
     
     Point_();
@@ -281,8 +292,9 @@ template<typename _Tp> struct CV_EXPORTS Point_
     _Tp x, y;
 };
 
-template<typename _Tp> struct CV_EXPORTS Point3_
+template<typename _Tp> class CV_EXPORTS Point3_
 {
+public:
     typedef _Tp value_type;
     
     Point3_();
@@ -290,7 +302,7 @@ template<typename _Tp> struct CV_EXPORTS Point3_
     Point3_(const Point3_& pt);
 	Point3_(const Point_<_Tp>& pt);
     Point3_(const CvPoint3D32f& pt);
-    Point3_(const Vec_<_Tp, 3>& t);
+    Point3_(const Vec<_Tp, 3>& t);
     Point3_& operator = (const Point3_& pt);
     operator Point3_<int>() const;
     operator Point3_<float>() const;
@@ -305,8 +317,9 @@ template<typename _Tp> struct CV_EXPORTS Point3_
 
 //////////////////////////////// Size_ ////////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Size_
+template<typename _Tp> class CV_EXPORTS Size_
 {
+public:
     typedef _Tp value_type;
     
     Size_();
@@ -329,8 +342,9 @@ template<typename _Tp> struct CV_EXPORTS Size_
 
 //////////////////////////////// Rect_ ////////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Rect_
+template<typename _Tp> class CV_EXPORTS Rect_
 {
+public:
     typedef _Tp value_type;
     
     Rect_();
@@ -368,8 +382,9 @@ typedef Point3_<int> Point3i;
 typedef Point3_<float> Point3f;
 typedef Point3_<double> Point3d;
 
-struct CV_EXPORTS RotatedRect
+class CV_EXPORTS RotatedRect
 {
+public:
     RotatedRect();
     RotatedRect(const Point2f& _center, const Size2f& _size, float _angle);
     RotatedRect(const CvBox2D& box);
@@ -382,8 +397,9 @@ struct CV_EXPORTS RotatedRect
 
 //////////////////////////////// Scalar_ ///////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Scalar_ : Vec_<_Tp, 4>
+template<typename _Tp> class CV_EXPORTS Scalar_ : public Vec<_Tp, 4>
 {
+public:
     Scalar_();
     Scalar_(_Tp v0, _Tp v1, _Tp v2=0, _Tp v3=0);
     Scalar_(const CvScalar& s);
@@ -401,8 +417,9 @@ typedef Scalar_<double> Scalar;
 
 //////////////////////////////// Range /////////////////////////////////
 
-struct CV_EXPORTS Range
+class CV_EXPORTS Range
 {
+public:
     Range();
     Range(int _start, int _end);
     Range(const CvSlice& slice);
@@ -416,8 +433,9 @@ struct CV_EXPORTS Range
 
 /////////////////////////////// DataType ////////////////////////////////
 
-template<typename _Tp> struct DataType
+template<typename _Tp> class DataType
 {
+public:
     typedef _Tp value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
@@ -426,8 +444,9 @@ template<typename _Tp> struct DataType
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<bool>
+template<> class DataType<bool>
 {
+public:
     typedef bool value_type;
     typedef int work_type;
     typedef value_type channel_type;
@@ -436,8 +455,9 @@ template<> struct DataType<bool>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<uchar>
+template<> class DataType<uchar>
 {
+public:
     typedef uchar value_type;
     typedef int work_type;
     typedef value_type channel_type;
@@ -446,8 +466,9 @@ template<> struct DataType<uchar>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<schar>
+template<> class DataType<schar>
 {
+public:
     typedef schar value_type;
     typedef int work_type;
     typedef value_type channel_type;
@@ -456,8 +477,9 @@ template<> struct DataType<schar>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<ushort>
+template<> class DataType<ushort>
 {
+public:
     typedef ushort value_type;
     typedef int work_type;
     typedef value_type channel_type;
@@ -466,8 +488,9 @@ template<> struct DataType<ushort>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<short>
+template<> class DataType<short>
 {
+public:
     typedef short value_type;
     typedef int work_type;
     typedef value_type channel_type;
@@ -476,8 +499,9 @@ template<> struct DataType<short>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<int>
+template<> class DataType<int>
 {
+public:
     typedef int value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
@@ -486,8 +510,9 @@ template<> struct DataType<int>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<float>
+template<> class DataType<float>
 {
+public:
     typedef float value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
@@ -496,8 +521,9 @@ template<> struct DataType<float>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<double>
+template<> class DataType<double>
 {
+public:
     typedef double value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
@@ -506,18 +532,20 @@ template<> struct DataType<double>
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp, int cn> struct DataType<Vec_<_Tp, cn> >
+template<typename _Tp, int cn> class DataType<Vec<_Tp, cn> >
 {
-    typedef Vec_<_Tp, cn> value_type;
-    typedef Vec_<typename DataType<_Tp>::work_type, cn> work_type;
+public:
+    typedef Vec<_Tp, cn> value_type;
+    typedef Vec<typename DataType<_Tp>::work_type, cn> work_type;
     typedef _Tp channel_type;
     enum { depth = DataDepth<channel_type>::value, channels = cn,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<std::complex<_Tp> >
+template<typename _Tp> class DataType<std::complex<_Tp> >
 {
+public:
     typedef std::complex<_Tp> value_type;
     typedef value_type work_type;
     typedef _Tp channel_type;
@@ -526,8 +554,9 @@ template<typename _Tp> struct DataType<std::complex<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Complex<_Tp> >
+template<typename _Tp> class DataType<Complex<_Tp> >
 {
+public:
     typedef Complex<_Tp> value_type;
     typedef value_type work_type;
     typedef _Tp channel_type;
@@ -536,8 +565,9 @@ template<typename _Tp> struct DataType<Complex<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Point_<_Tp> >
+template<typename _Tp> class DataType<Point_<_Tp> >
 {
+public:
     typedef Point_<_Tp> value_type;
     typedef Point_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
@@ -546,8 +576,9 @@ template<typename _Tp> struct DataType<Point_<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Point3_<_Tp> >
+template<typename _Tp> class DataType<Point3_<_Tp> >
 {
+public:
     typedef Point3_<_Tp> value_type;
     typedef Point3_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
@@ -556,8 +587,9 @@ template<typename _Tp> struct DataType<Point3_<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Size_<_Tp> >
+template<typename _Tp> class DataType<Size_<_Tp> >
 {
+public:
     typedef Size_<_Tp> value_type;
     typedef Size_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
@@ -566,8 +598,9 @@ template<typename _Tp> struct DataType<Size_<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Rect_<_Tp> >
+template<typename _Tp> class DataType<Rect_<_Tp> >
 {
+public:
     typedef Rect_<_Tp> value_type;
     typedef Rect_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
@@ -576,8 +609,9 @@ template<typename _Tp> struct DataType<Rect_<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<typename _Tp> struct DataType<Scalar_<_Tp> >
+template<typename _Tp> class DataType<Scalar_<_Tp> >
 {
+public:
     typedef Scalar_<_Tp> value_type;
     typedef Scalar_<typename DataType<_Tp>::work_type> work_type;
     typedef _Tp channel_type;
@@ -586,8 +620,9 @@ template<typename _Tp> struct DataType<Scalar_<_Tp> >
            type = CV_MAKETYPE(depth, channels) };
 };
 
-template<> struct DataType<Range>
+template<> class DataType<Range>
 {
+public:
     typedef Range value_type;
     typedef value_type work_type;
     typedef int channel_type;
@@ -627,6 +662,7 @@ public:
     Vector(size_t _size);
     Vector(size_t _size, const _Tp& val);
     Vector(_Tp* _data, size_t _size, bool _copyData=false);
+    template<int n> Vector(const Vec<_Tp, n>& vec);
     Vector(const std::vector<_Tp>& vec, bool _copyData=false);
     Vector(const Vector& d);
     Vector(const Vector& d, const Range& r);
@@ -673,8 +709,9 @@ protected:
 
 //////////////////// Generic ref-cointing pointer class for C/C++ objects ////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Ptr
+template<typename _Tp> class CV_EXPORTS Ptr
 {
+public:
     Ptr();
     Ptr(_Tp* _obj);
     ~Ptr();
@@ -683,45 +720,44 @@ template<typename _Tp> struct CV_EXPORTS Ptr
     void addref();
     void release();
     void delete_obj();
+    bool empty() const;
 
     _Tp* operator -> ();
     const _Tp* operator -> () const;
 
     operator _Tp* ();
     operator const _Tp*() const;
-
+protected:
     _Tp* obj;
     int* refcount;
 };
 
 //////////////////////////////// Mat ////////////////////////////////
 
-struct Mat;
-template<typename M> struct CV_EXPORTS MatExpr_Base_;
+class Mat;
+template<typename M> class CV_EXPORTS MatExpr_Base_;
 typedef MatExpr_Base_<Mat> MatExpr_Base;
-template<typename E, typename M> struct MatExpr_;
-template<typename A1, typename M, typename Op> struct MatExpr_Op1_;
-template<typename A1, typename A2, typename M, typename Op> struct MatExpr_Op2_;
-template<typename A1, typename A2, typename A3, typename M, typename Op> struct MatExpr_Op3_;
+template<typename E, typename M> class MatExpr_;
+template<typename A1, typename M, typename Op> class MatExpr_Op1_;
+template<typename A1, typename A2, typename M, typename Op> class MatExpr_Op2_;
+template<typename A1, typename A2, typename A3, typename M, typename Op> class MatExpr_Op3_;
 template<typename A1, typename A2, typename A3, typename A4,
-        typename M, typename Op> struct MatExpr_Op4_;
+        typename M, typename Op> class MatExpr_Op4_;
 template<typename A1, typename A2, typename A3, typename A4,
-        typename A5, typename M, typename Op> struct MatExpr_Op5_;
-template<typename M> struct CV_EXPORTS MatOp_DivRS_;
-template<typename M> struct CV_EXPORTS MatOp_Inv_;
-template<typename M> struct CV_EXPORTS MatOp_MulDiv_;
-template<typename M> struct CV_EXPORTS MatOp_Repeat_;
-template<typename M> struct CV_EXPORTS MatOp_Set_;
-template<typename M> struct CV_EXPORTS MatOp_Scale_;
-template<typename M> struct CV_EXPORTS MatOp_T_;
-
-struct Mat;
+        typename A5, typename M, typename Op> class MatExpr_Op5_;
+template<typename M> class CV_EXPORTS MatOp_DivRS_;
+template<typename M> class CV_EXPORTS MatOp_Inv_;
+template<typename M> class CV_EXPORTS MatOp_MulDiv_;
+template<typename M> class CV_EXPORTS MatOp_Repeat_;
+template<typename M> class CV_EXPORTS MatOp_Set_;
+template<typename M> class CV_EXPORTS MatOp_Scale_;
+template<typename M> class CV_EXPORTS MatOp_T_;
 
 typedef MatExpr_<MatExpr_Op4_<Size, int, Scalar,
     int, Mat, MatOp_Set_<Mat> >, Mat> MatExpr_Initializer;
 
-template<typename _Tp> struct MatIterator_;
-template<typename _Tp> struct MatConstIterator_;
+template<typename _Tp> class MatIterator_;
+template<typename _Tp> class MatConstIterator_;
 
 enum { MAGIC_MASK=0xFFFF0000, TYPE_MASK=0x00000FFF, DEPTH_MASK=7 };
 
@@ -735,8 +771,9 @@ enum { GEMM_1_T=1, GEMM_2_T=2, GEMM_3_T=4 };
 enum { DFT_INVERSE=1, DFT_SCALE=2, DFT_ROWS=4, DFT_COMPLEX_OUTPUT=16, DFT_REAL_OUTPUT=32,
     DCT_INVERSE = DFT_INVERSE, DCT_ROWS=DFT_ROWS };
 
-struct CV_EXPORTS Mat
+class CV_EXPORTS Mat
 {
+public:
     Mat();
     Mat(int _rows, int _cols, int _type);
     Mat(int _rows, int _cols, int _type, const Scalar& _s);
@@ -828,16 +865,17 @@ struct CV_EXPORTS Mat
     int rows, cols;
     size_t step;
     uchar* data;
-    int* refcount;
 
+    int* refcount;
     uchar* datastart;
     uchar* dataend;
 };
 
 
 // Multiply-with-Carry RNG
-struct CV_EXPORTS RNG
+class CV_EXPORTS RNG
 {
+public:
     enum { A=4164903690U, UNIFORM=0, NORMAL=1 };
 
     RNG();
@@ -860,8 +898,9 @@ struct CV_EXPORTS RNG
     uint64 state;
 };
 
-struct CV_EXPORTS TermCriteria
+class CV_EXPORTS TermCriteria
 {
+public:
     enum { COUNT=1, MAX_ITER=COUNT, EPS=2 };
 
     TermCriteria();
@@ -990,8 +1029,9 @@ CV_EXPORTS void calcCovariation( const Vector<Mat>& data, Mat& covar, Mat& mean,
 CV_EXPORTS void calcCovariation( const Mat& data, Mat& covar, Mat& mean,
                                  int flags, int ctype=CV_64F);
 
-struct CV_EXPORTS PCA
+class CV_EXPORTS PCA
 {
+public:
     PCA();
     PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
     PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
@@ -1005,8 +1045,9 @@ struct CV_EXPORTS PCA
     Mat mean;
 };
 
-struct CV_EXPORTS SVD
+class CV_EXPORTS SVD
 {
+public:
     enum { MODIFY_A=1, NO_UV=2, FULL_UV=4 };
     SVD();
     SVD( const Mat& m, int flags=0 );
@@ -1084,8 +1125,9 @@ CV_EXPORTS void polylines(Mat& img, const Vector<Vector<Point> >& pts, bool isCl
 
 CV_EXPORTS bool clipLine(Size imgSize, Point& pt1, Point& pt2);
 
-struct CV_EXPORTS LineIterator
+class CV_EXPORTS LineIterator
 {
+public:
     LineIterator(const Mat& img, Point pt1, Point pt2,
                  int connectivity=8, bool leftToRight=false);
     uchar* operator *();
@@ -1125,8 +1167,9 @@ CV_EXPORTS Size getTextSize(const String& text, int fontFace,
 
 ///////////////////////////////// Mat_<_Tp> ////////////////////////////////////
 
-template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
+template<typename _Tp> class CV_EXPORTS Mat_ : public Mat
 {
+public:
     typedef _Tp value_type;
     typedef typename DataType<_Tp>::channel_type channel_type;
     typedef MatIterator_<_Tp> iterator;
@@ -1143,7 +1186,7 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
     Mat_(const Mat_& m, const Range& rowRange, const Range& colRange);
     Mat_(const Mat_& m, const Rect& roi);
     Mat_(const MatExpr_Base& expr);
-    template<int n> explicit Mat_(const Vec_<_Tp, n>& vec);
+    template<int n> explicit Mat_(const Vec<_Tp, n>& vec);
     Mat_(const Vector<_Tp>& vec);
 
     Mat_& operator = (const Mat& m);
@@ -1210,8 +1253,9 @@ template<typename _Tp> struct CV_EXPORTS Mat_ : public Mat
 //////////// Iterators & Comma initializers //////////////////
 
 template<typename _Tp>
-struct CV_EXPORTS MatConstIterator_
+class CV_EXPORTS MatConstIterator_
 {
+public:
     typedef _Tp value_type;
     typedef int difference_type;
 
@@ -1233,6 +1277,7 @@ struct CV_EXPORTS MatConstIterator_
     MatConstIterator_ operator ++(int);
     Point pos() const;
 
+protected:
     const Mat_<_Tp>* m;
     _Tp* ptr;
     _Tp* sliceEnd;
@@ -1240,8 +1285,9 @@ struct CV_EXPORTS MatConstIterator_
 
 
 template<typename _Tp>
-struct CV_EXPORTS MatIterator_ : MatConstIterator_<_Tp>
+class CV_EXPORTS MatIterator_ : public MatConstIterator_<_Tp>
 {
+public:
     typedef _Tp* pointer;
     typedef _Tp& reference;
     typedef std::random_access_iterator_tag iterator_category;
@@ -1264,11 +1310,12 @@ struct CV_EXPORTS MatIterator_ : MatConstIterator_<_Tp>
     MatIterator_ operator ++(int);
 };
 
-template<typename _Tp> struct CV_EXPORTS MatOp_Iter_;
+template<typename _Tp> class CV_EXPORTS MatOp_Iter_;
 
-template<typename _Tp> struct CV_EXPORTS MatCommaInitializer_ :
-    MatExpr_<MatExpr_Op1_<MatIterator_<_Tp>, Mat_<_Tp>, MatOp_Iter_<_Tp> >, Mat_<_Tp> >
+template<typename _Tp> class CV_EXPORTS MatCommaInitializer_ :
+    public MatExpr_<MatExpr_Op1_<MatIterator_<_Tp>, Mat_<_Tp>, MatOp_Iter_<_Tp> >, Mat_<_Tp> >
 {
+public:
     MatCommaInitializer_(Mat_<_Tp>* _m);
     template<typename T2> MatCommaInitializer_<_Tp>& operator , (T2 v);
     operator Mat_<_Tp>() const;
@@ -1276,19 +1323,22 @@ template<typename _Tp> struct CV_EXPORTS MatCommaInitializer_ :
     void assignTo(Mat& m, int type=-1) const;
 };
 
-template<typename _Tp> struct VectorCommaInitializer_
+template<typename _Tp> class VectorCommaInitializer_
 {
+public:
     VectorCommaInitializer_(Vector<_Tp>* _vec);
     template<typename T2> VectorCommaInitializer_<_Tp>& operator , (T2 val);
     operator Vector<_Tp>() const;
     Vector<_Tp> operator *() const;
 
+protected:
     Vector<_Tp>* vec;
     int idx;
 };
 
-template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> struct CV_EXPORTS AutoBuffer
+template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> class CV_EXPORTS AutoBuffer
 {
+public:
     typedef _Tp value_type;
 
     AutoBuffer();
@@ -1300,6 +1350,7 @@ template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> struct CV_EXPORTS A
     operator _Tp* ();
     operator const _Tp* () const;
 
+protected:
     _Tp* ptr;
     size_t size;
     _Tp buf[fixed_size];
@@ -1307,11 +1358,12 @@ template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> struct CV_EXPORTS A
 
 /////////////////////////// multi-dimensional dense matrix //////////////////////////
 
-struct MatND;
-struct SparseMat;
+class MatND;
+class SparseMat;
 
-struct CV_EXPORTS MatND
+class CV_EXPORTS MatND
 {
+public:
     MatND();
     MatND(const Vector<int>& _sizes, int _type);
     MatND(const Vector<int>& _sizes, int _type, const Scalar& _s);
@@ -1369,11 +1421,11 @@ struct CV_EXPORTS MatND
     int flags;
     int dims;
     
-    int* refcount;
     uchar* data;
+    int* refcount;
     uchar* datastart;
     uchar* dataend;
-    
+
     struct
     {
         int size;
@@ -1382,8 +1434,9 @@ struct CV_EXPORTS MatND
     dim[MAX_DIM];
 };
 
-struct CV_EXPORTS NAryMatNDIterator
+class CV_EXPORTS NAryMatNDIterator
 {
+public:
     NAryMatNDIterator();
     NAryMatNDIterator(const Vector<MatND>& arrays);
     void init(const Vector<MatND>& arrays);
@@ -1393,7 +1446,10 @@ struct CV_EXPORTS NAryMatNDIterator
     
     Vector<MatND> arrays;
     Vector<Mat> planes;
-    int iterdepth, idx, nplanes;
+
+    int nplanes;
+protected:
+    int iterdepth, idx;
 };
 
 CV_EXPORTS void add(const MatND& a, const MatND& b, MatND& c, const MatND& mask);
@@ -1464,8 +1520,9 @@ typedef void (*ConvertScaleData)(const void* from, void* to, int cn, double alph
 CV_EXPORTS ConvertData getConvertElem(int fromType, int toType);
 CV_EXPORTS ConvertScaleData getConvertScaleElem(int fromType, int toType);
 
-template<typename _Tp> struct CV_EXPORTS MatND_ : public MatND
+template<typename _Tp> class CV_EXPORTS MatND_ : public MatND
 {
+public:
     typedef _Tp value_type;
     typedef typename DataType<_Tp>::channel_type channel_type;
 
@@ -1502,11 +1559,12 @@ template<typename _Tp> struct CV_EXPORTS MatND_ : public MatND
 
 /////////////////////////// multi-dimensional sparse matrix //////////////////////////
 
-struct SparseMatIterator;
-struct SparseMatConstIterator;
+class SparseMatIterator;
+class SparseMatConstIterator;
 
-struct CV_EXPORTS SparseMat
+class CV_EXPORTS SparseMat
 {
+public:
     typedef SparseMatIterator iterator;
     typedef SparseMatConstIterator const_iterator;
 
@@ -1611,8 +1669,9 @@ CV_EXPORTS void minMaxLoc(const SparseMat& a, double* minVal,
 CV_EXPORTS double norm( const SparseMat& src, int normType );
 CV_EXPORTS void normalize( const SparseMat& src, SparseMat& dst, double alpha, int normType );
 
-struct CV_EXPORTS SparseMatConstIterator
+class CV_EXPORTS SparseMatConstIterator
 {
+public:
     SparseMatConstIterator();
     SparseMatConstIterator(const SparseMat* _m);
     SparseMatConstIterator(const SparseMatConstIterator& it);
@@ -1631,8 +1690,9 @@ struct CV_EXPORTS SparseMatConstIterator
     uchar* ptr;
 };
 
-struct CV_EXPORTS SparseMatIterator : SparseMatConstIterator
+class CV_EXPORTS SparseMatIterator : public SparseMatConstIterator
 {
+public:
     SparseMatIterator();
     SparseMatIterator(SparseMat* _m);
     SparseMatIterator(SparseMat* _m, const int* idx);
@@ -1647,11 +1707,12 @@ struct CV_EXPORTS SparseMatIterator : SparseMatConstIterator
 };
 
 
-template<typename _Tp> struct SparseMatIterator_;
-template<typename _Tp> struct SparseMatConstIterator_;
+template<typename _Tp> class SparseMatIterator_;
+template<typename _Tp> class SparseMatConstIterator_;
 
-template<typename _Tp> struct CV_EXPORTS SparseMat_ : public SparseMat
+template<typename _Tp> class CV_EXPORTS SparseMat_ : public SparseMat
 {
+public:
     typedef SparseMatIterator_<_Tp> iterator;
     typedef SparseMatConstIterator_<_Tp> const_iterator;
 
@@ -1688,8 +1749,9 @@ template<typename _Tp> struct CV_EXPORTS SparseMat_ : public SparseMat
     SparseMatConstIterator_<_Tp> end() const;
 };
 
-template<typename _Tp> struct CV_EXPORTS SparseMatConstIterator_ : SparseMatConstIterator
+template<typename _Tp> class CV_EXPORTS SparseMatConstIterator_ : public SparseMatConstIterator
 {
+public:
     typedef std::forward_iterator_tag iterator_category;
     
     SparseMatConstIterator_();
@@ -1702,13 +1764,15 @@ template<typename _Tp> struct CV_EXPORTS SparseMatConstIterator_ : SparseMatCons
     SparseMatConstIterator_& operator ++();
     SparseMatConstIterator_ operator ++(int);
 
+protected:
     const SparseMat_<_Tp>* m;
     size_t hashidx;
     uchar* ptr;
 };
 
-template<typename _Tp> struct CV_EXPORTS SparseMatIterator_ : SparseMatConstIterator_<_Tp>
+template<typename _Tp> class CV_EXPORTS SparseMatIterator_ : public SparseMatConstIterator_<_Tp>
 {
+public:
     typedef std::forward_iterator_tag iterator_category;
     
     SparseMatIterator_();
@@ -1724,8 +1788,9 @@ template<typename _Tp> struct CV_EXPORTS SparseMatIterator_ : SparseMatConstIter
 
 //////////////////// Fast Nearest-Neighbor Search Structure ////////////////////
 
-struct CV_EXPORTS KDTree
+class CV_EXPORTS KDTree
 {
+public:
     struct Node
     {
         Node() : idx(-1), left(-1), right(-1), boundary(0.f) {}
@@ -1760,10 +1825,11 @@ struct CV_EXPORTS KDTree
 
 //////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
 
-struct CV_EXPORTS FileNode;
+class CV_EXPORTS FileNode;
 
-struct CV_EXPORTS FileStorage
+class CV_EXPORTS FileStorage
 {
+public:
     enum { READ=0, WRITE=1, APPEND=2 };
     enum { UNDEFINED=0, VALUE_EXPECTED=1, NAME_EXPECTED=2, INSIDE_MAP=4 };
     FileStorage();
@@ -1780,8 +1846,8 @@ struct CV_EXPORTS FileStorage
     FileNode operator[](const String& nodename) const;
     FileNode operator[](const char* nodename) const;
 
-    CvFileStorage* operator *() { return fs.obj; }
-    const CvFileStorage* operator *() const { return fs.obj; }
+    CvFileStorage* operator *() { return fs; }
+    const CvFileStorage* operator *() const { return fs; }
     void writeRaw( const String& fmt, const Vector<uchar>& vec );
     void writeObj( const String& name, const void* obj );
 
@@ -1793,10 +1859,11 @@ struct CV_EXPORTS FileStorage
     int state;
 };
 
-struct CV_EXPORTS FileNodeIterator;
+class CV_EXPORTS FileNodeIterator;
 
-struct CV_EXPORTS FileNode
+class CV_EXPORTS FileNode
 {
+public:
     enum { NONE=0, INT=1, REAL=2, FLOAT=REAL, STR=3, STRING=STR, REF=4, SEQ=5, MAP=6, TYPE_MASK=7,
         FLOW=8, USER=16, EMPTY=32, NAMED=64 };
     FileNode();
@@ -1832,8 +1899,9 @@ struct CV_EXPORTS FileNode
     const CvFileNode* node;
 };
 
-struct CV_EXPORTS FileNodeIterator
+class CV_EXPORTS FileNodeIterator
 {
+public:
     FileNodeIterator();
     FileNodeIterator(const CvFileStorage* fs, const CvFileNode* node, size_t ofs=0);
     FileNodeIterator(const FileNodeIterator& it);
@@ -1861,15 +1929,16 @@ struct CV_EXPORTS FileNodeIterator
 // !!! NOTE that the wrappers are "thin", i.e. they do not call
 // any element constructors/destructors
 
-template<typename _Tp> struct SeqIterator;
+template<typename _Tp> class SeqIterator;
 
 template<> inline void Ptr<CvMemStorage>::delete_obj()
 { cvReleaseMemStorage(&obj); }
 
 typedef Ptr<CvMemStorage> MemStorage;
 
-template<typename _Tp> struct CV_EXPORTS Seq
+template<typename _Tp> class CV_EXPORTS Seq
 {
+public:
     Seq();
     Seq(const CvSeq* seq);
     Seq(const MemStorage& storage, int headerSize = sizeof(CvSeq));
@@ -1901,8 +1970,9 @@ template<typename _Tp> struct CV_EXPORTS Seq
     CvSeq* seq;
 };
 
-template<typename _Tp> struct CV_EXPORTS SeqIterator : public CvSeqReader
+template<typename _Tp> class CV_EXPORTS SeqIterator : public CvSeqReader
 {
+public:
     SeqIterator();
     SeqIterator(const Seq<_Tp>& seq, bool seekEnd=false);
     void seek(size_t pos);

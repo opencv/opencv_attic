@@ -134,26 +134,26 @@ Scalar sum( const Mat& m )
         sum_<float, double>,
         sum_<double, double>, 0,
 
-        sumBlock_<Vec_<uchar, 2>, Vec_<unsigned, 2>, Vec_<double, 2>, 1<<24>, 0,
-        sumBlock_<Vec_<ushort, 2>, Vec_<unsigned, 2>, Vec_<double, 2>, 1<<16>,
-        sumBlock_<Vec_<short, 2>, Vec_<int, 2>, Vec_<double, 2>, 1<<16>,
-        sum_<Vec_<int, 2>, Vec_<double, 2> >,
-        sum_<Vec_<float, 2>, Vec_<double, 2> >,
-        sum_<Vec_<double, 2>, Vec_<double, 2> >, 0,
+        sumBlock_<Vec<uchar, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<24>, 0,
+        sumBlock_<Vec<ushort, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<16>,
+        sumBlock_<Vec<short, 2>, Vec<int, 2>, Vec<double, 2>, 1<<16>,
+        sum_<Vec<int, 2>, Vec<double, 2> >,
+        sum_<Vec<float, 2>, Vec<double, 2> >,
+        sum_<Vec<double, 2>, Vec<double, 2> >, 0,
 
-        sumBlock_<Vec_<uchar, 3>, Vec_<unsigned, 3>, Vec_<double, 3>, 1<<24>, 0,
-        sumBlock_<Vec_<ushort, 3>, Vec_<unsigned, 3>, Vec_<double, 3>, 1<<16>,
-        sumBlock_<Vec_<short, 3>, Vec_<int, 3>, Vec_<double, 3>, 1<<16>,
-        sum_<Vec_<int, 3>, Vec_<double, 3> >,
-        sum_<Vec_<float, 3>, Vec_<double, 3> >,
-        sum_<Vec_<double, 3>, Vec_<double, 3> >, 0,
+        sumBlock_<Vec<uchar, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<24>, 0,
+        sumBlock_<Vec<ushort, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<16>,
+        sumBlock_<Vec<short, 3>, Vec<int, 3>, Vec<double, 3>, 1<<16>,
+        sum_<Vec<int, 3>, Vec<double, 3> >,
+        sum_<Vec<float, 3>, Vec<double, 3> >,
+        sum_<Vec<double, 3>, Vec<double, 3> >, 0,
 
-        sumBlock_<Vec_<uchar, 4>, Vec_<unsigned, 4>, Vec_<double, 4>, 1<<24>, 0,
-        sumBlock_<Vec_<ushort, 4>, Vec_<unsigned, 4>, Vec_<double, 4>, 1<<16>,
-        sumBlock_<Vec_<short, 4>, Vec_<int, 4>, Vec_<double, 4>, 1<<16>,
-        sum_<Vec_<int, 4>, Vec_<double, 4> >,
-        sum_<Vec_<float, 4>, Vec_<double, 4> >,
-        sum_<Vec_<double, 4>, Vec_<double, 4> >, 0
+        sumBlock_<Vec<uchar, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<24>, 0,
+        sumBlock_<Vec<ushort, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<16>,
+        sumBlock_<Vec<short, 4>, Vec<int, 4>, Vec<double, 4>, 1<<16>,
+        sum_<Vec<int, 4>, Vec<double, 4> >,
+        sum_<Vec<float, 4>, Vec<double, 4> >,
+        sum_<Vec<double, 4>, Vec<double, 4> >, 0
     };
 
     Size size = m.size();
@@ -285,26 +285,26 @@ Scalar mean( const Mat& m, const Mat& mask )
         mean_<float, double>,
         mean_<double, double>, 0,
 
-        meanBlock_<Vec_<uchar, 2>, Vec_<unsigned, 2>, Vec_<double, 2>, 1<<24>, 0,
-        meanBlock_<Vec_<ushort, 2>, Vec_<unsigned, 2>, Vec_<double, 2>, 1<<16>,
-        meanBlock_<Vec_<short, 2>, Vec_<int, 2>, Vec_<double, 2>, 1<<16>,
-        mean_<Vec_<int, 2>, Vec_<double, 2> >,
-        mean_<Vec_<float, 2>, Vec_<double, 2> >,
-        mean_<Vec_<double, 2>, Vec_<double, 2> >, 0,
+        meanBlock_<Vec<uchar, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<24>, 0,
+        meanBlock_<Vec<ushort, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<16>,
+        meanBlock_<Vec<short, 2>, Vec<int, 2>, Vec<double, 2>, 1<<16>,
+        mean_<Vec<int, 2>, Vec<double, 2> >,
+        mean_<Vec<float, 2>, Vec<double, 2> >,
+        mean_<Vec<double, 2>, Vec<double, 2> >, 0,
 
-        meanBlock_<Vec_<uchar, 3>, Vec_<unsigned, 3>, Vec_<double, 3>, 1<<24>, 0,
-        meanBlock_<Vec_<ushort, 3>, Vec_<unsigned, 3>, Vec_<double, 3>, 1<<16>,
-        meanBlock_<Vec_<short, 3>, Vec_<int, 3>, Vec_<double, 3>, 1<<16>,
-        mean_<Vec_<int, 3>, Vec_<double, 3> >,
-        mean_<Vec_<float, 3>, Vec_<double, 3> >,
-        mean_<Vec_<double, 3>, Vec_<double, 3> >, 0,
+        meanBlock_<Vec<uchar, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<24>, 0,
+        meanBlock_<Vec<ushort, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<16>,
+        meanBlock_<Vec<short, 3>, Vec<int, 3>, Vec<double, 3>, 1<<16>,
+        mean_<Vec<int, 3>, Vec<double, 3> >,
+        mean_<Vec<float, 3>, Vec<double, 3> >,
+        mean_<Vec<double, 3>, Vec<double, 3> >, 0,
 
-        meanBlock_<Vec_<uchar, 4>, Vec_<unsigned, 4>, Vec_<double, 4>, 1<<24>, 0,
-        meanBlock_<Vec_<ushort, 4>, Vec_<unsigned, 4>, Vec_<double, 4>, 1<<16>,
-        meanBlock_<Vec_<short, 4>, Vec_<int, 4>, Vec_<double, 4>, 1<<16>,
-        mean_<Vec_<int, 4>, Vec_<double, 4> >,
-        mean_<Vec_<float, 4>, Vec_<double, 4> >,
-        mean_<Vec_<double, 4>, Vec_<double, 4> >, 0
+        meanBlock_<Vec<uchar, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<24>, 0,
+        meanBlock_<Vec<ushort, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<16>,
+        meanBlock_<Vec<short, 4>, Vec<int, 4>, Vec<double, 4>, 1<<16>,
+        mean_<Vec<int, 4>, Vec<double, 4> >,
+        mean_<Vec<float, 4>, Vec<double, 4> >,
+        mean_<Vec<double, 4>, Vec<double, 4> >, 0
     };
     
     if( !mask.data )
@@ -331,23 +331,23 @@ template<typename T, typename SqT> struct SqrC1
 
 template<typename T, typename SqT> struct SqrC2
 {
-    typedef Vec_<T, 2> type1;
-    typedef Vec_<SqT, 2> rtype;
+    typedef Vec<T, 2> type1;
+    typedef Vec<SqT, 2> rtype;
     rtype operator()(const type1& x) const { return rtype((SqT)x[0]*x[0], (SqT)x[1]*x[1]); }
 };
 
 template<typename T, typename SqT> struct SqrC3
 {
-    typedef Vec_<T, 3> type1;
-    typedef Vec_<SqT, 3> rtype;
+    typedef Vec<T, 3> type1;
+    typedef Vec<SqT, 3> rtype;
     rtype operator()(const type1& x) const
     { return rtype((SqT)x[0]*x[0], (SqT)x[1]*x[1], (SqT)x[2]*x[2]); }
 };
 
 template<typename T, typename SqT> struct SqrC4
 {
-    typedef Vec_<T, 4> type1;
-    typedef Vec_<SqT, 4> rtype;
+    typedef Vec<T, 4> type1;
+    typedef Vec<SqT, 4> rtype;
     rtype operator()(const type1& x) const
     { return rtype((SqT)x[0]*x[0], (SqT)x[1]*x[1], (SqT)x[2]*x[2], (SqT)x[3]*x[3]); }
 };
@@ -355,14 +355,14 @@ template<typename T, typename SqT> struct SqrC4
 template<> inline double SqrC1<uchar, double>::operator()(uchar x) const
 { return CV_SQR_8U(x); }
 
-template<> inline Vec_<double, 2> SqrC2<uchar, double>::operator()(const Vec_<uchar, 2>& x) const
-{ return Vec_<double, 2>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1])); }
+template<> inline Vec<double, 2> SqrC2<uchar, double>::operator()(const Vec<uchar, 2>& x) const
+{ return Vec<double, 2>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1])); }
 
-template<> inline Vec_<double, 3> SqrC3<uchar, double>::operator() (const Vec_<uchar, 3>& x) const
-{ return Vec_<double, 3>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1]), CV_SQR_8U(x[2])); }
+template<> inline Vec<double, 3> SqrC3<uchar, double>::operator() (const Vec<uchar, 3>& x) const
+{ return Vec<double, 3>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1]), CV_SQR_8U(x[2])); }
 
-template<> inline Vec_<double, 4> SqrC4<uchar, double>::operator() (const Vec_<uchar, 4>& x) const
-{ return Vec_<double, 4>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1]), CV_SQR_8U(x[2]), CV_SQR_8U(x[3])); }
+template<> inline Vec<double, 4> SqrC4<uchar, double>::operator() (const Vec<uchar, 4>& x) const
+{ return Vec<double, 4>(CV_SQR_8U(x[0]), CV_SQR_8U(x[1]), CV_SQR_8U(x[2]), CV_SQR_8U(x[3])); }
 
 
 template<class SqrOp> static void
