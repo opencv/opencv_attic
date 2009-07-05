@@ -1420,9 +1420,9 @@ public:
 
     int flags;
     int dims;
-    
-    uchar* data;
+
     int* refcount;
+    uchar* data;
     uchar* datastart;
     uchar* dataend;
 
