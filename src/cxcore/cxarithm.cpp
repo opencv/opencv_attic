@@ -1057,8 +1057,8 @@ template<typename T, typename WT> struct InRangeC1
 
 template<typename T, typename WT> struct InRangeC2
 {
-    typedef Vec_<T,2> xtype;
-    typedef Vec_<WT,2> btype;
+    typedef Vec<T,2> xtype;
+    typedef Vec<WT,2> btype;
     uchar operator()(const xtype& x, const btype& a, const btype& b) const
     {
         return (uchar)-(a[0] <= x[0] && x[0] < b[0] &&
@@ -1068,8 +1068,8 @@ template<typename T, typename WT> struct InRangeC2
 
 template<typename T, typename WT> struct InRangeC3
 {
-    typedef Vec_<T,3> xtype;
-    typedef Vec_<WT,3> btype;
+    typedef Vec<T,3> xtype;
+    typedef Vec<WT,3> btype;
     uchar operator()(const xtype& x, const btype& a, const btype& b) const
     {
         return (uchar)-(a[0] <= x[0] && x[0] < b[0] &&
@@ -1080,8 +1080,8 @@ template<typename T, typename WT> struct InRangeC3
 
 template<typename T, typename WT> struct InRangeC4
 {
-    typedef Vec_<T,4> xtype;
-    typedef Vec_<WT,4> btype;
+    typedef Vec<T,4> xtype;
+    typedef Vec<WT,4> btype;
     uchar operator()(const xtype& x, const btype& a, const btype& b) const
     {
         return (uchar)-(a[0] <= x[0] && x[0] < b[0] &&

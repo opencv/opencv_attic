@@ -161,7 +161,7 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
     
     if( isSeparable() )
     {
-        CV_Assert( rowFilter.obj && columnFilter.obj );
+        CV_Assert( !rowFilter.empty() && !columnFilter.empty() );
         ksize = Size(rowFilter->ksize, columnFilter->ksize);
         anchor = Point(rowFilter->anchor, columnFilter->anchor);
     }
@@ -290,9 +290,9 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
     rowCount = dstY = 0;
     startY = startY0 = std::max(roi.y - anchor.y, 0);
     endY = std::min(roi.y + roi.height + ksize.height - anchor.y - 1, wholeSize.height);
-    if( columnFilter.obj )
+    if( !columnFilter.empty() )
         columnFilter->reset();
-    if( filter2D.obj )
+    if( !filter2D.empty() )
         filter2D->reset();
 
     return startY;

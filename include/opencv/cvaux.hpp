@@ -395,6 +395,7 @@ CV_EXPORTS void computeSpinImages( const OctTree& octtree,
 
 struct CV_EXPORTS HOGDescriptor
 {
+public:
     enum { L2Hys=0 };
 
     HOGDescriptor() : winSize(64,128), blockSize(16,16), blockStride(8,8),

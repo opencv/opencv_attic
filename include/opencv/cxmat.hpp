@@ -460,7 +460,7 @@ template<typename _Tp> inline Mat_<_Tp>::Mat_(const Mat_& m, const Range& rowRan
 template<typename _Tp> inline Mat_<_Tp>::Mat_(const Mat_& m, const Rect& roi)
     : Mat(m, roi) {}
 
-template<typename _Tp> template<int n> inline Mat_<_Tp>::Mat_(const Vec_<_Tp, n>& vec)
+template<typename _Tp> template<int n> inline Mat_<_Tp>::Mat_(const Vec<_Tp, n>& vec)
     : Mat(n, 1, DataType<_Tp>::type)
 {
     _Tp* d = (_Tp*)data;
@@ -626,15 +626,17 @@ process( const Mat_<T1>& m1, const Mat_<T2>& m2, Mat_<T3>& m3, Op op )
     }
 }
 
-template<typename M> struct CV_EXPORTS MatExpr_Base_
+template<typename M> class CV_EXPORTS MatExpr_Base_
 {
+public:
     MatExpr_Base_() {}
     virtual ~MatExpr_Base_() {}
     virtual void assignTo(M& m, int type=-1) const = 0;
 };
 
-template<typename E, typename M> struct CV_EXPORTS MatExpr_ : MatExpr_Base_<M>
+template<typename E, typename M> class CV_EXPORTS MatExpr_ : public MatExpr_Base_<M>
 {
+public:
     MatExpr_(const E& _e) : e(_e) {}
     ~MatExpr_() {}
     operator M() const { return (M)e; }
@@ -696,8 +698,9 @@ template<typename _Tp> inline Mat_<_Tp>::operator MatExpr_<Mat_<_Tp>, Mat_<_Tp> 
 inline Mat::operator MatExpr_<Mat, Mat>() const
 { return MatExpr_<Mat, Mat>(*this); }
 
-template<typename M> struct CV_EXPORTS MatOp_Sub_
+template<typename M> class CV_EXPORTS MatOp_Sub_
 {
+public:
     MatOp_Sub_() {}
 
     static void apply(const M& a, const M& b, M& c, int type=-1)
@@ -715,8 +718,9 @@ template<typename M> struct CV_EXPORTS MatOp_Sub_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_Scale_
+template<typename M> class CV_EXPORTS MatOp_Scale_
 {
+public:
     MatOp_Scale_() {}
 
     static void apply(const M& a, double alpha, M& c, int type=-1)
@@ -725,8 +729,9 @@ template<typename M> struct CV_EXPORTS MatOp_Scale_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_ScaleAddS_
+template<typename M> class CV_EXPORTS MatOp_ScaleAddS_
 {
+public:
     MatOp_ScaleAddS_() {}
 
     static void apply(const M& a, double alpha, double beta, M& c, int type=-1)
@@ -735,8 +740,9 @@ template<typename M> struct CV_EXPORTS MatOp_ScaleAddS_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_AddS_
+template<typename M> class CV_EXPORTS MatOp_AddS_
 {
+public:
     MatOp_AddS_() {}
 
     static void apply(const M& a, const Scalar& s, M& c, int type=-1)
@@ -754,8 +760,9 @@ template<typename M> struct CV_EXPORTS MatOp_AddS_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_AddEx_
+template<typename M> class CV_EXPORTS MatOp_AddEx_
 {
+public:
     MatOp_AddEx_() {}
 
     static void apply(const M& a, double alpha, const M& b,
@@ -774,8 +781,9 @@ template<typename M> struct CV_EXPORTS MatOp_AddEx_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_Bin_
+template<typename M> class CV_EXPORTS MatOp_Bin_
 {
+public:
     MatOp_Bin_() {}
 
     static void apply(const M& a, const M& b, int _op, M& c, int type=-1)
@@ -807,8 +815,9 @@ template<typename M> struct CV_EXPORTS MatOp_Bin_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_BinS_
+template<typename M> class CV_EXPORTS MatOp_BinS_
 {
+public:
     MatOp_BinS_() {}
 
     static void apply(const M& a, const Scalar& s, int _op, M& c, int type=-1)
@@ -842,8 +851,9 @@ template<typename M> struct CV_EXPORTS MatOp_BinS_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_T_
+template<typename M> class CV_EXPORTS MatOp_T_
 {
+public:
     MatOp_T_() {}
 
     static void apply(const M& a, double scale, M& c, int type=-1)
@@ -864,8 +874,9 @@ template<typename M> struct CV_EXPORTS MatOp_T_
 };
 
 
-template<typename M> struct CV_EXPORTS MatOp_MatMul_
+template<typename M> class CV_EXPORTS MatOp_MatMul_
 {
+public:
     MatOp_MatMul_() {}
 
     static void apply(const M& a, const M& b, double scale, int flags, M& c, int type=-1)
@@ -884,8 +895,9 @@ template<typename M> struct CV_EXPORTS MatOp_MatMul_
 };
 
 
-template<typename M> struct CV_EXPORTS MatOp_MatMulAdd_
+template<typename M> class CV_EXPORTS MatOp_MatMulAdd_
 {
+public:
     MatOp_MatMulAdd_() {}
 
     static void apply(const M& a, const M& b, double alpha,
@@ -905,8 +917,9 @@ template<typename M> struct CV_EXPORTS MatOp_MatMulAdd_
 };
 
 
-template<typename M> struct CV_EXPORTS MatOp_Cmp_
+template<typename M> class CV_EXPORTS MatOp_Cmp_
 {
+public:
     MatOp_Cmp_() {}
 
     static void apply(const M& a, const M& b, int op, M& c, int type=-1)
@@ -924,8 +937,9 @@ template<typename M> struct CV_EXPORTS MatOp_Cmp_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_CmpS_
+template<typename M> class CV_EXPORTS MatOp_CmpS_
 {
+public:
     MatOp_CmpS_() {}
 
     static void apply(const M& a, double alpha, int op, M& c, int type=-1)
@@ -943,8 +957,9 @@ template<typename M> struct CV_EXPORTS MatOp_CmpS_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_MulDiv_
+template<typename M> class CV_EXPORTS MatOp_MulDiv_
 {
+public:
     MatOp_MulDiv_() {}
 
     static void apply(const M& a, const M& b, double alpha, char op, M& c, int type=-1)
@@ -965,8 +980,9 @@ template<typename M> struct CV_EXPORTS MatOp_MulDiv_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_DivRS_
+template<typename M> class CV_EXPORTS MatOp_DivRS_
 {
+public:
     MatOp_DivRS_() {}
 
     static void apply(const M& a, double alpha, M& c, int type=-1)
@@ -986,8 +1002,9 @@ template<typename M> struct CV_EXPORTS MatOp_DivRS_
 };
 
 
-template<typename M> struct CV_EXPORTS MatOp_Inv_
+template<typename M> class CV_EXPORTS MatOp_Inv_
 {
+public:
     MatOp_Inv_() {}
 
     static void apply(const M& a, int method, M& c, int type=-1)
@@ -1006,8 +1023,9 @@ template<typename M> struct CV_EXPORTS MatOp_Inv_
 };
 
 
-template<typename M> struct CV_EXPORTS MatOp_Solve_
+template<typename M> class CV_EXPORTS MatOp_Solve_
 {
+public:
     MatOp_Solve_() {}
 
     static void apply(const M& a, const M& b, int method, M& c, int type=-1)
@@ -1025,8 +1043,9 @@ template<typename M> struct CV_EXPORTS MatOp_Solve_
     }
 };
 
-template<typename M> struct CV_EXPORTS MatOp_Set_
+template<typename M> class CV_EXPORTS MatOp_Set_
 {
+public:
     MatOp_Set_() {}
 
     static void apply(Size size, int type0, const Scalar& s, int mtype, M& c, int type=-1)
@@ -1044,8 +1063,9 @@ template<typename M> struct CV_EXPORTS MatOp_Set_
 };
 
 template<typename A1, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op1_
+class CV_EXPORTS MatExpr_Op1_
 {
+public:
     MatExpr_Op1_(const A1& _a1) : a1(_a1) {}
     void assignTo(Mat& m, int type=-1) const { Op::apply(a1, (M&)m, type); }
     operator M() const { M result; assignTo(result); return result; }
@@ -1054,8 +1074,9 @@ struct CV_EXPORTS MatExpr_Op1_
 };
 
 template<typename A1, typename A2, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op2_
+class CV_EXPORTS MatExpr_Op2_
 {
+public:
     MatExpr_Op2_(const A1& _a1, const A2& _a2) : a1(_a1), a2(_a2) {}
     void assignTo(Mat& m, int type=-1) const { Op::apply(a1, a2, (M&)m, type); }
     operator M() const { M result; assignTo(result); return result; }
@@ -1064,8 +1085,9 @@ struct CV_EXPORTS MatExpr_Op2_
 };
 
 template<typename A1, typename A2, typename A3, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op3_
+class CV_EXPORTS MatExpr_Op3_
 {
+public:
     MatExpr_Op3_(const A1& _a1, const A2& _a2, const A3& _a3) : a1(_a1), a2(_a2), a3(_a3) {}
     void assignTo(Mat& m, int type=-1) const { Op::apply(a1, a2, a3, (M&)m, type); }
     operator M() const { M result; assignTo(result); return result; }
@@ -1074,8 +1096,9 @@ struct CV_EXPORTS MatExpr_Op3_
 };
 
 template<typename A1, typename A2, typename A3, typename A4, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op4_
+class CV_EXPORTS MatExpr_Op4_
 {
+public:
     MatExpr_Op4_(const A1& _a1, const A2& _a2, const A3& _a3, const A4& _a4)
         : a1(_a1), a2(_a2), a3(_a3), a4(_a4) {}
     void assignTo(Mat& m, int type=-1) const { Op::apply(a1, a2, a3, a4, (M&)m, type); }
@@ -1085,8 +1108,9 @@ struct CV_EXPORTS MatExpr_Op4_
 };
 
 template<typename A1, typename A2, typename A3, typename A4, typename A5, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op5_
+class CV_EXPORTS MatExpr_Op5_
 {
+public:
     MatExpr_Op5_(const A1& _a1, const A2& _a2, const A3& _a3, const A4& _a4, const A5& _a5)
         : a1(_a1), a2(_a2), a3(_a3), a4(_a4), a5(_a5) {}
     void assignTo(Mat& m, int type=-1) const { Op::apply(a1, a2, a3, a4, a5, (M&)m, type); }
@@ -1096,8 +1120,9 @@ struct CV_EXPORTS MatExpr_Op5_
 };
 
 template<typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename M, typename Op>
-struct CV_EXPORTS MatExpr_Op6_
+class CV_EXPORTS MatExpr_Op6_
 {
+public:
     MatExpr_Op6_(const A1& _a1, const A2& _a2, const A3& _a3,
                     const A4& _a4, const A5& _a5, const A6& _a6)
         : a1(_a1), a2(_a2), a3(_a3), a4(_a4), a5(_a5), a6(_a6) {}
@@ -3425,7 +3450,7 @@ template<typename _Tp> inline MatIterator_<_Tp> Mat_<_Tp>::end()
     return it;
 }
 
-template<typename _Tp> struct CV_EXPORTS MatOp_Iter_
+template<typename _Tp> class CV_EXPORTS MatOp_Iter_
 {
     MatOp_Iter_() {}
 

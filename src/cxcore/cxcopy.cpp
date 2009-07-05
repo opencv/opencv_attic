@@ -125,20 +125,20 @@ CopyMaskFunc g_copyMaskFuncTab[] =
     0,
     copyMask_<uchar>, // 1
     copyMask_<ushort>, // 2
-    copyMask_<Vec_<uchar,3> >, // 3
+    copyMask_<Vec<uchar,3> >, // 3
     copyMask_<int>, // 4
     0,
-    copyMask_<Vec_<ushort,3> >, // 6
+    copyMask_<Vec<ushort,3> >, // 6
     0,
     copyMask_<int64>, // 8
     0, 0, 0,
-    copyMask_<Vec_<int,3> >, // 12
+    copyMask_<Vec<int,3> >, // 12
     0, 0, 0,
-    copyMask_<Vec_<int64,2> >, // 16
+    copyMask_<Vec<int64,2> >, // 16
     0, 0, 0, 0, 0, 0, 0,
-    copyMask_<Vec_<int64,3> >, // 24
+    copyMask_<Vec<int64,3> >, // 24
     0, 0, 0, 0, 0, 0, 0,
-    copyMask_<Vec_<int64,4> > // 32
+    copyMask_<Vec<int64,4> > // 32
 };
 
 static SetMaskFunc setMaskFuncTab[] =
@@ -146,20 +146,20 @@ static SetMaskFunc setMaskFuncTab[] =
     0,
     setMask_<uchar>, // 1
     setMask_<ushort>, // 2
-    setMask_<Vec_<uchar,3> >, // 3
+    setMask_<Vec<uchar,3> >, // 3
     setMask_<int>, // 4
     0,
-    setMask_<Vec_<ushort,3> >, // 6
+    setMask_<Vec<ushort,3> >, // 6
     0,
     setMask_<int64>, // 8
     0, 0, 0,
-    setMask_<Vec_<int,3> >, // 12
+    setMask_<Vec<int,3> >, // 12
     0, 0, 0,
-    setMask_<Vec_<int64,2> >, // 16
+    setMask_<Vec<int64,2> >, // 16
     0, 0, 0, 0, 0, 0, 0,
-    setMask_<Vec_<int64,3> >, // 24
+    setMask_<Vec<int64,3> >, // 24
     0, 0, 0, 0, 0, 0, 0,
-    setMask_<Vec_<int64,4> > // 32
+    setMask_<Vec<int64,4> > // 32
 };
 
 
@@ -363,20 +363,20 @@ void flip( const Mat& src, Mat& dst, int flip_mode )
         0,
         flipHoriz_<uchar>, // 1
         flipHoriz_<ushort>, // 2
-        flipHoriz_<Vec_<uchar,3> >, // 3
+        flipHoriz_<Vec<uchar,3> >, // 3
         flipHoriz_<int>, // 4
         0,
-        flipHoriz_<Vec_<ushort,3> >, // 6
+        flipHoriz_<Vec<ushort,3> >, // 6
         0,
         flipHoriz_<int64>, // 8
         0, 0, 0,
-        flipHoriz_<Vec_<int,3> >, // 12
+        flipHoriz_<Vec<int,3> >, // 12
         0, 0, 0,
-        flipHoriz_<Vec_<int64,2> >, // 16
+        flipHoriz_<Vec<int64,2> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        flipHoriz_<Vec_<int64,3> >, // 24
+        flipHoriz_<Vec<int64,3> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        flipHoriz_<Vec_<int64,4> > // 32
+        flipHoriz_<Vec<int64,4> > // 32
     };
     
     dst.create( src.size(), src.type() );

@@ -311,7 +311,7 @@ RotatedRect CAMShift( const Mat& probImage, Rect& window,
     return RotatedRect(Point2f(box.center), Size2f(box.size), box.angle);
 }
 
-int MeanShift( const Mat& probImage, Rect& window, TermCriteria criteria )
+int meanShift( const Mat& probImage, Rect& window, TermCriteria criteria )
 {
     CvConnectedComp comp;
     CvMat _probImage = probImage;

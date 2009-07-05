@@ -276,20 +276,20 @@ void transpose( const Mat& src, Mat& dst )
         0,
         transposeI_<uchar>, // 1
         transposeI_<ushort>, // 2
-        transposeI_<Vec_<uchar,3> >, // 3
+        transposeI_<Vec<uchar,3> >, // 3
         transposeI_<int>, // 4
         0,
-        transposeI_<Vec_<ushort,3> >, // 6
+        transposeI_<Vec<ushort,3> >, // 6
         0,
         transposeI_<int64>, // 8
         0, 0, 0,
-        transposeI_<Vec_<int,3> >, // 12
+        transposeI_<Vec<int,3> >, // 12
         0, 0, 0,
-        transposeI_<Vec_<int64,2> >, // 16
+        transposeI_<Vec<int64,2> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        transposeI_<Vec_<int64,3> >, // 24
+        transposeI_<Vec<int64,3> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        transposeI_<Vec_<int64,4> > // 32
+        transposeI_<Vec<int64,4> > // 32
     };
 
     TransposeFunc tab[] =
@@ -297,20 +297,20 @@ void transpose( const Mat& src, Mat& dst )
         0,
         transpose_<uchar>, // 1
         transpose_<ushort>, // 2
-        transpose_<Vec_<uchar,3> >, // 3
+        transpose_<Vec<uchar,3> >, // 3
         transpose_<int>, // 4
         0,
-        transpose_<Vec_<ushort,3> >, // 6
+        transpose_<Vec<ushort,3> >, // 6
         0,
         transpose_<int64>, // 8
         0, 0, 0,
-        transpose_<Vec_<int,3> >, // 12
+        transpose_<Vec<int,3> >, // 12
         0, 0, 0,
-        transpose_<Vec_<int64,2> >, // 16
+        transpose_<Vec<int64,2> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        transpose_<Vec_<int64,3> >, // 24
+        transpose_<Vec<int64,3> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        transpose_<Vec_<int64,4> > // 32
+        transpose_<Vec<int64,4> > // 32
     };
 
     size_t esz = src.elemSize();
@@ -2748,7 +2748,10 @@ void SparseMat::erase(const int* idx, size_t* hashval)
 void SparseMat::resizeHashTab(size_t newsize)
 {
     size_t i, hsize = hdr->hashtab.size();
-    Vector<size_t> newh(newsize, (size_t)0);
+    Vector<size_t> _newh(newsize);
+    size_t* newh = &_newh[0];
+    for( size_t i = 0; i < newsize; i++ )
+        newh[i] = 0;
     uchar* pool = &hdr->pool[0];
     for( i = 0; i < hsize; i++ )
     {
@@ -2763,7 +2766,7 @@ void SparseMat::resizeHashTab(size_t newsize)
             nidx = next;
         }
     }
-    hdr->hashtab = newh;
+    hdr->hashtab = _newh;
 }
 
 uchar* SparseMat::newNode(const int* idx, size_t hashval)
