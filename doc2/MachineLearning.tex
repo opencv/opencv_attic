@@ -6,12 +6,12 @@
 
 The Machine Learning Library (MLL) is a set of classes and functions for statistical classification, regression and clustering of data.
 
-Most of the classification and regression algorithms are implemented as C++ classes. As the algorithms have different set of features (like ability to handle missing measurements, or categorical input variables etc.), there is a little common ground between the classes. This common ground is defined by the class `CvStatModel` that all the other ML classes are derived from.
+Most of the classification and regression algorithms are implemented as C++ classes. As the algorithms have different seta of features (like the ability to handle missing measurements, or categorical input variables etc.), there is a little common ground between the classes. This common ground is defined by the class `CvStatModel` that all the other ML classes are derived from.
 
 
 \cvfunc{StatModel}
 
-Base class for statistical models in ML
+Base class for the statistical models in ML.
 
 \begin{lstlisting}
 class CvStatModel
@@ -46,7 +46,7 @@ In this declaration some methods are commented off. Actually, these are methods 
 
 \cvfunc{CvStatModel::CvStatModel}
 
-Default constructor
+Default constructor.
 
 \cvexp{
 
@@ -54,12 +54,12 @@ CvStatModel::CvStatModel();
 
 }{CPP}{PYTHON}
 
-Each statistical model class in ML has default constructor without parameters. This constructor is useful for 2-stage model construction, when the default constructor is followed by \href{#CvStatModel.3A.3Atrain}{train()} or \href{#CvStatModel.3A.3Aload}{load()}.
+Each statistical model class in ML has a default constructor without parameters. This constructor is useful for 2-stage model construction, when the default constructor is followed by \href{#CvStatModel.3A.3Atrain}{train()} or \href{#CvStatModel.3A.3Aload}{load()}.
 
 
 \cvfunc{CvStatModel::CvStatModel(...)}
 
-Training constructor
+Training constructor.
 
 \cvexp{
 
@@ -67,12 +67,12 @@ CvStatModel::CvStatModel( const CvMat* train\_data ... );
 
 }{CPP}{PYTHON}
 
-Most ML classes provide single-step construct+train constructor. This constructor is equivalent to the default constructor, followed by the \href{#CvStatModel.3A.3Atrain}{train()} method with the parameters that passed to the constructor.
+Most ML classes provide single-step construct and train constructors. This constructor is equivalent to the default constructor, followed by the \href{#CvStatModel.3A.3Atrain}{train()} method with the parameters that are passed to the constructor.
 
 
 \cvfunc{CvStatModel::~CvStatModel}
 
-Virtual destructor
+Virtual destructor.
 
 \cvexp{
 
@@ -94,12 +94,12 @@ delete model;
 
 \end{lstlisting}
 
-Normally, the destructor of each derived class does nothing, but calls the overridden method \href{#CvStatModel.3A.3Aclear}{clear()} that deallocates all the memory.
+Normally, the destructor of each derived class does nothing, but in this instance it calls the overridden method \href{#CvStatModel.3A.3Aclear}{clear()} that deallocates all the memory.
 
 
 \cvfunc{CvStatModel::clear}
 
-Deallocates memory and resets the model state
+Deallocates memory and resets the model state.
 
 \cvexp{
 
@@ -107,12 +107,12 @@ void CvStatModel::clear();
 
 }{CPP}{PYTHON}
 
-The method `clear` does the same job as the destructor, i.e. it deallocates all the memory occupied by the class members. But the object itself is not destructed, and it can be reused further. This method is called from the destructor, from the `train` methods of the derived classes, from the methods \href{#CvStatModel.3A.3Aload}{load()}, \href{#CvStatModel.3A.3Aread}{read()} etc., or even explicitly by user.
+The method \texttt{clear} does the same job as the destructor; it deallocates all the memory occupied by the class members. But the object itself is not destructed, and can be reused further. This method is called from the destructor, from the \texttt{train} methods of the derived classes, from the methods \href{#CvStatModel.3A.3Aload}{load()}, \href{#CvStatModel.3A.3Aread}{read()} or even explicitly by the user.
 
 
 \cvfunc{CvStatModel::save}
 
-Saves the model to file
+Saves the model to a file.
 
 \cvexp{
 
@@ -120,12 +120,12 @@ void CvStatModel::save( const char* filename, const char* name=0 );
 
 }{CPP}{PYTHON}
 
-The method `save` stores the complete model state to the specified XML or YAML file with the specified name or default name (that depends on the particular class). \href{opencvref_cxcore.htm#cxcore_persistence}{Data persistence} functionality from cxcore is used.
+The method \texttt{save} stores the complete model state to the specified XML or YAML file with the specified name or default name (that depends on the particular class). \href{opencvref_cxcore.htm#cxcore_persistence}{Data persistence} functionality from CxCore is used.
 
 
 \cvfunc{CvStatModel::load}
 
-Loads the model from file
+Loads the model from a file.
 
 \cvexp{
 
@@ -133,14 +133,14 @@ void CvStatModel::load( const char* filename, const char* name=0 );
 
 }{CPP}{PYTHON}
 
-The method `load` loads the complete model state with the specified name (or default model-dependent name) from the specified XML or YAML file. The previous model state is cleared by \href{#CvStatModel.3A.3Aclear}{clear()}.
+The method \texttt{load} loads the complete model state with the specified name (or default model-dependent name) from the specified XML or YAML file. The previous model state is cleared by \href{#CvStatModel.3A.3Aclear}{clear()}.
 
-Note that the method is virtual, therefore any model can be loaded using this virtual method. However, unlike the C types of OpenCV that can be loaded using generic \href{opencvref_cxcore.htm#decl_cvLoad}{cvLoad()}, in this case the model type must be known anyway, because an empty model, an instance of the appropriate class, must be constructed beforehand. This limitation will be removed in the later ML versions.
+Note that the method is virtual, so any model can be loaded using this virtual method. However, unlike the C types of OpenCV that can be loaded using the generic \href{opencvref_cxcore.htm#decl_cvLoad}{load()}, here the model type must be known, because an empty model must be constructed beforehand. This limitation will be removed in the later ML versions.
 
 
 \cvfunc{CvStatModel::write}
 
-Writes the model to file storage
+Writes the model to file storage.
 
 \cvexp{
 
@@ -148,12 +148,12 @@ void CvStatModel::write( CvFileStorage* storage, const char* name );
 
 }{CPP}{PYTHON}
 
-The method `write` stores the complete model state to the file storage with the specified name or default name (that depends on the particular class). The method is called by \href{#CvStatModel.3A.3Asave}{save()}.
+The method \texttt{write} stores the complete model state to the file storage with the specified name or default name (that depends on the particular class). The method is called by \href{#CvStatModel.3A.3Asave}{save()}.
 
 
 \cvfunc{CvStatModel::read}
 
-Reads the model from file storage
+Reads the model from file storage.
 
 \cvexp{
 
@@ -161,14 +161,14 @@ void CvStatMode::read( CvFileStorage* storage, CvFileNode* node );
 
 }{CPP}{PYTHON}
 
-The method `read` restores the complete model state from the specified node of the file storage. The node must be located by user, for example, using the function \href{opencvref_cxcore.htm#decl_cvGetFileNodeByName}{cvGetFileNodeByName()}. The method is called by \href{#CvStatModel_load}{load()}.
+The method \texttt{read} restores the complete model state from the specified node of the file storage. The node must be located by the user using the function \href{opencvref_cxcore.htm#decl_cvGetFileNodeByName}{GetFileNodeByName()}. The method is called by \href{#CvStatModel_load}{load()}.
 
 The previous model state is cleared by \href{#CvStatModel_clear}{clear()}.
 
 
 \cvfunc{CvStatModel::train}
 
-Trains the model
+Trains the model.
 
 \cvexp{
 
@@ -185,25 +185,25 @@ The method trains the statistical model using a set of input feature vectors and
  \item \texttt{tflag=CV\_ROW\_SAMPLE} means that the feature vectors are stored as rows,
  \item \texttt{tflag=CV\_COL\_SAMPLE} means that the feature vectors are stored as columns.
 \end{itemize}
-The \texttt{train\_data} must have \texttt{32fC1} (32-bit floating-point, single-channel) format. Responses are usually stored in the 1d vector (a row or a column) of \texttt{32sC1} (only in the classification problem) or \texttt{32fC1} format, one value per an input vector (although some algorithms, like various flavors of neural nets, take vector responses).
+The \texttt{train\_data} must have a \texttt{32fC1} (32-bit floating-point, single-channel) format. Responses are usually stored in the 1d vector (a row or a column) of \texttt{32sC1} (only in the classification problem) or \texttt{32fC1} format, one value per input vector (although some algorithms, like various flavors of neural nets, take vector responses).
 
-For classification problems the responses are discrete class labels, for regression problems - the responses are values of the function to be approximated. Some algorithms can deal only with classification problems, some - only with regression problems, and some can deal with both problems. In the latter case the type of output variable is either passed as separate parameter, or as a last element of \texttt{var\_type} vector:
+For classification problems the responses are discrete class labels; for regression problems the responses are values of the function to be approximated. Some algorithms can deal only with classification problems, some - only with regression problems, and some can deal with both problems. In the latter case the type of output variable is either passed as separate parameter, or as a last element of \texttt{var\_type} vector:
 \begin{itemize}
  \item \texttt{CV\_VAR\_CATEGORICAL} means that the output values are discrete class labels,
  \item \texttt{CV\_VAR\_ORDERED(=CV\_VAR\_NUMERICAL)} means that the output values are ordered, i.e. 2 different values can be compared as numbers, and this is a regression problem
 \end{itemize}
 The types of input variables can be also specified using \texttt{var\_type}. Most algorithms can handle only ordered input variables.
 
-Many models in the ML may be trained on a selected feature subset, and/or on a selected sample subset of the training set. To make it easier for user, the method \texttt{train} usually includes \texttt{var\_idx} and \texttt{sample\_idx} parameters. The former identifies variables (features) of interest, and the latter identifies samples of interest. Both vectors are either integer (\texttt{32sC1}) vectors, i.e. lists of 0-based indices, or 8-bit (\texttt{8uC1}) masks of active variables/samples. User may pass \texttt{NULL} pointers instead of either of the argument, meaning that all the variables/samples are used for training.
+Many models in the ML may be trained on a selected feature subset, and/or on a selected sample subset of the training set. To make it easier for the user, the method \texttt{train} usually includes \texttt{var\_idx} and \texttt{sample\_idx} parameters. The former identifies variables (features) of interest, and the latter identifies samples of interest. Both vectors are either integer (\texttt{32sC1}) vectors, i.e. lists of 0-based indices, or 8-bit (\texttt{8uC1}) masks of active variables/samples. The user may pass \texttt{NULL} pointers instead of either of the arguments, meaning that all of the variables/samples are used for training.
 
-Additionally some algorithms can handle missing measurements, that is when certain features of certain training samples have unknown values (for example, they forgot to measure a temperature of patient A on Monday). The parameter \texttt{missing\_mask}, 8-bit matrix of the same size as \texttt{train\_data}, is used to mark the missed values (non-zero elements of the mask).
+Additionally some algorithms can handle missing measurements, that is when certain features of certain training samples have unknown values (for example, they forgot to measure a temperature of patient A on Monday). The parameter \texttt{missing\_mask}, an 8-bit matrix the same size as \texttt{train\_data}, is used to mark the missed values (non-zero elements of the mask).
 
 Usually, the previous model state is cleared by \href{#CvStatModel_clear}{clear()} before running the training procedure. However, some algorithms may optionally update the model state with the new training data, instead of resetting it.
 
 
 \cvfunc{CvStatModel::predict}
 
-Predicts the response for sample
+Predicts the response for the sample.
 
 \cvexp{
 
@@ -211,20 +211,20 @@ float CvStatMode::predict( const CvMat* sample[, <prediction\_params>] ) const;
 
 }{CPP}{PYTHON}
 
-The method is used to predict the response for a new sample. In case of classification the method returns the class label, in case of regression - the output function value. The input sample must have as many components as the \texttt{train\_data} passed to \href{#CvStatModel_train}{train} contains. If the \texttt{var\_idx} parameter is passed to \href{#CvStatModel_train}{train}, it is remembered and then is used to extract only the necessary components from the input sample in the method \texttt{predict}.
+The method is used to predict the response for a new sample. In the case of classification the method returns the class label, in the case of regression - the output function value. The input sample must have as many components as the \texttt{train\_data} passed to \href{#CvStatModel_train}{train} contains. If the \texttt{var\_idx} parameter is passed to \href{#CvStatModel_train}{train}, it is remembered and then is used to extract only the necessary components from the input sample in the method \texttt{predict}.
 
 The suffix "const" means that prediction does not affect the internal model state, so the method can be safely called from within different threads.
 
 \section{Normal Bayes Classifier}
 
-This is a simple classification model assuming that feature vectors from each class are normally distributed (though, not necessarily independently distributed), so the whole data distribution function is assumed to be a Gaussian mixture, one component per a class. Using the training data the algorithm estimates mean vectors and covariation matrices for every class, and then it uses them for prediction.
+This is a simple classification model assuming that feature vectors from each class are normally distributed (though, not necessarily independently distributed), so the whole data distribution function is assumed to be a Gaussian mixture, one component per  class. Using the training data the algorithm estimates mean vectors and covariance matrices for every class, and then it uses them for prediction.
 
 \textbf{[Fukunaga90] K. Fukunaga. Introduction to Statistical Pattern Recognition. second ed., New York: Academic Press, 1990.}
 
 
 \cvfunc{CvNormalBayesClassifier}
 
-Bayes classifier for normally distributed data
+Bayes classifier for normally distributed data.
 
 \begin{lstlisting}
 class CvNormalBayesClassifier : public CvStatModel
@@ -256,7 +256,7 @@ protected:
 
 \cvfunc{CvNormalBayesClassifier::train}
 
-Trains the model
+Trains the model.
 
 \cvexp{
 
@@ -265,9 +265,9 @@ bool CvNormalBayesClassifier::train( \par const CvMat* \_train\_data, \par const
 
 }{CPP}{PYTHON}
 
-The method trains the Normal Bayes classifier. It follows the conventions of generic \href{#CvStatModel\_train}{train} "method" with the following limitations: only CV\_ROW\_SAMPLE data layout is supported; the input variables are all ordered; the output variable is categorical (i.e. elements of \texttt{\_responses} must be integer numbers, though the vector may have \texttt{32fC1} type), missing measurements are not supported.
+The method trains the Normal Bayes classifier. It follows the conventions of the generic \href{#CvStatModel\_train}{train} "method" with the following limitations: only CV\_ROW\_SAMPLE data layout is supported; the input variables are all ordered; the output variable is categorical (i.e. elements of \texttt{\_responses} must be integer numbers, though the vector may have \texttt{32fC1} type), and missing measurements are not supported.
 
-In addition, there is \texttt{update} flag that identifies, whether the model should be trained from scratch (\texttt{update=false}) or should be updated using new training data (\texttt{update=true}).
+In addition, there is an \texttt{update} flag that identifies whether the model should be trained from scratch (\texttt{update=false}) or should be updated using the new training data (\texttt{update=true}).
 
 \cvfunc{CvNormalBayesClassifier::predict}
 
@@ -279,18 +279,16 @@ float CvNormalBayesClassifier::predict( \par const CvMat* samples, \par CvMat* r
 
 }{CPP}{PYTHON}
 
-The method \texttt{predict} estimates the most probable classes for the input vectors. The input vectors (one or more) are stored as rows of the matrix \texttt{samples}. In case of multiple input vectors, there should be output vector \texttt{results}. The predicted class for a single input vector is returned by the method.
+The method \texttt{predict} estimates the most probable classes for the input vectors. The input vectors (one or more) are stored as rows of the matrix \texttt{samples}. In the case of multiple input vectors, there should be one output vector \texttt{results}. The predicted class for a single input vector is returned by the method.
 
 \section{K Nearest Neighbors}
 
-\subsection{placeholder1}
-
-The algorithm caches all the training samples, and it predicts the response for a new sample by analyzing a certain number (\textbf{K}) of the nearest neighbors of the sample (using voting, calculating weighted sum etc.) The method is sometimes referred to as "learning by example", i.e. for prediction it looks for the feature vector with a known response that is closest to the given vector.
+The algorithm caches all of the training samples, and predicts the response for a new sample by analyzing a certain number (\textbf{K}) of the nearest neighbors of the sample (using voting, calculating weighted sum etc.) The method is sometimes referred to as "learning by example", because for prediction it looks for the feature vector with a known response that is closest to the given vector.
 
 
 \cvfunc{CvKNearest}
 
-K Nearest Neighbors model
+K Nearest Neighbors model.
 
 \begin{lstlisting}
 class CvKNearest : public CvStatModel
@@ -325,7 +323,7 @@ protected:
 
 \cvfunc{CvKNearest::train}
 
-Trains the model
+Trains the model.
 
 \cvexp{
 
@@ -339,12 +337,12 @@ The method trains the K-Nearest model. It follows the conventions of generic \hr
 
 The parameter \texttt{\_max\_k} specifies the number of maximum neighbors that may be passed to the method \href{#CvKNearest.3A.3Afindnearest}{find\_nearest}.
 
-The parameter \texttt{\_update\_base} specifies, whether the model is trained from scratch (\texttt{\_update\_base=false}), or it is updated using the new training data (\texttt{\_update\_base=true}). In the latter case the parameter \texttt{\_max\_k} must not be larger than the original value.
+The parameter \texttt{\_update\_base} specifies whether the model is trained from scratch \newline (\texttt{\_update\_base=false}), or it is updated using the new training data (\texttt{\_update\_base=true}). In the latter case the parameter \texttt{\_max\_k} must not be larger than the original value.
 
 
 \cvfunc{CvKNearest::find\_nearest}
 
-Finds the neighbors for the input vectors
+Finds the neighbors for the input vectors.
 
 \cvexp{
 
@@ -353,15 +351,15 @@ float CvKNearest::find\_nearest( \par const CvMat* \_samples, \par int k, CvMat*
 
 }{CPP}{PYTHON}
 
-For each input vector (which are rows of the matrix \texttt{\_samples}) the method finds \texttt{k≤get\_max\_k()} nearest neighbor. In case of regression, the predicted result will be a mean value of the particular vector's neighbor responses. In case of classification the class is determined by voting.
+For each input vector (which are the rows of the matrix \texttt{\_samples}) the method finds the \texttt{k≤get\_max\_k()} nearest neighbor. in the case of regression, the predicted result will be a mean value of the particular vector's neighbor responses. In the case of classification the class is determined by voting.
 
-For custom classification/regression prediction, the method can optionally return pointers to the neighbor vectors themselves (\texttt{neighbors}, array of \texttt{k*\_samples->rows} pointers), their corresponding output values (\texttt{neighbor\_responses}, a vector of \texttt{k*\_samples->rows} elements) and the distances from the input vectors to the neighbors (\texttt{dist}, also a vector of \texttt{k*\_samples->rows} elements).
+For custom classification/regression prediction, the method can optionally return pointers to the neighbor vectors themselves (\texttt{neighbors}, an array of \texttt{k*\_samples->rows} pointers), their corresponding output values (\texttt{neighbor\_responses}, a vector of \texttt{k*\_samples->rows} elements) and the distances from the input vectors to the neighbors (\texttt{dist}, also a vector of \texttt{k*\_samples->rows} elements).
 
 For each input vector the neighbors are sorted by their distances to the vector.
 
 If only a single input vector is passed, all output matrices are optional and the predicted value is returned by the method.
 
-Example. Classification of 2D samples from a Gaussian mixture with k-nearest classifier
+\cvfunc{Example. Classification of 2D samples from a Gaussian mixture with the k-nearest classifier}
 
 \begin{lstlisting}
 \#include "ml.h"
@@ -448,11 +446,9 @@ int main( int argc, char** argv )
 
 \section{Support Vector Machines}
 
-\subsection{placeholder2}
+Originally, support vector machines (SVM) was a technique for building an optimal (in some sense) binary (2-class) classifier. Then the technique has been extended to regression and clustering problems. SVM is a partial case of kernel-based methods, it maps feature vectors into higher-dimensional space using some kernel function, and then it builds an optimal linear discriminating function in this space (or an optimal hyper-plane that fits into the training data, ...). in the case of SVM the kernel is not defined explicitly. Instead, a distance between any 2 points in the hyper-space needs to be defined.
 
-Originally, support vector machines (SVM) was a technique for building an optimal (in some sense) binary (2-class) classifier. Then the technique has been extended to regression and clustering problems. SVM is a partial case of kernel-based methods, it maps feature vectors into higher-dimensional space using some kernel function, and then it builds an optimal linear discriminating function in this space (or an optimal hyper-plane that fits into the training data, ...). In case of SVM the kernel is not defined explicitly. Instead, a distance between any 2 points in the hyper-space needs to be defined.
-
-The solution is optimal in a sense that the margin between the separating hyper-plane and the nearest feature vectors from the both classes (in case of 2-class classifier) is maximal. The feature vectors that are the closest to the hyper-plane are called "support vectors", meaning that the position of other vectors does not affect the hyper-plane (the decision function).
+The solution is optimal in a sense that the margin between the separating hyper-plane and the nearest feature vectors from the both classes (in the case of 2-class classifier) is maximal. The feature vectors that are the closest to the hyper-plane are called "support vectors", meaning that the position of other vectors does not affect the hyper-plane (the decision function).
 
 There are a lot of good references on SVM. Here are only a few ones to start with.
 \begin{itemize}
@@ -462,7 +458,7 @@ There are a lot of good references on SVM. Here are only a few ones to start wit
 
 \cvfunc{CvSVM}
 
-Support Vector Machines
+Support Vector Machines.
 
 \begin{lstlisting}
 class CvSVM : public CvStatModel
@@ -522,7 +518,7 @@ protected:
 
 \cvfunc{CvSVMParams}
 
-SVM training parameters
+SVM training parameters.
 
 \begin{lstlisting}
 struct CvSVMParams
@@ -553,7 +549,7 @@ struct CvSVMParams
 \begin{description}
 \cvarg{CvSVM::C\_SVC}{n-class classification (n$>$=2), allows imperfect separation of classes with penalty multiplier \texttt{C} for outliers.}
 \cvarg{CvSVM::NU\_SVC}{n-class classification with possible imperfect separation. Parameter \texttt{nu} (in the range 0..1, the larger the value, the smoother the decision boundary) is used instead of \texttt{C}.}
-\cvarg{CvSVM::ONE\_CLASS}{one-class SVM. All the training data are from the same class, SVM builds a boundary that separates the class from the rest of the feature space.}
+\cvarg{CvSVM::ONE\_CLASS}{one-class SVM. All of the training data is from the same class, SVM builds a boundary that separates the class from the rest of the feature space.}
 \cvarg{CvSVM::EPS\_SVR}{regression. The distance between feature vectors from the training set and the fitting hyper-plane must be less than \texttt{p}. For outliers the penalty multiplier \texttt{C} is used.}
 \cvarg{CvSVM::NU\_SVR}{regression; \texttt{nu} is used instead of \texttt{p}.}
 \end{description}}
@@ -567,7 +563,7 @@ struct CvSVMParams
 \cvarg{degree, gamma, coef0}{Parameters of the kernel, see the formulas above.}
 \cvarg{C, nu, p}{Parameters in the generalized SVM optimization problem.}
 \cvarg{class\_weights}{Optional weights, assigned to particular classes. They are multiplied by \texttt{C} and thus affect the misclassification penalty for different classes. The larger weight, the larger penalty on misclassification of data from the corresponding class.}
-\cvarg{term\_crit}{Termination procedure for iterative SVM training procedure (which solves a partial case of constrained quadratic optimization problem)}
+\cvarg{term\_crit}{Termination procedure for the iterative SVM training procedure (which solves a partial case of constrained quadratic optimization problem)}
 \end{description}
 
 The structure must be initialized and passed to the training method of \cross{CvSVM}.
@@ -575,7 +571,7 @@ The structure must be initialized and passed to the training method of \cross{Cv
 
 \cvfunc{CvSVM::train}
 
-Trains SVM
+Trains SVM.
 
 \cvexp{
 
@@ -585,14 +581,14 @@ bool CvSVM::train( \par const CvMat* \_train\_data, \par const CvMat* \_response
 
 }{CPP}{PYTHON}
 
-The method trains the SVM model. It follows the conventions of generic \href{#CvStatModel.3A.3Atrain}{train} "method" with the following limitations: only CV\_ROW\_SAMPLE data layout is supported, the input variables are all ordered, the output variables can be either categorical (\texttt{\_params.svm\_type=CvSVM::C\_SVC} or \texttt{\_params.svm\_type=CvSVM::NU\_SVC}), or ordered (\texttt{\_params.svm\_type=CvSVM::EPS\_SVR} or \texttt{\_params.svm\_type=CvSVM::NU\_SVR}), or not required at all (\texttt{\_params.svm\_type=CvSVM::ONE\_CLASS}), missing measurements are not supported.
+The method trains the SVM model. It follows the conventions of the generic \href{#CvStatModel.3A.3Atrain}{train} "method" with the following limitations: only the CV\_ROW\_SAMPLE data layout is supported, the input variables are all ordered, the output variables can be either categorical (\texttt{\_params.svm\_type=CvSVM::C\_SVC} or \texttt{\_params.svm\_type=CvSVM::NU\_SVC}), or ordered (\texttt{\_params.svm\_type=CvSVM::EPS\_SVR} or \texttt{\_params.svm\_type=CvSVM::NU\_SVR}), or not required at all (\texttt{\_params.svm\_type=CvSVM::ONE\_CLASS}), missing measurements are not supported.
 
 All the other parameters are gathered in \cross{CvSVMParams} structure.
 
 
 \cvfunc{CvSVM::train\_auto} % XXX not in manual
 
-Trains SVM with optimal parameters
+Trains SVM with optimal parameters.
 
 \cvexp{
 
@@ -612,18 +608,32 @@ train\_auto( \par const CvMat* \_train\_data, \par const CvMat* \_responses,
 \cvarg{k\_fold}{Cross-validation parameter. The training set is divided into \texttt{k\_fold} subsets, one subset being used to train the model, the others forming the test set. So, the SVM algorithm is executed \texttt{k\_fold} times.}
 \end{description}
 
-The method trains the SVM model automatically by choosing the optimal parameters \texttt{C}, \texttt{gamma}, \texttt{p}, \texttt{nu}, \texttt{coef0}, \texttt{degree} from \cross{CvSVMParams}. By the optimality one mean that the cross-validation estimate of the test set error is minimal. The parameters are iterated by logarithmic grid, for example, the parameter \texttt{gamma} takes the values in the set {\texttt{gamma\_grid.min\_val}, \texttt{gamma\_grid.min\_val$*$gamma\_grid} step, \texttt{gamma\_grid.min\_val$*gamma\_grid.step^2$,...,} \texttt{gamma\_grid.min\_val$*gamma\_grid.step^n$}}, where \texttt{n} is the maximal index such, that \texttt{gamma\_grid.min\_val$*gamma\_grid.step^n$} $<$ \texttt{gamma\_grid.max\_val}. So, \texttt{step} must always be greater than 1.
+The method trains the SVM model automatically by choosing the optimal parameters \texttt{C}, \texttt{gamma}, \texttt{p}, \texttt{nu}, \texttt{coef0}, \texttt{degree} from \cross{CvSVMParams}. By optimal one means that the cross-validation estimate of the test set error is minimal. The parameters are iterated by a logarithmic grid, for example, the parameter \texttt{gamma} takes the values in the set {\texttt{gamma\_grid.min\_val}, 
 
-If there is no need in optimization in some parameter, the according grid step should be set to any value less or equal to 1. For example, to avoid optimization in ''\\texttt{gamma} one should set \texttt{gamma\_grid.step = 0}, \texttt{gamma\_grid.min\_val}, \texttt{gamma\_grid.max\_val} being arbitrary numbers. In this case, the value \texttt{params.gamma} will be taken for \texttt{gamma}.
+\texttt{gamma\_grid.min\_val$*$gamma\_grid} step, \texttt{gamma\_grid.min\_val$*gamma\_grid.step^2$,...,} 
+
+\texttt{gamma\_grid.min\_val$*gamma\_grid.step^n$}}, where \texttt{n} is the maximal index such, that 
+
+\texttt{gamma\_grid.min\_val$*gamma\_grid.step^n$} $<$ \texttt{gamma\_grid.max\_val}. So, \texttt{step} must always be greater than 1.
+
+If there is no need in optimization in some parameter, the according grid step should be set to any value less or equal to 1. For example, to avoid optimization in \texttt{gamma} one should set \texttt{gamma\_grid.step = 0}, \texttt{gamma\_grid.min\_val}, \texttt{gamma\_grid.max\_val} being arbitrary numbers. In this case, the value \texttt{params.gamma} will be taken for \texttt{gamma}.
 
 And, finally, if the optimization in some parameter is required, but there is no idea of the corresponding grid, one may call the function \href{#CvSVM.3A.3Agetdefaultgrid}{CvSVM::get\_default\_grid}. In order to generate a grid, say, for \texttt{gamma}, call \texttt{CvSVM::get\_default\_grid(CvSVM::GAMMA)}.
 
-This function works for the case of classification (\texttt{params.svm\_type=CvSVM::C\_SVC} or \texttt{params.svm\_type=CvSVM::NU\_SVC}) as well as for the regression (\texttt{params.svm\_type=CvSVM::EPS\_SVR} or \texttt{params.svm\_type=CvSVM::NU\_SVR}). If \texttt{params.svm\_type=CvSVM::ONE\_CLASS}, no optimization is made and usual SVM with specified in \texttt{params} parameters is executed.
+This function works for the case of classification 
+
+(\texttt{params.svm\_type=CvSVM::C\_SVC} or \texttt{params.svm\_type=CvSVM::NU\_SVC}) 
+
+as well as for the regression 
+
+(\texttt{params.svm\_type=CvSVM::EPS\_SVR} or \texttt{params.svm\_type=CvSVM::NU\_SVR}). If 
+
+\texttt{params.svm\_type=CvSVM::ONE\_CLASS}, no optimization is made and the usual SVM with specified in \texttt{params} parameters is executed.
 
 
 \cvfunc{CvSVM::get\_default\_grid} % XXX not in manual
 
-Generates a grid for SVM parameters
+Generates a grid for the SVM parameters.
 
 \cvexp{
 
@@ -649,7 +659,7 @@ The function generates a grid for the specified parameter of the SVM algorithm. 
 
 \cvfunc{CvSVM::get\_params} % XXX not in manual
 
-Returns current SVM parameters
+Returns the current SVM parameters.
 
 \cvexp{
 
@@ -657,12 +667,12 @@ CvSVMParams CvSVM::get\_params() const;
 
 }{CPP}{PYTHON}
 
-This function may be used to get the optimal parameters that were obtained while automatic training \href{#CvSVM.3A.3Atrainauto}{CvSVM::train\_auto}.
+This function may be used to get the optimal parameters that were obtained while automatically training \href{#CvSVM.3A.3Atrainauto}{CvSVM::train\_auto}.
 
 
 \cvfunc{CvSVM::get\_support\_vector*}
 
-Retrieves the number of support vectors and the particular vector
+Retrieves the number of support vectors and the particular vector.
 
 \cvexp{
 
@@ -677,28 +687,28 @@ The methods can be used to retrieve the set of support vectors.
 \section{Decision Trees}
 
 
-The ML classes discussed in this section implement Classification And Regression Tree algorithms, which is described in \href{#paper_Breiman84}{[Breiman84]}.
+The ML classes discussed in this section implement Classification And Regression Tree algorithms, which are described in \href{#paper_Breiman84}{[Breiman84]}.
 
 The class \cross{CvDTree} represents a single decision tree that may be used alone, or as a base class in tree ensembles (see \cross{Boosting} and \cross{Random Trees}).
 
-Decision tree is a binary tree (i.e. tree where each non-leaf node has exactly 2 child nodes). It can be used either for classification, when each tree leaf is marked with some class label (multiple leafs may have the same label), or for regression, when each tree leaf is also assigned a constant (so the approximation function is piecewise constant).
+A decision tree is a binary tree (i.e. tree where each non-leaf node has exactly 2 child nodes). It can be used either for classification, when each tree leaf is marked with some class label (multiple leafs may have the same label), or for regression, when each tree leaf is also assigned a constant (so the approximation function is piecewise constant).
 
 \subsection{Predicting with Decision Trees}
 
-To reach a leaf node, and thus to obtain a response for the input feature vector, the prediction procedure starts with the root node. From each non-leaf node the procedure goes to the left (i.e. selects the left child node as the next observed node), or to the right based on the value of a certain variable, which index is stored in the observed node. The variable can be either ordered or categorical. In the first case, the variable value is compared with the certain threshold (which is also stored in the node); if the value is less than the threshold, the procedure goes to the left, otherwise, to the right (for example, if the weight is less than 1 kilogram, the procedure goes to the left, else to the right). And in the second case the discrete variable value is tested, whether it belongs to a certain subset of values (also stored in the node) from a limited set of values the variable could take; if yes, the procedure goes to the left, else - to the right (for example, if the color is green or red, go to the left, else to the right). That is, in each node, a pair of entities ($<$variable\_index$>$, $<$decision\_rule (threshold/subset)$>$) is used. This pair is called split (split on the variable \#$<$variable\_index$>$). Once a leaf node is reached, the value assigned to this node is used as the output of prediction procedure.
+To reach a leaf node, and to obtain a response for the input feature vector, the prediction procedure starts with the root node. From each non-leaf node the procedure goes to the left (i.e. selects the left child node as the next observed node), or to the right based on the value of a certain variable, whose index is stored in the observed node. The variable can be either ordered or categorical. In the first case, the variable value is compared with the certain threshold (which is also stored in the node); if the value is less than the threshold, the procedure goes to the left, otherwise, to the right (for example, if the weight is less than 1 kilogram, the procedure goes to the left, else to the right). And in the second case the discrete variable value is tested to see if it belongs to a certain subset of values (also stored in the node) from a limited set of values the variable could take; if yes, the procedure goes to the left, else - to the right (for example, if the color is green or red, go to the left, else to the right). That is, in each node, a pair of entities ($<$variable\_index$>$, $<$decision\_rule (threshold/subset)$>$) is used. This pair is called a split (split on the variable \#$<$variable\_index$>$). Once a leaf node is reached, the value assigned to this node is used as the output of prediction procedure.
 
 Sometimes, certain features of the input vector are missed (for example, in the darkness it is difficult to determine the object color), and the prediction procedure may get stuck in the certain node (in the mentioned example if the node is split by color). To avoid such situations, decision trees use so-called surrogate splits. That is, in addition to the best "primary" split, every tree node may also be split on one or more other variables with nearly the same results.
 
 \subsection{Training Decision Trees}
 
-The tree is built recursively, starting from the root node. The whole training data (feature vectors and the responses) are used to split the root node. In each node the optimum decision rule (i.e. the best "primary" split) is found based on some criteria (in ML \texttt{gini} "purity" criteria is used for classification, and sum of squared errors is used for regression). Then, if necessary, the surrogate splits are found that resemble at the most the results of the primary split on the training data; all data are divided using the primary and the surrogate splits (just like it is done in the prediction procedure) between the left and the right child node. Then the procedure recursively splits both left and right nodes etc. At each node the recursive procedure may stop (i.e. stop splitting the node further) in one of the following cases:
+The tree is built recursively, starting from the root node. All of the training data (feature vectors and the responses) is used to split the root node. In each node the optimum decision rule (i.e. the best "primary" split) is found based on some criteria (in ML \texttt{gini} "purity" criteria is used for classification, and sum of squared errors is used for regression). Then, if necessary, the surrogate splits are found that resemble the results of the primary split on the training data; all of the data is divided using the primary and the surrogate splits (just like it is done in the prediction procedure) between the left and the right child node. Then the procedure recursively splits both left and right nodes. At each node the recursive procedure may stop (i.e. stop splitting the node further) in one of the following cases:
 \begin{itemize}
 \item{depth of the tree branch being constructed has reached the specified maximum value.}
-\item{number of training samples in the node is less than the specified threshold, i.e. it is not statistically representative set to split the node further.}
-\item{all the samples in the node belong to the same class (or, in case of regression, the variation is too small).}
-\item{the best split found does not give any noticeable improvement comparing to just a random choice.}
+\item{number of training samples in the node is less than the specified threshold, when it is not statistically representative to split the node further.}
+\item{all the samples in the node belong to the same class (or, in the case of regression, the variation is too small).}
+\item{the best split found does not give any noticeable improvement compared to a random choice.}
 \end{itemize}
-When the tree is built, it may be pruned using cross-validation procedure, if need. That is, some branches of the tree that may lead to the model overfitting are cut off. Normally, this procedure is only applied to standalone decision trees, while tree ensembles usually build small enough trees and use their own protection schemes against overfitting.
+When the tree is built, it may be pruned using a cross-validation procedure, if necessary. That is, some branches of the tree that may lead to the model overfitting are cut off. Normally this procedure is only applied to standalone decision trees, while tree ensembles usually build small enough trees and use their own protection schemes against overfitting.
 
 \subsection{Variable importance}
 
@@ -711,7 +721,7 @@ Importance of each variable is computed over all the splits on this variable in 
 
 \cvfunc{CvDTreeSplit}
 
-Decision tree node split
+Decision tree node split.
 
 \begin{lstlisting}
 struct CvDTreeSplit
@@ -735,19 +745,22 @@ struct CvDTreeSplit
 
 \begin{description}
 \cvarg{var\_idx}{Index of the variable used in the split.}
-\cvarg{inversed}{When it equals to 1, the inverse split rule is used (i.e. left and right branches are exchanged in the expressions below).}
+\cvarg{inversed}{When it equals 1, the inverse split rule is used (i.e. left and right branches are exchanged in the expressions below).}
 \cvarg{quality}{The split quality, a positive number. It is used to choose the best primary split, then to choose and sort the surrogate splits. After the tree is constructed, it is also used to compute variable importance.}
 \cvarg{next}{Pointer to the next split in the node split list.}
-\cvarg{subset}{Bit array indicating the value subset in case of split on a categorical variable.
+\cvarg{subset}{Bit array indicating the value subset in the case of split on a categorical variable.
+
 The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
-\cvarg{c}{The threshold value in case of split on an ordered variable.}
-cvarg{split\_point}{Used internally by the training algorithm.}
+\cvarg{c}{The threshold value in the case of a split on an ordered variable.
+
+The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
+\cvarg{split\_point}{Used internally by the training algorithm.}
 \end{description}
 
 
 \cvfunc{CvDTreeNode}
 
-Decision tree node
+Decision tree node.
 
 \begin{lstlisting}
 struct CvDTreeNode
@@ -770,10 +783,10 @@ struct CvDTreeNode
 
 \begin{description}
 \cvarg{value}{The value assigned to the tree node. It is either a class label, or the estimated function value.}
-\cvarg{class\_idx}{The assigned to the node normalized class index (to 0..class\_count-1 range), it is used internally in classification trees and tree ensembles.}
-\cvarg{Tn}{The tree index in a ordered sequence of trees. The indices are used during and after the pruning procedure. The root node has the maximum value \texttt{Tn} of the whole tree, child nodes have \texttt{Tn} less than or equal to the parent's \texttt{Tn}, and the nodes with \texttt{Tn$≤$\cross{CvDTree}::pruned\_tree\_idx} are not taken into consideration at the prediction stage (the corresponding branches are considered as cut-off), even if they have not been physically deleted from the tree at the pruning stage.}
+\cvarg{class\_idx}{The assigned to the node normalized class index (to 0 to class\_count-1 range), it is used internally in classification trees and tree ensembles.}
+\cvarg{Tn}{The tree index in an ordered sequence of trees. The indices are used during and after the pruning procedure. The root node has the maximum value \texttt{Tn} of the whole tree, child nodes have \texttt{Tn} less than or equal to the parent's \texttt{Tn}, and the nodes with \texttt{Tn$≤$\cross{CvDTree}::pruned\_tree\_idx} are not taken into consideration at the prediction stage (the corresponding branches are considered as cut-off), even if they have not been physically deleted from the tree at the pruning stage.}
 \cvarg{parent, left, right}{Pointers to the parent node, left and right child nodes.}\cvarg{split}{Pointer to the first (primary) split.}
-\cvarg{sample\_count}{The number of samples that fall into the node at the training stage. It is used to resolve the difficult cases - when the variable for the primary split is missing, and all the variables for other surrogate splits are missing too,the sample is directed to the left if \texttt{left->sample\_count$>$right->sample\_count} and to the right otherwise.}
+\cvarg{sample\_count}{The number of samples that fall into the node at the training stage. It is used to resolve the difficult cases - when the variable for the primary split is missing, and all the variables for the other surrogate splits are missing too,the sample is directed to the left if \texttt{left->sample\_count$>$right->sample\_count} and to the right otherwise.}
 \cvarg{depth}{The node depth, the root node depth is 0, the child nodes depth is the parent's depth + 1.}
 \end{description}
 
@@ -782,9 +795,9 @@ Other numerous fields of \texttt{CvDTreeNode} are used internally at the trainin
 
 \cvfunc{CvDTreeParams}
 
-Decision tree training parameters
+Decision tree training parameters.
 
-\cvexp{A}{B}{C}
+
 \begin{lstlisting}
 struct CvDTreeParams
 {
@@ -818,12 +831,15 @@ struct CvDTreeParams
 \cvarg{use\_surrogates}{If \texttt{true}, surrogate splits are built. Surrogate splits are needed to handle missing measurements and for variable importance estimation.}
 \cvarg{max\_categories}{If a discrete variable, on which the training procedure tries to make a split, takes more than \texttt{max\_categories} values, the precise best subset estimation may take a very long time (as the algorithm is exponential). Instead, many decision trees engines (including ML) try to find sub-optimal split in this case by clustering all the samples into \texttt{max\_categories} clusters (i.e. some categories are merged together).
 
-Note that this technique is used only in \texttt{N($>$2)}-class classification problems. In case of regression and 2-class classification the optimal split can be found efficiently without employing clustering, thus the parameter is not used in these cases.}
+Note that this technique is used only in \texttt{N($>$2)}-class classification problems. in the case of regression and 2-class classification the optimal split can be found efficiently without employing clustering, thus the parameter is not used in these cases.}
 \cvarg{cv\_folds}{If this parameter is $>$1, the tree is pruned using \texttt{cv\_folds}-fold cross validation.}
 \cvarg{use\_1se\_rule}{If \texttt{true}, the tree is truncated a bit more by the pruning procedure. That leads to compact, and more resistant to the training data noise, but a bit less accurate decision tree.}
-\cvarg{truncate\_pruned\_tree}{If \texttt{true}, the cut off nodes (with \texttt{Tn$≤$CvDTree::pruned\_tree\_idx}) are physically removed from the tree. Otherwise they are kept, and by decreasing \texttt{CvDTree::pruned\_tree\_idx} (e.g. setting it to -1) it is still possible to get the results from the original un-pruned (or pruned less aggressively) tree.}\cvarg{priors}{The array of a priori class probabilities, sorted by the class label value. The parameter can be used to tune the decision tree preferences toward a certain class. For example, if users want to detect some rare anomaly occurrence, the training base will likely contain much more normal cases than anomalies, so a very good classification performance will be achieved just by considering every case as normal. To avoid this, the priors can be specified, where the anomaly probability is artificially increased (up to 0.5 or even greater), so the weight of the misclassified anomalies becomes much bigger, and the tree is adjusted properly.
+\cvarg{truncate\_pruned\_tree}{If \texttt{true}, the cut off nodes (with \texttt{Tn$≤$CvDTree::pruned\_tree\_idx}) are physically removed from the tree. Otherwise they are kept, and by decreasing
 
-A note about memory management: the field \texttt{priors} is a pointer to the array of floats. The array should be allocated by user, and released just after the \texttt{CvDTreeParams} structure is passed to \cross{CvDTreeTrainData} or \cross{CvDTree} constructors/methods (as the methods make a copy of the array).}
+ \texttt{CvDTree::pruned\_tree\_idx} (e.g. setting it to -1) it is still possible to get the results from the original un-pruned (or pruned less aggressively) tree.}
+\cvarg{priors}{The array of a priori class probabilities, sorted by the class label value. The parameter can be used to tune the decision tree preferences toward a certain class. For example, if users want to detect some rare anomaly occurrence, the training base will likely contain many more normal cases than anomalies, so a very good classification performance will be achieved just by considering every case as normal. To avoid this, the priors can be specified, where the anomaly probability is artificially increased (up to 0.5 or even greater), so the weight of the misclassified anomalies becomes much bigger, and the tree is adjusted properly.
+
+A note about memory management: the field \texttt{priors} is a pointer to the array of floats. The array should be allocated by the user, and released just after the \texttt{CvDTreeParams} structure is passed to \cross{CvDTreeTrainData} or \cross{CvDTree} constructors/methods (as the methods make a copy of the array).}
 \end{description}
 
 The structure contains all the decision tree training parameters. There is a default constructor that initializes all the parameters with the default values tuned for standalone classification tree. Any of the parameters can be overridden then, or the structure may be fully initialized using the advanced variant of the constructor.
@@ -831,7 +847,7 @@ The structure contains all the decision tree training parameters. There is a def
 
 \cvfunc{CvDTreeTrainData}
 
-Decision tree training data and shared data for tree ensembles
+Decision tree training data and shared data for tree ensembles.
 
 \begin{lstlisting}
 struct CvDTreeTrainData
@@ -931,11 +947,11 @@ struct CvDTreeTrainData
 
 This structure is mostly used internally for storing both standalone trees and tree ensembles efficiently. Basically, it contains 3 types of information:
 \begin{enumerate}
-\item{The training parameters, \cross{CvDTreeParams} instance.}
+\item{The training parameters, an instance of \cross{CvDTreeParams}.}
 \item{The training data, preprocessed in order to find the best splits more efficiently. For tree ensembles this preprocessed data is reused by all the trees. Additionally, the training data characteristics that are shared by all trees in the ensemble are stored here: variable types, the number of classes, class label compression map etc.}
 \item{Buffers, memory storages for tree nodes, splits and other elements of the trees constructed.}
 \end{enumerate}
-There are 2 ways of using this structure. In simple cases (e.g. standalone tree, or ready-to-use "black box" tree ensemble from ML, like \cross{Random Trees} or \cross{Boosting}) there is no need to care or even to know about the structure - just construct the needed statistical model, train it and use it. The \texttt{CvDTreeTrainData} structure will be constructed and used internally. However, for custom tree algorithms, or another sophisticated cases, the structure may be constructed and used explicitly. The scheme is the following:
+There are 2 ways of using this structure. In simple cases (e.g. a standalone tree, or the ready-to-use "black box" tree ensemble from ML, like \cross{Random Trees} or \cross{Boosting}) there is no need to care or even to know about the structure - just construct the needed statistical model, train it and use it. The \texttt{CvDTreeTrainData} structure will be constructed and used internally. However, for custom tree algorithms, or another sophisticated cases, the structure may be constructed and used explicitly. The scheme is the following:
 \begin{enumerate}
 \item{The structure is initialized using the default constructor, followed by \texttt{set\_data} (or it is built using the full form of constructor). The parameter \texttt{\_shared} must be set to \texttt{true}.}
 \item{One or more trees are trained using this data, see the special form of the method \href{#CvDTree.3A.3Atrain}{CvDTree::train}.}
@@ -945,7 +961,7 @@ There are 2 ways of using this structure. In simple cases (e.g. standalone tree,
 
 \cvfunc{CvDTree}
 
-Decision tree
+Decision tree.
 
 \begin{lstlisting}
 class CvDTree : public CvStatModel
@@ -1028,7 +1044,7 @@ protected:
 
 \cvfunc{CvDTree::train}
 
-Trains decision tree
+Trains a decision tree.
 
 \cvexp{
 
@@ -1045,14 +1061,14 @@ bool CvDTree::train( CvDTreeTrainData* \_train\_data, const CvMat* \_subsample\_
 
 There are 2 \texttt{train} methods in \texttt{CvDTree}.
 
-The first method follows the generic \href{#CvStatModel.3A.3Atrain}{CvStatModel::train} conventions,  it is the most complete form of it. Both data layouts (\texttt{\_tflag=CV\_ROW\_SAMPLE} and \texttt{\_tflag=CV\_COL\_SAMPLE}) are supported, as well as sample and variable subsets, missing measurements, arbitrary combinations of input and output variable types etc. The last parameter contains all the necessary training parameters, see \cross{CvDTreeParams} description.
+The first method follows the generic \href{#CvStatModel.3A.3Atrain}{CvStatModel::train} conventions,  it is the most complete form. Both data layouts (\texttt{\_tflag=CV\_ROW\_SAMPLE} and \texttt{\_tflag=CV\_COL\_SAMPLE}) are supported, as well as sample and variable subsets, missing measurements, arbitrary combinations of input and output variable types etc. The last parameter contains all of the necessary training parameters, see the \cross{CvDTreeParams} description.
 
 The second method \texttt{train} is mostly used for building tree ensembles. It takes the pre-constructed \cross{CvDTreeTrainData} instance and the optional subset of training set. The indices in \texttt{\_subsample\_idx} are counted relatively to the \texttt{\_sample\_idx}, passed to \texttt{CvDTreeTrainData} constructor. For example, if \texttt{\_sample\_idx=[1, 5, 7, 100]}, then \texttt{\_subsample\_idx=[0,3]} means that the samples \texttt{[1, 100]} of the original training set are used.
 
 
 \cvfunc{CvDTree::predict}
 
-Returns the leaf node of decision tree corresponding to the input vector
+Returns the leaf node of the decision tree corresponding to the input vector.
 
 \cvexp{
 
@@ -1061,25 +1077,25 @@ CvDTreeNode* CvDTree::predict( \par const CvMat* \_sample, \par const CvMat* \_m
 
 }{CPP}{PYTHON}
 
-The method takes the feature vector and the optional missing measurement mask on input, traverses the decision tree and returns the reached leaf node on output. The prediction result, either the class label or the estimated function value, may be retrieved as \texttt{value} field of the \cross{CvDTreeNode} structure, for example: dtree-$>$predict(sample,mask)-$>$value.
+The method takes the feature vector and the optional missing measurement mask on input, traverses the decision tree and returns the reached leaf node on output. The prediction result, either the class label or the estimated function value, may be retrieved as the \texttt{value} field of the \cross{CvDTreeNode} structure, for example: dtree-$>$predict(sample,mask)-$>$value.
 
-The last parameter is normally set to \texttt{false} that implies a regular input. If it is \texttt{true}, the method assumes that all the values of the discrete input variables have been already normalized to \texttt{0..$<$num\_of\_categories,,i,,$>$-1} ranges. (as the decision tree uses such normalized representation internally). It is useful for faster prediction with tree ensembles. For ordered input variables the flag is not used.
+The last parameter is normally set to \texttt{false}, implying a regular input. If it is \texttt{true}, the method assumes that all the values of the discrete input variables have been already normalized to \texttt{0 to $<$num\_of\_categories$_i>$-1} ranges. (as the decision tree uses such normalized representation internally). It is useful for faster prediction with tree ensembles. For ordered input variables the flag is not used.
 
-Example. Building Tree for Classifying Mushrooms
+\cvfunc{Example: Building A Tree for Classifying Mushrooms}
 
-See \href{../../samples/c/mushroom.cpp}{mushroom.cpp} sample that demonstrates how to build and use the decision tree.
+See the \href{../../samples/c/mushroom.cpp}{mushroom.cpp} sample that demonstrates how to build and use the decision tree.
 
 \section{Boosting} % XXX make sure the math is right
 
-A common machine learning task is supervised learning of the following kind: Predict the output $y$ for an unseen input sample $x$ given a training set consisting of input and its desired output. In other words, the goal is to learn the functional relationship $F: y = F(x)$ between input $x$ and output $y$. Predicting qualitative output is called classification, while predicting quantitative output is called regression.
+A common machine learning task is supervised learning. In supervised learning, the goal is to learn the functional relationship $F: y = F(x)$ between the input $x$ and the output $y$. Predicting the qualitative output is called classification, while predicting the quantitative output is called regression.
 
-Boosting is a powerful learning concept, which provide a solution to supervised classification learning task. It combines the performance of many "weak" classifiers to produce a powerful 'committee' \cross{HTF01}. A weak classifier is only required to be better than chance, and thus can be very simple and computationally inexpensive. Many of them smartly combined, however, result in a strong classifier, which often outperforms most 'monolithic' strong classifiers such as SVMs and Neural Networks.
+Boosting is a powerful learning concept, which provide a solution to the supervised classification learning task. It combines the performance of many "weak" classifiers to produce a powerful 'committee' \cross{HTF01}. A weak classifier is only required to be better than chance, and thus can be very simple and computationally inexpensive. Many of them smartly combined, however, results in a strong classifier, which often outperforms most 'monolithic' strong classifiers such as SVMs and Neural Networks.
 
 Decision trees are the most popular weak classifiers used in boosting schemes. Often the simplest decision trees with only a single split node per tree (called stumps) are sufficient.
 
-Learning of boosted model is based on $N$ training examples ${(x_i,y_i)}1N$ with $x_i \in{R^K}$ and $y_i \in{-1, +1}$. $x_i$ is a $K$-component vector. Each component encodes a feature relevant for the learning task at hand. The desired two-class output is encoded as −1 and +1.
+The boosted model is based on $N$ training examples ${(x_i,y_i)}1N$ with $x_i \in{R^K}$ and $y_i \in{-1, +1}$. $x_i$ is a $K$-component vector. Each component encodes a feature relevant for the learning task at hand. The desired two-class output is encoded as −1 and +1.
 
-Different variants of boosting are known such as Discrete Adaboost, Real AdaBoost, LogitBoost, and Gentle AdaBoost \cross{FHT98}. All of them are very similar in their overall structure. Therefore, we will look only at the standard two-class Discrete AdaBoost algorithm as shown in the box below. Each sample is initially assigned the same weight (step 2). Next a weak classifier $f_{m(x)}$ is trained on the weighted training data (step 3a). Its weighted training error and scaling factor $c_m$ is computed (step 3b). The weights are increased for training samples, which have been misclassified (step 3c). All weights are then normalized, and the process of finding the next week classifier continues for another $M$-1 times. The final classifier $F(x)$ is the sign of the weighted sum over the individual weak classifiers (step 4).
+Different variants of boosting are known such as Discrete Adaboost, Real AdaBoost, LogitBoost, and Gentle AdaBoost \cross{FHT98}. All of them are very similar in their overall structure. Therefore, we will look only at the standard two-class Discrete AdaBoost algorithm as shown in the box below. Each sample is initially assigned the same weight (step 2). Next a weak classifier $f_{m(x)}$ is trained on the weighted training data (step 3a). Its weighted training error and scaling factor $c_m$ is computed (step 3b). The weights are increased for training samples, which have been misclassified (step 3c). All weights are then normalized, and the process of finding the next weak classifier continues for another $M$-1 times. The final classifier $F(x)$ is the sign of the weighted sum over the individual weak classifiers (step 4).
 \begin{enumerate}
 \item{Given $N$ examples ${(x_i,y_i)}1N$ with $x_i \in{R^K}, y_i \in{-1, +1}$.}
 \item{Start with weights $w_i = 1/N, i = 1,...,N$.}
@@ -1091,19 +1107,22 @@ Different variants of boosting are known such as Discrete Adaboost, Real AdaBoos
 \item{Output the classifier sign$[\Sigma m = 1M c_m f_m(x)]$.}
 \end{enumerate}}
 \end{enumerate}
-  Two-class Discrete AdaBoost Algorithm: Training (steps 1 to 3) and Evaluation (step 4)
 
-\textbf{NOTE:} As well as the classical boosting methods, the current implementation supports 2-class classifiers only. For M>2 classes there is \textbf{AdaBoost.MH} algorithm, described in \cross{FHT98}, that reduces the problem to the 2-class problem, yet with much larger training set.
+Two-class Discrete AdaBoost Algorithm: Training (steps 1 to 3) and Evaluation (step 4)
+\newline
+\newline
+\textbf{NOTE:} As well as the classical boosting methods, the current implementation supports 2-class classifiers only. For M$>$2 classes there is the \textbf{AdaBoost.MH} algorithm, described in \cross{FHT98}, that reduces the problem to the 2-class problem, yet with a much larger training set.
 
-In order to reduce computation time for boosted models without substantial loosing of the accuracy, the influence trimming technique may be employed. As the training algorithm proceeds and the number of trees in the ensemble is increased, a larger number of the training samples are classified correctly and with increasing confidence, thereby those samples receive smaller weights on the subsequent iterations. Examples with very low relative weight have small impact on training of the weak classifier. Thus such examples may be excluded during the weak classifier training without having much effect on the induced classifier. This process is controlled via the weight\_trim\_rate parameter. Only examples with the summary fraction weight\_trim\_rate of the total weight mass are used in the weak classifier training. Note that the weights for \textbf{all} training examples are recomputed at each training iteration. Examples deleted at a particular iteration may be used again for learning some of the weak classifiers further \cross{FHT98}.
+In order to reduce computation time for boosted models without substantially losing accuracy, the influence trimming technique may be employed. As the training algorithm proceeds and the number of trees in the ensemble is increased, a larger number of the training samples are classified correctly and with increasing confidence, thereby those samples receive smaller weights on the subsequent iterations. Examples with very low relative weight have small impact on training of the weak classifier. Thus such examples may be excluded during the weak classifier training without having much effect on the induced classifier. This process is controlled with the weight\_trim\_rate parameter. Only examples with the summary fraction weight\_trim\_rate of the total weight mass are used in the weak classifier training. Note that the weights for \textbf{all} training examples are recomputed at each training iteration. Examples deleted at a particular iteration may be used again for learning some of the weak classifiers further \cross{FHT98}.
 
-\textbf{[HTF01] Hastie, T., Tibshirani, R., Friedman, J. H. The Elements of Statistical Learning: Data Mining, Inference, and Prediction. Springer Series in Statistics. 2001.
-[FHT98] Friedman, J. H., Hastie, T. and Tibshirani, R. Additive Logistic Regression: a Statistical View of Boosting. Technical Report, Dept. of Statistics, Stanford University, 1998.}
+\textbf{[HTF01] Hastie, T., Tibshirani, R., Friedman, J. H. The Elements of Statistical Learning: Data Mining, Inference, and Prediction. Springer Series in Statistics. 2001.}
+
+\textbf{[FHT98] Friedman, J. H., Hastie, T. and Tibshirani, R. Additive Logistic Regression: a Statistical View of Boosting. Technical Report, Dept. of Statistics, Stanford University, 1998.}
 
 
 \cvfunc{CvBoostParams}
 
-Boosting training parameters
+Boosting training parameters.
 
 \begin{lstlisting}
 struct CvBoostParams : public CvDTreeParams
@@ -1132,12 +1151,12 @@ Gentle AdaBoost and Real AdaBoost are often the preferable choices.}
 \cvarg{split\_criteria}{Splitting criteria, used to choose optimal splits during a weak tree construction:
 \begin{description}
 \cvarg{CvBoost::DEFAULT}{Use the default criteria for the particular boosting method, see below.}
-\cvarg{CvBoost::GINI}{Use Gini index. This is default option for Real AdaBoost; may be also used for Discrete AdaBoost.}
-\cvarg{CvBoost::MISCLASS}{Use misclassification rate. This is default option for Discrete AdaBoost; may be also used for Real AdaBoost.}
-\cvarg{CvBoost::SQERR}{Use least squares criteria. This is default and the only option for LogitBoost and Gentle AdaBoost.}
+\cvarg{CvBoost::GINI}{Use the Gini index. This is the default option for Real AdaBoost; may be also used for Discrete AdaBoost.}
+\cvarg{CvBoost::MISCLASS}{Use the misclassification rate. This is the default option for Discrete AdaBoost; may be also used for Real AdaBoost.}
+\cvarg{CvBoost::SQERR}{Use the least squares criteria. This is the default and the only option for LogitBoost and Gentle AdaBoost.}
 \end{description}
 test.}
-\cvarg{weight\_trim\_rate}{The weight trimming ratio, within 0..1. See the discussion of it above. If the parameter is $≤$0 or $>$1, the trimming is not used, all the samples are used at each iteration. The default value is 0.95.}
+\cvarg{weight\_trim\_rate}{The weight trimming ratio, between 0 and 1. See the discussion of it above. If the parameter is $≤$0 or $>$1, the trimming is not used and all of the samples are used at each iteration. The default value is 0.95.}
 \end{description}
 
 The structure is derived from \cross{CvDTreeParams}, but not all of the decision tree parameters are supported. In particular, cross-validation is not supported.
@@ -1145,7 +1164,7 @@ The structure is derived from \cross{CvDTreeParams}, but not all of the decision
 
 \cvfunc{CvBoostTree}
 
-Weak tree classifier
+Weak tree classifier.
 
 \begin{lstlisting}
 class CvBoostTree: public CvDTree
@@ -1168,14 +1187,14 @@ protected:
 \end{lstlisting}
 
 
-The weak classifier, a component of boosted tree classifier \cross{CvBoost}, is a derivative of \cross{CvDTree}. Normally, there is no need to use the weak classifiers directly, however they can be accessed as elements of sequence \texttt{CvBoost::weak}, retrieved by \href{#CvBoost.3A.3Agetweakpredictors}{CvBoost::get\_weak\_predictors}.
+The weak classifier, a component of the boosted tree classifier \cross{CvBoost}, is a derivative of \cross{CvDTree}. Normally, there is no need to use the weak classifiers directly, however they can be accessed as elements of the sequence \texttt{CvBoost::weak}, retrieved by \href{#CvBoost.3A.3Agetweakpredictors}{CvBoost::get\_weak\_predictors}.
 
-Note, that in case of LogitBoost and Gentle AdaBoost each weak predictor is a regression tree, rather than a classification tree. Even in case of Discrete AdaBoost and Real AdaBoost the \texttt{CvBoostTree::predict} return value (\texttt{CvDTreeNode::value}) is not the output class label; a negative value "votes" for class \#0, a positive - for class \#1. And the votes are weighted. The weight of each individual tree may be increased or decreased using method \texttt{CvBoostTree::scale}.
+Note, that in the case of LogitBoost and Gentle AdaBoost each weak predictor is a regression tree, rather than a classification tree. Even in the case of Discrete AdaBoost and Real AdaBoost the \texttt{CvBoostTree::predict} return value (\texttt{CvDTreeNode::value}) is not the output class label; a negative value "votes" for class \#0, a positive - for class \#1. And the votes are weighted. The weight of each individual tree may be increased or decreased using the method \texttt{CvBoostTree::scale}.
 
 
 \cvfunc{CvBoost}
 
-Boosted tree classifier
+Boosted tree classifier.
 
 \begin{lstlisting}
 class CvBoost : public CvStatModel
@@ -1234,7 +1253,7 @@ protected:
 
 \cvfunc{CvBoost::train}
 
-Trains boosted tree classifier
+Trains a boosted tree classifier.
 
 \cvexp{
 
@@ -1247,12 +1266,12 @@ bool CvBoost::train( \par const CvMat* \_train\_data, \par int \_tflag,
 
 }{CPP}{PYTHON}
 
-The train method follows the common template, the last parameter \texttt{update} specifies whether the classifier needs to be updated (i.e. the new weak tree classifiers added to the existing ensemble), or the classifier needs to be rebuilt from scratch. The responses must be categorical, i.e. boosted trees can not be built for regression, and there should be 2 classes.
+The train method follows the common template; the last parameter \texttt{update} specifies whether the classifier needs to be updated (i.e. the new weak tree classifiers added to the existing ensemble), or the classifier needs to be rebuilt from scratch. The responses must be categorical, i.e. boosted trees can not be built for regression, and there should be 2 classes.
 
 
 \cvfunc{CvBoost::predict}
 
-Predicts response for the input sample
+Predicts a response for the input sample.
 
 \cvexp{
 
@@ -1265,7 +1284,7 @@ float CvBoost::predict( \par const CvMat* sample, \par const CvMat* missing=0,
 \begin{description}
 \cvarg{sample}{The input sample.}
 \cvarg{missing}{The optional mask of missing measurements. To handle missing measurements, the weak classifiers must include surrogate splits (see \texttt{CvDTreeParams::use\_surrogates}).}
-\cvarg{weak\_responses}{The optional output parameter, a floating-point vector, of responses from each individual weak classifier. The number of elements in the vector must be equal to the \texttt{slice} length.}
+\cvarg{weak\_responses}{The optional output parameter, a floating-point vector of responses from each individual weak classifier. The number of elements in the vector must be equal to the \texttt{slice} length.}
 \cvarg{slice}{The continuous subset of the sequence of weak classifiers to be used for prediction. By default, all the weak classifiers are used.}
 \cvarg{raw\_mode}{It has the same meaning as in \texttt{CvDTree::predict}. Normally, it should be set to false.}
 \end{description}
@@ -1275,7 +1294,7 @@ The method \texttt{CvBoost::predict} runs the sample through the trees in the en
 
 \cvfunc{CvBoost::prune}
 
-Removes specified weak classifiers
+Removes the specified weak classifiers.
 
 \cvexp{
 
@@ -1288,7 +1307,7 @@ The method removes the specified weak classifiers from the sequence. Note that t
 
 \cvfunc{CvBoost::get\_weak\_predictors}
 
-Returns the sequence of weak tree classifiers
+Returns the sequence of weak tree classifiers.
 
 \cvexp{
 
@@ -1296,16 +1315,16 @@ CvSeq* CvBoost::get\_weak\_predictors();
 
 }{CPP}{PYTHON}
 
-The method returns the sequence of weak classifiers. Each element of the sequence is a pointer to \texttt{CvBoostTree} class (or, probably, to some of its derivatives).
+The method returns the sequence of weak classifiers. Each element of the sequence is a pointer to a \texttt{CvBoostTree} class (or, probably, to some of its derivatives).
 
 \section{Random Trees}
 
 
-Random trees have been introduced by Leo Breiman and Adele Cutler: \url{http://www.stat.berkeley.edu/users/breiman/RandomForests/}. The algorithm can deal with both classification and regression problems. Random trees is a collection (ensemble) of \href{#DecisionTrees}{tree predictors} that is called \textbf{forest} further in this section (the term has been also introduced by L. Breiman). The classification works as following: the random trees classifier takes the input feature vector, classifies it with every tree in the forest, and outputs the class label that has got the majority of "votes". In case of regression the classifier response is the average of responses over all the trees in the forest.
+Random trees have been introduced by Leo Breiman and Adele Cutler: \url{http://www.stat.berkeley.edu/users/breiman/RandomForests/}. The algorithm can deal with both classification and regression problems. Random trees is a collection (ensemble) of \href{#DecisionTrees}{tree predictors} that is called \textbf{forest} further in this section (the term has been also introduced by L. Breiman). The classification works as follows: the random trees classifier takes the input feature vector, classifies it with every tree in the forest, and outputs the class label that recieved the majority of "votes". In the case of regression the classifier response is the average of the responses over all the trees in the forest.
 
-All the trees are trained with the same parameters, but on the different training sets, which are generated from the original training set using bootstrap procedure: for each training set we randomly select the same number of vectors as in the original set (\texttt{=N}). The vectors are chosen with replacement. That is, some vectors will occur more than once and some will be absent. At each node of each tree trained not all the variables are used to find the best split, rather than a random subset of them. The each node a new subset is generated, however its size is fixed for all the nodes and all the trees. It is a training parameter, set to \texttt{sqrt($<$number\_of\_variables$>$)} by default. None of the tree built is pruned.
+All the trees are trained with the same parameters, but on the different training sets, which are generated from the original training set using the bootstrap procedure: for each training set we randomly select the same number of vectors as in the original set (\texttt{=N}). The vectors are chosen with replacement. That is, some vectors will occur more than once and some will be absent. At each node of each tree trained not all the variables are used to find the best split, rather than a random subset of them. With each node a new subset is generated, however its size is fixed for all the nodes and all the trees. It is a training parameter, set to \texttt{sqrt($<$number\_of\_variables$>$)} by default. None of the trees that are built are pruned.
 
-In random trees there is no need in any accuracy estimation procedures, such as cross-validation or bootstrap, or a separate test set to get an estimate of the training error. The error is estimated internally during the training. When the training set for the current tree is drawn by sampling with replacement, some vectors are left out (so-called \emph{oob (out-of-bag) data}). The size of oob data is about \texttt{N/3}. The classification error is estimated by using this oob-data as following:
+In random trees there is no need for any accuracy estimation procedures, such as cross-validation or bootstrap, or a separate test set to get an estimate of the training error. The error is estimated internally during the training. When the training set for the current tree is drawn by sampling with replacement, some vectors are left out (so-called \emph{oob (out-of-bag) data}). The size of oob data is about \texttt{N/3}. The classification error is estimated by using this oob-data as following:
 \begin{itemize}
 \item{Get a prediction for each vector, which is oob relatively to the i-th tree, using the very i-th tree.}
 \item{After all the trees have been trained, for each vector that has ever been oob, find the class-"winner" for it (i.e. the class that has got the majority of votes in the trees, where the vector was oob) and compare it to the ground-truth response.}
@@ -1322,7 +1341,7 @@ In random trees there is no need in any accuracy estimation procedures, such as 
 
 \cvfunc{CvRTParams}
 
-Training Parameters of Random Trees
+Training Parameters of Random Trees.
 
 \begin{lstlisting}
 struct CvRTParams : public CvDTreeParams
@@ -1347,7 +1366,7 @@ struct CvRTParams : public CvDTreeParams
 \end{lstlisting}
 
 \begin{description}
-\cvarg{calc\_var\_importance}{If it is set, then variable importance is computed by the training procedure. To retrieve the computed variable importance array, call the method \texttt{CvRTrees::get\_var\_importance().}}
+\cvarg{calc\_var\_importance}{If it is set, then variable importance is computed by the training procedure. To retrieve the computed variable importance array, call the method \newline \texttt{CvRTrees::get\_var\_importance().}}
 \cvarg{nactive\_vars}{The number of variables that are randomly selected at each tree node and that are used to find the best split(s).}
 \cvarg{term\_crit}{Termination criteria for growing the forest: \texttt{term\_crit.max\_iter} is the maximum number of trees in the forest (see also \texttt{max\_tree\_count} parameter of the constructor, by default it is set to 50).
 
@@ -1359,7 +1378,7 @@ The set of training parameters for the forest is the superset of the training pa
 
 \cvfunc{CvRTrees}
 
-Random Trees
+Random Trees.
 
 \begin{lstlisting}
 class CvRTrees : public CvStatModel
@@ -1406,7 +1425,7 @@ protected:
 
 \cvfunc{CvRTrees::train}
 
-Trains Random Trees model
+Trains the Random Trees model.
 
 \cvexp{
 
@@ -1418,12 +1437,12 @@ bool CvRTrees::train( \par const CvMat* train\_data, \par int tflag,
 
 }{CPP}{PYTHON}
 
-The method \texttt{CvRTrees::train} is very similar to the first form of \href{#CvDTree.3A.3Atrain}{CvDTree::train}() and follows the generic method \href{#CvStatModel.3A.3Atrain}{CvStatModel::train} conventions. All the specific to the algorithm training parameters are passed as \cross{CvRTParams} instance. The estimate of the training error (\href{#RTreesOOBerror}{oob-error}) is stored in the protected class member \texttt{oob\_error}.
+The method \texttt{CvRTrees::train} is very similar to the first form of \href{#CvDTree.3A.3Atrain}{CvDTree::train}() and follows the generic method \href{#CvStatModel.3A.3Atrain}{CvStatModel::train} conventions. All of the specific to the algorithm training parameters are passed as a \cross{CvRTParams} instance. The estimate of the training error (\href{#RTreesOOBerror}{oob-error}) is stored in the protected class member \texttt{oob\_error}.
 
 
 \cvfunc{CvRTrees::predict}
 
-Predicts the output for the input sample
+Predicts the output for the input sample.
 
 \cvexp{
 
@@ -1436,7 +1455,7 @@ The input parameters of the prediction method are the same as in \href{#CvDTree.
 
 \cvfunc{CvRTrees::get\_var\_importance}
 
-Retrieves the variable importance array
+Retrieves the variable importance array.
 
 \cvexp{
 
@@ -1449,7 +1468,7 @@ The method returns the variable importance vector, computed at the training stag
 
 \cvfunc{CvRTrees::get\_proximity}
 
-Retrieves proximity measure between two training samples
+Retrieves the proximity measure between two training samples.
 
 \cvexp{
 
@@ -1460,7 +1479,7 @@ float CvRTrees::get\_proximity( \par const CvMat* sample\_1, \par const CvMat* s
 The method returns proximity measure between any two samples (the ratio of the those trees in the ensemble, in which the samples fall into the same leaf node, to the total number of the trees).
 
 
-Example. Prediction of mushroom goodness using random trees classifier
+\cvfunc{Example: Prediction of mushroom goodness using random trees classifier}
 
 \begin{lstlisting}
 #include <float.h>
@@ -1581,20 +1600,32 @@ int main( void )
 
 \section{Expectation-Maximization}
 
-The EM (Expectation-Maximization) algorithm estimates the parameters of the multivariate probability density function in a form of the Gaussian mixture distribution with a specified number of mixtures.
+The EM (Expectation-Maximization) algorithm estimates the parameters of the multivariate probability density function in the form of a Gaussian mixture distribution with a specified number of mixtures.
 
-Consider the set of the feature vectors $x_1, x_2,...,x_{N}$ : N vectors from d-dimensional Euclidean space drawn from a Gaussian mixture:
+Consider the set of the feature vectors $x_1, x_2,...,x_{N}$ : N vectors from a d-dimensional Euclidean space drawn from a Gaussian mixture:
 
-\includegraphics[width=0.8\textwidth]{pics/em1.png}
+\[
+p(x;a_k,S_k,\pi_k) = \sum_{k=1}^{m}\pi_kp_k(x), \quad \pi_k \geq 0, \quad \sum_{k=1}^{m}\pi_k=1,
+\]
+
+\[
+p_k(x)=\varphi(x;a_k,S_k)=\frac{1}{(2\pi)^{d/2}\mid{S_k}\mid^{1/2}}exp\left\{-\frac{1}{2}(x-a_k)^TS_k^{-1}(x-a_k)\right\},
+\]
 
 where $m$ is the number of mixtures, $p_k$ is the normal distribution
 density with the mean $a_k$ and covariance matrix $S_k$, $\pi_k$
-is the weight of k-th mixture. Given the number of mixtures
+is the weight of the k-th mixture. Given the number of mixtures
 $M$ and the samples $x_i$, $i=1..N$ the algorithm finds the
 maximum-likelihood estimates (MLE) of the all the mixture parameters,
 i.e. $a_k$, $S_k$ and $\pi_k$ :
 
-\includegraphics[width=0.8\textwidth]{pics/em3.png}
+\[
+L(x,\theta)=logp(x,\theta)=\sum_{i=1}^{N}log\left(\sum_{k=1}^{m}\pi_kp_k(x)\right)\to\max_{\theta\in\Theta},
+\]
+
+\[
+\Theta=\left\{(a_k,S_k,\pi_k): a_k \in \mathbbm{R} ^d,S_k=S_k^T>0,S_k \in \mathbbm{R} ^{d \times d},\pi_k\geq 0,\sum_{k=1}^{m}\pi_k=1\right\}.
+\]
 
 EM algorithm is an iterative procedure. Each iteration of it includes
 two steps. At the first step (Expectation-step, or E-step), we find a
@@ -1602,15 +1633,19 @@ probability $p_{i,k}$ (denoted $\alpha_{i,k}$ in the formula below) of
 sample \texttt{i} to belong to mixture \texttt{k} using the currently
 available mixture parameter estimates:
 
-\includegraphics[width=0.3\textwidth]{pics/em4.png}
+\[
+\alpha_{ki} = \frac{\pi_k\varphi(x;a_k,S_k)}{\sum\limits_{j=1}^{m}\pi_j\varphi(x;a_j,S_j)}.
+\]
 
 At the second step (Maximization-step, or M-step) the mixture parameter estimates are refined using the computed probabilities:
 
-\includegraphics[width=0.8\textwidth]{pics/em5.png}
+\[
+\pi_k=\frac{1}{N}\sum_{i=1}^{N}\alpha_{ki}, \quad a_k=\frac{\sum\limits_{i=1}^{N}\alpha_{ki}x_i}{\sum\limits_{i=1}^{N}\alpha_{ki}}, \quad S_k=\frac{\sum\limits_{i=1}^{N}\alpha_{ki}(x_i-a_k)(x_i-a_k)^T}{\sum\limits_{i=1}^{N}\alpha_{ki}},
+\]
 
-Alternatively, the algorithm may start with M-step when initial values for $p_{i,k}$ can be provided. Another alternative, when $p_{i,k}$ are unknown, is to use a simpler clustering algorithm to pre-cluster the input samples and thus obtain initial $p_{i,k}$. Often (and in ML) \href{CxCore#KMeans2}{k-means} algorithm is used for that purpose.
+Alternatively, the algorithm may start with the M-step when the initial values for $p_{i,k}$ can be provided. Another alternative when $p_{i,k}$ are unknown, is to use a simpler clustering algorithm to pre-cluster the input samples and thus obtain initial $p_{i,k}$. Often (and in ML) the \href{CxCore#KMeans2}{k-means} algorithm is used for that purpose.
 
-One of the main that EM algorithm should deal with is the large number of parameters to estimate. The majority of the parameters sits in covariation matrices, which are \texttt{dxd} elements each (where \texttt{d} is the feature space dimensionality). However, in many practical problems the covariation matrices are close to diagonal, or even to $\mu_k*\texttt{I}$, where \texttt{I} is identity matrix and $\mu_k$ is mixture-dependent "scale" parameter. So a robust computation scheme could be to start with the harder constraints on the covariation matrices and then use the estimated parameters as an input for a less constrained optimization problem (often a diagonal covariation matrix is already a good enough approximation).
+One of the main that EM algorithm should deal with is the large number of parameters to estimate. The majority of the parameters sits in covariance matrices, which are \texttt{d$\times$d} elements each (where \texttt{d} is the feature space dimensionality). However, in many practical problems the covariance matrices are close to diagonal, or even to $\mu_k*\texttt{I}$, where \texttt{I} is identity matrix and $\mu_k$ is mixture-dependent "scale" parameter. So a robust computation scheme could be to start with the harder constraints on the covariance matrices and then use the estimated parameters as an input for a less constrained optimization problem (often a diagonal covariance matrix is already a good enough approximation).
 
 \textbf{References:}
 \begin{enumerate}
@@ -1620,7 +1655,7 @@ One of the main that EM algorithm should deal with is the large number of parame
 
 \cvfunc{CvEMParams}
 
-Parameters of EM algorithm
+Parameters of the EM algorithm.
 
 \begin{lstlisting}
 struct CvEMParams
@@ -1658,24 +1693,24 @@ struct CvEMParams
 \end{lstlisting}
 
 \begin{description}
-\cvarg{nclusters}{The number of mixtures. Some of EM implementation could determine the optimal number of mixtures within a specified value range, but that is not the case in ML yet.}
-\cvarg{cov\_mat\_type}{The type of the mixture covariation matrices; should be one of the following:
+\cvarg{nclusters}{The number of mixtures. Some EM implementation could determine the optimal number of mixtures within a specified value range, but that is not the case in ML yet.}
+\cvarg{cov\_mat\_type}{The type of the mixture covariance matrices; should be one of the following:
 \begin{description}
-\cvarg{CvEM::COV\_MAT\_GENERIC}{a covariation matrix of each mixture may be arbitrary symmetrical positively defined matrix, so the number of free parameters in each matrix is about $\texttt{d}^2/2$. It is not recommended to use this option, unless there is pretty accurate initial estimation of the parameters and/or a huge number of training samples.}
-\cvarg{CvEM::COV\_MAT\_DIAGONAL}{a covariation matrix of each mixture may be arbitrary diagonal matrix with positive diagonal elements, that is, non-diagonal elements are forced to be 0's, so the number of free parameters is \texttt{d} for each matrix. This is most commonly used option yielding good estimation results.}
-\cvarg{CvEM::COV\_MAT\_SPHERICAL}{a covariation matrix of each mixture is a scaled identity matrix, $\mu_k*\texttt{I}$, so the only parameter to be estimated is $\mu_k$. The option may be used in special cases, when the constraint is relevant, or as a first step in the optimization (e.g. in case when the data is preprocessed with \cross{CalcPCA}). The results of such preliminary estimation may be passed again to the optimization procedure, this time with \texttt{cov\_mat\_type=CvEM::COV\_MAT\_DIAGONAL}.}
+\cvarg{CvEM::COV\_MAT\_GENERIC}{a covariance matrix of each mixture may be an arbitrary, symmetrical, positively defined matrix, so the number of free parameters in each matrix is about $\texttt{d}^2/2$. It is not recommended to use this option, unless there is pretty accurate initial estimation of the parameters and/or a huge number of training samples.}
+\cvarg{CvEM::COV\_MAT\_DIAGONAL}{a covariance matrix of each mixture may be an arbitrary diagonal matrix with positive diagonal elements, that is, non-diagonal elements are forced to be 0's, so the number of free parameters is \texttt{d} for each matrix. This is the most commonly used option yielding good estimation results.}
+\cvarg{CvEM::COV\_MAT\_SPHERICAL}{a covariance matrix of each mixture is a scaled identity matrix, $\mu_k*\texttt{I}$, so the only parameter to be estimated is $\mu_k$. The option may be used in special cases, when the constraint is relevant, or as a first step in the optimization (e.g. in case when the data is preprocessed with \cross{CalcPCA}). The results of such preliminary estimation may be passed again to the optimization procedure, this time with \texttt{cov\_mat\_type=CvEM::COV\_MAT\_DIAGONAL}.}
 \end{description}}
 \cvarg{start\_step}{The initial step the algorithm starts from; should be one of the following:
 \begin{description}
-\cvarg{CvEM::START\_E\_STEP}{the algorithm starts with E-step. At least, the initial values of mean vectors, \texttt{CvEMParams::means} must be passed. Optionally, the user may also provide initial values for weights (\texttt{CvEMParams::weights}) and/or covariation matrices (\texttt{CvEMParams::covs}).}
+\cvarg{CvEM::START\_E\_STEP}{the algorithm starts with E-step. At least, the initial values of mean vectors, \texttt{CvEMParams::means} must be passed. Optionally, the user may also provide initial values for weights (\texttt{CvEMParams::weights}) and/or covariance matrices (\texttt{CvEMParams::covs}).}
 \cvarg{CvEM::START\_M\_STEP}{the algorithm starts with M-step. The initial probabilities $p_{i,k}$ must be provided.}
 \cvarg{CvEM::START\_AUTO\_STEP}{No values are required from the user, k-means algorithm is used to estimate initial mixtures parameters.}
 \end{description}}
 \cvarg{term\_crit}{Termination criteria of the procedure. EM algorithm stops either after a certain number of iterations (\texttt{term\_crit.num\_iter}), or when the parameters change too little (no more than \texttt{term\_crit.epsilon}) from iteration to iteration.}
-\cvarg{probs}{Initial probabilities $p_{i,k}$; are used (and must be not \texttt{NULL}) only when \texttt{start\_step=CvEM::START\_M\_STEP}.}
-\cvarg{weights}{Initial mixture weights $\pi_k$; are used (if not \texttt{NULL}) only when \texttt{start\_step=CvEM::START\_E\_STEP}.}
-\cvarg{covs}{Initial mixture covariation matrices $S_k$; are used (if not \texttt{NULL}) only when \texttt{start\_step=CvEM::START\_E\_STEP}.}
-\cvarg{means}{Initial mixture means $a_k$; are used (and must be not \texttt{NULL}) only when \texttt{start\_step=CvEM::START\_E\_STEP}.}
+\cvarg{probs}{Initial probabilities $p_{i,k}$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_M\_STEP}.}
+\cvarg{weights}{Initial mixture weights $\pi_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
+\cvarg{covs}{Initial mixture covariance matrices $S_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
+\cvarg{means}{Initial mixture means $a_k$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
 \end{description}
 
 The structure has 2 constructors, the default one represents a rough rule-of-thumb, with another one it is possible to override a variety of parameters, from a single number of mixtures (the only essential problem-dependent parameter), to the initial values for the mixture parameters.
@@ -1683,13 +1718,13 @@ The structure has 2 constructors, the default one represents a rough rule-of-thu
 
 \cvfunc{CvEM}
 
-EM model
+EM model.
 
 \begin{lstlisting}
 class CV_EXPORTS CvEM : public CvStatModel
 {
 public:
-    // Type of covariation matrices
+    // Type of covariance matrices
     enum { COV_MAT_SPHERICAL=0, COV_MAT_DIAGONAL=1, COV_MAT_GENERIC=2 };
 
     // The initial step
@@ -1739,7 +1774,7 @@ protected:
 
 \cvfunc{CvEM::train}
 
-Estimates Gaussian mixture parameters from the sample set
+Estimates the Gaussian mixture parameters from the sample set.
 
 \cvexp{
 
@@ -1748,12 +1783,12 @@ void CvEM::train( \par const CvMat* samples, \par const CvMat*  sample\_idx=0,
 
 }{CPP}{PYTHON}
 
-Unlike many of ML models, EM is an unsupervised learning algorithm and it does not take responses (class labels or the function values) on input. Instead, it computes \cross{MLE} of Gaussian mixture parameters from the input sample set, stores all the parameters inside the structure: $p_{i,k}$ in \texttt{probs}, $a_k$ in \texttt{means} $S_k$ in \texttt{covs[k]}, $\pi_k$ in \texttt{weights} and optionally computes the output "class label" for each sample: $\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N$ (i.e. indices of the most-probable mixture for each sample).
+Unlike many of the ML models, EM is an unsupervised learning algorithm and it does not take responses (class labels or the function values) on input. Instead, it computes the \cross{MLE} of the Gaussian mixture parameters from the input sample set, stores all the parameters inside the structure: $p_{i,k}$ in \texttt{probs}, $a_k$ in \texttt{means} $S_k$ in \texttt{covs[k]}, $\pi_k$ in \texttt{weights} and optionally computes the output "class label" for each sample: $\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N$ (i.e. indices of the most-probable mixture for each sample).
 
 The trained model can be used further for prediction, just like any other classifier. The model trained is similar to the \cross{Bayes classifier}.
 
 
-Example. Clustering random samples of multi-Gaussian distribution using EM
+\cvfunc{Example: Clustering random samples of multi-Gaussian distribution using EM}
 
 \begin{lstlisting}
 #include "ml.h"
@@ -1864,11 +1899,11 @@ int main( int argc, char** argv )
 
 \section{Neural Networks}
 
-ML implements feed-forward artificial neural networks, more particularly, multi-layer perceptrons (MLP), the most commonly used type of neural networks. MLP consists of the input layer, output layer and one or more hidden layers. Each layer of MLP includes one or more neurons that are directionally linked with the neurons from the previous and the next layer. Here is an example of 3-layer perceptron with 3 inputs, 2 outputs and the hidden layer including 5 neurons:
+ML implements feed-forward artificial neural networks, more particularly, multi-layer perceptrons (MLP), the most commonly used type of neural networks. MLP consists of the input layer, output layer and one or more hidden layers. Each layer of MLP includes one or more neurons that are directionally linked with the neurons from the previous and the next layer. Here is an example of a 3-layer perceptron with 3 inputs, 2 outputs and the hidden layer including 5 neurons:
 
 \includegraphics{pics/mlp_.png}
 
-All the neurons in MLP are similar. Each of them has several input links (i.e. it takes the output values from several neurons in the previous layer on input) and several output links (i.e. it passes the response to several neurons in the next layer). The values retrieved from the previous layer are summed with certain weights, individual for each neuron, plus the bias term, and the sum is transformed using the activation function \texttt{f} that may be also different for different neurons. Here is the picture:
+All the neurons in MLP are similar. Each of them has several input links (i.e. it takes the output values from several neurons in the previous layer on input) and several output links (i.e. it passes the response to several neurons in the next layer). The values retrieved from the previous layer are summed with certain weights, individual for each neuron, plus the bias term, and the sum is transformed using the activation function $f$ that may be also different for different neurons. Here is the picture:
 
 \includegraphics{pics/neuron_model.png}
 
@@ -1882,7 +1917,7 @@ In other words, given the outputs \texttt{{$x_j$}} of the layer \texttt{n}, the 
 
 }{CPP}{PYTHON}
 
-Different activation functions may be used, the ML implements 3 standard ones:
+Different activation functions may be used, ML implements 3 standard ones:
 \begin{itemize}
 \item{Identity function (\texttt{CvANN\_MLP::IDENTITY}): \texttt{$f(x)=x$}}
 \item{Symmetrical sigmoid (\texttt{CvANN\_MLP::SIGMOID\_SYM}): \texttt{$f(x)=\beta*(1-e^-\alpha x)/(1+e^-\alpha x$)}, the default choice for MLP; the standard sigmoid with $\beta =1, \alpha =1$ is shown below:}
@@ -1893,13 +1928,13 @@ Different activation functions may be used, the ML implements 3 standard ones:
 \end{itemize}
 In ML all the neurons have the same activation functions, with the same free parameters ($\alpha, \beta$) that are specified by user and are not altered by the training algorithms.
 
-So the whole trained network works as following. It takes the feature vector on input, the vector size is equal to the size of the input layer, when the values are passed as input to the first hidden layer, the outputs of the hidden layer are computed using the weights and the activation functions and passed further downstream, until we compute the output layer.
+So the whole trained network works as follows: It takes the feature vector on input, the vector size is equal to the size of the input layer, when the values are passed as input to the first hidden layer, the outputs of the hidden layer are computed using the weights and the activation functions and passed further downstream, until we compute the output layer.
 
-So, in order to compute the network one need to know all the weights \texttt{$w^(n+1)_{i,j}$}. The weights are computed by the training algorithm. The algorithm takes a training set: multiple input vectors with the corresponding output vectors, and iteratively adjusts the weights to try to make the network give the desired response on the provided input vectors.
+So, in order to compute the network one needs to know all the weights \texttt{$w^{(n+1)_{i,j}}$}. The weights are computed by the training algorithm. The algorithm takes a training set: multiple input vectors with the corresponding output vectors, and iteratively adjusts the weights to try to make the network give the desired response on the provided input vectors.
 
 The larger the network size (the number of hidden layers and their sizes), the more is the potential network flexibility, and the error on the training set could be made arbitrarily small. But at the same time the learned network will also "learn" the noise present in the training set, so the error on the test set usually starts increasing after the network size reaches some limit. Besides, the larger networks are train much longer than the smaller ones, so it is reasonable to preprocess the data (using \cross{CalcPCA} or similar technique) and train a smaller network on only the essential features.
 
-Another feature of the MLP's is their inability to handle categorical data as is, however there is a workaround. If a certain feature in the input or output (i.e. in case of \texttt{n}-class classifier for \texttt{n$>$2}) layer is categorical and can take \texttt{M} ($>$2) different values, it makes sense to represent it as binary tuple of \texttt{M} elements, where \texttt{i}-th element is 1 if and only if the feature is equal to the \texttt{i}-th value out of \texttt{M} possible. It will increase the size of the input/output layer, but will speedup the training algorithm convergence and at the same time enable "fuzzy" values of such variables, i.e. a tuple of probabilities instead of a fixed value.
+Another feature of the MLP's is their inability to handle categorical data as is, however there is a workaround. If a certain feature in the input or output (i.e. in the case of \texttt{n}-class classifier for \texttt{n$>$2}) layer is categorical and can take \texttt{M} ($>$2) different values, it makes sense to represent it as binary tuple of \texttt{M} elements, where \texttt{i}-th element is 1 if and only if the feature is equal to the \texttt{i}-th value out of \texttt{M} possible. It will increase the size of the input/output layer, but will speedup the training algorithm convergence and at the same time enable "fuzzy" values of such variables, i.e. a tuple of probabilities instead of a fixed value.
 
 ML implements 2 algorithms for training MLP's. The first is the classical random sequential \href{#paper_backprop}{back-propagation algorithm} and the second (default one) is batch \href{#paper_rprop}{RPROP algorithm}
 
@@ -1913,7 +1948,7 @@ ML implements 2 algorithms for training MLP's. The first is the classical random
 
 \cvfunc{CvANN\_MLP\_TrainParams}
 
-Parameters of MLP training algorithm
+Parameters of the MLP training algorithm.
 
 \begin{lstlisting}
 struct CvANN_MLP_TrainParams
@@ -1937,13 +1972,13 @@ struct CvANN_MLP_TrainParams
 \end{lstlisting}
 
 \begin{description}
-\cvarg{term\_crit}{The termination criteria for the training algorithm. It identifies how many iterations is done by the algorithm (for sequential backpropagation algorithm the number is multiplied by the size of the training set) and how much the weights could change between the iterations to make the algorithm continue.}
+\cvarg{term\_crit}{The termination criteria for the training algorithm. It identifies how many iterations are done by the algorithm (for sequential backpropagation algorithm the number is multiplied by the size of the training set) and how much the weights could change between the iterations to make the algorithm continue.}
 \cvarg{train\_method}{The training algorithm to use; can be one of \texttt{CvANN\_MLP\_TrainParams::BACKPROP} (sequential backpropagation algorithm) or \texttt{CvANN\_MLP\_TrainParams::RPROP} (RPROP algorithm, default value).}
 \cvarg{bp\_dw\_scale}{(Backpropagation only): The coefficient to multiply the computed weight gradient by. The recommended value is about 0.1. The parameter can be set via \texttt{param1} of the constructor.}
 \cvarg{bp\_moment\_scale}{(Backpropagation only): The coefficient to multiply the difference between weights on the 2 previous iterations. This parameter provides some inertia to smooth the random fluctuations of the weights. It can vary from 0 (the feature is disabled) to 1 and beyond. The value 0.1 or so is good enough. The parameter can be set via \texttt{param2} of the constructor.}
 \cvarg{rp\_dw0}{(RPROP only): Initial magnitude of the weight delta. The default value is 0.1. This parameter can be set via \texttt{param1} of the constructor.}
-\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>$1, default value is 1.2 that should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
-\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<$1, default value is 0.5 that should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>$1, the default value is 1.2, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<$1, the default value is 0.5, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
 \cvarg{rp\_dw\_min}{(RPROP only): The minimum value of the weight delta. It must be $>$0, the default value is \texttt{FLT\_EPSILON}. The parameter can be set via \texttt{param2} of the constructor.}
 \cvarg{rp\_dw\_max}{(RPROP only): The maximum value of the weight delta. It must be $>$1, the default value is 50. The parameter can only be changed explicitly by modifying the structure member.}
 \end{description}
@@ -1953,7 +1988,7 @@ The structure has default constructor that initializes parameters for \texttt{RP
 
 \cvfunc{CvANN\_MLP}
 
-MLP model
+MLP model.
 
 \begin{lstlisting}
 class CvANN_MLP : public CvStatModel
@@ -2055,11 +2090,11 @@ void CvANN\_MLP::create( \par const CvMat* \_layer\_sizes,
 \cvarg{\_f\_param1,\_f\_param2}{Free parameters of the activation function, $\alpha$ and $\beta$, respectively. See the formulas in the introduction section.}
 \end{description}
 
-The method creates MLP network with the specified topology and assigns the same activation function to all the neurons.
+The method creates a MLP network with the specified topology and assigns the same activation function to all the neurons.
 
 \cvfunc{CvANN\_MLP::train}
 
-Trains/updates MLP
+Trains/updates MLP.
 
 \cvexp{
 
@@ -2073,7 +2108,7 @@ int CvANN\_MLP::train( \par const CvMat* \_inputs, \par const CvMat* \_outputs,
 \begin{description}
 \cvarg{\_inputs}{A floating-point matrix of input vectors, one vector per row.}
 \cvarg{\_outputs}{A floating-point matrix of the corresponding output vectors, one vector per row.}
-\cvarg{\_sample\_weights}{(RPROP only) The optional floating-point vector of weights for each sample. Some samples may be more important than others for training, e.g. user may want to gain the weight of certain classes to find the right balance between hit-rate and false-alarm rate etc.}
+\cvarg{\_sample\_weights}{(RPROP only) The optional floating-point vector of weights for each sample. Some samples may be more important than others for training, and the user may want to raise the weight of certain classes to find the right balance between hit-rate and false-alarm rate etc.}
 \cvarg{\_sample\_idx}{The optional integer vector indicating the samples (i.e. rows of \texttt{\_inputs} and \texttt{\_outputs}) that are taken into account.}
 \cvarg{\_params}{The training params. See \href{\#CvANNMLPTrainParams}{CvANN\_MLP\_TrainParams} description.}
 \cvarg{\_flags}{The various parameters to control the training algorithm. May be a combination of the following:
