@@ -44,8 +44,9 @@ using namespace std;
 // rectified results along with the computed disparity images.
 //
 static void
-StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated)
+StereoCalib(const char* imageList, int useUncalibrated)
 {
+    int nx = 0, ny = 0;
     int displayCorners = 0;
     int showUndistorted = 1;
     bool isVerticalStereo = false;//OpenCV can handle left-right
@@ -53,13 +54,13 @@ StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated)
     const int maxScale = 1;
     const float squareSize = 1.f; //Set this to your actual square size
     FILE* f = fopen(imageList, "rt");
-    int i, j, lr, nframes, n = nx*ny, N = 0;
+    int i, j, lr, nframes, n, N = 0;
     vector<string> imageNames[2];
     vector<CvPoint3D32f> objectPoints;
     vector<CvPoint2D32f> points[2];
     vector<int> npoints;
     vector<uchar> active[2];
-    vector<CvPoint2D32f> temp(n);
+    vector<CvPoint2D32f> temp;
     CvSize imageSize = {0,0};
     // ARRAY AND VECTOR STORAGE:
     double M1[3][3], M2[3][3], D1[5], D2[5];
@@ -72,6 +73,8 @@ StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated)
     CvMat _T = cvMat(3, 1, CV_64F, T );
     CvMat _E = cvMat(3, 3, CV_64F, E );
     CvMat _F = cvMat(3, 3, CV_64F, F );
+    char buf[1024];
+    
     if( displayCorners )
         cvNamedWindow( "corners", 1 );
 // READ IN THE LIST OF CHESSBOARDS:
@@ -80,9 +83,14 @@ StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated)
         fprintf(stderr, "can not open file %s\n", imageList );
         return;
     }
+    
+    if( !fgets(buf, sizeof(buf)-3, f) || sscanf(buf, "%d%d", &nx, &ny) != 2 )
+        return;
+    n = nx*ny;
+    temp.resize(n);
+    
     for(i=0;;i++)
     {
-        char buf[1024];
         int count = 0, result=0;
         lr = i % 2;
         vector<CvPoint2D32f>& pts = points[lr];
@@ -373,6 +381,6 @@ StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated)
 
 int main(void)
 {
-    StereoCalib("stereo_calib.txt", 9, 6, 1);
+    StereoCalib("stereo_calib.txt", 1);
     return 0;
 }
