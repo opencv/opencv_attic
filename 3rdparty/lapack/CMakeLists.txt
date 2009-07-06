@@ -26,7 +26,7 @@ set(the_target "opencv_lapack")
 add_library(${the_target} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 if(PCHSupport_FOUND)
-    set(pch_header ${CMAKE_SOURCE_DIR}/3rdparty/include/clapack.h)
+    set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/../include/clapack.h)
     if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
         if(${CMAKE_GENERATOR} MATCHES "Visual*")
             set(${the_target}_pch "precomp.c")

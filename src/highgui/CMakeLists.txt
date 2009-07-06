@@ -6,7 +6,7 @@
 project(highgui)
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
-    include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include")
     add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
 endif()
 
@@ -36,7 +36,7 @@ set(highgui_hdrs _highgui.h utils.h)
 set(lib_hdr_names highgui.h highgui.hpp)
 set(highgui_ext_hdrs)
 foreach(h ${lib_hdr_names})
-    list(APPEND highgui_ext_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+    list(APPEND highgui_ext_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
 endforeach()
 
 if(WIN32)
@@ -121,7 +121,7 @@ source_group("Include" FILES ${highgui_ext_hdrs})
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
     if(WIN32)
-        link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib")
+        link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/lib")
     endif()
     link_directories(
         "${CMAKE_BINARY_DIR}/3rdparty/lib"
@@ -138,14 +138,14 @@ set(the_target "highgui")
 
 add_definitions(-DHIGHGUI_EXPORTS -DCVAPI_EXPORTS)
 
-include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"
                     "${CMAKE_CURRENT_BINARY_DIR}")
 
 add_library(${the_target} SHARED ${lib_srcs} ${highgui_hdrs} ${grfmt_hdrs} ${highgui_ext_hdrs})
 
 if(PCHSupport_FOUND)
-    set(pch_header ${CMAKE_SOURCE_DIR}/src/highgui/_highgui.h)
+    set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_highgui.h)
     if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
         if(${CMAKE_GENERATOR} MATCHES "Visual*")
             set(${the_target}_pch "precomp.cpp")
