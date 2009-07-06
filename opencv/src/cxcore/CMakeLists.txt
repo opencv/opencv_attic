@@ -8,14 +8,14 @@ source_group("Src" FILES ${lib_srcs})
 
 add_definitions(-DCVAPI_EXPORTS)
 
-include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include"
-                    "${CMAKE_SOURCE_DIR}/include/opencv"
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
 					"${CMAKE_CURRENT_BINARY_DIR}")
 
 set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
-    list(APPEND lib_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+    list(APPEND lib_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
 endforeach()
 source_group("Include\\External" FILES ${lib_hdrs})
 
@@ -27,7 +27,7 @@ set(the_target "cxcore")
 add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
 
 if(PCHSupport_FOUND)
-    set(pch_header ${CMAKE_SOURCE_DIR}/src/cxcore/_cxcore.h)
+    set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_cxcore.h)
     if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
         if(${CMAKE_GENERATOR} MATCHES "Visual*")
             set(${the_target}_pch "cxprecomp.cpp")

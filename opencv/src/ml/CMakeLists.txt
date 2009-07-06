@@ -5,14 +5,14 @@ project(ml)
 
 file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
-set(lib_hdrs ${CMAKE_SOURCE_DIR}/include/opencv/ml.h)
+set(lib_hdrs ${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/ml.h)
 source_group("Include\\External" FILES ${lib_hdrs})
 file(GLOB lib_int_hdrs "*.h*")
 source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
 add_definitions(-DCVAPI_EXPORTS)
 
-include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"
                     "${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -21,7 +21,7 @@ set(the_target "ml")
 add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
 
 if(PCHSupport_FOUND)
-    set(pch_header ${CMAKE_SOURCE_DIR}/src/ml/_ml.h)
+    set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_ml.h)
     if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
         if(${CMAKE_GENERATOR} MATCHES "Visual*")
             set(${the_target}_pch "ml.cpp")
