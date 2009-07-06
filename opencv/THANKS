@@ -26,11 +26,13 @@ Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
 Bovyrin, Alexander      Intel Corp.                Contours, Stereo, Improvements in object detection, blobtrack/vs module in cvaux
+Bowman, James           Willow Garage Inc.         Latex-based OpenCV documentation
 Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
 Burenkov, Denis         Moscow State Uni           Contour morphing, several demo scripts
 
+Castrillon-Santana, Modesto IUSIANI, Spain         Haarcascades for facial feature detection 
 Cherepanova, Tatiana    Novosibirsk University     Face tracking
 Cherepennikov, Valery   Intel Corp.                Optimization, matrices, estimators (Kalman, ConDensation) and more ...
 Chudinovich, Boris      Intel Corp.                Ideas and algorithms on contours and comp. geometry functions
@@ -83,6 +85,7 @@ Nefian, Ara             Intel Corp.                Algorithm for HMM face recogn
 
 Oblomov, Sergey         Intel Corp.                Camshift and histogram code, linux scripts and makefiles, optimization and more ...
 
+Pantofaru, Caroline     Willow Garage Inc.         Latex-based OpenCV documentation
 Perreault, Simon        Universite Laval           O(1) Median filtering algorithm
 Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on face detection etc.
 Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
