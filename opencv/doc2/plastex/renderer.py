@@ -174,11 +174,13 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def do_cvstruct(self, node):
     t = str(node.attributes['title']).strip()
+    self.after_parameters = False
     self.indent = 4
     return u".. ctype:: %s" % t + unicode(node)
 
   def do_cvmacro(self, node):
     t = str(node.attributes['title']).strip()
+    self.after_parameters = False
     self.indent = 4
     return u".. cmacro:: %s" % t + unicode(node)
 
