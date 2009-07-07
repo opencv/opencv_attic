@@ -1035,12 +1035,12 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 		assert( input_picture );
 		// let input_picture point to the raw data buffer of 'image'
 		avpicture_fill((AVPicture *)input_picture, (uint8_t *) image->imageData,
-				input_pix_fmt, image->width, image->height);
+				(PixelFormat)input_pix_fmt, image->width, image->height);
 
 #if !defined(HAVE_FFMPEG_SWSCALE)
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)picture, c->pix_fmt,
-					(AVPicture *)input_picture, input_pix_fmt,
+					(AVPicture *)input_picture, (PixelFormat)input_pix_fmt,
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
@@ -1066,7 +1066,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 	}
 	else{
 		avpicture_fill((AVPicture *)picture, (uint8_t *) image->imageData,
-				input_pix_fmt, image->width, image->height);
+				(PixelFormat)input_pix_fmt, image->width, image->height);
 	}
 
 	ret = icv_av_write_frame_FFMPEG( oc, video_st, outbuf, outbuf_size, picture) >= 0;
