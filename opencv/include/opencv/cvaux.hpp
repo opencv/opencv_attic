@@ -357,10 +357,10 @@ public:
     };
 
     OctTree();
-    OctTree( Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
+    OctTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
     virtual ~OctTree();
 
-    virtual void buildTree( Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
+    virtual void buildTree( const Vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
     virtual void getPointsWithinSphere( const Point3f& center, float radius,
                                         Vector<Point3f>& points ) const;
     const Vector<Node>& getNodes() const { return nodes; }
