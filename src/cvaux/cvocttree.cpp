@@ -327,12 +327,13 @@ void  OctTree::buildNext(size_t node_ind)
         for( int k = 0; k < 8; k++ )
             child.children[k] = 0;
 
+        nodes[node_ind].children[i] = (int)(nodes.size() - 1);
+
         if (child.maxLevels != 1 && (child.end - child.begin) > minPoints )
         {
             child.isLeaf = false;
             buildNext(nodes.size() - 1);
-        }
-        nodes[node_ind].children[i] = (int)(nodes.size() - 1);		
+        }        		
     }
 }
 
