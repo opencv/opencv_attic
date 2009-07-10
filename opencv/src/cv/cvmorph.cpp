@@ -343,8 +343,8 @@ template<class VecUpdate> struct MorphColumnFVec
                     x1 = _mm_load_ps(sptr + 4);
                     s0 = updateOp(s0, x0);
                     s1 = updateOp(s1, x1);
-                    x0 = _mm_load_ps(sptr + 8);
-                    x1 = _mm_load_ps(sptr + 12);
+                    x2 = _mm_load_ps(sptr + 8);
+                    x3 = _mm_load_ps(sptr + 12);
                     s2 = updateOp(s2, x2);
                     s3 = updateOp(s3, x3);
                 }
