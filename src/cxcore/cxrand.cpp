@@ -379,7 +379,7 @@ Randn_( Mat& _arr, uint64* state, const void* _param )
     const int RAND_BUF_SIZE = 96;
     float buffer[RAND_BUF_SIZE];
     const PT* param = (const PT*)_param;
-    Size size = getContinuousSize(_arr);
+    Size size = getContinuousSize(_arr, _arr.channels());
 
     for( int y = 0; y < size.height; y++ )
     {
