@@ -744,7 +744,7 @@ cvCheckContourConvexity( const CvArr* array )
 
     if( CV_IS_SEQ(contour) )
     {
-        if( !CV_IS_SEQ_POLYGON(contour))
+        if( !CV_IS_SEQ_POINT_SET(contour))
             CV_ERROR( CV_StsUnsupportedFormat,
                 "Input sequence must be polygon (closed 2d curve)" );
     }

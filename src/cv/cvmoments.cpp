@@ -374,7 +374,7 @@ cvMoments( const void* array, CvMoments* moments, int binary )
     if( CV_IS_SEQ( array ))
     {
         contour = (CvSeq*)array;
-        if( !CV_IS_SEQ_POLYGON( contour ))
+        if( !CV_IS_SEQ_POINT_SET( contour ))
             CV_ERROR( CV_StsBadArg, "The passed sequence is not a valid contour" );
     }
 
