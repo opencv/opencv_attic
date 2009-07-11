@@ -1231,7 +1231,7 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 \cvarg{type}{Type of array elements. The same as for CvMat}
 \end{description}
 
-The function \texttt{cvCreateSparseMat} allocates a multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReadl} returns zero for every index.
+The function \texttt{cvCreateSparseMat} allocates a multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReal} returns zero for every index.
 
 \cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
@@ -1515,7 +1515,15 @@ for( i = 0; i < dims; i++ )
 \end{lstlisting}
 
 
-\cvfunc{PtrnD}\label{PtrnD}
+\ifplastex
+\cvfunc{Ptr1D} \cvexp{uchar* cvPtr1D( const CvArr* arr, int idx0, int* type=NULL );}{}{}
+\cvfunc{Ptr2D} \cvexp{uchar* cvPtr2D( const CvArr* arr, int idx0, int idx1, int* type=NULL );}{}{}
+\cvfunc{Ptr3D} \cvexp{uchar* cvPtr3D( const CvArr* arr, int idx0, int idx1, int idx2, int* type=NULL );}{}{}
+\cvfunc{PtrND}
+Return pointer to a particular array element.
+\cvexp{uchar* cvPtrND( const CvArr* arr, int* idx, int* type=NULL, int create\_node=1, unsigned* precalc\_hashval=NULL );}{}{}
+\else
+\cvfunc{Ptr*D}\label{Ptr*D}
 
 Return pointer to a particular array element.
 
@@ -1527,6 +1535,7 @@ uchar* cvPtr3D( const CvArr* arr, int idx0, int idx1, int idx2, int* type=NULL )
 uchar* cvPtrND( const CvArr* arr, int* idx, int* type=NULL, int create\_node=1, unsigned* precalc\_hashval=NULL );
 
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1539,7 +1548,7 @@ uchar* cvPtrND( const CvArr* arr, int* idx, int* type=NULL, int create\_node=1, 
 \cvarg{precalc\_hashval}{Optional input parameter for sparse matrices. If the pointer is not NULL, the function does not recalculate the node hash value, but takes it from the specified location. It is useful for speeding up pair-wise operations (TODO: provide an example)}
 \end{description}
 
-The functions \texttt{cvPtrnD} return a pointer to a specific array element. Number of array dimension should match to the number of indices passed to the function except for \texttt{cvPtr1D} function that can be used for sequential access to 1D, 2D or nD dense arrays.
+The functions \texttt{cvPtr*D} return a pointer to a specific array element. Number of array dimension should match to the number of indices passed to the function except for \texttt{cvPtr1D} function that can be used for sequential access to 1D, 2D or nD dense arrays.
 
 The functions can be used for sparse arrays as well - if the requested node does not exist they create it and set it to zero.
 
@@ -1547,6 +1556,16 @@ All these as well as other functions accessing array elements (\cross{Get}, \cro
 
 \cross{Set}, \cross{SetReal}) raise an error in case if the element index is out of range.
 
+
+\ifplastex
+\cvfunc{Get1D} \cvexp{CvScalar cvGet1D( const CvArr* arr, int idx0 );}{}{}
+\cvfunc{Get2D} \cvexp{CvScalar cvGet2D( const CvArr* arr, int idx0, int idx1 );}{}{}
+\cvfunc{Get3D} \cvexp{CvScalar cvGet3D( const CvArr* arr, int idx0, int idx1, int idx2 );}{}{}
+\cvfunc{GetND} 
+Return a specific array element.
+\cvexp{CvScalar cvGetND( const CvArr* arr, int* idx );}{}{}
+
+\else
 \cvfunc{Get*D}\label{Get*D}
 
 Return a specific array element.
@@ -1559,6 +1578,7 @@ CvScalar cvGet3D( const CvArr* arr, int idx0, int idx1, int idx2 );
 CvScalar cvGetND( const CvArr* arr, int* idx );
 
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1569,8 +1589,17 @@ CvScalar cvGetND( const CvArr* arr, int* idx );
 \end{description}
 
 
-The functions \texttt{cvGet*D} return a specific array element. In the case of sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
+The functions \texttt{cvGet*D} return a specific array element. In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
 
+\ifplastex
+\cvfunc{GetReal1D} \cvexp{double cvGetReal1D( const CvArr* arr, int idx0 );}{}{}
+\cvfunc{GetReal2D} \cvexp{double cvGetReal2D( const CvArr* arr, int idx0, int idx1 );}{}{}
+\cvfunc{GetReal3D} \cvexp{double cvGetReal3D( const CvArr* arr, int idx0, int idx1, int idx2 );}{}{}
+\cvfunc{GetRealND}
+Return a specific element of single-channel array.
+\cvexp{double cvGetRealND( const CvArr* arr, int* idx );}{}{}
+
+\else
 \cvfunc{GetReal*D}\label{GetReal*D}
 
 Return a specific element of single-channel array.
@@ -1583,6 +1612,7 @@ double cvGetReal3D( const CvArr* arr, int idx0, int idx1, int idx2 );
 double cvGetRealND( const CvArr* arr, int* idx );
 
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array. Must have a single channel.}
@@ -1618,9 +1648,18 @@ in the case of single-channel floating-point matrices. It is faster because
 it is inline, it does fewer checks for array type and array element type,
 and it checks for the row and column ranges only in debug mode.
 
-\cvfunc{SetnD}\label{SetnD}
-
+\ifplastex
+\cvfunc{Set1D} \cvexp{void cvSet1D( CvArr* arr, int idx0, CvScalar value );}{}{}
+\cvfunc{Set2D} \cvexp{void cvSet2D( CvArr* arr, int idx0, int idx1, CvScalar value );}{}{}
+\cvfunc{Set3D} \cvexp{void cvSet3D( CvArr* arr, int idx0, int idx1, int idx2, CvScalar value );}{}{}
+\cvfunc{SetND}
 Change the particular array element
+\cvexp{void cvSetND( CvArr* arr, int* idx, CvScalar value );}{}{}
+
+\else
+\cvfunc{Set*D}\label{Set*D}
+
+Change the particular array element.
 
 \begin{lstlisting}
 
@@ -1630,6 +1669,7 @@ void cvSet3D( CvArr* arr, int idx0, int idx1, int idx2, CvScalar value );
 void cvSetND( CvArr* arr, int* idx, CvScalar value );
 
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1640,10 +1680,18 @@ void cvSetND( CvArr* arr, int* idx, CvScalar value );
 \cvarg{value}{The assigned value}
 \end{description}
 
+The functions \texttt{cvSet*D} assign the new value to a particular array element. In the case of a sparse array the functions create the node if it does not exist yet.
 
-The functions \texttt{cvSetnD} assign the new value to a particular array element. In the case of a sparse array the functions create the node if it does not exist yet.
+\ifplastex
+\cvfunc{SetReal1D} \cvexp{void cvSetReal1D( CvArr* arr, int idx0, double value );}{}{}
+\cvfunc{SetReal2D} \cvexp{void cvSetReal2D( CvArr* arr, int idx0, int idx1, double value );}{}{}
+\cvfunc{SetReal3D} \cvexp{void cvSetReal3D( CvArr* arr, int idx0, int idx1, int idx2, double value );}{}{}
+\cvfunc{SetRealND}
+Change a specific array element.
+\cvexp{void cvSetRealND( CvArr* arr, int* idx, double value );}{}{}
 
-\cvfunc{SetRealnD}\label{SetRealnD}
+\else
+\cvfunc{SetReal*D}\label{SetReal*D}
 
 Change a specific array element.
 
@@ -1655,6 +1703,7 @@ void cvSetReal3D( CvArr* arr, int idx0, int idx1, int idx2, double value );
 void cvSetRealND( CvArr* arr, int* idx, double value );
 
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1665,9 +1714,9 @@ void cvSetRealND( CvArr* arr, int* idx, double value );
 \cvarg{value}{The assigned value}
 \end{description}
 
-The functions \texttt{cvSetRealnD} assign a new value to a specific
+The functions \texttt{cvSetReal*D} assign a new value to a specific
 element of a single-channel array. If the array has multiple channels,
-a runtime error is raised. Note that the \cross{SetnD} function can be used
+a runtime error is raised. Note that the \cross{Set*D} function can be used
 safely for both single-channel and multiple-channel arrays, though they
 are a bit slower.
 
@@ -1890,7 +1939,7 @@ Fill the destination array with repeated copies of the source array.
 
 void cvRepeat( const CvArr* src, CvArr* dst );
 
-}{CPP}{Repeat(scr,dst)-> None}
+}{CPP}{Repeat(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{Source array, image or matrix}
