@@ -36,9 +36,8 @@
 
 
 #include <iostream>
-#include <cv.h>
+#include <cvaux.h>
 #include <highgui.h>
-#include <cvaux\CvAdaptiveSkinDetector.h>
 
 class ASDFrameHolder
 {
