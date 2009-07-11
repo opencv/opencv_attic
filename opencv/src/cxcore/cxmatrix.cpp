@@ -849,8 +849,9 @@ double kmeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
     int N = data.rows > 1 ? data.rows : data.cols;
     int dims = (data.rows > 1 ? data.cols : 1)*data.channels();
     int type = data.depth();
-    
-    CV_Assert( type == CV_32F && K > 0 && attempts > 0 );
+
+    attempts = std::max(attempts, 1);
+    CV_Assert( type == CV_32F && K > 0 );
 
     Vector<int> labels;
     if( flags & CV_KMEANS_USE_INITIAL_LABELS )
