@@ -64,7 +64,7 @@ dist_csamples_DATA = \
   c/letter-recognition.data \
   c/waveform.data\
   \
-  c/adaptiveskindetector_sample.cpp \
+  c/adaptiveskindetector.cpp \
   c/bgfg_codebook.cpp \
   c/bgfg_segm.cpp \
   c/blobtrack.cpp \
