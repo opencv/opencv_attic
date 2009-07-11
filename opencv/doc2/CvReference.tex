@@ -2667,6 +2667,12 @@ CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHis
 
 The function \texttt{cvMakeHistHeaderForArray} initializes the histogram, whose header and bins are allocated by th user. \cross{ReleaseHist} does not need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
 
+\ifplastex
+\cvfunc{QueryHistValue\_1D} \cvexp{float cvQueryHistValue\_1D( CvHistogram *hist, int idx0)}{}{}
+\cvfunc{QueryHistValue\_2D} \cvexp{float cvQueryHistValue\_2D( CvHistogram *hist, int idx0, int idx1)}{}{}
+\cvfunc{QueryHistValue\_3D} \cvexp{float cvQueryHistValue\_3D( CvHistogram *hist, int idx0, int idx1, int idx2)}{}{}
+\cvfunc{QueryHistValue\_nD} Queries the value of the histogram bin.  \cvexp{float cvQueryHistValue\_nD( CvHistogram *hist, int idx[])}{}{}
+\else
 \cvfunc{QueryHistValue\_nD}\label{QueryHistValue_nD}
 
 Queries the value of the histogram bin.
@@ -2681,6 +2687,7 @@ Queries the value of the histogram bin.
 \#define cvQueryHistValue\_nD( hist, idx ) \
     cvGetRealND( (hist)->bins, (idx) )
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -2690,6 +2697,12 @@ Queries the value of the histogram bin.
 
 The macros \texttt{QueryHistValue\_nD} return the value of the specified bin of the 1D, 2D, 3D or N-D histogram. In the case of a sparse histogram the function returns 0, if the bin is not present in the histogram no new bin is created.
 
+\ifplastex
+\cvfunc{GetHistValue\_1D} \cvexp{float* cvGetHistValue\_1D( CvHistogram *hist, int idx0);}{}{}
+\cvfunc{GetHistValue\_2D} \cvexp{float* cvGetHistValue\_2D( CvHistogram *hist, int idx0, int idx1);}{}{}
+\cvfunc{GetHistValue\_3D} \cvexp{float* cvGetHistValue\_3D( CvHistogram *hist, int idx0, int idx1, int idx2);}{}{}
+\cvfunc{GetHistValue\_nD} Returns a pointer to the histogram bin. \cvexp{float* cvGetHistValue\_nD( CvHistogram *hist, int idx[]);}{}{}
+\else
 \cvfunc{GetHistValue\_nD}\label{GetHistValue_nD}
 
 Returns a pointer to the histogram bin.
@@ -2704,6 +2717,7 @@ Returns a pointer to the histogram bin.
 \#define cvGetHistValue\_nD( hist, idx ) \
     ((float*)(cvPtrND( (hist)->bins, (idx), 0 ))
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{hist}{Histogram}
