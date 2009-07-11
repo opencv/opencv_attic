@@ -101,7 +101,7 @@ icvCreateContourTree( const CvSeq * contour, CvMemStorage * storage,
     if( contour->total < 4 )
         return CV_BADSIZE_ERR;
 
-    if( !CV_IS_SEQ_POLYGON( contour ))
+    if( !CV_IS_SEQ_POINT_SET( contour ))
         return CV_BADFLAG_ERR;
 
 

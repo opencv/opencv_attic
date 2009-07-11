@@ -106,7 +106,7 @@ icvFindDominantPointsIPAN( CvSeq * contour,
             CV_READ_CHAIN_POINT( ptInf[i].pt, reader );
         }
     }
-    else if( CV_IS_SEQ_POLYGON( contour ))
+    else if( CV_IS_SEQ_POINT_SET( contour ))
     {
         CvSeqReader reader;
 

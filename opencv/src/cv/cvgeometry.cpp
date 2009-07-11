@@ -183,7 +183,7 @@ cvPointPolygonTest( const CvArr* _contour, CvPoint2D32f pt, int measure_dist )
         CV_CALL( contour = cvPointSeqFromMat( CV_SEQ_KIND_CURVE + CV_SEQ_FLAG_CLOSED,
                                               _contour, &header, &block ));
     }
-    else if( CV_IS_SEQ_POLYGON(contour) )
+    else if( CV_IS_SEQ_POINT_SET(contour) )
     {
         if( contour->header_size == sizeof(CvContour) && !measure_dist )
         {

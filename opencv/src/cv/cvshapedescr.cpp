@@ -574,7 +574,7 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
     if( contour == NULL )
         return CV_NULLPTR_ERR;
 
-    if( !CV_IS_SEQ_POLYGON( contour ))
+    if( !CV_IS_SEQ_POINT_SET( contour ))
         return CV_BADFLAG_ERR;
 
     lpt = cvSliceLength( slice, contour );
