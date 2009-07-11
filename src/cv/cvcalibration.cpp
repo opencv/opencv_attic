@@ -2485,7 +2485,7 @@ cvStereoRectifyUncalibrated(
     cvConvert( _points1, _m1 );
     cvConvert( _points2, _m2 );
     cvReshape( _m1, _m1, 2, 1 );
-    cvReshape( _m1, _m1, 2, 1 );
+    cvReshape( _m2, _m2, 2, 1 );
 
     m1 = (CvPoint2D64f*)_m1->data.ptr;
     m2 = (CvPoint2D64f*)_m2->data.ptr;
