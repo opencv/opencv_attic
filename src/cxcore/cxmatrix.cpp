@@ -846,7 +846,9 @@ double kmeans( const Mat& data, int K, Vector<int>& best_labels, TermCriteria cr
                int attempts, RNG* rng, int flags, Mat* _centers )
 {
     const int SPP_TRIALS = 3;
-    int N = data.rows, dims = data.cols, type = data.type();
+    int N = data.rows > 1 ? data.rows : data.cols;
+    int dims = (data.rows > 1 ? data.cols : 1)*data.channels();
+    int type = data.depth();
     
     CV_Assert( type == CV_32F && K > 0 && attempts > 0 );
 
