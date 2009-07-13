@@ -544,27 +544,27 @@ struct CvSVMParams
 
 \end{lstlisting}
 
-\begin{description}
-\cvarg{svm\_type}{Type of SVM, one of the following types:
-\begin{description}
-\cvarg{CvSVM::C\_SVC}{n-class classification (n$>$=2), allows imperfect separation of classes with penalty multiplier \texttt{C} for outliers.}
-\cvarg{CvSVM::NU\_SVC}{n-class classification with possible imperfect separation. Parameter \texttt{nu} (in the range 0..1, the larger the value, the smoother the decision boundary) is used instead of \texttt{C}.}
-\cvarg{CvSVM::ONE\_CLASS}{one-class SVM. All of the training data is from the same class, SVM builds a boundary that separates the class from the rest of the feature space.}
-\cvarg{CvSVM::EPS\_SVR}{regression. The distance between feature vectors from the training set and the fitting hyper-plane must be less than \texttt{p}. For outliers the penalty multiplier \texttt{C} is used.}
-\cvarg{CvSVM::NU\_SVR}{regression; \texttt{nu} is used instead of \texttt{p}.}
-\end{description}}
-\cvarg{kernel\_type}{The kernel type, one of the following types:
-\begin{description}
-\cvarg{CvSVM::LINEAR}{no mapping is done, linear discrimination (or regression) is done in the original feature space. It is the fastest option $d(x,y) = x•y == (x,y)$.}
-\cvarg{CvSVM::POLY}{polynomial kernel: $d(x,y) = (gamma*(x•y)+coef0)^{degree}$.}
-\cvarg{CvSVM::RBF}{radial-basis-function kernel; a good choice in most cases: $d(x,y) = exp(-gamma*|x-y|^2)$}
-\cvarg{CvSVM::SIGMOID}{sigmoid function is used as a kernel: $d(x,y) = tanh(gamma*(x•y)+coef0)'$}
-\end{description}}
-\cvarg{degree, gamma, coef0}{Parameters of the kernel, see the formulas above.}
-\cvarg{C, nu, p}{Parameters in the generalized SVM optimization problem.}
-\cvarg{class\_weights}{Optional weights, assigned to particular classes. They are multiplied by \texttt{C} and thus affect the misclassification penalty for different classes. The larger weight, the larger penalty on misclassification of data from the corresponding class.}
-\cvarg{term\_crit}{Termination procedure for the iterative SVM training procedure (which solves a partial case of constrained quadratic optimization problem)}
-\end{description}
+%\begin{description}
+%\cvarg{svm\_type}{Type of SVM, one of the following types:
+%\begin{description}
+%\cvarg{CvSVM::C\_SVC}{n-class classification (n$>$=2), allows imperfect separation of classes with penalty multiplier \texttt{C} for outliers.}
+%\cvarg{CvSVM::NU\_SVC}{n-class classification with possible imperfect separation. Parameter \texttt{nu} (in the range 0..1, the larger the value, the smoother the decision boundary) is used instead of \texttt{C}.}
+%\cvarg{CvSVM::ONE\_CLASS}{one-class SVM. All of the training data is from the same class, SVM builds a boundary that separates the class from the rest of the feature space.}
+%\cvarg{CvSVM::EPS\_SVR}{regression. The distance between feature vectors from the training set and the fitting hyper-plane must be less than \texttt{p}. For outliers the penalty multiplier \texttt{C} is used.}
+%\cvarg{CvSVM::NU\_SVR}{regression; \texttt{nu} is used instead of \texttt{p}.}
+%\end{description}}
+%\cvarg{kernel\_type}{The kernel type, one of the following types:
+%\begin{description}
+%\cvarg{CvSVM::LINEAR}{no mapping is done, linear discrimination (or regression) is done in the original feature space. It is the fastest option $d(x,y) = x•y == (x,y)$.}
+%\cvarg{CvSVM::POLY}{polynomial kernel: $d(x,y) = (gamma*(x•y)+coef0)^{degree}$.}
+%\cvarg{CvSVM::RBF}{radial-basis-function kernel; a good choice in most cases: $d(x,y) = exp(-gamma*|x-y|^2)$}
+%\cvarg{CvSVM::SIGMOID}{sigmoid function is used as a kernel: $d(x,y) = tanh(gamma*(x•y)+coef0)'$}
+%\end{description}}
+%\cvarg{degree, gamma, coef0}{Parameters of the kernel, see the formulas above.}
+%\cvarg{C, nu, p}{Parameters in the generalized SVM optimization problem.}
+%\cvarg{class\_weights}{Optional weights, assigned to particular classes. They are multiplied by \texttt{C} and thus affect the misclassification penalty for different classes. The larger weight, the larger penalty on misclassification of data from the corresponding class.}
+%\cvarg{term\_crit}{Termination procedure for the iterative SVM training procedure (which solves a partial case of constrained quadratic optimization problem)}
+%\end{description}
 
 The structure must be initialized and passed to the training method of \cross{CvSVM}.
 
@@ -743,19 +743,19 @@ struct CvDTreeSplit
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{var\_idx}{Index of the variable used in the split.}
-\cvarg{inversed}{When it equals 1, the inverse split rule is used (i.e. left and right branches are exchanged in the expressions below).}
-\cvarg{quality}{The split quality, a positive number. It is used to choose the best primary split, then to choose and sort the surrogate splits. After the tree is constructed, it is also used to compute variable importance.}
-\cvarg{next}{Pointer to the next split in the node split list.}
-\cvarg{subset}{Bit array indicating the value subset in the case of split on a categorical variable.
-
-The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
-\cvarg{c}{The threshold value in the case of a split on an ordered variable.
-
-The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
-\cvarg{split\_point}{Used internally by the training algorithm.}
-\end{description}
+%\begin{description}
+%\cvarg{var\_idx}{Index of the variable used in the split.}
+%\cvarg{inversed}{When it equals 1, the inverse split rule is used (i.e. left and right branches are exchanged in the expressions below).}
+%\cvarg{quality}{The split quality, a positive number. It is used to choose the best primary split, then to choose and sort the surrogate splits. After the tree is constructed, it is also used to compute variable importance.}
+%\cvarg{next}{Pointer to the next split in the node split list.}
+%\cvarg{subset}{Bit array indicating the value subset in the case of split on a categorical variable.
+%
+%The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
+%\cvarg{c}{The threshold value in the case of a split on an ordered variable.
+%
+%The rule is:\texttt{if var\_value in subset then next\_node<-left else next\_node<-right}.}
+%\cvarg{split\_point}{Used internally by the training algorithm.}
+%\end{description}
 
 
 \cvfunc{CvDTreeNode}
@@ -781,14 +781,14 @@ struct CvDTreeNode
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{value}{The value assigned to the tree node. It is either a class label, or the estimated function value.}
-\cvarg{class\_idx}{The assigned to the node normalized class index (to 0 to class\_count-1 range), it is used internally in classification trees and tree ensembles.}
-\cvarg{Tn}{The tree index in an ordered sequence of trees. The indices are used during and after the pruning procedure. The root node has the maximum value \texttt{Tn} of the whole tree, child nodes have \texttt{Tn} less than or equal to the parent's \texttt{Tn}, and the nodes with \texttt{Tn$≤$\cross{CvDTree}::pruned\_tree\_idx} are not taken into consideration at the prediction stage (the corresponding branches are considered as cut-off), even if they have not been physically deleted from the tree at the pruning stage.}
-\cvarg{parent, left, right}{Pointers to the parent node, left and right child nodes.}\cvarg{split}{Pointer to the first (primary) split.}
-\cvarg{sample\_count}{The number of samples that fall into the node at the training stage. It is used to resolve the difficult cases - when the variable for the primary split is missing, and all the variables for the other surrogate splits are missing too,the sample is directed to the left if \texttt{left->sample\_count$>$right->sample\_count} and to the right otherwise.}
-\cvarg{depth}{The node depth, the root node depth is 0, the child nodes depth is the parent's depth + 1.}
-\end{description}
+%\begin{description}
+%\cvarg{value}{The value assigned to the tree node. It is either a class label, or the estimated function value.}
+%\cvarg{class\_idx}{The assigned to the node normalized class index (to 0 to class\_count-1 range), it is used internally in classification trees and tree ensembles.}
+%\cvarg{Tn}{The tree index in an ordered sequence of trees. The indices are used during and after the pruning procedure. The root node has the maximum value \texttt{Tn} of the whole tree, child nodes have \texttt{Tn} less than or equal to the parent's \texttt{Tn}, and the nodes with \texttt{Tn$≤$\cross{CvDTree}::pruned\_tree\_idx} are not taken into consideration at the prediction stage (the corresponding branches are considered as cut-off), even if they have not been physically deleted from the tree at the pruning stage.}
+%\cvarg{parent, left, right}{Pointers to the parent node, left and right child nodes.}\cvarg{split}{Pointer to the first (primary) split.}
+%\cvarg{sample\_count}{The number of samples that fall into the node at the training stage. It is used to resolve the difficult cases - when the variable for the primary split is missing, and all the variables for the other surrogate splits are missing too,the sample is directed to the left if \texttt{left->sample\_count$>$right->sample\_count} and to the right otherwise.}
+%\cvarg{depth}{The node depth, the root node depth is 0, the child nodes depth is the parent's depth + 1.}
+%\end{description}
 
 Other numerous fields of \texttt{CvDTreeNode} are used internally at the training stage.
 
@@ -824,23 +824,23 @@ struct CvDTreeParams
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{max\_depth}{This parameter specifies the maximum possible depth of the tree. That is the training algorithms attempts to split a node while its depth is less than \texttt{max\_depth}. The actual depth may be smaller if the other termination criteria are met (see the outline of the training procedure in the beginning of the section), and/or if the tree is pruned.}
-\cvarg{min\_sample\_count}{A node is not split if the number of samples directed to the node is less than the parameter value.}
-\cvarg{regression\_accuracy}{Another stop criteria - only for regression trees. As soon as the estimated node value differs from the node training samples responses by less than the parameter value, the node is not split further.}
-\cvarg{use\_surrogates}{If \texttt{true}, surrogate splits are built. Surrogate splits are needed to handle missing measurements and for variable importance estimation.}
-\cvarg{max\_categories}{If a discrete variable, on which the training procedure tries to make a split, takes more than \texttt{max\_categories} values, the precise best subset estimation may take a very long time (as the algorithm is exponential). Instead, many decision trees engines (including ML) try to find sub-optimal split in this case by clustering all the samples into \texttt{max\_categories} clusters (i.e. some categories are merged together).
+%\begin{description}
+%\cvarg{max\_depth}{This parameter specifies the maximum possible depth of the tree. That is the training algorithms attempts to split a node while its depth is less than \texttt{max\_depth}. The actual depth may be smaller if the other termination criteria are met (see the outline of the training procedure in the beginning of the section), and/or if the tree is pruned.}
+%\cvarg{min\_sample\_count}{A node is not split if the number of samples directed to the node is less than the parameter value.}
+%\cvarg{regression\_accuracy}{Another stop criteria - only for regression trees. As soon as the estimated node value differs from the node training samples responses by less than the parameter value, the node is not split further.}
+%\cvarg{use\_surrogates}{If \texttt{true}, surrogate splits are built. Surrogate splits are needed to handle missing measurements and for variable importance estimation.}
+%\cvarg{max\_categories}{If a discrete variable, on which the training procedure tries to make a split, takes more than \texttt{max\_categories} values, the precise best subset estimation may take a very long time (as the algorithm is exponential). Instead, many decision trees engines (including ML) try to find sub-optimal split in this case by clustering all the samples into \texttt{max\_categories} clusters (i.e. some categories are merged together).
+%
+%Note that this technique is used only in \texttt{N($>$2)}-class classification problems. in the case of regression and 2-class classification the optimal split can be found efficiently without employing clustering, thus the parameter is not used in these cases.}
+%\cvarg{cv\_folds}{If this parameter is $>$1, the tree is pruned using \texttt{cv\_folds}-fold cross validation.}
+%\cvarg{use\_1se\_rule}{If \texttt{true}, the tree is truncated a bit more by the pruning procedure. That leads to compact, and more resistant to the training data noise, but a bit less accurate decision tree.}
+%\cvarg{truncate\_pruned\_tree}{If \texttt{true}, the cut off nodes (with \texttt{Tn$≤$CvDTree::pruned\_tree\_idx}) are physically removed from the tree. Otherwise they are kept, and by decreasing
 
-Note that this technique is used only in \texttt{N($>$2)}-class classification problems. in the case of regression and 2-class classification the optimal split can be found efficiently without employing clustering, thus the parameter is not used in these cases.}
-\cvarg{cv\_folds}{If this parameter is $>$1, the tree is pruned using \texttt{cv\_folds}-fold cross validation.}
-\cvarg{use\_1se\_rule}{If \texttt{true}, the tree is truncated a bit more by the pruning procedure. That leads to compact, and more resistant to the training data noise, but a bit less accurate decision tree.}
-\cvarg{truncate\_pruned\_tree}{If \texttt{true}, the cut off nodes (with \texttt{Tn$≤$CvDTree::pruned\_tree\_idx}) are physically removed from the tree. Otherwise they are kept, and by decreasing
-
- \texttt{CvDTree::pruned\_tree\_idx} (e.g. setting it to -1) it is still possible to get the results from the original un-pruned (or pruned less aggressively) tree.}
-\cvarg{priors}{The array of a priori class probabilities, sorted by the class label value. The parameter can be used to tune the decision tree preferences toward a certain class. For example, if users want to detect some rare anomaly occurrence, the training base will likely contain many more normal cases than anomalies, so a very good classification performance will be achieved just by considering every case as normal. To avoid this, the priors can be specified, where the anomaly probability is artificially increased (up to 0.5 or even greater), so the weight of the misclassified anomalies becomes much bigger, and the tree is adjusted properly.
-
-A note about memory management: the field \texttt{priors} is a pointer to the array of floats. The array should be allocated by the user, and released just after the \texttt{CvDTreeParams} structure is passed to \cross{CvDTreeTrainData} or \cross{CvDTree} constructors/methods (as the methods make a copy of the array).}
-\end{description}
+% \texttt{CvDTree::pruned\_tree\_idx} (e.g. setting it to -1) it is still possible to get the results from the original un-pruned (or pruned less aggressively) tree.}
+%\cvarg{priors}{The array of a priori class probabilities, sorted by the class label value. The parameter can be used to tune the decision tree preferences toward a certain class. For example, if users want to detect some rare anomaly occurrence, the training base will likely contain many more normal cases than anomalies, so a very good classification performance will be achieved just by considering every case as normal. To avoid this, the priors can be specified, where the anomaly probability is artificially increased (up to 0.5 or even greater), so the weight of the misclassified anomalies becomes much bigger, and the tree is adjusted properly.
+%
+%A note about memory management: the field \texttt{priors} is a pointer to the array of floats. The array should be allocated by the user, and released just after the \texttt{CvDTreeParams} structure is passed to \cross{CvDTreeTrainData} or \cross{CvDTree} constructors/methods (as the methods make a copy of the array).}
+%\end{description}
 
 The structure contains all the decision tree training parameters. There is a default constructor that initializes all the parameters with the default values tuned for standalone classification tree. Any of the parameters can be overridden then, or the structure may be fully initialized using the advanced variant of the constructor.
 
@@ -1138,26 +1138,26 @@ struct CvBoostParams : public CvDTreeParams
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{boost\_type}{Boosting type, one of the following:
-\begin{description}
-\cvarg{CvBoost::DISCRETE}{Discrete AdaBoost}
-\cvarg{CvBoost::REAL}{Real AdaBoost}
-\cvarg{CvBoost::LOGIT}{LogitBoost}
-\cvarg{CvBoost::GENTLE}{Gentle AdaBoost}
-\end{description}
-Gentle AdaBoost and Real AdaBoost are often the preferable choices.}
-\cvarg{weak\_count}{The number of weak classifiers to build.}
-\cvarg{split\_criteria}{Splitting criteria, used to choose optimal splits during a weak tree construction:
-\begin{description}
-\cvarg{CvBoost::DEFAULT}{Use the default criteria for the particular boosting method, see below.}
-\cvarg{CvBoost::GINI}{Use the Gini index. This is the default option for Real AdaBoost; may be also used for Discrete AdaBoost.}
-\cvarg{CvBoost::MISCLASS}{Use the misclassification rate. This is the default option for Discrete AdaBoost; may be also used for Real AdaBoost.}
-\cvarg{CvBoost::SQERR}{Use the least squares criteria. This is the default and the only option for LogitBoost and Gentle AdaBoost.}
-\end{description}
-test.}
-\cvarg{weight\_trim\_rate}{The weight trimming ratio, between 0 and 1. See the discussion of it above. If the parameter is $≤$0 or $>$1, the trimming is not used and all of the samples are used at each iteration. The default value is 0.95.}
-\end{description}
+%\begin{description}
+%\cvarg{boost\_type}{Boosting type, one of the following:
+%\begin{description}
+%\cvarg{CvBoost::DISCRETE}{Discrete AdaBoost}
+%\cvarg{CvBoost::REAL}{Real AdaBoost}
+%\cvarg{CvBoost::LOGIT}{LogitBoost}
+%\cvarg{CvBoost::GENTLE}{Gentle AdaBoost}
+%\end{description}
+%Gentle AdaBoost and Real AdaBoost are often the preferable choices.}
+%\cvarg{weak\_count}{The number of weak classifiers to build.}
+%\cvarg{split\_criteria}{Splitting criteria, used to choose optimal splits during a weak tree construction:
+%\begin{description}
+%\cvarg{CvBoost::DEFAULT}{Use the default criteria for the particular boosting method, see below.}
+%\cvarg{CvBoost::GINI}{Use the Gini index. This is the default option for Real AdaBoost; may be also used for Discrete AdaBoost.}
+%\cvarg{CvBoost::MISCLASS}{Use the misclassification rate. This is the default option for Discrete AdaBoost; may be also used for Real AdaBoost.}
+%\cvarg{CvBoost::SQERR}{Use the least squares criteria. This is the default and the only option for LogitBoost and Gentle AdaBoost.}
+%\end{description}
+%test.}
+%\cvarg{weight\_trim\_rate}{The weight trimming ratio, between 0 and 1. See the discussion of it above. If the parameter is $≤$0 or $>$1, the trimming is not used and all of the samples are used at each iteration. The default value is 0.95.}
+%\end{description}
 
 The structure is derived from \cross{CvDTreeParams}, but not all of the decision tree parameters are supported. In particular, cross-validation is not supported.
 
@@ -1281,13 +1281,13 @@ float CvBoost::predict( \par const CvMat* sample, \par const CvMat* missing=0,
 
 }{CPP}{PYTHON}
 
-\begin{description}
-\cvarg{sample}{The input sample.}
-\cvarg{missing}{The optional mask of missing measurements. To handle missing measurements, the weak classifiers must include surrogate splits (see \texttt{CvDTreeParams::use\_surrogates}).}
-\cvarg{weak\_responses}{The optional output parameter, a floating-point vector of responses from each individual weak classifier. The number of elements in the vector must be equal to the \texttt{slice} length.}
-\cvarg{slice}{The continuous subset of the sequence of weak classifiers to be used for prediction. By default, all the weak classifiers are used.}
-\cvarg{raw\_mode}{It has the same meaning as in \texttt{CvDTree::predict}. Normally, it should be set to false.}
-\end{description}
+%\begin{description}
+%\cvarg{sample}{The input sample.}
+%\cvarg{missing}{The optional mask of missing measurements. To handle missing measurements, the weak classifiers must include surrogate splits (see \texttt{CvDTreeParams::use\_surrogates}).}
+%\cvarg{weak\_responses}{The optional output parameter, a floating-point vector of responses from each individual weak classifier. The number of elements in the vector must be equal to the \texttt{slice} length.}
+%\cvarg{slice}{The continuous subset of the sequence of weak classifiers to be used for prediction. By default, all the weak classifiers are used.}
+%\cvarg{raw\_mode}{It has the same meaning as in \texttt{CvDTree::predict}. Normally, it should be set to false.}
+%\end{description}
 
 The method \texttt{CvBoost::predict} runs the sample through the trees in the ensemble and returns the output class label based on the weighted voting.
 
@@ -1365,13 +1365,13 @@ struct CvRTParams : public CvDTreeParams
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{calc\_var\_importance}{If it is set, then variable importance is computed by the training procedure. To retrieve the computed variable importance array, call the method \newline \texttt{CvRTrees::get\_var\_importance().}}
-\cvarg{nactive\_vars}{The number of variables that are randomly selected at each tree node and that are used to find the best split(s).}
-\cvarg{term\_crit}{Termination criteria for growing the forest: \texttt{term\_crit.max\_iter} is the maximum number of trees in the forest (see also \texttt{max\_tree\_count} parameter of the constructor, by default it is set to 50).
-
-\texttt{term\_crit.epsilon} is the sufficient accuracy (\cross{OOB error}).}
-\end{description}
+%\begin{description}
+%\cvarg{calc\_var\_importance}{If it is set, then variable importance is computed by the training procedure. To retrieve the computed variable importance array, call the method \newline \texttt{CvRTrees::get\_var\_importance().}}
+%\cvarg{nactive\_vars}{The number of variables that are randomly selected at each tree node and that are used to find the best split(s).}
+%\cvarg{term\_crit}{Termination criteria for growing the forest: \texttt{term\_crit.max\_iter} is the maximum number of trees in the forest (see also \texttt{max\_tree\_count} parameter of the constructor, by default it is set to 50).
+%
+%\texttt{term\_crit.epsilon} is the sufficient accuracy (\cross{OOB error}).}
+%\end{description}
 
 The set of training parameters for the forest is the superset of the training parameters for a single tree. However, Random trees do not need all the functionality/features of decision trees, most noticeably, the trees are not pruned, so the cross-validation parameters are not used.
 
@@ -1692,26 +1692,26 @@ struct CvEMParams
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{nclusters}{The number of mixtures. Some EM implementation could determine the optimal number of mixtures within a specified value range, but that is not the case in ML yet.}
-\cvarg{cov\_mat\_type}{The type of the mixture covariance matrices; should be one of the following:
-\begin{description}
-\cvarg{CvEM::COV\_MAT\_GENERIC}{a covariance matrix of each mixture may be an arbitrary, symmetrical, positively defined matrix, so the number of free parameters in each matrix is about $\texttt{d}^2/2$. It is not recommended to use this option, unless there is pretty accurate initial estimation of the parameters and/or a huge number of training samples.}
-\cvarg{CvEM::COV\_MAT\_DIAGONAL}{a covariance matrix of each mixture may be an arbitrary diagonal matrix with positive diagonal elements, that is, non-diagonal elements are forced to be 0's, so the number of free parameters is \texttt{d} for each matrix. This is the most commonly used option yielding good estimation results.}
-\cvarg{CvEM::COV\_MAT\_SPHERICAL}{a covariance matrix of each mixture is a scaled identity matrix, $\mu_k*\texttt{I}$, so the only parameter to be estimated is $\mu_k$. The option may be used in special cases, when the constraint is relevant, or as a first step in the optimization (e.g. in case when the data is preprocessed with \cross{CalcPCA}). The results of such preliminary estimation may be passed again to the optimization procedure, this time with \texttt{cov\_mat\_type=CvEM::COV\_MAT\_DIAGONAL}.}
-\end{description}}
-\cvarg{start\_step}{The initial step the algorithm starts from; should be one of the following:
-\begin{description}
-\cvarg{CvEM::START\_E\_STEP}{the algorithm starts with E-step. At least, the initial values of mean vectors, \texttt{CvEMParams::means} must be passed. Optionally, the user may also provide initial values for weights (\texttt{CvEMParams::weights}) and/or covariance matrices (\texttt{CvEMParams::covs}).}
-\cvarg{CvEM::START\_M\_STEP}{the algorithm starts with M-step. The initial probabilities $p_{i,k}$ must be provided.}
-\cvarg{CvEM::START\_AUTO\_STEP}{No values are required from the user, k-means algorithm is used to estimate initial mixtures parameters.}
-\end{description}}
-\cvarg{term\_crit}{Termination criteria of the procedure. EM algorithm stops either after a certain number of iterations (\texttt{term\_crit.num\_iter}), or when the parameters change too little (no more than \texttt{term\_crit.epsilon}) from iteration to iteration.}
-\cvarg{probs}{Initial probabilities $p_{i,k}$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_M\_STEP}.}
-\cvarg{weights}{Initial mixture weights $\pi_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
-\cvarg{covs}{Initial mixture covariance matrices $S_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
-\cvarg{means}{Initial mixture means $a_k$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
-\end{description}
+%\begin{description}
+%\cvarg{nclusters}{The number of mixtures. Some EM implementation could determine the optimal number of mixtures within a specified value range, but that is not the case in ML yet.}
+%\cvarg{cov\_mat\_type}{The type of the mixture covariance matrices; should be one of the following:
+%\begin{description}
+%\cvarg{CvEM::COV\_MAT\_GENERIC}{a covariance matrix of each mixture may be an arbitrary, symmetrical, positively defined matrix, so the number of free parameters in each matrix is about $\texttt{d}^2/2$. It is not recommended to use this option, unless there is pretty accurate initial estimation of the parameters and/or a huge number of training samples.}
+%\cvarg{CvEM::COV\_MAT\_DIAGONAL}{a covariance matrix of each mixture may be an arbitrary diagonal matrix with positive diagonal elements, that is, non-diagonal elements are forced to be 0's, so the number of free parameters is \texttt{d} for each matrix. This is the most commonly used option yielding good estimation results.}
+%\cvarg{CvEM::COV\_MAT\_SPHERICAL}{a covariance matrix of each mixture is a scaled identity matrix, $\mu_k*\texttt{I}$, so the only parameter to be estimated is $\mu_k$. The option may be used in special cases, when the constraint is relevant, or as a first step in the optimization (e.g. in case when the data is preprocessed with \cross{CalcPCA}). The results of such preliminary estimation may be passed again to the optimization procedure, this time with \texttt{cov\_mat\_type=CvEM::COV\_MAT\_DIAGONAL}.}
+%\end{description}}
+%\cvarg{start\_step}{The initial step the algorithm starts from; should be one of the following:
+%\begin{description}
+%\cvarg{CvEM::START\_E\_STEP}{the algorithm starts with E-step. At least, the initial values of mean vectors, \texttt{CvEMParams::means} must be passed. Optionally, the user may also provide initial values for weights (\texttt{CvEMParams::weights}) and/or covariance matrices (\texttt{CvEMParams::covs}).}
+%\cvarg{CvEM::START\_M\_STEP}{the algorithm starts with M-step. The initial probabilities $p_{i,k}$ must be provided.}
+%\cvarg{CvEM::START\_AUTO\_STEP}{No values are required from the user, k-means algorithm is used to estimate initial mixtures parameters.}
+%\end{description}}
+%\cvarg{term\_crit}{Termination criteria of the procedure. EM algorithm stops either after a certain number of iterations (\texttt{term\_crit.num\_iter}), or when the parameters change too little (no more than \texttt{term\_crit.epsilon}) from iteration to iteration.}
+%\cvarg{probs}{Initial probabilities $p_{i,k}$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_M\_STEP}.}
+%\cvarg{weights}{Initial mixture weights $\pi_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
+%\cvarg{covs}{Initial mixture covariance matrices $S_k$; are used (if not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
+%\cvarg{means}{Initial mixture means $a_k$; are used (and must be not \texttt{NULL}) only when  \newline \texttt{start\_step=CvEM::START\_E\_STEP}.}
+%\end{description}
 
 The structure has 2 constructors, the default one represents a rough rule-of-thumb, with another one it is possible to override a variety of parameters, from a single number of mixtures (the only essential problem-dependent parameter), to the initial values for the mixture parameters.
 
@@ -1909,13 +1909,12 @@ All the neurons in MLP are similar. Each of them has several input links (i.e. i
 
 In other words, given the outputs \texttt{{$x_j$}} of the layer \texttt{n}, the outputs \texttt{{$y_i$}} of the layer \texttt{n+1} are computed as:
 
-\cvexp{
-
-    $u_i=sum_j(w^(n+1)_{i,j}*x_j) + w^(n+1)_i,bias
-\newline
-    y_i=f(u_i)$
-
-}{CPP}{PYTHON}
+\[
+    u_i=sum_j(w^(n+1)_{i,j}*x_j) + w^(n+1)_i,bias
+\]
+\[
+    y_i=f(u_i)
+\[
 
 Different activation functions may be used, ML implements 3 standard ones:
 \begin{itemize}
@@ -1971,17 +1970,17 @@ struct CvANN_MLP_TrainParams
 };
 \end{lstlisting}
 
-\begin{description}
-\cvarg{term\_crit}{The termination criteria for the training algorithm. It identifies how many iterations are done by the algorithm (for sequential backpropagation algorithm the number is multiplied by the size of the training set) and how much the weights could change between the iterations to make the algorithm continue.}
-\cvarg{train\_method}{The training algorithm to use; can be one of \texttt{CvANN\_MLP\_TrainParams::BACKPROP} (sequential backpropagation algorithm) or \texttt{CvANN\_MLP\_TrainParams::RPROP} (RPROP algorithm, default value).}
-\cvarg{bp\_dw\_scale}{(Backpropagation only): The coefficient to multiply the computed weight gradient by. The recommended value is about 0.1. The parameter can be set via \texttt{param1} of the constructor.}
-\cvarg{bp\_moment\_scale}{(Backpropagation only): The coefficient to multiply the difference between weights on the 2 previous iterations. This parameter provides some inertia to smooth the random fluctuations of the weights. It can vary from 0 (the feature is disabled) to 1 and beyond. The value 0.1 or so is good enough. The parameter can be set via \texttt{param2} of the constructor.}
-\cvarg{rp\_dw0}{(RPROP only): Initial magnitude of the weight delta. The default value is 0.1. This parameter can be set via \texttt{param1} of the constructor.}
-\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>$1, the default value is 1.2, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
-\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<$1, the default value is 0.5, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
-\cvarg{rp\_dw\_min}{(RPROP only): The minimum value of the weight delta. It must be $>$0, the default value is \texttt{FLT\_EPSILON}. The parameter can be set via \texttt{param2} of the constructor.}
-\cvarg{rp\_dw\_max}{(RPROP only): The maximum value of the weight delta. It must be $>$1, the default value is 50. The parameter can only be changed explicitly by modifying the structure member.}
-\end{description}
+%\begin{description}
+%\cvarg{term\_crit}{The termination criteria for the training algorithm. It identifies how many iterations are done by the algorithm (for sequential backpropagation algorithm the number is multiplied by the size of the training set) and how much the weights could change between the iterations to make the algorithm continue.}
+%\cvarg{train\_method}{The training algorithm to use; can be one of \texttt{CvANN\_MLP\_TrainParams::BACKPROP} (sequential backpropagation algorithm) or \texttt{CvANN\_MLP\_TrainParams::RPROP} (RPROP algorithm, default value).}
+%\cvarg{bp\_dw\_scale}{(Backpropagation only): The coefficient to multiply the computed weight gradient by. The recommended value is about 0.1. The parameter can be set via \texttt{param1} of the constructor.}
+%\cvarg{bp\_moment\_scale}{(Backpropagation only): The coefficient to multiply the difference between weights on the 2 previous iterations. This parameter provides some inertia to smooth the random fluctuations of the weights. It can vary from 0 (the feature is disabled) to 1 and beyond. The value 0.1 or so is good enough. The parameter can be set via \texttt{param2} of the constructor.}
+%\cvarg{rp\_dw0}{(RPROP only): Initial magnitude of the weight delta. The default value is 0.1. This parameter can be set via \texttt{param1} of the constructor.}
+%\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>$1, the default value is 1.2, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+%\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<$1, the default value is 0.5, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+%\cvarg{rp\_dw\_min}{(RPROP only): The minimum value of the weight delta. It must be $>$0, the default value is \texttt{FLT\_EPSILON}. The parameter can be set via \texttt{param2} of the constructor.}
+%\cvarg{rp\_dw\_max}{(RPROP only): The maximum value of the weight delta. It must be $>$1, the default value is 50. The parameter can only be changed explicitly by modifying the structure member.}
+%\end{description}
 
 The structure has default constructor that initializes parameters for \texttt{RPROP} algorithm. There is also more advanced constructor to customize the parameters and/or choose backpropagation algorithm. Finally, the individual parameters can be adjusted after the structure is created.
 
