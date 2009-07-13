@@ -38,7 +38,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'opencv'
-copyright = u'2009, author'
+copyright = u'2009, authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -193,5 +193,5 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_use_modindex = True
 
-pngmath_latex_preamble = '\usepackage{mymath}\usepackage{amsmath}\usepackage[usenames]{color}'
+pngmath_latex_preamble = '\usepackage{mymath}\usepackage{amsmath}\usepackage{bbm}\usepackage[usenames]{color}'
 highlight_language = 'c'

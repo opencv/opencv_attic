@@ -261,6 +261,7 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_cvarg(self, node):
     self.indent += 4
 
+    print "HELLO", str(node.attributes['item']).strip()
     # Nested descriptions occur e.g. when a flag parameter can 
     # be one of several constants.  We want to render the inner 
     # description differently than the outer parameter descriptions.
@@ -321,6 +322,7 @@ class reStructuredTextRenderer(BaseRenderer):
     return unicode(node)
 
   def do_lstlisting(self, node):
+    self.in_func = False
     lines = node.source.split('\n')
     body = "\n".join([u"%s    %s" % (self.ind(), s) for s in lines[1:-1]])
     return u"\n\n%s::\n\n" % self.ind() + unicode(body) + "\n\n"

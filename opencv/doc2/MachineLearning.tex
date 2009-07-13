@@ -547,7 +547,7 @@ struct CvSVMParams
 %\begin{description}
 %\cvarg{svm\_type}{Type of SVM, one of the following types:
 %\begin{description}
-%\cvarg{CvSVM::C\_SVC}{n-class classification (n$>$=2), allows imperfect separation of classes with penalty multiplier \texttt{C} for outliers.}
+%\cvarg{CvSVM::C\_SVC}{n-class classification ($n>=2$), allows imperfect separation of classes with penalty multiplier \texttt{C} for outliers.}
 %\cvarg{CvSVM::NU\_SVC}{n-class classification with possible imperfect separation. Parameter \texttt{nu} (in the range 0..1, the larger the value, the smoother the decision boundary) is used instead of \texttt{C}.}
 %\cvarg{CvSVM::ONE\_CLASS}{one-class SVM. All of the training data is from the same class, SVM builds a boundary that separates the class from the rest of the feature space.}
 %\cvarg{CvSVM::EPS\_SVR}{regression. The distance between feature vectors from the training set and the fitting hyper-plane must be less than \texttt{p}. For outliers the penalty multiplier \texttt{C} is used.}
@@ -610,7 +610,7 @@ train\_auto( \par const CvMat* \_train\_data, \par const CvMat* \_responses,
 
 The method trains the SVM model automatically by choosing the optimal parameters \texttt{C}, \texttt{gamma}, \texttt{p}, \texttt{nu}, \texttt{coef0}, \texttt{degree} from \cross{CvSVMParams}. By optimal one means that the cross-validation estimate of the test set error is minimal. The parameters are iterated by a logarithmic grid, for example, the parameter \texttt{gamma} takes the values in the set {\texttt{gamma\_grid.min\_val}, 
 
-\texttt{gamma\_grid.min\_val$*$gamma\_grid} step, \texttt{gamma\_grid.min\_val$*gamma\_grid.step^2$,...,} 
+$\texttt{gamma\_grid.min\_val}*\texttt{gamma\_grid}$ step, \texttt{gamma\_grid.min\_val$*gamma\_grid.step^2$,...,} 
 
 \texttt{gamma\_grid.min\_val$*gamma\_grid.step^n$}}, where \texttt{n} is the maximal index such, that 
 
@@ -695,7 +695,25 @@ A decision tree is a binary tree (i.e. tree where each non-leaf node has exactly
 
 \subsection{Predicting with Decision Trees}
 
-To reach a leaf node, and to obtain a response for the input feature vector, the prediction procedure starts with the root node. From each non-leaf node the procedure goes to the left (i.e. selects the left child node as the next observed node), or to the right based on the value of a certain variable, whose index is stored in the observed node. The variable can be either ordered or categorical. In the first case, the variable value is compared with the certain threshold (which is also stored in the node); if the value is less than the threshold, the procedure goes to the left, otherwise, to the right (for example, if the weight is less than 1 kilogram, the procedure goes to the left, else to the right). And in the second case the discrete variable value is tested to see if it belongs to a certain subset of values (also stored in the node) from a limited set of values the variable could take; if yes, the procedure goes to the left, else - to the right (for example, if the color is green or red, go to the left, else to the right). That is, in each node, a pair of entities ($<$variable\_index$>$, $<$decision\_rule (threshold/subset)$>$) is used. This pair is called a split (split on the variable \#$<$variable\_index$>$). Once a leaf node is reached, the value assigned to this node is used as the output of prediction procedure.
+To reach a leaf node, and to obtain a response for the input feature
+vector, the prediction procedure starts with the root node. From each
+non-leaf node the procedure goes to the left (i.e. selects the left
+child node as the next observed node), or to the right based on the
+value of a certain variable, whose index is stored in the observed
+node. The variable can be either ordered or categorical. In the first
+case, the variable value is compared with the certain threshold (which
+is also stored in the node); if the value is less than the threshold,
+the procedure goes to the left, otherwise, to the right (for example,
+if the weight is less than 1 kilogram, the procedure goes to the left,
+else to the right). And in the second case the discrete variable value is
+tested to see if it belongs to a certain subset of values (also stored
+in the node) from a limited set of values the variable could take; if
+yes, the procedure goes to the left, else - to the right (for example,
+if the color is green or red, go to the left, else to the right). That
+is, in each node, a pair of entities (variable\_index, decision\_rule
+(threshold/subset)) is used. This pair is called a split (split on
+the variable variable\_index). Once a leaf node is reached, the value
+assigned to this node is used as the output of prediction procedure.
 
 Sometimes, certain features of the input vector are missed (for example, in the darkness it is difficult to determine the object color), and the prediction procedure may get stuck in the certain node (in the mentioned example if the node is split by color). To avoid such situations, decision trees use so-called surrogate splits. That is, in addition to the best "primary" split, every tree node may also be split on one or more other variables with nearly the same results.
 
@@ -1079,7 +1097,12 @@ CvDTreeNode* CvDTree::predict( \par const CvMat* \_sample, \par const CvMat* \_m
 
 The method takes the feature vector and the optional missing measurement mask on input, traverses the decision tree and returns the reached leaf node on output. The prediction result, either the class label or the estimated function value, may be retrieved as the \texttt{value} field of the \cross{CvDTreeNode} structure, for example: dtree-$>$predict(sample,mask)-$>$value.
 
-The last parameter is normally set to \texttt{false}, implying a regular input. If it is \texttt{true}, the method assumes that all the values of the discrete input variables have been already normalized to \texttt{0 to $<$num\_of\_categories$_i>$-1} ranges. (as the decision tree uses such normalized representation internally). It is useful for faster prediction with tree ensembles. For ordered input variables the flag is not used.
+The last parameter is normally set to \texttt{false}, implying a regular
+input. If it is \texttt{true}, the method assumes that all the values of
+the discrete input variables have been already normalized to $0$
+to $num\_of\_categories_i-1$ ranges. (as the decision tree uses such
+normalized representation internally). It is useful for faster prediction
+with tree ensembles. For ordered input variables the flag is not used.
 
 \cvfunc{Example: Building A Tree for Classifying Mushrooms}
 
@@ -1322,7 +1345,7 @@ The method returns the sequence of weak classifiers. Each element of the sequenc
 
 Random trees have been introduced by Leo Breiman and Adele Cutler: \url{http://www.stat.berkeley.edu/users/breiman/RandomForests/}. The algorithm can deal with both classification and regression problems. Random trees is a collection (ensemble) of \href{#DecisionTrees}{tree predictors} that is called \textbf{forest} further in this section (the term has been also introduced by L. Breiman). The classification works as follows: the random trees classifier takes the input feature vector, classifies it with every tree in the forest, and outputs the class label that recieved the majority of "votes". In the case of regression the classifier response is the average of the responses over all the trees in the forest.
 
-All the trees are trained with the same parameters, but on the different training sets, which are generated from the original training set using the bootstrap procedure: for each training set we randomly select the same number of vectors as in the original set (\texttt{=N}). The vectors are chosen with replacement. That is, some vectors will occur more than once and some will be absent. At each node of each tree trained not all the variables are used to find the best split, rather than a random subset of them. With each node a new subset is generated, however its size is fixed for all the nodes and all the trees. It is a training parameter, set to \texttt{sqrt($<$number\_of\_variables$>$)} by default. None of the trees that are built are pruned.
+All the trees are trained with the same parameters, but on the different training sets, which are generated from the original training set using the bootstrap procedure: for each training set we randomly select the same number of vectors as in the original set (\texttt{=N}). The vectors are chosen with replacement. That is, some vectors will occur more than once and some will be absent. At each node of each tree trained not all the variables are used to find the best split, rather than a random subset of them. With each node a new subset is generated, however its size is fixed for all the nodes and all the trees. It is a training parameter, set to $\sqrt{number\_of\_variables}$ by default. None of the trees that are built are pruned.
 
 In random trees there is no need for any accuracy estimation procedures, such as cross-validation or bootstrap, or a separate test set to get an estimate of the training error. The error is estimated internally during the training. When the training set for the current tree is drawn by sampling with replacement, some vectors are left out (so-called \emph{oob (out-of-bag) data}). The size of oob data is about \texttt{N/3}. The classification error is estimated by using this oob-data as following:
 \begin{itemize}
@@ -1645,7 +1668,17 @@ At the second step (Maximization-step, or M-step) the mixture parameter estimate
 
 Alternatively, the algorithm may start with the M-step when the initial values for $p_{i,k}$ can be provided. Another alternative when $p_{i,k}$ are unknown, is to use a simpler clustering algorithm to pre-cluster the input samples and thus obtain initial $p_{i,k}$. Often (and in ML) the \href{CxCore#KMeans2}{k-means} algorithm is used for that purpose.
 
-One of the main that EM algorithm should deal with is the large number of parameters to estimate. The majority of the parameters sits in covariance matrices, which are \texttt{d$\times$d} elements each (where \texttt{d} is the feature space dimensionality). However, in many practical problems the covariance matrices are close to diagonal, or even to $\mu_k*\texttt{I}$, where \texttt{I} is identity matrix and $\mu_k$ is mixture-dependent "scale" parameter. So a robust computation scheme could be to start with the harder constraints on the covariance matrices and then use the estimated parameters as an input for a less constrained optimization problem (often a diagonal covariance matrix is already a good enough approximation).
+One of the main that EM algorithm should deal with is the large number
+of parameters to estimate. The majority of the parameters sits in
+covariance matrices, which are $d \times d$ elements each
+(where $d$ is the feature space dimensionality). However, in
+many practical problems the covariance matrices are close to diagonal,
+or even to $\mu_k*I$, where $I$ is identity matrix and
+$\mu_k$ is mixture-dependent "scale" parameter. So a robust computation
+scheme could be to start with the harder constraints on the covariance
+matrices and then use the estimated parameters as an input for a less
+constrained optimization problem (often a diagonal covariance matrix is
+already a good enough approximation).
 
 \textbf{References:}
 \begin{enumerate}
@@ -1907,14 +1940,15 @@ All the neurons in MLP are similar. Each of them has several input links (i.e. i
 
 \includegraphics{pics/neuron_model.png}
 
-In other words, given the outputs \texttt{{$x_j$}} of the layer \texttt{n}, the outputs \texttt{{$y_i$}} of the layer \texttt{n+1} are computed as:
+In other words, given the outputs $x_j$} of the layer $n$, the outputs $y_i$ of the layer $n+1$ are computed as:
 
 \[
-    u_i=sum_j(w^(n+1)_{i,j}*x_j) + w^(n+1)_i,bias
+    u_i=sum_j(w^{n+1}_{i,j}*x_j) + w^{n+1}_i,bias
 \]
+
 \[
     y_i=f(u_i)
-\[
+\]
 
 Different activation functions may be used, ML implements 3 standard ones:
 \begin{itemize}
@@ -1929,13 +1963,37 @@ In ML all the neurons have the same activation functions, with the same free par
 
 So the whole trained network works as follows: It takes the feature vector on input, the vector size is equal to the size of the input layer, when the values are passed as input to the first hidden layer, the outputs of the hidden layer are computed using the weights and the activation functions and passed further downstream, until we compute the output layer.
 
-So, in order to compute the network one needs to know all the weights \texttt{$w^{(n+1)_{i,j}}$}. The weights are computed by the training algorithm. The algorithm takes a training set: multiple input vectors with the corresponding output vectors, and iteratively adjusts the weights to try to make the network give the desired response on the provided input vectors.
+So, in order to compute the network one needs to know all the
+weights $w^{n+1)}_{i,j}$. The weights are computed by the training
+algorithm. The algorithm takes a training set: multiple input vectors
+with the corresponding output vectors, and iteratively adjusts the
+weights to try to make the network give the desired response on the
+provided input vectors.
 
-The larger the network size (the number of hidden layers and their sizes), the more is the potential network flexibility, and the error on the training set could be made arbitrarily small. But at the same time the learned network will also "learn" the noise present in the training set, so the error on the test set usually starts increasing after the network size reaches some limit. Besides, the larger networks are train much longer than the smaller ones, so it is reasonable to preprocess the data (using \cross{CalcPCA} or similar technique) and train a smaller network on only the essential features.
+The larger the network size (the number of hidden layers and their sizes),
+the more is the potential network flexibility, and the error on the
+training set could be made arbitrarily small. But at the same time the
+learned network will also "learn" the noise present in the training set,
+so the error on the test set usually starts increasing after the network
+size reaches some limit. Besides, the larger networks are train much
+longer than the smaller ones, so it is reasonable to preprocess the data
+(using \cross{CalcPCA} or similar technique) and train a smaller network
+on only the essential features.
 
-Another feature of the MLP's is their inability to handle categorical data as is, however there is a workaround. If a certain feature in the input or output (i.e. in the case of \texttt{n}-class classifier for \texttt{n$>$2}) layer is categorical and can take \texttt{M} ($>$2) different values, it makes sense to represent it as binary tuple of \texttt{M} elements, where \texttt{i}-th element is 1 if and only if the feature is equal to the \texttt{i}-th value out of \texttt{M} possible. It will increase the size of the input/output layer, but will speedup the training algorithm convergence and at the same time enable "fuzzy" values of such variables, i.e. a tuple of probabilities instead of a fixed value.
+Another feature of the MLP's is their inability to handle categorical
+data as is, however there is a workaround. If a certain feature in the
+input or output (i.e. in the case of \texttt{n}-class classifier for
+$n>2$) layer is categorical and can take $M>2$
+different values, it makes sense to represent it as binary tuple of
+\texttt{M} elements, where \texttt{i}-th element is 1 if and only if the
+feature is equal to the \texttt{i}-th value out of \texttt{M} possible. It
+will increase the size of the input/output layer, but will speedup the
+training algorithm convergence and at the same time enable "fuzzy" values
+of such variables, i.e. a tuple of probabilities instead of a fixed value.
 
-ML implements 2 algorithms for training MLP's. The first is the classical random sequential \href{#paper_backprop}{back-propagation algorithm} and the second (default one) is batch \href{#paper_rprop}{RPROP algorithm}
+ML implements 2 algorithms for training MLP's. The first is the classical
+random sequential \href{#paper_backprop}{back-propagation algorithm}
+and the second (default one) is batch \href{#paper_rprop}{RPROP algorithm}
 
 \textbf{References:
 \begin{enumerate}
@@ -1976,10 +2034,10 @@ struct CvANN_MLP_TrainParams
 %\cvarg{bp\_dw\_scale}{(Backpropagation only): The coefficient to multiply the computed weight gradient by. The recommended value is about 0.1. The parameter can be set via \texttt{param1} of the constructor.}
 %\cvarg{bp\_moment\_scale}{(Backpropagation only): The coefficient to multiply the difference between weights on the 2 previous iterations. This parameter provides some inertia to smooth the random fluctuations of the weights. It can vary from 0 (the feature is disabled) to 1 and beyond. The value 0.1 or so is good enough. The parameter can be set via \texttt{param2} of the constructor.}
 %\cvarg{rp\_dw0}{(RPROP only): Initial magnitude of the weight delta. The default value is 0.1. This parameter can be set via \texttt{param1} of the constructor.}
-%\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>$1, the default value is 1.2, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
-%\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<$1, the default value is 0.5, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
-%\cvarg{rp\_dw\_min}{(RPROP only): The minimum value of the weight delta. It must be $>$0, the default value is \texttt{FLT\_EPSILON}. The parameter can be set via \texttt{param2} of the constructor.}
-%\cvarg{rp\_dw\_max}{(RPROP only): The maximum value of the weight delta. It must be $>$1, the default value is 50. The parameter can only be changed explicitly by modifying the structure member.}
+%\cvarg{rp\_dw\_plus}{(RPROP only): The increase factor for the weight delta. It must be $>1$, the default value is 1.2, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+%\cvarg{rp\_dw\_minus}{(RPROP only): The decrease factor for the weight delta. It must be $<1$, the default value is 0.5, which should work well in most cases, according to the algorithm's author. The parameter can only be changed explicitly by modifying the structure member.}
+%\cvarg{rp\_dw\_min}{(RPROP only): The minimum value of the weight delta. It must be $>0$, the default value is \texttt{FLT\_EPSILON}. The parameter can be set via \texttt{param2} of the constructor.}
+%\cvarg{rp\_dw\_max}{(RPROP only): The maximum value of the weight delta. It must be $>1$, the default value is 50. The parameter can only be changed explicitly by modifying the structure member.}
 %\end{description}
 
 The structure has default constructor that initializes parameters for \texttt{RPROP} algorithm. There is also more advanced constructor to customize the parameters and/or choose backpropagation algorithm. Finally, the individual parameters can be adjusted after the structure is created.
