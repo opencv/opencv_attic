@@ -2996,6 +2996,44 @@ Mat getAffineTransform( const Point2f src[], const Point2f dst[] )
     solve( A, B, X );
     return M;
 }
+    
+void invertAffineTransform(const Mat& _M, Mat& _iM)
+{
+    CV_Assert(_M.rows == 2 && _M.cols == 3);
+    _iM.create(2, 3, _M.type());
+    if( _M.type() == CV_32F )
+    {
+        const float* M = (const float*)_M.data;
+        float* iM = (float*)_iM.data;
+        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        
+        double D = M[0]*M[step+1] - M[1]*M[step];
+        D = D != 0 ? 1./D : 0;
+        double A11 = M[step+1]*D, A22 = M[0]*D, A12 = -M[1]*D, A21 = -M[step]*D;
+        double b1 = -A11*M[2] - A12*M[step+2];
+        double b2 = -A21*M[2] - A22*M[step+2];
+        
+        iM[0] = (float)A11; iM[1] = (float)A12; iM[2] = (float)b1;
+        iM[istep] = (float)A21; iM[istep+1] = (float)A22; iM[istep+2] = (float)b2;
+    }
+    else if( _M.type() == CV_64F )
+    {
+        const double* M = (const double*)_M.data;
+        double* iM = (double*)_iM.data;
+        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        
+        double D = M[0]*M[step+1] - M[1]*M[step];
+        D = D != 0 ? 1./D : 0;
+        double A11 = M[step+1]*D, A22 = M[0]*D, A12 = -M[1]*D, A21 = -M[step]*D;
+        double b1 = -A11*M[2] - A12*M[step+2];
+        double b2 = -A21*M[2] - A22*M[step+2];
+        
+        iM[0] = A11; iM[1] = A12; iM[2] = b1;
+        iM[istep] = A21; iM[istep+1] = A22; iM[istep+2] = b2;
+    }
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
+}    
 
 }
 

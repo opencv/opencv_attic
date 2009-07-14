@@ -212,6 +212,7 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
                   CvMat* mask )
 {
     const double confidence = 0.99;
+    const int maxIters = 1500;
     bool result = false;
     CvMat *m = 0, *M = 0, *tempMask = 0;
 
@@ -251,9 +252,9 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     if( count == 4 )
         method = 0;
     if( method == CV_LMEDS )
-        result = estimator.runLMeDS( M, m, &_H, tempMask, confidence );
+        result = estimator.runLMeDS( M, m, &_H, tempMask, confidence, maxIters );
     else if( method == CV_RANSAC )
-        result = estimator.runRANSAC( M, m, &_H, tempMask, ransacReprojThreshold, confidence );
+        result = estimator.runRANSAC( M, m, &_H, tempMask, ransacReprojThreshold, confidence, maxIters);
     else
         result = estimator.runKernel( M, m, &_H ) > 0;
 

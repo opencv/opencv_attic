@@ -279,9 +279,7 @@ public:
     Point_(const CvPoint2D32f& pt);
     Point_(const Size_<_Tp>& sz);
     Point_& operator = (const Point_& pt);
-    operator Point_<int>() const;
-    operator Point_<float>() const;
-    operator Point_<double>() const;
+    template<typename _Tp2> operator Point_<_Tp2>() const;
     operator CvPoint() const;
     operator CvPoint2D32f() const;
 
@@ -304,9 +302,7 @@ public:
     Point3_(const CvPoint3D32f& pt);
     Point3_(const Vec<_Tp, 3>& t);
     Point3_& operator = (const Point3_& pt);
-    operator Point3_<int>() const;
-    operator Point3_<float>() const;
-    operator Point3_<double>() const;
+    template<typename _Tp2> operator Point3_<_Tp2>() const;
     operator CvPoint3D32f() const;
 
     _Tp dot(const Point3_& pt) const;
