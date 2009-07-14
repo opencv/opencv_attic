@@ -458,7 +458,199 @@ public:
     bool gammaCorrection;
     Vector<float> svmDetector;
 };
+    
+    
+class CV_EXPORTS PatchGenerator
+{
+public:
+    PatchGenerator();
+    PatchGenerator(double _backgroundMin, double _backgroundMax,
+                   double _noiseRange, bool _randomBlur=true,
+                   double _lambdaMin=0.6, double _lambdaMax=1.5,
+                   double _thetaMin=-CV_PI, double _thetaMax=CV_PI,
+                   double _phiMin=-CV_PI, double _phiMax=CV_PI );
+    void operator()(const Mat& image, Point2f pt, Mat& patch, Size patchSize, RNG& rng) const;
+    void operator()(const Mat& image, const Mat& transform, Mat& patch,
+                    Size patchSize, RNG& rng) const;
+    void warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
+                        Mat& warped, int border, RNG& rng) const;
+    void generateRandomTransform(Point2f srcCenter, Point2f dstCenter,
+                                 Mat& transform, RNG& rng, bool inverse=false) const;
+    double backgroundMin, backgroundMax;
+    double noiseRange;
+    bool randomBlur;
+    double lambdaMin, lambdaMax;
+    double thetaMin, thetaMax;
+    double phiMin, phiMax;
+};
 
+
+class CV_EXPORTS LDetector
+{
+public:    
+    LDetector();
+    LDetector(int _radius, int _threshold, int _nOctaves,
+              int _nViews, double _baseFeatureSize, double _clusteringDistance);
+    void operator()(const Mat& image, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
+                         int maxCount, const PatchGenerator& patchGenerator) const;
+    void setVerbose(bool verbose);
+    
+    void read(const FileNode& node);
+    void write(FileStorage& fs, const String& name=String()) const;
+    
+    int radius;
+    int threshold;
+    int nOctaves;
+    int nViews;
+    bool verbose;
+    
+    double baseFeatureSize;
+    double clusteringDistance;
+};
+
+
+class CV_EXPORTS FernClassifier
+{
+public:
+    FernClassifier();
+    FernClassifier(const FileNode& node);
+    FernClassifier(const Vector<Point2f>& points,
+                   const Vector<Ptr<Mat> >& refimgs,
+                   const Vector<int>& labels=Vector<int>(),
+                   int _nclasses=0, int _patchSize=PATCH_SIZE,
+                   int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                   int _nstructs=DEFAULT_STRUCTS,
+                   int _structSize=DEFAULT_STRUCT_SIZE,
+                   int _nviews=DEFAULT_VIEWS,
+                   int _compressionMethod=COMPRESSION_NONE,
+                   const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual ~FernClassifier();
+    virtual void read(const FileNode& n);
+    virtual void write(FileStorage& fs, const String& name=String()) const;
+    virtual void trainFromSingleView(const Mat& image,
+                                     const Vector<Keypoint>& keypoints,
+                                     int _patchSize=PATCH_SIZE,
+                                     int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                                     int _nstructs=DEFAULT_STRUCTS,
+                                     int _structSize=DEFAULT_STRUCT_SIZE,
+                                     int _nviews=DEFAULT_VIEWS,
+                                     int _compressionMethod=COMPRESSION_NONE,
+                                     const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual void train(const Vector<Point2f>& points,
+                       const Vector<Ptr<Mat> >& refimgs,
+                       const Vector<int>& labels=Vector<int>(),
+                       int _nclasses=0, int _patchSize=PATCH_SIZE,
+                       int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                       int _nstructs=DEFAULT_STRUCTS,
+                       int _structSize=DEFAULT_STRUCT_SIZE,
+                       int _nviews=DEFAULT_VIEWS,
+                       int _compressionMethod=COMPRESSION_NONE,
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual int operator()(const Mat& img, Point2f kpt, Vector<float>& signature) const;
+    virtual int operator()(const Mat& patch, Vector<float>& signature) const;
+    virtual void clear();
+    void setVerbose(bool verbose);
+    
+    int getClassCount() const;
+    int getStructCount() const;
+    int getStructSize() const;
+    int getSignatureSize() const;
+    int getCompressionMethod() const;
+    Size getPatchSize() const;    
+    
+    struct Feature
+    {
+        uchar x1, y1, x2, y2;
+        Feature() : x1(0), y1(0), x2(0), y2(0) {}
+        Feature(int _x1, int _y1, int _x2, int _y2)
+        : x1((uchar)_x1), y1((uchar)_y1), x2((uchar)_x2), y2((uchar)_y2)
+        {}
+        template<typename _Tp> bool operator ()(const Mat_<_Tp>& patch) const
+        { return patch(y1,x1) > patch(y2, x2); }
+    };
+    
+    enum
+    {
+        PATCH_SIZE = 31,
+        DEFAULT_STRUCTS = 50,
+        DEFAULT_STRUCT_SIZE = 9,
+        DEFAULT_VIEWS = 5000,
+        DEFAULT_SIGNATURE_SIZE = 176,
+        COMPRESSION_NONE = 0,
+        COMPRESSION_RANDOM_PROJ = 1,
+        COMPRESSION_PCA = 2,
+        DEFAULT_COMPRESSION_METHOD = COMPRESSION_NONE,
+    };
+    
+protected:
+    virtual void prepare(int _nclasses, int _patchSize, int _signatureSize,
+                         int _nstructs, int _structSize,
+                         int _nviews, int _compressionMethod);
+    virtual void finalize(RNG& rng);
+    virtual int getLeaf(int fidx, const Mat& patch) const;
+    
+    bool verbose;
+    int nstructs;
+    int structSize;
+    int nclasses;
+    int signatureSize;
+    int compressionMethod;
+    int leavesPerStruct;
+    Size patchSize;
+    Vector<Feature> features;
+    Vector<int> classCounters;
+    Vector<float> posteriors;
+};
+
+class CV_EXPORTS PlanarObjectDetector
+{
+public:
+    PlanarObjectDetector();
+    PlanarObjectDetector(const FileNode& node);
+    PlanarObjectDetector(const Vector<Mat>& pyr, int _npoints=300,
+                         int _patchSize=FernClassifier::PATCH_SIZE,
+                         int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                         int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                         int _nviews=FernClassifier::DEFAULT_VIEWS,
+                         const LDetector& detector=LDetector(),
+                         const PatchGenerator& patchGenerator=PatchGenerator()); 
+    virtual ~PlanarObjectDetector();
+    virtual void train(const Vector<Mat>& pyr, int _npoints=300,
+                       int _patchSize=FernClassifier::PATCH_SIZE,
+                       int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                       int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                       int _nviews=FernClassifier::DEFAULT_VIEWS,
+                       const LDetector& detector=LDetector(),
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual void train(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+                       int _patchSize=FernClassifier::PATCH_SIZE,
+                       int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                       int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                       int _nviews=FernClassifier::DEFAULT_VIEWS,
+                       const LDetector& detector=LDetector(),
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    Rect getModelROI() const;
+    Vector<Keypoint> getModelPoints() const;
+    const LDetector& getDetector() const;
+    const FernClassifier& getClassifier() const;
+    void setVerbose(bool verbose);
+    
+    void read(const FileNode& node);
+    void write(FileStorage& fs, const String& name=String()) const;
+    bool operator()(const Mat& image, Mat& H, Vector<Point2f>& corners) const;
+    bool operator()(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+                    Mat& H, Vector<Point2f>& corners, Vector<int>* pairs=0) const;
+    
+protected:
+    bool verbose;
+    Rect modelROI;
+    Vector<Keypoint> modelPoints;
+    LDetector ldetector;
+    FernClassifier fernClassifier;
+};
+    
 }
 
 #endif /* __cplusplus */

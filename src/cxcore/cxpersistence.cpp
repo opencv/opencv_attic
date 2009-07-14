@@ -5045,6 +5045,7 @@ FileNodeIterator& FileNodeIterator::operator += (int ofs)
         size_t count = FileNode(fs, container).count();
         ofs = (int)(remaining - std::min(remaining - ofs, count));
     }
+    remaining -= ofs;
     if( reader.seq )
         cvSetSeqReaderPos( &reader, ofs, 1 );
     return *this;

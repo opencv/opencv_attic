@@ -487,12 +487,8 @@ template<typename _Tp> inline Point_<_Tp>::Point_(const Size_<_Tp>& sz) : x(sz.w
 template<typename _Tp> inline Point_<_Tp>& Point_<_Tp>::operator = (const Point_& pt)
 { x = pt.x; y = pt.y; return *this; }
 
-template<typename _Tp> inline Point_<_Tp>::operator Point_<int>() const
-{ return Point_<int>(saturate_cast<int>(x), saturate_cast<int>(y)); }
-template<typename _Tp> inline Point_<_Tp>::operator Point_<float>() const
-{ return Point_<float>(float(x), float(y)); }
-template<typename _Tp> inline Point_<_Tp>::operator Point_<double>() const
-{ return Point_<double>(x, y); }
+template<typename _Tp> template<typename _Tp2> inline Point_<_Tp>::operator Point_<_Tp2>() const
+{ return Point_<_Tp2>(saturate_cast<_Tp2>(x), saturate_cast<_Tp2>(y)); }
 template<typename _Tp> inline Point_<_Tp>::operator CvPoint() const
 { return cvPoint(saturate_cast<int>(x), saturate_cast<int>(y)); }
 template<typename _Tp> inline Point_<_Tp>::operator CvPoint2D32f() const
@@ -543,12 +539,9 @@ template<typename _Tp> inline Point3_<_Tp>::Point3_(const CvPoint3D32f& pt) :
     x(saturate_cast<_Tp>(pt.x)), y(saturate_cast<_Tp>(pt.y)), z(saturate_cast<_Tp>(pt.z)) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const Vec<_Tp, 3>& t) : x(t[0]), y(t[1]), z(t[2]) {}
 
-template<typename _Tp> inline Point3_<_Tp>::operator Point3_<int>() const
-{ return Point3_<int>(saturate_cast<int>(x), saturate_cast<int>(y), saturate_cast<int>(z)); }
-template<typename _Tp> inline Point3_<_Tp>::operator Point3_<float>() const
-{ return Point3_<float>(float(x), float(y), float(z)); }
-template<typename _Tp> inline Point3_<_Tp>::operator Point3_<double>() const
-{ return Point3_<double>(x, y, z); }
+template<typename _Tp> template<typename _Tp2> inline Point3_<_Tp>::operator Point3_<_Tp2>() const
+{ return Point3_<_Tp2>(saturate_cast<_Tp2>(x), saturate_cast<_Tp2>(y), saturate_cast<_Tp2>(z)); }
+    
 template<typename _Tp> inline Point3_<_Tp>::operator CvPoint3D32f() const
 { return cvPoint3D32f((float)x, (float)y, (float)z); }
 
@@ -963,7 +956,7 @@ template <typename _Tp> inline Vector<_Tp>::Vector(_Tp* _data, size_t _size, boo
 template <typename _Tp> template<int n> inline Vector<_Tp>::Vector(const Vec<_Tp, n>& vec)
 { set((_Tp*)&vec.val[0], n, true); }
 template <typename _Tp> inline Vector<_Tp>::Vector(const std::vector<_Tp>& vec, bool _copyData)
-{ set(&vec[0], vec.size(), _copyData); }
+{ set((_Tp*)&vec[0], vec.size(), _copyData); }
 template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d)
 { *this = d; }
 template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d, const Range& r)

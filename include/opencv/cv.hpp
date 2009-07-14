@@ -342,6 +342,7 @@ CV_EXPORTS void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat
 CV_EXPORTS Mat getRotationMatrix2D( Point2f center, double angle, double scale );
 CV_EXPORTS Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] );
 CV_EXPORTS Mat getAffineTransform( const Point2f src[], const Point2f dst[] );
+CV_EXPORTS void invertAffineTransform(const Mat& M, Mat& iM);
 
 CV_EXPORTS void getRectSubPix( const Mat& image, Size patchSize,
                                Point2f center, Mat& patch, int patchType=-1 );
@@ -894,6 +895,26 @@ public:
 
     void operator()(const Mat& image, Vector<StarKeypoint>& keypoints) const;
 };
+    
+    
+class CV_EXPORTS Keypoint
+{
+public:    
+    Keypoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
+    Keypoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
+    : pt(_pt), size(_size), angle(_angle), response(_response), octave(_octave) {}
+    Keypoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
+    : pt(x, y), size(_size), angle(_angle), response(_response), octave(_octave) {}
+    
+    Point2f pt;
+    float size;
+    float angle;
+    float response;
+    int octave;
+};
+
+void write(FileStorage& fs, const String& name, const Vector<Keypoint>& keypoints);
+void read(const FileNode& node, Vector<Keypoint>& keypoints);    
 
 }
 
