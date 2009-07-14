@@ -1015,8 +1015,6 @@ template <typename _Tp> inline Vector<_Tp>::operator CvMat() const
 
 template <typename _Tp> inline _Tp& Vector<_Tp>::operator [] (size_t i) { CV_DbgAssert( i < size() ); return hdr.data[i]; }
 template <typename _Tp> inline const _Tp& Vector<_Tp>::operator [] (size_t i) const { CV_DbgAssert( i < size() ); return hdr.data[i]; }
-template <typename _Tp> inline _Tp& Vector<_Tp>::operator [] (int i) { CV_DbgAssert( (size_t)i < size() ); return hdr.data[i]; }
-template <typename _Tp> inline const _Tp& Vector<_Tp>::operator [] (int i) const { CV_DbgAssert( (size_t)i < size() ); return hdr.data[i]; }
 template <typename _Tp> inline Vector<_Tp> Vector<_Tp>::operator() (const Range& r) const { return Vector(*this, r); }
 template <typename _Tp> inline _Tp& Vector<_Tp>::back() { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
 template <typename _Tp> inline const _Tp& Vector<_Tp>::back() const { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
