@@ -291,6 +291,7 @@ struct HOGCache
 {
     struct BlockData
     {
+        BlockData() : histOfs(0), imgOffset() {}
         int histOfs;
         Point imgOffset;
     };
