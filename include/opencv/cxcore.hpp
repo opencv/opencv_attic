@@ -672,8 +672,6 @@ public:
     
     _Tp& operator [] (size_t i);
     const _Tp& operator [] (size_t i) const;
-    _Tp& operator [] (int i);
-    const _Tp& operator [] (int i) const;
     Vector operator() (const Range& r) const;
     _Tp& back();
     const _Tp& back() const;
