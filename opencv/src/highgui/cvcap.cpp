@@ -237,9 +237,6 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
 {
     CvCapture * result = 0;
 
-    if (! result)
-        result = cvCreateFileCapture_Images (filename);
-
     #ifdef WIN32
     if (! result)
         result = cvCreateFileCapture_Win32 (filename);
@@ -264,6 +261,9 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
     if (! result)
         result = cvCreateFileCapture_QT (filename);
     #endif
+    
+    if (! result)
+        result = cvCreateFileCapture_Images (filename);
 
     return result;
 }
