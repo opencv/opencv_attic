@@ -45,6 +45,19 @@
 namespace cv
 {
 
+/*
+  The code below implements keypoint detector, fern-based point classifier and a planar object detector.
+ 
+  References:
+   1. Mustafa Özuysal, Michael Calonder, Vincent Lepetit, Pascal Fua,
+      "Fast Keypoint Recognition Using Random Ferns,"
+      IEEE Transactions on Pattern Analysis and Machine Intelligence, 15 Jan. 2009.
+ 
+   2. Vincent Lepetit, Pascal Fua,
+      “Towards Recognizing Feature Points Using Classification Trees,”
+      Technical Report IC/2004/74, EPFL, 2004.  
+*/     
+    
 const int progressBarSize = 50;    
 
 //////////////////////////// Patch Generator //////////////////////////////////    
