@@ -53,6 +53,13 @@
 namespace cv
 {
 
+using std::max;
+using std::min;
+using std::exp;
+using std::log;
+using std::pow;
+using std::sqrt;    
+
 /////////////// saturate_cast (used in image & signal processing) ///////////////////
 
 template<typename _Tp> static inline _Tp saturate_cast(uchar v) { return _Tp(v); }
@@ -367,6 +374,15 @@ Vec<T1, 4>& operator += (Vec<T1, 4>& a, const Vec<T2, 4>& b)
     a[3] = saturate_cast<T1>(a[3] + b[3]);
     return a;
 }
+    
+template<typename T1, int n> static inline
+double norm(const Vec<T1, n>& a)
+{
+    double s = 0;
+    for( int i = 0; i < n; i++ )
+        s += (double)a.val[i]*a.val[i];
+    return std::sqrt(s);
+}
 
 //////////////////////////////// Complex //////////////////////////////
 
@@ -528,7 +544,7 @@ template<typename _Tp> static inline Point_<_Tp> operator * (const Point_<_Tp>& 
 
 template<typename _Tp> static inline Point_<_Tp> operator * (_Tp a, const Point_<_Tp>& b)
 { return Point_<_Tp>( a*b.x, a*b.y ); }
-
+    
 //////////////////////////////// 3D Point ////////////////////////////////
 
 template<typename _Tp> inline Point3_<_Tp>::Point3_() : x(0), y(0), z(0) {}
@@ -578,7 +594,7 @@ template<typename _Tp> static inline Point3_<_Tp> operator * (const Point3_<_Tp>
 
 template<typename _Tp> static inline Point3_<_Tp> operator * (_Tp a, const Point3_<_Tp>& b)
 { return Point3_<_Tp>( a*b.x, a*b.y, a*b.z ); }
-
+    
 //////////////////////////////// Size ////////////////////////////////
 
 template<typename _Tp> inline Size_<_Tp>::Size_()
