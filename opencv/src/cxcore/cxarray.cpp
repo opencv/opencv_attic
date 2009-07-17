@@ -2976,29 +2976,22 @@ cvSetImageROI( IplImage* image, CvRect rect )
     if( !image )
         CV_Error( CV_HeaderIsNull, "" );
 
-    if( rect.x > image->width || rect.y > image->height )
-        CV_Error( CV_BadROISize, "" );
-
-    if( rect.x + rect.width < 0 || rect.y + rect.height < 0 )
-        CV_Error( CV_BadROISize, "" );
-
-    if( rect.x < 0 )
-    {
-        rect.width += rect.x;
-        rect.x = 0;
-    }
-
-    if( rect.y < 0 )
-    {
-        rect.height += rect.y;
-        rect.y = 0;
-    }
-
-    if( rect.x + rect.width > image->width )
-        rect.width = image->width - rect.x;
-
-    if( rect.y + rect.height > image->height )
-        rect.height = image->height - rect.y;
+    // allow zero ROI width or height
+    CV_Assert( rect.width >= 0 && rect.height >= 0 &&
+               rect.x < image->width && rect.y < image->height &&
+               rect.x + rect.width >= (rect.width > 0) &&
+               rect.y + rect.height >= (rect.height > 0) );
+    
+    rect.width += rect.x;
+    rect.height += rect.y;
+    
+    rect.x = std::max(rect.x, 0);
+    rect.y = std::max(rect.y, 0);
+    rect.width = std::min(rect.width, image->width);
+    rect.height = std::min(rect.height, image->height);
+    
+    rect.width -= rect.x;
+    rect.height -= rect.y;
 
     if( image->roi )
     {
