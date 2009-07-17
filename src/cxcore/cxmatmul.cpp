@@ -183,8 +183,8 @@ GEMMSingleMul( const T* a_data, size_t a_step,
             c_data = _c_data;
             for( j = 0; j <= d_size.width - 2; j += 2, c_data += 2*c_step1 )
             {
-                WT s0 = al*b_data[j];
-                WT s1 = al*b_data[j+1];
+                WT s0 = al*WT(b_data[j]);
+                WT s1 = al*WT(b_data[j+1]);
                 if( !c_data )
                 {
                     d_data[j] = T(s0);
@@ -192,18 +192,18 @@ GEMMSingleMul( const T* a_data, size_t a_step,
                 }
                 else
                 {
-                    d_data[j] = T(s0 + c_data[0]*beta);
-                    d_data[j+1] = T(s1 + c_data[c_step1]*beta);
+                    d_data[j] = T(s0 + WT(c_data[0])*beta);
+                    d_data[j+1] = T(s1 + WT(c_data[c_step1])*beta);
                 }
             }
 
             for( ; j < d_size.width; j++, c_data += c_step1 )
             {
-                WT s0 = al*b_data[j];
+                WT s0 = al*WT(b_data[j]);
                 if( !c_data )
                     d_data[j] = T(s0);
                 else
-                    d_data[j] = T(s0 + c_data[0]*beta);
+                    d_data[j] = T(s0 + WT(c_data[0])*beta);
             }
         }
     }
@@ -229,20 +229,20 @@ GEMMSingleMul( const T* a_data, size_t a_step,
 
                 for( k = 0; k <= n - 4; k += 4 )
                 {
-                    s0 += WT(a_data[k])*b_data[k];
-                    s1 += WT(a_data[k+1])*b_data[k+1];
-                    s2 += WT(a_data[k+2])*b_data[k+2];
-                    s3 += WT(a_data[k+3])*b_data[k+3];
+                    s0 += WT(a_data[k])*WT(b_data[k]);
+                    s1 += WT(a_data[k+1])*WT(b_data[k+1]);
+                    s2 += WT(a_data[k+2])*WT(b_data[k+2]);
+                    s3 += WT(a_data[k+3])*WT(b_data[k+3]);
                 }
 
                 for( ; k < n; k++ )
-                    s0 += WT(a_data[k])*b_data[k];
+                    s0 += WT(a_data[k])*WT(b_data[k]);
                 s0 = (s0+s1+s2+s3)*alpha;
 
                 if( !c_data )
                     d_data[j] = T(s0);
                 else
-                    d_data[j] = T(s0 + c_data[0]*beta);
+                    d_data[j] = T(s0 + WT(c_data[0])*beta);
             }
         }
     }
@@ -269,8 +269,8 @@ GEMMSingleMul( const T* a_data, size_t a_step,
                 for( k = 0; k < n; k++, b += b_step )
                 {
                     WT a(a_data[k]);
-                    s0 += a * b[0]; s1 += a * b[1];
-                    s2 += a * b[2]; s3 += a * b[3];
+                    s0 += a * WT(b[0]); s1 += a * WT(b[1]);
+                    s2 += a * WT(b[2]); s3 += a * WT(b[3]);
                 }
 
                 if( !c_data )
@@ -284,10 +284,10 @@ GEMMSingleMul( const T* a_data, size_t a_step,
                 {
                     s0 = s0*alpha; s1 = s1*alpha;
                     s2 = s2*alpha; s3 = s3*alpha;
-                    d_data[j] = T(s0 + c_data[0]*beta);
-                    d_data[j+1] = T(s1 + c_data[c_step1]*beta);
-                    d_data[j+2] = T(s2 + c_data[c_step1*2]*beta);
-                    d_data[j+3] = T(s3 + c_data[c_step1*3]*beta);
+                    d_data[j] = T(s0 + WT(c_data[0])*beta);
+                    d_data[j+1] = T(s1 + WT(c_data[c_step1])*beta);
+                    d_data[j+2] = T(s2 + WT(c_data[c_step1*2])*beta);
+                    d_data[j+3] = T(s3 + WT(c_data[c_step1*3])*beta);
                 }
             }
 
@@ -297,13 +297,13 @@ GEMMSingleMul( const T* a_data, size_t a_step,
                 WT s0(0);
 
                 for( k = 0; k < n; k++, b += b_step )
-                    s0 += WT(a_data[k]) * b[0];
+                    s0 += WT(a_data[k]) * WT(b[0]);
 
                 s0 = s0*alpha;
                 if( !c_data )
                     d_data[j] = T(s0);
                 else
-                    d_data[j] = T(s0 + c_data[0]*beta);
+                    d_data[j] = T(s0 + WT(c_data[0])*beta);
             }
         }
     }
@@ -333,18 +333,18 @@ GEMMSingleMul( const T* a_data, size_t a_step,
 
                 for( j = 0; j <= m - 4; j += 4 )
                 {
-                    WT t0 = d_buf[j] + b_data[j]*al;
-                    WT t1 = d_buf[j+1] + b_data[j+1]*al;
+                    WT t0 = d_buf[j] + WT(b_data[j])*al;
+                    WT t1 = d_buf[j+1] + WT(b_data[j+1])*al;
                     d_buf[j] = t0;
                     d_buf[j+1] = t1;
-                    t0 = d_buf[j+2] + b_data[j+2]*al;
-                    t1 = d_buf[j+3] + b_data[j+3]*al;
+                    t0 = d_buf[j+2] + WT(b_data[j+2])*al;
+                    t1 = d_buf[j+3] + WT(b_data[j+3])*al;
                     d_buf[j+2] = t0;
                     d_buf[j+3] = t1;
                 }
 
                 for( ; j < m; j++ )
-                    d_buf[j] += b_data[j]*al;
+                    d_buf[j] += WT(b_data[j])*al;
             }
 
             if( !c_data )
@@ -354,7 +354,7 @@ GEMMSingleMul( const T* a_data, size_t a_step,
                 for( j = 0; j < m; j++, c_data += c_step1 )
                 {
                     WT t = d_buf[j]*alpha;
-                    d_data[j] = T(t + c_data[0]*beta);
+                    d_data[j] = T(t + WT(c_data[0])*beta);
                 }
         }
     }
@@ -406,12 +406,12 @@ GEMMBlockMul( const T* a_data, size_t a_step,
                 WT s0 = do_acc ? d_data[j]:WT(0), s1(0);
                 for( k = 0; k <= n - 2; k += 2 )
                 {
-                    s0 += WT(a_data[k])*b_data[k];
-                    s1 += WT(a_data[k+1])*b_data[k+1];
+                    s0 += WT(a_data[k])*WT(b_data[k]);
+                    s1 += WT(a_data[k+1])*WT(b_data[k+1]);
                 }
 
                 for( ; k < n; k++ )
-                    s0 += WT(a_data[k])*b_data[k];
+                    s0 += WT(a_data[k])*WT(b_data[k]);
 
                 d_data[j] = s0 + s1;
             }
@@ -446,8 +446,8 @@ GEMMBlockMul( const T* a_data, size_t a_step,
                 for( k = 0; k < n; k++, b += b_step )
                 {
                     WT a(a_data[k]);
-                    s0 += a * b[0]; s1 += a * b[1];
-                    s2 += a * b[2]; s3 += a * b[3];
+                    s0 += a * WT(b[0]); s1 += a * WT(b[1]);
+                    s2 += a * WT(b[2]); s3 += a * WT(b[3]);
                 }
 
                 d_data[j] = s0; d_data[j+1] = s1;
@@ -460,7 +460,7 @@ GEMMBlockMul( const T* a_data, size_t a_step,
                 WT s0 = do_acc ? d_data[j] : WT(0);
 
                 for( k = 0; k < n; k++, b += b_step )
-                    s0 += WT(a_data[k]) * b[0];
+                    s0 += WT(a_data[k]) * WT(b[0]);
 
                 d_data[j] = s0;
             }
@@ -513,7 +513,7 @@ GEMMStore( const T* c_data, size_t c_step,
             for( ; j < d_size.width; j++, c_data += c_step1 )
             {
                 WT t0 = alpha*d_buf[j];
-                d_data[j] = T(t0 + beta*c_data[0]);
+                d_data[j] = T(t0 + WT(c_data[0])*beta);
             }
         }
         else
@@ -573,6 +573,30 @@ static void GEMMSingleMul_64f( const double* a_data, size_t a_step,
                                 alpha, beta, flags);
 }
 
+    
+static void GEMMSingleMul_32fc( const Complexf* a_data, size_t a_step,
+                              const Complexf* b_data, size_t b_step,
+                              const Complexf* c_data, size_t c_step,
+                              Complexf* d_data, size_t d_step,
+                              Size a_size, Size d_size,
+                              double alpha, double beta, int flags )
+{
+    GEMMSingleMul<Complexf,Complexd>(a_data, a_step, b_data, b_step, c_data,
+                                c_step, d_data, d_step, a_size, d_size,
+                                alpha, beta, flags);
+}
+
+static void GEMMSingleMul_64fc( const Complexd* a_data, size_t a_step,
+                              const Complexd* b_data, size_t b_step,
+                              const Complexd* c_data, size_t c_step,
+                              Complexd* d_data, size_t d_step,
+                              Size a_size, Size d_size,
+                              double alpha, double beta, int flags )
+{
+    GEMMSingleMul<Complexd,Complexd>(a_data, a_step, b_data, b_step, c_data,
+                                 c_step, d_data, d_step, a_size, d_size,
+                                 alpha, beta, flags);
+}    
 
 static void GEMMBlockMul_32f( const float* a_data, size_t a_step,
              const float* b_data, size_t b_step,
@@ -592,6 +616,24 @@ static void GEMMBlockMul_64f( const double* a_data, size_t a_step,
 }
 
 
+static void GEMMBlockMul_32fc( const Complexf* a_data, size_t a_step,
+                             const Complexf* b_data, size_t b_step,
+                             Complexd* d_data, size_t d_step,
+                             Size a_size, Size d_size, int flags )
+{
+    GEMMBlockMul(a_data, a_step, b_data, b_step, d_data, d_step, a_size, d_size, flags);
+}
+
+
+static void GEMMBlockMul_64fc( const Complexd* a_data, size_t a_step,
+                             const Complexd* b_data, size_t b_step,
+                             Complexd* d_data, size_t d_step,
+                             Size a_size, Size d_size, int flags )
+{
+    GEMMBlockMul(a_data, a_step, b_data, b_step, d_data, d_step, a_size, d_size, flags);
+}
+    
+    
 static void GEMMStore_32f( const float* c_data, size_t c_step,
           const double* d_buf, size_t d_buf_step,
           float* d_data, size_t d_step, Size d_size,
@@ -605,6 +647,24 @@ static void GEMMStore_64f( const double* c_data, size_t c_step,
                       const double* d_buf, size_t d_buf_step,
                       double* d_data, size_t d_step, Size d_size,
                       double alpha, double beta, int flags )
+{
+    GEMMStore(c_data, c_step, d_buf, d_buf_step, d_data, d_step, d_size, alpha, beta, flags);
+}
+    
+
+static void GEMMStore_32fc( const Complexf* c_data, size_t c_step,
+                          const Complexd* d_buf, size_t d_buf_step,
+                          Complexf* d_data, size_t d_step, Size d_size,
+                          double alpha, double beta, int flags )
+{
+    GEMMStore(c_data, c_step, d_buf, d_buf_step, d_data, d_step, d_size, alpha, beta, flags);
+}
+
+
+static void GEMMStore_64fc( const Complexd* c_data, size_t c_step,
+                          const Complexd* d_buf, size_t d_buf_step,
+                          Complexd* d_data, size_t d_step, Size d_size,
+                          double alpha, double beta, int flags )
 {
     GEMMStore(c_data, c_step, d_buf, d_buf_step, d_data, d_step, d_size, alpha, beta, flags);
 }
@@ -624,7 +684,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     Size a_size = A.size(), d_size;
     int i, len = 0, type = A.type();
 
-    CV_Assert( type == B.type() && (type == CV_32F || type == CV_64F) );
+    CV_Assert( type == B.type() && (type == CV_32FC1 || type == CV_64FC1 || type == CV_32FC2 || type == CV_64FC2) );
 
     switch( flags & (GEMM_1_T|GEMM_2_T) )
     {
@@ -932,18 +992,32 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     size_t Cstep = C ? C->step : 0;
     AutoBuffer<uchar> buf;
 
-    if( type == CV_32F )
+    if( type == CV_32FC1 )
     {
         singleMulFunc = (GEMMSingleMulFunc)GEMMSingleMul_32f;
         blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_32f;
         storeFunc = (GEMMStoreFunc)GEMMStore_32f;
     }
-    else
+    else if( type == CV_64FC1 )
     {
         singleMulFunc = (GEMMSingleMulFunc)GEMMSingleMul_64f;
         blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_64f;
         storeFunc = (GEMMStoreFunc)GEMMStore_64f;
     }
+    else if( type == CV_32FC2 )
+    {
+        singleMulFunc = (GEMMSingleMulFunc)GEMMSingleMul_32fc;
+        blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_32fc;
+        storeFunc = (GEMMStoreFunc)GEMMStore_32fc;
+    }
+    else if( type == CV_64FC2 )
+    {
+        singleMulFunc = (GEMMSingleMulFunc)GEMMSingleMul_64fc;
+        blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_64fc;
+        storeFunc = (GEMMStoreFunc)GEMMStore_64fc;
+    }
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     if( D.data == A.data || D.data == B.data )
     {
