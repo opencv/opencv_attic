@@ -298,7 +298,7 @@ public:
     Point3_();
     Point3_(_Tp _x, _Tp _y, _Tp _z);
     Point3_(const Point3_& pt);
-	Point3_(const Point_<_Tp>& pt);
+	explicit Point3_(const Point_<_Tp>& pt);
     Point3_(const CvPoint3D32f& pt);
     Point3_(const Vec<_Tp, 3>& t);
     Point3_& operator = (const Point3_& pt);
@@ -846,6 +846,7 @@ public:
     int channels() const;
     size_t step1() const;
     Size size() const;
+    bool empty() const;
 
     uchar* ptr(int y=0);
     const uchar* ptr(int y=0) const;

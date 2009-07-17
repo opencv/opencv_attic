@@ -385,6 +385,7 @@ inline int Mat::depth() const { return CV_MAT_DEPTH(flags); }
 inline int Mat::channels() const { return CV_MAT_CN(flags); }
 inline size_t Mat::step1() const { return step/elemSize1(); }
 inline Size Mat::size() const { return Size(cols, rows); }
+inline bool Mat::empty() const { return data == 0; }
 
 inline uchar* Mat::ptr(int y)
 {
