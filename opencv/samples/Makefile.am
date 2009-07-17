@@ -72,10 +72,7 @@ dist_csamples_DATA = \
   c/camshiftdemo.c \
   c/contours.c \
   c/convexhull.c \
-  c/camshiftdemo.c \
-  c/contours.c \
   c/convert_cascade.c \
-  c/convexhull.c \
   c/delaunay.c \
   c/demhist.c \
   c/dft.c \
