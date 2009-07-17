@@ -1635,7 +1635,26 @@ void ellipse( Mat& img, Point center, Size axes,
     EllipseEx( img, center, axes, _angle, _start_angle,
                _end_angle, buf, thickness, line_type );
 }
-
+    
+void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
+             int thickness, int lineType)
+{
+    if( lineType == CV_AA && img.depth() != CV_8U )
+        lineType = 8;
+    
+    CV_Assert( box.size.width >= 0 && box.size.height >= 0 &&
+               thickness <= 255 );
+    
+    double buf[4];
+    scalarToRawData(color, buf, img.type(), 0);
+    
+    int _angle = cvRound(box.angle);
+    Point center(cvRound(box.center.x*(1 << XY_SHIFT)),
+                 cvRound(box.center.y*(1 << XY_SHIFT)));
+    Size axes(cvRound(box.size.width*(1 << (XY_SHIFT - 1))),
+              cvRound(box.size.height*(1 << (XY_SHIFT - 1))));
+    EllipseEx( img, center, axes, _angle, 0, 360, buf, thickness, lineType );    
+}
 
 void fillConvexPoly( Mat& img, const Vector<Point>& pts,
                      const Scalar& color, int line_type, int shift )
@@ -2068,7 +2087,7 @@ cvDrawContours( void* _img, CvSeq* contour,
                 pt1 = pt2;
             }
             if( thickness < 0 )
-                cv::CollectPolyEdges( img, pts, edges, ext_buf, line_type, 0, offset );
+                cv::CollectPolyEdges( img, pts, edges, ext_buf, line_type, 0, Point() );
         }
     }
 

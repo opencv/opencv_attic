@@ -1105,7 +1105,7 @@ CV_EXPORTS void ellipse(Mat& img, Point center, Size axes,
                         int lineType=8, int shift=0);
 
 CV_EXPORTS void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
-                        int thickness=1, int lineType=8, int shift=0 );
+                        int thickness=1, int lineType=8);
 
 CV_EXPORTS void fillConvexPoly(Mat& img, const Vector<Point>& pts,
                                const Scalar& color, int lineType=8,
