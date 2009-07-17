@@ -1251,7 +1251,7 @@ protected:
 };
 
 CxCore_GEMMTest::CxCore_GEMMTest() :
-    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 1 )
+    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
     default_timing_param_names = matrix_gemm_param_names;
