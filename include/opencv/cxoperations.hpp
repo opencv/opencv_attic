@@ -629,8 +629,8 @@ template<typename _Tp> inline Rect_<_Tp>::Rect_(const Point_<_Tp>& org, const Si
     x(org.x), y(org.y), width(sz.width), height(sz.height) {}
 template<typename _Tp> inline Rect_<_Tp>::Rect_(const Point_<_Tp>& pt1, const Point_<_Tp>& pt2)
 {
-    x = min(pt1.x, pt2.x); y = min(pt1.y, pt2.y);
-    width = max(pt1.x, pt2.x) - x; height = max(pt1.y, pt2.y) - y;
+    x = std::min(pt1.x, pt2.x); y = std::min(pt1.y, pt2.y);
+    width = std::max(pt1.x, pt2.x) - x; height = std::max(pt1.y, pt2.y) - y;
 }
 template<typename _Tp> inline Rect_<_Tp>& Rect_<_Tp>::operator = ( const Rect_<_Tp>& r )
 { x = r.x; y = r.y; width = r.width; height = r.height; return *this; }
@@ -651,9 +651,9 @@ template<typename _Tp> static inline Rect_<_Tp>& operator -= ( Rect_<_Tp>& a, co
 
 template<typename _Tp> static inline Rect_<_Tp>& operator &= ( Rect_<_Tp>& a, const Rect_<_Tp>& b )
 {
-    _Tp x1 = max(a.x, b.x), y1 = max(a.y, b.y);
-    a.width = min(a.x + a.width, b.x + b.width) - x1;
-    a.height = min(a.y + a.height, b.y + b.height) - y1;
+    _Tp x1 = std::max(a.x, b.x), y1 = std::max(a.y, b.y);
+    a.width = std::min(a.x + a.width, b.x + b.width) - x1;
+    a.height = std::min(a.y + a.height, b.y + b.height) - y1;
     a.x = x1; a.y = y1;
     if( a.width <= 0 || a.height <= 0 )
         a = Rect();
@@ -662,9 +662,9 @@ template<typename _Tp> static inline Rect_<_Tp>& operator &= ( Rect_<_Tp>& a, co
 
 template<typename _Tp> static inline Rect_<_Tp>& operator |= ( Rect_<_Tp>& a, const Rect_<_Tp>& b )
 {
-    _Tp x1 = min(a.x, b.x), y1 = min(a.y, b.y);
-    a.width = max(a.x + a.width, b.x + b.width) - x1;
-    a.height = max(a.y + a.height, b.y + b.height) - y1;
+    _Tp x1 = std::min(a.x, b.x), y1 = std::min(a.y, b.y);
+    a.width = std::max(a.x + a.width, b.x + b.width) - x1;
+    a.height = std::max(a.y + a.height, b.y + b.height) - y1;
     a.x = x1; a.y = y1;
     return a;
 }
