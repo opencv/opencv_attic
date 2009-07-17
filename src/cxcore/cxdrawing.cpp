@@ -2087,7 +2087,7 @@ cvDrawContours( void* _img, CvSeq* contour,
                 pt1 = pt2;
             }
             if( thickness < 0 )
-                cv::CollectPolyEdges( img, pts, edges, ext_buf, line_type, 0, Point() );
+                cv::CollectPolyEdges( img, pts, edges, ext_buf, line_type, 0, cv::Point() );
         }
     }
 
