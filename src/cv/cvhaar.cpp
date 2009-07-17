@@ -51,10 +51,9 @@
 #       define _mm_blendv_pd(a, b, m) _mm_xor_pd(a, _mm_and_pd(_mm_xor_pd(b, a), m))
 #       define _mm_blendv_ps(a, b, m) _mm_xor_ps(a, _mm_and_ps(_mm_xor_ps(b, a), m))
 #   endif
-#endif
-
 #if defined CV_ICC
-#define CV_HAAR_USE_SSE 1
+#   define CV_HAAR_USE_SSE 1
+#endif
 #endif
 
 /* these settings affect the quality of detection: change with care */
@@ -781,19 +780,19 @@ cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
                     CvHidHaarClassifier* classifier = cascade->stage_classifier[i].classifier + j;
                     CvHidHaarTreeNode* node = classifier->node;
 #ifndef CV_HAAR_USE_SSE
-                    float t = (float)(node->threshold*variance_norm_factor);
-                    float sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+                    double t = node->threshold*variance_norm_factor;
+                    double sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
                     sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
                     stage_sum += classifier->alpha[sum >= t];
 #else
                     // ayasin - NHM perf optim. Avoid use of costly flaky jcc
-                    __m128 t = _mm_set_ss((float)(node->threshold*variance_norm_factor));
-                    __m128 a = _mm_load_ss(&classifier->alpha[0]);
-                    __m128 b = _mm_load_ss(&classifier->alpha[1]);
-                    __m128 sum = _mm_set_ss(calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight +
-                                            calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight);
-                    t = _mm_cmpgt_ss(t, sum);
-                    stage_sum = _mm_add_sd(stage_sum, _mm_cvtps_pd(_mm_blendv_ps(b, a, t)));
+                    __m128d t = _mm_set_sd(node->threshold*variance_norm_factor);
+                    __m128d a = _mm_set_sd(classifier->alpha[0]);
+                    __m128d b = _mm_set_sd(classifier->alpha[1]);
+                    __m128d sum = _mm_set_sd(calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight +
+                                             calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight);
+                    t = _mm_cmpgt_sd(t, sum);
+                    stage_sum = _mm_add_sd(stage_sum, _mm_blendv_pd(b, a, t));
 #endif
                 }
             }
@@ -804,8 +803,8 @@ cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
                     CvHidHaarClassifier* classifier = cascade->stage_classifier[i].classifier + j;
                     CvHidHaarTreeNode* node = classifier->node;
 #ifndef CV_HAAR_USE_SSE
-                    float t = (float)(node->threshold*variance_norm_factor);
-                    float sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+                    double t = node->threshold*variance_norm_factor;
+                    double sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
                     sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
                     if( node->feature.rect[2].p0 )
                         sum += calc_sum(node->feature.rect[2],p_offset) * node->feature.rect[2].weight;
@@ -813,17 +812,17 @@ cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
                     stage_sum += classifier->alpha[sum >= t];
 #else
                     // ayasin - NHM perf optim. Avoid use of costly flaky jcc
-                    __m128 t = _mm_set_ss((float)(node->threshold*variance_norm_factor));
-                    __m128 a = _mm_load_ss(&classifier->alpha[0]);
-                    __m128 b = _mm_load_ss(&classifier->alpha[1]);
-                    float _sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+                    __m128d t = _mm_set_sd(node->threshold*variance_norm_factor);
+                    __m128d a = _mm_set_sd(classifier->alpha[0]);
+                    __m128d b = _mm_set_sd(classifier->alpha[1]);
+                    double _sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
                     _sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
                     if( node->feature.rect[2].p0 )
                         _sum += calc_sum(node->feature.rect[2],p_offset) * node->feature.rect[2].weight;
-                    __m128 sum = _mm_set_ss(_sum);
+                    __m128d sum = _mm_set_sd(_sum);
                     
-                    t = _mm_cmpgt_ss(t, sum);
-                    stage_sum = _mm_add_sd(stage_sum, _mm_cvtps_pd(_mm_blendv_ps(b, a, t)));
+                    t = _mm_cmpgt_sd(t, sum);
+                    stage_sum = _mm_add_sd(stage_sum, _mm_blendv_pd(b, a, t));
 #endif
                 }
             }
@@ -831,7 +830,7 @@ cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
 #ifndef CV_HAAR_USE_SSE
             if( stage_sum < cascade->stage_classifier[i].threshold )
 #else
-            __m128d i_threshold = _mm_cvtps_pd(_mm_load_ss(&cascade->stage_classifier[i].threshold));
+            __m128d i_threshold = _mm_set_sd(cascade->stage_classifier[i].threshold);
             if( _mm_comilt_sd(stage_sum, i_threshold) )
 #endif
             {
