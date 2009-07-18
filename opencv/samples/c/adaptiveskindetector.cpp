@@ -36,6 +36,7 @@
 
 
 #include <iostream>
+#include <ctime>
 #include <cvaux.h>
 #include <highgui.h>
 
@@ -361,7 +362,7 @@ int main(int argc, char** argv )
 	//		c:\>CvASDSample "C:\VideoSequences\sample1\right_view\temp_%05d.jpg" 0 1000
 
 	std::cout << "Press ESC to stop." << std::endl << std::endl;
-	while (img = sequencer->getNextImage())
+	while ((img = sequencer->getNextImage()) != 0)
 	{
 		numFrames++;
 
