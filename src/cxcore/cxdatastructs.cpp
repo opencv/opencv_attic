@@ -1126,7 +1126,7 @@ cvSetSeqReaderPos( CvSeqReader* reader, int index, int is_relative )
 
 /* Push element onto the sequence: */
 CV_IMPL schar*
-cvSeqPush( CvSeq *seq, void *element )
+cvSeqPush( CvSeq *seq, const void *element )
 {
     schar *ptr = 0;
     size_t elem_size;
@@ -1185,7 +1185,7 @@ cvSeqPop( CvSeq *seq, void *element )
 
 /* Push element onto the front of the sequence: */
 CV_IMPL schar*
-cvSeqPushFront( CvSeq *seq, void *element )
+cvSeqPushFront( CvSeq *seq, const void *element )
 {
     schar* ptr = 0;
     int elem_size;
@@ -1244,7 +1244,7 @@ cvSeqPopFront( CvSeq *seq, void *element )
 
 /* Insert new element in middle of sequence: */
 CV_IMPL schar*
-cvSeqInsert( CvSeq *seq, int before_index, void *element )
+cvSeqInsert( CvSeq *seq, int before_index, const void *element )
 {
     int elem_size;
     int block_size;
@@ -1448,7 +1448,7 @@ cvSeqRemove( CvSeq *seq, int index )
 
 /* Add several elements to the beginning or end of a sequence: */
 CV_IMPL void
-cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
+cvSeqPushMulti( CvSeq *seq, const void *_elements, int count, int front )
 {
     char *elements = (char *) _elements;
 
@@ -1517,7 +1517,7 @@ cvSeqPushMulti( CvSeq *seq, void *_elements, int count, int front )
 
 /* Remove several elements from the end of sequence: */
 CV_IMPL void
-cvSeqPopMulti( CvSeq *seq, void *_elements, int count, int front )
+cvSeqPopMulti( CvSeq *seq, const void *_elements, int count, int front )
 {
     char *elements = (char *) _elements;
 

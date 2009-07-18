@@ -2093,11 +2093,11 @@ template<typename _Tp> inline Seq<_Tp>::Seq( const CvSeq* _seq ) : seq((CvSeq*)_
     CV_Assert(!_seq || _seq->elem_size == sizeof(_Tp));
 }
 
-template<typename _Tp> inline Seq<_Tp>::Seq( const MemStorage& storage,
+template<typename _Tp> inline Seq<_Tp>::Seq( MemStorage& storage,
                                              int headerSize )
 {
-    CV_Assert(headerSize >= sizeof(CvSeq));
-    seq = cvCreateSeq(DataType<_Tp>::type, headerSize, sizeof(_Tp), storage.obj);
+    CV_Assert(headerSize >= (int)sizeof(CvSeq));
+    seq = cvCreateSeq(DataType<_Tp>::type, headerSize, sizeof(_Tp), storage);
 }
 
 template<typename _Tp> inline _Tp& Seq<_Tp>::operator [](int idx)
