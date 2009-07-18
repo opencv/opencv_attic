@@ -49,6 +49,7 @@
 
 #ifndef SKIP_INCLUDES
 #include <algorithm>
+#include <cmath>
 #include <complex>
 #include <map>
 #include <new>
@@ -57,6 +58,9 @@
 #endif // SKIP_INCLUDES
 
 namespace cv {
+
+#undef min
+#undef max    
 
 template<typename _Tp> class CV_EXPORTS Size_;
 template<typename _Tp> class CV_EXPORTS Point_;
@@ -1934,9 +1938,12 @@ typedef Ptr<CvMemStorage> MemStorage;
 template<typename _Tp> class CV_EXPORTS Seq
 {
 public:
+    typedef SeqIterator<_Tp> iterator;
+    typedef SeqIterator<_Tp> const_iterator;
+    
     Seq();
     Seq(const CvSeq* seq);
-    Seq(const MemStorage& storage, int headerSize = sizeof(CvSeq));
+    Seq(MemStorage& storage, int headerSize = sizeof(CvSeq));
     _Tp& operator [](int idx);
     const _Tp& operator[](int idx) const;
     SeqIterator<_Tp> begin() const;

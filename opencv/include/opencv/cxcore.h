@@ -56,7 +56,7 @@
         typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
         typedef int BOOL;
     #endif
-    #if defined WIN32 || defined WIN64 || defined _WIN64
+    #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
       #include "ipl.h"
     #else
       #include "ipl/ipl.h"
@@ -971,11 +971,11 @@ CVAPI(void)  cvSetSeqBlockSize( CvSeq* seq, int delta_elems );
 
 
 /* Adds new element to the end of sequence. Returns pointer to the element */
-CVAPI(schar*)  cvSeqPush( CvSeq* seq, void* element CV_DEFAULT(NULL));
+CVAPI(schar*)  cvSeqPush( CvSeq* seq, const void* element CV_DEFAULT(NULL));
 
 
 /* Adds new element to the beginning of sequence. Returns pointer to it */
-CVAPI(schar*)  cvSeqPushFront( CvSeq* seq, void* element CV_DEFAULT(NULL));
+CVAPI(schar*)  cvSeqPushFront( CvSeq* seq, const void* element CV_DEFAULT(NULL));
 
 
 /* Removes the last element from sequence and optionally saves it */
@@ -989,17 +989,17 @@ CVAPI(void)  cvSeqPopFront( CvSeq* seq, void* element CV_DEFAULT(NULL));
 #define CV_FRONT 1
 #define CV_BACK 0
 /* Adds several new elements to the end of sequence */
-CVAPI(void)  cvSeqPushMulti( CvSeq* seq, void* elements,
+CVAPI(void)  cvSeqPushMulti( CvSeq* seq, const void* elements,
                              int count, int in_front CV_DEFAULT(0) );
 
 /* Removes several elements from the end of sequence and optionally saves them */
-CVAPI(void)  cvSeqPopMulti( CvSeq* seq, void* elements,
+CVAPI(void)  cvSeqPopMulti( CvSeq* seq, const void* elements,
                             int count, int in_front CV_DEFAULT(0) );
 
 /* Inserts a new element in the middle of sequence.
    cvSeqInsert(seq,0,elem) == cvSeqPushFront(seq,elem) */
 CVAPI(schar*)  cvSeqInsert( CvSeq* seq, int before_index,
-                            void* element CV_DEFAULT(NULL));
+                            const void* element CV_DEFAULT(NULL));
 
 /* Removes specified sequence element */
 CVAPI(void)  cvSeqRemove( CvSeq* seq, int index );
