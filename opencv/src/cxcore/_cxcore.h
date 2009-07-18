@@ -51,7 +51,9 @@
 typedef unsigned long ulong;
 
 #ifdef __BORLANDC__
+#ifndef WIN32
     #define     WIN32
+#endif
     #define     CV_DLL
 #endif
 
@@ -66,6 +68,15 @@ typedef unsigned long ulong;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined WIN32 || defined _WIN32
+#  ifndef WIN32
+#    define WIN32
+#  endif
+#  ifndef _WIN32
+#    define _WIN32
+#  endif
+#endif
 
 #if defined WIN32 || defined WINCE
 #ifndef _WIN32_WINNT         // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
@@ -121,7 +132,7 @@ static inline CopyMaskFunc getCopyMaskFunc(int esz)
     return func;
 }
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 void deleteThreadAllocData();
 void deleteThreadRNGData();
 #endif

@@ -59,7 +59,12 @@
 #include <float.h>
 
 #ifdef __BORLANDC__
+#ifndef WIN32
     #define     WIN32
+#endif
+#ifndef _WIN32
+    #define     _WIN32
+#endif
     #define     CV_DLL
     #undef      _CV_ALWAYS_PROFILE_
     #define     _CV_ALWAYS_NO_PROFILE_

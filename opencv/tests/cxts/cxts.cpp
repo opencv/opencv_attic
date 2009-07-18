@@ -44,7 +44,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <time.h>
-#if defined WIN32 || defined WIN64 || defined _WIN64
+#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
 #include <io.h>
 #else
 #include <unistd.h>
@@ -65,7 +65,7 @@ int CvTest::test_count = 0;
 #define CV_TS_GREEN  2
 #define CV_TS_RED    4
 
-#if defined WIN32 || defined WIN64 || defined _WIN64
+#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
 #include <windows.h>
 
 #ifdef _MSC_VER
@@ -398,7 +398,7 @@ void* CvTestMemoryManager::alloc( size_t size )
         {
             if( show_msg_box )
             {
-        #ifdef WIN32
+        #if defined WIN32 || defined _WIN32
                 MessageBox( NULL, "The block that is corrupted and/or not deallocated has been just allocated\n"
                             "Press Ok to start debugging", "Memory Manager", MB_ICONERROR|MB_OK|MB_SYSTEMMODAL );
         #endif
@@ -1089,7 +1089,7 @@ void CvTS::set_handlers( bool on )
     {
         cvSetErrMode( CV_ErrModeParent );
         cvRedirectError( cvStdErrReport );
-    #ifdef WIN32
+    #if defined WIN32 || defined _WIN32
         #ifdef _MSC_VER
         _set_se_translator( cv_seh_translator );
         #endif
@@ -1102,7 +1102,7 @@ void CvTS::set_handlers( bool on )
     {
         cvSetErrMode( CV_ErrModeLeaf );
         cvRedirectError( cvGuiBoxReport );
-    #ifdef WIN32
+    #if defined WIN32 || defined _WIN32
         #ifdef _MSC_VER
         _set_se_translator( 0 );
         #endif
@@ -1453,7 +1453,7 @@ void CvTS::print_help()
 }
 
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 const char* default_data_path = "../tests/cv/testdata/";
 #else
 const char* default_data_path = "../../../../tests/cv/testdata/";
@@ -1480,7 +1480,7 @@ int CvTS::read_params( CvFileStorage* fs )
     params.resource_path = cvReadStringByName( fs, node, "." );
     if( params.use_optimized < 0 )
         params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
-#ifndef WIN32
+#if !defined WIN32 && !defined _WIN32
     if( !params.data_path || !params.data_path[0] )
     {
         char* srcdir = getenv("srcdir");

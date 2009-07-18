@@ -72,7 +72,7 @@ int createTrackbar(const String& trackbarName, const String& winName,
 
 }
 
-#if   defined (WIN32)         // see window_w32.cpp
+#if   defined WIN32 || defined _WIN32         // see window_w32.cpp
 #elif defined (HAVE_GTK)      // see window_gtk.cpp
 #elif defined (HAVE_CARBON)   // see window_carbon.cpp
 

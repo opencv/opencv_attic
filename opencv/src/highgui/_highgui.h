@@ -52,7 +52,7 @@
 #include <ctype.h>
 #include <assert.h>
 
-#ifndef WIN32
+#if !defined WIN32 && !defined _WIN32
 #include "cvconfig.h"
 #else
 void  FillBitmapInfo( BITMAPINFO* bmi, int width, int height, int bpp, int origin );
@@ -90,7 +90,7 @@ struct CvVideoWriter
     virtual bool writeFrame(const IplImage*) { return false; }
 };
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 #define HAVE_VFW 1
 
 #if _MSC_VER >= 1400 && !defined WIN64 && !defined _WIN64

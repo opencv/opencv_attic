@@ -45,13 +45,13 @@
 #ifndef SKIP_INCLUDES
 
   #include "cxcore.h"
-  #if defined WIN32 || defined WIN64 || defined _WIN64
+  #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #include <windows.h>
   #endif
 
 #else // SKIP_INCLUDES
 
-  #if defined WIN32 || defined WIN64 || defined _WIN64
+  #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #define CV_CDECL __cdecl
     #define CV_STDCALL __stdcall
   #else
@@ -80,14 +80,14 @@
   #ifndef CV_INLINE
     #if defined __cplusplus
       #define CV_INLINE inline
-    #elif (defined WIN32 || defined WIN64 || defined _WIN64) && !defined __GNUC__
+    #elif (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && !defined __GNUC__
       #define CV_INLINE __inline
     #else
       #define CV_INLINE static
     #endif
   #endif /* CV_INLINE */
 
-  #if (defined WIN32 || defined WIN64 || defined _WIN64) && defined CVAPI_EXPORTS
+  #if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
   #else
     #define CV_EXPORTS
@@ -371,7 +371,7 @@ CVAPI(void) cvReleaseVideoWriter( CvVideoWriter** writer );
 #define set_preprocess_func cvSetPreprocessFuncWin32
 #define set_postprocess_func cvSetPostprocessFuncWin32
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 
 typedef int (CV_CDECL * CvWin32WindowCallback)(HWND, UINT, WPARAM, LPARAM, int*);
 CVAPI(void) cvSetPreprocessFuncWin32( CvWin32WindowCallback on_preprocess );
@@ -394,7 +394,7 @@ CV_INLINE int iplHeight( const IplImage* img )
 #endif /* obsolete functions */
 
 /* For use with Win32 */
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 
 CV_INLINE RECT NormalizeRect( RECT r );
 CV_INLINE RECT NormalizeRect( RECT r )
@@ -479,7 +479,7 @@ public:
     virtual bool  LoadRect( const char* filename,
                             int desired_color, CvRect r );
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
     virtual bool  LoadRect( const char* filename,
                             int desired_color, RECT r )
     {
@@ -508,7 +508,7 @@ public:
     /* draw to highgui window */
     virtual void  Show( const char* window );
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
     /* draw part of image to the specified DC */
     virtual void  Show( HDC dc, int x, int y, int width, int height,
                         int from_x = 0, int from_y = 0 );
