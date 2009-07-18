@@ -63,7 +63,7 @@
     #define CV_ICC   __ECC
   #endif
 
-  #if ((defined WIN32 || defined _WIN64) && \
+  #if ((defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && \
       (_MSC_VER >= 1400 || defined CV_ICC)) \
       || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
     #include <emmintrin.h>
@@ -84,7 +84,7 @@
 
   #ifdef HAVE_IPL
       #ifndef __IPL_H__
-          #if defined WIN32 || defined WIN64
+          #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
               #include <ipl.h>
           #else
               #include <ipl/ipl.h>
@@ -95,7 +95,7 @@
   #endif
 #endif // SKIP_INCLUDES
 
-#if defined WIN32 || defined WIN64 || defined _WIN64
+#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #define CV_CDECL __cdecl
     #define CV_STDCALL __stdcall
 #else
@@ -124,14 +124,14 @@
 #ifndef CV_INLINE
 #if defined __cplusplus
     #define CV_INLINE inline
-#elif (defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && !defined __GNUC__
+#elif (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && !defined __GNUC__
     #define CV_INLINE __inline
 #else
     #define CV_INLINE static
 #endif
 #endif /* CV_INLINE */
 
-#if (defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && defined CVAPI_EXPORTS
+#if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
 #else
     #define CV_EXPORTS
@@ -213,9 +213,9 @@ Cv64suf;
 CV_INLINE  int  cvRound( double value )
 {
 #if CV_SSE2
-    __m128d t = _mm_load_sd( &value );
+    __m128d t = _mm_set_sd( value );
     return _mm_cvtsd_si32(t);
-#elif defined WIN32 && !defined WIN64 && !defined _WIN64 && defined _MSC_VER
+#elif (defined WIN32 || defined _WIN32) && !defined WIN64 && !defined _WIN64 && defined _MSC_VER
     int t;
     __asm
     {
@@ -223,46 +223,47 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif (defined HAVE_LRINT) || defined CV_ICC
+#elif defined HAVE_LRINT || defined CV_ICC || defined __GNUC__
     return (int)lrint(value);
 #else
-    /*
-     the algorithm was taken from Agner Fog's optimization guide
-     at http://www.agner.org/assem
-     */
-    Cv64suf temp;
-    temp.f = value + 6755399441055744.0;
-    return (int)temp.u;
+    // while this is not IEEE754-compliant rounding, it's usually a good enough approximation
+    return (int)(value + 0.5);
 #endif
 }
 
 
 CV_INLINE  int  cvFloor( double value )
 {
-#if CV_SSE2
-    __m128d t = _mm_load_sd( &value );
+#ifdef __GNUC__
+    int i = cvRound(value);
+    return i - (i > value);
+#elif CV_SSE2
+    __m128d t = _mm_set_sd( value );
     int i = _mm_cvtsd_si32(t);
-    return i - _mm_movemask_pd(_mm_cmplt_sd(t,_mm_cvtsi32_sd(t,i)));
+    return i - _mm_movemask_pd(_mm_cmplt_sd(t, _mm_cvtsi32_sd(t,i)));
 #else
-    int temp = cvRound(value);
+    int i = cvRound(value);
     Cv32suf diff;
-    diff.f = (float)(value - temp);
-    return temp - (diff.i < 0);
+    diff.f = (float)(value - i);
+    return i - (diff.i < 0);
 #endif
 }
 
 
 CV_INLINE  int  cvCeil( double value )
 {
-#if CV_SSE2
-    __m128d t = _mm_load_sd( &value );
+#ifdef __GNUC__
+    int i = cvRound(value);
+    return i + (i < value);
+#elif CV_SSE2
+    __m128d t = _mm_set_sd( value );
     int i = _mm_cvtsd_si32(t);
-    return i + _mm_movemask_pd(_mm_cmplt_sd(_mm_cvtsi32_sd(t,i),t));
+    return i + _mm_movemask_pd(_mm_cmplt_sd(_mm_cvtsi32_sd(t,i), t));
 #else
-    int temp = cvRound(value);
+    int i = cvRound(value);
     Cv32suf diff;
-    diff.f = (float)(temp - value);
-    return temp + (diff.i < 0);
+    diff.f = (float)(i - value);
+    return i + (diff.i < 0);
 #endif
 }
 
