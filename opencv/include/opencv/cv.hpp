@@ -854,7 +854,9 @@ public:
     float response;
     int octave;
 };
-    
+
+CV_EXPORTS void write(FileStorage& fs, const String& name, const Vector<Keypoint>& keypoints);
+CV_EXPORTS void read(const FileNode& node, Vector<Keypoint>& keypoints);    
 
 class CV_EXPORTS SURF : public CvSURFParams
 {
@@ -896,10 +898,6 @@ public:
     void operator()(const Mat& image, Vector<Keypoint>& keypoints) const;
 };
     
-    
-void write(FileStorage& fs, const String& name, const Vector<Keypoint>& keypoints);
-void read(const FileNode& node, Vector<Keypoint>& keypoints);    
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

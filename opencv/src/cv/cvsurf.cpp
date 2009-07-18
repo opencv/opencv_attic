@@ -791,7 +791,7 @@ static int getPointOctave(const CvSURFPoint& kpt, const CvSURFParams& params)
     for( octave = 1; octave < params.nOctaves; octave++ )
         for( layer = 0; layer < params.nOctaveLayers; layer++ )
         {
-            float diff = std::abs(kpt.size - ((HAAR_SIZE0 + HAAR_SIZE_INC*layer) << octave));
+            float diff = std::abs(kpt.size - (float)((HAAR_SIZE0 + HAAR_SIZE_INC*layer) << octave));
             if( min_diff > diff )
             {
                 min_diff = diff;
@@ -819,7 +819,8 @@ void SURF::operator()(const Mat& img, const Mat& mask,
     for( i = 0; i < n; i++, ++it )
     {
         const CvSURFPoint& kpt = *it;
-        keypoints[i] = Keypoint(kpt.pt, kpt.size, kpt.dir, kpt.hessian, getPointOctave(kpt, *this));
+        keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+                                kpt.hessian, getPointOctave(kpt, *this));
     }
 }
 
@@ -856,7 +857,8 @@ void SURF::operator()(const Mat& img, const Mat& mask,
         for( i = 0; i < n; i++, ++it )
         {
             const CvSURFPoint& kpt = *it;
-            keypoints[i] = Keypoint(kpt.pt, kpt.size, kpt.dir, kpt.hessian, getPointOctave(kpt, *this));
+            keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+                                    kpt.hessian, getPointOctave(kpt, *this));
         }
     }
     Seq<float>(d).copyTo(descriptors);

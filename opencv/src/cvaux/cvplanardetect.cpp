@@ -197,8 +197,8 @@ void PatchGenerator::warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
         Point2f pt0, pt1;
         pt0.x = (float)(k == 0 || k == 3 ? 0 : image.cols);
         pt0.y = (float)(k < 2 ? 0 : image.rows);
-        pt1.x = T(0,0)*pt0.x + T(0,1)*pt0.y + T(0,2);
-        pt1.y = T(1,0)*pt0.x + T(1,1)*pt0.y + T(1,2);
+        pt1.x = (float)(T(0,0)*pt0.x + T(0,1)*pt0.y + T(0,2));
+        pt1.y = (float)(T(1,0)*pt0.x + T(1,1)*pt0.y + T(1,2));
         
         roi.x = std::min(roi.x, cvFloor(pt1.x));
         roi.y = std::min(roi.y, cvFloor(pt1.y));
@@ -523,7 +523,7 @@ void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, 
                 }
                 else
                 {
-                    scores[x] = computeLResponse(img, cdata, csize);
+                    scores[x] = (short)computeLResponse(img, cdata, csize);
                     mask[x] = 1;
                 }
             }
@@ -551,7 +551,8 @@ void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, 
                     {
                         int val = scores[ndata_s[k]];
                         if( val == 0 && recomputeZeroScores )
-                            scores[ndata_s[k]] = val = computeLResponse(img + ndata[k], cdata, csize);
+                            scores[ndata_s[k]] = (short)(val =
+                                computeLResponse(img + ndata[k], cdata, csize));
                         if( val0 < val )
                             break;
                     }
@@ -562,7 +563,8 @@ void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, 
                     {
                         int val = scores[ndata_s[k]];
                         if( val == 0 && recomputeZeroScores )
-                            scores[ndata_s[k]] = val = computeLResponse(img + ndata[k], cdata, csize);
+                            scores[ndata_s[k]] = (short)(val =
+                                computeLResponse(img + ndata[k], cdata, csize));
                         if( val0 > val )
                             break;
                     }
@@ -573,8 +575,8 @@ void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, 
                 for( int i1 = -1; i1 <= 1; i1++ )
                     for( int j1 = -1; j1 <= 1; j1++ )
                     {
-                        fval[(i1+1)*3 + j1 + 1] = scores[sstep*i1+j1] ? scores[sstep*i1+j1] :
-                        computeLResponse(img + pyrLayer.step*i1 + j1, cdata, csize);
+                        fval[(i1+1)*3 + j1 + 1] = (float)(scores[sstep*i1+j1] ? scores[sstep*i1+j1] :
+                            computeLResponse(img + pyrLayer.step*i1 + j1, cdata, csize));
                     }
                 Point2f pt = adjustCorner(fval, fvaln);
                 pt.x += x;
@@ -896,8 +898,8 @@ void FernClassifier::trainFromSingleView(const Mat& image,
             Point2f pt0, pt1;
             pt0.x = (float)(k == 0 || k == 3 ? 0 : image.cols);
             pt0.y = (float)(k < 2 ? 0 : image.rows);
-            pt1.x = M[0]*pt0.x + M[1]*pt0.y + M[2];
-            pt1.y = M[3]*pt0.x + M[4]*pt0.y + M[5];
+            pt1.x = (float)(M[0]*pt0.x + M[1]*pt0.y + M[2]);
+            pt1.y = (float)(M[3]*pt0.x + M[4]*pt0.y + M[5]);
             
             roi.x = std::min(roi.x, cvFloor(pt1.x));
             roi.y = std::min(roi.y, cvFloor(pt1.y));
@@ -944,8 +946,8 @@ void FernClassifier::trainFromSingleView(const Mat& image,
         {
             Keypoint kpt = keypoints[j];
             float scale = 1.f/(1 << kpt.octave);
-            Point2f pt((M[0]*kpt.pt.x + M[1]*kpt.pt.y + M[2])*scale,
-                       (M[3]*kpt.pt.x + M[4]*kpt.pt.y + M[5])*scale);
+            Point2f pt((float)((M[0]*kpt.pt.x + M[1]*kpt.pt.y + M[2])*scale),
+                       (float)((M[3]*kpt.pt.x + M[4]*kpt.pt.y + M[5])*scale));
             getRectSubPix(pyr[kpt.octave], patchSize, pt, patch, patch.type());
             for( int f = 0; f < nstructs; f++ )
                 posteriors[getLeaf(f, patch)*nclasses + j]++;
@@ -1012,7 +1014,7 @@ int FernClassifier::operator()(const Mat& patch, Vector<float>& signature) const
 }
 
 
-void FernClassifier::finalize(RNG& rng)
+void FernClassifier::finalize(RNG&)
 {
     int i, j, k, n = nclasses;
     Vector<double> invClassCounters(n);
@@ -1323,11 +1325,11 @@ bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<Keypo
         corners.resize(4);
         for( i = 0; i < 4; i++ )
         {
-            Point2f pt(modelROI.x + (i == 0 || i == 3 ? 0 : modelROI.width),
-                       modelROI.y + (i <= 1 ? 0 : modelROI.height));
-            float w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
-            corners[i] = Point2f((H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w,
-                                 (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w);
+            Point2f pt((float)(modelROI.x + (i == 0 || i == 3 ? 0 : modelROI.width)),
+                       (float)(modelROI.y + (i <= 1 ? 0 : modelROI.height)));
+            double w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
+            corners[i] = Point2f((float)((H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w),
+                                 (float)((H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w));
         }
     }
     
