@@ -235,7 +235,7 @@ CV_INLINE  int  cvRound( double value )
 CV_INLINE  int  cvFloor( double value )
 {
 #ifdef __GNUC__
-    int i = cvRound(value);
+    int i = (int)value;
     return i - (i > value);
 #elif CV_SSE2
     __m128d t = _mm_set_sd( value );
@@ -253,7 +253,7 @@ CV_INLINE  int  cvFloor( double value )
 CV_INLINE  int  cvCeil( double value )
 {
 #ifdef __GNUC__
-    int i = cvRound(value);
+    int i = (int)value;
     return i + (i < value);
 #elif CV_SSE2
     __m128d t = _mm_set_sd( value );
