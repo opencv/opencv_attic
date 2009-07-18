@@ -1010,14 +1010,13 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
         blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_32fc;
         storeFunc = (GEMMStoreFunc)GEMMStore_32fc;
     }
-    else if( type == CV_64FC2 )
+    else
     {
+        CV_Assert( type == CV_64FC2 );
         singleMulFunc = (GEMMSingleMulFunc)GEMMSingleMul_64fc;
         blockMulFunc = (GEMMBlockMulFunc)GEMMBlockMul_64fc;
         storeFunc = (GEMMStoreFunc)GEMMStore_64fc;
     }
-    else
-        CV_Error( CV_StsUnsupportedFormat, "" );
 
     if( D.data == A.data || D.data == B.data )
     {

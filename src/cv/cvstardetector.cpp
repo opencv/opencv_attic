@@ -461,7 +461,7 @@ void StarDetector::operator()(const Mat& image, Vector<Keypoint>& keypoints) con
     for( i = 0; i < n; i++, ++it )
     {
         const CvStarKeypoint& kpt = *it;
-        keypoints[i] = Keypoint(kpt.pt, kpt.size, -1.f, kpt.response, 0);
+        keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, -1.f, kpt.response, 0);
     }
 }
 

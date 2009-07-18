@@ -2979,8 +2979,8 @@ cvSetImageROI( IplImage* image, CvRect rect )
     // allow zero ROI width or height
     CV_Assert( rect.width >= 0 && rect.height >= 0 &&
                rect.x < image->width && rect.y < image->height &&
-               rect.x + rect.width >= (rect.width > 0) &&
-               rect.y + rect.height >= (rect.height > 0) );
+               rect.x + rect.width >= (int)(rect.width > 0) &&
+               rect.y + rect.height >= (int)(rect.height > 0) );
     
     rect.width += rect.x;
     rect.height += rect.y;
