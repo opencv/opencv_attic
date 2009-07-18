@@ -450,12 +450,19 @@ StarDetector::StarDetector(int _maxSize, int _responseThreshold,
             _lineThresholdProjected, _lineThresholdBinarized, _suppressNonmaxSize);
 }
 
-void StarDetector::operator()(const Mat& image, Vector<StarKeypoint>& keypoints) const
+void StarDetector::operator()(const Mat& image, Vector<Keypoint>& keypoints) const
 {
     CvMat _image = image;
     MemStorage storage(cvCreateMemStorage(0));
-    CvSeq* kp = cvGetStarKeypoints( &_image, storage, *(const CvStarDetectorParams*)this);
-    Seq<StarKeypoint>(kp).copyTo(keypoints);
+    Seq<CvStarKeypoint> kp = cvGetStarKeypoints( &_image, storage, *(const CvStarDetectorParams*)this);
+    Seq<CvStarKeypoint>::iterator it = kp.begin();
+    keypoints.resize(kp.size());
+    size_t i, n = kp.size();
+    for( i = 0; i < n; i++, ++it )
+    {
+        const CvStarKeypoint& kpt = *it;
+        keypoints[i] = Keypoint(kpt.pt, kpt.size, -1.f, kpt.response, 0);
+    }
 }
 
 }

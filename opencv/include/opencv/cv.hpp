@@ -839,13 +839,22 @@ CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
                                     bool handleMissingValues=false );
 
-class CV_EXPORTS SURFKeypoint : public CvSURFPoint
+class CV_EXPORTS Keypoint
 {
-public:
-    SURFKeypoint() { pt=Point2f(); laplacian=size=0; dir=hessian=0; }
-    SURFKeypoint(Point2f _pt, int _laplacian, int _size, float _dir=0.f, float _hessian=0.f)
-    { pt = _pt; laplacian = _laplacian; size = _size; dir = _dir; hessian = _hessian; }
+public:    
+    Keypoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
+    Keypoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
+    : pt(_pt), size(_size), angle(_angle), response(_response), octave(_octave) {}
+    Keypoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
+    : pt(x, y), size(_size), angle(_angle), response(_response), octave(_octave) {}
+    
+    Point2f pt;
+    float size;
+    float angle;
+    float response;
+    int octave;
 };
+    
 
 class CV_EXPORTS SURF : public CvSURFParams
 {
@@ -855,9 +864,9 @@ public:
 
     int descriptorSize() const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<SURFKeypoint>& keypoints) const;
+                    Vector<Keypoint>& keypoints) const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<SURFKeypoint>& keypoints,
+                    Vector<Keypoint>& keypoints,
                     Vector<float>& descriptors,
                     bool useProvidedKeypoints=false) const;
 };
@@ -874,15 +883,6 @@ public:
     Vector<Vector<Point> > operator()(Mat& image, const Mat& mask) const;
 };
 
-class CV_EXPORTS StarKeypoint : public CvStarKeypoint
-{
-public:
-    StarKeypoint() { pt = Point(); size = 0; response = 0.f; }
-    StarKeypoint(Point _pt, int _size, float _response)
-    {
-        pt = _pt; size = _size; response = _response;
-    }
-};
 
 class CV_EXPORTS StarDetector : CvStarDetectorParams
 {
@@ -893,26 +893,10 @@ public:
                  int _lineThresholdBinarized,
                  int _suppressNonmaxSize);
 
-    void operator()(const Mat& image, Vector<StarKeypoint>& keypoints) const;
+    void operator()(const Mat& image, Vector<Keypoint>& keypoints) const;
 };
     
     
-class CV_EXPORTS Keypoint
-{
-public:    
-    Keypoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
-    Keypoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
-    : pt(_pt), size(_size), angle(_angle), response(_response), octave(_octave) {}
-    Keypoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
-    : pt(x, y), size(_size), angle(_angle), response(_response), octave(_octave) {}
-    
-    Point2f pt;
-    float size;
-    float angle;
-    float response;
-    int octave;
-};
-
 void write(FileStorage& fs, const String& name, const Vector<Keypoint>& keypoints);
 void read(const FileNode& node, Vector<Keypoint>& keypoints);    
 
