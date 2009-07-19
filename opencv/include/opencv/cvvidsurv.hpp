@@ -117,7 +117,7 @@ private: /* Internal functions: */
         if(p->Str)free(p->Str);
         if(p->pName)free(p->pName);
         if(p->pComment)free(p->pComment);
-        cvFree((void**)pp);
+        cvFree(pp);
     }
     CvDefParam* NewParam(const char* name)
     {

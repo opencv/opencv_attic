@@ -36,6 +36,8 @@
 
 
 #include <iostream>
+#include <cstdio>
+#include <cstring>
 #include <ctime>
 #include <cvaux.h>
 #include <highgui.h>
