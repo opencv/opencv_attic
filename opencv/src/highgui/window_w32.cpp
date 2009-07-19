@@ -1352,6 +1352,7 @@ icvCreateTrackbar( const char* trackbar_name, const char* window_name,
         trackbar = (CvTrackbar*)cvAlloc( sizeof(CvTrackbar) + len + 1 );
         trackbar->signature = CV_TRACKBAR_MAGIC_VAL;
         trackbar->notify = 0;
+        trackbar->notify2 = 0;
         trackbar->parent = window;
         trackbar->pos = 0;
         trackbar->data = 0;
@@ -1387,6 +1388,7 @@ icvCreateTrackbar( const char* trackbar_name, const char* window_name,
     {
         trackbar->data = 0;
         trackbar->notify = 0;
+        trackbar->notify2 = 0;
     }
 
     trackbar->maxval = count;
