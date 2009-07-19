@@ -141,7 +141,7 @@ protected:
 *                                   Adaptive Skin Detector                               *
 \****************************************************************************************/
 
-class CvAdaptiveSkinDetector
+class CV_EXPORTS CvAdaptiveSkinDetector
 {
 private:
 	enum {
@@ -151,7 +151,7 @@ private:
 		GSD_INTENSITY_UT = 250
 	};
 
-	class Histogram
+	class CV_EXPORTS Histogram
 	{
 	private:
 		enum {
@@ -200,14 +200,14 @@ public:
 *                                  Fuzzy MeanShift Tracker                               *
 \****************************************************************************************/
 
-class CvFuzzyPoint {
+class CV_EXPORTS CvFuzzyPoint {
 public:
 	double x, y, value;
 
 	CvFuzzyPoint(double _x, double _y);
 };
 
-class CvFuzzyCurve {
+class CV_EXPORTS CvFuzzyCurve {
 private:
     std::vector<CvFuzzyPoint> points;
 	double value, centre;
@@ -227,7 +227,7 @@ public:
 	void setValue(double _value);
 };
 
-class CvFuzzyFunction {
+class CV_EXPORTS CvFuzzyFunction {
 public:
     std::vector<CvFuzzyCurve> curves;
 
@@ -239,7 +239,7 @@ public:
 	CvFuzzyCurve *newCurve();
 };
 
-class CvFuzzyRule {
+class CV_EXPORTS CvFuzzyRule {
 private:
 	CvFuzzyCurve *fuzzyInput1, *fuzzyInput2;
 	CvFuzzyCurve *fuzzyOutput;
@@ -251,7 +251,7 @@ public:
 	CvFuzzyCurve *getOutputCurve();
 };
 
-class CvFuzzyController {
+class CV_EXPORTS CvFuzzyController {
 private:
     std::vector<CvFuzzyRule*> rules;
 public:
@@ -261,7 +261,7 @@ public:
 	double calcOutput(double param1, double param2);
 };
 
-class CvFuzzyMeanShiftTracker
+class CV_EXPORTS CvFuzzyMeanShiftTracker
 {
 private:
 	class FuzzyResizer
