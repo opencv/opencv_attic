@@ -90,7 +90,8 @@ int createTrackbar(const String& trackbarName, const String& winName,
 #define CV_NO_GUI_ERROR(funcname) \
     cvError( CV_StsError, funcname, \
     "The function is not implemented. " \
-    "Rebuild the library with Windows, GTK+ 2.x or Carbon support", \
+    "Rebuild the library with Windows, GTK+ 2.x or Carbon support. "\
+    "If you are on Ubuntu or Debian, install libgtk2.0-dev and pkg-config, then re-run cmake or configure script", \
     __FILE__, __LINE__ )
 
 
