@@ -258,7 +258,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
     CvPoint2D64f* dstd;
     int stype, dtype;
     int sstep, dstep;
-    int i, j, n;
+    int i, j, n, iters = 1;
 
     CV_ASSERT( CV_IS_MAT(_src) && CV_IS_MAT(_dst) &&
         (_src->rows == 1 || _src->cols == 1) &&
@@ -267,15 +267,24 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
         (CV_MAT_TYPE(_src->type) == CV_32FC2 || CV_MAT_TYPE(_src->type) == CV_64FC2) &&
         (CV_MAT_TYPE(_dst->type) == CV_32FC2 || CV_MAT_TYPE(_dst->type) == CV_64FC2));
 
-    CV_ASSERT( CV_IS_MAT(_cameraMatrix) && CV_IS_MAT(_distCoeffs) &&
-        _cameraMatrix->rows == 3 && _cameraMatrix->cols == 3 &&
-        (_distCoeffs->rows == 1 || _distCoeffs->cols == 1) &&
-        (_distCoeffs->rows*_distCoeffs->cols == 4 ||
-        _distCoeffs->rows*_distCoeffs->cols == 5) );
-    _Dk = cvMat( _distCoeffs->rows, _distCoeffs->cols,
-        CV_MAKETYPE(CV_64F,CV_MAT_CN(_distCoeffs->type)), k);
+    CV_ASSERT( CV_IS_MAT(_cameraMatrix) &&
+        _cameraMatrix->rows == 3 && _cameraMatrix->cols == 3 );
+
     cvConvert( _cameraMatrix, &_A );
-    cvConvert( _distCoeffs, &_Dk );
+
+    if( _distCoeffs )
+    {
+        CV_ASSERT( CV_IS_MAT(_distCoeffs) &&
+            (_distCoeffs->rows == 1 || _distCoeffs->cols == 1) &&
+            (_distCoeffs->rows*_distCoeffs->cols == 4 ||
+            _distCoeffs->rows*_distCoeffs->cols == 5) );
+
+        _Dk = cvMat( _distCoeffs->rows, _distCoeffs->cols,
+            CV_MAKETYPE(CV_64F,CV_MAT_CN(_distCoeffs->type)), k);
+        
+        cvConvert( _distCoeffs, &_Dk );
+        iters = 5;
+    }
 
     if( _R )
     {
@@ -330,7 +339,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
         y0 = y = (y - cy)*ify;
 
         // compensate distortion iteratively
-        for( j = 0; j < 5; j++ )
+        for( j = 0; j < iters; j++ )
         {
             double r2 = x*x + y*y;
             double icdist = 1./(1 + ((k[4]*r2 + k[1])*r2 + k[0])*r2);
@@ -367,14 +376,15 @@ void cv::undistortPoints( const Vector<Point2f>& src, Vector<Point2f>& dst,
                           const Mat& R, const Mat& P)
 {
     dst.resize(src.size());
-    CvMat _src = src, _dst = dst;
-    CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
-    CvMat _R, _P, *pR=0, *pP=0;
+    CvMat _src = src, _dst = dst, _cameraMatrix = cameraMatrix;
+    CvMat _R, _P, _distCoeffs, *pR=0, *pP=0, *pD=0;
     if( R.data )
         pR = &(_R = R);
     if( P.data )
         pP = &(_P = P);
-    cvUndistortPoints(&_src, &_dst, &_cameraMatrix, &_distCoeffs, pR, pP);
+    if( distCoeffs.data )
+        pD = &(_distCoeffs = distCoeffs);
+    cvUndistortPoints(&_src, &_dst, &_cameraMatrix, pD, pR, pP);
 }
 
 /*  End of file  */
