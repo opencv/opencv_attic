@@ -43,7 +43,6 @@
 #include "_cxcore.h"
 
 #if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
-#include <windows.h>
 #include <tchar.h>
 #else
 #include <pthread.h>
