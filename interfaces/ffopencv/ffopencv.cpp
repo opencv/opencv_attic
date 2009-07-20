@@ -521,15 +521,42 @@ That's all there is to it!
 
 #if defined _MSC_VER && _MSC_VER >= 1200
 
+#pragma comment(lib, "libgcc_.a")
+#pragma comment(lib, "libmingwex_.a")
+#pragma comment(lib, "libcoldname_.a")
+#if _MSC_VER >= 1500
+#ifdef _DEBUG
+#pragma comment(lib, "libmsvcr90d_.a")
+#else
+#pragma comment(lib, "libmsvcr90_.a")
+#endif
+#elif _MSC_VER >= 1400
+#ifdef _DEBUG
+#pragma comment(lib, "libmsvcr80d_.a")
+#else
+#pragma comment(lib, "libmsvcr80_.a")
+#endif
+#elif _MSC_VER >= 1310
+#ifdef _DEBUG
+#pragma comment(lib, "libmsvcr71_.a")
+#else
+#pragma comment(lib, "libmsvcr71d_.a")
+#endif
+#else
+#ifdef _DEBUG
+#pragma comment(lib, "libmsvcrt_.a")
+#else
+#pragma comment(lib, "libmsvcrtd_.a")
+#endif
+#endif
 #pragma comment(lib, "libavformat.a")
 #pragma comment(lib, "libavcodec.a")
 #pragma comment(lib, "libavutil.a")
-#pragma comment(lib, "libgcc_mingw.a")
-#pragma comment(lib, "libmingwex.a")
+#pragma comment(lib, "libwsock32_.a")
 
 #endif
 
-#undef __STDC_CONSTANT_MACROS
+#undef __STDC_CONSTANT_MACROS                                                      
 #define __STDC_CONSTANT_MACROS 1
 
 #undef snprintf
