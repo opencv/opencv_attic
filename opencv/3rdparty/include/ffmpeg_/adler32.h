@@ -18,10 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef ADLER32_H
-#define ADLER32_H
+#ifndef AVUTIL_ADLER32_H
+#define AVUTIL_ADLER32_H
+
+#include <stdint.h>
+#include "common.h"
 
 unsigned long av_adler32_update(unsigned long adler, const uint8_t *buf,
-                                unsigned int len);
+                                unsigned int len) av_pure;
 
-#endif
+#endif /* AVUTIL_ADLER32_H */

@@ -68,6 +68,7 @@ extern "C" {
 #ifdef WIN32
 #include <ffmpeg_/avformat.h>
 #include <ffmpeg_/avcodec.h>
+#include <ffmpeg_/imgconvert.h>
 #else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
