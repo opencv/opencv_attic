@@ -486,11 +486,11 @@ namespace cv
 {
 
 void copyMakeBorder( const Mat& src, Mat& dst, int top, int bottom,
-                     int left, int right, int borderType )
+                     int left, int right, int borderType, const Scalar& value )
 {
     dst.create( src.rows + top + bottom, src.cols + left + right, src.type() );
     CvMat _src = src, _dst = dst;
-    cvCopyMakeBorder( &_src, &_dst, Point(left, top), borderType );
+    cvCopyMakeBorder( &_src, &_dst, Point(left, top), borderType, value );
 }
 
 }
