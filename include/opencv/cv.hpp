@@ -218,7 +218,7 @@ CV_EXPORTS Mat getStructuringElement(int shape, Size ksize, Point anchor=Point(-
 
 CV_EXPORTS void copyMakeBorder( const Mat& src, Mat& dst,
                                 int top, int bottom, int left, int right,
-                                int borderType );
+                                int borderType, const Scalar& value=Scalar() );
 
 CV_EXPORTS void medianBlur( const Mat& src, Mat& dst, int ksize );
 CV_EXPORTS void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
