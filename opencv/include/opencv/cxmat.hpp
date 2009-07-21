@@ -411,6 +411,19 @@ template<typename _Tp> inline const _Tp* Mat::ptr(int y) const
     return (const _Tp*)(data + step*y);
 }
 
+template<typename _Tp> inline _Tp& Mat::at(int y, int x)
+{
+    CV_DbgAssert( (unsigned)y < (unsigned)rows && (unsigned)x < (unsigned)cols &&
+        sizeof(_Tp) == elemSize() );
+    return ((_Tp*)(data + step*y))[x];
+}
+
+template<typename _Tp> inline const _Tp& Mat::at(int y, int x) const
+{
+    CV_DbgAssert( (unsigned)y < (unsigned)rows && (unsigned)x < (unsigned)cols &&
+        sizeof(_Tp) == elemSize() );
+    return ((_Tp*)(data + step*y))[x];
+}
 
 static inline void swap( Mat& a, Mat& b )
 {
@@ -3707,6 +3720,23 @@ inline const uchar* MatND::ptr(const int* idx) const
     return p;
 }
 
+template<typename _Tp> inline _Tp& MatND::at(int i0)
+{ return *(_Tp*)ptr(i0); }
+template<typename _Tp> inline const _Tp& MatND::at(int i0) const
+{ return *(const _Tp*)ptr(i0); }
+template<typename _Tp> inline _Tp& MatND::at(int i0, int i1)
+{ return *(_Tp*)ptr(i0, i1); }
+template<typename _Tp> inline const _Tp& MatND::at(int i0, int i1) const
+{ return *(const _Tp*)ptr(i0, i1); }
+template<typename _Tp> inline _Tp& MatND::at(int i0, int i1, int i2)
+{ return *(_Tp*)ptr(i0, i1, i2); }
+template<typename _Tp> inline const _Tp& MatND::at(int i0, int i1, int i2) const
+{ return *(const _Tp*)ptr(i0, i1, i2); }
+template<typename _Tp> inline _Tp& MatND::at(const int* idx)
+{ return *(_Tp*)ptr(idx); }
+template<typename _Tp> inline const _Tp& MatND::at(const int* idx) const
+{ return *(const _Tp*)ptr(idx); }
+
 inline NAryMatNDIterator::NAryMatNDIterator()
 {
 }
@@ -4012,20 +4042,47 @@ inline size_t SparseMat::hash(const int* idx) const
     return h;
 }
 
-inline const uchar* SparseMat::get(int i0, int i1, size_t* hashval) const
-{ return ((SparseMat*)this)->ptr(i0, i1, false, hashval); }
+template<typename _Tp> inline _Tp& SparseMat::ref(int i0, int i1, size_t* hashval)
+{ return *(_Tp*)((SparseMat*)this)->ptr(i0, i1, true, hashval); }
 
-inline const uchar* SparseMat::get(int i0, int i1, int i2, size_t* hashval) const
-{ return ((SparseMat*)this)->ptr(i0, i1, i2, false, hashval); }
+template<typename _Tp> inline _Tp& SparseMat::ref(int i0, int i1, int i2, size_t* hashval)
+{ return *(_Tp*)((SparseMat*)this)->ptr(i0, i1, i2, true, hashval); }
 
-inline const uchar* SparseMat::get(const int* idx, size_t* hashval) const
-{ return ((SparseMat*)this)->ptr(idx, false, hashval); }
+template<typename _Tp> inline _Tp& SparseMat::ref(const int* idx, size_t* hashval)
+{ return *(_Tp*)((SparseMat*)this)->ptr(idx, true, hashval); }
 
-inline uchar* SparseMat::value(Node* n)
-{ return ((uchar*)n + hdr->valueOffset); }
+template<typename _Tp> inline _Tp SparseMat::value(int i0, int i1, size_t* hashval) const
+{
+    const _Tp* p = (const _Tp*)((SparseMat*)this)->ptr(i0, i1, false, hashval);
+    return p ? *p : _Tp();
+}
 
-inline const uchar* SparseMat::value(const Node* n) const
-{ return ((uchar*)n + hdr->valueOffset); }
+template<typename _Tp> inline _Tp SparseMat::value(int i0, int i1, int i2, size_t* hashval) const
+{
+    const _Tp* p = (const _Tp*)((SparseMat*)this)->ptr(i0, i1, i2, false, hashval);
+    return p ? *p : _Tp();
+}
+
+template<typename _Tp> inline _Tp SparseMat::value(const int* idx, size_t* hashval) const
+{
+    const _Tp* p = (const _Tp*)((SparseMat*)this)->ptr(idx, false, hashval);
+    return p ? *p : _Tp();
+}
+
+template<typename _Tp> inline const _Tp* SparseMat::find(int i0, int i1, size_t* hashval) const
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, true, hashval); }
+
+template<typename _Tp> inline const _Tp* SparseMat::find(int i0, int i1, int i2, size_t* hashval) const
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, i2, true, hashval); }
+
+template<typename _Tp> inline const _Tp* SparseMat::find(const int* idx, size_t* hashval) const
+{ return (const _Tp*)((SparseMat*)this)->ptr(idx, true, hashval); }
+
+template<typename _Tp> inline _Tp& SparseMat::value(Node* n)
+{ return *(_Tp*)((uchar*)n + hdr->valueOffset); }
+
+template<typename _Tp> inline const _Tp& SparseMat::value(const Node* n) const
+{ return *(const _Tp*)((const uchar*)n + hdr->valueOffset); }
 
 inline SparseMat::Node* SparseMat::node(size_t nidx)
 { return (Node*)&hdr->pool[nidx]; }
@@ -4091,8 +4148,8 @@ inline SparseMatConstIterator& SparseMatConstIterator::operator = (const SparseM
     return *this;
 }
 
-inline const uchar* SparseMatConstIterator::value() const
-{ return ptr; }
+template<typename _Tp> inline const _Tp& SparseMatConstIterator::value() const
+{ return *(_Tp*)ptr; }
 
 inline const SparseMat::Node* SparseMatConstIterator::node() const
 {
@@ -4125,10 +4182,8 @@ inline SparseMatIterator& SparseMatIterator::operator = (const SparseMatIterator
     return *this;
 }
 
-inline uchar* SparseMatIterator::value() const
-{
-    return ptr;
-}
+template<typename _Tp> inline _Tp& SparseMatIterator::value() const
+{ return *(_Tp*)ptr; }
 
 inline SparseMat::Node* SparseMatIterator::node() const
 {
@@ -4250,37 +4305,28 @@ template<typename _Tp> inline int SparseMat_<_Tp>::channels() const
 { return DataType<_Tp>::channels; }
 
 template<typename _Tp> inline _Tp&
-SparseMat_<_Tp>::operator()(int i0, int i1, size_t* hashval)
-{ return (_Tp&)ptr(i0, i1, hashval); }
+SparseMat_<_Tp>::ref(int i0, int i1, size_t* hashval)
+{ return SparseMat::ref<_Tp>(i0, i1, hashval); }
 
 template<typename _Tp> inline _Tp
 SparseMat_<_Tp>::operator()(int i0, int i1, size_t* hashval) const
-{
-    const uchar* p = get(i0, i1, hashval);
-    return p ? *(const _Tp*)p : _Tp();
-}
+{ return SparseMat::value<_Tp>(i0, i1, hashval); }
 
 template<typename _Tp> inline _Tp&
-SparseMat_<_Tp>::operator()(int i0, int i1, int i2, size_t* hashval)
-{ return (_Tp&)ptr(i0, i1, i2, hashval); }
+SparseMat_<_Tp>::ref(int i0, int i1, int i2, size_t* hashval)
+{ return SparseMat::ref<_Tp>(i0, i1, i2, hashval); }
 
 template<typename _Tp> inline _Tp
 SparseMat_<_Tp>::operator()(int i0, int i1, int i2, size_t* hashval) const
-{
-    const uchar* p = get(i0, i1, i2, hashval);
-    return p ? *(const _Tp*)p : _Tp();
-}
+{ return SparseMat::value<_Tp>(i0, i1, i2, hashval); }
 
 template<typename _Tp> inline _Tp&
-SparseMat_<_Tp>::operator()(const int* idx, size_t* hashval)
-{ return (_Tp&)ptr(idx, hashval); }
+SparseMat_<_Tp>::ref(const int* idx, size_t* hashval)
+{ return SparseMat::ref<_Tp>(idx, hashval); }
 
 template<typename _Tp> inline _Tp
 SparseMat_<_Tp>::operator()(const int* idx, size_t* hashval) const
-{
-    const uchar* p = get(idx, hashval);
-    return p ? *(const _Tp*)p : _Tp();
-}
+{ return SparseMat::value<_Tp>(idx, hashval); }
 
 template<typename _Tp> inline SparseMatIterator_<_Tp> SparseMat_<_Tp>::begin()
 { return SparseMatIterator_<_Tp>(this); }
@@ -4297,6 +4343,7 @@ template<typename _Tp> inline SparseMatIterator_<_Tp> SparseMat_<_Tp>::end()
         it.hashidx = hdr->hashtab.size();
         it.ptr = 0;
     }
+    return it;
 }
 
 template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat_<_Tp>::end() const
@@ -4308,6 +4355,7 @@ template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat_<_Tp>::end(
         it.hashidx = hdr->hashtab.size();
         it.ptr = 0;
     }
+    return it;
 }
 
 
@@ -4317,7 +4365,7 @@ SparseMatConstIterator_<_Tp>::SparseMatConstIterator_()
 
 template<typename _Tp> inline
 SparseMatConstIterator_<_Tp>::SparseMatConstIterator_(const SparseMat_<_Tp>* _m)
-: SparseMatConstIterator(m)
+: SparseMatConstIterator(_m)
 {}
 
 template<typename _Tp> inline
@@ -4354,12 +4402,12 @@ SparseMatIterator_<_Tp>::SparseMatIterator_()
 
 template<typename _Tp> inline
 SparseMatIterator_<_Tp>::SparseMatIterator_(SparseMat_<_Tp>* _m)
-: SparseMatIterator(_m)
+: SparseMatConstIterator_<_Tp>(_m)
 {}
 
 template<typename _Tp> inline
 SparseMatIterator_<_Tp>::SparseMatIterator_(const SparseMatIterator_<_Tp>& it)
-: SparseMatIterator(it)
+: SparseMatConstIterator_<_Tp>(it)
 {}
 
 template<typename _Tp> inline SparseMatIterator_<_Tp>&

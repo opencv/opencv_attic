@@ -3545,11 +3545,13 @@ const int MAX_TREE_DEPTH = 32;
 KDTree::KDTree()
 {
     maxDepth = -1;
+    normType = NORM_L2;
 }
 
 KDTree::KDTree(const Mat& _points, bool _copyData)
 {
     maxDepth = -1;
+    normType = NORM_L2;
     build(_points, _copyData);
 }
 
@@ -3632,7 +3634,6 @@ computeSums( const Mat& points, const size_t* ofs, int a, int b, double* sums )
 void KDTree::build(const Mat& _points, bool _copyData)
 {
     CV_Assert(_points.type() == CV_32F);
-    
     nodes.release();
 
     if( !_copyData )
@@ -3755,7 +3756,8 @@ void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
     K = std::min(K, points.rows);
     int dims = points.cols;
 
-    CV_Assert(_vec.size() == (size_t)dims && K > 0 );
+    CV_Assert(_vec.size() == (size_t)dims && K > 0 &&
+        (normType == NORM_L2 || normType == NORM_L1));
 
     AutoBuffer<uchar> _buf((K+1)*(sizeof(float) + sizeof(int)));
     int* idx = (int*)(uchar*)_buf;
@@ -3814,11 +3816,15 @@ void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
             {
                 i = ~n.idx;
                 const float* row = points.ptr<float>(i);
-                for( j = 0, d = 0.f; j < dims; j++ )
-                {
-                    float t = vec[j] - row[j];
-                    d += t*t;
-                }
+                if( normType == NORM_L2 )
+                    for( j = 0, d = 0.f; j < dims; j++ )
+                    {
+                        float t = vec[j] - row[j];
+                        d += t*t;
+                    }
+                else
+                    for( j = 0, d = 0.f; j < dims; j++ )
+                        d += std::abs(vec[j] - row[j]);
                 
                 dist[ncount] = d;
                 idx[ncount] = i;
@@ -3846,8 +3852,11 @@ void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
                 alt = n.left;
             }
             
-            d = std::abs(vec[n.idx] - n.boundary);
-            d = d*d + alt_d;
+            d = vec[n.idx] - n.boundary;
+            if( normType == NORM_L2 )
+                d = d*d + alt_d;
+            else
+                d = std::abs(d) + alt_d;
             // subtree prunning
             if( ncount == K && d > dist[ncount-1] )
                 continue;

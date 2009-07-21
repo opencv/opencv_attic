@@ -45,7 +45,14 @@
 namespace cv
 {
 
-#if 1
+#if CV_USE_SYSTEM_MALLOC
+
+void deleteThreadAllocData() {}
+
+void* fastMalloc( size_t size ) { return malloc(size); }
+void fastFree(void* ptr) { if(ptr) free(ptr); }
+
+#else
 
 #if 0
 #define SANITY_CHECK(block) \
@@ -191,9 +198,11 @@ struct Block
         bumpPtr = data;
         int nobjects = MAX_BLOCK_SIZE/objSize;
         endPtr = bumpPtr + nobjects*objSize;
-        almostEmptyThreshold = (nobjects*2 + 1)/3;
+        almostEmptyThreshold = (nobjects + 1)/2;
         allocated = 0;
     }
+
+    bool isFilled() const { return allocated > almostEmptyThreshold; }
 
     size_t signature;
     Block* prev;
@@ -208,7 +217,6 @@ struct Block
     int binIdx;
     int allocated;
     int almostEmptyThreshold;
-    int isFilled;
     CriticalSection cs;
 };
 
@@ -290,16 +298,18 @@ struct BlockPool
 
 BlockPool mallocPool;
 
+enum { START=0, FREE=1, GC=2 };
+
 struct ThreadData
 {
-    ThreadData() { for(int i = 0; i <= MAX_BIN; i++) bins[i] = 0; }
+    ThreadData() { for(int i = 0; i <= MAX_BIN; i++) bins[i][START] = bins[i][FREE] = bins[i][GC] = 0; }
     ~ThreadData()
     {
         // mark all the thread blocks as abandoned or even release them
-        for(int i = 0; i <= MAX_BIN; i++)
+        for( int i = 0; i <= MAX_BIN; i++ )
         {
-            Block *bin = bins[i], *block = bin;
-            bins[i] = 0;
+            Block *bin = bins[i][START], *block = bin;
+            bins[i][START] = bins[i][FREE] = bins[i][GC] = 0;
             if( block )
             {
                 do
@@ -323,7 +333,28 @@ struct ThreadData
         }
     }
 
-    Block* bins[MAX_BIN+1];
+    void moveBlockToFreeList( Block* block )
+    {
+        int i = block->binIdx;
+        Block*& freePtr = bins[i][FREE];
+        CV_DbgAssert( block->next->prev == block && block->prev->next == block );
+        if( block != freePtr )
+        {
+            Block*& gcPtr = bins[i][GC];
+            if( gcPtr == block )
+                gcPtr = block->next;
+            if( block->next != block )
+            {
+                block->prev->next = block->next;
+                block->next->prev = block->prev;
+            }
+            block->next = freePtr->next;
+            block->prev = freePtr;
+            freePtr = block->next->prev = block->prev->next = block;
+        }
+    }
+
+    Block* bins[MAX_BIN+1][3];
 
 #ifdef WIN32
 #ifdef WINCE
@@ -380,6 +411,34 @@ void deleteThreadAllocData()
 pthread_key_t ThreadData::tlsKey = 0;
 #endif
 
+#if 0
+static void checkList(ThreadData* tls, int idx)
+{
+    Block* block = tls->bins[idx][START];
+    if( !block )
+    {
+        CV_DbgAssert( tls->bins[idx][FREE] == 0 && tls->bins[idx][GC] == 0 );
+    }
+    else
+    {
+        bool gcInside = false;
+        bool freeInside = false;
+        do
+        {
+            if( tls->bins[idx][FREE] == block )
+                freeInside = true;
+            if( tls->bins[idx][GC] == block )
+                gcInside = true;
+            block = block->next;
+        }
+        while( block != tls->bins[idx][START] );
+        CV_DbgAssert( gcInside && freeInside );
+    }
+}
+#else
+#define checkList(tls, idx)
+#endif
+
 void* fastMalloc( size_t size )
 {
     if( size > MAX_BLOCK_SIZE )
@@ -395,7 +454,10 @@ void* fastMalloc( size_t size )
     {
     ThreadData* tls = ThreadData::get();
     int idx = mallocTables.bin(size);
-    Block *&bin = tls->bins[idx], *block = bin;
+    Block*& startPtr = tls->bins[idx][START];
+    Block*& gcPtr = tls->bins[idx][GC];
+    Block*& freePtr = tls->bins[idx][FREE], *block = freePtr;
+    checkList(tls, idx);
     size = binSizeTab[idx];
     STAT(
         stat.nettoBytes += size;
@@ -407,10 +469,10 @@ void* fastMalloc( size_t size )
     {
         if( block )
         {
-            int k = 0;
-            // try to
-            do
+            // try to find non-full block
+            for(;;)
             {
+                CV_DbgAssert( block->next->prev == block && block->prev->next == block );
                 if( block->bumpPtr )
                 {
                     data = block->bumpPtr;
@@ -425,17 +487,29 @@ void* fastMalloc( size_t size )
                     block->privateFreeList = block->privateFreeList->next;
                     break;
                 }
-                k++;
+
+                if( block == startPtr )
+                    break;
                 block = block->next;
             }
-            while( block != bin );
+#if 0
+            avg_k += _k;
+            avg_nk++;
+            if( avg_nk == 1000 )
+            {
+                printf("avg search iters per 1e3 allocs = %g\n", (double)avg_k/avg_nk );
+                avg_k = avg_nk = 0;
+            }
+#endif
 
+            freePtr = block;
             if( !data )
             {
-                do
+                block = gcPtr; 
+                for( int k = 0; k < 2; k++ )
                 {
                     SANITY_CHECK(block);
-
+                    CV_DbgAssert( block->next->prev == block && block->prev->next == block );
                     if( block->publicFreeList )
                     {
                         {
@@ -448,23 +522,29 @@ void* fastMalloc( size_t size )
                             --block->allocated;
                         data = (uchar*)block->privateFreeList;
                         block->privateFreeList = block->privateFreeList->next;
+                        gcPtr = block->next;
+                        if( block->allocated+1 <= block->almostEmptyThreshold )
+                            tls->moveBlockToFreeList(block);
                         break;
                     }
                     block = block->next;
                 }
-                while( block != bin );
+                if( !data )
+                    gcPtr = block;
             }
         }
 
         if( data )
             break;
         block = mallocPool.alloc();
-        block->init(bin ? bin->prev : block, bin ? bin : block, (int)size, tls);
+        block->init(startPtr ? startPtr->prev : block, startPtr ? startPtr : block, (int)size, tls);
+        if( !startPtr )
+            startPtr = gcPtr = freePtr = block;
+        checkList(tls, block->binIdx);
         SANITY_CHECK(block);
     }
 
-    block->isFilled = ++block->allocated > block->almostEmptyThreshold;
-    bin = block;
+    ++block->allocated;
     return data;
     }
 }
@@ -500,36 +580,39 @@ void fastFree( void* ptr )
 
         SANITY_CHECK(block);
 
-        if( --block->allocated <= block->almostEmptyThreshold &&
-            (block->allocated == 0 || block->isFilled) )
+        bool prevFilled = block->isFilled();
+        --block->allocated;
+        if( !block->isFilled() && ((block->allocated == 0 && block->privateFreeList) || prevFilled) )
         {
-            Block*& bin = tls->bins[block->binIdx];
-            if( block->allocated == 0 )
+            if( block->allocated == 0 && block->privateFreeList )
             {
+                int idx = block->binIdx;
+                Block*& startPtr = tls->bins[idx][START];
+                Block*& freePtr = tls->bins[idx][FREE];
+                Block*& gcPtr = tls->bins[idx][GC];
+                
                 if( block == block->next )
-                    bin = 0;
+                {
+                    CV_DbgAssert( startPtr == block && freePtr == block && gcPtr == block );
+                    startPtr = freePtr = gcPtr = 0;
+                }
                 else
                 {
-                    if( bin == block )
-                        bin = block->next;
+                    if( freePtr == block )
+                        freePtr = block->next;
+                    if( gcPtr == block )
+                        gcPtr = block->next;
+                    if( startPtr == block )
+                        startPtr = block->next;
                     block->prev->next = block->next;
                     block->next->prev = block->prev;
                 }
                 mallocPool.free(block);
+                checkList(tls, idx);
                 return;
             }
 
-            block->isFilled = 0;
-            if( bin != block && bin->next != block )
-            {
-                block->prev->next = block->next;
-                block->next->prev = block->prev;
-
-                block->prev = bin;
-                block->next = bin->next;
-                block->next->prev = block;
-                bin->next = block;
-            }
+            tls->moveBlockToFreeList(block);
         }
         node->next = block->privateFreeList;
         block->privateFreeList = node;
@@ -547,27 +630,22 @@ void fastFree( void* ptr )
             // note that it can happen at the same time as
             // ThreadData::deleteData() marks the blocks as abandoned,
             // so this part of the algorithm needs to be checked for data races
+            int idx = block->binIdx;
             block->threadData = tls;
-            Block*& bin = tls->bins[block->binIdx];
-            if( bin )
+            Block*& startPtr = tls->bins[idx][START];
+
+            if( startPtr )
             {
-                block->next = bin;
-                block->prev = bin->prev;
+                block->next = startPtr;
+                block->prev = startPtr->prev;
                 block->next->prev = block->prev->next = block;
             }
             else
-                bin = block->next = block->prev = block;
+                startPtr = tls->bins[idx][FREE] = tls->bins[idx][GC] = block;
         }
     }
     }
 }
-
-#else
-
-void deleteThreadAllocData() {}
-
-void* fastMalloc( size_t size ) { return malloc(size); }
-void fastFree(void* ptr) { if(ptr) free(ptr); }
 
 #endif
 
