@@ -2624,7 +2624,7 @@ uchar* SparseMat::ptr(int i0, int i1, bool createMissing, size_t* hashval)
     {
         Node* elem = (Node*)(pool + nidx);
         if( elem->hashval == h && elem->idx[0] == i0 && elem->idx[1] == i1 )
-            return value(elem);
+            return &value<uchar>(elem);
         nidx = elem->next;
     }
 
@@ -2647,7 +2647,7 @@ uchar* SparseMat::ptr(int i0, int i1, int i2, bool createMissing, size_t* hashva
         Node* elem = (Node*)(pool + nidx);
         if( elem->hashval == h && elem->idx[0] == i0 &&
             elem->idx[1] == i1 && elem->idx[2] == i2 )
-            return value(elem);
+            return &value<uchar>(elem);
         nidx = elem->next;
     }
 
@@ -2675,7 +2675,7 @@ uchar* SparseMat::ptr(const int* idx, bool createMissing, size_t* hashval)
                 if( elem->idx[i] != idx[i] )
                     break;
             if( i == d )
-                return value(elem);
+                return &value<uchar>(elem);
         }
         nidx = elem->next;
     }
@@ -2750,6 +2750,10 @@ void SparseMat::erase(const int* idx, size_t* hashval)
 
 void SparseMat::resizeHashTab(size_t newsize)
 {
+    newsize = std::max(newsize, (size_t)8);
+    if((newsize & (newsize-1)) != 0)
+        newsize = 1 << cvCeil(std::log((double)newsize)/CV_LOG2);
+
     size_t i, hsize = hdr->hashtab.size();
     Vector<size_t> _newh(newsize);
     size_t* newh = &_newh[0];
@@ -2806,7 +2810,7 @@ uchar* SparseMat::newNode(const int* idx, size_t hashval)
     for( i = 0; i < d; i++ )
         elem->idx[i] = idx[i];
     d = elemSize();
-    uchar* p = value(elem);
+    uchar* p = &value<uchar>(elem);
     for( i = 0; i <= d - sizeof(int); i += sizeof(int) )
         *(int*)(p + i) = 0;
     for( ; i < d; i++ )
@@ -2874,6 +2878,7 @@ SparseMatConstIterator& SparseMatConstIterator::operator ++()
             return *this;
         }
     }
+    hashidx = sz;
     ptr = 0;
     return *this;
 }

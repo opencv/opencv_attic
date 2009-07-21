@@ -253,6 +253,7 @@ lib_cvaux_la_SOURCES = \
   cvaux/cvprewarp.cpp \
   cvaux/cvscanlines.cpp \
   cvaux/cvsegment.cpp \
+  cvaux/cvselfsimilarity.cpp \
   cvaux/cvspinimages.cpp \
   cvaux/cvsubdiv2.cpp \
   cvaux/cvtexture.cpp \

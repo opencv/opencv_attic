@@ -857,6 +857,8 @@ public:
 
     template<typename _Tp> _Tp* ptr(int y=0);
     template<typename _Tp> const _Tp* ptr(int y=0) const;
+    template<typename _Tp> _Tp& at(int y, int x);
+    template<typename _Tp> const _Tp& at(int y, int x) const;
 
     enum { MAGIC_VAL=0x42FF0000, AUTO_STEP=0, CONTINUOUS_FLAG=CV_MAT_CONT_FLAG };
 
@@ -1414,6 +1416,15 @@ public:
     uchar* ptr(const int* idx);
     const uchar* ptr(const int* idx) const;
 
+    template<typename _Tp> _Tp& at(int i0);
+    template<typename _Tp> const _Tp& at(int i0) const;
+    template<typename _Tp> _Tp& at(int i0, int i1);
+    template<typename _Tp> const _Tp& at(int i0, int i1) const;
+    template<typename _Tp> _Tp& at(int i0, int i1, int i2);
+    template<typename _Tp> const _Tp& at(int i0, int i1, int i2) const;
+    template<typename _Tp> _Tp& at(const int* idx);
+    template<typename _Tp> const _Tp& at(const int* idx) const;
+
     enum { MAGIC_VAL=0x42FE0000, AUTO_STEP=-1,
         CONTINUOUS_FLAG=CV_MAT_CONT_FLAG, MAX_DIM=CV_MAX_DIM };
 
@@ -1632,11 +1643,20 @@ public:
     size_t hash(const int* idx) const;
     
     uchar* ptr(int i0, int i1, bool createMissing, size_t* hashval=0);
-    const uchar* get(int i0, int i1, size_t* hashval=0) const;
     uchar* ptr(int i0, int i1, int i2, bool createMissing, size_t* hashval=0);
-    const uchar* get(int i0, int i1, int i2, size_t* hashval=0) const;
     uchar* ptr(const int* idx, bool createMissing, size_t* hashval=0);
-    const uchar* get(const int* idx, size_t* hashval=0) const;
+
+    template<typename _Tp> _Tp& ref(int i0, int i1, size_t* hashval=0);   
+    template<typename _Tp> _Tp value(int i0, int i1, size_t* hashval=0) const;
+    template<typename _Tp> const _Tp* find(int i0, int i1, size_t* hashval=0) const;
+    
+    template<typename _Tp> _Tp& ref(int i0, int i1, int i2, size_t* hashval=0);
+    template<typename _Tp> _Tp value(int i0, int i1, int i2, size_t* hashval=0) const;
+    template<typename _Tp> const _Tp* find(int i0, int i1, int i2, size_t* hashval=0) const;
+
+    template<typename _Tp> _Tp& ref(const int* idx, size_t* hashval=0);
+    template<typename _Tp> _Tp value(const int* idx, size_t* hashval=0) const;
+    template<typename _Tp> const _Tp* find(const int* idx, size_t* hashval=0) const;
 
     void erase(int i0, int i1, size_t* hashval=0);
     void erase(int i0, int i1, int i2, size_t* hashval=0);
@@ -1647,8 +1667,8 @@ public:
     SparseMatIterator end();
     SparseMatConstIterator end() const;
 
-    uchar* value(Node* n);
-    const uchar* value(const Node* n) const;
+    template<typename _Tp> _Tp& value(Node* n);
+    template<typename _Tp> const _Tp& value(const Node* n) const;
     Node* node(size_t nidx);
     const Node* node(size_t nidx) const;
 
@@ -1676,7 +1696,8 @@ public:
     SparseMatConstIterator(const SparseMatConstIterator& it);
 
     SparseMatConstIterator& operator = (const SparseMatConstIterator& it);
-    const uchar* value() const;
+
+    template<typename _Tp> const _Tp& value() const;
     const SparseMat::Node* node() const;
     
     SparseMatConstIterator& operator --();
@@ -1698,7 +1719,7 @@ public:
     SparseMatIterator(const SparseMatIterator& it);
 
     SparseMatIterator& operator = (const SparseMatIterator& it);
-    uchar* value() const;
+    template<typename _Tp> _Tp& value() const;
     SparseMat::Node* node() const;
     
     SparseMatIterator& operator ++();
@@ -1735,11 +1756,11 @@ public:
     int depth() const;
     int channels() const;
     
-    _Tp& operator()(int i0, int i1, size_t* hashval=0);
+    _Tp& ref(int i0, int i1, size_t* hashval=0);
     _Tp operator()(int i0, int i1, size_t* hashval=0) const;
-    _Tp& operator()(int i0, int i1, int i2, size_t* hashval=0);
+    _Tp& ref(int i0, int i1, int i2, size_t* hashval=0);
     _Tp operator()(int i0, int i1, int i2, size_t* hashval=0) const;
-    _Tp& operator()(const int* idx, size_t* hashval=0);
+    _Tp& ref(const int* idx, size_t* hashval=0);
     _Tp operator()(const int* idx, size_t* hashval=0) const;
 
     SparseMatIterator_<_Tp> begin();
@@ -1762,11 +1783,6 @@ public:
     
     SparseMatConstIterator_& operator ++();
     SparseMatConstIterator_ operator ++(int);
-
-protected:
-    const SparseMat_<_Tp>* m;
-    size_t hashidx;
-    uchar* ptr;
 };
 
 template<typename _Tp> class CV_EXPORTS SparseMatIterator_ : public SparseMatConstIterator_<_Tp>
@@ -1820,6 +1836,7 @@ public:
     Vector<Node> nodes;
     Mat points;
     int maxDepth;
+    int normType;
 };
 
 //////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
