@@ -379,8 +379,9 @@ StereoCalib(const char* imageList, int useUncalibrated)
     }
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
-    StereoCalib("stereo_calib.txt", 1);
+    StereoCalib(argc > 1 ? argv[1] : "stereo_calib.txt", 1);
     return 0;
 }
+
