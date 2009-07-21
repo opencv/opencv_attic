@@ -50,7 +50,7 @@
 // 1. Shechtman, E., Irani, M.:
 //		Matching local self-similarities across images and videos.
 // 		CVPR, (2007)
-// 2. Eva Hörster, Thomas Greif, Rainer Lienhart, Malcolm Slaney.
+// 2. Eva Horster, Thomas Greif, Rainer Lienhart, Malcolm Slaney.
 //		Comparing Local Feature Descriptors in pLSA-Based Image Models.
 //		30th Annual Symposium of the German Association for
 //      Pattern Recognition (DAGM) 2008, Munich, Germany, June 2008.
@@ -148,7 +148,7 @@ void SelfSimDescriptor::SSD(const Mat& img, Point pt, Mat& ssd) const
 void SelfSimDescriptor::compute(const Mat& img, Vector<float>& descriptors, Size winStride,
                                 const Vector<Point>& locations) const
 {
-    CV_Assert( img.depth() == CV_8U );
+    CV_Assert( img.depth() == CV_8U );  
 
     winStride.width = std::max(winStride.width, 1);
     winStride.height = std::max(winStride.height, 1);
@@ -230,6 +230,7 @@ void SelfSimDescriptor::computeLogPolarMapping(Mat& mappingMask) const
     //	<==> log_10 (radius) / log_10 (m) = numberOfDistanceBuckets
     //	<==> log_10 (radius) / numberOfDistanceBuckets = log_10 (m)
     //	<==> m = 10 ^ log_10(m) = 10 ^ [log_10 (radius) / numberOfDistanceBuckets]
+    //
     int radius = largeSize/2, angleBucketSize = 360 / numberOfAngles;
     int fsize = (int)getDescriptorSize();
     double inv_log10m = (double)numberOfDistanceBuckets/log10((double)radius);
