@@ -583,9 +583,9 @@ endif()
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
-set(OPENCV_EXTRA_C_FLAGS ${EXTRA_C_FLAGS} CACHE STRING "Extra compiler options" FORCE)
-set(OPENCV_EXTRA_C_FLAGS_RELEASE ${EXTRA_C_FLAGS_RELEASE} CACHE STRING "Extra compiler options for Release build" FORCE)
-set(OPENCV_EXTRA_C_FLAGS_DEBUG ${EXTRA_C_FLAGS_DEBUG} CACHE STRING "Extra compiler options for Debug build" FORCE)
+set(OPENCV_EXTRA_C_FLAGS ${EXTRA_C_FLAGS} CACHE STRING "Extra compiler options")
+set(OPENCV_EXTRA_C_FLAGS_RELEASE ${EXTRA_C_FLAGS_RELEASE} CACHE STRING "Extra compiler options for Release build")
+set(OPENCV_EXTRA_C_FLAGS_DEBUG ${EXTRA_C_FLAGS_DEBUG} CACHE STRING "Extra compiler options for Debug build")
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS ${EXTRA_EXE_LINKER_FLAGS} CACHE STRING "Extra linker flags" FORCE)
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE ${EXTRA_EXE_LINKER_FLAGS_RELEASE} CACHE STRING "Extra linker flags for Release build" FORCE)
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG ${EXTRA_EXE_LINKER_FLAGS_DEBUG} CACHE STRING "Extra linker flags for Debug build" FORCE)
