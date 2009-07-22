@@ -153,7 +153,9 @@ Creates a trackbar and attaches it to the specified window
 int cvCreateTrackbar( \par const char* trackbar\_name, \par const char* window\_name,
                       \par int* value, \par int count, \par CvTrackbarCallback on\_change );
 
-}{CPP}{PYTHON}
+}{CPP}{
+CreateTrackbar(trackbar\_name, window\_name, value, count, on\_change)
+}
 \begin{lstlisting}
 CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \end{lstlisting}
@@ -207,7 +209,7 @@ Assigns callback for mouse events.
 
 \cvexp{
 void cvSetMouseCallback( const char* window\_name, CvMouseCallback on\_mouse, void* param=NULL );
-}{CPP}{PYTHON}
+}{CPP}{SetMouseCallback(window\_name, on\_mouse, param) -> None}
 
 \begin{lstlisting}
 #define CV_EVENT_MOUSEMOVE      0
@@ -276,7 +278,7 @@ Loads an image from a file.
 
 \cvexp{
 IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );
-}{CPP}{PYTHON}
+}{CPP}{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)}
 
 \begin{lstlisting}
 #define CV_LOAD_IMAGE_COLOR       1

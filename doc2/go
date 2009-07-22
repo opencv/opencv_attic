@@ -1,3 +1,4 @@
+make &&
 (
   pdflatex '\newcommand{\genc}{true}\newcommand{\genpy}{true}\input{opencv.tex}' &&
   bibtex opencv &&

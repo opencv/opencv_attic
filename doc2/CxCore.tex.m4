@@ -1,3 +1,4 @@
+include(common.m4)
 \chapter{CXCORE}
 
 \section{Basic Structures}
@@ -6,7 +7,7 @@
 
 \cvstruct{CvPoint}\label{CvPoint}
 
-2D point with integer coordinates (usually zero-based)
+2D point with integer coordinates (usually zero-based).
 
 \begin{lstlisting}
 typedef struct CvPoint
@@ -553,7 +554,9 @@ CvSize size,
 int depth, 
 
 int channels );
-}{CPP}{PYTHON}
+}{CPP}{
+CreateImageHeader(size, depth, channels) -> image
+}
 
 \begin{description}
 \cvarg{size}{Image width and height}
@@ -575,6 +578,7 @@ iplCreateImageHeader( channels, 0, depth,
 
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{ReleaseImageHeader}\label{ReleaseImageHeader}
 
 Deallocates an image header.
@@ -598,7 +602,6 @@ if( image )
 \end{lstlisting}
 
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
-
 
 \cvfunc{ReleaseImage}\label{ReleaseImage}
 
@@ -626,7 +629,6 @@ if( *image )
 
 \end{lstlisting}
 
-
 \cvfunc{InitImageHeader}\label{InitImageHeader}
 
 Initializes an image header that was previously allocated.
@@ -647,6 +649,8 @@ IplImage* cvInitImageHeader( \par IplImage* image,\par CvSize size,\par int dept
 \end{description}
 
 The returned \texttt{IplImage*} points to the initialized header.
+
+')
 
 \cvfunc{CloneImage}\label{CloneImage}
 
@@ -771,7 +775,7 @@ Creates a matrix header and allocates the matrix data.
 
 CvMat* cvCreateMat( \par int rows,\par int cols,\par int type );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateMat(row, cols, type) -> mat}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -796,7 +800,7 @@ Creates a matrix header but does not allocate the matrix data.
 
 CvMat* cvCreateMatHeader( \par int rows,\par int cols,\par int type );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateMatHeader(rows, cols, type) -> mat}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -806,7 +810,7 @@ CvMat* cvCreateMatHeader( \par int rows,\par int cols,\par int type );
 
 The function \texttt{cvCreateMatHeader} allocates a new matrix header and returns a pointer to it. The matrix data can then be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
-
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{ReleaseMat}\label{ReleaseMat}
 
 Deallocates a matrix.
@@ -904,7 +908,7 @@ CvMat mat;
 cvInitMatHeader( &mat, rows, cols, type, data, CV\_AUTOSTEP );
 
 \end{lstlisting}
-
+')
 
 \cvfunc{CloneMat}\label{CloneMat}
 
@@ -930,11 +934,15 @@ Creates the header and allocates the data for a multi-dimensional dense array.
 
 CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateMatND(dims, type)}
 
 \begin{description}
+ifelse(TARGET_LANGUAGE,py,`
+\cvarg{dims}{List or tuple of array dimensions, up to 32 in length.}
+',`
 \cvarg{dims}{Number of array dimensions. This must not exceed CV\_MAX\_DIM (32 by default, but can be changed at build time).}
 \cvarg{sizes}{Array of dimension sizes.}
+')
 \cvarg{type}{Type of array elements, see \cross{CreateMat}.}
 \end{description}
 
@@ -955,16 +963,21 @@ Creates a new matrix header but does not allocate the matrix data.
 
 CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateMatNDHeader(dims, type)}
 
 \begin{description}
+ifelse(TARGET_LANGUAGE,py,`
+\cvarg{dims}{List or tuple of array dimensions, up to 32 in length.}
+',`
 \cvarg{dims}{Number of array dimensions}
 \cvarg{sizes}{Array of dimension sizes}
+')
 \cvarg{type}{Type of array elements, see \cross{CreateMat}}
 \end{description}
 
 The function \texttt{cvCreateMatND} allocates a header for a multi-dimensional dense array. The array data can further be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{ReleaseMatND}\label{ReleaseMatND}
 
 Deallocates a multi-dimensional array.
@@ -1065,6 +1078,7 @@ int cvIncRefData( CvArr* arr );
 The function \texttt{cvIncRefData} increments \cross{CvMat} or
 \cross{CvMatND} data reference counter and returns the new counter value
 if the reference counter pointer is not NULL, otherwise it returns zero.
+')
 
 \cvfunc{CreateData}\label{CreateData}
 
@@ -1074,7 +1088,7 @@ Allocates array data
 
 void cvCreateData( CvArr* arr );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateData(arr)}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -1086,6 +1100,8 @@ multi-dimensional array data. Note that in the case of matrix types OpenCV
 allocation functions are used and in the case of IplImage they are used
 unless \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} was called. In the
 latter case IPL functions are used to allocate the data.
+
+ifelse(TARGET_LANGUAGE,c,`
 
 \cvfunc{ReleaseData}\label{ReleaseData}
 
@@ -1104,6 +1120,8 @@ void cvReleaseData( CvArr* arr );
 
 The function \texttt{cvReleaseData} releases the array data. In the case of \cross{CvMat} or \cross{CvMatND} it simply calls cvDecRefData(), that is the function can not deallocate external data. See also the note to \cross{CreateData}.
 
+')
+
 \cvfunc{SetData}\label{SetData}
 
 Assigns user data to the array header.
@@ -1112,7 +1130,7 @@ Assigns user data to the array header.
 
 void cvSetData( CvArr* arr, void* data, int step );
 
-}{CPP}{PYTHON}
+}{CPP}{SetData(arr, data, step)}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -1123,6 +1141,7 @@ void cvSetData( CvArr* arr, void* data, int step );
 
 The function \texttt{cvSetData} assigns user data to the array header. Header should be initialized before using cvCreate*Header, cvInit*Header or \cross{Mat} (in the case of matrix) function.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{GetRawData}\label{GetRawData}
 
 Retrieves low-level information about the array.
@@ -1161,7 +1180,7 @@ for( y = 0; y < size.height; y++, data += step )
         data[x] = (float)fabs(data[x]);
 
 \end{lstlisting}
-
+')
 
 \cvfunc{GetMat}\label{GetMat}
 
@@ -1171,13 +1190,15 @@ Returns matrix header for arbitrary array.
 
 CvMat* cvGetMat( const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{GetMat(arr) -> cvmat }
 
 \begin{description}
 \cvarg{arr}{Input array}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{header}{Pointer to \cross{CvMat} structure used as a temporary buffer}
 \cvarg{coi}{Optional output parameter for storing COI}
 \cvarg{allowND}{If non-zero, the function accepts multi-dimensional dense arrays (CvMatND*) and returns 2D (if CvMatND has two dimensions) or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions). The array must be continuous.}
+')
 \end{description}
 
 The function \texttt{cvGetMat} returns a matrix header for the input array that can be a matrix - 
@@ -1198,11 +1219,13 @@ Returns image header for arbitrary array.
 
 IplImage* cvGetImage( const CvArr* arr, IplImage* image\_header );
 
-}{CPP}{PYTHON}
+}{CPP}{GetImage(arr) -> iplimage}
 
 \begin{description}
 \cvarg{arr}{Input array}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{image\_header}{Pointer to \texttt{IplImage} structure used as a temporary buffer}
+')
 \end{description}
 
 The function \texttt{cvGetImage} returns the image header for the input array
@@ -1223,16 +1246,21 @@ Creates sparse array.
 
 CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateSparseMat(dims, type) -> cvmat}
 
 \begin{description}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{dims}{Number of array dimensions. In contrast to the dense matrix, the number of dimensions is practically unlimited (up to $2^{16}$).}
 \cvarg{sizes}{Array of dimension sizes}
+',`
+\cvarg{dims}{List or tuple of array dimensions.}
+')
 \cvarg{type}{Type of array elements. The same as for CvMat}
 \end{description}
 
 The function \texttt{cvCreateSparseMat} allocates a multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReal} returns zero for every index.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
 Deallocates sparse array.
@@ -1249,7 +1277,7 @@ void cvReleaseSparseMat( CvSparseMat** mat );
 
 
 The function \texttt{cvReleaseSparseMat} releases the sparse array and clears the array pointer upon exit.
-
+')
 
 \cvfunc{CloneSparseMat}\label{CloneSparseMat}
 
@@ -1259,7 +1287,7 @@ Creates full copy of sparse array.
 
 CvSparseMat* cvCloneSparseMat( const CvSparseMat* mat );
 
-}{CPP}{PYTHON}
+}{CPP}{CloneSparseMat(mat) -> mat}
 
 \begin{description}
 \cvarg{mat}{Input array}
@@ -1277,11 +1305,13 @@ Returns matrix header corresponding to the rectangular sub-array of input image 
 
 CvMat* cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect );
 
-}{CPP}{PYTHON}
+}{CPP}{GetSubRect(arr, rect) -> cvmat}
 
 \begin{description}
 \cvarg{arr}{Input array}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{submat}{Pointer to the resultant sub-array header}
+')
 \cvarg{rect}{Zero-based coordinates of the rectangle of interest}
 \end{description}
 
@@ -1383,6 +1413,7 @@ CvSize cvGetSize( const CvArr* arr );
 The function \texttt{cvGetSize} returns number of rows (CvSize::height) and number of columns (CvSize::width) of the input matrix or image. In the case of image the size of ROI is returned.
 
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{InitSparseMatIterator}\label{InitSparseMatIterator}
 
 Initializes sparse array elements iterator.
@@ -1447,6 +1478,7 @@ printf( "\nTotal sum = %g\n", sum );
 
 \end{lstlisting}
 
+')
 
 \cvfunc{GetElemType}\label{GetElemType}
 
@@ -1472,6 +1504,7 @@ as described in \cross{CreateMat} discussion: \texttt{CV\_8UC1}
 
 Return number of array dimensions and their sizes or the size of a particular dimension.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvexp{
 int cvGetDims( const CvArr* arr, int* sizes=NULL );
 }{CPP}{PYTHON}
@@ -1513,7 +1546,18 @@ for( i = 0; i < dims; i++ )
     total *= cvGetDimsSize( arr, i );
 
 \end{lstlisting}
+',`
+\cvexp{C}{CPP}{GetDims(arr)}
 
+\begin{description}
+\cvarg{arr}{Input array}
+\end{description}
+
+
+The function \texttt{cvGetDims} returns a list of array dimensions.
+In the case of \texttt{IplImage} or \cross{CvMat} it always
+returns a list of length 2.
+')
 
 \ifplastex
 \cvfunc{Ptr1D} \cvexp{uchar* cvPtr1D( const CvArr* arr, int idx0, int* type=NULL );}{}{}
@@ -1686,8 +1730,7 @@ The functions \texttt{cvSet*D} assign the new value to a particular array elemen
 \cvfunc{SetReal1D} \cvexp{void cvSetReal1D( CvArr* arr, int idx0, double value );}{}{}
 \cvfunc{SetReal2D} \cvexp{void cvSetReal2D( CvArr* arr, int idx0, int idx1, double value );}{}{}
 \cvfunc{SetReal3D} \cvexp{void cvSetReal3D( CvArr* arr, int idx0, int idx1, int idx2, double value );}{}{}
-\cvfunc{SetRealND}
-Change a specific array element.
+\cvfunc{SetRealND} Change a specific array element.
 \cvexp{void cvSetRealND( CvArr* arr, int* idx, double value );}{}{}
 
 \else
@@ -1852,17 +1895,20 @@ Changes shape of matrix/image without copying data.
 
 CvMat* cvReshape( const CvArr* arr, CvMat* header, int new\_cn, int new\_rows=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{Reshape(arr, new\_cn, new\_rows=0) -> cvmat}
 
 \begin{description}
 \cvarg{arr}{Input array}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{header}{Output header to be filled}
+')
 \cvarg{new\_cn}{New number of channels. 'new\_cn = 0' means that the number of channels remains unchanged.}
 \cvarg{new\_rows}{New number of rows. 'new\_rows = 0' means that the number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value.}
 \end{description}
 
 The function \texttt{cvReshape} initializes the CvMat header so that it points to the same data as the original array but has a different shape - different number of channels, different number of rows, or both.
 
+ifelse(TARGET_LANGUAGE,c,`
 For example, the following code creates one image buffer and two image headers, the first is for a 320x240x3 image and the second is for a 960x240x1 image:
 
 \begin{lstlisting}
@@ -1884,6 +1930,7 @@ CvMat row_header, *row;
 row = cvReshape( mat, &row_header, 0, 1 );
 
 \end{lstlisting}
+')
 
 \cvfunc{ReshapeMatND}\label{ReshapeMatND}
 
@@ -1894,27 +1941,33 @@ Changes the shape of a multi-dimensional array without copying the data.
 CvArr* cvReshapeMatND( const CvArr* arr,
                        int sizeof\_header, CvArr* header,
                        int new\_cn, int new\_dims, int* new\_sizes );
-}{CPP}{PYTHON}
+}{CPP}{ReshapeMatND(arr, new\_cn, new\_dims) -> cvmat}
 
+ifelse(TARGET_LANGUAGE,c,`
 \begin{lstlisting}
 #define cvReshapeND( arr, header, new\_cn, new\_dims, new\_sizes )   \
       cvReshapeMatND( (arr), sizeof(*(header)), (header),         \
                       (new\_cn), (new\_dims), (new\_sizes))
 \end{lstlisting}
-
+')
 
 \begin{description}
 \cvarg{arr}{Input array}
+ifelse(TARGET_LANGUAGE,c,`
 \cvarg{sizeof\_header}{Size of output header to distinguish between IplImage, CvMat and CvMatND output headers}
 \cvarg{header}{Output header to be filled}
 \cvarg{new\_cn}{New number of channels. $\texttt{new\_cn} = 0$ means that the number of channels remains unchanged.}
 \cvarg{new\_dims}{New number of dimensions. $\texttt{new\_dims} = 0$ means that the number of dimensions remains the same.}
 \cvarg{new\_sizes}{Array of new dimension sizes. Only $\texttt{new\_dims}-1$ values are used, because the total number of elements must remain the same.
 Thus, if $\texttt{new\_dims} = 1$, \texttt{new\_sizes} array is not used.}
+',`
+\cvarg{new\_dims}{List of new dimensions.}
+')
 \end{description}
 
 The function \texttt{cvReshapeMatND} is an advanced version of \cross{Reshape} that can work with multi-dimensional arrays as well (though it can work with ordinary images and matrices) and change the number of dimensions. Below are the two samples from the \cross{Reshape} description rewritten using \cross{ReshapeMatND}:
 
+ifelse(TARGET_LANGUAGE,c,`
 \begin{lstlisting}
 
 IplImage* color_img = cvCreateImage( cvSize(320,240), IPL_DEPTH_8U, 3 );
@@ -1930,6 +1983,7 @@ CvMat row_header, *row;
 row = cvReshapeND( mat, &row_header, 0, 1, 0 );
 
 \end{lstlisting}
+')
 
 \cvfunc{Repeat}\label{Repeat}
 
@@ -4018,32 +4072,32 @@ random locations within a 2d array.
 
 \begin{lstlisting}
 
-/* let noisy\_screen be the floating-point 2d array that is to be "crapped" */
-CvRNG rng\_state = cvRNG(0xffffffff);
+/* let noisy_screen be the floating-point 2d array that is to be "crapped" */
+CvRNG rng_state = cvRNG(0xffffffff);
 int i, pointCount = 1000;
 /* allocate the array of coordinates of points */
-CvMat* locations = cvCreateMat( pointCount, 1, CV\_32SC2 );
+CvMat* locations = cvCreateMat( pointCount, 1, CV_32SC2 );
 /* arr of random point values */
-CvMat* values = cvCreateMat( pointCount, 1, CV\_32FC1 );
-CvSize size = cvGetSize( noisy\_screen );
+CvMat* values = cvCreateMat( pointCount, 1, CV_32FC1 );
+CvSize size = cvGetSize( noisy_screen );
 
-cvRandInit( &rng\_state,
+cvRandInit( &rng_state,
             0, 1, /* use dummy parameters now and adjust them further */
             0xffffffff /* just use a fixed seed here */,
-            CV\_RAND\_UNI /* specify uniform type */ );
+            CV_RAND_UNI /* specify uniform type */ );
 
 /* initialize the locations */
-cvRandArr( &rng\_state, locations, CV\_RAND\_UNI, cvScalar(0,0,0,0), 
+cvRandArr( &rng_state, locations, CV_RAND_UNI, cvScalar(0,0,0,0), 
 	   cvScalar(size.width,size.height,0,0) );
 
 /* modify RNG to make it produce normally distributed values */
-rng\_state.disttype = CV\_RAND\_NORMAL;
-cvRandSetRange( &rng\_state,
+rng_state.disttype = CV_RAND_NORMAL;
+cvRandSetRange( &rng_state,
                 30 /* deviation */,
                 100 /* average point brightness */,
                 -1 /* initialize all the dimensions */ );
 /* generate values */
-cvRandArr( &rng\_state, values, CV\_RAND\_NORMAL,
+cvRandArr( &rng_state, values, CV_RAND_NORMAL,
            cvRealScalar(100), // average intensity
            cvRealScalar(30) // deviation of the intensity
            );
@@ -4053,7 +4107,7 @@ for( i = 0; i < pointCount; i++ )
 {
     CvPoint pt = *(CvPoint*)cvPtr1D( locations, i, 0 );
     float value = *(float*)cvPtr1D( values, i, 0 );
-    *((float*)cvPtr2D( noisy\_screen, pt.y, pt.x, 0 )) += value;
+    *((float*)cvPtr2D( noisy_screen, pt.y, pt.x, 0 )) += value;
 }
 
 /* not to forget to release the temporary arrays */
@@ -6879,18 +6933,17 @@ Initializes the line iterator.
 
 int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt2,\par CvLineIterator* line\_iterator,\par int connectivity=8,\par int left\_to\_right=0 );
 
-}{CPP}{PYTHON}
+}{CPP}{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0)}
 
 \begin{description}
 \cvarg{image}{Image to sample the line from}
 \cvarg{pt1}{First ending point of the line segment}
 \cvarg{pt2}{Second ending point of the line segment}
-\cvarg{line\_iterator}{Pointer to the line iterator state structure}
-\cvarg{connectivity}{The scanned line connectivity, 4 or 8
-is always scanned from the left-most point to the right-most
-of \texttt{pt1} and \texttt{pt2} ($ \texttt{left\_to\_right} \ne 0$), or it
-is scanned in the specified order, from \texttt{pt1} to \texttt{pt2}
-($ \texttt{left\_to\_right} = 0 $ )}
+ONLY_C(\cvarg{line\_iterator}{Pointer to the line iterator state structure})
+\cvarg{connectivity}{The scanned line connectivity, 4 or 8.}
+\cvarg{left\_to\_right}{
+If ($ \texttt{left\_to\_right} = 0 $ ) then the line is scanned in the specified order, from \texttt{pt1} to \texttt{pt2}.
+If ($ \texttt{left\_to\_right} \ne 0$) the line is scanned from left-most point to right-most.}
 \end{description}
 
 The function \texttt{cvInitLineIterator} initializes the line
@@ -6902,6 +6955,7 @@ two ending points may be retrieved by successive calls of
 calculated one by one using a 4-connected or 8-connected Bresenham
 algorithm.
 
+ONLY_C(
 \cvfunc{Example: Using line iterator to calculate the sum of pixel values along the color line}
 
 \begin{lstlisting}
@@ -6935,6 +6989,7 @@ CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 }
 
 \end{lstlisting}
+)
 
 \cvfunc{ClipLine}\label{ClipLine}
 
@@ -7942,9 +7997,10 @@ The function \texttt{cvReadRawDataSlice} reads one or more elements from
 the file node, representing a sequence, to a user-specified array. The
 total number of read sequence elements is a product of \texttt{total}
 and the number of components in each array element. For example, if
-dt=\texttt{2if}, the function will read \texttt{total}$\times$3 sequence elements. As
-with any sequence, some parts of the file node sequence may be skipped or
-read repeatedly by repositioning the reader using \cross{SetSeqReaderPos}.
+dt=\texttt{2if}, the function will read $\texttt{total} \times 3$
+sequence elements. As with any sequence, some parts of the file node
+sequence may be skipped or read repeatedly by repositioning the reader
+using \cross{SetSeqReaderPos}.
 
 \subsection{RTTI and Generic Functions}
 

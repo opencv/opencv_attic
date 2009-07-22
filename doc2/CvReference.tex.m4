@@ -1,4 +1,5 @@
-f\chapter{CvReference}
+include(common.m4)
+\chapter{CvReference}
 \section{Image Processing}
 
 Note: The chapter describes functions for image processing and
@@ -1927,8 +1928,8 @@ Finds the contours in a binary image.
 \cvexp{
 int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** first\_contour,\par
                     int header\_size=sizeof(CvContour),\par int mode=CV\_RETR\_LIST,\par
-                    int method=CV\_CHAIN\_APPROX\_SIMPLE,\par CvPoint offset=cvPoint(0,\par0) );
-}{CPP}{PYTHON}
+                    int method=CV\_CHAIN\_APPROX\_SIMPLE,\par CvPoint offset=cvPoint(0,0) );
+}{CPP}{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
 
 \begin{description}
 \cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as `binary`. To get such a binary image from grayscale, one may use \cross{Threshold}, \cross{AdaptiveThreshold} or \cross{Canny}. The function modifies the source image's content}
@@ -1966,6 +1967,7 @@ connected component detection. Contours can be also used for shape
 analysis and object recognition - see \texttt{squares.c} in the OpenCV
 sample directory.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{StartFindContours}\label{StartFindContours}
 
 Initializes the contour scanning process.
@@ -2039,6 +2041,7 @@ CvSeq* cvEndFindContours( \par CvContourScanner* scanner );
 \end{description}
 
 The function \texttt{cvEndFindContours} finishes the scanning process and returns a pointer to the first contour on the highest level.
+')
 
 \cvfunc{PyrMeanShiftFiltering}
 
@@ -2051,7 +2054,7 @@ void cvPyrMeanShiftFiltering( \par const CvArr* src, \par CvArr* dst,
      \par CvTermCriteria termcrit=\par cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1));
 
 }{CPP}{PyrMeanShiftFiltering(src,dst,sp,sr,max\_level=1,
-       termcrit=\par cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1))-> None}
+       termcrit=\par (CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1))-> None}
 
 \begin{description}
 \cvarg{src}{The source 8-bit, 3-channel image.}
@@ -3156,7 +3159,7 @@ Computes the "minimal work" distance between two weighted point configurations.
 
 \cvexp{
 float cvCalcEMD2( \par const CvArr* signature1,\par const CvArr* signature2,\par int distance\_type,\par CvDistanceFunction distance\_func=NULL,\par const CvArr* cost\_matrix=NULL,\par CvArr* flow=NULL,\par float* lower\_bound=NULL,\par void* userdata=NULL );
-}{CPP}{PYTHON}
+}{CPP}{CalcEMD2(signature1, signature2, distance\_type, distance\_func = None, cost\_matrix=None, flow=None, lower\_bound=None, userdata = None) -> float}
 
 \begin{lstlisting}
 typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
@@ -3237,7 +3240,9 @@ Approximates polygonal curve(s) with the specified precision.
 
 \cvexp{
 CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemStorage* storage,\par int method,\par double parameter,\par int parameter2=0 );
-}{CPP}{PYTHON}
+}{CPP}{
+ApproxPoly(src\_seq, storage, method, parameter=0, parameter2=0)
+}
 
 \begin{description}
 \cvarg{src\_seq}{Sequence of an array of points}
@@ -3248,7 +3253,10 @@ CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemS
 \cvarg{parameter2}{If case if \texttt{src\_seq} is a sequence, the parameter determines whether the single sequence should be approximated or all sequences on the same level or below \texttt{src\_seq} (see \cross{FindContours} for description of hierarchical contour structures). If \texttt{src\_seq} is an array CvMat* of points, the parameter specifies whether the curve is closed (\texttt{parameter2}!=0) or not (\texttt{parameter2} =0)}
 \end{description}
 
-The function \texttt{cvApproxPoly} approximates one or more curves and returns the approximation result[s]. In the case of multiple curves, the resultant tree will have the same structure as the input one (1:1 correspondence).
+The function \texttt{cvApproxPoly} approximates one or more curves and
+returns the approximation result[s]. In the case of multiple curves,
+the resultant tree will have the same structure as the input one (1:1
+correspondence).
 
 \cvfunc{BoundingRect}\label{BoundingRect}
 
@@ -4008,28 +4016,42 @@ The function \texttt{cvSubdivDelaunay2DInsert} inserts a single point into a sub
 
 \cvfunc{Subdiv2DLocate}\label{Subdiv2DLocate}
 
-Inserts a single point into a Delaunay triangulation.
+Returns the location of a point within a Delaunay triangulation.
 
 \cvexp{
 CvSubdiv2DPointLocation  cvSubdiv2DLocate( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt,\par CvSubdiv2DEdge* edge,\par CvSubdiv2DPoint** vertex=NULL );
-}{CPP}{PYTHON}
+}{CPP}{Subdiv2DLocate(subdiv, pt) -> (loc, where)}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
 \cvarg{pt}{The point to locate}
-\cvarg{edge}{The output edge the point falls onto or right to}
-\cvarg{vertex}{Optional output vertex double pointer the input point coinsides with}
+ONLY_C(\cvarg{edge}{The output edge the point falls onto or right to})
+ONLY_C(\cvarg{vertex}{Optional output vertex double pointer the input point coinsides with})
+ONLY_PYTHON(\cvarg{loc}{The location of the point within the triangulation})
+ONLY_PYTHON(\cvarg{where}{The edge or vertex.  See below.})
 \end{description}
 
 The function \texttt{cvSubdiv2DLocate} locates the input point within the subdivision. There are 5 cases:
 
+ONLY_C(`
 \begin{itemize}
- \item The point falls into some facet. The function returns \\texttt{CV\_PTLOC\_INSIDE} and \texttt{*edge} will contain one of edges of the facet.
- \item The point falls onto the edge. The function returns \\texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{*edge} will contain this edge.
- \item The point coinsides with one of the subdivision vertices. The function returns \\texttt{CV\_PTLOC\_VERTEX} and \texttt{*vertex} will contain a pointer to the vertex.
- \item The point is outside the subdivsion reference rectangle. The function returns \\texttt{CV\_PTLOC\_OUTSIDE\_RECT} and no pointers are filled.
+ \item The point falls into some facet. The function returns \texttt{CV\_PTLOC\_INSIDE} and \texttt{*edge} will contain one of edges of the facet.
+ \item The point falls onto the edge. The function returns \texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{*edge} will contain this edge.
+ \item The point coincides with one of the subdivision vertices. The function returns \texttt{CV\_PTLOC\_VERTEX} and \texttt{*vertex} will contain a pointer to the vertex.
+ \item The point is outside the subdivsion reference rectangle. The function returns \texttt{CV\_PTLOC\_OUTSIDE\_RECT} and no pointers are filled.
  \item One of input arguments is invalid. A runtime error is raised or, if silent or "parent" error processing mode is selected, \\texttt{CV\_PTLOC\_ERROR} is returnd.
 \end{itemize}
+')
+
+ONLY_PYTHON(
+\begin{itemize}
+ \item The point falls into some facet.                          \texttt{loc} is \texttt{CV\_PTLOC\_INSIDE} and \texttt{where} is one of edges of the facet.
+ \item The point falls onto the edge.                            \texttt{loc} is \texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{where} is the edge.
+ \item The point coincides with one of the subdivision vertices. \texttt{loc} is \texttt{CV\_PTLOC\_VERTEX} and \texttt{where} is the vertex.
+ \item The point is outside the subdivsion reference rectangle.  \texttt{loc} is \texttt{CV\_PTLOC\_OUTSIDE\_RECT} and \texttt{where} is None.
+ \item One of input arguments is invalid. The function raises an exception.
+\end{itemize}
+)
 
 \cvfunc{FindNearestPoint2D}\label{FindNearestPoint2D}
 
@@ -4441,7 +4463,9 @@ Calculates the optical flow for a sparse feature set using the iterative Lucas-K
 
 \cvexp{
 void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prev\_pyr,\par CvArr* curr\_pyr,\par const CvPoint2D32f* prev\_features,\par CvPoint2D32f* curr\_features,\par int count,\par CvSize win\_size,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
-}{CPP}{PYTHON}
+}{CPP}{
+CalcOpticalFlowPyrLK(  prev, curr, prev\_pyr, curr\_pyr, prev\_features, CvSize win\_size, int level, criteria, flags, guesses = None) -> (curr\_features, status, track\_error)
+}
 
 \begin{description}
 \cvarg{prev}{First frame, at time \texttt{t}}
@@ -4460,8 +4484,9 @@ void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par 
 \begin{description}
   \cvarg{CV\_LKFLOW\_PYR\_A\_READY}{pyramid for the first frame is precalculated before the call}
   \cvarg{CV\_LKFLOW\_PYR\_B\_READY}{ pyramid for the second frame is precalculated before the call}
-  \cvarg{CV\_LKFLOW\_INITIAL\_GUESSES}{array B contains initial coordinates of features before the function call}
+  ONLY_C(\cvarg{CV\_LKFLOW\_INITIAL\_GUESSES}{array B contains initial coordinates of features before the function call})
 \end{description}}
+ONLY_PYTHON(`\cvarg{guesses}{optional array of estimated coordinates of features in second frame, with same length as \texttt{prev_features}}')
 \end{description}
 
 The function \texttt{cvCalcOpticalFlowPyrLK} implements the sparse iterative version of the Lucas-Kanade optical flow in pyramids
@@ -5824,14 +5849,14 @@ Finds the positions of the internal corners of the chessboard.
 
 \cvexp{
 int cvFindChessboardCorners( \par const void* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int* corner\_count=NULL,\par int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH );
-}{CPP}{PYTHON}
+}{CPP}{FindChessboardCorners(image, pattern\_size, flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH) -> corners}
 
 \begin{description}
 \cvarg{image}{Source chessboard view; it must be an 8-bit grayscale or color image}
 \cvarg{pattern\_size}{The number of inner corners per chessboard row and column}
 ( pattern\_size = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
 \cvarg{corners}{The output array of corners detected}
-\cvarg{corner\_count}{The output corner counter. If it is not NULL, it stores the number of corners found}
+ONLY_C(`\cvarg{corner\_count}{The output corner counter. If it is not NULL, it stores the number of corners found}')
 \cvarg{flags}{Various operation flags, can be 0 or a combination of the following values:
 \begin{description}
  \cvarg{CV\_CALIB\_CB\_ADAPTIVE\_THRESH}{use adaptive thresholding to convert the image to black and white, rather than a fixed threshold level (computed from the average image brightness).}
