@@ -2,5 +2,13 @@
 
 tput clear
 
-TEXINPUTS=../: python renderer.py > a || exit
-TEXINPUTS=$PWD: make html
+cd .. && make && cd -
+mkdir -p _build/html/python
+
+cp index-c.rst index.rst
+TEXINPUTS=../: python renderer.py c > a || exit
+TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C Reference' -d _build/doctrees . _build/html
+
+cp index-py.rst index.rst
+TEXINPUTS=../: python renderer.py py > a || exit
+TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 Python Reference' -d _build/doctrees . _build/html/python

@@ -1,4 +1,3 @@
-
 from plasTeX import Base
 from plasTeX.Base.LaTeX.Verbatim import verbatim
 from plasTeX.Base.LaTeX import Sectioning
@@ -75,4 +74,44 @@ class section(Sectioning.section):
             return filename
         raise AttributeError, 'This section does not generate a new file'
 
+class xifthenelse(Base.Command):
+    args = 'test then else' 
 
+    class _not(Base.Command):
+        macroName = 'not'
+
+    class _and(Base.Command):
+        macroName = 'and'
+
+    class _or(Base.Command):
+        macroName = 'or'
+
+    class NOT(Base.Command):
+        pass
+
+    class AND(Base.Command):
+        pass
+
+    class OR(Base.Command):
+        pass
+
+    class openParen(Base.Command):
+        macroName = '('
+
+    class closeParen(Base.Command):
+        macroName = ')'
+
+    class isodd(Base.Command):
+        args = 'number:int'
+
+    class isundefined(Base.Command):
+        args = 'command:str'
+
+    class equal(Base.Command):
+        args = 'first second'
+
+    class lengthtest(Base.Command):
+        args = 'test'
+
+    class boolean(Base.Command):
+        args = 'name:str'

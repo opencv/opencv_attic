@@ -129,8 +129,8 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_cvexp(self, node):
     self.indent = -1
     self.in_func = False
-    decl = unicode(node.attributes['c']).rstrip(' ;')  # remove trailing ';'
-    r = u"\n\n.. cfunction:: %s\n\n" % decl
+    decl = unicode(node.attributes[self.language]).rstrip(' ;')  # remove trailing ';'
+    r = u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'py' : 'function'}[self.language], decl)
     self.indent = 4
     if self.func_short_desc != '':
       r += self.ind() + self.func_short_desc + '\n\n'
@@ -232,14 +232,17 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def gen_reference(self, name):
     """
-    try to guess whether *t* is a function, struct or macro
+    try to guess whether *name* is a function, struct or macro
     and if yes, generate the appropriate reference markup
     """
     name = name.strip()
     if name[0:2] == 'cv':
         return u":cfunc:`%s`" % self.fixup_funcname(name)
     elif 'cv'+name in opencv_function_names:
-        return u":cfunc:`cv%s`" % self.fixup_funcname(name)
+        if self.language in ['c', 'cpp']:
+            return u":cfunc:`cv%s`" % self.fixup_funcname(name)
+        else:
+            return u":func:`%s`" % self.fixup_funcname(name)
     elif name[0:2] == 'Cv' or name[0:3] == 'Ipl':
         return u":ctype:`%s`" % name
     elif name[0:2] == 'CV':
@@ -354,6 +357,23 @@ class reStructuredTextRenderer(BaseRenderer):
     s = s.replace(u'\xd7', "#<d7>")
     return s
 
+  def do_ifthenelse(self, node):
+    # print "IFTHENELSE: [%s],[%s],[%s]" % (node.attributes['test'], str(node.attributes['then']), node.attributes['else'])
+    print "CONDITION", unicode(node.attributes['test']).strip() == u'true'
+    if unicode(node.attributes['test']).strip() == u'true':
+      print "TRUE: [%s]" % str(node.attributes['then'])
+      return unicode(node.attributes['then'])
+    else:
+      return unicode(node.attributes['else'])
+
+  def do_equal(self, node):
+    first = unicode(node.attributes['first']).strip()
+    second = unicode(node.attributes['second']).strip()
+    if first == second:
+      return u'true'
+    else:
+      return u'false'
+
   def textDefault(self, node):
     if self.in_func:
       self.func_short_desc += self.fix_quotes(unicode(node)).strip(" ")
@@ -369,49 +389,32 @@ from plasTeX.TeX import TeX
 import os
 import pickle
 
-def parse_documentation_source():
+def parse_documentation_source(language):
     # Instantiate a TeX processor and parse the input text
     tex = TeX()
     tex.ownerDocument.config['files']['split-level'] = 0
     #tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
 
-    src0 = r'''
-    \documentclass{book}
-    \usepackage{myopencv}
-    \begin{document}'''
-
-    src1 = r'''
-    \end{document}
-    '''
     if 1:
-      tex.input(open("../simple-opencv.tex"))
+        tex.input("\\input{online-opencv-%s.tex}" % language)
     else:
-      lines = list(open("../CvReference.tex"))
-      LINES = 80
-      tex.input(src0 + "".join(lines[:LINES]) + src1)
+        src0 = r'''
+        \documentclass{book}
+        \usepackage{myopencv}
+        \begin{document}'''
+
+        src1 = r'''
+        \end{document}
+        '''
+        lines = list(open("../CvReference.tex"))
+        LINES = 80
+        tex.input(src0 + "".join(lines[:LINES]) + src1)
 
     return tex.parse()
 
-# pickling does not work right now
-# plastex will need to be patched up
-#
-#document = None
-#if os.path.exists('document.pickle'):
-#    modified = False
-#    dst_si = os.stat('document.pickle')
-#    for file in ['../CxCore.tex', '../CvReference.tex']:
-#        src_si = os.stat(file)
-#        if src_si.st_mtime > dst_si.st_mtime:
-#            modified = True
-#
-#    if not modified:
-#        document = pickle.load(open('document.pickle', 'rb'))
-
-#if document is None:
-#    document = parse_documentation_source()
-#    pickle.dump(document, open('document.pickle', 'wb'))
-
-document = parse_documentation_source()
+language = sys.argv[1]
+document = parse_documentation_source(language)
 
 rest = reStructuredTextRenderer()
+rest.language = language
 rest.render(document)

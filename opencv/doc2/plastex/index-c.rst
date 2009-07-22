@@ -1,5 +1,5 @@
-OpenCV Reference
-================
+OpenCV |version| C Reference
+============================
 
 The OpenCV Wiki is here: http://opencv.willowgarage.com/
 
