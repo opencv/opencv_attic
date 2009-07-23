@@ -276,7 +276,7 @@ static void icvPutImage( CvWindow* window )
 
 static void icvUpdateWindowSize( const CvWindow* window )
 {
-    int width = 0, height = 240; /* init ˆ al taille de base de l'image*/
+    int width = 0, height = 240; /* init Ã  al taille de base de l'image*/
     Rect globalBounds;
     
     GetWindowBounds(window->window, kWindowContentRgn, &globalBounds);
@@ -883,7 +883,7 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
                     ly = ly * window->imageHeight / (content.bottom - content.top - window->trackbarheight);
                 }
 
-                if (lx>0 && ly >0){ /* a remettre dans les coordonnŽes locale */
+                if (lx>0 && ly >0){ /* a remettre dans les coordonnÃ©es locale */
                     window->on_mouse (event, lx, ly, flags, window->on_mouse_param);
                     return noErr;
                 }
@@ -938,13 +938,18 @@ CV_IMPL int cvWaitKey (int maxWait)
 	
 	// wait at least for one event (to allow mouse, etc. processing), exit if maxWait milliseconds passed (nullEvent)
 	UInt32 start = TickCount();
+    int iters=0;
 	do
 	{
 		// remaining time until maxWait is over
 		UInt32 wait = EventTimeToTicks (maxWait / 1000.0) - (TickCount() - start);
-		if (wait < 0)
-			wait = 0;
-		
+		if ((int)wait <= 0)
+        {
+            if( maxWait > 0 && iters > 0 )
+                break;
+            wait = 1;
+        }
+        iters++;
         WaitNextEvent (everyEvent, &theEvent, maxWait > 0 ? wait : kDurationForever, NULL);
 	}
 	while (lastKey == NO_KEY  &&  theEvent.what != nullEvent);

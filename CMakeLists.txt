@@ -145,7 +145,7 @@ set(BUILD_TESTS ON CACHE BOOL "Build tests")
 
 # Build 3rdparty libraries under unix
 # ===================================================
-if(WIN32)
+if(WIN32 OR APPLE)
 	set(OPENCV_BUILD_3RDPARTY_LIBS TRUE  CACHE BOOL "Build 3rd party libraries")
 else()
 	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
