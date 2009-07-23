@@ -625,12 +625,14 @@ void LDetector::setVerbose(bool _verbose)
 
 FernClassifier::FernClassifier()
 {
+    verbose = false;
     clear();
 }
 
 
 FernClassifier::FernClassifier(const FileNode& node)
 {
+    verbose = false;
     clear();
     read(node);
 }
@@ -684,6 +686,7 @@ FernClassifier::FernClassifier(const Vector<Point2f>& points,
                                int _structSize, int _nviews, int _compressionMethod,
                                const PatchGenerator& patchGenerator)
 {
+    verbose = false;
     clear();
     train(points, refimgs, labels, _nclasses, _patchSize,
           _signatureSize, _nstructs, _structSize, _nviews,
@@ -729,7 +732,7 @@ void FernClassifier::read(const FileNode& objnode)
     patchSize.width = patchSize.height = (int)objnode["patch-size"];
     leavesPerStruct = 1 << structSize;
     
-    FileNode _nodes = objnode["nodes"];
+    FileNode _nodes = objnode["features"];
     int i, nfeatures = structSize*nstructs;
     features.resize(nfeatures);
     FileNodeIterator it = _nodes.begin(), it_end = _nodes.end();
@@ -751,7 +754,6 @@ void FernClassifier::read(const FileNode& objnode)
 void FernClassifier::clear()
 {
     signatureSize = nclasses = nstructs = structSize = compressionMethod = leavesPerStruct = 0;
-    verbose = false;
     features.release();
     posteriors.release();
 }
@@ -1235,6 +1237,7 @@ void PlanarObjectDetector::train(const Vector<Mat>& pyr, const Vector<Keypoint>&
 {
     modelROI = Rect(0, 0, pyr[0].cols, pyr[0].rows);
     ldetector = detector;
+    ldetector.setVerbose(verbose);
     modelPoints = keypoints.clone();
     
     fernClassifier.setVerbose(verbose);
