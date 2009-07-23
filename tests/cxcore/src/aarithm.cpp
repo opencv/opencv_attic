@@ -113,7 +113,7 @@ void CxCore_ArithmTestImpl::generate_scalars( int depth )
     {
         CvRNG* rng = ts->get_rng();
         int i;
-        double m = 10.;
+        double m = 3.;
         for( i = 0; i < 4; i++ )
         {
             if( gen_scalars & 1 )
