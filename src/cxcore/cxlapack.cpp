@@ -51,6 +51,7 @@
   #include "clapack.h"
 #endif
 
+#undef abs
 #undef max
 #undef min
 
@@ -718,10 +719,196 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
 
 /////////////////// finding eigenvalues and eigenvectors of a symmetric matrix ///////////////
 
+template<typename Real> static inline Real hypot(Real a, Real b)
+{
+    a = std::abs(a);
+    b = std::abs(b);
+    Real f;
+    if( a > b )
+    {
+        f = b/a;
+        return a*std::sqrt(1 + f*f);
+    }
+    f = a/b;
+    return b*std::sqrt(1 + f*f);
+}
+
+    
+template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool computeEvects, Real eps)
+{
+    int n = _S0.cols, i, j, k, m;
+    
+    if( computeEvects )
+        _E = Mat::eye(n, n, _S0.type());
+    
+    int iters, maxIters = n*n*30;
+    
+    AutoBuffer<uchar> buf(n*2*sizeof(int) + (n*n+n*2+1)*sizeof(Real));
+    Real* S = alignPtr((Real*)(uchar*)buf, sizeof(Real));
+    Real* maxSR = S + n*n;
+    Real* maxSC = maxSR + n;
+    int* indR = (int*)(maxSC + n);
+    int* indC = indR + n;
+    
+    Mat _S(_S0.size(), _S0.type(), S);
+    _S0.copyTo(_S);
+    
+    Real mv;
+    Real* E = (Real*)_E.data;
+    Real* e = (Real*)_e.data;
+    int Sstep = _S.step/sizeof(Real);
+    int estep = _e.cols == 1 ? 1 : _e.step/sizeof(Real);
+    int Estep = _E.step/sizeof(Real);
+    
+    for( k = 0; k < n; k++ )
+    {
+        e[k*estep] = S[(Sstep + 1)*k];
+        if( k < n - 1 )
+        {
+            for( m = k+1, mv = std::abs(S[Sstep*k + m]), i = k+2; i < n; i++ )
+            {
+                Real v = std::abs(S[Sstep*k+i]);
+                if( mv < v )
+                    mv = v, m = i;
+            }
+            maxSR[k] = mv;
+            indR[k] = m;
+        }
+        if( k > 0 )
+        {
+            for( m = 0, mv = std::abs(S[k]), i = 1; i < k; i++ )
+            {
+                Real v = std::abs(S[Sstep*i+k]);
+                if( mv < v )
+                    mv = v, m = i;
+            }
+            maxSC[k] = mv;
+            indC[k] = m;
+        }
+    }
+    
+    for( iters = 0; iters < maxIters; iters++ )
+    {
+        // find index (k,l) of pivot p
+        for( k = 0, mv = maxSR[0], i = 1; i < n-1; i++ )
+        {
+            Real v = maxSR[i];
+            if( mv < v )
+                mv = v, k = i;
+        }
+        int l = indR[k];
+        for( i = 1; i < n; i++ )
+        {
+            Real v = maxSC[i];
+            if( mv < v )
+                mv = v, k = indC[i], l = i;
+        }
+        
+        Real p = S[Sstep*k + l];
+        if( std::abs(p) <= eps )
+            break;
+        Real y = Real((e[estep*l] - e[estep*k])*0.5);
+        Real t = std::abs(y) + hypot(p, y);
+        Real s = hypot(p, t);
+        Real c = t/s;
+        s = p/s; t = (p/t)*p;
+        if( y < 0 )
+            s = -s, t = -t;
+        S[Sstep*k + l] = 0;
+        
+        e[estep*k] -= t;
+        e[estep*l] += t;
+        
+        Real a0, b0;
+        
+#undef rotate
+#define rotate(v0, v1) a0 = v0, b0 = v1, v0 = a0*c - b0*s, v1 = a0*s + b0*c
+        
+        // rotate rows and columns k and l
+        for( i = 0; i < k; i++ )
+            rotate(S[Sstep*i+k], S[Sstep*i+l]);
+        for( i = k+1; i < l; i++ )
+            rotate(S[Sstep*k+i], S[Sstep*i+l]);
+        for( i = l+1; i < n; i++ )
+            rotate(S[Sstep*k+i], S[Sstep*l+i]);
+        
+        // rotate eigenvectors
+        if( computeEvects )
+            for( i = 0; i < n; i++ )
+                rotate(E[Estep*k+i], E[Estep*l+i]);
+        
+#undef rotate
+        
+        for( j = 0; j < 2; j++ )
+        {
+            int idx = j == 0 ? k : l;
+            if( idx < n - 1 )
+            {
+                for( m = idx+1, mv = std::abs(S[Sstep*idx + m]), i = idx+2; i < n; i++ )
+                {
+                    Real v = std::abs(S[Sstep*idx+i]);
+                    if( mv < v )
+                        mv = v, m = i;
+                }
+                maxSR[idx] = mv;
+                indR[idx] = m;
+            }
+            if( idx > 0 )
+            {
+                for( m = 0, mv = std::abs(S[idx]), i = 1; i < idx; i++ )
+                {
+                    Real v = std::abs(S[Sstep*i+idx]);
+                    if( mv < v )
+                        mv = v, m = i;
+                }
+                maxSC[idx] = mv;
+                indC[idx] = m;
+            }
+        }
+    }
+    
+    // sort eigenvalues & eigenvectors
+    for( k = 0; k < n-1; k++ )
+    {
+        m = k;
+        for( i = k+1; i < n; i++ )
+        {
+            if( e[estep*m] < e[estep*i] )
+                m = i;
+        }
+        if( k != m )
+        {
+            std::swap(e[estep*m], e[estep*k]);
+            if( computeEvects )
+                for( i = 0; i < n; i++ )
+                    std::swap(E[Estep*m + i], E[Estep*k + i]);
+        }
+    }
+    
+    return true;
+}
+    
+    
 static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
 {
+    int type = src.type();
+    integer n = src.rows;
+    
+    CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
+    // allow for 1xn eigenvalue matrix too
+    if( !(evals.rows == 1 && evals.cols == n && evals.type() == type) )
+        evals.create(n, 1, type);
+    
+    if( n <= 20 )
+    {
+        if( type == CV_32F )
+            return jacobi<float>(src, evals, evects, computeEvects, FLT_EPSILON);
+        else
+            return jacobi<double>(src, evals, evects, computeEvects, DBL_EPSILON);
+    }
+    
     bool result;
-    integer i, n, m=0, lda, ldv, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
+    integer i, m=0, lda, ldv=n, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
     integer *isupport, *iwork;
     char job[] = { computeEvects ? 'V' : 'N', '\0' };
     char A[] = {'A', '\0'}, L[] = {'L', '\0'};
@@ -729,15 +916,8 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
 
     AutoBuffer<uchar> buf;
 
-    int type = src.type();
     int elem_size = (int)src.elemSize();
     lda = (int)(src.step/elem_size);
-    n = ldv = src.rows;
-
-    CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
-    // allow for 1xn eigenvalue matrix too
-    if( !(evals.rows == 1 && evals.cols == n && evals.type() == type) )
-        evals.create(n, 1, type);
     
     if( computeEvects )
     {
@@ -820,6 +1000,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
     return result;
 }
 
+    
 bool eigen( const Mat& src, Mat& evals )
 {
     Mat evects;

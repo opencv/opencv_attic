@@ -128,7 +128,8 @@ int CvHomographyEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* H
     }
     cvCompleteSymm( &_LtL );
 
-    cvSVD( &_LtL, &_W, 0, &_V, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    //cvSVD( &_LtL, &_W, 0, &_V, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    cvEigenVV( &_LtL, &_V, &_W );
     cvMatMul( &_invHnorm, &_H0, &_Htemp );
     cvMatMul( &_Htemp, &_Hnorm2, &_H0 );
     cvConvertScale( &_H0, H, 1./_H0.data.db[8] );
@@ -211,8 +212,8 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
                   CvMat* __H, int method, double ransacReprojThreshold,
                   CvMat* mask )
 {
-    const double confidence = 0.99;
-    const int maxIters = 1500;
+    const double confidence = 0.995;
+    const int maxIters = 2000;
     bool result = false;
     CvMat *m = 0, *M = 0, *tempMask = 0;
 

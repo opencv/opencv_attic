@@ -564,8 +564,8 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     src_step = src->step ? src->step : CV_STUB_STEP;
     dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
-    if( dst_size.width > src_size.width || dst_size.height > src_size.height )
-        CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
+    //if( dst_size.width > src_size.width || dst_size.height > src_size.height )
+    //    CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
 
     if( CV_ARE_DEPTHS_EQ( src, dst ))
     {

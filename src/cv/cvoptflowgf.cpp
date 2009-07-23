@@ -42,7 +42,11 @@
 
 #include "_cv.h"
 
-// Gunnar Farneback 2D dense optical flow algorithm
+//
+// 2D dense optical flow algorithm from the following paper:
+// Gunnar Farneback. "Two-Frame Motion Estimation Based on Polynomial Expansion".
+// Proceedings of the 13th Scandinavian Conference on Image Analysis, Gothenburg, Sweden
+//
 
 namespace cv
 {
