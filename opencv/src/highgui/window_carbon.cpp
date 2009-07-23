@@ -746,6 +746,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     
     const EventTypeSpec genericWindowEventHandler[] = { 
         { kEventClassMouse, kEventMouseMoved},
+        { kEventClassMouse, kEventMouseDragged},
         { kEventClassMouse, kEventMouseUp},
         { kEventClassMouse, kEventMouseDown},
         { kEventClassWindow, kEventWindowClose },
@@ -823,7 +824,8 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
         switch (eventKind){
         case kEventMouseUp :
         case kEventMouseDown : 
-        case kEventMouseMoved : {
+        case kEventMouseMoved :
+        case kEventMouseDragged : {
             err = CallNextEventHandler(nextHandler, theEvent);
             if (err != eventNotHandledErr)
                 return err;

@@ -33,6 +33,7 @@ int main( int argc, char** argv )
         int i, sample_count = cvRandInt(&rng)%1000 + 1;
         CvMat* points = cvCreateMat( sample_count, 1, CV_32FC2 );
         CvMat* clusters = cvCreateMat( sample_count, 1, CV_32SC1 );
+        cluster_count = MIN(cluster_count, sample_count);
 
         /* generate random sample from multigaussian distribution */
         for( k = 0; k < cluster_count; k++ )
