@@ -263,9 +263,9 @@ void merge(const Vector<Mat>& _mv, Mat& dst)
     {
         Vector<Mat> allsrc(total), alldst(total);
         Vector<int> pairs(total*2);
-        size_t j, k, ni=0;
+        int j, k, ni=0;
 
-        for( i = j = 0; i < mv.size(); i++, j += ni )
+        for( i = 0, j = 0; i < mv.size(); i++, j += ni )
         {
             ni = mv[i].channels();
             for( k = 0; k < ni; k++ )
@@ -346,7 +346,7 @@ void mixChannels( const Vector<Mat>& src, Vector<Mat>& dst,
     if( npairs == 0 )
         return;
 
-    int depth = dst[0].depth(), esz1 = dst[0].elemSize1();
+    int depth = dst[0].depth(), esz1 = (int)dst[0].elemSize1();
     Size size = dst[0].size();
 
     AutoBuffer<uchar> buf(npairs*(sizeof(void*)*2 + sizeof(int)*4));
@@ -364,7 +364,7 @@ void mixChannels( const Vector<Mat>& src, Vector<Mat>& dst,
             CV_Assert( src[i].depth() == depth && src[i].size() == size && 0 <= i0 && i0 < scn );
             isContinuous = isContinuous && src[i].isContinuous();
             srcs[i] = src[i].data + i0*esz1;
-            s1[i] = scn; s0[i] = src[i].step/esz1 - size.width*scn;
+            s1[i] = scn; s0[i] = (int)src[i].step/esz1 - size.width*scn;
         }
         else
         {
@@ -374,7 +374,7 @@ void mixChannels( const Vector<Mat>& src, Vector<Mat>& dst,
         CV_Assert( dst[i].depth() == depth && dst[i].size() == size && 0 <= i1 && i1 < dcn );
         isContinuous = isContinuous && dst[i].isContinuous();
         dsts[i] = dst[i].data + i1*esz1;
-        d1[i] = dcn; d0[i] = dst[i].step/esz1 - size.width*dcn;
+        d1[i] = dcn; d0[i] = (int)(dst[i].step/esz1 - size.width*dcn);
     }
 
     MixChannelsFunc func = 0;
@@ -394,7 +394,7 @@ void mixChannels( const Vector<Mat>& src, Vector<Mat>& dst,
         size.width *= size.height;
         size.height = 1;
     }
-    func( (const void**)srcs, s0, s1, dsts, d0, d1, npairs, size );
+    func( (const void**)srcs, s0, s1, dsts, d0, d1, (int)npairs, size );
 }
 
 
@@ -794,7 +794,7 @@ typedef void (*LUTFunc)( const Mat& src, Mat& dst, const Mat& lut );
 
 void LUT( const Mat& src, const Mat& lut, Mat& dst )
 {
-    int cn = src.channels(), esz1 = lut.elemSize1();
+    int cn = src.channels(), esz1 = (int)lut.elemSize1();
 
     CV_Assert( (lut.channels() == cn || lut.channels() == 1) &&
         lut.rows*lut.cols == 256 && lut.isContinuous() &&

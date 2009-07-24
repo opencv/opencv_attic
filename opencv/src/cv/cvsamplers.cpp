@@ -564,8 +564,8 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     src_step = src->step ? src->step : CV_STUB_STEP;
     dst_step = dst->step ? dst->step : CV_STUB_STEP;
 
-    if( dst_size.width > src_size.width || dst_size.height > src_size.height )
-        CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
+    //if( dst_size.width > src_size.width || dst_size.height > src_size.height )
+    //    CV_ERROR( CV_StsBadSize, "destination ROI must be smaller than source ROI" );
 
     if( CV_ARE_DEPTHS_EQ( src, dst ))
     {
@@ -884,5 +884,14 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
     __END__;
 }
 
+
+void cv::getRectSubPix( const Mat& image, Size patchSize, Point2f center,
+                        Mat& patch, int patchType )
+{
+    patch.create(patchSize, patchType < 0 ? image.type() :
+        CV_MAKETYPE(CV_MAT_DEPTH(patchType),image.channels()));
+    CvMat _image = image, _patch = patch;
+    cvGetRectSubPix(&_image, &_patch, center);
+}
 
 /* End of file. */

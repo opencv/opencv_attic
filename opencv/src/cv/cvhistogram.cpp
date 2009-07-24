@@ -123,7 +123,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         CV_Assert( images.size() == dims && channels.size() == dims );
     
     imsize = images[0].size();
-    int depth = images[0].depth(), esz1 = images[0].elemSize1();
+    int depth = images[0].depth(), esz1 = (int)images[0].elemSize1();
     bool isContinuous = true;
     
     ptrs.resize(dims + 1);
@@ -141,7 +141,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         CV_Assert( 0 <= c && c < nch );
         ptrs[i] = images[i].data + c*esz1;
         deltas[i*2] = nch;
-        deltas[i*2+1] = images[i].step/esz1 - imsize.width*deltas[i*2];
+        deltas[i*2+1] = (int)(images[i].step/esz1 - imsize.width*deltas[i*2]);
     }
     
     if( mask.data )
@@ -150,7 +150,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         isContinuous = isContinuous && mask.isContinuous();
         ptrs[dims] = mask.data;
         deltas[dims*2] = 1;
-        deltas[dims*2 + 1] = mask.step/mask.elemSize1();
+        deltas[dims*2 + 1] = (int)(mask.step/mask.elemSize1());
     }
     
     if( isContinuous )
@@ -602,14 +602,13 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
                const Vector<Vector<float> >& ranges,
                bool uniform, bool accumulate )
 {
+    hist.create(histSize, CV_32F);    
+        
     MatND ihist = hist;
     ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK)|CV_32S;
     
     if( !accumulate )
-    {
-        hist.create(histSize, CV_32F);
         hist = Scalar(0.);
-    }
     else
         hist.convertTo(ihist, CV_32S);
     
@@ -624,9 +623,9 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
     
     int depth = images[0].depth();
     if( depth == CV_8U )
-        calcHist_8u(ptrs, deltas, imsize, hist, ranges, uniranges, uniform );
+        calcHist_8u(ptrs, deltas, imsize, ihist, ranges, uniranges, uniform );
     else if( depth == CV_32F )
-        calcHist_<float>(ptrs, deltas, imsize, hist, ranges, uniranges, uniform );
+        calcHist_<float>(ptrs, deltas, imsize, ihist, ranges, uniranges, uniform );
     
     ihist.convertTo(hist, CV_32F);
 }
@@ -1152,10 +1151,7 @@ calcSparseBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
                 }
                 
                 if( i == dims )
-                {
-                    const float* val = (const float*)hist.get(idx);
-                    bproj[x] = val ? saturate_cast<BT>(*val*scale) : 0;
-                }
+                    bproj[x] = saturate_cast<BT>(hist.value<float>(idx)*scale);
                 else
                 {
                     bproj[x] = 0;
@@ -1194,10 +1190,7 @@ calcSparseBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
                 }
                 
                 if( i == dims )
-                {
-                    const float* val = (const float*)hist.get(idx);
-                    bproj[x] = val ? saturate_cast<BT>(*val*scale) : 0;
-                }
+                    bproj[x] = saturate_cast<BT>(hist.value<float>(idx)*scale);
                 else
                 {
                     bproj[x] = 0;
@@ -1243,10 +1236,7 @@ calcSparseBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
             }
             
             if( i == dims )
-            {
-                const float* val = (const float*)hist.get(idx);
-                bproj[x] = val ? saturate_cast<uchar>(*val*scale) : 0;
-            }
+                bproj[x] = saturate_cast<uchar>(hist.value<float>(idx)*scale);
             else
             {
                 bproj[x] = 0;
@@ -1382,20 +1372,19 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         std::swap(PH1, PH2);
     
     SparseMatConstIterator it = PH1->begin();
-    int N1 = PH1->nzcount(), N2 = PH2->nzcount();
+    int N1 = (int)PH1->nzcount(), N2 = (int)PH2->nzcount();
     
     if( method == CV_COMP_CHISQR )
     {
         for( i = 0; i < N1; i++, ++it )
         {
-            float v1 = *(const float*)it.ptr;
+            float v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
-            const float* p2 = (const float*)PH2->get(node->idx, (size_t*)&node->hashval);
-            if( !p2 )
+            float v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
+            if( !v2 )
                 result += v1;
             else
             {
-                float v2 = *p2;
                 double a = v1 - v2;
                 double b = v1 + v2;
                 if( fabs(b) > FLT_EPSILON )
@@ -1406,10 +1395,9 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         it = PH2->begin();
         for( i = 0; i < N2; i++, ++it )
         {
-            float v2 = *(const float*)it.ptr;
+            float v2 = it.value<float>();
             const SparseMat::Node* node = it.node();
-            const float* p1 = (const float*)PH2->get(node->idx, (size_t*)&node->hashval);
-            if( !p1 )
+            if( !PH1->find<float>(node->idx, (size_t*)&node->hashval) )
                 result += v2;
         }
     }
@@ -1419,11 +1407,9 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         
         for( i = 0; i < N1; i++, ++it )
         {
-            double v1 = *(const float*)it.ptr;
+            double v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
-            const float* p2 = (const float*)PH2->get(node->idx, (size_t*)&node->hashval);
-            if( p2 )
-                s12 += v1*(*p2);
+            s12 += v1*PH2->value<float>(node->idx, (size_t*)&node->hashval);
             s1 += v1;
             s11 += v1*v1;
         }
@@ -1431,7 +1417,7 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         it = PH2->begin();
         for( i = 0; i < N2; i++, ++it )
         {
-            double v2 = *(const float*)it.ptr;
+            double v2 = it.value<float>();
             s2 += v2;
             s22 += v2*v2;
         }
@@ -1448,11 +1434,11 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
     {
         for( i = 0; i < N1; i++, ++it )
         {
-            float v1 = *(const float*)it.ptr;
+            float v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
-            const float* p2 = (const float*)PH2->get(node->idx, (size_t*)&node->hashval);
-            if( p2 )
-                result += std::min(v1, *p2);
+            float v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
+            if( v2 )
+                result += std::min(v1, v2);
         }
     }
     else if( method == CV_COMP_BHATTACHARYYA )
@@ -1461,17 +1447,16 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         
         for( i = 0; i < N1; i++, ++it )
         {
-            double v1 = *(const float*)it.ptr;
+            double v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
-            const float* p2 = (const float*)PH2->get(node->idx, (size_t*)&node->hashval);
-            if( p2 )
-                result += std::sqrt(v1*(*p2));
+            double v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
+            result += std::sqrt(v1*v2);
             s1 += v1;
         }
         
         it = PH2->begin();
         for( i = 0; i < N2; i++, ++it )
-            s2 += *(const float*)it.ptr;
+            s2 += it.value<float>();
         
         s1 *= s2;
         s1 = fabs(s1) > FLT_EPSILON ? 1./std::sqrt(s1) : 1.;
@@ -2123,7 +2108,7 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
             cvZero( sparsemat );
         
         cv::SparseMatConstIterator it = sH.begin();
-        int nz = sH.nzcount();
+        int nz = (int)sH.nzcount();
         for( i = 0; i < nz; i++, ++it )
             *(float*)cvPtrND(sparsemat, it.node()->idx, 0, -2) = (float)*(const int*)it.ptr;
     }

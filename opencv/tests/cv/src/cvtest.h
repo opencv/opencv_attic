@@ -52,6 +52,9 @@
 #include "cxts.h"
 #include "highgui.h"
 
+#undef min
+#undef max
+
 void cvTsCalcSobelKernel2D( int dx, int dy, int _aperture_size, int origin, CvMat* kernel );
 int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian=0 );
 void cvTsConvertHomogeneous( const CvMat* src, CvMat* dst );

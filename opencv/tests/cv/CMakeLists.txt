@@ -9,33 +9,27 @@ source_group("Src" FILES ${test_srcs})
 file(GLOB test_hdrs "src/*.h*")
 source_group("Include" FILES ${test_hdrs})
 
-if(WIN32 AND MSVC)
-    set(pch_header "cvtest.h")
-    set(pch_src "cvtest.cpp")
-    list(REMOVE_ITEM test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${pch_src})
-    set(test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${pch_src} ${test_srcs})
-    foreach(src_file ${test_srcs})
-        if(${src_file} MATCHES ${pch_src})
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yc${pch_header}"
-                )
-        else()
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yu${pch_header}"
-                )
-        endif()
-    endforeach()
-endif()
+include_directories("${CMAKE_SOURCE_DIR}/include/opencv"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+                    "${CMAKE_CURRENT_BINARY_DIR}")
 
 include_directories(../cxts)
 
 set(the_target "cvtest")
 
 add_executable(${the_target} ${test_srcs} ${test_hdrs})
+
+if(PCHSupport_FOUND)
+    set(pch_header ${CMAKE_SOURCE_DIR}/tests/cv/src/cvtest.h)
+    if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
+        if(${CMAKE_GENERATOR} MATCHES "Visual*")
+            set(${the_target}_pch "src/cvtest.cpp")
+        endif()            
+        add_native_precompiled_header(${the_target} ${pch_header})
+    elseif(CMAKE_COMPILER_IS_GNUCXX AND ${CMAKE_GENERATOR} MATCHES ".*Makefiles")
+        add_precompiled_header(${the_target} ${pch_header})
+    endif()
+endif()
 
 # Additional target properties
 set_target_properties(${the_target} PROPERTIES

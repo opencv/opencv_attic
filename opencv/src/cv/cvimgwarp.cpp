@@ -246,8 +246,8 @@ resizeNN( const Mat& src, Mat& dst, double fx, double fy )
     Size ssize = src.size(), dsize = dst.size();
     AutoBuffer<int> _x_ofs(dsize.width);
     int* x_ofs = _x_ofs;
-    int pix_size = src.elemSize();
-    int pix_size4 = pix_size / sizeof(int);
+    int pix_size = (int)src.elemSize();
+    int pix_size4 = (int)(pix_size / sizeof(int));
     double ifx = 1./fx, ify = 1./fy;
     int x, y;
 
@@ -1364,7 +1364,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
             std::abs(scale_y - iscale_y) < DBL_EPSILON )
         {
             int area = iscale_x*iscale_y;
-            int srcstep = src.step / src.elemSize1();
+            size_t srcstep = src.step / src.elemSize1();
             AutoBuffer<int> _ofs(area + dsize.width*cn);
             int* ofs = _ofs;
             int* xofs = ofs + area;
@@ -1373,7 +1373,7 @@ void resize( const Mat& src, Mat& dst, Size dsize,
 
             for( sy = 0, k = 0; sy < iscale_y; sy++ )
                 for( sx = 0; sx < iscale_x; sx++ )
-                    ofs[k++] = sy*srcstep + sx*cn;
+                    ofs[k++] = (int)(sy*srcstep + sx*cn);
 
             for( dx = 0; dx < dsize.width; dx++ )
             {
@@ -1567,7 +1567,7 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
     Size ssize = _src.size(), dsize = _dst.size();
     int cn = _src.channels();
     const T* S0 = (const T*)_src.data;
-    int sstep = _src.step/sizeof(S0[0]);
+    size_t sstep = _src.step/sizeof(S0[0]);
     Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
         saturate_cast<T>(_borderValue[1]),
         saturate_cast<T>(_borderValue[2]),
@@ -1684,7 +1684,7 @@ struct RemapVec_8u
         const uchar *S0 = _src.data, *S1 = _src.data + _src.step;
         const short* wtab = cn == 1 ? (const short*)_wtab : &BilinearTab_iC4[0][0][0];
         uchar* D = (uchar*)_dst;
-        int x = 0, sstep = _src.step;
+        int x = 0, sstep = (int)_src.step;
         __m128i delta = _mm_set1_epi32(INTER_REMAP_COEF_SCALE/2);
         __m128i xy2ofs = _mm_set1_epi32(cn + (sstep << 16));
         __m128i z = _mm_setzero_si128();
@@ -1887,7 +1887,7 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
     int cn = _src.channels();
     const AT* wtab = (const AT*)_wtab;
     const T* S0 = (const T*)_src.data;
-    int sstep = _src.step/sizeof(S0[0]);
+    size_t sstep = _src.step/sizeof(S0[0]);
     Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
         saturate_cast<T>(_borderValue[1]),
         saturate_cast<T>(_borderValue[2]),
@@ -2087,7 +2087,7 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
     int cn = _src.channels();
     const AT* wtab = (const AT*)_wtab;
     const T* S0 = (const T*)_src.data;
-    int sstep = _src.step/sizeof(S0[0]);
+    size_t sstep = _src.step/sizeof(S0[0]);
     Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
         saturate_cast<T>(_borderValue[1]),
         saturate_cast<T>(_borderValue[2]),
@@ -2191,7 +2191,7 @@ static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
     int cn = _src.channels();
     const AT* wtab = (const AT*)_wtab;
     const T* S0 = (const T*)_src.data;
-    int sstep = _src.step/sizeof(S0[0]);
+    size_t sstep = _src.step/sizeof(S0[0]);
     Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
         saturate_cast<T>(_borderValue[1]),
         saturate_cast<T>(_borderValue[2]),
@@ -2706,7 +2706,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
     AutoBuffer<int> _abdelta(width*2);
     int* adelta = &_abdelta[0], *bdelta = adelta + width;
-    const int AB_BITS = std::max(10, (int)INTER_BITS);
+    const int AB_BITS = MAX(10, (int)INTER_BITS);
     const int AB_SCALE = 1 << AB_BITS;
     int round_delta = interpolation == INTER_NEAREST ? AB_SCALE/2 : AB_SCALE/INTER_TAB_SIZE/2;
 
@@ -2810,7 +2810,7 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
 {
     dst.create( dsize, src.type() );
 
-    const int BLOCK_SZ = 64;
+    const int BLOCK_SZ = 32;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
     double M[9];
     Mat _M(3, 3, CV_64F, M);
@@ -2996,6 +2996,44 @@ Mat getAffineTransform( const Point2f src[], const Point2f dst[] )
     solve( A, B, X );
     return M;
 }
+    
+void invertAffineTransform(const Mat& _M, Mat& _iM)
+{
+    CV_Assert(_M.rows == 2 && _M.cols == 3);
+    _iM.create(2, 3, _M.type());
+    if( _M.type() == CV_32F )
+    {
+        const float* M = (const float*)_M.data;
+        float* iM = (float*)_iM.data;
+        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        
+        double D = M[0]*M[step+1] - M[1]*M[step];
+        D = D != 0 ? 1./D : 0;
+        double A11 = M[step+1]*D, A22 = M[0]*D, A12 = -M[1]*D, A21 = -M[step]*D;
+        double b1 = -A11*M[2] - A12*M[step+2];
+        double b2 = -A21*M[2] - A22*M[step+2];
+        
+        iM[0] = (float)A11; iM[1] = (float)A12; iM[2] = (float)b1;
+        iM[istep] = (float)A21; iM[istep+1] = (float)A22; iM[istep+2] = (float)b2;
+    }
+    else if( _M.type() == CV_64F )
+    {
+        const double* M = (const double*)_M.data;
+        double* iM = (double*)_iM.data;
+        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        
+        double D = M[0]*M[step+1] - M[1]*M[step];
+        D = D != 0 ? 1./D : 0;
+        double A11 = M[step+1]*D, A22 = M[0]*D, A12 = -M[1]*D, A21 = -M[step]*D;
+        double b1 = -A11*M[2] - A12*M[step+2];
+        double b2 = -A21*M[2] - A22*M[step+2];
+        
+        iM[0] = A11; iM[1] = A12; iM[2] = b1;
+        iM[istep] = A21; iM[istep+1] = A22; iM[istep+2] = b2;
+    }
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
+}    
 
 }
 

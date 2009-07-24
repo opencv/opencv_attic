@@ -37,7 +37,7 @@ EXTRA_DIST = \
   highgui/cvcap_ffmpeg.cpp     \
   highgui/cvcap_xine.cpp       \
   highgui/cvcap_gstreamer.cpp  \
-  highgui/gstappsink.c         \
+  highgui/gstappsink.cpp       \
   highgui/cvcap_qt.cpp         \
   highgui/window_carbon.cpp    \
   highgui/window_gtk.cpp       \
@@ -253,6 +253,7 @@ lib_cvaux_la_SOURCES = \
   cvaux/cvprewarp.cpp \
   cvaux/cvscanlines.cpp \
   cvaux/cvsegment.cpp \
+  cvaux/cvselfsimilarity.cpp \
   cvaux/cvspinimages.cpp \
   cvaux/cvsubdiv2.cpp \
   cvaux/cvtexture.cpp \

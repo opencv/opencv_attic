@@ -166,7 +166,7 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
     if( angle_dim <= 0 || angle_dim > 180 || dist_dim <= 0 )
         return CV_BADRANGE_ERR;
 
-    if( !CV_IS_SEQ_POLYGON( contour ))
+    if( !CV_IS_SEQ_POINT_SET( contour ))
         return CV_BADFLAG_ERR;
 
     memset( pgh, 0, hist_size * sizeof( pgh[0] ));
@@ -351,7 +351,7 @@ cvCalcPGH( const CvSeq * contour, CvHistogram * hist )
     if( dims != 2 )
         CV_ERROR( CV_StsBadSize, "The histogram must be two-dimensional" );
 
-    if( !CV_IS_SEQ_POLYGON( contour ) || CV_SEQ_ELTYPE( contour ) != CV_32SC2 )
+    if( !CV_IS_SEQ_POINT_SET( contour ) || CV_SEQ_ELTYPE( contour ) != CV_32SC2 )
         CV_ERROR( CV_StsUnsupportedFormat, "The contour is not valid or the point type is not supported" );
 
     IPPI_CALL( icvCalcPGH( contour, ((CvMatND*)(hist->bins))->data.fl, size[0], size[1] ));

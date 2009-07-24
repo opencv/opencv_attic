@@ -51,13 +51,13 @@
   #include "cxcore.h"
   #include <limits.h>
 
-  #if defined WIN32 || defined WIN64
+  #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #include <windows.h>
   #endif
 
 #else // SKIP_INCLUDES
 
-  #if defined WIN32 || defined WIN64
+  #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #define CV_CDECL __cdecl
     #define CV_STDCALL __stdcall
   #else
@@ -86,14 +86,14 @@
   #ifndef CV_INLINE
     #if defined __cplusplus
       #define CV_INLINE inline
-    #elif (defined WIN32 || defined WIN64) && !defined __GNUC__
+    #elif (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && !defined __GNUC__
       #define CV_INLINE __inline
     #else
       #define CV_INLINE static
     #endif
   #endif /* CV_INLINE */
 
-  #if (defined WIN32 || defined WIN64) && defined CVAPI_EXPORTS
+  #if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
   #else
     #define CV_EXPORTS
@@ -1080,6 +1080,8 @@ protected:
 class CV_EXPORTS CvERTrees : public CvRTrees
 {
 public:
+    CvERTrees();
+    virtual ~CvERTrees();
     virtual bool train( const CvMat* _train_data, int _tflag,
                         const CvMat* _responses, const CvMat* _var_idx=0,
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,

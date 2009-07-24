@@ -1251,7 +1251,7 @@ protected:
 };
 
 CxCore_GEMMTest::CxCore_GEMMTest() :
-    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 1 )
+    CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
     default_timing_param_names = matrix_gemm_param_names;
@@ -1976,14 +1976,14 @@ void CxCore_CovarMatrixTest::get_test_array_types_and_sizes( int test_case_idx, 
     {
         len = sizes[INPUT][0].width;
         count = sizes[INPUT][0].height;
-        count = std::max(count, min_count);
+        count = MAX(count, min_count);
         sizes[INPUT][0] = cvSize(len, count);
     }
     else
     {
         len = sizes[INPUT][0].height;
         count = sizes[INPUT][0].width;
-        count = std::max(count, min_count);
+        count = MAX(count, min_count);
         sizes[INPUT][0] = cvSize(count, len);
     }
 

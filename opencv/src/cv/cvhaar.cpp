@@ -44,6 +44,18 @@
 #include "_cv.h"
 #include <stdio.h>
 
+#if CV_SSE2
+#   if CV_SSE4 || defined __SSE4__
+#       include <smmintrin.h>
+#   else
+#       define _mm_blendv_pd(a, b, m) _mm_xor_pd(a, _mm_and_pd(_mm_xor_pd(b, a), m))
+#       define _mm_blendv_ps(a, b, m) _mm_xor_ps(a, _mm_and_ps(_mm_xor_ps(b, a), m))
+#   endif
+#if defined CV_ICC
+#   define CV_HAAR_USE_SSE 1
+#endif
+#endif
+
 /* these settings affect the quality of detection: change with care */
 #define CV_ADJUST_FEATURES 1
 #define CV_ADJUST_WEIGHTS  0
@@ -680,7 +692,7 @@ double icvEvalHidHaarClassifier( CvHidHaarClassifier* classifier,
 
 
 CV_IMPL int
-cvRunHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
+cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
                             CvPoint pt, int start_stage )
 {
     int result = -1;
@@ -755,7 +767,11 @@ cvRunHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     {
         for( i = start_stage; i < cascade->count; i++ )
         {
+#ifndef CV_HAAR_USE_SSE
             double stage_sum = 0;
+#else
+            __m128d stage_sum = _mm_setzero_pd();
+#endif
 
             if( cascade->stage_classifier[i].two_rects )
             {
@@ -763,14 +779,21 @@ cvRunHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                 {
                     CvHidHaarClassifier* classifier = cascade->stage_classifier[i].classifier + j;
                     CvHidHaarTreeNode* node = classifier->node;
-                    double sum, t = node->threshold*variance_norm_factor, a, b;
-
-                    sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+#ifndef CV_HAAR_USE_SSE
+                    double t = node->threshold*variance_norm_factor;
+                    double sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
                     sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
-
-                    a = classifier->alpha[0];
-                    b = classifier->alpha[1];
-                    stage_sum += sum < t ? a : b;
+                    stage_sum += classifier->alpha[sum >= t];
+#else
+                    // ayasin - NHM perf optim. Avoid use of costly flaky jcc
+                    __m128d t = _mm_set_sd(node->threshold*variance_norm_factor);
+                    __m128d a = _mm_set_sd(classifier->alpha[0]);
+                    __m128d b = _mm_set_sd(classifier->alpha[1]);
+                    __m128d sum = _mm_set_sd(calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight +
+                                             calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight);
+                    t = _mm_cmpgt_sd(t, sum);
+                    stage_sum = _mm_add_sd(stage_sum, _mm_blendv_pd(b, a, t));
+#endif
                 }
             }
             else
@@ -779,21 +802,37 @@ cvRunHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                 {
                     CvHidHaarClassifier* classifier = cascade->stage_classifier[i].classifier + j;
                     CvHidHaarTreeNode* node = classifier->node;
-                    double sum, t = node->threshold*variance_norm_factor, a, b;
-
-                    sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+#ifndef CV_HAAR_USE_SSE
+                    double t = node->threshold*variance_norm_factor;
+                    double sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
                     sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
-
                     if( node->feature.rect[2].p0 )
                         sum += calc_sum(node->feature.rect[2],p_offset) * node->feature.rect[2].weight;
-
-                    a = classifier->alpha[0];
-                    b = classifier->alpha[1];
-                    stage_sum += sum < t ? a : b;
+                    
+                    stage_sum += classifier->alpha[sum >= t];
+#else
+                    // ayasin - NHM perf optim. Avoid use of costly flaky jcc
+                    __m128d t = _mm_set_sd(node->threshold*variance_norm_factor);
+                    __m128d a = _mm_set_sd(classifier->alpha[0]);
+                    __m128d b = _mm_set_sd(classifier->alpha[1]);
+                    double _sum = calc_sum(node->feature.rect[0],p_offset) * node->feature.rect[0].weight;
+                    _sum += calc_sum(node->feature.rect[1],p_offset) * node->feature.rect[1].weight;
+                    if( node->feature.rect[2].p0 )
+                        _sum += calc_sum(node->feature.rect[2],p_offset) * node->feature.rect[2].weight;
+                    __m128d sum = _mm_set_sd(_sum);
+                    
+                    t = _mm_cmpgt_sd(t, sum);
+                    stage_sum = _mm_add_sd(stage_sum, _mm_blendv_pd(b, a, t));
+#endif
                 }
             }
 
+#ifndef CV_HAAR_USE_SSE
             if( stage_sum < cascade->stage_classifier[i].threshold )
+#else
+            __m128d i_threshold = _mm_set_sd(cascade->stage_classifier[i].threshold);
+            if( _mm_comilt_sd(stage_sum, i_threshold) )
+#endif
             {
                 result = -i;
                 EXIT;
@@ -2318,5 +2357,44 @@ CvType haar_type( CV_TYPE_NAME_HAAR, icvIsHaarClassifier,
                   (CvReleaseFunc)cvReleaseHaarClassifierCascade,
                   icvReadHaarClassifier, icvWriteHaarClassifier,
                   icvCloneHaarClassifier );
+
+namespace cv
+{
+
+HaarClassifierCascade::HaarClassifierCascade() {}
+HaarClassifierCascade::HaarClassifierCascade(const String& filename)
+{ load(filename); }
+    
+bool HaarClassifierCascade::load(const String& filename)
+{
+    cascade = Ptr<CvHaarClassifierCascade>((CvHaarClassifierCascade*)cvLoad(filename.c_str(), 0, 0, 0));
+    return (CvHaarClassifierCascade*)cascade != 0;
+}
+
+void HaarClassifierCascade::detectMultiScale( const Mat& image,
+                       Vector<Rect>& objects, double scaleFactor,
+                       int minNeighbors, int flags,
+                       Size minSize )
+{
+    MemStorage storage(cvCreateMemStorage(0));
+    CvMat _image = image;
+    CvSeq* _objects = cvHaarDetectObjects( &_image, cascade, storage, scaleFactor,
+                                           minNeighbors, flags, minSize );
+    Seq<Rect>(_objects).copyTo(objects);
+}
+
+int HaarClassifierCascade::runAt(Point pt, int startStage, int) const
+{
+    return cvRunHaarClassifierCascade(cascade, pt, startStage);
+}
+
+void HaarClassifierCascade::setImages( const Mat& sum, const Mat& sqsum,
+                                       const Mat& tilted, double scale )
+{
+    CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
+    cvSetImagesForHaarClassifierCascade( cascade, &_sum, &_sqsum, &_tilted, scale );
+}
+
+}
 
 /* End of file. */

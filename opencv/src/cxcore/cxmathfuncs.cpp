@@ -352,8 +352,8 @@ void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
     {
         const float *x = (const float*)X.data, *y = (const float*)Y.data;
         float *mag = (float*)Mag.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep )
             Magnitude( x, y, mag, size.width );
@@ -362,8 +362,8 @@ void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
     {
         const double *x = (const double*)X.data, *y = (const double*)Y.data;
         double *mag = (double*)Mag.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep )
             Magnitude( x, y, mag, size.width );
@@ -384,8 +384,8 @@ void phase( const Mat& X, const Mat& Y, Mat& Angle, bool angleInDegrees )
     {
         const float *x = (const float*)X.data, *y = (const float*)Y.data;
         float *angle = (float*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t astep = Angle.step/sizeof(angle[0]);
 
         for( ; size.height--; x += xstep, y += ystep, angle += astep )
             FastAtan2_32f( y, x, angle, size.width, angleInDegrees );
@@ -394,8 +394,8 @@ void phase( const Mat& X, const Mat& Y, Mat& Angle, bool angleInDegrees )
     {
         const double *x = (const double*)X.data, *y = (const double*)Y.data;
         double *angle = (double*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t astep = Angle.step/sizeof(angle[0]);
 
         for( ; size.height--; x += xstep, y += ystep, angle += astep )
         {
@@ -431,8 +431,8 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
     {
         const float *x = (const float*)X.data, *y = (const float*)Y.data;
         float *mag = (float*)Mag.data, *angle = (float*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
@@ -451,8 +451,8 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
     {
         const double *x = (const double*)X.data, *y = (const double*)Y.data;
         double *mag = (double*)Mag.data, *angle = (double*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
@@ -582,8 +582,8 @@ void polarToCart( const Mat& Mag, const Mat& Angle, Mat& X, Mat& Y, bool angleIn
     {
         float *x = (float*)X.data, *y = (float*)Y.data;
         const float *mag = (const float*)Mag.data, *angle = (const float*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
@@ -604,8 +604,8 @@ void polarToCart( const Mat& Mag, const Mat& Angle, Mat& X, Mat& Y, bool angleIn
     {
         double *x = (double*)X.data, *y = (double*)Y.data;
         const double *mag = (const double*)Mag.data, *angle = (const double*)Angle.data;
-        int xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
-        int mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
+        size_t mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
         double ascale = angleInDegrees ? CV_PI/180. : 1;
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
@@ -1337,16 +1337,19 @@ static CvStatus CV_STDCALL Log_64f( const double *x, double *y, int n )
 {
     static const double shift[] = { 0, -1./512 };
     static const double
-        A0 = -.1666666666666666666666666666666666666666,
-        A1 = +0.2,
-        A2 = -0.25,
-        A3 = +0.3333333333333333333333333333333333333333,
-        A4 = -0.5,
-        A5 = +1.0;
+        A7 = 1.0,
+        A6 = -0.5,
+        A5 = 0.333333333333333314829616256247390992939472198486328125,
+        A4 = -0.25,
+        A3 = 0.2,
+        A2 = -0.1666666666666666574148081281236954964697360992431640625,
+        A1 = 0.1428571428571428769682682968777953647077083587646484375,
+        A0 = -0.125;
 
     #undef LOGPOLY
-    #define LOGPOLY(x,k) ((x)+=shift[k], (xq) = (x)*(x),\
-        ((A0*(xq) + A2)*(xq) + A4)*(xq) + ((A1*(xq) + A3)*(xq) + A5)*(x))
+    #define LOGPOLY(x,k) ((x)+=shift[k], xq = (x)*(x),\
+        (((A0*xq + A2)*xq + A4)*xq + A6)*xq + \
+        (((A1*xq + A3)*xq + A5)*xq + A7)*(x))
 
     int i = 0;
     DBLINT buf[4];
@@ -1559,7 +1562,7 @@ void pow( const Mat& _src, double power, Mat& dst )
     {
         const float *x = (const float*)src->data;
         float *y = (float*)dst.data;
-        int xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
+        size_t xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
         float p = (float)power;
 
         for( ; size.height--; x += xstep, y += ystep )
@@ -1578,7 +1581,7 @@ void pow( const Mat& _src, double power, Mat& dst )
     {
         const double *x = (const double*)src->data;
         double *y = (double*)dst.data;
-        int xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
+        size_t xstep = src->step/sizeof(x[0]), ystep = dst.step/sizeof(y[0]);
 
         for( ; size.height--; x += xstep, y += ystep )
         {
@@ -1634,7 +1637,7 @@ bool checkRange(const Mat& src, bool quiet, Point* pt,
             Cv32suf a, b;
             int ia, ib;
             const int* isrc = (const int*)src.data;
-            int step = src.step/sizeof(isrc[0]);
+            size_t step = src.step/sizeof(isrc[0]);
 
             a.f = (float)std::max(minVal, (double)-FLT_MAX);
             b.f = (float)std::min(maxVal, (double)FLT_MAX);
@@ -1663,7 +1666,7 @@ bool checkRange(const Mat& src, bool quiet, Point* pt,
             Cv64suf a, b;
             int64 ia, ib;
             const int64* isrc = (const int64*)src.data;
-            int step = src.step/sizeof(isrc[0]);
+            size_t step = src.step/sizeof(isrc[0]);
 
             a.f = minVal;
             b.f = maxVal;
@@ -1816,7 +1819,8 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
 
     double a0 = 1., a1, a2, a3;
     double x0 = 0., x1 = 0., x2 = 0.;
-    int step = 1, coeff_count;
+    size_t step = 1;
+    int coeff_count;
 
     if( !CV_IS_MAT(coeffs) )
         CV_Error( !coeffs ? CV_StsNullPtr : CV_StsBadArg, "Input parameter is not a valid matrix" );

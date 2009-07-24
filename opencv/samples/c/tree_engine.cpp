@@ -28,9 +28,9 @@ int main()
 
 //#define LEPIOTA
 #ifdef LEPIOTA
-    const char* filename = "../../../OpenCV_SVN/samples/c/agaricus-lepiota.data";
+    const char* filename = "../../../OpenCV/samples/c/agaricus-lepiota.data";
 #else
-    const char* filename = "../../../OpenCV_SVN/samples/c/waveform.data";
+    const char* filename = "../../../OpenCV/samples/c/waveform.data";
 #endif
 
     CvDTree dtree;
@@ -42,34 +42,38 @@ int main()
 
     CvTrainTestSplit spl( train_sample_count );
     
-    data.read_csv( filename );
+    if ( data.read_csv( filename ) == 0)
+    {
 
 #ifdef LEPIOTA
-    data.set_response_idx( 0 );     
+        data.set_response_idx( 0 );     
 #else
-    data.set_response_idx( 21 );     
-    data.change_var_type( 21, CV_VAR_CATEGORICAL );
+        data.set_response_idx( 21 );     
+        data.change_var_type( 21, CV_VAR_CATEGORICAL );
 #endif
 
-    data.set_train_test_split( &spl );
-    
-    printf("======DTREE=====\n");
-    dtree.train( &data, CvDTreeParams( 10, 2, 0, false, 16, 0, false, false, 0 ));
-    print_result( dtree.calc_error( &data, CV_TRAIN_ERROR), dtree.calc_error( &data ), dtree.get_var_importance() );
+        data.set_train_test_split( &spl );
+        
+        printf("======DTREE=====\n");
+        dtree.train( &data, CvDTreeParams( 10, 2, 0, false, 16, 0, false, false, 0 ));
+        print_result( dtree.calc_error( &data, CV_TRAIN_ERROR), dtree.calc_error( &data ), dtree.get_var_importance() );
 
 #ifdef LEPIOTA
-    printf("======BOOST=====\n");
-    boost.train( &data, CvBoostParams(CvBoost::DISCRETE, 100, 0.95, 2, false, 0));
-    print_result( boost.calc_error( &data, CV_TRAIN_ERROR ), boost.calc_error( &data ), 0 );
+        printf("======BOOST=====\n");
+        boost.train( &data, CvBoostParams(CvBoost::DISCRETE, 100, 0.95, 2, false, 0));
+        print_result( boost.calc_error( &data, CV_TRAIN_ERROR ), boost.calc_error( &data ), 0 );
 #endif
 
-    printf("======RTREES=====\n");
-    rtrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
-    print_result( rtrees.calc_error( &data, CV_TRAIN_ERROR), rtrees.calc_error( &data ), rtrees.get_var_importance() );
+        printf("======RTREES=====\n");
+        rtrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
+        print_result( rtrees.calc_error( &data, CV_TRAIN_ERROR), rtrees.calc_error( &data ), rtrees.get_var_importance() );
 
-    printf("======ERTREES=====\n");
-    ertrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
-    print_result( ertrees.calc_error( &data, CV_TRAIN_ERROR), ertrees.calc_error( &data ), ertrees.get_var_importance() );
+        printf("======ERTREES=====\n");
+        ertrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
+        print_result( ertrees.calc_error( &data, CV_TRAIN_ERROR), ertrees.calc_error( &data ), ertrees.get_var_importance() );
+    }
+    else
+        printf("File can not be read");
 
     return 0;
 }

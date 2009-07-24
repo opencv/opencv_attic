@@ -217,7 +217,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             }
         }
         isrc -= srcroi.height*srcstep;
-        idst -= (top - srcroi.height)*dststep;
+        idst -= (top + srcroi.height)*dststep;
     }
     else
     {
@@ -238,7 +238,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
             }
         }
         src -= srcroi.height*srcstep;
-        dst -= (top - srcroi.height)*dststep;
+        dst -= (top + srcroi.height)*dststep;
     }
 
     for( t = 0; t < 2; t++ )
@@ -486,11 +486,11 @@ namespace cv
 {
 
 void copyMakeBorder( const Mat& src, Mat& dst, int top, int bottom,
-                     int left, int right, int borderType )
+                     int left, int right, int borderType, const Scalar& value )
 {
     dst.create( src.rows + top + bottom, src.cols + left + right, src.type() );
     CvMat _src = src, _dst = dst;
-    cvCopyMakeBorder( &_src, &_dst, Point(left, top), borderType );
+    cvCopyMakeBorder( &_src, &_dst, Point(left, top), borderType, value );
 }
 
 }

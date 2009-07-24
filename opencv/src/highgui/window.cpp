@@ -62,9 +62,17 @@ int waitKey(int delay)
     return cvWaitKey(delay);
 }
 
+int createTrackbar(const String& trackbarName, const String& winName,
+                   int* value, int count, TrackbarCallback callback,
+                   void* userdata)
+{
+    return cvCreateTrackbar2(trackbarName.c_str(), winName.c_str(),
+                             value, count, callback, userdata);
 }
 
-#if   defined (WIN32)         // see window_w32.cpp
+}
+
+#if   defined WIN32 || defined _WIN32         // see window_w32.cpp
 #elif defined (HAVE_GTK)      // see window_gtk.cpp
 #elif defined (HAVE_CARBON)   // see window_carbon.cpp
 
@@ -82,7 +90,8 @@ int waitKey(int delay)
 #define CV_NO_GUI_ERROR(funcname) \
     cvError( CV_StsError, funcname, \
     "The function is not implemented. " \
-    "Rebuild the library with Windows, GTK+ 2.x or Carbon support", \
+    "Rebuild the library with Windows, GTK+ 2.x or Carbon support. "\
+    "If you are on Ubuntu or Debian, install libgtk2.0-dev and pkg-config, then re-run cmake or configure script", \
     __FILE__, __LINE__ )
 
 

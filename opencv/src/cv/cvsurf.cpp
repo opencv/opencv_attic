@@ -205,19 +205,20 @@ icvInterpolateKeypoint( float N9[3][9], int dx, int dy, int ds, CvSURFPoint *poi
 }
 
 
+/* Wavelet size at first layer of first octave. */ 
+const int HAAR_SIZE0 = 9;    
+
+/* Wavelet size increment between layers. This should be an even number, 
+ such that the wavelet sizes in an octave are either all even or all odd.
+ This ensures that when looking for the neighbours of a sample, the layers
+ above and below are aligned correctly. */
+const int HAAR_SIZE_INC = 6;
+
+
 static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
     CvMemStorage* storage, const CvSURFParams* params )
 {
     CvSeq* points = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvSURFPoint), storage );
-    
-    /* Wavelet size at first layer of first octave. */ 
-    const int HAAR_SIZE0 = 9;    
-
-    /* Wavelet size increment between layers. This should be an even number, 
-       such that the wavelet sizes in an octave are either all even or all odd.
-       This ensures that when looking for the neighbours of a sample, the layers
-       above and below are aligned correctly. */
-    const int HAAR_SIZE_INC = 6; 
 
     /* Sampling step along image x and y axes at first octave. This is doubled
        for each additional octave. WARNING: Increasing this improves speed, 
@@ -760,3 +761,107 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     cvFree( &win_bufs );
 }
 
+
+namespace cv
+{
+
+SURF::SURF()
+{
+    hessianThreshold = 100;
+    extended = 1;
+    nOctaves = 4;
+    nOctaveLayers = 2;
+}
+
+SURF::SURF(double _threshold, bool _extended)
+{
+    hessianThreshold = _threshold;
+    extended = _extended;
+    nOctaves = 4;
+    nOctaveLayers = 2;
+}
+
+int SURF::descriptorSize() const { return extended ? 128 : 64; }
+    
+    
+static int getPointOctave(const CvSURFPoint& kpt, const CvSURFParams& params)
+{
+    int octave = 0, layer = 0, best_octave = 0;
+    float min_diff = FLT_MAX;
+    for( octave = 1; octave < params.nOctaves; octave++ )
+        for( layer = 0; layer < params.nOctaveLayers; layer++ )
+        {
+            float diff = std::abs(kpt.size - (float)((HAAR_SIZE0 + HAAR_SIZE_INC*layer) << octave));
+            if( min_diff > diff )
+            {
+                min_diff = diff;
+                best_octave = octave;
+                if( min_diff == 0 )
+                    return best_octave;
+            }
+        }
+    return best_octave;
+}
+    
+
+void SURF::operator()(const Mat& img, const Mat& mask,
+                      Vector<Keypoint>& keypoints) const
+{
+    CvMat _img = img, _mask, *pmask = 0;
+    if( mask.data )
+        pmask = &(_mask = mask);
+    MemStorage storage(cvCreateMemStorage(0));
+    Seq<CvSURFPoint> kp;
+    cvExtractSURF(&_img, pmask, &kp.seq, 0, storage, *(const CvSURFParams*)this, 0);
+    Seq<CvSURFPoint>::iterator it = kp.begin();
+    size_t i, n = kp.size();
+    keypoints.resize(n);
+    for( i = 0; i < n; i++, ++it )
+    {
+        const CvSURFPoint& kpt = *it;
+        keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+                                kpt.hessian, getPointOctave(kpt, *this));
+    }
+}
+
+void SURF::operator()(const Mat& img, const Mat& mask,
+                Vector<Keypoint>& keypoints,
+                Vector<float>& descriptors,
+                bool useProvidedKeypoints) const
+{
+    CvMat _img = img, _mask, *pmask = 0;
+    if( mask.data )
+        pmask = &(_mask = mask);
+    MemStorage storage(cvCreateMemStorage(0));
+    Seq<CvSURFPoint> kp;
+    CvSeq* d = 0;
+    size_t i, n;
+    if( useProvidedKeypoints )
+    {
+        kp = Seq<CvSURFPoint>(storage);
+        n = keypoints.size();
+        for( i = 0; i < n; i++ )
+        {
+            const Keypoint& kpt = keypoints[i];
+            kp.push_back(cvSURFPoint(kpt.pt, 1, cvRound(kpt.size), kpt.angle, kpt.response));
+        }
+    }
+    
+    cvExtractSURF(&_img, pmask, &kp.seq, &d, storage,
+        *(const CvSURFParams*)this, useProvidedKeypoints);
+    if( !useProvidedKeypoints )
+    {
+        Seq<CvSURFPoint>::iterator it = kp.begin();
+        size_t i, n = kp.size();
+        keypoints.resize(n);
+        for( i = 0; i < n; i++, ++it )
+        {
+            const CvSURFPoint& kpt = *it;
+            keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+                                    kpt.hessian, getPointOctave(kpt, *this));
+        }
+    }
+    Seq<float>(d).copyTo(descriptors);
+}
+
+}

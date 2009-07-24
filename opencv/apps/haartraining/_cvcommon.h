@@ -42,6 +42,7 @@
 #ifndef __CVCOMMON_H_
 #define __CVCOMMON_H_
 
+#include <cxcore.h>
 #include <cv.h>
 #include <cxmisc.h>
 

@@ -68,6 +68,7 @@ extern "C" {
 #ifdef WIN32
 #include <ffmpeg_/avformat.h>
 #include <ffmpeg_/avcodec.h>
+#include <ffmpeg_/imgconvert.h>
 #else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avcodec.h>
@@ -93,8 +94,9 @@ extern "C" {
 #define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
 #endif
 
-#if defined(HAVE_FFMPEG_SWSCALE)
-static struct SwsContext *img_convert_ctx = NULL;
+/* PIX_FMT_RGBA32 macro changed in newer ffmpeg versions */
+#ifndef PIX_FMT_RGBA32
+#define PIX_FMT_RGBA32 PIX_FMT_RGB32
 #endif
 
 
@@ -304,6 +306,9 @@ protected:
     AVFrame             rgb_picture;
     AVPacket            packet;
     IplImage            frame;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    struct SwsContext *img_convert_ctx;
+#endif
 /*
    'filename' contains the filename of the videosource,
    'filename==NULL' indicates that ffmpeg's seek support works
@@ -326,6 +331,9 @@ void CvCapture_FFMPEG::init()
     memset( &frame, 0, sizeof(frame) );
     filename = 0;
     packet.data = NULL;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    img_convert_ctx = 0;
+#endif    
 }
 
 
@@ -742,6 +750,9 @@ protected:
     AVStream        * video_st;
     int               input_pix_fmt;
     IplImage        * temp_image;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    struct SwsContext *img_convert_ctx;
+#endif
 };
 
 static const char * icvFFMPEGErrStr(int err)
@@ -781,6 +792,9 @@ void CvVideoWriter_FFMPEG::init()
     video_st = 0;
     input_pix_fmt = 0;
     temp_image = 0;
+#if defined(HAVE_FFMPEG_SWSCALE)
+    img_convert_ctx = 0;
+#endif    
 }
 
 /**
@@ -796,7 +810,7 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 	picture = avcodec_alloc_frame();
 	if (!picture)
 		return NULL;
-	size = avpicture_get_size(pix_fmt, width, height);
+	size = avpicture_get_size( (PixelFormat) pix_fmt, width, height);
 	if(alloc){
 		picture_buf = (uint8_t *) cvAlloc(size);
 		if (!picture_buf)
@@ -805,7 +819,7 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
 			return NULL;
 		}
 		avpicture_fill((AVPicture *)picture, picture_buf,
-				pix_fmt, width, height);
+				(PixelFormat) pix_fmt, width, height);
 	}
 	else {
 	}
@@ -1022,12 +1036,12 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 		assert( input_picture );
 		// let input_picture point to the raw data buffer of 'image'
 		avpicture_fill((AVPicture *)input_picture, (uint8_t *) image->imageData,
-				input_pix_fmt, image->width, image->height);
+				(PixelFormat)input_pix_fmt, image->width, image->height);
 
 #if !defined(HAVE_FFMPEG_SWSCALE)
 		// convert to the color format needed by the codec
 		if( img_convert((AVPicture *)picture, c->pix_fmt,
-					(AVPicture *)input_picture, input_pix_fmt,
+					(AVPicture *)input_picture, (PixelFormat)input_pix_fmt,
 					image->width, image->height) < 0){
 			CV_ERROR(CV_StsUnsupportedFormat, "FFMPEG::img_convert pixel format conversion from BGR24 not handled");
 		}
@@ -1053,7 +1067,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 	}
 	else{
 		avpicture_fill((AVPicture *)picture, (uint8_t *) image->imageData,
-				input_pix_fmt, image->width, image->height);
+				(PixelFormat)input_pix_fmt, image->width, image->height);
 	}
 
 	ret = icv_av_write_frame_FFMPEG( oc, video_st, outbuf, outbuf_size, picture) >= 0;
@@ -1198,15 +1212,14 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         codec_pix_fmt = input_pix_fmt;
         break;
 #endif
-    case CODEC_ID_FFV1:
-        // no choice... other supported formats are YUV only
-        codec_pix_fmt = PIX_FMT_RGBA32;
+    case CODEC_ID_HUFFYUV:
+        codec_pix_fmt = PIX_FMT_YUV422P;
         break;
-	case CODEC_ID_MJPEG:
-	case CODEC_ID_LJPEG:
-		codec_pix_fmt = PIX_FMT_YUVJ420P;
-		bitrate_scale = 128;
-		break;
+    case CODEC_ID_MJPEG:
+    case CODEC_ID_LJPEG:
+      codec_pix_fmt = PIX_FMT_YUVJ420P;
+      bitrate_scale = 128;
+      break;
     case CODEC_ID_RAWVIDEO:
     default:
         // good for lossy formats, MPEG, etc.

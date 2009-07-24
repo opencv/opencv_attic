@@ -23,6 +23,7 @@ if (BUILD_EXAMPLES)
     	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} cv cxcore highgui ml cvaux)
     ENDMACRO(MY_DEFINE_EXAMPLE)
     
+    MY_DEFINE_EXAMPLE(adaptiveskindetector 	adaptiveskindetector.cpp)
     MY_DEFINE_EXAMPLE(bgfg_codebook 	bgfg_codebook.cpp)
     MY_DEFINE_EXAMPLE(bgfg_segm			bgfg_segm.cpp)
     MY_DEFINE_EXAMPLE(blobtrack			blobtrack.cpp)

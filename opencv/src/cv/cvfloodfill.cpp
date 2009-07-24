@@ -1157,4 +1157,29 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
     cvReleaseMat( &tempMask );
 }
 
+
+int cv::floodFill( Mat& image, Point seedPoint,
+                   Scalar newVal, Rect* rect,
+                   Scalar loDiff, Scalar upDiff, int flags )
+{
+    CvConnectedComp ccomp;
+    CvMat _image = image;
+    cvFloodFill(&_image, seedPoint, newVal, loDiff, upDiff, &ccomp, flags, 0);
+    if( rect )
+        *rect = ccomp.rect;
+    return cvRound(ccomp.area);
+}
+
+int cv::floodFill( Mat& image, Mat& mask,
+                   Point seedPoint, Scalar newVal, Rect* rect, 
+                   Scalar loDiff, Scalar upDiff, int flags )
+{
+    CvConnectedComp ccomp;
+    CvMat _image = image, _mask = mask;
+    cvFloodFill(&_image, seedPoint, newVal, loDiff, upDiff, &ccomp, flags, &_mask);
+    if( rect )
+        *rect = ccomp.rect;
+    return cvRound(ccomp.area);
+}
+
 /* End of file. */

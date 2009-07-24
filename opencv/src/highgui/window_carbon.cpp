@@ -2,42 +2,42 @@
 //
 //  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
 //
-   //  By downloading, copying, installing or using the software you agree to this license.
-   //  If you do not agree to this license, do not download, install,
-   //  copy or use the software.
-   //
-   //
-   //                        Intel License Agreement
-   //                For Open Source Computer Vision Library
-   //
-   // Copyright (C) 2000, Intel Corporation, all rights reserved.
-   // Third party copyrights are property of their respective owners.
-   //
-   // Redistribution and use in source and binary forms, with or without modification,
-   // are permitted provided that the following conditions are met:
-   //
-   //   * Redistribution's of source code must retain the above copyright notice,
-   //     this list of conditions and the following disclaimer.
-   //
-   //   * Redistribution's in binary form must reproduce the above copyright notice,
-   //     this list of conditions and the following disclaimer in the documentation
-   //     and/or other materials provided with the distribution.
-   //
-   //   * The name of Intel Corporation may not be used to endorse or promote products
-   //     derived from this software without specific prior written permission.
-   //
-   // This software is provided by the copyright holders and contributors "as is" and
-   // any express or implied warranties, including, but not limited to, the implied
-   // warranties of merchantability and fitness for a particular purpose are disclaimed.
-   // In no event shall the Intel Corporation or contributors be liable for any direct,
-   // indirect, incidental, special, exemplary, or consequential damages
-   // (including, but not limited to, procurement of substitute goods or services;
-   // loss of use, data, or profits; or business interruption) however caused
-   // and on any theory of liability, whether in contract, strict liability,
-   // or tort (including negligence or otherwise) arising in any way out of
-   // the use of this software, even if advised of the possibility of such damage.
-   //
-   //M*/
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                        Intel License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//   * The name of Intel Corporation may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors "as is" and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the Intel Corporation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
 
 #include "_highgui.h"
 
@@ -70,6 +70,8 @@ typedef struct CvTrackbar
     int pos;
     int maxval;
     CvTrackbarCallback notify;
+    CvTrackbarCallback2 notify2;
+    void* userdata;
 }
 CvTrackbar;
 
@@ -274,7 +276,7 @@ static void icvPutImage( CvWindow* window )
 
 static void icvUpdateWindowSize( const CvWindow* window )
 {
-    int width = 0, height = 240; /* init ˆ al taille de base de l'image*/
+    int width = 0, height = 240; /* init Ã  al taille de base de l'image*/
     Rect globalBounds;
     
     GetWindowBounds(window->window, kWindowContentRgn, &globalBounds);
@@ -459,18 +461,27 @@ void TrackbarActionProcPtr (ControlRef theControl, ControlPartCode partCode)
     }
 	else 
 	{
+        int pos = GetControl32BitValue (theControl);
         if ( trackbar->data )
-            *trackbar->data = GetControl32BitValue (theControl);
+            *trackbar->data = pos;
         if ( trackbar->notify )
-            trackbar->notify(GetControl32BitValue (theControl));
+            trackbar->notify(pos);
+        else if ( trackbar->notify2 )
+            trackbar->notify2(pos, trackbar->userdata);
     }
 }
 
-CV_IMPL int cvCreateTrackbar (const char* trackbar_name, const char* window_name,int* val, int count, CvTrackbarCallback on_notify)
+
+static int icvCreateTrackbar (const char* trackbar_name,
+                              const char* window_name,
+                              int* val, int count,
+                              CvTrackbarCallback on_notify,
+                              CvTrackbarCallback2 on_notify2,
+                              void* userdata)
 {
     int result = 0;
     
-    CV_FUNCNAME( "cvCreateTrackbar" );
+    CV_FUNCNAME( "icvCreateTrackbar" );
     __BEGIN__;
     
     /*char slider_name[32];*/
@@ -516,7 +527,6 @@ CV_IMPL int cvCreateTrackbar (const char* trackbar_name, const char* window_name
         }
         
         trackbar->maxval = count;
-        trackbar->notify = on_notify;
         
         int c = icvCountTrackbarInWindow(window);		
         
@@ -527,7 +537,7 @@ CV_IMPL int cvCreateTrackbar (const char* trackbar_name, const char* window_name
         stboundsRect.bottom = stboundsRect.top + WIDGETHEIGHT;
         stboundsRect.right = stboundsRect.left+LABELWIDTH;
         
-        fprintf(stdout,"create trackabar bounds (%d %d %d %d)\n",stboundsRect.top,stboundsRect.left,stboundsRect.bottom,stboundsRect.right);
+        //fprintf(stdout,"create trackabar bounds (%d %d %d %d)\n",stboundsRect.top,stboundsRect.left,stboundsRect.bottom,stboundsRect.right);
         CreateStaticTextControl (window->window,&stboundsRect,CFStringCreateWithCString(NULL,trackbar_name,kCFStringEncodingASCII),NULL,&stoutControl);
         
         stboundsRect.top = (INTERWIDGETSPACE +WIDGETHEIGHT)* (c-1)+INTERWIDGETSPACE;
@@ -549,9 +559,37 @@ CV_IMPL int cvCreateTrackbar (const char* trackbar_name, const char* window_name
             window->trackbarheight += INTERWIDGETSPACE + WIDGETHEIGHT;
         icvUpdateWindowSize( window );
     }
+
+    trackbar->notify = on_notify;
+    trackbar->notify2 = on_notify2;
+    trackbar->userdata = userdata;
+
+    result = 1;
+
     __END__;
     return result;
 }
+
+
+CV_IMPL int cvCreateTrackbar (const char* trackbar_name,
+                              const char* window_name,
+                              int* val, int count,
+                              CvTrackbarCallback on_notify)
+{
+    return icvCreateTrackbar(trackbar_name, window_name, val, count, on_notify, 0, 0);
+}
+
+
+CV_IMPL int cvCreateTrackbar2(const char* trackbar_name,
+                              const char* window_name,
+                              int* val, int count,
+                              CvTrackbarCallback2 on_notify2,
+                              void* userdata)
+{
+    return icvCreateTrackbar(trackbar_name, window_name, val,
+                             count, 0, on_notify2, userdata);
+}
+
 
 CV_IMPL void
 cvSetMouseCallback( const char* name, CvMouseCallback function, void* info)
@@ -642,7 +680,7 @@ CV_IMPL void* cvGetWindowHandle( const char* name )
     
     __END__;
     
-    return NULL;
+    return result;
 }
 
 
@@ -708,6 +746,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     
     const EventTypeSpec genericWindowEventHandler[] = { 
         { kEventClassMouse, kEventMouseMoved},
+        { kEventClassMouse, kEventMouseDragged},
         { kEventClassMouse, kEventMouseUp},
         { kEventClassMouse, kEventMouseDown},
         { kEventClassWindow, kEventWindowClose },
@@ -785,7 +824,8 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
         switch (eventKind){
         case kEventMouseUp :
         case kEventMouseDown : 
-        case kEventMouseMoved : {
+        case kEventMouseMoved :
+        case kEventMouseDragged : {
             err = CallNextEventHandler(nextHandler, theEvent);
             if (err != eventNotHandledErr)
                 return err;
@@ -845,7 +885,7 @@ static pascal OSStatus windowEventHandler(EventHandlerCallRef nextHandler, Event
                     ly = ly * window->imageHeight / (content.bottom - content.top - window->trackbarheight);
                 }
 
-                if (lx>0 && ly >0){ /* a remettre dans les coordonnŽes locale */
+                if (lx>0 && ly >0){ /* a remettre dans les coordonnÃ©es locale */
                     window->on_mouse (event, lx, ly, flags, window->on_mouse_param);
                     return noErr;
                 }
@@ -900,13 +940,18 @@ CV_IMPL int cvWaitKey (int maxWait)
 	
 	// wait at least for one event (to allow mouse, etc. processing), exit if maxWait milliseconds passed (nullEvent)
 	UInt32 start = TickCount();
+    int iters=0;
 	do
 	{
 		// remaining time until maxWait is over
 		UInt32 wait = EventTimeToTicks (maxWait / 1000.0) - (TickCount() - start);
-		if (wait < 0)
-			wait = 0;
-		
+		if ((int)wait <= 0)
+        {
+            if( maxWait > 0 && iters > 0 )
+                break;
+            wait = 1;
+        }
+        iters++;
         WaitNextEvent (everyEvent, &theEvent, maxWait > 0 ? wait : kDurationForever, NULL);
 	}
 	while (lastKey == NO_KEY  &&  theEvent.what != nullEvent);

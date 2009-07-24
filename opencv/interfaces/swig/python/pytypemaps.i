@@ -201,7 +201,7 @@
     
     // use the macro we have to expand a single entry
     TUPLE_OR_TYPE (item, *element, typename, number, description, __VA_ARGS__)
-//*corner, "ff", & corner->x, & corner->y
+    // *corner, "ff", & corner->x, & corner->y
   }
   
   // these are the arguments passed to the OpenCV function

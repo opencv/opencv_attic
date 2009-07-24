@@ -1177,9 +1177,9 @@ CCSIDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
 }
 
 static void
-CopyColumn( const uchar* _src, int src_step,
-            uchar* _dst, int dst_step,
-            int len, int elem_size )
+CopyColumn( const uchar* _src, size_t src_step,
+            uchar* _dst, size_t dst_step,
+            int len, size_t elem_size )
 {
     int i, t0, t1;
     const int* src = (const int*)_src;
@@ -1214,9 +1214,9 @@ CopyColumn( const uchar* _src, int src_step,
 
 
 static void
-CopyFrom2Columns( const uchar* _src, int src_step,
+CopyFrom2Columns( const uchar* _src, size_t src_step,
                   uchar* _dst0, uchar* _dst1,
-                  int len, int elem_size )
+                  int len, size_t elem_size )
 {
     int i, t0, t1;
     const int* src = (const int*)_src;
@@ -1261,8 +1261,8 @@ CopyFrom2Columns( const uchar* _src, int src_step,
 
 static void
 CopyTo2Columns( const uchar* _src0, const uchar* _src1,
-                uchar* _dst, int dst_step,
-                int len, int elem_size )
+                uchar* _dst, size_t dst_step,
+                int len, size_t elem_size )
 {
     int i, t0, t1;
     const int* src0 = (const int*)_src0;
@@ -1419,7 +1419,7 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
     bool inv = (flags & DFT_INVERSE) != 0;
     int nf = 0, real_transform = src.channels() == 1 || (inv && (flags & DFT_REAL_OUTPUT)!=0);
     int type = src.type(), depth = src.depth();
-    int elem_size = src.elemSize1(), complex_elem_size = elem_size*2;
+    int elem_size = (int)src.elemSize1(), complex_elem_size = elem_size*2;
     int factors[34];
     bool inplace_transform = false;
     int ipp_norm_flag = 0;
@@ -1811,9 +1811,9 @@ void mulSpectrums( const Mat& srcA, const Mat& srcB,
         const float* dataB = (const float*)srcB.data;
         float* dataC = (float*)dst.data;
 
-        int stepA = srcA.step/sizeof(dataA[0]);
-        int stepB = srcB.step/sizeof(dataB[0]);
-        int stepC = dst.step/sizeof(dataC[0]);
+        size_t stepA = srcA.step/sizeof(dataA[0]);
+        size_t stepB = srcB.step/sizeof(dataB[0]);
+        size_t stepC = dst.step/sizeof(dataC[0]);
 
         if( !is_1d && cn == 1 )
         {
@@ -1878,9 +1878,9 @@ void mulSpectrums( const Mat& srcA, const Mat& srcB,
         const double* dataB = (const double*)srcB.data;
         double* dataC = (double*)dst.data;
 
-        int stepA = srcA.step/sizeof(dataA[0]);
-        int stepB = srcB.step/sizeof(dataB[0]);
-        int stepC = dst.step/sizeof(dataC[0]);
+        size_t stepA = srcA.step/sizeof(dataA[0]);
+        size_t stepB = srcB.step/sizeof(dataB[0]);
+        size_t stepC = dst.step/sizeof(dataC[0]);
 
         if( !is_1d && cn == 1 )
         {
@@ -2172,7 +2172,7 @@ void dct( const Mat& src0, Mat& dst, int flags )
     uchar *dft_wave = 0, *dct_wave = 0;
     int* itab = 0;
     uchar* ptr = 0;
-    int elem_size = src.elemSize(), complex_elem_size = elem_size*2;
+    int elem_size = (int)src.elemSize(), complex_elem_size = elem_size*2;
     int factors[34], inplace_transform;
     int i, len, count;
     AutoBuffer<uchar> buf;
@@ -2196,7 +2196,7 @@ void dct( const Mat& src0, Mat& dst, int flags )
     for( ; stage <= end_stage; stage++ )
     {
         uchar *sptr = src.data, *dptr = dst.data;
-        int sstep0, sstep1, dstep0, dstep1;
+        size_t sstep0, sstep1, dstep0, dstep1;
         
         if( stage == 0 )
         {
@@ -2296,8 +2296,8 @@ void dct( const Mat& src0, Mat& dst, int flags )
         // otherwise reuse the tables calculated on the previous stage
         for( i = 0; i < count; i++ )
         {
-            dct_func( sptr + i*sstep0, sstep1, src_dft_buf, dst_dft_buf,
-                      dptr + i*dstep0, dstep1, len, nf, factors,
+            dct_func( sptr + i*sstep0, (int)sstep1, src_dft_buf, dst_dft_buf,
+                      dptr + i*dstep0, (int)dstep1, len, nf, factors,
                       itab, dft_wave, dct_wave, spec, ptr );
         }
         src = dst;

@@ -44,7 +44,7 @@
 static const char* accum_param_names[] = { "size", "channels", "depth", "use_mask", 0 };
 static const CvSize accum_sizes[] = {{30,30}, {320, 240}, {720,480}, {-1,-1}};
 static const CvSize accum_whole_sizes[] = {{320,240}, {320, 240}, {720,480}, {-1,-1}};
-static const int accum_depths[] = { CV_8U, CV_32F, -1 };
+static const int accum_depths[] = { CV_8U, CV_32F, CV_64F, -1 };
 static const int accum_channels[] = { 1, 3, -1 };
 
 class CV_AccumBaseTestImpl : public CvArrTest
@@ -84,14 +84,16 @@ void CV_AccumBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = cvTsRandInt(rng) % 2, cn = cvTsRandInt(rng) & 1 ? 3 : 1;
+    int depth = cvTsRandInt(rng) % 3, cn = cvTsRandInt(rng) & 1 ? 3 : 1;
+    int accdepth = std::max((int)(cvTsRandInt(rng) % 2 + 1), depth);
     int i, input_count = test_array[INPUT].size();
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    depth = depth == 0 ? CV_8U : CV_32F;
+    depth = depth == 0 ? CV_8U : depth == 1 ? CV_32F : CV_64F;
+    accdepth = accdepth == 1 ? CV_32F : CV_64F;
 
     for( i = 0; i < input_count; i++ )
         types[INPUT][i] = CV_MAKETYPE(depth,cn);
-    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = types[TEMP][0] = CV_MAKETYPE(CV_32F,cn);
+    types[INPUT_OUTPUT][0] = types[REF_INPUT_OUTPUT][0] = types[TEMP][0] = CV_MAKETYPE(accdepth,cn);
 
     alpha = cvTsRandReal(rng);
 }
@@ -99,7 +101,8 @@ void CV_AccumBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
 
 double CV_AccumBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return FLT_EPSILON*10;
+    return CV_MAT_DEPTH(test_mat[INPUT_OUTPUT][0].type) < CV_64F ||
+        CV_MAT_DEPTH(test_mat[INPUT][0].type) == CV_32F ? FLT_EPSILON*10 : DBL_EPSILON*100;
 }
 
 
@@ -281,12 +284,13 @@ void CV_RunningAvgTest::prepare_to_validation( int )
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
     CvMat* temp = &test_mat[TEMP][0];
     const CvMat* mask = test_array[MASK][0] ? &test_mat[MASK][0] : 0;
-    float a[1], b[1];
-    CvMat A = cvMat(1,1,CV_32F,a), B = cvMat(1,1,CV_32F,b);
+    double a[1], b[1];
+    int accdepth = CV_MAT_DEPTH(test_mat[INPUT_OUTPUT][0].type);
+    CvMat A = cvMat(1,1,accdepth,a), B = cvMat(1,1,accdepth,b);
     cvSetReal1D( &A, 0, alpha);
-    cvSetReal1D( &B, 0, 1 - A.data.fl[0] );
+    cvSetReal1D( &B, 0, 1 - cvGetReal1D(&A, 0));
 
-    cvTsAdd( src, cvScalarAll(A.data.fl[0]), dst, cvScalarAll(B.data.fl[0]), cvScalarAll(0.), temp, 0 );
+    cvTsAdd( src, cvScalarAll(cvGetReal1D(&A, 0)), dst, cvScalarAll(cvGetReal1D(&B, 0)), cvScalarAll(0.), temp, 0 );
     cvTsCopy( temp, dst, mask );
 }
 

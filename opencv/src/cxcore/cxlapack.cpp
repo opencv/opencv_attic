@@ -51,6 +51,7 @@
   #include "clapack.h"
 #endif
 
+#undef abs
 #undef max
 #undef min
 
@@ -70,7 +71,7 @@ double determinant( const Mat& mat )
 {
     double result = 0;
     int type = mat.type(), rows = mat.rows;
-    int step = mat.step;
+    size_t step = mat.step;
     const uchar* m = mat.data;
 
     CV_Assert( mat.rows == mat.cols );
@@ -191,8 +192,8 @@ double invert( const Mat& src, Mat& dst, int method )
         {
             uchar* srcdata = src.data;
             uchar* dstdata = dst.data;
-            int srcstep = src.step;
-            int dststep = dst.step;
+            size_t srcstep = src.step;
+            size_t dststep = dst.step;
 
             if( src.rows == 2 )
             {
@@ -316,7 +317,7 @@ double invert( const Mat& src, Mat& dst, int method )
 
         {
         integer n = dst.cols, lwork=-1, elem_size = CV_ELEM_SIZE(type),
-            lda = dst.step/elem_size, piv1=0, info=0;
+            lda = (int)(dst.step/elem_size), piv1=0, info=0;
 
         if( dst.data == src.data )
         {
@@ -413,9 +414,9 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
         uchar* srcdata = src.data;
         uchar* bdata = src2.data;
         uchar* dstdata = dst.data;
-        int srcstep = src.step;
-        int src2step = src2.step;
-        int dststep = dst.step;
+        size_t srcstep = src.step;
+        size_t src2step = src2.step;
+        size_t dststep = dst.step;
 
         if( src.rows == 2 )
         {
@@ -638,8 +639,8 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
         gemm( src2, src, 1, Mat(), 0, xt, GEMM_1_T );
     }
     
-    lda = at.step ? at.step/elem_size : at.cols;
-    ldx = xt.step ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n);
+    lda = (int)(at.step ? at.step/elem_size : at.cols);
+    ldx = (int)(xt.step ? xt.step/elem_size : (!is_normal && copy_rhs ? mn : n));
 
     if( method == DECOMP_SVD || method == DECOMP_EIG )
     {
@@ -718,10 +719,196 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
 
 /////////////////// finding eigenvalues and eigenvectors of a symmetric matrix ///////////////
 
+template<typename Real> static inline Real hypot(Real a, Real b)
+{
+    a = std::abs(a);
+    b = std::abs(b);
+    Real f;
+    if( a > b )
+    {
+        f = b/a;
+        return a*std::sqrt(1 + f*f);
+    }
+    f = a/b;
+    return b*std::sqrt(1 + f*f);
+}
+
+    
+template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool computeEvects, Real eps)
+{
+    int n = _S0.cols, i, j, k, m;
+    
+    if( computeEvects )
+        _E = Mat::eye(n, n, _S0.type());
+    
+    int iters, maxIters = n*n*30;
+    
+    AutoBuffer<uchar> buf(n*2*sizeof(int) + (n*n+n*2+1)*sizeof(Real));
+    Real* S = alignPtr((Real*)(uchar*)buf, sizeof(Real));
+    Real* maxSR = S + n*n;
+    Real* maxSC = maxSR + n;
+    int* indR = (int*)(maxSC + n);
+    int* indC = indR + n;
+    
+    Mat _S(_S0.size(), _S0.type(), S);
+    _S0.copyTo(_S);
+    
+    Real mv;
+    Real* E = (Real*)_E.data;
+    Real* e = (Real*)_e.data;
+    int Sstep = _S.step/sizeof(Real);
+    int estep = _e.cols == 1 ? 1 : _e.step/sizeof(Real);
+    int Estep = _E.step/sizeof(Real);
+    
+    for( k = 0; k < n; k++ )
+    {
+        e[k*estep] = S[(Sstep + 1)*k];
+        if( k < n - 1 )
+        {
+            for( m = k+1, mv = std::abs(S[Sstep*k + m]), i = k+2; i < n; i++ )
+            {
+                Real v = std::abs(S[Sstep*k+i]);
+                if( mv < v )
+                    mv = v, m = i;
+            }
+            maxSR[k] = mv;
+            indR[k] = m;
+        }
+        if( k > 0 )
+        {
+            for( m = 0, mv = std::abs(S[k]), i = 1; i < k; i++ )
+            {
+                Real v = std::abs(S[Sstep*i+k]);
+                if( mv < v )
+                    mv = v, m = i;
+            }
+            maxSC[k] = mv;
+            indC[k] = m;
+        }
+    }
+    
+    for( iters = 0; iters < maxIters; iters++ )
+    {
+        // find index (k,l) of pivot p
+        for( k = 0, mv = maxSR[0], i = 1; i < n-1; i++ )
+        {
+            Real v = maxSR[i];
+            if( mv < v )
+                mv = v, k = i;
+        }
+        int l = indR[k];
+        for( i = 1; i < n; i++ )
+        {
+            Real v = maxSC[i];
+            if( mv < v )
+                mv = v, k = indC[i], l = i;
+        }
+        
+        Real p = S[Sstep*k + l];
+        if( std::abs(p) <= eps )
+            break;
+        Real y = Real((e[estep*l] - e[estep*k])*0.5);
+        Real t = std::abs(y) + hypot(p, y);
+        Real s = hypot(p, t);
+        Real c = t/s;
+        s = p/s; t = (p/t)*p;
+        if( y < 0 )
+            s = -s, t = -t;
+        S[Sstep*k + l] = 0;
+        
+        e[estep*k] -= t;
+        e[estep*l] += t;
+        
+        Real a0, b0;
+        
+#undef rotate
+#define rotate(v0, v1) a0 = v0, b0 = v1, v0 = a0*c - b0*s, v1 = a0*s + b0*c
+        
+        // rotate rows and columns k and l
+        for( i = 0; i < k; i++ )
+            rotate(S[Sstep*i+k], S[Sstep*i+l]);
+        for( i = k+1; i < l; i++ )
+            rotate(S[Sstep*k+i], S[Sstep*i+l]);
+        for( i = l+1; i < n; i++ )
+            rotate(S[Sstep*k+i], S[Sstep*l+i]);
+        
+        // rotate eigenvectors
+        if( computeEvects )
+            for( i = 0; i < n; i++ )
+                rotate(E[Estep*k+i], E[Estep*l+i]);
+        
+#undef rotate
+        
+        for( j = 0; j < 2; j++ )
+        {
+            int idx = j == 0 ? k : l;
+            if( idx < n - 1 )
+            {
+                for( m = idx+1, mv = std::abs(S[Sstep*idx + m]), i = idx+2; i < n; i++ )
+                {
+                    Real v = std::abs(S[Sstep*idx+i]);
+                    if( mv < v )
+                        mv = v, m = i;
+                }
+                maxSR[idx] = mv;
+                indR[idx] = m;
+            }
+            if( idx > 0 )
+            {
+                for( m = 0, mv = std::abs(S[idx]), i = 1; i < idx; i++ )
+                {
+                    Real v = std::abs(S[Sstep*i+idx]);
+                    if( mv < v )
+                        mv = v, m = i;
+                }
+                maxSC[idx] = mv;
+                indC[idx] = m;
+            }
+        }
+    }
+    
+    // sort eigenvalues & eigenvectors
+    for( k = 0; k < n-1; k++ )
+    {
+        m = k;
+        for( i = k+1; i < n; i++ )
+        {
+            if( e[estep*m] < e[estep*i] )
+                m = i;
+        }
+        if( k != m )
+        {
+            std::swap(e[estep*m], e[estep*k]);
+            if( computeEvects )
+                for( i = 0; i < n; i++ )
+                    std::swap(E[Estep*m + i], E[Estep*k + i]);
+        }
+    }
+    
+    return true;
+}
+    
+    
 static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
 {
+    int type = src.type();
+    integer n = src.rows;
+    
+    CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
+    // allow for 1xn eigenvalue matrix too
+    if( !(evals.rows == 1 && evals.cols == n && evals.type() == type) )
+        evals.create(n, 1, type);
+    
+    if( n <= 20 )
+    {
+        if( type == CV_32F )
+            return jacobi<float>(src, evals, evects, computeEvects, FLT_EPSILON);
+        else
+            return jacobi<double>(src, evals, evects, computeEvects, DBL_EPSILON);
+    }
+    
     bool result;
-    integer i, n, m=0, lda, ldv, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
+    integer i, m=0, lda, ldv=n, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
     integer *isupport, *iwork;
     char job[] = { computeEvects ? 'V' : 'N', '\0' };
     char A[] = {'A', '\0'}, L[] = {'L', '\0'};
@@ -729,20 +916,13 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
 
     AutoBuffer<uchar> buf;
 
-    int type = src.type();
-    int elem_size = src.elemSize();
-    lda = src.step/elem_size;
-    n = ldv = src.rows;
-
-    CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
-    // allow for 1xn eigenvalue matrix too
-    if( !(evals.rows == 1 && evals.cols == n && evals.type() == type) )
-        evals.create(n, 1, type);
+    int elem_size = (int)src.elemSize();
+    lda = (int)(src.step/elem_size);
     
     if( computeEvects )
     {
         evects.create(n, n, type);
-        ldv = evects.step/elem_size;
+        ldv = (int)(evects.step/elem_size);
     }
 
     bool copy_evals = !evals.isContinuous();
@@ -820,6 +1000,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
     return result;
 }
 
+    
 bool eigen( const Mat& src, Mat& evals )
 {
     Mat evects;
@@ -927,7 +1108,7 @@ SVBkSb( int m, int n, const T* w, int incw,
 SVD& SVD::operator ()(const Mat& a, int flags)
 {
     integer m = a.rows, n = a.cols, mn = std::max(m, n), nm = std::min(m, n);
-    int type = a.type(), elem_size = a.elemSize();
+    int type = a.type(), elem_size = (int)a.elemSize();
     
     if( flags & NO_UV )
     {
@@ -1015,11 +1196,11 @@ SVD& SVD::operator ()(const Mat& a, int flags)
 
     if( mode[0] != 'N' )
     {
-        ldv = vt.step ? vt.step/elem_size : vt.cols;
-        ldu = u.step ? u.step/elem_size : u.cols;
+        ldv = (int)(vt.step ? vt.step/elem_size : vt.cols);
+        ldu = (int)(u.step ? u.step/elem_size : u.cols);
     }
 
-    lda = _a.step ? _a.step/elem_size : _a.cols;
+    lda = (int)(_a.step ? _a.step/elem_size : _a.cols);
     if( type == CV_32F )
     {
         sgesdd_(mode, &n, &m, (float*)_a.data, &lda, (float*)w.data,
@@ -1032,14 +1213,20 @@ SVD& SVD::operator ()(const Mat& a, int flags)
             (double*)vt.data, &ldv, (double*)u.data, &ldu,
             (double*)(buffer + work_ofs), &lwork, (integer*)(buffer + iwork_ofs), &info );
     }
-    CV_Assert(info == 0);
+    CV_Assert(info >= 0);
+    if(info != 0)
+    {
+        u = Scalar(0.);
+        vt = Scalar(0.);
+        w = Scalar(0.);
+    }
     return *this;
 }
 
 
 void SVD::backSubst( const Mat& rhs, Mat& dst ) const
 {
-    int type = w.type(), esz = w.elemSize();
+    int type = w.type(), esz = (int)w.elemSize();
     int m = u.rows, n = vt.cols, nb = rhs.data ? rhs.cols : m;
     AutoBuffer<double> buffer(nb);
     CV_Assert( u.data && vt.data && w.data );
@@ -1049,13 +1236,13 @@ void SVD::backSubst( const Mat& rhs, Mat& dst ) const
 
     dst.create( n, nb, type );
     if( type == CV_32F )
-        SVBkSb(m, n, (float*)w.data, 1, (float*)u.data, u.step/esz, false,
-            (float*)vt.data, vt.step/esz, true, (float*)rhs.data, rhs.step/esz,
-            nb, (float*)dst.data, dst.step/esz, buffer, 10*FLT_EPSILON );
+        SVBkSb(m, n, (float*)w.data, 1, (float*)u.data, (int)(u.step/esz), false,
+            (float*)vt.data, (int)(vt.step/esz), true, (float*)rhs.data, (int)(rhs.step/esz),
+            nb, (float*)dst.data, (int)(dst.step/esz), buffer, 10*FLT_EPSILON );
     else if( type == CV_64F )
-        SVBkSb(m, n, (double*)w.data, 1, (double*)u.data, u.step/esz, false,
-            (double*)vt.data, vt.step/esz, true, (double*)rhs.data, rhs.step/esz,
-            nb, (double*)dst.data, dst.step/esz, buffer, 2*DBL_EPSILON );
+        SVBkSb(m, n, (double*)w.data, 1, (double*)u.data, (int)(u.step/esz), false,
+            (double*)vt.data, (int)(vt.step/esz), true, (double*)rhs.data, (int)(rhs.step/esz),
+            nb, (double*)dst.data, (int)(dst.step/esz), buffer, 2*DBL_EPSILON );
     else
         CV_Error( CV_StsUnsupportedFormat, "" );
 }
@@ -1191,8 +1378,8 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
     int m = !uT ? u.rows : u.cols;
     int n = vT ? v.cols : v.rows;
     int nm = std::min(n, m), nb;
-    int esz = w.elemSize();
-    int incw = w.size() == cv::Size(nm, 1) ? 1 : w.step/esz + (w.cols > 1 && w.rows > 1);
+    int esz = (int)w.elemSize();
+    int incw = w.size() == cv::Size(nm, 1) ? 1 : (int)(w.step/esz) + (w.cols > 1 && w.rows > 1);
 
     CV_Assert( type == u.type() && type == v.type() &&
         type == dst.type() && dst.rows == n &&
@@ -1213,11 +1400,11 @@ cvSVBkSb( const CvArr* warr, const CvArr* uarr,
     cv::AutoBuffer<double> buffer(nb);
 
     if( type == CV_32F )
-        cv::SVBkSb(m, n, (float*)w.data, incw, (float*)u.data, u.step/esz, uT,
-            (float*)v.data, v.step/esz, vT, (float*)rhs.data, rhs.step/esz,
-            nb, (float*)dst.data, dst.step/esz, buffer, 2*FLT_EPSILON );
+        cv::SVBkSb(m, n, (float*)w.data, incw, (float*)u.data, (int)(u.step/esz), uT,
+            (float*)v.data, (int)(v.step/esz), vT, (float*)rhs.data, (int)(rhs.step/esz),
+            nb, (float*)dst.data, (int)(dst.step/esz), buffer, 2*FLT_EPSILON );
     else
-        cv::SVBkSb(m, n, (double*)w.data, incw, (double*)u.data, u.step/esz, uT,
-            (double*)v.data, v.step/esz, vT, (double*)rhs.data, rhs.step/esz,
-            nb, (double*)dst.data, dst.step/esz, buffer, 2*DBL_EPSILON );
+        cv::SVBkSb(m, n, (double*)w.data, incw, (double*)u.data, (int)(u.step/esz), uT,
+            (double*)v.data, (int)(v.step/esz), vT, (double*)rhs.data, (int)(rhs.step/esz),
+            nb, (double*)dst.data, (int)(dst.step/esz), buffer, 2*DBL_EPSILON );
 }

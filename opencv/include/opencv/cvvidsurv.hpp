@@ -117,7 +117,7 @@ private: /* Internal functions: */
         if(p->Str)free(p->Str);
         if(p->pName)free(p->pName);
         if(p->pComment)free(p->pComment);
-        cvFree((void**)pp);
+        cvFree(pp);
     }
     CvDefParam* NewParam(const char* name)
     {
@@ -131,7 +131,7 @@ private: /* Internal functions: */
         else
         {
             CvDefParam* p = m_pParamList;
-            for(;p->next;p=p->next);
+            for(;p->next;p=p->next) ;
             p->next = pNew;
         }
         return pNew;
@@ -140,7 +140,7 @@ private: /* Internal functions: */
     CvDefParam* GetParamPtr(int index)
     {
         CvDefParam* p = m_pParamList;
-        for(;index>0 && p;index--,p=p->next);
+        for(;index>0 && p;index--,p=p->next) ;
         return p;
     }
     CvDefParam* GetParamPtr(const char* name)

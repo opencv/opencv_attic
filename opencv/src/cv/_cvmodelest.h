@@ -53,10 +53,10 @@ public:
 
     virtual int runKernel( const CvMat* m1, const CvMat* m2, CvMat* model )=0;
     virtual bool runLMeDS( const CvMat* m1, const CvMat* m2, CvMat* model,
-                           CvMat* mask, double confidence=0.99, int maxIters=1000 );
+                           CvMat* mask, double confidence=0.99, int maxIters=2000 );
     virtual bool runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* model,
                             CvMat* mask, double threshold,
-                            double confidence=0.99, int maxIters=1000 );
+                            double confidence=0.99, int maxIters=2000 );
     virtual bool refine( const CvMat*, const CvMat*, CvMat*, int ) { return true; }
     virtual void setSeed( int64 seed );
 

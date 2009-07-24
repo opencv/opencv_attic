@@ -256,7 +256,7 @@ void OctTree::getPointsWithinSphere( const Point3f& center, float radius, Vector
 void OctTree::buildTree( const Vector<Point3f>& points3d, int maxLevels, int minPoints)
 {
     assert( (size_t)maxLevels * 8 < MAX_STACK_SIZE );
-    points = points3d;
+    points3d.copyTo(points);
     this->minPoints = minPoints;
 
     nodes.clear();
@@ -267,7 +267,7 @@ void OctTree::buildTree( const Vector<Point3f>& points3d, int maxLevels, int min
     root.isLeaf = true;
     root.maxLevels = maxLevels;
     root.begin = 0;
-    root.end = points.size();
+    root.end = (int)points.size();
     for( int i = 0; i < 8; i++ )
         root.children[i] = 0;
 
@@ -322,17 +322,18 @@ void  OctTree::buildNext(size_t node_ind)
 
         child.isLeaf = true;
         child.maxLevels = nodes[node_ind].maxLevels - 1;		
-        child.begin = nodes[node_ind].begin + boxBorders[i+0];
-        child.end   = nodes[node_ind].begin + boxBorders[i+1];
+        child.begin = nodes[node_ind].begin + (int)boxBorders[i+0];
+        child.end   = nodes[node_ind].begin + (int)boxBorders[i+1];
         for( int k = 0; k < 8; k++ )
             child.children[k] = 0;
+
+        nodes[node_ind].children[i] = (int)(nodes.size() - 1);
 
         if (child.maxLevels != 1 && (child.end - child.begin) > minPoints )
         {
             child.isLeaf = false;
             buildNext(nodes.size() - 1);
-        }
-        nodes[node_ind].children[i] = (int)(nodes.size() - 1);		
+        }        		
     }
 }
 

@@ -64,7 +64,7 @@ dist_csamples_DATA = \
   c/letter-recognition.data \
   c/waveform.data\
   \
-  c/adaptiveskindetector_sample.cpp \
+  c/adaptiveskindetector.cpp \
   c/bgfg_codebook.cpp \
   c/bgfg_segm.cpp \
   c/blobtrack.cpp \
@@ -72,10 +72,7 @@ dist_csamples_DATA = \
   c/camshiftdemo.c \
   c/contours.c \
   c/convexhull.c \
-  c/camshiftdemo.c \
-  c/contours.c \
   c/convert_cascade.c \
-  c/convexhull.c \
   c/delaunay.c \
   c/demhist.c \
   c/dft.c \

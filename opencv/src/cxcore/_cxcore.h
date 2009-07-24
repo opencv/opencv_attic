@@ -51,7 +51,9 @@
 typedef unsigned long ulong;
 
 #ifdef __BORLANDC__
+#ifndef WIN32
     #define     WIN32
+#endif
     #define     CV_DLL
 #endif
 
@@ -66,6 +68,15 @@ typedef unsigned long ulong;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined WIN32 || defined _WIN32
+#  ifndef WIN32
+#    define WIN32
+#  endif
+#  ifndef _WIN32
+#    define _WIN32
+#  endif
+#endif
 
 #if defined WIN32 || defined WINCE
 #ifndef _WIN32_WINNT         // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
@@ -121,7 +132,7 @@ static inline CopyMaskFunc getCopyMaskFunc(int esz)
     return func;
 }
 
-#ifdef WIN32
+#if defined WIN32 || defined _WIN32
 void deleteThreadAllocData();
 void deleteThreadRNGData();
 #endif
@@ -233,9 +244,9 @@ binaryOpC1_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat )
     const T1* src1 = (const T1*)srcmat1.data;
     const T2* src2 = (const T2*)srcmat2.data;
     DT* dst = (DT*)dstmat.data;
-    int step1 = srcmat1.step/sizeof(src1[0]);
-    int step2 = srcmat2.step/sizeof(src2[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step1 = srcmat1.step/sizeof(src1[0]);
+    size_t step2 = srcmat2.step/sizeof(src2[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, dstmat.channels() );
 
     if( size.width == 1 )
@@ -277,8 +288,8 @@ binarySOpCn_( const Mat& srcmat, Mat& dstmat, const Scalar& _scalar )
     typedef typename Op::rtype DT;
     const T* src0 = (const T*)srcmat.data;
     DT* dst0 = (DT*)dstmat.data;
-    int step1 = srcmat.step/sizeof(src0[0]);
-    int step = dstmat.step/sizeof(dst0[0]);
+    size_t step1 = srcmat.step/sizeof(src0[0]);
+    size_t step = dstmat.step/sizeof(dst0[0]);
     int cn = dstmat.channels();
     Size size = getContinuousSize( srcmat, dstmat, cn );
     WT scalar[12];
@@ -332,8 +343,8 @@ binarySOpC1_( const Mat& srcmat, Mat& dstmat, double _scalar )
     WT scalar = saturate_cast<WT>(_scalar);
     const T* src = (const T*)srcmat.data;
     DT* dst = (DT*)dstmat.data;
-    int step1 = srcmat.step/sizeof(src[0]);
-    int step = dstmat.step/sizeof(dst[0]);
+    size_t step1 = srcmat.step/sizeof(src[0]);
+    size_t step = dstmat.step/sizeof(dst[0]);
     Size size = srcmat.size();
     
     size.width *= srcmat.channels();

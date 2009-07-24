@@ -41,7 +41,7 @@
 
 #include "_highgui.h"
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined WIN64 || defined _WIN64
 
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4710 )
@@ -57,7 +57,7 @@
 static const char* trackbar_text =
 "                                                                                             ";
 
-#if defined WIN64 || defined EM64T
+#if defined WIN64 || defined _WIN64
 
 #define icvGetWindowLongPtr GetWindowLongPtr
 #define icvSetWindowLongPtr( hwnd, id, ptr ) SetWindowLongPtr( hwnd, id, (LONG_PTR)(ptr) )
@@ -121,6 +121,8 @@ typedef struct CvTrackbar
     int pos;
     int maxval;
     void (*notify)(int);
+    void (*notify2)(int, void*);
+    void* userdata;
     int id;
 }
 CvTrackbar;
@@ -1034,6 +1036,8 @@ static void icvUpdateTrackbar( CvTrackbar* trackbar, int pos )
     if( trackbar->pos != pos )
     {
         trackbar->pos = pos;
+        if( trackbar->notify2 )
+            trackbar->notify2(pos, trackbar->userdata);
         if( trackbar->notify )
             trackbar->notify(pos);
 
@@ -1232,13 +1236,14 @@ typedef struct
 ButtonInfo;
 
 
-CV_IMPL int
-cvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                  int* val, int count, CvTrackbarCallback on_notify )
+static int
+icvCreateTrackbar( const char* trackbar_name, const char* window_name,
+                   int* val, int count, CvTrackbarCallback on_notify,
+                   CvTrackbarCallback2 on_notify2, void* userdata )
 {
     int result = 0;
 
-    CV_FUNCNAME( "cvCreateTrackbar" );
+    CV_FUNCNAME( "icvCreateTrackbar" );
 
     __BEGIN__;
 
@@ -1347,6 +1352,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
         trackbar = (CvTrackbar*)cvAlloc( sizeof(CvTrackbar) + len + 1 );
         trackbar->signature = CV_TRACKBAR_MAGIC_VAL;
         trackbar->notify = 0;
+        trackbar->notify2 = 0;
         trackbar->parent = window;
         trackbar->pos = 0;
         trackbar->data = 0;
@@ -1382,6 +1388,7 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     {
         trackbar->data = 0;
         trackbar->notify = 0;
+        trackbar->notify2 = 0;
     }
 
     trackbar->maxval = count;
@@ -1401,6 +1408,8 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     ShowWindow( trackbar->hwnd, SW_SHOW );
 
     trackbar->notify = on_notify;
+    trackbar->notify2 = on_notify2;
+    trackbar->userdata = userdata;
     trackbar->data = val;
 
     /* Resize the window to reflect the toolbar resizing*/
@@ -1413,6 +1422,22 @@ cvCreateTrackbar( const char* trackbar_name, const char* window_name,
     return result;
 }
 
+CV_IMPL int
+cvCreateTrackbar( const char* trackbar_name, const char* window_name,
+                  int* val, int count, CvTrackbarCallback on_notify )
+{
+    return icvCreateTrackbar( trackbar_name, window_name, val, count,
+        on_notify, 0, 0 );
+}
+
+CV_IMPL int
+cvCreateTrackbar2( const char* trackbar_name, const char* window_name,
+                   int* val, int count, CvTrackbarCallback2 on_notify2,
+                   void* userdata )
+{
+    return icvCreateTrackbar( trackbar_name, window_name, val, count,
+        0, on_notify2, userdata );
+}
 
 CV_IMPL void
 cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* param )

@@ -2507,6 +2507,97 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     __END__;
 }
 
+
+void cv::cvtColor( const Mat& src, Mat& dst, int code, int dst_cn )
+{
+    switch( code )
+    {
+    case CV_BGR2BGRA:
+    case CV_RGB2BGRA:
+    case CV_BGRA2RGBA:
+    case CV_BGR5652BGRA:
+    case CV_BGR5552BGRA:
+    case CV_BGR5652RGBA:
+    case CV_BGR5552RGBA:
+    case CV_GRAY2BGRA:
+        dst_cn = 4;
+        break;
+
+    case CV_BGRA2BGR:
+    case CV_RGBA2BGR:
+    case CV_RGB2BGR:
+    case CV_BGR5652BGR:
+    case CV_BGR5552BGR:
+    case CV_BGR5652RGB:
+    case CV_BGR5552RGB:
+    case CV_GRAY2BGR:
+
+    case CV_BGR2YCrCb:
+    case CV_RGB2YCrCb:
+    case CV_BGR2XYZ:
+    case CV_RGB2XYZ:
+    case CV_BGR2HSV:
+    case CV_RGB2HSV:
+    case CV_BGR2Lab:
+    case CV_RGB2Lab:
+    case CV_BGR2Luv:
+    case CV_RGB2Luv:
+    case CV_BGR2HLS:
+    case CV_RGB2HLS:
+
+    case CV_BayerBG2BGR:
+    case CV_BayerGB2BGR:
+    case CV_BayerRG2BGR:
+    case CV_BayerGR2BGR:
+        dst_cn = 3;
+        break;
+
+    case CV_YCrCb2BGR:
+    case CV_YCrCb2RGB:
+    case CV_XYZ2BGR:
+    case CV_XYZ2RGB:
+    case CV_HSV2BGR:
+    case CV_HSV2RGB:
+    case CV_Lab2BGR:
+    case CV_Lab2RGB:
+    case CV_Luv2BGR:
+    case CV_Luv2RGB:
+    case CV_HLS2BGR:
+    case CV_HLS2RGB:
+        if( dst_cn != 4 )
+            dst_cn = 3;
+        break;
+
+    case CV_BGR2BGR565:
+    case CV_BGR2BGR555:
+    case CV_RGB2BGR565:
+    case CV_RGB2BGR555:
+    case CV_BGRA2BGR565:
+    case CV_BGRA2BGR555:
+    case CV_RGBA2BGR565:
+    case CV_RGBA2BGR555:
+    case CV_GRAY2BGR565:
+    case CV_GRAY2BGR555:
+        dst_cn = 2;
+        break;
+
+    case CV_BGR2GRAY:
+    case CV_BGRA2GRAY:
+    case CV_RGB2GRAY:
+    case CV_RGBA2GRAY:
+    case CV_BGR5652GRAY:
+    case CV_BGR5552GRAY:
+        dst_cn = 1;
+        break;
+    default:
+        CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
+    }
+    
+    dst.create(src.size(), CV_MAKETYPE(src.depth(), dst_cn));
+    CvMat _src = src, _dst = dst;
+    cvCvtColor( &_src, &_dst, code );
+}
+
 /* End of file. */
 
 

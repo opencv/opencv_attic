@@ -141,7 +141,7 @@ protected:
 *                                   Adaptive Skin Detector                               *
 \****************************************************************************************/
 
-class CvAdaptiveSkinDetector
+class CV_EXPORTS CvAdaptiveSkinDetector
 {
 private:
 	enum {
@@ -151,7 +151,7 @@ private:
 		GSD_INTENSITY_UT = 250
 	};
 
-	class Histogram
+	class CV_EXPORTS Histogram
 	{
 	private:
 		enum {
@@ -200,14 +200,14 @@ public:
 *                                  Fuzzy MeanShift Tracker                               *
 \****************************************************************************************/
 
-class CvFuzzyPoint {
+class CV_EXPORTS CvFuzzyPoint {
 public:
 	double x, y, value;
 
 	CvFuzzyPoint(double _x, double _y);
 };
 
-class CvFuzzyCurve {
+class CV_EXPORTS CvFuzzyCurve {
 private:
     std::vector<CvFuzzyPoint> points;
 	double value, centre;
@@ -227,7 +227,7 @@ public:
 	void setValue(double _value);
 };
 
-class CvFuzzyFunction {
+class CV_EXPORTS CvFuzzyFunction {
 public:
     std::vector<CvFuzzyCurve> curves;
 
@@ -239,7 +239,7 @@ public:
 	CvFuzzyCurve *newCurve();
 };
 
-class CvFuzzyRule {
+class CV_EXPORTS CvFuzzyRule {
 private:
 	CvFuzzyCurve *fuzzyInput1, *fuzzyInput2;
 	CvFuzzyCurve *fuzzyOutput;
@@ -251,7 +251,7 @@ public:
 	CvFuzzyCurve *getOutputCurve();
 };
 
-class CvFuzzyController {
+class CV_EXPORTS CvFuzzyController {
 private:
     std::vector<CvFuzzyRule*> rules;
 public:
@@ -261,7 +261,7 @@ public:
 	double calcOutput(double param1, double param2);
 };
 
-class CvFuzzyMeanShiftTracker
+class CV_EXPORTS CvFuzzyMeanShiftTracker
 {
 private:
 	class FuzzyResizer
@@ -395,6 +395,7 @@ CV_EXPORTS void computeSpinImages( const OctTree& octtree,
 
 struct CV_EXPORTS HOGDescriptor
 {
+public:
     enum { L2Hys=0 };
 
     HOGDescriptor() : winSize(64,128), blockSize(16,16), blockStride(8,8),
@@ -403,9 +404,9 @@ struct CV_EXPORTS HOGDescriptor
     {}
 
     HOGDescriptor(Size _winSize, Size _blockSize, Size _blockStride,
-        int _nbins, int _derivAperture=1, double _winSigma=-1,
+        Size _cellSize, int _nbins, int _derivAperture=1, double _winSigma=-1,
         int _histogramNormType=L2Hys, double _L2HysThreshold=0.2, bool _gammaCorrection=false)
-        : winSize(_winSize), blockSize(_blockSize), blockStride(_blockStride),
+        : winSize(_winSize), blockSize(_blockSize), blockStride(_blockStride), cellSize(_cellSize),
         nbins(_nbins), derivAperture(_derivAperture), winSigma(_winSigma),
         histogramNormType(_histogramNormType), L2HysThreshold(_L2HysThreshold),
         gammaCorrection(_gammaCorrection)
@@ -458,6 +459,230 @@ struct CV_EXPORTS HOGDescriptor
     Vector<float> svmDetector;
 };
 
+
+class CV_EXPORTS SelfSimDescriptor
+{
+public:
+    SelfSimDescriptor();
+    SelfSimDescriptor(int _ssize, int _lsize,
+        int _startDistanceBucket=DEFAULT_START_DISTANCE_BUCKET,
+        int _numberOfDistanceBuckets=DEFAULT_NUM_DISTANCE_BUCKETS,
+        int _nangles=DEFAULT_NUM_ANGLES);
+	SelfSimDescriptor(const SelfSimDescriptor& ss);
+	virtual ~SelfSimDescriptor();
+    SelfSimDescriptor& operator = (const SelfSimDescriptor& ss);
+
+    size_t getDescriptorSize() const;
+    Size getGridSize( Size imgsize, Size winStride ) const;
+
+    virtual void compute(const Mat& img, Vector<float>& descriptors, Size winStride=Size(),
+                         const Vector<Point>& locations=Vector<Point>()) const;
+    virtual void computeLogPolarMapping(Mat& mappingMask) const;
+    virtual void SSD(const Mat& img, Point pt, Mat& ssd) const;
+
+	int smallSize;
+	int largeSize;
+    int startDistanceBucket;
+    int numberOfDistanceBuckets;
+    int numberOfAngles;
+
+    enum { DEFAULT_SMALL_SIZE = 5, DEFAULT_LARGE_SIZE = 41,
+        DEFAULT_NUM_ANGLES = 20, DEFAULT_START_DISTANCE_BUCKET = 3,
+        DEFAULT_NUM_DISTANCE_BUCKETS = 7 };
+};
+
+    
+class CV_EXPORTS PatchGenerator
+{
+public:
+    PatchGenerator();
+    PatchGenerator(double _backgroundMin, double _backgroundMax,
+                   double _noiseRange, bool _randomBlur=true,
+                   double _lambdaMin=0.6, double _lambdaMax=1.5,
+                   double _thetaMin=-CV_PI, double _thetaMax=CV_PI,
+                   double _phiMin=-CV_PI, double _phiMax=CV_PI );
+    void operator()(const Mat& image, Point2f pt, Mat& patch, Size patchSize, RNG& rng) const;
+    void operator()(const Mat& image, const Mat& transform, Mat& patch,
+                    Size patchSize, RNG& rng) const;
+    void warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
+                        Mat& warped, int border, RNG& rng) const;
+    void generateRandomTransform(Point2f srcCenter, Point2f dstCenter,
+                                 Mat& transform, RNG& rng, bool inverse=false) const;
+    double backgroundMin, backgroundMax;
+    double noiseRange;
+    bool randomBlur;
+    double lambdaMin, lambdaMax;
+    double thetaMin, thetaMax;
+    double phiMin, phiMax;
+};
+
+
+class CV_EXPORTS LDetector
+{
+public:    
+    LDetector();
+    LDetector(int _radius, int _threshold, int _nOctaves,
+              int _nViews, double _baseFeatureSize, double _clusteringDistance);
+    void operator()(const Mat& image, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
+                         int maxCount, const PatchGenerator& patchGenerator) const;
+    void setVerbose(bool verbose);
+    
+    void read(const FileNode& node);
+    void write(FileStorage& fs, const String& name=String()) const;
+    
+    int radius;
+    int threshold;
+    int nOctaves;
+    int nViews;
+    bool verbose;
+    
+    double baseFeatureSize;
+    double clusteringDistance;
+};
+
+
+class CV_EXPORTS FernClassifier
+{
+public:
+    FernClassifier();
+    FernClassifier(const FileNode& node);
+    FernClassifier(const Vector<Point2f>& points,
+                   const Vector<Ptr<Mat> >& refimgs,
+                   const Vector<int>& labels=Vector<int>(),
+                   int _nclasses=0, int _patchSize=PATCH_SIZE,
+                   int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                   int _nstructs=DEFAULT_STRUCTS,
+                   int _structSize=DEFAULT_STRUCT_SIZE,
+                   int _nviews=DEFAULT_VIEWS,
+                   int _compressionMethod=COMPRESSION_NONE,
+                   const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual ~FernClassifier();
+    virtual void read(const FileNode& n);
+    virtual void write(FileStorage& fs, const String& name=String()) const;
+    virtual void trainFromSingleView(const Mat& image,
+                                     const Vector<Keypoint>& keypoints,
+                                     int _patchSize=PATCH_SIZE,
+                                     int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                                     int _nstructs=DEFAULT_STRUCTS,
+                                     int _structSize=DEFAULT_STRUCT_SIZE,
+                                     int _nviews=DEFAULT_VIEWS,
+                                     int _compressionMethod=COMPRESSION_NONE,
+                                     const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual void train(const Vector<Point2f>& points,
+                       const Vector<Ptr<Mat> >& refimgs,
+                       const Vector<int>& labels=Vector<int>(),
+                       int _nclasses=0, int _patchSize=PATCH_SIZE,
+                       int _signatureSize=DEFAULT_SIGNATURE_SIZE,
+                       int _nstructs=DEFAULT_STRUCTS,
+                       int _structSize=DEFAULT_STRUCT_SIZE,
+                       int _nviews=DEFAULT_VIEWS,
+                       int _compressionMethod=COMPRESSION_NONE,
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual int operator()(const Mat& img, Point2f kpt, Vector<float>& signature) const;
+    virtual int operator()(const Mat& patch, Vector<float>& signature) const;
+    virtual void clear();
+    void setVerbose(bool verbose);
+    
+    int getClassCount() const;
+    int getStructCount() const;
+    int getStructSize() const;
+    int getSignatureSize() const;
+    int getCompressionMethod() const;
+    Size getPatchSize() const;    
+    
+    struct Feature
+    {
+        uchar x1, y1, x2, y2;
+        Feature() : x1(0), y1(0), x2(0), y2(0) {}
+        Feature(int _x1, int _y1, int _x2, int _y2)
+        : x1((uchar)_x1), y1((uchar)_y1), x2((uchar)_x2), y2((uchar)_y2)
+        {}
+        template<typename _Tp> bool operator ()(const Mat_<_Tp>& patch) const
+        { return patch(y1,x1) > patch(y2, x2); }
+    };
+    
+    enum
+    {
+        PATCH_SIZE = 31,
+        DEFAULT_STRUCTS = 50,
+        DEFAULT_STRUCT_SIZE = 9,
+        DEFAULT_VIEWS = 5000,
+        DEFAULT_SIGNATURE_SIZE = 176,
+        COMPRESSION_NONE = 0,
+        COMPRESSION_RANDOM_PROJ = 1,
+        COMPRESSION_PCA = 2,
+        DEFAULT_COMPRESSION_METHOD = COMPRESSION_NONE
+    };
+    
+protected:
+    virtual void prepare(int _nclasses, int _patchSize, int _signatureSize,
+                         int _nstructs, int _structSize,
+                         int _nviews, int _compressionMethod);
+    virtual void finalize(RNG& rng);
+    virtual int getLeaf(int fidx, const Mat& patch) const;
+    
+    bool verbose;
+    int nstructs;
+    int structSize;
+    int nclasses;
+    int signatureSize;
+    int compressionMethod;
+    int leavesPerStruct;
+    Size patchSize;
+    Vector<Feature> features;
+    Vector<int> classCounters;
+    Vector<float> posteriors;
+};
+
+class CV_EXPORTS PlanarObjectDetector
+{
+public:
+    PlanarObjectDetector();
+    PlanarObjectDetector(const FileNode& node);
+    PlanarObjectDetector(const Vector<Mat>& pyr, int _npoints=300,
+                         int _patchSize=FernClassifier::PATCH_SIZE,
+                         int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                         int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                         int _nviews=FernClassifier::DEFAULT_VIEWS,
+                         const LDetector& detector=LDetector(),
+                         const PatchGenerator& patchGenerator=PatchGenerator()); 
+    virtual ~PlanarObjectDetector();
+    virtual void train(const Vector<Mat>& pyr, int _npoints=300,
+                       int _patchSize=FernClassifier::PATCH_SIZE,
+                       int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                       int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                       int _nviews=FernClassifier::DEFAULT_VIEWS,
+                       const LDetector& detector=LDetector(),
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    virtual void train(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+                       int _patchSize=FernClassifier::PATCH_SIZE,
+                       int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                       int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                       int _nviews=FernClassifier::DEFAULT_VIEWS,
+                       const LDetector& detector=LDetector(),
+                       const PatchGenerator& patchGenerator=PatchGenerator());
+    Rect getModelROI() const;
+    Vector<Keypoint> getModelPoints() const;
+    const LDetector& getDetector() const;
+    const FernClassifier& getClassifier() const;
+    void setVerbose(bool verbose);
+    
+    void read(const FileNode& node);
+    void write(FileStorage& fs, const String& name=String()) const;
+    bool operator()(const Mat& image, Mat& H, Vector<Point2f>& corners) const;
+    bool operator()(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+                    Mat& H, Vector<Point2f>& corners, Vector<int>* pairs=0) const;
+    
+protected:
+    bool verbose;
+    Rect modelROI;
+    Vector<Keypoint> modelPoints;
+    LDetector ldetector;
+    FernClassifier fernClassifier;
+};
+    
 }
 
 #endif /* __cplusplus */

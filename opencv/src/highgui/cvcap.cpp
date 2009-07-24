@@ -45,7 +45,7 @@
 #pragma warning( disable: 4711 )
 #endif
 
-#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined __ICL
+#if (defined WIN64 || defined _WIN64) && defined _MSC_VER && !defined __ICL
 #pragma optimize("",off)
 #endif
 
@@ -237,9 +237,6 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
 {
     CvCapture * result = 0;
 
-    if (! result)
-        result = cvCreateFileCapture_Images (filename);
-
     #ifdef WIN32
     if (! result)
         result = cvCreateFileCapture_Win32 (filename);
@@ -264,6 +261,9 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
     if (! result)
         result = cvCreateFileCapture_QT (filename);
     #endif
+    
+    if (! result)
+        result = cvCreateFileCapture_Images (filename);
 
     return result;
 }

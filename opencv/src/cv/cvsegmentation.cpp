@@ -318,6 +318,13 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
 }
 
 
+void cv::watershed( const Mat& src, Mat& markers )
+{
+    CvMat _src = src, _markers = markers;
+    cvWatershed( &_src, &_markers );
+}
+
+
 /****************************************************************************************\
 *                                         Meanshift                                      *
 \****************************************************************************************/

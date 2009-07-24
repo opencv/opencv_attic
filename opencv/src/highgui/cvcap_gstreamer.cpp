@@ -49,10 +49,10 @@
 // use GStreamer to read a video
 //
 
+#include "_highgui.h"
 #include <unistd.h>
 #include <string.h>
 #include <gst/gst.h>
-#include "_highgui.h"
 #include "gstappsink.h"
 
 #ifdef NDEBUG

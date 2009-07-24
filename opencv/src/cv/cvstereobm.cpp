@@ -779,4 +779,28 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     __END__;
 }
 
+namespace cv
+{
+
+StereoBM::StereoBM()
+{ state = cvCreateStereoBMState(); }
+
+StereoBM::StereoBM(int _preset, int _ndisparities, int _SADWindowSize)
+{ init(_preset, _ndisparities, _SADWindowSize); }
+
+void StereoBM::init(int _preset, int _ndisparities, int _SADWindowSize)
+{
+    state = cvCreateStereoBMState(_preset, _ndisparities);
+    state->SADWindowSize = _SADWindowSize;
+}
+
+void StereoBM::operator()( const Mat& left, const Mat& right, Mat& disparity )
+{
+    disparity.create(left.size(), CV_16SC1);
+    CvMat _left = left, _right = right, _disparity = disparity;
+    cvFindStereoCorrespondenceBM(&_left, &_right, &_disparity, state);
+}
+
+}
+
 /* End of file. */

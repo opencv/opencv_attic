@@ -204,7 +204,7 @@ imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
     Mat temp, *data = &temp;
 
     ImageDecoder decoder = findDecoder(filename);
-    if( !decoder.obj )
+    if( decoder.empty() )
         return 0;
     decoder->setSource(filename);
     if( !decoder->readHeader() )
@@ -275,7 +275,7 @@ static bool imwrite_( const String& filename, const Mat& image,
     CV_Assert( image.channels() == 1 || image.channels() == 3 || image.channels() == 4 );
 
     ImageEncoder encoder = findEncoder( filename );
-    if( !encoder.obj )
+    if( encoder.empty() )
         CV_Error( CV_StsError, "could not find a writer for the specified extension" );
 
     if( !encoder->isFormatSupported(image.depth()) )
@@ -314,7 +314,7 @@ imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
     const char* filename = 0;
 
     ImageDecoder decoder = findDecoder(buf);
-    if( !decoder.obj )
+    if( decoder.empty() )
         return 0;
 
     if( !decoder->setSource(buf) )
@@ -407,7 +407,7 @@ bool imencode( const String& ext, const Mat& image,
     CV_Assert( channels == 1 || channels == 3 || channels == 4 );
 
     ImageEncoder encoder = findEncoder( ext );
-    if( !encoder.obj )
+    if( encoder.empty() )
         CV_Error( CV_StsError, "could not find encoder for the specified extension" );
 
     if( !encoder->isFormatSupported(image.depth()) )
@@ -461,13 +461,13 @@ CV_IMPL int
 cvHaveImageReader( const char* filename )
 {
     cv::ImageDecoder decoder = cv::findDecoder(filename);
-    return decoder.obj != 0;
+    return !decoder.empty();
 }
 
 CV_IMPL int cvHaveImageWriter( const char* filename )
 {
     cv::ImageEncoder encoder = cv::findEncoder(filename);
-    return encoder.obj != 0;
+    return !encoder.empty();
 }
 
 CV_IMPL IplImage*

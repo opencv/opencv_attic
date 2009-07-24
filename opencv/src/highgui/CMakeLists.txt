@@ -6,7 +6,7 @@
 project(highgui)
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
-    include_directories("${CMAKE_SOURCE_DIR}/3rdparty/include")
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include")
     add_definitions(-DHAVE_JPEG -DHAVE_PNG -DHAVE_TIFF -DHAVE_JASPER)
 endif()
 
@@ -36,7 +36,7 @@ set(highgui_hdrs _highgui.h utils.h)
 set(lib_hdr_names highgui.h highgui.hpp)
 set(highgui_ext_hdrs)
 foreach(h ${lib_hdr_names})
-    list(APPEND highgui_ext_hdrs "${CMAKE_SOURCE_DIR}/include/opencv/${h}")
+    list(APPEND highgui_ext_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
 endforeach()
 
 if(WIN32)
@@ -68,7 +68,7 @@ if(UNIX)
     endif()
 
     if(HAVE_GSTREAMER)
-        set(highgui_srcs ${highgui_srcs} cvcap_gstreamer.cpp gstappsink.c)
+        set(highgui_srcs ${highgui_srcs} cvcap_gstreamer.cpp gstappsink.cpp)
         set(highgui_hdrs ${highgui_hdrs} gstappsink.h)
     endif()
 
@@ -121,7 +121,7 @@ source_group("Include" FILES ${highgui_ext_hdrs})
 
 if(OPENCV_BUILD_3RDPARTY_LIBS)
     if(WIN32)
-        link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib")
+        link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/lib")
     endif()
     link_directories(
         "${CMAKE_BINARY_DIR}/3rdparty/lib"
@@ -131,37 +131,30 @@ endif()
 
 set(lib_srcs ${highgui_srcs} ${grfmt_srcs})
 
-if(WIN32 AND MSVC)
-    set(pch_header "_highgui.h")
-    set(pch_src "precomp.cpp")
-    list(REMOVE_ITEM lib_srcs ${pch_src})
-    set(lib_srcs ${pch_src} ${lib_srcs})
-    foreach(src_file ${lib_srcs})
-        if(${src_file} MATCHES ${pch_src})
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yc${pch_header}"
-                )
-        else()
-            set_source_files_properties(
-                ${src_file}
-                PROPERTIES
-                COMPILE_FLAGS "/Yu${pch_header}"
-                )
-        endif()
-    endforeach()
-    #set(lib_srcs ${lib_srcs} precomp.cpp)  # Already added above...
-endif()
-
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
 # ----------------------------------------------------------------------------------
 set(the_target "highgui")
 
-add_definitions(-DHIGHGUI_EXPORTS)
+add_definitions(-DHIGHGUI_EXPORTS -DCVAPI_EXPORTS)
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
+                    "${CMAKE_CURRENT_SOURCE_DIR}"
+                    "${CMAKE_CURRENT_BINARY_DIR}")
 
 add_library(${the_target} SHARED ${lib_srcs} ${highgui_hdrs} ${grfmt_hdrs} ${highgui_ext_hdrs})
+
+if(PCHSupport_FOUND)
+    set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_highgui.h)
+    if(${CMAKE_GENERATOR} MATCHES "Visual*" OR ${CMAKE_GENERATOR} MATCHES "Xcode*")
+        if(${CMAKE_GENERATOR} MATCHES "Visual*")
+            set(${the_target}_pch "precomp.cpp")
+        endif()            
+        add_native_precompiled_header(${the_target} ${pch_header})
+    elseif(CMAKE_COMPILER_IS_GNUCXX AND ${CMAKE_GENERATOR} MATCHES ".*Makefiles")
+        add_precompiled_header(${the_target} ${pch_header})
+    endif()
+endif()
 
 # For dynamic link numbering convenions
 set_target_properties(${the_target} PROPERTIES
@@ -175,7 +168,6 @@ set_target_properties(${the_target} PROPERTIES
 	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-	DEFINE_SYMBOL "CVAPI_EXPORTS"
 	LINK_INTERFACE_LIBRARIES ""
 	)
 
@@ -194,7 +186,7 @@ if(OPENCV_BUILD_3RDPARTY_LIBS)
 	target_link_libraries(${the_target} libjasper libjpeg libpng libtiff zlib)
 endif()
 if(WIN32)
-	target_link_libraries(${the_target} comctl32 gdi32)
+	target_link_libraries(${the_target} comctl32 gdi32 ole32)
 
 	if (MSVC)
 		target_link_libraries(${the_target} vfw32 videoinput)
@@ -217,4 +209,3 @@ install(TARGETS ${the_target}
 install(FILES ${highgui_ext_hdrs}
         DESTINATION include/opencv
         COMPONENT dev)
-

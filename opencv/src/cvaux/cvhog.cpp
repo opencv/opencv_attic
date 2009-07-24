@@ -86,18 +86,10 @@ void HOGDescriptor::setSVMDetector(const Vector<float>& _svmDetector)
     CV_Assert( checkDetectorSize() );
 }
 
-FileNode getFirstTopLevelNode(FileStorage& fs)
-{
-    FileNode root = fs.root();
-    FileNodeIterator it = root.begin();
-    return it != root.end() ? *it : FileNode();
-}
-
 bool HOGDescriptor::load(const String& filename, const String& objname)
 {
     FileStorage fs(filename, FileStorage::READ);
-    FileNode obj = !objname.empty() ? fs[objname] :
-        getFirstTopLevelNode(fs);
+    FileNode obj = !objname.empty() ? fs[objname] : fs.getFirstTopLevelNode();
     if( !obj.isMap() )
         return false;
     FileNodeIterator it = obj["winSize"].begin();
@@ -299,6 +291,7 @@ struct HOGCache
 {
     struct BlockData
     {
+        BlockData() : histOfs(0), imgOffset() {}
         int histOfs;
         Point imgOffset;
     };
@@ -329,7 +322,7 @@ struct HOGCache
     Vector<BlockData> blockData;
 
     bool useCache;
-    int ymaxCached;
+    Vector<int> ymaxCached;
     Size winSize, cacheStride;
     Size nblocks, ncells;
     int blockHistogramSize;
@@ -346,7 +339,6 @@ struct HOGCache
 HOGCache::HOGCache()
 {
     useCache = false;
-    ymaxCached = -1;
     blockHistogramSize = count1 = count2 = count4 = 0;
     descriptor = 0;
 }
@@ -388,7 +380,10 @@ void HOGCache::init(const HOGDescriptor* _descriptor,
                        (winSize.height/cacheStride.height)+1);
         blockCache.create(cacheSize.height, cacheSize.width*blockHistogramSize);
         blockCacheFlags.create(cacheSize);
-        ymaxCached = -1;
+        size_t i, cacheRows = blockCache.rows;
+        ymaxCached.resize(cacheRows);
+        for( i = 0; i < cacheRows; i++ )
+            ymaxCached[i] = -1;
     }
 
     Mat_<float> weights(blockSize);
@@ -550,11 +545,11 @@ const float* HOGCache::getBlock(Point pt, float* buf)
                    pt.y % cacheStride.height == 0 );
         Point cacheIdx(pt.x/cacheStride.width,
                       (pt.y/cacheStride.height) % blockCache.rows);
-        if( pt.y > ymaxCached )
+        if( pt.y != ymaxCached[cacheIdx.y] )
         {
             Mat_<uchar> cacheRow = blockCacheFlags.row(cacheIdx.y);
             cacheRow = (uchar)0;
-            ymaxCached = pt.y;
+            ymaxCached[cacheIdx.y] = pt.y;
         }
 
         blockHist = &blockCache[cacheIdx.y][cacheIdx.x*blockHistogramSize];
@@ -704,7 +699,7 @@ void HOGDescriptor::compute(const Mat& img, Vector<float>& descriptors,
         }
         else
         {
-            pt0 = cache.getWindow(paddedImgSize, winStride, i).tl() - Point(padding);
+            pt0 = cache.getWindow(paddedImgSize, winStride, (int)i).tl() - Point(padding);
             CV_Assert(pt0.x % cacheStride.width == 0 && pt0.y % cacheStride.height == 0);
         }
 
@@ -766,7 +761,7 @@ void HOGDescriptor::detect(const Mat& img,
         }
         else
         {
-            pt0 = cache.getWindow(paddedImgSize, winStride, i).tl() - Point(padding);
+            pt0 = cache.getWindow(paddedImgSize, winStride, (int)i).tl() - Point(padding);
             CV_Assert(pt0.x % cacheStride.width == 0 && pt0.y % cacheStride.height == 0);
         }
         double s = rho;
