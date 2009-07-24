@@ -53,7 +53,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack zlib)
 
 # Linker flag needed for Windows Mobile 5 and 6 SDKs
 if(MSVC AND CMAKE_CROSSCOMPILING)
@@ -62,7 +62,7 @@ if(MSVC AND CMAKE_CROSSCOMPILING)
 		)
 endif()
 
-add_dependencies(${the_target} opencv_lapack)
+add_dependencies(${the_target} opencv_lapack zlib)
 
 install(TARGETS ${the_target}
     RUNTIME DESTINATION bin COMPONENT dev
