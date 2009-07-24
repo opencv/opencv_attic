@@ -52,7 +52,7 @@
 */
 
 /*
-Keypoint position and scale interpolation has been implemented as described in
+KeyPoint position and scale interpolation has been implemented as described in
 the Brown and Lowe paper cited by the SURF paper.
 
 The sampling step along the x and y axes of the image for the determinant of the
@@ -79,7 +79,7 @@ octave.
 The extraction of the patch of pixels surrounding a keypoint used to build a
 descriptor has been simplified.
 
-Keypoint descriptor normalisation has been changed from normalising each 4x4 
+KeyPoint descriptor normalisation has been changed from normalising each 4x4 
 cell (resulting in a descriptor of magnitude 16) to normalising the entire 
 descriptor to magnitude 1.
 
@@ -362,7 +362,7 @@ static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
                                 point.pt.x >= 0 && point.pt.x <= (sum->cols-1) &&
                                 point.pt.y >= 0 && point.pt.y <= (sum->rows-1) )
                             {    
-                                /*printf( "Keypoint %f %f %d\n", point.pt.x, point.pt.y, point.size );*/
+                                /*printf( "KeyPoint %f %f %d\n", point.pt.x, point.pt.y, point.size );*/
                                 cvSeqPush( points, &point );
                             }    
                         }
@@ -805,7 +805,7 @@ static int getPointOctave(const CvSURFPoint& kpt, const CvSURFParams& params)
     
 
 void SURF::operator()(const Mat& img, const Mat& mask,
-                      Vector<Keypoint>& keypoints) const
+                      Vector<KeyPoint>& keypoints) const
 {
     CvMat _img = img, _mask, *pmask = 0;
     if( mask.data )
@@ -819,13 +819,13 @@ void SURF::operator()(const Mat& img, const Mat& mask,
     for( i = 0; i < n; i++, ++it )
     {
         const CvSURFPoint& kpt = *it;
-        keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+        keypoints[i] = KeyPoint(kpt.pt, (float)kpt.size, kpt.dir,
                                 kpt.hessian, getPointOctave(kpt, *this));
     }
 }
 
 void SURF::operator()(const Mat& img, const Mat& mask,
-                Vector<Keypoint>& keypoints,
+                Vector<KeyPoint>& keypoints,
                 Vector<float>& descriptors,
                 bool useProvidedKeypoints) const
 {
@@ -842,7 +842,7 @@ void SURF::operator()(const Mat& img, const Mat& mask,
         n = keypoints.size();
         for( i = 0; i < n; i++ )
         {
-            const Keypoint& kpt = keypoints[i];
+            const KeyPoint& kpt = keypoints[i];
             kp.push_back(cvSURFPoint(kpt.pt, 1, cvRound(kpt.size), kpt.angle, kpt.response));
         }
     }
@@ -857,7 +857,7 @@ void SURF::operator()(const Mat& img, const Mat& mask,
         for( i = 0; i < n; i++, ++it )
         {
             const CvSURFPoint& kpt = *it;
-            keypoints[i] = Keypoint(kpt.pt, (float)kpt.size, kpt.dir,
+            keypoints[i] = KeyPoint(kpt.pt, (float)kpt.size, kpt.dir,
                                     kpt.hessian, getPointOctave(kpt, *this));
         }
     }

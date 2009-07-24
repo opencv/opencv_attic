@@ -839,13 +839,13 @@ CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
                                     bool handleMissingValues=false );
 
-class CV_EXPORTS Keypoint
+class CV_EXPORTS KeyPoint
 {
 public:    
-    Keypoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
-    Keypoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
+    KeyPoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
+    KeyPoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
     : pt(_pt), size(_size), angle(_angle), response(_response), octave(_octave) {}
-    Keypoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
+    KeyPoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
     : pt(x, y), size(_size), angle(_angle), response(_response), octave(_octave) {}
     
     Point2f pt;
@@ -855,8 +855,8 @@ public:
     int octave;
 };
 
-CV_EXPORTS void write(FileStorage& fs, const String& name, const Vector<Keypoint>& keypoints);
-CV_EXPORTS void read(const FileNode& node, Vector<Keypoint>& keypoints);    
+CV_EXPORTS void write(FileStorage& fs, const String& name, const Vector<KeyPoint>& keypoints);
+CV_EXPORTS void read(const FileNode& node, Vector<KeyPoint>& keypoints);    
 
 class CV_EXPORTS SURF : public CvSURFParams
 {
@@ -866,9 +866,9 @@ public:
 
     int descriptorSize() const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<Keypoint>& keypoints) const;
+                    Vector<KeyPoint>& keypoints) const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<Keypoint>& keypoints,
+                    Vector<KeyPoint>& keypoints,
                     Vector<float>& descriptors,
                     bool useProvidedKeypoints=false) const;
 };
@@ -895,7 +895,7 @@ public:
                  int _lineThresholdBinarized,
                  int _suppressNonmaxSize);
 
-    void operator()(const Mat& image, Vector<Keypoint>& keypoints) const;
+    void operator()(const Mat& image, Vector<KeyPoint>& keypoints) const;
 };
     
 }

@@ -523,9 +523,9 @@ public:
     LDetector();
     LDetector(int _radius, int _threshold, int _nOctaves,
               int _nViews, double _baseFeatureSize, double _clusteringDistance);
-    void operator()(const Mat& image, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
-    void operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
-    void getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
+    void operator()(const Mat& image, Vector<KeyPoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void operator()(const Vector<Mat>& pyr, Vector<KeyPoint>& keypoints, int maxCount=0, bool scaleCoords=true) const;
+    void getMostStable2D(const Mat& image, Vector<KeyPoint>& keypoints,
                          int maxCount, const PatchGenerator& patchGenerator) const;
     void setVerbose(bool verbose);
     
@@ -562,7 +562,7 @@ public:
     virtual void read(const FileNode& n);
     virtual void write(FileStorage& fs, const String& name=String()) const;
     virtual void trainFromSingleView(const Mat& image,
-                                     const Vector<Keypoint>& keypoints,
+                                     const Vector<KeyPoint>& keypoints,
                                      int _patchSize=PATCH_SIZE,
                                      int _signatureSize=DEFAULT_SIGNATURE_SIZE,
                                      int _nstructs=DEFAULT_STRUCTS,
@@ -656,7 +656,7 @@ public:
                        int _nviews=FernClassifier::DEFAULT_VIEWS,
                        const LDetector& detector=LDetector(),
                        const PatchGenerator& patchGenerator=PatchGenerator());
-    virtual void train(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+    virtual void train(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
                        int _patchSize=FernClassifier::PATCH_SIZE,
                        int _nstructs=FernClassifier::DEFAULT_STRUCTS,
                        int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
@@ -664,7 +664,7 @@ public:
                        const LDetector& detector=LDetector(),
                        const PatchGenerator& patchGenerator=PatchGenerator());
     Rect getModelROI() const;
-    Vector<Keypoint> getModelPoints() const;
+    Vector<KeyPoint> getModelPoints() const;
     const LDetector& getDetector() const;
     const FernClassifier& getClassifier() const;
     void setVerbose(bool verbose);
@@ -672,13 +672,13 @@ public:
     void read(const FileNode& node);
     void write(FileStorage& fs, const String& name=String()) const;
     bool operator()(const Mat& image, Mat& H, Vector<Point2f>& corners) const;
-    bool operator()(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+    bool operator()(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
                     Mat& H, Vector<Point2f>& corners, Vector<int>* pairs=0) const;
     
 protected:
     bool verbose;
     Rect modelROI;
-    Vector<Keypoint> modelPoints;
+    Vector<KeyPoint> modelPoints;
     LDetector ldetector;
     FernClassifier fernClassifier;
 };

@@ -50,7 +50,7 @@ namespace cv
  
   References:
    1. Mustafa Özuysal, Michael Calonder, Vincent Lepetit, Pascal Fua,
-      "Fast Keypoint Recognition Using Random Ferns,"
+      "Fast KeyPoint Recognition Using Random Ferns,"
       IEEE Transactions on Pattern Analysis and Machine Intelligence, 15 Jan. 2009.
  
    2. Vincent Lepetit, Pascal Fua,
@@ -293,11 +293,11 @@ static void getDiscreteCircle(int R, Vector<Point>& circle, Vector<int>& filledH
 
 struct CmpKeypointScores
 {
-    bool operator ()(const Keypoint& a, const Keypoint& b) const { return std::abs(a.response) > std::abs(b.response); }
+    bool operator ()(const KeyPoint& a, const KeyPoint& b) const { return std::abs(a.response) > std::abs(b.response); }
 };
 
 
-void LDetector::getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
+void LDetector::getMostStable2D(const Mat& image, Vector<KeyPoint>& keypoints,
                                 int maxPoints, const PatchGenerator& _patchGenerator) const
 {
     PatchGenerator patchGenerator = _patchGenerator;
@@ -308,7 +308,7 @@ void LDetector::getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
     double *M = (double*)_M.data, *iM = (double*)_iM.data;
     RNG& rng = theRNG();
     int i, k;
-    Vector<Keypoint> tempKeypoints;
+    Vector<KeyPoint> tempKeypoints;
     double d2 = clusteringDistance*clusteringDistance;
     keypoints.clear();
     
@@ -342,8 +342,8 @@ void LDetector::getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
         int j, sz0 = (int)tempKeypoints.size(), sz1;
         for( j = 0; j < sz0; j++ )
         {
-            Keypoint kpt1 = tempKeypoints[j];
-            Keypoint kpt0((float)(iM[0]*kpt1.pt.x + iM[1]*kpt1.pt.y + iM[2]),
+            KeyPoint kpt1 = tempKeypoints[j];
+            KeyPoint kpt0((float)(iM[0]*kpt1.pt.x + iM[1]*kpt1.pt.y + iM[2]),
                           (float)(iM[3]*kpt1.pt.x + iM[4]*kpt1.pt.y + iM[5]),
                           kpt1.size, -1.f, 1.f, kpt1.octave);
             float r = kpt1.size*0.5f;
@@ -354,13 +354,13 @@ void LDetector::getMostStable2D(const Mat& image, Vector<Keypoint>& keypoints,
             sz1 = (int)keypoints.size();
             for( k = 0; k < sz1; k++ )
             {
-                Keypoint kpt = keypoints[k];
+                KeyPoint kpt = keypoints[k];
                 if( kpt.octave != kpt0.octave )
                     continue;
                 double dx = kpt.pt.x - kpt0.pt.x, dy = kpt.pt.y - kpt0.pt.y;
                 if( dx*dx + dy*dy <= d2*(1 << kpt.octave*2) )
                 {
-                    keypoints[k] = Keypoint((kpt.pt.x*kpt.response + kpt0.pt.x)/(kpt.response+1),
+                    keypoints[k] = KeyPoint((kpt.pt.x*kpt.response + kpt0.pt.x)/(kpt.response+1),
                                             (kpt.pt.y*kpt.response + kpt0.pt.y)/(kpt.response+1),
                                             kpt.size, -1.f, kpt.response + 1, kpt.octave);
                     break;
@@ -414,14 +414,14 @@ static Point2f adjustCorner(const float* fval, float& fvaln)
     return Point2f((float)dx, (float)dy);
 }    
 
-void LDetector::operator()(const Mat& image, Vector<Keypoint>& keypoints, int maxCount, bool scaleCoords) const
+void LDetector::operator()(const Mat& image, Vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
 {
     Vector<Mat> pyr;
     buildPyramid(image, pyr, std::max(nOctaves-1, 0));
     (*this)(pyr, keypoints, maxCount, scaleCoords);    
 }       
 
-void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, int maxCount, bool scaleCoords) const
+void LDetector::operator()(const Vector<Mat>& pyr, Vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
 {
     const int lthreshold = 3;
     int L, x, y, i, j, k, tau = lthreshold;
@@ -581,7 +581,7 @@ void LDetector::operator()(const Vector<Mat>& pyr, Vector<Keypoint>& keypoints, 
                 Point2f pt = adjustCorner(fval, fvaln);
                 pt.x += x;
                 pt.y += y;
-                keypoints.push_back(Keypoint((float)(pt.x*cscale), (float)(pt.y*cscale),
+                keypoints.push_back(KeyPoint((float)(pt.x*cscale), (float)(pt.y*cscale),
                                              (float)(baseFeatureSize*cscale), -1, fvaln, L));
             }
         }
@@ -860,7 +860,7 @@ void FernClassifier::train(const Vector<Point2f>& points,
 
 
 void FernClassifier::trainFromSingleView(const Mat& image,
-                                         const Vector<Keypoint>& keypoints,
+                                         const Vector<KeyPoint>& keypoints,
                                          int _patchSize, int _signatureSize,
                                          int _nstructs, int _structSize,
                                          int _nviews, int _compressionMethod,
@@ -946,7 +946,7 @@ void FernClassifier::trainFromSingleView(const Mat& image,
         
         for( j = 0; j < nsamples; j++ )
         {
-            Keypoint kpt = keypoints[j];
+            KeyPoint kpt = keypoints[j];
             float scale = 1.f/(1 << kpt.octave);
             Point2f pt((float)((M[0]*kpt.pt.x + M[1]*kpt.pt.y + M[2])*scale),
                        (float)((M[3]*kpt.pt.x + M[4]*kpt.pt.y + M[5])*scale));
@@ -1208,7 +1208,7 @@ PlanarObjectDetector::~PlanarObjectDetector()
 {
 }    
 
-Vector<Keypoint> PlanarObjectDetector::getModelPoints() const
+Vector<KeyPoint> PlanarObjectDetector::getModelPoints() const
 {
     return modelPoints;
 }   
@@ -1230,7 +1230,7 @@ void PlanarObjectDetector::train(const Vector<Mat>& pyr, int npoints,
                                        FernClassifier::COMPRESSION_NONE, patchGenerator);
 }
 
-void PlanarObjectDetector::train(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+void PlanarObjectDetector::train(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
                                  int patchSize, int nstructs, int structSize,
                                  int nviews, const LDetector& detector,
                                  const PatchGenerator& patchGenerator)
@@ -1278,13 +1278,13 @@ bool PlanarObjectDetector::operator()(const Mat& image, Mat& H, Vector<Point2f>&
 {
     Vector<Mat> pyr;
     buildPyramid(image, pyr, ldetector.nOctaves - 1);
-    Vector<Keypoint> keypoints;
+    Vector<KeyPoint> keypoints;
     ldetector(pyr, keypoints);
     
     return (*this)(pyr, keypoints, H, corners);
 }
 
-bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<Keypoint>& keypoints,
+bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
                                       Mat& _H, Vector<Point2f>& corners, Vector<int>* pairs) const
 {
     int i, j, m = (int)modelPoints.size(), n = (int)keypoints.size();
@@ -1295,7 +1295,7 @@ bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<Keypo
     
     for( i = 0; i < n; i++ )
     {
-        Keypoint kpt = keypoints[i];
+        KeyPoint kpt = keypoints[i];
         CV_Assert(0 <= kpt.octave && kpt.octave < (int)pyr.size());
         kpt.pt.x /= (float)(1 << kpt.octave);
         kpt.pt.y /= (float)(1 << kpt.octave);

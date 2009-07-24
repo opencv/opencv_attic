@@ -1759,7 +1759,7 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 //    CCOUNTER_SET_ZERO(thread_consumed_count);
 //
 //    #ifdef _OPENMP
-//    #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
+//    #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata,
 //                                 normfactor, thread_consumed_count)
 //    #endif /* _OPENMP */
 //    {

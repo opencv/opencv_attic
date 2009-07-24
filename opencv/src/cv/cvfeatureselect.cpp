@@ -121,14 +121,14 @@ void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
     }
 }
     
-void write(FileStorage& fs, const String& objname, const Vector<Keypoint>& keypoints)
+void write(FileStorage& fs, const String& objname, const Vector<KeyPoint>& keypoints)
 {
     WriteStructContext ws(fs, objname, CV_NODE_SEQ + CV_NODE_FLOW);
     
     int i, npoints = (int)keypoints.size();
     for( i = 0; i < npoints; i++ )
     {
-        const Keypoint& kpt = keypoints[i];
+        const KeyPoint& kpt = keypoints[i];
         write(fs, kpt.pt.x);
         write(fs, kpt.pt.y);
         write(fs, kpt.size);
@@ -139,13 +139,13 @@ void write(FileStorage& fs, const String& objname, const Vector<Keypoint>& keypo
 }
 
 
-void read(const FileNode& node, Vector<Keypoint>& keypoints)
+void read(const FileNode& node, Vector<KeyPoint>& keypoints)
 {
     keypoints.resize(0);
     FileNodeIterator it = node.begin(), it_end = node.end();
     for( ; it != it_end; )
     {
-        Keypoint kpt;
+        KeyPoint kpt;
         it >> kpt.pt.x >> kpt.pt.y >> kpt.size >> kpt.angle >> kpt.response >> kpt.octave;
         keypoints.push_back(kpt);
     }
