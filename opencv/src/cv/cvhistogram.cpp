@@ -2362,6 +2362,14 @@ CV_IMPL void cvEqualizeHist( const CvArr* srcarr, CvArr* dstarr )
     }
 }
 
+
+void cv::equalizeHist( const Mat& src, Mat& dst )
+{
+    dst.create( src.size(), src.type() );
+    CvMat _src = src, _dst = dst;
+    cvEqualizeHist( &_src, &_dst );
+}
+
 /* Implementation of RTTI and Generic Functions for CvHistogram */
 #define CV_TYPE_NAME_HIST "opencv-hist"
 
