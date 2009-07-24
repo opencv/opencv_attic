@@ -43,6 +43,7 @@
 #include "_cxcore.h"
 #include <ctype.h>
 #include <wchar.h>
+#include "zlib.h"
 
 /****************************************************************************************\
 *                            Common macros and type definitions                          *
@@ -82,7 +83,7 @@ cv::String cv::FileStorage::getDefaultObjectName(const String& _filename)
 
     while( ptr >= filename && *ptr != '\\' && *ptr != '/' && *ptr != ':' )
     {
-        if( *ptr == '.' && !*ptr2 )
+        if( *ptr == '.' && (!*ptr2 || strncmp(ptr2, ".gz", 3) == 0) )
             ptr2 = ptr;
         ptr--;
     }
@@ -202,6 +203,7 @@ typedef struct CvFileStorage
     int space;
     char* filename;
     FILE* file;
+    gzFile gzfile;
     char* buffer;
     char* buffer_start;
     char* buffer_end;
@@ -222,6 +224,49 @@ typedef struct CvFileStorage
 }
 CvFileStorage;
 
+static void icvPuts( CvFileStorage* fs, const char* str )
+{
+    CV_Assert( fs->file || fs->gzfile );
+    if( fs->file )
+        fputs( str, fs->file );
+    else
+        gzputs( fs->gzfile, str );
+}
+
+static char* icvGets( CvFileStorage* fs, char* str, int maxCount )
+{
+    CV_Assert( fs->file || fs->gzfile );
+    if( fs->file )
+        return fgets( str, maxCount, fs->file );
+    return gzgets( fs->gzfile, str, maxCount );
+}
+
+static int icvEof( CvFileStorage* fs )
+{
+    CV_Assert( fs->file || fs->gzfile );
+    if( fs->file )
+        return feof(fs->file);
+    return gzeof(fs->gzfile);
+}
+
+static void icvClose( CvFileStorage* fs )
+{
+    if( fs->file )
+        fclose( fs->file );
+    if( fs->gzfile )
+        gzclose( fs->gzfile );
+    fs->file = 0;
+    fs->gzfile = 0;
+}
+
+static void icvRewind( CvFileStorage* fs )
+{
+    CV_Assert( fs->file || fs->gzfile );
+    if( fs->file )
+        rewind(fs->file);
+    else
+        gzrewind(fs->gzfile);
+}
 
 #define CV_YML_INDENT  3
 #define CV_XML_INDENT  2
@@ -393,7 +438,7 @@ icvFSFlush( CvFileStorage* fs )
     {
         ptr[0] = '\n';
         ptr[1] = '\0';
-        fputs( fs->buffer_start, fs->file );
+        icvPuts( fs, fs->buffer_start );
         fs->buffer = fs->buffer_start;
     }
 
@@ -424,7 +469,7 @@ cvReleaseFileStorage( CvFileStorage** p_fs )
         CvFileStorage* fs = *p_fs;
         *p_fs = 0;
 
-        if( fs->write_mode && fs->file )
+        if( fs->write_mode && (fs->file || fs->gzfile) )
         {
             if( fs->write_stack )
             {
@@ -433,16 +478,12 @@ cvReleaseFileStorage( CvFileStorage** p_fs )
             }
             icvFSFlush(fs);
             if( fs->is_xml )
-                fputs("</opencv_storage>\n", fs->file );
+                icvPuts( fs, "</opencv_storage>\n" );
         }
 
         //icvFSReleaseCollection( fs->roots ); // delete all the user types recursively
 
-        if( fs->file )
-        {
-            fclose( fs->file );
-            fs->file = 0;
-        }
+        icvClose(fs);
 
         cvReleaseMemStorage( &fs->strstorage );
 
@@ -852,7 +893,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
         else if( *ptr == '\0' || *ptr == '\n' || *ptr == '\r' )
         {
             int max_size = (int)(fs->buffer_end - fs->buffer_start);
-            ptr = fgets( fs->buffer_start, max_size, fs->file );
+            ptr = icvGets( fs, fs->buffer_start, max_size );
             if( !ptr )
             {
                 // emulate end of stream
@@ -865,7 +906,7 @@ icvYMLSkipSpaces( CvFileStorage* fs, char* ptr, int min_indent, int max_comment_
             else
             {
                 int l = (int)strlen(ptr);
-                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
+                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !icvEof(fs) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
 
@@ -1479,8 +1520,8 @@ icvYMLStartNextStream( CvFileStorage* fs )
 
         fs->struct_indent = 0;
         icvFSFlush(fs);
-        fputs( "...\n", fs->file );
-        fputs( "---\n", fs->file );
+        icvPuts( fs, "...\n" );
+        icvPuts( fs, "---\n" );
         fs->buffer = fs->buffer_start;
     }
 }
@@ -1674,7 +1715,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
             int max_size = (int)(fs->buffer_end - fs->buffer_start);
             if( *ptr != '\0' && *ptr != '\n' && *ptr != '\r' )
                 CV_PARSE_ERROR( "Invalid character in the stream" );
-            ptr = fgets( fs->buffer_start, max_size, fs->file );
+            ptr = icvGets( fs, fs->buffer_start, max_size );
             if( !ptr )
             {
                 ptr = fs->buffer_start;
@@ -1685,7 +1726,7 @@ icvXMLSkipSpaces( CvFileStorage* fs, char* ptr, int mode )
             else
             {
                 int l = (int)strlen(ptr);
-                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !feof(fs->file) )
+                if( ptr[l-1] != '\n' && ptr[l-1] != '\r' && !icvEof(fs) )
                     CV_PARSE_ERROR( "Too long string or a last string w/o newline" );
             }
             fs->lineno++;
@@ -2300,7 +2341,7 @@ icvXMLStartNextStream( CvFileStorage* fs )
         /* XML does not allow multiple top-level elements,
            so we just put a comment and continue
            the current (and the only) "stream" */
-        fputs( "\n<!-- next stream -->\n", fs->file );
+        icvPuts( fs, "\n<!-- next stream -->\n" );
         /*fputs( "</opencv_storage>\n", fs->file );
         fputs( "<opencv_storage>\n", fs->file );*/
         fs->buffer = fs->buffer_start;
@@ -2523,6 +2564,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     char* xml_buf = 0;
     int default_block_size = 1 << 18;
     bool append = (flags & 3) == CV_STORAGE_APPEND;
+    bool isGZ = false;
 
     if( !filename )
         CV_Error( CV_StsNullPtr, "NULL filename" );
@@ -2533,18 +2575,49 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     fs->memstorage = cvCreateMemStorage( default_block_size );
     fs->dststorage = dststorage ? dststorage : fs->memstorage;
 
-    fs->filename = (char*)cvMemStorageAlloc( fs->memstorage, strlen(filename)+1 );
+    int fnamelen = (int)strlen(filename);
+    if( !fnamelen )
+        CV_Error( CV_StsError, "Empty filename" );
+
+    fs->filename = (char*)cvMemStorageAlloc( fs->memstorage, fnamelen+1 );
     strcpy( fs->filename, filename );
+    
+    char* dot_pos = strrchr(fs->filename, '.');
+    char compression = '\0';
+
+    if( dot_pos && dot_pos[1] == 'g' && dot_pos[2] == 'z' &&
+        (dot_pos[3] == '\0' || (isdigit(dot_pos[3]) && dot_pos[4] == '\0')) )
+    {
+        if( append )
+            CV_Error(CV_StsNotImplemented, "Appending data to compressed file is not implemented" );
+        isGZ = true;
+        compression = dot_pos[3];
+        if( compression )
+            dot_pos[3] = '\0', fnamelen--;
+    }
 
     fs->flags = CV_FILE_STORAGE;
     fs->write_mode = (flags & 3) != 0;
-#ifdef WIN32
-    fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(), !fs->write_mode ? L"rt" : !append ? L"wt" : L"a+t" );
-#else
-    fs->file = fopen(fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
-#endif
-    if( !fs->file )
-        goto _exit_;
+
+    if( !isGZ )
+    {
+        #ifdef WIN32
+            fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(),
+                !fs->write_mode ? L"rt" : !append ? L"wt" : L"a+t" );
+        #else
+            fs->file = fopen(fs->filename,
+                !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
+        #endif
+        if( !fs->file )
+            goto _exit_;
+    }
+    else
+    {
+        char mode[] = { fs->write_mode ? 'w' : 'r', 'b', compression ? compression : '3', '\0' };
+        fs->gzfile = gzopen(fs->filename, mode);
+        if( !fs->gzfile )
+            goto _exit_;
+    }
 
     fs->roots = 0;
     fs->struct_indent = 0;
@@ -2557,9 +2630,9 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         // and factor=4 for YAML ( as we use 4 bytes for non ASCII characters (e.g. \xAB))
         int buf_size = CV_FS_MAX_LEN*(fs->is_xml ? 6 : 4) + 1024;
 
-        char* dot_pos = strrchr( fs->filename, '.' );
-        fs->is_xml = dot_pos && (strcmp( dot_pos, ".xml" ) == 0 ||
-                      strcmp( dot_pos, ".XML" ) == 0 || strcmp( dot_pos, ".Xml" ) == 0);
+        dot_pos = fs->filename + fnamelen - (isGZ ? 7 : 4);
+        fs->is_xml = dot_pos > fs->filename && (memcmp( dot_pos, ".xml", 4) == 0 ||
+                      memcmp(dot_pos, ".XML", 4) == 0 || memcmp(dot_pos, ".Xml", 4) == 0);
 
         if( append )
             fseek( fs->file, 0, SEEK_END );
@@ -2573,12 +2646,12 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         fs->buffer_end = fs->buffer_start + buf_size;
         if( fs->is_xml )
         {
-            int file_size = (int)ftell( fs->file );
+            int file_size = fs->file ? (int)ftell( fs->file ) : 0;
             fs->strstorage = cvCreateChildMemStorage( fs->memstorage );
             if( !append || file_size == 0 )
             {
-                fputs( "<?xml version=\"1.0\"?>\n", fs->file );
-                fputs( "<opencv_storage>\n", fs->file );
+                icvPuts( fs, "<?xml version=\"1.0\"?>\n" );
+                icvPuts( fs, "<opencv_storage>\n" );
             }
             else
             {
@@ -2592,7 +2665,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                 for(;;)
                 {
                     int line_offset = ftell( fs->file );
-                    char* ptr0 = fgets( xml_buf, xml_buf_size, fs->file ), *ptr;
+                    char* ptr0 = icvGets( fs, xml_buf, xml_buf_size ), *ptr;
                     if( !ptr0 )
                         break;
                     ptr = ptr0;
@@ -2607,7 +2680,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                 }
                 if( last_occurence < 0 )
                     CV_Error( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
-                fclose( fs->file );
+                icvClose( fs );
             #ifdef WIN32
                 fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(), L"r+t" );
             #else
@@ -2615,9 +2688,9 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
             #endif
                 fseek( fs->file, last_occurence, SEEK_SET );
                 // replace the last "</opencv_storage>" with " <!-- resumed -->", which has the same length
-                fputs( " <!-- resumed -->", fs->file );
+                icvPuts( fs, " <!-- resumed -->" );
                 fseek( fs->file, 0, SEEK_END );
-                fputs( "\n", fs->file );
+                icvPuts( fs, "\n" );
             }
             fs->start_write_struct = icvXMLStartWriteStruct;
             fs->end_write_struct = icvXMLEndWriteStruct;
@@ -2630,9 +2703,9 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
         else
         {
             if( !append )
-                fputs( "%YAML:1.0\n", fs->file );
+                icvPuts( fs, "%YAML:1.0\n" );
             else
-                fputs( "...\n---\n", fs->file );
+                icvPuts( fs, "...\n---\n" );
             fs->start_write_struct = icvYMLStartWriteStruct;
             fs->end_write_struct = icvYMLEndWriteStruct;
             fs->write_int = icvYMLWriteInt;
@@ -2644,18 +2717,20 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
     }
     else
     {
-        int buf_size;
+        int buf_size = 1 << 20;
         const char* yaml_signature = "%YAML:";
         char buf[16];
-        fgets( buf, sizeof(buf)-2, fs->file );
+        icvGets( fs, buf, sizeof(buf)-2 );
         fs->is_xml = strncmp( buf, yaml_signature, strlen(yaml_signature) ) != 0;
 
-        fseek( fs->file, 0, SEEK_END );
-        buf_size = ftell( fs->file );
-        fseek( fs->file, 0, SEEK_SET );
-
-        buf_size = MIN( buf_size, (1 << 20) );
-        buf_size = MAX( buf_size, CV_FS_MAX_LEN*2 + 1024 );
+        if( !isGZ )
+        {
+            fseek( fs->file, 0, SEEK_END );
+            buf_size = ftell( fs->file );
+            buf_size = MIN( buf_size, (1 << 20) );
+            buf_size = MAX( buf_size, CV_FS_MAX_LEN*2 + 1024 );
+        }
+        icvRewind(fs);
 
         fs->str_hash = cvCreateMap( 0, sizeof(CvStringHash),
                         sizeof(CvStringHashNode), fs->memstorage, 256 );
@@ -2683,14 +2758,13 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
 _exit_:
     if( fs )
     {
-        if( cvGetErrStatus() < 0 || !fs->file )
+        if( cvGetErrStatus() < 0 || (!fs->file && !fs->gzfile) )
         {
             cvReleaseFileStorage( &fs );
         }
         else if( !fs->write_mode )
         {
-            fclose( fs->file );
-            fs->file = 0;
+            icvClose(fs);
         }
     }
 
