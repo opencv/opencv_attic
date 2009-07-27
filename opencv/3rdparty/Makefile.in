@@ -46,7 +46,11 @@ am__aclocal_m4_deps =  \
 	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
 	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
 	$(top_srcdir)/autotools/aclocal/az_python.m4 \
-	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
+	$(top_srcdir)/autotools/aclocal/libtool.m4 \
+	$(top_srcdir)/autotools/aclocal/ltoptions.m4 \
+	$(top_srcdir)/autotools/aclocal/ltsugar.m4 \
+	$(top_srcdir)/autotools/aclocal/ltversion.m4 \
+	$(top_srcdir)/autotools/aclocal/lt~obsolete.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
 	$(top_srcdir)/autotools/aclocal/version_at_least.m4 \
@@ -58,7 +62,8 @@ CONFIG_HEADER = $(top_builddir)/cvconfig.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 lib_clapack_la_DEPENDENCIES = lib_clapack_floatstore.la
-am_lib_clapack_la_OBJECTS = dasum.lo daxpy.lo dbdsdc.lo dbdsqr.lo \
+am_lib_clapack_la_OBJECTS = dlasyf.lo dsyr.lo dsytf2.lo dsytrf.lo \
+	dsytri.lo dsytrs.lo dasum.lo daxpy.lo dbdsdc.lo dbdsqr.lo \
 	dcopy.lo ddot.lo dgebd2.lo dgebrd.lo dgelq2.lo dgelqf.lo \
 	dgels.lo dgelsd.lo dgemm.lo dgemv.lo dgeqr2.lo dgeqrf.lo \
 	dger.lo dgesdd.lo dgesv.lo dgetf2.lo dgetrf.lo dgetri.lo \
@@ -172,15 +177,14 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FGREP = @FGREP@
 FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
@@ -197,10 +201,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LAPACK_LIBS = @LAPACK_LIBS@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION = @LT_VERSION@
@@ -210,6 +216,7 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
@@ -219,6 +226,8 @@ OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OPENMP_CXXFLAGS = @OPENMP_CXXFLAGS@
 OPTIMIZATION_CPPFLAGS = @OPTIMIZATION_CPPFLAGS@
 OPTIMIZATION_CXXFLAGS = @OPTIMIZATION_CXXFLAGS@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -260,7 +269,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -291,6 +300,7 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+lt_ECHO = @lt_ECHO@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -379,6 +389,7 @@ lib_clapack_floatstore_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS
 
 # sources of the cLapack convenience library
 lib_clapack_la_SOURCES = \
+  lapack/dlasyf.c   lapack/dsyr.c     lapack/dsytf2.c   lapack/dsytrf.c   lapack/dsytri.c   lapack/dsytrs.c \
   lapack/dasum.c    lapack/daxpy.c    lapack/dbdsdc.c   lapack/dbdsqr.c   lapack/dcopy.c    lapack/ddot.c     lapack/dgebd2.c   lapack/dgebrd.c   \
   lapack/dgelq2.c   lapack/dgelqf.c   lapack/dgels.c    lapack/dgelsd.c   lapack/dgemm.c    lapack/dgemv.c    lapack/dgeqr2.c   lapack/dgeqrf.c   \
   lapack/dger.c     lapack/dgesdd.c   lapack/dgesv.c    lapack/dgetf2.c   lapack/dgetrf.c   lapack/dgetri.c   lapack/dgetrs.c   lapack/dlabad.c   \
@@ -570,6 +581,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlassq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlasv2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlaswp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlasyf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlatrd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlauu2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlauum.Plo@am__quote@
@@ -603,11 +615,16 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dswap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsyevr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsymv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsyr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsyr2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsyr2k.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsyrk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytd2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytf2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytrd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytrf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytri.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsytrs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dtrmm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dtrmv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dtrsm.Plo@am__quote@
@@ -791,6 +808,48 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+dlasyf.lo: lapack/dlasyf.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dlasyf.lo -MD -MP -MF $(DEPDIR)/dlasyf.Tpo -c -o dlasyf.lo `test -f 'lapack/dlasyf.c' || echo '$(srcdir)/'`lapack/dlasyf.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dlasyf.Tpo $(DEPDIR)/dlasyf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dlasyf.c' object='dlasyf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dlasyf.lo `test -f 'lapack/dlasyf.c' || echo '$(srcdir)/'`lapack/dlasyf.c
+
+dsyr.lo: lapack/dsyr.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dsyr.lo -MD -MP -MF $(DEPDIR)/dsyr.Tpo -c -o dsyr.lo `test -f 'lapack/dsyr.c' || echo '$(srcdir)/'`lapack/dsyr.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dsyr.Tpo $(DEPDIR)/dsyr.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dsyr.c' object='dsyr.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dsyr.lo `test -f 'lapack/dsyr.c' || echo '$(srcdir)/'`lapack/dsyr.c
+
+dsytf2.lo: lapack/dsytf2.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dsytf2.lo -MD -MP -MF $(DEPDIR)/dsytf2.Tpo -c -o dsytf2.lo `test -f 'lapack/dsytf2.c' || echo '$(srcdir)/'`lapack/dsytf2.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dsytf2.Tpo $(DEPDIR)/dsytf2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dsytf2.c' object='dsytf2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dsytf2.lo `test -f 'lapack/dsytf2.c' || echo '$(srcdir)/'`lapack/dsytf2.c
+
+dsytrf.lo: lapack/dsytrf.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dsytrf.lo -MD -MP -MF $(DEPDIR)/dsytrf.Tpo -c -o dsytrf.lo `test -f 'lapack/dsytrf.c' || echo '$(srcdir)/'`lapack/dsytrf.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dsytrf.Tpo $(DEPDIR)/dsytrf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dsytrf.c' object='dsytrf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dsytrf.lo `test -f 'lapack/dsytrf.c' || echo '$(srcdir)/'`lapack/dsytrf.c
+
+dsytri.lo: lapack/dsytri.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dsytri.lo -MD -MP -MF $(DEPDIR)/dsytri.Tpo -c -o dsytri.lo `test -f 'lapack/dsytri.c' || echo '$(srcdir)/'`lapack/dsytri.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dsytri.Tpo $(DEPDIR)/dsytri.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dsytri.c' object='dsytri.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dsytri.lo `test -f 'lapack/dsytri.c' || echo '$(srcdir)/'`lapack/dsytri.c
+
+dsytrs.lo: lapack/dsytrs.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dsytrs.lo -MD -MP -MF $(DEPDIR)/dsytrs.Tpo -c -o dsytrs.lo `test -f 'lapack/dsytrs.c' || echo '$(srcdir)/'`lapack/dsytrs.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/dsytrs.Tpo $(DEPDIR)/dsytrs.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lapack/dsytrs.c' object='dsytrs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dsytrs.lo `test -f 'lapack/dsytrs.c' || echo '$(srcdir)/'`lapack/dsytrs.c
 
 dasum.lo: lapack/dasum.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dasum.lo -MD -MP -MF $(DEPDIR)/dasum.Tpo -c -o dasum.lo `test -f 'lapack/dasum.c' || echo '$(srcdir)/'`lapack/dasum.c

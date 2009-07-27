@@ -14,7 +14,7 @@ import sys
 import works
 
 # path to imagefiles we need
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/videos/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/videos/")
 
 # check requirements and delete old flag file, if it exists
 if not works.check_files(REQUIRED,TESTNAME):
@@ -26,7 +26,7 @@ from cv import *
 
 
 # create a video reader using the tiny video 'vd_uncompressed.avi'
-video = cvCreateFileCapture(PREFIX+"uncompressed.avi"")
+video = cvCreateFileCapture(PREFIX+"uncompressed.avi")
 
 # retrieve video dimensions and compare with known values
 print str(cvGetCaptureProperty( video, CV_CAP_PROP_FOURCC ))

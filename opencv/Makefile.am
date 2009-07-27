@@ -21,6 +21,8 @@ EXTRA_DIST = \
   opencv.pc.in \
   \
   make_frameworks.sh \
+  autotools/darwin/Info.plist \
+  autotools/darwin/OpenCV.h \
   \
   CMakeLists.txt \
   opencv.pc.cmake.in \
@@ -28,6 +30,7 @@ EXTRA_DIST = \
   cmake_uninstall.cmake.in \
   OpenCVConfig.cmake.in \
   OpenCVFindPkgConfig.cmake \
+  OpenCVPCHSupport.cmake \
   cvconfig.h.cmake
 
 pkgconfigdir = $(libdir)/pkgconfig

@@ -69,7 +69,7 @@ def datadir():
     """
     Return a string containing the full path to the python testdata directory
     """
-    return os.path.sep.join([top_srcdir(), 'tests', 'python', 'testdata'])
+    return os.path.sep.join([top_srcdir(), '..', 'opencv_extra', 'testdata', 'python'])
 
 ### Module Initialization
 try:

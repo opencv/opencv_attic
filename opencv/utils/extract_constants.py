@@ -15,6 +15,12 @@ for fn in sys.argv[1:]:
             in_define = 1
         if re.match (r"^#define\s+CV_MAKETYPE", l):
             in_define = 1
+        if re.match (r"^#define\s+CV_CN", l):
+            in_define = 1
+        if re.match (r"^#define\s+CV_MAT_TYPE", l):
+            in_define = 1
+        if re.match (r"^#define\s+CV_MAT_DEPTH", l):
+            in_define = 1
         if in_define:
             print l[:l.find ('/*')]
             if not l.endswith( "\\\n" ):

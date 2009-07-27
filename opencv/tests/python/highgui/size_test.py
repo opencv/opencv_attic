@@ -12,7 +12,7 @@ from highgui import *
 
 
 # path to images and videos  we need
-PREFIX		=os.path.join(os.environ["srcdir"],"python/testdata/")
+PREFIX		=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/")
 
 
 # this is the folder with the videos and images

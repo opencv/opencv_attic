@@ -27,7 +27,7 @@ bar_count= 100
 
 
 # position of imagefiles we need
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/images/")
 
 # 'moved' indicates if trackbar has been moved
 moved = False
