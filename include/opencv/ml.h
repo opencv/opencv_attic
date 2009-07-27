@@ -598,6 +598,7 @@ public:
     CvEM();
     CvEM( const CvMat* samples, const CvMat* sample_idx=0,
           CvEMParams params=CvEMParams(), CvMat* labels=0 );
+    //CvEM (CvEMParams params, CvMat * means, CvMat ** covs, CvMat * weights, CvMat * probs, CvMat * log_weight_div_det, CvMat * inv_eigen_values, CvMat** cov_rotate_mats);
 
     virtual ~CvEM();
 
@@ -607,13 +608,17 @@ public:
     virtual float predict( const CvMat* sample, CvMat* probs ) const;
     virtual void clear();
 
-    int get_nclusters() const;
-    const CvMat* get_means() const;
-    const CvMat** get_covs() const;
-    const CvMat* get_weights() const;
-    const CvMat* get_probs() const;
+    int           get_nclusters() const;
+    const CvMat*  get_means()     const;
+    const CvMat** get_covs()      const;
+    const CvMat*  get_weights()   const;
+    const CvMat*  get_probs()     const;
 
-    inline double get_log_likelihood () const { return log_likelihood; };
+    inline double         get_log_likelihood     () const { return log_likelihood;     };
+    
+//    inline const CvMat *  get_log_weight_div_det () const { return log_weight_div_det; };
+//    inline const CvMat *  get_inv_eigen_values   () const { return inv_eigen_values;   };
+//    inline const CvMat ** get_cov_rotate_mats    () const { return cov_rotate_mats;    };
 
 protected:
 

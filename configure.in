@@ -323,11 +323,11 @@ AC_SUBST(OPTIMIZATION_CPPFLAGS)
 AC_SUBST(OPTIMIZATION_CXXFLAGS)
 AC_SUBST(FLOAT_STORE_CFLAGS)
 
-
-# add libm because it is used by several libraries and OpenCV itself
+# basic libraries needed by OpenCV
 AC_CHECK_LIB(m,pow)
 AC_CHECK_LIB(dl,dlopen)
 AC_CHECK_LIB(pthread,pthread_create)
+AC_CHECK_LIB(z,gzputs)
 
 # check endianness
 AC_C_BIGENDIAN
@@ -338,8 +338,6 @@ AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([malloc.h])
 AC_CHECK_HEADERS([assert.h])
 AC_CHECK_FUNCS(lrint)
-#AC_CHECK_FUNC(clock_gettime,, [AC_CHECK_LIB(rt, clock_gettime, [LIBRT="-lrt"])])
-#AC_SUBST(LIBRT)
 AC_SEARCH_LIBS([clock_gettime],[rt])
 
 ######################################################################
@@ -637,32 +635,34 @@ if test x"$with_ffmpeg" = "xno"; then
     have_ffmpeg=no
     # FFMPEGLIBS=""
 else
-
+    
+    have_ffmpeg=no
+    have_avcodec=no
+    have_avformat=no
+    
     # check if ./configure arguments are valid
     if test x"$with_ffmpeg" = "xauto"; then
        with_ffmpeg=yes
     fi
+    
     if test x"$with_ffmpeg" = "xyes"; then
-        AC_CHECK_HEADER(ffmpeg/avcodec.h,
-                        AC_SEARCH_LIBS([avcodec_decode_video],[avcodec_pic avcodec],                                      [
-                                       AC_SEARCH_LIBS([av_open_input_file], [avformat_pic avformat],
-                                                    [
-                                                      have_ffmpeg=yes
-                                                      AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video library])
-                                                      FFMPEGLIBS="-lavcodec -lavformat"
-                                                    ],
-                                                    [ have_ffmpeg=no ],
-                                                    [-lavcodec])
-                                     ],
-                                     [ have_ffmpeg=no ]),
-                        [ have_ffmpeg=no ])
-        AC_CHECK_HEADER([ffmpeg/swscale.h],
-                            AC_CHECK_LIB(swscale,sws_getContext,
-                                         [
-					   AC_DEFINE(HAVE_FFMPEG_SWSCALE,,[ffmpeg's libswscale])
-                                           FFMPEG_SWSCALE_LIBS="-lswscale"
-                                         ]))
-        FFMPEGLIBS="$FFMPEGLIBS $FFMPEG_SWSCALE_LIBS"
+        AC_CHECK_HEADERS([ffmpeg/avcodec.h libavcodec/avcodec.h],[have_avcodec=yes])
+        AC_CHECK_HEADERS([ffmpeg/avformat.h libavformat/avformat.h],[have_avformat=yes])
+        
+        if test x"$have_avcodec"x"$have_avformat" = "xyesxyes" ; then
+            AC_SEARCH_LIBS([avcodec_decode_video],[avcodec_pic avcodec],[
+                AC_SEARCH_LIBS([av_open_input_file], [avformat_pic avformat],[have_ffmpeg=yes],[],[-lavcodec])])
+        fi
+        
+        if test x"$have_ffmpeg" = "xyes" ; then
+            # libswscale is not always necessary, but if it is there, we want to use it
+            AC_CHECK_HEADERS([ffmpeg/swscale.h libswscale/swscale.h],[
+                AC_CHECK_LIB([swscale],[sws_getContext],[FFMPEG_SWSCALE_LIBS="-lswscale"
+                    AC_DEFINE(HAVE_FFMPEG_SWSCALE,,[FFMPEG helper library])])])
+            
+            AC_DEFINE(HAVE_FFMPEG,,[FFMPEG video library])
+            FFMPEGLIBS="-lavcodec -lavformat $FFMPEG_SWSCALE_LIBS"
+        fi
     else
         # if we get here then --with-ffmpeg was not called with 'yes','no' or 'auto'
         AC_MSG_WARN([unexpected arguments for option --with-ffmpeg, continuing assuming 'no'])
@@ -677,6 +677,7 @@ AM_CONDITIONAL([BUILD_FFMPEG], [test x"$have_ffmpeg" = "xyes"])
 if test x"$with_1394libs" = "xno"; then
     have_raw1394=no
     have_dc1394=no
+    have_dc1394_2=no
     # IEEE1394LIBS=""
 else
 
@@ -689,24 +690,35 @@ else
         SAVELIBS="$LIBS"
         have_raw1394=no
         have_dc1394=no
+        have_dc1394_2=no
 
         AC_CHECK_HEADER(libraw1394/raw1394.h,
                         AC_CHECK_LIB(raw1394, raw1394_new_handle,
                                      [
                                        have_raw1394=yes
-                                       LIBS="-lm -lraw1394 $LIBS"
+                                       LIBS="-lraw1394 $LIBS"
                                      ]))
 
         if test x"$have_raw1394" = "xyes"; then
-            AC_CHECK_HEADER(libdc1394/dc1394_control.h,
-                            AC_CHECK_LIB(dc1394_control, dc1394_camera_on,
+            AC_CHECK_HEADER(dc1394/dc1394.h,
+                            AC_CHECK_LIB(dc1394, dc1394_camera_enumerate,
                                          [
-                                           have_dc1394=yes
-                                           AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
-                                           AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
-                                                           [AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
-                                           IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"
+                                           have_dc1394_2=yes
+                                           AC_DEFINE(HAVE_DC1394_2,,[IEEE1394 capturing support])
+                                           IEEE1394LIBS="-lraw1394 -ldc1394"
                                          ]))
+            
+            if test x"$have_dc1394_2" = "xno"; then
+                AC_CHECK_HEADER(libdc1394/dc1394_control.h,
+                                AC_CHECK_LIB(dc1394_control, dc1394_camera_on,
+                                             [
+                                               have_dc1394=yes
+                                               AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
+                                               AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
+                                                               [AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
+                                               IEEE1394LIBS="-lraw1394 -ldc1394_control"
+                                             ]))
+            fi
         fi
 
         LIBS="$SAVELIBS"
@@ -718,6 +730,7 @@ else
 fi
 AC_SUBST(IEEE1394LIBS)
 AM_CONDITIONAL([BUILD_DC1394], [test x"$have_dc1394" = "xyes"])
+AM_CONDITIONAL([BUILD_DC1394_2], [test x"$have_dc1394_2" = "xyes"])
 
 # Video for Linux (V4L)
 # we support version 1 and 2 currently
@@ -811,8 +824,8 @@ if test x"$have_imageio" = "xno" ; then
                                [
                                  have_zlib=yes
                                  AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
-                                 IMAGELIBS="$IMAGELIBS -lz -lm"
-                                 LIBS="$LIBS -lz -lm"
+                                 IMAGELIBS="$IMAGELIBS -lz"
+                                 LIBS="$LIBS -lz"
                                ]))
 
   AC_CHECK_HEADER(png.h,
@@ -1117,6 +1130,7 @@ HighGUI configuration ================================================
     Use gstreamer:            ${have_gstreamer}
     Use ffmpeg:               ${have_ffmpeg}
     Use dc1394 & raw1394:     ${have_dc1394}
+    Use dc1394_v2 & raw1394:  ${have_dc1394_2}
     Use v4l:                  ${have_v4l}
     Use v4l2:                 ${have_v4l2}
     Use unicap:               ${have_unicap}

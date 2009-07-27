@@ -24,6 +24,8 @@ EXTRA_DIST = \
   highgui/CMakeLists.txt       \
   ml/CMakeLists.txt            \
   \
+  highgui/makeswig.sh          \
+  \
   highgui/cvcap_cmu.cpp        \
   highgui/cvcap_tyzx.cpp       \
   highgui/cvcap_vfw.cpp        \
@@ -32,13 +34,17 @@ EXTRA_DIST = \
   highgui/window_w32.cpp       \
   \
   highgui/cvcap_dc1394.cpp     \
-  highgui/cvcap_v4l.cpp        \
-  highgui/cvcap_unicap.cpp     \
+  highgui/cvcap_dc1394_v2.cpp  \
+  highgui/cvcap_dshow.cpp      \
   highgui/cvcap_ffmpeg.cpp     \
-  highgui/cvcap_xine.cpp       \
   highgui/cvcap_gstreamer.cpp  \
-  highgui/gstappsink.cpp       \
+  highgui/cvcap_libv4l.cpp     \
   highgui/cvcap_qt.cpp         \
+  highgui/cvcap_unicap.cpp     \
+  highgui/cvcap_v4l.cpp        \
+  highgui/cvcap_w32.cpp        \
+  highgui/cvcap_xine.cpp       \
+  highgui/gstappsink.cpp       \
   highgui/window_carbon.cpp    \
   highgui/window_gtk.cpp       \
   highgui/grfmt_imageio.cpp
@@ -250,6 +256,7 @@ lib_cvaux_la_SOURCES = \
   cvaux/cvmorphcontours.cpp \
   cvaux/cvmorphing.cpp \
   cvaux/cvocttree.cpp \
+  cvaux/cvplanardetect.cpp \
   cvaux/cvprewarp.cpp \
   cvaux/cvscanlines.cpp \
   cvaux/cvsegment.cpp \
@@ -338,6 +345,12 @@ else
 TMP_DC1394=
 endif
 
+if BUILD_DC1394_2
+TMP_DC1394=highgui/cvcap_dc1394_v2.cpp
+else
+TMP_DC1394=
+endif
+
 if BUILD_V4L
 TMP_V4L=highgui/cvcap_v4l.cpp
 else
@@ -363,7 +376,7 @@ TMP_XINE=
 endif
 
 if BUILD_GSTREAMER
-TMP_GSTREAMER=highgui/cvcap_gstreamer.cpp highgui/gstappsink.c
+TMP_GSTREAMER=highgui/cvcap_gstreamer.cpp highgui/gstappsink.cpp
 else
 TMP_GSTREAMER=
 endif

@@ -37,17 +37,21 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 check_PROGRAMS = cxcoretest$(EXEEXT) cvtest$(EXEEXT) mltest$(EXEEXT)
-TESTS = $(check_PROGRAMS) $(am__EXEEXT_3)
+TESTS = $(am__EXEEXT_3)
 subdir = tests
-DIST_COMMON = $(am__noinst_PYTHON_DIST) $(noinst_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(am__dist_check_SCRIPTS_DIST) $(am__noinst_PYTHON_DIST) \
+	$(noinst_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps =  \
 	$(top_srcdir)/autotools/aclocal/ax_check_compiler_flags.m4 \
 	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
 	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
 	$(top_srcdir)/autotools/aclocal/az_python.m4 \
-	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
+	$(top_srcdir)/autotools/aclocal/libtool.m4 \
+	$(top_srcdir)/autotools/aclocal/ltoptions.m4 \
+	$(top_srcdir)/autotools/aclocal/ltsugar.m4 \
+	$(top_srcdir)/autotools/aclocal/ltversion.m4 \
+	$(top_srcdir)/autotools/aclocal/lt~obsolete.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
 	$(top_srcdir)/autotools/aclocal/version_at_least.m4 \
@@ -94,23 +98,8 @@ am_mltest_OBJECTS = aboost.$(OBJEXT) adtree.$(OBJEXT) \
 mltest_OBJECTS = $(am_mltest_OBJECTS)
 mltest_DEPENDENCIES = libcxts.la $(top_builddir)/src/libcxcore.la \
 	$(top_builddir)/src/libcv.la $(top_builddir)/src/libml.la
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
-depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
-am__depfiles_maybe = depfiles
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-SOURCES = $(libcxts_la_SOURCES) $(cvtest_SOURCES) \
-	$(cxcoretest_SOURCES) $(mltest_SOURCES)
-DIST_SOURCES = $(libcxts_la_SOURCES) $(cvtest_SOURCES) \
-	$(cxcoretest_SOURCES) $(mltest_SOURCES)
-am__noinst_PYTHON_DIST = python/test_adaptors.py \
+am__dist_check_SCRIPTS_DIST = test_cxcore.sh test_cv.sh test_ml.sh \
+	octave/test_adaptors.m python/testall.py \
 	python/highgui/cvInitSystem.py \
 	python/highgui/cvLoadImageBMP.py \
 	python/highgui/cvLoadImageJPG.py \
@@ -121,8 +110,8 @@ am__noinst_PYTHON_DIST = python/test_adaptors.py \
 	python/highgui/cvNamedWindow.py python/highgui/cvShowImage.py \
 	python/highgui/cvWaitKey.py python/highgui/cvCreateTrackbar.py \
 	python/highgui/cvMoveResizeWindow.py \
-	python/highgui/cvGetWindowHandleName.py \
 	python/highgui/cvGetSetTrackbarPos.py \
+	python/highgui/cvGetWindowHandleName.py \
 	python/highgui/cvSetMouseCallback.py \
 	python/highgui/cvCreateFileCaptureRGB.py \
 	python/highgui/cvCreateFileCaptureRGBA.py \
@@ -132,6 +121,7 @@ am__noinst_PYTHON_DIST = python/test_adaptors.py \
 	python/highgui/cvCreateFileCaptureYV12.py \
 	python/highgui/cvCreateFileCaptureYV16.py \
 	python/highgui/cvCreateFileCaptureYVU9.py \
+	python/highgui/cvGetCaptureProperty.py \
 	python/highgui/cvGrabFrame.py \
 	python/highgui/cvRetrieveFrame.py \
 	python/highgui/cvQueryFrame.py python/highgui/query_3gp.py \
@@ -173,10 +163,95 @@ am__noinst_PYTHON_DIST = python/test_adaptors.py \
 	python/highgui/size_huffyuv.py python/highgui/size_indeo.py \
 	python/highgui/size_mpeg4.py \
 	python/highgui/size_uncompressed.py \
-	python/highgui/size_wmv9.py python/highgui/works.py \
-	python/highgui/frames.py python/highgui/match.py \
-	python/highgui/query_test.py python/highgui/seek_test.py \
-	python/highgui/size_test.py \
+	python/highgui/size_wmv9.py
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
+am__depfiles_maybe = depfiles
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+SOURCES = $(libcxts_la_SOURCES) $(cvtest_SOURCES) \
+	$(cxcoretest_SOURCES) $(mltest_SOURCES)
+DIST_SOURCES = $(libcxts_la_SOURCES) $(cvtest_SOURCES) \
+	$(cxcoretest_SOURCES) $(mltest_SOURCES)
+am__noinst_PYTHON_DIST = python/testall.py \
+	python/highgui/cvInitSystem.py \
+	python/highgui/cvLoadImageBMP.py \
+	python/highgui/cvLoadImageJPG.py \
+	python/highgui/cvLoadImageTIFF.py \
+	python/highgui/cvLoadImagePPM.py \
+	python/highgui/cvLoadImagePNG.py \
+	python/highgui/cvLoadImageSR.py python/highgui/cvSaveImage.py \
+	python/highgui/cvNamedWindow.py python/highgui/cvShowImage.py \
+	python/highgui/cvWaitKey.py python/highgui/cvCreateTrackbar.py \
+	python/highgui/cvMoveResizeWindow.py \
+	python/highgui/cvGetSetTrackbarPos.py \
+	python/highgui/cvGetWindowHandleName.py \
+	python/highgui/cvSetMouseCallback.py \
+	python/highgui/cvCreateFileCaptureRGB.py \
+	python/highgui/cvCreateFileCaptureRGBA.py \
+	python/highgui/cvCreateFileCaptureUYVY.py \
+	python/highgui/cvCreateFileCaptureY8.py \
+	python/highgui/cvCreateFileCaptureYUY2.py \
+	python/highgui/cvCreateFileCaptureYV12.py \
+	python/highgui/cvCreateFileCaptureYV16.py \
+	python/highgui/cvCreateFileCaptureYVU9.py \
+	python/highgui/cvGetCaptureProperty.py \
+	python/highgui/cvGrabFrame.py \
+	python/highgui/cvRetrieveFrame.py \
+	python/highgui/cvQueryFrame.py python/highgui/query_3gp.py \
+	python/highgui/query_bmp24.py python/highgui/query_bmp32.py \
+	python/highgui/query_cinepak.py python/highgui/query_divx.py \
+	python/highgui/query_dv_pal_progressive_avi.py \
+	python/highgui/query_dv_pal_progressive_dv.py \
+	python/highgui/query_huffyuv.py python/highgui/query_indeo.py \
+	python/highgui/query_mpeg4.py \
+	python/highgui/query_uncompressed.py \
+	python/highgui/query_wmv9.py python/highgui/seek_frame_3gp.py \
+	python/highgui/seek_frame_bmp24.py \
+	python/highgui/seek_frame_bmp32.py \
+	python/highgui/seek_frame_cinepak.py \
+	python/highgui/seek_frame_divx.py \
+	python/highgui/seek_frame_dv_pal_progressive_avi.py \
+	python/highgui/seek_frame_dv_pal_progressive_dv.py \
+	python/highgui/seek_frame_huffyuv.py \
+	python/highgui/seek_frame_indeo.py \
+	python/highgui/seek_frame_mpeg4.py \
+	python/highgui/seek_frame_uncompressed.py \
+	python/highgui/seek_frame_wmv9.py \
+	python/highgui/seek_time_3gp.py \
+	python/highgui/seek_time_bmp24.py \
+	python/highgui/seek_time_bmp32.py \
+	python/highgui/seek_time_cinepak.py \
+	python/highgui/seek_time_divx.py \
+	python/highgui/seek_time_dv_pal_progressive_avi.py \
+	python/highgui/seek_time_dv_pal_progressive_dv.py \
+	python/highgui/seek_time_huffyuv.py \
+	python/highgui/seek_time_indeo.py \
+	python/highgui/seek_time_mpeg4.py \
+	python/highgui/seek_time_uncompressed.py \
+	python/highgui/seek_time_wmv9.py python/highgui/size_3gp.py \
+	python/highgui/size_bmp24.py python/highgui/size_bmp32.py \
+	python/highgui/size_cinepak.py python/highgui/size_divx.py \
+	python/highgui/size_dv_pal_progressive_avi.py \
+	python/highgui/size_dv_pal_progressive_dv.py \
+	python/highgui/size_huffyuv.py python/highgui/size_indeo.py \
+	python/highgui/size_mpeg4.py \
+	python/highgui/size_uncompressed.py \
+	python/highgui/size_wmv9.py python/cmp_tests.py \
+	python/cvtestutils.py python/feature_tree_tests.py \
+	python/histogram_tests.py python/homography_tests.py \
+	python/lsh_tests.py python/moments_tests.py \
+	python/roots_tests.py python/test_adaptors.py \
+	python/highgui/works.py python/highgui/frames.py \
+	python/highgui/match.py python/highgui/query_test.py \
+	python/highgui/seek_test.py python/highgui/size_test.py \
 	python/highgui/cvCreateFileCapture.py \
 	python/highgui/cvLoadImage.py
 py_compile = $(top_srcdir)/autotools/py-compile
@@ -184,7 +259,7 @@ HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 @BUILD_OCTAVE_WRAPPERS_TRUE@am__EXEEXT_1 = octave/test_adaptors.m
-@BUILD_PYTHON_WRAPPERS_TRUE@am__EXEEXT_2 = python/test_adaptors.py \
+@BUILD_PYTHON_WRAPPERS_TRUE@am__EXEEXT_2 = python/testall.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvInitSystem.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvLoadImageBMP.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvLoadImageJPG.py \
@@ -198,8 +273,8 @@ CTAGS = ctags
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvWaitKey.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateTrackbar.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvMoveResizeWindow.py \
-@BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvGetWindowHandleName.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvGetSetTrackbarPos.py \
+@BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvGetWindowHandleName.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvSetMouseCallback.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateFileCaptureRGB.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateFileCaptureRGBA.py \
@@ -209,6 +284,7 @@ CTAGS = ctags
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateFileCaptureYV12.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateFileCaptureYV16.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvCreateFileCaptureYVU9.py \
+@BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvGetCaptureProperty.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvGrabFrame.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvRetrieveFrame.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/cvQueryFrame.py \
@@ -260,7 +336,8 @@ CTAGS = ctags
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/size_mpeg4.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/size_uncompressed.py \
 @BUILD_PYTHON_WRAPPERS_TRUE@	python/highgui/size_wmv9.py
-am__EXEEXT_3 = $(am__EXEEXT_1) $(am__EXEEXT_2)
+am__EXEEXT_3 = test_cxcore.sh test_cv.sh test_ml.sh $(am__EXEEXT_1) \
+	$(am__EXEEXT_2)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -290,15 +367,14 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FGREP = @FGREP@
 FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
@@ -315,10 +391,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LAPACK_LIBS = @LAPACK_LIBS@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION = @LT_VERSION@
@@ -328,6 +406,7 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
@@ -337,6 +416,8 @@ OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OPENMP_CXXFLAGS = @OPENMP_CXXFLAGS@
 OPTIMIZATION_CPPFLAGS = @OPTIMIZATION_CPPFLAGS@
 OPTIMIZATION_CXXFLAGS = @OPTIMIZATION_CXXFLAGS@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -378,7 +459,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -409,6 +490,7 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+lt_ECHO = @lt_ECHO@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -433,7 +515,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 check_LTLIBRARIES = libcxts.la
-check_SCRIPTS = $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
+dist_check_SCRIPTS = test_cxcore.sh test_cv.sh test_ml.sh $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
 TESTS_ENVIRONMENT = \
   LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
   DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
@@ -452,15 +534,13 @@ EXTRA_DIST = \
   cxts/CMakeLists.txt \
   ml/CMakeLists.txt \
   \
-  cv/testdata \
   cxcore/src/precomp.cpp \
   cxts/precomp.cpp \
   \
   ml/src/precomp.cpp \
   ml/Readme.txt \
   \
-  octave \
-  python/testdata
+  octave/frame.jpg
 
 noinst_HEADERS = \
   cxts/_cxts.h                  \
@@ -567,7 +647,7 @@ mltest_LDADD = \
 noinst_OCTAVE = $(TMP_OCTAVE_FILES)
 @BUILD_PYTHON_WRAPPERS_FALSE@TMP_PYTHON_FILES = 
 @BUILD_PYTHON_WRAPPERS_TRUE@TMP_PYTHON_FILES = \
-@BUILD_PYTHON_WRAPPERS_TRUE@  python/test_adaptors.py                              \
+@BUILD_PYTHON_WRAPPERS_TRUE@  python/testall.py            \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvInitSystem.py                       \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvLoadImageBMP.py                     \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvLoadImageJPG.py                     \
@@ -581,8 +661,8 @@ noinst_OCTAVE = $(TMP_OCTAVE_FILES)
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvWaitKey.py                          \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateTrackbar.py                   \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvMoveResizeWindow.py                 \
-@BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvGetWindowHandleName.py              \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvGetSetTrackbarPos.py                \
+@BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvGetWindowHandleName.py              \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvSetMouseCallback.py                 \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateFileCaptureRGB.py             \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateFileCaptureRGBA.py            \
@@ -592,6 +672,7 @@ noinst_OCTAVE = $(TMP_OCTAVE_FILES)
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateFileCaptureYV12.py            \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateFileCaptureYV16.py            \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvCreateFileCaptureYVU9.py            \
+@BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvGetCaptureProperty.py               \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvGrabFrame.py                        \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvRetrieveFrame.py                    \
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/cvQueryFrame.py                       \
@@ -645,7 +726,16 @@ noinst_OCTAVE = $(TMP_OCTAVE_FILES)
 @BUILD_PYTHON_WRAPPERS_TRUE@  python/highgui/size_wmv9.py
 
 noinst_PYTHON = \
-  $(TMP_PYTHON_FILES)                          \
+  $(TMP_PYTHON_FILES)                    \
+  python/cmp_tests.py                    \
+  python/cvtestutils.py                  \
+  python/feature_tree_tests.py           \
+  python/histogram_tests.py              \
+  python/homography_tests.py             \
+  python/lsh_tests.py                    \
+  python/moments_tests.py                \
+  python/roots_tests.py                  \
+  python/test_adaptors.py                \
   python/highgui/works.py                \
   python/highgui/frames.py               \
   python/highgui/match.py                \
@@ -1805,7 +1895,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_LTLIBRARIES) $(check_PROGRAMS) \
-	  $(check_SCRIPTS)
+	  $(dist_check_SCRIPTS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 all-am: Makefile $(HEADERS)
@@ -1911,7 +2001,7 @@ uninstall-am:
 
 
 clean-local:
-	-rm -rf *.lst *.sum python/*.pyc python/*.works python/highgui/*.pyc python/highgui/*.works
+	-rm -rf *.lst *.sum python/*.pyc *.works python/*.works python/highgui/*.pyc python/highgui/*.works
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

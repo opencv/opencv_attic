@@ -17,4 +17,12 @@ nobase_dist_pkgdata_DATA = \
   haarcascades/haarcascade_lowerbody.xml \
   haarcascades/haarcascade_profileface.xml \
   haarcascades/haarcascade_righteye_2splits.xml \
-  haarcascades/haarcascade_upperbody.xml
+  haarcascades/haarcascade_upperbody.xml \
+  \
+  haarcascades/haarcascade_mcs_eyepair_big.xml \
+  haarcascades/haarcascade_mcs_eyepair_small.xml \
+  haarcascades/haarcascade_mcs_lefteye.xml \
+  haarcascades/haarcascade_mcs_mouth.xml \
+  haarcascades/haarcascade_mcs_nose.xml \
+  haarcascades/haarcascade_mcs_righteye.xml \
+  haarcascades/haarcascade_mcs_upperbody.xml

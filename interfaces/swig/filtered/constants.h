@@ -232,9 +232,9 @@
 
 #define CV_MINOR_VERSION    1
 
-#define CV_SUBMINOR_VERSION 0
+#define CV_SUBMINOR_VERSION 1
 
-#define CV_VERSION          "1.1.0"
+#define CV_VERSION          CVAUX_STR(CV_MAJOR_VERSION) "." CVAUX_STR(CV_MINOR_VERSION) "." CVAUX_STR(CV_SUBMINOR_VERSION)
 
 #define CV_PI   3.1415926535897932384626433832795
 
@@ -320,7 +320,11 @@
 
 #define CV_USRTYPE1 7
 
-#define CV_MAKETYPE(depth,cn) ((depth) + (((cn)-1) << CV_CN_SHIFT))
+#define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
+
+#define CV_MAT_DEPTH(flags)     ((flags) & CV_MAT_DEPTH_MASK)
+
+#define CV_MAKETYPE(depth,cn) (CV_MAT_DEPTH(depth) + (((cn)-1) << CV_CN_SHIFT))
 
 #define CV_MAKE_TYPE CV_MAKETYPE
 
@@ -386,9 +390,9 @@
 
 #define CV_MAT_CN_MASK          ((CV_CN_MAX - 1) << CV_CN_SHIFT)
 
-#define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
-
 #define CV_MAT_TYPE_MASK        (CV_DEPTH_MAX*CV_CN_MAX - 1)
+
+#define CV_MAT_TYPE(flags)      ((flags) & CV_MAT_TYPE_MASK)
 
 #define CV_MAT_CONT_FLAG_SHIFT  14
 

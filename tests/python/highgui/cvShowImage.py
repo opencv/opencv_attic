@@ -14,7 +14,7 @@ import sys
 import works
 
 # path to imagefiles we need
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/images/")
 
 # check requirements and delete old flag file, if it exists
 if not works.check_files(REQUIRED,TESTNAME):

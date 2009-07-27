@@ -58,25 +58,43 @@ extern "C" {
 #include <errno.h>
 #endif
 
+// please remove the lines below as soon as the CMAKE environment
+// has been updated to set the correct HAVE_XYZ values
 #if defined(HAVE_GENTOO_FFMPEG)
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#if defined(HAVE_FFMPEG_SWSCALE)
-#include <libswscale/swscale.h>
+  #define HAVE_LIBAVCODEC_AVCODEC_H
+  #define HAVE_LIBAVFORMAT_AVFORMAT_H
+  
+  #if defined(HAVE_FFMPEG_SWSCALE)
+    #define HAVE_LIBSWSCALE_SWSCALE_H
+  #endif
 #endif
-#else
+
 #ifdef WIN32
-#include <ffmpeg_/avformat.h>
-#include <ffmpeg_/avcodec.h>
-#include <ffmpeg_/imgconvert.h>
-#else
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/avcodec.h>
-#if defined(HAVE_FFMPEG_SWSCALE)
-#include <ffmpeg/swscale.h>
+  #include <ffmpeg_/avformat.h>
+  #include <ffmpeg_/avcodec.h>
+  #include <ffmpeg_/imgconvert.h>
 #endif
+
+#if defined(HAVE_FFMPEG_AVCODEC_H)
+  #include <ffmpeg/avcodec.h>
 #endif
+#if defined(HAVE_FFMPEG_AVFORMAT_H)
+  #include <ffmpeg/avformat.h>
 #endif
+#if defined(HAVE_FFMPEG_SWSCALE_H)
+  #include <ffmpeg/swscale.h>
+#endif
+
+#if defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
+  #include <libavformat/avformat.h>
+#endif
+#if defined(HAVE_LIBAVCODEC_AVCODEC_H)
+  #include <libavcodec/avcodec.h>
+#endif
+#if defined(HAVE_LIBSWSCALE_SWSCALE_H)
+  #include <libswscale/swscale.h>
+#endif
+
 }
 
 #if defined _MSC_VER && _MSC_VER >= 1200

@@ -10,7 +10,7 @@ from cv import *
 import match
 
 # path to videos and images we need
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/")
 
 # this is the folder with the videos and images
 # and name of output window

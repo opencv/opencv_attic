@@ -43,7 +43,7 @@
 #include "_cxcore.h"
 #include <ctype.h>
 #include <wchar.h>
-#include "zlib.h"
+#include <zlib.h>
 
 /****************************************************************************************\
 *                            Common macros and type definitions                          *

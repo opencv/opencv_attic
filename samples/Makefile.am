@@ -6,7 +6,9 @@ EXTRA_DIST = \
   CMakeLists.txt        \
   c/CMakeLists.txt      \
   python/CMakeLists.txt \
-  octave/CMakeLists.txt
+  octave/CMakeLists.txt \
+  \
+  c/cvsample.vs2005.vcproj
 
 # C/C++ samples
 csamplesdir=$(pkgdatadir)/samples/c

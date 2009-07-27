@@ -108,14 +108,14 @@ opencv-1.1.0.tar.gz: $(PKG_OCT_FILES) $(PKG_OTHER_FILES)
 
 # seems that mkoctfile has some troubles compiling the wrapper... it takes forever
 # workaround is to use the g++ directly
-MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
+#MY_MKOCTFILE=$(CXX) -O0 -g -shared $(OCTAVE_INCFLAGS)
 
 cv.oct: cv_wrap.cpp cvshadow.cpp octerror.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lcv $^
+	$(MKOCTFILE) -o $@ $(AM_CPPFLAGS) $(OCTAVE_INCFLAGS) -L$(top_builddir)/src/.libs -lcv -lcxcore $^
 ml.oct: ml_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lml $^
+	$(MKOCTFILE) -o $@ $(AM_CPPFLAGS) $(OCTAVE_INCFLAGS) -L$(top_builddir)/src/.libs -lml -lcxcore $^
 highgui.oct: highgui_wrap.cpp octhelpers.cpp
-	$(MY_MKOCTFILE) -o $@ $(AM_CPPFLAGS) -L$(top_builddir)/src/.libs -lhighgui $^
+	$(MKOCTFILE) -o $@ $(AM_CPPFLAGS) $(OCTAVE_INCFLAGS) -L$(top_builddir)/src/.libs -lhighgui -lcxcore $^
 
 endif
 

@@ -1251,6 +1251,35 @@ int CvTS::run( int argc, char** argv )
             params.color_terminal = 0;
     }
 
+#if 0
+//#if !defined WIN32 && !defined _WIN32
+    if (! config_name )
+    {    
+      char * confname = getenv("configname");
+      if (confname)
+        config_name = confname;
+    }
+    
+    if( !params.data_path || !params.data_path[0] )
+    {
+        char* datapath = getenv("datapath");
+        if( datapath )
+            set_data_path(datapath);
+    }
+    
+    // this is the fallback for the current OpenCV autotools setup
+    if( !params.data_path || !params.data_path[0] )
+    {
+        char* srcdir = getenv("srcdir");
+        char buf[1024];
+        if( srcdir )
+        {
+            sprintf( buf, "%s/../../opencv_extra/testdata/", srcdir );
+            set_data_path(buf);
+        }
+    }
+#endif
+
     if( write_params )
     {
         if( !config_name )
@@ -1449,6 +1478,7 @@ void CvTS::print_help()
         "-O{0|1} - disable/enable on-fly detection of IPP and other supported optimized libs. It's enabled by default\n\n"
         "-t - switch to the performance testing mode instead of the default algorithmic/correctness testing mode\n\n"
         "-w - write default parameters of the algorithmic or performance (when -t is passed) tests to the specifed config file (see -f) and exit\n\n"
+        //"Test data path and config file can also be specified by the environment variables 'config' and 'datapath'.\n\n"
         );
 }
 
@@ -1480,18 +1510,6 @@ int CvTS::read_params( CvFileStorage* fs )
     params.resource_path = cvReadStringByName( fs, node, "." );
     if( params.use_optimized < 0 )
         params.use_optimized = cvReadIntByName( fs, node, "use_optimized", -1 );
-#if !defined WIN32 && !defined _WIN32
-    if( !params.data_path || !params.data_path[0] )
-    {
-        char* srcdir = getenv("srcdir");
-        char buf[1024];
-        if( srcdir )
-        {
-            sprintf( buf, "%s/../testdata/", srcdir );
-            set_data_path(buf);
-        }
-    }
-#endif
     if( !params.data_path || !params.data_path[0] )
     {
         const char* data_path =

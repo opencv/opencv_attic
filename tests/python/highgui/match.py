@@ -11,7 +11,7 @@ import frames
 import sys
 import os
 
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/images/")
 
 
 DisplayImages=False

@@ -13,7 +13,7 @@ import sys
 import works
 
 # path to imagefiles we need
-PREFIX=os.path.join(os.environ["srcdir"],"python/testdata/images/")
+PREFIX=os.path.join(os.environ["srcdir"],"../../opencv_extra/testdata/python/images/")
 
 # delete old .works file and check requirements
 if not works.check_files(REQUIRED,TESTNAME):
