@@ -1,3 +1,4 @@
+include(common.m4)
 \chapter{HighGui}
 
 \subsection{HighGUI overview}
@@ -99,6 +100,7 @@ void cvMoveWindow( const char* name, int x, int y );
 
 The function \texttt{cvMoveWindow} changes the position of the window.
 
+ONLY_C(`
 \cvfunc{GetWindowHandle}
 
 Gets the window's handle by its name.
@@ -128,6 +130,7 @@ const char* cvGetWindowName( void* window\_handle );
 \end{description}
 
 The function \texttt{cvGetWindowName} returns the name of the window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
+')
 
 \cvfunc{ShowImage} 
 
@@ -317,6 +320,7 @@ int cvSaveImage( const char* filename, const CvArr* image );
 
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
+ONLY_C(`
 \subsection{Video I/O functions}
 
 \cvfunc{Capture} 
@@ -500,7 +504,10 @@ CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, 
 
 \begin{description}
 \cvarg{ filename}{Name of the output video file.}
-\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example, \texttt{CV\_FOURCC('P','I','M','1')} is a MPEG-1 codec, \texttt{CV\_FOURCC('M','J','P','G')} is a motion-jpeg codec etc. Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if 0 is passed while using an avi filename it will create a video writer that creates an uncompressed avi file.}
+\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,
+\texttt{CV\_FOURCC(P,I,M,1)} is a MPEG-1 codec,
+\texttt{CV\_FOURCC(M,J,P,G)} is a motion-jpeg codec etc.
+Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if 0 is passed while using an avi filename it will create a video writer that creates an uncompressed avi file.}
 \cvarg{ fps}{Framerate of the created video stream.}
 \cvarg{ frame\_size}{Size of the  video frames.}
 \cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
@@ -540,7 +547,9 @@ int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 \end{description}
 
 The function \texttt{cvWriteFrame} writes/appends one frame to a video file.
+')
 
+ONLY_C(`
 \subsection{Utility and System Functions}
 
 \cvfunc{InitSystem}
@@ -583,3 +592,4 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
 \end{description}
 
 The function \texttt{cvConvertImage} converts one image to another and flips the result vertically if desired. The function is used by \cross{ShowImage}.
+')

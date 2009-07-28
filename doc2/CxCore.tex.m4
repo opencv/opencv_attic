@@ -6561,7 +6561,7 @@ Constructs a color value.
 
 \cvexp{
 \#define CV\_RGB( r, g, b )  cvScalar( (b), (g), (r) )
-}{CPP}{\_RGB(red,grn,blu)->CvScalar}
+}{CPP}{CV\_RGB(red,grn,blu)->CvScalar}
 
 \cvfunc{Line}\label{Line}
 
@@ -6955,7 +6955,7 @@ two ending points may be retrieved by successive calls of
 calculated one by one using a 4-connected or 8-connected Bresenham
 algorithm.
 
-ONLY_C(
+ONLY_C(`
 \cvfunc{Example: Using line iterator to calculate the sum of pixel values along the color line}
 
 \begin{lstlisting}
@@ -6989,7 +6989,7 @@ CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 }
 
 \end{lstlisting}
-)
+')
 
 \cvfunc{ClipLine}\label{ClipLine}
 
@@ -6999,18 +6999,20 @@ Clips the line against the image rectangle.
 
 int cvClipLine( \par CvSize img\_size,\par CvPoint* pt1,\par CvPoint* pt2 );
 
-}{CPP}{PYTHON}
+}{CPP}{ClipLine(img, pt1, pt2) -> (clipped_pt1, clipped_pt2)}
 
 \begin{description}
-\cvarg{img\_size}{Size of the image}
-\cvarg{pt1}{First ending point of the line segment. It is modified by the function.}
-\cvarg{pt2}{Second ending point of the line segment. It is modified by the function.}
+\cvarg{img\_size}{Size of the image ONLY_PYTHON(as a 2-tuple)}
+\cvarg{pt1}{First ending point of the line segment. ONLY_C(It is modified by the function.)}
+\cvarg{pt2}{Second ending point of the line segment. ONLY_C(It is modified by the function.)}
 \end{description}
 
 The function \texttt{cvClipLine} calculates a part of the line
-segment which is entirely within the image. It returns 0 if the line
-segment is completely outside the image and 1 otherwise.
+segment which is entirely within the image.
+ONLY_C(`It returns 0 if the line segment is completely outside the image and 1 otherwise.')
+ONLY_PYTHON(`If the line segment is outside the image, it returns None. If the line segment is inside the image it returns a new pair of points.')
 
+ONLY_C(`
 \cvfunc{Ellipse2Poly}\label{Ellipse2Poly}
 
 Approximates an elliptic arc with a polyline.
@@ -7034,6 +7036,8 @@ at maximum.}
 \end{description}
 
 The function \texttt{cvEllipse2Poly} computes the vertices of a polyline that approximates the specified elliptic arc. It is used by \cross{Ellipse}.
+
+')
 
 \section{Data Persistence and RTTI}
 
