@@ -58,7 +58,7 @@ using std::min;
 using std::exp;
 using std::log;
 using std::pow;
-using std::sqrt;    
+using std::sqrt;
 
 /////////////// saturate_cast (used in image & signal processing) ///////////////////
 
@@ -374,7 +374,7 @@ Vec<T1, 4>& operator += (Vec<T1, 4>& a, const Vec<T2, 4>& b)
     a[3] = saturate_cast<T1>(a[3] + b[3]);
     return a;
 }
-    
+
 template<typename T1, int n> static inline
 double norm(const Vec<T1, n>& a)
 {
@@ -392,6 +392,10 @@ template<typename _Tp> template<typename T2> inline Complex<_Tp>::operator Compl
 { return Complex<T2>(saturate_cast<T2>(re), saturate_cast<T2>(im)); }
 template<typename _Tp> inline Complex<_Tp> Complex<_Tp>::conj() const
 { return Complex<_Tp>(re, -im); }
+
+template<typename _Tp> static inline
+bool operator == (const Complex<_Tp>& a, const Complex<_Tp>& b)
+{ return a.re == b.re && a.im == b.im; }
 
 template<typename _Tp> static inline
 Complex<_Tp> operator + (const Complex<_Tp>& a, const Complex<_Tp>& b)
@@ -544,7 +548,7 @@ template<typename _Tp> static inline Point_<_Tp> operator * (const Point_<_Tp>& 
 
 template<typename _Tp> static inline Point_<_Tp> operator * (_Tp a, const Point_<_Tp>& b)
 { return Point_<_Tp>( a*b.x, a*b.y ); }
-    
+
 //////////////////////////////// 3D Point ////////////////////////////////
 
 template<typename _Tp> inline Point3_<_Tp>::Point3_() : x(0), y(0), z(0) {}
@@ -557,7 +561,7 @@ template<typename _Tp> inline Point3_<_Tp>::Point3_(const Vec<_Tp, 3>& t) : x(t[
 
 template<typename _Tp> template<typename _Tp2> inline Point3_<_Tp>::operator Point3_<_Tp2>() const
 { return Point3_<_Tp2>(saturate_cast<_Tp2>(x), saturate_cast<_Tp2>(y), saturate_cast<_Tp2>(z)); }
-    
+
 template<typename _Tp> inline Point3_<_Tp>::operator CvPoint3D32f() const
 { return cvPoint3D32f((float)x, (float)y, (float)z); }
 
@@ -594,7 +598,7 @@ template<typename _Tp> static inline Point3_<_Tp> operator * (const Point3_<_Tp>
 
 template<typename _Tp> static inline Point3_<_Tp> operator * (_Tp a, const Point3_<_Tp>& b)
 { return Point3_<_Tp>( a*b.x, a*b.y, a*b.z ); }
-    
+
 //////////////////////////////// Size ////////////////////////////////
 
 template<typename _Tp> inline Size_<_Tp>::Size_()
@@ -622,6 +626,12 @@ template<typename _Tp> inline Size_<_Tp>::operator CvSize2D32f() const
 
 template<typename _Tp> inline Size_<_Tp>& Size_<_Tp>::operator = (const Size_<_Tp>& sz)
 { width = sz.width; height = sz.height; return *this; }
+template<typename _Tp> static inline Size_<_Tp> operator * (const Size_<_Tp>& a, _Tp b)
+{ return Size_<_Tp>(a.width * b, a.height * b); }
+template<typename _Tp> static inline Size_<_Tp> operator + (const Size_<_Tp>& a, const Size_<_Tp>& b)
+{ return Size_<_Tp>(a.width + b.width, a.height + b.height); }
+template<typename _Tp> static inline Size_<_Tp> operator - (const Size_<_Tp>& a, const Size_<_Tp>& b)
+{ return Size_<_Tp>(a.width - b.width, a.height - b.height); }
 template<typename _Tp> inline _Tp Size_<_Tp>::area() const { return width*height; }
 
 template<typename _Tp> static inline Size_<_Tp>& operator += (Size_<_Tp>& a, const Size_<_Tp>& b)
@@ -1741,9 +1751,9 @@ inline FileNode FileStorage::getFirstTopLevelNode() const
     FileNodeIterator it = r.begin();
     return it != r.end() ? *it : FileNode();
 }
-    
+
 //////////////////////////////////////// Various algorithms ////////////////////////////////////
-    
+
 template<typename _Tp> static inline _Tp gcd(_Tp a, _Tp b)
 {
     if( a < b )
@@ -1988,7 +1998,7 @@ public:
     const _Tp* arr;
 };
 
-    
+
 // This function splits the input sequence or set into one or more equivalence classes and
 // returns the vector of labels - 0-based class indexes for each element.
 // predicate(a,b) returns true if the two sequence elements certainly belong to the same class.
@@ -2001,38 +2011,38 @@ partition( const Vector<_Tp>& _vec, Vector<int>& labels,
 {
     int i, j, N = (int)_vec.size();
     const _Tp* vec = &_vec[0];
-    
+
     const int PARENT=0;
     const int RANK=1;
-    
+
     Vector<int> _nodes(N*2);
     int (*nodes)[2] = (int(*)[2])&_nodes[0];
-    
+
     // The first O(N) pass: create N single-vertex trees
     for(i = 0; i < N; i++)
     {
         nodes[i][PARENT]=-1;
         nodes[i][RANK] = 0;
     }
-    
+
     // The main O(N^2) pass: merge connected components
     for( i = 0; i < N; i++ )
     {
         int root = i;
-        
+
         // find root
         while( nodes[root][PARENT] >= 0 )
             root = nodes[root][PARENT];
-        
+
         for( j = 0; j < N; j++ )
         {
             if( i == j || !predicate(vec[i], vec[j]))
                 continue;
             int root2 = j;
-            
+
             while( nodes[root2][PARENT] >= 0 )
                 root2 = nodes[root2][PARENT];
-            
+
             if( root2 != root )
             {
                 // unite both trees
@@ -2046,16 +2056,16 @@ partition( const Vector<_Tp>& _vec, Vector<int>& labels,
                     root = root2;
                 }
                 assert( nodes[root][PARENT] < 0 );
-                
+
                 int k = j, parent;
-                
+
                 // compress the path from node2 to root
                 while( (parent = nodes[k][PARENT]) >= 0 )
                 {
                     nodes[k][PARENT] = root;
                     k = parent;
                 }
-                
+
                 // compress the path from node to root
                 k = i;
                 while( (parent = nodes[k][PARENT]) >= 0 )
@@ -2066,11 +2076,11 @@ partition( const Vector<_Tp>& _vec, Vector<int>& labels,
             }
         }
     }
-    
+
     // Final O(N) pass: enumerate classes
     labels.resize(N);
     int nclasses = 0;
-    
+
     for( i = 0; i < N; i++ )
     {
         int root = i;
@@ -2081,7 +2091,7 @@ partition( const Vector<_Tp>& _vec, Vector<int>& labels,
             nodes[root][RANK] = ~nclasses++;
         labels[i] = ~nodes[root][RANK];
     }
-    
+
     return nclasses;
 }
 
