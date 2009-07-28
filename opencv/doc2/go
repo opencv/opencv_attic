@@ -1,5 +1,4 @@
 make && grep klak CvReference-py.tex
-exit
 make &&
 (
   pdflatex '\newcommand{\genc}{true}\newcommand{\genpy}{true}\input{opencv.tex}' &&
