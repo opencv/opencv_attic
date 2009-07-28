@@ -4435,6 +4435,22 @@ X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 
 \subsection{Memory Storages}
 
+ONLY_PYTHON(`
+\cvfunc{CreateMemStorage}\label{CreateMemStorage}
+
+Creates memory storage.
+
+\cvexp{C}{CPP}{CreateMemStorage(block\_size) -> memstorage}
+
+\begin{description}
+\cvarg{block\_size}{Size of the storage blocks in bytes. If it is 0, the block size is set to a default value - currently it is  about 64K.}
+\end{description}
+
+The function \texttt{cvCreateMemStorage} creates an empty memory storage object.
+
+')
+
+ONLY_C(`
 \cvstruct{CvMemStorage}\label{CvMemStorage}
 
 Growing memory storage.
@@ -4706,6 +4722,7 @@ void cvRestoreMemStoragePos( \par CvMemStorage* storage,\par CvMemStoragePos* po
 \end{description}
 
 The function \texttt{cvRestoreMemStoragePos} restores the position of the storage top from the parameter \texttt{pos}. This function and the function \texttt{cvClearMemStorage} are the only methods to release memory occupied in memory blocks. Note again that there is no way to free memory in the middle of an occupied portion of a storage block.
+')
 
 \subsection{Sequences}
 
@@ -4713,6 +4730,31 @@ The function \texttt{cvRestoreMemStoragePos} restores the position of the storag
 
 Growable sequence of elements.
 
+ONLY_PYTHON(`
+Many OpenCV functions return a CvSeq object.  The CvSeq obect is a sequence, so these are all legal:
+\begin{lstlisting}
+seq = cv.FindContours(scribble, storage, cv.CV_RETR_CCOMP, cv.CV_CHAIN_APPROX_SIMPLE)
+# seq is a sequence of point pairs
+print `len'(seq)
+# FindContours returns a sequence of (x,y) points, so to print them out:
+for (x,y) in seq:
+   print (x,y)
+print seq[10]            # tenth entry in the seqeuence
+print seq[::-1]          # reversed sequence
+print sorted(list(seq))  # sorted sequence
+\end{lstlisting}
+
+Also, a CvSeq object has methods
+\texttt{h_next()},
+\texttt{h_prev()},
+\texttt{v_next()} and
+\texttt{v_prev()}.
+Some OpenCV functions (for example \cross{FindContours}) can return multiple CvSeq objects, connected by these relations.
+In this case the methods return the other sequences.  If no relation between sequences exists, then the methods return \texttt{None}.
+
+')
+
+ONLY_C(`
 \begin{lstlisting}
 
 #define CVgSEQUENCE\_FIELDS() \
@@ -5140,6 +5182,7 @@ char* cvSeqInsert( \par CvSeq* seq,\par int before\_index,\par void* element=NUL
 \end{description}
 
 The function \texttt{cvSeqInsert} shifts the sequence elements from the inserted position to the nearest end of the sequence and copies the \texttt{element} content there if the pointer is not NULL. The function returns a pointer to the inserted element.
+')
 
 \cvfunc{SeqRemove}\label{SeqRemove}
 
@@ -5185,6 +5228,7 @@ sequence. The function does not return the memory to the storage block, but this
 memory is reused later when new elements are added to the sequence. The function has
 'O(1)' time complexity.
 
+ONLY_C(`
 \cvfunc{GetSeqElem}\label{GetSeqElem}
 
 Returns a pointer to a sequence element according to its index.
@@ -5308,6 +5352,7 @@ CvSeq* cvSeqSlice( \par const CvSeq* seq,\par CvSlice slice,\par CvMemStorage* s
 
 The function \texttt{cvSeqSlice} creates a sequence that represents the specified slice of the input sequence. The new sequence either shares the elements with the original sequence or has its own copy of the elements. So if one needs to process a part of sequence but the processing function does not have a slice parameter, the required sub-sequence may be extracted using this function.
 
+')
 
 \cvfunc{CloneSeq}\label{CloneSeq}
 
@@ -5324,7 +5369,8 @@ CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );
 \cvarg{storage}{The destination storage block to hold the new sequence header and the copied data, if any. If it is NULL, the function uses the storage block containing the input sequence.} 
 \end{description}
 
-The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and returns it. The call
+The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and returns it.
+ONLY_C(`The call
 
 \begin{lstlisting}
 cvCloneSeq( seq, storage )
@@ -5333,8 +5379,9 @@ cvCloneSeq( seq, storage )
 is equivalent to
 
 \begin{lstlisting}
-cvSeqSlice]( seq, CV\_WHOLE\_SEQ, storage, 1 )
+cvSeqSlice]( seq, CV_WHOLE_SEQ, storage, 1 )
 \end{lstlisting}
+')
 
 \cvfunc{SeqRemoveSlice}\label{SeqRemoveSlice}
 
@@ -5354,6 +5401,7 @@ void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
 
 The function \texttt{cvSeqRemoveSlice} removes a slice from the sequence.
 
+ONLY_C(`
 \cvfunc{SeqInsertSlice}\label{SeqInsertSlice}
 
 Inserts an array in the middle of a sequence.
@@ -5375,6 +5423,8 @@ The function \texttt{cvSeqInsertSlice} inserts all \texttt{from\_arr}
 array elements at the specified position of the sequence. The array
 \texttt{from\_arr} can be a matrix or another sequence.
 
+')
+
 \cvfunc{SeqInvert}\label{SeqInvert}
 
 Reverses the order of sequence elements.
@@ -5392,7 +5442,7 @@ void cvSeqInvert( CvSeq* seq );
 
 The function \texttt{cvSeqInvert} reverses the sequence in-place - makes the first element go last, the last element go first and so forth.
 
-
+ONLY_C(`
 \cvfunc{SeqSort}\label{SeqSort}
 
 Sorts sequence element using the specified comparison function.
@@ -5684,12 +5734,26 @@ void cvSetSeqReaderPos( \par CvSeqReader* reader,\par int index,\par int is\_rel
 
 The function \texttt{cvSetSeqReaderPos} moves the read position to an absolute position or relative to the current position.
 
+')
+
 \subsection{Sets}
 
 \cvstruct{CvSet}\label{CvSet}
 
 Collection of nodes.
 
+ONLY_PYTHON(`
+Some OpenCV functions return a CvSet object. The CvSeq obect is iterable, for example:
+
+\begin{lstlisting}
+for i in s:
+  print i
+print set(s)
+print list(s)
+\end{lstlisting}
+')
+
+ONLY_C(`
 \begin{lstlisting}
 
 typedef struct CvSetElem
@@ -5876,13 +5940,15 @@ void cvClearSet( CvSet* set\_header );
 
 The function \texttt{cvClearSet} removes all elements from set. It has O(1) time complexity.
 
+')
 
+ONLY_C(`
 \subsection{Graphs}
 
 
 \cvstruct{CvGraph}\label{CvGraph}
 
-Oriented or unoriented weigted graph.
+Oriented or unoriented weighted graph.
 
 \begin{lstlisting}
 
@@ -5959,8 +6025,8 @@ CvGraph* cvCreateGraph( \par int graph\_flags,\par int header\_size,\par int vtx
 \cvarg{graph\_flags}{Type of the created graph. Usually, it is either \texttt{CV\_SEQ\_KIND\_GRAPH} for generic unoriented graphs and
 \texttt{CV\_SEQ\_KIND\_GRAPH | CV\_GRAPH\_FLAG\_ORIENTED} for generic oriented graphs.}
 \cvarg{header\_size}{Graph header size; may not be less than \texttt{sizeof(CvGraph)}}
-\cvarg{vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use 'CV\_GRAPH\_VERTEX\_FIELDS()')}
-\cvarg{edge\_size}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use 'CV\_GRAPH\_EDGE\_FIELDS()')}
+\cvarg{vtx\_size}{Graph vertex size; the custom vertex structure must start with \cross{CvGraphVtx} (use \texttt{CV\_GRAPH\_VERTEX\_FIELDS()})}
+\cvarg{edge\_size}{Graph edge size; the custom edge structure must start with \cross{CvGraphEdge} (use \texttt{CV\_GRAPH\_EDGE\_FIELDS()})}
 \cvarg{storage}{The graph container}
 \end{description}
 
@@ -6333,7 +6399,7 @@ CvGraphScanner*  cvCreateGraphScanner( \par CvGraph* graph,\par CvGraphVtx* vtx=
 \cvarg{CV\_GRAPH\_VERTEX}{stop at the graph vertices visited for the first time}
 \cvarg{CV\_GRAPH\_TREE\_EDGE}{stop at tree edges (\texttt{tree edge} is the edge connecting the last visited vertex and the vertex to be visited next)}
 \cvarg{CV\_GRAPH\_BACK\_EDGE}{stop at back edges (\texttt{back edge} is an edge connecting the last visited vertex with some of its ancestors in the search tree)}
-\cvarg{CV\_GRAPH\_FORWARD\_EDGE}{stop at forward edges (\texttt{forward edge} is an edge conecting the last visited vertex with some of its descendants in the search tree). The 'forward edges' are only possible during oriented graph traversal)}
+\cvarg{CV\_GRAPH\_FORWARD\_EDGE}{stop at forward edges (\texttt{forward edge} is an edge conecting the last visited vertex with some of its descendants in the search tree. The forward edges are only possible during oriented graph traversal)}
 \cvarg{CV\_GRAPH\_CROSS\_EDGE}{stop at cross edges (\texttt{cross edge} is an edge connecting different search trees or branches of the same tree. The \texttt{cross edges} are only possible during oriented graph traversal)}
 \cvarg{CV\_GRAPH\_ANY\_EDGE}{stop at any edge (\texttt{tree, back, forward}, and \texttt{cross edges})}
 \cvarg{CV\_GRAPH\_NEW\_TREE}{stop in the beginning of every new search tree. When the traversal procedure visits all vertices and edges reachable from the initial vertex (the visited vertices together with tree edges make up a tree), it searches for some unvisited vertex in the graph and resumes the traversal process from that vertex. Before starting a new tree (including the very first tree when \texttt{cvNextGraphItem} is called for the first time) it generates a \texttt{CV\_GRAPH\_NEW\_TREE} event. For unoriented graphs, each search tree corresponds to a connected component of the graph.}
@@ -6535,6 +6601,8 @@ void cvRemoveNodeFromTree( \par void* node,\par void* frame );
 \cvarg{node}{The removed node}
 \cvarg{frame}{The top level node. If \texttt{node-$>$v\_prev = NULL} and \texttt{node-$>$h\_prev} is NULL (i.e., if \texttt{node} is the first child of \texttt{frame}), \texttt{frame-$>$v\_next} is set to \texttt{node-$>$h\_next} (i.e., the first child or frame is changed).}
 \end{description}
+
+')
 
 The function \texttt{cvRemoveNodeFromTree} removes a node from a tree. The function does not deallocate any memory; it can only modify links of the tree nodes.
 
@@ -7041,7 +7109,7 @@ The function \texttt{cvEllipse2Poly} computes the vertices of a polyline that ap
 
 \section{Data Persistence and RTTI}
 
-
+ONLY_C('
 \subsection{File Storage}
 
 \cvstruct{CvFileStorage}\label{CvFileStorage}
@@ -7110,39 +7178,38 @@ File Storage Node.
 \begin{lstlisting}
 
 /* file node type */
-#define CV\_NODE\_NONE        0
-#define CV\_NODE\_INT         1
-#define CV\_NODE\_INTEGER     CV\_NODE\_INT
-#define CV\_NODE\_REAL        2
-#define CV\_NODE\_FLOAT       CV\_NODE\_REAL
-#define CV\_NODE\_STR         3
-#define CV\_NODE\_STRING      CV\_NODE\_STR
-#define CV\_NODE\_REF         4 /* not used */
-#define CV\_NODE\_SEQ         5
-#define CV\_NODE\_MAP         6
-#define CV\_NODE\_TYPE\_MASK   7
+#define CV_NODE_NONE        0
+#define CV_NODE_INT         1
+#define CV_NODE_INTEGER     CV_NODE_INT
+#define CV_NODE_REAL        2
+#define CV_NODE_FLOAT       CV_NODE_REAL
+#define CV_NODE_STR         3
+#define CV_NODE_STRING      CV_NODE_STR
+#define CV_NODE_REF         4 /* not used */
+#define CV_NODE_SEQ         5
+#define CV_NODE_MAP         6
+#define CV_NODE_TYPE_MASK   7
 
 /* optional flags */
-#define CV\_NODE\_USER        16
-#define CV\_NODE\_EMPTY       32
-#define CV\_NODE\_NAMED       64
+#define CV_NODE_USER        16
+#define CV_NODE_EMPTY       32
+#define CV_NODE_NAMED       64
 
-#define CV\_NODE\_TYPE(tag)  ((tag) & CV\_NODE\_TYPE\_MASK)
+#define CV_NODE_TYPE(tag)  ((tag) & CV_NODE_TYPE_MASK)
 
-#define CV\_NODE\_IS\_INT(tag)        (CV\_NODE\_TYPE(tag) == CV\_NODE\_INT)
-#define CV\_NODE\_IS\_REAL(tag)       (CV\_NODE\_TYPE(tag) == CV\_NODE\_REAL)
-#define CV\_NODE\_IS\_STRING(tag)     (CV\_NODE\_TYPE(tag) == CV\_NODE\_STRING)
-#define CV\_NODE\_IS\_SEQ(tag)        (CV\_NODE\_TYPE(tag) == CV\_NODE\_SEQ)
-#define CV\_NODE\_IS\_MAP(tag)        (CV\_NODE\_TYPE(tag) == CV\_NODE\_MAP)
-#define CV\_NODE\_IS\_COLLECTION(tag) (CV\_NODE\_TYPE(tag) >= CV\_NODE\_SEQ)
-#define CV\_NODE\_IS\_FLOW(tag)       (((tag) & CV\_NODE\_FLOW) != 0)
-#define CV\_NODE\_IS\_EMPTY(tag)      (((tag) & CV\_NODE\_EMPTY) != 0)
-#define CV\_NODE\_IS\_USER(tag)       (((tag) & CV\_NODE\_USER) != 0)
-#define CV\_NODE\_HAS\_NAME(tag)      (((tag) & CV\_NODE\_NAMED) != 0)
+#define CV_NODE_IS_INT(tag)        (CV_NODE_TYPE(tag) == CV_NODE_INT)
+#define CV_NODE_IS_REAL(tag)       (CV_NODE_TYPE(tag) == CV_NODE_REAL)
+#define CV_NODE_IS_STRING(tag)     (CV_NODE_TYPE(tag) == CV_NODE_STRING)
+#define CV_NODE_IS_SEQ(tag)        (CV_NODE_TYPE(tag) == CV_NODE_SEQ)
+#define CV_NODE_IS_MAP(tag)        (CV_NODE_TYPE(tag) == CV_NODE_MAP)
+#define CV_NODE_IS_COLLECTION(tag) (CV_NODE_TYPE(tag) >= CV_NODE_SEQ)
+#define CV_NODE_IS_FLOW(tag)       (((tag) & CV_NODE_FLOW) != 0)
+#define CV_NODE_IS_EMPTY(tag)      (((tag) & CV_NODE_EMPTY) != 0)
+#define CV_NODE_IS_USER(tag)       (((tag) & CV_NODE_USER) != 0)
+#define CV_NODE_HAS_NAME(tag)      (((tag) & CV_NODE_NAMED) != 0)
 
-#define CV\_NODE\_SEQ\_SIMPLE 256
-#define CV\_NODE\_SEQ\_IS\_SIMPLE(seq) (((seq)->flags & CV\_NODE\_SEQ\_SIMPLE) 
-									!= 0)
+#define CV_NODE_SEQ_SIMPLE 256
+#define CV_NODE_SEQ_IS_SIMPLE(seq) (((seq)->flags & CV_NODE_SEQ_SIMPLE) != 0)
 
 typedef struct CvString
 {
@@ -8006,8 +8073,11 @@ sequence elements. As with any sequence, some parts of the file node
 sequence may be skipped or read repeatedly by repositioning the reader
 using \cross{SetSeqReaderPos}.
 
+')
+
 \subsection{RTTI and Generic Functions}
 
+ONLY_C(`
 \cvstruct{CvTypeInfo}\label{CvTypeInfo}
 
 Type information.
@@ -8172,6 +8242,8 @@ void* cvClone( const void* struct\_ptr );
 
 The function \texttt{cvClone} finds the type of a given object and calls \texttt{clone} with the passed object.
 
+')
+
 \cvfunc{Save}\label{Save}
 
 Saves an object to a file.
@@ -8187,7 +8259,7 @@ void cvSave( \par const char* filename,\par const void* struct\_ptr,\par const c
 \cvarg{struct\_ptr}{Object to save}
 \cvarg{name}{Optional object name. If it is NULL, the name will be formed from \texttt{filename}.}
 \cvarg{comment}{Optional comment to put in the beginning of the file}
-\cvarg{attributes}{Optional attributes passed to \cross{Write}}
+ONLY_C(`\cvarg{attributes}{Optional attributes passed to \cross{Write}}')
 \end{description}
 
 The function \texttt{cvSave} saves an object to a file. It provides a simple interface to \cross{Write}.
@@ -8206,7 +8278,7 @@ void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par 
 \cvarg{filename}{File name}
 \cvarg{memstorage}{Memory storage for dynamic structures, such as \cross{CvSeq} or \cross{CvGraph} . It is not used for matrices or images.}
 \cvarg{name}{Optional object name. If it is NULL, the first top-level object in the storage will be loaded.}
-\cvarg{real\_name}{Optional output parameter that will contain the name of the loaded object (useful if \texttt{name=NULL})}
+ONLY_C(`\cvarg{real\_name}{Optional output parameter that will contain the name of the loaded object (useful if \texttt{name=NULL})}')
 \end{description}
 
 The function \texttt{cvLoad} loads an object from a file. It provides a
@@ -8228,9 +8300,11 @@ Checks every element of an input array for invalid values.
 int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\par double max\_val=0);
 
 }{CPP}{CheckArr(arr,flags=0,min\_val=0,max\_val=0)-> int}
+
+ONLY_C(`
 \begin{lstlisting}
 #define cvCheckArray cvCheckArr
-\end{lstlisting}
+\end{lstlisting}')
 
 \begin{description}
 \cvarg{arr}{The array to check}
@@ -8265,6 +8339,7 @@ void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* la
 \cvarg{cluster\_count}{Number of clusters to split the set by}
 \cvarg{labels}{Output integer vector storing cluster indices for every sample}
 \cvarg{termcrit}{Specifies maximum number of iterations and/or accuracy (distance the centers can move by between subsequent iterations)}
+ONLY_C(`
 \cvarg{attempts}{How many times the algorithm is executed using different initial labelings. The algorithm returns labels that yield the best compactness (see the last function parameter)}
 \cvarg{rng}{Optional external random number generator; can be used to fully control the function behaviour}
 \cvarg{flags}{Can be 0 or \texttt{CV\_KMEANS\_USE\_INITIAL\_LABELS}. The latter
@@ -8283,6 +8358,7 @@ user can use only the core of the function, set the number of
 attempts to 1, initialize labels each time using a custom algorithm
 \newline (\texttt{flags}=\texttt{CV\_KMEAN\_USE\_INITIAL\_LABELS}) and, based on the output compactness
 or any other criteria, choose the best clustering.}
+')
 \end{description}
 
 The function \texttt{cvKMeans2} implements a k-means algorithm that finds the
@@ -8290,6 +8366,7 @@ centers of \texttt{cluster\_count} clusters and groups the input samples
 around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
 samples stored in the row $i$ of the \texttt{samples} matrix.
 
+ONLY_C(`
 \cvfunc{Example: Clustering random samples of multi-gaussian distribution with k-means}
 \begin{lstlisting}
 #include "cxcore.h"
@@ -8374,6 +8451,9 @@ void main( int argc, char** argv )
 }
 \end{lstlisting}
 
+')
+
+ONLY_C(`
 \cvfunc{SeqPartition}\label{SeqPartition}
 
 Splits a sequence into equivalency classes.
@@ -8476,18 +8556,25 @@ int main( int argc, char** argv )
 }
 \end{lstlisting}
 
+')
 
 \section{Error Handling and System Functions}
 
 \subsection{Error Handling}
 
+ONLY_PYTHON(`
+Errors in argument type cause a \texttt{TypeError} exception.
+OpenCV errors cause a cv.error exception.
+')
+
+ONLY_C(`
 Error handling in OpenCV is similar to IPL (Image Processing
 Library). In the case of an error, functions do not return the error
 code. Instead, they raise an error using \texttt{CV\_ERROR}
 macro that calls \cross{Error} that, in its turn, sets the error
 status with \cross{SetErrStatus} and calls a standard or user-defined
 error handler (that can display a message box, write to log, etc., see
-\cross{RedirectError}, There is a global variable, one per each program
+\cross{RedirectError}).  There is a global variable, one per each program
 thread, that contains current error status (an integer value). The status
 can be retrieved with the \cross{GetErrStatus} function.
 
@@ -8579,7 +8666,7 @@ void cvResizeDCT( CvMat* input_array, CvMat* output_array )
     CV_FUNCNAME( "cvResizeDCT" ); // declare cvFuncName
 
     __BEGIN__; // start processing. There may be some declarations just after 
-              // this macro, but they couldn't be accessed from the epilogue.
+              // this macro, but they could not be accessed from the epilogue.
 
     if( !CV_IS_MAT(input_array) || !CV_IS_MAT(output_array) )
         // use CV_ERROR() to raise an error
@@ -8719,7 +8806,7 @@ The function \texttt{cvError} sets the error status to the specified value (via 
 
 \cvfunc{ErrorStr}\label{ErrorStr}
 
-Returns textual description of an error's status code.
+Returns textual description of an error status code.
 
 \cvexp{
 const char* cvErrorStr( int status );
@@ -8815,6 +8902,9 @@ OpenCV ERROR: Bad argument (input_array or output_array are not valid matrices)
 Terminating the application...
 \end{verbatim}
 
+')
+
+ONLY_C(`
 \subsection{System and Utility Functions}
 
 \cvfunc{Alloc}\label{Alloc}
@@ -9040,3 +9130,6 @@ etc. The function is not necessary if IPL is called only for data
 processing and all the allocation/deallocation is done by CXCORE, or
 if all the allocation/deallocation is done by IPL and some of OpenCV
 functions are used to process the data.
+
+')
+
