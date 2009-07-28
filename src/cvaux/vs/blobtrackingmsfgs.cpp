@@ -118,7 +118,7 @@ private:
         m_ObjSize = cvSize(w,h);
         m_KernelMeanShiftSize = cvSize(kernel_width,kernel_height);
 
-        
+
         /* Create kernels for histogram calculation: */
         if(m_KernelHistModel) cvReleaseMat(&m_KernelHistModel);
         m_KernelHistModel = cvCreateMat(h, w, DefHistTypeMat);
@@ -129,7 +129,7 @@ private:
 
         if(m_Weights) cvReleaseMat(&m_Weights);
         m_Weights = cvCreateMat(kernel_height, kernel_width, CV_32F);
-        
+
         for(s=-SCALE_RANGE; s<=SCALE_RANGE; ++s)
         {   /* Allocate kernel for meanshifts in space and scale: */
             int     si = s+SCALE_RANGE;
@@ -144,8 +144,8 @@ private:
 
             for(y=0; y<kernel_height; ++y)
             {
-                DefHistType* pK = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftK[si][0], y, 0, sizeof(DefHistType) ); 
-                DefHistType* pG = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftG[si][0], y, 0, sizeof(DefHistType) ); 
+                DefHistType* pK = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftK[si][0], y, 0, sizeof(DefHistType) );
+                DefHistType* pG = (DefHistType*)CV_MAT_ELEM_PTR_FAST( m_KernelMeanShiftG[si][0], y, 0, sizeof(DefHistType) );
 
                 for(x=0; x<kernel_width; ++x)
                 {
@@ -159,7 +159,7 @@ private:
         }
     }   /* ReallocKernel */
 
-    inline double Gaussian2D(double x, double sigma2) 
+    inline double Gaussian2D(double x, double sigma2)
     {
         return (exp(-x/(2*sigma2)) / (2*3.1415926535897932384626433832795*sigma2) );
     }
@@ -239,13 +239,13 @@ private:
                 unsigned char* pImgData = NULL;
                 unsigned char* pMaskData = NULL;
                 float* pWData = NULL;
-                
+
                 if(y+y0 < 0 || y+y0 >= pImg->height) continue;
-                
+
                 pImgData = &CV_IMAGE_ELEM(pImg,unsigned char,y+y0,x0*3);
                 pMaskData = pImgFG?(&CV_IMAGE_ELEM(pImgFG,unsigned char,y+y0,x0)):NULL;
                 pWData = (float*)CV_MAT_ELEM_PTR_FAST(m_Weights[0],y,0,sizeof(float));
-                
+
                 for(x=0; x<m_KernelMeanShiftSize.width; ++x, pImgData+=3)
                 {
                     double      V  = 0;
@@ -253,7 +253,7 @@ private:
                     double      HC = 0;
                     int         index;
                     if(x+x0 < 0 || x+x0 >= pImg->width) continue;
-                    
+
                     index = HIST_INDEX(pImgData);
                     assert(index >= 0 && index < m_BinNumTotal);
 
@@ -278,7 +278,7 @@ public:
         int i;
         m_FGWeight = 0;
         m_Alpha = 0.0;
-        
+
         /* Add several parameters for external use: */
         AddParam("FGWeight", &m_FGWeight);
         CommentParam("FGWeight","Weight of FG mask using (0 - mask will not be used for tracking)");
@@ -300,6 +300,8 @@ public:
             m_KernelMeanShiftG[i] = NULL;
         }
         ReAllocHist(3,5);   /* 3D hist, each dimension has 2^5 bins. */
+
+        SetModuleName("MSFGS");
     }
 
     ~CvBlobTrackerOneMSFGS()
@@ -395,15 +397,15 @@ public:
                 float   news = 0;
                 float   sum = 0;
                 float   scale;
-                
+
                 Center = cvPoint(cvRound(m_Blob.x),cvRound(m_Blob.y));
                 calcHist(pImg, NULL, Center, m_KernelHistCandidate, m_HistCandidate, &m_HistCandidateVolume);
                 calcWeights(pImg, pImgFG, Center);
                 //cvSet(m_Weights,cvScalar(1));
 
-                for(si=0; si<SCALE_NUM; si++) 
+                for(si=0; si<SCALE_NUM; si++)
                 {
-                    double  W = cvDotProduct(m_Weights, m_KernelMeanShiftG[si]);;   
+                    double  W = cvDotProduct(m_Weights, m_KernelMeanShiftG[si]);;
                     int     s = si-SCALE_RANGE;
                     sum += (float)fabs(W);
                     news += (float)(s*W);
@@ -418,7 +420,7 @@ public:
                 m_Blob.w *= scale;
                 m_Blob.h *= scale;
             }   /* Mean shift in scale space. */
-            
+
             /* Check fo finish: */
             if(fabs(dx)<0.1 && fabs(dy)<0.1) break;
 

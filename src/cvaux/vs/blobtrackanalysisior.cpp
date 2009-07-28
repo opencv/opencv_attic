@@ -59,6 +59,7 @@ public:
     CvBlobTrackAnalysisIOR()
     {
         m_AnNum = 0;
+        SetModuleName("IOR");
     }
 
     ~CvBlobTrackAnalysisIOR()

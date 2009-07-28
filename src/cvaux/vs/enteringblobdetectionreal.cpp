@@ -61,6 +61,7 @@ public:
     {
         m_pTestSeq = pTestSeq;
         m_pMem = cvCreateMemStorage(0);
+        SetModuleName("Real");
     }
 
     /* Destructor of BlobDetector: */
