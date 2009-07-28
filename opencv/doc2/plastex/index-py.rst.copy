@@ -3,6 +3,8 @@ OpenCV |version| Python Reference
 
 The OpenCV Wiki is here: http://opencv.willowgarage.com/
 
+Details on downloading and building OpenCV's new Python bindings are here: http://pr.willowgarage.com/wiki/OpenCVPythonBindings
+
 Contents:
 
 .. toctree::

@@ -2,6 +2,7 @@ include(common.m4)
 \chapter{CvReference}
 \section{Image Processing}
 
+
 Note: The chapter describes functions for image processing and
 analysis. Most of the functions work with 2d arrays of pixels, which are referred
 to as "images". However, they do not have to be of type
@@ -51,7 +52,7 @@ aperture is
 
 for the x-derivative or transposed for the y-derivative.
 
-The function `cvSobel` calculates the image derivative by convolving the image with the appropriate kernel:
+The function \texttt{cvSobel} calculates the image derivative by convolving the image with the appropriate kernel:
 
 \[
 \texttt{dst}(x,y) = \frac{d^{xorder+yorder} \texttt{src}}{dx^{xorder} \cdot dy^{yorder}}
@@ -308,7 +309,7 @@ CvTermCriteria criteria );
 \cvarg{count}{Number of corners}
 \cvarg{win}{Half of the side length of the search window. For example, if \texttt{win} =(5,5), then a 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window would be used}
 \cvarg{zero\_zone}{Half of the size of the dead region in the middle of the search zone over which the summation in the formula below is not done. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size}
-\cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after a certain number of iterations or when a required accuracy is achieved. The `criteria` may specify either of or both the maximum number of iteration and the required accuracy}
+\cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after a certain number of iterations or when a required accuracy is achieved. The \texttt{criteria} may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}
 
 The function \texttt{cvFindCornerSubPix} iterates to find the sub-pixel accurate location of corners, or radial saddle points, as shown in on the picture below.
@@ -555,6 +556,7 @@ int main(int argc, char** argv)
 
 \subsection{Sampling, Interpolation and Geometrical Transforms}
 
+ONLY_C(`
 \cvfunc{SampleLine}\label{SampleLine}
 Reads the raster line to the buffer.
 
@@ -586,6 +588,7 @@ in the case of a 4-connected line}
 \end{description}
 
 The function \texttt{cvSampleLine} implements a particular application of line iterators. The function reads all of the image points lying on the line between \texttt{pt1} and \texttt{pt2}, including the end points, and stores them into the buffer.
+')
 
 \cvfunc{GetRectSubPix}\label{GetRectSubPix}
 
@@ -719,7 +722,7 @@ CvScalar fillval=cvScalarAll(0) );
 \cvarg{map\_matrix}{$2\times 3$ transformation matrix}
 \cvarg{flags}{A combination of interpolation methods and the following optional flags:
 \begin{description}
-  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels; if some of them correspond to outliers in the source image, they are set to `fillval`}
+  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels; if some of them correspond to outliers in the source image, they are set to \texttt{fillval}}
   \cvarg{CV\_WARP\_INVERSE\_MAP}{indicates that \texttt{matrix} is inversely
   transformed from the destination image to the source and, thus, can be used
   directly for pixel interpolation. Otherwise, the function finds
@@ -873,7 +876,7 @@ NNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0
 \cvarg{map\_matrix}{$3\times 3$ transformation matrix}
 \cvarg{flags}{A combination of interpolation methods and the following optional flags:
 \begin{description}
-  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels; if some of them correspond to outliers in the source image, they are set to `fillval`}
+  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels; if some of them correspond to outliers in the source image, they are set to \texttt{fillval}}
   \cvarg{CV\_WARP\_INVERSE\_MAP}{indicates that \texttt{matrix} is inversely transformed from the destination image to the source and, thus, can be used directly for pixel interpolation. Otherwise, the function finds the inverse transform from \texttt{map\_matrix}}
 \end{description}}
 \cvarg{fillval}{A value used to fill outliers}
@@ -978,7 +981,7 @@ CvScalar fillval=cvScalarAll(0) );
 \cvarg{mapy}{The map of y-coordinates (32fC1 image)}
 \cvarg{flags}{A combination of interpolation method and the following optional flag(s):
 \begin{description}
-  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels. If some of them correspond to outliers in the source image, they are set to `fillval`}
+  \cvarg{CV\_WARP\_FILL\_OUTLIERS}{fills all of the destination image pixels. If some of them correspond to outliers in the source image, they are set to \texttt{fillval}}
 \end{description}}
 \cvarg{fillval}{A value used to fill outliers}
 \end{description}
@@ -1117,6 +1120,7 @@ int* values=NULL );
 
 The function CreateStructuringElementEx allocates and fills the structure \texttt{IplConvKernel}, which can be used as a structuring element in the morphological operations.
 
+ONLY_C(`
 \cvfunc{ReleaseStructuringElement}\label{ReleaseStructuringElement}
 
 Deletes a structuring element.
@@ -1130,6 +1134,8 @@ void cvReleaseStructuringElement( IplConvKernel** element );
 \end{description}
 
 The function \texttt{cvReleaseStructuringElement} releases the structure \texttt{IplConvKernel} that is no longer needed. If \texttt{*element} is \texttt{NULL}, the function has no effect.
+
+')
 
 \cvfunc{Erode}\label{Erode}
 
@@ -1889,9 +1895,9 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
 \cvarg{flags}{The operation flags. Lower bits contain connectivity value, 4 (by default) or 8, used within the function. Connectivity determines which neighbors of a pixel are considered. Upper bits can be 0 or a combination of the following flags:
 \begin{description}
   \cvarg{CV\_FLOODFILL\_FIXED\_RANGE}{if set, the difference between the current pixel and seed pixel is considered, otherwise the difference between neighbor pixels is considered (the range is floating)}
-  \cvarg{CV\_FLOODFILL\_MASK\_ONLY}{if set, the function does not fill the image (`new\_val` is ignored), but fills the mask (that must be non-NULL in this case)}
+  \cvarg{CV\_FLOODFILL\_MASK\_ONLY}{if set, the function does not fill the image (\texttt{new\_val} is ignored), but fills the mask (that must be non-NULL in this case)}
 \end{description}}
-\cvarg{mask}{Operation mask, should be a single-channel 8-bit image, 2 pixels wider and 2 pixels taller than \texttt{image}. If not NULL, the function uses and updates the mask, so the user takes responsibility of initializing the \texttt{mask} content. Floodfilling can't go across non-zero pixels in the mask, for example, an edge detector output can be used as a mask to stop filling at edges. It is possible to use the same mask in multiple calls to the function to make sure the filled area do not overlap. \textbf{Note}: because the mask is larger than the filled image, a pixel in \texttt{mask} that corresponds to $(x,y)$ pixel in `image` will have coordinates $(x+1,y+1)$ }
+\cvarg{mask}{Operation mask, should be a single-channel 8-bit image, 2 pixels wider and 2 pixels taller than \texttt{image}. If not NULL, the function uses and updates the mask, so the user takes responsibility of initializing the \texttt{mask} content. Floodfilling can't go across non-zero pixels in the mask, for example, an edge detector output can be used as a mask to stop filling at edges. It is possible to use the same mask in multiple calls to the function to make sure the filled area do not overlap. \textbf{Note}: because the mask is larger than the filled image, a pixel in \texttt{mask} that corresponds to $(x,y)$ pixel in \texttt{image} will have coordinates $(x+1,y+1)$ }
 \end{description}
 
 The function \texttt{cvFloodFill} fills a connected component starting from the seed point with the specified color. The connectivity is determined by the closeness of pixel values. The pixel at $(x,y)$ is considered to belong to the repainted domain if:
@@ -1932,7 +1938,7 @@ int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** fir
 }{CPP}{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
 
 \begin{description}
-\cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as `binary`. To get such a binary image from grayscale, one may use \cross{Threshold}, \cross{AdaptiveThreshold} or \cross{Canny}. The function modifies the source image's content}
+\cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as \texttt{binary}. To get such a binary image from grayscale, one may use \cross{Threshold}, \cross{AdaptiveThreshold} or \cross{Canny}. The function modifies the source image's content}
 \cvarg{storage}{Container of the retrieved contours}
 \cvarg{first\_contour}{Output parameter, will contain the pointer to the first outer contour}
 \cvarg{header\_size}{Size of the sequence header, $\ge \texttt{sizeof(CvChain)}$ if $\texttt{method} =\texttt{CV\_CHAIN\_CODE}$,
@@ -2138,7 +2144,7 @@ Calculates all of the moments up to the third order of a polygon or rasterized s
 
 \cvexp{
 void cvMoments( \par const CvArr* arr,\par CvMoments* moments,\par int binary=0 );
-}{CPP}{PYTHON}
+}{CPP}{Moments(arr) -> cvmoments}
 
 \begin{description}
 \cvarg{arr}{Image (1-channel or 3-channel with COI set) or polygon (CvSeq of points or a vector of points)}
@@ -2154,7 +2160,7 @@ Retrieves the spatial moment from the moment state structure.
 
 \cvexp{
 double cvGetSpatialMoment( \par CvMoments* moments, \par int x\_order, \par int y\_order );
-}{CPP}{PYTHON}
+}{CPP}{GetSpatialMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{The moment state, calculated by \cross{Moments}}
@@ -2176,7 +2182,7 @@ Retrieves the central moment from the moment state structure.
 
 \cvexp{
 double cvGetCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}{CPP}{PYTHON}
+}{CPP}{GetCentralMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -2202,7 +2208,7 @@ Retrieves the normalized central moment from the moment state structure.
 
 \cvexp{
 double cvGetNormalizedCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}{CPP}{PYTHON}
+}{CPP}{GetNormalizedCentralMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -2222,18 +2228,16 @@ Calculates the seven Hu invariants.
 
 \cvexp{
 void cvGetHuMoments( CvMoments* moments, CvHuMoments* hu\_moments );
-}{CPP}{PYTHON}
+}{CPP}{GetHuMoments(cvmoments) -> (h1, h2, h3, h4, h5, h5, h7)}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
-\cvarg{hu\_moments}{Pointer to the Hu moments structure}
+ONLY_C(\cvarg{hu\_moments}{Pointer to the Hu moments structure})
 \end{description}
 
 The function \texttt{cvGetHuMoments} calculates the seven Hu invariants that are defined as:
 
 \[ \begin{array}{l}
-h1=\eta_{20}+\eta_{02}\\
-h2=(\eta_{20}-\eta_{02})^{2}+4\eta_{11}^{2}\\
 h1=\eta_{20}+\eta_{02}\\
 h2=(\eta_{20}-\eta_{02})^{2}+4\eta_{11}^{2}\\
 h3=(\eta_{30}-3\eta_{12})^{2}+ (3\eta_{21}-\eta_{03})^{2}\\
@@ -2532,20 +2536,20 @@ Inpaints the selected region in the image.
 \cvexp{
 
 void cvInpaint( \par const CvArr* src, \par const CvArr* mask, \par CvArr* dst,
-                \par int flags, \par double inpaintRadius );
+                \par double inpaintRadius, \par int flags);
 
-}{CPP}{Inpaint(src,mask,dst,flags,inpaintRadius)-> None}
+}{CPP}{Inpaint(src,mask,dst,inpaintRadius,flags) -> None}
 
 \begin{description}
 \cvarg{src}{The input 8-bit 1-channel or 3-channel image.}
 \cvarg{mask}{The inpainting mask, 8-bit 1-channel image. Non-zero pixels indicate the area that needs to be inpainted.}
 \cvarg{dst}{The output image of the same format and the same size as input.}
+\cvarg{inpaintRadius}{The radius of circlular neighborhood of each point inpainted that is considered by the algorithm.}
 \cvarg{flags}{The inpainting method, one of the following:
 \begin{description}
 \cvarg{CV\_INPAINT\_NS}{Navier-Stokes based method.}
 \cvarg{CV\_INPAINT\_TELEA}{The method by Alexandru Telea \href{\#Telea04}{[Telea04]}}
 \end{description}}
-\cvarg{inpaintRadius}{The radius of circlular neighborhood of each point inpainted that is considered by the algorithm.}
 \end{description}
 
 The function \texttt{cvInpaint} reconstructs the selected image area from the pixel near the area boundary. The function may be used to remove dust and scratches from a scanned photo, or to remove undesirable objects from still images or video.
@@ -2623,6 +2627,7 @@ void cvSetHistBinRanges( \par CvHistogram* hist,\par float** ranges,\par int uni
 The function \texttt{cvSetHistBinRanges} is a stand-alone function for setting bin ranges in the histogram. For a more detailed description of the parameters \texttt{ranges} and \texttt{uniform} see the \cross{CalcHist} function, that can initialize the ranges as well. Ranges for the histogram bins must be set before the histogram is calculated or the backproject of the histogram is calculated.
 
 
+ONLY_C(`
 \cvfunc{ReleaseHist}\label{ReleaseHist}
 
 Releases the histogram.
@@ -2636,6 +2641,7 @@ void cvReleaseHist( CvHistogram** hist );
 \end{description}
 
 The function \texttt{cvReleaseHist} releases the histogram (header and the data). The pointer to the histogram is cleared by the function. If \texttt{*hist} pointer is already \texttt{NULL}, the function does nothing.
+')
 
 \cvfunc{ClearHist}\label{ClearHist}
 
@@ -2714,11 +2720,11 @@ Returns a pointer to the histogram bin.
 \#define cvGetHistValue\_1D( hist, idx0 ) \
     ((float*)(cvPtr1D( (hist)->bins, (idx0), 0 ))
 \#define cvGetHistValue\_2D( hist, idx0, idx1 ) \
-    ((float*)(cvPtr2D( (hist)->bins, (idx0), (idx1), 0 ))
+    ((float*)(cvPtr2D( (hist)->bins, (idx0), (idx1), 0 )))
 \#define cvGetHistValue\_3D( hist, idx0, idx1, idx2 ) \
-    ((float*)(cvPtr3D( (hist)->bins, (idx0), (idx1), (idx2), 0 ))
+    ((float*)(cvPtr3D( (hist)->bins, (idx0), (idx1), (idx2), 0 )))
 \#define cvGetHistValue\_nD( hist, idx ) \
-    ((float*)(cvPtrND( (hist)->bins, (idx), 0 ))
+    ((float*)(cvPtrND( (hist)->bins, (idx), 0 )))
 \end{lstlisting}
 \fi
 
@@ -3210,6 +3216,7 @@ CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int 
 
 This is a stand-alone approximation routine. The function \texttt{cvApproxChains} works exactly in the same way as \cross{FindContours} with the corresponding approximation flag. The function returns pointer to the first resultant contour. Other approximated contours, if any, can be accessed via the \texttt{v\_next} or \texttt{h\_next} fields of the returned structure.
 
+ifelse(TARGET_LANGUAGE,c,`
 \cvfunc{StartReadChainPoints}\label{StartReadChainPoints}
 
 Initializes the chain reader.
@@ -3233,6 +3240,8 @@ CvPoint cvReadChainPoint( CvChainPtReader* reader );
 \end{description}
 
 The function \texttt{cvReadChainPoint} returns the current chain point and updates the reader position.
+
+')
 
 \cvfunc{ApproxPoly}\label{ApproxPoly}
 
@@ -3394,6 +3403,7 @@ The function \texttt{cvMaxRect} finds the minimum area rectangle that contains b
 
 \includegraphics[width=0.5\textwidth]{pics/maxrect.png}
 
+ONLY_C(`
 \cvfunc{CvBox2D}\label{CvBox2D}
 
 Rotated 2D box.
@@ -3408,7 +3418,9 @@ typedef struct CvBox2D
 }
 CvBox2D;
 \end{lstlisting}
+')
 
+ONLY_C(`
 \cvfunc{PointSeqFromMat}\label{PointSeqFromMat}
 
 Initializes a point sequence header from a point vector.
@@ -3459,6 +3471,7 @@ cvDrawContours( img,
                 CV_RGB(255,0,0),
                 0, 3, 8, cvPoint(0,0));
 \end{lstlisting}
+')
 
 \cvfunc{BoxPoints}\label{BoxPoints}
 
@@ -3466,7 +3479,7 @@ Finds the box vertices.
 
 \cvexp{
 void cvBoxPoints( \par CvBox2D box,\par CvPoint2D32f pt[4] );
-}{CPP}{BoxPoints(box)-> pt}
+}{CPP}{BoxPoints(box)-> points}
 
 \begin{description}
 \cvarg{box}{Box}
@@ -4410,7 +4423,7 @@ Calculates the optical flow for two images.
 
 \cvexp{
 void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvSize win\_size,\par CvArr* velx,\par CvArr* vely );
-}{CPP}{CalcObticalFlowLK(prev,curr,win\_size,velx,vely)-> None}
+}{CPP}{CalcOpticalFlowLK(prev,curr,win\_size,velx,vely)-> None}
 \begin{description}
 
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -4506,12 +4519,14 @@ readiness flag for the corresponding image can be set in the next call
 (i.e., typically, for all the image pairs except the very first one
 \texttt{CV\_LKFLOW\_PYR\_A\_READY} is set).
 
+ONLY_C(`
 \subsection{Estimators}
 
 \cvfunc{CvKalman}\label{CvKalman}
 
 Kalman filter state.
 
+'changequote(KLAK,KLOK)
 \begin{lstlisting}
 typedef struct CvKalman
 {
@@ -4545,7 +4560,7 @@ typedef struct CvKalman
     CvMat* process_noise_cov;   /* process noise covariance matrix (Q) */
     CvMat* measurement_noise_cov; /* measurement noise covariance matrix (R) */
     CvMat* error_cov_pre;       /* priori error estimate covariance matrix (P'(k)):
-                                    P'(k)=A*P(k-1)*At + Q)*/
+                                    P'(k)=A*P(k-1)*At + Q*/
     CvMat* gain;                /* Kalman gain matrix (K(k)):
                                     K(k)=P'(k)*Ht*inv(H*P'(k)*Ht+R)*/
     CvMat* error_cov_post;      /* posteriori error estimate covariance matrix (P(k)):
@@ -4558,6 +4573,7 @@ typedef struct CvKalman
 }
 CvKalman;
 \end{lstlisting}
+changequote`''
 
 The structure \texttt{CvKalman} is used to keep the Kalman filter
 state. It is created by the \cross{CreateKalman} function, updated
@@ -4900,6 +4916,7 @@ void cvConDensUpdateByTime( \par CvConDensation* condens );
 \end{description}
 
 The function \texttt{cvConDensUpdateByTime} estimates the subsequent stochastic model state from its current state.
+')
 
 \section{Pattern Recognition}
 
@@ -5988,6 +6005,7 @@ The function \texttt{cvPOSIT} implements the POSIT algorithm. Image coordinates 
 
 Difference norm between two projections is the maximal distance between corresponding points. The parameter \texttt{criteria.epsilon} serves to stop the algorithm if the difference is small.
 
+ONLY_C(`
 \cvfunc{ReleasePOSITObject}\label{ReleasePOSITObject}
 
 Deallocates a 3D object structure.
@@ -6002,6 +6020,7 @@ void cvReleasePOSITObject( \par CvPOSITObject** posit\_object );
 
 The function \texttt{cvReleasePOSITObject} releases memory previously allocated by the function \cross{CreatePOSITObject}.
 
+')
 
 \cvfunc{CalcImageHomography}\label{CalcImageHomography}
 
