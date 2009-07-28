@@ -309,6 +309,8 @@ public:
         AddParam("VelThreshold",&m_VelThreshold);
         CommentParam("VelThreshold","Minimal allowed relative difference between blob speed");
 
+        SetModuleName("TrackDist");
+
     } /* Constructor. */
 
     ~CvBlobTrackAnalysisTrackDist()

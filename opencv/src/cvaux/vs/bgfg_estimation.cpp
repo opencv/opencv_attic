@@ -131,6 +131,8 @@ public:
             AddParam("LoadName",&m_LoadName);
             AddParam("ObjWithoutHoles",&m_ParamFGD.is_obj_without_holes);
             AddParam("Morphology",&m_ParamFGD.perform_morphing);
+
+        SetModuleName("FGD");
         }
         else if( m_FGType == CV_BG_MODEL_MOG )			// "MOG" == "Mixture Of Gaussians"
         {
@@ -151,6 +153,8 @@ public:
                 m_ParamMOG.n_gauss       = CV_BGFG_MOG_NGAUSSIANS;
             }
             AddParam("NG",&m_ParamMOG.n_gauss);
+
+            SetModuleName("MOG");
         }
 
     };

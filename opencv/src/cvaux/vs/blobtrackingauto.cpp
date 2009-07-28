@@ -192,6 +192,8 @@ CvBlobTrackerAuto1::CvBlobTrackerAuto1(CvBlobTrackerAutoParam1* param):m_BlobLis
         m_BTDel = 1;
     }
 
+    SetModuleName("Auto1");
+
 } /* CvBlobTrackerAuto1::CvBlobTrackerAuto1 */
 
 /* Destructor for auto blob tracker: */

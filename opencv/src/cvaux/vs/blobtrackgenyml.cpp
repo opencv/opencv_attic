@@ -56,7 +56,7 @@ protected:
     char*       m_pFileName;
     CvBlobSeq   m_TrackList;
     CvSize      m_Size;
-    
+
     void SaveAll()
     {
         int     ObjNum = m_TrackList.GetBlobNum();
@@ -104,7 +104,7 @@ protected:
             CvBlobSeq*      pSeq = pTrack->pSeq;
             sprintf(obj_name,"%s_obj%d",struct_name,i);
             cvStartWriteStruct(storage, obj_name, CV_NODE_MAP);
-            
+
             {   /* Write position: */
                 int             j;
                 CvPoint2D32f    p;
@@ -118,7 +118,7 @@ protected:
                 }
                 cvEndWriteStruct( storage );
             }
-            
+
             {   /* Write size: */
                 int             j;
                 CvPoint2D32f    p;
@@ -145,6 +145,8 @@ public:
         m_Frame = 0;
         m_pFileName = NULL;
         m_Size = cvSize(2,2);
+
+        SetModuleName("YML");
     };
 
     ~CvBlobTrackGenYML()

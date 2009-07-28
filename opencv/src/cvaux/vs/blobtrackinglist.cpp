@@ -214,6 +214,8 @@ public:
         m_BGImageUsing = 50;
         AddParam("BGImageUsing", &m_BGImageUsing);
         CommentParam("BGImageUsing","Weight of using BG image in update hist model (0 - BG dies not use 1 - use)");
+
+        SetModuleName("List");
     }
 
     ~CvBlobTrackerList()
@@ -434,7 +436,7 @@ public:
         double  W = 1;
         int     b,bN = pBlobList->GetBlobNum();
 
-        if(m_pImgReg == NULL) 
+        if(m_pImgReg == NULL)
         {
             m_pImgReg = cvCreateImage(cvSize(pImg->width,pImg->height),IPL_DEPTH_8U,1);
         }
@@ -448,10 +450,10 @@ public:
             DefBlobTrackerL* pF = (DefBlobTrackerL*)m_BlobTrackerList.GetBlobByID(pB->ID);
             if(pF==NULL || pF->pTracker==NULL) continue;
             W *= pF->pTracker->GetConfidence(pB, pImg, pImgFG, m_pImgReg );
-            cvEllipse( 
-                m_pImgReg, 
-                cvPoint(cvRound(pB->x*256),cvRound(pB->y*256)), cvSize(cvRound(pB->w*128),cvRound(pB->h*128)), 
-                0, 0, 360, 
+            cvEllipse(
+                m_pImgReg,
+                cvPoint(cvRound(pB->x*256),cvRound(pB->y*256)), cvSize(cvRound(pB->w*128),cvRound(pB->h*128)),
+                0, 0, 360,
                 cvScalar(0), CV_FILLED, 8, 8 );
 //            cvNamedWindow("REG",0);
 //            cvShowImage("REG",m_pImgReg);

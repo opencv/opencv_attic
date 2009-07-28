@@ -63,6 +63,7 @@ public:
         CvBlobTrackPostProcOne* pM = create();
         TransferParamsFromChild(pM,NULL);
         pM->Release();
+        SetModuleName("List");
     }
 
    ~CvBlobTrackPostProcList()

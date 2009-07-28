@@ -60,7 +60,7 @@ const float H8[] = { 1, 0, 0, 0, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0, 0, 0};
 
-/* Matrices for zero size velocity: */ 
+/* Matrices for zero size velocity: */
 /* Dinamic matrix A: */
 const float A6[] = { 1, 0, 0, 0, 1, 0,
                      0, 1, 0, 0, 0, 1,
@@ -110,7 +110,7 @@ CvBlobTrackPostProcKalman::CvBlobTrackPostProcKalman()
     #else
         m_DataNoiseSize /= (float)pow(20.,2.);
     #endif
-    
+
     AddParam("ModelNoise",&m_ModelNoise);
     AddParam("DataNoisePos",&m_DataNoisePos);
     AddParam("DataNoiseSize",&m_DataNoiseSize);
@@ -119,7 +119,7 @@ CvBlobTrackPostProcKalman::CvBlobTrackPostProcKalman()
     m_pKalman = cvCreateKalman(STATE_NUM,4);
     memcpy( m_pKalman->transition_matrix->data.fl, A, sizeof(A));
     memcpy( m_pKalman->measurement_matrix->data.fl, H, sizeof(H));
-    
+
     cvSetIdentity( m_pKalman->process_noise_cov, cvRealScalar(m_ModelNoise) );
     cvSetIdentity( m_pKalman->measurement_noise_cov, cvRealScalar(m_DataNoisePos) );
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 2,2) = m_DataNoiseSize;
@@ -127,6 +127,8 @@ CvBlobTrackPostProcKalman::CvBlobTrackPostProcKalman()
     cvSetIdentity( m_pKalman->error_cov_post, cvRealScalar(1));
     cvZero(m_pKalman->state_post);
     cvZero(m_pKalman->state_pre);
+
+    SetModuleName("Kalman");
 }
 
 CvBlobTrackPostProcKalman::~CvBlobTrackPostProcKalman()
@@ -243,7 +245,7 @@ CvBlobTrackPredictKalman::CvBlobTrackPredictKalman()
     #else
         m_DataNoiseSize /= (float)pow(20.,2.);
     #endif
-    
+
     AddParam("ModelNoise",&m_ModelNoise);
     AddParam("DataNoisePos",&m_DataNoisePos);
     AddParam("DataNoiseSize",&m_DataNoiseSize);
@@ -252,7 +254,7 @@ CvBlobTrackPredictKalman::CvBlobTrackPredictKalman()
     m_pKalman = cvCreateKalman(STATE_NUM,4);
     memcpy( m_pKalman->transition_matrix->data.fl, A, sizeof(A));
     memcpy( m_pKalman->measurement_matrix->data.fl, H, sizeof(H));
-    
+
     cvSetIdentity( m_pKalman->process_noise_cov, cvRealScalar(m_ModelNoise) );
     cvSetIdentity( m_pKalman->measurement_noise_cov, cvRealScalar(m_DataNoisePos) );
     CV_MAT_ELEM(*m_pKalman->measurement_noise_cov, float, 2,2) = m_DataNoiseSize;
@@ -260,6 +262,8 @@ CvBlobTrackPredictKalman::CvBlobTrackPredictKalman()
     cvSetIdentity( m_pKalman->error_cov_post, cvRealScalar(1));
     cvZero(m_pKalman->state_post);
     cvZero(m_pKalman->state_pre);
+
+    SetModuleName("Kalman");
 }
 
 CvBlobTrackPredictKalman::~CvBlobTrackPredictKalman()
