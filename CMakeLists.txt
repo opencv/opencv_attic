@@ -703,7 +703,7 @@ if(WIN32)
 	# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 	
 	# This will expand to, for example, <program files>/OpenCV 1.1.0/include
-	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\"")
+	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\" \"\${THIS_OPENCV_CONFIG_PATH}/include/opencv\"")
 
 	# This will expand to, for example, <program files>/OpenCV 1.1.0/lib
 	set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
@@ -777,6 +777,30 @@ if(BUILD_PACKAGE)
 		DESTINATION ${OPENCV_DOC_INSTALL_PATH}
         COMPONENT doc
 		)
+
+	IF (WIN32)
+		# Add the "win-install/OpenCVConfig.cmake" file to the "dev" install component 
+		install(FILES 
+			"${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake"
+			DESTINATION "."
+			COMPONENT dev
+			)
+
+		# Add debug libs to "dev" install component 
+		file(GLOB EXTRA_LIBS_TO_INSTALL "${CMAKE_BINARY_DIR}/lib/Debug/*.lib")
+		install(FILES 
+			${EXTRA_LIBS_TO_INSTALL}
+			DESTINATION "lib"
+			COMPONENT dev
+			)
+		# Add debug DLLs to "dev" install component 
+		file(GLOB EXTRA_DLLS_TO_INSTALL "${CMAKE_BINARY_DIR}/bin/Debug/*.dll")
+		install(FILES 
+			${EXTRA_DLLS_TO_INSTALL}
+			DESTINATION "bin"
+			COMPONENT dev
+			)
+	ENDIF(WIN32)
 		
 	include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 	
