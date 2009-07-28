@@ -6999,7 +6999,7 @@ Clips the line against the image rectangle.
 
 int cvClipLine( \par CvSize img\_size,\par CvPoint* pt1,\par CvPoint* pt2 );
 
-}{CPP}{ClipLine(img, pt1, pt2) -> (clipped_pt1, clipped_pt2)}
+}{CPP}{ClipLine(img, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
 
 \begin{description}
 \cvarg{img\_size}{Size of the image ONLY_PYTHON(as a 2-tuple)}
