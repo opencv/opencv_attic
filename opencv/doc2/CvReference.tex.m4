@@ -3529,14 +3529,20 @@ Fits a line to a 2D or 3D point set.
 
 \cvexp{
 void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,\par double reps,\par double aeps,\par float* line );
-}{CPP}{PYTHON}
+}{CPP}{FitLine(points, dist\_type, param, reps, aeps) -> line}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D or 3D points with 32-bit integer or floating-point coordinates}
 \cvarg{dist\_type}{The distance used for fitting (see the discussion)}
 \cvarg{param}{Numerical parameter (\texttt{C}) for some types of distances, if 0 then some optimal value is chosen}
 \cvarg{reps, aeps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line) and angle, respectively; 0.01 would be a good default value for both.}
-\cvarg{line}{The output line parameters. In the case of a 2d fitting, it is an array of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the line and \texttt{(x0, y0)} is some point on the line. in the case of a 3D fitting it is an array of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)} where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line and \texttt{(x0, y0, z0)} is some point on the line}
+\cvarg{line}{The output line parameters. In the case of a 2d fitting,
+it is ONLY_C(an array)ONLY_PYTHON(a tuple) of 4 floats \texttt{(vx, vy,
+x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
+line and \texttt{(x0, y0)} is some point on the line. in the case of a
+3D fitting it is ONLY_C(an array)ONLY_PYTHON(a tuple) of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
+where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line
+and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
 
 The function \texttt{cvFitLine} fits a line to a 2D or 3D point set by minimizing $\sum_i \rho(r_i)$ where $r_i$ is the distance between the $i$ th point and the line and $\rho(r)$ is a distance function, one of:
@@ -4956,6 +4962,23 @@ following Haar-like features:
 
 The feature used in a particular classifier is specified by its shape (1a, 2b etc.), position within the region of interest and the scale (this scale is not the same as the scale used at the detection stage, though these two scales are multiplied). For example, in the case of the third line feature (2c) the response is calculated as the difference between the sum of image pixels under the rectangle covering the whole feature (including the two white stripes and the black stripe in the middle) and the sum of the image pixels under the black stripe multiplied by 3 in order to compensate for the differences in the size of areas. The sums of pixel values over a rectangular regions are calculated rapidly using integral images (see below and the \cross{Integral} description).
 
+ONLY_PYTHON(`
+A simple demonstration of face detection, which draws a rectangle around each detected face:
+
+\begin{lstlisting}
+
+hc = cv.Load("haarcascade_frontalface_default.xml")
+img = cv.LoadImage("faces.jpg", 0)
+faces = cv.HaarDetectObjects(img, hc, cv.CreateMemStorage())
+for (x,y,w,h),n in faces:
+    cv.Rectangle(img, (x,y), (x+w,y+h), 255)
+cv.SaveImage("faces_detected.jpg", img)
+
+\end{lstlisting}
+
+')
+
+ONLY_C(`
 To see the object detector at work, have a look at the HaarFaceDetect demo.
 
 The following reference is for the detection part only. There
@@ -5019,7 +5042,7 @@ CvHaarClassifier;
 
 /* a boosted battery of classifiers(=stage classifier):
    the stage classifier returns 1
-   if the sum of the classifiers' responces
+   if the sum of the classifiers responses
    is greater than \texttt{threshold} and 0 otherwise */
 typedef struct CvHaarStageClassifier
 {
@@ -5124,6 +5147,8 @@ typedef struct CvAvgComp
 CvAvgComp;
 \end{lstlisting}
 
+')
+
 \cvexp{
 CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade* cascade,\par CvMemStorage* storage,\par double scale\_factor=1.1,\par int min\_neighbors=3,\par int flags=0,\par CvSize min\_size=cvSize(0,\par0) );
 }{CPP}{HaarDetectObjects(image,cascade,storage,scale\_factor=1.1,min\_neighbors=3,flags=0,min\_size=(0,0))-> detected\_objects}
@@ -5140,6 +5165,7 @@ CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade
 
 The function \texttt{cvHaarDetectObjects} finds rectangular regions in the given image that are likely to contain objects the cascade has been trained for and returns those regions as a sequence of rectangles. The function scans the image several times at different scales (see \cross{SetImagesForHaarClassifierCascade}). Each time it considers overlapping regions in the image and applies the classifiers to the regions using \cross{RunHaarClassifierCascade}. It may also apply some heuristics to reduce number of analyzed regions, such as Canny prunning. After it has proceeded and collected the candidate rectangles (regions that passed the classifier cascade), it groups them and returns a sequence of average rectangles for each large enough group. The default parameters (\texttt{scale\_factor} =1.1, \texttt{min\_neighbors} =3, \texttt{flags} =0) are tuned for accurate yet slow object detection. For a faster operation on real video images the settings are: \texttt{scale\_factor} =1.2, \texttt{min\_neighbors} =2, \texttt{flags} =\texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}, \texttt{min\_size} =\textit{minimum possible face size} (for example, $\sim$ 1/4 to 1/16 of the image area in the case of video conferencing).
 
+ONLY_C(`
 % ===== Example. Using cascade of Haar classifiers to find objects (e.g. faces). =====
 \begin{lstlisting}
 #include "cv.h"
@@ -5244,6 +5270,8 @@ integral images and the appropriate scale (window size) should be set
 using \cross{SetImagesForHaarClassifierCascade}. The function returns
 a positive value if the analyzed rectangle passed all the classifier stages
 (it is a candidate) and a zero or negative value otherwise.
+
+')
 
 \section{Camera Calibration and 3D Reconstruction}
 
