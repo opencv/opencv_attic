@@ -4,6 +4,14 @@
 # (c) Copyrights 2008 Hartmut Seichter, HIT Lab NZ
 #
 
+SET(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
+INCLUDE(InstallRequiredSystemLibraries)
+
+if(WIN32)
+	# Add "<install_path>/bin" to the system PATH
+	SET(CPACK_NSIS_MODIFY_PATH ON)
+endif(WIN32)
+
 set(CPACK_PACKAGE_NAME "OpenCV")
 set(CPACK_PACKAGE_VENDOR "OpenCV project opencvlibrary.sourceforge.net")
 
