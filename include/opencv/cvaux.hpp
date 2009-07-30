@@ -44,6 +44,8 @@
 
 #ifdef __cplusplus
 
+#include <iosfwd>
+
 /****************************************************************************************\
 *                                       CamShiftTracker                                  *
 \****************************************************************************************/
@@ -373,21 +375,116 @@ private:
 };
 
 
-CV_EXPORTS void computeNormals( const OctTree& octtree, 
-                     const Vector<Point3f>& centers, 
-                     Vector<Point3f>& normals, 
-                     Vector<uchar>& mask, 
-                     float normalRadius,
-                     int minNeighbors = 20);
+class CV_EXPORTS Mesh3D
+{
+public:
+    struct EmptyMeshException {};
 
-CV_EXPORTS void computeSpinImages( const OctTree& octtree, 
-                        const Vector<Point3f>& points,
-                        const Vector<Point3f>& normals,
-                        Vector<uchar>& mask,
-                        Mat& spinImages,						  
-                        float support, 
-                        float pixelsPerMeter );
+    Mesh3D();
+    Mesh3D(const Vector<Point3f>& vtx);
+    ~Mesh3D();
 
+    void buildOctTree();
+    void clearOctTree();
+    float estimateResolution(float tryRatio = 0.1f);        
+    void computeNormals(float normalRadius, int minNeighbors = 20);
+    void computeNormals(const Vector<int>& subset, float normalRadius, int minNeighbors = 20);
+    
+    void writeAsVrml(const String& file, const Vector<Scalar>& colors = Vector<Scalar>()) const;
+    
+    Vector<Point3f> vtx;
+    Vector<Point3f> normals;
+    float resolution;    
+    OctTree octree;
+
+    const static Point3f allzero;
+};
+
+class CV_EXPORTS SpinImageModel
+{
+public:
+    
+    /* model parameters, leave unset for default or auto estimate */
+    float normalRadius;
+    int minNeighbors;
+
+    float binSize;
+    int imageWidth;
+
+    float lambda;                        
+    float gamma;
+    float Tgc;
+
+    /* public interface */
+    SpinImageModel();
+    explicit SpinImageModel(const Mesh3D& mesh);
+    ~SpinImageModel();
+
+    void setLogger(std::ostream* log);
+    void selectRandomSubset(float ratio);         
+    void compute();
+
+    Vector< Vector< Vec2i > > match(const SpinImageModel& scene); 
+
+    Mat packRandomScaledSpins(bool separateScale = false, size_t xCount = 10, size_t yCount = 10) const;
+    
+    size_t getSpinCount() const { return spinImages.rows; }
+    Mat getSpinImage(size_t index) const { return spinImages.row(index); }
+    const Point3f& getSpinVertex(size_t index) const { return mesh.vtx[subset[index]]; }
+    const Point3f& getSpinNormal(size_t index) const { return mesh.normals[subset[index]]; }
+
+    const Mesh3D& getMesh() const { return mesh; }
+
+    /* static utility functions */
+    static bool spinCorrelation(const Mat& spin1, const Mat& spin2, float lambda, float& result);
+
+    static Point2f calcSpinMapCoo(const Point3f& point, const Point3f& vertex, const Point3f& normal);
+
+    static float geometricConsistency(const Point3f& pointScene1, const Point3f& normalScene1,
+                                      const Point3f& pointModel1, const Point3f& normalModel1,   
+                                      const Point3f& pointScene2, const Point3f& normalScene2,                               
+                                      const Point3f& pointModel2, const Point3f& normalModel2);
+
+    static float groupingCreteria(const Point3f& pointScene1, const Point3f& normalScene1,
+                                  const Point3f& pointModel1, const Point3f& normalModel1,
+                                  const Point3f& pointScene2, const Point3f& normalScene2,                               
+                                  const Point3f& pointModel2, const Point3f& normalModel2, 
+                                  float gamma);
+protected:       
+    void defaultParams();
+
+    void matchSpinToModel(const Mat& spin, Vector<int>& indeces, 
+        Vector<float>& corrCoeffs, bool useExtremeOutliers = true) const; 
+
+    void repackSpinImages(const Vector<uchar>& mask, Mat& spinImages, bool reAlloc = true) const;
+             
+    Vector<int> subset;
+    Mesh3D mesh;
+    Mat spinImages;
+    std::ostream* out;
+};
+
+class TickMeterCV
+{
+public:
+    TickMeterCV();
+    void start();    
+    void stop();
+
+    int64 getTimeTicks() const;
+    int64 getTimeMicro() const;
+    int64 getTimeMilli() const;
+    int64 getTimeSec()   const;
+    int64 getCounter() const;
+
+    void reset();
+private:
+    int64 counter;
+    int64 sumTime;
+    int64 startTime;
+};
+
+std::ostream& operator<<(std::ostream& out, const TickMeterCV& tm);
 
 /****************************************************************************************\
 *            HOG (Histogram-of-Oriented-Gradients) Descriptor and Object Detector        *

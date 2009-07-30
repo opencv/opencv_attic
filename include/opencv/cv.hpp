@@ -583,6 +583,8 @@ CV_EXPORTS RotatedRect CAMShift( const Mat& probImage, Rect& window,
 CV_EXPORTS int meanShift( const Mat& probImage, Rect& window,
                           TermCriteria criteria );
 
+CV_EXPORTS int estimateAffine3D(const Vector<Point3f>& from, const Vector<Point3f>& to, Mat& out, Vector<uchar>& outliers, double param1 = 3.0, double param2 = 0.99);
+
 class CV_EXPORTS KalmanFilter
 {
 public:
