@@ -1,3 +1,4 @@
+add_subdirectory(flann)
 add_subdirectory(lapack)
 add_subdirectory(zlib)
 if(OPENCV_BUILD_3RDPARTY_LIBS)

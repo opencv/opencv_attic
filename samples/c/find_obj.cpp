@@ -16,6 +16,11 @@
 
 using namespace std;
 
+
+// define whether to use approximate nearest-neighbor search
+#define USE_FLANN
+
+
 IplImage *image = 0;
 
 double
@@ -36,6 +41,7 @@ compareSURFDescriptors( const float* d1, const float* d2, double best, int lengt
     return total_cost;
 }
 
+
 int
 naiveNearestNeighbor( const float* vec, int laplacian,
                       const CvSeq* model_keypoints,
@@ -52,7 +58,7 @@ naiveNearestNeighbor( const float* vec, int laplacian,
     {
         const CvSURFPoint* kp = (const CvSURFPoint*)kreader.ptr;
         const float* mvec = (const float*)reader.ptr;
-        CV_NEXT_SEQ_ELEM( kreader.seq->elem_size, kreader );
+    	CV_NEXT_SEQ_ELEM( kreader.seq->elem_size, kreader );
         CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
         if( laplacian != kp->laplacian )
             continue;
@@ -75,6 +81,7 @@ void
 findPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
            const CvSeq* imageKeypoints, const CvSeq* imageDescriptors, vector<int>& ptpairs )
 {
+	int length = (int)(objectDescriptors->elem_size/sizeof(float));
     int i;
     CvSeqReader reader, kreader;
     cvStartReadSeq( objectKeypoints, &kreader );
@@ -96,6 +103,56 @@ findPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
     }
 }
 
+
+void
+flannFindPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
+           const CvSeq* imageKeypoints, const CvSeq* imageDescriptors, vector<int>& ptpairs )
+{
+	int length = (int)(objectDescriptors->elem_size/sizeof(float));
+
+    cv::Mat m_object(objectDescriptors->total, length, CV_32F);
+	cv::Mat m_image(imageDescriptors->total, length, CV_32F);
+
+
+	// copy descriptors
+    CvSeqReader obj_reader;
+	float* obj_ptr = m_object.ptr<float>(0);
+    cvStartReadSeq( objectDescriptors, &obj_reader );
+    for(int i = 0; i < objectDescriptors->total; i++ )
+    {
+        const float* descriptor = (const float*)obj_reader.ptr;
+        CV_NEXT_SEQ_ELEM( obj_reader.seq->elem_size, obj_reader );
+        memcpy(obj_ptr, descriptor, length*sizeof(float));
+        obj_ptr += length;
+    }
+    CvSeqReader img_reader;
+	float* img_ptr = m_image.ptr<float>(0);
+    cvStartReadSeq( imageDescriptors, &img_reader );
+    for(int i = 0; i < imageDescriptors->total; i++ )
+    {
+        const float* descriptor = (const float*)img_reader.ptr;
+        CV_NEXT_SEQ_ELEM( img_reader.seq->elem_size, img_reader );
+        memcpy(img_ptr, descriptor, length*sizeof(float));
+        img_ptr += length;
+    }
+
+    // find nearest neighbors using FLANN
+    cv::Mat m_indices(objectDescriptors->total, 2, CV_32S);
+    cv::Mat m_dists(objectDescriptors->total, 2, CV_32F);
+    cv::flann::Index flann_index(m_image, cv::flann::KDTreeIndexParams(4));  // using 4 randomized kdtrees
+    flann_index.knnSearch(m_object, m_indices, m_dists, 2, cv::flann::SearchParams(64) ); // maximum number of leafs checked
+
+    int* indices_ptr = m_indices.ptr<int>(0);
+    float* dists_ptr = m_dists.ptr<float>(0);
+    for (int i=0;i<m_indices.rows;++i) {
+    	if (dists_ptr[2*i]<0.6*dists_ptr[2*i+1]) {
+    		ptpairs.push_back(i);
+    		ptpairs.push_back(indices_ptr[2*i]);
+    	}
+    }
+}
+
+
 /* a rough implementation for object location */
 int
 locatePlanarObject( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
@@ -109,7 +166,12 @@ locatePlanarObject( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors
     CvMat _pt1, _pt2;
     int i, n;
 
+#ifdef USE_FLANN
     findPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
+#else
+    flannFindPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
+#endif
+
     n = ptpairs.size()/2;
     if( n < 4 )
         return 0;
@@ -194,6 +256,11 @@ int main(int argc, char** argv)
     cvSetImageROI( correspond, cvRect( 0, object->height, correspond->width, correspond->height ) );
     cvCopy( image, correspond );
     cvResetImageROI( correspond );
+
+#ifdef USE_FLANN
+    printf("Using approximate nearest neighbor search\n");
+#endif
+
     if( locatePlanarObject( objectKeypoints, objectDescriptors, imageKeypoints,
         imageDescriptors, src_corners, dst_corners ))
     {
@@ -206,7 +273,11 @@ int main(int argc, char** argv)
         }
     }
     vector<int> ptpairs;
+#ifdef USE_FLANN
+    flannFindPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
+#else
     findPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
+#endif
     for( i = 0; i < (int)ptpairs.size(); i += 2 )
     {
         CvSURFPoint* r1 = (CvSURFPoint*)cvGetSeqElem( objectKeypoints, ptpairs[i] );

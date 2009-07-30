@@ -705,7 +705,7 @@ protected:
     Hdr hdr;
 };
 
-//////////////////// Generic ref-cointing pointer class for C/C++ objects ////////////////////////
+//////////////////// Generic ref-counting pointer class for C/C++ objects ////////////////////////
 
 template<typename _Tp> class CV_EXPORTS Ptr
 {
@@ -2017,5 +2017,7 @@ public:
 
 #include "cxoperations.hpp"
 #include "cxmat.hpp"
+
+#include "cxflann.h"	// FLANN (Fast Library for Approximate Nearest Neighbors)
 
 #endif /*_CXCORE_HPP_*/
