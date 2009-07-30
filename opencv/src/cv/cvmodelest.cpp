@@ -41,6 +41,11 @@
 
 #include "_cv.h"
 #include "_cvmodelest.h"
+#include <algorithm>
+#include <limits>
+
+using namespace std;
+
 
 CvModelEstimator2::CvModelEstimator2(int _modelPoints, CvSize _modelSize, int _maxBasicSolutions)
 {
@@ -373,4 +378,130 @@ bool CvModelEstimator2::checkSubset( const CvMat* m, int count )
     }
 
     return j == i;
+}
+
+
+namespace cv
+{
+
+class Affine3DEstimator : public CvModelEstimator2
+{
+public:
+    Affine3DEstimator() : CvModelEstimator2(4, cvSize(4, 3), 1) {}
+    virtual int runKernel( const CvMat* m1, const CvMat* m2, CvMat* model );     
+protected:
+    virtual void computeReprojError( const CvMat* m1, const CvMat* m2, const CvMat* model, CvMat* error );      
+    virtual bool checkSubset( const CvMat* ms1, int count );
+};
+
+}
+
+int cv::Affine3DEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* model )
+{    
+    const Point3d* from = reinterpret_cast<const Point3d*>(m1->data.ptr);
+    const Point3d* to   = reinterpret_cast<const Point3d*>(m2->data.ptr);
+
+    Mat A(12, 12, CV_64F);
+    Mat B(12, 1, CV_64F);
+    A = Scalar(0.0);
+
+    for(int i = 0; i < modelPoints; ++i)
+    {
+        *B.ptr<Point3d>(3*i) = to[i];
+
+        double *aptr = A.ptr<double>(3*i);
+        for(int k = 0; k < 3; ++k)
+        {
+            aptr[3] = 1.0;
+            *reinterpret_cast<Point3d*>(aptr) = from[i];
+            aptr += 16;
+        }                
+    }
+
+    CvMat cvA = A;
+    CvMat cvB = B;
+    CvMat cvX;
+    cvReshape(model, &cvX, 1, 12);
+    cvSolve(&cvA, &cvB, &cvX, CV_SVD );
+    
+    return 1;
+}
+
+void cv::Affine3DEstimator::computeReprojError( const CvMat* m1, const CvMat* m2, const CvMat* model, CvMat* error )
+{
+    int count = m1->rows * m1->cols;
+    const Point3d* from = reinterpret_cast<const Point3d*>(m1->data.ptr);
+    const Point3d* to   = reinterpret_cast<const Point3d*>(m2->data.ptr);    
+    const double* F = model->data.db;
+    float* err = error->data.fl;
+    
+    for(int i = 0; i < count; i++ )
+    {
+        const Point3d& f = from[i];
+        const Point3d& t = to[i];
+
+        double a = F[0]*f.x + F[1]*f.y + F[ 2]*f.z + F[ 3] - t.x;
+        double b = F[4]*f.x + F[5]*f.y + F[ 6]*f.z + F[ 7] - t.y;
+        double c = F[8]*f.x + F[9]*f.y + F[10]*f.z + F[11] - t.z;
+
+        err[i] = (float)sqrt(a*a + b*b + c*c);       
+    }
+}
+
+bool cv::Affine3DEstimator::checkSubset( const CvMat* ms1, int count )
+{
+    CV_Assert( CV_MAT_TYPE(ms1->type) == CV_64FC3 );
+
+    int j, k, i = count - 1;
+    const Point3d* ptr = reinterpret_cast<const Point3d*>(ms1->data.ptr);    
+    
+    // check that the i-th selected point does not belong
+    // to a line connecting some previously selected points
+    
+    for(j = 0; j < i; ++j)
+    {
+        Point3d d1 = ptr[j] - ptr[i];
+        double n1 = norm(d1);
+        
+        for(k = 0; k < j; ++k)
+        {
+            Point3d d2 = ptr[k] - ptr[i];            
+            double n = norm(d2) * n1;
+
+            if (fabs(d1.dot(d2) / n) > 0.996)
+                break;            
+        }
+        if( k < j )
+            break;
+    }
+
+    return j == i;
+}
+
+int cv::estimateAffine3D(const Vector<Point3f>& from, const Vector<Point3f>& to, Mat& out, Vector<uchar>& outliers, double param1, double param2)
+{
+    CV_Assert( from.size() == to.size() && from.size() >= 4 );
+
+    size_t count = from.size();
+
+    out.create(3, 4, CV_64F); 
+    outliers.resize(count);
+    fill(outliers.begin(), outliers.end(), (uchar)1);
+
+    Vector<Point3d> dFrom;
+    Vector<Point3d> dTo;    
+
+    copy(from.begin(), from.end(), back_inserter(dFrom));
+    copy(to.begin(), to.end(), back_inserter(dTo));
+    
+    CvMat F3x4 = out;
+    CvMat mask  = cvMat( 1, count, CV_8U, outliers.begin() );           
+    CvMat m1 = cvMat( 1, count, CV_64FC3, dFrom.begin() );    
+    CvMat m2 = cvMat( 1, count, CV_64FC3,   dTo.begin() );
+    
+    const double epsilon = numeric_limits<double>::epsilon();        
+    param1 = param1 <= 0 ? 3 : param1;
+    param2 = (param2 < epsilon) ? 0.99 : (param2 > 1 - epsilon) ? 0.99 : param2;
+            
+    return Affine3DEstimator().runRANSAC(&m1,& m2, &F3x4, &mask, param1, param2 );    
 }
