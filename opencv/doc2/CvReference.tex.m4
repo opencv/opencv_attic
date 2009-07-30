@@ -4018,6 +4018,8 @@ subdivision, where 2d points can be added using the function
 \cross{SubdivDelaunay2DInsert}. All of the points to be added must be within
 the specified rectangle, otherwise a runtime error will be raised.
 
+Note that the triangulation is a single large triangle that covers the given rectangle.  Hence the three vertices of this triangle are outside the rectangle \texttt{rect}.
+
 \cvfunc{SubdivDelaunay2DInsert}\label{SubdivDelaunay2DInsert}
 
 Inserts a single point into a Delaunay triangulation.
