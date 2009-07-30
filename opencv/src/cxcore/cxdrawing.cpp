@@ -1912,7 +1912,7 @@ void putText( Mat& img, const String& text, Point org,
         int c = (uchar)text[i];
         Point p;
 
-        if( c >= 128 || c < ' ' )
+        if( c >= 127 || c < ' ' )
             c = '?';
 
         const char* ptr = faces[ascii[(c-' ')+1]];
@@ -1960,7 +1960,7 @@ Size getTextSize( const String& text, int fontFace, double fontScale, int thickn
         int c = (uchar)text[i];
         Point p;
 
-        if( c > 128 || c < ' ' )
+        if( c >= 127 || c < ' ' )
             c = '?';
 
         const char* ptr = faces[ascii[(c-' ')+1]];
