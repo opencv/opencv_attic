@@ -2192,7 +2192,6 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
         CV_Error( CV_StsBadSize, "The patch width and height must be positive" );
 
     dims = cvGetDims( hist->bins );
-    cvCopyHist( hist, &model );
     cvNormalizeHist( hist, norm_factor );
 
     for( i = 0; i < dims; i++ )
@@ -2212,6 +2211,8 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
         CV_Error( CV_StsUnmatchedSizes,
             "The output map must be (W-w+1 x H-h+1), "
             "where the input images are (W x H) each and the patch is (w x h)" );
+
+    cvCopyHist( hist, &model );
 
     size = cvGetMatSize(dstmat);
     roi.coi = 0;
