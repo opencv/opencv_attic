@@ -19,9 +19,15 @@ include_directories(
    )
 
 # The .cpp files:
-file(GLOB_RECURSE flann_sources *.cpp)
+file(GLOB_RECURSE flann_sources_cpp *.cpp)
+file(GLOB_RECURSE flann_sources_h1 "${CMAKE_CURRENT_SOURCE_DIR}/../include/flann/*.h")
+file(GLOB_RECURSE flann_sources_h2 *.h)
 
+source_group("Src" FILES ${flann_sources_cpp})
+source_group("Include\\External" FILES ${flann_sources_h1})
+source_group("Include\\Internal" FILES ${flann_sources_h2})
 
+set(flann_sources ${flann_sources_cpp} ${flann_sources_h1} ${flann_sources_h2})
 
 # ----------------------------------------------------------------------------------
 #           Define the library target:
