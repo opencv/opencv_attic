@@ -860,7 +860,7 @@ This function is often used to process raw data with OpenCV matrix functions. Fo
 
 \begin{lstlisting}
 
-double a[] = { 1, 2, 3, 4
+double a[] = { 1, 2, 3, 4,
                5, 6, 7, 8,
                9, 10, 11, 12 };
 
@@ -6883,7 +6883,7 @@ Draws a text string.
 
 void cvPutText( \par CvArr* img,\par const char* text,\par CvPoint org,\par const CvFont* font,\par CvScalar color );
 
-}{CPP}{img,text,org,font,color)-> None}
+}{CPP}{PutText(img,text,org,font,color)-> None}
 
 \begin{description}
 \cvarg{img}{Input image}
