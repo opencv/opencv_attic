@@ -1108,13 +1108,13 @@ int* values=NULL );
 \cvarg{rows}{Number of rows in the structuring element}
 \cvarg{anchor\_x}{Relative horizontal offset of the anchor point}
 \cvarg{anchor\_y}{Relative vertical offset of the anchor point}
-\cvarg{shape}{Shape of the structuring element; may have the following values:}
+\cvarg{shape}{Shape of the structuring element; may have the following values:
 \begin{description}
   \cvarg{CV\_SHAPE\_RECT}{a rectangular element}
   \cvarg{CV\_SHAPE\_CROSS}{a cross-shaped element}
   \cvarg{CV\_SHAPE\_ELLIPSE}{an elliptic element}
   \cvarg{CV\_SHAPE\_CUSTOM}{a user-defined element. In this case the parameter \texttt{values} specifies the mask, that is, which neighbors of the pixel must be considered}
-\end{description}
+\end{description}}
 \cvarg{values}{Pointer to the structuring element data, a plane array, representing row-by-row scanning of the element matrix. Non-zero values indicate points that belong to the element. If the pointer is \texttt{NULL}, then all values are considered non-zero, that is, the element is of a rectangular shape. This parameter is considered only if the shape is \texttt{CV\_SHAPE\_CUSTOM} }
 \end{description}
 
@@ -3537,10 +3537,10 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{param}{Numerical parameter (\texttt{C}) for some types of distances, if 0 then some optimal value is chosen}
 \cvarg{reps, aeps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line) and angle, respectively; 0.01 would be a good default value for both.}
 \cvarg{line}{The output line parameters. In the case of a 2d fitting,
-it is ONLY_C(an array)ONLY_PYTHON(a tuple) of 4 floats \texttt{(vx, vy,
+it is ONLY_C(an array) ONLY_PYTHON(a tuple) of 4 floats \texttt{(vx, vy,
 x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
 line and \texttt{(x0, y0)} is some point on the line. in the case of a
-3D fitting it is ONLY_C(an array)ONLY_PYTHON(a tuple) of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
+3D fitting it is ONLY_C(an array) ONLY_PYTHON(a tuple) of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
 where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line
 and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
