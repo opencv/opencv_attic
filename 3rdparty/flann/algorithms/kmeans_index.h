@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <string>
+#include <cstdlib>
 #include <map>
 #include <cassert>
 #include <limits>
@@ -668,7 +669,7 @@ private:
 		float* mean = new float[veclen_];
 		memoryCounter += veclen_*sizeof(float);
 
-        memset(mean,0,veclen_*sizeof(float));
+        std::memset(mean,0,veclen_*sizeof(float));
 
 		for (int i=0;i<size_;++i) {
 			float* vec = dataset[indices[i]];
@@ -774,7 +775,7 @@ private:
 
 			// compute the new cluster centers
 			for (int i=0;i<branching;++i) {
-                memset(dcenters[i],0,sizeof(double)*veclen_);
+                std::memset(dcenters[i],0,sizeof(double)*veclen_);
                 radiuses[i] = 0;
 			}
             for (int i=0;i<indices_length;++i) {
