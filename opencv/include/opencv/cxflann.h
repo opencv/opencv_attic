@@ -89,19 +89,20 @@ enum flann_distance_t {
 
 
 
-class IndexFactory
+class CV_EXPORTS IndexFactory
 {
 public:
+    virtual ~IndexFactory() {}
 	virtual ::flann::Index* createIndex(const Mat& dataset) const = 0;
 };
 
-struct IndexParams : public IndexFactory {
+struct CV_EXPORTS IndexParams : public IndexFactory {
 protected:
 	IndexParams() {};
 
 };
 
-struct LinearIndexParams : public IndexParams {
+struct CV_EXPORTS LinearIndexParams : public IndexParams {
 	LinearIndexParams() {};
 
 	::flann::Index* createIndex(const Mat& dataset) const;
@@ -109,7 +110,7 @@ struct LinearIndexParams : public IndexParams {
 
 
 
-struct KDTreeIndexParams : public IndexParams {
+struct CV_EXPORTS KDTreeIndexParams : public IndexParams {
 	KDTreeIndexParams(int trees_ = 4) : trees(trees_) {};
 
 	int trees;                 // number of randomized trees to use (for kdtree)
@@ -117,7 +118,7 @@ struct KDTreeIndexParams : public IndexParams {
 	::flann::Index* createIndex(const Mat& dataset) const;
 };
 
-struct KMeansIndexParams : public IndexParams {
+struct CV_EXPORTS KMeansIndexParams : public IndexParams {
 	KMeansIndexParams(int branching_ = 32, int iterations_ = 11,
 			flann_centers_init_t centers_init_ = CENTERS_RANDOM, float cb_index_ = 0.2 ) :
 		branching(branching_),
@@ -134,7 +135,7 @@ struct KMeansIndexParams : public IndexParams {
 };
 
 
-struct CompositeIndexParams : public IndexParams {
+struct CV_EXPORTS CompositeIndexParams : public IndexParams {
 	CompositeIndexParams(int trees_ = 4, int branching_ = 32, int iterations_ = 11,
 			flann_centers_init_t centers_init_ = CENTERS_RANDOM, float cb_index_ = 0.2 ) :
 		trees(trees_),
@@ -153,7 +154,7 @@ struct CompositeIndexParams : public IndexParams {
 };
 
 
-struct AutotunedIndexParams : public IndexParams {
+struct CV_EXPORTS AutotunedIndexParams : public IndexParams {
 	AutotunedIndexParams( float target_precision_ = 0.9, float build_weight_ = 0.01,
 			float memory_weight_ = 0, float sample_fraction_ = 0.1) :
 		target_precision(target_precision_),
@@ -170,9 +171,8 @@ struct AutotunedIndexParams : public IndexParams {
 };
 
 
-struct SavedIndexParams : public IndexParams {
-	SavedIndexParams() {
-	}
+struct CV_EXPORTS SavedIndexParams : public IndexParams {
+	SavedIndexParams() {}
 	SavedIndexParams(std::string filename_) : filename(filename_) {}
 
 	std::string filename;		// filename of the stored index
@@ -181,7 +181,7 @@ struct SavedIndexParams : public IndexParams {
 };
 
 
-struct SearchParams {
+struct CV_EXPORTS SearchParams {
 	SearchParams(int checks_ = 32) :
 		checks(checks_) {};
 
@@ -190,7 +190,7 @@ struct SearchParams {
 
 
 
-class Index {
+class CV_EXPORTS Index {
 	::flann::Index* nnIndex;
 
 public:
@@ -212,7 +212,8 @@ public:
 };
 
 
-int hierarchicalClustering(const Mat& features, Mat& centers, const KMeansIndexParams& params);
+CV_EXPORTS int hierarchicalClustering(const Mat& features, Mat& centers,
+                                      const KMeansIndexParams& params);
 
 }
 
