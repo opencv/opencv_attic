@@ -160,7 +160,7 @@ public:
 		for (int i=0;i<count;++i) {
 			if (indices[i]==index) return false;
 		}
-		float dist = flann_dist(target, target_end, point);
+		float dist = (float)flann_dist(target, target_end, point);
 
 		if (count<capacity) {
 			indices[count] = index;
@@ -293,7 +293,7 @@ public:
 	{
 		Item it;
 		it.index = index;
-		it.dist = flann_dist(target, target_end, point);
+		it.dist = (float)flann_dist(target, target_end, point);
 		if (it.dist<=radius) {
 			items.push_back(it);
 			push_heap(items.begin(), items.end());

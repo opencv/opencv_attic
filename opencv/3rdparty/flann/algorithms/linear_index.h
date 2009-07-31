@@ -74,18 +74,18 @@ public:
 		/* nothing to do here for linear search */
 	}
 
-    void saveIndex(FILE* stream)
+    void saveIndex(FILE* /*stream*/)
     {
 		/* nothing to do here for linear search */
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(FILE* /*stream*/)
     {
 		/* nothing to do here for linear search */
     }
 
-	void findNeighbors(ResultSet& resultSet, const float* vec, const SearchParams& searchParams)
+	void findNeighbors(ResultSet& resultSet, const float* /*vec*/, const SearchParams& /*searchParams*/)
 	{
 		for (int i=0;i<dataset.rows;++i) {
 			resultSet.addPoint(dataset[i],i);

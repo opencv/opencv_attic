@@ -60,8 +60,8 @@ public:
 
 	static IndexParams* createFromParameters(const FLANNParameters& p);
 
-	void fromParameters(const FLANNParameters& p) {};
-	void toParameters(FLANNParameters& p) { };
+	void fromParameters(const FLANNParameters&) {};
+	void toParameters(FLANNParameters&) { };
 };
 
 struct LinearIndexParams : public IndexParams {

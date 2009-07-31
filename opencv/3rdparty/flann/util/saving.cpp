@@ -43,7 +43,7 @@ void save_header(FILE* stream, const NNIndex& index)
 	IndexHeader header;
 	memset(header.signature, 0 , sizeof(header.signature));
 	strcpy(header.signature, FLANN_SIGNATURE);
-	header.flann_version = FLANN_VERSION;
+	header.flann_version = (int)FLANN_VERSION;
 	header.index_type = index.getType();
 	header.rows = index.size();
 	header.cols = index.veclen();

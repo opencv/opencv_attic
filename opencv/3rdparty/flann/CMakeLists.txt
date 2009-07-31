@@ -36,6 +36,7 @@ set(flann_sources ${flann_sources_cpp} ${flann_sources_h1} ${flann_sources_h2})
 set(the_target "flann")
 
 add_library(${the_target} STATIC ${flann_sources})
+add_definitions(-Dflann_EXPORTS)
 
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")

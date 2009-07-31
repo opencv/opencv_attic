@@ -163,17 +163,17 @@ extern flann_distance_t flann_distance_type;
  * of this argument.
  */
 template <typename Iterator1, typename Iterator2>
-double custom_dist(Iterator1 first1, Iterator1 last1, Iterator2 first2, double acc = 0)
+float custom_dist(Iterator1 first1, Iterator1 last1, Iterator2 first2, double acc = 0)
 {
 	switch (flann_distance_type) {
 	case EUCLIDEAN:
-		return euclidean_dist(first1, last1, first2, acc);
+		return (float)euclidean_dist(first1, last1, first2, acc);
 	case MANHATTAN:
-		return manhattan_dist(first1, last1, first2, acc);
+		return (float)manhattan_dist(first1, last1, first2, acc);
 	case MINKOWSKI:
-		return minkowski_dist(first1, last1, first2, acc);
+		return (float)minkowski_dist(first1, last1, first2, acc);
 	default:
-		return euclidean_dist(first1, last1, first2, acc);
+		return (float)euclidean_dist(first1, last1, first2, acc);
 	}
 }
 
@@ -191,7 +191,7 @@ struct ZeroIterator {
 		return 0;
 	}
 
-	T operator[](int index) {
+	T operator[](int /*index*/) {
 		return 0;
 	}
 

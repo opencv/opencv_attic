@@ -32,7 +32,7 @@
 #define CONSTANTS_H
 
 
-const int FLANN_VERSION = 1.20;
+const double FLANN_VERSION = 1.20;
 
 /* Nearest neighbor index algorithms */
 enum flann_algorithm_t {

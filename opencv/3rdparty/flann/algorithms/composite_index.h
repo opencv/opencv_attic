@@ -95,13 +95,13 @@ public:
 	}
 
 
-    void saveIndex(FILE* stream)
+    void saveIndex(FILE* /*stream*/)
     {
 
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(FILE* /*stream*/)
     {
 
     }
