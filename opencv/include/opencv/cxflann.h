@@ -43,7 +43,7 @@
 #ifndef CXFLANN_H_
 #define CXFLANN_H_
 
-
+#ifdef __cplusplus
 
 namespace flann
 {
@@ -84,10 +84,6 @@ enum flann_distance_t {
 	MANHATTAN = 2,
 	MINKOWSKI = 3
 };
-
-
-
-
 
 class CV_EXPORTS IndexFactory
 {
@@ -218,5 +214,7 @@ CV_EXPORTS int hierarchicalClustering(const Mat& features, Mat& centers,
 }
 
 }
+
+#endif // __cplusplus
 
 #endif /* CXFLANN_H_ */
