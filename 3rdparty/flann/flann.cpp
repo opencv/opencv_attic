@@ -256,7 +256,7 @@ EXPORTED void flann_set_distance_type(flann_distance_t distance_type, int order)
 }
 
 
-EXPORTED flann_index_t flann_build_index(float* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params)
+EXPORTED flann_index_t flann_build_index(float* dataset, int rows, int cols, float* /*speedup*/, FLANNParameters* flann_params)
 {
 	try {
 		init_flann_parameters(flann_params);
@@ -311,6 +311,7 @@ EXPORTED FLANN_INDEX flann_load_index(char* filename, float* dataset, int rows, 
 
 EXPORTED int flann_find_nearest_neighbors(float* dataset,  int rows, int cols, float* testset, int tcount, int* result, float* dists, int nn, FLANNParameters* flann_params)
 {
+    int _result = 0;
 	try {
 		init_flann_parameters(flann_params);
 
@@ -321,14 +322,13 @@ EXPORTED int flann_find_nearest_neighbors(float* dataset,  int rows, int cols, f
 		index->knnSearch(Matrix<float>(tcount, index->veclen(), testset),
 						m_indices,
 						m_dists, nn, SearchParams(flann_params->checks) );
-		return 0;
 	}
 	catch(runtime_error& e) {
 		logger.error("Caught exception: %s\n",e.what());
-		return -1;
+        _result = -1;
 	}
 
-	return -1;
+	return _result;
 }
 
 

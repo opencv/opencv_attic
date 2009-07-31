@@ -43,7 +43,7 @@
 namespace flann
 {
 
-const float SEARCH_EPS = 0.001;
+const float SEARCH_EPS = 0.001f;
 
 int countCorrectMatches(int* neighbors, int* groundTruth, int n)
 {
@@ -65,8 +65,8 @@ float computeDistanceRaport(const Matrix<float>& inputData, float* target, int* 
 	float* target_end = target + veclen;
     float ret = 0;
     for (int i=0;i<n;++i) {
-        float den = flann_dist(target,target_end, inputData[groundTruth[i]]);
-        float num = flann_dist(target,target_end, inputData[neighbors[i]]);
+        float den = (float)flann_dist(target,target_end, inputData[groundTruth[i]]);
+        float num = (float)flann_dist(target,target_end, inputData[neighbors[i]]);
 
 //        printf("den=%g,num=%g\n",den,num);
 
@@ -91,8 +91,8 @@ float search_with_ground_truth(NNIndex& index, const Matrix<float>& inputData, c
     KNNResultSet resultSet(nn+skipMatches);
     SearchParams searchParams(checks);
 
-    int correct;
-    float distR;
+    int correct = 0;
+    float distR = 0;
     StartStopTimer t;
     int repeats = 0;
     while (t.value<0.2) {
@@ -112,7 +112,7 @@ float search_with_ground_truth(NNIndex& index, const Matrix<float>& inputData, c
         }
         t.stop();
     }
-    time = t.value/repeats;
+    time = (float)(t.value/repeats);
 
 
     float precicion = (float)correct/(nn*testData.rows);

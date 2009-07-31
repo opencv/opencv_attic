@@ -182,7 +182,7 @@ void chooseCentersKMeanspp(int k, const Matrix<float>& vecs, int* indices, int i
 
         // Repeat several trials
         double bestNewPot = -1;
-        int bestNewIndex;
+        int bestNewIndex = 0;
         for (int localTrial = 0; localTrial < numLocalTries; localTrial++) {
 
             // Choose our center - have to be slightly careful to return a valid answer even accounting
@@ -198,7 +198,7 @@ void chooseCentersKMeanspp(int k, const Matrix<float>& vecs, int* indices, int i
             // Compute the new potential
             double newPot = 0;
             for (int i = 0; i < n; i++)
-                newPot += min( flann_dist(vecs[indices[i]], vecs[indices[i]] + vecs.cols, vecs[indices[index]]), closestDistSq[i] );
+                newPot += min( (double)flann_dist(vecs[indices[i]], vecs[indices[i]] + vecs.cols, vecs[indices[index]]), closestDistSq[i] );
 
             // Store the best result
             if (bestNewPot < 0 || newPot < bestNewPot) {
@@ -211,7 +211,7 @@ void chooseCentersKMeanspp(int k, const Matrix<float>& vecs, int* indices, int i
         centers[centerCount] = vecs[indices[bestNewIndex]];
         currentPot = bestNewPot;
         for (int i = 0; i < n; i++)
-            closestDistSq[i] = min( flann_dist(vecs[indices[i]], vecs[indices[i]]+vecs.cols, vecs[indices[bestNewIndex]]), closestDistSq[i] );
+            closestDistSq[i] = min( (double)flann_dist(vecs[indices[i]], vecs[indices[i]]+vecs.cols, vecs[indices[bestNewIndex]]), closestDistSq[i] );
     }
 
     centers_length = centerCount;
@@ -416,7 +416,7 @@ public:
 		else {
 			throw FLANNException("Unknown algorithm for choosing initial centers.");
 		}
-        cb_index = 0.4;
+        cb_index = 0.4f;
 
  		heap = new Heap<BranchSt>(size_);
 	}
@@ -844,7 +844,7 @@ private:
  			centers[i] = new float[veclen_];
  			memoryCounter += veclen_*sizeof(float);
             for (int k=0; k<veclen_; ++k) {
-                centers[i][k] = dcenters[i][k];
+                centers[i][k] = (float)dcenters[i][k];
             }
  		}
 

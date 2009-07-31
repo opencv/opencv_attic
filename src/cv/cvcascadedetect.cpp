@@ -154,14 +154,14 @@ void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
 
 FeatureEvaluator::~FeatureEvaluator() {}
 void FeatureEvaluator::init(Size) {};
-bool FeatureEvaluator::read(const FileNode& node) {return true;}
+bool FeatureEvaluator::read(const FileNode&) {return true;}
 int FeatureEvaluator::getFeatureType() const {return -1;}
 
 bool FeatureEvaluator::setImage(const Mat& ) { return true; }
 int FeatureEvaluator::setWindow(Point) { return true; }
 
-double FeatureEvaluator::calcOrd(int featureIdx, int pOffset) const { return 0.; }
-int FeatureEvaluator::calcCat(int featureIdx, int pOffset) const { return 0; }
+double FeatureEvaluator::calcOrd(int, int) const { return 0.; }
+int FeatureEvaluator::calcCat(int, int) const { return 0; }
 
     
 class HaarEvaluator : public FeatureEvaluator
@@ -555,7 +555,7 @@ bool CascadeClassifier::load(const String& filename)
 template<class FEval>
 inline int predictOrdered( CascadeClassifier& cascade, int pOffset)
 {
-    size_t si, nstages = cascade.stages.size();
+    int si, nstages = (int)cascade.stages.size();
     size_t nodeOfs = 0, leafOfs = 0;
     FEval& feval = (FEval&)*cascade.feval;
     
@@ -590,7 +590,7 @@ inline int predictOrdered( CascadeClassifier& cascade, int pOffset)
 template<class FEval>
 inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
 {
-    size_t si, nstages = cascade.stages.size();
+    int si, nstages = (int)cascade.stages.size();
     size_t nodeOfs = 0, leafOfs = 0;
     FEval& feval = (FEval&)*cascade.feval;
     size_t subsetSize = (cascade.ncategories + 31)/32;

@@ -120,7 +120,7 @@ public:
 	/**
 		Method that searches for nearest-neighbors
 	*/
-	virtual void findNeighbors(ResultSet& result, const float* vec, const SearchParams& searchParams)
+	virtual void findNeighbors(ResultSet& result, const float* vec, const SearchParams& /*searchParams*/)
 	{
 		bestIndex->findNeighbors(result, vec, bestSearchParams);
 	}
@@ -193,12 +193,12 @@ private:
         t.start();
         kmeans.buildIndex();
         t.stop();
-        float buildTime = t.value;
+        float buildTime = (float)t.value;
 
         // measure search time
         float searchTime = test_index_precision(kmeans, *sampledDataset, *testDataset, *gt_matches, params.target_precision, checks, nn);;
 
-        float datasetMemory = sampledDataset->rows*sampledDataset->cols*sizeof(float);
+        float datasetMemory = (float)(sampledDataset->rows*sampledDataset->cols*sizeof(float));
         cost.memoryCost = (kmeans.usedMemory()+datasetMemory)/datasetMemory;
         cost.searchTimeCost = searchTime;
         cost.buildTimeCost = buildTime;
@@ -219,12 +219,12 @@ private:
         t.start();
         kdtree.buildIndex();
         t.stop();
-        float buildTime = t.value;
+        float buildTime = (float)t.value;
 
         //measure search time
         float searchTime = test_index_precision(kdtree, *sampledDataset, *testDataset, *gt_matches, params.target_precision, checks, nn);
 
-        float datasetMemory = sampledDataset->rows*sampledDataset->cols*sizeof(float);
+        float datasetMemory = (float)(sampledDataset->rows*sampledDataset->cols*sizeof(float));
         cost.memoryCost = (kdtree.usedMemory()+datasetMemory)/datasetMemory;
         cost.searchTimeCost = searchTime;
         cost.buildTimeCost = buildTime;
@@ -460,7 +460,7 @@ private:
         t.start();
         compute_ground_truth(*sampledDataset, *testDataset, *gt_matches, 0);
         t.stop();
-        float bestCost = t.value;
+        float bestCost = (float)t.value;
         IndexParams* bestParams = new LinearIndexParams();
 
         // Start parameter autotune process
@@ -517,7 +517,7 @@ private:
             t.start();
             compute_ground_truth(dataset, *testDataset, gt_matches,1);
             t.stop();
-            float linear = t.value;
+            float linear = (float)t.value;
 
             int checks;
             logger.info("Estimating number of checks\n");
@@ -531,7 +531,7 @@ private:
                 float bestSearchTime = -1;
                 float best_cb_index = -1;
                 int best_checks = -1;
-                for (cb_index = 0;cb_index<1.1; cb_index+=0.2) {
+                for (cb_index = 0;cb_index<1.1f; cb_index+=0.2f) {
                     kmeans->set_cb_index(cb_index);
                     searchTime = test_index_precision(*kmeans, dataset, *testDataset, gt_matches, params.target_precision, checks, nn, 1);
                     if (searchTime<bestSearchTime || bestSearchTime == -1) {

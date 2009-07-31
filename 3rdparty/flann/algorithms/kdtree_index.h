@@ -596,7 +596,7 @@ private:
 			adding exceeds their value.
 		*/
 
-		double new_distsq = flann_dist(&val, &val+1, &node->divval, mindistsq);
+		float new_distsq = flann_dist(&val, &val+1, &node->divval, mindistsq);
 //		if (2 * checkCount < maxCheck  ||  !result.full()) {
 		if (new_distsq < result.worstDist() ||  !result.full()) {
 			heap->insert( BranchSt::make_branch(otherChild, new_distsq) );
@@ -642,7 +642,7 @@ private:
 
 		/* Call recursively to search next level down. */
 		searchLevelExact(result, vec, bestChild, mindistsq);
-		double new_distsq = flann_dist(&val, &val+1, &node->divval, mindistsq);
+		float new_distsq = flann_dist(&val, &val+1, &node->divval, mindistsq);
 		searchLevelExact(result, vec, otherChild, new_distsq);
 	}
 
