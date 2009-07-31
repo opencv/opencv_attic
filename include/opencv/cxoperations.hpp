@@ -1582,6 +1582,7 @@ inline FileNode FileNode::operator[](int i) const
 }
 
 inline int FileNode::type() const { return !node ? NONE : (node->tag & TYPE_MASK); }
+inline bool FileNode::empty() const { return node == 0; }
 inline bool FileNode::isNone() const { return type() == NONE; }
 inline bool FileNode::isSeq() const { return type() == SEQ; }
 inline bool FileNode::isMap() const { return type() == MAP; }
@@ -1594,7 +1595,7 @@ inline String FileNode::name() const
     const char* str;
     return !node || (str = cvGetFileNodeName(node)) == 0 ? String() : String(str);
 }
-inline size_t FileNode::count() const
+inline size_t FileNode::size() const
 {
     int t = type();
     return t == MAP ? ((CvSet*)node->data.map)->active_count :
@@ -1701,7 +1702,7 @@ inline FileNodeIterator FileNode::begin() const
 
 inline FileNodeIterator FileNode::end() const
 {
-    return FileNodeIterator(fs, node, count());
+    return FileNodeIterator(fs, node, size());
 }
 
 inline FileNode FileNodeIterator::operator *() const

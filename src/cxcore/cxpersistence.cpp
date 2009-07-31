@@ -5045,7 +5045,7 @@ FileNodeIterator::FileNodeIterator(const CvFileStorage* _fs,
         if( node_type == FileNode::SEQ || node_type == FileNode::MAP )
         {
             cvStartReadSeq( _node->data.seq, &reader );
-            remaining = FileNode(_fs, _node).count();
+            remaining = FileNode(_fs, _node).size();
         }
         else
         {
@@ -5092,7 +5092,7 @@ FileNodeIterator FileNodeIterator::operator ++(int)
 
 FileNodeIterator& FileNodeIterator::operator --()
 {
-    if( remaining < FileNode(fs, container).count() )
+    if( remaining < FileNode(fs, container).size() )
     {
         if( reader.seq )
             CV_PREV_SEQ_ELEM( reader.seq->elem_size, reader );
@@ -5116,7 +5116,7 @@ FileNodeIterator& FileNodeIterator::operator += (int ofs)
         ofs = std::min(ofs, (int)remaining);
     else
     {
-        size_t count = FileNode(fs, container).count();
+        size_t count = FileNode(fs, container).size();
         ofs = (int)(remaining - std::min(remaining - ofs, count));
     }
     remaining -= ofs;

@@ -925,6 +925,9 @@ cvHaarDetectObjects( const CvArr* _img,
 
     if( CV_MAT_DEPTH(img->type) != CV_8U )
         CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit images are supported" );
+    
+    if( scale_factor <= 1 )
+        CV_ERROR( CV_StsOutOfRange, "scale factor must be > 1" );
 
     if( find_biggest_object )
         flags &= ~CV_HAAR_SCALE_IMAGE;
@@ -2358,6 +2361,7 @@ CvType haar_type( CV_TYPE_NAME_HAAR, icvIsHaarClassifier,
                   icvReadHaarClassifier, icvWriteHaarClassifier,
                   icvCloneHaarClassifier );
 
+#if 0
 namespace cv
 {
 
@@ -2396,5 +2400,6 @@ void HaarClassifierCascade::setImages( const Mat& sum, const Mat& sqsum,
 }
 
 }
+#endif
 
 /* End of file. */

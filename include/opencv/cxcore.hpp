@@ -1890,6 +1890,7 @@ public:
     FileNode operator[](int i) const;
     int type() const;
     int rawDataSize(const String& fmt) const;
+    bool empty() const;
     bool isNone() const;
     bool isSeq() const;
     bool isMap() const;
@@ -1898,7 +1899,7 @@ public:
     bool isString() const;
     bool isNamed() const;
     String name() const;
-    size_t count() const;
+    size_t size() const;
     operator int() const;
     operator float() const;
     operator double() const;
