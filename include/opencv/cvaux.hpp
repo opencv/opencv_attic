@@ -464,17 +464,17 @@ protected:
     std::ostream* out;
 };
 
-class TickMeterCV
+class CV_EXPORTS TickMeter
 {
 public:
-    TickMeterCV();
+    TickMeter();
     void start();    
     void stop();
 
     int64 getTimeTicks() const;
-    int64 getTimeMicro() const;
-    int64 getTimeMilli() const;
-    int64 getTimeSec()   const;
+    double getTimeMicro() const;
+    double getTimeMilli() const;
+    double getTimeSec()   const;
     int64 getCounter() const;
 
     void reset();
@@ -484,7 +484,7 @@ private:
     int64 startTime;
 };
 
-std::ostream& operator<<(std::ostream& out, const TickMeterCV& tm);
+CV_EXPORTS std::ostream& operator<<(std::ostream& out, const TickMeter& tm);
 
 /****************************************************************************************\
 *            HOG (Histogram-of-Oriented-Gradients) Descriptor and Object Detector        *

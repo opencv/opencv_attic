@@ -81,7 +81,6 @@ void
 findPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
            const CvSeq* imageKeypoints, const CvSeq* imageDescriptors, vector<int>& ptpairs )
 {
-	int length = (int)(objectDescriptors->elem_size/sizeof(float));
     int i;
     CvSeqReader reader, kreader;
     cvStartReadSeq( objectKeypoints, &kreader );
@@ -105,8 +104,8 @@ findPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
 
 
 void
-flannFindPairs( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
-           const CvSeq* imageKeypoints, const CvSeq* imageDescriptors, vector<int>& ptpairs )
+flannFindPairs( const CvSeq*, const CvSeq* objectDescriptors,
+           const CvSeq*, const CvSeq* imageDescriptors, vector<int>& ptpairs )
 {
 	int length = (int)(objectDescriptors->elem_size/sizeof(float));
 

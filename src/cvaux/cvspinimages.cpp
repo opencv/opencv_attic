@@ -425,8 +425,12 @@ void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, c
 
 const Point3f cv::Mesh3D::allzero(0.f, 0.f, 0.f);
 
-cv::Mesh3D::Mesh3D() : resolution(-1) {}
-cv::Mesh3D::Mesh3D(const Vector<Point3f>& _vtx) : resolution(-1), vtx(_vtx.clone()) {}
+cv::Mesh3D::Mesh3D() { resolution = -1; }
+cv::Mesh3D::Mesh3D(const Vector<Point3f>& _vtx)
+{
+    resolution = -1;
+    vtx = _vtx.clone();
+}
 cv::Mesh3D::~Mesh3D() {}
 
 void cv::Mesh3D::buildOctTree() { if (octree.getNodes().empty()) octree.buildTree(vtx); }
@@ -992,7 +996,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
         model.lambda = static_cast<float>( nonzero[ nonzero.size()/2 ] ) / 2;
     }    
        
-    TickMeterCV corr_timer;
+    TickMeter corr_timer;
     corr_timer.start();
     vector<Match> allMatches;
     for(int i = 0; i < scene.spinImages.rows; ++i)
@@ -1188,16 +1192,16 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     return result;    
 }
 
-cv::TickMeterCV::TickMeterCV() : startTime( 0 ), sumTime( 0 ), counter(0) {}
-int64 cv::TickMeterCV::getTimeTicks() const { return sumTime; }
-int64 cv::TickMeterCV::getTimeMicro() const { return static_cast<int64>(getTimeTicks()/cvGetTickFrequency()); }
-int64 cv::TickMeterCV::getTimeMilli() const { return getTimeMicro()/1000; }
-int64 cv::TickMeterCV::getTimeSec()   const { return getTimeMilli()/1000; }    
-int64 cv::TickMeterCV::getCounter() const { return counter; }
-void  cv::TickMeterCV::reset() {startTime = 0; sumTime = 0; counter = 0; }
+cv::TickMeter::TickMeter() { reset(); }
+int64 cv::TickMeter::getTimeTicks() const { return sumTime; }
+double cv::TickMeter::getTimeMicro() const { return (double)getTimeTicks()/cvGetTickFrequency(); }
+double cv::TickMeter::getTimeMilli() const { return getTimeMicro()*1e-3; }
+double cv::TickMeter::getTimeSec()   const { return getTimeMilli()*1e-3; }    
+int64 cv::TickMeter::getCounter() const { return counter; }
+void  cv::TickMeter::reset() {startTime = 0; sumTime = 0; counter = 0; }
 
-void cv::TickMeterCV::start(){ startTime = cvGetTickCount(); }
-void cv::TickMeterCV::stop()
+void cv::TickMeter::start(){ startTime = cvGetTickCount(); }
+void cv::TickMeter::stop()
 {
     int64 time = cvGetTickCount();
     if ( startTime == 0 )
@@ -1209,4 +1213,4 @@ void cv::TickMeterCV::stop()
     startTime = 0;
 }
 
-std::ostream& cv::operator<<(std::ostream& out, const TickMeterCV& tm){ return out << tm.getTimeSec() << "sec"; }
+std::ostream& cv::operator<<(std::ostream& out, const TickMeter& tm){ return out << tm.getTimeSec() << "sec"; }

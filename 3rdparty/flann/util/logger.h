@@ -33,6 +33,7 @@
 
 
 #include <cstdio>
+#include <stdarg.h>
 #include "common.h"
 #include "flann.h"
 
