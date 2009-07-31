@@ -621,35 +621,92 @@ public:
 
 ///////////////////////////// Object Detection ////////////////////////////
 
+CV_EXPORTS void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps=0.2);
+        
+class CV_EXPORTS FeatureEvaluator
+{
+public:    
+    virtual ~FeatureEvaluator();
+    virtual void init(Size);
+    virtual bool read(const FileNode& node);
+    virtual int getFeatureType() const;
+    
+    virtual bool setImage(const Mat&);
+    virtual int setWindow(Point);
+    
+    virtual double calcOrd(int featureIdx, int pOffset) const;
+    virtual int calcCat(int featureIdx, int pOffset) const;
+    
+    enum { HAAR = 0, LBP = 1 };
+    static Ptr<FeatureEvaluator> create(int type);
+};
+    
 template<> inline void Ptr<CvHaarClassifierCascade>::delete_obj()
-{ cvReleaseHaarClassifierCascade(&obj); }
-
-class CV_EXPORTS HaarClassifierCascade
+{ cvReleaseHaarClassifierCascade(&obj); }    
+   
+class CV_EXPORTS CascadeClassifier
 {
 public:
+    struct CV_EXPORTS DTreeNode
+    {
+        int featureIdx;
+        float threshold; // for ordered features only
+        int left;
+        int right;
+    };
+    
+    struct CV_EXPORTS DTree
+    {
+        int nodeCount;
+    };
+    
+    struct CV_EXPORTS Stage
+    {
+        int first;
+        int ntrees;
+        float threshold;
+    };
+    
+    enum { BOOST = 0 };
     enum { DO_CANNY_PRUNING = CV_HAAR_DO_CANNY_PRUNING,
            SCALE_IMAGE = CV_HAAR_SCALE_IMAGE,
            FIND_BIGGEST_OBJECT = CV_HAAR_FIND_BIGGEST_OBJECT,
            DO_ROUGH_SEARCH = CV_HAAR_DO_ROUGH_SEARCH };
+
+    CascadeClassifier();
+    CascadeClassifier(const String& filename);
+    ~CascadeClassifier();
     
-    HaarClassifierCascade();
-    HaarClassifierCascade(const String& filename);
+    bool empty() const;
     bool load(const String& filename);
+    bool read(const FileNode& node);
 
     void detectMultiScale( const Mat& image,
                            Vector<Rect>& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
+   
+    bool setImage( const Mat& image );
+    int runAt( Point pt );
 
-    int runAt(Point pt, int startStage=0, int nstages=0) const;
-
-    void setImages( const Mat& sum, const Mat& sqsum,
-                    const Mat& tiltedSum, double scale );
+    int stageType;
+    int featureType;
+    int ncategories;
     
-    Ptr<CvHaarClassifierCascade> cascade;
+    Size origWinSize;
+    
+    Vector<Stage> stages;
+    Vector<DTree> classifiers;
+    Vector<DTreeNode> nodes;
+    Vector<float> leaves;
+    Vector<int> subsets;
+    
+    Ptr<FeatureEvaluator> feval;
+    Ptr<CvHaarClassifierCascade> oldCascade;
 };
 
+    
 CV_EXPORTS void undistortPoints( const Vector<Point2f>& src, Vector<Point2f>& dst,
                                  const Mat& cameraMatrix, const Mat& distCoeffs,
                                  const Mat& R=Mat(), const Mat& P=Mat());

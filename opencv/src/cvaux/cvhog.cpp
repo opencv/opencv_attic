@@ -785,20 +785,6 @@ void HOGDescriptor::detect(const Mat& img,
 }
 
 
-struct SimilarRects
-{
-    SimilarRects(double _eps) : eps(_eps) {}
-    inline bool operator()(const Rect& r1, const Rect& r2) const
-    {
-        double delta = eps*(std::min(r1.width, r2.width) + std::min(r1.height, r2.height))*0.5;
-        return std::abs(r1.x - r2.x) <= delta &&
-            std::abs(r1.y - r2.y) <= delta &&
-            std::abs(r1.x + r1.width - r2.x - r2.width) <= delta &&
-            std::abs(r1.y + r1.height - r2.y - r2.height) <= delta;
-    }
-    double eps;
-};
-
 struct HOGThreadData
 {
     Vector<Rect> rectangles;
@@ -866,33 +852,7 @@ void HOGDescriptor::detectMultiScale(
             std::back_inserter(foundLocations));
     }
 
-    if( groupThreshold <= 0 )
-        return;
-
-    Vector<int> labels;
-    int nclasses = partition(foundLocations, labels, SimilarRects(0.2));
-    Vector<Rect> rrects(nclasses);
-    Vector<int> rweights(nclasses, 0);
-    int nlabels = (int)labels.size();
-    for( i = 0; i < nlabels; i++ )
-    {
-        int cls = labels[i];
-        rrects[cls].x += foundLocations[i].x;
-        rrects[cls].y += foundLocations[i].y;
-        rrects[cls].width += foundLocations[i].width;
-        rrects[cls].height += foundLocations[i].height;
-        rweights[cls]++;
-    }
-    foundLocations.clear();
-    for( i = 0; i < nclasses; i++ )
-    {
-        Rect r = rrects[i];
-        if( rweights[i] <= groupThreshold )
-            continue;
-        float s = 1.f/rweights[i];
-        foundLocations.push_back(
-            Rect(cvRound(r.x*s), cvRound(r.y*s), cvRound(r.width*s), cvRound(r.height*s)));
-    }
+    groupRectangles(foundLocations, groupThreshold, 0.2);
 }
 
 Vector<float> HOGDescriptor::getDefaultPeopleDetector()

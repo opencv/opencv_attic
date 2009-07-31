@@ -48,13 +48,13 @@ class NNIndex;
 class IndexFactory
 {
 public:
+    virtual ~IndexFactory() {}
 	virtual NNIndex* createIndex(const Matrix<float>& dataset) const = 0;
 };
 
 struct IndexParams : public IndexFactory {
 protected:
 	IndexParams() {};
-
 public:
 
 	static IndexParams* createFromParameters(const FLANNParameters& p);
