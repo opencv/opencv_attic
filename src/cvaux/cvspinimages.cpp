@@ -51,6 +51,14 @@ using namespace cv;
 using namespace std;
 
 /********************************* local utility *********************************/
+
+namespace cv
+{
+    using std::log;
+    using std::max;
+    using std::min;
+    using std::sqrt;
+}
 namespace 
 {
     const static Scalar colors[] = 
@@ -515,7 +523,7 @@ void cv::Mesh3D::writeAsVrml(const String& file, const Vector<Scalar>& colors) c
 
 bool cv::SpinImageModel::spinCorrelation(const Mat& spin1, const Mat& spin2, float lambda, float& result)
 {
-    struct Math { static double atanh(double x) { return 0.5 * log( (1 + x) / (1 - x) ); } };
+    struct Math { static double atanh(double x) { return 0.5 * std::log( (1 + x) / (1 - x) ); } };
       
     const float* s1 = spin1.ptr<float>();
     const float* s2 = spin2.ptr<float>();
@@ -932,7 +940,8 @@ struct Match
 };
 
 typedef set<size_t> group_t;
-typedef group_t::const_iterator iter;
+typedef group_t::iterator iter;
+typedef group_t::const_iterator citer;
 
 struct WgcHelper
 {
@@ -947,7 +956,7 @@ struct WgcHelper
         const float* wgcLine = mat.ptr<float>(corespInd);
         float maximum = numeric_limits<float>::min();
         
-        for(iter pos = group.begin(); pos != group.end(); ++pos)
+        for(citer pos = group.begin(); pos != group.end(); ++pos)
             maximum = max(wgcLine[*pos], maximum);
 
         return maximum;
@@ -1169,7 +1178,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
         const group_t& group = groups[i];
 
         Vector< Vec2i > outgrp;
-        for(iter pos = group.begin(); pos != group.end(); ++pos)
+        for(citer pos = group.begin(); pos != group.end(); ++pos)
         {
             const Match& m = allMatches[*pos];            
             outgrp.push_back(Vec2i(subset[m.modelInd], scene.subset[m.sceneInd]));
