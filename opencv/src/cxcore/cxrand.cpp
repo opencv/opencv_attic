@@ -436,13 +436,15 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
         RandBits_<short>,
         RandBits_<int>, 0, 0, 0},
 
-        {Randi_<uchar,float>, 0,
+        {Randi_<uchar,float>,
+        Randi_<schar,float>,
         Randi_<ushort,float>,
         Randi_<short,float>,
         Randi_<int,float>,
         Randf_, Randd_, 0},
 
-        {Randn_<uchar,float>, 0,
+        {Randn_<uchar,float>,
+        Randn_<schar,float>,
         Randn_<ushort,float>,
         Randn_<short,float>,
         Randn_<int,float>,
