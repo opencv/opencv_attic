@@ -429,7 +429,9 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
 {
     static RandFunc rngtab[3][8] =
     {
-        {RandBits_<uchar>, 0,
+        {
+        RandBits_<uchar>, 
+        RandBits_<schar>,
         RandBits_<ushort>,
         RandBits_<short>,
         RandBits_<int>, 0, 0, 0},
@@ -549,6 +551,8 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
             param = fparam;
         }
     }
+
+    CV_Assert( func != 0);
 
     func( mat, &state, param );
 }
