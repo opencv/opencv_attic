@@ -21,7 +21,7 @@ Alekseev, Aleksey       Intel Corp.                IppCV testing
 Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 
 Baksheev, Anatoly       Argus CV                   CMake support for OpenCV, Spin Images
-Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; add cvLinearPolar
+Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; added cvLinearPolar
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
@@ -43,12 +43,14 @@ Dadgostar, Farhad       ???                        Adaptive Skin Detector, Fuzzy
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Delacour, Xavier        ???                        Octave bindings, KD trees/BBF search, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
+Dimashova, Maria        Argus CV.                  TrainCascade application and the new object detection class
+                                                   cv::CascadeClassifier.
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
 
 Eaton, Daniel           ???                        Texture descriptors code
-Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI and more ...
-
+Eruhimov, Victor        Intel Corp.                Hough & distance transforms, stereo, Hawk, HighGUI,
+                                                   One-way descriptor and more ...
 Filip, Daniel           Google Inc.                cv::wImage* template image classes
 
 Gaspard Breton          France Telecom             Support for multiple cameras (2,3,4) in SyncFilter and cvcam
@@ -72,7 +74,8 @@ Kruppa, Hannes          ETH Zurich                 Haar classifier for fullbody,
 Kuranov, Alexander      Intel Corp.                Matlab wrappers, face detection code, haartraining and related applications 
 Kuriakin, Valery        Intel Corp.                Started OpenCV project in Nizhny Novrogod Lab
 
-Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code
+Lienhart, Rainer        Intel Corp.                Haar feature-based face detection algorithm and the original code;
+                                                   Self-similarity features.
 Liu Liu                 ???                        SURF, Spill trees, MSERs
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
@@ -81,6 +84,7 @@ Molinov, Sergey         Intel Corp.                HMM face recognition code, PO
 Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code (C),
                                                    fundamental matrix estimation
 Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
+Muja, Marius            Willow Garage Inc.         FLANN bindings
 Nefian, Ara             Intel Corp.                Algorithm for HMM face recognition
 
 Oblomov, Sergey         Intel Corp.                Camshift and histogram code, linux scripts and makefiles, optimization and more ...
@@ -97,7 +101,8 @@ Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
 Shavit, Adi             ???                        OpenCV forum moderation, OpenCV logo
-Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees, CNN in Machine Learning module; SVM enhancements
+Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees,
+                                                   CNN in Machine Learning module; SVM enhancements
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 Stavinzky, Jay          ???                        8u->8u L1 Distance transform.
