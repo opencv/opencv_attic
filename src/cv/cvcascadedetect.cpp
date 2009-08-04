@@ -590,7 +590,7 @@ template<class FEval>
 inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
 {
     int si, nstages = (int)cascade.stages.size();
-    size_t nodeOfs = 0, leafOfs = 0;
+    int nodeOfs = 0, leafOfs = 0;
     FEval& feval = (FEval&)*cascade.feval;
     size_t subsetSize = (cascade.ncategories + 31)/32;
     
@@ -603,7 +603,7 @@ inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
         for( wi = 0; wi < ntrees; wi++ )
         {
             CascadeClassifier::DTree& weak = cascade.classifiers[stage.first + wi];
-            size_t idx = 0, root = nodeOfs;
+            int idx = 0, root = nodeOfs;
             do
             {
                 CascadeClassifier::DTreeNode& node = cascade.nodes[root + idx];
