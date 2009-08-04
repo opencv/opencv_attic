@@ -653,8 +653,8 @@ dst(x, y)= src( A_{11} x' + A_{12} y' + b_1, A_{21} x' + A_{22} y' + b_2)
 where
 
 \[
-x'=\frac{x-(width(dst)-1)}{2}, 
-y'=\frac{y-(height(dst)-1)}{2}
+x'=x-\frac{(width(dst)-1)}{2}, 
+y'=y-\frac{(height(dst)-1)}{2}
 \]
 
 and
@@ -2579,16 +2579,17 @@ Creates a histogram.
 
 \cvexp{
 CvHistogram* cvCreateHist(\par int dims,\par int* sizes,\par int type,\par float** ranges=NULL,\par int uniform=1 );
-}{CPP}{PYTHON}
+}{CPP}{CreateHist(dims, type, ranges, uniform = 1) -> hist}
 
 \begin{description}
-\cvarg{dims}{Number of histogram dimensions}
-\cvarg{sizes}{Array of the histogram dimension sizes}
+ONLY_C(`\cvarg{dims}{Number of histogram dimensions}
+\cvarg{sizes}{Array of the histogram dimension sizes}')
+ONLY_PYTHON(`\cvarg{dims}{for an N-dimensional histogram, list of length N giving the size of each dimension}')
 \cvarg{type}{Histogram representation format: \texttt{CV\_HIST\_ARRAY} means that the histogram data is represented as a multi-dimensional dense array CvMatND; \texttt{CV\_HIST\_SPARSE} means that histogram data is represented as a multi-dimensional sparse array CvSparseMat}
 \cvarg{ranges}{Array of ranges for the histogram bins. Its meaning depends on the \texttt{uniform} parameter value. The ranges are used for when the histogram is calculated or backprojected to determine which histogram bin corresponds to which value/tuple of values from the input image(s)}
 \cvarg{uniform}{Uniformity flag; if not 0, the histogram has evenly
 spaced bins and for every $0<=i<cDims$ \texttt{ranges[i]}
-is array of two numbers: lower and upper boundaries for the i-th
+is an array of two numbers: lower and upper boundaries for the i-th
 histogram dimension.
 The whole range [lower,upper] is then split
 into \texttt{dims[i]} equal parts to determine the \texttt{i-th} input
@@ -2608,8 +2609,14 @@ the specified range for a histogram bin are not counted by
 \cross{CalcHist} and filled with 0 by \cross{CalcBackProject}}
 \end{description}
 
-The function \texttt{CreateHist} creates a histogram of the specified size and returns a pointer to the created histogram. If the array \texttt{ranges} is 0, the histogram bin ranges must be specified later via the function \texttt{cvSetHistBinRanges}. Though \cross{CalcHist} and \cross{CalcBackProject} may process 8-bit images without setting bin ranges, they assume thy are equally spaced in 0 to 255 bins.
+The function \texttt{CreateHist} creates a histogram of the specified
+size and returns a pointer to the created histogram. If the array
+\texttt{ranges} is 0, the histogram bin ranges must be specified later
+via the function \cross{SetHistBinRanges}. Though \cross{CalcHist}
+and \cross{CalcBackProject} may process 8-bit images without setting
+bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 
+ONLY_C(`
 \cvfunc{SetHistBinRanges}\label{SetHistBinRanges}
 
 Sets the bounds of the histogram bins.
@@ -2625,7 +2632,7 @@ void cvSetHistBinRanges( \par CvHistogram* hist,\par float** ranges,\par int uni
 \end{description}
 
 The function \texttt{cvSetHistBinRanges} is a stand-alone function for setting bin ranges in the histogram. For a more detailed description of the parameters \texttt{ranges} and \texttt{uniform} see the \cross{CalcHist} function, that can initialize the ranges as well. Ranges for the histogram bins must be set before the histogram is calculated or the backproject of the histogram is calculated.
-
+')
 
 ONLY_C(`
 \cvfunc{ReleaseHist}\label{ReleaseHist}
@@ -2657,6 +2664,7 @@ void cvClearHist( CvHistogram* hist );
 
 The function \texttt{ClearHist} sets all of the histogram bins to 0 in the case of a dense histogram and removes all histogram bins in the case of a sparse array.
 
+ONLY_C(`
 \cvfunc{MakeHistHeaderForArray}\label{MakeHistHeaderForArray}
 
 Makes a histogram out of an array.
@@ -2675,6 +2683,7 @@ CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHis
 \end{description}
 
 The function \texttt{cvMakeHistHeaderForArray} initializes the histogram, whose header and bins are allocated by th user. \cross{ReleaseHist} does not need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
+')
 
 \ifplastex
 \cvfunc{QueryHistValue\_1D} \cvexp{float cvQueryHistValue\_1D( CvHistogram *hist, int idx0)}{}{}
@@ -2843,6 +2852,7 @@ Note: the method \texttt{CV\_COMP\_BHATTACHARYYA} only works with normalized his
 
 To compare a sparse histogram or more general sparse configurations of weighted points, consider using the \cross{CalcEMD2} function.
 
+ONLY_C(`
 \cvfunc{CopyHist}\label{CopyHist}
 
 Copies a histogram.
@@ -2862,6 +2872,8 @@ same size as \texttt{src} is created. Otherwise, both histograms must
 have equal types and sizes. Then the function copies the source histogram's
 bin values to the destination histogram and sets the same bin value ranges
 as in \texttt{src}.
+
+')
 
 \cvfunc{CalcHist}\label{CalcHist}
 
@@ -5945,11 +5957,11 @@ The function \texttt{cvDrawChessboardCorners} draws the individual chessboard co
 
 \cvfunc{RQDecomp3x3}\label{RQDecomp3x3}
 
-Computes the RQ decomposition of 3x3 matrices.
+Computes the `RQ' decomposition of 3x3 matrices.
 
 \cvexp{
 void cvRQDecomp3x3( \par const CvMat *matrixM,\par CvMat *matrixR,\par CvMat *matrixQ,\par CvMat *matrixQx=NULL,\par CvMat *matrixQy=NULL,\par CvMat *matrixQz=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}{CPP}{PYTHON}
+}{CPP}{RQDecomp3x3(matrixM, matrixR, matrixQ, matrixQx = None, matrixQy = None, matrixQz = None) -> eulerAngles}
 
 \begin{description}
 \cvarg{matrixM}{The 3x3 input matrix M}
@@ -5968,11 +5980,11 @@ It optionally returns three rotation matrices, one for each axis, and the three 
 
 \cvfunc{DecomposeProjectionMatrix}\label{DecomposeProjectionMatrix}
 
-Computes the RQ decomposition of 3x3 matrices.
+Computes the `RQ' decomposition of 3x3 matrices.
 
 \cvexp{
 void cvDecomposeProjectionMatrix( \par const CvMat *projMatr,\par CvMat *calibMatr,\par CvMat *rotMatr,\par CvMat *posVect,\par CvMat *rotMatrX=NULL,\par CvMat *rotMatrY=NULL,\par CvMat *rotMatrZ=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}{CPP}{PYTHON}
+}{CPP}{DecomposeProjectionMatrix(projMatr, calibMatr, rotMatr, posVect, rotMatrX = None, rotMatrY = None, rotMatrZ = None) -> eulerAngles}
 
 \begin{description}
 \cvarg{projMatr}{The 3x4 input projection matrix P}
@@ -6078,7 +6090,7 @@ Calculates the fundamental matrix from the corresponding points in two images.
 
 \cvexp{
 int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\par CvMat* fundamental\_matrix,\par int    method=CV\_FM\_RANSAC,\par double param1=1.,\par double param2=0.99,\par CvMat* status=NULL);
-}{CPP}{PYTHON}
+}{CPP}{FindFundamentalMat(points1, points2, fundamental\_matrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
 
 \begin{description}
 \cvarg{points1}{Array of the first image points of \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} size (where \texttt{N} is number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable. The point coordinates should be floating-point (single or double precision)}
@@ -6142,7 +6154,7 @@ For points in one image of a stereo pair, computes the corresponding epilines in
 
 \cvexp{
 void cvComputeCorrespondEpilines( \par const CvMat* points,\par int which\_image,\par const CvMat* fundamental\_matrix,\par CvMat* correspondent\_lines);
-}{CPP}{PYTHON}
+}{CPP}{ComputeCorrespondEpilines(points, which\_image, fundamental\_matrix, correspondent\_lines) -> None}
 
 \begin{description}
 \cvarg{points}{The input points. \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} array (where \texttt{N} number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable}
