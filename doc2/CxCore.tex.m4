@@ -2098,6 +2098,74 @@ void cvMerge( const CvArr* src0, const CvArr* src1,
 
 The function \texttt{cvMerge} is the opposite to \cross{Split}. If the destination array has N channels then if the first N input channels are not NULL, they all are copied to the destination array; if only a single source channel of the first N is not NULL, this particular channel is copied into the destination array; otherwise an error is raised. The rest of the source channels (beyond the first N) must always be NULL. For IplImage \cross{Copy} with COI set can be also used to insert a single channel into the image.
 
+\cvfunc{MixChannels}\label{MixChannels}
+
+Copies several channels from input arrays to certain channels of output arrays
+
+\cvexp{
+
+void cvMixChannels( const CvArr** src, int src\_count, \par
+                    CvArr** dst, int dst_count, \par
+                    const int* from_to, int pair\_count );
+
+}{CPP}{MixChannels(src, dst, from\_to)-> None}
+
+\begin{description}
+\cvarg{src}{Input arrays}
+ONLY_C(`\cvarg{src\_count}{The number of input arrays.}')
+\cvarg{dst}{Destination arrays}
+ONLY_C(`\cvarg{dst\_count}{The number of output arrays.}')
+\cvarg{from\_to}{The array of pairs of indices of the planes
+copied.  ONLY_C(`\texttt{from\_to[k*2]} is the 0-based index of the input plane, and
+\texttt{from_to[k*2+1]} is the index of the output plane in their respective array entries.
+As a special case, when the source array entry is \texttt{NULL}, i is ignored
+and output plane j is filled with zero.')ONLY_PYTHON(`Each pair (i,j)
+means that for the corresponding input and output arrays, plane i is
+copied to output plane j.
+As a special case, when the source array entry is \texttt{None}, i is
+ignored and output plane j is filled with zero.')
+}
+\end{description}
+
+The function cvMixChannels is a generalized form of \cross{Split} and \cross{Merge}
+and some forms of \cross{CvtColor}. It can be used to change the order of the
+planes, add/remove alpha channel, extract or insert a single plane or
+multiple planes etc.
+
+ONLY_PYTHON(`
+As an example, this code splits a 4-channel RGBA image into a 3-channel
+BGR (i.e. with R&B swapped) and separate alpha channel image:
+
+\begin{lstlisting}
+        rgba = cv.CreateMat(100, 100, cv.CV_8UC4)
+        bgr =  cv.CreateMat(100, 100, cv.CV_8UC3)
+        alpha = cv.CreateMat(100, 100, cv.CV_8UC1)
+        cv.Set(rgba, (1,2,3,4))
+        cv.MixChannels([rgba,rgba,rgba,rgba], [bgr, bgr, bgr, alpha], [
+           (0, 2),    # rgba[0] -> bgr[2]
+           (1, 1),    # rgba[1] -> bgr[1]
+           (2, 0),    # rgba[2] -> bgr[0]
+           (3, 0)     # rgba[3] -> alpha[0]
+        ])
+\end{lstlisting}
+')
+
+ONLY_C(`
+As an example, this code splits a 4-channel RGBA image into a 3-channel
+BGR (i.e. with R&B swapped) and separate alpha channel image:
+
+\begin{lstlisting}
+    CvMat* rgba = cvCreateMat( 100, 100, CV_8UC4 );
+    CvMat* bgr = cvCreateMat( rgba->rows, rgba->cols, CV_8UC3 );
+    CvMat* alpha = cvCreateMat( rgba->rows, rgba->cols, CV_8UC1 );
+    cvSet( rgba, cvScalar(1,2,3,4) );
+
+    CvArr* in[] = { rgba, rgba, rgba, rgba };
+    CvArr* out[] = { bgr, bgr, bgr, alpha };
+    int from_to[] = { 0,2,  1,1,  2,0,  3,3 };
+    cvMixChannels( in, 4, out, 4, from_to, 4 );
+\end{lstlisting}
+')
 
 \subsection{Arithmetic, Logic and Comparison}
 
@@ -6772,13 +6840,18 @@ Fills a polygon's interior.
 
 void cvFillPoly( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par CvScalar color,\par int line\_type=8,\par int shift=0 );
 
-}{CPP}{FillPoly(img,pts,color,line\_type=8,shift=0)-> None}
+}{CPP}{FillPoly(img,polys,color,line\_type=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
+ONLY_C(`
 \cvarg{pts}{Array of pointers to polygons}
 \cvarg{npts}{Array of polygon vertex counters}
 \cvarg{contours}{Number of contours that bind the filled region}
+')
+ONLY_PYTHON(`
+\cvarg{polys}{List of lists of (x,y) pairs.  Each list of points is a polygon.}
+')
 \cvarg{color}{Polygon color}
 \cvarg{line\_type}{Type of the polygon boundaries, see \cross{Line} description}
 \cvarg{shift}{Number of fractional bits in the vertex coordinates}
@@ -6826,10 +6899,15 @@ void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int cont
 }{CPP}{PolyLine(img,pts,is\_closed,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
+ONLY_C(`
+\cvarg{pts}{Array of pointers to polygons}
+\cvarg{npts}{Array of polygon vertex counters}
+\cvarg{contours}{Number of contours that bind the filled region}
+')
+ONLY_PYTHON(`
+\cvarg{polys}{List of lists of (x,y) pairs.  Each list of points is a polygon.}
+')
 \cvarg{img}{Image}
-\cvarg{pts}{Array of pointers to polylines}
-\cvarg{npts}{Array of polyline vertex counters}
-\cvarg{contours}{Number of polyline contours}
 \cvarg{is\_closed}{Indicates whether the polylines must be drawn
 closed. If closed, the function draws the line from the last vertex
 of every contour to the first vertex.}
