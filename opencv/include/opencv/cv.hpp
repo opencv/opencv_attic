@@ -627,11 +627,10 @@ class CV_EXPORTS FeatureEvaluator
 {
 public:    
     virtual ~FeatureEvaluator();
-    virtual void init(Size);
     virtual bool read(const FileNode& node);
     virtual int getFeatureType() const;
     
-    virtual bool setImage(const Mat&);
+    virtual bool setImage(const Mat&, Size origWinSize);
     virtual int setWindow(Point);
     
     virtual double calcOrd(int featureIdx, int pOffset) const;
@@ -680,14 +679,13 @@ public:
     bool empty() const;
     bool load(const String& filename);
     bool read(const FileNode& node);
-
     void detectMultiScale( const Mat& image,
                            Vector<Rect>& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
-   
-    bool setImage( const Mat& image );
+ 
+    //bool setImage( const Mat& image );
     int runAt( Point pt );
 
     int stageType;
