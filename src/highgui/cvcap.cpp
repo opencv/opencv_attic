@@ -321,3 +321,118 @@ CV_IMPL void cvReleaseVideoWriter( CvVideoWriter** pwriter )
         *pwriter = 0;
     }
 }
+
+namespace cv
+{
+
+VideoCapture::VideoCapture()
+{}
+        
+VideoCapture::VideoCapture(const String& filename)
+{
+    open(filename);
+}
+    
+VideoCapture::VideoCapture(int device)
+{
+    open(device);
+}
+
+VideoCapture::~VideoCapture()
+{
+    cap.release();
+}
+    
+bool VideoCapture::open(const String& filename)
+{
+    cap = cvCreateFileCapture(filename.c_str());
+    return isOpened();
+}
+    
+bool VideoCapture::open(int device)
+{
+    cap = cvCreateCameraCapture(device);
+    return isOpened();
+}
+    
+bool VideoCapture::isOpened() const { return !cap.empty(); }
+    
+void VideoCapture::release()
+{
+    cap.release();
+}
+
+bool VideoCapture::grab()
+{
+    return cvGrabFrame(cap) != 0;
+}
+    
+bool VideoCapture::retrieve(Mat& image, int channel)
+{
+    IplImage* _img = cvRetrieveFrame(cap, channel);
+    if( !_img )
+    {
+        image.release();
+        return false;
+    }
+    if(_img->origin == IPL_ORIGIN_TL)
+        image = Mat(_img);
+    else
+    {
+        Mat temp(_img);
+        flip(temp, image, 0);
+    }
+    return true;
+}
+    
+VideoCapture& VideoCapture::operator >> (Mat& image)
+{
+    if(!grab())
+        image.release();
+    else
+        retrieve(image);
+    return *this;
+}
+    
+bool VideoCapture::set(int propId, double value)
+{
+    return cvSetCaptureProperty(cap, propId, value) != 0;
+}
+    
+double VideoCapture::get(int propId)
+{
+    return cvGetCaptureProperty(cap, propId);
+}
+
+VideoWriter::VideoWriter()
+{}
+    
+VideoWriter::VideoWriter(const String& filename, int fourcc, double fps, Size frameSize, bool isColor)
+{
+    open(filename, fourcc, fps, frameSize, isColor);
+}
+
+VideoWriter::~VideoWriter()
+{
+    writer.release();
+}
+    
+bool VideoWriter::open(const String& filename, int fourcc, double fps, Size frameSize, bool isColor)
+{
+    writer = cvCreateVideoWriter(filename.c_str(), fourcc, fps, frameSize, isColor);
+    return isOpened();
+}
+
+bool VideoWriter::isOpened() const
+{
+    return !writer.empty();
+}    
+    
+VideoWriter& VideoWriter::operator << (const Mat& image)
+{
+    IplImage _img = image;
+    cvWriteFrame(writer, &_img);
+    return *this;    
+}
+
+}

@@ -99,9 +99,78 @@ typedef unsigned long ulong;
 #include "ipp.h"
 #endif
 
+
+#define CV_MEMCPY_CHAR( dst, src, len )                 \
+{                                                       \
+    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);    \
+    char* _icv_memcpy_dst_ = (char*)(dst);              \
+    const char* _icv_memcpy_src_ = (const char*)(src);  \
+                                                        \
+    for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++ )  \
+        _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];        \
+}
+
+
+#define CV_MEMCPY_INT( dst, src, len )                  \
+{                                                       \
+    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);    \
+    int* _icv_memcpy_dst_ = (int*)(dst);                \
+    const int* _icv_memcpy_src_ = (const int*)(src);    \
+    assert( ((size_t)_icv_memcpy_src_&(sizeof(int)-1)) == 0 && \
+    ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );  \
+                                                        \
+    for(_icv_memcpy_i_=0;_icv_memcpy_i_<_icv_memcpy_len_;_icv_memcpy_i_++)  \
+        _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];\
+}
+
+
+#define CV_MEMCPY_AUTO( dst, src, len )                                             \
+{                                                                                   \
+    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
+    char* _icv_memcpy_dst_ = (char*)(dst);                                          \
+    const char* _icv_memcpy_src_ = (const char*)(src);                              \
+    if( (_icv_memcpy_len_ & (sizeof(int)-1)) == 0 )                                 \
+    {                                                                               \
+        assert( ((size_t)_icv_memcpy_src_&(sizeof(int)-1)) == 0 &&                  \
+                ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );                  \
+        for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_;                 \
+            _icv_memcpy_i_+=sizeof(int) )                                           \
+        {                                                                           \
+            *(int*)(_icv_memcpy_dst_+_icv_memcpy_i_) =                              \
+            *(const int*)(_icv_memcpy_src_+_icv_memcpy_i_);                         \
+        }                                                                           \
+    }                                                                               \
+    else                                                                            \
+    {                                                                               \
+        for(_icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++)\
+            _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];    \
+    }                                                                               \
+}
+
+
+#define CV_ZERO_CHAR( dst, len )                        \
+{                                                       \
+    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);    \
+    char* _icv_memcpy_dst_ = (char*)(dst);              \
+                                                        \
+    for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++ )  \
+        _icv_memcpy_dst_[_icv_memcpy_i_] = '\0';        \
+}
+
+
+#define CV_ZERO_INT( dst, len )                                                     \
+{                                                                                   \
+    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
+    int* _icv_memcpy_dst_ = (int*)(dst);                                            \
+    assert( ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );                      \
+                                                                                    \
+    for(_icv_memcpy_i_=0;_icv_memcpy_i_<_icv_memcpy_len_;_icv_memcpy_i_++)          \
+        _icv_memcpy_dst_[_icv_memcpy_i_] = 0;                                       \
+}
+
 namespace cv
 {
-
+    
 // -128.f ... 255.f
 extern const float g_8x32fTab[];
 #define CV_8TO32F(x)  cv::g_8x32fTab[(x)+128]

@@ -425,6 +425,36 @@ template<typename _Tp> inline const _Tp& Mat::at(int y, int x) const
     return ((_Tp*)(data + step*y))[x];
 }
 
+    
+template<typename _Tp> inline MatConstIterator_<_Tp> Mat::begin() const
+{
+    CV_DbgAssert( elemSize() == sizeof(_Tp) );
+    return MatConstIterator_<_Tp>((const Mat_<_Tp>*)this);
+}
+
+template<typename _Tp> inline MatConstIterator_<_Tp> Mat::end() const
+{
+    CV_DbgAssert( elemSize() == sizeof(_Tp) );
+    MatConstIterator_<_Tp> it((const Mat_<_Tp>*)this);
+    it.ptr = it.sliceEnd = (_Tp*)(data + step*(rows-1)) + cols;
+    return it;
+}
+
+template<typename _Tp> inline MatIterator_<_Tp> Mat::begin()
+{
+    CV_DbgAssert( elemSize() == sizeof(_Tp) );
+    return MatIterator_<_Tp>((Mat_<_Tp>*)this);
+}
+
+template<typename _Tp> inline MatIterator_<_Tp> Mat::end()
+{
+    CV_DbgAssert( elemSize() == sizeof(_Tp) );
+    MatIterator_<_Tp> it((Mat_<_Tp>*)this);
+    it.ptr = it.sliceEnd = (_Tp*)(data + step*(rows-1)) + cols;
+    return it;
+}
+    
+    
 static inline void swap( Mat& a, Mat& b )
 {
     std::swap( a.flags, b.flags );
@@ -3445,24 +3475,16 @@ template<typename _Tp> inline _Tp& MatIterator_<_Tp>::operator [](int i) const
 { return *(*this + i); }
 
 template<typename _Tp> inline MatConstIterator_<_Tp> Mat_<_Tp>::begin() const
-{ return MatConstIterator_<_Tp>(this); }
+{ return Mat::begin<_Tp>(); }
 
 template<typename _Tp> inline MatConstIterator_<_Tp> Mat_<_Tp>::end() const
-{
-    MatConstIterator_<_Tp> it(this);
-    it.ptr = it.sliceEnd = (_Tp*)(data + step*(rows-1)) + cols;
-    return it;
-}
+{ return Mat::end<_Tp>(); }
 
 template<typename _Tp> inline MatIterator_<_Tp> Mat_<_Tp>::begin()
-{ return MatIterator_<_Tp>(this); }
+{ return Mat::begin<_Tp>(); }
 
 template<typename _Tp> inline MatIterator_<_Tp> Mat_<_Tp>::end()
-{
-    MatIterator_<_Tp> it(this);
-    it.ptr = it.sliceEnd = (_Tp*)(data + step*(rows-1)) + cols;
-    return it;
-}
+{ return Mat::end<_Tp>(); }
 
 template<typename _Tp> class CV_EXPORTS MatOp_Iter_
 {

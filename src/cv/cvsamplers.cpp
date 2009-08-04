@@ -73,7 +73,8 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
     pix_size = CV_ELEM_SIZE(mat->type);
     for( i = 0; i < count; i++ )
     {
-        CV_MEMCPY_AUTO( buffer, iterator.ptr, pix_size );
+        for( int j = 0; j < pix_size; j++ )
+            buffer[j] = iterator.ptr[j];
         buffer += pix_size;
         CV_NEXT_LINE_POINT( iterator );
     }
