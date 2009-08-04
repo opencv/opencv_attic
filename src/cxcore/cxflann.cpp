@@ -32,6 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <cxcore.h>
 #include "flann/flann.hpp"
 
 namespace cv
