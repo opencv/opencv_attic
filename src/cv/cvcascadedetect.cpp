@@ -39,10 +39,8 @@
 //
 //M*/
 
-/* Haar features calculation */
-
 #include "_cv.h"
-#include <stdio.h>
+#include <cstdio>
 
 namespace cv
 {
@@ -97,33 +95,36 @@ void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
                                 saturate_cast<int>(r.height*s)));
     }
 }
-
     
 //-----------------------------------------------------------------------------------------------------------------
-#define CC_STAGE_PARAMS "stageParams"
+#define CC_CASCADE_PARAMS "cascadeParams"
 #define CC_STAGE_TYPE "stageType"
-#define CC_STAGE_TYPE_BOOST "BOOST"
-#define CC_STAGE_NUM "stageNum"
-#define CC_FEATURE_PARAMS "featureParams"
 #define CC_FEATURE_TYPE "featureType"
-#define CC_FEATURE_TYPE_HAAR "HAAR"
-#define CC_FEATURE_TYPE_LBP "LBP"
-#define CC_STAGES "stages"
-#define CC_FEATURES "features"
-#define CBT_INTERNAL_NODES  "internalNodes"
-#define CBT_LEAF_VALUES     "leafValues"
 #define CC_HEIGHT "height"
 #define CC_WIDTH  "width"
 
-#define FP_MAX_CAT_COUNT  "maxCatCount"
+#define CC_STAGE_NUM    "stageNum"
+#define CC_STAGES       "stages"
+#define CC_STAGE_PARAMS "stageParams"
 
-#define HFP_MODE   "mode"
-#define HFP_MODE_ALL    "ALL"
+#define CC_BOOST            "BOOST"
+#define CC_MAX_DEPTH        "maxDepth"
+#define CC_WEAK_COUNT       "maxWeakCount"
+#define CC_STAGE_THRESHOLD  "stageThreshold"
+#define CC_WEAK_CLASSIFIERS "weakClassifiers"
+#define CC_INTERNAL_NODES   "internalNodes"
+#define CC_LEAF_VALUES      "leafValues"
 
-#define HF_RECTS    "rects"
-#define HF_TILTED   "tilted"
+#define CC_FEATURES "features"
+#define CC_FEATURE_PARAMS "featureParams"
+#define CC_MAX_CAT_COUNT  "maxCatCount"
 
-#define LBP_RECT "rect"
+#define CC_HAAR         "HAAR"
+#define CC_RECTS        "rects"
+#define CC_TILTED       "tilted"
+
+#define CC_LBP  "LBP"
+#define CC_RECT "rect"
 
 #define CV_SUM_PTRS( p0, p1, p2, p3, sum, rect, step )                    \
     /* (x, y) */                                                          \
@@ -153,11 +154,10 @@ void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
 
 
 FeatureEvaluator::~FeatureEvaluator() {}
-void FeatureEvaluator::init(Size) {};
 bool FeatureEvaluator::read(const FileNode&) {return true;}
 int FeatureEvaluator::getFeatureType() const {return -1;}
 
-bool FeatureEvaluator::setImage(const Mat& ) { return true; }
+bool FeatureEvaluator::setImage(const Mat&, Size) { return true; }
 int FeatureEvaluator::setWindow(Point) { return true; }
 
 double FeatureEvaluator::calcOrd(int, int) const { return 0.; }
@@ -189,22 +189,21 @@ public:
     };
     
     HaarEvaluator();
-    ~HaarEvaluator();
+    virtual ~HaarEvaluator();
 
-    void init( Size origWinSize );
-    bool read( const FileNode& node );
-    bool setImage(const Mat& image );
-    int setWindow( Point pt );
-    int getFeatureType() const { return FeatureEvaluator::HAAR; }
+    virtual bool read( const FileNode& node );
+    virtual bool setImage(const Mat& image, Size _origWinSize );
+    virtual int setWindow( Point pt );
+    virtual int getFeatureType() const { return FeatureEvaluator::HAAR; }
 
     double operator()(int featureIdx, int pOffset) const
     { return features[featureIdx].calc(pOffset) * varianceNormFactor; }
     
-    double calcOrd(int featureIdx, int pOffset) const
+    virtual double calcOrd(int featureIdx, int pOffset) const
     { return (*this)(featureIdx, pOffset); }
 
 private:
-    Size origWinSize, maxWinSize;
+    Size origWinSize;
     Vector<Feature> features;
     bool hasTiltedFeatures;
 
@@ -242,7 +241,7 @@ inline float HaarEvaluator::Feature :: calc( int offset ) const
 inline void HaarEvaluator::Feature :: updatePtrs( const Mat& sum )
 {
     const int* ptr = (const int*)sum.data;
-    int step = sum.step/sizeof(ptr[0]);
+    size_t step = sum.step/sizeof(ptr[0]);
     if (tilted)
     {
         CV_TILTED_PTRS( p[0][0], p[0][1], p[0][2], p[0][3], ptr, rect[0].r, step );
@@ -261,7 +260,7 @@ inline void HaarEvaluator::Feature :: updatePtrs( const Mat& sum )
 
 bool HaarEvaluator::Feature :: read( const FileNode& node )
 {
-    FileNode rnode = node[HF_RECTS];
+    FileNode rnode = node[CC_RECTS];
     FileNodeIterator it = rnode.begin(), it_end = rnode.end();
     
     int ri;
@@ -278,7 +277,7 @@ bool HaarEvaluator::Feature :: read( const FileNode& node )
             rect[ri].r.width >> rect[ri].r.height >> rect[ri].weight;
     }
     
-    tilted = (int)node[HF_TILTED] != 0;
+    tilted = (int)node[CC_TILTED] != 0;
     return true;
 }
 
@@ -289,12 +288,6 @@ HaarEvaluator::HaarEvaluator()
 
 HaarEvaluator::~HaarEvaluator()
 {
-}
-
-void HaarEvaluator::init( Size _origWinSize )
-{
-    origWinSize = _origWinSize;
-    normrect = Rect(1, 1, origWinSize.width-2, origWinSize.height-2);
 }
 
 bool HaarEvaluator::read(const FileNode& node)
@@ -313,9 +306,11 @@ bool HaarEvaluator::read(const FileNode& node)
     return true;
 }
     
-bool HaarEvaluator::setImage( const Mat& image )
+bool HaarEvaluator::setImage( const Mat& image, Size _origWinSize )
 {
     int rn = image.rows+1, cn = image.cols+1;
+    origWinSize = _origWinSize;
+    normrect = Rect(1, 1, origWinSize.width-2, origWinSize.height-2);
     
     if (image.cols < origWinSize.width || image.rows < origWinSize.height)
         return false;
@@ -339,8 +334,8 @@ bool HaarEvaluator::setImage( const Mat& image )
 
     const int* sdata = (const int*)sum.data;
     const double* sqdata = (const double*)sqsum.data;
-    int sumStep = sum.step/sizeof(sdata[0]);
-    int sqsumStep = sqsum.step/sizeof(sqdata[0]);
+    size_t sumStep = sum.step/sizeof(sdata[0]);
+    size_t sqsumStep = sqsum.step/sizeof(sqdata[0]);
     
     CV_SUM_PTRS( p[0], p[1], p[2], p[3], sdata, normrect, sumStep );
     CV_SUM_PTRS( pq[0], pq[1], pq[2], pq[3], sqdata, normrect, sqsumStep );
@@ -361,18 +356,18 @@ int HaarEvaluator::setWindow( Point pt )
         pt.y + origWinSize.height >= sum.rows-2 )
         return false;
 
-    int pOffset = pt.y * (sum.step/sizeof(int)) + pt.x;
-    int pqOffset = pt.y * (sqsum.step/sizeof(double)) + pt.x;
+    size_t pOffset = pt.y * (sum.step/sizeof(int)) + pt.x;
+    size_t pqOffset = pt.y * (sqsum.step/sizeof(double)) + pt.x;
     int valsum = CALC_SUM(p,pOffset);
     double valsqsum = CALC_SUM(pq,pqOffset);
 
     varianceNormFactor = (double)normrect.area() * valsqsum - (double)valsum * valsum;
-    if( varianceNormFactor >= 0. )
+    if( varianceNormFactor > 0. )
         varianceNormFactor = sqrt(varianceNormFactor);
     else
         varianceNormFactor = 1.;
     varianceNormFactor = 1./varianceNormFactor;
-    return pOffset;
+    return (int)pOffset;
 }
 
 //----------------------------------------------  LBP Features ------------------------------------------------
@@ -392,23 +387,22 @@ public:
         
         enum { POINT_NUM = 16 };
         
-        Rect rect; // weight and hieght for block
+        Rect rect; // weight and height for block
         const int* p[POINT_NUM]; // fast
     };
     
     LBPEvaluator();
-    ~LBPEvaluator();
+    virtual ~LBPEvaluator();
     
-    void init( Size _origWinSize );
-    bool read( FileNode& node );
-    bool setImage(const Mat& image);
-    int setWindow( Point pt );
-    int getFeatureType() const { return FeatureEvaluator::LBP; }
+    virtual bool read( const FileNode& node );
+    virtual bool setImage(const Mat& image, Size _origWinSize);
+    virtual int setWindow( Point pt );
+    virtual int getFeatureType() const { return FeatureEvaluator::LBP; }
     
     int operator()(int featureIdx, int pOffset) const
     { return features[featureIdx].calc(pOffset); }
     
-    int calcCat(int featureIdx, int pOffset) const
+    virtual int calcCat(int featureIdx, int pOffset) const
     { return (*this)(featureIdx, pOffset); }
     
 private:
@@ -431,20 +425,20 @@ inline int LBPEvaluator::Feature :: calc( int offset ) const
 {
     int cval = CALC_SUM_( p[5], p[6], p[9], p[10], offset );
     
-    return (CALC_SUM_( p[0], p[1], p[4], p[5], offset ) >= cval ? 1 : 0) |  // 0
-           (CALC_SUM_( p[1], p[2], p[5], p[6], offset ) >= cval ? 2 : 0) |  // 1
-           (CALC_SUM_( p[2], p[3], p[6], p[7], offset ) >= cval ? 4 : 0) |  // 2
-           (CALC_SUM_( p[6], p[7], p[10], p[11], offset ) >= cval ? 8 : 0) | // 5
-           (CALC_SUM_( p[10], p[11], p[14], p[15], offset ) >= cval ? 16 : 0)| // 8
-           (CALC_SUM_( p[9], p[10], p[13], p[14], offset ) >= cval ? 32 : 0)| // 7
-           (CALC_SUM_( p[8], p[9], p[12], p[13], offset ) >= cval ? 64 : 0)| // 6
-           (CALC_SUM_( p[4], p[5], p[8], p[9], offset ) >= cval ? 128 : 0);
+    return (CALC_SUM_( p[0], p[1], p[4], p[5], offset ) >= cval ? 128 : 0) |   // 0
+           (CALC_SUM_( p[1], p[2], p[5], p[6], offset ) >= cval ? 64 : 0) |    // 1
+           (CALC_SUM_( p[2], p[3], p[6], p[7], offset ) >= cval ? 32 : 0) |    // 2
+           (CALC_SUM_( p[6], p[7], p[10], p[11], offset ) >= cval ? 16 : 0) |  // 5
+           (CALC_SUM_( p[10], p[11], p[14], p[15], offset ) >= cval ? 8 : 0)|  // 8
+           (CALC_SUM_( p[9], p[10], p[13], p[14], offset ) >= cval ? 4 : 0)|   // 7
+           (CALC_SUM_( p[8], p[9], p[12], p[13], offset ) >= cval ? 2 : 0)|    // 6
+           (CALC_SUM_( p[4], p[5], p[8], p[9], offset ) >= cval ? 1 : 0);
 }
 
 inline void LBPEvaluator::Feature :: updatePtrs( const Mat& sum )
 {
     const int* ptr = (const int*)sum.data;
-    int step = sum.step/sizeof(ptr[0]);
+    size_t step = sum.step/sizeof(ptr[0]);
     Rect tr = rect;
     CV_SUM_PTRS( p[0], p[1], p[4], p[5], ptr, tr, step );
     tr.x += 2*rect.width;
@@ -457,7 +451,7 @@ inline void LBPEvaluator::Feature :: updatePtrs( const Mat& sum )
 
 bool LBPEvaluator::Feature :: read( FileNode& node )
 {
-    FileNode rnode = node[LBP_RECT];
+    FileNode rnode = node[CC_RECT];
     FileNodeIterator it = rnode.begin();
     it >> rect.x >> rect.y >> rect.width >> rect.height;
     return true;
@@ -472,17 +466,24 @@ LBPEvaluator::LBPEvaluator()
 LBPEvaluator::~LBPEvaluator()
 {
 }
-
-    
-void LBPEvaluator::init( Size _origWinSize )
+bool LBPEvaluator::read( const FileNode& node )
 {
-    origWinSize = _origWinSize;
+    features.resize(node.size());
+    FileNodeIterator it = node.begin(), it_end = node.end();
+
+    for(int i = 0; it != it_end; ++it, i++)
+    {
+        if(!features[i].read(*it))
+            return false;
+    }
+    return true;
 }
 
-    
-bool LBPEvaluator::setImage( const Mat& image )
+bool LBPEvaluator::setImage( const Mat& image, Size _origWinSize )
 {
     int rn = image.rows+1, cn = image.cols+1;
+    origWinSize = _origWinSize;
+
     if( image.cols < origWinSize.width || image.rows < origWinSize.height )
         return false;
     
@@ -498,7 +499,6 @@ bool LBPEvaluator::setImage( const Mat& image )
 
     return true;
 }
-
     
 int LBPEvaluator::setWindow( Point pt )
 {
@@ -506,7 +506,7 @@ int LBPEvaluator::setWindow( Point pt )
         pt.x + origWinSize.width >= sum.cols-2 ||
         pt.y + origWinSize.height >= sum.rows-2 )
         return -1;
-    return pt.y * (sum.step/sizeof(int)) + pt.x;
+    return pt.y * ((int)sum.step/sizeof(int)) + pt.x;
 }
 
     
@@ -556,7 +556,7 @@ template<class FEval>
 inline int predictOrdered( CascadeClassifier& cascade, int pOffset)
 {
     int si, nstages = (int)cascade.stages.size();
-    size_t nodeOfs = 0, leafOfs = 0;
+    int nodeOfs = 0, leafOfs = 0;
     FEval& feval = (FEval&)*cascade.feval;
     
     for( si = 0; si < nstages; si++ )
@@ -586,7 +586,6 @@ inline int predictOrdered( CascadeClassifier& cascade, int pOffset)
     return 1;
 }
 
-    
 template<class FEval>
 inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
 {
@@ -604,7 +603,7 @@ inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
         for( wi = 0; wi < ntrees; wi++ )
         {
             CascadeClassifier::DTree& weak = cascade.classifiers[stage.first + wi];
-            int idx = 0, root = nodeOfs;
+            size_t idx = 0, root = nodeOfs;
             do
             {
                 CascadeClassifier::DTreeNode& node = cascade.nodes[root + idx];
@@ -626,8 +625,9 @@ inline int predictCategorical( CascadeClassifier& cascade, int pOffset)
 
 int CascadeClassifier::runAt(Point pt)
 {
-    if( !oldCascade.empty() )
-        return cvRunHaarClassifierCascade(oldCascade, pt, 0);
+    CV_Assert( oldCascade.empty() );
+    /*if( !oldCascade.empty() )
+        return cvRunHaarClassifierCascade(oldCascade, pt, 0);*/
         
     assert(featureType == FeatureEvaluator::HAAR ||
            featureType == FeatureEvaluator::LBP);
@@ -639,43 +639,48 @@ int CascadeClassifier::runAt(Point pt)
 }
 
     
-bool CascadeClassifier::setImage(const Mat& image)
-{
-    if( !oldCascade.empty() )
-    {
-        Mat sum(image.rows+1, image.cols+1, CV_32S);
-        Mat tilted(image.rows+1, image.cols+1, CV_32S);
-        Mat sqsum(image.rows+1, image.cols+1, CV_64F);
-        integral(image, sum, sqsum, tilted);
-        CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
-        cvSetImagesForHaarClassifierCascade( oldCascade, &_sum, &_sqsum, &_tilted, 1. );
-        return true;
-    }
-    if( empty() )
-        return false;
-    return feval->setImage(image);
-}
+//bool CascadeClassifier::setImage(const Mat& image)
+//{
+//    if( !oldCascade.empty() )
+//    {
+//        Mat sum(image.rows+1, image.cols+1, CV_32S);
+//        Mat tilted(image.rows+1, image.cols+1, CV_32S);
+//        Mat sqsum(image.rows+1, image.cols+1, CV_64F);
+//        integral(image, sum, sqsum, tilted);
+//        CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
+//        cvSetImagesForHaarClassifierCascade( oldCascade, &_sum, &_sqsum, &_tilted, 1. );
+//        return true;
+//    }
+//    if( empty() )
+//        return false;
+//    return feval->setImage(image, origWinSize);
+//}
     
     
+struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } };
 void CascadeClassifier::detectMultiScale( const Mat& image, Vector<Rect>& objects,
                                           double scaleFactor, int minNeighbors,
                                           int flags, Size minSize )
 {
     CV_Assert( scaleFactor > 1 && image.depth() == CV_8U );
     
+    if( empty() )
+        return;
+
     if( !oldCascade.empty() )
     {
         MemStorage storage(cvCreateMemStorage(0));
         CvMat _image = image;
         CvSeq* _objects = cvHaarDetectObjects( &_image, oldCascade, storage, scaleFactor,
                                               minNeighbors, flags, minSize );
-        Seq<Rect>(_objects).copyTo(objects);
+        Vector<CvAvgComp> vecAvgComp;
+        Seq<CvAvgComp>(_objects).copyTo(vecAvgComp);
+        objects.resize(vecAvgComp.size());
+        std::transform(vecAvgComp.begin(), vecAvgComp.end(), objects.begin(), getRect());
         return;
     }
     
     objects.clear();
-    if( !empty() )
-        return;
     
     Mat img = image, imgbuf(image.rows+1, image.cols+1, CV_8U);
     
@@ -690,18 +695,18 @@ void CascadeClassifier::detectMultiScale( const Mat& image, Vector<Rect>& object
     {
         
         Size winSize( cvRound(origWinSize.width*factor), cvRound(origWinSize.height*factor) );
-        Size sz1( cvRound( img.cols/factor ) - origWinSize.width,
-                 cvRound( img.rows/factor ) - origWinSize.height);
+        Size sz( cvRound( img.cols/factor ), cvRound( img.rows/factor ) );
+        Size sz1( sz.width - origWinSize.width, sz.height - origWinSize.height );
         
         if( sz1.width <= 0 || sz1.height <= 0 )
             break;
         if( winSize.width < minSize.width || winSize.height < minSize.height )
             continue;
         
-        Mat img1( sz1, CV_8U, imgbuf.data );
+        Mat img1( sz, CV_8U, imgbuf.data );
         
-        resize( img, img1, sz1, 0, 0, CV_INTER_LINEAR );
-        if( !feval->setImage( img1 ) )
+        resize( img, img1, sz, 0, 0, CV_INTER_LINEAR );
+        if( !feval->setImage( img1, origWinSize ) )
             break;
         int yStep = factor > 2. ? 1 : 2;
         
@@ -723,17 +728,17 @@ void CascadeClassifier::detectMultiScale( const Mat& image, Vector<Rect>& object
     
 bool CascadeClassifier::read(const FileNode& root)
 {
-    // 1. load stage params
+    // load stage params
     String stageTypeStr = (String)root[CC_STAGE_TYPE];
-    if( stageTypeStr == CC_STAGE_TYPE_BOOST )
+    if( stageTypeStr == CC_BOOST )
         stageType = BOOST;
     else
         return false;
     
     String featureTypeStr = (String)root[CC_FEATURE_TYPE];
-    if( featureTypeStr == CC_FEATURE_TYPE_HAAR )
+    if( featureTypeStr == CC_HAAR )
         featureType = FeatureEvaluator::HAAR;
-    else if( featureTypeStr == CC_FEATURE_TYPE_LBP )
+    else if( featureTypeStr == CC_LBP )
         featureType = FeatureEvaluator::LBP;
     else
         return false;
@@ -742,15 +747,16 @@ bool CascadeClassifier::read(const FileNode& root)
     origWinSize.height = (int)root[CC_HEIGHT];
     CV_Assert( origWinSize.height > 0 && origWinSize.width > 0 );
     
-    // 2. load feature params
+    // load feature params
     FileNode fn = root[CC_FEATURE_PARAMS];
     if( fn.empty() )
         return false;
     
-    ncategories = fn[FP_MAX_CAT_COUNT];
-    int subsetSize = (ncategories + 31)/32;
+    ncategories = fn[CC_MAX_CAT_COUNT];
+    int subsetSize = (ncategories + 31)/32,
+        nodeStep = 3 + ( ncategories>0 ? subsetSize : 1 );
     
-    // 3. load stages in auxiliary array
+    // load stages
     fn = root[CC_STAGES];
     if( fn.empty() )
         return false;
@@ -765,8 +771,8 @@ bool CascadeClassifier::read(const FileNode& root)
     {
         FileNode fns = *it;
         Stage stage;
-        stage.threshold = fns["stage_threshold"];
-        fns = fns["weak_classifiers"];
+        stage.threshold = fns[CC_STAGE_THRESHOLD];
+        fns = fns[CC_WEAK_CLASSIFIERS];
         if(fns.empty())
             return false;
         stage.ntrees = (int)fns.size();
@@ -775,25 +781,25 @@ bool CascadeClassifier::read(const FileNode& root)
         classifiers.reserve(stages[si].first + stages[si].ntrees);
         
         FileNodeIterator it1 = fns.begin(), it1_end = fns.end();
-        for( int wi = 0; it1 != it1_end; wi++, ++it1 )
+        for( ; it1 != it1_end; ++it1 ) // weak trees
         {
             FileNode fnw = *it1;
-            FileNode internalNodes = fnw[CBT_INTERNAL_NODES];
-            FileNode leafValues = fnw[CBT_INTERNAL_NODES];
+            FileNode internalNodes = fnw[CC_INTERNAL_NODES];
+            FileNode leafValues = fnw[CC_LEAF_VALUES];
             if( internalNodes.empty() || leafValues.empty() )
                 return false;
             DTree tree;
-            tree.nodeCount = (int)internalNodes.size();
+            tree.nodeCount = (int)internalNodes.size()/nodeStep;
             classifiers.push_back(tree);
             
             nodes.reserve(nodes.size() + tree.nodeCount);
-            leaves.reserve(leaves.size() + tree.nodeCount + 1);
+            leaves.reserve(leaves.size() + leafValues.size());
             if( subsetSize > 0 )
                 subsets.reserve(subsets.size() + tree.nodeCount*subsetSize);
             
             FileNodeIterator it2 = internalNodes.begin(), it2_end = internalNodes.end();
             
-            for( int ni = 0; it2 != it2_end; ni++ )
+            for( ; it2 != it2_end; ) // nodes
             {
                 DTreeNode node;
                 node.left = (int)*it2; ++it2;
@@ -811,11 +817,12 @@ bool CascadeClassifier::read(const FileNode& root)
             
             it2 = leafValues.begin(), it2_end = leafValues.end();
             
-            for( int li = 0; it2 != it2_end; li++, ++it2 )
+            for( ; it2 != it2_end; ++it2 ) // leaves
                 leaves.push_back((float)*it2);
         }
     }
 
+    // load features
     feval = FeatureEvaluator::create(featureType);
     fn = root[CC_FEATURES];
     if( fn.empty() )
