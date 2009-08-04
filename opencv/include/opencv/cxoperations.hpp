@@ -1333,10 +1333,27 @@ template<typename _Tp> inline Ptr<_Tp>::operator const _Tp*() const { return obj
 
 template<typename _Tp> inline bool Ptr<_Tp>::empty() const { return obj == 0; }
 
-//////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
+//// specializied implementations of Ptr::delete_obj() for classic OpenCV types
+
+template<> inline void Ptr<CvMat>::delete_obj()
+{ cvReleaseMat(&obj); }   
+
+template<> inline void Ptr<IplImage>::delete_obj()
+{ cvReleaseImage(&obj); }
+    
+template<> inline void Ptr<CvMatND>::delete_obj()
+{ cvReleaseMatND(&obj); }
+    
+template<> inline void Ptr<CvSparseMat>::delete_obj()
+{ cvReleaseSparseMat(&obj); }
+    
+template<> inline void Ptr<CvMemStorage>::delete_obj()
+{ cvReleaseMemStorage(&obj); }
 
 template<> inline void Ptr<CvFileStorage>::delete_obj()
 { cvReleaseFileStorage(&obj); }
+    
+//////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
 
 static inline void write( FileStorage& fs, const String& name, int value )
 { cvWriteInt( *fs, name.size() ? name.c_str() : 0, value ); }

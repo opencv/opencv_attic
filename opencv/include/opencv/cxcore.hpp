@@ -859,6 +859,10 @@ public:
     template<typename _Tp> const _Tp* ptr(int y=0) const;
     template<typename _Tp> _Tp& at(int y, int x);
     template<typename _Tp> const _Tp& at(int y, int x) const;
+    template<typename _Tp> MatIterator_<_Tp> begin();
+    template<typename _Tp> MatIterator_<_Tp> end();
+    template<typename _Tp> MatConstIterator_<_Tp> begin() const;
+    template<typename _Tp> MatConstIterator_<_Tp> end() const;
 
     enum { MAGIC_VAL=0x42FF0000, AUTO_STEP=0, CONTINUOUS_FLAG=CV_MAT_CONT_FLAG };
 
@@ -1278,7 +1282,6 @@ public:
     MatConstIterator_ operator ++(int);
     Point pos() const;
 
-protected:
     const Mat_<_Tp>* m;
     _Tp* ptr;
     _Tp* sliceEnd;
@@ -1332,7 +1335,6 @@ public:
     operator Vector<_Tp>() const;
     Vector<_Tp> operator *() const;
 
-protected:
     Vector<_Tp>* vec;
     int idx;
 };
@@ -1947,9 +1949,6 @@ public:
 // any element constructors/destructors
 
 template<typename _Tp> class SeqIterator;
-
-template<> inline void Ptr<CvMemStorage>::delete_obj()
-{ cvReleaseMemStorage(&obj); }
 
 typedef Ptr<CvMemStorage> MemStorage;
 

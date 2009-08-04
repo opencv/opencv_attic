@@ -399,6 +399,9 @@ CV_EXPORTS void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
                                Mat& flow0, double pyr_scale, int levels, int winsize,
                                int iterations, int poly_n, double poly_sigma, int flags );
     
+
+template<> inline void Ptr<CvHistogram>::delete_obj()
+{ cvReleaseHist(&obj); }
     
 CV_EXPORTS void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
                           const Mat& mask, MatND& hist, const Vector<int>& histSize,

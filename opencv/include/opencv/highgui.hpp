@@ -73,6 +73,53 @@ CV_EXPORTS bool imencode( const String& ext, const Mat& img,
 
 CV_EXPORTS int waitKey(int delay=0);
 
+
+template<> inline void Ptr<CvCapture>::delete_obj()
+{ cvReleaseCapture(&obj); }
+    
+template<> inline void Ptr<CvVideoWriter>::delete_obj()
+{ cvReleaseVideoWriter(&obj); }
+
+class CV_EXPORTS VideoCapture
+{
+public:
+    VideoCapture();
+    VideoCapture(const String& filename);
+    VideoCapture(int device);
+    
+    virtual ~VideoCapture();
+    virtual bool open(const String& filename);
+    virtual bool open(int device);
+    virtual bool isOpened() const;
+    virtual void release();
+    
+    virtual bool grab();
+    virtual bool retrieve(Mat& image, int channel=0);
+    virtual VideoCapture& operator >> (Mat& image);
+    
+    virtual bool set(int propId, double value);
+    virtual double get(int propId);
+    
+protected:
+    Ptr<CvCapture> cap;
+};
+
+    
+class CV_EXPORTS VideoWriter
+{
+public:    
+    VideoWriter();
+    VideoWriter(const String& filename, int fourcc, double fps, Size frameSize, bool isColor=true);
+    
+    virtual ~VideoWriter();
+    virtual bool open(const String& filename, int fourcc, double fps, Size frameSize, bool isColor=true);
+    virtual bool isOpened() const;
+    virtual VideoWriter& operator << (const Mat& image);
+    
+protected:
+    Ptr<CvVideoWriter> writer;
+};
+    
 }
 
 #endif
