@@ -1,4 +1,7 @@
-sudo apt-get install texlive
-sudo apt-get install texlive-latex-extra
-sudo apt-get install latex-xcolor
-sudo apt-get install texlive-fonts-extra  
+To build the documentation, you will need these tools:
+
+apt-get install texlive
+apt-get install texlive-latex-extra
+apt-get install latex-xcolor
+apt-get install texlive-fonts-extra  
+easy_install sphinx
