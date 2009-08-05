@@ -639,22 +639,20 @@ int CascadeClassifier::runAt(Point pt)
 }
 
     
-//bool CascadeClassifier::setImage(const Mat& image)
-//{
-//    if( !oldCascade.empty() )
-//    {
-//        Mat sum(image.rows+1, image.cols+1, CV_32S);
-//        Mat tilted(image.rows+1, image.cols+1, CV_32S);
-//        Mat sqsum(image.rows+1, image.cols+1, CV_64F);
-//        integral(image, sum, sqsum, tilted);
-//        CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
-//        cvSetImagesForHaarClassifierCascade( oldCascade, &_sum, &_sqsum, &_tilted, 1. );
-//        return true;
-//    }
-//    if( empty() )
-//        return false;
-//    return feval->setImage(image, origWinSize);
-//}
+bool CascadeClassifier::setImage(const Mat& image)
+{
+    /*if( !oldCascade.empty() )
+    {
+        Mat sum(image.rows+1, image.cols+1, CV_32S);
+        Mat tilted(image.rows+1, image.cols+1, CV_32S);
+        Mat sqsum(image.rows+1, image.cols+1, CV_64F);
+        integral(image, sum, sqsum, tilted);
+        CvMat _sum = sum, _sqsum = sqsum, _tilted = tilted;
+        cvSetImagesForHaarClassifierCascade( oldCascade, &_sum, &_sqsum, &_tilted, 1. );
+        return true;
+    }*/
+    return empty() ? false : feval->setImage(image, origWinSize);
+}
     
     
 struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } };
