@@ -383,7 +383,7 @@ public:
         
         int calc( int offset ) const;
         void updatePtrs( const Mat& sum );
-        bool read( FileNode& node );
+        bool read(const FileNode& node );
         
         enum { POINT_NUM = 16 };
         
@@ -449,7 +449,7 @@ inline void LBPEvaluator::Feature :: updatePtrs( const Mat& sum )
     CV_SUM_PTRS( p[8], p[9], p[12], p[13], ptr, tr, step );
 }
 
-bool LBPEvaluator::Feature :: read( FileNode& node )
+bool LBPEvaluator::Feature :: read(const FileNode& node )
 {
     FileNode rnode = node[CC_RECT];
     FileNodeIterator it = rnode.begin();
