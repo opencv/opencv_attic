@@ -688,7 +688,7 @@ public:
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
  
-    //bool setImage( const Mat& image );
+    bool setImage( const Mat& image );
     int runAt( Point pt );
 
     int stageType;
