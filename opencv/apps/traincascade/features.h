@@ -5,6 +5,7 @@
 #include "cxcore.h"
 #include "cv.h"
 #include "ml.h"
+#include <stdio.h>
 
 typedef uint64 ccounter_t;
 #define CCOUNTER_DIV(cc0, cc1) ( ((cc1) == 0) ? 0 : ( ((double)(cc0))/(double)(int64)(cc1) ) )
