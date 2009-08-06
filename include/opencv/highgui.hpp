@@ -73,6 +73,7 @@ CV_EXPORTS bool imencode( const String& ext, const Mat& img,
 
 CV_EXPORTS int waitKey(int delay=0);
 
+#ifndef CV_NO_VIDEO_CAPTURE_CPP_API
 
 template<> inline void Ptr<CvCapture>::delete_obj()
 { cvReleaseCapture(&obj); }
@@ -119,7 +120,9 @@ public:
 protected:
     Ptr<CvVideoWriter> writer;
 };
-    
+
+#endif
+
 }
 
 #endif
