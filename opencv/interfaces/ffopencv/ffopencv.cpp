@@ -517,6 +517,8 @@ That's all there is to it!
 
 \****************************************************************************************/
 
+#define CV_NO_VIDEO_CAPTURE_CPP_API 1
+
 #include "ffopencv.h"
 
 #if defined _MSC_VER && _MSC_VER >= 1200
