@@ -582,9 +582,9 @@ void fastFree( void* ptr )
 
         bool prevFilled = block->isFilled();
         --block->allocated;
-        if( !block->isFilled() && ((block->allocated == 0 && block->privateFreeList) || prevFilled) )
+        if( !block->isFilled() && (block->allocated == 0 || prevFilled) )
         {
-            if( block->allocated == 0 && block->privateFreeList )
+            if( block->allocated == 0 )
             {
                 int idx = block->binIdx;
                 Block*& startPtr = tls->bins[idx][START];
