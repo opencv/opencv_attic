@@ -1,6 +1,7 @@
 #include "cv.h"
 #include "_imagestorage.h"
 #include "_inner_functions.h"
+#include <stdio.h>
 
 //----------------------------------------  Background reading  ------------------------------------------------
 
