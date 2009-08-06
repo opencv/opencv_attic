@@ -2105,8 +2105,8 @@ Copies several channels from input arrays to certain channels of output arrays
 \cvexp{
 
 void cvMixChannels( const CvArr** src, int src\_count, \par
-                    CvArr** dst, int dst_count, \par
-                    const int* from_to, int pair\_count );
+                    CvArr** dst, int dst\_count, \par
+                    const int* from\_to, int pair\_count );
 
 }{CPP}{MixChannels(src, dst, from\_to)-> None}
 
@@ -2117,7 +2117,7 @@ ONLY_C(`\cvarg{src\_count}{The number of input arrays.}')
 ONLY_C(`\cvarg{dst\_count}{The number of output arrays.}')
 \cvarg{from\_to}{The array of pairs of indices of the planes
 copied.  ONLY_C(`\texttt{from\_to[k*2]} is the 0-based index of the input plane, and
-\texttt{from_to[k*2+1]} is the index of the output plane in their respective array entries.
+\texttt{from\_to[k*2+1]} is the index of the output plane in their respective array entries.
 As a special case, when the source array entry is \texttt{NULL}, i is ignored
 and output plane j is filled with zero.')ONLY_PYTHON(`Each pair (i,j)
 means that for the corresponding input and output arrays, plane i is
@@ -2134,7 +2134,7 @@ multiple planes etc.
 
 ONLY_PYTHON(`
 As an example, this code splits a 4-channel RGBA image into a 3-channel
-BGR (i.e. with R&B swapped) and separate alpha channel image:
+BGR (i.e. with R\&B swapped) and separate alpha channel image:
 
 \begin{lstlisting}
         rgba = cv.CreateMat(100, 100, cv.CV_8UC4)
@@ -2152,7 +2152,7 @@ BGR (i.e. with R&B swapped) and separate alpha channel image:
 
 ONLY_C(`
 As an example, this code splits a 4-channel RGBA image into a 3-channel
-BGR (i.e. with R&B swapped) and separate alpha channel image:
+BGR (i.e. with R\&B swapped) and separate alpha channel image:
 
 \begin{lstlisting}
     CvMat* rgba = cvCreateMat( 100, 100, CV_8UC4 );
