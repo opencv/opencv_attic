@@ -3488,6 +3488,7 @@ template<typename _Tp> inline MatIterator_<_Tp> Mat_<_Tp>::end()
 
 template<typename _Tp> class CV_EXPORTS MatOp_Iter_
 {
+public:    
     MatOp_Iter_() {}
 
     static void apply(const MatIterator_<_Tp>& a, Mat& c, int type=-1)
