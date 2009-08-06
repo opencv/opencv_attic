@@ -286,101 +286,104 @@ void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, c
         float alpha, beta;
         size_t j = 0;
 #if CV_SSE2
-        __m128 center_x4 = _mm_set1_ps(new_center.x);
-        __m128 center_y4 = _mm_set1_ps(new_center.y);
-        __m128 center_z4 = _mm_set1_ps(new_center.z + halfSuppport);
-        __m128 ppm4 = _mm_set1_ps(pixelsPerMeter);
-        __m128i height4m1 = _mm_set1_epi32(spinImage.rows-1);
-        __m128i width4m1 = _mm_set1_epi32(spinImage.cols-1);
-        assert( spinImage.step <= 0xffff );
-        __m128i step4 = _mm_set1_epi16((short)step);
-        __m128i zero4 = _mm_setzero_si128();
-        __m128i one4i = _mm_set1_epi32(1);
-        __m128 zero4f = _mm_setzero_ps();
-        __m128 one4f = _mm_set1_ps(1.f);
-        //__m128 two4f = _mm_set1_ps(2.f);
-        int CV_DECL_ALIGNED(16) o[4];
-
-        for (; j <= inSphere_size - 5; j += 4)
+        if (inSphere_size > 4)
         {
-            __m128 pt0 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+0])); // x0 y0 z0 .
-            __m128 pt1 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+1])); // x1 y1 z1 .
-            __m128 pt2 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+2])); // x2 y2 z2 .
-            __m128 pt3 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+3])); // x3 y3 z3 .
+            __m128 center_x4 = _mm_set1_ps(new_center.x);
+            __m128 center_y4 = _mm_set1_ps(new_center.y);
+            __m128 center_z4 = _mm_set1_ps(new_center.z + halfSuppport);
+            __m128 ppm4 = _mm_set1_ps(pixelsPerMeter);
+            __m128i height4m1 = _mm_set1_epi32(spinImage.rows-1);
+            __m128i width4m1 = _mm_set1_epi32(spinImage.cols-1);
+            assert( spinImage.step <= 0xffff );
+            __m128i step4 = _mm_set1_epi16((short)step);
+            __m128i zero4 = _mm_setzero_si128();
+            __m128i one4i = _mm_set1_epi32(1);
+            __m128 zero4f = _mm_setzero_ps();
+            __m128 one4f = _mm_set1_ps(1.f);
+            //__m128 two4f = _mm_set1_ps(2.f);
+            int CV_DECL_ALIGNED(16) o[4];
 
-            __m128 z0 = _mm_unpackhi_ps(pt0, pt1); // z0 z1 . .
-            __m128 z1 = _mm_unpackhi_ps(pt2, pt3); // z2 z3 . .
-            __m128 beta4 = _mm_sub_ps(center_z4, _mm_movelh_ps(z0, z1)); // b0 b1 b2 b3
-            
-            __m128 xy0 = _mm_unpacklo_ps(pt0, pt1); // x0 x1 y0 y1
-            __m128 xy1 = _mm_unpacklo_ps(pt2, pt3); // x2 x3 y2 y3
-            __m128 x4 = _mm_movelh_ps(xy0, xy1); // x0 x1 x2 x3
-            __m128 y4 = _mm_movehl_ps(xy1, xy0); // y0 y1 y2 y3
+            for (; j <= inSphere_size - 5; j += 4)
+            {
+                __m128 pt0 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+0])); // x0 y0 z0 .
+                __m128 pt1 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+1])); // x1 y1 z1 .
+                __m128 pt2 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+2])); // x2 y2 z2 .
+                __m128 pt3 = transformSSE(rotmatSSE, _mm_loadu_ps((float*)&pointsInSphere[j+3])); // x3 y3 z3 .
 
-            x4 = _mm_sub_ps(x4, center_x4);
-            y4 = _mm_sub_ps(y4, center_y4);
-            __m128 alpha4 = _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(x4,x4),_mm_mul_ps(y4,y4)));
-            
-            __m128 n1f4 = _mm_mul_ps( beta4, ppm4);  /* beta4 float */
-            __m128 n2f4 = _mm_mul_ps(alpha4, ppm4); /* alpha4 float */
+                __m128 z0 = _mm_unpackhi_ps(pt0, pt1); // z0 z1 . .
+                __m128 z1 = _mm_unpackhi_ps(pt2, pt3); // z2 z3 . .
+                __m128 beta4 = _mm_sub_ps(center_z4, _mm_movelh_ps(z0, z1)); // b0 b1 b2 b3
+                
+                __m128 xy0 = _mm_unpacklo_ps(pt0, pt1); // x0 x1 y0 y1
+                __m128 xy1 = _mm_unpacklo_ps(pt2, pt3); // x2 x3 y2 y3
+                __m128 x4 = _mm_movelh_ps(xy0, xy1); // x0 x1 x2 x3
+                __m128 y4 = _mm_movehl_ps(xy1, xy0); // y0 y1 y2 y3
 
-            /* floor */
-            __m128i n1 = _mm_sub_epi32(_mm_cvttps_epi32( _mm_add_ps( n1f4, one4f ) ), one4i);
-            __m128i n2 = _mm_sub_epi32(_mm_cvttps_epi32( _mm_add_ps( n2f4, one4f ) ), one4i);
+                x4 = _mm_sub_ps(x4, center_x4);
+                y4 = _mm_sub_ps(y4, center_y4);
+                __m128 alpha4 = _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(x4,x4),_mm_mul_ps(y4,y4)));
+                
+                __m128 n1f4 = _mm_mul_ps( beta4, ppm4);  /* beta4 float */
+                __m128 n2f4 = _mm_mul_ps(alpha4, ppm4); /* alpha4 float */
 
-            __m128 f1 = _mm_sub_ps( n1f4, _mm_cvtepi32_ps(n1) );  /* { beta4  }  */
-            __m128 f2 = _mm_sub_ps( n2f4, _mm_cvtepi32_ps(n2) );  /* { alpha4 }  */
+                /* floor */
+                __m128i n1 = _mm_sub_epi32(_mm_cvttps_epi32( _mm_add_ps( n1f4, one4f ) ), one4i);
+                __m128i n2 = _mm_sub_epi32(_mm_cvttps_epi32( _mm_add_ps( n2f4, one4f ) ), one4i);
 
-            __m128 f1f2 = _mm_mul_ps(f1, f2);  // f1 * f2                        
-            __m128 omf1omf2 = _mm_add_ps(_mm_sub_ps(_mm_sub_ps(one4f, f2), f1), f1f2); // (1-f1) * (1-f2)
-            
-            __m128i mask = _mm_and_si128(
-                _mm_andnot_si128(_mm_cmpgt_epi32(zero4, n1), _mm_cmpgt_epi32(height4m1, n1)),
-                _mm_andnot_si128(_mm_cmpgt_epi32(zero4, n2), _mm_cmpgt_epi32(width4m1, n2)));
+                __m128 f1 = _mm_sub_ps( n1f4, _mm_cvtepi32_ps(n1) );  /* { beta4  }  */
+                __m128 f2 = _mm_sub_ps( n2f4, _mm_cvtepi32_ps(n2) );  /* { alpha4 }  */
 
-            __m128 maskf = _mm_cmpneq_ps(_mm_cvtepi32_ps(mask), zero4f);
-                        
-            __m128 v00 = _mm_and_ps(        omf1omf2       , maskf); // a00 b00 c00 d00
-            __m128 v01 = _mm_and_ps( _mm_sub_ps( f2, f1f2 ), maskf); // a01 b01 c01 d01
-            __m128 v10 = _mm_and_ps( _mm_sub_ps( f1, f1f2 ), maskf); // a10 b10 c10 d10
-            __m128 v11 = _mm_and_ps(          f1f2         , maskf); // a11 b11 c11 d11
+                __m128 f1f2 = _mm_mul_ps(f1, f2);  // f1 * f2                        
+                __m128 omf1omf2 = _mm_add_ps(_mm_sub_ps(_mm_sub_ps(one4f, f2), f1), f1f2); // (1-f1) * (1-f2)
+                
+                __m128i mask = _mm_and_si128(
+                    _mm_andnot_si128(_mm_cmpgt_epi32(zero4, n1), _mm_cmpgt_epi32(height4m1, n1)),
+                    _mm_andnot_si128(_mm_cmpgt_epi32(zero4, n2), _mm_cmpgt_epi32(width4m1, n2)));
 
-            __m128i ofs4 = _mm_and_si128(_mm_add_epi32(_mm_mullo_epi32_emul(n1, step4), n2), mask);
-            _mm_store_si128((__m128i*)o, ofs4);
+                __m128 maskf = _mm_cmpneq_ps(_mm_cvtepi32_ps(mask), zero4f);
+                            
+                __m128 v00 = _mm_and_ps(        omf1omf2       , maskf); // a00 b00 c00 d00
+                __m128 v01 = _mm_and_ps( _mm_sub_ps( f2, f1f2 ), maskf); // a01 b01 c01 d01
+                __m128 v10 = _mm_and_ps( _mm_sub_ps( f1, f1f2 ), maskf); // a10 b10 c10 d10
+                __m128 v11 = _mm_and_ps(          f1f2         , maskf); // a11 b11 c11 d11
 
-            __m128 t0 = _mm_unpacklo_ps(v00, v01); // a00 a01 b00 b01
-            __m128 t1 = _mm_unpacklo_ps(v10, v11); // a10 a11 b10 b11
-            __m128 u0 = _mm_movelh_ps(t0, t1); // a00 a01 a10 a11
-            __m128 u1 = _mm_movehl_ps(t1, t0); // b00 b01 b10 b11
+                __m128i ofs4 = _mm_and_si128(_mm_add_epi32(_mm_mullo_epi32_emul(n1, step4), n2), mask);
+                _mm_store_si128((__m128i*)o, ofs4);
 
-            __m128 x0 = _mm_loadl_pi(u0, (__m64*)(spinImageData+o[0])); // x00 x01
-            x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[0]+step));   // x00 x01 x10 x11
-            x0 = _mm_add_ps(x0, u0);
-            _mm_storel_pi((__m64*)(spinImageData+o[0]), x0);
-            _mm_storeh_pi((__m64*)(spinImageData+o[0]+step), x0);
+                __m128 t0 = _mm_unpacklo_ps(v00, v01); // a00 a01 b00 b01
+                __m128 t1 = _mm_unpacklo_ps(v10, v11); // a10 a11 b10 b11
+                __m128 u0 = _mm_movelh_ps(t0, t1); // a00 a01 a10 a11
+                __m128 u1 = _mm_movehl_ps(t1, t0); // b00 b01 b10 b11
 
-            x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[1]));        // y00 y01
-            x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[1]+step));   // y00 y01 y10 y11
-            x0 = _mm_add_ps(x0, u1);
-            _mm_storel_pi((__m64*)(spinImageData+o[1]), x0);
-            _mm_storeh_pi((__m64*)(spinImageData+o[1]+step), x0);
+                __m128 x0 = _mm_loadl_pi(u0, (__m64*)(spinImageData+o[0])); // x00 x01
+                x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[0]+step));   // x00 x01 x10 x11
+                x0 = _mm_add_ps(x0, u0);
+                _mm_storel_pi((__m64*)(spinImageData+o[0]), x0);
+                _mm_storeh_pi((__m64*)(spinImageData+o[0]+step), x0);
 
-            t0 = _mm_unpackhi_ps(v00, v01); // c00 c01 d00 d01
-            t1 = _mm_unpackhi_ps(v10, v11); // c10 c11 d10 d11
-            u0 = _mm_movelh_ps(t0, t1); // c00 c01 c10 c11
-            u1 = _mm_movehl_ps(t1, t0); // d00 d01 d10 d11
+                x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[1]));        // y00 y01
+                x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[1]+step));   // y00 y01 y10 y11
+                x0 = _mm_add_ps(x0, u1);
+                _mm_storel_pi((__m64*)(spinImageData+o[1]), x0);
+                _mm_storeh_pi((__m64*)(spinImageData+o[1]+step), x0);
 
-            x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[2]));        // z00 z01
-            x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[2]+step));   // z00 z01 z10 z11
-            x0 = _mm_add_ps(x0, u0);
-            _mm_storel_pi((__m64*)(spinImageData+o[2]), x0);
-            _mm_storeh_pi((__m64*)(spinImageData+o[2]+step), x0);
+                t0 = _mm_unpackhi_ps(v00, v01); // c00 c01 d00 d01
+                t1 = _mm_unpackhi_ps(v10, v11); // c10 c11 d10 d11
+                u0 = _mm_movelh_ps(t0, t1); // c00 c01 c10 c11
+                u1 = _mm_movehl_ps(t1, t0); // d00 d01 d10 d11
 
-            x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[3]));        // w00 w01
-            x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[3]+step));   // w00 w01 w10 w11
-            x0 = _mm_add_ps(x0, u1);
-            _mm_storel_pi((__m64*)(spinImageData+o[3]), x0);
-            _mm_storeh_pi((__m64*)(spinImageData+o[3]+step), x0);
+                x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[2]));        // z00 z01
+                x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[2]+step));   // z00 z01 z10 z11
+                x0 = _mm_add_ps(x0, u0);
+                _mm_storel_pi((__m64*)(spinImageData+o[2]), x0);
+                _mm_storeh_pi((__m64*)(spinImageData+o[2]+step), x0);
+
+                x0 = _mm_loadl_pi(x0, (__m64*)(spinImageData+o[3]));        // w00 w01
+                x0 = _mm_loadh_pi(x0, (__m64*)(spinImageData+o[3]+step));   // w00 w01 w10 w11
+                x0 = _mm_add_ps(x0, u1);
+                _mm_storel_pi((__m64*)(spinImageData+o[3]), x0);
+                _mm_storeh_pi((__m64*)(spinImageData+o[3]+step), x0);
+            }
         }
 #endif
         for (; j < inSphere_size; ++j)
