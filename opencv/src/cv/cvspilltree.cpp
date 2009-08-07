@@ -433,18 +433,18 @@ icvDFSReleaseSpillTreeNode( CvSpillTreeNode* node )
     {
       CvSpillTreeNode* it = node->lc;
       for ( int i = 0; i < node->cc; i++ )
-	{
-	  CvSpillTreeNode* s = it;
-	  it = it->rc;
-	  cvFree( &s );
-	}
+        {
+          CvSpillTreeNode* s = it;
+          it = it->rc;
+          cvFree( &s );
+        }
     } else {
       cvReleaseMat( &node->u );
       cvReleaseMat( &node->center );
       icvDFSReleaseSpillTreeNode( node->lc );
       icvDFSReleaseSpillTreeNode( node->rc );
-      cvFree( &node );
     }
+  cvFree( &node );
 }
 
 static void
