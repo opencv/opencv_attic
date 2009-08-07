@@ -58,21 +58,29 @@ extern "C" {
 #include <errno.h>
 #endif
 
-// please remove the lines below as soon as the CMAKE environment
-// has been updated to set the correct HAVE_XYZ values
-#if defined(HAVE_GENTOO_FFMPEG)
-  #define HAVE_LIBAVCODEC_AVCODEC_H
-  #define HAVE_LIBAVFORMAT_AVFORMAT_H
-  
-  #if defined(HAVE_FFMPEG_SWSCALE)
-    #define HAVE_LIBSWSCALE_SWSCALE_H
-  #endif
-#endif
-
 #ifdef WIN32
   #include <ffmpeg_/avformat.h>
   #include <ffmpeg_/avcodec.h>
   #include <ffmpeg_/imgconvert.h>
+#else
+
+// if the header path is not specified explicitly, let's deduce it
+#if !defined HAVE_FFMPEG_AVCODEC_H && !defined HAVE_LIBAVCODEC_AVCODEC_H
+
+#if defined(HAVE_GENTOO_FFMPEG)
+  #define HAVE_LIBAVCODEC_AVCODEC_H 1
+  #define HAVE_LIBAVFORMAT_AVFORMAT_H 1
+  #if defined(HAVE_FFMPEG_SWSCALE)
+    #define HAVE_LIBSWSCALE_SWSCALE_H 1
+  #endif
+#elif defined HAVE_FFMPEG
+  #define HAVE_FFMPEG_AVCODEC_H 1
+  #define HAVE_FFMPEG_AVFORMAT_H 1
+  #if defined(HAVE_FFMPEG_SWSCALE)
+    #define HAVE_FFMPEG_SWSCALE_H 1
+  #endif
+#endif
+
 #endif
 
 #if defined(HAVE_FFMPEG_AVCODEC_H)
@@ -93,6 +101,8 @@ extern "C" {
 #endif
 #if defined(HAVE_LIBSWSCALE_SWSCALE_H)
   #include <libswscale/swscale.h>
+#endif
+
 #endif
 
 }
