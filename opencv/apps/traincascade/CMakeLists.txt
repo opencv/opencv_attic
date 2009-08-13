@@ -7,8 +7,7 @@ set(traincascade_files traincascade.cpp
     boost.cpp boost.h features.cpp features.h
     haarfeatures.cpp haarfeatures.h
     lbpfeatures.cpp lbpfeatures.h
-    imagestorage.cpp _imagestorage.h
-    inner_functions.cpp _inner_functions.h)
+    imagestorage.cpp imagestorage.h)
     
 add_executable(traincascade ${traincascade_files})
 

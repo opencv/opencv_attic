@@ -1,340 +1,177 @@
 #include "cv.h"
-#include "_imagestorage.h"
-#include "_inner_functions.h"
+#include "imagestorage.h"
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 
-//----------------------------------------  Background reading  ------------------------------------------------
-
-CvBackgroundReader::CvBackgroundReader()
+bool CvCascadeImageReader::create( const String _posFilename, const String _negFilename, Size _winSize )
 {
-    src = cvMat( 1, 1, CV_8UC1, NULL );
-    img = cvMat( 1, 1, CV_8UC1, NULL );
-    offset = cvPoint( 0, 0 );
+    return posReader.create(_posFilename) && negReader.create(_negFilename, _winSize);
+}
+
+CvCascadeImageReader::NegReader::NegReader()
+{
+    src.create( 0, 0 , CV_8UC1 );
+    img.create( 0, 0, CV_8UC1 );
+    point = offset = Point( 0, 0 );
     scale       = 1.0F;
     scaleFactor = 1.4142135623730950488016887242097F;
     stepFactor  = 0.5F;
-    point = offset;
 }
 
-CvBackgroundReader::~CvBackgroundReader()
+bool CvCascadeImageReader::NegReader::create( const String _filename, Size _winSize )
 {
-    if( src.data.ptr != NULL )
+    String dirname, str;
+    std::ifstream file(_filename.c_str());
+    if ( !file.is_open() )
+        return false;
+
+    size_t pos = _filename.rfind('\\');
+    char dlmrt = '\\';
+    if (pos == String::npos)
     {
-        cvFree( &src.data.ptr );
+        pos = _filename.rfind('/');
+        dlmrt = '/';
     }
-    if( img.data.ptr != NULL )
+    dirname = _filename.substr(0, pos) + dlmrt;
+    while( !file.eof() )
     {
-        cvFree( &img.data.ptr );
+        std::getline(file, str);
+        if (str.empty()) break;
+        if (str.at(0) == '#' ) continue; /* comment */
+        imgFilenames.push_back(dirname + str);
     }
+    file.close();
+
+    winSize = _winSize;
+    last = round = 0;
+    return true;
 }
- 
 
-CvBackgroundData::CvBackgroundData()
+bool CvCascadeImageReader::NegReader::nextImg()
 {
-    fileName = 0; 
-}
+    Point _offset = Point(0,0);
+    size_t count = imgFilenames.size();
+    for( size_t i = 0; i < count; i++ )
+    {
+        src = imread( imgFilenames[last++], 0 );
+        if( src.empty() ) 
+            continue;
+        round += last / count;
+        round = round % (winSize.width * winSize.height);
+        last %= count;
 
-CvBackgroundData::CvBackgroundData( const char* _fileName, CvSize _winSize )
-{
-    const char* dir = NULL;    
-    char full[CC_PATH_MAX];
-    char* imgFileName = NULL;
-    FILE* input = NULL;
-    size_t len = 0, fileNamesLen = 0;
+        _offset.x = min( (int)round % winSize.width, src.cols - winSize.width );
+        _offset.y = min( (int)round / winSize.width, src.rows - winSize.height );
+        if( !src.empty() && src.type() == CV_8UC1 
+                && offset.x >= 0 && offset.y >= 0 )
+            break;
+    }
 
-    assert( _fileName );
+    if( src.empty() )
+        return false; // no appropriate image
+    point = offset = _offset;
+    scale = max( ((float)winSize.width + point.x) / ((float)src.cols),
+                 ((float)winSize.height + point.y) / ((float)src.rows) );
     
-    dir = strrchr( _fileName, '\\' );
-    if( dir == NULL )
-    {
-        dir = strrchr( _fileName, '/' );
-    }
-    if( dir == NULL )
-    {
-        imgFileName = &(full[0]);
-    }
+    Size sz( (int)(scale*src.cols + 0.5F), (int)(scale*src.rows + 0.5F) );
+    resize( src, img, sz );
+    return true;
+}
+
+bool CvCascadeImageReader::NegReader::get( Mat& _img )
+{
+    CV_Assert( !_img.empty() );
+    CV_Assert( _img.type() == CV_8UC1 );
+    CV_Assert( _img.cols == winSize.width );
+    CV_Assert( _img.rows == winSize.height );
+
+    if( img.empty() )
+        if ( !nextImg() ) 
+            return false;
+
+    Mat mat( winSize.height, winSize.width, CV_8UC1,
+        (void*)(img.data + point.y * img.step + point.x * img.elemSize()), img.step );
+    mat.copyTo(_img);
+
+    if( (int)( point.x + (1.0F + stepFactor ) * winSize.width ) < img.cols )
+        point.x += (int)(stepFactor * winSize.width);
     else
     {
-        strncpy( &(full[0]), _fileName, (dir - _fileName + 1) );
-        imgFileName = &(full[(dir - _fileName + 1)]);
-    }
-
-    input = fopen( _fileName, "r" );
-    if( input != NULL )
-    {
-        count = 0;
-        fileNamesLen = 0;
-        
-        /* count */
-        while( !feof( input ) )
-        {
-            *imgFileName = '\0';
-            if( !fscanf( input, "%s", imgFileName ))
-                break;
-            len = strlen( imgFileName );
-            if( len > 0 )
-            {
-                if( (*imgFileName) == '#' ) continue; /* comment */
-                count++;
-                fileNamesLen += sizeof( char ) * (strlen( &(full[0]) ) + 1);
-            }
-        }
-        if( count > 0 )
-        {   
-            char* tmp;
-            fseek( input, 0, SEEK_SET );
-            fileNamesLen += sizeof( char* ) * count;
-            fileName = (char**) cvAlloc( fileNamesLen );
-            memset( (void*) fileName, 0, fileNamesLen );
-            last = round = 0;
-            winSize = _winSize;
-            tmp = (char*)(fileName + count);
-            count = 0;
-            while( !feof( input ) )
-            {
-                *imgFileName = '\0';
-                if( !fscanf( input, "%s", imgFileName ))
-                    break;
-                len = strlen( imgFileName );
-                if( len > 0 )
-                {
-                    if( (*imgFileName) == '#' ) continue; /* comment */
-                    fileName[count++] = tmp;
-                    strcpy( tmp, &(full[0]) );
-                    tmp += strlen( &(full[0]) ) + 1;
-                }
-            }
-        }
-        fclose( input );
-    }
-
-    bgReader = new CvBackgroundReader();
-}
-
-CvBackgroundData::~CvBackgroundData()
-{
-    delete bgReader;
-    char* fb = (char*)fileName;
-    cvFree( &fb );    
-}
-
-bool CvBackgroundData::getNext( bool reset )
-{
-    IplImage* img = NULL;
-    size_t dataSize = 0;
-    int i = 0;
-    CvPoint offset = cvPoint(0,0);
-
-    if( bgReader->src.data.ptr != NULL )
-    {
-        cvFree( &(bgReader->src.data.ptr) );
-        bgReader->src.data.ptr = NULL;
-    }
-    if( bgReader->img.data.ptr != NULL )
-    {
-        cvFree( &(bgReader->img.data.ptr) );
-        bgReader->img.data.ptr = NULL;
-    }
-    if ( reset )
-        last = 0;
-    {
-        for( i = 0; i < count; i++ )
-        {
-            img = cvLoadImage( fileName[last++], 0 );
-            if( !img )
-                continue;
-            round += last / count;
-            round = round % (winSize.width * winSize.height);
-            last %= count;
-
-            offset.x = round % winSize.width;
-            offset.y = round / winSize.width;
-
-            offset.x = MIN( offset.x, img->width - winSize.width );
-            offset.y = MIN( offset.y, img->height - winSize.height );
-            
-            if( img != NULL && img->depth == IPL_DEPTH_8U && img->nChannels == 1 &&
-                offset.x >= 0 && offset.y >= 0 )
-            {
-                break;
-            }
-            if( img != NULL )
-                cvReleaseImage( &img );
-            img = NULL;
-        }
-    }
-    if( img == NULL )
-    {
-        /* no appropriate image */
-        return 0;
-    }
-    dataSize = sizeof( uchar ) * img->width * img->height;
-    bgReader->src = cvMat( img->height, img->width, CV_8UC1, (void*) cvAlloc( dataSize ) );
-    cvCopy( img, &bgReader->src, NULL );
-    cvReleaseImage( &img );
-    img = NULL;
-
-    bgReader->offset = offset;
-    bgReader->point = bgReader->offset;
-    bgReader->scale = MAX(
-        ((float) winSize.width + bgReader->point.x) / ((float) bgReader->src.cols),
-        ((float) winSize.height + bgReader->point.y) / ((float) bgReader->src.rows) );
-    
-    bgReader->img = cvMat( (int) (bgReader->scale * bgReader->src.rows + 0.5F),
-                         (int) (bgReader->scale * bgReader->src.cols + 0.5F),
-                          CV_8UC1, (void*) cvAlloc( dataSize ) );
-    cvResize( &(bgReader->src), &(bgReader->img) );
-
-    return 1;
-}
-
-
-bool CvBackgroundData::getImage( CvMat* img, bool reset )
-{
-    CvMat mat;
-
-    assert( img != NULL );
-    assert( CV_MAT_TYPE( img->type ) == CV_8UC1 );
-    assert( img->cols == winSize.width );
-    assert( img->rows == winSize.height );
-
-    if( bgReader->img.data.ptr == NULL )
-    {
-        if ( !getNext( reset ) ) 
-            return 0;
-    }
-
-    mat = cvMat( winSize.height, winSize.width, CV_8UC1 );
-    cvSetData( &mat, (void*) (bgReader->img.data.ptr + bgReader->point.y * bgReader->img.step
-                              + bgReader->point.x * sizeof( uchar )), bgReader->img.step );
-
-    cvCopy( &mat, img, 0 );
-    if( (int) ( bgReader->point.x + (1.0F + bgReader->stepFactor ) * winSize.width )
-            < bgReader->img.cols )
-    {
-        bgReader->point.x += (int) (bgReader->stepFactor * winSize.width);
-    }
-    else
-    {
-        bgReader->point.x = bgReader->offset.x;
-        if( (int) ( bgReader->point.y + (1.0F + bgReader->stepFactor ) * winSize.height )
-                < bgReader->img.rows )
-        {
-            bgReader->point.y += (int) (bgReader->stepFactor * winSize.height);
-        }
+        point.x = offset.x;
+        if( (int)( point.y + (1.0F + stepFactor ) * winSize.height ) < img.rows )
+            point.y += (int)(stepFactor * winSize.height);
         else
         {
-            bgReader->point.y = bgReader->offset.y;
-            bgReader->scale *= bgReader->scaleFactor;
-            if( bgReader->scale <= 1.0F )
-            {
-                bgReader->img = cvMat( (int) (bgReader->scale * bgReader->src.rows),
-                                     (int) (bgReader->scale * bgReader->src.cols),
-                                      CV_8UC1, (void*) (bgReader->img.data.ptr) );
-                cvResize( &(bgReader->src), &(bgReader->img) );
-            }
+            point.y = offset.y;
+            scale *= scaleFactor;
+            if( scale <= 1.0F )
+                resize( src, img, Size( (int)(scale*src.cols), (int)(scale*src.rows) ) );
             else
             {
-                if ( !getNext( reset ) ) 
-                    return 0;
+                if ( !nextImg() ) 
+                    return false;
             }
         }
     }
-
-    return 1;
+    return true;
 }
 
-//------------------------------------------- VecFile reading ------------------------------------------------
-
-CvVecFile::CvVecFile()
+CvCascadeImageReader::PosReader::PosReader()
 {
-    input = 0;
-    vector = 0;
+    file = 0;
+    vec = 0;
 }
 
-CvVecFile::CvVecFile( const char* _vecFileName )
+bool CvCascadeImageReader::PosReader::create( const String _filename )
 {
-    CV_FUNCNAME( "CvVecFile::CvVecFile" );
-    __BEGIN__;
+    if ( file )
+        fclose( file );
+    file = fopen( _filename.c_str(), "rb" );
 
+    if( !file )
+        return false;
     short tmp = 0;  
-
-    input = NULL;
-    if( _vecFileName ) input = fopen( _vecFileName, "rb" );
-
-    if( input != NULL )
-    {
-        fread( &count, sizeof( count ), 1, input );
-        fread( &vecSize, sizeof( vecSize ), 1, input );
-        fread( &tmp, sizeof( tmp ), 1, input );
-        fread( &tmp, sizeof( tmp ), 1, input );
-        base = sizeof( count ) + sizeof( vecSize ) + sizeof( tmp ) + sizeof( tmp );
-        if( !feof( input ) )
-        {
-            last = 0;
-            CV_CALL( vector = (short*) cvAlloc( sizeof( *vector ) * vecSize ) );
-        }
-    }
-    else
-        CV_ERROR( CV_StsNullPtr, "vecfile can not be opened" );
-
-    __END__;
+    fread( &count, sizeof( count ), 1, file );
+    fread( &vecSize, sizeof( vecSize ), 1, file );
+    fread( &tmp, sizeof( tmp ), 1, file );
+    fread( &tmp, sizeof( tmp ), 1, file );
+    base = sizeof( count ) + sizeof( vecSize ) + 2*sizeof( tmp );
+    if( feof( file ) )
+        return false;
+    last = 0;
+    vec = (short*) cvAlloc( sizeof( *vec ) * vecSize );
+    CV_Assert( vec );
+    return true;
 }
 
-CvVecFile::~CvVecFile()
+bool CvCascadeImageReader::PosReader::get( Mat &_img )
 {
-    fclose( input );
-    cvFree( &vector );
-}
-
-//-------------------------------------------  CvImageReader --------------------------------------------------
-
-CvImageReader::CvImageReader( const char* _vecFileName, const char* _bgfileName, CvSize _winSize )
-{
-    bgData = new CvBackgroundData( _bgfileName, _winSize );
-    vecFile = new CvVecFile( _vecFileName );
-}
-
-CvImageReader::~CvImageReader()
-{
-    delete bgData;
-    delete vecFile;
-}
-
-bool CvImageReader::getNegImage(CvMat* img, bool reset )
-{
-    return bgData->getImage( img, reset );
-}
-
-bool CvImageReader::getPosImage(CvMat* img, bool reset )
-{
+    CV_Assert( _img.rows * _img.cols == vecSize );
     uchar tmp = 0;
-    int r = 0;
-    int c = 0;
+    fread( &tmp, sizeof( tmp ), 1, file );
+    fread( vec, sizeof( vec[0] ), vecSize, file );
 
-    assert( img->rows * img->cols == vecFile->vecSize );
-    
-    if ( reset )
-    {
-        vecFile->last = 0;
-        fseek( vecFile->input, vecFile->base, SEEK_SET );
-    }
+    if( feof( file ) || last++ >= count )
+        return false;
 
-    fread( &tmp, sizeof( tmp ), 1, vecFile->input );
-    fread( vecFile->vector, sizeof( short ), vecFile->vecSize, vecFile->input );
+    for( int r = 0; r < _img.rows; r++ )
+    {
+        for( int c = 0; c < _img.cols; c++ )
+            _img.ptr(r)[c] = (uchar)vec[r * _img.cols + c];
+    }
+    return true;
+}
 
-    if( feof( vecFile->input ) || vecFile->last++ >= vecFile->count )
-    {
-        return 0;
-    }
-    
-    for( r = 0; r < img->rows; r++ )
-    {
-        for( c = 0; c < img->cols; c++ )
-        {
-            CV_MAT_ELEM( *img, uchar, r, c ) = 
-                (uchar) vecFile->vector[r * img->cols + c];
-        }
-    }
-    return 1;
+void CvCascadeImageReader::PosReader::restart()
+{
+    CV_Assert( file );
+    last = 0;
+    fseek( file, base, SEEK_SET );
+}
+
+CvCascadeImageReader::PosReader::~PosReader()
+{
+    fclose( file );
+    cvFree( &vec );
 }

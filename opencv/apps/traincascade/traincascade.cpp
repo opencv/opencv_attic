@@ -4,10 +4,8 @@
 int main( int argc, char* argv[] )
 {
     CvCascadeClassifier classifier;
-    char* cascadeDirName = NULL;
-    char* vecName = NULL;
-    char* bgName  = NULL;
-    int numPos    = 1000;
+    String cascadeDirName, vecName, bgName;
+    int numPos    = 2000;
     int numNeg    = 1000;
     int numStages = 20;
     int numPrecalcVal = 10000,
@@ -15,35 +13,27 @@ int main( int argc, char* argv[] )
     bool baseFormatSave = false;
     
     CvCascadeParams cascadeParams;
-
     CvCascadeBoostParams stageParams;
-    
-    CvFeatureParams* featureParams[] = { new CvHaarFeatureParams(),
-                                         new CvLBPFeatureParams() }; 
+    Ptr<CvFeatureParams> featureParams[] = { Ptr<CvFeatureParams>(new CvHaarFeatureParams),
+                                             Ptr<CvFeatureParams>(new CvLBPFeatureParams)
+                                           }; 
     int fc = sizeof(featureParams)/sizeof(featureParams[0]);
-    
     if( argc == 1 )
     {
-        printf( "Usage: %s\n"
-                "  -data <cascade_dir_name>\n"
-                "  -vec <vec_file_name>\n"
-                "  -bg <background_file_name>\n"
-                "  [-numPos <number_of_positive_samples = %d>]\n"
-                "  [-numNeg <number_of_negative_samples = %d>]\n"
-                "  [-numStages <number_of_stages = %d>]\n"
-                "  [-numPrecalcVal <number_of_precalculated_vals = %d>]\n"
-                "  [-numPrecalcIdx <number_of_precalculated_idxs = %d>]\n"
-                "  [-baseFormatSave]\n",
-                argv[0], numPos, numNeg, numStages, numPrecalcVal, numPrecalcIdx );
-
+        cout << "Usage: " << argv[0] << endl;
+        cout << "  -data <cascade_dir_name>" << endl;
+        cout << "  -vec <vec_file_name>" << endl;
+        cout << "  -bg <background_file_name>" << endl;
+        cout << "  [-numPos <number_of_positive_samples = " << numPos << ">]" << endl;
+        cout << "  [-numNeg <number_of_negative_samples = " << numNeg << ">]" << endl;
+        cout << "  [-numStages <number_of_stages = " << numStages << ">]" << endl;
+        cout << "  [-numPrecalcVal <number_of_precalculated_vals = " << numPrecalcVal << ">]" << endl;
+        cout << "  [-numPrecalcIdx <number_of_precalculated_idxs = " << numPrecalcIdx << ">]" << endl;
+        cout << "  [-baseFormatSave]" << endl;
         cascadeParams.printDefaults();
-
-        printf("--boostStageParams--\n");
-        stageParams.printDefault();
-
+        stageParams.printDefaults();
         for( int fi = 0; fi < fc; fi++ )
             featureParams[fi]->printDefaults();
-
         return 0;
     }
 
@@ -112,9 +102,5 @@ int main( int argc, char* argv[] )
                       *featureParams[cascadeParams.featureType],
                       stageParams,
                       baseFormatSave );
-
-    for( int fi = 0; fi < fc; fi++ )
-        delete featureParams[fi];
-
     return 0;
 }

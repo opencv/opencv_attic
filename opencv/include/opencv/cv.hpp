@@ -636,8 +636,8 @@ public:
     virtual bool setImage(const Mat&, Size origWinSize);
     virtual int setWindow(Point);
     
-    virtual double calcOrd(int featureIdx, int pOffset) const;
-    virtual int calcCat(int featureIdx, int pOffset) const;
+    /*virtual double calcOrd(int featureIdx, int pOffset) const;
+    virtual int calcCat(int featureIdx, int pOffset) const;*/
     
     enum { HAAR = 0, LBP = 1 };
     static Ptr<FeatureEvaluator> create(int type);
