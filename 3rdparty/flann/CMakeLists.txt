@@ -8,7 +8,7 @@ project(flann)
 
 # List of C++ files:
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 include_directories(
    ${CMAKE_CURRENT_SOURCE_DIR}
