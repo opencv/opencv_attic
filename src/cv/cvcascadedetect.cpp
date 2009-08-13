@@ -98,10 +98,10 @@ void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
     
 //-----------------------------------------------------------------------------------------------------------------
 #define CC_CASCADE_PARAMS "cascadeParams"
-#define CC_STAGE_TYPE "stageType"
-#define CC_FEATURE_TYPE "featureType"
-#define CC_HEIGHT "height"
-#define CC_WIDTH  "width"
+#define CC_STAGE_TYPE     "stageType"
+#define CC_FEATURE_TYPE   "featureType"
+#define CC_HEIGHT         "height"
+#define CC_WIDTH          "width"
 
 #define CC_STAGE_NUM    "stageNum"
 #define CC_STAGES       "stages"
@@ -115,13 +115,13 @@ void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
 #define CC_INTERNAL_NODES   "internalNodes"
 #define CC_LEAF_VALUES      "leafValues"
 
-#define CC_FEATURES "features"
+#define CC_FEATURES       "features"
 #define CC_FEATURE_PARAMS "featureParams"
 #define CC_MAX_CAT_COUNT  "maxCatCount"
 
-#define CC_HAAR         "HAAR"
-#define CC_RECTS        "rects"
-#define CC_TILTED       "tilted"
+#define CC_HAAR   "HAAR"
+#define CC_RECTS  "rects"
+#define CC_TILTED "tilted"
 
 #define CC_LBP  "LBP"
 #define CC_RECT "rect"
@@ -160,10 +160,6 @@ int FeatureEvaluator::getFeatureType() const {return -1;}
 bool FeatureEvaluator::setImage(const Mat&, Size) { return true; }
 int FeatureEvaluator::setWindow(Point) { return true; }
 
-double FeatureEvaluator::calcOrd(int, int) const { return 0.; }
-int FeatureEvaluator::calcCat(int, int) const { return 0; }
-
-    
 class HaarEvaluator : public FeatureEvaluator
 {
 public:
@@ -199,9 +195,6 @@ public:
     double operator()(int featureIdx, int pOffset) const
     { return features[featureIdx].calc(pOffset) * varianceNormFactor; }
     
-    virtual double calcOrd(int featureIdx, int pOffset) const
-    { return (*this)(featureIdx, pOffset); }
-
 private:
     Size origWinSize;
     Vector<Feature> features;
@@ -385,10 +378,8 @@ public:
         void updatePtrs( const Mat& sum );
         bool read(const FileNode& node );
         
-        enum { POINT_NUM = 16 };
-        
         Rect rect; // weight and height for block
-        const int* p[POINT_NUM]; // fast
+        const int* p[16]; // fast
     };
     
     LBPEvaluator();
@@ -417,7 +408,7 @@ private:
 inline LBPEvaluator::Feature :: Feature()
 {
     rect = Rect();
-    for( int i = 0; i < POINT_NUM; i++ )
+    for( int i = 0; i < 16; i++ )
         p[i] = 0;
 }
 

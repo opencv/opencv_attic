@@ -1,14 +1,11 @@
-#ifndef FEATURES_H
-#define FEATURES_H
-
-#include "_imagestorage.h"
+#pragma once
+#include "imagestorage.h"
 #include "cxcore.h"
 #include "cv.h"
 #include "ml.h"
 #include <stdio.h>
 
-typedef uint64 ccounter_t;
-#define CCOUNTER_DIV(cc0, cc1) ( ((cc1) == 0) ? 0 : ( ((double)(cc0))/(double)(int64)(cc1) ) )
+#define FEATURES "features"
 
 #define CV_SUM_OFFSETS( p0, p1, p2, p3, rect, step )                      \
     /* (x, y) */                                                          \
@@ -31,93 +28,68 @@ typedef uint64 ccounter_t;
     (p3) = (rect).x + (rect).width - (rect).height                        \
            + (step) * ((rect).y + (rect).width + (rect).height);
 
-//-------------------------------------- Params ---------------------------------------------
+float calcNormFactor( const Mat& sum, const Mat& sqSum );
 
-struct CvParams
+template<class Feature>
+void _writeFeatures( const Vector<Feature> features, FileStorage &fs, const Mat& featureMap )
 {
-    CvParams() : name( "params" ) {}
-    virtual ~CvParams() {}
-    // from|to file
-    virtual void write( CvFileStorage* fs ) const = 0;
-    virtual bool read( CvFileStorage* fs, CvFileNode* node ) = 0;
+    fs << FEATURES << "[";
+    for ( int fi = 0; fi < featureMap.cols; fi++ )
+        if ( featureMap.at<int>(0, fi) >= 0 )
+        {
+            fs << "{";
+            features[fi].write( fs );
+            fs << "}";
+        }
+    fs << "]";
+}
 
+class CvParams
+{
+public:
+    CvParams();
+    // from|to file
+    virtual void write( FileStorage &fs ) const = 0;
+    virtual bool read( const FileNode &node ) = 0;
     // from|to screen
-    virtual void printDefaults()
-    { printf( "--%s--\n", name ); };
-    virtual void printAttrs(){};
-    virtual bool scanAttr( const char* prmName, const char* val ){ return false; }
-    const char* name;
+    virtual void printDefaults() const;
+    virtual void printAttrs() const;
+    virtual bool scanAttr( const String prmName, const String val );
+    String name;
 };
 
-//----------------------------------  FeatureParams  ----------------------------------------
-struct CvFeatureParams : CvParams
+class CvFeatureParams : public CvParams
 {
+public:
+    enum { HAAR = 0, LBP = 1 };
     CvFeatureParams();
-    CvFeatureParams( CvSize _winSize );
-    virtual ~CvFeatureParams()
-    {}
-
-    virtual void set( const CvFeatureParams* fp );
-
-    virtual void write( CvFileStorage* fs ) const;
-    virtual bool read( CvFileStorage* fs, CvFileNode* node );
-
+    virtual void init( const CvFeatureParams& fp );
+    virtual void write( FileStorage &fs ) const;
+    virtual bool read( const FileNode &node );
+    static Ptr<CvFeatureParams> create( int featureType );
     int maxCatCount; // 0 in case of numerical features
 };
 
-//----------------------------------  Features  ----------------------------------------------
-
-struct CvFeature
-{
-    CvFeature() {}
-    virtual ~CvFeature() {}
-    virtual void write( CvFileStorage* fs ) const = 0;
-};
-
-//----------------------------------  CascadeData ----------------------------------------
-
-class CvCascadeClassifier;
-
-class CvCascadeData
+class CvFeatureEvaluator
 {
 public:
-    CvCascadeData();
-    virtual ~CvCascadeData();
+    virtual void init(const CvFeatureParams *_featureParams,
+                      int _maxSampleCount, Size _winSize );
+    virtual void setImage(const Mat& img, uchar clsLabel, int idx);
+    virtual void writeFeatures( FileStorage &fs, const Mat& featureMap ) const = 0;
+    virtual float operator()(int featureIdx, int sampleIdx) const = 0;
+    static Ptr<CvFeatureEvaluator> create(int type);
 
-    virtual void setData( CvCascadeClassifier* _cascade,
-         const char* _vecFileName, const char* _bgFileName, 
-         int _numPos, int _numNeg, const CvFeatureParams* _featureParams );
-    virtual void clear();
-    virtual void generateFeatures() = 0;
-    virtual float calcFeature( int featureIdx, int sampleIdx ) = 0;
-
-    static void calcNormfactor( const CvMat* _sum, const CvMat* _sqSum, float& _normFactor );
-
-    virtual bool updateForNextStage( double& acceptanceRatio );    
-
-    int getMaxCatCount() const { return featureParams->maxCatCount; }
-    CvSize getWinSize() const { return winSize; }
     int getNumFeatures() const { return numFeatures; }
-    int getNumSamples() const { return numImg; }
-    float getCls( int sampleIdx ) const;
-    const CvMat* getCls() const { return cls; }    
-    
-    virtual void writeFeature( CvFileStorage* fs, int fi ); // for old file format
-    virtual void writeFeatures( CvFileStorage* fs, const CvMat* featureMap );
+    int getMaxCatCount() const { return featureParams->maxCatCount; }
+    const Mat& getCls() const { return cls; }
+    float getCls(int si) const { return cls.at<float>(si, 0); }
+protected:
+    virtual void generateFeatures() = 0;
 
-protected:    
-    virtual int fillPassedSamles( int first, int count, bool isPositive, int64& consumed ) = 0;
-    int maxCatCount;
+    int npos, nneg;
     int numFeatures;
-    int numPos, numNeg, numImg;
-    CvSize winSize;
-
-    CvMat* cls; /* classes. 1.0 - object, 0.0 - background */
-
-    CvCascadeClassifier* cascade;
-    const CvFeatureParams* featureParams;
-    CvImageReader* imgreader;
-	CvFeature** features;
+    Size winSize;
+    CvFeatureParams *featureParams;
+    Mat cls;
 };
-
-#endif
