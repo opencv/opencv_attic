@@ -795,8 +795,11 @@ bool CascadeClassifier::read(const FileNode& root)
                 node.right = (int)*it2; ++it2;
                 node.featureIdx = (int)*it2; ++it2;
                 if( subsetSize > 0 )
+                {
                     for( int j = 0; j < subsetSize; j++, ++it2 )
                         subsets.push_back((int)*it2);
+                    node.threshold = 0.f;
+                }
                 else
                 {
                     node.threshold = (float)*it2; ++it2;
