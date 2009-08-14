@@ -111,7 +111,7 @@ private:
     Ptr<CvCascadeBoostParams> stageParams;
 
     Ptr<CvFeatureEvaluator> featureEvaluator;    
-    Vector<Ptr<CvCascadeBoost>> stageClassifiers;
+    Vector< Ptr<CvCascadeBoost> > stageClassifiers;
     CvCascadeImageReader imgReader;
     int numStages, curNumSamples;
     int numPos, numNeg;
