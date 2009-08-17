@@ -371,12 +371,35 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 }
 
 
-void cv::undistortPoints( const Vector<Point2f>& src, Vector<Point2f>& dst,
+void cv::undistortPoints( const Mat& src, Mat& dst,
                           const Mat& cameraMatrix, const Mat& distCoeffs,
-                          const Mat& R, const Mat& P)
+                          const Mat& R, const Mat& P )
 {
-    dst.resize(src.size());
+    CV_Assert( src.isContinuous() && src.depth() == CV_32F &&
+              ((src.rows == 1 && src.channels() == 2) || src.cols*src.channels() == 2));
+    
+    dst.create(src.size(), src.type());
     CvMat _src = src, _dst = dst, _cameraMatrix = cameraMatrix;
+    CvMat _R, _P, _distCoeffs, *pR=0, *pP=0, *pD=0;
+    if( R.data )
+        pR = &(_R = R);
+    if( P.data )
+        pP = &(_P = P);
+    if( distCoeffs.data )
+        pD = &(_distCoeffs = distCoeffs);
+    cvUndistortPoints(&_src, &_dst, &_cameraMatrix, pD, pR, pP);
+}
+
+void cv::undistortPoints( const Mat& src, std::vector<Point2f>& dst,
+                          const Mat& cameraMatrix, const Mat& distCoeffs,
+                          const Mat& R, const Mat& P )
+{
+    size_t sz = src.cols*src.rows*src.channels()/2;
+    CV_Assert( src.isContinuous() && src.depth() == CV_32F &&
+               ((src.rows == 1 && src.channels() == 2) || src.cols*src.channels() == 2));
+    
+    dst.resize(sz);
+    CvMat _src = src, _dst = Mat(dst), _cameraMatrix = cameraMatrix;
     CvMat _R, _P, _distCoeffs, *pR=0, *pP=0, *pD=0;
     if( R.data )
         pR = &(_R = R);

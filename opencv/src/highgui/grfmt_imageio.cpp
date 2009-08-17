@@ -254,7 +254,7 @@ CFStringRef  FilenameToUTI( const char* filename )
 }
 
 
-bool  ImageIOEncoder::write( const Mat& img, const Vector<int>& params )
+bool  ImageIOEncoder::write( const Mat& img, const vector<int>& params )
 {
     int width = img.cols, height = img.rows;
     int _channels = img.channels();

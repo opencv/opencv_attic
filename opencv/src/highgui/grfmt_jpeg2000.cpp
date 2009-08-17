@@ -418,7 +418,7 @@ bool  Jpeg2KEncoder::isFormatSupported( int depth )
 }
 
 
-bool  Jpeg2KEncoder::write( const Mat& _img, const Vector<int>& )
+bool  Jpeg2KEncoder::write( const Mat& _img, const vector<int>& )
 {
     int width = _img.cols, height = _img.rows;
     int depth = _img.depth(), channels = _img.channels();

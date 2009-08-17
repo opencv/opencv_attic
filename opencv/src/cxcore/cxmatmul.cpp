@@ -2139,7 +2139,7 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
 *                                 Covariation Matrix                                     *
 \****************************************************************************************/
 
-void calcCovariation( const Vector<Mat>& data, Mat& covar, Mat& _mean, int flags, int ctype )
+void calcCovariation( const vector<Mat>& data, Mat& covar, Mat& _mean, int flags, int ctype )
 {
     int nsamples = (int)data.size();
     CV_Assert( nsamples > 0 );
@@ -2890,7 +2890,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     }
     else
     {
-        cv::Vector<cv::Mat> data(count);
+        std::vector<cv::Mat> data(count);
         for( int i = 0; i < count; i++ )
             data[i] = cv::cvarrToMat(vecarr[i]);
         cv::calcCovariation( data, cov, mean, flags, cov.type() );

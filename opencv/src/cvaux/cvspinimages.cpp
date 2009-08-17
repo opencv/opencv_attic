@@ -86,8 +86,8 @@ namespace
 
 template<class FwIt, class T> void iota(FwIt first, FwIt last, T value) { while(first != last) *first++ = value++; }
 
-void computeNormals( const OctTree& octtree, const Vector<Point3f>& centers, Vector<Point3f>& normals, 
-                    Vector<uchar>& mask, float normalRadius, int minNeighbors = 20)
+void computeNormals( const OctTree& octtree, const vector<Point3f>& centers, vector<Point3f>& normals, 
+                    vector<uchar>& mask, float normalRadius, int minNeighbors = 20)
 {    
     size_t normals_size = centers.size();
     normals.resize(normals_size);
@@ -101,7 +101,7 @@ void computeNormals( const OctTree& octtree, const Vector<Point3f>& centers, Vec
                 mask[m] = 1;
     }
     
-    Vector<Point3f> buffer;
+    vector<Point3f> buffer;
     buffer.reserve(128);
     SVD svd;
 
@@ -219,8 +219,8 @@ inline __m128i _mm_mullo_epi32_emul(const __m128i& a, __m128i& b)
 
 #endif
 
-void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, const Vector<Point3f>& normals, 
-                       Vector<uchar>& mask, Mat& spinImages, int imageWidth, float binSize)
+void computeSpinImages( const OctTree& octtree, const vector<Point3f>& points, const vector<Point3f>& normals, 
+                       vector<uchar>& mask, Mat& spinImages, int imageWidth, float binSize)
 {   
     float pixelsPerMeter = 1.f / binSize;
     float support = imageWidth * binSize;    
@@ -239,7 +239,7 @@ void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, c
     int nthreads = getNumThreads();
     int i;
 
-    Vector< Vector<Point3f> > pointsInSpherePool(nthreads);
+    vector< vector<Point3f> > pointsInSpherePool(nthreads);
     for(i = 0; i < nthreads; i++)
         pointsInSpherePool[i].reserve(2048);
 
@@ -255,7 +255,7 @@ void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, c
             continue;
 
         int t = cvGetThreadNum();
-        Vector<Point3f>& pointsInSphere = pointsInSpherePool[t];
+        vector<Point3f>& pointsInSphere = pointsInSpherePool[t];
                 
         const Point3f& center = points[i];
         octtree.getPointsWithinSphere(center, searchRad, pointsInSphere);
@@ -429,10 +429,11 @@ void computeSpinImages( const OctTree& octtree, const Vector<Point3f>& points, c
 const Point3f cv::Mesh3D::allzero(0.f, 0.f, 0.f);
 
 cv::Mesh3D::Mesh3D() { resolution = -1; }
-cv::Mesh3D::Mesh3D(const Vector<Point3f>& _vtx)
+cv::Mesh3D::Mesh3D(const vector<Point3f>& _vtx)
 {
     resolution = -1;
-    vtx = _vtx.clone();
+    vtx.resize(_vtx.size());
+    std::copy(_vtx.begin(), _vtx.end(), vtx.begin());
 }
 cv::Mesh3D::~Mesh3D() {}
 
@@ -447,20 +448,20 @@ float cv::Mesh3D::estimateResolution(float tryRatio)
     size_t tryNum = static_cast<size_t>(tryRatio * vtx.size());
     tryNum = min(max(tryNum, minReasonable), vtx.size());
 
-    CvMat desc = cvMat(vtx.size(), 3, CV_32F, vtx.begin());
+    CvMat desc = cvMat(vtx.size(), 3, CV_32F, &vtx[0]);
     CvFeatureTree* tr = cvCreateKDTree(&desc);
 
-    Vector<double> dist(tryNum * neighbors);
-    Vector<int>    inds(tryNum * neighbors);
-    Vector<Point3f> query;  
+    vector<double> dist(tryNum * neighbors);
+    vector<int>    inds(tryNum * neighbors);
+    vector<Point3f> query;  
 
     RNG& rng = theRNG();          
     for(size_t i = 0; i < tryNum; ++i)
         query.push_back(vtx[rng.next() % vtx.size()]);
         
-    CvMat cvinds  = cvMat( tryNum, neighbors, CV_32S,  inds.begin() );
-    CvMat cvdist  = cvMat( tryNum, neighbors, CV_64F,  dist.begin() );    
-    CvMat cvquery = cvMat( tryNum,         3, CV_32F, query.begin() );
+    CvMat cvinds  = cvMat( tryNum, neighbors, CV_32S,  &inds[0] );
+    CvMat cvdist  = cvMat( tryNum, neighbors, CV_64F,  &dist[0] );    
+    CvMat cvquery = cvMat( tryNum,         3, CV_32F, &query[0] );
     cvFindFeatures(tr, &cvquery, &cvinds, &cvdist, neighbors, 50);    
     cvReleaseFeatureTree(tr);
 
@@ -479,20 +480,20 @@ float cv::Mesh3D::estimateResolution(float tryRatio)
 void cv::Mesh3D::computeNormals(float normalRadius, int minNeighbors)
 {
     buildOctTree();
-    Vector<uchar> mask;
+    vector<uchar> mask;
     ::computeNormals(octree, vtx, normals, mask, normalRadius, minNeighbors);
 }
 
-void cv::Mesh3D::computeNormals(const Vector<int>& subset, float normalRadius, int minNeighbors)
+void cv::Mesh3D::computeNormals(const vector<int>& subset, float normalRadius, int minNeighbors)
 {
     buildOctTree();
-    Vector<uchar> mask(vtx.size(), 0);
+    vector<uchar> mask(vtx.size(), 0);
     for(size_t i = 0; i < subset.size(); ++i) 
         mask[subset[i]] = 1;
     ::computeNormals(octree, vtx, normals, mask, normalRadius, minNeighbors);
 }
 
-void cv::Mesh3D::writeAsVrml(const String& file, const Vector<Scalar>& colors) const
+void cv::Mesh3D::writeAsVrml(const String& file, const vector<Scalar>& colors) const
 {
     ofstream ofs(file.c_str());
 
@@ -710,7 +711,7 @@ Mat cv::SpinImageModel::packRandomScaledSpins(bool separateScale, size_t xCount,
 
     RNG& rng = theRNG();    
 
-    Vector<Mat> spins;
+    vector<Mat> spins;
     for(size_t i = 0; i < num; ++i)
         spins.push_back(getSpinImage( rng.next() % spinNum ).reshape(1, imageWidth));    
     
@@ -758,7 +759,7 @@ Mat cv::SpinImageModel::packRandomScaledSpins(bool separateScale, size_t xCount,
                 int endx   = (x + 1) * sz + x;
 
                 Mat color;
-                merge(Vector<Mat>(3, spins[pos++]), color);
+                cvtColor(spins[pos++], color, CV_GRAY2BGR);
                 Mat roi = result(Range(starty, endy), Range(startx, endx));
                 color.copyTo(roi);
             } 
@@ -785,7 +786,7 @@ void cv::SpinImageModel::selectRandomSubset(float ratio)
     {
         RNG& rnd = theRNG();
 
-        Vector<size_t> left(vtxSize);
+        vector<size_t> left(vtxSize);
         iota(left.begin(), left.end(), (size_t)0);
 
         subset.resize(setSize);
@@ -801,7 +802,7 @@ void cv::SpinImageModel::selectRandomSubset(float ratio)
     }
 }
 
-void cv::SpinImageModel::repackSpinImages(const Vector<uchar>& mask, Mat& spinImages, bool reAlloc) const
+void cv::SpinImageModel::repackSpinImages(const vector<uchar>& mask, Mat& spinImages, bool reAlloc) const
 {    
     if (reAlloc)
     {
@@ -859,7 +860,7 @@ void cv::SpinImageModel::compute()
     else
         mesh.computeNormals(subset, normalRadius, minNeighbors);
 
-    Vector<uchar> mask(mesh.vtx.size(), 0);       
+    vector<uchar> mask(mesh.vtx.size(), 0);       
     for(size_t i = 0; i < subset.size(); ++i)
         if (mesh.normals[subset[i]] == Mesh3D::allzero)                   
             subset[i] = -1;                    
@@ -867,8 +868,8 @@ void cv::SpinImageModel::compute()
             mask[subset[i]] = 1;
     subset.resize( remove(subset.begin(), subset.end(), -1) - subset.begin() );
         
-    Vector<Point3f> vtx;
-    Vector<Point3f> normals;    
+    vector<Point3f> vtx;
+    vector<Point3f> normals;    
     for(size_t i = 0; i < mask.size(); ++i)
         if(mask[i])
         {
@@ -876,7 +877,7 @@ void cv::SpinImageModel::compute()
             normals.push_back(mesh.normals[i]);
         }
 
-    Vector<uchar> spinMask(vtx.size(), 1);
+    vector<uchar> spinMask(vtx.size(), 1);
     computeSpinImages( mesh.octree, vtx, normals, spinMask, spinImages, imageWidth, binSize);
     repackSpinImages(spinMask, spinImages);
 
@@ -884,19 +885,19 @@ void cv::SpinImageModel::compute()
     for(size_t i = 0; i < mask.size(); ++i)
         if(mask[i])
             if (spinMask[mask_pos++] == 0)
-                subset.resize( remove(subset.begin(), subset.end(), i) - subset.begin() );   
+                subset.resize( remove(subset.begin(), subset.end(), (int)i) - subset.begin() );   
 }
 
-void cv::SpinImageModel::matchSpinToModel(const Mat& spin, Vector<int>& indeces, Vector<float>& corrCoeffs, bool useExtremeOutliers) const
+void cv::SpinImageModel::matchSpinToModel(const Mat& spin, vector<int>& indeces, vector<float>& corrCoeffs, bool useExtremeOutliers) const
 {
     const SpinImageModel& model = *this;
 
     indeces.clear();
     corrCoeffs.clear();
 
-    Vector<float> corrs(model.spinImages.rows);
-    Vector<bool>  masks(model.spinImages.rows);
-    Vector<float> cleanCorrs;
+    vector<float> corrs(model.spinImages.rows);
+    vector<uchar>  masks(model.spinImages.rows);
+    vector<float> cleanCorrs;
     cleanCorrs.reserve(model.spinImages.rows);
     
     for(int i = 0; i < model.spinImages.rows; ++i)
@@ -974,7 +975,7 @@ private:
 
 }
 
-Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
+vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
 {   
     if (mesh.vtx.empty())
         throw Mesh3D::EmptyMeshException();
@@ -992,7 +993,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     /* estimate lambda */
     if (model.lambda == 0.f)
     {
-        Vector<int> nonzero(model.spinImages.rows);        
+        vector<int> nonzero(model.spinImages.rows);        
         for(int i = 0; i < model.spinImages.rows; ++i)
             nonzero[i] = countNonZero(model.spinImages.row(i));
         sort(nonzero, less<int>());
@@ -1004,8 +1005,8 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     vector<Match> allMatches;
     for(int i = 0; i < scene.spinImages.rows; ++i)
     {
-        Vector<int> indeces;
-        Vector<float> coeffs;
+        vector<int> indeces;
+        vector<float> coeffs;
         matchSpinToModel(scene.spinImages.row(i), indeces, coeffs);        
         for(size_t t = 0; t < indeces.size(); ++t)
             allMatches.push_back(Match(i, indeces[t], coeffs[t])); 
@@ -1025,12 +1026,12 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
         //        const Scalar red(CV_RGB(1.f, 0, 0));
 
         //        const Mesh3D& sc = scene.getMesh();
-        //        Vector<Scalar> colors(sc.vtx.size(), Scalar(1.f, 1.f, 1.f));
+        //        vector<Scalar> colors(sc.vtx.size(), Scalar(1.f, 1.f, 1.f));
         //        colors[i] = red;
         //        sc.writeAsVrml("d:/scene.vrml", colors);
 
         //        const Mesh3D& mo = model.getMesh();
-        //        colors = Vector<Scalar>(mo.vtx.size(), Scalar(1.f, 1.f, 1.f));
+        //        colors = vector<Scalar>(mo.vtx.size(), Scalar(1.f, 1.f, 1.f));
 
         //        for(size_t x = 0; x < indeces.size(); ++x)
         //            colors[model.subset[indeces[x]]] = red;
@@ -1045,7 +1046,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     if (out) *out << "Matches number = " << allMatches.size() << endl;
 
     if(allMatches.empty())
-        return Vector< Vector< Vec2i > >();
+        return vector< vector< Vec2i > >();
        
     /* filtering by similarity measure */
     const float fraction = 0.5f;
@@ -1057,7 +1058,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
 
     size_t matchesSize = allMatches.size();
     if(matchesSize == 0)
-        return Vector< Vector< Vec2i > >();
+        return vector< vector< Vec2i > >();
     
     /* filtering by geometric consistency */    
     const float infinity = numeric_limits<float>::infinity();
@@ -1101,7 +1102,7 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
 
     matchesSize = allMatches.size();
     if(matchesSize == 0)
-        return Vector< Vector< Vec2i > >();
+        return vector< vector< Vec2i > >();
 
     if (out) *out << "grouping ..." << endl;
 
@@ -1139,9 +1140,9 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     for(size_t i = 0; i < matchesSize; ++i)
         allMatchesInds.insert(i);
     
-    Vector<float> buf(matchesSize);
-    float *buf_beg = buf.begin();
-    Vector<group_t> groups;
+    vector<float> buf(matchesSize);
+    float *buf_beg = &buf[0];
+    vector<group_t> groups;
     
     for(size_t g = 0; g < matchesSize; ++g)
     {        
@@ -1179,12 +1180,12 @@ Vector< Vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     }
 
     /* converting the data to final result */
-    Vector< Vector< Vec2i > > result; 
+    vector< vector< Vec2i > > result; 
     for(size_t i = 0; i < groups.size(); ++i)
     {
         const group_t& group = groups[i];
 
-        Vector< Vec2i > outgrp;
+        vector< Vec2i > outgrp;
         for(citer pos = group.begin(); pos != group.end(); ++pos)
         {
             const Match& m = allMatches[*pos];            

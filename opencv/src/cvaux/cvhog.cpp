@@ -80,7 +80,7 @@ bool HOGDescriptor::checkDetectorSize() const
         detectorSize == descriptorSize + 1;
 }
 
-void HOGDescriptor::setSVMDetector(const Vector<float>& _svmDetector)
+void HOGDescriptor::setSVMDetector(const vector<float>& _svmDetector)
 {
     svmDetector = _svmDetector;
     CV_Assert( checkDetectorSize() );
@@ -267,25 +267,6 @@ void HOGDescriptor::computeGradient(const Mat& img, Mat& grad, Mat& qangle,
     }
 }
 
-void HOGDescriptor::normalizeBlockHistogram(Vector<float>& _hist) const
-{
-    float* hist = &_hist[0];
-    size_t i, sz = _hist.size();
-
-    float sum = 0;
-    for( i = 0; i < sz; i++ )
-        sum += hist[i]*hist[i];
-    float scale = 1.f/(std::sqrt(sum)+sz*0.1f), thresh = (float)L2HysThreshold;
-    for( i = 0, sum = 0; i < sz; i++ )
-    {
-        hist[i] = std::min(hist[i]*scale, thresh);
-        sum += hist[i]*hist[i];
-    }
-    scale = 1.f/(std::sqrt(sum)+1e-3f);
-    for( i = 0; i < sz; i++ )
-        hist[i] *= scale;
-}
-
 
 struct HOGCache
 {
@@ -317,12 +298,13 @@ struct HOGCache
     Rect getWindow(Size imageSize, Size winStride, int idx) const;
 
     const float* getBlock(Point pt, float* buf);
+    virtual void normalizeBlockHistogram(float* histogram) const;
     
-    Vector<PixData> pixData;
-    Vector<BlockData> blockData;
+    vector<PixData> pixData;
+    vector<BlockData> blockData;
 
     bool useCache;
-    Vector<int> ymaxCached;
+    vector<int> ymaxCached;
     Size winSize, cacheStride;
     Size nblocks, ncells;
     int blockHistogramSize;
@@ -637,14 +619,32 @@ const float* HOGCache::getBlock(Point pt, float* buf)
         hist[h0] = t0; hist[h1] = t1;
     }
 
-    // normalize the block histogram
-    Vector<float> d(blockHist, (size_t)blockHistogramSize);
-    descriptor->normalizeBlockHistogram(d);
+    normalizeBlockHistogram(blockHist);
 
     return blockHist;
 }
 
 
+void HOGCache::normalizeBlockHistogram(float* _hist) const
+{
+    float* hist = &_hist[0];
+    size_t i, sz = blockHistogramSize;
+    
+    float sum = 0;
+    for( i = 0; i < sz; i++ )
+        sum += hist[i]*hist[i];
+    float scale = 1.f/(std::sqrt(sum)+sz*0.1f), thresh = (float)descriptor->L2HysThreshold;
+    for( i = 0, sum = 0; i < sz; i++ )
+    {
+        hist[i] = std::min(hist[i]*scale, thresh);
+        sum += hist[i]*hist[i];
+    }
+    scale = 1.f/(std::sqrt(sum)+1e-3f);
+    for( i = 0; i < sz; i++ )
+        hist[i] *= scale;
+}
+    
+    
 Size HOGCache::windowsInImage(Size imageSize, Size winStride) const
 {
     return Size((imageSize.width - winSize.width)/winStride.width + 1,
@@ -660,9 +660,9 @@ Rect HOGCache::getWindow(Size imageSize, Size winStride, int idx) const
 }
 
 
-void HOGDescriptor::compute(const Mat& img, Vector<float>& descriptors,
+void HOGDescriptor::compute(const Mat& img, vector<float>& descriptors,
                             Size winStride, Size padding,
-                            const Vector<Point>& locations) const
+                            const vector<Point>& locations) const
 {
     if( winStride == Size() )
         winStride = cellSize;
@@ -719,8 +719,8 @@ void HOGDescriptor::compute(const Mat& img, Vector<float>& descriptors,
 
 
 void HOGDescriptor::detect(const Mat& img,
-    Vector<Point>& hits, double hitThreshold,
-    Size winStride, Size padding, const Vector<Point>& locations) const
+    vector<Point>& hits, double hitThreshold,
+    Size winStride, Size padding, const vector<Point>& locations) const
 {
     hits.clear();
     if( svmDetector.empty() )
@@ -747,7 +747,7 @@ void HOGDescriptor::detect(const Mat& img,
     size_t dsize = getDescriptorSize();
 
     double rho = svmDetector.size() > dsize ? svmDetector[dsize] : 0;
-    Vector<float> blockHist(blockHistogramSize);
+    vector<float> blockHist(blockHistogramSize);
 
     for( size_t i = 0; i < nwindows; i++ )
     {
@@ -787,13 +787,13 @@ void HOGDescriptor::detect(const Mat& img,
 
 struct HOGThreadData
 {
-    Vector<Rect> rectangles;
-    Vector<Point> locations;
+    vector<Rect> rectangles;
+    vector<Point> locations;
     Mat smallerImgBuf;
 };
 
 void HOGDescriptor::detectMultiScale(
-    const Mat& img, Vector<Rect>& foundLocations,
+    const Mat& img, vector<Rect>& foundLocations,
     double hitThreshold, Size winStride, Size padding,
     double scale0, int groupThreshold) const
 {
@@ -803,12 +803,12 @@ void HOGDescriptor::detectMultiScale(
     const int maxLevels = 64;
 
     int t, nthreads = getNumThreads();
-    Vector<HOGThreadData> threadData(nthreads);
+    vector<HOGThreadData> threadData(nthreads);
 
     for( t = 0; t < nthreads; t++ )
         threadData[t].smallerImgBuf.create(img.size(), img.type());
 
-    Vector<double> levelScale(maxLevels);
+    vector<double> levelScale(maxLevels);
     for( levels = 0; levels < maxLevels; levels++ )
     {
         levelScale[levels] = scale;
@@ -855,7 +855,7 @@ void HOGDescriptor::detectMultiScale(
     groupRectangles(foundLocations, groupThreshold, 0.2);
 }
 
-Vector<float> HOGDescriptor::getDefaultPeopleDetector()
+vector<float> HOGDescriptor::getDefaultPeopleDetector()
 {
     static const float detector[] = {
        0.05359386f, -0.14721455f, -0.05532170f, 0.05077307f,
@@ -1663,7 +1663,7 @@ Vector<float> HOGDescriptor::getDefaultPeopleDetector()
        -0.01612278f, -1.46097376e-003f, 0.14013411f, -8.96181818e-003f,
        -0.03250246f, 3.38630192e-003f, 2.64779478e-003f, 0.03359732f,
        -0.02411991f, -0.04229729f, 0.10666174f, -6.66579151f };
-    return Vector<float>((float*)detector, sizeof(detector)/sizeof(detector[0]), true);
+    return vector<float>(detector, detector + sizeof(detector)/sizeof(detector[0]));
 }
 
 }

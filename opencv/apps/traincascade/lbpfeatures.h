@@ -11,6 +11,7 @@ struct CvLBPFeatureParams : CvFeatureParams
 class CvLBPEvaluator : public CvFeatureEvaluator
 {
 public:
+    virtual ~CvLBPEvaluator() {}
     virtual void init(const CvFeatureParams *_featureParams,
         int _maxSampleCount, Size _winSize );
     virtual void setImage(const Mat& img, uchar clsLabel, int idx);
@@ -31,7 +32,7 @@ protected:
         Rect rect;
         int p[16];
     };
-    Vector<LBPFeature> features;
+    vector<LBPFeature> features;
 
     Mat sum;
 };

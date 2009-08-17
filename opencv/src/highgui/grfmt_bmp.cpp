@@ -78,7 +78,7 @@ bool  BmpDecoder::readHeader()
     bool result = false;
     bool iscolor = false;
 
-    if( m_buf.size() )
+    if( !m_buf.empty() )
     {
         if( !m_strm.open( m_buf ) )
             return false;
@@ -490,7 +490,7 @@ ImageEncoder BmpEncoder::newEncoder() const
     return new BmpEncoder;
 }
 
-bool  BmpEncoder::write( const Mat& img, const Vector<int>& )
+bool  BmpEncoder::write( const Mat& img, const vector<int>& )
 {
     int width = img.cols, height = img.rows, channels = img.channels();
     int fileStep = (width*channels + 3) & -4;

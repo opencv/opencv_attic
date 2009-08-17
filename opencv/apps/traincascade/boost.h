@@ -10,6 +10,7 @@ struct CvCascadeBoostParams : CvBoostParams
     CvCascadeBoostParams();
     CvCascadeBoostParams( int _boostType, float _minHitRate, float _maxFalseAlarm,
                           double _weightTrimRate, int _maxDepth, int _maxWeakCount );
+    virtual ~CvCascadeBoostParams() {}
     void write( FileStorage &fs ) const;
     bool read( const FileNode &node );
     virtual void printDefaults() const;

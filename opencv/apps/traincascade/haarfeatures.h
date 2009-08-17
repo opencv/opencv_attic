@@ -61,7 +61,7 @@ protected:
         } fastRect[CV_HAAR_FEATURE_MAX];
     }; 
 
-    Vector<HaarFeature> features;
+    vector<HaarFeature> features;
     Mat  sum;         /* sum images (each row represents image) */
     Mat  tilted;      /* tilted sum images (each row represents image) */
     Mat  normfactor;  /* normalization factor */

@@ -709,18 +709,18 @@ Moments moments( const Mat& image, bool binaryImage )
     return om;
 }
 
-Moments moments( const Vector<Point>& points )
+Moments moments( const vector<Point>& points )
 {
     CvMoments om;
-    CvMat _points = points;
+    CvMat _points = Mat_<Point>(points);
     cvMoments(&_points, &om, 0);
     return om;
 }
 
-Moments moments( const Vector<Point2f>& points )
+Moments moments( const vector<Point2f>& points )
 {
     CvMoments om;
-    CvMat _points = points;
+    CvMat _points = Mat_<Point2f>(points);
     cvMoments(&_points, &om, 0);
     return om;
 }

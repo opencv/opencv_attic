@@ -49,9 +49,9 @@ static const size_t OUT_OF_RANGE = (size_t)1 << (sizeof(size_t)*8 - 2);
 
 static void
 calcHistLookupTables_8u( const MatND& hist, const SparseMat& shist,
-                        const Vector<Vector<float> >& ranges,
-                        const Vector<double>& uniranges,
-                        bool uniform, bool issparse, Vector<size_t>& _tab )
+                        const vector<vector<float> >& ranges,
+                        const vector<double>& uniranges,
+                        bool uniform, bool issparse, vector<size_t>& _tab )
 {
     const int low = 0, high = 256;
     int i, j, dims = !issparse ? hist.dims : shist.dims();
@@ -64,8 +64,8 @@ calcHistLookupTables_8u( const MatND& hist, const SparseMat& shist,
         {
             double a = uniranges[i*2];
             double b = uniranges[i*2+1];
-            int sz = !issparse ? hist.size(i) : shist.size(i);
-            size_t step = !issparse ? hist.dim[i].step : 1;
+            int sz = !issparse ? hist.size[i] : shist.size(i);
+            size_t step = !issparse ? hist.step[i] : 1;
             
             for( j = low; j < high; j++ )
             {
@@ -85,9 +85,9 @@ calcHistLookupTables_8u( const MatND& hist, const SparseMat& shist,
         for( i = 0; i < dims; i++ )
         {
             int limit = std::min(cvCeil(ranges[i][0]), high);
-            int idx = -1, sz = !issparse ? hist.size(i) : shist.size(i);
+            int idx = -1, sz = !issparse ? hist.size[i] : shist.size(i);
             size_t written_idx = OUT_OF_RANGE;
-            size_t step = !issparse ? hist.dim[i].step : 1;
+            size_t step = !issparse ? hist.step[i] : 1;
             
             for(j = low;;)
             {
@@ -111,13 +111,13 @@ calcHistLookupTables_8u( const MatND& hist, const SparseMat& shist,
 }
 
 
-static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& channels,
-                              const Mat& mask, const Vector<int>& histSize,
-                              const Vector<Vector<float> >& ranges,
-                              bool uniform, Vector<uchar*>& ptrs, Vector<int>& deltas,
-                              Size& imsize, Vector<double>& uniranges )
+static void histPrepareImages( const vector<Mat>& images, const vector<int>& channels,
+                              const Mat& mask, size_t dims, const int* histSize,
+                              const vector<vector<float> >& ranges,
+                              bool uniform, vector<uchar*>& ptrs, vector<int>& deltas,
+                              Size& imsize, vector<double>& uniranges )
 {
-    size_t i, dims = histSize.size();
+    size_t i;
     
     if( !channels.empty() )
         CV_Assert( images.size() == dims && channels.size() == dims );
@@ -203,7 +203,7 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
         for( i = 0; i < dims; i++ )
         {
             size_t j, n = histSize[i];
-            const Vector<float>& r = ranges[i];
+            const vector<float>& r = ranges[i];
             CV_Assert( r.size() == n+1 );
             for( j = 0; j < n; j++ )
                 CV_Assert( r[j] < r[j+1] );
@@ -215,9 +215,9 @@ static void histPrepareImages( const Vector<Mat>& images, const Vector<int>& cha
 ////////////////////////////////// C A L C U L A T E    H I S T O G R A M ////////////////////////////////////        
     
 template<typename T> static void
-calcHist_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-           Size imsize, MatND& hist, const Vector<Vector<float> >& _ranges,
-           const Vector<double>& _uniranges, bool uniform )
+calcHist_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+           Size imsize, MatND& hist, const vector<vector<float> >& _ranges,
+           const vector<double>& _uniranges, bool uniform )
 {
     T** ptrs = (T**)&_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -230,8 +230,8 @@ calcHist_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     
     for( i = 0; i < dims; i++ )
     {
-        size[i] = hist.size(i);
-        hstep[i] = hist.dim[i].step;
+        size[i] = hist.size[i];
+        hstep[i] = hist.step[i];
     }
     
     if( uniform )
@@ -430,9 +430,9 @@ calcHist_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     
     
 static void
-calcHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-             Size imsize, MatND& hist, const Vector<Vector<float> >& _ranges,
-             const Vector<double>& _uniranges, bool uniform )
+calcHist_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+             Size imsize, MatND& hist, const vector<vector<float> >& _ranges,
+             const vector<double>& _uniranges, bool uniform )
 {
     uchar** ptrs = &_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -440,7 +440,7 @@ calcHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     int i, x, dims = hist.dims;
     const uchar* mask = _ptrs[dims];
     int mstep = _deltas[dims*2 + 1];
-    Vector<size_t> _tab;
+    vector<size_t> _tab;
     
     calcHistLookupTables_8u( hist, SparseMat(), _ranges, _uniranges, uniform, false, _tab );
     const size_t* tab = &_tab[0];
@@ -597,12 +597,13 @@ calcHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 }
 
 
-void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
-               const Mat& mask, MatND& hist, const Vector<int>& histSize,
-               const Vector<Vector<float> >& ranges,
+void calcHist( const vector<Mat>& images, const vector<int>& channels,
+               const Mat& mask, MatND& hist, int dims, const int* histSize,
+               const vector<vector<float> >& ranges,
                bool uniform, bool accumulate )
 {
-    hist.create(histSize, CV_32F);    
+    CV_Assert(dims > 0 && histSize);
+    hist.create(dims, histSize, CV_32F);    
         
     MatND ihist = hist;
     ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK)|CV_32S;
@@ -612,13 +613,13 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
     else
         hist.convertTo(ihist, CV_32S);
     
-    Vector<uchar*> ptrs;
-    Vector<int> deltas;
-    Vector<double> uniranges;
+    vector<uchar*> ptrs;
+    vector<int> deltas;
+    vector<double> uniranges;
     Size imsize;
     
     CV_Assert( !mask.data || mask.type() == CV_8UC1 );
-    histPrepareImages( images, channels, mask, hist.size(), ranges,
+    histPrepareImages( images, channels, mask, hist.dims, hist.size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
     
     int depth = images[0].depth();
@@ -632,9 +633,9 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
 
     
 template<typename T> static void
-calcSparseHist_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-                 Size imsize, SparseMat& hist, const Vector<Vector<float> >& _ranges,
-                 const Vector<double>& _uniranges, bool uniform )
+calcSparseHist_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+                 Size imsize, SparseMat& hist, const vector<vector<float> >& _ranges,
+                 const vector<double>& _uniranges, bool uniform )
 {
     T** ptrs = (T**)&_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -716,9 +717,9 @@ calcSparseHist_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 
     
 static void
-calcSparseHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-                   Size imsize, SparseMat& hist, const Vector<Vector<float> >& _ranges,
-                   const Vector<double>& _uniranges, bool uniform )
+calcSparseHist_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+                   Size imsize, SparseMat& hist, const vector<vector<float> >& _ranges,
+                   const vector<double>& _uniranges, bool uniform )
 {
     uchar** ptrs = (uchar**)&_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -726,7 +727,7 @@ calcSparseHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     const uchar* mask = _ptrs[dims];
     int mstep = _deltas[dims*2 + 1];
     int idx[CV_MAX_DIM];
-    Vector<size_t> _tab;
+    vector<size_t> _tab;
     
     calcHistLookupTables_8u( MatND(), hist, _ranges, _uniranges, uniform, true, _tab );
     const size_t* tab = &_tab[0];
@@ -758,16 +759,16 @@ calcSparseHist_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 }   
     
 
-static void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
-                      const Mat& mask, SparseMat& hist, const Vector<int>& histSize,
-                      const Vector<Vector<float> >& ranges,
+static void calcHist( const vector<Mat>& images, const vector<int>& channels,
+                      const Mat& mask, SparseMat& hist, int dims, const int* histSize,
+                      const vector<vector<float> >& ranges,
                       bool uniform, bool accumulate, bool keepInt )
 {
     SparseMatIterator it;
     size_t i, N;
     
     if( !accumulate )
-        hist.create(histSize, CV_32F);
+        hist.create(dims, histSize, CV_32F);
     else
         for( i = 0, N = hist.nzcount(); i < N; i++, ++it )
         {
@@ -775,13 +776,13 @@ static void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
             *value = cvRound(*(const float*)value);
         }
     
-    Vector<uchar*> ptrs;
-    Vector<int> deltas;
-    Vector<double> uniranges;
+    vector<uchar*> ptrs;
+    vector<int> deltas;
+    vector<double> uniranges;
     Size imsize;
     
     CV_Assert( !mask.data || mask.type() == CV_8UC1 );
-    histPrepareImages( images, channels, mask, hist.size(), ranges,
+    histPrepareImages( images, channels, mask, hist.dims(), hist.hdr->size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
     
     int depth = images[0].depth();
@@ -799,12 +800,13 @@ static void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
 }
     
     
-void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
-               const Mat& mask, SparseMat& hist, const Vector<int>& histSize,
-               const Vector<Vector<float> >& ranges,
+void calcHist( const vector<Mat>& images, const vector<int>& channels,
+               const Mat& mask, SparseMat& hist, int dims, const int* histSize,
+               const vector<vector<float> >& ranges,
                bool uniform, bool accumulate )
 {
-    calcHist( images, channels, mask, hist, histSize, ranges, uniform, accumulate, false );
+    calcHist( images, channels, mask, hist, dims, histSize,
+              ranges, uniform, accumulate, false );
 }
 
     
@@ -812,9 +814,9 @@ void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
     
 
 template<typename T, typename BT> static void
-calcBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-               Size imsize, const MatND& hist, const Vector<Vector<float> >& _ranges,
-               const Vector<double>& _uniranges, float scale, bool uniform )
+calcBackProj_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+               Size imsize, const MatND& hist, const vector<vector<float> >& _ranges,
+               const vector<double>& _uniranges, float scale, bool uniform )
 {
     T** ptrs = (T**)&_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -827,8 +829,8 @@ calcBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     
     for( i = 0; i < dims; i++ )
     {
-        size[i] = hist.size(i);
-        hstep[i] = hist.dim[i].step;
+        size[i] = hist.size[i];
+        hstep[i] = hist.step[i];
     }
     
     if( uniform )
@@ -977,9 +979,9 @@ calcBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 
 
 static void
-calcBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-                 Size imsize, const MatND& hist, const Vector<Vector<float> >& _ranges,
-                 const Vector<double>& _uniranges, float scale, bool uniform )
+calcBackProj_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+                 Size imsize, const MatND& hist, const vector<vector<float> >& _ranges,
+                 const vector<double>& _uniranges, float scale, bool uniform )
 {
     uchar** ptrs = &_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -987,7 +989,7 @@ calcBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
     int i, x, dims = hist.dims;
     uchar* bproj = _ptrs[dims];
     int bpstep = _deltas[dims*2 + 1];
-    Vector<size_t> _tab;
+    vector<size_t> _tab;
     
     calcHistLookupTables_8u( hist, SparseMat(), _ranges, _uniranges, uniform, false, _tab );
     const size_t* tab = &_tab[0];
@@ -1099,19 +1101,19 @@ calcBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 }    
     
     
-void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
+void calcBackProject( const vector<Mat>& images, const vector<int>& channels,
                       const MatND& hist, Mat& backProject,
-                      const Vector<Vector<float> >& ranges,
+                      const vector<vector<float> >& ranges,
                       double scale, bool uniform )
 {
-    Vector<uchar*> ptrs;
-    Vector<int> deltas;
-    Vector<double> uniranges;
+    vector<uchar*> ptrs;
+    vector<int> deltas;
+    vector<double> uniranges;
     Size imsize;
     
     CV_Assert( hist.dims > 0 && hist.data );
     backProject.create( images[0].size(), images[0].depth() );
-    histPrepareImages( images, channels, backProject, hist.size(), ranges,
+    histPrepareImages( images, channels, backProject, hist.dims, hist.size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
     
     int depth = images[0].depth();
@@ -1123,9 +1125,9 @@ void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
 
     
 template<typename T, typename BT> static void
-calcSparseBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-                     Size imsize, const SparseMat& hist, const Vector<Vector<float> >& _ranges,
-                     const Vector<double>& _uniranges, float scale, bool uniform )
+calcSparseBackProj_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+                     Size imsize, const SparseMat& hist, const vector<vector<float> >& _ranges,
+                     const vector<double>& _uniranges, float scale, bool uniform )
 {
     T** ptrs = (T**)&_ptrs[0];
     const int* deltas = &_deltas[0];
@@ -1207,16 +1209,16 @@ calcSparseBackProj_( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 
 
 static void
-calcSparseBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
-                       Size imsize, const SparseMat& hist, const Vector<Vector<float> >& _ranges,
-                       const Vector<double>& _uniranges, float scale, bool uniform )
+calcSparseBackProj_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
+                       Size imsize, const SparseMat& hist, const vector<vector<float> >& _ranges,
+                       const vector<double>& _uniranges, float scale, bool uniform )
 {
     uchar** ptrs = &_ptrs[0];
     const int* deltas = &_deltas[0];
     int i, x, dims = hist.dims();
     uchar* bproj = _ptrs[dims];
     int bpstep = _deltas[dims*2 + 1];
-    Vector<size_t> _tab;
+    vector<size_t> _tab;
     int idx[CV_MAX_DIM];
     
     calcHistLookupTables_8u( MatND(), hist, _ranges, _uniranges, uniform, true, _tab );
@@ -1250,19 +1252,20 @@ calcSparseBackProj_8u( Vector<uchar*>& _ptrs, const Vector<int>& _deltas,
 }    
     
 
-void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
+void calcBackProject( const vector<Mat>& images, const vector<int>& channels,
                       const SparseMat& hist, Mat& backProject,
-                      const Vector<Vector<float> >& ranges,
+                      const vector<vector<float> >& ranges,
                       double scale, bool uniform )
 {
-    Vector<uchar*> ptrs;
-    Vector<int> deltas;
-    Vector<double> uniranges;
+    vector<uchar*> ptrs;
+    vector<int> deltas;
+    vector<double> uniranges;
     Size imsize;
     
     CV_Assert( hist.dims() > 0 );
     backProject.create( images[0].size(), images[0].depth() );
-    histPrepareImages( images, channels, backProject, hist.size(), ranges,
+    histPrepareImages( images, channels, backProject,
+                       hist.dims(), hist.hdr->size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
     
     int depth = images[0].depth();
@@ -1277,7 +1280,7 @@ void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
 
 double compareHist( const MatND& H1, const MatND& H2, int method )
 {
-    NAryMatNDIterator it((Vector<MatND>() << H1, H2));
+    NAryMatNDIterator it(H1, H2);
     double result = 0;
     int i, len;
     
@@ -1341,7 +1344,7 @@ double compareHist( const MatND& H1, const MatND& H2, int method )
     {
         size_t total = 1;
         for( i = 0; i < H1.dims; i++ )
-            total *= H1.size(i);
+            total *= H1.size[i];
         double scale = 1./total;
         double num = s12 - s1*s2*scale;
         double denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
@@ -2068,21 +2071,22 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
     int size[CV_MAX_DIM];
     int i, dims = cvGetDims( hist->bins, size);
     bool uniform = CV_IS_UNIFORM_HIST(hist);
-    cv::Vector<cv::Vector<float> > ranges;
+    cv::vector<cv::vector<float> > ranges;
     
     if( hist->type & CV_HIST_RANGES_FLAG )
     {
         if( uniform )
-            ranges.push_back(cv::Vector<float>((float*)&hist->thresh[0][0], dims*2));
+            ranges.push_back(std::vector<float>((float*)&hist->thresh[0][0],
+                                           (float*)&hist->thresh[0][0]+dims*2));
         else
         {
             ranges.resize(dims);
             for( i = 0; i < dims; i++ )
-                ranges[i] = cv::Vector<float>(hist->thresh2[i], size[i]+1);
+                ranges[i] = std::vector<float>(hist->thresh2[i], hist->thresh2[i]+size[i]+1);
         }
     }
     
-    cv::Vector<cv::Mat> images(dims);
+    cv::vector<cv::Mat> images(dims);
     for( i = 0; i < dims; i++ )
         images[i] = cv::cvarrToMat(img[i]);
     
@@ -2093,7 +2097,7 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
     if( !CV_IS_SPARSE_HIST(hist) )
     {
         cv::MatND H((const CvMatND*)hist->bins);
-        cv::calcHist( images, cv::Vector<int>(), _mask, H, H.size(), ranges, uniform, accumulate != 0 );
+        cv::calcHist( images, std::vector<int>(), _mask, H, H.dims, H.size, ranges, uniform, accumulate != 0 );
     }
     else
     {
@@ -2102,7 +2106,8 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
         if( !accumulate )
             cvZero( hist->bins );
         cv::SparseMat sH(sparsemat);
-        cv::calcHist( images, cv::Vector<int>(), _mask, sH, sH.size(), ranges, uniform, accumulate != 0, true );
+        cv::calcHist( images, std::vector<int>(), _mask, sH, sH.dims(),
+                     sH.dims() > 0 ? sH.hdr->size : 0, ranges, uniform, accumulate != 0, true );
         
         if( accumulate )
             cvZero( sparsemat );
@@ -2128,21 +2133,22 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
     int i, dims = cvGetDims( hist->bins, size );
     
     bool uniform = CV_IS_UNIFORM_HIST(hist);
-    cv::Vector<cv::Vector<float> > ranges;
+    std::vector<std::vector<float> > ranges;
     
     if( hist->type & CV_HIST_RANGES_FLAG )
     {
         if( uniform )
-            ranges.push_back(cv::Vector<float>((float*)&hist->thresh[0][0], dims*2));
+            ranges.push_back(std::vector<float>((float*)&hist->thresh[0][0],
+                                                (float*)&hist->thresh[0][0]+dims*2));
         else
         {
             ranges.resize(dims);
             for( i = 0; i < dims; i++ )
-                ranges[i] = cv::Vector<float>(hist->thresh2[i], size[i]+1);
+                ranges[i] = std::vector<float>(hist->thresh2[i], hist->thresh2[i]+size[i]+1);
         }
     }
     
-    cv::Vector<cv::Mat> images(dims);
+    cv::vector<cv::Mat> images(dims);
     for( i = 0; i < dims; i++ )
         images[i] = cv::cvarrToMat(img[i]);
     
@@ -2153,12 +2159,12 @@ cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
     if( !CV_IS_SPARSE_HIST(hist) )
     {
         cv::MatND H((const CvMatND*)hist->bins);
-        cv::calcBackProject( images, cv::Vector<int>(), H, _dst, ranges, 1, uniform );
+        cv::calcBackProject( images, std::vector<int>(), H, _dst, ranges, 1, uniform );
     }
     else
     {
         cv::SparseMat sH((const CvSparseMat*)hist->bins);
-        cv::calcBackProject( images, cv::Vector<int>(), sH, _dst, ranges, 1, uniform );
+        cv::calcBackProject( images, std::vector<int>(), sH, _dst, ranges, 1, uniform );
     }
 }
 

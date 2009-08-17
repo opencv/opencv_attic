@@ -54,8 +54,8 @@
 namespace cv
 {
 
-static Vector<ImageDecoder> decoders;
-static Vector<ImageEncoder> encoders;
+static vector<ImageDecoder> decoders;
+static vector<ImageEncoder> encoders;
 
 ImageDecoder findDecoder( const String& filename )
 {
@@ -87,11 +87,11 @@ ImageDecoder findDecoder( const String& filename )
     return ImageDecoder();
 }
 
-ImageDecoder findDecoder( const Vector<uchar>& buf )
+ImageDecoder findDecoder( const Mat& buf )
 {
     size_t i, maxlen = 0;
 
-    if( buf.size() < 1 )
+    if( buf.rows*buf.cols < 1 || !buf.isContinuous() )
         return ImageDecoder();
 
     for( i = 0; i < decoders.size(); i++ )
@@ -100,9 +100,10 @@ ImageDecoder findDecoder( const Vector<uchar>& buf )
         maxlen = std::max(maxlen, len);
     }
 
-    maxlen = std::min(maxlen, buf.size());
+    size_t bufSize = buf.rows*buf.cols*buf.elemSize();
+    maxlen = std::min(maxlen, bufSize);
     String signature(maxlen, ' ');
-    memcpy( &signature[0], &buf[0], maxlen );
+    memcpy( &signature[0], buf.data, maxlen );
 
     for( i = 0; i < decoders.size(); i++ )
     {
@@ -267,7 +268,7 @@ Mat imread( const String& filename, int flags )
 }
 
 static bool imwrite_( const String& filename, const Mat& image,
-                      const Vector<int>& params, bool flipv )
+                      const vector<int>& params, bool flipv )
 {
     Mat temp;
     const Mat* pimage = &image;
@@ -299,14 +300,15 @@ static bool imwrite_( const String& filename, const Mat& image,
 }
 
 bool imwrite( const String& filename, const Mat& img,
-              const Vector<int>& params )
+              const vector<int>& params )
 {
     return imwrite_(filename, img, params, false);
 }
 
 static void*
-imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
+imdecode_( const Mat& buf, int flags, int hdrtype, Mat* mat=0 )
 {
+    CV_Assert(buf.data && buf.isContinuous());
     IplImage* image = 0;
     CvMat *matrix = 0;
     Mat temp, *data = &temp;
@@ -323,7 +325,8 @@ imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
         FILE* f = fopen( filename, "wb" );
         if( !f )
             return 0;
-        fwrite( &buf[0], 1, buf.size(), f );
+        size_t bufSize = buf.cols*buf.rows*buf.elemSize();
+        fwrite( &buf.data, 1, bufSize, f );
         fclose(f);
         decoder->setSource(filename);
     }
@@ -389,16 +392,24 @@ imdecode_( const Vector<uchar>& buf, int flags, int hdrtype, Mat* mat=0 )
 }
 
 
-Mat imdecode( const Vector<uchar>& buf, int flags )
+Mat imdecode( const Mat& buf, int flags )
 {
     Mat img;
     imdecode_( buf, flags, LOAD_MAT, &img );
     return img;
 }
+    
 
-
+Mat imdecode( const vector<uchar>& buf, int flags )
+{
+    Mat img;
+    imdecode_( Mat_<uchar>(buf), flags, LOAD_MAT, &img );
+    return img;
+}
+    
+    
 bool imencode( const String& ext, const Mat& image,
-               Vector<uchar>& buf, const Vector<int>& params )
+               vector<uchar>& buf, const vector<int>& params )
 {
     Mat temp;
     const Mat* pimage = &image;
@@ -492,7 +503,7 @@ cvSaveImage( const char* filename, const CvArr* arr, const int* _params )
             ;
     }
     return cv::imwrite_(filename, cv::cvarrToMat(arr),
-        i > 0 ? cv::Vector<int>((int*)_params, i) : cv::Vector<int>(),
+        i > 0 ? cv::vector<int>(_params, _params+i) : cv::vector<int>(),
         CV_IS_IMAGE(arr) && ((const IplImage*)arr)->origin == IPL_ORIGIN_BL );
 }
 
@@ -501,7 +512,7 @@ CV_IMPL IplImage*
 cvDecodeImage( const CvMat* _buf, int iscolor )
 {
     CV_Assert( _buf && CV_IS_MAT_CONT(_buf->type) );
-    cv::Vector<uchar> buf(_buf->data.ptr, _buf->cols*_buf->rows*CV_ELEM_SIZE(_buf->type));
+    cv::Mat buf(1, _buf->rows*_buf->cols*CV_ELEM_SIZE(_buf->type), CV_8U, _buf->data.ptr);
     return (IplImage*)cv::imdecode_(buf, iscolor, cv::LOAD_IMAGE );
 }
 
@@ -509,7 +520,7 @@ CV_IMPL CvMat*
 cvDecodeImageM( const CvMat* _buf, int iscolor )
 {
     CV_Assert( _buf && CV_IS_MAT_CONT(_buf->type) );
-    cv::Vector<uchar> buf(_buf->data.ptr, _buf->cols*_buf->rows*CV_ELEM_SIZE(_buf->type));
+    cv::Mat buf(1, _buf->rows*_buf->cols*CV_ELEM_SIZE(_buf->type), CV_8U, _buf->data.ptr);
     return (CvMat*)cv::imdecode_(buf, iscolor, cv::LOAD_CVMAT );
 }
 
@@ -529,10 +540,10 @@ cvEncodeImage( const char* ext, const CvArr* arr, const int* _params )
         cv::flip(img, temp, 0);
         img = temp;
     }
-    cv::Vector<uchar> buf;
+    cv::vector<uchar> buf;
 
     bool code = cv::imencode(ext, img, buf,
-        i > 0 ? cv::Vector<int>((int*)_params, i) : cv::Vector<int>() );
+        i > 0 ? std::vector<int>(_params, _params+i) : std::vector<int>() );
     if( !code )
         return 0;
     CvMat* _buf = cvCreateMat(1, (int)buf.size(), CV_8U);

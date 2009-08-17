@@ -27,7 +27,7 @@ add_definitions(-DCVAPI_EXPORTS)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"
                     "${CMAKE_CURRENT_BINARY_DIR}"
-					"${CMAKE_CURRENT_SOURCE_DIR}/../cv" ".")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../cv" ".")
 
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
@@ -63,7 +63,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv highgui ml)
 
 if(MSVC AND CMAKE_CROSSCOMPILING)
 	set_target_properties(${the_target} PROPERTIES
@@ -72,7 +72,7 @@ if(MSVC AND CMAKE_CROSSCOMPILING)
 endif()
 
 # Dependencies of this target:
-add_dependencies(${the_target} cxcore cv)
+add_dependencies(${the_target} cxcore cv highgui ml)
 
 install(TARGETS ${the_target}
 	RUNTIME DESTINATION bin COMPONENT dev

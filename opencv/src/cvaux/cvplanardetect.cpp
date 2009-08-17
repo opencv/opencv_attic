@@ -240,7 +240,7 @@ LDetector::LDetector(int _radius, int _threshold, int _nOctaves, int _nViews,
 {
 }
 
-static void getDiscreteCircle(int R, Vector<Point>& circle, Vector<int>& filledHCircle)
+static void getDiscreteCircle(int R, vector<Point>& circle, vector<int>& filledHCircle)
 {
     int x = R, y = 0;
     for( ;;y++ )
@@ -297,7 +297,7 @@ struct CmpKeypointScores
 };
 
 
-void LDetector::getMostStable2D(const Mat& image, Vector<KeyPoint>& keypoints,
+void LDetector::getMostStable2D(const Mat& image, vector<KeyPoint>& keypoints,
                                 int maxPoints, const PatchGenerator& _patchGenerator) const
 {
     PatchGenerator patchGenerator = _patchGenerator;
@@ -308,7 +308,7 @@ void LDetector::getMostStable2D(const Mat& image, Vector<KeyPoint>& keypoints,
     double *M = (double*)_M.data, *iM = (double*)_iM.data;
     RNG& rng = theRNG();
     int i, k;
-    Vector<KeyPoint> tempKeypoints;
+    vector<KeyPoint> tempKeypoints;
     double d2 = clusteringDistance*clusteringDistance;
     keypoints.clear();
     
@@ -414,21 +414,21 @@ static Point2f adjustCorner(const float* fval, float& fvaln)
     return Point2f((float)dx, (float)dy);
 }    
 
-void LDetector::operator()(const Mat& image, Vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
+void LDetector::operator()(const Mat& image, vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
 {
-    Vector<Mat> pyr;
+    vector<Mat> pyr;
     buildPyramid(image, pyr, std::max(nOctaves-1, 0));
     (*this)(pyr, keypoints, maxCount, scaleCoords);    
 }       
 
-void LDetector::operator()(const Vector<Mat>& pyr, Vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
+void LDetector::operator()(const vector<Mat>& pyr, vector<KeyPoint>& keypoints, int maxCount, bool scaleCoords) const
 {
     const int lthreshold = 3;
     int L, x, y, i, j, k, tau = lthreshold;
     Mat scoreBuf(pyr[0].size(), CV_16S), maskBuf(pyr[0].size(), CV_8U);
     int scoreElSize = scoreBuf.elemSize();
-    Vector<Point> circle0;
-    Vector<int> fhcircle0, circle, fcircle_s, fcircle;
+    vector<Point> circle0;
+    vector<int> fhcircle0, circle, fcircle_s, fcircle;
     getDiscreteCircle(radius, circle0, fhcircle0);
     CV_Assert(fhcircle0.size() == (size_t)(radius+1) && circle0.size() % 2 == 0);
     keypoints.clear();
@@ -678,9 +678,9 @@ Size FernClassifier::getPatchSize() const
 }        
 
 
-FernClassifier::FernClassifier(const Vector<Point2f>& points,
-                               const Vector<Ptr<Mat> >& refimgs,
-                               const Vector<int>& labels,
+FernClassifier::FernClassifier(const vector<Point2f>& points,
+                               const vector<Ptr<Mat> >& refimgs,
+                               const vector<int>& labels,
                                int _nclasses, int _patchSize,
                                int _signatureSize, int _nstructs,
                                int _structSize, int _nviews, int _compressionMethod,
@@ -754,8 +754,8 @@ void FernClassifier::read(const FileNode& objnode)
 void FernClassifier::clear()
 {
     signatureSize = nclasses = nstructs = structSize = compressionMethod = leavesPerStruct = 0;
-    features.release();
-    posteriors.release();
+    vector<Feature>().swap(features);
+    vector<float>().swap(posteriors);
 }
 
 
@@ -798,9 +798,9 @@ void FernClassifier::prepare(int _nclasses, int _patchSize, int _signatureSize,
     
     int i, nfeatures = structSize*nstructs;
     
-    features = Vector<Feature>( nfeatures );
-    posteriors = Vector<float>( leavesPerStruct*nstructs*nclasses, 1.f );
-    classCounters = Vector<int>( nclasses, leavesPerStruct );
+    features = vector<Feature>( nfeatures );
+    posteriors = vector<float>( leavesPerStruct*nstructs*nclasses, 1.f );
+    classCounters = vector<int>( nclasses, leavesPerStruct );
     
     CV_Assert( patchSize.width <= 256 && patchSize.height <= 256 );
     RNG& rng = theRNG();
@@ -816,9 +816,9 @@ void FernClassifier::prepare(int _nclasses, int _patchSize, int _signatureSize,
 }
 
 
-void FernClassifier::train(const Vector<Point2f>& points,
-                           const Vector<Ptr<Mat> >& refimgs,
-                           const Vector<int>& labels,
+void FernClassifier::train(const vector<Point2f>& points,
+                           const vector<Ptr<Mat> >& refimgs,
+                           const vector<int>& labels,
                            int _nclasses, int _patchSize,
                            int _signatureSize, int _nstructs,
                            int _structSize, int _nviews, int _compressionMethod,
@@ -860,7 +860,7 @@ void FernClassifier::train(const Vector<Point2f>& points,
 
 
 void FernClassifier::trainFromSingleView(const Mat& image,
-                                         const Vector<KeyPoint>& keypoints,
+                                         const vector<KeyPoint>& keypoints,
                                          int _patchSize, int _signatureSize,
                                          int _nstructs, int _structSize,
                                          int _nviews, int _compressionMethod,
@@ -879,7 +879,7 @@ void FernClassifier::trainFromSingleView(const Mat& image,
     Mat canvas(cvRound(std::max(image.cols,image.rows)*maxScale + patchSize.width*2 + 10),
                cvRound(std::max(image.cols,image.rows)*maxScale + patchSize.width*2 + 10), image.type());
     Mat noisebuf;
-    Vector<Mat> pyrbuf(maxOctave+1), pyr(maxOctave+1);
+    vector<Mat> pyrbuf(maxOctave+1), pyr(maxOctave+1);
     Point2f center0((image.cols-1)*0.5f, (image.rows-1)*0.5f),
     center1((canvas.cols - 1)*0.5f, (canvas.rows - 1)*0.5f);
     Mat _M(2, 3, CV_64F);
@@ -965,7 +965,7 @@ void FernClassifier::trainFromSingleView(const Mat& image,
 }
 
 
-int FernClassifier::operator()(const Mat& img, Point2f pt, Vector<float>& signature) const
+int FernClassifier::operator()(const Mat& img, Point2f pt, vector<float>& signature) const
 {
     Mat patch;
     getRectSubPix(img, patchSize, pt, patch, img.type());
@@ -973,7 +973,7 @@ int FernClassifier::operator()(const Mat& img, Point2f pt, Vector<float>& signat
 }
 
 
-int FernClassifier::operator()(const Mat& patch, Vector<float>& signature) const
+int FernClassifier::operator()(const Mat& patch, vector<float>& signature) const
 {
     if( posteriors.empty() )
         CV_Error(CV_StsNullPtr,
@@ -1019,7 +1019,7 @@ int FernClassifier::operator()(const Mat& patch, Vector<float>& signature) const
 void FernClassifier::finalize(RNG&)
 {
     int i, j, k, n = nclasses;
-    Vector<double> invClassCounters(n);
+    vector<double> invClassCounters(n);
     Mat_<double> _temp(1, n);
     double* temp = &_temp(0,0);
     
@@ -1061,7 +1061,7 @@ void FernClassifier::finalize(RNG&)
             csmatrix.create(m, n);
             rng.fill(csmatrix, RNG::UNIFORM, Scalar::all(0), Scalar::all(2));
         }
-        Vector<float> dst(m);
+        vector<float> dst(m);
         
         for( i = 0; i < totalLeaves; i++ )
         {
@@ -1195,7 +1195,7 @@ PlanarObjectDetector::PlanarObjectDetector(const FileNode& node)
     read(node);    
 }
 
-PlanarObjectDetector::PlanarObjectDetector(const Vector<Mat>& pyr, int npoints,
+PlanarObjectDetector::PlanarObjectDetector(const vector<Mat>& pyr, int npoints,
                                            int patchSize, int nstructs, int structSize,
                                            int nviews, const LDetector& detector,
                                            const PatchGenerator& patchGenerator)
@@ -1208,12 +1208,12 @@ PlanarObjectDetector::~PlanarObjectDetector()
 {
 }    
 
-Vector<KeyPoint> PlanarObjectDetector::getModelPoints() const
+vector<KeyPoint> PlanarObjectDetector::getModelPoints() const
 {
     return modelPoints;
 }   
 
-void PlanarObjectDetector::train(const Vector<Mat>& pyr, int npoints,
+void PlanarObjectDetector::train(const vector<Mat>& pyr, int npoints,
                                  int patchSize, int nstructs, int structSize,
                                  int nviews, const LDetector& detector,
                                  const PatchGenerator& patchGenerator)
@@ -1230,7 +1230,7 @@ void PlanarObjectDetector::train(const Vector<Mat>& pyr, int npoints,
                                        FernClassifier::COMPRESSION_NONE, patchGenerator);
 }
 
-void PlanarObjectDetector::train(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
+void PlanarObjectDetector::train(const vector<Mat>& pyr, const vector<KeyPoint>& keypoints,
                                  int patchSize, int nstructs, int structSize,
                                  int nviews, const LDetector& detector,
                                  const PatchGenerator& patchGenerator)
@@ -1238,7 +1238,8 @@ void PlanarObjectDetector::train(const Vector<Mat>& pyr, const Vector<KeyPoint>&
     modelROI = Rect(0, 0, pyr[0].cols, pyr[0].rows);
     ldetector = detector;
     ldetector.setVerbose(verbose);
-    modelPoints = keypoints.clone();
+    modelPoints.resize(keypoints.size());
+    std::copy(keypoints.begin(), keypoints.end(), modelPoints.begin());
     
     fernClassifier.setVerbose(verbose);
     fernClassifier.trainFromSingleView(pyr[0], modelPoints, 
@@ -1274,24 +1275,24 @@ void PlanarObjectDetector::write(FileStorage& fs, const String& objname) const
 }
 
 
-bool PlanarObjectDetector::operator()(const Mat& image, Mat& H, Vector<Point2f>& corners) const
+bool PlanarObjectDetector::operator()(const Mat& image, Mat& H, vector<Point2f>& corners) const
 {
-    Vector<Mat> pyr;
+    vector<Mat> pyr;
     buildPyramid(image, pyr, ldetector.nOctaves - 1);
-    Vector<KeyPoint> keypoints;
+    vector<KeyPoint> keypoints;
     ldetector(pyr, keypoints);
     
     return (*this)(pyr, keypoints, H, corners);
 }
 
-bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<KeyPoint>& keypoints,
-                                      Mat& _H, Vector<Point2f>& corners, Vector<int>* pairs) const
+bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPoint>& keypoints,
+                                      Mat& _H, vector<Point2f>& corners, vector<int>* pairs) const
 {
     int i, j, m = (int)modelPoints.size(), n = (int)keypoints.size();
-    Vector<int> bestMatches(m, -1);
-    Vector<float> maxLogProb(m, -FLT_MAX);
-    Vector<float> signature;
-    Vector<Point2f> fromPt, toPt;
+    vector<int> bestMatches(m, -1);
+    vector<float> maxLogProb(m, -FLT_MAX);
+    vector<float> signature;
+    vector<Point2f> fromPt, toPt;
     
     for( i = 0; i < n; i++ )
     {
@@ -1320,7 +1321,7 @@ bool PlanarObjectDetector::operator()(const Vector<Mat>& pyr, const Vector<KeyPo
     if( fromPt.size() < 4 )
         return false;
     
-    Vector<bool> mask;
+    vector<uchar> mask;
     _H = findHomography(fromPt, toPt, mask, RANSAC, 10);
     if( _H.data )
     {

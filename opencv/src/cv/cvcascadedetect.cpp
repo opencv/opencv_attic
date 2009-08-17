@@ -63,15 +63,15 @@ public:
 };    
     
     
-void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps)
+void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
 {
     if( groupThreshold <= 0 )
         return;
     
-    Vector<int> labels;
+    vector<int> labels;
     int nclasses = partition(rectList, labels, SimilarRects(eps));
-    Vector<Rect> rrects(nclasses);
-    Vector<int> rweights(nclasses, 0);
+    vector<Rect> rrects(nclasses);
+    vector<int> rweights(nclasses, 0);
     int i, nlabels = (int)labels.size();
     for( i = 0; i < nlabels; i++ )
     {
@@ -197,7 +197,7 @@ public:
     
 private:
     Size origWinSize;
-    Vector<Feature> features;
+    vector<Feature> features;
     bool hasTiltedFeatures;
 
     Mat sum0, sqsum0, tilted0;
@@ -398,7 +398,7 @@ public:
     
 private:
     Size origWinSize;
-    Vector<LBPEvaluator::Feature> features;
+    vector<LBPEvaluator::Feature> features;
     
     Mat sum0, sum;
     Rect normrect;
@@ -647,7 +647,7 @@ bool CascadeClassifier::setImage(const Mat& image)
     
     
 struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } };
-void CascadeClassifier::detectMultiScale( const Mat& image, Vector<Rect>& objects,
+void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& objects,
                                           double scaleFactor, int minNeighbors,
                                           int flags, Size minSize )
 {
@@ -662,7 +662,7 @@ void CascadeClassifier::detectMultiScale( const Mat& image, Vector<Rect>& object
         CvMat _image = image;
         CvSeq* _objects = cvHaarDetectObjects( &_image, oldCascade, storage, scaleFactor,
                                               minNeighbors, flags, minSize );
-        Vector<CvAvgComp> vecAvgComp;
+        vector<CvAvgComp> vecAvgComp;
         Seq<CvAvgComp>(_objects).copyTo(vecAvgComp);
         objects.resize(vecAvgComp.size());
         std::transform(vecAvgComp.begin(), vecAvgComp.end(), objects.begin(), getRect());

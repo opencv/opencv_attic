@@ -50,7 +50,7 @@ namespace cv
 \****************************************************************************************/
 
 template<typename T> static void
-splitC2_( const Mat& srcmat, Vector<Mat>& dstmat )
+splitC2_( const Mat& srcmat, Mat* dstmat )
 {
     Size size = getContinuousSize( srcmat, dstmat[0], dstmat[1] );
     for( int y = 0; y < size.height; y++ )
@@ -68,7 +68,7 @@ splitC2_( const Mat& srcmat, Vector<Mat>& dstmat )
 }
 
 template<typename T> static void
-splitC3_( const Mat& srcmat, Vector<Mat>& dstmat )
+splitC3_( const Mat& srcmat, Mat* dstmat )
 {
     Size size = getContinuousSize( srcmat, dstmat[0], dstmat[1], dstmat[2] );
     for( int y = 0; y < size.height; y++ )
@@ -87,7 +87,7 @@ splitC3_( const Mat& srcmat, Vector<Mat>& dstmat )
 }
 
 template<typename T> static void
-splitC4_( const Mat& srcmat, Vector<Mat>& dstmat )
+splitC4_( const Mat& srcmat, Mat* dstmat )
 {
     Size size = getContinuousSize( srcmat, dstmat[0], dstmat[1], dstmat[2], dstmat[3] );
     for( int y = 0; y < size.height; y++ )
@@ -108,9 +108,9 @@ splitC4_( const Mat& srcmat, Vector<Mat>& dstmat )
     }
 }
 
-typedef void (*SplitFunc)(const Mat& src, Vector<Mat>& dst);
+typedef void (*SplitFunc)(const Mat& src, Mat* dst);
 
-void split(const Mat& src, Vector<Mat>& mv)
+void split(const Mat& src, Mat* mv)
 {
     static SplitFunc tab[] =
     {
@@ -121,7 +121,6 @@ void split(const Mat& src, Vector<Mat>& mv)
 
     int i, depth = src.depth(), cn = src.channels();
     Size size = src.size();
-    mv.resize(cn);
 
     if( cn == 1 )
     {
@@ -140,8 +139,8 @@ void split(const Mat& src, Vector<Mat>& mv)
     }
     else
     {
-        Vector<Mat> allsrc(cn);
-        Vector<int> pairs(cn*2);
+        vector<Mat> allsrc(cn);
+        vector<int> pairs(cn*2);
 
         for( i = 0; i < cn; i++ )
         {
@@ -149,7 +148,7 @@ void split(const Mat& src, Vector<Mat>& mv)
             pairs[i*2] = i;
             pairs[i*2+1] = 0;
         }
-        mixChannels( allsrc, mv, pairs );
+        mixChannels( &allsrc[0], mv, &pairs[0], cn );
     }
 }
 
@@ -159,7 +158,7 @@ void split(const Mat& src, Vector<Mat>& mv)
 
 // input vector is made non-const to make sure that we do not copy Mat on each access
 template<typename T> static void
-mergeC2_( Vector<Mat>& srcmat, Mat& dstmat )
+mergeC2_( const Mat* srcmat, Mat& dstmat )
 {
     Size size = getContinuousSize( srcmat[0], srcmat[1], dstmat );
     for( int y = 0; y < size.height; y++ )
@@ -177,7 +176,7 @@ mergeC2_( Vector<Mat>& srcmat, Mat& dstmat )
 }
 
 template<typename T> static void
-mergeC3_( Vector<Mat>& srcmat, Mat& dstmat )
+mergeC3_( const Mat* srcmat, Mat& dstmat )
 {
     Size size = getContinuousSize( srcmat[0], srcmat[1], srcmat[2], dstmat );
     for( int y = 0; y < size.height; y++ )
@@ -196,7 +195,7 @@ mergeC3_( Vector<Mat>& srcmat, Mat& dstmat )
 }
 
 template<typename T> static void
-mergeC4_( Vector<Mat>& srcmat, Mat& dstmat )
+mergeC4_( const Mat* srcmat, Mat& dstmat )
 {
     Size size = getContinuousSize( srcmat[0], srcmat[1], srcmat[2], srcmat[3], dstmat );
     for( int y = 0; y < size.height; y++ )
@@ -217,9 +216,9 @@ mergeC4_( Vector<Mat>& srcmat, Mat& dstmat )
     }
 }
 
-typedef void (*MergeFunc)(Vector<Mat>& src, Mat& dst);
+typedef void (*MergeFunc)(const Mat* src, Mat& dst);
 
-void merge(const Vector<Mat>& _mv, Mat& dst)
+void merge(const Mat* mv, size_t n, Mat& dst)
 {
     static MergeFunc tab[] =
     {
@@ -228,15 +227,16 @@ void merge(const Vector<Mat>& _mv, Mat& dst)
         mergeC4_<uchar>, mergeC4_<ushort>, mergeC4_<int>, 0, mergeC4_<int64>
     };
 
-    Vector<Mat>& mv = (Vector<Mat>&)_mv;
-    CV_Assert( mv.size() > 0 );
+    size_t i;
+    CV_Assert( mv && n > 0 );
+    
     int depth = mv[0].depth();
     bool allch1 = true;
     int total = 0;
-    size_t i;
+    
     Size size = mv[0].size();
 
-    for( i = 0; i < mv.size(); i++ )
+    for( i = 0; i < n; i++ )
     {
         CV_Assert(mv[i].size() == size && mv[i].depth() == depth);
         allch1 = allch1 && mv[i].channels() == 1;
@@ -261,11 +261,11 @@ void merge(const Vector<Mat>& _mv, Mat& dst)
     }
     else
     {
-        Vector<Mat> allsrc(total), alldst(total);
-        Vector<int> pairs(total*2);
+        vector<Mat> allsrc(total), alldst(total);
+        vector<int> pairs(total*2);
         int j, k, ni=0;
 
-        for( i = 0, j = 0; i < mv.size(); i++, j += ni )
+        for( i = 0, j = 0; i < n; i++, j += ni )
         {
             ni = mv[i].channels();
             for( k = 0; k < ni; k++ )
@@ -276,7 +276,7 @@ void merge(const Vector<Mat>& _mv, Mat& dst)
                 pairs[(j+k)*2+1] = j + k;
             }
         }
-        mixChannels( allsrc, alldst, pairs );
+        mixChannels( allsrc, alldst, &pairs[0] );
     }
 }
 
@@ -338,13 +338,13 @@ mixChannels_( const void** _src, const int* sdelta0,
 typedef void (*MixChannelsFunc)( const void** src, const int* sdelta0,
         const int* sdelta1, void** dst, const int* ddelta0, const int* ddelta1, int n, Size size );
 
-void mixChannels( const Vector<Mat>& src, Vector<Mat>& dst,
-                  const Vector<int>& fromTo )
+void mixChannels( const Mat* src, Mat* dst, const int* fromTo, size_t npairs )
 {
-    size_t i, npairs = src.size();
-    CV_Assert( npairs == dst.size() && fromTo.size() == npairs*2 );
+    size_t i;
+    
     if( npairs == 0 )
         return;
+    CV_Assert( src && dst && fromTo && npairs > 0 );
 
     int depth = dst[0].depth(), esz1 = (int)dst[0].elemSize1();
     Size size = dst[0].size();
@@ -858,8 +858,8 @@ cvSplit( const void* srcarr, void* dstarr0, void* dstarr1, void* dstarr2, void* 
     for( i = 0; i < 4; i++ )
         nz += dptrs[i] != 0;
     CV_Assert( nz > 0 );
-    cv::Vector<cv::Mat> dvec(nz);
-    cv::Vector<int> pairs(nz*2);
+    cv::vector<cv::Mat> dvec(nz);
+    cv::vector<int> pairs(nz*2);
 
     for( i = j = 0; i < 4; i++ )
     {
@@ -878,8 +878,8 @@ cvSplit( const void* srcarr, void* dstarr0, void* dstarr1, void* dstarr2, void* 
         cv::split( src, dvec );
     else
     {
-        cv::Vector<cv::Mat> svec(nz, src);
-        cv::mixChannels( svec, dvec, pairs );
+        cv::vector<cv::Mat> svec(nz, src);
+        cv::mixChannels( svec, dvec, &pairs[0] );
     }
 }
 
@@ -894,8 +894,8 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
     for( i = 0; i < 4; i++ )
         nz += sptrs[i] != 0;
     CV_Assert( nz > 0 );
-    cv::Vector<cv::Mat> svec(nz);
-    cv::Vector<int> pairs(nz*2);
+    cv::vector<cv::Mat> svec(nz);
+    cv::vector<int> pairs(nz*2);
 
     for( i = j = 0; i < 4; i++ )
     {
@@ -915,8 +915,8 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
         cv::merge( svec, dst );
     else
     {
-        cv::Vector<cv::Mat> dvec(nz, dst);
-        cv::mixChannels( svec, dvec, pairs );
+        cv::vector<cv::Mat> dvec(nz, dst);
+        cv::mixChannels( svec, dvec, &pairs[0] );
     }
 }
 
@@ -927,8 +927,8 @@ cvMixChannels( const CvArr** src, int src_count,
                const int* from_to, int pair_count )
 {
     CV_Assert( src_count == dst_count && src_count == pair_count );
-    cv::Vector<cv::Mat> svec(pair_count), dvec(pair_count);
-    cv::Vector<int> pairs((int*)from_to, pair_count*2);
+    cv::vector<cv::Mat> svec(pair_count), dvec(pair_count);
+    cv::vector<int> pairs(from_to, from_to + pair_count*2);
 
     for( int i = 0; i < pair_count; i++ )
     {
@@ -936,7 +936,7 @@ cvMixChannels( const CvArr** src, int src_count,
             svec[i] = cv::cvarrToMat(src[i]);
         dvec[i] = cv::cvarrToMat(dst[i]);
     }
-    cv::mixChannels(svec, dvec, pairs);
+    cv::mixChannels(svec, dvec, &pairs[0]);
 }
 
 CV_IMPL void

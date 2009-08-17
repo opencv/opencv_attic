@@ -4999,14 +4999,14 @@ FileStorage& operator << (FileStorage& fs, const String& str)
 }
 
 
-void FileStorage::writeRaw( const String& fmt, const Vector<uchar>& vec )
+void FileStorage::writeRaw( const String& fmt, const uchar* vec, size_t len )
 {
     if( !isOpened() )
         return;
     size_t elemSize, cn;
     getElemSize( fmt, elemSize, cn );
-    CV_Assert( vec.size() % elemSize == 0 );
-    cvWriteRawData( fs, &vec[0], (int)(vec.size()/elemSize), fmt.c_str());
+    CV_Assert( len % elemSize == 0 );
+    cvWriteRawData( fs, vec, (int)(len/elemSize), fmt.c_str());
 }
 
 
@@ -5131,7 +5131,7 @@ FileNodeIterator& FileNodeIterator::operator -= (int ofs)
 }
 
 
-FileNodeIterator& FileNodeIterator::readRaw( const String& fmt, Vector<uchar>& vec, size_t maxCount )
+FileNodeIterator& FileNodeIterator::readRaw( const String& fmt, uchar* vec, size_t maxCount )
 {
     if( fs && container && remaining > 0 )
     {
@@ -5139,16 +5139,15 @@ FileNodeIterator& FileNodeIterator::readRaw( const String& fmt, Vector<uchar>& v
         getElemSize( fmt, elem_size, cn );
         CV_Assert( elem_size > 0 );
         size_t count = std::min(remaining, maxCount);
-        vec.resize( count*elem_size );
         
         if( reader.seq )
         {
-            cvReadRawDataSlice( fs, &reader, (int)count, &vec[0], fmt.c_str() );
+            cvReadRawDataSlice( fs, &reader, (int)count, vec, fmt.c_str() );
             remaining -= count*cn;
         }
         else
         {
-            cvReadRawData( fs, container, &vec[0], fmt.c_str() );
+            cvReadRawData( fs, container, vec, fmt.c_str() );
             remaining = 0;
         }
     }

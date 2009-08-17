@@ -152,11 +152,9 @@ void detectAndDraw( Mat& img,
                    CascadeClassifier& cascade, CascadeClassifier& nestedCascade,
                    double scale)
 {
-    static int imgIdx = 0;
     int i = 0;
     double t = 0;
-    char buf[200];
-    Vector<Rect> faces;
+    vector<Rect> faces;
     const static Scalar colors[] =  { CV_RGB(0,0,255),
                                       CV_RGB(0,128,255),
                                       CV_RGB(0,255,255),
@@ -181,10 +179,10 @@ void detectAndDraw( Mat& img,
         Size(30, 30) );
     t = (double)cvGetTickCount() - t;
     printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
-    for( Vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ )
+    for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ )
     {
         Mat smallImgROI;
-        Vector<Rect> nestedObjects;
+        vector<Rect> nestedObjects;
         Point center;
         Scalar color = colors[i%8];
         int radius;
@@ -203,7 +201,7 @@ void detectAndDraw( Mat& img,
             |CV_HAAR_SCALE_IMAGE
             ,
             Size(30, 30) );
-        for( Vector<Rect>::const_iterator nr = nestedObjects.begin(); nr != nestedObjects.end(); nr++ )
+        for( vector<Rect>::const_iterator nr = nestedObjects.begin(); nr != nestedObjects.end(); nr++ )
         {
             center.x = cvRound((r->x + nr->x + nr->width*0.5)*scale);
             center.y = cvRound((r->y + nr->y + nr->height*0.5)*scale);

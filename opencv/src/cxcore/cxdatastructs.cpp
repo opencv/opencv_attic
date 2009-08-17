@@ -3634,7 +3634,7 @@ computeSums( const Mat& points, const size_t* ofs, int a, int b, double* sums )
 void KDTree::build(const Mat& _points, bool _copyData)
 {
     CV_Assert(_points.type() == CV_32F);
-    nodes.release();
+    vector<KDTree::Node>().swap(nodes);
 
     if( !_copyData )
         points = _points;
@@ -3654,7 +3654,7 @@ void KDTree::build(const Mat& _points, bool _copyData)
     Mat sumstack(MAX_TREE_DEPTH*2, dims*2, CV_64F);
     SubTree stack[MAX_TREE_DEPTH*2];
     
-    Vector<size_t> _ptofs(n);
+    vector<size_t> _ptofs(n);
     size_t* ptofs = &_ptofs[0];
 
     for( i = 0; i < n; i++ )
@@ -3720,22 +3720,24 @@ void KDTree::build(const Mat& _points, bool _copyData)
 }
 
 
-void KDTree::findNearest(const Mat& vec, int K, int emax, Vector<int>* neighborsIdx,
-                         Mat* neighbors, Vector<float>* dist) const
+int KDTree::findNearest(const float* vec, int K, int emax,
+                         vector<int>* neighborsIdx,
+                         Mat* neighbors,
+                         vector<float>* dist) const
 {
     K = std::min(K, points.rows);
-    int dims = points.cols;
-    CV_Assert(vec.type() == CV_32F && vec.isContinuous() &&
-        (vec.rows == 1 || vec.cols == 1) &&
-        vec.rows + vec.cols - 1 == dims && K > 0 );
-    Vector<float> _vec((float*)vec.data, (size_t)dims);
-    AutoBuffer<int> idxbuf(K);
-    Vector<int> _idx(idxbuf, (size_t)K), *idx = neighborsIdx ? neighborsIdx : &_idx;
-
-    findNearest(_vec, K, emax, idx, 0, dist);
-
-    if( neighbors )
-        getPoints(*idx, *neighbors);
+    CV_Assert(K > 0);
+    if(neighborsIdx)
+        neighborsIdx->resize(K);
+    if(dist)
+        dist->resize(K);
+    K = findNearest(vec, K, emax, neighborsIdx ? &(*neighborsIdx)[0] : 0,
+                    neighbors, dist ? &(*dist)[0] : 0);
+    if(neighborsIdx)
+        neighborsIdx->resize(K);
+    if(dist)
+        dist->resize(K);
+    return K;
 }
 
 
@@ -3748,21 +3750,19 @@ struct PQueueElem
 };
 
 
-void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
-                         Vector<int>* _neighborsIdx,
-                         Vector<float>* _neighbors,
-                         Vector<float>* _dist) const
+int KDTree::findNearest(const float* vec, int K, int emax,
+                        int* _neighborsIdx, Mat* _neighbors,
+                        float* _dist) const
+    
 {
     K = std::min(K, points.rows);
     int dims = points.cols;
 
-    CV_Assert(_vec.size() == (size_t)dims && K > 0 &&
-        (normType == NORM_L2 || normType == NORM_L1));
+    CV_Assert(K > 0 && (normType == NORM_L2 || normType == NORM_L1));
 
     AutoBuffer<uchar> _buf((K+1)*(sizeof(float) + sizeof(int)));
     int* idx = (int*)(uchar*)_buf;
     float* dist = (float*)(idx + K + 1);
-    const float* vec = &_vec[0];
     int i, j, ncount = 0, e = 0;
 
     int qsize = 0, maxqsize = 1 << 10;
@@ -3877,52 +3877,29 @@ void KDTree::findNearest(const Vector<float>& _vec, int K, int emax,
     K = std::min(K, ncount);
     if( _neighborsIdx )
     {
-        _neighborsIdx->resize(K);
         for( i = 0; i < K; i++ )
-            (*_neighborsIdx)[i] = idx[i];
+            _neighborsIdx[i] = idx[i];
     }
     if( _dist )
     {
-        _dist->resize(K);
         for( i = 0; i < K; i++ )
-            (*_dist)[i] = std::sqrt(dist[i]);
+            _dist[i] = std::sqrt(dist[i]);
     }
 
     if( _neighbors )
-        getPoints(Vector<int>(idx, (size_t)K), *_neighbors);
+        getPoints(idx, K, *_neighbors);
+    return K;
 }
 
 
-void KDTree::findOrthoRange(const Mat& minBounds, const Mat& maxBounds,
-                            Vector<int>* neighborsIdx, Mat* neighbors) const
+void KDTree::findOrthoRange(const float* L, const float* R,
+                            vector<int>* neighborsIdx, Mat* neighbors) const
 {
     int dims = points.cols;
-    CV_Assert( minBounds.type() == CV_32F && minBounds.isContinuous() &&
-        (minBounds.cols == 1 || minBounds.rows == 1) &&
-        minBounds.cols + minBounds.rows - 1 == dims &&
-
-        maxBounds.type() == CV_32F && maxBounds.isContinuous() &&
-        (maxBounds.cols == 1 || maxBounds.rows == 1) &&
-        maxBounds.cols + maxBounds.rows - 1 == dims );
-
-    Vector<int> _idx, *idx = neighborsIdx ? neighborsIdx : &_idx;
-
-    findOrthoRange(Vector<float>((float*)minBounds.data, (size_t)dims),
-                   Vector<float>((float*)maxBounds.data, (size_t)dims),
-                   idx, 0);
-
-    if( neighbors )
-        getPoints(*idx, *neighbors);
-}
-
-
-void KDTree::findOrthoRange(const Vector<float>& _minBounds, const Vector<float>& _maxBounds,
-                            Vector<int>* neighborsIdx, Vector<float>* neighbors) const
-{
-    int dims = points.cols;
-    CV_Assert( _minBounds.size() == (size_t)dims && _maxBounds.size() == (size_t)dims );
-    const float *L = &_minBounds[0], *R = &_maxBounds[0];
-    Vector<int> _idx, *idx = neighborsIdx ? neighborsIdx : &_idx;
+    
+    CV_Assert( L && R );
+    
+    vector<int> _idx, *idx = neighborsIdx ? neighborsIdx : &_idx;
     AutoBuffer<int> _stack(MAX_TREE_DEPTH*2 + 1);
     int* stack = _stack;
     int top = 0;
@@ -3954,48 +3931,47 @@ void KDTree::findOrthoRange(const Vector<float>& _minBounds, const Vector<float>
     }
 
     if( neighbors )
-        getPoints( *idx, *neighbors );
+        getPoints( &(*idx)[0], idx->size(), *neighbors );
 }
 
-
-void KDTree::getPoints(const Vector<int>& ids, Mat& pts) const
+    
+void KDTree::getPoints(const int* idx, size_t nidx, Mat& pts) const
 {
-    int i, j, dims = points.cols, n = (int)ids.size();
-    pts.create( n, dims, points.type());
-    for( i = 0; i < n; i++ )
+    int dims = points.cols;
+    pts.create( nidx, dims, points.type());
+    for( size_t i = 0; i < nidx; i++ )
     {
-        int idx = ids[i];
-        CV_Assert( (unsigned)idx < (unsigned)points.rows );
-        const float* src = points.ptr<float>(idx);
-        float* dst = pts.ptr<float>(i);
-
-        for( j = 0; j < dims; j++ )
-            dst[j] = src[j];
+        int k = idx[i];
+        CV_Assert( (unsigned)k < (unsigned)points.rows );
+        const float* src = points.ptr<float>(k);
+        std::copy(src, src + dims, pts.ptr<float>(i));
     }
 }
 
 
-void KDTree::getPoints(const Vector<int>& ids, Vector<float>& pts) const
+void KDTree::getPoints(const Mat& idx, Mat& pts) const
 {
-    int i, j, dims = points.cols, n = (int)ids.size();
-    pts.resize( n*dims );
-    for( i = 0; i < n; i++ )
+    CV_Assert(idx.type() == CV_32S && idx.isContinuous() &&
+              (idx.cols == 1 || idx.rows == 1));
+    int dims = points.cols;
+    size_t i, nidx = idx.cols + idx.rows - 1;
+    pts.create( nidx, dims, points.type());
+    const int* _idx = idx.ptr<int>();
+    
+    for( i = 0; i < nidx; i++ )
     {
-        int idx = ids[i];
-        CV_Assert( (unsigned)idx < (unsigned)points.rows );
-        const float* src = points.ptr<float>(idx);
-        float* dst = &pts[i*dims];
-
-        for( j = 0; j < dims; j++ )
-            dst[j] = src[j];
+        int k = _idx[i];
+        CV_Assert( (unsigned)k < (unsigned)points.rows );
+        const float* src = points.ptr<float>(k);
+        std::copy(src, src + dims, pts.ptr<float>(i));
     }
 }
 
 
-Vector<float> KDTree::at(int ptidx, bool copyData) const
+const float* KDTree::getPoint(int ptidx) const
 {
     CV_Assert( (unsigned)ptidx < (unsigned)points.rows);
-    return Vector<float>((float*)points.ptr<float>(ptidx), (size_t)points.cols, copyData);
+    return points.ptr<float>(ptidx);
 }
 
 }

@@ -751,7 +751,7 @@ template<class Op, class VecOp> struct MorphFilter : BaseFilter
         ksize = _kernel.size();
         CV_Assert( _kernel.type() == CV_8U );
 
-        Vector<uchar> coeffs; // we do not really the values of non-zero
+        vector<uchar> coeffs; // we do not really the values of non-zero
                               // kernel elements, just their locations
         preprocess2DKernel( _kernel, coords, coeffs );
         ptrs.resize( coords.size() );
@@ -800,8 +800,8 @@ template<class Op, class VecOp> struct MorphFilter : BaseFilter
         }
     }
 
-    Vector<Point> coords;
-    Vector<uchar*> ptrs;
+    vector<Point> coords;
+    vector<uchar*> ptrs;
     VecOp vecOp;
 };
 
