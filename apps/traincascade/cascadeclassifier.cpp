@@ -233,7 +233,7 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
 int CvCascadeClassifier::predict( int sampleIdx )
 {
     CV_DbgAssert( sampleIdx < numPos + numNeg );
-    for (Vector< Ptr<CvCascadeBoost> >::iterator it = stageClassifiers.begin();
+    for (vector< Ptr<CvCascadeBoost> >::iterator it = stageClassifiers.begin();
         it != stageClassifiers.end(); it++ )
     {
         if ( (*it)->predict( sampleIdx ) == 0.f )
@@ -302,7 +302,7 @@ void CvCascadeClassifier::writeStages( FileStorage &fs, const Mat& featureMap ) 
     //char cmnt[30];
     //int i = 0;
     fs << CC_STAGES << "["; 
-    for( Vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
+    for( vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
         it != stageClassifiers.end(); it++/*, i++*/ )
     {
         /*sprintf( cmnt, "stage %d", i );
@@ -497,7 +497,7 @@ void CvCascadeClassifier::getUsedFeaturesIdxMap( Mat& featureMap )
     featureMap.create( 1, featureEvaluator->getNumFeatures(), CV_32SC1 );
     featureMap.setTo(Scalar(-1));
     
-    for( Vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
+    for( vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
         it != stageClassifiers.end(); it++ )
         ((CvCascadeBoost*)((Ptr<CvCascadeBoost>)(*it)))->markUsedFeaturesInMap( featureMap );
     

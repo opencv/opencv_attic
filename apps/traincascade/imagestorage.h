@@ -38,7 +38,7 @@ private:
         bool nextImg();
 
         Mat     src, img;
-        Vector<String> imgFilenames;
+        vector<String> imgFilenames;
         Point   offset, point;
         float   scale;
         float   scaleFactor;

@@ -11,11 +11,21 @@ int main( int argc, char** argv )
     const char* imagename = argc > 1 ? argv[1] : "lena.jpg";
 #if DEMO_MIXED_API_USE
     Ptr<IplImage> iplimg = cvLoadImage(imagename); // Ptr<T> is safe ref-conting pointer class
+    if(iplimg.empty())
+    {
+        fprintf(stderr, "Can not load image %s\n", imagename);
+        return -1;
+    }
     Mat img(iplimg); // cv::Mat replaces the CvMat and IplImage, but it's easy to convert
     // between the old and the new data structures (by default, only the header
     // is converted, while the data is shared)
 #else
     Mat img = imread(imagename); // the newer cvLoadImage alternative, MATLAB-style function
+    if(img.empty())
+    {
+        fprintf(stderr, "Can not load image %s\n", imagename);
+        return -1;
+    }
 #endif
     
     if( !img.data ) // check if the image has been loaded properly
@@ -24,7 +34,7 @@ int main( int argc, char** argv )
     Mat img_yuv;
     cvtColor(img, img_yuv, CV_BGR2YCrCb); // convert image to YUV color space. The output image will be created automatically
     
-    Vector<Mat> planes; // Vector is template vector class, similar to STL's vector. It can store matrices too.
+    vector<Mat> planes; // Vector is template vector class, similar to STL's vector. It can store matrices too.
     split(img_yuv, planes); // split the image into separate color planes
     
 #if 1

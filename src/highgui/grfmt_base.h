@@ -66,7 +66,7 @@ public:
     int type() const { return m_type; };
 
     virtual bool setSource( const String& filename );
-    virtual bool setSource( const Vector<uchar>& buf );
+    virtual bool setSource( const Mat& buf );
     virtual bool readHeader() = 0;
     virtual bool readData( Mat& img ) = 0;
 
@@ -80,7 +80,7 @@ protected:
     int  m_type;
     String m_filename;
     String m_signature;
-    Vector<uchar> m_buf;
+    Mat m_buf;
     bool m_buf_supported;
 };
 
@@ -94,8 +94,8 @@ public:
     virtual bool isFormatSupported( int depth ) const;
 
     virtual bool setDestination( const String& filename );
-    virtual bool setDestination( Vector<uchar>& buf );
-    virtual bool write( const Mat& img, const Vector<int>& params ) = 0;
+    virtual bool setDestination( vector<uchar>& buf );
+    virtual bool write( const Mat& img, const vector<int>& params ) = 0;
 
     virtual String getDescription() const;
     virtual ImageEncoder newEncoder() const;
@@ -104,7 +104,7 @@ protected:
     String m_description;
     
     String m_filename;
-    Vector<uchar>* m_buf;
+    vector<uchar>* m_buf;
     bool m_buf_supported;
 };
 

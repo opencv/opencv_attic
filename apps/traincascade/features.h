@@ -31,7 +31,7 @@
 float calcNormFactor( const Mat& sum, const Mat& sqSum );
 
 template<class Feature>
-void _writeFeatures( const Vector<Feature> features, FileStorage &fs, const Mat& featureMap )
+void _writeFeatures( const vector<Feature> features, FileStorage &fs, const Mat& featureMap )
 {
     fs << FEATURES << "[";
     for ( int fi = 0; fi < featureMap.cols; fi++ )
@@ -48,6 +48,7 @@ class CvParams
 {
 public:
     CvParams();
+    virtual ~CvParams() {}
     // from|to file
     virtual void write( FileStorage &fs ) const = 0;
     virtual bool read( const FileNode &node ) = 0;
@@ -73,6 +74,7 @@ public:
 class CvFeatureEvaluator
 {
 public:
+    virtual ~CvFeatureEvaluator() {}
     virtual void init(const CvFeatureParams *_featureParams,
                       int _maxSampleCount, Size _winSize );
     virtual void setImage(const Mat& img, uchar clsLabel, int idx);

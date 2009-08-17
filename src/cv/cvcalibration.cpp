@@ -2746,131 +2746,9 @@ cvReprojectImageTo3D(
 namespace cv
 {
 
-Mat Rodrigues(const Mat& src)
-{
-    bool v2m = src.cols == 1 || src.rows == 1;
-    Mat dst(3, v2m ? 3 : 1, src.type());
-    CvMat _src = src, _dst = dst;
-    bool ok = cvRodrigues2(&_src, &_dst, 0) > 0;
-    if( !ok )
-        dst = Scalar(0);
-    return dst;
-}
-
-Mat Rodrigues(const Mat& src, Mat& jacobian)
-{
-    bool v2m = src.cols == 1 || src.rows == 1;
-    Mat dst(3, v2m ? 3 : 1, src.type());
-    jacobian.create(v2m ? Size(9, 3) : Size(3, 9), src.type());
-    CvMat _src = src, _dst = dst, _jacobian = jacobian;
-    bool ok = cvRodrigues2(&_src, &_dst, &_jacobian) > 0;
-    if( !ok )
-        dst = Scalar(0);
-    return dst;
-}
-
-void matMulDeriv( const Mat& A, const Mat& B, Mat& dABdA, Mat& dABdB )
-{
-    dABdA.create(A.rows*B.cols, A.rows*A.cols, A.type());
-    dABdB.create(A.rows*B.cols, B.rows*B.cols, A.type());
-    CvMat _A = A, _B = B, _dABdA = dABdA, _dABdB = dABdB;
-    cvCalcMatMulDeriv(&_A, &_B, &_dABdA, &_dABdB);
-}
-
-void composeRT( const Mat& rvec1, const Mat& tvec1,
-                const Mat& rvec2, const Mat& tvec2,
-                Mat& rvec3, Mat& tvec3 )
-{
-    rvec3.create(rvec1.size(), rvec1.type());
-    tvec3.create(tvec1.size(), tvec1.type());
-    CvMat _rvec1 = rvec1, _tvec1 = tvec1, _rvec2 = rvec2,
-        _tvec2 = tvec2, _rvec3 = rvec3, _tvec3 = tvec3;
-    cvComposeRT(&_rvec1, &_tvec1, &_rvec2, &_tvec2, &_rvec3, &_tvec3, 0, 0, 0, 0, 0, 0, 0, 0);
-}
-
-
-void composeRT( const Mat& rvec1, const Mat& tvec1,
-                const Mat& rvec2, const Mat& tvec2,
-                Mat& rvec3, Mat& tvec3,
-                Mat& dr3dr1, Mat& dr3dt1,
-                Mat& dr3dr2, Mat& dr3dt2,
-                Mat& dt3dr1, Mat& dt3dt1,
-                Mat& dt3dr2, Mat& dt3dt2 )
-{
-    int rtype = rvec1.type();
-    rvec3.create(rvec1.size(), rtype);
-    tvec3.create(tvec1.size(), rtype);
-    dr3dr1.create(3, 3, rtype); dr3dt1.create(3, 3, rtype);
-    dr3dr2.create(3, 3, rtype); dr3dt2.create(3, 3, rtype);
-    dt3dr1.create(3, 3, rtype); dt3dt1.create(3, 3, rtype);
-    dt3dr2.create(3, 3, rtype); dt3dt2.create(3, 3, rtype);
-
-    CvMat _rvec1 = rvec1, _tvec1 = tvec1, _rvec2 = rvec2,
-        _tvec2 = tvec2, _rvec3 = rvec3, _tvec3 = tvec3;
-    CvMat _dr3dr1 = dr3dr1, _dr3dt1 = dr3dt1, _dr3dr2 = dr3dr2, _dr3dt2 = dr3dt2;
-    CvMat _dt3dr1 = dt3dr1, _dt3dt1 = dt3dt1, _dt3dr2 = dt3dr2, _dt3dt2 = dt3dt2;
-    cvComposeRT(&_rvec1, &_tvec1, &_rvec2, &_tvec2, &_rvec3, &_tvec3,
-                &_dr3dr1, &_dr3dt1, &_dr3dr2, &_dr3dt2,
-                &_dt3dr1, &_dt3dt1, &_dt3dr2, &_dt3dt2);
-}
-
-void projectPoints( const Vector<Point3f>& objectPoints,
-                    const Mat& rvec, const Mat& tvec,
-                    const Mat& cameraMatrix,
-                    const Mat& distCoeffs,
-                    Vector<Point2f>& imagePoints )
-{
-    imagePoints.resize(objectPoints.size());
-    CvMat _objectPoints = objectPoints, _imagePoints = imagePoints;
-    CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
-
-    cvProjectPoints2( &_objectPoints, &_rvec, &_tvec, &_cameraMatrix, &_distCoeffs,
-                      &_imagePoints, 0, 0, 0, 0, 0, 0 );
-}
-
-void projectPoints( const Vector<Point3f>& objectPoints,
-                    const Mat& rvec, const Mat& tvec,
-                    const Mat& cameraMatrix,
-                    const Mat& distCoeffs,
-                    Vector<Point2f>& imagePoints,
-                    Mat& dpdrot, Mat& dpdt, Mat& dpdf,
-                    Mat& dpdc, Mat& dpddist,
-                    double aspectRatio )
-{
-    int npoints = (int)objectPoints.size();
-    imagePoints.resize(npoints);
-    dpdrot.create(npoints*2, 3, CV_64F);
-    dpdt.create(npoints*2, 3, CV_64F);
-    dpdf.create(npoints*2, 2, CV_64F);
-    dpdc.create(npoints*2, 3, CV_64F);
-    dpddist.create(npoints*2, distCoeffs.rows + distCoeffs.cols - 1, CV_64F);
-    CvMat _objectPoints = objectPoints, _imagePoints = imagePoints;
-    CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
-    CvMat _dpdrot = dpdrot, _dpdt = dpdt, _dpdf = dpdf, _dpdc = dpdc, _dpddist = dpddist;
-
-    cvProjectPoints2( &_objectPoints, &_rvec, &_tvec, &_cameraMatrix, &_distCoeffs,
-                      &_imagePoints, &_dpdrot, &_dpdt, &_dpdf, &_dpdc, &_dpddist, aspectRatio );
-}
-
-void solvePnP( const Vector<Point3f>& objectPoints,
-               const Vector<Point2f>& imagePoints,
-               const Mat& cameraMatrix,
-               const Mat& distCoeffs,
-               Mat& rvec, Mat& tvec,
-               bool useExtrinsicGuess )
-{
-    rvec.create(3, 1, CV_64F);
-    tvec.create(3, 1, CV_64F);
-    CvMat _objectPoints = objectPoints, _imagePoints = imagePoints;
-    CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
-    CvMat _rvec = rvec, _tvec = tvec;
-    cvFindExtrinsicCameraParams2(&_objectPoints, &_imagePoints, &_cameraMatrix,
-                                 &_distCoeffs, &_rvec, &_tvec, useExtrinsicGuess );
-}
-
-static void collectCalibrationData( const Vector<Vector<Point3f> >& objectPoints,
-                                    const Vector<Vector<Point2f> >& imagePoints,
-                                    const Vector<Vector<Point2f> >& imagePoints2,
+static void collectCalibrationData( const vector<vector<Point3f> >& objectPoints,
+                                    const vector<vector<Point2f> >& imagePoints,
+                                    const vector<vector<Point2f> >& imagePoints2,
                                     Mat& objPtMat, Mat& imgPtMat, Mat* imgPtMat2,
                                     Mat& npoints )
 {
@@ -2886,40 +2764,30 @@ static void collectCalibrationData( const Vector<Vector<Point3f> >& objectPoints
     }
 
     npoints.create(1, (int)nimages, CV_32S);
-    objPtMat.create(1, (int)total, objectPoints[0].type());
-    imgPtMat.create(1, (int)total, imagePoints[0].type());
+    objPtMat.create(1, (int)total, DataType<Point3f>::type);
+    imgPtMat.create(1, (int)total, DataType<Point2f>::type);
+    Point2f* imgPtData2 = 0;
+    
     if( imgPtMat2 )
-        imgPtMat2->create(1, (int)total, imagePoints2[0].type());
+    {
+        imgPtMat2->create(1, (int)total, DataType<Point2f>::type);
+        imgPtData2 = imgPtMat2->ptr<Point2f>();
+    }
 
+    Point3f* objPtData = objPtMat.ptr<Point3f>();
+    Point2f* imgPtData = imgPtMat.ptr<Point2f>();
+    
     for( i = 0; i < nimages; i++, j += ni )
     {
         ni = objectPoints[i].size();
         ((int*)npoints.data)[i] = (int)ni;
-        Vector<Point3f> dstObjPt((Point3f*)objPtMat.data + j, ni);
-        Vector<Point2f> dstImgPt((Point2f*)imgPtMat.data + j, ni);
-        objectPoints[i].copyTo(dstObjPt);
-        imagePoints[i].copyTo(dstImgPt);
-        if( !imagePoints2.empty() )
-        {
-            Vector<Point2f> dstImgPt2((Point2f*)imgPtMat2->data + j, ni);
-            imagePoints2[i].copyTo(dstImgPt2);
-        }
+        std::copy(objectPoints[i].begin(), objectPoints[i].end(), objPtData + j);
+        std::copy(imagePoints[i].begin(), imagePoints[i].end(), imgPtData + j);
+        if( imgPtMat2 )
+            std::copy(imagePoints2[i].begin(), imagePoints2[i].end(), imgPtData2 + j);
     }
 }
-
-Mat initCameraMatrix2D( const Vector<Vector<Point3f> >& objectPoints,
-                        const Vector<Vector<Point2f> >& imagePoints,
-                        Size imageSize, double aspectRatio )
-{
-    Mat objPt, imgPt, npoints, cameraMatrix(3, 3, CV_64F);
-    collectCalibrationData( objectPoints, imagePoints, Vector<Vector<Point2f> >(),
-                            objPt, imgPt, 0, npoints );
-    CvMat _objPt = objPt, _imgPt = imgPt, _npoints = npoints, _cameraMatrix = cameraMatrix;
-    cvInitIntrinsicParams2D( &_objPt, &_imgPt, &_npoints,
-                             imageSize, &_cameraMatrix, aspectRatio );
-    return cameraMatrix;
-}
-
+    
 static Mat prepareCameraMatrix(Mat& cameraMatrix0, int rtype)
 {
     Mat cameraMatrix = Mat::eye(3, 3, rtype);
@@ -2932,20 +2800,171 @@ static Mat prepareDistCoeffs(Mat& distCoeffs0, int rtype)
 {
     Mat distCoeffs = Mat::zeros(distCoeffs0.cols == 1 ? Size(1, 5) : Size(5, 1), rtype);
     if( distCoeffs0.size() == Size(1, 4) ||
-        distCoeffs0.size() == Size(1, 5) ||
-        distCoeffs0.size() == Size(4, 1) ||
-        distCoeffs0.size() == Size(5, 1) )
+       distCoeffs0.size() == Size(1, 5) ||
+       distCoeffs0.size() == Size(4, 1) ||
+       distCoeffs0.size() == Size(5, 1) )
     {
         Mat dstCoeffs(distCoeffs, Rect(0, 0, distCoeffs0.cols, distCoeffs0.rows));
         distCoeffs0.convertTo(dstCoeffs, rtype);
     }
     return distCoeffs;
 }
+    
+}
 
-void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
-                      const Vector<Vector<Point2f> >& imagePoints,
-                      Size imageSize, Mat& cameraMatrix, Mat& distCoeffs,
-                      Vector<Mat>& rvecs, Vector<Mat>& tvecs, int flags )
+
+void cv::Rodrigues(const Mat& src, Mat& dst)
+{
+    bool v2m = src.cols == 1 || src.rows == 1;
+    dst.create(3, v2m ? 3 : 1, src.type());
+    CvMat _src = src, _dst = dst;
+    bool ok = cvRodrigues2(&_src, &_dst, 0) > 0;
+    if( !ok )
+        dst = Scalar(0);
+}
+
+void cv::Rodrigues(const Mat& src, Mat& dst, Mat& jacobian)
+{
+    bool v2m = src.cols == 1 || src.rows == 1;
+    dst.create(3, v2m ? 3 : 1, src.type());
+    jacobian.create(v2m ? Size(9, 3) : Size(3, 9), src.type());
+    CvMat _src = src, _dst = dst, _jacobian = jacobian;
+    bool ok = cvRodrigues2(&_src, &_dst, &_jacobian) > 0;
+    if( !ok )
+        dst = Scalar(0);
+}
+
+void cv::matMulDeriv( const Mat& A, const Mat& B, Mat& dABdA, Mat& dABdB )
+{
+    dABdA.create(A.rows*B.cols, A.rows*A.cols, A.type());
+    dABdB.create(A.rows*B.cols, B.rows*B.cols, A.type());
+    CvMat _A = A, _B = B, _dABdA = dABdA, _dABdB = dABdB;
+    cvCalcMatMulDeriv(&_A, &_B, &_dABdA, &_dABdB);
+}
+
+void cv::composeRT( const Mat& rvec1, const Mat& tvec1,
+                    const Mat& rvec2, const Mat& tvec2,
+                    Mat& rvec3, Mat& tvec3 )
+{
+    rvec3.create(rvec1.size(), rvec1.type());
+    tvec3.create(tvec1.size(), tvec1.type());
+    CvMat _rvec1 = rvec1, _tvec1 = tvec1, _rvec2 = rvec2,
+    _tvec2 = tvec2, _rvec3 = rvec3, _tvec3 = tvec3;
+    cvComposeRT(&_rvec1, &_tvec1, &_rvec2, &_tvec2, &_rvec3, &_tvec3, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+
+void cv::composeRT( const Mat& rvec1, const Mat& tvec1,
+                    const Mat& rvec2, const Mat& tvec2,
+                    Mat& rvec3, Mat& tvec3,
+                    Mat& dr3dr1, Mat& dr3dt1,
+                    Mat& dr3dr2, Mat& dr3dt2,
+                    Mat& dt3dr1, Mat& dt3dt1,
+                    Mat& dt3dr2, Mat& dt3dt2 )
+{
+    int rtype = rvec1.type();
+    rvec3.create(rvec1.size(), rtype);
+    tvec3.create(tvec1.size(), rtype);
+    dr3dr1.create(3, 3, rtype); dr3dt1.create(3, 3, rtype);
+    dr3dr2.create(3, 3, rtype); dr3dt2.create(3, 3, rtype);
+    dt3dr1.create(3, 3, rtype); dt3dt1.create(3, 3, rtype);
+    dt3dr2.create(3, 3, rtype); dt3dt2.create(3, 3, rtype);
+    
+    CvMat _rvec1 = rvec1, _tvec1 = tvec1, _rvec2 = rvec2,
+    _tvec2 = tvec2, _rvec3 = rvec3, _tvec3 = tvec3;
+    CvMat _dr3dr1 = dr3dr1, _dr3dt1 = dr3dt1, _dr3dr2 = dr3dr2, _dr3dt2 = dr3dt2;
+    CvMat _dt3dr1 = dt3dr1, _dt3dt1 = dt3dt1, _dt3dr2 = dt3dr2, _dt3dt2 = dt3dt2;
+    cvComposeRT(&_rvec1, &_tvec1, &_rvec2, &_tvec2, &_rvec3, &_tvec3,
+                &_dr3dr1, &_dr3dt1, &_dr3dr2, &_dr3dt2,
+                &_dt3dr1, &_dt3dt1, &_dt3dr2, &_dt3dt2);
+}
+
+
+void cv::projectPoints( const Mat& opoints,
+                        const Mat& rvec, const Mat& tvec,
+                        const Mat& cameraMatrix,
+                        const Mat& distCoeffs,
+                        vector<Point2f>& ipoints )
+{
+    CV_Assert(opoints.isContinuous() && opoints.depth() == CV_32F &&
+              ((opoints.rows == 1 && opoints.channels() == 3) ||
+               opoints.cols*opoints.channels() == 3));
+    
+    ipoints.resize(opoints.cols*opoints.rows*opoints.channels()/3);
+    CvMat _objectPoints = opoints, _imagePoints = Mat(ipoints);
+    CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
+    
+    cvProjectPoints2( &_objectPoints, &_rvec, &_tvec, &_cameraMatrix, &_distCoeffs,
+                     &_imagePoints, 0, 0, 0, 0, 0, 0 );
+}
+
+void cv::projectPoints( const Mat& opoints,
+                        const Mat& rvec, const Mat& tvec,
+                        const Mat& cameraMatrix,
+                        const Mat& distCoeffs,
+                        vector<Point2f>& ipoints,
+                        Mat& dpdrot, Mat& dpdt, Mat& dpdf,
+                        Mat& dpdc, Mat& dpddist,
+                        double aspectRatio )
+{
+    CV_Assert(opoints.isContinuous() && opoints.depth() == CV_32F &&
+              ((opoints.rows == 1 && opoints.channels() == 3) ||
+               opoints.cols*opoints.channels() == 3));
+    
+    int npoints = opoints.cols*opoints.rows*opoints.channels()/3;
+    ipoints.resize(npoints);
+    dpdrot.create(npoints*2, 3, CV_64F);
+    dpdt.create(npoints*2, 3, CV_64F);
+    dpdf.create(npoints*2, 2, CV_64F);
+    dpdc.create(npoints*2, 3, CV_64F);
+    dpddist.create(npoints*2, distCoeffs.rows + distCoeffs.cols - 1, CV_64F);
+    CvMat _objectPoints = opoints, _imagePoints = Mat(ipoints);
+    CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
+    CvMat _dpdrot = dpdrot, _dpdt = dpdt, _dpdf = dpdf, _dpdc = dpdc, _dpddist = dpddist;
+    
+    cvProjectPoints2( &_objectPoints, &_rvec, &_tvec, &_cameraMatrix, &_distCoeffs,
+                      &_imagePoints, &_dpdrot, &_dpdt, &_dpdf, &_dpdc, &_dpddist, aspectRatio );
+}
+
+void cv::solvePnP( const Mat& opoints, const Mat& ipoints,
+                   const Mat& cameraMatrix, const Mat& distCoeffs,
+                   Mat& rvec, Mat& tvec, bool useExtrinsicGuess )
+{
+    CV_Assert(opoints.isContinuous() && opoints.depth() == CV_32F &&
+              ((opoints.rows == 1 && opoints.channels() == 3) ||
+               opoints.cols*opoints.channels() == 3) &&
+              ipoints.isContinuous() && ipoints.depth() == CV_32F &&
+              ((ipoints.rows == 1 && ipoints.channels() == 2) ||
+              ipoints.cols*ipoints.channels() == 2));
+    
+    rvec.create(3, 1, CV_64F);
+    tvec.create(3, 1, CV_64F);
+    CvMat _objectPoints = opoints, _imagePoints = ipoints;
+    CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
+    CvMat _rvec = rvec, _tvec = tvec;
+    cvFindExtrinsicCameraParams2(&_objectPoints, &_imagePoints, &_cameraMatrix,
+                                 &_distCoeffs, &_rvec, &_tvec, useExtrinsicGuess );
+}
+
+
+cv::Mat cv::initCameraMatrix2D( const vector<vector<Point3f> >& objectPoints,
+                                const vector<vector<Point2f> >& imagePoints,
+                                Size imageSize, double aspectRatio )
+{
+    Mat objPt, imgPt, npoints, cameraMatrix(3, 3, CV_64F);
+    collectCalibrationData( objectPoints, imagePoints, vector<vector<Point2f> >(),
+                            objPt, imgPt, 0, npoints );
+    CvMat _objPt = objPt, _imgPt = imgPt, _npoints = npoints, _cameraMatrix = cameraMatrix;
+    cvInitIntrinsicParams2D( &_objPt, &_imgPt, &_npoints,
+                             imageSize, &_cameraMatrix, aspectRatio );
+    return cameraMatrix;
+}
+
+
+void cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
+                          const vector<vector<Point2f> >& imagePoints,
+                          Size imageSize, Mat& cameraMatrix, Mat& distCoeffs,
+                          vector<Mat>& rvecs, vector<Mat>& tvecs, int flags )
 {
     int rtype = CV_64F;
     cameraMatrix = prepareCameraMatrix(cameraMatrix, rtype);
@@ -2954,7 +2973,7 @@ void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
     size_t i, nimages = objectPoints.size();
     CV_Assert( nimages > 0 );
     Mat objPt, imgPt, npoints, rvecM((int)nimages, 1, CV_32FC3), tvecM((int)nimages, 1, CV_32FC3);
-    collectCalibrationData( objectPoints, imagePoints, Vector<Vector<Point2f> >(),
+    collectCalibrationData( objectPoints, imagePoints, vector<vector<Point2f> >(),
                             objPt, imgPt, 0, npoints );
     CvMat _objPt = objPt, _imgPt = imgPt, _npoints = npoints;
     CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
@@ -2971,24 +2990,24 @@ void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
     }
 }
 
-void calibrationMatrixValues( const Mat& cameraMatrix, Size imageSize,
-                     double apertureWidth, double apertureHeight,
-                     double& fovx, double& fovy, double& focalLength,
-                     Point2d& principalPoint, double& aspectRatio )
+void cv::calibrationMatrixValues( const Mat& cameraMatrix, Size imageSize,
+                                  double apertureWidth, double apertureHeight,
+                                  double& fovx, double& fovy, double& focalLength,
+                                  Point2d& principalPoint, double& aspectRatio )
 {
     CvMat _cameraMatrix = cameraMatrix;
     cvCalibrationMatrixValues( &_cameraMatrix, imageSize, apertureWidth, apertureHeight,
         &fovx, &fovy, &focalLength, (CvPoint2D64f*)&principalPoint, &aspectRatio );
 }
 
-void stereoCalibrate( const Vector<Vector<Point3f> >& objectPoints,
-                      const Vector<Vector<Point2f> >& imagePoints1,
-                      const Vector<Vector<Point2f> >& imagePoints2,
-                      Mat& cameraMatrix1, Mat& distCoeffs1,
-                      Mat& cameraMatrix2, Mat& distCoeffs2,
-                      Size imageSize, Mat& R, Mat& T,
-                      Mat& E, Mat& F, TermCriteria criteria,
-                      int flags )
+void cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
+                          const vector<vector<Point2f> >& imagePoints1,
+                          const vector<vector<Point2f> >& imagePoints2,
+                          Mat& cameraMatrix1, Mat& distCoeffs1,
+                          Mat& cameraMatrix2, Mat& distCoeffs2,
+                          Size imageSize, Mat& R, Mat& T,
+                          Mat& E, Mat& F, TermCriteria criteria,
+                          int flags )
 {
     int rtype = CV_64F;
     cameraMatrix1 = prepareCameraMatrix(cameraMatrix1, rtype);
@@ -3011,11 +3030,11 @@ void stereoCalibrate( const Vector<Vector<Point3f> >& objectPoints,
         &_R, &_T, &_E, &_F, criteria, flags );
 }
 
-void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
-                    const Mat& cameraMatrix2, const Mat& distCoeffs2,
-                    Size imageSize, const Mat& R, const Mat& T,
-                    Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
-                    int flags )
+void cv::stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+                        const Mat& cameraMatrix2, const Mat& distCoeffs2,
+                        Size imageSize, const Mat& R, const Mat& T,
+                        Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+                        int flags )
 {
     int rtype = CV_64F;
     R1.create(3, 3, rtype);
@@ -3030,11 +3049,9 @@ void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
         imageSize, &_R, &_T, &_R1, &_R2, &_P1, &_P2, &_Q, flags );
 }
 
-bool stereoRectifyUncalibrated( const Vector<Point2f>& points1,
-                                const Vector<Point2f>& points2,
-                                const Mat& F, Size imgSize,
-                                Mat& H1, Mat& H2,
-                                double threshold )
+bool cv::stereoRectifyUncalibrated( const Mat& points1, const Mat& points2,
+                                    const Mat& F, Size imgSize,
+                                    Mat& H1, Mat& H2, double threshold )
 {
     int rtype = CV_64F;
     H1.create(3, 3, rtype);
@@ -3045,15 +3062,13 @@ bool stereoRectifyUncalibrated( const Vector<Point2f>& points1,
     return cvStereoRectifyUncalibrated(&_pt1, &_pt2, pF, imgSize, &_H1, &_H2, threshold) > 0;
 }
 
-void reprojectImageTo3D( const Mat& disparity,
-                         Mat& _3dImage, const Mat& Q,
-                         bool handleMissingValues )
+void cv::reprojectImageTo3D( const Mat& disparity,
+                             Mat& _3dImage, const Mat& Q,
+                             bool handleMissingValues )
 {
     _3dImage.create(disparity.size(), CV_32FC3);
     CvMat _disparity = disparity, __3dImage = _3dImage, _Q = Q;
     cvReprojectImageTo3D( &_disparity, &__3dImage, &_Q, handleMissingValues );
-}
-
 }
 
 /* End of file. */

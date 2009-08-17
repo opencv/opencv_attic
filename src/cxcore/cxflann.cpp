@@ -118,7 +118,7 @@ Index::~Index()
 	delete nnIndex;
 }
 
-void Index::knnSearch(const Vector<float>& query, Vector<int>& indices, Vector<float>& dists, int knn, const SearchParams& searchParams)
+void Index::knnSearch(const vector<float>& query, vector<int>& indices, vector<float>& dists, int knn, const SearchParams& searchParams)
 {
 
 	::flann::Matrix<float> m_query(1, query.size(), (float*)&query[0]);
@@ -147,7 +147,7 @@ void Index::knnSearch(const Mat& queries, Mat& indices, Mat& dists, int knn, con
 	nnIndex->knnSearch(m_queries,m_indices,m_dists,knn,::flann::SearchParams(searchParams.checks));
 }
 
-int Index::radiusSearch(const Vector<float>& query, Vector<int>& indices, Vector<float>& dists, float radius, const SearchParams& searchParams)
+int Index::radiusSearch(const vector<float>& query, vector<int>& indices, vector<float>& dists, float radius, const SearchParams& searchParams)
 {
 	::flann::Matrix<float> m_query(1, query.size(), (float*)&query[0]);
 	::flann::Matrix<int> m_indices(1, indices.size(), &indices[0]);

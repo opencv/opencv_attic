@@ -101,7 +101,7 @@ bool checkIfNodeInsideSphere(const OctTree::Node& node, const Point3f& c, float 
     return true;
 }
 
-void fillMinMax(const Vector<Point3f>& points, OctTree::Node& node)
+void fillMinMax(const vector<Point3f>& points, OctTree::Node& node)
 {
     node.x_max = node.y_max = node.z_max = std::numeric_limits<float>::min();
     node.x_min = node.y_min = node.z_min = std::numeric_limits<float>::max();
@@ -168,7 +168,7 @@ OctTree::OctTree()
 {
 }
 
-OctTree::OctTree( const Vector<Point3f>& points3d, int maxLevels, int minPoints )
+OctTree::OctTree( const vector<Point3f>& points3d, int maxLevels, int minPoints )
 {
     buildTree(points3d, maxLevels, minPoints);
 }
@@ -177,7 +177,7 @@ OctTree::~OctTree()
 {
 }
 
-void OctTree::getPointsWithinSphere( const Point3f& center, float radius, Vector<Point3f>& out ) const
+void OctTree::getPointsWithinSphere( const Point3f& center, float radius, vector<Point3f>& out ) const
 {
     out.clear();
 
@@ -253,10 +253,11 @@ void OctTree::getPointsWithinSphere( const Point3f& center, float radius, Vector
     }
 }
 
-void OctTree::buildTree( const Vector<Point3f>& points3d, int maxLevels, int minPoints)
+void OctTree::buildTree( const vector<Point3f>& points3d, int maxLevels, int minPoints)
 {
     assert( (size_t)maxLevels * 8 < MAX_STACK_SIZE );
-    points3d.copyTo(points);
+    points.resize(points3d.size());
+    std::copy(points3d.begin(), points3d.end(), points.begin());
     this->minPoints = minPoints;
 
     nodes.clear();
@@ -282,9 +283,9 @@ void  OctTree::buildNext(size_t node_ind)
 {	
     size_t size = nodes[node_ind].end - nodes[node_ind].begin;
 
-    Vector<size_t> boxBorders(9, 0);
-    Vector<size_t> boxIndeces(size);
-    Vector<Point3f> tempPoints(size);
+    vector<size_t> boxBorders(9, 0);
+    vector<size_t> boxIndeces(size);
+    vector<Point3f> tempPoints(size);
 
     for(int i = nodes[node_ind].begin, j = 0; i < nodes[node_ind].end; ++i, ++j)
     {
@@ -300,7 +301,7 @@ void  OctTree::buildNext(size_t node_ind)
     for(size_t i = 1; i < boxBorders.size(); ++i)
         boxBorders[i] += boxBorders[i-1];
 
-    Vector<size_t> writeInds(boxBorders.begin(), boxBorders.size(), true);
+    vector<size_t> writeInds(boxBorders.begin(), boxBorders.end());
     
     for(size_t i = 0; i < size; ++i)
     {

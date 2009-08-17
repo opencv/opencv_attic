@@ -478,26 +478,30 @@ bool cv::Affine3DEstimator::checkSubset( const CvMat* ms1, int count )
     return j == i;
 }
 
-int cv::estimateAffine3D(const Vector<Point3f>& from, const Vector<Point3f>& to, Mat& out, Vector<uchar>& outliers, double param1, double param2)
+int cv::estimateAffine3D(const Mat& from, const Mat& to, Mat& out, vector<uchar>& outliers, double param1, double param2)
 {
-    CV_Assert( from.size() == to.size() && from.size() >= 4 );
-
-    size_t count = from.size();
+    size_t count = from.cols*from.rows*from.channels()/3;
+    
+    CV_Assert( count >= 4 && from.isContinuous() && to.isContinuous() &&
+               from.depth() == CV_32F && to.depth() == CV_32F &&
+               ((from.rows == 1 && from.channels() == 3) || from.cols*from.channels() == 3) &&
+               ((to.rows == 1 && to.channels() == 3) || to.cols*to.channels() == 3) &&
+               count == (size_t)to.cols*to.rows*to.channels()/3);
 
     out.create(3, 4, CV_64F); 
     outliers.resize(count);
     fill(outliers.begin(), outliers.end(), (uchar)1);
 
-    Vector<Point3d> dFrom;
-    Vector<Point3d> dTo;    
+    vector<Point3d> dFrom;
+    vector<Point3d> dTo;    
 
-    copy(from.begin(), from.end(), back_inserter(dFrom));
-    copy(to.begin(), to.end(), back_inserter(dTo));
+    copy(from.ptr<Point3f>(), from.ptr<Point3f>() + count, back_inserter(dFrom));
+    copy(to.ptr<Point3f>(), to.ptr<Point3f>() + count, back_inserter(dTo));
     
     CvMat F3x4 = out;
-    CvMat mask  = cvMat( 1, count, CV_8U, outliers.begin() );           
-    CvMat m1 = cvMat( 1, count, CV_64FC3, dFrom.begin() );    
-    CvMat m2 = cvMat( 1, count, CV_64FC3,   dTo.begin() );
+    CvMat mask  = cvMat( 1, count, CV_8U, &outliers[0] );           
+    CvMat m1 = cvMat( 1, count, CV_64FC3, &dFrom[0] );    
+    CvMat m2 = cvMat( 1, count, CV_64FC3, &dTo[0] );
     
     const double epsilon = numeric_limits<double>::epsilon();        
     param1 = param1 <= 0 ? 3 : param1;

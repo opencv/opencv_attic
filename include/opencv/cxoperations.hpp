@@ -383,6 +383,20 @@ double norm(const Vec<T1, n>& a)
         s += (double)a.val[i]*a.val[i];
     return std::sqrt(s);
 }
+    
+template<typename T1, int n> static inline
+bool operator == (const Vec<T1, n>& a, const Vec<T1, n>& b)
+{
+    for( int i = 0; i < n; i++ )
+        if( a[i] != b[i] ) return false;
+    return true;
+}
+    
+template<typename T1, int n> static inline
+bool operator != (const Vec<T1, n>& a, const Vec<T1, n>& b)
+{
+    return !(a == b);
+}
 
 //////////////////////////////// Complex //////////////////////////////
 
@@ -504,6 +518,7 @@ template<typename _Tp> inline Point_<_Tp>::Point_(const CvPoint& pt) : x((_Tp)pt
 template<typename _Tp> inline Point_<_Tp>::Point_(const CvPoint2D32f& pt)
     : x(saturate_cast<_Tp>(pt.x)), y(saturate_cast<_Tp>(pt.y)) {}
 template<typename _Tp> inline Point_<_Tp>::Point_(const Size_<_Tp>& sz) : x(sz.width), y(sz.height) {}
+template<typename _Tp> inline Point_<_Tp>::Point_(const Vec<_Tp,2>& v) : x(v[0]), y(v[1]) {}
 template<typename _Tp> inline Point_<_Tp>& Point_<_Tp>::operator = (const Point_& pt)
 { x = pt.x; y = pt.y; return *this; }
 
@@ -513,6 +528,8 @@ template<typename _Tp> inline Point_<_Tp>::operator CvPoint() const
 { return cvPoint(saturate_cast<int>(x), saturate_cast<int>(y)); }
 template<typename _Tp> inline Point_<_Tp>::operator CvPoint2D32f() const
 { return cvPoint2D32f((float)x, (float)y); }
+template<typename _Tp> inline Point_<_Tp>::operator Vec<_Tp, 2>() const
+{ return Vec<_Tp, 2>(x, y); }
 
 template<typename _Tp> inline _Tp Point_<_Tp>::dot(const Point_& pt) const
 { return x*pt.x + y*pt.y; }
@@ -524,6 +541,9 @@ operator += (Point_<_Tp>& a, const Point_<_Tp>& b) { a.x += b.x; a.y += b.y; ret
 
 template<typename _Tp> static inline Point_<_Tp>&
 operator -= (Point_<_Tp>& a, const Point_<_Tp>& b) { a.x -= b.x; a.y -= b.y; return a; }
+
+template<typename _Tp> static inline Point_<_Tp>&
+operator *= (Point_<_Tp>& a, _Tp b) { a.x *= b; a.y *= b; return a; }
 
 template<typename _Tp> static inline double norm(const Point_<_Tp>& pt)
 { return std::sqrt((double)pt.x*pt.x + (double)pt.y*pt.y); }
@@ -557,13 +577,16 @@ template<typename _Tp> inline Point3_<_Tp>::Point3_(const Point3_& pt) : x(pt.x)
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const Point_<_Tp>& pt) : x(pt.x), y(pt.y), z(_Tp()) {}
 template<typename _Tp> inline Point3_<_Tp>::Point3_(const CvPoint3D32f& pt) :
     x(saturate_cast<_Tp>(pt.x)), y(saturate_cast<_Tp>(pt.y)), z(saturate_cast<_Tp>(pt.z)) {}
-template<typename _Tp> inline Point3_<_Tp>::Point3_(const Vec<_Tp, 3>& t) : x(t[0]), y(t[1]), z(t[2]) {}
+template<typename _Tp> inline Point3_<_Tp>::Point3_(const Vec<_Tp, 3>& v) : x(v[0]), y(v[1]), z(v[2]) {}
 
 template<typename _Tp> template<typename _Tp2> inline Point3_<_Tp>::operator Point3_<_Tp2>() const
 { return Point3_<_Tp2>(saturate_cast<_Tp2>(x), saturate_cast<_Tp2>(y), saturate_cast<_Tp2>(z)); }
 
 template<typename _Tp> inline Point3_<_Tp>::operator CvPoint3D32f() const
 { return cvPoint3D32f((float)x, (float)y, (float)z); }
+
+template<typename _Tp> inline Point3_<_Tp>::operator Vec<_Tp, 3>() const
+{ return Vec<_Tp, 3>(x, y, z); }
 
 template<typename _Tp> inline Point3_<_Tp>& Point3_<_Tp>::operator = (const Point3_& pt)
 { x = pt.x; y = pt.y; z = pt.z; return *this; }
@@ -613,12 +636,8 @@ template<typename _Tp> inline Size_<_Tp>::Size_(const CvSize2D32f& sz)
     : width(saturate_cast<_Tp>(sz.width)), height(saturate_cast<_Tp>(sz.height)) {}
 template<typename _Tp> inline Size_<_Tp>::Size_(const Point_<_Tp>& pt) : width(pt.x), height(pt.y) {}
 
-template<typename _Tp> inline Size_<_Tp>::operator Size_<int>() const
-{ return Size_<int>(saturate_cast<int>(width), saturate_cast<int>(height)); }
-template<typename _Tp> inline Size_<_Tp>::operator Size_<float>() const
-{ return Size_<float>(float(width), float(height)); }
-template<typename _Tp> inline Size_<_Tp>::operator Size_<double>() const
-{ return Size_<double>(width, height); }
+template<typename _Tp> template<typename _Tp2> inline Size_<_Tp>::operator Size_<_Tp2>() const
+{ return Size_<_Tp2>(saturate_cast<_Tp2>(width), saturate_cast<_Tp2>(height)); }
 template<typename _Tp> inline Size_<_Tp>::operator CvSize() const
 { return cvSize(saturate_cast<int>(width), saturate_cast<int>(height)); }
 template<typename _Tp> inline Size_<_Tp>::operator CvSize2D32f() const
@@ -698,11 +717,9 @@ template<typename _Tp> static inline Rect_<_Tp>& operator |= ( Rect_<_Tp>& a, co
 template<typename _Tp> inline Size_<_Tp> Rect_<_Tp>::size() const { return Size_<_Tp>(width, height); }
 template<typename _Tp> inline _Tp Rect_<_Tp>::area() const { return width*height; }
 
-template<typename _Tp> inline Rect_<_Tp>::operator Rect_<int>() const
-{ return Rect_<int>(saturate_cast<int>(x), saturate_cast<int>(y),
-                    saturate_cast<int>(width), saturate_cast<int>(height)); }
-template<typename _Tp> inline Rect_<_Tp>::operator Rect_<float>() const { return Rect_<float>(float(x), float(y), float(width), float(height)); }
-template<typename _Tp> inline Rect_<_Tp>::operator Rect_<double>() const { return Rect_<double>(x, y, width, height); }
+template<typename _Tp> template<typename _Tp2> inline Rect_<_Tp>::operator Rect_<_Tp2>() const
+{ return Rect_<_Tp2>(saturate_cast<_Tp2>(x), saturate_cast<_Tp2>(y),
+                     saturate_cast<_Tp2>(width), saturate_cast<_Tp2>(height)); }
 template<typename _Tp> inline Rect_<_Tp>::operator CvRect() const
 { return cvRect(saturate_cast<int>(x), saturate_cast<int>(y),
                 saturate_cast<int>(width), saturate_cast<int>(height)); }
@@ -968,176 +985,210 @@ static inline Range operator - (const Range& r1, int delta)
 inline Range::operator CvSlice() const
 { return *this != Range::all() ? cvSlice(start, end) : CV_WHOLE_SEQ; }
 
+    
+    
+//////////////////////////////// Vector ////////////////////////////////
 
-template <typename _Tp> inline Vector<_Tp>::Vector() {}
-template <typename _Tp> inline Vector<_Tp>::Vector(size_t _size) { resize(_size); }
-template <typename _Tp> inline Vector<_Tp>::Vector(size_t _size, const _Tp& val)
+// template vector class. It is similar to STL's vector,
+// with a few important differences:
+//   1) it can be created on top of user-allocated data w/o copying it
+//   2) vector b = a means copying the header,
+//      not the underlying data (use clone() to make a deep copy)
+template <typename _Tp> class CV_EXPORTS Vector
 {
-    resize(_size);
-    for(size_t i = 0; i < _size; i++)
-        hdr.data[i] = val;
-}
-template <typename _Tp> inline Vector<_Tp>::Vector(_Tp* _data, size_t _size, bool _copyData)
-{ set(_data, _size, _copyData); }
-template <typename _Tp> template<int n> inline Vector<_Tp>::Vector(const Vec<_Tp, n>& vec)
-{ set((_Tp*)&vec.val[0], n, true); }
-template <typename _Tp> inline Vector<_Tp>::Vector(const std::vector<_Tp>& vec, bool _copyData)
-{ set((_Tp*)&vec[0], vec.size(), _copyData); }
-template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d)
-{ *this = d; }
-template <typename _Tp> inline Vector<_Tp>::Vector(const Vector& d, const Range& r)
-{
-    if( r == Range::all() )
-        r = Range(0, d.size());
-    if( r.size() > 0 && r.start >= 0 && r.end <= d.size() )
+public:
+    typedef _Tp value_type;
+    typedef _Tp* iterator;
+    typedef const _Tp* const_iterator;
+    typedef _Tp& reference;
+    typedef const _Tp& const_reference;
+    
+    struct CV_EXPORTS Hdr
     {
-        if( d.hdr.refcount )
-            ++*d.hdr.refcount;
-        hdr.refcount = d.hdr.refcount;
-        hdr.datastart = d.hdr.datastart;
-        hdr.data = d.hdr.data + r.start;
-        hdr.capacity = hdr.size = r.size();
+        Hdr() : data(0), datastart(0), refcount(0), size(0), capacity(0) {};
+        _Tp* data;
+        _Tp* datastart;
+        int* refcount;
+        size_t size;
+        size_t capacity;
+    };
+    
+    Vector() {}
+    Vector(size_t _size)  { resize(_size); }
+    Vector(size_t _size, const _Tp& val)
+    {
+        resize(_size);
+        for(size_t i = 0; i < _size; i++)
+            hdr.data[i] = val;
     }
-}
-
-template <typename _Tp> inline Vector<_Tp>& Vector<_Tp>::operator = (const Vector<_Tp>& d)
-{
-    if( this != &d )
+    Vector(_Tp* _data, size_t _size, bool _copyData=false)
+    { set(_data, _size, _copyData); }
+    
+    template<int n> Vector(const Vec<_Tp, n>& vec)
+    { set((_Tp*)&vec.val[0], n, true); }    
+    
+    Vector(const std::vector<_Tp>& vec, bool _copyData=false)
+    { set((_Tp*)&vec[0], vec.size(), _copyData); }    
+    
+    Vector(const Vector& d) { *this = d; }
+    
+    Vector(const Vector& d, const Range& r)
     {
-        if( d.hdr.refcount )
-            ++*d.hdr.refcount;
+        if( r == Range::all() )
+            r = Range(0, d.size());
+        if( r.size() > 0 && r.start >= 0 && r.end <= d.size() )
+        {
+            if( d.hdr.refcount )
+                ++*d.hdr.refcount;
+            hdr.refcount = d.hdr.refcount;
+            hdr.datastart = d.hdr.datastart;
+            hdr.data = d.hdr.data + r.start;
+            hdr.capacity = hdr.size = r.size();
+        }
+    }
+    
+    Vector<_Tp>& operator = (const Vector& d)
+    {
+        if( this != &d )
+        {
+            if( d.hdr.refcount )
+                ++*d.hdr.refcount;
+            release();
+            hdr = d.hdr;
+        }
+        return *this;
+    }
+    
+    ~Vector()  { release(); }
+    
+    Vector<_Tp> clone() const
+    { return hdr.data ? Vector<_Tp>(hdr.data, hdr.size, true) : Vector<_Tp>(); }
+    
+    void copyTo(Vector<_Tp>& vec) const
+    {
+        size_t i, sz = size();
+        vec.resize(sz);
+        const _Tp* src = hdr.data;
+        _Tp* dst = vec.hdr.data;
+        for( i = 0; i < sz; i++ )
+            dst[i] = src[i];
+    }
+    
+    void copyTo(std::vector<_Tp>& vec) const
+    {
+        size_t i, sz = size();
+        vec.resize(sz);
+        const _Tp* src = hdr.data;
+        _Tp* dst = sz ? &vec[0] : 0;
+        for( i = 0; i < sz; i++ )
+            dst[i] = src[i];
+    }
+    
+    operator CvMat() const
+    { return cvMat((int)size(), 1, type(), (void*)hdr.data); }
+    
+    _Tp& operator [] (size_t i) { CV_DbgAssert( i < size() ); return hdr.data[i]; }
+    const _Tp& operator [] (size_t i) const { CV_DbgAssert( i < size() ); return hdr.data[i]; }
+    Vector operator() (const Range& r) const { return Vector(*this, r); }
+    _Tp& back() { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
+    const _Tp& back() const { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
+    _Tp& front() { CV_DbgAssert(!empty()); return hdr.data[0]; }
+    const _Tp& front() const { CV_DbgAssert(!empty()); return hdr.data[0]; }
+    
+    _Tp* begin() { return hdr.data; }
+    _Tp* end() { return hdr.data + hdr.size; }
+    const _Tp* begin() const { return hdr.data; }
+    const _Tp* end() const { return hdr.data + hdr.size; }
+    
+    void addref() { if( hdr.refcount ) ++*hdr.refcount; }
+    void release()
+    {
+        if( hdr.refcount && --*hdr.refcount == 0 )
+            deallocate<_Tp>(hdr.datastart, hdr.capacity);
+        hdr = Hdr();
+    }
+    
+    void set(_Tp* _data, size_t _size, bool _copyData=false)
+    {
+        if( !_copyData )
+        {
+            release();
+            hdr.data = hdr.datastart = _data;
+            hdr.size = hdr.capacity = _size;
+            hdr.refcount = 0;
+        }
+        else
+        {
+            reserve(_size);
+            for( size_t i = 0; i < _size; i++ )
+                hdr.data[i] = _data[i];
+            hdr.size = _size;
+        }
+    }
+    
+    void reserve(size_t newCapacity)
+    {
+        _Tp* newData;
+        int* newRefcount;
+        size_t i, oldSize = hdr.size;
+        if( (!hdr.refcount || *hdr.refcount == 1) && hdr.capacity >= newCapacity )
+            return;
+        newCapacity = std::max(newCapacity, oldSize);
+        size_t datasize = alignSize(newCapacity*sizeof(_Tp), (size_t)sizeof(*newRefcount));
+        newData = (_Tp*)fastMalloc(datasize + sizeof(*newRefcount));
+        for( i = 0; i < oldSize; i++ )
+            ::new(newData + i) _Tp(hdr.data[i]);
+        _Tp dummy = _Tp();
+        for( ; i < newCapacity; i++ )
+            ::new(newData + i) _Tp(dummy);
+        newRefcount = (int*)((uchar*)newData + datasize);
+        *newRefcount = 1;
         release();
-        hdr = d.hdr;
+        hdr.data = hdr.datastart = newData;
+        hdr.capacity = newCapacity;
+        hdr.size = oldSize;
+        hdr.refcount = newRefcount;
     }
-    return *this;
-}
-
-template <typename _Tp> inline Vector<_Tp>::~Vector() { release(); }
-template <typename _Tp> inline Vector<_Tp> Vector<_Tp>::clone() const
-{ return Vector(hdr.data, hdr.size, true); }
-
-template <typename _Tp> inline void Vector<_Tp>::copyTo(Vector<_Tp>& vec) const
-{
-    size_t i, sz = size();
-    vec.resize(sz);
-    const _Tp* src = hdr.data;
-    _Tp* dst = vec.hdr.data;
-    for( i = 0; i < sz; i++ )
-        dst[i] = src[i];
-}
-
-template <typename _Tp> inline void Vector<_Tp>::copyTo(std::vector<_Tp>& vec) const
-{
-    size_t i, sz = size();
-    vec.resize(sz);
-    const _Tp* src = hdr.data;
-    _Tp* dst = sz ? &vec[0] : 0;
-    for( i = 0; i < sz; i++ )
-        dst[i] = src[i];
-}
-
-template <typename _Tp> inline Vector<_Tp>::operator CvMat() const
-{ return cvMat((int)size(), 1, type(), (void*)hdr.data); }
-
-template <typename _Tp> inline _Tp& Vector<_Tp>::operator [] (size_t i) { CV_DbgAssert( i < size() ); return hdr.data[i]; }
-template <typename _Tp> inline const _Tp& Vector<_Tp>::operator [] (size_t i) const { CV_DbgAssert( i < size() ); return hdr.data[i]; }
-template <typename _Tp> inline Vector<_Tp> Vector<_Tp>::operator() (const Range& r) const { return Vector(*this, r); }
-template <typename _Tp> inline _Tp& Vector<_Tp>::back() { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
-template <typename _Tp> inline const _Tp& Vector<_Tp>::back() const { CV_DbgAssert(!empty()); return hdr.data[hdr.size-1]; }
-template <typename _Tp> inline _Tp& Vector<_Tp>::front() { CV_DbgAssert(!empty()); return hdr.data[0]; }
-template <typename _Tp> inline const _Tp& Vector<_Tp>::front() const { CV_DbgAssert(!empty()); return hdr.data[0]; }
-
-template <typename _Tp> inline _Tp* Vector<_Tp>::begin() { return hdr.data; }
-template <typename _Tp> inline _Tp* Vector<_Tp>::end() { return hdr.data + hdr.size; }
-template <typename _Tp> inline const _Tp* Vector<_Tp>::begin() const { return hdr.data; }
-template <typename _Tp> inline const _Tp* Vector<_Tp>::end() const { return hdr.data + hdr.size; }
-
-template <typename _Tp> inline void Vector<_Tp>::addref()
-{ if( hdr.refcount ) ++*hdr.refcount; }
-
-template <typename _Tp> inline void Vector<_Tp>::release()
-{
-    if( hdr.refcount && --*hdr.refcount == 0 )
-        deallocate<_Tp>(hdr.datastart, hdr.capacity);
-    hdr = Hdr();
-}
-
-template <typename _Tp> inline void Vector<_Tp>::set(_Tp* _data, size_t _size, bool _copyData)
-{
-    if( !_copyData )
+    
+    void resize(size_t newSize)
     {
-        release();
-        hdr.data = hdr.datastart = _data;
-        hdr.size = hdr.capacity = _size;
-        hdr.refcount = 0;
+        size_t i;
+        newSize = std::max(newSize, (size_t)0);
+        if( (!hdr.refcount || *hdr.refcount == 1) && hdr.size == newSize )
+            return;
+        if( newSize > hdr.capacity )
+            reserve(std::max(newSize, std::max((size_t)4, hdr.capacity*2)));
+        for( i = hdr.size; i < newSize; i++ )
+            hdr.data[i] = _Tp();
+        hdr.size = newSize;
     }
-    else
+    
+    Vector<_Tp>& push_back(const _Tp& elem)
     {
-        reserve(_size);
-        for( size_t i = 0; i < _size; i++ )
-            hdr.data[i] = _data[i];
-        hdr.size = _size;
+        if( hdr.size == hdr.capacity )
+            reserve( std::max((size_t)4, hdr.capacity*2) );
+        hdr.data[hdr.size++] = elem;
+        return *this;
     }
-}
+    
+    Vector<_Tp>& pop_back()
+    {
+        if( hdr.size > 0 )
+            --hdr.size;
+        return *this;
+    }
+    
+    size_t size() const { return hdr.size; }
+    size_t capacity() const { return hdr.capacity; }
+    bool empty() const { return hdr.size == 0; }
+    void clear() { resize(0); }
+    int type() const { return DataType<_Tp>::type; }
+    
+protected:
+    Hdr hdr;
+};    
 
-template <typename _Tp> inline void Vector<_Tp>::reserve(size_t newCapacity)
-{
-    _Tp* newData;
-    int* newRefcount;
-    size_t i, oldSize = hdr.size;
-    if( (!hdr.refcount || *hdr.refcount == 1) && hdr.capacity >= newCapacity )
-        return;
-    newCapacity = std::max(newCapacity, oldSize);
-    size_t datasize = alignSize(newCapacity*sizeof(_Tp), (size_t)sizeof(*newRefcount));
-    newData = (_Tp*)fastMalloc(datasize + sizeof(*newRefcount));
-    for( i = 0; i < oldSize; i++ )
-        ::new(newData + i) _Tp(hdr.data[i]);
-    _Tp dummy = _Tp();
-    for( ; i < newCapacity; i++ )
-        ::new(newData + i) _Tp(dummy);
-    newRefcount = (int*)((uchar*)newData + datasize);
-    *newRefcount = 1;
-    release();
-    hdr.data = hdr.datastart = newData;
-    hdr.capacity = newCapacity;
-    hdr.size = oldSize;
-    hdr.refcount = newRefcount;
-}
-
-template <typename _Tp> inline void Vector<_Tp>::resize(size_t newSize)
-{
-    size_t i;
-    newSize = std::max(newSize, (size_t)0);
-    if( (!hdr.refcount || *hdr.refcount == 1) && hdr.size == newSize )
-        return;
-    if( newSize > hdr.capacity )
-        reserve(std::max(newSize, std::max((size_t)4, hdr.capacity*2)));
-    for( i = hdr.size; i < newSize; i++ )
-        hdr.data[i] = _Tp();
-    hdr.size = newSize;
-}
-
-template <typename _Tp> inline Vector<_Tp>& Vector<_Tp>::push_back(const _Tp& elem)
-{
-    if( hdr.size == hdr.capacity )
-        reserve( std::max((size_t)4, hdr.capacity*2) );
-    hdr.data[hdr.size++] = elem;
-    return *this;
-}
-template <typename _Tp> inline Vector<_Tp>& Vector<_Tp>::pop_back()
-{
-    if( hdr.size > 0 )
-        --hdr.size;
-    return *this;
-}
-
-template <typename _Tp> inline size_t Vector<_Tp>::size() const { return hdr.size; }
-template <typename _Tp> inline size_t Vector<_Tp>::capacity() const { return hdr.capacity; }
-template <typename _Tp> inline bool Vector<_Tp>::empty() const { return hdr.size == 0; }
-template <typename _Tp> inline void Vector<_Tp>::clear() { resize(0); }
-template <typename _Tp> inline int Vector<_Tp>::type() const
-{ return DataType<_Tp>::type; }
-
+    
 template<typename _Tp> inline typename DataType<_Tp>::work_type
 dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
 {
@@ -1154,7 +1205,7 @@ dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
         s += (_Tw)ptr1[i]*ptr2[i];
     return s;
 }
-
+    
 // Multiply-with-Carry RNG
 inline RNG::RNG() { state = 0xffffffff; }
 inline RNG::RNG(uint64 _state) { state = _state ? _state : 0xffffffff; }
@@ -1205,8 +1256,9 @@ inline LineIterator LineIterator::operator ++(int)
     return it;
 }
 
+#if 0
 template<typename _Tp> inline VectorCommaInitializer_<_Tp>::
-VectorCommaInitializer_(Vector<_Tp>* _vec) : vec(_vec), idx(0) {}
+VectorCommaInitializer_(vector<_Tp>* _vec) : vec(_vec), idx(0) {}
 
 template<typename _Tp> template<typename T2> inline VectorCommaInitializer_<_Tp>&
 VectorCommaInitializer_<_Tp>::operator , (T2 val)
@@ -1219,19 +1271,20 @@ VectorCommaInitializer_<_Tp>::operator , (T2 val)
     return *this;
 }
 
-template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator Vector<_Tp>() const
+template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator vector<_Tp>() const
 { return *vec; }
 
-template<typename _Tp> inline Vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
+template<typename _Tp> inline vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
 { return *vec; }
 
 template<typename _Tp, typename T2> static inline VectorCommaInitializer_<_Tp>
-operator << (const Vector<_Tp>& vec, T2 val)
+operator << (const vector<_Tp>& vec, T2 val)
 {
-    VectorCommaInitializer_<_Tp> commaInitializer((Vector<_Tp>*)&vec);
+    VectorCommaInitializer_<_Tp> commaInitializer((vector<_Tp>*)&vec);
     return (commaInitializer, val);
 }
-
+#endif
+    
 /////////////////////////////// AutoBuffer ////////////////////////////////////////
 
 template<typename _Tp, size_t fixed_size> inline AutoBuffer<_Tp, fixed_size>::AutoBuffer()
@@ -1513,7 +1566,7 @@ template<typename _Tp, int numflag> class CV_EXPORTS VecWriterProxy
 {
 public:
     VecWriterProxy( FileStorage* _fs ) : fs(_fs) {}
-    void operator()(const Vector<_Tp>& vec) const
+    void operator()(const vector<_Tp>& vec) const
     {
         size_t i, count = vec.size();
         for( i = 0; i < count; i++ )
@@ -1526,24 +1579,24 @@ template<typename _Tp> class CV_EXPORTS VecWriterProxy<_Tp,1>
 {
 public:
     VecWriterProxy( FileStorage* _fs ) : fs(_fs) {}
-    void operator()(const Vector<_Tp>& vec) const
+    void operator()(const vector<_Tp>& vec) const
     {
         int _fmt = DataType<_Tp>::fmt;
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
-        fs->writeRaw( String(fmt), Vector<uchar>((uchar*)&vec[0], vec.size()*sizeof(_Tp)) );
+        fs->writeRaw( String(fmt), (uchar*)&vec[0], vec.size()*sizeof(_Tp) );
     }
     FileStorage* fs;
 };
 
 
-template<typename _Tp> static inline void write( FileStorage& fs, const Vector<_Tp>& vec )
+template<typename _Tp> static inline void write( FileStorage& fs, const vector<_Tp>& vec )
 {
     VecWriterProxy<_Tp, DataType<_Tp>::fmt != 0> w(&fs);
     w(vec);
 }
 
 template<typename _Tp> static inline FileStorage&
-operator << ( FileStorage& fs, const Vector<_Tp>& vec )
+operator << ( FileStorage& fs, const vector<_Tp>& vec )
 {
     VecWriterProxy<_Tp, DataType<_Tp>::fmt != 0> w(&fs);
     w(vec);
@@ -1663,16 +1716,16 @@ inline FileNode::operator String() const
     return String(cvReadString(node, ""));
 }
 
-inline void FileNode::readRaw( const String& fmt, Vector<uchar>& vec ) const
+inline void FileNode::readRaw( const String& fmt, uchar* vec, size_t len ) const
 {
-    begin().readRaw( fmt, vec );
+    begin().readRaw( fmt, vec, len );
 }
 
 template<typename _Tp, int numflag> class CV_EXPORTS VecReaderProxy
 {
 public:
     VecReaderProxy( FileNodeIterator* _it ) : it(_it) {}
-    void operator()(Vector<_Tp>& vec, size_t count) const
+    void operator()(vector<_Tp>& vec, size_t count) const
     {
         count = std::min(count, it->remaining);
         vec.resize(count);
@@ -1686,28 +1739,27 @@ template<typename _Tp> class CV_EXPORTS VecReaderProxy<_Tp,1>
 {
 public:
     VecReaderProxy( FileNodeIterator* _it ) : it(_it) {}
-    void operator()(Vector<_Tp>& vec, size_t count) const
+    void operator()(vector<_Tp>& vec, size_t count) const
     {
         size_t remaining = it->remaining, cn = DataType<_Tp>::channels;
         int _fmt = DataType<_Tp>::fmt;
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
         count = std::min(count, remaining/cn);
         vec.resize(count);
-        Vector<uchar> _vec((uchar*)&vec[0], count*sizeof(_Tp), false);
-        it->readRaw( String(fmt), _vec, count );
+        it->readRaw( String(fmt), (uchar*)&vec[0], count*sizeof(_Tp) );
     }
     FileNodeIterator* it;
 };
 
 template<typename _Tp> static inline void
-read( FileNodeIterator& it, Vector<_Tp>& vec, size_t maxCount=(size_t)INT_MAX )
+read( FileNodeIterator& it, vector<_Tp>& vec, size_t maxCount=(size_t)INT_MAX )
 {
     VecReaderProxy<_Tp, DataType<_Tp>::fmt != 0> r(&it);
     r(vec, maxCount);
 }
 
 template<typename _Tp> static inline void
-read( FileNode& node, Vector<_Tp>& vec, const Vector<_Tp>& /*default_value*/ )
+read( FileNode& node, vector<_Tp>& vec, const vector<_Tp>& /*default_value*/ )
 {
     read( node.begin(), vec );
 }
@@ -1732,7 +1784,7 @@ template<typename _Tp> static inline FileNodeIterator& operator >> (FileNodeIter
 { read( *it, value, _Tp()); return ++it; }
 
 template<typename _Tp> static inline
-FileNodeIterator& operator >> (FileNodeIterator& it, Vector<_Tp>& vec)
+FileNodeIterator& operator >> (FileNodeIterator& it, vector<_Tp>& vec)
 {
     VecReaderProxy<_Tp, DataType<_Tp>::fmt != 0> r(&it);
     r(vec, (size_t)INT_MAX);
@@ -1788,7 +1840,7 @@ template<typename _Tp> static inline _Tp gcd(_Tp a, _Tp b)
 /****************************************************************************************\
 
   Generic implementation of QuickSort algorithm
-  Use it as: Vector<_Tp> a; ... sort(a,<less_than_predictor>);
+  Use it as: vector<_Tp> a; ... sort(a,<less_than_predictor>);
 
   The current implementation was derived from *BSD system qsort():
 
@@ -1825,7 +1877,7 @@ template<typename _Tp> static inline _Tp gcd(_Tp a, _Tp b)
 
 \****************************************************************************************/
 
-template<typename _Tp, class _LT> void sort( Vector<_Tp>& vec, _LT LT=_LT() )
+template<typename _Tp, class _LT> void sort( vector<_Tp>& vec, _LT LT=_LT() )
 {
     int isort_thresh = 7;
     int sp = 0;
@@ -2024,7 +2076,7 @@ public:
 // The algorithm is described in "Introduction to Algorithms"
 // by Cormen, Leiserson and Rivest, the chapter "Data structures for disjoint sets"
 template<typename _Tp, class _EqPredicate> int
-partition( const Vector<_Tp>& _vec, Vector<int>& labels,
+partition( const vector<_Tp>& _vec, vector<int>& labels,
            _EqPredicate predicate=_EqPredicate())
 {
     int i, j, N = (int)_vec.size();
@@ -2033,7 +2085,7 @@ partition( const Vector<_Tp>& _vec, Vector<int>& labels,
     const int PARENT=0;
     const int RANK=1;
 
-    Vector<int> _nodes(N*2);
+    vector<int> _nodes(N*2);
     int (*nodes)[2] = (int(*)[2])&_nodes[0];
 
     // The first O(N) pass: create N single-vertex trees
@@ -2188,7 +2240,7 @@ template<typename _Tp> inline void Seq<_Tp>::pop_back()
 template<typename _Tp> inline void Seq<_Tp>::pop_front()
 { cvSeqPopFront(seq); }
 
-template<typename _Tp> inline void Seq<_Tp>::copyTo(Vector<_Tp>& vec, const Range& range) const
+template<typename _Tp> inline void Seq<_Tp>::copyTo(vector<_Tp>& vec, const Range& range) const
 {
     size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
     vec.resize(len);
@@ -2196,9 +2248,9 @@ template<typename _Tp> inline void Seq<_Tp>::copyTo(Vector<_Tp>& vec, const Rang
         cvCvtSeqToArray(seq, &vec[0], range);
 }
 
-template<typename _Tp> inline Seq<_Tp>::operator Vector<_Tp>() const
+template<typename _Tp> inline Seq<_Tp>::operator vector<_Tp>() const
 {
-    Vector<_Tp> vec;
+    vector<_Tp> vec;
     copyTo(vec);
     return vec;
 }

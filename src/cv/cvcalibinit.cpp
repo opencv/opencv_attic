@@ -2140,7 +2140,7 @@ namespace cv
 {
 
 bool findChessboardCorners( const Mat& image, Size patternSize,
-                            Vector<Point2f>& corners, int flags )
+                            vector<Point2f>& corners, int flags )
 {
     int count = patternSize.area()*2;
     corners.resize(count);
@@ -2152,7 +2152,7 @@ bool findChessboardCorners( const Mat& image, Size patternSize,
 }
 
 void drawChessboardCorners( Mat& image, Size patternSize,
-                            const Vector<Point2f>& corners,
+                            const vector<Point2f>& corners,
                             bool patternWasFound )
 {
     CvMat _image = image;

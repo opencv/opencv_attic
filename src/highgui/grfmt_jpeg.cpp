@@ -206,11 +206,11 @@ bool  JpegDecoder::readHeader()
     {
         jpeg_create_decompress( &state->cinfo );
 
-        if( m_buf.size() )
+        if( !m_buf.empty() )
         {
             jpeg_buffer_src(&state->cinfo, &state->source);
-            state->source.pub.next_input_byte = &m_buf[0];
-            state->source.pub.bytes_in_buffer = m_buf.size();
+            state->source.pub.next_input_byte = m_buf.data;
+            state->source.pub.bytes_in_buffer = m_buf.cols*m_buf.rows*m_buf.elemSize();
         }
         else
         {
@@ -465,7 +465,7 @@ bool  JpegDecoder::readData( Mat& img )
 struct JpegDestination
 {
     struct jpeg_destination_mgr pub;
-    Vector<uchar> *buf, *dst;
+    vector<uchar> *buf, *dst;
 };
 
 METHODDEF(void)
@@ -525,7 +525,7 @@ ImageEncoder JpegEncoder::newEncoder() const
     return new JpegEncoder;
 }
 
-bool  JpegEncoder::write( const Mat& img, const Vector<int>& params )
+bool  JpegEncoder::write( const Mat& img, const vector<int>& params )
 {
     int quality = 95;
 
@@ -544,7 +544,7 @@ bool  JpegEncoder::write( const Mat& img, const Vector<int>& params )
     int channels = _channels > 1 ? 3 : 1;
     int width = img.cols, height = img.rows;
 
-    Vector<uchar> out_buf(1 << 12);
+    vector<uchar> out_buf(1 << 12);
     AutoBuffer<uchar> _buffer;
     uchar* buffer;
 

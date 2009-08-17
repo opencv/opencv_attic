@@ -194,10 +194,10 @@ public:
 
 	~Index();
 
-	void knnSearch(const Vector<float>& queries, Vector<int>& indices, Vector<float>& dists, int knn, const SearchParams& params);
+	void knnSearch(const vector<float>& queries, vector<int>& indices, vector<float>& dists, int knn, const SearchParams& params);
 	void knnSearch(const Mat& queries, Mat& indices, Mat& dists, int knn, const SearchParams& params);
 
-	int radiusSearch(const Vector<float>& query, Vector<int>& indices, Vector<float>& dists, float radius, const SearchParams& params);
+	int radiusSearch(const vector<float>& query, vector<int>& indices, vector<float>& dists, float radius, const SearchParams& params);
 	int radiusSearch(const Mat& query, Mat& indices, Mat& dists, float radius, const SearchParams& params);
 
 	void save(std::string filename);

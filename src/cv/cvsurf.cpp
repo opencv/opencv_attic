@@ -805,7 +805,7 @@ static int getPointOctave(const CvSURFPoint& kpt, const CvSURFParams& params)
     
 
 void SURF::operator()(const Mat& img, const Mat& mask,
-                      Vector<KeyPoint>& keypoints) const
+                      vector<KeyPoint>& keypoints) const
 {
     CvMat _img = img, _mask, *pmask = 0;
     if( mask.data )
@@ -825,8 +825,8 @@ void SURF::operator()(const Mat& img, const Mat& mask,
 }
 
 void SURF::operator()(const Mat& img, const Mat& mask,
-                Vector<KeyPoint>& keypoints,
-                Vector<float>& descriptors,
+                vector<KeyPoint>& keypoints,
+                vector<float>& descriptors,
                 bool useProvidedKeypoints) const
 {
     CvMat _img = img, _mask, *pmask = 0;

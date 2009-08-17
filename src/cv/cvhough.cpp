@@ -482,7 +482,7 @@ icvHoughLinesProbabalistic( CvMat* image,
                             CvSeq *lines, int linesMax )
 {
     cv::Mat accum, mask;
-    cv::Vector<float> trigtab;
+    cv::vector<float> trigtab;
     cv::MemStorage storage(cvCreateMemStorage(0));
 
     CvSeq* seq;
@@ -1131,7 +1131,7 @@ namespace cv
 
 const int STORAGE_SIZE = 1 << 12;
 
-void HoughLines( Mat& image, Vector<Vec2f>& lines,
+void HoughLines( Mat& image, vector<Vec2f>& lines,
                  double rho, double theta, int threshold,
                  double srn, double stn )
 {
@@ -1143,7 +1143,7 @@ void HoughLines( Mat& image, Vector<Vec2f>& lines,
     Seq<Vec2f>(seq).copyTo(lines);
 }
 
-void HoughLinesP( Mat& image, Vector<Vec4i>& lines,
+void HoughLinesP( Mat& image, vector<Vec4i>& lines,
                   double rho, double theta, int threshold,
                   double minLineLength, double maxGap )
 {
@@ -1154,7 +1154,7 @@ void HoughLinesP( Mat& image, Vector<Vec4i>& lines,
     Seq<Vec4i>(seq).copyTo(lines);
 }
 
-void HoughCircles( Mat& image, Vector<Vec3f>& circles,
+void HoughCircles( Mat& image, vector<Vec3f>& circles,
                    int method, double dp, double min_dist,
                    double param1, double param2,
                    int minRadius, int maxRadius )

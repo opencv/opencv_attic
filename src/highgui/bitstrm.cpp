@@ -130,13 +130,14 @@ bool  RBaseStream::open( const String& filename )
     return m_file != 0;
 }
 
-bool  RBaseStream::open( const Vector<uchar>& buf )
+bool  RBaseStream::open( const Mat& buf )
 {
     close();
-    if( !buf.size() )
+    if( buf.empty() )
         return false;
-    m_start = (uchar*)&buf[0];
-    m_end = m_start + buf.size();
+    CV_Assert(buf.isContinuous());
+    m_start = buf.data;
+    m_end = m_start + buf.cols*buf.rows*buf.elemSize();
     m_allocated = false;
     m_is_opened = true;
     setPos(0);
@@ -412,7 +413,7 @@ bool  WBaseStream::open( const String& filename )
     return m_file != 0;
 }
 
-bool  WBaseStream::open( Vector<uchar>& buf )
+bool  WBaseStream::open( vector<uchar>& buf )
 {
     close();
     allocate();

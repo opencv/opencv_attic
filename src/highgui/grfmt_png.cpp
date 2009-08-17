@@ -109,12 +109,13 @@ void  PngDecoder::readDataFromBuf( void* _png_ptr, uchar* dst, size_t size )
     png_structp png_ptr = (png_structp)_png_ptr;
     PngDecoder* decoder = (PngDecoder*)(png_ptr->io_ptr);
     CV_Assert( decoder );
-    if( decoder->m_buf_pos + size > decoder->m_buf.size() )
+    const Mat& buf = decoder->m_buf;
+    if( decoder->m_buf_pos + size > buf.cols*buf.rows*buf.elemSize() )
     {
         png_error(png_ptr, "PNG input buffer is incomplete");
         return;
     }
-    memcpy( dst, &decoder->m_buf[decoder->m_buf_pos], size );
+    memcpy( dst, &decoder->m_buf.data[decoder->m_buf_pos], size );
     decoder->m_buf_pos += size;
 }
 
@@ -139,7 +140,7 @@ bool  PngDecoder::readHeader()
         {
             if( setjmp( png_ptr->jmpbuf ) == 0 )
             {
-                if( m_buf.size() )
+                if( !m_buf.empty() )
                     png_set_read_fn(png_ptr, this, (png_rw_ptr)readDataFromBuf );
                 else
                 {
@@ -152,7 +153,7 @@ bool  PngDecoder::readHeader()
                         png_init_io( png_ptr, m_f );
                 }
 
-                if( m_buf.size() || m_f )
+                if( !m_buf.empty() || m_f )
                 {
                     png_uint_32 width, height;
                     int bit_depth, color_type;
@@ -295,7 +296,7 @@ void PngEncoder::flushBuf(void*)
 {
 }
 
-bool  PngEncoder::write( const Mat& img, const Vector<int>& params )
+bool  PngEncoder::write( const Mat& img, const vector<int>& params )
 {
     int compression_level = 0;
 

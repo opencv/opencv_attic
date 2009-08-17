@@ -62,6 +62,8 @@ namespace cv {
 #undef min
 #undef max    
 
+using std::vector;
+    
 template<typename _Tp> class CV_EXPORTS Size_;
 template<typename _Tp> class CV_EXPORTS Point_;
 template<typename _Tp> class CV_EXPORTS Rect_;
@@ -282,10 +284,12 @@ public:
     Point_(const CvPoint& pt);
     Point_(const CvPoint2D32f& pt);
     Point_(const Size_<_Tp>& sz);
+    Point_(const Vec<_Tp, 2>& v);
     Point_& operator = (const Point_& pt);
     template<typename _Tp2> operator Point_<_Tp2>() const;
     operator CvPoint() const;
     operator CvPoint2D32f() const;
+    operator Vec<_Tp, 2>() const;
 
     _Tp dot(const Point_& pt) const;
     double ddot(const Point_& pt) const;
@@ -304,10 +308,11 @@ public:
     Point3_(const Point3_& pt);
 	explicit Point3_(const Point_<_Tp>& pt);
     Point3_(const CvPoint3D32f& pt);
-    Point3_(const Vec<_Tp, 3>& t);
+    Point3_(const Vec<_Tp, 3>& v);
     Point3_& operator = (const Point3_& pt);
     template<typename _Tp2> operator Point3_<_Tp2>() const;
     operator CvPoint3D32f() const;
+    operator Vec<_Tp, 3>() const;
 
     _Tp dot(const Point3_& pt) const;
     double ddot(const Point3_& pt) const;
@@ -331,9 +336,7 @@ public:
     Size_& operator = (const Size_& sz);
     _Tp area() const;
 
-    operator Size_<int>() const;
-    operator Size_<float>() const;
-    operator Size_<double>() const;
+    template<typename _Tp2> operator Size_<_Tp2>() const;
     operator CvSize() const;
     operator CvSize2D32f() const;
 
@@ -360,9 +363,7 @@ public:
     Size_<_Tp> size() const;
     _Tp area() const;
 
-    operator Rect_<int>() const;
-    operator Rect_<float>() const;
-    operator Rect_<double>() const;
+    template<typename _Tp2> operator Rect_<_Tp2>() const;
     operator CvRect() const;
 
     bool contains(const Point_<_Tp>& pt) const;
@@ -631,80 +632,7 @@ public:
            type = CV_MAKETYPE(depth, channels) };
 };
 
-
-//////////////////////////////// Vector ////////////////////////////////
-
-// template vector class. It is similar to STL's vector,
-// with a few important differences:
-//   1) it can be created on top of user-allocated data w/o copying it
-//   2) Vector b = a means copying the header,
-//      not the underlying data (use clone() to make a deep copy)
-template <typename _Tp> class CV_EXPORTS Vector
-{
-public:
-    typedef _Tp value_type;
-    typedef _Tp* iterator;
-    typedef const _Tp* const_iterator;
-    typedef _Tp& reference;
-    typedef const _Tp& const_reference;
-
-    struct CV_EXPORTS Hdr
-    {
-        Hdr() : data(0), datastart(0), refcount(0), size(0), capacity(0) {};
-        _Tp* data;
-        _Tp* datastart;
-        int* refcount;
-        size_t size;
-        size_t capacity;
-    };
-
-    Vector();
-    Vector(size_t _size);
-    Vector(size_t _size, const _Tp& val);
-    Vector(_Tp* _data, size_t _size, bool _copyData=false);
-    template<int n> Vector(const Vec<_Tp, n>& vec);
-    Vector(const std::vector<_Tp>& vec, bool _copyData=false);
-    Vector(const Vector& d);
-    Vector(const Vector& d, const Range& r);
-
-    Vector<_Tp>& operator = (const Vector& d);
-    ~Vector();
-    Vector clone() const;
-    void copyTo(Vector<_Tp>& vec) const;
-    void copyTo(std::vector<_Tp>& vec) const;
-    operator CvMat() const;
     
-    _Tp& operator [] (size_t i);
-    const _Tp& operator [] (size_t i) const;
-    Vector operator() (const Range& r) const;
-    _Tp& back();
-    const _Tp& back() const;
-    _Tp& front();
-    const _Tp& front() const;
-
-    _Tp* begin();
-    _Tp* end();
-    const _Tp* begin() const;
-    const _Tp* end() const;
-
-    void addref();
-    void release();
-    void set(_Tp* _data, size_t _size, bool _copyData=false);
-
-    void reserve(size_t newCapacity);
-    void resize(size_t newSize);
-    Vector<_Tp>& push_back(const _Tp& elem);
-    Vector<_Tp>& pop_back();
-    size_t size() const;
-    size_t capacity() const;
-    bool empty() const;
-    void clear();
-    int type() const;
-
-protected:
-    Hdr hdr;
-};
-
 //////////////////// Generic ref-counting pointer class for C/C++ objects ////////////////////////
 
 template<typename _Tp> class CV_EXPORTS Ptr
@@ -783,7 +711,8 @@ public:
     Mat(const Mat& m, const Rect& roi);
     Mat(const CvMat* m, bool copyData=false);
     Mat(const IplImage* img, bool copyData=false);
-    Mat( const MatExpr_Base& expr );
+    template<typename _Tp> Mat(const vector<_Tp>& vec, bool copyData=false);
+    Mat(const MatExpr_Base& expr);
     ~Mat();
     Mat& operator = (const Mat& m);
     Mat& operator = (const MatExpr_Base& expr);
@@ -859,6 +788,8 @@ public:
     template<typename _Tp> const _Tp* ptr(int y=0) const;
     template<typename _Tp> _Tp& at(int y, int x);
     template<typename _Tp> const _Tp& at(int y, int x) const;
+    template<typename _Tp> _Tp& at(Point pt);
+    template<typename _Tp> const _Tp& at(Point pt) const;
     template<typename _Tp> MatIterator_<_Tp> begin();
     template<typename _Tp> MatIterator_<_Tp> end();
     template<typename _Tp> MatConstIterator_<_Tp> begin() const;
@@ -957,10 +888,11 @@ CV_EXPORTS void minMaxLoc(const Mat& a, double* minVal,
                           double* maxVal=0, Point* minLoc=0,
                           Point* maxLoc=0, const Mat& mask=Mat());
 CV_EXPORTS void reduce(const Mat& m, Mat& dst, int dim, int rtype, int dtype=-1);
-CV_EXPORTS void merge(const Vector<Mat>& mv, Mat& dst);
-CV_EXPORTS void split(const Mat& m, Vector<Mat>& mv);
-CV_EXPORTS void mixChannels(const Vector<Mat>& src, Vector<Mat>& dst,
-                            const Vector<int>& fromTo);
+CV_EXPORTS void merge(const Mat* mv, size_t count, Mat& dst);
+CV_EXPORTS void split(const Mat& m, Mat* mvbegin);
+
+CV_EXPORTS void mixChannels(const Mat* srcbegin, Mat* dstbegin,
+                            const int* fromTo, size_t npairs);
 CV_EXPORTS void flip(const Mat& a, Mat& b, int flipCode);
 
 CV_EXPORTS void repeat(const Mat& a, int ny, int nx, Mat& b);
@@ -1029,9 +961,10 @@ CV_EXPORTS void solvePoly(const Mat& coeffs, Mat& roots, int maxIters=20, int fi
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, Mat& eigenvectors);
 
-CV_EXPORTS void calcCovariation( const Vector<Mat>& data, Mat& covar, Mat& mean,
+CV_EXPORTS void calcCovariation( const Mat* samples, int nsamples,
+                                 Mat& covar, Mat& mean,
                                  int flags, int ctype=CV_64F);
-CV_EXPORTS void calcCovariation( const Mat& data, Mat& covar, Mat& mean,
+CV_EXPORTS void calcCovariation( const Mat& samples, Mat& covar, Mat& mean,
                                  int flags, int ctype=CV_64F);
 
 class CV_EXPORTS PCA
@@ -1083,8 +1016,6 @@ CV_EXPORTS int kmeans( const Mat& samples, int K,
                        int flags=KMEANS_CENTERS_SPP,
                        double* compactness=0);
 
-CV_EXPORTS void seqToVector( const CvSeq* ptseq, Vector<Point>& pts );
-
 CV_EXPORTS RNG& theRNG();
 static inline int randi() { return (int)theRNG(); }
 static inline unsigned randu() { return (unsigned)theRNG(); }
@@ -1117,15 +1048,15 @@ CV_EXPORTS void ellipse(Mat& img, Point center, Size axes,
 CV_EXPORTS void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
                         int thickness=1, int lineType=8);
 
-CV_EXPORTS void fillConvexPoly(Mat& img, const Vector<Point>& pts,
+CV_EXPORTS void fillConvexPoly(Mat& img, const Point* pts, int npts,
                                const Scalar& color, int lineType=8,
                                int shift=0);
 
-CV_EXPORTS void fillPoly(Mat& img, const Vector<Vector<Point> >& pts,
+CV_EXPORTS void fillPoly(Mat& img, const Point** pts, const int* npts, int ncontours,
                          const Scalar& color, int lineType=8, int shift=0,
                          Point offset=Point() );
 
-CV_EXPORTS void polylines(Mat& img, const Vector<Vector<Point> >& pts, bool isClosed,
+CV_EXPORTS void polylines(Mat& img, const Point** pts, const int* npts, int ncontours, bool isClosed,
                           const Scalar& color, int thickness=1, int lineType=8, int shift=0 );
 
 CV_EXPORTS bool clipLine(Size imgSize, Point& pt1, Point& pt2);
@@ -1146,7 +1077,7 @@ public:
 };
 
 CV_EXPORTS void ellipse2Poly( Point center, Size axes, int angle,
-                              int arcStart, int arcEnd, int delta, Vector<Point>& pts );
+                              int arcStart, int arcEnd, int delta, vector<Point>& pts );
 
 enum
 {
@@ -1192,7 +1123,7 @@ public:
     Mat_(const Mat_& m, const Rect& roi);
     Mat_(const MatExpr_Base& expr);
     template<int n> explicit Mat_(const Vec<_Tp, n>& vec);
-    Mat_(const Vector<_Tp>& vec);
+    Mat_(const vector<_Tp>& vec, bool copyData=false);
 
     Mat_& operator = (const Mat& m);
     Mat_& operator = (const Mat_& m);
@@ -1250,9 +1181,11 @@ public:
 
     _Tp& operator ()(int row, int col);
     const _Tp& operator ()(int row, int col) const;
+    _Tp& operator ()(Point pt);
+    const _Tp& operator()(Point pt) const;
 
     operator MatExpr_<Mat_, Mat_>() const;
-    operator Vector<_Tp>() const;
+    operator vector<_Tp>() const;
 };
 
 //////////// Iterators & Comma initializers //////////////////
@@ -1327,17 +1260,19 @@ public:
     void assignTo(Mat& m, int type=-1) const;
 };
 
+#if 0
 template<typename _Tp> class VectorCommaInitializer_
 {
 public:
-    VectorCommaInitializer_(Vector<_Tp>* _vec);
+    VectorCommaInitializer_(vector<_Tp>* _vec);
     template<typename T2> VectorCommaInitializer_<_Tp>& operator , (T2 val);
-    operator Vector<_Tp>() const;
-    Vector<_Tp> operator *() const;
+    operator vector<_Tp>() const;
+    vector<_Tp> operator *() const;
 
-    Vector<_Tp>* vec;
+    vector<_Tp>* vec;
     int idx;
 };
+#endif
 
 template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> class CV_EXPORTS AutoBuffer
 {
@@ -1368,10 +1303,10 @@ class CV_EXPORTS MatND
 {
 public:
     MatND();
-    MatND(const Vector<int>& _sizes, int _type);
-    MatND(const Vector<int>& _sizes, int _type, const Scalar& _s);
+    MatND(int dims, const int* _sizes, int _type);
+    MatND(int dims, const int* _sizes, int _type, const Scalar& _s);
     MatND(const MatND& m);
-    MatND(const MatND& m, const Vector<Range>& ranges);
+    MatND(const MatND& m, const Range* ranges);
     MatND(const CvMatND* m, bool copyData=false);
     //MatND( const MatExpr_BaseND& expr );
     ~MatND();
@@ -1381,7 +1316,7 @@ public:
     //operator MatExpr_<MatND, MatND>() const;
 
     MatND clone() const;
-    MatND operator()(const Vector<Range>& ranges) const;
+    MatND operator()(const Range* ranges) const;
 
     void copyTo( MatND& m ) const;
     void copyTo( MatND& m, const MatND& mask ) const;
@@ -1390,9 +1325,9 @@ public:
     void assignTo( MatND& m, int type=-1 ) const;
     MatND& operator = (const Scalar& s);
     MatND& setTo(const Scalar& s, const MatND& mask=MatND());
-    MatND reshape(int newcn, const Vector<int>& newsz=Vector<int>()) const;
+    MatND reshape(int newcn, int newdims=0, const int* newsz=0) const;
 
-    void create(const Vector<int>& _sizes, int _type);
+    void create(int dims, const int* _sizes, int _type);
     void addref();
     void release();
 
@@ -1404,10 +1339,7 @@ public:
     int type() const;
     int depth() const;
     int channels() const;
-    size_t step(int i) const;
     size_t step1(int i) const;
-    Vector<int> size() const;
-    int size(int i) const;
 
     uchar* ptr(int i0);
     const uchar* ptr(int i0) const;
@@ -1438,26 +1370,32 @@ public:
     uchar* datastart;
     uchar* dataend;
 
-    struct
-    {
-        int size;
-        size_t step;
-    }
-    dim[MAX_DIM];
+    int size[MAX_DIM];
+    size_t step[MAX_DIM];
 };
 
 class CV_EXPORTS NAryMatNDIterator
 {
 public:
     NAryMatNDIterator();
-    NAryMatNDIterator(const Vector<MatND>& arrays);
-    void init(const Vector<MatND>& arrays);
+    NAryMatNDIterator(const MatND* arrays, size_t count);
+    NAryMatNDIterator(const MatND** arrays, size_t count);
+    NAryMatNDIterator(const MatND& m1);
+    NAryMatNDIterator(const MatND& m1, const MatND& m2);
+    NAryMatNDIterator(const MatND& m1, const MatND& m2, const MatND& m3);
+    NAryMatNDIterator(const MatND& m1, const MatND& m2, const MatND& m3, const MatND& m4);
+    NAryMatNDIterator(const MatND& m1, const MatND& m2, const MatND& m3,
+                      const MatND& m4, const MatND& m5);
+    NAryMatNDIterator(const MatND& m1, const MatND& m2, const MatND& m3,
+                      const MatND& m4, const MatND& m5, const MatND& m6);
+    
+    void init(const MatND** arrays, size_t count);
 
     NAryMatNDIterator& operator ++();
     NAryMatNDIterator operator ++(int);
     
-    Vector<MatND> arrays;
-    Vector<Mat> planes;
+    vector<MatND> arrays;
+    vector<Mat> planes;
 
     int nplanes;
 protected:
@@ -1494,10 +1432,11 @@ CV_EXPORTS void normalize( const MatND& a, MatND& b, double alpha=1, double beta
 CV_EXPORTS void minMaxLoc(const MatND& a, double* minVal,
                        double* maxVal, int* minIdx=0, int* maxIdx=0,
                        const MatND& mask=MatND());
-CV_EXPORTS void merge(const Vector<MatND>& mv, MatND& dst);
-CV_EXPORTS void split(const MatND& m, Vector<MatND>& mv);
-CV_EXPORTS void mixChannels(const Vector<MatND>& src, Vector<MatND>& dst,
-                            const Vector<int>& fromTo);
+
+CV_EXPORTS void merge(const MatND* mvbegin, size_t count, MatND& dst);
+CV_EXPORTS void split(const MatND& m, MatND* mv);
+CV_EXPORTS void mixChannels(const MatND* srcbegin, MatND* dstbegin,
+                            const int* fromTo, size_t npairs);
 
 CV_EXPORTS void bitwise_and(const MatND& a, const MatND& b, MatND& c, const MatND& mask=MatND());
 CV_EXPORTS void bitwise_or(const MatND& a, const MatND& b, MatND& c, const MatND& mask=MatND());
@@ -1539,20 +1478,20 @@ public:
     typedef typename DataType<_Tp>::channel_type channel_type;
 
     MatND_();
-    MatND_(const Vector<int>& _sizes);
-    MatND_(const Vector<int>& _sizes, const _Tp& _s);
+    MatND_(int dims, const int* _sizes);
+    MatND_(int dims, const int* _sizes, const _Tp& _s);
     MatND_(const MatND& m);
     MatND_(const MatND_& m);
-    MatND_(const MatND_& m, const Vector<Range>& ranges);
+    MatND_(const MatND_& m, const Range* ranges);
     MatND_(const CvMatND* m, bool copyData=false);
     MatND_& operator = (const MatND& m);
     MatND_& operator = (const MatND_& m);
     MatND_& operator = (const _Tp& s);
 
-    void create(const Vector<int>& _sizes);
+    void create(int dims, const int* _sizes);
     template<typename T2> operator MatND_<T2>() const;
     MatND_ clone() const;
-    MatND_ operator()(const Vector<Range>& ranges) const;
+    MatND_ operator()(const Range* ranges) const;
 
     size_t elemSize() const;
     size_t elemSize1() const;
@@ -1582,7 +1521,7 @@ public:
 
     struct CV_EXPORTS Hdr
     {
-        Hdr(const Vector<int>& _sizes, int _type);
+        Hdr(int _dims, const int* _sizes, int _type);
         void clear();
         int refcount;
         int dims;
@@ -1590,8 +1529,8 @@ public:
         size_t nodeSize;
         size_t nodeCount;
         size_t freeList;
-        Vector<uchar> pool;
-        Vector<size_t> hashtab;
+        vector<uchar> pool;
+        vector<size_t> hashtab;
         int size[CV_MAX_DIM];
     };
 
@@ -1603,7 +1542,7 @@ public:
     };
 
     SparseMat();
-    SparseMat(const Vector<int>& _sizes, int _type);
+    SparseMat(int dims, const int* _sizes, int _type);
     SparseMat(const SparseMat& m);
     SparseMat(const Mat& m, bool try1d=false);
     SparseMat(const MatND& m);
@@ -1623,7 +1562,7 @@ public:
 
     void assignTo( SparseMat& m, int type=-1 ) const;
 
-    void create(const Vector<int>& _sizes, int _type);
+    void create(int dims, const int* _sizes, int _type);
     void clear();
     void addref();
     void release();
@@ -1634,7 +1573,7 @@ public:
     int type() const;
     int depth() const;
     int channels() const;
-    Vector<int> size() const;
+    const int* size() const;
     int size(int i) const;
     int dims() const;
     size_t nzcount() const;
@@ -1739,7 +1678,7 @@ public:
     typedef SparseMatConstIterator_<_Tp> const_iterator;
 
     SparseMat_();
-    SparseMat_(const Vector<int>& _sizes);
+    SparseMat_(int dims, const int* _sizes);
     SparseMat_(const SparseMat& m);
     SparseMat_(const SparseMat_& m);
     SparseMat_(const Mat& m);
@@ -1751,7 +1690,7 @@ public:
     SparseMat_& operator = (const MatND& m);
 
     SparseMat_ clone() const;
-    void create(const Vector<int>& _sizes);
+    void create(int dims, const int* _sizes);
     operator CvSparseMat*() const;
 
     int type() const;
@@ -1823,19 +1762,19 @@ public:
     KDTree(const Mat& _points, bool copyPoints=true);
     void build(const Mat& _points, bool copyPoints=true);
 
-    void findNearest(const Mat& vec, int K, int Emax, Vector<int>* neighborsIdx,
-        Mat* neighbors=0, Vector<float>* dist=0) const;
-    void findNearest(const Vector<float>& vec, int K, int Emax, Vector<int>* neighborsIdx,
-        Vector<float>* neighbors=0, Vector<float>* dist=0) const;
-    void findOrthoRange(const Mat& minBounds, const Mat& maxBounds,
-        Vector<int>* neighborsIdx, Mat* neighbors=0) const;
-    void findOrthoRange(const Vector<float>& minBounds, const Vector<float>& maxBounds,
-        Vector<int>* neighborsIdx, Vector<float>* neighbors=0) const;
-    void getPoints(const Vector<int>& ids, Mat& pts) const;
-    void getPoints(const Vector<int>& ids, Vector<float>& pts) const;
-    Vector<float> at(int ptidx, bool copyData=false) const;
+    int findNearest(const float* vec, int K, int Emax, int* neighborsIdx,
+                    Mat* neighbors=0, float* dist=0) const;
+    int findNearest(const float* vec, int K, int Emax,
+                    vector<int>* neighborsIdx,
+                    Mat* neighbors=0, vector<float>* dist=0) const;
+    void findOrthoRange(const float* minBounds, const float* maxBounds,
+                        vector<int>* neighborsIdx, Mat* neighbors=0) const;
+    void getPoints(const int* idx, size_t nidx, Mat& pts) const;
+    void getPoints(const Mat& idxs, Mat& pts) const;
+    const float* getPoint(int ptidx) const;
+    int dims() const;
 
-    Vector<Node> nodes;
+    vector<Node> nodes;
     Mat points;
     int maxDepth;
     int normType;
@@ -1866,14 +1805,14 @@ public:
 
     CvFileStorage* operator *() { return fs; }
     const CvFileStorage* operator *() const { return fs; }
-    void writeRaw( const String& fmt, const Vector<uchar>& vec );
+    void writeRaw( const String& fmt, const uchar* vec, size_t len );
     void writeObj( const String& name, const void* obj );
 
     static String getDefaultObjectName(const String& filename);
 
     Ptr<CvFileStorage> fs;
     String elname;
-    Vector<char> structs;
+    vector<char> structs;
     int state;
 };
 
@@ -1910,7 +1849,7 @@ public:
     FileNodeIterator begin() const;
     FileNodeIterator end() const;
 
-    void readRaw( const String& fmt, Vector<uchar>& vec ) const;
+    void readRaw( const String& fmt, uchar* vec, size_t len ) const;
     void* readObj() const;
 
     // do not use wrapper pointer classes for better efficiency
@@ -1934,7 +1873,7 @@ public:
     FileNodeIterator& operator += (int);
     FileNodeIterator& operator -= (int);
 
-    FileNodeIterator& readRaw( const String& fmt, Vector<uchar>& vec,
+    FileNodeIterator& readRaw( const String& fmt, uchar* vec,
                                size_t maxCount=(size_t)INT_MAX );
 
     const CvFileStorage* fs;
@@ -1983,8 +1922,8 @@ public:
     void pop_front();
     void pop_back();
 
-    void copyTo(Vector<_Tp>& vec, const Range& range=Range::all()) const;
-    operator Vector<_Tp>() const;
+    void copyTo(vector<_Tp>& vec, const Range& range=Range::all()) const;
+    operator vector<_Tp>() const;
     
     CvSeq* seq;
 };

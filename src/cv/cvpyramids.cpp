@@ -438,7 +438,7 @@ void pyrUp( const Mat& _src, Mat& _dst, const Size& _dsz )
     func( _src, _dst );
 }
 
-void buildPyramid( const Mat& _src, Vector<Mat>& _dst, int maxlevel )
+void buildPyramid( const Mat& _src, vector<Mat>& _dst, int maxlevel )
 {
     _dst.resize( maxlevel + 1 );
     _dst[0] = _src;

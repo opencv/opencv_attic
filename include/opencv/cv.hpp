@@ -130,14 +130,14 @@ public:
     Rect roi;
     int dx1, dx2;
     int rowBorderType, columnBorderType;
-    Vector<int> borderTab;
+    vector<int> borderTab;
     int borderElemSize;
-    Vector<uchar> ringBuf;
-    Vector<uchar> srcRow;
-    Vector<uchar> constBorderValue;
-    Vector<uchar> constBorderRow;
+    vector<uchar> ringBuf;
+    vector<uchar> srcRow;
+    vector<uchar> constBorderValue;
+    vector<uchar> constBorderRow;
     int bufStep, startY, startY0, endY, rowCount, dstY;
-    Vector<uchar*> rows;
+    vector<uchar*> rows;
     
     Ptr<BaseFilter> filter2D;
     Ptr<BaseRowFilter> rowFilter;
@@ -279,24 +279,24 @@ CV_EXPORTS void cornerEigenValsAndVecs( const Mat& src, Mat& dst,
 CV_EXPORTS void preCornerDetect( const Mat& src, Mat& dst, int ksize,
                                  int borderType=BORDER_DEFAULT );
 
-CV_EXPORTS void cornerSubPix( const Mat& image, Vector<Point2f>& corners,
+CV_EXPORTS void cornerSubPix( const Mat& image, vector<Point2f>& corners,
                               Size winSize, Size zeroZone,
                               TermCriteria criteria );
 
-CV_EXPORTS void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
+CV_EXPORTS void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
                                      int maxCorners, double qualityLevel, double minDistance,
                                      const Mat& mask=Mat(), int blockSize=3,
                                      bool useHarrisDetector=false, double k=0.04 );
 
-CV_EXPORTS void HoughLines( Mat& image, Vector<Vec2f>& lines,
+CV_EXPORTS void HoughLines( Mat& image, vector<Vec2f>& lines,
                             double rho, double theta, int threshold,
                             double srn=0, double stn=0 );
 
-CV_EXPORTS void HoughLinesP( Mat& image, Vector<Vec4i>& lines,
+CV_EXPORTS void HoughLinesP( Mat& image, vector<Vec4i>& lines,
                              double rho, double theta, int threshold,
                              double minLineLength=0, double maxLineGap=0 );
 
-CV_EXPORTS void HoughCircles( Mat& image, Vector<Vec3f>& circles,
+CV_EXPORTS void HoughCircles( Mat& image, vector<Vec3f>& circles,
                               int method, double dp, double minDist,
                               double param1=100, double param2=100,
                               int minRadius=0, int maxRadius=0 );
@@ -371,7 +371,7 @@ CV_EXPORTS void adaptiveThreshold( const Mat& src, Mat& dst, double maxValue,
 
 CV_EXPORTS void pyrDown( const Mat& src, Mat& dst, const Size& dstsize=Size());
 CV_EXPORTS void pyrUp( const Mat& src, Mat& dst, const Size& dstsize=Size());
-CV_EXPORTS void buildPyramid( const Mat& src, Vector<Mat>& dst, int maxlevel );
+CV_EXPORTS void buildPyramid( const Mat& src, vector<Mat>& dst, int maxlevel );
 
 
 CV_EXPORTS void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
@@ -385,9 +385,8 @@ CV_EXPORTS Mat getDefaultNewCameraMatrix( const Mat& cameraMatrix, Size imgsize=
 enum { OPTFLOW_USE_INITIAL_FLOW=4, OPTFLOW_FARNEBACK_GAUSSIAN=256 };
 
 CV_EXPORTS void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
-                           const Vector<Point2f>& prevPts,
-                           Vector<Point2f>& nextPts,
-                           Vector<bool>& status, Vector<float>& err,
+                           const Mat& prevPts, const Mat& nextPts,
+                           vector<uchar>& status, vector<float>& err,
                            Size winSize=Size(15,15), int maxLevel=3,
                            TermCriteria criteria=TermCriteria(
                             TermCriteria::COUNT+TermCriteria::EPS,
@@ -403,24 +402,26 @@ CV_EXPORTS void calcOpticalFlowFarneback( const Mat& prev0, const Mat& next0,
 template<> inline void Ptr<CvHistogram>::delete_obj()
 { cvReleaseHist(&obj); }
     
-CV_EXPORTS void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
-                          const Mat& mask, MatND& hist, const Vector<int>& histSize,
-                          const Vector<Vector<float> >& ranges,
-                          bool uniform=true, bool accumulate=false );
+CV_EXPORTS void calcHist( const Mat* images, int nimages,
+                          const int* channels, const Mat& mask,
+                          MatND& hist, int dims, const int* histSize,
+                          const float** ranges, bool uniform=true,
+                          bool accumulate=false );
 
-CV_EXPORTS void calcHist( const Vector<Mat>& images, const Vector<int>& channels,
-                          const Mat& mask, SparseMat& hist, const Vector<int>& histSize,
-                          const Vector<Vector<float> >& ranges,
-                          bool uniform=true, bool accumulate=false );
+CV_EXPORTS void calcHist( const Mat* images, int nimages,
+                          const int* channels, const Mat& mask,
+                          SparseMat& hist, int dims, const int* histSize,
+                          const float** ranges, bool uniform=true,
+                          bool accumulate=false );
     
-CV_EXPORTS void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
-                                 const MatND& hist, Mat& backProject,
-                                 const Vector<Vector<float> >& ranges,
+CV_EXPORTS void calcBackProject( const Mat* images, int nimages,
+                                 const int* channels, const MatND& hist,
+                                 Mat& backProject, const float** ranges,
                                  double scale=1, bool uniform=true );
     
-CV_EXPORTS void calcBackProject( const Vector<Mat>& images, const Vector<int>& channels,
-                                 const SparseMat& hist, Mat& backProject,
-                                 const Vector<Vector<float> >& ranges,
+CV_EXPORTS void calcBackProject( const Mat* images, int nimages,
+                                 const int* channels, const SparseMat& hist,
+                                 Mat& backProject, const float** ranges,
                                  double scale=1, bool uniform=true );
 
 CV_EXPORTS double compareHist( const MatND& H1, const MatND& H2, int method );
@@ -489,82 +490,54 @@ enum { CHAIN_APPROX_NONE=CV_CHAIN_APPROX_NONE,
        CHAIN_APPROX_TC89_L1=CV_CHAIN_APPROX_TC89_L1,
        CHAIN_APPROX_TC89_KCOS=CV_CHAIN_APPROX_TC89_KCOS };
 
-CV_EXPORTS Vector<Vector<Point> >
-    findContours( const Mat& image, Vector<Vec4i>& hierarchy,
-                  int mode, int method, Point offset=Point());
+CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours,
+                              vector<Vec4i>& hierarchy, int mode,
+                              int method, Point offset=Point());
 
-CV_EXPORTS Vector<Vector<Point> >
-    findContours( const Mat& image, int mode, int method, Point offset=Point());
+CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours,
+                              int mode, int method, Point offset=Point());
 
 CV_EXPORTS void
-    drawContours( Mat& image, const Vector<Vector<Point> >& contours,
+    drawContours( Mat& image, const vector<vector<Point> >& contours,
                   const Scalar& color, int thickness=1,
-                  int lineType=8, const Vector<Vec4i>& hierarchy=Vector<Vec4i>(),
+                  int lineType=8, const vector<Vec4i>& hierarchy=vector<Vec4i>(),
                   int maxLevel=1, Point offset=Point() );
 
-CV_EXPORTS void approxPolyDP( const Vector<Point>& curve,
-                              Vector<Point>& approxCurve,
+CV_EXPORTS void approxPolyDP( const Mat& curve,
+                              vector<Point>& approxCurve,
                               double epsilon, bool closed );
-CV_EXPORTS void approxPolyDP( const Vector<Point2f>& curve,
-                              Vector<Point2f>& approxCurve,
+CV_EXPORTS void approxPolyDP( const Mat& curve,
+                              vector<Point2f>& approxCurve,
                               double epsilon, bool closed );
-
-CV_EXPORTS double arcLength( const Vector<Point>& curve, bool closed );
-CV_EXPORTS double arcLength( const Vector<Point2f>& curve, bool closed );
-
-CV_EXPORTS Rect boundingRect( const Vector<Point>& points );
-CV_EXPORTS Rect boundingRect( const Vector<Point2f>& points );
-
-CV_EXPORTS double contourArea( const Vector<Point>& contour );
-CV_EXPORTS double contourArea( const Vector<Point2f>& contour );
-
-CV_EXPORTS RotatedRect minAreaRect( const Vector<Point>& points );
-CV_EXPORTS RotatedRect minAreaRect( const Vector<Point2f>& points );
-
-CV_EXPORTS void minEnclosingCircle( const Vector<Point>& points,
-                                    Point2f center, float& radius );
-CV_EXPORTS void minEnclosingCircle( const Vector<Point2f>& points,
-                                    Point2f center, float& radius );
-
-CV_EXPORTS Moments moments( const Vector<Point>& points );
-CV_EXPORTS Moments moments( const Vector<Point2f>& points );
-
-CV_EXPORTS double matchShapes( const Vector<Point2f>& contour1,
-                               const Vector<Point2f>& contour2,
+    
+CV_EXPORTS double arcLength( const Mat& curve, bool closed );
+CV_EXPORTS Rect boundingRect( const Mat& points );
+CV_EXPORTS double contourArea( const Mat& contour );    
+CV_EXPORTS RotatedRect minAreaRect( const Mat& points );
+CV_EXPORTS void minEnclosingCircle( const Mat& points,
+                                    Point2f center, float& radius );    
+CV_EXPORTS Moments moments( const Mat& points );
+CV_EXPORTS double matchShapes( const Mat& contour1,
+                               const Mat& contour2,
                                int method, double parameter );
-CV_EXPORTS double matchShapes( const Vector<Point>& contour1,
-                               const Vector<Point>& contour2,
-                               int method, double parameter );
+    
+CV_EXPORTS void convexHull( const Mat& points, vector<int>& hull, bool clockwise=false );
+CV_EXPORTS void convexHull( const Mat& points, vector<Point>& hull, bool clockwise=false );
+CV_EXPORTS void convexHull( const Mat& points, vector<Point2f>& hull, bool clockwise=false );
 
-CV_EXPORTS void convexHull( const Vector<Point>& points,
-                            Vector<int>& hull, bool clockwise=false );
-CV_EXPORTS void convexHull( const Vector<Point>& points,
-                            Vector<Point>& hull, bool clockwise=false );
-CV_EXPORTS void convexHull( const Vector<Point2f>& points,
-                            Vector<int>& hull, bool clockwise=false );
-CV_EXPORTS void convexHull( const Vector<Point2f>& points,
-                            Vector<Point2f>& hull, bool clockwise=false );
+CV_EXPORTS bool isContourConvex( const Mat& contour );
 
-CV_EXPORTS bool isContourConvex( const Vector<Point>& contour );
-CV_EXPORTS bool isContourConvex( const Vector<Point2f>& contour );
+CV_EXPORTS RotatedRect fitEllipse( const Mat& points );
 
-CV_EXPORTS RotatedRect fitEllipse( const Vector<Point>& points );
-CV_EXPORTS RotatedRect fitEllipse( const Vector<Point2f>& points );
+CV_EXPORTS void fitLine( const Mat& points, Vec4f& line, int distType,
+                         double param, double reps, double aeps );
+CV_EXPORTS void fitLine( const Mat& points, Vec6f& line, int distType,
+                         double param, double reps, double aeps );
 
-CV_EXPORTS Vec4f fitLine( const Vector<Point> points, int distType,
-                          double param, double reps, double aeps );
-CV_EXPORTS Vec4f fitLine( const Vector<Point2f> points, int distType,
-                          double param, double reps, double aeps );
-CV_EXPORTS Vec6f fitLine( const Vector<Point3f> points, int distType,
-                          double param, double reps, double aeps );
-
-CV_EXPORTS double pointPolygonTest( const Vector<Point>& contour,
-                                    Point2f pt, bool measureDist );
-CV_EXPORTS double pointPolygonTest( const Vector<Point2f>& contour,
+CV_EXPORTS double pointPolygonTest( const Mat& contour,
                                     Point2f pt, bool measureDist );
 
-CV_EXPORTS Mat estimateRigidTransform( const Vector<Point2f>& A,
-                                       const Vector<Point2f>& B,
+CV_EXPORTS Mat estimateRigidTransform( const Mat& A, const Mat& B,
                                        bool fullAffine );
 
 CV_EXPORTS void updateMotionHistory( const Mat& silhouette, Mat& mhi,
@@ -586,7 +559,9 @@ CV_EXPORTS RotatedRect CAMShift( const Mat& probImage, Rect& window,
 CV_EXPORTS int meanShift( const Mat& probImage, Rect& window,
                           TermCriteria criteria );
 
-CV_EXPORTS int estimateAffine3D(const Vector<Point3f>& from, const Vector<Point3f>& to, Mat& out, Vector<uchar>& outliers, double param1 = 3.0, double param2 = 0.99);
+CV_EXPORTS int estimateAffine3D(const Mat& from, const Mat& to, Mat& out,
+                                vector<uchar>& outliers,
+                                double param1 = 3.0, double param2 = 0.99);
 
 class CV_EXPORTS KalmanFilter
 {
@@ -624,7 +599,7 @@ public:
 
 ///////////////////////////// Object Detection ////////////////////////////
 
-CV_EXPORTS void groupRectangles(Vector<Rect>& rectList, int groupThreshold, double eps=0.2);
+CV_EXPORTS void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps=0.2);
         
 class CV_EXPORTS FeatureEvaluator
 {
@@ -683,7 +658,7 @@ public:
     bool load(const String& filename);
     bool read(const FileNode& node);
     void detectMultiScale( const Mat& image,
-                           Vector<Rect>& objects,
+                           vector<Rect>& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
@@ -697,33 +672,41 @@ public:
     
     Size origWinSize;
     
-    Vector<Stage> stages;
-    Vector<DTree> classifiers;
-    Vector<DTreeNode> nodes;
-    Vector<float> leaves;
-    Vector<int> subsets;
+    vector<Stage> stages;
+    vector<DTree> classifiers;
+    vector<DTreeNode> nodes;
+    vector<float> leaves;
+    vector<int> subsets;
     
     Ptr<FeatureEvaluator> feval;
     Ptr<CvHaarClassifierCascade> oldCascade;
 };
 
     
-CV_EXPORTS void undistortPoints( const Vector<Point2f>& src, Vector<Point2f>& dst,
+CV_EXPORTS void undistortPoints( const Mat& src, vector<Point2f>& dst,
+                                 const Mat& cameraMatrix, const Mat& distCoeffs,
+                                 const Mat& R=Mat(), const Mat& P=Mat());
+CV_EXPORTS void undistortPoints( const Mat& src, Mat& dst,
                                  const Mat& cameraMatrix, const Mat& distCoeffs,
                                  const Mat& R=Mat(), const Mat& P=Mat());
 
-CV_EXPORTS Mat Rodrigues(const Mat& src);
-CV_EXPORTS Mat Rodrigues(const Mat& src, Mat& jacobian);
+CV_EXPORTS void Rodrigues(const Mat& src, Mat& dst);
+CV_EXPORTS void Rodrigues(const Mat& src, Mat& dst, Mat& jacobian);
 
 enum { LMEDS=4, RANSAC=8 };
 
-CV_EXPORTS Mat findHomography( const Vector<Point2f>& srcPoints,
-                               const Vector<Point2f>& dstPoints,
-                               Vector<bool>& mask, int method=0,
+CV_EXPORTS Mat findHomography( const Mat& srcPoints,
+                               const Mat& dstPoints,
+                               Mat& mask, int method=0,
+                               double ransacReprojThreshold=0 );
+    
+CV_EXPORTS Mat findHomography( const Mat& srcPoints,
+                               const Mat& dstPoints,
+                               vector<uchar>& mask, int method=0,
                                double ransacReprojThreshold=0 );
 
-CV_EXPORTS Mat findHomography( const Vector<Point2f>& srcPoints,
-                               const Vector<Point2f>& dstPoints,
+CV_EXPORTS Mat findHomography( const Mat& srcPoints,
+                               const Mat& dstPoints,
                                int method=0, double ransacReprojThreshold=0 );
 
 /* Computes RQ decomposition for 3x3 matrices */
@@ -752,30 +735,30 @@ CV_EXPORTS void composeRT( const Mat& rvec1, const Mat& tvec1,
                            Mat& dt3dr1, Mat& dt3dt1,
                            Mat& dt3dr2, Mat& dt3dt2 );
 
-CV_EXPORTS void projectPoints( const Vector<Point3f>& objectPoints,
+CV_EXPORTS void projectPoints( const Mat& objectPoints,
                                const Mat& rvec, const Mat& tvec,
                                const Mat& cameraMatrix,
                                const Mat& distCoeffs,
-                               Vector<Point2f>& imagePoints );
+                               vector<Point2f>& imagePoints );
 
-CV_EXPORTS void projectPoints( const Vector<Point3f>& objectPoints,
+CV_EXPORTS void projectPoints( const Mat& objectPoints,
                                const Mat& rvec, const Mat& tvec,
                                const Mat& cameraMatrix,
                                const Mat& distCoeffs,
-                               Vector<Point2f>& imagePoints,
+                               vector<Point2f>& imagePoints,
                                Mat& dpdrot, Mat& dpdt, Mat& dpdf,
                                Mat& dpdc, Mat& dpddist,
                                double aspectRatio=0 );
 
-CV_EXPORTS void solvePnP( const Vector<Point3f>& objectPoints,
-                          const Vector<Point2f>& imagePoints,
+CV_EXPORTS void solvePnP( const Mat& objectPoints,
+                          const Mat& imagePoints,
                           const Mat& cameraMatrix,
                           const Mat& distCoeffs,
                           Mat& rvec, Mat& tvec,
                           bool useExtrinsicGuess=false );
 
-CV_EXPORTS Mat initCameraMatrix2D( const Vector<Vector<Point3f> >& objectPoints,
-                                   const Vector<Vector<Point2f> >& imagePoints,
+CV_EXPORTS Mat initCameraMatrix2D( const vector<vector<Point3f> >& objectPoints,
+                                   const vector<vector<Point2f> >& imagePoints,
                                    Size imageSize, double aspectRatio=1. );
 
 enum { CALIB_CB_ADAPTIVE_THRESH = CV_CALIB_CB_ADAPTIVE_THRESH,
@@ -783,12 +766,12 @@ enum { CALIB_CB_ADAPTIVE_THRESH = CV_CALIB_CB_ADAPTIVE_THRESH,
        CALIB_CB_FILTER_QUADS = CV_CALIB_CB_FILTER_QUADS };
 
 CV_EXPORTS bool findChessboardCorners( const Mat& image, Size patternSize,
-                                       Vector<Point2f>& corners,
+                                       vector<Point2f>& corners,
                                        int flags=CV_CALIB_CB_ADAPTIVE_THRESH+
                                             CV_CALIB_CB_NORMALIZE_IMAGE );
 
 CV_EXPORTS void drawChessboardCorners( Mat& image, Size patternSize,
-                                       const Vector<Point2f>& corners,
+                                       const Mat& corners,
                                        bool patternWasFound );
 
 enum
@@ -808,11 +791,11 @@ enum
     CALIB_ZERO_DISPARITY = CV_CALIB_ZERO_DISPARITY
 };
 
-CV_EXPORTS void calibrateCamera( const Vector<Vector<Point3f> >& objectPoints,
-                                 const Vector<Vector<Point2f> >& imagePoints,
+CV_EXPORTS void calibrateCamera( const vector<vector<Point3f> >& objectPoints,
+                                 const vector<vector<Point2f> >& imagePoints,
                                  Size imageSize,
                                  Mat& cameraMatrix, Mat& distCoeffs,
-                                 Vector<Mat>& rvecs, Vector<Mat>& tvecs,
+                                 vector<Mat>& rvecs, vector<Mat>& tvecs,
                                  int flags=0 );
 
 CV_EXPORTS void calibrationMatrixValues( const Mat& cameraMatrix,
@@ -825,9 +808,9 @@ CV_EXPORTS void calibrationMatrixValues( const Mat& cameraMatrix,
                                 Point2d& principalPoint,
                                 double& aspectRatio );
 
-CV_EXPORTS void stereoCalibrate( const Vector<Vector<Point3f> >& objectPoints,
-                                 const Vector<Vector<Point2f> >& imagePoints1,
-                                 const Vector<Vector<Point2f> >& imagePoints2,
+CV_EXPORTS void stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
+                                 const vector<vector<Point2f> >& imagePoints1,
+                                 const vector<vector<Point2f> >& imagePoints2,
                                  Mat& cameraMatrix1, Mat& distCoeffs1,
                                  Mat& cameraMatrix2, Mat& distCoeffs2,
                                  Size imageSize, Mat& R, Mat& T,
@@ -842,16 +825,14 @@ CV_EXPORTS void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
                                Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
                                int flags=CALIB_ZERO_DISPARITY );
 
-CV_EXPORTS bool stereoRectifyUncalibrated( const Vector<Point2f>& points1,
-                                           const Vector<Point2f>& points2,
+CV_EXPORTS bool stereoRectifyUncalibrated( const Mat& points1,
+                                           const Mat& points2,
                                            const Mat& F, Size imgSize,
                                            Mat& H1, Mat& H2,
                                            double threshold=5 );
 
-CV_EXPORTS void convertPointsHomogeneous( const Vector<Point2f>& src,
-                                          Vector<Point3f>& dst );
-CV_EXPORTS void convertPointsHomogeneous( const Vector<Point3f>& src,
-                                          Vector<Point2f>& dst );
+CV_EXPORTS void convertPointsHomogeneous( const Mat& src, vector<Point3f>& dst );
+CV_EXPORTS void convertPointsHomogeneous( const Mat& src, vector<Point2f>& dst );
 
 enum
 { 
@@ -861,20 +842,17 @@ enum
     FM_RANSAC = CV_FM_RANSAC
 };
 
-CV_EXPORTS Mat findFundamentalMat( const Vector<Point2f>& points1,
-                                   const Vector<Point2f>& points2,
-                                   Vector<bool>& mask,
+CV_EXPORTS Mat findFundamentalMat( const Mat& points1, const Mat& points2,
+                                   vector<uchar>& mask, int method=FM_RANSAC,
+                                   double param1=3., double param2=0.99 );
+
+CV_EXPORTS Mat findFundamentalMat( const Mat& points1, const Mat& points2,
                                    int method=FM_RANSAC,
                                    double param1=3., double param2=0.99 );
 
-CV_EXPORTS Mat findFundamentalMat( const Vector<Point2f>& points1,
-                                   const Vector<Point2f>& points2,
-                                   int method=FM_RANSAC,
-                                   double param1=3., double param2=0.99 );
-
-CV_EXPORTS void computeCorrespondEpilines( const Vector<Point2f>& points1,
+CV_EXPORTS void computeCorrespondEpilines( const Mat& points1,
                                            int whichImage, const Mat& F,
-                                           Vector<Vec3f>& lines );
+                                           vector<Vec3f>& lines );
 
 template<> inline void Ptr<CvStereoBMState>::delete_obj()
 { cvReleaseStereoBMState(&obj); }
@@ -902,21 +880,26 @@ CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
 class CV_EXPORTS KeyPoint
 {
 public:    
-    KeyPoint() : pt(0,0), size(0), angle(-1), response(0), octave(0) {}
-    KeyPoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0)
-    : pt(_pt), size(_size), angle(_angle), response(_response), octave(_octave) {}
-    KeyPoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0)
-    : pt(x, y), size(_size), angle(_angle), response(_response), octave(_octave) {}
+    KeyPoint() : pt(0,0), size(0), angle(-1), response(0), octave(0), class_id(-1) {}
+    KeyPoint(Point2f _pt, float _size, float _angle=-1,
+            float _response=0, int _octave=0, int _class_id=-1)
+            : pt(_pt), size(_size), angle(_angle),
+            response(_response), octave(_octave), class_id(_class_id) {}
+    KeyPoint(float x, float y, float _size, float _angle=-1,
+            float _response=0, int _octave=0, int _class_id=-1)
+            : pt(x, y), size(_size), angle(_angle),
+            response(_response), octave(_octave), class_id(_class_id) {}
     
     Point2f pt;
     float size;
     float angle;
     float response;
     int octave;
+    int class_id;
 };
 
-CV_EXPORTS void write(FileStorage& fs, const String& name, const Vector<KeyPoint>& keypoints);
-CV_EXPORTS void read(const FileNode& node, Vector<KeyPoint>& keypoints);    
+CV_EXPORTS void write(FileStorage& fs, const String& name, const vector<KeyPoint>& keypoints);
+CV_EXPORTS void read(const FileNode& node, vector<KeyPoint>& keypoints);    
 
 class CV_EXPORTS SURF : public CvSURFParams
 {
@@ -926,10 +909,10 @@ public:
 
     int descriptorSize() const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<KeyPoint>& keypoints) const;
+                    vector<KeyPoint>& keypoints) const;
     void operator()(const Mat& img, const Mat& mask,
-                    Vector<KeyPoint>& keypoints,
-                    Vector<float>& descriptors,
+                    vector<KeyPoint>& keypoints,
+                    vector<float>& descriptors,
                     bool useProvidedKeypoints=false) const;
 };
 
@@ -942,7 +925,7 @@ public:
           float _max_variation, float _min_diversity,
           int _max_evolution, double _area_threshold,
           double _min_margin, int _edge_blur_size );
-    Vector<Vector<Point> > operator()(Mat& image, const Mat& mask) const;
+    void operator()(Mat& image, vector<vector<Point> >& msers, const Mat& mask) const;
 };
 
 
@@ -955,7 +938,7 @@ public:
                  int _lineThresholdBinarized,
                  int _suppressNonmaxSize);
 
-    void operator()(const Mat& image, Vector<KeyPoint>& keypoints) const;
+    void operator()(const Mat& image, vector<KeyPoint>& keypoints) const;
 };
     
 }

@@ -56,19 +56,19 @@ struct PolyEdge
 };
 
 static void
-CollectPolyEdges( Mat& img, const Vector<Point>& v,
-                  Vector<PolyEdge>& edges, const void* color, int line_type,
+CollectPolyEdges( Mat& img, const Point* v, int npts,
+                  vector<PolyEdge>& edges, const void* color, int line_type,
                   int shift, Point offset=Point() );
 
 static void
-FillEdgeCollection( Mat& img, Vector<PolyEdge>& edges, const void* color );
+FillEdgeCollection( Mat& img, vector<PolyEdge>& edges, const void* color );
 
 static void
-PolyLine( Mat& img, const Vector<Point>& v, bool closed,
+PolyLine( Mat& img, const Point* v, int npts, bool closed,
           const void* color, int thickness, int line_type, int shift );
 
 static void
-FillConvexPoly( Mat& img, const Vector<Point>& v,
+FillConvexPoly( Mat& img, const Point* v, int npts,
                 const void* color, int line_type, int shift );
 
 /****************************************************************************************\
@@ -809,7 +809,7 @@ sincos( int angle, float& cosval, float& sinval )
 */
 void ellipse2Poly( Point center, Size axes, int angle,
                    int arc_start, int arc_end,
-                   int delta, Vector<Point>& pts )
+                   int delta, vector<Point>& pts )
 {
     float alpha, beta;
     double size_a = axes.width, size_b = axes.height;
@@ -878,18 +878,18 @@ EllipseEx( Mat& img, Point center, Size axes,
     int delta = (std::max(axes.width,axes.height)+(XY_ONE>>1))>>XY_SHIFT;
     delta = delta < 3 ? 90 : delta < 10 ? 30 : delta < 15 ? 18 : 5;
 
-    Vector<Point> v;
+    vector<Point> v;
     ellipse2Poly( center, axes, angle, arc_start, arc_end, delta, v );
 
     if( thickness >= 0 )
-        PolyLine( img, v, false, color, thickness, line_type, XY_SHIFT );
+        PolyLine( img, &v[0], (int)v.size(), false, color, thickness, line_type, XY_SHIFT );
     else if( arc_end - arc_start >= 360 )
-        FillConvexPoly( img, v, color, line_type, XY_SHIFT );
+        FillConvexPoly( img, &v[0], (int)v.size(), color, line_type, XY_SHIFT );
     else
     {
         v.push_back(center);
-        Vector<PolyEdge> edges;
-        CollectPolyEdges( img,  v, edges, color, line_type, XY_SHIFT );
+        vector<PolyEdge> edges;
+        CollectPolyEdges( img,  &v[0], (int)v.size(), edges, color, line_type, XY_SHIFT );
         FillEdgeCollection( img, edges, color );
     }
 }
@@ -918,7 +918,7 @@ EllipseEx( Mat& img, Point center, Size axes,
 
 /* filling convex polygon. v - array of vertices, ntps - number of points */
 static void
-FillConvexPoly( Mat& img, const Vector<Point>& v, const void* color, int line_type, int shift )
+FillConvexPoly( Mat& img, const Point* v, int npts, const void* color, int line_type, int shift )
 {
     struct
     {
@@ -929,7 +929,6 @@ FillConvexPoly( Mat& img, const Vector<Point>& v, const void* color, int line_ty
 
     int delta = shift ? 1 << (shift - 1) : 0;
     int i, y, imin = 0, left = 0, right = 1, x1, x2;
-    int npts = (int)v.size();
     int edges = npts;
     int xmin, xmax, ymin, ymax;
     uchar* ptr = img.data;
@@ -1079,11 +1078,10 @@ FillConvexPoly( Mat& img, const Vector<Point>& v, const void* color, int line_ty
 /******** Arbitrary polygon **********/
 
 static void
-CollectPolyEdges( Mat& img, const Vector<Point>& v, Vector<PolyEdge>& edges,
+CollectPolyEdges( Mat& img, const Point* v, int count, vector<PolyEdge>& edges,
                   const void* color, int line_type, int shift, Point offset )
 {
-    int i, count = (int)v.size();
-    int delta = offset.y + (shift ? 1 << (shift - 1) : 0);
+    int i, delta = offset.y + (shift ? 1 << (shift - 1) : 0);
     Point pt0 = v[count-1], pt1;
     pt0.x = (pt0.x + offset.x) << (XY_SHIFT - shift);
     pt0.y = (pt0.y + delta) >> shift;
@@ -1146,7 +1144,7 @@ struct CmpEdges
 /**************** helper macros and functions for sequence/contour processing ***********/
 
 static void
-FillEdgeCollection( Mat& img, Vector<PolyEdge>& edges, const void* color )
+FillEdgeCollection( Mat& img, vector<PolyEdge>& edges, const void* color )
 {
     PolyEdge tmp;
     int i, y, total = (int)edges.size();
@@ -1488,7 +1486,7 @@ ThickLine( Mat& img, Point p0, Point p1, const void* color,
         pt[3].x = p1.x + dp.x;
         pt[3].y = p1.y + dp.y;
 
-        FillConvexPoly( img, Vector<Point>(pt, 4, false), color, line_type, XY_SHIFT );
+        FillConvexPoly( img, pt, 4, color, line_type, XY_SHIFT );
 
         for( i = 0; i < 2; i++ )
         {
@@ -1514,13 +1512,11 @@ ThickLine( Mat& img, Point p0, Point p1, const void* color,
 
 
 static void
-PolyLine( Mat& img, const Vector<Point>& v, bool is_closed,
+PolyLine( Mat& img, const Point* v, int count, bool is_closed,
           const void* color, int thickness,
           int line_type, int shift )
 {
-    int count = (int)v.size();
-    
-    if( count == 0 )
+    if( !v || count <= 0 )
         return;
     
     int i = is_closed ? count - 1 : 0;
@@ -1577,12 +1573,11 @@ void rectangle( Mat& img, Point pt1, Point pt2,
     pt[2] = pt2;
     pt[3].x = pt1.x;
     pt[3].y = pt2.y;
-    Vector<Point> v(pt, 4, false);
 
     if( thickness >= 0 )
-        PolyLine( img, v, true, buf, thickness, line_type, shift );
+        PolyLine( img, pt, 4, true, buf, thickness, line_type, shift );
     else
-        FillConvexPoly( img, v, buf, line_type, shift );
+        FillConvexPoly( img, pt, 4, buf, line_type, shift );
 }
 
 
@@ -1656,10 +1651,10 @@ void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
     EllipseEx( img, center, axes, _angle, 0, 360, buf, thickness, lineType );    
 }
 
-void fillConvexPoly( Mat& img, const Vector<Point>& pts,
+void fillConvexPoly( Mat& img, const Point* pts, int npts,
                      const Scalar& color, int line_type, int shift )
 {
-    if( pts.size() == 0 )
+    if( !pts || npts <= 0 )
         return;
 
     if( line_type == CV_AA && img.depth() != CV_8U )
@@ -1668,51 +1663,51 @@ void fillConvexPoly( Mat& img, const Vector<Point>& pts,
     double buf[4];
     CV_Assert( 0 <= shift && shift <=  XY_SHIFT );
     scalarToRawData(color, buf, img.type(), 0);
-    FillConvexPoly( img, pts, buf, line_type, shift );
+    FillConvexPoly( img, pts, npts, buf, line_type, shift );
 }
 
 
-void fillPoly( Mat& img, const Vector<Vector<Point> >& pts,
+void fillPoly( Mat& img, const Point** pts, const int* npts, int ncontours,
                const Scalar& color, int line_type,
                int shift, Point offset )
 {
     if( line_type == CV_AA && img.depth() != CV_8U )
         line_type = 8;
 
-    CV_Assert( 0 <= shift && shift <= XY_SHIFT );
+    CV_Assert( pts && npts && ncontours >= 0 && 0 <= shift && shift <= XY_SHIFT );
 
     double buf[4];
     scalarToRawData(color, buf, img.type(), 0);
 
-    Vector<PolyEdge> edges;
+    vector<PolyEdge> edges;
 
-    int i, count = (int)pts.size(), total = 0;
-    for( i = 0; i < count; i++ )
-        total += (int)pts[i].size();
+    int i, total = 0;
+    for( i = 0; i < ncontours; i++ )
+        total += npts[i];
 
     edges.reserve( total + 1 );
-    for( i = 0; i < count; i++ )
-        CollectPolyEdges( img, pts[i], edges, buf, line_type, shift, offset );
+    for( i = 0; i < ncontours; i++ )
+        CollectPolyEdges( img, pts[i], npts[i], edges, buf, line_type, shift, offset );
 
     FillEdgeCollection(img, edges, buf);
 }
 
 
-void polylines( Mat& img, const Vector<Vector<Point> >& pts, bool isClosed,
+void polylines( Mat& img, const Point** pts, const int* npts, int ncontours, bool isClosed,
                 const Scalar& color, int thickness, int line_type, int shift )
 {
     if( line_type == CV_AA && img.depth() != CV_8U )
         line_type = 8;
 
-    CV_Assert( 0 <= thickness && thickness <= 255 &&
+    CV_Assert( pts && npts && ncontours >= 0 &&
+               0 <= thickness && thickness <= 255 &&
                0 <= shift && shift <= XY_SHIFT );
 
     double buf[4];
     scalarToRawData( color, buf, img.type(), 0 );
-    int i, count = (int)pts.size();
 
-    for( i = 0; i < count; i++ )
-        PolyLine( img, pts[i], isClosed, buf, thickness, line_type, shift );
+    for( int i = 0; i < ncontours; i++ )
+        PolyLine( img, pts[i], npts[i], isClosed, buf, thickness, line_type, shift );
 }
 
 
@@ -1903,7 +1898,7 @@ void putText( Mat& img, const String& text, Point org,
 
     int view_x = org.x << XY_SHIFT;
     int view_y = (org.y << XY_SHIFT) + base_line*vscale;
-    Vector<Point> pts;
+    vector<Point> pts;
     pts.reserve(1 << 10);
     const char **faces = cv::g_HersheyGlyphs;
 
@@ -1927,7 +1922,7 @@ void putText( Mat& img, const String& text, Point org,
             if( *ptr == ' ' || !*ptr )
             {
                 if( pts.size() > 1 )
-                    PolyLine( img, pts, false, buf, thickness, line_type, XY_SHIFT ); 
+                    PolyLine( img, &pts[0], (int)pts.size(), false, buf, thickness, line_type, XY_SHIFT ); 
                 if( !*ptr++ )
                     break;
                 pts.resize(0);
@@ -1991,8 +1986,8 @@ cvDrawContours( void* _img, CvSeq* contour,
 {
     CvSeq *contour0 = contour, *h_next = 0;
     CvTreeNodeIterator iterator;
-    cv::Vector<cv::PolyEdge> edges;
-    cv::Vector<cv::Point> pts;
+    cv::vector<cv::PolyEdge> edges;
+    cv::vector<cv::Point> pts;
     cv::Scalar externalColor = _externalColor, holeColor = _holeColor;
     cv::Mat img = cv::cvarrToMat(_img);
     cv::Point offset = _offset;
@@ -2062,7 +2057,8 @@ cvDrawContours( void* _img, CvSeq* contour,
                     cv::Point(((CvChain*)contour)->origin) + offset,
                     clr, thickness, line_type, 2, 0 );
             else
-                cv::CollectPolyEdges(img, pts, edges, ext_buf, line_type, 0, offset);
+                cv::CollectPolyEdges(img, &pts[0], (int)pts.size(),
+                                     edges, ext_buf, line_type, 0, offset);
         }
         else if( CV_IS_SEQ_POLYLINE( contour ))
         {
@@ -2087,7 +2083,8 @@ cvDrawContours( void* _img, CvSeq* contour,
                 pt1 = pt2;
             }
             if( thickness < 0 )
-                cv::CollectPolyEdges( img, pts, edges, ext_buf, line_type, 0, cv::Point() );
+                cv::CollectPolyEdges( img, &pts[0], (int)pts.size(),
+                                      edges, ext_buf, line_type, 0, cv::Point() );
         }
     }
 
@@ -2110,7 +2107,7 @@ CV_IMPL int
 cvEllipse2Poly( CvPoint center, CvSize axes, int angle,
                 int arc_start, int arc_end, CvPoint* _pts, int delta )
 {
-    cv::Vector<cv::Point> pts;
+    cv::vector<cv::Point> pts;
     cv::ellipse2Poly( center, axes, angle, arc_start, arc_end, delta, pts );
     memcpy( _pts, &pts[0], pts.size()*sizeof(_pts[0]) );
     return (int)pts.size();
@@ -2234,36 +2231,32 @@ cvEllipse( CvArr* _img, CvPoint center, CvSize axes,
 }
 
 CV_IMPL void
-cvFillConvexPoly( CvArr* _img, CvPoint *pts, int npts, CvScalar color, int line_type, int shift )
+cvFillConvexPoly( CvArr* _img, const CvPoint *pts, int npts,
+                  CvScalar color, int line_type, int shift )
 {
     cv::Mat img = cv::cvarrToMat(_img);
-    cv::fillConvexPoly( img, cv::Vector<cv::Point>((cv::Point*)pts, npts, false),
+    cv::fillConvexPoly( img, (const cv::Point*)pts, npts,
                         color, line_type, shift );
 }
 
 CV_IMPL void
-cvFillPoly( CvArr* _img, CvPoint **_pts, int *npts, int contours,
+cvFillPoly( CvArr* _img, CvPoint **pts, const int *npts, int ncontours,
             CvScalar color, int line_type, int shift )
 {
     cv::Mat img = cv::cvarrToMat(_img);
-    cv::Vector<cv::Vector<cv::Point> > pts(contours);
-    for( int i = 0; i < contours; i++ )
-        pts[i] = cv::Vector<cv::Point>( (cv::Point*)_pts[i], npts[i], false );
 
-    cv::fillPoly( img, pts, color, line_type, shift );
+    cv::fillPoly( img, (const cv::Point**)pts, npts, ncontours, color, line_type, shift );
 }
 
 CV_IMPL void
-cvPolyLine( CvArr* _img, CvPoint **_pts, int *npts,
-            int contours, int closed, CvScalar color,
+cvPolyLine( CvArr* _img, CvPoint **pts, const int *npts,
+            int ncontours, int closed, CvScalar color,
             int thickness, int line_type, int shift )
 {
     cv::Mat img = cv::cvarrToMat(_img);
-    cv::Vector<cv::Vector<cv::Point> > pts(contours);
-    for( int i = 0; i < contours; i++ )
-        pts[i] = cv::Vector<cv::Point>( (cv::Point*)_pts[i], npts[i], false );
 
-    cv::polylines( img, pts, closed != 0, color, thickness, line_type, shift );
+    cv::polylines( img, (const cv::Point**)pts, npts, ncontours,
+                   closed != 0, color, thickness, line_type, shift );
 }
 
 CV_IMPL void

@@ -193,6 +193,25 @@ inline Mat::Mat(const CvMat* m, bool copyData)
     }
 }
 
+template<typename _Tp> inline Mat::Mat(const vector<_Tp>& vec, bool copyData)
+    : flags(MAGIC_VAL | DataType<_Tp>::type | CV_MAT_CONT_FLAG),
+    rows(0), cols(0), step(0), data(0), refcount(0),
+    datastart(0), dataend(0)
+{
+    if(vec.empty())
+        return;
+    if( !copyData )
+    {
+        rows = (int)vec.size();
+        cols = 1;
+        step = sizeof(_Tp);
+        data = datastart = (uchar*)&vec[0];
+        dataend = datastart + rows*step;
+    }
+    else
+        Mat((int)vec.size(), 1, DataType<_Tp>::type, (uchar*)&vec[0]).copyTo(*this);
+}
+    
 inline Mat::~Mat()
 {
     release();
@@ -422,9 +441,22 @@ template<typename _Tp> inline const _Tp& Mat::at(int y, int x) const
 {
     CV_DbgAssert( (unsigned)y < (unsigned)rows && (unsigned)x < (unsigned)cols &&
         sizeof(_Tp) == elemSize() );
-    return ((_Tp*)(data + step*y))[x];
+    return ((const _Tp*)(data + step*y))[x];
 }
 
+template<typename _Tp> inline _Tp& Mat::at(Point pt)
+{
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols &&
+        sizeof(_Tp) == elemSize() );
+    return ((_Tp*)(data + step*pt.y))[pt.x];
+}
+
+template<typename _Tp> inline const _Tp& Mat::at(Point pt) const
+{
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols &&
+        sizeof(_Tp) == elemSize() );
+    return ((const _Tp*)(data + step*pt.y))[pt.x];
+}
     
 template<typename _Tp> inline MatConstIterator_<_Tp> Mat::begin() const
 {
@@ -512,8 +544,8 @@ template<typename _Tp> template<int n> inline Mat_<_Tp>::Mat_(const Vec<_Tp, n>&
         d[i] = vec[i];
 }
 
-template<typename _Tp> inline Mat_<_Tp>::Mat_(const Vector<_Tp>& vec)
-    : Mat((int)vec.size(), 1, DataType<_Tp>::type, (void*)&vec[0])
+template<typename _Tp> inline Mat_<_Tp>::Mat_(const vector<_Tp>& vec, bool copyData)
+    : Mat(vec, copyData)
 {}
 
 template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const Mat& m)
@@ -627,11 +659,23 @@ template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(int row, int col
     return ((const _Tp*)(data + step*row))[col];
 }
 
-template<typename _Tp> inline Mat_<_Tp>::operator Vector<_Tp>() const
+template<typename _Tp> inline _Tp& Mat_<_Tp>::operator ()(Point pt)
+{
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols );
+    return ((_Tp*)(data + step*pt.y))[pt.x];
+}
+
+template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(Point pt) const
+{
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols );
+    return ((const _Tp*)(data + step*pt.y))[pt.x];
+}
+
+template<typename _Tp> inline Mat_<_Tp>::operator vector<_Tp>() const
 {
     CV_Assert( rows == 1 || cols == 1 );
-    return isContinuous() ? Vector<_Tp>((size_t)(rows + cols - 1), (_Tp*)data) :
-        (Vector<_Tp>)((Mat_<_Tp>)this->t());
+    return isContinuous() ? vector<_Tp>((size_t)(rows + cols - 1), (_Tp*)data) :
+        (vector<_Tp>)((Mat_<_Tp>)this->t());
 }
 
 template<typename T1, typename T2, typename Op> inline void
@@ -2899,12 +2943,30 @@ abs(const MatExpr_<MatExpr_Op2_<A, B, M, MatOp_Sub_<Mat> >, M>& a)
     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)a.e.a2, 'a'));
 }
 
-template<typename _Tp> void merge(const Vector<Mat_<_Tp> >& mv, Mat& dst)
-{ merge( (const Vector<Mat>&)mv, dst ); }
+template<typename _Tp> void merge(const Mat_<_Tp>* mvbegin, size_t count, Mat& dst)
+{ merge( (const Mat*)mvbegin, count, dst ); }
 
-template<typename _Tp> void split(const Mat& src, Vector<Mat_<_Tp> >& mv)
-{ split(src, (Vector<Mat>&)mv ); }
+static inline void split(const Mat& m, vector<Mat>& mv)
+{
+    mv.resize(m.channels());
+    if(m.channels() > 0)
+        split(m, &mv[0]);
+}
+    
+template<typename _Tp> void split(const Mat& src, vector<Mat_<_Tp> >& mv)
+{ split(src, (vector<Mat>&)mv ); }
+    
+static inline void merge(const vector<Mat>& mv, Mat& dst)
+{ merge(&mv[0], mv.size(), dst); }
 
+static inline void mixChannels(const vector<Mat>& src,
+                               vector<Mat>& dst,
+                               const int* fromTo)
+{
+    CV_Assert(src.size() == dst.size());
+    mixChannels(&src[0], &dst[0], fromTo, src.size());
+}
+    
 ///// Element-wise multiplication
 
 inline MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
@@ -3544,16 +3606,16 @@ inline MatND::MatND()
 {
 }
 
-inline MatND::MatND(const Vector<int>& _sizes, int _type)
+inline MatND::MatND(int _dims, const int* _sizes, int _type)
  : flags(MAGIC_VAL), dims(0), refcount(0), data(0), datastart(0), dataend(0)
 {
-    create(_sizes, _type);
+    create(_dims, _sizes, _type);
 }
 
-inline MatND::MatND(const Vector<int>& _sizes, int _type, const Scalar& _s)
+inline MatND::MatND(int _dims, const int* _sizes, int _type, const Scalar& _s)
  : flags(MAGIC_VAL), dims(0), refcount(0), data(0), datastart(0), dataend(0)
 {
-    create(_sizes, _type);
+    create(_dims, _sizes, _type);
     *this = _s;
 }
 
@@ -3564,8 +3626,8 @@ inline MatND::MatND(const MatND& m)
     int i, d = dims;
     for( i = 0; i < d; i++ )
     {
-        dim[i].size = m.dim[i].size;
-        dim[i].step = m.dim[i].step;
+        size[i] = m.size[i];
+        step[i] = m.step[i];
     }
     if( refcount )
         ++*refcount;
@@ -3578,11 +3640,11 @@ inline MatND::MatND(const CvMatND* m, bool copyData)
     int i, d = dims;
     for( i = 0; i < d; i++ )
     {
-        dim[i].size = m->dim[i].size;
-        dim[i].step = m->dim[i].step;
+        size[i] = m->dim[i].size;
+        step[i] = m->dim[i].step;
     }
     datastart = data;
-    dataend = datastart + dim[0].size*dim[0].step;
+    dataend = datastart + size[0]*step[0];
     if( copyData )
     {
         MatND temp(*this);
@@ -3608,8 +3670,8 @@ inline MatND& MatND::operator = (const MatND& m)
         int i, d = dims;
         for( i = 0; i < d; i++ )
         {
-            dim[i].size = m.dim[i].size;
-            dim[i].step = m.dim[i].step;
+            size[i] = m.size[i];
+            step[i] = m.step[i];
         }
     }
     return *this;
@@ -3622,7 +3684,7 @@ inline MatND MatND::clone() const
     return temp;
 }
 
-inline MatND MatND::operator()(const Vector<Range>& ranges) const
+inline MatND MatND::operator()(const Range* ranges) const
 {
     return MatND(*this, ranges);
 }
@@ -3656,65 +3718,55 @@ inline int MatND::type() const { return CV_MAT_TYPE(flags); }
 inline int MatND::depth() const { return CV_MAT_DEPTH(flags); }
 inline int MatND::channels() const { return CV_MAT_CN(flags); }
 
-inline size_t MatND::step(int i) const { CV_DbgAssert((unsigned)i < (unsigned)dims); return dim[i].step; }
 inline size_t MatND::step1(int i) const
-{ CV_DbgAssert((unsigned)i < (unsigned)dims); return dim[i].step/elemSize1(); }
-inline Vector<int> MatND::size() const
-{
-    int i, d = dims;
-    Vector<int> sz(d);
-    for( i = 0; i < d; i++ )
-        sz[i] = dim[i].size;
-    return sz;
-}
-inline int MatND::size(int i) const  { CV_DbgAssert((unsigned)i < (unsigned)dims); return dim[i].size; }
+{ CV_DbgAssert((unsigned)i < (unsigned)dims); return step[i]/elemSize1(); }
 
 inline uchar* MatND::ptr(int i0)
 {
     CV_DbgAssert( dims == 1 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size );
-    return data + i0*dim[0].step;
+        (unsigned)i0 < (unsigned)size[0] );
+    return data + i0*step[0];
 }
 
 inline const uchar* MatND::ptr(int i0) const
 {
     CV_DbgAssert( dims == 1 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size );
-    return data + i0*dim[0].step;
+        (unsigned)i0 < (unsigned)size[0] );
+    return data + i0*step[0];
 }
 
 inline uchar* MatND::ptr(int i0, int i1)
 {
     CV_DbgAssert( dims == 2 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size );
-    return data + i0*dim[0].step + i1*dim[1].step;
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] );
+    return data + i0*step[0] + i1*step[1];
 }
 
 inline const uchar* MatND::ptr(int i0, int i1) const
 {
     CV_DbgAssert( dims == 2 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size );
-    return data + i0*dim[0].step + i1*dim[1].step;
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] );
+    return data + i0*step[0] + i1*step[1];
 }
 
 inline uchar* MatND::ptr(int i0, int i1, int i2)
 {
     CV_DbgAssert( dims == 3 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size &&
-        (unsigned)i2 < (unsigned)dim[2].size );
-    return data + i0*dim[0].step + i1*dim[1].step + i2*dim[2].step;
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] &&
+        (unsigned)i2 < (unsigned)size[2] );
+    return data + i0*step[0] + i1*step[1] + i2*step[2];
 }
 
 inline const uchar* MatND::ptr(int i0, int i1, int i2) const
 {
     CV_DbgAssert( dims == 3 && data &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size &&
-        (unsigned)i2 < (unsigned)dim[2].size );
-    return data + i0*dim[0].step + i1*dim[1].step + i2*dim[2].step;
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] &&
+        (unsigned)i2 < (unsigned)size[2] );
+    return data + i0*step[0] + i1*step[1] + i2*step[2];
 }
 
 inline uchar* MatND::ptr(const int* idx)
@@ -3724,8 +3776,8 @@ inline uchar* MatND::ptr(const int* idx)
     CV_DbgAssert( data );
     for( i = 0; i < d; i++ )
     {
-        CV_DbgAssert( (unsigned)idx[i] < (unsigned)dim[i].size );
-        p += idx[i]*dim[i].step;
+        CV_DbgAssert( (unsigned)idx[i] < (unsigned)size[i] );
+        p += idx[i]*step[i];
     }
     return p;
 }
@@ -3737,8 +3789,8 @@ inline const uchar* MatND::ptr(const int* idx) const
     CV_DbgAssert( data );
     for( i = 0; i < d; i++ )
     {
-        CV_DbgAssert( (unsigned)idx[i] < (unsigned)dim[i].size );
-        p += idx[i]*dim[i].step;
+        CV_DbgAssert( (unsigned)idx[i] < (unsigned)size[i] );
+        p += idx[i]*step[i];
     }
     return p;
 }
@@ -3775,13 +3827,13 @@ template<typename _Tp> inline MatND_<_Tp>::MatND_()
     flags = MAGIC_VAL | DataType<_Tp>::type;
 }
 
-template<typename _Tp> inline MatND_<_Tp>::MatND_(const Vector<int>& _sizes)
-: MatND(_sizes, DataType<_Tp>::type)
+template<typename _Tp> inline MatND_<_Tp>::MatND_(int _dims, const int* _sizes)
+: MatND(_dims, _sizes, DataType<_Tp>::type)
 {
 }
 
-template<typename _Tp> inline MatND_<_Tp>::MatND_(const Vector<int>& _sizes, const _Tp& _s)
-: MatND(_sizes, DataType<_Tp>::type, Scalar(_s))
+template<typename _Tp> inline MatND_<_Tp>::MatND_(int _dims, const int* _sizes, const _Tp& _s)
+: MatND(_dims, _sizes, DataType<_Tp>::type, Scalar(_s))
 {
 }
 
@@ -3797,7 +3849,7 @@ template<typename _Tp> inline MatND_<_Tp>::MatND_(const MatND_<_Tp>& m) : MatND(
 {
 }
 
-template<typename _Tp> inline MatND_<_Tp>::MatND_(const MatND_<_Tp>& m, const Vector<Range>& ranges)
+template<typename _Tp> inline MatND_<_Tp>::MatND_(const MatND_<_Tp>& m, const Range* ranges)
 : MatND(m, ranges)
 {
 }
@@ -3833,9 +3885,9 @@ template<typename _Tp> inline MatND_<_Tp>& MatND_<_Tp>::operator = (const _Tp& s
     return (MatND&)*this = Scalar(s);
 }
 
-template<typename _Tp> inline void MatND_<_Tp>::create(const Vector<int>& _sizes)
+template<typename _Tp> inline void MatND_<_Tp>::create(int _dims, const int* _sizes)
 {
-    MatND::create(_sizes);
+    MatND::create(_dims, _sizes, DataType<_Tp>::type);
 }
 
 template<typename _Tp> template<typename _Tp2> inline MatND_<_Tp>::operator MatND_<_Tp2>() const
@@ -3851,7 +3903,7 @@ template<typename _Tp> inline MatND_<_Tp> MatND_<_Tp>::clone() const
 }
 
 template<typename _Tp> inline MatND_<_Tp>
-MatND_<_Tp>::operator()(const Vector<Range>& ranges) const
+MatND_<_Tp>::operator()(const Range* ranges) const
 { return MatND_<_Tp>(*this, ranges); }
 
 template<typename _Tp> inline size_t MatND_<_Tp>::elemSize() const
@@ -3872,13 +3924,13 @@ template<typename _Tp> inline int MatND_<_Tp>::channels() const
 template<typename _Tp> inline size_t MatND_<_Tp>::stepT(int i) const
 {
     CV_DbgAssert( (unsigned)i < (unsigned)dims );
-    return dim[i].step/elemSize();
+    return step[i]/elemSize();
 }
 
 template<typename _Tp> inline size_t MatND_<_Tp>::step1(int i) const
 {
     CV_DbgAssert( (unsigned)i < (unsigned)dims );
-    return dim[i].step/elemSize1();
+    return step[i]/elemSize1();
 }
 
 template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(const int* idx)
@@ -3888,8 +3940,8 @@ template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(const int* idx)
     for( i = 0; i < d; i++ )
     {
         int ii = idx[i];
-        CV_DbgAssert( (unsigned)ii < (unsigned)dim[i].size );
-        ptr += ii*dim[i].step;
+        CV_DbgAssert( (unsigned)ii < (unsigned)size[i] );
+        ptr += ii*step[i];
     }
     return *(_Tp*)ptr;
 }
@@ -3901,8 +3953,8 @@ template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(const int* idx
     for( i = 0; i < d; i++ )
     {
         int ii = idx[i];
-        CV_DbgAssert( (unsigned)ii < (unsigned)dim[i].size );
-        ptr += ii*dim[i].step;
+        CV_DbgAssert( (unsigned)ii < (unsigned)size[i] );
+        ptr += ii*step[i];
     }
     return *(const _Tp*)ptr;
 }
@@ -3910,23 +3962,43 @@ template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(const int* idx
 template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(int i0, int i1, int i2)
 {
     CV_DbgAssert( dims == 3 &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size &&
-        (unsigned)i2 < (unsigned)dim[2].size );
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] &&
+        (unsigned)i2 < (unsigned)size[2] );
 
-    return *(_Tp*)(data + i0*dim[0].step + i1*dim[1].step + i2*dim[2].step);
+    return *(_Tp*)(data + i0*step[0] + i1*step[1] + i2*step[2]);
 }
 
 template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(int i0, int i1, int i2) const
 {
     CV_DbgAssert( dims == 3 &&
-        (unsigned)i0 < (unsigned)dim[0].size &&
-        (unsigned)i1 < (unsigned)dim[1].size &&
-        (unsigned)i2 < (unsigned)dim[2].size );
+        (unsigned)i0 < (unsigned)size[0] &&
+        (unsigned)i1 < (unsigned)size[1] &&
+        (unsigned)i2 < (unsigned)size[2] );
 
-    return *(const _Tp*)(data + i0*dim[0].step + i1*dim[1].step + i2*dim[2].step);
+    return *(const _Tp*)(data + i0*step[0] + i1*step[1] + i2*step[2]);
 }
 
+    
+static inline void merge(const vector<MatND>& mv, MatND& dst)
+{
+    merge(&mv[0], mv.size(), dst);
+}
+    
+static inline void split(const MatND& m, vector<MatND>& mv)
+{
+    mv.resize(m.channels());
+    if(m.channels() > 0)
+        split(m, &mv[0]);
+}
+
+static inline void mixChannels(const vector<MatND>& src,
+                               vector<MatND>& dst,
+                               const int* fromTo)
+{
+    CV_Assert(src.size() == dst.size());
+    mixChannels(&src[0], &dst[0], fromTo, src.size());
+}   
 
 //////////////////////////////// SparseMat ////////////////////////////////
 
@@ -3935,10 +4007,10 @@ inline SparseMat::SparseMat()
 {
 }
 
-inline SparseMat::SparseMat(const Vector<int>& _sizes, int _type)
+inline SparseMat::SparseMat(int _dims, const int* _sizes, int _type)
 : flags(MAGIC_VAL), hdr(0)
 {
-    create(_sizes, _type);
+    create(_dims, _sizes, _type);
 }
 
 inline SparseMat::SparseMat(const SparseMat& m)
@@ -4012,11 +4084,9 @@ inline int SparseMat::depth() const
 inline int SparseMat::channels() const
 { return CV_MAT_CN(flags); }
 
-inline Vector<int> SparseMat::size() const
+inline const int* SparseMat::size() const
 {
-    if( !hdr )
-        return Vector<int>();
-    return Vector<int>(hdr->size, hdr->dims, true);
+    return hdr ? hdr->size : 0;
 }
 
 inline int SparseMat::size(int i) const
@@ -4230,8 +4300,8 @@ inline SparseMatIterator SparseMatIterator::operator ++(int)
 template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_()
 { flags = MAGIC_VAL | DataType<_Tp>::type; }
 
-template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_(const Vector<int>& _sizes)
-: SparseMat(_sizes, DataType<_Tp>::type)
+template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_(int _dims, const int* _sizes)
+: SparseMat(_dims, _sizes, DataType<_Tp>::type)
 {}
 
 template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_(const SparseMat& m)
@@ -4307,9 +4377,9 @@ SparseMat_<_Tp>::clone() const
 }
 
 template<typename _Tp> inline void
-SparseMat_<_Tp>::create(const Vector<int>& _sizes)
+SparseMat_<_Tp>::create(int _dims, const int* _sizes)
 {
-    SparseMat::create(_sizes, DataType<_Tp>::type);
+    SparseMat::create(_dims, _sizes, DataType<_Tp>::type);
 }
 
 template<typename _Tp> inline

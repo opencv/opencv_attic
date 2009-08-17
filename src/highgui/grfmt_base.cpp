@@ -61,7 +61,7 @@ bool BaseImageDecoder::setSource( const String& filename )
     return true;
 }
 
-bool BaseImageDecoder::setSource( const Vector<uchar>& buf )
+bool BaseImageDecoder::setSource( const Mat& buf )
 {
     if( !m_buf_supported )
         return false;
@@ -108,7 +108,7 @@ bool BaseImageEncoder::setDestination( const String& filename )
     return true;
 }
 
-bool BaseImageEncoder::setDestination( Vector<uchar>& buf )
+bool BaseImageEncoder::setDestination( vector<uchar>& buf )
 {
     if( !m_buf_supported )
         return false;

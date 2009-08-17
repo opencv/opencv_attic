@@ -65,11 +65,12 @@ CV_EXPORTS void setTrackbarPos( const String& trackbarname, const String& winnam
 
 CV_EXPORTS Mat imread( const String& filename, int flags=1 );
 CV_EXPORTS bool imwrite( const String& filename, const Mat& img,
-              const Vector<int>& params=Vector<int>());
-CV_EXPORTS Mat imdecode( const Vector<uchar>& buf, int flags );
+              const vector<int>& params=vector<int>());
+CV_EXPORTS Mat imdecode( const vector<uchar>& buf, int flags );
+CV_EXPORTS Mat imdecode( const Mat& buf, int flags );
 CV_EXPORTS bool imencode( const String& ext, const Mat& img,
-                          Vector<uchar>& buf,
-                          const Vector<int>& params=Vector<int>());
+                          vector<uchar>& buf,
+                          const vector<int>& params=vector<int>());
 
 CV_EXPORTS int waitKey(int delay=0);
 

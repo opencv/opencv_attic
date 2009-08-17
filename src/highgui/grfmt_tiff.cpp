@@ -246,7 +246,7 @@ void  TiffEncoder::writeTag( WLByteStream& strm, TiffTag tag,
 }
 
 
-bool  TiffEncoder::write( const Mat& img, const Vector<int>& )
+bool  TiffEncoder::write( const Mat& img, const vector<int>& )
 {
     int channels = img.channels();
     int width = img.cols, height = img.rows;

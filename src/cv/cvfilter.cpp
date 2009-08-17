@@ -1726,7 +1726,7 @@ struct FilterVec_8u
         Mat kernel;
         _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
         delta = (float)(_delta/(1 << _bits));
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1793,7 +1793,7 @@ struct FilterVec_8u
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -1806,7 +1806,7 @@ struct FilterVec_8u16s
         Mat kernel;
         _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
         delta = (float)(_delta/(1 << _bits));
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1873,7 +1873,7 @@ struct FilterVec_8u16s
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -1884,7 +1884,7 @@ struct FilterVec_32f
     FilterVec_32f(const Mat& _kernel, int, double _delta)
     {
         delta = (float)_delta;
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(_kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1942,7 +1942,7 @@ struct FilterVec_32f
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -2706,7 +2706,7 @@ Ptr<FilterEngine> createSeparableLinearFilter(
 *                               Non-separable linear filter                              *
 \****************************************************************************************/
 
-void preprocess2DKernel( const Mat& kernel, Vector<Point>& coords, Vector<uchar>& coeffs )
+void preprocess2DKernel( const Mat& kernel, vector<Point>& coords, vector<uchar>& coeffs )
 {
     int i, j, k, nz = countNonZero(kernel), ktype = kernel.type();
     if(nz == 0)
@@ -2824,9 +2824,9 @@ template<typename ST, class CastOp, class VecOp> struct Filter2D : public BaseFi
         }
     }
 
-    Vector<Point> coords;
-    Vector<uchar> coeffs;
-    Vector<uchar*> ptrs;
+    vector<Point> coords;
+    vector<uchar> coeffs;
+    vector<uchar*> ptrs;
     KT delta;
     CastOp castOp0;
     VecOp vecOp;

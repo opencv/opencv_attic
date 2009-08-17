@@ -48,7 +48,7 @@ template<typename T> struct lessThanPtr
     bool operator()(const T* a, const T* b) const { return *a < *b; }
 };
 
-void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
+void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
                           int maxCorners, double qualityLevel, double minDistance,
                           const Mat& mask, int blockSize,
                           bool useHarrisDetector, double harrisK )
@@ -71,7 +71,7 @@ void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
 
     Size imgsize = image.size();
 
-    Vector<const float*> tmpCorners;
+    vector<const float*> tmpCorners;
 
     // collect list of pointers to features - put them into temporary image
     for( int y = 1; y < imgsize.height - 1; y++ )
@@ -121,7 +121,7 @@ void goodFeaturesToTrack( const Mat& image, Vector<Point2f>& corners,
     }
 }
     
-void write(FileStorage& fs, const String& objname, const Vector<KeyPoint>& keypoints)
+void write(FileStorage& fs, const String& objname, const vector<KeyPoint>& keypoints)
 {
     WriteStructContext ws(fs, objname, CV_NODE_SEQ + CV_NODE_FLOW);
     
@@ -139,7 +139,7 @@ void write(FileStorage& fs, const String& objname, const Vector<KeyPoint>& keypo
 }
 
 
-void read(const FileNode& node, Vector<KeyPoint>& keypoints)
+void read(const FileNode& node, vector<KeyPoint>& keypoints)
 {
     keypoints.resize(0);
     FileNodeIterator it = node.begin(), it_end = node.end();
@@ -161,7 +161,7 @@ cvGoodFeaturesToTrack( const void* _image, void*, void*,
                        int use_harris, double harris_k )
 {
     cv::Mat image = cv::cvarrToMat(_image), mask;
-    cv::Vector<cv::Point2f> corners;
+    cv::vector<cv::Point2f> corners;
 
     if( _maskImage )
         mask = cv::cvarrToMat(_maskImage);
