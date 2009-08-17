@@ -95,8 +95,9 @@ Philomin, Vasanth       PHILIPS (?)                Several bug reports/fixes on 
 Pisarevsky, Vadim       Intel Corp.                OpenCV hacker :)
 Pleskov, Alexander      Intel Corp.                Pyramidal segmentation, gesture recognition code, comp. geometry functions
 
-Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports, functionality proposals,
-                                                   blobtrack/vs module in cvaux
+Rodyushkin, Konstantin  Intel Corp.                applications OpenCV to 3dFace caused a few bug reports,
+                                                   functionality proposals, blobtrack/vs module in cvaux
+Rosten, Edward          Univ. of Cambridge         FAST corner detector
 
 Schaefer, Dirk          MD-Mathematische Dienste GmbH  original code for Bayer->RGB pattern conversion
 Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody, lowerbody, upperbody detection.
