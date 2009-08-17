@@ -62,8 +62,8 @@ static void eigenvector2image(CvMat* eigenvector, IplImage* img);
 
 inline CvRect resize_rect(CvRect rect, float alpha)
 {
-	return cvRect(rect.x + round((float)(0.5*(1 - alpha)*rect.width)), rect.y + round((float)(0.5*(1 - alpha)*rect.height)), 
-				  round(rect.width*alpha), round(rect.height*alpha));
+	return cvRect(rect.x + cvRound((float)(0.5*(1 - alpha)*rect.width)), rect.y + cvRound((float)(0.5*(1 - alpha)*rect.height)), 
+				  cvRound(rect.width*alpha), cvRound(rect.height*alpha));
 }
 
 inline CvRect fit_rect_roi_fixedsize(CvRect rect, CvRect roi)
@@ -282,7 +282,9 @@ void OneWayDescriptorBase::InitializeDescriptor(int desc_idx, IplImage* train_im
 
 void OneWayDescriptorBase::FindDescriptor(IplImage* src, Point2f pt, int& desc_idx, int& pose_idx, float& distance) const
 {
-    CvRect roi = cvRect(pt.x - m_patch_size.width/4, pt.y - m_patch_size.height/4, m_patch_size.width/2, m_patch_size.height/2);
+    CvRect roi = cvRect(cvRound(pt.x - m_patch_size.width/4),
+        cvRound(pt.y - m_patch_size.height/4),
+        m_patch_size.width/2, m_patch_size.height/2);
     cvSetImageROI(src, roi);
     
     FindDescriptor(src, desc_idx, pose_idx, distance);
@@ -380,10 +382,10 @@ int OneWayDescriptorBase::LoadPCADescriptors(const char* filename)
         m_poses = new AffinePose[m_pose_count];
         for(int i = 0; i < m_pose_count; i++)
         {
-            m_poses[i].phi = cvmGet(poses, i, 0);
-            m_poses[i].theta = cvmGet(poses, i, 1);
-            m_poses[i].lambda1 = cvmGet(poses, i, 2);
-            m_poses[i].lambda2 = cvmGet(poses, i, 3);
+            m_poses[i].phi = (float)cvmGet(poses, i, 0);
+            m_poses[i].theta = (float)cvmGet(poses, i, 1);
+            m_poses[i].lambda1 = (float)cvmGet(poses, i, 2);
+            m_poses[i].lambda2 = (float)cvmGet(poses, i, 3);
         }
         cvReleaseMat(&poses);
         
@@ -498,6 +500,7 @@ void OneWayDescriptorObject::Allocate(int train_feature_count, int object_featur
 {
     OneWayDescriptorBase::Allocate(train_feature_count);
     
+    m_object_feature_count = object_feature_count;
     m_part_id = new int[m_object_feature_count];
 }
 
@@ -514,7 +517,7 @@ void OneWayDescriptorObject::InitializeObjectDescriptors(IplImage* train_image, 
         if(m_part_id)
         {
             // remember descriptor part id
-            Point center_scaled = cvPoint(round(center.x*scale), round(center.y*scale));
+            Point center_scaled = cvPoint(cvRound(center.x*scale), cvRound(center.y*scale));
             m_part_id[i + desc_start_idx] = MatchPointToPart(center_scaled);
         }
     }
@@ -582,7 +585,7 @@ static void eigenvector2image(CvMat* eigenvector, IplImage* img)
         {
             for(int x = 0; x < roi.width; x++)
             {
-                float val = cvmGet(eigenvector, 0, roi.width*y + x);
+                float val = (float)cvmGet(eigenvector, 0, roi.width*y + x);
                 *((float*)(img->imageData + (roi.y + y)*img->widthStep) + roi.x + x) = val;
             }
         }
@@ -593,7 +596,7 @@ static void eigenvector2image(CvMat* eigenvector, IplImage* img)
         {
             for(int x = 0; x < roi.width; x++)
             {
-                float val = cvmGet(eigenvector, 0, roi.width*y + x);
+                float val = (float)cvmGet(eigenvector, 0, roi.width*y + x);
                 img->imageData[(roi.y + y)*img->widthStep + roi.x + x] = (unsigned char)val;
             }
         }
@@ -670,12 +673,12 @@ void generate_mean_patch(IplImage* frontal, IplImage* result, AffinePose pose, i
     cvReleaseImage(&workspace_float);
 }
 
-void generate_mean_patch_fast(IplImage* frontal, IplImage* result, AffinePose pose, 
-                    CvMat* pca_hr_avg, CvMat* pca_hr_eigenvectors, const OneWayDescriptor* pca_descriptors)
+void generate_mean_patch_fast(IplImage* /*frontal*/, IplImage* /*result*/, AffinePose /*pose*/, 
+                    CvMat* /*pca_hr_avg*/, CvMat* pca_hr_eigenvectors,
+                    const OneWayDescriptor* /*pca_descriptors*/)
 {
     for(int i = 0; i < pca_hr_eigenvectors->cols; i++)
     {
-        
     }
 }
 
@@ -795,7 +798,7 @@ void AffineTransformPatch(IplImage* src, IplImage* dst, AffinePose pose)
     IplImage* temp2 = cvCloneImage(temp);
     CvMat* rotation_phi = cvCreateMat(2, 3, CV_32FC1);
     
-    Size new_size = cvSize(temp->width*pose.lambda1, temp->height*pose.lambda2);
+    Size new_size = cvSize(cvRound(temp->width*pose.lambda1), cvRound(temp->height*pose.lambda2));
     IplImage* temp3 = cvCreateImage(new_size, IPL_DEPTH_32F, src->nChannels);
 
     cvConvertScale(src, temp);
@@ -844,8 +847,8 @@ void OneWayDescriptor::GenerateSamples(int pose_count, IplImage* frontal, int no
         float scale = 1.0f;
         if(norm)
         {
-            float sum = cvSum(patch_8u).val[0];
-            scale = 1/sum;
+            float sum = (float)cvSum(patch_8u).val[0];
+            scale = 1.f/sum;
         }
         cvConvertScale(patch_8u, m_samples[i], scale);
         
@@ -870,7 +873,7 @@ void OneWayDescriptor::GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
     cvMinMaxLoc(frontal, 0, &maxval);
     CvMat* frontal_data = ConvertImageToMatrix(frontal);
     
-    float sum = cvSum(frontal_data).val[0];
+    float sum = (float)cvSum(frontal_data).val[0];
     cvConvertScale(frontal_data, frontal_data, 1.0f/sum);
     cvProjectPCA(frontal_data, pca_hr_avg, pca_hr_eigenvectors, pca_coeffs);
     for(int i = 0; i < m_pose_count; i++)
@@ -878,7 +881,7 @@ void OneWayDescriptor::GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
         cvSetZero(m_samples[i]);
         for(int j = 0; j < m_pca_dim_high; j++)
         {
-            float coeff = cvmGet(pca_coeffs, 0, j);
+            float coeff = (float)cvmGet(pca_coeffs, 0, j);
             IplImage* patch = pca_descriptors[j + 1].GetPatch(i);
             cvAddWeighted(m_samples[i], 1.0, patch, coeff, 0, m_samples[i]);
             
@@ -895,7 +898,7 @@ void OneWayDescriptor::GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
         }
         
         cvAdd(pca_descriptors[0].GetPatch(i), m_samples[i], m_samples[i]);
-        float sum = cvSum(m_samples[i]).val[0];
+        float sum = (float)cvSum(m_samples[i]).val[0];
         cvConvertScale(m_samples[i], m_samples[i], 1.0/sum);
         
 #if 0
@@ -996,7 +999,7 @@ void OneWayDescriptor::EstimatePosePCA(IplImage* patch, int& pose_idx, float& di
     CvMat* pca_coeffs = cvCreateMat(1, m_pca_dim_low, CV_32FC1);
     
     IplImage* patch_32f = cvCreateImage(cvSize(roi.width, roi.height), IPL_DEPTH_32F, 1);
-    float sum = cvSum(patch).val[0];
+    float sum = (float)cvSum(patch).val[0];
     cvConvertScale(patch, patch_32f, 1.0f/sum);
  
     ProjectPCASample(patch_32f, avg, eigenvectors, pca_coeffs);
@@ -1006,7 +1009,7 @@ void OneWayDescriptor::EstimatePosePCA(IplImage* patch, int& pose_idx, float& di
     
     for(int i = 0; i < m_pose_count; i++)
     {
-        float dist = cvNorm(m_pca_coeffs[i], pca_coeffs);
+        float dist = (float)cvNorm(m_pca_coeffs[i], pca_coeffs);
         if(dist < distance)
         {
             distance = dist;
@@ -1025,7 +1028,7 @@ void OneWayDescriptor::EstimatePose(IplImage* patch, int& pose_idx, float& dista
     
     CvRect roi = cvGetImageROI(patch);
     IplImage* patch_32f = cvCreateImage(cvSize(roi.width, roi.height), IPL_DEPTH_32F, patch->nChannels);
-    float sum = cvSum(patch).val[0];
+    float sum = (float)cvSum(patch).val[0];
     cvConvertScale(patch, patch_32f, 1/sum);
     
     for(int i = 0; i < m_pose_count; i++)
@@ -1034,7 +1037,7 @@ void OneWayDescriptor::EstimatePose(IplImage* patch, int& pose_idx, float& dista
         {
             continue;
         }
-        float dist = cvNorm(m_samples[i], patch_32f);
+        float dist = (float)cvNorm(m_samples[i], patch_32f);
         if(dist < distance)
         {
             distance = dist;
@@ -1117,7 +1120,7 @@ int OneWayDescriptor::ReadByName(CvFileStorage* fs, CvFileNode* parent, const ch
         {
             for(int x = 0; x < m_samples[i]->width; x++)
             {
-                float val = cvmGet(mat, i, y*m_samples[i]->width + x);
+                float val = (float)cvmGet(mat, i, y*m_samples[i]->width + x);
                 *((float*)(m_samples[i]->imageData + y*m_samples[i]->widthStep) + x) = val;
             }
         }
