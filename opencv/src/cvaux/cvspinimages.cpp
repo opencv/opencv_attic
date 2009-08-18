@@ -976,10 +976,12 @@ private:
 
 }
 
-vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
+ void cv::SpinImageModel::match(const SpinImageModel& scene, vector< vector<Vec2i> >& result)
 {   
     if (mesh.vtx.empty())
         throw Mesh3D::EmptyMeshException();
+
+    result.clear();
 
     SpinImageModel& model = *this;
     
@@ -1046,9 +1048,9 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
     if (out) *out << "Spin correlation time  = " << corr_timer << endl;
     if (out) *out << "Matches number = " << allMatches.size() << endl;
 
-    if(allMatches.empty())
-        return vector< vector< Vec2i > >();
-       
+    if(allMatches.empty())    
+        return;
+           
     /* filtering by similarity measure */
     const float fraction = 0.5f;
     float maxMeasure = max_element(allMatches.begin(), allMatches.end(), less<float>())->measure;    
@@ -1059,7 +1061,7 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
 
     size_t matchesSize = allMatches.size();
     if(matchesSize == 0)
-        return vector< vector< Vec2i > >();
+        return;
     
     /* filtering by geometric consistency */    
     const float infinity = numeric_limits<float>::infinity();
@@ -1103,7 +1105,7 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
 
     matchesSize = allMatches.size();
     if(matchesSize == 0)
-        return vector< vector< Vec2i > >();
+        return;
 
     if (out) *out << "grouping ..." << endl;
 
@@ -1180,8 +1182,7 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
             groups.push_back(group);      
     }
 
-    /* converting the data to final result */
-    vector< vector< Vec2i > > result; 
+    /* converting the data to final result */    
     for(size_t i = 0; i < groups.size(); ++i)
     {
         const group_t& group = groups[i];
@@ -1193,8 +1194,7 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
             outgrp.push_back(Vec2i(subset[m.modelInd], scene.subset[m.sceneInd]));
         }        
         result.push_back(outgrp);
-    }
-    return result;    
+    }    
 }
 
 cv::TickMeter::TickMeter() { reset(); }
