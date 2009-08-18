@@ -2216,6 +2216,12 @@ template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp& elem)
 template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp& elem)
 { cvSeqPushFront(seq, &elem); }
 
+template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp* elem, size_t count)
+{ cvSeqPushMulti(seq, elem, (int)count, 0); }
+
+template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp* elem, size_t count)
+{ cvSeqPushMulti(seq, elem, (int)count, 1); }    
+    
 template<typename _Tp> inline _Tp& Seq<_Tp>::back()
 { return *(_Tp*)cvGetSeqElem(seq, -1); }
 
@@ -2240,6 +2246,27 @@ template<typename _Tp> inline void Seq<_Tp>::pop_back()
 template<typename _Tp> inline void Seq<_Tp>::pop_front()
 { cvSeqPopFront(seq); }
 
+template<typename _Tp> inline void Seq<_Tp>::pop_back(_Tp* elem, size_t count)
+{ cvSeqPopMulti(seq, elem, (int)count, 0); }
+
+template<typename _Tp> inline void Seq<_Tp>::pop_front(_Tp* elem, size_t count)
+{ cvSeqPopMulti(seq, elem, (int)count, 1); }    
+
+template<typename _Tp> inline void Seq<_Tp>::insert(int idx, const _Tp& elem)
+{ cvSeqInsert(seq, idx, &elem); }
+    
+template<typename _Tp> inline void Seq<_Tp>::insert(int idx, const _Tp* elems, size_t count)
+{
+    CvMat m = cvMat(1, count, DataType<_Tp>::type, elems);
+    cvSeqInsertSlice(seq, idx, &m);
+}
+    
+template<typename _Tp> inline void Seq<_Tp>::remove(int idx)
+{ cvSeqRemove(seq, idx); }
+    
+template<typename _Tp> inline void Seq<_Tp>::remove(const Range& r)
+{ cvSeqRemoveSlice(seq, r); }
+    
 template<typename _Tp> inline void Seq<_Tp>::copyTo(vector<_Tp>& vec, const Range& range) const
 {
     size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
