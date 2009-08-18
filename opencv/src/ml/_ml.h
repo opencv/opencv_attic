@@ -42,7 +42,7 @@
 #define __ML_INTERNAL_H__
 
 #if _MSC_VER >= 1200
-#pragma warning( disable: 4514 4710 4711 4710 )
+#pragma warning( disable: 4251 4514 4710 4711 4710 )
 #endif
 
 #include "ml.h"

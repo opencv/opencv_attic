@@ -42,6 +42,10 @@
 #ifndef __HIGHGUI_H_
 #define __HIGHGUI_H_
 
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4251 )
+#endif
+
 #include "highgui.h"
 #include "cxmisc.h"
 
