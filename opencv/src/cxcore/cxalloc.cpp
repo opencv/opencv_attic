@@ -49,8 +49,24 @@ namespace cv
 
 void deleteThreadAllocData() {}
 
-void* fastMalloc( size_t size ) { return malloc(size); }
-void fastFree(void* ptr) { if(ptr) free(ptr); }
+void* fastMalloc( size_t size )
+{
+    uchar* udata = (uchar*)malloc(size + sizeof(void*) + CV_MALLOC_ALIGN);
+    uchar** adata = alignPtr((uchar**)udata + 1, CV_MALLOC_ALIGN);
+    adata[-1] = udata;
+    return adata;
+}
+    
+void fastFree(void* ptr)
+{
+    if(ptr)
+    {
+        uchar* udata = ((uchar**)ptr)[-1];
+        CV_DbgAssert(udata < (uchar*)ptr &&
+               ((uchar*)ptr - udata) <= (ptrdiff_t)(sizeof(void*)+CV_MALLOC_ALIGN)); 
+        free(udata);
+    }
+}
 
 #else
 

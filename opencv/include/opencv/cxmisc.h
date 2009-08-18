@@ -82,7 +82,7 @@
 #define  CV_MAX_ALLOC_SIZE    (((size_t)1 << (sizeof(size_t)*8-2)))
 
 /* the alignment of all the allocated buffers */
-#define  CV_MALLOC_ALIGN    32
+#define  CV_MALLOC_ALIGN    16
 
 /* default alignment for dynamic data strucutures, resided in storages. */
 #define  CV_STRUCT_ALIGN    ((int)sizeof(double))
