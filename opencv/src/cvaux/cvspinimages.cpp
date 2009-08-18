@@ -698,7 +698,8 @@ void cv::SpinImageModel::defaultParams()
     lambda = 0.f; /* autodetect according to medan non zero images bin */
     gamma  = 0.f; /* autodetect according to mesh resolution */
 
-    Tgc = 0.25f;
+    T_GeometriccConsistency = 0.25f;
+    T_GroupingCorespondances = 0.25f;
 };
 
 Mat cv::SpinImageModel::packRandomScaledSpins(bool separateScale, size_t xCount, size_t yCount) const
@@ -1085,9 +1086,9 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
                 const Point3f& normalModelJ = model.getSpinNormal(mj.modelInd);
 
                 float gc = geometricConsistency(pointSceneI, normalSceneI, pointModelI, normalModelI,
-                                                pointSceneJ, normalSceneJ, pointModelJ, normalModelJ);                
+                                                pointSceneJ, normalSceneJ, pointModelJ, normalModelJ);
 
-                if (gc < model.Tgc)
+                if (gc < model.T_GeometriccConsistency)
                     ++consistNum;
             }
                     
@@ -1162,8 +1163,8 @@ vector< vector< Vec2i > > cv::SpinImageModel::match(const SpinImageModel& scene)
                         
             std::transform(left.begin(), left.end(), buf_beg,  WgcHelper(group, groupingMat));
             size_t minInd = min_element(buf_beg, buf_beg + left_size) - buf_beg;
-
-            if (buf[minInd] < model.Tgc) /* can add corespondance to group */
+            
+            if (buf[minInd] < model.T_GroupingCorespondances) /* can add corespondance to group */
             {
                 iter pos = left.begin();
                 advance(pos, minInd);
