@@ -426,7 +426,7 @@ public:
     void selectRandomSubset(float ratio);         
     void compute();
 
-    vector< vector< Vec2i > > match(const SpinImageModel& scene); 
+    void match(const SpinImageModel& scene, vector< vector<Vec2i> >& result);    
 
     Mat packRandomScaledSpins(bool separateScale = false, size_t xCount = 10, size_t yCount = 10) const;
     
