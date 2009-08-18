@@ -191,7 +191,8 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
     wholeSize = Size(-1,-1);
 }
 
-    
+static const int VEC_ALIGN = CV_MALLOC_ALIGN;
+
 int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
 {
     int i, j;
@@ -243,8 +244,8 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
         }
         
         int maxBufStep = bufElemSize*(int)alignSize(maxWidth +
-            (!isSeparable() ? ksize.width - 1 : 0),16);
-        ringBuf.resize(maxBufStep*rows.size());
+            (!isSeparable() ? ksize.width - 1 : 0),VEC_ALIGN);
+        ringBuf.resize(maxBufStep*rows.size()+VEC_ALIGN);
     }
 
     // adjust bufstep so that the used part of the ring buffer stays compact in memory
@@ -261,7 +262,7 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
             int nr = isSeparable() ? 1 : (int)rows.size();
             for( i = 0; i < nr; i++ )
             {
-                uchar* dst = isSeparable() ? &srcRow[0] : &ringBuf[0] + bufStep*i;
+                uchar* dst = isSeparable() ? &srcRow[0] : alignPtr(&ringBuf[0],VEC_ALIGN) + bufStep*i;
                 memcpy( dst, constVal, dx1*esz );
                 memcpy( dst + (roi.width + ksize.width - 1 - dx2)*esz, constVal, dx2*esz );
             }
@@ -365,7 +366,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
         for( ; dcount-- > 0; src += srcstep )
         {
             int bi = (startY - startY0 + rowCount) % bufRows;
-            uchar* brow = &ringBuf[0] + bi*bufStep;
+            uchar* brow = alignPtr(&ringBuf[0], VEC_ALIGN) + bi*bufStep;
             uchar* row = isSep ? &srcRow[0] : brow;
             
             if( ++rowCount > bufRows )
@@ -414,7 +415,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
                 if( srcY >= startY + rowCount )
                     break;
                 int bi = (srcY - startY0) % bufRows;
-                brows[i] = &ringBuf[0] + bi*bufStep;
+                brows[i] = alignPtr(&ringBuf[0], VEC_ALIGN) + bi*bufStep;
             }
         }
         if( i < kheight )
