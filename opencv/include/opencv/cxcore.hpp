@@ -1912,6 +1912,13 @@ public:
     size_t index(const _Tp& elem) const;
     void push_back(const _Tp& elem);
     void push_front(const _Tp& elem);
+    void push_back(const _Tp* elems, size_t count);
+    void push_front(const _Tp* elems, size_t count);
+    void insert(int idx, const _Tp& elem);
+    void insert(int idx, const _Tp* elems, size_t count);
+    void remove(int idx);
+    void remove(const Range& r);
+    
     _Tp& front();
     const _Tp& front() const;
     _Tp& back();
@@ -1921,6 +1928,8 @@ public:
     void clear();
     void pop_front();
     void pop_back();
+    void pop_front(_Tp* elems, size_t count);
+    void pop_back(_Tp* elems, size_t count);
 
     void copyTo(vector<_Tp>& vec, const Range& range=Range::all()) const;
     operator vector<_Tp>() const;

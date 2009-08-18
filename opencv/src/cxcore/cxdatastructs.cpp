@@ -1517,7 +1517,7 @@ cvSeqPushMulti( CvSeq *seq, const void *_elements, int count, int front )
 
 /* Remove several elements from the end of sequence: */
 CV_IMPL void
-cvSeqPopMulti( CvSeq *seq, const void *_elements, int count, int front )
+cvSeqPopMulti( CvSeq *seq, void *_elements, int count, int front )
 {
     char *elements = (char *) _elements;
 

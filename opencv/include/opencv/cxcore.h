@@ -993,7 +993,7 @@ CVAPI(void)  cvSeqPushMulti( CvSeq* seq, const void* elements,
                              int count, int in_front CV_DEFAULT(0) );
 
 /* Removes several elements from the end of sequence and optionally saves them */
-CVAPI(void)  cvSeqPopMulti( CvSeq* seq, const void* elements,
+CVAPI(void)  cvSeqPopMulti( CvSeq* seq, void* elements,
                             int count, int in_front CV_DEFAULT(0) );
 
 /* Inserts a new element in the middle of sequence.
