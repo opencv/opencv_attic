@@ -413,7 +413,9 @@ public:
 
     float lambda;                        
     float gamma;
-    float Tgc;
+
+    float T_GeometriccConsistency;
+    float T_GroupingCorespondances;
 
     /* public interface */
     SpinImageModel();
