@@ -604,17 +604,18 @@ CV_EXPORTS void groupRectangles(vector<Rect>& rectList, int groupThreshold, doub
 class CV_EXPORTS FeatureEvaluator
 {
 public:    
+    enum { HAAR = 0, LBP = 1 };
     virtual ~FeatureEvaluator();
     virtual bool read(const FileNode& node);
+    virtual Ptr<FeatureEvaluator> clone() const;
     virtual int getFeatureType() const;
     
     virtual bool setImage(const Mat&, Size origWinSize);
-    virtual int setWindow(Point);
-    
-    /*virtual double calcOrd(int featureIdx, int pOffset) const;
-    virtual int calcCat(int featureIdx, int pOffset) const;*/
-    
-    enum { HAAR = 0, LBP = 1 };
+    virtual bool setWindow(Point p);
+
+    virtual double calcOrd(int featureIdx) const;
+    virtual int calcCat(int featureIdx) const;
+
     static Ptr<FeatureEvaluator> create(int type);
 };
     
@@ -663,8 +664,8 @@ public:
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
  
-    bool setImage( const Mat& image );
-    int runAt( Point pt );
+    bool setImage( Ptr<FeatureEvaluator>&, const Mat& );
+    int runAt( Ptr<FeatureEvaluator>&, Point );
 
     int stageType;
     int featureType;
@@ -677,7 +678,7 @@ public:
     vector<DTreeNode> nodes;
     vector<float> leaves;
     vector<int> subsets;
-    
+
     Ptr<FeatureEvaluator> feval;
     Ptr<CvHaarClassifierCascade> oldCascade;
 };
