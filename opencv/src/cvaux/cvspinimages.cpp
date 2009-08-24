@@ -86,7 +86,7 @@ namespace
 
 template<class FwIt, class T> void iota(FwIt first, FwIt last, T value) { while(first != last) *first++ = value++; }
 
-void computeNormals( const OctTree& octtree, const vector<Point3f>& centers, vector<Point3f>& normals, 
+void computeNormals( const Octree& Octree, const vector<Point3f>& centers, vector<Point3f>& normals, 
                     vector<uchar>& mask, float normalRadius, int minNeighbors = 20)
 {    
     size_t normals_size = centers.size();
@@ -113,7 +113,7 @@ void computeNormals( const OctTree& octtree, const vector<Point3f>& centers, vec
             continue;
 
         const Point3f& center = centers[n];
-        octtree.getPointsWithinSphere(center, normalRadius, buffer);
+        Octree.getPointsWithinSphere(center, normalRadius, buffer);
 
         int buf_size = (int)buffer.size();
         if (buf_size < minNeighbors)
@@ -219,7 +219,7 @@ inline __m128i _mm_mullo_epi32_emul(const __m128i& a, __m128i& b)
 
 #endif
 
-void computeSpinImages( const OctTree& octtree, const vector<Point3f>& points, const vector<Point3f>& normals, 
+void computeSpinImages( const Octree& Octree, const vector<Point3f>& points, const vector<Point3f>& normals, 
                        vector<uchar>& mask, Mat& spinImages, int imageWidth, float binSize)
 {   
     float pixelsPerMeter = 1.f / binSize;
@@ -258,7 +258,7 @@ void computeSpinImages( const OctTree& octtree, const vector<Point3f>& points, c
         vector<Point3f>& pointsInSphere = pointsInSpherePool[t];
                 
         const Point3f& center = points[i];
-        octtree.getPointsWithinSphere(center, searchRad, pointsInSphere);
+        Octree.getPointsWithinSphere(center, searchRad, pointsInSphere);
 
         size_t inSphere_size = pointsInSphere.size();
         if (inSphere_size == 0)
@@ -437,8 +437,8 @@ cv::Mesh3D::Mesh3D(const vector<Point3f>& _vtx)
 }
 cv::Mesh3D::~Mesh3D() {}
 
-void cv::Mesh3D::buildOctTree() { if (octree.getNodes().empty()) octree.buildTree(vtx); }
-void cv::Mesh3D::clearOctTree(){ octree = OctTree(); }
+void cv::Mesh3D::buildOctree() { if (octree.getNodes().empty()) octree.buildTree(vtx); }
+void cv::Mesh3D::clearOctree(){ octree = Octree(); }
 
 float cv::Mesh3D::estimateResolution(float tryRatio)
 {
@@ -479,14 +479,14 @@ float cv::Mesh3D::estimateResolution(float tryRatio)
 
 void cv::Mesh3D::computeNormals(float normalRadius, int minNeighbors)
 {
-    buildOctTree();
+    buildOctree();
     vector<uchar> mask;
     ::computeNormals(octree, vtx, normals, mask, normalRadius, minNeighbors);
 }
 
 void cv::Mesh3D::computeNormals(const vector<int>& subset, float normalRadius, int minNeighbors)
 {
-    buildOctTree();
+    buildOctree();
     vector<uchar> mask(vtx.size(), 0);
     for(size_t i = 0; i < subset.size(); ++i) 
         mask[subset[i]] = 1;
@@ -851,7 +851,7 @@ void cv::SpinImageModel::compute()
     /* estimate normalRadius */    
     normalRadius = normalRadius != 0.f ? normalRadius : binSize * imageWidth / 2;    
 
-    mesh.buildOctTree();  
+    mesh.buildOctree();  
     if (subset.empty())
     {
         mesh.computeNormals(normalRadius, minNeighbors);
