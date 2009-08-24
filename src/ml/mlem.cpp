@@ -447,7 +447,7 @@ void CvEM::init_em( const CvVectors& train_data )
 
     CV_CALL( tcov = cvCreateMat( dims, dims, CV_64FC1 ));
     CV_CALL( w = cvCreateMat( dims, dims, CV_64FC1 ));
-    if( params.cov_mat_type == COV_MAT_GENERIC )
+    if( params.cov_mat_type != COV_MAT_SPHERICAL )
         CV_CALL( u = cvCreateMat( dims, dims, CV_64FC1 ));
 
     for( i = 0; i < nclusters; i++ )
@@ -462,8 +462,8 @@ void CvEM::init_em( const CvVectors& train_data )
         cvSVD( tcov, w, u, 0, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
         if( params.cov_mat_type == COV_MAT_SPHERICAL )
             cvSetIdentity( covs[i], cvScalar(cvTrace(w).val[0]/dims) );
-        else if( params.cov_mat_type == COV_MAT_DIAGONAL )
-            cvCopy( w, covs[i] );
+        /*else if( params.cov_mat_type == COV_MAT_DIAGONAL )
+            cvCopy( w, covs[i] );*/
         else
         {
             // generic case: covs[i] = (u')'*max(w,0)*u'
