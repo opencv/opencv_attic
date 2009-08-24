@@ -49,7 +49,7 @@ namespace cv
 
 const size_t MAX_STACK_SIZE = 255;
 
-bool checkIfNodeOutsideSphere(const OctTree::Node& node, const Point3f& c, float r)
+bool checkIfNodeOutsideSphere(const Octree::Node& node, const Point3f& c, float r)
 {
     if (node.x_max < (c.x - r) ||  node.y_max < (c.y - r) || node.z_max < (c.z - r) )
         return true;
@@ -60,7 +60,7 @@ bool checkIfNodeOutsideSphere(const OctTree::Node& node, const Point3f& c, float
     return false;	
 }
 
-bool checkIfNodeInsideSphere(const OctTree::Node& node, const Point3f& c, float r)
+bool checkIfNodeInsideSphere(const Octree::Node& node, const Point3f& c, float r)
 {
     r*=r;
 
@@ -101,7 +101,7 @@ bool checkIfNodeInsideSphere(const OctTree::Node& node, const Point3f& c, float 
     return true;
 }
 
-void fillMinMax(const vector<Point3f>& points, OctTree::Node& node)
+void fillMinMax(const vector<Point3f>& points, Octree::Node& node)
 {
     node.x_max = node.y_max = node.z_max = std::numeric_limits<float>::min();
     node.x_min = node.y_min = node.z_min = std::numeric_limits<float>::max();
@@ -130,7 +130,7 @@ void fillMinMax(const vector<Point3f>& points, OctTree::Node& node)
     }	
 }
 
-size_t findSubboxForPoint(const Point3f& point, const OctTree::Node& node)
+size_t findSubboxForPoint(const Point3f& point, const Octree::Node& node)
 {
     size_t ind_x = point.x < (node.x_max + node.x_min) / 2 ? 0 : 1;
     size_t ind_y = point.y < (node.y_max + node.y_min) / 2 ? 0 : 1;
@@ -138,7 +138,7 @@ size_t findSubboxForPoint(const Point3f& point, const OctTree::Node& node)
 
     return (ind_x << 2) + (ind_y << 1) + (ind_z << 0);
 }
-void initChildBox(const OctTree::Node& perent, size_t boxIndex, OctTree::Node& child)
+void initChildBox(const Octree::Node& perent, size_t boxIndex, Octree::Node& child)
 {
     child.x_min = child.x_max = (perent.x_max + perent.x_min) / 2;
     child.y_min = child.y_max = (perent.y_max + perent.y_min) / 2;
@@ -161,23 +161,23 @@ void initChildBox(const OctTree::Node& perent, size_t boxIndex, OctTree::Node& c
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////       OctTree       //////////////////////////////////////
+///////////////////////////       Octree       //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-OctTree::OctTree() 
+Octree::Octree() 
 {
 }
 
-OctTree::OctTree( const vector<Point3f>& points3d, int maxLevels, int minPoints )
+Octree::Octree( const vector<Point3f>& points3d, int maxLevels, int minPoints )
 {
     buildTree(points3d, maxLevels, minPoints);
 }
 
-OctTree::~OctTree()
+Octree::~Octree()
 {
 }
 
-void OctTree::getPointsWithinSphere( const Point3f& center, float radius, vector<Point3f>& out ) const
+void Octree::getPointsWithinSphere( const Point3f& center, float radius, vector<Point3f>& out ) const
 {
     out.clear();
 
@@ -253,7 +253,7 @@ void OctTree::getPointsWithinSphere( const Point3f& center, float radius, vector
     }
 }
 
-void OctTree::buildTree( const vector<Point3f>& points3d, int maxLevels, int minPoints)
+void Octree::buildTree( const vector<Point3f>& points3d, int maxLevels, int minPoints)
 {
     assert( (size_t)maxLevels * 8 < MAX_STACK_SIZE );
     points.resize(points3d.size());
@@ -279,7 +279,7 @@ void OctTree::buildTree( const vector<Point3f>& points3d, int maxLevels, int min
     }
 }
 
-void  OctTree::buildNext(size_t node_ind)
+void  Octree::buildNext(size_t node_ind)
 {	
     size_t size = nodes[node_ind].end - nodes[node_ind].begin;
 
