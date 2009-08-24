@@ -87,13 +87,18 @@ Mat::Mat(const IplImage* img, bool copyData)
     }
 }
 
-Mat cvarrToMat(const CvArr* arr, bool copyData, bool allowND)
+Mat cvarrToMat(const CvArr* arr, bool copyData, bool allowND, int coiMode)
 {
     Mat m;
     if( CV_IS_MAT(arr) )
         m = Mat((const CvMat*)arr, copyData );
     else if( CV_IS_IMAGE(arr) )
-        m = Mat((const IplImage*)arr, copyData );
+    {
+        const IplImage* iplimg = (const IplImage*)arr;
+        m = Mat(iplimg, copyData );
+        if( coiMode == 0 && cvGetImageCOI(iplimg) > 0 )
+            CV_Error(CV_BadCOI, "COI is not supported by the function");
+    }
     else
     {
         CvMat hdr, *cvmat = cvGetMat( arr, &hdr, 0, allowND ? 1 : 0 );
@@ -103,16 +108,27 @@ Mat cvarrToMat(const CvArr* arr, bool copyData, bool allowND)
     return m;
 }
 
-Mat extractImageCOI(const CvArr* arr)
+void extractImageCOI(const CvArr* arr, Mat& ch, int coi)
 {
-    Mat mat = cvarrToMat(arr), ch( mat.size(), mat.depth());
-    int coi = 0;
-    CV_Assert( CV_IS_IMAGE(arr) && (coi = cvGetImageCOI((const IplImage*)arr)) > 0 );
-    int _pairs[] = { coi-1, 0 };
+    Mat mat = cvarrToMat(arr, false, true, 1);
+    ch.create(mat.size(), mat.depth());
+    if(coi < 0) 
+        CV_Assert( CV_IS_IMAGE(arr) && (coi = cvGetImageCOI((const IplImage*)arr)-1) >= 0 );
+    CV_Assert(0 <= coi && coi < mat.channels());
+    int _pairs[] = { coi, 0 };
     mixChannels( &mat, &ch, _pairs, 1 );
-
-    return ch;
 }
+    
+void insertImageCOI(const Mat& ch, CvArr* arr, int coi)
+{
+    Mat mat = cvarrToMat(arr, false, true, 1);
+    if(coi < 0) 
+        CV_Assert( CV_IS_IMAGE(arr) && (coi = cvGetImageCOI((const IplImage*)arr)-1) >= 0 );
+    CV_Assert(ch.size() == mat.size() && ch.depth() == mat.depth() && 0 <= coi && coi < mat.channels());
+    int _pairs[] = { 0, coi };
+    mixChannels( &ch, &mat, _pairs, 1 );
+}
+    
 
 Mat Mat::reshape(int new_cn, int new_rows) const
 {

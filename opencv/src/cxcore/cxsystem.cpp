@@ -150,13 +150,13 @@ int getThreadNum(void)
 }
 
 
-String format( const char* fmt, ... )
+string format( const char* fmt, ... )
 {
     char buf[1 << 16];
     va_list args;
     va_start( args, fmt );
     vsprintf( buf, fmt, args );
-    return String(buf);
+    return string(buf);
 }
 
 void error( const Exception& exc )

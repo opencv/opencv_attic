@@ -29,7 +29,7 @@ public:
     void  close();
     
     size_t signatureLength() const;
-    bool checkSignature( const String& signature ) const;
+    bool checkSignature( const string& signature ) const;
 
     ImageDecoder newDecoder() const;
 

@@ -56800,7 +56800,7 @@ static octave_value_list _wrap_cvSeqPopMulti (const octave_value_list& args, int
   }
   {
     try {
-      cvSeqPopMulti(arg1,(void const *)arg2,arg3,arg4); 
+      cvSeqPopMulti(arg1,arg2,arg3,arg4); 
     } 
     catch (...) 
     {

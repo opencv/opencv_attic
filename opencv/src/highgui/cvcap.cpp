@@ -328,7 +328,7 @@ namespace cv
 VideoCapture::VideoCapture()
 {}
         
-VideoCapture::VideoCapture(const String& filename)
+VideoCapture::VideoCapture(const string& filename)
 {
     open(filename);
 }
@@ -343,7 +343,7 @@ VideoCapture::~VideoCapture()
     cap.release();
 }
     
-bool VideoCapture::open(const String& filename)
+bool VideoCapture::open(const string& filename)
 {
     cap = cvCreateFileCapture(filename.c_str());
     return isOpened();
@@ -407,7 +407,7 @@ double VideoCapture::get(int propId)
 VideoWriter::VideoWriter()
 {}
     
-VideoWriter::VideoWriter(const String& filename, int fourcc, double fps, Size frameSize, bool isColor)
+VideoWriter::VideoWriter(const string& filename, int fourcc, double fps, Size frameSize, bool isColor)
 {
     open(filename, fourcc, fps, frameSize, isColor);
 }
@@ -417,7 +417,7 @@ VideoWriter::~VideoWriter()
     writer.release();
 }
     
-bool VideoWriter::open(const String& filename, int fourcc, double fps, Size frameSize, bool isColor)
+bool VideoWriter::open(const string& filename, int fourcc, double fps, Size frameSize, bool isColor)
 {
     writer = cvCreateVideoWriter(filename.c_str(), fourcc, fps, frameSize, isColor);
     return isOpened();

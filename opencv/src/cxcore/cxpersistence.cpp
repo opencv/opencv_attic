@@ -73,7 +73,7 @@ static char* icv_itoa( int _val, char* buffer, int /*radix*/ )
     return ptr;
 }
 
-cv::String cv::FileStorage::getDefaultObjectName(const String& _filename)
+cv::string cv::FileStorage::getDefaultObjectName(const string& _filename)
 {
     static const char* stubname = "unnamed";
     const char* filename = _filename.c_str();
@@ -109,25 +109,25 @@ cv::String cv::FileStorage::getDefaultObjectName(const String& _filename)
     name = name_buf;
     if( strcmp( name, "_" ) == 0 )
         strcpy( name, stubname );
-    return cv::String(name);
+    return cv::string(name);
 }
 
 namespace cv
 {
 
-String fromUtf16(const WString& str)
+string fromUtf16(const WString& str)
 {
     cv::AutoBuffer<char> _buf(str.size()*4 + 1);
     char* buf = _buf;
         
     size_t sz = wcstombs(buf, str.c_str(), str.size());
     if( sz == (size_t)-1 )
-        return String();
+        return string();
     buf[sz] = '\0';
-    return String(buf);
+    return string(buf);
 }
 
-WString toUtf16(const String& str)
+WString toUtf16(const string& str)
 {
     cv::AutoBuffer<wchar_t> _buf(str.size() + 1);
     wchar_t* buf = _buf;
@@ -4776,7 +4776,7 @@ cvSave( const char* filename, const void* struct_ptr,
     if( !fs )
         CV_Error( CV_StsError, "Could not open the file storage. Check the path and permissions" );
 
-    cv::String name = _name ? cv::String(_name) : cv::FileStorage::getDefaultObjectName(filename);
+    cv::string name = _name ? cv::string(_name) : cv::FileStorage::getDefaultObjectName(filename);
 
     if( comment )
         cvWriteComment( fs, comment, 0 );
@@ -4873,7 +4873,7 @@ exit:
 namespace cv
 {
 
-static void getElemSize( const String& fmt, size_t& elemSize, size_t& cn )
+static void getElemSize( const string& fmt, size_t& elemSize, size_t& cn )
 {
     const char* dt = fmt.c_str();
     cn = 1;
@@ -4893,7 +4893,7 @@ FileStorage::FileStorage()
     state = UNDEFINED;
 }
 
-FileStorage::FileStorage(const String& filename, int flags)
+FileStorage::FileStorage(const string& filename, int flags)
 {
     state = UNDEFINED;
     open( filename, flags );
@@ -4914,7 +4914,7 @@ FileStorage::~FileStorage()
     }
 }
 
-bool FileStorage::open(const String& filename, int flags)
+bool FileStorage::open(const string& filename, int flags)
 {
     release();
     fs = Ptr<CvFileStorage>(cvOpenFileStorage( filename.c_str(), 0, flags ));
@@ -4940,7 +4940,7 @@ FileNode FileStorage::root(int streamidx) const
     return isOpened() ? FileNode(fs, cvGetRootFileNode(fs, streamidx)) : FileNode();
 }
 
-FileStorage& operator << (FileStorage& fs, const String& str)
+FileStorage& operator << (FileStorage& fs, const string& str)
 {
     enum { NAME_EXPECTED = FileStorage::NAME_EXPECTED,
         VALUE_EXPECTED = FileStorage::VALUE_EXPECTED,
@@ -4959,7 +4959,7 @@ FileStorage& operator << (FileStorage& fs, const String& str)
         fs.state = fs.structs.empty() || fs.structs.back() == '{' ?
             INSIDE_MAP + NAME_EXPECTED : VALUE_EXPECTED;
         cvEndWriteStruct( *fs );
-        fs.elname = String();
+        fs.elname = string();
     }
     else if( fs.state == NAME_EXPECTED + INSIDE_MAP )
     {
@@ -4983,12 +4983,12 @@ FileStorage& operator << (FileStorage& fs, const String& str)
             }
             cvStartWriteStruct( *fs, fs.elname.size() > 0 ? fs.elname.c_str() : 0,
                 flags, *_str ? _str : 0 );
-            fs.elname = String();
+            fs.elname = string();
         }
         else
         {
             write( fs, fs.elname, (_str[0] == '\\' && (_str[1] == '{' || _str[1] == '}' ||
-                _str[1] == '[' || _str[1] == ']')) ? String(_str+1) : str );
+                _str[1] == '[' || _str[1] == ']')) ? string(_str+1) : str );
             if( fs.state == INSIDE_MAP + VALUE_EXPECTED )
                 fs.state = INSIDE_MAP + NAME_EXPECTED;
         }
@@ -4999,7 +4999,7 @@ FileStorage& operator << (FileStorage& fs, const String& str)
 }
 
 
-void FileStorage::writeRaw( const String& fmt, const uchar* vec, size_t len )
+void FileStorage::writeRaw( const string& fmt, const uchar* vec, size_t len )
 {
     if( !isOpened() )
         return;
@@ -5010,7 +5010,7 @@ void FileStorage::writeRaw( const String& fmt, const uchar* vec, size_t len )
 }
 
 
-void FileStorage::writeObj( const String& name, const void* obj )
+void FileStorage::writeObj( const string& name, const void* obj )
 {
     if( !isOpened() )
         return;
@@ -5131,7 +5131,7 @@ FileNodeIterator& FileNodeIterator::operator -= (int ofs)
 }
 
 
-FileNodeIterator& FileNodeIterator::readRaw( const String& fmt, uchar* vec, size_t maxCount )
+FileNodeIterator& FileNodeIterator::readRaw( const string& fmt, uchar* vec, size_t maxCount )
 {
     if( fs && container && remaining > 0 )
     {

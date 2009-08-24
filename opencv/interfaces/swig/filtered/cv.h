@@ -1711,7 +1711,7 @@ extern "C" void cvSeqPushMulti( CvSeq* seq, const void* elements,
                              int count, int in_front = 0 );
 
 
-extern "C" void cvSeqPopMulti( CvSeq* seq, const void* elements,
+extern "C" void cvSeqPopMulti( CvSeq* seq, void* elements,
                             int count, int in_front = 0 );
 
 

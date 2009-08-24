@@ -3959,6 +3959,42 @@ template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(const int* idx
     return *(const _Tp*)ptr;
 }
 
+template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(int i0)
+{
+    CV_DbgAssert( dims == 1 &&
+                 (unsigned)i0 < (unsigned)size[0] );
+    
+    return *(_Tp*)(data + i0*step[0]);
+}
+
+template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(int i0) const
+{
+    CV_DbgAssert( dims == 1 &&
+                 (unsigned)i0 < (unsigned)size[0] );
+    
+    return *(const _Tp*)(data + i0*step[0]);
+}
+    
+    
+template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(int i0, int i1)
+{
+    CV_DbgAssert( dims == 2 &&
+                 (unsigned)i0 < (unsigned)size[0] &&
+                 (unsigned)i1 < (unsigned)size[1] );
+    
+    return *(_Tp*)(data + i0*step[0] + i1*step[1]);
+}
+
+template<typename _Tp> inline const _Tp& MatND_<_Tp>::operator ()(int i0, int i1) const
+{
+    CV_DbgAssert( dims == 2 &&
+                 (unsigned)i0 < (unsigned)size[0] &&
+                 (unsigned)i1 < (unsigned)size[1] );
+    
+    return *(const _Tp*)(data + i0*step[0] + i1*step[1]);
+}
+    
+    
 template<typename _Tp> inline _Tp& MatND_<_Tp>::operator ()(int i0, int i1, int i2)
 {
     CV_DbgAssert( dims == 3 &&
@@ -4135,6 +4171,9 @@ inline size_t SparseMat::hash(const int* idx) const
     return h;
 }
 
+template<typename _Tp> inline _Tp& SparseMat::ref(int i0, size_t* hashval)
+{ return *(_Tp*)((SparseMat*)this)->ptr(i0, true, hashval); }
+    
 template<typename _Tp> inline _Tp& SparseMat::ref(int i0, int i1, size_t* hashval)
 { return *(_Tp*)((SparseMat*)this)->ptr(i0, i1, true, hashval); }
 
@@ -4144,6 +4183,12 @@ template<typename _Tp> inline _Tp& SparseMat::ref(int i0, int i1, int i2, size_t
 template<typename _Tp> inline _Tp& SparseMat::ref(const int* idx, size_t* hashval)
 { return *(_Tp*)((SparseMat*)this)->ptr(idx, true, hashval); }
 
+template<typename _Tp> inline _Tp SparseMat::value(int i0, size_t* hashval) const
+{
+    const _Tp* p = (const _Tp*)((SparseMat*)this)->ptr(i0, false, hashval);
+    return p ? *p : _Tp();
+}    
+    
 template<typename _Tp> inline _Tp SparseMat::value(int i0, int i1, size_t* hashval) const
 {
     const _Tp* p = (const _Tp*)((SparseMat*)this)->ptr(i0, i1, false, hashval);
@@ -4162,6 +4207,9 @@ template<typename _Tp> inline _Tp SparseMat::value(const int* idx, size_t* hashv
     return p ? *p : _Tp();
 }
 
+template<typename _Tp> inline const _Tp* SparseMat::find(int i0, size_t* hashval) const
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, true, hashval); }
+    
 template<typename _Tp> inline const _Tp* SparseMat::find(int i0, int i1, size_t* hashval) const
 { return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, true, hashval); }
 
@@ -4190,29 +4238,24 @@ inline SparseMatConstIterator SparseMat::begin() const
 { return SparseMatConstIterator(this); }
 
 inline SparseMatIterator SparseMat::end()
-{
-    SparseMatIterator it;
-    it.m = this;
-    if( hdr )
-    {
-        it.hashidx = hdr->hashtab.size();
-        it.ptr = 0;
-    }
-    return it;
-}
-
+{ SparseMatIterator it(this); it.seekEnd(); return it; }
+    
 inline SparseMatConstIterator SparseMat::end() const
-{
-    SparseMatConstIterator it;
-    it.m = this;
-    if( hdr )
-    {
-        it.hashidx = hdr->hashtab.size();
-        it.ptr = 0;
-    }
-    return it;
-}
+{ SparseMatConstIterator it(this); it.seekEnd(); return it; }
+    
+template<typename _Tp> inline SparseMatIterator_<_Tp> SparseMat::begin()
+{ return SparseMatIterator_<_Tp>(this); }
+    
+template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat::begin() const
+{ return SparseMatConstIterator_<_Tp>(this); }
+    
+template<typename _Tp> inline SparseMatIterator_<_Tp> SparseMat::end()
+{ SparseMatIterator_<_Tp> it(this); it.seekEnd(); return it; }
 
+template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat::end() const
+{ SparseMatConstIterator_<_Tp> it(this); it.seekEnd(); return it; }
+    
+    
 inline SparseMatConstIterator::SparseMatConstIterator()
 : m(0), hashidx(0), ptr(0)
 {
@@ -4257,6 +4300,16 @@ inline SparseMatConstIterator SparseMatConstIterator::operator ++(int)
     return it;
 }
 
+    
+inline void SparseMatConstIterator::seekEnd()
+{
+    if( m && m->hdr )
+    {
+        hashidx = m->hdr->hashtab.size();
+        ptr = 0;
+    }
+}
+    
 inline SparseMatIterator::SparseMatIterator()
 {}
 
@@ -4398,6 +4451,14 @@ template<typename _Tp> inline int SparseMat_<_Tp>::channels() const
 { return DataType<_Tp>::channels; }
 
 template<typename _Tp> inline _Tp&
+SparseMat_<_Tp>::ref(int i0, size_t* hashval)
+{ return SparseMat::ref<_Tp>(i0, hashval); }
+
+template<typename _Tp> inline _Tp
+SparseMat_<_Tp>::operator()(int i0, size_t* hashval) const
+{ return SparseMat::value<_Tp>(i0, hashval); }    
+    
+template<typename _Tp> inline _Tp&
 SparseMat_<_Tp>::ref(int i0, int i1, size_t* hashval)
 { return SparseMat::ref<_Tp>(i0, i1, hashval); }
 
@@ -4428,29 +4489,10 @@ template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat_<_Tp>::begi
 { return SparseMatConstIterator_<_Tp>(this); }
 
 template<typename _Tp> inline SparseMatIterator_<_Tp> SparseMat_<_Tp>::end()
-{
-    SparseMatIterator_<_Tp> it;
-    it.m = this;
-    if( hdr )
-    {
-        it.hashidx = hdr->hashtab.size();
-        it.ptr = 0;
-    }
-    return it;
-}
-
+{ SparseMatIterator_<_Tp> it(this); it.seekEnd(); return it; }
+    
 template<typename _Tp> inline SparseMatConstIterator_<_Tp> SparseMat_<_Tp>::end() const
-{
-    SparseMatConstIterator_<_Tp> it;
-    it.m = this;
-    if( hdr )
-    {
-        it.hashidx = hdr->hashtab.size();
-        it.ptr = 0;
-    }
-    return it;
-}
-
+{ SparseMatConstIterator_<_Tp> it(this); it.seekEnd(); return it; }
 
 template<typename _Tp> inline
 SparseMatConstIterator_<_Tp>::SparseMatConstIterator_()

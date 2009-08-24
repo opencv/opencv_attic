@@ -121,7 +121,7 @@ void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
     }
 }
     
-void write(FileStorage& fs, const String& objname, const vector<KeyPoint>& keypoints)
+void write(FileStorage& fs, const string& objname, const vector<KeyPoint>& keypoints)
 {
     WriteStructContext ws(fs, objname, CV_NODE_SEQ + CV_NODE_FLOW);
     

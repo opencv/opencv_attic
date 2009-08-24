@@ -40,7 +40,7 @@ size_t ImageIODecoder::signatureLength() const
     return 12;
 }
 
-bool ImageIODecoder::checkSignature( const String& signature ) const
+bool ImageIODecoder::checkSignature( const string& signature ) const
 {
     // TODO: implement real signature check
     return true;

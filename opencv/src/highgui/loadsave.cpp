@@ -57,7 +57,7 @@ namespace cv
 static vector<ImageDecoder> decoders;
 static vector<ImageEncoder> encoders;
 
-ImageDecoder findDecoder( const String& filename )
+ImageDecoder findDecoder( const string& filename )
 {
     size_t i, maxlen = 0;
     for( i = 0; i < decoders.size(); i++ )
@@ -73,7 +73,7 @@ ImageDecoder findDecoder( const String& filename )
 #endif
     if( !f )
         return ImageDecoder();
-    String signature(maxlen, ' ');
+    string signature(maxlen, ' ');
     maxlen = fread( &signature[0], 1, maxlen, f );
     fclose(f);
     signature = signature.substr(0, maxlen);
@@ -102,7 +102,7 @@ ImageDecoder findDecoder( const Mat& buf )
 
     size_t bufSize = buf.rows*buf.cols*buf.elemSize();
     maxlen = std::min(maxlen, bufSize);
-    String signature(maxlen, ' ');
+    string signature(maxlen, ' ');
     memcpy( &signature[0], buf.data, maxlen );
 
     for( i = 0; i < decoders.size(); i++ )
@@ -114,7 +114,7 @@ ImageDecoder findDecoder( const Mat& buf )
     return ImageDecoder();
 }
 
-ImageEncoder findEncoder( const String& _ext )
+ImageEncoder findEncoder( const string& _ext )
 {
     if( _ext.size() <= 1 )
         return ImageEncoder();
@@ -128,7 +128,7 @@ ImageEncoder findEncoder( const String& _ext )
 
     for( size_t i = 0; i < encoders.size(); i++ )
     {
-        String description = encoders[i]->getDescription();
+        string description = encoders[i]->getDescription();
         const char* descr = strchr( description.c_str(), '(' );
 
         while( descr )
@@ -198,7 +198,7 @@ static ImageCodecInitializer initialize_codecs;
 enum { LOAD_CVMAT=0, LOAD_IMAGE=1, LOAD_MAT=2 };
 
 static void*
-imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
+imread_( const string& filename, int flags, int hdrtype, Mat* mat=0 )
 {
     IplImage* image = 0;
     CvMat *matrix = 0;
@@ -260,14 +260,14 @@ imread_( const String& filename, int flags, int hdrtype, Mat* mat=0 )
         hdrtype == LOAD_IMAGE ? (void*)image : (void*)mat;
 }
 
-Mat imread( const String& filename, int flags )
+Mat imread( const string& filename, int flags )
 {
     Mat img;
     imread_( filename, flags, LOAD_MAT, &img );
     return img;
 }
 
-static bool imwrite_( const String& filename, const Mat& image,
+static bool imwrite_( const string& filename, const Mat& image,
                       const vector<int>& params, bool flipv )
 {
     Mat temp;
@@ -299,7 +299,7 @@ static bool imwrite_( const String& filename, const Mat& image,
     return code;
 }
 
-bool imwrite( const String& filename, const Mat& img,
+bool imwrite( const string& filename, const Mat& img,
               const vector<int>& params )
 {
     return imwrite_(filename, img, params, false);
@@ -408,7 +408,7 @@ Mat imdecode( const vector<uchar>& buf, int flags )
 }
     
     
-bool imencode( const String& ext, const Mat& image,
+bool imencode( const string& ext, const Mat& image,
                vector<uchar>& buf, const vector<int>& params )
 {
     Mat temp;
