@@ -1214,7 +1214,7 @@ double norm( const Mat& a, const Mat& b, int normType, const Mat& mask )
 
 CV_IMPL CvScalar cvSum( const CvArr* srcarr )
 {
-    cv::Scalar sum = cv::sum(cv::cvarrToMat(srcarr));
+    cv::Scalar sum = cv::sum(cv::cvarrToMat(srcarr, false, true, 1));
     if( CV_IS_IMAGE(srcarr) )
     {
         int coi = cvGetImageCOI((IplImage*)srcarr);
@@ -1229,9 +1229,9 @@ CV_IMPL CvScalar cvSum( const CvArr* srcarr )
 
 CV_IMPL int cvCountNonZero( const CvArr* imgarr )
 {
-    cv::Mat img = cv::cvarrToMat(imgarr);
+    cv::Mat img = cv::cvarrToMat(imgarr, false, true, 1);
     if( img.channels() > 1 )
-        img = cv::extractImageCOI(imgarr);
+        cv::extractImageCOI(imgarr, img);
     return countNonZero(img);
 }
 
@@ -1239,7 +1239,7 @@ CV_IMPL int cvCountNonZero( const CvArr* imgarr )
 CV_IMPL  CvScalar
 cvAvg( const void* imgarr, const void* maskarr )
 {
-    cv::Mat img = cv::cvarrToMat(imgarr);
+    cv::Mat img = cv::cvarrToMat(imgarr, false, true, 1);
     cv::Scalar mean = !maskarr ? cv::mean(img) : cv::mean(img, cv::cvarrToMat(maskarr));
     if( CV_IS_IMAGE(imgarr) )
     {
@@ -1263,7 +1263,7 @@ cvAvgSdv( const CvArr* imgarr, CvScalar* _mean, CvScalar* _sdv, const void* mask
     if( maskarr )
         mask = cv::cvarrToMat(maskarr);
 
-    cv::meanStdDev(cv::cvarrToMat(imgarr), mean, sdv, mask );
+    cv::meanStdDev(cv::cvarrToMat(imgarr, false, true, 1), mean, sdv, mask );
 
     if( CV_IS_IMAGE(imgarr) )
     {
@@ -1287,11 +1287,11 @@ CV_IMPL void
 cvMinMaxLoc( const void* imgarr, double* _minVal, double* _maxVal,
              CvPoint* _minLoc, CvPoint* _maxLoc, const void* maskarr )
 {
-    cv::Mat mask, img = cv::cvarrToMat(imgarr);
+    cv::Mat mask, img = cv::cvarrToMat(imgarr, false, true, 1);
     if( maskarr )
         mask = cv::cvarrToMat(maskarr);
     if( img.channels() > 1 )
-        img = cv::extractImageCOI(imgarr);
+        cv::extractImageCOI(imgarr, img);
 
     cv::minMaxLoc( img, _minVal, _maxVal,
         (cv::Point*)_minLoc, (cv::Point*)_maxLoc, mask );
@@ -1308,19 +1308,19 @@ cvNorm( const void* imgA, const void* imgB, int normType, const void* maskarr )
         imgB = 0;
     }
 
-    a = cv::cvarrToMat(imgA);
+    a = cv::cvarrToMat(imgA, false, true, 1);
     if( maskarr )
         mask = cv::cvarrToMat(maskarr);
 
     if( a.channels() > 1 && CV_IS_IMAGE(imgA) && cvGetImageCOI((const IplImage*)imgA) > 0 )
-        a = cv::extractImageCOI(imgA);
+        cv::extractImageCOI(imgA, a);
 
     if( !imgB )
         return !maskarr ? cv::norm(a, normType) : cv::norm(a, normType, mask);
 
-    cv::Mat b = cv::cvarrToMat(imgB);
+    cv::Mat b = cv::cvarrToMat(imgB, false, true, 1);
     if( b.channels() > 1 && CV_IS_IMAGE(imgB) && cvGetImageCOI((const IplImage*)imgB) > 0 )
-        b = cv::extractImageCOI(imgB);
+        cv::extractImageCOI(imgB, b);
 
     return !maskarr ? cv::norm(a, b, normType) : cv::norm(a, b, normType, mask);
 }

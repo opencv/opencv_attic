@@ -46,12 +46,12 @@
 namespace cv
 {
 
-void namedWindow( const String& winname, int flags )
+void namedWindow( const string& winname, int flags )
 {
     cvNamedWindow( winname.c_str(), flags );
 }
 
-void imshow( const String& winname, const Mat& img )
+void imshow( const string& winname, const Mat& img )
 {
     CvMat _img = img;
     cvShowImage( winname.c_str(), &_img );
@@ -62,7 +62,7 @@ int waitKey(int delay)
     return cvWaitKey(delay);
 }
 
-int createTrackbar(const String& trackbarName, const String& winName,
+int createTrackbar(const string& trackbarName, const string& winName,
                    int* value, int count, TrackbarCallback callback,
                    void* userdata)
 {

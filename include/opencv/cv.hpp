@@ -652,11 +652,11 @@ public:
            DO_ROUGH_SEARCH = CV_HAAR_DO_ROUGH_SEARCH };
 
     CascadeClassifier();
-    CascadeClassifier(const String& filename);
+    CascadeClassifier(const string& filename);
     ~CascadeClassifier();
     
     bool empty() const;
-    bool load(const String& filename);
+    bool load(const string& filename);
     bool read(const FileNode& node);
     void detectMultiScale( const Mat& image,
                            vector<Rect>& objects,
@@ -899,7 +899,7 @@ public:
     int class_id;
 };
 
-CV_EXPORTS void write(FileStorage& fs, const String& name, const vector<KeyPoint>& keypoints);
+CV_EXPORTS void write(FileStorage& fs, const string& name, const vector<KeyPoint>& keypoints);
 CV_EXPORTS void read(const FileNode& node, vector<KeyPoint>& keypoints);    
 
 class CV_EXPORTS SURF : public CvSURFParams

@@ -544,7 +544,7 @@ CascadeClassifier::CascadeClassifier()
 {
 }
 
-CascadeClassifier::CascadeClassifier(const String& filename)
+CascadeClassifier::CascadeClassifier(const string& filename)
 { load(filename); }
 
 CascadeClassifier::~CascadeClassifier()
@@ -556,7 +556,7 @@ bool CascadeClassifier::empty() const
     return oldCascade.empty() && stages.empty();
 }
 
-bool CascadeClassifier::load(const String& filename)
+bool CascadeClassifier::load(const string& filename)
 {
     oldCascade.release();
     
@@ -791,13 +791,13 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
 bool CascadeClassifier::read(const FileNode& root)
 {
     // load stage params
-    String stageTypeStr = (String)root[CC_STAGE_TYPE];
+    string stageTypeStr = (string)root[CC_STAGE_TYPE];
     if( stageTypeStr == CC_BOOST )
         stageType = BOOST;
     else
         return false;
     
-    String featureTypeStr = (String)root[CC_FEATURE_TYPE];
+    string featureTypeStr = (string)root[CC_FEATURE_TYPE];
     if( featureTypeStr == CC_HAAR )
         featureType = FeatureEvaluator::HAAR;
     else if( featureTypeStr == CC_LBP )

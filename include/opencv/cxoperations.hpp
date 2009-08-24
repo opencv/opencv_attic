@@ -278,6 +278,22 @@ template<typename _Tp, int cn> inline Vec<_Tp, cn>::operator CvScalar() const
 template<typename _Tp, int cn> inline _Tp Vec<_Tp, cn>::operator [](int i) const { return val[i]; }
 template<typename _Tp, int cn> inline _Tp& Vec<_Tp, cn>::operator[](int i) { return val[i]; }
 
+template<typename _Tp1, typename _Tp2, int cn> static inline Vec<_Tp1, cn>&
+operator += (Vec<_Tp1, cn>& a, const Vec<_Tp2, cn>& b)
+{
+    for( int i = 0; i < cn; i++ )
+        a.val[i] = saturate_cast<_Tp1>(a.val[i] + b.val[i]);
+    return a;
+}    
+
+template<typename _Tp1, typename _Tp2, int cn> static inline Vec<_Tp1, cn>&
+operator -= (Vec<_Tp1, cn>& a, const Vec<_Tp2, cn>& b)
+{
+    for( int i = 0; i < cn; i++ )
+        a.val[i] = saturate_cast<_Tp1>(a.val[i] - b.val[i]);
+    return a;
+}        
+    
 template<typename _Tp, int cn> static inline Vec<_Tp, cn>
 operator + (const Vec<_Tp, cn>& a, const Vec<_Tp, cn>& b)
 {
@@ -1408,20 +1424,20 @@ template<> inline void Ptr<CvFileStorage>::delete_obj()
     
 //////////////////////////////////////// XML & YAML I/O ////////////////////////////////////
 
-static inline void write( FileStorage& fs, const String& name, int value )
+static inline void write( FileStorage& fs, const string& name, int value )
 { cvWriteInt( *fs, name.size() ? name.c_str() : 0, value ); }
 
-static inline void write( FileStorage& fs, const String& name, float value )
+static inline void write( FileStorage& fs, const string& name, float value )
 { cvWriteReal( *fs, name.size() ? name.c_str() : 0, value ); }
 
-static inline void write( FileStorage& fs, const String& name, double value )
+static inline void write( FileStorage& fs, const string& name, double value )
 { cvWriteReal( *fs, name.size() ? name.c_str() : 0, value ); }
 
-static inline void write( FileStorage& fs, const String& name, const String& value )
+static inline void write( FileStorage& fs, const string& name, const string& value )
 { cvWriteString( *fs, name.size() ? name.c_str() : 0, value.c_str() ); }
 
 template<typename _Tp> static inline void write(FileStorage& fs, const _Tp& value)
-{ write(fs, String(), value); }
+{ write(fs, string(), value); }
 
 template<> inline void write(FileStorage& fs, const int& value )
 { cvWriteInt( *fs, 0, value ); }
@@ -1432,7 +1448,7 @@ template<> inline void write(FileStorage& fs, const float& value )
 template<> inline void write(FileStorage& fs, const double& value )
 { cvWriteReal( *fs, 0, value ); }
 
-template<> inline void write(FileStorage& fs, const String& value )
+template<> inline void write(FileStorage& fs, const string& value )
 { cvWriteString( *fs, 0, value.c_str() ); }
 
 template<typename _Tp> inline void write(FileStorage& fs, const Point_<_Tp>& pt )
@@ -1491,8 +1507,8 @@ inline void write(FileStorage& fs, const Range& r )
 class CV_EXPORTS WriteStructContext
 {
 public:
-    WriteStructContext(FileStorage& _fs, const String& name,
-        int flags, const String& typeName=String()) : fs(&_fs)
+    WriteStructContext(FileStorage& _fs, const string& name,
+        int flags, const string& typeName=string()) : fs(&_fs)
     {
         cvStartWriteStruct(**fs, !name.empty() ? name.c_str() : 0, flags,
             !typeName.empty() ? typeName.c_str() : 0);
@@ -1501,14 +1517,14 @@ public:
     FileStorage* fs;
 };
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Point_<_Tp>& pt )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Point_<_Tp>& pt )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, pt.x);
     write(fs, pt.y);
 }
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Point3_<_Tp>& pt )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Point3_<_Tp>& pt )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, pt.x);
@@ -1516,21 +1532,21 @@ template<typename _Tp> inline void write(FileStorage& fs, const String& name, co
     write(fs, pt.z);
 }
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Size_<_Tp>& sz )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Size_<_Tp>& sz )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, sz.width);
     write(fs, sz.height);
 }
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Complex<_Tp>& c )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Complex<_Tp>& c )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, c.re);
     write(fs, c.im);
 }
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Rect_<_Tp>& r )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Rect_<_Tp>& r )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, r.x);
@@ -1539,14 +1555,14 @@ template<typename _Tp> inline void write(FileStorage& fs, const String& name, co
     write(fs, r.height);
 }
 
-template<typename _Tp, int cn> inline void write(FileStorage& fs, const String& name, const Vec<_Tp, cn>& v )
+template<typename _Tp, int cn> inline void write(FileStorage& fs, const string& name, const Vec<_Tp, cn>& v )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     for(int i = 0; i < cn; i++)
         write(fs, v.val[i]);
 }
 
-template<typename _Tp> inline void write(FileStorage& fs, const String& name, const Scalar_<_Tp>& s )
+template<typename _Tp> inline void write(FileStorage& fs, const string& name, const Scalar_<_Tp>& s )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, s.val[0]);
@@ -1555,7 +1571,7 @@ template<typename _Tp> inline void write(FileStorage& fs, const String& name, co
     write(fs, s.val[3]);
 }
 
-inline void write(FileStorage& fs, const String& name, const Range& r )
+inline void write(FileStorage& fs, const string& name, const Range& r )
 {
     WriteStructContext ws(fs, name, CV_NODE_SEQ+CV_NODE_FLOW);
     write(fs, r.start);
@@ -1583,7 +1599,7 @@ public:
     {
         int _fmt = DataType<_Tp>::fmt;
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
-        fs->writeRaw( String(fmt), (uchar*)&vec[0], vec.size()*sizeof(_Tp) );
+        fs->writeRaw( string(fmt), (uchar*)&vec[0], vec.size()*sizeof(_Tp) );
     }
     FileStorage* fs;
 };
@@ -1603,7 +1619,7 @@ operator << ( FileStorage& fs, const vector<_Tp>& vec )
     return fs;
 }
 
-CV_EXPORTS void write( FileStorage& fs, const String& name, const Mat& value );
+CV_EXPORTS void write( FileStorage& fs, const string& name, const Mat& value );
 
 template<typename _Tp> static inline FileStorage& operator << (FileStorage& fs, const _Tp& value)
 {
@@ -1617,12 +1633,12 @@ template<typename _Tp> static inline FileStorage& operator << (FileStorage& fs, 
     return fs;
 }
 
-CV_EXPORTS FileStorage& operator << (FileStorage& fs, const String& str);
+CV_EXPORTS FileStorage& operator << (FileStorage& fs, const string& str);
 
 static inline FileStorage& operator << (FileStorage& fs, const char* str)
-{ return (fs << String(str)); }
+{ return (fs << string(str)); }
 
-inline FileNode FileStorage::operator[](const String& nodename) const
+inline FileNode FileStorage::operator[](const string& nodename) const
 {
     return FileNode(fs, cvGetFileNodeByName(fs, 0, nodename.c_str()));
 }
@@ -1636,7 +1652,7 @@ inline FileNode::FileNode(const CvFileStorage* _fs, const CvFileNode* _node)
     : fs(_fs), node(_node) {}
 
 inline FileNode::FileNode(const FileNode& _node) : fs(_node.fs), node(_node.node) {}
-inline FileNode FileNode::operator[](const String& nodename) const
+inline FileNode FileNode::operator[](const string& nodename) const
 {
     return FileNode(fs, cvGetFileNodeByName(fs, node, nodename.c_str()));
 }
@@ -1660,10 +1676,10 @@ inline bool FileNode::isInt() const { return type() == INT; }
 inline bool FileNode::isReal() const { return type() == REAL; }
 inline bool FileNode::isString() const { return type() == STR; }
 inline bool FileNode::isNamed() const { return !node ? false : (node->tag & NAMED) != 0; }
-inline String FileNode::name() const
+inline string FileNode::name() const
 {
     const char* str;
-    return !node || (str = cvGetFileNodeName(node)) == 0 ? String() : String(str);
+    return !node || (str = cvGetFileNodeName(node)) == 0 ? string() : string(str);
 }
 inline size_t FileNode::size() const
 {
@@ -1696,8 +1712,8 @@ static inline void read(const FileNode& node, float& value, float default_value)
 static inline void read(const FileNode& node, double& value, double default_value)
 { value = cvReadReal(node.node, default_value); }
 
-static inline void read(const FileNode& node, String& value, const String& default_value)
-{ value = String(cvReadString(node.node, default_value.c_str())); }
+static inline void read(const FileNode& node, string& value, const string& default_value)
+{ value = string(cvReadString(node.node, default_value.c_str())); }
 
 inline FileNode::operator int() const
 {
@@ -1711,12 +1727,12 @@ inline FileNode::operator double() const
 {
     return cvReadReal(node, 0);
 }
-inline FileNode::operator String() const
+inline FileNode::operator string() const
 {
-    return String(cvReadString(node, ""));
+    return string(cvReadString(node, ""));
 }
 
-inline void FileNode::readRaw( const String& fmt, uchar* vec, size_t len ) const
+inline void FileNode::readRaw( const string& fmt, uchar* vec, size_t len ) const
 {
     begin().readRaw( fmt, vec, len );
 }
@@ -1746,7 +1762,7 @@ public:
         char fmt[] = { (char)((_fmt>>8)+'1'), (char)_fmt, '\0' };
         count = std::min(count, remaining/cn);
         vec.resize(count);
-        it->readRaw( String(fmt), (uchar*)&vec[0], count*sizeof(_Tp) );
+        it->readRaw( string(fmt), (uchar*)&vec[0], count*sizeof(_Tp) );
     }
     FileNodeIterator* it;
 };
