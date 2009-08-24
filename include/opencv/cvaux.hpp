@@ -345,7 +345,7 @@ public:
 namespace cv
 {
 
-class CV_EXPORTS OctTree
+class CV_EXPORTS Octree
 {
 public:    
     struct Node
@@ -358,9 +358,9 @@ public:
         int children[8];
     };
 
-    OctTree();
-    OctTree( const vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
-    virtual ~OctTree();
+    Octree();
+    Octree( const vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
+    virtual ~Octree();
 
     virtual void buildTree( const vector<Point3f>& points, int maxLevels = 10, int minPoints = 20 );
     virtual void getPointsWithinSphere( const Point3f& center, float radius,
@@ -384,8 +384,8 @@ public:
     Mesh3D(const vector<Point3f>& vtx);
     ~Mesh3D();
 
-    void buildOctTree();
-    void clearOctTree();
+    void buildOctree();
+    void clearOctree();
     float estimateResolution(float tryRatio = 0.1f);        
     void computeNormals(float normalRadius, int minNeighbors = 20);
     void computeNormals(const vector<int>& subset, float normalRadius, int minNeighbors = 20);
@@ -395,7 +395,7 @@ public:
     vector<Point3f> vtx;
     vector<Point3f> normals;
     float resolution;    
-    OctTree octree;
+    Octree octree;
 
     const static Point3f allzero;
 };
