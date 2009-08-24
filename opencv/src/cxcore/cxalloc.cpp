@@ -42,6 +42,8 @@
 
 #include "_cxcore.h"
 
+#define CV_USE_SYSTEM_MALLOC 1
+
 namespace cv
 {
 
