@@ -1033,6 +1033,8 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 	AVCodecContext *c = &(video_st->codec);
 #endif
 
+#if LIBAVFORMAT_BUILD < 5231
+    // It is not needed in the latest versions of the ffmpeg
     if( c->codec_id == CODEC_ID_RAWVIDEO && image->origin != IPL_ORIGIN_BL )
     {
         if( !temp_image )
@@ -1041,6 +1043,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
         cvFlip( image, temp_image, 0 );
         image = temp_image;
     }
+#endif
 
     // check parameters
     if (input_pix_fmt == PIX_FMT_BGR24) {
