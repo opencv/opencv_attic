@@ -1874,7 +1874,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     return ok;
 }
 
-float CvSVM::predict( const CvMat* sample ) const
+float CvSVM::predict( const CvMat* sample, bool returnDFVal ) const
 {
     bool local_alloc = 0;
     float result = 0;
@@ -1931,12 +1931,13 @@ float CvSVM::predict( const CvMat* sample ) const
 
         memset( vote, 0, class_count*sizeof(vote[0]));
         kernel->calc( sv_total, var_count, (const float**)sv, row_sample, buffer );
+        double sum = 0.;
 
         for( i = 0; i < class_count; i++ )
         {
             for( j = i+1; j < class_count; j++, df++ )
             {
-                double sum = -df->rho;
+                sum = -df->rho;
                 int sv_count = df->sv_count;
                 for( k = 0; k < sv_count; k++ )
                     sum += df->alpha[k]*buffer[df->sv_index[k]];
@@ -1950,8 +1951,7 @@ float CvSVM::predict( const CvMat* sample ) const
             if( vote[i] > vote[k] )
                 k = i;
         }
-
-        result = (float)(class_labels->data.i[k]);
+        result = returnDFVal && class_count == 2 ? (float)sum : (float)(class_labels->data.i[k]);
     }
     else
         CV_ERROR( CV_StsBadArg, "INTERNAL ERROR: Unknown SVM type, "
