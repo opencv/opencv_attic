@@ -514,7 +514,7 @@ public:
         CvParamGrid coef_grid   = get_default_grid(CvSVM::COEF),
         CvParamGrid degree_grid = get_default_grid(CvSVM::DEGREE) );
 
-    virtual float predict( const CvMat* _sample ) const;
+    virtual float predict( const CvMat* _sample, bool returnDFVal=false ) const;
 
     virtual int get_support_vector_count() const;
     virtual const float* get_support_vector(int i) const;
