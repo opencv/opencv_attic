@@ -123,7 +123,7 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
                                 const String _posFilename,
                                 const String _negFilename, 
                                 int _numPos, int _numNeg, 
-                                int _numPrecalcVal, int _numPrecalcIdx,
+                                int _precalcValBufSize, int _precalcIdxBufSize,
                                 int _numStages,
                                 const CvCascadeParams& _cascadeParams,
                                 const CvFeatureParams& _featureParams,
@@ -142,7 +142,8 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
     numPos = _numPos;
     numNeg = _numNeg;
     numStages = _numStages;
-    imgReader.create( _posFilename, _negFilename, cascadeParams.winSize );
+    if ( !imgReader.create( _posFilename, _negFilename, cascadeParams.winSize ) )
+        return false;
     if ( !load( dirName ) )
     {
         cascadeParams = _cascadeParams;
@@ -161,8 +162,8 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
     cout << "numPos: " << _numPos << endl;
     cout << "numNeg: " << _numNeg << endl;
     cout << "numStages: " << numStages << endl;
-    cout << "numPrecalcValues : " << _numPrecalcVal << endl;
-    cout << "numPrecalcIndices : " << _numPrecalcIdx << endl;
+    cout << "precalcValBufSize[Mb] : " << _precalcValBufSize << endl;
+    cout << "precalcIdxBufSize[Mb] : " << _precalcIdxBufSize << endl;
     cascadeParams.printAttrs();
     stageParams->printAttrs();
     featureParams->printAttrs();
@@ -197,7 +198,7 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
 
         CvCascadeBoost* tempStage = new CvCascadeBoost;
         tempStage->train( (CvFeatureEvaluator*)featureEvaluator,
-                           curNumSamples, _numPrecalcVal, _numPrecalcIdx,
+                           curNumSamples, _precalcValBufSize, _precalcIdxBufSize,
                           *((CvCascadeBoostParams*)stageParams) );
         stageClassifiers.push_back( tempStage );
 

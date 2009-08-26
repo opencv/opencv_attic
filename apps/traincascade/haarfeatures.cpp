@@ -111,7 +111,7 @@ void CvHaarEvaluator::generateFeatures()
                     if ( (x+dx*2 <= winSize.width) && (y+dy <= winSize.height) )
                     {
                         if ( x+x+dx*2 <= winSize.width ) 
-                            features.push_back( HaarFeature( offset, false,
+                            features.push_back( Feature( offset, false,
                             x,    y, dx*2, dy, -1,
                             x+dx, y, dx  , dy, +2 ) );
                     }
@@ -119,7 +119,7 @@ void CvHaarEvaluator::generateFeatures()
                     if ( (x+dx*2 <= winSize.height) && (y+dy <= winSize.width) ) 
                     {
                         if ( y+y+dy <= winSize.width )
-                            features.push_back( HaarFeature( offset, false,
+                            features.push_back( Feature( offset, false,
                             y,    x, dy, dx*2, -1,
                             y, x+dx, dy, dx,   +2 ) );
                     }
@@ -127,7 +127,7 @@ void CvHaarEvaluator::generateFeatures()
                     if ( (x+dx*3 <= winSize.width) && (y+dy <= winSize.height) )
                     {
                         if ( x+x+dx*3 <= winSize.width )
-                            features.push_back( HaarFeature( offset, false,
+                            features.push_back( Feature( offset, false,
                             x,    y, dx*3, dy, -1,
                             x+dx, y, dx  , dy, +3 ) );
                     }
@@ -135,7 +135,7 @@ void CvHaarEvaluator::generateFeatures()
                     if ( (x+dx*3 <= winSize.height) && (y+dy <= winSize.width) )
                     {
                         if ( y+y+dy <= winSize.width )
-                            features.push_back( HaarFeature( offset, false,
+                            features.push_back( Feature( offset, false,
                             y, x,    dy, dx*3, -1,
                             y, x+dx, dy, dx,   +3 ) );
                     }
@@ -145,7 +145,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx*4 <= winSize.width) && (y+dy <= winSize.height) ) 
                         {
                             if ( x+x+dx*4 <= winSize.width )
-                                features.push_back( HaarFeature( offset, false,
+                                features.push_back( Feature( offset, false,
                                 x,    y, dx*4, dy, -1,
                                 x+dx, y, dx*2, dy, +2 ) );
                         }
@@ -153,7 +153,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx*4 <= winSize.height) && (y+dy <= winSize.width ) ) 
                         {
                             if ( y+y+dy <= winSize.width )
-                                features.push_back( HaarFeature( offset, false,
+                                features.push_back( Feature( offset, false,
                                 y, x,    dy, dx*4, -1,
                                 y, x+dx, dy, dx*2, +2 ) );
                         }
@@ -162,7 +162,7 @@ void CvHaarEvaluator::generateFeatures()
                     if ( (x+dx*2 <= winSize.width) && (y+dy*2 <= winSize.height) ) 
                     {
                         if ( x+x+dx*2 <= winSize.width ) 
-                            features.push_back( HaarFeature( offset, false,
+                            features.push_back( Feature( offset, false,
                             x,    y,    dx*2, dy*2, -1,
                             x,    y,    dx,   dy,   +2,
                             x+dx, y+dy, dx,   dy,   +2 ) );
@@ -172,7 +172,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx*3 <= winSize.width) && (y+dy*3 <= winSize.height) ) 
                         {
                             if ( x+x+dx*3 <= winSize.width )  
-                                features.push_back( HaarFeature( offset, false,
+                                features.push_back( Feature( offset, false,
                                 x   , y   , dx*3, dy*3, -1,
                                 x+dx, y+dy, dx  , dy  , +9) );
                         }
@@ -183,7 +183,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+2*dx <= winSize.width) && (y+2*dx+dy <= winSize.height) && (x-dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x, y, dx*2, dy, -1,
                                 x, y, dx,   dy, +2 ) );
                         }
@@ -191,7 +191,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx <= winSize.width) && (y+dx+2*dy <= winSize.height) && (x-2*dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x, y, dx, 2*dy, -1,
                                 x, y, dx, dy,   +2 ) );
                         }
@@ -199,7 +199,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+3*dx <= winSize.width) && (y+3*dx+dy <= winSize.height) && (x-dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x,    y,    dx*3, dy, -1,
                                 x+dx, y+dx, dx,   dy, +3 ) );
                         }
@@ -207,7 +207,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx <= winSize.width) && (y+dx+3*dy <= winSize.height) && (x-3*dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x,    y,    dx, 3*dy, -1,
                                 x-dy, y+dy, dx, dy,   +3 ) );
                         }
@@ -215,7 +215,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+4*dx <= winSize.width) && (y+4*dx+dy <= winSize.height) && (x-dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x,    y,    dx*4, dy, -1,
                                 x+dx, y+dx, dx*2, dy, +2 ) );
                         }
@@ -223,7 +223,7 @@ void CvHaarEvaluator::generateFeatures()
                         if ( (x+dx <= winSize.width) && (y+dx+4*dy <= winSize.height) && (x-4*dy>= 0) ) 
                         {
                             if ( x <= (winSize.width / 2) ) 
-                                features.push_back( HaarFeature( offset, true,
+                                features.push_back( Feature( offset, true,
                                 x,    y,    dx, 4*dy, -1,
                                 x-dy, y+dy, dx, 2*dy, +2 ) );
                         }
@@ -235,14 +235,14 @@ void CvHaarEvaluator::generateFeatures()
     numFeatures = (int)features.size();
 }
 
-CvHaarEvaluator::HaarFeature::HaarFeature()
+CvHaarEvaluator::Feature::Feature()
 {
     tilted = false;
     rect[0].r = rect[1].r = rect[2].r = Rect(0,0,0,0);
     rect[0].weight = rect[1].weight = rect[2].weight = 0;
 }
 
-CvHaarEvaluator::HaarFeature::HaarFeature( int offset, bool _tilted,
+CvHaarEvaluator::Feature::Feature( int offset, bool _tilted,
                                           int x0, int y0, int w0, int h0, float wt0,
                                           int x1, int y1, int w1, int h1, float wt1,
                                           int x2, int y2, int w2, int h2, float wt2 )
@@ -287,7 +287,7 @@ CvHaarEvaluator::HaarFeature::HaarFeature( int offset, bool _tilted,
     }
 }
 
-void CvHaarEvaluator::HaarFeature::write( FileStorage &fs ) const
+void CvHaarEvaluator::Feature::write( FileStorage &fs ) const
 {
     fs << CC_RECTS << "[";
     for( int ri = 0; ri < CV_HAAR_FEATURE_MAX && rect[ri].r.width != 0; ++ri )

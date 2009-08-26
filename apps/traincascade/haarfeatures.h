@@ -37,11 +37,11 @@ public:
 protected:
     virtual void generateFeatures();
 
-    class HaarFeature
+    class Feature
     {
     public:
-        HaarFeature();
-        HaarFeature( int offset, bool _tilted,
+        Feature();
+        Feature( int offset, bool _tilted,
             int x0, int y0, int w0, int h0, float wt0,
             int x1, int y1, int w1, int h1, float wt1,
             int x2 = 0, int y2 = 0, int w2 = 0, int h2 = 0, float wt2 = 0.0F ); 
@@ -61,7 +61,7 @@ protected:
         } fastRect[CV_HAAR_FEATURE_MAX];
     }; 
 
-    vector<HaarFeature> features;
+    vector<Feature> features;
     Mat  sum;         /* sum images (each row represents image) */
     Mat  tilted;      /* tilted sum images (each row represents image) */
     Mat  normfactor;  /* normalization factor */
@@ -73,7 +73,7 @@ inline float CvHaarEvaluator::operator()(int featureIdx, int sampleIdx) const
     return !nf ? 0.0f : (features[featureIdx].calc( sum, tilted, sampleIdx)/nf); 
 }
 
-inline float CvHaarEvaluator::HaarFeature::calc( const Mat &_sum, const Mat &_tilted, size_t y) const
+inline float CvHaarEvaluator::Feature::calc( const Mat &_sum, const Mat &_tilted, size_t y) const
 {
     const int* img = tilted ? _tilted.ptr<int>((int)y) : _sum.ptr<int>((int)y);
     float ret = rect[0].weight * (img[fastRect[0].p0] - img[fastRect[0].p1] - img[fastRect[0].p2] + img[fastRect[0].p3] ) +

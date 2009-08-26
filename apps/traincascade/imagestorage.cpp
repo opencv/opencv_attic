@@ -172,6 +172,7 @@ void CvCascadeImageReader::PosReader::restart()
 
 CvCascadeImageReader::PosReader::~PosReader()
 {
-    fclose( file );
+    if (file)
+        fclose( file );
     cvFree( &vec );
 }

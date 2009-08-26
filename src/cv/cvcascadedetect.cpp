@@ -719,7 +719,10 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
         img = temp;
     }
     
-    int maxNumThreads = cv::getNumThreads();
+    int maxNumThreads = 1;
+#ifdef _OPENMP
+    maxNumThreads = cv::getNumThreads();
+#endif
     vector<vector<Rect> > rects( maxNumThreads );
     vector<Rect>* rectsPtr = &rects[0];
     vector<Ptr<FeatureEvaluator> > fevals( maxNumThreads );

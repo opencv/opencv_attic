@@ -23,10 +23,10 @@ struct CvCascadeBoostTrainData : CvDTreeTrainData
     CvCascadeBoostTrainData( const CvFeatureEvaluator* _featureEvaluator,
                              const CvDTreeParams& _params );
     CvCascadeBoostTrainData( const CvFeatureEvaluator* _featureEvaluator,
-                             int _numSamples, int _numPrecalcVal, int _numPrecalcIdx,
+                             int _numSamples, int _precalcValBufSize, int _precalcIdxBufSize,
                              const CvDTreeParams& _params = CvDTreeParams() );
     virtual void setData( const CvFeatureEvaluator* _featureEvaluator,
-                          int _numSamples, int _numPrecalcVal, int _numPrecalcIdx,
+                          int _numSamples, int _precalcValBufSize, int _precalcIdxBufSize,
                           const CvDTreeParams& _params=CvDTreeParams() );
     void precalculate();
 
@@ -61,7 +61,7 @@ class CvCascadeBoost : public CvBoost
 {
 public:
     virtual bool train( const CvFeatureEvaluator* _featureEvaluator,
-                        int _numSamples, int _numPrecalcVal, int _numPrecalcIdx,
+                        int _numSamples, int _precalcValBufSize, int _precalcIdxBufSize,
                         const CvCascadeBoostParams& _params=CvCascadeBoostParams() );
     virtual float predict( int sampleIdx, bool returnSum = false ) const;
 

@@ -110,6 +110,8 @@
 
 // Apple defines a check() macro somewhere in the debug headers
 // that interferes with a method definiton in this header
+
+using namespace std;
 #undef check
 
 /****************************************************************************************\
@@ -802,12 +804,19 @@ struct CV_EXPORTS CvDTreeTrainData
     virtual void free_node( CvDTreeNode* node );
 
     // inner arrays for getting predictors and responses
-    float* pred_float_buf;
-    int* pred_int_buf;
-    float* resp_float_buf;
-    int* resp_int_buf;
-    int* cv_lables_buf;
-    int* sample_idx_buf;
+    float* get_pred_float_buf();
+    int* get_pred_int_buf();
+    float* get_resp_float_buf();
+    int* get_resp_int_buf();
+    int* get_cv_lables_buf();
+    int* get_sample_idx_buf();
+
+    vector<vector<float> > pred_float_buf;
+    vector<vector<int> > pred_int_buf;
+    vector<vector<float> > resp_float_buf;
+    vector<vector<int> > resp_int_buf;
+    vector<vector<int> > cv_lables_buf;
+    vector<vector<int> > sample_idx_buf;
 
     int sample_count, var_all, var_count, max_c_count;
     int ord_var_count, cat_var_count, work_var_count;
@@ -897,10 +906,10 @@ protected:
     virtual void try_split_node( CvDTreeNode* n );
     virtual void split_node_data( CvDTreeNode* n );
     virtual CvDTreeSplit* find_best_split( CvDTreeNode* n );
-    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* n, int vi );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
     virtual CvDTreeSplit* find_surrogate_split_ord( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_surrogate_split_cat( CvDTreeNode* n, int vi );
     virtual double calc_node_dir( CvDTreeNode* node );
@@ -1074,10 +1083,10 @@ class CV_EXPORTS CvForestERTree : public CvForestTree
 {
 protected:
     virtual double calc_node_dir( CvDTreeNode* node );
-    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* node, int vi );
-    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* node, int vi );
-    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* node, int vi );
-    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* node, int vi );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split = 0 );
     //virtual void complete_node_dir( CvDTreeNode* node );
     virtual void split_node_data( CvDTreeNode* n );
 };
@@ -1149,10 +1158,10 @@ protected:
     virtual void try_split_node( CvDTreeNode* n );
     virtual CvDTreeSplit* find_surrogate_split_ord( CvDTreeNode* n, int vi );
     virtual CvDTreeSplit* find_surrogate_split_cat( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* n, int vi );
-    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* n, int vi );
+    virtual CvDTreeSplit* find_split_ord_class( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_class( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_ord_reg( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
+    virtual CvDTreeSplit* find_split_cat_reg( CvDTreeNode* n, int vi, CvDTreeSplit* _split = 0 );
     virtual void calc_node_value( CvDTreeNode* n );
     virtual double calc_node_dir( CvDTreeNode* n );
 
