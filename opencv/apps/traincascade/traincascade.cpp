@@ -8,8 +8,8 @@ int main( int argc, char* argv[] )
     int numPos    = 2000;
     int numNeg    = 1000;
     int numStages = 20;
-    int numPrecalcVal = 10000,
-        numPrecalcIdx = 50000;
+    int precalcValBufSize = 256,
+        precalcIdxBufSize = 256;
     bool baseFormatSave = false;
     
     CvCascadeParams cascadeParams;
@@ -27,8 +27,8 @@ int main( int argc, char* argv[] )
         cout << "  [-numPos <number_of_positive_samples = " << numPos << ">]" << endl;
         cout << "  [-numNeg <number_of_negative_samples = " << numNeg << ">]" << endl;
         cout << "  [-numStages <number_of_stages = " << numStages << ">]" << endl;
-        cout << "  [-numPrecalcVal <number_of_precalculated_vals = " << numPrecalcVal << ">]" << endl;
-        cout << "  [-numPrecalcIdx <number_of_precalculated_idxs = " << numPrecalcIdx << ">]" << endl;
+        cout << "  [-precalcValBufSize <precalculated_vals_buffer_size_in_Mb = " << precalcValBufSize << ">]" << endl;
+        cout << "  [-precalcIdxBufSize <precalculated_idxs_buffer_size_in_Mb = " << precalcIdxBufSize << ">]" << endl;
         cout << "  [-baseFormatSave]" << endl;
         cascadeParams.printDefaults();
         stageParams.printDefaults();
@@ -64,13 +64,13 @@ int main( int argc, char* argv[] )
         {
             numStages = atoi( argv[++i] );
         }
-        else if( !strcmp( argv[i], "-numPrecalcVal" ) )
+        else if( !strcmp( argv[i], "-precalcValBufSize" ) )
         {
-            numPrecalcVal = atoi( argv[++i] );
+            precalcValBufSize = atoi( argv[++i] );
         }
-        else if( !strcmp( argv[i], "-numPrecalcIdx" ) )
+        else if( !strcmp( argv[i], "-precalcIdxBufSize" ) )
         {
-            numPrecalcIdx = atoi( argv[++i] );
+            precalcIdxBufSize = atoi( argv[++i] );
         }
         else if( !strcmp( argv[i], "-baseFormatSave" ) )
         {
@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
                       vecName,
                       bgName, 
                       numPos, numNeg, 
-                      numPrecalcVal, numPrecalcIdx,
+                      precalcValBufSize, precalcIdxBufSize,
                       numStages,
                       cascadeParams,
                       *featureParams[cascadeParams.featureType],

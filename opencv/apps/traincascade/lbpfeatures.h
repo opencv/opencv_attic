@@ -21,23 +21,23 @@ public:
 protected:
     virtual void generateFeatures();
 
-    class LBPFeature
+    class Feature
     {
     public:
-        LBPFeature();
-        LBPFeature( int offset, int x, int y, int _block_w, int _block_h  ); 
+        Feature();
+        Feature( int offset, int x, int y, int _block_w, int _block_h  ); 
         uchar calc( const Mat& _sum, size_t y ) const;
         void write( FileStorage &fs ) const;
 
         Rect rect;
         int p[16];
     };
-    vector<LBPFeature> features;
+    vector<Feature> features;
 
     Mat sum;
 };
 
-inline uchar CvLBPEvaluator::LBPFeature::calc(const Mat &_sum, size_t y) const
+inline uchar CvLBPEvaluator::Feature::calc(const Mat &_sum, size_t y) const
 {
     const int* sum = _sum.ptr<int>((int)y);
     int cval = sum[p[5]] - sum[p[6]] - sum[p[9]] + sum[p[10]];

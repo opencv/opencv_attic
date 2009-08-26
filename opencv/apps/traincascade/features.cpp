@@ -50,7 +50,7 @@ bool CvFeatureParams::read( const FileNode &node )
 Ptr<CvFeatureParams> CvFeatureParams::create( int featureType )
 {
     return featureType == HAAR ? Ptr<CvFeatureParams>(new CvHaarFeatureParams) :
-        featureType == LBP ? Ptr<CvFeatureParams>(new CvLBPFeatureParams) : Ptr<CvFeatureParams>(new CvFeatureParams);
+        featureType == LBP ? Ptr<CvFeatureParams>(new CvLBPFeatureParams) : Ptr<CvFeatureParams>();
 }
 
 //------------------------------------- FeatureEvaluator ---------------------------------------

@@ -96,10 +96,8 @@ CvForestTree::train( CvDTreeTrainData*, const CvMat* )
 CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 {
     int vi;
-    CvDTreeSplit *best_split = 0, *split = 0, *t;
 
-    CV_FUNCNAME("CvForestTree::find_best_split");
-    __BEGIN__;
+    CvDTreeSplit *best_split = 0;
 
     CvMat* active_var_mask = 0;
     if( forest )
@@ -110,7 +108,7 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         active_var_mask = forest->get_active_var_mask();
         var_count = active_var_mask->cols;
 
-        CV_ASSERT( var_count == data->var_count );
+        CV_Assert( var_count == data->var_count );
 
         for( vi = 0; vi < var_count; vi++ )
         {
@@ -121,8 +119,25 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
                 active_var_mask->data.ptr[i2], temp );
         }
     }
+    int maxNumThreads = 1;
+#ifdef _OPENMP
+    maxNumThreads = cv::getNumThreads();
+#endif
+    vector<CvDTreeSplit*> splits(maxNumThreads);
+    vector<CvDTreeSplit*> bestSplits(maxNumThreads);
+    for (int i = 0; i < maxNumThreads; i++)
+    {
+        splits[i] = data->new_split_cat( 0, -1.0f );
+        bestSplits[i] = data->new_split_cat( 0, -1.0f );
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
+#endif
     for( vi = 0; vi < data->var_count; vi++ )
     {
+        CvDTreeSplit *res, *t;
+        int threadIdx = cv::getThreadNum();
         int ci = data->var_type->data.i[vi];
         if( node->num_valid[vi] <= 1
             || (active_var_mask && !active_var_mask->data.ptr[vi]) )
@@ -131,28 +146,37 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                split = find_split_cat_class( node, vi );
+                res = find_split_cat_class( node, vi, splits[threadIdx] );
             else
-                split = find_split_ord_class( node, vi );
+                res = find_split_ord_class( node, vi, splits[threadIdx] );
         }
         else
         {
             if( ci >= 0 )
-                split = find_split_cat_reg( node, vi );
+                res = find_split_cat_reg( node, vi, splits[threadIdx] );
             else
-                split = find_split_ord_reg( node, vi );
+                res = find_split_ord_reg( node, vi, splits[threadIdx] );
         }
 
-        if( split )
+        if( res )
         {
-            if( !best_split || best_split->quality < split->quality )
-                CV_SWAP( best_split, split, t );
-            if( split )
-                cvSetRemoveByPtr( data->split_heap, split );
+            if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
+                CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
         }
     }
 
-    __END__;
+    best_split = bestSplits[0];
+    for(int i = 1; i < maxNumThreads; i++)
+    {
+        if( best_split->quality < bestSplits[i]->quality )
+            best_split = bestSplits[i];
+    }
+    for(int i = 0; i < maxNumThreads; i++)
+    {
+        cvSetRemoveByPtr( data->split_heap, splits[i] );
+        if( bestSplits[i] != best_split )
+            cvSetRemoveByPtr( data->split_heap, bestSplits[i] );
+    }
 
     return best_split;
 }

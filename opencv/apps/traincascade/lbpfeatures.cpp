@@ -35,16 +35,16 @@ void CvLBPEvaluator::generateFeatures()
             for( int w = 1; w <= winSize.width / 3; w++ )
                 for( int h = 1; h <= winSize.height / 3; h++ )
                     if ( (x+3*w <= winSize.width) && (y+3*h <= winSize.height) )
-                        features.push_back( LBPFeature(offset, x, y, w, h ) );
+                        features.push_back( Feature(offset, x, y, w, h ) );
     numFeatures = (int)features.size();
 }
 
-CvLBPEvaluator::LBPFeature::LBPFeature()
+CvLBPEvaluator::Feature::Feature()
 {
     rect = cvRect(0, 0, 0, 0);
 }
 
-CvLBPEvaluator::LBPFeature::LBPFeature( int offset, int x, int y, int _blockWidth, int _blockHeight )
+CvLBPEvaluator::Feature::Feature( int offset, int x, int y, int _blockWidth, int _blockHeight )
 {
     Rect tr = rect = cvRect(x, y, _blockWidth, _blockHeight);
     CV_SUM_OFFSETS( p[0], p[1], p[4], p[5], tr, offset )
@@ -56,7 +56,7 @@ CvLBPEvaluator::LBPFeature::LBPFeature( int offset, int x, int y, int _blockWidt
     CV_SUM_OFFSETS( p[8], p[9], p[12], p[13], tr, offset )
 }
 
-void CvLBPEvaluator::LBPFeature::write(FileStorage &fs) const
+void CvLBPEvaluator::Feature::write(FileStorage &fs) const
 {
     fs << CC_RECT << "[:" << rect.x << rect.y << rect.width << rect.height << "]";
 }

@@ -49,8 +49,6 @@ CvDTreeTrainData::CvDTreeTrainData()
 {
     var_idx = var_type = cat_count = cat_ofs = cat_map =
         priors = priors_mult = counts = buf = direction = split_buf = responses_copy = 0;
-    pred_int_buf = resp_int_buf = cv_lables_buf = sample_idx_buf = 0;
-    pred_float_buf = resp_float_buf = 0;
     tree_storage = temp_storage = 0;
 
     clear();
@@ -65,9 +63,6 @@ CvDTreeTrainData::CvDTreeTrainData( const CvMat* _train_data, int _tflag,
 {
     var_idx = var_type = cat_count = cat_ofs = cat_map =
         priors = priors_mult = counts = buf = direction = split_buf = responses_copy = 0;
-
-    pred_int_buf = resp_int_buf = cv_lables_buf = sample_idx_buf = 0;
-    pred_float_buf = resp_float_buf = 0;
 
     tree_storage = temp_storage = 0;
 
@@ -639,12 +634,27 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     CV_CALL( direction = cvCreateMat( 1, sample_count, CV_8UC1 ));
     CV_CALL( split_buf = cvCreateMat( 1, sample_count, CV_32SC1 ));
 
-    CV_CALL( pred_float_buf = (float*)cvAlloc(sample_count*sizeof(pred_float_buf[0])) );
-    CV_CALL( pred_int_buf = (int*)cvAlloc(sample_count*sizeof(pred_int_buf[0])) );
-    CV_CALL( resp_float_buf = (float*)cvAlloc(sample_count*sizeof(resp_float_buf[0])) );
-    CV_CALL( resp_int_buf = (int*)cvAlloc(sample_count*sizeof(resp_int_buf[0])) );
-    CV_CALL( cv_lables_buf = (int*)cvAlloc(sample_count*sizeof(cv_lables_buf[0])) );
-    CV_CALL( sample_idx_buf = (int*)cvAlloc(sample_count*sizeof(sample_idx_buf[0])) );
+    {
+        int maxNumThreads = 1;
+#ifdef _OPENMP
+        maxNumThreads = cv::getNumThreads();
+#endif
+        pred_float_buf.resize(maxNumThreads);
+        pred_int_buf.resize(maxNumThreads);
+        resp_float_buf.resize(maxNumThreads);
+        resp_int_buf.resize(maxNumThreads);
+        cv_lables_buf.resize(maxNumThreads);
+        sample_idx_buf.resize(maxNumThreads);
+        for( int ti = 0; ti < maxNumThreads; ti++ )
+        {
+            pred_float_buf[ti].resize(sample_count);
+            pred_int_buf[ti].resize(sample_count);
+            resp_float_buf[ti].resize(sample_count);
+            resp_int_buf[ti].resize(sample_count);
+            cv_lables_buf[ti].resize(sample_count);
+            sample_idx_buf[ti].resize(sample_count);
+        }
+    }
 
     __END__;
 
@@ -660,8 +670,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     cvReleaseMat( &sample_indices );
     cvReleaseMat( &tmp_map );
 }
-
-
 
 void CvDTreeTrainData::do_responses_copy()
 {
@@ -737,7 +745,7 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
 
             if( ci >= 0 || vi >= var_count )
             {
-                int* src_buf = pred_int_buf;
+                int* src_buf = get_pred_int_buf();
                 const int* src = 0;
                 int num_valid = 0;
                 
@@ -771,9 +779,9 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
             }
             else
             {
-                int *src_idx_buf = pred_int_buf;
+                int *src_idx_buf = get_pred_int_buf();
                 const int* src_idx = 0;
-                float *src_val_buf = pred_float_buf;
+                float *src_val_buf = get_pred_float_buf();
                 const float* src_val = 0;
                 int j = 0, idx, count_i;
                 int num_valid = data_root->get_num_valid(vi);
@@ -830,7 +838,7 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
             }
         }
         // sample indices subsampling
-        int* sample_idx_src_buf = sample_idx_buf;
+        int* sample_idx_src_buf = get_sample_idx_buf();
         const int* sample_idx_src = 0;
         get_sample_indices(data_root, sample_idx_src_buf, &sample_idx_src);
         if (is_buf_16u)
@@ -904,7 +912,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         {
             float* dst = values + vi;
             uchar* m = missing ? missing + vi : 0;
-            int* src_buf = pred_int_buf;
+            int* src_buf = get_pred_int_buf();
             const int* src = 0; 
             get_cat_var_data(data_root, vi, src_buf, &src);
 
@@ -925,9 +933,9 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
             float* dst = values + vi;
             uchar* m = missing ? missing + vi : 0;
             int count1 = data_root->get_num_valid(vi);
-            float *src_val_buf = pred_float_buf;
+            float *src_val_buf = get_pred_float_buf();
             const float *src_val = 0;
-            int* src_idx_buf = pred_int_buf;
+            int* src_idx_buf = get_pred_int_buf();
             const int* src_idx = 0;
             get_ord_var_data(data_root, vi, src_val_buf, src_idx_buf, &src_val, &src_idx);
 
@@ -961,7 +969,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
     {
         if( is_classifier )
         {
-            int* src_buf = resp_int_buf;
+            int* src_buf = get_resp_int_buf();
             const int* src = 0;
             get_class_labels(data_root, src_buf, &src);
             for( i = 0; i < count; i++ )
@@ -974,7 +982,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         }
         else
         {
-            float *_values_buf = resp_float_buf;
+            float *_values_buf = get_resp_float_buf();
             const float* _values = 0;
             get_ord_responses(data_root, _values_buf, &_values);
             for( i = 0; i < count; i++ )
@@ -1102,12 +1110,12 @@ void CvDTreeTrainData::free_train_data()
     cvReleaseMat( &split_buf );
     cvReleaseMemStorage( &temp_storage );
     cvReleaseMat( &responses_copy );
-    cvFree( &pred_float_buf );
-    cvFree( &pred_int_buf );
-    cvFree( &resp_float_buf );
-    cvFree( &resp_int_buf );
-    cvFree( &cv_lables_buf );
-    cvFree( &sample_idx_buf );
+    pred_float_buf.clear();
+    pred_int_buf.clear();
+    resp_float_buf.clear();
+    resp_int_buf.clear();
+    cv_lables_buf.clear();
+    sample_idx_buf.clear();
 
     cv_heap = nv_heap = 0;
 }
@@ -1156,7 +1164,7 @@ int CvDTreeTrainData::get_ord_var_data( CvDTreeNode* n, int vi, float* ord_value
 {
     int vidx = var_idx ? var_idx->data.i[vi] : vi;
     int node_sample_count = n->sample_count; 
-    int* sample_indices_buf = sample_idx_buf;
+    int* sample_indices_buf = get_sample_idx_buf();
     const int* sample_indices = 0;
     int td_step = train_data->step/CV_ELEM_SIZE(train_data->type);
 
@@ -1211,7 +1219,7 @@ void CvDTreeTrainData::get_sample_indices( CvDTreeNode* n, int* indices_buf, con
 void CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, const float** values)
 {
     int sample_count = n->sample_count;
-    int* indices_buf = sample_idx_buf;
+    int* indices_buf = get_sample_idx_buf();
     const int* indices = 0;
 
     int r_step = responses->step/CV_ELEM_SIZE(responses->type);
@@ -1473,6 +1481,32 @@ void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
 
     __END__;
 }
+
+float* CvDTreeTrainData::get_pred_float_buf()
+{
+    return &pred_float_buf[cv::getThreadNum()][0];
+}
+int* CvDTreeTrainData::get_pred_int_buf()
+{
+    return &pred_int_buf[cv::getThreadNum()][0];
+}
+float* CvDTreeTrainData::get_resp_float_buf()
+{
+    return &resp_float_buf[cv::getThreadNum()][0];
+}
+int* CvDTreeTrainData::get_resp_int_buf()
+{
+    return &resp_int_buf[cv::getThreadNum()][0];
+}
+int* CvDTreeTrainData::get_cv_lables_buf()
+{
+    return &cv_lables_buf[cv::getThreadNum()][0];
+}
+int* CvDTreeTrainData::get_sample_idx_buf()
+{
+    return &sample_idx_buf[cv::getThreadNum()][0];
+}
+
 /////////////////////// Decision Tree /////////////////////////
 
 CvDTree::CvDTree()
@@ -1719,7 +1753,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
 
     if( data->get_var_type(vi) >= 0 ) // split on categorical var
     {
-        int* labels_buf = data->pred_int_buf;
+        int* labels_buf = data->get_pred_int_buf();
         const int* labels = 0;
         const int* subset = node->split->subset;
         data->get_cat_var_data( node, vi, labels_buf, &labels );
@@ -1743,7 +1777,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         {
             const double* priors = data->priors_mult->data.db;
             double sum = 0, sum_abs = 0;
-            int *responses_buf = data->resp_int_buf;
+            int *responses_buf = data->get_resp_int_buf();
             const int* responses;
             data->get_class_labels(node, responses_buf, &responses);
 
@@ -1765,9 +1799,9 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         int split_point = node->split->ord.split_point;
         int n1 = node->get_num_valid(vi);
         
-        float* val_buf = data->pred_float_buf;
+        float* val_buf = data->get_pred_float_buf();
         const float* val = 0;
-        int* sorted_buf = data->pred_int_buf;
+        int* sorted_buf = data->get_pred_int_buf();
         const int* sorted = 0;
         data->get_ord_var_data( node, vi, val_buf, sorted_buf, &val, &sorted);
 
@@ -1788,7 +1822,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         else
         {
             const double* priors = data->priors_mult->data.db;
-            int* responses_buf = data->resp_int_buf;
+            int* responses_buf = data->get_resp_int_buf();
             const int* responses = 0;
             data->get_class_labels(node, responses_buf, &responses);
             L = R = 0;
@@ -1818,14 +1852,29 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
     return node->split->quality/(L + R);
 }
 
-
 CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
 {
     int vi;
-    CvDTreeSplit *best_split = 0, *split = 0, *t;
+    CvDTreeSplit *bestSplit;
+    int maxNumThreads = 1;
+#ifdef _OPENMP
+    maxNumThreads = cv::getNumThreads();
+#endif
+    vector<CvDTreeSplit*> splits(maxNumThreads);
+    vector<CvDTreeSplit*> bestSplits(maxNumThreads);
+    for (int i = 0; i < maxNumThreads; i++)
+    {
+        splits[i] = data->new_split_cat( 0, -1.0f );
+        bestSplits[i] = data->new_split_cat( 0, -1.0f );
+    }
 
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
+#endif
     for( vi = 0; vi < data->var_count; vi++ )
     {
+        CvDTreeSplit *res, *t;
+        int threadIdx = cv::getThreadNum();
         int ci = data->get_var_type(vi);
         if( node->get_num_valid(vi) <= 1 )
             continue;
@@ -1833,44 +1882,53 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                split = find_split_cat_class( node, vi );
+                res = find_split_cat_class( node, vi, splits[threadIdx] );
             else
-                split = find_split_ord_class( node, vi );
+                res = find_split_ord_class( node, vi, splits[threadIdx] );
         }
         else
         {
             if( ci >= 0 )
-                split = find_split_cat_reg( node, vi );
+                res = find_split_cat_reg( node, vi, splits[threadIdx] );
             else
-                split = find_split_ord_reg( node, vi );
+                res = find_split_ord_reg( node, vi, splits[threadIdx] );
         }
 
-        if( split )
+        if( res )
         {
-            if( !best_split || best_split->quality < split->quality )
-                CV_SWAP( best_split, split, t );
-            if( split )
-                cvSetRemoveByPtr( data->split_heap, split );
+            if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
+                CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
         }
     }
-
-    return best_split;
+    bestSplit = bestSplits[0];
+    for(int i = 1; i < maxNumThreads; i++)
+    {
+        if( bestSplit->quality < bestSplits[i]->quality )
+            bestSplit = bestSplits[i];
+    }
+    for(int i = 0; i < maxNumThreads; i++)
+    {
+        cvSetRemoveByPtr( data->split_heap, splits[i] );
+        if( bestSplits[i] != bestSplit )
+            cvSetRemoveByPtr( data->split_heap, bestSplits[i] );
+    }
+    return bestSplit;
 }
 
 
-CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
+CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     int n = node->sample_count;
     int n1 = node->get_num_valid(vi);
     int m = data->get_num_classes();
 
-    float* values_buf = data->pred_float_buf;
+    float* values_buf = data->get_pred_float_buf();
     const float* values = 0;
-    int* indices_buf = data->pred_int_buf;
+    int* indices_buf = data->get_pred_int_buf();
     const int* indices = 0;
     data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
-    int* responses_buf =  data->resp_int_buf;
+    int* responses_buf =  data->get_resp_int_buf();
     const int* responses = 0;
     data->get_class_labels( node, responses_buf, &responses );
 
@@ -1955,9 +2013,17 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi )
         }
     }
 
-    return best_i >= 0 ? data->new_split_ord( vi,
-        (values[best_i] + values[best_i+1])*0.5f, best_i,
-        0, (float)best_val ) : 0;
+    CvDTreeSplit* split = 0;
+    if( best_i >= 0 )
+    {
+        split = _split ? _split : data->new_split_ord( 0, 0.0f, 0, 0, 0.0f );
+        split->var_idx = vi;
+        split->ord.c = (values[best_i] + values[best_i+1])*0.5f;
+        split->ord.split_point = best_i;
+        split->inversed = 0;
+        split->quality = (float)best_val;
+    }
+    return split;
 }
 
 
@@ -2058,18 +2124,17 @@ void CvDTree::cluster_categories( const int* vectors, int n, int m,
 }
 
 
-CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
+CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
 {
-    CvDTreeSplit* split = 0;
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int m = data->get_num_classes();
     int _mi = data->cat_count->data.i[ci], mi = _mi;
 
-    int* labels_buf = data->pred_int_buf;
+    int* labels_buf = data->get_pred_int_buf();
     const int* labels = 0;
     data->get_cat_var_data(node, vi, labels_buf, &labels);
-    int *responses_buf = data->resp_int_buf;
+    int *responses_buf = data->get_resp_int_buf();
     const int* responses = 0;
     data->get_class_labels(node, responses_buf, &responses);
 
@@ -2208,45 +2273,47 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi )
         }
     }
 
-    if( best_subset < 0 )
-        return 0;
-
-    split = data->new_split_cat( vi, (float)best_val );
-
-    if( m == 2 )
+    CvDTreeSplit* split = 0;
+    if( best_subset >= 0 ) 
     {
-        for( i = 0; i <= best_subset; i++ )
+        split = _split ? _split : data->new_split_cat( 0, -1.0f );
+        split->var_idx = vi;
+        split->quality = (float)best_val;
+        memset( split->subset, 0, (data->max_c_count + 31)/32 * sizeof(int));
+        if( m == 2 )
         {
-            idx = (int)(int_ptr[i] - cjk) >> 1;
-            split->subset[idx >> 5] |= 1 << (idx & 31);
+            for( i = 0; i <= best_subset; i++ )
+            {
+                idx = (int)(int_ptr[i] - cjk) >> 1;
+                split->subset[idx >> 5] |= 1 << (idx & 31);
+            }
+        }
+        else
+        {
+            for( i = 0; i < _mi; i++ )
+            {
+                idx = cluster_labels ? cluster_labels[i] : i;
+                if( best_subset & (1 << idx) )
+                    split->subset[i >> 5] |= 1 << (i & 31);
+            }
         }
     }
-    else
-    {
-        for( i = 0; i < _mi; i++ )
-        {
-            idx = cluster_labels ? cluster_labels[i] : i;
-            if( best_subset & (1 << idx) )
-                split->subset[i >> 5] |= 1 << (i & 31);
-        }
-    }
-
     return split;
 }
 
 
-CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi )
+CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     int n = node->sample_count;
     int n1 = node->get_num_valid(vi);
 
-    float* values_buf = data->pred_float_buf;
+    float* values_buf = data->get_pred_float_buf();
     const float* values = 0;
-    int* indices_buf = data->pred_int_buf;
+    int* indices_buf = data->get_pred_int_buf();
     const int* indices = 0;
     data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
-    float* responses_buf =  data->resp_float_buf;
+    float* responses_buf =  data->get_resp_float_buf();
     const float* responses = 0;
     data->get_ord_responses( node, responses_buf, &responses );
 
@@ -2277,21 +2344,27 @@ CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi )
         }
     }
 
-    return best_i >= 0 ? data->new_split_ord( vi,
-        (values[best_i] + values[best_i+1])*0.5f, best_i,
-        0, (float)best_val ) : 0;
+    CvDTreeSplit* split = 0;
+    if( best_i >= 0 )
+    {
+        split = _split ? _split : data->new_split_ord( 0, 0.0f, 0, 0, 0.0f );
+        split->var_idx = vi;
+        split->ord.c = (values[best_i] + values[best_i+1])*0.5f;
+        split->ord.split_point = best_i;
+        split->inversed = 0;
+        split->quality = (float)best_val;
+    }
+    return split;
 }
 
-
-CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
+CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
 {
-    CvDTreeSplit* split;
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int mi = data->cat_count->data.i[ci];
-    int* labels_buf = data->pred_int_buf;
+    int* labels_buf = data->get_pred_int_buf();
     const int* labels = 0;
-    float* responses_buf = data->resp_float_buf;
+    float* responses_buf = data->get_resp_float_buf();
     const float* responses = 0;
     data->get_cat_var_data(node, vi, labels_buf, &labels);
     data->get_ord_responses(node, responses_buf, &responses);
@@ -2355,16 +2428,19 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi )
         }
     }
 
-    if( best_subset < 0 )
-        return 0;
-
-    split = data->new_split_cat( vi, (float)best_val );
-    for( i = 0; i <= best_subset; i++ )
+    CvDTreeSplit* split = 0;
+    if( best_subset >= 0 )
     {
-        int idx = (int)(sum_ptr[i] - sum);
-        split->subset[idx >> 5] |= 1 << (idx & 31);
+        split = _split ? _split : data->new_split_cat( 0, -1.0f);
+        split->var_idx = vi;
+        split->quality = (float)best_val;
+        memset( split->subset, 0, (data->max_c_count + 31)/32 * sizeof(int));
+        for( i = 0; i <= best_subset; i++ )
+        {
+            int idx = (int)(sum_ptr[i] - sum);
+            split->subset[idx >> 5] |= 1 << (idx & 31);
+        }
     }
-
     return split;
 }
 
@@ -2373,9 +2449,9 @@ CvDTreeSplit* CvDTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
     const float epsilon = FLT_EPSILON*2;
     const char* dir = (char*)data->direction->data.ptr;
     int n1 = node->get_num_valid(vi);
-    float* values_buf = data->pred_float_buf;
+    float* values_buf = data->get_pred_float_buf();
     const float* values = 0;
-    int* indices_buf = data->pred_int_buf;
+    int* indices_buf = data->get_pred_int_buf();
     const int* indices = 0;
     data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
     // LL - number of samples that both the primary and the surrogate splits send to the left
@@ -2435,7 +2511,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
         double worst_val = node->maxlr;
         double sum = 0, sum_abs = 0;
         const double* priors = data->priors_mult->data.db;
-        int* responses_buf = data->resp_int_buf;
+        int* responses_buf = data->get_resp_int_buf();
         const int* responses = 0;
         data->get_class_labels(node, responses_buf, &responses);
         best_val = worst_val;
@@ -2481,10 +2557,8 @@ CvDTreeSplit* CvDTree::find_surrogate_split_ord( CvDTreeNode* node, int vi )
             }
         }
     }
-
     return best_i >= 0 && best_val > node->maxlr ? data->new_split_ord( vi,
-        (values[best_i] + values[best_i+1])*0.5f, best_i,
-        best_inversed, (float)best_val ) : 0;
+        (values[best_i] + values[best_i+1])*0.5f, best_i, best_inversed, (float)best_val ) : 0;
 }
 
 
@@ -2492,7 +2566,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 {
     const char* dir = (char*)data->direction->data.ptr;
     int n = node->sample_count;
-    int* labels_buf = data->pred_int_buf;
+    int* labels_buf = data->get_pred_int_buf();
     const int* labels = 0;
     data->get_cat_var_data(node, vi, labels_buf, &labels);
     // LL - number of samples that both the primary and the surrogate splits send to the left
@@ -2538,7 +2612,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
     else
     {
         const double* priors = data->priors_mult->data.db;
-        int* responses_buf = data->resp_int_buf;
+        int* responses_buf = data->get_resp_int_buf();
         const int* responses = 0;
         data->get_class_labels(node, responses_buf, &responses);
 
@@ -2587,7 +2661,7 @@ CvDTreeSplit* CvDTree::find_surrogate_split_cat( CvDTreeNode* node, int vi )
 void CvDTree::calc_node_value( CvDTreeNode* node )
 {
     int i, j, k, n = node->sample_count, cv_n = data->params.cv_folds;
-    int* cv_labels_buf = data->cv_lables_buf;
+    int* cv_labels_buf = data->get_cv_lables_buf();
     const int* cv_labels = 0;
     data->get_cv_labels(node, cv_labels_buf, &cv_labels);
 
@@ -2603,7 +2677,7 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
 
         // compute the number of instances of each class
         int* cls_count = data->counts->data.i;
-        int* responses_buf = data->resp_int_buf;
+        int* responses_buf = data->get_resp_int_buf();
         const int* responses = 0;
         data->get_class_labels(node, responses_buf, &responses);
         int m = data->get_num_classes();
@@ -2709,7 +2783,7 @@ void CvDTree::calc_node_value( CvDTreeNode* node )
         //    over the samples with cv_labels(*)==j.
 
         double sum = 0, sum2 = 0;
-        float* values_buf = data->resp_float_buf;
+        float* values_buf = data->get_resp_float_buf();
         const float* values = 0;
         data->get_ord_responses(node, values_buf, &values);
         double *cv_sum = 0, *cv_sum2 = 0;
@@ -2789,7 +2863,7 @@ void CvDTree::complete_node_dir( CvDTreeNode* node )
 
             if( data->get_var_type(vi) >= 0 ) // split on categorical var
             {
-                int* labels_buf = data->pred_int_buf;
+                int* labels_buf = data->get_pred_int_buf();
                 const int* labels = 0;
                 data->get_cat_var_data(node, vi, labels_buf, &labels);
                 const int* subset = split->subset;
@@ -2809,9 +2883,9 @@ void CvDTree::complete_node_dir( CvDTreeNode* node )
             }
             else // split on ordered var
             {
-                float* values_buf = data->pred_float_buf;
+                float* values_buf = data->get_pred_float_buf();
                 const float* values = 0;
-                int* indices_buf = data->pred_int_buf;
+                int* indices_buf = data->get_pred_int_buf();
                 const int* indices = 0;
                 data->get_ord_var_data( node, vi, values_buf, indices_buf, &values, &indices );
                 int split_point = split->ord.split_point;
@@ -2895,9 +2969,9 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     {
         int ci = data->get_var_type(vi);
         int n1 = node->get_num_valid(vi);
-        int *src_idx_buf = data->pred_int_buf;
+        int *src_idx_buf = data->get_pred_int_buf();
         const int* src_idx = 0;
-        float *src_val_buf = data->pred_float_buf;
+        float *src_val_buf = data->get_pred_float_buf();
         const float* src_val = 0;
         
         if( ci >= 0 || !split_input_data )
@@ -3013,7 +3087,7 @@ void CvDTree::split_node_data( CvDTreeNode* node )
         if( ci < 0 || (vi < data->var_count && !split_input_data) )
             continue;
 
-        int *src_lbls_buf = data->pred_int_buf;
+        int *src_lbls_buf = data->get_pred_int_buf();
         const int* src_lbls = 0;
         data->get_cat_var_data(node, vi, src_lbls_buf, &src_lbls);
 
@@ -3085,7 +3159,7 @@ void CvDTree::split_node_data( CvDTreeNode* node )
 
 
     // split sample indices
-    int *sample_idx_src_buf = data->sample_idx_buf;
+    int *sample_idx_src_buf = data->get_sample_idx_buf();
     const int* sample_idx_src = 0;
     data->get_sample_indices(node, sample_idx_src_buf, &sample_idx_src);
 

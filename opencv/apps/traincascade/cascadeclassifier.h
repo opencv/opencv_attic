@@ -85,7 +85,7 @@ public:
                 const String _posFilename,
                 const String _negFilename, 
                 int _numPos, int _numNeg, 
-                int _numPrecalcVal, int _numPrecalcIdx,
+                int _precalcValBufSize, int _precalcIdxBufSize,
                 int _numStages,
                 const CvCascadeParams& _cascadeParams,
                 const CvFeatureParams& _featureParams,
