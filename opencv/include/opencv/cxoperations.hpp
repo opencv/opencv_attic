@@ -54,7 +54,7 @@
     
 #ifdef __GNUC__
     
-#if __GNUC__*10 + __GNUC_MINOR >= 42
+#if __GNUC__*10 + __GNUC_MINOR__ >= 42
 #define CV_XADD __sync_fetch_and_add
 #else
 #include <bits/atomicity.h>
