@@ -50,17 +50,6 @@
 
 #ifdef __cplusplus
 
-namespace cv
-{
-
-using std::max;
-using std::min;
-using std::exp;
-using std::log;
-using std::pow;
-using std::sqrt;
-
-
 /////// exchange-add operation for atomic operations on reference counters ///////
     
 #ifdef __GNUC__
@@ -74,13 +63,13 @@ using std::sqrt;
     
 #elif defined WIN32 || defined _WIN32
 
-#if defined __MSC_VER && !defined WIN64 && !defined _WIN64
-static inline int CV_XADD( int* ptr, int delta )
+#if defined _MSC_VER && !defined WIN64 && !defined _WIN64
+static inline int CV_XADD( int* addr, int delta )
 {
-    T tmp;
+    int tmp;
     __asm
     {
-        mov edx, ptr
+        mov edx, addr
         mov eax, delta
         lock xadd [edx], eax
         mov tmp, eax
@@ -89,15 +78,27 @@ static inline int CV_XADD( int* ptr, int delta )
 }
 #else
 #include "windows.h"
-#define CV_XADD(ptr,delta) InterlockedExchangeAdd((LONG volatile*)(ptr), (delta))
+#undef min
+#undef max
+#define CV_XADD(addr,delta) InterlockedExchangeAdd((LONG volatile*)(addr), (delta))
 #endif
     
 #else
 
-template<typename _Tp> static inline _Tp CV_XADD(_Tp* ptr, _Tp delta)
-{ int tmp = *ptr; *ptr += delta; return tmp; }
+template<typename _Tp> static inline _Tp CV_XADD(_Tp* addr, _Tp delta)
+{ int tmp = *addr; *addr += delta; return tmp; }
     
 #endif
+
+namespace cv
+{
+
+using std::max;
+using std::min;
+using std::exp;
+using std::log;
+using std::pow;
+using std::sqrt;
 
     
 /////////////// saturate_cast (used in image & signal processing) ///////////////////
