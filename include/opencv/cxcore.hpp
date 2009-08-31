@@ -1096,11 +1096,9 @@ CV_EXPORTS void mulSpectrums(const Mat& a, const Mat& b, Mat& c,
 CV_EXPORTS int getOptimalDFTSize(int vecsize);
 
 enum { KMEANS_RANDOM_CENTERS=0, KMEANS_PP_CENTERS=2, KMEANS_USE_INITIAL_LABELS=1 };
-CV_EXPORTS int kmeans( const Mat& samples, int K,
-                       Mat& labels, Mat& centers,
-                       TermCriteria crit, int attempts=1,
-                       int flags=KMEANS_PP_CENTERS,
-                       double* compactness=0);
+CV_EXPORTS double kmeans( const Mat& data, int K, Mat& best_labels,
+                          TermCriteria criteria, int attempts,
+                          int flags, Mat* centers );
 
 CV_EXPORTS RNG& theRNG();
 template<typename _Tp> static inline _Tp randu() { return (_Tp)theRNG(); }

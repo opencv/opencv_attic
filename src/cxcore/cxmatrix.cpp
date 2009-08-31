@@ -853,8 +853,9 @@ static void generateCentersPP(const Mat& _data, Mat& _out_centers,
     }
 }
 
-double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria criteria,
-               int attempts, RNG* rng, int flags, Mat* _centers )
+double kmeans( const Mat& data, int K, Mat& best_labels,
+               TermCriteria criteria, int attempts,
+               int flags, Mat* _centers )
 {
     const int SPP_TRIALS = 3;
     int N = data.rows > 1 ? data.rows : data.cols;
@@ -864,15 +865,25 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
     attempts = std::max(attempts, 1);
     CV_Assert( type == CV_32F && K > 0 );
 
-    vector<int> labels;
+    Mat _labels;
     if( flags & CV_KMEANS_USE_INITIAL_LABELS )
     {
-        CV_Assert( best_labels.size() == (size_t)N );
-        labels.resize(best_labels.size());
-        std::copy(best_labels.begin(), best_labels.end(), labels.begin());
+        CV_Assert( (best_labels.cols == 1 || best_labels.rows == 1) &&
+                  best_labels.cols*best_labels.rows == N &&
+                  best_labels.type() == CV_32S &&
+                  best_labels.isContinuous());
+        best_labels.copyTo(_labels);
     }
     else
-        labels.resize(N);
+    {
+        if( !((best_labels.cols == 1 || best_labels.rows == 1) &&
+             best_labels.cols*best_labels.rows == N &&
+            best_labels.type() == CV_32S &&
+            best_labels.isContinuous()))
+            best_labels.create(N, 1, CV_32S);
+        _labels.create(best_labels.size(), best_labels.type());
+    }
+    int* labels = _labels.ptr<int>();
 
     Mat centers(K, dims, type), old_centers(K, dims, type);
     vector<int> counters(K);
@@ -880,9 +891,7 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
     Vec2f* box = &_box[0];
 
     double best_compactness = DBL_MAX, compactness = 0;
-    RNG default_rng;
-    if( !rng )
-        rng = &default_rng;
+    RNG& rng = theRNG();
     int a, iter, i, j, k;
 
     if( criteria.type & TermCriteria::EPS )
@@ -927,11 +936,11 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
             if( iter == 0 && (a > 0 || !(flags & KMEANS_USE_INITIAL_LABELS)) )
             {
                 if( flags & KMEANS_PP_CENTERS )
-                    generateCentersPP(data, centers, K, *rng, SPP_TRIALS);
+                    generateCentersPP(data, centers, K, rng, SPP_TRIALS);
                 else
                 {
                     for( k = 0; k < K; k++ )
-                        generateRandomCenter(_box, centers.ptr<float>(k), *rng);
+                        generateRandomCenter(_box, centers.ptr<float>(k), rng);
                 }
             }
             else
@@ -984,7 +993,7 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
                             center[j] *= scale;
                     }
                     else
-                        generateRandomCenter(_box, center, *rng);
+                        generateRandomCenter(_box, center, rng);
                     
                     if( iter > 0 )
                     {
@@ -1030,8 +1039,7 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
             best_compactness = compactness;
             if( _centers )
                 centers.copyTo(*_centers);
-            best_labels.resize(labels.size());
-            std::copy(labels.begin(), labels.end(), best_labels.begin());
+            _labels.copyTo(best_labels);
         }
     }
 
@@ -1189,22 +1197,17 @@ cvSort( const CvArr* _src, CvArr* _dst, CvArr* _idx, int flags )
 
 CV_IMPL int
 cvKMeans2( const CvArr* _samples, int cluster_count, CvArr* _labels,
-           CvTermCriteria termcrit, int attempts, CvRNG* _rng,
+           CvTermCriteria termcrit, int attempts, CvRNG*,
            int flags, CvArr* _centers, double* _compactness )
 {
     cv::Mat data = cv::cvarrToMat(_samples), labels = cv::cvarrToMat(_labels), centers;
-    cv::RNG rng(_rng ? *_rng : (uint64)-1);
     if( _centers )
         centers = cv::cvarrToMat(_centers);
     CV_Assert( labels.isContinuous() && labels.type() == CV_32S &&
+        (labels.cols == 1 || labels.rows == 1) &&
         labels.cols + labels.rows - 1 == data.rows );
-    int* ldata = (int*)labels.data;
-    cv::vector<int> labelvec(ldata, ldata + data.rows);
-    double compactness = cv::kmeans(data, cluster_count, labelvec, termcrit, attempts,
-                                    _rng ? &rng : 0, flags, _centers ? &centers : 0 );
-    std::copy(labelvec.begin(), labelvec.end(), ldata);
-    if( _rng )
-        *_rng = rng.state;
+    double compactness = cv::kmeans(data, cluster_count, labels, termcrit, attempts,
+                                    flags, _centers ? &centers : 0 );
     if( _compactness )
         *_compactness = compactness;
     return 1;

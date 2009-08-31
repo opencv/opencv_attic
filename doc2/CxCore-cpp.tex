@@ -1,6 +1,6 @@
 \chapter{C++ Interface}
 
-\section{CXCORE}
+\section{CXCORE. Basic Functionality}
 
 \subsection{Introduction}
 
@@ -2576,15 +2576,18 @@ X = (1/(M \cdot N)) \cdot X'\]
 
 In the case of real (single-channel) data, the packed format called \emph{CCS} (complex-conjugate-symmetrical) that was borrowed from IPL and used to represent the result of a forward Fourier transform or input for an inverse Fourier transform:
 
-\[Re Y_{0,0} \quad     Re Y_{0,1}  \quad  Im Y_{0,1}  \quad  Re Y_{0,2}     \quad Im Y_{0,2} \quad ...  \quad Re Y_{0,N/2-1} \quad  Im Y_{0,N/2-1} \quad Re Y_{0,N/2}\]
+\[\begin{array}
+Re Y_{0,0} \quad     Re Y_{0,1}  \quad  Im Y_{0,1}  \quad  Re Y_{0,2}     \quad Im Y_{0,2} \quad ...  \quad Re Y_{0,N/2-1} \quad  Im Y_{0,N/2-1} \quad Re Y_{0,N/2} \\
 
-\[Re Y_{1,0}  \quad    Re Y_{1,1}  \quad  Im Y_{1,1}   \quad Re Y_{1,2}   \quad  Im Y_{1,2} \quad ... \quad Re Y_{1,N/2-1}  \quad Im Y_{1,N/2-1} \quad Re Y_{1,N/2}\]
+Re Y_{1,0}  \quad    Re Y_{1,1}  \quad  Im Y_{1,1}   \quad Re Y_{1,2}   \quad  Im Y_{1,2} \quad ... \quad Re Y_{1,N/2-1}  \quad Im Y_{1,N/2-1} \quad Re Y_{1,N/2} \\
 
-\[Im Y_{1,0}    \quad  Re Y_{2,1}  \quad  Im Y_{2,1} \quad   Re Y_{2,2}  \quad   Im Y_{2,2} \quad ... \quad Re Y_{2,N/2-1}  \quad Im Y_{2,N/2-1} \quad Im Y_{2,N/2}\]
-\[............................................................................................................................................................\]
-\[Re Y_{M/2-1,0} \quad  Re Y_{M-3,1}  \quad Im Y_{M-3,1} \quad Re Y_{M-3,2} \quad  Im Y_{M-3,2} \quad... \quad Re Y_{M-3,N/2-1} \quad Im Y_{M-3,N/2-1}\quad Re Y_{M-3,N/2}\]
-\[Im Y_{M/2-1,0} \quad  Re Y_{M-2,1}  \quad Im Y_{M-2,1} \quad Re Y_{M-2,2} \quad  Im Y_{M-2,2} \quad... \quad Re Y_{M-2,N/2-1} \quad Im Y_{M-2,N/2-1}\quad Im Y_{M-2,N/2}\]
-\[Re Y_{M/2,0}  \quad  Re Y_{M-1,1} \quad  Im Y_{M-1,1} \quad Re Y_{M-1,2} \quad  Im Y_{M-1,2} \quad ... \quad Re Y_{M-1,N/2-1} \quad Im Y_{M-1,N/2-1}\quad Im Y_{M-1,N/2}\]
+Im Y_{1,0}    \quad  Re Y_{2,1}  \quad  Im Y_{2,1} \quad   Re Y_{2,2}  \quad   Im Y_{2,2} \quad ... \quad Re Y_{2,N/2-1}  \quad Im Y_{2,N/2-1} \quad Im Y_{2,N/2} \\
+............................................................................................................................................................ \\
+Re Y_{M/2-1,0} \quad  Re Y_{M-3,1}  \quad Im Y_{M-3,1} \quad Re Y_{M-3,2} \quad  Im Y_{M-3,2} \quad... \quad Re Y_{M-3,N/2-1} \quad Im Y_{M-3,N/2-1}\quad Re Y_{M-3,N/2} \\
+Im Y_{M/2-1,0} \quad  Re Y_{M-2,1}  \quad Im Y_{M-2,1} \quad Re Y_{M-2,2} \quad  Im Y_{M-2,2} \quad... \quad Re Y_{M-2,N/2-1} \quad Im Y_{M-2,N/2-1}\quad Im Y_{M-2,N/2} \\
+Re Y_{M/2,0}  \quad  Re Y_{M-1,1} \quad  Im Y_{M-1,1} \quad Re Y_{M-1,2} \quad  Im Y_{M-1,2} \quad ... \quad Re Y_{M-1,N/2-1} \quad Im Y_{M-1,N/2-1}\quad Im Y_{M-1,N/2}
+\end{array}
+\]
 
 In case of 1D transform of real vector, the output will look as the first row of the above matrix. 
 
@@ -3032,8 +3035,8 @@ void log(const MatND& src, MatND& dst);
 The function \texttt{log} calculates the natural logarithm of the absolute value of every element of the input array:
 
 \[
-\texttt{dst} [I] = \fork
-{\log{|\texttt{src}(I)}|}{if $\texttt{src}[I] \ne 0$ }
+\texttt{dst}_I = \fork
+{\log |\texttt{src}_I|}{if $\texttt{src}_I \ne 0$ }
 {\texttt{C}}{otherwise}
 \]
 
@@ -3058,7 +3061,7 @@ void LUT(const Mat& src, const Mat& lut, Mat& dst);
 The function \texttt{LUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as follows:
 
 \[
-\texttt{dst}_i \leftarrow \texttt{lut}_{\texttt{src}_i + d}
+\texttt{dst}_I \leftarrow \texttt{lut}_{\texttt{src}_I + d}
 \]
 
 where
@@ -3086,7 +3089,7 @@ void magnitude(const Mat& x, const Mat& y, Mat& magnitude);
 The function \texttt{magnitude} calculates magnitude of 2D vectors formed from the corresponding elements of \texttt{x} and \texttt{y} arrays:
 
 \[
-\texttt{dst}(I) = \sqrt{\texttt{x}(I)^2 + \texttt{y}(I)^2}
+\texttt{dst}_I = \sqrt{\texttt{x}_I^2 + \texttt{y}_I^2}
 \]
 
 See also: \cross{cartToPolar}, \cross{polarToCart}, \cross{phase}, \cross{sqrt}
@@ -3108,7 +3111,7 @@ double Mahalonobis(const Mat& vec1, const Mat& vec2, const Mat& icovar);
 The function \texttt{cvMahalonobis} calculates and returns the weighted distance between two vectors:
 
 \[
-d(vec1,vec2)=\sqrt{sum_{i,j}{icovar(i,j)\cdot(vec1(i)-vec2(i))\cdot(vec1(j)-vec2(j))}}
+d(vec1,vec2)=\sqrt{\sum_{i,j}{icovar(i,j)\cdot(vec1(i)-vec2(i))\cdot(vec1(j)-vec2(j))}}
 \]
 
 The covariance matrix may be calculated using the \cross{calcCovarMatrix} function and then inverted using the \cross{invert} function (preferably using DECOMP\_SVD method, as the most accurate).
@@ -3535,7 +3538,7 @@ public:
 };
 \end{lstlisting}
 
-The class PCA is used to compute the special basis for a set of vectors. The basis will consist of eigenvectors of the covariance matrix of the set of vectors and then transform vectors to/from the new coordinate space, defined by the basis. Usually, in this new coordinate system each vector from the original set (and any linear combination of them) can be quite accurately approximated by taking just the first few its components, corresponding to the eigenvectors for the largest eigenvalues of the covariance matrix. That is, we can approximate the original vectors with much shorter ones. Such a transformation is also known as Karhunen-Loeve Transform, or KLT. See \href{principal component analysis}{http://en.wikipedia.org/wiki/Principal\_component\_analysis}
+The class PCA is used to compute the special basis for a set of vectors. The basis will consist of eigenvectors of the covariance matrix of the set of vectors and then transform vectors to/from the new coordinate space, defined by the basis. Usually, in this new coordinate system each vector from the original set (and any linear combination of them) can be quite accurately approximated by taking just the first few its components, corresponding to the eigenvectors for the largest eigenvalues of the covariance matrix. That is, we can approximate the original vectors with much shorter ones. Such a transformation is also known as Karhunen-Loeve Transform, or KLT. See \url{http://en.wikipedia.org/wiki/Principal\_component\_analysis}
 
 The following sample is the function that takes two matrices. The first one stores the set of vectors (a row per vector) that is used to compute PCA, the second one stores another "test" set of vectors (a row per vector) that are first compressed with PCA, then reconstructed back and then the reconstruction error norm is computed and printed for each vector.
 \begin{lstlisting}
@@ -4580,18 +4583,15 @@ replaced question marks. See \cross{getTextSize} for a text rendering code examp
 \cvfunc{kmeans}\label{kmeans}
 
 \begin{lstlisting}
-int kmeans( const Mat& samples, int clusterCount,
-            Mat& labels, Mat& centers,
-            TermCriteria termcrit, int attempts=1,
-            int flags=KMEANS_CENTERS_SPP,
-            double* compactness=0);
+double kmeans( const Mat& samples, int clusterCount, Mat& labels,
+               TermCriteria termcrit, int attempts,
+               int flags, Mat* centers );
 enum { KMEANS_RANDOM_CENTERS=0, KMEANS_PP_CENTERS=2, KMEANS_USE_INITIAL_LABELS=1 };
 \end{lstlisting}
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
 \cvarg{clusterCount}{The number of clusters to split the set by}
 \cvarg{labels}{The input/output integer array that will store the cluster indices for every sample}
-\cvarg{centers}{The input/output matrix of the cluster centers, one row per each cluster center}
 \cvarg{termcrit}{Specifies maximum number of iterations and/or accuracy (distance the centers can move by between subsequent iterations)}
 
 \cvarg{attempts}{How many times the algorithm is executed using different initial labelings. The algorithm returns the labels that yield the best compactness (see the last function parameter)}
@@ -4602,15 +4602,7 @@ enum { KMEANS_RANDOM_CENTERS=0, KMEANS_PP_CENTERS=2, KMEANS_USE_INITIAL_LABELS=1
 \cvarg{KMEANS\_USE\_INITIAL\_LABELS}{During the first (and possibly the only) attempt, the
 function uses the user-supplied labels instaed of computing them from the initial centers. For the second and further attempts, the function will use the random or semi-random centers (use one of \texttt{KMEANS\_*\_CENTERS} flag to specify the exact method)}
 \end{description}}
-\cvarg{compactness}{The optional output parameter, which is computed as
-\[
-\sum_i \|\texttt{samples}_i - \texttt{centers}_{\texttt{labels}_i}\|^2
-\]
-after every attempt; the best (minimum) value is chosen and the
-corresponding labels are returned by the function. Basically, the
-user can use only the core of the function, set the number of
-attempts to 1, initialize labels each time using some custom algorithm and pass them with
-\newline (\texttt{flags}=\texttt{KMEAN\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering}
+\cvarg{centers}{The output matrix of the cluster centers, one row per each cluster center}
 \end{description}
 
 The function \texttt{kmeans} implements a k-means algorithm that finds the
@@ -4618,6 +4610,15 @@ centers of \texttt{clusterCount} clusters and groups the input samples
 around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
 the sample stored in the $i^th$ row of the \texttt{samples} matrix.
 
+The function returns the compactness measure, which is computed as
+\[
+\sum_i \|\texttt{samples}_i - \texttt{centers}_{\texttt{labels}_i}\|^2
+\]
+after every attempt; the best (minimum) value is chosen and the
+corresponding labels and the compactness value are returned by the function.
+Basically, the user can use only the core of the function, set the number of
+attempts to 1, initialize labels each time using some custom algorithm and pass them with
+\newline (\texttt{flags}=\texttt{KMEAN\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering}
 
 \cvfunc{partition}\label{partition}
 Splits an element set into equivalency classes.
@@ -4634,7 +4635,7 @@ template<typename _Tp, class _EqPredicate> int
 \end{description}
 
 The generic function \texttt{partition} implements a quadratic algorithm for
-splitting a set into one or more equivalancy classes, described in \href{http://en.wikipedia.org/wiki/Disjoint-set_data_structure}. The function
+splitting a set into one or more equivalancy classes, described in \url{http://en.wikipedia.org/wiki/Disjoint-set_data_structure}. The function
 returns the number of equivalency classes.
 
 \subsection{Utility and System Functions and Macros}
