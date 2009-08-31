@@ -660,7 +660,6 @@ inline int predictOrderedStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator
     FEval& feval = (FEval&)*_feval;
     float* cascadeLeaves = &cascade.leaves[0];
     CascadeClassifier::DTreeNode* cascadeNodes = &cascade.nodes[0];
-    CascadeClassifier::DTree* cascadeWeaks = &cascade.classifiers[0];
     CascadeClassifier::Stage* cascadeStages = &cascade.stages[0];
     for( si = 0; si < nstages; si++ )
     {
@@ -689,7 +688,6 @@ inline int predictCategoricalStump( CascadeClassifier& cascade, Ptr<FeatureEvalu
     int* cascadeSubsets = &cascade.subsets[0];
     float* cascadeLeaves = &cascade.leaves[0];
     CascadeClassifier::DTreeNode* cascadeNodes = &cascade.nodes[0];
-    CascadeClassifier::DTree* cascadeWeaks = &cascade.classifiers[0];
     CascadeClassifier::Stage* cascadeStages = &cascade.stages[0];
 
     for( si = 0; si < nstages; si++ )
