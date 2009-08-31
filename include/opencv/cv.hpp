@@ -667,10 +667,11 @@ public:
     bool setImage( Ptr<FeatureEvaluator>&, const Mat& );
     int runAt( Ptr<FeatureEvaluator>&, Point );
 
+    bool is_stump_based;
+
     int stageType;
     int featureType;
     int ncategories;
-    
     Size origWinSize;
     
     vector<Stage> stages;

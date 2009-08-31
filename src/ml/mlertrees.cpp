@@ -874,7 +874,7 @@ double CvForestERTree::calc_node_dir( CvDTreeNode* node )
     return node->split->quality/(L + R);
 }
 
-CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     const float split_delta = (1 + FLT_EPSILON) * FLT_EPSILON;
@@ -891,7 +891,7 @@ CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi, C
     const int* responses = 0;
     data->get_class_labels( node, responses_buf, &responses );
 
-    double lbest_val = 0, rbest_val = 0, best_val = 0, split_val = 0;
+    double lbest_val = 0, rbest_val = 0, best_val = init_quality, split_val = 0;
     
     int i;
 
@@ -1018,13 +1018,13 @@ CvDTreeSplit* CvForestERTree::find_split_ord_class( CvDTreeNode* node, int vi, C
     return split;
 }
 
-CvDTreeSplit* CvForestERTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvForestERTree::find_split_cat_class( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int cm = data->get_num_classes(); 
     int vm = data->cat_count->data.i[ci];
-    double best_val = 0;
+    double best_val = init_quality;
     CvDTreeSplit *split = 0;
 
     if ( vm > 1 )
@@ -1169,7 +1169,7 @@ CvDTreeSplit* CvForestERTree::find_split_cat_class( CvDTreeNode* node, int vi, C
     return split;
 }
 
-CvDTreeSplit* CvForestERTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvForestERTree::find_split_ord_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     const float split_delta = (1 + FLT_EPSILON) * FLT_EPSILON;
@@ -1183,7 +1183,7 @@ CvDTreeSplit* CvForestERTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvD
     const float* responses = 0;
     data->get_ord_responses( node, responses_buf, &responses );
 
-    double best_val = 0, split_val = 0, lsum = 0, rsum = 0;
+    double best_val = init_quality, split_val = 0, lsum = 0, rsum = 0;
     int L = 0, R = 0;
 
     bool is_find_split = false;
@@ -1250,12 +1250,12 @@ CvDTreeSplit* CvForestERTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvD
     return split;
 }
 
-CvDTreeSplit* CvForestERTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvForestERTree::find_split_cat_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
     int vm = data->cat_count->data.i[ci];
-    double best_val = 0;
+    double best_val = init_quality;
     CvDTreeSplit *split = 0;
     float lsum = 0, rsum = 0;
 
