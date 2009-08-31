@@ -85,7 +85,7 @@ inline Mat::Mat(const Mat& m)
     refcount(m.refcount), datastart(m.datastart), dataend(m.dataend)
 {
     if( refcount )
-        ++*refcount;
+        CV_XADD(refcount, 1);
 }
 
 inline Mat::Mat(int _rows, int _cols, int _type, void* _data, size_t _step)
@@ -157,7 +157,7 @@ inline Mat::Mat(const Mat& m, const Range& rowRange, const Range& colRange)
         flags |= CONTINUOUS_FLAG;
 
     if( refcount )
-        ++*refcount;
+        CV_XADD(refcount, 1);
     if( rows <= 0 || cols <= 0 )
         rows = cols = 0;
 }
@@ -172,7 +172,7 @@ inline Mat::Mat(const Mat& m, const Rect& roi)
     CV_Assert( 0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols &&
         0 <= roi.y && 0 <= roi.height && roi.y + roi.height <= m.rows );
     if( refcount )
-        ++*refcount;
+        CV_XADD(refcount, 1);
     if( rows <= 0 || cols <= 0 )
         rows = cols = 0;
 }
@@ -222,7 +222,7 @@ inline Mat& Mat::operator = (const Mat& m)
     if( this != &m )
     {
         if( m.refcount )
-            ++*m.refcount;
+            CV_XADD(m.refcount, 1);
         release();
         flags = m.flags;
         rows = m.rows; cols = m.cols;
@@ -325,11 +325,11 @@ inline void Mat::create(Size _size, int _type)
 }
 
 inline void Mat::addref()
-{ if( refcount ) ++*refcount; }
+{ if( refcount ) CV_XADD(refcount, 1); }
 
 inline void Mat::release()
 {
-    if( refcount && --*refcount == 0 )
+    if( refcount && CV_XADD(refcount, -1) == 1 )
         fastFree(datastart);
     data = datastart = dataend = 0;
     step = rows = cols = 0;
@@ -3630,7 +3630,7 @@ inline MatND::MatND(const MatND& m)
         step[i] = m.step[i];
     }
     if( refcount )
-        ++*refcount;
+        CV_XADD(refcount, 1);
 }
 
 inline MatND::MatND(const CvMatND* m, bool copyData)
@@ -3659,7 +3659,7 @@ inline MatND& MatND::operator = (const MatND& m)
     if( this != &m )
     {
         if( m.refcount )
-            ++*m.refcount;
+            CV_XADD(m.refcount, 1);
         release();
         flags = m.flags;
         dims = m.dims;
@@ -3699,12 +3699,12 @@ inline void MatND::assignTo( MatND& m, int type ) const
 
 inline void MatND::addref()
 {
-    if( refcount ) ++*refcount;
+    if( refcount ) CV_XADD(refcount, 1);
 }
 
 inline void MatND::release()
 {
-    if( refcount && --*refcount == 0 )
+    if( refcount && CV_XADD(refcount, -1) == 1 )
         fastFree(datastart);
     dims = 0;
     data = datastart = dataend = 0;
@@ -4065,7 +4065,7 @@ inline SparseMat& SparseMat::operator = (const SparseMat& m)
     if( this != &m )
     {
         if( m.hdr )
-            ++m.hdr->refcount;
+            CV_XADD(&m.hdr->refcount, 1);
         release();
         flags = m.flags;
         hdr = m.hdr;
@@ -4096,11 +4096,11 @@ inline void SparseMat::assignTo( SparseMat& m, int type ) const
 }
 
 inline void SparseMat::addref()
-{ if( hdr ) ++hdr->refcount; }
+{ if( hdr ) CV_XADD(&hdr->refcount, 1); }
 
 inline void SparseMat::release()
 {
-    if( hdr && --hdr->refcount == 0 )
+    if( hdr && CV_XADD(&hdr->refcount, -1) == 1 )
         delete hdr;
     hdr = 0;
 }
@@ -4370,7 +4370,7 @@ template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_(const SparseMat_<_Tp>&
     this->flags = m.flags;
     this->hdr = m.hdr;
     if( this->hdr )
-        ++this->hdr->refcount;
+        CV_XADD(&this->hdr->refcount, 1);
 }
 
 template<typename _Tp> inline SparseMat_<_Tp>::SparseMat_(const Mat& m)
@@ -4396,7 +4396,7 @@ SparseMat_<_Tp>::operator = (const SparseMat_<_Tp>& m)
 {
     if( this != &m )
     {
-        if( m.hdr ) ++m.hdr->refcount;
+        if( m.hdr ) CV_XADD(&m.hdr->refcount, 1);
         release();
         flags = m.flags;
         hdr = m.hdr;

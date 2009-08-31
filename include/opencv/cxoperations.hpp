@@ -60,6 +60,46 @@ using std::log;
 using std::pow;
 using std::sqrt;
 
+
+/////// exchange-add operation for atomic operations on reference counters ///////
+    
+#ifdef __GNUC__
+    
+#if __GNUC__*10 + __GNUC_MINOR >= 42
+#define CV_XADD __sync_fetch_and_add
+#else
+#include <bits/atomicity.h>
+#define CV_XADD __gnu_cxx::__exchange_and_add
+#endif
+    
+#elif defined WIN32 || defined _WIN32
+
+#if defined __MSC_VER && !defined WIN64 && !defined _WIN64
+static inline int CV_XADD( int* ptr, int delta )
+{
+    T tmp;
+    __asm
+    {
+        mov edx, ptr
+        mov eax, delta
+        lock xadd [edx], eax
+        mov tmp, eax
+    }
+    return tmp;
+}
+#else
+#include "windows.h"
+#define CV_XADD(ptr,delta) InterlockedExchangeAdd((LONG volatile*)(ptr), (delta))
+#endif
+    
+#else
+
+template<typename _Tp> static inline _Tp CV_XADD(_Tp* ptr, _Tp delta)
+{ int tmp = *ptr; *ptr += delta; return tmp; }
+    
+#endif
+
+    
 /////////////// saturate_cast (used in image & signal processing) ///////////////////
 
 template<typename _Tp> static inline _Tp saturate_cast(uchar v) { return _Tp(v); }
@@ -1055,7 +1095,7 @@ public:
         if( r.size() > 0 && r.start >= 0 && r.end <= d.size() )
         {
             if( d.hdr.refcount )
-                ++*d.hdr.refcount;
+                CV_XADD(d.hdr.refcount, 1);
             hdr.refcount = d.hdr.refcount;
             hdr.datastart = d.hdr.datastart;
             hdr.data = d.hdr.data + r.start;
@@ -1068,7 +1108,7 @@ public:
         if( this != &d )
         {
             if( d.hdr.refcount )
-                ++*d.hdr.refcount;
+                CV_XADD(d.hdr.refcount, 1);
             release();
             hdr = d.hdr;
         }
@@ -1116,10 +1156,10 @@ public:
     const _Tp* begin() const { return hdr.data; }
     const _Tp* end() const { return hdr.data + hdr.size; }
     
-    void addref() { if( hdr.refcount ) ++*hdr.refcount; }
+    void addref() { if( hdr.refcount ) CV_XADD(hdr.refcount, 1); }
     void release()
     {
-        if( hdr.refcount && --*hdr.refcount == 0 )
+        if( hdr.refcount && CV_XADD(hdr.refcount, -1) == 1 )
             deallocate<_Tp>(hdr.datastart, hdr.capacity);
         hdr = Hdr();
     }
@@ -1356,11 +1396,11 @@ template<typename _Tp> inline Ptr<_Tp>::Ptr(_Tp* _obj) : obj(_obj)
 }
 
 template<typename _Tp> inline void Ptr<_Tp>::addref()
-{ if( refcount ) ++*refcount; }
+{ if( refcount ) CV_XADD(refcount, 1); }
 
 template<typename _Tp> inline void Ptr<_Tp>::release()
 {
-    if( refcount && --*refcount == 0 )
+    if( refcount && CV_XADD(refcount, -1) == 1 )
     {
         delete_obj();
         fastFree(refcount);
@@ -1387,7 +1427,7 @@ template<typename _Tp> inline Ptr<_Tp>& Ptr<_Tp>::operator = (const Ptr<_Tp>& pt
 {
     int* _refcount = ptr.refcount;
     if( _refcount )
-        ++*_refcount;
+        CV_XADD(_refcount, 1);
     release();
     obj = ptr.obj;
     refcount = _refcount;

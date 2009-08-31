@@ -692,7 +692,7 @@ static inline size_t getElemSize(int type) { return CV_ELEM_SIZE(type); }
 
 // matrix decomposition types
 enum { DECOMP_LU=0, DECOMP_SVD=1, DECOMP_EIG=2, DECOMP_CHOLESKY=3, DECOMP_QR=4, DECOMP_NORMAL=16 };
-enum { NORM_INF=1, NORM_L1=2, NORM_L2=4, NORM_TYPE_MASK=7, NORM_RELATIVE=8};
+enum { NORM_INF=1, NORM_L1=2, NORM_L2=4, NORM_TYPE_MASK=7, NORM_RELATIVE=8, NORM_MINMAX=32};
 enum { CMP_EQ=0, CMP_GT=1, CMP_GE=2, CMP_LT=3, CMP_LE=4, CMP_NE=5 };
 enum { GEMM_1_T=1, GEMM_2_T=2, GEMM_3_T=4 };
 enum { DFT_INVERSE=1, DFT_SCALE=2, DFT_ROWS=4, DFT_COMPLEX_OUTPUT=16, DFT_REAL_OUTPUT=32,
@@ -1047,10 +1047,10 @@ CV_EXPORTS void solvePoly(const Mat& coeffs, Mat& roots, int maxIters=20, int fi
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, Mat& eigenvectors);
 
-CV_EXPORTS void calcCovariation( const Mat* samples, int nsamples,
+CV_EXPORTS void calcCovarMatrix( const Mat* samples, int nsamples,
                                  Mat& covar, Mat& mean,
                                  int flags, int ctype=CV_64F);
-CV_EXPORTS void calcCovariation( const Mat& samples, Mat& covar, Mat& mean,
+CV_EXPORTS void calcCovarMatrix( const Mat& samples, Mat& covar, Mat& mean,
                                  int flags, int ctype=CV_64F);
 
 class CV_EXPORTS PCA
@@ -1083,9 +1083,9 @@ public:
     Mat u, w, vt;
 };
 
-CV_EXPORTS double mahalanobis(const Mat& v1, const Mat& v2, const Mat& icovar);
-static inline double mahalonobis(const Mat& v1, const Mat& v2, const Mat& icovar)
-{ return mahalanobis(v1, v2, icovar); }
+CV_EXPORTS double Mahalanobis(const Mat& v1, const Mat& v2, const Mat& icovar);
+static inline double Mahalonobis(const Mat& v1, const Mat& v2, const Mat& icovar)
+{ return Mahalanobis(v1, v2, icovar); }
 
 CV_EXPORTS void dft(const Mat& src, Mat& dst, int flags=0, int nonzeroRows=0);
 CV_EXPORTS void idft(const Mat& src, Mat& dst, int flags=0, int nonzeroRows=0);
@@ -1095,25 +1095,22 @@ CV_EXPORTS void mulSpectrums(const Mat& a, const Mat& b, Mat& c,
                              int flags, bool conjB=false);
 CV_EXPORTS int getOptimalDFTSize(int vecsize);
 
-enum { KMEANS_CENTERS_RANDOM=0, KMEANS_CENTERS_SPP=2, KMEANS_USE_INITIAL_LABELS=1 };
+enum { KMEANS_RANDOM_CENTERS=0, KMEANS_PP_CENTERS=2, KMEANS_USE_INITIAL_LABELS=1 };
 CV_EXPORTS int kmeans( const Mat& samples, int K,
                        Mat& labels, Mat& centers,
                        TermCriteria crit, int attempts=1,
-                       int flags=KMEANS_CENTERS_SPP,
+                       int flags=KMEANS_PP_CENTERS,
                        double* compactness=0);
 
 CV_EXPORTS RNG& theRNG();
-static inline int randi() { return (int)theRNG(); }
-static inline unsigned randu() { return (unsigned)theRNG(); }
-static inline float randf() { return (float)theRNG(); }
-static inline double randd() { return (double)theRNG(); }
+template<typename _Tp> static inline _Tp randu() { return (_Tp)theRNG(); }
+
 static inline void randu(Mat& dst, const Scalar& low, const Scalar& high)
 { theRNG().fill(dst, RNG::UNIFORM, low, high); }
 static inline void randn(Mat& dst, const Scalar& mean, const Scalar& stddev)
 { theRNG().fill(dst, RNG::NORMAL, mean, stddev); }
-CV_EXPORTS void randShuffle(Mat& dst, RNG& rng, double iterFactor=1.);
-static inline void randShuffle(Mat& dst, double iterFactor=1.)
-{ randShuffle(dst, theRNG(), iterFactor); }
+CV_EXPORTS void randShuffle(Mat& dst, double iterFactor=1., RNG* rng=0);
+
 
 CV_EXPORTS void line(Mat& img, Point pt1, Point pt2, const Scalar& color,
                      int thickness=1, int lineType=8, int shift=0);
@@ -1146,6 +1143,7 @@ CV_EXPORTS void polylines(Mat& img, const Point** pts, const int* npts, int ncon
                           const Scalar& color, int thickness=1, int lineType=8, int shift=0 );
 
 CV_EXPORTS bool clipLine(Size imgSize, Point& pt1, Point& pt2);
+CV_EXPORTS bool clipLine(Rect img_rect, Point& pt1, Point& pt2);
 
 class CV_EXPORTS LineIterator
 {

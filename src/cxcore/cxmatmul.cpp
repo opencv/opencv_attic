@@ -2139,7 +2139,7 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
 *                                 Covariation Matrix                                     *
 \****************************************************************************************/
 
-void calcCovariation( const Mat* data, int nsamples, Mat& covar, Mat& _mean, int flags, int ctype )
+void calcCovarMatrix( const Mat* data, int nsamples, Mat& covar, Mat& _mean, int flags, int ctype )
 {
     CV_Assert( data && nsamples > 0 );
     Size size = data[0].size();
@@ -2173,12 +2173,12 @@ void calcCovariation( const Mat* data, int nsamples, Mat& covar, Mat& _mean, int
         }
     }
 
-    calcCovariation( _data, covar, mean, (flags & ~(CV_COVAR_ROWS|CV_COVAR_COLS)) | CV_COVAR_ROWS, ctype );
+    calcCovarMatrix( _data, covar, mean, (flags & ~(CV_COVAR_ROWS|CV_COVAR_COLS)) | CV_COVAR_ROWS, ctype );
     if( (flags & CV_COVAR_USE_AVG) == 0 )
         _mean = mean.reshape(1, size.height);
 }
 
-void calcCovariation( const Mat& data, Mat& covar, Mat& _mean, int flags, int ctype )
+void calcCovarMatrix( const Mat& data, Mat& covar, Mat& _mean, int flags, int ctype )
 {
     CV_Assert( ((flags & CV_COVAR_ROWS) != 0) ^ ((flags & CV_COVAR_COLS) != 0) );
     bool takeRows = (flags & CV_COVAR_ROWS) != 0;
@@ -2209,7 +2209,7 @@ void calcCovariation( const Mat& data, Mat& covar, Mat& _mean, int flags, int ct
 *                                        Mahalanobis                                     *
 \****************************************************************************************/
 
-double mahalanobis( const Mat& v1, const Mat& v2, const Mat& icovar )
+double Mahalanobis( const Mat& v1, const Mat& v2, const Mat& icovar )
 {
     int type = v1.type(), depth = v1.depth();
     Size sz = v1.size();
@@ -2711,7 +2711,7 @@ PCA& PCA::operator()(const Mat& data, const Mat& _mean, int flags, int maxCompon
         _mean.convertTo(mean, ctype);
     }
 
-    calcCovariation( data, covar, mean, covar_flags, ctype );
+    calcCovarMatrix( data, covar, mean, covar_flags, ctype );
     eigen( covar, eigenvalues, eigenvectors );
 
     if( !(covar_flags & CV_COVAR_NORMAL) )
@@ -2885,14 +2885,14 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     if( count == 1 || (flags & CV_COVAR_COLS) != 0 || (flags & CV_COVAR_ROWS) != 0 )
     {
         cv::Mat data = cv::cvarrToMat(vecarr[0]);
-        cv::calcCovariation( data, cov, mean, flags, cov.type() );
+        cv::calcCovarMatrix( data, cov, mean, flags, cov.type() );
     }
     else
     {
         std::vector<cv::Mat> data(count);
         for( int i = 0; i < count; i++ )
             data[i] = cv::cvarrToMat(vecarr[i]);
-        cv::calcCovariation( &data[0], count, cov, mean, flags, cov.type() );
+        cv::calcCovarMatrix( &data[0], count, cov, mean, flags, cov.type() );
     }
 
     if( mean.data != mean0.data && mean0.data )
@@ -2906,7 +2906,7 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
 CV_IMPL double
 cvMahalanobis( const CvArr* srcAarr, const CvArr* srcBarr, const CvArr* matarr )
 {
-    return cv::mahalanobis(cv::cvarrToMat(srcAarr),
+    return cv::Mahalanobis(cv::cvarrToMat(srcAarr),
         cv::cvarrToMat(srcBarr), cv::cvarrToMat(matarr));
 }
 
