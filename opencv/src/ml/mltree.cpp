@@ -1882,16 +1882,16 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                res = find_split_cat_class( node, vi, splits[threadIdx] );
+                res = find_split_cat_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
             else
-                res = find_split_ord_class( node, vi, splits[threadIdx] );
+                res = find_split_ord_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
         }
         else
         {
             if( ci >= 0 )
-                res = find_split_cat_reg( node, vi, splits[threadIdx] );
+                res = find_split_cat_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
             else
-                res = find_split_ord_reg( node, vi, splits[threadIdx] );
+                res = find_split_ord_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
         }
 
         if( res )
@@ -1915,8 +1915,8 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
     return bestSplit;
 }
 
-
-CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi,
+                                            float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     int n = node->sample_count;
@@ -1936,7 +1936,7 @@ CvDTreeSplit* CvDTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeS
     int* lc = (int*)cvStackAlloc(m*sizeof(lc[0]));
     int* rc = (int*)cvStackAlloc(m*sizeof(rc[0]));
     int i, best_i = -1;
-    double lsum2 = 0, rsum2 = 0, best_val = 0;
+    double lsum2 = 0, rsum2 = 0, best_val = init_quality;
     const double* priors = data->have_priors ? data->priors_mult->data.db : 0;
 
     // init arrays of class instance counters on both sides of the split
@@ -2124,7 +2124,7 @@ void CvDTree::cluster_categories( const int* vectors, int n, int m,
 }
 
 
-CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
@@ -2146,7 +2146,7 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeS
     int** int_ptr = 0;
     int i, j, k, idx;
     double L = 0, R = 0;
-    double best_val = 0;
+    double best_val = init_quality;
     int prevcode = 0, best_subset = -1, subset_i, subset_n, subtract = 0;
     const double* priors = data->priors_mult->data.db;
 
@@ -2302,7 +2302,7 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeS
 }
 
 
-CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     int n = node->sample_count;
@@ -2318,7 +2318,7 @@ CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSpl
     data->get_ord_responses( node, responses_buf, &responses );
 
     int i, best_i = -1;
-    double best_val = 0, lsum = 0, rsum = node->value*n;
+    double best_val = init_quality, lsum = 0, rsum = node->value*n;
     int L = 0, R = n1;
 
     // compensate for missing values
@@ -2357,7 +2357,7 @@ CvDTreeSplit* CvDTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSpl
     return split;
 }
 
-CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
@@ -2373,7 +2373,7 @@ CvDTreeSplit* CvDTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSpl
     int* counts = (int*)cvStackAlloc( (mi+1)*sizeof(counts[0]) ) + 1;
     double** sum_ptr = (double**)cvStackAlloc( (mi+1)*sizeof(sum_ptr[0]) );
     int i, L = 0, R = 0;
-    double best_val = 0, lsum = 0, rsum = 0;
+    double best_val = init_quality, lsum = 0, rsum = 0;
     int best_subset = -1, subset_i;
 
     for( i = -1; i < mi; i++ )

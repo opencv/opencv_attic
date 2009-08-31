@@ -249,7 +249,7 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
 
 
 CvDTreeSplit*
-CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
 
@@ -267,7 +267,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _spl
     const double* rcw0 = weights + n;
     double lcw[2] = {0,0}, rcw[2];
     int i, best_i = -1;
-    double best_val = 0;
+    double best_val = init_quality;
     int boost_type = ensemble->get_params().boost_type;
     int split_criteria = ensemble->get_params().split_criteria;
 
@@ -351,7 +351,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi, CvDTreeSplit* _spl
 static CV_IMPLEMENT_QSORT_EX( icvSortDblPtr, double*, CV_CMP_NUM_PTR, int )
 
 CvDTreeSplit*
-CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     int ci = data->get_var_type(vi);
     int n = node->sample_count;
@@ -368,7 +368,7 @@ CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _spl
     double** dbl_ptr = (double**)cvStackAlloc( mi*sizeof(dbl_ptr[0]) );
     int i, j, k, idx;
     double L = 0, R;
-    double best_val = 0;
+    double best_val = init_quality;
     int best_subset = -1, subset_i;
     int boost_type = ensemble->get_params().boost_type;
     int split_criteria = ensemble->get_params().split_criteria;
@@ -465,7 +465,7 @@ CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi, CvDTreeSplit* _spl
 
 
 CvDTreeSplit*
-CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const float epsilon = FLT_EPSILON*2;
     const double* weights = ensemble->get_subtree_weights()->data.db;
@@ -483,7 +483,7 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split
 
     int i, best_i = -1;
     double L = 0, R = weights[n];
-    double best_val = 0, lsum = 0, rsum = node->value*R;
+    double best_val = init_quality, lsum = 0, rsum = node->value*R;
     
     // compensate for missing values
     for( i = n1; i < n; i++ )
@@ -529,7 +529,7 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split
 
 
 CvDTreeSplit*
-CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split )
+CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi, float init_quality, CvDTreeSplit* _split )
 {
     const double* weights = ensemble->get_subtree_weights()->data.db;
     int ci = data->get_var_type(vi);
@@ -545,7 +545,7 @@ CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi, CvDTreeSplit* _split
     double* sum = (double*)cvStackAlloc( (mi+1)*sizeof(sum[0]) ) + 1;
     double* counts = (double*)cvStackAlloc( (mi+1)*sizeof(counts[0]) ) + 1;
     double** sum_ptr = (double**)cvStackAlloc( mi*sizeof(sum_ptr[0]) );
-    double L = 0, R = 0, best_val = 0, lsum = 0, rsum = 0;
+    double L = 0, R = 0, best_val = init_quality, lsum = 0, rsum = 0;
     int i, best_subset = -1, subset_i;
 
     for( i = -1; i < mi; i++ )

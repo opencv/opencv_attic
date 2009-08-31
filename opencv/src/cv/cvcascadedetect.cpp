@@ -62,7 +62,6 @@ public:
     double eps;
 };    
     
-    
 void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
 {
     if( groupThreshold <= 0 || rectList.empty() )
@@ -338,6 +337,7 @@ bool HaarEvaluator::setImage( const Mat &image, Size _origWinSize )
     }
     sum = Mat(rn, cn, CV_32S, sum0.data);
     sqsum = Mat(rn, cn, CV_32S, sqsum0.data);
+
     if( hasTiltedFeatures )
     {
         tilted = Mat(rn, cn, CV_32S, tilted0.data);
@@ -345,7 +345,6 @@ bool HaarEvaluator::setImage( const Mat &image, Size _origWinSize )
     }
     else
         integral(image, sum, sqsum);
-
     const int* sdata = (const int*)sum.data;
     const double* sqdata = (const double*)sqsum.data;
     size_t sumStep = sum.step/sizeof(sdata[0]);
@@ -653,6 +652,67 @@ inline int predictCategorical( CascadeClassifier& cascade, Ptr<FeatureEvaluator>
     return 1;
 }
 
+template<class FEval>
+inline int predictOrderedStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &_feval )
+{
+    int si, nstages = (int)cascade.stages.size();
+    int nodeOfs = 0, leafOfs = 0;
+    FEval& feval = (FEval&)*_feval;
+    float* cascadeLeaves = &cascade.leaves[0];
+    CascadeClassifier::DTreeNode* cascadeNodes = &cascade.nodes[0];
+    CascadeClassifier::DTree* cascadeWeaks = &cascade.classifiers[0];
+    CascadeClassifier::Stage* cascadeStages = &cascade.stages[0];
+    for( si = 0; si < nstages; si++ )
+    {
+        CascadeClassifier::Stage& stage = cascadeStages[si];
+        int wi, ntrees = stage.ntrees;
+        double sum = 0;
+        for( wi = 0; wi < ntrees; wi++, nodeOfs++, leafOfs+= 2 )
+        {
+            CascadeClassifier::DTreeNode& node = cascadeNodes[nodeOfs];
+            double val = feval(node.featureIdx);
+            sum += cascadeLeaves[ val < node.threshold ? leafOfs : leafOfs+1 ];
+        }
+        if( sum < stage.threshold )
+            return -si;            
+    }
+    return 1;
+}
+
+template<class FEval>
+inline int predictCategoricalStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &_feval )
+{
+    int si, nstages = (int)cascade.stages.size();
+    int nodeOfs = 0, leafOfs = 0;
+    FEval& feval = (FEval&)*_feval;
+    size_t subsetSize = (cascade.ncategories + 31)/32;
+    int* cascadeSubsets = &cascade.subsets[0];
+    float* cascadeLeaves = &cascade.leaves[0];
+    CascadeClassifier::DTreeNode* cascadeNodes = &cascade.nodes[0];
+    CascadeClassifier::DTree* cascadeWeaks = &cascade.classifiers[0];
+    CascadeClassifier::Stage* cascadeStages = &cascade.stages[0];
+
+    for( si = 0; si < nstages; si++ )
+    {
+        CascadeClassifier::Stage& stage = cascadeStages[si];
+        int wi, ntrees = stage.ntrees;
+        double sum = 0;
+
+        for( wi = 0; wi < ntrees; wi++ )
+        {
+            CascadeClassifier::DTreeNode& node = cascadeNodes[nodeOfs];
+            int c = feval(node.featureIdx);
+            const int* subset = &cascadeSubsets[nodeOfs*subsetSize];
+            sum += cascadeLeaves[ subset[c>>5] & (1 << (c & 31)) ? leafOfs : leafOfs+1];
+            nodeOfs++;
+            leafOfs += 2;
+        }
+        if( sum < stage.threshold )
+            return -si;            
+    }
+    return 1;
+}
+
 int CascadeClassifier::runAt( Ptr<FeatureEvaluator> &_feval, Point pt )
 {
     CV_Assert( oldCascade.empty() );
@@ -662,9 +722,12 @@ int CascadeClassifier::runAt( Ptr<FeatureEvaluator> &_feval, Point pt )
     assert(featureType == FeatureEvaluator::HAAR ||
            featureType == FeatureEvaluator::LBP);
     return !_feval->setWindow(pt) ? -1 :
-                featureType == FeatureEvaluator::HAAR ?
+                is_stump_based ? ( featureType == FeatureEvaluator::HAAR ?
+                    predictOrderedStump<HaarEvaluator>( *this, _feval ) :
+                    predictCategoricalStump<LBPEvaluator>( *this, _feval ) ) :
+                                 ( featureType == FeatureEvaluator::HAAR ?
                     predictOrdered<HaarEvaluator>( *this, _feval ) :
-                    predictCategorical<LBPEvaluator>( *this, _feval );
+                    predictCategorical<LBPEvaluator>( *this, _feval ) );
 }
 
     
@@ -786,7 +849,6 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
     }
     for( vector< vector<Rect> >::const_iterator it = rects.begin(); it != rects.end(); it++ )
         objects.insert( objects.end(), it->begin(), it->end() );
-        
     groupRectangles( objects, minNeighbors, 0.2 );
 }    
 
@@ -812,6 +874,8 @@ bool CascadeClassifier::read(const FileNode& root)
     origWinSize.height = (int)root[CC_HEIGHT];
     CV_Assert( origWinSize.height > 0 && origWinSize.width > 0 );
     
+    is_stump_based = (int)(root[CC_STAGE_PARAMS][CC_MAX_DEPTH]) == 1 ? true : false;
+
     // load feature params
     FileNode fn = root[CC_FEATURE_PARAMS];
     if( fn.empty() )

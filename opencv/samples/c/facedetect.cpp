@@ -22,6 +22,11 @@ String cascadeName =
 String nestedCascadeName =
 "../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
 
+const String dirname = "D:/Dimashova/argus/res";
+
+double timeSum;
+int mcount;
+
 int main( int argc, const char** argv )
 {
     CvCapture* capture = 0;
@@ -36,6 +41,9 @@ int main( int argc, const char** argv )
 
     CascadeClassifier cascade, nestedCascade;
     double scale = 1;
+
+    timeSum = 0;
+    mcount = 0;
 
     for( int i = 1; i < argc; i++ )
     {
@@ -71,8 +79,8 @@ int main( int argc, const char** argv )
         return -1;
     }
 
-    if( inputName.empty() || (isdigit(inputName.c_str()[0]) && inputName.c_str()[1] == '\0') )
-        capture = cvCaptureFromCAM( inputName.empty() ? 0 : inputName.c_str()[0] - '0' );
+    if( !inputName.size() || (isdigit(inputName.c_str()[0]) && inputName.c_str()[1] == '\0') )
+        capture = cvCaptureFromCAM( !inputName.size() ? 0 : inputName.c_str()[0] - '0' );
     else if( inputName.size() )
     {
         image = imread( inputName, 1 );
@@ -82,7 +90,7 @@ int main( int argc, const char** argv )
     else
         image = imread( "lena.jpg", 1 );
 
-    cvNamedWindow( "result", 1 );
+    //cvNamedWindow( "result", 1 );
 
     if( capture )
     {
@@ -143,7 +151,9 @@ _cleanup_:
         }
     }
 
-    cvDestroyWindow("result");
+    //cvDestroyWindow("result");
+
+    cout << "average time " << (float)timeSum/(float)mcount;
 
     return 0;
 }
@@ -152,18 +162,26 @@ void detectAndDraw( Mat& img,
                    CascadeClassifier& cascade, CascadeClassifier& nestedCascade,
                    double scale)
 {
+    static int imgIdx = 0;
     int i = 0;
     double t = 0;
+    char buf[200];
     vector<Rect> faces;
     const static Scalar colors[] =  { CV_RGB(0,0,255),
-                                      CV_RGB(0,128,255),
-                                      CV_RGB(0,255,255),
-                                      CV_RGB(0,255,0),
-                                      CV_RGB(255,128,0),
-                                      CV_RGB(255,255,0),
-                                      CV_RGB(255,0,0),
-                                      CV_RGB(255,0,255)} ;
+        CV_RGB(0,128,255),
+        CV_RGB(0,255,255),
+        CV_RGB(0,255,0),
+        CV_RGB(255,128,0),
+        CV_RGB(255,255,0),
+        CV_RGB(255,0,0),
+        CV_RGB(255,0,255)} ;
     Mat gray, smallImg( cvRound (img.rows/scale), cvRound(img.cols/scale), CV_8UC1 );
+
+    //sprintf( buf, "%s/%d.jpg", dirname.c_str(), ++imgIdx );
+    //printf( "%s\n", buf );
+    //printf("%d-%d\n", img.cols, img.rows );
+    //imwrite( buf, img );
+    //printf("OK!\n");
 
     cvtColor( img, gray, CV_BGR2GRAY );
     resize( gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR );
@@ -178,6 +196,8 @@ void detectAndDraw( Mat& img,
         ,
         Size(30, 30) );
     t = (double)cvGetTickCount() - t;
+    timeSum += t/((double)cvGetTickFrequency()*1000.);
+    mcount++;
     printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
     for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ )
     {
@@ -209,5 +229,8 @@ void detectAndDraw( Mat& img,
             circle( img, center, radius, color, 3, 8, 0 );
         }
     }  
-    cv::imshow( "result", img );    
+    sprintf( buf, "%s/%d.jpg", dirname.c_str(), ++imgIdx );
+    imwrite( buf, img );
+    //cv::imshow( "result", img );    
+    //cvShowImage( "result", img );
 }

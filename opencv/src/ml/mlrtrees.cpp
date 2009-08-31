@@ -146,16 +146,16 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                res = find_split_cat_class( node, vi, splits[threadIdx] );
+                res = find_split_cat_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
             else
-                res = find_split_ord_class( node, vi, splits[threadIdx] );
+                res = find_split_ord_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
         }
         else
         {
             if( ci >= 0 )
-                res = find_split_cat_reg( node, vi, splits[threadIdx] );
+                res = find_split_cat_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
             else
-                res = find_split_ord_reg( node, vi, splits[threadIdx] );
+                res = find_split_ord_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
         }
 
         if( res )
