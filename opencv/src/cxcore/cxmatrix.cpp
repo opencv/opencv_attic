@@ -794,7 +794,8 @@ static inline float distance(const float* a, const float* b, int n)
 k-means center initialization using the following algorithm:
 Arthur & Vassilvitskii (2007) k-means++: The Advantages of Careful Seeding
 */
-static void generateCentersSPP(const Mat& _data, Mat& _out_centers, int K, RNG& rng, int trials)
+static void generateCentersPP(const Mat& _data, Mat& _out_centers,
+                              int K, RNG& rng, int trials)
 {
     int i, j, k, dims = _data.cols, N = _data.rows;
     const float* data = _data.ptr<float>(0);
@@ -925,8 +926,8 @@ double kmeans( const Mat& data, int K, vector<int>& best_labels, TermCriteria cr
 
             if( iter == 0 && (a > 0 || !(flags & KMEANS_USE_INITIAL_LABELS)) )
             {
-                if( flags & KMEANS_CENTERS_SPP )
-                    generateCentersSPP(data, centers, K, *rng, SPP_TRIALS);
+                if( flags & KMEANS_PP_CENTERS )
+                    generateCentersPP(data, centers, K, *rng, SPP_TRIALS);
                 else
                 {
                     for( k = 0; k < K; k++ )

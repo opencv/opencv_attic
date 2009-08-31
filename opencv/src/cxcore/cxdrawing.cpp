@@ -133,6 +133,15 @@ bool clipLine( Size img_size, Point& pt1, Point& pt2 )
     return (c1 | c2) == 0;
 }
 
+bool clipLine( Rect img_rect, Point& pt1, Point& pt2 )
+{
+    Point tl = img_rect.tl();
+    pt1 -= tl; pt2 -= tl;
+    bool inside = clipLine(img_rect.size(), pt1, pt2);
+    pt1 += tl; pt2 += tl;
+    
+    return inside;
+}
 
 /* 
    Initializes line iterator.
@@ -1467,26 +1476,26 @@ ThickLine( Mat& img, Point p0, Point p1, const void* color,
         Point pt[4], dp = Point(0,0);
         double dx = (p0.x - p1.x)*INV_XY_ONE, dy = (p1.y - p0.y)*INV_XY_ONE;
         double r = dx * dx + dy * dy;
-        int i;
+        int i, oddThickness = thickness & 1;
         thickness <<= XY_SHIFT - 1;
 
         if( fabs(r) > DBL_EPSILON )
         {
-            r = thickness/std::sqrt(r);
+            r = (thickness + oddThickness*XY_ONE*0.5)/std::sqrt(r);
             dp.x = cvRound( dy * r );
             dp.y = cvRound( dx * r );
+
+            pt[0].x = p0.x + dp.x;
+            pt[0].y = p0.y + dp.y;
+            pt[1].x = p0.x - dp.x;
+            pt[1].y = p0.y - dp.y;
+            pt[2].x = p1.x - dp.x;
+            pt[2].y = p1.y - dp.y;
+            pt[3].x = p1.x + dp.x;
+            pt[3].y = p1.y + dp.y;
+
+            FillConvexPoly( img, pt, 4, color, line_type, XY_SHIFT );
         }
-
-        pt[0].x = p0.x + dp.x;
-        pt[0].y = p0.y + dp.y;
-        pt[1].x = p0.x - dp.x;
-        pt[1].y = p0.y - dp.y;
-        pt[2].x = p1.x - dp.x;
-        pt[2].y = p1.y - dp.y;
-        pt[3].x = p1.x + dp.x;
-        pt[3].y = p1.y + dp.y;
-
-        FillConvexPoly( img, pt, 4, color, line_type, XY_SHIFT );
 
         for( i = 0; i < 2; i++ )
         {
@@ -1497,7 +1506,7 @@ ThickLine( Mat& img, Point p0, Point p1, const void* color,
                     Point center;
                     center.x = (p0.x + (XY_ONE>>1)) >> XY_SHIFT;
                     center.y = (p0.y + (XY_ONE>>1)) >> XY_SHIFT;
-                    Circle( img, center, thickness >> XY_SHIFT, color, 1 ); 
+                    Circle( img, center, (thickness + (XY_ONE>>1)) >> XY_SHIFT, color, 1 ); 
                 }
                 else
                 {
@@ -1948,7 +1957,7 @@ Size getTextSize( const string& text, int fontFace, double fontScale, int thickn
 
     int base_line = (ascii[0] & 15);
     int cap_line = (ascii[0] >> 4) & 15;
-    size.height = cvRound((cap_line + base_line)*fontScale + thickness);
+    size.height = cvRound((cap_line + base_line)*fontScale + (thickness+1)/2);
 
     for( int i = 0; text[i] != '\0'; i++ )
     {
@@ -1966,7 +1975,7 @@ Size getTextSize( const string& text, int fontFace, double fontScale, int thickn
 
     size.width = cvRound(view_x + thickness);
     if( _base_line )
-        *_base_line = base_line;
+        *_base_line = cvRound(base_line*fontScale + thickness*0.5);
     return size;
 }
 

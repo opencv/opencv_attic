@@ -255,7 +255,7 @@ lib_cvaux_la_SOURCES = \
   cvaux/cvmat.cpp \
   cvaux/cvmorphcontours.cpp \
   cvaux/cvmorphing.cpp \
-  cvaux/cvocttree.cpp \
+  cvaux/cvoctree.cpp \
   cvaux/cvplanardetect.cpp \
   cvaux/cvprewarp.cpp \
   cvaux/cvscanlines.cpp \
