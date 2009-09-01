@@ -1034,7 +1034,9 @@ void LevMarqSparse::bundleAdjust( vector<Point3d>& points, //positions of points
 
     //fill point params
     Mat ptparams(num_points, 1, CV_64FC3, params.data + num_cameras*num_cam_param*params.step);
-    Mat(points).copyTo(ptparams);
+    Mat _points(points);
+    CV_Assert(_points.size() == ptparams.size() && _points.type() == ptparams.type());
+    _points.copyTo(ptparams);
 
     //convert visibility vectors to visibility matrix
     Mat vismat(num_points, num_cameras, CV_32S);
@@ -1071,9 +1073,10 @@ void LevMarqSparse::bundleAdjust( vector<Point3d>& points, //positions of points
                           TermCriteria(criteria), fjac_new, func_new, NULL );
     //extract results
     //fill point params
-    Mat final_pts(points);
-    Mat(num_points, 1, CV_64FC3,
-        levmar.P->data.db + num_cameras*num_cam_param *levmar.P->step).copyTo(final_pts);
+    Mat final_points(num_points, 1, CV_64FC3,
+        levmar.P->data.db + num_cameras*num_cam_param *levmar.P->step);
+    CV_Assert(_points.size() == final_points.size() && _points.type() == final_points.type());
+    final_points.copyTo(_points);
     
     //fill camera params
     for( int i = 0; i < num_cameras; i++ )
