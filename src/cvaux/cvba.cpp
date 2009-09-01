@@ -306,7 +306,7 @@ void LevMarqSparse::run( int num_points_, //number of points
     iters = 0; 
     criteria = criteria_init;
     
-    return;
+    optimize();
 }
 
 void LevMarqSparse::ask_for_proj()
@@ -1037,15 +1037,13 @@ void LevMarqSparse::bundleAdjust( vector<Point3d>& points, //positions of points
     Mat(points).copyTo(ptparams);
 
     //convert visibility vectors to visibility matrix
-    Mat vismat_(num_cameras, num_points, CV_32S);
     Mat vismat(num_points, num_cameras, CV_32S);
     for( int i = 0; i < num_cameras; i++ )
     {
         //get row
-        Mat row = vismat_.row(i);
-        Mat(visibility[i]).copyTo( row );
+        Mat col = vismat.col(i);
+        Mat(visibility[i]).copyTo( col );
     }
-    transpose(vismat_, vismat);
 
     int num_proj = countNonZero(vismat); //total number of points projections
 
