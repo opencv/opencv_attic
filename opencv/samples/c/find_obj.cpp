@@ -166,9 +166,9 @@ locatePlanarObject( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors
     int i, n;
 
 #ifdef USE_FLANN
-    findPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
-#else
     flannFindPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
+#else
+    findPairs( objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, ptpairs );
 #endif
 
     n = ptpairs.size()/2;
