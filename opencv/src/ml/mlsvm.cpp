@@ -1752,6 +1752,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
             CV_SWAP( responses->data.i[i1], responses->data.i[i2], y );
     }
 
+    int* cls_lbls = class_labels->data.i;
     C = C_grid.min_val;
     do
     {
@@ -1814,7 +1815,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
                         s.data.fl = *test_samples_ptr;
                         resp = predict( &s );
                         error += is_regression ? powf( resp - *(float*)true_resp, 2 )
-                            : ((int)resp != *(int*)true_resp);
+                            : ((int)resp != cls_lbls[*(int*)true_resp]);
                     }
                 }
                 if( min_error > error )
