@@ -40,7 +40,6 @@
 //
 //M*/
 
-#include <iostream>
 #include "_cxcore.h"
 
 #ifdef HAVE_VECLIB
@@ -913,13 +912,11 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
     
     if( n <= 20 )
     {
-        std::cout << "jacobifoo" << std::endl;
         if( type == CV_32F )
             return jacobi<float>(src, evals, evects, computeEvects, FLT_EPSILON);
         else
             return jacobi<double>(src, evals, evects, computeEvects, DBL_EPSILON);
     }
-    std::cout << "non-jacobifoo" << std::endl;
     
     bool result;
     integer m=0, lda, ldv=n, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
@@ -971,9 +968,6 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
             &il, &iu, &abstol, &m, s, (float*)evects.data,
             &ldv, isupport, (float*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
-
-        //for( i = 0; i < n/2; i++ )
-        //    CV_SWAP(s[i], s[n-i-1], work1);
     }
     else
     {
@@ -1003,16 +997,12 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
             &il, &iu, &abstol, &m, s, (double*)evects.data,
             &ldv, isupport, (double*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
-
-        //for( i = 0; i < n/2; i++ )
-        //    CV_SWAP(s[i], s[n-i-1], work1);
     }
 
     if( copy_evals )
         Mat(evals.rows, evals.cols, type, work + lwork*elem_size).copyTo(evals);
 
     if( il < n + 1 && n > 20 ) {
-        std::cout << "meh messed up: " << il << " - " << iu << std::endl;
         int nVV = iu - il + 1;
         if( computeEvects ) {
             Mat flipme = evects.rowRange(0, nVV);
