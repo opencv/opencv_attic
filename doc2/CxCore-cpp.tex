@@ -2576,7 +2576,7 @@ X = (1/(M \cdot N)) \cdot X'\]
 
 In the case of real (single-channel) data, the packed format called \emph{CCS} (complex-conjugate-symmetrical) that was borrowed from IPL and used to represent the result of a forward Fourier transform or input for an inverse Fourier transform:
 
-\[\begin{array}
+\[\begin{array}{l}
 Re Y_{0,0} \quad     Re Y_{0,1}  \quad  Im Y_{0,1}  \quad  Re Y_{0,2}     \quad Im Y_{0,2} \quad ...  \quad Re Y_{0,N/2-1} \quad  Im Y_{0,N/2-1} \quad Re Y_{0,N/2} \\
 
 Re Y_{1,0}  \quad    Re Y_{1,1}  \quad  Im Y_{1,1}   \quad Re Y_{1,2}   \quad  Im Y_{1,2} \quad ... \quad Re Y_{1,N/2-1}  \quad Im Y_{1,N/2-1} \quad Re Y_{1,N/2} \\
@@ -2722,13 +2722,18 @@ See also: \cross{SVD}, \cross{trace}, \cross{invert}, \cross{solve}, \cross{Matr
 Computes eigenvalues and eigenvectors of a symmetric matrix.
 
 \begin{lstlisting}
-bool eigen(const Mat& src, Mat& eigenvalues);
-bool eigen(const Mat& src, Mat& eigenvalues, Mat& eigenvectors);
+bool eigen(const Mat& src, Mat& eigenvalues, int lowindex, int highindex);
+bool eigen(const Mat& src, Mat& eigenvalues, Mat& eigenvectors, int lowindex,
+int highindex);
 \end{lstlisting}
 \begin{description}
 \cvarg{src}{The input matrix; must have \texttt{CV\_32FC1} or \texttt{CV\_64FC1} type, square size and be symmetric: $src^T=src$}
 \cvarg{eigenvalues}{The output vector of eigenvalues of the same type as \texttt{src}; The eigenvalues are stored in the descending order.}
 \cvarg{eigenvectors}{The output matrix of eigenvectors; It will have the same size and the same type as \texttt{src}; The eigenvectors are stored as subsequent matrix rows, in the same order as the corresponding eigenvalues}
+\cvarg{lowindex}{Optional index of largest eigenvalue/-vector to calculate.
+(See below.)}
+\cvarg{highindex}{Optional index of smallest eigenvalue/-vector to calculate.
+(See below.)}
 \end{description}
 
 The functions \texttt{eigen} compute just eigenvalues, or eigenvalues and eigenvectors of symmetric matrix \texttt{src}:
@@ -2736,6 +2741,14 @@ The functions \texttt{eigen} compute just eigenvalues, or eigenvalues and eigenv
 \begin{lstlisting}
 src*eigenvectors(i,:)' = eigenvalues(i)*eigenvectors(i,:)' (in MATLAB notation)
 \end{lstlisting}
+
+If either low- or highindex is supplied the other is required, too.
+Indexing is 1-based. Example: To calculate the largest eigenvector/-value set
+lowindex = highindex = 1.
+For legacy reasons this function always returns a square matrix the same size
+as the source matrix with eigenvectors and a vector the length of the source
+matrix with eigenvalues. The selected eigenvectors/-values are always in the
+first highindex - lowindex + 1 rows.
 
 See also: \cross{SVD}, \cross{completeSymm}, \cross{PCA}
 
@@ -4618,7 +4631,7 @@ after every attempt; the best (minimum) value is chosen and the
 corresponding labels and the compactness value are returned by the function.
 Basically, the user can use only the core of the function, set the number of
 attempts to 1, initialize labels each time using some custom algorithm and pass them with
-\newline (\texttt{flags}=\texttt{KMEAN\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering}
+\newline (\texttt{flags}=\texttt{KMEAN\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering.
 
 \cvfunc{partition}\label{partition}
 Splits an element set into equivalency classes.
