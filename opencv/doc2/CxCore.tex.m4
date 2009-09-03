@@ -3669,15 +3669,21 @@ Computes eigenvalues and eigenvectors of a symmetric matrix.
 
 \cvexp{
 
-void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double eps=0 );
+void cvEigenVV( \par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double eps=0,
+\par int lowindex = 0, \par int highindex = 0 );
 
-}{CPP}{EigenVV(mat,evects,evals,eps)-> None}
+}{CPP}{EigenVV(mat,evects,evals,eps,lowindex,highindex)-> None}
 
 \begin{description}
 \cvarg{mat}{The input symmetric square matrix, modified during the processing}
 \cvarg{evects}{The output matrix of eigenvectors, stored as subsequent rows}
 \cvarg{evals}{The output vector of eigenvalues, stored in the descending order (order of eigenvalues and eigenvectors is syncronized, of course)}
-\cvarg{eps}{Accuracy of diagonalization. Typically, \texttt{DBL\_EPSILON} (about $ 10^{-15} $) works well}
+\cvarg{eps}{Accuracy of diagonalization. Typically, \texttt{DBL\_EPSILON} (about $ 10^{-15} $) works well.
+THIS PARAMETER IS CURRENTLY IGNORED.}
+\cvarg{lowindex}{Optional index of largest eigenvalue/-vector to calculate.
+(See below.)}
+\cvarg{highindex}{Optional index of smallest eigenvalue/-vector to calculate.
+(See below.)}
 \end{description}
 
 
@@ -3686,6 +3692,14 @@ The function \texttt{cvEigenVV} computes the eigenvalues and eigenvectors of mat
 \begin{lstlisting}
 mat*evects(i,:)' = evals(i)*evects(i,:)' (in MATLAB notation)
 \end{lstlisting}
+
+If either low- or highindex is supplied the other is required, too.
+Indexing is 1-based. Example: To calculate the largest eigenvector/-value set
+lowindex = highindex = 1.
+For legacy reasons this function always returns a square matrix the same size
+as the source matrix with eigenvectors and a vector the length of the source
+matrix with eigenvalues. The selected eigenvectors/-values are always in the
+first highindex - lowindex + 1 rows.
 
 The contents of matrix \texttt{A} is destroyed by the function.
 

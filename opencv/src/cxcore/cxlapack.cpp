@@ -40,6 +40,7 @@
 //
 //M*/
 
+#include <iostream>
 #include "_cxcore.h"
 
 #ifdef HAVE_VECLIB
@@ -889,29 +890,45 @@ template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool compu
 }
     
     
-static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
+static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
+                   int lowindex = 0, int highindex = 0 )
 {
     int type = src.type();
     integer n = src.rows;
+
+    // If a range is selected both limits are needed.
+    CV_Assert( ( lowindex > 0 && highindex > 0 ) ||
+               ( lowindex == 0 && highindex == 0 ) );
+
+    // lapack sorts from lowest to highest so we flip
+    integer il = n + 1 - highindex;
+    integer iu = n + 1 - lowindex;
     
-    CV_Assert( src.rows == src.cols && (type == CV_32F || type == CV_64F));
+    CV_Assert( src.rows == src.cols );
+    CV_Assert (type == CV_32F || type == CV_64F);
+
     // allow for 1xn eigenvalue matrix too
     if( !(evals.rows == 1 && evals.cols == n && evals.type() == type) )
         evals.create(n, 1, type);
     
     if( n <= 20 )
     {
+        std::cout << "jacobifoo" << std::endl;
         if( type == CV_32F )
             return jacobi<float>(src, evals, evects, computeEvects, FLT_EPSILON);
         else
             return jacobi<double>(src, evals, evects, computeEvects, DBL_EPSILON);
     }
+    std::cout << "non-jacobifoo" << std::endl;
     
     bool result;
-    integer i, m=0, lda, ldv=n, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
+    integer m=0, lda, ldv=n, lwork=-1, iwork1=0, liwork=-1, idummy=0, info=0;
     integer *isupport, *iwork;
     char job[] = { computeEvects ? 'V' : 'N', '\0' };
-    char A[] = {'A', '\0'}, L[] = {'L', '\0'};
+    char range[2] = "I";
+    range[0] = (il < n + 1) ? 'I' : 'A';
+
+    char L[] = {'L', '\0'};
     uchar* work;
 
     AutoBuffer<uchar> buf;
@@ -931,7 +948,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
     {
         float work1 = 0, dummy = 0, abstol = 0, *s;
 
-        ssyevr_(job, A, L, &n, (float*)src.data, &lda, &dummy, &dummy, &idummy, &idummy,
+        ssyevr_(job, range, L, &n, (float*)src.data, &lda, &dummy, &dummy, &il, &iu,
             &abstol, &m, (float*)evals.data, (float*)evects.data, &ldv,
             &idummy, &work1, &lwork, &iwork1, &liwork, &info );
         assert( info == 0 );
@@ -950,19 +967,19 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
         iwork = (integer*)cvAlignPtr(work + (lwork + (copy_evals ? n : 0))*elem_size, sizeof(integer));
         isupport = iwork + liwork;
 
-        ssyevr_(job, A, L, &n, (float*)src.data, &lda, &dummy, &dummy,
-            &idummy, &idummy, &abstol, &m, s, (float*)evects.data,
+        ssyevr_(job, range, L, &n, (float*)src.data, &lda, &dummy, &dummy,
+            &il, &iu, &abstol, &m, s, (float*)evects.data,
             &ldv, isupport, (float*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
 
-        for( i = 0; i < n/2; i++ )
-            CV_SWAP(s[i], s[n-i-1], work1);
+        //for( i = 0; i < n/2; i++ )
+        //    CV_SWAP(s[i], s[n-i-1], work1);
     }
     else
     {
         double work1 = 0, dummy = 0, abstol = 0, *s;
 
-        dsyevr_(job, A, L, &n, (double*)src.data, &lda, &dummy, &dummy, &idummy, &idummy,
+        dsyevr_(job, range, L, &n, (double*)src.data, &lda, &dummy, &dummy, &il, &iu,
             &abstol, &m, (double*)evals.data, (double*)evects.data, &ldv,
             &idummy, &work1, &lwork, &iwork1, &liwork, &info );
         assert( info == 0 );
@@ -982,34 +999,46 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects )
         iwork = (integer*)cvAlignPtr(work + (lwork + (copy_evals ? n : 0))*elem_size, sizeof(integer));
         isupport = iwork + liwork;
 
-        dsyevr_(job, A, L, &n, (double*)src.data, &lda, &dummy, &dummy,
-            &idummy, &idummy, &abstol, &m, s, (double*)evects.data,
+        dsyevr_(job, range, L, &n, (double*)src.data, &lda, &dummy, &dummy,
+            &il, &iu, &abstol, &m, s, (double*)evects.data,
             &ldv, isupport, (double*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
 
-        for( i = 0; i < n/2; i++ )
-            CV_SWAP(s[i], s[n-i-1], work1);
+        //for( i = 0; i < n/2; i++ )
+        //    CV_SWAP(s[i], s[n-i-1], work1);
     }
 
     if( copy_evals )
         Mat(evals.rows, evals.cols, type, work + lwork*elem_size).copyTo(evals);
 
-    if( computeEvects )
-        flip(evects, evects, 0);
+    if( il < n + 1 && n > 20 ) {
+        std::cout << "meh messed up: " << il << " - " << iu << std::endl;
+        int nVV = iu - il + 1;
+        if( computeEvects ) {
+            Mat flipme = evects.rowRange(0, nVV);
+            flip(flipme, flipme, 0);
+            flipme = evals.rowRange(0, nVV);
+            flip(flipme, flipme, 0);
+        }
+    } else {
+        flip(evals, evals, 0);
+        if( computeEvects )
+            flip(evects, evects, 0);
+    }
 
     return result;
 }
 
-    
-bool eigen( const Mat& src, Mat& evals )
+bool eigen( const Mat& src, Mat& evals, int lowindex, int highindex )
 {
     Mat evects;
-    return eigen(src, evals, evects, false);
+    return eigen(src, evals, evects, false, lowindex, highindex);
 }
 
-bool eigen( const Mat& src, Mat& evals, Mat& evects )
+bool eigen( const Mat& src, Mat& evals, Mat& evects, int lowindex,
+            int highindex )
 {
-    return eigen(src, evals, evects, true);
+    return eigen(src, evals, evects, true, lowindex, highindex);
 }
 
 
@@ -1281,16 +1310,17 @@ cvSolve( const CvArr* Aarr, const CvArr* barr, CvArr* xarr, int method )
 
 
 CV_IMPL void
-cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double )
+cvEigenVV( CvArr* srcarr, CvArr* evectsarr, CvArr* evalsarr, double,
+           int lowindex, int highindex)
 {
     cv::Mat src = cv::cvarrToMat(srcarr), evals = cv::cvarrToMat(evalsarr);
     if( evectsarr )
     {
         cv::Mat evects = cv::cvarrToMat(evectsarr);
-        eigen(src, evals, evects);
+        eigen(src, evals, evects, lowindex, highindex);
     }
     else
-        eigen(src, evals);
+        eigen(src, evals, lowindex, highindex);
 }
 
 
