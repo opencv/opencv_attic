@@ -424,6 +424,7 @@ public:
 
     void setLogger(std::ostream* log);
     void selectRandomSubset(float ratio);         
+    void setSubset(const vector<int>& subset);         
     void compute();
 
     void match(const SpinImageModel& scene, vector< vector<Vec2i> >& result);    
@@ -436,6 +437,7 @@ public:
     const Point3f& getSpinNormal(size_t index) const { return mesh.normals[subset[index]]; }
 
     const Mesh3D& getMesh() const { return mesh; }
+    Mesh3D& getMesh() { return mesh; }
 
     /* static utility functions */
     static bool spinCorrelation(const Mat& spin1, const Mat& spin2, float lambda, float& result);

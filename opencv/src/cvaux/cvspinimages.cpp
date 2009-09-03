@@ -803,6 +803,11 @@ void cv::SpinImageModel::selectRandomSubset(float ratio)
     }
 }
 
+void cv::SpinImageModel::setSubset(const vector<int>& ss)
+{
+    subset = ss;
+}
+
 void cv::SpinImageModel::repackSpinImages(const vector<uchar>& mask, Mat& spinImages, bool reAlloc) const
 {    
     if (reAlloc)
