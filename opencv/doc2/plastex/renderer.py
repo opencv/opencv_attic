@@ -218,6 +218,11 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_verbatim(self, node):
     return u"\n\n::\n\n    " + unicode(node.source.replace('\n', '\n    ')) + "\n\n"
 
+  def do_index(self, node):
+    return u""
+    # No idea why this does not work... JCB
+    return u"\n\n.. index:: (%s)\n\n" % node.attributes['entry']
+
   def do_label(self, node):
     return u""
 

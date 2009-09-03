@@ -2559,6 +2559,8 @@ The function \texttt{cvInpaint} reconstructs the selected image area from the pi
 
 \cvfunc{CvHistogram}\label{CvHistogram}
 
+\index{histogram}
+
 Multi-dimensional histogram.
 
 \begin{lstlisting}
@@ -3426,7 +3428,7 @@ typedef struct CvBox2D
     CvPoint2D32f center;  /* center of the box */
     CvSize2D32f  size;    /* box width and length */
     float angle;          /* angle between the horizontal axis
-                             and the first side (i.e. length) in radians */
+                             and the first side (i.e. length) in degrees */
 }
 CvBox2D;
 \end{lstlisting}
@@ -5802,7 +5804,7 @@ Computes an undistortion map.
 
 \cvexp{
 void cvInitUndistortMap( \par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvArr* mapx,\par CvArr* mapy );
-}{CPP}{InitUndistoryMap(camera\_matrix,distortion\_coeffs,mapx,mapy)-> None}
+}{CPP}{InitUndistortMap(camera\_matrix,distortion\_coeffs,mapx,mapy)-> None}
 
 \begin{description}
 \cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
@@ -6079,7 +6081,10 @@ void cvCalcImageHomography( \par float* line,\par CvPoint3D32f* center,\par floa
 \cvarg{homography}{output homography matrix (3x3)}
 \end{description}
 
-The function \texttt{cvCalcImageHomography} calculates the homography matrix for the initial image transformation from image plane to the plane, defined by a 3D oblong object line (See \_\_Figure 6-10\_\_ in the OpenCV Guide 3D Reconstruction Chapter).
+The function \texttt{cvCalcImageHomography} calculates the homography
+matrix for the initial image transformation from image plane to the
+plane, defined by a 3D oblong object line (See \_\_Figure 6-10\_\_
+in the OpenCV Guide 3D Reconstruction Chapter).
 
 
 \subsection{Epipolar Geometry}

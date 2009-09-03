@@ -2108,7 +2108,7 @@ void cvMixChannels( const CvArr** src, int src\_count, \par
                     CvArr** dst, int dst\_count, \par
                     const int* from\_to, int pair\_count );
 
-}{CPP}{MixChannels(src, dst, from\_to)-> None}
+}{CPP}{MixChannels(src, dst, from\_to) -> None}
 
 \begin{description}
 \cvarg{src}{Input arrays}
@@ -2132,10 +2132,10 @@ and some forms of \cross{CvtColor}. It can be used to change the order of the
 planes, add/remove alpha channel, extract or insert a single plane or
 multiple planes etc.
 
-ONLY_PYTHON(`
 As an example, this code splits a 4-channel RGBA image into a 3-channel
-BGR (i.e. with R\&B swapped) and separate alpha channel image:
+BGR (i.e. with R and B swapped) and separate alpha channel image:
 
+ONLY_PYTHON(`
 \begin{lstlisting}
         rgba = cv.CreateMat(100, 100, cv.CV_8UC4)
         bgr =  cv.CreateMat(100, 100, cv.CV_8UC3)
@@ -2151,8 +2151,6 @@ BGR (i.e. with R\&B swapped) and separate alpha channel image:
 ')
 
 ONLY_C(`
-As an example, this code splits a 4-channel RGBA image into a 3-channel
-BGR (i.e. with R\&B swapped) and separate alpha channel image:
 
 \begin{lstlisting}
     CvMat* rgba = cvCreateMat( 100, 100, CV_8UC4 );
