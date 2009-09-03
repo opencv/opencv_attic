@@ -784,8 +784,9 @@ CVAPI(CvScalar) cvTrace( const CvArr* mat );
 
 /* Finds eigen values and vectors of a symmetric matrix */
 CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
-                        double eps CV_DEFAULT(0), int lowindex = 0,
-                        int highindex = 0);
+                        double eps CV_DEFAULT(0),
+                        int lowindex CV_DEFAULT(-1),
+                        int highindex CV_DEFAULT(-1));
 
 ///* Finds selected eigen values and vectors of a symmetric matrix */
 //CVAPI(void)  cvSelectedEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,

@@ -890,18 +890,18 @@ template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool compu
     
     
 static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
-                   int lowindex = 0, int highindex = 0 )
+                   int lowindex, int highindex )
 {
     int type = src.type();
     integer n = src.rows;
 
     // If a range is selected both limits are needed.
-    CV_Assert( ( lowindex > 0 && highindex > 0 ) ||
-               ( lowindex == 0 && highindex == 0 ) );
+    CV_Assert( ( lowindex >= 0 && highindex >= 0 ) ||
+               ( lowindex < 0 && highindex < 0 ) );
 
     // lapack sorts from lowest to highest so we flip
-    integer il = n + 1 - highindex;
-    integer iu = n + 1 - lowindex;
+    integer il = n - highindex;
+    integer iu = n - lowindex;
     
     CV_Assert( src.rows == src.cols );
     CV_Assert (type == CV_32F || type == CV_64F);
