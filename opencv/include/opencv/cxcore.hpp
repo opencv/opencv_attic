@@ -1044,10 +1044,10 @@ CV_EXPORTS void sort(const Mat& a, Mat& b, int flags);
 CV_EXPORTS void sortIdx(const Mat& a, Mat& b, int flags);
 CV_EXPORTS void solveCubic(const Mat& coeffs, Mat& roots);
 CV_EXPORTS void solvePoly(const Mat& coeffs, Mat& roots, int maxIters=20, int fig=100);
-CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, int lowindex = 0,
-                      int highindex = 0);
+CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, int lowindex=-1,
+                      int highindex=-1);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, Mat& eigenvectors,
-                      int lowindex = 0, int highindex = 0);
+                      int lowindex=-1, int highindex=-1);
 //CV_EXPORTS bool selectedeigen(const Mat& a, Mat& eigenvalues, int lowindex,
 //                              int highindex);
 //CV_EXPORTS bool selectedeigen(const Mat& a, Mat& eigenvalues,
