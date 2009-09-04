@@ -2557,9 +2557,7 @@ The function \texttt{cvInpaint} reconstructs the selected image area from the pi
 
 \subsection{Histograms}
 
-\cvfunc{CvHistogram}\label{CvHistogram}
-
-\index{histogram}
+\cvstruct{CvHistogram}\label{CvHistogram}
 
 Multi-dimensional histogram.
 
@@ -2568,7 +2566,7 @@ typedef struct CvHistogram
 {
     int     type;
     CvArr*  bins;
-    float   thresh[CV\_MAX\_DIM][2]; /* for uniform histograms */
+    float   thresh[CV_MAX_DIM][2]; /* for uniform histograms */
     float** thresh2; /* for non-uniform histograms */
     CvMatND mat; /* embedded matrix header for array histograms */
 }
@@ -2838,13 +2836,13 @@ H'_k(I) = \frac{H_k(I) - 1}{N \cdot \sum_J H_k(J)}
 where N is the number of histogram bins.
 
 \item[Chi-Square (method=CV\_COMP\_CHISQR)]
-\[ d(H_1,H_2) = \sum_I \frac{H_1(I)-H_2(I)}{H_1(I)+H_2(I)} \]
+\[ d(H_1,H_2) = \sum_I \frac{(H_1(I)-H_2(I))^2}{H_1(I)+H_2(I)} \]
 
 \item[Intersection (method=CV\_COMP\_INTERSECT)]
 \[ d(H_1,H_2) = \sum_I \min (H_1(I), H_2(I)) \]
 
 \item[Bhattacharyya distance (method=CV\_COMP\_BHATTACHARYYA)]
-\[ d(H_1,H_2) = \sqrt{1 - \sum_I \sqrt{H_1(I) \cdot H_2(I)}} \]
+\[ d(H_1,H_2) = \sqrt{1 - \sum_I \frac{\sqrt{H_1(I) \cdot H_2(I)}}{ \sqrt { \sum_I H_1(I) \cdot \sum_I H_2(I) }}} \]
 
 \end{description}
 
