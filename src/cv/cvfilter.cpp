@@ -219,28 +219,29 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
         srcRow.resize(esz*(maxWidth + ksize.width - 1));
         if( columnBorderType == BORDER_CONSTANT )
         {
-            constBorderRow.resize(getElemSize(bufType)*maxWidth);
-            uchar* dst;
+            constBorderRow.resize(getElemSize(bufType)*(maxWidth+VEC_ALIGN));
+            uchar *dst = alignPtr(&constBorderRow[0], VEC_ALIGN), *tdst;
             int n = (int)constBorderValue.size()*esz, N;
             if( isSeparable() )
             {
-                dst = &srcRow[0];
+                tdst = &srcRow[0];
                 N = (maxWidth + ksize.width - 1)*esz;
             }
             else
             {
-                dst = &constBorderRow[0];
+                tdst = dst;
                 N = maxWidth*esz;
             }
             
             for( i = 0; i < N; i += n )
             {
                 n = std::min( n, N - i );
-                memcpy( dst + i, constVal, n );
+                for(j = 0; j < n; j++)
+                    tdst[i+j] = constVal[j];
             }
 
             if( isSeparable() )
-                (*rowFilter)(&srcRow[0] + anchor.x*esz, &constBorderRow[0], maxWidth, cn);
+                (*rowFilter)(&srcRow[0] + anchor.x*esz, dst, maxWidth, cn);
         }
         
         int maxBufStep = bufElemSize*(int)alignSize(maxWidth +
@@ -408,7 +409,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
             int srcY = borderInterpolate(dstY + dy + i + roi.y - ay,
                             wholeSize.height, columnBorderType);
             if( srcY < 0 ) // can happen only with constant border type
-                brows[i] = &constBorderRow[0];
+                brows[i] = alignPtr(&constBorderRow[0], VEC_ALIGN);
             else
             {
                 CV_Assert( srcY >= startY );
