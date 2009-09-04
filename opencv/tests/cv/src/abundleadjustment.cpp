@@ -1528,4 +1528,4 @@ _exit_:
         ts->set_failed_test_info( code );
 }
 
-CV_BundleAdjustmentTest bundleadjustment_test;
+//CV_BundleAdjustmentTest bundleadjustment_test;
