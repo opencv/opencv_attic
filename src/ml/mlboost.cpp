@@ -1974,6 +1974,7 @@ CvBoost::read( CvFileStorage* fs, CvFileNode* node )
         CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
         cvSeqPush( weak, &tree );
     }
+    get_active_vars();
 
     __END__;
 }

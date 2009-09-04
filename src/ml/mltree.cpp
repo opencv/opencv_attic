@@ -155,7 +155,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     char err[100];
     const int *sidx = 0, *vidx = 0;
     
-    
     if( _update_data && data_root )
     {
         data = new CvDTreeTrainData( _train_data, _tflag, _responses, _var_idx,
@@ -434,7 +433,6 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
             }
 
             c_count = num_valid > 0;
-
             if (is_buf_16u)
             {
                 icvSortPairs( pair16u32s_ptr, sample_count, 0 );
@@ -1685,7 +1683,6 @@ void CvDTree::try_split_node( CvDTreeNode* node )
         // TODO: check the split quality ...
         node->split = best_split;
     }
-
     if( !can_split || !best_split )
     {
         data->free_node_data(node);
@@ -1693,7 +1690,6 @@ void CvDTree::try_split_node( CvDTreeNode* node )
     }
 
     quality_scale = calc_node_dir( node );
-
     if( data->params.use_surrogates )
     {
         // find all the surrogate splits
@@ -1725,7 +1721,6 @@ void CvDTree::try_split_node( CvDTreeNode* node )
             }
         }
     }
-
     split_node_data( node );
     try_split_node( node->left );
     try_split_node( node->right );
@@ -1804,7 +1799,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
         int* sorted_buf = data->get_pred_int_buf();
         const int* sorted = 0;
         data->get_ord_var_data( node, vi, val_buf, sorted_buf, &val, &sorted);
-
+        
         assert( 0 <= split_point && split_point < n1-1 );
 
         if( !data->have_priors )
@@ -1847,7 +1842,6 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
                 dir[sorted[i]] = (char)0;
         }
     }
-
     node->maxlr = MAX( L, R );
     return node->split->quality/(L + R);
 }
@@ -1855,7 +1849,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
 CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
 {
     int vi;
-    CvDTreeSplit *bestSplit;
+    CvDTreeSplit *bestSplit = 0;
     int maxNumThreads = 1;
 #ifdef _OPENMP
     maxNumThreads = cv::getNumThreads();
@@ -1868,6 +1862,7 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
         bestSplits[i] = data->new_split_cat( 0, -1.0f );
     }
 
+    bool can_split = false;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
 #endif
@@ -1896,15 +1891,19 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
 
         if( res )
         {
+            can_split = true;
             if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
                 CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
         }
     }
-    bestSplit = bestSplits[0];
-    for(int i = 1; i < maxNumThreads; i++)
+    if ( can_split )
     {
-        if( bestSplit->quality < bestSplits[i]->quality )
-            bestSplit = bestSplits[i];
+        bestSplit = bestSplits[0];
+        for(int i = 1; i < maxNumThreads; i++)
+        {
+            if( bestSplit->quality < bestSplits[i]->quality )
+                bestSplit = bestSplits[i];
+        }
     }
     for(int i = 0; i < maxNumThreads; i++)
     {
