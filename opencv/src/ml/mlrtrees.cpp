@@ -131,6 +131,7 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         bestSplits[i] = data->new_split_cat( 0, -1.0f );
     }
 
+    bool can_split = false;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
 #endif
@@ -160,16 +161,19 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 
         if( res )
         {
+            can_split = true;
             if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
                 CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
         }
     }
-
-    best_split = bestSplits[0];
-    for(int i = 1; i < maxNumThreads; i++)
+    if ( can_split )
     {
-        if( best_split->quality < bestSplits[i]->quality )
-            best_split = bestSplits[i];
+        best_split = bestSplits[0];
+        for(int i = 1; i < maxNumThreads; i++)
+        {
+            if( best_split->quality < bestSplits[i]->quality )
+                best_split = bestSplits[i];
+        }
     }
     for(int i = 0; i < maxNumThreads; i++)
     {
@@ -177,7 +181,6 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
         if( bestSplits[i] != best_split )
             cvSetRemoveByPtr( data->split_heap, bestSplits[i] );
     }
-
     return best_split;
 }
 
@@ -395,7 +398,6 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
         }
     }
 
-   
     trees = (CvForestTree**)cvAlloc( sizeof(trees[0])*max_ntrees );
     memset( trees, 0, sizeof(trees[0])*max_ntrees );
 
