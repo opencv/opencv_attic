@@ -2292,7 +2292,7 @@ dst(I)=src1(I)+src2(I) if mask(I)!=0
 \end{lstlisting}
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size).
-
+For types that have limited range this operation is saturating.
 
 \cvfunc{AddS}\label{AddS}
 
@@ -2312,7 +2312,8 @@ void cvAddS( const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NUL
 \end{description}
 
 
-The function \texttt{cvAddS} adds a scalar \texttt{value} to every element in the source array \texttt{src1} and stores the result in \texttt{dst}
+The function \texttt{cvAddS} adds a scalar \texttt{value} to every element in the source array \texttt{src1} and stores the result in \texttt{dst}.
+For types that have limited range this operation is saturating.
 
 \begin{lstlisting}
 dst(I)=src(I)+value if mask(I)!=0
@@ -2349,6 +2350,7 @@ dst(I)=src1(I)*alpha+src2(I)*beta+gamma
 \end{lstlisting}
 
 All the arrays must have the same type and the same size (or ROI size).
+For types that have limited range this operation is saturating.
 
 
 \cvfunc{Sub}\label{Sub}
@@ -2376,6 +2378,7 @@ dst(I)=src1(I)-src2(I) if mask(I)!=0
 \end{lstlisting}
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size).
+For types that have limited range this operation is saturating.
 
 \cvfunc{SubS}\label{SubS}
 
@@ -2401,6 +2404,7 @@ dst(I)=src(I)-value if mask(I)!=0
 \end{lstlisting}
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size).
+For types that have limited range this operation is saturating.
 
 
 \cvfunc{SubRS}\label{SubRS}
@@ -2428,6 +2432,7 @@ dst(I)=value-src(I) if mask(I)!=0
 \end{lstlisting}
 
 All the arrays must have the same type, except the mask, and the same size (or ROI size).
+For types that have limited range this operation is saturating.
 
 \cvfunc{Mul}\label{Mul}
 
@@ -2454,6 +2459,7 @@ The function \texttt{cvMul} calculates the per-element product of two arrays:
 \]
 
 All the arrays must have the same type and the same size (or ROI size).
+For types that have limited range this operation is saturating.
 
 \cvfunc{Div}\label{Div}
 
