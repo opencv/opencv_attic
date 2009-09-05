@@ -221,7 +221,7 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
         {
             constBorderRow.resize(getElemSize(bufType)*(maxWidth+VEC_ALIGN));
             uchar *dst = alignPtr(&constBorderRow[0], VEC_ALIGN), *tdst;
-            int n = (int)constBorderValue.size()*esz, N;
+            int n = (int)constBorderValue.size(), N;
             if( isSeparable() )
             {
                 tdst = &srcRow[0];
