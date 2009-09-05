@@ -1953,12 +1953,12 @@ template<typename _Tp, class _LT> void sort( vector<_Tp>& vec, _LT LT=_LT() )
     }
     stack[48];
 
-    _Tp* arr = &vec[0];
     size_t total = vec.size();
 
     if( total <= 1 )
         return;
 
+    _Tp* arr = &vec[0];
     stack[0].lb = arr;
     stack[0].ub = arr + (total - 1);
 
