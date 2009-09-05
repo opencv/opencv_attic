@@ -297,6 +297,9 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_url(self, node):
     return unicode(node.attributes['loc'])
 
+  def do_enumerate(self, node):
+    return unicode(node)
+
   def do_itemize(self, node):
     return unicode(node)
 
