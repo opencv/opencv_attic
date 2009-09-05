@@ -5,4 +5,4 @@ make &&
   makeindex opencv &&
   pdflatex '\newcommand{\genc}{true}\newcommand{\genpy}{true}\input{opencv.tex}' > 1
   ) || exit 1
-
+gv -page=480 opencv.pdf
