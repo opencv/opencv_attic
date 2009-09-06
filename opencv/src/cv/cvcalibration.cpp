@@ -2972,7 +2972,7 @@ void cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
 
     size_t i, nimages = objectPoints.size();
     CV_Assert( nimages > 0 );
-    Mat objPt, imgPt, npoints, rvecM((int)nimages, 1, CV_32FC3), tvecM((int)nimages, 1, CV_32FC3);
+    Mat objPt, imgPt, npoints, rvecM((int)nimages, 3, CV_64FC1), tvecM((int)nimages, 3, CV_64FC1);
     collectCalibrationData( objectPoints, imagePoints, vector<vector<Point2f> >(),
                             objPt, imgPt, 0, npoints );
     CvMat _objPt = objPt, _imgPt = imgPt, _npoints = npoints;
