@@ -33,7 +33,7 @@ INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
-LINK_DIRECTORIES(@CMAKE_LIB_DIRS_CONFIGCMAKE@)
+LINK_DIRECTORIES("@CMAKE_LIB_DIRS_CONFIGCMAKE@")
 # Provide the libs directory anyway, it may be needed in some cases.
 SET(OpenCV_LIB_DIR "@CMAKE_LIB_DIRS_CONFIGCMAKE@")
 
