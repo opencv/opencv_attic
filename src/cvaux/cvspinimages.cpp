@@ -641,16 +641,19 @@ inline float cv::SpinImageModel::geometricConsistency(const Point3f& pointScene1
                                                       const Point3f& pointModel1, const Point3f& normalModel1,
                                                       const Point3f& pointScene2, const Point3f& normalScene2,                               
                                                       const Point3f& pointModel2, const Point3f& normalModel2)
-{    
-    Point2f Sm2_to_m1 = calcSpinMapCoo(pointModel2, pointModel1, normalModel1);
-    Point2f Ss2_to_s1 = calcSpinMapCoo(pointScene2, pointScene1, normalScene1);
+{   
+    Point2f Sm2_to_m1, Ss2_to_s1;
+    Point2f Sm1_to_m2, Ss1_to_s2;
 
-    double gc21 = norm(Sm2_to_m1 - Ss2_to_s1) / ( (norm(Sm2_to_m1) + norm(Ss2_to_s1) ) / 2 );
+    double n_Sm2_to_m1 = norm(Sm2_to_m1 = calcSpinMapCoo(pointModel2, pointModel1, normalModel1));
+    double n_Ss2_to_s1 = norm(Ss2_to_s1 = calcSpinMapCoo(pointScene2, pointScene1, normalScene1));   
+
+    double gc21 = 2 * norm(Sm2_to_m1 - Ss2_to_s1) / (n_Sm2_to_m1 + n_Ss2_to_s1 ) ;
         
-    Point2f Sm1_to_m2 = calcSpinMapCoo(pointModel1, pointModel2, normalModel2);
-    Point2f Ss1_to_s2 = calcSpinMapCoo(pointScene1, pointScene2, normalScene2);
+    double n_Sm1_to_m2 = norm(Sm1_to_m2 = calcSpinMapCoo(pointModel1, pointModel2, normalModel2));
+    double n_Ss1_to_s2 = norm(Ss1_to_s2 = calcSpinMapCoo(pointScene1, pointScene2, normalScene2));
 
-    double gc12 = norm(Sm1_to_m2 - Ss1_to_s2) / ( (norm(Sm1_to_m2) + norm(Ss1_to_s2) ) / 2 );
+    double gc12 = 2 * norm(Sm1_to_m2 - Ss1_to_s2) / (n_Sm1_to_m2 + n_Ss1_to_s2 ) ;
 
     return (float)max(gc12, gc21);
 }
@@ -661,20 +664,26 @@ inline float cv::SpinImageModel::groupingCreteria(const Point3f& pointScene1, co
                                                   const Point3f& pointModel2, const Point3f& normalModel2, 
                                                   float gamma)
 {   
-    Point2f Sm2_to_m1 = calcSpinMapCoo(pointModel2, pointModel1, normalModel1);
-    Point2f Ss2_to_s1 = calcSpinMapCoo(pointScene2, pointScene1, normalScene1);
+    Point2f Sm2_to_m1, Ss2_to_s1;
+    Point2f Sm1_to_m2, Ss1_to_s2;
 
-    double gc21 = norm(Sm2_to_m1 - Ss2_to_s1) / ( (norm(Sm2_to_m1) + norm(Ss2_to_s1) ) / 2 );
-    double wgc21 = gc21 / (1 - exp( -(norm(Sm2_to_m1) + norm(Ss2_to_s1))/(2*gamma) ) );
+    float gamma05_inv =  0.5f/gamma;
+
+    double n_Sm2_to_m1 = norm(Sm2_to_m1 = calcSpinMapCoo(pointModel2, pointModel1, normalModel1));
+    double n_Ss2_to_s1 = norm(Ss2_to_s1 = calcSpinMapCoo(pointScene2, pointScene1, normalScene1));
+
+    double gc21 = 2 * norm(Sm2_to_m1 - Ss2_to_s1) / (n_Sm2_to_m1 + n_Ss2_to_s1 );
+    double wgc21 = gc21 / (1 - exp( -(n_Sm2_to_m1 + n_Ss2_to_s1) * gamma05_inv ) );
     
-    Point2f Sm1_to_m2 = calcSpinMapCoo(pointModel1, pointModel2, normalModel2);
-    Point2f Ss1_to_s2 = calcSpinMapCoo(pointScene1, pointScene2, normalScene2);
+    double n_Sm1_to_m2 = norm(Sm1_to_m2 = calcSpinMapCoo(pointModel1, pointModel2, normalModel2));
+    double n_Ss1_to_s2 = norm(Ss1_to_s2 = calcSpinMapCoo(pointScene1, pointScene2, normalScene2));
 
-    double gc12 = norm(Sm1_to_m2 - Ss1_to_s2) / ( (norm(Sm1_to_m2) + norm(Ss1_to_s2) ) / 2 );
-    double wgc12 = gc12 / (1 - exp( -(norm(Sm1_to_m2) + norm(Ss1_to_s2))/(2*gamma) ) );
+    double gc12 = 2 * norm(Sm1_to_m2 - Ss1_to_s2) / (n_Sm1_to_m2 + n_Ss1_to_s2 );
+    double wgc12 = gc12 / (1 - exp( -(n_Sm1_to_m2 + n_Ss1_to_s2) * gamma05_inv ) );
 
     return (float)max(wgc12, wgc21);
 }
+
 
 cv::SpinImageModel::SpinImageModel(const Mesh3D& _mesh) : mesh(_mesh) , out(0)
 { 
@@ -989,6 +998,8 @@ private:
     result.clear();
 
     SpinImageModel& model = *this;
+    const float infinity = numeric_limits<float>::infinity();
+    const float float_max = numeric_limits<float>::max();
     
     /* estimate gamma */
     if (model.gamma == 0.f)
@@ -1019,35 +1030,7 @@ private:
         for(size_t t = 0; t < indeces.size(); ++t)
             allMatches.push_back(Match(i, indeces[t], coeffs[t])); 
 
-        if (out) if (i % 10 == 0) *out << "Comparing scene spinimage " << i << " of " << scene.spinImages.rows << endl;
-
-        ///********* hack *********/
-
-        //static int z = 0;
-        //
-        //if (i > scene.spinImages.rows/2 && z != 1)
-        //{   
-        //    if (indeces.size() != 0)
-        //    {
-        //        z = 1;
-
-        //        const Scalar red(CV_RGB(1.f, 0, 0));
-
-        //        const Mesh3D& sc = scene.getMesh();
-        //        vector<Scalar> colors(sc.vtx.size(), Scalar(1.f, 1.f, 1.f));
-        //        colors[i] = red;
-        //        sc.writeAsVrml("d:/scene.vrml", colors);
-
-        //        const Mesh3D& mo = model.getMesh();
-        //        colors = vector<Scalar>(mo.vtx.size(), Scalar(1.f, 1.f, 1.f));
-
-        //        for(size_t x = 0; x < indeces.size(); ++x)
-        //            colors[model.subset[indeces[x]]] = red;
-        //        mo.writeAsVrml("d:/model.vrml", colors);
-        //    }
-
-        //}
-        ///********* hack *********/
+        if (out) if (i % 100 == 0) *out << "Comparing scene spinimage " << i << " of " << scene.spinImages.rows << endl;        
     }
     corr_timer.stop();
     if (out) *out << "Spin correlation time  = " << corr_timer << endl;
@@ -1068,45 +1051,51 @@ private:
     if(matchesSize == 0)
         return;
     
-    /* filtering by geometric consistency */    
-    const float infinity = numeric_limits<float>::infinity();
+    /* filtering by geometric consistency */        
     for(size_t i = 0; i < matchesSize; ++i)
     {
         size_t consistNum = 1;
-
+        float gc = float_max;
+        
         for(size_t j = 0; j < matchesSize; ++j)
             if (i != j)
             {
                 const Match& mi = allMatches[i];
                 const Match& mj = allMatches[j];
 
-                const Point3f& pointSceneI  = scene.getSpinVertex(mi.sceneInd);
-                const Point3f& normalSceneI = scene.getSpinNormal(mi.sceneInd);
-            
-                const Point3f& pointModelI  = model.getSpinVertex(mi.modelInd);
-                const Point3f& normalModelI = model.getSpinNormal(mi.modelInd);
-            
-                const Point3f& pointSceneJ  = scene.getSpinVertex(mj.sceneInd);
-                const Point3f& normalSceneJ = scene.getSpinNormal(mj.sceneInd);
-            
-                const Point3f& pointModelJ  = model.getSpinVertex(mj.modelInd);
-                const Point3f& normalModelJ = model.getSpinNormal(mj.modelInd);
-
-                float gc = geometricConsistency(pointSceneI, normalSceneI, pointModelI, normalModelI,
-                                                pointSceneJ, normalSceneJ, pointModelJ, normalModelJ);
+                if (mi.sceneInd == mj.sceneInd || mi.modelInd == mj.modelInd)
+                    gc = float_max;
+                else
+                {
+                    const Point3f& pointSceneI  = scene.getSpinVertex(mi.sceneInd);
+                    const Point3f& normalSceneI = scene.getSpinNormal(mi.sceneInd);
+                
+                    const Point3f& pointModelI  = model.getSpinVertex(mi.modelInd);
+                    const Point3f& normalModelI = model.getSpinNormal(mi.modelInd);
+                
+                    const Point3f& pointSceneJ  = scene.getSpinVertex(mj.sceneInd);
+                    const Point3f& normalSceneJ = scene.getSpinNormal(mj.sceneInd);
+                
+                    const Point3f& pointModelJ  = model.getSpinVertex(mj.modelInd);
+                    const Point3f& normalModelJ = model.getSpinNormal(mj.modelInd);
+             
+                    gc = geometricConsistency(pointSceneI, normalSceneI, pointModelI, normalModelI,
+                                              pointSceneJ, normalSceneJ, pointModelJ, normalModelJ);                                
+                }
 
                 if (gc < model.T_GeometriccConsistency)
                     ++consistNum;
             }
                     
+            
         if (consistNum < matchesSize / 4) /* failed consistensy test */
-            allMatches[i].measure = infinity;
+            allMatches[i].measure = infinity;     
     }
     allMatches.erase(
-        remove_if(allMatches.begin(), allMatches.end(), bind2nd(equal_to<float>(), infinity)), 
-        allMatches.end()); 
-
+      remove_if(allMatches.begin(), allMatches.end(), bind2nd(equal_to<float>(), infinity)), 
+      allMatches.end()); 
     if (out) *out << "Matches number [filtered by geometric consistency] = " << allMatches.size() << endl;
+
 
     matchesSize = allMatches.size();
     if(matchesSize == 0)
@@ -1123,6 +1112,13 @@ private:
         {
             const Match& mi = allMatches[i];
             const Match& mj = allMatches[j];
+
+            if (mi.sceneInd == mj.sceneInd || mi.modelInd == mj.modelInd)
+            {
+                groupingMat.ptr<float>(i)[j] = float_max;
+                groupingMat.ptr<float>(j)[i] = float_max;
+                continue;
+            }
 
             const Point3f& pointSceneI  = scene.getSpinVertex(mi.sceneInd);
             const Point3f& normalSceneI = scene.getSpinNormal(mi.sceneInd);
