@@ -1131,7 +1131,7 @@ namespace cv
 
 const int STORAGE_SIZE = 1 << 12;
 
-void HoughLines( Mat& image, vector<Vec2f>& lines,
+void HoughLines( const Mat& image, vector<Vec2f>& lines,
                  double rho, double theta, int threshold,
                  double srn, double stn )
 {
@@ -1154,7 +1154,7 @@ void HoughLinesP( Mat& image, vector<Vec4i>& lines,
     Seq<Vec4i>(seq).copyTo(lines);
 }
 
-void HoughCircles( Mat& image, vector<Vec3f>& circles,
+void HoughCircles( const Mat& image, vector<Vec3f>& circles,
                    int method, double dp, double min_dist,
                    double param1, double param2,
                    int minRadius, int maxRadius )
