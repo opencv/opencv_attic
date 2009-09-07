@@ -241,7 +241,7 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
             }
 
             if( isSeparable() )
-                (*rowFilter)(&srcRow[0] + anchor.x*esz, dst, maxWidth, cn);
+                (*rowFilter)(&srcRow[0], dst, maxWidth, cn);
         }
         
         int maxBufStep = bufElemSize*(int)alignSize(maxWidth +
