@@ -288,7 +288,7 @@ CV_EXPORTS void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
                                      const Mat& mask=Mat(), int blockSize=3,
                                      bool useHarrisDetector=false, double k=0.04 );
 
-CV_EXPORTS void HoughLines( Mat& image, vector<Vec2f>& lines,
+CV_EXPORTS void HoughLines( const Mat& image, vector<Vec2f>& lines,
                             double rho, double theta, int threshold,
                             double srn=0, double stn=0 );
 
@@ -296,7 +296,7 @@ CV_EXPORTS void HoughLinesP( Mat& image, vector<Vec4i>& lines,
                              double rho, double theta, int threshold,
                              double minLineLength=0, double maxLineGap=0 );
 
-CV_EXPORTS void HoughCircles( Mat& image, vector<Vec3f>& circles,
+CV_EXPORTS void HoughCircles( const Mat& image, vector<Vec3f>& circles,
                               int method, double dp, double minDist,
                               double param1=100, double param2=100,
                               int minRadius=0, int maxRadius=0 );
