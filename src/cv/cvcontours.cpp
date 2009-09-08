@@ -1706,7 +1706,7 @@ void cv::approxPolyDP( const Mat& curve, vector<Point>& approxCurve,
                curve.cols*curve.channels() == 2));
     CvMat _curve = curve;
     MemStorage storage(cvCreateMemStorage());
-    Seq<Point> seq(cvApproxPoly(&_curve, sizeof(CvSeq), storage, CV_POLY_APPROX_DP, epsilon, closed));
+    Seq<Point> seq(cvApproxPoly(&_curve, sizeof(CvContour), storage, CV_POLY_APPROX_DP, epsilon, closed));
     seq.copyTo(approxCurve);
 }
 
@@ -1718,7 +1718,7 @@ void cv::approxPolyDP( const Mat& curve, vector<Point2f>& approxCurve,
                curve.cols*curve.channels() == 2));
     CvMat _curve = curve;
     MemStorage storage(cvCreateMemStorage());
-    Seq<Point2f> seq(cvApproxPoly(&_curve, sizeof(CvSeq), storage, CV_POLY_APPROX_DP, epsilon, closed));
+    Seq<Point2f> seq(cvApproxPoly(&_curve, sizeof(CvContour), storage, CV_POLY_APPROX_DP, epsilon, closed));
     seq.copyTo(approxCurve);
 }
 
