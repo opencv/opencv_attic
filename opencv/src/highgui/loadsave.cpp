@@ -399,15 +399,6 @@ Mat imdecode( const Mat& buf, int flags )
     return img;
 }
     
-
-Mat imdecode( const vector<uchar>& buf, int flags )
-{
-    Mat img;
-    imdecode_( Mat_<uchar>(buf), flags, LOAD_MAT, &img );
-    return img;
-}
-    
-    
 bool imencode( const string& ext, const Mat& image,
                vector<uchar>& buf, const vector<int>& params )
 {

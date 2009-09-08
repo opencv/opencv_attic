@@ -300,7 +300,7 @@ cvCamShift( const void* imgProb, CvRect windowIn,
 namespace cv
 {
 
-RotatedRect CAMShift( const Mat& probImage, Rect& window,
+RotatedRect CamShift( const Mat& probImage, Rect& window,
                       TermCriteria criteria )
 {
     CvConnectedComp comp;

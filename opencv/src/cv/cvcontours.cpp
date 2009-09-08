@@ -1600,47 +1600,102 @@ void cv::findContours( const Mat& image, vector<vector<Point> >& contours,
     _findContours(image, contours, 0, mode, method, offset);
 }
 
+namespace cv
+{
+
+static void addChildContour(const vector<vector<Point> >& contours,
+                            const vector<Vec4i>& hierarchy,
+                            int i, vector<CvSeq>& seq,
+                            vector<CvSeqBlock>& block)
+{
+    size_t count = contours.size();
+    for( ; i >= 0; i = hierarchy[i][0] )
+    {
+        const vector<Point>& ci = contours[i];
+        cvMakeSeqHeaderForArray(CV_SEQ_POLYGON, sizeof(CvSeq), sizeof(Point),
+                                !ci.empty() ? (void*)&ci[0] : 0, (int)ci.size(),
+                                &seq[i], &block[i] );
+        
+        int h_next = hierarchy[i][0], h_prev = hierarchy[i][1],
+            v_next = hierarchy[i][2], v_prev = hierarchy[i][3];
+        seq[i].h_next = (size_t)h_next < count ? &seq[h_next] : 0;
+        seq[i].h_prev = (size_t)h_prev < count ? &seq[h_prev] : 0;
+        seq[i].v_next = (size_t)v_next < count ? &seq[v_next] : 0;
+        seq[i].v_prev = (size_t)v_prev < count ? &seq[v_prev] : 0;
+        
+        if( v_next >= 0 )
+            addChildContour(contours, hierarchy, v_next, seq, block);
+    }
+}
+    
+}
+
 void cv::drawContours( Mat& image, const vector<vector<Point> >& contours,
-                   const Scalar& color, int thickness,
+                   int contourIdx, const Scalar& color, int thickness,
                    int lineType, const vector<Vec4i>& hierarchy,
                    int maxLevel, Point offset )
 {
     CvMat _image = image;
 
-    size_t i = 0, count = maxLevel != 0 ? contours.size() : 1;
-    vector<CvSeq> seq(count);
-    vector<CvSeqBlock> block(count);
+    size_t i = 0, first = 0, last = contours.size();
+    vector<CvSeq> seq;
+    vector<CvSeqBlock> block;
 
-    // TODO: if maxLevel is < 0, we do not have to collect all the contours,
-    //       instead we can just track down the sub-tree of interest.
-    for( i = 0; i < count; i++ )
+    seq.resize(last);
+    block.resize(last);
+    
+    for( i = first; i < last; i++ )
+        seq[i].first = 0;
+                              
+    if( contourIdx >= 0 )
+    {
+        CV_Assert( 0 <= contourIdx && contourIdx < (int)last );
+        first = contourIdx;
+        last = contourIdx + 1;
+    }
+    
+    for( i = first; i < last; i++ )
     {
         const vector<Point>& ci = contours[i];
         cvMakeSeqHeaderForArray(CV_SEQ_POLYGON, sizeof(CvSeq), sizeof(Point),
             !ci.empty() ? (void*)&ci[0] : 0, (int)ci.size(), &seq[i], &block[i] );
     }
 
-    if( hierarchy.empty() || maxLevel == 0 )
-        for( i = 0; i < count; i++ )
+    if( hierarchy.empty() || maxLevel == 0 || maxLevel == INT_MAX )
+        for( i = first; i < last; i++ )
         {
-            seq[i].h_next = i < count-1 ? &seq[i+1] : 0;
-            seq[i].h_prev = i > 0 ? &seq[i-1] : 0;
+            seq[i].h_next = i < last-1 ? &seq[i+1] : 0;
+            seq[i].h_prev = i > first ? &seq[i-1] : 0;
         }
     else
     {
+        size_t count = last - first;
         CV_Assert(hierarchy.size() == contours.size());
-        for( i = 0; i < count; i++ )
+        if( count == contours.size() )
         {
-            int h_next = hierarchy[i][0], h_prev = hierarchy[i][1],
-                v_next = hierarchy[i][2], v_prev = hierarchy[i][3];
-            seq[i].h_next = (size_t)h_next < count ? &seq[h_next] : 0;
-            seq[i].h_prev = (size_t)h_prev < count ? &seq[h_prev] : 0;
-            seq[i].v_next = (size_t)v_next < count ? &seq[v_next] : 0;
-            seq[i].v_prev = (size_t)v_prev < count ? &seq[v_prev] : 0;
+            for( i = first; i < last; i++ )
+            {
+                int h_next = hierarchy[i][0], h_prev = hierarchy[i][1],
+                    v_next = hierarchy[i][2], v_prev = hierarchy[i][3];
+                seq[i].h_next = (size_t)h_next < count ? &seq[h_next] : 0;
+                seq[i].h_prev = (size_t)h_prev < count ? &seq[h_prev] : 0;
+                seq[i].v_next = (size_t)v_next < count ? &seq[v_next] : 0;
+                seq[i].v_prev = (size_t)v_prev < count ? &seq[v_prev] : 0;
+            }
+        }
+        else
+        {
+            int child = hierarchy[first][2];
+            if( child >= 0 )
+            {
+                addChildContour(contours, hierarchy, child, seq, block);
+                seq[first].v_next = &seq[child];
+            }
         }
     }
 
-    cvDrawContours( &_image, &seq[0], color, color, maxLevel, thickness, lineType, offset );
+    cvDrawContours( &_image, &seq[first], color, color, contourIdx >= 0 ?
+                   -maxLevel : maxLevel, thickness, lineType, offset );
 }
 
 void cv::approxPolyDP( const Mat& curve, vector<Point>& approxCurve,
@@ -1712,7 +1767,7 @@ cv::RotatedRect cv::minAreaRect( const Mat& points )
 
 
 void cv::minEnclosingCircle( const Mat& points,
-                             Point2f center, float& radius )
+                             Point2f& center, float& radius )
 {
     CV_Assert(points.isContinuous() &&
               (points.depth() == CV_32S || points.depth() == CV_32F) &&
