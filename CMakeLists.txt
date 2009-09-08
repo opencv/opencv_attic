@@ -652,6 +652,15 @@ endif()
 #-----------------------------------
 add_subdirectory(src)
 add_subdirectory(apps)
+
+if(BUILD_LATEX_DOCS)
+  include(OpenCVFindLATEX.cmake REQUIRED)
+    
+  if(PDFLATEX_COMPILER)
+    message(STATUS "PDF LaTeX found!")
+  endif()
+endif()
+
 add_subdirectory(doc)
 add_subdirectory(data)
 
@@ -666,14 +675,6 @@ endif()
 
 add_subdirectory(interfaces)
 add_subdirectory(3rdparty)
-
-if(BUILD_LATEX_DOCS)
-    include(OpenCVFindLATEX.cmake REQUIRED)
-    if(PDFLATEX_COMPILER)
-        message(STATUS "PDF LaTeX found!")
-        add_subdirectory(doc2)
-    endif()
-endif()
 
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
