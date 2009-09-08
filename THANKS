@@ -41,7 +41,7 @@ Cowperthwaite, David    Intel Corp.                3d Tracker
 
 Dadgostar, Farhad       ???                        Adaptive Skin Detector, Fuzzy MeanShift Tracker
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
-Delacour, Xavier        ???                        Octave bindings, KD trees/BBF search, some Video I/O components for highgui
+Delacour, Xavier        PhaseSpace Inc.            Octave bindings, KD trees/BBF and LSH search, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
 Dimashova, Maria        Argus CV.                  TrainCascade application and the new object detection class
                                                    cv::CascadeClassifier.
