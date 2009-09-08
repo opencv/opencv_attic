@@ -390,6 +390,7 @@ public:
     RotatedRect();
     RotatedRect(const Point2f& _center, const Size2f& _size, float _angle);
     RotatedRect(const CvBox2D& box);
+    void points(Point2f pts[]) const;
     Rect boundingRect() const;
     operator CvBox2D() const;
     Point2f center;

@@ -773,12 +773,12 @@ SURF::SURF()
     nOctaveLayers = 2;
 }
 
-SURF::SURF(double _threshold, bool _extended)
+SURF::SURF(double _threshold, int _nOctaves, int _nOctaveLayers, bool _extended)
 {
     hessianThreshold = _threshold;
     extended = _extended;
-    nOctaves = 4;
-    nOctaveLayers = 2;
+    nOctaves = _nOctaves;
+    nOctaveLayers = _nOctaveLayers;
 }
 
 int SURF::descriptorSize() const { return extended ? 128 : 64; }

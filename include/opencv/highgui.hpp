@@ -66,7 +66,6 @@ CV_EXPORTS void setTrackbarPos( const string& trackbarname, const string& winnam
 CV_EXPORTS Mat imread( const string& filename, int flags=1 );
 CV_EXPORTS bool imwrite( const string& filename, const Mat& img,
               const vector<int>& params=vector<int>());
-CV_EXPORTS Mat imdecode( const vector<uchar>& buf, int flags );
 CV_EXPORTS Mat imdecode( const Mat& buf, int flags );
 CV_EXPORTS bool imencode( const string& ext, const Mat& img,
                           vector<uchar>& buf,

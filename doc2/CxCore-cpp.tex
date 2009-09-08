@@ -225,7 +225,7 @@ template<> inline Ptr<IplImage>::delete_obj() {
 See \cross{Ptr} description for more details and other usage scenarios.
 
 
-\subsection{Memory Management Part II. Automatic Data Allocation}
+\subsection{Memory Management Part II. Automatic Data Allocation}\label{AutomaticMemoryManagement}
 
 With the new interface not only explicit memory deallocation is not needed anymore,
 but the memory allocation is often done automatically too. That was demonstrated in the example
@@ -2989,15 +2989,15 @@ void inRange(const MatND& src, const Scalar& lowerb,
 The functions \texttt{inRange} do the range check for every element of the input array:
 
 \[
-\texttt{dst}(I)=\texttt{lowerb}(I)_0 <= \texttt{src}(I)_0 < \texttt{upperb}(I)_0
+\texttt{dst}(I)=\texttt{lowerb}(I)_0 \leq \texttt{src}(I)_0 < \texttt{upperb}(I)_0
 \]
 
 For single-channel arrays,
 
 \[
 \texttt{dst}(I)=
-\texttt{lowerb}(I)_0 <= \texttt{src}(I)_0 < \texttt{upperb}(I)_0 \land
-\texttt{lowerb}(I)_1 <= \texttt{src}(I)_1 < \texttt{upperb}(I)_1
+\texttt{lowerb}(I)_0 \leq \texttt{src}(I)_0 < \texttt{upperb}(I)_0 \land
+\texttt{lowerb}(I)_1 \leq \texttt{src}(I)_1 < \texttt{upperb}(I)_1
 \]
 
 For two-channel arrays and so forth,

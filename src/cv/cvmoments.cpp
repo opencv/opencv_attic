@@ -700,32 +700,17 @@ Moments::operator CvMoments() const
 
     return m;
 }
-
-Moments moments( const Mat& image, bool binaryImage )
+}
+    
+cv::Moments cv::moments( const Mat& array, bool binaryImage )
 {
     CvMoments om;
-    CvMat _image = image;
-    cvMoments(&_image, &om, binaryImage);
+    CvMat _array = array;
+    cvMoments(&_array, &om, binaryImage);
     return om;
 }
 
-Moments moments( const vector<Point>& points )
-{
-    CvMoments om;
-    CvMat _points = Mat_<Point>(points);
-    cvMoments(&_points, &om, 0);
-    return om;
-}
-
-Moments moments( const vector<Point2f>& points )
-{
-    CvMoments om;
-    CvMat _points = Mat_<Point2f>(points);
-    cvMoments(&_points, &om, 0);
-    return om;
-}
-
-void HuMoments( const Moments& m, double hu[7] )
+void cv::HuMoments( const Moments& m, double hu[7] )
 {
     double t0 = m.nu30 + m.nu12;
     double t1 = m.nu21 + m.nu03;
@@ -752,6 +737,5 @@ void HuMoments( const Moments& m, double hu[7] )
     hu[6] = q1 * t0 - q0 * t1;
 }
 
-}
 
 /* End of file. */

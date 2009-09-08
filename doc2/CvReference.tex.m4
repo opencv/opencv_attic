@@ -63,7 +63,7 @@ so the result is more or less resistant to the noise. Most often,
 the function is called with (\texttt{xorder} = 1, \texttt{yorder} = 0,
 \texttt{aperture\_size} = 3) or (\texttt{xorder} = 0, \texttt{yorder} = 1,
 \texttt{aperture\_size} = 3) to calculate the first x- or y- image
-derivative. The first case corresponds to a kernal of:
+derivative. The first case corresponds to a kernel of:
 
 \[ \vecthreethree
 {-1}{0}{1}
@@ -71,13 +71,13 @@ derivative. The first case corresponds to a kernal of:
 {-1}{0}{1}
 \]
 
-and the second one corresponds to a kernal of:
+and the second one corresponds to a kernel of:
 \[ \vecthreethree
 {-1}{-2}{-1}
 {0}{0}{0}
 {1}{2}{1}
 \]
-or a kernal of:
+or a kernel of:
 \[ \vecthreethree
 {1}{2}{1}
 {0}{0}{0}
@@ -241,7 +241,7 @@ int aperture\_size=3 );
 }{CPP}{CornerMinEigenVal(image,eigenval,block\_size,aperture\_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
-\cvarg{eigenval}{Image to store the minimal eigen values. Should have the same size as \texttt{image}}
+\cvarg{eigenval}{Image to store the minimal eigenvalues. Should have the same size as \texttt{image}}
 \cvarg{block\_size}{Neighborhood size (see the discussion of \cross{CornerEigenValsAndVecs})}
 \cvarg{aperture\_size}{Aperture parameter for the Sobel operator (see \cross{Sobel}).}
 %  format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
@@ -827,7 +827,7 @@ CvMat* map\_matrix );
 
 \begin{description}
 \cvarg{center}{Center of the rotation in the source image}
-\cvarg{angle}{The rotation angle in degrees. Positive values mean couter-clockwise rotation (the coordiate origin is assumed to be the top-left corner)}
+\cvarg{angle}{The rotation angle in degrees. Positive values mean counter-clockwise rotation (the coordinate origin is assumed to be the top-left corner)}
 \cvarg{scale}{Isotropic scale factor}
 \cvarg{map\_matrix}{Pointer to the destination $2\times 3$ matrix}
 \end{description}
@@ -1340,7 +1340,7 @@ CvArr* dst,
 const CvMat* kernel,
 
 CvPoint anchor=cvPoint(-1,-1));
-}{CPP}{Filter2D(src,dst,kernal,anchor=(-1,-1))-> None}
+}{CPP}{Filter2D(src,dst,kernel,anchor=(-1,-1))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -4230,7 +4230,7 @@ where $\alpha$ (\texttt{alpha}) regulates the update speed (how fast the accumul
 
 \cvfunc{UpdateMotionHistory}\label{UpdateMotionHistory}
 
-Updates the motion history image by moving a silhouette.
+Updates the motion history image by a moving silhouette.
 
 \cvexp{
 void cvUpdateMotionHistory( \par const CvArr* silhouette,\par CvArr* mhi,\par double timestamp,\par double duration );
@@ -5546,8 +5546,8 @@ void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const C
 \begin{description}
 \cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
 \cvarg{image\_points}{The array of corresponding image points, 2xN or Nx2, where N is the number of points in the view}
-\cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
-\cvarg{distortion\_coeffs}{The output 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$. If it is NULL, all of the distortion coefficients are set to 0}
+\cvarg{intrinsic\_matrix}{The input camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
+\cvarg{distortion\_coeffs}{The input 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$. If it is NULL, all of the distortion coefficients are set to 0}
 \cvarg{rotation\_vector}{The output 3x1 or 1x3 rotation vector (compact representation of a rotation matrix, \cross{Rodrigues2}}
 \cvarg{translation\_vector}{The output 3x1 or 1x3 translation vector}
 \end{description}
@@ -5780,8 +5780,8 @@ void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* intri
 \begin{description}
 \cvarg{src}{The input (distorted) image}
 \cvarg{dst}{The output (corrected) image}
-\cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
-\cvarg{distortion\_coeffs}{The output 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$.}
+\cvarg{intrinsic\_matrix}{The camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
+\cvarg{distortion\_coeffs}{The 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$.}
 \end{description}
 
 The function \texttt{cvUndistort2} transforms the image to compensate

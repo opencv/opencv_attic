@@ -1,7 +1,7 @@
 project(opencv_refman)
 
 set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
-set(refman_srcs CxCore-cpp.tex CvAux.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
+set(refman_srcs CxCore-cpp.tex Cv-cpp.tex CvAux.tex HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
 set(refman_copied_srcs)
 
 foreach(f ${refman_m4_srcs})

@@ -472,7 +472,7 @@ public:
     double  nu20, nu11, nu02, nu30, nu21, nu12, nu03; // central normalized moments
 };
 
-CV_EXPORTS Moments moments( const Mat& image, bool binaryImage=false );
+CV_EXPORTS Moments moments( const Mat& array, bool binaryImage=false );
 
 CV_EXPORTS void HuMoments( const Moments& moments, double hu[7] );
 
@@ -497,11 +497,11 @@ CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours
 CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours,
                               int mode, int method, Point offset=Point());
 
-CV_EXPORTS void
-    drawContours( Mat& image, const vector<vector<Point> >& contours,
-                  const Scalar& color, int thickness=1,
-                  int lineType=8, const vector<Vec4i>& hierarchy=vector<Vec4i>(),
-                  int maxLevel=1, Point offset=Point() );
+CV_EXPORTS void drawContours( Mat& image, const vector<vector<Point> >& contours,
+                              int contourIdx, const Scalar& color,
+                              int thickness=1, int lineType=8,
+                              const vector<Vec4i>& hierarchy=vector<Vec4i>(),
+                              int maxLevel=INT_MAX, Point offset=Point() );
 
 CV_EXPORTS void approxPolyDP( const Mat& curve,
                               vector<Point>& approxCurve,
@@ -515,8 +515,7 @@ CV_EXPORTS Rect boundingRect( const Mat& points );
 CV_EXPORTS double contourArea( const Mat& contour );    
 CV_EXPORTS RotatedRect minAreaRect( const Mat& points );
 CV_EXPORTS void minEnclosingCircle( const Mat& points,
-                                    Point2f center, float& radius );    
-CV_EXPORTS Moments moments( const Mat& points );
+                                    Point2f& center, float& radius );    
 CV_EXPORTS double matchShapes( const Mat& contour1,
                                const Mat& contour2,
                                int method, double parameter );
@@ -553,7 +552,7 @@ CV_EXPORTS double calcGlobalOrientation( const Mat& orientation, const Mat& mask
                                          double duration );
 // TODO: need good API for cvSegmentMotion
 
-CV_EXPORTS RotatedRect CAMShift( const Mat& probImage, Rect& window,
+CV_EXPORTS RotatedRect CamShift( const Mat& probImage, Rect& window,
                                  TermCriteria criteria );
 
 CV_EXPORTS int meanShift( const Mat& probImage, Rect& window,
@@ -907,7 +906,8 @@ class CV_EXPORTS SURF : public CvSURFParams
 {
 public:
     SURF();
-    SURF(double _hessianThreshold, bool _extended=false);
+    SURF(double _hessianThreshold, int _nOctaves=4,
+         int _nOctaveLayers=2, bool _extended=false);
 
     int descriptorSize() const;
     void operator()(const Mat& img, const Mat& mask,
