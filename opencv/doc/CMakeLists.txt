@@ -6,6 +6,8 @@ file(GLOB FILES_DOC *.htm *.txt *.jpg *.png *.pdf)
 file(GLOB FILES_DOC_PAPERS papers/*.pdf papers/*.ps)
 file(GLOB FILES_DOC_VS vidsurv/*.doc)
 
+if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
+        
 project(opencv_refman)
 
 set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
@@ -89,6 +91,9 @@ add_dependencies(ReferenceManual MakePicsLink)
 
 install(FILES "${OPENCV_CURRENT_BINARY_DIR}/opencv.pdf"
         DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT doc)
+        
+endif() # BUILD_LATEX_DOCS AND PDFLATEX_COMPILER
+        
 install(FILES ${FILES_DOC} DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT doc)
 install(FILES ${FILES_DOC_PAPERS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/papers" COMPONENT doc)
 install(FILES ${FILES_DOC_VS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/vidsurv" COMPONENT doc)
