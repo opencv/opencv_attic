@@ -2,14 +2,21 @@
 
 tput clear
 
-cd .. && make && cd -
+#cd .. && make && cd -
 mkdir -p _build/html/python
 
-cp index-c.rst.copy index.rst
-TEXINPUTS=../: python renderer.py c > a || exit
-TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C Reference' -d _build/doctrees . _build/html
+if true
+then
+  cp index-c.rst.copy index.rst
+  TEXINPUTS=../: python renderer.py c > a || exit
+  TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C Reference' -d _build/doctrees . _build/html
+  exit
+fi
 
-rm -f *.rst
-cp index-py.rst.copy index.rst
-TEXINPUTS=../: python renderer.py py > a || exit
-TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 1.1 Python Reference' -d _build/doctrees . _build/html/python
+if true
+then
+  rm -f *.rst
+  cp index-py.rst.copy index.rst
+  TEXINPUTS=../: python renderer.py py > a || exit
+  TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 1.1 Python Reference' -d _build/doctrees . _build/html/python
+fi
