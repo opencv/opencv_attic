@@ -42,6 +42,26 @@
 }{}
 }
 
+\newcommand{\cvC}[1]{
+\ifthenelse{\equal{\targetlang}{c}}{
+#1
+}{}
+}
+
+\newcommand{\cvPy}[1]{
+\ifthenelse{\equal{\targetlang}{python}}{
+#1
+}{}
+}
+
+\newcommand{\cvcode}[1]{
+\begin{shaded}
+\begin{alltt}
+#1
+\end{alltt}
+\end{shaded}
+}
+
 %\newcommand{\cross}[1]{#1 (page \pageref{#1})}
 \newcommand{\cross}[1]{ \hyperref[#1]{#1} }
 

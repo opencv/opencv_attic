@@ -10,23 +10,23 @@ if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
         
 project(opencv_refman)
 
-set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
-set(refman_srcs CxCore-cpp.tex Cv-cpp.tex CvAux.tex HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
+#set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
+set(refman_srcs CxCore.tex CvReference.tex HighGui.tex CxCore-cpp.tex Cv-cpp.tex CvAux.tex HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
 set(refman_copied_srcs)
 
-foreach(f ${refman_m4_srcs})
-    get_filename_component(basef ${f} NAME_WE)
-    set(outputf ${CMAKE_CURRENT_BINARY_DIR}/${basef}-c.tex)
-    add_custom_command(
-        OUTPUT ${outputf}
-        DEPENDS ${f}
-        COMMAND m4
-        ARGS -DTARGET_LANGUAGE=c ${f} > ${outputf}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        VERBATIM
-        )
-    list(APPEND refman_copied_srcs ${outputf})
-endforeach()
+#foreach(f ${refman_m4_srcs})
+#    get_filename_component(basef ${f} NAME_WE)
+#    set(outputf ${CMAKE_CURRENT_BINARY_DIR}/${basef}-c.tex)
+#    add_custom_command(
+#        OUTPUT ${outputf}
+#        DEPENDS ${f}
+#        COMMAND m4
+#        ARGS -DTARGET_LANGUAGE=c ${f} > ${outputf}
+#        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#        VERBATIM
+#        )
+#    list(APPEND refman_copied_srcs ${outputf})
+#endforeach()
 
 foreach(f ${refman_srcs})
     set(outputf ${CMAKE_CURRENT_BINARY_DIR}/${f})
@@ -39,7 +39,8 @@ foreach(f ${refman_srcs})
     list(APPEND refman_copied_srcs ${outputf})
 endforeach()
 
-set(pdflatex_args -interaction=batchmode "'\\newcommand{\\genc}{true}\\newcommand{\\genpy}{true}\\input{opencv.tex}'")
+set(pdflatex_args -interaction=batchmode
+"'\\newcommand{\\genc}{true}\\newcommand{\\genpy}{true}\\newcommand{\\targetlang}{c}\\input{opencv.tex}'")
 
 add_custom_command(
   OUTPUT    ${CMAKE_CURRENT_BINARY_DIR}/opencv.aux

@@ -1,4 +1,3 @@
-include(common.m4)
 \chapter{CXCORE}
 
 \section{Basic Structures}
@@ -578,7 +577,8 @@ iplCreateImageHeader( channels, 0, depth,
 
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
+
 \cvfunc{ReleaseImageHeader}\label{ReleaseImageHeader}
 
 Deallocates an image header.
@@ -650,7 +650,7 @@ IplImage* cvInitImageHeader( \par IplImage* image,\par CvSize size,\par int dept
 
 The returned \texttt{IplImage*} points to the initialized header.
 
-')
+/fi
 
 \cvfunc{CloneImage}\label{CloneImage}
 
@@ -810,7 +810,8 @@ CvMat* cvCreateMatHeader( \par int rows,\par int cols,\par int type );
 
 The function \texttt{cvCreateMatHeader} allocates a new matrix header and returns a pointer to it. The matrix data can then be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
+
 \cvfunc{ReleaseMat}\label{ReleaseMat}
 
 Deallocates a matrix.
@@ -908,7 +909,7 @@ CvMat mat;
 cvInitMatHeader( &mat, rows, cols, type, data, CV\_AUTOSTEP );
 
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{CloneMat}\label{CloneMat}
 
@@ -937,12 +938,12 @@ CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type );
 }{CPP}{CreateMatND(dims, type)}
 
 \begin{description}
-ifelse(TARGET_LANGUAGE,py,`
+\ifPython
 \cvarg{dims}{List or tuple of array dimensions, up to 32 in length.}
-',`
+\else
 \cvarg{dims}{Number of array dimensions. This must not exceed CV\_MAX\_DIM (32 by default, but can be changed at build time).}
 \cvarg{sizes}{Array of dimension sizes.}
-')
+\fi
 \cvarg{type}{Type of array elements, see \cross{CreateMat}.}
 \end{description}
 
@@ -966,18 +967,19 @@ CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type )
 }{CPP}{CreateMatNDHeader(dims, type)}
 
 \begin{description}
-ifelse(TARGET_LANGUAGE,py,`
+\ifPython
 \cvarg{dims}{List or tuple of array dimensions, up to 32 in length.}
-',`
+\else
 \cvarg{dims}{Number of array dimensions}
 \cvarg{sizes}{Array of dimension sizes}
-')
+\fi
 \cvarg{type}{Type of array elements, see \cross{CreateMat}}
 \end{description}
 
 The function \texttt{cvCreateMatND} allocates a header for a multi-dimensional dense array. The array data can further be allocated using \cross{CreateData} or set explicitly to user-allocated data via \cross{SetData}.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
+
 \cvfunc{ReleaseMatND}\label{ReleaseMatND}
 
 Deallocates a multi-dimensional array.
@@ -1078,7 +1080,7 @@ int cvIncRefData( CvArr* arr );
 The function \texttt{cvIncRefData} increments \cross{CvMat} or
 \cross{CvMatND} data reference counter and returns the new counter value
 if the reference counter pointer is not NULL, otherwise it returns zero.
-')
+\fi
 
 \cvfunc{CreateData}\label{CreateData}
 
@@ -1101,7 +1103,7 @@ allocation functions are used and in the case of IplImage they are used
 unless \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} was called. In the
 latter case IPL functions are used to allocate the data.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 
 \cvfunc{ReleaseData}\label{ReleaseData}
 
@@ -1120,7 +1122,7 @@ void cvReleaseData( CvArr* arr );
 
 The function \texttt{cvReleaseData} releases the array data. In the case of \cross{CvMat} or \cross{CvMatND} it simply calls cvDecRefData(), that is the function can not deallocate external data. See also the note to \cross{CreateData}.
 
-')
+\fi
 
 \cvfunc{SetData}\label{SetData}
 
@@ -1141,7 +1143,7 @@ void cvSetData( CvArr* arr, void* data, int step );
 
 The function \texttt{cvSetData} assigns user data to the array header. Header should be initialized before using cvCreate*Header, cvInit*Header or \cross{Mat} (in the case of matrix) function.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvfunc{GetRawData}\label{GetRawData}
 
 Retrieves low-level information about the array.
@@ -1180,7 +1182,7 @@ for( y = 0; y < size.height; y++, data += step )
         data[x] = (float)fabs(data[x]);
 
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{GetMat}\label{GetMat}
 
@@ -1194,11 +1196,11 @@ CvMat* cvGetMat( const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0 )
 
 \begin{description}
 \cvarg{arr}{Input array}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{header}{Pointer to \cross{CvMat} structure used as a temporary buffer}
 \cvarg{coi}{Optional output parameter for storing COI}
 \cvarg{allowND}{If non-zero, the function accepts multi-dimensional dense arrays (CvMatND*) and returns 2D (if CvMatND has two dimensions) or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions). The array must be continuous.}
-')
+\fi
 \end{description}
 
 The function \texttt{cvGetMat} returns a matrix header for the input array that can be a matrix - 
@@ -1223,9 +1225,9 @@ IplImage* cvGetImage( const CvArr* arr, IplImage* image\_header );
 
 \begin{description}
 \cvarg{arr}{Input array}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{image\_header}{Pointer to \texttt{IplImage} structure used as a temporary buffer}
-')
+\fi
 \end{description}
 
 The function \texttt{cvGetImage} returns the image header for the input array
@@ -1249,18 +1251,18 @@ CvSparseMat* cvCreateSparseMat( int dims, const int* sizes, int type );
 }{CPP}{CreateSparseMat(dims, type) -> cvmat}
 
 \begin{description}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{dims}{Number of array dimensions. In contrast to the dense matrix, the number of dimensions is practically unlimited (up to $2^{16}$).}
 \cvarg{sizes}{Array of dimension sizes}
-',`
+\else
 \cvarg{dims}{List or tuple of array dimensions.}
-')
+\fi
 \cvarg{type}{Type of array elements. The same as for CvMat}
 \end{description}
 
 The function \texttt{cvCreateSparseMat} allocates a multi-dimensional sparse array. Initially the array contain no elements, that is \cross{Get} or \cross{GetReal} returns zero for every index.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvfunc{ReleaseSparseMat}\label{ReleaseSparseMat}
 
 Deallocates sparse array.
@@ -1277,7 +1279,7 @@ void cvReleaseSparseMat( CvSparseMat** mat );
 
 
 The function \texttt{cvReleaseSparseMat} releases the sparse array and clears the array pointer upon exit.
-')
+\fi
 
 \cvfunc{CloneSparseMat}\label{CloneSparseMat}
 
@@ -1309,9 +1311,9 @@ CvMat* cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect );
 
 \begin{description}
 \cvarg{arr}{Input array}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{submat}{Pointer to the resultant sub-array header}
-')
+\fi
 \cvarg{rect}{Zero-based coordinates of the rectangle of interest}
 \end{description}
 
@@ -1413,7 +1415,7 @@ CvSize cvGetSize( const CvArr* arr );
 The function \texttt{cvGetSize} returns number of rows (CvSize::height) and number of columns (CvSize::width) of the input matrix or image. In the case of image the size of ROI is returned.
 
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvfunc{InitSparseMatIterator}\label{InitSparseMatIterator}
 
 Initializes sparse array elements iterator.
@@ -1478,7 +1480,7 @@ printf( "\nTotal sum = %g\n", sum );
 
 \end{lstlisting}
 
-')
+\fi
 
 \cvfunc{GetElemType}\label{GetElemType}
 
@@ -1504,7 +1506,7 @@ as described in \cross{CreateMat} discussion: \texttt{CV\_8UC1}
 
 Return number of array dimensions and their sizes or the size of a particular dimension.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvexp{
 int cvGetDims( const CvArr* arr, int* sizes=NULL );
 }{CPP}{PYTHON}
@@ -1546,7 +1548,7 @@ for( i = 0; i < dims; i++ )
     total *= cvGetDimsSize( arr, i );
 
 \end{lstlisting}
-',`
+\else
 \cvexp{C}{CPP}{GetDims(arr)}
 
 \begin{description}
@@ -1557,7 +1559,7 @@ for( i = 0; i < dims; i++ )
 The function \texttt{cvGetDims} returns a list of array dimensions.
 In the case of \texttt{IplImage} or \cross{CvMat} it always
 returns a list of length 2.
-')
+\fi
 
 \ifplastex
 \cvfunc{Ptr1D} \cvexp{uchar* cvPtr1D( const CvArr* arr, int idx0, int* type=NULL );}{}{}
@@ -1899,16 +1901,16 @@ CvMat* cvReshape( const CvArr* arr, CvMat* header, int new\_cn, int new\_rows=0 
 
 \begin{description}
 \cvarg{arr}{Input array}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{header}{Output header to be filled}
-')
+\fi
 \cvarg{new\_cn}{New number of channels. 'new\_cn = 0' means that the number of channels remains unchanged.}
 \cvarg{new\_rows}{New number of rows. 'new\_rows = 0' means that the number of rows remains unchanged unless it needs to be changed according to \texttt{new\_cn} value.}
 \end{description}
 
 The function \texttt{cvReshape} initializes the CvMat header so that it points to the same data as the original array but has a different shape - different number of channels, different number of rows, or both.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 For example, the following code creates one image buffer and two image headers, the first is for a 320x240x3 image and the second is for a 960x240x1 image:
 
 \begin{lstlisting}
@@ -1930,7 +1932,7 @@ CvMat row_header, *row;
 row = cvReshape( mat, &row_header, 0, 1 );
 
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{ReshapeMatND}\label{ReshapeMatND}
 
@@ -1943,31 +1945,31 @@ CvArr* cvReshapeMatND( const CvArr* arr,
                        int new\_cn, int new\_dims, int* new\_sizes );
 }{CPP}{ReshapeMatND(arr, new\_cn, new\_dims) -> cvmat}
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \begin{lstlisting}
 #define cvReshapeND( arr, header, new\_cn, new\_dims, new\_sizes )   \
       cvReshapeMatND( (arr), sizeof(*(header)), (header),         \
                       (new\_cn), (new\_dims), (new\_sizes))
 \end{lstlisting}
-')
+\fi
 
 \begin{description}
 \cvarg{arr}{Input array}
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvarg{sizeof\_header}{Size of output header to distinguish between IplImage, CvMat and CvMatND output headers}
 \cvarg{header}{Output header to be filled}
 \cvarg{new\_cn}{New number of channels. $\texttt{new\_cn} = 0$ means that the number of channels remains unchanged.}
 \cvarg{new\_dims}{New number of dimensions. $\texttt{new\_dims} = 0$ means that the number of dimensions remains the same.}
 \cvarg{new\_sizes}{Array of new dimension sizes. Only $\texttt{new\_dims}-1$ values are used, because the total number of elements must remain the same.
 Thus, if $\texttt{new\_dims} = 1$, \texttt{new\_sizes} array is not used.}
-',`
+\else
 \cvarg{new\_dims}{List of new dimensions.}
-')
+\fi
 \end{description}
 
 The function \texttt{cvReshapeMatND} is an advanced version of \cross{Reshape} that can work with multi-dimensional arrays as well (though it can work with ordinary images and matrices) and change the number of dimensions. Below are the two samples from the \cross{Reshape} description rewritten using \cross{ReshapeMatND}:
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \begin{lstlisting}
 
 IplImage* color_img = cvCreateImage( cvSize(320,240), IPL_DEPTH_8U, 3 );
@@ -1983,7 +1985,7 @@ CvMat row_header, *row;
 row = cvReshapeND( mat, &row_header, 0, 1, 0 );
 
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{Repeat}\label{Repeat}
 
@@ -2112,18 +2114,18 @@ void cvMixChannels( const CvArr** src, int src\_count, \par
 
 \begin{description}
 \cvarg{src}{Input arrays}
-ONLY_C(`\cvarg{src\_count}{The number of input arrays.}')
+\cvC{\cvarg{src\_count}{The number of input arrays.}}
 \cvarg{dst}{Destination arrays}
-ONLY_C(`\cvarg{dst\_count}{The number of output arrays.}')
+\cvC{\cvarg{dst\_count}{The number of output arrays.}}
 \cvarg{from\_to}{The array of pairs of indices of the planes
-copied.  ONLY_C(`\texttt{from\_to[k*2]} is the 0-based index of the input plane, and
+copied. \cvC{\texttt{from\_to[k*2]} is the 0-based index of the input plane, and
 \texttt{from\_to[k*2+1]} is the index of the output plane in their respective array entries.
 As a special case, when the source array entry is \texttt{NULL}, i is ignored
-and output plane j is filled with zero.')ONLY_PYTHON(`Each pair (i,j)
+and output plane j is filled with zero.}\cvPy{Each pair (i,j)
 means that for the corresponding input and output arrays, plane i is
 copied to output plane j.
 As a special case, when the source array entry is \texttt{None}, i is
-ignored and output plane j is filled with zero.')
+ignored and output plane j is filled with zero.}
 }
 \end{description}
 
@@ -2135,7 +2137,7 @@ multiple planes etc.
 As an example, this code splits a 4-channel RGBA image into a 3-channel
 BGR (i.e. with R and B swapped) and separate alpha channel image:
 
-ONLY_PYTHON(`
+\ifPython
 \begin{lstlisting}
         rgba = cv.CreateMat(100, 100, cv.CV_8UC4)
         bgr =  cv.CreateMat(100, 100, cv.CV_8UC3)
@@ -2148,10 +2150,9 @@ ONLY_PYTHON(`
            (3, 0)     # rgba[3] -> alpha[0]
         ])
 \end{lstlisting}
-')
+\fi
 
-ONLY_C(`
-
+\ifC
 \begin{lstlisting}
     CvMat* rgba = cvCreateMat( 100, 100, CV_8UC4 );
     CvMat* bgr = cvCreateMat( rgba->rows, rgba->cols, CV_8UC3 );
@@ -2163,7 +2164,7 @@ ONLY_C(`
     int from_to[] = { 0,2,  1,1,  2,0,  3,3 };
     cvMixChannels( in, 4, out, 4, from_to, 4 );
 \end{lstlisting}
-')
+\fi
 
 \subsection{Arithmetic, Logic and Comparison}
 
@@ -4521,7 +4522,7 @@ X = (C^(M)^)^T^ \cdot Y \cdot C^(N)^
 
 \subsection{Memory Storages}
 
-ONLY_PYTHON(`
+\ifPython
 \cvfunc{CreateMemStorage}\label{CreateMemStorage}
 
 Creates memory storage.
@@ -4534,9 +4535,9 @@ Creates memory storage.
 
 The function \texttt{cvCreateMemStorage} creates an empty memory storage object.
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 \cvstruct{CvMemStorage}\label{CvMemStorage}
 
 Growing memory storage.
@@ -4808,7 +4809,7 @@ void cvRestoreMemStoragePos( \par CvMemStorage* storage,\par CvMemStoragePos* po
 \end{description}
 
 The function \texttt{cvRestoreMemStoragePos} restores the position of the storage top from the parameter \texttt{pos}. This function and the function \texttt{cvClearMemStorage} are the only methods to release memory occupied in memory blocks. Note again that there is no way to free memory in the middle of an occupied portion of a storage block.
-')
+\fi
 
 \subsection{Sequences}
 
@@ -4816,7 +4817,7 @@ The function \texttt{cvRestoreMemStoragePos} restores the position of the storag
 
 Growable sequence of elements.
 
-ONLY_PYTHON(`
+\ifPython
 Many OpenCV functions return a CvSeq object.  The CvSeq obect is a sequence, so these are all legal:
 \begin{lstlisting}
 seq = cv.FindContours(scribble, storage, cv.CV_RETR_CCOMP, cv.CV_CHAIN_APPROX_SIMPLE)
@@ -4838,31 +4839,31 @@ Also, a CvSeq object has methods
 Some OpenCV functions (for example \cross{FindContours}) can return multiple CvSeq objects, connected by these relations.
 In this case the methods return the other sequences.  If no relation between sequences exists, then the methods return \texttt{None}.
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 \begin{lstlisting}
 
-#define CVgSEQUENCE\_FIELDS() \
+#define CV_SEQUENCE\_FIELDS() \
     int flags; /* micsellaneous flags */ \
-    int headergsize; /* size of sequence header */ \
-    struct CvSeq* hgprev; /* previous sequence */ \
-    struct CvSeq* hgnext; /* next sequence */ \
-    struct CvSeq* vgprev; /* 2nd previous sequence */ \
-    struct CvSeq* vgnext; /* 2nd next sequence */ \
+    int header_size; /* size of sequence header */ \
+    struct CvSeq* h_prev; /* previous sequence */ \
+    struct CvSeq* h_next; /* next sequence */ \
+    struct CvSeq* v_prev; /* 2nd previous sequence */ \
+    struct CvSeq* v_next; /* 2nd next sequence */ \
     int total; /* total number of elements */ \
-    int elemgsize;/* size of sequence element in bytes */ \
-    char* blockgmax;/* maximal bound of the last block */ \
+    int elem_size;/* size of sequence element in bytes */ \
+    char* block_max;/* maximal bound of the last block */ \
     char* ptr; /* current write pointer */ \
-    int deltagelems; /* how many elements allocated when the sequence grows 
+    int delta_elems; /* how many elements allocated when the sequence grows 
 			(sequence granularity) */ \
     CvMemStorage* storage; /* where the seq is stored */ \
-    CvSeqBlock* freegblocks; /* free blocks list */ \
+    CvSeqBlock* free_blocks; /* free blocks list */ \
     CvSeqBlock* first; /* pointer to the first sequence block */
 
 typedef struct CvSeq
 {
-    CVgSEQUENCE\_FIELDS()
+    CV_SEQUENCE_FIELDS()
 } CvSeq;
 
 \end{lstlisting}
@@ -5268,7 +5269,7 @@ char* cvSeqInsert( \par CvSeq* seq,\par int before\_index,\par void* element=NUL
 \end{description}
 
 The function \texttt{cvSeqInsert} shifts the sequence elements from the inserted position to the nearest end of the sequence and copies the \texttt{element} content there if the pointer is not NULL. The function returns a pointer to the inserted element.
-')
+\fi
 
 \cvfunc{SeqRemove}\label{SeqRemove}
 
@@ -5314,7 +5315,7 @@ sequence. The function does not return the memory to the storage block, but this
 memory is reused later when new elements are added to the sequence. The function has
 'O(1)' time complexity.
 
-ONLY_C(`
+\ifC
 \cvfunc{GetSeqElem}\label{GetSeqElem}
 
 Returns a pointer to a sequence element according to its index.
@@ -5438,7 +5439,7 @@ CvSeq* cvSeqSlice( \par const CvSeq* seq,\par CvSlice slice,\par CvMemStorage* s
 
 The function \texttt{cvSeqSlice} creates a sequence that represents the specified slice of the input sequence. The new sequence either shares the elements with the original sequence or has its own copy of the elements. So if one needs to process a part of sequence but the processing function does not have a slice parameter, the required sub-sequence may be extracted using this function.
 
-')
+\fi
 
 \cvfunc{CloneSeq}\label{CloneSeq}
 
@@ -5456,7 +5457,8 @@ CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );
 \end{description}
 
 The function \texttt{cvCloneSeq} makes a complete copy of the input sequence and returns it.
-ONLY_C(`The call
+\ifC
+The call
 
 \begin{lstlisting}
 cvCloneSeq( seq, storage )
@@ -5467,7 +5469,7 @@ is equivalent to
 \begin{lstlisting}
 cvSeqSlice]( seq, CV_WHOLE_SEQ, storage, 1 )
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{SeqRemoveSlice}\label{SeqRemoveSlice}
 
@@ -5487,7 +5489,7 @@ void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
 
 The function \texttt{cvSeqRemoveSlice} removes a slice from the sequence.
 
-ONLY_C(`
+\ifC
 \cvfunc{SeqInsertSlice}\label{SeqInsertSlice}
 
 Inserts an array in the middle of a sequence.
@@ -5509,7 +5511,7 @@ The function \texttt{cvSeqInsertSlice} inserts all \texttt{from\_arr}
 array elements at the specified position of the sequence. The array
 \texttt{from\_arr} can be a matrix or another sequence.
 
-')
+\fi
 
 \cvfunc{SeqInvert}\label{SeqInvert}
 
@@ -5528,7 +5530,7 @@ void cvSeqInvert( CvSeq* seq );
 
 The function \texttt{cvSeqInvert} reverses the sequence in-place - makes the first element go last, the last element go first and so forth.
 
-ONLY_C(`
+\ifC
 \cvfunc{SeqSort}\label{SeqSort}
 
 Sorts sequence element using the specified comparison function.
@@ -5820,7 +5822,7 @@ void cvSetSeqReaderPos( \par CvSeqReader* reader,\par int index,\par int is\_rel
 
 The function \texttt{cvSetSeqReaderPos} moves the read position to an absolute position or relative to the current position.
 
-')
+\fi
 
 \subsection{Sets}
 
@@ -5828,7 +5830,7 @@ The function \texttt{cvSetSeqReaderPos} moves the read position to an absolute p
 
 Collection of nodes.
 
-ONLY_PYTHON(`
+\ifPython
 Some OpenCV functions return a CvSet object. The CvSeq obect is iterable, for example:
 
 \begin{lstlisting}
@@ -5837,9 +5839,9 @@ for i in s:
 print set(s)
 print list(s)
 \end{lstlisting}
-')
+\fi
 
-ONLY_C(`
+\ifC
 \begin{lstlisting}
 
 typedef struct CvSetElem
@@ -6026,9 +6028,9 @@ void cvClearSet( CvSet* set\_header );
 
 The function \texttt{cvClearSet} removes all elements from set. It has O(1) time complexity.
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 \subsection{Graphs}
 
 
@@ -6688,7 +6690,7 @@ void cvRemoveNodeFromTree( \par void* node,\par void* frame );
 \cvarg{frame}{The top level node. If \texttt{node-$>$v\_prev = NULL} and \texttt{node-$>$h\_prev} is NULL (i.e., if \texttt{node} is the first child of \texttt{frame}), \texttt{frame-$>$v\_next} is set to \texttt{node-$>$h\_next} (i.e., the first child or frame is changed).}
 \end{description}
 
-')
+\fi
 
 The function \texttt{cvRemoveNodeFromTree} removes a node from a tree. The function does not deallocate any memory; it can only modify links of the tree nodes.
 
@@ -6862,14 +6864,14 @@ void cvFillPoly( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int cont
 
 \begin{description}
 \cvarg{img}{Image}
-ONLY_C(`
+\ifC
 \cvarg{pts}{Array of pointers to polygons}
 \cvarg{npts}{Array of polygon vertex counters}
 \cvarg{contours}{Number of contours that bind the filled region}
-')
-ONLY_PYTHON(`
+\fi
+\ifPython
 \cvarg{polys}{List of lists of (x,y) pairs.  Each list of points is a polygon.}
-')
+\fi
 \cvarg{color}{Polygon color}
 \cvarg{line\_type}{Type of the polygon boundaries, see \cross{Line} description}
 \cvarg{shift}{Number of fractional bits in the vertex coordinates}
@@ -6917,14 +6919,14 @@ void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int cont
 }{CPP}{PolyLine(img,pts,is\_closed,color,thickness=1,line\_type=8,shift=0)-> None}
 
 \begin{description}
-ONLY_C(`
+\ifC
 \cvarg{pts}{Array of pointers to polygons}
 \cvarg{npts}{Array of polygon vertex counters}
 \cvarg{contours}{Number of contours that bind the filled region}
-')
-ONLY_PYTHON(`
+\fi
+\ifPython
 \cvarg{polys}{List of lists of (x,y) pairs.  Each list of points is a polygon.}
-')
+\fi
 \cvarg{img}{Image}
 \cvarg{is\_closed}{Indicates whether the polylines must be drawn
 closed. If closed, the function draws the line from the last vertex
@@ -7103,7 +7105,7 @@ int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt
 \cvarg{image}{Image to sample the line from}
 \cvarg{pt1}{First ending point of the line segment}
 \cvarg{pt2}{Second ending point of the line segment}
-ONLY_C(\cvarg{line\_iterator}{Pointer to the line iterator state structure})
+\cvC{\cvarg{line\_iterator}{Pointer to the line iterator state structure}}
 \cvarg{connectivity}{The scanned line connectivity, 4 or 8.}
 \cvarg{left\_to\_right}{
 If ($ \texttt{left\_to\_right} = 0 $ ) then the line is scanned in the specified order, from \texttt{pt1} to \texttt{pt2}.
@@ -7119,7 +7121,7 @@ two ending points may be retrieved by successive calls of
 calculated one by one using a 4-connected or 8-connected Bresenham
 algorithm.
 
-ONLY_C(`
+\ifC
 \cvfunc{Example: Using line iterator to calculate the sum of pixel values along the color line}
 
 \begin{lstlisting}
@@ -7153,7 +7155,7 @@ CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 }
 
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{ClipLine}\label{ClipLine}
 
@@ -7166,17 +7168,17 @@ int cvClipLine( \par CvSize img\_size,\par CvPoint* pt1,\par CvPoint* pt2 );
 }{CPP}{ClipLine(img, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
 
 \begin{description}
-\cvarg{img\_size}{Size of the image ONLY_PYTHON(as a 2-tuple)}
-\cvarg{pt1}{First ending point of the line segment. ONLY_C(It is modified by the function.)}
-\cvarg{pt2}{Second ending point of the line segment. ONLY_C(It is modified by the function.)}
+\cvarg{img\_size}{Size of the image \cvPy{as a 2-tuple}}
+\cvarg{pt1}{First ending point of the line segment. \cvC{It is modified by the function.}}
+\cvarg{pt2}{Second ending point of the line segment. \cvC{It is modified by the function.}}
 \end{description}
 
 The function \texttt{cvClipLine} calculates a part of the line
 segment which is entirely within the image.
-ONLY_C(`It returns 0 if the line segment is completely outside the image and 1 otherwise.')
-ONLY_PYTHON(`If the line segment is outside the image, it returns None. If the line segment is inside the image it returns a new pair of points.')
+\cvC{It returns 0 if the line segment is completely outside the image and 1 otherwise.}
+\cvPy{If the line segment is outside the image, it returns None. If the line segment is inside the image it returns a new pair of points.}
 
-ONLY_C(`
+\ifC
 \cvfunc{Ellipse2Poly}\label{Ellipse2Poly}
 
 Approximates an elliptic arc with a polyline.
@@ -7201,11 +7203,11 @@ at maximum.}
 
 The function \texttt{cvEllipse2Poly} computes the vertices of a polyline that approximates the specified elliptic arc. It is used by \cross{Ellipse}.
 
-')
+\fi
 
 \section{Data Persistence and RTTI}
 
-ONLY_C('
+\ifC
 \subsection{File Storage}
 
 \cvstruct{CvFileStorage}\label{CvFileStorage}
@@ -8169,11 +8171,11 @@ sequence elements. As with any sequence, some parts of the file node
 sequence may be skipped or read repeatedly by repositioning the reader
 using \cross{SetSeqReaderPos}.
 
-')
+\fi
 
 \subsection{RTTI and Generic Functions}
 
-ONLY_C(`
+\ifC
 \cvstruct{CvTypeInfo}\label{CvTypeInfo}
 
 Type information.
@@ -8338,7 +8340,7 @@ void* cvClone( const void* struct\_ptr );
 
 The function \texttt{cvClone} finds the type of a given object and calls \texttt{clone} with the passed object.
 
-')
+\fi
 
 \cvfunc{Save}\label{Save}
 
@@ -8355,7 +8357,7 @@ void cvSave( \par const char* filename,\par const void* struct\_ptr,\par const c
 \cvarg{struct\_ptr}{Object to save}
 \cvarg{name}{Optional object name. If it is NULL, the name will be formed from \texttt{filename}.}
 \cvarg{comment}{Optional comment to put in the beginning of the file}
-ONLY_C(`\cvarg{attributes}{Optional attributes passed to \cross{Write}}')
+\cvC{\cvarg{attributes}{Optional attributes passed to \cross{Write}}}
 \end{description}
 
 The function \texttt{cvSave} saves an object to a file. It provides a simple interface to \cross{Write}.
@@ -8374,7 +8376,7 @@ void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par 
 \cvarg{filename}{File name}
 \cvarg{memstorage}{Memory storage for dynamic structures, such as \cross{CvSeq} or \cross{CvGraph} . It is not used for matrices or images.}
 \cvarg{name}{Optional object name. If it is NULL, the first top-level object in the storage will be loaded.}
-ONLY_C(`\cvarg{real\_name}{Optional output parameter that will contain the name of the loaded object (useful if \texttt{name=NULL})}')
+\cvC{\cvarg{real\_name}{Optional output parameter that will contain the name of the loaded object (useful if \texttt{name=NULL})}}
 \end{description}
 
 The function \texttt{cvLoad} loads an object from a file. It provides a
@@ -8397,10 +8399,11 @@ int  cvCheckArr( \par const CvArr* arr,\par int flags=0,\par double min\_val=0,\
 
 }{CPP}{CheckArr(arr,flags=0,min\_val=0,max\_val=0)-> int}
 
-ONLY_C(`
+\ifC
 \begin{lstlisting}
 #define cvCheckArray cvCheckArr
-\end{lstlisting}')
+\end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{arr}{The array to check}
@@ -8435,7 +8438,7 @@ void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* la
 \cvarg{cluster\_count}{Number of clusters to split the set by}
 \cvarg{labels}{Output integer vector storing cluster indices for every sample}
 \cvarg{termcrit}{Specifies maximum number of iterations and/or accuracy (distance the centers can move by between subsequent iterations)}
-ONLY_C(`
+\ifC
 \cvarg{attempts}{How many times the algorithm is executed using different initial labelings. The algorithm returns labels that yield the best compactness (see the last function parameter)}
 \cvarg{rng}{Optional external random number generator; can be used to fully control the function behaviour}
 \cvarg{flags}{Can be 0 or \texttt{CV\_KMEANS\_USE\_INITIAL\_LABELS}. The latter
@@ -8454,7 +8457,7 @@ user can use only the core of the function, set the number of
 attempts to 1, initialize labels each time using a custom algorithm
 \newline (\texttt{flags}=\texttt{CV\_KMEAN\_USE\_INITIAL\_LABELS}) and, based on the output compactness
 or any other criteria, choose the best clustering.}
-')
+\fi
 \end{description}
 
 The function \texttt{cvKMeans2} implements a k-means algorithm that finds the
@@ -8462,7 +8465,7 @@ centers of \texttt{cluster\_count} clusters and groups the input samples
 around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
 samples stored in the row $i$ of the \texttt{samples} matrix.
 
-ONLY_C(`
+\ifC
 \cvfunc{Example: Clustering random samples of multi-gaussian distribution with k-means}
 \begin{lstlisting}
 #include "cxcore.h"
@@ -8547,9 +8550,9 @@ void main( int argc, char** argv )
 }
 \end{lstlisting}
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 \cvfunc{SeqPartition}\label{SeqPartition}
 
 Splits a sequence into equivalency classes.
@@ -8652,18 +8655,18 @@ int main( int argc, char** argv )
 }
 \end{lstlisting}
 
-')
+\fi
 
 \section{Error Handling and System Functions}
 
 \subsection{Error Handling}
 
-ONLY_PYTHON(`
+\ifPython
 Errors in argument type cause a \texttt{TypeError} exception.
 OpenCV errors cause a cv.error exception.
-')
+\fi
 
-ONLY_C(`
+\ifC
 Error handling in OpenCV is similar to IPL (Image Processing
 Library). In the case of an error, functions do not return the error
 code. Instead, they raise an error using \texttt{CV\_ERROR}
@@ -8998,9 +9001,9 @@ OpenCV ERROR: Bad argument (input_array or output_array are not valid matrices)
 Terminating the application...
 \end{verbatim}
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 \subsection{System and Utility Functions}
 
 \cvfunc{Alloc}\label{Alloc}
@@ -9227,5 +9230,5 @@ processing and all the allocation/deallocation is done by CXCORE, or
 if all the allocation/deallocation is done by IPL and some of OpenCV
 functions are used to process the data.
 
-')
+\fi
 

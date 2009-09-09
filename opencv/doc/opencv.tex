@@ -59,10 +59,15 @@ backgroundcolor=\color{shadecolor}
 %%% Define these to get rid of warnings
 \def\genc{true}
 \def\genpy{true}
+\def\targetlang{c}
+
+\newif\ifC
+\newif\ifPython
+\ifthenelse{\equal{\targetlang}{c}}{\Ctrue}{\Pythontrue}
 
 %%% Chapters %%%
-\include{CxCore-c}
-\include{CvReference-c}
+\include{CxCore}
+\include{CvReference}
 \include{CvAux}
 \include{HighGui}
 \include{MachineLearning}
