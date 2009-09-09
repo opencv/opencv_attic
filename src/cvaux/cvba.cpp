@@ -714,7 +714,7 @@ void LevMarqSparse::optimize() //main function that runs minimization
 
 //Utilities
 
-void fjac(int i, int j, CvMat *point_params, CvMat* cam_params, CvMat* A, CvMat* B, void* data) 
+void fjac(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* A, CvMat* B, void* /*data*/) 
 {
     //compute jacobian per camera parameters (i.e. Aij)
     //take i-th point 3D current coordinates
@@ -925,7 +925,7 @@ void fjac(int i, int j, CvMat *point_params, CvMat* cam_params, CvMat* A, CvMat*
 #endif
     
 };
-void func(int i, int j, CvMat *point_params, CvMat* cam_params, CvMat* estim, void* data) 
+void func(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* estim, void* /*data*/) 
 {
     //just do projections
     CvMat _Mi;
