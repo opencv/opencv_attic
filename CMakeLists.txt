@@ -448,9 +448,7 @@ endif()
 
 endif()
 
-if(UNIX OR APPLE OR ${CMAKE_GENERATOR} MATCHES "MSYS Makefiles")
-    set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
-endif()
+set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
 
 # ----------------------------------------------------------------------------
 #   				UPDATE CONFIG FILES & SCRIPTS:
