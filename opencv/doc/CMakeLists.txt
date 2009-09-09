@@ -40,7 +40,7 @@ foreach(f ${refman_srcs})
 endforeach()
 
 set(pdflatex_args -interaction=batchmode
-"'\\newcommand{\\genc}{true}\\newcommand{\\genpy}{true}\\newcommand{\\targetlang}{c}\\input{opencv.tex}'")
+"\"\\newcommand{\\genc}{true}\\newcommand{\\genpy}{true}\\newcommand{\\targetlang}{c}\\input{opencv.tex}\"")
 
 add_custom_command(
   OUTPUT    ${CMAKE_CURRENT_BINARY_DIR}/opencv.aux
@@ -79,18 +79,31 @@ add_custom_command(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
 
-add_custom_target(MakePicsLink
-   COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/pics ${CMAKE_CURRENT_BINARY_DIR}/pics
-   )
+set(PICS_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/pics")
+message(STATUS "Copying pictures to the build directory")
+make_directory(${PICS_OUT_DIR})
+
+file(GLOB pics RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/pics" pics/*.jpg pics/*.png)
+
+foreach(p ${pics})
+    configure_file(
+           "pics/${p}"
+           "${PICS_OUT_DIR}/${p}"
+           COPYONLY)
+endforeach()
+
+#add_custom_target(MakePicsLink
+#   COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/pics ${CMAKE_CURRENT_BINARY_DIR}/pics
+#   )
   
 # Eventually trigger the whole process
 add_custom_target(ReferenceManual ALL echo
    DEPENDS   ${CMAKE_CURRENT_BINARY_DIR}/opencv.log
    )
 
-add_dependencies(ReferenceManual MakePicsLink)
+#add_dependencies(ReferenceManual MakePicsLink)
 
-install(FILES "${OPENCV_CURRENT_BINARY_DIR}/opencv.pdf"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/opencv.pdf"
         DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT doc)
         
 endif() # BUILD_LATEX_DOCS AND PDFLATEX_COMPILER
