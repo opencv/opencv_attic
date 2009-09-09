@@ -1,4 +1,4 @@
-(if you noticed that some names are missing, please mail to Vadim Pisarevsky)
+(if you noticed that some names are missing, please mail to vadim.pisarevsky@gmail.com)
 
 Original OpenCV committee (vision, functionality proposals etc.):
 -----------------------------------------------------------------
@@ -21,13 +21,18 @@ Alekseev, Aleksey       Intel Corp.                IppCV testing
 Asbach, Mark            RWTH Aachen University     New-style Linux makefiles, SWIG wrappers, Mac OS X porting
 
 Baksheev, Anatoly       Argus CV                   CMake support for OpenCV, Spin Images
-Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; added cvLinearPolar
+Blanco, Jose Luis       Universidad de Malaga, Spain   CMake support for OpenCV; added cvLinearPolar,
+                                                   multiple bug reports and misc. patches
 Boldyrev, Sergey        Intel Corp.                rpm spec & linux makefiles
 Bornet, Olivier         IDIAP Research Institute   New-style Linux makefiles, SWIG & specialized Python wrappers 
 Bouguet, Jean-Yves      Intel Corp.                Algorithms for Camera calibration, calibration toolbox for MATLAB, LK in pyramids ...
 Bovyrin, Alexander      Intel Corp.                Contours, Stereo, Improvements in object detection, blobtrack/vs module in cvaux
-Bowman, James           Willow Garage Inc.         Latex-based OpenCV documentation
-Bradski, Gary           Intel Corp.                Idea and Vision, Leading, CAMSHIFT & MHI algorithms and more ...
+Bowman, James           Willow Garage Inc.         Latex-based OpenCV documentation,
+                                                   the new-style Python wrappers opencvpython,
+                                                   a lot of QA work.                                                   
+Bradski, Gary           Intel Corp.                Idea and Vision, Leading, Promotion, the OpenCV book.
+                                                   Also, CAMSHIFT & MHI algorithms,
+                                                   Codebook background/foreground subtraction etc.
 Bradley, David          Princeton Univ.            Haar classifier for profile faces
 Breen, Ed               ???                        EiC intepreter, used for Hawk
 Burenkov, Denis         Moscow State Uni           Contour morphing, several demo scripts
@@ -43,8 +48,11 @@ Dadgostar, Farhad       ???                        Adaptive Skin Detector, Fuzzy
 Davies, Bob             Intel Corp.                First OpenCV installation program, communications with user group, tech. advisor
 Delacour, Xavier        PhaseSpace Inc.            Octave bindings, KD trees/BBF and LSH search, some Video I/O components for highgui
 Devernay, Frederic      INRIA (?)                  Multiple patches for OpenCV (cvcam, cxcore, cv, highgui).
-Dimashova, Maria        Argus CV.                  TrainCascade application and the new object detection class
-                                                   cv::CascadeClassifier.
+Dimashova, Maria        Argus CV.                  TrainCascade application,
+                                                   the new object detection class cv::CascadeClassifier,
+                                                   Extremely Random Trees in MLL,
+                                                   a lot of optimization and QA work on MLL.
+                                                   
 Don Murray              PointGrey                  PointGrey SDK and patches for stereo gesture recognition code
 Dubey, Premnath         ???                        Patch for cvcam (Windows version)
 
@@ -80,10 +88,12 @@ Liu Liu                 ???                        SURF, Spill trees, MSERs
 Lantz, Philip           Intel Corp.                3d Tracker
 Lundin, Magnus          ???                        Patches and new functionality for Linux version of highgui
 
-Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes, optical flow, improved face detection, stereo and more ...
-Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code (C),
+Molinov, Sergey         Intel Corp.                HMM face recognition code, POSIT, snakes,
+                                                   optical flow, improved face detection,
+                                                   stereo and more ...
+Mosyagin, Valery        Intel Corp.                View morphing, camera calibration code v.1,
                                                    fundamental matrix estimation
-Muehlmann, Karsten      Lehrstuhl fur Informatik V  Another stereo correspondence code (not included yet)
+Muehlmann, Karsten      Lehrstuhl fur Informatik V  3D stereo correspondence algorithm (not included yet)
 Muja, Marius            Willow Garage Inc.         FLANN bindings
 Nefian, Ara             Intel Corp.                Algorithm for HMM face recognition
 
@@ -104,6 +114,10 @@ Schiele, Bernt          ETH Zurich                 Haar classifier for fullbody,
 Shavit, Adi             ???                        OpenCV forum moderation, OpenCV logo
 Shevtsova, Irina        Moscow State Uni           EM, Bayesian classifier, Random Trees,
                                                    CNN in Machine Learning module; SVM enhancements
+Shiqi Yu                Shenzhen Institute of      Haar cascades for eye detection. 
+                        Advanced Technology        The author of the first book on OpenCV (in Chinese)
+                                                   and the translator to Chinese
+                                                   of the OReilly OpenCV book.
 Sobolev, Andrey         Moscow State Uni           Contour skeletons and linear-contour model
 Stanchak, Roman         Naval Research Lab         Multiple improvements in Highgui (GTK+), Python wrappers and the core functionality
 Stavinzky, Jay          ???                        8u->8u L1 Distance transform.
