@@ -1880,8 +1880,8 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
 }{CPP}{FloodFill(image,seed\_point,new\_val,lo\_diff=cvScalarAll(0),up\_diff=cvScalarAll(0),flags=4,mask=NULL)-> comp}
 
 \begin{lstlisting}
-\#define CV\_FLOODFILL\_FIXED\_RANGE (1 << 16)
-\#define CV\_FLOODFILL\_MASK\_ONLY   (1 << 17)
+#define CV_FLOODFILL_FIXED_RANGE (1 << 16)
+#define CV_FLOODFILL_MASK_ONLY   (1 << 17)
 \end{lstlisting}
 
 \begin{description}
@@ -3415,7 +3415,7 @@ The function \texttt{cvMaxRect} finds the minimum area rectangle that contains b
 \includegraphics[width=0.5\textwidth]{pics/maxrect.png}
 
 \ifC
-\cvfunc{CvBox2D}\label{CvBox2D}
+\cvstruct{CvBox2D}\label{CvBox2D}
 
 Rotated 2D box.
 
