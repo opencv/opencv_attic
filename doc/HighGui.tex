@@ -1,4 +1,3 @@
-include(common.m4)
 \chapter{HighGui}
 
 \subsection{HighGUI overview}
@@ -100,7 +99,7 @@ void cvMoveWindow( const char* name, int x, int y );
 
 The function \texttt{cvMoveWindow} changes the position of the window.
 
-ONLY_C(`
+\ifC
 \cvfunc{GetWindowHandle}
 
 Gets the window's handle by its name.
@@ -130,7 +129,7 @@ const char* cvGetWindowName( void* window\_handle );
 \end{description}
 
 The function \texttt{cvGetWindowName} returns the name of the window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
-')
+\fi
 
 \cvfunc{ShowImage} 
 
@@ -320,7 +319,7 @@ int cvSaveImage( const char* filename, const CvArr* image );
 
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
-ONLY_C(`
+\ifC
 \subsection{Video I/O functions}
 
 \cvfunc{Capture} 
@@ -547,9 +546,9 @@ int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 \end{description}
 
 The function \texttt{cvWriteFrame} writes/appends one frame to a video file.
-')
+\fi
 
-ONLY_C(`
+\ifC
 \subsection{Utility and System Functions}
 
 \cvfunc{InitSystem}
@@ -592,4 +591,4 @@ void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
 \end{description}
 
 The function \texttt{cvConvertImage} converts one image to another and flips the result vertically if desired. The function is used by \cross{ShowImage}.
-')
+\fi

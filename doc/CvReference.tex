@@ -1,4 +1,3 @@
-include(common.m4)
 \chapter{CvReference}
 \section{Image Processing}
 
@@ -556,7 +555,7 @@ int main(int argc, char** argv)
 
 \subsection{Sampling, Interpolation and Geometrical Transforms}
 
-ONLY_C(`
+\ifC
 \cvfunc{SampleLine}\label{SampleLine}
 Reads the raster line to the buffer.
 
@@ -588,7 +587,7 @@ in the case of a 4-connected line}
 \end{description}
 
 The function \texttt{cvSampleLine} implements a particular application of line iterators. The function reads all of the image points lying on the line between \texttt{pt1} and \texttt{pt2}, including the end points, and stores them into the buffer.
-')
+\fi
 
 \cvfunc{GetRectSubPix}\label{GetRectSubPix}
 
@@ -1120,7 +1119,7 @@ int* values=NULL );
 
 The function CreateStructuringElementEx allocates and fills the structure \texttt{IplConvKernel}, which can be used as a structuring element in the morphological operations.
 
-ONLY_C(`
+\ifC
 \cvfunc{ReleaseStructuringElement}\label{ReleaseStructuringElement}
 
 Deletes a structuring element.
@@ -1135,7 +1134,7 @@ void cvReleaseStructuringElement( IplConvKernel** element );
 
 The function \texttt{cvReleaseStructuringElement} releases the structure \texttt{IplConvKernel} that is no longer needed. If \texttt{*element} is \texttt{NULL}, the function has no effect.
 
-')
+\fi
 
 \cvfunc{Erode}\label{Erode}
 
@@ -1973,7 +1972,7 @@ connected component detection. Contours can be also used for shape
 analysis and object recognition - see \texttt{squares.c} in the OpenCV
 sample directory.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvfunc{StartFindContours}\label{StartFindContours}
 
 Initializes the contour scanning process.
@@ -2047,7 +2046,7 @@ CvSeq* cvEndFindContours( \par CvContourScanner* scanner );
 \end{description}
 
 The function \texttt{cvEndFindContours} finishes the scanning process and returns a pointer to the first contour on the highest level.
-')
+\fi
 
 \cvfunc{PyrMeanShiftFiltering}
 
@@ -2232,7 +2231,7 @@ void cvGetHuMoments( CvMoments* moments, CvHuMoments* hu\_moments );
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
-ONLY_C(\cvarg{hu\_moments}{Pointer to the Hu moments structure})
+\cvC{\cvarg{hu\_moments}{Pointer to the Hu moments structure}}
 \end{description}
 
 The function \texttt{cvGetHuMoments} calculates the seven Hu invariants that are defined as:
@@ -2582,9 +2581,9 @@ CvHistogram* cvCreateHist(\par int dims,\par int* sizes,\par int type,\par float
 }{CPP}{CreateHist(dims, type, ranges, uniform = 1) -> hist}
 
 \begin{description}
-ONLY_C(`\cvarg{dims}{Number of histogram dimensions}
-\cvarg{sizes}{Array of the histogram dimension sizes}')
-ONLY_PYTHON(`\cvarg{dims}{for an N-dimensional histogram, list of length N giving the size of each dimension}')
+\cvC{\cvarg{dims}{Number of histogram dimensions}
+\cvarg{sizes}{Array of the histogram dimension sizes}}
+\cvPy{\cvarg{dims}{for an N-dimensional histogram, list of length N giving the size of each dimension}}
 \cvarg{type}{Histogram representation format: \texttt{CV\_HIST\_ARRAY} means that the histogram data is represented as a multi-dimensional dense array CvMatND; \texttt{CV\_HIST\_SPARSE} means that histogram data is represented as a multi-dimensional sparse array CvSparseMat}
 \cvarg{ranges}{Array of ranges for the histogram bins. Its meaning depends on the \texttt{uniform} parameter value. The ranges are used for when the histogram is calculated or backprojected to determine which histogram bin corresponds to which value/tuple of values from the input image(s)}
 \cvarg{uniform}{Uniformity flag; if not 0, the histogram has evenly
@@ -2616,7 +2615,7 @@ via the function \cross{SetHistBinRanges}. Though \cross{CalcHist}
 and \cross{CalcBackProject} may process 8-bit images without setting
 bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 
-ONLY_C(`
+\ifC
 \cvfunc{SetHistBinRanges}\label{SetHistBinRanges}
 
 Sets the bounds of the histogram bins.
@@ -2632,9 +2631,9 @@ void cvSetHistBinRanges( \par CvHistogram* hist,\par float** ranges,\par int uni
 \end{description}
 
 The function \texttt{cvSetHistBinRanges} is a stand-alone function for setting bin ranges in the histogram. For a more detailed description of the parameters \texttt{ranges} and \texttt{uniform} see the \cross{CalcHist} function, that can initialize the ranges as well. Ranges for the histogram bins must be set before the histogram is calculated or the backproject of the histogram is calculated.
-')
+\fi
 
-ONLY_C(`
+\ifC
 \cvfunc{ReleaseHist}\label{ReleaseHist}
 
 Releases the histogram.
@@ -2648,7 +2647,7 @@ void cvReleaseHist( CvHistogram** hist );
 \end{description}
 
 The function \texttt{cvReleaseHist} releases the histogram (header and the data). The pointer to the histogram is cleared by the function. If \texttt{*hist} pointer is already \texttt{NULL}, the function does nothing.
-')
+\fi
 
 \cvfunc{ClearHist}\label{ClearHist}
 
@@ -2664,7 +2663,7 @@ void cvClearHist( CvHistogram* hist );
 
 The function \texttt{ClearHist} sets all of the histogram bins to 0 in the case of a dense histogram and removes all histogram bins in the case of a sparse array.
 
-ONLY_C(`
+\ifC
 \cvfunc{MakeHistHeaderForArray}\label{MakeHistHeaderForArray}
 
 Makes a histogram out of an array.
@@ -2683,7 +2682,7 @@ CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHis
 \end{description}
 
 The function \texttt{cvMakeHistHeaderForArray} initializes the histogram, whose header and bins are allocated by th user. \cross{ReleaseHist} does not need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
-')
+\fi
 
 \ifplastex
 \cvfunc{QueryHistValue\_1D} \cvexp{float cvQueryHistValue\_1D( CvHistogram *hist, int idx0)}{}{}
@@ -2852,7 +2851,7 @@ Note: the method \texttt{CV\_COMP\_BHATTACHARYYA} only works with normalized his
 
 To compare a sparse histogram or more general sparse configurations of weighted points, consider using the \cross{CalcEMD2} function.
 
-ONLY_C(`
+\ifC
 \cvfunc{CopyHist}\label{CopyHist}
 
 Copies a histogram.
@@ -2873,7 +2872,7 @@ have equal types and sizes. Then the function copies the source histogram's
 bin values to the destination histogram and sets the same bin value ranges
 as in \texttt{src}.
 
-')
+\fi
 
 \cvfunc{CalcHist}\label{CalcHist}
 
@@ -3228,7 +3227,7 @@ CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int 
 
 This is a stand-alone approximation routine. The function \texttt{cvApproxChains} works exactly in the same way as \cross{FindContours} with the corresponding approximation flag. The function returns pointer to the first resultant contour. Other approximated contours, if any, can be accessed via the \texttt{v\_next} or \texttt{h\_next} fields of the returned structure.
 
-ifelse(TARGET_LANGUAGE,c,`
+\ifC
 \cvfunc{StartReadChainPoints}\label{StartReadChainPoints}
 
 Initializes the chain reader.
@@ -3253,7 +3252,7 @@ CvPoint cvReadChainPoint( CvChainPtReader* reader );
 
 The function \texttt{cvReadChainPoint} returns the current chain point and updates the reader position.
 
-')
+\fi
 
 \cvfunc{ApproxPoly}\label{ApproxPoly}
 
@@ -3415,7 +3414,7 @@ The function \texttt{cvMaxRect} finds the minimum area rectangle that contains b
 
 \includegraphics[width=0.5\textwidth]{pics/maxrect.png}
 
-ONLY_C(`
+\ifC
 \cvfunc{CvBox2D}\label{CvBox2D}
 
 Rotated 2D box.
@@ -3430,9 +3429,9 @@ typedef struct CvBox2D
 }
 CvBox2D;
 \end{lstlisting}
-')
+\fi
 
-ONLY_C(`
+\ifC
 \cvfunc{PointSeqFromMat}\label{PointSeqFromMat}
 
 Initializes a point sequence header from a point vector.
@@ -3483,7 +3482,7 @@ cvDrawContours( img,
                 CV_RGB(255,0,0),
                 0, 3, 8, cvPoint(0,0));
 \end{lstlisting}
-')
+\fi
 
 \cvfunc{BoxPoints}\label{BoxPoints}
 
@@ -3549,10 +3548,10 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{param}{Numerical parameter (\texttt{C}) for some types of distances, if 0 then some optimal value is chosen}
 \cvarg{reps, aeps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line) and angle, respectively; 0.01 would be a good default value for both.}
 \cvarg{line}{The output line parameters. In the case of a 2d fitting,
-it is ONLY_C(an array) ONLY_PYTHON(a tuple) of 4 floats \texttt{(vx, vy,
+it is \cvC{an array} \cvPy{a tuple} of 4 floats \texttt{(vx, vy,
 x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
 line and \texttt{(x0, y0)} is some point on the line. in the case of a
-3D fitting it is ONLY_C(an array) ONLY_PYTHON(a tuple) of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
+3D fitting it is \cvC{an array} \cvPy{a tuple} of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
 where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line
 and \texttt{(x0, y0, z0)} is some point on the line}
 \end{description}
@@ -4058,15 +4057,15 @@ CvSubdiv2DPointLocation  cvSubdiv2DLocate( \par CvSubdiv2D* subdiv,\par CvPoint2
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
 \cvarg{pt}{The point to locate}
-ONLY_C(\cvarg{edge}{The output edge the point falls onto or right to})
-ONLY_C(\cvarg{vertex}{Optional output vertex double pointer the input point coinsides with})
-ONLY_PYTHON(\cvarg{loc}{The location of the point within the triangulation})
-ONLY_PYTHON(\cvarg{where}{The edge or vertex.  See below.})
+\cvC{\cvarg{edge}{The output edge the point falls onto or right to}}
+\cvC{\cvarg{vertex}{Optional output vertex double pointer the input point coinsides with}}
+\cvPy{\cvarg{loc}{The location of the point within the triangulation}}
+\cvPy{\cvarg{where}{The edge or vertex.  See below.}}
 \end{description}
 
 The function \texttt{cvSubdiv2DLocate} locates the input point within the subdivision. There are 5 cases:
 
-ONLY_C(`
+\ifC
 \begin{itemize}
  \item The point falls into some facet. The function returns \texttt{CV\_PTLOC\_INSIDE} and \texttt{*edge} will contain one of edges of the facet.
  \item The point falls onto the edge. The function returns \texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{*edge} will contain this edge.
@@ -4074,9 +4073,9 @@ ONLY_C(`
  \item The point is outside the subdivsion reference rectangle. The function returns \texttt{CV\_PTLOC\_OUTSIDE\_RECT} and no pointers are filled.
  \item One of input arguments is invalid. A runtime error is raised or, if silent or "parent" error processing mode is selected, \\texttt{CV\_PTLOC\_ERROR} is returnd.
 \end{itemize}
-')
+\fi
 
-ONLY_PYTHON(
+\ifPython
 \begin{itemize}
  \item The point falls into some facet.                          \texttt{loc} is \texttt{CV\_PTLOC\_INSIDE} and \texttt{where} is one of edges of the facet.
  \item The point falls onto the edge.                            \texttt{loc} is \texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{where} is the edge.
@@ -4084,7 +4083,7 @@ ONLY_PYTHON(
  \item The point is outside the subdivsion reference rectangle.  \texttt{loc} is \texttt{CV\_PTLOC\_OUTSIDE\_RECT} and \texttt{where} is None.
  \item One of input arguments is invalid. The function raises an exception.
 \end{itemize}
-)
+\fi
 
 \cvfunc{FindNearestPoint2D}\label{FindNearestPoint2D}
 
@@ -4517,9 +4516,9 @@ CalcOpticalFlowPyrLK(  prev, curr, prev\_pyr, curr\_pyr, prev\_features, CvSize 
 \begin{description}
   \cvarg{CV\_LKFLOW\_PYR\_A\_READY}{pyramid for the first frame is precalculated before the call}
   \cvarg{CV\_LKFLOW\_PYR\_B\_READY}{ pyramid for the second frame is precalculated before the call}
-  ONLY_C(\cvarg{CV\_LKFLOW\_INITIAL\_GUESSES}{array B contains initial coordinates of features before the function call})
+  \cvC{\cvarg{CV\_LKFLOW\_INITIAL\_GUESSES}{array B contains initial coordinates of features before the function call}}
 \end{description}}
-ONLY_PYTHON(`\cvarg{guesses}{optional array of estimated coordinates of features in second frame, with same length as \texttt{prev_features}}')
+\cvPy{\cvarg{guesses}{optional array of estimated coordinates of features in second frame, with same length as \texttt{prev_features}}}
 \end{description}
 
 The function \texttt{cvCalcOpticalFlowPyrLK} implements the sparse iterative version of the Lucas-Kanade optical flow in pyramids
@@ -4539,7 +4538,7 @@ readiness flag for the corresponding image can be set in the next call
 (i.e., typically, for all the image pairs except the very first one
 \texttt{CV\_LKFLOW\_PYR\_A\_READY} is set).
 
-ONLY_C(`
+\ifC
 \subsection{Estimators}
 
 \cvfunc{CvKalman}\label{CvKalman}
@@ -4936,7 +4935,7 @@ void cvConDensUpdateByTime( \par CvConDensation* condens );
 \end{description}
 
 The function \texttt{cvConDensUpdateByTime} estimates the subsequent stochastic model state from its current state.
-')
+\fi
 
 \section{Pattern Recognition}
 
@@ -4976,7 +4975,7 @@ following Haar-like features:
 
 The feature used in a particular classifier is specified by its shape (1a, 2b etc.), position within the region of interest and the scale (this scale is not the same as the scale used at the detection stage, though these two scales are multiplied). For example, in the case of the third line feature (2c) the response is calculated as the difference between the sum of image pixels under the rectangle covering the whole feature (including the two white stripes and the black stripe in the middle) and the sum of the image pixels under the black stripe multiplied by 3 in order to compensate for the differences in the size of areas. The sums of pixel values over a rectangular regions are calculated rapidly using integral images (see below and the \cross{Integral} description).
 
-ONLY_PYTHON(`
+\ifPython
 A simple demonstration of face detection, which draws a rectangle around each detected face:
 
 \begin{lstlisting}
@@ -4990,9 +4989,9 @@ cv.SaveImage("faces_detected.jpg", img)
 
 \end{lstlisting}
 
-')
+\fi
 
-ONLY_C(`
+\ifC
 To see the object detector at work, have a look at the HaarFaceDetect demo.
 
 The following reference is for the detection part only. There
@@ -5161,7 +5160,7 @@ typedef struct CvAvgComp
 CvAvgComp;
 \end{lstlisting}
 
-')
+\fi
 
 \cvexp{
 CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade* cascade,\par CvMemStorage* storage,\par double scale\_factor=1.1,\par int min\_neighbors=3,\par int flags=0,\par CvSize min\_size=cvSize(0,\par0) );
@@ -5179,7 +5178,7 @@ CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade
 
 The function \texttt{cvHaarDetectObjects} finds rectangular regions in the given image that are likely to contain objects the cascade has been trained for and returns those regions as a sequence of rectangles. The function scans the image several times at different scales (see \cross{SetImagesForHaarClassifierCascade}). Each time it considers overlapping regions in the image and applies the classifiers to the regions using \cross{RunHaarClassifierCascade}. It may also apply some heuristics to reduce number of analyzed regions, such as Canny prunning. After it has proceeded and collected the candidate rectangles (regions that passed the classifier cascade), it groups them and returns a sequence of average rectangles for each large enough group. The default parameters (\texttt{scale\_factor} =1.1, \texttt{min\_neighbors} =3, \texttt{flags} =0) are tuned for accurate yet slow object detection. For a faster operation on real video images the settings are: \texttt{scale\_factor} =1.2, \texttt{min\_neighbors} =2, \texttt{flags} =\texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}, \texttt{min\_size} =\textit{minimum possible face size} (for example, $\sim$ 1/4 to 1/16 of the image area in the case of video conferencing).
 
-ONLY_C(`
+\ifC
 % ===== Example. Using cascade of Haar classifiers to find objects (e.g. faces). =====
 \begin{lstlisting}
 #include "cv.h"
@@ -5285,7 +5284,7 @@ using \cross{SetImagesForHaarClassifierCascade}. The function returns
 a positive value if the analyzed rectangle passed all the classifier stages
 (it is a candidate) and a zero or negative value otherwise.
 
-')
+\fi
 
 \section{Camera Calibration and 3D Reconstruction}
 
@@ -5915,7 +5914,7 @@ int cvFindChessboardCorners( \par const void* image,\par CvSize pattern\_size,\p
 \cvarg{pattern\_size}{The number of inner corners per chessboard row and column}
 ( pattern\_size = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
 \cvarg{corners}{The output array of corners detected}
-ONLY_C(`\cvarg{corner\_count}{The output corner counter. If it is not NULL, it stores the number of corners found}')
+\cvC{\cvarg{corner\_count}{The output corner counter. If it is not NULL, it stores the number of corners found}}
 \cvarg{flags}{Various operation flags, can be 0 or a combination of the following values:
 \begin{description}
  \cvarg{CV\_CALIB\_CB\_ADAPTIVE\_THRESH}{use adaptive thresholding to convert the image to black and white, rather than a fixed threshold level (computed from the average image brightness).}
@@ -6047,7 +6046,7 @@ The function \texttt{cvPOSIT} implements the POSIT algorithm. Image coordinates 
 
 Difference norm between two projections is the maximal distance between corresponding points. The parameter \texttt{criteria.epsilon} serves to stop the algorithm if the difference is small.
 
-ONLY_C(`
+\ifC
 \cvfunc{ReleasePOSITObject}\label{ReleasePOSITObject}
 
 Deallocates a 3D object structure.
@@ -6062,7 +6061,7 @@ void cvReleasePOSITObject( \par CvPOSITObject** posit\_object );
 
 The function \texttt{cvReleasePOSITObject} releases memory previously allocated by the function \cross{CreatePOSITObject}.
 
-')
+\fi
 
 \cvfunc{CalcImageHomography}\label{CalcImageHomography}
 
