@@ -8,7 +8,7 @@
   * [Optional] Subversion client (e.g. command-line svn tool, SmartSVN, Tortoise SVN)
   * [Optional] CMake 2.6 or later. CMake is now the only method of building OpenCV SVN snapshots
     on Windows and the recommended method on Linux/MacOSX.
-  * [Optional] Python 2.5 or later (Python 3.x support status is unknown),
+  * [Optional] Python 2.5.x or 2.6.x (Python 3.x support status is unknown),
     including the development files: Python.h, etc. in order to build Python wrappers
   * [Optional] SWIG 1.3.30 or later to build Python & Octave wrappers
     (in order to build Octave wrappers you will need at least SWIG 1.3.36).
@@ -16,6 +16,7 @@
     of IPP binaries and use them to achieve higher performance.
     If you have full IPP installed, on Windows you can also build custom IPP opencv_ipp*.dll
     that will include a small subset of IPP functions that are really used by OpenCV.
+  * [Optional] LiveTeX distribution (or MiKTeX on Windows) to build the up-to-date OpenCV reference manual
 
   Extra Prerequisities (Linux/BSD/other Unix-like OSes):
   ======================================================
@@ -47,7 +48,7 @@
   ==============================
   * Xcode 3.1 or later. It does not only include the required C++ compiler,
     but also Quicktime and Carbon frameworks that make highgui on MacOSX functional.
-    Besides, CMake can generate Xcode projects, so you can build OpenCV conveniently from within IDE.
+    Besides, CMake can generate Xcode projects, so you can build OpenCV conveniently from within the IDE.
 
   Getting the latest stable OpenCV version:
   =========================================
@@ -80,6 +81,13 @@
 
    2a. If you use CMake GUI, execute "Configure" to do the initial configuration,
       then adjust any options, then press "Configure" again and then press "Generate".
+      
+      For the best performance, and if you compiler and the platform supports it,
+      it is recommended to turn on SSE2 optimization
+      (on Mac and Windows it is turned on by default) and OpenMP support.
+      
+      Also, if you want to build Python wrappers, samples or the reference manual in PDF,
+      you should explicitly turn it on.
 
    2b. If you are using command line, enter the <cmake_binary_dir> and type
       "cmake [<some optional parameters...>] <path to the OpenCV source directory>"

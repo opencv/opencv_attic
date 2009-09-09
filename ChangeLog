@@ -154,11 +154,31 @@
     Many thanks to everybody who submitted bug reports and/or provided the patches!
 
 >>> Known issues:
-    * Borland compiler is not supported (but might work) in this update.
-    * 64-bit Windows is not supported (but might work) in this update.
-    * SF bug tracker still contains over 50 records of open bugs.
-      Many of them will be addressed in the next update.
+    * configure+autotools based build is currently broken.
+      Please, use CMake.
+    * OpenCV bug tracker at SF still lists about 150 open bugs.
+      Some of them may be actually fixed already, and most of the remaining bugs
+      are going to be fixed by OpenCV 2.0 gold.
+    * IPP is not supported. As the new OpenCV includes a lot of SSE2 code,
+      it may be not such a serious problem, though.
+      The support (at least for most important functions that do not have
+      SSE2 optimization) will be returned in 2.0 gold.
+    * The documentation has been updated and improved a lot, but it still
+      needs quite a bit of work:
+        - some of the new functionality in cvaux is not described yet.
+        - the bibliography part is broken
+        - there are quite a few known bugs and typos there
+        - many of the hyperlinks are not working.
+    * The existing tests partly cover the new functionality
+      (via the old backward-compatibility OpenCV 1.x API), but the coverage is
+      not sufficient of course.
+    * The new-style Python interface is not included yet  
 
+    Many of the problems will be addressed in 2.0 gold.
+    If you have found some specific problem, please, put the record to the bug tracker:
+    http://sourceforge.net/tracker/?group_id=22870
+    Better if the bug reports will include a small code sample in C++/python +
+    all the necessary data files needed to reproduce the problem.
 
 =============================================================================
                       OpenCV 1.1pre1, October, 2008
