@@ -10,9 +10,6 @@ if (BUILD_EXAMPLES)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
     endif()
     
-    file(GLOB SAMPLE_DATA_FILES *.avi *.data *.jpg *.png stereo_calib.txt)
-    install(FILES ${SAMPLE_DATA_FILES} DESTINATION bin COMPONENT dev)
-    
     # ---------------------------------------------
     #      Define executable targets
     # ---------------------------------------------
@@ -21,6 +18,11 @@ if (BUILD_EXAMPLES)
 		set_target_properties(${name} PROPERTIES PROJECT_LABEL "(EXAMPLE) ${name}")
     	add_dependencies(${name} cv cxcore highgui ml cvaux)
     	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} cv cxcore highgui ml cvaux)
+
+        if(WIN32)
+            install(TARGETS ${name}
+                RUNTIME DESTINATION "samples/c" COMPONENT main)
+        endif()
     ENDMACRO(MY_DEFINE_EXAMPLE)
     
     MY_DEFINE_EXAMPLE(adaptiveskindetector 	adaptiveskindetector.cpp)
@@ -62,9 +64,10 @@ if (BUILD_EXAMPLES)
     MY_DEFINE_EXAMPLE(polar_transforms	polar_transforms.c)
 endif(BUILD_EXAMPLES)
 
-if (INSTALL_C_EXAMPLES)
+if (INSTALL_C_EXAMPLES AND NOT WIN32)
     file(GLOB C_SAMPLES *.c *.cpp *.jpg *.png *.data makefile.* build_all.sh *.dsp *.cmd )
     install(FILES ${C_SAMPLES}
             DESTINATION share/opencv/samples/c
             PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-endif (INSTALL_C_EXAMPLES)
+endif ()
+

@@ -52,7 +52,7 @@ endif()
 # ----------------------------------------------------------------------------
 #  Current version number:
 # ----------------------------------------------------------------------------
-set(OPENCV_VERSION "1.1.1")
+set(OPENCV_VERSION "1.2.0")
 
 string(REGEX MATCHALL "[0-9]" OPENCV_VERSION_PARTS "${OPENCV_VERSION}")
 
@@ -648,35 +648,6 @@ else()
 set(OPENCV_DOC_INSTALL_PATH share/opencv/doc)
 endif()
 
-#-----------------------------------
-# Subdirectories:
-#-----------------------------------
-add_subdirectory(src)
-add_subdirectory(apps)
-
-if(BUILD_LATEX_DOCS)
-  include(OpenCVFindLATEX.cmake REQUIRED)
-    
-  if(PDFLATEX_COMPILER)
-    message(STATUS "PDF LaTeX found!")
-  endif()
-endif()
-
-add_subdirectory(doc)
-add_subdirectory(data)
-
-if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
-    add_subdirectory(samples)
-endif()
-
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
-
-add_subdirectory(interfaces)
-add_subdirectory(3rdparty)
-
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
 #  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
@@ -770,12 +741,11 @@ ADD_CUSTOM_TARGET(uninstall
 # ----------------------------------------------------------------------------
 include(InstallRequiredSystemLibraries)
 
-
 # ----------------------------------------------------------------------------
 #   CPack target
 # ----------------------------------------------------------------------------
 
-option(BUILD_PACKAGE "Build a installer with the SDK")
+set(BUILD_PACKAGE OFF CACHE BOOL "Build a installer with the SDK")
 
 if(BUILD_PACKAGE)
 
@@ -785,46 +755,68 @@ if(BUILD_PACKAGE)
 	@ONLY
 	)
 	
-	install(FILES 
-		AUTHORS
-		ChangeLog
-		COPYING
-		INSTALL
-		NEWS
-		README
-		THANKS
-		TODO
-		DESTINATION ${OPENCV_DOC_INSTALL_PATH}
-        COMPONENT doc
-		)
+    include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
-	IF (WIN32)
-		# Add the "win-install/OpenCVConfig.cmake" file to the "dev" install component 
+    set(root_files AUTHORS README ChangeLog COPYING INSTALL NEWS THANKS)
+
+    file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
+
+    if (NOT WIN32)
+        install(FILES ${root_files}
+	            DESTINATION ${OPENCV_DOC_INSTALL_PATH}
+                COMPONENT main)
+    else()
+        install(FILES ${root_files}
+	            DESTINATION "."
+                COMPONENT main)
+        install(FILES ${root_src_files}
+	            DESTINATION "."
+                COMPONENT src)
+		# Add the "win-install/OpenCVConfig.cmake" file to the "main" install component 
 		install(FILES 
 			"${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake"
 			DESTINATION "."
-			COMPONENT dev
+			COMPONENT main
 			)
 
-		# Add debug libs to "dev" install component 
-		file(GLOB EXTRA_LIBS_TO_INSTALL "${CMAKE_BINARY_DIR}/lib/Debug/*.lib")
-		install(FILES 
-			${EXTRA_LIBS_TO_INSTALL}
-			DESTINATION "lib"
-			COMPONENT dev
-			)
-		# Add debug DLLs to "dev" install component 
-		file(GLOB EXTRA_DLLS_TO_INSTALL "${CMAKE_BINARY_DIR}/bin/Debug/*.dll")
-		install(FILES 
-			${EXTRA_DLLS_TO_INSTALL}
-			DESTINATION "bin"
-			COMPONENT dev
-			)
-	ENDIF(WIN32)
-		
-	include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
-	
+        install(DIRECTORY data samples DESTINATION "." COMPONENT main PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY 3rdparty apps interfaces src tests DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY doc/ DESTINATION doc COMPONENT src FILES_MATCHING PATTERN "*.tex")
+        install(DIRECTORY doc/pics DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY doc/plastex DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
+	endif()
 endif()
+
+
+#-----------------------------------
+# Subdirectories:
+#-----------------------------------
+add_subdirectory(src)
+add_subdirectory(apps)
+
+if(BUILD_LATEX_DOCS)
+  include(OpenCVFindLATEX.cmake REQUIRED)
+    
+  if(PDFLATEX_COMPILER)
+    message(STATUS "PDF LaTeX found!")
+  endif()
+endif()
+
+add_subdirectory(doc)
+add_subdirectory(data)
+
+if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
+    add_subdirectory(samples)
+endif()
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+add_subdirectory(interfaces)
+add_subdirectory(3rdparty)
+
 
 # ----------------------------------------------------------------------------
 #   Sumary:

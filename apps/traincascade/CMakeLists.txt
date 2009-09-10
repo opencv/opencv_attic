@@ -18,4 +18,4 @@ set_target_properties(traincascade PROPERTIES
 
 target_link_libraries(traincascade cxcore cv ml)
 
-install(TARGETS traincascade RUNTIME DESTINATION bin COMPONENT dev)
+install(TARGETS traincascade RUNTIME DESTINATION bin COMPONENT main)

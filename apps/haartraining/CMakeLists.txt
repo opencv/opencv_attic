@@ -57,6 +57,6 @@ set_target_properties(performance PROPERTIES
 #  Install part
 # -----------------------------------------------------------
 
-install(TARGETS haartraining RUNTIME DESTINATION bin COMPONENT dev)
-install(TARGETS createsamples RUNTIME DESTINATION bin COMPONENT dev)
-install(TARGETS performance RUNTIME DESTINATION bin COMPONENT dev)
+install(TARGETS haartraining RUNTIME DESTINATION bin COMPONENT main)
+install(TARGETS createsamples RUNTIME DESTINATION bin COMPONENT main)
+install(TARGETS performance RUNTIME DESTINATION bin COMPONENT main)

@@ -60,10 +60,10 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
 add_dependencies(${the_target} cxcore)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin COMPONENT dev
-	LIBRARY DESTINATION lib COMPONENT dev
-	ARCHIVE DESTINATION lib COMPONENT dev)
+	RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main)
 
 install(FILES ${lib_hdrs}
         DESTINATION include/opencv
-        COMPONENT dev)
+        COMPONENT main)

@@ -46,3 +46,7 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore cv cvaux highgu
 enable_testing()
 get_target_property(LOC ${the_target} LOCATION)
 add_test(cvtest "${LOC}")
+
+if(WIN32)
+install(TARGETS ${the_target} RUNTIME DESTINATION bin COMPONENT main)
+endif()

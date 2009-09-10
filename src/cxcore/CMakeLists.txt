@@ -65,11 +65,11 @@ endif()
 add_dependencies(${the_target} opencv_lapack zlib)
 
 install(TARGETS ${the_target}
-    RUNTIME DESTINATION bin COMPONENT dev
-	LIBRARY DESTINATION lib COMPONENT dev
-	ARCHIVE DESTINATION lib COMPONENT dev)
+    RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main)
 
 # install each module headers separately
 install(FILES ${lib_hdrs}
         DESTINATION include/opencv
-        COMPONENT dev)
+        COMPONENT main)
