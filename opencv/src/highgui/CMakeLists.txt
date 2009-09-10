@@ -202,10 +202,10 @@ if(APPLE)
 endif()
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin COMPONENT dev
-	LIBRARY DESTINATION lib COMPONENT dev
-	ARCHIVE DESTINATION lib COMPONENT dev)
+	RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main)
 
 install(FILES ${highgui_ext_hdrs}
         DESTINATION include/opencv
-        COMPONENT dev)
+        COMPONENT main)

@@ -59,3 +59,10 @@ add_dependencies(${the_target} cxcore)
 
 # Add the required libraries for linking:
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
+
+if(WIN32)
+install(TARGETS ${the_target}
+    RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main)
+endif()

@@ -5,6 +5,9 @@
 file(GLOB FILES_DOC *.htm *.txt *.jpg *.png *.pdf)
 file(GLOB FILES_DOC_PAPERS papers/*.pdf papers/*.ps)
 file(GLOB FILES_DOC_VS vidsurv/*.doc)
+file(GLOB FILES_TEX *.tex *.sty *.bib go)
+file(GLOB FILES_TEX_PICS pics/*.png pics/*.jpg)
+file(GLOB_RECURSE FILES_PLASTEX plastex/*)
 
 if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
         
@@ -104,10 +107,10 @@ add_custom_target(ReferenceManual ALL echo
 #add_dependencies(ReferenceManual MakePicsLink)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/opencv.pdf"
-        DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT doc)
+        DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT main)
         
 endif() # BUILD_LATEX_DOCS AND PDFLATEX_COMPILER
         
-install(FILES ${FILES_DOC} DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT doc)
-install(FILES ${FILES_DOC_PAPERS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/papers" COMPONENT doc)
-install(FILES ${FILES_DOC_VS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/vidsurv" COMPONENT doc)
+install(FILES ${FILES_DOC} DESTINATION "${OPENCV_DOC_INSTALL_PATH}" COMPONENT main)
+install(FILES ${FILES_DOC_PAPERS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/papers" COMPONENT main)
+install(FILES ${FILES_DOC_VS} DESTINATION "${OPENCV_DOC_INSTALL_PATH}/vidsurv" COMPONENT main)

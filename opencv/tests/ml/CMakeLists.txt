@@ -52,3 +52,7 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore ml cxts)
 enable_testing()
 get_target_property(LOC ${the_target} LOCATION)
 add_test(mltest "${LOC}")
+
+if(WIN32)
+install(TARGETS ${the_target} RUNTIME DESTINATION bin COMPONENT main)
+endif()

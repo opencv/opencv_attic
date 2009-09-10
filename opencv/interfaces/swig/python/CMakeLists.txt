@@ -82,10 +82,6 @@ set(SWIG_MODULE_highgui_EXTRA_DEPS
 SWIG_ADD_MODULE(highgui python highgui.i pyhelpers.cpp pyhelpers.h)
 SWIG_LINK_LIBRARIES(highgui ${PYTHON_LIBRARIES} cxcore cv highgui)
 
-get_target_property(LOC_CV ${SWIG_MODULE_cv_REAL_NAME} LOCATION)
-get_target_property(LOC_ML ${SWIG_MODULE_ml_REAL_NAME} LOCATION)
-get_target_property(LOC_HIGHGUI ${SWIG_MODULE_highgui_REAL_NAME} LOCATION)
-
 # ------------------------------ installation ----------------------------------
 
 if(WIN32)
@@ -96,11 +92,27 @@ if(WIN32)
         PROPERTIES SUFFIX ".pyd")
 endif()
 
+get_target_property(LOC_CV ${SWIG_MODULE_cv_REAL_NAME} LOCATION)
+get_target_property(LOC_ML ${SWIG_MODULE_ml_REAL_NAME} LOCATION)
+get_target_property(LOC_HIGHGUI ${SWIG_MODULE_highgui_REAL_NAME} LOCATION)
+
 set(pyopencv_files __init__.py adaptors.py matlab_syntax.py
     ${CMAKE_CURRENT_BINARY_DIR}/cv.py
     ${CMAKE_CURRENT_BINARY_DIR}/ml.py
-    ${CMAKE_CURRENT_BINARY_DIR}/highgui.py
-    ${LOC_CV} ${LOC_ML} ${LOC_HIGHGUI})
+    ${CMAKE_CURRENT_BINARY_DIR}/highgui.py)
+
+foreach(m ${LOC_CV} ${LOC_ML} ${LOC_HIGHGUI})
+    string(REPLACE "\$(OutDir)" "\${CMAKE_INSTALL_CONFIG_NAME}" m1 ${m})
+    set(pyopencv_files ${pyopencv_files} ${m1})
+endforeach()
+
 
 # TODO: need to compile *.py files
-install(FILES ${pyopencv_files} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT py)
+if(WIN32)
+    install(FILES ${pyopencv_files} DESTINATION
+        "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages/opencv"
+        COMPONENT main)
+else()
+    install(FILES ${pyopencv_files} DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT main)
+endif()
+
