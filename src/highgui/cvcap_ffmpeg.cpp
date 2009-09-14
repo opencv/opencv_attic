@@ -602,7 +602,11 @@ IplImage* CvCapture_FFMPEG::retrieveFrame(int)
     return &frame;
 }
 
+#if defined(__APPLE__)
+#define AV_NOPTS_VALUE_ ((int64_t)0x8000000000000000LL)
+#else
 #define AV_NOPTS_VALUE_ ((int64_t)AV_NOPTS_VALUE)
+#endif
 
 double CvCapture_FFMPEG::getProperty( int property_id )
 {
