@@ -780,7 +780,7 @@ if(BUILD_PACKAGE)
 			)
 
         install(DIRECTORY data samples DESTINATION "." COMPONENT main PATTERN ".svn" EXCLUDE)
-        install(DIRECTORY 3rdparty apps interfaces src tests DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY 3rdparty apps interfaces src tests utils DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/ DESTINATION doc COMPONENT src FILES_MATCHING PATTERN "*.tex")
         install(DIRECTORY doc/pics DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/plastex DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
