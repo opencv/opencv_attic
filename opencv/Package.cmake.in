@@ -4,8 +4,9 @@
 # (c) Copyrights 2008 Hartmut Seichter, HIT Lab NZ
 #
 
-SET(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
-INCLUDE(InstallRequiredSystemLibraries)
+set(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
+include(InstallRequiredSystemLibraries)
+
 
 if(WIN32)
 	# Add "<install_path>/bin" to the system PATH
@@ -40,9 +41,36 @@ set(CPACK_COMPONENT_MAIN_INSTALL_TYPES Full)
 set(CPACK_COMPONENT_SRC_INSTALL_TYPES Full)
 #set(CPACK_COMPONENT_py_INSTALL_TYPES Full)
 
+set(CPACK_SOURCE_IGNORE_FILES
+	"/\\\\.svn/"
+	"/autotools/"
+	"configure"
+	"Makefile\\\\.in$"
+	"Makefile\\\\.am$"	
+	"/autom4te.cache/"
+	"aclocal\\\\.m4"
+	"cvconfig\\\\.h\\\\.in"
+	"/build/"
+	"/lib/"
+	"~$"	
+	"\\\\.aux$"
+	"\\\\.bbl$"
+	"\\\\.blg$"
+	"\\\\.idx$"
+	"\\\\.ilg$"
+	"\\\\.ind$"
+	"\\\\.log$"
+	"\\\\.toc$"
+	"\\\\.out$"
+	"/1$"
+	"${CPACK_SOURCE_IGNORE_FILES}")
 
 if(WIN32)
-	
+	set(CPACK_GENERATOR "NSIS")
+	set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/utils/opencv.ico")
+	set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/utils/opencv.ico")
+	set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/utils/opencv.ico")	
+		
     set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_SOURCE_DIR}/utils/opencv.ico")
     set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\opencvlibrary.sourceforge.net")
 	set(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\opencvlibrary.sourceforge.net")
@@ -53,12 +81,17 @@ if(WIN32)
         "doc/index.htm" "Start Page"
         "doc/opencv.pdf" "The Reference Manual"
         "CMakeLists.txt" "The Build Script (open with CMake)"
-        "samples/c/" "C/C++ Samples"
+        "samples/c/" "C Samples"
         "samples/python/" "Python Samples")
 else()
+	set(CPACK_GENERATOR "TBZ2")
+	set(CPACK_SOURCE_GENERATOR "TBZ2")
+	set(CPACK_SOURCE_PACKAGE_FILE_NAME
+  		"${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+	
 	if(APPLE)
-		set(CPACK_GENERATOR "PackageMaker;STGZ")
+		set(CPACK_GENERATOR "PackageMaker;TBZ2")
 	endif()
 endif()
-	
-include(CPack) 
+
+include(CPack)
