@@ -384,37 +384,37 @@ if(UNIX)
     endif()
 endif()
 
-set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with Python support")
+set(BUILD_NEW_PYTHON_SUPPORT ON CACHE BOOL "Build with Python support")
+set(BUILD_SWIG_PYTHON_SUPPORT OFF CACHE BOOL "Build with older SWIG-based Python support")
 set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 
-find_package(SWIG)
-if(SWIG_FOUND)
-
+if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
     find_package(PythonInterp)
     find_package(PythonLibs)
-    
+
     # cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
     if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
         set(PYTHONLIBS_FOUND ON)
     endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
-    
-    # Build with python if installed:
-    # ===================================================
-    if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-        execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
-                  ERROR_VARIABLE PYTHON_VERSION_FULL
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-    
-        string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
-        if(UNIX)
-            set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
-        endif()
-        if(WIN32)
-            get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
-            set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
-        endif()
-    endif()
+        
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+              ERROR_VARIABLE PYTHON_VERSION_FULL
+              OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+    string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
+    if(UNIX)
+        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        set(PYTHON_PACKAGES_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages)
+    endif()
+    if(WIN32)
+        get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
+        set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
+        set(PYTHON_PACKAGES_PATH "${PYTHON_PATH}/Lib/site-packages")
+    endif()
+endif()
+    
+if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
+    find_package(SWIG)
 endif()
 
 if(WIN32)
@@ -876,11 +876,12 @@ message(STATUS "    Xine:                      ${HAVE_XINE}")
 endif()
 message(STATUS "")
 message(STATUS "  Interfaces: ")
-if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-message(STATUS "    Python:                    1")
+if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
+message(STATUS "    Old Python:                1")
 else()
-message(STATUS "    Python:                    0")
+message(STATUS "    Old Python:                0")
 endif()
+message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
 if(IPP_FOUND AND USE_IPP)
 message(STATUS "    Use IPP:                   1")
 else()
