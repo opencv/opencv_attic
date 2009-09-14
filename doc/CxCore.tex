@@ -577,6 +577,32 @@ iplCreateImageHeader( channels, 0, depth,
 
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
 
+\newif\ifKLAK
+% \ifthenelse{\equal{\targetlang}{c}}{\Ctrue}{\Pythontrue}
+
+\KLAKtrue
+
+% \ifKLAK
+\cvfunc{klakReleaseImageHeader}\label{klakReleaseImageHeader}
+
+Deallocates an image header.
+
+\cvexp{
+void klakcvReleaseImageHeader( IplImage** image );
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{image}{klakDouble pointer to the image header}
+\end{description}
+
+This call is an analogue of
+
+\begin{verbatim}
+  THIS IS VERBATIM
+\end{verbatim}
+
+% \fi
+
 \ifC
 
 \cvfunc{ReleaseImageHeader}\label{ReleaseImageHeader}
@@ -3081,13 +3107,20 @@ Calculates average (mean) of array elements.
 
 void cvAvgSdv( const CvArr* arr, CvScalar* mean, CvScalar* std\_dev, const CvArr* mask=NULL );
 
-}{CPP}{AvdSdv(arr,mask=NULL)-> mean,std\_dev}
+}{CPP}{AvgSdv(arr,mask=NULL)-> mean, std\_dev}
 
 \begin{description}
 \cvarg{arr}{The array}
+\ifC
 \cvarg{mean}{Pointer to the mean value, may be NULL if it is not needed}
 \cvarg{std\_dev}{Pointer to the standard deviation}
+\fi
 \cvarg{mask}{The optional operation mask}
+\ifPython
+\cvarg{mean}{Mean value, a CvScalar}
+\cvarg{std\_dev}{Standard deviation, a CvScalar}
+\fi
+
 \end{description}
 
 The function \texttt{cvAvgSdv} calculates the average value and standard deviation of array elements, independently for each channel:
