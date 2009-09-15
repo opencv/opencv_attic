@@ -24,4 +24,5 @@ add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs} ${CMAKE
 target_link_libraries(${the_target} ${PYTHON_LIBRARIES} cxcore cv highgui)
 set_target_properties(${the_target} PROPERTIES PREFIX "")
 set_target_properties(${the_target} PROPERTIES OUTPUT_NAME "cv")
+set_target_properties(${the_target} PROPERTIES SUFFIX ".so")
 install(FILES ${LIBRARY_OUTPUT_PATH}/cv.so DESTINATION ${PYTHON_PACKAGES_PATH})
