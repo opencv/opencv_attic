@@ -253,30 +253,30 @@ Load generic
 # Accessing Elements and sub-Arrays
 GetRow
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   int row
 GetRows submat
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   int start_row
   int end_row
   int delta_row -1
 GetCol submat
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   int col
 GetCols submat
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   int start_col
   int end_col
 GetDiag submat
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   int diag 0
 GetSubRect submat
   CvArr arr
-  CvMat submat /J:arr
+  CvMat submat /J:arr,O,A
   CvRect rect
 GetSize CvSize
   CvArr arr

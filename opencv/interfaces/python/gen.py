@@ -163,6 +163,9 @@ def gen(name, args, ty):
 
   # Do the conversions:
   for a in args:
+    joinwith = [f[2:] for f in a.flags if f.startswith("J:")]
+    if len(joinwith) > 0:
+      yield 'preShareData(%s, &%s);' % (joinwith[0], a.nm)
     if 'O' in a.flags:
       continue
     if a.ty in (conversion_types + aggregate.keys()):
@@ -246,7 +249,7 @@ def gen(name, args, ty):
         af = dict([ (a.nm,a.flags) for a in args])
         joinwith = [f[2:] for f in af.get(all_returns[0], []) if f.startswith("J:")]
         if len(joinwith) > 0:
-            yield '  return shareData(pyobj_%s, %s, pyobj_%s, %s);' % (joinwith[0], joinwith[0], all_returns[0], all_returns[0])
+            yield '  return shareData(pyobj_%s, %s, %s);' % (joinwith[0], joinwith[0], all_returns[0])
         else:
             yield '  return FROM_%s(%s);' % (safename(typed[all_returns[0]]), all_returns[0])
       else:
