@@ -48,7 +48,11 @@ am__aclocal_m4_deps =  \
 	$(top_srcdir)/autotools/aclocal/ax_ext.m4 \
 	$(top_srcdir)/autotools/aclocal/ax_gcc_x86_cpuid.m4 \
 	$(top_srcdir)/autotools/aclocal/az_python.m4 \
-	$(top_srcdir)/autotools/aclocal/libtool1.m4 \
+	$(top_srcdir)/autotools/aclocal/libtool.m4 \
+	$(top_srcdir)/autotools/aclocal/ltoptions.m4 \
+	$(top_srcdir)/autotools/aclocal/ltsugar.m4 \
+	$(top_srcdir)/autotools/aclocal/ltversion.m4 \
+	$(top_srcdir)/autotools/aclocal/lt~obsolete.m4 \
 	$(top_srcdir)/autotools/aclocal/pkg.m4 \
 	$(top_srcdir)/autotools/aclocal/swig_complete.m4 \
 	$(top_srcdir)/autotools/aclocal/version_at_least.m4 \
@@ -165,15 +169,14 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
 FFMPEGLIBS = @FFMPEGLIBS@
+FGREP = @FGREP@
 FLOAT_STORE_CFLAGS = @FLOAT_STORE_CFLAGS@
 GREP = @GREP@
 GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
@@ -190,10 +193,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LAPACK_LIBS = @LAPACK_LIBS@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION = @LT_VERSION@
@@ -203,6 +208,7 @@ MKOCTFILE = @MKOCTFILE@
 MMAJOR = @MMAJOR@
 MMINOR = @MMINOR@
 MSUBMINOR = @MSUBMINOR@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
@@ -212,6 +218,8 @@ OCTAVE_INCFLAGS = @OCTAVE_INCFLAGS@
 OPENMP_CXXFLAGS = @OPENMP_CXXFLAGS@
 OPTIMIZATION_CPPFLAGS = @OPTIMIZATION_CPPFLAGS@
 OPTIMIZATION_CXXFLAGS = @OPTIMIZATION_CXXFLAGS@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -253,7 +261,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -284,6 +292,7 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+lt_ECHO = @lt_ECHO@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -326,9 +335,11 @@ EXTRA_DIST = \
   \
   cv.i             \
   cvaliases.i      \
+  cvaliases_autogen.i \
   cvarr.i          \
   cvseq.i          \
   cvshadow.i       \
+  cvswigmacros.i   \
   ml.i             \
   highgui.i        \
   imagedata.i      \
@@ -761,8 +772,8 @@ uninstall-am: uninstall-pkgpyexecLTLIBRARIES uninstall-pkgpyexecPYTHON
 # the following rules keep wrappers up to date, if SWIG is present
 
 # this rule creates the Python wrapper sources for cxcore and cv
-@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
-@UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
+@UPDATE_SWIG_WRAPPERS_TRUE@_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i cvaliases_autogen.i pyhelpers.i \
+@UPDATE_SWIG_WRAPPERS_TRUE@         nointpb.i pytypemaps.i cvshadow.i cvseq.i cvswigmacros.i \
 @UPDATE_SWIG_WRAPPERS_TRUE@         error.cpp error.h                                      \
 @UPDATE_SWIG_WRAPPERS_TRUE@         pyhelpers.h cvshadow.h pycvseq.hpp                     \
 @UPDATE_SWIG_WRAPPERS_TRUE@         $(top_srcdir)/interfaces/swig/general/cv.i             \
@@ -778,7 +789,7 @@ uninstall-am: uninstall-pkgpyexecLTLIBRARIES uninstall-pkgpyexecPYTHON
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for ml
-@UPDATE_SWIG_WRAPPERS_TRUE@_ml.cpp: ml.i nointpb.i pytypemaps.i                            \
+@UPDATE_SWIG_WRAPPERS_TRUE@_ml.cpp: ml.i nointpb.i pytypemaps.i cvswigmacros.i             \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/include/opencv/ml.h                 \
@@ -786,7 +797,7 @@ uninstall-am: uninstall-pkgpyexecLTLIBRARIES uninstall-pkgpyexecPYTHON
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
+@UPDATE_SWIG_WRAPPERS_TRUE@_highgui.cpp: highgui.i nointpb.i pytypemaps.i cvswigmacros.i   \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/highgui.i   \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/typemaps.i  \
 @UPDATE_SWIG_WRAPPERS_TRUE@              $(top_srcdir)/interfaces/swig/general/memory.i    \
@@ -794,7 +805,7 @@ uninstall-am: uninstall-pkgpyexecLTLIBRARIES uninstall-pkgpyexecPYTHON
 @UPDATE_SWIG_WRAPPERS_TRUE@              Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
-@UPDATE_SWIG_WRAPPERS_TRUE@cvaliases.i: $(CV_HEADER_FILES) Makefile.in
+@UPDATE_SWIG_WRAPPERS_TRUE@cvaliases_autogen.i: $(CV_HEADER_FILES) Makefile.in
 @UPDATE_SWIG_WRAPPERS_TRUE@	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

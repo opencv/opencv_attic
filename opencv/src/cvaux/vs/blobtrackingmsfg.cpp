@@ -338,6 +338,8 @@ public:
         m_KernelHist = NULL;
         m_KernelMeanShift = NULL;
         ReAllocHist(3,5);   /* 3D hist, each dim has 2^5 bins*/
+
+        SetModuleName("MSFG");
     }
 
     ~CvBlobTrackerOneMSFG()
@@ -732,6 +734,7 @@ public:
     {
         SetParam("FGWeight",0);
         DelParam("FGWeight");
+        SetModuleName("MS");
     };
 };
 
@@ -816,6 +819,9 @@ public:
         CommentParam("PosVar","Position variation (in object size)");
 
         m_RNG = cvRNG(0);
+
+        SetModuleName("MSPF");
+
 #ifdef _OPENMP
         {
             m_ThreadNum = omp_get_num_procs();

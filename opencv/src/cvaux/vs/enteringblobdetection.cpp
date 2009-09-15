@@ -41,7 +41,7 @@
 /*
 This file implements the virtual interface defined as "CvBlobDetector".
 This implementation based on a simple algorithm:
-A new blob is detected when several successive frames contains connected components 
+A new blob is detected when several successive frames contains connected components
 which have uniform motion not at an unreasonably high speed.
 Separation from border and already tracked blobs are also considered.
 
@@ -183,10 +183,10 @@ void cvFindBlobsByCCClasters(IplImage* pFG, CvBlobSeq* pBlobs, CvMemStorage* sto
 
             CvBlob* pB = pBlobs->GetBlob(claster_cur);
             int x = cvRound(CV_BLOB_RX(pB)), y = cvRound(CV_BLOB_RY(pB));
-            cvEllipse( pI, 
+            cvEllipse( pI,
                 cvPointFrom32f(CV_BLOB_CENTER(pB)),
                 cvSize(MAX(1,x), MAX(1,y)),
-                0, 0, 360, 
+                0, 0, 360,
                 color, 1 );
         }
 
@@ -215,7 +215,7 @@ protected:
     IplImage*       m_pMaskBlobNew;
     IplImage*       m_pMaskBlobExist;
     /* Lists of connected components detected on previous frames: */
-    CvBlobSeq*      m_pBlobLists[EBD_FRAME_NUM]; 
+    CvBlobSeq*      m_pBlobLists[EBD_FRAME_NUM];
 };
 
 /* Blob detector creator (sole interface function for this file) */
@@ -228,6 +228,8 @@ CvBlobDetectorSimple::CvBlobDetectorSimple()
     m_pMaskBlobNew = NULL;
     m_pMaskBlobExist = NULL;
     for(i=0;i<EBD_FRAME_NUM;++i)m_pBlobLists[i] = NULL;
+
+    SetModuleName("Simple");
 }
 
 /* Destructor of BlobDetector: */
@@ -249,7 +251,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
     CvSize      S = cvSize(pFGMask->width,pFGMask->height);
     if(m_pMaskBlobNew == NULL ) m_pMaskBlobNew = cvCreateImage(S,IPL_DEPTH_8U,1);
     if(m_pMaskBlobExist == NULL ) m_pMaskBlobExist = cvCreateImage(S,IPL_DEPTH_8U,1);
-    
+
     /* Shift blob list: */
     {
         int     i;
@@ -257,7 +259,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
         for(i=1;i<EBD_FRAME_NUM;++i)m_pBlobLists[i-1]=m_pBlobLists[i];
         m_pBlobLists[EBD_FRAME_NUM-1] = new CvBlobSeq;
     }   /* Shift blob list. */
-    
+
     /* Create exist blob mask: */
     cvCopy(pFGMask, m_pMaskBlobNew);
 
@@ -388,7 +390,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
             pBLIndex[i] = 0;
             pBL_BEST[i] = 0;
         }
-        
+
         /* Check configuration exist: */
         for(i=0; Good && (i<EBD_FRAME_NUM); ++i)
             if(m_pBlobLists[i] == NULL || m_pBlobLists[i]->GetBlobNum() == 0)
@@ -432,7 +434,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
             if(Good)
             {
                 int     N = EBD_FRAME_NUM;
-                float   sum[2] = {0,0};   
+                float   sum[2] = {0,0};
                 float   jsum[2] = {0,0};
                 float   a[2],b[2]; /* estimated parameters of moving x(t) = a*t+b*/
 
@@ -454,21 +456,21 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
 
                 for(j=0; j<N; ++j)
                 {
-                    Error += 
+                    Error +=
                         pow(a[0]*j+b[0]-pBL[j]->x,2)+
                         pow(a[1]*j+b[1]-pBL[j]->y,2);
                 }
 
                 Error = sqrt(Error/N);
 
-                if( Error > S.width*0.01 || 
+                if( Error > S.width*0.01 ||
                     fabs(a[0])>S.width*0.1 ||
                     fabs(a[1])>S.height*0.1)
                     Good = 0;
 
             }   /* Check configuration. */
 
-            
+
             /* New best trajectory: */
             if(Good && (BestError == -1 || BestError > Error))
             {
@@ -500,7 +502,7 @@ int CvBlobDetectorSimple::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, C
                 printf("%d,",m_pBlobLists[i]?m_pBlobLists[i]->GetBlobNum():0);
             }
             printf("]\n");
-        
+
         }
         #endif
 
@@ -581,7 +583,7 @@ private:
     /* If not 0 then the detector is loaded from the specified file
      * and it is applied for splitting blobs which actually correspond
      * to groups of objects:
-     */ 
+     */
     char*           m_param_split_detector_file_name;
     float           m_param_roi_scale;
     int             m_param_only_roi;
@@ -606,7 +608,7 @@ CvBlobDetectorCC::CvBlobDetectorCC() :
     m_roi_seq(0),
     m_debug_blob_seq(sizeof(CvDetectedBlob))
 {
-    /*CvDrawShape shapes[] = 
+    /*CvDrawShape shapes[] =
     {
         { CvDrawShape::RECT,    {{255,255,255}} },
         { CvDrawShape::RECT,    {{0,0,255}} },
@@ -628,7 +630,7 @@ CvBlobDetectorCC::CvBlobDetectorCC() :
     m_MinDistToBorder = 1.1f;
     AddParam("MinDistToBorder",&m_MinDistToBorder);
     CommentParam("MinDistToBorder","Minimal allowed distance from blob center to image border in blob sizes");
-    
+
     m_Clastering=1;
     AddParam("Clastering",&m_Clastering);
     CommentParam("Clastering","Minimal allowed distance from blob center to image border in blob sizes");
@@ -650,8 +652,8 @@ CvBlobDetectorCC::CvBlobDetectorCC() :
     m_min_window_size = cvSize(0,0);
     m_max_border = 0;
     m_roi_seq = cvCreateSeq( 0, sizeof(*m_roi_seq), sizeof(CvRect), cvCreateMemStorage() );
-    
-    SetModuleName("BD_CC");
+
+    SetModuleName("CC");
 }
 
 /* Destructor for BlobDetector: */
@@ -660,7 +662,7 @@ CvBlobDetectorCC::~CvBlobDetectorCC()
     int i;
     for(i=0; i<SEQ_SIZE_MAX; ++i)
     {
-        if(m_pBlobLists[i]) 
+        if(m_pBlobLists[i])
             delete m_pBlobLists[i];
     }
 
@@ -681,7 +683,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
 {
     int         result = 0;
     CvSize      S = cvSize(pFGMask->width,pFGMask->height);
-    
+
     /* Shift blob list: */
     {
         int     i;
@@ -692,7 +694,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
         m_pBlobLists[0] = new CvBlobSeq;
 
     }   /* Shift blob list. */
-    
+
     /* Create contours and add new blobs to blob list: */
     {   /* Create blobs: */
         CvBlobSeq       Blobs;
@@ -866,7 +868,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
             CvBlob* pBNew = pTrack->pBlobs[0];
             if(pTrack->size != SEQ_SIZE) continue;
             if(pBNew == NULL ) continue;
-            
+
             /* Check intersection last blob with existed: */
             if(Good && pOldBlobList)
             {
@@ -894,11 +896,11 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                 double      Error = 0;
                 int         N = pTrack->size;
                 CvBlob**    pBL = pTrack->pBlobs;
-                float       sum[2] = {0,0};   
+                float       sum[2] = {0,0};
                 float       jsum[2] = {0,0};
                 float       a[2],b[2]; /* estimated parameters of moving x(t) = a*t+b*/
                 int         j;
-                
+
                 for(j=0; j<N; ++j)
                 {
                     float   x = pBL[j]->x;
@@ -916,18 +918,18 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
 
                 for(j=0; j<N; ++j)
                 {
-                    Error += 
+                    Error +=
                         pow(a[0]*j+b[0]-pBL[j]->x,2)+
                         pow(a[1]*j+b[1]-pBL[j]->y,2);
                 }
 
                 Error = sqrt(Error/N);
 
-                if( Error > S.width*0.01 || 
+                if( Error > S.width*0.01 ||
                     fabs(a[0])>S.width*0.1 ||
                     fabs(a[1])>S.height*0.1)
                     Good = 0;
-                
+
                 /* New best trajectory: */
                 if(Good && (BestError == -1 || BestError > Error))
                 {   /* New best trajectory: */
@@ -989,7 +991,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
             m_debug_blob_seq.AddBlob(&d_b);
 
             float scale = m_param_roi_scale * m_min_window_size.height / CV_BLOB_WY(b);
-            
+
             float b_width =   MAX(CV_BLOB_WX(b), m_min_window_size.width / scale)
                             + (m_param_roi_scale - 1.0F) * (m_min_window_size.width / scale)
                             + 2.0F * m_max_border / scale;
@@ -1026,7 +1028,7 @@ int CvBlobDetectorCC::DetectNewBlob(IplImage* /*pImg*/, IplImage* pFGMask, CvBlo
                         b->response );
                 m_debug_blob_seq.AddBlob(&d_b);
             }
-            
+
             if( m_detected_blob_seq.GetBlobNum() > 1 )
             {
                 /*

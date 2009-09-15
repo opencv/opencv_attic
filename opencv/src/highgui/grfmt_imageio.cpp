@@ -40,7 +40,7 @@ size_t ImageIODecoder::signatureLength() const
     return 12;
 }
 
-bool ImageIODecoder::checkSignature( const String& signature ) const
+bool ImageIODecoder::checkSignature( const string& signature ) const
 {
     // TODO: implement real signature check
     return true;
@@ -254,7 +254,7 @@ CFStringRef  FilenameToUTI( const char* filename )
 }
 
 
-bool  ImageIOEncoder::write( const Mat& img, const Vector<int>& params )
+bool  ImageIOEncoder::write( const Mat& img, const vector<int>& params )
 {
     int width = img.cols, height = img.rows;
     int _channels = img.channels();

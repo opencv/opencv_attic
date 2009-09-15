@@ -45,7 +45,7 @@
 
 #if defined _MSC_VER && _MSC_VER >= 1200
     /* disable warnings related to inline functions */
-    #pragma warning( disable: 4711 4710 4514 )
+    #pragma warning( disable: 4251 4711 4710 4514 )
 #endif
 
 #include "cv.h"
@@ -100,7 +100,7 @@ static inline Point normalizeAnchor( Point anchor, Size ksize )
     return anchor;
 }
 
-void preprocess2DKernel( const Mat& kernel, Vector<Point>& coords, Vector<uchar>& coeffs );
+void preprocess2DKernel( const Mat& kernel, vector<Point>& coords, vector<uchar>& coeffs );
 void crossCorr( const Mat& src, const Mat& templ, Mat& dst,
                 Point anchor=Point(0,0), double delta=0,
                 int borderType=BORDER_REFLECT_101 );

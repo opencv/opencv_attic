@@ -61,6 +61,7 @@ public:
     {
         m_Frame = 0;
         m_CreateAnalysis = create;
+        SetModuleName("List");
     }
     ~CvBlobTrackAnalysisList()
     {

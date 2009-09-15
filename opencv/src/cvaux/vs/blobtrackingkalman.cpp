@@ -60,7 +60,7 @@ const float H8[] = { 1, 0, 0, 0, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0, 0, 0};
 
-/* Matices for zero size velocity: */ 
+/* Matices for zero size velocity: */
 /* Dynamic matrix A: */
 const float A6[] = { 1, 0, 0, 0, 1, 0,
                      0, 1, 0, 0, 0, 1,
@@ -99,6 +99,8 @@ public:
         cvSetIdentity( m_pKalman->error_cov_post, cvRealScalar(1));
         cvZero(m_pKalman->state_post);
         cvZero(m_pKalman->state_pre);
+
+        SetModuleName("Kalman");
     }
 
     ~CvBlobTrackerOneKalman()

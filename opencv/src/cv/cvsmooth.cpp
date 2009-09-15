@@ -193,7 +193,7 @@ template<typename ST, typename T> struct ColumnSum : public BaseColumnFilter
 
     double scale;
     int sumCount;
-    Vector<ST> sum;
+    vector<ST> sum;
 };
 
 
@@ -429,7 +429,13 @@ void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
 
 //#undef CV_SSE2
 
-#if defined(__VEC__) || defined(__ALTIVEC__)
+//#if defined __VEC__ || defined __ALTIVEC__
+//#define CV_ALTIVEC 1
+//#endif
+
+#undef CV_ALTIVEC
+
+#if CV_ALTIVEC
 #include <altivec.h>
 #undef bool
 #endif
@@ -457,7 +463,7 @@ typedef struct
 } Histogram;
 
 
-#if CV_SSE2 || defined __MMX__ || defined __ALTIVEC__
+#if CV_SSE2 || defined __MMX__ || CV_ALTIVEC
 #define MEDIAN_HAVE_SIMD 1
 #else
 #define MEDIAN_HAVE_SIMD 0
@@ -503,7 +509,7 @@ static inline void histogram_sub( const HT x[16], HT y[16] )
     *(__m64*) &y[8]  = _mm_sub_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
     *(__m64*) &y[12] = _mm_sub_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
 }
-#elif defined(__ALTIVEC__)
+#elif CV_ALTIVEC
 static inline void histogram_add( const HT x[16], HT y[16] )
 {
     *(vector HT*) &y[0] = vec_add( *(vector HT*) &y[0], *(vector HT*) &x[0] );
@@ -560,8 +566,8 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
 
     int STRIPE_SIZE = std::min( _dst.cols, 512/cn );
 
-    Vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn);
-    Vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn);
+    vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn);
+    vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn);
     HT* h_coarse = &_h_coarse[0];
     HT* h_fine = &_h_fine[0];
 
@@ -1224,9 +1230,9 @@ bilateralFilter_8u( const Mat& src, Mat& dst, int d,
     Mat temp;
     copyMakeBorder( src, temp, radius, radius, radius, radius, borderType );
 
-    Vector<float> _color_weight(cn*256);
-    Vector<float> _space_weight(d*d);
-    Vector<int> _space_ofs(d*d);
+    vector<float> _color_weight(cn*256);
+    vector<float> _space_weight(d*d);
+    vector<int> _space_ofs(d*d);
     float* color_weight = &_color_weight[0];
     float* space_weight = &_space_weight[0];
     int* space_ofs = &_space_ofs[0];
@@ -1335,15 +1341,15 @@ bilateralFilter_32f( const Mat& src, Mat& dst, int d,
     copyMakeBorder( src, temp, radius, radius, radius, radius, borderType );
 
     // allocate lookup tables
-    Vector<float> _space_weight(d*d);
-    Vector<int> _space_ofs(d*d);
+    vector<float> _space_weight(d*d);
+    vector<int> _space_ofs(d*d);
     float* space_weight = &_space_weight[0];
     int* space_ofs = &_space_ofs[0];
 
     // assign a length which is slightly more than needed
     len = (float)(maxValSrc - minValSrc) * cn;
     kExpNumBins = kExpNumBinsPerChannel * cn;
-    Vector<float> _expLUT(kExpNumBins+2);
+    vector<float> _expLUT(kExpNumBins+2);
     float* expLUT = &_expLUT[0];
 
     scale_index = kExpNumBins/len;

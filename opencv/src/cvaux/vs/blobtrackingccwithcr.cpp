@@ -100,7 +100,7 @@ public:
         AddParam("AlphaSize",&m_AlphaSize);
         CommentParam("AlphaSize", "Size update speed (0..1)");
 
-        strcpy(m_ModuleName, "CC");
+        strcpy(m_ModuleName, "CCCR");
         if(CRName)strcat(m_ModuleName,CRName);
         SetModuleName(m_ModuleName);
 

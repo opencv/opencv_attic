@@ -25,9 +25,11 @@ EXTRA_DIST = \
   \
   cv.i             \
   cvaliases.i      \
+  cvaliases_autogen.i \
   cvarr.i          \
   cvseq.i          \
   cvshadow.i       \
+  cvswigmacros.i   \
   ml.i             \
   highgui.i        \
   imagedata.i      \
@@ -54,8 +56,8 @@ EXTRA_DIST = \
 if UPDATE_SWIG_WRAPPERS
 
 # this rule creates the Python wrapper sources for cxcore and cv
-_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
-         nointpb.i pytypemaps.i cvshadow.i cvseq.i              \
+_cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i cvaliases_autogen.i pyhelpers.i \
+         nointpb.i pytypemaps.i cvshadow.i cvseq.i cvswigmacros.i \
          error.cpp error.h                                      \
          pyhelpers.h cvshadow.h pycvseq.hpp                     \
          $(top_srcdir)/interfaces/swig/general/cv.i             \
@@ -71,7 +73,7 @@ _cv.cpp: cv.i imagedata.i cvarr.i cvaliases.i pyhelpers.i       \
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -o $@ $<
 
 # this rule creates the Python wrapper sources for ml
-_ml.cpp: ml.i nointpb.i pytypemaps.i                            \
+_ml.cpp: ml.i nointpb.i pytypemaps.i cvswigmacros.i             \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
               $(top_srcdir)/include/opencv/ml.h                 \
@@ -79,7 +81,7 @@ _ml.cpp: ml.i nointpb.i pytypemaps.i                            \
 	$(SWIG) $(SWIG_PYTHON_OPT) $(CV_INCLUDES) -DSKIP_INCLUDES -o $@ $<
 
 # this rule creates the Python wrapper sources for highgui
-_highgui.cpp: highgui.i nointpb.i pytypemaps.i                  \
+_highgui.cpp: highgui.i nointpb.i pytypemaps.i cvswigmacros.i   \
               $(top_srcdir)/interfaces/swig/general/highgui.i   \
               $(top_srcdir)/interfaces/swig/general/typemaps.i  \
               $(top_srcdir)/interfaces/swig/general/memory.i    \
@@ -93,7 +95,7 @@ CV_HEADER_FILES = \
   $(top_srcdir)/include/opencv/cvtypes.h \
   $(top_srcdir)/include/opencv/cv.h
 
-cvaliases.i: $(CV_HEADER_FILES) Makefile.in
+cvaliases_autogen.i: $(CV_HEADER_FILES) Makefile.in
 	$(PYTHON) $(top_srcdir)/utils/extract_aliases.py $(CV_HEADER_FILES) > $@
 
 endif

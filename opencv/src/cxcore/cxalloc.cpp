@@ -42,15 +42,41 @@
 
 #include "_cxcore.h"
 
+#define CV_USE_SYSTEM_MALLOC 1
+
 namespace cv
 {
+
+static void* OutOfMemoryError(size_t size)
+{
+    CV_Error_(CV_StsNoMem, ("Failed to allocate %lu bytes", (unsigned long)size));
+    return 0;
+}
 
 #if CV_USE_SYSTEM_MALLOC
 
 void deleteThreadAllocData() {}
 
-void* fastMalloc( size_t size ) { return malloc(size); }
-void fastFree(void* ptr) { if(ptr) free(ptr); }
+void* fastMalloc( size_t size )
+{
+    uchar* udata = (uchar*)malloc(size + sizeof(void*) + CV_MALLOC_ALIGN);
+    if(!udata)
+        return OutOfMemoryError(size);
+    uchar** adata = alignPtr((uchar**)udata + 1, CV_MALLOC_ALIGN);
+    adata[-1] = udata;
+    return adata;
+}
+    
+void fastFree(void* ptr)
+{
+    if(ptr)
+    {
+        uchar* udata = ((uchar**)ptr)[-1];
+        CV_DbgAssert(udata < (uchar*)ptr &&
+               ((uchar*)ptr - udata) <= (ptrdiff_t)(sizeof(void*)+CV_MALLOC_ALIGN)); 
+        free(udata);
+    }
+}
 
 #else
 
@@ -79,7 +105,8 @@ struct CriticalSection
 
 void* SystemAlloc(size_t size)
 {
-    return malloc(size);
+    void* ptr = malloc(size);
+    return ptr ? ptr : OutOfMemoryError(size);
 }
 
 void SystemFree(void* ptr, size_t)
@@ -105,7 +132,7 @@ void* SystemAlloc(size_t size)
     #endif
     void* ptr = 0;
     ptr = mmap(ptr, size, (PROT_READ | PROT_WRITE), MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    return ptr != MAP_FAILED ? ptr : 0;
+    return ptr != MAP_FAILED ? ptr : OutOfMemoryError(size);
 }
 
 void SystemFree(void* ptr, size_t size)
@@ -582,9 +609,9 @@ void fastFree( void* ptr )
 
         bool prevFilled = block->isFilled();
         --block->allocated;
-        if( !block->isFilled() && ((block->allocated == 0 && block->privateFreeList) || prevFilled) )
+        if( !block->isFilled() && (block->allocated == 0 || prevFilled) )
         {
-            if( block->allocated == 0 && block->privateFreeList )
+            if( block->allocated == 0 )
             {
                 int idx = block->binIdx;
                 Block*& startPtr = tls->bins[idx][START];

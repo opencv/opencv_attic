@@ -783,8 +783,14 @@ CVAPI(double) cvDet( const CvArr* mat );
 CVAPI(CvScalar) cvTrace( const CvArr* mat );
 
 /* Finds eigen values and vectors of a symmetric matrix */
-CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects,
-                        CvArr* evals, double eps CV_DEFAULT(0));
+CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
+                        double eps CV_DEFAULT(0),
+                        int lowindex CV_DEFAULT(-1),
+                        int highindex CV_DEFAULT(-1));
+
+///* Finds selected eigen values and vectors of a symmetric matrix */
+//CVAPI(void)  cvSelectedEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
+//                                int lowindex, int highindex );
 
 /* Makes an identity matrix (mat_ij = i == j) */
 CVAPI(void)  cvSetIdentity( CvArr* mat, CvScalar value CV_DEFAULT(cvRealScalar(1)) );
@@ -993,7 +999,7 @@ CVAPI(void)  cvSeqPushMulti( CvSeq* seq, const void* elements,
                              int count, int in_front CV_DEFAULT(0) );
 
 /* Removes several elements from the end of sequence and optionally saves them */
-CVAPI(void)  cvSeqPopMulti( CvSeq* seq, const void* elements,
+CVAPI(void)  cvSeqPopMulti( CvSeq* seq, void* elements,
                             int count, int in_front CV_DEFAULT(0) );
 
 /* Inserts a new element in the middle of sequence.
@@ -1324,15 +1330,16 @@ CV_INLINE  void  cvEllipseBox( CvArr* img, CvBox2D box, CvScalar color,
 }
 
 /* Fills convex or monotonous polygon. */
-CVAPI(void)  cvFillConvexPoly( CvArr* img, CvPoint* pts, int npts, CvScalar color,
+CVAPI(void)  cvFillConvexPoly( CvArr* img, const CvPoint* pts, int npts, CvScalar color,
                                int line_type CV_DEFAULT(8), int shift CV_DEFAULT(0));
 
 /* Fills an area bounded by one or more arbitrary polygons */
-CVAPI(void)  cvFillPoly( CvArr* img, CvPoint** pts, int* npts, int contours, CvScalar color,
+CVAPI(void)  cvFillPoly( CvArr* img, CvPoint** pts, const int* npts,
+                         int contours, CvScalar color,
                          int line_type CV_DEFAULT(8), int shift CV_DEFAULT(0) );
 
 /* Draws one or more polygonal curves */
-CVAPI(void)  cvPolyLine( CvArr* img, CvPoint** pts, int* npts, int contours,
+CVAPI(void)  cvPolyLine( CvArr* img, CvPoint** pts, const int* npts, int contours,
                          int is_closed, CvScalar color, int thickness CV_DEFAULT(1),
                          int line_type CV_DEFAULT(8), int shift CV_DEFAULT(0) );
 

@@ -82,7 +82,7 @@
 #define  CV_MAX_ALLOC_SIZE    (((size_t)1 << (sizeof(size_t)*8-2)))
 
 /* the alignment of all the allocated buffers */
-#define  CV_MALLOC_ALIGN    32
+#define  CV_MALLOC_ALIGN    16
 
 /* default alignment for dynamic data strucutures, resided in storages. */
 #define  CV_STRUCT_ALIGN    ((int)sizeof(double))
@@ -212,17 +212,7 @@
 #define  CV_EMPTY
 #define  CV_MAKE_STR(a) #a
 
-#define  CV_DEFINE_MASK         \
-    float maskTab[2]; maskTab[0] = 0.f; maskTab[1] = 1.f;
-#define  CV_ANDMASK( m, x )     ((x) & (((m) == 0) - 1))
-
-/* (x) * ((m) == 1 ? 1.f : (m) == 0 ? 0.f : <ERR> */
-#define  CV_MULMASK( m, x )       (maskTab[(m) != 0]*(x))
-
-/* (x) * ((m) == -1 ? 1.f : (m) == 0 ? 0.f : <ERR> */
-#define  CV_MULMASK1( m, x )      (maskTab[(m)+1]*(x))
-
-#define  CV_ZERO_OBJ(x)  memset((x), 0, sizeof(*(x)))
+#define  CV_ZERO_OBJ(x) memset((x), 0, sizeof(*(x)))
 
 #define  CV_DIM(static_array) ((int)(sizeof(static_array)/sizeof((static_array)[0])))
 
@@ -250,76 +240,6 @@ CV_INLINE  CvSize  cvGetMatSize( const CvMat* mat )
 
 #define  CV_DESCALE(x,n)     (((x) + (1 << ((n)-1))) >> (n))
 #define  CV_FLT_TO_FIX(x,n)  cvRound((x)*(1<<(n)))
-
-
-#define CV_MEMCPY_CHAR( dst, src, len )                                             \
-{                                                                                   \
-    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
-    char* _icv_memcpy_dst_ = (char*)(dst);                                          \
-    const char* _icv_memcpy_src_ = (const char*)(src);                              \
-                                                                                    \
-    for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++ )  \
-        _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];        \
-}
-
-
-#define CV_MEMCPY_INT( dst, src, len )                                              \
-{                                                                                   \
-    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
-    int* _icv_memcpy_dst_ = (int*)(dst);                                            \
-    const int* _icv_memcpy_src_ = (const int*)(src);                                \
-    assert( ((size_t)_icv_memcpy_src_&(sizeof(int)-1)) == 0 &&                      \
-            ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );                      \
-                                                                                    \
-    for(_icv_memcpy_i_=0;_icv_memcpy_i_<_icv_memcpy_len_;_icv_memcpy_i_++)          \
-        _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];        \
-}
-
-
-#define CV_MEMCPY_AUTO( dst, src, len )                                             \
-{                                                                                   \
-    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
-    char* _icv_memcpy_dst_ = (char*)(dst);                                          \
-    const char* _icv_memcpy_src_ = (const char*)(src);                              \
-    if( (_icv_memcpy_len_ & (sizeof(int)-1)) == 0 )                                 \
-    {                                                                               \
-        assert( ((size_t)_icv_memcpy_src_&(sizeof(int)-1)) == 0 &&                  \
-                ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );                  \
-        for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_;                 \
-            _icv_memcpy_i_+=sizeof(int) )                                           \
-        {                                                                           \
-            *(int*)(_icv_memcpy_dst_+_icv_memcpy_i_) =                              \
-            *(const int*)(_icv_memcpy_src_+_icv_memcpy_i_);                         \
-        }                                                                           \
-    }                                                                               \
-    else                                                                            \
-    {                                                                               \
-        for(_icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++)\
-            _icv_memcpy_dst_[_icv_memcpy_i_] = _icv_memcpy_src_[_icv_memcpy_i_];    \
-    }                                                                               \
-}
-
-
-#define CV_ZERO_CHAR( dst, len )                                                    \
-{                                                                                   \
-    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
-    char* _icv_memcpy_dst_ = (char*)(dst);                                          \
-                                                                                    \
-    for( _icv_memcpy_i_ = 0; _icv_memcpy_i_ < _icv_memcpy_len_; _icv_memcpy_i_++ )  \
-        _icv_memcpy_dst_[_icv_memcpy_i_] = '\0';                                    \
-}
-
-
-#define CV_ZERO_INT( dst, len )                                                     \
-{                                                                                   \
-    size_t _icv_memcpy_i_, _icv_memcpy_len_ = (len);                                \
-    int* _icv_memcpy_dst_ = (int*)(dst);                                            \
-    assert( ((size_t)_icv_memcpy_dst_&(sizeof(int)-1)) == 0 );                      \
-                                                                                    \
-    for(_icv_memcpy_i_=0;_icv_memcpy_i_<_icv_memcpy_len_;_icv_memcpy_i_++)          \
-        _icv_memcpy_dst_[_icv_memcpy_i_] = 0;                                       \
-}
-
 
 /****************************************************************************************\
 

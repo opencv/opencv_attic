@@ -52,7 +52,7 @@ endif()
 # ----------------------------------------------------------------------------
 #  Current version number:
 # ----------------------------------------------------------------------------
-set(OPENCV_VERSION "1.1.1")
+set(OPENCV_VERSION "1.2.0")
 
 string(REGEX MATCHALL "[0-9]" OPENCV_VERSION_PARTS "${OPENCV_VERSION}")
 
@@ -304,6 +304,11 @@ if(UNIX)
       CHECK_MODULE(libavutil HAVE_FFMPEG_UTIL)
       CHECK_MODULE(libswscale HAVE_FFMPEG_SWSCALE)
       CHECK_INCLUDE_FILE(libavformat/avformat.h HAVE_GENTOO_FFMPEG)
+      if(NOT HAVE_GENTOO_FFMPEG)
+        if(EXISTS /usr/include/ffmpeg/libavformat/avformat.h)
+          set(HAVE_GENTOO_FFMPEG 1)
+        endif()
+      endif()
       if(HAVE_FFMPEG_CODEC AND HAVE_FFMPEG_FORMAT AND HAVE_FFMPEG_UTIL)
         set(HAVE_FFMPEG 1)
       endif()
@@ -328,84 +333,88 @@ if(UNIX)
         CHECK_INCLUDE_FILE(pthread.h HAVE_LIBPTHREAD)
 
         if(WITH_XINE)
-        CHECK_MODULE(libxine HAVE_XINE)
+            CHECK_MODULE(libxine HAVE_XINE)
         else()
-          set(HAVE_XINE FALSE)
+            set(HAVE_XINE FALSE)
         endif()
         if(WITH_V4L)
-	  CHECK_MODULE(libv4l1 HAVE_LIBV4L)
-          CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
-          CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
+            CHECK_MODULE(libv4l1 HAVE_LIBV4L)
+            CHECK_INCLUDE_FILE(linux/videodev.h HAVE_CAMV4L)
+            CHECK_INCLUDE_FILE(linux/videodev2.h HAVE_CAMV4L2)
         else()
-          set(HAVE_LIBV4L FALSE)
-          set(HAVE_CAMV4L FALSE)
-          set(HAVE_CAMV4L2 FALSE)
+            set(HAVE_LIBV4L FALSE)
+            set(HAVE_CAMV4L FALSE)
+            set(HAVE_CAMV4L2 FALSE)
         endif()
 
-	if(NOT OPENCV_BUILD_3RDPARTY_LIBS)
-          if(WITH_PNG)
-	    include(FindPNG)
-	    if(PNG_FOUND)
-	      CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/png.h HAVE_PNG_H)
-	      CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/libpng/png.h HAVE_LIBPNG_PNG_H)
-	    endif()
-          else()
-            set(PNG_FOUND FALSE)
-          endif()
-          if(WITH_TIFF)
-            include(FindTIFF)
-          else()
-            set(TIFF_FOUND FALSE)
-          endif()
-          if(WITH_JASPER)
-	    include(FindJasper)
-          else()
-            set(JASPER_FOUND FALSE)
-          endif()          
-          if(WITH_JPEG)
-	    include(FindJPEG)
-          else()
-            set(JPEG_FOUND FALSE)
-          endif()
-	endif()
+        if(NOT OPENCV_BUILD_3RDPARTY_LIBS)
+            if(WITH_PNG)
+                include(FindPNG)
+                if(PNG_FOUND)
+                    CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/png.h HAVE_PNG_H)
+                    CHECK_INCLUDE_FILE(${PNG_PNG_INCLUDE_DIR}/libpng/png.h HAVE_LIBPNG_PNG_H)
+                endif()
+            else()
+                set(PNG_FOUND FALSE)
+            endif()
+            if(WITH_TIFF)
+                include(FindTIFF)
+            else()
+                set(TIFF_FOUND FALSE)
+            endif()
+            if(WITH_JASPER)
+                include(FindJasper)
+            else()
+                set(JASPER_FOUND FALSE)
+            endif()          
+            if(WITH_JPEG)
+                include(FindJPEG)
+            else()
+                set(JPEG_FOUND FALSE)
+            endif()
+        endif()
         
-        set(OPENCV_LINKER_LIBS dl m pthread rt)
+        if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+            set(OPENCV_LINKER_LIBS m pthread)
+        else()
+            set(OPENCV_LINKER_LIBS dl m pthread rt)
+        endif()
     else()
         add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
     endif()
 endif()
 
-set(BUILD_PYTHON_SUPPORT OFF CACHE BOOL "Build with Python support")
+set(BUILD_NEW_PYTHON_SUPPORT ON CACHE BOOL "Build with Python support")
+set(BUILD_SWIG_PYTHON_SUPPORT OFF CACHE BOOL "Build with older SWIG-based Python support")
 set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 
-find_package(SWIG)
-if(SWIG_FOUND)
-
+if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
     find_package(PythonInterp)
     find_package(PythonLibs)
-    
+
     # cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
     if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
         set(PYTHONLIBS_FOUND ON)
     endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
-    
-    # Build with python if installed:
-    # ===================================================
-    if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-        execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
-                  ERROR_VARIABLE PYTHON_VERSION_FULL
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-    
-        string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
-        if(UNIX)
-            set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
-        endif()
-        if(WIN32)
-            get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
-            set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
-        endif()
-    endif()
+        
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+              ERROR_VARIABLE PYTHON_VERSION_FULL
+              OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+    string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
+    if(UNIX)
+        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/opencv)
+        set(PYTHON_PACKAGES_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages)
+    endif()
+    if(WIN32)
+        get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
+        set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
+        set(PYTHON_PACKAGES_PATH "${PYTHON_PATH}/Lib/site-packages")
+    endif()
+endif()
+    
+if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
+    find_package(SWIG)
 endif()
 
 if(WIN32)
@@ -438,6 +447,8 @@ if(IPP_FOUND AND USE_IPP)
 endif()
 
 endif()
+
+set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
 
 # ----------------------------------------------------------------------------
 #   				UPDATE CONFIG FILES & SCRIPTS:
@@ -482,7 +493,7 @@ set(EXTRA_EXE_LINKER_FLAGS_RELEASE "")
 set(EXTRA_EXE_LINKER_FLAGS_DEBUG "")
 
 if(MSVC)
-    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE")
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _SCL_SECURE_NO_WARNINGS")
     # 64-bit portability warnings, in MSVC8
     if(MSVC80)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Wp64")
@@ -511,7 +522,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wall")
 
     # The -Wno-long-long is required in 64bit systems when including sytem headers.
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64* OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
+    endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64*)
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
     endif()
 
@@ -634,26 +648,6 @@ else()
 set(OPENCV_DOC_INSTALL_PATH share/opencv/doc)
 endif()
 
-#-----------------------------------
-# Subdirectories:
-#-----------------------------------
-add_subdirectory(src)
-add_subdirectory(apps)
-add_subdirectory(doc)
-add_subdirectory(data)
-
-if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
-    add_subdirectory(samples)
-endif()
-
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
-
-add_subdirectory(interfaces)
-add_subdirectory(3rdparty)
-
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  OpenCVConfig.cmake
 #  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
@@ -662,7 +656,7 @@ add_subdirectory(3rdparty)
 # -------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------
-#  Part 1/2: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
+#  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
 # -------------------------------------------------------------------------------------------
 
 # Name of libraries is: libcv.so.1.1.0, etc...
@@ -670,17 +664,14 @@ add_subdirectory(3rdparty)
 # Already done above.
 
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
-set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE)
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${OPENCV_CONFIG_FILE_INCLUDE_DIR}")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-list(APPEND CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_CURRENT_SOURCE_DIR}/include/opencv")
+set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"${OPENCV_CONFIG_FILE_INCLUDE_DIR}\" \"${CMAKE_CURRENT_SOURCE_DIR}/include\" \"${CMAKE_CURRENT_SOURCE_DIR}/include/opencv\"")
 
-set(CMAKE_LIB_DIRS_CONFIGCMAKE ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_LIB_DIRS_CONFIGCMAKE "${LIBRARY_OUTPUT_PATH}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 # --------------------------------------------------------------------------------------------
-#  Part 2/2: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
+#  Part 2/3: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
 # -------------------------------------------------------------------------------------------
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 
@@ -703,7 +694,7 @@ if(WIN32)
 	# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 	
 	# This will expand to, for example, <program files>/OpenCV 1.1.0/include
-	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\"")
+	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\" \"\${THIS_OPENCV_CONFIG_PATH}/include/opencv\"")
 
 	# This will expand to, for example, <program files>/OpenCV 1.1.0/lib
 	set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
@@ -746,16 +737,11 @@ ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
 
-# Make sure the system libraries are also copied when doing an "INSTALL":
-# ----------------------------------------------------------------------------
-include(InstallRequiredSystemLibraries)
-
-
 # ----------------------------------------------------------------------------
 #   CPack target
 # ----------------------------------------------------------------------------
 
-option(BUILD_PACKAGE "Build a installer with the SDK")
+set(BUILD_PACKAGE OFF CACHE BOOL "Build a installer with the SDK")
 
 if(BUILD_PACKAGE)
 
@@ -765,22 +751,68 @@ if(BUILD_PACKAGE)
 	@ONLY
 	)
 	
-	install(FILES 
-		AUTHORS
-		ChangeLog
-		COPYING
-		INSTALL
-		NEWS
-		README
-		THANKS
-		TODO
-		DESTINATION ${OPENCV_DOC_INSTALL_PATH}
-        COMPONENT doc
-		)
-		
-	include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
-	
+    include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
+
+    set(root_files AUTHORS README ChangeLog COPYING INSTALL NEWS THANKS)
+
+    file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
+
+    if (NOT WIN32)
+        install(FILES ${root_files}
+	            DESTINATION ${OPENCV_DOC_INSTALL_PATH}
+                COMPONENT main)
+    else()
+        install(FILES ${root_files}
+	            DESTINATION "."
+                COMPONENT main)
+        install(FILES ${root_src_files}
+	            DESTINATION "."
+                COMPONENT src)
+		# Add the "win-install/OpenCVConfig.cmake" file to the "main" install component 
+		install(FILES 
+			"${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake"
+			DESTINATION "."
+			COMPONENT main
+			)
+
+        install(DIRECTORY data samples DESTINATION "." COMPONENT main PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY 3rdparty apps interfaces src tests utils DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY doc/ DESTINATION doc COMPONENT src FILES_MATCHING PATTERN "*.tex")
+        install(DIRECTORY doc/pics DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
+        install(DIRECTORY doc/plastex DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
+	endif()
 endif()
+
+
+#-----------------------------------
+# Subdirectories:
+#-----------------------------------
+add_subdirectory(src)
+add_subdirectory(apps)
+
+if(BUILD_LATEX_DOCS)
+  include(OpenCVFindLATEX.cmake REQUIRED)
+    
+  if(PDFLATEX_COMPILER)
+    message(STATUS "PDF LaTeX found!")
+  endif()
+endif()
+
+add_subdirectory(doc)
+add_subdirectory(data)
+
+if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
+    add_subdirectory(samples)
+endif()
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+add_subdirectory(interfaces)
+add_subdirectory(3rdparty)
+
 
 # ----------------------------------------------------------------------------
 #   Sumary:
@@ -825,6 +857,10 @@ message(STATUS "  Video I/O: ")
 message(STATUS "    DC1394 1.x:                ${HAVE_DC1394}")
 message(STATUS "    DC1394 2.x:                ${HAVE_DC1394_2}")
 message(STATUS "    FFMPEG:                    ${HAVE_FFMPEG}")
+message(STATUS "      codec:                   ${HAVE_FFMPEG_CODEC}")
+message(STATUS "      format:                  ${HAVE_FFMPEG_FORMAT}")
+message(STATUS "      util:                    ${HAVE_FFMPEG_UTIL}")
+message(STATUS "      gentoo-style:            ${HAVE_GENTOO_FFMPEG}")
 message(STATUS "    GStreamer:                 ${HAVE_GSTREAMER}")
 message(STATUS "    UniCap:                    ${HAVE_UNICAP}")
 if(HAVE_LIBV4L)
@@ -836,15 +872,21 @@ message(STATUS "    Xine:                      ${HAVE_XINE}")
 endif()
 message(STATUS "")
 message(STATUS "  Interfaces: ")
-if(PYTHONLIBS_FOUND AND BUILD_PYTHON_SUPPORT)
-message(STATUS "    Python:                    1")
+if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
+message(STATUS "    Old Python:                1")
 else()
-message(STATUS "    Python:                    0")
+message(STATUS "    Old Python:                0")
 endif()
+message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
 if(IPP_FOUND AND USE_IPP)
 message(STATUS "    Use IPP:                   1")
 else()
 message(STATUS "    Use IPP:                   0")
+endif()
+if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
+message(STATUS "    Build Documentation        1")
+else()
+message(STATUS "    Build Documentation        0")
 endif()
 message(STATUS "")
 message(STATUS "    Install path:              ${CMAKE_INSTALL_PREFIX}")

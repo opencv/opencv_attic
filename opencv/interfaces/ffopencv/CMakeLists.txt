@@ -21,6 +21,6 @@ set_target_properties(${the_target} PROPERTIES
                       )
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin COMPONENT dev
-	LIBRARY DESTINATION lib COMPONENT dev
+	RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
     )

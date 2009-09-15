@@ -2582,14 +2582,13 @@ void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat& dstmap2,
     if( m1type == CV_32FC1 && dstm1type == CV_32FC2 )
     {
         Mat vdata[] = { *m1, *m2 };
-        merge( Vector<Mat>(vdata, 2), dstmap1 );
+        merge( vdata, 2, dstmap1 );
         return;
     }
 
     if( m1type == CV_32FC2 && dstm1type == CV_32FC1 )
     {
-        Mat vdata[] = { dstmap1, dstmap2 };
-        Vector<Mat> mv(vdata, 2);
+        Mat mv[] = { dstmap1, dstmap2 };
         split( *m1, mv );
         return;
     }

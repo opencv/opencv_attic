@@ -12,7 +12,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include"
                     "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
 					"${CMAKE_CURRENT_BINARY_DIR}")
 
-set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h)
+set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h cxflann.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
     list(APPEND lib_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
@@ -53,7 +53,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} opencv_lapack zlib flann)
 
 # Linker flag needed for Windows Mobile 5 and 6 SDKs
 if(MSVC AND CMAKE_CROSSCOMPILING)
@@ -62,14 +62,14 @@ if(MSVC AND CMAKE_CROSSCOMPILING)
 		)
 endif()
 
-add_dependencies(${the_target} opencv_lapack)
+add_dependencies(${the_target} opencv_lapack zlib)
 
 install(TARGETS ${the_target}
-    RUNTIME DESTINATION bin COMPONENT dev
-	LIBRARY DESTINATION lib COMPONENT dev
-	ARCHIVE DESTINATION lib COMPONENT dev)
+    RUNTIME DESTINATION bin COMPONENT main
+	LIBRARY DESTINATION lib COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main)
 
 # install each module headers separately
 install(FILES ${lib_hdrs}
         DESTINATION include/opencv
-        COMPONENT dev)
+        COMPONENT main)

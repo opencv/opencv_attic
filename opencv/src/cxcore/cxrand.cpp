@@ -429,18 +429,22 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
 {
     static RandFunc rngtab[3][8] =
     {
-        {RandBits_<uchar>, 0,
+        {
+        RandBits_<uchar>, 
+        RandBits_<schar>,
         RandBits_<ushort>,
         RandBits_<short>,
         RandBits_<int>, 0, 0, 0},
 
-        {Randi_<uchar,float>, 0,
+        {Randi_<uchar,float>,
+        Randi_<schar,float>,
         Randi_<ushort,float>,
         Randi_<short,float>,
         Randi_<int,float>,
         Randf_, Randd_, 0},
 
-        {Randn_<uchar,float>, 0,
+        {Randn_<uchar,float>,
+        Randn_<schar,float>,
         Randn_<ushort,float>,
         Randn_<short,float>,
         Randn_<int,float>,
@@ -550,6 +554,8 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
         }
     }
 
+    CV_Assert( func != 0);
+
     func( mat, &state, param );
 }
 
@@ -639,7 +645,7 @@ randShuffle_( Mat& _arr, RNG& rng, double iterFactor )
 
 typedef void (*RandShuffleFunc)( Mat& dst, RNG& rng, double iterFactor );
 
-void randShuffle( Mat& dst, RNG& rng, double iterFactor )
+void randShuffle( Mat& dst, double iterFactor, RNG* _rng )
 {
     RandShuffleFunc tab[] =
     {
@@ -662,6 +668,7 @@ void randShuffle( Mat& dst, RNG& rng, double iterFactor )
         randShuffle_<Vec<int64,4> > // 32
     };
 
+    RNG& rng = _rng ? *_rng : theRNG();
     CV_Assert( dst.elemSize() <= 32 );
     RandShuffleFunc func = tab[dst.elemSize()];
     CV_Assert( func != 0 );
@@ -684,7 +691,7 @@ CV_IMPL void cvRandShuffle( CvArr* arr, CvRNG* _rng, double iter_factor )
 {
     cv::Mat dst = cv::cvarrToMat(arr);
     cv::RNG& rng = _rng ? (cv::RNG&)*_rng : cv::theRNG();
-    cv::randShuffle( dst, rng, iter_factor );
+    cv::randShuffle( dst, iter_factor, &rng );
 }
 
 /* End of file. */

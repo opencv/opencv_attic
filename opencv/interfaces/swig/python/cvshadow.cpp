@@ -49,7 +49,7 @@ CvTypedSeq<CvPoint> * cvApproxPoly_Shadow( const void* src_seq, int header_size,
 
 // Always return a new Mat of indices
 CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_points){
-	CvMat * hull;
+	CvMat * hull=0;
 	CvMat * points_mat=(CvMat *) points;
 	CvSeq * points_seq=(CvSeq *) points;
 	int npoints, type;

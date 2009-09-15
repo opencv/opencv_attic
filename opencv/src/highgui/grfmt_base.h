@@ -65,22 +65,22 @@ public:
     int height() const { return m_height; };
     int type() const { return m_type; };
 
-    virtual bool setSource( const String& filename );
-    virtual bool setSource( const Vector<uchar>& buf );
+    virtual bool setSource( const string& filename );
+    virtual bool setSource( const Mat& buf );
     virtual bool readHeader() = 0;
     virtual bool readData( Mat& img ) = 0;
 
     virtual size_t signatureLength() const;
-    virtual bool checkSignature( const String& signature ) const;
+    virtual bool checkSignature( const string& signature ) const;
     virtual ImageDecoder newDecoder() const;
 
 protected:
     int  m_width;  // width  of the image ( filled by readHeader )
     int  m_height; // height of the image ( filled by readHeader )
     int  m_type;
-    String m_filename;
-    String m_signature;
-    Vector<uchar> m_buf;
+    string m_filename;
+    string m_signature;
+    Mat m_buf;
     bool m_buf_supported;
 };
 
@@ -93,18 +93,18 @@ public:
     virtual ~BaseImageEncoder() {};
     virtual bool isFormatSupported( int depth ) const;
 
-    virtual bool setDestination( const String& filename );
-    virtual bool setDestination( Vector<uchar>& buf );
-    virtual bool write( const Mat& img, const Vector<int>& params ) = 0;
+    virtual bool setDestination( const string& filename );
+    virtual bool setDestination( vector<uchar>& buf );
+    virtual bool write( const Mat& img, const vector<int>& params ) = 0;
 
-    virtual String getDescription() const;
+    virtual string getDescription() const;
     virtual ImageEncoder newEncoder() const;
 
 protected:
-    String m_description;
+    string m_description;
     
-    String m_filename;
-    Vector<uchar>* m_buf;
+    string m_filename;
+    vector<uchar>* m_buf;
     bool m_buf_supported;
 };
 

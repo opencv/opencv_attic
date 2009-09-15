@@ -804,8 +804,11 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
         icvCalcFMM(out,t,Out,true);
         icvTeleaInpaintFMM(mask,t,output_img,range,Heap);
     }
-    else
+    else if (flags == CV_INPAINT_NS) {
         icvNSInpaintFMM(mask,t,output_img,range,Heap);
+    } else {
+        CV_ERROR( CV_StsBadArg, "The flags argument must be one of CV_INPAINT_TELEA or CV_INPAINT_NS" );
+    }
     
     __END__;
     

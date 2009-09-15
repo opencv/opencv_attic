@@ -450,7 +450,7 @@ StarDetector::StarDetector(int _maxSize, int _responseThreshold,
             _lineThresholdProjected, _lineThresholdBinarized, _suppressNonmaxSize);
 }
 
-void StarDetector::operator()(const Mat& image, Vector<KeyPoint>& keypoints) const
+void StarDetector::operator()(const Mat& image, vector<KeyPoint>& keypoints) const
 {
     CvMat _image = image;
     MemStorage storage(cvCreateMemStorage(0));

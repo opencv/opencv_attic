@@ -1,1 +1,2 @@
 add_subdirectory(haartraining)
+add_subdirectory(traincascade)

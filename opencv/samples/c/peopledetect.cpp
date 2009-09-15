@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 
     cv::HOGDescriptor hog;
     hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
-    cv::Vector<cv::Rect> found;
+    cv::vector<cv::Rect> found;
     double t = (double)cv::getTickCount();
     // run the detector with default parameters. to get a higher hit-rate
     // (and more false alarms, respectively), decrease the hitThreshold and

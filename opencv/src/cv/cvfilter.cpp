@@ -191,7 +191,8 @@ void FilterEngine::init( const Ptr<BaseFilter>& _filter2D,
     wholeSize = Size(-1,-1);
 }
 
-    
+static const int VEC_ALIGN = CV_MALLOC_ALIGN;
+
 int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
 {
     int i, j;
@@ -218,33 +219,34 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
         srcRow.resize(esz*(maxWidth + ksize.width - 1));
         if( columnBorderType == BORDER_CONSTANT )
         {
-            constBorderRow.resize(getElemSize(bufType)*maxWidth);
-            uchar* dst;
-            int n = (int)constBorderValue.size()*esz, N;
+            constBorderRow.resize(getElemSize(bufType)*(maxWidth+VEC_ALIGN));
+            uchar *dst = alignPtr(&constBorderRow[0], VEC_ALIGN), *tdst;
+            int n = (int)constBorderValue.size(), N;
             if( isSeparable() )
             {
-                dst = &srcRow[0];
+                tdst = &srcRow[0];
                 N = (maxWidth + ksize.width - 1)*esz;
             }
             else
             {
-                dst = &constBorderRow[0];
+                tdst = dst;
                 N = maxWidth*esz;
             }
             
             for( i = 0; i < N; i += n )
             {
                 n = std::min( n, N - i );
-                memcpy( dst + i, constVal, n );
+                for(j = 0; j < n; j++)
+                    tdst[i+j] = constVal[j];
             }
 
             if( isSeparable() )
-                (*rowFilter)(&srcRow[0] + anchor.x*esz, &constBorderRow[0], maxWidth, cn);
+                (*rowFilter)(&srcRow[0], dst, maxWidth, cn);
         }
         
         int maxBufStep = bufElemSize*(int)alignSize(maxWidth +
-            (!isSeparable() ? ksize.width - 1 : 0),16);
-        ringBuf.resize(maxBufStep*rows.size());
+            (!isSeparable() ? ksize.width - 1 : 0),VEC_ALIGN);
+        ringBuf.resize(maxBufStep*rows.size()+VEC_ALIGN);
     }
 
     // adjust bufstep so that the used part of the ring buffer stays compact in memory
@@ -261,7 +263,7 @@ int FilterEngine::start(Size _wholeSize, Rect _roi, int _maxBufRows)
             int nr = isSeparable() ? 1 : (int)rows.size();
             for( i = 0; i < nr; i++ )
             {
-                uchar* dst = isSeparable() ? &srcRow[0] : &ringBuf[0] + bufStep*i;
+                uchar* dst = isSeparable() ? &srcRow[0] : alignPtr(&ringBuf[0],VEC_ALIGN) + bufStep*i;
                 memcpy( dst, constVal, dx1*esz );
                 memcpy( dst + (roi.width + ksize.width - 1 - dx2)*esz, constVal, dx2*esz );
             }
@@ -365,7 +367,7 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
         for( ; dcount-- > 0; src += srcstep )
         {
             int bi = (startY - startY0 + rowCount) % bufRows;
-            uchar* brow = &ringBuf[0] + bi*bufStep;
+            uchar* brow = alignPtr(&ringBuf[0], VEC_ALIGN) + bi*bufStep;
             uchar* row = isSep ? &srcRow[0] : brow;
             
             if( ++rowCount > bufRows )
@@ -407,14 +409,14 @@ int FilterEngine::proceed( const uchar* src, int srcstep, int count,
             int srcY = borderInterpolate(dstY + dy + i + roi.y - ay,
                             wholeSize.height, columnBorderType);
             if( srcY < 0 ) // can happen only with constant border type
-                brows[i] = &constBorderRow[0];
+                brows[i] = alignPtr(&constBorderRow[0], VEC_ALIGN);
             else
             {
                 CV_Assert( srcY >= startY );
                 if( srcY >= startY + rowCount )
                     break;
                 int bi = (srcY - startY0) % bufRows;
-                brows[i] = &ringBuf[0] + bi*bufStep;
+                brows[i] = alignPtr(&ringBuf[0], VEC_ALIGN) + bi*bufStep;
             }
         }
         if( i < kheight )
@@ -446,7 +448,8 @@ void FilterEngine::apply(const Mat& src, Mat& dst,
         dstOfs.y + srcRoi.height <= dst.rows );
 
     int y = start(src, srcRoi, isolated);
-    proceed( src.data + y*src.step, (int)src.step, endY - startY, dst.data, (int)dst.step );
+    proceed( src.data + y*src.step, (int)src.step, endY - startY,
+             dst.data + dstOfs.y*dst.step + dstOfs.x*dst.elemSize(), (int)dst.step );
 }
 
 
@@ -1726,7 +1729,7 @@ struct FilterVec_8u
         Mat kernel;
         _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
         delta = (float)(_delta/(1 << _bits));
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1793,7 +1796,7 @@ struct FilterVec_8u
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -1806,7 +1809,7 @@ struct FilterVec_8u16s
         Mat kernel;
         _kernel.convertTo(kernel, CV_32F, 1./(1 << _bits), 0);
         delta = (float)(_delta/(1 << _bits));
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1873,7 +1876,7 @@ struct FilterVec_8u16s
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -1884,7 +1887,7 @@ struct FilterVec_32f
     FilterVec_32f(const Mat& _kernel, int, double _delta)
     {
         delta = (float)_delta;
-        Vector<Point> coords;
+        vector<Point> coords;
         preprocess2DKernel(_kernel, coords, coeffs);
         _nz = (int)coords.size();
     }
@@ -1942,7 +1945,7 @@ struct FilterVec_32f
     }
 
     int _nz;
-    Vector<uchar> coeffs;
+    vector<uchar> coeffs;
     float delta;
 };
 
@@ -2706,7 +2709,7 @@ Ptr<FilterEngine> createSeparableLinearFilter(
 *                               Non-separable linear filter                              *
 \****************************************************************************************/
 
-void preprocess2DKernel( const Mat& kernel, Vector<Point>& coords, Vector<uchar>& coeffs )
+void preprocess2DKernel( const Mat& kernel, vector<Point>& coords, vector<uchar>& coeffs )
 {
     int i, j, k, nz = countNonZero(kernel), ktype = kernel.type();
     if(nz == 0)
@@ -2824,9 +2827,9 @@ template<typename ST, class CastOp, class VecOp> struct Filter2D : public BaseFi
         }
     }
 
-    Vector<Point> coords;
-    Vector<uchar> coeffs;
-    Vector<uchar*> ptrs;
+    vector<Point> coords;
+    vector<uchar> coeffs;
+    vector<uchar*> ptrs;
     KT delta;
     CastOp castOp0;
     VecOp vecOp;

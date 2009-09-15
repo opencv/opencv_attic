@@ -460,8 +460,6 @@ CV_INLINE IplROI RectToROI( RECT r )
 
 #if defined __cplusplus && !defined CV_NO_CVV_IMAGE
 
-#define CImage CvvImage
-
 /* CvvImage class definition */
 class CV_EXPORTS CvvImage
 {
@@ -520,6 +518,9 @@ protected:
 
     IplImage*  m_img;
 };
+
+typedef CvvImage CImage;
+
 
 #endif /* __cplusplus */
 

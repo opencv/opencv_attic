@@ -1284,7 +1284,7 @@ MSER::MSER( int _delta, int _min_area, int _max_area,
         _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size);
 }
 
-Vector<Vector<Point> > MSER::operator()(Mat& image, const Mat& mask) const
+void MSER::operator()(Mat& image, vector<vector<Point> >& dstcontours, const Mat& mask) const
 {
     CvMat _image = image, _mask, *pmask = 0;
     if( mask.data )
@@ -1294,11 +1294,9 @@ Vector<Vector<Point> > MSER::operator()(Mat& image, const Mat& mask) const
     cvExtractMSER( &_image, pmask, &contours.seq, storage, *(const CvMSERParams*)this );
     SeqIterator<CvSeq*> it = contours.begin();
     size_t i, ncontours = contours.size();
-    Vector<Vector<Point> > dstcontours;
     dstcontours.resize(ncontours);
     for( i = 0; i < ncontours; i++, ++it )
         Seq<Point>(*it).copyTo(dstcontours[i]);
-    return dstcontours;
 }
 
 }

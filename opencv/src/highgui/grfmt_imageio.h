@@ -29,7 +29,7 @@ public:
     void  close();
     
     size_t signatureLength() const;
-    bool checkSignature( const String& signature ) const;
+    bool checkSignature( const string& signature ) const;
 
     ImageDecoder newDecoder() const;
 
@@ -44,7 +44,7 @@ public:
     ImageIOEncoder();
     ~ImageIOEncoder();
 
-    bool  write( const Mat& img, const Vector<int>& params );
+    bool  write( const Mat& img, const vector<int>& params );
 
     ImageEncoder newEncoder() const;
 };

@@ -46,9 +46,9 @@ namespace cv
 {
 
 void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
-                           const Vector<Point2f>& prevPts,
-                           Vector<Point2f>& nextPts,
-                           Vector<bool>& status, Vector<float>& err,
+                           const vector<Point2f>& prevPts,
+                           vector<Point2f>& nextPts,
+                           vector<uchar>& status, vector<float>& err,
                            Size winSize, int maxLevel,
                            TermCriteria criteria,
                            double derivLambda,
@@ -76,7 +76,7 @@ void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
     if( npoints == 0 )
         return;
     
-    Vector<Mat> prevPyr, nextPyr;
+    vector<Mat> prevPyr, nextPyr;
 
     int cn = prevImg.channels();
     buildPyramid( prevImg, prevPyr, maxLevel );
@@ -120,56 +120,56 @@ void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
         CvMat cvderivJ = _derivJ;
         cvZero(&cvderivJ);
 
-        Vector<Mat> svec(&tempDeriv, 1), dvecI(&derivI, 1), dvecJ(&derivJ, 1);
-        Vector<int> fromTo(prevImg.channels()*2);
+        vector<Mat> svec(cn, tempDeriv), dvecI(cn, derivI), dvecJ(cn, derivJ);
+        vector<int> fromTo(cn*2);
         for( k = 0; k < cn; k++ )
             fromTo[k*2] = k;
 
         prevPyr[level].convertTo(tempDeriv, derivDepth);
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         // compute spatial derivatives and merge them together
         Sobel(prevPyr[level], tempDeriv, derivDepth, 1, 0, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 1;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 0, 1, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 2;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 2, 0, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 3;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 1, 1, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 4;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 0, 2, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 5;
-        mixChannels(svec, dvecI, fromTo);
+        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
 
         nextPyr[level].convertTo(tempDeriv, derivDepth);
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3;
-        mixChannels(svec, dvecJ, fromTo);
+        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
 
         Sobel(nextPyr[level], tempDeriv, derivDepth, 1, 0, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3 + 1;
-        mixChannels(svec, dvecJ, fromTo);
+        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
 
         Sobel(nextPyr[level], tempDeriv, derivDepth, 0, 1, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3 + 2;
-        mixChannels(svec, dvecJ, fromTo);
+        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
 
         /*copyMakeBorder( derivI, _derivI, winSize.height, winSize.height,
             winSize.width, winSize.width, BORDER_CONSTANT );
@@ -1637,12 +1637,12 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
 
 namespace cv
 {
-Mat estimateRigidTransform( const Vector<Point2f>& A,
-                            const Vector<Point2f>& B,
+Mat estimateRigidTransform( const vector<Point2f>& A,
+                            const vector<Point2f>& B,
                             bool fullAffine )
 {
     Mat M(2, 3, CV_64F);
-    CvMat _A = A, _B = B, _M = M;
+    CvMat _A = Mat_<Point2f>(A), _B = Mat_<Point2f>(B), _M = M;
     cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
     return M;
 }

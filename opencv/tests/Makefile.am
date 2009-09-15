@@ -2,13 +2,14 @@
 # Python and Octave tests are only run if python or octave resp. have been --enable[d] in ./configure
 
 
-check_LTLIBRARIES = libcxts.la
-check_PROGRAMS    = cxcoretest cvtest mltest
-check_SCRIPTS     = $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
-TESTS             = $(check_PROGRAMS) $(check_SCRIPTS)
+check_LTLIBRARIES  = libcxts.la
+check_PROGRAMS     = cxcoretest cvtest mltest
+dist_check_SCRIPTS = test_cxcore.sh test_cv.sh test_ml.sh $(TMP_OCTAVE_FILES) $(TMP_PYTHON_FILES)
+TESTS              = $(dist_check_SCRIPTS)
+
 
 clean-local:
-	-rm -rf *.lst *.sum python/*.pyc python/*.works python/highgui/*.pyc python/highgui/*.works
+	-rm -rf *.lst *.sum python/*.pyc *.works python/*.works python/highgui/*.pyc python/highgui/*.works
 
 
 TESTS_ENVIRONMENT = \
@@ -16,7 +17,6 @@ TESTS_ENVIRONMENT = \
   DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
   OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
   PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
-
 
 AM_CPPFLAGS = \
   -I$(top_srcdir)/tests/cxts        \
@@ -32,15 +32,13 @@ EXTRA_DIST = \
   cxts/CMakeLists.txt \
   ml/CMakeLists.txt \
   \
-  cv/testdata \
   cxcore/src/precomp.cpp \
   cxts/precomp.cpp \
   \
   ml/src/precomp.cpp \
   ml/Readme.txt \
   \
-  octave \
-  python/testdata
+  octave/frame.jpg
 
 noinst_HEADERS = \
   cxts/_cxts.h                  \
@@ -153,7 +151,7 @@ noinst_OCTAVE    = $(TMP_OCTAVE_FILES)
 
 if BUILD_PYTHON_WRAPPERS
 TMP_PYTHON_FILES = \
-  python/test_adaptors.py                              \
+  python/testall.py            \
   python/highgui/cvInitSystem.py                       \
   python/highgui/cvLoadImageBMP.py                     \
   python/highgui/cvLoadImageJPG.py                     \
@@ -167,8 +165,8 @@ TMP_PYTHON_FILES = \
   python/highgui/cvWaitKey.py                          \
   python/highgui/cvCreateTrackbar.py                   \
   python/highgui/cvMoveResizeWindow.py                 \
-  python/highgui/cvGetWindowHandleName.py              \
   python/highgui/cvGetSetTrackbarPos.py                \
+  python/highgui/cvGetWindowHandleName.py              \
   python/highgui/cvSetMouseCallback.py                 \
   python/highgui/cvCreateFileCaptureRGB.py             \
   python/highgui/cvCreateFileCaptureRGBA.py            \
@@ -178,6 +176,7 @@ TMP_PYTHON_FILES = \
   python/highgui/cvCreateFileCaptureYV12.py            \
   python/highgui/cvCreateFileCaptureYV16.py            \
   python/highgui/cvCreateFileCaptureYVU9.py            \
+  python/highgui/cvGetCaptureProperty.py               \
   python/highgui/cvGrabFrame.py                        \
   python/highgui/cvRetrieveFrame.py                    \
   python/highgui/cvQueryFrame.py                       \
@@ -234,7 +233,16 @@ else
 endif
 
 noinst_PYTHON = \
-  $(TMP_PYTHON_FILES)                          \
+  $(TMP_PYTHON_FILES)                    \
+  python/cmp_tests.py                    \
+  python/cvtestutils.py                  \
+  python/feature_tree_tests.py           \
+  python/histogram_tests.py              \
+  python/homography_tests.py             \
+  python/lsh_tests.py                    \
+  python/moments_tests.py                \
+  python/roots_tests.py                  \
+  python/test_adaptors.py                \
   python/highgui/works.py                \
   python/highgui/frames.py               \
   python/highgui/match.py                \
@@ -243,4 +251,3 @@ noinst_PYTHON = \
   python/highgui/size_test.py            \
   python/highgui/cvCreateFileCapture.py  \
   python/highgui/cvLoadImage.py
-

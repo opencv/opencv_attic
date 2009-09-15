@@ -58,25 +58,53 @@ extern "C" {
 #include <errno.h>
 #endif
 
-#if defined(HAVE_GENTOO_FFMPEG)
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#if defined(HAVE_FFMPEG_SWSCALE)
-#include <libswscale/swscale.h>
-#endif
-#else
 #ifdef WIN32
-#include <ffmpeg_/avformat.h>
-#include <ffmpeg_/avcodec.h>
-#include <ffmpeg_/imgconvert.h>
+  #include <ffmpeg_/avformat.h>
+  #include <ffmpeg_/avcodec.h>
+  #include <ffmpeg_/imgconvert.h>
 #else
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/avcodec.h>
-#if defined(HAVE_FFMPEG_SWSCALE)
-#include <ffmpeg/swscale.h>
+
+// if the header path is not specified explicitly, let's deduce it
+#if !defined HAVE_FFMPEG_AVCODEC_H && !defined HAVE_LIBAVCODEC_AVCODEC_H
+
+#if defined(HAVE_GENTOO_FFMPEG)
+  #define HAVE_LIBAVCODEC_AVCODEC_H 1
+  #define HAVE_LIBAVFORMAT_AVFORMAT_H 1
+  #if defined(HAVE_FFMPEG_SWSCALE)
+    #define HAVE_LIBSWSCALE_SWSCALE_H 1
+  #endif
+#elif defined HAVE_FFMPEG
+  #define HAVE_FFMPEG_AVCODEC_H 1
+  #define HAVE_FFMPEG_AVFORMAT_H 1
+  #if defined(HAVE_FFMPEG_SWSCALE)
+    #define HAVE_FFMPEG_SWSCALE_H 1
+  #endif
 #endif
+
 #endif
+
+#if defined(HAVE_FFMPEG_AVCODEC_H)
+  #include <ffmpeg/avcodec.h>
 #endif
+#if defined(HAVE_FFMPEG_AVFORMAT_H)
+  #include <ffmpeg/avformat.h>
+#endif
+#if defined(HAVE_FFMPEG_SWSCALE_H)
+  #include <ffmpeg/swscale.h>
+#endif
+
+#if defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
+  #include <libavformat/avformat.h>
+#endif
+#if defined(HAVE_LIBAVCODEC_AVCODEC_H)
+  #include <libavcodec/avcodec.h>
+#endif
+#if defined(HAVE_LIBSWSCALE_SWSCALE_H)
+  #include <libswscale/swscale.h>
+#endif
+
+#endif
+
 }
 
 #if defined _MSC_VER && _MSC_VER >= 1200
@@ -574,7 +602,11 @@ IplImage* CvCapture_FFMPEG::retrieveFrame(int)
     return &frame;
 }
 
+#if defined(__APPLE__)
+#define AV_NOPTS_VALUE_ ((int64_t)0x8000000000000000LL)
+#else
 #define AV_NOPTS_VALUE_ ((int64_t)AV_NOPTS_VALUE)
+#endif
 
 double CvCapture_FFMPEG::getProperty( int property_id )
 {
@@ -1005,6 +1037,8 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
 	AVCodecContext *c = &(video_st->codec);
 #endif
 
+#if LIBAVFORMAT_BUILD < 5231
+    // It is not needed in the latest versions of the ffmpeg
     if( c->codec_id == CODEC_ID_RAWVIDEO && image->origin != IPL_ORIGIN_BL )
     {
         if( !temp_image )
@@ -1013,6 +1047,7 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
         cvFlip( image, temp_image, 0 );
         image = temp_image;
     }
+#endif
 
     // check parameters
     if (input_pix_fmt == PIX_FMT_BGR24) {
