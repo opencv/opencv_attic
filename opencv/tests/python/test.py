@@ -1163,6 +1163,11 @@ class TestDirected(unittest.TestCase):
     def test_FindChessboardCorners(self):
         im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 1)
         cv.Set(im, 128)
+
+        # Empty image run
+        status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+        # Perfect checkerboard
         def xf(i,j, o):
             return ((96 + o) + 40 * i, (96 + o) + 40 * j)
         for i in range(8):
@@ -1172,11 +1177,31 @@ class TestDirected(unittest.TestCase):
         status,corners = cv.FindChessboardCorners( im, (7,7) )
         self.assert_(status)
         self.assert_(len(corners) == (7 * 7))
+
+        # Exercise corner display
+        im3 = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_8U, 3)
+        cv.Merge(im, im, im, None, im3)
+        cv.DrawChessboardCorners(im3, (7,7), corners, status)
+
         if 0:
-            im3 = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_8U, 3)
-            cv.Merge(im, im, im, None, im3)
-            cv.DrawChessboardCorners(im3, (7,7), corners, status)
             self.snap(im3)
+
+        # Run it with too many corners
+        cv.Set(im, 128)
+        for i in range(40):
+            for j in range(40):
+                color = ((i ^ j) & 1) * 255
+                x = 30 + 6 * i
+                y = 30 + 4 * j
+                cv.Rectangle(im, (x, y), (x+4, y+4), color, cv.CV_FILLED)
+        status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+        # XXX - this is very slow
+        if 0:
+            rng = cv.RNG(0)
+            cv.RandArr(rng, im, cv.CV_RAND_UNI, 0, 255.0)
+            self.snap(im)
+            status,corners = cv.FindChessboardCorners( im, (7,7) )
 
     def test_FillPoly(self):
         scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)

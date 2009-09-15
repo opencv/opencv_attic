@@ -611,12 +611,10 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
 
     // start with first one, assign rows/cols
     int row_min = 0, col_min = 0, row_max=0, col_max = 0;
-#define HSIZE 20
-    int col_hist[HSIZE*2];
-    int row_hist[HSIZE*2]; // bad programming, should allow variable size
 
-    for (i=0; i<HSIZE*2; i++) // init to zero
-        col_hist[i] = row_hist[i] = 0;
+    std::map<int, int> col_hist;
+    std::map<int, int> row_hist;
+
     cvSeqPush(stack, &start);
     start->row = 0;
     start->col = 0;
@@ -631,8 +629,8 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
         cvSeqPop( stack, &q );
         int col = q->col;
         int row = q->row;
-        col_hist[col+HSIZE]++;
-        row_hist[row+HSIZE]++;
+        col_hist[col]++;
+        row_hist[row]++;
 
         // check min/max
         if (row > row_max) row_max = row;
@@ -671,7 +669,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     cvReleaseMemStorage( &temp_storage );
 
     for (i=col_min; i<=col_max; i++)
-        PRINTF("HIST[%d] = %d\n", i, col_hist[i+HSIZE]);
+        PRINTF("HIST[%d] = %d\n", i, col_hist[i]);
 
     // analyze inner quad structure
     int w = pattern_size.width - 1;
@@ -700,7 +698,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     if (dcol == w+1)    // too many, trim
     {
         PRINTF("Trimming cols\n");
-        if (col_hist[col_max+HSIZE] > col_hist[col_min+HSIZE])
+        if (col_hist[col_max] > col_hist[col_min])
         {
             PRINTF("Trimming left col\n");
             quad_count = icvTrimCol(quads,quad_count,col_min,-1);
@@ -716,7 +714,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     if (drow == h+1)    // too many, trim
     {
         PRINTF("Trimming rows\n");
-        if (row_hist[row_max+HSIZE] > row_hist[row_min+HSIZE])
+        if (row_hist[row_max] > row_hist[row_min])
         {
             PRINTF("Trimming top row\n");
             quad_count = icvTrimRow(quads,quad_count,row_min,-1);
