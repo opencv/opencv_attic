@@ -3189,8 +3189,15 @@ static PyObject *pycvFindChessboardCorners(PyObject *self, PyObject *args, PyObj
 // make recipient use the donor's data, compute the offset,
 // and manage reference counts.
 
-static PyObject *shareData(PyObject *donor, CvArr *pdonor, PyObject *recipient, CvMat *precipient)
+static void preShareData(CvArr *donor, CvMat **recipient)
 {
+  *recipient = cvCreateMatHeader(4, 4, cvGetElemType(donor));
+}
+
+static PyObject *shareData(PyObject *donor, CvArr *pdonor, CvMat *precipient)
+{
+  PyObject *recipient = (PyObject*)PyObject_NEW(cvmat_t, &cvmat_Type);
+  ((cvmat_t*)recipient)->a = precipient;
   ((cvmat_t*)recipient)->offset = cvPtr1D(precipient, 0) - cvPtr1D(pdonor, 0);
 
   PyObject *arr_data;
@@ -3201,10 +3208,8 @@ static PyObject *shareData(PyObject *donor, CvArr *pdonor, PyObject *recipient, 
   } else {
     return (PyObject*)failmsg("Argument 'mat' must be either IplImage or CvMat");
   }
-  Py_DECREF(((cvmat_t*)recipient)->data);
   ((cvmat_t*)recipient)->data = arr_data;
   Py_INCREF(arr_data);
-  Py_INCREF(recipient);
   return recipient;
 }
 

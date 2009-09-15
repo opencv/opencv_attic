@@ -424,8 +424,7 @@ class TestDirected(unittest.TestCase):
         iter = 77
         subs = []
         for i in range(iter):
-            sub = cv.CreateMat(10, 10, cv.CV_8UC1)
-            cv.GetSubRect(src, sub, (0, 0, 10, 10))
+            sub = cv.GetSubRect(src, (0, 0, 10, 10))
             subs.append(sub)
         self.assert_(sys.getrefcount(data) == (start_count + iter))
 
@@ -434,7 +433,7 @@ class TestDirected(unittest.TestCase):
         sub = cv.CreateMat(32, 32, cv.CV_8UC1)
         for x in range(0, 512, 32):
             for y in range(0, 512, 32):
-                cv.GetSubRect(src, sub, (x, y, 32, 32))
+                sub = cv.GetSubRect(src, (x, y, 32, 32))
                 cv.SetImageROI(made, (x, y, 32, 32))
                 cv.Copy(sub, made)
         cv.ResetImageROI(made)
