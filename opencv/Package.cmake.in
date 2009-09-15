@@ -5,6 +5,8 @@
 #
 
 set(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
+set(CMAKE_INSTALL_OPENMP_LIBRARIES 1)
+#include(OpenCVInstallRequiredSystemLibraries.cmake)
 include(InstallRequiredSystemLibraries)
 
 
