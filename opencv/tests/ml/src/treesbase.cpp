@@ -43,11 +43,27 @@
 
 CV_TreesBaseTest :: CV_TreesBaseTest( const char* test_name, const char* test_funcs ) : 
     CvTest( test_name, test_funcs )
-{   
+{ 
+   validation_fs = 0; 
+   data_sets_names = 0;
+}
+  
+int CV_TreesBaseTest :: init( CvTS* system )
+{
+    clear();
+    ts = system;
+
+    char buf[200];
+    sprintf( buf, "%s%s", ts->get_data_path(), "validation.xml" );
+    validation_fs = cvOpenFileStorage( buf, 0, CV_STORAGE_READ );
+    CV_Assert( validation_fs );
+    return read_params( validation_fs );
 }
 
 CV_TreesBaseTest :: ~CV_TreesBaseTest()
 {
+    if( validation_fs )
+        cvReleaseFileStorage( &validation_fs );
 }
 
 int CV_TreesBaseTest :: read_params( CvFileStorage* fs )
@@ -63,7 +79,6 @@ void CV_TreesBaseTest :: run( int start_from )
 {
     int code = CvTS::OK;
     start_from = 0;
-    
     for (int i = 0; i < test_case_count; i++)
     {
         int temp_code = run_test_case( i );
@@ -87,12 +102,11 @@ int CV_TreesBaseTest :: validate_test_results( int test_case_idx )
     const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
 
     // read validation params
-    CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* fnode = cvGetFileNodeByName( fs, 0, "validation" ), *fnode1 = 0;
-    fnode = cvGetFileNodeByName( fs, fnode, name );
-    fnode = cvGetFileNodeByName( fs, fnode, data_name );
-    fnode = cvGetFileNodeByName( fs, fnode, "result" );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "iter_count" );
+    CvFileNode* fnode = cvGetFileNodeByName( validation_fs, 0, "validation" ), *fnode1 = 0;
+    fnode = cvGetFileNodeByName( validation_fs, fnode, name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, "result" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "iter_count" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "iter_count can not be read from config file" );
@@ -101,14 +115,14 @@ int CV_TreesBaseTest :: validate_test_results( int test_case_idx )
     iters = fnode1->data.i; 
     if ( iters > 0)
     {
-        fnode1 = cvGetFileNodeByName( fs, fnode, "mean" );
+        fnode1 = cvGetFileNodeByName( validation_fs, fnode, "mean" );
         if ( !fnode1 )
         {
             ts->printf( CvTS::LOG, "mean can not be read from config file" );
             return CvTS::FAIL_INVALID_TEST_DATA;
         }
         mean = (float)fnode1->data.f;
-        fnode1 = cvGetFileNodeByName( fs, fnode, "sigma" );
+        fnode1 = cvGetFileNodeByName( validation_fs, fnode, "sigma" );
         if ( !fnode1 )
         {
             ts->printf( CvTS::LOG, "sigma can not be read from config file" );
@@ -162,12 +176,11 @@ int CV_TreesBaseTest :: prepare_test_case( int test_case_idx )
     }
 
     // read model params
-    CvFileStorage* fs = ts->get_file_storage();
-    fnode = cvGetFileNodeByName( fs, 0, "validation" );
-    fnode = cvGetFileNodeByName( fs, fnode, name );
-    fnode = cvGetFileNodeByName( fs, fnode, data_name );
-    fnode = cvGetFileNodeByName( fs, fnode, "data_params" );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "LS" );
+    fnode = cvGetFileNodeByName( validation_fs, 0, "validation" );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, "data_params" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "LS" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "LS can not be read from config file" );
@@ -176,7 +189,7 @@ int CV_TreesBaseTest :: prepare_test_case( int test_case_idx )
     train_sample_count =  fnode1->data.i;
     CvTrainTestSplit spl(train_sample_count);
     data.set_train_test_split( &spl );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "resp_idx" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "resp_idx" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "resp_idx can not be read from config file" );
@@ -184,7 +197,7 @@ int CV_TreesBaseTest :: prepare_test_case( int test_case_idx )
     }
     resp_idx = fnode1->data.i;
     data.set_response_idx( resp_idx );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "types" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "types" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "types can not be read from config file" );

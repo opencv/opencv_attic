@@ -70,61 +70,60 @@ int CV_ERTreesTest :: train( int test_case_idx )
     const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
 
     // read validation params
-    CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* fnode = cvGetFileNodeByName( fs, 0, "validation" ), *fnode1 = 0;
-    fnode = cvGetFileNodeByName( fs, fnode, name );
-    fnode = cvGetFileNodeByName( fs, fnode, data_name );
-    fnode = cvGetFileNodeByName( fs, fnode, "model_params" );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "max_depth" );
+    CvFileNode* fnode = cvGetFileNodeByName( validation_fs, 0, "validation" ), *fnode1 = 0;
+    fnode = cvGetFileNodeByName( validation_fs, fnode, name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, "model_params" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "max_depth" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "MAX_DEPTH can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     MAX_DEPTH = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "min_sample_count" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "min_sample_count" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "MIN_SAMPLE_COUNT can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     MIN_SAMPLE_COUNT = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "use_surrogate" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "use_surrogate" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "USE_SURROGATE can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     USE_SURROGATE = (fnode1->data.i != 0);
-    fnode1 = cvGetFileNodeByName( fs, fnode, "max_categories" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "max_categories" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "MAX_CATEGORIES can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     MAX_CATEGORIES = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "cv_folds" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "cv_folds" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "CV_FOLDS can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     CV_FOLDS = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "is_pruned" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "is_pruned" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "IS_PRUNED can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     IS_PRUNED = (fnode1->data.i != 0);
-    fnode1 = cvGetFileNodeByName( fs, fnode, "nactive_vars" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "nactive_vars" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "NACTIVE_VARS can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     NACTIVE_VARS = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "max_trees_num" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "max_trees_num" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "MAX_TREES_NUM can not be read from config file" );
