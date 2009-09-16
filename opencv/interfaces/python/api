@@ -23,6 +23,11 @@ CV_CMP int
   int b
 CV_SIGN int
   int a
+CV_FOURCC int
+  char c1
+  char c2
+  char c3
+  char c4
 
 # Initialization
 CloneImage IplImage*
@@ -1489,3 +1494,12 @@ SetCaptureProperty int
   CvCapture* capture
   int property_id
   double value
+CreateVideoWriter CvVideoWriter*
+  char* filename
+  int fourcc
+  double fps
+  CvSize frame_size
+  int is_color 1
+WriteFrame int
+  CvVideoWriter* writer
+  IplImage image
