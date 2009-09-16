@@ -54,11 +54,13 @@ aggregate = {
   'cvpoint2d32f_count' : '!.points,&!.count'
 }
 conversion_types = [
+'char',
 'CvArr',
 'CvArrSeq',
 'CvBox2D', # '((ff)(ff)f)',
 'CvBox2D*',
 'CvCapture*',
+'CvVideoWriter*',
 'CvContourTree*',
 'CvFont',
 'CvFont*',
@@ -209,6 +211,7 @@ def gen(name, args, ty):
       'int',
       'double',
       'CvCapture*',
+      'CvVideoWriter*',
       'CvPOSITObject*',
       'CvScalar',
       'CvSize',
