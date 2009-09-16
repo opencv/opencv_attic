@@ -216,12 +216,12 @@ int CvMLData :: read_csv(const char* filename)
         for( int j = 0; j < cols_count; j++ )
         {
             ddata[j] = sdata[j];
-            dm[j] = ( MISS_VAL - sdata[j] < FLT_EPSILON );
+            dm[j] = ( fabs( MISS_VAL - sdata[j] ) <= FLT_EPSILON );
         }
         CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
     }
 
-    if ( cvNorm( missing, 0, CV_L1 ) < FLT_EPSILON )
+    if ( cvNorm( missing, 0, CV_L1 ) <= FLT_EPSILON )
         cvReleaseMat( &missing );
 
     cvReleaseMemStorage( &storage );
@@ -244,7 +244,7 @@ void CvMLData :: str_to_flt_elem( const char* token, float& flt_elem, int& type)
     }
     else
     {
-        if ( (*stopstring != 0) && (*stopstring != '\n')) // class label
+        if ( (*stopstring != 0) && (*stopstring != '\n') && (strcmp(stopstring, "\r\n") != 0) ) // class label
         {
             int idx = (*class_map)[token];
             if ( idx == 0)

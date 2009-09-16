@@ -62,7 +62,8 @@ class CV_TreesBaseTest : public CvTest
 {
 public:
     CV_TreesBaseTest( const char* test_name, const char* test_funcs );
-    virtual ~CV_TreesBaseTest();
+    ~CV_TreesBaseTest();
+    virtual int init( CvTS* system );
 protected:
     virtual int read_params( CvFileStorage* fs );
     virtual void run( int start_from );
@@ -76,6 +77,7 @@ protected:
     CvMLData data;
     
     CvSeq* data_sets_names;
+    CvFileStorage* validation_fs;
 };
 
 #endif /* _ML_TEST_H_ */

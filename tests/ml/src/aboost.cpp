@@ -85,40 +85,39 @@ int CV_BoostTest :: train( int test_case_idx )
     const char* data_name = ((CvFileNode*)cvGetSeqElem( data_sets_names, test_case_idx ))->data.str.ptr;     
 
     // read validation params
-    CvFileStorage* fs = ts->get_file_storage();
-    CvFileNode* fnode = cvGetFileNodeByName( fs, 0, "validation" ), *fnode1 = 0;
-    fnode = cvGetFileNodeByName( fs, fnode, name );
-    fnode = cvGetFileNodeByName( fs, fnode, data_name );
-    fnode = cvGetFileNodeByName( fs, fnode, "model_params" );
-    fnode1 = cvGetFileNodeByName( fs, fnode, "type" );
+    CvFileNode* fnode = cvGetFileNodeByName( validation_fs, 0, "validation" ), *fnode1 = 0;
+    fnode = cvGetFileNodeByName( validation_fs, fnode, name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, data_name );
+    fnode = cvGetFileNodeByName( validation_fs, fnode, "model_params" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "type" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "BOOST_TYPE can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     BOOST_TYPE = str_to_boost_type(fnode1->data.str.ptr);
-    fnode1 = cvGetFileNodeByName( fs, fnode, "weak_count" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "weak_count" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "WEAK_COUNT can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     WEAK_COUNT = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "weight_trim_rate" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "weight_trim_rate" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "WEIGHT_TRIM_RATE can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     WEIGHT_TRIM_RATE = (float)fnode1->data.f;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "max_depth" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "max_depth" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "MAX_DEPTH can not be read from config file" );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
     MAX_DEPTH = fnode1->data.i;
-    fnode1 = cvGetFileNodeByName( fs, fnode, "use_surrogate" );
+    fnode1 = cvGetFileNodeByName( validation_fs, fnode, "use_surrogate" );
     if ( !fnode1 )
     {
         ts->printf( CvTS::LOG, "USE_SURROGATE can not be read from config file" );
