@@ -2265,8 +2265,12 @@ static PyObject *FROM_IplImagePTR(IplImage *r)
 static PyObject *FROM_ROIplImagePTR(ROIplImage *r)
 {
   if (r != NULL) {
-    IplImage* clone = cvCloneImage(r);
-    return FROM_IplImagePTR(clone);
+    iplimage_t *cva = PyObject_NEW(iplimage_t, &iplimage_Type);
+    cva->a = cvCreateImageHeader(cvSize(100,100), 8, 1);
+    *(cva->a) = *r;
+    cva->data = PyBuffer_FromReadWriteMemory(r->imageData, r->height * r->widthStep);
+    cva->offset = 0;
+    return (PyObject*)cva;
   } else {
     Py_RETURN_NONE;
   }
