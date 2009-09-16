@@ -1177,7 +1177,7 @@ static void cvsubdiv2dpoint_specials(void)
 
 static int convert_to_char(PyObject *o, char *dst, const char *name = "no_name")
 {
-  if (PyString_Check(o) and PyString_Size(o) == 1) {
+  if (PyString_Check(o) && PyString_Size(o) == 1) {
     *dst = PyString_AsString(o)[0];
     return 1;
   } else {
