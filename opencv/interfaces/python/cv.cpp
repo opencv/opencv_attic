@@ -1,7 +1,6 @@
 #include <Python.h>
 
 #include <assert.h>
-#include <pthread.h>
 
 #include <opencv/cxcore.h>
 #include <opencv/cv.h>
@@ -11,7 +10,6 @@
 #define MODULESTR "cv"
 
 static PyObject *opencv_error;
-static pthread_key_t TLS;
 
 struct iplimage_t {
   PyObject_HEAD
@@ -161,27 +159,6 @@ static void translate_error_to_exception(void)
     } while(0)
 
 /************************************************************************/
-
-/* A thread waits on a condition, and calls into Python when the condition is met. */
-#if 0
-
-static void thread_callback(commblk cb)
-{
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-  PyEval_ReleaseLock();
-
-  pthread_mutex_lock(cb->mutex);
-  for (;;) {
-    pthread_cond_wait(cb->cond, cb->mutex);
-    Py_BEGIN_ALLOW_THREADS
-    Py_END_ALLOW_THREADS
-  }
-
-  /* Release the thread. No Python API allowed beyond this point. */
-  PyGILState_Release(gstate);
-}
-#endif
 
 static int failmsg(const char *fmt, ...)
 {
@@ -3399,9 +3376,6 @@ static int to_ok(PyTypeObject *to)
 extern "C" void initcv()
 {
   PyObject *m, *d;
-
-  pthread_key_create(&TLS, NULL);
-  pthread_setspecific(TLS, (const void*)0x77);
 
   cvSetErrMode(CV_ErrModeParent);
 
