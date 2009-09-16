@@ -200,7 +200,7 @@ public:
     { return (*this)(featureIdx); }
 private:
     Size origWinSize;
-    vector<Feature> features;
+    Ptr<vector<Feature> > features;
     Feature* featuresPtr; // optimization
     bool hasTiltedFeatures;
 
@@ -280,6 +280,7 @@ bool HaarEvaluator::Feature :: read( const FileNode& node )
 
 HaarEvaluator::HaarEvaluator()
 {
+    features = new vector<Feature>();
 }
 HaarEvaluator::~HaarEvaluator()
 {
@@ -287,8 +288,8 @@ HaarEvaluator::~HaarEvaluator()
 
 bool HaarEvaluator::read(const FileNode& node)
 {
-    features.resize(node.size());
-    featuresPtr = &features[0];
+    features->resize(node.size());
+    featuresPtr = &(*features)[0];
     FileNodeIterator it = node.begin(), it_end = node.end();
     hasTiltedFeatures = false;
     
@@ -307,13 +308,13 @@ Ptr<FeatureEvaluator> HaarEvaluator::clone() const
     HaarEvaluator* ret = new HaarEvaluator;
     ret->origWinSize = origWinSize;
     ret->features = features;
-    ret->featuresPtr = &ret->features[0];
+    ret->featuresPtr = &(*ret->features)[0];
     ret->hasTiltedFeatures = hasTiltedFeatures;
     ret->sum0 = sum0, ret->sqsum0 = sqsum0, ret->tilted0 = tilted0;
     ret->sum = sum, ret->sqsum = sqsum, ret->tilted = tilted;
     ret->normrect = normrect;
-    memcpy( ret->p, p, 4*sizeof(int) );
-    memcpy( ret->pq, pq, 4*sizeof(double) );
+    memcpy( ret->p, p, 4*sizeof(p[0]) );
+    memcpy( ret->pq, pq, 4*sizeof(pq[0]) );
     ret->offset = offset;
     ret->varianceNormFactor = varianceNormFactor; 
     return ret;
@@ -353,7 +354,7 @@ bool HaarEvaluator::setImage( const Mat &image, Size _origWinSize )
     CV_SUM_PTRS( p[0], p[1], p[2], p[3], sdata, normrect, sumStep );
     CV_SUM_PTRS( pq[0], pq[1], pq[2], pq[3], sqdata, normrect, sqsumStep );
     
-    size_t fi, nfeatures = features.size();
+    size_t fi, nfeatures = features->size();
 
     for( fi = 0; fi < nfeatures; fi++ )
         featuresPtr[fi].updatePtrs( !featuresPtr[fi].tilted ? sum : tilted );
@@ -417,7 +418,7 @@ public:
     { return (*this)(featureIdx); }
 private:
     Size origWinSize;
-    vector<Feature> features;
+    Ptr<vector<Feature> > features;
     Feature* featuresPtr; // optimization
     Mat sum0, sum;
     Rect normrect;
@@ -471,6 +472,7 @@ bool LBPEvaluator::Feature :: read(const FileNode& node )
 
 LBPEvaluator::LBPEvaluator()
 {
+    features = new vector<Feature>();
 }
 LBPEvaluator::~LBPEvaluator()
 {
@@ -478,8 +480,8 @@ LBPEvaluator::~LBPEvaluator()
 
 bool LBPEvaluator::read( const FileNode& node )
 {
-    features.resize(node.size());
-    featuresPtr = &features[0];
+    features->resize(node.size());
+    featuresPtr = &(*features)[0];
     FileNodeIterator it = node.begin(), it_end = node.end();
     for(int i = 0; it != it_end; ++it, i++)
     {
@@ -494,7 +496,7 @@ Ptr<FeatureEvaluator> LBPEvaluator::clone() const
     LBPEvaluator* ret = new LBPEvaluator;
     ret->origWinSize = origWinSize;
     ret->features = features;
-    ret->featuresPtr = &ret->features[0];
+    ret->featuresPtr = &(*ret->features)[0];
     ret->sum0 = sum0, ret->sum = sum;
     ret->normrect = normrect;
     ret->offset = offset;
@@ -514,7 +516,7 @@ bool LBPEvaluator::setImage( const Mat& image, Size _origWinSize )
     sum = Mat(rn, cn, CV_32S, sum0.data);
     integral(image, sum);
     
-    size_t fi, nfeatures = features.size();
+    size_t fi, nfeatures = features->size();
     
     for( fi = 0; fi < nfeatures; fi++ )
         featuresPtr[fi].updatePtrs( sum );
