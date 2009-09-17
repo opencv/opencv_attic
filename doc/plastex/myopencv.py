@@ -45,6 +45,16 @@ class cvexp(Base.Command):
   def invoke(self, tex):
     Base.Command.invoke(self, tex)
 
+class cvC(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvPy(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
 class xxindex(Base.Command):
   args = 'entry'
   def invoke(self, tex):
