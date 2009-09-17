@@ -30,6 +30,7 @@ inline CvPoint cvPoint( int x, int y );
 inline CvPoint cvPointFrom32f( CvPoint2D32f point );
 \end{lstlisting}
 
+
 \cvstruct{CvPoint2D32f}\label{CvPoint2D32f}
 
 2D point with floating-point coordinates
@@ -577,32 +578,6 @@ iplCreateImageHeader( channels, 0, depth,
 
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
 
-\newif\ifKLAK
-% \ifthenelse{\equal{\targetlang}{c}}{\Ctrue}{\Pythontrue}
-
-\KLAKtrue
-
-% \ifKLAK
-\cvfunc{klakReleaseImageHeader}\label{klakReleaseImageHeader}
-
-Deallocates an image header.
-
-\cvexp{
-void klakcvReleaseImageHeader( IplImage** image );
-}{CPP}{PYTHON}
-
-\begin{description}
-\cvarg{image}{klakDouble pointer to the image header}
-\end{description}
-
-This call is an analogue of
-
-\begin{verbatim}
-  THIS IS VERBATIM
-\end{verbatim}
-
-% \fi
-
 \ifC
 
 \cvfunc{ReleaseImageHeader}\label{ReleaseImageHeader}
@@ -676,7 +651,7 @@ IplImage* cvInitImageHeader( \par IplImage* image,\par CvSize size,\par int dept
 
 The returned \texttt{IplImage*} points to the initialized header.
 
-/fi
+\fi
 
 \cvfunc{CloneImage}\label{CloneImage}
 
