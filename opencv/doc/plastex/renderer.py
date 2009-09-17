@@ -366,6 +366,16 @@ class reStructuredTextRenderer(BaseRenderer):
     s = s.replace(u'\xd7', "#<d7>")
     return s
 
+  def do_cvC(self, node):
+    if self.language == 'c':
+        return unicode(node.attributes['a'])
+    return unicode("")
+
+  def do_cvPy(self, node):
+    if self.language == 'py':
+        return unicode(node.attributes['a'])
+    return unicode("")
+
   def do_ifthenelse(self, node):
     # print "IFTHENELSE: [%s],[%s],[%s]" % (node.attributes['test'], str(node.attributes['then']), node.attributes['else'])
     print "CONDITION", unicode(node.attributes['test']).strip() == u'true'
