@@ -1,5 +1,5 @@
 \documentclass[11pt]{book}
-\\newcommand{\\targetlang}{c}
+\newcommand{\targetlang}{c}
 
 \usepackage{myopencv}
 \usepackage{amsmath}
@@ -8,10 +8,6 @@
 \def\genc{true}
 \def\genpy{false}
 \def\targetlang{c}
-
-% \newif\ifC
-% \newif\ifPython
-% \ifthenelse{\equal{\targetlang}{c}}{\Ctrue}{\Pythontrue}
 
 \title{OpenCV Documentation}			% used by \maketitle
 \author{Authors}		                % used by \maketitle
@@ -24,10 +20,10 @@
 \tableofcontents
 
 %%% Chapters %%%
-\include{CxCore}
-\include{CvReference}
+\include{CxCore-c}
+\include{CvReference-c}
 \include{CvAux}
-\include{HighGui}
+\include{HighGui-c}
 \include{MachineLearning}
 \include{FAQ}
 %%%%%%%%%%%%%%%%

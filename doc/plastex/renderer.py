@@ -1,6 +1,7 @@
 import string, re
 import sys
 from plasTeX.Renderers import Renderer
+from plasTeX.Base.TeX import Primitives
 
 # import generated OpenCV function names
 # if the file function_names.py does not exist, it
@@ -397,11 +398,31 @@ from plasTeX.TeX import TeX
 import os
 import pickle
 
+def preprocess_conditionals(fname, suffix, conditionals):
+    f = open("../" + fname + ".tex", 'r')
+    fout = open(fname + suffix + ".tex", 'w')
+    ifstack=[True]
+    for l in f.readlines():
+        if l.startswith("\\if"):
+            ifstack.append(conditionals.get(l.rstrip()[3:], False))
+        elif l.startswith("\\else"):
+            ifstack[-1] = not ifstack[-1]
+        elif l.startswith("\\fi"):
+            ifstack.pop()
+        elif ifstack[-1]:
+            fout.write(l)
+    f.close()
+    fout.close()
+
 def parse_documentation_source(language):
     # Instantiate a TeX processor and parse the input text
     tex = TeX()
     tex.ownerDocument.config['files']['split-level'] = 0
     #tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
+
+    for f in ['CxCore', 'CvReference', 'HighGui']:
+        preprocess_conditionals(f, '-' + language,
+            {'C':language=='c', 'Python':language=='py', 'plastex':True}) 
 
     if 1:
         tex.input("\\input{online-opencv-%s.tex}" % language)
@@ -421,6 +442,7 @@ def parse_documentation_source(language):
     return tex.parse()
 
 language = sys.argv[1]
+
 document = parse_documentation_source(language)
 
 rest = reStructuredTextRenderer()
