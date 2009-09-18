@@ -409,6 +409,7 @@ import os
 import pickle
 
 def preprocess_conditionals(fname, suffix, conditionals):
+    print 'conditionals', conditionals
     f = open("../" + fname + ".tex", 'r')
     fout = open(fname + suffix + ".tex", 'w')
     ifstack=[True]

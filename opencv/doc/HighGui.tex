@@ -268,7 +268,7 @@ int cvWaitKey( int delay=0 );
 \cvarg{ delay}{Delay in milliseconds.}
 \end{description}
 
-The function \texttt{cvWaitKey} waits for key event infinitely (delay$<=$0) or for "delay" milliseconds. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
+The function \texttt{cvWaitKey} waits for key event infinitely ($ \texttt{delay} <= 0$) or for \texttt{delay} milliseconds. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
 
 \textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
@@ -290,7 +290,7 @@ IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMA
 
 \begin{description}
 \cvarg{ filename}{Name of file to be loaded.}
-\cvarg{ iscolor}{Specific color type of the loaded image: if $>$0, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $<$0, the loaded image will be loaded as is.}
+\cvarg{ iscolor}{Specific color type of the loaded image: if $ > 0 $, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $ < 0 $, the loaded image will be loaded as is.}
 \end{description}
 
 The function \texttt{cvLoadImage} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
@@ -319,17 +319,18 @@ int cvSaveImage( const char* filename, const CvArr* image );
 
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
-\ifC
 \subsection{Video I/O functions}
 
-\cvfunc{Capture} 
+\cvstruct{CvCapture}\label{CvCapture}
 
 Video capturing structure.
 
+\ifC
 \cvexp{
 typedef struct CvCapture CvCapture;
 
 }{CPP}{PYTHON}
+\fi
 
 The structure \texttt{CvCapture} does not have a public interface and is used only as a parameter for video capturing functions.
 
@@ -340,7 +341,7 @@ Initializes capturing a video from a file.
 \cvexp{
 CvCapture* cvCaptureFromFile( const char* filename );
 
-}{CPP}{PYTHON}
+}{CPP}{CaptureFromFile(filename) -> CvCapture}
 
 \begin{description}
 \cvarg{ filename}{Name of the video file.}
@@ -357,16 +358,17 @@ Initializes capturing a video from a camera.
 \cvexp{
 CvCapture* cvCaptureFromCAM( int index );
 
-}{CPP}{PYTHON}
+}{CPP}{CaptureFromCAM(index) -> CvCapture}
 
 \begin{description}
 \cvarg{ index}{Index of the camera to be used. If there is only one camera or it does not matter what camera is used -1 may be passed.}
 \end{description}
 
-The function \texttt{cvCaptureFromCAM} allocates and initializes the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and !FireWire (IEEE1394).
+The function \texttt{cvCaptureFromCAM} allocates and initializes the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and FireWire (IEEE1394).
 
 To release the structure, use \cross{ReleaseCapture}.
 
+\ifC
 \cvfunc{ReleaseCapture} 
 
 Releases the CvCapture structure.
@@ -381,6 +383,7 @@ void cvReleaseCapture( CvCapture** capture );
 \end{description}
 
 The function \texttt{cvReleaseCapture} releases the CvCapture structure allocated by \cross{CaptureFromFile} or \cross{CaptureFromCAM}.
+\fi
 
 \cvfunc{GrabFrame} 
 
@@ -389,7 +392,7 @@ Grabs the frame from a camera or file.
 \cvexp{
 int cvGrabFrame( CvCapture* capture );
 
-}{CPP}{PYTHON}
+}{CPP}{GrabFrame(capture) -> int}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
@@ -404,13 +407,13 @@ Gets the image grabbed with cvGrabFrame.
 \cvexp{
 IplImage* cvRetrieveFrame( CvCapture* capture );
 
-}{CPP}{PYTHON}
+}{CPP}{RetrieveFrame(capture) -> iplimage}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
 \end{description}
 
-The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed with the \cross{GrabFrame} function. The returned image should not be released or modified by the user.
+The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed with the \cross{GrabFrame} function. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
 
 \cvfunc{QueryFrame} 
 
@@ -419,13 +422,13 @@ Grabs and returns a frame from a camera or file.
 \cvexp{
 IplImage* cvQueryFrame( CvCapture* capture );
 
-}{CPP}{PYTHON}
+}{CPP}{QueryFrame(capture) -> iplimage}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
 \end{description}
 
-The function \texttt{cvQueryFrame} grabs a frame from a camera or video file, decompresses it and returns it. This function is just a combination of \cross{GrabFrame} and \cross{RetrieveFrame}, but in one call. The returned image should not be released or modified by the user.
+The function \texttt{cvQueryFrame} grabs a frame from a camera or video file, decompresses it and returns it. This function is just a combination of \cross{GrabFrame} and \cross{RetrieveFrame}, but in one call. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
 
 \cvfunc{GetCaptureProperty}
 
@@ -434,7 +437,7 @@ Gets video capturing properties.
 \cvexp{
 double cvGetCaptureProperty( CvCapture* capture, int property\_id );
 
-}{CPP}{PYTHON}
+}{CPP}{GetCaptureProperty(capture, property\_id)->double}
 
 \begin{description}
 \cvarg{capture}{video capturing structure.}
@@ -464,7 +467,7 @@ Sets video capturing properties.
 \cvexp{
 int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );
 
-}{CPP}{PYTHON}
+}{CPP}{SetCaptureProperty(capture, property\_id,double)}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
@@ -499,13 +502,13 @@ Creates the video file writer.
 typedef struct CvVideoWriter CvVideoWriter;
 CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, \par double fps, \par CvSize frame\_size, \par int is\_color=1 );
 
-}{CPP}{PYTHON}
+}{CPP}{CreateVideoWriter(filename, fourcc, fps, frame\_size, is\_color) -> CvVideoWriter}
 
 \begin{description}
 \cvarg{ filename}{Name of the output video file.}
 \cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,
-\texttt{CV\_FOURCC(P,I,M,1)} is a MPEG-1 codec,
-\texttt{CV\_FOURCC(M,J,P,G)} is a motion-jpeg codec etc.
+\texttt{CV\_FOURCC('P','I','M,'1')} is a MPEG-1 codec,
+\texttt{CV\_FOURCC('M','J','P','G')} is a motion-jpeg codec etc.
 Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if 0 is passed while using an avi filename it will create a video writer that creates an uncompressed avi file.}
 \cvarg{ fps}{Framerate of the created video stream.}
 \cvarg{ frame\_size}{Size of the  video frames.}
@@ -514,8 +517,9 @@ Under Win32 it is possible to pass -1 in order to choose compression method and 
 
 The function \texttt{cvCreateVideoWriter} creates the video writer structure.
 
-Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux ffmpeg is used and on Mac OS X the back end is !QuickTime. See VideoCodecs for some discussion on what to expect.
+Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux ffmpeg is used and on Mac OS X the back end is QuickTime. See VideoCodecs for some discussion on what to expect.
 
+\ifC
 \cvfunc{ReleaseVideoWriter}
 
 Releases the AVI writer.
@@ -530,6 +534,7 @@ void cvReleaseVideoWriter( CvVideoWriter** writer );
 \end{description}
 
 The function \texttt{cvReleaseVideoWriter} finishes writing to the video file and releases the structure.
+\fi
 
 \cvfunc{WriteFrame} 
 
@@ -538,7 +543,7 @@ Writes a frame to a video file.
 \cvexp{
 int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 
-}{CPP}{PYTHON}
+}{CPP}{WriteFrame(writer, image)->int}
 
 \begin{description}
 \cvarg{ writer}{Video writer structure}
@@ -546,7 +551,6 @@ int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
 \end{description}
 
 The function \texttt{cvWriteFrame} writes/appends one frame to a video file.
-\fi
 
 \ifC
 \subsection{Utility and System Functions}
