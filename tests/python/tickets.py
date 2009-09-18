@@ -55,6 +55,16 @@ class TestTickets(unittest.TestCase):
 
             self.snap(vis)
 
+    def test_2686307(self):
+        lena = cv.LoadImage(find_sample("lena.jpg"), 1)
+        dst = cv.CreateImage((512,512), 8, 3)
+        cv.Set(dst, (128,192,255))
+        mask = cv.CreateImage((512,512), 8, 1)
+        cv.Zero(mask)
+        cv.Rectangle(mask, (10,10), (300,100), 255, -1)
+        cv.Copy(lena, dst, mask)
+        self.snapL([lena, dst, mask])
+
     def snap(self, img):
         self.snapL([img])
 
