@@ -501,6 +501,19 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(mt[1,1].tostring(), "QRST")
         self.assertEqual(mt[:,::2,:].tostring(), "ABCDIJKLMNOPUVWX")
 
+    def test_addS_3D(self):
+        for dim in [ [1,1,4], [2,2,3], [7,4,3] ]:
+            for ty,ac in [ (cv.CV_32FC1, 'f'), (cv.CV_64FC1, 'd')]:
+                mat = cv.CreateMatND(dim, ty)
+                mat2 = cv.CreateMatND(dim, ty)
+                for increment in [ 0, 3, -1 ]:
+                    cv.SetData(mat, array.array(ac, range(dim[0] * dim[1] * dim[2])), 0)
+                    cv.AddS(mat, increment, mat2)
+                    for i in range(dim[0]):
+                        for j in range(dim[1]):
+                            for k in range(dim[2]):
+                                self.assert_(mat2[i,j,k] == mat[i,j,k] + increment)
+
     def test_Buffers(self):
         ar = array.array('f', [7] * (360*640))
 
@@ -1356,7 +1369,14 @@ class TestDirected(unittest.TestCase):
 
     def failing_test_rand_FindNearestPoint2D(self):
         subdiv = cv.CreateSubdivDelaunay2D((0,0,100,100), cv.CreateMemStorage())
-        cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
+        cv.SubdivDelaunay2DInsert( subdiv, (50, 50))
+        cv.CalcSubdivVoronoi2D(subdiv)
+        print
+        for e in subdiv.edges:
+            print e, 
+            print "  ", cv.Subdiv2DEdgeOrg(e)
+            print "  ", cv.Subdiv2DEdgeOrg(cv.Subdiv2DRotateEdge(e, 1)), cv.Subdiv2DEdgeDst(cv.Subdiv2DRotateEdge(e, 1))
+        print "nearest", cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
 
 if __name__ == '__main__':
     random.seed(0)
