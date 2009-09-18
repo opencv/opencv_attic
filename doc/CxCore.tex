@@ -3103,8 +3103,8 @@ The function \texttt{cvAvgSdv} calculates the average value and standard deviati
 \[
 \begin{array}{l}
 N = \sum_I (\texttt{mask}(I) \ne 0)\\
-mean_c = \frac{\sum_{ I, \, \texttt{mask}(I) \ne 0} \texttt{arr}(I)_c}{N}\\
-std\_dev_c = \sqrt{\sum_{ I, \, \texttt{mask}(I) \ne 0} (\texttt{arr}(I)_c - mean_c)^2}
+mean_c = \frac{1}{N} \, \sum_{ I, \, \texttt{mask}(I) \ne 0} \texttt{arr}(I)_c\\
+std\_dev_c = \sqrt{\frac{1}{N} \, \sum_{ I, \, \texttt{mask}(I) \ne 0} (\texttt{arr}(I)_c - mean_c)^2}
 \end{array}
 \]
 

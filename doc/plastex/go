@@ -5,7 +5,7 @@ tput clear
 #cd .. && make && cd -
 mkdir -p _build/html/python
 
-if true
+if false
 then
   rm -f *.rst
   cp index-c.rst.copy index.rst
@@ -13,7 +13,7 @@ then
   TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C Reference' -d _build/doctrees . _build/html
 fi
 
-if false
+if true
 then
   rm -f *.rst
   cp index-py.rst.copy index.rst
