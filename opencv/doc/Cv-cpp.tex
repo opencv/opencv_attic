@@ -1,6 +1,10 @@
 \section{CV. Image Processing and Computer Vision}
 
-\subsection{Image Filtering}
+\subsection{Image Filtering}\label{CV.Filtering}
+
+Functions and classes described in this section are used to perform various linear or non-linear filtering operations on 2D images (represented as \cross{Mat}'s), that is, for each pixel location $(x,y)$ in the source image some its (normally rectangular) neighborhood is considered and used to compute the response. In case of a linear filter it is a weighted sum of pixel values, in case of morphological operations it is the minimum or maximum etc. The computed response is stored to the destination image at the same location $(x,y)$. It means, that the output image will be of the same size as the input image. Normally, the functions supports multi-channel arrays, in which case every channel is processed independently, therefore the output image will also have the same number of channels as the input one.
+
+Another common feature of the functions and classes described in this section is that, unlike simple arithmetic functions, they need to extrapolate values of some non-existing pixels. For example, if we want to smooth an image using a Gaussian $3 \times 3$ filter, then during the processing of the left-most pixels in each row we need pixels to the left of them, i.e. outside of the image. We can let those pixels be the same as the left-most image pixels (i.e. use "replicated border" extrapolation mthod), or assume that all the non-existing pixels are zeros ("contant border" extrapolation method) etc. OpenCV let the user to specify the extrapolation method; see the function \cross{borderInterpolate} and discussion of \texttt{borderType} parameter in various functions below.  
 
 \cvfunc{BaseColumnFilter}\label{BaseColumnFilter}
 Base class for filters with single-column kernels
@@ -10,6 +14,9 @@ class BaseColumnFilter
 {
 public:
     virtual ~BaseColumnFilter();
+    
+    // To be overriden by the user.
+    //
     // runs filtering operation on the set of rows,
     // "dstcount + ksize - 1" rows on input,
     // "dstcount" rows on output,
@@ -28,7 +35,7 @@ public:
 
 The class \texttt{BaseColumnFilter} is the base class for filtering data using single-column kernels. The filtering does not have to be a linear operation. In general, it could be written as following:
 
-\[\texttt{dst}(x,y) = F(\texttt{src}[y](x), \texttt{src}[y+1](x), ..., \texttt{src}[y+\texttt{ksize}-1](x)\]
+\[\texttt{dst}(x,y) = F(\texttt{src}[y](x),\;\texttt{src}[y+1](x),\;...,\;\texttt{src}[y+\texttt{ksize}-1](x)\]
 
 where $F$ is the filtering function, but, as it is represented as a class, it can produce any side effects, memorize previously processed data etc. The class only defines the interface and is not used directly. Instead, there are several functions in OpenCV (and you can add more) that return pointers to the derived classes that implement specific filtering operations. Those pointers are then passed to \cross{FilterEngine} constructor. While the filtering operation interface uses \texttt{uchar} type, a particular implementation is not limited to 8-bit data.
 
@@ -44,6 +51,9 @@ class BaseFilter
 {
 public:
     virtual ~BaseFilter();
+    
+    // To be overriden by the user.
+    //
     // runs filtering operation on the set of rows,
     // "dstcount + ksize.height - 1" rows on input,
     // "dstcount" rows on output,
@@ -63,11 +73,13 @@ The class \texttt{BaseFilter} is the base class for filtering data using 2D kern
 
 \[
   \begin{array}{l}
-  \texttt{dst}(x,y) = F( \\
-  \texttt{src}[y](x), \texttt{src}[y](x+1), ..., \texttt{src}[y](x+\texttt{ksize.width}-1), \\
-  \texttt{src}[y+1](x), \texttt{src}[y+1](x+1), ..., \texttt{src}[y+1](x+\texttt{ksize.width}-1), \\
+  \texttt{dst}(x,y) = F( \texttt{src}[y](x),\;\texttt{src}[y](x+1),\;...,\;\texttt{src}[y](x+\texttt{ksize.width}-1), \\
+  \texttt{src}[y+1](x),\;\texttt{src}[y+1](x+1),\;...,\;\texttt{src}[y+1](x+\texttt{ksize.width}-1), \\
   ......................................................................................... \\
-  \texttt{src}[y+\texttt{ksize.height-1}](x), \texttt{src}[y+\texttt{ksize.height-1}](x+1), ..., \texttt{src}[y+\texttt{ksize.height-1}](x+\texttt{ksize.width}-1))
+  \texttt{src}[y+\texttt{ksize.height-1}](x),\\
+  \texttt{src}[y+\texttt{ksize.height-1}](x+1),\\
+  ...
+  \texttt{src}[y+\texttt{ksize.height-1}](x+\texttt{ksize.width}-1))
   \end{array}
   \]
 
@@ -85,6 +97,11 @@ class BaseRowFilter
 public:
     virtual ~BaseRowFilter();
     
+    // To be overriden by the user.
+    //
+    // runs filtering operation on the single input row
+    // of "width" element, each element is has "cn" channels.
+    // the filtered row is written into "dst" buffer.
     virtual void operator()(const uchar* src, uchar* dst,
                             int width, int cn) = 0;
     int ksize, anchor;
@@ -93,7 +110,7 @@ public:
 
 The class \texttt{BaseRowFilter} is the base class for filtering data using single-row kernels. The filtering does not have to be a linear operation. In general, it could be written as following:
 
-\[\texttt{dst}(x,y) = F(\texttt{src}[y](x), \texttt{src}[y](x+1), ..., \texttt{src}[y](x+\texttt{ksize.width}-1))\]
+\[\texttt{dst}(x,y) = F(\texttt{src}[y](x),\;\texttt{src}[y](x+1),\;...,\;\texttt{src}[y](x+\texttt{ksize.width}-1))\]
 
 where $F$ is the filtering function. The class only defines the interface and is not used directly. Instead, there are several functions in OpenCV (and you can add more) that return pointers to the derived classes that implement specific filtering operations. Those pointers are then passed to \cross{FilterEngine} constructor. While the filtering operation interface uses \texttt{uchar} type, a particular implementation is not limited to 8-bit data.
 
@@ -338,10 +355,10 @@ The function \texttt{blur} smoothes the image using the kernel:
 
 \[ \texttt{K} = \frac{1}{\texttt{ksize.width*ksize.height}}
 \begin{bmatrix}
-1 1 1 ... 1 1 \\
-1 1 1 ... 1 1 \\
-............... \\
-1 1 1 ... 1 1
+1 & 1 & 1 & \cdots & 1 & 1 \\
+1 & 1 & 1 & \cdots & 1 & 1 \\
+\hdotsfor{6} \\
+1 & 1 & 1 & \cdots & 1 & 1 \\
 \end{bmatrix}
 \]
 
@@ -407,10 +424,10 @@ The function \texttt{boxFilter} smoothes the image using the kernel:
 
 \[ \texttt{K} = \alpha
 \begin{bmatrix}
-1 & 1 & 1 & ... & 1 & 1 \\
-1 & 1 & 1 & ... & 1 & 1 \\
+1 & 1 & 1 & \cdots & 1 & 1 \\
+1 & 1 & 1 & \cdots & 1 & 1 \\
 \hdotsfor{6} \\
-1 & 1 & 1 & ... & 1 & 1
+1 & 1 & 1 & \cdots & 1 & 1
 \end{bmatrix}
 \]
 
@@ -420,7 +437,7 @@ where
 {\frac{1}{\texttt{ksize.width*ksize.height}}}{when \texttt{normalize=true}}
 {1}{otherwise} \]
 
-Unnormalized box filter is useful for computing various integral characteristics over each pixel neighborhood, such as covariation matrices of image derivatives (used in dense optical flow algorithms, \href{conerHarris}{Harris corner detector} etc.). If you need to compute pixel sums over variable-size windows, use \cross{integral}.
+Unnormalized box filter is useful for computing various integral characteristics over each pixel neighborhood, such as covariation matrices of image derivatives (used in dense optical flow algorithms, \hyperref[conerHarris]{Harris corner detector} etc.). If you need to compute pixel sums over variable-size windows, use \cross{integral}.
 
 See also: \cross{boxFilter}, \cross{bilateralFilter}, \cross{GaussianBlur}, \cross{medianBlur}, \cross{integral}.
 
@@ -530,7 +547,7 @@ The function \cross{createDerivFilter} is a small convenience function that retr
 See also: \cross{createSeparableLinearFilter}, \cross{getDerivKernels}, \cross{Scharr}, \cross{Sobel}.
 
 \cvfunc{createGaussianFilter}\label{createGaussianFilter}
-Returns engine for smoothing images with Gaussian filter
+Returns engine for smoothing images with a Gaussian filter
 
 \begin{lstlisting}
 Ptr<FilterEngine> createGaussianFilter( int type, Size ksize,
@@ -583,13 +600,14 @@ See also: \cross{createSeparableLinearFilter}, \cross{FilterEngine}, \cross{filt
 Creates engine for non-separable morphological operations
 
 \begin{lstlisting}
-Ptr<FilterEngine> createMorphologyFilter(int op, int type, const Mat& element,
-                   Point anchor=Point(-1,-1), int rowBorderType=BORDER_CONSTANT,
-                   int columnBorderType=-1,
-                   const Scalar& borderValue=morphologyDefaultBorderValue());
+Ptr<FilterEngine> createMorphologyFilter(int op, int type,
+    const Mat& element, Point anchor=Point(-1,-1),
+    int rowBorderType=BORDER_CONSTANT,
+    int columnBorderType=-1,
+    const Scalar& borderValue=morphologyDefaultBorderValue());
                    
 Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& element,
-                                   Point anchor=Point(-1,-1));
+                                    Point anchor=Point(-1,-1));
                                    
 Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type,
                                           int esize, int anchor=-1);
@@ -597,7 +615,8 @@ Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type,
 Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type,
                                                 int esize, int anchor=-1);
 
-static inline Scalar morphologyDefaultBorderValue() { return Scalar::all(DBL_MAX); }
+static inline Scalar morphologyDefaultBorderValue()
+{ return Scalar::all(DBL_MAX); }
 \end{lstlisting}
 \begin{description}
 \cvarg{op}{The morphology operation id, \texttt{MORPH\_ERODE} or \texttt{MORPH\_DILATE}}
@@ -606,7 +625,7 @@ static inline Scalar morphologyDefaultBorderValue() { return Scalar::all(DBL_MAX
 \cvarg{esize}{The horizontal or vertical structuring element size for separable morphological operations}
 \cvarg{anchor}{The anchor position within the structuring element; negative values mean that the anchor is at the center}
 \cvarg{rowBorderType, columnBorderType}{The pixel extrapolation methods in the horizontal and the vertical directions; see \cross{borderInterpolate}}
-\cvarg{borderValue}{The border value in case of a constant border. The default value, \texttt{morphologyDefaultBorderValue}, has the special meaning. It is transformed $+\inf$ for the erosion and to $-\inf$ for the dilation, which means that the minimum (maximum) is effectively computed only over the pixels that are inside the image.}
+\cvarg{borderValue}{The border value in case of a constant border. The default value,\\ \texttt{morphologyDefaultBorderValue}, has the special meaning. It is transformed $+\inf$ for the erosion and to $-\inf$ for the dilation, which means that the minimum (maximum) is effectively computed only over the pixels that are inside the image.}
 \end{description}
 
 The functions construct primitive morphological filtering operations or a filter engine based on them. Normally it's enough to use \cross{createMorphologyFilter} or even higher-level \cross{erode}, \cross{dilate} or \cross{morphologyEx}, Note, that \cross{createMorphologyFilter} analyses the structuring element shape and builds a separable morphological filter engine when the structuring element is square.
@@ -678,7 +697,7 @@ The function \texttt{dilate} dilates the source image using the specified struct
 \texttt{dst}(x,y) = \max_{(x',y'): \, \texttt{element}(x',y')\ne0}\texttt{src}(x+x',y+y')
 \]
 
-The function supports the in-place mode. Dilation can be applied several (\texttt{iterations}) times. For color images, each channel is processed independently.
+The function supports the in-place mode. Dilation can be applied several (\texttt{iterations}) times. In the case of multi-channel images each channel is processed independently.
 
 See also: \cross{erode}, \cross{morphologyEx}, \cross{createMorphologyFilter}
 
@@ -704,10 +723,10 @@ void erode( const Mat& src, Mat& dst, const Mat& element,
 The function \texttt{erode} erodes the source image using the specified structuring element that determines the shape of a pixel neighborhood over which the minimum is taken:
 
 \[
-\texttt{dst}(x,y) = \min_{(x',y'): \, \texttt{kernel}(x',y')\ne0}\texttt{src}(x+x',y+y')
+\texttt{dst}(x,y) = \min_{(x',y'): \, \texttt{element}(x',y')\ne0}\texttt{src}(x+x',y+y')
 \]
 
-The function supports the in-place mode. Erosion can be applied several (\texttt{iterations}) times. For color images, each channel is processed independently.
+The function supports the in-place mode. Erosion can be applied several (\texttt{iterations}) times. In the case of multi-channel images each channel is processed independently.
 
 See also: \cross{dilate}, \cross{morphologyEx}, \cross{createMorphologyFilter}
 
@@ -734,12 +753,12 @@ The function \texttt{filter2D} applies an arbitrary linear filter to the image. 
 The function does actually computes correlation, not the convolution:
 
 \[
-\texttt{dst}(x,y) = \sum_{0\leq x' < \texttt{kernel.cols},\,0\leq y' < \texttt{kernel.rows}} \texttt{kernel}(x',y')*\texttt{src}(x+x'-\texttt{anchor.x},y+y'-\texttt{anchor.y})
+\texttt{dst}(x,y) = \sum_{\stackrel{0\leq x' < \texttt{kernel.cols},}{0\leq y' < \texttt{kernel.rows}}} \texttt{kernel}(x',y')*\texttt{src}(x+x'-\texttt{anchor.x},y+y'-\texttt{anchor.y})
 \]
 
 That is, the kernel is not mirrored around the anchor point. If you need a real convolution, flip the kernel using \cross{flip} and set the new anchor to \texttt{(kernel.cols - anchor.x - 1, kernel.rows - anchor.y - 1)}.
 
-The function uses \href{dft}{DFT}-based algorithm in case of sufficiently large kernels (~$11\times11$) and the direct algorithm (that uses the engine retrieved by \cross{createLinearFilter}) for small kernels.
+The function uses \hyperref[dft]{DFT}-based algorithm in case of sufficiently large kernels (~$11\times11$) and the direct algorithm (that uses the engine retrieved by \cross{createLinearFilter}) for small kernels.
 
 See also: \cross{sepFilter2D}, \cross{createLinearFilter}, \cross{dft}, \cross{matchTemplate}
 
@@ -776,7 +795,7 @@ void getDerivKernels( Mat& kx, Mat& ky, int dx, int dy, int ksize,
 \cvarg{dx}{The derivative order in respect with x}
 \cvarg{dy}{The derivative order in respect with y}
 \cvarg{ksize}{The aperture size. It can be \texttt{CV\_SCHARR}, 1, 3, 5 or 7}
-\cvarg{normalize}{Indicates, whether to normalize (scale down) the filter coefficients or not. In theory the coefficients have the denominator $=2^{ksize*2-dx-dy-2}$. If you are going to filter floating-point images, you will likely want to use the normalized kernels. But if you compute derivatives of a 8-bit image, store the results in 16-bit image and want to preserve all the fractional bits, you may leave \texttt{normalize=false}.}
+\cvarg{normalize}{Indicates, whether to normalize (scale down) the filter coefficients or not. In theory the coefficients should have the denominator $=2^{ksize*2-dx-dy-2}$. If you are going to filter floating-point images, you will likely want to use the normalized kernels. But if you compute derivatives of a 8-bit image, store the results in 16-bit image and wish to preserve all the fractional bits, you may want to set \texttt{normalize=false}.}
 \cvarg{ktype}{The type of filter coefficients. It can be \texttt{CV\_32f} or \texttt{CV\_64F}}
 \end{description}
 
@@ -790,7 +809,7 @@ Mat getGaussianKernel( int ksize, double sigma, int ktype=CV_64F );
 \end{lstlisting}
 \begin{description}
 \cvarg{ksize}{The aperture size. It should be odd ($\texttt{ksize} \mod 2 = 1$) and positive.}
-\cvarg{sigma}{The Gaussian standard deviation. If it is non-positive, it is computed from \texttt{ksize} as
+\cvarg{sigma}{The Gaussian standard deviation. If it is non-positive, it is computed from \texttt{ksize} as \\
 \texttt{sigma = 0.3*(ksize/2 - 1) + 0.8}}
 \cvarg{ktype}{The type of filter coefficients. It can be \texttt{CV\_32f} or \texttt{CV\_64F}}
 \end{description}
@@ -801,7 +820,7 @@ The function \texttt{getGaussianKernel} computes and returns the $\texttt{ksize}
  
 where $i=0..\texttt{ksize}-1$ and $\alpha$ is the scale factor chosen so that $\sum_i G_i=1$
 
-Two of such generated kernels can be passed to \cross{sepFilter2D} or to \cross{createSeparableLinearFilter} that will automatically detect that these are smoothing kernels are process the image accordingly. Also you may use the higher-level \cross{GaussianBlur}.
+Two of such generated kernels can be passed to \cross{sepFilter2D} or to \cross{createSeparableLinearFilter} that will automatically detect that these are smoothing kernels and handle them accordingly. Also you may use the higher-level \cross{GaussianBlur}.
 
 See also: \cross{sepFilter2D}, \cross{createSeparableLinearFilter}, \cross{getDerivKernels}, \cross{getStructuringElement}, \cross{GaussianBlur}.
 
@@ -854,7 +873,7 @@ enum { MORPH_RECT=0, MORPH_CROSS=1, MORPH_ELLIPSE=2 };
         
     \end{itemize}}
 \cvarg{esize}{Size of the structuring element}
-\cvarg{anchor}{The anchor position within the element. The default value $(-1, -1)$ means that the anchor is at the center. Note that only the cross-shaped element's shape depends on the anchor position; in other cases the anchor just regulates by how much the morphological operation result is shifted}
+\cvarg{anchor}{The anchor position within the element. The default value $(-1, -1)$ means that the anchor is at the center. Note that only the cross-shaped element's shape depends on the anchor position; in other cases the anchor just regulates by how much the result of the morphological operation is shifted}
 \end{description}
 
 The function constructs and returns the structuring element that can be then passed to \cross{createMorphologyFilter}, \cross{erode}, \cross{dilate} or \cross{morphologyEx}. But also you can construct an arbitrary binary mask yourself and use it as the structuring element.  
@@ -908,31 +927,31 @@ The function \texttt{morphologyEx} can perform advanced morphological transforma
 Opening:
 
 \[
-dst=open(src,element)=dilate(erode(src,element),element)
+\texttt{dst}=\mathrm{open}(\texttt{src},\texttt{element})=\mathrm{dilate}(\mathrm{erode}(\texttt{src},\texttt{element}))
 \]
 
 Closing:
 
 \[
-dst=close(src,element)=erode(dilate(src,element),element)
+\texttt{dst}=\mathrm{close}(\texttt{src},\texttt{element})=\mathrm{erode}(\mathrm{dilate}(\texttt{src},\texttt{element}))
 \]
 
 Morphological gradient:
 
 \[
-dst=morph\_grad(src,element)=dilate(src,element)-erode(src,element)
+\texttt{dst}=\mathrm{morph\_grad}(\texttt{src},\texttt{element})=\mathrm{dilate}(\texttt{src},\texttt{element})-\mathrm{erode}(\texttt{src},\texttt{element})
 \]
 
 "Top hat":
 
 \[
-dst=tophat(src,element)=src-open(src,element)
+\texttt{dst}=\mathrm{tophat}(\texttt{src},\texttt{element})=\texttt{src}-\mathrm{open}(\texttt{src},\texttt{element})
 \]
 
 "Black hat":
 
 \[
-dst=blackhat(src,element)=close(src,element)-src
+\texttt{dst}=\mathrm{blackhat}(\texttt{src},\texttt{element})=\mathrm{close}(\texttt{src},\texttt{element})-\texttt{src}
 \]
 
 Any of the operations can be done in-place.
@@ -1024,7 +1043,7 @@ void pyrUp( const Mat& src, Mat& dst, const Size& dstsize=Size());
 
 The function \texttt{pyrUp} performs the upsampling step of the Gaussian pyramid construction (it can actually be used to construct the Laplacian pyramid). First it upsamples the source image by injecting even zero rows and columns and then convolves the result with the same kernel as in \cross{pyrDown}, multiplied by 4.
 
-\cross{sepFilter2D}
+\cvfunc{sepFilter2D}\label{sepFilter2D}
 Applies separable linear filter to an image
 
 \begin{lstlisting}
@@ -1071,11 +1090,11 @@ void Sobel( const Mat& src, Mat& dst, int ddepth,
 
 In all cases except 1, an $\texttt{ksize} \times
 \texttt{ksize}$ separable kernel will be used to calculate the
-derivative. For $\texttt{ksize} = 1$ $ 3 \times 1$ or $ 1 \times 3$
-a kernel will be used (no Gaussian smoothing is not done). \texttt{ksize=1} can only be used for the first or the second x- or y- derivatives.
+derivative. When $\texttt{ksize = 1}$, a $ 3 \times 1$ or $ 1 \times 3$
+kernel will be used (i.e. no Gaussian smoothing is done). \texttt{ksize = 1} can only be used for the first or the second x- or y- derivatives.
 
-There is also the special value \texttt{CV\_SCHARR} (-1) that corresponds to a $3\times3$ Scharr
-filter that may give more accurate results than a $3\times3$ Sobel. Scharr
+There is also the special value \texttt{ksize = CV\_SCHARR} (-1) that corresponds to a $3\times3$ Scharr
+filter that may give more accurate results than a $3\times3$ Sobel. The Scharr
 aperture is
 
 \[ \vecthreethree
@@ -1092,7 +1111,7 @@ The function \texttt{sobel} calculates the image derivative by convolving the im
 \texttt{dst} = \frac{\partial^{xorder+yorder} \texttt{src}}{\partial x^{xorder} \partial y^{yorder}}
 \]
 
-The Sobel operators combine Gaussian smoothing and differentiation
+The Sobel operators combine Gaussian smoothing and differentiation,
 so the result is more or less resistant to the noise. Most often,
 the function is called with (\texttt{xorder} = 1, \texttt{yorder} = 0,
 \texttt{ksize} = 3) or (\texttt{xorder} = 0, \texttt{yorder} = 1,
@@ -1134,9 +1153,24 @@ void Scharr( const Mat& src, Mat& dst, int ddepth,
 \cvarg{borderType}{The pixel extrapolation method, see \cross{borderInterpolate}}
 \end{description}
 
-The function computes the first x- or y- spatial image derivative using Scharr operator. The call \texttt{Scharr(src, dst, ddepth, xorder, yorder, scale, delta, borderType)} is equivalent to \cross{Sobel}\texttt{(src, dst, ddepth, xorder, yorder, CV\_SCHARR, scale, delta, borderType)}. 
+The function computes the first x- or y- spatial image derivative using Scharr operator. The call
+\[\texttt{Scharr(src, dst, ddepth, xorder, yorder, scale, delta, borderType)}\]
+is equivalent to
+\[\texttt{Sobel(src, dst, ddepth, xorder, yorder, CV\_SCHARR, scale, delta, borderType)}.\] 
 
-\subsection{Geometric Image Transformations}
+\subsection{Geometric Image Transformations}\label{CV.Geometric}
+
+The functions in this subsection perform various geometrical transformations of 2D images. That is, they do not change the image content, but deform the pixel grid, and map this deformed grid to the destination image. In fact, to avoid sampling artifacts, the inverse mapping is done in the reverse order, from destination to the source. That is, for each pixel $(x, y)$ of the destination image, the functions compute coordinates of the corresponding "donor" pixel in the source image and copy the pixel value, that is:
+
+\[\texttt{dst}(x,y)=\texttt{src}(f_x(x,y), f_y(x,y))\]
+
+In the case when the user specifies the forward mapping: $\left<g_x, g_y\right>: \texttt{src} \rightarrow \texttt{dst}$, the OpenCV functions first compute the corresponding inverse mapping: $\left<f_x, f_y\right>: \texttt{dst} \rightarrow \texttt{src}$ and then use the above formula.
+
+The actual implementations of the geometrical transformations, from the most generic \cross{remap} and to the simplest and the fastest \cross{resize}, need to solve the 2 main problems with the above formula:
+\begin{enumerate}
+    \item extrapolation of non-existing pixels. Similarly to \hyperref[CV.Filtering]{the filtering functions}, for some $(x,y)$ one of $f_x(x,y)$ or $f_y(x,y)$, or they both, may fall outside of the image, in which case some extrapolation method needs to be used. OpenCV provides the same selection of the extrapolation methods as in the filtering functions, but also an additional method \texttt{BORDER\_TRANSPARENT}, which means that the corresponding pixels in the destination image will not be modified at all.
+    \item interpolation of pixel values. Usually $f_x(x,y)$ and $f_y(x,y)$ are floating-point numbers (i.e. $\left<f_x, f_y\right>$ can be an affine or perspective transformation, or radial lens distortion correction etc.), so a pixel values at fractional coordinates needs to be retrieved. In the simplest case the coordinates can be just rounded to the nearest integer coordinates and the corresponding pixel used, which is called nearest-neighbor interpolation. However, a better result can be achieved by using more sophisticated \href{http://en.wikipedia.org/wiki/Multivariate_interpolation}{interpolation methods}, where a polynomial function is fit into some neighborhood of the computed pixel $(f_x(x,y), f_y(x,y))$ and then the value of the polynomial at $(f_x(x,y), f_y(x,y))$ is taken as the interpolated pixel value. In OpenCV you can choose between several interpolation methods, see \cross{resize}. 
+\end{enumerate}
 
 \cvfunc{convertMaps}\label{convertMaps}
 Converts image transformation maps from one representation to another
@@ -1260,7 +1294,7 @@ void getRectSubPix( const Mat& image, Size patchSize,
 The function \texttt{getRectSubPix} extracts pixels from \texttt{src}:
 
 \[
-dst(x, y) = src(x + \texttt{center.x} - (width(\texttt{dst})-1)*0.5, y + \texttt{center.y} - (height(\texttt{dst} )-1)*0.5)
+dst(x, y) = src(x + \texttt{center.x} - (\texttt{dst.cols}-1)*0.5, y + \texttt{center.y} - (\texttt{dst.rows}-1)*0.5)
 \]
 
 where the values of the pixels at non-integer coordinates are retrieved
@@ -1296,7 +1330,10 @@ The function calculates the following matrix:
 where
 
 \[
-\alpha = \texttt{scale} \cdot \cos \texttt{angle},\,\beta = \texttt{scale} \cdot \sin \texttt{angle}
+\begin{array}{l}
+\alpha = \texttt{scale} \cdot \cos \texttt{angle},\\
+\beta = \texttt{scale} \cdot \sin \texttt{angle}
+\end{array}
 \]
 
 The transformation maps the rotation center to itself. If this is not the purpose, the shift should be adjusted.
@@ -1312,17 +1349,17 @@ void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& distCoeffs,
                            Size size, int m1type, Mat& map1, Mat& map2 );
 \end{lstlisting}
 \begin{description}
-\cvarg{cameraMatrix}{The camera matrix $A=[f_x 0 c_x; 0 f_y c_y; 0 0 1]$}
+\cvarg{cameraMatrix}{The camera matrix $A=\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
 \cvarg{distCoeffs}{The vector of distortion coefficients, \cross{4x1, 1x4, 5x1 or 1x5}}
 \cvarg{R}{The rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cross{stereoRectify} can be passed here. If the matrix is empty, the identity transformation is assumed}
-\cvarg{newCameraMatrix}{The new camera matrix $A'=[{f'}_x 0 {c'}_x; 0 {f'}_y {c'}_y; 0 0 1]$}
+\cvarg{newCameraMatrix}{The new camera matrix $A'=\vecthreethree{f_x'}{0}{c_x'}{0}{f_y'}{c_y'}{0}{0}{1}$}
 \cvarg{size}{The image size}
 \cvarg{m1type}{The type of the first output map, can be \texttt{CV\_32FC1} or \texttt{CV\_16SC2}. See \cross{convertMaps}}
 \cvarg{map1}{The first output map}
 \cvarg{map2}{The second output map}
 \end{description}
 
-The function computes the joint undistortion+rectification transformation and represent the result in forms of maps for \cross{remap}. The undistorted image will look like the same scene as in the original image, but captured with a camera with camera matrix \texttt{=newCameraMatrix} and zero distortion. Also, this new camera will be oriented slightly different in the space, according to \texttt{R}. That, for example, helps to align a stereo pair so that the epipolar lines on both images become horizontal and have the same y- coordinate (in case of horizontally aligned stereo camera).
+The function computes the joint undistortion+rectification transformation and represents the result in the form of maps for \cross{remap}. The undistorted image will look like the original, as if it was captured with a camera with camera matrix \texttt{=newCameraMatrix} and zero distortion. Also, this new camera will be oriented differently in the coordinate space, according to \texttt{R}. That, for example, helps to align a stereo pair so that the epipolar lines on both images become horizontal and have the same y- coordinate (in case of horizontally aligned stereo camera).
 
 The function actually builds the maps for the inverse mapping algorithm that is used by \cross{remap}. That is, for each pixel $(u, v)$ in the destination (corrected and rectified) image the function computes the corresponding coordinates in the source image (i.e. the original image from camera). The process is the following:
 
@@ -1339,11 +1376,11 @@ map_x(u,v) \leftarrow x" f_x + c_x \\
 map_y(u,v) \leftarrow y" f_y + c_y
 \end{array}
 \]
-where $(k_1, k_2, p_1, p_2[, k_3])$ are the distortion coefficients. 
+where $(k_1, k_2, p_1, p_2[, k_3])$\label{4x1, 1x4, 5x1 or 1x5} are the distortion coefficients. 
  
-Normally, this function is called [twice, once for each head of stereo camera] after \cross{stereoRectify}. But it is also possible to compute the rectification transformations directly from the fundamental matrix, e.g. by using \cross{stereoRectifyUncalibrated}. Such functions work with pixels and produce homographies \texttt{H} as rectification transformations, not rotation matrices \texttt{R} in 3D space. In this case, the \texttt{R} can be computed from the homography matrix \texttt{H} as 
+In the case of a stereo camera this function is called twice, once for each camera head, after \cross{stereoRectify}. But it is also possible to compute the rectification transformations directly from the fundamental matrix, e.g. by using \cross{stereoRectifyUncalibrated}. Such functions work with pixels and produce homographies \texttt{H} as rectification transformations, not rotation matrices \texttt{R} in 3D space. In this case, the \texttt{R} can be computed from the homography matrix \texttt{H} as 
 
-\[ \texttt{R} = \texttt{cameraMatrix}^{-1} \texttt{H} \texttt{cameraMatrix} \]
+\[ \texttt{R} = \texttt{cameraMatrix}^{-1} \cdot \texttt{H} \cdot \texttt{cameraMatrix} \]
 
 \cvfunc{invertAffineTransform}\label{invertAffineTransform}
 Inverts an affine transformation
@@ -1359,8 +1396,8 @@ void invertAffineTransform(const Mat& M, Mat& iM);
 The function computes inverse affine transformation represented by $2 \times 3$ matrix \texttt{M}:
 
 \[\begin{bmatrix}
-a_11 & a_12 & b_1 \\
-a_21 & a_22 & b_2
+a_{11} & a_{12} & b_1 \\
+a_{21} & a_{22} & b_2
 \end{bmatrix}
 \]
 
@@ -1380,8 +1417,8 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
 \cvarg{map1}{The first map of type \texttt{CV\_16SC2}, \texttt{CV\_32FC1} or \texttt{CV\_32FC2}. See \cross{convertMaps}}
 \cvarg{map2}{The second map of type \texttt{CV\_16UC1}, \texttt{CV\_32FC1} or none (empty map), respectively}
 \cvarg{interpolation}{The interpolation method, see \cross{resize}. The method \texttt{INTER\_AREA} is not supported by this function}
-\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
-\cvarg{borderValue}{A value used in case of a constant border. By default it is 0}
+\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the\\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
+\cvarg{borderValue}{A value used in the case of a constant border. By default it is 0}
 \end{description}
 
 The function \texttt{remap} transforms the source image using the specified map:
@@ -1407,11 +1444,11 @@ enum { INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3,
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
 \cvarg{dsize}{The destination image size. If it is zero, then it is computed as:
-\texttt{dsize = Size(round(fx*src.cols), round(fy*src.rows))}}
+\[\texttt{dsize = Size(round(fx*src.cols), round(fy*src.rows))}\]}
 \cvarg{fx}{The scale factor along the horizontal axis. When 0, it is computed as
-\texttt{(double)dsize.width/src.cols}}
-\cvarg{fx}{The scale factor along the vertical axis. When 0, it is computed as
-\texttt{(double)dsize.height/src.rows}}
+\[\texttt{(double)dsize.width/src.cols}\]}
+\cvarg{fy}{The scale factor along the vertical axis. When 0, it is computed as
+\[\texttt{(double)dsize.height/src.rows}\]}
 \cvarg{interpolation}{The interpolation method:
 \begin{description}
 \cvarg{INTER\_NEAREST}{nearest-neighbor interpolation}
@@ -1444,11 +1481,9 @@ void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
 The function \texttt{undistort} transforms the image to compensate
 radial and tangential lens distortion. The function is simply a combination of \cross{initUndistortRectifyMap} (with unity \texttt{R}) and \cross{remap} (with bilinear interpolation) put into one loop.
 
-The camera matrix and distortion parameters can be determined using
-\cross{calibrateCamera}. If the resolution of images is different from what
-was used at the calibration stage, $f_x, f_y, c_x$ and $c_y$
-need to be adjusted appropriately, while the distortion coefficients
-remain the same.
+The camera matrix and the distortion parameters can be determined using
+\cross{calibrateCamera}. If the resolution of images is different from the used at the calibration stage, $f_x, f_y, c_x$ and $c_y$
+need to be scaled accordingly, while the distortion coefficients remain the same.
 
 \cvfunc{warpAffine}\label{warpAffine}
 Applies an affine transformation to an image.
@@ -1466,21 +1501,21 @@ void warpAffine( const Mat& src, Mat& dst,
 \cvarg{M}{$2\times 3$ transformation matrix}
 \cvarg{dsize}{Size of the destination image}
 \cvarg{flags}{A combination of interpolation methods, see \cross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation (\texttt{dst}$\rightarrow$\texttt{src})}
-\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
+\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the \\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
 \cvarg{borderValue}{A value used in case of a constant border. By default it is 0}
 \end{description}
 
 The function \texttt{warpAffine} transforms the source image using the specified matrix:
 
 \[
-dst(x,y) = src(M_{11} x + M_{12} y + M_{13}, M_{21} x + M_{22} y + M_{23})
+\texttt{dst}(x,y) = \texttt{src}(\texttt{M}_{11} x + \texttt{M}_{12} y + \texttt{M}_{13}, \texttt{M}_{21} x + \texttt{M}_{22} y + \texttt{M}_{23})
 \]
 when the flag \texttt{WARP\_INVERSE\_MAP} is set. Otherwise, the transformation is first inverted with \cross{invertAffineTransform} and then put in the formula above instead of \texttt{M}.
 
 See also: \cross{warpPerspective}, \cross{resize}, \cross{remap}, \cross{getRectSubPix}, \cross{transform}
 
 \cvfunc{warpPerspective}\label{warpPerspective}
-Applies an affine transformation to an image.
+Applies a perspective transformation to an image.
 
 \begin{lstlisting}
 void warpPerspective( const Mat& src, Mat& dst,
@@ -1495,14 +1530,14 @@ void warpPerspective( const Mat& src, Mat& dst,
 \cvarg{M}{$3\times 3$ transformation matrix}
 \cvarg{dsize}{Size of the destination image}
 \cvarg{flags}{A combination of interpolation methods, see \cross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation (\texttt{dst}$\rightarrow$\texttt{src})}
-\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
+\cvarg{borderMode}{The pixel extrapolation method, see \cross{borderInterpolate}. When the \\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
 \cvarg{borderValue}{A value used in case of a constant border. By default it is 0}
 \end{description}
 
 The function \texttt{warpPerspective} transforms the source image using the specified matrix:
 
 \[
-dst(x,y) = src\left(\frac{M_{11} x + M_{12} y + M_{13}}{M_{31} x + M_{32} y + M_{33}},
+\texttt{dst}(x,y) = \texttt{src}\left(\frac{M_{11} x + M_{12} y + M_{13}}{M_{31} x + M_{32} y + M_{33}},
     \frac{M_{21} x + M_{22} y + M_{23}}{M_{31} x + M_{32} y + M_{33}}\right)
 \]
 when the flag \texttt{WARP\_INVERSE\_MAP} is set. Otherwise, the transformation is first inverted with \cross{invert} and then put in the formula above instead of \texttt{M}.
@@ -1540,9 +1575,12 @@ The function \texttt{adaptiveThreshold} transforms a grayscale image to a binary
 
 where $T(x,y)$ is a threshold calculated individually for each pixel.
 
-For the method \texttt{ADAPTIVE\_THRESH\_MEAN\_C} it is the mean of a $\texttt{blockSize} \times \texttt{blockSize}$ pixel neighborhood, minus \texttt{C}.
-
-For the method \texttt{ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is the weighted sum (i.e. cross-correlation with a Gaussian window) of a $\texttt{blockSize} \times \texttt{blockSize}$ pixel neighborhood, minus \texttt{C}. The default sigma (standard deviation) is used for the specified \texttt{blockSize}, see \cross{getGaussianKernel}.
+\begin{enumerate}
+    \item
+For the method \texttt{ADAPTIVE\_THRESH\_MEAN\_C} the threshold value $T(x,y)$ is the mean of a $\texttt{blockSize} \times \texttt{blockSize}$ neighborhood of $(x, y)$, minus \texttt{C}.
+    \item
+For the method \texttt{ADAPTIVE\_THRESH\_GAUSSIAN\_C} the threshold value $T(x, y)$ is the weighted sum (i.e. cross-correlation with a Gaussian window) of a $\texttt{blockSize} \times \texttt{blockSize}$ neighborhood of $(x, y)$, minus \texttt{C}. The default sigma (standard deviation) is used for the specified \texttt{blockSize}, see \cross{getGaussianKernel}.
+\end{enumerate}
 
 The function can process the image in-place.
 
@@ -1562,7 +1600,7 @@ void Canny( const Mat& image, Mat& edges,
 \cvarg{threshold1}{The first threshold for the hysteresis procedure}
 \cvarg{threshold2}{The second threshold for the hysteresis procedure}
 \cvarg{apertureSize}{Aperture size for the \cross{Sobel} operator}
-\cvarg{L2gradient}{Indicates, whether the more accurate $L_2$ norm $\sqrt{(dI/dx)^2 + (dI/dy)^2}$ should be used to compute the image gradient magnitude (\texttt{L2gradient=true}), or a faster default $L_1$ norm $|dI/dx|+|dI/dy|$ is enough (\texttt{L2gradient=false})}
+\cvarg{L2gradient}{Indicates, whether the more accurate $L_2$ norm $=\sqrt{(dI/dx)^2 + (dI/dy)^2}$ should be used to compute the image gradient magnitude (\texttt{L2gradient=true}), or a faster default $L_1$ norm $=|dI/dx|+|dI/dy|$ is enough (\texttt{L2gradient=false})}
 \end{description}
 
 The function \texttt{Canny} finds edges in the input image \texttt{image} and marks them in the output map \texttt{edges} using the Canny algorithm. The smallest value between \texttt{threshold1} and \texttt{threshold2} is used for edge linking, the largest value is used to find the initial segments of strong edges, see
@@ -1576,42 +1614,45 @@ Converts image from one color space to another
 void cvtColor( const Mat& src, Mat& dst, int code, int dstCn=0 );
 \end{lstlisting}
 \begin{description}
-\cvarg{The source image, 8-bit unsigned, 16-bit unsigned (\texttt{CV\_16UC...}) or single-precision floating-point}
-\cvarg{The destination image; will have the same size and the same depth as \texttt{src}}
+\cvarg{src}{The source image, 8-bit unsigned, 16-bit unsigned (\texttt{CV\_16UC...}) or single-precision floating-point}
+\cvarg{dst}{The destination image; will have the same size and the same depth as \texttt{src}}
 \cvarg{code}{The color space conversion code; see the discussion}
 \cvarg{dstCn}{The number of channels in the destination image; if the parameter is 0, the number of the channels will be derived automatically from \texttt{src} and the \texttt{code}}
 \end{description}
 
 The function \texttt{cvtColor} converts the input image from one color
-space to another. The case of transformation to-from RGB color space the ordering of the channels should be specified explicitly (RGB or BGR).
+space to another. In the case of transformation to-from RGB color space the ordering of the channels should be specified explicitly (RGB or BGR).
 
-The conventional ranges for R,G,B channel values are:
+The conventional ranges for R, G and B channel values are:
 
 \begin{itemize}
- \item 0 to 255 for 8-bit images
- \item 0 to 65535 for 16-bit images and
- \item 0 to 1 for floating-point images.
+ \item 0 to 255 for \texttt{CV\_8U} images
+ \item 0 to 65535 for \texttt{CV\_16U} images and
+ \item 0 to 1 for \texttt{CV\_32F} images.
 \end{itemize}
 
 Of course, in the case of linear transformations the range does not matter,
-but in order to get correct results in the case of non-linear
-transformations, the input image should be scaled if a different value range is used (this note is mostly about 32-bit floating-point images that, if directly converted from 8-bit images, for example, can have 0..255 value range instead of the standard 0..1).
+but in the non-linear cases the input RGB image should be normalized to the proper value range in order to get the correct results, e.g. for RGB$\rightarrow$L*u*v* transformation. For example, if you have a 32-bit floating-point image directly converted from 8-bit image without any scaling, then it will have 0..255 value range, instead of the assumed by the function 0..1. So, before calling \texttt{cvtColor}, you need first to scale the image down:
+\begin{lstlisting}
+img *= 1./255;
+cvtColor(img, img, CV_BGR2Luv);
+\end{lstlisting}
 
 The function can do the following transformations:
 
 \begin{itemize}
  \item Transformations within RGB space like adding/removing the alpha channel, reversing the channel order, conversion to/from 16-bit RGB color (R5:G6:B5 or R5:G5:B5), as well as conversion to/from grayscale using:
  \[
- \text{RGB[A] to Gray:} Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B
+ \text{RGB[A] to Gray:}\quad Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B
  \]
  and
  \[
- \text{Gray to RGB[A]:} R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
+ \text{Gray to RGB[A]:}\quad R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
  \]
 
 The conversion from a RGB image to gray is done with:
 \begin{lstlisting}
-cvtColor(src ,bwsrc, CV_RGB2GRAY)
+cvtColor(src, bwsrc, CV_RGB2GRAY);
 \end{lstlisting}
 
 Some more advanced channel reordering can also be done with \cross{mixChannels}.
@@ -1718,9 +1759,9 @@ On output $0 \leq V \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
 The values are then converted to the destination data type:
 \begin{description}
 \item[8-bit images]
-\[ V \leftarrow 255 V, S \leftarrow 255 S, H \leftarrow H/2 \text{(to fit to 0 to 255)} \]
+\[ V \leftarrow 255\cdot V, S \leftarrow 255\cdot S, H \leftarrow H/2\; \text{(to fit to 0 to 255)} \]
 \item[16-bit images (currently not supported)]
-\[ V <- 65535 V, S <- 65535 S, H <- H \]
+\[ V <- 65535\cdot V, S <- 65535\cdot S, H <- H \]
 \item[32-bit images]
 H, S, V are left as is
 \end{description}
@@ -1752,7 +1793,7 @@ On output $0 \leq L \leq 100$, $-127 \leq a \leq 127$, $-127 \leq b \leq 127$
 The values are then converted to the destination data type:
 \begin{description}
 \item[8-bit images]
-\[L \leftarrow L*255/100, a \leftarrow a + 128, b \leftarrow b + 128\]
+\[L \leftarrow L*255/100,\; a \leftarrow a + 128,\; b \leftarrow b + 128\]
 \item[16-bit images] currently not supported
 \item[32-bit images]
 L, a, b are left as is
@@ -1779,7 +1820,7 @@ On output $0 \leq L \leq 100$, $-134 \leq u \leq 220$, $-140 \leq v \leq 122$.
 The values are then converted to the destination data type:
 \begin{description}
 \item[8-bit images]
-\[L \leftarrow 255/100 L, u \leftarrow 255/354 (u + 134), v \leftarrow 255/256 (v + 140) \]
+\[L \leftarrow 255/100 L,\; u \leftarrow 255/354 (u + 134),\; v \leftarrow 255/256 (v + 140) \]
 \item[16-bit images] currently not supported
 \item[32-bit images] L, u, v are left as is
 \end{description}
@@ -1844,7 +1885,7 @@ distance from every binary image pixel to the nearest zero pixel.
 
 When \texttt{maskSize == CV\_DIST\_MASK\_PRECISE} and \texttt{distanceType == CV\_DIST\_L2}, the function runs the algorithm described in \cite{Felzenszwalb04}.
 
-In other cases the \cite{Borgefors86} algorithm is used, that is,
+In other cases the algorithm \cite{Borgefors86} is used, that is,
 for pixel the function finds the shortest path to the nearest zero pixel
 consisting of basic shifts: horizontal,
 vertical, diagonal or knight's move (the latest is available for a
@@ -1857,8 +1898,9 @@ the same cost (denoted \texttt{c}). For \texttt{CV\_DIST\_C} and
 \texttt{CV\_DIST\_L1} types the distance is calculated precisely,
 whereas for \texttt{CV\_DIST\_L2} (Euclidian distance) the distance
 can be calculated only with some relative error (a $5\times 5$ mask
-gives more accurate results). For \texttt{a, b, c}
+gives more accurate results). For \texttt{a}, \texttt{b} and \texttt{c}
 OpenCV uses the values suggested in the original paper:
+
 
 \begin{tabular}{| c | c | c |}
 \hline
@@ -1867,6 +1909,7 @@ OpenCV uses the values suggested in the original paper:
 \texttt{CV\_DIST\_L2} & $(3\times 3)$ & a=0.955, b=1.3693\\ \hline
 \texttt{CV\_DIST\_L2} & $(5\times 5)$ & a=1, b=1.4, c=2.1969\\ \hline
 \end{tabular}
+
 
 Typically, for a fast, coarse distance estimation \texttt{CV\_DIST\_L2},
 a $3\times 3$ mask is used, and for a more accurate distance estimation
@@ -1923,7 +1966,7 @@ The functions \texttt{floodFill} fill a connected component starting from the se
 \texttt{src}(x',y')-\texttt{loDiff} \leq \texttt{src}(x,y) \leq \texttt{src}(x',y')+\texttt{upDiff} \]
 
 \item[grayscale image, fixed range] \[
-\texttt{src}(seed.x,seed.y)-\texttt{loDiff}\leq \texttt{src}(x,y) \leq \texttt{src}(seed.x,seed.y)+\texttt{upDiff} \]
+\texttt{src}(\texttt{seed}.x,\texttt{seed}.y)-\texttt{loDiff}\leq \texttt{src}(x,y) \leq \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)+\texttt{upDiff} \]
 
 \item[color image, floating range]
 \[ \texttt{src}(x',y')_r-\texttt{loDiff}_r\leq \texttt{src}(x,y)_r\leq \texttt{src}(x',y')_r+\texttt{upDiff}_r \]
@@ -1931,9 +1974,9 @@ The functions \texttt{floodFill} fill a connected component starting from the se
 \[ \texttt{src}(x',y')_b-\texttt{loDiff}_b\leq \texttt{src}(x,y)_b\leq \texttt{src}(x',y')_b+\texttt{upDiff}_b \]
 
 \item[color image, fixed range]
-\[ \texttt{src}(seed.x,seed.y)_r-\texttt{loDiff}_r\leq \texttt{src}(x,y)_r\leq \texttt{src}(seed.x,seed.y)_r+\texttt{upDiff}_r \]
-\[ \texttt{src}(seed.x,seed.y)_g-\texttt{loDiff}_g\leq \texttt{src}(x,y)_g\leq \texttt{src}(seed.x,seed.y)_g+\texttt{upDiff}_g \]
-\[ \texttt{src}(seed.x,seed.y)_b-\texttt{loDiff}_b\leq \texttt{src}(x,y)_b\leq \texttt{src}(seed.x,seed.y)_b+\texttt{upDiff}_b \]
+\[ \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_r-\texttt{loDiff}_r\leq \texttt{src}(x,y)_r\leq \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_r+\texttt{upDiff}_r \]
+\[ \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_g-\texttt{loDiff}_g\leq \texttt{src}(x,y)_g\leq \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_g+\texttt{upDiff}_g \]
+\[ \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_b-\texttt{loDiff}_b\leq \texttt{src}(x,y)_b\leq \texttt{src}(\texttt{seed}.x,\texttt{seed}.y)_b+\texttt{upDiff}_b \]
 \end{description}
 
 where $src(x',y')$ is the value of one of pixel neighbors that is already known to belong to the component. That is, to be added to the connected component, a pixel's color/brightness should be close enough to the:
@@ -2004,7 +2047,7 @@ The functions \texttt{integral} calculate one or more integral images for the so
 Using these integral images, one may calculate sum, mean and standard deviation over a specific up-right or rotated rectangular region of the image in a constant time, for example:
 
 \[
-\sum_{x_1\leq x < x_2, \, y_1 \leq y < y_2} = \texttt{sum}(x_2,y_2)-\texttt{sum}(x_1,y_2)-\texttt{sum}(x_2,y_1)+\texttt{sum}(x_1,x_1)
+\sum_{x_1\leq x < x_2, \, y_1 \leq y < y_2} \texttt{image}(x,y) = \texttt{sum}(x_2,y_2)-\texttt{sum}(x_1,y_2)-\texttt{sum}(x_2,y_1)+\texttt{sum}(x_1,x_1)
 \]
 
 It makes possible to do a fast blurring or fast block correlation with variable window size, for example. In the case of multi-channel images, sums for each channel are accumulated independently.
@@ -2014,10 +2057,13 @@ It makes possible to do a fast blurring or fast block correlation with variable 
 Applies a fixed-level threshold to each array element
 
 \begin{lstlisting}
-double threshold( const Mat& src, Mat& dst, double thresh, double maxVal, int thresholdType );
+double threshold( const Mat& src, Mat& dst, double thresh,
+                  double maxVal, int thresholdType );
 
-enum { THRESH_BINARY=0, THRESH_BINARY_INV=1, THRESH_TRUNC=2, THRESH_TOZERO=3,
-       THRESH_TOZERO_INV=4, THRESH_MASK=7, THRESH_OTSU=8 };
+enum { THRESH_BINARY=0, THRESH_BINARY_INV=1,
+       THRESH_TRUNC=2, THRESH_TOZERO=3,
+       THRESH_TOZERO_INV=4, THRESH_MASK=7,
+       THRESH_OTSU=8 };
 \end{lstlisting}
 \begin{description}
 \cvarg{src}{Source array (single-channel, 8-bit of 32-bit floating point)}
@@ -2036,7 +2082,7 @@ types of thresholding that the function supports that are determined by
 \texttt{thresholdType}:
 
 \begin{description}
-\cvarg{THRESH\_BINARY}{\[ \texttt{dst}(x,y) = \fork{\texttt{maxVal}}{if $\texttt{src}(x,y) > \texttt{thres}$}{0}{otherwise} \]}
+\cvarg{THRESH\_BINARY}{\[ \texttt{dst}(x,y) = \fork{\texttt{maxVal}}{if $\texttt{src}(x,y) > \texttt{thresh}$}{0}{otherwise} \]}
 \cvarg{THRESH\_BINARY\_INV}{\[ \texttt{dst}(x,y) = \fork{0}{if $\texttt{src}(x,y) > \texttt{thresh}$}{\texttt{maxVal}}{otherwise} \]}
 \cvarg{THRESH\_TRUNC}{\[ \texttt{dst}(x,y) = \fork{\texttt{threshold}}{if $\texttt{src}(x,y) > \texttt{thresh}$}{\texttt{src}(x,y)}{otherwise} \]}
 \cvarg{THRESH\_TOZERO}{\[ \texttt{dst}(x,y) = \fork{\texttt{src}(x,y)}{if $\texttt{src}(x,y) > \texttt{thresh}$}{0}{otherwise} \]}
@@ -2222,7 +2268,7 @@ That is the approximate algorithm of \cross{CAMShift} color object tracker.
 
 See also: \cross{calcHist}
 
-\cross{compareHist}
+\cvfunc{compareHist}\label{compareHist}
 Compares two histograms
 
 \begin{lstlisting}
@@ -2257,13 +2303,13 @@ where
 and $N$ is the total number of histogram bins.
 
 \item[Chi-Square (method=CV\_COMP\_CHISQR)]
-\[ d(H_1,H_2) = \sum_I \frac{H_1(I)-H_2(I)}{H_1(I)+H_2(I)} \]
+\[ d(H_1,H_2) = \sum_I \frac{\left(H_1(I)-H_2(I)\right)^2}{H_1(I)+H_2(I)} \]
 
 \item[Intersection (method=CV\_COMP\_INTERSECT)]
 \[ d(H_1,H_2) = \sum_I \min (H_1(I), H_2(I)) \]
 
 \item[Bhattacharyya distance (method=CV\_COMP\_BHATTACHARYYA)]
-\[ d(H_1,H_2) = \sqrt{1 - \frac{1}{\bar{H_1} \bar{H_2} N^2} \sum_I \sqrt{H_1(I) \cdot H_2(I)}} \]
+\[ d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\bar{H_1} \bar{H_2} N^2}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}} \]
 
 \end{description}
 
@@ -2289,7 +2335,7 @@ The function \texttt{equalizeHist} equalizes the histogram of the input image us
 \item normalize the histogram so that the sum of histogram bins is 255.
 \item compute the integral of the histogram:
 \[
-H'_i = \sum_{0 \le j \le i} H(j)
+H'_i = \sum_{0 \le j < i} H(j)
 \]
 \item transform the image using $H'$ as a look-up table: $\texttt{dst}(x,y) = H'(\texttt{src}(x,y))$
 \end{enumerate}
@@ -2358,7 +2404,7 @@ void cornerHarris( const Mat& src, Mat& dst, int blockSize,
 The function \texttt{cornerHarris} runs the Harris edge detector on the image. Similarly to \cross{cornerMinEigenVal} and \cross{cornerEigenValsAndVecs}, for each pixel $(x, y)$ it calculates a $2\times2$ gradient covariation matrix $M^{(x,y)}$ over a $\texttt{blockSize} \times \texttt{blockSize}$ neighborhood. Then, it computes the following characteristic:
 
 \[
-\texttt{dst}(x,y) = det(M^{(x,y)}) - k \, trace(M^{(x,y)})^2
+\texttt{dst}(x,y) = \mathrm{det} M^{(x,y)} - k \cdot \left(\mathrm{tr} M^{(x,y)}\right)^2
 \]
 
 Corners in the image can be found as the local maxima of this response map.
@@ -2379,7 +2425,7 @@ void cornerMinEigenVal( const Mat& src, Mat& dst,
 \cvarg{boderType}{Pixel extrapolation method; see \cross{borderInterpolate}}
 \end{description}
 
-The function \texttt{cornerMinEigenVal} is similar to \cross{cornerEigenValsAndVecs} but it calculates and stores only the minimal eigenvalue of the covariation matrix of derivatives, i.e. $min(\lambda_1, \lambda_2)$ in terms of the formulae in \cross{cornerEigenValsAndVecs} description.
+The function \texttt{cornerMinEigenVal} is similar to \cross{cornerEigenValsAndVecs} but it calculates and stores only the minimal eigenvalue of the covariation matrix of derivatives, i.e. $\min(\lambda_1, \lambda_2)$ in terms of the formulae in \cross{cornerEigenValsAndVecs} description.
 
 \cvfunc{cornerSubPix}\label{cornerSubPix}
 Refines the corner locations.
@@ -2439,7 +2485,7 @@ void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
 \cvarg{minDistance}{The minimum possible Euclidean distance between the returned corners}
 \cvarg{mask}{The optional region of interest. If the image is not empty (then it needs to have the type \texttt{CV\_8UC1} and the same size as \texttt{image}), it will specify the region in which the corners are detected}
 \cvarg{blockSize}{Size of the averaging block for computing derivative covariation matrix over each pixel neighborhood, see \cross{cornerEigenValsAndVecs}}
-\cvarg{useHarrisDetector}{Indicates, whether to use \href{cornerHarris}{Harris} operator or \cross{cornerMinEigenVal}}
+\cvarg{useHarrisDetector}{Indicates, whether to use \hyperref[cornerHarris]{Harris} operator or \cross{cornerMinEigenVal}}
 \cvarg{k}{Free parameter of Harris detector}
 \end{description}
 
@@ -2470,7 +2516,7 @@ void HoughCircles( Mat& image, vector<Vec3f>& circles,
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, grayscale input image}
 \cvarg{circles}{The output vector of found circles. Each vector is encoded as 3-element floating-point vector $(x, y, radius)$}
-\cvarg{method}{Currently, the only implemented method is \texttt{CV\_HOUGH\_GRADIENT}, which is basically \emph{21HT}, described in \cite{Yuen03}.}
+\cvarg{method}{Currently, the only implemented method is \texttt{CV\_HOUGH\_GRADIENT}, which is basically \emph{21HT}, described in \cite{Yuen90}.}
 \cvarg{dp}{The inverse ratio of the accumulator resolution to the image resolution. For example, if \texttt{dp=1}, the accumulator will have the same resolution as the input image, if \texttt{dp=2} - accumulator will have half as big width and height, etc}
 \cvarg{minDist}{Minimum distance between the centers of the detected circles. If the parameter is too small, multiple neighbor circles may be falsely detected in addition to a true one. If it is too large, some circles may be missed}
 \cvarg{param1}{The first method-specific parameter. in the case of \texttt{CV\_HOUGH\_GRADIENT} it is the higher threshold of the two passed to \cross{Canny} edge detector (the lower one will be twice smaller)}
@@ -2531,7 +2577,7 @@ void HoughLines( Mat& image, vector<Vec2f>& lines,
 \cvarg{lines}{The output vector of lines. Each line is represented by a two-element vector $(\rho, \theta)$. $\rho$ is the distance from the coordinate origin $(0,0)$ (top-left corner of the image) and $\theta$ is the line rotation angle in radians (0 $\sim$ vertical line, $\pi/2 \sim$ horizontal line)}
 \cvarg{rho}{Distance resolution of the accumulator in pixels}
 \cvarg{theta}{Angle resolution of the accumulator in radians}
-\cvarg{threshold}{The accumulator threshold parameter. Only those lines are returned that get enough votes (>\texttt{threshold})}
+\cvarg{threshold}{The accumulator threshold parameter. Only those lines are returned that get enough votes ($>\texttt{threshold}$)}
 \cvarg{srn}{For the multi-scale Hough transform it is the divisor for the distance resolution \texttt{rho}. The coarse accumulator distance resolution will be \texttt{rho} and the accurate accumulator resolution will be \texttt{rho/srn}. If both \texttt{srn=0} and \texttt{stn=0} then the classical Hough transform is used, otherwise both these parameters should be positive.}
 \cvarg{stn}{For the multi-scale Hough transform it is the divisor for the distance resolution \texttt{theta}}
 \end{description}
@@ -2552,12 +2598,12 @@ void HoughLinesP( Mat& image, vector<Vec4i>& lines,
 \cvarg{lines}{The output vector of lines. Each line is represented by a 4-element vector $(x_1, y_1, x_2, y_2)$, where $(x_1,y_1)$ and $(x_2, y_2)$ are the ending points of each line segment detected.}
 \cvarg{rho}{Distance resolution of the accumulator in pixels}
 \cvarg{theta}{Angle resolution of the accumulator in radians}
-\cvarg{threshold}{The accumulator threshold parameter. Only those lines are returned that get enough votes (>\texttt{threshold})}
+\cvarg{threshold}{The accumulator threshold parameter. Only those lines are returned that get enough votes ($>\texttt{threshold}$)}
 \cvarg{minLineLength}{The minimum line length. Line segments shorter than that will be rejected}
 \cvarg{maxLineGap}{The maximum allowed gap between points on the same line to link them.}
 \end{description}
 
-The function \texttt{HoughLinesP} implements probabilistic Hough transform algorithm for line detection, described in \cite[Matas98]. Below is line detection example:
+The function \texttt{HoughLinesP} implements probabilistic Hough transform algorithm for line detection, described in \cite{Matas00}. Below is line detection example:
 
 \begin{lstlisting}
 /* This is a standalone program. Pass an image name as a first parameter
@@ -2643,7 +2689,7 @@ The function \texttt{preCornerDetect} calculates the complex spatial derivative-
 \texttt{dst} = (D_x \texttt{src})^2 \cdot D_{yy} \texttt{src} + (D_y \texttt{src})^2 \cdot D_{xx} \texttt{src} - 2 D_x \texttt{src} \cdot D_y \texttt{src} \cdot D_{xy} \texttt{src}
 \]
 
-where $D_x$, $D_y$ are the first image derivatives, $D_xx$, $D_yy$ are the second image derivatives and $D_xy$ is the mixed derivative.
+where $D_x$, $D_y$ are the first image derivatives, $D_{xx}$, $D_{yy}$ are the second image derivatives and $D_{xy}$ is the mixed derivative.
 
 The corners can be found as local maximums of the functions, as shown below:
 
@@ -2657,7 +2703,7 @@ Mat corner_mask = corners == dilated_corners;
 
 
 \cvfunc{KeyPoint}\label{KeyPoint}
-Data structure for interest point detectors
+Data structure for salient point detectors
 
 \begin{lstlisting}
 class KeyPoint
@@ -2744,7 +2790,7 @@ public:
 };
 \end{lstlisting}
 
-The class \texttt{SURF} implements Speeded Up Robust Features descriptor described \cite{Bay06}.
+The class \texttt{SURF} implements Speeded Up Robust Features descriptor \cite{Bay06}.
 There is fast multi-scale Hessian keypoint detector that can be used to find the keypoints
 (which is the default option), but the descriptors can be also computed for the user-specified keypoints.
 The function can be used for object tracking and localization, image stitching etc. See the
@@ -3117,24 +3163,24 @@ public:
 \end{lstlisting}
 \begin{description}
 \cvarg{array}{A raster image (single-channel, 8-bit or floating-point 2D array) or an array
-    ($1 \times N$ or $N \times 1$) of 2D points (\href{Point\_}{Point} or \href{Point\_}{Point2f})}
+    ($1 \times N$ or $N \times 1$) of 2D points (\texttt{Point} or \texttt{Point2f})}
 \cvarg{binaryImage}{(For images only) If it is true, then all the non-zero image pixels are treated as 1's}
 \end{description}
 
 The function \texttt{moments} computes moments, up to the 3rd order, of a vector shape or a rasterized shape.
-In case of a raster image, the spatial moments $\texttt{Moments::m}_ji$ are computed as:
+In case of a raster image, the spatial moments $\texttt{Moments::m}_{ji}$ are computed as:
 
-\[\texttt{m}_{ji}=\sum_{x,y} (\texttt{array}(x,y) \cdot x^j \cdot y^i),\]
+\[\texttt{m}_{ji}=\sum_{x,y} \left(\texttt{array}(x,y) \cdot x^j \cdot y^i\right),\]
 
-the central moments $\texttt{Moments::mu}_ji$ are computed as:
-\[\texttt{mu}_{ji}=\sum_{x,y} (\texttt{array}(x,y) \cdot (x - \bar{x})^j \cdot (y - \bar{y})^i)\]
+the central moments $\texttt{Moments::mu}_{ji}$ are computed as:
+\[\texttt{mu}_{ji}=\sum_{x,y} \left(\texttt{array}(x,y) \cdot (x - \bar{x})^j \cdot (y - \bar{y})^i\right)\]
 where $(\bar{x}, \bar{y})$ is the mass center:
 
 \[
-\bar{x}=\frac{\texttt{m}_{10}}{\texttt{m}_{00}}, \bar{y}=\frac{\texttt{m}_{01}}{\texttt{m}_{00}}
+\bar{x}=\frac{\texttt{m}_{10}}{\texttt{m}_{00}},\; \bar{y}=\frac{\texttt{m}_{01}}{\texttt{m}_{00}}
 \]
 
-and the normalized central moments $\texttt{Moments::nu}_ij$ are computed as:
+and the normalized central moments $\texttt{Moments::nu}_{ij}$ are computed as:
 \[\texttt{nu}_{ji}=\frac{\texttt{mu}_{ji}}{\texttt{m}_{00}^{(i+j)/2+1}}.\]
 
 Note that $\texttt{mu}_{00}=\texttt{m}_{00}$, $\texttt{nu}_{00}=1$ $\texttt{nu}_{10}=\texttt{mu}_{10}=\texttt{mu}_{01}=\texttt{mu}_{10}=0$, hence the values are not stored.
@@ -3346,7 +3392,8 @@ The function finds the optimal affine transform $[A|b]$ (a $2 \times 3$ floating
 
 \[ [A^*|b^*] = arg \min_{[A|b]} \sum_i \|\texttt{dstpt}_i - A {\texttt{srcpt}_i}^T - b \|^2 \]
 
-where $[A|b]$ can be either arbitrary (when \texttt{fullAffine=true}) or have form \texttt{[a11 a12 b1; -a12 a11 b2]} when \texttt{fullAffine=false}.
+where $[A|b]$ can be either arbitrary (when \texttt{fullAffine=true}) or have form
+$\begin{bmatrix}a_{11} & a_{12} & b_1 \\ -a_{12} & a_{11} & b_2 \end{bmatrix}$ when \texttt{fullAffine=false}.
 
 See also: \cross{getAffineTransform}, \cross{getPerspectiveTransform}, \cross{findHomography}
 
@@ -3356,7 +3403,8 @@ Computes optimal affine transformation between two 3D point sets
 \begin{lstlisting}
 int estimateAffine3D(const Mat& srcpt, const Mat& dstpt, Mat& out,
                      vector<uchar>& outliers,
-                     double ransacThreshold = 3.0, double confidence = 0.99);
+                     double ransacThreshold = 3.0,
+                     double confidence = 0.99);
 \end{lstlisting}
 \begin{description}
 \cvarg{srcpt}{The first input 3D point set}
@@ -3404,9 +3452,12 @@ cout << "area0 =" << area0 << endl <<
 Finds the convex hull of a point set.
 
 \begin{lstlisting}
-void convexHull( const Mat& points, vector<int>& hull, bool clockwise=false );
-void convexHull( const Mat& points, vector<Point>& hull, bool clockwise=false );
-void convexHull( const Mat& points, vector<Point2f>& hull, bool clockwise=false );
+void convexHull( const Mat& points, vector<int>& hull,
+                 bool clockwise=false );
+void convexHull( const Mat& points, vector<Point>& hull,
+                 bool clockwise=false );
+void convexHull( const Mat& points, vector<Point2f>& hull,
+                 bool clockwise=false );
 \end{lstlisting}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
@@ -3442,7 +3493,9 @@ enum { LMEDS=4, RANSAC=8 };
 \cvarg{RANSAC}{RANSAC-based robust method}
 \cvarg{LMEDS}{Least-Median robust method}
 \end{description}}
-\cvarg{ransacReprojThreshold}{The maximum allowed reprojection error to treat a point pair as an inlier (used in the RANSAC method only). That is, if $\|\texttt{dstPoints}_i - \texttt{convertPointHomogeneous}(\texttt{H} \texttt{srcPoints}_i)\| > \texttt{ransacReprojThreshold}$ then the point $i$ is considered an outlier. If \texttt{srcPoints} and \texttt{dstPoints} are measured in pixels, it usually makes sense to set this parameter somewhere in the range 1 to 10. }
+\cvarg{ransacReprojThreshold}{The maximum allowed reprojection error to treat a point pair as an inlier (used in the RANSAC method only). That is, if
+\[\|\texttt{dstPoints}_i - \texttt{convertPointHomogeneous}(\texttt{H} \texttt{srcPoints}_i)\| > \texttt{ransacReprojThreshold}\]
+then the point $i$ is considered an outlier. If \texttt{srcPoints} and \texttt{dstPoints} are measured in pixels, it usually makes sense to set this parameter somewhere in the range 1 to 10. }
 \cvarg{mask}{The optional output mask 8-bit single-channel matrix or a vector; will have as many elements as \texttt{srcPoints}. \texttt{mask[i]} is set to 0 if the point $i$ is outlier and 0 otherwise}
 \end{description}
 
@@ -3452,7 +3505,7 @@ The functions \texttt{findHomography} find and return the perspective transforma
 s_i \vecthree{x'_i}{y'_i}{1} \sim H \vecthree{x_i}{y_i}{1}
 \]
 
-So that the back-projection error is minimized:
+So that the back-projection error
 
 \[
 \sum_i
@@ -3460,7 +3513,7 @@ So that the back-projection error is minimized:
 \left( y'_i-\frac{h_{21} x_i + h_{22} y_i + h_{23}}{h_{31} x_i + h_{32} y_i + h_{33}} \right)^2
 \]
 
-If the parameter method is set to the default value 0, the function
+is minimized. If the parameter method is set to the default value 0, the function
 uses all the point pairs and estimates the best suitable homography
 matrix. However, if not all of the point pairs ($src\_points_i$,
 $dst\_points_i$) fit the rigid perspective transformation (i.e. there
@@ -3612,8 +3665,8 @@ double matchShapes( const Mat& object1,
 \cvarg{object1}{The first contour or grayscale image}
 \cvarg{object2}{The second contour or grayscale image}
 \cvarg{method}{Comparison method:
- \texttt{CV\_CONTOUR\_MATCH\_I1}, 
- \texttt{CV\_CONTOURS\_MATCH\_I2} 
+ \texttt{CV\_CONTOUR\_MATCH\_I1},\\ 
+ \texttt{CV\_CONTOURS\_MATCH\_I2}\\ 
 or 
  \texttt{CV\_CONTOURS\_MATCH\_I3} (see the discussion below)}
 \cvarg{parameter}{Method-specific parameter (is not used now)}
@@ -3636,8 +3689,8 @@ where
 
 \[
 \begin{array}{l}
-m^A_i = sign(h^A_i) \cdot \log{h^A_i}
-m^B_i = sign(h^B_i) \cdot \log{h^B_i}
+m^A_i = \mathrm{sign}(h^A_i) \cdot \log{h^A_i} \\
+m^B_i = \mathrm{sign}(h^B_i) \cdot \log{h^B_i}
 \end{array}
 \]
 
@@ -3730,17 +3783,20 @@ public:
     bool read(const FileNode& node);
     // detects objects of different sizes in the input image.
     // the detected objects are returned as a list of rectangles.
-    // scaleFactor specifies how much the image size is reduced at each image scale.
+    // scaleFactor specifies how much the image size
+    //        is reduced at each image scale.
     // minNeighbors speficifes how many neighbors should
     //        each candiate rectangle have to retain it.
     // flags - ignored
-    // minSize - the minimum possible object size. Objects smaller than that are ignored.
+    // minSize - the minimum possible object size.
+    //        Objects smaller than that are ignored.
     void detectMultiScale( const Mat& image,
                            vector<Rect>& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
-    // sets the image for detection (called by detectMultiScale at each image level)
+    // sets the image for detection
+    // (called by detectMultiScale at each image level)
     bool setImage( Ptr<FeatureEvaluator>& feval, const Mat& image );
     // runs the detector at the specified point
     // (the image that the detector is working with should be set
@@ -3763,7 +3819,8 @@ public:
 Groups the object candidate rectangles
 
 \begin{lstlisting}
-void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps=0.2);
+void groupRectangles(vector<Rect>& rectList,
+                     int groupThreshold, double eps=0.2);
 \end{lstlisting}
 \begin{description}
 \cvarg{rectList}{The input/output vector of rectangles. On output there will be retained and grouped rectangles}
@@ -3777,7 +3834,8 @@ The function is a wrapper for a generic function \cross{partition}. It clusters 
 Compares a template against overlapped image regions.
 
 \begin{lstlisting}
-void matchTemplate( const Mat& image, const Mat& templ, Mat& result, int method );
+void matchTemplate( const Mat& image, const Mat& templ,
+                    Mat& result, int method );
 
 enum { TM_SQDIFF=CV_TM_SQDIFF, TM_SQDIFF_NORMED=CV_TM_SQDIFF_NORMED,
        TM_CCORR=CV_TM_CCORR, TM_CCORR_NORMED=CV_TM_CCORR_NORMED,
@@ -3849,7 +3907,7 @@ is, a scene view is formed by projecting 3D points into the image plane
 using a perspective transformation.
 
 \[
-s \quad m' = A [R|t] M'
+s \; m' = A [R|t] M'
 \]
 
 or
@@ -3890,8 +3948,8 @@ to the following (when $z \ne 0$):
 \vecthree{x}{y}{z} = R \vecthree{X}{Y}{Z} + t\\
 x' = x/z\\
 y' = y/z\\
-u = fx*x' + cx\\
-v = fy*y' + cy
+u = f_x*x' + c_x\\
+v = f_y*y' + c_y
 \end{array}
 \]
 
@@ -3907,19 +3965,19 @@ y' = y/z\\
 x'' = x' (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) + 2 p_1 x' y' + p_2(r^2 + 2 x'^2) \\
 y'' = y' (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) + p_1 (r^2 + 2 y'^2) + 2 p_2 x' y' \\
 \text{where} \quad r^2 = x'^2 + y'^2 \\
-u = fx*x'' + cx\\
-v = fy*y'' + cy
+u = f_x*x'' + c_x\\
+v = f_y*y'' + c_y
 \end{array}
 \]
 
 $k_1$, $k_2$, $k_3$ are radial distortion coefficients, $p_1$, $p_2$ are tangential distortion coefficients.
 Higher-order coefficients are not considered in OpenCV.
-The distortion coefficients also do not depend on the scene viewed, thus they are intrinsic camera parameters.
+The distortion coefficients do not depend on the scene viewed, thus they also belong to the intrinsic camera parameters.
 \emph{And they remain the same regardless of the captured image resolution.}
 That is, if, for example, a camera has been calibrated on images of $320
 \times 240$ resolution, absolutely the same distortion coefficients can
-be used for images of $640 \times 480$ resolution from the same camera (while $fx$,
-$fy$, $cx$ and $cy$ need to be scaled appropriately).
+be used for images of $640 \times 480$ resolution from the same camera (while $f_x$,
+$f_y$, $c_x$ and $c_y$ need to be scaled appropriately).
 
 The functions below use the above model to
 
@@ -3992,7 +4050,7 @@ The algorithm does the following:
 Note: if you're using a non-square (=non-NxN) grid and
 \cross{findChessboardCorners} for calibration, and \texttt{calibrateCamera} returns
 bad values (i.e. zero distortion coefficients, an image center very far from
-(w/2-0.5,h/2-0.5), and / or large differences between $fx$ and $fy$ (ratios of
+$(w/2-0.5,h/2-0.5)$, and / or large differences between $f_x$ and $f_y$ (ratios of
 10:1 or more)), then you've probaby used \texttt{patternSize=cvSize(rows,cols)},
 but should use \texttt{patternSize=cvSize(cols,rows)} in \cross{findChessboardCorners}.
 
@@ -4022,7 +4080,7 @@ void calibrationMatrixValues( const Mat& cameraMatrix,
 \cvarg{fovy}{The output field of view in degrees along the vertical sensor axis}
 \cvarg{focalLength}{The focal length of the lens in mm}
 \cvarg{prinicialPoint}{The principal point in pixels}
-\cvarg{aspectRatio}{\texttt{fy}/texttt{fx}}
+\cvarg{aspectRatio}{$f_y/f_x$}
 \end{description}
 
 The function computes various useful camera characteristics from the previously estimated camera matrix.
@@ -4056,12 +4114,14 @@ void composeRT( const Mat& rvec1, const Mat& tvec1,
 The functions compute:
 
 \[ \begin{array}{l}
-\texttt{rvec3} = \texttt{Rodrigues}^{(M \rightarrow V)}
-    (\texttt{Rodrigues}^{(V \rightarrow M)}{\texttt{rvec2}} \texttt{Rodrigues}^{(V \rightarrow M)}{\texttt{rvec1}}) \\
-\texttt{tvec3} = (\texttt{Rodrigues}^{(V \rightarrow M)}{\texttt{rvec2}} \texttt{tvec1} + \texttt{tvec2})
-\end{array} \]
+\texttt{rvec3} = \mathrm{rodrigues}^{-1}\left(\mathrm{rodrigues}(\texttt{rvec2}) \cdot
+\mathrm{rodrigues}(\texttt{rvec1})\right) \\
+\texttt{tvec3} = \mathrm{rodrigues}(\texttt{rvec2}) \cdot \texttt{tvec1} + \texttt{tvec2}
+\end{array}, \]
 
-and, optionally, the derivatives of the output vectors w.r.t the input vectors (see \cross{matMulDeriv}).
+where $\mathrm{rodrigues}$ denotes a rotation vector to rotation matrix transformation, and $\mathrm{rodrigues}^{-1}$ denotes the inverse transformation, see \cross{Rodrigues}.
+
+Also, the functions can compute the derivatives of the output vectors w.r.t the input vectors (see \cross{matMulDeriv}).
 The functions are used inside \cross{stereoCalibrate} but can also be used in your own code where Levenberg-Marquardt or another gradient-based solver is used to optimize a function that contains matrix multiplication.
 
 
@@ -4333,7 +4393,7 @@ R = \cos{\theta} I + (1-\cos{\theta}) r r^T + \sin{\theta}
 \end{array}
 \]
 
-Inverse transformation can also be done easily as
+Inverse transformation can also be done easily, since
 
 \[
 \sin(\theta)
@@ -4442,8 +4502,8 @@ void reprojectImageTo3D( const Mat& disparity,
 The function transforms 1-channel disparity map to 3-channel image representing a 3D surface. That is, for each pixel \texttt{(x,y)} and the corresponding disparity \texttt{d=disparity(x,y)} it computes: 
 
 \[\begin{array}{l}
-[X Y Z W]^T = \texttt{Q}*[x y \texttt{disparity}(x,y) 1]^T \\
-\texttt{\_3dImage}(x,y) = (X/W, Y/W, Z/W)
+[X\; Y\; Z\; W]^T = \texttt{Q}*[x\; y\; \texttt{disparity}(x,y)\; 1]^T \\
+\texttt{\_3dImage}(x,y) = (X/W,\; Y/W,\; Z/W)
 \end{array}\]
 
 The matrix \texttt{Q} can be arbitrary $4 \times 4$ matrix, e.g. the one computed by \cross{stereoRectify}. To reproject a sparse set of points {(x,y,d),...} to 3D space, use \cross{perspectiveTransform}.  
@@ -4543,7 +4603,7 @@ E=
 where $T_i$ are components of the translation vector $T:\,T=[T_0, T_1, T_2]^T$,
 and the fundamental matrix \texttt{F}:
 
-\[F = cameraMatrix2^{-T} E cameraMatrix1^{-1}\]
+\[F = cameraMatrix2^{-T} \cdot E \cdot cameraMatrix1^{-1}\]
 
 Besides the stereo-related information, the function can also perform full calibration of each of the 2 cameras. However, because of the high dimensionality of the parameter space and noise in the input data the function can diverge from the correct solution. Thus, if the intrinsic parameters can be estimated with high accuracy for each of the cameras individually (e.g. using \cross{calibrateCamera}), it is recommended to do so and then pass \texttt{CALIB\_FIX\_INTRINSIC} flag to the function along with the computed intrinsic parameters. Otherwise, if all the parameters are needed to be estimated at once, it makes sense to restrict some parameters, e.g. pass \texttt{CALIB\_SAME\_FOCAL\_LENGTH} and \texttt{CALIB\_ZERO\_TANGENT\_DIST} flags, which are usually reasonable assumptions. 
 
@@ -4559,8 +4619,8 @@ void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
                     int flags=CALIB_ZERO_DISPARITY );
 \end{lstlisting}
 \begin{description}
-\cvarg{cameraMatrix1, cameraMatrix2}{The camera matrices [$f_x^{(j)}$ 0 $c_x^{(j)}$; 0 $f_y^{(j)}$ $c_y^{(j)}$; 0 0 1].}
-\cvarg{distCoeffs1, distCoeffs2}{The vectors of distortion coefficients for each camera, \href{\#Pinhole Camera Model, Distortion}{4x1, 1x4, 5x1 or 1x5.}}
+\cvarg{cameraMatrix1, cameraMatrix2}{The camera matrices $\vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$}
+\cvarg{distCoeffs1, distCoeffs2}{The vectors of distortion coefficients for each camera, \cross{4x1, 1x4, 5x1 or 1x5}}
 \cvarg{imageSize}{Size of the image used for stereo calibration.}
 \cvarg{R}{The input rotation matrix between the 1st and the 2nd cameras' coordinate systems; can be computed with \cross{stereoCalibrate}.}
 \cvarg{T}{The translation vector between the cameras' coordinate systems; can be computed with \cross{stereoCalibrate}.}
@@ -4638,7 +4698,7 @@ bool stereoRectifyUncalibrated( const Mat& points1,
 \cvarg{threshold}{Optional threshold used to filter out the outliers. If the parameter is greater than zero, then all the point pairs that do not comply the epipolar geometry well enough (that is, the points for which $|\texttt{points2[i]}^T*\texttt{F}*\texttt{points1[i]}|>\texttt{threshold}$) are rejected prior to computing the homographies.}
 \end{description}
 
-The function \texttt{stereoRectifyUncalibrated} computes the rectification transformations without knowing intrinsic parameters of the cameras and their relative position in space, hence the suffix "Uncalibrated". Another related difference from \cross{stereoRectify} is that the function outputs not the rectification transformations in the object (3D) space, but the planar perspective transformations, encoded by the homography matrices \texttt{H1} and \texttt{H2}. The function implements the following algorithm \href{\#Hartly99}{[Hartley99]}. 
+The function \texttt{stereoRectifyUncalibrated} computes the rectification transformations without knowing intrinsic parameters of the cameras and their relative position in space, hence the suffix "Uncalibrated". Another related difference from \cross{stereoRectify} is that the function outputs not the rectification transformations in the object (3D) space, but the planar perspective transformations, encoded by the homography matrices \texttt{H1} and \texttt{H2}. The function implements the algorithm \cite{Hartley99}. 
 
 Note that while the algorithm does not need to know the intrinsic parameters of the cameras, it heavily depends on the epipolar geometry. Therefore, if the camera lenses have significant distortion, it would better be corrected before computing the fundamental matrix and calling this function. For example, distortion coefficients can be estimated for each head of stereo camera separately by using \cross{calibrateCamera} and then the images can be corrected using \cross{undistort}, or just the point coordinates can be corrected with \cross{undistortPoints}. 
 
@@ -4685,7 +4745,7 @@ void undistortPoints( const Mat& src, Mat& dst,
 \begin{description}
 \cvarg{src}{The observed point coordinates, a matrix or vector of 2D points.}
 \cvarg{dst}{The ideal point coordinates, after undistortion and reverse perspective transformation}
-\cvarg{cameraMatrix}{The camera matrix $[f_x 0 c_x; 0 f_y c_y; 0 0 1]$}
+\cvarg{cameraMatrix}{The camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
 \cvarg{distCoeffs}{he vector of distortion coefficients, \cross{4x1, 1x4, 5x1 or 1x5}}
 \cvarg{R}{The rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cross{StereoRectify} can be passed here. If the matrix is empty, the identity transformation is used}
 \cvarg{P}{The new camera matrix (3x3) or the new projection matrix (3x4). \texttt{P1} or \texttt{P2}, computed by \cross{StereoRectify} can be passed here. If the matrix is empty, the identity new camera matrix is used}

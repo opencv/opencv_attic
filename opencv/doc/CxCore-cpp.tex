@@ -5,8 +5,8 @@
 \subsection{Introduction}
 
 Starting from OpenCV 2.0 the new modern C++ interface has been introduced.
-It is crisp (less typing is needed to code the same thing), type-safe (no more CvArr $\sim$ void*)
-and in general more convenient to use. Here is a short sample of what it looks like:
+It is crisp (less typing is needed to code the same thing), type-safe (no more \texttt{CvArr*} a.k.a. \texttt{void*})
+and, in general, more convenient to use. Here is a short example of what it looks like:
 
 \begin{lstlisting}
 //
@@ -91,7 +91,7 @@ int main( int argc, char** argv )
     planes[2] = Mat_<uchar>(planes[2]*color_scale + 128*(1-color_scale));
 
     // Mat::mul replaces cvMul(). Again, no temporary arrays are
-    // created in case of simple expressions.
+    // created in the case of simple expressions.
     planes[0] = planes[0].mul(planes[0], 1./255);
 
     // now merge the results back
@@ -103,7 +103,7 @@ int main( int argc, char** argv )
     namedWindow("image with grain", CV_WINDOW_AUTOSIZE);
 #if DEMO_MIXED_API_USE
     // this is to demonstrate that img and iplimg really share the data -
-    // the result of the above processing is stored in img and thus in iplimg too.
+    // the result of the above processing is stored to img and thus in iplimg too.
     cvShowImage("image with grain", iplimg);
 #else
     imshow("image with grain", img);
@@ -148,20 +148,20 @@ cv::log(a, a);
 a /= std::log(2.);
 \end{lstlisting}
 
-For most used C functions and structures from OpenCV 1.x you may find the direct counterparts in the new C++ interface. The name is usually formed by omitting \texttt{cv} or \texttt{Cv} prefix and turning the first letter to the low case (unless it's a own name, like Canny, Sobel etc). In case when there is no the new-style counterpart, it's possible to use the old functions with the new structures, as shown the first sample in the chapter.
+For the most of the C functions and structures from OpenCV 1.x you may find the direct counterparts in the new C++ interface. The name is usually formed by omitting \texttt{cv} or \texttt{Cv} prefix and turning the first letter to the low case (unless it's a own name, like Canny, Sobel etc). In case when there is no the new-style counterpart, it's possible to use the old functions with the new structures, as shown the first sample in the chapter.
 
 \subsection{Memory Management}
 
-The new interface does most of memory deallocation or even memory allocation operations automatically when needed.
+When using the new interface, the most of memory deallocation and even memory allocation operations are done automatically when needed.
 
 First of all, \cross{Mat}, \cross{SparseMat} and other classes have destructors
 that deallocate memory buffers occupied by the structures when needed.
 
 Secondly, this "when needed" means that the destructors do not always deallocate the buffers, they take into account possible data sharing.
 That is, in a destructor the reference counter associated with the underlying data is decremented and the data is deallocated
-if and only if the reference counter reaches zero, that is, when no other structures use the same buffers. When such a structure
-containing a reference counter is copied, usually just the header is duplicated and the underlying data is not; instead, the reference counter is incremented to memorize that there is another owner of the same data.
-Also, some structures, such as \texttt{Mat}, can use pre-allocated data rather than data allocated by the structures' methods.
+if and only if the reference counter becomes zero, that is, when no other structures refer to the same buffer. When such a structure
+containing a reference counter is copied, usually just the header is duplicated, while the underlying data is not; instead, the reference counter is incremented to memorize that there is another owner of the same data.
+Also, some structures, such as \texttt{Mat}, can refer to the user-allocated data.
 In this case the reference counter is \texttt{NULL} pointer and then no reference counting is done - the data is not deallocated by the destructors and should be deallocated manually by the user. We saw this scheme in the first example in the chapter:
 \begin{lstlisting}
 // allocates IplImages and wraps it into shared pointer class.
@@ -177,12 +177,12 @@ Mat img(iplimg);
 // of NULL pointer to the reference counter.
 //
 // Then Ptr<IplImage> destructor is called that decrements
-// the reference counter and if it reached 0, calls cvReleaseImage().
+// the reference counter and, as the counter becomes 0 in this case,
+// the destructor calls cvReleaseImage().
 \end{lstlisting}
 
-The copying semantics was mentioned in the above paragraph, but deserves a dedicated explanation.
-By default, the new OpenCV structures implement cheap, so called O(1) (i.e. constant-time) assignment operations. It gives user possibility to pass quite big data structures to functions (though, \texttt{const Mat\&} is even faster), return them (e.g. see the example with \cross{findHomography} above) and store in OpenCV and STL containers, and do all of this very efficiently. On the other hand, most of the new data structures provide clone()
-method that creates a full copy of an object. Here is the sample:
+The copying semantics was mentioned in the above paragraph, but deserves a dedicated discussion.
+By default, the new OpenCV structures implement shallow, so called O(1) (i.e. constant-time) assignment operations. It gives user possibility to pass quite big data structures to functions (though, e.g. passing \texttt{const Mat\&} is still faster than passing \texttt{Mat}), return them (e.g. see the example with \cross{findHomography} above), store them in OpenCV and STL containers etc. - and do all of this very efficiently. On the other hand, most of the new data structures provide \texttt{clone()} method that creates a full copy of an object. Here is the sample:
 \begin{lstlisting}
 // create a big 8Mb matrix
 Mat A(1000, 1000, CV_64F);
@@ -201,19 +201,19 @@ B.row(5).copyTo(C);
 A = D;
 // now make B an empty matrix (which references no memory buffers),
 // but the modified version of A will still be referenced by C,
-// despite that C is just a single matrix row
+// despite that C is just a single row of the original A
 B.release(); 
              
-// finally, make a full copy of C and deallocate the modified
-// big matrix, since it's not referenced by anyone
+// finally, make a full copy of C. In result, the big modified
+// matrix will be deallocated, since it's not referenced by anyone
 C = C.clone();
 \end{lstlisting}
 
 Memory management of the new data structures is automatic and thus easy. If, however, your code uses \cross{IplImage},
 \cross{CvMat} or other C data structures a lot, memory management can still be automated without immediate migration
 to \cross{Mat} by using the already mentioned template class \cross{Ptr}, similar to \texttt{shared\_ptr} from Boost and C++ TR1.
-It warps a pointer to an arbitrary object, provides transparent access to all the object fields and associates a reference counter with it.
-Instance of the class can be passed to any function that expects the original pointer. For correct deallocation of the object, you should specialize \texttt{Ptr<T>::delete\_obj()} method, like it was done for classic OpenCV datatypes:
+It wraps a pointer to an arbitrary object, provides transparent access to all the object fields and associates a reference counter with it.
+Instance of the class can be passed to any function that expects the original pointer. For correct deallocation of the object, you should specialize \texttt{Ptr<T>::delete\_obj()} method. Such specialized methods already exist for the classical OpenCV structures, e.g.:
 \begin{lstlisting}
 // cxoperations.hpp:
 ...
@@ -225,7 +225,7 @@ template<> inline Ptr<IplImage>::delete_obj() {
 See \cross{Ptr} description for more details and other usage scenarios.
 
 
-\subsection{Memory Management Part II. Automatic Data Allocation}\label{AutomaticMemoryManagement}
+\subsection{Memory Management Part II. Automatic Data Allocation}\label{AutomaticMemoryManagement2}
 
 With the new interface not only explicit memory deallocation is not needed anymore,
 but the memory allocation is often done automatically too. That was demonstrated in the example
@@ -236,8 +236,8 @@ data if and only if the currently allocated array is not of the required size an
 If a new buffer is needed, the previously allocated buffer is released
 (by engaging all the reference counting mechanism described in the previous section).
 Now, since it is very quick to check whether the needed memory buffer is already allocated,
-most new OpenCV functions that have output arrays call the \texttt{create} method and
-this way the Automatic Data Allocation concept is implemented. Here is the example:
+most new OpenCV functions that have arrays as output parameters call the \texttt{create} method and
+this way the \emph{automatic data allocation} concept is implemented. Here is the example:
 \begin{lstlisting}
 #include "cv.h"
 #include "highgui.h"
@@ -266,7 +266,7 @@ The matrix \texttt{edges} is allocated during the first frame processing and unl
 the same buffer will be reused for every next frame's edge map.
 
 In many cases the output array type and size can be inferenced from the input arrays' respective characteristics, but not always.
-In these rare cases functions take separate input parameters that specify the data type and/or size of the output arrays,
+In these rare cases the corresponding functions take separate input parameters that specify the data type and/or size of the output arrays,
 like \cross{resize}. Anyway, a vast majority of the new-style array processing functions call \texttt{create}
 for each of the output array, with just a few exceptions like \texttt{mixChannels}, \texttt{RNG::fill} and some others.
 
@@ -274,9 +274,9 @@ Note that this output array allocation semantic is only implemented in the new f
 
 \subsection{Algebraic Operations}
 
-Just like in v1.x, OpenCV 2.x provides basic functions operating on matrices, like \texttt{add},
-\texttt{subtract}, \texttt{gemm} etc. In addition, it introduces overloaded operators that give user convenient
-algebraic notation and nearly as fast as the functions. For example, here is how the least squares problem $Ax=b$
+Just like in v1.x, OpenCV 2.x provides some basic functions operating on matrices, like \texttt{add},
+\texttt{subtract}, \texttt{gemm} etc. In addition, it introduces overloaded operators that give the user a convenient
+algebraic notation, which is nearly as fast as using the functions directly. For example, here is how the least squares problem $Ax=b$
 can be solved using normal equations:
 \begin{lstlisting}
 Mat x = (A.t()*A).inv()*(A.t()*b);
@@ -287,7 +287,7 @@ The complete list of overloaded operators can be found in \cross{Matrix Expressi
 \subsection{Fast Element Access}
 
 Historically, OpenCV provided many different ways to access image and matrix elements, and none of them was both fast and convenient.
-With the new data structures, OpenCV 2.x introduces a few more alternatives, hopefully more convenient than before. For detailed description of the operations, please, check \cross{Mat} and \href{#MatT}{Mat\_} description. Here is part of the retro-photo-styling example rewritten (in simplified form) using the element access operations:
+With the new data structures, OpenCV 2.x introduces a few more alternatives, hopefully more convenient than before. For detailed description of the operations, please, check \cross{Mat} and \hyperref[MatT]{Mat\_} description. Here is part of the retro-photo-styling example rewritten (in simplified form) using the element access operations:
 
 \begin{lstlisting}
 ...
@@ -325,14 +325,14 @@ merge(planes, img_yuv);
 
 \subsection{Saturation Arithmetics}
 
-In the above sample you may have noticed \href{saturate}{saturate\_cast<>()} operator, and that's how all the pixel processing is done in OpenCV. When a result of image operation is 8-bit image with pixel values ranging from 0 to 255, each output pixel value is clipped to this available range:
+In the above sample you may have noticed \hyperref[saturatecast]{saturate\_cast} operator, and that's how all the pixel processing is done in OpenCV. When a result of image operation is 8-bit image with pixel values ranging from 0 to 255, each output pixel value is clipped to this available range:
 
 \[
 I(x,y)=\min(\max(value, 0), 255)
 \]
 
-and the similar rules are applied to 8-bit signed and 16-bit signed and unsigned types. This "saturation" semantics (different from usual C language "wrapping" semantics, where lowest bits are taken) is implemented in every image processing function, from the simple \texttt{cv::add} and \texttt{cvAdd} to \texttt{cv::cvtColor}, \texttt{cv::resize}, \texttt{cv::filter2D} etc.
-It is not a new feature of OpenCV v2.x, it was there from very beginning. In the new version this special \href{saturate}{saturate\_cast<T>()} template operator is introduced to simplify implementation of this semantic in your own functions.
+and the similar rules are applied to 8-bit signed and 16-bit signed and unsigned types. This "saturation" semantics (different from usual C language "wrapping" semantics, where lowest bits are taken, is implemented in every image processing function, from the simple \texttt{cv::add} to \texttt{cv::cvtColor}, \texttt{cv::resize}, \texttt{cv::filter2D} etc.
+It is not a new feature of OpenCV v2.x, it was there from very beginning. In the new version this special \hyperref[saturatecast]{saturate\_cast} template operator is introduced to simplify implementation of this semantic in your own functions.
 
 
 \subsection{Error handling}
@@ -341,7 +341,7 @@ The modern error handling mechanism in OpenCV uses exceptions, as opposite to th
 
 \subsection{Threading and Reenterability}
 
-OpenCV uses OpenMP to do thread some time-consuming operations. Threading can be explicitly controlled by \cross{setNumThreads} function. Also, functions and "const" methods of the classes are generally re-enterable, that is, they can be called from different threads asynchronously.
+OpenCV uses OpenMP to run some time-consuming operations in parallel. Threading can be explicitly controlled by \cross{setNumThreads} function. Also, functions and "const" methods of the classes are generally re-enterable, that is, they can be called from different threads asynchronously.
 
 \subsection{Basic Structures}
 
@@ -358,7 +358,7 @@ template<typename _Tp> class DataType
     // it is int for uchar, signed char, unsigned short, signed short and int,
     // float for float, double for double, ...
     typedef <...> work_type;
-    // in case of multi-channel data it is the data type of each channel
+    // in the case of multi-channel data it is the data type of each channel
     typedef <...> channel_type;
     enum
     {
@@ -374,9 +374,9 @@ template<typename _Tp> class DataType
 };
 \end{lstlisting}
 
-The template class \texttt{DataType} is descriptive class for OpenCV primitive data types and other types that comply with the following definition. A primitive OpenCV data type is one of \texttt{unsigned char, bool ($\sim$unsigned char), signed char, unsigned short, signed short, int, float, double} or a tuple of values of one of these types, where all the values in the tuple have the same type. If you are familiar with OpenCV \cross{CvMat}'s type notation, CV\_8U ... CV\_32FC3, CV\_64FC2 etc., when a primitive type can be defined as a type for which you can give a unique identifier in a form \verb*"CV\_<bit-depth>{U|S|F}C<number_of_channels>". A universal type able to store a single instance of such primitive data type is \cross{Vec}. Multiple instances of such a type can be stored in a \texttt{std::vector}, \texttt{Mat}, \texttt{Mat\_}, \texttt{MatND}, \texttt{MatND\_}, \texttt{SparseMat}, \texttt{SparseMat\_} or any other container that is able to store \cross{Vec} instances.
+The template class \texttt{DataType} is descriptive class for OpenCV primitive data types and other types that comply with the following definition. A primitive OpenCV data type is one of \texttt{unsigned char, bool ($\sim$unsigned char), signed char, unsigned short, signed short, int, float, double} or a tuple of values of one of these types, where all the values in the tuple have the same type. If you are familiar with OpenCV \cross{CvMat}'s type notation, CV\_8U ... CV\_32FC3, CV\_64FC2 etc., then a primitive type can be defined as a type for which you can give a unique identifier in a form \verb*"CV\_<bit-depth>{U|S|F}C<number_of_channels>". A universal OpenCV structure able to store a single instance of such primitive data type is \cross{Vec}. Multiple instances of such a type can be stored to a \texttt{std::vector}, \texttt{Mat}, \texttt{Mat\_}, \texttt{MatND}, \texttt{MatND\_}, \texttt{SparseMat}, \texttt{SparseMat\_} or any other container that is able to store \cross{Vec} instances.
  
-The class \texttt{DataType} is basically used to provide some description of any data type without adding any fields or methods to the corresponding class (and it is actually impossible to add anything to primitive C/C++ data types). This technique is known in C++ as class traits. It's not \texttt{DataType} itself that is used, but its specialized versions, such as:
+The class \texttt{DataType} is basically used to provide some description of such primitive data types without adding any fields or methods to the corresponding classes (and it is actually impossible to add anything to primitive C/C++ data types). This technique is known in C++ as class traits. It's not \texttt{DataType} itself that is used, but its specialized versions, such as:
 
 \begin{lstlisting}
 template<> class DataType<uchar>
@@ -400,7 +400,7 @@ template<typename _Tp> DataType<std::complex<_Tp> >
 ...
 \end{lstlisting}
 
-The main purpose of the classes is to convert compile time type information to OpenCV-compatible data type identifier, for example:
+The main purpose of the classes is to convert compile-time type information to OpenCV-compatible data type identifier, for example:
 
 \begin{lstlisting}
 // allocates 30x40 floating-point matrix
@@ -411,7 +411,7 @@ Mat B = Mat_<std::complex<double> >(3, 3);
 cout << B.depth() << ", " << B.channels() << endl; 
 \end{lstlisting}
 
-that is, such traits are used to tell OpenCV which data type you are working with, even if such a type is not native. Also, this mechanism is useful for generic algorithm implementation (in particular, it is used this way internally in OpenCV).
+that is, such traits are used to tell OpenCV which data type you are working with, even if such a type is not native to OpenCV (the matrix \texttt{B} intialization above compiles because OpenCV defines the proper specialized template class \texttt{DataType<complex<\_Tp> >}). Also, this mechanism is useful (and used in OpenCV this way) for generic algorithms implementations.
 
 \cvfunc{Point\_}
 Template class for 2D points
@@ -447,7 +447,7 @@ public:
 \end{lstlisting}
 
 The class represents a 2D point, specified by its coordinates $x$ and $y$.
-Instance of the class is interchangeable with С structures \texttt{CvPoint} and \texttt{CvPoint2D32f}. There is also cast operator to convert point coordinates to the specified type. The conversion from floating-point coordinates to integer coordinates is done by rounding; in general case the conversion uses \href{saturate}{saturate\_cast<>()} operation on each of the coordinates. Besides the class members listed in the declaration above, the following operations on points are implemented:
+Instance of the class is interchangeable with С structures \texttt{CvPoint} and \texttt{CvPoint2D32f}. There is also cast operator to convert point coordinates to the specified type. The conversion from floating-point coordinates to integer coordinates is done by rounding; in general case the conversion uses \hyperref[saturatecast]{saturate\_cast} operation on each of the coordinates. Besides the class members listed in the declaration above, the following operations on points are implemented:
 
 \begin{itemize}
     \item \texttt{pt1 = pt2 $\pm$ pt3}
@@ -593,7 +593,9 @@ public:
 };
 \end{lstlisting}
 
-The rectangle is described by the coordinates of the top-left corner (which is the default interpretation of \texttt{Rect\_::x} and \texttt{Rect\_::y} in OpenCV; though, in your algorithms you may treat \texttt{x} and \texttt{y} as coordinates of the bottom-left corner), the rectangle width and height. Another assumption OpenCV usually makes is that the top and left boundary of the rectangle are inclusive, while the right and bottom boundaries are not, for example, the method \texttt{Rect\_::contains} returns true if
+The rectangle is described by the coordinates of the top-left corner (which is the default interpretation of \texttt{Rect\_::x} and \texttt{Rect\_::y} in OpenCV; though, in your algorithms you may count \texttt{x} and \texttt{y} from the bottom-left corner), the rectangle width and height.
+
+Another assumption OpenCV usually makes is that the top and left boundary of the rectangle are inclusive, while the right and bottom boundaries are not, for example, the method \texttt{Rect\_::contains} returns true if
 \begin{eqnarray*}
       x \leq pt.x < x+width,\\
       y \leq pt.y < y+height
@@ -737,10 +739,10 @@ public:
 };
 \end{lstlisting}
 
-The class is most universal representation of short numerical vectors or tuples. It is possible to convert \texttt{Vec<T,2>} to/from \texttt{Point\_}, \texttt{Vec<T,3>} to/from \texttt{Point3\_} and \texttt{Vec<T,4>} to \cross{CvScalar}. The elements of \texttt{Vec} are accessed using \texttt{operator[]} and expected vector operations are implemented too:
+The class is the most universal representation of short numerical vectors or tuples. It is possible to convert \texttt{Vec<T,2>} to/from \texttt{Point\_}, \texttt{Vec<T,3>} to/from \texttt{Point3\_}, and \texttt{Vec<T,4>} to \cross{CvScalar}~. The elements of \texttt{Vec} are accessed using \texttt{operator[]}. All the expected vector operations are implemented too:
 
 \begin{itemize}
-    \item \texttt{v1 = v2 $\pm$ v3, v1 = v2 * $\alpha$, v1 = $\alpha * v2$} (plus the corresponding augmenting operations; note that these operations apply \href{saturate}{saturate\_cast<\_Tp>()} to the each computed vector component)
+    \item \texttt{v1 = v2 $\pm$ v3, v1 = v2 * $\alpha$, v1 = $\alpha$ * v2} (plus the corresponding augmenting operations; note that these operations apply \hyperref[saturatecast]{saturate\_cast.3C.3E} to the each computed vector component)
     \item \texttt{v1 == v2, v1 != v2}
     \item \texttt{double n = norm(v1); // $L_2$-norm}
 \end{itemize}
@@ -795,7 +797,7 @@ public:
 typedef Scalar_<double> Scalar;
 \end{lstlisting}
 
-The template class \texttt{Scalar\_} and it's double-precision instantiation \texttt{Scalar} represent 4-element vector. They are absolutely similar to \texttt{Vec<\_Tp, 4>} expect that they can be constructed from \texttt{CvScalar}. \texttt{Scalar} is widely used in OpenCV for passing pixel values and it is a drop-in replacement for \cross{CvScalar} that was used for the same purpose in the earlier versions of OpenCV.
+The template class \texttt{Scalar\_} and it's double-precision instantiation \texttt{Scalar} represent 4-element vector. Being derived from \texttt{Vec<\_Tp, 4>}, they can be used as typical 4-element vectors, but in addition they can be converted to/from \texttt{CvScalar}. The type \texttt{Scalar} is widely used in OpenCV for passing pixel values and it is a drop-in replacement for \cross{CvScalar} that was used for the same purpose in the earlier versions of OpenCV.
 
 \cvfunc{Range}\label{Range}
 Specifies a continuous subsequence (a.k.a. slice) of a sequence.
@@ -818,7 +820,7 @@ public:
 
 The class is used to specify a row or column span in a matrix (\cross{Mat}), and for many other purposes. \texttt{Range(a,b)} is basically the same as \texttt{a:b} in Matlab or \texttt{a..b} in Python. As in Python, \texttt{start} is inclusive left boundary of the range, and \texttt{end} is exclusive right boundary of the range. Such a half-opened interval is usually denoted as $[start,end)$.
 
-The static method \texttt{Range::all()} returns some special variable that means "the whole sequence" or "the whole range", just like "\texttt{:}" in Matlab or "\texttt{...}" in Python. All the methods and functions in OpenCV that take \texttt{Range} support this special \texttt{Range::all()} value, but of course, in case of your own custom processing you will probably have to implement it manually:
+The static method \texttt{Range::all()} returns some special variable that means "the whole sequence" or "the whole range", just like "\texttt{:}" in Matlab or "\texttt{...}" in Python. All the methods and functions in OpenCV that take \texttt{Range} support this special \texttt{Range::all()} value, but of course, in the case of your own custom processing you will probably have to check and handle it explicitly:
 \begin{lstlisting}
 void my_function(..., const Range& r, ....)
 {
@@ -830,6 +832,87 @@ void my_function(..., const Range& r, ....)
     } 
 }
 \end{lstlisting}
+
+\cvfunc{Ptr}\label{Ptr}
+
+A template class for smart reference-counting pointers
+
+\begin{lstlisting}
+template<typename _Tp> class Ptr
+{
+public:
+    // default constructor
+    Ptr();
+    // constructor that wraps the object pointer
+    Ptr(_Tp* _obj);
+    // destructor: calls release()
+    ~Ptr();
+    // copy constructor; increments ptr's reference counter
+    Ptr(const Ptr& ptr);
+    // assignment operator; decrements own reference counter
+    // (with release()) and increments ptr's reference counter 
+    Ptr& operator = (const Ptr& ptr);
+    // increments reference counter
+    void addref();
+    // decrements reference counter; when it becomes 0,
+    // delete_obj() is called
+    void release();
+    // user-specified custom object deletion operation.
+    // by default, "delete obj;" is called
+    void delete_obj();
+    // returns true if obj == 0;
+    bool empty() const;
+
+    // provide access to the object fields and methods
+    _Tp* operator -> ();
+    const _Tp* operator -> () const;
+
+    // return the underlying object pointer;
+    // thanks to the methods, the Ptr<_Tp> can be
+    // used instead of _Tp*
+    operator _Tp* ();
+    operator const _Tp*() const;
+protected:
+    // the incapsulated object pointer
+    _Tp* obj;
+    // the associated reference counter
+    int* refcount;
+};
+\end{lstlisting}
+
+The class \texttt{Ptr<\_Tp>} is a template class that wraps pointers of the corresponding type. It is similar to \texttt{shared\_ptr} that is a part of Boost library (\url{http://www.boost.org/doc/libs/1_40_0/libs/smart_ptr/shared_ptr.htm}) and also a part of the
+\href{http://en.wikipedia.org/wiki/C%2B%2B0x}{C++0x} standard. 
+
+By using this class you can get the following capabilities:
+
+\begin{itemize}
+    \item default constructor, copy constructor and assignment operator for an arbitrary C++ class or a C structure. For some objects, like files, windows, mutexes, sockets etc, copy constructor or assignment operator are difficult to define. For some other objects, like complex classifiers in OpenCV, copy constructors are absent and not easy to implement. Finally, some of complex OpenCV and your own data structures may have been written in C. However, copy constructors and default constructors can simplify programming a lot; besides, they are often required (e.g. by STL containers). By wrapping a pointer to such a complex object \texttt{TObj} to \texttt{Ptr<TObj>} you will automatically get all of the necessary constructors and the assignment operator.
+    \item all the above-mentioned operations running very fast, regardless of the data size, i.e. as "O(1)" operations. Indeed, while some structures, like \texttt{std::vector} provide a copy constructor and an assignment operator, the operations may take considerable time if the data structures are big. But if the structures are put into \texttt{Ptr<>}, the overhead becomes small and independent of the data size.
+    \item automatic destruction, even for C structures. See the example below with \texttt{FILE*}.  
+    \item heterogeneous collections of objects. The standard STL and most other C++ and OpenCV containers can only store objects of the same type and the same size. The classical solution to store objects of different types in the same container is to store pointers to the base class \texttt{base\_class\_t*} instead, but when you loose the automatic memory management. Again, by using \texttt{Ptr<base\_class\_t>()} instead of the raw pointers, you can solve the problem.
+\end{itemize}    
+
+The class \texttt{Ptr} treats the wrapped object as a black box, the reference counter is allocated and managed separately. The only thing the pointer class needs to know about the object is how to deallocate it. This knowledge is incapsulated in \texttt{Ptr::delete\_obj()} method, which is called when the reference counter becomes 0. If the object is a C++ class instance, no additional coding is needed, because the default implementation of this method calls \texttt{delete obj;}.
+However, if the object is deallocated in a different way, then the specialized method should be created. For example, if you want to wrap \texttt{FILE}, the \texttt{delete\_obj} may be implemented as following:
+
+\begin{lstlisting}
+template<> inline void Ptr<FILE>::delete_obj()
+{
+    fclose(obj); // no need to clear the pointer afterwards,
+                 // it is done externally.
+}
+...
+
+// now use it:
+Ptr<FILE> f(fopen("myfile.txt", "r"));
+if(f.empty())
+    throw ...;
+fprintf(f, ....);
+...
+// the file will be closed automatically by the Ptr<FILE> destructor.
+\end{lstlisting}  
+
+\textbf{Note}: The reference increment/decrement operations are implemented as atomic operations, and therefore it is normally safe to use the classes in multi-threaded applications. The same is true for \cross{Mat} and other C++ OpenCV classes that operate on the reference counters.
 
 \cvfunc{Mat}\label{Mat}
 
@@ -1028,8 +1111,8 @@ The class \texttt{Mat} represents a 2D numerical array that can act as a matrix 
 There are many different ways to create \texttt{Mat} object. Here are the some popular ones:
 \begin{itemize}
 \item using \texttt{create(nrows, ncols, type)} method or
-    similar \texttt{Mat(nrows, ncols, type[, fill\_value])} constructor.
-    A new matrix of the specified size and specifed type is allocated.
+    the similar constructor \texttt{Mat(nrows, ncols, type[, fill\_value])} constructor.
+    A new matrix of the specified size and specifed type will be allocated.
     \texttt{type} has the same meaning as in \cross{cvCreateMat} method,
     e.g. \texttt{CV\_8UC1} means 8-bit single-channel matrix,
     \texttt{CV\_32FC2} means 2-channel (i.e. complex) floating-point matrix etc:
@@ -1044,22 +1127,27 @@ M.create(100,60,CV_8UC(15));
         
     As noted in the introduction of this chapter, \texttt{create()}
     will only allocate a new matrix when the current matrix dimensionality
-    or type is different from the specified.
+    or type are different from the specified.
         
 \item by using a copy constructor or assignment operator, where on the right side it can
       be a matrix or expression, see below. Again, as noted in the introduction,
       matrix assignment is O(1) operation because it only copies the header
-      and increases the reference counter. \texttt{Mat::clone()} method can be used to get full
+      and increases the reference counter. \texttt{Mat::clone()} method can be used to get a full
       (a.k.a. deep) copy of the matrix when you need it.
           
 \item by constructing a header for a part of another matrix. It can be a single row, single column,
       several rows, several columns, rectangular region in the matrix (called a minor in algebra) or
-      a diagonal. Such operation is also O(1) operation because the new header will reference the same data.
+      a diagonal. Such operations are also O(1), because the new header will reference the same data.
       You can actually modify a part of the matrix using this feature, e.g.
           
 \begin{lstlisting}
 // add 5-th row, multiplied by 3 to the 3rd row
 M.row(3) = M.row(3) + M.row(5)*3;
+
+// now copy 7-th column to the 1-st column
+// M.col(1) = M.col(7); // this will not work
+Mat M1 = M.col(1);
+M.col(7).copyTo(M1);
 
 // create new 320x240 image
 cv::Mat img(Size(320,240),CV_8UC3);
@@ -1082,31 +1170,30 @@ Mat B = A(Range::all(), Range(1, 3));
 Mat C = B(Range(5, 9), Range::all());
 Size size; Point ofs;
 C.locateROI(size, ofs);
-// size will be (10,10) and ofs will be (/*x=*/1, /*y=*/5)
+// size will be (width=10,height=10) and the ofs will be (x=1, y=5)
 \end{lstlisting}
           
-      As in case of whole matrices, if you need a deep copy, use \texttt{clone()} method
+      As in the case of whole matrices, if you need a deep copy, use \texttt{clone()} method
       of the extracted sub-matrices.
           
 \item by making a header for user-allocated-data. It can be useful for
     \begin{enumerate}
         \item processing "foreign" data using OpenCV (e.g. when you implement
-        DirectShow filter or gstreamer processing module), e.g.
+        a DirectShow filter or a processing module for gstreamer etc.), e.g.
             
 \begin{lstlisting}
 void process_video_frame(const unsigned char* pixels,
                          int width, int height, int step)
 {
     cv::Mat img(height, width, CV_8UC3, pixels, step);
-    cv::GaussianBlur(img, img, Size(7,7), 1.5, 1.5);
+    cv::GaussianBlur(img, img, cv::Size(7,7), 1.5, 1.5);
 }
 \end{lstlisting}
             
         \item for quick initialization of small matrices and/or super-fast element access
 \begin{lstlisting}
 double m[3][3] = {{a, b, c}, {d, e, f}, {g, h, i}};
-cv::Mat M(3, 3, CV_64F, m);
-M = M.inv();
+cv::Mat M = cv::Mat(3, 3, CV_64F, m).inv();
 \end{lstlisting}
         \end{enumerate}
         
@@ -1119,11 +1206,19 @@ M = M.inv();
         \texttt{Mat::operator CvMat() const} an \texttt{Mat::operator IplImage()}.
         The operators do \emph{not} copy the data.
         
+\begin{lstlisting}
+IplImage* img = cvLoadImage("greatwave.jpg", 1);
+Mat mtx(img); // convert IplImage* -> cv::Mat
+CvMat oldmat = mtx; // convert cv::Mat -> CvMat
+CV_Assert(oldmat.cols == img->width && oldmat.rows == img->height &&
+    oldmat.data.ptr == (uchar*)img->imageData && oldmat.step == img->widthStep);
+\end{lstlisting}
+        
 \item by using MATLAB-style matrix initializers, \texttt{zeros(), ones(), eye()}, e.g.:
 
 \begin{lstlisting}
-// create 100x100 double-precision identity martix and add it to M.
-M += Mat::eye(100, 100, CV_64F);
+// create a double-precision identity martix and add it to M.
+M += Mat::eye(M.rows, M.cols, CV_64F);
 \end{lstlisting}
 
 \item by using comma-separated initializer:
@@ -1132,28 +1227,29 @@ M += Mat::eye(100, 100, CV_64F);
 Mat M = (Mat_<double>(3,3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
 \end{lstlisting}
 
-here we first call constructor of \texttt{Mat\_} class (that we describe further) with the proper matrix, and then we just put << operator followed by comma-separated values that can be constants, variables, expressions etc. Also, note the extra parentheses that are needed to avoid compiler errors.
+here we first call constructor of \texttt{Mat\_} class (that we describe further) with the proper matrix, and then we just put \texttt{<<} operator followed by comma-separated values that can be constants, variables, expressions etc. Also, note the extra parentheses that are needed to avoid compiler errors.
         
 \end{itemize}
 
-Once matrix is created, it will be automatically managed by using reference-counting mechanism (unless the matrix header is built on top of user-allocated data, in which case you should handle the data yourself).
-So the matrix data will be deallocated when no one points to it; if you want to release the data pointed by a matrix header before the matrix destructor is called, the \texttt{Mat::release()} method is the safe way to do it.
+Once matrix is created, it will be automatically managed by using reference-counting mechanism (unless the matrix header is built on top of user-allocated data, in which case you should handle the data by yourself).
+The matrix data will be deallocated when no one points to it; if you want to release the data pointed by a matrix header before the matrix destructor is called, use \texttt{Mat::release()}.
 
-The next important thing to learn about matrix is element access. Here is how the matrix is stored. The elements are stored in row-major order (row by row). The \texttt{data} member points to the first element of the first row, \texttt{rows} contains the number of matrix rows and \texttt{cols} -- the number of matrix columns. There is yet another member, called \texttt{step} that is used to actually compute address of a matrix element. The \texttt{step} is needed because the matrix can be a part of another matrix or because there can some padding space for proper alignment in the end of each row:
+The next important thing to learn about the matrix class is element access. Here is how the matrix is stored. The elements are stored in row-major order (row by row). The \texttt{Mat::data} member points to the first element of the first row, \texttt{Mat::rows} contains the number of matrix rows and \texttt{Mat::cols} -- the number of matrix columns. There is yet another member, called \texttt{Mat::step} that is used to actually compute address of a matrix element. The \texttt{Mat::step} is needed because the matrix can be a part of another matrix or because there can some padding space in the end of each row for a proper alignment.
 %\includegraphics[width=1.0\textwidth]{pics/roi.png}
+
 Given these parameters, address of the matrix element $M_{ij}$ is computed as following:
 
 
 \texttt{addr($M_{ij}$)=M.data + M.step*i + j*M.elemSize()}
 
 
-if you know matrix element type, e.g. it is \texttt{float}, then you can use \texttt{at<>()} method:
+if you know the matrix element type, e.g. it is \texttt{float}, then you can use \texttt{at<>()} method:
 
 
 \texttt{addr($M_{ij}$)=\&M.at<float>(i,j)}
 
 (where \& is used to convert the reference returned by \texttt{at} to a pointer).
-if you need to process a whole row of matrix, much more efficient way is to get the pointer to the row first, and then just use plain C operator []:
+if you need to process a whole row of matrix, the most efficient way is to get the pointer to the row first, and then just use plain C operator \texttt{[]}:
 
 \begin{lstlisting}
 // compute sum of positive matrix elements
@@ -1185,7 +1281,7 @@ for(int i = 0; i < rows; i++)
         sum += std::max(Mi[j], 0.);
 }
 \end{lstlisting}
-In case of continuous matrix the loop body will be executed only once, so the overhead will be smaller, which will be especially noticeable in case of small matrices.
+in the case of continuous matrix the outer loop body will be executed just once, so the overhead will be smaller, which will be especially noticeable in the case of small matrices.
 
 Finally, there are STL-style iterators that are smart enough to skip gaps between successive rows:
 \begin{lstlisting}
@@ -1196,25 +1292,25 @@ for(; it != it_end; ++it)
     sum += std::max(*it, 0.);
 \end{lstlisting}
 
-The matrix iterators are random-access iterators, so they can be passed to arbitrary STL algorithm, including \texttt{std::sort()}.
+The matrix iterators are random-access iterators, so they can be passed to any STL algorithm, including \texttt{std::sort()}.
 
-\cvfunc{Matrix Expressions}
+\cvfunc{Matrix Expressions}\label{Matrix Expressions}
 
 This is a list of implemented matrix operations that can be combined in arbitrary complex expressions
 (here \emph{A}, \emph{B} stand for matrices (\texttt{Mat}), \emph{s} for a scalar (\texttt{Scalar}),
 \emph{$\alpha$} for a real-valued scalar (\texttt{double})):
 
 \begin{itemize}
-    \item addition, subtraction, negation: \texttt{A$\pm$ B, A$\pm$ s, s$\pm$ A, -A}
+    \item addition, subtraction, negation: \texttt{A$\pm$B, A$\pm$s, s$\pm$A, -A}
     \item scaling: \texttt{A*$\alpha$, A/$\alpha$}
     \item per-element multiplication and division: \texttt{A.mul(B), A/B, $\alpha$/A}
     \item matrix multiplication: \texttt{A*B}
     \item transposition: \texttt{A.t() $\sim A^t$}
     \item matrix inversion and pseudo-inversion, solving linear systems and least-squares problems:
         \texttt{A.inv([method]) $\sim A^{-1}$}, \texttt{A.inv([method])*B $\sim X:\,AX=B$}
-    \item comparison: \texttt{A$\gtreqqless$ B, A $\ne$ B, A$\gtreqqless \alpha$, A $\ne \alpha$}
-          (the result of comparison is 8-bit single channel mask, which elements are set to 255
-          (if the particular element or pair of elements satisfy the condition) and 0 otherwise)
+    \item comparison: \texttt{A$\gtreqqless$ B, A $\ne$ B, A$\gtreqqless \alpha$, A $\ne \alpha$}.
+          The result of comparison is 8-bit single channel mask, which elements are set to 255
+          (if the particular element or pair of elements satisfy the condition) and 0 otherwise.
     \item bitwise logical operations: \verb"A & B, A & s, A | B, A | s, A ^ B, A ^ s, ~A"
     \item element-wise minimum and maximum: \texttt{min(A, B), min(A, $\alpha$), max(A, B), max(A, $\alpha$)}
     \item element-wise absolute value: \texttt{abs(A)}
@@ -1228,7 +1324,7 @@ This is a list of implemented matrix operations that can be combined in arbitrar
 \end{itemize}
 Note, however, that comma-separated initializers and probably some other operations may require additional explicit \texttt{Mat()} or \verb"Mat_<T>()" constuctor calls to resolve possible ambiguity.
 
-\cvfunc{Mat\_}
+\cvfunc{Mat\_}\label{MatT}
 Template matrix class derived from \cross{Mat}
 
 \begin{lstlisting}
@@ -1344,7 +1440,7 @@ The class \texttt{Mat\_<\_Tp>} is a "thin" template wrapper on top of \texttt{Ma
 Mat M(100,100,CV_8U);
 // this will compile fine. no any data conversion will be done.
 Mat_<float>& M1 = (Mat_<float>&)M;
-// the program will likely at the statement below
+// the program will likely crash at the statement below
 M1(99,99) = 1.f;
 \end{lstlisting}
 
@@ -1492,7 +1588,7 @@ public:
 };
 \end{lstlisting}
 
-The class \texttt{MatND} describes n-dimensional dense numerical single-channel or multi-channel array. This is a convenient representation for multi-dimensional histograms (when they are not very sparse, otherwise \texttt{SparseMat} will do better), voxel volumes, stacked motion fields etc. The data layout of matrix $M$ is defined by the array of \texttt{M.step[i]}, so that the address of element $(i_0,...,i_{M.dims-1})$, where $0\leq i_k<M.size[k]$ is computed as:
+The class \texttt{MatND} describes n-dimensional dense numerical single-channel or multi-channel array. This is a convenient representation for multi-dimensional histograms (when they are not very sparse, otherwise \texttt{SparseMat} will do better), voxel volumes, stacked motion fields etc. The data layout of matrix $M$ is defined by the array of \texttt{M.step[]}, so that the address of element $(i_0,...,i_{M.dims-1})$, where $0\leq i_k<M.size[k]$ is computed as:
 \[
 addr(M_{i_0,...,i_{M.dims-1}}) = M.data + M.step[0]*i_0 + M.step[1]*i_1 + ... + M.step[M.dims-1]*i_{M.dims-1}
 \]
@@ -1502,7 +1598,7 @@ which is more general form of the respective formula for \cross{Mat}, wherein \t
 In other aspects \texttt{MatND} is also very similar to \texttt{Mat}, with the following limitations and differences:
 \begin{itemize}
     \item much less operations are implemented for \texttt{MatND}
-    \item currently, algebraic expressions with \texttt{MatND} are not supported
+    \item currently, algebraic expressions with \texttt{MatND}'s are not supported
     \item the \texttt{MatND} iterator is completely different from \texttt{Mat} and \texttt{Mat\_} iterators. The latter are per-element iterators, while the former is per-slice iterator, see below.
 \end{itemize}
 
@@ -1519,7 +1615,7 @@ void computeColorHist(const Mat& image, MatND& hist, int N)
     // and clear it
     hist = Scalar(0);
     
-    // the loop below assumes that we the image
+    // the loop below assumes that the image
     // is 8-bit 3-channel, so let's check it.
     CV_Assert(image.type() == CV_8UC3);
     MatConstIterator_<Vec3b> it = image.begin<Vec3b>(),
@@ -1528,7 +1624,7 @@ void computeColorHist(const Mat& image, MatND& hist, int N)
     {
         const Vec3b& pix = *it;
         
-        // we could have added 1.f/(image.rows*image.cols)
+        // we could have incremented the cells by 1.f/(image.rows*image.cols)
         // instead of 1.f to make the histogram normalized.
         hist.at<float>(pix[0]*N/256, pix[1]*N/256, pix[2]*N/256) += 1.f;
     }
@@ -1843,7 +1939,7 @@ public:
 };
 \end{lstlisting}
 
-The class \texttt{SparseMat} represents multi-dimensional sparse numerical arrays. Such a sparse array can store elements of arbitrary type that \cross{Mat} and \cross{MatND} can store. "Sparse" means that only non-zero elements are stored (though, during some operations on sparse matrices some of the stored elements can actually become 0. It's up to the user to detect such elements and delete them using \texttt{SparseMat::erase}). The non-zero elements are stored in a hash table that grows when it's filled enough, so that the search time is O(1) in average (regardless of whether element is there or not). Elements can be accessed using the following methods:
+The class \texttt{SparseMat} represents multi-dimensional sparse numerical arrays. Such a sparse array can store elements of any type that \cross{Mat} and \cross{MatND} can store. "Sparse" means that only non-zero elements are stored (though, as a result of operations on a sparse matrix, some of its stored elements can actually become 0. It's up to the user to detect such elements and delete them using \texttt{SparseMat::erase}). The non-zero elements are stored in a hash table that grows when it's filled enough, so that the search time is O(1) in average (regardless of whether element is there or not). Elements can be accessed using the following methods:
 
 \begin{enumerate}
     \item query operations (\texttt{SparseMat::ptr} and the higher-level \texttt{SparseMat::ref}, \texttt{SparseMat::value} and \texttt{SparseMat::find}), e.g.:
@@ -1859,10 +1955,13 @@ The class \texttt{SparseMat} represents multi-dimensional sparse numerical array
         sparse_mat.ref<float>(idx) += 1.f;
     }
     \end{lstlisting}
-    \item sparse matrix iterators. Like \cross{Mat} iterators and unlike \cross{MatND} iterators, the sparse matrix iterators are STL-style, that is the iteration loop is familiar to C++ users:
+    \item sparse matrix iterators. Like \cross{Mat} iterators and unlike \cross{MatND} iterators, the sparse matrix iterators are STL-style, that is, the iteration loop is familiar to C++ users:
     \begin{lstlisting}
-    // prints elements of a sparse floating-point matrix and the sum of elements.
-    SparseMatConstIterator_<float> it = sparse_mat.begin<float>(), it_end = sparse_mat.end<float>();
+    // prints elements of a sparse floating-point matrix
+    // and the sum of elements.
+    SparseMatConstIterator_<float>
+        it = sparse_mat.begin<float>(),
+        it_end = sparse_mat.end<float>();
     double s = 0;
     int dims = sparse_mat.dims();
     for(; it != it_end; ++it)
@@ -1877,16 +1976,18 @@ The class \texttt{SparseMat} represents multi-dimensional sparse numerical array
     }
     printf("Element sum is %g\n", s);
     \end{lstlisting}
-    If you run this loop, you will notice that elements are enumerated in no any logical order (lexicographical or any other), they come in the same order as they stored in the hash table. You may collect pointers to the nodes and sort them to get the proper ordering. Note, however, that pointers to the nodes may become invalid when you add more elements to the matrix; this is because possible buffer reallocation.
+    If you run this loop, you will notice that elements are enumerated in no any logical order (lexicographical etc.), they come in the same order as they stored in the hash table, i.e. semi-randomly. You may collect pointers to the nodes and sort them to get the proper ordering. Note, however, that pointers to the nodes may become invalid when you add more elements to the matrix; this is because of possible buffer reallocation.
     \item a combination of the above 2 methods when you need to process 2 or more sparse matrices simultaneously, e.g. this is how you can compute unnormalized cross-correlation of the 2 floating-point sparse matrices:
     \begin{lstlisting}
     double cross_corr(const SparseMat& a, const SparseMat& b)
     {
         const SparseMat *_a = &a, *_b = &b;
-        // if b contains less elements than a, it's faster to iterate through b
+        // if b contains less elements than a,
+        // it's faster to iterate through b
         if(_a->nzcount() > _b->nzcount())
             std::swap(_a, _b);
-        SparseMatConstIterator_<float> it = _a->begin<float>(), it_end = _a->end<float>();
+        SparseMatConstIterator_<float> it = _a->begin<float>(),
+                                       it_end = _a->end<float>();
         double ccorr = 0;
         for(; it != it_end; ++it)
         {
@@ -1959,7 +2060,8 @@ public:
 };
 \end{lstlisting}
 
-\texttt{SparseMat\_} is thin wrapper on top of \cross{SparseMat}, made in the same way as \texttt{Mat\_} and \texttt{MatND\_}:
+\texttt{SparseMat\_} is a thin wrapper on top of \cross{SparseMat}, made in the same way as \texttt{Mat\_} and \texttt{MatND\_}.
+It simplifies notation of some operations, and that's it.
 \begin{lstlisting}
 int sz[] = {10, 20, 30};
 SparseMat_<double> M(3, sz);
@@ -1980,7 +2082,7 @@ MatExpr<...> abs(const MatExpr<...>& src);
 \cvarg{src}{matrix or matrix expression}
 \end{description}
 
-\texttt{abs} is meta-function that is expanded to one of \cross{absdiff} forms:
+\texttt{abs} is a meta-function that is expanded to one of \cross{absdiff} forms:
 
 \begin{itemize}
     \item \texttt{C = abs(A-B)} is equivalent to \texttt{absdiff(A, B, C)} and
@@ -1991,7 +2093,7 @@ MatExpr<...> abs(const MatExpr<...>& src);
 The output matrix will have the same size and the same type as the input one
 (except for the last case, where \texttt{C} will be \texttt{depth=CV\_8U}).
 
-See also: \cross{Matrix Expressions}, \cross{absdiff}, \href{saturate}{saturate\_cast<T>}
+See also: \cross{Matrix Expressions}, \cross{absdiff}, \hyperref[saturatecast]{saturate\_cast}
 
 \cvfunc{absdiff}\label{absdiff}
 Computes per-element absolute difference between 2 arrays or between array and a scalar.
@@ -2012,13 +2114,14 @@ void absdiff(const MatND& src1, const Scalar& sc, MatND& dst);
 The functions \texttt{absdiff} compute:
 \begin{itemize}
     \item absolute difference between two arrays
-    \texttt{dst(I) = saturate(abs(src1(I) - src2(I)))}
+    \[\texttt{dst}(I) = \texttt{saturate}(|\texttt{src1}(I) - \texttt{src2}(I)|)\]
     \item or absolute difference between array and a scalar:
-    \texttt{dst(I) = saturate(abs(src1(I) - sc))}
+    \[\texttt{dst}(I) = \texttt{saturate}(|\texttt{src1}(I) - \texttt{sc}|)\]
 \end{itemize}
 where \texttt{I} is multi-dimensional index of array elements.
+in the case of multi-channel arrays each channel is processed independently.
 
-See also: \cross{abs}, \href{saturate}{saturate\_cast<>}
+See also: \cross{abs}, \hyperref[saturatecast]{saturate\_cast}
 
 \cvfunc{add}\label{add}
 Computes the per-element sum of two arrays or an array and a scalar.
@@ -2040,25 +2143,25 @@ void add(const MatND& src1, const Scalar& sc, MatND& dst, const MatND& mask=MatN
              specifies elements of the destination array to be changed}
 \end{description}
 
-The functions \texttt{add} compute
-
+The functions \texttt{add} compute:
 \begin{itemize}
-    \item the sum of two arrays
-    \texttt{dst(I) = saturate(src1(I) + src2(I)) if mask(I)$\ne$0}
-    \item the sum of array and a scalar:
-    \texttt{dst(I) = saturate(src1(I) + sc) if mask(I) $\ne$ 0}
+    \item the sum of two arrays:
+    \[\texttt{dst}(I) = \texttt{saturate}(\texttt{src1}(I) + \texttt{src2}(I))\quad\texttt{if mask}(I)\ne0\]
+    \item or the sum of array and a scalar:
+    \[\texttt{dst}(I) = \texttt{saturate}(\texttt{src1}(I) + \texttt{sc})\quad\texttt{if mask}(I)\ne0\]
 \end{itemize}
-
 where \texttt{I} is multi-dimensional index of array elements.
 
 The first function in the above list can be replaced with matrix expressions:
 \begin{lstlisting}
-    dst = src1 + src2;
-    dst += src1; // ~ add(dst, src1, dst);
+dst = src1 + src2;
+dst += src1; // equivalent to add(dst, src1, dst);
 \end{lstlisting}
 
+in the case of multi-channel arrays each channel is processed independently.
+
 See also: \cross{subtract}, \cross{addWeighted}, \cross{scaleAdd}, \cross{convertScale},
-\cross{Matrix Expressions}, \href{saturate}{saturate\_cast<>}.
+\cross{Matrix Expressions}, \hyperref[saturatecast]{saturate\_cast}.
 
 \cvfunc{addWeighted}\label{addWeighted}
 Computes the weighted sum of two arrays.
@@ -2079,19 +2182,18 @@ void addWeighted(const MatND& src1, double alpha, const MatND& src2,
 \end{description}
 
 The functions \texttt{addWeighted} calculate the weighted sum of two arrays as follows:
-
-\begin{lstlisting}
-dst(I)=saturate(src1(I)*alpha+src2(I)*beta+gamma)
-\end{lstlisting}
-
+\[\texttt{dst}(I)=\texttt{saturate}(\texttt{src1}(I)*\texttt{alpha} + \texttt{src2}(I)*\texttt{beta} + \texttt{gamma})\]
 where \texttt{I} is multi-dimensional index of array elements.
+
 The first function can be replaced with a matrix expression:
 \begin{lstlisting}
 dst = src1*alpha + src2*beta + gamma;
 \end{lstlisting}
 
+In the case of multi-channel arrays each channel is processed independently.
+
 See also: \cross{add}, \cross{subtract}, \cross{scaleAdd}, \cross{convertScale},
-\cross{Matrix Expressions}, \href{saturate}{saturate\_cast<>}.
+\cross{Matrix Expressions}, \hyperref[saturatecast]{saturate\_cast}.
 
 \cvfunc{bitwise\_and}\label{bitwise and}
 Calculates per-element bit-wise conjunction of two arrays and an array and a scalar.
@@ -2111,18 +2213,17 @@ void bitwise_and(const MatND& src1, const Scalar& sc, MatND& dst, const MatND& m
              specifies elements of the destination array to be changed}
 \end{description}
 
-The functions \texttt{bitwise\_and} compute per-element bit-wise logical conjunction
-
+The functions \texttt{bitwise\_and} compute per-element bit-wise logical conjunction:
 \begin{itemize}
     \item of two arrays
-    \texttt{dst(I) = src1(I) \& src2(I) if mask(I)$\ne$0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \wedge \texttt{src2}(I)\quad\texttt{if mask}(I)\ne0\]
     \item or array and a scalar:
-    \texttt{dst(I) = src1(I) \& sc if mask(I) $\ne$ 0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \wedge \texttt{sc}\quad\texttt{if mask}(I)\ne0\]
 \end{itemize}
 
-In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation.
+In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation, and in the case of multi-channel arrays each channel is processed independently.
 
-See also: \href{bitwise.and}{bitwise\_and}, \href{bitwise.not}{bitwise\_not}, \href{bitwise.xor}{bitwise\_xor}
+See also: \hyperref[bitwise.and]{bitwise\_and}, \hyperref[bitwise.not]{bitwise\_not}, \hyperref[bitwise.xor]{bitwise\_xor}
 
 \cvfunc{bitwise\_not}
 Inverts every bit of array
@@ -2140,14 +2241,11 @@ void bitwise_not(const MatND& src, MatND& dst);
 \end{description}
 
 The functions \texttt{bitwise\_not} compute per-element bit-wise inversion of the source array:
+\[\texttt{dst}(I) = \neg\texttt{src}(I)\]
 
-\begin{lstlisting}
-dst(I) = ~src1(I)
-\end{lstlisting}
+In the case of floating-point source array its machine-specific bit representation (usually IEEE754-compliant) is used for the operation. in the case of multi-channel arrays each channel is processed independently.
 
-In the case of floating-point source array its machine-specific bit representation (usually IEEE754-compliant) is used for the operation.
-
-See also: \href{bitwise.and}{bitwise\_and}, \href{bitwise.or}{bitwise\_or}, \href{bitwise.xor}{bitwise\_xor}
+See also: \hyperref[bitwise.and]{bitwise\_and}, \hyperref[bitwise.or]{bitwise\_or}, \hyperref[bitwise.xor]{bitwise\_xor}
 
 
 \cvfunc{bitwise\_or}
@@ -2170,17 +2268,16 @@ void bitwise_or(const MatND& src1, const Scalar& s, MatND& dst, const MatND& mas
 \end{description}
 
 The functions \texttt{bitwise\_or} compute per-element bit-wise logical disjunction
-
 \begin{itemize}
     \item of two arrays
-    \texttt{dst(I) = src1(I) | src2(I) if mask(I)$\ne$0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \vee \texttt{src2}(I)\quad\texttt{if mask}(I)\ne0\]
     \item or array and a scalar:
-    \texttt{dst(I) = src1(I) | sc if mask(I) $\ne$ 0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \vee \texttt{sc}\quad\texttt{if mask}(I)\ne0\]
 \end{itemize}
 
-In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation.
+In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation. in the case of multi-channel arrays each channel is processed independently.
 
-See also: \href{bitwise.and}{bitwise\_and}, \href{bitwise.not}{bitwise\_not}, \href{bitwise.xor}{bitwise\_xor}
+See also: \hyperref[bitwise.and]{bitwise\_and}, \hyperref[bitwise.not]{bitwise\_not}, \hyperref[bitwise.or]{bitwise\_or}
 
 \cvfunc{bitwise\_xor}
 Calculates per-element bit-wise "exclusive or" operation on two arrays and an array and a scalar.
@@ -2205,14 +2302,14 @@ The functions \texttt{bitwise\_xor} compute per-element bit-wise logical "exclus
 
 \begin{itemize}
     \item on two arrays
-    \texttt{dst(I) = src1(I) \^ src2(I) if mask(I)$\ne$0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \oplus \texttt{src2}(I)\quad\texttt{if mask}(I)\ne0\]
     \item or array and a scalar:
-    \texttt{dst(I) = src1(I) \^ sc if mask(I) $\ne$ 0}
+    \[\texttt{dst}(I) = \texttt{src1}(I) \oplus \texttt{sc}\quad\texttt{if mask}(I)\ne0\]
 \end{itemize}
 
-In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation.
+In the case of floating-point arrays their machine-specific bit representations (usually IEEE754-compliant) are used for the operation. in the case of multi-channel arrays each channel is processed independently.
 
-See also: \href{bitwise.and}{bitwise\_and}, \href{bitwise.not}{bitwise\_not}, \href{bitwise.or}{bitwise\_or}
+See also: \hyperref[bitwise.and]{bitwise\_and}, \hyperref[bitwise.not]{bitwise\_not}, \hyperref[bitwise.or]{bitwise\_or}
 
 \cvfunc{calcCovarMatrix}\label{calcCovarMatrix}
 Calculates covariation matrix of a set of vectors
@@ -2233,7 +2330,7 @@ void calcCovarMatrix( const Mat& samples, Mat& covar, Mat& mean,
 \begin{description}
 \cvarg{CV\_COVAR\_SCRAMBLED}{The output covariance matrix is calculated as:
 \[
- \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...]^T \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...] 
+ \texttt{scale} \cdot [ \texttt{vects} [0]- \texttt{mean} ,\texttt{vects} [1]- \texttt{mean} ,...]^T \cdot [\texttt{vects} [0]-\texttt{mean} ,\texttt{vects} [1]-\texttt{mean} ,...] 
 \],
 that is, the covariance matrix will be $\texttt{nsamples} \times \texttt{nsamples}$.
 Such an unusual covariance matrix is used for fast PCA
@@ -2244,17 +2341,17 @@ eigenvectors can be easily calculated from the eigenvectors of the
 "scrambled" covariance matrix.}
 \cvarg{CV\_COVAR\_NORMAL}{The output covariance matrix is calculated as:
 \[
- \texttt{scale} * [ \texttt{vects} [0]- \texttt{avg} ,\texttt{vects} [1]- \texttt{avg} ,...] \cdot [\texttt{vects} [0]-\texttt{avg} ,\texttt{vects} [1]-\texttt{avg} ,...]^T 
+ \texttt{scale} \cdot [ \texttt{vects} [0]- \texttt{mean} ,\texttt{vects} [1]- \texttt{mean} ,...] \cdot [\texttt{vects} [0]-\texttt{mean} ,\texttt{vects} [1]-\texttt{mean} ,...]^T 
 \],
-that is, \texttt{covar} will be a covariance matrix
-with the same linear size as the total number of elements in each
+that is, \texttt{covar} will be a square matrix
+of the same size as the total number of elements in each
 input vector. One and only one of \texttt{CV\_COVAR\_SCRAMBLED} and
 \texttt{CV\_COVAR\_NORMAL} must be specified}
 \cvarg{CV\_COVAR\_USE\_AVG}{If the flag is specified, the function does not calculate \texttt{mean} from the input vectors, but, instead, uses the passed \texttt{mean} vector. This is useful if \texttt{mean} has been pre-computed or known a-priori, or if the covariance matrix is calculated by parts - in this case, \texttt{mean} is not a mean vector of the input sub-set of vectors, but rather the mean vector of the whole set.}
-\cvarg{CV\_COVAR\_SCALE}{If the flag is specified, the covariance matrix is scaled. In the "normal" mode \texttt{scale} is '1./nsamples'; in the "scrambled" mode \texttt{scale} is the reciprocal of the total number of elements in each input vector. By default (if the flag is not specified) the covariance matrix is not scaled ('scale=1').}
+\cvarg{CV\_COVAR\_SCALE}{If the flag is specified, the covariance matrix is scaled. In the "normal" mode \texttt{scale} is \texttt{1./nsamples}; in the "scrambled" mode \texttt{scale} is the reciprocal of the total number of elements in each input vector. By default (if the flag is not specified) the covariance matrix is not scaled (i.e. \texttt{scale=1}).}
 
-\cvarg{CV\_COVAR\_ROWS}{Only useful in the second variant. The flag means that all the input vectors are stored as rows of the \texttt{samples} matrix. \texttt{mean} should be a single-row vector in this case.}
-\cvarg{CV\_COVAR\_COLS}{Only useful in the second variant. The flag means that all the input vectors are stored as columns of the \texttt{samples} matrix. \texttt{mean} should be a single-column vector in this case.}
+\cvarg{CV\_COVAR\_ROWS}{[Only useful in the second variant of the function] The flag means that all the input vectors are stored as rows of the \texttt{samples} matrix. \texttt{mean} should be a single-row vector in this case.}
+\cvarg{CV\_COVAR\_COLS}{[Only useful in the second variant of the function] The flag means that all the input vectors are stored as columns of the \texttt{samples} matrix. \texttt{mean} should be a single-column vector in this case.}
 
 \end{description}}
 \end{description}
@@ -2283,12 +2380,14 @@ The angles are measured in radians $(0$ to $2 \pi )$ or in degrees (0 to 360 deg
 
 The function \texttt{cartToPolar} calculates either the magnitude, angle, or both of every 2d vector (x(I),y(I)):
 
-\begin{lstlisting}
-magnitude(I)=sqrt(x(I)^2^+y(I)^2^),
-angle(I)=atan2(y(I), x(I))[*180/pi]
-\end{lstlisting}
+\[
+\begin{array}{l}
+\texttt{magnitude}(I)=\sqrt{\texttt{x}(I)^2+\texttt{y}(I)^2},\\
+\texttt{angle}(I)=\texttt{atan2}(\texttt{y}(I), \texttt{x}(I))[\cdot180/\pi]
+\end{array}
+\]
 
-The angles are calculated with $\sim$;0.3 degree accuracy. For the (0,0) point, the angle is set to 0.
+The angles are calculated with $\sim\,0.3^\circ$ accuracy. For the (0,0) point, the angle is set to 0.
 
 \cvfunc{checkRange}\label{checkRange}
 Checks every element of an input array for invalid values.
@@ -2309,8 +2408,8 @@ bool checkRange(const MatND& src, bool quiet=true, int* pos=0,
 
 The functions \texttt{checkRange} check that every array element is
 neither NaN nor $ \pm \infty $. When \texttt{minVal < -DBL\_MAX} and \texttt{maxVal < DBL\_MAX}, then the functions also check that
-each value is between \texttt{minVal} and \texttt{maxVal}. In case of multi-channel arrays each channel is processed independently.
-If some values are out of range, position of the first outlier is stored in \texttt{pos} (when it is $\ne$0), and then the function either return false (when \texttt{quiet=true}) or throw an exception otherwise.
+each value is between \texttt{minVal} and \texttt{maxVal}. in the case of multi-channel arrays each channel is processed independently.
+If some values are out of range, position of the first outlier is stored in \texttt{pos} (when $\texttt{pos}\ne0$), and then the functions either return false (when \texttt{quiet=true}) or throw an exception.
 
 
 \cvfunc{compare}\label{compare}
@@ -2329,18 +2428,17 @@ void compare(const MatND& src1, double value, MatND& dst, int cmpop);
 \cvarg{dst}{The destination array; will have the same size as \texttt{src1} and type=\texttt{CV\_8UC1}}
 \cvarg{cmpop}{The flag specifying the relation between the elements to be checked
 \begin{description}
- \cvarg{CMP\_EQ}{src1(I) "equal to" src2(I) or src1(I) "equal to" value}
- \cvarg{CMP\_GT}{src1(I) "greater than" src2(I) or src1(I) "greater than" value}
- \cvarg{CMP\_GE}{src1(I) "greater or equal" src2(I) or src1(I) "greater or equal" value}
- \cvarg{CMP\_LT}{src1(I) "less than" src2(I) or src1(I) "less than" value}
- \cvarg{CMP\_LE}{src1(I) "less or equal" src2(I) or src1(I) "less or equal" value}
- \cvarg{CMP\_NE}{src1(I) "not equal" src2(I) or src1(I) "not equal" value}
+ \cvarg{CMP\_EQ}{$\texttt{src1}(I) = \texttt{src2}(I)$ or $\texttt{src1}(I) = \texttt{value}$}
+ \cvarg{CMP\_GT}{$\texttt{src1}(I) > \texttt{src2}(I)$ or $\texttt{src1}(I) > \texttt{value}$}
+ \cvarg{CMP\_GE}{$\texttt{src1}(I) \geq \texttt{src2}(I)$ or $\texttt{src1}(I) \geq \texttt{value}$}
+ \cvarg{CMP\_LT}{$\texttt{src1}(I) < \texttt{src2}(I)$ or $\texttt{src1}(I) < \texttt{value}$}
+ \cvarg{CMP\_LE}{$\texttt{src1}(I) \leq \texttt{src2}(I)$ or $\texttt{src1}(I) \leq \texttt{value}$}
+ \cvarg{CMP\_NE}{$\texttt{src1}(I) \ne \texttt{src2}(I)$ or $\texttt{src1}(I) \ne \texttt{value}$}
 \end{description}}
 \end{description}
 
 The functions \texttt{compare} compare each element of \texttt{src1} with the corresponding element of \texttt{src2}
 or with real scalar \texttt{value}. When the comparison result is true, the corresponding element of destination array is set to 255, otherwise it is set to 0:
-
 \begin{itemize}
     \item \texttt{dst(I) = src1(I) cmpop src2(I) ? 255 : 0}
     \item \texttt{dst(I) = src1(I) cmpop value ? 255 : 0}
@@ -2357,7 +2455,7 @@ Mat dst2 = src1 < 8;
 See also: \cross{checkRange}, \cross{min}, \cross{max}, \cross{threshold}, \cross{Matrix Expressions}
 
 \cvfunc{completeSymm}\label{completeSymm}
-Copies lower or upper half of a square matrix to another half.
+Copies the lower or the upper half of a square matrix to another half.
 
 \begin{lstlisting}
 void completeSymm(Mat& mtx, bool lowerToUpper=false);
@@ -2370,8 +2468,8 @@ void completeSymm(Mat& mtx, bool lowerToUpper=false);
 The function \texttt{completeSymm} copies the lower half of a square matrix to its another half; the matrix diagonal remains unchanged:
 
 \begin{itemize}
-    \item $\texttt{mtx}_ij=\texttt{mtx}_ji$ for $i > j$ if \texttt{lowerToUpper=false}
-    \item $\texttt{mtx}_ij=\texttt{mtx}_ji$ for $i < j$ if \texttt{lowerToUpper=true}
+    \item $\texttt{mtx}_{ij}=\texttt{mtx}_{ji}$ for $i > j$ if \texttt{lowerToUpper=false}
+    \item $\texttt{mtx}_{ij}=\texttt{mtx}_{ji}$ for $i < j$ if \texttt{lowerToUpper=true}
 \end{itemize}
 
 See also: \cross{flip}, \cross{transpose}
@@ -2390,12 +2488,9 @@ void convertScaleAbs(const Mat& src, Mat& dst, double alpha=1, double beta=0);
 \end{description}
 
 On each element of the input array the function \texttt{convertScaleAbs} performs 3 operations sequentially: scaling, taking absolute value, conversion to unsigned 8-bit type:
+\[\texttt{dst}(I)=\texttt{saturate\_cast<uchar>}(|\texttt{src}(I)*\texttt{alpha} + \texttt{beta}|)\]
 
-\begin{lstlisting}
-dst(I)=saturate_cast<uchar>(abs(src(I)*alpha + beta))
-\end{lstlisting}
-
-In case of multi-channel arrays the function processes each channel independently. When the output is not 8-bit, the operation can be emulated by calling \texttt{Mat::convertTo} method (or by using matrix expressions) and then by computing absolute value of the result, for example:
+in the case of multi-channel arrays the function processes each channel independently. When the output is not 8-bit, the operation can be emulated by calling \texttt{Mat::convertTo} method (or by using matrix expressions) and then by computing absolute value of the result, for example:
 
 \begin{lstlisting}
 Mat_<float> A(30,30);
@@ -2421,7 +2516,7 @@ int countNonZero( const MatND& mtx );
 
 The function \texttt{cvCountNonZero} returns the number of non-zero elements in mtx:
 
-\[ \sum_{I,\,mtx(I)\ne0} 1 \]
+\[ \sum_{I:\;\texttt{mtx}(I)\ne0} 1 \]
 
 See also: \cross{mean}, \cross{meanStdDev}, \cross{norm}, \cross{minMaxLoc}, \cross{calcCovarMatrix}
 
@@ -2435,8 +2530,8 @@ float cubeRoot(float val);
 \cvarg{val}The function argument
 \end{description}
 
-The function \texttt{cubeRoot} computes cube root of the floating-point argument.
-Negative arguments are handled correctly, \emph{NaN} and $\pm\inf$ are not handled.
+The function \texttt{cubeRoot} computes $\sqrt[3]{\texttt{val}}$.
+Negative arguments are handled correctly, \emph{NaN} and $\pm\infty$ are not handled.
 The accuracy approaches the maximum possible accuracy for single-precision data.
 
 \cvfunc{cvsrcToMat}\label{cvsrcToMat}
@@ -2481,7 +2576,7 @@ printf("%g", cvDet(&C1));
 
 Normally, the function is used to convert an old-style 2D array (\cross{CvMat} or \cross{IplImage}) to \texttt{Mat}, however, the function can also take \cross{CvMatND} on input and create \cross{Mat} for it, if it's possible. And for \texttt{CvMatND A} it is possible if and only if \texttt{A.dim[i].size*A.dim.step[i] == A.dim.step[i-1]} for all or for all but one \texttt{i, 0 < i < A.dims}. That is, the matrix data should be continuous or it should be representable as a sequence of continuous matrices. By using this function in this way, you can process \cross{CvMatND} using arbitrary element-wise function. But for more complex operations, such as filtering functions, it will not work, and you need to convert \cross{CvMatND} to \cross{MatND} using the corresponding constructor of the latter.
 
-The last parameter, \texttt{coiMode}, specifies how to react on an image with COI set: by default it's 0, and then the function reports an error when an image with COI comes in. And \texttt{coiMode=1} means that no error is signaled - user has to check COI presence and handle it manually. The modern structures, such as \cross{Mat} and \cross{MatND} do not support COI natively. To process individual channel of an new-style array, you will need either to organize loop over the array, e.g. using matrix iterators, or extract the COI using \cross{mixChannels} (for new-style arrays) or \cross{extractImageCOI} (for old-style arrays), process this individual channel and put it back to the if need (using \cross{mixChannel} or \cross{insertImageCOI}).
+The last parameter, \texttt{coiMode}, specifies how to react on an image with COI set: by default it's 0, and then the function reports an error when an image with COI comes in. And \texttt{coiMode=1} means that no error is signaled - user has to check COI presence and handle it manually. The modern structures, such as \cross{Mat} and \cross{MatND} do not support COI natively. To process individual channel of an new-style array, you will need either to organize loop over the array (e.g. using matrix iterators) where the channel of interest will be processed, or extract the COI using \cross{mixChannels} (for new-style arrays) or \cross{extractImageCOI} (for old-style arrays), process this individual channel and insert it back to the destination array if need (using \cross{mixChannel} or \cross{insertImageCOI}, respectively).
 
 See also: \cross{cvGetImage}, \cross{cvGetMat}, \cross{cvGetMatND}, \cross{extractImageCOI}, \cross{insertImageCOI}, \cross{mixChannels}
 
@@ -2507,18 +2602,18 @@ The function \texttt{dct} performs a forward or inverse discrete cosine transfor
 Forward Cosine transform of 1D vector of $N$ elements:
 \[Y = C^{(N)} \cdot X\]
 where
-\[C^{(N)}_{jk}=\sqrt{\alpha_j/N\cos(\pi(2k+1)j/N)}\]
-and $\alpha_0=1$, $\alpha_j=2$ for $j > 1$.
+\[C^{(N)}_{jk}=\sqrt{\alpha_j/N}\cos\left(\frac{\pi(2k+1)j}{2N}\right)\]
+and $\alpha_0=1$, $\alpha_j=2$ for $j > 0$.
 
 Inverse Cosine transform of 1D vector of N elements:
-\[X = (C^{(N)})^{-1} \cdot Y = (C^{(N)})^T \cdot Y\]
-(since $C^{(N)}$ is orthogonal matrix, $C^{(N)} \cdot (C^{(N)})^T = I$)
+\[X = \left(C^{(N)}\right)^{-1} \cdot Y = \left(C^{(N)}\right)^T \cdot Y\]
+(since $C^{(N)}$ is orthogonal matrix, $C^{(N)} \cdot \left(C^{(N)}\right)^T = I$)
 
 Forward Cosine transform of 2D $M \times N$ matrix:
-\[Y = C^{(N)} \cdot X \cdot (C^{(N)})^T\]
+\[Y = C^{(N)} \cdot X \cdot \left(C^{(N)}\right)^T\]
 
 Inverse Cosine transform of 2D vector of $M \times N$ elements:
-\[X = (C^{(N)})^T \cdot X \cdot C^{(N)}\]
+\[X = \left(C^{(N)}\right)^T \cdot X \cdot C^{(N)}\]
 
 The function chooses the mode of operation by looking at the flags and size of the input array:
 \begin{itemize}
@@ -2528,7 +2623,7 @@ The function chooses the mode of operation by looking at the flags and size of t
     \item otherwise it performs 2D transform.
 \end{itemize}
 
-\emph{Important note: currently cv::dct supports even-size arrays (2, 4, 6 ...). For data analysis and approximation you can pad the array when necessary.}
+\textbf{Important note}: currently cv::dct supports even-size arrays (2, 4, 6 ...). For data analysis and approximation you can pad the array when necessary.
 
 Also, the function's performance depends very much, and not monotonically, on the array size, see \cross{getOptimalDFTSize}. In the current implementation DCT of a vector of size \texttt{N} is computed via DFT of a vector of size \texttt{N/2}, thus the optimal DCT size $\texttt{N}^*\geq\texttt{N}$ can be computed as:
 
@@ -2560,36 +2655,43 @@ void dft(const Mat& src, Mat& dst, int flags=0, int nonzeroRows=0);
 \end{description}
 
 Forward Fourier transform of 1D vector of N elements:
-\[Y = F^{(N)} \cdot X, where F^{(N)}_{jk}=\exp(-2\pi i j k/N)\], 
-where $i=\sqrt{-1}$
+\[Y = F^{(N)} \cdot X,\]
+where $F^{(N)}_{jk}=\exp(-2\pi i j k/N)$ and $i=\sqrt{-1}$
 
 Inverse Fourier transform of 1D vector of N elements:
-\[X'= (F^{(N)})^{-1} \cdot Y = (F^{(N)})^* \cdot y
-X = (1/N) \cdot X\], where $F^*=(Re(F^{(N)})-Im(F^{(N)}))^T$
+\[
+\begin{array}{l}
+X'= \left(F^{(N)}\right)^{-1} \cdot Y = \left(F^{(N)}\right)^* \cdot y \\
+X = (1/N) \cdot X,
+\end{array}
+\]
+where $F^*=\left(\textrm{Re}(F^{(N)})-\textrm{Im}(F^{(N)})\right)^T$
 
 Forward Fourier transform of 2D vector of M $\times$ N elements:
 \[Y = F^{(M)} \cdot X \cdot F^{(N)}\]
 
 Inverse Fourier transform of 2D vector of M $\times$ N elements:
-\[X'= (F^{(M)})^* \cdot Y \cdot (F^{(N)})^*
-X = (1/(M \cdot N)) \cdot X'\]
-
-In the case of real (single-channel) data, the packed format called \emph{CCS} (complex-conjugate-symmetrical) that was borrowed from IPL and used to represent the result of a forward Fourier transform or input for an inverse Fourier transform:
-
-\[\begin{array}{l}
-Re Y_{0,0} \quad     Re Y_{0,1}  \quad  Im Y_{0,1}  \quad  Re Y_{0,2}     \quad Im Y_{0,2} \quad ...  \quad Re Y_{0,N/2-1} \quad  Im Y_{0,N/2-1} \quad Re Y_{0,N/2} \\
-
-Re Y_{1,0}  \quad    Re Y_{1,1}  \quad  Im Y_{1,1}   \quad Re Y_{1,2}   \quad  Im Y_{1,2} \quad ... \quad Re Y_{1,N/2-1}  \quad Im Y_{1,N/2-1} \quad Re Y_{1,N/2} \\
-
-Im Y_{1,0}    \quad  Re Y_{2,1}  \quad  Im Y_{2,1} \quad   Re Y_{2,2}  \quad   Im Y_{2,2} \quad ... \quad Re Y_{2,N/2-1}  \quad Im Y_{2,N/2-1} \quad Im Y_{2,N/2} \\
-............................................................................................................................................................ \\
-Re Y_{M/2-1,0} \quad  Re Y_{M-3,1}  \quad Im Y_{M-3,1} \quad Re Y_{M-3,2} \quad  Im Y_{M-3,2} \quad... \quad Re Y_{M-3,N/2-1} \quad Im Y_{M-3,N/2-1}\quad Re Y_{M-3,N/2} \\
-Im Y_{M/2-1,0} \quad  Re Y_{M-2,1}  \quad Im Y_{M-2,1} \quad Re Y_{M-2,2} \quad  Im Y_{M-2,2} \quad... \quad Re Y_{M-2,N/2-1} \quad Im Y_{M-2,N/2-1}\quad Im Y_{M-2,N/2} \\
-Re Y_{M/2,0}  \quad  Re Y_{M-1,1} \quad  Im Y_{M-1,1} \quad Re Y_{M-1,2} \quad  Im Y_{M-1,2} \quad ... \quad Re Y_{M-1,N/2-1} \quad Im Y_{M-1,N/2-1}\quad Im Y_{M-1,N/2}
+\[
+\begin{array}{l}
+X'= \left(F^{(M)}\right)^* \cdot Y \cdot \left(F^{(N)}\right)^*\\
+X = \frac{1}{M \cdot N} \cdot X'
 \end{array}
 \]
 
-In case of 1D transform of real vector, the output will look as the first row of the above matrix. 
+In the case of real (single-channel) data, the packed format called \emph{CCS} (complex-conjugate-symmetrical) that was borrowed from IPL and used to represent the result of a forward Fourier transform or input for an inverse Fourier transform:
+
+\[\begin{bmatrix}
+Re Y_{0,0} & Re Y_{0,1} & Im Y_{0,1} & Re Y_{0,2} & Im Y_{0,2} & \cdots & Re Y_{0,N/2-1} & Im Y_{0,N/2-1} & Re Y_{0,N/2} \\
+Re Y_{1,0} & Re Y_{1,1} & Im Y_{1,1} & Re Y_{1,2} & Im Y_{1,2} & \cdots & Re Y_{1,N/2-1} & Im Y_{1,N/2-1} & Re Y_{1,N/2} \\
+Im Y_{1,0} & Re Y_{2,1} & Im Y_{2,1} & Re Y_{2,2} & Im Y_{2,2} & \cdots & Re Y_{2,N/2-1} & Im Y_{2,N/2-1} & Im Y_{1,N/2} \\
+\hdotsfor{9} \\
+Re Y_{M/2-1,0} &  Re Y_{M-3,1}  & Im Y_{M-3,1} & \hdotsfor{3} & Re Y_{M-3,N/2-1} & Im Y_{M-3,N/2-1}& Re Y_{M/2-1,N/2} \\
+Im Y_{M/2-1,0} &  Re Y_{M-2,1}  & Im Y_{M-2,1} & \hdotsfor{3} & Re Y_{M-2,N/2-1} & Im Y_{M-2,N/2-1}& Im Y_{M/2-1,N/2} \\
+Re Y_{M/2,0}  &  Re Y_{M-1,1} &  Im Y_{M-1,1} & \hdotsfor{3} & Re Y_{M-1,N/2-1} & Im Y_{M-1,N/2-1}& Re Y_{M/2,N/2}
+\end{bmatrix}
+\]
+
+in the case of 1D transform of real vector, the output will look as the first row of the above matrix. 
 
 So, the function chooses the operation mode depending on the flags and size of the input array:
 \begin{itemize}
@@ -2597,13 +2699,13 @@ So, the function chooses the operation mode depending on the flags and size of t
     \item if input array is real and \texttt{(flags \& DFT\_INVERSE) == 0}, the function does forward 1D or 2D transform:
     \begin{itemize}
         \item when \texttt{(flags \& DFT\_COMPLEX\_OUTPUT) $\ne$ 0)} then the output will be complex matrix of the same size as input.
-        \item otherwise the output will be a real matrix of the same size as input. In case of 2D transform it will use the packed format as shown above; in case of single 1D transform it will look as the first row of the above matrix; in case of multiple 1D transforms (when using \texttt{DCT\_ROWS} flag) each row of the output matrix will look like the first row of the above matrix.
+        \item otherwise the output will be a real matrix of the same size as input. in the case of 2D transform it will use the packed format as shown above; in the case of single 1D transform it will look as the first row of the above matrix; in the case of multiple 1D transforms (when using \texttt{DCT\_ROWS} flag) each row of the output matrix will look like the first row of the above matrix.
     \end{itemize}
     \item otherwise, if the input array is complex and \texttt{(flags \& DFT\_INVERSE) == 0} or \texttt{(flags \& DFT\_REAL\_OUTPUT) == 0} then the output will be a complex array of the same size as input and the function will perform the forward or inverse 1D or 2D transform of the whole input array or each row of the input array independently, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
     \item otherwise, i.e. when \texttt{(flags \& DFT\_INVERSE) $\ne$ 0}, the input array is real, or it is complex but \texttt{(flags \& DFT\_REAL\_OUTPUT) $\ne$ 0}, the output will be a real array of the same size as input, and the function will perform 1D or 2D inverse transformation of the whole input array or each individual row, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
 \end{itemize}
 
-The scaling is done if need (\texttt{(flags \& DFT\_SCALE) $\ne$ 0}) after the transformation.
+The scaling is done if needed (\texttt{(flags \& DFT\_SCALE) $\ne$ 0}) after the transformation.
 
 Unlike \cross{dct}, the function supports arrays of arbitrary size, but only those arrays are processed efficiently, which sizes can be factorized in a product of small prime numbers (2, 3 and 5 in the current implementation). Such an efficient DFT size can be computed using \cross{getOptimalDFTSize} method.
 
@@ -2655,7 +2757,7 @@ What can be optimized in the above sample?
     \item since we passed \texttt{nonzeroRows $\ne$ 0} to the forward transform calls and
     since we copied \texttt{A}/\texttt{B} to the top-left corners of \texttt{tempA}/\texttt{tempB}, respectively,
     it's not necessary to clear the whole \texttt{tempA} and \texttt{tempB};
-    it is only necessary to clear the \texttt{tempA.cols - A.cols}/\texttt{tempB.cols - B.cols},
+    it is only necessary to clear the \texttt{tempA.cols - A.cols} (\texttt{tempB.cols - B.cols})
     rightmost columns of the matrices.
     \item this DFT-based convolution does not have to be applied to the whole big arrays,
     especially if \texttt{B} is significantly smaller than \texttt{A} or vice versa.
@@ -2666,10 +2768,10 @@ What can be optimized in the above sample?
     the algorithm becomes equivalent to the naive convolution algorithm.
     If the tiles are too big, the temporary arrays \texttt{tempA} and \texttt{tempB} become too big
     and there is also slowdown because of bad cache locality. So there is optimal tile size somewhere in the middle.
-    \item once the previous step is done, then, since different tiles in \texttt{C} can be computed in parallel, the loop can be threaded.
+    \item if the convolution is done by parts, since different tiles in \texttt{C} can be computed in parallel, the loop can be threaded.
 \end{itemize}
 
-All the above improvements have been implemented in \cross{matchTemplate} and \cross{filter2D}, therefore, by using them, you can get even better performance than with the above theoretically optimal implementation (though, those two functions actually compute cross-correlation, not convolution, so you will need to "flip" the kernel or the image around the center using \cross{flip}).
+All of the above improvements have been implemented in \cross{matchTemplate} and \cross{filter2D}, therefore, by using them, you can get even better performance than with the above theoretically optimal implementation (though, those two functions actually compute cross-correlation, not convolution, so you will need to "flip" the kernel or the image around the center using \cross{flip}).
 
 See also: \cross{dct}, \cross{getOptimalDFTSize}, \cross{mulSpectrums}, \cross{filter2D}, \cross{matchTemplate}, \cross{flip}, \cross{cartToPolar}, \cross{magnitude}, \cross{phase}
 
@@ -2714,7 +2816,7 @@ double determinant(const Mat& mtx);
 The function \texttt{determinant} computes and returns determinant of the specified matrix. For small matrices (\texttt{mtx.cols=mtx.rows<=3})
 the direct method is used; for larger matrices the function uses LU factorization.
 
-For symmetric positive-determined matrices, it is also possible to compute \cross{SVD}: $mtx=U \cdot W \cdot V^T$ and then calculate the determinant as a product of the diagonal elements of $W$.
+For symmetric positive-determined matrices, it is also possible to compute \cross{SVD}: $\texttt{mtx}=U \cdot W \cdot V^T$ and then calculate the determinant as a product of the diagonal elements of $W$.
 
 See also: \cross{SVD}, \cross{trace}, \cross{invert}, \cross{solve}, \cross{Matrix Expressions}
 
@@ -2727,7 +2829,7 @@ bool eigen(const Mat& src, Mat& eigenvalues, Mat& eigenvectors, int lowindex,
 int highindex);
 \end{lstlisting}
 \begin{description}
-\cvarg{src}{The input matrix; must have \texttt{CV\_32FC1} or \texttt{CV\_64FC1} type, square size and be symmetric: $src^T=src$}
+\cvarg{src}{The input matrix; must have \texttt{CV\_32FC1} or \texttt{CV\_64FC1} type, square size and be symmetric: $\texttt{src}^T=\texttt{src}$}
 \cvarg{eigenvalues}{The output vector of eigenvalues of the same type as \texttt{src}; The eigenvalues are stored in the descending order.}
 \cvarg{eigenvectors}{The output matrix of eigenvectors; It will have the same size and the same type as \texttt{src}; The eigenvectors are stored as subsequent matrix rows, in the same order as the corresponding eigenvalues}
 \cvarg{lowindex}{Optional index of largest eigenvalue/-vector to calculate.
@@ -2743,8 +2845,8 @@ src*eigenvectors(i,:)' = eigenvalues(i)*eigenvectors(i,:)' (in MATLAB notation)
 \end{lstlisting}
 
 If either low- or highindex is supplied the other is required, too.
-Indexing is 1-based. Example: To calculate the largest eigenvector/-value set
-lowindex = highindex = 1.
+Indexing is 0-based. Example: To calculate the largest eigenvector/-value set
+lowindex = highindex = 0.
 For legacy reasons this function always returns a square matrix the same size
 as the source matrix with eigenvectors and a vector the length of the source
 matrix with eigenvalues. The selected eigenvectors/-values are always in the
@@ -2767,10 +2869,10 @@ void exp(const MatND& src, MatND& dst);
 The function \texttt{exp} calculates the exponent of every element of the input array:
 
 \[
-\texttt{dst} [I] = e^{\texttt{src}(I)}
+\texttt{dst} [I] = e^{\texttt{src}}(I)
 \]
 
-The maximum relative error is about $7 \times 10^{-6}$ for single-precision and <$10^{-10}$ for double-precision. Currently, the function converts denormalized values to zeros on output. Special values (NaN, $\pm \inf$) are not handled.
+The maximum relative error is about $7 \times 10^{-6}$ for single-precision and less than $10^{-10}$ for double-precision. Currently, the function converts denormalized values to zeros on output. Special values (NaN, $\pm \infty$) are not handled.
 
 See also: \cross{log}, \cross{cartToPolar}, \cross{polarToCart}, \cross{phase}, \cross{pow}, \cross{sqrt}, \cross{magnitude}
 
@@ -2807,7 +2909,7 @@ float fastAtan2(float y, float x);
 \end{description}
 
 The function \texttt{fastAtan2} calculates the full-range angle of an input 2D vector. The angle is 
-measured in degrees and varies from 0 degrees to 360 degrees. The accuracy is about 0.3 degrees.
+measured in degrees and varies from $0^\circ$ to $360^\circ$. The accuracy is about $0.3^\circ$.
 
 \cvfunc{flip}\label{flip}
 Flips a 2D array around vertical, horizontal or both axes.
@@ -2825,18 +2927,18 @@ void flip(const Mat& src, Mat& dst, int flipCode);
 The function \texttt{flip} flips the array in one of three different ways (row and column indices are 0-based):
 
 \[
-dst(i,j) = \forkthree
-{\texttt{src}(rows(\texttt{src})-i-1,j)}{if $\texttt{flip\_mode} = 0$}
-{\texttt{src}(i,cols(\texttt{src})-j-1)}{if $\texttt{flip\_mode} > 0$}
-{\texttt{src}(rows(\texttt{src})-i-1,cols(\texttt{src})-j-1)}{if $\texttt{flip\_mode} < 0$}
+\texttt{dst}_{ij} = \forkthree
+{\texttt{src}_{\texttt{src.rows}-i-1,j}}{if \texttt{flipCode} = 0}
+{\texttt{src}_{i,\texttt{src.cols}-j-1}}{if \texttt{flipCode} > 0}
+{\texttt{src}_{\texttt{src.rows}-i-1,\texttt{src.cols}-j-1}}{if \texttt{flipCode} < 0}
 \]
 
 The example scenarios of function use are:
 \begin{itemize}
-  \item vertical flipping of the image (flip\_mode > 0) to switch between top-left and bottom-left image origin, which is a typical operation in video processing in Windows.
-  \item horizontal flipping of the image with subsequent horizontal shift and absolute difference calculation to check for a vertical-axis symmetry (flip\_mode $>$ 0)
-  \item simultaneous horizontal and vertical flipping of the image with subsequent shift and absolute difference calculation to check for a central symmetry (flip\_mode $<$ 0)
-  \item reversing the order of 1d point arrays (flip\_mode > 0)
+  \item vertical flipping of the image ($\texttt{flipCode} > 0$) to switch between top-left and bottom-left image origin, which is a typical operation in video processing in Windows.
+  \item horizontal flipping of the image with subsequent horizontal shift and absolute difference calculation to check for a vertical-axis symmetry ($\texttt{flipCode} > 0$)
+  \item simultaneous horizontal and vertical flipping of the image with subsequent shift and absolute difference calculation to check for a central symmetry ($\texttt{flipCode} < 0$)
+  \item reversing the order of 1d point arrays ($\texttt{flipCode} > 0$ or $\texttt{flipCode} = 0$)
 \end{itemize}
 
 See also: \cross{transpose}, \cross{repeat}, \cross{completeSymm}
@@ -2857,14 +2959,14 @@ void gemm(const Mat& src1, const Mat& src2, double alpha,
 \cvarg{dst}{The destination matrix; It will have the proper size and the same type as input matrices}
 \cvarg{flags}{Operation flags:
 \begin{description}
-    \cvarg{GEMM\_1\_T}{transpose src1}
-    \cvarg{GEMM\_2\_T}{transpose src2}
-    \cvarg{GEMM\_3\_T}{transpose src3}
+    \cvarg{GEMM\_1\_T}{transpose \texttt{src1}}
+    \cvarg{GEMM\_2\_T}{transpose \texttt{src2}}
+    \cvarg{GEMM\_3\_T}{transpose \texttt{src3}}
 \end{description}}
 \end{description}
 
 The function performs generalized matrix multiplication and similar to the corresponding functions \texttt{*gemm} in BLAS level 3.
-For example, \texttt{gemm(src1, src2, alpha, src3, beta, dst, GEMM\_1\_T + GEMM\_2\_T)} corresponds to
+For example, \texttt{gemm(src1, src2, alpha, src3, beta, dst, GEMM\_1\_T + GEMM\_3\_T)} corresponds to
 \[
 \texttt{dst} = \texttt{alpha} \cdot \texttt{src1} ^T \cdot \texttt{src2} + \texttt{beta} \cdot \texttt{src3} ^T
 \]
@@ -2885,7 +2987,8 @@ ConvertData getConvertElem(int fromType, int toType);
 ConvertScaleData getConvertScaleElem(int fromType, int toType);
 
 typedef void (*ConvertData)(const void* from, void* to, int cn);
-typedef void (*ConvertScaleData)(const void* from, void* to, int cn, double alpha, double beta);
+typedef void (*ConvertScaleData)(const void* from, void* to,
+                                 int cn, double alpha, double beta);
 \end{lstlisting}
 \begin{description}
 \cvarg{fromType}{The source pixel type}
@@ -2920,7 +3023,7 @@ of a vector of size \texttt{N} can be computed efficiently. In the current imple
 
 The function returns a negative number if \texttt{vecsize} is too large (very close to \texttt{INT\_MAX}).
 
-While the function can be used directly to estimate the optimal vector size for DCT transform (since the current DCT implementation supports only even-size vectors), it can be easily be easily computed as \texttt{getOptimalDFTSize((vecsize+1)/2)*2}.
+While the function cannot be used directly to estimate the optimal vector size for DCT transform (since the current DCT implementation supports only even-size vectors), it can be easily computed as \texttt{getOptimalDFTSize((vecsize+1)/2)*2}.
 
 See also: \cross{dft}, \cross{dct}, \cross{idft}, \cross{idct}, \cross{mulSpectrums}
 
@@ -2992,7 +3095,7 @@ The functions \texttt{inRange} do the range check for every element of the input
 \texttt{dst}(I)=\texttt{lowerb}(I)_0 \leq \texttt{src}(I)_0 < \texttt{upperb}(I)_0
 \]
 
-For single-channel arrays,
+for single-channel arrays,
 
 \[
 \texttt{dst}(I)=
@@ -3000,8 +3103,8 @@ For single-channel arrays,
 \texttt{lowerb}(I)_1 \leq \texttt{src}(I)_1 < \texttt{upperb}(I)_1
 \]
 
-For two-channel arrays and so forth,
-dst(I) is set to 255 (all \texttt{1}-bits) if src(I) is within the range and 0 otherwise.
+for two-channel arrays and so forth.
+\texttt{dst}(I) is set to 255 (all \texttt{1}-bits) if \texttt{src}(I) is within the specified range and 0 otherwise.
 
 
 \cvfunc{invert}\label{invert}
@@ -3022,13 +3125,13 @@ double invert(const Mat& src, Mat& dst, int method=DECOMP_LU);
 \end{description}
 
 The function \texttt{invert} inverts matrix \texttt{src} and stores the result in \texttt{dst}.
-When the matrix \texttt{src} is singular or non-square, the function computes the pseudo-inverse matrix, i.e. the matrix \texttt{dst}, such that $\|src \cdot dst - I\|$
+When the matrix \texttt{src} is singular or non-square, the function computes the pseudo-inverse matrix, i.e. the matrix \texttt{dst}, such that $\|\texttt{src} \cdot \texttt{dst} - I\|$ is minimal.
 
 In the case of \texttt{DECOMP\_LU} method, the function returns the \texttt{src} determinant (\texttt{src} must be square). If it is 0, the matrix is not inverted and \texttt{dst} is filled with zeros.
 
-In the case of \texttt{DECOMP\_SVD} method, the function returns the inversed condition number of \texttt{src} (the ratio of the smallest singular value to the largest singular value) and 0 if \texttt{src} is singular. The SVD method calculate a pseudo-inverse matrix if \texttt{src} is singular.
+In the case of \texttt{DECOMP\_SVD} method, the function returns the inversed condition number of \texttt{src} (the ratio of the smallest singular value to the largest singular value) and 0 if \texttt{src} is singular. The SVD method calculates a pseudo-inverse matrix if \texttt{src} is singular.
 
-Similarly to \texttt{DECOMP\_LU}, the method \texttt{DECOMP\_CHOLESKY} works only with non-singular matrices. In this case the function stores the inverted matrix in \texttt{dst} and returns non-zero, otherwise it returns 0.
+Similarly to \texttt{DECOMP\_LU}, the method \texttt{DECOMP\_CHOLESKY} works only with non-singular square matrices. In this case the function stores the inverted matrix in \texttt{dst} and returns non-zero, otherwise it returns 0.
 
 See also: \cross{solve}, \cross{SVD}
 
@@ -3048,13 +3151,13 @@ void log(const MatND& src, MatND& dst);
 The function \texttt{log} calculates the natural logarithm of the absolute value of every element of the input array:
 
 \[
-\texttt{dst}_I = \fork
-{\log |\texttt{src}_I|}{if $\texttt{src}_I \ne 0$ }
+\texttt{dst}(I) = \fork
+{\log |\texttt{src}(I)|}{if $\texttt{src}(I) \ne 0$ }
 {\texttt{C}}{otherwise}
 \]
 
 Where \texttt{C} is a large negative number (about -700 in the current implementation).
-The maximum relative error is about $7 \times 10^{-6}$ for single-precision and <$10^{-10}$ for double-precision. Special values (NaN, $\pm \inf$) are not handled.
+The maximum relative error is about $7 \times 10^{-6}$ for single-precision input and less than $10^{-10}$ for double-precision input. Special values (NaN, $\pm \infty$) are not handled.
 
 See also: \cross{exp}, \cross{cartToPolar}, \cross{polarToCart}, \cross{phase}, \cross{pow}, \cross{sqrt}, \cross{magnitude}
 
@@ -3074,7 +3177,7 @@ void LUT(const Mat& src, const Mat& lut, Mat& dst);
 The function \texttt{LUT} fills the destination array with values from the look-up table. Indices of the entries are taken from the source array. That is, the function processes each element of \texttt{src} as follows:
 
 \[
-\texttt{dst}_I \leftarrow \texttt{lut}_{\texttt{src}_I + d}
+\texttt{dst}(I) \leftarrow \texttt{lut(src(I) + d)}
 \]
 
 where
@@ -3102,7 +3205,7 @@ void magnitude(const Mat& x, const Mat& y, Mat& magnitude);
 The function \texttt{magnitude} calculates magnitude of 2D vectors formed from the corresponding elements of \texttt{x} and \texttt{y} arrays:
 
 \[
-\texttt{dst}_I = \sqrt{\texttt{x}_I^2 + \texttt{y}_I^2}
+\texttt{dst}(I) = \sqrt{\texttt{x}(I)^2 + \texttt{y}(I)^2}
 \]
 
 See also: \cross{cartToPolar}, \cross{polarToCart}, \cross{phase}, \cross{sqrt}
@@ -3124,7 +3227,7 @@ double Mahalonobis(const Mat& vec1, const Mat& vec2, const Mat& icovar);
 The function \texttt{cvMahalonobis} calculates and returns the weighted distance between two vectors:
 
 \[
-d(vec1,vec2)=\sqrt{\sum_{i,j}{icovar(i,j)\cdot(vec1(i)-vec2(i))\cdot(vec1(j)-vec2(j))}}
+d(\texttt{vec1},\texttt{vec2})=\sqrt{\sum_{i,j}{\texttt{icovar(i,j)}\cdot(\texttt{vec1}(I)-\texttt{vec2}(I))\cdot(\texttt{vec1(j)}-\texttt{vec2(j)})}}
 \]
 
 The covariance matrix may be calculated using the \cross{calcCovarMatrix} function and then inverted using the \cross{invert} function (preferably using DECOMP\_SVD method, as the most accurate).
@@ -3178,8 +3281,8 @@ The functions \texttt{mean} compute mean value \texttt{M} of array elements, ind
 
 \[
 \begin{array}{l}
-N = \sum_{I, \texttt{mask}(I) \ne 0} 1\\
-M_c = \frac{\sum_{I, \texttt{mask}(I) \ne 0} \texttt{mtx}(I)_c}{N}
+N = \sum_{I:\;\texttt{mask}(I)\ne 0} 1\\
+M_c = \left(\sum_{I:\;\texttt{mask}(I)\ne 0}{\texttt{mtx}(I)_c}\right)/N
 \end{array}
 \]
 
@@ -3206,8 +3309,8 @@ The functions \texttt{meanStdDev} compute the mean and the standard deviation \t
 \[
 \begin{array}{l}
 N = \sum_{I, \texttt{mask}(I) \ne 0} 1\\
-mean_c = \frac{\sum_{ I, \, \texttt{mask}(I) \ne 0} \texttt{src}(I)_c}{N}\\
-stddev_c = \sqrt{\sum_{ I, \, \texttt{mask}(I) \ne 0} (\texttt{src}(I)_c - mean_c)^2}
+\texttt{mean}_c = \frac{\sum_{ I: \; \texttt{mask}(I) \ne 0} \texttt{src}(I)_c}{N}\\
+\texttt{stddev}_c = \sqrt{\sum_{ I: \; \texttt{mask}(I) \ne 0} \left(\texttt{src}(I)_c - \texttt{mean}_c\right)^2}
 \end{array}
 \]
 
@@ -3301,7 +3404,7 @@ if \texttt{mask} is not \texttt{NULL}, in the specified array region.
 
 The functions do not work with multi-channel arrays. If you need to find minimum or maximum elements across all the channels, use \cross{reshape} first to reinterpret the array as single-channel. Or you may extract the particular channel using \cross{extractImageCOI} or \cross{mixChannels} or \cross{split}.
 
-In case of a sparse matrix the minimum is found among non-zero elements only.
+in the case of a sparse matrix the minimum is found among non-zero elements only.
 
 See also: \cross{max}, \cross{min}, \cross{compare}, \cross{inRange}, \cross{extractImageCOI}, \cross{mixChannels}, \cross{split}, \cross{reshape}.
 
@@ -3421,13 +3524,12 @@ void mulTransposed( const Mat& src, Mat& dst, bool aTa,
 
 The function \texttt{mulTransposed} calculates the product of \texttt{src} and its transposition:
 \[
-\texttt{dst}=\texttt{scale} (\texttt{src}-\texttt{delta}) (\texttt{src}-\texttt{delta})^T
+\texttt{dst}=\texttt{scale} (\texttt{src}-\texttt{delta})^T (\texttt{src}-\texttt{delta})
 \]
-
-if $\texttt{aTa}=false$, and
+if \texttt{aTa=true}, and
 
 \[
-\texttt{dst}=\texttt{scale} (\texttt{src}-\texttt{delta})^T (\texttt{src}-\texttt{delta})
+\texttt{dst}=\texttt{scale} (\texttt{src}-\texttt{delta}) (\texttt{src}-\texttt{delta})^T
 \]
 
 otherwise. The function is used to compute covariance matrix and with zero delta can be used as a faster substitute for general matrix product $A*B$ when $B=A^T$.
@@ -3455,34 +3557,34 @@ double norm( const SparseMat& src, int normType );
 \cvarg{mask}{The optional operation mask}
 \end{description}
 
-The functions \texttt{norm} calculate the absolute norm of \texttt{src1} if \texttt{src2} is NULL:
+The functions \texttt{norm} calculate the absolute norm of \texttt{src1} (when there is no \texttt{src2}):
 \[
 norm = \forkthree
-{\|\texttt{src1}\|_{L_{\inf}}    = \max_I |\texttt{src1}(I)|}{if $\texttt{normType} = \texttt{NORM\_INF}$}
+{\|\texttt{src1}\|_{L_{\infty}}    = \max_I |\texttt{src1}(I)|}{if $\texttt{normType} = \texttt{NORM\_INF}$}
 {\|\texttt{src1}\|_{L_1} = \sum_I |\texttt{src1}(I)|}{if $\texttt{normType} = \texttt{NORM\_L1}$}
 {\|\texttt{src1}\|_{L_2} = \sqrt{\sum_I \texttt{src1}(I)^2}}{if $\texttt{normType} = \texttt{NORM\_L2}$}
 \]
 
-And the function calculates absolute or relative difference norm if \texttt{src2} is not NULL:
+or an absolute or relative difference norm if \texttt{src2} is there:
 \[
 norm = \forkthree
-{\|\texttt{src1}-\texttt{src2}\|_{L_{\inf}}    = \max_I |\texttt{src1}(I) - \texttt{src2}(I)|}{if $\texttt{normType} = \texttt{NORM\_INF}$}
-{\|\texttt{src1}-\texttt{src2}\|_{L1} = \sum_I |\texttt{src1}(I) - \texttt{src2}(I)|}{if $\texttt{normType} = \texttt{NORM\_L1}$}
-{\|\texttt{src1}-\texttt{src2}\|_{L2} = \sqrt{\sum_I (\texttt{src1}(I) - \texttt{src2}(I))^2}}{if $\texttt{normType} = \texttt{NORM\_L2}$}
+{\|\texttt{src1}-\texttt{src2}\|_{L_{\infty}}    = \max_I |\texttt{src1}(I) - \texttt{src2}(I)|}{if $\texttt{normType} = \texttt{NORM\_INF}$}
+{\|\texttt{src1}-\texttt{src2}\|_{L_1} = \sum_I |\texttt{src1}(I) - \texttt{src2}(I)|}{if $\texttt{normType} = \texttt{NORM\_L1}$}
+{\|\texttt{src1}-\texttt{src2}\|_{L_2} = \sqrt{\sum_I (\texttt{src1}(I) - \texttt{src2}(I))^2}}{if $\texttt{normType} = \texttt{NORM\_L2}$}
 \]
 
 or
 
 \[
 norm = \forkthree
-{\frac{\|\texttt{src1}-\texttt{src2}\|_{L_{\inf}}    }{\|\texttt{src2}\|_{L_{\inf}}   }}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_INF}$}
-{\frac{\|\texttt{src1}-\texttt{src2}\|_{L1} }{\|\texttt{src2}\|_{L1}}}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_L1}$}
-{\frac{\|\texttt{src1}-\texttt{src2}\|_{L2} }{\|\texttt{src2}\|_{L2}}}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_L2}$}
+{\frac{\|\texttt{src1}-\texttt{src2}\|_{L_{\infty}}    }{\|\texttt{src2}\|_{L_{\infty}}   }}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_INF}$}
+{\frac{\|\texttt{src1}-\texttt{src2}\|_{L_1} }{\|\texttt{src2}\|_{L_1}}}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_L1}$}
+{\frac{\|\texttt{src1}-\texttt{src2}\|_{L_2} }{\|\texttt{src2}\|_{L_2}}}{if $\texttt{normType} = \texttt{NORM\_RELATIVE\_L2}$}
 \]
 
 The functions \texttt{norm} return the calculated norm.
 
-When there is \texttt{mask} parameter, and the matrix is not empty (then it should have type \texttt{CV\_8U} and the same size as \texttt{src1}), the norm is computed only over the specified by the mask region.
+When there is \texttt{mask} parameter, and it is not empty (then it should have type \texttt{CV\_8U} and the same size as \texttt{src1}), the norm is computed only over the specified by the mask region.
 
 A multiple-channel source arrays are treated as a single-channel, that is, the results for all channels are combined.
 
@@ -3500,23 +3602,23 @@ void normalize( const SparseMat& src, SparseMat& dst, double alpha, int normType
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array; will have the same size as \texttt{src}}
-\cvarg{alpha}{The norm value to normalize to or the lower range boundary in case of range normalization}
-\cvarg{beta}{The upper range boundary in case of range normalization; not used for norm normalization}
+\cvarg{alpha}{The norm value to normalize to or the lower range boundary in the case of range normalization}
+\cvarg{beta}{The upper range boundary in the case of range normalization; not used for norm normalization}
 \cvarg{normType}{The normalization type, see the discussion}
 \cvarg{rtype}{When the parameter is negative, the destination array will have the same type as \texttt{src}, otherwise it will have the same number of channels as \texttt{src} and the depth\texttt{=CV\_MAT\_DEPTH(rtype)}}
 \cvarg{mask}{The optional operation mask}
 \end{description}
 
 The functions \texttt{normalize} scale and shift the source array elements, so that
-\[\|dst\|_{L_p}=\texttt{alpha}\]
-(where $p=\inf$, 1 or 2) when \texttt{normType=NORM\_INF}, \texttt{NORM\_L1} or \texttt{NORM\_L2},
+\[\|\texttt{dst}\|_{L_p}=\texttt{alpha}\]
+(where $p=\infty$, 1 or 2) when \texttt{normType=NORM\_INF}, \texttt{NORM\_L1} or \texttt{NORM\_L2},
 or so that
 \[\min_I \texttt{dst}(I)=\texttt{alpha},\,\,\max_I \texttt{dst}(I)=\texttt{beta}\]
 when \texttt{normType=NORM\_MINMAX} (for dense arrays only).
 
 The optional mask specifies the sub-array to be normalize, that is, the norm or min-n-max are computed over the sub-array and then this sub-array is modified to be normalized. If you want to only use the mask to compute the norm or min-max, but modify the whole array, you can use \cross{norm} and \cross{Mat::convertScale}/\cross{MatND::convertScale}/cross{SparseMat::convertScale} separately.
 
-In case of sparse matrices, only the non-zero values are analyzed and transformed. Because of this, the range transformation for sparse matrices is not allowed, since it can shift the zero level. 
+in the case of sparse matrices, only the non-zero values are analyzed and transformed. Because of this, the range transformation for sparse matrices is not allowed, since it can shift the zero level. 
 
 See also: \cross{norm}, \cross{Mat::convertScale}, \cross{MatND::convertScale}, \cross{SparseMat::convertScale}
 
@@ -3551,11 +3653,12 @@ public:
 };
 \end{lstlisting}
 
-The class PCA is used to compute the special basis for a set of vectors. The basis will consist of eigenvectors of the covariance matrix of the set of vectors and then transform vectors to/from the new coordinate space, defined by the basis. Usually, in this new coordinate system each vector from the original set (and any linear combination of them) can be quite accurately approximated by taking just the first few its components, corresponding to the eigenvectors for the largest eigenvalues of the covariance matrix. That is, we can approximate the original vectors with much shorter ones. Such a transformation is also known as Karhunen-Loeve Transform, or KLT. See \url{http://en.wikipedia.org/wiki/Principal\_component\_analysis}
+The class \texttt{PCA} is used to compute the special basis for a set of vectors. The basis will consist of eigenvectors of the covariance matrix computed from the input set of vectors. And also the class \texttt{PCA} can transform vectors to/from the new coordinate space, defined by the basis. Usually, in this new coordinate system each vector from the original set (and any linear combination of such vectors) can be quite accurately approximated by taking just the first few its components, corresponding to the eigenvectors of the largest eigenvalues of the covariance matrix. Geometrically it means that we compute projection of the vector to a subspace formed by a few eigenvectors corresponding to the dominant eigenvalues of the covariation matrix. And usually such a projection is very close to the original vector. That is, we can represent the original vector from a high-dimensional space with a much shorter vector consisting of the projected vector's coordinates in the subspace. Such a transformation is also known as Karhunen-Loeve Transform, or KLT. See \url{http://en.wikipedia.org/wiki/Principal\_component\_analysis}
 
 The following sample is the function that takes two matrices. The first one stores the set of vectors (a row per vector) that is used to compute PCA, the second one stores another "test" set of vectors (a row per vector) that are first compressed with PCA, then reconstructed back and then the reconstruction error norm is computed and printed for each vector.
 \begin{lstlisting}
-PCA compressPCA(const Mat& pcaset, int maxComponents, const Mat& testset, Mat& compressed)
+PCA compressPCA(const Mat& pcaset, int maxComponents,
+                const Mat& testset, Mat& compressed)
 {
     PCA pca(pcaset, // pass the data
             Mat(), // we do not have a pre-computed mean vector,
@@ -3604,7 +3707,8 @@ void perspectiveTransform(const Mat& src, Mat& dst, const Mat& mtx );
 \cvarg{mtx}{$3\times 3$ or $4 \times 4$ transformation matrix}
 \end{description}
 
-The function \texttt{perspectiveTransform} transforms every element of \texttt{src} (by treating it as 2D or 3D vector) in the following way:
+The function \texttt{perspectiveTransform} transforms every element of \texttt{src},
+by treating it as 2D or 3D vector, in the following way (here 3D vector transformation is shown; in the case of 2D vector transformation the $z$ component is omitted):
 
 \[ (x, y, z) \rightarrow (x'/w, y'/w, z'/w) \]
 
@@ -3618,7 +3722,7 @@ where
 and
 \[ w = \fork{w'}{if $w' \ne 0$}{\infty}{otherwise} \]
 
-Note that the function transforms a sparse set of 2D or 3D vectors. If you want to transform an image using perspective transformation, use \cross{warpPerspective}. If you have an inverse task - compute the most probably perspective transformation out of several pairs of corresponding points, you can use \cross{getPerspectiveTransform} or \cross{findHomography}.
+Note that the function transforms a sparse set of 2D or 3D vectors. If you want to transform an image using perspective transformation, use \cross{warpPerspective}. If you have an inverse task, i.e. want to compute the most probable perspective transformation out of several pairs of corresponding points, you can use \cross{getPerspectiveTransform} or \cross{findHomography}.
 
 See also: \cross{transform}, \cross{warpPerspective}, \cross{getPerspectiveTransform}, \cross{findHomography}
 
@@ -3638,9 +3742,9 @@ void phase(const Mat& x, const Mat& y, Mat& angle,
 
 The function \texttt{phase} computes the rotation angle of each 2D vector that is formed from the corresponding elements of \texttt{x} and \texttt{y}:
 
-\[\texttt{angle}(I) = \texttt{atan2}(\texttt{y}(I)/\texttt{x}(I))\]
+\[\texttt{angle}(I) = \texttt{atan2}(\texttt{y}(I), \texttt{x}(I))\]
 
-The angle estimation accuracy is $\sim$ 0.3 degrees.
+The angle estimation accuracy is $\sim\,0.3^\circ$, when \texttt{x(I)=y(I)=0}, the corresponding \texttt{angle}(I) is set to $0$.
 
 See also:
 
@@ -3663,12 +3767,12 @@ The function \texttt{polarToCart} computes the cartesian coordinates of each 2D 
 
 \[
 \begin{array}{l}
-\texttt{x}(I) = \texttt{magnitude}(I)\cos(angle(I))\\
-\texttt{y}(I) = \texttt{magnitude}(I)\sin(angle(I))\\
+\texttt{x}(I) = \texttt{magnitude}(I)\cos(\texttt{angle}(I))\\
+\texttt{y}(I) = \texttt{magnitude}(I)\sin(\texttt{angle}(I))\\
 \end{array}
 \]
 
-The relative accuracy of the estimated coordinates is $\sim$;1e-6.
+The relative accuracy of the estimated coordinates is $\sim\,10^{-6}$.
 
 See also: \cross{cartToPolar}, \cross{magnitude}, \cross{phase}, \cross{exp}, \cross{log}, \cross{pow}, \cross{sqrt}
 
@@ -3688,7 +3792,7 @@ void pow(const MatND& src, double p, MatND& dst);
 The function \texttt{pow} raises every element of the input array to \texttt{p}:
 
 \[
-\texttt{dst} [I] = \fork
+\texttt{dst}(I) = \fork
 {\texttt{src}(I)^p}{if \texttt{p} is integer}
 {|\texttt{src}(I)|^p}{otherwise}
 \]
@@ -3724,7 +3828,7 @@ The second non-template variant of the function fills the matrix \texttt{mtx} wi
 
 \[\texttt{low}_c \leq \texttt{mtx}(I)_c < \texttt{high}_c\]
 
-See also: \cross{RNG}, \cross{randn}
+See also: \cross{RNG}, \cross{randn}, \cross{theRNG}.
 
 \cvfunc{randn}\label{randn}
 Fills array with normally distributed random numbers
@@ -3738,7 +3842,7 @@ void randn(Mat& mtx, const Scalar& mean, const Scalar& stddev);
 \cvarg{stddev}{The standard deviation of the generated random numbers}
 \end{description}
 
-The function \texttt{randn} fills the matrix \texttt{mtx} with normally distributed random numbers with the specified mean and standard deviation. \href{saturate}{saturate\_cast<>} is applied to the generated numbers (i.e. the values are clipped)
+The function \texttt{randn} fills the matrix \texttt{mtx} with normally distributed random numbers with the specified mean and standard deviation. \hyperref[saturatecast]{saturate\_cast} is applied to the generated numbers (i.e. the values are clipped)
 
 See also: \cross{RNG}, \cross{randu}
 
@@ -3798,13 +3902,13 @@ Mat repeat(const Mat& src, int ny, int nx);
 
 The functions \cross{repeat} duplicate the source array one or more times along each of the two axes:
 
-\[\texttt{dst}_ij=\texttt{src}_{i \mod \texttt{src.rows}, j \mod \texttt{src.cols}}\]
+\[\texttt{dst}_{ij}=\texttt{src}_{i\mod\texttt{src.rows},\;j\mod\texttt{src.cols}}\]
 
 The second variant of the function is more convenient to use with \cross{Matrix Expressions}
 
 See also: \cross{reduce}, \cross{Matrix Expressions}
 
-\cvfunc{saturate\_cast}\label{saturate cast}
+\cvfunc{saturate\_cast}\label{saturatecast}
 Template function for accurate conversion from one primitive type to another
 
 \begin{lstlisting}
@@ -3821,16 +3925,16 @@ template<typename _Tp> inline _Tp saturate_cast(double v);
 \cvarg{v}{The function parameter}
 \end{description}
 
-The functions \texttt{saturate\_cast} resembler standard C++ cast operations, such as \texttt{static\_cast<T>()} etc. They perform efficient and accurate conversion from one primitive type to another, see the introduction. "saturate" in the name means that when the input value \texttt{v} is out of range of the target type, the result will not be formed just by taking low bits of the input, but instead the value will be clipped. For example:
+The functions \texttt{saturate\_cast} resembles the standard C++ cast operations, such as \texttt{static\_cast<T>()} etc. They perform an efficient and accurate conversion from one primitive type to another, see the introduction. "saturate" in the name means that when the input value \texttt{v} is out of range of the target type, the result will not be formed just by taking low bits of the input, but instead the value will be clipped. For example:
 
 \begin{lstlisting}
-uchar a = saturate_cast<uchar>(-100); // a = 0 ~ UCHAR_MIN
-short b = saturate_cast<short>(33333.33333); // b = 32768 ~ SHRT_MAX
+uchar a = saturate_cast<uchar>(-100); // a = 0 (UCHAR_MIN)
+short b = saturate_cast<short>(33333.33333); // b = 32768 (SHRT_MAX)
 \end{lstlisting}
 
 Such clipping is done when the target type is \texttt{unsigned char, signed char, unsigned short or signed short} - for 32-bit integers no clipping is done.
 
-When the parameter is floating-point value and the target type is an integer (8-, 16- or 32-bit), the floating-point value is first rounded to the nearest integer and then clipped if needed (again, only when the result is 8- or 16-bit).
+When the parameter is floating-point value and the target type is an integer (8-, 16- or 32-bit), the floating-point value is first rounded to the nearest integer and then clipped if needed (when the target type is 8- or 16-bit).
 
 This operation is used in most simple or complex image processing functions in OpenCV.
 
@@ -3850,7 +3954,7 @@ void scaleAdd(const MatND& src1, double scale, const MatND& src2, MatND& dst);
 \cvarg{dst}{The destination array; will have the same size and the same type as \texttt{src1}}
 \end{description}
 
-The function \texttt{cvScaleAdd} is one of the classical primitive linear algebra operations, known as \texttt{daxpy} and \texttt{saxpy} in BLAS. It calculates the sum of a scaled array and another array:
+The function \texttt{cvScaleAdd} is one of the classical primitive linear algebra operations, known as \texttt{DAXPY} or \texttt{SAXPY} in \href{http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms}{BLAS}. It calculates the sum of a scaled array and another array:
 
 \[
 \texttt{dst}(I)=\texttt{scale} \cdot \texttt{src1}(I) + \texttt{src2}(I)
@@ -3899,8 +4003,8 @@ Solves one or more linear systems or least-squares problems.
 bool solve(const Mat& src1, const Mat& src2, Mat& dst, int flags=DECOMP_LU);
 \end{lstlisting}
 \begin{description}
-\cvarg{src1}{The source matrix}
-\cvarg{src2}{The right-hand part of the linear system}
+\cvarg{src1}{The input matrix on the left-hand side of the system}
+\cvarg{src2}{The input matrix on the right-hand side of the system}
 \cvarg{dst}{The output solution}
 \cvarg{flags}{The solution (matrix inversion) method
 \begin{description}
@@ -3909,17 +4013,17 @@ bool solve(const Mat& src1, const Mat& src2, Mat& dst, int flags=DECOMP_LU);
  \cvarg{DECOMP\_EIG}{Eigenvalue decomposition; the matrix \texttt{src1} must be symmetrical}
  \cvarg{DECOMP\_SVD}{Singular value decomposition (SVD) method; the system can be over-defined and/or the matrix \texttt{src1} can be singular}
  \cvarg{DECOMP\_QR}{QR factorization; the system can be over-defined and/or the matrix \texttt{src1} can be singular}
- \cvarg{DECOMP\_NORMAL}{While all the previous flags are mutually exclusive, this flag can be used together with any of the previous. It means that the normal equations $\texttt{src1}^T\cdot\texttt{src1}\cdot\texttt{dst}=\texttt{src1}^T\texttt{src2}$ are solved instead of the original system}
+ \cvarg{DECOMP\_NORMAL}{While all the previous flags are mutually exclusive, this flag can be used together with any of the previous. It means that the normal equations $\texttt{src1}^T\cdot\texttt{src1}\cdot\texttt{dst}=\texttt{src1}^T\texttt{src2}$ are solved instead of the original system $\texttt{src1}\cdot\texttt{dst}=\texttt{src2}$}
 \end{description}}
 \end{description}
 
-The function \texttt{sSolve} solves a linear system or least-squares problem (the latter is possible with SVD or QR methods):
+The function \texttt{solve} solves a linear system or least-squares problem (the latter is possible with SVD or QR methods, or by specifying the flag \texttt{DECOMP\_NORMAL}):
 
 \[
-\texttt{dst} = \arg \min_X\|\texttt{src1} \, \texttt{X} - \texttt{src2}\|
+\texttt{dst} = \arg \min_X\|\texttt{src1}\cdot\texttt{X} - \texttt{src2}\|
 \]
 
-If \texttt{CV\_LU} or \texttt{CV\_CHOLESKY} method is used, the function returns 1 if \texttt{src1} is non-singular and 0 otherwise; in the latter case \texttt{dst} is not valid. Other methods find some pseudo-solution in the case of singular \texttt{src1}.
+If \texttt{DECOMP\_LU} or \texttt{DECOMP\_CHOLESKY} method is used, the function returns 1 if \texttt{src1} (or $\texttt{src1}^T\texttt{src1}$) is non-singular and 0 otherwise; in the latter case \texttt{dst} is not valid. Other methods find some pseudo-solution in the case of singular left-hand side part.
 
 Note that if you want to find unity-norm solution of an under-defined singular system $\texttt{src1}\cdot\texttt{dst}=0$, the function \texttt{solve} will not do the work. Use \cross{SVD::solveZ} instead.
 
@@ -4056,7 +4160,7 @@ void sqrt(const MatND& src, MatND& dst);
 \cvarg{dst}{The destination array; will have the same size and the same type as \texttt{src}}
 \end{description}
 
-The functions \texttt{sqrt} calculate square root of each source array element. In case of multi-channel arrays each channel is processed independently. The function accuracy is approximately the same as in the built-in \texttt{std::sqrt}.
+The functions \texttt{sqrt} calculate square root of each source array element. in the case of multi-channel arrays each channel is processed independently. The function accuracy is approximately the same as of the built-in \texttt{std::sqrt}.
 
 See also: \cross{pow}, \cross{magnitude}
 
@@ -4086,26 +4190,26 @@ The functions \texttt{subtract} compute
 
 \begin{itemize}
     \item the difference between two arrays
-    \texttt{dst(I) = saturate(src1(I) - src2(I)) if mask(I)$\ne$0}
+    \[\texttt{dst}(I) = \texttt{saturate}(\texttt{src1}(I) - \texttt{src2}(I))\quad\texttt{if mask}(I)\ne0\]
     \item the difference between array and a scalar:
-    \texttt{dst(I) = saturate(src1(I) - sc) if mask(I) $\ne$ 0}
+    \[\texttt{dst}(I) = \texttt{saturate}(\texttt{src1}(I) - \texttt{sc})\quad\texttt{if mask}(I)\ne0\]
     \item the difference between scalar and an array:
-    \texttt{dst(I) = saturate(sc - src2(I)) if mask(I) $\ne$ 0}
+    \[\texttt{dst}(I) = \texttt{saturate}(\texttt{sc} - \texttt{src2}(I))\quad\texttt{if mask}(I)\ne0\]
 \end{itemize}
 
 where \texttt{I} is multi-dimensional index of array elements.
 
 The first function in the above list can be replaced with matrix expressions:
 \begin{lstlisting}
-    dst = src1 - src2;
-    dst -= src2; // ~ subtract(dst, src2, dst);
+dst = src1 - src2;
+dst -= src2; // equivalent to subtract(dst, src2, dst);
 \end{lstlisting}
 
 See also: \cross{add}, \cross{addWeighted}, \cross{scaleAdd}, \cross{convertScale},
-\cross{Matrix Expressions}, \href{saturate}{saturate\_cast<>}.
+\cross{Matrix Expressions}, \hyperref[saturatecast]{saturate\_cast}.
 
 \cvfunc{SVD}\label{SVD}
-Class for computing and using Singular Value Decomposition
+Class for computing Singular Value Decomposition
 
 \begin{lstlisting}
 class SVD
@@ -4174,7 +4278,7 @@ Scalar trace(const Mat& mtx);
 
 The function \texttt{trace} returns the sum of the diagonal elements of the matrix \texttt{mtx}.
 
-\[ tr(\texttt{mtx}) = \sum_i \texttt{mtx}(i,i) \]
+\[ \mathrm{tr}(\texttt{mtx}) = \sum_i \texttt{mtx}(i,i) \]
 
 
 \cvfunc{transform}\label{transform}
@@ -4421,13 +4525,16 @@ Size textSize = getTextSize(text, fontFace,
 baseline += thickness;
 
 // center the text
-Point textOrg((img.cols - textSize.width)/2, (img.rows + textSize.height)/2);
+Point textOrg((img.cols - textSize.width)/2,
+              (img.rows + textSize.height)/2);
 
 // draw the box
-rectangle(img, textOrg + Point(0, baseline), textOrg + Point(textSize.width, -textSize.height),
+rectangle(img, textOrg + Point(0, baseline),
+          textOrg + Point(textSize.width, -textSize.height),
           Scalar(0,0,255));
 // ... and the baseline first
-line(img, textOrg + Point(0, thickness), textOrg + Point(textSize.width, thickness),
+line(img, textOrg + Point(0, thickness),
+     textOrg + Point(textSize.width, thickness),
      Scalar(0, 0, 255));
 
 // then put the text itself
@@ -4502,7 +4609,8 @@ The class \texttt{LineIterator} is used to get each pixel of a raster line. It c
 The number of pixels along the line is store in \texttt{LineIterator::count}.
 
 \begin{lstlisting}
-\\ grabs pixels along the line (pt1, pt2) from 8-bit 3-channel image to the buffer
+\\ grabs pixels along the line (pt1, pt2)
+\\ from 8-bit 3-channel image to the buffer
 LineIterator it(img, pt1, pt2, 8);
 vector<Vec3b> buf(it.count);
 
@@ -4536,8 +4644,9 @@ The function \texttt{rectangle} draws a rectangle outline or a filled rectangle,
 Draws several polygonal curves
 
 \begin{lstlisting}
-void polylines(Mat& img, const Point** pts, const int* npts, int ncontours, bool isClosed,
-               const Scalar& color, int thickness=1, int lineType=8, int shift=0 );
+void polylines(Mat& img, const Point** pts, const int* npts,
+               int ncontours, bool isClosed, const Scalar& color,
+               int thickness=1, int lineType=8, int shift=0 );
 \end{lstlisting}
 \begin{description}
 \cvarg{img}{The image}
@@ -4657,7 +4766,8 @@ The XML/YAML file node class
 class CV_EXPORTS FileNode
 {
 public:
-    enum { NONE=0, INT=1, REAL=2, FLOAT=REAL, STR=3, STRING=STR, REF=4, SEQ=5, MAP=6, TYPE_MASK=7,
+    enum { NONE=0, INT=1, REAL=2, FLOAT=REAL, STR=3,
+        STRING=STR, REF=4, SEQ=5, MAP=6, TYPE_MASK=7,
         FLOW=8, USER=16, EMPTY=32, NAMED=64 };
     FileNode();
     FileNode(const CvFileStorage* fs, const CvFileNode* node);
@@ -4694,7 +4804,7 @@ public:
 };
 \end{lstlisting}
 
-\cvfunc{FileNode}\label{FileNode}
+\cvfunc{FileNodeIterator}\label{FileNodeIterator}
 The XML/YAML file node iterator class
 
 \begin{lstlisting}
@@ -4702,7 +4812,8 @@ class CV_EXPORTS FileNodeIterator
 {
 public:
     FileNodeIterator();
-    FileNodeIterator(const CvFileStorage* fs, const CvFileNode* node, size_t ofs=0);
+    FileNodeIterator(const CvFileStorage* fs,
+        const CvFileNode* node, size_t ofs=0);
     FileNodeIterator(const FileNodeIterator& it);
     FileNode operator *() const;
     FileNode operator ->() const;
@@ -4732,7 +4843,9 @@ public:
 double kmeans( const Mat& samples, int clusterCount, Mat& labels,
                TermCriteria termcrit, int attempts,
                int flags, Mat* centers );
-enum { KMEANS_RANDOM_CENTERS=0, KMEANS_PP_CENTERS=2, KMEANS_USE_INITIAL_LABELS=1 };
+enum { KMEANS_RANDOM_CENTERS=0,
+       KMEANS_PP_CENTERS=2,
+       KMEANS_USE_INITIAL_LABELS=1 };
 \end{lstlisting}
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
@@ -4753,8 +4866,8 @@ function uses the user-supplied labels instaed of computing them from the initia
 
 The function \texttt{kmeans} implements a k-means algorithm that finds the
 centers of \texttt{clusterCount} clusters and groups the input samples
-around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
-the sample stored in the $i^th$ row of the \texttt{samples} matrix.
+around the clusters. On output, $\texttt{labels}_i$ contains a 0-based cluster index for
+the sample stored in the $i^{th}$ row of the \texttt{samples} matrix.
 
 The function returns the compactness measure, which is computed as
 \[
@@ -4780,8 +4893,8 @@ template<typename _Tp, class _EqPredicate> int
 \cvarg{predicate}{The equivalence predicate (i.e. pointer to a boolean function of two arguments or an instance of the class that has the method \texttt{bool operator()(const \_Tp\& a, const \_Tp\& b)}. The predicate returns true when the elements are certainly if the same class, and false if they may or may not be in the same class}
 \end{description}
 
-The generic function \texttt{partition} implements a quadratic algorithm for
-splitting a set into one or more equivalancy classes, described in \url{http://en.wikipedia.org/wiki/Disjoint-set_data_structure}. The function
+The generic function \texttt{partition} implements an $O(N^2)$ algorithm for
+splitting a set of $N$ elements into one or more equivalency classes, as described in \url{http://en.wikipedia.org/wiki/Disjoint-set_data_structure}. The function
 returns the number of equivalency classes.
 
 \subsection{Utility and System Functions and Macros}
@@ -4798,7 +4911,7 @@ template<typename _Tp> _Tp* alignPtr(_Tp* ptr, int n=sizeof(_Tp));
 \end{description}
 
 The function returns the aligned pointer of the same type as the input pointer:
-\[(\_Tp*)(((size\_t)ptr + n-1) \& -n)\]
+\[\texttt{(\_Tp*)(((size\_t)ptr + n-1) \& -n)}\]
 
 
 \cvfunc{alignSize}\label{alignSize}
@@ -4813,7 +4926,7 @@ size_t alignSize(size_t sz, int n);
 \end{description}
 
 The function returns the minimum number that is greater or equal to \texttt{sz} and is divisble by \texttt{n}:
-\[(sz + n-1) \& -n\]
+\[\texttt{(sz + n-1) \& -n}\]
 
 
 \cvfunc{allocate}\label{allocate}
@@ -4924,7 +5037,7 @@ void* fastMalloc(size_t size);
 \cvarg{size}{The allocated buffer size}
 \end{description}
  
-The function \texttt{fastMalloc} allocates buffer of the specified size and returns it. When the buffer is 16 bytes or more, the returned buffer is aligned on 16 bytes.
+The function \texttt{fastMalloc} allocates buffer of the specified size and returns it. When the buffer size is 16 bytes or more, the returned buffer is aligned on 16 bytes.
 
 \cvfunc{fastFree}\label{fastFree}
 Deallocates memory buffer
