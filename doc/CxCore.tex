@@ -707,7 +707,7 @@ int cvGetImageCOI( const IplImage* image );
 
 Returns the channel of interest of in an IplImage. Returned values correspond to the \texttt{coi} in \cross{SetImageCOI}.
 
-\cvfunc{SetImageROI}\label{SetImageROI}
+\cvfunc{SetImageROI}\label{SetImageROI}\label{ROI}
 
 Sets an image Region Of Interest (ROI) for a given rectangle.
 
@@ -768,7 +768,7 @@ CvRect cvGetImageROI( const IplImage* image );
 If there is no ROI set, \texttt{cvRect(0,0,image->width,image->height)} is returned.
 
 
-\cvfunc{CreateMat}\label{CreateMat}
+\cvfunc{CreateMat}\label{CreateMat}\label{cvCreateMat}
 
 Creates a matrix header and allocates the matrix data. 
 
