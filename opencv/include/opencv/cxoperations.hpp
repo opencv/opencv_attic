@@ -56,7 +56,8 @@
     
 #if __GNUC__*10 + __GNUC_MINOR__ >= 42
 
-#if defined __i486__ || defined __i586__ || defined __i686__ || defined __MMX__ || defined __SSE__
+#if !defined WIN32 && (defined __i486__ || defined __i586__ || \
+    defined __i686__ || defined __MMX__ || defined __SSE__)
 #define CV_XADD __sync_fetch_and_add
 #else
 #include <ext/atomicity.h>
