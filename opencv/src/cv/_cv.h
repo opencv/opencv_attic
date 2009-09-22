@@ -70,6 +70,16 @@
     #define     _CV_ALWAYS_NO_PROFILE_
 #endif
 
+#ifdef HAVE_IPP
+#include "ipp.h"
+
+CV_INLINE IppiSize ippiSize(int width, int height)
+{
+    IppiSize size = { width, height };
+    return size;
+}
+#endif
+
 /* helper tables */
 extern const uchar icvSaturate8u_cv[];
 #define CV_FAST_CAST_8U(t)  (assert(-256 <= (t) || (t) <= 512), icvSaturate8u_cv[(t)+256])
