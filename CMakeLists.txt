@@ -418,14 +418,33 @@ if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
     find_package(SWIG)
 endif()
 
-if(WIN32)
 
+############################### IPP ################################
 set(IPP_FOUND)
+set(OPENCV_LOADER_PATH)
+
+if(UNIX)
+if(APPLE)
+    set(OPENCV_LOADER_PATH DYLD_LIBRARY_PATH)
+else()
+    set(OPENCV_LOADER_PATH LD_LIBRARY_PATH)
+endif()
+endif()
+
+message(STATUS "${CMAKE_SYSTEM_LIBRARY_PATH}" "${CMAKE_LIBRARY_PATH}")
+
 foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
     if(NOT IPP_FOUND)
-        find_path(IPP_PATH "ippi-${v}.dll"
-            PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
-            DOC "The path to IPP DLLs")
+        if(WIN32)
+            find_path(IPP_PATH "ippi-${v}.dll"
+                PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
+                DOC "The path to IPP dynamic libraries")
+        endif()
+        if(UNIX)
+            find_path(IPP_PATH "libippi${CMAKE_SHARED_LIBRARY_SUFFIX}.${v}"
+                PATHS ${CMAKE_LIBRARY_PATH} ${CMAKE_SYSTEM_LIBRARY_PATH} ENV ${OPENCV_LOADER_PATH}
+                DOC "The path to IPP dynamic libraries")
+        endif()
         if(IPP_PATH)
             file(GLOB IPP_HDRS "${IPP_PATH}/../include")
             if(IPP_HDRS)
@@ -442,13 +461,24 @@ if(IPP_FOUND AND USE_IPP)
     add_definitions(-DHAVE_IPP)
     include_directories("${IPP_PATH}/../include")
     link_directories("${IPP_PATH}/../lib")
-    set(IPP_LIBS ippsmerged.lib ippsemerged.lib ippimerged.lib ippiemerged.lib
-        ippvmmerged.lib ippvmemerged.lib ippccmerged.lib ippccemerged.lib
-        ippcvmerged.lib ippcvemerged.lib ippcorel.lib)
+    
+    set(A ${CMAKE_STATIC_LIBRARY_PREFIX})
+    set(B ${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if(WIN32)
+        set(L l)
+    else()
+        set(L)
+    endif()
+    set(IPP_LIBS ${A}ippsmerged${B} ${A}ippsemerged${B}
+                 ${A}ippimerged${B} ${A}ippiemerged${B}
+                 ${A}ippvmmerged${B} ${A}ippvmemerged${B}
+                 ${A}ippccmerged${B} ${A}ippccemerged${B}
+                 ${A}ippcvmerged${B} ${A}ippcvemerged${B}
+                 ${A}ippcore${L}${B})
 endif()
 
-endif()
 
+################## LATEX ##################
 set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
 
 # ----------------------------------------------------------------------------
