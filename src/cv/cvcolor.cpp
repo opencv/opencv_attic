@@ -277,7 +277,7 @@ icvBGRx2BGR5x5_8u_CnC2R( const uchar* src, int srcstep,
 
 /////////////////////////// IPP Color Conversion Functions //////////////////////////////
 
-/*#define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                       \
+#define CV_IMPL_BGRx2ABC_IPP( flavor, arrtype )                         \
 static CvStatus CV_STDCALL                                              \
 icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
     arrtype* dst, int dststep, CvSize size, int src_cn,                 \
@@ -374,7 +374,9 @@ icvBGRx2ABC_IPP_8u_CnC3R( const uchar* src, int srcstep,
 }
 
 //CV_IMPL_BGRx2ABC_IPP( 8u, uchar )
+#ifndef HAVE_IPP
 CV_IMPL_BGRx2ABC_IPP( 16u, ushort )
+#endif
 CV_IMPL_BGRx2ABC_IPP( 32f, float )
 
 #define CV_IMPL_ABC2BGRx_IPP( flavor, arrtype )                         \
@@ -428,9 +430,11 @@ icvABC2BGRx_IPP_##flavor##_C3CnR( const arrtype* src, int srcstep,      \
 }
 
 CV_IMPL_ABC2BGRx_IPP( 8u, uchar )
+#ifndef HAVE_IPP
 CV_IMPL_ABC2BGRx_IPP( 16u, ushort )
+#endif
 CV_IMPL_ABC2BGRx_IPP( 32f, float )
-*/
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -923,6 +927,7 @@ CV_IMPL_XYZ2BGRx( 32f, float, float, CV_NOP, CV_NOP, _32f )
 *                          Non-linear Color Space Transformations                        *
 \****************************************************************************************/
 
+#ifndef HAVE_IPP
 // driver color space conversion function for 8u arrays that uses 32f function
 // with appropriate pre- and post-scaling.
 static CvStatus CV_STDCALL
@@ -1061,7 +1066,7 @@ icvBGRx2ABC_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
 
     return CV_OK;
 }
-
+#endif
 
 /****************************************************************************************\
 *                                      RGB <-> HSV                                       *
@@ -1113,6 +1118,30 @@ static CvStatus CV_STDCALL
 icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int src_cn, int blue_idx )
 {
+    int i;
+
+#ifdef HAVE_IPP
+    CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
+                                            src_cn, blue_idx, (CvColorCvtFunc0)ippiRGBToHSV_8u_C3R );
+    if( status >= 0 )
+    {
+        size.width *= 3;
+        for( ; size.height--; dst += dststep )
+        {
+            for( i = 0; i <= size.width - 12; i += 12 )
+            {
+                uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
+                dst[i] = t0; dst[i+3] = t1;
+                t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
+                dst[i+6] = t0; dst[i+9] = t1;
+            }
+            for( ; i < size.width; i += 3 )
+                dst[i] = icvHue255To180[dst[i]];
+        }
+    }
+    return status;
+#else
+    
     const int hsv_shift = 12;
 
     static const int div_table[] = {
@@ -1150,30 +1179,6 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
         4212, 4195, 4178, 4161, 4145, 4128, 4112, 4096
     };
 
-    int i;
-    /*if( icvRGB2HSV_8u_C3R_p )
-    {
-        CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                                src_cn, blue_idx, icvRGB2HSV_8u_C3R_p );
-        if( status >= 0 )
-        {
-            size.width *= 3;
-            for( ; size.height--; dst += dststep )
-            {
-                for( i = 0; i <= size.width - 12; i += 12 )
-                {
-                    uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
-                    dst[i] = t0; dst[i+3] = t1;
-                    t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
-                    dst[i+6] = t0; dst[i+9] = t1;
-                }
-                for( ; i < size.width; i += 3 )
-                    dst[i] = icvHue255To180[dst[i]];
-            }
-        }
-        return status;
-    }*/
-
     srcstep -= size.width*src_cn;
     size.width *= 3;
 
@@ -1208,6 +1213,7 @@ icvBGRx2HSV_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 
@@ -1320,56 +1326,54 @@ icvHSV2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
 {
     static const float pre_coeffs[] = { 2.f, 0.f, 0.0039215686274509803f, 0.f, 1.f, 0.f };
 
-    /*if( icvHSV2RGB_8u_C3R_p )
+#ifdef HAVE_IPP
+    int block_size = MIN(1 << 14, size.width);
+    uchar* buffer;
+    int i, di, k;
+    CvStatus status = CV_OK;
+
+    buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+    dststep -= size.width*dst_cn;
+
+    for( ; size.height--; src += srcstep, dst += dststep )
     {
-        int block_size = MIN(1 << 14, size.width);
-        uchar* buffer;
-        int i, di, k;
-        CvStatus status = CV_OK;
-
-        buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
-        dststep -= size.width*dst_cn;
-
-        for( ; size.height--; src += srcstep, dst += dststep )
+        for( i = 0; i < size.width; i += block_size )
         {
-            for( i = 0; i < size.width; i += block_size )
+            const uchar* src1 = src + i*3;
+            di = MIN(block_size, size.width - i);
+            for( k = 0; k < di*3; k += 3 )
             {
-                const uchar* src1 = src + i*3;
-                di = MIN(block_size, size.width - i);
-                for( k = 0; k < di*3; k += 3 )
-                {
-                    uchar h = icvHue180To255[src1[k]];
-                    uchar s = src1[k+1];
-                    uchar v = src1[k+2];
-                    buffer[k] = h;
-                    buffer[k+1] = s;
-                    buffer[k+2] = v;
-                }
+                uchar h = icvHue180To255[src1[k]];
+                uchar s = src1[k+1];
+                uchar v = src1[k+2];
+                buffer[k] = h;
+                buffer[k+1] = s;
+                buffer[k+2] = v;
+            }
 
-                status = icvHSV2RGB_8u_C3R_p( buffer, di*3,
-                                buffer, di*3, cvSize(di,1) );
-                if( status < 0 )
-                    return status;
+            status = (CvStatus)ippiHSVToRGB_8u_C3R( buffer, di*3,
+                                    buffer, di*3, ippiSize(di,1) );
+            if( status < 0 )
+                return status;
 
-                for( k = 0; k < di*3; k += 3, dst += dst_cn )
-                {
-                    uchar r = buffer[k];
-                    uchar g = buffer[k+1];
-                    uchar b = buffer[k+2];
-                    dst[blue_idx] = b;
-                    dst[1] = g;
-                    dst[blue_idx^2] = r;
-                    if( dst_cn == 4 )
-                        dst[3] = 0;
-                }
+            for( k = 0; k < di*3; k += 3, dst += dst_cn )
+            {
+                uchar r = buffer[k];
+                uchar g = buffer[k+1];
+                uchar b = buffer[k+2];
+                dst[blue_idx] = b;
+                dst[1] = g;
+                dst[blue_idx^2] = r;
+                if( dst_cn == 4 )
+                    dst[3] = 0;
             }
         }
-
-        return CV_OK;
-    }*/
-
+    }
+    return CV_OK;
+#else
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvHSV2BGRx_32f_C3CnR, pre_coeffs, 0 );
+#endif
 }
 
 
@@ -1383,31 +1387,29 @@ icvBGRx2HLS_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
 {
     int i;
 
-    /*if( icvRGB2HLS_32f_C3R_p )
+#ifdef HAVE_IPP
+    CvStatus status = icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
+                                                 src_cn, blue_idx, (CvColorCvtFunc0)ippiRGBToHLS_32f_C3R );
+    if( status >= 0 )
     {
-        CvStatus status = icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
-                                                     src_cn, blue_idx, icvRGB2HLS_32f_C3R_p );
-        if( status >= 0 )
+        size.width *= 3;
+        dststep /= sizeof(dst[0]);
+
+        for( ; size.height--; dst += dststep )
         {
-            size.width *= 3;
-            dststep /= sizeof(dst[0]);
-
-            for( ; size.height--; dst += dststep )
+            for( i = 0; i <= size.width - 12; i += 12 )
             {
-                for( i = 0; i <= size.width - 12; i += 12 )
-                {
-                    float t0 = dst[i]*360.f, t1 = dst[i+3]*360.f;
-                    dst[i] = t0; dst[i+3] = t1;
-                    t0 = dst[i+6]*360.f; t1 = dst[i+9]*360.f;
-                    dst[i+6] = t0; dst[i+9] = t1;
-                }
-                for( ; i < size.width; i += 3 )
-                    dst[i] = dst[i]*360.f;
+                float t0 = dst[i]*360.f, t1 = dst[i+3]*360.f;
+                dst[i] = t0; dst[i+3] = t1;
+                t0 = dst[i+6]*360.f; t1 = dst[i+9]*360.f;
+                dst[i+6] = t0; dst[i+9] = t1;
             }
+            for( ; i < size.width; i += 3 )
+                dst[i] = dst[i]*360.f;
         }
-        return status;
-    }*/
-
+    }
+    return status;
+#else
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
     srcstep -= size.width*src_cn;
@@ -1452,6 +1454,7 @@ icvBGRx2HLS_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 
@@ -1463,46 +1466,45 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
 
-    /*if( icvHLS2RGB_32f_C3R_p )
+#ifdef HAVE_IPP
+    int block_size = MIN(1 << 10, size.width);
+    float* buffer;
+    int di, k;
+    CvStatus status = CV_OK;
+
+    buffer = (float*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+    dststep -= size.width*dst_cn;
+
+    for( ; size.height--; src += srcstep, dst += dststep )
     {
-        int block_size = MIN(1 << 10, size.width);
-        float* buffer;
-        int di, k;
-        CvStatus status = CV_OK;
-
-        buffer = (float*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
-        dststep -= size.width*dst_cn;
-
-        for( ; size.height--; src += srcstep, dst += dststep )
+        for( i = 0; i < size.width; i += block_size )
         {
-            for( i = 0; i < size.width; i += block_size )
+            const float* src1 = src + i*3;
+            di = MIN(block_size, size.width - i);
+            for( k = 0; k < di*3; k += 3 )
             {
-                const float* src1 = src + i*3;
-                di = MIN(block_size, size.width - i);
-                for( k = 0; k < di*3; k += 3 )
-                {
-                    float h = src1[k]*0.0027777777777777779f; // /360.
-                    float s = src1[k+1], v = src1[k+2];
-                    buffer[k] = h; buffer[k+1] = s; buffer[k+2] = v;
-                }
+                float h = src1[k]*0.0027777777777777779f; // /360.
+                float s = src1[k+1], v = src1[k+2];
+                buffer[k] = h; buffer[k+1] = s; buffer[k+2] = v;
+            }
 
-                status = icvHLS2RGB_32f_C3R_p( buffer, di*3*sizeof(dst[0]),
-                                buffer, di*3*sizeof(dst[0]), cvSize(di,1) );
-                if( status < 0 )
-                    return status;
+            status = (CvStatus)ippiHLSToRGB_32f_C3R( buffer, di*3*sizeof(dst[0]),
+                            buffer, di*3*sizeof(dst[0]), ippiSize(di,1) );
+            if( status < 0 )
+                return status;
 
-                for( k = 0; k < di*3; k += 3, dst += dst_cn )
-                {
-                    float r = buffer[k], g = buffer[k+1], b = buffer[k+2];
-                    dst[blue_idx] = b; dst[1] = g; dst[blue_idx^2] = r;
-                    if( dst_cn == 4 )
-                        dst[3] = 0;
-                }
+            for( k = 0; k < di*3; k += 3, dst += dst_cn )
+            {
+                float r = buffer[k], g = buffer[k+1], b = buffer[k+2];
+                dst[blue_idx] = b; dst[1] = g; dst[blue_idx^2] = r;
+                if( dst_cn == 4 )
+                    dst[3] = 0;
             }
         }
+    }
 
-        return CV_OK;
-    }*/
+    return CV_OK;
+#else
     
     dststep -= size.width*dst_cn;
     size.width *= 3;
@@ -1555,6 +1557,7 @@ icvHLS2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 static CvStatus CV_STDCALL
@@ -1563,32 +1566,31 @@ icvBGRx2HLS_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
 {
     static const float post_coeffs[] = { 0.5f, 0.f, 255.f, 0.f, 255.f, 0.f };
 
-    /*if( icvRGB2HLS_8u_C3R_p )
+#ifdef HAVE_IPP
+    CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
+                                                src_cn, blue_idx, (CvColorCvtFunc0)ippiRGBToHLS_8u_C3R );
+    if( status >= 0 )
     {
-        CvStatus status = icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                                    src_cn, blue_idx, icvRGB2HLS_8u_C3R_p );
-        if( status >= 0 )
+        size.width *= 3;
+        for( ; size.height--; dst += dststep )
         {
-            size.width *= 3;
-            for( ; size.height--; dst += dststep )
+            int i;
+            for( i = 0; i <= size.width - 12; i += 12 )
             {
-                int i;
-                for( i = 0; i <= size.width - 12; i += 12 )
-                {
-                    uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
-                    dst[i] = t0; dst[i+3] = t1;
-                    t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
-                    dst[i+6] = t0; dst[i+9] = t1;
-                }
-                for( ; i < size.width; i += 3 )
-                    dst[i] = icvHue255To180[dst[i]];
+                uchar t0 = icvHue255To180[dst[i]], t1 = icvHue255To180[dst[i+3]];
+                dst[i] = t0; dst[i+3] = t1;
+                t0 = icvHue255To180[dst[i+6]]; t1 = icvHue255To180[dst[i+9]];
+                dst[i+6] = t0; dst[i+9] = t1;
             }
+            for( ; i < size.width; i += 3 )
+                dst[i] = icvHue255To180[dst[i]];
         }
-        return status;
-    }*/
-
+    }
+    return status;
+#else
     return icvBGRx2ABC_8u_CnC3R( src, srcstep, dst, dststep, size, src_cn, blue_idx,
                                  (CvColorCvtFunc2)icvBGRx2HLS_32f_CnC3R, 1, post_coeffs );
+#endif
 }
 
 
@@ -1599,56 +1601,55 @@ icvHLS2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
     static const float pre_coeffs[] = { 2.f, 0.f, 0.0039215686274509803f, 0.f,
                                         0.0039215686274509803f, 0.f };
 
-    /*if( icvHLS2RGB_8u_C3R_p )
+#ifdef HAVE_IPP
+    int block_size = MIN(1 << 14, size.width);
+    uchar* buffer;
+    int i, di, k;
+    CvStatus status = CV_OK;
+
+    buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
+    dststep -= size.width*dst_cn;
+
+    for( ; size.height--; src += srcstep, dst += dststep )
     {
-        int block_size = MIN(1 << 14, size.width);
-        uchar* buffer;
-        int i, di, k;
-        CvStatus status = CV_OK;
-
-        buffer = (uchar*)cvStackAlloc( block_size*3*sizeof(buffer[0]) );
-        dststep -= size.width*dst_cn;
-
-        for( ; size.height--; src += srcstep, dst += dststep )
+        for( i = 0; i < size.width; i += block_size )
         {
-            for( i = 0; i < size.width; i += block_size )
+            const uchar* src1 = src + i*3;
+            di = MIN(block_size, size.width - i);
+            for( k = 0; k < di*3; k += 3 )
             {
-                const uchar* src1 = src + i*3;
-                di = MIN(block_size, size.width - i);
-                for( k = 0; k < di*3; k += 3 )
-                {
-                    uchar h = icvHue180To255[src1[k]];
-                    uchar l = src1[k+1];
-                    uchar s = src1[k+2];
-                    buffer[k] = h;
-                    buffer[k+1] = l;
-                    buffer[k+2] = s;
-                }
+                uchar h = icvHue180To255[src1[k]];
+                uchar l = src1[k+1];
+                uchar s = src1[k+2];
+                buffer[k] = h;
+                buffer[k+1] = l;
+                buffer[k+2] = s;
+            }
 
-                status = icvHLS2RGB_8u_C3R_p( buffer, di*3,
-                                buffer, di*3, cvSize(di,1) );
-                if( status < 0 )
-                    return status;
+            status = (CvStatus)ippiHLSToRGB_8u_C3R( buffer, di*3,
+                            buffer, di*3, ippiSize(di,1) );
+            if( status < 0 )
+                return status;
 
-                for( k = 0; k < di*3; k += 3, dst += dst_cn )
-                {
-                    uchar r = buffer[k];
-                    uchar g = buffer[k+1];
-                    uchar b = buffer[k+2];
-                    dst[blue_idx] = b;
-                    dst[1] = g;
-                    dst[blue_idx^2] = r;
-                    if( dst_cn == 4 )
-                        dst[3] = 0;
-                }
+            for( k = 0; k < di*3; k += 3, dst += dst_cn )
+            {
+                uchar r = buffer[k];
+                uchar g = buffer[k+1];
+                uchar b = buffer[k+2];
+                dst[blue_idx] = b;
+                dst[1] = g;
+                dst[blue_idx^2] = r;
+                if( dst_cn == 4 )
+                    dst[3] = 0;
             }
         }
+    }
 
-        return CV_OK;
-    }*/
-
+    return CV_OK;
+#else
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvHLS2BGRx_32f_C3CnR, pre_coeffs, 1 );
+#endif
 }
 
 
@@ -1751,18 +1752,16 @@ static CvStatus CV_STDCALL
 icvBGRx2Lab_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int src_cn, int blue_idx )
 {
-    int i;
-
-    /*if( icvBGR2Lab_8u_C3R_p )
-        return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                         src_cn, blue_idx^2, icvBGR2Lab_8u_C3R_p );*/
-
+#ifdef HAVE_IPP
+    return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
+                                     src_cn, blue_idx^2, (CvColorCvtFunc0)ippiBGRToLab_8u_C3R );
+#else
     srcstep -= size.width*src_cn;
     size.width *= 3;
 
     for( ; size.height--; src += srcstep, dst += dststep )
     {
-        for( i = 0; i < size.width; i += 3, src += src_cn )
+        for( int i = 0; i < size.width; i += 3, src += src_cn )
         {
             int b = src[blue_idx], g = src[1], r = src[2^blue_idx];
             int x, y, z, f;
@@ -1812,6 +1811,7 @@ icvBGRx2Lab_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 
@@ -1916,17 +1916,18 @@ static CvStatus CV_STDCALL
 icvLab2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int dst_cn, int blue_idx )
 {
+#ifdef HAVE_IPP
+    return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
+                                     dst_cn, blue_idx^2, (CvColorCvtFunc0)ippiLabToBGR_8u_C3R );
+#else
     // L: [0..255] -> [0..100]
     // a: [0..255] -> [-128..127]
     // b: [0..255] -> [-128..127]
     static const float pre_coeffs[] = { 0.39215686274509809f, 0.f, 1.f, -128.f, 1.f, -128.f };
 
-    /*if( icvLab2BGR_8u_C3R_p )
-        return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
-                                         dst_cn, blue_idx^2, icvLab2BGR_8u_C3R_p );*/
-
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvLab2BGRx_32f_C3CnR, pre_coeffs, 1 );
+#endif
 }
 
 
@@ -1942,12 +1943,10 @@ static CvStatus CV_STDCALL
 icvBGRx2Luv_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
                        CvSize size, int src_cn, int blue_idx )
 {
-    int i;
-
-    /*if( icvRGB2Luv_32f_C3R_p )
-        return icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
-                                          src_cn, blue_idx, icvRGB2Luv_32f_C3R_p );*/
-
+#ifdef HAVE_IPP
+    return icvBGRx2ABC_IPP_32f_CnC3R( src, srcstep, dst, dststep, size,
+                                      src_cn, blue_idx, (CvColorCvtFunc0)ippiRGBToLUV_32f_C3R );
+#else
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
     srcstep -= size.width*src_cn;
@@ -1955,7 +1954,7 @@ icvBGRx2Luv_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
 
     for( ; size.height--; src += srcstep, dst += dststep )
     {
-        for( i = 0; i < size.width; i += 3, src += src_cn )
+        for( int i = 0; i < size.width; i += 3, src += src_cn )
         {
             float b = src[blue_idx], g = src[1], r = src[2^blue_idx];
             float x, y, z;
@@ -1989,6 +1988,7 @@ icvBGRx2Luv_32f_CnC3R( const float* src, int srcstep, float* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 
@@ -1996,12 +1996,10 @@ static CvStatus CV_STDCALL
 icvLuv2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
                        CvSize size, int dst_cn, int blue_idx )
 {
-    int i;
-
-    /*if( icvLuv2RGB_32f_C3R_p )
-        return icvABC2BGRx_IPP_32f_C3CnR( src, srcstep, dst, dststep, size,
-                                          dst_cn, blue_idx, icvLuv2RGB_32f_C3R_p );*/
-
+#ifdef HAVE_IPP
+    return icvABC2BGRx_IPP_32f_C3CnR( src, srcstep, dst, dststep, size,
+                                      dst_cn, blue_idx, (CvColorCvtFunc0)ippiLUVToRGB_32f_C3R );
+#else
     srcstep /= sizeof(src[0]);
     dststep /= sizeof(dst[0]);
     dststep -= size.width*dst_cn;
@@ -2009,7 +2007,7 @@ icvLuv2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
 
     for( ; size.height--; src += srcstep, dst += dststep )
     {
-        for( i = 0; i < size.width; i += 3, dst += dst_cn )
+        for( int i = 0; i < size.width; i += 3, dst += dst_cn )
         {
             float L = src[i], u = src[i+1], v = src[i+2];
             float x, y, z, t, u1, v1, b, g, r;
@@ -2044,6 +2042,7 @@ icvLuv2BGRx_32f_C3CnR( const float* src, int srcstep, float* dst, int dststep,
     }
 
     return CV_OK;
+#endif
 }
 
 
@@ -2051,19 +2050,19 @@ static CvStatus CV_STDCALL
 icvBGRx2Luv_8u_CnC3R( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int src_cn, int blue_idx )
 {
+#ifdef HAVE_IPP
+    return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
+                                     src_cn, blue_idx, (CvColorCvtFunc0)ippiRGBToLUV_8u_C3R );
+#else
     // L: [0..100] -> [0..255]
     // u: [-134..220] -> [0..255]
     // v: [-140..122] -> [0..255]
     //static const float post_coeffs[] = { 2.55f, 0.f, 1.f, 83.f, 1.f, 140.f };
     static const float post_coeffs[] = { 2.55f, 0.f, 0.72033898305084743f, 96.525423728813564f,
                                          0.99609375f, 139.453125f };
-
-    /*if( icvRGB2Luv_8u_C3R_p )
-        return icvBGRx2ABC_IPP_8u_CnC3R( src, srcstep, dst, dststep, size,
-                                         src_cn, blue_idx, icvRGB2Luv_8u_C3R_p );*/
-
     return icvBGRx2ABC_8u_CnC3R( src, srcstep, dst, dststep, size, src_cn, blue_idx,
                                  (CvColorCvtFunc2)icvBGRx2Luv_32f_CnC3R, 1, post_coeffs );
+#endif
 }
 
 
@@ -2071,18 +2070,19 @@ static CvStatus CV_STDCALL
 icvLuv2BGRx_8u_C3CnR( const uchar* src, int srcstep, uchar* dst, int dststep,
                       CvSize size, int dst_cn, int blue_idx )
 {
+#ifdef HAVE_IPP
+    return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
+                                     dst_cn, blue_idx, (CvColorCvtFunc0)ippiLUVToRGB_8u_C3R );
+#else
     // L: [0..255] -> [0..100]
     // u: [0..255] -> [-134..220]
     // v: [0..255] -> [-140..122]
     static const float pre_coeffs[] = { 0.39215686274509809f, 0.f, 1.388235294117647f, -134.f,
                                         1.003921568627451f, -140.f };
 
-    /*if( icvLuv2RGB_8u_C3R_p )
-        return icvABC2BGRx_IPP_8u_C3CnR( src, srcstep, dst, dststep, size,
-                                         dst_cn, blue_idx, icvLuv2RGB_8u_C3R_p );*/
-
     return icvABC2BGRx_8u_C3CnR( src, srcstep, dst, dststep, size, dst_cn, blue_idx,
                                  (CvColorCvtFunc2)icvLuv2BGRx_32f_C3CnR, pre_coeffs, 1 );
+#endif
 }
 
 /****************************************************************************************\

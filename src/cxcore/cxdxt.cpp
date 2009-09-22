@@ -474,6 +474,60 @@ template<> struct DFT_VecR4<float>
 
 #endif
 
+#ifdef HAVE_IPP
+static void ippsDFTFwd_CToC( const Complex<float>* src, Complex<float>* dst,
+                             const void* spec, uchar* buf)
+{
+    ippsDFTFwd_CToC_32fc( (const Ipp32fc*)src, (Ipp32fc*)dst,
+                          (const IppsDFTSpec_C_32fc*)spec, buf); 
+}
+
+static void ippsDFTFwd_CToC( const Complex<double>* src, Complex<double>* dst,
+                             const void* spec, uchar* buf)
+{
+    ippsDFTFwd_CToC_64fc( (const Ipp64fc*)src, (Ipp64fc*)dst,
+                          (const IppsDFTSpec_C_64fc*)spec, buf); 
+}
+
+static void ippsDFTInv_CToC( const Complex<float>* src, Complex<float>* dst,
+                             const void* spec, uchar* buf)
+{
+    ippsDFTInv_CToC_32fc( (const Ipp32fc*)src, (Ipp32fc*)dst,
+                          (const IppsDFTSpec_C_32fc*)spec, buf); 
+}
+
+static void ippsDFTInv_CToC( const Complex<double>* src, Complex<double>* dst,
+                             const void* spec, uchar* buf)
+{
+    ippsDFTInv_CToC_64fc( (const Ipp64fc*)src, (Ipp64fc*)dst,
+                          (const IppsDFTSpec_C_64fc*)spec, buf); 
+}
+
+static void ippsDFTFwd_RToPack( const float* src, float* dst,
+                                const void* spec, uchar* buf)
+{
+    ippsDFTFwd_RToPack_32f( src, dst, (const IppsDFTSpec_R_32f*)spec, buf); 
+}
+
+static void ippsDFTFwd_RToPack( const double* src, double* dst,
+                                const void* spec, uchar* buf)
+{
+    ippsDFTFwd_RToPack_64f( src, dst, (const IppsDFTSpec_R_64f*)spec, buf); 
+}
+
+static void ippsDFTInv_PackToR( const float* src, float* dst,
+                                const void* spec, uchar* buf)
+{
+    ippsDFTInv_PackToR_32f( src, dst, (const IppsDFTSpec_R_32f*)spec, buf); 
+}
+
+static void ippsDFTInv_PackToR( const double* src, double* dst,
+                                const void* spec, uchar* buf)
+{
+    ippsDFTInv_PackToR_64f( src, dst, (const IppsDFTSpec_R_64f*)spec, buf); 
+}
+#endif
+
 enum { DFT_NO_PERMUTE=256, DFT_COMPLEX_INPUT_OR_OUTPUT=512 };
 
 // mixed-radix complex discrete Fourier transform: double-precision version
@@ -481,7 +535,11 @@ template<typename T> static void
 DFT( const Complex<T>* src, Complex<T>* dst, int n,
      int nf, const int* factors, const int* itab,
      const Complex<T>* wave, int tab_size,
-     const void* /*spec*/, Complex<T>* buf,
+     const void*
+#ifdef HAVE_IPP
+     spec
+#endif
+     , Complex<T>* buf,
      int flags, double _scale )
 {
     static const T sin_120 = (T)0.86602540378443864676372317075294;
@@ -498,13 +556,16 @@ DFT( const Complex<T>* src, Complex<T>* dst, int n,
     T scale = (T)_scale;
     int tab_step;
 
-    /*if( spec )
+#ifdef HAVE_IPP
+    if( spec )
     {
-        assert( DFTFwd_CToC_64fc_p != 0 && DFTInv_CToC_64fc_p != 0 );
-        return !inv ?
-            DFTFwd_CToC_64fc_p( src, dst, spec, buf ):
-            DFTInv_CToC_64fc_p( src, dst, spec, buf );
-    }*/
+        if( !inv )
+            ippsDFTFwd_CToC( src, dst, spec, (uchar*)buf );
+        else
+            ippsDFTInv_CToC( src, dst, spec, (uchar*)buf );
+        return;
+    }
+#endif
 
     tab_step = tab_size == n ? 1 : tab_size == n*2 ? 2 : tab_size/n;
 
@@ -914,7 +975,11 @@ DFT( const Complex<T>* src, Complex<T>* dst, int n,
      re(0), 0, re(1), im(1), ..., re(n/2-1), im((n+1)/2-1) [, re((n+1)/2), 0] */
 template<typename T> static void
 RealDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
-         const Complex<T>* wave, int tab_size, const void* /*spec*/,
+         const Complex<T>* wave, int tab_size, const void*
+#ifdef HAVE_IPP
+         spec
+#endif
+         ,
          Complex<T>* buf, int flags, double _scale )
 {
     int complex_output = (flags & DFT_COMPLEX_INPUT_OR_OUTPUT) != 0;
@@ -922,11 +987,13 @@ RealDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
     int j, n2 = n >> 1;
     dst += complex_output;
 
-    /*if( spec )
+#ifdef HAVE_IPP
+    if( spec )
     {
-        DFTFwd_RToPack_##flavor##_p( src, dst, spec, buf );
+        ippsDFTFwd_RToPack( src, dst, spec, (uchar*)buf );
         goto finalize;
-    }*/
+    }
+#endif
     assert( tab_size == n );
 
     if( n == 1 )
@@ -1008,7 +1075,9 @@ RealDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
         }
     }
 
-//finalize:
+#ifdef HAVE_IPP
+finalize:
+#endif
     if( complex_output )
     {
         dst[-1] = dst[0];
@@ -1025,7 +1094,11 @@ RealDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
 template<typename T> static void
 CCSIDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
          const Complex<T>* wave, int tab_size,
-         const void* /*spec*/, Complex<T>* buf,
+         const void*
+#ifdef HAVE_IPP
+         spec
+#endif
+         , Complex<T>* buf,
          int flags, double _scale )
 {
     int complex_input = (flags & DFT_COMPLEX_INPUT_OR_OUTPUT) != 0;
@@ -1043,13 +1116,13 @@ CCSIDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
         ((T*)src)[1] = src[0];
         src++;
     }
-
-    /*if( spec )
+#ifdef HAVE_IPP
+    if( spec )
     {
-        DFTInv_PackToR_##flavor##_p( src, dst, spec, buf );
+        ippsDFTInv_PackToR( src, dst, spec, (uchar*)buf );
         goto finalize;
-    }*/
-
+    }
+#endif
     if( n == 1 )
     {
         dst[0] = (T)(src[0]*scale);
@@ -1171,7 +1244,9 @@ CCSIDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
         }
     }
 
-/*finalize:*/
+#ifdef HAVE_IPP
+finalize:
+#endif
     if( complex_input )
         ((T*)src)[0] = (T)save_s1;
 }
@@ -1423,6 +1498,9 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
     int factors[34];
     bool inplace_transform = false;
     int ipp_norm_flag = 0;
+#ifdef HAVE_IPP
+    void *spec_r = 0, *spec_c = 0;
+#endif
 
     CV_Assert( type == CV_32FC1 || type == CV_32FC2 || type == CV_64FC1 || type == CV_64FC2 );
 
@@ -1479,7 +1557,8 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
         }
 
         spec = 0;
-        /*if( len*count >= 64 && DFTInitAlloc_R_32f_p != 0 ) // use IPP DFT if available
+#ifdef HAVE_IPP
+        if( len*count >= 64 ) // use IPP DFT if available
         {
             int ipp_sz = 0;
             
@@ -1488,18 +1567,18 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
                 if( depth == CV_32F )
                 {
                     if( spec_r )
-                        IPPI_CALL( DFTFree_R_32f_p( spec_r ));
-                    IPPI_CALL( DFTInitAlloc_R_32f_p(
-                        &spec_r, len, ipp_norm_flag, cvAlgHintNone ));
-                    IPPI_CALL( DFTGetBufSize_R_32f_p( spec_r, &ipp_sz ));
+                        IPPI_CALL( ippsDFTFree_R_32f( (IppsDFTSpec_R_32f*)spec_r ));
+                    IPPI_CALL( ippsDFTInitAlloc_R_32f(
+                        (IppsDFTSpec_R_32f**)&spec_r, len, ipp_norm_flag, ippAlgHintNone ));
+                    IPPI_CALL( ippsDFTGetBufSize_R_32f( (IppsDFTSpec_R_32f*)spec_r, &ipp_sz ));
                 }
                 else
                 {
                     if( spec_r )
-                        IPPI_CALL( DFTFree_R_64f_p( spec_r ));
-                    IPPI_CALL( DFTInitAlloc_R_64f_p(
-                        &spec_r, len, ipp_norm_flag, cvAlgHintNone ));
-                    IPPI_CALL( DFTGetBufSize_R_64f_p( spec_r, &ipp_sz ));
+                        IPPI_CALL( ippsDFTFree_R_64f( (IppsDFTSpec_R_64f*)spec_r ));
+                    IPPI_CALL( ippsDFTInitAlloc_R_64f(
+                        (IppsDFTSpec_R_64f**)&spec_r, len, ipp_norm_flag, ippAlgHintNone ));
+                    IPPI_CALL( ippsDFTGetBufSize_R_64f( (IppsDFTSpec_R_64f*)spec_r, &ipp_sz ));
                 }
                 spec = spec_r;
             }
@@ -1508,25 +1587,26 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
                 if( depth == CV_32F )
                 {
                     if( spec_c )
-                        IPPI_CALL( DFTFree_C_32fc_p( spec_c ));
-                    IPPI_CALL( DFTInitAlloc_C_32fc_p(
-                        &spec_c, len, ipp_norm_flag, cvAlgHintNone ));
-                    IPPI_CALL( DFTGetBufSize_C_32fc_p( spec_c, &ipp_sz ));
+                        IPPI_CALL( ippsDFTFree_C_32fc( (IppsDFTSpec_C_32fc*)spec_c ));
+                    IPPI_CALL( ippsDFTInitAlloc_C_32fc(
+                        (IppsDFTSpec_C_32fc**)&spec_c, len, ipp_norm_flag, ippAlgHintNone ));
+                    IPPI_CALL( ippsDFTGetBufSize_C_32fc( (IppsDFTSpec_C_32fc*)spec_c, &ipp_sz ));
                 }
                 else
                 {
                     if( spec_c )
-                        IPPI_CALL( DFTFree_C_64fc_p( spec_c ));
-                    IPPI_CALL( DFTInitAlloc_C_64fc_p(
-                        &spec_c, len, ipp_norm_flag, cvAlgHintNone ));
-                    IPPI_CALL( DFTGetBufSize_C_64fc_p( spec_c, &ipp_sz ));
+                        IPPI_CALL( ippsDFTFree_C_64fc( (IppsDFTSpec_C_64fc*)spec_c ));
+                    IPPI_CALL( ippsDFTInitAlloc_C_64fc(
+                        (IppsDFTSpec_C_64fc**)&spec_c, len, ipp_norm_flag, ippAlgHintNone ));
+                    IPPI_CALL( ippsDFTGetBufSize_C_64fc( (IppsDFTSpec_C_64fc*)spec_c, &ipp_sz ));
                 }
                 spec = spec_c;
             }
 
             sz += ipp_sz;
         }
-        else*/
+        else
+#endif
         {
             if( len != prev_len )
                 nf = DFTFactorize( len, factors );
@@ -1760,21 +1840,23 @@ void dft( const Mat& src0, Mat& dst, int flags, int nonzero_rows )
         }
     }
 
-    /*if( spec_c )
+#ifdef HAVE_IPP
+    if( spec_c )
     {
         if( depth == CV_32F )
-            DFTFree_C_32fc_p( spec_c );
+            ippsDFTFree_C_32fc( (IppsDFTSpec_C_32fc*)spec_c );
         else
-            DFTFree_C_64fc_p( spec_c );
+            ippsDFTFree_C_64fc( (IppsDFTSpec_C_64fc*)spec_c );
     }
 
     if( spec_r )
     {
         if( depth == CV_32F )
-            DFTFree_R_32f_p( spec_r );
+            ippsDFTFree_R_32f( (IppsDFTSpec_R_32f*)spec_r );
         else
-            DFTFree_R_64f_p( spec_r );
-    }*/
+            ippsDFTFree_R_64f( (IppsDFTSpec_R_64f*)spec_r );
+    }
+#endif
 }
 
 

@@ -112,6 +112,9 @@
 /* LZ77 compression/decompression library (used for PNG) */
 #cmakedefine  HAVE_ZLIB
 
+/* Intel Integrated Performance Primitives */
+#cmakedefine  HAVE_IPP
+
 /* Name of package */
 #define  PACKAGE "${PACKAGE}"
 
