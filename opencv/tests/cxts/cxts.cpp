@@ -1374,7 +1374,10 @@ int CvTS::run( int argc, char** argv )
     }
 
     if( list_tests )
-        goto _exit_;
+    {
+        clear();
+        return 0;
+    }
 
     // 5. setup all the neccessary handlers and print header
     set_handlers( !params.debug_mode );
@@ -1459,10 +1462,10 @@ int CvTS::run( int argc, char** argv )
             test->safe_run( info.test_case_idx );
         }
     }
-_exit_:
+    int nfailed = failed_tests ? (int)failed_tests->size() : 0;
     clear();
 
-    return 0;
+    return nfailed;
 }
 
 
