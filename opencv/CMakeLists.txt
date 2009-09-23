@@ -431,19 +431,27 @@ else()
 endif()
 endif()
 
-message(STATUS "${CMAKE_SYSTEM_LIBRARY_PATH}" "${CMAKE_LIBRARY_PATH}")
-
 foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
     if(NOT IPP_FOUND)
         if(WIN32)
             find_path(IPP_PATH "ippi-${v}.dll"
                 PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
                 DOC "The path to IPP dynamic libraries")
+            if(NOT IPP_PATH)
+                find_path(IPP_PATH "ippiem64t-${v}.dll"
+                    PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
+                    DOC "The path to IPP dynamic libraries")
+            endif()
         endif()
         if(UNIX)
             find_path(IPP_PATH "libippi${CMAKE_SHARED_LIBRARY_SUFFIX}.${v}"
                 PATHS ${CMAKE_LIBRARY_PATH} ${CMAKE_SYSTEM_LIBRARY_PATH} ENV ${OPENCV_LOADER_PATH}
                 DOC "The path to IPP dynamic libraries")
+            if(NOT IPP_PATH)
+                find_path(IPP_PATH "libippiem64t${CMAKE_SHARED_LIBRARY_SUFFIX}.${v}"
+                    PATHS ${CMAKE_LIBRARY_PATH} ${CMAKE_SYSTEM_LIBRARY_PATH} ENV ${OPENCV_LOADER_PATH}
+                    DOC "The path to IPP dynamic libraries")
+            endif()
         endif()
         if(IPP_PATH)
             file(GLOB IPP_HDRS "${IPP_PATH}/../include")
@@ -462,8 +470,14 @@ if(IPP_FOUND AND USE_IPP)
     include_directories("${IPP_PATH}/../include")
     link_directories("${IPP_PATH}/../lib")
     
+    file(GLOB em64t_files "${IPP_PATH}/../lib/*em64t*")
+    set(IPP_ARCH)
+    if(em64t_files)
+        set(IPP_ARCH "em64t")
+    endif()
+    
     set(A ${CMAKE_STATIC_LIBRARY_PREFIX})
-    set(B ${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(B ${IPP_ARCH}${CMAKE_STATIC_LIBRARY_SUFFIX})
     if(WIN32)
         set(L l)
     else()
@@ -911,9 +925,9 @@ message(STATUS "    Old Python:                0")
 endif()
 message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
 if(IPP_FOUND AND USE_IPP)
-message(STATUS "    Use IPP:                   1")
+message(STATUS "    Use IPP:                   ${IPP_PATH}")
 else()
-message(STATUS "    Use IPP:                   0")
+message(STATUS "    Use IPP:                   NO")
 endif()
 if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
 message(STATUS "    Build Documentation        1")
