@@ -1699,6 +1699,8 @@ operator << ( FileStorage& fs, const vector<_Tp>& vec )
 }
 
 CV_EXPORTS void write( FileStorage& fs, const string& name, const Mat& value );
+CV_EXPORTS void write( FileStorage& fs, const string& name, const MatND& value );
+CV_EXPORTS void write( FileStorage& fs, const string& name, const SparseMat& value );
 
 template<typename _Tp> static inline FileStorage& operator << (FileStorage& fs, const _Tp& value)
 {
@@ -1767,6 +1769,9 @@ inline size_t FileNode::size() const
         t == SEQ ? node->data.seq->total : node != 0;
 }
 
+inline CvFileNode* FileNode::operator *() { return (CvFileNode*)node; }
+inline const CvFileNode* FileNode::operator* () const { return node; }
+
 static inline void read(const FileNode& node, bool& value, bool default_value)
 { value = cvReadInt(node.node, default_value) != 0; }
 
@@ -1794,6 +1799,10 @@ static inline void read(const FileNode& node, double& value, double default_valu
 static inline void read(const FileNode& node, string& value, const string& default_value)
 { value = string(cvReadString(node.node, default_value.c_str())); }
 
+CV_EXPORTS void read(const FileNode& node, Mat& mat, const Mat& default_mat=Mat() );
+CV_EXPORTS void read(const FileNode& node, MatND& mat, const MatND& default_mat=MatND() );
+CV_EXPORTS void read(const FileNode& node, SparseMat& mat, const SparseMat& default_mat=SparseMat() );    
+    
 inline FileNode::operator int() const
 {
     return cvReadInt(node, 0);
@@ -1829,7 +1838,7 @@ public:
     }
     FileNodeIterator* it;
 };
-
+    
 template<typename _Tp> class CV_EXPORTS VecReaderProxy<_Tp,1>
 {
 public:
@@ -1854,11 +1863,11 @@ read( FileNodeIterator& it, vector<_Tp>& vec, size_t maxCount=(size_t)INT_MAX )
 }
 
 template<typename _Tp> static inline void
-read( FileNode& node, vector<_Tp>& vec, const vector<_Tp>& /*default_value*/ )
+read( FileNode& node, vector<_Tp>& vec, const vector<_Tp>& default_value=vector<_Tp>() )
 {
     read( node.begin(), vec );
 }
-
+    
 inline FileNodeIterator FileNode::begin() const
 {
     return FileNodeIterator(fs, node);

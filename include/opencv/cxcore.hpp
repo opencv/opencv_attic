@@ -240,6 +240,10 @@ typedef Vec<short, 2> Vec2s;
 typedef Vec<short, 3> Vec3s;
 typedef Vec<short, 4> Vec4s;
 
+typedef Vec<ushort, 2> Vec2w;
+typedef Vec<ushort, 3> Vec3w;
+typedef Vec<ushort, 4> Vec4w;    
+    
 typedef Vec<int, 2> Vec2i;
 typedef Vec<int, 3> Vec3i;
 typedef Vec<int, 4> Vec4i;
@@ -2110,6 +2114,10 @@ public:
     operator float() const;
     operator double() const;
     operator string() const;
+    
+    CvFileNode* operator *();
+    const CvFileNode* operator* () const;
+    
 
     FileNodeIterator begin() const;
     FileNodeIterator end() const;

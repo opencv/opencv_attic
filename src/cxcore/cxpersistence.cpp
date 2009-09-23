@@ -5153,7 +5153,63 @@ FileNodeIterator& FileNodeIterator::readRaw( const string& fmt, uchar* vec, size
     }
     return *this;
 }
+    
+void write( FileStorage& fs, const string& name, const Mat& value )
+{
+    CvMat mat = value;
+    cvWrite( *fs, name.size() ? name.c_str() : 0, &mat );
+}
+    
+void write( FileStorage& fs, const string& name, const MatND& value )
+{
+    CvMatND mat = value;
+    cvWrite( *fs, name.size() ? name.c_str() : 0, &mat );
+}
 
+// TODO: the 4 functions below need to be implemented more efficiently 
+void write( FileStorage& fs, const string& name, const SparseMat& value )
+{
+    Ptr<CvSparseMat> mat = (CvSparseMat*)value;
+    cvWrite( *fs, name.size() ? name.c_str() : 0, mat );
+}
+
+
+void read( const FileNode& node, Mat& mat, const Mat& default_mat )
+{
+    if( node.empty() )
+    {
+        default_mat.copyTo(mat);
+        return;
+    }
+    Ptr<CvMat> m = (CvMat*)cvRead((CvFileStorage*)node.fs, (CvFileNode*)*node);
+    CV_Assert(CV_IS_MAT(m));
+    Mat(m).copyTo(mat);
+}
+    
+void read( const FileNode& node, MatND& mat, const MatND& default_mat )
+{
+    if( node.empty() )
+    {
+        default_mat.copyTo(mat);
+        return;
+    }
+    Ptr<CvMatND> m = (CvMatND*)cvRead((CvFileStorage*)node.fs, (CvFileNode*)*node);
+    CV_Assert(CV_IS_MATND(m));
+    MatND(m).copyTo(mat);
+}
+        
+void read( const FileNode& node, SparseMat& mat, const SparseMat& default_mat )
+{
+    if( node.empty() )
+    {
+        default_mat.copyTo(mat);
+        return;
+    }
+    Ptr<CvSparseMat> m = (CvSparseMat*)cvRead((CvFileStorage*)node.fs, (CvFileNode*)*node);
+    CV_Assert(CV_IS_SPARSE_MAT(m));
+    SparseMat(m).copyTo(mat);
+}
+    
 }
 
 /* End of file. */
