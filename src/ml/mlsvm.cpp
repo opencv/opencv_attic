@@ -1752,7 +1752,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
             CV_SWAP( responses->data.i[i1], responses->data.i[i2], y );
     }
 
-    int* cls_lbls = class_labels->data.i;
+    int* cls_lbls = class_labels ? class_labels->data.i : 0;
     C = C_grid.min_val;
     do
     {
@@ -2227,7 +2227,7 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
 
     CV_CALL( class_labels = (CvMat*)cvReadByName( fs, svm_node, "class_labels" ));
     CV_CALL( class_weights = (CvMat*)cvReadByName( fs, svm_node, "class_weights" ));
-    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, svm_node, "comp_idx" ));
+    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, svm_node, "var_idx" ));
 
     if( class_count > 1 && (!class_labels ||
         !CV_IS_MAT(class_labels) || class_labels->cols != class_count))

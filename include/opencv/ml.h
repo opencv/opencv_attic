@@ -207,7 +207,6 @@ protected:
     const char* default_model_name;
 };
 
-
 /****************************************************************************************\
 *                                 Normal Bayes Classifier                                *
 \****************************************************************************************/
@@ -216,6 +215,9 @@ protected:
    It is used for optimizing statmodel accuracy by varying model parameters,
    the accuracy estimate being computed by cross-validation.
    The grid is logarithmic, so <step> must be greater then 1. */
+
+class CvMLData;
+
 struct CV_EXPORTS CvParamGrid
 {
     // SVM params type
@@ -251,7 +253,7 @@ public:
 
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx = 0, const CvMat* _sample_idx=0, bool update=false );
-
+   
     virtual float predict( const CvMat* _samples, CvMat* results=0 ) const;
     virtual void clear();
 
@@ -290,7 +292,7 @@ public:
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
                         const CvMat* _sample_idx=0, bool is_regression=false,
                         int _max_k=32, bool _update_base=false );
-
+    
     virtual float find_nearest( const CvMat* _samples, int k, CvMat* results=0,
         const float** neighbors=0, CvMat* neighbor_responses=0, CvMat* dist=0 ) const;
 
@@ -648,8 +650,6 @@ protected:
 /****************************************************************************************\
 *                                      Decision Tree                                     *
 \****************************************************************************************/\
-class CvMLData;
-
 struct CvPair16u32s
 {
     unsigned short* u;
@@ -878,7 +878,7 @@ public:
 
     virtual bool train( CvMLData* _data, CvDTreeParams _params=CvDTreeParams() );
 
-    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
 
@@ -1030,7 +1030,7 @@ public:
     virtual float get_proximity( const CvMat* sample1, const CvMat* sample2,
         const CvMat* missing1 = 0, const CvMat* missing2 = 0 ) const;
     
-    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual float get_train_error();    
 
@@ -1214,7 +1214,7 @@ public:
                            CvMat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
                            bool raw_mode=false, bool return_sum=false ) const;
 
-    virtual float calc_error( CvMLData* _data, int type = CV_TEST_ERROR ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual void prune( CvSlice slice );
 
@@ -1302,6 +1302,7 @@ public:
                        const CvMat* _sample_weights, const CvMat* _sample_idx=0,
                        CvANN_MLP_TrainParams _params = CvANN_MLP_TrainParams(),
                        int flags=0 );
+    
     virtual float predict( const CvMat* _inputs,
                            CvMat* _outputs ) const;
 
@@ -1726,7 +1727,7 @@ public:
 
     const CvMat* get_values(){ return values; };
 
-    const CvMat* get_response();
+    const CvMat* get_responses();
 
     const CvMat* get_missing(){ return missing; };
 
