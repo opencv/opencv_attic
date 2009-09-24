@@ -477,10 +477,10 @@ const CvMat* CvMLData :: get_var_types()
     if ( avcount == values->cols || (avcount == values->cols-1 && response_idx == values->cols-1) )
         return var_types;
 
-    if ( !var_types_out || (var_types_out && var_types_out->cols != vt_size ) ) 
+    if ( !var_types_out || ( var_types_out && var_types_out->cols != vt_size ) ) 
     {
         cvReleaseMat( &var_types_out );
-        var_types_out = cvCreateMat( 1, vt_size, CV_8UC1);
+        var_types_out = cvCreateMat( 1, vt_size, CV_8UC1 );
     }
 
     var_types_out_ptr = var_types_out->data.ptr;
@@ -498,7 +498,7 @@ const CvMat* CvMLData :: get_var_types()
     return var_types_out;
 }
 
-const CvMat* CvMLData :: get_response()
+const CvMat* CvMLData :: get_responses()
 {
     CV_FUNCNAME( "CvMLData :: get_responses_ptr" );
     __BEGIN__;
@@ -619,7 +619,7 @@ const CvMat* CvMLData :: get_var_idx()
     if ( avcount == values->cols )
         return 0;
      
-    if ( !var_idx_out || (var_idx_out && var_idx_out->cols != avcount ) ) 
+    if ( !var_idx_out || ( var_idx_out && var_idx_out->cols != avcount ) ) 
     {
         cvReleaseMat( &var_idx_out );
         var_idx_out = cvCreateMat( 1, avcount, CV_32SC1);

@@ -40,8 +40,7 @@
 //
 //M*/
 
-#ifndef _ML_TEST_H_
-#define _ML_TEST_H_
+#pragma once
 
 #if defined _MSC_VER && _MSC_VER >= 1200
 #pragma warning( disable: 4710 4711 4514 4996 )
@@ -55,31 +54,74 @@
 #include <string>
 #include <iostream>
 
-
 using namespace std;
+using namespace cv;
 
-class CV_TreesBaseTest : public CvTest
+#define CV_NBAYES   "nbayes"
+#define CV_KNEAREST "knearest"
+#define CV_SVM      "svm"
+#define CV_EM       "em"
+#define CV_ANN      "ann"
+#define CV_DTREE    "dtree"
+#define CV_BOOST    "boost"
+#define CV_RTREES   "rtrees"
+#define CV_ERTREES  "ertrees"
+
+class CV_MLBaseTest : public CvTest
 {
 public:
-    CV_TreesBaseTest( const char* test_name, const char* test_funcs );
-    ~CV_TreesBaseTest();
+    CV_MLBaseTest( const char* _modelName, const char* _testName, const char* _testFuncs );
+    virtual ~CV_MLBaseTest();
     virtual int init( CvTS* system );
 protected:
     virtual int read_params( CvFileStorage* fs );
-    virtual void run( int start_from );
-    virtual int prepare_test_case( int test_case_idx );
-    virtual int run_test_case( int test_case_idx );
-    virtual int validate_test_results( int test_case_idx );
+    virtual void run( int startFrom );
+    virtual int prepare_test_case( int testCaseIdx );
+    virtual string& get_validation_filename();
+    virtual int run_test_case( int testCaseIdx ) = 0;
+    virtual int validate_test_results( int testCaseIdx ) = 0;
 
-    virtual int train( int test_case_idx ) = 0;
-    virtual float get_error() = 0;
-    
+    int train( int testCaseIdx );
+    float get_error( int testCaseIdx, int type, vector<float> *resp = 0 );
+    void save( const char* filename );
+    void load( const char* filename );
+
     CvMLData data;
-    
-    CvSeq* data_sets_names;
-    CvFileStorage* validation_fs;
+    string modelName, validationFN;
+    vector<string> dataSetNames;
+    FileStorage validationFS;
+
+    // MLL models
+    CvNormalBayesClassifier* nbayes;
+    CvKNearest* knearest;
+    CvSVM* svm;
+    CvEM* em;
+    CvANN_MLP* ann;
+    CvDTree* dtree;
+    CvBoost* boost;
+    CvRTrees* rtrees;
+    CvERTrees* ertrees;
 };
 
-#endif /* _ML_TEST_H_ */
+class CV_AMLTest : public CV_MLBaseTest
+{
+public:
+    CV_AMLTest( const char* _modelName, const char* _testName ); 
+protected:
+    virtual int run_test_case( int testCaseIdx );
+    virtual int validate_test_results( int testCaseIdx );
+};
+
+class CV_SLMLTest : public CV_MLBaseTest
+{
+public:
+    CV_SLMLTest( const char* _modelName, const char* _testName ); 
+protected:
+    virtual int run_test_case( int testCaseIdx );
+    virtual int validate_test_results( int testCaseIdx );
+
+    vector<float> test_resps1, test_resps2; // predicted responses for test data
+    char fname1[50], fname2[50];
+};
 
 /* End of file. */

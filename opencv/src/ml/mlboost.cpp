@@ -1058,7 +1058,7 @@ bool CvBoost::train( CvMLData* _data,
     __BEGIN__;
 
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* var_types = _data->get_var_types();
     const CvMat* train_sidx = _data->get_train_sample_idx();
@@ -1788,11 +1788,11 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     return value;
 }
 
-float CvBoost::calc_error( CvMLData* _data, int type )
+float CvBoost::calc_error( CvMLData* _data, int type, vector<float> *resp )
 {
     float err = 0;
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
     const CvMat* var_types = _data->get_var_types();
@@ -1802,6 +1802,12 @@ float CvBoost::calc_error( CvMLData* _data, int type )
     bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
     int sample_count = sample_idx ? sample_idx->cols : 0;
     sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : sample_count;
+    float* pred_resp = 0;
+    if( resp && (sample_count > 0) )
+    {
+        resp->resize( sample_count );
+        pred_resp = &((*resp)[0]);
+    }
     if ( is_classifier )
     {
         for( int i = 0; i < sample_count; i++ )
@@ -1812,6 +1818,8 @@ float CvBoost::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 );
+            if( pred_resp )
+                pred_resp[i] = r;
             int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
             err += d;
         }
@@ -1827,6 +1835,8 @@ float CvBoost::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 );
+            if( pred_resp )
+                pred_resp[i] = r;
             float d = r - response->data.fl[si*r_step];
             err += d*d;
         }
