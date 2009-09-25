@@ -634,6 +634,9 @@ double CvCapture_FFMPEG::getProperty( int property_id )
     if(ic->start_time != AV_NOPTS_VALUE_ && ic->duration != AV_NOPTS_VALUE_)
         return (double)(timestamp-ic->start_time)/(double)ic->duration;
     break;
+	case CV_CAP_PROP_FRAME_COUNT:
+		return (double)video_st->duration;
+	break;
     case CV_CAP_PROP_FRAME_WIDTH:
         return (double)frame.width;
     break;
