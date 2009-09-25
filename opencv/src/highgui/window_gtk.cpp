@@ -761,6 +761,11 @@ cvShowImage( const char* name, const CvArr* arr )
 	CV_LOCK_MUTEX();
 
     window = icvFindWindowByName(name);
+	if(!window)
+	{
+		cvNamedWindow(name, 1);
+		window = icvFindWindowByName(name);
+	}
     if( window && arr ){
 		CvImageWidget * image_widget = CV_IMAGE_WIDGET( window->widget );
 		cvImageWidgetSetImage( image_widget, arr );
