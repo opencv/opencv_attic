@@ -920,6 +920,27 @@ static int icvOpenCamera_QT (CvCapture_QT_Cam * capture, const int index)
 	result = SGNewChannel (capture->grabber, VideoMediaType, & (capture->channel));
 	OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt create new video channel");
 
+    // select the camera indicated by index
+    SGDeviceList device_list = 0;
+    result = SGGetChannelDeviceList (capture->channel, 0, & device_list);
+    OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt get channel device list");
+    for (int i = 0, current_index = 1; i < (*device_list)->count; i++)
+    {
+        SGDeviceName device = (*device_list)->entry[i];
+        if (device.flags == 0)
+        {
+            if (current_index == index)
+            {
+                result = SGSetChannelDevice (capture->channel, device.name);
+                OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt set the channel video device");
+                break;
+            }
+            current_index++;
+        }
+    }   
+    result = SGDisposeDeviceList (capture->grabber, device_list);
+    OPENCV_ASSERT (result == noErr, "icvOpenCamera_QT", "couldnt dispose the channel device list");
+    
 	// query natural camera resolution -- this will be wrong, but will be an upper
 	// bound on the actual resolution -- the actual resolution is set below
 	// after starting the frame grabber
