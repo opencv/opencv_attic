@@ -173,7 +173,8 @@ bool setBreakOnError(bool value)
 void error( const Exception& exc )
 {
     if (customErrorCallback != 0) 
-        customErrorCallback(exc.code, exc.func.c_str(), exc.err.c_str(), exc.file.c_str(), exc.line, 0);
+        customErrorCallback(exc.code, exc.func.c_str(), exc.err.c_str(),
+                            exc.file.c_str(), exc.line, customErrorCallbackData);
     else
     {
         const char* errorStr = cvErrorStr(exc.code);
