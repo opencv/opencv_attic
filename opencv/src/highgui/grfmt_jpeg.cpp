@@ -214,11 +214,7 @@ bool  JpegDecoder::readHeader()
         }
         else
         {
-        #ifdef WIN32
-            m_f = _wfopen( toUtf16(m_filename).c_str(), L"rb" );
-        #else
             m_f = fopen( m_filename.c_str(), "rb" );
-        #endif
             if( m_f )
                 jpeg_stdio_src( &state->cinfo, m_f );
         }
@@ -558,11 +554,7 @@ bool  JpegEncoder::write( const Mat& img, const vector<int>& params )
 
     if( !m_buf )
     {
-    #ifdef WIN32
-        f = _wfopen( toUtf16(m_filename).c_str(), L"wb" );
-    #else
         f = fopen( m_filename.c_str(), "wb" );
-    #endif
         if( !f )
             goto _exit_;
         jpeg_stdio_dest( &cinfo, f );

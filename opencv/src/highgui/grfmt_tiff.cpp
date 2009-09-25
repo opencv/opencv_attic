@@ -392,11 +392,7 @@ bool  TiffEncoder::write( const Mat& img, const vector<int>& )
     else
     {
         // write directory offset
-    #ifdef WIN32
-        FILE* f = _wfopen( toUtf16(m_filename).c_str(), L"r+b" );
-    #else
         FILE* f = fopen( m_filename.c_str(), "r+b" );
-    #endif
         buffer[0] = (uchar)directoryOffset;
         buffer[1] = (uchar)(directoryOffset >> 8);
         buffer[2] = (uchar)(directoryOffset >> 16);
