@@ -12,7 +12,6 @@
 			<_> poletelecomm </_></svm>
 		<em type_id="seq"></em>
 		<ann type_id="seq"> 
-			<_> spambase </_>
 			<_> waveform </_></ann>
 		<dtree type_id="seq"> 
 			<_> mushroom </_>
@@ -79,6 +78,15 @@
 		</svm>
 		<em></em>
 		<ann>
+			<letter>
+				<model_params>
+					<train_method> RPROP </train_method>
+					<param1> 0.1 </param1>
+					<param2> 0.1 </param2></model_params>
+				<data_params>
+					<LS> 10000 </LS>
+					<resp_idx> 17 </resp_idx>
+					<types> ord[0-16],cat[17] </types></data_params></letter>
 			<spambase>
 				<model_params>
 					<train_method> BACKPROP </train_method>

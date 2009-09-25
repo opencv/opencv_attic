@@ -294,79 +294,119 @@ float svm_calc_error( CvSVM* svm, CvMLData* _data, int type, vector<float> *resp
 
 // 4. em
 // 5. ann
-//int str_to_ann_train_method( string& str )
-//{
-//    if( !str.compare("BACKPROP") )
-//        return CvANN_MLP_TrainParams::BACKPROP;
-//    if( !str.compare("RPROP") )
-//        return CvANN_MLP_TrainParams::RPROP;
-//    CV_Error( CV_StsBadArg, "incorrect ann train method string" );
-//    return -1;
-//}
-//void ann_check_data_and_get_predictors( CvMLData* _data, CvMat* _inputs )
-//{
-//    const CvMat* values = _data->get_values();
-//    const CvMat* var_idx = _data->get_var_idx();
-//    if( var_idx->cols + var_idx->rows != values->cols )
-//        CV_Error( CV_StsBadArg, "var_idx is not supported" );
-//    if( _data->get_missing() )
-//        CV_Error( CV_StsBadArg, "missing values are not supported" );
-//    int resp_idx = _data->get_response_idx();
-//    if( resp_idx == 0)
-//        cvGetCols( values, _inputs, 1, values->cols );
-//    else if( resp_idx == values->cols - 1 )
-//        cvGetCols( values, _inputs, 0, values->cols - 1 );
-//    else
-//        CV_Error( CV_StsBadArg, "outputs must be in the first or last column; other cases are not supported" );
-//}
-//int ann_train( CvANN_MLP* ann, CvMLData* _data, CvANN_MLP_TrainParams _params, int flags = 0 )
-//{
-//    const CvMat* responses = _data->get_responses();
-//    const CvMat* train_sidx = _data->get_train_sample_idx();
-//    CvMat predictors;
-//    ann_check_data_and_get_predictors( _data, &predictors );
-//    return ann->train( &predictors, responses, 0, train_sidx, _params, flags );
-//}
-//float ann_calc_error( CvANN_MLP* ann, CvMLData* _data, int type , vector<float> *resp )
-//{
-//    float err = 0;
-//    const CvMat* response = _data->get_responses();
-//    const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
-//    int* sidx = sample_idx ? sample_idx->data.i : 0;
-//    int r_step = CV_IS_MAT_CONT(response->type) ?
-//        1 : response->step / CV_ELEM_SIZE(response->type);
-//    CvMat predictors;
-//    ann_check_data_and_get_predictors( _data, &predictors );
-//    int sample_count = sample_idx ? sample_idx->cols : 0;
-//    sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? predictors.rows : sample_count;
-//    float* pred_resp = 0;
-//    vector<float> innresp;
-//    if( sample_count > 0 )
-//    {
-//        if( resp )
-//        {
-//            resp->resize( sample_count );
-//            pred_resp = &((*resp)[0]);
-//        }
-//        else
-//        {
-//            innresp.resize( sample_count );
-//            pred_resp = &(innresp[0]);
-//        }
-//    }
-//    for( int i = 0; i < sample_count; i++ )
-//    {
-//        CvMat sample;
-//        CvMat output = cvMat( 1, 1, CV_32FC1, &pred_resp[i] );
-//        int si = sidx ? sidx[i] : i;
-//        cvGetRow( &predictors, &sample, si ); 
-//        ann->predict( &sample, &output );
-//        int d = fabs((double)pred_resp[i] - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
-//        err += d;
-//    }
-//    err = sample_count ? err / (float)sample_count * 100 : -FLT_MAX;
-//    return err;
-//}
+int str_to_ann_train_method( string& str )
+{
+    if( !str.compare("BACKPROP") )
+        return CvANN_MLP_TrainParams::BACKPROP;
+    if( !str.compare("RPROP") )
+        return CvANN_MLP_TrainParams::RPROP;
+    CV_Error( CV_StsBadArg, "incorrect ann train method string" );
+    return -1;
+}
+void ann_check_data_and_get_predictors( CvMLData* _data, CvMat* _inputs )
+{
+    const CvMat* values = _data->get_values();
+    const CvMat* var_idx = _data->get_var_idx();
+    if( var_idx->cols + var_idx->rows != values->cols )
+        CV_Error( CV_StsBadArg, "var_idx is not supported" );
+    if( _data->get_missing() )
+        CV_Error( CV_StsBadArg, "missing values are not supported" );
+    int resp_idx = _data->get_response_idx();
+    if( resp_idx == 0)
+        cvGetCols( values, _inputs, 1, values->cols );
+    else if( resp_idx == values->cols - 1 )
+        cvGetCols( values, _inputs, 0, values->cols - 1 );
+    else
+        CV_Error( CV_StsBadArg, "outputs must be in the first or last column; other cases are not supported" );
+}
+void ann_get_new_responses( CvMLData* _data, Mat& new_responses, map<int, int>& cls_map )
+{
+    const CvMat* train_sidx = _data->get_train_sample_idx();
+    int* train_sidx_ptr = train_sidx->data.i;
+    const CvMat* responses = _data->get_responses();
+    float* responses_ptr = responses->data.fl;
+    int r_step = CV_IS_MAT_CONT(responses->type) ?
+        1 : responses->step / CV_ELEM_SIZE(responses->type);
+    int cls_count = 0;
+    // construct cls_map
+    cls_map.clear();
+    for( int si = 0; si < train_sidx->cols; si++ )
+    {
+        int sidx = train_sidx_ptr[si];
+        int r = cvRound(responses_ptr[sidx*r_step]);
+        CV_DbgAssert( fabs(responses_ptr[sidx*r_step]-r) < FLT_EPSILON );
+        int cls_map_size = (int)cls_map.size();
+        cls_map[r];
+        if ( (int)cls_map.size() > cls_map_size )
+            cls_map[r] = cls_count++;
+    }
+    new_responses.create( responses->rows, cls_count, CV_32F );
+    new_responses.setTo( 0 );
+    for( int si = 0; si < train_sidx->cols; si++ )
+    {
+        int sidx = train_sidx_ptr[si];
+        int r = cvRound(responses_ptr[sidx*r_step]);
+        int cidx = cls_map[r];
+        new_responses.ptr<float>(sidx)[cidx] = 1;
+    }
+}
+int ann_train( CvANN_MLP* ann, CvMLData* _data, Mat& new_responses, CvANN_MLP_TrainParams _params, int flags = 0 )
+{
+    const CvMat* train_sidx = _data->get_train_sample_idx();
+    CvMat predictors;
+    ann_check_data_and_get_predictors( _data, &predictors );
+    CvMat _new_responses = CvMat( new_responses );
+    return ann->train( &predictors, &_new_responses, 0, train_sidx, _params, flags );
+}
+float ann_calc_error( CvANN_MLP* ann, CvMLData* _data, map<int, int>& cls_map, int type , vector<float> *resp_labels )
+{
+    float err = 0;
+    const CvMat* responses = _data->get_responses();
+    const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
+    int* sidx = sample_idx ? sample_idx->data.i : 0;
+    int r_step = CV_IS_MAT_CONT(responses->type) ?
+        1 : responses->step / CV_ELEM_SIZE(responses->type);
+    CvMat predictors;
+    ann_check_data_and_get_predictors( _data, &predictors );
+    int sample_count = sample_idx ? sample_idx->cols : 0;
+    sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? predictors.rows : sample_count;
+    float* pred_resp = 0;
+    vector<float> innresp;
+    if( sample_count > 0 )
+    {
+        if( resp_labels )
+        {
+            resp_labels->resize( sample_count );
+            pred_resp = &((*resp_labels)[0]);
+        }
+        else
+        {
+            innresp.resize( sample_count );
+            pred_resp = &(innresp[0]);
+        }
+    }
+    int cls_count = (int)cls_map.size();
+    Mat output( 1, cls_count, CV_32FC1 );
+    CvMat _output = CvMat(output);
+    map<int, int>::iterator b_it = cls_map.begin();
+    for( int i = 0; i < sample_count; i++ )
+    {
+        CvMat sample;
+        int si = sidx ? sidx[i] : i;
+        cvGetRow( &predictors, &sample, si ); 
+        ann->predict( &sample, &_output );
+        CvPoint best_cls = {0,0};
+        cvMinMaxLoc( &_output, 0, 0, 0, &best_cls, 0 );
+        int r = cvRound(responses->data.fl[si*r_step]);
+        CV_DbgAssert( fabs(responses->data.fl[si*r_step]-r) < FLT_EPSILON );
+        r = cls_map[r];
+        int d = best_cls.x == r ? 0 : 1;
+        err += d;
+        pred_resp[i] = (float)best_cls.x;
+    }
+    err = sample_count ? err / (float)sample_count * 100 : -FLT_MAX;
+    return err;
+}
 
 // 6. dtree
 // 7. boost
@@ -581,18 +621,19 @@ int CV_MLBaseTest::train( int testCaseIdx )
     }
     else if( !modelName.compare(CV_ANN) )
     {
-        assert( 0 );
-        /*string train_method_str;
+        string train_method_str;
         double param1, param2;
         modelParamsNode["train_method"] >> train_method_str;
         modelParamsNode["param1"] >> param1;
         modelParamsNode["param2"] >> param2;
-        int layer_sz[] = { data.get_values()->cols - 1, 100, 100, 1 };
+        Mat new_responses;
+        ann_get_new_responses( &data, new_responses, cls_map );
+        int layer_sz[] = { data.get_values()->cols - 1, 100, 100, (int)cls_map.size() };
         CvMat layer_sizes =
             cvMat( 1, (int)(sizeof(layer_sz)/sizeof(layer_sz[0])), CV_32S, layer_sz );
         ann->create( &layer_sizes );
-        is_trained = ann_train( ann, &data, CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER,300,0.01),
-            str_to_ann_train_method(train_method_str), param1, param2) ) >= 0;*/
+        is_trained = ann_train( ann, &data, new_responses, CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER,300,0.01),
+            str_to_ann_train_method(train_method_str), param1, param2) ) >= 0;
     }
     else if( !modelName.compare(CV_DTREE) )
     {
@@ -685,8 +726,7 @@ float CV_MLBaseTest::get_error( int testCaseIdx, int type, vector<float> *resp )
     else if( !modelName.compare(CV_EM) )
         assert( 0 );
     else if( !modelName.compare(CV_ANN) )
-        assert( 0 );
-        // err = ann_calc_error( ann, &data, type, resp );
+        err = ann_calc_error( ann, &data, cls_map, type, resp );
     else if( !modelName.compare(CV_DTREE) )
         err = dtree->calc_error( &data, type, resp );
     else if( !modelName.compare(CV_BOOST) )
