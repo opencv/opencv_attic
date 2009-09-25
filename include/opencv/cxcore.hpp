@@ -101,7 +101,10 @@ public:
 
 CV_EXPORTS string format( const char* fmt, ... );
 CV_EXPORTS void error( const Exception& exc );
-
+CV_EXPORTS bool setBreakOnError(bool value);
+CV_EXPORTS CvErrorCallback redirectError( CvErrorCallback errCallback,
+                                          void* userdata=0, void** prevUserdata=0);
+    
 #ifdef __GNUC__
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, __func__, __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, __func__, __FILE__, __LINE__) )
@@ -982,7 +985,7 @@ CV_EXPORTS void reduce(const Mat& m, Mat& dst, int dim, int rtype, int dtype=-1)
 CV_EXPORTS void merge(const Mat* mv, size_t count, Mat& dst);
 CV_EXPORTS void split(const Mat& m, Mat* mvbegin);
 
-CV_EXPORTS void mixChannels(const Mat* srcbegin, Mat* dstbegin,
+CV_EXPORTS void mixChannels(const Mat* src, int nsrcs, Mat* dst, int ndsts,
                             const int* fromTo, size_t npairs);
 CV_EXPORTS void flip(const Mat& a, Mat& b, int flipCode);
 
@@ -1592,7 +1595,7 @@ CV_EXPORTS void minMaxLoc(const MatND& a, double* minVal,
 
 CV_EXPORTS void merge(const MatND* mvbegin, size_t count, MatND& dst);
 CV_EXPORTS void split(const MatND& m, MatND* mv);
-CV_EXPORTS void mixChannels(const MatND* srcbegin, MatND* dstbegin,
+CV_EXPORTS void mixChannels(const MatND* src, int nsrcs, MatND* dst, int ndsts,
                             const int* fromTo, size_t npairs);
 
 CV_EXPORTS void bitwise_and(const MatND& a, const MatND& b, MatND& c, const MatND& mask=MatND());

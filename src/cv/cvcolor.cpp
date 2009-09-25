@@ -325,7 +325,7 @@ icvBGRx2ABC_IPP_##flavor##_CnC3R( const arrtype* src, int srcstep,      \
     return CV_OK;                                                       \
 }
 
-
+#ifdef HAVE_IPP
 static CvStatus CV_STDCALL
 icvBGRx2ABC_IPP_8u_CnC3R( const uchar* src, int srcstep,
     uchar* dst, int dststep, CvSize size, int src_cn,
@@ -374,9 +374,7 @@ icvBGRx2ABC_IPP_8u_CnC3R( const uchar* src, int srcstep,
 }
 
 //CV_IMPL_BGRx2ABC_IPP( 8u, uchar )
-#ifndef HAVE_IPP
 CV_IMPL_BGRx2ABC_IPP( 16u, ushort )
-#endif
 CV_IMPL_BGRx2ABC_IPP( 32f, float )
 
 #define CV_IMPL_ABC2BGRx_IPP( flavor, arrtype )                         \
@@ -430,11 +428,9 @@ icvABC2BGRx_IPP_##flavor##_C3CnR( const arrtype* src, int srcstep,      \
 }
 
 CV_IMPL_ABC2BGRx_IPP( 8u, uchar )
-#ifndef HAVE_IPP
 CV_IMPL_ABC2BGRx_IPP( 16u, ushort )
-#endif
 CV_IMPL_ABC2BGRx_IPP( 32f, float )
-
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
 

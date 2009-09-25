@@ -159,23 +159,52 @@ string format( const char* fmt, ... )
     return string(buf);
 }
 
+static CvErrorCallback customErrorCallback = 0;
+static void* customErrorCallbackData = 0;
+static bool breakOnError = false;
+
+bool setBreakOnError(bool value)
+{
+    bool prevVal = breakOnError;
+    breakOnError = value;
+    return prevVal;
+}        
+
 void error( const Exception& exc )
 {
-    const char* errorStr = cvErrorStr(exc.code);
-    char buf[1 << 16];
+    if (customErrorCallback != 0) 
+        customErrorCallback(exc.code, exc.func.c_str(), exc.err.c_str(), exc.file.c_str(), exc.line, 0);
+    else
+    {
+        const char* errorStr = cvErrorStr(exc.code);
+        char buf[1 << 16];
 
-    sprintf( buf, "OpenCV Error: %s (%s) in %s, file %s, line %d",
-        errorStr, exc.err.c_str(), exc.func.size() > 0 ?
-        exc.func.c_str() : "unknown function", exc.file.c_str(), exc.line );
-    fprintf( stderr, "%s\n", buf );
-    fflush( stderr );
-#ifdef _DEBUG
-    static volatile int* p = 0;
-    *p = 0;
-#endif
+        sprintf( buf, "OpenCV Error: %s (%s) in %s, file %s, line %d",
+            errorStr, exc.err.c_str(), exc.func.size() > 0 ?
+            exc.func.c_str() : "unknown function", exc.file.c_str(), exc.line );
+        fprintf( stderr, "%s\n", buf );
+        fflush( stderr );
+    }
+    if(breakOnError)
+    {
+        static volatile int* p = 0;
+        *p = 0;
+    }
     throw exc;
 }
-
+    
+CvErrorCallback
+redirectError( CvErrorCallback errCallback, void* userdata, void** prevUserdata)
+{
+    if( prevUserdata )
+        *prevUserdata = customErrorCallbackData;
+    CvErrorCallback prevCallback = customErrorCallback;
+    customErrorCallback = errCallback;
+    customErrorCallbackData = userdata;
+    
+    return prevCallback;
+}
+    
 }
 
 /*CV_IMPL int
@@ -246,9 +275,9 @@ CV_IMPL int cvGetThreadNum()
 
 
 CV_IMPL CvErrorCallback
-cvRedirectError( CvErrorCallback, void*, void** )
+cvRedirectError( CvErrorCallback errCallback, void* userdata, void** prevUserdata)
 {
-    return 0;
+    return cv::redirectError(errCallback, userdata, prevUserdata);
 }
 
 CV_IMPL int cvNulDevReport( int, const char*, const char*,

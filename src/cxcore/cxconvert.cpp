@@ -139,16 +139,14 @@ void split(const Mat& src, Mat* mv)
     }
     else
     {
-        vector<Mat> allsrc(cn);
         vector<int> pairs(cn*2);
 
         for( i = 0; i < cn; i++ )
         {
-            allsrc[i] = src;
             pairs[i*2] = i;
             pairs[i*2+1] = 0;
         }
-        mixChannels( &allsrc[0], mv, &pairs[0], cn );
+        mixChannels( &src, 1, mv, cn, &pairs[0], cn );
     }
 }
 
@@ -261,7 +259,6 @@ void merge(const Mat* mv, size_t n, Mat& dst)
     }
     else
     {
-        vector<Mat> allsrc(total), alldst(total);
         vector<int> pairs(total*2);
         int j, k, ni=0;
 
@@ -270,13 +267,11 @@ void merge(const Mat* mv, size_t n, Mat& dst)
             ni = mv[i].channels();
             for( k = 0; k < ni; k++ )
             {
-                allsrc[j+k] = mv[i];
-                alldst[j+k] = dst;
-                pairs[(j+k)*2] = k;
+                pairs[(j+k)*2] = j + k;
                 pairs[(j+k)*2+1] = j + k;
             }
         }
-        mixChannels( allsrc, alldst, &pairs[0] );
+        mixChannels( mv, n, &dst, 1, &pairs[0], total );
     }
 }
 
@@ -338,13 +333,13 @@ mixChannels_( const void** _src, const int* sdelta0,
 typedef void (*MixChannelsFunc)( const void** src, const int* sdelta0,
         const int* sdelta1, void** dst, const int* ddelta0, const int* ddelta1, int n, Size size );
 
-void mixChannels( const Mat* src, Mat* dst, const int* fromTo, size_t npairs )
+void mixChannels( const Mat* src, int nsrcs, Mat* dst, int ndsts, const int* fromTo, size_t npairs )
 {
     size_t i;
     
     if( npairs == 0 )
         return;
-    CV_Assert( src && dst && fromTo && npairs > 0 );
+    CV_Assert( src && nsrcs > 0 && dst && ndsts > 0 && fromTo && npairs > 0 );
 
     int depth = dst[0].depth(), esz1 = (int)dst[0].elemSize1();
     Size size = dst[0].size();
@@ -357,24 +352,29 @@ void mixChannels( const Mat* src, Mat* dst, const int* fromTo, size_t npairs )
 
     for( i = 0; i < npairs; i++ )
     {
-        int i0 = fromTo[i*2], i1 = fromTo[i*2+1];
-        int scn = src[i].channels(), dcn = dst[i].channels();
-        if( src[i].data )
+        int i0 = fromTo[i*2], i1 = fromTo[i*2+1], j;
+        if( i0 >= 0 )
         {
-            CV_Assert( src[i].depth() == depth && src[i].size() == size && 0 <= i0 && i0 < scn );
-            isContinuous = isContinuous && src[i].isContinuous();
-            srcs[i] = src[i].data + i0*esz1;
-            s1[i] = scn; s0[i] = (int)src[i].step/esz1 - size.width*scn;
+            for( j = 0; j < nsrcs; i0 -= src[j].channels(), j++ )
+                if( i0 < src[j].channels() )
+                    break;
+            CV_Assert(j < nsrcs && src[j].size() == size && src[j].depth() == depth);
+            isContinuous = isContinuous && src[j].isContinuous();
+            srcs[i] = src[j].data + i0*esz1;
+            s1[i] = src[j].channels(); s0[i] = (int)src[j].step/esz1 - size.width*src[j].channels();
         }
         else
         {
             srcs[i] = 0; s1[i] = s0[i] = 0;
         }
-
-        CV_Assert( dst[i].depth() == depth && dst[i].size() == size && 0 <= i1 && i1 < dcn );
-        isContinuous = isContinuous && dst[i].isContinuous();
-        dsts[i] = dst[i].data + i1*esz1;
-        d1[i] = dcn; d0[i] = (int)(dst[i].step/esz1 - size.width*dcn);
+        
+        for( j = 0; j < ndsts; i1 -= dst[j].channels(), j++ )
+            if( i1 < dst[j].channels() )
+                break;
+        CV_Assert(i1 >= 0 && j < ndsts && dst[j].size() == size && dst[j].depth() == depth);
+        isContinuous = isContinuous && dst[j].isContinuous();
+        dsts[i] = dst[j].data + i1*esz1;
+        d1[i] = dst[j].channels(); d0[i] = (int)dst[j].step/esz1 - size.width*dst[j].channels();
     }
 
     MixChannelsFunc func = 0;
@@ -870,7 +870,7 @@ cvSplit( const void* srcarr, void* dstarr0, void* dstarr1, void* dstarr2, void* 
                 dvec[j].depth() == src.depth() &&
                 dvec[j].channels() == 1 && i < src.channels() );
             pairs[j*2] = i;
-            pairs[j*2+1] = 0;
+            pairs[j*2+1] = j;
             j++;
         }
     }
@@ -878,8 +878,7 @@ cvSplit( const void* srcarr, void* dstarr0, void* dstarr1, void* dstarr2, void* 
         cv::split( src, dvec );
     else
     {
-        cv::vector<cv::Mat> svec(nz, src);
-        cv::mixChannels( svec, dvec, &pairs[0] );
+        cv::mixChannels( &src, 1, &dvec[0], nz, &pairs[0], nz );
     }
 }
 
@@ -905,7 +904,7 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
             CV_Assert( svec[j].size() == dst.size() &&
                 svec[j].depth() == dst.depth() &&
                 svec[j].channels() == 1 && i < dst.channels() );
-            pairs[j*2] = 0;
+            pairs[j*2] = j;
             pairs[j*2+1] = i;
             j++;
         }
@@ -915,8 +914,7 @@ cvMerge( const void* srcarr0, const void* srcarr1, const void* srcarr2,
         cv::merge( svec, dst );
     else
     {
-        cv::vector<cv::Mat> dvec(nz, dst);
-        cv::mixChannels( svec, dvec, &pairs[0] );
+        cv::mixChannels( &svec[0], nz, &dst, 1, &pairs[0], nz );
     }
 }
 
@@ -927,16 +925,14 @@ cvMixChannels( const CvArr** src, int src_count,
                const int* from_to, int pair_count )
 {
     CV_Assert( src_count == dst_count && src_count == pair_count );
-    cv::vector<cv::Mat> svec(pair_count), dvec(pair_count);
-    cv::vector<int> pairs(from_to, from_to + pair_count*2);
+    cv::AutoBuffer<cv::Mat, 32> buf;
 
-    for( int i = 0; i < pair_count; i++ )
-    {
-        if( src[i] )
-            svec[i] = cv::cvarrToMat(src[i]);
-        dvec[i] = cv::cvarrToMat(dst[i]);
-    }
-    cv::mixChannels(svec, dvec, &pairs[0]);
+    int i;
+    for( i = 0; i < src_count; i++ )
+        buf[i] = cv::cvarrToMat(src[i]);
+    for( i = 0; i < dst_count; i++ )
+        buf[i+src_count] = cv::cvarrToMat(dst[i]);
+    cv::mixChannels(&buf[0], src_count, &buf[src_count], dst_count, from_to, pair_count);
 }
 
 CV_IMPL void
