@@ -887,10 +887,10 @@ static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long
 	}
 
 	// check if we dropped a frame
-	#ifndef NDEBUG
+	/*#ifndef NDEBUG
 		if (capture->got_frame)
 			fprintf (stderr, "icvDataProc_QT_Cam: frame was dropped\n");
-	#endif
+	#endif*/
 
 	// everything worked as expected
 	capture->got_frame = true;
