@@ -93,8 +93,9 @@ void initUndistortRectifyMap( const Mat& _cameraMatrix, const Mat& _distCoeffs,
         distCoeffs = 0.;
     }
 
-    CV_Assert( A.size() == Size(3,3) && A.size() == Ar.size() && A.size() == R.size() );
-    Mat_<double> iR = (Ar*R).inv(DECOMP_LU);
+    CV_Assert( A.size() == Size(3,3) && A.size() == R.size() );
+    CV_Assert( Ar.size() == Size(3,3) || Ar.size() == Size(4, 3));
+    Mat_<double> iR = (Ar.colRange(0,3)*R).inv(DECOMP_LU);
     const double* ir = &iR(0,0);
 
     double u0 = A(0, 2),  v0 = A(1, 2);
