@@ -3412,23 +3412,26 @@ See also: \cross{max}, \cross{min}, \cross{compare}, \cross{inRange}, \cross{ext
 Copies specified channels from input arrays to the specified channels of output arrays
 
 \begin{lstlisting}
-void mixChannels(const Mat* srcv, Mat* dstv,
+void mixChannels(const Mat* srcv, int nsrc, Mat* dstv, int ndst,
                  const int* fromTo, size_t npairs);
-void mixChannels(const MatND* srcv, MatND* dstv,
+void mixChannels(const MatND* srcv, int nsrc, MatND* dstv, int ndst,
                  const int* fromTo, size_t npairs);
-void mixChannels(const vector<Mat>& srcv,
-                 vector<Mat>& dstv, const int* fromTo);
-void mixChannels(const vector<MatND>& srcv,
-                 vector<MatND>& dstv, const int* fromTo);
+void mixChannels(const vector<Mat>& srcv, vector<Mat>& dstv,
+                 const int* fromTo, int npairs);
+void mixChannels(const vector<MatND>& srcv, vector<MatND>& dstv,
+                 const int* fromTo, int npairs);
 \end{lstlisting}
 \begin{description}
-\cvarg{srcv}{The input array or vector of matrices, containing \texttt{npairs} elements (in the first 2 variants).
+\cvarg{srcv}{The input array or vector of matrices.
 All the matrices must have the same size and the same depth}
-\cvarg{dstv}{The output array or vector of matrices, containing the same number of matrices as \texttt{srcv}.
+\cvarg{nsrc}{The number of elements in \texttt{srcv}}
+\cvarg{dstv}{The output array or vector of matrices.
 All the matrices \emph{must be allocated}, their size and depth must be the same as in \texttt{srcv[0]}}
+\cvarg{ndst}{The number of elements in \texttt{dstv}}
 \cvarg{fromTo}{The array of index pairs, specifying which channels are copied and where.
-\texttt{fromTo[k*2]} is the 0-based index of the input channel in \texttt{srcv[k]}, and
-\texttt{fromTo[k*2+1]} is the index of the output channel in \texttt{dstv[k]}.
+\texttt{fromTo[k*2]} is the 0-based index of the input channel in \texttt{srcv} and
+\texttt{fromTo[k*2+1]} is the index of the output channel in \texttt{dstv}. Here the continuous channel numbering is used, that is,
+the first input image channels are indexed from \texttt{0} to \texttt{srcv[0].channels()-1}, the second input image channels are indexed from \texttt{srcv[0].channels()} to \texttt{srcv[0].channels() + srcv[1].channels()-1} etc., and the same for the output image channels.
 As a special case, when \texttt{fromTo[k*2]} is negative, the corresponding output channel is filled with zero.
 }
 \texttt{npairs}{The number of pairs. In the latter case the parameter is not passed explicitly, but computed as \texttt{srcv.size()} (=\texttt{dstv.size()})}
@@ -3446,12 +3449,11 @@ Mat alpha( rgba.rows, rgba.cols, CV_8UC1 );
 
 // forming array of matrices is quite efficient operations,
 // because the matrix data is not copied, only the headers
-Mat in[] = { rgba, rgba, rgba, rgba };
-Mat out[] = { bgr, bgr, bgr, alpha };
+Mat out[] = { bgr, alpha };
 // rgba[0] -> bgr[2], rgba[1] -> bgr[1],
 // rgba[2] -> bgr[0], rgba[3] -> alpha[0]
-int from_to[] = { 0,2,  1,1,  2,0,  3,0 };
-mixChannels( in, out, from_to, 4 );
+int from_to[] = { 0,2,  1,1,  2,0,  3,3 };
+mixChannels( &rgba, 1, out, 2, from_to, 4 );
 \end{lstlisting}
 
 Note that, unlike many other new-style C++ functions in OpenCV (see the introduction section and \cross{Mat::create}),

@@ -477,7 +477,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
             (coi2 != 0 || dst.channels() == 1) );
         
         int pair[] = { std::max(coi1-1, 0), std::max(coi2-1, 0) };
-        cv::mixChannels( &src, &dst, pair, 1 );
+        cv::mixChannels( &src, 1, &dst, 1, pair, 1 );
         return;
     }
     else

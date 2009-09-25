@@ -2959,12 +2959,10 @@ template<typename _Tp> void split(const Mat& src, vector<Mat_<_Tp> >& mv)
 static inline void merge(const vector<Mat>& mv, Mat& dst)
 { merge(&mv[0], mv.size(), dst); }
 
-static inline void mixChannels(const vector<Mat>& src,
-                               vector<Mat>& dst,
-                               const int* fromTo)
+static inline void mixChannels(const vector<Mat>& src, vector<Mat>& dst,
+                               const int* fromTo, int npairs)
 {
-    CV_Assert(src.size() == dst.size());
-    mixChannels(&src[0], &dst[0], fromTo, src.size());
+    mixChannels(&src[0], (int)src.size(), &dst[0], (int)dst.size(), fromTo, npairs);
 }
     
 ///// Element-wise multiplication
@@ -4028,12 +4026,10 @@ static inline void split(const MatND& m, vector<MatND>& mv)
         split(m, &mv[0]);
 }
 
-static inline void mixChannels(const vector<MatND>& src,
-                               vector<MatND>& dst,
-                               const int* fromTo)
+static inline void mixChannels(const vector<MatND>& src, vector<MatND>& dst,
+                               const int* fromTo, int npairs)
 {
-    CV_Assert(src.size() == dst.size());
-    mixChannels(&src[0], &dst[0], fromTo, src.size());
+    mixChannels(&src[0], (int)src.size(), &dst[0], (int)dst.size(), fromTo, npairs);
 }   
 
 //////////////////////////////// SparseMat ////////////////////////////////

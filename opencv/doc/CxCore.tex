@@ -2144,11 +2144,11 @@ BGR (i.e. with R and B swapped) and separate alpha channel image:
         bgr =  cv.CreateMat(100, 100, cv.CV_8UC3)
         alpha = cv.CreateMat(100, 100, cv.CV_8UC1)
         cv.Set(rgba, (1,2,3,4))
-        cv.MixChannels([rgba,rgba,rgba,rgba], [bgr, bgr, bgr, alpha], [
+        cv.MixChannels([rgba], [bgr, alpha], [
            (0, 2),    # rgba[0] -> bgr[2]
            (1, 1),    # rgba[1] -> bgr[1]
            (2, 0),    # rgba[2] -> bgr[0]
-           (3, 0)     # rgba[3] -> alpha[0]
+           (3, 3)     # rgba[3] -> alpha[0]
         ])
 \end{lstlisting}
 \fi
@@ -2160,10 +2160,9 @@ BGR (i.e. with R and B swapped) and separate alpha channel image:
     CvMat* alpha = cvCreateMat( rgba->rows, rgba->cols, CV_8UC1 );
     cvSet( rgba, cvScalar(1,2,3,4) );
 
-    CvArr* in[] = { rgba, rgba, rgba, rgba };
-    CvArr* out[] = { bgr, bgr, bgr, alpha };
+    CvArr* out[] = { bgr, alpha };
     int from_to[] = { 0,2,  1,1,  2,0,  3,3 };
-    cvMixChannels( in, 4, out, 4, from_to, 4 );
+    cvMixChannels( &bgra, 1, out, 2, from_to, 4 );
 \end{lstlisting}
 \fi
 

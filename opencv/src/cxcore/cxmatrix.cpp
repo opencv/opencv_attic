@@ -116,7 +116,7 @@ void extractImageCOI(const CvArr* arr, Mat& ch, int coi)
         CV_Assert( CV_IS_IMAGE(arr) && (coi = cvGetImageCOI((const IplImage*)arr)-1) >= 0 );
     CV_Assert(0 <= coi && coi < mat.channels());
     int _pairs[] = { coi, 0 };
-    mixChannels( &mat, &ch, _pairs, 1 );
+    mixChannels( &mat, 1, &ch, 1, _pairs, 1 );
 }
     
 void insertImageCOI(const Mat& ch, CvArr* arr, int coi)
@@ -126,7 +126,7 @@ void insertImageCOI(const Mat& ch, CvArr* arr, int coi)
         CV_Assert( CV_IS_IMAGE(arr) && (coi = cvGetImageCOI((const IplImage*)arr)-1) >= 0 );
     CV_Assert(ch.size() == mat.size() && ch.depth() == mat.depth() && 0 <= coi && coi < mat.channels());
     int _pairs[] = { 0, coi };
-    mixChannels( &ch, &mat, _pairs, 1 );
+    mixChannels( &ch, 1, &mat, 1, _pairs, 1 );
 }
     
 
@@ -1937,10 +1937,10 @@ void split(const MatND& m, MatND* mv)
         split( it.planes[n], &it.planes[0] );
 }
 
-void mixChannels(const MatND* src, MatND* dst,
+void mixChannels(const MatND* src, int nsrcs, MatND* dst, int ndsts,
                  const int* fromTo, size_t npairs)
 {
-    size_t k, m = npairs, n = npairs;
+    size_t k, m = nsrcs, n = ndsts;
     CV_Assert( n > 0 && m > 0 );
     vector<MatND> v(m + n);
     for( k = 0; k < m; k++ )
@@ -1952,7 +1952,7 @@ void mixChannels(const MatND* src, MatND* dst,
     for( int i = 0; i < it.nplanes; i++, ++it )
     {
         Mat* pptr = &it.planes[0];
-        mixChannels( pptr, pptr + m, fromTo, npairs );
+        mixChannels( pptr, m, pptr + m, n, fromTo, npairs );
     }
 }
 
