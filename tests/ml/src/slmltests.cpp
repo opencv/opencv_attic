@@ -122,7 +122,7 @@ CV_SLMLTest lsmlnbayes( CV_NBAYES, "slnbayes" );
 //CV_SLMLTest lsmlknearest( CV_KNEAREST, "slknearest" ); // does not support save!
 CV_SLMLTest lsmlsvm( CV_SVM, "slsvm" );
 //CV_SLMLTest lsmlem( CV_EM, "slem" ); // does not support save!
-//CV_SLMLTest lsmlann( CV_ANN, "slann" );
+CV_SLMLTest lsmlann( CV_ANN, "slann" );
 CV_SLMLTest slmldtree( CV_DTREE, "sldtree" );
 CV_SLMLTest slmlboost( CV_BOOST, "slboost" );
 CV_SLMLTest slmlrtrees( CV_RTREES, "slrtrees" );

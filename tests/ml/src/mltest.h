@@ -101,6 +101,8 @@ protected:
     CvBoost* boost;
     CvRTrees* rtrees;
     CvERTrees* ertrees;
+
+    map<int, int> cls_map;
 };
 
 class CV_AMLTest : public CV_MLBaseTest
