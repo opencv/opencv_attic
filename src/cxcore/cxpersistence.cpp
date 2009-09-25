@@ -2601,13 +2601,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
 
     if( !isGZ )
     {
-        #ifdef WIN32
-            fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(),
-                !fs->write_mode ? L"rt" : !append ? L"wt" : L"a+t" );
-        #else
-            fs->file = fopen(fs->filename,
-                !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
-        #endif
+        fs->file = fopen(fs->filename, !fs->write_mode ? "rt" : !append ? "wt" : "a+t" );
         if( !fs->file )
             goto _exit_;
     }
@@ -2681,11 +2675,7 @@ cvOpenFileStorage( const char* filename, CvMemStorage* dststorage, int flags )
                 if( last_occurence < 0 )
                     CV_Error( CV_StsError, "Could not find </opencv_storage> in the end of file.\n" );
                 icvClose( fs );
-            #ifdef WIN32
-                fs->file = _wfopen( cv::toUtf16(fs->filename).c_str(), L"r+t" );
-            #else
                 fs->file = fopen( fs->filename, "r+t" );
-            #endif
                 fseek( fs->file, last_occurence, SEEK_SET );
                 // replace the last "</opencv_storage>" with " <!-- resumed -->", which has the same length
                 icvPuts( fs, " <!-- resumed -->" );

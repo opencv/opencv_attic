@@ -144,11 +144,7 @@ bool  PngDecoder::readHeader()
                     png_set_read_fn(png_ptr, this, (png_rw_ptr)readDataFromBuf );
                 else
                 {
-                #ifdef WIN32
-                    m_f = _wfopen( toUtf16(m_filename).c_str(), L"rb" );
-                #else
                     m_f = fopen( m_filename.c_str(), "rb" );
-                #endif
                     if( m_f )
                         png_init_io( png_ptr, m_f );
                 }
@@ -335,11 +331,7 @@ bool  PngEncoder::write( const Mat& img, const vector<int>& params )
                 }
                 else
                 {
-                #ifdef WIN32
-                    f = _wfopen( toUtf16(m_filename).c_str(), L"wb" );
-                #else
                     f = fopen( m_filename.c_str(), "wb" );
-                #endif
                     if( f )
                         png_init_io( png_ptr, f );
                 }
