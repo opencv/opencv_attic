@@ -56,7 +56,7 @@ int main()
         
         printf("======DTREE=====\n");
         dtree.train( &data, CvDTreeParams( 10, 2, 0, false, 16, 0, false, false, 0 ));
-        print_result( dtree.calc_error( &data, CV_TRAIN_ERROR), dtree.calc_error( &data ), dtree.get_var_importance() );
+        print_result( dtree.calc_error( &data, CV_TRAIN_ERROR), dtree.calc_error( &data, CV_TEST_ERROR ), dtree.get_var_importance() );
 
 #ifdef LEPIOTA
         printf("======BOOST=====\n");
@@ -66,11 +66,11 @@ int main()
 
         printf("======RTREES=====\n");
         rtrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
-        print_result( rtrees.calc_error( &data, CV_TRAIN_ERROR), rtrees.calc_error( &data ), rtrees.get_var_importance() );
+        print_result( rtrees.calc_error( &data, CV_TRAIN_ERROR), rtrees.calc_error( &data, CV_TEST_ERROR ), rtrees.get_var_importance() );
 
         printf("======ERTREES=====\n");
         ertrees.train( &data, CvRTParams( 10, 2, 0, false, 16, 0, true, 0, 100, 0, CV_TERMCRIT_ITER ));
-        print_result( ertrees.calc_error( &data, CV_TRAIN_ERROR), ertrees.calc_error( &data ), ertrees.get_var_importance() );
+        print_result( ertrees.calc_error( &data, CV_TRAIN_ERROR), ertrees.calc_error( &data, CV_TEST_ERROR ), ertrees.get_var_importance() );
     }
     else
         printf("File can not be read");
