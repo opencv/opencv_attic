@@ -73,6 +73,7 @@ CvHomographyEstimator::CvHomographyEstimator(int _modelPoints)
     : CvModelEstimator2(_modelPoints, cvSize(3,3), 1)
 {
     assert( _modelPoints == 4 || _modelPoints == 5 );
+    checkPartialSubsets = false;
 }
 
 int CvHomographyEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* H )

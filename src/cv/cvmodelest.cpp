@@ -323,9 +323,9 @@ bool CvModelEstimator2::getSubset( const CvMat* m1, const CvMat* m2,
     assert( CV_IS_MAT_CONT(m1->type & m2->type) && (elemSize % sizeof(int) == 0) );
     elemSize /= sizeof(int);
 
-    for(;;)
+    for(; iters < maxAttempts; iters++)
     {
-        for( i = 0; i < modelPoints && iters < maxAttempts; iters++ )
+        for( i = 0; i < modelPoints && iters < maxAttempts; )
         {
             idx[i] = idx_i = cvRandInt(&rng) % count;
             for( j = 0; j < i; j++ )
@@ -339,45 +339,57 @@ bool CvModelEstimator2::getSubset( const CvMat* m1, const CvMat* m2,
                 ms2ptr[i*elemSize + k] = m2ptr[idx_i*elemSize + k];
             }
             if( checkPartialSubsets && (!checkSubset( ms1, i+1 ) || !checkSubset( ms2, i+1 )))
+            {
+                iters++;
                 continue;
+            }
             i++;
-            iters = 0;
         }
         if( !checkPartialSubsets && i == modelPoints &&
-            (!checkSubset( ms1, i+1 ) || !checkSubset( ms2, i+1 )))
+            (!checkSubset( ms1, i ) || !checkSubset( ms2, i )))
             continue;
         break;
     }
 
-    return i == modelPoints;
+    return i == modelPoints && iters < maxAttempts;
 }
 
 
 bool CvModelEstimator2::checkSubset( const CvMat* m, int count )
 {
-    int j, k, i = count-1;
+    int j, k, i, i0, i1;
     CvPoint2D64f* ptr = (CvPoint2D64f*)m->data.ptr;
 
     assert( CV_MAT_TYPE(m->type) == CV_64FC2 );
     
-    // check that the i-th selected point does not belong
-    // to a line connecting some previously selected points
-    for( j = 0; j < i; j++ )
+    if( checkPartialSubsets )
+        i0 = i1 = count - 1;
+    else
+        i0 = 0, i1 = count - 1;
+    
+    for( i = i0; i <= i1; i++ )
     {
-        double dx1 = ptr[j].x - ptr[i].x;
-        double dy1 = ptr[j].y - ptr[i].y;
-        for( k = 0; k < j; k++ )
+        // check that the i-th selected point does not belong
+        // to a line connecting some previously selected points
+        for( j = 0; j < i; j++ )
         {
-            double dx2 = ptr[k].x - ptr[i].x;
-            double dy2 = ptr[k].y - ptr[i].y;
-            if( fabs(dx2*dy1 - dy2*dx1) < FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
+            double dx1 = ptr[j].x - ptr[i].x;
+            double dy1 = ptr[j].y - ptr[i].y;
+            for( k = 0; k < j; k++ )
+            {
+                double dx2 = ptr[k].x - ptr[i].x;
+                double dy2 = ptr[k].y - ptr[i].y;
+                if( fabs(dx2*dy1 - dy2*dx1) < FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
+                    break;
+            }
+            if( k < j )
                 break;
         }
-        if( k < j )
+        if( j < i )
             break;
     }
 
-    return j == i;
+    return i >= i1;
 }
 
 
