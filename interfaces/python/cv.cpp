@@ -68,7 +68,7 @@ struct cvsubdiv2dpoint_t {
   PyObject *container;  // Containing cvmemstorage_t
 };
 
-struct cvquadedge2d_t {
+struct cvsubdiv2dedge_t {
   PyObject_HEAD
   CvSubdiv2DEdge a;
   PyObject *container;  // Containing cvmemstorage_t
@@ -419,13 +419,33 @@ static struct PyMethodDef cvmat_methods[] =
   {NULL,          NULL}
 };
 
+static PyObject *cvmat_gettype(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->type);
+}
+
+static PyObject *cvmat_getstep(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->step);
+}
+
 static PyObject *cvmat_getrows(cvmat_t *cva)
 {
   return PyInt_FromLong(cva->a->rows);
 }
 
+static PyObject *cvmat_getcols(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->cols);
+}
+
 static PyGetSetDef cvmat_getseters[] = {
-  {(char*)"rows", (getter)cvmat_getrows, (setter)NULL, (char*)"rows", NULL},
+  {(char*)"type",   (getter)cvmat_gettype, (setter)NULL, (char*)"type",   NULL},
+  {(char*)"step",   (getter)cvmat_getstep, (setter)NULL, (char*)"step",   NULL},
+  {(char*)"rows",   (getter)cvmat_getrows, (setter)NULL, (char*)"rows",   NULL},
+  {(char*)"cols",   (getter)cvmat_getcols, (setter)NULL, (char*)"cols",   NULL},
+  {(char*)"width",  (getter)cvmat_getcols, (setter)NULL, (char*)"width",  NULL},
+  {(char*)"height", (getter)cvmat_getrows, (setter)NULL, (char*)"height", NULL},
   {NULL}  /* Sentinel */
 };
 
@@ -836,19 +856,19 @@ static void cvcontourtree_specials(void) { }
 
 /************************************************************************/
 
-/* cvquadedge2d */
+/* cvsubdiv2dedge */
 
-static PyTypeObject cvquadedge2d_Type = {
+static PyTypeObject cvsubdiv2dedge_Type = {
   PyObject_HEAD_INIT(&PyType_Type)
   0,                                      /*size*/
-  MODULESTR".cvquadedge2d",                     /*name*/
-  sizeof(cvquadedge2d_t),                       /*basicsize*/
+  MODULESTR".cvsubdiv2dedge",                     /*name*/
+  sizeof(cvsubdiv2dedge_t),                       /*basicsize*/
 };
 
-static int cvquadedge2d_compare(PyObject *o1, PyObject *o2)
+static int cvsubdiv2dedge_compare(PyObject *o1, PyObject *o2)
 {
-  cvquadedge2d_t *e1 = (cvquadedge2d_t*)o1;
-  cvquadedge2d_t *e2 = (cvquadedge2d_t*)o2;
+  cvsubdiv2dedge_t *e1 = (cvsubdiv2dedge_t*)o1;
+  cvsubdiv2dedge_t *e2 = (cvsubdiv2dedge_t*)o2;
   if (e1->a < e2->a)
     return -1;
   else if (e1->a > e2->a)
@@ -857,8 +877,21 @@ static int cvquadedge2d_compare(PyObject *o1, PyObject *o2)
     return 0;
 }
 
-static void cvquadedge2d_specials(void) {
-  cvquadedge2d_Type.tp_compare = cvquadedge2d_compare;
+static PyObject *cvquadedge_repr(PyObject *self)
+{
+  CvSubdiv2DEdge m = ((cvsubdiv2dedge_t*)self)->a;
+  char str[1000];
+  sprintf(str, "<cvsubdiv2dedge(");
+  char *d = str + strlen(str);
+  sprintf(d, "%zx.%d", m & ~3, m & 3);
+  d += strlen(d);
+  sprintf(d, ")>");
+  return PyString_FromString(str);
+}
+
+static void cvsubdiv2dedge_specials(void) {
+  cvsubdiv2dedge_Type.tp_compare = cvsubdiv2dedge_compare;
+  cvsubdiv2dedge_Type.tp_repr = cvquadedge_repr;
 }
 
 /************************************************************************/
@@ -913,7 +946,7 @@ static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
       switch (ps->a->elem_size) {
       case sizeof(CvQuadEdge2D):
         {
-          cvquadedge2d_t *r = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+          cvsubdiv2dedge_t *r = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
           r->a = (CvSubdiv2DEdge)CV_GET_SEQ_ELEM(CvQuadEdge2D, ps->a, i);
           r->container = ps->container;
           Py_INCREF(r->container);
@@ -1131,7 +1164,7 @@ static PyObject *cvsubdiv2dpoint_getattro(PyObject *o, PyObject *name)
 {
   cvsubdiv2dpoint_t *p = (cvsubdiv2dpoint_t*)o;
   if (strcmp(PyString_AsString(name), "first") == 0) {
-    cvquadedge2d_t *r = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+    cvsubdiv2dedge_t *r = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
     r->a = p->a->first;
     r->container = p->container;
     Py_INCREF(r->container);
@@ -1923,8 +1956,8 @@ static int convert_to_CvNextEdgeType(PyObject *o, CvNextEdgeType *dst, const cha
 
 static int convert_to_CvSubdiv2DEdge(PyObject *o, CvSubdiv2DEdge *dst, const char *name = "no_name")
 {
-  if (PyType_IsSubtype(o->ob_type, &cvquadedge2d_Type)) {
-    (*dst) = (((cvquadedge2d_t*)o)->a);
+  if (PyType_IsSubtype(o->ob_type, &cvsubdiv2dedge_Type)) {
+    (*dst) = (((cvsubdiv2dedge_t*)o)->a);
     return 1;
   } else {
     *dst = 0L;
@@ -2330,7 +2363,7 @@ static PyObject *FROM_generic(generic r)
 
 static PyObject *FROM_CvSubdiv2DEdge(CvSubdiv2DEdge r)
 {
-  cvquadedge2d_t *m = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+  cvsubdiv2dedge_t *m = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
   m->a = r;
   m->container = Py_None; // XXX
   Py_INCREF(m->container);
@@ -3390,7 +3423,7 @@ extern "C" void initcv()
   MKTYPE(cvmemstorage);
   MKTYPE(cvmoments);
   MKTYPE(cvpositobject);
-  MKTYPE(cvquadedge2d);
+  MKTYPE(cvsubdiv2dedge);
   MKTYPE(cvrng);
   MKTYPE(cvseq);
   MKTYPE(cvset);

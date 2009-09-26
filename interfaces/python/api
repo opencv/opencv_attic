@@ -32,7 +32,6 @@ CV_FOURCC int
 # Initialization
 CloneImage IplImage*
   IplImage image
-
 SetImageCOI
   IplImage image
   int coi
