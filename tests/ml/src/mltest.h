@@ -40,7 +40,8 @@
 //
 //M*/
 
-#pragma once
+#ifndef _OPENCV_MLTEST_H_
+#define _OPENCV_MLTEST_H_
 
 #if defined _MSC_VER && _MSC_VER >= 1200
 #pragma warning( disable: 4710 4711 4514 4996 )
@@ -127,3 +128,5 @@ protected:
 };
 
 /* End of file. */
+
+#endif

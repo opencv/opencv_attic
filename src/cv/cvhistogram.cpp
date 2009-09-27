@@ -1126,6 +1126,7 @@ calcSparseBackProj_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
     int bpstep = _deltas[dims*2 + 1];
     const int* size = hist.hdr->size;
     int idx[CV_MAX_DIM];
+    const SparseMat_<float>& hist_ = (const SparseMat_<float>&)hist;
     
     if( uniform )
     {
@@ -1143,7 +1144,7 @@ calcSparseBackProj_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
                 }
                 
                 if( i == dims )
-                    bproj[x] = saturate_cast<BT>(hist.value<float>(idx)*scale);
+                    bproj[x] = saturate_cast<BT>(hist_(idx)*scale);
                 else
                 {
                     bproj[x] = 0;
@@ -1182,7 +1183,7 @@ calcSparseBackProj_( vector<uchar*>& _ptrs, const vector<int>& _deltas,
                 }
                 
                 if( i == dims )
-                    bproj[x] = saturate_cast<BT>(hist.value<float>(idx)*scale);
+                    bproj[x] = saturate_cast<BT>(hist_(idx)*scale);
                 else
                 {
                     bproj[x] = 0;

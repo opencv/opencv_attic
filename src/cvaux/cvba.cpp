@@ -1044,7 +1044,7 @@ void LevMarqSparse::bundleAdjust( vector<Point3d>& points, //positions of points
     {
         //get row
         Mat col = vismat.col(i);
-        Mat(visibility[i]).copyTo( col );
+        Mat((int)visibility[i].size(), 1, vismat.type(), (void*)&visibility[i][0]).copyTo( col );
     }
 
     int num_proj = countNonZero(vismat); //total number of points projections

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_CASCADECLASSIFIER_H_
+#define _OPENCV_CASCADECLASSIFIER_H_
+
 #include <ctime>
 #include "features.h"
 #include "haarfeatures.h"
@@ -116,3 +118,5 @@ private:
     int numStages, curNumSamples;
     int numPos, numNeg;
 };
+
+#endif

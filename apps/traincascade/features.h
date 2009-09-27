@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_FEATURES_H_
+#define _OPENCV_FEATURES_H_
+
 #include "imagestorage.h"
 #include "cxcore.h"
 #include "cv.h"
@@ -34,8 +36,9 @@ template<class Feature>
 void _writeFeatures( const vector<Feature> features, FileStorage &fs, const Mat& featureMap )
 {
     fs << FEATURES << "[";
+    const Mat_<int>& featureMap_ = (const Mat_<int>&)featureMap;
     for ( int fi = 0; fi < featureMap.cols; fi++ )
-        if ( featureMap.at<int>(0, fi) >= 0 )
+        if ( featureMap_(0, fi) >= 0 )
         {
             fs << "{";
             features[fi].write( fs );
@@ -95,3 +98,5 @@ protected:
     CvFeatureParams *featureParams;
     Mat cls;
 };
+
+#endif
