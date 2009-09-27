@@ -580,19 +580,23 @@ double CvCaptureCAM_DC1394_v2_CPP::getProperty(int propId)
 
 bool CvCaptureCAM_DC1394_v2_CPP::setProperty(int propId, double value)
 {
-    if (!started)
-        return false;
     switch (propId)
     {
     case CV_CAP_PROP_FRAME_WIDTH:
+        if(started)
+			return false;
         frameWidth = cvRound(value);
         frameHeight = 0;
         break;
     case CV_CAP_PROP_FRAME_HEIGHT:
+    	if(started)
+			return false;
         frameWidth = 0;
         frameHeight = cvRound(value);
         break;
     case CV_CAP_PROP_FPS:
+    	if(started)
+			return false;
         fps = value;
         break;
     case CV_CAP_PROP_RECTIFICATION:
