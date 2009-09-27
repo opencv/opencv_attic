@@ -568,7 +568,9 @@ That's all there is to it!
 #undef snprintf
 #define snprintf _snprintf
 
+#ifdef _MSC_VER
 #include "msc_stdint.h"
+#endif
 #include "errno.h"
 
 #include "cvcap_ffmpeg.cpp"

@@ -1,7 +1,7 @@
 if(SWIG_FOUND)
     add_subdirectory(swig)
 endif()
-if(MSVC)
+if(MSVC OR MINGW)
     add_subdirectory(ffopencv)
 endif()
 if(PYTHONLIBS_FOUND AND BUILD_NEW_PYTHON_SUPPORT)
