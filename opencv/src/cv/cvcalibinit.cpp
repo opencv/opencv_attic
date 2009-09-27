@@ -2150,12 +2150,14 @@ bool findChessboardCorners( const Mat& image, Size patternSize,
 }
 
 void drawChessboardCorners( Mat& image, Size patternSize,
-                            const vector<Point2f>& corners,
+                            const Mat& corners,
                             bool patternWasFound )
 {
     CvMat _image = image;
-    cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)&corners[0],
-                             (int)corners.size(), patternWasFound );
+    CV_Assert((corners.cols == 1 || corners.rows == 1) &&
+              corners.type() == CV_32FC2 && corners.isContinuous());
+    cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)corners.data,
+                             corners.cols + corners.rows - 1, patternWasFound );
 }
 
 }
