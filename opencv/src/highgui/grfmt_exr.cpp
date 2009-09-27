@@ -557,7 +557,7 @@ ExrEncoder::~ExrEncoder()
 }
 
 
-bool  ExrEncoder::isFormatSupported( int depth )
+bool  ExrEncoder::isFormatSupported( int depth ) const
 {
     return CV_MAT_DEPTH(depth) >= CV_8U && CV_MAT_DEPTH(depth) < CV_64F;
 }

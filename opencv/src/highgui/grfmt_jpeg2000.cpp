@@ -412,7 +412,7 @@ ImageEncoder Jpeg2KEncoder::newEncoder() const
     return new Jpeg2KEncoder;
 }
 
-bool  Jpeg2KEncoder::isFormatSupported( int depth )
+bool  Jpeg2KEncoder::isFormatSupported( int depth ) const
 {
     return depth == CV_8U || depth == CV_16U;
 }
