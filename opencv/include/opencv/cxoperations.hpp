@@ -66,7 +66,11 @@
 
 #else
 #include <bits/atomicity.h>
+#if __GNUC__ >= 4
 #define CV_XADD __gnu_cxx::__exchange_and_add
+#else
+#define CV_XADD __exchange_and_add
+#endif
 #endif
     
 #elif defined WIN32 || defined _WIN32

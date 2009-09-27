@@ -2856,11 +2856,6 @@ static CvBtNextFunc icvBtNextFunc[] =
 CV_BOOST_IMPL
 void cvBtNext( CvCARTClassifier** trees, CvBtTrainer* trainer )
 {
-
-    CV_FUNCNAME( "cvBtNext" );
-
-    __BEGIN__;
-
     int i, j;
     int index;
     CvMat sample;
@@ -2898,8 +2893,6 @@ void cvBtNext( CvCARTClassifier** trees, CvBtTrainer* trainer )
             }
         }
     }
-    
-    __END__;
 }
 
 CV_BOOST_IMPL

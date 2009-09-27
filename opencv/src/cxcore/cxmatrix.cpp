@@ -665,7 +665,7 @@ template<typename T> static void sort_( const Mat& src, Mat& dst, int flags )
                 std::swap(ptr[j], ptr[len-1-j]);
         if( !sortRows )
             for( j = 0; j < len; j++ )
-                dst.at<T>(j,i) = ptr[j];
+                ((T*)(dst.data + dst.step*j))[i] = ptr[j];
     }
 }
 
@@ -716,7 +716,7 @@ template<typename T> static void sortIdx_( const Mat& src, Mat& dst, int flags )
                 std::swap(iptr[j], iptr[len-1-j]);
         if( !sortRows )
             for( j = 0; j < len; j++ )
-                dst.at<int>(j,i) = iptr[j];
+                ((int*)(dst.data + dst.step*j))[i] = iptr[j];
     }
 }
 

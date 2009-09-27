@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_HAARFEATURES_H_
+#define _OPENCV_HAARFEATURES_H_
+
 #include "features.h"
 
 #define CV_HAAR_FEATURE_MAX      3
@@ -83,3 +85,4 @@ inline float CvHaarEvaluator::Feature::calc( const Mat &_sum, const Mat &_tilted
     return ret;
 }
 
+#endif

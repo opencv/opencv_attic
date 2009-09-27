@@ -246,13 +246,14 @@ Randd_( Mat& _arr, uint64* state, const void* _param )
     uint64 temp = *state;
     const double* param = (const double*)_param;
     Size size = getContinuousSize(_arr,_arr.channels());
+    int64 v = 0;
 
     for( int y = 0; y < size.height; y++ )
     {
         double* arr = (double*)(_arr.data + _arr.step*y);
         int i, k = 3;
         const double* p = param;
-        int64 v;
+        
         for( i = 0; i <= size.width - 4; i += 4 )
         {
             double f0, f1;
