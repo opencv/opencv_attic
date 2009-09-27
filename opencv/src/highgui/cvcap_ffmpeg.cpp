@@ -620,29 +620,25 @@ double CvCapture_FFMPEG::getProperty( int property_id )
     switch( property_id )
     {
     case CV_CAP_PROP_POS_MSEC:
-        // if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE_))
-        if(ic->start_time != AV_NOPTS_VALUE_)
-        return (double)(timestamp - ic->start_time)*1000/(double)AV_TIME_BASE;
+        if(video_st->cur_dts != AV_NOPTS_VALUE_)
+            return (((double)video_st->cur_dts-1) *1000) / av_q2d (video_st->r_frame_rate);
         break;
     case CV_CAP_PROP_POS_FRAMES:
-    //if(video_st->cur_dts != static_cast<double>(AV_NOPTS_VALUE_))
-    if(video_st->cur_dts != AV_NOPTS_VALUE_)
-        return (double)video_st->cur_dts-1;
-    break;
+        if(video_st->cur_dts != AV_NOPTS_VALUE_)
+            return (double)video_st->cur_dts-1;
+        break;
     case CV_CAP_PROP_POS_AVI_RATIO:
-    //  if(ic->start_time != static_cast<double>(AV_NOPTS_VALUE_) && ic->duration != static_cast<double>(AV_NOPTS_VALUE_))
-    if(ic->start_time != AV_NOPTS_VALUE_ && ic->duration != AV_NOPTS_VALUE_)
-        return (double)(timestamp-ic->start_time)/(double)ic->duration;
-    break;
+        if(video_st->cur_dts != AV_NOPTS_VALUE_ && video_st->duration != AV_NOPTS_VALUE_)
+            return (double)(video_st->cur_dts-1)/(double)video_st->duration;
+        break;
 	case CV_CAP_PROP_FRAME_COUNT:
-		return (double)video_st->duration;
-	break;
+	    if(video_st->duration != AV_NOPTS_VALUE_)
+		    return (double)video_st->duration;
+	    break;
     case CV_CAP_PROP_FRAME_WIDTH:
         return (double)frame.width;
-    break;
     case CV_CAP_PROP_FRAME_HEIGHT:
         return (double)frame.height;
-    break;
     case CV_CAP_PROP_FPS:
 #if LIBAVCODEC_BUILD > 4753
         return av_q2d (video_st->r_frame_rate);
@@ -650,14 +646,12 @@ double CvCapture_FFMPEG::getProperty( int property_id )
         return (double)video_st->codec.frame_rate
             / (double)video_st->codec.frame_rate_base;
 #endif
-    break;
     case CV_CAP_PROP_FOURCC:
 #if LIBAVFORMAT_BUILD > 4628
         return (double)video_st->codec->codec_tag;
 #else
         return (double)video_st->codec.codec_tag;
 #endif
-    break;
     }
     return 0;
 }
