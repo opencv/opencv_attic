@@ -264,7 +264,7 @@ PngEncoder::~PngEncoder()
 }
 
 
-bool  PngEncoder::isFormatSupported( int depth )
+bool  PngEncoder::isFormatSupported( int depth ) const
 {
     return depth == CV_8U || depth == CV_16U;
 }
