@@ -46,7 +46,7 @@
 #endif
 
 extern "C" {
-#ifndef WIN32
+#if !defined(WIN32) || defined(__MINGW32__)
 // some versions of FFMPEG assume a C99 compiler, and don't define INT64_C
 #ifndef INT64_C
 #define INT64_C
