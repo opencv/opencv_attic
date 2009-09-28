@@ -740,6 +740,9 @@ cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
 
     if( !CV_IS_SUBDIV2D( subdiv ))
         CV_ERROR( CV_StsNullPtr, "" );
+    
+    if( subdiv->edges->active_count <= 3 )
+        EXIT;
 
     if( !subdiv->is_geometry_valid )
         cvCalcSubdivVoronoi2D( subdiv );
