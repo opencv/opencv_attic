@@ -510,13 +510,12 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
             break;
     }
 
-    if ( is_oob_or_vimportance )
+    if( var_importance )
     {
         for ( int vi = 0; vi < var_importance->cols; vi++ )
                 var_importance->data.fl[vi] = ( var_importance->data.fl[vi] > 0 ) ?
                     var_importance->data.fl[vi] : 0;
-        if( var_importance )
-            cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
     }
 
     cvFree( &oob_samples_perm_ptr );
