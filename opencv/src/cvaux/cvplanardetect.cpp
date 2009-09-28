@@ -587,7 +587,7 @@ void LDetector::operator()(const vector<Mat>& pyr, vector<KeyPoint>& keypoints, 
         }
     }
     
-    if( keypoints.size() > (size_t)maxCount )
+    if( maxCount > 0 && keypoints.size() > (size_t)maxCount )
     {
         sort(keypoints, CmpKeypointScores());
         keypoints.resize(maxCount);
@@ -1337,13 +1337,15 @@ bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPo
         }
     }
     
-    for( i = j = 0; i < m; i++ )
-        if( bestMatches[i] >= 0 && mask[j++] )
-        {
-            pairs->push_back(i);
-            pairs->push_back(bestMatches[i]);
-        }
-    
+    if( pairs )
+    {
+        for( i = j = 0; i < m; i++ )
+            if( bestMatches[i] >= 0 && mask[j++] )
+            {
+                pairs->push_back(i);
+                pairs->push_back(bestMatches[i]);
+            }
+    }
     
     return _H.data != 0;
 }

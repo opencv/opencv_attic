@@ -337,7 +337,7 @@ icvSpillTreeDFSearch( CvSpillTree* tr,
 {
   if ((emax > 0)&&( *es >= emax ))
     return;
-  double dist, p;
+  double dist, p=0;
   while ( node->spill )
     {
       // defeatist search

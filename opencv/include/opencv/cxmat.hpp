@@ -68,8 +68,11 @@ inline Mat::Mat(int _rows, int _cols, int _type, const Scalar& _s)
     : flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
     datastart(0), dataend(0)
 {
-    create(_rows, _cols, _type);
-    *this = _s;
+    if(_rows > 0 && _cols > 0)
+    {
+        create(_rows, _cols, _type);
+        *this = _s;
+    }
 }
 
 inline Mat::Mat(Size _size, int _type)
@@ -79,6 +82,17 @@ inline Mat::Mat(Size _size, int _type)
     if( _size.height > 0 && _size.width > 0 )
         create( _size.height, _size.width, _type );
 }
+    
+inline Mat::Mat(Size _size, int _type, const Scalar& _s)
+: flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
+datastart(0), dataend(0)
+{
+    if( _size.height > 0 && _size.width > 0 )
+    {
+        create( _size.height, _size.width, _type );
+        *this = _s;
+    }
+}    
 
 inline Mat::Mat(const Mat& m)
     : flags(m.flags), rows(m.rows), cols(m.cols), step(m.step), data(m.data),

@@ -714,9 +714,10 @@ public:
     // constructs matrix of the specified size and type
     // (_type is CV_8UC1, CV_64FC3, CV_32SC(12) etc.)
     Mat(int _rows, int _cols, int _type);
+    Mat(Size _size, int _type);
     // constucts matrix and fills it with the specified value _s.
     Mat(int _rows, int _cols, int _type, const Scalar& _s);
-    Mat(Size _size, int _type);
+    Mat(Size _size, int _type, const Scalar& _s);
     // copy constructor
     Mat(const Mat& m);
     // constructor for matrix headers pointing to user-allocated data

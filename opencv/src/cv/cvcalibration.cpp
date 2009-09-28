@@ -2353,6 +2353,17 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
     double fc_new = DBL_MAX;
     CvPoint2D64f cc_new[2] = {{0,0}, {0,0}};
 
+	for( k = 0; k < 2; k++ ) {
+        const CvMat* A = k == 0 ? _cameraMatrix1 : _cameraMatrix2;
+        const CvMat* Dk = k == 0 ? _distCoeffs1 : _distCoeffs2;
+        double dk1 = Dk ? cvmGet(Dk, 0, 0) : 0;
+        double fc = cvmGet(A,idx^1,idx^1);
+		if( dk1 < 0 ) {
+ 			fc *= 1 + dk1*(nx*nx + ny*ny)/(4*fc*fc);
+		}
+        fc_new = MIN(fc_new, fc);
+	}
+
     for( k = 0; k < 2; k++ )
     {
         const CvMat* A = k == 0 ? _cameraMatrix1 : _cameraMatrix2;
@@ -2361,24 +2372,27 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
         CvPoint3D32f _pts_3[4];
         CvMat pts = cvMat(1, 4, CV_32FC2, _pts);
         CvMat pts_3 = cvMat(1, 4, CV_32FC3, _pts_3);
-        double fc, dk1 = Dk ? cvmGet(Dk, 0, 0) : 0;
-
-        fc = cvmGet(A,idx^1,idx^1);
-        if( dk1 < 0 )
-            fc *= 1 + 0.2*dk1*(nx*nx + ny*ny)/(8*fc*fc);
-        fc_new = MIN(fc_new, fc);
 
         for( i = 0; i < 4; i++ )
         {
-            _pts[i].x = (float)(((i % 2) + 0.5)*nx*0.5);
-            _pts[i].y = (float)(((i / 2) + 0.5)*ny*0.5);
+			int j = (i<2) ? 0 : 1;
+            _pts[i].x = (float)((i % 2)*(nx-1));
+	        _pts[i].y = (float)(j*(ny-1));
         }
         cvUndistortPoints( &pts, &pts, A, Dk, 0, 0 );
         cvConvertPointsHomogeneous( &pts, &pts_3 );
-        cvProjectPoints2( &pts_3, k == 0 ? _R1 : _R2, &Z, A, 0, &pts );
+
+		//Change camera matrix to have cc=[0,0] and fc = fc_new
+		double _a_tmp[3][3];
+		CvMat A_tmp  = cvMat(3, 3, CV_64F, _a_tmp);
+		_a_tmp[0][0]=fc_new;
+		_a_tmp[1][1]=fc_new;
+		_a_tmp[0][2]=0.0;
+		_a_tmp[1][2]=0.0;
+		cvProjectPoints2( &pts_3, k == 0 ? _R1 : _R2, &Z, &A_tmp, 0, &pts );
         CvScalar avg = cvAvg(&pts);
-        cc_new[k].x = avg.val[0];
-        cc_new[k].y = avg.val[1];
+        cc_new[k].x = (nx-1)/2 - avg.val[0];
+        cc_new[k].y = (ny-1)/2 - avg.val[1];
     }
 
     // vertical focal length must be the same for both images to keep the epipolar constraint
