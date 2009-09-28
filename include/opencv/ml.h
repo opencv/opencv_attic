@@ -197,10 +197,10 @@ public:
 
     virtual void clear();
 
-    virtual void save( const char* filename, const char* name=0 );
+    virtual void save( const char* filename, const char* name=0 ) const;
     virtual void load( const char* filename, const char* name=0 );
 
-    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void write( CvFileStorage* storage, const char* name ) const;
     virtual void read( CvFileStorage* storage, CvFileNode* node );
 
 protected:
@@ -250,14 +250,23 @@ public:
 
     CvNormalBayesClassifier( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx=0, const CvMat* _sample_idx=0 );
-
+    
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx = 0, const CvMat* _sample_idx=0, bool update=false );
    
     virtual float predict( const CvMat* _samples, CvMat* results=0 ) const;
     virtual void clear();
 
-    virtual void write( CvFileStorage* storage, const char* name );
+#ifndef SWIG
+    CvNormalBayesClassifier( const cv::Mat& _train_data, const cv::Mat& _responses,
+                            const cv::Mat& _var_idx=cv::Mat(), const cv::Mat& _sample_idx=cv::Mat() );
+    virtual bool train( const cv::Mat& _train_data, const cv::Mat& _responses,
+                       const cv::Mat& _var_idx = cv::Mat(), const cv::Mat& _sample_idx=cv::Mat(),
+                       bool update=false );
+    virtual float predict( const cv::Mat& _samples, cv::Mat* results=0 ) const;
+#endif
+    
+    virtual void write( CvFileStorage* storage, const char* name ) const;
     virtual void read( CvFileStorage* storage, CvFileNode* node );
 
 protected:
@@ -295,7 +304,21 @@ public:
     
     virtual float find_nearest( const CvMat* _samples, int k, CvMat* results=0,
         const float** neighbors=0, CvMat* neighbor_responses=0, CvMat* dist=0 ) const;
-
+    
+#ifndef SWIG
+    CvKNearest( const cv::Mat& _train_data, const cv::Mat& _responses,
+               const cv::Mat& _sample_idx=cv::Mat(), bool _is_regression=false, int max_k=32 );
+    
+    virtual bool train( const cv::Mat& _train_data, const cv::Mat& _responses,
+                       const cv::Mat& _sample_idx=cv::Mat(), bool is_regression=false,
+                       int _max_k=32, bool _update_base=false );    
+    
+    virtual float find_nearest( const cv::Mat& _samples, int k, cv::Mat* results=0,
+                                const float** neighbors=0,
+                                cv::Mat* neighbor_responses=0,
+                                cv::Mat* dist=0 ) const;
+#endif
+    
     virtual void clear();
     int get_max_k() const;
     int get_var_count() const;
@@ -508,6 +531,7 @@ public:
     virtual bool train( const CvMat* _train_data, const CvMat* _responses,
                         const CvMat* _var_idx=0, const CvMat* _sample_idx=0,
                         CvSVMParams _params=CvSVMParams() );
+    
     virtual bool train_auto( const CvMat* _train_data, const CvMat* _responses,
         const CvMat* _var_idx, const CvMat* _sample_idx, CvSVMParams _params,
         int k_fold = 10,
@@ -520,6 +544,27 @@ public:
 
     virtual float predict( const CvMat* _sample, bool returnDFVal=false ) const;
 
+#ifndef SWIG
+    CvSVM( const cv::Mat& _train_data, const cv::Mat& _responses,
+          const cv::Mat& _var_idx=cv::Mat(), const cv::Mat& _sample_idx=cv::Mat(),
+          CvSVMParams _params=CvSVMParams() );
+    
+    virtual bool train( const cv::Mat& _train_data, const cv::Mat& _responses,
+                       const cv::Mat& _var_idx=cv::Mat(), const cv::Mat& _sample_idx=cv::Mat(),
+                       CvSVMParams _params=CvSVMParams() );
+    
+    virtual bool train_auto( const cv::Mat& _train_data, const cv::Mat& _responses,
+                            const cv::Mat& _var_idx, const cv::Mat& _sample_idx, CvSVMParams _params,
+                            int k_fold = 10,
+                            CvParamGrid C_grid      = get_default_grid(CvSVM::C),
+                            CvParamGrid gamma_grid  = get_default_grid(CvSVM::GAMMA),
+                            CvParamGrid p_grid      = get_default_grid(CvSVM::P),
+                            CvParamGrid nu_grid     = get_default_grid(CvSVM::NU),
+                            CvParamGrid coef_grid   = get_default_grid(CvSVM::COEF),
+                            CvParamGrid degree_grid = get_default_grid(CvSVM::DEGREE) );
+    virtual float predict( const cv::Mat& _sample, bool returnDFVal=false ) const;    
+#endif
+    
     virtual int get_support_vector_count() const;
     virtual const float* get_support_vector(int i) const;
     virtual CvSVMParams get_params() const { return params; };
@@ -527,7 +572,7 @@ public:
 
     static CvParamGrid get_default_grid( int param_id );
 
-    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void write( CvFileStorage* storage, const char* name ) const;
     virtual void read( CvFileStorage* storage, CvFileNode* node );
     int get_var_count() const { return var_idx ? var_idx->cols : var_all; }
 
@@ -542,7 +587,7 @@ protected:
     virtual void create_kernel();
     virtual void create_solver();
 
-    virtual void write_params( CvFileStorage* fs );
+    virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
     CvSVMParams params;
@@ -610,6 +655,17 @@ public:
                         CvEMParams params=CvEMParams(), CvMat* labels=0 );
 
     virtual float predict( const CvMat* sample, CvMat* probs ) const;
+
+#ifndef SWIG
+    CvEM( const cv::Mat& samples, const cv::Mat& sample_idx=cv::Mat(),
+         CvEMParams params=CvEMParams(), cv::Mat* labels=0 );
+    
+    virtual bool train( const cv::Mat& samples, const cv::Mat& sample_idx=cv::Mat(),
+                       CvEMParams params=CvEMParams(), cv::Mat* labels=0 );
+    
+    virtual float predict( const cv::Mat& sample, cv::Mat* probs ) const;
+#endif
+    
     virtual void clear();
 
     int           get_nclusters() const;
@@ -771,7 +827,7 @@ struct CV_EXPORTS CvDTreeTrainData
 
     virtual CvDTreeNode* subsample_data( const CvMat* _subsample_idx );
 
-    virtual void write_params( CvFileStorage* fs );
+    virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
     // release all the data
@@ -884,16 +940,28 @@ public:
 
     virtual CvDTreeNode* predict( const CvMat* _sample, const CvMat* _missing_data_mask=0,
                                   bool preprocessed_input=false ) const;
+
+#ifndef SWIG
+    virtual bool train( const cv::Mat& _train_data, int _tflag,
+                       const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
+                       const cv::Mat& _sample_idx=cv::Mat(), const cv::Mat& _var_type=cv::Mat(),
+                       const cv::Mat& _missing_mask=cv::Mat(),
+                       CvDTreeParams params=CvDTreeParams() );
+    
+    virtual CvDTreeNode* predict( const cv::Mat& _sample, const cv::Mat& _missing_data_mask=cv::Mat(),
+                                  bool preprocessed_input=false ) const;
+#endif
+    
     virtual const CvMat* get_var_importance();
     virtual void clear();
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
-    virtual void write( CvFileStorage* fs, const char* name );
+    virtual void write( CvFileStorage* fs, const char* name ) const;
 
     // special read & write methods for trees in the tree ensembles
     virtual void read( CvFileStorage* fs, CvFileNode* node,
                        CvDTreeTrainData* data );
-    virtual void write( CvFileStorage* fs );
+    virtual void write( CvFileStorage* fs ) const;
 
     const CvDTreeNode* get_root() const;
     int get_pruned_tree_idx() const;
@@ -929,11 +997,11 @@ protected:
     virtual void free_prune_data(bool cut_tree);
     virtual void free_tree();
 
-    virtual void write_node( CvFileStorage* fs, CvDTreeNode* node );
-    virtual void write_split( CvFileStorage* fs, CvDTreeSplit* split );
+    virtual void write_node( CvFileStorage* fs, CvDTreeNode* node ) const;
+    virtual void write_split( CvFileStorage* fs, CvDTreeSplit* split ) const;
     virtual CvDTreeNode* read_node( CvFileStorage* fs, CvFileNode* node, CvDTreeNode* parent );
     virtual CvDTreeSplit* read_split( CvFileStorage* fs, CvFileNode* node );
-    virtual void write_tree_nodes( CvFileStorage* fs );
+    virtual void write_tree_nodes( CvFileStorage* fs ) const;
     virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeNode* root;
@@ -1021,9 +1089,21 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams() );
+    
     virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
     virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual float predict_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
+
+#ifndef SWIG
+    virtual bool train( const cv::Mat& _train_data, int _tflag,
+                       const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
+                       const cv::Mat& _sample_idx=cv::Mat(), const cv::Mat& _var_type=cv::Mat(),
+                       const cv::Mat& _missing_mask=cv::Mat(),
+                       CvRTParams params=CvRTParams() );
+    virtual float predict( const cv::Mat& sample, const cv::Mat& missing = cv::Mat() ) const;
+    virtual float predict_prob( const cv::Mat& sample, const cv::Mat& missing = cv::Mat() ) const;
+#endif
+    
     virtual void clear();
 
     virtual const CvMat* get_var_importance();
@@ -1035,7 +1115,7 @@ public:
     virtual float get_train_error();    
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
-    virtual void write( CvFileStorage* fs, const char* name );
+    virtual void write( CvFileStorage* fs, const char* name ) const;
 
     CvMat* get_active_var_mask();
     CvRNG* get_rng();
@@ -1109,6 +1189,13 @@ public:
                         const CvMat* _sample_idx=0, const CvMat* _var_type=0,
                         const CvMat* _missing_mask=0,
                         CvRTParams params=CvRTParams());
+#ifndef SWIG
+    virtual bool train( const cv::Mat& _train_data, int _tflag,
+                       const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
+                       const cv::Mat& _sample_idx=cv::Mat(), const cv::Mat& _var_type=cv::Mat(),
+                       const cv::Mat& _missing_mask=cv::Mat(),
+                       CvRTParams params=CvRTParams());
+#endif
     virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
 protected:
     virtual bool grow_forest( const CvTermCriteria term_crit );
@@ -1198,14 +1285,14 @@ public:
              const CvMat* _sample_idx=0, const CvMat* _var_type=0,
              const CvMat* _missing_mask=0,
              CvBoostParams params=CvBoostParams() );
-
+    
     virtual bool train( const CvMat* _train_data, int _tflag,
              const CvMat* _responses, const CvMat* _var_idx=0,
              const CvMat* _sample_idx=0, const CvMat* _var_type=0,
              const CvMat* _missing_mask=0,
              CvBoostParams params=CvBoostParams(),
              bool update=false );
-
+    
     virtual bool train( CvMLData* data,
              CvBoostParams params=CvBoostParams(),
              bool update=false );
@@ -1214,13 +1301,32 @@ public:
                            CvMat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
                            bool raw_mode=false, bool return_sum=false ) const;
 
+#ifndef SWIG
+    CvBoost( const cv::Mat& _train_data, int _tflag,
+            const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
+            const cv::Mat& _sample_idx=cv::Mat(), const cv::Mat& _var_type=cv::Mat(),
+            const cv::Mat& _missing_mask=cv::Mat(),
+            CvBoostParams params=CvBoostParams() );
+    
+    virtual bool train( const cv::Mat& _train_data, int _tflag,
+                       const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
+                       const cv::Mat& _sample_idx=0, const cv::Mat& _var_type=cv::Mat(),
+                       const cv::Mat& _missing_mask=0,
+                       CvBoostParams params=CvBoostParams(),
+                       bool update=false );
+    
+    virtual float predict( const cv::Mat& _sample, const cv::Mat& _missing=cv::Mat(),
+                          cv::Mat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
+                          bool raw_mode=false, bool return_sum=false ) const;
+#endif
+    
     virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual void prune( CvSlice slice );
 
     virtual void clear();
 
-    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void write( CvFileStorage* storage, const char* name ) const;
     virtual void read( CvFileStorage* storage, CvFileNode* node );
     virtual const CvMat* get_active_vars(bool absolute_idx=true);
 
@@ -1237,7 +1343,7 @@ protected:
     virtual bool set_params( const CvBoostParams& _params );
     virtual void update_weights( CvBoostTree* tree );
     virtual void trim_weights();
-    virtual void write_params( CvFileStorage* fs );
+    virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeTrainData* data;
@@ -1297,15 +1403,30 @@ public:
     virtual void create( const CvMat* _layer_sizes,
                          int _activ_func=SIGMOID_SYM,
                          double _f_param1=0, double _f_param2=0 );
-
+    
     virtual int train( const CvMat* _inputs, const CvMat* _outputs,
                        const CvMat* _sample_weights, const CvMat* _sample_idx=0,
                        CvANN_MLP_TrainParams _params = CvANN_MLP_TrainParams(),
                        int flags=0 );
+    virtual float predict( const CvMat* _inputs, CvMat* _outputs ) const;
     
-    virtual float predict( const CvMat* _inputs,
-                           CvMat* _outputs ) const;
-
+#ifndef SWIG
+    CvANN_MLP( const cv::Mat& _layer_sizes,
+              int _activ_func=SIGMOID_SYM,
+              double _f_param1=0, double _f_param2=0 );
+    
+    virtual void create( const cv::Mat& _layer_sizes,
+                        int _activ_func=SIGMOID_SYM,
+                        double _f_param1=0, double _f_param2=0 );    
+    
+    virtual int train( const cv::Mat& _inputs, const cv::Mat& _outputs,
+                      const cv::Mat& _sample_weights, const cv::Mat& _sample_idx=cv::Mat(),
+                      CvANN_MLP_TrainParams _params = CvANN_MLP_TrainParams(),
+                      int flags=0 );    
+    
+    virtual float predict( const cv::Mat& _inputs, cv::Mat& _outputs ) const;
+#endif
+    
     virtual void clear();
 
     // possible activation functions
@@ -1315,7 +1436,7 @@ public:
     enum { UPDATE_WEIGHTS = 1, NO_INPUT_SCALE = 2, NO_OUTPUT_SCALE = 4 };
 
     virtual void read( CvFileStorage* fs, CvFileNode* node );
-    virtual void write( CvFileStorage* storage, const char* name );
+    virtual void write( CvFileStorage* storage, const char* name ) const;
 
     int get_layer_count() { return layer_sizes ? layer_sizes->cols : 0; }
     const CvMat* get_layer_sizes() { return layer_sizes; }
@@ -1347,7 +1468,7 @@ protected:
     virtual void calc_input_scale( const CvVectors* vecs, int flags );
     virtual void calc_output_scale( const CvVectors* vecs, int flags );
 
-    virtual void write_params( CvFileStorage* fs );
+    virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
     CvMat* layer_sizes;
@@ -1791,6 +1912,37 @@ protected:
 
     CvRNG rng;
 };
+
+
+namespace cv
+{
+    
+typedef CvStatModel StatModel;
+typedef CvParamGrid ParamGrid;
+typedef CvNormalBayesClassifier NormalBayesClassifier;
+typedef CvKNearest KNearest;
+typedef CvSVMParams SVMParams;
+typedef CvSVMKernel SVMKernel;
+typedef CvSVMSolver SVMSolver;
+typedef CvSVM SVM;
+typedef CvEMParams EMParams;
+typedef CvEM ExpectationMaximization;
+typedef CvDTreeParams DTreeParams;
+typedef CvMLData TrainData;
+typedef CvDTree DecisionTree;
+typedef CvForestTree ForestTree;
+typedef CvRTParams RandomTreeParams;
+typedef CvRTrees RandomTrees;
+typedef CvERTreeTrainData ERTreeTRainData;
+typedef CvForestERTree ERTree;
+typedef CvERTrees ERTrees;
+typedef CvBoostParams BoostParams;
+typedef CvBoostTree BoostTree;
+typedef CvBoost Boost;
+typedef CvANN_MLP_TrainParams ANN_MLP_TrainParams;
+typedef CvANN_MLP NeuralNet_MLP;
+    
+}
 
 #endif /*__ML_H__*/
 /* End of file. */

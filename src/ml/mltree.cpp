@@ -41,6 +41,8 @@
 #include "_ml.h"
 #include <ctype.h>
 
+using namespace cv;
+
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
 static const int block_size_delta = 1 << 10;
@@ -529,7 +531,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                 if (is_buf_16u)
                     udst[i] = (unsigned short)i;
                 else
-                    idst[i] = i; // οεπενερςθ βϋψε β if( idata )
+                    idst[i] = i; // Γ”Γ‚ο£ΏΓ‚ΓΓ‚Γ’ΓΓ‹ β€ΛΒ―Γ‚ β€ if( idata )
                 _fdst[i] = val;
                 
             }
@@ -1269,7 +1271,7 @@ int CvDTreeTrainData::get_child_buf_idx( CvDTreeNode* n )
 }
 
 
-void CvDTreeTrainData::write_params( CvFileStorage* fs )
+void CvDTreeTrainData::write_params( CvFileStorage* fs ) const
 {
     CV_FUNCNAME( "CvDTreeTrainData::write_params" );
 
@@ -1578,6 +1580,18 @@ bool CvDTree::train( const CvMat* _train_data, int _tflag,
 
     return result;
 }
+
+bool CvDTree::train( const Mat& _train_data, int _tflag,
+                    const Mat& _responses, const Mat& _var_idx,
+                    const Mat& _sample_idx, const Mat& _var_type,
+                    const Mat& _missing_mask, CvDTreeParams _params )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx=_var_idx,
+        sidx=_sample_idx, vtype=_var_type, mmask=_missing_mask; 
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0, sidx.data.ptr ? &sidx : 0,
+                 vtype.data.ptr ? &vtype : 0, mmask.data.ptr ? &mmask : 0, _params);
+}
+
 
 bool CvDTree::train( CvMLData* _data, CvDTreeParams _params )
 {
@@ -3655,6 +3669,13 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
 }
 
 
+CvDTreeNode* CvDTree::predict( const Mat& _sample, const Mat& _missing, bool preprocessed_input ) const
+{
+    CvMat sample = _sample, mmask = _missing;
+    return predict(&sample, mmask.data.ptr ? &mmask : 0, preprocessed_input);
+}
+
+
 const CvMat* CvDTree::get_var_importance()
 {
     if( !var_importance )
@@ -3698,7 +3719,7 @@ const CvMat* CvDTree::get_var_importance()
 }
 
 
-void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
+void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split ) const
 {
     int ci;
 
@@ -3735,7 +3756,7 @@ void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
 }
 
 
-void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node )
+void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node ) const
 {
     CvDTreeSplit* split;
 
@@ -3769,7 +3790,7 @@ void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node )
 }
 
 
-void CvDTree::write_tree_nodes( CvFileStorage* fs )
+void CvDTree::write_tree_nodes( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvDTree::write_tree_nodes" );
 
@@ -3803,7 +3824,7 @@ void CvDTree::write_tree_nodes( CvFileStorage* fs )
 }
 
 
-void CvDTree::write( CvFileStorage* fs, const char* name )
+void CvDTree::write( CvFileStorage* fs, const char* name ) const
 {
     //CV_FUNCNAME( "CvDTree::write" );
 
@@ -3811,10 +3832,10 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 
     cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_TREE );
 
-    get_var_importance();
+    //get_var_importance();
     data->write_params( fs );
-    if( var_importance )
-        cvWrite( fs, "var_importance", var_importance );
+    //if( var_importance )
+    //cvWrite( fs, "var_importance", var_importance );
     write( fs );
 
     cvEndWriteStruct( fs );
@@ -3823,7 +3844,7 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 }
 
 
-void CvDTree::write( CvFileStorage* fs )
+void CvDTree::write( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvDTree::write" );
 

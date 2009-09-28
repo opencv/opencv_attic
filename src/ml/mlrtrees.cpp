@@ -717,7 +717,7 @@ float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
     return -1;
 }
 
-void CvRTrees::write( CvFileStorage* fs, const char* name )
+void CvRTrees::write( CvFileStorage* fs, const char* name ) const
 {
     int k;
 
@@ -819,4 +819,33 @@ CvForestTree* CvRTrees::get_tree(int i) const
 {
     return (unsigned)i < (unsigned)ntrees ? trees[i] : 0;
 }
+
+using namespace cv;
+
+bool CvRTrees::train( const Mat& _train_data, int _tflag,
+                     const Mat& _responses, const Mat& _var_idx,
+                     const Mat& _sample_idx, const Mat& _var_type,
+                     const Mat& _missing_mask, CvRTParams _params )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx,
+    sidx = _sample_idx, vtype = _var_type, mmask = _missing_mask;
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0,
+                 sidx.data.ptr ? &sidx : 0, vtype.data.ptr ? &vtype : 0,
+                 mmask.data.ptr ? &mmask : 0, _params);
+}
+
+
+float CvRTrees::predict( const Mat& _sample, const Mat& _missing ) const
+{
+    CvMat sample = _sample, mmask = _missing;
+    return predict(&sample, mmask.data.ptr ? &mmask : 0);
+}
+
+float CvRTrees::predict_prob( const Mat& _sample, const Mat& _missing) const
+{
+    CvMat sample = _sample, mmask = _missing;
+    return predict_prob(&sample, mmask.data.ptr ? &mmask : 0);
+}
+
+
 // End of file.
