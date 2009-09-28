@@ -1844,7 +1844,7 @@ void icvGetCutPiece(   CvVect64d areaLineCoef1,CvVect64d areaLineCoef2,
     double cutLine2[3];
 
     /* Find middle line of sector */
-    double midLine[3];
+    double midLine[3]={0,0,0};
 
     
     /* Different way  */

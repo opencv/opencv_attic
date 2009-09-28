@@ -360,7 +360,7 @@ void CvFuzzyMeanShiftTracker::SearchWindow::setSize(int _x, int _y, int _width, 
 
 void CvFuzzyMeanShiftTracker::SearchWindow::initDepthValues(IplImage *maskImage, IplImage *depthMap)
 {
-	unsigned int d, mind = 0xFFFF, maxd = 0, m0 = 0, m1 = 0, mc, dd;
+	unsigned int d=0, mind = 0xFFFF, maxd = 0, m0 = 0, m1 = 0, mc, dd;
 	unsigned char *data = NULL;
 	unsigned short *depthData = NULL;
 
@@ -592,7 +592,7 @@ void CvFuzzyMeanShiftTracker::SearchWindow::getResizeAttribsInnerDensity(int &re
 
 void CvFuzzyMeanShiftTracker::SearchWindow::getResizeAttribsEdgeDensityFuzzy(int &resizeDx, int &resizeDy, int &resizeDw, int &resizeDh)
 {
-	double dx1, dx2, dy1, dy2;
+	double dx1=0, dx2, dy1, dy2;
 
 	resizeDy = 0;
 	resizeDh = 0;

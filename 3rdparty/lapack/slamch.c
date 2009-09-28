@@ -1,5 +1,94 @@
 #include "clapack.h"
+#include <float.h>
 #include <stdio.h>
+
+/* *********************************************************************** */
+
+doublereal slamc3_(real *a, real *b)
+{
+    /* System generated locals */
+    real ret_val;
+    
+    
+    /*  -- LAPACK auxiliary routine (version 3.1) -- */
+    /*     Univ. of Tennessee, Univ. of California Berkeley and NAG Ltd.. */
+    /*     November 2006 */
+    
+    /*     .. Scalar Arguments .. */
+    /*     .. */
+    
+    /*  Purpose */
+    /*  ======= */
+    
+    /*  SLAMC3  is intended to force  A  and  B  to be stored prior to doing */
+    /*  the addition of  A  and  B ,  for use in situations where optimizers */
+    /*  might hold one of these in a register. */
+    
+    /*  Arguments */
+    /*  ========= */
+    
+    /*  A       (input) REAL */
+    /*  B       (input) REAL */
+    /*          The values A and B. */
+    
+    /* ===================================================================== */
+    
+    /*     .. Executable Statements .. */
+    
+    ret_val = *a + *b;
+    
+    return ret_val;
+    
+    /*     End of SLAMC3 */
+    
+} /* slamc3_ */
+
+
+#if 1
+
+/* simpler version of dlamch for the case of IEEE754-compliant FPU module by Piotr Luszczek S.
+ taken from http://www.mail-archive.com/numpy-discussion@lists.sourceforge.net/msg02448.html */
+
+#ifndef FLT_DIGITS
+#define FLT_DIGITS 24
+#endif
+
+doublereal
+slamch_(char *cmach) {
+    char ch = cmach[0];
+    float sfmin, small, one = 1.0, zero = 0.0;
+    
+    if ('B' == ch || 'b' == ch) {
+        return FLT_RADIX;
+    } else if ('E' == ch || 'e' == ch) {
+        return FLT_EPSILON;
+    } else if ('L' == ch || 'l' == ch) {
+        return FLT_MAX_EXP;
+    } else if ('M' == ch || 'm' == ch) {
+        return FLT_MIN_EXP;
+    } else if ('N' == ch || 'n' == ch) {
+        return FLT_DIGITS;
+    } else if ('O' == ch || 'o' == ch) {
+        return FLT_MAX;
+    } else if ('P' == ch || 'p' == ch) {
+        return FLT_EPSILON * FLT_RADIX;
+    } else if ('R' == ch || 'r' == ch) {
+        return FLT_ROUNDS < 2 ? one : zero;
+    } else if ('S' == ch || 's' == ch) {
+        /* Use SMALL plus a bit, to avoid the possibility of rounding causing overflow
+         when computing  1/sfmin. */
+        sfmin = FLT_MIN;
+        small = one / FLT_MAX;
+        if (small >= sfmin) sfmin = small * (one + FLT_EPSILON);
+        return sfmin;
+    } else if ('U' == ch || 'u' == ch) {
+        return FLT_MIN;
+    }
+    
+    return zero;
+}
+
+#else
 
 /* Table of constant values */
 
@@ -684,48 +773,6 @@ L10:
 
 /* *********************************************************************** */
 
-doublereal slamc3_(real *a, real *b)
-{
-    /* System generated locals */
-    real ret_val;
-
-
-/*  -- LAPACK auxiliary routine (version 3.1) -- */
-/*     Univ. of Tennessee, Univ. of California Berkeley and NAG Ltd.. */
-/*     November 2006 */
-
-/*     .. Scalar Arguments .. */
-/*     .. */
-
-/*  Purpose */
-/*  ======= */
-
-/*  SLAMC3  is intended to force  A  and  B  to be stored prior to doing */
-/*  the addition of  A  and  B ,  for use in situations where optimizers */
-/*  might hold one of these in a register. */
-
-/*  Arguments */
-/*  ========= */
-
-/*  A       (input) REAL */
-/*  B       (input) REAL */
-/*          The values A and B. */
-
-/* ===================================================================== */
-
-/*     .. Executable Statements .. */
-
-    ret_val = *a + *b;
-
-    return ret_val;
-
-/*     End of SLAMC3 */
-
-} /* slamc3_ */
-
-
-/* *********************************************************************** */
-
 /* Subroutine */ int slamc4_(integer *emin, real *start, integer *base)
 {
     /* System generated locals */
@@ -994,3 +1041,5 @@ L10:
 /*     End of SLAMC5 */
 
 } /* slamc5_ */
+
+#endif

@@ -1041,7 +1041,7 @@ cvHaarDetectObjects( const CvArr* _img,
             }
             else
 #endif
-                cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, 0, 1. );
+                cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, _tilted, 1. );
 
         #ifdef _OPENMP
             #pragma omp parallel for num_threads(max_threads) schedule(dynamic)

@@ -212,8 +212,10 @@ class reStructuredTextRenderer(BaseRenderer):
     s = ""
     s += sep + "\n"
     for r in rows:
-      s += "|" + "|".join([ ' ' + c.ljust(m + 3) for c,m in zip(r, maxes) ]) + "|" + "\n"
-      s += sep + "\n"
+      #s += "|" + "|".join([ ' ' + c.ljust(m + 3) for c,m in zip(r, maxes) ]) + "|" + "\n"
+      #s += sep + "\n"
+      s += self.ind() + "|" + "|".join([ ' ' + c.ljust(m + 3) for c,m in zip(r, maxes) ]) + "|" + "\n"
+      s += self.ind() + sep + "\n"
     return unicode(s)
 
   def do_verbatim(self, node):
