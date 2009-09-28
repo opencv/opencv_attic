@@ -58,7 +58,7 @@ void CvStatModel::clear()
 }
 
 
-void CvStatModel::save( const char* filename, const char* name )
+void CvStatModel::save( const char* filename, const char* name ) const
 {
     CvFileStorage* fs = 0;
 
@@ -109,7 +109,7 @@ void CvStatModel::load( const char* filename, const char* name )
 }
 
 
-void CvStatModel::write( CvFileStorage*, const char* )
+void CvStatModel::write( CvFileStorage*, const char* ) const
 {
     OPENCV_ERROR( CV_StsNotImplemented, "CvStatModel::write", "" );
 }

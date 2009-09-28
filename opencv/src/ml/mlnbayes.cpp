@@ -394,7 +394,7 @@ float CvNormalBayesClassifier::predict( const CvMat* samples, CvMat* results ) c
 }
 
 
-void CvNormalBayesClassifier::write( CvFileStorage* fs, const char* name )
+void CvNormalBayesClassifier::write( CvFileStorage* fs, const char* name ) const
 {
     CV_FUNCNAME( "CvNormalBayesClassifier::write" );
 
@@ -563,6 +563,32 @@ void CvNormalBayesClassifier::read( CvFileStorage* fs, CvFileNode* root_node )
 
     if( !ok )
         clear();
+}
+
+using namespace cv;
+
+bool CvNormalBayesClassifier::train( const Mat& _train_data, const Mat& _responses,
+                                    const Mat& _var_idx, const Mat& _sample_idx, bool update )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx, sidx = _sample_idx;
+    return train(&tdata, &responses, vidx.data.ptr ? &vidx : 0,
+                 sidx.data.ptr ? &sidx : 0, update);
+}
+
+float CvNormalBayesClassifier::predict( const Mat& _samples, Mat* _results ) const
+{
+    CvMat samples = _samples, results, *presults = 0;
+    
+    if( _results )
+    {
+        if( !(_results->data && _results->type() == CV_32F &&
+              (_results->cols == 1 || _results->rows == 1) &&
+              _results->cols + _results->rows - 1 == _samples.rows) )
+            _results->create(_samples.rows, 1, CV_32F);
+        presults = &(results = *_results);
+    }
+    
+    return predict(&samples, presults);
 }
 
 /* End of file. */

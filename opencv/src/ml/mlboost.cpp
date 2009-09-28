@@ -1845,7 +1845,7 @@ float CvBoost::calc_error( CvMLData* _data, int type, vector<float> *resp )
     return err;
 }
 
-void CvBoost::write_params( CvFileStorage* fs )
+void CvBoost::write_params( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvBoost::write_params" );
 
@@ -1991,7 +1991,7 @@ CvBoost::read( CvFileStorage* fs, CvFileNode* node )
 
 
 void
-CvBoost::write( CvFileStorage* fs, const char* name )
+CvBoost::write( CvFileStorage* fs, const char* name ) const
 {
     CV_FUNCNAME( "CvBoost::write" );
 
@@ -2061,6 +2061,62 @@ CvSeq* CvBoost::get_weak_predictors()
 const CvDTreeTrainData* CvBoost::get_data() const
 {
     return data;
+}
+
+using namespace cv;
+
+CvBoost::CvBoost( const Mat& _train_data, int _tflag,
+               const Mat& _responses, const Mat& _var_idx,
+               const Mat& _sample_idx, const Mat& _var_type,
+               const Mat& _missing_mask,
+               CvBoostParams _params )
+{
+    weak = 0;
+    data = 0;
+    default_model_name = "my_boost_tree";
+    orig_response = sum_response = weak_eval = subsample_mask = weights = 0;
+    
+    train( _train_data, _tflag, _responses, _var_idx, _sample_idx,
+          _var_type, _missing_mask, _params );
+}    
+
+
+bool
+CvBoost::train( const Mat& _train_data, int _tflag,
+               const Mat& _responses, const Mat& _var_idx,
+               const Mat& _sample_idx, const Mat& _var_type,
+               const Mat& _missing_mask,
+               CvBoostParams _params, bool _update )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx,
+        sidx = _sample_idx, vtype = _var_type, mmask = _missing_mask;
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0,
+          sidx.data.ptr ? &sidx : 0, vtype.data.ptr ? &vtype : 0,
+          mmask.data.ptr ? &mmask : 0, _params, _update);
+}
+
+float
+CvBoost::predict( const Mat& _sample, const Mat& _missing,
+                 Mat* weak_responses, CvSlice slice,
+                 bool raw_mode, bool return_sum ) const
+{
+    CvMat sample = _sample, mmask = _missing, wr, *pwr = 0;
+    if( weak_responses )
+    {
+        int weak_count = cvSliceLength( slice, weak );
+        if( weak_count >= weak->total )
+        {
+            weak_count = weak->total;
+            slice.start_index = 0;
+        }
+        
+        if( !(weak_responses->data && weak_responses->type() == CV_32FC1 &&
+              (weak_responses->cols == 1 || weak_responses->rows == 1) &&
+              weak_responses->cols + weak_responses->rows - 1 == weak_count) )
+            weak_responses->create(weak_count, 1, CV_32FC1);
+        pwr = &(wr = *weak_responses);
+    }
+    return predict(&sample, &mmask, pwr, slice, raw_mode, return_sum);
 }
 
 /* End of file. */

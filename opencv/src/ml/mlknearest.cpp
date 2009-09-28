@@ -397,5 +397,60 @@ float CvKNearest::find_nearest( const CvMat* _samples, int k, CvMat* _results,
     return result;
 }
 
+
+using namespace cv;
+
+CvKNearest::CvKNearest( const Mat& _train_data, const Mat& _responses,
+                       const Mat& _sample_idx, bool _is_regression, int _max_k )
+{
+    samples = 0;
+    train(_train_data, _responses, _sample_idx, _is_regression, _max_k, false );
+}
+
+bool CvKNearest::train( const Mat& _train_data, const Mat& _responses,
+                        const Mat& _sample_idx, bool _is_regression,
+                        int _max_k, bool _update_base )
+{
+    CvMat tdata = _train_data, responses = _responses, sidx = _sample_idx;
+    
+    return train(_train_data, _responses, sidx.data.ptr ? &sidx : 0, _is_regression, _max_k, _update_base );
+}
+
+
+float CvKNearest::find_nearest( const Mat& _samples, int k, Mat* _results,
+                                const float** _neighbors, Mat* _neighbor_responses,
+                                Mat* _dist ) const
+{
+    CvMat s = _samples, results, *presults = 0, nresponses, *pnresponses = 0, dist, *pdist = 0;
+    
+    if( _results )
+    {
+        if(!(_results->data && (_results->type() == CV_32F ||
+            (_results->type() == CV_32S && regression)) &&
+             (_results->cols == 1 || _results->rows == 1) ||
+             _results->cols + _results->rows - 1 == _samples.rows) )
+            _results->create(_samples.rows, 1, CV_32F);
+        presults = &(results = *_results);
+    }
+    
+    if( _neighbor_responses )
+    {
+        if(!(_neighbor_responses->data && _neighbor_responses->type() == CV_32F &&
+             _neighbor_responses->cols == k && _neighbor_responses->rows == _samples.rows) )
+            _neighbor_responses->create(_samples.rows, k, CV_32F);
+        pnresponses = &(nresponses = *_neighbor_responses);
+    }
+    
+    if( _dist )
+    {
+        if(!(_dist->data && _dist->type() == CV_32F &&
+             _dist->cols == k && _dist->rows == _samples.rows) )
+            _dist->create(_samples.rows, k, CV_32F);
+        pdist = &(dist = *_dist);
+    }
+    
+    return find_nearest(&s, k, presults, _neighbors, pnresponses, pdist );
+}
+
 /* End of file */
 

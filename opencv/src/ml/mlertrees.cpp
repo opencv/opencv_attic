@@ -1906,5 +1906,19 @@ bool CvERTrees::grow_forest( const CvTermCriteria term_crit )
     return result;
 }
 
+using namespace cv;
+
+bool CvERTrees::train( const Mat& _train_data, int _tflag,
+                      const Mat& _responses, const Mat& _var_idx,
+                      const Mat& _sample_idx, const Mat& _var_type,
+                      const Mat& _missing_mask, CvRTParams params )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx,
+    sidx = _sample_idx, vtype = _var_type, mmask = _missing_mask;
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0,
+                 sidx.data.ptr ? &sidx : 0, vtype.data.ptr ? &vtype : 0,
+                 mmask.data.ptr ? &mmask : 0, params);
+}
+
 // End of file.
 

@@ -1107,4 +1107,52 @@ const CvMat* CvEM::get_probs() const
     return probs;
 }
 
+using namespace cv;
+
+CvEM::CvEM( const Mat& samples, const Mat& sample_idx,
+           CvEMParams params, Mat* labels )
+{
+    means = weights = probs = inv_eigen_values = log_weight_div_det = 0;
+    covs = cov_rotate_mats = 0;
+    
+    // just invoke the train() method
+    train(samples, sample_idx, params, labels);
+}    
+
+bool CvEM::train( const Mat& _samples, const Mat& _sample_idx,
+                 CvEMParams _params, Mat* _labels )
+{
+    CvMat samples = _samples, sidx = _sample_idx, labels, *plabels = 0;
+    
+    if( _labels )
+    {
+        int nsamples = sidx.data.ptr ? sidx.rows : samples.rows;
+        
+        if( !(_labels->data && _labels->type() == CV_32SC1 &&
+              (_labels->cols == 1 || _labels->rows == 1) &&
+              _labels->cols + _labels->rows - 1 == nsamples) )
+            _labels->create(nsamples, 1, CV_32SC1);
+        plabels = &(labels = *_labels);
+    }
+    return train(&samples, sidx.data.ptr ? &sidx : 0, params, plabels);
+}
+
+float
+CvEM::predict( const Mat& _sample, Mat* _probs ) const
+{
+    CvMat sample = _sample, probs, *pprobs = 0;
+    
+    if( _probs )
+    {
+        int nclusters = params.nclusters;
+        if(!(_probs->data && (_probs->type() == CV_32F || _probs->type()==CV_64F) &&
+             (_probs->cols == 1 || _probs->rows == 1) &&
+             _probs->cols + _probs->rows - 1 == nclusters))
+            _probs->create(nclusters, 1, _sample.type());
+        pprobs = &(probs = *_probs);
+    }
+    return predict(&sample, pprobs);
+}
+
+
 /* End of file. */
