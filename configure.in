@@ -1,9 +1,9 @@
 # Process this file with autoconf to produce a configure script.
 
 # Set various version strings
-m4_define([opencv_major_version],    [1])
-m4_define([opencv_minor_version],    [2])
-m4_define([opencv_subminor_version], [1])
+m4_define([opencv_major_version],    [2])
+m4_define([opencv_minor_version],    [0])
+m4_define([opencv_subminor_version], [0])
 m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
 
 # Before making a release, the LT_VERSION string should be modified.
@@ -30,7 +30,7 @@ m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.
 # This is an abuse that only fosters misunderstanding of the purpose of library versions. Instead,
 # use the -release flag (see Release numbers), but be warned that every release of your package will
 # not be binary compatible with any other release.
-m4_define([opencv_lt_version], [3:0:0])
+m4_define([opencv_lt_version], [4:0:0])
 
 # init autotools
 # we need autoconf >= 2.62 beause of several macros in there
@@ -98,9 +98,9 @@ AC_ARG_ENABLE([optimization],
 
 # does the user want to have SSE / SSE2 / SSE3 specified?
 AC_ARG_ENABLE([sse],
-              [AS_HELP_STRING([--enable-sse],[enable SSE(2) intrinsics [yes]])],
+              [AS_HELP_STRING([--enable-sse],[enable SSE(2) intrinsics [automatic]])],
               [enable_sse=$enableval],
-              [enable_sse=yes])
+              [enable_sse=auto])
 
 # does the user want to build demo applications?
 AC_ARG_ENABLE([apps],
@@ -224,12 +224,23 @@ AC_ARG_WITH([gthread],
 AC_OPENMP
 
 # SSE/SSE2/SSE3 support
-if test x"$enable_sse" = "xyes"; then
+if test x"$enable_sse" = "xauto"; then
   # This macro calls:
   #   AC_SUBST(SIMD_FLAGS)
   # And defines:
   #   HAVE_MMX / HAVE_SSE / HAVE_SSE2 / HAVE_SSE3 / HAVE_SSSE3
   AX_EXT
+else
+  if test x"$enable_sse" = "xyes"; then
+    AC_DEFINE(HAVE_MMX,,[Support mmx instructions])
+    AC_DEFINE(HAVE_SSE,,[Support SSE (Streaming SIMD Extensions) instructions])
+    AC_DEFINE(HAVE_SSE2,,[Support SSE2 (Streaming SIMD Extensions 2) instructions])
+    #AC_DEFINE(HAVE_SSE3,,[Support SSE3 (Streaming SIMD Extensions 3) instructions])
+    #AC_DEFINE(HAVE_SSSE3,,[Support SSSE3 (Supplemental Streaming SIMD Extensions 3) instructions])
+    
+    SIMD_FLAGS=" -mmmx -msse -msse2"
+    AC_SUBST(SIMD_FLAGS)
+  fi
 fi
 
 
@@ -986,7 +997,7 @@ if test x"$with_octave" = "xyes"; then
           AC_MSG_WARN([Octave headers not found, disabling octave wrappers])
           have_octave=no
         ])
-
+    
     # restore the old CPPFLAGS
     CPPFLAGS=$OLD_CPPFLAGS
 
@@ -1072,7 +1083,6 @@ AC_SUBST(DEBUG)
 AC_CONFIG_FILES([Makefile
 opencv.pc
 opencv.spec
-doc/Makefile
 data/Makefile
 include/Makefile
 3rdparty/Makefile

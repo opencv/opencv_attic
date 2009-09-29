@@ -143,6 +143,7 @@ lib_cv_la_SOURCES = \
   cv/cvcalibration.cpp \
   cv/cvcamshift.cpp \
   cv/cvcanny.cpp \
+  cv/cvcascadedetect.cpp \
   cv/cvcolor.cpp \
   cv/cvcondens.cpp \
   cv/cvcontours.cpp \
@@ -223,6 +224,7 @@ lib_cvaux_la_SOURCES = \
   cvaux/cvadaptiveskindetector.cpp \
   cvaux/cvaux.cpp \
   cvaux/cvauxutils.cpp \
+  cvaux/cvba.cpp \
   cvaux/cvbgfg_acmmm2003.cpp \
   cvaux/cvbgfg_codebook.cpp \
   cvaux/cvbgfg_common.cpp \
@@ -333,6 +335,7 @@ libml_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ -version-info @LT_VERSION
 libml_la_LIBADD = \
   lib_ml.la \
   libcxcore.la \
+  $(top_builddir)/3rdparty/lib_flann.la \
   @LTLIBOBJS@
 
 # =========================================================================

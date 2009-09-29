@@ -4,6 +4,13 @@
 #include <octave/oct.h>
 #include <octave/Cell.h>
 
+// SWIG sets an include on 'tcl.h' without giving the path, which fails on Ubuntu
+#if   defined HAVE_TCL_H
+  #include <tcl.h>
+#elif defined HAVE_TCL_TCL_H
+  #include <tcl/tcl.h>
+#endif
+
 #include <cxcore.h>
 #include <cv.h>
 

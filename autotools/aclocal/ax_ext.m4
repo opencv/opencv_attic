@@ -39,28 +39,34 @@
 AC_DEFUN([AX_EXT],
 [
   AC_REQUIRE([AX_GCC_X86_CPUID])
-
+  
   AX_GCC_X86_CPUID([0x00000001])
-  ecx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 3`
-  edx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 4`
-
- AC_CACHE_CHECK([whether mmx is supported], [ax_cv_have_mmx_ext],
+  if test "$ax_cv_gcc_x86_cpuid_0x00000001" != "unknown"; then
+    ecx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 3`
+    edx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 4`
+  fi
+  
+  AC_CACHE_CHECK([whether mmx is supported], [ax_cv_have_mmx_ext],
   [
     ax_cv_have_mmx_ext=no
-    if test "$((0x$edx>>23&0x01))" = 1; then
-      ax_cv_have_mmx_ext=yes
+    if test "$ax_cv_gcc_x86_cpuid_0x00000001" != "unknown"; then
+      if test "$((0x$edx>>23&0x01))" = 1; then
+        ax_cv_have_mmx_ext=yes
+      fi
     fi
   ])
 
- AC_CACHE_CHECK([whether sse is supported], [ax_cv_have_sse_ext],
+  AC_CACHE_CHECK([whether sse is supported], [ax_cv_have_sse_ext],
   [
     ax_cv_have_sse_ext=no
-    if test "$((0x$edx>>25&0x01))" = 1; then
-      ax_cv_have_sse_ext=yes
+    if test "$ax_cv_gcc_x86_cpuid_0x00000001" != "unknown"; then
+      if test "$((0x$edx>>25&0x01))" = 1; then
+        ax_cv_have_sse_ext=yes
+      fi
     fi
   ])
 
- AC_CACHE_CHECK([whether sse2 is supported], [ax_cv_have_sse2_ext],
+  AC_CACHE_CHECK([whether sse2 is supported], [ax_cv_have_sse2_ext],
   [
     ax_cv_have_sse2_ext=no
     if test "$((0x$edx>>26&0x01))" = 1; then
@@ -68,19 +74,23 @@ AC_DEFUN([AX_EXT],
     fi
   ])
 
- AC_CACHE_CHECK([whether sse3 is supported], [ax_cv_have_sse3_ext],
+  AC_CACHE_CHECK([whether sse3 is supported], [ax_cv_have_sse3_ext],
   [
     ax_cv_have_sse3_ext=no
-    if test "$((0x$ecx&0x01))" = 1; then
-      ax_cv_have_sse3_ext=yes
+    if test "$ax_cv_gcc_x86_cpuid_0x00000001" != "unknown"; then
+      if test "$((0x$ecx&0x01))" = 1; then
+        ax_cv_have_sse3_ext=yes
+      fi
     fi
   ])
 
- AC_CACHE_CHECK([whether ssse3 is supported], [ax_cv_have_ssse3_ext],
+  AC_CACHE_CHECK([whether ssse3 is supported], [ax_cv_have_ssse3_ext],
   [
     ax_cv_have_ssse3_ext=no
-    if test "$((0x$ecx>>9&0x01))" = 1; then
-      ax_cv_have_ssse3_ext=yes
+    if test "$ax_cv_gcc_x86_cpuid_0x00000001" != "unknown"; then
+      if test "$((0x$ecx>>9&0x01))" = 1; then
+        ax_cv_have_ssse3_ext=yes
+      fi
     fi
   ])
 

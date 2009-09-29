@@ -44,63 +44,63 @@
 #define _OPENCV_CORE_OPERATIONS_H_
 
 #ifndef SKIP_INCLUDES
-#include <string.h>
-#include <limits.h>
+  #include <string.h>
+  #include <limits.h>
 #endif // SKIP_INCLUDES
 
 #ifdef __cplusplus
 
 /////// exchange-add operation for atomic operations on reference counters ///////
-    
 #ifdef __GNUC__
     
-#if __GNUC__*10 + __GNUC_MINOR__ >= 42
+  #if __GNUC__*10 + __GNUC_MINOR__ >= 42
 
-#if !defined WIN32 && (defined __i486__ || defined __i586__ || \
-    defined __i686__ || defined __MMX__ || defined __SSE__)
-#define CV_XADD __sync_fetch_and_add
-#else
-#include <ext/atomicity.h>
-#define CV_XADD __gnu_cxx::__exchange_and_add
-#endif
+    #if !defined WIN32 && (defined __i486__ || defined __i586__ || \
+        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__)
+      #define CV_XADD __sync_fetch_and_add
+    #else
+      #include <ext/atomicity.h>
+      #define CV_XADD __gnu_cxx::__exchange_and_add
+    #endif
 
-#else
-#include <bits/atomicity.h>
-#if __GNUC__ >= 4
-#define CV_XADD __gnu_cxx::__exchange_and_add
-#else
-#define CV_XADD __exchange_and_add
-#endif
-#endif
+  #else
+    #include <bits/atomicity.h>
+    #if __GNUC__ >= 4
+      #define CV_XADD __gnu_cxx::__exchange_and_add
+    #else
+      #define CV_XADD __exchange_and_add
+    #endif
+  #endif
     
 #elif defined WIN32 || defined _WIN32
 
-#if defined _MSC_VER && !defined WIN64 && !defined _WIN64
-static inline int CV_XADD( int* addr, int delta )
-{
-    int tmp;
-    __asm
+  #if defined _MSC_VER && !defined WIN64 && !defined _WIN64
+    static inline int CV_XADD( int* addr, int delta )
     {
-        mov edx, addr
-        mov eax, delta
-        lock xadd [edx], eax
-        mov tmp, eax
+        int tmp;
+        __asm
+        {
+            mov edx, addr
+            mov eax, delta
+            lock xadd [edx], eax
+            mov tmp, eax
+        }
+        return tmp;
     }
-    return tmp;
-}
-#else
-#include "windows.h"
-#undef min
-#undef max
-#define CV_XADD(addr,delta) InterlockedExchangeAdd((LONG volatile*)(addr), (delta))
-#endif
-    
+  #else
+    #include "windows.h"
+    #undef min
+    #undef max
+    #define CV_XADD(addr,delta) InterlockedExchangeAdd((LONG volatile*)(addr), (delta))
+  #endif
+      
 #else
 
-template<typename _Tp> static inline _Tp CV_XADD(_Tp* addr, _Tp delta)
-{ int tmp = *addr; *addr += delta; return tmp; }
+  template<typename _Tp> static inline _Tp CV_XADD(_Tp* addr, _Tp delta)
+  { int tmp = *addr; *addr += delta; return tmp; }
     
 #endif
+
 
 namespace cv
 {
@@ -1356,32 +1356,32 @@ inline LineIterator LineIterator::operator ++(int)
 }
 
 #if 0
-template<typename _Tp> inline VectorCommaInitializer_<_Tp>::
-VectorCommaInitializer_(vector<_Tp>* _vec) : vec(_vec), idx(0) {}
+  template<typename _Tp> inline VectorCommaInitializer_<_Tp>::
+  VectorCommaInitializer_(vector<_Tp>* _vec) : vec(_vec), idx(0) {}
 
-template<typename _Tp> template<typename T2> inline VectorCommaInitializer_<_Tp>&
-VectorCommaInitializer_<_Tp>::operator , (T2 val)
-{
-    if( (size_t)idx < vec->size() )
-        (*vec)[idx] = _Tp(val);
-    else
-        vec->push_back(_Tp(val));
-    idx++;
-    return *this;
-}
+  template<typename _Tp> template<typename T2> inline VectorCommaInitializer_<_Tp>&
+  VectorCommaInitializer_<_Tp>::operator , (T2 val)
+  {
+      if( (size_t)idx < vec->size() )
+          (*vec)[idx] = _Tp(val);
+      else
+          vec->push_back(_Tp(val));
+      idx++;
+      return *this;
+  }
 
-template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator vector<_Tp>() const
-{ return *vec; }
+  template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator vector<_Tp>() const
+  { return *vec; }
 
-template<typename _Tp> inline vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
-{ return *vec; }
+  template<typename _Tp> inline vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
+  { return *vec; }
 
-template<typename _Tp, typename T2> static inline VectorCommaInitializer_<_Tp>
-operator << (const vector<_Tp>& vec, T2 val)
-{
-    VectorCommaInitializer_<_Tp> commaInitializer((vector<_Tp>*)&vec);
-    return (commaInitializer, val);
-}
+  template<typename _Tp, typename T2> static inline VectorCommaInitializer_<_Tp>
+  operator << (const vector<_Tp>& vec, T2 val)
+  {
+      VectorCommaInitializer_<_Tp> commaInitializer((vector<_Tp>*)&vec);
+      return (commaInitializer, val);
+  }
 #endif
     
 /////////////////////////////// AutoBuffer ////////////////////////////////////////
@@ -2485,5 +2485,5 @@ template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
 
 }
 
-#endif
-#endif
+#endif // __cplusplus
+#endif // _OPENCV_CORE_OPERATIONS_H_

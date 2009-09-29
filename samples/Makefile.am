@@ -5,8 +5,9 @@ EXTRA_DIST = \
   \
   CMakeLists.txt        \
   c/CMakeLists.txt      \
-  python/CMakeLists.txt \
+  python/camshift.py    \
   octave/CMakeLists.txt \
+  swig_python/CMakeLists.txt \
   \
   c/cvsample.vs2005.vcproj
 
@@ -81,7 +82,7 @@ dist_csamples_DATA = \
   c/distrans.c \
   c/drawing.c \
   c/edge.c \
-  c/facedetect.c \
+  c/facedetect.cpp \
   c/ffilldemo.c \
   c/find_obj.cpp \
   c/fitellipse.cpp \
@@ -108,34 +109,34 @@ dist_csamples_DATA = \
 # Python samples
 pythonsamplesdir=$(pkgdatadir)/samples/python
 dist_pythonsamples_SCRIPTS = \
-  python/cam-histo.py            \
-  python/capture-cam.py          \
-  python/chessboard.py           \
-  python/contours.py             \
-  python/convexhull.py           \
-  python/delaunay.py             \
-  python/demhist.py              \
-  python/dft.py                  \
-  python/distrans.py             \
-  python/drawing.py              \
-  python/edge.py                 \
-  python/facedetect.py           \
-  python/ffilldemo.py            \
-  python/fitellipse.py           \
-  python/houghlines.py           \
-  python/inpaint.py              \
-  python/kalman.py               \
-  python/kmeans.py               \
-  python/laplace.py              \
-  python/lkdemo.py               \
-  python/logpolar.py             \
-  python/minarea.py              \
-  python/minidemo.py             \
-  python/morphology.py           \
-  python/motempl.py              \
-  python/pyramid_segmentation.py \
-  python/squares.py              \
-  python/watershed.py
+  swig_python/cam-histo.py            \
+  swig_python/capture-cam.py          \
+  swig_python/chessboard.py           \
+  swig_python/contours.py             \
+  swig_python/convexhull.py           \
+  swig_python/delaunay.py             \
+  swig_python/demhist.py              \
+  swig_python/dft.py                  \
+  swig_python/distrans.py             \
+  swig_python/drawing.py              \
+  swig_python/edge.py                 \
+  swig_python/facedetect.py           \
+  swig_python/ffilldemo.py            \
+  swig_python/fitellipse.py           \
+  swig_python/houghlines.py           \
+  swig_python/inpaint.py              \
+  swig_python/kalman.py               \
+  swig_python/kmeans.py               \
+  swig_python/laplace.py              \
+  swig_python/lkdemo.py               \
+  swig_python/logpolar.py             \
+  swig_python/minarea.py              \
+  swig_python/minidemo.py             \
+  swig_python/morphology.py           \
+  swig_python/motempl.py              \
+  swig_python/pyramid_segmentation.py \
+  swig_python/squares.py              \
+  swig_python/watershed.py
 
 # Octave / Matlab samples
 octavesamplesdir=$(pkgdatadir)/samples/octave

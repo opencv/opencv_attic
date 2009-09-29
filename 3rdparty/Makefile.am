@@ -1,7 +1,7 @@
 # on autotools setups, build cLapack only
 # TODO: let ./configure find platform installed cLapack and only use this as fallback
 
-AM_CPPFLAGS = -I$(top_srcdir)/3rdparty/include @OPTIMIZATION_CPPFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir)/3rdparty/include @OPTIMIZATION_CPPFLAGS@ -I$(top_srcdir)/3rdparty/flann -I$(top_srcdir)/3rdparty/flann/algorithms -I$(top_srcdir)/3rdparty/flann/nn -I$(top_srcdir)/3rdparty/flann/util
 AM_CXXFLAGS = @OPTIMIZATION_CXXFLAGS@ @SIMD_FLAGS@ @OPENMP_CXXFLAGS@
 AM_CFLAGS   = $(AM_CXXFLAGS) $(CXXFLAGS)
 
@@ -48,7 +48,34 @@ EXTRA_DIST = \
 noinst_HEADERS     = \
    include/cblas.h   \
    include/clapack.h \
-   include/f2c.h
+   include/f2c.h     \
+   \
+   flann/algorithms/autotuned_index.h  \
+   flann/algorithms/composite_index.h  \
+   flann/algorithms/dist.h             \
+   flann/algorithms/kdtree_index.h     \
+   flann/algorithms/kmeans_index.h     \
+   flann/algorithms/linear_index.h     \
+   flann/algorithms/nn_index.h         \
+   \
+   flann/nn/ground_truth.h      \
+   flann/nn/index_testing.h     \
+   flann/nn/simplex_downhill.h  \
+   \
+   flann/constants.h  \
+   flann/flann.h      \
+   flann/flann.hpp    \
+   \
+   flann/util/allocator.h       \
+   flann/util/common.h          \
+   flann/util/heap.h            \
+   flann/util/logger.h          \
+   flann/util/matrix.h          \
+   flann/util/object_factory.h  \
+   flann/util/random.h          \
+   flann/util/result_set.h      \
+   flann/util/saving.h          \
+   flann/util/timer.h
 
 # all we want to build here is the single library
 if NATIVE_LAPACK
@@ -57,7 +84,7 @@ else
   TMP_LAPACK = lib_clapack.la lib_clapack_floatstore.la
 endif
 
-noinst_LTLIBRARIES = $(TMP_LAPACK)
+noinst_LTLIBRARIES = $(TMP_LAPACK) lib_flann.la
 
 # sources of the cLapack convenience library part with special flags
 lib_clapack_floatstore_la_SOURCES = \
@@ -109,3 +136,13 @@ lib_clapack_la_SOURCES = \
 # the cLapack convenience library
 lib_clapack_la_LDFLAGS = -no-undefined -Wc,@OPENMP_CXXFLAGS@ @LDFLAGS@
 lib_clapack_la_LIBADD  = lib_clapack_floatstore.la
+
+
+# sources of the FLANN convenience library
+lib_flann_la_SOURCES = \
+  flann/algorithms/dist.cpp   \
+  flann/nn/index_testing.cpp  \
+  flann/flann.cpp             \
+  flann/util/logger.cpp       \
+  flann/util/random.cpp       \
+  flann/util/saving.cpp
