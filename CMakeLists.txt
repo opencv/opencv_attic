@@ -805,7 +805,7 @@ if(BUILD_PACKAGE)
 	
     include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
-    set(root_files README ChangeLog)
+    set(root_files  README ChangeLog)
 
     file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
 
