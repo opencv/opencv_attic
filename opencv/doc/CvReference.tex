@@ -1660,19 +1660,19 @@ the Ford98
 
  \item Bayer $\rightarrow$ RGB (\texttt{CV\_BayerBG2BGR, CV\_BayerGB2BGR, CV\_BayerRG2BGR, CV\_BayerGR2BGR, CV\_BayerBG2RGB, CV\_BayerGB2RGB, CV\_BayerRG2RGB, CV\_BayerGR2RGB}) The Bayer pattern is widely used in CCD and CMOS cameras. It allows one to get color pictures from a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
 
-\newcommand{\R}{\color{red}R}
-\newcommand{\G}{\color{green}G}
-\newcommand{\B}{\color{blue}B}
+\newcommand{\Rcell}{\color{red}R}
+\newcommand{\Gcell}{\color{green}G}
+\newcommand{\Bcell}{\color{blue}B}
 
 
 \[
 \definecolor{BackGray}{rgb}{0.8,0.8,0.8}
 \begin{array}{ c c c c c }
-\R&\G&\R&\G&\R\\
-\G&\colorbox{BackGray}{\B}&\colorbox{BackGray}{\G}&\B&\G\\
-\R&\G&\R&\G&\R\\
-\G&\B&\G&\B&\G\\
-\R&\G&\R&\G&\R
+\Rcell&\Gcell&\Rcell&\Gcell&\Rcell\\
+\Gcell&\colorbox{BackGray}{\Bcell}&\colorbox{BackGray}{\Gcell}&\Bcell&\Gcell\\
+\Rcell&\Gcell&\Rcell&\Gcell&\Rcell\\
+\Gcell&\Bcell&\Gcell&\Bcell&\Gcell\\
+\Rcell&\Gcell&\Rcell&\Gcell&\Rcell
 \end{array}
 \]
 

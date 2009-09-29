@@ -25,5 +25,26 @@ add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs} ${CMAKE
 target_link_libraries(${the_target} ${PYTHON_LIBRARIES} cxcore cv highgui)
 set_target_properties(${the_target} PROPERTIES PREFIX "")
 set_target_properties(${the_target} PROPERTIES OUTPUT_NAME "cv")
-set_target_properties(${the_target} PROPERTIES SUFFIX ".so")
-install(FILES ${LIBRARY_OUTPUT_PATH}/cv.so DESTINATION ${PYTHON_PACKAGES_PATH})
+if(WIN32)
+   set(CVPY_SUFFIX ".pyd")
+else()
+   set(CVPY_SUFFIX ".so")
+endif()
+
+set_target_properties(${the_target} PROPERTIES SUFFIX ${CVPY_SUFFIX})
+
+set(cvpy_files cv${CVPY_SUFFIX})
+
+if(WIN32)
+    install(TARGETS ${the_target}
+            RUNTIME DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages" COMPONENT main
+            LIBRARY DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages" COMPONENT main
+            ARCHIVE DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages" COMPONENT main
+            )
+else()
+    install(TARGETS ${the_target}
+            RUNTIME DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT main
+            LIBRARY DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT main
+            ARCHIVE DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH} COMPONENT main
+            )
+endif()
