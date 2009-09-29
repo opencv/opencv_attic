@@ -47,6 +47,15 @@
 #define _CRT_SECURE_NO_DEPRECATE /* to avoid multiple Visual Studio 2005 warnings */
 #endif
 
+#if _MSC_VER >= 1500
+#ifndef _BIND_TO_CURRENT_CRT_VERSION
+  #define _BIND_TO_CURRENT_CRT_VERSION 1
+#endif
+#ifndef _BIND_TO_CURRENT_VCLIBS_VERSION
+  #define _BIND_TO_CURRENT_VCLIBS_VERSION 1
+#endif
+#endif
+
 #ifndef SKIP_INCLUDES
   #include <assert.h>
   #include <stdlib.h>
