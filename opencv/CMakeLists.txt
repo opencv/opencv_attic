@@ -52,7 +52,7 @@ endif()
 # ----------------------------------------------------------------------------
 #  Current version number:
 # ----------------------------------------------------------------------------
-set(OPENCV_VERSION "1.2.0")
+set(OPENCV_VERSION "2.0.0")
 
 string(REGEX MATCHALL "[0-9]" OPENCV_VERSION_PARTS "${OPENCV_VERSION}")
 
@@ -548,6 +548,9 @@ if(MSVC)
     # 64-bit portability warnings, in MSVC8
     if(MSVC80)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Wp64")
+    endif()
+    if(MSVC90)
+	set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _BIND_TO_CURRENT_CRT_VERSION=1 /D _BIND_TO_CURRENT_VCLIBS_VERSION=1")
     endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
