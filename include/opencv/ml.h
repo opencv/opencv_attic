@@ -1310,8 +1310,8 @@ public:
     
     virtual bool train( const cv::Mat& _train_data, int _tflag,
                        const cv::Mat& _responses, const cv::Mat& _var_idx=cv::Mat(),
-                       const cv::Mat& _sample_idx=0, const cv::Mat& _var_type=cv::Mat(),
-                       const cv::Mat& _missing_mask=0,
+                       const cv::Mat& _sample_idx=cv::Mat(), const cv::Mat& _var_type=cv::Mat(),
+                       const cv::Mat& _missing_mask=cv::Mat(),
                        CvBoostParams params=CvBoostParams(),
                        bool update=false );
     

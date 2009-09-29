@@ -413,7 +413,7 @@ bool CvKNearest::train( const Mat& _train_data, const Mat& _responses,
 {
     CvMat tdata = _train_data, responses = _responses, sidx = _sample_idx;
     
-    return train(_train_data, _responses, sidx.data.ptr ? &sidx : 0, _is_regression, _max_k, _update_base );
+    return train(&tdata, &responses, sidx.data.ptr ? &sidx : 0, _is_regression, _max_k, _update_base );
 }
 
 

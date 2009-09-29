@@ -1134,7 +1134,7 @@ bool CvEM::train( const Mat& _samples, const Mat& _sample_idx,
             _labels->create(nsamples, 1, CV_32SC1);
         plabels = &(labels = *_labels);
     }
-    return train(&samples, sidx.data.ptr ? &sidx : 0, params, plabels);
+    return train(&samples, sidx.data.ptr ? &sidx : 0, _params, plabels);
 }
 
 float

@@ -110,8 +110,8 @@ IF(MSVC)
         SET(MSVC90_OPENMP_DIR
           "${MSVC90_REDIST_DIR}/Debug_NonRedist/${CMAKE_MSVC_ARCH}/Microsoft.VC90.DebugOPENMP")
         SET(__install__libs ${__install__libs}
-          "${MSVC90_CRT_DIR}/Microsoft.VC90.DebugOpenMP.manifest"
-          "${MSVC90_CRT_DIR}/vcomp90d.dll"
+          "${MSVC90_OPENMP_DIR}/Microsoft.VC90.DebugOpenMP.manifest"
+          "${MSVC90_OPENMP_DIR}/vcomp90d.dll"
           )
       ENDIF(CMAKE_INSTALL_DEBUG_LIBRARIES)
     ENDIF(CMAKE_INSTALL_OPENMP_LIBRARIES) 

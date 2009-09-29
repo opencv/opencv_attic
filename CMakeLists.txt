@@ -464,6 +464,11 @@ foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
 endforeach()
 
 message(STATUS "IPP detected: ${IPP_FOUND}")
+
+if(WIN32 AND NOT MSVC)
+    set(IPP_FOUND)
+endif()
+
 set(USE_IPP ${IPP_FOUND} CACHE BOOL "Use IPP when available")
 
 if(IPP_FOUND AND USE_IPP)
@@ -800,7 +805,7 @@ if(BUILD_PACKAGE)
 	
     include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
-    set(root_files AUTHORS README ChangeLog COPYING INSTALL NEWS THANKS)
+    set(root_files README ChangeLog)
 
     file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
 
@@ -822,12 +827,22 @@ if(BUILD_PACKAGE)
 			COMPONENT main
 			)
 
+        if(CMAKE_INSTALL_DEBUG_LIBRARIES)
+            foreach(m cxcore cv cvaux ml highgui opencv_ffmpeg)
+                install(FILES ${CMAKE_BINARY_DIR}/bin/Debug/${m}${OPENCV_DLLVERSION}d.dll
+			DESTINATION bin COMPONENT main)
+                install(FILES ${CMAKE_BINARY_DIR}/lib/Debug/${m}${OPENCV_DLLVERSION}d.lib
+			DESTINATION lib COMPONENT main)
+            endforeach()     
+        endif()
+
         install(DIRECTORY data samples DESTINATION "." COMPONENT main PATTERN ".svn" EXCLUDE)
         install(DIRECTORY 3rdparty apps interfaces src tests utils DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/ DESTINATION doc COMPONENT src FILES_MATCHING PATTERN "*.tex")
         install(DIRECTORY doc/pics DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/plastex DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
-	endif()
+    
+    endif()
 endif()
 
 
