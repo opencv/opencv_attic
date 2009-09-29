@@ -4,11 +4,13 @@
 # (c) Copyrights 2008 Hartmut Seichter, HIT Lab NZ
 #
 
-set(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
+if(MSVC)
+    set(CMAKE_INSTALL_DEBUG_LIBRARIES 1)
+endif()
 if(ENABLE_OPENMP)
     set(CMAKE_INSTALL_OPENMP_LIBRARIES 1)
 endif()
-include(OpenCVInstallRequiredSystemLibraries.cmake)
+#include(OpenCVInstallRequiredSystemLibraries.cmake)
 #include(InstallRequiredSystemLibraries)
 
 set(CPACK_PACKAGE_NAME "OpenCV")
@@ -41,27 +43,21 @@ set(CPACK_COMPONENT_SRC_INSTALL_TYPES Full)
 
 set(CPACK_SOURCE_IGNORE_FILES
 	"/\\\\.svn/"
-	"/autotools/"
-	"configure"
-	"Makefile\\\\.in$"
-	"Makefile\\\\.am$"	
 	"/autom4te.cache/"
-	"aclocal\\\\.m4"
-	"cvconfig\\\\.h\\\\.in"
 	"/build/"
 	"/lib/"
 	"~$"	
 	"\\\\.aux$"
 	"\\\\.bbl$"
 	"\\\\.blg$"
-    "\\\\.dsp$"
+	"\\\\.dsp$"
 	"\\\\.idx$"
 	"\\\\.ilg$"
 	"\\\\.ind$"
 	"\\\\.log$"
 	"\\\\.toc$"
 	"\\\\.out$"
-    "\\\\.vcproj$"
+	"\\\\.vcproj$"
 	"/1$"
 	"${CPACK_SOURCE_IGNORE_FILES}")
 
