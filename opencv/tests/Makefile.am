@@ -9,14 +9,14 @@ TESTS              = $(dist_check_SCRIPTS)
 
 
 clean-local:
-	-rm -rf *.lst *.sum python/*.pyc *.works python/*.works python/highgui/*.pyc python/highgui/*.works
+	-rm -rf *.lst *.sum python-old/*.pyc *.works python-old/*.works python-old/highgui/*.pyc python-old/highgui/*.works
 
 
 TESTS_ENVIRONMENT = \
   LD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
   DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs:$(LD_LIBRARY_PATH) \
   OCTAVEPATH=$(top_builddir)/interfaces/swig/octave \
-  PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python/.libs
+  PYTHONPATH=$(top_srcdir)/tests/python:$(top_srcdir)/tests/python-old/highgui:$(top_srcdir)/interfaces/swig/python:$(top_builddir)/interfaces/swig/python-old/.libs
 
 AM_CPPFLAGS = \
   -I$(top_srcdir)/tests/cxts        \
@@ -36,9 +36,12 @@ EXTRA_DIST = \
   cxts/precomp.cpp \
   \
   ml/src/precomp.cpp \
-  ml/Readme.txt \
   \
-  octave/frame.jpg
+  octave/frame.jpg \
+  \
+  python/test.py \
+  python/tickets.py
+
 
 noinst_HEADERS = \
   cxts/_cxts.h                  \
@@ -128,12 +131,10 @@ cvtest_LDADD = \
 
 
 mltest_SOURCES = \
-  ml/src/aboost.cpp      \
-  ml/src/adtree.cpp      \
-  ml/src/aertrees.cpp    \
-  ml/src/artrees.cpp     \
+  ml/src/amltests.cpp    \
   ml/src/mltest_main.cpp \
-  ml/src/treesbase.cpp
+  ml/src/mltests.cpp     \
+  ml/src/slmltests.cpp
 mltest_LDADD = \
   libcxts.la \
   $(top_builddir)/src/libcxcore.la       \
@@ -150,104 +151,105 @@ noinst_OCTAVE    = $(TMP_OCTAVE_FILES)
 
 
 if BUILD_PYTHON_WRAPPERS
-TMP_PYTHON_FILES = \
-  python/testall.py            \
-  python/highgui/cvInitSystem.py                       \
-  python/highgui/cvLoadImageBMP.py                     \
-  python/highgui/cvLoadImageJPG.py                     \
-  python/highgui/cvLoadImageTIFF.py                    \
-  python/highgui/cvLoadImagePPM.py                     \
-  python/highgui/cvLoadImagePNG.py                     \
-  python/highgui/cvLoadImageSR.py                      \
-  python/highgui/cvSaveImage.py                        \
-  python/highgui/cvNamedWindow.py                      \
-  python/highgui/cvShowImage.py                        \
-  python/highgui/cvWaitKey.py                          \
-  python/highgui/cvCreateTrackbar.py                   \
-  python/highgui/cvMoveResizeWindow.py                 \
-  python/highgui/cvGetSetTrackbarPos.py                \
-  python/highgui/cvGetWindowHandleName.py              \
-  python/highgui/cvSetMouseCallback.py                 \
-  python/highgui/cvCreateFileCaptureRGB.py             \
-  python/highgui/cvCreateFileCaptureRGBA.py            \
-  python/highgui/cvCreateFileCaptureUYVY.py            \
-  python/highgui/cvCreateFileCaptureY8.py              \
-  python/highgui/cvCreateFileCaptureYUY2.py            \
-  python/highgui/cvCreateFileCaptureYV12.py            \
-  python/highgui/cvCreateFileCaptureYV16.py            \
-  python/highgui/cvCreateFileCaptureYVU9.py            \
-  python/highgui/cvGetCaptureProperty.py               \
-  python/highgui/cvGrabFrame.py                        \
-  python/highgui/cvRetrieveFrame.py                    \
-  python/highgui/cvQueryFrame.py                       \
-  python/highgui/query_3gp.py                          \
-  python/highgui/query_bmp24.py                        \
-  python/highgui/query_bmp32.py                        \
-  python/highgui/query_cinepak.py                      \
-  python/highgui/query_divx.py                         \
-  python/highgui/query_dv_pal_progressive_avi.py       \
-  python/highgui/query_dv_pal_progressive_dv.py        \
-  python/highgui/query_huffyuv.py                      \
-  python/highgui/query_indeo.py                        \
-  python/highgui/query_mpeg4.py                        \
-  python/highgui/query_uncompressed.py                 \
-  python/highgui/query_wmv9.py                         \
-  python/highgui/seek_frame_3gp.py                     \
-  python/highgui/seek_frame_bmp24.py                   \
-  python/highgui/seek_frame_bmp32.py                   \
-  python/highgui/seek_frame_cinepak.py                 \
-  python/highgui/seek_frame_divx.py                    \
-  python/highgui/seek_frame_dv_pal_progressive_avi.py  \
-  python/highgui/seek_frame_dv_pal_progressive_dv.py   \
-  python/highgui/seek_frame_huffyuv.py                 \
-  python/highgui/seek_frame_indeo.py                   \
-  python/highgui/seek_frame_mpeg4.py                   \
-  python/highgui/seek_frame_uncompressed.py            \
-  python/highgui/seek_frame_wmv9.py                    \
-  python/highgui/seek_time_3gp.py                      \
-  python/highgui/seek_time_bmp24.py                    \
-  python/highgui/seek_time_bmp32.py                    \
-  python/highgui/seek_time_cinepak.py                  \
-  python/highgui/seek_time_divx.py                     \
-  python/highgui/seek_time_dv_pal_progressive_avi.py	  \
-  python/highgui/seek_time_dv_pal_progressive_dv.py	  \
-  python/highgui/seek_time_huffyuv.py                  \
-  python/highgui/seek_time_indeo.py                    \
-  python/highgui/seek_time_mpeg4.py                    \
-  python/highgui/seek_time_uncompressed.py             \
-  python/highgui/seek_time_wmv9.py                     \
-  python/highgui/size_3gp.py                           \
-  python/highgui/size_bmp24.py                         \
-  python/highgui/size_bmp32.py                         \
-  python/highgui/size_cinepak.py                       \
-  python/highgui/size_divx.py                          \
-  python/highgui/size_dv_pal_progressive_avi.py        \
-  python/highgui/size_dv_pal_progressive_dv.py         \
-  python/highgui/size_huffyuv.py                       \
-  python/highgui/size_indeo.py                         \
-  python/highgui/size_mpeg4.py                         \
-  python/highgui/size_uncompressed.py                  \
-  python/highgui/size_wmv9.py
+TMP_PYTHON_FILES = 
+#  python-old/testall.py            \
+#  python-old/highgui/cvInitSystem.py                       \
+#  python-old/highgui/cvLoadImageBMP.py                     \
+#  python-old/highgui/cvLoadImageJPG.py                     \
+#  python-old/highgui/cvLoadImageTIFF.py                    \
+#  python-old/highgui/cvLoadImagePPM.py                     \
+#  python-old/highgui/cvLoadImagePNG.py                     \
+#  python-old/highgui/cvLoadImageSR.py                      \
+#  python-old/highgui/cvSaveImage.py                        \
+#  python-old/highgui/cvNamedWindow.py                      \
+#  python-old/highgui/cvShowImage.py                        \
+#  python-old/highgui/cvWaitKey.py                          \
+#  python-old/highgui/cvCreateTrackbar.py                   \
+#  python-old/highgui/cvMoveResizeWindow.py                 \
+#  python-old/highgui/cvGetSetTrackbarPos.py                \
+#  python-old/highgui/cvGetWindowHandleName.py              \
+#  python-old/highgui/cvSetMouseCallback.py                 \
+#  python-old/highgui/cvCreateFileCaptureRGB.py             \
+#  python-old/highgui/cvCreateFileCaptureRGBA.py            \
+#  python-old/highgui/cvCreateFileCaptureUYVY.py            \
+#  python-old/highgui/cvCreateFileCaptureY8.py              \
+#  python-old/highgui/cvCreateFileCaptureYUY2.py            \
+#  python-old/highgui/cvCreateFileCaptureYV12.py            \
+#  python-old/highgui/cvCreateFileCaptureYV16.py            \
+#  python-old/highgui/cvCreateFileCaptureYVU9.py            \
+#  python-old/highgui/cvGetCaptureProperty.py               \
+#  python-old/highgui/cvGrabFrame.py                        \
+#  python-old/highgui/cvRetrieveFrame.py                    \
+#  python-old/highgui/cvQueryFrame.py                       \
+#  python-old/highgui/query_3gp.py                          \
+#  python-old/highgui/query_bmp24.py                        \
+#  python-old/highgui/query_bmp32.py                        \
+#  python-old/highgui/query_cinepak.py                      \
+#  python-old/highgui/query_divx.py                         \
+#  python-old/highgui/query_dv_pal_progressive_avi.py       \
+#  python-old/highgui/query_dv_pal_progressive_dv.py        \
+#  python-old/highgui/query_huffyuv.py                      \
+#  python-old/highgui/query_indeo.py                        \
+#  python-old/highgui/query_mpeg4.py                        \
+#  python-old/highgui/query_uncompressed.py                 \
+#  python-old/highgui/query_wmv9.py                         \
+#  python-old/highgui/seek_frame_3gp.py                     \
+#  python-old/highgui/seek_frame_bmp24.py                   \
+#  python-old/highgui/seek_frame_bmp32.py                   \
+#  python-old/highgui/seek_frame_cinepak.py                 \
+#  python-old/highgui/seek_frame_divx.py                    \
+#  python-old/highgui/seek_frame_dv_pal_progressive_avi.py  \
+#  python-old/highgui/seek_frame_dv_pal_progressive_dv.py   \
+#  python-old/highgui/seek_frame_huffyuv.py                 \
+#  python-old/highgui/seek_frame_indeo.py                   \
+#  python-old/highgui/seek_frame_mpeg4.py                   \
+#  python-old/highgui/seek_frame_uncompressed.py            \
+#  python-old/highgui/seek_frame_wmv9.py                    \
+#  python-old/highgui/seek_time_3gp.py                      \
+#  python-old/highgui/seek_time_bmp24.py                    \
+#  python-old/highgui/seek_time_bmp32.py                    \
+#  python-old/highgui/seek_time_cinepak.py                  \
+#  python-old/highgui/seek_time_divx.py                     \
+#  python-old/highgui/seek_time_dv_pal_progressive_avi.py	  \
+#  python-old/highgui/seek_time_dv_pal_progressive_dv.py	  \
+#  python-old/highgui/seek_time_huffyuv.py                  \
+#  python-old/highgui/seek_time_indeo.py                    \
+#  python-old/highgui/seek_time_mpeg4.py                    \
+#  python-old/highgui/seek_time_uncompressed.py             \
+#  python-old/highgui/seek_time_wmv9.py                     \
+#  python-old/highgui/size_3gp.py                           \
+#  python-old/highgui/size_bmp24.py                         \
+#  python-old/highgui/size_bmp32.py                         \
+#  python-old/highgui/size_cinepak.py                       \
+#  python-old/highgui/size_divx.py                          \
+#  python-old/highgui/size_dv_pal_progressive_avi.py        \
+#  python-old/highgui/size_dv_pal_progressive_dv.py         \
+#  python-old/highgui/size_huffyuv.py                       \
+#  python-old/highgui/size_indeo.py                         \
+#  python-old/highgui/size_mpeg4.py                         \
+#  python-old/highgui/size_uncompressed.py                  \
+#  python-old/highgui/size_wmv9.py
 else
   TMP_PYTHON_FILES =
 endif
 
-noinst_PYTHON = \
-  $(TMP_PYTHON_FILES)                    \
-  python/cmp_tests.py                    \
-  python/cvtestutils.py                  \
-  python/feature_tree_tests.py           \
-  python/histogram_tests.py              \
-  python/homography_tests.py             \
-  python/lsh_tests.py                    \
-  python/moments_tests.py                \
-  python/roots_tests.py                  \
-  python/test_adaptors.py                \
-  python/highgui/works.py                \
-  python/highgui/frames.py               \
-  python/highgui/match.py                \
-  python/highgui/query_test.py           \
-  python/highgui/seek_test.py            \
-  python/highgui/size_test.py            \
-  python/highgui/cvCreateFileCapture.py  \
-  python/highgui/cvLoadImage.py
+noinst_PYTHON = 
+
+#  $(TMP_PYTHON_FILES)                        \
+#  python-old/cmp_tests.py                    \
+#  python-old/cvtestutils.py                  \
+#  python-old/feature_tree_tests.py           \
+#  python-old/histogram_tests.py              \
+#  python-old/homography_tests.py             \
+#  python-old/lsh_tests.py                    \
+#  python-old/moments_tests.py                \
+#  python-old/roots_tests.py                  \
+#  python-old/test_adaptors.py                \
+#  python-old/highgui/works.py                \
+#  python-old/highgui/frames.py               \
+#  python-old/highgui/match.py                \
+#  python-old/highgui/query_test.py           \
+#  python-old/highgui/seek_test.py            \
+#  python-old/highgui/size_test.py            \
+#  python-old/highgui/cvCreateFileCapture.py  \
+#  python-old/highgui/cvLoadImage.py

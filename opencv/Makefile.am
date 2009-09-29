@@ -9,7 +9,7 @@ if BUILD_APPS
 else
   APPS_DIR =
 endif
-SUBDIRS = 3rdparty src include utils interfaces $(APPS_DIR) tests samples data doc
+SUBDIRS = 3rdparty src include utils interfaces $(APPS_DIR) tests samples data
 
 # All the rest of the distributed files
 EXTRA_DIST = \
@@ -31,7 +31,9 @@ EXTRA_DIST = \
   OpenCVConfig.cmake.in \
   OpenCVFindPkgConfig.cmake \
   OpenCVPCHSupport.cmake \
-  cvconfig.h.cmake
+  cvconfig.h.cmake \
+  \
+  doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = opencv.pc
@@ -73,9 +75,9 @@ clean-local: clean-framework
 #
 
 FRAMEWORK_NAME = OpenCV
-FRAMEWORK_VERSION = A
-FRAMEWORK_CURRENT_VERSION = 2
-FRAMEWORK_COMPAT_VERSION = 1
+FRAMEWORK_VERSION = B
+FRAMEWORK_CURRENT_VERSION = 0
+FRAMEWORK_COMPAT_VERSION = 0
 
 # install path to be set in calling script
 # FRAMEWORK_INSTALL_PATH = executable_path/../Frameworks
@@ -90,10 +92,9 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/cv.h           \
   $(top_srcdir)/include/opencv/cv.hpp         \
   $(top_srcdir)/include/opencv/cvaux.h        \
+  $(top_srcdir)/include/opencv/cvaux.hpp      \
   $(top_srcdir)/include/opencv/cvcompat.h     \
   $(top_srcdir)/include/opencv/cvstreams.h    \
-  $(top_srcdir)/include/opencv/cvaux.hpp      \
-  $(top_srcdir)/include/opencv/cxmat.hpp      \
   $(top_srcdir)/include/opencv/cvtypes.h      \
   $(top_srcdir)/include/opencv/cvver.h        \
   $(top_srcdir)/include/opencv/cvvidsurv.hpp  \
@@ -101,6 +102,8 @@ FRAMEWORK_XHEADERS = \
   $(top_srcdir)/include/opencv/cxcore.h       \
   $(top_srcdir)/include/opencv/cxcore.hpp     \
   $(top_srcdir)/include/opencv/cxerror.h      \
+  $(top_srcdir)/include/opencv/cxflann.h      \
+  $(top_srcdir)/include/opencv/cxmat.hpp      \
   $(top_srcdir)/include/opencv/cxmisc.h       \
   $(top_srcdir)/include/opencv/cxoperations.hpp \
   $(top_srcdir)/include/opencv/cxtypes.h      \
@@ -111,21 +114,23 @@ FRAMEWORK_XHEADERS = \
 
 FRAMEWORK_OFILES = \
   $(top_builddir)/3rdparty/.libs/lib_clapack.a  \
+  $(top_builddir)/3rdparty/.libs/lib_flann.a    \
   $(top_builddir)/src/.libs/lib_cxcore.a        \
   $(top_builddir)/src/.libs/lib_cv.a            \
   $(top_builddir)/src/.libs/lib_cvaux.a         \
   $(top_builddir)/src/.libs/lib_ml.a            \
   $(top_builddir)/src/.libs/lib_highgui.a
 
-FRAMEWORK_XLIBRARIES = -framework Carbon -framework QuickTime -framework QuartzCore
+FRAMEWORK_XLIBRARIES = -lz -framework Carbon -framework QuickTime -framework QuartzCore
 
-FRAMEWORK_DOCUMENTATION = \
-  $(top_srcdir)/doc/license.txt \
-  $(top_srcdir)/doc/index.htm   \
-  $(top_srcdir)/doc/faq.htm     \
-  $(top_srcdir)/doc/ref
+FRAMEWORK_DOCUMENTATION = 
+#\
+#  $(top_srcdir)/doc/license.txt \
+#  $(top_srcdir)/doc/index.htm   \
+#  $(top_srcdir)/doc/faq.htm     \
+#  $(top_srcdir)/doc/ref
 
-FMWK_CC = g++ -dynamiclib -all_load -Wl,-single_module -Wl,-Y,100
+FMWK_CC = g++-4.2 -fopenmp -dynamiclib -all_load -Wl,-single_module -Wl,-Y,100
 
 framework: all clean-framework
 	@echo "Setting up framework directories..."
@@ -151,8 +156,9 @@ framework: all clean-framework
 		$(FRAMEWORK_OFILES) $(FRAMEWORK_XLIBRARIES)
 	strip -x $(FRAMEWORK_NAME).framework/Versions/Current/$(FRAMEWORK_NAME)
 	cp $(FRAMEWORK_XHEADERS) $(FRAMEWORK_NAME).framework/Headers/
-	cp -r $(FRAMEWORK_DOCUMENTATION) $(FRAMEWORK_NAME).framework/Documentation/
 	cp $(top_srcdir)/autotools/darwin/Info.plist $(FRAMEWORK_NAME).framework/Resources/
+
+#	cp -r $(FRAMEWORK_DOCUMENTATION) $(FRAMEWORK_NAME).framework/Documentation/
 
 clean-framework:
 	rm -rf $(FRAMEWORK_NAME).framework build_i386 build_ppc build_x86_64 build_ppc64

@@ -16,6 +16,7 @@ pkginclude_HEADERS = \
   opencv/cxcore.h      \
   opencv/cxcore.hpp    \
   opencv/cxerror.h     \
+  opencv/cxflann.h     \
   opencv/cxmisc.h      \
   opencv/cxoperations.hpp \
   opencv/cxtypes.h     \

@@ -36,19 +36,16 @@ export FRAMEWORK_INSTALL_PATH="@executable_path/../Frameworks"
 #export FRAMEWORK_INSTALL_PATH="/Users/your_login_name_here/Library/Frameworks"
 
 # set up a couple of additional build settings
-export SETTINGS="CC=gcc-4.2 CXX=g++-4.2 \
- --without-swig --without-python --without-octave --without-gstreamer --without-xine --without-ffmpeg --without-1394libs --without-v4l --without-unicap --without-gtk --without-gthread \
- --with-imageio --without-lapack \
- --disable-apps \
- --enable-optimization --enable-sse --disable-openmp \
- --build=`arch`"
+export SETTINGS="CC=gcc-4.2 CXX=g++-4.2 --without-python --without-octave --disable-apps --build=`arch`"
+#export SETTINGS="--without-python --without-octave --build=`arch`"
 export SYSROOT="--sysroot=/Developer/SDKs/MacOSX10.5.sdk"
+#export SYSROOT="" #--iwithsysroot=/Developer/SDKs/MacOSX10.5.sdk"
 
 # build powerpc version
 echo "Building ppc version of the OpenCV framework"
 echo "============================================"
 cd build_ppc \
- && ../configure --host=ppc-apple-darwin9 $SETTINGS --with-quicktime --with-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch ppc" LDFLAGS="$SYSROOT -arch ppc"\
+ && ../configure --host=ppc-apple-darwin9 $SETTINGS CPPFLAGS="$SYSROOT" CFLAGS="-arch ppc" CXXFLAGS="-arch ppc" LDFLAGS="$SYSROOT -arch ppc"\
  && make -j $parallel_jobs framework FRAMEWORK_ARCH=ppc
 
 # build powerpc 64bit version
@@ -58,11 +55,13 @@ cd build_ppc \
 #../configure --host=ppc64-apple-darwin9 $SETTINGS --without-quicktime --without-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch ppc64" LDFLAGS="$SYSROOT -arch ppc64"\
 # && make -j $parallel_jobs framework FRAMEWORK_ARCH=ppc64
 
+# options from -O2
+#" -fthread-jumps -fcrossjumping -foptimize-sibling-calls -fcse-follow-jumps -fcse-skip-blocks -fgcse -fgcse-lm -fexpensive-optimizations -fstrength-reduce -frerun-cse-after-loop -frerun-loop-opt -fcaller-saves -fpeephole2 -fschedule-insns -fschedule-insns2  -fsched-spec -fregmove -fdelete-null-pointer-checks -freorder-functions -funit-at-a-time -falign-functions -falign-jumps -falign-loops -falign-labels -ftree-pre"
 # build intel version
 echo "Building i386 version of the OpenCV framework"
 echo "============================================="
 if test -d ../build_i386; then cd ../build_i386; fi
-../configure --host=i386-apple-darwin9 $SETTINGS --with-quicktime --with-carbon CPPFLAGS="$SYSROOT" CXXFLAGS="-arch i386" LDFLAGS="$SYSROOT -arch i386"\
+../configure --host=i386-apple-darwin9 $SETTINGS --disable-optimization --enable-openmp --enable-sse CPPFLAGS="$SYSROOT" CFLAGS="-arch i386" CXXFLAGS="-arch i386 -O0 -fdefer-pop -fguess-branch-probability -fcprop-registers -floop-optimize -fif-conversion -fif-conversion2 -ftree-ccp -ftree-dce -ftree-dominator-opts -ftree-dse -ftree-ter -ftree-lrs -ftree-sra -ftree-copyrename -ftree-fre -ftree-ch -fmerge-constants -fomit-frame-pointer" LDFLAGS="$SYSROOT -arch i386"\
  && make -j $parallel_jobs framework FRAMEWORK_ARCH=i386
 
 # build intel version
@@ -77,7 +76,7 @@ echo "Creating universal Framework"
 echo "============================================="
 if test -d ../build_i386; then cd .. ; fi
 cp -Rp build_ppc/OpenCV.framework ./
-lipo -create build_ppc/OpenCV.framework/OpenCV build_i386/OpenCV.framework/OpenCV -output OpenCV.framework/Versions/A/OpenCV
+lipo -create build_ppc/OpenCV.framework/OpenCV build_i386/OpenCV.framework/OpenCV -output OpenCV.framework/Versions/B/OpenCV
 #lipo -create build_ppc/OpenCV.framework/OpenCV build_ppc64/OpenCV.framework/OpenCV build_i386/OpenCV.framework/OpenCV build_x86_64/OpenCV.framework/OpenCV -output OpenCV.framework/Versions/A/OpenCV
 
 # finalize
