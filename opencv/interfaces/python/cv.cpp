@@ -3406,7 +3406,11 @@ static int to_ok(PyTypeObject *to)
 
 #define MKTYPE(NAME)  do { NAME##_specials(); if (!to_ok(&NAME##_Type)) return; } while (0)
 
-extern "C" void initcv()
+extern "C"
+#if defined WIN32 || defined _WIN32
+__declspec(dllexport)
+#endif
+void initcv()
 {
   PyObject *m, *d;
 
