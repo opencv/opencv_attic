@@ -196,7 +196,7 @@ if(WIN32)
 	endif()
 
 	if(MINGW)
-		target_link_libraries(${the_target} vfw32 winmm videoInput strmiids)
+		target_link_libraries(${the_target} vfw32 winmm videoInput strmiids ole32)
 	endif()
 endif()
 
