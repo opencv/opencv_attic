@@ -2963,7 +2963,8 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     int new_buf_idx = data->get_child_buf_idx( node );
     int work_var_count = data->get_work_var_count();
     CvMat* buf = data->buf;
-    int* temp_buf = (int*)cvStackAlloc(n*sizeof(temp_buf[0]));
+    cv::AutoBuffer<int, 1<<14> _temp_buf(n);
+    int* temp_buf = _temp_buf;
 
     complete_node_dir(node);
 

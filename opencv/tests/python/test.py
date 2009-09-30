@@ -848,32 +848,6 @@ class TestDirected(unittest.TestCase):
                     defects = cv.ConvexityDefects(pts, cv.ConvexHull2(pts, storage), storage)
                     self.assert_(len([depth for (_,_,_,depth) in defects if (depth > 5)]) == points)
 
-    def test_Defects(self):
-        # ticket 2542670
-        if 1:
-            xys = [tuple([int(s) for s in l.split()]) for l in open("/u/jamesb/Desktop/contour.txt")]
-        else:
-            xys = [ (50,50), (150,50), (150,150), (50,150), (100,100) ]
-            xys = xys[::-1]
-        print xys
-        pts = cv.CreateMat(len(xys), 1, cv.CV_32SC2)
-        for i,(x,y) in enumerate(xys):
-            pts[i,0] = (x, y)
-        storage = cv.CreateMemStorage()
-        hull = cv.ConvexHull2(pts, storage)
-        defects = cv.ConvexityDefects(pts, hull, storage)
-
-        vis = cv.CreateImage((200,200), 8, 3)
-        for d in defects:
-            cv.Zero(vis)
-            for a,b in zip(xys, xys[1:]):
-                cv.Line(vis, a, b, (128,128,128))
-            cv.Line(vis, d[0], d[1], (0,0,255))
-            cv.Line(vis, d[0], d[2], (0,0,255))
-            cv.Line(vis, d[1], d[2], (0,0,255))
-            
-            self.snap(vis)
-
     def xxxtest_corners(self):
         a = cv.LoadImage("foo-mono.png", 0)
         cv.AdaptiveThreshold(a, a, 255, param1=5)

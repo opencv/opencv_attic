@@ -175,4 +175,8 @@ CvCapture* cvCreateCameraCapture_DShow( int index )
     return 0;
 }
 
+#ifdef _MSC_VER
+#pragma comment(lib, "videoInput.lib")
+#endif
+
 #endif
