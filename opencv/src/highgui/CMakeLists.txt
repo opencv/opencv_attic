@@ -190,13 +190,13 @@ if(OPENCV_BUILD_3RDPARTY_LIBS)
 endif()
 if(WIN32)
 	target_link_libraries(${the_target} comctl32 gdi32 ole32)
-
+	
 	if (MSVC)
-		target_link_libraries(${the_target} vfw32 videoinput)
+		target_link_libraries(${the_target} vfw32)
 	endif()
 
 	if(MINGW)
-		target_link_libraries(${the_target} vfw32 winmm videoInput strmiids ole32)
+		target_link_libraries(${the_target} vfw32 winmm videoInput strmiids)
 	endif()
 endif()
 

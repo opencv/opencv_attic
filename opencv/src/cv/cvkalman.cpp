@@ -291,7 +291,7 @@ const Mat& KalmanFilter::predict(const Mat& control)
     temp1 = transitionMatrix*errorCovPost;
 
     // P'(k) = temp1*At + Q
-    errorCovPre = temp1*transitionMatrix.t() + processNoiseCov;
+    gemm(temp1, transitionMatrix, 1, processNoiseCov, 1, errorCovPre, GEMM_2_T);
 
     return statePre;
 }
@@ -302,7 +302,7 @@ const Mat& KalmanFilter::correct(const Mat& measurement)
     temp2 = measurementMatrix * errorCovPre;
 
     // temp3 = temp2*Ht + R
-    temp3 = temp2*measurementMatrix.t() + measurementNoiseCov;
+    gemm(temp2, measurementMatrix, 1, measurementNoiseCov, 1, temp3, GEMM_2_T); 
 
     // temp4 = inv(temp3)*temp2 = Kt(k)
     solve(temp3, temp2, temp4, DECOMP_SVD);

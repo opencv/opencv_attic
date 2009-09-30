@@ -97,8 +97,7 @@ struct CvVideoWriter
 #if defined WIN32 || defined _WIN32
 #define HAVE_VFW 1
 
-//#if _MSC_VER >= 1400 && !defined WIN64 && !defined _WIN64
-#if !defined WIN64 && !defined _WIN64
+#if (_MSC_VER >= 1400 || defined __GNUC__) && !defined WIN64 && !defined _WIN64
 #define HAVE_VIDEOINPUT 1
 #endif
 

@@ -3250,7 +3250,10 @@ static inline MatExpr_Initializer operator * (const MatExpr_Initializer& a, doub
 }
 
 static inline MatExpr_Initializer operator * (double alpha, MatExpr_Initializer& a)
-{ return a*alpha; }
+{
+    typedef MatExpr_Op4_<Size, int, Scalar, int, Mat, MatOp_Set_<Mat> > MatExpr_Temp;
+    return MatExpr_Initializer(MatExpr_Temp(a.e.a1, a.e.a2, a.e.a3*alpha, a.e.a4));
+}
 
 template<typename _Tp> inline MatExpr_Initializer Mat_<_Tp>::zeros(int rows, int cols)
 { return Mat::zeros(rows, cols, DataType<_Tp>::type); }
