@@ -1298,7 +1298,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
 }
 
 
-void CvANN_MLP::write_params( CvFileStorage* fs )
+void CvANN_MLP::write_params( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvANN_MLP::write_params" );
 
@@ -1354,7 +1354,7 @@ void CvANN_MLP::write_params( CvFileStorage* fs )
 }
 
 
-void CvANN_MLP::write( CvFileStorage* fs, const char* name )
+void CvANN_MLP::write( CvFileStorage* fs, const char* name ) const
 {
     CV_FUNCNAME( "CvANN_MLP::write" );
 
@@ -1515,6 +1515,33 @@ void CvANN_MLP::read( CvFileStorage* fs, CvFileNode* node )
     }
 
     __END__;
+}
+
+using namespace cv;
+
+void CvANN_MLP::create( const Mat& _layer_sizes, int _activ_func,
+                       double _f_param1, double _f_param2 )
+{
+    CvMat layer_sizes = _layer_sizes;
+    create( &layer_sizes, _activ_func, _f_param1, _f_param2 );
+}
+
+int CvANN_MLP::train( const Mat& _inputs, const Mat& _outputs,
+                     const Mat& _sample_weights, const Mat& _sample_idx,
+                     CvANN_MLP_TrainParams _params, int flags )
+{
+    CvMat inputs = _inputs, outputs = _outputs, sweights = _sample_weights, sidx = _sample_idx;
+    return train(&inputs, &outputs, sweights.data.ptr ? &sweights : 0,
+                 sidx.data.ptr ? &sidx : 0, _params, flags); 
+}
+
+float CvANN_MLP::predict( const Mat& _inputs, Mat& _outputs ) const
+{
+    CV_Assert(layer_sizes != 0);
+    _outputs.create(_inputs.rows, layer_sizes->data.i[layer_sizes->cols-1], _inputs.type());
+    CvMat inputs = _inputs, outputs = _outputs;
+    
+    return predict(&inputs, &outputs); 
 }
 
 /* End of file. */

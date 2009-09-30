@@ -861,6 +861,7 @@ template<> inline void Ptr<CvStereoBMState>::delete_obj()
 // Block matching stereo correspondence algorithm
 class CV_EXPORTS StereoBM
 {
+public:
     enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
         BASIC_PRESET=CV_STEREO_BM_BASIC,
         FISH_EYE_PRESET=CV_STEREO_BM_FISH_EYE,

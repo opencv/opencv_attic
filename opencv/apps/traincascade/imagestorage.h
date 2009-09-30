@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_IMAGESTORAGE_H_
+#define _OPENCV_IMAGESTORAGE_H_
+
 #include <highgui.h>
 
 using namespace cv;
@@ -47,3 +49,5 @@ private:
         Size    winSize;
     } negReader;
 };
+
+#endif

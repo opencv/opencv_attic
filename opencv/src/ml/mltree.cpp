@@ -41,6 +41,8 @@
 #include "_ml.h"
 #include <ctype.h>
 
+using namespace cv;
+
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
 static const int block_size_delta = 1 << 10;
@@ -403,7 +405,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                     {
                         float t = fdata[si*step];
                         val = cvRound(t);
-                        if( val != t )
+                        if( fabs(t - val) > FLT_EPSILON )
                         {
                             sprintf( err, "%d-th value of %d-th (categorical) "
                                 "variable is not an integer", i, vi );
@@ -529,7 +531,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                 if (is_buf_16u)
                     udst[i] = (unsigned short)i;
                 else
-                    idst[i] = i; // οεπενερςθ βϋψε β if( idata )
+                    idst[i] = i; // Γ”Γ‚ο£ΏΓ‚ΓΓ‚Γ’ΓΓ‹ β€ΛΒ―Γ‚ β€ if( idata )
                 _fdst[i] = val;
                 
             }
@@ -1269,7 +1271,7 @@ int CvDTreeTrainData::get_child_buf_idx( CvDTreeNode* n )
 }
 
 
-void CvDTreeTrainData::write_params( CvFileStorage* fs )
+void CvDTreeTrainData::write_params( CvFileStorage* fs ) const
 {
     CV_FUNCNAME( "CvDTreeTrainData::write_params" );
 
@@ -1579,6 +1581,18 @@ bool CvDTree::train( const CvMat* _train_data, int _tflag,
     return result;
 }
 
+bool CvDTree::train( const Mat& _train_data, int _tflag,
+                    const Mat& _responses, const Mat& _var_idx,
+                    const Mat& _sample_idx, const Mat& _var_type,
+                    const Mat& _missing_mask, CvDTreeParams _params )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx=_var_idx,
+        sidx=_sample_idx, vtype=_var_type, mmask=_missing_mask; 
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0, sidx.data.ptr ? &sidx : 0,
+                 vtype.data.ptr ? &vtype : 0, mmask.data.ptr ? &mmask : 0, _params);
+}
+
+
 bool CvDTree::train( CvMLData* _data, CvDTreeParams _params )
 {
    bool result = false;
@@ -1588,7 +1602,7 @@ bool CvDTree::train( CvMLData* _data, CvDTreeParams _params )
     __BEGIN__;
 
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* var_types = _data->get_var_types();
     const CvMat* train_sidx = _data->get_train_sample_idx();
@@ -1856,13 +1870,16 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
 #endif
     vector<CvDTreeSplit*> splits(maxNumThreads);
     vector<CvDTreeSplit*> bestSplits(maxNumThreads);
+    vector<int> canSplit(maxNumThreads);
+    CvDTreeSplit **splitsPtr = &splits[0], ** bestSplitsPtr = &bestSplits[0];
+    int* canSplitPtr = &canSplit[0];
     for (int i = 0; i < maxNumThreads; i++)
     {
-        splits[i] = data->new_split_cat( 0, -1.0f );
-        bestSplits[i] = data->new_split_cat( 0, -1.0f );
+        splitsPtr[i] = data->new_split_cat( 0, -1.0f );
+        bestSplitsPtr[i] = data->new_split_cat( 0, -1.0f );
+        canSplitPtr[i] = 0;
     }
 
-    bool can_split = false;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
 #endif
@@ -1877,39 +1894,44 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
         if( data->is_classifier )
         {
             if( ci >= 0 )
-                res = find_split_cat_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
+                res = find_split_cat_class( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
             else
-                res = find_split_ord_class( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
+                res = find_split_ord_class( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
         }
         else
         {
             if( ci >= 0 )
-                res = find_split_cat_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
+                res = find_split_cat_reg( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
             else
-                res = find_split_ord_reg( node, vi, bestSplits[threadIdx]->quality, splits[threadIdx] );
+                res = find_split_ord_reg( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
         }
 
         if( res )
         {
-            can_split = true;
-            if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
-                CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
+            canSplitPtr[threadIdx] = 1;
+            if( bestSplitsPtr[threadIdx]->quality < splitsPtr[threadIdx]->quality )
+                CV_SWAP( bestSplitsPtr[threadIdx], splitsPtr[threadIdx], t );
         }
     }
-    if ( can_split )
+    int ti = 0;
+    for( ; ti < maxNumThreads; ti++ )
     {
-        bestSplit = bestSplits[0];
-        for(int i = 1; i < maxNumThreads; i++)
+        if( canSplitPtr[ti] )
         {
-            if( bestSplit->quality < bestSplits[i]->quality )
-                bestSplit = bestSplits[i];
+            bestSplit = bestSplitsPtr[ti];
+            break;
         }
+    }
+    for( ; ti < maxNumThreads; ti++ )
+    {
+        if( bestSplit->quality < bestSplitsPtr[ti]->quality )
+            bestSplit = bestSplitsPtr[ti];
     }
     for(int i = 0; i < maxNumThreads; i++)
     {
-        cvSetRemoveByPtr( data->split_heap, splits[i] );
-        if( bestSplits[i] != bestSplit )
-            cvSetRemoveByPtr( data->split_heap, bestSplits[i] );
+        cvSetRemoveByPtr( data->split_heap, splitsPtr[i] );
+        if( bestSplitsPtr[i] != bestSplit )
+            cvSetRemoveByPtr( data->split_heap, bestSplitsPtr[i] );
     }
     return bestSplit;
 }
@@ -3215,11 +3237,11 @@ void CvDTree::split_node_data( CvDTreeNode* node )
     data->free_node_data(node);    
 }
 
-float CvDTree::calc_error( CvMLData* _data, int type )
+float CvDTree::calc_error( CvMLData* _data, int type, vector<float> *resp )
 {
     float err = 0;
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
     const CvMat* var_types = _data->get_var_types();
@@ -3229,6 +3251,13 @@ float CvDTree::calc_error( CvMLData* _data, int type )
     bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
     int sample_count = sample_idx ? sample_idx->cols : 0;
     sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : sample_count;
+    float* pred_resp = 0;
+    if( resp && (sample_count > 0) )
+    {
+        resp->resize( sample_count );
+        pred_resp = &((*resp)[0]);
+    }
+
     if ( is_classifier )
     {
         for( int i = 0; i < sample_count; i++ )
@@ -3239,6 +3268,8 @@ float CvDTree::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 )->value;
+            if( pred_resp )
+                pred_resp[i] = r;
             int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
             err += d;
         }
@@ -3254,6 +3285,8 @@ float CvDTree::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 )->value;
+            if( pred_resp )
+                pred_resp[i] = r;
             float d = r - response->data.fl[si*r_step];
             err += d*d;
         }
@@ -3636,6 +3669,13 @@ CvDTreeNode* CvDTree::predict( const CvMat* _sample,
 }
 
 
+CvDTreeNode* CvDTree::predict( const Mat& _sample, const Mat& _missing, bool preprocessed_input ) const
+{
+    CvMat sample = _sample, mmask = _missing;
+    return predict(&sample, mmask.data.ptr ? &mmask : 0, preprocessed_input);
+}
+
+
 const CvMat* CvDTree::get_var_importance()
 {
     if( !var_importance )
@@ -3679,7 +3719,7 @@ const CvMat* CvDTree::get_var_importance()
 }
 
 
-void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
+void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split ) const
 {
     int ci;
 
@@ -3716,7 +3756,7 @@ void CvDTree::write_split( CvFileStorage* fs, CvDTreeSplit* split )
 }
 
 
-void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node )
+void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node ) const
 {
     CvDTreeSplit* split;
 
@@ -3750,7 +3790,7 @@ void CvDTree::write_node( CvFileStorage* fs, CvDTreeNode* node )
 }
 
 
-void CvDTree::write_tree_nodes( CvFileStorage* fs )
+void CvDTree::write_tree_nodes( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvDTree::write_tree_nodes" );
 
@@ -3784,7 +3824,7 @@ void CvDTree::write_tree_nodes( CvFileStorage* fs )
 }
 
 
-void CvDTree::write( CvFileStorage* fs, const char* name )
+void CvDTree::write( CvFileStorage* fs, const char* name ) const
 {
     //CV_FUNCNAME( "CvDTree::write" );
 
@@ -3792,10 +3832,10 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 
     cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_TREE );
 
-    get_var_importance();
+    //get_var_importance();
     data->write_params( fs );
-    if( var_importance )
-        cvWrite( fs, "var_importance", var_importance );
+    //if( var_importance )
+    //cvWrite( fs, "var_importance", var_importance );
     write( fs );
 
     cvEndWriteStruct( fs );
@@ -3804,7 +3844,7 @@ void CvDTree::write( CvFileStorage* fs, const char* name )
 }
 
 
-void CvDTree::write( CvFileStorage* fs )
+void CvDTree::write( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvDTree::write" );
 

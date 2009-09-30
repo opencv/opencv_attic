@@ -120,7 +120,6 @@ void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
         CvMat cvderivJ = _derivJ;
         cvZero(&cvderivJ);
 
-        vector<Mat> svec(cn, tempDeriv), dvecI(cn, derivI), dvecJ(cn, derivJ);
         vector<int> fromTo(cn*2);
         for( k = 0; k < cn; k++ )
             fromTo[k*2] = k;
@@ -128,48 +127,48 @@ void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
         prevPyr[level].convertTo(tempDeriv, derivDepth);
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         // compute spatial derivatives and merge them together
         Sobel(prevPyr[level], tempDeriv, derivDepth, 1, 0, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 1;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 0, 1, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 2;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 2, 0, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 3;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 1, 1, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 4;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         Sobel(prevPyr[level], tempDeriv, derivDepth, 0, 2, derivKernelSize, deriv2Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*6 + 5;
-        mixChannels(&svec[0], &dvecI[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivI, 1, &fromTo[0], cn);
 
         nextPyr[level].convertTo(tempDeriv, derivDepth);
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3;
-        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivJ, 1, &fromTo[0], cn);
 
         Sobel(nextPyr[level], tempDeriv, derivDepth, 1, 0, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3 + 1;
-        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivJ, 1, &fromTo[0], cn);
 
         Sobel(nextPyr[level], tempDeriv, derivDepth, 0, 1, derivKernelSize, deriv1Scale );
         for( k = 0; k < cn; k++ )
             fromTo[k*2+1] = k*3 + 2;
-        mixChannels(&svec[0], &dvecJ[0], &fromTo[0], cn);
+        mixChannels(&tempDeriv, 1, &derivJ, 1, &fromTo[0], cn);
 
         /*copyMakeBorder( derivI, _derivI, winSize.height, winSize.height,
             winSize.width, winSize.width, BORDER_CONSTANT );

@@ -45,8 +45,7 @@ CvTS test_system;
 
 int main(int argC,char *argV[])
 {
-    test_system.run( argC, argV );
-    return 0;
+    return test_system.run( argC, argV );
 }
 
 /* End of file. */

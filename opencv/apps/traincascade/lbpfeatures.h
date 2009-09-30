@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_LBPFEATURES_H_
+#define _OPENCV_LBPFEATURES_H_
+
 #include "features.h"
 
 #define LBPF_NAME "lbpFeatureParams"
@@ -51,3 +53,5 @@ inline uchar CvLBPEvaluator::Feature::calc(const Mat &_sum, size_t y) const
         (sum[p[8]] - sum[p[9]] - sum[p[12]] + sum[p[13]] >= cval ? 2 : 0) |   // 6
         (sum[p[4]] - sum[p[5]] - sum[p[8]] + sum[p[9]] >= cval ? 1 : 0));     // 3
 }
+
+#endif

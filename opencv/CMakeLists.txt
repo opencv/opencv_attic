@@ -40,6 +40,10 @@ if(MSVC)
     set(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "" FORCE)
 endif()
 
+#set(CMAKE_C_COMPILER "/opt/BullseyeCoverage/bin/gcc")
+#set(CMAKE_CXX_COMPILER "/opt/BullseyeCoverage/bin/g++")
+#set(CMAKE_CXX_COMPILER_INIT "/opt/BullseyeCoverage/bin/gcc")
+
 # --------------------------------------------------------------
 # Indicate CMake 2.7 and above that we don't want to mix relative
 #  and absolute paths in linker lib lists.
@@ -52,7 +56,7 @@ endif()
 # ----------------------------------------------------------------------------
 #  Current version number:
 # ----------------------------------------------------------------------------
-set(OPENCV_VERSION "1.2.0")
+set(OPENCV_VERSION "2.0.0")
 
 string(REGEX MATCHALL "[0-9]" OPENCV_VERSION_PARTS "${OPENCV_VERSION}")
 
@@ -298,22 +302,24 @@ if(UNIX)
       set(HAVE_UNICAP FALSE)
     endif()
 
+    set(HAVE_FFMPEG 0)
     if(WITH_FFMPEG)
       CHECK_MODULE(libavcodec HAVE_FFMPEG_CODEC)
       CHECK_MODULE(libavformat HAVE_FFMPEG_FORMAT)
       CHECK_MODULE(libavutil HAVE_FFMPEG_UTIL)
       CHECK_MODULE(libswscale HAVE_FFMPEG_SWSCALE)
       CHECK_INCLUDE_FILE(libavformat/avformat.h HAVE_GENTOO_FFMPEG)
-      if(NOT HAVE_GENTOO_FFMPEG)
-        if(EXISTS /usr/include/ffmpeg/libavformat/avformat.h)
+      CHECK_INCLUDE_FILE(ffmpeg/avformat.h HAVE_FFMPEG_FFMPEG)
+      if(NOT HAVE_GENTOO_FFMPEG AND NOT HAVE_FFMPEG_FFMPEG)
+        if(EXISTS /usr/include/ffmpeg/libavformat/avformat.h OR HAVE_FFMPEG_SWSCALE)
           set(HAVE_GENTOO_FFMPEG 1)
         endif()
       endif()
       if(HAVE_FFMPEG_CODEC AND HAVE_FFMPEG_FORMAT AND HAVE_FFMPEG_UTIL)
-        set(HAVE_FFMPEG 1)
+        if(HAVE_FFMPEG_SWSCALE OR NOT HAVE_GENTOO_FFMPEG)
+            set(HAVE_FFMPEG 1)
+        endif()    
       endif()
-    else()
-      set(HAVE_FFMPEG FALSE)
     endif()
 
     if(WITH_1394)
@@ -417,14 +423,41 @@ if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
     find_package(SWIG)
 endif()
 
-if(WIN32)
 
+############################### IPP ################################
 set(IPP_FOUND)
+set(OPENCV_LOADER_PATH)
+
+if(UNIX)
+if(APPLE)
+    set(OPENCV_LOADER_PATH DYLD_LIBRARY_PATH)
+else()
+    set(OPENCV_LOADER_PATH LD_LIBRARY_PATH)
+endif()
+endif()
+
 foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
     if(NOT IPP_FOUND)
-        find_path(IPP_PATH "ippi-${v}.dll"
-            PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
-            DOC "The path to IPP DLLs")
+        if(WIN32)
+            find_path(IPP_PATH "ippi-${v}.dll"
+                PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
+                DOC "The path to IPP dynamic libraries")
+            if(NOT IPP_PATH)
+                find_path(IPP_PATH "ippiem64t-${v}.dll"
+                    PATHS ${CMAKE_PROGRAM_PATH} ${CMAKE_SYSTEM_PROGRAM_PATH}
+                    DOC "The path to IPP dynamic libraries")
+            endif()
+        endif()
+        if(UNIX)
+            find_path(IPP_PATH "libippi${CMAKE_SHARED_LIBRARY_SUFFIX}.${v}"
+                PATHS ${CMAKE_LIBRARY_PATH} ${CMAKE_SYSTEM_LIBRARY_PATH} ENV ${OPENCV_LOADER_PATH}
+                DOC "The path to IPP dynamic libraries")
+            if(NOT IPP_PATH)
+                find_path(IPP_PATH "libippiem64t${CMAKE_SHARED_LIBRARY_SUFFIX}.${v}"
+                    PATHS ${CMAKE_LIBRARY_PATH} ${CMAKE_SYSTEM_LIBRARY_PATH} ENV ${OPENCV_LOADER_PATH}
+                    DOC "The path to IPP dynamic libraries")
+            endif()
+        endif()
         if(IPP_PATH)
             file(GLOB IPP_HDRS "${IPP_PATH}/../include")
             if(IPP_HDRS)
@@ -435,19 +468,41 @@ foreach(v "6.1" "6.0" "5.3" "5.2" "5.1")
 endforeach()
 
 message(STATUS "IPP detected: ${IPP_FOUND}")
+
+if(WIN32 AND NOT MSVC)
+    set(IPP_FOUND)
+endif()
+
 set(USE_IPP ${IPP_FOUND} CACHE BOOL "Use IPP when available")
 
 if(IPP_FOUND AND USE_IPP)
     add_definitions(-DHAVE_IPP)
     include_directories("${IPP_PATH}/../include")
     link_directories("${IPP_PATH}/../lib")
-    set(IPP_LIBS ippsmerged.lib ippsemerged.lib ippimerged.lib ippiemerged.lib
-        ippvmmerged.lib ippvmemerged.lib ippccmerged.lib ippccemerged.lib
-        ippcvmerged.lib ippcvemerged.lib ippcorel.lib)
+    
+    file(GLOB em64t_files "${IPP_PATH}/../lib/*em64t*")
+    set(IPP_ARCH)
+    if(em64t_files)
+        set(IPP_ARCH "em64t")
+    endif()
+    
+    set(A ${CMAKE_STATIC_LIBRARY_PREFIX})
+    set(B ${IPP_ARCH}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if(WIN32)
+        set(L l)
+    else()
+        set(L)
+    endif()
+    set(IPP_LIBS ${A}ippsmerged${B} ${A}ippsemerged${B}
+                 ${A}ippimerged${B} ${A}ippiemerged${B}
+                 ${A}ippvmmerged${B} ${A}ippvmemerged${B}
+                 ${A}ippccmerged${B} ${A}ippccemerged${B}
+                 ${A}ippcvmerged${B} ${A}ippcvemerged${B}
+                 ${A}ippcore${L}${B})
 endif()
 
-endif()
 
+################## LATEX ##################
 set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
 
 # ----------------------------------------------------------------------------
@@ -498,6 +553,9 @@ if(MSVC)
     if(MSVC80)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Wp64")
     endif()
+    if(MSVC90)
+	set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _BIND_TO_CURRENT_CRT_VERSION=1 /D _BIND_TO_CURRENT_VCLIBS_VERSION=1")
+    endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
 
@@ -509,7 +567,7 @@ if(MSVC)
     endif()
 
     if(ENABLE_OPENMP)
-        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
+        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /openmp")
     endif()
 
     # Remove unreferenced functions: function level linking
@@ -588,6 +646,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     # Parallel mode
     if(ENABLE_OPENMP)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -D_GLIBCXX_PARALLEL -fopenmp")
+        set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} gomp)
     endif()
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
@@ -597,22 +656,22 @@ endif()
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
-set(OPENCV_EXTRA_C_FLAGS ${EXTRA_C_FLAGS} CACHE STRING "Extra compiler options")
-set(OPENCV_EXTRA_C_FLAGS_RELEASE ${EXTRA_C_FLAGS_RELEASE} CACHE STRING "Extra compiler options for Release build")
-set(OPENCV_EXTRA_C_FLAGS_DEBUG ${EXTRA_C_FLAGS_DEBUG} CACHE STRING "Extra compiler options for Debug build")
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS ${EXTRA_EXE_LINKER_FLAGS} CACHE STRING "Extra linker flags" FORCE)
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE ${EXTRA_EXE_LINKER_FLAGS_RELEASE} CACHE STRING "Extra linker flags for Release build" FORCE)
-set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG ${EXTRA_EXE_LINKER_FLAGS_DEBUG} CACHE STRING "Extra linker flags for Debug build" FORCE)
+set(OPENCV_EXTRA_C_FLAGS "" CACHE STRING "Extra compiler options")
+set(OPENCV_EXTRA_C_FLAGS_RELEASE "" CACHE STRING "Extra compiler options for Release build")
+set(OPENCV_EXTRA_C_FLAGS_DEBUG "" CACHE STRING "Extra compiler options for Debug build")
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS "" CACHE STRING "Extra linker flags" FORCE)
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE "" CACHE STRING "Extra linker flags for Release build" FORCE)
+set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG "" CACHE STRING "Extra linker flags for Debug build" FORCE)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OPENCV_EXTRA_C_FLAGS_DEBUG}")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${OPENCV_EXTRA_C_FLAGS_DEBUG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_EXTRA_EXE_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE}")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_C_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${EXTRA_C_FLAGS_RELEASE} ${OPENCV_EXTRA_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_C_FLAGS_DEBUG} ${OPENCV_EXTRA_C_FLAGS_DEBUG}")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${EXTRA_C_FLAGS_DEBUG} ${OPENCV_EXTRA_C_FLAGS_DEBUG}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_EXE_LINKER_FLAGS} ${OPENCV_EXTRA_EXE_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_EXE_LINKER_FLAGS_RELEASE} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${EXTRA_EXE_LINKER_FLAGS_DEBUG} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG}")
 
 # In case of Makefiles if the user does not setup CMAKE_BUILD_TYPE, assume it's Release:
 if (${CMAKE_GENERATOR} MATCHES ".*Makefiles")
@@ -753,7 +812,7 @@ if(BUILD_PACKAGE)
 	
     include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
-    set(root_files AUTHORS README ChangeLog COPYING INSTALL NEWS THANKS)
+    set(root_files README ChangeLog configure)
 
     file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
 
@@ -775,12 +834,22 @@ if(BUILD_PACKAGE)
 			COMPONENT main
 			)
 
+        if(CMAKE_INSTALL_DEBUG_LIBRARIES)
+            foreach(m cxcore cv cvaux ml highgui opencv_ffmpeg)
+                install(FILES ${CMAKE_BINARY_DIR}/bin/Debug/${m}${OPENCV_DLLVERSION}d.dll
+			DESTINATION bin COMPONENT main)
+                install(FILES ${CMAKE_BINARY_DIR}/lib/Debug/${m}${OPENCV_DLLVERSION}d.lib
+			DESTINATION lib COMPONENT main)
+            endforeach()     
+        endif()
+
         install(DIRECTORY data samples DESTINATION "." COMPONENT main PATTERN ".svn" EXCLUDE)
         install(DIRECTORY 3rdparty apps interfaces src tests utils DESTINATION "." COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/ DESTINATION doc COMPONENT src FILES_MATCHING PATTERN "*.tex")
         install(DIRECTORY doc/pics DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
         install(DIRECTORY doc/plastex DESTINATION doc COMPONENT src PATTERN ".svn" EXCLUDE)
-	endif()
+    
+    endif()
 endif()
 
 
@@ -860,6 +929,7 @@ message(STATUS "    FFMPEG:                    ${HAVE_FFMPEG}")
 message(STATUS "      codec:                   ${HAVE_FFMPEG_CODEC}")
 message(STATUS "      format:                  ${HAVE_FFMPEG_FORMAT}")
 message(STATUS "      util:                    ${HAVE_FFMPEG_UTIL}")
+message(STATUS "      swscale:                 ${HAVE_FFMPEG_SWSCALE}")
 message(STATUS "      gentoo-style:            ${HAVE_GENTOO_FFMPEG}")
 message(STATUS "    GStreamer:                 ${HAVE_GSTREAMER}")
 message(STATUS "    UniCap:                    ${HAVE_UNICAP}")
@@ -879,9 +949,9 @@ message(STATUS "    Old Python:                0")
 endif()
 message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
 if(IPP_FOUND AND USE_IPP)
-message(STATUS "    Use IPP:                   1")
+message(STATUS "    Use IPP:                   ${IPP_PATH}")
 else()
-message(STATUS "    Use IPP:                   0")
+message(STATUS "    Use IPP:                   NO")
 endif()
 if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
 message(STATUS "    Build Documentation        1")

@@ -375,6 +375,12 @@ CV_IMPL void cvShowImage( const char* name, const CvArr* arr)
         CV_ERROR( CV_StsNullPtr, "NULL name" );
     
     window = icvFindWindowByName(name);
+	if(!window)
+	{
+		cvNamedWindow(name, 1);
+		window = icvFindWindowByName(name);
+	}
+
     if( !window || !arr )
         EXIT; // keep silence here.
     

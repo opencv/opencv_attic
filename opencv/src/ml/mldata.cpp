@@ -216,12 +216,12 @@ int CvMLData :: read_csv(const char* filename)
         for( int j = 0; j < cols_count; j++ )
         {
             ddata[j] = sdata[j];
-            dm[j] = ( MISS_VAL - sdata[j] < FLT_EPSILON );
+            dm[j] = ( fabs( MISS_VAL - sdata[j] ) <= FLT_EPSILON );
         }
         CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
     }
 
-    if ( cvNorm( missing, 0, CV_L1 ) < FLT_EPSILON )
+    if ( cvNorm( missing, 0, CV_L1 ) <= FLT_EPSILON )
         cvReleaseMat( &missing );
 
     cvReleaseMemStorage( &storage );
@@ -244,7 +244,7 @@ void CvMLData :: str_to_flt_elem( const char* token, float& flt_elem, int& type)
     }
     else
     {
-        if ( (*stopstring != 0) && (*stopstring != '\n')) // class label
+        if ( (*stopstring != 0) && (*stopstring != '\n') && (strcmp(stopstring, "\r\n") != 0) ) // class label
         {
             int idx = (*class_map)[token];
             if ( idx == 0)
@@ -477,10 +477,10 @@ const CvMat* CvMLData :: get_var_types()
     if ( avcount == values->cols || (avcount == values->cols-1 && response_idx == values->cols-1) )
         return var_types;
 
-    if ( !var_types_out || (var_types_out && var_types_out->cols != vt_size ) ) 
+    if ( !var_types_out || ( var_types_out && var_types_out->cols != vt_size ) ) 
     {
         cvReleaseMat( &var_types_out );
-        var_types_out = cvCreateMat( 1, vt_size, CV_8UC1);
+        var_types_out = cvCreateMat( 1, vt_size, CV_8UC1 );
     }
 
     var_types_out_ptr = var_types_out->data.ptr;
@@ -498,7 +498,7 @@ const CvMat* CvMLData :: get_var_types()
     return var_types_out;
 }
 
-const CvMat* CvMLData :: get_response()
+const CvMat* CvMLData :: get_responses()
 {
     CV_FUNCNAME( "CvMLData :: get_responses_ptr" );
     __BEGIN__;
@@ -619,7 +619,7 @@ const CvMat* CvMLData :: get_var_idx()
     if ( avcount == values->cols )
         return 0;
      
-    if ( !var_idx_out || (var_idx_out && var_idx_out->cols != avcount ) ) 
+    if ( !var_idx_out || ( var_idx_out && var_idx_out->cols != avcount ) ) 
     {
         cvReleaseMat( &var_idx_out );
         var_idx_out = cvCreateMat( 1, avcount, CV_32SC1);

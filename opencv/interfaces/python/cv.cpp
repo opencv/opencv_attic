@@ -1,7 +1,6 @@
 #include <Python.h>
 
 #include <assert.h>
-#include <pthread.h>
 
 #include <opencv/cxcore.h>
 #include <opencv/cv.h>
@@ -11,7 +10,6 @@
 #define MODULESTR "cv"
 
 static PyObject *opencv_error;
-static pthread_key_t TLS;
 
 struct iplimage_t {
   PyObject_HEAD
@@ -70,7 +68,7 @@ struct cvsubdiv2dpoint_t {
   PyObject *container;  // Containing cvmemstorage_t
 };
 
-struct cvquadedge2d_t {
+struct cvsubdiv2dedge_t {
   PyObject_HEAD
   CvSubdiv2DEdge a;
   PyObject *container;  // Containing cvmemstorage_t
@@ -91,6 +89,11 @@ struct iplconvkernel_t {
 struct cvcapture_t {
   PyObject_HEAD
   CvCapture *a;
+};
+
+struct cvvideowriter_t {
+  PyObject_HEAD
+  CvVideoWriter *a;
 };
 
 typedef IplImage ROIplImage;
@@ -156,27 +159,6 @@ static void translate_error_to_exception(void)
     } while(0)
 
 /************************************************************************/
-
-/* A thread waits on a condition, and calls into Python when the condition is met. */
-#if 0
-
-static void thread_callback(commblk cb)
-{
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-  PyEval_ReleaseLock();
-
-  pthread_mutex_lock(cb->mutex);
-  for (;;) {
-    pthread_cond_wait(cb->cond, cb->mutex);
-    Py_BEGIN_ALLOW_THREADS
-    Py_END_ALLOW_THREADS
-  }
-
-  /* Release the thread. No Python API allowed beyond this point. */
-  PyGILState_Release(gstate);
-}
-#endif
 
 static int failmsg(const char *fmt, ...)
 {
@@ -437,13 +419,33 @@ static struct PyMethodDef cvmat_methods[] =
   {NULL,          NULL}
 };
 
+static PyObject *cvmat_gettype(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->type);
+}
+
+static PyObject *cvmat_getstep(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->step);
+}
+
 static PyObject *cvmat_getrows(cvmat_t *cva)
 {
   return PyInt_FromLong(cva->a->rows);
 }
 
+static PyObject *cvmat_getcols(cvmat_t *cva)
+{
+  return PyInt_FromLong(cva->a->cols);
+}
+
 static PyGetSetDef cvmat_getseters[] = {
-  {(char*)"rows", (getter)cvmat_getrows, (setter)NULL, (char*)"rows", NULL},
+  {(char*)"type",   (getter)cvmat_gettype, (setter)NULL, (char*)"type",   NULL},
+  {(char*)"step",   (getter)cvmat_getstep, (setter)NULL, (char*)"step",   NULL},
+  {(char*)"rows",   (getter)cvmat_getrows, (setter)NULL, (char*)"rows",   NULL},
+  {(char*)"cols",   (getter)cvmat_getcols, (setter)NULL, (char*)"cols",   NULL},
+  {(char*)"width",  (getter)cvmat_getcols, (setter)NULL, (char*)"width",  NULL},
+  {(char*)"height", (getter)cvmat_getrows, (setter)NULL, (char*)"height", NULL},
   {NULL}  /* Sentinel */
 };
 
@@ -713,6 +715,31 @@ static void cvcapture_specials(void)
 
 /************************************************************************/
 
+/* cvvideowriter */
+
+static void cvvideowriter_dealloc(PyObject *self)
+{
+  cvvideowriter_t *pi = (cvvideowriter_t*)self;
+  cvReleaseVideoWriter(&(pi->a));
+  PyObject_Del(self);
+}
+
+static PyTypeObject cvvideowriter_Type = {
+  PyObject_HEAD_INIT(&PyType_Type)
+  0,                                      /*size*/
+  MODULESTR".cvvideowriter",              /*name*/
+  sizeof(cvvideowriter_t),                /*basicsize*/
+};
+
+static void cvvideowriter_specials(void)
+{
+  cvvideowriter_Type.tp_dealloc = cvvideowriter_dealloc;
+}
+
+
+
+/************************************************************************/
+
 /* cvmoments */
 
 static PyTypeObject cvmoments_Type = {
@@ -829,19 +856,19 @@ static void cvcontourtree_specials(void) { }
 
 /************************************************************************/
 
-/* cvquadedge2d */
+/* cvsubdiv2dedge */
 
-static PyTypeObject cvquadedge2d_Type = {
+static PyTypeObject cvsubdiv2dedge_Type = {
   PyObject_HEAD_INIT(&PyType_Type)
   0,                                      /*size*/
-  MODULESTR".cvquadedge2d",                     /*name*/
-  sizeof(cvquadedge2d_t),                       /*basicsize*/
+  MODULESTR".cvsubdiv2dedge",                     /*name*/
+  sizeof(cvsubdiv2dedge_t),                       /*basicsize*/
 };
 
-static int cvquadedge2d_compare(PyObject *o1, PyObject *o2)
+static int cvsubdiv2dedge_compare(PyObject *o1, PyObject *o2)
 {
-  cvquadedge2d_t *e1 = (cvquadedge2d_t*)o1;
-  cvquadedge2d_t *e2 = (cvquadedge2d_t*)o2;
+  cvsubdiv2dedge_t *e1 = (cvsubdiv2dedge_t*)o1;
+  cvsubdiv2dedge_t *e2 = (cvsubdiv2dedge_t*)o2;
   if (e1->a < e2->a)
     return -1;
   else if (e1->a > e2->a)
@@ -850,8 +877,21 @@ static int cvquadedge2d_compare(PyObject *o1, PyObject *o2)
     return 0;
 }
 
-static void cvquadedge2d_specials(void) {
-  cvquadedge2d_Type.tp_compare = cvquadedge2d_compare;
+static PyObject *cvquadedge_repr(PyObject *self)
+{
+  CvSubdiv2DEdge m = ((cvsubdiv2dedge_t*)self)->a;
+  char str[1000];
+  sprintf(str, "<cvsubdiv2dedge(");
+  char *d = str + strlen(str);
+  sprintf(d, "%zx.%d", m & ~3, m & 3);
+  d += strlen(d);
+  sprintf(d, ")>");
+  return PyString_FromString(str);
+}
+
+static void cvsubdiv2dedge_specials(void) {
+  cvsubdiv2dedge_Type.tp_compare = cvsubdiv2dedge_compare;
+  cvsubdiv2dedge_Type.tp_repr = cvquadedge_repr;
 }
 
 /************************************************************************/
@@ -906,7 +946,7 @@ static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
       switch (ps->a->elem_size) {
       case sizeof(CvQuadEdge2D):
         {
-          cvquadedge2d_t *r = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+          cvsubdiv2dedge_t *r = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
           r->a = (CvSubdiv2DEdge)CV_GET_SEQ_ELEM(CvQuadEdge2D, ps->a, i);
           r->container = ps->container;
           Py_INCREF(r->container);
@@ -1124,7 +1164,7 @@ static PyObject *cvsubdiv2dpoint_getattro(PyObject *o, PyObject *name)
 {
   cvsubdiv2dpoint_t *p = (cvsubdiv2dpoint_t*)o;
   if (strcmp(PyString_AsString(name), "first") == 0) {
-    cvquadedge2d_t *r = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+    cvsubdiv2dedge_t *r = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
     r->a = p->a->first;
     r->container = p->container;
     Py_INCREF(r->container);
@@ -1144,6 +1184,17 @@ static void cvsubdiv2dpoint_specials(void)
 
 /************************************************************************/
 /* convert_to_X: used after PyArg_ParseTuple in the generated code  */
+
+static int convert_to_char(PyObject *o, char *dst, const char *name = "no_name")
+{
+  if (PyString_Check(o) && PyString_Size(o) == 1) {
+    *dst = PyString_AsString(o)[0];
+    return 1;
+  } else {
+    (*dst) = 0;
+    return failmsg("Expected single character string for argument '%s'", name);
+  }
+}
 
 static int convert_to_CvMemStorage(PyObject *o, CvMemStorage **dst, const char *name = "no_name")
 {
@@ -1776,6 +1827,16 @@ static int convert_to_CvCapturePTR(PyObject *o, CvCapture** dst, const char *nam
   }
 }
 
+static int convert_to_CvVideoWriterPTR(PyObject *o, CvVideoWriter** dst, const char *name = "no_name")
+{
+  if (PyType_IsSubtype(o->ob_type, &cvvideowriter_Type)) {
+    *dst = ((cvvideowriter_t*)o)->a;
+    return 1;
+  } else {
+    (*dst) = (CvVideoWriter*)NULL;
+    return failmsg("Expected CvVideoWriter for argument '%s'", name);
+  }
+}
 
 static int convert_to_CvMomentsPTR(PyObject *o, CvMoments** dst, const char *name = "no_name")
 {
@@ -1895,8 +1956,8 @@ static int convert_to_CvNextEdgeType(PyObject *o, CvNextEdgeType *dst, const cha
 
 static int convert_to_CvSubdiv2DEdge(PyObject *o, CvSubdiv2DEdge *dst, const char *name = "no_name")
 {
-  if (PyType_IsSubtype(o->ob_type, &cvquadedge2d_Type)) {
-    (*dst) = (((cvquadedge2d_t*)o)->a);
+  if (PyType_IsSubtype(o->ob_type, &cvsubdiv2dedge_Type)) {
+    (*dst) = (((cvsubdiv2dedge_t*)o)->a);
     return 1;
   } else {
     *dst = 0L;
@@ -2151,6 +2212,13 @@ static PyObject *FROM_CvCapturePTR(CvCapture *r)
   return (PyObject*)c;
 }
 
+static PyObject *FROM_CvVideoWriterPTR(CvVideoWriter *r)
+{
+  cvvideowriter_t *c = PyObject_NEW(cvvideowriter_t, &cvvideowriter_Type);
+  c->a = r;
+  return (PyObject*)c;
+}
+
 typedef CvPoint2D32f CvPoint2D32f_4[4];
 static PyObject *FROM_CvPoint2D32f_4(CvPoint2D32f* r)
 {
@@ -2207,8 +2275,12 @@ static PyObject *FROM_IplImagePTR(IplImage *r)
 static PyObject *FROM_ROIplImagePTR(ROIplImage *r)
 {
   if (r != NULL) {
-    IplImage* clone = cvCloneImage(r);
-    return FROM_IplImagePTR(clone);
+    iplimage_t *cva = PyObject_NEW(iplimage_t, &iplimage_Type);
+    cva->a = cvCreateImageHeader(cvSize(100,100), 8, 1);
+    *(cva->a) = *r;
+    cva->data = PyBuffer_FromReadWriteMemory(r->imageData, r->height * r->widthStep);
+    cva->offset = 0;
+    return (PyObject*)cva;
   } else {
     Py_RETURN_NONE;
   }
@@ -2291,7 +2363,7 @@ static PyObject *FROM_generic(generic r)
 
 static PyObject *FROM_CvSubdiv2DEdge(CvSubdiv2DEdge r)
 {
-  cvquadedge2d_t *m = PyObject_NEW(cvquadedge2d_t, &cvquadedge2d_Type);
+  cvsubdiv2dedge_t *m = PyObject_NEW(cvsubdiv2dedge_t, &cvsubdiv2dedge_Type);
   m->a = r;
   m->container = Py_None; // XXX
   Py_INCREF(m->container);
@@ -3189,8 +3261,15 @@ static PyObject *pycvFindChessboardCorners(PyObject *self, PyObject *args, PyObj
 // make recipient use the donor's data, compute the offset,
 // and manage reference counts.
 
-static PyObject *shareData(PyObject *donor, CvArr *pdonor, PyObject *recipient, CvMat *precipient)
+static void preShareData(CvArr *donor, CvMat **recipient)
 {
+  *recipient = cvCreateMatHeader(4, 4, cvGetElemType(donor));
+}
+
+static PyObject *shareData(PyObject *donor, CvArr *pdonor, CvMat *precipient)
+{
+  PyObject *recipient = (PyObject*)PyObject_NEW(cvmat_t, &cvmat_Type);
+  ((cvmat_t*)recipient)->a = precipient;
   ((cvmat_t*)recipient)->offset = cvPtr1D(precipient, 0) - cvPtr1D(pdonor, 0);
 
   PyObject *arr_data;
@@ -3201,10 +3280,8 @@ static PyObject *shareData(PyObject *donor, CvArr *pdonor, PyObject *recipient, 
   } else {
     return (PyObject*)failmsg("Argument 'mat' must be either IplImage or CvMat");
   }
-  Py_DECREF(((cvmat_t*)recipient)->data);
   ((cvmat_t*)recipient)->data = arr_data;
   Py_INCREF(arr_data);
-  Py_INCREF(recipient);
   return recipient;
 }
 
@@ -3279,35 +3356,35 @@ static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject
 
 static PyMethodDef methods[] = {
 
-  {"CreateHist", pycvCreateHist, METH_VARARGS},
-  {"CreateImage", pycvCreateImage, METH_VARARGS},
-  {"CreateImageHeader", pycvCreateImageHeader, METH_VARARGS},
-  {"CreateMat", pycvCreateMat, METH_VARARGS},
-  {"CreateMatHeader", pycvCreateMatHeader, METH_VARARGS},
-  {"CreateMatND", pycvCreateMatND, METH_VARARGS},
-  {"CreateMatNDHeader", pycvCreateMatNDHeader, METH_VARARGS},
-  {"CreateMemStorage", pycvCreateMemStorage, METH_VARARGS},
-  {"FindContours", (PyCFunction)pycvFindContours, METH_KEYWORDS},
-  {"ApproxPoly", (PyCFunction)pycvApproxPoly, METH_KEYWORDS},
-  {"CreateData", pycvCreateData, METH_VARARGS},
-  {"GetDims", pycvGetDims, METH_VARARGS},
-  {"GetImage", pycvGetImage, METH_VARARGS},
-  {"GetMat", pycvGetMat, METH_VARARGS},
-  {"Reshape", pycvReshape, METH_VARARGS},
-  {"InitLineIterator", pycvInitLineIterator, METH_VARARGS},
-  {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS},
-  {"SetData", pycvSetData, METH_VARARGS},
-  {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS},
-  {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS},
-  {"CalcEMD2", (PyCFunction)pycvCalcEMD2, METH_KEYWORDS},
-  {"FindChessboardCorners", (PyCFunction)pycvFindChessboardCorners, METH_KEYWORDS},
-  {"FitLine", (PyCFunction)pycvFitLine, METH_KEYWORDS},
-  {"Subdiv2DLocate", pycvSubdiv2DLocate, METH_VARARGS},
-  {"CalcOpticalFlowPyrLK", pycvCalcOpticalFlowPyrLK, METH_VARARGS},
-  {"ClipLine", (PyCFunction)pycvClipLine, METH_KEYWORDS},
-  {"GetHuMoments", (PyCFunction)pycvGetHuMoments, METH_KEYWORDS},
-  {"GetMinMaxHistValue", (PyCFunction)pycvGetMinMaxHistValue, METH_KEYWORDS},
-  {"WaitKey", (PyCFunction)pycvWaitKey, METH_KEYWORDS},
+  {"CreateHist", pycvCreateHist, METH_VARARGS, "CreateHist(dims, type, ranges, uniform = 1) -> hist"},
+  {"CreateImage", pycvCreateImage, METH_VARARGS, "CreateImage(size, depth, channels) -> image"},
+  {"CreateImageHeader", pycvCreateImageHeader, METH_VARARGS, "CreateImageHeader(size, depth, channels) -> image"},
+  {"CreateMat", pycvCreateMat, METH_VARARGS, "CreateMat(row, cols, type) -> mat"},
+  {"CreateMatHeader", pycvCreateMatHeader, METH_VARARGS, "CreateMatHeader(rows, cols, type) -> mat"},
+  {"CreateMatND", pycvCreateMatND, METH_VARARGS, "CreateMatND(dims, type) -> matnd"},
+  {"CreateMatNDHeader", pycvCreateMatNDHeader, METH_VARARGS, "CreateMatNDHeader(dims, type) -> matnd"},
+  {"CreateMemStorage", pycvCreateMemStorage, METH_VARARGS, "CreateMemStorage(block_size) -> memstorage"},
+  {"FindContours", (PyCFunction)pycvFindContours, METH_KEYWORDS, "FindContours(image, storage, mode=CV_RETR_LIST, method=CV_CHAIN_APPROX_SIMPLE, offset=(0, 0)) -> cvseq"},
+  {"ApproxPoly", (PyCFunction)pycvApproxPoly, METH_KEYWORDS, "ApproxPoly(src_seq, storage, method, parameter=0, parameter2=0) -> None"},
+  {"CreateData", pycvCreateData, METH_VARARGS, "CreateData(arr) -> None"},
+  {"GetDims", pycvGetDims, METH_VARARGS, "GetDims(arr) -> dims"},
+  {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
+  {"GetMat", pycvGetMat, METH_VARARGS, "GetMat(image) -> cvmat"},
+  {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
+  {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
+  {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
+  {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},
+  {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS, "SetMouseCallback(window_name, on_mouse, param) -> None"},
+  {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS, "CreateTrackbar(trackbar_name, window_name, value, count, on_change) -> None"},
+  {"CalcEMD2", (PyCFunction)pycvCalcEMD2, METH_KEYWORDS, "CalcEMD2(signature1, signature2, distance_type, distance_func = None, cost_matrix=None, flow=None, lower_bound=None, userdata = None) -> float"},
+  {"FindChessboardCorners", (PyCFunction)pycvFindChessboardCorners, METH_KEYWORDS, "FindChessboardCorners(image, pattern_size, flags=CV_CALIB_CB_ADAPTIVE_THRESH) -> success,corners"},
+  {"FitLine", (PyCFunction)pycvFitLine, METH_KEYWORDS, "FitLine(points, dist_type, param, reps, aeps) -> line"},
+  {"Subdiv2DLocate", pycvSubdiv2DLocate, METH_VARARGS, "Subdiv2DLocate(subdiv, pt) -> (loc, where)"},
+  {"CalcOpticalFlowPyrLK", pycvCalcOpticalFlowPyrLK, METH_VARARGS, "CalcOpticalFlowPyrLK(prev, curr, prev_pyr, curr_pyr, prev_features, CvSize win_size, int level, criteria, flags, guesses = None) -> (curr_features, status, track_error)"},
+  {"ClipLine", (PyCFunction)pycvClipLine, METH_KEYWORDS, "ClipLine(img, pt1, pt2) -> (clipped_pt1, clipped_pt2)"},
+  {"GetHuMoments", (PyCFunction)pycvGetHuMoments, METH_KEYWORDS, "GetHuMoments(cvmoments) -> (h1, h2, h3, h4, h5, h5, h7)"},
+  {"GetMinMaxHistValue", (PyCFunction)pycvGetMinMaxHistValue, METH_KEYWORDS, "GetMinMaxHistValue(hist) -> min_val,max_val,min_loc,max_loc"},
+  {"WaitKey", (PyCFunction)pycvWaitKey, METH_KEYWORDS, "WaitKey(delay=0) -> int"},
 
   {"temp_test", temp_test, METH_VARARGS},
 
@@ -3329,12 +3406,13 @@ static int to_ok(PyTypeObject *to)
 
 #define MKTYPE(NAME)  do { NAME##_specials(); if (!to_ok(&NAME##_Type)) return; } while (0)
 
-extern "C" void initcv()
+extern "C"
+#if defined WIN32 || defined _WIN32
+__declspec(dllexport)
+#endif
+void initcv()
 {
   PyObject *m, *d;
-
-  pthread_key_create(&TLS, NULL);
-  pthread_setspecific(TLS, (const void*)0x77);
 
   cvSetErrMode(CV_ErrModeParent);
 
@@ -3349,12 +3427,13 @@ extern "C" void initcv()
   MKTYPE(cvmemstorage);
   MKTYPE(cvmoments);
   MKTYPE(cvpositobject);
-  MKTYPE(cvquadedge2d);
+  MKTYPE(cvsubdiv2dedge);
   MKTYPE(cvrng);
   MKTYPE(cvseq);
   MKTYPE(cvset);
   MKTYPE(cvsubdiv2d);
   MKTYPE(cvsubdiv2dpoint);
+  MKTYPE(cvvideowriter);
   MKTYPE(iplconvkernel);
   MKTYPE(iplimage);
 
@@ -3441,3 +3520,4 @@ extern "C" void initcv()
   }
 #endif
 }
+

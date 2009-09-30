@@ -66,11 +66,7 @@ ImageDecoder findDecoder( const string& filename )
         maxlen = std::max(maxlen, len);
     }
 
-#ifdef WIN32
-    FILE* f = _wfopen( toUtf16(filename).c_str(), L"rb" );
-#else
     FILE* f= fopen( filename.c_str(), "rb" );
-#endif
     if( !f )
         return ImageDecoder();
     string signature(maxlen, ' ');

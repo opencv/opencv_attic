@@ -112,7 +112,10 @@ if(UNIX)
 endif()
 
 if(APPLE)
-    add_definitions(-DHAVE_QUICKTIME=1 -DHAVE_CARBON=1 -DHAVE_IMAGEIO=1)
+    add_definitions(-DHAVE_QUICKTIME=1 -DHAVE_CARBON=1)
+    if(NOT OPENCV_BUILD_3RDPARTY_LIBS)
+        add_definitions(-DHAVE_IMAGEIO=1)
+    endif()
     set(highgui_srcs ${highgui_srcs} window_carbon.cpp cvcap_qt.cpp)
 endif(APPLE)
 
@@ -193,7 +196,7 @@ if(WIN32)
 	endif()
 
 	if(MINGW)
-		target_link_libraries(${the_target} vfw32 winmm)
+		target_link_libraries(${the_target} vfw32 winmm videoInput strmiids ole32)
 	endif()
 endif()
 

@@ -20,8 +20,8 @@ include_directories(
 
 # The .cpp files:
 file(GLOB_RECURSE flann_sources_cpp *.cpp)
-file(GLOB_RECURSE flann_sources_h1 "${CMAKE_CURRENT_SOURCE_DIR}/../include/flann/*.h*")
-file(GLOB_RECURSE flann_sources_h2 *.h*)
+file(GLOB_RECURSE flann_sources_h1 "${CMAKE_CURRENT_SOURCE_DIR}/../include/flann/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/../include/flann/*.hpp")
+file(GLOB_RECURSE flann_sources_h2 *.h *.hpp)
 
 source_group("Src" FILES ${flann_sources_cpp})
 source_group("Include\\External" FILES ${flann_sources_h1})

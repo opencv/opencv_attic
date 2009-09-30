@@ -81,6 +81,8 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \****************************************************************************************/
 
+using namespace cv;
+
 #define CV_SVM_MIN_CACHE_SIZE  (40 << 20)  /* 40Mb */
 
 #include <stdarg.h>
@@ -1752,7 +1754,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
             CV_SWAP( responses->data.i[i1], responses->data.i[i2], y );
     }
 
-    int* cls_lbls = class_labels->data.i;
+    int* cls_lbls = class_labels ? class_labels->data.i : 0;
     C = C_grid.min_val;
     do
     {
@@ -1970,7 +1972,33 @@ float CvSVM::predict( const CvMat* sample, bool returnDFVal ) const
 }
 
 
-void CvSVM::write_params( CvFileStorage* fs )
+bool CvSVM::train( const Mat& _train_data, const Mat& _responses,
+                  const Mat& _var_idx, const Mat& _sample_idx, CvSVMParams _params )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx, sidx = _sample_idx;
+    return train(&tdata, &responses, vidx.data.ptr ? &vidx : 0, sidx.data.ptr ? &sidx : 0, _params);
+}
+
+
+bool CvSVM::train_auto( const Mat& _train_data, const Mat& _responses,
+                       const Mat& _var_idx, const Mat& _sample_idx, CvSVMParams _params, int k_fold,
+                       CvParamGrid C_grid, CvParamGrid gamma_grid, CvParamGrid p_grid,
+                       CvParamGrid nu_grid, CvParamGrid coef_grid, CvParamGrid degree_grid )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx, sidx = _sample_idx;
+    return train_auto(&tdata, &responses, vidx.data.ptr ? &vidx : 0,
+                      sidx.data.ptr ? &sidx : 0, _params, k_fold, C_grid, gamma_grid, p_grid,
+                      nu_grid, coef_grid, degree_grid);
+}
+
+float CvSVM::predict( const Mat& _sample, bool returnDFVal ) const
+{
+    CvMat sample = _sample; 
+    return predict(&sample, returnDFVal);
+}
+
+
+void CvSVM::write_params( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvSVM::write_params" );
 
@@ -2037,7 +2065,7 @@ void CvSVM::write_params( CvFileStorage* fs )
 }
 
 
-void CvSVM::write( CvFileStorage* fs, const char* name )
+void CvSVM::write( CvFileStorage* fs, const char* name ) const
 {
     CV_FUNCNAME( "CvSVM::write" );
 
@@ -2227,7 +2255,7 @@ void CvSVM::read( CvFileStorage* fs, CvFileNode* svm_node )
 
     CV_CALL( class_labels = (CvMat*)cvReadByName( fs, svm_node, "class_labels" ));
     CV_CALL( class_weights = (CvMat*)cvReadByName( fs, svm_node, "class_weights" ));
-    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, svm_node, "comp_idx" ));
+    CV_CALL( var_idx = (CvMat*)cvReadByName( fs, svm_node, "var_idx" ));
 
     if( class_count > 1 && (!class_labels ||
         !CV_IS_MAT(class_labels) || class_labels->cols != class_count))

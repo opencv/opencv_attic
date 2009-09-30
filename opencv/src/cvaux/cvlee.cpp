@@ -3509,9 +3509,9 @@ float _cvCalcEdgeIntersection(pCvVoronoiEdge pEdge1,
         return _cvLine_ParIntersection(pEdge1,pEdge2,pPoint,Radius);
     if((pEdge1->parabola!=NULL)&&(pEdge2->parabola==NULL))
         return _cvPar_LineIntersection(pEdge1,pEdge2,pPoint,Radius);
-    if((pEdge1->parabola!=NULL)&&(pEdge2->parabola!=NULL))
+    //if((pEdge1->parabola!=NULL)&&(pEdge2->parabola!=NULL))
         return _cvPar_ParIntersection(pEdge1,pEdge2,pPoint,Radius);
-    return -1;
+    //return -1;
 }//end of _cvCalcEdgeIntersection
 
 static
@@ -3601,8 +3601,7 @@ float _cvLine_ParIntersection(pCvVoronoiEdge pEdge1,
 {
     if(pEdge2->node1==NULL||pEdge2->node2==NULL)
         return _cvLine_OpenParIntersection(pEdge1,pEdge2,pPoint,Radius);
-    else
-        return _cvLine_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
+    return _cvLine_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
 }//end of _cvLine_ParIntersection
 
 static
@@ -3635,7 +3634,7 @@ float _cvLine_OpenParIntersection(pCvVoronoiEdge pEdge1,
     else
         pParPoint1 = &(pEdge2->node1->node);
 
-    float InversParabola[6];
+    float InversParabola[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
     CvPointFloat  Point,ParPoint1_img,RayPoint1_img;
@@ -3744,7 +3743,7 @@ float _cvLine_CloseParIntersection(pCvVoronoiEdge pEdge1,
     pParPoint1 = &(pEdge2->node2->node);
 
 
-    float InversParabola[6];
+    float InversParabola[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
     CvPointFloat  Point,ParPoint1_img,ParPoint2_img,RayPoint1_img;
@@ -3853,8 +3852,7 @@ float _cvPar_LineIntersection(pCvVoronoiEdge pEdge1,
 {
     if(pEdge2->node1==NULL||pEdge2->node2==NULL)
         return _cvPar_OpenLineIntersection(pEdge1,pEdge2,pPoint,Radius);
-    else
-        return _cvPar_CloseLineIntersection(pEdge1,pEdge2,pPoint,Radius);
+    return _cvPar_CloseLineIntersection(pEdge1,pEdge2,pPoint,Radius);
 }//end _cvPar_LineIntersection
 
 static
@@ -3887,7 +3885,7 @@ float _cvPar_OpenLineIntersection(pCvVoronoiEdge pEdge1,
     pCvDirection pDirection = pEdge2->direction;
 
 
-    float InversParabola[6];
+    float InversParabola[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
     CvPointFloat  Point = {0,0},ParPoint1_img,RayPoint1_img;
@@ -3972,7 +3970,7 @@ float _cvPar_CloseLineIntersection(pCvVoronoiEdge pEdge1,
     pRayPoint1 = &(pEdge2->node2->node);
 
     pCvDirection pDirection = pEdge2->direction;
-    float InversParabola[6];
+    float InversParabola[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola, Parabola);
 
     CvPointFloat  Point={0,0},ParPoint1_img,RayPoint1_img,RayPoint2_img;
@@ -4051,8 +4049,7 @@ float _cvPar_ParIntersection(pCvVoronoiEdge pEdge1,
 {
     if(pEdge2->node1==NULL||pEdge2->node2==NULL)
         return _cvPar_OpenParIntersection(pEdge1,pEdge2,pPoint,Radius);
-    else
-        return _cvPar_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
+    return _cvPar_CloseParIntersection(pEdge1,pEdge2,pPoint,Radius);
 }// end of _cvPar_ParIntersection
 
 static
@@ -4128,7 +4125,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
         }
     }
 
-    float InversParabola2[6];
+    float InversParabola2[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola2, Parabola2);
 
     CvPointFloat  Par2Point1_img,Point_img;
@@ -4158,7 +4155,7 @@ float _cvPar_OpenParIntersection(pCvVoronoiEdge pEdge1,
         N=1;
     }
 
-    float InversParabola1[6];
+    float InversParabola1[6]={0,0,0,0,0,0};
     CvPointFloat Par1Point1_img;
     _cvCalcOrtogInverse(InversParabola1, Parabola1);
     _cvCalcPointImage(&Par1Point1_img, pPar1Point1, InversParabola1);
@@ -4268,7 +4265,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
 
 
 
-    float InversParabola2[6];
+    float InversParabola2[6]={0,0,0,0,0,0};
     _cvCalcOrtogInverse(InversParabola2, Parabola2);
 
     CvPointFloat  Par2Point1_img,Par2Point2_img,Point_img;
@@ -4308,7 +4305,7 @@ float _cvPar_CloseParIntersection(pCvVoronoiEdge pEdge1,
     else if(X[N-1]>Par2Point2_img.x)
             N=1;
 
-    float InversParabola1[6];
+    float InversParabola1[6]={0,0,0,0,0,0};
     CvPointFloat Par1Point1_img;
     _cvCalcOrtogInverse(InversParabola1, Parabola1);
     _cvCalcPointImage(&Par1Point1_img, pPar1Point1, InversParabola1);

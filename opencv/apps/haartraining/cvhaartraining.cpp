@@ -67,6 +67,12 @@
 
 #endif /* CV_VERBOSE */
 
+#if defined CV_OPENMP && (defined _MSC_VER || defined CV_ICC)
+#define CV_OPENMP 1
+#else
+#undef CV_OPENMP
+#endif
+
 typedef struct CvBackgroundData
 {
     int    count;
@@ -93,7 +99,7 @@ typedef struct CvBackgroundReader
  */
 CvBackgroundReader* cvbgreader = NULL;
 
-#if defined _OPENMP
+#if defined CV_OPENMP
 #pragma omp threadprivate(cvbgreader)
 #endif
 
@@ -659,13 +665,13 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
         CvUserdata userdata;
 
         /* private variables */
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         CvMat t_data;
         CvMat t_idx;
         int first;
         int t_portion;
         int portion = CV_STUMP_TRAIN_PORTION;
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
 
         m = data->sum.rows;
 
@@ -678,7 +684,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
 
         userdata = cvUserdata( data, haarFeatures );
 
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         #pragma omp parallel for private(t_data, t_idx, first, t_portion)
         for( first = 0; first < numprecalculated; first += portion )
         {
@@ -728,7 +734,7 @@ void icvPrecalculate( CvHaarTrainingData* data, CvIntHaarFeatures* haarFeatures,
 #else
         cvGetSortedIndices( data->valcache, data->idxcache, 1 );
 #endif
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
     }
 
     __END__;
@@ -1332,9 +1338,9 @@ void icvGetNextFromBackgroundData( CvBackgroundData* data,
         reader->img.data.ptr = NULL;
     }
 
-    #ifdef _OPENMP
+    #ifdef CV_OPENMP
     #pragma omp critical(c_background_data)
-    #endif /* _OPENMP */
+    #endif /* CV_OPENMP */
     {
         for( i = 0; i < data->count; i++ )
         {
@@ -1495,13 +1501,13 @@ int icvInitBackgroundReaders( const char* filename, CvSize winsize )
     if( cvbgdata )
     {
 
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         #pragma omp parallel
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
         {
-            #ifdef _OPENMP
+            #ifdef CV_OPENMP
             #pragma omp critical(c_create_bg_data)
-            #endif /* _OPENMP */
+            #endif /* CV_OPENMP */
             {
                 if( cvbgreader == NULL )
                 {
@@ -1525,13 +1531,13 @@ static
 void icvDestroyBackgroundReaders()
 {
     /* release background reader in each thread */
-    #ifdef _OPENMP
+    #ifdef CV_OPENMP
     #pragma omp parallel
-    #endif /* _OPENMP */
+    #endif /* CV_OPENMP */
     {
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         #pragma omp critical(c_release_bg_data)
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
         {
             if( cvbgreader != NULL )
             {
@@ -1636,10 +1642,10 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
     CCOUNTER_SET_ZERO(consumed_count);
     CCOUNTER_SET_ZERO(thread_consumed_count);
 
-    #ifdef _OPENMP
+    #ifdef CV_OPENMP
     #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata, \
                                  normfactor, thread_consumed_count, thread_getcount)
-    #endif /* _OPENMP */
+    #endif /* CV_OPENMP */
     {
         sumdata    = NULL;
         tilteddata = NULL;
@@ -1659,9 +1665,9 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
                        cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
                                                      * (data->winsize.width + 1) ) );
 
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         #pragma omp for schedule(static, 1)
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
         for( i = first; (i < first + count); i++ )
         {
             if( !ok )
@@ -1699,9 +1705,9 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
         cvFree( &(img.data.ptr) );
         cvFree( &(sqsum.data.ptr) );
 
-        #ifdef _OPENMP
+        #ifdef CV_OPENMP
         #pragma omp critical (c_consumed_count)
-        #endif /* _OPENMP */
+        #endif /* CV_OPENMP */
         {
             /* consumed_count += thread_consumed_count; */
             CCOUNTER_ADD(getcount, thread_getcount);
@@ -1758,10 +1764,10 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 //    CCOUNTER_SET_ZERO(consumed_count);
 //    CCOUNTER_SET_ZERO(thread_consumed_count);
 //
-//    #ifdef _OPENMP
+//    #ifdef CV_OPENMP
 //    #pragma omp parallel private(img, sum, tilted, sqsum, sumdata, tilteddata,
 //                                 normfactor, thread_consumed_count)
-//    #endif /* _OPENMP */
+//    #endif /* CV_OPENMP */
 //    {
 //        sumdata    = NULL;
 //        tilteddata = NULL;
@@ -1780,9 +1786,9 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 //                       cvAlloc( sizeof( sqsum_type ) * (data->winsize.height + 1)
 //                                                     * (data->winsize.width + 1) ) );
 //        
-//        #ifdef _OPENMP
+//        #ifdef CV_OPENMP
 //        #pragma omp for schedule(static, 1)
-//        #endif /* _OPENMP */
+//        #endif /* CV_OPENMP */
 //        for( i = first; i < first + count; i++ )
 //        {
 //            for( ; ; )
@@ -1816,9 +1822,9 @@ int icvGetHaarTrainingData( CvHaarTrainingData* data, int first, int count,
 //        cvFree( &(img.data.ptr) );
 //        cvFree( &(sqsum.data.ptr) );
 //
-//        #ifdef _OPENMP
+//        #ifdef CV_OPENMP
 //        #pragma omp critical (c_consumed_count)
-//        #endif /* _OPENMP */
+//        #endif /* CV_OPENMP */
 //        {
 //            /* consumed_count += thread_consumed_count; */
 //            CCOUNTER_ADD(consumed_count, thread_consumed_count);
@@ -1873,9 +1879,9 @@ int icvGetHaarTrainingDataFromBGCallback ( CvMat* img, void* /*userdata*/ )
       return 0;
     
     // just in case icvGetBackgroundImage is not thread-safe ...
-    #ifdef _OPENMP
+    #ifdef CV_OPENMP
     #pragma omp critical (get_background_image_callback)
-    #endif /* _OPENMP */
+    #endif /* CV_OPENMP */
     {
       icvGetBackgroundImage( cvbgdata, cvbgreader, img );
     }
@@ -2287,7 +2293,7 @@ CvMat* icvGetUsedValues( CvHaarTrainingData* training_data,
     CV_CALL( ptr = cvCreateMat( num, total, CV_32FC1 ) );
     
 
-    #ifdef _OPENMP
+    #ifdef CV_OPENMP
     #pragma omp parallel for
     #endif
     for( r = start; r < start + num; r++ )

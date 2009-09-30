@@ -1,63 +1,55 @@
-******************** OpenCV Installation Guide *********************
+= OpenCV Installation Guide =
 
-  Common Prerequisities:
-  ================================
+== Prerequisites ==
+
+=== Common Prerequisites ===
+
   * C/C++ compiler (OpenCV is known to work with VS2005, VS2008,
         including Express Editions, and Mingw on Windows,
         GCC 4.x on Linux, MacOSX and other Unix-like systems).
-  * [Optional] Subversion client (e.g. command-line svn tool, SmartSVN, Tortoise SVN)
-  * [Optional] CMake 2.6 or later. CMake is now the only method of building OpenCV SVN snapshots
+  * CMake 2.6 or later. CMake is now the only method of building OpenCV SVN snapshots
     on Windows and the recommended method on Linux/MacOSX.
-  * [Optional] Python 2.5.x or 2.6.x (Python 3.x support status is unknown),
+  * (''Optional'') Subversion client (e.g. command-line svn tool, SmartSVN, Tortoise SVN) 
+  * (''Optional'') Python 2.5.x or 2.6.x (Python 3.x support status is unknown),
     including the development files: Python.h, etc. in order to build Python wrappers
-  * [Optional] SWIG 1.3.30 or later to build Python & Octave wrappers
+  * (''Optional'') SWIG 1.3.30 or later to build Python & Octave wrappers
     (in order to build Octave wrappers you will need at least SWIG 1.3.36).
-  * [Optional] IPP 5.1 or later. OpenCV does not require IPP, but can detect the presence
-    of IPP binaries and use them to achieve higher performance.
-    If you have full IPP installed, on Windows you can also build custom IPP opencv_ipp*.dll
-    that will include a small subset of IPP functions that are really used by OpenCV.
-  * [Optional] LiveTeX distribution (or MiKTeX on Windows) to build the up-to-date OpenCV reference manual
+  * (''Optional'') IPP 5.1 or later. OpenCV does not require IPP, but can be configured to
+    use IPP to make some functions run faster.
+  * (''Optional'') LiveTeX distribution (or MiKTeX on Windows) to build the up-to-date OpenCV reference manual
 
-  Extra Prerequisities (Linux/BSD/other Unix-like OSes):
-  ======================================================
+=== Extra Prerequisites (Linux/BSD/other Unix-like OSes) ===
+
   * pkg-config. It is used at the configuration stage and also simplifies the further use of OpenCV itself.
-  * [Optional] autotools:
-        autoconf-2.59 or later (including autoheader)
-        automake-1.9 or later (including aclocal)
-        libtool-1.5 or later (including libtoolize)
-    You can choose to use either cmake or autotools to build OpenCV.
-  * [Optional] gtk+ 2.x and the related packages (glib, gthread etc.).
+  * (''Optional'') gtk+ 2.x and the related packages (glib, gthread etc.).
     This is the GUI toolkit of choice for highgui on OSes other than Windows and MacOSX.
-  * [Optional] libjpeg, libtiff, libjasper, libpng and zlib. Install any of those with the associated
-    development packages to be able to read/write the corresponding image formats. On Windows these libraries
-    are shipped with OpenCV, on MacOSX QuickTime is used instead.
-  * [Optional] ffmpeg, libgstreamer, libxine, unicap, libdc1394 2.x (or libdc1394 1.x + libraw1394).
+  * (''Optional'') libjpeg, libtiff, libjasper, libpng and zlib. Install any of those with the associated
+    development packages (libjpeg-dev etc. on Debian/Ubuntu) to be able to read/write the corresponding
+    image formats.
+  * (''Optional'') ffmpeg, libgstreamer, libxine, unicap, libdc1394 2.x (or libdc1394 1.x + libraw1394).
     You should have some/all of these packages installed (together with associated development packages)
     to add video capturing, video decoding and video encoding capabilities to highgui.
     The output of the configure script or cmake will show you, which of the packages have been detected
     and will be used in highgui. For example, on Ubuntu 8.10 all the necessary ffmpeg files
     can be installed using the following command:
-        sudo apt-get install libavformat-dev
-
-    On Windows and MacOSX some video I/O capabilities are provided by the OS-native services.
-
-  * [Optional] Octave 2.9 or later, together with SWIG 1.3.36 or later, in order to build Octave wrappers.
+        sudo apt-get install libavformat-dev libswscale-dev
+  * (''Optional'') Octave 2.9 or later, together with SWIG 1.3.36 or later, in order to build Octave wrappers.
     Note that currently Octave wrappers can only be built with autotools, not cmake.
 
-  Extra Prerequisities (MacOSX):
-  ==============================
+=== Extra Prerequisities (MacOSX) ===
+
   * Xcode 3.1 or later. It does not only include the required C++ compiler,
     but also Quicktime and Carbon frameworks that make highgui on MacOSX functional.
-    Besides, CMake can generate Xcode projects, so you can build OpenCV conveniently from within the IDE.
+    Besides, CMake can generate Xcode projects, so you can
+    build OpenCV conveniently from within the IDE.
 
-  Getting the latest stable OpenCV version:
-  =========================================
+== Getting the latest stable OpenCV version ==
+
   * Go to http://sourceforge.net/projects/opencvlibrary
   * Windows: download the executable installation package for Windows and run it
   * Linux/MacOSX/other operating systems: download the source tarball and unpack it
 
-  Getting the cutting-edge OpenCV from SourceForge SVN repository:
-  =============================================================
+=== Getting the cutting-edge OpenCV from SourceForge SVN repository ===
 
   Launch SVN client and checkout either
       a) the current OpenCV snapshot from here:
@@ -65,21 +57,21 @@
       b) or the latest tested OpenCV snapshot from here:
          http://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/tags/latest_tested_snapshot
 
-      In Linux/MacOSX it can be done using command line, e.g.:
-        cd ~/<my_working_directory>
-        svn co https://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/trunk
+  In Linux/MacOSX it can be done using command line, e.g.:
+    {{{
+    cd ~/<my_working_directory>
+    svn co https://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/trunk
+    }}}
 
-      If you access SourceForge anonymously, you can replace "https://" with "http://" in the URLs above.
+== Building OpenCV from source using CMake (Cross-platform) ==
 
-
-  Building OpenCV from source using CMake (Cross-platform):
-  =========================================================
    1. Create a temporary directory, which we denote as <cmake_binary_dir>,
       where you want to put the generated Makefiles,
       VisualStudio, Xcode, or Eclipse etc. project files as well the object files and output binaries.
       You can do it using CMake GUI.
 
-   2a. If you use CMake GUI, execute "Configure" to do the initial configuration,
+   2.
+     2a. If you use CMake GUI, execute "Configure" to do the initial configuration,
       then adjust any options, then press "Configure" again and then press "Generate".
       
       For the best performance, and if you compiler and the platform supports it,
@@ -89,22 +81,27 @@
       Also, if you want to build Python wrappers, samples or the reference manual in PDF,
       you should explicitly turn it on.
 
-   2b. If you are using command line, enter the <cmake_binary_dir> and type
-      "cmake [<some optional parameters...>] <path to the OpenCV source directory>"
-      For example, if you downloaded the project to ~/projects/opencv, you can do the following:
-         cd ~/projects/opencv # the directory containing INSTALL, CMakeLists.txt etc.
-         mkdir release
-         cd release
-         cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_PYTHON_SUPPORT=ON ..
+     2b. If you are using command line, enter the <cmake_binary_dir> and type
+    {{{
+    cmake [<some optional parameters...>] <path to the OpenCV source directory>
+    }}}
 
+      For example, if you downloaded the project to ~/projects/opencv, you can do the following:
+    {{{
+    cd ~/projects/opencv # the directory containing INSTALL, CMakeLists.txt etc.
+    mkdir release
+    cd release
+    cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_PYTHON_SUPPORT=ON ..
+    }}}
       that will generate makefiles for the Release configuration and will put them in
       ~/projects/opencv/release directory.
 
-   3a. If you generated project files for VisualStudio, Xcode, Eclipse etc., run the respective IDE, open
-       the OpenCV top-level project/solution/workspace etc. and build it.
+   3.
+     3a. If you generated project files for VisualStudio, Xcode, Eclipse etc., run the respective IDE, open
+         the OpenCV top-level project/solution/workspace etc. and build it.
 
-   3b. If you generated makefiles, then enter the created temporary directory and run make/nmake utility.
-       Then you can optionally run "sudo make install".
+     3b. If you generated makefiles, then enter the created temporary directory and run make/nmake utility.
+         Then you can optionally run "sudo make install".
 
    4. If you did not run "make install", you should let your system know where to find the generated libraries.
 
@@ -113,105 +110,50 @@
 
       On Linux you should add <cmake_binary_dir>/lib[/debug|/release] to /etc/ld.so.conf or
       to LD_LIBRARY_PATH, e.g.:
-      export LD_LIBRARY_PATH=~/projects/opencv/release/lib:$LD_LIBRARY_PATH
-      sudo ldconfig
-
+    {{{
+    export LD_LIBRARY_PATH=~/projects/opencv/release/lib:$LD_LIBRARY_PATH
+    sudo ldconfig
+    }}}
       On MacOSX you should add <cmake_binary_dir>/lib[/debug|/release] to DYLD_LIBRARY_PATH.
   
-  
-  Building OpenCV using autotools (Linux, MacOSX, other Unix-like systems):
-  =========================================================================
-
-   1. enter the top-level OpenCV source directory, containing configure.in, INSTALL etc.
-
-   1b [This step is usually not necessary, UNLESS you are building from a not consistent SVN checkout]
-   
-      Use autoreconf to generate the up-to-date configure script and Makefile.in's
-      out of configure.in and Makefile.am's. In rare cases, it might be necessary to invoke
-      it with '--force' switch if the files' time stamps are wrong.
-
-      note 1. you should have pretty recent versions of autoconf, automake, libtool installed,
-              see Prerequisities above.
-      note 2. for some reason the INSTALL document is overwritten by this command,
-              so you may want to backup it prior running the command, or restore it from SVN after.
-      
-      Inconsistent states of the SVN might also mean that the SWIG wrappers for Python and/or
-      Octave are not up-to-date. In this case, you should configure with 
-      
-        ./configure --with-swig
-      
-      or 
-      
-        ./configure --with-swig --with-octave
-      
-      and build in the main directory (not in a temporary VPATH build like step '2' suggests.
-
-   2. create a new temporary directory where you want the generated Makefiles and object files be put, 
-      enter it and run configure script. For example, if you downloaded OpenCV to ~/projects/opencv,
-      you can do the following:
-
-         cd ~/projects/opencv
-         mkdir release
-         cd release
-         ../configure
-
-      The full list of the configurations options can be retrieved with:
-          ../configure --help
-
-      Also, watch the final part of the configure script output,
-      there it shows which 3rd-party libraries it detected and will use.
-
-   4. then run:
-         make
-         sudo make install
-
-
-  Testing OpenCV (CMake, cross-platform)
-  ======================================
+== Testing OpenCV (CMake, cross-platform) ==
 
   You may turn on "BUILD_EXAMPLES" in CMake GUI or run cmake with "-D BUILD_EXAMPLES=ON" option,
   then it will include short demo samples to the build. Note that some of them need image files
   from the original source directory, you may just copy them to the bin directory.
 
-  You can also run tests correctness tests <cmake_binary_dir>[/debug|/release]/bin/cxcoretest and .../cvtest.
+  You can also run tests correctness tests <cmake_binary_dir>/bin[/debug|/release]/cxcoretest and .../cvtest.
 
-  Testing OpenCV (autotools)
-  ==========================
-  Run "make check" in order to run the correctness tests. The check target needs additional
-  test data that has been moved out of the main directory of OpenCV. It is automatically found
-  for usual builds if you check out the 'opencv_extra' directory from the SVN to the same location
-  where you already put the 'opencv' directory itself.
-  
-  For "make distcheck" to succeed, you will need to specify the location of the opencv_extra/testdata
-  folder by setting an environment variable:
-  
-    env TESTDATA_DIR='~/wherever/opencv_extra/testdata' make distcheck
+=== Testing Python/Octave wrappers ===
 
-  Testing Python/Octave wrappers
-  ==============================
   As long as you build Python/Octave wrappers and installed them, you can
-  just enter opencv/samples/python or opencv/samples/octave and run the samples, e.g.
-  "python delaunay.py"
-  
-  The autotools "make check" rule also runs a couple of unit tests and Python test cases
+  just enter opencv/samples/swig_python or opencv/samples/octave and run the samples, e.g.
+    {{{
+    python delaunay.py
+    }}}
 
-  Building your own code that uses OpenCV
-  =======================================
+=== Building your own code that uses OpenCV ===
+
   * If you use CMake, you can write your own CMakeLists.txt script and use the provided FindOpenCV.cmake file there,
     just like you would use FindJPEG.cmake etc. Please, refer to CMake documentation.
   * You can add opencv include, lib and bin subdirectory to your IDE settings.
   * For hand-written Makefiles you can specify the necessary paths and options manually, e.g.:
-     g++ -o my_example my_example.cpp -I<opencv_source_dir>/include[/opencv] \
-             -L<cmake_binary_dir>/lib -lcxcore -lcv -lcvaux -lhighgui -lml
+    {{{
+    g++ -o my_example my_example.cpp -I<opencv_source_dir>/include[/opencv] \
+        -L<cmake_binary_dir>/lib -lcxcore -lcv -lcvaux -lhighgui -lml
+    }}}
   * Finally, you can use pkg-config and the provided opencv.pc.
      1. Make sure that opencv.pc is found by pkg-config:
-          pkg-config opencv --libs  # should print something like -lcxcore -lcv ...
+    {{{
+    pkg-config opencv --libs  # should print something like -lcxcore -lcv ...
+    }}}
      2. You can now use it in your Makefiles or build scripts, e.g.:
-           g++ -o my_example my_example.cpp `pkg-config opencv --cflags --libs`
+    {{{
+    g++ -o my_example my_example.cpp `pkg-config opencv --cflags --libs`
+    }}}
+----
+Up-to-date version of this manual can be found here: http://opencv.willowgarage.com/wiki/InstallGuide
 
-ARM notice:
-===========
-   Although there is no official support for non-x86 based
-   processors it is reportedly possible to compile OpenCV on ARM.
+[[Welcome | OpenCV Wiki]]
 
-   * on ARM pass CXXFLAGS=-fsigned-char to configure.
+[[FullOpenCVWiki | Full OpenCV Wiki]]

@@ -861,7 +861,9 @@ void SURF::operator()(const Mat& img, const Mat& mask,
                                     kpt.hessian, getPointOctave(kpt, *this));
         }
     }
-    Seq<float>(d).copyTo(descriptors);
+    descriptors.resize(d ? d->total*d->elem_size/sizeof(float) : 0);
+    if(d)
+        cvCvtSeqToArray(d, &descriptors[0]);
 }
 
 }

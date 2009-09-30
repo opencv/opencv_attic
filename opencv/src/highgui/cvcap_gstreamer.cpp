@@ -315,7 +315,7 @@ static double icvGetProperty_GStreamer(CvCapture_GStreamer *cap, int id)
 		}
 		return value * 1e-6; // nano seconds to milli seconds
 	case CV_CAP_PROP_POS_FRAMES:
-		format = GST_FORMAT_BUFFERS;
+		format = GST_FORMAT_DEFAULT;
 		if(!gst_element_query_position(cap->pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
 			return 0;
@@ -335,7 +335,7 @@ static double icvGetProperty_GStreamer(CvCapture_GStreamer *cap, int id)
 	case CV_CAP_PROP_FOURCC:
 		break;
 	case CV_CAP_PROP_FRAME_COUNT:
-		format = GST_FORMAT_BUFFERS;
+		format = GST_FORMAT_DEFAULT;
 		if(!gst_element_query_duration(cap->pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
 			return 0;
@@ -441,7 +441,7 @@ static int icvSetProperty_GStreamer(CvCapture_GStreamer *cap, int id, double val
 		}
 		break;
 	case CV_CAP_PROP_POS_FRAMES:
-		format = GST_FORMAT_BUFFERS;
+		format = GST_FORMAT_DEFAULT;
 		flags = (GstSeekFlags) (GST_SEEK_FLAG_FLUSH|GST_SEEK_FLAG_ACCURATE);
 		if(!gst_element_seek_simple(GST_ELEMENT(cap->pipeline), format,
 					    flags, (gint64) value)) {

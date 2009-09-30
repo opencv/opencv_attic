@@ -21,6 +21,30 @@ basicstyle=\small\ttfamily,
 backgroundcolor=\color{shadecolor}
 }
 
+\definecolor{cvlinkcolor}{rgb}{0.0 0.3 0.8}
+
+% taken from http://en.wikibooks.org/wiki/LaTeX/Hyperlinks
+\hypersetup{
+    bookmarks=true,         % show bookmarks bar?
+    unicode=false,          % non-Latin characters in Acrobat’s bookmarks
+    %pdftoolbar=true,        % show Acrobat’s toolbar?
+    %pdfmenubar=true,        % show Acrobat’s menu?
+    %pdffitwindow=false,     % window fit to page when opened
+    %pdfstartview={FitH},    % fits the width of the page to the window
+    %pdftitle={My title},    % title
+    %pdfauthor={Author},     % author
+    %pdfsubject={Subject},   % subject of the document
+    %pdfcreator={Creator},   % creator of the document
+    %pdfproducer={Producer}, % producer of the document
+    %pdfkeywords={keywords}, % list of keywords
+    %pdfnewwindow=true,      % links in new window
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=cvlinkcolor,  % color of internal links
+    citecolor=cvlinkcolor,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan           % color of external links
+}
+
 \makeindex
 
 \newcommand{\piRsquare}{\pi r^2}		% This is my own macro !!!
@@ -73,18 +97,18 @@ backgroundcolor=\color{shadecolor}
 \include{MachineLearning}
 \include{CxCore-cpp}
 \include{Cv-cpp}
-%\include{CvAux-cpp}
+\include{CvAux-cpp}
 \include{HighGui-cpp}
-\include{FAQ}
+%\include{FAQ}
 %%%%%%%%%%%%%%%%
 
-
+\addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{plain}
 {\small
 \bibliography{opencv}
 }
 
+\addcontentsline{toc}{chapter}{Index}
 \printindex
-
 
 \end{document}             % End of document.

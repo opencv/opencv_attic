@@ -55,7 +55,7 @@ int main( int argc, char** argv )
     cvZero( inpaint_mask );
     cvZero( inpainted );
     cvShowImage( "image", img );
-    cvShowImage( "watershed transform", inpainted );
+    cvShowImage( "inpainted image", inpainted );
     cvSetMouseCallback( "image", on_mouse, 0 );
 
     for(;;)

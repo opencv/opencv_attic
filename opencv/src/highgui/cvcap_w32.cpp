@@ -73,9 +73,13 @@ icvInitFFMPEG(void)
     static int ffmpegInitialized = 0;
     if( !ffmpegInitialized )
     {
-#ifdef _DEBUG
-//#define ffopencv_suffix_dbg "d"
-#define ffopencv_suffix_dbg ""
+#ifdef __MINGW32__
+#define ffopencv_prefix "lib"
+#else
+#define ffopencv_prefix ""
+#endif
+#if defined(_DEBUG) && defined(__MINGW32__)
+#define ffopencv_suffix_dbg "d"
 #else
 #define ffopencv_suffix_dbg ""
 #endif
@@ -85,7 +89,7 @@ icvInitFFMPEG(void)
 #define ffopencv_suffix ""
 #endif
 
-#define ffopencv_name_m2(a,b,c) "opencv_ffmpeg" #a #b #c ffopencv_suffix ffopencv_suffix_dbg ".dll"
+#define ffopencv_name_m2(a,b,c) ffopencv_prefix "opencv_ffmpeg" #a #b #c ffopencv_suffix ffopencv_suffix_dbg ".dll"
 #define ffopencv_name_m(a,b,c) ffopencv_name_m2(a,b,c)
         const char* ffopencv_name =
             ffopencv_name_m(CV_MAJOR_VERSION,CV_MINOR_VERSION,CV_SUBMINOR_VERSION);

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _OPENCV_BOOST_H_
+#define _OPENCV_BOOST_H_
+
 #include "features.h"
 #include "ml.h"
 
@@ -78,3 +80,5 @@ protected:
     float threshold;
     float minHitRate, maxFalseAlarm;
 };
+
+#endif

@@ -44,58 +44,63 @@
 #define _OPENCV_CORE_OPERATIONS_H_
 
 #ifndef SKIP_INCLUDES
-#include <string.h>
-#include <limits.h>
+  #include <string.h>
+  #include <limits.h>
 #endif // SKIP_INCLUDES
 
 #ifdef __cplusplus
 
 /////// exchange-add operation for atomic operations on reference counters ///////
-    
 #ifdef __GNUC__
     
-#if __GNUC__*10 + __GNUC_MINOR__ >= 42
+  #if __GNUC__*10 + __GNUC_MINOR__ >= 42
 
-#if defined __i486__ || defined __i586__ || defined __i686__ || defined __MMX__ || defined __SSE__
-#define CV_XADD __sync_fetch_and_add
-#else
-#include <ext/atomicity.h>
-#define CV_XADD __gnu_cxx::__exchange_and_add
-#endif
+    #if !defined WIN32 && (defined __i486__ || defined __i586__ || \
+        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__)
+      #define CV_XADD __sync_fetch_and_add
+    #else
+      #include <ext/atomicity.h>
+      #define CV_XADD __gnu_cxx::__exchange_and_add
+    #endif
 
-#else
-#include <bits/atomicity.h>
-#define CV_XADD __gnu_cxx::__exchange_and_add
-#endif
+  #else
+    #include <bits/atomicity.h>
+    #if __GNUC__ >= 4
+      #define CV_XADD __gnu_cxx::__exchange_and_add
+    #else
+      #define CV_XADD __exchange_and_add
+    #endif
+  #endif
     
 #elif defined WIN32 || defined _WIN32
 
-#if defined _MSC_VER && !defined WIN64 && !defined _WIN64
-static inline int CV_XADD( int* addr, int delta )
-{
-    int tmp;
-    __asm
+  #if defined _MSC_VER && !defined WIN64 && !defined _WIN64
+    static inline int CV_XADD( int* addr, int delta )
     {
-        mov edx, addr
-        mov eax, delta
-        lock xadd [edx], eax
-        mov tmp, eax
+        int tmp;
+        __asm
+        {
+            mov edx, addr
+            mov eax, delta
+            lock xadd [edx], eax
+            mov tmp, eax
+        }
+        return tmp;
     }
-    return tmp;
-}
-#else
-#include "windows.h"
-#undef min
-#undef max
-#define CV_XADD(addr,delta) InterlockedExchangeAdd((LONG volatile*)(addr), (delta))
-#endif
-    
+  #else
+    #include "windows.h"
+    #undef min
+    #undef max
+    #define CV_XADD(addr,delta) InterlockedExchangeAdd((LONG volatile*)(addr), (delta))
+  #endif
+      
 #else
 
-template<typename _Tp> static inline _Tp CV_XADD(_Tp* addr, _Tp delta)
-{ int tmp = *addr; *addr += delta; return tmp; }
+  template<typename _Tp> static inline _Tp CV_XADD(_Tp* addr, _Tp delta)
+  { int tmp = *addr; *addr += delta; return tmp; }
     
 #endif
+
 
 namespace cv
 {
@@ -1351,32 +1356,32 @@ inline LineIterator LineIterator::operator ++(int)
 }
 
 #if 0
-template<typename _Tp> inline VectorCommaInitializer_<_Tp>::
-VectorCommaInitializer_(vector<_Tp>* _vec) : vec(_vec), idx(0) {}
+  template<typename _Tp> inline VectorCommaInitializer_<_Tp>::
+  VectorCommaInitializer_(vector<_Tp>* _vec) : vec(_vec), idx(0) {}
 
-template<typename _Tp> template<typename T2> inline VectorCommaInitializer_<_Tp>&
-VectorCommaInitializer_<_Tp>::operator , (T2 val)
-{
-    if( (size_t)idx < vec->size() )
-        (*vec)[idx] = _Tp(val);
-    else
-        vec->push_back(_Tp(val));
-    idx++;
-    return *this;
-}
+  template<typename _Tp> template<typename T2> inline VectorCommaInitializer_<_Tp>&
+  VectorCommaInitializer_<_Tp>::operator , (T2 val)
+  {
+      if( (size_t)idx < vec->size() )
+          (*vec)[idx] = _Tp(val);
+      else
+          vec->push_back(_Tp(val));
+      idx++;
+      return *this;
+  }
 
-template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator vector<_Tp>() const
-{ return *vec; }
+  template<typename _Tp> inline VectorCommaInitializer_<_Tp>::operator vector<_Tp>() const
+  { return *vec; }
 
-template<typename _Tp> inline vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
-{ return *vec; }
+  template<typename _Tp> inline vector<_Tp> VectorCommaInitializer_<_Tp>::operator *() const
+  { return *vec; }
 
-template<typename _Tp, typename T2> static inline VectorCommaInitializer_<_Tp>
-operator << (const vector<_Tp>& vec, T2 val)
-{
-    VectorCommaInitializer_<_Tp> commaInitializer((vector<_Tp>*)&vec);
-    return (commaInitializer, val);
-}
+  template<typename _Tp, typename T2> static inline VectorCommaInitializer_<_Tp>
+  operator << (const vector<_Tp>& vec, T2 val)
+  {
+      VectorCommaInitializer_<_Tp> commaInitializer((vector<_Tp>*)&vec);
+      return (commaInitializer, val);
+  }
 #endif
     
 /////////////////////////////// AutoBuffer ////////////////////////////////////////
@@ -1698,6 +1703,8 @@ operator << ( FileStorage& fs, const vector<_Tp>& vec )
 }
 
 CV_EXPORTS void write( FileStorage& fs, const string& name, const Mat& value );
+CV_EXPORTS void write( FileStorage& fs, const string& name, const MatND& value );
+CV_EXPORTS void write( FileStorage& fs, const string& name, const SparseMat& value );
 
 template<typename _Tp> static inline FileStorage& operator << (FileStorage& fs, const _Tp& value)
 {
@@ -1766,6 +1773,9 @@ inline size_t FileNode::size() const
         t == SEQ ? node->data.seq->total : node != 0;
 }
 
+inline CvFileNode* FileNode::operator *() { return (CvFileNode*)node; }
+inline const CvFileNode* FileNode::operator* () const { return node; }
+
 static inline void read(const FileNode& node, bool& value, bool default_value)
 { value = cvReadInt(node.node, default_value) != 0; }
 
@@ -1793,6 +1803,10 @@ static inline void read(const FileNode& node, double& value, double default_valu
 static inline void read(const FileNode& node, string& value, const string& default_value)
 { value = string(cvReadString(node.node, default_value.c_str())); }
 
+CV_EXPORTS void read(const FileNode& node, Mat& mat, const Mat& default_mat=Mat() );
+CV_EXPORTS void read(const FileNode& node, MatND& mat, const MatND& default_mat=MatND() );
+CV_EXPORTS void read(const FileNode& node, SparseMat& mat, const SparseMat& default_mat=SparseMat() );    
+    
 inline FileNode::operator int() const
 {
     return cvReadInt(node, 0);
@@ -1828,7 +1842,7 @@ public:
     }
     FileNodeIterator* it;
 };
-
+    
 template<typename _Tp> class CV_EXPORTS VecReaderProxy<_Tp,1>
 {
 public:
@@ -1853,11 +1867,11 @@ read( FileNodeIterator& it, vector<_Tp>& vec, size_t maxCount=(size_t)INT_MAX )
 }
 
 template<typename _Tp> static inline void
-read( FileNode& node, vector<_Tp>& vec, const vector<_Tp>& /*default_value*/ )
+read( FileNode& node, vector<_Tp>& vec, const vector<_Tp>& default_value=vector<_Tp>() )
 {
     read( node.begin(), vec );
 }
-
+    
 inline FileNodeIterator FileNode::begin() const
 {
     return FileNodeIterator(fs, node);
@@ -2471,5 +2485,5 @@ template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
 
 }
 
-#endif
-#endif
+#endif // __cplusplus
+#endif // _OPENCV_CORE_OPERATIONS_H_

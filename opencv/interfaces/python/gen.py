@@ -54,11 +54,13 @@ aggregate = {
   'cvpoint2d32f_count' : '!.points,&!.count'
 }
 conversion_types = [
+'char',
 'CvArr',
 'CvArrSeq',
 'CvBox2D', # '((ff)(ff)f)',
 'CvBox2D*',
 'CvCapture*',
+'CvVideoWriter*',
 'CvContourTree*',
 'CvFont',
 'CvFont*',
@@ -96,9 +98,16 @@ conversion_types = [
 def safename(s):
   return s.replace('*', 'PTR').replace('[', '_').replace(']', '_')
 
+def has_optional(al):
+    """ return true if any argument is optional """
+    return any([a.init for a in al])
+
 def gen(name, args, ty):
   yield ""
-  yield "static PyObject *pycv%s(PyObject *self, PyObject *args, PyObject *kw)" % cname(name)
+  if has_optional(args):
+      yield "static PyObject *pycv%s(PyObject *self, PyObject *args, PyObject *kw)" % cname(name) 
+  else:
+      yield "static PyObject *pycv%s(PyObject *self, PyObject *args)" % cname(name)
   yield "{"
 
   destinations = []
@@ -163,6 +172,9 @@ def gen(name, args, ty):
 
   # Do the conversions:
   for a in args:
+    joinwith = [f[2:] for f in a.flags if f.startswith("J:")]
+    if len(joinwith) > 0:
+      yield 'preShareData(%s, &%s);' % (joinwith[0], a.nm)
     if 'O' in a.flags:
       continue
     if a.ty in (conversion_types + aggregate.keys()):
@@ -199,6 +211,7 @@ def gen(name, args, ty):
       'int',
       'double',
       'CvCapture*',
+      'CvVideoWriter*',
       'CvPOSITObject*',
       'CvScalar',
       'CvSize',
@@ -246,7 +259,7 @@ def gen(name, args, ty):
         af = dict([ (a.nm,a.flags) for a in args])
         joinwith = [f[2:] for f in af.get(all_returns[0], []) if f.startswith("J:")]
         if len(joinwith) > 0:
-            yield '  return shareData(pyobj_%s, %s, pyobj_%s, %s);' % (joinwith[0], joinwith[0], all_returns[0], all_returns[0])
+            yield '  return shareData(pyobj_%s, %s, %s);' % (joinwith[0], joinwith[0], all_returns[0])
         else:
             yield '  return FROM_%s(%s);' % (safename(typed[all_returns[0]]), all_returns[0])
       else:
@@ -258,7 +271,26 @@ gen_c = [ open("generated%d.i" % i, "w") for i in range(3) ]
 
 print "Generated %d functions" % len(api)
 for nm,args,ty in sorted(api):
-  entry = '{"%%s", (PyCFunction)pycv%s, METH_KEYWORDS},' % (cname(nm))
+
+  # Figure out docstring into ds_*
+  ds_args = []
+  mandatory = [a.nm for a in args if not ('O' in a.flags) and not a.init]
+  optional = [a.nm for a in args if not ('O' in a.flags) and a.init]
+  ds_args = ", ".join(mandatory)
+  def o2s(o):
+    if o == []:
+        return ""
+    else:
+        return ' [, %s%s]' % (o[0], o2s(o[1:]))
+  ds_args += o2s(optional)
+
+  ds = "%s(%s) -> %s" % (nm, ds_args, str(ty))
+  print ds
+
+  if has_optional(args):
+      entry = '{"%%s", (PyCFunction)pycv%s, METH_KEYWORDS, "%s"},' % (cname(nm), ds)
+  else:
+      entry = '{"%%s", pycv%s, METH_VARARGS, "%s"},' % (cname(nm), ds)
   print >>gen_c[1], entry % (nm)
   if nm.startswith('CV_'):
     print >>gen_c[1], entry % (nm[3:])

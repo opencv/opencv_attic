@@ -92,7 +92,7 @@ Mat imread( const string& filename, int flags=1 );
 
 \begin{description}
 \cvarg{filename}{Name of file to be loaded.}
-\cvarg{flags}{Specifies color type of the loaded image: if $>$0, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $<$0, the loaded image will be loaded as is.}
+\cvarg{flags}{Specifies color type of the loaded image: if $>$0, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $<$0, the loaded image will be loaded as is (note that in the current implementation the alpha channel, if any, is stripped from the output image, e.g. 4-channel RGBA image will be loaded as RGB).}
 \end{description}
 
 The function \texttt{imread} loads an image from the specified file and returns it. Currently, the following file formats are supported:
@@ -234,7 +234,7 @@ protected:
 };
 \end{lstlisting}
 
-See \href{AutomaticMemoryManagement}{the CXCORE introduction} for the sample code.
+See \hyperref[AutomaticMemoryManagement2]{the CXCORE introduction} for the sample code.
 
 \cvfunc{VideoWriter}\label{VideoWriter}
 Video writer class
@@ -246,7 +246,8 @@ public:
     // default constructor
     VideoWriter();
     // constructor that calls open
-    VideoWriter(const string& filename, int fourcc, double fps, Size frameSize, bool isColor=true);
+    VideoWriter(const string& filename, int fourcc,
+                double fps, Size frameSize, bool isColor=true);
     
     // the destructor
     virtual ~VideoWriter();
@@ -257,7 +258,8 @@ public:
     // fps - the number of frames per second
     // frameSize - the video frame size
     // isColor - specifies whether the video stream is color or grayscale
-    virtual bool open(const string& filename, int fourcc, double fps, Size frameSize, bool isColor=true);
+    virtual bool open(const string& filename, int fourcc,
+                      double fps, Size frameSize, bool isColor=true);
     
     // returns true if the writer has been initialized successfully
     virtual bool isOpened() const;

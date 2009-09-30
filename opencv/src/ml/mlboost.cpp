@@ -1058,7 +1058,7 @@ bool CvBoost::train( CvMLData* _data,
     __BEGIN__;
 
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* var_types = _data->get_var_types();
     const CvMat* train_sidx = _data->get_train_sample_idx();
@@ -1788,11 +1788,11 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     return value;
 }
 
-float CvBoost::calc_error( CvMLData* _data, int type )
+float CvBoost::calc_error( CvMLData* _data, int type, vector<float> *resp )
 {
     float err = 0;
     const CvMat* values = _data->get_values();
-    const CvMat* response = _data->get_response();
+    const CvMat* response = _data->get_responses();
     const CvMat* missing = _data->get_missing();
     const CvMat* sample_idx = (type == CV_TEST_ERROR) ? _data->get_test_sample_idx() : _data->get_train_sample_idx();
     const CvMat* var_types = _data->get_var_types();
@@ -1802,6 +1802,12 @@ float CvBoost::calc_error( CvMLData* _data, int type )
     bool is_classifier = var_types->data.ptr[var_types->cols-1] == CV_VAR_CATEGORICAL;
     int sample_count = sample_idx ? sample_idx->cols : 0;
     sample_count = (type == CV_TRAIN_ERROR && sample_count == 0) ? values->rows : sample_count;
+    float* pred_resp = 0;
+    if( resp && (sample_count > 0) )
+    {
+        resp->resize( sample_count );
+        pred_resp = &((*resp)[0]);
+    }
     if ( is_classifier )
     {
         for( int i = 0; i < sample_count; i++ )
@@ -1812,6 +1818,8 @@ float CvBoost::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 );
+            if( pred_resp )
+                pred_resp[i] = r;
             int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
             err += d;
         }
@@ -1827,6 +1835,8 @@ float CvBoost::calc_error( CvMLData* _data, int type )
             if( missing ) 
                 cvGetRow( missing, &miss, si );             
             float r = (float)predict( &sample, missing ? &miss : 0 );
+            if( pred_resp )
+                pred_resp[i] = r;
             float d = r - response->data.fl[si*r_step];
             err += d*d;
         }
@@ -1835,7 +1845,7 @@ float CvBoost::calc_error( CvMLData* _data, int type )
     return err;
 }
 
-void CvBoost::write_params( CvFileStorage* fs )
+void CvBoost::write_params( CvFileStorage* fs ) const
 {
     //CV_FUNCNAME( "CvBoost::write_params" );
 
@@ -1981,7 +1991,7 @@ CvBoost::read( CvFileStorage* fs, CvFileNode* node )
 
 
 void
-CvBoost::write( CvFileStorage* fs, const char* name )
+CvBoost::write( CvFileStorage* fs, const char* name ) const
 {
     CV_FUNCNAME( "CvBoost::write" );
 
@@ -2051,6 +2061,62 @@ CvSeq* CvBoost::get_weak_predictors()
 const CvDTreeTrainData* CvBoost::get_data() const
 {
     return data;
+}
+
+using namespace cv;
+
+CvBoost::CvBoost( const Mat& _train_data, int _tflag,
+               const Mat& _responses, const Mat& _var_idx,
+               const Mat& _sample_idx, const Mat& _var_type,
+               const Mat& _missing_mask,
+               CvBoostParams _params )
+{
+    weak = 0;
+    data = 0;
+    default_model_name = "my_boost_tree";
+    orig_response = sum_response = weak_eval = subsample_mask = weights = 0;
+    
+    train( _train_data, _tflag, _responses, _var_idx, _sample_idx,
+          _var_type, _missing_mask, _params );
+}    
+
+
+bool
+CvBoost::train( const Mat& _train_data, int _tflag,
+               const Mat& _responses, const Mat& _var_idx,
+               const Mat& _sample_idx, const Mat& _var_type,
+               const Mat& _missing_mask,
+               CvBoostParams _params, bool _update )
+{
+    CvMat tdata = _train_data, responses = _responses, vidx = _var_idx,
+        sidx = _sample_idx, vtype = _var_type, mmask = _missing_mask;
+    return train(&tdata, _tflag, &responses, vidx.data.ptr ? &vidx : 0,
+          sidx.data.ptr ? &sidx : 0, vtype.data.ptr ? &vtype : 0,
+          mmask.data.ptr ? &mmask : 0, _params, _update);
+}
+
+float
+CvBoost::predict( const Mat& _sample, const Mat& _missing,
+                 Mat* weak_responses, CvSlice slice,
+                 bool raw_mode, bool return_sum ) const
+{
+    CvMat sample = _sample, mmask = _missing, wr, *pwr = 0;
+    if( weak_responses )
+    {
+        int weak_count = cvSliceLength( slice, weak );
+        if( weak_count >= weak->total )
+        {
+            weak_count = weak->total;
+            slice.start_index = 0;
+        }
+        
+        if( !(weak_responses->data && weak_responses->type() == CV_32FC1 &&
+              (weak_responses->cols == 1 || weak_responses->rows == 1) &&
+              weak_responses->cols + weak_responses->rows - 1 == weak_count) )
+            weak_responses->create(weak_count, 1, CV_32FC1);
+        pwr = &(wr = *weak_responses);
+    }
+    return predict(&sample, &mmask, pwr, slice, raw_mode, return_sum);
 }
 
 /* End of file. */

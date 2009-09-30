@@ -7,7 +7,7 @@ elevators   |reg     |18: ord                                      |none       |
 housing     |reg     |13: ord[0-2,4-12], cat[3]                    |none       |506     |455    |51
 letter      |cat(26) |16: ord                                      |none       |20000   |10000  |10000
 mushroom    |cat(2)  |22: cat                                      |yes        |8124    |4000   |4124
-poletelecomm|reg     |48: ord                                      |none       |9065    |5000   |4065
+poletelecomm|reg     |48: ord                                      |none       |5000    |2500   |2500
 ringnorm    |cat(2)  |20: ord                                      |none       |7400    |300    |7100
 spambase    |cat(2)  |57: ord                                      |none       |4601    |3221   |1380
 twonorm     |cat(2)  |20: ord                                      |none       |7400    |300    |7100

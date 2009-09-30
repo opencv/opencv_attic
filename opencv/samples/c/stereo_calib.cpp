@@ -308,11 +308,19 @@ StereoCalib(const char* imageList, int useUncalibrated)
 //Setup for finding stereo corrrespondences
         CvStereoBMState *BMState = cvCreateStereoBMState();
         assert(BMState != 0);
-        BMState->preFilterSize=41;
-        BMState->preFilterCap=31;
-        BMState->SADWindowSize=41;
-        BMState->minDisparity=-64;
-        BMState->numberOfDisparities=128;
+        BMState->preFilterSize=33;
+        BMState->preFilterCap=33;
+        BMState->SADWindowSize=33;
+        if( useUncalibrated )
+        {
+            BMState->minDisparity=-64;
+            BMState->numberOfDisparities=128;
+        }
+        else
+        {
+            BMState->minDisparity=-32;
+            BMState->numberOfDisparities=192;
+        }
         BMState->textureThreshold=10;
         BMState->uniquenessRatio=15;
         for( i = 0; i < nframes; i++ )

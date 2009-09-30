@@ -424,8 +424,7 @@ class TestDirected(unittest.TestCase):
         iter = 77
         subs = []
         for i in range(iter):
-            sub = cv.CreateMat(10, 10, cv.CV_8UC1)
-            cv.GetSubRect(src, sub, (0, 0, 10, 10))
+            sub = cv.GetSubRect(src, (0, 0, 10, 10))
             subs.append(sub)
         self.assert_(sys.getrefcount(data) == (start_count + iter))
 
@@ -434,7 +433,7 @@ class TestDirected(unittest.TestCase):
         sub = cv.CreateMat(32, 32, cv.CV_8UC1)
         for x in range(0, 512, 32):
             for y in range(0, 512, 32):
-                cv.GetSubRect(src, sub, (x, y, 32, 32))
+                sub = cv.GetSubRect(src, (x, y, 32, 32))
                 cv.SetImageROI(made, (x, y, 32, 32))
                 cv.Copy(sub, made)
         cv.ResetImageROI(made)
@@ -501,6 +500,19 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(mt[:1,:,:].tostring(), "ABCDEFGHIJKL")
         self.assertEqual(mt[1,1].tostring(), "QRST")
         self.assertEqual(mt[:,::2,:].tostring(), "ABCDIJKLMNOPUVWX")
+
+    def test_addS_3D(self):
+        for dim in [ [1,1,4], [2,2,3], [7,4,3] ]:
+            for ty,ac in [ (cv.CV_32FC1, 'f'), (cv.CV_64FC1, 'd')]:
+                mat = cv.CreateMatND(dim, ty)
+                mat2 = cv.CreateMatND(dim, ty)
+                for increment in [ 0, 3, -1 ]:
+                    cv.SetData(mat, array.array(ac, range(dim[0] * dim[1] * dim[2])), 0)
+                    cv.AddS(mat, increment, mat2)
+                    for i in range(dim[0]):
+                        for j in range(dim[1]):
+                            for k in range(dim[2]):
+                                self.assert_(mat2[i,j,k] == mat[i,j,k] + increment)
 
     def test_Buffers(self):
         ar = array.array('f', [7] * (360*640))
@@ -835,6 +847,32 @@ class TestDirected(unittest.TestCase):
                 if way in [ 'CvSeq', 'CvMat' ]:
                     defects = cv.ConvexityDefects(pts, cv.ConvexHull2(pts, storage), storage)
                     self.assert_(len([depth for (_,_,_,depth) in defects if (depth > 5)]) == points)
+
+    def test_Defects(self):
+        # ticket 2542670
+        if 1:
+            xys = [tuple([int(s) for s in l.split()]) for l in open("/u/jamesb/Desktop/contour.txt")]
+        else:
+            xys = [ (50,50), (150,50), (150,150), (50,150), (100,100) ]
+            xys = xys[::-1]
+        print xys
+        pts = cv.CreateMat(len(xys), 1, cv.CV_32SC2)
+        for i,(x,y) in enumerate(xys):
+            pts[i,0] = (x, y)
+        storage = cv.CreateMemStorage()
+        hull = cv.ConvexHull2(pts, storage)
+        defects = cv.ConvexityDefects(pts, hull, storage)
+
+        vis = cv.CreateImage((200,200), 8, 3)
+        for d in defects:
+            cv.Zero(vis)
+            for a,b in zip(xys, xys[1:]):
+                cv.Line(vis, a, b, (128,128,128))
+            cv.Line(vis, d[0], d[1], (0,0,255))
+            cv.Line(vis, d[0], d[2], (0,0,255))
+            cv.Line(vis, d[1], d[2], (0,0,255))
+            
+            self.snap(vis)
 
     def xxxtest_corners(self):
         a = cv.LoadImage("foo-mono.png", 0)
@@ -1357,7 +1395,14 @@ class TestDirected(unittest.TestCase):
 
     def failing_test_rand_FindNearestPoint2D(self):
         subdiv = cv.CreateSubdivDelaunay2D((0,0,100,100), cv.CreateMemStorage())
-        cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
+        cv.SubdivDelaunay2DInsert( subdiv, (50, 50))
+        cv.CalcSubdivVoronoi2D(subdiv)
+        print
+        for e in subdiv.edges:
+            print e, 
+            print "  ", cv.Subdiv2DEdgeOrg(e)
+            print "  ", cv.Subdiv2DEdgeOrg(cv.Subdiv2DRotateEdge(e, 1)), cv.Subdiv2DEdgeDst(cv.Subdiv2DRotateEdge(e, 1))
+        print "nearest", cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
 
 if __name__ == '__main__':
     random.seed(0)

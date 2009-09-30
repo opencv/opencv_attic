@@ -616,7 +616,7 @@ public:
     double phiMin, phiMax;
 };
 
-
+    
 class CV_EXPORTS LDetector
 {
 public:    
@@ -642,6 +642,7 @@ public:
     double clusteringDistance;
 };
 
+typedef LDetector YAPE;
 
 class CV_EXPORTS FernClassifier
 {

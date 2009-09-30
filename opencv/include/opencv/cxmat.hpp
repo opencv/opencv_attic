@@ -68,8 +68,11 @@ inline Mat::Mat(int _rows, int _cols, int _type, const Scalar& _s)
     : flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
     datastart(0), dataend(0)
 {
-    create(_rows, _cols, _type);
-    *this = _s;
+    if(_rows > 0 && _cols > 0)
+    {
+        create(_rows, _cols, _type);
+        *this = _s;
+    }
 }
 
 inline Mat::Mat(Size _size, int _type)
@@ -79,6 +82,17 @@ inline Mat::Mat(Size _size, int _type)
     if( _size.height > 0 && _size.width > 0 )
         create( _size.height, _size.width, _type );
 }
+    
+inline Mat::Mat(Size _size, int _type, const Scalar& _s)
+: flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
+datastart(0), dataend(0)
+{
+    if( _size.height > 0 && _size.width > 0 )
+    {
+        create( _size.height, _size.width, _type );
+        *this = _s;
+    }
+}    
 
 inline Mat::Mat(const Mat& m)
     : flags(m.flags), rows(m.rows), cols(m.cols), step(m.step), data(m.data),
@@ -2959,12 +2973,10 @@ template<typename _Tp> void split(const Mat& src, vector<Mat_<_Tp> >& mv)
 static inline void merge(const vector<Mat>& mv, Mat& dst)
 { merge(&mv[0], mv.size(), dst); }
 
-static inline void mixChannels(const vector<Mat>& src,
-                               vector<Mat>& dst,
-                               const int* fromTo)
+static inline void mixChannels(const vector<Mat>& src, vector<Mat>& dst,
+                               const int* fromTo, int npairs)
 {
-    CV_Assert(src.size() == dst.size());
-    mixChannels(&src[0], &dst[0], fromTo, src.size());
+    mixChannels(&src[0], (int)src.size(), &dst[0], (int)dst.size(), fromTo, npairs);
 }
     
 ///// Element-wise multiplication
@@ -4028,12 +4040,10 @@ static inline void split(const MatND& m, vector<MatND>& mv)
         split(m, &mv[0]);
 }
 
-static inline void mixChannels(const vector<MatND>& src,
-                               vector<MatND>& dst,
-                               const int* fromTo)
+static inline void mixChannels(const vector<MatND>& src, vector<MatND>& dst,
+                               const int* fromTo, int npairs)
 {
-    CV_Assert(src.size() == dst.size());
-    mixChannels(&src[0], &dst[0], fromTo, src.size());
+    mixChannels(&src[0], (int)src.size(), &dst[0], (int)dst.size(), fromTo, npairs);
 }   
 
 //////////////////////////////// SparseMat ////////////////////////////////

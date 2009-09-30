@@ -47,11 +47,24 @@
 #define _CRT_SECURE_NO_DEPRECATE /* to avoid multiple Visual Studio 2005 warnings */
 #endif
 
+#if _MSC_VER >= 1500
+#ifndef _BIND_TO_CURRENT_CRT_VERSION
+  #define _BIND_TO_CURRENT_CRT_VERSION 1
+#endif
+#ifndef _BIND_TO_CURRENT_VCLIBS_VERSION
+  #define _BIND_TO_CURRENT_VCLIBS_VERSION 1
+#endif
+#endif
+
 #ifndef SKIP_INCLUDES
   #include <assert.h>
   #include <stdlib.h>
   #include <string.h>
   #include <float.h>
+
+#if !defined _MSC_VER && !defined __BORLANDC__
+  #include <stdint.h>
+#endif
 
   #if defined __ICL
     #define CV_ICC   __ICL
@@ -145,8 +158,8 @@
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
 #else
-typedef long long int64;
-typedef unsigned long long uint64;
+typedef int64_t int64;
+typedef uint64_t uint64;
 #endif
 
 #ifndef HAVE_IPL
@@ -212,7 +225,7 @@ Cv64suf;
 
 CV_INLINE  int  cvRound( double value )
 {
-#if CV_SSE2
+#if CV_SSE2 && !defined __APPLE__
     __m128d t = _mm_set_sd( value );
     return _mm_cvtsd_si32(t);
 #elif (defined WIN32 || defined _WIN32) && !defined WIN64 && !defined _WIN64 && defined _MSC_VER

@@ -279,7 +279,11 @@ LineAA( Mat& img, Point pt1, Point pt2, const void* color )
     size_t step = img.step;
     Size size = img.size();
 
-    assert( (nch == 1 || nch == 3) && img.depth() == CV_8U );
+    if( !((nch == 1 || nch == 3) && img.depth() == CV_8U) )
+    {
+        Line(img, pt1, pt2, color);
+        return;
+    }
 
     pt1.x -= XY_ONE*2;
     pt1.y -= XY_ONE*2;

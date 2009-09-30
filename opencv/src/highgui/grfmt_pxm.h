@@ -81,7 +81,7 @@ public:
     PxMEncoder();
     virtual ~PxMEncoder();
 
-    bool  isFormatSupported( int depth );
+    bool  isFormatSupported( int depth ) const;
     bool  write( const Mat& img, const vector<int>& params );
 
     ImageEncoder newEncoder() const;
