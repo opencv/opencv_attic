@@ -43,7 +43,8 @@
 
 #include "_cv.h"
 
-#if !defined _MSC_VER || defined __ICL || _MSC_VER >= 1400
+#if !defined _MSC_VER || defined __ICL || _MSC_VER >= 1300
+
 #include "_cvkdtree.hpp"
 #include "_cvfeaturetree.h"
 

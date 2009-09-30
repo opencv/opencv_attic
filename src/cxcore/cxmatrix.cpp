@@ -2821,7 +2821,7 @@ void SparseMat::resizeHashTab(size_t newsize)
     size_t i, hsize = hdr->hashtab.size();
     vector<size_t> _newh(newsize);
     size_t* newh = &_newh[0];
-    for( size_t i = 0; i < newsize; i++ )
+    for( i = 0; i < newsize; i++ )
         newh[i] = 0;
     uchar* pool = &hdr->pool[0];
     for( i = 0; i < hsize; i++ )
