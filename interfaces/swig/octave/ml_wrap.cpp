@@ -28200,6 +28200,63 @@ fail:
 }
 
 
+static octave_value_list _wrap_CvDTree_pruned_tree_idx_set (const octave_value_list& args, int nargout) {
+  CvDTree *arg1 = (CvDTree *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  
+  if (!SWIG_check_num_args("CvDTree_pruned_tree_idx_set",args.length(),2,2,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvDTree, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvDTree_pruned_tree_idx_set" "', argument " "1"" of type '" "CvDTree *""'"); 
+  }
+  arg1 = (CvDTree *)(argp1);
+  ecode2 = SWIG_AsVal_int(args(1), &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CvDTree_pruned_tree_idx_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = (int)(val2);
+  if (arg1) (arg1)->pruned_tree_idx = arg2;
+  _outv = octave_value();
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
+static octave_value_list _wrap_CvDTree_pruned_tree_idx_get (const octave_value_list& args, int nargout) {
+  CvDTree *arg1 = (CvDTree *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  octave_value_list _out;
+  octave_value_list *_outp=&_out;
+  octave_value _outv;
+  int result;
+  
+  if (!SWIG_check_num_args("CvDTree_pruned_tree_idx_get",args.length(),1,1,0)) {
+    SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(args(0), &argp1,SWIGTYPE_p_CvDTree, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CvDTree_pruned_tree_idx_get" "', argument " "1"" of type '" "CvDTree *""'"); 
+  }
+  arg1 = (CvDTree *)(argp1);
+  result = (int) ((arg1)->pruned_tree_idx);
+  _outv = SWIG_From_int((int)(result));
+  if (_outv.is_defined()) _outp = SWIG_Octave_AppendOutput(_outp, _outv);
+fail:
+  return _out;
+}
+
+
 static swig_octave_member swig_CvDTree_members[] = {
 {"calc_error",_wrap_CvDTree_calc_error,0,0,0,0},
 {"train",_wrap_CvDTree_train,0,0,0,0},
@@ -28211,6 +28268,7 @@ static swig_octave_member swig_CvDTree_members[] = {
 {"get_root",_wrap_CvDTree_get_root,0,0,0,0},
 {"get_pruned_tree_idx",_wrap_CvDTree_get_pruned_tree_idx,0,0,0,0},
 {"get_data",_wrap_CvDTree_get_data,0,0,0,0},
+{"pruned_tree_idx",0,_wrap_CvDTree_pruned_tree_idx_get,_wrap_CvDTree_pruned_tree_idx_set,0,0},
 {0,0,0,0}
 };
 static const char *swig_CvDTree_base_names[] = {"_p_CvStatModel",0};
@@ -43787,6 +43845,8 @@ static const struct swig_octave_member swig_globals[] = {
 {"CvDTree_get_root",_wrap_CvDTree_get_root,0,0,2,0},
 {"CvDTree_get_pruned_tree_idx",_wrap_CvDTree_get_pruned_tree_idx,0,0,2,0},
 {"CvDTree_get_data",_wrap_CvDTree_get_data,0,0,2,0},
+{"CvDTree_pruned_tree_idx_set",_wrap_CvDTree_pruned_tree_idx_set,0,0,2,0},
+{"CvDTree_pruned_tree_idx_get",_wrap_CvDTree_pruned_tree_idx_get,0,0,2,0},
 {"new_CvForestTree",_wrap_new_CvForestTree,0,0,2,0},
 {"delete_CvForestTree",_wrap_delete_CvForestTree,0,0,2,0},
 {"CvForestTree_get_var_count",_wrap_CvForestTree_get_var_count,0,0,2,0},

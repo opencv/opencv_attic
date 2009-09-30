@@ -61,7 +61,7 @@ cd build_ppc \
 echo "Building i386 version of the OpenCV framework"
 echo "============================================="
 if test -d ../build_i386; then cd ../build_i386; fi
-../configure --host=i386-apple-darwin9 $SETTINGS --disable-optimization --enable-openmp --enable-sse CPPFLAGS="$SYSROOT" CFLAGS="-arch i386" CXXFLAGS="-arch i386 -O0 -fdefer-pop -fguess-branch-probability -fcprop-registers -floop-optimize -fif-conversion -fif-conversion2 -ftree-ccp -ftree-dce -ftree-dominator-opts -ftree-dse -ftree-ter -ftree-lrs -ftree-sra -ftree-copyrename -ftree-fre -ftree-ch -fmerge-constants -fomit-frame-pointer" LDFLAGS="$SYSROOT -arch i386"\
+../configure --host=i386-apple-darwin9 $SETTINGS --enable-sse CPPFLAGS="$SYSROOT" CFLAGS="-arch i386" CXXFLAGS="-arch i386" LDFLAGS="$SYSROOT -arch i386"\
  && make -j $parallel_jobs framework FRAMEWORK_ARCH=i386
 
 # build intel version

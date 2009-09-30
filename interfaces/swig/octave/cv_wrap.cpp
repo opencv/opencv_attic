@@ -105852,8 +105852,8 @@ static void SWIG_init_user(octave_swig_type* module_ns)
   SWIG_Octave_SetConstant(module_ns,"CV_ErrModeLeaf",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_ErrModeParent",SWIG_From_int((int)(1)));
   SWIG_Octave_SetConstant(module_ns,"CV_ErrModeSilent",SWIG_From_int((int)(2)));
-  SWIG_Octave_SetConstant(module_ns,"CV_MAJOR_VERSION",SWIG_From_int((int)(1)));
-  SWIG_Octave_SetConstant(module_ns,"CV_MINOR_VERSION",SWIG_From_int((int)(2)));
+  SWIG_Octave_SetConstant(module_ns,"CV_MAJOR_VERSION",SWIG_From_int((int)(2)));
+  SWIG_Octave_SetConstant(module_ns,"CV_MINOR_VERSION",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_SUBMINOR_VERSION",SWIG_From_int((int)(0)));
   SWIG_Octave_SetConstant(module_ns,"CV_PI",octave_value(3.1415926535897932384626433832795));
   SWIG_Octave_SetConstant(module_ns,"CV_LOG2",octave_value(0.69314718055994530941723212145818));

@@ -1038,6 +1038,9 @@ class CvDTree(CvStatModel):
     def get_root(self): return _ml.CvDTree_get_root(self)
     def get_pruned_tree_idx(self): return _ml.CvDTree_get_pruned_tree_idx(self)
     def get_data(self): return _ml.CvDTree_get_data(self)
+    __swig_setmethods__["pruned_tree_idx"] = _ml.CvDTree_pruned_tree_idx_set
+    __swig_getmethods__["pruned_tree_idx"] = _ml.CvDTree_pruned_tree_idx_get
+    if _newclass:pruned_tree_idx = _swig_property(_ml.CvDTree_pruned_tree_idx_get, _ml.CvDTree_pruned_tree_idx_set)
 CvDTree_swigregister = _ml.CvDTree_swigregister
 CvDTree_swigregister(CvDTree)
 
