@@ -42,9 +42,5 @@ if(WIN32)
             ARCHIVE DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages" COMPONENT main
             )
 else()
-    install(TARGETS ${the_target}
-            RUNTIME DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main
-            LIBRARY DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main
-            ARCHIVE DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main
-            )
+    install(FILES ${LIBRARY_OUTPUT_PATH}/cv.so DESTINATION ${PYTHON_PACKAGES_PATH})
 endif()
