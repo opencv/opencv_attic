@@ -2457,7 +2457,7 @@ static double cvTsSVDet( CvMat* mat )
 void CxCore_InvertTest::prepare_to_validation( int )
 {
     CvMat* input = &test_mat[INPUT][0];
-    double det = method != CV_LU ? cvTsSVDet( input ) : 0;
+    double det = cvTsSVDet( input );
     double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
 
     if( CV_MAT_TYPE(input->type) == CV_32FC1 )
@@ -2466,7 +2466,7 @@ void CxCore_InvertTest::prepare_to_validation( int )
         cvTsCopy( input, &test_mat[TEMP][1], 0 );
 
     if( (method == CV_LU && result == 0) ||
-        ((method != CV_LU && det < threshold) || result < threshold) )
+        (det < threshold || result < threshold) )
     {
         cvTsZero( &test_mat[OUTPUT][0] );
         cvTsZero( &test_mat[REF_OUTPUT][0] );

@@ -351,14 +351,16 @@ double invert( const Mat& src, Mat& dst, int method )
             if( type == CV_32F )
             {
                 sgetrf_(&n, &n, (float*)dst.data, &lda, (integer*)buffer, &info);
-                sgetri_(&n, (float*)dst.data, &lda, (integer*)buffer,
-                    (float*)(buffer + n*sizeof(integer)), &lwork, &info);
+                if(info==0)
+                    sgetri_(&n, (float*)dst.data, &lda, (integer*)buffer,
+                        (float*)(buffer + n*sizeof(integer)), &lwork, &info);
             }
             else
             {
                 dgetrf_(&n, &n, (double*)dst.data, &lda, (integer*)buffer, &info);
-                dgetri_(&n, (double*)dst.data, &lda, (integer*)buffer,
-                    (double*)cvAlignPtr(buffer + n*sizeof(integer), elem_size), &lwork, &info);
+                if(info==0)
+                    dgetri_(&n, (double*)dst.data, &lda, (integer*)buffer,
+                        (double*)cvAlignPtr(buffer + n*sizeof(integer), elem_size), &lwork, &info);
             }
         }
         else if( method == CV_CHOLESKY )
@@ -367,12 +369,14 @@ double invert( const Mat& src, Mat& dst, int method )
             if( type == CV_32F )
             {
                 spotrf_(L, &n, (float*)dst.data, &lda, &info);
-                spotri_(L, &n, (float*)dst.data, &lda, &info);
+                if(info==0)
+                    spotri_(L, &n, (float*)dst.data, &lda, &info);
             }
             else
             {
                 dpotrf_(L, &n, (double*)dst.data, &lda, &info);
-                dpotri_(L, &n, (double*)dst.data, &lda, &info);
+                if(info==0)
+                    dpotri_(L, &n, (double*)dst.data, &lda, &info);
             }
             completeSymm(dst);
         }
@@ -687,12 +691,14 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
         if( type == CV_32F )
         {
             spotrf_(L, &n, (float*)at.data, &lda, &info);
-            spotrs_(L, &n, &nb, (float*)at.data, &lda, (float*)xt.data, &ldx, &info);
+            if(info==0)
+                spotrs_(L, &n, &nb, (float*)at.data, &lda, (float*)xt.data, &ldx, &info);
         }
         else
         {
             dpotrf_(L, &n, (double*)at.data, &lda, &info);
-            dpotrs_(L, &n, &nb, (double*)at.data, &lda, (double*)xt.data, &ldx, &info);
+            if(info==0)
+                dpotrs_(L, &n, &nb, (double*)at.data, &lda, (double*)xt.data, &ldx, &info);
         }
     }
     else if( method == CV_LU )

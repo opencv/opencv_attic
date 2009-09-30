@@ -56,12 +56,12 @@ doublereal slamc3_(real *a, real *b)
 doublereal
 slamch_(char *cmach) {
     char ch = cmach[0];
-    float sfmin, small, one = 1.0, zero = 0.0;
-    
+    float eps=FLT_EPSILON*0.5f, sfmin, small;
+
     if ('B' == ch || 'b' == ch) {
         return FLT_RADIX;
     } else if ('E' == ch || 'e' == ch) {
-        return FLT_EPSILON;
+        return eps;
     } else if ('L' == ch || 'l' == ch) {
         return FLT_MAX_EXP;
     } else if ('M' == ch || 'm' == ch) {
@@ -71,21 +71,21 @@ slamch_(char *cmach) {
     } else if ('O' == ch || 'o' == ch) {
         return FLT_MAX;
     } else if ('P' == ch || 'p' == ch) {
-        return FLT_EPSILON * FLT_RADIX;
+        return eps * FLT_RADIX;
     } else if ('R' == ch || 'r' == ch) {
-        return FLT_ROUNDS < 2 ? one : zero;
+        return FLT_ROUNDS < 2;
     } else if ('S' == ch || 's' == ch) {
         /* Use SMALL plus a bit, to avoid the possibility of rounding causing overflow
          when computing  1/sfmin. */
         sfmin = FLT_MIN;
-        small = one / FLT_MAX;
-        if (small >= sfmin) sfmin = small * (one + FLT_EPSILON);
-        return sfmin;
+        small = 2. / FLT_MAX;
+        if (small <= sfmin) small = sfmin * (1 + eps);
+        return small;
     } else if ('U' == ch || 'u' == ch) {
         return FLT_MIN;
     }
-    
-    return zero;
+
+    return 0;
 }
 
 #else
