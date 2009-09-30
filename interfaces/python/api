@@ -28,6 +28,9 @@ CV_FOURCC int
   char c2
   char c3
   char c4
+CV_MAKETYPE int
+  int depth
+  int cn
 
 # Initialization
 CloneImage IplImage*
