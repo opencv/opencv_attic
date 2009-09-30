@@ -225,7 +225,7 @@ Cv64suf;
 
 CV_INLINE  int  cvRound( double value )
 {
-#if CV_SSE2
+#if CV_SSE2 && !defined __APPLE__
     __m128d t = _mm_set_sd( value );
     return _mm_cvtsd_si32(t);
 #elif (defined WIN32 || defined _WIN32) && !defined WIN64 && !defined _WIN64 && defined _MSC_VER
