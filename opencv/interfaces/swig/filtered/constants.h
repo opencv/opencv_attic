@@ -228,9 +228,9 @@
 
 #define CV_ErrModeSilent   2   
 
-#define CV_MAJOR_VERSION    1
+#define CV_MAJOR_VERSION    2
 
-#define CV_MINOR_VERSION    2
+#define CV_MINOR_VERSION    0
 
 #define CV_SUBMINOR_VERSION 0
 

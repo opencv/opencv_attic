@@ -293,20 +293,20 @@ if test x"$enable_optimization" = "xyes"; then
     case $host in
     i386-apple-*)
       # all intel macs have at least prescott instruction set
-      OPTIMIZATION_CXXFLAGS="-fast -g -march=prescott"
+      OPTIMIZATION_CXXFLAGS="-fast -g"
       ;;
     x86_64-apple-*)
       # all 64bit intel macs have at least nocona instruction set
       OPTIMIZATION_CXXFLAGS="-fast -g -march=nocona"
       ;;
-	i?86-*-*)
+    i?86-*-*)
       # okay, we use this default together with the specification of the target architecture
       # let us just assume, a Pentium 4 would be the minimum platform for OpenCV,
       # then SSE2 instruction set is available also
-	  OPTIMIZATION_CXXFLAGS="-O3 -g -march=pentium4 -ffast-math -fomit-frame-pointer"
-	  ;;
-	amd64-*-* | x86_64-*-*)
-	  OPTIMIZATION_CXXFLAGS="-O3 -g -march=x86-64 -ffast-math -fomit-frame-pointer"
+      OPTIMIZATION_CXXFLAGS="-O3 -g -march=pentium4 -ffast-math -fomit-frame-pointer"
+      ;;
+    amd64-*-* | x86_64-*-*)
+      OPTIMIZATION_CXXFLAGS="-O3 -g -march=x86-64 -ffast-math -fomit-frame-pointer"
       ;;
     powerpc-apple-*)
       # Mac OS X 10.4 runs on CPUs >= G4 only

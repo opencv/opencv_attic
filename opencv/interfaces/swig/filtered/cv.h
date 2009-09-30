@@ -1,12 +1,12 @@
 # 1 "../../../include/opencv/cv.h"
 # 1 "<built-in>"
-# 1 "<command line>"
+# 1 "<command-line>"
 # 1 "../../../include/opencv/cv.h"
 # 58 "../../../include/opencv/cv.h"
 # 1 "../../../include/opencv/cxcore.h" 1
 # 70 "../../../include/opencv/cxcore.h"
 # 1 "../../../include/opencv/cxtypes.h" 1
-# 152 "../../../include/opencv/cxtypes.h"
+# 161 "../../../include/opencv/cxtypes.h"
 typedef int64_t int64;
 typedef uint64_t uint64;
 
@@ -40,10 +40,10 @@ typedef union Cv64suf
     double f;
 }
 Cv64suf;
-# 217 "../../../include/opencv/cxtypes.h"
+# 226 "../../../include/opencv/cxtypes.h"
 inline int cvRound( double value )
 {
-# 231 "../../../include/opencv/cxtypes.h"
+# 240 "../../../include/opencv/cxtypes.h"
     return (int)lrint(value);
 
 
@@ -57,7 +57,7 @@ inline int cvFloor( double value )
 
     int i = (int)value;
     return i - (i > value);
-# 254 "../../../include/opencv/cxtypes.h"
+# 263 "../../../include/opencv/cxtypes.h"
 }
 
 
@@ -66,7 +66,7 @@ inline int cvCeil( double value )
 
     int i = (int)value;
     return i + (i < value);
-# 272 "../../../include/opencv/cxtypes.h"
+# 281 "../../../include/opencv/cxtypes.h"
 }
 
 
@@ -126,7 +126,7 @@ inline double cvRandReal( CvRNG* rng )
 {
     return cvRandInt(rng)*2.3283064365386962890625e-10 ;
 }
-# 373 "../../../include/opencv/cxtypes.h"
+# 382 "../../../include/opencv/cxtypes.h"
 typedef struct _IplImage
 {
     int nSize;
@@ -194,7 +194,7 @@ typedef struct _IplConvKernelFP
     float *values;
 }
 IplConvKernelFP;
-# 552 "../../../include/opencv/cxtypes.h"
+# 561 "../../../include/opencv/cxtypes.h"
 typedef struct CvMat
 {
     int type;
@@ -232,7 +232,7 @@ typedef struct CvMat
 
 }
 CvMat;
-# 630 "../../../include/opencv/cxtypes.h"
+# 639 "../../../include/opencv/cxtypes.h"
 inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 {
     CvMat m;
@@ -249,7 +249,7 @@ inline CvMat cvMat( int rows, int cols, int type, void* data = NULL)
 
     return m;
 }
-# 660 "../../../include/opencv/cxtypes.h"
+# 669 "../../../include/opencv/cxtypes.h"
 inline double cvmGet( const CvMat* mat, int row, int col )
 {
     int type;
@@ -291,7 +291,7 @@ inline int cvIplDepth( int type )
     return ((((sizeof(size_t)<<28)|0x8442211) >> ((depth) & ((1 << 3) - 1))*4) & 15)*8 | (depth == 1 || depth == 3 ||
            depth == 4 ? 0x80000000 : 0);
 }
-# 713 "../../../include/opencv/cxtypes.h"
+# 722 "../../../include/opencv/cxtypes.h"
 typedef struct CvMatND
 {
     int type;
@@ -317,7 +317,7 @@ typedef struct CvMatND
     dim[32];
 }
 CvMatND;
-# 753 "../../../include/opencv/cxtypes.h"
+# 762 "../../../include/opencv/cxtypes.h"
 struct CvSet;
 
 typedef struct CvSparseMat
@@ -335,7 +335,7 @@ typedef struct CvSparseMat
     int size[32];
 }
 CvSparseMat;
-# 780 "../../../include/opencv/cxtypes.h"
+# 789 "../../../include/opencv/cxtypes.h"
 typedef struct CvSparseNode
 {
     unsigned hashval;
@@ -350,9 +350,9 @@ typedef struct CvSparseMatIterator
     int curidx;
 }
 CvSparseMatIterator;
-# 802 "../../../include/opencv/cxtypes.h"
+# 811 "../../../include/opencv/cxtypes.h"
 typedef int CvHistType;
-# 818 "../../../include/opencv/cxtypes.h"
+# 827 "../../../include/opencv/cxtypes.h"
 typedef struct CvHistogram
 {
     int type;
@@ -362,7 +362,7 @@ typedef struct CvHistogram
     CvMatND mat;
 }
 CvHistogram;
-# 848 "../../../include/opencv/cxtypes.h"
+# 857 "../../../include/opencv/cxtypes.h"
 typedef struct CvRect
 {
     int x;
@@ -720,13 +720,13 @@ typedef struct CvSeqBlock
     schar* data;
 }
 CvSeqBlock;
-# 1230 "../../../include/opencv/cxtypes.h"
+# 1239 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeq
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first;
 }
 CvSeq;
-# 1250 "../../../include/opencv/cxtypes.h"
+# 1259 "../../../include/opencv/cxtypes.h"
 typedef struct CvSetElem
 {
     int flags; struct CvSetElem* next_free;
@@ -743,7 +743,7 @@ typedef struct CvSet
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count;
 }
 CvSet;
-# 1306 "../../../include/opencv/cxtypes.h"
+# 1315 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraphEdge
 {
     int flags; float weight; struct CvGraphEdge* next[2]; struct CvGraphVtx* vtx[2];
@@ -762,7 +762,7 @@ typedef struct CvGraphVtx2D
     CvPoint2D32f* ptr;
 }
 CvGraphVtx2D;
-# 1333 "../../../include/opencv/cxtypes.h"
+# 1342 "../../../include/opencv/cxtypes.h"
 typedef struct CvGraph
 {
     int flags; int header_size; struct CvSeq* h_prev; struct CvSeq* h_next; struct CvSeq* v_prev; struct CvSeq* v_next; int total; int elem_size; schar* block_max; schar* ptr; int delta_elems; CvMemStorage* storage; CvSeqBlock* free_blocks; CvSeqBlock* first; CvSetElem* free_elems; int active_count; CvSet* edges;
@@ -793,21 +793,21 @@ typedef struct CvContour
 CvContour;
 
 typedef CvContour CvPoint2DSeq;
-# 1500 "../../../include/opencv/cxtypes.h"
+# 1509 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqWriter
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max;
 }
 CvSeqWriter;
-# 1518 "../../../include/opencv/cxtypes.h"
+# 1527 "../../../include/opencv/cxtypes.h"
 typedef struct CvSeqReader
 {
     int header_size; CvSeq* seq; CvSeqBlock* block; schar* ptr; schar* block_min; schar* block_max; int delta_index; schar* prev_elem;
 }
 CvSeqReader;
-# 1638 "../../../include/opencv/cxtypes.h"
+# 1647 "../../../include/opencv/cxtypes.h"
 typedef struct CvFileStorage CvFileStorage;
-# 1648 "../../../include/opencv/cxtypes.h"
+# 1657 "../../../include/opencv/cxtypes.h"
 typedef struct CvAttrList
 {
     const char** attr;
@@ -826,7 +826,7 @@ inline CvAttrList cvAttrList( const char** attr = NULL,
 }
 
 struct CvTypeInfo;
-# 1701 "../../../include/opencv/cxtypes.h"
+# 1710 "../../../include/opencv/cxtypes.h"
 typedef struct CvString
 {
     int len;
