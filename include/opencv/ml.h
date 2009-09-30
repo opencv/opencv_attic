@@ -1005,11 +1005,11 @@ protected:
     virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
 
     CvDTreeNode* root;
-
-    int pruned_tree_idx;
     CvMat* var_importance;
-
     CvDTreeTrainData* data;
+
+public:
+    int pruned_tree_idx;
 };
 
 

@@ -296,12 +296,14 @@ void CvMLData :: set_response_idx( int idx )
     if ( idx >= values->cols)
         CV_ERROR( CV_StsBadArg, "idx value is not correct" );
 
-    response_idx = idx;
-
     if ( response_idx >= 0 )
-        chahge_var_idx( response_idx, false );
-    else
         chahge_var_idx( response_idx, true );
+
+    if ( idx >= 0 )
+    {
+    	response_idx = idx;
+        chahge_var_idx( response_idx, false );
+	}
 
     __END__;    
 }
@@ -486,7 +488,7 @@ const CvMat* CvMLData :: get_var_types()
     var_types_out_ptr = var_types_out->data.ptr;
     for( int i = 0; i < var_types->cols; i++)
     {
-        if (i == response_idx ) continue;
+        if (i == response_idx || !var_idx_mask->data.ptr[i]) continue;
         *var_types_out_ptr = var_types->data.ptr[i];
         var_types_out_ptr++;
     }
