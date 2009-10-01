@@ -1852,7 +1852,8 @@ public:
 
     const CvMat* get_missing(){ return missing; };
 
-    void set_response_idx( int idx ); // idx < 0 to set all vars as predictors
+    void set_response_idx( int idx ); // old response become predictors, new response_idx = idx
+                                      // if idx < 0 there will be no response
     int get_response_idx() { return response_idx; }
 
     const CvMat* get_train_sample_idx() { return train_sample_idx; };
@@ -1861,7 +1862,7 @@ public:
     void set_train_test_split( const CvTrainTestSplit * spl);
     
     const CvMat* get_var_idx();
-    void chahge_var_idx( int vi, bool state );
+    void chahge_var_idx( int vi, bool state ); // state == true to set vi-variable as predictor
 
     const CvMat* get_var_types();
     int get_var_type( int var_idx ) { return var_types->data.ptr[var_idx]; };
