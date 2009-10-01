@@ -298,12 +298,9 @@ void CvMLData :: set_response_idx( int idx )
 
     if ( response_idx >= 0 )
         chahge_var_idx( response_idx, true );
-
     if ( idx >= 0 )
-    {
-    	response_idx = idx;
-        chahge_var_idx( response_idx, false );
-	}
+        chahge_var_idx( idx, false );
+    response_idx = idx;
 
     __END__;    
 }
