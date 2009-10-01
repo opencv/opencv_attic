@@ -620,7 +620,7 @@ void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
     int type = projMatrix.type();
     cameraMatrix.create(3, 3, type);
     rotMatrix.create(3, 3, type);
-    transVect.create(3, 3, type);
+    transVect.create(4, 1, type);
     CvMat _projMatrix = projMatrix, _cameraMatrix = cameraMatrix;
     CvMat _rotMatrix = rotMatrix, _transVect = transVect;
     cvDecomposeProjectionMatrix(&_projMatrix, &_cameraMatrix, &_rotMatrix,
@@ -635,7 +635,7 @@ void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
     int type = projMatrix.type();
     cameraMatrix.create(3, 3, type);
     rotMatrix.create(3, 3, type);
-    transVect.create(3, 3, type);
+    transVect.create(4, 1, type);
     rotMatrixX.create(3, 3, type);
     rotMatrixY.create(3, 3, type);
     rotMatrixZ.create(3, 3, type);
