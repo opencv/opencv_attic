@@ -40,6 +40,10 @@ if(MSVC)
     set(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "" FORCE)
 endif()
 
+#set(CMAKE_C_COMPILER "/opt/BullseyeCoverage/bin/gcc")
+#set(CMAKE_CXX_COMPILER "/opt/BullseyeCoverage/bin/g++")
+#set(CMAKE_CXX_COMPILER_INIT "/opt/BullseyeCoverage/bin/gcc")
+
 # --------------------------------------------------------------
 # Indicate CMake 2.7 and above that we don't want to mix relative
 #  and absolute paths in linker lib lists.

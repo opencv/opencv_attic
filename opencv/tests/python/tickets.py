@@ -64,6 +64,9 @@ class TestTickets(unittest.TestCase):
         cv.Rectangle(mask, (10,10), (300,100), 255, -1)
         cv.Copy(lena, dst, mask)
         self.snapL([lena, dst, mask])
+        m = cv.CreateMat(480, 640, cv.CV_8UC1)
+        print "ji", m
+        print m.rows, m.cols, m.type, m.step
 
     def snap(self, img):
         self.snapL([img])
