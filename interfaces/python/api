@@ -258,7 +258,7 @@ Load generic
   char* name NULL
 
 # Accessing Elements and sub-Arrays
-GetRow
+GetRow submat
   CvArr arr
   CvMat submat /J:arr,O,A
   int row
@@ -267,7 +267,7 @@ GetRows submat
   CvMat submat /J:arr,O,A
   int start_row
   int end_row
-  int delta_row -1
+  int delta_row 1
 GetCol submat
   CvArr arr
   CvMat submat /J:arr,O,A

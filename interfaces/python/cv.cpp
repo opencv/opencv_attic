@@ -194,6 +194,24 @@ static PyObject *PyObject_FromCvScalar(CvScalar s, int type)
 static PyObject *cvarr_GetItem(PyObject *o, PyObject *key);
 static int cvarr_SetItem(PyObject *o, PyObject *key, PyObject *v);
 
+// o is a Python string or buffer object.  Return its size.
+
+static Py_ssize_t what_size(PyObject *o)
+{
+  void *buffer;
+  Py_ssize_t buffer_len;
+
+  if (PyString_Check(o)) {
+    return PyString_Size(o);
+  } else if (PyObject_AsWriteBuffer(o, &buffer, &buffer_len) == 0) {
+    return buffer_len;
+  } else {
+    assert(0);  // argument must be string or buffer.
+    return 0;
+  }
+}
+
+
 /************************************************************************/
 
 /* iplimage */
@@ -254,7 +272,7 @@ static PyObject *iplimage_tostring(PyObject *self, PyObject *args)
     return (PyObject*)failmsg("Unrecognised depth %d", i->depth);
   }
   int bpl = i->width * i->nChannels * bps;
-  if (bpl == i->widthStep && pc->offset == 0) {
+  if (bpl == i->widthStep && pc->offset == 0 && ((bpl * i->height) == what_size(pc->data))) {
     Py_INCREF(pc->data);
     return pc->data;
   } else {
@@ -395,9 +413,9 @@ static PyObject *cvmat_tostring(PyObject *self, PyObject *args)
     return (PyObject*)failmsg("Unrecognised depth %d", CV_MAT_DEPTH(m->type));
   }
 
-  int bpl = m->cols * 1 * bps; // bytes per line
+  int bpl = m->cols * bps; // bytes per line
   cvmat_t *pc = (cvmat_t*)self;
-  if (bpl == m->step && pc->offset == 0) {
+  if (bpl == m->step && pc->offset == 0 && ((bpl * m->rows) == what_size(pc->data))) {
     Py_INCREF(pc->data);
     return pc->data;
   } else {
@@ -2626,7 +2644,7 @@ static PyObject *cvarr_GetItem(PyObject *o, PyObject *key)
 
     if (is_cvmat(o) || is_iplimage(o)) {
       cvmat_t *sub = PyObject_NEW(cvmat_t, &cvmat_Type);
-      sub->a = cvCreateMatHeader(dd.length[0], dd.length[1], CV_MAT_CN(cvGetElemType(cva)));
+      sub->a = cvCreateMatHeader(dd.length[0], dd.length[1], cvGetElemType(cva));
       uchar *old0;  // pointer to first element in old mat
       int oldstep;
       cvGetRawData(cva, &old0, &oldstep);
@@ -2640,7 +2658,7 @@ static PyObject *cvarr_GetItem(PyObject *o, PyObject *key)
       return (PyObject*)sub;
     } else {
       cvmatnd_t *sub = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
-      sub->a = cvCreateMatNDHeader(dd.count, dd.length, CV_MAT_CN(cvGetElemType(cva)));
+      sub->a = cvCreateMatNDHeader(dd.count, dd.length, cvGetElemType(cva));
       uchar *old0;  // pointer to first element in old mat
       cvGetRawData(cva, &old0);
       uchar *new0;  // pointer to first element in new mat
