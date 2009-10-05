@@ -1330,10 +1330,10 @@ Returns array row or row span.
 
 \cvexp{
 CvMat* cvGetRow( const CvArr* arr, CvMat* submat, int row );
-}{CPP}{GetRow(arr,submat,row)-> None}
+}{CPP}{GetRow(arr,row)-> submat}
 \cvexp{
 CvMat* cvGetRows( const CvArr* arr, CvMat* submat, int start\_row, int end\_row, int delta\_row=1 );
-}{CPP}{GetRows(arr,submat,start\_row,end\_row,delta\_row=-1)-> None}
+}{CPP}{GetRows(arr,start\_row,end\_row,delta\_row=1)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1360,10 +1360,10 @@ Returns array column or column span.
 
 \cvexp{
 CvMat* cvGetCol( const CvArr* arr, CvMat* submat, int col );
-}{CPP}{GetCol(arr,submat,row)-> None}
+}{CPP}{GetCol(arr,row)-> submat}
 \cvexp{
 CvMat* cvGetCols( const CvArr* arr, CvMat* submat, int start\_col, int end\_col );
-}{CPP}{GetCols(arr,submat,start\_col,end\_col,delta\_col=-1)-> None}
+}{CPP}{GetCols(arr,start\_col,end\_col)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1389,7 +1389,7 @@ Returns one of array diagonals.
 
 CvMat* cvGetDiag( const CvArr* arr, CvMat* submat, int diag=0 );
 
-}{CPP}{GetDiag(arr,submat,diag=0)-> None}
+}{CPP}{GetDiag(arr,diag=0)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
