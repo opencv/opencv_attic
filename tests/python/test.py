@@ -481,6 +481,7 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(lastword.tostring(), "Congreve")
         src[2,0] = ord('K')
         self.assertEqual(lastword.tostring(), "Kongreve")
+        src[2,0] = ord('C')
 
         # ABCD
         # EFGH
@@ -500,6 +501,35 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(mt[:1,:,:].tostring(), "ABCDEFGHIJKL")
         self.assertEqual(mt[1,1].tostring(), "QRST")
         self.assertEqual(mt[:,::2,:].tostring(), "ABCDIJKLMNOPUVWX")
+
+        # Exercise explicit GetRows
+        self.assertEqual(cv.GetRows(src, 0, 3).tostring(), "AchillesBenedictCongreve")
+        self.assertEqual(cv.GetRows(src, 0, 3, 1).tostring(), "AchillesBenedictCongreve")
+        self.assertEqual(cv.GetRows(src, 0, 3, 2).tostring(), "AchillesCongreve")
+
+        self.assertEqual(cv.GetRow(src, 0).tostring(), "Achilles")
+
+        self.assertEqual(cv.GetCols(src, 0, 4).tostring(), "AchiBeneCong")
+
+        self.assertEqual(cv.GetCol(src, 0).tostring(), "ABC")
+        self.assertEqual(cv.GetCol(src, 1).tostring(), "ceo")
+
+        self.assertEqual(cv.GetDiag(src, 0).tostring(), "Aen")
+
+        # Check that matrix type is preserved by the various operators
+
+        for mt in self.mat_types:
+            m = cv.CreateMat(5, 3, mt)
+            self.assertEqual(mt, cv.GetElemType(cv.GetRows(m, 0, 2)))
+            self.assertEqual(mt, cv.GetElemType(cv.GetRow(m, 0)))
+            self.assertEqual(mt, cv.GetElemType(cv.GetCols(m, 0, 2)))
+            self.assertEqual(mt, cv.GetElemType(cv.GetCol(m, 0)))
+            self.assertEqual(mt, cv.GetElemType(cv.GetDiag(m, 0)))
+            self.assertEqual(mt, cv.GetElemType(m[0]))
+            self.assertEqual(mt, cv.GetElemType(m[::2]))
+            self.assertEqual(mt, cv.GetElemType(m[:,0]))
+            self.assertEqual(mt, cv.GetElemType(m[:,:]))
+            self.assertEqual(mt, cv.GetElemType(m[::2,:]))
 
     def test_addS_3D(self):
         for dim in [ [1,1,4], [2,2,3], [7,4,3] ]:
