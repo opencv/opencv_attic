@@ -1483,6 +1483,8 @@ CaptureFromFile CvCapture*
   char* filename
 CaptureFromCAM CvCapture*
   int index
+CreateCameraCapture CvCapture*
+  int index
 GrabFrame int
   CvCapture* capture
 RetrieveFrame ROIplImage*
