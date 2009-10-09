@@ -4645,10 +4645,11 @@ cvFindType( const char* type_name )
 {
     CvTypeInfo* info = 0;
 
-    for( info = CvType::first; info != 0; info = info->next )
+    if (type_name)
+      for( info = CvType::first; info != 0; info = info->next )
         if( strcmp( info->type_name, type_name ) == 0 )
-            break;
-
+	  break;
+    
     return info;
 }
 
