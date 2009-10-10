@@ -324,7 +324,7 @@ int cvSaveImage( const char* filename, const CvArr* image );
 
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
-\subsection{Video I/O functions}
+\subsection{Video IO functions}
 
 \cvstruct{CvCapture}\label{CvCapture}
 

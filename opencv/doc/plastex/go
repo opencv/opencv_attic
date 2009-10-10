@@ -10,7 +10,7 @@ then
   rm -f *.rst
   svn up
   cp index-c.rst.copy index.rst
-  TEXINPUTS=../: python renderer.py c > a || exit
+  TEXINPUTS=../: python renderer.py c # > a || exit
   TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C Reference' -d _build/doctrees . _build/html
 fi
 
