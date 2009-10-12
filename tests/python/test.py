@@ -1381,11 +1381,19 @@ class TestDirected(unittest.TestCase):
           self.assert_(abs(hu0[i] - hu1[i]) < 1e-6)
         self.assert_(abs(hu0[i] + hu1[i]) < 1e-6)
 
+    def test_encode(self):
+        im = cv.LoadImage(find_sample("lena.jpg"), 1)
+        jpeg = cv.EncodeImage(".jpeg", im)
+        sizes = dict([(qual, cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, qual]).cols) for qual in range(5, 100, 5)])
+        self.assertEqual(cv.EncodeImage(".jpeg", im).cols, sizes[95])
+        round_trip = cv.DecodeImage(cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, 10]))
+        self.assert_(cv.GetSize(round_trip) == cv.GetSize(im))
+
     def temp_test(self):
         cv.temp_test()
 
     def failing_test_rand_GetStarKeypoints(self):
-        #GetStarKeypoints [<cvmat(type=4242400d rows=64 cols=64 step=512 )>, <cv.cvmemstorage object at 0xb7cc40d0>, (45, 0.73705234376883488, 0.64282591451367344, 0.1567738743689836, 3)]
+        # GetStarKeypoints [<cvmat(type=4242400d rows=64 cols=64 step=512 )>, <cv.cvmemstorage object at 0xb7cc40d0>, (45, 0.73705234376883488, 0.64282591451367344, 0.1567738743689836, 3)]
         print cv.CV_MAT_CN(0x4242400d)
         mat = cv.CreateMat( 64, 64, cv.CV_32FC2)
         cv.GetStarKeypoints(mat, cv.CreateMemStorage(), (45, 0.73705234376883488, 0.64282591451367344, 0.1567738743689836, 3))
