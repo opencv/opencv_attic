@@ -5,7 +5,7 @@ tput clear
 #cd .. && make && cd -
 mkdir -p _build/html/python
 
-if true
+if false
 then
   rm -f *.rst
   svn up
