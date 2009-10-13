@@ -44,6 +44,7 @@ aggregate = {
   'cvarr_plane_count' :  '!.cvarr,!.count',
   'floats' :             '!.f',
   'ints' :               '!.i',
+  'ints0' :              '!.i',
   'CvPoints' :           '!.p,!.count',
   'CvPoint2D32fs' :      '!.p,!.count',
   'CvPoint3D32fs' :      '!.p,!.count',
