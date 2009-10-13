@@ -3187,9 +3187,9 @@ Reduces a matrix to a vector.
 
 \cvexp{
 
-void cvReduce( const CvArr* src, CvArr* dst, int op=CV\_REDUCE\_SUM );
+void cvReduce( const CvArr* src, CvArr* dst, int dim = -1, int op=CV\_REDUCE\_SUM );
 
-}{CPP}{Reduce(src,dst,op=CV\_REDUCE\_SUM)-> None}
+}{CPP}{Reduce(src,dst,dim=-1,op=CV\_REDUCE\_SUM)-> None}
 
 \begin{description}
 \cvarg{src}{The input matrix.}
@@ -4322,10 +4322,10 @@ void cvDFT( const CvArr* src, CvArr* dst, int flags, int nonzero\_rows=0 );
 \cvarg{dst}{Destination array of the same size and same type as the source}
 \cvarg{flags}{Transformation flags, a combination of the following values
 \begin{description}
-\cvarg{CV\_DXT\_FORWARD} - do a forward 1D or 2D transform. The result is not scaled.
-\cvarg{CV\_DXT\_INVERSE} - do an inverse 1D or 2D transform. The result is not scaled. \texttt{CV\_DXT\_FORWARD} and \texttt{CV\_DXT\_INVERSE} are mutually exclusive, of course.
-\cvarg{CV\_DXT\_SCALE} - scale the result: divide it by the number of array elements. Usually, it is combined with \texttt{CV\_DXT\_INVERSE}, and one may use a shortcut \texttt{CV\_DXT\_INV\_SCALE}.
-\cvarg{CV\_DXT\_ROWS} - do a forward or inverse transform of every individual row of the input matrix. This flag allows the user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms and so forth.
+\cvarg{CV\_DXT\_FORWARD}{do a forward 1D or 2D transform. The result is not scaled.}
+\cvarg{CV\_DXT\_INVERSE}{do an inverse 1D or 2D transform. The result is not scaled. \texttt{CV\_DXT\_FORWARD} and \texttt{CV\_DXT\_INVERSE} are mutually exclusive, of course.}
+\cvarg{CV\_DXT\_SCALE}{scale the result: divide it by the number of array elements. Usually, it is combined with \texttt{CV\_DXT\_INVERSE}, and one may use a shortcut \texttt{CV\_DXT\_INV\_SCALE}.}
+\cvarg{CV\_DXT\_ROWS}{do a forward or inverse transform of every individual row of the input matrix. This flag allows the user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms and so forth.}
 \end{description}}
 \cvarg{nonzero\_rows}{Number of nonzero rows in the source array
 (in the case of a forward 2d transform), or a number of rows of interest in
