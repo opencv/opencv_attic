@@ -1389,6 +1389,36 @@ class TestDirected(unittest.TestCase):
         round_trip = cv.DecodeImage(cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, 10]))
         self.assert_(cv.GetSize(round_trip) == cv.GetSize(im))
 
+    def test_reduce(self):
+        srcmat = cv.CreateMat(2, 3, cv.CV_32FC1)
+        # 0 1 2
+        # 3 4 5
+        srcmat[0,0] = 0
+        srcmat[0,1] = 1
+        srcmat[0,2] = 2
+        srcmat[1,0] = 3
+        srcmat[1,1] = 4
+        srcmat[1,2] = 5
+        def doreduce(siz, rfunc):
+            dst = cv.CreateMat(siz[0], siz[1], cv.CV_32FC1)
+            rfunc(dst)
+            if siz[0] != 1:
+                return [dst[i,0] for i in range(siz[0])]
+            else:
+                return [dst[0,i] for i in range(siz[1])]
+
+        # exercise dim
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst)), [3, 5, 7])
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, -1)), [3, 5, 7])
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, 0)), [3, 5, 7])
+        self.assertEqual(doreduce((2,1), lambda dst: cv.Reduce(srcmat, dst, 1)), [3, 12])
+
+        # exercise op
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_SUM)), [3, 5, 7])
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_AVG)), [1.5, 2.5, 3.5])
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MAX)), [3, 4, 5])
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MIN)), [0, 1, 2])
+
     def temp_test(self):
         cv.temp_test()
 

@@ -531,6 +531,7 @@ Norm double
 Reduce
   CvArr src
   CvArr dst
+  int dim -1
   int op CV_REDUCE_SUM
 
 # Linear Algebra
@@ -1507,3 +1508,13 @@ CreateVideoWriter CvVideoWriter*
 WriteFrame int
   CvVideoWriter* writer
   IplImage image
+EncodeImage CvMat*
+  char* ext
+  CvArr image
+  ints0 params {&zero,1}
+DecodeImage IplImage*
+  CvMat buf
+  int iscolor CV_LOAD_IMAGE_COLOR
+DecodeImageM CvMat*
+  CvMat buf
+  int iscolor CV_LOAD_IMAGE_COLOR

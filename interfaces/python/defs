@@ -325,3 +325,6 @@ include/highgui.h:#define CV_CAP_PROP_CONVERT_RGB   16
 include/highgui.h:#define CV_CAP_PROP_WHITE_BALANCE 17
 include/highgui.h:#define CV_CAP_PROP_RECTIFICATION 18
 #define CV_CN_SHIFT   3
+#define CV_IMWRITE_JPEG_QUALITY 1
+#define CV_IMWRITE_PNG_COMPRESSION 16
+#define CV_IMWRITE_PXM_BINARY 32

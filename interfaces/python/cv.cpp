@@ -1712,6 +1712,26 @@ static int convert_to_ints(PyObject *o, ints *dst, const char *name = "no_name")
   return 1;
 }
 
+struct ints0 {
+  int *i;
+  int count;
+};
+static int convert_to_ints0(PyObject *o, ints0 *dst, const char *name = "no_name")
+{
+  PyObject *fi = PySequence_Fast(o, name);
+  if (fi == NULL)
+    return 0;
+  dst->count = PySequence_Fast_GET_SIZE(fi);
+  dst->i = new int[dst->count + 1];
+  for (Py_ssize_t i = 0; i < PySequence_Fast_GET_SIZE(fi); i++) {
+    PyObject *item = PySequence_Fast_GET_ITEM(fi, i);
+    dst->i[i] = PyInt_AsLong(item);
+  }
+  dst->i[dst->count] = 0;
+  Py_DECREF(fi);
+  return 1;
+}
+
 struct dims
 {
   int count;
@@ -3213,6 +3233,11 @@ static PyObject *pycvClipLine(PyObject *self, PyObject *args, PyObject *kw)
 static PyObject *temp_test(PyObject *self, PyObject *args)
 {
 #if 0
+  CvArr *im = cvLoadImage("../samples/c/lena.jpg", 0);
+  printf("im=%p\n", im);
+  CvMat *m = cvEncodeImage(".jpeg", im);
+#endif
+#if 0
   CvArr *im = cvLoadImage("lena.jpg", 0);
   float r0[] = { 0, 255 };
   float *ranges[] = { r0 };
@@ -3366,6 +3391,7 @@ static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject
   return Py_BuildValue("ffNN", min_val, max_val, pminloc, pmaxloc);
 }
 
+static int zero = 0;
 
 /************************************************************************/
 /* Generated functions */
