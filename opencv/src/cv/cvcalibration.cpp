@@ -3040,7 +3040,7 @@ void cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
     CvMat _R = R, _T = T, _E = E, _F = F;
 
     cvStereoCalibrate(&_objPt, &_imgPt, &_imgPt2, &_npoints, &_cameraMatrix1,
-        &_cameraMatrix2, &_distCoeffs1, &_distCoeffs2, imageSize,
+        &_distCoeffs1, &_cameraMatrix2, &_distCoeffs2, imageSize,
         &_R, &_T, &_E, &_F, criteria, flags );
 }
 
