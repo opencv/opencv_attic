@@ -65,7 +65,7 @@
 
   #else
     #include <bits/atomicity.h>
-    #if __GNUC__ >= 4
+    #if __GNUC__*10 + __GNUC_MINOR__ >= 34
       #define CV_XADD __gnu_cxx::__exchange_and_add
     #else
       #define CV_XADD __exchange_and_add
