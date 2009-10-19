@@ -67,14 +67,14 @@ list(GET OPENCV_VERSION_PARTS 2 OPENCV_VERSION_PATCH)
 set(OPENCV_SOVERSION "${OPENCV_VERSION_MAJOR}.${OPENCV_VERSION_MINOR}")
 
 if(WIN32)
-	# Postfix of DLLs:
-	set(OPENCV_DLLVERSION "${OPENCV_VERSION_MAJOR}${OPENCV_VERSION_MINOR}${OPENCV_VERSION_PATCH}")
-	set(OPENCV_DEBUG_POSTFIX d)
+    # Postfix of DLLs:
+    set(OPENCV_DLLVERSION "${OPENCV_VERSION_MAJOR}${OPENCV_VERSION_MINOR}${OPENCV_VERSION_PATCH}")
+    set(OPENCV_DEBUG_POSTFIX d)
 else()
-	# Postfix of so's:
-	#set(OPENCV_DLLVERSION "${OPENCV_VERSION_MAJOR}${OPENCV_VERSION_MINOR}${OPENCV_VERSION_PATCH}")
-	set(OPENCV_DLLVERSION "")
-	set(OPENCV_DEBUG_POSTFIX)
+    # Postfix of so's:
+    #set(OPENCV_DLLVERSION "${OPENCV_VERSION_MAJOR}${OPENCV_VERSION_MINOR}${OPENCV_VERSION_PATCH}")
+    set(OPENCV_DLLVERSION "")
+    set(OPENCV_DEBUG_POSTFIX)
 endif()
 
 
@@ -133,7 +133,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # ----------------------------------------------------------------------------
-# 		CHECK FOR SYSTEM LIBRARIES, OPTIONS, ETC..
+#       CHECK FOR SYSTEM LIBRARIES, OPTIONS, ETC..
 # ----------------------------------------------------------------------------
 
 # Build/install (or not) some apps:
@@ -150,9 +150,9 @@ set(BUILD_TESTS ON CACHE BOOL "Build tests")
 # Build 3rdparty libraries under unix
 # ===================================================
 if(WIN32 OR APPLE)
-	set(OPENCV_BUILD_3RDPARTY_LIBS TRUE  CACHE BOOL "Build 3rd party libraries")
+    set(OPENCV_BUILD_3RDPARTY_LIBS TRUE  CACHE BOOL "Build 3rd party libraries")
 else()
-	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
+    set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
 include(OpenCVPCHSupport.cmake REQUIRED)
@@ -163,16 +163,7 @@ if(UNIX)
     include(CheckIncludeFile)
 endif()
 
-# Default value for OPENMP:
-#  MSVC: Yes
-#  Others: No
-# ===================================================
-if(MSVC)
-	set(DEFAULT_ENABLE_OPENMP ON)
-else()
-	set(DEFAULT_ENABLE_OPENMP OFF)
-endif()
-
+set(DEFAULT_ENABLE_OPENMP OFF)
 set(ENABLE_OPENMP ${DEFAULT_ENABLE_OPENMP} CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -207,19 +198,19 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-		set(USE_SSE OFF CACHE BOOL "Enable SSE for GCC")
+        set(USE_SSE OFF CACHE BOOL "Enable SSE for GCC")
         set(USE_SSE2 OFF CACHE BOOL "Enable SSE2 for GCC")
         set(USE_SSE3 OFF CACHE BOOL "Enable SSE3 for GCC")
-	# SSE/SSE2 might probably be not available for some old AMD or VIA processors
+    # SSE/SSE2 might probably be not available for some old AMD or VIA processors
     endif ()
     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
         set(USE_O3 ON CACHE BOOL "Enable -O3 for GCC")
         set(USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(USE_MMX ON CACHE BOOL "Enable MMX for GCC")
-		set(USE_SSE OFF CACHE BOOL "Enable SSE for GCC")
+        set(USE_SSE OFF CACHE BOOL "Enable SSE for GCC")
         set(USE_SSE2 OFF CACHE BOOL "Enable SSE2 for GCC")
         set(USE_SSE3 OFF CACHE BOOL "Enable SSE3 for GCC")
-	# SSE/SSE2 might probably be not available for some old AMD or VIA processors
+    # SSE/SSE2 might probably be not available for some old AMD or VIA processors
     endif ()
 endif()
 
@@ -506,7 +497,7 @@ endif()
 set(BUILD_LATEX_DOCS OFF CACHE BOOL "Build LaTeX OpenCV Documentation")
 
 # ----------------------------------------------------------------------------
-#   				UPDATE CONFIG FILES & SCRIPTS:
+#                   UPDATE CONFIG FILES & SCRIPTS:
 #
 #  CONFIGURE_FILE(InputFile OutputFile [COPYONLY] [ESCAPE_QUOTES] [@ONLY])
 # If @ONLY is specified, only variables of the form @VAR@ will be
@@ -532,7 +523,7 @@ include_directories("."
     )
 
 # ----------------------------------------------------------------------------
-# 			Set the maximum level of warnings:
+#           Set the maximum level of warnings:
 # ----------------------------------------------------------------------------
 # Should be set to true for development
 set(OPENCV_WARNINGS_ARE_ERRORS OFF CACHE BOOL "Treat warnings as errors")
@@ -554,7 +545,7 @@ if(MSVC)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Wp64")
     endif()
     if(MSVC90)
-	set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _BIND_TO_CURRENT_CRT_VERSION=1 /D _BIND_TO_CURRENT_VCLIBS_VERSION=1")
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /D _BIND_TO_CURRENT_CRT_VERSION=1 /D _BIND_TO_CURRENT_VCLIBS_VERSION=1")
     endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
@@ -620,11 +611,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     if(USE_MMX)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mmmx")
     endif()
-    # SSE should be disabled under MingW because it generates compiler errors
     if(USE_SSE)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse")
     endif()
-    # SSE2 should be disabled under MingW because it generates compiler errors
     if(USE_SSE2)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse2")
     endif()
@@ -695,7 +684,7 @@ if("${CMAKE_CONFIGURE_LDFLAGS}")
 endif("${CMAKE_CONFIGURE_LDFLAGS}")
 
 # ----------------------------------------------------------------------------
-#      					PROCESS SUBDIRECTORIES:
+#                       PROCESS SUBDIRECTORIES:
 # ----------------------------------------------------------------------------
 # Save libs and executables in the same place
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
@@ -750,17 +739,17 @@ endif()
 #  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
 # -------------------------------------------------------------------------------------------
 if(WIN32)
-	# Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
-	
-	# This will expand to, for example, <program files>/OpenCV 1.1.0/include
-	set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\" \"\${THIS_OPENCV_CONFIG_PATH}/include/opencv\"")
+    # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
+    
+    # This will expand to, for example, <program files>/OpenCV 1.1.0/include
+    set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/include\" \"\${THIS_OPENCV_CONFIG_PATH}/include/opencv\"")
 
-	# This will expand to, for example, <program files>/OpenCV 1.1.0/lib
-	set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
+    # This will expand to, for example, <program files>/OpenCV 1.1.0/lib
+    set(CMAKE_LIB_DIRS_CONFIGCMAKE "\"\${THIS_OPENCV_CONFIG_PATH}/lib\"")
 
-	#exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/win-install/\"")
-	exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/win-install/\"")
-	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
+    #exec_program(${CMAKE_COMMAND} ARGS "-E make_directory \"${CMAKE_BINARY_DIR}/win-install/\"")
+    exec_program(mkdir ARGS "-p \"${CMAKE_BINARY_DIR}/win-install/\"")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 endif()
 
 
@@ -771,10 +760,10 @@ endif()
 # libdir=${exec_prefix}/lib
 # includedir=${prefix}/include/opencv
 # -------------------------------------------------------------------------------------------
-set(prefix 		${CMAKE_INSTALL_PREFIX})
-set(exec_prefix		"\${prefix}")
-set(libdir		"\${exec_prefix}/lib")
-set(includedir		"\${prefix}/include")
+set(prefix      ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix     "\${prefix}")
+set(libdir      "\${exec_prefix}/lib")
+set(includedir      "\${prefix}/include")
 set(VERSION             ${OPENCV_VERSION})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/opencv.pc.cmake.in" "${CMAKE_BINARY_DIR}/unix-install/opencv.pc" @ONLY IMMEDIATE)
@@ -804,12 +793,12 @@ set(BUILD_PACKAGE OFF CACHE BOOL "Build a installer with the SDK")
 
 if(BUILD_PACKAGE)
 
-	configure_file(
-	Package.cmake.in
-	${CMAKE_BINARY_DIR}/.cpack/Package.cmake
-	@ONLY
-	)
-	
+    configure_file(
+    Package.cmake.in
+    ${CMAKE_BINARY_DIR}/.cpack/Package.cmake
+    @ONLY
+    )
+    
     include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
     set(root_files README ChangeLog configure)
@@ -818,28 +807,28 @@ if(BUILD_PACKAGE)
 
     if (NOT WIN32)
         install(FILES ${root_files}
-	            DESTINATION ${OPENCV_DOC_INSTALL_PATH}
+                DESTINATION ${OPENCV_DOC_INSTALL_PATH}
                 COMPONENT main)
     else()
         install(FILES ${root_files}
-	            DESTINATION "."
+                DESTINATION "."
                 COMPONENT main)
         install(FILES ${root_src_files}
-	            DESTINATION "."
+                DESTINATION "."
                 COMPONENT src)
-		# Add the "win-install/OpenCVConfig.cmake" file to the "main" install component 
-		install(FILES 
-			"${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake"
-			DESTINATION "."
-			COMPONENT main
-			)
+        # Add the "win-install/OpenCVConfig.cmake" file to the "main" install component 
+        install(FILES 
+            "${CMAKE_BINARY_DIR}/win-install/OpenCVConfig.cmake"
+            DESTINATION "."
+            COMPONENT main
+            )
 
         if(CMAKE_INSTALL_DEBUG_LIBRARIES)
             foreach(m cxcore cv cvaux ml highgui opencv_ffmpeg)
                 install(FILES ${CMAKE_BINARY_DIR}/bin/Debug/${m}${OPENCV_DLLVERSION}d.dll
-			DESTINATION bin COMPONENT main)
+            DESTINATION bin COMPONENT main)
                 install(FILES ${CMAKE_BINARY_DIR}/lib/Debug/${m}${OPENCV_DLLVERSION}d.lib
-			DESTINATION lib COMPONENT main)
+            DESTINATION lib COMPONENT main)
             endforeach()     
         endif()
 
