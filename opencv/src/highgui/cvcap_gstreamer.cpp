@@ -564,13 +564,16 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
 	//printf("entered capturecreator %s\n", sourcetypes[type]);
-
-
-	GstElement *source = gst_element_factory_make(sourcetypes[type], NULL);
+    GstElement *source;
+    if  (type == CV_CAP_GSTREAMER_FILE && gst_uri_is_valid(filename)) {
+		source = gst_element_make_from_uri(GST_URI_SRC, filename, NULL);
+	}
+	else 	
+		source = gst_element_factory_make(sourcetypes[type], NULL);
 	if(!source)
 		return 0;
 
-	if(type == CV_CAP_GSTREAMER_FILE)
+	if(type ==CV_CAP_GSTREAMER_FILE && !gst_uri_is_valid(filename))
 		g_object_set(G_OBJECT(source), "location", filename, NULL);
 
 	GstElement *colour = gst_element_factory_make("ffmpegcolorspace", NULL);
