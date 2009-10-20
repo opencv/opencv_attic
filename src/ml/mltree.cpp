@@ -531,7 +531,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
                 if (is_buf_16u)
                     udst[i] = (unsigned short)i;
                 else
-                    idst[i] = i; // ÔÂÂÌÂÒÚË ‚˚¯Â ‚ if( idata )
+                    idst[i] = i;
                 _fdst[i] = val;
                 
             }
@@ -2055,17 +2055,16 @@ void CvDTree::cluster_categories( const int* vectors, int n, int m,
     int iters = 0, max_iters = 100;
     int i, j, idx;
     double* buf = (double*)cvStackAlloc( (n + k)*sizeof(buf[0]) );
-    double *v_weights = buf, *c_weights = buf + k;
+    double *v_weights = buf, *c_weights = buf + n;
     bool modified = true;
     CvRNG* r = &data->rng;
 
     // assign labels randomly
-    for( i = idx = 0; i < n; i++ )
+    for( i = 0; i < n; i++ )
     {
         int sum = 0;
         const int* v = vectors + i*m;
-        labels[i] = idx++;
-        idx &= idx < k ? -1 : 0;
+        labels[i] = i < k ? i : (cvRandInt(r) % k);
 
         // compute weight of each vector
         for( j = 0; j < m; j++ )
@@ -2189,8 +2188,8 @@ CvDTreeSplit* CvDTree::find_split_cat_class( CvDTreeNode* node, int vi, float in
         if( mi > data->params.max_categories )
         {
             mi = MIN(data->params.max_categories, n);
-            cjk += _mi*m;
-            cluster_labels = (int*)cvStackAlloc(mi*sizeof(cluster_labels[0]));
+            cjk = (int*)cvStackAlloc( m*mi*sizeof(cjk[0]) );
+            cluster_labels = (int*)cvStackAlloc( _mi*sizeof(cluster_labels[0]) );
             cluster_categories( _cjk, _mi, m, cjk, mi, cluster_labels );
         }
         subset_i = 1;

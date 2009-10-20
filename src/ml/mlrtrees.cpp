@@ -284,10 +284,14 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
     }
     { // initialize active variables mask
         CvMat submask1, submask2;
+        CV_Assert( (active_var_mask->cols >= 1) && (params.nactive_vars > 0) && (params.nactive_vars <= active_var_mask->cols) );
         cvGetCols( active_var_mask, &submask1, 0, params.nactive_vars );
-        cvGetCols( active_var_mask, &submask2, params.nactive_vars, var_count );
         cvSet( &submask1, cvScalar(1) );
-        cvZero( &submask2 );
+        if( params.nactive_vars < active_var_mask->cols )
+        {
+            cvGetCols( active_var_mask, &submask2, params.nactive_vars, var_count );
+            cvZero( &submask2 );
+        }
     }
 
     return grow_forest( params.term_crit );
