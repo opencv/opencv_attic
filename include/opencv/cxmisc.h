@@ -48,14 +48,7 @@
 #ifndef _CXCORE_MISC_H_
 #define _CXCORE_MISC_H_
 
-#ifdef HAVE_CONFIG_H
-    #include "cvconfig.h"
-#endif
-
 #include <limits.h>
-#ifdef _OPENMP
-#include "omp.h"
-#endif
 
 /****************************************************************************************\
 *                              Compile-time tuning parameters                            *

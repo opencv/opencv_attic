@@ -50,6 +50,10 @@
 #include <time.h>
 #endif
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
 #include <stdarg.h>
 
 namespace cv
