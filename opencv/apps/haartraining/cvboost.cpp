@@ -64,6 +64,9 @@
 #include "_cvcommon.h"
 #include "cvclassifier.h"
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 #define CV_BOOST_IMPL
 

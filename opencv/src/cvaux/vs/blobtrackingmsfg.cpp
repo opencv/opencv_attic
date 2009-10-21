@@ -40,6 +40,10 @@
 
 #include "_cvaux.h"
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
 // Uncomment to trade flexibility for speed
 //#define CONST_HIST_SIZE
 
