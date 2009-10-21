@@ -838,7 +838,7 @@ void SURF::operator()(const Mat& img, const Mat& mask,
     size_t i, n;
     if( useProvidedKeypoints )
     {
-        kp = Seq<CvSURFPoint>(storage);
+        kp = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvSURFPoint), storage);
         n = keypoints.size();
         for( i = 0; i < n; i++ )
         {
