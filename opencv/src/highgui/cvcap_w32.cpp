@@ -78,7 +78,7 @@ icvInitFFMPEG(void)
 #else
 #define ffopencv_prefix ""
 #endif
-#if defined(_DEBUG) && defined(__MINGW32__)
+#if defined(_DEBUG)
 #define ffopencv_suffix_dbg "d"
 #else
 #define ffopencv_suffix_dbg ""
