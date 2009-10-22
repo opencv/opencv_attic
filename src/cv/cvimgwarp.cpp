@@ -2329,6 +2329,7 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
 
     CV_Assert( (!map2.data || map2.size() == map1.size()));
     dst.create( map1.size(), src.type() );
+    CV_Assert(dst.data != src.data);
 
     int depth = src.depth(), map_depth = map1.depth();
     RemapNNFunc nnfunc = 0;
@@ -2678,6 +2679,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                  int flags, int borderType, const Scalar& borderValue )
 {
     dst.create( dsize, src.type() );
+    CV_Assert( dst.data != src.data );
 
     const int BLOCK_SZ = 64;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
@@ -2808,6 +2810,7 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                       int flags, int borderType, const Scalar& borderValue )
 {
     dst.create( dsize, src.type() );
+    CV_Assert( dst.data != src.data );
 
     const int BLOCK_SZ = 32;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];

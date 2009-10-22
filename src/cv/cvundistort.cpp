@@ -156,6 +156,8 @@ void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
                 const Mat& _distCoeffs, const Mat& _newCameraMatrix )
 {
     dst.create( src.size(), src.type() );
+    CV_Assert( dst.data != src.data );
+
     int stripe_size0 = std::min(std::max(1, (1 << 12) / std::max(src.cols, 1)), src.rows);
     Mat map1(stripe_size0, src.cols, CV_16SC2), map2(stripe_size0, src.cols, CV_16UC1);
 

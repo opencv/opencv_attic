@@ -1323,7 +1323,7 @@ The function calculates the following matrix:
 \[
 \begin{bmatrix}
 \alpha & \beta & (1-\alpha) \cdot \texttt{center.x} - \beta \cdot \texttt{center.y} \\
-\beta - 1 & \alpha & \beta \cdot \texttt{center.x} - (1-\alpha) \cdot \texttt{center.y}
+-\beta & \alpha & \beta \cdot \texttt{center.x} - (1-\alpha) \cdot \texttt{center.y}
 \end{bmatrix}
 \]
 
@@ -1428,6 +1428,7 @@ The function \texttt{remap} transforms the source image using the specified map:
 \]
 
 Where values of pixels with non-integer coordinates are computed using one of the available interpolation methods. $map_x$ and $map_y$ can be encoded as separate floating-point maps, interleaved floating-point maps or fixed-point maps.
+The function can not operate in-place.
 
 \cvfunc{resize}\label{resize}
 Resizes an image
@@ -1511,6 +1512,7 @@ The function \texttt{warpAffine} transforms the source image using the specified
 \texttt{dst}(x,y) = \texttt{src}(\texttt{M}_{11} x + \texttt{M}_{12} y + \texttt{M}_{13}, \texttt{M}_{21} x + \texttt{M}_{22} y + \texttt{M}_{23})
 \]
 when the flag \texttt{WARP\_INVERSE\_MAP} is set. Otherwise, the transformation is first inverted with \cross{invertAffineTransform} and then put in the formula above instead of \texttt{M}.
+The function can not operate in-place.
 
 See also: \cross{warpPerspective}, \cross{resize}, \cross{remap}, \cross{getRectSubPix}, \cross{transform}
 
@@ -1541,6 +1543,7 @@ The function \texttt{warpPerspective} transforms the source image using the spec
     \frac{M_{21} x + M_{22} y + M_{23}}{M_{31} x + M_{32} y + M_{33}}\right)
 \]
 when the flag \texttt{WARP\_INVERSE\_MAP} is set. Otherwise, the transformation is first inverted with \cross{invert} and then put in the formula above instead of \texttt{M}.
+The function can not operate in-place.
 
 See also: \cross{warpAffine}, \cross{resize}, \cross{remap}, \cross{getRectSubPix}, \cross{perspectiveTransform}
 
@@ -2067,7 +2070,7 @@ enum { THRESH_BINARY=0, THRESH_BINARY_INV=1,
 \end{lstlisting}
 \begin{description}
 \cvarg{src}{Source array (single-channel, 8-bit of 32-bit floating point)}
-\cvarg{dst}{Destination array; must be either the same type as \texttt{src} or 8-bit}
+\cvarg{dst}{Destination array; will have the same size and the same type as \texttt{src}}
 \cvarg{thresh}{Threshold value}
 \cvarg{maxVal}{Maximum value to use with \texttt{THRESH\_BINARY} and \texttt{THRESH\_BINARY\_INV} thresholding types}
 \cvarg{thresholdType}{Thresholding type (see the discussion)}
