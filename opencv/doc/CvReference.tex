@@ -412,11 +412,11 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
     int laplacian;   // -1, 0 or +1. sign of the laplacian at the point.
                      // can be used to speedup feature comparison
                      // (normally features with laplacians of different 
-		     // signs can not match)
+             // signs can not match)
     int size;        // size of the feature
     float dir;       // orientation of the feature: 0..360 degrees
     float hessian;   // value of the hessian (can be used to 
-		     // approximately estimate the feature strengths;
+             // approximately estimate the feature strengths;
                      // see also params.hessianThreshold)
  }
  CvSURFPoint;
@@ -430,21 +430,21 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
     int extended; // 0 means basic descriptors (64 elements each),
                   // 1 means extended descriptors (128 elements each)
     double hessianThreshold; // only features with keypoint.hessian 
-		  // larger than that are extracted.
+          // larger than that are extracted.
                   // good default value is ~300-500 (can depend on the 
-		  // average local contrast and sharpness of the image).
+          // average local contrast and sharpness of the image).
                   // user can further filter out some features based on 
-		  // their hessian values and other characteristics.
+          // their hessian values and other characteristics.
     int nOctaves; // the number of octaves to be used for extraction.
                   // With each next octave the feature size is doubled 
-		  // (3 by default)
+          // (3 by default)
     int nOctaveLayers; // The number of layers within each octave 
-		  // (4 by default)
+          // (4 by default)
  }
  CvSURFParams;
 
  CvSURFParams cvSURFParams(double hessianThreshold, int extended=0); 
-		  // returns default parameters
+          // returns default parameters
 \end{lstlisting}
 \end{description}
 
@@ -477,11 +477,11 @@ CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\p
     int responseThreshold; // threshold for the approximatd laplacian,
                            // used to eliminate weak features
     int lineThresholdProjected; // another threshold for laplacian to 
-				// eliminate edges
+                // eliminate edges
     int lineThresholdBinarized; // another threshold for the feature 
-				// scale to eliminate edges
+                // scale to eliminate edges
     int suppressNonmaxSize; // linear size of a pixel neighborhood 
-			    // for non-maxima suppression
+                // for non-maxima suppression
  }
  CvStarDetectorParams;
 \end{lstlisting}
@@ -760,6 +760,7 @@ y'\\
 \]
 
 The function is similar to \cross{GetQuadrangleSubPix} but they are not exactly the same. \cross{WarpAffine} requires input and output image have the same data type, has larger overhead (so it is not quite suitable for small images) and can leave part of destination image unchanged. While \cross{GetQuadrangleSubPix} may extract quadrangles from 8-bit images into floating-point buffer, has smaller overhead and always changes the whole destination image content.
+Note that the function can not operate in-place.
 
 To transform a sparse set of points, use the \cross{Transform} function from cxcore.
 
@@ -835,15 +836,15 @@ The function \texttt{cv2DRotationMatrix} calculates the following matrix:
 
 \[
 \begin{bmatrix}
-a & \beta & (1-a) \cdot \texttt{center.x} - \beta \cdot \texttt{center.y} \\
-\beta - 1 & a & \beta \cdot \texttt{center.x} - (1-a) \cdot \texttt{center.y}
+\alpha & \beta & (1-\alpha) \cdot \texttt{center.x} - \beta \cdot \texttt{center.y} \\
+-\beta & \alpha & \beta \cdot \texttt{center.x} - (1-\alpha) \cdot \texttt{center.y}
 \end{bmatrix}
 \]
 
 where
 
 \[
-a = \texttt{scale} \cdot cos(\texttt{angle}), \beta = \texttt{scale} \cdot sin(\texttt{angle})
+\alpha = \texttt{scale} \cdot cos(\texttt{angle}), \beta = \texttt{scale} \cdot sin(\texttt{angle})
 \]
 
 The transformation maps the rotation center to itself. If this is not the purpose, the shift should be adjusted.
@@ -904,8 +905,8 @@ y'\\
 \end{matrix}
 \]
 
+Note that the function can not operate in-place.
 For a sparse set of points use the \cross{PerspectiveTransform} function from CxCore.
-
 
 \cvfunc{GetPerspectiveTransform}\label{GetPerspectiveTransform}
 
@@ -992,6 +993,7 @@ The function \texttt{cvRemap} transforms the source image using the specified ma
 \]
 
 Similar to other geometrical transformations, some interpolation method (specified by user) is used to extract pixels with non-integer coordinates.
+Note that the function can not operate in-place.
 
 \cvfunc{LogPolar}\label{LogPolar}
 
@@ -1046,7 +1048,7 @@ where
 \]
 
 The function emulates the human "foveal" vision and can be used for fast scale and rotation-invariant template matching, for object tracking and so forth.
-
+The function can not operate in-place.
 
 \cvfunc{Example: Log-polar transformation}
 \begin{lstlisting}
@@ -1062,9 +1064,9 @@ int main(int argc, char** argv)
         IplImage* dst = cvCreateImage( cvSize(256,256), 8, 3 );
         IplImage* src2 = cvCreateImage( cvGetSize(src), 8, 3 );
         cvLogPolar( src, dst, cvPoint2D32f(src->width/2,src->height/2), 40, 
-		CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS );
+        CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS );
         cvLogPolar( dst, src2, cvPoint2D32f(src->width/2,src->height/2), 40, 
-		CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS+CV_WARP_INVERSE_MAP );
+        CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS+CV_WARP_INVERSE_MAP );
         cvNamedWindow( "log-polar", 1 );
         cvShowImage( "log-polar", dst );
         cvNamedWindow( "inverse log-polar", 1 );
@@ -5039,9 +5041,9 @@ typedef struct CvHaarClassifier
        corresponds to a node of the decision tree (root has 0-th index).
 
        left[i] - index of the left child (or negated index if the 
-		 left child is a leaf)
+         left child is a leaf)
        right[i] - index of the right child (or negated index if the 
-		  right child is a leaf)
+          right child is a leaf)
        threshold[i] - branch threshold. if feature responce is <= threshold, 
                     left branch is chosen, otherwise right branch is chosen.
        alpha[i] - output value correponding to the leaf. */
@@ -5079,16 +5081,16 @@ typedef struct CvHaarClassifierCascade
     int  flags; /* signature */
     int  count; /* number of stages */
     CvSize orig_window_size; /* original object size (the cascade is 
-							trained for) */
+                            trained for) */
 
     /* these two parameters are set by cvSetImagesForHaarClassifierCascade */
     CvSize real_window_size; /* current object size */
     double scale; /* current scale */
     CvHaarStageClassifier* stage_classifier; /* array of stage classifiers */
     CvHidHaarClassifierCascade* hid_cascade; /* hidden optimized 
-						representation of the 
-						cascade, created by 
-				cvSetImagesForHaarClassifierCascade */
+                        representation of the 
+                        cascade, created by 
+                cvSetImagesForHaarClassifierCascade */
 }
 CvHaarClassifierCascade;
 \end{lstlisting}
@@ -5794,6 +5796,8 @@ interpolation. If the resolution of images is different from what
 was used at the calibration stage, $fx, fy, cx$ and $cy$
 need to be adjusted appropriately, while the distortion coefficients
 remain the same.
+
+The function can not operate in-place.
 
 \cvfunc{InitUndistortMap}\label{InitUndistortMap}
 
