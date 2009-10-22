@@ -562,14 +562,14 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
     int cn = _dst.channels(), m = _dst.rows, r = (ksize-1)/2;
     size_t sstep = _src.step, dstep = _dst.step;
     Histogram CV_DECL_ALIGNED(16) H[4];
-    HT luc[4][16];
+    HT CV_DECL_ALIGNED(16) luc[4][16];
 
     int STRIPE_SIZE = std::min( _dst.cols, 512/cn );
 
-    vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn);
-    vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn);
-    HT* h_coarse = &_h_coarse[0];
-    HT* h_fine = &_h_fine[0];
+    vector<HT> _h_coarse(1 * 16 * (STRIPE_SIZE + 2*r) * cn + 16);
+    vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn + 16);
+    HT* h_coarse = alignPtr(&_h_coarse[0], 16);
+    HT* h_fine = alignPtr(&_h_fine[0], 16);
 
     for( int x = 0; x < _dst.cols; x += STRIPE_SIZE )
     {
