@@ -3431,7 +3431,9 @@ All the matrices \emph{must be allocated}, their size and depth must be the same
 \cvarg{fromTo}{The array of index pairs, specifying which channels are copied and where.
 \texttt{fromTo[k*2]} is the 0-based index of the input channel in \texttt{srcv} and
 \texttt{fromTo[k*2+1]} is the index of the output channel in \texttt{dstv}. Here the continuous channel numbering is used, that is,
-the first input image channels are indexed from \texttt{0} to \texttt{srcv[0].channels()-1}, the second input image channels are indexed from \texttt{srcv[0].channels()} to \texttt{srcv[0].channels() + srcv[1].channels()-1} etc., and the same for the output image channels.
+the first input image channels are indexed from \texttt{0} to \texttt{srcv[0].channels()-1},
+the second input image channels are indexed from \texttt{srcv[0].channels()} to
+\texttt{srcv[0].channels() + srcv[1].channels()-1} etc., and the same scheme is used for the output image channels.
 As a special case, when \texttt{fromTo[k*2]} is negative, the corresponding output channel is filled with zero.
 }
 \texttt{npairs}{The number of pairs. In the latter case the parameter is not passed explicitly, but computed as \texttt{srcv.size()} (=\texttt{dstv.size()})}

@@ -2119,15 +2119,18 @@ void cvMixChannels( const CvArr** src, int src\_count, \par
 \cvarg{dst}{Destination arrays}
 \cvC{\cvarg{dst\_count}{The number of output arrays.}}
 \cvarg{from\_to}{The array of pairs of indices of the planes
-copied. \cvC{\texttt{from\_to[k*2]} is the 0-based index of the input plane, and
-\texttt{from\_to[k*2+1]} is the index of the output plane in their respective array entries.
-As a special case, when the source array entry is \texttt{NULL}, i is ignored
-and output plane j is filled with zero.}\cvPy{Each pair (i,j)
-means that for the corresponding input and output arrays, plane i is
-copied to output plane j.
-As a special case, when the source array entry is \texttt{None}, i is
-ignored and output plane j is filled with zero.}
-}
+copied. \cvC{\texttt{from\_to[k*2]} is the 0-based index of the input channel in \texttt{src} and
+\texttt{from\_to[k*2+1]} is the index of the output channel in \texttt{dst}.
+Here the continuous channel numbering is used, that is, the first input image channels are indexed
+from \texttt{0} to \texttt{channels(src[0])-1}, the second input image channels are indexed from
+\texttt{channels(src[0])} to \texttt{channels(src[0]) + channels(src[1])-1} etc., and the same
+scheme is used for the output image channels.
+As a special case, when \texttt{from\_to[k*2]} is negative,
+the corresponding output channel is filled with zero.}\cvPy{Each pair \texttt{from\_to[k]=(i,j)}
+means that i-th plane from \texttt{src} is copied to the j-th plane in \texttt{dst}, where continuous
+plane numbering is used both in the input array list and the output array list.
+As a special case, when the \texttt{from\_to[k][0]} is negative, the corresponding output plane \texttt{j}
+ is filled with zero.}}
 \end{description}
 
 The function cvMixChannels is a generalized form of \cross{Split} and \cross{Merge}

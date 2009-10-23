@@ -924,7 +924,6 @@ cvMixChannels( const CvArr** src, int src_count,
                CvArr** dst, int dst_count,
                const int* from_to, int pair_count )
 {
-    CV_Assert( src_count == dst_count && src_count == pair_count );
     cv::AutoBuffer<cv::Mat, 32> buf;
 
     int i;
