@@ -315,16 +315,10 @@ double invert( const Mat& src, Mat& dst, int method )
             return result;
         }
 
-        {
-        integer n = dst.cols, lwork=-1, elem_size = CV_ELEM_SIZE(type),
-            lda = (int)(dst.step/elem_size), piv1=0, info=0;
-
-        if( dst.data == src.data )
-        {
-            dst.release();
-            dst.create( src.rows, src.cols, type );
-        }
         src.copyTo(dst);
+        integer n = dst.cols, lwork=-1, elem_size = CV_ELEM_SIZE(type),
+            lda = (int)(dst.step/elem_size), piv1=0, info=0;    
+            
         if( method == DECOMP_LU )
         {
             int buf_size = (int)(n*sizeof(integer));
@@ -381,7 +375,6 @@ double invert( const Mat& src, Mat& dst, int method )
             completeSymm(dst);
         }
         result = info == 0;
-        }
     }
 
     if( !result )
