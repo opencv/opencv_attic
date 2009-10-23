@@ -291,7 +291,7 @@ static bool imwrite_( const string& filename, const Mat& image,
     encoder->setDestination( filename );
     bool code = encoder->write( *pimage, params );
 
-    CV_Assert( code );
+    //    CV_Assert( code );
     return code;
 }
 
