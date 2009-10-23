@@ -53,7 +53,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <gst/gst.h>
+#ifdef HAVE_GSTREAMER_APP
+#include <gst/app/gstappsink.h>
+#else
 #include "gstappsink.h"
+#endif
 
 #ifdef NDEBUG
 #define CV_WARN(message)
@@ -161,7 +165,16 @@ static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 
 	icvHandleMessage(cap);
 
-	if(!gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink))) {
+#ifndef HAVE_GSTREAMER_APP
+	if(gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)))
+	{
+//		printf("peeking buffer, %d buffers in queue\n",
+//		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
+		cap->buffer = gst_app_sink_peek_buffer(GST_APP_SINK(cap->appsink));
+	}
+	else
+#endif
+	{
 //		printf("no buffers queued, starting pipeline\n");
 
 		if(gst_element_set_state(GST_ELEMENT(cap->pipeline), GST_STATE_PLAYING) ==
@@ -201,11 +214,7 @@ static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 		}
 
 //		printf("pipeline paused\n");
-	} else {
-//		printf("peeking buffer, %d buffers in queue\n",
-//		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
-		cap->buffer = gst_app_sink_peek_buffer(GST_APP_SINK(cap->appsink));
-	}
+	} 
 
 	if(!cap->buffer)
 		return 0;
@@ -578,7 +587,11 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 	GstElement *colour = gst_element_factory_make("ffmpegcolorspace", NULL);
 
+#ifdef HAVE_GSTREAMER_APP
+	GstElement *sink = gst_element_factory_make("appsink", NULL);
+#else
 	GstElement *sink = gst_element_factory_make("opencv-appsink", NULL);
+#endif
 	GstCaps *caps = gst_caps_new_simple("video/x-raw-rgb", NULL);
 	gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
 //	gst_caps_unref(caps);
