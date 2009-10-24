@@ -1236,6 +1236,9 @@ FindHomography homography
   CvMat src_points
   CvMat dst_points
   CvMat homography
+  int method 0
+  double ransacReprojThreshold 0.0
+  CvMat mask NULL
 CalibrateCamera2 
   CvMat object_points
   CvMat image_points
