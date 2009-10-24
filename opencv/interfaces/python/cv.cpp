@@ -901,7 +901,7 @@ static PyObject *cvquadedge_repr(PyObject *self)
   char str[1000];
   sprintf(str, "<cvsubdiv2dedge(");
   char *d = str + strlen(str);
-  sprintf(d, "%zx.%d", m & ~3, m & 3);
+  sprintf(d, "%zx.%d", m & ~3, (int)(m & 3));
   d += strlen(d);
   sprintf(d, ")>");
   return PyString_FromString(str);
