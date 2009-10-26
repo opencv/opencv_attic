@@ -1579,9 +1579,9 @@ _findContours( const Mat& image, vector<vector<Point> >& contours,
         {
             CvSeq* c = *it;
             int h_next = c->h_next ? ((CvContour*)c->h_next)->color : -1;
-            int h_prev = c->h_next ? ((CvContour*)c->h_next)->color : -1;
-            int v_next = c->h_next ? ((CvContour*)c->h_next)->color : -1;
-            int v_prev = c->h_next ? ((CvContour*)c->h_next)->color : -1;
+            int h_prev = c->h_prev ? ((CvContour*)c->h_prev)->color : -1;
+            int v_next = c->v_next ? ((CvContour*)c->v_next)->color : -1;
+            int v_prev = c->v_prev ? ((CvContour*)c->v_prev)->color : -1;
             (*hierarchy)[i] = Vec4i(h_next, h_prev, v_next, v_prev);
         }
     }
