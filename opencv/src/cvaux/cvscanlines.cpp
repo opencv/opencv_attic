@@ -439,7 +439,7 @@ icvGetStartEnd1( CvMatrix3 * matrix, CvSize imgSize, float *l_start_end, float *
     int width, height;
     float l_diagonal[3];
     float r_diagonal[3];
-    float l_point[3], r_point[3], epiline[3];
+    float l_point[3]={0,0,0}, r_point[3], epiline[3]={0,0,0};
     CvStatus error = CV_OK;
 
     F = matrix;
@@ -609,7 +609,7 @@ icvGetStartEnd2( CvMatrix3 * matrix, CvSize imgSize, float *l_start_end, float *
     int width, height;
     float l_diagonal[3];
     float r_diagonal[3];
-    float l_point[3], r_point[3], epiline[3];
+    float l_point[3]={0,0,0}, r_point[3], epiline[3]={0,0,0};
     CvStatus error = CV_OK;
 
     F = matrix;
@@ -781,7 +781,7 @@ icvGetStartEnd3( CvMatrix3 * matrix, CvSize imgSize, float *l_start_end, float *
     int width, height;
     float l_diagonal[3];
     float r_diagonal[3];
-    float l_point[3], r_point[3], epiline[3];
+    float l_point[3]={0,0,0}, r_point[3], epiline[3]={0,0,0};
     CvStatus error = CV_OK;
 
     F = matrix;
@@ -955,7 +955,7 @@ icvGetStartEnd4( CvMatrix3 * matrix, CvSize imgSize, float *l_start_end, float *
     int width, height;
     float l_diagonal[3];
     float r_diagonal[3];
-    float l_point[3], r_point[3], epiline[3];
+    float l_point[3], r_point[3], epiline[3]={0,0,0};
     CvStatus error;
 
     F = matrix;
