@@ -775,12 +775,13 @@ static void calcHist( const Mat* images, int nimages, const int* channels,
     CV_Assert( !mask.data || mask.type() == CV_8UC1 );
     histPrepareImages( images, nimages, channels, mask, hist.dims(), hist.hdr->size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
+    const double* _uniranges = uniform ? &uniranges[0] : 0;
     
     int depth = images[0].depth();
     if( depth == CV_8U )
-        calcSparseHist_8u(ptrs, deltas, imsize, hist, ranges, &uniranges[0], uniform );
+        calcSparseHist_8u(ptrs, deltas, imsize, hist, ranges, _uniranges, uniform );
     else if( depth == CV_32F )
-        calcSparseHist_<float>(ptrs, deltas, imsize, hist, ranges, &uniranges[0], uniform );
+        calcSparseHist_<float>(ptrs, deltas, imsize, hist, ranges, _uniranges, uniform );
     
     if( !keepInt )
         for( i = 0, N = hist.nzcount(); i < N; i++, ++it )
