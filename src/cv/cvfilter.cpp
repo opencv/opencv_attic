@@ -2961,8 +2961,8 @@ void filter2D( const Mat& src, Mat& dst, int ddepth,
     dst.create( src.size(), CV_MAKETYPE(ddepth, src.channels()) );
     anchor = normalizeAnchor(anchor, kernel.size());
 
-    if( kernel.cols*kernel.rows >= dft_filter_size &&
-        kernel.cols <= src.cols && kernel.rows <= src.rows )
+    if( kernel.cols*kernel.rows >= dft_filter_size /*&&
+        kernel.cols <= src.cols && kernel.rows <= src.rows*/ )
     {
         Mat temp;
         if( src.data != dst.data )

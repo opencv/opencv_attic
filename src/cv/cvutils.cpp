@@ -249,7 +249,7 @@ icvCopyReflect101Border_8u( const uchar* src, int srcstep, CvSize srcroi,
         else
             i1 = top+srcroi.height, i2=dstroi.height, di = 1, j = srcroi.height-2, dj = -1;
         
-        for( i = i1; i != i2; i += di )
+        for( i = i1; (di > 0 && i < i2) || (di < 0 && i > i2); i += di )
         {
             if( int_mode )
             {
