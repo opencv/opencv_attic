@@ -104,9 +104,9 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
     if( depth > CV_8U )
         max_depth = CV_64F;
 
-    if( img->cols < templ->cols || img->rows < templ->rows )
+    /*if( img->cols < templ->cols || img->rows < templ->rows )
         CV_ERROR( CV_StsUnmatchedSizes,
-        "Such a combination of image and template/filter size is not supported" );
+        "Such a combination of image and template/filter size is not supported" );*/
 
     if( corr->rows > img->rows + templ->rows - 1 ||
         corr->cols > img->cols + templ->cols - 1 )
