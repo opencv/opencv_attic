@@ -60,7 +60,8 @@
 namespace cv {
 
 #undef min
-#undef max    
+#undef max
+#undef Complex
 
 using std::vector;
 using std::string;
