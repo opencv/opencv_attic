@@ -133,15 +133,12 @@ CV_EXPORTS void fastFree(void* ptr);
 
 template<typename _Tp> static inline _Tp* allocate(size_t n)
 {
-    _Tp* ptr = (_Tp*)fastMalloc(n*sizeof(ptr[0]));
-    ::new(ptr) _Tp[n];
-    return ptr;
+    return new _Tp[n];
 }
 
-template<typename _Tp> static inline void deallocate(_Tp* ptr, size_t n)
+template<typename _Tp> static inline void deallocate(_Tp* ptr, size_t)
 {
-    for( size_t i = 0; i < n; i++ ) (ptr+i)->~_Tp();
-    fastFree(ptr);
+    delete[] ptr;
 }
 
 template<typename _Tp> static inline _Tp* alignPtr(_Tp* ptr, int n=(int)sizeof(_Tp))
