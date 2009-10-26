@@ -361,7 +361,7 @@ void CvCapture_FFMPEG::init()
     packet.data = NULL;
 #if defined(HAVE_FFMPEG_SWSCALE)
     img_convert_ctx = 0;
-#endif    
+#endif
 }
 
 
@@ -823,7 +823,7 @@ void CvVideoWriter_FFMPEG::init()
     temp_image = 0;
 #if defined(HAVE_FFMPEG_SWSCALE)
     img_convert_ctx = 0;
-#endif    
+#endif
 }
 
 /**
@@ -1062,7 +1062,11 @@ bool CvVideoWriter_FFMPEG::writeFrame( const IplImage * image )
     }
 
 	// check if buffer sizes match, i.e. image has expected format (size, channels, bitdepth, alignment)
+#if LIBAVCODEC_VERSION_INT >= ((52<<16)+(37<<8)+0)
+	assert (image->imageSize == avpicture_get_size( (PixelFormat)input_pix_fmt, image->width, image->height ));
+#else
 	assert (image->imageSize == avpicture_get_size( input_pix_fmt, image->width, image->height ));
+#endif
 
 	if ( c->pix_fmt != input_pix_fmt ) {
 		assert( input_picture );

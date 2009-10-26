@@ -304,7 +304,7 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h);
 /***********************   Implementations  ***************************************/
 
 static int numCameras = 0;
-static int indexList = 0; 
+static int indexList = 0;
 
 // IOCTL handling for V4L2
 static int xioctl( int fd, int request, void *arg)
@@ -320,7 +320,7 @@ static int xioctl( int fd, int request, void *arg)
 
 }
 
- 
+
 /* Simple test program: Find number of Video Sources available.
    Start from 0 and go to MAX_CAMERAS while checking for the device with that name.
    If it fails on the first attempt of /dev/video0, then check if /dev/video is valid.
@@ -408,7 +408,7 @@ static int try_init_v4l2(CvCaptureCAM_V4L* capture, char *deviceName)
 
   /* Open and test V4L2 device */
   capture->deviceHandle = v4l2_open (deviceName, O_RDWR /* required */ | O_NONBLOCK, 0);
-  
+
 
 
   if (capture->deviceHandle == 0)
@@ -696,12 +696,12 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
   capture->form.fmt.pix.field       = V4L2_FIELD_ANY;
   capture->form.fmt.pix.width = DEFAULT_V4L_WIDTH;
   capture->form.fmt.pix.height = DEFAULT_V4L_HEIGHT;
-  
+
   if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form)) {
       fprintf( stderr, "HIGHGUI ERROR: libv4l unable to ioctl S_FMT\n\n");
       return -1;
   }
-  
+
   if (V4L2_PIX_FMT_BGR24 != capture->form.fmt.pix.pixelformat) {
       fprintf( stderr, "HIGHGUI ERROR: libv4l unable convert to requested pixfmt\n\n");
       return -1;
@@ -894,7 +894,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
          fprintf( stderr, "HIGHGUI ERROR: V4L: Unable to determine size of incoming image\n");
          icvCloseCAM_V4L(capture);
          return -1;
-      } 
+      }
 
       capture->imageProperties.palette = VIDEO_PALETTE_RGB24;
       capture->imageProperties.depth = 24;
@@ -919,7 +919,7 @@ static int _capture_V4L (CvCaptureCAM_V4L *capture, char *deviceName)
    {
 
      v4l1_ioctl(capture->deviceHandle, VIDIOCGMBUF, &capture->memoryBuffer);
-     capture->memoryMap  = (char *)v4l1_mmap(0, 
+     capture->memoryMap  = (char *)v4l1_mmap(0,
                                    capture->memoryBuffer.size,
                                    PROT_READ | PROT_WRITE,
                                    MAP_SHARED,
@@ -997,7 +997,7 @@ static CvCaptureCAM_V4L * icvCaptureFromCAM_V4L (int index)
       the standard set of cv calls promoting transparency.  "Vector Table" insertion. */
    capture->FirstCapture = 1;
 
-   
+
    if (_capture_V4L2 (capture, deviceName) == -1) {
        icvCloseCAM_V4L(capture);
        capture->is_v4l2_device = 0;
@@ -1156,7 +1156,7 @@ static int icvGrabFrameCAM_V4L(CvCaptureCAM_V4L* capture) {
 
       }
 
-      
+
       /* preparation is ok */
       capture->FirstCapture = 0;
    }
@@ -1237,7 +1237,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture, int) {
   if (capture->is_v4l2_device == 1)
   {
 
-      memcpy((char *)capture->frame.imageData, 
+      memcpy((char *)capture->frame.imageData,
              (char *)capture->buffers[capture->bufferIndex].start,
              capture->frame.imageSize);
 
@@ -1247,7 +1247,7 @@ static IplImage* icvRetrieveFrameCAM_V4L( CvCaptureCAM_V4L* capture, int) {
 
     switch(capture->imageProperties.palette) {
       case VIDEO_PALETTE_RGB24:
-        memcpy((char *)capture->frame.imageData, 
+        memcpy((char *)capture->frame.imageData,
            (char *)(capture->memoryMap + capture->memoryBuffer.offsets[capture->bufferIndex]),
            capture->frame.imageSize);
         break;
@@ -1691,7 +1691,7 @@ static int icvSetControl (CvCaptureCAM_V4L* capture,
         return -1;
     }
 
-    
+
     if (v4l1_ioctl(capture->deviceHandle, VIDIOCSPICT, &capture->imageProperties)
         < 0)
     {
@@ -1765,7 +1765,7 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
          free(capture->mmaps);
        if (capture->memoryMap)
          v4l1_munmap(capture->memoryMap, capture->memoryBuffer.size);
-       if (capture->deviceHandle != -1) 
+       if (capture->deviceHandle != -1)
          v4l1_close(capture->deviceHandle);
      }
      else {
@@ -1781,7 +1781,7 @@ static void icvCloseCAM_V4L( CvCaptureCAM_V4L* capture ){
            }
        }
 
-       if (capture->deviceHandle != -1) 
+       if (capture->deviceHandle != -1)
          v4l2_close(capture->deviceHandle);
      }
 
