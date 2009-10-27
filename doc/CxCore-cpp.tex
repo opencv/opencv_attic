@@ -1,8 +1,6 @@
-\chapter{C++ Interface}
+\chapter{C++. Core}
 
-\section{CXCORE. Basic Functionality}
-
-\subsection{Introduction}
+\section{Introduction}
 
 Starting from OpenCV 2.0 the new modern C++ interface has been introduced.
 It is crisp (less typing is needed to code the same thing), type-safe (no more \texttt{CvArr*} a.k.a. \texttt{void*})
@@ -342,6 +340,8 @@ The modern error handling mechanism in OpenCV uses exceptions, as opposite to th
 \subsection{Threading and Reenterability}
 
 OpenCV uses OpenMP to run some time-consuming operations in parallel. Threading can be explicitly controlled by \cross{setNumThreads} function. Also, functions and "const" methods of the classes are generally re-enterable, that is, they can be called from different threads asynchronously.
+
+\section{The cxcore Reference}
 
 \subsection{Basic Structures}
 
@@ -1294,7 +1294,7 @@ for(; it != it_end; ++it)
 
 The matrix iterators are random-access iterators, so they can be passed to any STL algorithm, including \texttt{std::sort()}.
 
-\cvfunc{Matrix Expressions}\label{Matrix Expressions}
+\subsubsection{Matrix Expressions}\label{Matrix Expressions}
 
 This is a list of implemented matrix operations that can be combined in arbitrary complex expressions
 (here \emph{A}, \emph{B} stand for matrices (\texttt{Mat}), \emph{s} for a scalar (\texttt{Scalar}),
