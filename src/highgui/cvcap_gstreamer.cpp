@@ -53,6 +53,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #ifdef HAVE_GSTREAMER_APP
 #include <gst/app/gstappsink.h>
 #else
@@ -240,22 +241,6 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 
 	GstStructure* structure = gst_caps_get_structure(caps, 0);
 
-	gint bpp, endianness, redmask, greenmask, bluemask;
-
-	if(!gst_structure_get_int(structure, "bpp", &bpp) ||
-	   !gst_structure_get_int(structure, "endianness", &endianness) ||
-	   !gst_structure_get_int(structure, "red_mask", &redmask) ||
-	   !gst_structure_get_int(structure, "green_mask", &greenmask) ||
-	   !gst_structure_get_int(structure, "blue_mask", &bluemask)) {
-		printf("missing essential information in buffer caps, %s\n", gst_caps_to_string(caps));
-		return 0;
-	}
-
-	//printf("buffer has %d bpp, endianness %d, rgb %x %x %x, %s\n", bpp, endianness, redmask, greenmask, bluemask, gst_caps_to_string(caps));
-
-	if(!redmask || !greenmask || !bluemask)
-		return 0;
-
 	if(!cap->frame) {
 		gint height, width;
 
@@ -270,34 +255,7 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 
 	gst_caps_unref(caps);
 
-	unsigned char *data = GST_BUFFER_DATA(cap->buffer);
-
-	//printf("generating shifts\n");
-
-	IplImage *frame = cap->frame;
-	unsigned nbyte = bpp >> 3;
-	unsigned redshift, blueshift, greenshift;
-	unsigned mask = redmask;
-	for(redshift = 0, mask = redmask; (mask & 1) == 0; mask >>= 1, redshift++)
-		;
-	for(greenshift = 0, mask = greenmask; (mask & 1) == 0; mask >>= 1, greenshift++)
-		;
-	for(blueshift = 0, mask = bluemask; (mask & 1) == 0; mask >>= 1, blueshift++)
-		;
-
-	//printf("shifts: %u %u %u\n", redshift, greenshift, blueshift);
-
-	for(int r = 0; r < frame->height; r++) {
-		for(int c = 0; c < frame->width; c++, data += nbyte) {
-			int at = r * frame->widthStep + c * 3;
-			frame->imageData[at] = ((*((gint *)data)) & redmask) >> redshift;
-			frame->imageData[at+1] = ((*((gint *)data)) & greenmask) >> greenshift;
-			frame->imageData[at+2] = ((*((gint *)data)) & bluemask) >> blueshift;
-		}
-	}
-
-//	printf("converted buffer\n");
-
+	memcpy (cap->frame->imageData, GST_BUFFER_DATA(cap->buffer), GST_BUFFER_SIZE (cap->buffer));
 	gst_buffer_unref(cap->buffer);
 	cap->buffer = 0;
 
@@ -592,7 +550,7 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 #else
 	GstElement *sink = gst_element_factory_make("opencv-appsink", NULL);
 #endif
-	GstCaps *caps = gst_caps_new_simple("video/x-raw-rgb", NULL);
+	GstCaps *caps = gst_caps_new_simple(GST_VIDEO_CAPS_RGB, NULL);
 	gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
 //	gst_caps_unref(caps);
 	gst_base_sink_set_sync(GST_BASE_SINK(sink), false);
