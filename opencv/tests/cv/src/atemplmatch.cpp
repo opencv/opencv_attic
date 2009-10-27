@@ -377,14 +377,12 @@ static void cvTsMatchTemplate( const CvMat* img, const CvMat* templ, CvMat* resu
                     denom += a_sum2.val[2] - (a_sum.val[2]*a_sum.val[2])/area;
                 }
                 denom = sqrt(MAX(denom,0))*b_denom;
-                if( denom > DBL_EPSILON )
-                {
+                if( fabs(value) < denom )
                     value /= denom;
-                    if( fabs(value) > 1 )
-                        value = value < 0 ? -1. : 1.;
-                }
+                else if( fabs(value) < denom*1.125 )
+                    value = value > 0 ? 1 : -1;
                 else
-                    value = method != CV_TM_SQDIFF_NORMED || value < DBL_EPSILON ? 0 : 1;
+                    value = method != CV_TM_SQDIFF_NORMED ? 0 : 1;
             }
 
             ((float*)(result->data.ptr + result->step*i))[j] = (float)value;

@@ -70,7 +70,8 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
 
     if( CV_MAT_DEPTH( img->type ) != CV_8U &&
         CV_MAT_DEPTH( img->type ) != CV_16U &&
-        CV_MAT_DEPTH( img->type ) != CV_32F )
+        CV_MAT_DEPTH( img->type ) != CV_32F &&
+        CV_MAT_DEPTH( img->type ) != CV_64F )
         CV_ERROR( CV_StsUnsupportedFormat,
         "The function supports only 8u, 16u and 32f data types" );
 
@@ -329,7 +330,7 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     __BEGIN__;
 
     int coi1 = 0, coi2 = 0;
-    int depth, cn;
+    int depth, cn, tdepth;
     int i, j, k;
     CvMat stub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
@@ -340,7 +341,7 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     int idx = 0, idx2 = 0;
     double *p0, *p1, *p2, *p3;
     double *q0, *q1, *q2, *q3;
-    double inv_area;
+    double inv_area, mval;
     int sum_step, sqsum_step;
     int num_type = method == CV_TM_CCORR || method == CV_TM_CCORR_NORMED ? 0 :
                    method == CV_TM_CCOEFF || method == CV_TM_CCOEFF_NORMED ? 1 : 2;
@@ -378,40 +379,6 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
     depth = CV_MAT_DEPTH(img->type);
     cn = CV_MAT_CN(img->type);
-
-    /*if( is_normed && cn == 1 && templ->rows > 8 && templ->cols > 8 &&
-        img->rows > templ->cols && img->cols > templ->cols )
-    {
-        CvTemplMatchIPPFunc ipp_func =
-            depth == CV_8U ?
-            (method == CV_TM_SQDIFF_NORMED ? (CvTemplMatchIPPFunc)icvSqrDistanceValid_Norm_8u32f_C1R_p :
-            method == CV_TM_CCORR_NORMED ? (CvTemplMatchIPPFunc)icvCrossCorrValid_Norm_8u32f_C1R_p :
-            (CvTemplMatchIPPFunc)icvCrossCorrValid_NormLevel_8u32f_C1R_p) :
-            (method == CV_TM_SQDIFF_NORMED ? (CvTemplMatchIPPFunc)icvSqrDistanceValid_Norm_32f_C1R_p :
-            method == CV_TM_CCORR_NORMED ? (CvTemplMatchIPPFunc)icvCrossCorrValid_Norm_32f_C1R_p :
-            (CvTemplMatchIPPFunc)icvCrossCorrValid_NormLevel_32f_C1R_p);
-
-        if( ipp_func )
-        {
-            CvSize img_size = cvGetMatSize(img), templ_size = cvGetMatSize(templ);
-
-            IPPI_CALL( ipp_func( img->data.ptr, img->step ? img->step : CV_STUB_STEP,
-                                 img_size, templ->data.ptr,
-                                 templ->step ? templ->step : CV_STUB_STEP,
-                                 templ_size, result->data.ptr,
-                                 result->step ? result->step : CV_STUB_STEP ));
-            for( i = 0; i < result->rows; i++ )
-            {
-                float* rrow = (float*)(result->data.ptr + i*result->step);
-                for( j = 0; j < result->cols; j++ )
-                {
-                    if( fabs(rrow[j]) > 1. )
-                        rrow[j] = rrow[j] < 0 ? -1.f : 1.f;
-                }
-            }
-            EXIT;
-        }
-    }*/
 
     CV_CALL( icvCrossCorr( img, templ, result ));
 
@@ -511,14 +478,12 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
             if( is_normed )
             {
                 t = sqrt(MAX(wnd_sum2 - wnd_mean2,0))*templ_norm;
-                if( t > DBL_EPSILON )
-                {
+                if( fabs(num) < t )
                     num /= t;
-                    if( fabs(num) > 1. )
-                        num = num > 0 ? 1 : -1;
-                }
+                else if( fabs(num) < t*1.125 )
+                    num = num > 0 ? 1 : -1;
                 else
-                    num = method != CV_TM_SQDIFF_NORMED || num < DBL_EPSILON ? 0 : 1;
+                    num = method != CV_TM_SQDIFF_NORMED ? 0 : 1;
             }
 
             rrow[j] = (float)num;
