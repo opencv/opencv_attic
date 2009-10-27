@@ -1,4 +1,4 @@
-\section{HighGUI. Image, Video I/O and simple UI functions}
+\chapter{C++. HighGUI}
 
 While OpenCV was designed for use in full-scale
 applications and can be used within functionally rich UI frameworks (such as Qt, WinForms or Cocoa) or without any UI at all, sometimes there is a need to try some functionality quickly and visualize the results. This is what the HighGUI module has been designed for.
@@ -11,7 +11,9 @@ It provides easy interface to:
     \item read video from camera or file and write video to a file.
 \end{itemize}
 
-\subsection{The Reference}
+\section{The Reference}
+
+\subsection{User Interface}
 
 \cvfunc{createTrackbar}\label{createTrackbar}
 
@@ -32,7 +34,6 @@ int createTrackbar( const string& trackbarname, const string& winname,
 
 The function \texttt{createTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable \texttt{value} to be syncronized with trackbar position and specifies a callback function \texttt{onChange} to be called on the trackbar position change. The created trackbar is displayed on the top of the given window.
 
-
 \cvfunc{getTrackbarPos}\label{getTrackbarPos}
 Returns the trackbar position.
 
@@ -45,6 +46,72 @@ int getTrackbarPos( const string& trackbarname, const string& winname );
 \end{description}
 
 The function returns the current position of the specified trackbar.
+
+\cvfunc{imshow}\label{imshow}
+Displays the image in the specified window
+
+\begin{lstlisting}
+void imshow( const string& winname, const Mat& image );
+\end{lstlisting}
+\begin{description}
+\cvarg{winname}{Name of the window.}
+\cvarg{image}{Image to be shown.}
+\end{description}
+
+The function \texttt{imshow} displays the image in the specified window. If the window was created with the \texttt{CV\_WINDOW\_AUTOSIZE} flag then the image is shown with its original size, otherwise the image is scaled to fit in the window. The function may scale the image, depending on its depth:
+\begin{itemize}
+    \item If the image is 8-bit unsigned, it is displayed as is.
+    \item If the image is 16-bit unsigned or 32-bit integer, the pixels are divided by 256. That is, the value range [0,255*256] is mapped to [0,255].
+    \item If the image is 32-bit floating-point, the pixel values are multiplied by 255. That is, the value range [0,1] is mapped to [0,255].
+\end{itemize}
+
+
+\cvfunc{namedWindow}\label{namedWindow}
+Creates a window.
+
+\begin{lstlisting}
+void namedWindow( const string& winname, int flags );
+\end{lstlisting}
+\begin{description}
+\cvarg{name}{Name of the window in the window caption that may be used as a window identifier.}
+\cvarg{flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, the window size is automatically adjusted to fit the displayed image (see \cross{imshow}), and the user can not change the window size manually.}
+\end{description}
+
+The function \texttt{namedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred to by their names.
+
+If a window with the same name already exists, the function does nothing.
+
+\cvfunc{setTrackbarPos}\label{setTrackbarPos}
+Sets the trackbar position.
+
+\begin{lstlisting}
+void setTrackbarPos( const string& trackbarname, const string& winname, int pos );
+\end{lstlisting}
+\begin{description}
+\cvarg{trackbarname}{Name of the trackbar.}
+\cvarg{winname}{Name of the window which is the parent of trackbar.}
+\cvarg{pos}{The new position.}
+\end{description}
+
+The function sets the position of the specified trackbar in the specified window.
+
+
+\cvfunc{waitKey}\label{waitKey}
+Waits for a pressed key.
+
+\begin{lstlisting}
+int waitKey(int delay=0);
+\end{lstlisting}
+\begin{description}
+\cvarg{delay}{Delay in milliseconds. 0 is the special value that means "forever"}
+\end{description}
+
+The function \texttt{waitKey} waits for key event infinitely (when $\texttt{delay}\leq 0$) or for \texttt{delay} milliseconds, when it's positive. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
+
+\textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
+
+
+\subsection{Image and Video I/O}
 
 \cvfunc{imdecode}\label{imdecode}
 
@@ -112,24 +179,6 @@ The function \texttt{imread} loads an image from the specified file and returns 
 
 On Linux, BSD flavors and other Unix-like open-source operating systems OpenCV looks for the supplied with OS image codecs. Please, install the relevant packages (do not forget the development files, e.g. "libjpeg-dev" etc. in Debian and Ubuntu) in order to get the codec support, or turn on \texttt{OPENCV\_BUILD\_3RDPARTY\_LIBS} flag in CMake. 
 
-\cvfunc{imshow}\label{imshow}
-Displays the image in the specified window
-
-\begin{lstlisting}
-void imshow( const string& winname, const Mat& image );
-\end{lstlisting}
-\begin{description}
-\cvarg{winname}{Name of the window.}
-\cvarg{image}{Image to be shown.}
-\end{description}
-
-The function \texttt{imshow} displays the image in the specified window. If the window was created with the \texttt{CV\_WINDOW\_AUTOSIZE} flag then the image is shown with its original size, otherwise the image is scaled to fit in the window. The function may scale the image, depending on its depth:
-\begin{itemize}
-    \item If the image is 8-bit unsigned, it is displayed as is.
-    \item If the image is 16-bit unsigned or 32-bit integer, the pixels are divided by 256. That is, the value range [0,255*256] is mapped to [0,255].
-    \item If the image is 32-bit floating-point, the pixel values are multiplied by 255. That is, the value range [0,1] is mapped to [0,255].
-\end{itemize}
-
 \cvfunc{imwrite}\label{imwrite}
 Saves an image to a specified file.
 
@@ -153,36 +202,6 @@ bool imwrite( const string& filename, const Mat& img,
 \end{description}
 
 The function \texttt{imwrite} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{imread} for the list of extensions. Only 8-bit (or 16-bit in the case of PNG, JPEG 2000 and TIFF) single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \cross{Mat::convertTo}, and \cross{cvtColor} to convert it before saving, or use the universal XML I/O functions to save the image to XML or YAML format.
-
-\cvfunc{namedWindow}\label{namedWindow}
-Creates a window.
-
-\begin{lstlisting}
-void namedWindow( const string& winname, int flags );
-\end{lstlisting}
-\begin{description}
-\cvarg{name}{Name of the window in the window caption that may be used as a window identifier.}
-\cvarg{flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, the window size is automatically adjusted to fit the displayed image (see \cross{imshow}), and the user can not change the window size manually.}
-\end{description}
-
-The function \texttt{namedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred to by their names.
-
-If a window with the same name already exists, the function does nothing.
-
-\cvfunc{setTrackbarPos}\label{setTrackbarPos}
-Sets the trackbar position.
-
-\begin{lstlisting}
-void setTrackbarPos( const string& trackbarname, const string& winname, int pos );
-\end{lstlisting}
-\begin{description}
-\cvarg{trackbarname}{Name of the trackbar.}
-\cvarg{winname}{Name of the window which is the parent of trackbar.}
-\cvarg{pos}{The new position.}
-\end{description}
-
-The function sets the position of the specified trackbar in the specified window.
-
 
 \cvfunc{VideoCapture}\label{VideoCapture}
 Class for video capturing from video files or cameras
@@ -271,18 +290,3 @@ protected:
     ...
 };
 \end{lstlisting}
-
-\cvfunc{waitKey}\label{waitKey}
-Waits for a pressed key.
-
-\begin{lstlisting}
-int waitKey(int delay=0);
-\end{lstlisting}
-\begin{description}
-\cvarg{delay}{Delay in milliseconds. 0 is the special value that means "forever"}
-\end{description}
-
-The function \texttt{waitKey} waits for key event infinitely (when $\texttt{delay}\leq 0$) or for \texttt{delay} milliseconds, when it's positive. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
-
-\textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
-

@@ -1,4 +1,6 @@
-\section{CV. Image Processing and Computer Vision}
+\chapter{C++. Image Processing and Computer Vision}
+
+\section{The cv Reference}
 
 \subsection{Image Filtering}\label{CV.Filtering}
 
@@ -2565,7 +2567,7 @@ int main(int argc, char** argv)
 
 Note that usually the function detects the circles' centers well, however it may fail to find the correct radii. You can assist the function by specifying the radius range (\texttt{minRadius} and \texttt{maxRadius}) if you know it, or you may ignore the returned radius, use only the center and find the correct radius using some additional procedure.
 
-\see also: \cross{fitEllipse}, \cross{minEnclosingCircle}
+See also: \cross{fitEllipse}, \cross{minEnclosingCircle}
 
 \cvfunc{HoughLines}\label{HoughLines}
 Finds lines in a binary image using standard Hough transform.
@@ -3189,7 +3191,7 @@ and the normalized central moments $\texttt{Moments::nu}_{ij}$ are computed as:
 Note that $\texttt{mu}_{00}=\texttt{m}_{00}$, $\texttt{nu}_{00}=1$ $\texttt{nu}_{10}=\texttt{mu}_{10}=\texttt{mu}_{01}=\texttt{mu}_{10}=0$, hence the values are not stored.
 
 The moments of a contour are defined in the same way, but computed using Green's formula
-(see \url{http://en.wikipedia.org/wiki/Green%27s_theorem}), therefore, because of a limited raster resolution, the moments computed for a contour will be slightly different from the moments computed for the same contour rasterized.
+(see \url{http://en.wikipedia.org/wiki/Green_theorem}), therefore, because of a limited raster resolution, the moments computed for a contour will be slightly different from the moments computed for the same contour rasterized.
 
 See also: \cross{contourArea}, \cross{arcLength}
 
