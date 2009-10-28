@@ -95,10 +95,12 @@ backgroundcolor=\color{shadecolor}
 \include{CvAux}
 \include{HighGui}
 \include{MachineLearning}
-\include{CxCore-cpp}
-\include{Cv-cpp}
-\include{CvAux-cpp}
-\include{HighGui-cpp}
+\ifC
+\include{new_CxCore-cpp}
+\include{new_Cv-cpp}
+%\include{CvAux-cpp}
+\include{new_HighGui-cpp}
+\fi
 %\include{FAQ}
 %%%%%%%%%%%%%%%%
 

@@ -29,5 +29,5 @@ then
   svn up
   cp index-cpp.rst.copy index.rst
   TEXINPUTS=../: python renderer.py cpp > a || exit
-  TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 1.1 C++ Reference' -d _build/doctrees . _build/html/cpp
+  TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 2.0 C++ Reference' -d _build/doctrees . _build/html/cpp
 fi
