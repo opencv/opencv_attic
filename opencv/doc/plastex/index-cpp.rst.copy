@@ -6,12 +6,12 @@ The OpenCV Wiki is here: http://opencv.willowgarage.com/
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   cxcore
-   cvreference
+   c++._core
+   c++._image_processing_and_computer_vision
    cvaux
-   highgui
+   c++._highgui
    machine_learning
    faq
 
