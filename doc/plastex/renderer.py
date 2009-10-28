@@ -131,7 +131,7 @@ class reStructuredTextRenderer(BaseRenderer):
     self.indent = -1
     self.in_func = False
     decl = unicode(node.attributes[self.language]).rstrip(' ;')  # remove trailing ';'
-    r = u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'py' : 'function'}[self.language], decl)
+    r = u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'cpp' : 'cfunction', 'py' : 'function'}[self.language], decl)
     self.indent = 4
     if self.func_short_desc != '':
       r += self.ind() + self.func_short_desc + '\n\n'
@@ -272,7 +272,6 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_cvarg(self, node):
     self.indent += 4
 
-    print "HELLO", str(node.attributes['item']).strip()
     # Nested descriptions occur e.g. when a flag parameter can 
     # be one of several constants.  We want to render the inner 
     # description differently than the outer parameter descriptions.
@@ -373,6 +372,11 @@ class reStructuredTextRenderer(BaseRenderer):
         return unicode(node.attributes['a'])
     return unicode("")
 
+  def do_cvCpp(self, node):
+    if self.language == 'cpp':
+        return unicode(node.attributes['a'])
+    return unicode("")
+
   def do_cvPy(self, node):
     if self.language == 'py':
         return unicode(node.attributes['a'])
@@ -414,6 +418,7 @@ def preprocess_conditionals(fname, suffix, conditionals):
     print 'conditionals', conditionals
     f = open("../" + fname + ".tex", 'r')
     fout = open(fname + suffix + ".tex", 'w')
+    print 'write', fname + suffix + ".tex"
     ifstack=[True]
     for l in f.readlines():
         if l.startswith("\\if"):
@@ -435,7 +440,7 @@ def parse_documentation_source(language):
 
     for f in ['CxCore', 'CvReference', 'HighGui']:
         preprocess_conditionals(f, '-' + language,
-            {'C':language=='c', 'Python':language=='py', 'plastex':True}) 
+            {'C':language=='c', 'Python':language=='py', 'Cpp':language=='cpp', 'plastex':True}) 
 
     if 1:
         tex.input("\\input{online-opencv-%s.tex}" % language)
