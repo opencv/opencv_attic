@@ -48,6 +48,12 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <time.h>
+
+#ifdef __MACH__
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+#endif
+
 #endif
 
 #ifdef _OPENMP
@@ -85,7 +91,9 @@ int64 getTickCount()
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
     return (int64)tp.tv_sec*1000000000 + tp.tv_nsec;
-#else
+#elif defined __MACH__
+    return (int64)mach_absolute_time();
+#else    
     struct timeval tv;
     struct timezone tz;
     gettimeofday( &tv, &tz );
@@ -101,6 +109,15 @@ double getTickFrequency()
     return (double)freq.QuadPart;
 #elif defined __linux || defined __linux__
     return 1e9;
+#elif defined __MACH__
+    static double freq = 0;
+    if( freq == 0 )
+    {
+        mach_timebase_info_data_t sTimebaseInfo;
+        mach_timebase_info(&sTimebaseInfo);
+        freq = sTimebaseInfo.denom*1e9/sTimebaseInfo.numer;
+    }
+    return freq; 
 #else
     return 1e6;
 #endif

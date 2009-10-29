@@ -272,7 +272,7 @@ void CvArrTest::print_timing_params( int /*test_case_idx*/, char* ptr, int param
 }
 
 
-void CvArrTest::print_time( int test_case_idx, double time_clocks )
+void CvArrTest::print_time( int test_case_idx, double time_clocks, double time_cpu_clocks )
 {
     int in_type = -1, out_type = -1;
     CvSize size = { -1, -1 };
@@ -373,13 +373,13 @@ void CvArrTest::print_time( int test_case_idx, double time_clocks )
 
     print_timing_params( test_case_idx, ptr );
     ptr += strlen(ptr);
-    cpe = time_clocks / ((double)size.width * size.height);
+    cpe = time_cpu_clocks / ((double)size.width * size.height);
     if( cpe >= 100 )
         sprintf( ptr, "%.0f,", cpe );
     else
         sprintf( ptr, "%.1f,", cpe );
     ptr += strlen(ptr);
-    sprintf( ptr, "%g", time_clocks/cvGetTickFrequency() );
+    sprintf( ptr, "%g", time_clocks*1e6/cv::getTickFrequency() );
 
     ts->printf( CvTS::CSV, "%s\n", str );
 }
