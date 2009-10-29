@@ -47,27 +47,32 @@ set_target_properties(${the_target} PROPERTIES
 
 # Additional target properties
 set_target_properties(${the_target} PROPERTIES
-	DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-	)
+    DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
+    )
 
 # Add the required libraries for linking:
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} cxcore)
 
-if(MSVC AND CMAKE_CROSSCOMPILING)
-	set_target_properties(${the_target} PROPERTIES
-		LINK_FLAGS "/NODEFAULTLIB:secchk"
-		)
+if(MSVC)
+    if(CMAKE_CROSSCOMPILING)
+        set_target_properties(${the_target} PROPERTIES
+            LINK_FLAGS "/NODEFAULTLIB:secchk"
+            )
+    endif()
+    set_target_properties(${the_target} PROPERTIES
+        LINK_FLAGS "/NODEFAULTLIB:libc"
+        )
 endif()
 
 # Dependencies of this target:
 add_dependencies(${the_target} cxcore)
 
 install(TARGETS ${the_target}
-	RUNTIME DESTINATION bin COMPONENT main
-	LIBRARY DESTINATION lib COMPONENT main
-	ARCHIVE DESTINATION lib COMPONENT main)
+    RUNTIME DESTINATION bin COMPONENT main
+    LIBRARY DESTINATION lib COMPONENT main
+    ARCHIVE DESTINATION lib COMPONENT main)
 
 install(FILES ${lib_hdrs}
     DESTINATION include/opencv
