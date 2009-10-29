@@ -172,7 +172,7 @@ protected:
     virtual void run_func(); // runs tested func(s)
 
     // prints results of timing test
-    virtual void print_time( int test_case_idx, double time_usecs );
+    virtual void print_time( int test_case_idx, double time_usecs, double time_cpu_clocks );
 
     // updates progress bar
     virtual int update_progress( int progress, int test_case_idx, int count, double dt );
@@ -577,7 +577,7 @@ protected:
     virtual void fill_array( int test_case_idx, int i, int j, CvMat* arr );
     virtual void get_minmax_bounds( int i, int j, int type, CvScalar* low, CvScalar* high );
     virtual double get_success_error_level( int test_case_idx, int i, int j );
-    virtual void print_time( int test_case_idx, double time_usecs );
+    virtual void print_time( int test_case_idx, double time_usecs, double time_cpu_clocks );
     virtual void print_timing_params( int test_case_idx, char* ptr, int params_left=TIMING_EXTRA_PARAMS );
 
     bool cvmat_allowed;
@@ -749,6 +749,8 @@ CV_EXPORTS void cvTsTransform( const CvMat* a, CvMat* b, const CvMat* transmat, 
 
 // modifies values that are close to zero
 CV_EXPORTS void  cvTsPatchZeros( CvMat* mat, double level );
+
+CV_EXPORTS int64 cvTsRDTSC();
 
 #endif/*__CXTS_H__*/
 

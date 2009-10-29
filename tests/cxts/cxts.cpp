@@ -189,6 +189,64 @@ static void change_color( int color )
 
 #endif
 
+#if defined __GNUC__ && (defined __i386__ || defined __x86_64__ || defined __ppc__) 
+#if defined(__i386__)
+
+int64 cvTsRDTSC(void)
+{
+    int64 x;
+    __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+    return x;
+}
+#elif defined(__x86_64__)
+
+int64 cvTsRDTSC(void)
+{
+    unsigned hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return (int64)lo | ((int64)hi << 32);
+}
+
+#elif defined(__powerpc__)
+
+int64 cvTsRDTSC(void)
+{
+    int64 result=0;
+    unsigned upper, lower, tmp;
+    __asm__ volatile(
+                     "0:                  \n"
+                     "\tmftbu   %0           \n"
+                     "\tmftb    %1           \n"
+                     "\tmftbu   %2           \n"
+                     "\tcmpw    %2,%0        \n"
+                     "\tbne     0b         \n"
+                     : "=r"(upper),"=r"(lower),"=r"(tmp)
+                     );
+    return lower | ((int64)upper << 32);
+}
+
+#else
+
+#error "RDTSC not defined"
+
+#endif
+
+#elif defined _MSC_VER && defined WIN32 
+
+int64 cvTsRDTSC(void)
+{
+    __asm _emit 0x0f;
+    __asm _emit 0x31;
+}
+
+#else
+
+int64 cvTsRDTSC()
+{
+    return cv::getTickCount();
+}
+
+#endif
 
 /***************************** memory manager *****************************/
 
@@ -813,8 +871,8 @@ void CvTest::run( int start_from )
          count < 0 || test_case_idx < count; test_case_idx++ )
     {
         ts->update_context( this, test_case_idx, ff );
-        int64 t00 = 0, t0, t1 = 0;
-        double t_acc = 0;
+        int64 t00 = 0, t0 = 0, t1 = 0, t2 = 0, t3 = 0;
+        double t_acc = 0, t_cpu_acc = 0;
 
         if( ts->get_testing_mode() == CvTS::TIMING_MODE )
         {
@@ -829,30 +887,37 @@ void CvTest::run( int start_from )
 
             for( i = 0; i < iterations; i++ )
             {
-                t0 = cvGetTickCount();
+                t0 = cv::getTickCount();
+                t2 = cvTsRDTSC();
                 run_func();
-                t1 = cvGetTickCount();
+                t3 = cvTsRDTSC();
+                t1 = cv::getTickCount();
                 if( ts->get_err_code() < 0 )
                     return;
 
                 if( i == 0 )
                 {
                     t_acc = (double)(t1 - t0);
+                    t_cpu_acc = (double)t2;
                     t00 = t0;
                 }
                 else
                 {
                     t0 = t1 - t0;
+                    t2 = t3 - t2;
 
                     if( ts->get_timing_mode() == CvTS::MIN_TIME )
                     {
                         if( (double)t0 < t_acc )
                             t_acc = (double)t0;
+                        if( (double)t2 < t_cpu_acc )
+                            t_cpu_acc = (double)t2;
                     }
                     else
                     {
                         assert( ts->get_timing_mode() == CvTS::AVG_TIME );
                         t_acc += (double)t0;
+                        t_cpu_acc += (double)t2;
                     }
 
                     if( t1 - t00 > freq*2000000 )
@@ -861,8 +926,11 @@ void CvTest::run( int start_from )
             }
 
             if( ts->get_timing_mode() == CvTS::AVG_TIME )
+            {
                 t_acc /= i;
-            print_time( test_case_idx, t_acc );
+                t_cpu_acc /= i;
+            }
+            print_time( test_case_idx, t_acc, t_cpu_acc );
         }
         else
         {
@@ -910,7 +978,7 @@ int CvTest::validate_test_results( int )
 }
 
 
-void CvTest::print_time( int /*test_case_idx*/, double /*time_usecs*/ )
+void CvTest::print_time( int /*test_case_idx*/, double /*time_usecs*/, double /*time_cpu_clocks*/ )
 {
 }
 
