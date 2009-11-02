@@ -1674,6 +1674,7 @@ public:
     CxCore_PerspectiveTransformTest();
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+    double get_success_error_level( int test_case_idx, int i, int j );
     void get_timing_test_array_types_and_sizes( int test_case_idx,
                                                 CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool* are_images );
@@ -1706,6 +1707,14 @@ void CxCore_PerspectiveTransformTest::get_test_array_types_and_sizes( int test_c
     mattype = depth == CV_64F ? CV_64F : bits & 1 ? CV_32F : CV_64F;
     types[INPUT][1] = mattype;
     sizes[INPUT][1] = cvSize(cn + 1, cn + 1);
+}
+
+
+double CxCore_PerspectiveTransformTest::get_success_error_level( int test_case_idx, int i, int j )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    return depth == CV_32F ? 1e-4 : depth == CV_64F ? 1e-9 :
+		CxCore_MatrixTest::get_success_error_level(test_case_idx, i, j);
 }
 
 
