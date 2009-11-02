@@ -90,6 +90,7 @@ void CV_AccumBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     depth = depth == 0 ? CV_8U : depth == 1 ? CV_32F : CV_64F;
     accdepth = accdepth == 1 ? CV_32F : CV_64F;
+    accdepth = MAX(accdepth, depth);
 
     for( i = 0; i < input_count; i++ )
         types[INPUT][i] = CV_MAKETYPE(depth,cn);
@@ -111,7 +112,8 @@ void CV_AccumBaseTestImpl::get_timing_test_array_types_and_sizes( int test_case_
 {
     CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
                                                       whole_sizes, are_images );
-    types[INPUT_OUTPUT][0] = CV_MAKETYPE(CV_32F, CV_MAT_CN(types[INPUT][0]));
+    types[INPUT_OUTPUT][0] = CV_MAKETYPE(MAX(CV_32F, CV_MAT_DEPTH(types[INPUT][0])),
+        CV_MAT_CN(types[INPUT][0]));
     alpha = 0.333333333333333;
 }
 
@@ -148,6 +150,7 @@ protected:
     void prepare_to_validation( int );
 };
 
+static int niters = 0;
 
 CV_AccTest::CV_AccTest()
     : CV_AccumBaseTest( "accum-acc", "cvAcc" )

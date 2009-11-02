@@ -51,12 +51,6 @@
 namespace cv
 {
 
-const signed char g_DepthToType[] =
-{
-    -1, -1, CV_8U, CV_8S, CV_16U, CV_16S, -1, -1,
-    CV_32F, CV_32S, -1, -1, -1, -1, -1, -1, CV_64F, -1
-};
-
 const float g_8x32fTab[] =
 {
     -128.f, -127.f, -126.f, -125.f, -124.f, -123.f, -122.f, -121.f,

@@ -180,10 +180,6 @@ extern const ushort g_8x16uSqrTab[];
 
 extern const char* g_HersheyGlyphs[];
 
-extern const signed char g_DepthToType[];
-#define IplToCvDepth( depth ) \
-    cv::g_DepthToType[(((depth) & 255) >> 2) + ((depth) < 0)]
-
 extern const uchar g_Saturate8u[];
 #define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), cv::g_Saturate8u[(t)+256])
 #define CV_MIN_8U(a,b)       ((a) - CV_FAST_CAST_8U((a) - (b)))

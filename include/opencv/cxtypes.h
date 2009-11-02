@@ -81,6 +81,15 @@
       || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
     #include <emmintrin.h>
     #define CV_SSE2 1
+    #if (_MSC_VER >= 1500 || defined CV_ICC) || \
+        (defined __SSE3__ && defined __GNUC__ && __GNUC__ >= 4)
+        #include <pmmintrin.h>
+        #define CV_SSE3 1
+        #define _cv_loadu_si128 _mm_lddqu_si128
+    #else
+        #define CV_SSE3 0
+        #define _cv_loadu_si128 _mm_loadu_si128
+    #endif
   #else
     #define CV_SSE2 0
   #endif
@@ -631,6 +640,10 @@ CvMat;
 /* 0x3a50 = 11 10 10 01 01 00 00 ~ array of log2(sizeof(arr_type_elem)) */
 #define CV_ELEM_SIZE(type) \
     (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
+
+#define IPL2CV_DEPTH(depth) \
+    (((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
+    (CV_16S<<24)+(CV_32S<<28)) >> (((depth & 0xF0) >> 2) + (depth<0 ? 20 : 0)))
 
 /* Inline constructor. No data is allocated internally!!!
  * (Use together with cvCreateData, or use cvCreateMat instead to

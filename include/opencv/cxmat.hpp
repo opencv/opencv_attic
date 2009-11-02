@@ -207,6 +207,27 @@ inline Mat::Mat(const CvMat* m, bool copyData)
     }
 }
 
+static inline Mat cvarrToMat(const CvArr* arr, bool copyData=false,
+                             bool allowND=true, int coiMode=0)
+{
+    if( CV_IS_MAT(arr) )
+        return Mat((const CvMat*)arr, copyData );
+    else if( CV_IS_IMAGE(arr) )
+    {
+        const IplImage* iplimg = (const IplImage*)arr;
+        if( coiMode == 0 && iplimg->roi && iplimg->roi->coi > 0 )
+            CV_Error(CV_BadCOI, "COI is not supported by the function");
+        return Mat(iplimg, copyData);
+    }
+    else
+    {
+        CvMat hdr, *cvmat = cvGetMat( arr, &hdr, 0, allowND ? 1 : 0 );
+        if( cvmat )
+            return Mat(cvmat, copyData);
+    }
+    return Mat();
+}
+
 template<typename _Tp> inline Mat::Mat(const vector<_Tp>& vec, bool copyData)
     : flags(MAGIC_VAL | DataType<_Tp>::type | CV_MAT_CONT_FLAG),
     rows(0), cols(0), step(0), data(0), refcount(0),

@@ -228,14 +228,14 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
             for( i = 0; i <= maxIdx; i++ )
             {
                 const int** p = (const int**)&f[i].p[0];
-                __m128i r0 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[0]+ofs)),
-                                           _mm_loadu_si128((const __m128i*)(p[1]+ofs)));
-                __m128i r1 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[3]+ofs)),
-                                           _mm_loadu_si128((const __m128i*)(p[2]+ofs)));
-                __m128i r2 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[4]+ofs)),
-                                           _mm_loadu_si128((const __m128i*)(p[5]+ofs)));
-                __m128i r3 = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(p[7]+ofs)),
-                                           _mm_loadu_si128((const __m128i*)(p[6]+ofs)));
+                __m128i r0 = _mm_sub_epi32(_cv_loadu_si128((const __m128i*)(p[0]+ofs)),
+                                           _cv_loadu_si128((const __m128i*)(p[1]+ofs)));
+                __m128i r1 = _mm_sub_epi32(_cv_loadu_si128((const __m128i*)(p[3]+ofs)),
+                                           _cv_loadu_si128((const __m128i*)(p[2]+ofs)));
+                __m128i r2 = _mm_sub_epi32(_cv_loadu_si128((const __m128i*)(p[4]+ofs)),
+                                           _cv_loadu_si128((const __m128i*)(p[5]+ofs)));
+                __m128i r3 = _mm_sub_epi32(_cv_loadu_si128((const __m128i*)(p[7]+ofs)),
+                                           _cv_loadu_si128((const __m128i*)(p[6]+ofs)));
                 r0 = _mm_add_epi32(_mm_add_epi32(r0,r1), _mm_add_epi32(r2,r3));
                 _mm_store_ps((float*)&vals[i], _mm_cvtepi32_ps(r0));
             }

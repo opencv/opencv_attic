@@ -60,10 +60,10 @@ template<class Op8> struct VBinOp8
         int x = 0;
         for( ; x <= len - 32; x += 32 )
         {
-            __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
-            __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 16));
-            r0 = op(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
-            r1 = op(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 16)));
+            __m128i r0 = _cv_loadu_si128((const __m128i*)(src1 + x));
+            __m128i r1 = _cv_loadu_si128((const __m128i*)(src1 + x + 16));
+            r0 = op(r0,_cv_loadu_si128((const __m128i*)(src2 + x)));
+            r1 = op(r1,_cv_loadu_si128((const __m128i*)(src2 + x + 16)));
             _mm_storeu_si128((__m128i*)(dst + x), r0);
             _mm_storeu_si128((__m128i*)(dst + x + 16), r1);
         }
@@ -85,10 +85,10 @@ template<typename T, class Op16> struct VBinOp16
         int x = 0;
         for( ; x <= len - 16; x += 16 )
         {
-            __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
-            __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 8));
-            r0 = op(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
-            r1 = op(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 8)));
+            __m128i r0 = _cv_loadu_si128((const __m128i*)(src1 + x));
+            __m128i r1 = _cv_loadu_si128((const __m128i*)(src1 + x + 8));
+            r0 = op(r0,_cv_loadu_si128((const __m128i*)(src2 + x)));
+            r1 = op(r1,_cv_loadu_si128((const __m128i*)(src2 + x + 8)));
             _mm_storeu_si128((__m128i*)(dst + x), r0);
             _mm_storeu_si128((__m128i*)(dst + x + 8), r1);
         }

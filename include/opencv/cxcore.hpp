@@ -59,6 +59,7 @@
 
 namespace cv {
 
+#undef abs
 #undef min
 #undef max
 #undef Complex
@@ -128,6 +129,7 @@ CV_EXPORTS int getThreadNum();
 
 CV_EXPORTS int64 getTickCount();
 CV_EXPORTS double getTickFrequency();
+CV_EXPORTS int64 getCPUTickCount();
 
 CV_EXPORTS void* fastMalloc(size_t);
 CV_EXPORTS void fastFree(void* ptr);
@@ -941,7 +943,6 @@ public:
     double epsilon;
 };
 
-CV_EXPORTS Mat cvarrToMat(const CvArr* arr, bool copyData=false, bool allowND=true, int coiMode=0);
 CV_EXPORTS void extractImageCOI(const CvArr* arr, Mat& coiimg, int coi=-1);
 CV_EXPORTS void insertImageCOI(const Mat& coiimg, CvArr* arr, int coi=-1);
 

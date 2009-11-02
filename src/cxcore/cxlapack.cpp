@@ -1271,7 +1271,35 @@ void SVD::backSubst( const Mat& rhs, Mat& dst ) const
 CV_IMPL double
 cvDet( const CvArr* arr )
 {
-    return determinant(cv::cvarrToMat(arr));
+    if( CV_IS_MAT(arr) && ((CvMat*)arr)->rows <= 3 )
+    {
+        CvMat* mat = (CvMat*)arr;
+        int type = CV_MAT_TYPE(mat->type);
+        int rows = mat->rows;
+        uchar* m = mat->data.ptr;
+        int step = mat->step;
+        CV_Assert( rows == mat->cols );
+
+        #define Mf(y, x) ((float*)(m + y*step))[x]
+        #define Md(y, x) ((double*)(m + y*step))[x]
+
+        if( type == CV_32F )
+        {
+            if( rows == 2 )
+                return det2(Mf);
+            if( rows == 3 )
+                return det3(Mf);
+        }
+        else if( type == CV_64F )
+        {
+            if( rows == 2 )
+                return det2(Md);
+            if( rows == 3 )
+                return det3(Md);
+        }
+        return cv::determinant(cv::Mat(mat));
+    }
+    return cv::determinant(cv::cvarrToMat(arr));
 }
 
 

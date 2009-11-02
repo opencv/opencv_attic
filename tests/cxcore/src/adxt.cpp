@@ -543,6 +543,7 @@ CxCore_DXTBaseTestImpl::CxCore_DXTBaseTestImpl( const char* test_name, const cha
     test_array[TEMP].push(NULL);
     test_array[TEMP].push(NULL);
 
+    max_log_array_size = 9;
     element_wise_relative_error = spectrum_mode;
 
     size_list = (CvSize*)dxt_sizes;
@@ -583,6 +584,15 @@ void CxCore_DXTBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         else
             size.height = 1;
         flags &= ~CV_DXT_ROWS;
+    }
+
+    const int P2_MIN_SIZE = 32;
+    if( ((bits >> 10) & 1) == 0 )
+    {
+        size.width = (size.width / P2_MIN_SIZE)*P2_MIN_SIZE;
+        size.width = MAX(size.width, 1);
+        size.height = (size.height / P2_MIN_SIZE)*P2_MIN_SIZE;
+        size.height = MAX(size.height, 1);
     }
 
     if( !allow_odd )

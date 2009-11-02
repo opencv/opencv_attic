@@ -189,65 +189,6 @@ static void change_color( int color )
 
 #endif
 
-#if defined __GNUC__ && (defined __i386__ || defined __x86_64__ || defined __ppc__) 
-#if defined(__i386__)
-
-int64 cvTsRDTSC(void)
-{
-    int64 x;
-    __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
-    return x;
-}
-#elif defined(__x86_64__)
-
-int64 cvTsRDTSC(void)
-{
-    unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-    return (int64)lo | ((int64)hi << 32);
-}
-
-#elif defined(__powerpc__)
-
-int64 cvTsRDTSC(void)
-{
-    int64 result=0;
-    unsigned upper, lower, tmp;
-    __asm__ volatile(
-                     "0:                  \n"
-                     "\tmftbu   %0           \n"
-                     "\tmftb    %1           \n"
-                     "\tmftbu   %2           \n"
-                     "\tcmpw    %2,%0        \n"
-                     "\tbne     0b         \n"
-                     : "=r"(upper),"=r"(lower),"=r"(tmp)
-                     );
-    return lower | ((int64)upper << 32);
-}
-
-#else
-
-#error "RDTSC not defined"
-
-#endif
-
-#elif defined _MSC_VER && defined WIN32 
-
-int64 cvTsRDTSC(void)
-{
-    __asm _emit 0x0f;
-    __asm _emit 0x31;
-}
-
-#else
-
-int64 cvTsRDTSC()
-{
-    return cv::getTickCount();
-}
-
-#endif
-
 /***************************** memory manager *****************************/
 
 typedef struct CvTestAllocBlock
@@ -888,9 +829,9 @@ void CvTest::run( int start_from )
             for( i = 0; i < iterations; i++ )
             {
                 t0 = cv::getTickCount();
-                t2 = cvTsRDTSC();
+                t2 = cv::getCPUTickCount();
                 run_func();
-                t3 = cvTsRDTSC();
+                t3 = cv::getCPUTickCount();
                 t1 = cv::getTickCount();
                 if( ts->get_err_code() < 0 )
                     return;
