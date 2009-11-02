@@ -1571,7 +1571,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
             for( ; x <= (size.width - 4)*3; x += 4*3 )
             {
                 __m128i z = _mm_setzero_si128();
-                __m128i v0 = _mm_loadu_si128((const __m128i*)(src + x)), v1;
+                __m128i v0 = _cv_loadu_si128((const __m128i*)(src + x)), v1;
                 __m128i v2 = _mm_loadl_epi64((const __m128i*)(src + x + 8)), v3;
                 v1 = _mm_unpacklo_epi16(_mm_srli_si128(v0, 6), z); // b1 g1 r1
                 v3 = _mm_unpacklo_epi16(_mm_srli_si128(v2, 2), z); // b3 g3 r3

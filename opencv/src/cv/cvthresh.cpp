@@ -114,8 +114,8 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
             for( ; j <= roi.width - 32; j += 32 )
             {
                 __m128i v0, v1;
-                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
                 v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
                 v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
                 v0 = _mm_and_si128( v0, maxval_ );
@@ -137,8 +137,8 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
             for( ; j <= roi.width - 32; j += 32 )
             {
                 __m128i v0, v1;
-                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
                 v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
                 v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
                 v0 = _mm_andnot_si128( v0, maxval_ );
@@ -160,8 +160,8 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
             for( ; j <= roi.width - 32; j += 32 )
             {
                 __m128i v0, v1;
-                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
                 v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
                 v1 = _mm_subs_epu8( v1, _mm_subs_epu8( v1, thresh_u ));
                 _mm_storeu_si128( (__m128i*)(dst + j), v0 );
@@ -180,8 +180,8 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
             for( ; j <= roi.width - 32; j += 32 )
             {
                 __m128i v0, v1;
-                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
                 v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
                 v1 = _mm_and_si128( v1, _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ));
                 _mm_storeu_si128( (__m128i*)(dst + j), v0 );
@@ -200,8 +200,8 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
             for( ; j <= roi.width - 32; j += 32 )
             {
                 __m128i v0, v1;
-                v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
+                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
                 v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
                 v1 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ), v1 );
                 _mm_storeu_si128( (__m128i*)(dst + j), v0 );

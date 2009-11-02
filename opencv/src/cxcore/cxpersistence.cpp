@@ -3707,7 +3707,7 @@ icvWriteImage( CvFileStorage* fs, const char* name,
         cvEndWriteStruct( fs );
     }
 
-    depth = IplToCvDepth(image->depth);
+    depth = IPL2CV_DEPTH(image->depth);
     sprintf( dt_buf, "%d%c", image->nChannels, icvTypeSymbol[depth] );
     dt = dt_buf + (dt_buf[2] == '\0' && dt_buf[0] == '1');
     cvWriteString( fs, "dt", dt, 0 );

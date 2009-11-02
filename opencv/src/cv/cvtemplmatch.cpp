@@ -45,6 +45,13 @@ void
 icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
               CvPoint anchor, double delta, int borderType )
 {
+    // disable OpenMP in the case of Visual Studio,
+    // otherwise the performance drops significantly
+#undef USE_OPENMP
+#if !defined _MSC_VER || defined CV_ICC
+    #define USE_OPENMP 1
+#endif
+
     const double block_scale = 4.5;
     const int min_block_size = 256;
     CvMat* dft_img[CV_MAX_THREADS] = {0};
@@ -136,7 +143,11 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
 
     CV_CALL( dft_templ = cvCreateMat( dftsize.height*templ_cn, dftsize.width, max_depth ));
 
+#ifdef USE_OPENMP
     num_threads = cvGetNumThreads();
+#else
+    num_threads = 1;
+#endif
 
     for( k = 0; k < num_threads; k++ )
         CV_CALL( dft_img[k] = cvCreateMat( dftsize.height, dftsize.width, max_depth ));
@@ -194,13 +205,17 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
     tile_count = tile_count_x*tile_count_y;
 
     {
-#ifdef _OPENMP
+#if defined _OPENMP && defined USE_OPENMP
     #pragma omp parallel for num_threads(num_threads) schedule(dynamic)
 #endif
     // calculate correlation by blocks
     for( k = 0; k < tile_count; k++ )
     {
+#ifdef USE_OPENMP
         int thread_idx = cvGetThreadNum();
+#else
+        int thread_idx = 0;
+#endif
         int x = (k%tile_count_x)*blocksize.width;
         int y = (k/tile_count_x)*blocksize.height;
         int i, yofs;
@@ -330,7 +345,7 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     __BEGIN__;
 
     int coi1 = 0, coi2 = 0;
-    int depth, cn, tdepth;
+    int depth, cn;
     int i, j, k;
     CvMat stub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
@@ -341,7 +356,7 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
     int idx = 0, idx2 = 0;
     double *p0, *p1, *p2, *p3;
     double *q0, *q1, *q2, *q3;
-    double inv_area, mval;
+    double inv_area;
     int sum_step, sqsum_step;
     int num_type = method == CV_TM_CCORR || method == CV_TM_CCORR_NORMED ? 0 :
                    method == CV_TM_CCOEFF || method == CV_TM_CCOEFF_NORMED ? 1 : 2;

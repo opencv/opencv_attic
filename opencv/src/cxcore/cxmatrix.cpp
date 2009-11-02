@@ -49,63 +49,49 @@
 namespace cv {
 
 Mat::Mat(const IplImage* img, bool copyData)
-    : flags(0), rows(0), cols(0), step(0), data(0),
-      refcount(0), datastart(0), dataend(0)
 {
-    CvMat m, dst;                                
-    int coi=0;
-    cvGetMat( img, &m, &coi );
+    CV_DbgAssert(CV_IS_IMAGE(img) && img->imageData != 0);
     
+    int depth = IPL2CV_DEPTH( img->depth );
+    size_t esz;
+    step = img->widthStep;
+    refcount = 0;
+
+    if(!img->roi)
+    {
+        CV_Assert(img->dataOrder == IPL_DATA_ORDER_PIXEL);
+        flags = MAGIC_VAL + CV_MAKETYPE(depth, img->nChannels);
+        rows = img->height; cols = img->width;
+        datastart = data = (uchar*)img->imageData;
+        esz = elemSize();
+        dataend = datastart + step*(rows-1) + esz*cols;    
+    }
+    else
+    {
+        CV_Assert(img->dataOrder == IPL_DATA_ORDER_PIXEL || img->roi->coi != 0);
+        bool selectedPlane = img->roi->coi && img->dataOrder == IPL_DATA_ORDER_PLANE;
+        flags = MAGIC_VAL + CV_MAKETYPE(depth, selectedPlane ? 1 : img->nChannels);
+        rows = img->roi->height; cols = img->roi->width;
+        datastart = (uchar*)img->imageData + (selectedPlane ? (img->roi->coi - 1)*step*img->height : 0);
+        data = datastart + img->roi->yOffset*step + img->roi->xOffset*elemSize();
+        esz = elemSize();
+        dataend = datastart + step*(img->height-1) + esz*img->width;
+    }
+    flags |= (cols*esz == step || rows == 1 ? CONTINUOUS_FLAG : 0);
+
     if( copyData )
     {
-        if( coi == 0 )
-        {
-            create( m.rows, m.cols, CV_MAT_TYPE(m.type) );
-            dst = *this;
-            cvCopy( &m, &dst );
-        }
+        Mat m = *this;
+        rows = cols = 0;
+        if( !img->roi || !img->roi->coi )
+            m.copyTo(*this);
         else
         {
-            create( m.rows, m.cols, CV_MAT_DEPTH(m.type) );
-            dst = *this;
-            CvMat* pdst = &dst;
-            const int pairs[] = { coi-1, 0 };
-            cvMixChannels( (const CvArr**)&img, 1, (CvArr**)&pdst, 1, pairs, 1 );
+            int ch[] = {img->roi->coi - 1, 0};
+            create(m.rows, m.cols, m.type());
+            mixChannels(&m, 1, this, 1, ch, 1);
         }
     }
-    else
-    {
-        /*if( coi != 0 )
-            CV_Error(CV_BadCOI, "When copyData=false, COI must not be set");*/
-
-        *this = Mat(m.rows, m.cols, CV_MAT_TYPE(m.type), m.data.ptr, m.step);
-        /*if( img->roi )
-        {
-            datastart = (uchar*)img->imageData;
-            dataend = datastart + img->imageSize;
-        }*/
-    }
-}
-
-Mat cvarrToMat(const CvArr* arr, bool copyData, bool allowND, int coiMode)
-{
-    Mat m;
-    if( CV_IS_MAT(arr) )
-        m = Mat((const CvMat*)arr, copyData );
-    else if( CV_IS_IMAGE(arr) )
-    {
-        const IplImage* iplimg = (const IplImage*)arr;
-        m = Mat(iplimg, copyData );
-        if( coiMode == 0 && cvGetImageCOI(iplimg) > 0 )
-            CV_Error(CV_BadCOI, "COI is not supported by the function");
-    }
-    else
-    {
-        CvMat hdr, *cvmat = cvGetMat( arr, &hdr, 0, allowND ? 1 : 0 );
-        if( cvmat )
-            m = Mat(cvmat, copyData);
-    }
-    return m;
 }
 
 void extractImageCOI(const CvArr* arr, Mat& ch, int coi)

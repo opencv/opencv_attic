@@ -91,10 +91,10 @@ template<class VecUpdate> struct MorphRowIVec
 
         for( i = 0; i <= width - 16; i += 16 )
         {
-            __m128i s = _mm_loadu_si128((const __m128i*)(src + i));
+            __m128i s = _cv_loadu_si128((const __m128i*)(src + i));
             for( k = cn; k < _ksize; k += cn )
             {
-                __m128i x = _mm_loadu_si128((const __m128i*)(src + i + k));
+                __m128i x = _cv_loadu_si128((const __m128i*)(src + i + k));
                 s = updateOp(s, x);
             }
             _mm_storeu_si128((__m128i*)(dst + i), s);
@@ -386,15 +386,15 @@ template<class VecUpdate> struct MorphIVec
         for( i = 0; i <= width - 32; i += 32 )
         {
             const uchar* sptr = src[0] + i;
-            __m128i s0 = _mm_loadu_si128((const __m128i*)sptr);
-            __m128i s1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
+            __m128i s0 = _cv_loadu_si128((const __m128i*)sptr);
+            __m128i s1 = _cv_loadu_si128((const __m128i*)(sptr + 16));
             __m128i x0, x1;
 
             for( k = 1; k < nz; k++ )
             {
                 sptr = src[k] + i;
-                x0 = _mm_loadu_si128((const __m128i*)sptr);
-                x1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
+                x0 = _cv_loadu_si128((const __m128i*)sptr);
+                x1 = _cv_loadu_si128((const __m128i*)(sptr + 16));
                 s0 = updateOp(s0, x0);
                 s1 = updateOp(s1, x1);
             }

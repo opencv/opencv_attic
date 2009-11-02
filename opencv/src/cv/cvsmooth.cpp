@@ -883,7 +883,7 @@ struct MinMaxVec8u
     typedef uchar value_type;
     typedef __m128i arg_type;
     enum { SIZE = 16 };
-    arg_type load(const uchar* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
+    arg_type load(const uchar* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
     void store(uchar* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
     void operator()(arg_type& a, arg_type& b) const
     {
@@ -899,7 +899,7 @@ struct MinMaxVec16u
     typedef ushort value_type;
     typedef __m128i arg_type;
     enum { SIZE = 8 };
-    arg_type load(const ushort* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
+    arg_type load(const ushort* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
     void store(ushort* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
     void operator()(arg_type& a, arg_type& b) const
     {

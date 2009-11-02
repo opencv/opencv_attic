@@ -1069,7 +1069,7 @@ cvGetElemType( const CvArr* arr )
     else if( CV_IS_IMAGE(arr))
     {
         IplImage* img = (IplImage*)arr;
-        type = CV_MAKETYPE( IplToCvDepth(img->depth), img->nChannels );
+        type = CV_MAKETYPE( IPL2CV_DEPTH(img->depth), img->nChannels );
     }
     else
         CV_Error( CV_StsBadArg, "unrecognized or unsupported array type" );
@@ -1788,7 +1788,7 @@ cvPtr2D( const CvArr* arr, int y, int x, int* _type )
 
         if( _type )
         {
-            int type = IplToCvDepth(img->depth);
+            int type = IPL2CV_DEPTH(img->depth);
             if( type < 0 || (unsigned)(img->nChannels - 1) > 3 )
                 CV_Error( CV_StsUnsupportedFormat, "" );
 
@@ -2384,7 +2384,7 @@ cvGetMat( const CvArr* array, CvMat* mat,
         if( img->imageData == 0 )
             CV_Error( CV_StsNullPtr, "The image has NULL data pointer" );
 
-        depth = IplToCvDepth( img->depth );
+        depth = IPL2CV_DEPTH( img->depth );
         if( depth < 0 )
             CV_Error( CV_BadDepth, "" );
 

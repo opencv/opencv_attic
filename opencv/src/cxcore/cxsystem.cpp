@@ -67,6 +67,13 @@ namespace cv
 
 #ifdef HAVE_IPP
 volatile bool useOptimizedFlag = true;
+
+struct IPPInitializer
+{
+    IPPInitializer() { ippStaticInit(); }
+};
+
+IPPInitializer ippInitializer;
 #else
 volatile bool useOptimizedFlag = false;
 #endif
@@ -122,6 +129,66 @@ double getTickFrequency()
     return 1e6;
 #endif
 }
+
+#if defined __GNUC__ && (defined __i386__ || defined __x86_64__ || defined __ppc__) 
+#if defined(__i386__)
+
+int64 getCPUTickCount(void)
+{
+    int64 x;
+    __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+    return x;
+}
+#elif defined(__x86_64__)
+
+int64 getCPUTickCount(void)
+{
+    unsigned hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return (int64)lo | ((int64)hi << 32);
+}
+
+#elif defined(__powerpc__)
+
+int64 getCPUTickCount(void)
+{
+    int64 result=0;
+    unsigned upper, lower, tmp;
+    __asm__ volatile(
+                     "0:                  \n"
+                     "\tmftbu   %0           \n"
+                     "\tmftb    %1           \n"
+                     "\tmftbu   %2           \n"
+                     "\tcmpw    %2,%0        \n"
+                     "\tbne     0b         \n"
+                     : "=r"(upper),"=r"(lower),"=r"(tmp)
+                     );
+    return lower | ((int64)upper << 32);
+}
+
+#else
+
+#error "RDTSC not defined"
+
+#endif
+
+#elif defined _MSC_VER && defined WIN32 
+
+int64 getCPUTickCount(void)
+{
+    __asm _emit 0x0f;
+    __asm _emit 0x31;
+}
+
+#else
+
+int64 getCPUTickCount()
+{
+    return getTickCount();
+}
+
+#endif
+
 
 static int numThreads = 0;
 static int numProcs = 0;

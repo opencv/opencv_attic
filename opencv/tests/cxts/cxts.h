@@ -750,7 +750,5 @@ CV_EXPORTS void cvTsTransform( const CvMat* a, CvMat* b, const CvMat* transmat, 
 // modifies values that are close to zero
 CV_EXPORTS void  cvTsPatchZeros( CvMat* mat, double level );
 
-CV_EXPORTS int64 cvTsRDTSC();
-
 #endif/*__CXTS_H__*/
 

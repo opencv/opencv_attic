@@ -573,7 +573,7 @@ struct RowVec_8u32s
                     f = _mm_shuffle_epi32(f, 0);
                     f = _mm_packs_epi32(f, f);
 
-                    x0 = _mm_loadu_si128((const __m128i*)src);
+                    x0 = _cv_loadu_si128((const __m128i*)src);
                     x2 = _mm_unpackhi_epi8(x0, z);
                     x0 = _mm_unpacklo_epi8(x0, z);
                     x1 = _mm_mulhi_epi16(x0, f);
@@ -664,9 +664,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
-                        x1 = _mm_loadu_si128((__m128i*)src);
-                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x1 = _cv_loadu_si128((__m128i*)src);
+                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -684,9 +684,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
-                        x1 = _mm_loadu_si128((__m128i*)src);
-                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x1 = _cv_loadu_si128((__m128i*)src);
+                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -710,9 +710,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
-                        x1 = _mm_loadu_si128((__m128i*)src);
-                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x1 = _cv_loadu_si128((__m128i*)src);
+                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                         x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -748,9 +748,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
-                        x1 = _mm_loadu_si128((__m128i*)src);
-                        x2 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _cv_loadu_si128((__m128i*)src);
+                        x2 = _cv_loadu_si128((__m128i*)(src + cn*2));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -776,9 +776,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
-                        x1 = _mm_loadu_si128((__m128i*)src);
-                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x1 = _cv_loadu_si128((__m128i*)src);
+                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                         x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -802,8 +802,8 @@ struct SymmRowSmallVec_8u32s
                         z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
                         z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
 
-                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
-                        x1 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                        x0 = _cv_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _cv_loadu_si128((__m128i*)(src + cn*2));
                         y1 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         y0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -832,8 +832,8 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, y0;
-                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
-                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x1 = _cv_loadu_si128((__m128i*)(src - cn));
                         y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
                         _mm_store_si128((__m128i*)(dst + i), _mm_srai_epi32(_mm_unpacklo_epi16(x0, x0),16));
@@ -849,8 +849,8 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, y0, y1, z0, z1, z2, z3;
-                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
-                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x0 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x1 = _cv_loadu_si128((__m128i*)(src - cn));
                         y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -882,8 +882,8 @@ struct SymmRowSmallVec_8u32s
                 for( ; i <= width - 16; i += 16, src += 16 )
                 {
                     __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                    x0 = _mm_loadu_si128((__m128i*)(src + cn));
-                    x2 = _mm_loadu_si128((__m128i*)(src - cn));
+                    x0 = _cv_loadu_si128((__m128i*)(src + cn));
+                    x2 = _cv_loadu_si128((__m128i*)(src - cn));
                     y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                     x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
 
@@ -896,8 +896,8 @@ struct SymmRowSmallVec_8u32s
                     z2 = _mm_unpacklo_epi16(y0, y1);
                     z3 = _mm_unpackhi_epi16(y0, y1);
 
-                    x0 = _mm_loadu_si128((__m128i*)(src + cn*2));
-                    x1 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                    x0 = _cv_loadu_si128((__m128i*)(src + cn*2));
+                    x1 = _cv_loadu_si128((__m128i*)(src - cn*2));
                     y1 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                     y0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -1750,7 +1750,7 @@ struct FilterVec_8u
                 __m128 f = _mm_load_ss(kf+k), t0, t1;
                 f = _mm_shuffle_ps(f, f, 0);
 
-                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
+                x0 = _cv_loadu_si128((const __m128i*)(src[k] + i));
                 x1 = _mm_unpackhi_epi8(x0, z);
                 x0 = _mm_unpacklo_epi8(x0, z);
 
@@ -1831,7 +1831,7 @@ struct FilterVec_8u16s
                 __m128 f = _mm_load_ss(kf+k), t0, t1;
                 f = _mm_shuffle_ps(f, f, 0);
 
-                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
+                x0 = _cv_loadu_si128((const __m128i*)(src[k] + i));
                 x1 = _mm_unpackhi_epi8(x0, z);
                 x0 = _mm_unpacklo_epi8(x0, z);
 
