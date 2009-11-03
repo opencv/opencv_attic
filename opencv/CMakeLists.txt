@@ -563,7 +563,7 @@ if(MSVC)
     endif()
 
     if(ENABLE_OPENMP)
-        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /openmp")
+        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
     endif()
 
     # Remove unreferenced functions: function level linking

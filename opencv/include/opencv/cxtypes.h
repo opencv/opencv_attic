@@ -154,13 +154,7 @@
 #endif /* CV_INLINE */
 
 #ifndef CV_FORCE_INLINE
-#if defined __GNUC__ && __GNUC__*10 + __GNUC_MINOR__ >= 31
-    #define CV_FORCE_INLINE __attribute__((always_inline))
-#elif defined _MSC_VER
-    #define CV_FORCE_INLINE __forceinline
-#else
     #define CV_FORCE_INLINE CV_INLINE
-#endif
 #endif
 
 #if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && defined CVAPI_EXPORTS

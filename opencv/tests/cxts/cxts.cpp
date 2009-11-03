@@ -1409,6 +1409,8 @@ int CvTS::run( int argc, char** argv )
         if( memory_manager )
             memory_manager->start_tracking();
         update_context( test, -1, true );
+        current_test_info.rng_seed0 = current_test_info.rng_seed;
+        
         ostream_testname_mask = 0; // reset "test name was printed" flags
         if( output_streams[LOG_IDX].f )
             fflush( output_streams[LOG_IDX].f );
@@ -1692,6 +1694,9 @@ void CvTS::vprintf( int streams, const char* fmt, va_list l )
                     if( i != CSV_IDX && !(ostream_testname_mask & (1 << i)) && current_test_info.test )
                     {
                         fprintf( f, "-------------------------------------------------\n" );
+                        if( i == CONSOLE_IDX || i == SUMMARY_IDX )
+							fprintf( f, "[%08x%08x]\n", (int)(current_test_info.rng_seed0 >> 32),
+							    (int)(current_test_info.rng_seed0));
                         fprintf( f, "%s: ", current_test_info.test->get_name() );
                         fflush( f );
                         ostream_testname_mask |= 1 << i;

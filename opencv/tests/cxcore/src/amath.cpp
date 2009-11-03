@@ -1713,7 +1713,7 @@ void CxCore_PerspectiveTransformTest::get_test_array_types_and_sizes( int test_c
 double CxCore_PerspectiveTransformTest::get_success_error_level( int test_case_idx, int i, int j )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth == CV_32F ? 1e-4 : depth == CV_64F ? 1e-9 :
+    return depth == CV_32F ? 1e-4 : depth == CV_64F ? 1e-8 :
 		CxCore_MatrixTest::get_success_error_level(test_case_idx, i, j);
 }
 

@@ -232,6 +232,9 @@ typedef struct CvTestInfo
 
     // seed value right before the data for the failed test case is prepared.
     uint64 rng_seed;
+    
+    // seed value right before running the test
+    uint64 rng_seed0;
 
     // index of test case, can be then passed to CvTest::proceed_to_test_case()
     int test_case_idx;
