@@ -70,6 +70,16 @@ int createTrackbar(const string& trackbarName, const string& winName,
                              value, count, callback, userdata);
 }
 
+void setTrackbarPos( const string& trackbarName, const string& winName, int value )
+{
+    cvSetTrackbarPos(trackbarName.c_str(), winName.c_str(), value );
+}
+
+int getTrackbarPos( const string& trackbarName, const string& winName )
+{
+	return cvGetTrackbarPos(trackbarName.c_str(), winName.c_str());
+}
+
 }
 
 #if   defined WIN32 || defined _WIN32         // see window_w32.cpp
