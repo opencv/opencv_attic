@@ -804,9 +804,10 @@ void CvTest::run( int start_from )
 {
     int i, test_case_idx, count = get_test_case_count();
     int64 t_start = cvGetTickCount();
-    double freq = cvGetTickFrequency();
+    double freq = cv::getTickFrequency();
     bool ff = can_do_fast_forward();
     int progress = 0, code;
+    std::vector<double> v_cpe, v_time;
 
     for( test_case_idx = ff && start_from >= 0 ? start_from : 0;
          count < 0 || test_case_idx < count; test_case_idx++ )
@@ -817,7 +818,7 @@ void CvTest::run( int start_from )
 
         if( ts->get_testing_mode() == CvTS::TIMING_MODE )
         {
-            const int iterations = 15;
+            const int iterations = 20;
             code = prepare_test_case( test_case_idx );
 
             if( code < 0 || ts->get_err_code() < 0 )
@@ -825,52 +826,39 @@ void CvTest::run( int start_from )
 
             if( code == 0 )
                 continue;
+                
+            v_cpe.resize(0);
+            v_time.resize(0);
 
             for( i = 0; i < iterations; i++ )
             {
-                t0 = cv::getTickCount();
-                t2 = cv::getCPUTickCount();
-                run_func();
-                t3 = cv::getCPUTickCount();
-                t1 = cv::getTickCount();
-                if( ts->get_err_code() < 0 )
-                    return;
-
-                if( i == 0 )
+                for(;;)
                 {
-                    t_acc = (double)(t1 - t0);
-                    t_cpu_acc = (double)t2;
-                    t00 = t0;
-                }
-                else
-                {
-                    t0 = t1 - t0;
-                    t2 = t3 - t2;
+					t0 = cv::getTickCount();
+					t2 = cv::getCPUTickCount();
+					run_func();
+					t3 = cv::getCPUTickCount();
+					t1 = cv::getTickCount();
+					if( ts->get_err_code() < 0 )
+						return;
 
-                    if( ts->get_timing_mode() == CvTS::MIN_TIME )
-                    {
-                        if( (double)t0 < t_acc )
-                            t_acc = (double)t0;
-                        if( (double)t2 < t_cpu_acc )
-                            t_cpu_acc = (double)t2;
-                    }
-                    else
-                    {
-                        assert( ts->get_timing_mode() == CvTS::AVG_TIME );
-                        t_acc += (double)t0;
-                        t_cpu_acc += (double)t2;
-                    }
+					if( t3 - t2 > 0 && t1 - t0 > 1 )
+						break;
+				}
 
-                    if( t1 - t00 > freq*2000000 )
-                        break;
-                }
+				if( i == 0 )
+					t00 = t0;
+				v_cpe.push_back((double)(t3 - t2));
+				v_time.push_back((double)(t1 - t0));
+                if( i >= 5 && t1 - t00 > freq*5 )
+                    break;
             }
 
-            if( ts->get_timing_mode() == CvTS::AVG_TIME )
-            {
-                t_acc /= i;
-                t_cpu_acc /= i;
-            }
+			sort(v_cpe.begin(), v_cpe.end());
+			sort(v_time.begin(), v_time.end());
+			
+            t_cpu_acc = v_cpe[i/2];
+            t_acc = v_time[i/2];
             print_time( test_case_idx, t_acc, t_cpu_acc );
         }
         else
