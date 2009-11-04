@@ -675,7 +675,7 @@ template<typename _Tp> inline Mat_<_Tp> Mat_<_Tp>::operator()( const Range& rowR
 { return Mat_<_Tp>(*this, rowRange, colRange); }
 
 template<typename _Tp> inline Mat_<_Tp> Mat_<_Tp>::operator()( const Rect& roi ) const
-{ return Mat_<_Tp>(roi); }
+{ return Mat_<_Tp>(*this, roi); }
 
 template<typename _Tp> inline _Tp* Mat_<_Tp>::operator [](int y)
 { return (_Tp*)ptr(y); }
