@@ -1,5 +1,6 @@
 #include "cv.h" // include standard OpenCV headers, same as before
 #include "highgui.h"
+#include <stdio.h>
 
 using namespace cv; // all the new API is put into "cv" namespace. Export its content
 
