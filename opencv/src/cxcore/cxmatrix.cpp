@@ -52,7 +52,7 @@ Mat::Mat(const IplImage* img, bool copyData)
 {
     CV_DbgAssert(CV_IS_IMAGE(img) && img->imageData != 0);
     
-    int depth = IPL2CV_DEPTH( img->depth );
+    int depth = IPL2CV_DEPTH(img->depth);
     size_t esz;
     step = img->widthStep;
     refcount = 0;
@@ -63,8 +63,7 @@ Mat::Mat(const IplImage* img, bool copyData)
         flags = MAGIC_VAL + CV_MAKETYPE(depth, img->nChannels);
         rows = img->height; cols = img->width;
         datastart = data = (uchar*)img->imageData;
-        esz = elemSize();
-        dataend = datastart + step*(rows-1) + esz*cols;    
+        esz = elemSize(); 
     }
     else
     {
@@ -72,18 +71,20 @@ Mat::Mat(const IplImage* img, bool copyData)
         bool selectedPlane = img->roi->coi && img->dataOrder == IPL_DATA_ORDER_PLANE;
         flags = MAGIC_VAL + CV_MAKETYPE(depth, selectedPlane ? 1 : img->nChannels);
         rows = img->roi->height; cols = img->roi->width;
-        datastart = (uchar*)img->imageData + (selectedPlane ? (img->roi->coi - 1)*step*img->height : 0);
-        data = datastart + img->roi->yOffset*step + img->roi->xOffset*elemSize();
         esz = elemSize();
-        dataend = datastart + step*(img->height-1) + esz*img->width;
+        data = datastart = (uchar*)img->imageData +
+			(selectedPlane ? (img->roi->coi - 1)*step*img->height : 0) +
+			img->roi->yOffset*step + img->roi->xOffset*esz;        
     }
+    dataend = datastart + step*(rows-1) + esz*cols;
     flags |= (cols*esz == step || rows == 1 ? CONTINUOUS_FLAG : 0);
 
     if( copyData )
     {
         Mat m = *this;
         rows = cols = 0;
-        if( !img->roi || !img->roi->coi )
+        if( !img->roi || !img->roi->coi ||
+            img->dataOrder == IPL_DATA_ORDER_PLANE)
             m.copyTo(*this);
         else
         {
@@ -93,6 +94,7 @@ Mat::Mat(const IplImage* img, bool copyData)
         }
     }
 }
+
 
 void extractImageCOI(const CvArr* arr, Mat& ch, int coi)
 {
