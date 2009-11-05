@@ -1452,6 +1452,17 @@ CalcOpticalFlowHS
   CvArr vely        /ch_vel_64
   double lambda
   CvTermCriteria criteria
+CalcOpticalFlowFarneback
+  CvArr prev /ch_image8
+  CvArr curr /ch_image8
+  CvArr flow
+  double pyr_scale 0.5
+  int levels 3
+  int winsize 15
+  int iterations 3
+  int poly_n 7
+  double poly_sigma 1.5
+  int flags 0
 
 # Highgui
 NamedWindow
