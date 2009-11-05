@@ -518,6 +518,12 @@ CVAPI(void)  cvCalcAffineFlowPyrLK( const CvArr*  prev, const CvArr*  curr,
 CVAPI(int)  cvEstimateRigidTransform( const CvArr* A, const CvArr* B,
                                       CvMat* M, int full_affine );
 
+/* Estimate optical flow for each pixel using the two-frame G. Farneback algorithm */
+CVAPI(void) cvCalcOpticalFlowFarneback( const CvArr* prev, const CvArr* next,
+                                        CvArr* flow, double pyr_scale, int levels,
+                                        int winsize, int iterations, int poly_n,
+                                        double poly_sigma, int flags );
+
 /********************************* motion templates *************************************/
 
 /****************************************************************************************\

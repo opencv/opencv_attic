@@ -4,6 +4,7 @@
 
 #include <opencv/cxcore.h>
 #include <opencv/cv.h>
+#include <opencv/cvaux.h>
 #include <opencv/cvwimage.h>
 #include <opencv/highgui.h>
 
@@ -3391,6 +3392,30 @@ static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject
   return Py_BuildValue("ffNN", min_val, max_val, pminloc, pmaxloc);
 }
 
+/*static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject *kw)
+{
+  CvHistogram* hist;
+  PyObject *pyobj_hist = NULL;
+  float min_val;
+  float max_val;
+  int min_loc[CV_MAX_DIM];
+  int max_loc[CV_MAX_DIM];
+
+  if (!PyArg_ParseTuple(args, "O", &pyobj_hist))
+    return NULL;
+  if (!convert_to_CvHistogram(pyobj_hist, &hist, "hist")) return NULL;
+  ERRWRAP(cvGetMinMaxHistValue(hist, &min_val, &max_val, min_loc, max_loc));
+  int d = cvGetDims(hist->bins);
+  PyObject *pminloc = PyTuple_New(d), *pmaxloc = PyTuple_New(d);
+  for (int i = 0; i < d; i++) {
+    PyTuple_SetItem(pminloc, i, PyInt_FromLong(min_loc[i]));
+    PyTuple_SetItem(pmaxloc, i, PyInt_FromLong(max_loc[i]));
+  }
+  return Py_BuildValue("ffNN", min_val, max_val, pminloc, pmaxloc);
+}*/
+
+
+
 static int zero = 0;
 
 /************************************************************************/
@@ -3429,6 +3454,10 @@ static PyMethodDef methods[] = {
   {"GetHuMoments", (PyCFunction)pycvGetHuMoments, METH_KEYWORDS, "GetHuMoments(cvmoments) -> (h1, h2, h3, h4, h5, h5, h7)"},
   {"GetMinMaxHistValue", (PyCFunction)pycvGetMinMaxHistValue, METH_KEYWORDS, "GetMinMaxHistValue(hist) -> min_val,max_val,min_loc,max_loc"},
   {"WaitKey", (PyCFunction)pycvWaitKey, METH_KEYWORDS, "WaitKey(delay=0) -> int"},
+  //{"CalcOpticalFlowFarneback", (PyCFunction)pycvCalcOpticalFlowFarneback, METH_KEYWORDS, "CalcOpticalFlowFarneback(prev, next, flow, pyr_scale=0.5, levels=3, win_size=15, iterations=3, poly_n=7, poly_sigma=1.5, flags=0) -> None"},
+  //{"_HOGComputeDescriptors", (PyCFunction)pycvHOGComputeDescriptors, METH_KEYWORDS, "_HOGComputeDescriptors(image, win_stride=block_stride, locations=None, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_descriptors"},
+  //{"_HOGDetect", (PyCFunction)pycvHOGDetect, METH_KEYWORDS, "_HOGDetect(image, svm_classifier, win_stride=block_stride, locations=None, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_points"},
+  //{"_HOGDetectMultiScale", (PyCFunction)pycvHOGDetectMultiScale, METH_KEYWORDS, "_HOGDetectMultiScale(image, svm_classifier, win_stride=block_stride, scale=1.05, group_threshold=2, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_points"},
 
   {"temp_test", temp_test, METH_VARARGS},
 
