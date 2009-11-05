@@ -646,8 +646,9 @@ CvMat;
     (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
 
 #define IPL2CV_DEPTH(depth) \
-    (((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
-    (CV_16S<<24)+(CV_32S<<28)) >> (((depth & 0xF0) >> 2) + (depth<0 ? 20 : 0)))
+    ((((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
+    (CV_16S<<24)+(CV_32S<<28)) >> ((((depth) & 0xF0) >> 2) + \
+    (((depth) & IPL_DEPTH_SIGN) ? 20 : 0))) & 15)
 
 /* Inline constructor. No data is allocated internally!!!
  * (Use together with cvCreateData, or use cvCreateMat instead to
