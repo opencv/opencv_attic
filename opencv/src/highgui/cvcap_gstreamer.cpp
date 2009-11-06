@@ -56,6 +56,8 @@
 #include <gst/video/video.h>
 #ifdef HAVE_GSTREAMER_APP
 #include <gst/app/gstappsink.h>
+#include <gst/app/gstappsrc.h>
+
 #else
 #include "gstappsink.h"
 #endif
@@ -67,13 +69,20 @@
 #endif
 
 static bool isInited = false;
-
-typedef struct CvCapture_GStreamer
+class CvCapture_GStreamer : public CvCapture
 {
-	/// method call table
-	int			type;	// one of [1394, v4l2, v4l, file]
+public:
+    CvCapture_GStreamer() { init(); }
+    virtual ~CvCapture_GStreamer() { close(); }
 
-	GstElement	       *pipeline;
+    virtual bool open( int type, const char* filename );
+    virtual void close();
+
+    virtual double getProperty(int);
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual IplImage* retrieveFrame(int);
+    GstElement	       *pipeline;
 	GstElement	       *source;
 	GstElement	       *decodebin;
 	GstElement	       *colour;
@@ -84,7 +93,15 @@ typedef struct CvCapture_GStreamer
 	GstCaps		       *caps;	// filter caps inserted right after the source
 
 	IplImage	       *frame;
-} CvCapture_GStreamer;
+protected:
+    void init();
+    bool reopen();
+};
+void CvCapture_GStreamer::init()
+{
+	frame=0;
+    buffer=0;
+}
 
 static void icvClose_GStreamer(CvCapture_GStreamer *cap)
 {
@@ -153,6 +170,7 @@ static void icvHandleMessage(CvCapture_GStreamer *cap)
 //
 static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 {
+	
 	if(!cap->pipeline)
 		return 0;
 
@@ -163,14 +181,12 @@ static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 
 	if(cap->buffer)
 		gst_buffer_unref(cap->buffer);
-
 	icvHandleMessage(cap);
 
 #ifndef HAVE_GSTREAMER_APP
 	if(gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)))
 	{
 //		printf("peeking buffer, %d buffers in queue\n",
-//		       gst_app_sink_get_queue_length(GST_APP_SINK(cap->appsink)));
 		cap->buffer = gst_app_sink_peek_buffer(GST_APP_SINK(cap->appsink));
 	}
 	else
@@ -183,26 +199,6 @@ static int icvGrabFrame_GStreamer(CvCapture_GStreamer *cap)
 			icvHandleMessage(cap);
 			return 0;
 		}
-
-// 		icvHandleMessage(cap);
-//
-// 		// check whether stream contains an acceptable video stream
-// 		GstPad *sinkpad = gst_element_get_pad(cap->colour, "sink");
-// 		if(!GST_PAD_IS_LINKED(sinkpad)) {
-// 			gst_object_unref(sinkpad);
-// 			fprintf(stderr, "GStreamer: Pipeline is NOT ready. Format unknown?\n");
-// 			return 0;
-// 		}
-// 		gst_object_unref(sinkpad);
-
-// 		printf("pulling preroll\n");
-//
-// 		if(!gst_app_sink_pull_preroll(GST_APP_SINK(cap->appsink))) {
-// 			printf("no preroll\n");
-// 			return 0;
-// 		}
-
-//		printf("pulling buffer\n");
 
 		cap->buffer = gst_app_sink_pull_buffer(GST_APP_SINK(cap->appsink));
 
@@ -233,8 +229,6 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 	if(!cap->buffer)
 		return 0;
 
-//	printf("getting buffercaps\n");
-
 	GstCaps* caps = gst_buffer_get_caps(cap->buffer);
 
 	assert(gst_caps_get_size(caps) == 1);
@@ -245,14 +239,13 @@ static IplImage *icvRetrieveFrame_GStreamer(CvCapture_GStreamer *cap, int)
 		gint height, width;
 
 		if(!gst_structure_get_int(structure, "width", &width) ||
-		   !gst_structure_get_int(structure, "height", &height))
+	   !gst_structure_get_int(structure, "height", &height))
 			return 0;
 
-//		printf("creating frame %dx%d\n", width, height);
+     	//printf("creating frame %dx%d\n", width, height);
 
 		cap->frame = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 	}
-
 	gst_caps_unref(caps);
 
 	memcpy (cap->frame->imageData, GST_BUFFER_DATA(cap->buffer), GST_BUFFER_SIZE (cap->buffer));
@@ -504,9 +497,8 @@ static void icvNewPad(GstElement *decodebin, GstPad *pad, gboolean last, gpointe
 	gst_object_unref(sinkpad);
 }
 
-static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *filename)
+static bool icvCreateCapture_GStreamer(CvCapture_GStreamer *cap, int type, const char *filename)
 {
-	CvCapture_GStreamer *capture = 0;
 	CV_FUNCNAME("cvCaptureFromCAM_GStreamer");
 
 	__BEGIN__;
@@ -519,23 +511,19 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 //		printf("gst_init\n");
 		gst_init (NULL, NULL);
 
-// according to the documentation this is the way to register a plugin now
-// unfortunately, it has not propagated into my distribution yet...
-// 		gst_plugin_register_static(GST_VERSION_MAJOR, GST_VERSION_MINOR,
-// 			"opencv-appsink", "Element application sink",
-// 			"0.1", appsink_plugin_init, "LGPL", "highgui", "opencv",
-// 			"http://opencvlibrary.sourceforge.net/");
 
 		isInited = true;
 	}
-
+    bool stream=false;
 	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
 	//printf("entered capturecreator %s\n", sourcetypes[type]);
     GstElement *source;
     if  (type == CV_CAP_GSTREAMER_FILE && gst_uri_is_valid(filename)) {
+		printf("Trying to connect to stream \n");
+		stream=true;
 		source = gst_element_make_from_uri(GST_URI_SRC, filename, NULL);
 	}
-	else 	
+	else	
 		source = gst_element_factory_make(sourcetypes[type], NULL);
 	if(!source)
 		return 0;
@@ -547,15 +535,23 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 #ifdef HAVE_GSTREAMER_APP
 	GstElement *sink = gst_element_factory_make("appsink", NULL);
+	if (stream) {
+		gst_app_sink_set_max_buffers (GST_APP_SINK(sink),1);
+		gst_app_sink_set_drop (GST_APP_SINK(sink),true);
+	}	
 #else
 	GstElement *sink = gst_element_factory_make("opencv-appsink", NULL);
 #endif
-	GstCaps *caps = gst_caps_new_simple(GST_VIDEO_CAPS_RGB, NULL);
-	gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
-//	gst_caps_unref(caps);
-	gst_base_sink_set_sync(GST_BASE_SINK(sink), false);
-//	g_signal_connect(sink, "new-buffer", G_CALLBACK(newbuffer), NULL);
-
+    GstCaps *caps= gst_caps_new_simple("video/x-raw-rgb",
+									   "red_mask",   G_TYPE_INT, 255,
+ 	                                   "green_mask", G_TYPE_INT, 65280,
+ 	                                   "blue_mask",  G_TYPE_INT, 16711680,
+                                       NULL);
+    //GstCaps *caps=gst_video_format_new_caps(GST_VIDEO_FORMAT_BGR,,368,30,1,1,1);
+    gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
+	gst_caps_unref(caps);
+	//gst_base_sink_set_sync(GST_BASE_SINK(sink), false);
+	//g_signal_connect(sink, "new-buffer", G_CALLBACK(newbuffer), NULL);	
 	GstElement *decodebin = gst_element_factory_make("decodebin", NULL);
 	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(icvNewPad), colour);
 
@@ -563,24 +559,12 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 	gst_bin_add_many(GST_BIN(pipeline), source, decodebin, colour, sink, NULL);
 
-//	printf("added many\n");
-
 	switch(type) {
 	case CV_CAP_GSTREAMER_V4L2: // default to 640x480, 30 fps
-		caps = gst_caps_new_simple("video/x-raw-rgb",
-					   "width", G_TYPE_INT, 640,
-					   "height", G_TYPE_INT, 480,
-					   "framerate", GST_TYPE_FRACTION, 30, 1,
-					   NULL);
-		if(!gst_element_link_filtered(source, decodebin, caps)) {
-			CV_ERROR(CV_StsError, "GStreamer: cannot link v4l2src -> decodebin\n");
-			gst_object_unref(pipeline);
-			return 0;
-		}
-		gst_caps_unref(caps);
 		break;
 	case CV_CAP_GSTREAMER_V4L:
 	case CV_CAP_GSTREAMER_1394:
+        break;
 	case CV_CAP_GSTREAMER_FILE:
 		if(!gst_element_link(source, decodebin)) {
 			CV_ERROR(CV_StsError, "GStreamer: cannot link filesrc -> decodebin\n");
@@ -589,7 +573,6 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 		}
 		break;
 	}
-
 	if(!gst_element_link(colour, sink)) {
 		CV_ERROR(CV_StsError, "GStreamer: cannot link colour -> sink\n");
 		gst_object_unref(pipeline);
@@ -619,167 +602,206 @@ static CvCapture_GStreamer * icvCreateCapture_GStreamer(int type, const char *fi
 
 
 //	printf("state now paused\n");
-
 	// construct capture struct
-	capture = (CvCapture_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
-	memset(capture, 0, sizeof(CvCapture_GStreamer));
-	capture->type = type;
-	capture->pipeline = pipeline;
-	capture->source = source;
-	capture->decodebin = decodebin;
-	capture->colour = colour;
-	capture->appsink = sink;
+	//capture->type = type;
+	cap->pipeline = pipeline;
+	cap->source = source;
+	cap->decodebin = decodebin;
+	cap->colour = colour;
+	cap->appsink = sink;
 
-	icvHandleMessage(capture);
-
-	OPENCV_ASSERT(capture,
-                      "cvCaptureFromFile_GStreamer( const char * )", "couldn't create capture");
+	icvHandleMessage(cap);
 
 //	GstClock *clock = gst_pipeline_get_clock(GST_PIPELINE(pipeline));
 //	printf("clock %s\n", gst_object_get_name(GST_OBJECT(clock)));
 
 	__END__;
 
-	return capture;
+	return true;
 }
-
-#if 0
-//
-//
-// image sequence writer
-//
-//
-typedef struct CvVideoWriter_GStreamer {
-	char		       *filename;
-	unsigned		currentframe;
-};
-
-static int icvWriteFrame_GStreamer( CvVideoWriter* writer, const IplImage* image )
-{
-	CvVideoWriter_GStreamer *wri = (CvVideoWriter_GStreamer *)writer;
-
-	char str[100];
-	char *x = str;
-	int size = 100;
-	while(snprintf(x, size, wri->filename, wri->currentframe) == size - 1) {
-		size *= 2;
-		if(x == str)
-			x = (char *)malloc(size);
-		else
-			x = (char *)realloc(x, size);
-	}
-
-	int ret = cvSaveImage(x, image);
-
-	wri->currentframe++;
-
-	if(x != str)
-		free(x);
-
-	return ret;
-}
-
-static void icvReleaseVideoWriter_GStreamer( CvVideoWriter** writer )
-{
-	CvVideoWriter_GStreamer **wri = (CvVideoWriter_GStreamer **)writer;
-
-	free((*wri)->filename);
-}
-
-CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename )
-{
-	CvVideoWriter_GStreamer *writer;
-
-	unsigned offset = 0;
-	char *name = icvExtractPattern(filename, &offset);
-	if(!name)
-		return 0;
-
-	char str[100];
-	char *x = str;
-	int size = 100;
-	while(snprintf(x, size, name, 0) == size - 1) {
-		size *= 2;
-		if(x == str)
-			x = (char *)malloc(size);
-		else
-			x = (char *)realloc(x, size);
-	}
-	if(!cvHaveImageWriter(x)) {
-		if(x != str)
-			free(x);
-		return 0;
-	}
-	if(x != str)
-		free(x);
-
-	writer = (CvVideoWriter_GStreamer *)cvAlloc(sizeof(CvCapture_GStreamer));
-	memset(writer, 0, sizeof(CvVideoWriter_GStreamer));
-	writer->filename = strdup(name);
-	writer->currentframe = offset;
-
-	return (CvVideoWriter *)writer;
-}
-#endif
-
-
-class CvCapture_GStreamer_CPP : public CvCapture
-{
-public:
-    CvCapture_GStreamer_CPP() { captureGS = 0; }
-    virtual ~CvCapture_GStreamer_CPP() { close(); }
-
-    virtual bool open( int type, const char* filename );
-    virtual void close();
-
-    virtual double getProperty(int);
-    virtual bool setProperty(int, double);
-    virtual bool grabFrame();
-    virtual IplImage* retrieveFrame(int);
-protected:
-
-    CvCapture_GStreamer* captureGS;
-};
-
-bool CvCapture_GStreamer_CPP::open( int type, const char* filename )
+bool CvCapture_GStreamer::open( int type, const char* filename )
 {
     close();
-    captureGS = icvCreateCapture_GStreamer( type, filename );
-    return captureGS != 0;
+    icvCreateCapture_GStreamer(this, type, filename );
+    return true;
 }
-
-void CvCapture_GStreamer_CPP::close()
+//
+//
+// gstreamer image sequence writer
+//
+//
+class CvVideoWriter_GStreamer : public CvVideoWriter
 {
-    if( captureGS )
-    {
-        icvClose_GStreamer( captureGS );
-        cvFree( &captureGS );
+public:
+    CvVideoWriter_GStreamer() { init(); }
+    virtual ~CvVideoWriter_GStreamer() { close(); }
+
+    virtual bool open( const char* filename, int fourcc,
+                       double fps, CvSize frameSize, bool isColor );
+    virtual void close();
+    virtual bool writeFrame( const IplImage* image ); 
+protected:
+    void init();	
+    GstElement* source;
+    GstElement* file;
+    GstElement* enc;
+    GstElement* mux;
+    GstElement* colour;
+    GstBuffer* buffer;
+    GstElement* pipeline;
+    int input_pix_fmt;
+};
+void CvVideoWriter_GStreamer::init()
+{
+	pipeline=0;
+}
+void CvVideoWriter_GStreamer::close()
+{
+  if (pipeline) {	
+	gst_app_src_end_of_stream(GST_APP_SRC(source));
+	gst_element_set_state (pipeline, GST_STATE_NULL);
+	gst_object_unref (GST_OBJECT (pipeline));
+  }
+}
+bool CvVideoWriter_GStreamer::open( const char * filename, int fourcc,
+		double fps, CvSize frameSize, bool is_color )
+{
+    //actually doesn't support fourcc parameter and encode an avi with jpegenc
+    //we need to find a common api between backend to support fourcc for avi 
+    //but also to choose in a common way codec and container format (ogg,dirac,matroska)
+    CV_FUNCNAME("CvVideoWriter_GStreamer::open");
+	
+    __BEGIN__;
+	// check arguments
+	assert (filename);
+	assert (fps > 0);
+	assert (frameSize.width > 0  &&  frameSize.height > 0);
+    if(!isInited) {
+		gst_init (NULL, NULL);
+		isInited = true;
+	}
+	close();
+    source=gst_element_factory_make("appsrc",NULL);
+    file=gst_element_factory_make("filesink", NULL);
+    enc=gst_element_factory_make("jpegenc", NULL);
+    mux=gst_element_factory_make("avimux", NULL);
+    colour = gst_element_factory_make("ffmpegcolorspace", NULL);
+    g_object_set(G_OBJECT(file), "location", filename, NULL);
+    pipeline = gst_pipeline_new (NULL);
+    GstCaps* caps;
+    if (is_color) {
+        input_pix_fmt=1;
+		caps= gst_video_format_new_caps(GST_VIDEO_FORMAT_BGR,
+												 frameSize.width,
+												 frameSize.height,
+												 fps,
+												 1,
+												 1,
+												 1); 	
+	}								 
+	else  {
+		input_pix_fmt=0;
+		caps= gst_caps_new_simple("video/x-raw-gray",
+								  "width", G_TYPE_INT, frameSize.width,
+								  "height", G_TYPE_INT, frameSize.height,
+								  "framerate", GST_TYPE_FRACTION, int(fps),1,
+								  "bpp",G_TYPE_INT,8, 
+								  "depth",G_TYPE_INT,8,
+                                           NULL);  
+    }                                                                          
+	gst_app_src_set_caps(GST_APP_SRC(source), caps);	
+	gst_bin_add_many(GST_BIN(pipeline), source, colour,mux, file, NULL);
+	gst_element_link_many(source,colour,mux,file,NULL);
+	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING) ==
+		GST_STATE_CHANGE_FAILURE) {
+			printf("Cannot put pipeline to play\n");
+			return 0;
+		}
+    __END__;
+
+	return true;
+}	
+bool CvVideoWriter_GStreamer::writeFrame( const IplImage * image )
+{
+    
+    CV_FUNCNAME("CvVideoWriter_GStreamer::writerFrame");
+
+	__BEGIN__;
+	if (input_pix_fmt == 1) {
+        if (image->nChannels != 3 || image->depth != IPL_DEPTH_8U) {
+            CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 3.");
+        }
     }
+	else if (input_pix_fmt == 0) {
+        if (image->nChannels != 1 || image->depth != IPL_DEPTH_8U) {
+            CV_ERROR(CV_StsUnsupportedFormat, "cvWriteFrame() needs images with depth = IPL_DEPTH_8U and nChannels = 1.");
+        }
+    }
+	else {
+        assert(false);
+    }
+    int size;
+    size = image->imageSize;
+    buffer = gst_buffer_new_and_alloc (size); 
+    //gst_buffer_set_data (buffer,(guint8*)image->imageData, GST_BUFFER_SIZE(sizeof(image->imageData)));
+    memcpy (GST_BUFFER_DATA(buffer),image->imageData, size); 
+    GstFlowReturn flow_ret;
+    flow_ret=gst_app_src_push_buffer(GST_APP_SRC(source),buffer);
+    //gst_buffer_unref(buffer);
+	//buffer = 0;
+    __END__;
+	return true;
 }
 
-bool CvCapture_GStreamer_CPP::grabFrame()
+/*static void icvReleaseVideoWriter_GStreamer( CvVideoWriter** writer )
 {
-    return captureGS ? icvGrabFrame_GStreamer( captureGS ) != 0 : false;
+	//CvVideoWriter_GStreamer **wri = (CvVideoWriter_GStreamer **)writer;
+
+	//free(this->filename);
+}*/
+
+
+void CvCapture_GStreamer::close()
+{
+  if (pipeline)	
+	icvClose_GStreamer( this );
+
 }
 
-IplImage* CvCapture_GStreamer_CPP::retrieveFrame(int)
+bool CvCapture_GStreamer::grabFrame()
 {
-    return captureGS ? (IplImage*)icvRetrieveFrame_GStreamer( captureGS, 0 ) : 0;
+    return this ? icvGrabFrame_GStreamer( this ) != 0 : false;
 }
 
-double CvCapture_GStreamer_CPP::getProperty( int propId )
+IplImage* CvCapture_GStreamer::retrieveFrame(int)
 {
-    return captureGS ? icvGetProperty_GStreamer( captureGS, propId ) : 0;
+    return this ? (IplImage*)icvRetrieveFrame_GStreamer( this, 0 ) : 0;
+ 
 }
 
-bool CvCapture_GStreamer_CPP::setProperty( int propId, double value )
+double CvCapture_GStreamer::getProperty( int propId )
 {
-    return captureGS ? icvSetProperty_GStreamer( captureGS, propId, value ) != 0 : false;
+    return this ? icvGetProperty_GStreamer( this, propId ) : 0;
 }
 
-CvCapture* cvCreateCapture_GStreamer( int type, const char* filename )
+bool CvCapture_GStreamer::setProperty( int propId, double value )
 {
-    CvCapture_GStreamer_CPP* capture = new CvCapture_GStreamer_CPP;
+    return this ? icvSetProperty_GStreamer( this, propId, value ) != 0 : false;
+}
+CvVideoWriter* cvCreateVideoWriter_GStreamer(const char* filename, int fourcc, double fps,
+                                           CvSize frameSize, int isColor )
+{
+    CvVideoWriter_GStreamer* wrt = new CvVideoWriter_GStreamer;
+    if( wrt->open(filename, fourcc, fps,
+                                           frameSize, isColor))
+        return wrt;
+
+    delete wrt;
+    return 0;
+}
+CvCapture* cvCreateCapture_GStreamer(int type, const char* filename )
+{
+    CvCapture_GStreamer* capture = new CvCapture_GStreamer;
 
     if( capture->open( type, filename ))
         return capture;

@@ -191,13 +191,14 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 			if (capture)
 				return capture;
 		#endif
+	/* Re-enable again when gstreamer 1394 support will land in the backend code	
 		#ifdef HAVE_GSTREAMER
 			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_1394, 0);
 			if (capture)
 				return capture;
 		#endif
+	*/ 
 			break;
-
 		#ifdef HAVE_MIL
 		case CV_CAP_MIL:
 			capture = cvCreateCameraCapture_MIL (index);
@@ -301,7 +302,10 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
 	if(!result)
 		result = cvCreateVideoWriter_QT(filename, fourcc, fps, frameSize, is_color);
 	#endif
-
+    #ifdef HAVE_GSTREAMER
+    if (! result)
+        result = cvCreateVideoWriter_GStreamer(filename, fourcc, fps, frameSize, is_color);
+    #endif
 	if(!result)
 		result = cvCreateVideoWriter_Images(filename);
 
@@ -310,6 +314,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
 
 CV_IMPL int cvWriteFrame( CvVideoWriter* writer, const IplImage* image )
 {
+
     return writer ? writer->writeFrame(image) : 0;
 }
 

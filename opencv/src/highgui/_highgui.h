@@ -140,6 +140,7 @@ CvCapture* cvCreateFileCapture_XINE (const char* filename);
 CvCapture * cvCreateCapture_GStreamer(int type, const char *filename);
 CvCapture* cvCreateFileCapture_FFMPEG (const char* filename);
 
+
 CvVideoWriter* cvCreateVideoWriter_FFMPEG ( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color );
 
@@ -150,7 +151,8 @@ CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
 
 CvCapture * cvCreateCameraCapture_Unicap  (const int     index);
-
+CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize, int is_color );
 /*namespace cv
 {
 
