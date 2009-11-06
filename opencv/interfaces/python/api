@@ -1532,3 +1532,20 @@ DecodeImage IplImage*
 DecodeImageM CvMat*
   CvMat buf
   int iscolor CV_LOAD_IMAGE_COLOR
+
+# cvaux stuff
+HOGDetectMultiScale CvSeq*
+  CvArr image
+  CvMemStorage storage
+  CvArr svm_classifier NULL
+  CvSize win_stride cvSize(0,0)
+  double hit_threshold 0
+  double scale 1.05
+  int group_threshold 2
+  CvSize padding cvSize(0,0)
+  CvSize win_size cvSize(64,128)
+  CvSize block_size cvSize(16,16)
+  CvSize block_stride cvSize(8,8)
+  CvSize cell_size cvSize(8,8)
+  int nbins 9
+  int gammaCorrection 1

@@ -3392,29 +3392,36 @@ static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject
   return Py_BuildValue("ffNN", min_val, max_val, pminloc, pmaxloc);
 }
 
-/*static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject *kw)
+static CvSeq* cvHOGDetectMultiScale( const CvArr* image, CvMemStorage* storage,
+  const CvArr* svm_classifier=NULL, CvSize win_stride=cvSize(0,0),
+  double hit_threshold=0, double scale=1.05,
+  int group_threshold=2, CvSize padding=cvSize(0,0),
+  CvSize win_size=cvSize(64,128), CvSize block_size=cvSize(16,16),
+  CvSize block_stride=cvSize(8,8), CvSize cell_size=cvSize(8,8),
+  int nbins=9, int gammaCorrection=1 )
 {
-  CvHistogram* hist;
-  PyObject *pyobj_hist = NULL;
-  float min_val;
-  float max_val;
-  int min_loc[CV_MAX_DIM];
-  int max_loc[CV_MAX_DIM];
-
-  if (!PyArg_ParseTuple(args, "O", &pyobj_hist))
-    return NULL;
-  if (!convert_to_CvHistogram(pyobj_hist, &hist, "hist")) return NULL;
-  ERRWRAP(cvGetMinMaxHistValue(hist, &min_val, &max_val, min_loc, max_loc));
-  int d = cvGetDims(hist->bins);
-  PyObject *pminloc = PyTuple_New(d), *pmaxloc = PyTuple_New(d);
-  for (int i = 0; i < d; i++) {
-    PyTuple_SetItem(pminloc, i, PyInt_FromLong(min_loc[i]));
-    PyTuple_SetItem(pmaxloc, i, PyInt_FromLong(max_loc[i]));
-  }
-  return Py_BuildValue("ffNN", min_val, max_val, pminloc, pmaxloc);
-}*/
-
-
+    cv::HOGDescriptor hog(win_size, block_size, block_stride, cell_size, nbins, 1, -1, cv::HOGDescriptor::L2Hys, 0.2, gammaCorrection!=0);
+    if(win_stride.width == 0 && win_stride.height == 0)
+        win_stride = block_stride;
+    cv::Mat img = cv::cvarrToMat(image);
+    std::vector<cv::Rect> found;
+    if(svm_classifier)
+    {
+        CvMat stub, *m = cvGetMat(svm_classifier, &stub);
+        int sz = m->cols*m->rows;
+        CV_Assert(CV_IS_MAT_CONT(m->type) && (m->cols == 1 || m->rows == 1) && CV_MAT_TYPE(m->type) == CV_32FC1);
+        std::vector<float> w(sz);
+        std::copy(m->data.fl, m->data.fl + sz, w.begin());
+        hog.setSVMDetector(w);
+    }
+    else
+        hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+    hog.detectMultiScale(img, found, hit_threshold, win_stride, padding, scale, group_threshold);
+    CvSeq* seq = cvCreateSeq(cv::DataType<cv::Rect>::type, sizeof(CvSeq), sizeof(cv::Rect), storage);
+    if(found.size())
+        cvSeqPushMulti(seq, &found[0], (int)found.size());
+    return seq;
+}
 
 static int zero = 0;
 
