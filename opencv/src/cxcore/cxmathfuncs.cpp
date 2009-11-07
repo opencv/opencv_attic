@@ -584,17 +584,19 @@ void polarToCart( const Mat& Mag, const Mat& Angle, Mat& X, Mat& Y, bool angleIn
         const float *mag = (const float*)Mag.data, *angle = (const float*)Angle.data;
         size_t xstep = X.step/sizeof(x[0]), ystep = Y.step/sizeof(y[0]);
         size_t mstep = Mag.step/sizeof(mag[0]), astep = Angle.step/sizeof(angle[0]);
+        float x_tmp[MAX_BLOCK_SIZE];
+        float y_tmp[MAX_BLOCK_SIZE];
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep, angle += astep )
         {
             for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
                 int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
-                SinCos_32f( angle + i, y + i, x + i, block_size, angleInDegrees );
+                SinCos_32f( angle + i, y_tmp, x_tmp, block_size, angleInDegrees );
                 for( j = 0; j < block_size; j++ )
                 {
                     float m = mag ? mag[i + j] : 1.f;
-                    float t0 = x[i + j]*m, t1 = y[i + j]*m;
+                    float t0 = x_tmp[j]*m, t1 = y_tmp[j]*m;
                     x[i + j] = t0; y[i + j] = t1;
                 }
             }
