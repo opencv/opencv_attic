@@ -148,7 +148,7 @@ int64 getCPUTickCount(void)
     return (int64)lo | ((int64)hi << 32);
 }
 
-#elif defined(__powerpc__)
+#elif defined(__ppc__)
 
 int64 getCPUTickCount(void)
 {

@@ -728,6 +728,8 @@ template<typename Real> static inline Real hypot(Real a, Real b)
         f = b/a;
         return a*std::sqrt(1 + f*f);
     }
+    if( b == 0 )
+        return 0;
     f = a/b;
     return b*std::sqrt(1 + f*f);
 }
