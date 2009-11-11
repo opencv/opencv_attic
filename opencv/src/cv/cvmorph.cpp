@@ -1082,6 +1082,12 @@ void morphologyEx( const Mat& src, Mat& dst, int op, const Mat& kernel,
     Mat temp;
     switch( op )
     {
+    case MORPH_ERODE:
+        erode( src, dst, kernel, anchor, iterations, borderType, borderValue );
+        break;    
+    case MORPH_DILATE:
+        dilate( src, dst, kernel, anchor, iterations, borderType, borderValue );
+        break;    
     case MORPH_OPEN:
         erode( src, dst, kernel, anchor, iterations, borderType, borderValue );
         dilate( dst, dst, kernel, anchor, iterations, borderType, borderValue );
