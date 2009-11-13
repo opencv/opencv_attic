@@ -303,7 +303,7 @@ Randn_0_1_32f_C1R( float* arr, int len, uint64* state )
 {
     const float r = 3.442620f; // The start of the right tail
     const float rng_flt = 2.3283064365386962890625e-10f; // 2^-32
-    static unsigned kn[127];
+    static unsigned kn[128];
     static float wn[128], fn[128];
     uint64 temp = *state;
     static bool initialized=false;
