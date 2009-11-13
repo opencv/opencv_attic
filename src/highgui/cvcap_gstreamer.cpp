@@ -625,6 +625,9 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
     icvCreateCapture_GStreamer(this, type, filename );
     return true;
 }
+
+#ifdef HAVE_GSTREAMER_APP
+
 //
 //
 // gstreamer image sequence writer
@@ -753,6 +756,28 @@ bool CvVideoWriter_GStreamer::writeFrame( const IplImage * image )
 	return true;
 }
 
+
+CvVideoWriter* cvCreateVideoWriter_GStreamer(const char* filename, int fourcc, double fps,
+                                           CvSize frameSize, int isColor )
+{
+    CvVideoWriter_GStreamer* wrt = new CvVideoWriter_GStreamer;
+    if( wrt->open(filename, fourcc, fps,
+                                           frameSize, isColor))
+        return wrt;
+
+    delete wrt;
+    return 0;
+}
+
+#else
+
+CvVideoWriter* cvCreateVideoWriter_GStreamer(const char*, int, double, CvSize, int )
+{
+    return 0;
+}
+
+#endif
+
 /*static void icvReleaseVideoWriter_GStreamer( CvVideoWriter** writer )
 {
 	//CvVideoWriter_GStreamer **wri = (CvVideoWriter_GStreamer **)writer;
@@ -788,17 +813,7 @@ bool CvCapture_GStreamer::setProperty( int propId, double value )
 {
     return this ? icvSetProperty_GStreamer( this, propId, value ) != 0 : false;
 }
-CvVideoWriter* cvCreateVideoWriter_GStreamer(const char* filename, int fourcc, double fps,
-                                           CvSize frameSize, int isColor )
-{
-    CvVideoWriter_GStreamer* wrt = new CvVideoWriter_GStreamer;
-    if( wrt->open(filename, fourcc, fps,
-                                           frameSize, isColor))
-        return wrt;
 
-    delete wrt;
-    return 0;
-}
 CvCapture* cvCreateCapture_GStreamer(int type, const char* filename )
 {
     CvCapture_GStreamer* capture = new CvCapture_GStreamer;
