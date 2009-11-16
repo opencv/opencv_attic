@@ -58,6 +58,10 @@
 
 #define CV_TS_VERSION "CxTest 0.1"
 
+#define __BEGIN__ __CV_BEGIN__
+#define __END__  __CV_END__
+#define EXIT __CV_EXIT__
+
 // Helper class for growing vector (to avoid dependency from STL)
 template < typename T > class CvTestVec
 {

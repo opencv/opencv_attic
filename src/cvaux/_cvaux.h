@@ -49,6 +49,10 @@
 #include "cxmisc.h"
 #include "_cvmatrix.h"
 
+#define __BEGIN__ __CV_BEGIN__
+#define __END__  __CV_END__
+#define EXIT __CV_EXIT__
+
 typedef unsigned short ushort;
 
 CV_INLINE bool operator == (CvSize size1, CvSize size2 );

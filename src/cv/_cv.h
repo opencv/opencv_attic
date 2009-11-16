@@ -70,6 +70,10 @@
     #define     _CV_ALWAYS_NO_PROFILE_
 #endif
 
+#define __BEGIN__ __CV_BEGIN__
+#define __END__ __CV_END__
+#define EXIT __CV_EXIT__
+
 #ifdef HAVE_IPP
 #include "ipp.h"
 
