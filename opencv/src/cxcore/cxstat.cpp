@@ -1101,7 +1101,7 @@ double norm( const Mat& a, int normType, const Mat& mask )
 
     normType &= 7;
     CV_Assert((normType == NORM_INF || normType == NORM_L1 || normType == NORM_L2) &&
-        a.size() == mask.size() && mask.type() == CV_8U );
+        a.size() == mask.size() && mask.type() == CV_8U && a.channels() == 1);
     NormMaskFunc func = tab[normType >> 1][a.depth()];
     CV_Assert(func != 0);
     double r = func(a, mask);
@@ -1193,7 +1193,7 @@ double norm( const Mat& a, const Mat& b, int normType, const Mat& mask )
         return norm(a, b, normType);
 
     CV_Assert( a.type() == b.type() && a.size() == b.size() &&
-        a.size() == mask.size() && mask.type() == CV_8U );
+        a.size() == mask.size() && mask.type() == CV_8U && a.channels() == 1);
 
     bool isRelative = (normType & NORM_RELATIVE) != 0;
     normType &= 7;
