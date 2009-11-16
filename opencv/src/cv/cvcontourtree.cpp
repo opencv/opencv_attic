@@ -780,7 +780,6 @@ cvContourFromContourTree( const CvContourTree*  tree,
     contour = cvEndWriteSeq( &writer );
     cvBoundingRect( contour, 1 );
 
-    __CLEANUP__;
     __END__;
 
     cvFree( &level_buf );

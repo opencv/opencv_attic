@@ -4781,29 +4781,28 @@ cvLoad( const char* filename, CvMemStorage* memstorage,
 {
     void* ptr = 0;
     const char* real_name = 0;
-    CvFileStorage* fs = 0;
+    cv::FileStorage fs(cvOpenFileStorage(filename, memstorage, CV_STORAGE_READ));
 
     CvFileNode* node = 0;
-    fs = cvOpenFileStorage( filename, memstorage, CV_STORAGE_READ );
 
-    if( !fs )
+    if( !fs.isOpened() )
         return 0;
 
     if( name )
     {
-        node = cvGetFileNodeByName( fs, 0, name );
+        node = cvGetFileNodeByName( *fs, 0, name );
     }
     else
     {
         int i, k;
-        for( k = 0; k < fs->roots->total; k++ )
+        for( k = 0; k < (*fs)->roots->total; k++ )
         {
             CvSeq* seq;
             CvSeqReader reader;
 
-            node = (CvFileNode*)cvGetSeqElem( fs->roots, k );
+            node = (CvFileNode*)cvGetSeqElem( (*fs)->roots, k );
             if( !CV_NODE_IS_MAP( node->tag ))
-                EXIT;
+                return 0;
             seq = node->data.seq;
             node = 0;
 
@@ -4829,7 +4828,7 @@ stop_search:
         CV_Error( CV_StsObjectNotFound, "Could not find the/an object in file storage" );
 
     real_name = cvGetFileNodeName( node );
-    ptr = cvRead( fs, node, 0 );
+    ptr = cvRead( *fs, node, 0 );
 
     // sanity check
     if( !memstorage && (CV_IS_SEQ( ptr ) || CV_IS_SET( ptr )) )
@@ -4852,8 +4851,6 @@ stop_search:
 	    *_real_name = 0;
 	}
     }
-exit:
-    cvReleaseFileStorage( &fs );
 
     return ptr;
 }

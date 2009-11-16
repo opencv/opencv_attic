@@ -2188,14 +2188,10 @@ static void icvFindPolynomialRoots(const double *a, double *u, int n, int maxite
 
 void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
 {
-    __BEGIN__;
-
     int m, n;
     double *ad = 0, *rd = 0;
 
-    CV_FUNCNAME("cvSolvePoly");
-
-    CV_ASSERT(maxiter > 0);
+    CV_Assert(maxiter > 0);
     if (CV_MAT_TYPE(a->type) != CV_32FC1 &&
         CV_MAT_TYPE(a->type) != CV_64FC1)
         CV_Error(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
@@ -2228,8 +2224,6 @@ void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
         CvMat _r = cvMat( r->rows, r->cols, CV_64FC2, rd );
         cvConvert( &_r, r );
     }
-
-    __END__;
 }
 
 

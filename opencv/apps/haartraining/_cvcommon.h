@@ -46,6 +46,10 @@
 #include <cv.h>
 #include <cxmisc.h>
 
+#define __BEGIN__ __CV_BEGIN__
+#define __END__  __CV_END__
+#define EXIT __CV_EXIT__
+
 #define CV_DECLARE_QSORT( func_name, T, less_than )                     \
 void func_name( T* array, size_t length, int aux );
 

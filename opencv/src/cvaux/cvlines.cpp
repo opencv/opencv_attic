@@ -387,7 +387,6 @@ cvDeleteMoire( IplImage * img )
 
     CV_CALL( icvDeleteMoire8u( img_data, img_step, img_size, img->nChannels ));
 
-    __CLEANUP__;
     __END__;
 
 }
@@ -431,7 +430,6 @@ cvPreWarpImage( int numLines,   /* number of scanlines */
                                    img_size,    /* image size in pixels */
                                    scanlines /* scanlines array      */  ));
 
-    __CLEANUP__;
     __END__;
 
 }
@@ -475,7 +473,6 @@ cvPostWarpImage( int numLines,  /* number of scanlines  */
                                     img_size,   /* dest image size      */
                                     scanlines /* scanline             */  ));
 
-    __CLEANUP__;
     __END__;
 }
 

@@ -153,10 +153,6 @@
 #endif
 #endif /* CV_INLINE */
 
-#ifndef CV_FORCE_INLINE
-    #define CV_FORCE_INLINE CV_INLINE
-#endif
-
 #if (defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64 || defined WINCE) && defined CVAPI_EXPORTS
     #define CV_EXPORTS __declspec(dllexport)
 #else
