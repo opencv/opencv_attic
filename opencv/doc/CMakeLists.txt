@@ -14,7 +14,7 @@ if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
 project(opencv_refman)
 
 #set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
-set(refman_srcs CxCore.tex CvReference.tex HighGui.tex CxCore-cpp.tex Cv-cpp.tex CvAux.tex HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
+set(refman_srcs CxCore.tex CvReference.tex HighGui.tex new_CxCore-cpp.tex new_Cv-cpp.tex CvAux.tex new_HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
 set(refman_copied_srcs)
 
 #foreach(f ${refman_m4_srcs})
