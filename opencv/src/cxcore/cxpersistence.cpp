@@ -3903,9 +3903,7 @@ icvGetFormat( const CvSeq* seq, const char* dt_key, CvAttrList* attr,
     }
     else if( CV_MAT_TYPE(seq->flags) != 0 || seq->elem_size == 1 )
     {
-        int align = CV_MAT_DEPTH(seq->flags) == CV_64F ? sizeof(double) : sizeof(size_t);
-        int full_elem_size = cvAlign(CV_ELEM_SIZE(seq->flags) + initial_elem_size, align);
-        if( seq->elem_size != full_elem_size )
+        if( CV_ELEM_SIZE(seq->flags) != seq->elem_size )
             CV_Error( CV_StsUnmatchedSizes,
             "Size of sequence element (elem_size) is inconsistent with seq->flags" );
         dt = icvEncodeFormat( CV_MAT_TYPE(seq->flags), dt_buf );
