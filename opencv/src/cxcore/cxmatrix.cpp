@@ -1466,7 +1466,6 @@ void NAryMatNDIterator::init(const MatND** _arrays, size_t count)
     CV_Assert( _arrays && count > 0 );
     arrays.resize(count);
     int i, j, d1=0, i0 = -1, d = -1, n = (int)count;
-    size_t esz = 0;
 
     iterdepth = 0;
 
@@ -1483,7 +1482,6 @@ void NAryMatNDIterator::init(const MatND** _arrays, size_t count)
         {
             i0 = i;
             d = A.dims;
-            esz = A.elemSize();
             
             // find the first dimensionality which is different from 1;
             // in any of the arrays the first "d1" steps do not affect the continuity
@@ -1500,7 +1498,7 @@ void NAryMatNDIterator::init(const MatND** _arrays, size_t count)
 
         if( !A.isContinuous() )
         {
-            CV_Assert( A.step[d-1] == esz );
+            CV_Assert( A.step[d-1] == A.elemSize() );
             for( j = d-1; j > d1; j-- )
                 if( A.step[j]*A.size[j] < A.step[j-1] )
                     break;
@@ -1718,10 +1716,11 @@ Scalar mean(const MatND& m, const MatND& mask)
     Scalar s;
     for( int i = 0; i < it.nplanes; i++, ++it )
     {
-        s += sum(it.planes[0]);
-        total += countNonZero(it.planes[1]);
+        int n = countNonZero(it.planes[1]);
+        s += mean(it.planes[0], it.planes[1])*(double)n;
+        total += n;
     }
-    return s *= std::max(total, 1.);
+    return s *= 1./std::max(total, 1.);
 }
 
 void meanStdDev(const MatND& m, Scalar& mean, Scalar& stddev, const MatND& mask)
