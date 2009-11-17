@@ -60,6 +60,80 @@ CvTest( "io", "cvOpenFileStorage, cvReleaseFileStorage, cvRead*, cvWrite*, cvSta
 }
 
 
+static SparseMat cvTsGetRandomSparseMat(const int* sz, int dims, int type,
+                                        int nzcount, double a, double b, CvRNG* rng)
+{
+    SparseMat m(dims, sz, type);
+    int i, j;
+    CV_Assert(CV_MAT_CN(type) == 1);
+    for( i = 0; i < nzcount; i++ )
+    {
+        int idx[CV_MAX_DIM];
+        for( j = 0; j < dims; j++ )
+            idx[j] = cvTsRandInt(rng) % sz[j];
+        double val = cvTsRandReal(rng)*(b - a) + a;
+        uchar* ptr = m.ptr(idx, true, 0);
+        if( type == CV_8U )
+            *(uchar*)ptr = saturate_cast<uchar>(val);
+        else if( type == CV_8S )
+            *(schar*)ptr = saturate_cast<schar>(val);
+        else if( type == CV_16U )
+            *(ushort*)ptr = saturate_cast<ushort>(val);
+        else if( type == CV_16S )
+            *(short*)ptr = saturate_cast<short>(val);
+        else if( type == CV_32S )
+            *(int*)ptr = saturate_cast<int>(val);
+        else if( type == CV_32F )
+            *(float*)ptr = saturate_cast<float>(val);
+        else
+            *(double*)ptr = saturate_cast<double>(val);
+    }
+}
+
+static bool cvTsCheckSparse(const CvSparseMat* m1, const CvSparseMat* m2, double eps)
+{
+    CvSparseMatIterator it1;
+    CvSparseNode* node1;
+    int depth = CV_MAT_DEPTH(m1->type);
+    
+    if( m1->heap->active_count != m2->heap->active_count ||
+        m1->dims != m2->dims || CV_MAT_TYPE(m1->type) != CV_MAT_TYPE(m2->type) )
+        return false;
+    
+    for( node1 = cvInitSparseMatIterator( m1, &it1 );
+         node1 != 0; node1 = cvGetNextSparseNode( &it1 ))
+    {
+        uchar* v1 = (uchar*)CV_NODE_VAL(m1,node1);
+        uchar* v2 = cvPtrND( m2, CV_NODE_IDX(m1,node1), 0, 0, &node1->hashval );
+        if( !v2 )
+            return false;
+        if( depth == CV_8U || depth == CV_8S )
+        {
+            if( *v1 != *v2 )
+                return false;
+        }
+        else if( depth == CV_16U || depth == CV_16S )
+        {
+            if( *(ushort*)v1 != *(ushort*)v2 )
+                return false;
+        }
+        else if( depth == CV_32S )
+        {
+            if( *(int*)v1 != *(int*)v2 )
+                return false;
+        }
+        else if( depth == CV_32F )
+        {
+            if( fabs(*(float*)v1 - *(float*)v2) > eps*(fabs(*(float*)v2) + 1) )
+                return false;
+        }
+        else if( fabs(*(double*)v1 - *(double*)v2) > eps*(fabs(*(double*)v2) + 1) )
+            return false;
+    }
+    
+    return true;
+}
+
 void CV_IOTest::run( int start_from )
 {
     double ranges[][2] = {{0, 256}, {-128, 128}, {0, 65536}, {-32768, 32768},
@@ -68,9 +142,12 @@ void CV_IOTest::run( int start_from )
     RNG rng0;
     test_case_count = 2;
     int progress = 0;
+    MemStorage storage(cvCreateMemStorage(0));
     
     for( int idx = 0; idx < test_case_count; idx++ )
     {
+        cvClearMemStorage(storage);
+        
         ts->update_context( this, idx, false );
         char buf[L_tmpnam+16];
         char* filename = tmpnam(buf);
@@ -95,13 +172,41 @@ void CV_IOTest::run( int start_from )
             multiply(test_mat, test_mat_scale, test_mat);
         }
         
+        CvSeq* seq = cvCreateSeq(test_mat.type(), sizeof(CvSeq),
+            test_mat.elemSize(), storage);
+        cvSeqPushMulti(seq, test_mat.data, test_mat.cols*test_mat.rows); 
+        
+        depth = cvTsRandInt(rng) % (CV_64F+1);
+        cn = cvTsRandInt(rng) % 4 + 1;
+        int sz[] = {cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1};
+        MatND test_mat_nd(3, sz, CV_MAKETYPE(depth, cn));
+        Mat plain = test_mat_nd;
+        
+        rng0.fill(plain, CV_RAND_UNI, Scalar::all(ranges[depth][0]), Scalar::all(ranges[depth][1]));
+        if( depth >= CV_32F )
+        {
+            exp(test_mat_nd, test_mat_nd);
+            MatND test_mat_scale(test_mat_nd.dims, test_mat_nd.size, test_mat_nd.type());
+            plain = test_mat_scale;
+            rng0.fill(plain, CV_RAND_UNI, Scalar::all(-1), Scalar::all(1));
+            multiply(test_mat_nd, test_mat_scale, test_mat_nd);
+        }
+        
+        int ssz[] = {cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1,
+            cvTsRandInt(rng)%10+1,cvTsRandInt(rng)%10+1};
+        SparseMat test_sparse_mat = cvTsGetRandomSparseMat(ssz, 4, cvTsRandInt(rng)%(CV_64F+1),
+            cvTsRandInt(rng) % 10000, 0, 100, rng);
+            
         fs << "test_int" << test_int << "test_real" << test_real << "test_string" << test_string;
         fs << "test_mat" << test_mat;
+        fs << "test_mat_nd" << test_mat_nd;
+        fs << "test_sparse_mat" << test_sparse_mat;
         
         fs << "test_list" << "[" << 0.0000000000001 << 2 << CV_PI << -3435345 << "2-502 2-029 3egegeg" <<
             "{:" << "month" << 12 << "day" << 31 << "year" << 1969 << "}" << "]";
         fs << "test_map" << "{" << "x" << 1 << "y" << 2 << "width" << 100 << "height" << 200 <<
             "lbp" << "[:" << 0 << 1 << 1 << 0 << 1 << 1 << 0 << 1 << "]" << "}";
+        fs.writeObj("test_seq", seq);
         
         fs.release();
         
@@ -138,6 +243,48 @@ void CV_IOTest::run( int start_from )
         }
         if( m && CV_IS_MAT(m))
             cvReleaseMat(&m);
+
+        CvMatND* m_nd = (CvMatND*)fs["test_mat_nd"].readObj();
+        CvMatND _test_mat_nd = test_mat_nd;
+        
+        if( !m_nd || !CV_IS_MATND(m_nd) )
+        {
+            ts->printf( CvTS::LOG, "the read nd matrix is not correct\n" );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        CvMat stub, _test_stub;
+        cvGetMat(m_nd, &stub);
+        cvGetMat(&_test_mat_nd, &_test_stub);
+        
+        if( !CV_ARE_TYPES_EQ(&stub, &_test_stub) ||
+            !CV_ARE_SIZES_EQ(&stub, &_test_stub) ||
+            cvTsCmpEps( &stub, &_test_mat, &max_diff, depth == CV_32F ?
+                       FLT_EPSILON : DBL_EPSILON, 0, true) < 0 )
+        {
+            ts->printf( CvTS::LOG, "the read nd matrix is not correct\n" );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        if( m_nd && CV_IS_MATND(m_nd))
+            cvReleaseMatND(&m_nd);
+            
+        CvSparseMat* m_s = (CvSparseMat*)fs["test_sparse_mat"].readObj();
+        CvSparseMat* _test_sparse = (CvSparseMat*)test_sparse_mat;
+        
+        if( !m_s || !CV_IS_SPARSE_MAT(m_s) || !cvTsCheckSparse(m_s, _test_sparse,
+            depth==CV_32F?FLT_EPSILON:DBL_EPSILON))
+        {
+            ts->printf( CvTS::LOG, "the read sparse matrix is not correct\n" );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        if( m_s && CV_IS_SPARSE_MAT(m_s))
+            cvReleaseSparseMat(&m_s);
+        cvReleaseSparseMat(&_test_sparse);
         
         FileNode tl = fs["test_list"];
         if( tl.type() != FileNode::SEQ || tl.size() != 6 ||
