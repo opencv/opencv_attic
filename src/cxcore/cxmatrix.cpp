@@ -2274,7 +2274,7 @@ enum { HASH_SIZE0 = 8 };
 static inline void copyElem(const uchar* from, uchar* to, size_t elemSize)
 {
     size_t i;
-    for( i = 0; i <= elemSize - sizeof(int); i += sizeof(int) )
+    for( i = 0; (int)i <= (int)(elemSize - sizeof(int)); i += sizeof(int) )
         *(int*)(to + i) = *(const int*)(from + i);
     for( ; i < elemSize; i++ )
         to[i] = from[i];
@@ -2858,12 +2858,12 @@ uchar* SparseMat::newNode(const int* idx, size_t hashval)
     elem->next = hdr->hashtab[hidx];
     hdr->hashtab[hidx] = nidx;
 
-    size_t i, d = hdr->dims;
+    int i, d = hdr->dims;
     for( i = 0; i < d; i++ )
         elem->idx[i] = idx[i];
     d = elemSize();
     uchar* p = &value<uchar>(elem);
-    for( i = 0; i <= d - sizeof(int); i += sizeof(int) )
+    for( i = 0; i <= d - (int)sizeof(int); i += sizeof(int) )
         *(int*)(p + i) = 0;
     for( ; i < d; i++ )
         p[i] = 0;

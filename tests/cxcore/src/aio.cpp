@@ -60,7 +60,7 @@ CvTest( "io", "cvOpenFileStorage, cvReleaseFileStorage, cvRead*, cvWrite*, cvSta
 }
 
 
-static SparseMat cvTsGetRandomSparseMat(const int* sz, int dims, int type,
+static SparseMat cvTsGetRandomSparseMat(int dims, const int* sz, int type,
                                         int nzcount, double a, double b, CvRNG* rng)
 {
     SparseMat m(dims, sz, type);
@@ -88,6 +88,8 @@ static SparseMat cvTsGetRandomSparseMat(const int* sz, int dims, int type,
         else
             *(double*)ptr = saturate_cast<double>(val);
     }
+    
+    return m;
 }
 
 static bool cvTsCheckSparse(const CvSparseMat* m1, const CvSparseMat* m2, double eps)
@@ -194,7 +196,7 @@ void CV_IOTest::run( int start_from )
         
         int ssz[] = {cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1,
             cvTsRandInt(rng)%10+1,cvTsRandInt(rng)%10+1};
-        SparseMat test_sparse_mat = cvTsGetRandomSparseMat(ssz, 4, cvTsRandInt(rng)%(CV_64F+1),
+        SparseMat test_sparse_mat = cvTsGetRandomSparseMat(4, ssz, cvTsRandInt(rng)%(CV_64F+1),
             cvTsRandInt(rng) % 10000, 0, 100, rng);
             
         fs << "test_int" << test_int << "test_real" << test_real << "test_string" << test_string;
@@ -255,12 +257,12 @@ void CV_IOTest::run( int start_from )
         }
         
         CvMat stub, _test_stub;
-        cvGetMat(m_nd, &stub);
-        cvGetMat(&_test_mat_nd, &_test_stub);
+        cvGetMat(m_nd, &stub, 0, 1);
+        cvGetMat(&_test_mat_nd, &_test_stub, 0, 1);
         
         if( !CV_ARE_TYPES_EQ(&stub, &_test_stub) ||
             !CV_ARE_SIZES_EQ(&stub, &_test_stub) ||
-            cvTsCmpEps( &stub, &_test_mat, &max_diff, depth == CV_32F ?
+            cvTsCmpEps( &stub, &_test_stub, &max_diff, depth == CV_32F ?
                        FLT_EPSILON : DBL_EPSILON, 0, true) < 0 )
         {
             ts->printf( CvTS::LOG, "the read nd matrix is not correct\n" );
