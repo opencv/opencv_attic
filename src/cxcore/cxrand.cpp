@@ -146,36 +146,71 @@ RandBits_( Mat& _arr, uint64* state, const void* _param )
     *state = temp;
 }
 
+struct DivStruct
+{
+    unsigned d;
+    unsigned M;
+    int sh1, sh2;
+    int delta;
+};
 
-template<typename T, typename PT> static void
+template<typename T> static void
 Randi_( Mat& _arr, uint64* state, const void* _param )
 {
     uint64 temp = *state;
-    const PT* param = (const PT*)_param;
+    const int* param = (const int*)_param;
     Size size = getContinuousSize(_arr,_arr.channels());
+    int i, k, cn = _arr.channels();
+    DivStruct ds[12];
+    
+    for( k = 0; k < cn; k++ )
+    {
+        ds[k].delta = param[k];
+        ds[k].d = (unsigned)(param[k+12] - param[k]);
+        int l = 0;
+        while(((uint64)1 << l) < ds[k].d)
+            l++;
+        ds[k].M = (unsigned)(((uint64)1 << 32)*(((uint64)1 << l) - ds[k].d)/ds[k].d) + 1;
+        ds[k].sh1 = min(l, 1);
+        ds[k].sh2 = max(l - 1, 0);
+    }
+    
+    for( ; k < 12; k++ )
+        ds[k] = ds[k - cn];
 
     for( int y = 0; y < size.height; y++ )
     {
         T* arr = (T*)(_arr.data + _arr.step*y);
-        int i, k = 3;
-        const PT* p = param;
+        const DivStruct* p = ds;
+        unsigned t0, t1, v0, v1;
 
-        for( i = 0; i <= size.width - 4; i += 4 )
+        for( i = 0, k = 3; i <= size.width - 4; i += 4 )
         {
-            PT f0, f1;
             temp = RNG_NEXT(temp);
-            f0 = (int)temp * p[i+12] + p[i];
+            t0 = (unsigned)temp;
             temp = RNG_NEXT(temp);
-            f1 = (int)temp * p[i+13] + p[i+1];
-            arr[i] = saturate_cast<T>(cvFloor(f0));
-            arr[i+1] = saturate_cast<T>(cvFloor(f1));
-
+            t1 = (unsigned)temp;
+            v0 = (unsigned)(((uint64)t0 * p[i].M) >> 32);
+            v1 = (unsigned)(((uint64)t1 * p[i+1].M) >> 32);
+            v0 = (v0 + ((t0 - v0) >> p[i].sh1)) >> p[i].sh2;
+            v1 = (v1 + ((t1 - v1) >> p[i+1].sh1)) >> p[i+1].sh2;
+            v0 = t0 - v0*p[i].d + p[i].delta;
+            v1 = t1 - v1*p[i+1].d + p[i+1].delta;
+            arr[i] = saturate_cast<T>((int)v0);
+            arr[i+1] = saturate_cast<T>((int)v1);
+            
             temp = RNG_NEXT(temp);
-            f0 = (int)temp * p[i+14] + p[i+2];
+            t0 = (unsigned)temp;
             temp = RNG_NEXT(temp);
-            f1 = (int)temp * p[i+15] + p[i+3];
-            arr[i+2] = saturate_cast<T>(cvFloor(f0));
-            arr[i+3] = saturate_cast<T>(cvFloor(f1));
+            t1 = (unsigned)temp;
+            v0 = (unsigned)(((uint64)t0 * p[i+2].M) >> 32);
+            v1 = (unsigned)(((uint64)t1 * p[i+3].M) >> 32);
+            v0 = (v0 + ((t0 - v0) >> p[i+2].sh1)) >> p[i+2].sh2;
+            v1 = (v1 + ((t1 - v1) >> p[i+3].sh1)) >> p[i+3].sh2;
+            v0 = t0 - v0*p[i+2].d + p[i+2].delta;
+            v1 = t1 - v1*p[i+3].d + p[i+3].delta;
+            arr[i+2] = saturate_cast<T>((int)v0);
+            arr[i+3] = saturate_cast<T>((int)v1);
 
             if( !--k )
             {
@@ -187,7 +222,11 @@ Randi_( Mat& _arr, uint64* state, const void* _param )
         for( ; i < size.width; i++ )
         {
             temp = RNG_NEXT(temp);
-            arr[i] = saturate_cast<T>(cvFloor((int)temp * p[i + 12] + p[i]));
+            t0 = (unsigned)temp;
+            v0 = (unsigned)(((uint64)t0 * p[i].M) >> 32);
+            v0 = (v0 + ((t0 - v0) >> p[i].sh1)) >> p[i].sh2;
+            v0 = t0 - v0*p[i].d + p[i].delta;
+            arr[i] = saturate_cast<T>((int)v0);
         }
     }
 
@@ -263,15 +302,15 @@ Randd_( Mat& _arr, uint64* state, const void* _param )
             f0 = v*p[i+12] + p[i];
             temp = RNG_NEXT(temp);
             v = (temp >> 32)|(temp << 32);
-            f1 = v*p[i+12] + p[i];
+            f1 = v*p[i+13] + p[i+1];
             arr[i] = f0; arr[i+1] = f1;
 
             temp = RNG_NEXT(temp);
             v = (temp >> 32)|(temp << 32);
-            f0 = v*p[i+12] + p[i];
+            f0 = v*p[i+14] + p[i+2];
             temp = RNG_NEXT(temp);
             v = (temp >> 32)|(temp << 32);
-            f1 = v*p[i+12] + p[i];
+            f1 = v*p[i+15] + p[i+3];
             arr[i+2] = f0; arr[i+3] = f1;
 
             if( !--k )
@@ -437,11 +476,11 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
         RandBits_<short>,
         RandBits_<int>, 0, 0, 0},
 
-        {Randi_<uchar,float>,
-        Randi_<schar,float>,
-        Randi_<ushort,float>,
-        Randi_<short,float>,
-        Randi_<int,float>,
+        {Randi_<uchar>,
+        Randi_<schar>,
+        Randi_<ushort>,
+        Randi_<short>,
+        Randi_<int>,
         Randf_, Randd_, 0},
 
         {Randn_<uchar,float>,
@@ -469,29 +508,31 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
         {
             for( i = 0, fast_int_mode = 1; i < channels; i++ )
             {
-                int t0 = iparam[0][i] = cvCeil(param1.val[i]);
-                int t1 = iparam[1][i] = cvFloor(param2.val[i]) - t0;
-                double diff = param1.val[i] - param2.val[i];
+                double a = min(param1.val[i], param2.val[i]);
+                double b = max(param1.val[i], param2.val[i]);
+                int t0 = iparam[0][i] = cvCeil(a);
+                int t1 = iparam[1][i] = cvFloor(b);
+                double diff = b - a;
 
-                fast_int_mode &= INT_MIN <= diff && diff <= INT_MAX && (t1 & (t1 - 1)) == 0;
+                fast_int_mode &= diff <= 4294967296. && ((t1-t0) & (t1-t0-1)) == 0;
             }
-        }
-
-        if( fast_int_mode )
-        {
-            for( i = 0; i < channels; i++ )
-                iparam[1][i]--;
-        
+            
+            if( fast_int_mode )
+            {
+                for( i = 0; i < channels; i++ )
+                    iparam[1][i] = iparam[1][i] > iparam[0][i] ? iparam[1][i] - iparam[0][i] - 1 : 0;
+            }
+                
             for( ; i < 12; i++ )
             {
                 int t0 = iparam[0][i - channels];
                 int t1 = iparam[1][i - channels];
-
+                
                 iparam[0][i] = t0;
                 iparam[1][i] = t1;
             }
-
-            func = rngtab[0][depth];
+            
+            func = rngtab[!fast_int_mode][depth];
             param = iparam;
         }
         else
@@ -533,7 +574,7 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
     else
         CV_Error( CV_StsBadArg, "Unknown distribution type" );
 
-    if( !fast_int_mode )
+    if( param == dparam )
     {
         for( i = channels; i < 12; i++ )
         {
@@ -556,7 +597,6 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
     }
 
     CV_Assert( func != 0);
-
     func( mat, &state, param );
 }
 

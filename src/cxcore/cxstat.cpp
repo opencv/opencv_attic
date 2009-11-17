@@ -1028,7 +1028,8 @@ double norm( const Mat& a, int normType )
     static NormFunc tab[3][8] =
     {
         {
-            norm_<OpAbs<uchar>, OpMax<int> >, 0,
+            norm_<OpAbs<uchar>, OpMax<int> >,
+            norm_<OpAbs<schar>, OpMax<int> >,
             norm_<OpAbs<ushort>, OpMax<int> >,
             norm_<OpAbs<short, int>, OpMax<int> >,
             norm_<OpAbs<int>, OpMax<int> >,
@@ -1037,7 +1038,8 @@ double norm( const Mat& a, int normType )
         },
         
         { 
-            normBlock_<OpAbs<uchar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>, 0,
+            normBlock_<OpAbs<uchar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
+            normBlock_<OpAbs<schar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
             normBlock_<OpAbs<ushort>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normBlock_<OpAbs<short, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             norm_<OpAbs<int>, OpAdd<double> >,
@@ -1046,7 +1048,8 @@ double norm( const Mat& a, int normType )
         },
 
         { 
-            normBlock_<SqrC1<uchar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>, 0,
+            normBlock_<SqrC1<uchar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
+            normBlock_<SqrC1<schar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             norm_<SqrC1<ushort, double>, OpAdd<double> >,
             norm_<SqrC1<short, double>, OpAdd<double> >,
             norm_<SqrC1<int, double>, OpAdd<double> >,
@@ -1069,7 +1072,8 @@ double norm( const Mat& a, int normType, const Mat& mask )
     static NormMaskFunc tab[3][8] =
     {
         {
-            normMask_<OpAbs<uchar>, OpMax<int> >, 0,
+            normMask_<OpAbs<uchar>, OpMax<int> >,
+            normMask_<OpAbs<schar>, OpMax<int> >,
             normMask_<OpAbs<ushort>, OpMax<int> >,
             normMask_<OpAbs<short, int>, OpMax<int> >,
             normMask_<OpAbs<int>, OpMax<int> >,
@@ -1078,7 +1082,8 @@ double norm( const Mat& a, int normType, const Mat& mask )
         },
         
         { 
-            normMaskBlock_<OpAbs<uchar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>, 0,
+            normMaskBlock_<OpAbs<uchar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
+            normMaskBlock_<OpAbs<schar>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
             normMaskBlock_<OpAbs<ushort>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normMaskBlock_<OpAbs<short, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normMask_<OpAbs<int>, OpAdd<double> >,
@@ -1087,7 +1092,8 @@ double norm( const Mat& a, int normType, const Mat& mask )
         },
 
         { 
-            normMaskBlock_<SqrC1<uchar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>, 0,
+            normMaskBlock_<SqrC1<uchar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
+            normMaskBlock_<SqrC1<schar, unsigned>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normMask_<SqrC1<ushort, double>, OpAdd<double> >,
             normMask_<SqrC1<short, double>, OpAdd<double> >,
             normMask_<SqrC1<int, double>, OpAdd<double> >,
@@ -1114,7 +1120,8 @@ double norm( const Mat& a, const Mat& b, int normType )
     static NormDiffFunc tab[3][8] =
     {
         {
-            normDiff_<uchar, OpAbs<int>, OpMax<int> >, 0,
+            normDiff_<uchar, OpAbs<int>, OpMax<int> >,
+            normDiff_<schar, OpAbs<int>, OpMax<int> >,
             normDiff_<ushort, OpAbs<int>, OpMax<int> >,
             normDiff_<short, OpAbs<int>, OpMax<int> >,
             normDiff_<int, OpAbs<int>, OpMax<int> >,
@@ -1123,7 +1130,8 @@ double norm( const Mat& a, const Mat& b, int normType )
         },
         
         { 
-            normDiffBlock_<uchar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>, 0,
+            normDiffBlock_<uchar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
+            normDiffBlock_<schar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
             normDiffBlock_<ushort, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiffBlock_<short, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiff_<int, OpAbs<int>, OpAdd<double> >,
@@ -1132,7 +1140,8 @@ double norm( const Mat& a, const Mat& b, int normType )
         },
 
         { 
-            normDiffBlock_<uchar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>, 0,
+            normDiffBlock_<uchar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
+            normDiffBlock_<schar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiff_<ushort, SqrC1<int, double>, OpAdd<double> >,
             normDiff_<short, SqrC1<int, double>, OpAdd<double> >,
             normDiff_<int, SqrC1<int, double>, OpAdd<double> >,
@@ -1162,7 +1171,8 @@ double norm( const Mat& a, const Mat& b, int normType, const Mat& mask )
     static NormDiffMaskFunc tab[3][8] =
     {
         {
-            normDiffMask_<uchar, OpAbs<int>, OpMax<int> >, 0,
+            normDiffMask_<uchar, OpAbs<int>, OpMax<int> >,
+            normDiffMask_<schar, OpAbs<int>, OpMax<int> >,
             normDiffMask_<ushort, OpAbs<int>, OpMax<int> >,
             normDiffMask_<short, OpAbs<int>, OpMax<int> >,
             normDiffMask_<int, OpAbs<int>, OpMax<int> >,
@@ -1171,7 +1181,8 @@ double norm( const Mat& a, const Mat& b, int normType, const Mat& mask )
         },
         
         { 
-            normDiffMaskBlock_<uchar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>, 0,
+            normDiffMaskBlock_<uchar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
+            normDiffMaskBlock_<schar, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<24>,
             normDiffMaskBlock_<ushort, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiffMaskBlock_<short, OpAbs<int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiffMask_<int, OpAbs<int>, OpAdd<double> >,
@@ -1180,7 +1191,8 @@ double norm( const Mat& a, const Mat& b, int normType, const Mat& mask )
         },
 
         { 
-            normDiffMaskBlock_<uchar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>, 0,
+            normDiffMaskBlock_<uchar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
+            normDiffMaskBlock_<schar, SqrC1<int, int>, OpAdd<unsigned>, OpAdd<double>, 1<<16>,
             normDiffMask_<ushort, SqrC1<int, double>, OpAdd<double> >,
             normDiffMask_<short, SqrC1<int, double>, OpAdd<double> >,
             normDiffMask_<int, SqrC1<int, double>, OpAdd<double> >,
