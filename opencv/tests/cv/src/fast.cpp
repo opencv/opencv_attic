@@ -55,7 +55,7 @@ protected:
     void run(int);
 };
 
-CV_FastTest::CV_FastTest(): CvTest( "arithm-fast", "cvInpaint" )
+CV_FastTest::CV_FastTest(): CvTest( "features-fast", "cv::FAST" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }

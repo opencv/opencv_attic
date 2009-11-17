@@ -54,7 +54,7 @@ protected:
     void run(int);
 };
 
-CV_WatershedTest::CV_WatershedTest(): CvTest( "arithm-watershed", "cvWatershed" )
+CV_WatershedTest::CV_WatershedTest(): CvTest( "segmentation-watershed", "cvWatershed" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }

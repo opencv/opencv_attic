@@ -54,7 +54,7 @@ protected:
     void run(int);
 };
 
-CV_InpaintTest::CV_InpaintTest(): CvTest( "arithm-inpaint", "cvInpaint" )
+CV_InpaintTest::CV_InpaintTest(): CvTest( "inpaint", "cvInpaint" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }

@@ -3669,6 +3669,25 @@ inline MatND::MatND(const MatND& m)
         CV_XADD(refcount, 1);
 }
 
+inline MatND::MatND(const Mat& m)
+ : flags(m.flags), dims(2), refcount(m.refcount),
+   data(m.data), datastart(m.datastart), dataend(m.dataend)
+{
+    size[0] = m.rows; size[1] = m.cols;
+    step[0] = m.step; step[1] = m.elemSize();
+    if( refcount )
+        CV_XADD(refcount, 1);
+}
+
+static inline MatND cvarrToMatND(const CvArr* arr, bool copyData=false, int coiMode=0)
+{
+    if( CV_IS_MAT(arr) || CV_IS_IMAGE(arr))
+        return MatND(cvarrToMat(arr, copyData, true, coiMode));
+    else if( CV_IS_MATND(arr) )
+        return MatND((const CvMatND*)arr, copyData);
+    return MatND();
+}
+
 inline MatND::MatND(const CvMatND* m, bool copyData)
   : flags(MAGIC_VAL|(m->type & (CV_MAT_TYPE_MASK|CV_MAT_CONT_FLAG))),
   dims(m->dims), refcount(0), data(m->data.ptr)
