@@ -135,7 +135,7 @@ RandBits_( Mat& _arr, uint64* state, const void* _param )
 
         for( ; i < size.width; i++ )
         {
-            unsigned t0;
+            int t0;
             temp = RNG_NEXT(temp);
 
             t0 = ((int)temp & p[i + 12]) + p[i];
