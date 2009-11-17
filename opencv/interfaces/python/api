@@ -1058,7 +1058,7 @@ NormalizeHist
 ThreshHist
   CvHistogram hist
   double threshold
-CompareHist
+CompareHist double
   CvHistogram hist1
   CvHistogram hist2
   int method

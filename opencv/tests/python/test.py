@@ -225,6 +225,9 @@ class TestDirected(unittest.TestCase):
         bp = cv.CreateImage((cv.GetSize(src)[0]-2, cv.GetSize(src)[1]-2), cv.IPL_DEPTH_32F, 1)
         cv.CalcBackProjectPatch(split(src), bp, (3,3), h, cv.CV_COMP_INTERSECT, 1)
 
+        for meth,expected in [(cv.CV_COMP_CORREL, 1.0), (cv.CV_COMP_CHISQR, 0.0), (cv.CV_COMP_INTERSECT, 1.0), (cv.CV_COMP_BHATTACHARYYA, 0.0)]:
+            self.assertEqual(cv.CompareHist(h, h, meth), expected)
+
     def test_remap(self):
 
         raw = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
