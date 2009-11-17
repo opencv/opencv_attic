@@ -84,7 +84,7 @@ void CV_IOTest::run( int start_from )
         
         int depth = cvTsRandInt(rng) % (CV_64F+1);
         int cn = cvTsRandInt(rng) % 4 + 1;
-        Mat test_mat(cvTsRandInt(rng)%30, cvTsRandInt(rng)%30, CV_MAKETYPE(depth, cn));
+        Mat test_mat(cvTsRandInt(rng)%30+1, cvTsRandInt(rng)%30+1, CV_MAKETYPE(depth, cn));
         
         rng0.fill(test_mat, CV_RAND_UNI, Scalar::all(ranges[depth][0]), Scalar::all(ranges[depth][1]));
         if( depth >= CV_32F )
@@ -126,8 +126,11 @@ void CV_IOTest::run( int start_from )
         }
         
         CvMat* m = (CvMat*)fs["test_mat"].readObj();
+        CvMat _test_mat = test_mat;
+        double max_diff = 0;
         if( !m || !CV_IS_MAT(m) || m->rows != test_mat.rows || m->cols != test_mat.cols ||
-            cv::norm(cvarrToMat(m), test_mat, NORM_INF) > DBL_EPSILON )
+            cvTsCmpEps( m, &_test_mat, &max_diff, depth == CV_32F ?
+                       FLT_EPSILON : DBL_EPSILON, 0, true) < 0 )
         {
             ts->printf( CvTS::LOG, "the read matrix is not correct\n" );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
