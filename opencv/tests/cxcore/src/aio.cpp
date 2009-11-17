@@ -117,7 +117,7 @@ void CV_IOTest::run( int start_from )
         string real_string = (string)fs["test_string"];
         
         if( real_int != test_int ||
-            fabs(real_real - test_real) > DBL_EPSILON ||
+            fabs(real_real - test_real) > DBL_EPSILON*(fabs(test_real)+1) ||
             real_string != test_string )
         {
             ts->printf( CvTS::LOG, "the read scalars are not correct\n" );
