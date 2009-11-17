@@ -155,6 +155,7 @@ void CV_RandTest::run( int start_from )
         
         arr[0].create(1, SZ, type);
         arr[1].create(1, SZ, type);
+        bool fast_algo = dist_type == CV_RAND_UNI && depth < CV_32F;
         
         for( c = 0; c < cn; c++ )
         {
@@ -172,6 +173,8 @@ void CV_RandTest::run( int start_from )
                 if( a > b )
                     std::swap(a, b);
                 
+                unsigned r = (unsigned)(b - a);
+                fast_algo = fast_algo && r <= 256 && (r & (r-1)) == 0;
                 hsz = min((unsigned)(b - a), (unsigned)MAX_HIST_SIZE);
                 do_sphere_test = do_sphere_test && b - a >= 100;
             }
@@ -193,7 +196,8 @@ void CV_RandTest::run( int start_from )
         }
         
         cv::RNG saved_rng = tested_rng;
-        for( k = 0; k < 2; k++ )
+        int maxk = fast_algo ? 0 : 1;
+        for( k = 0; k <= maxk; k++ )
         {
             tested_rng = saved_rng;
             int sz = 0, dsz = 0, slice;
@@ -205,7 +209,7 @@ void CV_RandTest::run( int start_from )
             }
         }
         
-        if( norm(arr[0], arr[1], NORM_INF) != 0 )
+        if( maxk >= 1 && norm(arr[0], arr[1], NORM_INF) != 0 )
         {
             ts->printf( CvTS::LOG, "RNG output depends on the array lengths (some generated numbers get lost?)" );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
@@ -321,7 +325,7 @@ void CV_RandTest::run( int start_from )
             for( sdim += 2; sdim <= SDIM; sdim += 2 )
                 V0 *= 2*CV_PI/sdim;
             
-            if( fabs(V - V0) > 0.1*fabs(V0) )
+            if( fabs(V - V0) > 0.2*fabs(V0) )
             {
                 ts->printf( CvTS::LOG, "RNG failed %d-dim sphere volume test (got %g instead of %g)\n",
                            SDIM, V, V0);

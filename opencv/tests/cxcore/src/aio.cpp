@@ -127,7 +127,7 @@ void CV_IOTest::run( int start_from )
         
         CvMat* m = (CvMat*)fs["test_mat"].readObj();
         if( !m || !CV_IS_MAT(m) || m->rows != test_mat.rows || m->cols != test_mat.cols ||
-            cv::norm(cvarrToMat(m), test_mat, NORM_INF) != 0 )
+            cv::norm(cvarrToMat(m), test_mat, NORM_INF) > DBL_EPSILON )
         {
             ts->printf( CvTS::LOG, "the read matrix is not correct\n" );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
@@ -180,7 +180,11 @@ void CV_IOTest::run( int start_from )
             return;
         }
         fs.release();
-        unlink(filename);
+        #ifdef _MSC_VER
+            _unlink(filename);
+        #else
+            unlink(filename);
+        #endif
         progress = update_progress( progress, idx, test_case_count, 0 );
     }
 }
