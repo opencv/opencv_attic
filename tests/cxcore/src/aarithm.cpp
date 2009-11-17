@@ -270,8 +270,8 @@ void CxCore_AddTest::run_func()
     {
         cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
         cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
-        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][2]);
-        if( test_array[MASK][0] )
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        if( !test_array[MASK][0] )
             cv::add(a, b, c);
         else
             cv::add(a, b, c, cv::cvarrToMatND(test_array[MASK][0]));
@@ -308,8 +308,8 @@ void CxCore_SubTest::run_func()
     {
         cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
         cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
-        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][2]);
-        if( test_array[MASK][0] )
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        if( !test_array[MASK][0] )
             cv::subtract(a, b, c);
         else
             cv::subtract(a, b, c, cv::cvarrToMatND(test_array[MASK][0]));
@@ -616,8 +616,18 @@ double CxCore_MulTest::get_success_error_level( int test_case_idx, int i, int j 
 
 void CxCore_MulTest::run_func()
 {
-    cvMul( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[OUTPUT][0], alpha.val[0] );
+    if(!test_nd)
+    {
+        cvMul( test_array[INPUT][0], test_array[INPUT][1],
+              test_array[OUTPUT][0], alpha.val[0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::multiply(cv::cvarrToMatND(test_array[INPUT][0]),
+                     cv::cvarrToMatND(test_array[INPUT][1]),
+                     c, alpha.val[0]);
+    }
 }
 
 void CxCore_MulTest::prepare_to_validation( int /*test_case_idx*/ )
@@ -656,8 +666,18 @@ void CxCore_DivTest::print_timing_params( int test_case_idx, char* ptr, int para
 
 void CxCore_DivTest::run_func()
 {
-    cvDiv( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[OUTPUT][0], alpha.val[0] );
+    if(!test_nd)
+    {
+        cvDiv( test_array[INPUT][0], test_array[INPUT][1],
+              test_array[OUTPUT][0], alpha.val[0] );
+    }
+    else
+    {
+        cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::divide(cv::cvarrToMatND(test_array[INPUT][0]),
+                   b, c, alpha.val[0]);
+    }
 }
 
 void CxCore_DivTest::prepare_to_validation( int /*test_case_idx*/ )
@@ -697,8 +717,17 @@ void CxCore_RecipTest::print_timing_params( int test_case_idx, char* ptr, int pa
 
 void CxCore_RecipTest::run_func()
 {
-    cvDiv( 0, test_array[INPUT][0],
-           test_array[OUTPUT][0], gamma.val[0] );
+    if(!test_nd)
+    {
+        cvDiv( 0, test_array[INPUT][0],
+              test_array[OUTPUT][0], gamma.val[0] );
+    }
+    else
+    {
+        cv::MatND b = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::divide(gamma.val[0], b, c);
+    }
 }
 
 void CxCore_RecipTest::prepare_to_validation( int /*test_case_idx*/ )
@@ -1807,7 +1836,16 @@ CxCore_MinTest::CxCore_MinTest()
 
 void CxCore_MinTest::run_func()
 {
-    cvMin( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvMin( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::min(cv::cvarrToMatND(test_array[INPUT][0]),
+                cv::cvarrToMatND(test_array[INPUT][1]), c);
+    }
 }
 
 CxCore_MinTest min_test;
@@ -1830,7 +1868,16 @@ CxCore_MaxTest::CxCore_MaxTest()
 
 void CxCore_MaxTest::run_func()
 {
-    cvMax( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvMax( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::max(cv::cvarrToMatND(test_array[INPUT][0]),
+                cv::cvarrToMatND(test_array[INPUT][1]), c);
+    }
 }
 
 CxCore_MaxTest max_test;
@@ -1853,7 +1900,16 @@ CxCore_MinSTest::CxCore_MinSTest()
 
 void CxCore_MinSTest::run_func()
 {
-    cvMinS( test_array[INPUT][0], gamma.val[0], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvMinS( test_array[INPUT][0], gamma.val[0], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::min(cv::cvarrToMatND(test_array[INPUT][0]),
+                gamma.val[0], c);
+    }
 }
 
 CxCore_MinSTest mins_test;
@@ -1875,7 +1931,16 @@ CxCore_MaxSTest::CxCore_MaxSTest()
 
 void CxCore_MaxSTest::run_func()
 {
-    cvMaxS( test_array[INPUT][0], gamma.val[0], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvMaxS( test_array[INPUT][0], gamma.val[0], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::max(cv::cvarrToMatND(test_array[INPUT][0]),
+                gamma.val[0], c);
+    }
 }
 
 CxCore_MaxSTest maxs_test;
@@ -1990,8 +2055,18 @@ CxCore_AndTest::CxCore_AndTest()
 
 void CxCore_AndTest::run_func()
 {
-    cvAnd( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvAnd( test_array[INPUT][0], test_array[INPUT][1],
+              test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_and(cv::cvarrToMatND(test_array[INPUT][0]),
+                        cv::cvarrToMatND(test_array[INPUT][1]),
+                        c, cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_AndTest and_test;
@@ -2012,8 +2087,18 @@ CxCore_AndSTest::CxCore_AndSTest()
 
 void CxCore_AndSTest::run_func()
 {
-    cvAndS( test_array[INPUT][0], gamma,
-            test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvAndS( test_array[INPUT][0], gamma,
+              test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_and(cv::cvarrToMatND(test_array[INPUT][0]),
+                        gamma, c,
+                        cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_AndSTest ands_test;
@@ -2036,8 +2121,19 @@ CxCore_OrTest::CxCore_OrTest()
 
 void CxCore_OrTest::run_func()
 {
-    cvOr( test_array[INPUT][0], test_array[INPUT][1],
-          test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvOr( test_array[INPUT][0], test_array[INPUT][1],
+              test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_or(cv::cvarrToMatND(test_array[INPUT][0]),
+                        cv::cvarrToMatND(test_array[INPUT][1]),
+                        c, cv::cvarrToMatND(test_array[MASK][0]));
+    }
+    
 }
 
 CxCore_OrTest or_test;
@@ -2058,8 +2154,18 @@ CxCore_OrSTest::CxCore_OrSTest()
 
 void CxCore_OrSTest::run_func()
 {
-    cvOrS( test_array[INPUT][0], gamma,
-           test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvOrS( test_array[INPUT][0], gamma,
+               test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_or(cv::cvarrToMatND(test_array[INPUT][0]),
+                        gamma, c,
+                        cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_OrSTest ors_test;
@@ -2082,8 +2188,19 @@ CxCore_XorTest::CxCore_XorTest()
 
 void CxCore_XorTest::run_func()
 {
-    cvXor( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvXor( test_array[INPUT][0], test_array[INPUT][1],
+               test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_xor(cv::cvarrToMatND(test_array[INPUT][0]),
+                        cv::cvarrToMatND(test_array[INPUT][1]),
+                        c, cv::cvarrToMatND(test_array[MASK][0]));
+    }
+    
 }
 
 CxCore_XorTest xor_test;
@@ -2104,8 +2221,18 @@ CxCore_XorSTest::CxCore_XorSTest()
 
 void CxCore_XorSTest::run_func()
 {
-    cvXorS( test_array[INPUT][0], gamma,
-            test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvXorS( test_array[INPUT][0], gamma,
+               test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::bitwise_xor(cv::cvarrToMatND(test_array[INPUT][0]),
+                        gamma, c,
+                        cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_XorSTest xors_test;
@@ -2128,8 +2255,15 @@ CxCore_NotTest::CxCore_NotTest()
 
 void CxCore_NotTest::run_func()
 {
-    cvNot( test_array[INPUT][0],
-           test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvNot( test_array[INPUT][0], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::bitwise_not(cv::cvarrToMatND(test_array[INPUT][0]), c);
+    }
 }
 
 CxCore_NotTest nots_test;
@@ -2359,8 +2493,18 @@ CxCore_CmpTest::CxCore_CmpTest()
 
 void CxCore_CmpTest::run_func()
 {
-    cvCmp( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[OUTPUT][0], cmp_op );
+    if(!test_nd)
+    {
+        cvCmp( test_array[INPUT][0], test_array[INPUT][1],
+              test_array[OUTPUT][0], cmp_op );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::compare(cv::cvarrToMatND(test_array[INPUT][0]),
+                    cv::cvarrToMatND(test_array[INPUT][1]),
+                    c, cmp_op);
+    }
 }
 
 CxCore_CmpTest cmp_test;
@@ -2381,8 +2525,17 @@ CxCore_CmpSTest::CxCore_CmpSTest()
 
 void CxCore_CmpSTest::run_func()
 {
-    cvCmpS( test_array[INPUT][0], gamma.val[0],
+    if(!test_nd)
+    {
+        cvCmpS( test_array[INPUT][0], gamma.val[0],
             test_array[OUTPUT][0], cmp_op );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::compare(cv::cvarrToMatND(test_array[INPUT][0]),
+                    gamma.val[0], c, cmp_op);
+    }
 }
 
 CxCore_CmpSTest cmps_test;
@@ -2403,8 +2556,19 @@ CxCore_InRangeTest::CxCore_InRangeTest()
 
 void CxCore_InRangeTest::run_func()
 {
-    cvInRange( test_array[INPUT][0], test_array[INPUT][1],
-               test_array[INPUT][2], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvInRange( test_array[INPUT][0], test_array[INPUT][1],
+                  test_array[INPUT][2], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::inRange(cv::cvarrToMatND(test_array[INPUT][0]),
+                    cv::cvarrToMatND(test_array[INPUT][1]),
+                    cv::cvarrToMatND(test_array[INPUT][2]),
+                    c);
+    }
 }
 
 CxCore_InRangeTest inrange_test;
@@ -2425,7 +2589,15 @@ CxCore_InRangeSTest::CxCore_InRangeSTest()
 
 void CxCore_InRangeSTest::run_func()
 {
-    cvInRangeS( test_array[INPUT][0], alpha, gamma, test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvInRangeS( test_array[INPUT][0], alpha, gamma, test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::inRange(cv::cvarrToMatND(test_array[INPUT][0]), alpha, gamma, c);
+    }
 }
 
 CxCore_InRangeSTest inranges_test;
@@ -2632,8 +2804,16 @@ CxCore_CvtScaleTest::CxCore_CvtScaleTest()
 
 void CxCore_CvtScaleTest::run_func()
 {
-    cvConvertScale( test_array[INPUT][0], test_array[OUTPUT][0],
-                    alpha.val[0], gamma.val[0] );
+    if(!test_nd)
+    {
+        cvConvertScale( test_array[INPUT][0], test_array[OUTPUT][0],
+                       alpha.val[0], gamma.val[0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::cvarrToMatND(test_array[INPUT][0]).convertTo(c,c.type(),alpha.val[0], gamma.val[0]);
+    }
 }
 
 CxCore_CvtScaleTest cvtscale_test;
@@ -2655,8 +2835,16 @@ CxCore_CvtScaleAbsTest::CxCore_CvtScaleAbsTest()
 
 void CxCore_CvtScaleAbsTest::run_func()
 {
-    cvConvertScaleAbs( test_array[INPUT][0], test_array[OUTPUT][0],
+    if(!test_nd)
+    {
+        cvConvertScaleAbs( test_array[INPUT][0], test_array[OUTPUT][0],
                        alpha.val[0], gamma.val[0] );
+    }
+    else
+    {
+        cv::Mat c = cv::cvarrToMat(test_array[OUTPUT][0]);
+        cv::convertScaleAbs(cv::cvarrToMat(test_array[INPUT][0]),c,alpha.val[0], gamma.val[0]);
+    }
 }
 
 CxCore_CvtScaleAbsTest cvtscaleabs_test;
@@ -2690,6 +2878,7 @@ protected:
     int output_count;
     bool single_channel;
     bool is_binary;
+    bool test_nd;
 };
 
 
@@ -2713,6 +2902,7 @@ CxCore_StatTestImpl::CxCore_StatTestImpl( const char* test_name,
     whole_size_list = arithm_whole_sizes;
     depth_list = arithm_depths;
     cn_list = arithm_channels;
+    test_nd = false;
 }
 
 
@@ -2741,6 +2931,7 @@ void CxCore_StatTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         coi = cvTsRandInt(rng) % cn + 1;
         cvmat_allowed = false;
     }
+    test_nd = cvTsRandInt(rng) % 3 == 0;
 }
 
 
@@ -2878,7 +3069,14 @@ double CxCore_SumTest::get_success_error_level( int /*test_case_idx*/, int /*i*/
 
 void CxCore_SumTest::run_func()
 {
-    *(CvScalar*)(test_mat[OUTPUT][0].data.db) = cvSum(test_array[INPUT][0]);
+    if(!test_nd || coi)
+    {
+        *(CvScalar*)(test_mat[OUTPUT][0].data.db) = cvSum(test_array[INPUT][0]);
+    }
+    else
+    {
+        *(cv::Scalar*)(test_mat[OUTPUT][0].data.db) = cv::sum(cv::cvarrToMatND(test_array[INPUT][0]));
+    }
 }
 
 void CxCore_SumTest::prepare_to_validation( int /*test_case_idx*/ )
@@ -2921,7 +3119,14 @@ CxCore_NonZeroTest::CxCore_NonZeroTest()
 
 void CxCore_NonZeroTest::run_func()
 {
-    test_mat[OUTPUT][0].data.db[0] = cvCountNonZero(test_array[INPUT][0]);
+    if(!test_nd || coi)
+    {
+        test_mat[OUTPUT][0].data.db[0] = cvCountNonZero(test_array[INPUT][0]);
+    }
+    else
+    {
+        test_mat[OUTPUT][0].data.db[0] = cv::countNonZero(cv::cvarrToMatND(test_array[INPUT][0]));
+    }
 }
 
 void CxCore_NonZeroTest::get_test_array_types_and_sizes( int test_case_idx,
@@ -2972,8 +3177,17 @@ CxCore_MeanTest::CxCore_MeanTest()
 
 void CxCore_MeanTest::run_func()
 {
-    *(CvScalar*)(test_mat[OUTPUT][0].data.db) =
-        cvAvg(test_array[INPUT][0], test_array[MASK][0]);
+    if(!test_nd || coi)
+    {
+        *(CvScalar*)(test_mat[OUTPUT][0].data.db) =
+            cvAvg(test_array[INPUT][0], test_array[MASK][0]);
+    }
+    else
+    {
+        *(cv::Scalar*)(test_mat[OUTPUT][0].data.db) = cv::mean(
+                    cv::cvarrToMatND(test_array[INPUT][0]),
+                    cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 void CxCore_MeanTest::prepare_to_validation( int /*test_case_idx*/ )
@@ -3007,17 +3221,20 @@ CxCore_MeanStdDevTest::CxCore_MeanStdDevTest()
 
 void CxCore_MeanStdDevTest::run_func()
 {
-    /*CvScalar s;
-    CvRNG* rng = ts->get_rng();
-    s.val[0] = cvTsRandReal(rng)*100. - 50.;
-    s.val[1] = cvTsRandReal(rng)*100. - 50.;
-    s.val[2] = cvTsRandReal(rng)*100. - 50.;
-    s.val[3] = cvTsRandReal(rng)*100. - 50.;
-    cvSet( &test_mat[INPUT][0], s );*/
-    cvAvgSdv( test_array[INPUT][0],
-              &((CvScalar*)(test_mat[OUTPUT][0].data.db))[0],
-              &((CvScalar*)(test_mat[OUTPUT][0].data.db))[1],
-              test_array[MASK][0] );
+    if(!test_nd || coi)
+    {
+        cvAvgSdv( test_array[INPUT][0],
+                  &((CvScalar*)(test_mat[OUTPUT][0].data.db))[0],
+                  &((CvScalar*)(test_mat[OUTPUT][0].data.db))[1],
+                  test_array[MASK][0] );
+    }
+    else
+    {
+        cv::meanStdDev(cv::cvarrToMatND(test_array[INPUT][0]),
+                       ((cv::Scalar*)(test_mat[OUTPUT][0].data.db))[0],
+                       ((cv::Scalar*)(test_mat[OUTPUT][0].data.db))[1],
+                       cv::cvarrToMatND(test_array[MASK][0]) );
+    }
 }
 
 double CxCore_MeanStdDevTest::get_success_error_level( int test_case_idx, int i, int j )
@@ -3229,8 +3446,20 @@ void CxCore_NormTest::print_timing_params( int test_case_idx, char* ptr, int par
 
 void CxCore_NormTest::run_func()
 {
-    test_mat[OUTPUT][0].data.db[0] = cvNorm( test_array[INPUT][0],
-            test_array[INPUT][1], norm_type, test_array[MASK][0] );
+    if(!test_nd || coi)
+    {
+        test_mat[OUTPUT][0].data.db[0] = cvNorm( test_array[INPUT][0],
+                 test_array[INPUT][1], norm_type, test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
+        cv::MatND mask = cv::cvarrToMatND(test_array[MASK][0]);
+        test_mat[OUTPUT][0].data.db[0] = b.data ?
+            cv::norm( a, b, norm_type, mask ) :
+            cv::norm( a, norm_type, mask );
+    }
 }
 
 void CxCore_NormTest::prepare_to_validation( int /*test_case_idx*/ )
