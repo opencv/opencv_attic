@@ -432,6 +432,21 @@ CV_EXPORTS void equalizeHist( const Mat& src, Mat& dst );
 
 CV_EXPORTS void watershed( const Mat& image, Mat& markers );
 
+enum { GC_BGD    = 0,  // background
+GC_FGD    = 1,  // foreground
+GC_PR_BGD = 2,  // most probably background
+GC_PR_FGD = 3   // most probably foreground 
+};
+
+enum { GC_INIT_WITH_RECT  = 0,
+GC_INIT_WITH_MASK  = 1,
+GC_EVAL            = 2
+};
+
+CV_EXPORTS void grabCut( const Mat& img, Mat& mask, Rect rect, 
+                        Mat& bgdModel, Mat& fgdModel,
+                        int iterCount, int flag = GC_EVAL );
+
 enum { INPAINT_NS=CV_INPAINT_NS, INPAINT_TELEA=CV_INPAINT_TELEA };
 
 CV_EXPORTS void inpaint( const Mat& src, const Mat& inpaintMask,
@@ -1005,7 +1020,6 @@ struct CvLSHOperations
   virtual void hash_remove(lsh_hash h, int l, int i) = 0;
   virtual int hash_lookup(lsh_hash h, int l, int* ret_i, int ret_i_max) = 0;
 };
-
 
 #endif /* __cplusplus */
 
