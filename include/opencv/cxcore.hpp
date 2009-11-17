@@ -670,6 +670,7 @@ protected:
 //////////////////////////////// Mat ////////////////////////////////
 
 class Mat;
+class MatND;
 template<typename M> class CV_EXPORTS MatExpr_Base_;
 typedef MatExpr_Base_<Mat> MatExpr_Base;
 template<typename E, typename M> class MatExpr_;
@@ -924,6 +925,7 @@ public:
     float uniform(float a, float b);
     double uniform(double a, double b);
     void fill( Mat& mat, int distType, const Scalar& a, const Scalar& b );
+    void fill( MatND& mat, int distType, const Scalar& a, const Scalar& b );
 
     uint64 state;
 };
@@ -1433,6 +1435,8 @@ public:
     MatND(const MatND& m);
     // sub-array selection. only the header is copied
     MatND(const MatND& m, const Range* ranges);
+    // converts 2D matrix to ND matrix
+    explicit MatND(const Mat& m);
     // converts old-style nd array to MatND; optionally, copies the data
     MatND(const CvMatND* m, bool copyData=false);
     ~MatND();

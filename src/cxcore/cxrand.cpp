@@ -600,6 +600,13 @@ void RNG::fill( Mat& mat, int disttype, const Scalar& param1, const Scalar& para
     func( mat, &state, param );
 }
 
+void RNG::fill( MatND& mat, int disttype, const Scalar& param1, const Scalar& param2 )
+{
+    NAryMatNDIterator it(mat);
+
+    for( int i = 0; i < it.nplanes; i++, ++it )
+        fill( it.planes[0], disttype, param1, param2 ); 
+}
 
 #ifdef WIN32
 #ifdef WINCE

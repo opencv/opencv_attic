@@ -68,6 +68,7 @@ protected:
     CvScalar alpha, beta, gamma;
     int gen_scalars;
     bool calc_abs;
+    bool test_nd;
 };
 
 
@@ -98,6 +99,7 @@ CxCore_ArithmTestImpl::CxCore_ArithmTestImpl( const char* test_name, const char*
     whole_size_list = arithm_whole_sizes;
     depth_list = arithm_depths;
     cn_list = arithm_channels;
+    test_nd = false;
 }
 
 
@@ -188,6 +190,7 @@ void CxCore_ArithmTestImpl::get_test_array_types_and_sizes( int test_case_idx,
             types[i][j] = type;
         }
     }
+    test_nd = cvTsRandInt(rng)%3 == 0;
 }
 
 
@@ -197,6 +200,7 @@ void CxCore_ArithmTestImpl::get_timing_test_array_types_and_sizes( int test_case
     CvArrTest::get_timing_test_array_types_and_sizes( test_case_idx, sizes, types,
                                                       whole_sizes, are_images );
     generate_scalars( types[INPUT][0] );
+    test_nd = false;
 }
 
 
@@ -257,8 +261,21 @@ CxCore_AddTest::CxCore_AddTest()
 
 void CxCore_AddTest::run_func()
 {
-    cvAdd( test_array[INPUT][0], test_array[INPUT][1],
-        test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvAdd( test_array[INPUT][0], test_array[INPUT][1],
+            test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][2]);
+        if( test_array[MASK][0] )
+            cv::add(a, b, c);
+        else
+            cv::add(a, b, c, cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_AddTest add_test;
@@ -282,8 +299,21 @@ CxCore_SubTest::CxCore_SubTest()
 
 void CxCore_SubTest::run_func()
 {
-    cvSub( test_array[INPUT][0], test_array[INPUT][1],
-           test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvSub( test_array[INPUT][0], test_array[INPUT][1],
+            test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[INPUT][1]);
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][2]);
+        if( test_array[MASK][0] )
+            cv::subtract(a, b, c);
+        else
+            cv::subtract(a, b, c, cv::cvarrToMatND(test_array[MASK][0]));
+    }
 }
 
 CxCore_SubTest sub_test;
@@ -308,8 +338,19 @@ CxCore_AddSTest::CxCore_AddSTest()
 
 void CxCore_AddSTest::run_func()
 {
-    cvAddS( test_array[INPUT][0], gamma,
+    if(!test_nd)
+    {
+        cvAddS( test_array[INPUT][0], gamma,
             test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::add( cv::cvarrToMatND(test_array[INPUT][0]),
+                 gamma, c,
+                 test_array[MASK][0] ?
+                    cv::cvarrToMatND(test_array[MASK][0]) : cv::MatND());
+    }
 }
 
 CxCore_AddSTest adds_test;
@@ -333,8 +374,19 @@ CxCore_SubRSTest::CxCore_SubRSTest()
 
 void CxCore_SubRSTest::run_func()
 {
-    cvSubRS( test_array[INPUT][0], gamma,
-             test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    if(!test_nd)
+    {
+        cvSubRS( test_array[INPUT][0], gamma,
+                test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::subtract( gamma,
+                cv::cvarrToMatND(test_array[INPUT][0]),
+                c, test_array[MASK][0] ?
+                    cv::cvarrToMatND(test_array[MASK][0]) : cv::MatND());
+    }
 }
 
 CxCore_SubRSTest subrs_test;
@@ -386,9 +438,20 @@ double CxCore_AddWeightedTest::get_success_error_level( int test_case_idx, int i
 
 void CxCore_AddWeightedTest::run_func()
 {
-    cvAddWeighted( test_array[INPUT][0], alpha.val[0],
-                   test_array[INPUT][1], beta.val[0],
-                   gamma.val[0], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvAddWeighted( test_array[INPUT][0], alpha.val[0],
+                    test_array[INPUT][1], beta.val[0],
+                    gamma.val[0], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::addWeighted(cv::cvarrToMatND(test_array[INPUT][0]),
+                alpha.val[0],
+                cv::cvarrToMatND(test_array[INPUT][1]),
+                beta.val[0], gamma.val[0], c);
+    }
 }
 
 CxCore_AddWeightedTest addweighted_test;
@@ -413,7 +476,17 @@ CxCore_AbsDiffTest::CxCore_AbsDiffTest()
 
 void CxCore_AbsDiffTest::run_func()
 {
-    cvAbsDiff( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    if(!test_nd)
+    {
+        cvAbsDiff( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0] );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::absdiff(cv::cvarrToMatND(test_array[INPUT][0]),
+                cv::cvarrToMatND(test_array[INPUT][1]),
+                 c );
+    }
 }
 
 CxCore_AbsDiffTest absdiff_test;
@@ -437,7 +510,16 @@ CxCore_AbsDiffSTest::CxCore_AbsDiffSTest()
 
 void CxCore_AbsDiffSTest::run_func()
 {
-    cvAbsDiffS( test_array[INPUT][0], test_array[OUTPUT][0], gamma );
+    if(!test_nd)
+    {
+        cvAbsDiffS( test_array[INPUT][0], test_array[OUTPUT][0], gamma );
+    }
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::absdiff(cv::cvarrToMatND(test_array[INPUT][0]),
+                gamma, c);
+    }
 }
 
 CxCore_AbsDiffSTest absdiffs_test;
