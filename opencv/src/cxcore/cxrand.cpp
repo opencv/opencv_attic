@@ -649,8 +649,8 @@ RNG& theRNG()
 {
     if( !tlsRNGKey )
     {
-        pthread_key_create(&tlsRNGKey, deleteRNG);
-        CV_Assert(tlsRNGKey != 0);
+        int errcode = pthread_key_create(&tlsRNGKey, deleteRNG);
+        CV_Assert(errcode == 0);
     }
     RNG* rng = (RNG*)pthread_getspecific(tlsRNGKey);
     if( !rng )
