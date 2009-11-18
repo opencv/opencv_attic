@@ -43,12 +43,6 @@
 #include "cvgcgraph.hpp"
 
 using namespace cv;
-inline Vec3f cvtVec( const Vec3b& v3b )
-{
-    Vec3f v3f;
-    v3f[0] = v3b[0]; v3f[1] = v3b[1]; v3f[2] = v3b[2];
-    return v3f;
-}
 
 class GMM
 {
@@ -64,15 +58,18 @@ public:
     void addSample( uchar ci, Vec3b color );
     void endLearning();
 private:
+    void calcAuxData( uchar ci );
     float* coefs;
     float* mean;
     float* cov;
 
+    // auxData
     float inverseCov[K][3][3];
     float covDeterm[K];
 
-    float sum[3*K];
-    float prod[9*K];
+    // for learning
+    float sum[K][3];
+    float prod[K][3][3];
     int count[K];
     int totalCount;
 };
@@ -86,33 +83,14 @@ GMM::GMM( Mat& model )
     }
     else if( (model.type() != CV_32FC1) || (model.rows != 1) || (model.cols != 13*K) )
         CV_Error( CV_StsBadArg, "model must have CV_32FC1 type, rows == 1 and cols == 13*K" );
+
     coefs = model.ptr<float>(0);
     mean = coefs + K;
     cov = mean + 3*K;
 
     for( uchar ci = 0; ci < K; ci++ )
-    {
         if( coefs[ci] > 0 )
-        {
-            float *c = cov + 9*ci;
-            float dtrm = covDeterm[ci] = c[0]*(c[4]*c[8] - c[5]*c[7])
-                - c[1]*(c[3]*c[8] - c[5]*c[6]) + c[2]*(c[3]*c[7] - c[4]*c[6]);
-
-            if( dtrm > FLT_EPSILON )
-            {
-                inverseCov[ci][0][0] =  (c[4]*c[8] - c[5]*c[7]) / dtrm;
-                inverseCov[ci][1][0] = -(c[3]*c[8] - c[5]*c[6]) / dtrm;
-                inverseCov[ci][2][0] =  (c[3]*c[7] - c[4]*c[6]) / dtrm;
-                inverseCov[ci][0][1] = -(c[1]*c[8] - c[2]*c[7]) / dtrm;
-                inverseCov[ci][1][1] =  (c[0]*c[8] - c[2]*c[6]) / dtrm;
-                inverseCov[ci][2][1] = -(c[0]*c[7] - c[1]*c[6]) / dtrm;
-                inverseCov[ci][0][2] =  (c[1]*c[5] - c[2]*c[4]) / dtrm;
-                inverseCov[ci][1][2] = -(c[0]*c[5] - c[2]*c[3]) / dtrm;
-                inverseCov[ci][2][2] =  (c[0]*c[4] - c[1]*c[3]) / dtrm;
-            }
-
-        }
-    }
+             calcAuxData( ci );
 }
 
 float GMM::operator()( Vec3b color ) const
@@ -130,13 +108,13 @@ float GMM::operator()( uchar ci, Vec3b color ) const
     {
         if( covDeterm[ci] > FLT_EPSILON )
         {
-            Vec3f diff = cvtVec(color);
+            Vec3f diff = color;
             float* m = mean + 3*ci;
             diff[0] -= m[0]; diff[1] -= m[1]; diff[2] -= m[2];
             float mult = diff[0]*(diff[0]*inverseCov[ci][0][0] + diff[1]*inverseCov[ci][1][0] + diff[2]*inverseCov[ci][2][0])
                 + diff[1]*(diff[0]*inverseCov[ci][0][1] + diff[1]*inverseCov[ci][1][1] + diff[2]*inverseCov[ci][2][1])
                 + diff[2]*(diff[0]*inverseCov[ci][0][2] + diff[1]*inverseCov[ci][1][2] + diff[2]*inverseCov[ci][2][2]);
-            res = (1.0f/(sqrt(covDeterm[ci])) * exp(-0.5f*mult));
+            res = 1.0f/sqrt(covDeterm[ci]) * exp(-0.5f*mult);
         }
     }
     return res;
@@ -161,20 +139,23 @@ uchar GMM::whatComponent( Vec3b color ) const
 
 void GMM::startLearning()
 {
-    memset( &sum, 0, 3*K*sizeof(sum[0]) );
-    memset( &prod, 0, 9*K*sizeof(prod[0]) );
-    memset( &count, 0, K*sizeof(count[0]) );
+    for( uchar ci = 0; ci < K; ci++)
+    {
+        sum[ci][0] = sum[ci][1] = sum[ci][2] = 0;
+        prod[ci][0][0] = prod[ci][0][1] = prod[ci][0][2] = 0;
+        prod[ci][1][0] = prod[ci][1][1] = prod[ci][1][2] = 0;
+        prod[ci][2][0] = prod[ci][2][1] = prod[ci][2][2] = 0;
+        count[ci] = 0;
+    }
     totalCount = 0;
 }
 
 void GMM::addSample( uchar ci, Vec3b color )
 {
-    float* s = sum + 3*ci;
-    s[0] += color[0], s[1] += color[1], s[2] += color[2];
-    float* p = prod + 9*ci;
-    p[0] += color[0]*color[0], p[1] += color[0]*color[1], p[2] += color[0]*color[2];
-    p[3] += color[1]*color[0], p[4] += color[1]*color[1], p[5] += color[1]*color[2];
-    p[6] += color[2]*color[0], p[7] += color[2]*color[1], p[8] += color[2]*color[2];
+    sum[ci][0] += color[0], sum[ci][1] += color[1], sum[ci][2] += color[2];
+    prod[ci][0][0] += color[0]*color[0], prod[ci][0][1] += color[0]*color[1], prod[ci][0][2] += color[0]*color[2];
+    prod[ci][1][0] += color[1]*color[0], prod[ci][1][1] += color[1]*color[1], prod[ci][1][2] += color[1]*color[2];
+    prod[ci][2][0] += color[2]*color[0], prod[ci][2][1] += color[2]*color[1], prod[ci][2][2] += color[2]*color[2];
     count[ci]++;
     totalCount++;
 }
@@ -191,29 +172,38 @@ void GMM::endLearning()
         {
             int n = count[ci];
             coefs[ci] = (float)count[ci]/totalCount;
-            float* m = mean + 3*ci, *s = sum + 3*ci;
-            m[0] = s[0]/n; m[1] = s[1]/n; m[2] = s[2]/n;
+            float* m = mean + 3*ci;
+            m[0] = sum[ci][0]/n; m[1] = sum[ci][1]/n; m[2] = sum[ci][2]/n;
             
-            float* c = cov + 9*ci, *p = prod + 9*ci;
-            c[0] = p[0]/n - m[0]*m[0], c[1] = p[1]/n - m[0]*m[1], c[2] = p[2]/n - m[0]*m[2];
-            c[3] = p[3]/n - m[1]*m[0], c[4] = p[4]/n - m[1]*m[1], c[5] = p[5]/n - m[1]*m[2];
-            c[6] = p[6]/n - m[2]*m[0], c[7] = p[7]/n - m[2]*m[1], c[8] = p[8]/n - m[2]*m[2];
+            float* c = cov + 9*ci;
+            c[0] = prod[ci][0][0]/n - m[0]*m[0], c[1] = prod[ci][0][1]/n - m[0]*m[1], c[2] = prod[ci][0][2]/n - m[0]*m[2];
+            c[3] = prod[ci][1][0]/n - m[1]*m[0], c[4] = prod[ci][1][1]/n - m[1]*m[1], c[5] = prod[ci][1][2]/n - m[1]*m[2];
+            c[6] = prod[ci][2][0]/n - m[2]*m[0], c[7] = prod[ci][2][1]/n - m[2]*m[1], c[8] = prod[ci][2][2]/n - m[2]*m[2];
 
-            float dtrm = covDeterm[ci] = c[0]*(c[4]*c[8] - c[5]*c[7])
-                - c[1]*(c[3]*c[8] - c[5]*c[6]) + c[2]*(c[3]*c[7] - c[4]*c[6]);
+            calcAuxData( ci );
+        }
+    }
+}
 
-            if( dtrm > FLT_EPSILON )
-            {
-                inverseCov[ci][0][0] =  (c[4]*c[8] - c[5]*c[7]) / dtrm;
-                inverseCov[ci][1][0] = -(c[3]*c[8] - c[5]*c[6]) / dtrm;
-                inverseCov[ci][2][0] =  (c[3]*c[7] - c[4]*c[6]) / dtrm;
-                inverseCov[ci][0][1] = -(c[1]*c[8] - c[2]*c[7]) / dtrm;
-                inverseCov[ci][1][1] =  (c[0]*c[8] - c[2]*c[6]) / dtrm;
-                inverseCov[ci][2][1] = -(c[0]*c[7] - c[1]*c[6]) / dtrm;
-                inverseCov[ci][0][2] =  (c[1]*c[5] - c[2]*c[4]) / dtrm;
-                inverseCov[ci][1][2] = -(c[0]*c[5] - c[2]*c[3]) / dtrm;
-                inverseCov[ci][2][2] =  (c[0]*c[4] - c[1]*c[3]) / dtrm;
-            }
+void GMM::calcAuxData( uchar ci )
+{
+    if( coefs[ci] > 0 )
+    {
+        float *c = cov + 9*ci;
+        float dtrm = covDeterm[ci] = c[0]*(c[4]*c[8] - c[5]*c[7])
+            - c[1]*(c[3]*c[8] - c[5]*c[6]) + c[2]*(c[3]*c[7] - c[4]*c[6]);
+
+        if( dtrm > FLT_EPSILON )
+        {
+            inverseCov[ci][0][0] =  (c[4]*c[8] - c[5]*c[7]) / dtrm;
+            inverseCov[ci][1][0] = -(c[3]*c[8] - c[5]*c[6]) / dtrm;
+            inverseCov[ci][2][0] =  (c[3]*c[7] - c[4]*c[6]) / dtrm;
+            inverseCov[ci][0][1] = -(c[1]*c[8] - c[2]*c[7]) / dtrm;
+            inverseCov[ci][1][1] =  (c[0]*c[8] - c[2]*c[6]) / dtrm;
+            inverseCov[ci][2][1] = -(c[0]*c[7] - c[1]*c[6]) / dtrm;
+            inverseCov[ci][0][2] =  (c[1]*c[5] - c[2]*c[4]) / dtrm;
+            inverseCov[ci][1][2] = -(c[0]*c[5] - c[2]*c[3]) / dtrm;
+            inverseCov[ci][2][2] =  (c[0]*c[4] - c[1]*c[3]) / dtrm;
         }
     }
 }
@@ -226,25 +216,25 @@ float calcBeta( const Mat& img )
     {
         for( p.x = 0; p.x < img.cols; p.x++ )
         {
-            Vec3f color = cvtVec(img.at<Vec3b>(p));
+            Vec3f color = img.at<Vec3b>(p);
             if( p.x>0 ) // left
             {
-                Vec3f diff = color - cvtVec(img.at<Vec3b>(p.y, p.x-1));
+                Vec3f diff = color - (Vec3f)img.at<Vec3b>(p.y, p.x-1);
                 beta += diff.dot(diff);
             }
             if( p.y>0 && p.x>0 ) // upleft
             {
-                Vec3f diff = color - cvtVec(img.at<Vec3b>(p.y-1, p.x-1));
+                Vec3f diff = color - (Vec3f)img.at<Vec3b>(p.y-1, p.x-1);
                 beta += diff.dot(diff);
             }
             if( p.y>0 ) // up
             {
-                Vec3f diff = color - cvtVec(img.at<Vec3b>(p.y-1, p.x));
+                Vec3f diff = color - (Vec3f)img.at<Vec3b>(p.y-1, p.x);
                 beta += diff.dot(diff);
             }
             if( p.y>0 && p.x<img.cols-1) // upright
             {
-                Vec3f diff = color - cvtVec(img.at<Vec3b>(p.y-1, p.x+1));
+                Vec3f diff = color - (Vec3f)img.at<Vec3b>(p.y-1, p.x+1);
                 beta += diff.dot(diff);
             }
         }
@@ -261,7 +251,7 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
     up.create( img.rows, img.cols, CV_32FC1 );
     upright.create( img.rows, img.cols, CV_32FC1 );
     Point p, p2;
-    Vec3b c, diff;
+    Vec3f c, diff;
     for( p.y = 0; p.y < img.rows; p.y++ )
     {
         for( p.x = 0; p.x < img.cols; p.x++ )
@@ -272,7 +262,7 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
             p2.x = p.x-1;
             if( p2.x>=0 )
             {
-                diff = c - img.at<Vec3b>(p2);
+                diff = c - (Vec3f)img.at<Vec3b>(p2);
                 left.at<float>(p) = gamma * exp(-beta*diff.dot(diff));
             }
             else
@@ -282,7 +272,7 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
             p2.x = p.x-1;
             if( p2.x>=0 && p2.y>=0 )
             {
-                diff = c - img.at<Vec3b>(p2);
+                diff = c - (Vec3f)img.at<Vec3b>(p2);
                 upleft.at<float>(p) = gamma * exp(-beta*diff.dot(diff)) / sqrt2;
             }
             else
@@ -292,8 +282,7 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
             p2.x = p.x;
             if( p2.y>=0 )
             {
-                diff = c - img.at<Vec3b>(p2);
-                float res = gamma * exp(-beta*diff.dot(diff));
+                diff = c - (Vec3f)img.at<Vec3b>(p2);
                 up.at<float>(p) = gamma * exp(-beta*diff.dot(diff));
             }
             else
@@ -303,7 +292,7 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
             p2.x = p.x+1;
             if( p2.x<img.cols-1 && p2.y>=0 )
             {
-                diff = c - img.at<Vec3b>(p2);
+                diff = c - (Vec3f)img.at<Vec3b>(p2);
                 upright.at<float>(p) = gamma * exp(-beta*diff.dot(diff)) / sqrt2;
             }
             else
@@ -312,7 +301,28 @@ void calcNWeights( const Mat& img, Mat& left, Mat& upleft, Mat& up, Mat& upright
     }
 }
 
-void grabCut( const Mat& img, Mat& mask, Rect rect, 
+void checkMask( const Mat& img, const Mat& mask )
+{
+    if( mask.empty() )
+        CV_Error( CV_StsBadArg, "mask is empty" );
+    if( mask.type() != CV_8UC1 )
+        CV_Error( CV_StsBadArg, "mask mush have CV_8UC1 type" );
+    if( mask.cols != img.cols || mask.rows != img.rows )
+        CV_Error( CV_StsBadArg, "mask mush have rows and cols as img" );
+    Point p;
+    for( p.y = 0; p.y < mask.rows; p.y++ )
+    {
+        for( p.x = 0; p.x < mask.cols; p.x++ )
+        {
+            uchar val = mask.at<uchar>(p);
+            if( val!=GC_BGD && val!=GC_FGD && val!=GC_PR_BGD && val!=GC_PR_FGD )
+                CV_Error( CV_StsBadArg, "mask element value must be equel"
+                    "GC_BGD or GC_FGD or GC_PR_BGD or GC_PR_FGD" );
+        }
+    }
+}
+
+void cv::grabCut( const Mat& img, Mat& mask, Rect rect, 
              Mat& bgdModel, Mat& fgdModel,
              int iterCount, int flag )
 {
@@ -323,12 +333,6 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
 
     const int KMI = 10;
     const int KMT = KMEANS_PP_CENTERS;
-    const float gamma = 50;
-    const float lambda = 9*gamma;
-    const float beta = calcBeta( img );
-
-    Mat left, upleft, up, upright;
-    calcNWeights( img, left, upleft, up, upright, beta, gamma );
 
     GMM bgdGMM( bgdModel ), fgdGMM( fgdModel );
     Mat cidx( img.size(), CV_8UC1 );
@@ -350,15 +354,7 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
             maskRect.setTo( Scalar(GC_PR_FGD) );
         }
         else // flag == GC_INIT_WITH_MASK 
-        {
-            if( mask.empty() )
-                CV_Error( CV_StsBadArg, "mask is empty" );
-            if( mask.type() != CV_8UC1 )
-                CV_Error( CV_StsBadArg, "mask mush have CV_8UC1 type" );
-            if( mask.cols != img.cols || mask.rows != img.rows )
-                CV_Error( CV_StsBadArg, "mask mush have rows and cols as img" );
-            // TODO check mask elements? ( GC_BGD and GC_FGD only )
-        }
+            checkMask( img, mask );
 
         // init GMMs
         Mat bgdLabels, fgdLabels;
@@ -368,9 +364,9 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
             for( p.x = 0; p.x < img.cols; p.x++ )
             {
                 if( mask.at<uchar>(p) == GC_BGD )
-                    bgdSamples.push_back( cvtVec(img.at<Vec3b>(p)) );
+                    bgdSamples.push_back( (Vec3f)img.at<Vec3b>(p) );
                 else // GC_PR_BGD | GC_FGD | GC_PR_FGD
-                    fgdSamples.push_back( cvtVec(img.at<Vec3b>(p)) );
+                    fgdSamples.push_back( (Vec3f)img.at<Vec3b>(p) );
             }
         }
         CV_Assert( !bgdSamples.empty() && !fgdSamples.empty() );
@@ -381,16 +377,26 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
 
         bgdGMM.startLearning();
         for( int i = 0; i < (int)bgdSamples.size(); i++ )
-            bgdGMM.addSample( bgdLabels.at<int>(i,0), bgdSamples[i] );
+            bgdGMM.addSample( (uchar)bgdLabels.at<int>(i,0), bgdSamples[i] );
         bgdGMM.endLearning();
 
         fgdGMM.startLearning();
         for( int i = 0; i < (int)fgdSamples.size(); i++ )
-            fgdGMM.addSample( fgdLabels.at<int>(i,0), fgdSamples[i] );
+            fgdGMM.addSample( (uchar)fgdLabels.at<int>(i,0), fgdSamples[i] );
         fgdGMM.endLearning();
     }
-    
-    // TODO check mask
+
+    if( iterCount <= 0)
+        return;
+
+    if( flag != GC_INIT_WITH_MASK )
+        checkMask( img, mask );
+
+    const float gamma = 50;
+    const float lambda = 9*gamma;
+    const float beta = calcBeta( img );
+    Mat left, upleft, up, upright;
+    calcNWeights( img, left, upleft, up, upright, beta, gamma );
 
     for( int i = 0; i < iterCount; i++ )
     {
@@ -400,7 +406,6 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
             for( p.x = 0; p.x < img.cols; p.x++ )
             {
                 Vec3b color = img.at<Vec3b>(p);
-                bool b = mask.at<uchar>(p) == GC_BGD || mask.at<uchar>(p) == GC_PR_BGD;
                 cidx.at<uchar>(p) = mask.at<uchar>(p) == GC_BGD || mask.at<uchar>(p) == GC_PR_BGD ?
                     bgdGMM.whatComponent(color) : fgdGMM.whatComponent(color);
             }
@@ -415,7 +420,6 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
             {
                 for( p.x = 0; p.x < img.cols; p.x++ )
                 {
-                    uchar c = cidx.at<uchar>(p);
                     if( cidx.at<uchar>(p) == ci )
                     {
                         if( mask.at<uchar>(p) == GC_BGD || mask.at<uchar>(p) == GC_PR_BGD )    
@@ -459,7 +463,7 @@ void grabCut( const Mat& img, Mat& mask, Rect rect,
                 }
                 graph.addTermWeights( idx, fromSource, toSink );
 
-                // 3. set n-weights
+                // set n-weights
                 if( p.x>0 )
                 {
                     float w = left.at<float>(p);
