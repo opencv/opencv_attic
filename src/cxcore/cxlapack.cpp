@@ -387,32 +387,32 @@ double invert( const Mat& src, Mat& dst, int method )
 *                              Solving a linear system                                   *
 \****************************************************************************************/
 
-bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
+bool solve( const Mat& src, const Mat& _src2, Mat& dst, int method )
 {
     bool result = true;
     int type = src.type();
     bool is_normal = (method & DECOMP_NORMAL) != 0;
 
-    CV_Assert( type == src2.type() && (type == CV_32F || type == CV_64F) );
+    CV_Assert( type == _src2.type() && (type == CV_32F || type == CV_64F) );
 
     method &= ~DECOMP_NORMAL;
     CV_Assert( (method != DECOMP_LU && method != DECOMP_CHOLESKY) ||
         is_normal || src.rows == src.cols );
 
-    dst.create( src.cols, src2.cols, src.type() );
-
     // check case of a single equation and small matrix
     if( (method == DECOMP_LU || method == DECOMP_CHOLESKY) &&
-        src.rows <= 3 && src.rows == src.cols && src2.cols == 1 )
+        src.rows <= 3 && src.rows == src.cols && _src2.cols == 1 )
     {
+        dst.create( src.cols, _src2.cols, src.type() );
+        
         #define bf(y) ((float*)(bdata + y*src2step))[0]
         #define bd(y) ((double*)(bdata + y*src2step))[0]
 
         uchar* srcdata = src.data;
-        uchar* bdata = src2.data;
+        uchar* bdata = _src2.data;
         uchar* dstdata = dst.data;
         size_t srcstep = src.step;
-        size_t src2step = src2.step;
+        size_t src2step = _src2.step;
         size_t dststep = dst.step;
 
         if( src.rows == 2 )
@@ -534,7 +534,7 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
     double rcond=-1, s1=0, work1=0, *work=0, *s=0;
     float frcond=-1, fs1=0, fwork1=0, *fwork=0, *fs=0;
     integer m = src.rows, m_ = m, n = src.cols, mn = std::max(m,n),
-        nm = std::min(m, n), nb = src2.cols, lwork=-1, liwork=0, iwork1=0,
+        nm = std::min(m, n), nb = _src2.cols, lwork=-1, liwork=0, iwork1=0,
         lda = m, ldx = mn, info=0, rank=0, *iwork=0;
     int elem_size = CV_ELEM_SIZE(type);
     bool copy_rhs=false;
@@ -543,6 +543,9 @@ bool solve( const Mat& src, const Mat& src2, Mat& dst, int method )
     uchar* ptr;
     char N[] = {'N', '\0'}, L[] = {'L', '\0'};
 
+    Mat src2 = _src2;
+    dst.create( src.cols, src2.cols, src.type() );
+        
     if( m <= n )
         is_normal = false;
     else if( is_normal )

@@ -138,7 +138,7 @@ void CV_RandTest::run( int )
     int progress = 0;
     
     CvRNG* rng = ts->get_rng();
-    RNG tested_rng;
+    RNG tested_rng = theRNG();
     test_case_count = 500;
     
     for( int idx = 0; idx < test_case_count; idx++ )
