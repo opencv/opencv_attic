@@ -50,8 +50,8 @@ public:
     CV_RandTest();
 protected:
     void run(int);
-    bool check_pdf(const Mat& hist, double scale, double A, double B,
-                   int dist_type, double& refval, double& realval);
+    bool check_pdf(const Mat& hist, double scale, int dist_type,
+                   double& refval, double& realval);
 };
 
 
@@ -64,9 +64,10 @@ CvTest( "rand", "cvRandArr, cvRNG" )
 static double chi2_p95(int n)
 {
     static float chi2_tab95[] = {
-        3.841, 5.991, 7.815, 9.488, 11.07, 12.59, 14.07, 15.51, 16.92, 18.31, 19.68, 21.03,
-        21.03, 22.36, 23.69, 25.00, 26.30, 27.59, 28.87, 30.14, 31.41, 32.67, 33.92, 35.17,
-        36.42, 37.65, 38.89, 40.11, 41.34, 42.56, 43.77 };
+        3.841f, 5.991f, 7.815f, 9.488f, 11.07f, 12.59f, 14.07f, 15.51f,
+        16.92f, 18.31f, 19.68f, 21.03f, 21.03f, 22.36f, 23.69f, 25.00f,
+        26.30f, 27.59f, 28.87f, 30.14f, 31.41f, 32.67f, 33.92f, 35.17f,
+        36.42f, 37.65f, 38.89f, 40.11f, 41.34f, 42.56f, 43.77f };
     static const double xp = 1.64;
     CV_Assert(n >= 1);
     
@@ -75,7 +76,7 @@ static double chi2_p95(int n)
     return n + sqrt((double)2*n)*xp + 0.6666666666666*(xp*xp - 1);
 }
 
-bool CV_RandTest::check_pdf(const Mat& hist, double scale, double A, double B,
+bool CV_RandTest::check_pdf(const Mat& hist, double scale,
                             int dist_type, double& refval, double& realval)
 {
     Mat hist0(hist.size(), CV_32F);
@@ -117,12 +118,14 @@ bool CV_RandTest::check_pdf(const Mat& hist, double scale, double A, double B,
         if( a > DBL_EPSILON )
             chi2 += (a - b)*(a - b)/(a + b);
     }
+    realval = chi2;
     
     double chi2_pval = chi2_p95(hsz - 1 - (dist_type == CV_RAND_NORMAL ? 2 : 0));
-    return chi2 <= chi2_pval*0.01;
+    refval = chi2_pval*0.01;
+    return realval <= refval;
 }
 
-void CV_RandTest::run( int start_from )
+void CV_RandTest::run( int )
 {
     static int _ranges[][2] =
     {{ 0, 256 }, { -128, 128 }, { 0, 65536 }, { -32768, 32768 },
@@ -273,7 +276,7 @@ void CV_RandTest::run( int start_from )
             }
             double refval = 0, realval = 0;
             
-            if( !check_pdf(hist[c], 1./W[c], A[c], B[c], dist_type, refval, realval) )
+            if( !check_pdf(hist[c], 1./W[c], dist_type, refval, realval) )
             {
                 ts->printf( CvTS::LOG, "RNG failed Chi-square test "
                            "(got %g vs probable maximum %g) on channel %d/%d\n",
