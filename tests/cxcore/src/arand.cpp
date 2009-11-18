@@ -248,9 +248,9 @@ void CV_RandTest::run( int )
                 }
                 else if( dist_type == CV_RAND_UNI )
                 {
-                    if( depth >= CV_32F && val == maxVal )
+                    if( (minVal <= val && val < maxVal) || (depth >= CV_32F && val == maxVal) )
                     {
-                        H[HSZ-1]++;
+                        H[ival < 0 ? 0 : HSZ-1]++;
                         W[c]++;
                     }
                     else
