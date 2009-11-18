@@ -63,92 +63,34 @@ CV_WatershedTest::~CV_WatershedTest() {}
 void CV_WatershedTest::run( int start_from )
 {      
     Mat orig = imread(string(ts->get_data_path()) + "inpaint/orig.jpg");    
-    Mat exp = imread(string(ts->get_data_path()) + "watershed/wshed_exp.png");    
-    Mat mask = imread(string(ts->get_data_path()) + "watershed/mask.png", 0);    
-        
-    if (orig.empty() || mask.empty() || exp.empty() || 
-        orig.size() != mask.size() || orig.size() != exp.size())
+    Mat exp = imread(string(ts->get_data_path()) + "watershed/wshed_exp.png", 0); 
+    FileStorage fs(string(ts->get_data_path()) + "watershed/comp.xml", FileStorage::READ);
+            
+    if (orig.empty() || exp.empty() || orig.size() != exp.size() || !fs.isOpened())
     {
         ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
         return;
     }
-    
-    Mat gray1ch, gray;    
-    cvtColor(orig, gray1ch, CV_BGR2GRAY);    
-    cvtColor(gray1ch, gray, CV_GRAY2BGR);    
-        
-    MemStorage st(cvCreateMemStorage(0));    
-    CvSeq* cnts = 0;    
-    
-    IplImage iplmask = mask;
-    cvFindContours( &iplmask, st, &cnts, sizeof(CvContour), CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+               
+    CvSeq* cnts = (CvSeq*)fs["contours"].readObj();
 
     Mat markers(orig.size(), CV_32SC1);
-    IplImage iplmrks = markers;
-    
+    IplImage iplmrks = markers;    
     int compNum = 0;
     for( ; cnts != 0; cnts = cnts->h_next, compNum++ )
         cvDrawContours( &iplmrks, cnts, Scalar::all(compNum + 1), Scalar::all(compNum + 1), -1, CV_FILLED);        
-     
-    const Vec3b color_data[] = 
-    { 
-        Vec3b(155, 235, 159),
-        Vec3b(254, 105, 184),
-        Vec3b(199, 157, 229),
-        Vec3b(68, 216, 226),
-        Vec3b(145, 177, 29),
-        Vec3b(174, 173, 209),
-        Vec3b(7, 192, 134),
-        Vec3b(195, 232, 184),
-        Vec3b(104, 73, 181),
-        Vec3b(82, 216, 18),
-        Vec3b(84, 119, 177)
-    };
+    fs.release();
 
-    const size_t colors_num = sizeof(color_data)/sizeof(color_data[0]);
-
-    if (compNum != colors_num)
-    {
-        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
-        return;
-    }
-
-    //Mat color_tab(1, compNum, CV_8UC3);
-    //Vec3b* color_data = color_tab.ptr<Vec3b>();
-
-    //RNG rng(static_cast<uint64>(-1));
-    //for( int i = 0; i < compNum; ++i )
-    //{
-    //    Vec3b& color = color_data[i];        
-    //    color[0] = static_cast<unsigned char>( (int)rng % 180 + 50);
-    //    color[1] = static_cast<unsigned char>( (int)rng % 180 + 50);
-    //    color[2] = static_cast<unsigned char>( (int)rng % 180 + 50);
-    //    //printf("%d %d %d\n", color[0], color[1], color[2]);
-    //}                     
     watershed(orig, markers);
-
-    Mat wshed(orig.size(), orig.type());    
+ 
+    Mat markers8U;
+    markers.convertTo(markers8U, CV_8U, 1, 1);
     
-    Vec3b cwhite = Vec3b::all(255);
-    Vec3b cblack = Vec3b::all(0);
-    for( int i = 0; i < markers.cols; i++ )
-        for( int j = 0; j < markers.rows; j++ )        
-        {            
-            int ind = markers.ptr<int>(j)[i];
-                        
-            wshed.ptr<Vec3b>(j)[i] = ind == -1 ? cwhite : 
-                  ind <= 0 || ind > compNum ? cblack : // should not get here 
-                  color_data[ind-1];
-        }   
-
-    Mat res;  
-    addWeighted( wshed, 0.5, gray, 0.5, 0, res );
-        
-    if (0 != norm(res, exp, NORM_L2))
+    if (0 != norm(markers8U, exp, NORM_INF))
     {    
         ts->set_failed_test_info( CvTS::FAIL_MISMATCH );  
         return;
-    }
+    }          
 
     ts->set_failed_test_info(CvTS::OK);
 }
