@@ -300,18 +300,26 @@ CvSize win,
 CvSize zero\_zone,
 
 CvTermCriteria criteria );
-}{CPP}{FindCornerSubPix(image,win,zero\_zone,criteria)-> corners}
+}{CPP}{FindCornerSubPix(image,corners,win,zero\_zone,criteria)-> corners}
 
 \begin{description}
 \cvarg{image}{Input image}
+\ifC
 \cvarg{corners}{Initial coordinates of the input corners; refined coordinates on output}
 \cvarg{count}{Number of corners}
+\fi
+\ifPython
+\cvarg{corners}{Initial coordinates of the input corners as a list of (x, y) pairs}
+\fi
 \cvarg{win}{Half of the side length of the search window. For example, if \texttt{win} =(5,5), then a 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window would be used}
 \cvarg{zero\_zone}{Half of the size of the dead region in the middle of the search zone over which the summation in the formula below is not done. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size}
 \cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after a certain number of iterations or when a required accuracy is achieved. The \texttt{criteria} may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}
 
 The function \texttt{cvFindCornerSubPix} iterates to find the sub-pixel accurate location of corners, or radial saddle points, as shown in on the picture below.
+\ifPython
+It returns the refined coordinates as a list of (x, y) pairs.
+\fi
 
 \includegraphics[width=1.0\textwidth]{pics/cornersubpix.png}
 
