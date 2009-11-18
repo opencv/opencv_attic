@@ -89,18 +89,42 @@ void CV_WatershedTest::run( int start_from )
     int compNum = 0;
     for( ; cnts != 0; cnts = cnts->h_next, compNum++ )
         cvDrawContours( &iplmrks, cnts, Scalar::all(compNum + 1), Scalar::all(compNum + 1), -1, CV_FILLED);        
- 
-    Mat color_tab(1, compNum, CV_8UC3);
-    Vec3b* color_data = color_tab.ptr<Vec3b>();
-    RNG rng(static_cast<uint64>(-1));
-    for( int i = 0; i < compNum; ++i )
+     
+    const Vec3b color_data[] = 
+    { 
+        Vec3b(155, 235, 159),
+        Vec3b(254, 105, 184),
+        Vec3b(199, 157, 229),
+        Vec3b(68, 216, 226),
+        Vec3b(145, 177, 29),
+        Vec3b(174, 173, 209),
+        Vec3b(7, 192, 134),
+        Vec3b(195, 232, 184),
+        Vec3b(104, 73, 181),
+        Vec3b(82, 216, 18),
+        Vec3b(84, 119, 177)
+    };
+
+    const size_t colors_num = sizeof(color_data)/sizeof(color_data[0]);
+
+    if (compNum != colors_num)
     {
-        Vec3b& color = color_data[i];        
-        color[0] = static_cast<unsigned char>( (int)rng % 180 + 50);
-        color[1] = static_cast<unsigned char>( (int)rng % 180 + 50);
-        color[2] = static_cast<unsigned char>( (int)rng % 180 + 50);
+        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
+        return;
     }
-            
+
+    //Mat color_tab(1, compNum, CV_8UC3);
+    //Vec3b* color_data = color_tab.ptr<Vec3b>();
+
+    //RNG rng(static_cast<uint64>(-1));
+    //for( int i = 0; i < compNum; ++i )
+    //{
+    //    Vec3b& color = color_data[i];        
+    //    color[0] = static_cast<unsigned char>( (int)rng % 180 + 50);
+    //    color[1] = static_cast<unsigned char>( (int)rng % 180 + 50);
+    //    color[2] = static_cast<unsigned char>( (int)rng % 180 + 50);
+    //    //printf("%d %d %d\n", color[0], color[1], color[2]);
+    //}                     
     watershed(orig, markers);
 
     Mat wshed(orig.size(), orig.type());    
@@ -119,7 +143,7 @@ void CV_WatershedTest::run( int start_from )
 
     Mat res;  
     addWeighted( wshed, 0.5, gray, 0.5, 0, res );
-    
+        
     if (0 != norm(res, exp, NORM_L2))
     {    
         ts->set_failed_test_info( CvTS::FAIL_MISMATCH );  
