@@ -72,7 +72,7 @@ static double chi2_p95(int n)
     
     if( n <= 30 )
         return chi2_tab95[n-1];
-    return n + sqrt(2*n)*xp + 0.6666666666666*(xp*xp - 1);
+    return n + sqrt((double)2*n)*xp + 0.6666666666666*(xp*xp - 1);
 }
 
 bool CV_RandTest::check_pdf(const Mat& hist, double scale, double A, double B,
