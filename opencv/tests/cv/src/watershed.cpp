@@ -60,7 +60,7 @@ CV_WatershedTest::CV_WatershedTest(): CvTest( "segmentation-watershed", "cvWater
 }
 CV_WatershedTest::~CV_WatershedTest() {}
 
-void CV_WatershedTest::run( int start_from )
+void CV_WatershedTest::run( int /* start_from */)
 {      
     Mat orig = imread(string(ts->get_data_path()) + "inpaint/orig.jpg");    
     Mat exp = imread(string(ts->get_data_path()) + "watershed/wshed_exp.png", 0); 
@@ -71,27 +71,54 @@ void CV_WatershedTest::run( int start_from )
         ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
         return;
     }
-               
+              
     CvSeq* cnts = (CvSeq*)fs["contours"].readObj();
 
     Mat markers(orig.size(), CV_32SC1);
+    markers = Scalar(0);
     IplImage iplmrks = markers;    
-    int compNum = 0;
-    for( ; cnts != 0; cnts = cnts->h_next, compNum++ )
-        cvDrawContours( &iplmrks, cnts, Scalar::all(compNum + 1), Scalar::all(compNum + 1), -1, CV_FILLED);        
+
+    vector<unsigned char> colors(1);
+    for(int i = 0; cnts != 0; cnts = cnts->h_next, ++i )
+    {
+        cvDrawContours( &iplmrks, cnts, Scalar::all(i + 1), Scalar::all(i + 1), -1, CV_FILLED);
+        Point* p = (Point*)cvGetSeqElem(cnts, 0);
+
+        //expected image was added with 1 in order to save to png
+        //so now we substract 1 to get real color
+        colors.push_back(exp.ptr(p->y)[p->x] - 1);     
+    }
     fs.release();
+    const int compNum = colors.size() - 1;
 
     watershed(orig, markers);
- 
+
+    for(int j = 0; j < markers.rows; ++j)
+    {
+        int* line = markers.ptr<int>(j);
+        for(int i = 0; i < markers.cols; ++i)
+        {
+            int& pixel = line[i];
+
+            if (pixel == -1) // border
+                continue;
+
+            if (pixel <= 0 || pixel > compNum)
+                continue; // bad result, doing nothing and going to get error latter;
+            
+            // repaint in saved color to compare with expected;
+            pixel = colors[pixel];                                        
+        }
+    }    
+
     Mat markers8U;
     markers.convertTo(markers8U, CV_8U, 1, 1);
-    
+                
     if (0 != norm(markers8U, exp, NORM_INF))
     {    
         ts->set_failed_test_info( CvTS::FAIL_MISMATCH );  
         return;
-    }          
-
+    }
     ts->set_failed_test_info(CvTS::OK);
 }
 
