@@ -1224,6 +1224,16 @@ protected:
     void* data;
 };
 
+struct DefaultRngAuto
+{
+    const static uint64 def_state = (uint64)-1;
+    const uint64 old_state;
+
+    DefaultRngAuto() : old_state(theRNG().state) { theRNG().state = def_state; }
+    ~DefaultRngAuto() { theRNG().state = old_state; }   
+
+    DefaultRngAuto& operator=(const DefaultRngAuto&);
+};
 
 }
 
