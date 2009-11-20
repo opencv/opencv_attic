@@ -130,6 +130,8 @@ class TestDirected(unittest.TestCase):
             for cols in [1, 2, 4, 16, 64, 512, 640]:
                 for t in self.mat_types:
                     m = cv.CreateMat(rows, cols, t)
+                    self.assertEqual(cv.GetElemType(m), t)
+                    self.assertEqual(m.type, t)
 
     def test_CreateImage(self):
         for w in [ 1, 4, 64, 512, 640]:
@@ -228,7 +230,7 @@ class TestDirected(unittest.TestCase):
         for meth,expected in [(cv.CV_COMP_CORREL, 1.0), (cv.CV_COMP_CHISQR, 0.0), (cv.CV_COMP_INTERSECT, 1.0), (cv.CV_COMP_BHATTACHARYYA, 0.0)]:
             self.assertEqual(cv.CompareHist(h, h, meth), expected)
 
-    def test_remap(self):
+    def checker(self):
 
         raw = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
         for x in range(0, 640, 20):

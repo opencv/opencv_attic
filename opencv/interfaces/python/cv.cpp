@@ -440,7 +440,7 @@ static struct PyMethodDef cvmat_methods[] =
 
 static PyObject *cvmat_gettype(cvmat_t *cva)
 {
-  return PyInt_FromLong(cva->a->type);
+  return PyInt_FromLong(cvGetElemType(cva->a));
 }
 
 static PyObject *cvmat_getstep(cvmat_t *cva)
