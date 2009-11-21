@@ -123,9 +123,6 @@ void cv_arr_write(FILE * f, const char * fmt, T * data, size_t rows, size_t nch,
 }
 
 void cvArrPrint(CvArr * arr){
-    CV_FUNCNAME( "cvArrPrint" );
-      
-  __BEGIN__;
   CvMat * mat;
   CvMat stub;
 
@@ -159,11 +156,9 @@ void cvArrPrint(CvArr * arr){
       cv_arr_write(stdout, "%g", (double *)mat->data.ptr, mat->rows, cn, step);
       break;
     default:
-      CV_ERROR( CV_StsError, "Unknown element type");
+      CV_Error( CV_StsError, "Unknown element type");
       break;
   }
-
-  __END__;
 }
 
 // deal with negative array indices

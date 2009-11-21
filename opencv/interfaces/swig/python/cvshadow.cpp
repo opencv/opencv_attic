@@ -54,10 +54,6 @@ CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_
 	CvSeq * points_seq=(CvSeq *) points;
 	int npoints, type;
 
-	CV_FUNCNAME("cvConvexHull2");
-
-	__BEGIN__;
-
 	if(CV_IS_MAT(points_mat)){
 		npoints = MAX(points_mat->rows, points_mat->cols);
 		type = return_points ? points_mat->type : CV_32S;
@@ -67,12 +63,11 @@ CvMat * cvConvexHull2_Shadow( const CvArr * points, int orientation, int return_
 		type = return_points ? CV_SEQ_ELTYPE(points_seq) : 1;
 	}
 	else{
-		CV_ERROR(CV_StsBadArg, "points must be a CvSeq or CvMat");
+		CV_Error(CV_StsBadArg, "points must be a CvSeq or CvMat");
 	}
-	CV_CALL( hull=cvCreateMat(1,npoints,type) );
-	CV_CALL( cvConvexHull2(points, hull, orientation, return_points) );
+	hull=cvCreateMat(1,npoints,type);
+	cvConvexHull2(points, hull, orientation, return_points);
 
-	__END__;
 	return hull;
 }
 std::vector<CvPoint> cvSnakeImage_Shadow( const CvMat * image, std::vector<CvPoint>  points,
