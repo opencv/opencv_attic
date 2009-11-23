@@ -1287,7 +1287,7 @@ void MatND::create(int d, const int* _sizes, int _type)
 
 void MatND::copyTo( MatND& m ) const
 {
-    m.create( m.dims, m.size, type() );
+    m.create( dims, size, type() );
     NAryMatNDIterator it(*this, m);
 
     for( int i = 0; i < it.nplanes; i++, ++it )
@@ -2442,7 +2442,7 @@ void SparseMat::copyTo( SparseMat& m ) const
         m.release();
         return;
     }
-    m.create( m.hdr->dims, m.hdr->size, type() );
+    m.create( hdr->dims, hdr->size, type() );
     SparseMatConstIterator from = begin();
     size_t i, N = nzcount(), esz = elemSize();
 
