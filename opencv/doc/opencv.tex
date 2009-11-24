@@ -14,6 +14,8 @@
 \usepackage{makeidx}
 \usepackage{color}
 
+\setcounter{secnumdepth}{1}
+
 \definecolor{shadecolor}{gray}{0.95}  % Background color of title bars
 \lstset{
 language=C,
@@ -83,26 +85,36 @@ backgroundcolor=\color{shadecolor}
 %%% Define these to get rid of warnings
 \def\genc{true}
 \def\genpy{true}
-\def\targetlang{c}
+\def\gencpp{true}
 
 \newif\ifC
-\newif\ifPython
-\ifthenelse{\equal{\targetlang}{c}}{\Ctrue}{\Pythontrue}
+\newif\ifPy
+\newif\ifCpp
+\newif\ifCPy
 
-%%% Chapters %%%
-\include{CxCore}
-\include{CvReference}
-\include{CvAux}
-\include{HighGui}
-\include{MachineLearning}
-\ifC
-\include{new_CxCore-cpp}
-\include{new_Cv-cpp}
-%\include{CvAux-cpp}
-\include{new_HighGui-cpp}
-\fi
-%\include{FAQ}
-%%%%%%%%%%%%%%%%
+\Ctrue
+\Cppfalse
+\Pyfalse
+\CPytrue
+\def\targetlang{c}
+\part{C API Reference}
+\input{opencvref_body}
+
+\Cfalse
+\Cpptrue
+\Pyfalse
+\CPyfalse
+\def\targetlang{cpp}
+\part{C++ API Reference}
+\input{opencvref_body}
+
+\Cfalse
+\Cppfalse
+\Pytrue
+\CPytrue
+\def\targetlang{python}
+\part{Python API Reference}
+\input{opencvref_body}
 
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{plain}
