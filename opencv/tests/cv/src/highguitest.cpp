@@ -116,7 +116,7 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		 return false;
 	}	
 		
-	const string exts[] = {"png", "bmp", "tiff", "jpg"};	
+	const string exts[] = {"png", "bmp", "tiff", "jpg", "jp2", "ppm", "sr"};	
 	const size_t ext_num = sizeof(exts)/sizeof(exts[0]);	
 	
 	for(size_t i = 0; i < ext_num; ++i)
