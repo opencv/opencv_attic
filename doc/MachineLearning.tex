@@ -1,16 +1,12 @@
-\chapter{Machine Learning}
-
-\section{Introduction. Common classes and functions}
-
-\subsection{Statistical Models}
-
 The Machine Learning Library (MLL) is a set of classes and functions for statistical classification, regression and clustering of data.
 
 Most of the classification and regression algorithms are implemented as C++ classes. As the algorithms have different seta of features (like the ability to handle missing measurements, or categorical input variables etc.), there is a little common ground between the classes. This common ground is defined by the class `CvStatModel` that all the other ML classes are derived from.
 
+\ifCpp
+
+\section{Statistical Models}
 
 \cvfunc{StatModel}
-
 Base class for the statistical models in ML.
 
 \begin{lstlisting}
@@ -702,7 +698,7 @@ The class \cross{CvDTree} represents a single decision tree that may be used alo
 
 A decision tree is a binary tree (i.e. tree where each non-leaf node has exactly 2 child nodes). It can be used either for classification, when each tree leaf is marked with some class label (multiple leafs may have the same label), or for regression, when each tree leaf is also assigned a constant (so the approximation function is piecewise constant).
 
-\subsection{Predicting with Decision Trees}
+\section{Predicting with Decision Trees}
 
 To reach a leaf node, and to obtain a response for the input feature
 vector, the prediction procedure starts with the root node. From each
@@ -726,7 +722,7 @@ assigned to this node is used as the output of prediction procedure.
 
 Sometimes, certain features of the input vector are missed (for example, in the darkness it is difficult to determine the object color), and the prediction procedure may get stuck in the certain node (in the mentioned example if the node is split by color). To avoid such situations, decision trees use so-called surrogate splits. That is, in addition to the best "primary" split, every tree node may also be split on one or more other variables with nearly the same results.
 
-\subsection{Training Decision Trees}
+\section{Training Decision Trees}
 
 The tree is built recursively, starting from the root node. All of the training data (feature vectors and the responses) is used to split the root node. In each node the optimum decision rule (i.e. the best "primary" split) is found based on some criteria (in ML \texttt{gini} "purity" criteria is used for classification, and sum of squared errors is used for regression). Then, if necessary, the surrogate splits are found that resemble the results of the primary split on the training data; all of the data is divided using the primary and the surrogate splits (just like it is done in the prediction procedure) between the left and the right child node. Then the procedure recursively splits both left and right nodes. At each node the recursive procedure may stop (i.e. stop splitting the node further) in one of the following cases:
 \begin{itemize}
@@ -737,7 +733,7 @@ The tree is built recursively, starting from the root node. All of the training 
 \end{itemize}
 When the tree is built, it may be pruned using a cross-validation procedure, if necessary. That is, some branches of the tree that may lead to the model overfitting are cut off. Normally this procedure is only applied to standalone decision trees, while tree ensembles usually build small enough trees and use their own protection schemes against overfitting.
 
-\subsection{Variable importance}
+\section{Variable importance}
 
 Besides the obvious use of decision trees - prediction, the tree can be also used for various data analysis. One of the key properties of the constructed decision tree algorithms is that it is possible to compute importance (relative decisive power) of each variable. For example, in a spam filter that uses a set of words occurred in the message as a feature vector, the variable importance rating can be used to determine the most "spam-indicating" words and thus help to keep the dictionary size reasonable.
 
@@ -2190,4 +2186,6 @@ int CvANN\_MLP::train( \par const CvMat* \_inputs, \par const CvMat* \_outputs,
 \end{description}
 
 This method applies the specified training algorithm to compute/adjust the network weights. It returns the number of done iterations.
+
+\fi
 
