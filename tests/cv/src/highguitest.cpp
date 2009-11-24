@@ -153,7 +153,7 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		Mat buf_loaded = imdecode(buf, 1);
 		if (buf_loaded.empty())
 		{
-			if (exts[i] == "tiff") continue;
+			//if (exts[i] == "tiff") continue;
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;				
 		}
