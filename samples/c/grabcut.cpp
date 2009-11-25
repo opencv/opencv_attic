@@ -15,26 +15,16 @@ void getBinMask( const Mat& comMask, Mat& binMask )
         CV_Error( CV_StsBadArg, "comMask is empty or has incorrect type (not CV_8UC1)" );
     if( binMask.empty() || binMask.rows!=comMask.rows || binMask.cols!=comMask.cols )
         binMask.create( comMask.size(), CV_8UC1 );
-    Point p;
-    for( p.y = 0; p.y < comMask.rows; p.y++ )
-    {
-        for( p.x = 0; p.x < comMask.cols; p.x++ )
-        {
-            if( comMask.at<uchar>(p) == GC_BGD || comMask.at<uchar>(p) == GC_PR_BGD )
-                binMask.at<uchar>(p) = 0;
-            else
-                binMask.at<uchar>(p) = 1;
-        }
-    }
+    binMask = comMask & 1;
 }
 
 void changeMask( Mat& mask, vector<Point> bgdPixels, vector<Point> fgdPixels )
 {
     vector<Point>::const_iterator it = bgdPixels.begin(), itEnd = bgdPixels.end();
-    for( ; it != itEnd; it++ )
+    for( ; it != itEnd; ++it )
         mask.at<uchar>(*it) = GC_BGD;
     it = fgdPixels.begin(), itEnd = fgdPixels.end();
-    for( ; it != itEnd; it++ )
+    for( ; it != itEnd; ++it )
         mask.at<uchar>(*it) = GC_FGD;
 }
 
@@ -51,9 +41,9 @@ void showImage( Mat& _img, Mat& _mask, vector<Point>& _bgdPxls, vector<Point>& _
     }
 
     vector<Point>::const_iterator it;
-    for( it = _bgdPxls.begin(); it != _bgdPxls.end(); it++ )
+    for( it = _bgdPxls.begin(); it != _bgdPxls.end(); ++it )
         circle( res, *it, 1, BLUE );
-    for( it = _fgdPxls.begin(); it != _fgdPxls.end(); it++ )
+    for( it = _fgdPxls.begin(); it != _fgdPxls.end(); ++it )
         circle( res, *it, 1, RED );
 
     imshow( winName, res );

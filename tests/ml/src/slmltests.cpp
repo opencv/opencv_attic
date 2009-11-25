@@ -107,7 +107,7 @@ int CV_SLMLTest::validate_test_results( int testCaseIdx )
     // 2. compare responses
     CV_Assert( test_resps1.size() == test_resps2.size() );
     vector<float>::const_iterator it1 = test_resps1.begin(), it2 = test_resps2.begin();
-    for( ; it1 != test_resps1.end(); it1++, it2++ )
+    for( ; it1 != test_resps1.end(); ++it1, ++it2 )
     {
         if( fabs(*it1 - *it2) > FLT_EPSILON )
         {
