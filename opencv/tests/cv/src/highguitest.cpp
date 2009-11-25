@@ -51,27 +51,25 @@ using namespace cv;
 using namespace std;
 
 
+
 #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     
 #else
 
+#define MARKERS1
+
+#ifdef MARKERS
+	#define marker(x) cout << (x)  << endl
+#else
+	#define marker(x) 
+#endif
+
 struct TempDirHolder
 {
 	const string temp_folder;
-	TempDirHolder() : temp_folder(tmpnam(0)) 
-	{
-		string cmd = "mkdir " + temp_folder;	
-	    //cout << "Createing dir: " << cmd << endl;    
-	    int res = system( cmd.c_str() );	
-		(void)res;
-	} 
-	~TempDirHolder()
-	{
-		string cmd  = "rm -rf " + temp_folder;
-		//cout << "Deleting dir: " << cmd << endl;
-		int res = system( cmd.c_str() );		
-		(void)res;
-	}
+	TempDirHolder() : temp_folder(tmpnam(0)) { exec_cmd("mkdir " + temp_folder); }	
+	~TempDirHolder() { exec_cmd("rm -rf " + temp_folder); }
+	static void exec_cmd(const string& cmd) { marker(cmd); int res = system( cmd.c_str() ); (void)res; }
 	
 	TempDirHolder& operator=(const TempDirHolder&);
 };
@@ -116,22 +114,34 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		 return false;
 	}	
 		
-	const string exts[] = {"png", "bmp", "tiff", "jpg", "jp2", "ppm", "sr"};	
+	const string exts[] = {"png", "bmp", "tiff", "jpg", "jp2", "ppm"/*, "ras"*/};	
 	const size_t ext_num = sizeof(exts)/sizeof(exts[0]);	
 	
 	for(size_t i = 0; i < ext_num; ++i)
 	{
 		string full_name = tmp + "/img." + exts[i];
-				
+		marker(exts[i]);	
+		
+		marker("begin");	
+			
 		imwrite(full_name, image);			
-		Mat loaded = imread(full_name);					
-				
+		marker("begin++");	
+		Mat loaded = imread(full_name);	
+		if (loaded.empty())
+		{
+			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+			return false;					
+		}				
+		marker("begin++++");	
+						
 		const double thresDbell = 20;		
 		if (PSNR(loaded, image) < thresDbell)
 		{
+			
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;			
-		}		
+		}	
+		
 		
 		FILE *f = fopen(full_name.c_str(), "rb");
 		fseek(f, 0, SEEK_END);
@@ -140,35 +150,133 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		fseek(f, 0, SEEK_SET);
 		size_t read = fread(&from_file[0], len, sizeof(vector<uchar>::value_type), f); (void)read;
 		fclose(f);
+		
+		marker("0");
 									
 		vector<uchar> buf;		
 		imencode("." + exts[i], image, buf);
 		
+		marker("0++");
+		
 		if (buf != from_file)
-		{			
+		{		
+			marker("1");		
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;			
 		}			
-						
+		
+		marker("1++");				
 		Mat buf_loaded = imdecode(buf, 1);
+		marker("1--");				
 		if (buf_loaded.empty())
 		{
-			if (exts[i] == "tiff") continue;
+			marker("2");		
+			if (exts[i] == "tiff" || exts[i] == "jp2") continue;			
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;				
 		}
-						
+							
 		if (PSNR(buf_loaded, image) < thresDbell)
 		{			
+			marker("3");
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;			
 		}					
+		marker("3--");	
 	}  
 	return true;		
 }
 
 bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp)
 {	
+	string src_file = dir + "shared/video_for_test.avi";		
+	string tmp_name1 = tmp + "/img1.avi";
+	string tmp_name2 = tmp + "/img2.avi";
+	
+	CvCapture* cap = cvCaptureFromFile(src_file.c_str());
+	
+	if (!cap)
+	{
+		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+		return false;
+	}
+	
+	CvVideoWriter* writer1 = 0;
+	CvVideoWriter* writer2 = 0;
+	
+	while(1)
+	{
+		IplImage* img = cvQueryFrame( cap );
+		if (!img)
+			break;
+		
+		if (writer1 == 0)
+			//cvCreateVideoWriter(tmp_name1.c_str(), CV_FOURCC('M','J','P','G'), 24, cvGetSize(img));		
+			writer1 = cvCreateVideoWriter(tmp_name1.c_str(), CV_FOURCC_DEFAULT, 24, cvGetSize(img));							
+			
+		//if (writer1 == 0)
+			//writer2 = cvCreateVideoWriter(tmp_name2.c_str(), CV_FOURCC('X','V','I','D'), 24, cvGetSize(img));	
+			
+		cvWriteFrame(writer1, img);
+		//cvWriteFrame(writer2, img);
+	}	
+	
+	marker("mid");
+	
+	cvReleaseVideoWriter( &writer1 );
+	//cvReleaseVideoWriter( &writer2 );	
+	cvReleaseCapture( &cap );
+	
+	marker("mid++");
+	
+	cap = cvCaptureFromFile(src_file.c_str());
+	marker("mid1");
+	CvCapture *cap1 = cvCaptureFromFile(tmp_name1.c_str());
+	marker("mid2");
+	//CvCapture *cap2 = cvCaptureFromFile(tmp_name2.c_str());
+	
+	marker("mid??");
+	
+	if (!cap1)
+	{
+		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+		return false;			
+	}
+	
+	marker("mid--");
+	
+	
+	const double thresDbell = 20;	
+	
+	bool error = false;
+	while(1)
+	{		
+		IplImage* ipl = cvQueryFrame( cap );
+		IplImage* ipl1 = cvQueryFrame( cap1 );
+		
+		if (!ipl || !ipl1)
+			break;
+			
+		Mat img(ipl);		
+		Mat img1(ipl1);						
+				
+		if (PSNR(img1, img) < thresDbell)
+		{		
+			error = true;
+			break;				
+		}			
+	}	
+		
+	cvReleaseCapture( &cap );
+	cvReleaseCapture( &cap1 );
+	//cvReleaseCapture( &cap2 );
+	
+	if (error)
+	{
+		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+		return false;			
+	}
+	
 	return true;		
 }
 
@@ -190,3 +298,4 @@ CV_HighGuiTest HighGui_test;
 
 
 #endif
+
