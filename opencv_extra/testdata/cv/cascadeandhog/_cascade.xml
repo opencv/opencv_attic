@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<cascade>
+  <distE>0.005</distE>
+  <sE>0.005</sE>
+  <noPairE>0.1</noPairE>
+  <totalNoPairE>0.1</totalNoPairE>
+  <detector_names>
+    haarold2 lbp2</detector_names>
+  <detector_filenames>
+    <haarold2>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</haarold2>
+    <lbp2>cascadeandhog/cascades/lbpcascade_frontalface.xml</lbp2></detector_filenames>
+  <image_filenames>
+    <!-- img_0 -->
+    cascadeandhog/images/addams-family.png
+    <!-- img_1 -->
+    cascadeandhog/images/audrey1.png
+    <!-- img_2 -->
+    cascadeandhog/images/audrybt1.png
+    <!-- img_3 -->
+    cascadeandhog/images/churchill-downs.png
+    <!-- img_4 -->
+    cascadeandhog/images/class57.png
+    <!-- img_5 -->
+    cascadeandhog/images/er.png
+    <!-- img_6 -->
+    cascadeandhog/images/larroquette.png
+    <!-- img_7 -->
+    cascadeandhog/images/mickymouse-self-p.png
+    <!-- img_8 -->
+    cascadeandhog/images/mona-lisa.png
+    <!-- img_9 -->
+    cascadeandhog/images/waynesworld2.png
+    <!-- img_10 -->
+    cascadeandhog/images/rehg-thanksgiving-1994.png
+    <!-- img_11 -->
+    cascadeandhog/images/karen-and-rob.png
+    <!-- img_12 -->
+    cascadeandhog/images/bttf301.png</image_filenames>
+</cascade>
+</opencv_storage>
