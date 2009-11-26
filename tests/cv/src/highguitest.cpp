@@ -84,7 +84,9 @@ protected:
     void run(int);
 	
 	bool ImagesTest(const string& dir, const string& tmp);
-	bool VideoTest(const string& dir, const string& tmp);
+	bool VideoTest(const string& dir, const string& tmp, int fourcc);
+	
+	bool GuiTest(const string& dir, const string& tmp);
 };
 
 CV_HighGuiTest::CV_HighGuiTest(): CvTest( "highgui", "?" )
@@ -187,12 +189,11 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 	return true;		
 }
 
-bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp)
+bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 {	
 	string src_file = dir + "shared/video_for_test.avi";		
-	string tmp_name1 = tmp + "/img1.avi";
-	string tmp_name2 = tmp + "/img2.avi";
-	
+	string tmp_name = tmp + "/video.avi";
+		
 	CvCapture* cap = cvCaptureFromFile(src_file.c_str());
 	
 	if (!cap)
@@ -201,8 +202,7 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp)
 		return false;
 	}
 	
-	CvVideoWriter* writer1 = 0;
-	CvVideoWriter* writer2 = 0;
+	CvVideoWriter* writer = 0;
 	
 	while(1)
 	{
@@ -210,49 +210,43 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp)
 		if (!img)
 			break;
 		
-		if (writer1 == 0)
-			//cvCreateVideoWriter(tmp_name1.c_str(), CV_FOURCC('M','J','P','G'), 24, cvGetSize(img));		
-			writer1 = cvCreateVideoWriter(tmp_name1.c_str(), CV_FOURCC_DEFAULT, 24, cvGetSize(img));							
-			
-		//if (writer1 == 0)
-			//writer2 = cvCreateVideoWriter(tmp_name2.c_str(), CV_FOURCC('X','V','I','D'), 24, cvGetSize(img));	
-			
-		cvWriteFrame(writer1, img);
-		//cvWriteFrame(writer2, img);
+		if (writer == 0)			
+		{
+			writer = cvCreateVideoWriter(tmp_name.c_str(), fourcc, 24, cvGetSize(img));									
+			if (writer == 0)
+			{
+				marker("can't craete writer");
+				cvReleaseCapture( &cap );
+				ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+				return false;				
+			}
+		}
+				
+		cvWriteFrame(writer, img);		
 	}	
-	
-	marker("mid");
-	
-	cvReleaseVideoWriter( &writer1 );
-	//cvReleaseVideoWriter( &writer2 );	
+		
+	cvReleaseVideoWriter( &writer );	
 	cvReleaseCapture( &cap );
 	
 	marker("mid++");
 	
 	cap = cvCaptureFromFile(src_file.c_str());
 	marker("mid1");
-	CvCapture *cap1 = cvCaptureFromFile(tmp_name1.c_str());
-	marker("mid2");
-	//CvCapture *cap2 = cvCaptureFromFile(tmp_name2.c_str());
-	
-	marker("mid??");
-	
-	if (!cap1)
+	CvCapture *saved = cvCaptureFromFile(tmp_name.c_str());		
+	if (!saved)
 	{
 		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 		return false;			
 	}
 	
-	marker("mid--");
-	
-	
+
 	const double thresDbell = 20;	
 	
 	bool error = false;
 	while(1)
 	{		
 		IplImage* ipl = cvQueryFrame( cap );
-		IplImage* ipl1 = cvQueryFrame( cap1 );
+		IplImage* ipl1 = cvQueryFrame( saved );
 		
 		if (!ipl || !ipl1)
 			break;
@@ -268,9 +262,8 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp)
 	}	
 		
 	cvReleaseCapture( &cap );
-	cvReleaseCapture( &cap1 );
-	//cvReleaseCapture( &cap2 );
-	
+	cvReleaseCapture( &saved );
+		
 	if (error)
 	{
 		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
@@ -288,10 +281,41 @@ void CV_HighGuiTest::run( int start_from )
 	if (!ImagesTest(ts->get_data_path(), th.temp_folder))
 		return;
 		
-	if (!VideoTest(ts->get_data_path(), th.temp_folder))
+	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC_DEFAULT))
 		return;				
+		
+	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('M', 'J', 'P', 'G')))
+		return;				
+		
+	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('M', 'P', 'G', '2')))
+		return;				
+		
+	//if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('D', 'X', '5', '0')))		return;				
+	
+	if (!GuiTest(ts->get_data_path(), th.temp_folder))
+		return;
   
     ts->set_failed_test_info(CvTS::OK);
+}
+
+void Foo(int k, void* z)
+{
+	
+}
+
+bool CV_HighGuiTest::GuiTest(const string& dir, const string& tmp)
+{	
+	namedWindow("Win");
+	Mat m(30, 30, CV_8U);	
+	m = Scalar(128);	
+	imshow("Win", m);	
+	int value = 50;
+	createTrackbar( "trackbar", "Win", &value, 100, Foo, &value);	
+	getTrackbarPos( "trackbar", "Win" );	
+	waitKey(500);		
+	cvDestroyAllWindows();
+	
+	return true;
 }
 
 CV_HighGuiTest HighGui_test;
