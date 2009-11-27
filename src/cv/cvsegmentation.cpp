@@ -305,7 +305,7 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
         }
         if( m[mstep] == 0 )
         {
-            c_diff( ptr, ptr + 3, t );
+            c_diff( ptr, ptr + istep, t );
             ws_push( t, mofs + mstep, iofs + istep );
             active_queue = ws_min( active_queue, t );
             m[mstep] = IN_QUEUE;
