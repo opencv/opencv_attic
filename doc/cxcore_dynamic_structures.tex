@@ -1,8 +1,10 @@
 \section{Dynamic Structures}
 
+\ifCPy
+
 \ifC
 
-\cvstruct{CvMemStorage}\label{CvMemStorage}
+\cvfunc{CvMemStorage}\label{CvMemStorage}
 Growing memory storage.
 
 \begin{lstlisting}
@@ -28,8 +30,8 @@ and \texttt{top} itself is partly ocupied - \texttt{free\_space}
 contains the number of free bytes left in the end of \texttt{top}.
 
 A new memory buffer that may be allocated explicitly by
-\cross{cvMemStorageAlloc} function or implicitly by higher-level functions,
-such as \cross{cvSeqPush}, \cross{cvGraphAddEdge}, etc., \texttt{always}
+\cvCPyCross{MemStorageAlloc} function or implicitly by higher-level functions,
+such as \cvCPyCross{SeqPush}, \cvCPyCross{GraphAddEdge}, etc., \texttt{always}
 starts in the end of the current block if it fits there. After allocation,
 \texttt{free\_space} is decremented by the size of the allocated buffer
 plus some padding to keep the proper alignment. When the allocated buffer
@@ -38,14 +40,14 @@ block from the list is taken as \texttt{top} and \texttt{free\_space}
 is reset to the whole block size prior to the allocation.
 
 If there are no more free blocks, a new block is allocated (or borrowed
-from the parent, see \cross{cvCreateChildMemStorage}) and added to the end of
+from the parent, see \cvCPyCross{CreateChildMemStorage}) and added to the end of
 list. Thus, the storage behaves as a stack with \texttt{bottom} indicating
 bottom of the stack and the pair (\texttt{top}, \texttt{free\_space})
 indicating top of the stack. The stack top may be saved via
-\cross{cvSaveMemStoragePos}, restored via \cross{cvRestoreMemStoragePos},
-or reset via \cross{cvClearStorage}.
+\cvCPyCross{SaveMemStoragePos}, restored via \cvCPyCross{RestoreMemStoragePos},
+or reset via \cvCPyCross{ClearStorage}.
 
-\cvstruct{CvMemBlock}\label{CvMemBlock}
+\cvfunc{CvMemBlock}\label{CvMemBlock}
 Memory storage block.
 
 \begin{lstlisting}
@@ -62,7 +64,7 @@ the $i_{th}$ byte of the memory block can be retrieved with the expression
 \texttt{((char*)(mem\_block\_ptr+1))[i]}. However, there is normally no need
 to access the storage structure fields directly.
 
-\cvstruct{CvMemStoragePos}\label{CvMemStoragePos}
+\cvfunc{CvMemStoragePos}\label{CvMemStoragePos}
 Memory storage position.
 
 \begin{lstlisting}
@@ -73,11 +75,11 @@ typedef struct CvMemStoragePos
 } CvMemStoragePos;
 \end{lstlisting}
 
-The structure described above stores the position of the stack top that can be saved via \cross{cvSaveMemStoragePos} and restored via \cross{cvRestoreMemStoragePos}.
+The structure described above stores the position of the stack top that can be saved via \cvCPyCross{SaveMemStoragePos} and restored via \cvCPyCross{RestoreMemStoragePos}.
 
 \fi
 
-\cvstruct{CvSeq}\label{CvSeq}
+\cvfunc{CvSeq}\label{CvSeq}
 Growable sequence of elements.
 
 \ifPy
@@ -99,7 +101,7 @@ Also, a CvSeq object has methods
 \texttt{h\_prev()},
 \texttt{v\_next()} and
 \texttt{v\_prev()}.
-Some OpenCV functions (for example \cross{cvFindContours}) can return multiple CvSeq objects, connected by these relations.
+Some OpenCV functions (for example \cvCPyCross{FindContours}) can return multiple CvSeq objects, connected by these relations.
 In this case the methods return the other sequences.  If no relation between sequences exists, then the methods return \texttt{None}.
 
 \fi
@@ -238,7 +240,7 @@ predefined sequence types and helper macros designed to get the sequence
 type of other properties. The definition of the building
 blocks of sequences can be found below.
 
-\cvstruct{CvSeqBlock}\label{CvSeqBlock}
+\cvfunc{CvSeqBlock}\label{CvSeqBlock}
 
 Continuous sequence block.
 
@@ -271,7 +273,7 @@ correspondingly. The parameter
 \texttt{startIndex} of the first block is usually \texttt{0} unless
 some elements have been inserted at the beginning of the sequence.
 
-\cvstruct{CvSlice}\label{CvSlice}
+\cvfunc{CvSlice}\label{CvSlice}
 A sequence slice.
 
 \begin{lstlisting}
@@ -301,22 +303,22 @@ beginning of the sequence. For example, \texttt{cvSlice(-2, 3)} in the case of
 a 10-element sequence will select a 5-element slice, containing the pre-last
 (8th), last (9th), the very first (0th), second (1th) and third (2nd)
 elements. The functions normalize the slice argument in the following way:
-first, \cross{cvSliceLength} is called to determine the length of the slice,
+first, \cvCPyCross{SliceLength} is called to determine the length of the slice,
 then, \texttt{startIndex} of the slice is normalized similarly to the
-argument of \cross{cvGetSeqElem} (i.e., negative indices are allowed). The
+argument of \cvCPyCross{GetSeqElem} (i.e., negative indices are allowed). The
 actual slice to process starts at the normalized \texttt{startIndex}
-and lasts \cross{cvSliceLength} elements (again, assuming the sequence is
+and lasts \cvCPyCross{SliceLength} elements (again, assuming the sequence is
 a circular structure).
 
 If a function does not accept a slice argument, but you want to process
 only a part of the sequence, the sub-sequence may be extracted
-using the \cross{cvSeqSlice} function, or stored into a continuous
+using the \cvCPyCross{SeqSlice} function, or stored into a continuous
 buffer with \cross{CvtSeqToArray} (optionally, followed by
-\cross{cvMakeSeqHeaderForArray}).
+\cvCPyCross{MakeSeqHeaderForArray}).
 
 \fi
 
-\cvstruct{CvSet}\label{CvSet}
+\cvfunc{CvSet}\label{CvSet}
 Collection of nodes.
 
 \ifPy
@@ -385,7 +387,7 @@ sparse multi-dimensional arrays (\cross{CvSparseMat}), and planar subdivisions
 \cross{CvSubdiv2D}.
 
 
-\cvstruct{CvGraph}\label{CvGraph}
+\cvfunc{CvGraph}\label{CvGraph}
 Oriented or unoriented weighted graph.
 
 \begin{lstlisting}
@@ -435,7 +437,7 @@ and edge structures do not inherit from \cross{CvSetElem} explicitly, they
 satisfy both conditions of the set elements: having an integer field in
 the beginning and fitting within the CvSetElem structure. The \texttt{flags} fields are
 used as for indicating occupied vertices and edges as well as for other
-purposes, for example, for graph traversal (see \cross{cvCreateGraphScanner}
+purposes, for example, for graph traversal (see \cvCPyCross{CreateGraphScanner}
 et al.), so it is better not to use them directly.
 
 The graph is represented as a set of edges each of which has a list of
@@ -448,7 +450,7 @@ connecting vertex $B$ with vertex $A$ - only one of them can exist in the
 graph at the same moment and it represents both $A \rightarrow B$ and
 $B \rightarrow A$ edges.
 
-\cvstruct{CvGraphScanner}\label{CvGraphScanner}
+\cvfunc{CvGraphScanner}\label{CvGraphScanner}
 Graph traversal state.
 
 \begin{lstlisting}
@@ -478,7 +480,7 @@ that can be organized into hierarchical strucutures (trees), such as
 created with nodes declared using this macro can be processed using the
 functions described below in this section.
 
-\cvstruct{CvTreeNodeIterator}\label{CvTreeNodeIterator}
+\cvfunc{CvTreeNodeIterator}\label{CvTreeNodeIterator}
 Opens existing or creates new file storage.
 
 \begin{lstlisting}
@@ -515,7 +517,7 @@ struct _BaseTreeNode
 \cvCPyFunc{ClearGraph}
 Clears a graph.
 
-\cvcodeC{
+\cvdefC{
 void cvClearGraph( CvGraph* graph );
 }
 
@@ -528,7 +530,7 @@ The function removes all vertices and edges from a graph. The function has O(1) 
 \cvCPyFunc{ClearMemStorage}
 Clears memory storage.
 
-\cvcodeC{void cvClearMemStorage( CvMemStorage* storage );}
+\cvdefC{void cvClearMemStorage( CvMemStorage* storage );}
 
 \begin{description}
 \cvarg{storage}{Memory storage}
@@ -542,8 +544,8 @@ all blocks to the parent.
 \cvCPyFunc{ClearSeq}
 Clears a sequence.
 
-\cvcodeC{void cvClearSeq( CvSeq* seq );}
-\cvcodePy{ClearSeq(seq)-> None}
+\cvdefC{void cvClearSeq( CvSeq* seq );}
+\cvdefPy{ClearSeq(seq)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -558,7 +560,7 @@ memory is reused later when new elements are added to the sequence. The function
 \cvCPyFunc{ClearSet}
 Clears a set.
 
-\cvcodeC{void cvClearSet( CvSet* setHeader );}
+\cvdefC{void cvClearSet( CvSet* setHeader );}
 
 \begin{description}
 \cvarg{setHeader}{Cleared set}
@@ -571,7 +573,7 @@ The function removes all elements from set. It has O(1) time complexity.
 \cvCPyFunc{CloneGraph}
 Clones a graph.
 
-\cvcodeC{CvGraph* cvCloneGraph( \par const CvGraph* graph,\par CvMemStorage* storage );}
+\cvdefC{CvGraph* cvCloneGraph( \par const CvGraph* graph,\par CvMemStorage* storage );}
 
 \begin{description}
 \cvarg{graph}{The graph to copy}
@@ -590,8 +592,8 @@ the vertex and edge sets.
 \cvCPyFunc{CloneSeq}
 Creates a copy of a sequence.
 
-\cvcodeC{CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );}
-\cvcodePy{CloneSeq(seq,storage)-> None}
+\cvdefC{CvSeq* cvCloneSeq( \par const CvSeq* seq,\par CvMemStorage* storage=NULL );}
+\cvdefPy{CloneSeq(seq,storage)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -615,7 +617,7 @@ cvSeqSlice( seq, CV_WHOLE_SEQ, storage, 1 )
 \cvCPyFunc{CreateChildMemStorage}
 Creates child memory storage.
 
-\cvcodeC{CvMemStorage* cvCreateChildMemStorage(CvMemStorage* parent);}
+\cvdefC{CvMemStorage* cvCreateChildMemStorage(CvMemStorage* parent);}
 
 \begin{description}
 \cvarg{parent}{Parent memory storage}
@@ -656,7 +658,7 @@ Dynamic data processing using a child storage
 \cvCPyFunc{CreateGraph}
 Creates an empty graph.
 
-\cvcodeC{CvGraph* cvCreateGraph( \par int graph\_flags,\par int header\_size,\par int vtx\_size,\par int edge\_size,\par CvMemStorage* storage );}
+\cvdefC{CvGraph* cvCreateGraph( \par int graph\_flags,\par int header\_size,\par int vtx\_size,\par int edge\_size,\par CvMemStorage* storage );}
 
 \begin{description}
 \cvarg{graph\_flags}{Type of the created graph. Usually, it is either \texttt{CV\_SEQ\_KIND\_GRAPH} for generic unoriented graphs and
@@ -672,14 +674,14 @@ The function creates an empty graph and returns a pointer to it.
 \cvCPyFunc{CreateGraphScanner}
 Creates structure for depth-first graph traversal.
 
-\cvcodeC{
+\cvdefC{
 CvGraphScanner*  cvCreateGraphScanner( \par CvGraph* graph,\par CvGraphVtx* vtx=NULL,\par int mask=CV\_GRAPH\_ALL\_ITEMS );
 }
 
 \begin{description}
 \cvarg{graph}{Graph}
 \cvarg{vtx}{Initial vertex to start from. If NULL, the traversal starts from the first vertex (a vertex with the minimal index in the sequence of vertices).}
-\cvarg{mask}{Event mask indicating which events are of interest to the user (where \cross{cvNextGraphItem} function returns control to the user) It can be \texttt{CV\_GRAPH\_ALL\_ITEMS} (all events are of interest) or a combination of the following flags:
+\cvarg{mask}{Event mask indicating which events are of interest to the user (where \cvCPyCross{NextGraphItem} function returns control to the user) It can be \texttt{CV\_GRAPH\_ALL\_ITEMS} (all events are of interest) or a combination of the following flags:
 
 \begin{description}
 \cvarg{CV\_GRAPH\_VERTEX}{stop at the graph vertices visited for the first time}
@@ -693,15 +695,15 @@ CvGraphScanner*  cvCreateGraphScanner( \par CvGraph* graph,\par CvGraphVtx* vtx=
 \end{description}}
 \end{description}
 
-The function creates a structure for depth-first graph traversal/search. The initialized structure is used in the \cross{cvNextGraphItem} function - the incremental traversal procedure.
+The function creates a structure for depth-first graph traversal/search. The initialized structure is used in the \cvCPyCross{NextGraphItem} function - the incremental traversal procedure.
 
 \fi
 
 \cvCPyFunc{CreateMemStorage}
 Creates memory storage.
 
-\cvcodeC{CvMemStorage* cvCreateMemStorage( int blockSize=0 );}
-\cvcodePy{CreateMemStorage(blockSize) -> memstorage}
+\cvdefC{CvMemStorage* cvCreateMemStorage( int blockSize=0 );}
+\cvdefPy{CreateMemStorage(blockSize) -> memstorage}
 
 \begin{description}
 \cvarg{blockSize}{Size of the storage blocks in bytes. If it is 0, the block size is set to a default value - currently it is  about 64K.}
@@ -714,7 +716,7 @@ The function creates an empty memory storage. See \cross{CvMemStorage} descripti
 \cvCPyFunc{CreateSeq}
 Creates a sequence.
 
-\cvcodeC{CvSeq* cvCreateSeq( \par int seqFlags,\par int headerSize,\par int elemSize,\par CvMemStorage* storage);}
+\cvdefC{CvSeq* cvCreateSeq( \par int seqFlags,\par int headerSize,\par int elemSize,\par CvMemStorage* storage);}
 
 \begin{description}
 \cvarg{seqFlags}{Flags of the created sequence. If the sequence is not passed to any function working with a specific type of sequences, the sequence value may be set to 0, otherwise the appropriate type must be selected from the list of predefined sequence types.}
@@ -728,14 +730,14 @@ the pointer to it. The function allocates the sequence header in
 the storage block as one continuous chunk and sets the structure
 fields \texttt{flags}, \texttt{elemSize}, \texttt{headerSize}, and
 \texttt{storage} to passed values, sets \texttt{delta\_elems} to the
-default value (that may be reassigned using the \cross{cvSetSeqBlockSize}
+default value (that may be reassigned using the \cvCPyCross{SetSeqBlockSize}
 function), and clears other header fields, including the space following
 the first \texttt{sizeof(CvSeq)} bytes.
 
 \cvCPyFunc{CreateSet}
 Creates an empty set.
 
-\cvcodeC{CvSet* cvCreateSet( \par int set\_flags,\par int header\_size,\par int elem\_size,\par CvMemStorage* storage );}
+\cvdefC{CvSet* cvCreateSet( \par int set\_flags,\par int header\_size,\par int elem\_size,\par CvMemStorage* storage );}
 
 \begin{description}
 \cvarg{set\_flags}{Type of the created set}
@@ -744,12 +746,12 @@ Creates an empty set.
 \cvarg{storage}{Container for the set}
 \end{description}
 
-The function creates an empty set with a specified header size and element size, and returns the pointer to the set. This function is just a thin layer on top of \cross{cvCreateSeq}.
+The function creates an empty set with a specified header size and element size, and returns the pointer to the set. This function is just a thin layer on top of \cvCPyCross{CreateSeq}.
 
 \cvCPyFunc{CvtSeqToArray}
 Copies a sequence to one continuous block of memory.
 
-\cvcodeC{void* cvCvtSeqToArray( \par const CvSeq* seq,\par void* elements,\par CvSlice slice=CV\_WHOLE\_SEQ );}
+\cvdefC{void* cvCvtSeqToArray( \par const CvSeq* seq,\par void* elements,\par CvSlice slice=CV\_WHOLE\_SEQ );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -762,7 +764,7 @@ The function copies the entire sequence or subsequence to the specified buffer a
 \cvCPyFunc{EndWriteSeq}
 Finishes the process of writing a sequence.
 
-\cvcodeC{CvSeq* cvEndWriteSeq( CvSeqWriter* writer );}
+\cvdefC{CvSeq* cvEndWriteSeq( CvSeqWriter* writer );}
 
 \begin{description}
 \cvarg{writer}{Writer state}
@@ -773,13 +775,12 @@ The function finishes the writing process and
 returns the pointer to the written sequence. The function also truncates
 the last incomplete sequence block to return the remaining part of the
 block to memory storage. After that, the sequence can be read and
-modified safely. See \cross{cvcvStartWriteSeq} and \cross{cvcvStartAppendToSeq}
+modified safely. See \cvCPyCross{cvStartWriteSeq} and \cvCPyCross{cvStartAppendToSeq}
 
 \cvCPyFunc{FindGraphEdge}
-
 Finds an edge in a graph.
 
-\cvcodeC{
+\cvdefC{
 CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start\_idx, int end\_idx );
 }
 
@@ -798,15 +799,14 @@ CvGraphEdge* cvFindGraphEdge( const CvGraph* graph, int start\_idx, int end\_idx
 The function finds the graph edge connecting two specified vertices and returns a pointer to it or NULL if the edge does not exist.
 
 \cvCPyFunc{FindGraphEdgeByPtr}
-
 Finds an edge in a graph by using its pointer.
 
-\cvcodeC{
+\cvdefC{
 CvGraphEdge* cvFindGraphEdgeByPtr( \par const CvGraph* graph,\par const CvGraphVtx* startVtx,\par const CvGraphVtx* endVtx );
 }
 
 \begin{lstlisting}
-\#define cvGraphFindEdgeByPtr cvFindGraphEdgeByPtr
+#define cvGraphFindEdgeByPtr cvFindGraphEdgeByPtr
 \end{lstlisting}
 
 \begin{description}
@@ -820,7 +820,7 @@ The function finds the graph edge connecting two specified vertices and returns 
 \cvCPyFunc{FlushSeqWriter}
 Updates sequence headers from the writer.
 
-\cvcodeC{void cvFlushSeqWriter( CvSeqWriter* writer );}
+\cvdefC{void cvFlushSeqWriter( CvSeqWriter* writer );}
 
 \begin{description}
 \cvarg{writer}{Writer state}
@@ -832,12 +832,12 @@ e.g., in order to check specific conditions. The function updates the
 sequence headers to make reading from the sequence possible. The writer
 is not closed, however, so that the writing process can be continued at
 any time. If an algorithm requires frequent flushes, consider using
-\cross{cvSeqPush} instead.
+\cvCPyCross{SeqPush} instead.
 
 \cvCPyFunc{GetGraphVtx}
 Finds a graph vertex by using its index.
 
-\cvcodeC{CvGraphVtx* cvGetGraphVtx( \par CvGraph* graph,\par int vtx\_idx );}
+\cvdefC{CvGraphVtx* cvGetGraphVtx( \par CvGraph* graph,\par int vtx\_idx );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -851,7 +851,7 @@ The function finds the graph vertex by using its index and returns the pointer t
 \cvCPyFunc{GetSeqElem}
 Returns a pointer to a sequence element according to its index.
 
-\cvcodeC{char* cvGetSeqElem( const CvSeq* seq, int index );}
+\cvdefC{char* cvGetSeqElem( const CvSeq* seq, int index );}
 
 \begin{lstlisting}
 #define CV_GET_SEQ_ELEM( TYPE, seq, index )  (TYPE*)cvGetSeqElem( (CvSeq*)(seq), (index) )
@@ -876,14 +876,14 @@ type of sequence elements ( \cross{CvPoint} for example), the parameter
 of the desired element. The macro checks first whether the desired element
 belongs to the first block of the sequence and returns it if it does;
 otherwise the macro calls the main function \texttt{GetSeqElem}. Negative
-indices always cause the \cross{cvGetSeqElem} call. The function has O(1)
+indices always cause the \cvCPyCross{GetSeqElem} call. The function has O(1)
 time complexity assuming that the number of blocks is much smaller than the
 number of elements.
 
 \cvCPyFunc{GetSeqReaderPos}
 Returns the current reader position.
 
-\cvcodeC{int cvGetSeqReaderPos( CvSeqReader* reader );}
+\cvdefC{int cvGetSeqReaderPos( CvSeqReader* reader );}
 
 \begin{description}
 \cvarg{reader}{Reader state}
@@ -895,19 +895,19 @@ The function returns the current reader position (within 0 ... \texttt{reader->s
 \cvCPyFunc{GetSetElem}
 Finds a set element by its index.
 
-\cvcodeC{CvSetElem* cvGetSetElem( \par const CvSet* setHeader,\par int index );}
+\cvdefC{CvSetElem* cvGetSetElem( \par const CvSet* setHeader,\par int index );}
 
 \begin{description}
 \cvarg{setHeader}{Set}
 \cvarg{index}{Index of the set element within a sequence}
 \end{description}
 
-The function finds a set element by its index. The function returns the pointer to it or 0 if the index is invalid or the corresponding node is free. The function supports negative indices as it uses \cross{cvGetSeqElem} to locate the node.
+The function finds a set element by its index. The function returns the pointer to it or 0 if the index is invalid or the corresponding node is free. The function supports negative indices as it uses \cvCPyCross{GetSeqElem} to locate the node.
 
 \cvCPyFunc{GraphAddEdge}
 Adds an edge to a graph.
 
-\cvcodeC{int cvGraphAddEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_idx,\par const CvGraphEdge* edge=NULL,\par CvGraphEdge** inserted\_edge=NULL );
+\cvdefC{int cvGraphAddEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_idx,\par const CvGraphEdge* edge=NULL,\par CvGraphEdge** inserted\_edge=NULL );
 }
 
 \begin{description}
@@ -924,7 +924,7 @@ The function connects two specified vertices. The function returns 1 if the edge
 \cvCPyFunc{GraphAddEdgeByPtr}
 Adds an edge to a graph by using its pointer.
 
-\cvcodeC{int cvGraphAddEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\par CvGraphVtx* end\_vtx,\par const CvGraphEdge* edge=NULL,\par CvGraphEdge** inserted\_edge=NULL );}
+\cvdefC{int cvGraphAddEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\par CvGraphVtx* end\_vtx,\par const CvGraphEdge* edge=NULL,\par CvGraphEdge** inserted\_edge=NULL );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -944,7 +944,7 @@ the result is negative), the function also reports an error by default.
 \cvCPyFunc{GraphAddVtx}
 Adds a vertex to a graph.
 
-\cvcodeC{
+\cvdefC{
 int cvGraphAddVtx( \par CvGraph* graph,\par const CvGraphVtx* vtx=NULL,\par CvGraphVtx** inserted\_vtx=NULL );}
 
 \begin{description}
@@ -958,7 +958,7 @@ The function adds a vertex to the graph and returns the vertex index.
 \cvCPyFunc{GraphEdgeIdx}
 Returns the index of a graph edge.
 
-\cvcodeC{
+\cvdefC{
 int cvGraphEdgeIdx( \par CvGraph* graph,\par CvGraphEdge* edge );
 }
 
@@ -972,7 +972,7 @@ The function returns the index of a graph edge.
 \cvCPyFunc{GraphRemoveEdge}
 Removes an edge from a graph.
 
-\cvcodeC{void cvGraphRemoveEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_idx );}
+\cvdefC{void cvGraphRemoveEdge( \par CvGraph* graph,\par int start\_idx,\par int end\_idx );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -986,7 +986,7 @@ The function removes the edge connecting two specified vertices. If the vertices
 
 Removes an edge from a graph by using its pointer.
 
-\cvcodeC{void cvGraphRemoveEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\par CvGraphVtx* end\_vtx );}
+\cvdefC{void cvGraphRemoveEdgeByPtr( \par CvGraph* graph,\par CvGraphVtx* start\_vtx,\par CvGraphVtx* end\_vtx );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -999,7 +999,7 @@ The function removes the edge connecting two specified vertices. If the vertices
 \cvCPyFunc{GraphRemoveVtx}
 Removes a vertex from a graph.
 
-\cvcodeC{int cvGraphRemoveVtx( \par CvGraph* graph,\par int index );}
+\cvdefC{int cvGraphRemoveVtx( \par CvGraph* graph,\par int index );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -1014,7 +1014,7 @@ number of edges deleted, or -1 if the vertex does not belong to the graph.
 \cvCPyFunc{GraphRemoveVtxByPtr}
 Removes a vertex from a graph by using its pointer.
 
-\cvcodeC{int cvGraphRemoveVtxByPtr( \par CvGraph* graph,\par CvGraphVtx* vtx );}
+\cvdefC{int cvGraphRemoveVtxByPtr( \par CvGraph* graph,\par CvGraphVtx* vtx );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -1027,7 +1027,7 @@ The function removes a vertex from the graph by using its pointer together with 
 \cvCPyFunc{GraphVtxDegree}
 Counts the number of edges indicent to the vertex.
 
-\cvcodeC{
+\cvdefC{
 int cvGraphVtxDegree( const CvGraph* graph, int vtxIdx );
 }
 
@@ -1052,7 +1052,7 @@ The macro \texttt{CV\_NEXT\_GRAPH\_EDGE( edge, vertex )} returns the edge incide
 \cvCPyFunc{GraphVtxDegreeByPtr}
 Finds an edge in a graph.
 
-\cvcodeC{
+\cvdefC{
 int cvGraphVtxDegreeByPtr( \par const CvGraph* graph,\par const CvGraphVtx* vtx );
 }
 
@@ -1067,7 +1067,7 @@ The function returns the number of edges incident to the specified vertex, both 
 \cvCPyFunc{GraphVtxIdx}
 Returns the index of a graph vertex.
 
-\cvcodeC{int cvGraphVtxIdx( \par CvGraph* graph,\par CvGraphVtx* vtx );}
+\cvdefC{int cvGraphVtxIdx( \par CvGraph* graph,\par CvGraphVtx* vtx );}
 
 \begin{description}
 \cvarg{graph}{Graph}
@@ -1080,7 +1080,7 @@ The function returns the index of a graph vertex.
 
 Initializes the tree node iterator.
 
-\cvcodeC{
+\cvdefC{
 
 void cvInitTreeNodeIterator( \par CvTreeNodeIterator* tree\_iterator,\par const void* first,\par int max\_level );
 
@@ -1098,7 +1098,7 @@ The function initializes the tree iterator. The tree is traversed in depth-first
 
 Adds a new node to a tree.
 
-\cvcodeC{void cvInsertNodeIntoTree( \par void* node,\par void* parent,\par void* frame );}
+\cvdefC{void cvInsertNodeIntoTree( \par void* node,\par void* parent,\par void* frame );}
 
 \begin{description}
 \cvarg{node}{The inserted node}
@@ -1111,7 +1111,7 @@ The function adds another node into tree. The function does not allocate any mem
 \cvCPyFunc{MakeSeqHeaderForArray}
 Constructs a sequence header for an array.
 
-\cvcodeC{CvSeq* cvMakeSeqHeaderForArray( \par int seq\_type,\par int header\_size,\par int elem\_size,\par void* elements,\par int total,\par CvSeq* seq,\par CvSeqBlock* block );}
+\cvdefC{CvSeq* cvMakeSeqHeaderForArray( \par int seq\_type,\par int header\_size,\par int elem\_size,\par void* elements,\par int total,\par CvSeq* seq,\par CvSeqBlock* block );}
 
 \begin{description}
 \cvarg{seq\_type}{Type of the created sequence}
@@ -1134,7 +1134,7 @@ most cases.
 \cvCPyFunc{MemStorageAlloc}
 Allocates a memory buffer in a storage block.
 
-\cvcodeC{void* cvMemStorageAlloc( \par CvMemStorage* storage,\par size\_t size );}
+\cvdefC{void* cvMemStorageAlloc( \par CvMemStorage* storage,\par size\_t size );}
 
 \begin{description}
 \cvarg{storage}{Memory storage}
@@ -1149,7 +1149,7 @@ otherwise a runtime error is raised. The buffer address is aligned by
 \cvCPyFunc{MemStorageAllocString}
 Allocates a text string in a storage block.
 
-\cvcodeC{CvString cvMemStorageAllocString(CvMemStorage* storage, const char* ptr, int len=-1);}
+\cvdefC{CvString cvMemStorageAllocString(CvMemStorage* storage, const char* ptr, int len=-1);}
 
 \begin{lstlisting}
 typedef struct CvString
@@ -1173,7 +1173,7 @@ or computed length of the string and pointer to the copied string.
 \cvCPyFunc{NextGraphItem}
 Executes one or more steps of the graph traversal procedure.
 
-\cvcodeC{
+\cvdefC{
 int cvNextGraphItem( CvGraphScanner* scanner );
 }
 
@@ -1183,7 +1183,7 @@ int cvNextGraphItem( CvGraphScanner* scanner );
 
 The function traverses through the graph
 until an event of interest to the user (that is, an event, specified
-in the \texttt{mask} in the \cross{cvCreateGraphScanner} call) is met or the
+in the \texttt{mask} in the \cvCPyCross{CreateGraphScanner} call) is met or the
 traversal is completed. In the first case, it returns one of the events
 listed in the description of the \texttt{mask} parameter above and with
 the next call it resumes the traversal. In the latter case, it returns
@@ -1198,7 +1198,7 @@ vertex of the edge - at \texttt{scanner-$>$dst}.
 
 Returns the currently observed node and moves the iterator toward the next node.
 
-\cvcodeC{
+\cvdefC{
 
 void* cvNextTreeNode( CvTreeNodeIterator* tree\_iterator );
 
@@ -1216,7 +1216,7 @@ The function returns the currently observed node and then updates the iterator -
 
 Returns the currently observed node and moves the iterator toward the previous node.
 
-\cvcodeC{
+\cvdefC{
 
 void* cvPrevTreeNode( CvTreeNodeIterator* tree\_iterator );
 
@@ -1233,7 +1233,7 @@ The function returns the currently observed node and then updates the iterator -
 \cvCPyFunc{ReleaseGraphScanner}
 Completes the graph traversal procedure.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseGraphScanner( CvGraphScanner** scanner );
 }
 
@@ -1249,7 +1249,7 @@ The function completes the graph traversal procedure and releases the traverser 
 \cvCPyFunc{ReleaseMemStorage}
 Releases memory storage.
 
-\cvcodeC{void cvReleaseMemStorage( CvMemStorage** storage );}
+\cvdefC{void cvReleaseMemStorage( CvMemStorage** storage );}
 
 \begin{description}
 \cvarg{storage}{Pointer to the released storage}
@@ -1264,7 +1264,7 @@ parent storage block is released.
 \cvCPyFunc{RestoreMemStoragePos}
 Restores memory storage position.
 
-\cvcodeC{void cvRestoreMemStoragePos(\par CvMemStorage* storage,\par CvMemStoragePos* pos);}
+\cvdefC{void cvRestoreMemStoragePos(\par CvMemStorage* storage,\par CvMemStoragePos* pos);}
 
 \begin{description}
 \cvarg{storage}{Memory storage}
@@ -1277,7 +1277,7 @@ The function restores the position of the storage top from the parameter \texttt
 \cvCPyFunc{SaveMemStoragePos}
 Saves memory storage position.
 
-\cvcodeC{void cvSaveMemStoragePos(\par const CvMemStorage* storage,\par CvMemStoragePos* pos);}
+\cvdefC{void cvSaveMemStoragePos(\par const CvMemStorage* storage,\par CvMemStoragePos* pos);}
 
 \begin{description}
 \cvarg{storage}{Memory storage}
@@ -1291,7 +1291,7 @@ of the storage top to the parameter \texttt{pos}. The function
 \cvCPyFunc{SeqElemIdx}
 Returns the index of a specific sequence element.
 
-\cvcodeC{int cvSeqElemIdx( \par const CvSeq* seq,\par const void* element,\par CvSeqBlock** block=NULL );}
+\cvdefC{int cvSeqElemIdx( \par const CvSeq* seq,\par const void* element,\par CvSeqBlock** block=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1304,11 +1304,11 @@ The function returns the index of a sequence element or a negative number if the
 \cvCPyFunc{SeqInsert}
 Inserts an element in the middle of a sequence.
 
-\cvcodeC{char* cvSeqInsert( \par CvSeq* seq,\par int beforeIndex,\par void* element=NULL );}
+\cvdefC{char* cvSeqInsert( \par CvSeq* seq,\par int beforeIndex,\par void* element=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
-\cvarg{beforeIndex}{Index before which the element is inserted. Inserting before 0 (the minimal allowed value of the parameter) is equal to \cross{cvSeqPushFront} and inserting before \texttt{seq->total} (the maximal allowed value of the parameter) is equal to \cross{cvSeqPush}.}
+\cvarg{beforeIndex}{Index before which the element is inserted. Inserting before 0 (the minimal allowed value of the parameter) is equal to \cvCPyCross{SeqPushFront} and inserting before \texttt{seq->total} (the maximal allowed value of the parameter) is equal to \cvCPyCross{SeqPush}.}
 \cvarg{element}{Inserted element} 
 \end{description}
 
@@ -1318,7 +1318,7 @@ The function shifts the sequence elements from the inserted position to the near
 \cvCPyFunc{SeqInsertSlice}
 Inserts an array in the middle of a sequence.
 
-\cvcodeC{void cvSeqInsertSlice( \par CvSeq* seq,\par int beforeIndex,\par const CvArr* fromArr );}
+\cvdefC{void cvSeqInsertSlice( \par CvSeq* seq,\par int beforeIndex,\par const CvArr* fromArr );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1336,8 +1336,8 @@ array elements at the specified position of the sequence. The array
 \cvCPyFunc{SeqInvert}
 Reverses the order of sequence elements.
 
-\cvcodeC{void cvSeqInvert( CvSeq* seq );}
-\cvcodePy{SeqInvert(seq)-> None}
+\cvdefC{void cvSeqInvert( CvSeq* seq );}
+\cvdefPy{SeqInvert(seq)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1351,7 +1351,7 @@ The function reverses the sequence in-place - makes the first element go last, t
 \cvCPyFunc{SeqPop}
 Removes an element from the end of a sequence.
 
-\cvcodeC{void cvSeqPop( \par CvSeq* seq,\par void* element=NULL );}
+\cvdefC{void cvSeqPop( \par CvSeq* seq,\par void* element=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1363,7 +1363,7 @@ The function removes an element from a sequence. The function reports an error i
 \cvCPyFunc{SeqPopFront}
 Removes an element from the beginning of a sequence.
 
-\cvcodeC{void cvSeqPopFront( \par \par CvSeq* seq,\par\par void* element=NULL );}
+\cvdefC{void cvSeqPopFront( \par \par CvSeq* seq,\par\par void* element=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1375,7 +1375,7 @@ The function removes an element from the beginning of a sequence. The function r
 \cvCPyFunc{SeqPopMulti}
 Removes several elements from either end of a sequence.
 
-\cvcodeC{void cvSeqPopMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int in\_front=0 );}
+\cvdefC{void cvSeqPopMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int in\_front=0 );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1393,7 +1393,7 @@ The function removes several elements from either end of the sequence. If the nu
 \cvCPyFunc{SeqPush}
 Adds an element to the end of a sequence.
 
-\cvcodeC{char* cvSeqPush( \par CvSeq* seq,\par void* element=NULL );}
+\cvdefC{char* cvSeqPush( \par CvSeq* seq,\par void* element=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1422,25 +1422,25 @@ for( i = 0; i < 100; i++ )
 cvReleaseMemStorage( &storage );
 \end{lstlisting}
 
-The function has O(1) complexity, but there is a faster method for writing large sequences (see \cross{cvStartWriteSeq} and related functions).
+The function has O(1) complexity, but there is a faster method for writing large sequences (see \cvCPyCross{StartWriteSeq} and related functions).
 
 
 \cvCPyFunc{SeqPushFront}
 Adds an element to the beginning of a sequence.
 
-\cvcodeC{char* cvSeqPushFront( CvSeq* seq, void* element=NULL );}
+\cvdefC{char* cvSeqPushFront( CvSeq* seq, void* element=NULL );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
 \cvarg{element}{Added element}
 \end{description}
 
-The function is similar to \cross{cvSeqPush} but it adds the new element to the beginning of the sequence. The function has O(1) complexity.
+The function is similar to \cvCPyCross{SeqPush} but it adds the new element to the beginning of the sequence. The function has O(1) complexity.
 
 \cvCPyFunc{SeqPushMulti}
 Pushes several elements to either end of a sequence.
 
-\cvcodeC{void cvSeqPushMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int in\_front=0 );}
+\cvdefC{void cvSeqPushMulti( \par CvSeq* seq,\par void* elements,\par int count,\par int in\_front=0 );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1463,8 +1463,8 @@ different sequence blocks.
 \cvCPyFunc{SeqRemove}
 Removes an element from the middle of a sequence.
 
-\cvcodeC{void cvSeqRemove( \par CvSeq* seq,\par int index );}
-\cvcodePy{SeqRemove(seq,index)-> None}
+\cvdefC{void cvSeqRemove( \par CvSeq* seq,\par int index );}
+\cvdefPy{SeqRemove(seq,index)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1482,8 +1482,8 @@ the sequence elements between the nearest end of the sequence and the
 \cvCPyFunc{SeqRemoveSlice}
 Removes a sequence slice.
 
-\cvcodeC{void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );}
-\cvcodePy{SeqRemoveSlice(seq,slice)-> None}
+\cvdefC{void cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );}
+\cvdefPy{SeqRemoveSlice(seq,slice)-> None}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1508,7 +1508,7 @@ char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
 \begin{description}
 \cvarg{seq}{The sequence}
 \cvarg{elem}{The element to look for}
-\cvarg{func}{The comparison function that returns negative, zero or positive value depending on the relationships among the elements (see also \cross{cvSeqSort})}
+\cvarg{func}{The comparison function that returns negative, zero or positive value depending on the relationships among the elements (see also \cvCPyCross{SeqSort})}
 \cvarg{is\_sorted}{Whether the sequence is sorted or not}
 \cvarg{elem\_idx}{Output parameter; index of the found element}
 \cvarg{userdata}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
@@ -1524,7 +1524,7 @@ elements if a linear search is used, or to the smallest index
 \cvCPyFunc{SeqSlice}
 Makes a separate header for a sequence slice.
 
-\cvcodeC{CvSeq* cvSeqSlice( \par const CvSeq* seq,\par CvSlice slice,\par CvMemStorage* storage=NULL,\par int copy\_data=0 );}
+\cvdefC{CvSeq* cvSeqSlice( \par const CvSeq* seq,\par CvSlice slice,\par CvMemStorage* storage=NULL,\par int copy\_data=0 );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1538,7 +1538,7 @@ The function creates a sequence that represents the specified slice of the input
 \cvCPyFunc{SeqSort}
 Sorts sequence element using the specified comparison function.
 
-\cvcodeC{void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );}
+\cvdefC{void cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata=NULL );}
 
 \begin{lstlisting}
 /* a < b ? -1 : a > b ? 1 : 0 */
@@ -1594,7 +1594,7 @@ cvReleaseMemStorage( &storage );
 \cvCPyFunc{SetAdd}
 Occupies a node in the set.
 
-\cvcodeC{int cvSetAdd( \par CvSet* setHeader,\par CvSetElem* elem=NULL,\par CvSetElem** inserted\_elem=NULL );}
+\cvdefC{int cvSetAdd( \par CvSet* setHeader,\par CvSetElem* elem=NULL,\par CvSetElem** inserted\_elem=NULL );}
 
 \begin{description}
 \cvarg{setHeader}{Set}
@@ -1606,24 +1606,24 @@ The function allocates a new node, optionally copies
 input element data to it, and returns the pointer and the index to the
 node. The index value is taken from the lower bits of the \texttt{flags}
 field of the node. The function has O(1) complexity; however, there exists
-a faster function for allocating set nodes (see \cross{cvSetNew}).
+a faster function for allocating set nodes (see \cvCPyCross{SetNew}).
 
 \cvCPyFunc{SetNew}
 Adds an element to a set (fast variant).
 
-\cvcodeC{CvSetElem* cvSetNew( CvSet* setHeader );}
+\cvdefC{CvSetElem* cvSetNew( CvSet* setHeader );}
 
 \begin{description}
 \cvarg{setHeader}{Set}
 \end{description}
 
-The function is an inline lightweight variant of \cross{cvSetAdd}. It occupies a new node and returns a pointer to it rather than an index.
+The function is an inline lightweight variant of \cvCPyCross{SetAdd}. It occupies a new node and returns a pointer to it rather than an index.
 
 
 \cvCPyFunc{SetRemove}
 Removes an element from a set.
 
-\cvcodeC{void cvSetRemove( \par CvSet* setHeader,\par int index );}
+\cvdefC{void cvSetRemove( \par CvSet* setHeader,\par int index );}
 
 \begin{description}
 \cvarg{setHeader}{Set}
@@ -1633,26 +1633,26 @@ Removes an element from a set.
 The function removes an element with a specified
 index from the set. If the node at the specified location is not occupied,
 the function does nothing. The function has O(1) complexity; however,
-\cross{cvSetRemoveByPtr} provides a quicker way to remove a set element
+\cvCPyCross{SetRemoveByPtr} provides a quicker way to remove a set element
 if it is located already.
 
 \cvCPyFunc{SetRemoveByPtr}
 Removes a set element based on its pointer.
 
-\cvcodeC{void cvSetRemoveByPtr( \par CvSet* setHeader,\par void* elem );}
+\cvdefC{void cvSetRemoveByPtr( \par CvSet* setHeader,\par void* elem );}
 
 \begin{description}
 \cvarg{setHeader}{Set}
 \cvarg{elem}{Removed element}
 \end{description}
 
-The function is an inline lightweight variant of \cross{cvSetRemove} that requires an element pointer. The function does not check whether the node is occupied or not - the user should take care of that.
+The function is an inline lightweight variant of \cvCPyCross{SetRemove} that requires an element pointer. The function does not check whether the node is occupied or not - the user should take care of that.
 
 
 \cvCPyFunc{SetSeqBlockSize}
 Sets up sequence block size.
 
-\cvcodeC{void cvSetSeqBlockSize( \par CvSeq* seq,\par int deltaElems );}
+\cvdefC{void cvSetSeqBlockSize( \par CvSeq* seq,\par int deltaElems );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1675,7 +1675,7 @@ constraints.
 \cvCPyFunc{SetSeqReaderPos}
 Moves the reader to the specified position.
 
-\cvcodeC{void cvSetSeqReaderPos( \par CvSeqReader* reader,\par int index,\par int is\_relative=0 );}
+\cvdefC{void cvSetSeqReaderPos( \par CvSeqReader* reader,\par int index,\par int is\_relative=0 );}
 
 \begin{description}
 \cvarg{reader}{Reader state}
@@ -1689,7 +1689,7 @@ The function moves the read position to an absolute position or relative to the 
 \cvCPyFunc{StartAppendToSeq}
 Initializes the process of writing data to a sequence.
 
-\cvcodeC{void cvStartAppendToSeq( \par CvSeq* seq,\par CvSeqWriter* writer );}
+\cvdefC{void cvStartAppendToSeq( \par CvSeq* seq,\par CvSeqWriter* writer );}
 
 \begin{description}
 \cvarg{seq}{Pointer to the sequence}
@@ -1703,12 +1703,12 @@ sequence by using the
 macro. Note
 that during the writing process, other operations on the sequence may
 yield an incorrect result or even corrupt the sequence (see description of
-\cross{cvFlushSeqWriter}, which helps to avoid some of these problems).
+\cvCPyCross{FlushSeqWriter}, which helps to avoid some of these problems).
 
 \cvCPyFunc{StartReadSeq}
 Initializes the process of sequential reading from a sequence.
 
-\cvcodeC{void cvStartReadSeq( \par const CvSeq* seq,\par CvSeqReader* reader,\par int reverse=0 );}
+\cvdefC{void cvStartReadSeq( \par const CvSeq* seq,\par CvSeqReader* reader,\par int reverse=0 );}
 
 \begin{description}
 \cvarg{seq}{Sequence}
@@ -1771,7 +1771,7 @@ cvReleaseStorage( &storage );
 \cvCPyFunc{StartWriteSeq}
 Creates a new sequence and initializes a writer for it.
 
-\cvcodeC{
+\cvdefC{
 void cvStartWriteSeq( \par int seq\_flags,\par int header\_size,\par int elem\_size,\par CvMemStorage* storage,\par CvSeqWriter* writer );
 }
 
@@ -1784,16 +1784,16 @@ void cvStartWriteSeq( \par int seq\_flags,\par int header\_size,\par int elem\_s
 \end{description}
 
 The function is a combination of
-\cross{cvCreateSeq} and \cross{cvStartAppendToSeq}. The pointer to the
+\cvCPyCross{CreateSeq} and \cvCPyCross{StartAppendToSeq}. The pointer to the
 created sequence is stored at
 \texttt{writer->seq}
 and is also returned by the
-\cross{cvEndWriteSeq} function that should be called at the end.
+\cvCPyCross{EndWriteSeq} function that should be called at the end.
 
 \cvCPyFunc{TreeToNodeSeq}
 Gathers all node pointers to a single sequence.
 
-\cvcodeC{
+\cvdefC{
 
 CvSeq* cvTreeToNodeSeq( \par const void* first,\par int header\_size,\par CvMemStorage* storage );
 
@@ -1808,3 +1808,6 @@ CvSeq* cvTreeToNodeSeq( \par const void* first,\par int header\_size,\par CvMemS
 The function puts pointers of all nodes reacheable from \texttt{first} into a single sequence. The pointers are written sequentially in the depth-first order.
 
 \fi
+
+\fi
+

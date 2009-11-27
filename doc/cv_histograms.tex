@@ -3,7 +3,7 @@
 \ifCPy
 
 \ifC
-\cvstruct{CvHistogram}\label{CvHistogram}
+\cvfunc{CvHistogram}\label{CvHistogram}
 Multi-dimensional histogram.
 
 \begin{lstlisting}
@@ -22,9 +22,9 @@ CvHistogram;
 \cvCPyFunc{CalcBackProject}
 Calculates the back projection.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcBackProject( \par IplImage** image,\par CvArr* back\_project,\par const CvHistogram* hist );
-}\cvcodePy{CalcBackProject(image,back\_project,hist)-> None}
+}\cvdefPy{CalcBackProject(image,back\_project,hist)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though you may pass CvMat** as well)}
@@ -45,9 +45,9 @@ That is the approximate algorithm of Camshift color object tracker, except for t
 \cvCPyFunc{CalcBackProjectPatch}
 Locates a template within an image by using a histogram comparison.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcBackProjectPatch( \par IplImage** image,\par CvArr* dst,\par CvSize patch\_size,\par CvHistogram* hist,\par int method,\par float factor );
-}\cvcodePy{CalcBackProjectPatch(images,dst,patch\_size,hist,method,factor)-> None}
+}\cvdefPy{CalcBackProjectPatch(images,dst,patch\_size,hist,method,factor)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though, you may pass CvMat** as well)}
@@ -69,9 +69,9 @@ Each new image is measured and then converted into an \texttt{image} image array
 \cvCPyFunc{CalcHist}
 Calculates the histogram of image(s).
 
-\cvcodeC{
+\cvdefC{
 void cvCalcHist( \par IplImage** image,\par CvHistogram* hist,\par int accumulate=0,\par const CvArr* mask=NULL );
-}\cvcodePy{CalcHist(image,hist,ccumulate=0,mask=NULL)-> None}
+}\cvdefPy{CalcHist(image,hist,ccumulate=0,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though you may pass CvMat** as well)}
@@ -149,9 +149,9 @@ int main( int argc, char** argv )
 \cvCPyFunc{CalcProbDensity}
 Divides one histogram by another.
 
-\cvcodeC{
+\cvdefC{
 void  cvCalcProbDensity( \par const CvHistogram* hist1,\par const CvHistogram* hist2,\par CvHistogram* dst\_hist,\par double scale=255 );
-}\cvcodePy{CalcProbDensity(hist1,hist2,dst\_hst,scale=255)-> None}
+}\cvdefPy{CalcProbDensity(hist1,hist2,dst\_hst,scale=255)-> None}
 
 \begin{description}
 \cvarg{hist1}{first histogram (the divisor)}
@@ -175,9 +175,9 @@ So the destination histogram bins are within less than \texttt{scale}.
 \cvCPyFunc{ClearHist}
 Clears the histogram.
 
-\cvcodeC{
+\cvdefC{
 void cvClearHist( CvHistogram* hist );
-}\cvcodePy{ClearHist(hist)-> None}
+}\cvdefPy{ClearHist(hist)-> None}
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -188,9 +188,9 @@ The function sets all of the histogram bins to 0 in the case of a dense histogra
 \cvCPyFunc{CompareHist}
 Compares two dense histograms.
 
-\cvcodeC{
+\cvdefC{
 double cvCompareHist( \par const CvHistogram* hist1,\par const CvHistogram* hist2,\par int method );
-}\cvcodePy{CompareHist(hist1,hist2,method)->float}
+}\cvdefPy{CompareHist(hist1,hist2,method)->float}
 
 \begin{description}
 \cvarg{hist1}{The first dense histogram}
@@ -240,7 +240,7 @@ To compare a sparse histogram or more general sparse configurations of weighted 
 \cvCPyFunc{CopyHist}
 Copies a histogram.
 
-\cvcodeC{
+\cvdefC{
 void cvCopyHist( const CvHistogram* src, CvHistogram** dst );
 }
 
@@ -261,9 +261,9 @@ as in \texttt{src}.
 \cvCPyFunc{CreateHist}
 Creates a histogram.
 
-\cvcodeC{
+\cvdefC{
 CvHistogram* cvCreateHist(\par int dims,\par int* sizes,\par int type,\par float** ranges=NULL,\par int uniform=1 );
-}\cvcodePy{CreateHist(dims, type, ranges, uniform = 1) -> hist}
+}\cvdefPy{CreateHist(dims, type, ranges, uniform = 1) -> hist}
 
 \begin{description}
 \cvC{\cvarg{dims}{Number of histogram dimensions}
@@ -304,13 +304,13 @@ bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 Returns a pointer to the histogram bin.
 
 \begin{lstlisting}
-\#define cvGetHistValue\_1D( hist, idx0 ) \
+#define cvGetHistValue\_1D( hist, idx0 ) \
     ((float*)(cvPtr1D( (hist)->bins, (idx0), 0 ))
-\#define cvGetHistValue\_2D( hist, idx0, idx1 ) \
+#define cvGetHistValue\_2D( hist, idx0, idx1 ) \
     ((float*)(cvPtr2D( (hist)->bins, (idx0), (idx1), 0 )))
-\#define cvGetHistValue\_3D( hist, idx0, idx1, idx2 ) \
+#define cvGetHistValue\_3D( hist, idx0, idx1, idx2 ) \
     ((float*)(cvPtr3D( (hist)->bins, (idx0), (idx1), (idx2), 0 )))
-\#define cvGetHistValue\_nD( hist, idx ) \
+#define cvGetHistValue\_nD( hist, idx ) \
     ((float*)(cvPtrND( (hist)->bins, (idx), 0 )))
 \end{lstlisting}
 
@@ -326,10 +326,10 @@ The macros \texttt{GetHistValue} return a pointer to the specified bin of the 1D
 \cvCPyFunc{GetMinMaxHistValue}
 Finds the minimum and maximum histogram bins.
 
-\cvcodeC{
+\cvdefC{
 void cvGetMinMaxHistValue( \par const CvHistogram* hist,\par float* min\_value,\par float* max\_value,\par int* min\_idx=NULL,\par int* max\_idx=NULL );
 
-}\cvcodePy{GetMinMaxHistValue(hist)-> min\_val,max\_val,min\_loc,max\_loc}
+}\cvdefPy{GetMinMaxHistValue(hist)-> min\_val,max\_val,min\_loc,max\_loc}
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -349,7 +349,7 @@ is returned.
 \cvCPyFunc{MakeHistHeaderForArray}
 Makes a histogram out of an array.
 
-\cvcodeC{
+\cvdefC{
 CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHistogram* hist,\par float* data,\par float** ranges=NULL,\par int uniform=1 );
 }
 
@@ -367,9 +367,9 @@ The function initializes the histogram, whose header and bins are allocated by t
 \cvCPyFunc{NormalizeHist}
 Normalizes the histogram.
 
-\cvcodeC{
+\cvdefC{
 void cvNormalizeHist( CvHistogram* hist, double factor );
-}\cvcodePy{NormalizeHist(hist,factor)-> None}
+}\cvdefPy{NormalizeHist(hist,factor)-> None}
 
 \begin{description}
 \cvarg{hist}{Pointer to the histogram}
@@ -382,13 +382,13 @@ The function normalizes the histogram bins by scaling them, such that the sum of
 Queries the value of the histogram bin.
 
 \begin{lstlisting}
-\#define cvQueryHistValue\_1D( hist, idx0 ) \
+#define cvQueryHistValue\_1D( hist, idx0 ) \
     cvGetReal1D( (hist)->bins, (idx0) )
-\#define cvQueryHistValue\_2D( hist, idx0, idx1 ) \
+#define cvQueryHistValue\_2D( hist, idx0, idx1 ) \
     cvGetReal2D( (hist)->bins, (idx0), (idx1) )
-\#define cvQueryHistValue\_3D( hist, idx0, idx1, idx2 ) \
+#define cvQueryHistValue\_3D( hist, idx0, idx1, idx2 ) \
     cvGetReal3D( (hist)->bins, (idx0), (idx1), (idx2) )
-\#define cvQueryHistValue\_nD( hist, idx ) \
+#define cvQueryHistValue\_nD( hist, idx ) \
     cvGetRealND( (hist)->bins, (idx) )
 \end{lstlisting}
 
@@ -404,7 +404,7 @@ The macros return the value of the specified bin of the 1D, 2D, 3D or N-D histog
 \cvCPyFunc{ReleaseHist}
 Releases the histogram.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseHist( CvHistogram** hist );
 }
 
@@ -417,7 +417,7 @@ The function releases the histogram (header and the data). The pointer to the hi
 \cvCPyFunc{SetHistBinRanges}
 Sets the bounds of the histogram bins.
 
-\cvcodeC{
+\cvdefC{
 void cvSetHistBinRanges( \par CvHistogram* hist,\par float** ranges,\par int uniform=1 );
 }
 
@@ -434,9 +434,9 @@ The function is a stand-alone function for setting bin ranges in the histogram. 
 \cvCPyFunc{ThreshHist}
 Thresholds the histogram.
 
-\cvcodeC{
+\cvdefC{
 void cvThreshHist( CvHistogram* hist, double threshold );
-}\cvcodePy{ThreshHist(hist,threshold)-> None}
+}\cvdefPy{ThreshHist(hist,threshold)-> None}
 
 \begin{description}
 \cvarg{hist}{Pointer to the histogram}
@@ -452,19 +452,16 @@ The function clears histogram bins that are below the specified threshold.
 \cvCppFunc{calcHist}
 Calculates histogram of a set of arrays
 
-\begin{lstlisting}
-void calcHist( const Mat* arrays, int narrays,
-               const int* channels, const Mat& mask,
-               MatND& hist, int dims, const int* histSize,
-               const float** ranges, bool uniform=true,
-               bool accumulate=false );
-
-void calcHist( const Mat* arrays, int narrays,
-               const int* channels, const Mat& mask,
-               SparseMat& hist, int dims, const int* histSize,
-               const float** ranges, bool uniform=true,
-               bool accumulate=false );
-\end{lstlisting}
+\cvdefCpp{void calcHist( const Mat* arrays, int narrays,\par
+               const int* channels, const Mat\& mask,\par
+               MatND\& hist, int dims, const int* histSize,\par
+               const float** ranges, bool uniform=true,\par
+               bool accumulate=false );\newline
+void calcHist( const Mat* arrays, int narrays,\par
+               const int* channels, const Mat\& mask,\par
+               SparseMat\& hist, int dims, const int* histSize,\par
+               const float** ranges, bool uniform=true,\par
+               bool accumulate=false );}
 \begin{description}
 \cvarg{arrays}{Source arrays. They all should have the same depth, \texttt{CV\_8U} or \texttt{CV\_32F}, and the same size. Each of them can have an arbitrary number of channels}
 \cvarg{narrays}{The number of source arrays}
@@ -547,17 +544,14 @@ int main( int argc, char** argv )
 \cvCppFunc{calcBackProject}
 Calculates the back projection of a histogram.
 
-\begin{lstlisting}
-void calcBackProject( const Mat* arrays, int narrays,
-                      const int* channels, const MatND& hist,
-                      Mat& backProject, const float** ranges,
-                      double scale=1, bool uniform=true );
-    
-void calcBackProject( const Mat* arrays, int narrays,
-                      const int* channels, const SparseMat& hist,
-                      Mat& backProject, const float** ranges,
-                      double scale=1, bool uniform=true );
-\end{lstlisting}
+\cvdefCpp{void calcBackProject( const Mat* arrays, int narrays,\par
+                      const int* channels, const MatND\& hist,\par
+                      Mat\& backProject, const float** ranges,\par
+                      double scale=1, bool uniform=true );\newline
+void calcBackProject( const Mat* arrays, int narrays,\par
+                      const int* channels, const SparseMat\& hist,\par
+                      Mat\& backProject, const float** ranges,\par
+                      double scale=1, bool uniform=true );}
 \begin{description}
 \cvarg{arrays}{Source arrays. They all should have the same depth, \texttt{CV\_8U} or \texttt{CV\_32F}, and the same size. Each of them can have an arbitrary number of channels}
 \cvarg{narrays}{The number of source arrays}
@@ -584,10 +578,8 @@ See also: \cvCppCross{calcHist}
 \cvCppFunc{compareHist}
 Compares two histograms
 
-\begin{lstlisting}
-double compareHist( const MatND& H1, const MatND& H2, int method );
-double compareHist( const SparseMat& H1, const SparseMat& H2, int method );
-\end{lstlisting}
+\cvdefCpp{double compareHist( const MatND\& H1, const MatND\& H2, int method );\newline
+double compareHist( const SparseMat\& H1, \par const SparseMat\& H2, int method );}
 \begin{description}
 \cvarg{H1}{The first compared histogram}
 \cvarg{H2}{The second compared histogram of the same size as \texttt{H1}}
@@ -633,9 +625,7 @@ While the function works well with 1-, 2-, 3-dimensional dense histograms, it ma
 \cvCppFunc{equalizeHist}
 Equalizes the histogram of a grayscale image.
 
-\begin{lstlisting}
-void equalizeHist( const Mat& src, Mat& dst );
-\end{lstlisting}
+\cvdefCpp{void equalizeHist( const Mat\& src, Mat\& dst );}
 \begin{description}
 \cvarg{src}{The source 8-bit single channel image}
 \cvarg{dst}{The destination image; will have the same size and the same type as \texttt{src}}

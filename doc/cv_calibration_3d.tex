@@ -90,9 +90,9 @@ The functions below use the above model to
 \cvCPyFunc{CalcImageHomography}
 Calculates the homography matrix for an oblong planar object (e.g. arm).
 
-\cvcodeC{
+\cvdefC{
 void cvCalcImageHomography( \par float* line,\par CvPoint3D32f* center,\par float* intrinsic,\par float* homography );
-}\cvcodePy{CalcImageHomography(line,points)-> intrinsic,homography}
+}\cvdefPy{CalcImageHomography(line,points)-> intrinsic,homography}
 
 \begin{description}
 \cvarg{line}{the main object axis direction (vector (dx,dy,dz))}
@@ -110,9 +110,9 @@ in the OpenCV Guide 3D Reconstruction Chapter).
 \cvCPyFunc{CalibrateCamera2}
 Finds the intrinsic and extrinsic camera parameters using a calibration pattern.
 
-\cvcodeC{
+\cvdefC{
 void cvCalibrateCamera2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* point\_counts,\par CvSize image\_size,\par CvMat* intrinsic\_matrix,\par CvMat* distortion\_coeffs,\par CvMat* rotation\_vectors=NULL,\par CvMat* translation\_vectors=NULL,\par int flags=0 );
-}\cvcodePy{CalibrateCamera2(object\_points,image\_points,point\_counts,image\_size,intrinsic\_matrix,distortion\_coeffs,rotation\_vectors,translation\_vectors,flags=0)-> None}
+}\cvdefPy{CalibrateCamera2(object\_points,image\_points,point\_counts,image\_size,intrinsic\_matrix,distortion\_coeffs,rotation\_vectors,translation\_vectors,flags=0)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views}
@@ -160,9 +160,9 @@ but should use pattern\_size=cvSize(cols,rows) in \cvCPyCross{FindChessboardCorn
 \cvCPyFunc{ComputeCorrespondEpilines}
 For points in one image of a stereo pair, computes the corresponding epilines in the other image.
 
-\cvcodeC{
+\cvdefC{
 void cvComputeCorrespondEpilines( \par const CvMat* points,\par int which\_image,\par const CvMat* fundamental\_matrix,\par CvMat* correspondent\_lines);
-}\cvcodePy{ComputeCorrespondEpilines(points, which\_image, fundamental\_matrix, correspondent\_lines) -> None}
+}\cvdefPy{ComputeCorrespondEpilines(points, which\_image, fundamental\_matrix, correspondent\_lines) -> None}
 
 \begin{description}
 \cvarg{points}{The input points. \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} array (where \texttt{N} number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable}
@@ -193,10 +193,12 @@ and the line $l_1$ for a point $p_2$ in the second image $(\texttt{which\_image}
 
 Line coefficients are defined up to a scale. They are normalized $(a^2+b^2=1)$ are stored into \texttt{correspondent\_lines}.
 
+\ifC
+
 \cvCPyFunc{ConvertPointsHomogenious}
 Convert points to/from homogenious coordinates.
 
-\cvcodeC{
+\cvdefC{
 void cvConvertPointsHomogenious( \par const CvMat* src,\par CvMat* dst );
 }
 
@@ -221,12 +223,14 @@ If the output array dimensionality is larger, an extra 1 is appended to each poi
 
 \textbf{Note} because the function accepts a large variety of array layouts, it may report an error when input/output array dimensionality is ambiguous. It is always safe to use the function with number of points $\texttt{N} \ge 5$, or to use multi-channel \texttt{Nx1} or \texttt{1xN} arrays.
 
+\fi
+
 \cvCPyFunc{CreatePOSITObject}
 Initializes a structure containing object information.
 
-\cvcodeC{
+\cvdefC{
 CvPOSITObject* cvCreatePOSITObject( \par CvPoint3D32f* points,\par int point\_count );
-}\cvcodePy{CreatePOSITObject(points)-> POSITObject}
+}\cvdefPy{CreatePOSITObject(points)-> POSITObject}
 
 \begin{description}
 \cvarg{points}{Pointer to the points of the 3D object model}
@@ -250,12 +254,12 @@ Creates block matching stereo correspondence structure.
 #define CV_STEREO_BM_NARROW 2
 \end{lstlisting}
 
-\cvcodeC{
+\cvdefC{
 
 CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
                                         int numberOfDisparities=0 );
 
-}\cvcodePy{CreateStereoBMState(preset=CV\_STEREO\_BM\_BASIC,numberOfDisparities=0)-> StereoBMState}
+}\cvdefPy{CreateStereoBMState(preset=CV\_STEREO\_BM\_BASIC,numberOfDisparities=0)-> StereoBMState}
 
 \begin{description}
 \cvarg{preset}{ID of one of the pre-defined parameter sets. Any of the parameters can be overridden after creating the structure.}
@@ -267,12 +271,12 @@ The function creates the stereo correspondence structure and initializes it. It 
 \cvCPyFunc{CreateStereoGCState}
 Creates the state of graph cut-based stereo correspondence algorithm.
 
-\cvcodeC{
+\cvdefC{
 
 CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
                                         int maxIters );
 
-}\cvcodePy{CreateStereoGCState(numberOfDispaities,maxIters)-> StereoGCState}
+}\cvdefPy{CreateStereoGCState(numberOfDispaities,maxIters)-> StereoGCState}
 
 \begin{description}
 \cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be $\texttt{state->minDisparity} \le disparity < \texttt{state->minDisparity} + \texttt{state->numberOfDisparities}$}
@@ -346,9 +350,9 @@ The graph cuts stereo correspondence algorithm, described in \href{\#Kolmogrov03
 \cvCPyFunc{DecomposeProjectionMatrix}
 Computes the `RQ' decomposition of 3x3 matrices.
 
-\cvcodeC{
+\cvdefC{
 void cvDecomposeProjectionMatrix( \par const CvMat *projMatr,\par CvMat *calibMatr,\par CvMat *rotMatr,\par CvMat *posVect,\par CvMat *rotMatrX=NULL,\par CvMat *rotMatrY=NULL,\par CvMat *rotMatrZ=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}\cvcodePy{DecomposeProjectionMatrix(projMatr, calibMatr, rotMatr, posVect, rotMatrX = None, rotMatrY = None, rotMatrZ = None) -> eulerAngles}
+}\cvdefPy{DecomposeProjectionMatrix(projMatr, calibMatr, rotMatr, posVect, rotMatrX = None, rotMatrY = None, rotMatrZ = None) -> eulerAngles}
 
 \begin{description}
 \cvarg{projMatr}{The 3x4 input projection matrix P}
@@ -369,9 +373,9 @@ It optionally returns three rotation matrices, one for each axis, and the three 
 \cvCPyFunc{DrawChessBoardCorners}
 Renders the detected chessboard corners.
 
-\cvcodeC{
+\cvdefC{
 void cvDrawChessboardCorners( \par CvArr* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int count,\par int pattern\_was\_found );
-}\cvcodePy{DrawChessboardCorners(image,pattern\_size,corners,pattern\_was\_found)-> None}
+}\cvdefPy{DrawChessboardCorners(image,pattern\_size,corners,pattern\_was\_found)-> None}
 
 \begin{description}
 \cvarg{image}{The destination image; it must be an 8-bit color image}
@@ -387,9 +391,9 @@ The function draws the individual chessboard corners detected as red circles if 
 \cvCPyFunc{FindChessboardCorners}
 Finds the positions of the internal corners of the chessboard.
 
-\cvcodeC{
+\cvdefC{
 int cvFindChessboardCorners( \par const void* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int* corner\_count=NULL,\par int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH );
-}\cvcodePy{FindChessboardCorners(image, pattern\_size, flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH) -> corners}
+}\cvdefPy{FindChessboardCorners(image, pattern\_size, flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH) -> corners}
 
 \begin{description}
 \cvarg{image}{Source chessboard view; it must be an 8-bit grayscale or color image}
@@ -420,9 +424,9 @@ the function \cvCPyCross{FindCornerSubPix}.
 \cvCPyFunc{FindExtrinsicCameraParams2}
 Finds the extrinsic camera parameters for a particular view.
 
-\cvcodeC{
+\cvdefC{
 void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* rotation\_vector,\par CvMat* translation\_vector );
-}\cvcodePy{FindExtrinsicCameraParams2(object\_points,image\_points,intrinsic\_matrix,distortion\_coeffs,rotation\_vector,translation\_vector)-> None}
+}\cvdefPy{FindExtrinsicCameraParams2(object\_points,image\_points,intrinsic\_matrix,distortion\_coeffs,rotation\_vector,translation\_vector)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
@@ -438,9 +442,9 @@ The function estimates the extrinsic camera parameters using known intrinsic par
 \cvCPyFunc{FindFundamentalMat}
 Calculates the fundamental matrix from the corresponding points in two images.
 
-\cvcodeC{
+\cvdefC{
 int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\par CvMat* fundamental\_matrix,\par int    method=CV\_FM\_RANSAC,\par double param1=1.,\par double param2=0.99,\par CvMat* status=NULL);
-}\cvcodePy{FindFundamentalMat(points1, points2, fundamental\_matrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
+}\cvdefPy{FindFundamentalMat(points1, points2, fundamental\_matrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
 
 \begin{description}
 \cvarg{points1}{Array of the first image points of \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} size (where \texttt{N} is number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable. The point coordinates should be floating-point (single or double precision)}
@@ -501,10 +505,10 @@ int fm_count = cvFindFundamentalMat( points1,points2,fundamental_matrix,
 \cvCPyFunc{FindHomography}
 Finds the perspective transformation between two planes.
 
-\cvcodeC{
+\cvdefC{
 void cvFindHomography( \par const CvMat* src\_points,\par const CvMat* dst\_points,\par CvMat* homography \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* mask=NULL);
-}\cvcodePy{FindHomography(src\_points,dst\_points)-> homography}
+}\cvdefPy{FindHomography(src\_points,dst\_points)-> homography}
 
 \begin{description}
 \cvarg{src\_points}{Point coordinates in the original plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates), where N is the number of points}
@@ -568,12 +572,12 @@ to make $h_{33} =1$.
 \cvCPyFunc{FindStereoCorrespondenceBM}
 Computes the disparity map using block matching algorithm.
 
-\cvcodeC{
+\cvdefC{
 
 void cvFindStereoCorrespondenceBM( \par const CvArr* left, \par const CvArr* right,
                                    \par CvArr* disparity, \par CvStereoBMState* state );
 
-}\cvcodePy{FindStereoCorrespondenceBM(left,right,disparity,state)-> None}
+}\cvdefPy{FindStereoCorrespondenceBM(left,right,disparity,state)-> None}
 
 \begin{description}
 \cvarg{left}{The left single-channel, 8-bit image.}
@@ -587,14 +591,14 @@ The function cvFindStereoCorrespondenceBM computes disparity map for the input r
 \cvCPyFunc{FindStereoCorrespondenceGC}
 Computes the disparity map using graph cut-based algorithm.
 
-\cvcodeC{
+\cvdefC{
 
 void cvFindStereoCorrespondenceGC( \par const CvArr* left, \par const CvArr* right,
                                    \par CvArr* dispLeft, \par CvArr* dispRight,
                                    \par CvStereoGCState* state,
                                    \par int useDisparityGuess = CV\_DEFAULT(0) );
 
-}\cvcodePy{FindStereoCorrespondenceGC(\par left,\par right,\par dispLeft,\par dispRight,\par state,\par useDisparityGuess=CV\_DEFAULT(0))-> None}
+}\cvdefPy{FindStereoCorrespondenceGC(\par left,\par right,\par dispLeft,\par dispRight,\par state,\par useDisparityGuess=CV\_DEFAULT(0))-> None}
 
 \begin{description}
 \cvarg{left}{The left single-channel, 8-bit image.}
@@ -662,9 +666,9 @@ cvSave( "disparity.png", disparity_left_visual );
 \cvCPyFunc{POSIT}
 Implements the POSIT algorithm.
 
-\cvcodeC{
+\cvdefC{
 void cvPOSIT( \par CvPOSITObject* posit\_object,\par CvPoint2D32f* image\_points,\par double focal\_length,\par CvTermCriteria criteria,\par CvMatr32f rotation\_matrix,\par CvVect32f translation\_vector );
-}\cvcodePy{POSIT(posit\_object,image\_points,focal\_length,criteria)-> rotation\_matrix,translation\_vector}
+}\cvdefPy{POSIT(posit\_object,image\_points,focal\_length,criteria)-> rotation\_matrix,translation\_vector}
 
 \begin{description}
 \cvarg{posit\_object}{Pointer to the object structure}
@@ -683,9 +687,9 @@ Difference norm between two projections is the maximal distance between correspo
 \cvCPyFunc{ProjectPoints2}
 Projects 3D points on to an image plane.
 
-\cvcodeC{
+\cvdefC{
 void cvProjectPoints2( \par const CvMat* object\_points,\par const CvMat* rotation\_vector,\par const CvMat* translation\_vector,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* image\_points,\par CvMat* dpdrot=NULL,\par CvMat* dpdt=NULL,\par CvMat* dpdf=NULL,\par CvMat* dpdc=NULL,\par CvMat* dpddist=NULL );
-}\cvcodePy{ProjectPoints2(object\_points,rotation\_vector,translation\_vector,intrinsic\_matrix,distortion\_coeffs, image\_points,dpdrot=NULL,dpdt=NULL,dpdf=NULL,dpdc=NULL,dpddist=NULL)-> None}
+}\cvdefPy{ProjectPoints2(object\_points,rotation\_vector,translation\_vector,intrinsic\_matrix,distortion\_coeffs, image\_points,dpdrot=NULL,dpdt=NULL,dpdf=NULL,dpdc=NULL,dpddist=NULL)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
@@ -720,9 +724,9 @@ of points).
 \cvCPyFunc{RQDecomp3x3}
 Computes the `RQ' decomposition of 3x3 matrices.
 
-\cvcodeC{
+\cvdefC{
 void cvRQDecomp3x3( \par const CvMat *matrixM,\par CvMat *matrixR,\par CvMat *matrixQ,\par CvMat *matrixQx=NULL,\par CvMat *matrixQy=NULL,\par CvMat *matrixQz=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}\cvcodePy{RQDecomp3x3(matrixM, matrixR, matrixQ, matrixQx = None, matrixQy = None, matrixQz = None) -> eulerAngles}
+}\cvdefPy{RQDecomp3x3(matrixM, matrixR, matrixQ, matrixQx = None, matrixQy = None, matrixQz = None) -> eulerAngles}
 
 \begin{description}
 \cvarg{matrixM}{The 3x3 input matrix M}
@@ -742,7 +746,7 @@ It optionally returns three rotation matrices, one for each axis, and the three 
 \cvCPyFunc{ReleasePOSITObject}
 Deallocates a 3D object structure.
 
-\cvcodeC{
+\cvdefC{
 void cvReleasePOSITObject( \par CvPOSITObject** posit\_object );
 }
 
@@ -757,11 +761,11 @@ The function releases memory previously allocated by the function \cvCPyCross{Cr
 \cvCPyFunc{ReleaseStereoBMState}
 Releases block matching stereo correspondence structure.
 
-\cvcodeC{
+\cvdefC{
 
 void cvReleaseStereoBMState( CvStereoBMState** state );
 
-}\cvcodePy{ReleaseStereoBMState(state)-> None}
+}\cvdefPy{ReleaseStereoBMState(state)-> None}
 
 \begin{description}
 \cvarg{state}{Double pointer to the released structure.}
@@ -772,11 +776,11 @@ The function releases the stereo correspondence structure and all the associated
 \cvCPyFunc{ReleaseStereoGCState}
 Releases the state structure of the graph cut-based stereo correspondence algorithm.
 
-\cvcodeC{
+\cvdefC{
 
 void cvReleaseStereoGCState( CvStereoGCState** state );
 
-}\cvcodePy{ReleaseStereoGCState(state)-> None}
+}\cvdefPy{ReleaseStereoGCState(state)-> None}
 
 \begin{description}
 \cvarg{state}{Double pointer to the released structure.}
@@ -788,9 +792,9 @@ The function releases the stereo correspondence structure and all the associated
 \cvCPyFunc{Rodrigues2}
 Converts a rotation matrix to a rotation vector or vice versa.
 
-\cvcodeC{
+\cvdefC{
 int  cvRodrigues2( \par const CvMat* src,\par CvMat* dst,\par CvMat* jacobian=0 );
-}\cvcodePy{Rodrigues2(src,dst,jacobian=0)-> None}
+}\cvdefPy{Rodrigues2(src,dst,jacobian=0)-> None}
 
 \begin{description}
 \cvarg{src}{The input rotation vector (3x1 or 1x3) or rotation matrix (3x3)}
@@ -834,7 +838,7 @@ and \cvCPyCross{CalibrateCamera2}.
 \cvCPyFunc{StereoCalibrate}
 Calibrates stereo camera.
 
-\cvcodeC{
+\cvdefC{
 
 void cvStereoCalibrate( \par const CvMat* object\_points, \par const CvMat* image\_points1,
                         \par const CvMat* image\_points2, \par const CvMat* point\_counts,
@@ -846,7 +850,7 @@ void cvStereoCalibrate( \par const CvMat* object\_points, \par const CvMat* imag
                                \par CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),
                         \par int flags=CV\_CALIB\_FIX\_INTRINSIC );
 
-}\cvcodePy{StereoCalibrate(\par object\_points,\par image\_points1,\par image\_points2,\par point\_counts,\par camera\_matrix1,\par dist\_coeffs1,\par camera\_matrix2,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par E=NULL,\par F=NULL,\par term\_crit=cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),\par flags=CV\_CALIB\_FIX\_INTRINSIC)-> None}
+}\cvdefPy{StereoCalibrate(\par object\_points,\par image\_points1,\par image\_points2,\par point\_counts,\par camera\_matrix1,\par dist\_coeffs1,\par camera\_matrix2,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par E=NULL,\par F=NULL,\par term\_crit=cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),\par flags=CV\_CALIB\_FIX\_INTRINSIC)-> None}
 
 \begin{description}
 \cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views.}
@@ -902,15 +906,12 @@ Besides the stereo-related information, the function can also perform full calib
 \cvCPyFunc{StereoRectify}
 Computes rectification transform for stereo camera.
 
-\cvcodeC{
-
-void cvStereoRectify( \par const CvMat* camera\_matrix1, \par const CvMat* camera\_matrix2,
+\cvdefC{void cvStereoRectify( \par const CvMat* camera\_matrix1, \par const CvMat* camera\_matrix2,
                       \par const CvMat* dist\_coeffs1, \par const CvMat* dist\_coeffs2,
                       \par CvSize image\_size, \par const CvMat* R, \par const CvMat* T,
                       \par CvMat* R1, \par CvMat* R2, \par CvMat* P1, \par CvMat* P2,
-                      \par CvMat* Q=0, \par int flags=CV\_CALIB\_ZERO\_DISPARITY );
-
-}\cvcodePy{StereoRectify(\par camera\_matrix1,\par camera\_matrix2,\par dist\_coeffs1,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par R1,\par R2,\par P1,\par P2,\par Q=NULL,\par flags=CV\_CALIB\_ZERO\_DISPARITY)-> None}
+                      \par CvMat* Q=0, \par int flags=CV\_CALIB\_ZERO\_DISPARITY );}
+\cvdefPy{StereoRectify(\par camera\_matrix1,\par camera\_matrix2,\par dist\_coeffs1,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par R1,\par R2,\par P1,\par P2,\par Q=NULL,\par flags=CV\_CALIB\_ZERO\_DISPARITY)-> None}
 
 \begin{description}
 \cvarg{camera\_matrix1, camera\_matrix2}{The camera matrices [${fx}_k$ 0 ${cx}_k$; 0 ${fy}_k$ ${cy}_k$; 0 0 1].}
@@ -927,48 +928,48 @@ void cvStereoRectify( \par const CvMat* camera\_matrix1, \par const CvMat* camer
 The function computes the rotation matrices for each camera that (virtually) make both camera image planes the same plane. Consequently, that makes all the epipolar lines parallel and thus simplifies the dense stereo correspondence problem. On input the function takes the matrices computed by \cvCPyCross{cvStereoCalibrate} and on output it gives 2 rotation matrices and also 2 projection matrices in the new coordinates. The function is normally called after \cvCPyCross{cvStereoCalibrate} that computes both camera matrices, the distortion coefficients, R and T. The 2 cases are distinguished by the function: 
 
 \begin{enumerate}
-\item{Horizontal stereo, when 1st and 2nd camera views are shifted relative to each other mainly along the x axis (with possible small vertical shift). Then in the rectified images the corresponding epipolar lines in left and right cameras will be horizontal and have the same y-coordinate. P1 and P2 will look as: 
+\item Horizontal stereo, when 1st and 2nd camera views are shifted relative to each other mainly along the x axis (with possible small vertical shift). Then in the rectified images the corresponding epipolar lines in left and right cameras will be horizontal and have the same y-coordinate. P1 and P2 will look as: 
 
 \[
 P1=
-\begin{array}{cccc}
+\begin{bmatrix}
 f & 0 & cx1 & 0\\
 0 & f & cy & 0\\
 0 & 0 & 1 & 0
-\end{array}
+\end{bmatrix}
 \]
 \[
 P2=
-\begin{array}{cccc}
+\begin{bmatrix}
 f & 0 & cx2 & Tx*f\\
 0 & f & cy & 0\\
 0 & 0 & 1 & 0
-\end{array}
+\end{bmatrix}
 ,
 \]
 
-where $T_x$ is horizontal shift between the cameras and cx1=cx2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.}
-\item{Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
+where $T_x$ is horizontal shift between the cameras and cx1=cx2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.
+\item Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
 
 \[
 P1=
-\begin{array}{cccc}
+\begin{bmatrix}
 f & 0 & cx & 0\\
 0 & f & cy1 & 0\\
 0 & 0 & 1 & 0
-\end{array}
+\end{bmatrix}
 \]
 \[
 P2=
-\begin{array}{cccc}
+\begin{bmatrix}
 f & 0 & cx & 0\\
 0 & f & cy2 & Ty*f\\
 0 & 0 & 1 & 0
-\end{array}
+\end{bmatrix}
 ,
 \]
 
-where $T_y$ is vertical shift between the cameras and cy1=cy2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.}
+where $T_y$ is vertical shift between the cameras and cy1=cy2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.
 \end{enumerate} 
 
 As you can see, the first 3 columns of P1 and P2 will effectively be the new "rectified" camera matrices. 
@@ -976,14 +977,14 @@ As you can see, the first 3 columns of P1 and P2 will effectively be the new "re
 \cvCPyFunc{StereoRectifyUncalibrated}
 Computes rectification transform for uncalibrated stereo camera.
 
-\cvcodeC{
+\cvdefC{
 
 void cvStereoRectifyUncalibrated( \par const CvMat* points1, \par const CvMat* points2,
                                   \par const CvMat* F, \par CvSize image\_size,
                                   \par CvMat* H1, \par CvMat* H2,
                                   \par double threshold=5 );
 
-}\cvcodePy{StereoRectifyUncalibrated(points1,points2,F,image\_size,H1,H2,threshold=5)-> None}
+}\cvdefPy{StereoRectifyUncalibrated(points1,points2,F,image\_size,H1,H2,threshold=5)-> None}
 
 \begin{description}
 \cvarg{points1, points2}{The 2 arrays of corresponding 2D points.}
@@ -1000,15 +1001,12 @@ Note that while the algorithm does not need to know the intrinsic parameters of 
 \cvCPyFunc{UndistortPoints}
 Computes the ideal point coordinates from the observed point coordinates.
 
-\cvcodeC{
-
-void cvUndistortPoints( \par const CvMat* src, \par CvMat* dst,
+\cvdefC{void cvUndistortPoints( \par const CvMat* src, \par CvMat* dst,
                         \par const CvMat* camera\_matrix,
                         \par const CvMat* dist\_coeffs,
                         \par const CvMat* R=NULL,
-                        \par const CvMat* P=NULL);
-
-}\cvcodePy{UndistortPoints(src,dst,camera\_matrix,dist\_coeffs,R=NULL,P=NULL)-> None}
+                        \par const CvMat* P=NULL);}
+\cvdefPy{UndistortPoints(src,dst,camera\_matrix,dist\_coeffs,R=NULL,P=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The observed point coordinates}
@@ -1046,31 +1044,12 @@ The function can be used as for stereo cameras, as well as for individual camera
 \cvCppFunc{calibrateCamera}
 Finds the camera matrix and the camera poses from several views of the calibration pattern.
 
-\begin{lstlisting}
-void calibrateCamera( const vector<vector<Point3f> >& objectPoints,
-                      const vector<vector<Point2f> >& imagePoints,
-                      Size imageSize,
-                      Mat& cameraMatrix, Mat& distCoeffs,
-                      vector<Mat>& rvecs, vector<Mat>& tvecs,
-                      int flags=0 );
-enum
-{
-  CALIB_USE_INTRINSIC_GUESS = CV_CALIB_USE_INTRINSIC_GUESS,
-  CALIB_FIX_ASPECT_RATIO = CV_CALIB_FIX_ASPECT_RATIO,
-  CALIB_FIX_PRINCIPAL_POINT = CV_CALIB_FIX_PRINCIPAL_POINT,
-  CALIB_ZERO_TANGENT_DIST = CV_CALIB_ZERO_TANGENT_DIST,
-  CALIB_FIX_FOCAL_LENGTH = CV_CALIB_FIX_FOCAL_LENGTH,
-  CALIB_FIX_K1 = CV_CALIB_FIX_K1,
-  CALIB_FIX_K2 = CV_CALIB_FIX_K2,
-  CALIB_FIX_K3 = CV_CALIB_FIX_K3,
-  // only for stereo
-  CALIB_FIX_INTRINSIC = CV_CALIB_FIX_INTRINSIC,
-  CALIB_SAME_FOCAL_LENGTH = CV_CALIB_SAME_FOCAL_LENGTH,
-  // for stereo rectification
-  CALIB_ZERO_DISPARITY = CV_CALIB_ZERO_DISPARITY
-};
-\end{lstlisting}
-
+\cvdefCpp{void calibrateCamera( const vector<vector<Point3f> >\& objectPoints,\par
+                      const vector<vector<Point2f> >\& imagePoints,\par
+                      Size imageSize,\par
+                      Mat\& cameraMatrix, Mat\& distCoeffs,\par
+                      vector<Mat>\& rvecs, vector<Mat>\& tvecs,\par
+                      int flags=0 );}
 \begin{description}
 \cvarg{objectPoints}{The vector of vectors of points on the calibration rig in its coordinate system, one vector per a view of the rig. If the the same calibration rig is shown in each view and it's fully visible, all the vectors can be the same (though, you may change the numbering from one view to another). The points are 3D, but since they are in the rig coordinate system, then if the rig is planar, it may have sense to put the model to the XY coordinate plane, so that Z-coordinate of each input object point is 0}
 \cvarg{imagePoints}{The vector of vectors of the object point projections on the calibration rig views, one vector per a view. The projections must be in the same order as the corresponding object points.}
@@ -1115,17 +1094,15 @@ See also: \cvCppCross{findChessboardCorners}, \cvCppCross{solvePnP}, \cvCppCross
 \cvCppFunc{calibrationMatrixValues}
 Computes some useful camera characteristics from the camera matrix
 
-\begin{lstlisting}
-void calibrationMatrixValues( const Mat& cameraMatrix,
-                              Size imageSize,
-                              double apertureWidth,
-                              double apertureHeight,
-                              double& fovx,
-                              double& fovy,
-                              double& focalLength,
-                              Point2d& principalPoint,
-                              double& aspectRatio );
-\end{lstlisting}
+\cvdefCpp{void calibrationMatrixValues( const Mat\& cameraMatrix,\par
+                              Size imageSize,\par
+                              double apertureWidth,\par
+                              double apertureHeight,\par
+                              double\& fovx,\par
+                              double\& fovy,\par
+                              double\& focalLength,\par
+                              Point2d\& principalPoint,\par
+                              double\& aspectRatio );}
 \begin{description}
 \cvarg{cameraMatrix}{The input camera matrix that can be estimated by \cvCppCross{calibrateCamera} or \cvCppCross{stereoCalibrate}}
 \cvarg{imageSize}{The input image size in pixels}
@@ -1143,19 +1120,16 @@ The function computes various useful camera characteristics from the previously 
 \cvCppFunc{composeRT}
 Combines two rotation-and-shift transformations
 
-\begin{lstlisting}
-void composeRT( const Mat& rvec1, const Mat& tvec1,
-                const Mat& rvec2, const Mat& tvec2,
-                Mat& rvec3, Mat& tvec3 );
-                
-void composeRT( const Mat& rvec1, const Mat& tvec1,
-                const Mat& rvec2, const Mat& tvec2,
-                Mat& rvec3, Mat& tvec3,
-                Mat& dr3dr1, Mat& dr3dt1,
-                Mat& dr3dr2, Mat& dr3dt2,
-                Mat& dt3dr1, Mat& dt3dt1,
-                Mat& dt3dr2, Mat& dt3dt2 );
-\end{lstlisting}
+\cvdefCpp{void composeRT( const Mat\& rvec1, const Mat\& tvec1,\par
+                const Mat\& rvec2, const Mat\& tvec2,\par
+                Mat\& rvec3, Mat\& tvec3 );\newline
+void composeRT( const Mat\& rvec1, const Mat\& tvec1,\par
+                const Mat\& rvec2, const Mat\& tvec2,\par
+                Mat\& rvec3, Mat\& tvec3,\par
+                Mat\& dr3dr1, Mat\& dr3dt1,\par
+                Mat\& dr3dr2, Mat\& dr3dt2,\par
+                Mat\& dt3dr1, Mat\& dt3dt1,\par
+                Mat\& dt3dr2, Mat\& dt3dt2 );}
 \begin{description}
 \cvarg{rvec1}{The first rotation vector}
 \cvarg{tvec1}{The first translation vector}
@@ -1183,11 +1157,9 @@ The functions are used inside \cvCppCross{stereoCalibrate} but can also be used 
 \cvCppFunc{computeCorrespondEpilines}
 For points in one image of a stereo pair, computes the corresponding epilines in the other image.
 
-\begin{lstlisting}
-void computeCorrespondEpilines( const Mat& points,
-                                int whichImage, const Mat& F,
-                                vector<Vec3f>& lines );
-\end{lstlisting}
+\cvdefCpp{void computeCorrespondEpilines( const Mat\& points,\par
+                                int whichImage, const Mat\& F,\par
+                                vector<Vec3f>\& lines );}
 \begin{description}
 \cvarg{points}{The input points. $N \times 1$ or $1 \times N$ matrix of type \texttt{CV\_32FC2} or \texttt{vector<Point2f>}}
 \cvarg{whichImage}{Index of the image (1 or 2) that contains the \texttt{points}}
@@ -1213,10 +1185,10 @@ Line coefficients are defined up to a scale. They are normalized, such that $a_i
 \cvCppFunc{convertPointHomogeneous}
 Converts 2D points to/from homogeneous coordinates.
 
-\begin{lstlisting}
-void convertPointsHomogeneous( const Mat& src, vector<Point3f>& dst );
-void convertPointsHomogeneous( const Mat& src, vector<Point2f>& dst );
-\end{lstlisting}
+\cvdefCpp{void convertPointsHomogeneous( const Mat\& src, vector<Point3f>\& dst );\newline
+void convertPointsHomogeneous( const Mat\& src, vector<Point2f>\& dst );}
+
+\begin{description}
 \cvarg{src}{The input array or vector of 2D or 3D points}
 \cvarg{dst}{The output vector of 3D or 2D points, respectively}
 \end{description}
@@ -1226,14 +1198,14 @@ The first of the functions converts 2D points to the homogeneous coordinates by 
 \cvCppFunc{decomposeProjectionMatrix}
 Decomposes the projection matrix into a rotation matrix and a camera matrix.
 
-\begin{lstlisting}
-void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
-                                Mat& rotMatrix, Mat& transVect );
-void decomposeProjectionMatrix( const Mat& projMatrix, Mat& cameraMatrix,
-                                Mat& rotMatrix, Mat& transVect,
-                                Mat& rotMatrixX, Mat& rotMatrixY,
-                                Mat& rotMatrixZ, Vec3d& eulerAngles );
-\end{lstlisting}
+\cvdefCpp{void decomposeProjectionMatrix( const Mat\& projMatrix,\par
+                                Mat\& cameraMatrix,\par
+                                Mat\& rotMatrix, Mat\& transVect );\newline
+void decomposeProjectionMatrix( const Mat\& projMatrix, \par
+                                Mat\& cameraMatrix,\par
+                                Mat\& rotMatrix, Mat\& transVect,\par
+                                Mat\& rotMatrixX, Mat\& rotMatrixY,\par
+                                Mat\& rotMatrixZ, Vec3d\& eulerAngles );}
 \begin{description}
 \cvarg{projMatrix}{The input $3 \times 4$ projection matrix}
 \cvarg{cameraMatrix}{The output $3 \times 3$ camera matrix}
@@ -1254,11 +1226,9 @@ The function is based on \cvCppCross{RQDecomp3x3}.
 \cvCppFunc{drawChessboardCorners}
 Draws the detected chessboard corners.
 
-\begin{lstlisting}
-void drawChessboardCorners( Mat& image, Size patternSize,
-                            const Mat& corners,
-                            bool patternWasFound );
-\end{lstlisting}
+\cvdefCpp{void drawChessboardCorners( Mat\& image, Size patternSize,\par
+                            const Mat\& corners,\par
+                            bool patternWasFound );}
 \begin{description}
 \cvarg{image}{The destination image; it must be an 8-bit color image}
 \cvarg{patternSize}{The number of inner corners per chessboard row and column, i.e. \texttt{Size(<corners per row>, <corners per column>)}}
@@ -1271,23 +1241,12 @@ The function draws the detected chessboard corners. If no complete board was fou
 \cvCppFunc{findFundamentalMat}
 Calculates the fundamental matrix from the corresponding points in two images.
 
-\begin{lstlisting}
-Mat findFundamentalMat( const Mat& points1, const Mat& points2,
-                        vector<uchar>& mask, int method=FM_RANSAC,
-                        double param1=3., double param2=0.99 );
-
-Mat findFundamentalMat( const Mat& points1, const Mat& points2,
-                        int method=FM_RANSAC,
-                        double param1=3., double param2=0.99 );
-                        
-enum
-{ 
-    FM_7POINT = CV_FM_7POINT,
-    FM_8POINT = CV_FM_8POINT,
-    FM_LMEDS = CV_FM_LMEDS,
-    FM_RANSAC = CV_FM_RANSAC
-};
-\end{lstlisting}
+\cvdefCpp{Mat findFundamentalMat( const Mat\& points1, const Mat\& points2,\par
+                        vector<uchar>\& mask, int method=FM\_RANSAC,\par
+                        double param1=3., double param2=0.99 );\newline
+Mat findFundamentalMat( const Mat\& points1, const Mat\& points2,\par
+                        int method=FM\_RANSAC,\par
+                        double param1=3., double param2=0.99 );}
 \begin{description}
 \cvarg{points1}{Array of $N$ points in the first image, a matrix of \texttt{CV\_32FC2} type or \texttt{vector<Point2f>}. The points in homogeneous coordinates can also be passed.}
 \cvarg{points2}{Array of the corresponding points in the second image of the same size and the same type as \texttt{points1}}
@@ -1337,15 +1296,10 @@ Mat fundamental_matrix =
 \cvCppFunc{findChessboardCorners}
 Finds the positions of the internal corners of the chessboard.
 
-\begin{lstlisting}
-bool findChessboardCorners( const Mat& image, Size patternSize,
-                            vector<Point2f>& corners,
-                            int flags=CV_CALIB_CB_ADAPTIVE_THRESH+
-                                 CV_CALIB_CB_NORMALIZE_IMAGE );
-enum { CALIB_CB_ADAPTIVE_THRESH = CV_CALIB_CB_ADAPTIVE_THRESH,
-    CALIB_CB_NORMALIZE_IMAGE = CV_CALIB_CB_NORMALIZE_IMAGE,
-    CALIB_CB_FILTER_QUADS = CV_CALIB_CB_FILTER_QUADS };
-\end{lstlisting}
+\cvdefCpp{bool findChessboardCorners( const Mat\& image, Size patternSize,\par
+                            vector<Point2f>\& corners,\par
+                            int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH+\par
+                                 CV\_CALIB\_CB\_NORMALIZE\_IMAGE );}
 \begin{description}
 \cvarg{image}{The input chessboard (a.k.a. checkerboard) view; it must be an 8-bit grayscale or color image}
 \cvarg{patternSize}{The number of inner corners per chessboard row and column, i.e.
@@ -1377,10 +1331,10 @@ Sometimes the function fails to find the board because the image is too large or
 \cvCppFunc{getDefaultNewCameraMatrix}
 Returns the default new camera matrix
 
-\begin{lstlisting}
-Mat getDefaultNewCameraMatrix( const Mat& cameraMatrix, Size imgSize=Size(),
-                               bool centerPrincipalPoint=false );
-\end{lstlisting}
+\cvdefCpp{Mat getDefaultNewCameraMatrix(\par
+                               const Mat\& cameraMatrix,\par
+                               Size imgSize=Size(),\par
+                               bool centerPrincipalPoint=false );}
 \begin{description}
 \cvarg{cameraMatrix}{The input camera matrix}
 \cvarg{imageSize}{The camera view image size in pixels}
@@ -1404,11 +1358,9 @@ By default, the undistortion functions in OpenCV (see \texttt{initUndistortRecti
 \cvCppFunc{initCameraMatrix2D}
 Finds the initial camera matrix from the 3D-2D point correspondences
 
-\begin{lstlisting}
-Mat initCameraMatrix2D( const vector<vector<Point3f> >& objectPoints,
-                        const vector<vector<Point2f> >& imagePoints,
-                        Size imageSize, double aspectRatio=1. );
-\end{lstlisting}
+\cvdefCpp{Mat initCameraMatrix2D( const vector<vector<Point3f> >\& objectPoints,\par
+                        const vector<vector<Point2f> >\& imagePoints,\par
+                        Size imageSize, double aspectRatio=1. );}
 \begin{description}
 \cvarg{objectPoints}{The vector of vectors of the object points. See \cvCppCross{calibrateCamera}}
 \cvarg{imagePoints}{The vector of vectors of the corresponding image points. See \cvCppCross{calibrateCamera}}
@@ -1423,10 +1375,8 @@ Currently, the function only supports planar calibration rigs, i.e. the rig for 
 \cvCppFunc{Rodrigues}
 Converts a rotation matrix to a rotation vector or vice versa.
 
-\begin{lstlisting}
-void Rodrigues(const Mat& src, Mat& dst);
-void Rodrigues(const Mat& src, Mat& dst, Mat& jacobian);
-\end{lstlisting}
+\cvdefCpp{void Rodrigues(const Mat\& src, Mat\& dst);\newline
+void Rodrigues(const Mat\& src, Mat\& dst, Mat\& jacobian);}
 
 \begin{description}
 \cvarg{src}{The input rotation vector (3x1 or 1x3) or a rotation matrix (3x3)}
@@ -1468,12 +1418,9 @@ used in the global 3D geometry optimization procedures like \cvCppCross{calibrat
 \cvCppFunc{RQDecomp3x3}
 Computes the 'RQ' decomposition of 3x3 matrices.
 
-\begin{lstlisting}
-/* Computes RQ decomposition for 3x3 matrices */
-void RQDecomp3x3( const Mat& M, Mat& R, Mat& Q );
-Vec3d RQDecomp3x3( const Mat& M, Mat& R, Mat& Q,
-                   Mat& Qx, Mat& Qy, Mat& Qz );
-\end{lstlisting}
+\cvdefCpp{void RQDecomp3x3( const Mat\& M, Mat\& R, Mat\& Q );\newline
+Vec3d RQDecomp3x3( const Mat\& M, Mat\& R, Mat\& Q,\par
+                   Mat\& Qx, Mat\& Qy, Mat\& Qz );}
 \begin{description}
 \cvarg{M}{The input $3 \times 3$ floating-point matrix}
 \cvarg{R}{The output $3 \times 3$ upper-triangular matrix}
@@ -1486,9 +1433,7 @@ The function implements RQ decomposition of a $3 \times 3$ matrix. The function 
 \cvCppFunc{matMulDeriv}
 Computes partial derivatives of the matrix product w.r.t each multiplied matrix
 
-\begin{lstlisting}
-void matMulDeriv( const Mat& A, const Mat& B, Mat& dABdA, Mat& dABdB );
-\end{lstlisting}
+\cvdefCpp{void matMulDeriv( const Mat\& A, const Mat\& B, Mat\& dABdA, Mat\& dABdB );}
 \begin{description}
 \cvarg{A}{The first multiplied matrix}
 \cvarg{B}{The second multiplied matrix}
@@ -1501,22 +1446,19 @@ The function computes the partial derivatives of the elements of the matrix prod
 \cvCppFunc{projectPoints}
 Projects 3D points on to an image plane.
 
-\begin{lstlisting}
-void projectPoints( const Mat& objectPoints,
-                    const Mat& rvec, const Mat& tvec,
-                    const Mat& cameraMatrix,
-                    const Mat& distCoeffs,
-                    vector<Point2f>& imagePoints );
-
-void projectPoints( const Mat& objectPoints,
-                    const Mat& rvec, const Mat& tvec,
-                    const Mat& cameraMatrix,
-                    const Mat& distCoeffs,
-                    vector<Point2f>& imagePoints,
-                    Mat& dpdrot, Mat& dpdt, Mat& dpdf,
-                    Mat& dpdc, Mat& dpddist,
-                    double aspectRatio=0 );
-\end{lstlisting}
+\cvdefCpp{void projectPoints( const Mat\& objectPoints,\par
+                    const Mat\& rvec, const Mat\& tvec,\par
+                    const Mat\& cameraMatrix,\par
+                    const Mat\& distCoeffs,\par
+                    vector<Point2f>\& imagePoints );\newline
+void projectPoints( const Mat\& objectPoints,\par
+                    const Mat\& rvec, const Mat\& tvec,\par
+                    const Mat\& cameraMatrix,\par
+                    const Mat\& distCoeffs,\par
+                    vector<Point2f>\& imagePoints,\par
+                    Mat\& dpdrot, Mat\& dpdt, Mat\& dpdf,\par
+                    Mat\& dpdc, Mat\& dpddist,\par
+                    double aspectRatio=0 );}
 \begin{description}
 \cvarg{objectPoints}{The input array of 3D object points, a matrix of type \texttt{CV\_32FC3} or \texttt{vector<Point3f>}}
 \cvarg{imagePoints}{The output array of 2D image points}
@@ -1541,11 +1483,9 @@ Note, that by setting \texttt{rvec=tvec=(0,0,0)} or by setting \texttt{cameraMat
 \cvCppFunc{reprojectImageTo3D}
 Reprojects disparity image to 3D space.
 
-\begin{lstlisting}
-void reprojectImageTo3D( const Mat& disparity,
-                         Mat& _3dImage, const Mat& Q,
-                         bool handleMissingValues=false );
-\end{lstlisting}
+\cvdefCpp{void reprojectImageTo3D( const Mat\& disparity,\par
+                         Mat\& \_3dImage, const Mat\& Q,\par
+                         bool handleMissingValues=false );}
 \begin{description}
 \cvarg{disparity}{The input single-channel 16-bit signed or 32-bit floating-point disparity image}
 \cvarg{\_3dImage}{The output 3-channel floating-point image of the same size as \texttt{disparity}.
@@ -1567,14 +1507,12 @@ The matrix \texttt{Q} can be arbitrary $4 \times 4$ matrix, e.g. the one compute
 \cvCppFunc{solvePnP}
 Finds the camera pose from the 3D-2D point correspondences
 
-\begin{lstlisting}
-void solvePnP( const Mat& objectPoints,
-               const Mat& imagePoints,
-               const Mat& cameraMatrix,
-               const Mat& distCoeffs,
-               Mat& rvec, Mat& tvec,
-               bool useExtrinsicGuess=false );
-\end{lstlisting}
+\cvdefCpp{void solvePnP( const Mat\& objectPoints,\par
+               const Mat\& imagePoints,\par
+               const Mat\& cameraMatrix,\par
+               const Mat\& distCoeffs,\par
+               Mat\& rvec, Mat\& tvec,\par
+               bool useExtrinsicGuess=false );}
 \begin{description}
 \cvarg{objectPoints}{The array of object points, a matrix of type \texttt{CV\_32FC3} or \texttt{vector<Point3f>}}
 \cvarg{imagePoints}{The array of the corresponding image points, a matrix of type{CV\_32FC2} or \texttt{vector<Point2f>}}
@@ -1589,18 +1527,16 @@ The function estimates the camera pose given a set of object points, their corre
 \cvCppFunc{stereoCalibrate}
 Calibrates stereo camera.
 
-\begin{lstlisting}
-void stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
-                      const vector<vector<Point2f> >& imagePoints1,
-                      const vector<vector<Point2f> >& imagePoints2,
-                      Mat& cameraMatrix1, Mat& distCoeffs1,
-                      Mat& cameraMatrix2, Mat& distCoeffs2,
-                      Size imageSize, Mat& R, Mat& T,
-                      Mat& E, Mat& F,
-                      TermCriteria criteria = TermCriteria(TermCriteria::COUNT+
-                         TermCriteria::EPS, 30, 1e-6),
-                      int flags=CALIB_FIX_INTRINSIC );
-\end{lstlisting}
+\cvdefCpp{void stereoCalibrate( const vector<vector<Point3f> >\& objectPoints,\par
+                      const vector<vector<Point2f> >\& imagePoints1,\par
+                      const vector<vector<Point2f> >\& imagePoints2,\par
+                      Mat\& cameraMatrix1, Mat\& distCoeffs1,\par
+                      Mat\& cameraMatrix2, Mat\& distCoeffs2,\par
+                      Size imageSize, Mat\& R, Mat\& T,\par
+                      Mat\& E, Mat\& F,\par
+                      TermCriteria criteria = TermCriteria(TermCriteria::COUNT+\par
+                         TermCriteria::EPS, 30, 1e-6),\par
+                      int flags=CALIB\_FIX\_INTRINSIC );}
 \begin{description}
 \cvarg{objectPoints}{The vector of vectors of points on the calibration rig in its coordinate system, one vector per a view of the rig. See \cvCppCross{calibrateCamera}}
 \cvarg{imagePoints1}{The vector of vectors of the object point projections to the first camera views, one vector per a view. The projections must be in the same order as the corresponding object points.}
@@ -1666,13 +1602,11 @@ Besides the stereo-related information, the function can also perform full calib
 \cvCppFunc{stereoRectify}
 Computes rectification transforms for each head of a calibrated stereo camera.
 
-\begin{lstlisting}
-void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
-                    const Mat& cameraMatrix2, const Mat& distCoeffs2,
-                    Size imageSize, const Mat& R, const Mat& T,
-                    Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
-                    int flags=CALIB_ZERO_DISPARITY );
-\end{lstlisting}
+\cvdefCpp{void stereoRectify( const Mat\& cameraMatrix1, const Mat\& distCoeffs1,\par
+                    const Mat\& cameraMatrix2, const Mat\& distCoeffs2,\par
+                    Size imageSize, const Mat\& R, const Mat\& T,\par
+                    Mat\& R1, Mat\& R2, Mat\& P1, Mat\& P2, Mat\& Q,\par
+                    int flags=CALIB\_ZERO\_DISPARITY );}
 \begin{description}
 \cvarg{cameraMatrix1, cameraMatrix2}{The camera matrices $\vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$}
 \cvarg{distCoeffs1, distCoeffs2}{The vectors of distortion coefficients for each camera, \cvCppCross{4x1, 1x4, 5x1 or 1x5}}
@@ -1688,18 +1622,16 @@ void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
 The function computes the rotation matrices for each camera that (virtually) make both camera image planes the same plane. Consequently, that makes all the epipolar lines parallel and thus simplifies the dense stereo correspondence problem. On input the function takes the matrices computed by \cvCppCross{stereoCalibrate} and on output it gives 2 rotation matrices and also 2 projection matrices in the new coordinates. The 2 cases are distinguished by the function are: 
 
 \begin{enumerate}
-\item{Horizontal stereo, when 1st and 2nd camera views are shifted relative to each other mainly along the x axis (with possible small vertical shift). Then in the rectified images the corresponding epipolar lines in left and right cameras will be horizontal and have the same y-coordinate. P1 and P2 will look as: 
+\item Horizontal stereo, when 1st and 2nd camera views are shifted relative to each other mainly along the x axis (with possible small vertical shift). Then in the rectified images the corresponding epipolar lines in left and right cameras will be horizontal and have the same y-coordinate. P1 and P2 will look as: 
 
-\[
-\texttt{P1}=
+\[\texttt{P1}=
 \begin{bmatrix}
 f & 0 & cx_1 & 0\\
 0 & f & cy & 0\\
 0 & 0 & 1 & 0
 \end{bmatrix}
 \]
-\[
-\texttt{P2}=
+\[\texttt{P2}=
 \begin{bmatrix}
 f & 0 & cx_2 & T_x*f\\
 0 & f & cy & 0\\
@@ -1708,11 +1640,11 @@ f & 0 & cx_2 & T_x*f\\
 ,
 \]
 
-where $T_x$ is horizontal shift between the cameras and $cx_1=cx_2$ if \texttt{CALIB\_ZERO\_DISPARITY} is set.}
-\item{Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
+where $T_x$ is horizontal shift between the cameras and $cx_1=cx_2$ if \texttt{CALIB\_ZERO\_DISPARITY} is set.
+\item Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
 
 \[
-P1=
+\texttt{P1}=
 \begin{bmatrix}
 f & 0 & cx & 0\\
 0 & f & cy_1 & 0\\
@@ -1720,7 +1652,7 @@ f & 0 & cx & 0\\
 \end{bmatrix}
 \]
 \[
-P2=
+\texttt{P2}=
 \begin{bmatrix}
 f & 0 & cx & 0\\
 0 & f & cy_2 & T_y*f\\
@@ -1729,7 +1661,7 @@ f & 0 & cx & 0\\
 ,
 \]
 
-where $T_y$ is vertical shift between the cameras and $cy_1=cy_2$ if \texttt{CALIB\_ZERO\_DISPARITY} is set.}
+where $T_y$ is vertical shift between the cameras and $cy_1=cy_2$ if \texttt{CALIB\_ZERO\_DISPARITY} is set.
 \end{enumerate} 
 
 As you can see, the first 3 columns of \texttt{P1} and \texttt{P2} will effectively be the new "rectified" camera matrices. 
@@ -1738,13 +1670,11 @@ The matrices, together with \texttt{R1} and \texttt{R2}, can then be passed to \
 \cvCppFunc{stereoRectifyUncalibrated}
 Computes rectification transforms for each head of an uncalibrated stereo camera.
 
-\begin{lstlisting}
-bool stereoRectifyUncalibrated( const Mat& points1,
-                                const Mat& points2,
-                                const Mat& F, Size imgSize,
-                                Mat& H1, Mat& H2,
-                                double threshold=5 );
-\end{lstlisting}
+\cvdefCpp{bool stereoRectifyUncalibrated( const Mat\& points1,\par
+                                const Mat\& points2,\par
+                                const Mat\& F, Size imgSize,\par
+                                Mat\& H1, Mat\& H2,\par
+                                double threshold=5 );}
 \begin{description}
 \cvarg{points1, points2}{The two arrays of corresponding 2D points.}
 \cvarg{F}{Fundamental matrix. It can be computed using the same set of point pairs \texttt{points1} and \texttt{points2}  using \cvCppCross{findFundamentalMat}.}
@@ -1761,14 +1691,14 @@ Note that while the algorithm does not need to know the intrinsic parameters of 
 The class for computing stereo correspondence using block matching algorithm.
 
 \begin{lstlisting}
-// Block matching stereo correspondence algorithm
+// Block matching stereo correspondence algorithm\par
 class StereoBM
 {
     enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
         BASIC_PRESET=CV_STEREO_BM_BASIC,
         FISH_EYE_PRESET=CV_STEREO_BM_FISH_EYE,
         NARROW_PRESET=CV_STEREO_BM_NARROW };
-    
+
     StereoBM();
     // the preset is one of ..._PRESET above.
     // ndisparities is the size of disparity range,
@@ -1786,17 +1716,16 @@ class StereoBM
 };
 \end{lstlisting}
 
+
 \cvCppFunc{undistortPoints}
 Computes the ideal point coordinates from the observed point coordinates.
 
-\begin{lstlisting}
-void undistortPoints( const Mat& src, vector<Point2f>& dst,
-                      const Mat& cameraMatrix, const Mat& distCoeffs,
-                      const Mat& R=Mat(), const Mat& P=Mat());
-void undistortPoints( const Mat& src, Mat& dst,
-                      const Mat& cameraMatrix, const Mat& distCoeffs,
-                      const Mat& R=Mat(), const Mat& P=Mat());
-\end{lstlisting}
+\cvdefCpp{void undistortPoints( const Mat\& src, vector<Point2f>\& dst,\par
+                      const Mat\& cameraMatrix, const Mat\& distCoeffs,\par
+                      const Mat\& R=Mat(), const Mat\& P=Mat());\newline
+void undistortPoints( const Mat\& src, Mat\& dst,\par
+                      const Mat\& cameraMatrix, const Mat\& distCoeffs,\par
+                      const Mat\& R=Mat(), const Mat\& P=Mat());}
 \begin{description}
 \cvarg{src}{The observed point coordinates, a matrix or vector of 2D points.}
 \cvarg{dst}{The ideal point coordinates, after undistortion and reverse perspective transformation}

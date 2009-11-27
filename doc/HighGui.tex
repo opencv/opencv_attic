@@ -17,7 +17,7 @@ It provides easy interface to:
 \cvCPyFunc{ConvertImage} % XXX:TBD
 Converts one image to another with an optional vertical flip.
 
-\cvcodeC{void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );}
+\cvdefC{void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );}
 
 \begin{description}
 \cvarg{src}{Source image.}
@@ -36,11 +36,11 @@ The function \texttt{cvConvertImage} converts one image to another and flips the
 \cvCPyFunc{CreateTrackbar} 
 Creates a trackbar and attaches it to the specified window
 
-\cvcodeC{
+\cvdefC{
 int cvCreateTrackbar( \par const char* trackbarName, \par const char* windowName,
                       \par int* value, \par int count, \par CvTrackbarCallback onChange );
 }
-\cvcodePy{CreateTrackbar(trackbarName, windowName, value, count, onChange)}
+\cvdefPy{CreateTrackbar(trackbarName, windowName, value, count, onChange)}
 \begin{lstlisting}
 CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \end{lstlisting}
@@ -58,16 +58,16 @@ The function \texttt{cvCreateTrackbar} creates a trackbar (a.k.a. slider or rang
 \cvCPyFunc{DestroyAllWindows} 
 Destroys all of the HighGUI windows.
 
-\cvcodeC{void cvDestroyAllWindows(void);}
-\cvcodePy{DestroyAllWindows()-> None}
+\cvdefC{void cvDestroyAllWindows(void);}
+\cvdefPy{DestroyAllWindows()-> None}
 
 The function \texttt{cvDestroyAllWindows} destroys all of the opened HighGUI windows.
 
 \cvCPyFunc{DestroyWindow}
 Destroys a window.
 
-\cvcodeC{void cvDestroyWindow( const char* name );}
-\cvcodePy{DestroyWindow(name)-> None}
+\cvdefC{void cvDestroyWindow( const char* name );}
+\cvdefPy{DestroyWindow(name)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be destroyed.}
@@ -78,8 +78,8 @@ The function \texttt{cvDestroyWindow} destroys the window with the given name.
 \cvCPyFunc{GetTrackbarPos} 
 Returns the trackbar position.
 
-\cvcodeC{int cvGetTrackbarPos( \par const char* trackbarName, \par const char* windowName );}
-\cvcodePy{GetTrackbarPos(trackbarName,windowName)-> None}
+\cvdefC{int cvGetTrackbarPos( \par const char* trackbarName, \par const char* windowName );}
+\cvdefPy{GetTrackbarPos(trackbarName,windowName)-> None}
 
 \begin{description}
 \cvarg{ trackbarName}{Name of the trackbar.}
@@ -93,7 +93,7 @@ The function \texttt{cvGetTrackbarPos} returns the current position of the speci
 \cvCPyFunc{GetWindowHandle}
 Gets the window's handle by its name.
 
-\cvcodeC{void* cvGetWindowHandle( const char* name );}
+\cvdefC{void* cvGetWindowHandle( const char* name );}
 
 \begin{description}
 \cvarg{ name}{Name of the window}.
@@ -104,7 +104,7 @@ The function \texttt{cvGetWindowHandle} returns the native window handle (HWND i
 \cvCPyFunc{GetWindowName} 
 Gets the window's name by its handle.
 
-\cvcodeC{const char* cvGetWindowName( void* windowHandle );}
+\cvdefC{const char* cvGetWindowName( void* windowHandle );}
 
 \begin{description}
 \cvarg{ windowHandle}{Handle of the window.}
@@ -115,7 +115,7 @@ The function \texttt{cvGetWindowName} returns the name of the window given its n
 \cvCPyFunc{InitSystem}
 Initializes HighGUI.
 
-\cvcodeC{int cvInitSystem( int argc, char** argv );}
+\cvdefC{int cvInitSystem( int argc, char** argv );}
 
 \begin{description}
 \cvarg{argc}{Number of command line arguments}
@@ -133,8 +133,8 @@ may be used to customize a look of HighGUI windows and controls.
 \cvCPyFunc{MoveWindow} 
 Sets the position of the window.
 
-\cvcodeC{void cvMoveWindow( const char* name, int x, int y );}
-\cvcodePy{MoveWindow(name,x,y)-> None}
+\cvdefC{void cvMoveWindow( const char* name, int x, int y );}
+\cvdefPy{MoveWindow(name,x,y)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be resized.}
@@ -147,8 +147,8 @@ The function \texttt{cvMoveWindow} changes the position of the window.
 \cvCPyFunc{NamedWindow}
 Creates a window.
 
-\cvcodeC{int cvNamedWindow( const char* name, int flags );}
-\cvcodePy{NamedWindow(name,flags=CV\_WINDOW\_AUTOSIZE)-> None}
+\cvdefC{int cvNamedWindow( const char* name, int flags );}
+\cvdefPy{NamedWindow(name,flags=CV\_WINDOW\_AUTOSIZE)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window in the window caption that may be used as a window identifier.}
@@ -162,8 +162,8 @@ If a window with the same name already exists, the function does nothing.
 \cvCPyFunc{ResizeWindow} 
 Sets the window size.
 
-\cvcodeC{void cvResizeWindow( const char* name, int width, int height );}
-\cvcodePy{ResizeWindow(name,width,height)-> None}
+\cvdefC{void cvResizeWindow( const char* name, int width, int height );}
+\cvdefPy{ResizeWindow(name,width,height)-> None}
 
 \begin{description}
 \cvarg{ name}{Name of the window to be resized.}
@@ -176,8 +176,8 @@ The function \texttt{cvResizeWindow} changes the size of the window.
 \cvCPyFunc{SetMouseCallback} %XXX Weird URL Formatting
 Assigns callback for mouse events.
 
-\cvcodeC{void cvSetMouseCallback( const char* windowName, CvMouseCallback onMouse, void* param=NULL );}
-\cvcodePy{SetMouseCallback(windowName, onMouse, param) -> None}
+\cvdefC{void cvSetMouseCallback( const char* windowName, CvMouseCallback onMouse, void* param=NULL );}
+\cvdefPy{SetMouseCallback(windowName, onMouse, param) -> None}
 
 \begin{lstlisting}
 #define CV_EVENT_MOUSEMOVE      0
@@ -209,9 +209,9 @@ CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event,
 \cvarg{ windowName}{Name of the window.}
 \cvarg{ onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
 
-\cvcodeC{
+\cvdefC{
 void Foo(int event, int x, int y, int flags, void* param);
-}\cvcodePy{Foo(event,x,y,flags,param)-> None}
+}\cvdefPy{Foo(event,x,y,flags,param)-> None}
 
 where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
 \cvarg{param}{User-defined parameter to be passed to the callback function.}
@@ -224,8 +224,8 @@ The function \texttt{cvSetMouseCallback} sets the callback function for mouse ev
 \cvCPyFunc{SetTrackbarPos} 
 Sets the trackbar position.
 
-\cvcodeC{void cvSetTrackbarPos( \par const char* trackbarName, \par const char* windowName, \par int pos );}
-\cvcodePy{SetTrackbarPos(trackbarName,windowName)-> None}
+\cvdefC{void cvSetTrackbarPos( \par const char* trackbarName, \par const char* windowName, \par int pos );}
+\cvdefPy{SetTrackbarPos(trackbarName,windowName)-> None}
 
 \begin{description}
 \cvarg{ trackbarName}{Name of the trackbar.}
@@ -238,8 +238,8 @@ The function \texttt{cvSetTrackbarPos} sets the position of the specified trackb
 \cvCPyFunc{ShowImage} 
 Displays the image in the specified window
 
-\cvcodeC{void cvShowImage( const char* name, const CvArr* image );}
-\cvcodePy{ShowImage(name,image)-> None}
+\cvdefC{void cvShowImage( const char* name, const CvArr* image );}
+\cvdefPy{ShowImage(name,image)-> None}
 
 \begin{description}
 \cvarg{name}{Name of the window.}
@@ -256,8 +256,8 @@ The function \texttt{cvShowImage} displays the image in the specified window. If
 \cvCPyFunc{WaitKey} 
 Waits for a pressed key.
 
-\cvcodeC{int cvWaitKey( int delay=0 );}
-\cvcodePy{WaitKey(delay=0)-> int}
+\cvdefC{int cvWaitKey( int delay=0 );}
+\cvdefPy{WaitKey(delay=0)-> int}
 
 \begin{description}
 \cvarg{ delay}{Delay in milliseconds.}
@@ -268,14 +268,14 @@ The function \texttt{cvWaitKey} waits for key event infinitely ($ \texttt{delay}
 \textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
 
-\section{Image and Video I/O}
+\section{Reading and Writing Images and Video}
 
 \cvCPyFunc{LoadImage}
 Loads an image from a file.
 
-\cvcodeC{
+\cvdefC{
 IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );}
-\cvcodePy{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)}
+\cvdefPy{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)}
 
 \begin{lstlisting}
 #define CV_LOAD_IMAGE_COLOR       1
@@ -302,8 +302,8 @@ The function \texttt{cvLoadImage} loads an image from the specified file and ret
 \cvCPyFunc{SaveImage} 
 Saves an image to a specified file.
 
-\cvcodeC{int cvSaveImage( const char* filename, const CvArr* image );}
-\cvcodePy{SaveImage(filename,image)-> None}
+\cvdefC{int cvSaveImage( const char* filename, const CvArr* image );}
+\cvdefPy{SaveImage(filename,image)-> None}
 
 \begin{description}
 \cvarg{ filename}{Name of the file.}
@@ -313,18 +313,18 @@ Saves an image to a specified file.
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
 
-\cvstruct{CvCapture}\label{CvCapture}
+\cvfunc{CvCapture}\label{CvCapture}
 Video capturing structure.
 
-\cvcodeC{typedef struct CvCapture CvCapture;}
+\cvdefC{typedef struct CvCapture CvCapture;}
 
 The structure \texttt{CvCapture} does not have a public interface and is used only as a parameter for video capturing functions.
 
 \cvCPyFunc{CaptureFromCAM} % XXX:Called cvCreateCameraCapture in manual
 Initializes capturing a video from a camera.
 
-\cvcodeC{CvCapture* cvCaptureFromCAM( int index );}
-\cvcodePy{CaptureFromCAM(index) -> CvCapture}
+\cvdefC{CvCapture* cvCaptureFromCAM( int index );}
+\cvdefPy{CaptureFromCAM(index) -> CvCapture}
 
 \begin{description}
 \cvarg{index}{Index of the camera to be used. If there is only one camera or it does not matter what camera is used -1 may be passed.}
@@ -338,8 +338,8 @@ To release the structure, use \cross{ReleaseCapture}.
 \cvCPyFunc{CaptureFromFile} % XXX:Called cvCreateFileCapture in manual
 Initializes capturing a video from a file.
 
-\cvcodeC{CvCapture* cvCaptureFromFile( const char* filename );}
-\cvcodePy{CaptureFromFile(filename) -> CvCapture}
+\cvdefC{CvCapture* cvCaptureFromFile( const char* filename );}
+\cvdefPy{CaptureFromFile(filename) -> CvCapture}
 
 \begin{description}
 \cvarg{filename}{Name of the video file.}
@@ -352,8 +352,8 @@ After the allocated structure is not used any more it should be released by the 
 \cvCPyFunc{GetCaptureProperty}
 Gets video capturing properties.
 
-\cvcodeC{double cvGetCaptureProperty( CvCapture* capture, int property\_id );}
-\cvcodePy{GetCaptureProperty(capture, property\_id)->double}
+\cvdefC{double cvGetCaptureProperty( CvCapture* capture, int property\_id );}
+\cvdefPy{GetCaptureProperty(capture, property\_id)->double}
 
 \begin{description}
 \cvarg{capture}{video capturing structure.}
@@ -379,8 +379,8 @@ The function \texttt{cvGetCaptureProperty} retrieves the specified property of t
 \cvCPyFunc{GrabFrame} 
 Grabs the frame from a camera or file.
 
-\cvcodeC{int cvGrabFrame( CvCapture* capture );}
-\cvcodePy{GrabFrame(capture) -> int}
+\cvdefC{int cvGrabFrame( CvCapture* capture );}
+\cvdefPy{GrabFrame(capture) -> int}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
@@ -392,8 +392,8 @@ The function \texttt{cvGrabFrame} grabs the frame from a camera or file. The gra
 \cvCPyFunc{QueryFrame} 
 Grabs and returns a frame from a camera or file.
 
-\cvcodeC{IplImage* cvQueryFrame( CvCapture* capture );}
-\cvcodePy{QueryFrame(capture) -> iplimage}
+\cvdefC{IplImage* cvQueryFrame( CvCapture* capture );}
+\cvdefPy{QueryFrame(capture) -> iplimage}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
@@ -405,7 +405,7 @@ The function \texttt{cvQueryFrame} grabs a frame from a camera or video file, de
 \cvCPyFunc{ReleaseCapture} 
 Releases the CvCapture structure.
 
-\cvcodeC{void cvReleaseCapture( CvCapture** capture );}
+\cvdefC{void cvReleaseCapture( CvCapture** capture );}
 
 \begin{description}
 \cvarg{capture}{Pointer to video the capturing structure.}
@@ -417,8 +417,8 @@ The function \texttt{cvReleaseCapture} releases the CvCapture structure allocate
 \cvCPyFunc{RetrieveFrame} % XXX:Different than manual
 Gets the image grabbed with cvGrabFrame.
 
-\cvcodeC{IplImage* cvRetrieveFrame( CvCapture* capture );}
-\cvcodePy{RetrieveFrame(capture) -> iplimage}
+\cvdefC{IplImage* cvRetrieveFrame( CvCapture* capture );}
+\cvdefPy{RetrieveFrame(capture) -> iplimage}
 
 \begin{description}
 \cvarg{ capture}{video capturing structure.}
@@ -430,8 +430,8 @@ The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed w
 \cvCPyFunc{SetCaptureProperty} 
 Sets video capturing properties.
 
-\cvcodeC{int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );}
-\cvcodePy{SetCaptureProperty(capture, property\_id,double)}
+\cvdefC{int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );}
+\cvdefPy{SetCaptureProperty(capture, property\_id,double)}
 
 \begin{description}
 \cvarg{capture}{video capturing structure.}
@@ -462,10 +462,10 @@ NB This function currently does nothing when using the latest CVS download on li
 \cvCPyFunc{CreateVideoWriter} % XXX Different than manual
 Creates the video file writer.
 
-\cvcodeC{
+\cvdefC{
 typedef struct CvVideoWriter CvVideoWriter;
 CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, \par double fps, \par CvSize frame\_size, \par int is\_color=1 );
-}\cvcodePy{CreateVideoWriter(filename, fourcc, fps, frame\_size, is\_color) -> CvVideoWriter}
+}\cvdefPy{CreateVideoWriter(filename, fourcc, fps, frame\_size, is\_color) -> CvVideoWriter}
 
 \begin{description}
 \cvarg{ filename}{Name of the output video file.}
@@ -487,7 +487,7 @@ Which codecs and file formats are supported depends on the back end library. On 
 \cvCPyFunc{ReleaseVideoWriter}
 Releases the AVI writer.
 
-\cvcodeC{void cvReleaseVideoWriter( CvVideoWriter** writer );}
+\cvdefC{void cvReleaseVideoWriter( CvVideoWriter** writer );}
 
 \begin{description}
 \cvarg{ writer}{Pointer to the video file writer structure.}
@@ -500,8 +500,8 @@ The function \texttt{cvReleaseVideoWriter} finishes writing to the video file an
 \cvCPyFunc{WriteFrame} 
 Writes a frame to a video file.
 
-\cvcodeC{int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );}
-\cvcodePy{WriteFrame(writer, image)->int}
+\cvdefC{int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );}
+\cvdefPy{WriteFrame(writer, image)->int}
 
 \begin{description}
 \cvarg{ writer}{Video writer structure}
@@ -519,12 +519,11 @@ The function \texttt{cvWriteFrame} writes/appends one frame to a video file.
 \cvCppFunc{createTrackbar}
 Creates a trackbar and attaches it to the specified window
 
-\begin{lstlisting}
-int createTrackbar( const string& trackbarname, const string& winname,
-                    int* value, int count,
-                    TrackbarCallback onChange CV_DEFAULT(0),
-                    void* userdata CV_DEFAULT(0));
-\end{lstlisting}
+\cvdefCpp{int createTrackbar( const string\& trackbarname,\par
+                    const string\& winname,\par
+                    int* value, int count,\par
+                    TrackbarCallback onChange CV\_DEFAULT(0),\par
+                    void* userdata CV\_DEFAULT(0));}
 \begin{description}
 \cvarg{trackbarname}{Name of the created trackbar.}
 \cvarg{winname}{Name of the window which will be used as a parent of the created trackbar.}
@@ -539,9 +538,7 @@ The function \texttt{createTrackbar} creates a trackbar (a.k.a. slider or range 
 \cvCppFunc{getTrackbarPos}
 Returns the trackbar position.
 
-\begin{lstlisting}
-int getTrackbarPos( const string& trackbarname, const string& winname );
-\end{lstlisting}
+\cvdefCpp{int getTrackbarPos( const string\& trackbarname, \par const string\& winname );}
 \begin{description}
 \cvarg{trackbarname}{Name of the trackbar.}
 \cvarg{winname}{Name of the window which is the parent of the trackbar.}
@@ -553,9 +550,7 @@ The function returns the current position of the specified trackbar.
 \cvCppFunc{imshow}
 Displays the image in the specified window
 
-\begin{lstlisting}
-void imshow( const string& winname, const Mat& image );
-\end{lstlisting}
+\cvdefCpp{void imshow( const string\& winname, \par const Mat\& image );}
 \begin{description}
 \cvarg{winname}{Name of the window.}
 \cvarg{image}{Image to be shown.}
@@ -572,9 +567,7 @@ The function \texttt{imshow} displays the image in the specified window. If the 
 \cvCppFunc{namedWindow}
 Creates a window.
 
-\begin{lstlisting}
-void namedWindow( const string& winname, int flags );
-\end{lstlisting}
+\cvdefCpp{void namedWindow( const string\& winname, \par int flags );}
 \begin{description}
 \cvarg{name}{Name of the window in the window caption that may be used as a window identifier.}
 \cvarg{flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, the window size is automatically adjusted to fit the displayed image (see \cross{imshow}), and the user can not change the window size manually.}
@@ -587,9 +580,7 @@ If a window with the same name already exists, the function does nothing.
 \cvCppFunc{setTrackbarPos}
 Sets the trackbar position.
 
-\begin{lstlisting}
-void setTrackbarPos( const string& trackbarname, const string& winname, int pos );
-\end{lstlisting}
+\cvdefCpp{void setTrackbarPos( const string\& trackbarname, \par const string\& winname, int pos );}
 \begin{description}
 \cvarg{trackbarname}{Name of the trackbar.}
 \cvarg{winname}{Name of the window which is the parent of trackbar.}
@@ -602,9 +593,7 @@ The function sets the position of the specified trackbar in the specified window
 \cvCppFunc{waitKey}
 Waits for a pressed key.
 
-\begin{lstlisting}
-int waitKey(int delay=0);
-\end{lstlisting}
+\cvdefCpp{int waitKey(int delay=0);}
 \begin{description}
 \cvarg{delay}{Delay in milliseconds. 0 is the special value that means "forever"}
 \end{description}
@@ -613,13 +602,11 @@ The function \texttt{waitKey} waits for key event infinitely (when $\texttt{dela
 
 \textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
-\section{Image and Video I/O}
+\section{Reading and Writing Images and Video}
 
 \cvCppFunc{imdecode}
 
-\begin{lstlisting}
-Mat imdecode( const Mat& buf, int flags );
-\end{lstlisting}
+\cvdefCpp{Mat imdecode( const Mat\& buf, \par int flags );}
 \begin{description}
 \cvarg{buf}{The input array of vector of bytes}
 \cvarg{flags}{The same flags as in \cross{imread}}
@@ -632,11 +619,10 @@ See \cross{imread} for the list of supported formats and the flags description.
 
 \cvCppFunc{imencode}
 
-\begin{lstlisting}
-bool imencode( const string& ext, const Mat& img,
-               vector<uchar>& buf,
-               const vector<int>& params=vector<int>());
-\end{lstlisting}
+\cvdefCpp{bool imencode( const string\& ext,\par
+               const Mat\& img,\par
+               vector<uchar>\& buf,\par
+               const vector<int>\& params=vector<int>());}
 \begin{description}
 \cvarg{ext}{The file extension that defines the output format}
 \cvarg{img}{The image to be written}
@@ -651,13 +637,7 @@ See \cross{imwrite} for the list of supported formats and the flags description.
 \cvCppFunc{imread}
 Loads an image from a file.
 
-\begin{lstlisting}
-Mat imread( const string& filename, int flags=1 );
-
-#define CV_LOAD_IMAGE_COLOR       1
-#define CV_LOAD_IMAGE_GRAYSCALE   0
-#define CV_LOAD_IMAGE_UNCHANGED  -1
-\end{lstlisting}
+\cvdefCpp{Mat imread( const string\& filename, \par int flags=1 );}
 
 \begin{description}
 \cvarg{filename}{Name of file to be loaded.}
@@ -684,13 +664,8 @@ On Linux, BSD flavors and other Unix-like open-source operating systems OpenCV l
 \cvCppFunc{imwrite}
 Saves an image to a specified file.
 
-\begin{lstlisting}
-bool imwrite( const string& filename, const Mat& img,
-              const vector<int>& params=vector<int>());
-#define CV_IMWRITE_JPEG_QUALITY 1
-#define CV_IMWRITE_PNG_COMPRESSION 16
-#define CV_IMWRITE_PXM_BINARY 32
-\end{lstlisting}
+\cvdefCpp{bool imwrite( const string\& filename, \par const Mat\& img,\par
+              const vector<int>\& params=vector<int>());}
 \begin{description}
 \cvarg{filename}{Name of the file.}
 \cvarg{img}{The image to be saved.}

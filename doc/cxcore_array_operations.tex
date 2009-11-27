@@ -11,8 +11,8 @@
 \cvCPyFunc{AbsDiff}
 Calculates absolute difference between two arrays.
 
-\cvcodeC{void cvAbsDiff(const CvArr* src1, const CvArr* src2, CvArr* dst);}
-\cvcodePy{AbsDiff(src1,src2,dst)-> None}
+\cvdefC{void cvAbsDiff(const CvArr* src1, const CvArr* src2, CvArr* dst);}
+\cvdefPy{AbsDiff(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -29,8 +29,8 @@ All the arrays must have the same data type and the same size (or ROI size).
 \cvCPyFunc{AbsDiffS}
 Calculates absolute difference between an array and a scalar.
 
-\cvcodeC{void cvAbsDiffS(const CvArr* src, CvArr* dst, CvScalar value);}
-\cvcodePy{AbsDiffS(src1,value,dst)-> None}
+\cvdefC{void cvAbsDiffS(const CvArr* src, CvArr* dst, CvScalar value);}
+\cvdefPy{AbsDiffS(src1,value,dst)-> None}
 \ifC
 \begin{lstlisting}
 #define cvAbs(src, dst) cvAbsDiffS(src, dst, cvScalarAll(0))
@@ -52,8 +52,8 @@ All the arrays must have the same data type and the same size (or ROI size).
 \cvCPyFunc{Add}
 Computes the per-element sum of two arrays.
 
-\cvcodeC{void cvAdd(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{Add(src1,src2,sdt,mask=NULL)-> None}
+\cvdefC{void cvAdd(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{Add(src1,src2,sdt,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -74,8 +74,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{AddS}
 Computes the sum of an array and a scalar.
 
-\cvcodeC{void cvAddS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{AddS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvAddS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{AddS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -97,10 +97,10 @@ All the arrays must have the same type, except the mask, and the same size (or R
 \cvCPyFunc{AddWeighted}
 Computes the weighted sum of two arrays.
 
-\cvcodeC{void  cvAddWeighted(const CvArr* src1, double alpha,
+\cvdefC{void  cvAddWeighted(const CvArr* src1, double alpha,
                      const CvArr* src2, double beta,
                      double gamma, CvArr* dst);}
-\cvcodePy{AddWeighted(src1,alpha,src2,beta,gamma,dst)-> None}
+\cvdefPy{AddWeighted(src1,alpha,src2,beta,gamma,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -124,8 +124,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{And}
 Calculates per-element bit-wise conjunction of two arrays.
 
-\cvcodeC{void cvAnd(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{And(src1,src2,dst,mask=NULL)-> None}
+\cvdefC{void cvAnd(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{And(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -145,8 +145,8 @@ In the case of floating-point arrays their bit representations are used for the 
 \cvCPyFunc{AndS}
 Calculates per-element bit-wise conjunction of an array and a scalar.
 
-\cvcodeC{void cvAndS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{AndS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvAndS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{AndS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -184,8 +184,8 @@ The code should print:
 \cvCPyFunc{Avg}
 Calculates average (mean) of array elements.
 
-\cvcodeC{CvScalar cvAvg(const CvArr* arr, const CvArr* mask=NULL);}
-\cvcodePy{Avg(arr,mask=NULL)-> CvScalar}
+\cvdefC{CvScalar cvAvg(const CvArr* arr, const CvArr* mask=NULL);}
+\cvdefPy{Avg(arr,mask=NULL)-> CvScalar}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -206,8 +206,8 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 \cvCPyFunc{AvgSdv}
 Calculates average (mean) of array elements.
 
-\cvcodeC{void cvAvgSdv(const CvArr* arr, CvScalar* mean, CvScalar* stdDev, const CvArr* mask=NULL);}
-\cvcodePy{AvgSdv(arr,mask=NULL)-> mean, stdDev}
+\cvdefC{void cvAvgSdv(const CvArr* arr, CvScalar* mean, CvScalar* stdDev, const CvArr* mask=NULL);}
+\cvdefPy{AvgSdv(arr,mask=NULL)-> mean, stdDev}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -238,9 +238,9 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 \cvCPyFunc{CalcCovarMatrix}
 Calculates covariance matrix of a set of vectors.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcCovarMatrix(\par const CvArr** vects,\par int count,\par CvArr* covMat,\par CvArr* avg,\par int flags);}
-\cvcodePy{CalcCovarMatrix(vects,covMat,avg,flags)-> None}
+\cvdefPy{CalcCovarMatrix(vects,covMat,avg,flags)-> None}
 
 \begin{description}
 \cvarg{vects}{The input vectors, all of which must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g., images) and so forth}
@@ -285,8 +285,8 @@ can be used for PCA, for comparing vectors using Mahalanobis distance and so for
 \cvCPyFunc{CartToPolar}
 Calculates the magnitude and/or angle of 2d vectors.
 
-\cvcodeC{void cvCartToPolar(\par const CvArr* x,\par const CvArr* y,\par CvArr* magnitude,\par CvArr* angle=NULL,\par int angleInDegrees=0);}
-\cvcodePy{CartToPolar(x,y,magnitude,angle=NULL,angleInDegrees)-> None}
+\cvdefC{void cvCartToPolar(\par const CvArr* x,\par const CvArr* y,\par CvArr* magnitude,\par CvArr* angle=NULL,\par int angleInDegrees=0);}
+\cvdefPy{CartToPolar(x,y,magnitude,angle=NULL,angleInDegrees)-> None}
 
 \begin{description}
 \cvarg{x}{The array of x-coordinates}
@@ -310,8 +310,8 @@ The angles are calculated with 0.1 degree accuracy. For the (0,0) point, the ang
 \cvCPyFunc{Cbrt}
 Calculates the cubic root
 
-\cvcodeC{float cvCbrt(float value);}
-\cvcodePy{Cbrt(value)-> float}
+\cvdefC{float cvCbrt(float value);}
+\cvdefPy{Cbrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -322,8 +322,8 @@ The function calculates the cubic root of the argument, and normally it is faste
 
 \cvCPyFunc{ClearND}
 Clears a specific array element.
-\cvcodeC{void cvClearND(CvArr* arr, int* idx);}
-\cvcodePy{ClearND(arr,idx)-> None}
+\cvdefC{void cvClearND(CvArr* arr, int* idx);}
+\cvdefPy{ClearND(arr,idx)-> None}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -335,8 +335,8 @@ The function \cvCPyCross{ClearND} clears (sets to zero) a specific element of a 
 \cvCPyFunc{CloneImage}
 Makes a full copy of an image, including the header, data, and ROI.
 
-\cvcodeC{IplImage* cvCloneImage(const IplImage* image);}
-\cvcodePy{CloneImage(image)-> copy}
+\cvdefC{IplImage* cvCloneImage(const IplImage* image);}
+\cvdefPy{CloneImage(image)-> copy}
 
 \begin{description}
 \cvarg{image}{The original image}
@@ -347,8 +347,8 @@ The returned \texttt{IplImage*} points to the image copy.
 \cvCPyFunc{CloneMat}
 Creates a full matrix copy.
 
-\cvcodeC{CvMat* cvCloneMat(const CvMat* mat);}
-\cvcodePy{CloneMat(mat)-> copy}
+\cvdefC{CvMat* cvCloneMat(const CvMat* mat);}
+\cvdefPy{CloneMat(mat)-> copy}
 
 \begin{description}
 \cvarg{mat}{Matrix to be copied}
@@ -359,8 +359,8 @@ Creates a full copy of a matrix and returns a pointer to the copy.
 \cvCPyFunc{CloneMatND}
 Creates full copy of a multi-dimensional array and returns a pointer to the copy.
 
-\cvcodeC{CvMatND* cvCloneMatND(const CvMatND* mat);}
-\cvcodePy{CloneMatND(mat)-> copy}
+\cvdefC{CvMatND* cvCloneMatND(const CvMatND* mat);}
+\cvdefPy{CloneMatND(mat)-> copy}
 
 \begin{description}
 \cvarg{mat}{Input array}
@@ -370,8 +370,8 @@ Creates full copy of a multi-dimensional array and returns a pointer to the copy
 \cvCPyFunc{CloneSparseMat}
 Creates full copy of sparse array.
 
-\cvcodeC{CvSparseMat* cvCloneSparseMat(const CvSparseMat* mat);}
-\cvcodePy{CloneSparseMat(mat) -> mat}
+\cvdefC{CvSparseMat* cvCloneSparseMat(const CvSparseMat* mat);}
+\cvdefPy{CloneSparseMat(mat) -> mat}
 
 \begin{description}
 \cvarg{mat}{Input array}
@@ -382,8 +382,8 @@ The function creates a copy of the input array and returns pointer to the copy.
 \cvCPyFunc{Cmp}
 Performs per-element comparison of two arrays.
 
-\cvcodeC{void cvCmp(const CvArr* src1, const CvArr* src2, CvArr* dst, int cmpOp);}
-\cvcodePy{Cmp(src1,src2,dst,cmOp)-> None}
+\cvdefC{void cvCmp(const CvArr* src1, const CvArr* src2, CvArr* dst, int cmpOp);}
+\cvdefPy{Cmp(src1,src2,dst,cmOp)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -411,8 +411,8 @@ dst(I)=src1(I) op src2(I),
 \cvCPyFunc{CmpS}
 Performs per-element comparison of an array and a scalar.
 
-\cvcodeC{void cvCmpS(const CvArr* src, double value, CvArr* dst, int cmpOp);}
-\cvcodePy{CmpS(src1,value,dst,cmpOp)-> None}
+\cvdefC{void cvCmpS(const CvArr* src, double value, CvArr* dst, int cmpOp);}
+\cvdefPy{CmpS(src1,value,dst,cmpOp)-> None}
 
 \begin{description}
 \cvarg{src}{The source array, must have a single channel}
@@ -442,8 +442,8 @@ where \texttt{op} is $=$, $>$, $\ge$, $<$, $\le$ or $\ne$.
 \cvCPyFunc{ConvertScale}
 Converts one array to another with optional linear transformation.
 
-\cvcodeC{void cvConvertScale(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
-\cvcodePy{ConvertScale(src,dst,scale=1.0,shift=0.0)-> None}
+\cvdefC{void cvConvertScale(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
+\cvdefPy{ConvertScale(src,dst,scale=1.0,shift=0.0)-> None}
 
 \begin{lstlisting}
 #define cvCvtScale cvConvertScale
@@ -481,8 +481,8 @@ and that is caled \cvCPyCross{Scale}.
 \cvCPyFunc{ConvertScaleAbs}
 Converts input array elements to another 8-bit unsigned integer with optional linear transformation.
 
-\cvcodeC{void cvConvertScaleAbs(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
-\cvcodePy{ConvertScaleAbs(src,dst,scale=1.0,shift=0.0)-> None}
+\cvdefC{void cvConvertScaleAbs(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
+\cvdefPy{ConvertScaleAbs(src,dst,scale=1.0,shift=0.0)-> None}
 
 \begin{lstlisting}
 #define cvCvtScaleAbs cvConvertScaleAbs
@@ -507,8 +507,8 @@ The function supports only destination arrays of 8u (8-bit unsigned integers) ty
 \cvCPyFunc{Copy}
 Copies one array to another.
 
-\cvcodeC{void cvCopy(const CvArr* src, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{Copy(src,dst,msk=NULL)-> None}
+\cvdefC{void cvCopy(const CvArr* src, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{Copy(src,dst,msk=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -531,8 +531,8 @@ arrays (mask is not supported in this case).
 \cvCPyFunc{CountNonZero}
 Counts non-zero array elements.
 
-\cvcodeC{int cvCountNonZero(const CvArr* arr);}
-\cvcodePy{CountNonZero(arr)-> int}
+\cvdefC{int cvCountNonZero(const CvArr* arr);}
+\cvdefPy{CountNonZero(arr)-> int}
 
 \begin{description}
 \cvarg{arr}{The array must be a single-channel array or a multi-channel image with COI set}
@@ -549,8 +549,8 @@ In the case of \texttt{IplImage} both ROI and COI are supported.
 \cvCPyFunc{CreateData}
 Allocates array data
 
-\cvcodeC{void cvCreateData(CvArr* arr);}
-\cvcodePy{CreateData(arr)}
+\cvdefC{void cvCreateData(CvArr* arr);}
+\cvdefPy{CreateData(arr)}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -566,8 +566,8 @@ latter case IPL functions are used to allocate the data.
 \cvCPyFunc{CreateImage}
 Creates an image header and allocates the image data.
 
-\cvcodeC{IplImage* cvCreateImage(CvSize size, int depth, int channels);}
-\cvcodePy{CreateImage(size, depth, channels)->image}
+\cvdefC{IplImage* cvCreateImage(CvSize size, int depth, int channels);}
+\cvdefPy{CreateImage(size, depth, channels)->image}
 
 \begin{description}
 \cvarg{size}{Image width and height}
@@ -585,8 +585,8 @@ cvCreateData(header);
 \cvCPyFunc{CreateImageHeader}
 Creates an image header but does not allocate the image data.
 
-\cvcodeC{IplImage* cvCreateImageHeader(CvSize size, int depth, int channels);}
-\cvcodePy{CreateImageHeader(size, depth, channels) -> image}
+\cvdefC{IplImage* cvCreateImageHeader(CvSize size, int depth, int channels);}
+\cvdefPy{CreateImageHeader(size, depth, channels) -> image}
 
 \begin{description}
 \cvarg{size}{Image width and height}
@@ -609,8 +609,8 @@ but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\
 \cvCPyFunc{CreateMat}\label{cvCreateMat}
 Creates a matrix header and allocates the matrix data. 
 
-\cvcodeC{CvMat* cvCreateMat(\par int rows,\par int cols,\par int type);}
-\cvcodePy{CreateMat(row, cols, type) -> mat}
+\cvdefC{CvMat* cvCreateMat(\par int rows,\par int cols,\par int type);}
+\cvdefPy{CreateMat(row, cols, type) -> mat}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -628,8 +628,8 @@ cvCreateData(mat);
 \cvCPyFunc{CreateMatHeader}
 Creates a matrix header but does not allocate the matrix data.
 
-\cvcodeC{CvMat* cvCreateMatHeader(\par int rows,\par int cols,\par int type);}
-\cvcodePy{CreateMatHeader(rows, cols, type) -> mat}
+\cvdefC{CvMat* cvCreateMatHeader(\par int rows,\par int cols,\par int type);}
+\cvdefPy{CreateMatHeader(rows, cols, type) -> mat}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -642,8 +642,8 @@ The function allocates a new matrix header and returns a pointer to it. The matr
 \cvCPyFunc{CreateMatND}
 Creates the header and allocates the data for a multi-dimensional dense array.
 
-\cvcodeC{CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type);}
-\cvcodePy{CreateMatND(dims, type)}
+\cvdefC{CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type);}
+\cvdefPy{CreateMatND(dims, type)}
 
 \begin{description}
 \ifPy
@@ -665,8 +665,8 @@ cvCreateData(mat);
 \cvCPyFunc{CreateMatNDHeader}
 Creates a new matrix header but does not allocate the matrix data.
 
-\cvcodeC{CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type);}
-\cvcodePy{CreateMatNDHeader(dims, type)}
+\cvdefC{CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type);}
+\cvdefPy{CreateMatNDHeader(dims, type)}
 
 \begin{description}
 \ifPy
@@ -683,8 +683,8 @@ The function allocates a header for a multi-dimensional dense array. The array d
 \cvCPyFunc{CreateSparseMat}
 Creates sparse array.
 
-\cvcodeC{CvSparseMat* cvCreateSparseMat(int dims, const int* sizes, int type);}
-\cvcodePy{CreateSparseMat(dims, type) -> cvmat}
+\cvdefC{CvSparseMat* cvCreateSparseMat(int dims, const int* sizes, int type);}
+\cvdefPy{CreateSparseMat(dims, type) -> cvmat}
 
 \begin{description}
 \ifC
@@ -702,8 +702,8 @@ The function allocates a multi-dimensional sparse array. Initially the array con
 \cvCPyFunc{CrossProduct}
 Calculates the cross product of two 3D vectors.
 
-\cvcodeC{void cvCrossProduct(const CvArr* src1, const CvArr* src2, CvArr* dst);}
-\cvcodePy{CrossProduct(src1,src2,dst)-> None}
+\cvdefC{void cvCrossProduct(const CvArr* src1, const CvArr* src2, CvArr* dst);}
+\cvdefPy{CrossProduct(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source vector}
@@ -727,8 +727,8 @@ or:
 \cvCPyFunc{DCT}
 Performs a forward or inverse Discrete Cosine transform of a 1D or 2D floating-point array.
 
-\cvcodeC{void cvDCT(const CvArr* src, CvArr* dst, int flags);}
-\cvcodePy{DCT(src,dst,flags)-> None}
+\cvdefC{void cvDCT(const CvArr* src, CvArr* dst, int flags);}
+\cvdefPy{DCT(src,dst,flags)-> None}
 
 \begin{lstlisting}
 #define CV\_DXT\_FORWARD  0
@@ -769,8 +769,8 @@ Inverse Cosine transform of 2D vector of $M \times N$ elements:
 \cvCPyFunc{DFT}
 Performs a forward or inverse Discrete Fourier transform of a 1D or 2D floating-point array.
 
-\cvcodeC{void cvDFT(const CvArr* src, CvArr* dst, int flags, int nonzeroRows=0);}
-\cvcodePy{DFT(src,dst,flags,nonzeroRows=0)-> None}
+\cvdefC{void cvDFT(const CvArr* src, CvArr* dst, int flags, int nonzeroRows=0);}
+\cvdefPy{DFT(src,dst,flags,nonzeroRows=0)-> None}
 
 \begin{lstlisting}
 #define CV\_DXT\_FORWARD  0
@@ -891,7 +891,7 @@ cvCopy(&tmp, conv);
 \cvCPyFunc{DecRefData}
 Decrements an array data reference counter.
 
-\cvcodeC{void cvDecRefData(CvArr* arr);}
+\cvdefC{void cvDecRefData(CvArr* arr);}
 
 \begin{description}
 \cvarg{arr}{Pointer to an array header}
@@ -911,8 +911,8 @@ header is part of a larger matrix or image, or the header was converted from an 
 \cvCPyFunc{Det}
 Returns the determinant of a matrix.
 
-\cvcodeC{double cvDet(const CvArr* mat);}
-\cvcodePy{Det(mat)-> double}
+\cvdefC{double cvDet(const CvArr* mat);}
+\cvdefPy{Det(mat)-> double}
 
 \begin{description}
 \cvarg{mat}{The source matrix}
@@ -925,8 +925,8 @@ with $U = V = 0$ and then calculate the determinant as a product of the diagonal
 \cvCPyFunc{Div}
 Performs per-element division of two arrays.
 
-\cvcodeC{void cvDiv(const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1);}
-\cvcodePy{Div(src1,src2,dst,scale)-> None}
+\cvdefC{void cvDiv(const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1);}
+\cvdefPy{Div(src1,src2,dst,scale)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array. If the pointer is NULL, the array is assumed to be all 1's.}
@@ -949,8 +949,8 @@ All the arrays must have the same type and the same size (or ROI size).
 \cvCPyFunc{DotProduct}
 Calculates the dot product of two arrays in Euclidian metrics.
 
-\cvcodeC{double cvDotProduct(const CvArr* src1, const CvArr* src2);}
-\cvcodePy{DotProduct(src1,src2)-> double}
+\cvdefC{double cvDotProduct(const CvArr* src1, const CvArr* src2);}
+\cvdefPy{DotProduct(src1,src2)-> double}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -969,10 +969,10 @@ The function can process multi-dimensional arrays, row by row, layer by layer, a
 \cvCPyFunc{EigenVV}
 Computes eigenvalues and eigenvectors of a symmetric matrix.
 
-\cvcodeC{
+\cvdefC{
 void cvEigenVV(\par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double eps=0,
 \par int lowindex = 0, \par int highindex = 0);}
-\cvcodePy{EigenVV(mat,evects,evals,eps,lowindex,highindex)-> None}
+\cvdefPy{EigenVV(mat,evects,evals,eps,lowindex,highindex)-> None}
 
 \begin{description}
 \cvarg{mat}{The input symmetric square matrix, modified during the processing}
@@ -1012,8 +1012,8 @@ are not required.
 \cvCPyFunc{Exp}
 Calculates the exponent of every array element.
 
-\cvcodeC{void cvExp(const CvArr* src, CvArr* dst);}
-\cvcodePy{Exp(src,dst)-> None}
+\cvdefC{void cvExp(const CvArr* src, CvArr* dst);}
+\cvdefPy{Exp(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -1032,8 +1032,8 @@ The maximum relative error is about $7 \times 10^{-6}$. Currently, the function 
 \cvCPyFunc{FastArctan}
 Calculates the angle of a 2D vector.
 
-\cvcodeC{float cvFastArctan(float y, float x);}
-\cvcodePy{FastArctan(y,x)-> float}
+\cvdefC{float cvFastArctan(float y, float x);}
+\cvdefPy{FastArctan(y,x)-> float}
 
 \begin{description}
 \cvarg{x}{x-coordinate of 2D vector}
@@ -1047,8 +1047,8 @@ measured in degrees and varies from 0 degrees to 360 degrees. The accuracy is ab
 \cvCPyFunc{Flip}
 Flip a 2D array around vertical, horizontal or both axes.
 
-\cvcodeC{void  cvFlip(const CvArr* src, CvArr* dst=NULL, int flipMode=0);}
-\cvcodePy{Flip(src,dst=NULL,flipMode=0)-> None}
+\cvdefC{void  cvFlip(const CvArr* src, CvArr* dst=NULL, int flipMode=0);}
+\cvdefPy{Flip(src,dst=NULL,flipMode=0)-> None}
 
 \begin{lstlisting}
 #define cvMirror cvFlip
@@ -1082,15 +1082,12 @@ The example scenarios of function use are:
 \cvCPyFunc{GEMM}
 Performs generalized matrix multiplication.
 
-\cvcodeC{
-void  cvGEMM(const CvArr* src1, const CvArr* src2, double alpha,
-              const CvArr* src3, double beta, CvArr* dst, int tABC=0);
-
-}\cvcodePy{GEMM(src1,src2,alphs,src3,beta,dst,tABC=0)-> None}
-\begin{lstlisting}
-#define cvMatMulAdd(src1, src2, src3, dst ) cvGEMM(src1, src2, 1, src3, 1, dst, 0 )
-#define cvMatMul(src1, src2, dst ) cvMatMulAdd(src1, src2, 0, dst )
-\end{lstlisting}
+\cvdefC{void cvGEMM(\par const CvArr* src1, \par const CvArr* src2, double alpha,
+              \par const CvArr* src3, \par double beta, \par CvArr* dst, \par int tABC=0);\newline
+\#define cvMatMulAdd(src1, src2, src3, dst ) cvGEMM(src1, src2, 1, src3, 1, dst, 0 )\par
+\#define cvMatMul(src1, src2, dst ) cvMatMulAdd(src1, src2, 0, dst )}
+              
+\cvdefPy{GEMM(src1,src2,alphs,src3,beta,dst,tABC=0)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -1121,7 +1118,7 @@ All the matrices should have the same data type and coordinated sizes. Real or c
 \cvCPyFunc{Get?D}
 Return a specific array element.
 
-\cvcodeC{
+\cvdefC{
 CvScalar cvGet1D(const CvArr* arr, int idx0);
 CvScalar cvGet2D(const CvArr* arr, int idx0, int idx1);
 CvScalar cvGet3D(const CvArr* arr, int idx0, int idx1, int idx2);
@@ -1142,10 +1139,10 @@ The functions return a specific array element. In the case of a sparse array the
 \cvCPyFunc{GetCol(s)}
 Returns array column or column span.
 
-\cvcodeC{CvMat* cvGetCol(const CvArr* arr, CvMat* submat, int col);}
-\cvcodePy{GetCol(arr,row)-> submat}
-\cvcodeC{CvMat* cvGetCols(const CvArr* arr, CvMat* submat, int startCol, int endCol);}
-\cvcodePy{GetCols(arr,startCol,endCol)-> submat}
+\cvdefC{CvMat* cvGetCol(const CvArr* arr, CvMat* submat, int col);}
+\cvdefPy{GetCol(arr,row)-> submat}
+\cvdefC{CvMat* cvGetCols(const CvArr* arr, CvMat* submat, int startCol, int endCol);}
+\cvdefPy{GetCols(arr,startCol,endCol)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1164,8 +1161,8 @@ cvGetCol(arr, submat, col); // ~ cvGetCols(arr, submat, col, col + 1);
 \cvCPyFunc{GetDiag}
 Returns one of array diagonals.
 
-\cvcodeC{CvMat* cvGetDiag(const CvArr* arr, CvMat* submat, int diag=0);}
-\cvcodePy{GetDiag(arr,diag=0)-> submat}
+\cvdefC{CvMat* cvGetDiag(const CvArr* arr, CvMat* submat, int diag=0);}
+\cvdefPy{GetDiag(arr,diag=0)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1180,8 +1177,8 @@ The function returns the header, corresponding to a specified diagonal of the in
 
 Return number of array dimensions and their sizes or the size of a particular dimension.
 
-\cvcodeC{int cvGetDims(const CvArr* arr, int* sizes=NULL);}
-\cvcodeC{int cvGetDimSize(const CvArr* arr, int index);}
+\cvdefC{int cvGetDims(const CvArr* arr, int* sizes=NULL);}
+\cvdefC{int cvGetDimSize(const CvArr* arr, int index);}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1220,7 +1217,7 @@ for(i = 0; i < dims; i++ )
 \cvCPyFunc{GetDims}
 Returns list of array dimensions
 
-\cvcodePy{GetDims(arr)-> list}
+\cvdefPy{GetDims(arr)-> list}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1235,8 +1232,8 @@ returns a list of length 2.
 \cvCPyFunc{GetElemType}
 Returns type of array elements.
 
-\cvcodeC{int cvGetElemType(const CvArr* arr);}
-\cvcodePy{GetElemType(arr)-> int}
+\cvdefC{int cvGetElemType(const CvArr* arr);}
+\cvdefPy{GetElemType(arr)-> int}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1249,8 +1246,8 @@ as described in \cvCPyCross{CreateMat} discussion: \texttt{CV\_8UC1} ... \texttt
 \cvCPyFunc{GetImage}
 Returns image header for arbitrary array.
 
-\cvcodeC{IplImage* cvGetImage(const CvArr* arr, IplImage* imageHeader);}
-\cvcodePy{GetImage(arr) -> iplimage}
+\cvdefC{IplImage* cvGetImage(const CvArr* arr, IplImage* imageHeader);}
+\cvdefPy{GetImage(arr) -> iplimage}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1272,8 +1269,8 @@ fail on the resultant image.
 \cvCPyFunc{GetImageCOI}
 Returns the index of the channel of interest. 
 
-\cvcodeC{int cvGetImageCOI(const IplImage* image);}
-\cvcodePy{GetImageCOI(image)-> channel}
+\cvdefC{int cvGetImageCOI(const IplImage* image);}
+\cvdefPy{GetImageCOI(image)-> channel}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -1284,8 +1281,8 @@ Returns the channel of interest of in an IplImage. Returned values correspond to
 \cvCPyFunc{GetImageROI}
 Returns the image ROI.
 
-\cvcodeC{CvRect cvGetImageROI(const IplImage* image);}
-\cvcodePy{GetImageROI(image)-> CvRect}
+\cvdefC{CvRect cvGetImageROI(const IplImage* image);}
+\cvdefPy{GetImageROI(image)-> CvRect}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -1296,8 +1293,8 @@ If there is no ROI set, \texttt{cvRect(0,0,image->width,image->height)} is retur
 \cvCPyFunc{GetMat}
 Returns matrix header for arbitrary array.
 
-\cvcodeC{CvMat* cvGetMat(const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0);}
-\cvcodePy{GetMat(arr) -> cvmat }
+\cvdefC{CvMat* cvGetMat(const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0);}
+\cvdefPy{GetMat(arr) -> cvmat }
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1322,7 +1319,7 @@ If the input array is \texttt{IplImage} with planar data layout and COI set, the
 \cvCPyFunc{GetNextSparseNode} 
 Returns the next sparse matrix element
 
-\cvcodeC{CvSparseNode* cvGetNextSparseNode(CvSparseMatIterator* matIterator);}
+\cvdefC{CvSparseNode* cvGetNextSparseNode(CvSparseMatIterator* matIterator);}
 
 \begin{description}
 \cvarg{matIterator}{Sparse array iterator}
@@ -1361,8 +1358,8 @@ printf("\nTotal sum = %g\n", sum);
 \cvCPyFunc{GetOptimalDFTSize}
 Returns optimal DFT size for a given vector size.
 
-\cvcodeC{int cvGetOptimalDFTSize(int size0);}
-\cvcodePy{GetOptimalDFTSize(size0)-> int}
+\cvdefC{int cvGetOptimalDFTSize(int size0);}
+\cvdefPy{GetOptimalDFTSize(size0)-> int}
 
 \begin{description}
 \cvarg{size0}{Vector size}
@@ -1381,7 +1378,7 @@ The function returns a negative number if \texttt{size0} is too large
 \cvCPyFunc{GetRawData}
 Retrieves low-level information about the array.
 
-\cvcodeC{void cvGetRawData(const CvArr* arr, uchar** data,
+\cvdefC{void cvGetRawData(const CvArr* arr, uchar** data,
                    int* step=NULL, CvSize* roiSize=NULL);}
 
 \begin{description}
@@ -1439,10 +1436,10 @@ In the case of a sparse array the functions return 0 if the requested node does 
 \cvCPyFunc{GetRow(s)}
 Returns array row or row span.
 
-\cvcodeC{CvMat* cvGetRow(const CvArr* arr, CvMat* submat, int row);}
-\cvcodePy{GetRow(arr,row)-> submat}
-\cvcodeC{CvMat* cvGetRows(const CvArr* arr, CvMat* submat, int startRow, int endRow, int deltaRow=1);}
-\cvcodePy{GetRows(arr,startRow,endRow,deltaRow=1)-> submat}
+\cvdefC{CvMat* cvGetRow(const CvArr* arr, CvMat* submat, int row);}
+\cvdefPy{GetRow(arr,row)-> submat}
+\cvdefC{CvMat* cvGetRows(const CvArr* arr, CvMat* submat, int startRow, int endRow, int deltaRow=1);}
+\cvdefPy{GetRows(arr,startRow,endRow,deltaRow=1)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1463,8 +1460,8 @@ cvGetRow(arr, submat, row ) ~ cvGetRows(arr, submat, row, row + 1, 1);
 \cvCPyFunc{GetSize}
 Returns size of matrix or image ROI.
 
-\cvcodeC{CvSize cvGetSize(const CvArr* arr);}
-\cvcodePy{GetSize(arr)-> CvSize}
+\cvdefC{CvSize cvGetSize(const CvArr* arr);}
+\cvdefPy{GetSize(arr)-> CvSize}
 
 \begin{description}
 \cvarg{arr}{array header}
@@ -1476,8 +1473,8 @@ The function returns number of rows (CvSize::height) and number of columns (CvSi
 \cvCPyFunc{GetSubRect}
 Returns matrix header corresponding to the rectangular sub-array of input image or matrix.
 
-\cvcodeC{CvMat* cvGetSubRect(const CvArr* arr, CvMat* submat, CvRect rect);}
-\cvcodePy{GetSubRect(arr, rect) -> cvmat}
+\cvdefC{CvMat* cvGetSubRect(const CvArr* arr, CvMat* submat, CvRect rect);}
+\cvdefPy{GetSubRect(arr, rect) -> cvmat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -1496,8 +1493,8 @@ ROI is actually extracted.
 \cvCPyFunc{InRange}
 Checks that array elements lie between the elements of two other arrays.
 
-\cvcodeC{void cvInRange(const CvArr* src, const CvArr* lower, const CvArr* upper, CvArr* dst);}
-\cvcodePy{InRange(src,lower,upper,dst)-> None}
+\cvdefC{void cvInRange(const CvArr* src, const CvArr* lower, const CvArr* upper, CvArr* dst);}
+\cvdefPy{InRange(src,lower,upper,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -1529,8 +1526,8 @@ dst(I) is set to 0xff (all \texttt{1}-bits) if src(I) is within the range and 0 
 \cvCPyFunc{InRangeS}
 Checks that array elements lie between two scalars.
 
-\cvcodeC{void cvInRangeS(const CvArr* src, CvScalar lower, CvScalar upper, CvArr* dst);}
-\cvcodePy{InRangeS(src,lower,upper,dst)-> None}
+\cvdefC{void cvInRangeS(const CvArr* src, CvScalar lower, CvScalar upper, CvArr* dst);}
+\cvdefPy{InRangeS(src,lower,upper,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -1562,7 +1559,7 @@ For two-channel arrays nd so forth,
 \cvCPyFunc{IncRefData}
 Increments array data reference counter.
 
-\cvcodeC{int cvIncRefData(CvArr* arr);}
+\cvdefC{int cvIncRefData(CvArr* arr);}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -1575,7 +1572,7 @@ if the reference counter pointer is not NULL, otherwise it returns zero.
 \cvCPyFunc{InitImageHeader}
 Initializes an image header that was previously allocated.
 
-\cvcodeC{IplImage* cvInitImageHeader(\par IplImage* image,\par CvSize size,\par int depth,\par int channels,\par int origin=0,\par int align=4);}
+\cvdefC{IplImage* cvInitImageHeader(\par IplImage* image,\par CvSize size,\par int depth,\par int channels,\par int origin=0,\par int align=4);}
 
 \begin{description}
 \cvarg{image}{Image header to initialize}
@@ -1591,7 +1588,7 @@ The returned \texttt{IplImage*} points to the initialized header.
 \cvCPyFunc{InitMatHeader}
 Initializes a pre-allocated matrix header.
 
-\cvcodeC{
+\cvdefC{
 CvMat* cvInitMatHeader(\par CvMat* mat,\par int rows,\par int cols,\par int type, \par void* data=NULL,\par int step=CV\_AUTOSTEP);
 }
 
@@ -1631,7 +1628,7 @@ cvMatMulAdd(&Ma, &Mb, 0, &Mc);
 \cvCPyFunc{InitMatNDHeader}
 Initializes a pre-allocated multi-dimensional array header.
 
-\cvcodeC{CvMatND* cvInitMatNDHeader(\par CvMatND* mat,\par int dims,\par const int* sizes,\par int type,\par void* data=NULL);}
+\cvdefC{CvMatND* cvInitMatNDHeader(\par CvMatND* mat,\par int dims,\par const int* sizes,\par int type,\par void* data=NULL);}
 
 \begin{description}
 \cvarg{mat}{A pointer to the array header to be initialized}
@@ -1644,7 +1641,7 @@ Initializes a pre-allocated multi-dimensional array header.
 \cvCPyFunc{InitSparseMatIterator}
 Initializes sparse array elements iterator.
 
-\cvcodeC{CvSparseNode* cvInitSparseMatIterator(const CvSparseMat* mat,
+\cvdefC{CvSparseNode* cvInitSparseMatIterator(const CvSparseMat* mat,
                                        CvSparseMatIterator* matIterator);}
 
 \begin{description}
@@ -1661,8 +1658,8 @@ if the array is empty.
 \cvCPyFunc{InvSqrt}
 Calculates the inverse square root.
 
-\cvcodeC{float cvInvSqrt(float value);}
-\cvcodePy{InvSqrt(value)-> float}
+\cvdefC{float cvInvSqrt(float value);}
+\cvdefPy{InvSqrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -1674,8 +1671,8 @@ The function calculates the inverse square root of the argument, and normally it
 \cvCPyFunc{Invert}
 Finds the inverse or pseudo-inverse of a matrix.
 
-\cvcodeC{double cvInvert(const CvArr* src, CvArr* dst, int method=CV\_LU);}
-\cvcodePy{Invert(src,dst,method=CV\_LU)-> double}
+\cvdefC{double cvInvert(const CvArr* src, CvArr* dst, int method=CV\_LU);}
+\cvdefPy{Invert(src,dst,method=CV\_LU)-> double}
 \begin{lstlisting}
 #define cvInv cvInvert
 \end{lstlisting}
@@ -1701,8 +1698,8 @@ In the case of \texttt{SVD} methods, the function returns the inversed condition
 \cvCPyFunc{IsInf}
 Determines if the argument is Infinity.
 
-\cvcodeC{int cvIsInf(double value);}
-\cvcodePy{IsInf(value)-> int}
+\cvdefC{int cvIsInf(double value);}
+\cvdefPy{IsInf(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -1713,8 +1710,8 @@ The function returns 1 if the argument is $ \pm \infty $ (as defined by IEEE754 
 \cvCPyFunc{IsNaN}
 Determines if the argument is Not A Number.
 
-\cvcodeC{int cvIsNaN(double value);}
-\cvcodePy{IsNaN(value)-> int}
+\cvdefC{int cvIsNaN(double value);}
+\cvdefPy{IsNaN(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -1726,8 +1723,8 @@ The function returns 1 if the argument is Not A Number (as defined by IEEE754 st
 \cvCPyFunc{LUT}
 Performs a look-up table transform of an array.
 
-\cvcodeC{void cvLUT(const CvArr* src, CvArr* dst, const CvArr* lut);}
-\cvcodePy{LUT(src,dst,lut)-> None}
+\cvdefC{void cvLUT(const CvArr* src, CvArr* dst, const CvArr* lut);}
+\cvdefPy{LUT(src,dst,lut)-> None}
 
 \begin{description}
 \cvarg{src}{Source array of 8-bit elements}
@@ -1752,8 +1749,8 @@ d = \fork
 \cvCPyFunc{Log}
 Calculates the natural logarithm of every array element's absolute value.
 
-\cvcodeC{void cvLog(const CvArr* src, CvArr* dst);}
-\cvcodePy{Log(src,dst)-> None}
+\cvdefC{void cvLog(const CvArr* src, CvArr* dst);}
+\cvdefPy{Log(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -1773,8 +1770,8 @@ Where \texttt{C} is a large negative number (about -700 in the current implement
 \cvCPyFunc{Mahalonobis}
 Calculates the Mahalonobis distance between two vectors.
 
-\cvcodeC{double cvMahalanobis(\par const CvArr* vec1,\par const CvArr* vec2,\par CvArr* mat);}
-\cvcodePy{Mahalonobis(vec1,vec2,mat)-> None}
+\cvdefC{double cvMahalanobis(\par const CvArr* vec1,\par const CvArr* vec2,\par CvArr* mat);}
+\cvdefPy{Mahalonobis(vec1,vec2,mat)-> None}
 
 \begin{description}
 \cvarg{vec1}{The first 1D source vector}
@@ -1796,7 +1793,7 @@ The covariance matrix may be calculated using the \cvCPyCross{CalcCovarMatrix} f
 \cvCPyFunc{Mat}
 Initializes matrix header (lightweight variant).
 
-\cvcodeC{CvMat cvMat(\par int rows,\par int cols,\par int type,\par void* data=NULL);}
+\cvdefC{CvMat cvMat(\par int rows,\par int cols,\par int type,\par void* data=NULL);}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -1818,8 +1815,8 @@ cvInitMatHeader(&mat, rows, cols, type, data, CV\_AUTOSTEP);
 \cvCPyFunc{Max}
 Finds per-element maximum of two arrays.
 
-\cvcodeC{void cvMax(const CvArr* src1, const CvArr* src2, CvArr* dst);}
-\cvcodePy{Max(src1,src2,dst)-> None}
+\cvdefC{void cvMax(const CvArr* src1, const CvArr* src2, CvArr* dst);}
+\cvdefPy{Max(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -1839,8 +1836,8 @@ All the arrays must have a single channel, the same data type and the same size 
 \cvCPyFunc{MaxS}
 Finds per-element maximum of array and scalar.
 
-\cvcodeC{void cvMaxS(const CvArr* src, double value, CvArr* dst);}
-\cvcodePy{MaxS(src1,value,dst)-> None}
+\cvdefC{void cvMaxS(const CvArr* src, double value, CvArr* dst);}
+\cvdefPy{MaxS(src1,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -1860,14 +1857,14 @@ All the arrays must have a single channel, the same data type and the same size 
 \cvCPyFunc{Merge}
 Composes a multi-channel array from several single-channel arrays or inserts a single channel into the array.
 
-\cvcodeC{void cvMerge(const CvArr* src0, const CvArr* src1,
+\cvdefC{void cvMerge(const CvArr* src0, const CvArr* src1,
               const CvArr* src2, const CvArr* src3, CvArr* dst);}
 \ifC
 \begin{lstlisting}
 #define cvCvtPlaneToPix cvMerge
 \end{lstlisting}
 \fi
-\cvcodePy{Merge(src0,src1,src2,src3,dst)-> None}
+\cvdefPy{Merge(src0,src1,src2,src3,dst)-> None}
 
 \begin{description}
 \cvarg{src0...src3}{Input channels}
@@ -1879,8 +1876,8 @@ The function is the opposite to \cvCPyCross{Split}. If the destination array has
 \cvCPyFunc{Min}
 Finds per-element minimum of two arrays.
 
-\cvcodeC{void cvMin(const CvArr* src1, const CvArr* src2, CvArr* dst);}
-\cvcodePy{Min(src1,src2,dst)-> None}
+\cvdefC{void cvMin(const CvArr* src1, const CvArr* src2, CvArr* dst);}
+\cvdefPy{Min(src1,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -1901,9 +1898,9 @@ All the arrays must have a single channel, the same data type and the same size 
 \cvCPyFunc{MinMaxLoc}
 Finds global minimum and maximum in array or subarray.
 
-\cvcodeC{void cvMinMaxLoc(const CvArr* arr, double* minVal, double* maxVal,
+\cvdefC{void cvMinMaxLoc(const CvArr* arr, double* minVal, double* maxVal,
                   CvPoint* minLoc=NULL, CvPoint* maxLoc=NULL, const CvArr* mask=NULL);}
-\cvcodePy{MinMaxLoc(arr,mask=NULL)-> minVal,maxVal,minLoc,maxLoc}
+\cvdefPy{MinMaxLoc(arr,mask=NULL)-> minVal,maxVal,minLoc,maxLoc}
 
 \begin{description}
 \cvarg{arr}{The source array, single-channel or multi-channel with COI set}
@@ -1925,8 +1922,8 @@ will contain raw (linear) positions of the extremums.
 \cvCPyFunc{MinS}
 Finds per-element minimum of an array and a scalar.
 
-\cvcodeC{void cvMinS(const CvArr* src, double value, CvArr* dst);}
-\cvcodePy{MinS(src1,value,dst)-> None}
+\cvdefC{void cvMinS(const CvArr* src, double value, CvArr* dst);}
+\cvdefPy{MinS(src1,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -1946,10 +1943,10 @@ All the arrays must have a single channel, the same data type and the same size 
 \cvCPyFunc{MixChannels}
 Copies several channels from input arrays to certain channels of output arrays
 
-\cvcodeC{void cvMixChannels(const CvArr** src, int srcCount, \par
+\cvdefC{void cvMixChannels(const CvArr** src, int srcCount, \par
                     CvArr** dst, int dstCount, \par
                     const int* fromTo, int pairCount);}
-\cvcodePy{MixChannels(src, dst, fromTo) -> None}
+\cvdefPy{MixChannels(src, dst, fromTo) -> None}
 
 \begin{description}
 \cvarg{src}{Input arrays}
@@ -2010,8 +2007,8 @@ BGR (i.e. with R and B swapped) and separate alpha channel image:
 \cvCPyFunc{Mul}
 Calculates the per-element product of two arrays.
 
-\cvcodeC{void cvMul(const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1);}
-\cvcodePy{Mul(src1,src2,dst,scale)-> None}
+\cvdefC{void cvMul(const CvArr* src1, const CvArr* src2, CvArr* dst, double scale=1);}
+\cvdefPy{Mul(src1,src2,dst,scale)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2033,8 +2030,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{MulSpectrums}
 Performs per-element multiplication of two Fourier spectrums.
 
-\cvcodeC{void cvMulSpectrums(\par const CvArr* src1,\par const CvArr* src2,\par CvArr* dst,\par int flags);}
-\cvcodePy{MulSpectrums(src1,src2,dst,flags)-> None)}
+\cvdefC{void cvMulSpectrums(\par const CvArr* src1,\par const CvArr* src2,\par CvArr* dst,\par int flags);}
+\cvdefPy{MulSpectrums(src1,src2,dst,flags)-> None)}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2056,8 +2053,8 @@ The function, together with \cvCPyCross{DFT}, may be used to calculate convoluti
 \cvCPyFunc{MulTransposed}
 Calculates the product of an array and a transposed array.
 
-\cvcodeC{void cvMulTransposed(const CvArr* src, CvArr* dst, int order, const CvArr* delta=NULL, double scale=1.0);}
-\cvcodePy{MulTransposed(src,dst,order,delta=NULL)-> None}
+\cvdefC{void cvMulTransposed(const CvArr* src, CvArr* dst, int order, const CvArr* delta=NULL, double scale=1.0);}
+\cvdefPy{MulTransposed(src,dst,order,delta=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source matrix}
@@ -2084,8 +2081,8 @@ otherwise.
 \cvCPyFunc{Norm}
 Calculates absolute array norm, absolute difference norm, or relative difference norm.
 
-\cvcodeC{double cvNorm(const CvArr* arr1, const CvArr* arr2=NULL, int normType=CV\_L2, const CvArr* mask=NULL);}
-\cvcodePy{Norm(arr1,arr2,normType+CV\_L2,mask=NULL)-> double}
+\cvdefC{double cvNorm(const CvArr* arr1, const CvArr* arr2=NULL, int normType=CV\_L2, const CvArr* mask=NULL);}
+\cvdefPy{Norm(arr1,arr2,normType+CV\_L2,mask=NULL)-> double}
 
 \begin{description}
 \cvarg{arr1}{The first source image}
@@ -2124,8 +2121,8 @@ The function returns the calculated norm. A multiple-channel array is treated as
 \cvCPyFunc{Not}
 Performs per-element bit-wise inversion of array elements.
 
-\cvcodeC{void cvNot(const CvArr* src, CvArr* dst);}
-\cvcodePy{Not(src,dst)-> None}
+\cvdefC{void cvNot(const CvArr* src, CvArr* dst);}
+\cvdefPy{Not(src,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The source array}
@@ -2143,8 +2140,8 @@ dst(I)=~src(I)
 \cvCPyFunc{Or}
 Calculates per-element bit-wise disjunction of two arrays.
 
-\cvcodeC{void cvOr(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{Or(src1,src2,dst,mask=NULL)-> None}
+\cvdefC{void cvOr(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{Or(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2165,8 +2162,8 @@ In the case of floating-point arrays their bit representations are used for the 
 \cvCPyFunc{OrS}
 Calculates a per-element bit-wise disjunction of an array and a scalar.
 
-\cvcodeC{void cvOrS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{OrS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvOrS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{OrS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The source array}
@@ -2188,8 +2185,8 @@ Prior to the actual operation, the scalar is converted to the same type as that 
 \cvCPyFunc{PerspectiveTransform}
 Performs perspective matrix transformation of a vector array.
 
-\cvcodeC{void cvPerspectiveTransform(const CvArr* src, CvArr* dst, const CvMat* mat);}
-\cvcodePy{PerspectiveTransform(src,dst,mat)-> None}
+\cvdefC{void cvPerspectiveTransform(const CvArr* src, CvArr* dst, const CvMat* mat);}
+\cvdefPy{PerspectiveTransform(src,dst,mat)-> None}
 
 \begin{description}
 \cvarg{src}{The source three-channel floating-point array}
@@ -2215,8 +2212,8 @@ and
 \cvCPyFunc{PolarToCart}
 Calculates Cartesian coordinates of 2d vectors represented in polar form.
 
-\cvcodeC{void cvPolarToCart(\par const CvArr* magnitude,\par const CvArr* angle,\par CvArr* x,\par CvArr* y,\par int angleInDegrees=0);}
-\cvcodePy{PolarToCart(magnitude,angle=NULL,x,y,angleInDegrees)-> None}
+\cvdefC{void cvPolarToCart(\par const CvArr* magnitude,\par const CvArr* angle,\par CvArr* x,\par CvArr* y,\par int angleInDegrees=0);}
+\cvdefPy{PolarToCart(magnitude,angle=NULL,x,y,angleInDegrees)-> None}
 
 \begin{description}
 \cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed to be all 1's.}
@@ -2237,8 +2234,8 @@ y(I)=magnitude(I)*sin(angle(I))
 \cvCPyFunc{Pow}
 Raises every array element to a power.
 
-\cvcodeC{void cvPow(\par const CvArr* src,\par CvArr* dst,\par double power);}
-\cvcodePy{Pow(src,dst,power)-> None}
+\cvdefC{void cvPow(\par const CvArr* src,\par CvArr* dst,\par double power);}
+\cvdefPy{Pow(src,dst,power)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -2302,8 +2299,8 @@ All these as well as other functions accessing array elements (\cvCPyCross{Get},
 \cvCPyFunc{RNG}
 Initializes a random number generator state.
 
-\cvcodeC{CvRNG cvRNG(int64 seed=-1);}
-\cvcodePy{RNG(seed=-1LL)-> CvRNG}
+\cvdefC{CvRNG cvRNG(int64 seed=-1);}
+\cvdefPy{RNG(seed=-1LL)-> CvRNG}
 
 \begin{description}
 \cvarg{seed}{64-bit value used to initiate a random sequence}
@@ -2317,8 +2314,8 @@ current implementation a multiply-with-carry generator is used.
 \cvCPyFunc{RandArr}
 Fills an array with random numbers and updates the RNG state.
 
-\cvcodeC{void cvRandArr(\par CvRNG* rng,\par CvArr* arr,\par int distType,\par CvScalar param1,\par CvScalar param2);}
-\cvcodePy{RandArr(rng,arr,distType,param1,param2)-> None}
+\cvdefC{void cvRandArr(\par CvRNG* rng,\par CvArr* arr,\par int distType,\par CvScalar param1,\par CvScalar param2);}
+\cvdefPy{RandArr(rng,arr,distType,param1,param2)-> None}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cvCPyCross{RNG}}
@@ -2379,8 +2376,8 @@ cvReleaseMat(&values);
 \cvCPyFunc{RandInt}
 Returns a 32-bit unsigned integer and updates RNG.
 
-\cvcodeC{unsigned cvRandInt(CvRNG* rng);}
-\cvcodePy{RandInt(rng)-> unsigned}
+\cvdefC{unsigned cvRandInt(CvRNG* rng);}
+\cvdefPy{RandInt(rng)-> unsigned}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \texttt{RandInit} and, optionally, customized by \texttt{RandSetRange} (though, the latter function does not affect the discussed function outcome)}
@@ -2441,8 +2438,8 @@ practice of working with small, fixed-size matrices */
 \cvCPyFunc{RandReal}
 Returns a floating-point random number and updates RNG.
 
-\cvcodeC{double cvRandReal(CvRNG* rng);}
-\cvcodePy{RandReal(rng)-> double}
+\cvdefC{double cvRandReal(CvRNG* rng);}
+\cvdefPy{RandReal(rng)-> double}
 
 \begin{description}
 \cvarg{rng}{RNG state initialized by \cvCPyCross{RNG}}
@@ -2454,8 +2451,8 @@ The function returns a uniformly-distributed random floating-point number betwee
 \cvCPyFunc{Reduce}
 Reduces a matrix to a vector.
 
-\cvcodeC{void cvReduce(const CvArr* src, CvArr* dst, int dim = -1, int op=CV\_REDUCE\_SUM);}
-\cvcodePy{Reduce(src,dst,dim=-1,op=CV\_REDUCE\_SUM)-> None}
+\cvdefC{void cvReduce(const CvArr* src, CvArr* dst, int dim = -1, int op=CV\_REDUCE\_SUM);}
+\cvdefPy{Reduce(src,dst,dim=-1,op=CV\_REDUCE\_SUM)-> None}
 
 \begin{description}
 \cvarg{src}{The input matrix.}
@@ -2476,7 +2473,7 @@ The function reduces matrix to a vector by treating the matrix rows/columns as a
 \cvCPyFunc{ReleaseData}
 Releases array data.
 
-\cvcodeC{void cvReleaseData(CvArr* arr);}
+\cvdefC{void cvReleaseData(CvArr* arr);}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -2487,7 +2484,7 @@ The function releases the array data. In the case of \cross{CvMat} or \cross{CvM
 \cvCPyFunc{ReleaseImage}
 Deallocates the image header and the image data.
 
-\cvcodeC{void cvReleaseImage(IplImage** image);}
+\cvdefC{void cvReleaseImage(IplImage** image);}
 
 \begin{description}
 \cvarg{image}{Double pointer to the image header}
@@ -2507,7 +2504,7 @@ if(*image )
 \cvCPyFunc{ReleaseImageHeader}
 Deallocates an image header.
 
-\cvcodeC{void cvReleaseImageHeader(IplImage** image);}
+\cvdefC{void cvReleaseImageHeader(IplImage** image);}
 
 \begin{description}
 \cvarg{image}{Double pointer to the image header}
@@ -2527,7 +2524,7 @@ but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\
 \cvCPyFunc{ReleaseMat}
 Deallocates a matrix.
 
-\cvcodeC{void cvReleaseMat(CvMat** mat);}
+\cvdefC{void cvReleaseMat(CvMat** mat);}
 
 \begin{description}
 \cvarg{mat}{Double pointer to the matrix}
@@ -2546,7 +2543,7 @@ cvFree((void**)mat);
 \cvCPyFunc{ReleaseMatND}
 Deallocates a multi-dimensional array.
 
-\cvcodeC{void cvReleaseMatND(CvMatND** mat);}
+\cvdefC{void cvReleaseMatND(CvMatND** mat);}
 
 \begin{description}
 \cvarg{mat}{Double pointer to the array}
@@ -2563,7 +2560,7 @@ cvFree((void**)mat);
 \cvCPyFunc{ReleaseSparseMat}
 Deallocates sparse array.
 
-\cvcodeC{void cvReleaseSparseMat(CvSparseMat** mat);}
+\cvdefC{void cvReleaseSparseMat(CvSparseMat** mat);}
 
 \begin{description}
 \cvarg{mat}{Double pointer to the array}
@@ -2576,8 +2573,8 @@ The function releases the sparse array and clears the array pointer upon exit.
 \cvCPyFunc{Repeat}
 Fill the destination array with repeated copies of the source array.
 
-\cvcodeC{void cvRepeat(const CvArr* src, CvArr* dst);}
-\cvcodePy{Repeat(src,dst)-> None}
+\cvdefC{void cvRepeat(const CvArr* src, CvArr* dst);}
+\cvdefPy{Repeat(src,dst)-> None}
 
 \begin{description}
 \cvarg{src}{Source array, image or matrix}
@@ -2595,8 +2592,8 @@ So the destination array may be as larger as well as smaller than the source arr
 \cvCPyFunc{ResetImageROI}
 Resets the image ROI to include the entire image and releases the ROI structure.
 
-\cvcodeC{void cvResetImageROI(IplImage* image);}
-\cvcodePy{ResetImageROI(image)-> None}
+\cvdefC{void cvResetImageROI(IplImage* image);}
+\cvdefPy{ResetImageROI(image)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -2613,8 +2610,8 @@ cvSetImageCOI(image, 0);
 \cvCPyFunc{Reshape}
 Changes shape of matrix/image without copying data.
 
-\cvcodeC{CvMat* cvReshape(const CvArr* arr, CvMat* header, int newCn, int newRows=0);}
-\cvcodePy{Reshape(arr, newCn, newRows=0) -> cvmat}
+\cvdefC{CvMat* cvReshape(const CvArr* arr, CvMat* header, int newCn, int newRows=0);}
+\cvdefPy{Reshape(arr, newCn, newRows=0) -> cvmat}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -2650,10 +2647,10 @@ row = cvReshape(mat, &row_header, 0, 1);
 \cvCPyFunc{ReshapeMatND}
 Changes the shape of a multi-dimensional array without copying the data.
 
-\cvcodeC{CvArr* cvReshapeMatND(const CvArr* arr,
+\cvdefC{CvArr* cvReshapeMatND(const CvArr* arr,
                        int sizeofHeader, CvArr* header,
                        int newCn, int newDims, int* newSizes);}
-\cvcodePy{ReshapeMatND(arr, newCn, newDims) -> cvmat}
+\cvdefPy{ReshapeMatND(arr, newCn, newDims) -> cvmat}
 
 \ifC
 \begin{lstlisting}
@@ -2707,12 +2704,12 @@ row = cvReshapeND(mat, &row_header, 0, 1, 0);
 \fi
 Converts a floating-point number to an integer.
 
-\cvcodeC{
+\cvdefC{
 int cvRound(double value);
 int cvFloor(double value);
 int cvCeil(double value);
 
-}\cvcodePy{Round, Floor, Ceil(value)-> int}
+}\cvdefPy{Round, Floor, Ceil(value)-> int}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -2733,8 +2730,8 @@ are not handled.
 \cvCPyFunc{ScaleAdd}
 Calculates the sum of a scaled array and another array.
 
-\cvcodeC{void cvScaleAdd(const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* dst);}
-\cvcodePy{ScaleAdd(src1,sclae,src2,dst)-> None}
+\cvdefC{void cvScaleAdd(const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* dst);}
+\cvdefPy{ScaleAdd(src1,sclae,src2,dst)-> None}
 \begin{lstlisting}
 #define cvMulAddS cvScaleAdd
 \end{lstlisting}
@@ -2757,8 +2754,8 @@ All array parameters should have the same type and the same size.
 \cvCPyFunc{Set}
 Sets every element of an array to a given value.
 
-\cvcodeC{void cvSet(CvArr* arr, CvScalar value, const CvArr* mask=NULL);}
-\cvcodePy{Set(arr,value,msk=NULL)-> None}
+\cvdefC{void cvSet(CvArr* arr, CvScalar value, const CvArr* mask=NULL);}
+\cvdefPy{Set(arr,value,msk=NULL)-> None}
 
 \begin{description}
 \cvarg{arr}{The destination array}
@@ -2800,7 +2797,7 @@ The functions assign the new value to a particular array element. In the case of
 \cvCPyFunc{SetData}
 Assigns user data to the array header.
 
-\cvcodeC{void cvSetData(CvArr* arr, void* data, int step);}
+\cvdefC{void cvSetData(CvArr* arr, void* data, int step);}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -2814,8 +2811,8 @@ The function assigns user data to the array header. Header should be initialized
 \cvCPyFunc{SetIdentity}
 Initializes a scaled identity matrix.
 
-\cvcodeC{void cvSetIdentity(CvArr* mat, CvScalar value=cvRealScalar(1));}
-\cvcodePy{SetIdentity(mat,value=cvRealScalar(1))-> None}
+\cvdefC{void cvSetIdentity(CvArr* mat, CvScalar value=cvRealScalar(1));}
+\cvdefPy{SetIdentity(mat,value=cvRealScalar(1))-> None}
 
 \begin{description}
 \cvarg{arr}{The matrix to initialize (not necesserily square)}
@@ -2831,8 +2828,8 @@ The function initializes a scaled identity matrix:
 \cvCPyFunc{SetImageCOI}
 Sets the channel of interest in an IplImage.
 
-\cvcodeC{void cvSetImageCOI(\par IplImage* image,\par int coi);}
-\cvcodePy{SetImageCOI(image, coi)-> None}
+\cvdefC{void cvSetImageCOI(\par IplImage* image,\par int coi);}
+\cvdefPy{SetImageCOI(image, coi)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -2849,8 +2846,8 @@ or \cvCPyCross{Merge}) if needed.
 \cvCPyFunc{SetImageROI}
 Sets an image Region Of Interest (ROI) for a given rectangle.
 
-\cvcodeC{void cvSetImageROI(\par IplImage* image,\par CvRect rect);}
-\cvcodePy{SetImageROI(image, rect)-> None}
+\cvdefC{void cvSetImageROI(\par IplImage* image,\par CvRect rect);}
+\cvdefPy{SetImageROI(image, rect)-> None}
 
 \begin{description}
 \cvarg{image}{A pointer to the image header}
@@ -2893,8 +2890,8 @@ In the case of a sparse array the functions create the node if it does not yet e
 \cvCPyFunc{SetZero}
 Clears the array.
 
-\cvcodeC{void cvSetZero(CvArr* arr);}
-\cvcodePy{SetZero(arr)-> None}
+\cvdefC{void cvSetZero(CvArr* arr);}
+\cvdefPy{SetZero(arr)-> None}
 
 \ifC
 \begin{lstlisting}
@@ -2912,8 +2909,8 @@ In the case of sparse arrays all the elements are removed.
 \cvCPyFunc{Solve}
 Solves a linear system or least-squares problem.
 
-\cvcodeC{int cvSolve(const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV\_LU);}
-\cvcodePy{Solve(A,B,X,method=CV\_LU)-> None}
+\cvdefC{int cvSolve(const CvArr* src1, const CvArr* src2, CvArr* dst, int method=CV\_LU);}
+\cvdefPy{Solve(A,B,X,method=CV\_LU)-> None}
 
 \begin{description}
 \cvarg{A}{The source matrix}
@@ -2938,8 +2935,8 @@ If \texttt{CV\_LU} method is used, the function returns 1 if \texttt{src1} is no
 \cvCPyFunc{SolveCubic}
 Finds the real roots of a cubic equation.
 
-\cvcodeC{void cvSolveCubic(const CvArr* coeffs, CvArr* roots);}
-\cvcodePy{SolveCubic(coeffs,roots)-> None}
+\cvdefC{void cvSolveCubic(const CvArr* coeffs, CvArr* roots);}
+\cvdefPy{SolveCubic(coeffs,roots)-> None}
 
 \begin{description}
 \cvarg{coeffs}{The equation coefficients, an array of 3 or 4 elements}
@@ -2967,9 +2964,9 @@ only one root.
 \cvCPyFunc{Split}
 Divides multi-channel array into several single-channel arrays or extracts a single channel from the array.
 
-\cvcodeC{void cvSplit(const CvArr* src, CvArr* dst0, CvArr* dst1,
+\cvdefC{void cvSplit(const CvArr* src, CvArr* dst0, CvArr* dst1,
               CvArr* dst2, CvArr* dst3);}
-\cvcodePy{Split(src,dst0,dst1,dst2,dst3)-> None}
+\cvdefPy{Split(src,dst0,dst1,dst2,dst3)-> None}
 
 \begin{lstlisting}
 #define cvCvtPixToPlane cvSplit
@@ -2994,8 +2991,8 @@ channel from the image.
 \cvCPyFunc{Sqrt}
 Calculates the square root.
 
-\cvcodeC{float cvSqrt(float value);}
-\cvcodePy{Sqrt(value)-> float}
+\cvdefC{float cvSqrt(float value);}
+\cvdefPy{Sqrt(value)-> float}
 
 \begin{description}
 \cvarg{value}{The input floating-point value}
@@ -3007,8 +3004,8 @@ The function calculates the square root of the argument. If the argument is nega
 \cvCPyFunc{Sub}
 Computes the per-element difference between two arrays.
 
-\cvcodeC{void cvSub(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{Sub(src1,src2,dst,mask=NULL)-> None}
+\cvdefC{void cvSub(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{Sub(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -3030,8 +3027,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{SubRS}
 Computes the difference between a scalar and an array.
 
-\cvcodeC{void cvSubRS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{SubRS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvSubRS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{SubRS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -3052,8 +3049,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{SubS}
 Computes the difference between an array and a scalar.
 
-\cvcodeC{void cvSubS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{SubS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvSubS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{SubS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3075,8 +3072,8 @@ For types that have limited range this operation is saturating.
 \cvCPyFunc{Sum}
 Adds up array elements.
 
-\cvcodeC{CvScalar cvSum(const CvArr* arr);}
-\cvcodePy{Sum(arr)-> CvScalar}
+\cvdefC{CvScalar cvSum(const CvArr* arr);}
+\cvdefPy{Sum(arr)-> CvScalar}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -3093,9 +3090,9 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 \cvCPyFunc{SVBkSb}
 Performs singular value back substitution.
 
-\cvcodeC{
+\cvdefC{
 void  cvSVBkSb(\par const CvArr* W,\par const CvArr* U,\par const CvArr* V,\par const CvArr* B,\par CvArr* X,\par int flags);}
-\cvcodePy{SVBkSb(W,U,V,B,X,flags)-> None}
+\cvdefPy{SVBkSb(W,U,V,B,X,flags)-> None}
 
 \begin{description}
 \cvarg{W}{Matrix or vector of singular values}
@@ -3131,8 +3128,8 @@ the high-level counterparts (inv and solve).
 \cvCPyFunc{SVD}
 Performs singular value decomposition of a real floating-point matrix.
 
-\cvcodeC{void cvSVD(\par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0);}
-\cvcodePy{SVD(A,flags=0)-> W,U,V}
+\cvdefC{void cvSVD(\par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0);}
+\cvdefPy{SVD(A,flags=0)-> W,U,V}
 
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
@@ -3178,8 +3175,8 @@ An SVD algorithm is numerically robust and its typical applications include:
 \cvCPyFunc{Trace}
 Returns the trace of a matrix.
 
-\cvcodeC{CvScalar cvTrace(const CvArr* mat);}
-\cvcodePy{Trace(mat)-> CvScalar}
+\cvdefC{CvScalar cvTrace(const CvArr* mat);}
+\cvdefPy{Trace(mat)-> CvScalar}
 
 \begin{description}
 \cvarg{mat}{The source matrix}
@@ -3194,8 +3191,8 @@ The function returns the sum of the diagonal elements of the matrix \texttt{src1
 
 Performs matrix transformation of every array element.
 
-\cvcodeC{void cvTransform(const CvArr* src, CvArr* dst, const CvMat* transmat, const CvMat* shiftvec=NULL);}
-\cvcodePy{Transform(src,dst,transmat,shiftvec=NULL)-> None}
+\cvdefC{void cvTransform(const CvArr* src, CvArr* dst, const CvMat* transmat, const CvMat* shiftvec=NULL);}
+\cvdefPy{Transform(src,dst,transmat,shiftvec=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -3230,8 +3227,8 @@ channels and so forth.
 \cvCPyFunc{Transpose}
 Transposes a matrix.
 
-\cvcodeC{void cvTranspose(const CvArr* src, CvArr* dst);}
-\cvcodePy{Transpose(src,dst)-> None}
+\cvdefC{void cvTranspose(const CvArr* src, CvArr* dst);}
+\cvdefPy{Transpose(src,dst)-> None}
 
 \begin{lstlisting}
 #define cvT cvTranspose
@@ -3253,8 +3250,8 @@ in \cvCPyCross{XorS} for an example.
 \cvCPyFunc{Xor}
 Performs per-element bit-wise "exclusive or" operation on two arrays.
 
-\cvcodeC{void cvXor(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{Xor(src1,src2,dst,mask=NULL)-> None}
+\cvdefC{void cvXor(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{Xor(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -3274,8 +3271,8 @@ In the case of floating-point arrays their bit representations are used for the 
 \cvCPyFunc{XorS}
 Performs per-element bit-wise "exclusive or" operation on an array and a scalar.
 
-\cvcodeC{void cvXorS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvcodePy{XorS(src1,value,dst,mask=NULL)-> None}
+\cvdefC{void cvXorS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
+\cvdefPy{XorS(src1,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3315,8 +3312,8 @@ The code should print:
 \cvCPyFunc{mGet}
 Returns the particular element of single-channel floating-point matrix.
 
-\cvcodeC{double cvmGet(const CvMat* mat, int row, int col);}
-\cvcodePy{mGet(mat,row,col)-> double}
+\cvdefC{double cvmGet(const CvMat* mat, int row, int col);}
+\cvdefPy{mGet(mat,row,col)-> double}
 
 \begin{description}
 \cvarg{mat}{Input matrix}
@@ -3332,8 +3329,8 @@ and it checks for the row and column ranges only in debug mode.
 \cvCPyFunc{mSet}
 Returns a specific element of a single-channel floating-point matrix.
 
-\cvcodeC{void cvmSet(CvMat* mat, int row, int col, double value);}
-\cvcodePy{mSet(mat,row,col,value)-> None}
+\cvdefC{void cvmSet(CvMat* mat, int row, int col, double value);}
+\cvdefPy{mSet(mat,row,col,value)-> None}
 
 \begin{description}
 \cvarg{mat}{The matrix}
@@ -3361,10 +3358,9 @@ and it checks for the row and column ranges only in debug mode.
 \cvCppFunc{abs}
 Computes absolute value of each matrix element
 
-\begin{lstlisting}
-MatExpr<...> abs(const Mat& src);
-MatExpr<...> abs(const MatExpr<...>& src);
-\end{lstlisting}
+\cvdefCpp{MatExpr<...> abs(const Mat\& src);\newline
+MatExpr<...> abs(const MatExpr<...>\& src);}
+
 \begin{description}
 \cvarg{src}{matrix or matrix expression}
 \end{description}
@@ -3385,12 +3381,11 @@ See also: \cross{Matrix Expressions}, \cvCppCross{absdiff}, \hyperref[cppfunc.sa
 \cvCppFunc{absdiff}
 Computes per-element absolute difference between 2 arrays or between array and a scalar.
 
-\begin{lstlisting}
-void absdiff(const Mat& src1, const Mat& src2, Mat& dst);
-void absdiff(const Mat& src1, const Scalar& sc, Mat& dst);
-void absdiff(const MatND& src1, const MatND& src2, MatND& dst);
-void absdiff(const MatND& src1, const Scalar& sc, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void absdiff(const Mat\& src1, const Mat\& src2, Mat\& dst);\newline
+void absdiff(const Mat\& src1, const Scalar\& sc, Mat\& dst);\newline
+void absdiff(const MatND\& src1, const MatND\& src2, MatND\& dst);\newline
+void absdiff(const MatND\& src1, const Scalar\& sc, MatND\& dst);}
+
 \begin{description}
 \cvarg{src1}{The first input array}
 \cvarg{src2}{The second input array; Must be the same size and same type as \texttt{src1}}
@@ -3413,14 +3408,13 @@ See also: \cvCppCross{abs}, \hyperref[cppfunc.saturatecast]{saturate\_cast}
 \cvCppFunc{add}
 Computes the per-element sum of two arrays or an array and a scalar.
 
-\begin{lstlisting}
-void add(const Mat& src1, const Mat& src2, Mat& dst);
-void add(const Mat& src1, const Mat& src2, Mat& dst, const Mat& mask);
-void add(const Mat& src1, const Scalar& sc, Mat& dst, const Mat& mask=Mat());
-void add(const MatND& src1, const MatND& src2, MatND& dst);
-void add(const MatND& src1, const MatND& src2, MatND& dst, const MatND& mask);
-void add(const MatND& src1, const Scalar& sc, MatND& dst, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void add(const Mat\& src1, const Mat\& src2, Mat\& dst);\newline
+void add(const Mat\& src1, const Mat\& src2, \par Mat\& dst, const Mat\& mask);\newline
+void add(const Mat\& src1, const Scalar\& sc, \par Mat\& dst, const Mat\& mask=Mat());\newline
+void add(const MatND\& src1, const MatND\& src2, MatND\& dst);\newline
+void add(const MatND\& src1, const MatND\& src2, \par MatND\& dst, const MatND\& mask);\newline
+void add(const MatND\& src1, const Scalar\& sc, \par MatND\& dst, const MatND\& mask=MatND());}
+
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array. It must have the same size and same type as \texttt{src1}}
@@ -3453,12 +3447,12 @@ See also: \cvCppCross{subtract}, \cvCppCross{addWeighted}, \cvCppCross{scaleAdd}
 \cvCppFunc{addWeighted}
 Computes the weighted sum of two arrays.
 
-\begin{lstlisting}
-void addWeighted(const Mat& src1, double alpha, const Mat& src2,
-                 double beta, double gamma, Mat& dst);
-void addWeighted(const MatND& src1, double alpha, const MatND& src2,
-                 double beta, double gamma, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void addWeighted(const Mat\& src1, double alpha, const Mat\& src2,\par
+                 double beta, double gamma, Mat\& dst);\newline
+void addWeighted(const MatND\& src1, double alpha, const MatND\& src2,\par
+                 double beta, double gamma, MatND\& dst);
+}
+
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{alpha}{Weight for the first array elements}
@@ -3485,12 +3479,11 @@ See also: \cvCppCross{add}, \cvCppCross{subtract}, \cvCppCross{scaleAdd}, \cvCpp
 \subsection{cv::bitwise\_and}\label{cppfunc.bitwise.and}
 Calculates per-element bit-wise conjunction of two arrays and an array and a scalar.
 
-\begin{lstlisting}
-void bitwise_and(const Mat& src1, const Mat& src2, Mat& dst, const Mat& mask=Mat());
-void bitwise_and(const Mat& src1, const Scalar& sc, Mat& dst, const Mat& mask=Mat());
-void bitwise_and(const MatND& src1, const MatND& src2, MatND& dst, const MatND& mask=MatND());
-void bitwise_and(const MatND& src1, const Scalar& sc, MatND& dst, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void bitwise\_and(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_and(const Mat\& src1, const Scalar\& sc,\par  Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_and(const MatND\& src1, const MatND\& src2,\par  MatND\& dst, const MatND\& mask=MatND());\newline
+void bitwise\_and(const MatND\& src1, const Scalar\& sc,\par  MatND\& dst, const MatND\& mask=MatND());}
+
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array. It must have the same size and same type as \texttt{src1}}
@@ -3515,10 +3508,8 @@ See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwis
 \subsection{cv::bitwise\_not}\label{cppfunc.bitwise.not}
 Inverts every bit of array
 
-\begin{lstlisting}
-void bitwise_not(const Mat& src, Mat& dst);
-void bitwise_not(const MatND& src, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void bitwise\_not(const Mat\& src, Mat\& dst);\newline
+void bitwise\_not(const MatND\& src, MatND\& dst);}
 \begin{description}
 \cvarg{src1}{The source array}
 \cvarg{dst}{The destination array; it is reallocated to be of the same size and
@@ -3538,12 +3529,10 @@ See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwis
 \subsection{cv::bitwise\_or}\label{cppfunc.bitwise.or}
 Calculates per-element bit-wise disjunction of two arrays and an array and a scalar.
 
-\begin{lstlisting}
-void bitwise_or(const Mat& src1, const Mat& src2, Mat& dst, const Mat& mask=Mat());
-void bitwise_or(const Mat& src1, const Scalar& s, Mat& dst, const Mat& mask=Mat());
-void bitwise_or(const MatND& src1, const MatND& src2, MatND& dst, const MatND& mask=MatND());
-void bitwise_or(const MatND& src1, const Scalar& s, MatND& dst, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void bitwise\_or(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_or(const Mat\& src1, const Scalar\& sc,\par  Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_or(const MatND\& src1, const MatND\& src2,\par  MatND\& dst, const MatND\& mask=MatND());\newline
+void bitwise\_or(const MatND\& src1, const Scalar\& sc,\par  MatND\& dst, const MatND\& mask=MatND());}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array. It must have the same size and same type as \texttt{src1}}
@@ -3569,12 +3558,10 @@ See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwis
 \subsection{cv::bitwise\_xor}\label{cppfunc.bitwise.xor}
 Calculates per-element bit-wise "exclusive or" operation on two arrays and an array and a scalar.
 
-\begin{lstlisting}
-void bitwise_xor(const Mat& src1, const Mat& src2, Mat& dst, const Mat& mask=Mat());
-void bitwise_xor(const Mat& src1, const Scalar& s, Mat& dst, const Mat& mask=Mat());
-void bitwise_xor(const MatND& src1, const MatND& src2, MatND& dst, const MatND& mask=MatND());
-void bitwise_xor(const MatND& src1, const Scalar& s, MatND& dst, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void bitwise\_xor(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_xor(const Mat\& src1, const Scalar\& sc,\par  Mat\& dst, const Mat\& mask=Mat());\newline
+void bitwise\_xor(const MatND\& src1, const MatND\& src2,\par  MatND\& dst, const MatND\& mask=MatND());\newline
+void bitwise\_xor(const MatND\& src1, const Scalar\& sc,\par  MatND\& dst, const MatND\& mask=MatND());}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array. It must have the same size and same type as \texttt{src1}}
@@ -3601,13 +3588,11 @@ See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwis
 \cvCppFunc{calcCovarMatrix}
 Calculates covariation matrix of a set of vectors
 
-\begin{lstlisting}
-void calcCovarMatrix( const Mat* samples, int nsamples,
-                      Mat& covar, Mat& mean,
-                      int flags, int ctype=CV_64F);
-void calcCovarMatrix( const Mat& samples, Mat& covar, Mat& mean,
-                      int flags, int ctype=CV_64F);
-\end{lstlisting}
+\cvdefCpp{void calcCovarMatrix( const Mat* samples, int nsamples,\par
+                      Mat\& covar, Mat\& mean,\par
+                      int flags, int ctype=CV\_64F);\newline
+void calcCovarMatrix( const Mat\& samples, Mat\& covar, Mat\& mean,\par
+                      int flags, int ctype=CV\_64F);}
 \begin{description}
 \cvarg{samples}{The samples, stored as separate matrices, or as rows or columns of a single matrix}
 \cvarg{nsamples}{The number of samples when they are stored separately}
@@ -3651,11 +3636,9 @@ See also: \cvCppCross{PCA}, \cvCppCross{mulTransposed}, \cvCppCross{Mahalanobis}
 \cvCppFunc{cartToPolar}
 Calculates the magnitude and angle of 2d vectors.
 
-\begin{lstlisting}
-void cartToPolar(const Mat& x, const Mat& y,
-                 Mat& magnitude, Mat& angle,
-                 bool angleInDegrees=false);
-\end{lstlisting}
+\cvdefCpp{void cartToPolar(const Mat\& x, const Mat\& y,\par
+                 Mat\& magnitude, Mat\& angle,\par
+                 bool angleInDegrees=false);}
 \begin{description}
 \cvarg{x}{The array of x-coordinates; must be single-precision or double-precision floating-point array}
 \cvarg{y}{The array of y-coordinates; it must have the same size and same type as \texttt{x}}
@@ -3679,12 +3662,10 @@ The angles are calculated with $\sim\,0.3^\circ$ accuracy. For the (0,0) point, 
 \cvCppFunc{checkRange}
 Checks every element of an input array for invalid values.
 
-\begin{lstlisting}
-bool checkRange(const Mat& src, bool quiet=true, Point* pos=0,
-                double minVal=-DBL_MAX, double maxVal=DBL_MAX);
-bool checkRange(const MatND& src, bool quiet=true, int* pos=0,
-                double minVal=-DBL_MAX, double maxVal=DBL_MAX);
-\end{lstlisting}
+\cvdefCpp{bool checkRange(const Mat\& src, bool quiet=true, Point* pos=0,\par
+                double minVal=-DBL\_MAX, double maxVal=DBL\_MAX);\newline
+bool checkRange(const MatND\& src, bool quiet=true, int* pos=0,\par
+                double minVal=-DBL\_MAX, double maxVal=DBL\_MAX);}
 \begin{description}
 \cvarg{src}{The array to check}
 \cvarg{quiet}{The flag indicating whether the functions quietly return false when the array elements are out of range, or they throw an exception.}
@@ -3702,12 +3683,10 @@ If some values are out of range, position of the first outlier is stored in \tex
 \cvCppFunc{compare}
 Performs per-element comparison of two arrays or an array and scalar value.
 
-\begin{lstlisting}
-void compare(const Mat& src1, const Mat& src2, Mat& dst, int cmpop);
-void compare(const Mat& src1, double value, Mat& dst, int cmpop);
-void compare(const MatND& src1, const MatND& src2, MatND& dst, int cmpop);
-void compare(const MatND& src1, double value, MatND& dst, int cmpop);
-\end{lstlisting}
+\cvdefCpp{void compare(const Mat\& src1, const Mat\& src2, Mat\& dst, int cmpop);\newline
+void compare(const Mat\& src1, double value, \par Mat\& dst, int cmpop);\newline
+void compare(const MatND\& src1, const MatND\& src2, \par MatND\& dst, int cmpop);\newline
+void compare(const MatND\& src1, double value, \par MatND\& dst, int cmpop);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array; must have the same size and same type as \texttt{src1}}
@@ -3744,9 +3723,7 @@ See also: \cvCppCross{checkRange}, \cvCppCross{min}, \cvCppCross{max}, \cvCppCro
 \cvCppFunc{completeSymm}
 Copies the lower or the upper half of a square matrix to another half.
 
-\begin{lstlisting}
-void completeSymm(Mat& mtx, bool lowerToUpper=false);
-\end{lstlisting}
+\cvdefCpp{void completeSymm(Mat\& mtx, bool lowerToUpper=false);}
 \begin{description}
 \cvarg{mtx}{Input-output floating-point square matrix}
 \cvarg{lowerToUpper}{If true, the lower half is copied to the upper half, otherwise the upper half is copied to the lower half}
@@ -3764,9 +3741,7 @@ See also: \cvCppCross{flip}, \cvCppCross{transpose}
 \cvCppFunc{convertScaleAbs}
 Scales, computes absolute values and converts the result to 8-bit.
 
-\begin{lstlisting}
-void convertScaleAbs(const Mat& src, Mat& dst, double alpha=1, double beta=0);
-\end{lstlisting}
+\cvdefCpp{void convertScaleAbs(const Mat\& src, Mat\& dst, double alpha=1, double beta=0);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array}
@@ -3793,10 +3768,8 @@ See also: \cvCppCross{Mat::convertTo}, \cvCppCross{abs}
 \cvCppFunc{countNonZero}
 Counts non-zero array elements.
 
-\begin{lstlisting}
-int countNonZero( const Mat& mtx );
-int countNonZero( const MatND& mtx );
-\end{lstlisting}
+\cvdefCpp{int countNonZero( const Mat\& mtx );\newline
+int countNonZero( const MatND\& mtx );}
 \begin{description}
 \cvarg{mtx}Single-channel array
 \end{description}
@@ -3810,9 +3783,7 @@ See also: \cvCppCross{mean}, \cvCppCross{meanStdDev}, \cvCppCross{norm}, \cvCppC
 \cvCppFunc{cubeRoot}
 Computes cube root of the argument
 
-\begin{lstlisting}
-float cubeRoot(float val);
-\end{lstlisting}
+\cvdefCpp{float cubeRoot(float val);}
 \begin{description}
 \cvarg{val}The function argument
 \end{description}
@@ -3822,11 +3793,9 @@ Negative arguments are handled correctly, \emph{NaN} and $\pm\infty$ are not han
 The accuracy approaches the maximum possible accuracy for single-precision data.
 
 \cvCppFunc{cvarrToMat}
-Converts \cross{CvMat}, \cross{IplImage} or \cross{CvMatND} to \cvCppCross{Mat}.
+Converts CvMat, IplImage or CvMatND to cv::Mat.
 
-\begin{lstlisting}
-Mat cvarrToMat(const CvArr* src, bool copyData=false, bool allowND=true, int coiMode=0);
-\end{lstlisting}
+\cvdefCpp{Mat cvarrToMat(const CvArr* src, bool copyData=false, bool allowND=true, int coiMode=0);}
 \begin{description}
 \cvarg{src}{The source \texttt{CvMat}, \texttt{IplImage} or \texttt{CvMatND}}
 \cvarg{copyData}{When it is false (default value), no data is copied, only the new header is created.
@@ -3871,9 +3840,7 @@ See also: \cvCppCross{cvGetImage}, \cvCppCross{cvGetMat}, \cvCppCross{cvGetMatND
 \cvCppFunc{dct}
 Performs a forward or inverse discrete cosine transform of 1D or 2D array
 
-\begin{lstlisting}
-void dct(const Mat& src, Mat& dst, int flags=0);
-\end{lstlisting}
+\cvdefCpp{void dct(const Mat\& src, Mat\& dst, int flags=0);}
 \begin{description}
 \cvarg{src}{The source floating-point array}
 \cvarg{dst}{The destination array; will have the same size and same type as \texttt{src}}
@@ -3924,9 +3891,7 @@ See also: \cvCppCross{dft}, \cvCppCross{getOptimalDFTSize}, \cvCppCross{idct}
 \cvCppFunc{dft}
 Performs a forward or inverse Discrete Fourier transform of 1D or 2D floating-point array.
 
-\begin{lstlisting}
-void dft(const Mat& src, Mat& dst, int flags=0, int nonzeroRows=0);
-\end{lstlisting}
+\cvdefCpp{void dft(const Mat\& src, Mat\& dst, int flags=0, int nonzeroRows=0);}
 \begin{description}
 \cvarg{src}{The source array, real or complex}
 \cvarg{dst}{The destination array, which size and type depends on the \texttt{flags}}
@@ -4066,12 +4031,10 @@ See also: \cvCppCross{dct}, \cvCppCross{getOptimalDFTSize}, \cvCppCross{mulSpect
 
 Performs per-element division of two arrays or a scalar by an array.
 
-\begin{lstlisting}
-void divide(const Mat& src1, const Mat& src2, Mat& dst, double scale=1);
-void divide(double scale, const Mat& src2, Mat& dst);
-void divide(const MatND& src1, const MatND& src2, MatND& dst, double scale=1);
-void divide(double scale, const MatND& src2, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void divide(const Mat\& src1, const Mat\& src2, \par Mat\& dst, double scale=1);\newline
+void divide(double scale, const Mat\& src2, Mat\& dst);\newline
+void divide(const MatND\& src1, const MatND\& src2, \par MatND\& dst, double scale=1);\newline
+void divide(double scale, const MatND\& src2, MatND\& dst);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array; should have the same size and same type as \texttt{src1}}
@@ -4093,9 +4056,7 @@ See also: \cvCppCross{multiply}, \cvCppCross{add}, \cvCppCross{subtract}, \cross
 
 Returns determinant of a square floating-point matrix.
 
-\begin{lstlisting}
-double determinant(const Mat& mtx);
-\end{lstlisting}
+\cvdefCpp{double determinant(const Mat\& mtx);}
 \begin{description}
 \cvarg{mtx}{The input matrix; must have \texttt{CV\_32FC1} or \texttt{CV\_64FC1} type and square size}
 \end{description}
@@ -4110,11 +4071,9 @@ See also: \cvCppCross{SVD}, \cvCppCross{trace}, \cvCppCross{invert}, \cvCppCross
 \cvCppFunc{eigen}
 Computes eigenvalues and eigenvectors of a symmetric matrix.
 
-\begin{lstlisting}
-bool eigen(const Mat& src, Mat& eigenvalues, int lowindex, int highindex);
-bool eigen(const Mat& src, Mat& eigenvalues, Mat& eigenvectors, int lowindex,
-int highindex);
-\end{lstlisting}
+\cvdefCpp{bool eigen(const Mat\& src, Mat\& eigenvalues, \par int lowindex=-1, int highindex=-1);\newline
+bool eigen(const Mat\& src, Mat\& eigenvalues, \par Mat\& eigenvectors, int lowindex=-1,\par
+int highindex=-1);}
 \begin{description}
 \cvarg{src}{The input matrix; must have \texttt{CV\_32FC1} or \texttt{CV\_64FC1} type, square size and be symmetric: $\texttt{src}^T=\texttt{src}$}
 \cvarg{eigenvalues}{The output vector of eigenvalues of the same type as \texttt{src}; The eigenvalues are stored in the descending order.}
@@ -4144,10 +4103,8 @@ See also: \cvCppCross{SVD}, \cvCppCross{completeSymm}, \cvCppCross{PCA}
 \cvCppFunc{exp}
 Calculates the exponent of every array element.
 
-\begin{lstlisting}
-void exp(const Mat& src, Mat& dst);
-void exp(const MatND& src, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void exp(const Mat\& src, Mat\& dst);\newline
+void exp(const MatND\& src, MatND\& dst);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array; will have the same size and same type as \texttt{src}}
@@ -4167,9 +4124,7 @@ See also: \cvCppCross{log}, \cvCppCross{cartToPolar}, \cvCppCross{polarToCart}, 
 
 Extract the selected image channel
 
-\begin{lstlisting}
-void extractImageCOI(const CvArr* src, Mat& dst, int coi=-1);
-\end{lstlisting}
+\cvdefCpp{void extractImageCOI(const CvArr* src, Mat\& dst, int coi=-1);}
 \begin{description}
 \cvarg{src}{The source array. It should be a pointer to \cross{CvMat} or \cross{IplImage}}
 \cvarg{dst}{The destination array; will have single-channel, and the same size and the same depth as \texttt{src}}
@@ -4187,9 +4142,7 @@ See also: \cvCppCross{mixChannels}, \cvCppCross{split}, \cvCppCross{merge}, \cvC
 \cvCppFunc{fastAtan2}
 Calculates the angle of a 2D vector in degrees
 
-\begin{lstlisting}
-float fastAtan2(float y, float x);
-\end{lstlisting}
+\cvdefCpp{float fastAtan2(float y, float x);}
 \begin{description}
 \cvarg{x}{x-coordinate of the vector}
 \cvarg{y}{y-coordinate of the vector}
@@ -4201,9 +4154,7 @@ measured in degrees and varies from $0^\circ$ to $360^\circ$. The accuracy is ab
 \cvCppFunc{flip}
 Flips a 2D array around vertical, horizontal or both axes.
 
-\begin{lstlisting}
-void flip(const Mat& src, Mat& dst, int flipCode);
-\end{lstlisting}
+\cvdefCpp{void flip(const Mat\& src, Mat\& dst, int flipCode);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array; will have the same size and same type as \texttt{src}}
@@ -4233,10 +4184,8 @@ See also: \cvCppCross{transpose}, \cvCppCross{repeat}, \cvCppCross{completeSymm}
 \cvCppFunc{gemm}
 Performs generalized matrix multiplication.
 
-\begin{lstlisting}
-void gemm(const Mat& src1, const Mat& src2, double alpha,
-          const Mat& src3, double beta, Mat& dst, int flags=0);
-\end{lstlisting}
+\cvdefCpp{void gemm(const Mat\& src1, const Mat\& src2, double alpha,\par
+          const Mat\& src3, double beta, Mat\& dst, int flags=0);}
 \begin{description}
 \cvarg{src1}{The first multiplied input matrix; should have \texttt{CV\_32FC1}, \texttt{CV\_64FC1}, \texttt{CV\_32FC2} or \texttt{CV\_64FC2} type}
 \cvarg{src2}{The second multiplied input matrix; should have the same type as \texttt{src1}}
@@ -4269,14 +4218,11 @@ See also: \cvCppCross{mulTransposed}, \cvCppCross{transform}, \cross{Matrix Expr
 \cvCppFunc{getConvertElem}
 Returns conversion function for a single pixel
 
-\begin{lstlisting}
-ConvertData getConvertElem(int fromType, int toType);
-ConvertScaleData getConvertScaleElem(int fromType, int toType);
-
-typedef void (*ConvertData)(const void* from, void* to, int cn);
-typedef void (*ConvertScaleData)(const void* from, void* to,
-                                 int cn, double alpha, double beta);
-\end{lstlisting}
+\cvdefCpp{ConvertData getConvertElem(int fromType, int toType);\newline
+ConvertScaleData getConvertScaleElem(int fromType, int toType);\newline
+typedef void (*ConvertData)(const void* from, void* to, int cn);\newline
+typedef void (*ConvertScaleData)(const void* from, void* to,\par
+                                 int cn, double alpha, double beta);}
 \begin{description}
 \cvarg{fromType}{The source pixel type}
 \cvarg{toType}{The destination pixel type}
@@ -4295,9 +4241,7 @@ See also: \cvCppCross{Mat::convertTo}, \cvCppCross{MatND::convertTo}, \cvCppCros
 \cvCppFunc{getOptimalDFTSize}
 Returns optimal DFT size for a given vector size.
 
-\begin{lstlisting}
-int getOptimalDFTSize(int vecsize);
-\end{lstlisting}
+\cvdefCpp{int getOptimalDFTSize(int vecsize);}
 \begin{description}
 \cvarg{vecsize}{Vector size}
 \end{description}
@@ -4317,9 +4261,7 @@ See also: \cvCppCross{dft}, \cvCppCross{dct}, \cvCppCross{idft}, \cvCppCross{idc
 \cvCppFunc{idct}
 Computes inverse Discrete Cosine Transform of a 1D or 2D array
 
-\begin{lstlisting}
-void idct(const Mat& src, Mat& dst, int flags=0);
-\end{lstlisting}
+\cvdefCpp{void idct(const Mat\& src, Mat\& dst, int flags=0);}
 \begin{description}
 \cvarg{src}{The source floating-point single-channel array}
 \cvarg{dst}{The destination array. Will have the same size and same type as \texttt{src}}
@@ -4335,9 +4277,7 @@ See also: \cvCppCross{dct}, \cvCppCross{dft}, \cvCppCross{idft}, \cvCppCross{get
 \cvCppFunc{idft}
 Computes inverse Discrete Fourier Transform of a 1D or 2D array
 
-\begin{lstlisting}
-void idft(const Mat& src, Mat& dst, int flags=0, int outputRows=0);
-\end{lstlisting}
+\cvdefCpp{void idft(const Mat\& src, Mat\& dst, int flags=0, int outputRows=0);}
 \begin{description}
 \cvarg{src}{The source floating-point real or complex array}
 \cvarg{dst}{The destination array, which size and type depends on the \texttt{flags}}
@@ -4359,16 +4299,14 @@ See also: \cvCppCross{dft}, \cvCppCross{dct}, \cvCppCross{idct}, \cvCppCross{mul
 \cvCppFunc{inRange}
 Checks if array elements lie between the elements of two other arrays.
 
-\begin{lstlisting}
-void inRange(const Mat& src, const Mat& lowerb,
-             const Mat& upperb, Mat& dst);
-void inRange(const Mat& src, const Scalar& lowerb,
-             const Scalar& upperb, Mat& dst);
-void inRange(const MatND& src, const MatND& lowerb,
-             const MatND& upperb, MatND& dst);
-void inRange(const MatND& src, const Scalar& lowerb,
-             const Scalar& upperb, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void inRange(const Mat\& src, const Mat\& lowerb,\par
+             const Mat\& upperb, Mat\& dst);\newline
+void inRange(const Mat\& src, const Scalar\& lowerb,\par
+             const Scalar\& upperb, Mat\& dst);\newline
+void inRange(const MatND\& src, const MatND\& lowerb,\par
+             const MatND\& upperb, MatND\& dst);\newline
+void inRange(const MatND\& src, const Scalar\& lowerb,\par
+             const Scalar\& upperb, MatND\& dst);}
 \begin{description}
 \cvarg{src}{The first source array}
 \cvarg{lowerb}{The inclusive lower boundary array of the same size and type as \texttt{src}}
@@ -4397,9 +4335,7 @@ for two-channel arrays and so forth.
 \cvCppFunc{invert}
 Finds the inverse or pseudo-inverse of a matrix
 
-\begin{lstlisting}
-double invert(const Mat& src, Mat& dst, int method=DECOMP_LU);
-\end{lstlisting}
+\cvdefCpp{double invert(const Mat\& src, Mat\& dst, int method=DECOMP\_LU);}
 \begin{description}
 \cvarg{src}{The source floating-point $M \times N$ matrix}
 \cvarg{dst}{The destination matrix; will have $N \times M$ size and the same type as \texttt{src}}
@@ -4426,10 +4362,8 @@ See also: \cvCppCross{solve}, \cvCppCross{SVD}
 \cvCppFunc{log}
 Calculates the natural logarithm of every array element.
 
-\begin{lstlisting}
-void log(const Mat& src, Mat& dst);
-void log(const MatND& src, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void log(const Mat\& src, Mat\& dst);\newline
+void log(const MatND\& src, MatND\& dst);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array; will have the same size and same type as \texttt{src}}
@@ -4452,9 +4386,7 @@ See also: \cvCppCross{exp}, \cvCppCross{cartToPolar}, \cvCppCross{polarToCart}, 
 \cvCppFunc{LUT}
 Performs a look-up table transform of an array.
 
-\begin{lstlisting}
-void LUT(const Mat& src, const Mat& lut, Mat& dst);
-\end{lstlisting}
+\cvdefCpp{void LUT(const Mat\& src, const Mat\& lut, Mat\& dst);}
 \begin{description}
 \cvarg{src}{Source array of 8-bit elements}
 \cvarg{lut}{Look-up table of 256 elements. In the case of multi-channel source array, the table should either have a single channel (in this case the same table is used for all channels) or the same number of channels as in the source array}
@@ -4480,9 +4412,7 @@ See also: \cvCppCross{convertScaleAbs}, \texttt{Mat::convertTo}
 \cvCppFunc{magnitude}
 Calculates magnitude of 2D vectors.
 
-\begin{lstlisting}
-void magnitude(const Mat& x, const Mat& y, Mat& magnitude);
-\end{lstlisting}
+\cvdefCpp{void magnitude(const Mat\& x, const Mat\& y, Mat\& magnitude);}
 \begin{description}
 \cvarg{x}{The floating-point array of x-coordinates of the vectors}
 \cvarg{y}{The floating-point array of y-coordinates of the vectors; must have the same size as \texttt{x}}
@@ -4501,10 +4431,7 @@ See also: \cvCppCross{cartToPolar}, \cvCppCross{polarToCart}, \cvCppCross{phase}
 \cvCppFunc{Mahalanobis}
 Calculates the Mahalanobis distance between two vectors.
 
-\begin{lstlisting}
-double Mahalanobis(const Mat& vec1, const Mat& vec2, const Mat& icovar);
-double Mahalonobis(const Mat& vec1, const Mat& vec2, const Mat& icovar);
-\end{lstlisting}
+\cvdefCpp{double Mahalanobis(const Mat\& vec1, const Mat\& vec2, \par const Mat\& icovar);}
 \begin{description}
 \cvarg{vec1}{The first 1D source vector}
 \cvarg{vec2}{The second 1D source vector}
@@ -4523,15 +4450,13 @@ The covariance matrix may be calculated using the \cvCppCross{calcCovarMatrix} f
 \cvCppFunc{max}
 Calculates per-element maximum of two arrays or array and a scalar
 
-\begin{lstlisting}
-Mat_Expr<...> max(const Mat& src1, const Mat& src2);
-Mat_Expr<...> max(const Mat& src1, double value);
-Mat_Expr<...> max(double value, const Mat& src1);
-void max(const Mat& src1, const Mat& src2, Mat& dst);
-void max(const Mat& src1, double value, Mat& dst);
-void max(const MatND& src1, const MatND& src2, MatND& dst);
-void max(const MatND& src1, double value, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{Mat\_Expr<...> max(const Mat\& src1, const Mat\& src2);\newline
+Mat\_Expr<...> max(const Mat\& src1, double value);\newline
+Mat\_Expr<...> max(double value, const Mat\& src1);\newline
+void max(const Mat\& src1, const Mat\& src2, Mat\& dst);\newline
+void max(const Mat\& src1, double value, Mat\& dst);\newline
+void max(const MatND\& src1, const MatND\& src2, MatND\& dst);\newline
+void max(const MatND\& src1, double value, MatND\& dst);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array of the same size and type as \texttt{src1}}
@@ -4553,12 +4478,10 @@ See also: \cvCppCross{min}, \cvCppCross{compare}, \cvCppCross{inRange}, \cvCppCr
 \cvCppFunc{mean}
 Calculates average (mean) of array elements
 
-\begin{lstlisting}
-Scalar mean(const Mat& mtx);
-Scalar mean(const Mat& mtx, const Mat& mask);
-Scalar mean(const MatND& mtx);
-Scalar mean(const MatND& mtx, const MatND& mask);
-\end{lstlisting}
+\cvdefCpp{Scalar mean(const Mat\& mtx);\newline
+Scalar mean(const Mat\& mtx, const Mat\& mask);\newline
+Scalar mean(const MatND\& mtx);\newline
+Scalar mean(const MatND\& mtx, const MatND\& mask);}
 \begin{description}
 \cvarg{mtx}{The source array; it should have 1 to 4 channels (so that the result can be stored in \cvCppCross{Scalar})}
 \cvarg{mask}{The optional operation mask}
@@ -4580,10 +4503,8 @@ See also: \cvCppCross{countNonZero}, \cvCppCross{meanStdDev}, \cvCppCross{norm},
 \cvCppFunc{meanStdDev}
 Calculates mean and standard deviation of array elements
 
-\begin{lstlisting}
-void meanStdDev(const Mat& mtx, Scalar& mean, Scalar& stddev, const Mat& mask=Mat());
-void meanStdDev(const MatND& mtx, Scalar& mean, Scalar& stddev, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void meanStdDev(const Mat\& mtx, Scalar\& mean, \par Scalar\& stddev, const Mat\& mask=Mat());\newline
+void meanStdDev(const MatND\& mtx, Scalar\& mean, \par Scalar\& stddev, const MatND\& mask=MatND());}
 \begin{description}
 \cvarg{mtx}{The source array; it should have 1 to 4 channels (so that the results can be stored in \cvCppCross{Scalar}'s)}
 \cvarg{mean}{The output parameter: computed mean value}
@@ -4610,12 +4531,10 @@ See also: \cvCppCross{countNonZero}, \cvCppCross{mean}, \cvCppCross{norm}, \cvCp
 \cvCppFunc{merge}
 Composes a multi-channel array from several single-channel arrays.
 
-\begin{lstlisting}
-void merge(const Mat* mv, size_t count, Mat& dst);
-void merge(const vector<Mat>& mv, Mat& dst);
-void merge(const MatND* mv, size_t count, MatND& dst);
-void merge(const vector<MatND>& mv, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void merge(const Mat* mv, size\_t count, Mat\& dst);\newline
+void merge(const vector<Mat>\& mv, Mat\& dst);\newline
+void merge(const MatND* mv, size\_t count, MatND\& dst);\newline
+void merge(const vector<MatND>\& mv, MatND\& dst);}
 \begin{description}
 \cvarg{mv}{The source array or vector of the single-channel matrices to be merged. All the matrices in \texttt{mv} must have the same size and the same type}
 \cvarg{count}{The number of source matrices when \texttt{mv} is a plain C array; must be greater than zero}
@@ -4633,15 +4552,13 @@ See also: \cvCppCross{mixChannels}, \cvCppCross{split}, \cvCppCross{reshape}
 \cvCppFunc{min}
 Calculates per-element minimum of two arrays or array and a scalar
 
-\begin{lstlisting}
-Mat_Expr<...> min(const Mat& src1, const Mat& src2);
-Mat_Expr<...> min(const Mat& src1, double value);
-Mat_Expr<...> min(double value, const Mat& src1);
-void min(const Mat& src1, const Mat& src2, Mat& dst);
-void min(const Mat& src1, double value, Mat& dst);
-void min(const MatND& src1, const MatND& src2, MatND& dst);
-void min(const MatND& src1, double value, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{Mat\_Expr<...> min(const Mat\& src1, const Mat\& src2);\newline
+Mat\_Expr<...> min(const Mat\& src1, double value);\newline
+Mat\_Expr<...> min(double value, const Mat\& src1);\newline
+void min(const Mat\& src1, const Mat\& src2, Mat\& dst);\newline
+void min(const Mat\& src1, double value, Mat\& dst);\newline
+void min(const MatND\& src1, const MatND\& src2, MatND\& dst);\newline
+void min(const MatND\& src1, double value, MatND\& dst);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array of the same size and type as \texttt{src1}}
@@ -4663,16 +4580,14 @@ See also: \cvCppCross{max}, \cvCppCross{compare}, \cvCppCross{inRange}, \cvCppCr
 \cvCppFunc{minMaxLoc}
 Finds global minimum and maximum in a whole array or sub-array
 
-\begin{lstlisting}
-void minMaxLoc(const Mat& src, double* minVal,
-               double* maxVal=0, Point* minLoc=0,
-               Point* maxLoc=0, const Mat& mask=Mat());
-void minMaxLoc(const MatND& src, double* minVal,
-               double* maxVal, int* minIdx=0, int* maxIdx=0,
-               const MatND& mask=MatND());
-void minMaxLoc(const SparseMat& src, double* minVal,
-               double* maxVal, int* minIdx=0, int* maxIdx=0);
-\end{lstlisting}
+\cvdefCpp{void minMaxLoc(const Mat\& src, double* minVal,\par
+               double* maxVal=0, Point* minLoc=0,\par
+               Point* maxLoc=0, const Mat\& mask=Mat());\newline
+void minMaxLoc(const MatND\& src, double* minVal,\par
+               double* maxVal, int* minIdx=0, int* maxIdx=0,\par
+               const MatND\& mask=MatND());\newline
+void minMaxLoc(const SparseMat\& src, double* minVal,\par
+               double* maxVal, int* minIdx=0, int* maxIdx=0);}
 \begin{description}
 \cvarg{src}{The source single-channel array}
 \cvarg{minVal}{Pointer to returned minimum value; \texttt{NULL} if not required}
@@ -4698,16 +4613,14 @@ See also: \cvCppCross{max}, \cvCppCross{min}, \cvCppCross{compare}, \cvCppCross{
 \cvCppFunc{mixChannels}
 Copies specified channels from input arrays to the specified channels of output arrays
 
-\begin{lstlisting}
-void mixChannels(const Mat* srcv, int nsrc, Mat* dstv, int ndst,
-                 const int* fromTo, size_t npairs);
-void mixChannels(const MatND* srcv, int nsrc, MatND* dstv, int ndst,
-                 const int* fromTo, size_t npairs);
-void mixChannels(const vector<Mat>& srcv, vector<Mat>& dstv,
-                 const int* fromTo, int npairs);
-void mixChannels(const vector<MatND>& srcv, vector<MatND>& dstv,
-                 const int* fromTo, int npairs);
-\end{lstlisting}
+\cvdefCpp{void mixChannels(const Mat* srcv, int nsrc, Mat* dstv, int ndst,\par
+                 const int* fromTo, size\_t npairs);\newline
+void mixChannels(const MatND* srcv, int nsrc, MatND* dstv, int ndst,\par
+                 const int* fromTo, size\_t npairs);\newline
+void mixChannels(const vector<Mat>\& srcv, vector<Mat>\& dstv,\par
+                 const int* fromTo, int npairs);\newline
+void mixChannels(const vector<MatND>\& srcv, vector<MatND>\& dstv,\par
+                 const int* fromTo, int npairs);}
 \begin{description}
 \cvarg{srcv}{The input array or vector of matrices.
 All the matrices must have the same size and the same depth}
@@ -4754,10 +4667,8 @@ See also: \cvCppCross{split}, \cvCppCross{merge}, \cvCppCross{cvtColor}
 \cvCppFunc{mulSpectrums}
 Performs per-element multiplication of two Fourier spectrums.
 
-\begin{lstlisting}
-void mulSpectrums(const Mat& src1, const Mat& src2, Mat& dst,
-                  int flags, bool conj=false);
-\end{lstlisting}
+\cvdefCpp{void mulSpectrums(const Mat\& src1, const Mat\& src2, Mat\& dst,\par
+                  int flags, bool conj=false);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array; must have the same size and the same type as \texttt{src1}}
@@ -4773,10 +4684,8 @@ The function, together with \cvCppCross{dft} and \cvCppCross{idft}, may be used 
 \cvCppFunc{multiply}
 Calculates the per-element scaled product of two arrays
 
-\begin{lstlisting}
-void multiply(const Mat& src1, const Mat& src2, Mat& dst, double scale=1);
-void multiply(const MatND& src1, const MatND& src2, MatND& dst, double scale=1);
-\end{lstlisting}
+\cvdefCpp{void multiply(const Mat\& src1, const Mat\& src2, \par Mat\& dst, double scale=1);\newline
+void multiply(const MatND\& src1, const MatND\& src2, \par MatND\& dst, double scale=1);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array of the same size and the same type as \texttt{src1}}
@@ -4799,11 +4708,9 @@ See also: \cvCppCross{add}, \cvCppCross{substract}, \cvCppCross{divide}, \cross{
 \cvCppFunc{mulTransposed}
 Calculates the product of a matrix and its transposition.
 
-\begin{lstlisting}
-void mulTransposed( const Mat& src, Mat& dst, bool aTa,
-                    const Mat& delta=Mat(),
-                    double scale=1, int rtype=-1 );
-\end{lstlisting}
+\cvdefCpp{void mulTransposed( const Mat\& src, Mat\& dst, bool aTa,\par
+                    const Mat\& delta=Mat(),\par
+                    double scale=1, int rtype=-1 );}
 \begin{description}
 \cvarg{src}{The source matrix}
 \cvarg{dst}{The destination square matrix}
@@ -4831,16 +4738,14 @@ See also: \cvCppCross{calcCovarMatrix}, \cvCppCross{gemm}, \cvCppCross{repeat}, 
 \cvCppFunc{norm}
 Calculates absolute array norm, absolute difference norm, or relative difference norm.
 
-\begin{lstlisting}
-double norm(const Mat& src1, int normType=NORM_L2);
-double norm(const Mat& src1, const Mat& src2, int normType=NORM_L2);
-double norm(const Mat& src1, int normType, const Mat& mask);
-double norm(const Mat& src1, const Mat& src2, int normType, const Mat& mask);
-double norm(const MatND& src1, int normType=NORM_L2, const MatND& mask=MatND());
-double norm(const MatND& src1, const MatND& src2,
-            int normType=NORM_L2, const MatND& mask=MatND());
-double norm( const SparseMat& src, int normType );
-\end{lstlisting}
+\cvdefCpp{double norm(const Mat\& src1, int normType=NORM\_L2);\newline
+double norm(const Mat\& src1, const Mat\& src2, int normType=NORM\_L2);\newline
+double norm(const Mat\& src1, int normType, const Mat\& mask);\newline
+double norm(const Mat\& src1, const Mat\& src2, \par int normType, const Mat\& mask);\newline
+double norm(const MatND\& src1, int normType=NORM\_L2, \par const MatND\& mask=MatND());\newline
+double norm(const MatND\& src1, const MatND\& src2,\par
+            int normType=NORM\_L2, const MatND\& mask=MatND());\newline
+double norm( const SparseMat\& src, int normType );}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array of the same size and the same type as \texttt{src1}}
@@ -4883,13 +4788,11 @@ A multiple-channel source arrays are treated as a single-channel, that is, the r
 \cvCppFunc{normalize}
 Normalizes array's norm or the range
 
-\begin{lstlisting}
-void normalize( const Mat& src, Mat& dst, double alpha=1, double beta=0,
-                int normType=NORM_L2, int rtype=-1, const Mat& mask=Mat());
-void normalize( const MatND& src, MatND& dst, double alpha=1, double beta=0,
-                int normType=NORM_L2, int rtype=-1, const MatND& mask=MatND());
-void normalize( const SparseMat& src, SparseMat& dst, double alpha, int normType );
-\end{lstlisting}
+\cvdefCpp{void normalize( const Mat\& src, Mat\& dst, \par double alpha=1, double beta=0,\par
+                int normType=NORM\_L2, int rtype=-1, \par const Mat\& mask=Mat());\newline
+void normalize( const MatND\& src, MatND\& dst, \par double alpha=1, double beta=0,\par
+                int normType=NORM\_L2, int rtype=-1, \par const MatND\& mask=MatND());\newline
+void normalize( const SparseMat\& src, SparseMat\& dst, \par double alpha, int normType );}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array; will have the same size as \texttt{src}}
@@ -4922,22 +4825,22 @@ class PCA
 {
 public:
     // default constructor
-    PCA();
+    PCA();newline
     // computes PCA for a set of vectors stored as data rows or columns.
-    PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
+    PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);newline
     // computes PCA for a set of vectors stored as data rows or columns
-    PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
+    PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);newline
     // projects vector into the principal components space
-    Mat project(const Mat& vec) const;
-    void project(const Mat& vec, Mat& result) const;
+    Mat project(const Mat& vec) const;newline
+    void project(const Mat& vec, Mat& result) const;newline
     // reconstructs the vector from its PC projection
-    Mat backProject(const Mat& vec) const;
-    void backProject(const Mat& vec, Mat& result) const;
+    Mat backProject(const Mat& vec) const;newline
+    void backProject(const Mat& vec, Mat& result) const;newline
 
     // eigenvectors of the PC space, stored as the matrix rows
-    Mat eigenvectors;
+    Mat eigenvectors;newline
     // the corresponding eigenvalues; not used for PCA compression/decompression
-    Mat eigenvalues;
+    Mat eigenvalues;newline
     // mean vector, subtracted from the projected vector
     // or added to the reconstructed vector
     Mat mean;
@@ -4988,9 +4891,7 @@ See also: \cvCppCross{calcCovarMatrix}, \cvCppCross{mulTransposed}, \cvCppCross{
 \cvCppFunc{perspectiveTransform}
 Performs perspective matrix transformation of vectors.
 
-\begin{lstlisting}
-void perspectiveTransform(const Mat& src, Mat& dst, const Mat& mtx );
-\end{lstlisting}
+\cvdefCpp{void perspectiveTransform(const Mat\& src, \par Mat\& dst, const Mat\& mtx );}
 \begin{description}
 \cvarg{src}{The source two-channel or three-channel floating-point array;
             each element is 2D/3D vector to be transformed}
@@ -5020,10 +4921,8 @@ See also: \cvCppCross{transform}, \cvCppCross{warpPerspective}, \cvCppCross{getP
 \cvCppFunc{phase}
 Calculates the rotation angle of 2d vectors
 
-\begin{lstlisting}
-void phase(const Mat& x, const Mat& y, Mat& angle,
-           bool angleInDegrees=false);
-\end{lstlisting}
+\cvdefCpp{void phase(const Mat\& x, const Mat\& y, Mat\& angle,\par
+           bool angleInDegrees=false);}
 \begin{description}
 \cvarg{x}{The source floating-point array of x-coordinates of 2D vectors}
 \cvarg{y}{The source array of y-coordinates of 2D vectors; must have the same size and the same type as \texttt{x}}
@@ -5042,10 +4941,8 @@ See also:
 \cvCppFunc{polarToCart}
 Computes x and y coordinates of 2D vectors from their magnitude and angle.
 
-\begin{lstlisting}
-void polarToCart(const Mat& magnitude, const Mat& angle,
-                 Mat& x, Mat& y, bool angleInDegrees=false);
-\end{lstlisting}
+\cvdefCpp{void polarToCart(const Mat\& magnitude, const Mat\& angle,\par
+                 Mat\& x, Mat\& y, bool angleInDegrees=false);}
 \begin{description}
 \cvarg{magnitude}{The source floating-point array of magnitudes of 2D vectors. It can be an empty matrix (\texttt{=Mat()}) - in this case the function assumes that all the magnitudes are =1. If it's not empty, it must have the same size and same type as \texttt{angle}}
 \cvarg{angle}{The source floating-point array of angles of the 2D vectors}
@@ -5070,10 +4967,8 @@ See also: \cvCppCross{cartToPolar}, \cvCppCross{magnitude}, \cvCppCross{phase}, 
 \cvCppFunc{pow}
 Raises every array element to a power.
 
-\begin{lstlisting}
-void pow(const Mat& src, double p, Mat& dst);
-void pow(const MatND& src, double p, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void pow(const Mat\& src, double p, Mat\& dst);\newline
+void pow(const MatND\& src, double p, MatND\& dst);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{p}{The exponent of power}
@@ -5103,10 +4998,8 @@ See also: \cvCppCross{sqrt}, \cvCppCross{exp}, \cvCppCross{log}, \cvCppCross{car
 \cvCppFunc{randu}
 Generates a single uniformly-distributed random number or array of random numbers
 
-\begin{lstlisting}
-template<typename _Tp> _Tp randu();
-void randu(Mat& mtx, const Scalar& low, const Scalar& high);
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp> \_Tp randu();\newline
+void randu(Mat\& mtx, const Scalar\& low, const Scalar\& high);}
 \begin{description}
 \cvarg{mtx}{The output array of random numbers. The array must be pre-allocated and have 1 to 4 channels}
 \cvarg{low}{The inclusive lower boundary of the generated random numbers}
@@ -5124,9 +5017,7 @@ See also: \cvCppCross{RNG}, \cvCppCross{randn}, \cvCppCross{theRNG}.
 \cvCppFunc{randn}
 Fills array with normally distributed random numbers
 
-\begin{lstlisting}
-void randn(Mat& mtx, const Scalar& mean, const Scalar& stddev);
-\end{lstlisting}
+\cvdefCpp{void randn(Mat\& mtx, const Scalar\& mean, const Scalar\& stddev);}
 \begin{description}
 \cvarg{mtx}{The output array of random numbers. The array must be pre-allocated and have 1 to 4 channels}
 \cvarg{mean}{The mean value (expectation) of the generated random numbers}
@@ -5140,9 +5031,7 @@ See also: \cvCppCross{RNG}, \cvCppCross{randu}
 \cvCppFunc{randShuffle}
 Shuffles the array elements randomly
 
-\begin{lstlisting}
-void randShuffle(Mat& mtx, double iterFactor=1., RNG* rng=0);
-\end{lstlisting}
+\cvdefCpp{void randShuffle(Mat\& mtx, double iterFactor=1., RNG* rng=0);}
 \begin{description}
 \cvarg{mtx}{The input/output numerical 1D array}
 \cvarg{iterFactor}{The scale factor that determines the number of random swap operations. See the discussion}
@@ -5156,9 +5045,7 @@ See also: \cvCppCross{RNG}, \cvCppCross{sort}
 \cvCppFunc{reduce}
 Reduces a matrix to a vector
 
-\begin{lstlisting}
-void reduce(const Mat& mtx, Mat& vec, int dim, int reduceOp, int dtype=-1);
-\end{lstlisting}
+\cvdefCpp{void reduce(const Mat\& mtx, Mat\& vec, \par int dim, int reduceOp, int dtype=-1);}
 \begin{description}
 \cvarg{mtx}{The source 2D matrix}
 \cvarg{vec}{The destination vector. Its size and type is defined by \texttt{dim} and \texttt{dtype} parameters}
@@ -5180,10 +5067,8 @@ See also: \cvCppCross{repeat}
 \cvCppFunc{repeat}
 Fill the destination array with repeated copies of the source array.
 
-\begin{lstlisting}
-void repeat(const Mat& src, int ny, int nx, Mat& dst);
-Mat repeat(const Mat& src, int ny, int nx);
-\end{lstlisting}
+\cvdefCpp{void repeat(const Mat\& src, int ny, int nx, Mat\& dst);\newline
+Mat repeat(const Mat\& src, int ny, int nx);}
 \begin{description}
 \cvarg{src}{The source array to replicate}
 \cvarg{dst}{The destination array; will have the same type as \texttt{src}}
@@ -5199,19 +5084,22 @@ The second variant of the function is more convenient to use with \cross{Matrix 
 
 See also: \cvCppCross{reduce}, \cross{Matrix Expressions}
 
+\ifplastex
 \subsection{saturate\_cast}\label{cppfunc.saturatecast}
+\else
+\subsection{cv::saturate\_cast}\label{cppfunc.saturatecast}
+\fi
 Template function for accurate conversion from one primitive type to another
 
-\begin{lstlisting}
-template<typename _Tp> inline _Tp saturate_cast(unsigned char v);
-template<typename _Tp> inline _Tp saturate_cast(signed char v);
-template<typename _Tp> inline _Tp saturate_cast(unsigned short v);
-template<typename _Tp> inline _Tp saturate_cast(signed short v);
-template<typename _Tp> inline _Tp saturate_cast(int v);
-template<typename _Tp> inline _Tp saturate_cast(unsigned int v);
-template<typename _Tp> inline _Tp saturate_cast(float v);
-template<typename _Tp> inline _Tp saturate_cast(double v);
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp> inline \_Tp saturate\_cast(unsigned char v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(signed char v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(unsigned short v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(signed short v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(int v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(unsigned int v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(float v);\newline
+template<typename \_Tp> inline \_Tp saturate\_cast(double v);}
+
 \begin{description}
 \cvarg{v}{The function parameter}
 \end{description}
@@ -5234,10 +5122,8 @@ See also: \cvCppCross{add}, \cvCppCross{subtract}, \cvCppCross{multiply}, \cvCpp
 \cvCppFunc{scaleAdd}
 Calculates the sum of a scaled array and another array.
 
-\begin{lstlisting}
-void scaleAdd(const Mat& src1, double scale, const Mat& src2, Mat& dst);
-void scaleAdd(const MatND& src1, double scale, const MatND& src2, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void scaleAdd(const Mat\& src1, double scale, \par const Mat\& src2, Mat\& dst);\newline
+void scaleAdd(const MatND\& src1, double scale, \par const MatND\& src2, MatND\& dst);}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{scale}{Scale factor for the first array}
@@ -5264,9 +5150,7 @@ See also: \cvCppCross{add}, \cvCppCross{addWeighted}, \cvCppCross{subtract}, \cv
 \cvCppFunc{setIdentity}
 Initializes a scaled identity matrix
 
-\begin{lstlisting}
-void setIdentity(Mat& dst, const Scalar& value=Scalar(1));
-\end{lstlisting}
+\cvdefCpp{void setIdentity(Mat\& dst, const Scalar\& value=Scalar(1));}
 \begin{description}
 \cvarg{dst}{The matrix to initialize (not necessarily square)}
 \cvarg{value}{The value to assign to the diagonal elements}
@@ -5290,9 +5174,7 @@ See also: \cvCppCross{Mat::zeros}, \cvCppCross{Mat::ones}, \cross{Matrix Express
 \cvCppFunc{solve}
 Solves one or more linear systems or least-squares problems.
 
-\begin{lstlisting}
-bool solve(const Mat& src1, const Mat& src2, Mat& dst, int flags=DECOMP_LU);
-\end{lstlisting}
+\cvdefCpp{bool solve(const Mat\& src1, const Mat\& src2, \par Mat\& dst, int flags=DECOMP\_LU);}
 \begin{description}
 \cvarg{src1}{The input matrix on the left-hand side of the system}
 \cvarg{src2}{The input matrix on the right-hand side of the system}
@@ -5323,9 +5205,7 @@ See also: \cvCppCross{invert}, \cvCppCross{SVD}, \cvCppCross{eigen}
 \cvCppFunc{solveCubic}
 Finds the real roots of a cubic equation.
 
-\begin{lstlisting}
-void solveCubic(const Mat& coeffs, Mat& roots);
-\end{lstlisting}
+\cvdefCpp{void solveCubic(const Mat\& coeffs, Mat\& roots);}
 \begin{description}
 \cvarg{coeffs}{The equation coefficients, an array of 3 or 4 elements}
 \cvarg{roots}{The destination array of real roots which will have 1 or 3 elements}
@@ -5350,9 +5230,7 @@ The roots are stored to \texttt{roots} array.
 \cvCppFunc{solvePoly}
 Finds the real or complex roots of a polynomial equation
 
-\begin{lstlisting}
-void solvePoly(const Mat& coeffs, Mat& roots, int maxIters=20, int fig=100);
-\end{lstlisting}
+\cvdefCpp{void solvePoly(const Mat\& coeffs, Mat\& roots, \par int maxIters=20, int fig=100);}
 \begin{description}
 \cvarg{coeffs}{The array of polynomial coefficients}
 \cvarg{roots}{The destination (complex) array of roots}
@@ -5368,9 +5246,7 @@ The function \texttt{solvePoly} finds real and complex roots of a polynomial equ
 \cvCppFunc{sort}
 Sorts each row or each column of a matrix
 
-\begin{lstlisting}
-void sort(const Mat& src, Mat& dst, int flags);
-\end{lstlisting}
+\cvdefCpp{void sort(const Mat\& src, Mat\& dst, int flags);}
 \begin{description}
 \cvarg{src}{The source single-channel array}
 \cvarg{dst}{The destination array of the same size and the same type as \texttt{src}}
@@ -5390,9 +5266,7 @@ See also: \cvCppCross{sortIdx}, \cvCppCross{randShuffle}
 \cvCppFunc{sortIdx}
 Sorts each row or each column of a matrix
 
-\begin{lstlisting}
-void sortIdx(const Mat& src, Mat& dst, int flags);
-\end{lstlisting}
+\cvdefCpp{void sortIdx(const Mat\& src, Mat\& dst, int flags);}
 \begin{description}
 \cvarg{src}{The source single-channel array}
 \cvarg{dst}{The destination integer array of the same size as \texttt{src}}
@@ -5420,12 +5294,10 @@ See also: \cvCppCross{sort}, \cvCppCross{randShuffle}
 \cvCppFunc{split}
 Divides multi-channel array into several single-channel arrays
 
-\begin{lstlisting}
-void split(const Mat& mtx, Mat* mv);
-void split(const Mat& mtx, vector<Mat>& mv);
-void split(const MatND& mtx, MatND* mv);
-void split(const MatND& mtx, vector<MatND>& mv);
-\end{lstlisting}
+\cvdefCpp{void split(const Mat\& mtx, Mat* mv);\newline
+void split(const Mat\& mtx, vector<Mat>\& mv);\newline
+void split(const MatND\& mtx, MatND* mv);\newline
+void split(const MatND\& mtx, vector<MatND>\& mv);}
 \begin{description}
 \cvarg{mtx}{The source multi-channel array}
 \cvarg{mv}{The destination array or vector of arrays; The number of arrays must match \texttt{mtx.channels()}. The arrays themselves will be reallocated if needed}
@@ -5442,10 +5314,8 @@ See also: \cvCppCross{merge}, \cvCppCross{mixChannels}, \cvCppCross{cvtColor}
 \cvCppFunc{sqrt}
 Calculates square root of array elements
 
-\begin{lstlisting}
-void sqrt(const Mat& src, Mat& dst);
-void sqrt(const MatND& src, MatND& dst);
-\end{lstlisting}
+\cvdefCpp{void sqrt(const Mat\& src, Mat\& dst);\newline
+void sqrt(const MatND\& src, MatND\& dst);}
 \begin{description}
 \cvarg{src}{The source floating-point array}
 \cvarg{dst}{The destination array; will have the same size and the same type as \texttt{src}}
@@ -5458,16 +5328,14 @@ See also: \cvCppCross{pow}, \cvCppCross{magnitude}
 \cvCppFunc{subtract}
 Calculates per-element difference between two arrays or array and a scalar
 
-\begin{lstlisting}
-void subtract(const Mat& src1, const Mat& src2, Mat& dst);
-void subtract(const Mat& src1, const Mat& src2, Mat& dst, const Mat& mask);
-void subtract(const Mat& src1, const Scalar& sc, Mat& dst, const Mat& mask=Mat());
-void subtract(const Scalar& sc, const Mat& src2, Mat& dst, const Mat& mask=Mat());
-void subtract(const MatND& src1, const MatND& src2, MatND& dst);
-void subtract(const MatND& src1, const MatND& src2, MatND& dst, const MatND& mask);
-void subtract(const MatND& src1, const Scalar& sc, MatND& dst, const MatND& mask=MatND());
-void subtract(const Scalar& sc, const MatND& src2, MatND& dst, const MatND& mask=MatND());
-\end{lstlisting}
+\cvdefCpp{void subtract(const Mat\& src1, const Mat\& src2, Mat\& dst);\newline
+void subtract(const Mat\& src1, const Mat\& src2, \par Mat\& dst, const Mat\& mask);\newline
+void subtract(const Mat\& src1, const Scalar\& sc, \par Mat\& dst, const Mat\& mask=Mat());\newline
+void subtract(const Scalar\& sc, const Mat\& src2, \par Mat\& dst, const Mat\& mask=Mat());\newline
+void subtract(const MatND\& src1, const MatND\& src2, MatND\& dst);\newline
+void subtract(const MatND\& src1, const MatND\& src2, \par MatND\& dst, const MatND\& mask);\newline
+void subtract(const MatND\& src1, const Scalar\& sc, \par MatND\& dst, const MatND\& mask=MatND());\newline
+void subtract(const Scalar\& sc, const MatND\& src2, \par MatND\& dst, const MatND\& mask=MatND());}
 \begin{description}
 \cvarg{src1}{The first source array}
 \cvarg{src2}{The second source array. It must have the same size and same type as \texttt{src1}}
@@ -5506,21 +5374,21 @@ Class for computing Singular Value Decomposition
 class SVD
 {
 public:
-    enum { MODIFY_A=1, NO_UV=2, FULL_UV=4 };
+    enum { MODIFY_A=1, NO_UV=2, FULL_UV=4 };newline
     // default empty constructor
-    SVD();
-    // decomposes m into u, w and vt: m = u*w*vt;
+    SVD();newline
+    // decomposes m into u, w and vt: m = u*w*vt;newline
     // u and vt are orthogonal, w is diagonal
-    SVD( const Mat& m, int flags=0 );
+    SVD( const Mat& m, int flags=0 );newline
     // decomposes m into u, w and vt.
-    SVD& operator ()( const Mat& m, int flags=0 );
+    SVD& operator ()( const Mat& m, int flags=0 );newline
 
     // finds such vector x, norm(x)=1, so that m*x = 0,
     // where m is singular matrix
-    static void solveZ( const Mat& m, Mat& dst );
+    static void solveZ( const Mat& m, Mat& dst );newline
     // does back-subsitution:
     // dst = vt.t()*inv(w)*u.t()*rhs ~ inv(m)*rhs
-    void backSubst( const Mat& rhs, Mat& dst ) const;
+    void backSubst( const Mat& rhs, Mat& dst ) const;newline
 
     Mat u, w, vt;
 };
@@ -5534,10 +5402,8 @@ See also: \cvCppCross{invert}, \cvCppCross{solve}, \cvCppCross{eigen}, \cvCppCro
 \cvCppFunc{sum}
 Calculates sum of array elements
 
-\begin{lstlisting}
-Scalar sum(const Mat& mtx);
-Scalar sum(const MatND& mtx);
-\end{lstlisting}
+\cvdefCpp{Scalar sum(const Mat\& mtx);\newline
+Scalar sum(const MatND\& mtx);}
 \begin{description}
 \cvarg{mtx}{The source array; must have 1 to 4 channels}
 \end{description}
@@ -5549,9 +5415,7 @@ See also: \cvCppCross{countNonZero}, \cvCppCross{mean}, \cvCppCross{meanStdDev},
 \cvCppFunc{theRNG}
 Returns the default random number generator
 
-\begin{lstlisting}
-RNG& theRNG();
-\end{lstlisting}
+\cvdefCpp{RNG\& theRNG();}
 
 The function \texttt{theRNG} returns the default random number generator. For each thread there is separate random number generator, so you can use the function safely in multi-thread environments. If you just need to get a single random number using this generator or initialize an array, you can use \cvCppCross{randu} or \cvCppCross{randn} instead. But if you are going to generate many random numbers inside a loop, it will be much faster to use this function to retrieve the generator and then use \texttt{RNG::operator \_Tp()}.
 
@@ -5560,9 +5424,7 @@ See also: \cvCppCross{RNG}, \cvCppCross{randu}, \cvCppCross{randn}
 \cvCppFunc{trace}
 Returns the trace of a matrix
 
-\begin{lstlisting}
-Scalar trace(const Mat& mtx);
-\end{lstlisting}
+\cvdefCpp{Scalar trace(const Mat\& mtx);}
 \begin{description}
 \cvarg{mtx}{The source matrix}
 \end{description}
@@ -5575,9 +5437,7 @@ The function \texttt{trace} returns the sum of the diagonal elements of the matr
 \cvCppFunc{transform}
 Performs matrix transformation of every array element.
 
-\begin{lstlisting}
-void transform(const Mat& src, Mat& dst, const Mat& mtx );
-\end{lstlisting}
+\cvdefCpp{void transform(const Mat\& src, \par Mat\& dst, const Mat\& mtx );}
 \begin{description}
 \cvarg{src}{The source array; must have as many channels (1 to 4) as \texttt{mtx.cols} or \texttt{mtx.cols-1}}
 \cvarg{dst}{The destination array; will have the same size and depth as \texttt{src} and as many channels as \texttt{mtx.rows}}
@@ -5609,9 +5469,7 @@ See also: \cvCppCross{perspectiveTransform}, \cvCppCross{getAffineTransform}, \c
 \cvCppFunc{transpose}
 Transposes a matrix
 
-\begin{lstlisting}
-void transpose(const Mat& src, Mat& dst);
-\end{lstlisting}
+\cvdefCpp{void transpose(const Mat\& src, Mat\& dst);}
 \begin{description}
 \cvarg{src}{The source array}
 \cvarg{dst}{The destination array of the same type as \texttt{src}}

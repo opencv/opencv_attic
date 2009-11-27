@@ -1,9 +1,9 @@
-\subsection{XML/YAML Persistence}
+\section{XML/YAML Persistence}
 
 \ifCPy
 
 \ifC
-\cvstruct{CvFileStorage}\label{CvFileStorage}
+\cvfunc{CvFileStorage}\label{CvFileStorage}
 File Storage.
 
 \begin{lstlisting}
@@ -59,7 +59,7 @@ the particular format is determined by the extension of the opened
 file, .xml for XML files and .yml or .yaml for YAML.
 
 
-\cvstruct{CvFileNode}\label{CvFileNode}
+\cvfunc{CvFileNode}\label{CvFileNode}
 File Storage Node.
 
 \begin{lstlisting}
@@ -176,7 +176,7 @@ object can be decoded (coverted to native representation) by
 request - when a user calls the \cross{Read} or \cross{ReadByName} functions.
 
 
-\cvstruct{CvAttrList}\label{CvAttrList}
+\cvfunc{CvAttrList}\label{CvAttrList}
 List of attributes.
 
 \begin{lstlisting}
@@ -197,7 +197,7 @@ const char* cvAttrValue( const CvAttrList* attr, const char* attr\_name );
 In the current implementation, attributes are used to pass extra parameters when writing user objects (see \cross{Write}). XML attributes inside tags are not supported, aside from the object type specification (\texttt{type\_id} attribute).
 
 
-\cvstruct{CvTypeInfo}\label{CvTypeInfo}
+\cvfunc{CvTypeInfo}\label{CvTypeInfo}
 Type information.
 
 \begin{lstlisting}
@@ -244,7 +244,7 @@ standard types and override the basic methods.
 \cvCPyFunc{Clone}
 Makes a clone of an object.
 
-\cvcodeC{void* cvClone( const void* structPtr );}
+\cvdefC{void* cvClone( const void* structPtr );}
 
 \begin{description}
 \cvarg{structPtr}{The object to clone}
@@ -255,7 +255,7 @@ The function finds the type of a given object and calls \texttt{clone} with the 
 \cvCPyFunc{EndWriteStruct}
 Ends the writing of a structure.
 
-\cvcodeC{void  cvEndWriteStruct(CvFileStorage* fs);}
+\cvdefC{void  cvEndWriteStruct(CvFileStorage* fs);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -266,7 +266,7 @@ The function finishes the currently written structure.
 \cvCPyFunc{FindType}
 Finds a type by its name.
 
-\cvcodeC{CvTypeInfo* cvFindType(const char* typeName);}
+\cvdefC{CvTypeInfo* cvFindType(const char* typeName);}
 
 \begin{description}
 \cvarg{typeName}{Type name}
@@ -278,14 +278,14 @@ The function finds a registered type by its name. It returns NULL if there is no
 \cvCPyFunc{FirstType}
 Returns the beginning of a type list.
 
-\cvcodeC{CvTypeInfo* cvFirstType(void);}
+\cvdefC{CvTypeInfo* cvFirstType(void);}
 
 The function returns the first type in the list of registered types. Navigation through the list can be done via the \texttt{prev} and \texttt{next} fields of the \cross{CvTypeInfo} structure.
 
 \cvCPyFunc{GetFileNode}
 Finds a node in a map or file storage.
 
-\cvcodeC{CvFileNode* cvGetFileNode( \par CvFileStorage* fs,\par CvFileNode* map,\par const CvStringHashNode* key,\par int createMissing=0 );}
+\cvdefC{CvFileNode* cvGetFileNode( \par CvFileStorage* fs,\par CvFileNode* map,\par const CvStringHashNode* key,\par int createMissing=0 );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -300,7 +300,7 @@ The function finds a file node. It is a faster version of \cross{GetFileNodeByNa
 \cvCPyFunc{GetFileNodeByName}
 Finds a node in a map or file storage.
 
-\cvcodeC{CvFileNode* cvGetFileNodeByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name);}
+\cvdefC{CvFileNode* cvGetFileNodeByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -321,7 +321,7 @@ of structures) one may use a combination of \cross{GetHashedKey} and
 \cvCPyFunc{GetFileNodeName}
 Returns the name of a file node.
 
-\cvcodeC{const char* cvGetFileNodeName( const CvFileNode* node );}
+\cvdefC{const char* cvGetFileNodeName( const CvFileNode* node );}
 
 \begin{description}
 \cvarg{node}{File node}
@@ -333,7 +333,7 @@ The function returns the name of a file node or NULL, if the file node does not 
 \cvCPyFunc{GetHashedKey}
 Returns a unique pointer for a given name.
 
-\cvcodeC{CvStringHashNode* cvGetHashedKey( \par CvFileStorage* fs,\par const char* name,\par int len=-1,\par int createMissing=0 );}
+\cvdefC{CvStringHashNode* cvGetHashedKey( \par CvFileStorage* fs,\par const char* name,\par int len=-1,\par int createMissing=0 );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -420,7 +420,7 @@ in a single numeric sequence.
 \cvCPyFunc{GetRootFileNode}
 Retrieves one of the top-level nodes of the file storage.
 
-\cvcodeC{CvFileNode* cvGetRootFileNode( \par const CvFileStorage* fs,\par int stream\_index=0 );}
+\cvdefC{CvFileNode* cvGetRootFileNode( \par const CvFileStorage* fs,\par int stream\_index=0 );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -440,8 +440,8 @@ may be used as a base for recursive traversal of the file storage.
 \cvCPyFunc{Load}
 Loads an object from a file.
 
-\cvcodeC{void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par const char* name=NULL,\par const char** realName=NULL );}
-\cvcodePy{Load(filename,storage=NULL,name=NULL)-> generic}
+\cvdefC{void* cvLoad( \par const char* filename,\par CvMemStorage* memstorage=NULL,\par const char* name=NULL,\par const char** realName=NULL );}
+\cvdefPy{Load(filename,storage=NULL,name=NULL)-> generic}
 
 \begin{description}
 \cvarg{filename}{File name}
@@ -461,7 +461,7 @@ should pass a valid memory storage destination to the function.
 \cvCPyFunc{OpenFileStorage}
 Opens file storage for reading or writing data.
 
-\cvcodeC{CvFileStorage* cvOpenFileStorage(\par const char* filename,\par CvMemStorage* memstorage,\par int flags);}
+\cvdefC{CvFileStorage* cvOpenFileStorage(\par const char* filename,\par CvMemStorage* memstorage,\par int flags);}
 
 \begin{description}
 \cvarg{filename}{Name of the file associated with the storage}
@@ -485,7 +485,7 @@ returns a pointer to the \cross{CvFileStorage} structure.
 \cvCPyFunc{Read}
 Decodes an object and returns a pointer to it.
 
-\cvcodeC{void* cvRead( \par CvFileStorage* fs,\par CvFileNode* node,\par CvAttrList* attributes=NULL );}
+\cvdefC{void* cvRead( \par CvFileStorage* fs,\par CvFileNode* node,\par CvAttrList* attributes=NULL );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -508,7 +508,7 @@ using the generic \cross{Release}.
 \cvCPyFunc{ReadByName}
 Finds an object by name and decodes it.
 
-\cvcodeC{void* cvReadByName( \par CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par CvAttrList* attributes=NULL );}
+\cvdefC{void* cvReadByName( \par CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par CvAttrList* attributes=NULL );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -522,7 +522,7 @@ The function is a simple superposition of \cross{GetFileNodeByName} and \cross{R
 \cvCPyFunc{ReadInt}
 Retrieves an integer value from a file node.
 
-\cvcodeC{int cvReadInt( \par const CvFileNode* node,\par int defaultValue=0 );}
+\cvdefC{int cvReadInt( \par const CvFileNode* node,\par int defaultValue=0 );}
 
 \begin{description}
 \cvarg{node}{File node}
@@ -542,7 +542,7 @@ result is not determined.
 \cvCPyFunc{ReadIntByName}
 Finds a file node and returns its value.
 
-\cvcodeC{int cvReadIntByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par int defaultValue=0 );}
+\cvdefC{int cvReadIntByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par int defaultValue=0 );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -557,7 +557,7 @@ The function is a simple superposition of \cross{GetFileNodeByName} and \cross{R
 \cvCPyFunc{ReadRawData}
 Reads multiple numbers.
 
-\cvcodeC{void cvReadRawData(\par const CvFileStorage* fs,\par const CvFileNode* src,\par void* dst,\par const char* dt);}
+\cvdefC{void cvReadRawData(\par const CvFileStorage* fs,\par const CvFileNode* src,\par void* dst,\par const char* dt);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -571,7 +571,7 @@ The function reads elements from a file node that represents a sequence of scala
 \cvCPyFunc{ReadRawDataSlice}
 Initializes file node sequence reader.
 
-\cvcodeC{void cvReadRawDataSlice( \par const CvFileStorage* fs,\par CvSeqReader* reader,\par int count,\par void* dst,\par const char* dt );}
+\cvdefC{void cvReadRawDataSlice( \par const CvFileStorage* fs,\par CvSeqReader* reader,\par int count,\par void* dst,\par const char* dt );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -594,7 +594,7 @@ using \cross{SetSeqReaderPos}.
 \cvCPyFunc{ReadReal}
 Retrieves a floating-point value from a file node.
 
-\cvcodeC{double cvReadReal( \par const CvFileNode* node,\par double defaultValue=0. );}
+\cvdefC{double cvReadReal( \par const CvFileNode* node,\par double defaultValue=0. );}
 
 \begin{description}
 \cvarg{node}{File node}
@@ -613,7 +613,7 @@ and returned. Otherwise the result is not determined.
 \cvCPyFunc{ReadRealByName}
 Finds a file node and returns its value.
 
-\cvcodeC{double  cvReadRealByName(\par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par double defaultValue=0.);}
+\cvdefC{double  cvReadRealByName(\par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par double defaultValue=0.);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -627,7 +627,7 @@ The function is a simple superposition of \cross{GetFileNodeByName} and \cross{R
 \cvCPyFunc{ReadString}
 Retrieves a text string from a file node.
 
-\cvcodeC{const char* cvReadString( \par const CvFileNode* node,\par const char* defaultValue=NULL );}
+\cvdefC{const char* cvReadString( \par const CvFileNode* node,\par const char* defaultValue=NULL );}
 
 \begin{description}
 \cvarg{node}{File node}
@@ -644,7 +644,7 @@ is returned. Otherwise the result is not determined.
 \cvCPyFunc{ReadStringByName}
 Finds a file node by its name and returns its value.
 
-\cvcodeC{const char* cvReadStringByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par const char* defaultValue=NULL );}
+\cvdefC{const char* cvReadStringByName( \par const CvFileStorage* fs,\par const CvFileNode* map,\par const char* name,\par const char* defaultValue=NULL );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -658,7 +658,7 @@ The function is a simple superposition of \cross{GetFileNodeByName} and \cross{R
 \cvCPyFunc{RegisterType}
 Registers a new type.
 
-\cvcodeC{void cvRegisterType(const CvTypeInfo* info);}
+\cvdefC{void cvRegisterType(const CvTypeInfo* info);}
 
 \begin{description}
 \cvarg{info}{Type info structure}
@@ -671,7 +671,7 @@ so the user should delete it after calling the function.
 \cvCPyFunc{Release}
 Releases an object.
 
-\cvcodeC{void cvRelease( void** structPtr );}
+\cvdefC{void cvRelease( void** structPtr );}
 
 \begin{description}
 \cvarg{structPtr}{Double pointer to the object}
@@ -682,7 +682,7 @@ The function finds the type of a given object and calls \texttt{release} with th
 \cvCPyFunc{ReleaseFileStorage}
 Releases file storage.
 
-\cvcodeC{void  cvReleaseFileStorage(CvFileStorage** fs);}
+\cvdefC{void  cvReleaseFileStorage(CvFileStorage** fs);}
 
 \begin{description}
 \cvarg{fs}{Double pointer to the released file storage}
@@ -696,8 +696,8 @@ The function closes the file associated with the storage and releases all the te
 \cvCPyFunc{Save}
 Saves an object to a file.
 
-\cvcodeC{void cvSave( \par const char* filename,\par const void* structPtr,\par const char* name=NULL,\par const char* comment=NULL,\par CvAttrList attributes=cvAttrList());}
-\cvcodePy{Save(filename,structPtr,name=NULL,comment=NULL)-> None}
+\cvdefC{void cvSave( \par const char* filename,\par const void* structPtr,\par const char* name=NULL,\par const char* comment=NULL,\par CvAttrList attributes=cvAttrList());}
+\cvdefPy{Save(filename,structPtr,name=NULL,comment=NULL)-> None}
 
 \begin{description}
 \cvarg{filename}{File name}
@@ -714,7 +714,7 @@ The function saves an object to a file. It provides a simple interface to \cross
 \cvCPyFunc{StartNextStream}
 Starts the next stream.
 
-\cvcodeC{void cvStartNextStream(CvFileStorage* fs);}
+\cvdefC{void cvStartNextStream(CvFileStorage* fs);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -725,7 +725,7 @@ The function starts the next stream in file storage. Both YAML and XML support m
 \cvCPyFunc{StartReadRawData}
 Initializes the file node sequence reader.
 
-\cvcodeC{void cvStartReadRawData( \par const CvFileStorage* fs,\par const CvFileNode* src,\par CvSeqReader* reader);}
+\cvdefC{void cvStartReadRawData( \par const CvFileStorage* fs,\par const CvFileNode* src,\par CvSeqReader* reader);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -738,7 +738,7 @@ The function initializes the sequence reader to read data from a file node. The 
 \cvCPyFunc{StartWriteStruct}
 Starts writing a new structure.
 
-\cvcodeC{void  cvStartWriteStruct( CvFileStorage* fs,\par const char* name,\par int struct\_flags,\par const char* typeName=NULL,\par CvAttrList attributes=cvAttrList( \par));}
+\cvdefC{void  cvStartWriteStruct( CvFileStorage* fs,\par const char* name,\par int struct\_flags,\par const char* typeName=NULL,\par CvAttrList attributes=cvAttrList( \par));}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -770,7 +770,7 @@ function for a some user object (see \cross{CvTypeInfo}).
 \cvCPyFunc{TypeOf}
 Returns the type of an object.
 
-\cvcodeC{CvTypeInfo* cvTypeOf( const void* structPtr );}
+\cvdefC{CvTypeInfo* cvTypeOf( const void* structPtr );}
 
 \begin{description}
 \cvarg{structPtr}{The object pointer}
@@ -785,7 +785,7 @@ the latter case, the function returns NULL.
 \cvCPyFunc{UnregisterType}
 Unregisters the type.
 
-\cvcodeC{void cvUnregisterType( const char* typeName );}
+\cvdefC{void cvUnregisterType( const char* typeName );}
 
 \begin{description}
 \cvarg{typeName}{Name of an unregistered type}
@@ -800,7 +800,7 @@ iterating the type list, starting from \cross{FirstType}, and then calling
 \cvCPyFunc{Write}
 Writes a user object.
 
-\cvcodeC{void  cvWrite( CvFileStorage* fs,\par const char* name,\par const void* ptr,\par CvAttrList attributes=cvAttrList(\par) );}
+\cvdefC{void  cvWrite( CvFileStorage* fs,\par const char* name,\par const void* ptr,\par CvAttrList attributes=cvAttrList(\par) );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -851,7 +851,7 @@ int main( int argc, char** argv )
 \cvCPyFunc{WriteComment}
 Writes a comment.
 
-\cvcodeC{void  cvWriteComment(\par CvFileStorage* fs,\par const char* comment,\par int eolComment);}
+\cvdefC{void  cvWriteComment(\par CvFileStorage* fs,\par const char* comment,\par int eolComment);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -864,7 +864,7 @@ The function writes a comment into file storage. The comments are skipped when t
 \cvCPyFunc{WriteFileNode}
 Writes a file node to another file storage.
 
-\cvcodeC{void cvWriteFileNode( \par CvFileStorage* fs,\par const char* new\_node\_name,\par const CvFileNode* node,\par int embed );}
+\cvdefC{void cvWriteFileNode( \par CvFileStorage* fs,\par const char* new\_node\_name,\par const CvFileNode* node,\par int embed );}
 
 \begin{description}
 \cvarg{fs}{Destination file storage}
@@ -879,7 +879,7 @@ The function writes a copy of a file node to file storage. Possible applications
 \cvCPyFunc{WriteInt}
 Writes an integer value.
 
-\cvcodeC{void  cvWriteInt(\par CvFileStorage* fs,\par const char* name,\par int value);}
+\cvdefC{void  cvWriteInt(\par CvFileStorage* fs,\par const char* name,\par int value);}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -892,7 +892,7 @@ The function writes a single integer value (with or without a name) to the file 
 \cvCPyFunc{WriteRawData}
 Writes multiple numbers.
 
-\cvcodeC{void  cvWriteRawData( \par CvFileStorage* fs,\par const void* src,\par int len,\par const char* dt );}
+\cvdefC{void  cvWriteRawData( \par CvFileStorage* fs,\par const void* src,\par int len,\par const char* dt );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -929,7 +929,7 @@ have a name, they should be written to a sequence rather than a map.
 \cvCPyFunc{WriteReal}
 Writes a floating-point value.
 
-\cvcodeC{void  cvWriteReal( \par CvFileStorage* fs,\par const char* name,\par double value );}
+\cvdefC{void  cvWriteReal( \par CvFileStorage* fs,\par const char* name,\par double value );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -963,7 +963,7 @@ void write_termcriteria( CvFileStorage* fs, const char* struct_name,
 \cvCPyFunc{WriteString}
 Writes a text string.
 
-\cvcodeC{void  cvWriteString( \par CvFileStorage* fs,\par const char* name,\par const char* str,\par int quote=0 );}
+\cvdefC{void  cvWriteString( \par CvFileStorage* fs,\par const char* name,\par const char* str,\par int quote=0 );}
 
 \begin{description}
 \cvarg{fs}{File storage}
@@ -980,7 +980,7 @@ The function writes a text string to file storage.
 
 \ifCpp
 
-\cvfunc{FileStorage}\label{FileStorage}
+\cvCppFunc{FileStorage}
 The XML/YAML file storage class
 
 \begin{lstlisting}
@@ -1039,7 +1039,7 @@ public:
 \end{lstlisting}
 
 
-\cvfunc{FileNode}\label{FileNode}
+\cvCppFunc{FileNode}
 The XML/YAML file node class
 
 \begin{lstlisting}
@@ -1084,7 +1084,7 @@ public:
 };
 \end{lstlisting}
 
-\cvfunc{FileNodeIterator}\label{FileNodeIterator}
+\cvCppFunc{FileNodeIterator}
 The XML/YAML file node iterator class
 
 \begin{lstlisting}

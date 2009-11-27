@@ -127,16 +127,59 @@ class reStructuredTextRenderer(BaseRenderer):
     t = str(node.attributes['title'])
     return "\n\n%s\n%s\n\n" % (t, '-' * len(t)) + unicode(node)
 
-  def do_cvexp(self, node):
+  def do_cvdefX(self, node, lang):
+    if self.language != lang:
+      return u""
     self.indent = -1
     self.in_func = False
-    decl = unicode(node.attributes[self.language]).rstrip(' ;')  # remove trailing ';'
-    r = u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'cpp' : 'cfunction', 'py' : 'function'}[self.language], decl)
+    decl = unicode(node.attributes['a']).rstrip(' ;')  # remove trailing ';'
+    decl_list = decl.split(";")
+    r = u""
+    for d in decl_list:
+      r += u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'cpp' : 'cfunction', 'py' : 'function'}[self.language], d.strip())
     self.indent = 4
     if self.func_short_desc != '':
       r += self.ind() + self.func_short_desc + '\n\n'
       self.func_short_desc = ''
     return r
+    
+  def do_cvdefC(self, node):
+    return self.do_cvdefX(node, 'c')
+  
+  def do_cvcode(self, node):
+    #body = unicode(node.source).replace(u"\n",u"").replace(u"\\newline", u"\n");
+    #body = body.replace(u"\\par", u"\n").replace(u"\\cvcode{", "").replace(u"\\", u"")[:-1];
+    body = unicode(node.source).replace(u"\\newline", u"\n").replace("_ ", "_");
+    body = body.replace(u"\\par", u"\n").replace(u"\\cvcode{", "").replace(u"\n\n",u"\n");
+    body = body.replace(u",\n", ",\n    ").replace(u"\\", u"")[:-1];
+    
+    lines = body.split(u"\n")
+    self.indent += 4
+    body = "\n".join([u"%s    %s" % (self.ind(), s) for s in lines])
+    r = (u"\n\n%s::\n\n" % self.ind()) + unicode(body) + u"\n\n"
+    self.indent -= 4
+    return r
+    
+  def do_cvdefCpp(self, node):
+    lang = 'cpp'
+    if self.language != lang:
+      return u""
+    self.indent = -1
+    self.in_func = False
+    decl = unicode(node.source).replace(u"\n",u"").replace(u"\\newline", u"").replace(u"_ ", u"_");
+    decl = decl.replace(u"\\par", u"").replace(u"\\cvdefCpp{", "").replace(u"\\", u"").rstrip(u" ;}");
+    decl_list = decl.split(";")
+    r = u""
+    for d in decl_list:
+      r += u"\n\n.. %s:: %s\n\n" % ({'c' : 'cfunction', 'cpp' : 'cfunction', 'py' : 'function'}[self.language], d.strip())
+    self.indent = 4
+    if self.func_short_desc != '':
+      r += self.ind() + self.func_short_desc + '\n\n'
+      self.func_short_desc = ''
+    return r
+    
+  def do_cvdefPy(self, node):
+    return self.do_cvdefX(node, 'py')
 
   def do_description(self, node):
     self.descriptions += 1
@@ -153,15 +196,15 @@ class reStructuredTextRenderer(BaseRenderer):
         return u""
     return u"\n\n%s.. image:: %s\n\n" % (self.ind(), filename)
 
-  def do_cvfunc(self, node):
-    t = unicode(node.attributes['title']).strip()
+  def do_xfunc(self, node):
+    t = self.get_func_prefix() + unicode(node.attributes['title']).strip()
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
     self.in_func = True
     self.descriptions = 0
     self.after_parameters = False
     self.indent = 0
-    return u"" + unicode(node)
+    #return u"" + unicode(node)
 
     # Would like to look ahead to reorder things, but cannot see more than 2 ahead
     if 0:
@@ -171,7 +214,26 @@ class reStructuredTextRenderer(BaseRenderer):
         print "   ", n.nodeName, len(n.childNodes)
         n = n.nextSibling
       print "-----"
-    return label + u"\n\n%s\n%s\n\n" % (t, '^' * len(t)) + unicode(node)
+    return label + u"\n\n%s\n%s\n\n" % (t, '-' * len(t)) + unicode(node)
+
+  def do_cvfunc(self, node):
+    return self.do_xfunc(node)
+  
+  def get_func_prefix(self):
+    return u""
+    if self.language == 'c':
+      return u"cv"
+    if self.language == 'cpp':
+      return u"cv\\:\\:"
+    if self.language == 'py':
+      return u"cv\\."
+    return u""  
+    
+  def do_cvCPyFunc(self, node):
+    return self.do_xfunc(node)
+    
+  def do_cvCppFunc(self, node):
+    return self.do_xfunc(node)    
 
   def do_cvstruct(self, node):
     t = str(node.attributes['title']).strip()
@@ -257,14 +319,33 @@ class reStructuredTextRenderer(BaseRenderer):
         return u":cmacro:`%s`" % name
     return None
 
-  def do_cross(self, node):
-    t = str(node.attributes['name']).strip()
+  def do_xcross(self, refname):
     # try to guess whether t is a function, struct or macro
     # and if yes, generate the appropriate reference markup
-    rst_ref = self.gen_reference(t)
-    if rst_ref is not None:
-        return rst_ref
-    return u":ref:`%s`" % str(node.attributes['name']).strip()
+    #rst_ref = self.gen_reference(refname)
+    #if rst_ref is not None:
+    #    return rst_ref
+    return u":ref:`%s`" % refname
+
+  def do_cross(self, node):
+    return self.do_xcross(str(node.attributes['name']).strip())
+    
+  def do_cvCross(self, node):
+    prefix = self.get_func_prefix()
+    if self.language == 'cpp':
+      t = prefix + str(node.attributes['altname']).strip()
+      return u":ref:`%s`" % t
+    else:  
+      t = prefix + str(node.attributes['name']).strip()
+    return self.do_xcross(t)
+  
+  def do_cvCPyCross(self, node):
+    t = self.get_func_prefix() + str(node.attributes['name']).strip()
+    return self.do_xcross(t)
+    
+  def do_cvCppCross(self, node):
+    t = self.get_func_prefix() + str(node.attributes['name']).strip()
+    return u":ref:`%s`" % t
 
   def ind(self):
     return u" " * self.indent
@@ -291,7 +372,8 @@ class reStructuredTextRenderer(BaseRenderer):
     self.indent -= 4
     param_str = u"\n%s:param %s: %s"
     return param_str % (self.ind(), str(node.attributes['item']).strip(), self.fix_quotes(defstr).strip())
-
+    #lines = defstr.split('\n')
+    #return u"\n%s%s\n%s\n" % (self.ind(), str(node.attributes['item']).strip(), "\n".join([self.ind()+"  "+l for l in lines]))
 
   def do_bgroup(self, node):
     return u"bgroup(%s)" % node.source
@@ -306,7 +388,8 @@ class reStructuredTextRenderer(BaseRenderer):
     return unicode(node)
 
   def do_item(self, node):
-    if node.attributes['term'] != None:
+    #if node.attributes['term'] != None:
+    if node.attributes.get('term',None):
       self.indent += 4
       defstr = unicode(node).strip()
       assert not (u"\xe2" in unicode(defstr))
@@ -337,8 +420,14 @@ class reStructuredTextRenderer(BaseRenderer):
   def do_lstlisting(self, node):
     self.in_func = False
     lines = node.source.split('\n')
+    self.indent += 2
     body = "\n".join([u"%s    %s" % (self.ind(), s) for s in lines[1:-1]])
-    return u"\n\n%s::\n\n" % self.ind() + unicode(body) + "\n\n"
+    r = (u"\n\n%s::\n\n" % self.ind()) + unicode(body) + u"\n\n"
+    if self.func_short_desc != '':
+      r = self.ind() + self.func_short_desc + '\n\n' + r
+      self.func_short_desc = ''
+    self.indent -= 2  
+    return r
 
   def do_math(self, node):
     return u":math:`%s`" % node.source
@@ -427,7 +516,7 @@ def preprocess_conditionals(fname, suffix, conditionals):
             ifstack[-1] = not ifstack[-1]
         elif l.startswith("\\fi"):
             ifstack.pop()
-        elif ifstack[-1]:
+        elif not False in ifstack:
             fout.write(l)
     f.close()
     fout.close()
@@ -436,11 +525,37 @@ def parse_documentation_source(language):
     # Instantiate a TeX processor and parse the input text
     tex = TeX()
     tex.ownerDocument.config['files']['split-level'] = 0
-    #tex.ownerDocument.config['files']['filename'] = 'cxcore.rst'
+    master_f = open("../online-opencv.tex", "rt")
+    out_master_f = open(("../online-opencv-%s.tex" % language), "wt")
+    flist = []
+    
+    for l in master_f.readlines():
+      outl = l
+      if l.startswith("\\newcommand{\\targetlang}{}"):
+        outl = l.replace("}", ("%s}" % language))
+      elif l.startswith("\\input{"):
+        flist.append(re.findall(r"\{(.+)\}", l)[0])
+        outl = l.replace("}", ("-%s}" % language))
+      out_master_f.write(outl)
+      
+    master_f.close()
+    out_master_f.close()
+    
+    index_f = open("index.rst.copy", "rt")
+    index_lines = list(index_f.readlines())
+    index_f.close()
+    out_index_f = open("index.rst", "wt")
+    header_line = "OpenCV |version| %s Reference" % {"py": "Python", "c": "C", "cpp": "C++"}[language]
+    index_lines = [header_line + "\n", "="*len(header_line) + "\n", "\n"] + index_lines
+    for l in index_lines:
+      out_index_f.write(l)
+    out_index_f.close()
 
-    for f in ['CxCore', 'CvReference', 'HighGui']:
-        preprocess_conditionals(f, '-' + language,
-            {'C':language=='c', 'Python':language=='py', 'Cpp':language=='cpp', 'plastex':True}) 
+    for f in flist:
+      preprocess_conditionals(f, '-' + language,
+        {'C':language=='c', 'Python':language=='py',
+         'Py':language=='py', 'CPy':(language=='py' or language == 'c'),
+         'Cpp':language=='cpp', 'plastex':True}) 
 
     if 1:
         tex.input("\\input{online-opencv-%s.tex}" % language)

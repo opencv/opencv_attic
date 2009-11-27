@@ -5,12 +5,16 @@
 \cvCPyFunc{KMeans2}
 Splits set of vectors by a given number of clusters.
 
-\cvcodeC{void cvKMeans2( \par const CvArr* samples,\par int cluster\_count,\par CvArr* labels,\par CvTermCriteria termcrit);}
-\cvcodePy{KMeans2(samples,cluster\_count,labels,termcrit)-> None}
+\cvdefC{int cvKMeans2(const CvArr* samples, int nclusters,\par
+                      CvArr* labels, CvTermCriteria termcrit,\par
+                      int attempts=1, CvRNG* rng=0, \par
+                      int flags=0, CvArr* centers=0,\par
+                      double* compactness=0);}
+\cvdefPy{KMeans2(samples,nclusters,labels,termcrit)-> None}
 
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
-\cvarg{cluster\_count}{Number of clusters to split the set by}
+\cvarg{nclusters}{Number of clusters to split the set by}
 \cvarg{labels}{Output integer vector storing cluster indices for every sample}
 \cvarg{termcrit}{Specifies maximum number of iterations and/or accuracy (distance the centers can move by between subsequent iterations)}
 \ifC
@@ -23,22 +27,20 @@ instead of generating random labels. For the second and further attempts,
 the function will use randomly generated labels in any case}
 \cvarg{centers}{The optional output array of the cluster centers}
 \cvarg{compactness}{The optional output parameter, which is computed as
-\[
-\sum_i ||\texttt{samples}_i - \texttt{centers}_{\texttt{labels}_i}||^2
-\]
+$\sum_i ||\texttt{samples}_i - \texttt{centers}_{\texttt{labels}_i}||^2$
 after every attempt; the best (minimum) value is chosen and the
 corresponding labels are returned by the function. Basically, the
 user can use only the core of the function, set the number of
 attempts to 1, initialize labels each time using a custom algorithm
-\newline (\texttt{flags}=\texttt{CV\_KMEAN\_USE\_INITIAL\_LABELS}) and, based on the output compactness
+(\texttt{flags=CV\_KMEAN\_USE\_INITIAL\_LABELS}) and, based on the output compactness
 or any other criteria, choose the best clustering.}
 \fi
 \end{description}
 
 The function \texttt{cvKMeans2} implements a k-means algorithm that finds the
-centers of \texttt{cluster\_count} clusters and groups the input samples
+centers of \texttt{nclusters} clusters and groups the input samples
 around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
-samples stored in the row $i$ of the \texttt{samples} matrix.
+samples stored in the i-th row of the \texttt{samples} matrix.
 
 \ifC
 \cvfunc{Example: Clustering random samples of multi-gaussian distribution with k-means}
@@ -132,7 +134,7 @@ Splits a sequence into equivalency classes.
 typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
 \end{lstlisting}
 
-\cvcodeC{
+\cvdefC{
 int cvSeqPartition( \par const CvSeq* seq,\par CvMemStorage* storage,\par CvSeq** labels,\par CvCmpFunc is\_equal,\par void* userdata );
 }
 
@@ -234,14 +236,9 @@ int main( int argc, char** argv )
 
 \cvCppFunc{kmeans}
 
-\begin{lstlisting}
-double kmeans( const Mat& samples, int clusterCount, Mat& labels,
-               TermCriteria termcrit, int attempts,
-               int flags, Mat* centers );
-enum { KMEANS_RANDOM_CENTERS=0,
-       KMEANS_PP_CENTERS=2,
-       KMEANS_USE_INITIAL_LABELS=1 };
-\end{lstlisting}
+\cvdefCpp{double kmeans( const Mat\& samples, int clusterCount, Mat\& labels,\par
+               TermCriteria termcrit, int attempts,\par
+               int flags, Mat* centers );}
 \begin{description}
 \cvarg{samples}{Floating-point matrix of input samples, one row per sample}
 \cvarg{clusterCount}{The number of clusters to split the set by}
@@ -272,16 +269,14 @@ after every attempt; the best (minimum) value is chosen and the
 corresponding labels and the compactness value are returned by the function.
 Basically, the user can use only the core of the function, set the number of
 attempts to 1, initialize labels each time using some custom algorithm and pass them with
-\newline (\texttt{flags}=\texttt{KMEANS\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering.
+\par (\texttt{flags}=\texttt{KMEANS\_USE\_INITIAL\_LABELS}) flag, and then choose the best (most-compact) clustering.
 
 \cvCppFunc{partition}
 Splits an element set into equivalency classes.
 
-\begin{lstlisting}
-template<typename _Tp, class _EqPredicate> int
-    partition( const vector<_Tp>& vec, vector<int>& labels,
-               _EqPredicate predicate=_EqPredicate());
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp, class \_EqPredicate> int\newline
+    partition( const vector<\_Tp>\& vec, vector<int>\& labels,\par
+               \_EqPredicate predicate=\_EqPredicate());}
 \begin{description}
 \cvarg{vec}{The set of elements stored as a vector}
 \cvarg{labels}{The output vector of labels; will contain as many elements as \texttt{vec}. Each label \texttt{labels[i]} is 0-based cluster index of \texttt{vec[i]}}
@@ -302,9 +297,10 @@ information about FLANN can be found in \cite{muja_flann_2009}.
 
 \cvCppFunc{flann::Index}
 The FLANN nearest neighbor index class.
-\begin{lstlisting}
-  namespace flann {
 
+\begin{lstlisting}
+namespace flann
+{
     class Index 
     {
     public:
@@ -338,51 +334,46 @@ The FLANN nearest neighbor index class.
 
 	    int size() const;
     };
-  }
+}
 \end{lstlisting}
 
 \cvCppFunc{flann::Index::Index}
 Constructs a nearest neighbor search index for a given dataset.
-\begin{lstlisting}
-Index::Index(const Mat& features, const IndexParams& params);
-\end{lstlisting}
+
+\cvdefCpp{Index::Index(const Mat\& features, const IndexParams\& params);}
 \begin{description}
 \cvarg{features}{ Matrix of type CV\_32F containing the features(points) to index. The size of the matrix is num\_features x feature\_dimensionality.}
-\cvarg{params}{Structure containing the index parameters. The type of index that will be constructed depends on the type of this parameter.}
-\end{description}
-
+\cvarg{params}{Structure containing the index parameters. The type of index that will be constructed depends on the type of this parameter.
 The possible parameter types are:
 
-\begin {itemize}
- \item \texttt{LinearIndexParams} - When passing an object of this type, the index will perform a linear, brute-force search.
-\begin{lstlisting}
-  struct LinearIndexParams : public IndexParams 
-  {
-  };
-\end{lstlisting}
+\begin{description}
+ \cvarg{LinearIndexParams}{When passing an object of this type, the index will perform a linear, brute-force search.
+   \cvcode{
+    struct LinearIndexParams : public IndexParams\newline
+  \{\newline
+  \};}
+  }
 
- \item \texttt{KDTreeIndexParams} - When passing an object of this type the index constructed will consist of a set 
+\cvarg{KDTreeIndexParams}{When passing an object of this type the index constructed will consist of a set 
 of randomized kd-trees which will be searched in parallel.
-\begin{lstlisting}
-  struct KDTreeIndexParams : public IndexParams 
-  {
-	KDTreeIndexParams( int trees = 4 );
-  };
-\end{lstlisting}
+ \cvcode{
+  struct KDTreeIndexParams : public IndexParams\newline
+  \{\newline
+	KDTreeIndexParams( int trees = 4 );\newline
+  \};}
 \begin{description}
 \cvarg{trees}{The number of parallel kd-trees to use. Good values are in the range [1..16]}
 \end{description}
-
- \item \texttt{KMeansIndexParams}  - When passing an object of this type the index constructed will be a hierarchical k-means tree. 
-\begin{lstlisting}
-  struct KMeansIndexParams : public IndexParams 
-  {
-	KMeansIndexParams( int branching = 32, 
-			   int iterations = 11,
-			   flann_centers_init_t centers_init = CENTERS_RANDOM, 
-			   float cb_index = 0.2 );	
-  };
-\end{lstlisting}
+}
+\cvarg{KMeansIndexParams}{When passing an object of this type the index constructed will be a hierarchical k-means tree. 
+\cvcode{
+  struct KMeansIndexParams : public IndexParams\newline
+  \{\newline
+	    KMeansIndexParams( int branching = 32,\par
+			   int iterations = 11,\par
+			   flann\_centers\_init\_t centers\_init = CENTERS\_RANDOM,\par
+			   float cb\_index = 0.2 );\newline
+  \};}
 \begin{description}
 \cvarg{branching}{ The branching factor to use for the hierarchical k-means tree }
 \cvarg{iterations}{ The maximum number of iterations to use in the k-means clustering 
@@ -393,37 +384,35 @@ of randomized kd-trees which will be searched in parallel.
 		  CENTERS\_RANDOM (picks the initial cluster centers randomly), CENTERS\_GONZALES (picks the
 		  initial centers using Gonzales' algorithm) and CENTERS\_KMEANSPP (picks the initial
 		centers using the algorithm suggested in \cite{arthur_kmeanspp_2007}) }
-\cvarg{cb\_index} { This parameter (cluster boundary index) influences the
+\cvarg{cb\_index}{ This parameter (cluster boundary index) influences the
 		  way exploration is performed in the hierarchical kmeans tree. When \texttt{cb\_index} is zero
 		  the next kmeans domain to be explored is choosen to be the one with the closest center. 
 		  A value greater then zero also takes into account the size of the domain.}
 \end{description}
-
- \item \texttt{CompositeIndexParams} - When using a parameters object of this type the index created combines the randomized kd-trees 
+}
+\cvarg{CompositeIndexParams}{When using a parameters object of this type the index created combines the randomized kd-trees 
 	and the hierarchical k-means tree.
-\begin{lstlisting}
-  struct CompositeIndexParams : public IndexParams 
-  {
-	CompositeIndexParams( int trees = 4, 
-			      int branching = 32, 
-			      int iterations = 11,
-			      flann_centers_init_t centers_init = CENTERS_RANDOM, 
-			      float cb_index = 0.2 );
-  };
-\end{lstlisting}
-
- \item \texttt{AutotunedIndexParams} - When passing an object of this type the index created is automatically tuned to offer 
+\cvcode{
+  struct CompositeIndexParams : public IndexParams\newline 
+  \{\newline
+	    CompositeIndexParams( int trees = 4,\par
+			      int branching = 32,\par
+			      int iterations = 11,\par
+			      flann\_centers\_init\_t centers\_init = CENTERS\_RANDOM,\par 
+			      float cb\_index = 0.2 );\newline
+  \};}
+}
+\cvarg{AutotunedIndexParams}{When passing an object of this type the index created is automatically tuned to offer 
 the best performance, by choosing the optimal index type (randomized kd-trees, hierarchical kmeans, linear) and parameters for the
 dataset provided.
-\begin{lstlisting}
-  struct AutotunedIndexParams : public IndexParams 
-  {
-	AutotunedIndexParams( float target_precision = 0.9, 
-			      float build_weight = 0.01,
-			      float memory_weight = 0, 
-			      float sample_fraction = 0.1 );
-  };
-\end{lstlisting}
+\cvcode{
+  struct AutotunedIndexParams : public IndexParams\newline 
+  \{\newline
+	    AutotunedIndexParams( float target\_precision = 0.9,\par
+			      float build\_weight = 0.01,\par
+			      float memory\_weight = 0,\par
+			      float sample\_fraction = 0.1 );\newline
+  \};}
 \begin{description}
 \cvarg{target\_precision}{ Is a number between 0 and 1 specifying the
 percentage of the approximate nearest-neighbor searches that return the
@@ -450,28 +439,28 @@ very large datasets can take longer than desired. In such case using just a frac
 data helps speeding up this algorithm while still giving good approximations of the
 optimum parameters.}
 \end{description}
-
- \item \texttt{SavedIndexParams} - This object type is used for loading a previously saved index from the disk.
-\begin{lstlisting}
-  struct SavedIndexParams : public IndexParams {
-	SavedIndexParams( std::string filename );
-  };
-\end{lstlisting}
+}
+ \cvarg{SavedIndexParams}{This object type is used for loading a previously saved index from the disk.
+\cvcode{
+  struct SavedIndexParams : public IndexParams\newline
+  \{\newline
+	   SavedIndexParams( std::string filename );\newline
+  \};}
 \begin{description}
 \cvarg{filename}{ The filename in which the index was saved. }
 \end{description}
-\end {itemize}
-
+}
+\end {description}
+}
+\end{description}
 
 \cvCppFunc{flann::Index::knnSearch}
 Performs a K-nearest neighbor search for a given query point using the index.
-\begin{lstlisting}
-void Index::knnSearch(const vector<float>& query, 
-		vector<int>& indices, 
-		vector<float>& dists, 
-		int knn, 
-		const SearchParams& params);
-\end{lstlisting}
+\cvdefCpp{void Index::knnSearch(const vector<float>\& query, \par
+		vector<int>\& indices, \par
+		vector<float>\& dists, \par
+		int knn, \par
+		const SearchParams\& params);}
 \begin{description}
 \cvarg{query}{The query point}
 \cvarg{indices}{Vector that will contain the indices of the K-nearest neighbors found. It must have at least knn size.}
@@ -492,15 +481,13 @@ precision was also computed, in which case this parameter is ignored.}
 \end{description}
 \end{description}
 
-\cvfunc{flann::Index::knnSearch}\label{flann::Index::knnSearch}
+\cvCppFunc{flann::Index::knnSearch}
 Performs a K-nearest neighbor search for multiple query points.
-\begin{lstlisting}
-void Index::knnSearch(const Mat& queries, 
-		Mat& indices, 
-		Mat& dists, 
-		int knn, 
-		const SearchParams& params);
-\end{lstlisting}
+
+\cvdefCpp{void Index::knnSearch(const Mat\& queries,\par
+		Mat\& indices, Mat\& dists,\par
+		int knn, const SearchParams\& params);}
+
 \begin{description}
 \cvarg{queries}{The query points, one per row}
 \cvarg{indices}{Indices of the nearest neighbors found }
@@ -512,13 +499,11 @@ void Index::knnSearch(const Mat& queries,
 
 \cvCppFunc{flann::Index::radiusSearch}
 Performs a radius nearest neighbor search for a given query point.
-\begin{lstlisting}
-int Index::radiusSearch(const vector<float>& query, 
-		  vector<int>& indices, 
-		  vector<float>& dists, 
-		  float radius, 
-		  const SearchParams& params);
-\end{lstlisting}
+\cvdefCpp{int Index::radiusSearch(const vector<float>\& query, \par
+		  vector<int>\& indices, \par
+		  vector<float>\& dists, \par
+		  float radius, \par
+		  const SearchParams\& params);}
 \begin{description}
 \cvarg{query}{The query point}
 \cvarg{indices}{Vector that will contain the indices of the points found within the search radius in decreasing order of the distance to the query point. If the number of neighbors in the search radius is bigger than the size of this vector, the ones that don't fit in the vector are ignored. }
@@ -530,13 +515,11 @@ int Index::radiusSearch(const vector<float>& query,
 
 \cvCppFunc{flann::Index::radiusSearch}
 Performs a radius nearest neighbor search for multiple query points.
-\begin{lstlisting}
-int Index::radiusSearch(const Mat& query, 
-		  Mat& indices, 
-		  Mat& dists, 
-		  float radius, 
-		  const SearchParams& params);
-\end{lstlisting}
+\cvdefCpp{int Index::radiusSearch(const Mat\& query, \par
+		  Mat\& indices, \par
+		  Mat\& dists, \par
+		  float radius, \par
+		  const SearchParams\& params);}
 \begin{description}
 \cvarg{queries}{The query points, one per row}
 \cvarg{indices}{Indices of the nearest neighbors found}
@@ -548,9 +531,7 @@ int Index::radiusSearch(const Mat& query,
 
 \cvCppFunc{flann::Index::save}
 Saves the index to a file.
-\begin{lstlisting}
-void Index::save(std::string filename);
-\end{lstlisting}
+\cvdefCpp{void Index::save(std::string filename);}
 \begin{description}
 \cvarg{filename}{The file to save the index to}
 \end{description}
@@ -558,10 +539,8 @@ void Index::save(std::string filename);
 
 \cvCppFunc{flann::hierarchicalClustering}
 Clusters the given points by constructing a hierarchical k-means tree and choosing a cut in the tree that minimizes the cluster's variance.
-\begin{lstlisting}
-int hierarchicalClustering(const Mat& features, Mat& centers,
-                                      const KMeansIndexParams& params);
-\end{lstlisting}
+\cvdefCpp{int hierarchicalClustering(const Mat\& features, Mat\& centers,\par
+                                      const KMeansIndexParams\& params);}
 \begin{description}
 \cvarg{features}{The points to be clustered}
 \cvarg{centers}{The centers of the clusters obtained. The number of rows in this matrix represents the number of clusters desired, 

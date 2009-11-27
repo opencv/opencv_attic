@@ -1,8 +1,8 @@
-\ifCPy
-
 \section{Planar Subdivisions}
 
-\cvstruct{CvSubdiv2D}\label{CvSubdiv2D}
+\ifCPy
+
+\cvfunc{CvSubdiv2D}\label{CvSubdiv2D}
 
 Planar subdivision.
 
@@ -46,7 +46,7 @@ subdivisions can be used for the 3d piece-wise transformation of a plane,
 morphing, fast location of points on the plane, building special graphs
 (such as NNG,RNG) and so forth.
 
-\cvstruct{CvQuadEdge2D}\label{CvQuadEdge2D}
+\cvfunc{CvQuadEdge2D}\label{CvQuadEdge2D}
 
 Quad-edge of planar subdivision.
 
@@ -73,7 +73,7 @@ Quad-edge is a basic element of subdivision containing four edges (e, eRot, reve
 
 \includegraphics[width=0.5\textwidth]{pics/quadedge.png}
 
-\cvstruct{CvSubdiv2DPoint}\label{CvSubdiv2DPoint}
+\cvfunc{CvSubdiv2DPoint}\label{CvSubdiv2DPoint}
 
 Point of original or dual subdivision.
 
@@ -95,9 +95,9 @@ CvSubdiv2DPoint;
 \cvCPyFunc{CalcSubdivVoronoi2D}
 Calculates the coordinates of Voronoi diagram cells.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcSubdivVoronoi2D( \par CvSubdiv2D* subdiv );
-}\cvcodePy{CalcSubdivVoronoi2D(subdiv)-> None}
+}\cvdefPy{CalcSubdivVoronoi2D(subdiv)-> None}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision, in which all the points are already added}
@@ -111,9 +111,9 @@ cell at that point.
 \cvCPyFunc{ClearSubdivVoronoi2D}
 Removes all virtual points.
 
-\cvcodeC{
+\cvdefC{
 void cvClearSubdivVoronoi2D( CvSubdiv2D* subdiv );
-}\cvcodePy{ClearSubdivVoronoi2D(subdiv)-> None}
+}\cvdefPy{ClearSubdivVoronoi2D(subdiv)-> None}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision}
@@ -127,9 +127,9 @@ was modified after previous call to the function.
 \cvCPyFunc{CreateSubdivDelaunay2D}
 Creates an empty Delaunay triangulation.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2D* cvCreateSubdivDelaunay2D( \par CvRect rect,\par CvMemStorage* storage );
-}\cvcodePy{CreateSubdivDelaunay2D(rect,storage)-> delaunay\_triangulation}
+}\cvdefPy{CreateSubdivDelaunay2D(rect,storage)-> delaunay\_triangulation}
 
 \begin{description}
 \cvarg{rect}{Rectangle that includes all of the 2d points that are to be added to the subdivision}
@@ -146,9 +146,9 @@ Note that the triangulation is a single large triangle that covers the given rec
 \cvCPyFunc{FindNearestPoint2D}
 Finds the closest subdivision vertex to the given point.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DPoint* cvFindNearestPoint2D( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt );
-}\cvcodePy{FindNearestPoint2D(subdiv,pt)-> point}
+}\cvdefPy{FindNearestPoint2D(subdiv,pt)-> point}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
@@ -165,9 +165,9 @@ point. The function returns a pointer to the found subdivision vertex.
 \cvCPyFunc{Subdiv2DEdgeDst}
 Returns the edge destination.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DPoint* cvSubdiv2DEdgeDst( \par CvSubdiv2DEdge edge );
-}\cvcodePy{Subdiv2DEdgeDist(edge)-> point}
+}\cvdefPy{Subdiv2DEdgeDist(edge)-> point}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -181,9 +181,9 @@ can be calculated using the function \cvCPyCross{CalcSubdivVoronoi2D}.
 \cvCPyFunc{Subdiv2DEdgeOrg}
 Returns the edge origin.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DPoint* cvSubdiv2DEdgeOrg( \par CvSubdiv2DEdge edge );
-}\cvcodePy{Subdiv2DEdgeOrg(edge)-> point}
+}\cvdefPy{Subdiv2DEdgeOrg(edge)-> point}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -198,11 +198,11 @@ yet. The virtual points can be calculated using the function
 \cvCPyFunc{Subdiv2DGetEdge}
 Returns one of the edges related to the given edge.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DEdge  cvSubdiv2DGetEdge( CvSubdiv2DEdge edge, CvNextEdgeType type );
 
 
-}\cvcodePy{Subdiv2DGetEdge(edge,type)-> CvSubdiv2DEdge}
+}\cvdefPy{Subdiv2DGetEdge(edge,type)-> CvSubdiv2DEdge}
 \begin{lstlisting}
 #define cvSubdiv2DNextEdge( edge ) cvSubdiv2DGetEdge( edge, CV_NEXT_AROUND_ORG )
 \end{lstlisting}
@@ -227,9 +227,9 @@ The function returns one of the edges related to the input edge.
 \cvCPyFunc{Subdiv2DLocate}
 Returns the location of a point within a Delaunay triangulation.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DPointLocation  cvSubdiv2DLocate( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt,\par CvSubdiv2DEdge* edge,\par CvSubdiv2DPoint** vertex=NULL );
-}\cvcodePy{Subdiv2DLocate(subdiv, pt) -> (loc, where)}
+}\cvdefPy{Subdiv2DLocate(subdiv, pt) -> (loc, where)}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}
@@ -265,9 +265,9 @@ The function locates the input point within the subdivision. There are 5 cases:
 \cvCPyFunc{Subdiv2DRotateEdge}
 Returns another edge of the same quad-edge.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DEdge  cvSubdiv2DRotateEdge( \par CvSubdiv2DEdge edge,\par int rotate );
-}\cvcodePy{Subdiv2DRotateEdge(edge,rotate)-> CvSubdiv2DEdge}
+}\cvdefPy{Subdiv2DRotateEdge(edge,rotate)-> CvSubdiv2DEdge}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}
@@ -285,9 +285,9 @@ The function returns one of the edges of the same quad-edge as the input edge.
 \cvCPyFunc{SubdivDelaunay2DInsert}
 Inserts a single point into a Delaunay triangulation.
 
-\cvcodeC{
+\cvdefC{
 CvSubdiv2DPoint*  cvSubdivDelaunay2DInsert( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt);
-}\cvcodePy{SubdivDelaunay2DInsert(subdiv,pt)-> point}
+}\cvdefPy{SubdivDelaunay2DInsert(subdiv,pt)-> point}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision created by the function \cvCPyCross{CreateSubdivDelaunay2D}}

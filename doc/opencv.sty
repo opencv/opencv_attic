@@ -41,26 +41,6 @@ showtabs=false,                 % show tabs within strings adding particular und
 \item[\texttt{#1}] #2
 }
 
-\newcommand{\cvexp}[3]{
-\ifthenelse{\equal{\genc}{true}\and\equal{\genpy}{true}}{\noindent In C:}{}
-\ifthenelse{\equal{\genc}{true}}{
-\begin{shaded}
-\begin{alltt}
-\setlength{\parindent}{1in}
-#1
-\end{alltt}
-\end{shaded}
-}{}
-\ifthenelse{\equal{\genpy}{true}}{
-\ifthenelse{\equal{\genc}{true}\and\equal{\genpy}{true}}{\noindent In Python:}{}
-\begin{shaded}
-\begin{alltt}
-#3
-\end{alltt}
-\end{shaded}
-}{}
-}
-
 \newcommand{\cvFunc}[2]{
 \ifthenelse{\equal{\targetlang}{c}}
 {\subsection{cv#1}\index{cv#1}\label{cfunc.#1}}
@@ -81,7 +61,7 @@ showtabs=false,                 % show tabs within strings adding particular und
 \newcommand{\cvCPyCross}[1]{\cvCross{#1}{}}
 \newcommand{\cvCppCross}[1]{\cvCross{}{#1}}
 
-\newcommand{\cvcodeC}[1]{
+\newcommand{\cvdefC}[1]{
 \ifthenelse{\equal{\targetlang}{c}}{
 \begin{shaded}
 \begin{alltt}
@@ -92,7 +72,7 @@ showtabs=false,                 % show tabs within strings adding particular und
 }{}
 }
 
-\newcommand{\cvcodeCpp}[1]{
+\newcommand{\cvdefCpp}[1]{
 \ifthenelse{\equal{\targetlang}{cpp}}{
 \begin{shaded}
 \begin{alltt}
@@ -103,7 +83,7 @@ showtabs=false,                 % show tabs within strings adding particular und
 }{}
 }
 
-\newcommand{\cvcodePy}[1]{
+\newcommand{\cvdefPy}[1]{
 \ifthenelse{\equal{\targetlang}{python}}{
 \begin{shaded}
 \begin{alltt}
@@ -133,21 +113,10 @@ showtabs=false,                 % show tabs within strings adding particular und
 }{}
 }
 
-\newcommand{\cvCppPy}[1]{
-\ifthenelse{\equal{\targetlang}{cpp}\or\equal{\targetlang}{python}}{
-#1
-}{}
-}
-
-\newcommand{\cvCPy}[1]{
-\ifthenelse{\equal{\targetlang}{c}\or\equal{\targetlang}{python}}{
-#1
-}{}
-}
-
 \newcommand{\cvcode}[1]{
 \begin{shaded}
 \begin{alltt}
+\setlength{\parindent}{1in}
 #1
 \end{alltt}
 \end{shaded}

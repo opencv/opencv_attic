@@ -17,13 +17,13 @@ The actual implementations of the geometrical transformations, from the most gen
 \cvCPyFunc{2DRotationMatrix}
 Calculates the affine matrix of 2d rotation.
 
-\cvcodeC{
+\cvdefC{
 CvMat* cv2DRotationMatrix(
 \par CvPoint2D32f center,
 \par double angle,
 \par double scale,
 \par CvMat* mapMatrix );
-}\cvcodePy{2DRotationMatrix(center,angle,scale,mapMatrix)-> None}
+}\cvdefPy{2DRotationMatrix(center,angle,scale,mapMatrix)-> None}
 
 \begin{description}
 \cvarg{center}{Center of the rotation in the source image}
@@ -52,12 +52,12 @@ The transformation maps the rotation center to itself. If this is not the purpos
 \cvCPyFunc{GetAffineTransform}
 Calculates the affine transform from 3 corresponding points.
 
-\cvcodeC{
+\cvdefC{
 CvMat* cvGetAffineTransform(
 \par const CvPoint2D32f* src,
 \par const CvPoint2D32f* dst, 
 \par CvMat* mapMatrix );
-}\cvcodePy{GetAffineTransform(src,dst,mapMatrix)-> None}
+}\cvdefPy{GetAffineTransform(src,dst,mapMatrix)-> None}
 
 \begin{description}
 \cvarg{src}{ Coordinates of 3 triangle vertices in the source image}
@@ -93,12 +93,12 @@ i=0,1,2
 \cvCPyFunc{GetPerspectiveTransform}
 Calculates the perspective transform from 4 corresponding points.
 
-\cvcodeC{
+\cvdefC{
 CvMat* cvGetPerspectiveTransform(
 \par const CvPoint2D32f* src,
 \par const CvPoint2D32f* dst,
 \par CvMat* mapMatrix );
-}\cvcodePy{GetPerspectiveTransform(src,dst,mapMatrix)-> None}
+}\cvdefPy{GetPerspectiveTransform(src,dst,mapMatrix)-> None}
 
 \begin{description}
 \cvarg{src}{Coordinates of 4 quadrangle vertices in the source image}
@@ -134,12 +134,12 @@ i=0,1,2,3
 \cvCPyFunc{GetQuadrangleSubPix}
 Retrieves the pixel quadrangle from an image with sub-pixel accuracy.
 
-\cvcodeC{
+\cvdefC{
 void cvGetQuadrangleSubPix(
 \par const CvArr* src,
 \par CvArr* dst,
 \par const CvMat* mapMatrix );
-}\cvcodePy{GetQuadrangleSubPix(src,dst,mapMatrix)-> None}
+}\cvdefPy{GetQuadrangleSubPix(src,dst,mapMatrix)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -175,11 +175,11 @@ The values of pixels at non-integer coordinates are retrieved using bilinear int
 \cvCPyFunc{GetRectSubPix}
 Retrieves the pixel rectangle from an image with sub-pixel accuracy.
  
-\cvcodeC{void cvGetRectSubPix(
+\cvdefC{void cvGetRectSubPix(
 \par const CvArr* src,
 \par CvArr* dst,
 \par CvPoint2D32f center );
-}\cvcodePy{GetRectSubPix(src,dst,center)-> None}
+}\cvdefPy{GetRectSubPix(src,dst,center)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -204,8 +204,8 @@ pixel values beyond the image boundaries.
 \cvCPyFunc{InitUndistortMap}
 Computes an undistortion map.
 
-\cvcodeC{void cvInitUndistortMap( \par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvArr* mapx,\par CvArr* mapy );
-}\cvcodePy{InitUndistortMap(camera\_matrix,distortion\_coeffs,mapx,mapy)-> None}
+\cvdefC{void cvInitUndistortMap( \par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvArr* mapx,\par CvArr* mapy );
+}\cvdefPy{InitUndistortMap(camera\_matrix,distortion\_coeffs,mapx,mapy)-> None}
 
 \begin{description}
 \cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
@@ -214,30 +214,30 @@ Computes an undistortion map.
 \cvarg{mapy}{The output array of y-coordinates of the map}
 \end{description}
 
-The function \texttt{cvInitUndistortMap} pre-computes the undistortion map - coordinates of the corresponding pixel in the distorted image for every pixel in the corrected image. Then, the map (together with input and output images) can be passed to the \cross{Remap} function.
+The function \texttt{cvInitUndistortMap} pre-computes the undistortion map - coordinates of the corresponding pixel in the distorted image for every pixel in the corrected image. Then, the map (together with input and output images) can be passed to the \cvCPyCross{Remap} function.
 
 \cvCPyFunc{InitUndistortRectifyMap}
 Computes the undistortion and rectification transformation map of a head of a stereo camera.
 
-\cvcodeC{
+\cvdefC{
 void cvInitUndistortRectifyMap( \par const CvMat* camera\_matrix,
                                 \par const CvMat* dist\_coeffs,
                                 \par const CvMat* R,
                                 \par const CvMat* new\_camera\_matrix,
                                 \par CvArr* mapx, \par CvArr* mapy );
 
-}\cvcodePy{InitUndistortRectifyMap(camera\_matrix,dist\_coeffs,R,new\_camera\_matrix,mapx,mapy)-> None}
+}\cvdefPy{InitUndistortRectifyMap(camera\_matrix,dist\_coeffs,R,new\_camera\_matrix,mapx,mapy)-> None}
 
 \begin{description}
 \cvarg{camera\_matrix}{The camera matrix $A=[fx 0 cx; 0 fy cy; 0 0 1]$}
 \cvarg{dist\_coeffs}{The vector of distortion coefficients, \cross{4x1, 1x4, 5x1 or 1x5}}
-\cvarg{R}{The rectification transformation in object space (3x3 matrix). R1 or R2, computed by \cross{StereoRectify} can be passed here. If the parameter is NULL, the identity matrix is used}
+\cvarg{R}{The rectification transformation in object space (3x3 matrix). R1 or R2, computed by \cvCPyCross{StereoRectify} can be passed here. If the parameter is NULL, the identity matrix is used}
 \cvarg{new\_camera\_matrix}{The new camera matrix $A'=[fx' 0 cx'; 0 fy' cy'; 0 0 1]$}
 \cvarg{mapx}{The output array of x-coordinates of the map}
 \cvarg{mapy}{The output array of y-coordinates of the map}
 \end{description}
 
-The function \texttt{InitUndistortRectifyMap} is an extended version of \cross{InitUndistortMap}. That is, in addition to the correction of lens distortion, the function can also apply arbitrary perspective transformation R and finally it can scale and shift the image according to the new camera matrix. That is, in pseudo code the transformation can be represented as:
+The function \texttt{InitUndistortRectifyMap} is an extended version of \cvCPyCross{InitUndistortMap}. That is, in addition to the correction of lens distortion, the function can also apply arbitrary perspective transformation R and finally it can scale and shift the image according to the new camera matrix. That is, in pseudo code the transformation can be represented as:
 
 \begin{lstlisting}
 // (u,v) is the input point,
@@ -253,9 +253,9 @@ mapx(u,v) = x"*fx + cx
 mapy(u,v) = y"*fy + cy
 \end{lstlisting}
 
-Note that the code above does the reverse transformation from the target image (i.e. the ideal one, after undistortion and rectification) to the original "raw" image straight from the camera. That's for bilinear interpolation purposes and in order to fill the whole destination image w/o gaps using \cross{Remap}.\
+Note that the code above does the reverse transformation from the target image (i.e. the ideal one, after undistortion and rectification) to the original "raw" image straight from the camera. That's for bilinear interpolation purposes and in order to fill the whole destination image w/o gaps using \cvCPyCross{Remap}.
  
-Normally, this function is called [twice, once for each head of stereo camera] after \cross{StereoRectify}. But it is also possible to compute the rectification transformations directly from the fundamental matrix, e.g. by using \cross{StereoRectifyUncalibrated}. Such functions work with pixels and produce homographies as rectification transformations, not rotation matrices R in 3D space. In this case, the R can be computed from the homography matrix \texttt{H} as 
+Normally, this function is called [twice, once for each head of stereo camera] after \cvCPyCross{StereoRectify}. But it is also possible to compute the rectification transformations directly from the fundamental matrix, e.g. by using \cvCPyCross{StereoRectifyUncalibrated}. Such functions work with pixels and produce homographies as rectification transformations, not rotation matrices R in 3D space. In this case, the R can be computed from the homography matrix \texttt{H} as 
 
 \begin{lstlisting}
 R = inv(camera_matrix)*H*camera_matrix
@@ -264,14 +264,14 @@ R = inv(camera_matrix)*H*camera_matrix
 \cvCPyFunc{LogPolar}
 Remaps an image to log-polar space.
 
-\cvcodeC{
+\cvdefC{
 void cvLogPolar(
 \par const CvArr* src,
 \par CvArr* dst,
 \par CvPoint2D32f center,
 \par double M,
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS );}
-\cvcodePy{LogPolar(src,dst,center,M,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS)-> None}
+\cvdefPy{LogPolar(src,dst,center,M,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -345,7 +345,7 @@ And this is what the program displays when \texttt{opencv/samples/c/fruits.jpg} 
 \cvCPyFunc{Remap}
 Applies a generic geometrical transformation to the image.
 
-\cvcodeC{
+\cvdefC{
 void cvRemap(
 \par const CvArr* src,
 \par CvArr* dst,
@@ -353,7 +353,7 @@ void cvRemap(
 \par const CvArr* mapy,
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );}
-\cvcodePy{Remap(src,dst,mapx,mapy,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll0))-> None}
+\cvdefPy{Remap(src,dst,mapx,mapy,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -379,12 +379,12 @@ Note that the function can not operate in-place.
 \cvCPyFunc{Resize}
 Resizes an image.
 
-\cvcodeC{
+\cvdefC{
 void cvResize(
 \par const CvArr* src,
 \par CvArr* dst,
 \par int interpolation=CV\_INTER\_LINEAR );}
-\cvcodePy{Resize(src,dst,interpolation=CV\_INTER\_LINEAR)-> None}
+\cvdefPy{Resize(src,dst,interpolation=CV\_INTER\_LINEAR)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -403,9 +403,9 @@ The function \texttt{cvResize} resizes an image \texttt{src} so that it fits exa
 \cvCPyFunc{Undistort2}
 Transforms an image to compensate for lens distortion.
 
-\cvcodeC{void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs );
+\cvdefC{void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs );
 }
-\cvcodePy{Undistort2(src,dst,intrinsic\_matrix,distortion\_coeffs)-> None}
+\cvdefPy{Undistort2(src,dst,intrinsic\_matrix,distortion\_coeffs)-> None}
 
 \begin{description}
 \cvarg{src}{The input (distorted) image}
@@ -417,7 +417,7 @@ Transforms an image to compensate for lens distortion.
 The function \texttt{cvUndistort2} transforms the image to compensate
 radial and tangential lens distortion. The camera matrix and
 distortion parameters can be determined using
-\cross{CalibrateCamera2}. For every
+\cvCPyCross{CalibrateCamera2}. For every
 pixel in the output image the function computes the coordinates of the
 corresponding location in the input image using the formulas in the
 section beginning. Then, the pixel value is computed using bilinear
@@ -431,7 +431,7 @@ The function can not operate in-place.
 \cvCPyFunc{WarpAffine}
 Applies an affine transformation to an image.
 
-\cvcodeC{
+\cvdefC{
 void cvWarpAffine(
 \par const CvArr* src,
 \par CvArr* dst,
@@ -439,7 +439,7 @@ void cvWarpAffine(
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );
 }
-\cvcodePy{WarpAffline(src,dst,mapMatrix,flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0))-> None}
+\cvdefPy{WarpAffline(src,dst,mapMatrix,flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -485,22 +485,22 @@ y'\\
 \end{matrix}
 \]
 
-The function is similar to \cross{GetQuadrangleSubPix} but they are not exactly the same. \cross{WarpAffine} requires input and output image have the same data type, has larger overhead (so it is not quite suitable for small images) and can leave part of destination image unchanged. While \cross{GetQuadrangleSubPix} may extract quadrangles from 8-bit images into floating-point buffer, has smaller overhead and always changes the whole destination image content.
+The function is similar to \cvCPyCross{GetQuadrangleSubPix} but they are not exactly the same. \cvCPyCross{WarpAffine} requires input and output image have the same data type, has larger overhead (so it is not quite suitable for small images) and can leave part of destination image unchanged. While \cvCPyCross{GetQuadrangleSubPix} may extract quadrangles from 8-bit images into floating-point buffer, has smaller overhead and always changes the whole destination image content.
 Note that the function can not operate in-place.
 
-To transform a sparse set of points, use the \cross{Transform} function from cxcore.
+To transform a sparse set of points, use the \cvCPyCross{Transform} function from cxcore.
 
 \cvCPyFunc{WarpPerspective}
 Applies a perspective transformation to an image.
 
-\cvcodeC{
+\cvdefC{
 void cvWarpPerspective(
 \par const CvArr* src,
 \par CvArr* dst,
 \par const CvMat* mapMatrix,
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );
-}\cvcodePy{WarpPerspective(src,dst,mapMatrix,flags=CV\_I
+}\cvdefPy{WarpPerspective(src,dst,mapMatrix,flags=CV\_I
 NNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0
 ))-> None}
 
@@ -540,7 +540,7 @@ y'\\
 \]
 
 Note that the function can not operate in-place.
-For a sparse set of points use the \cross{PerspectiveTransform} function from CxCore.
+For a sparse set of points use the \cvCPyCross{PerspectiveTransform} function from CxCore.
 
 \fi
 
@@ -549,10 +549,9 @@ For a sparse set of points use the \cross{PerspectiveTransform} function from Cx
 \cvCppFunc{convertMaps}
 Converts image transformation maps from one representation to another
 
-\begin{lstlisting}
-void convertMaps( const Mat& map1, const Mat& map2, Mat& dstmap1, Mat& dstmap2,
-                  int dstmap1type, bool nninterpolation=false );
-\end{lstlisting}
+\cvdefCpp{void convertMaps( const Mat\& map1, const Mat\& map2,\par
+                  Mat\& dstmap1, Mat\& dstmap2,\par
+                  int dstmap1type, bool nninterpolation=false );}
 \begin{description}
 \cvarg{map1}{The first input map of type \texttt{CV\_16SC2} or \texttt{CV\_32FC1} or \texttt{CV\_32FC2}}
 \cvarg{map2}{The second input map of type \texttt{CV\_16UC1} or \texttt{CV\_32FC1} or none (empty matrix), respectively}
@@ -574,9 +573,7 @@ See also: \cvCppCross{remap}, \cvCppCross{undisort}, \cvCppCross{initUndistortRe
 \cvCppFunc{getAffineTransform}
 Calculates the affine transform from 3 pairs of the corresponding points
 
-\begin{lstlisting}
-Mat getAffineTransform( const Point2f src[], const Point2f dst[] );
-\end{lstlisting}
+\cvdefCpp{Mat getAffineTransform( const Point2f src[], const Point2f dst[] );}
 
 \begin{description}
 \cvarg{src}{Coordinates of a triangle vertices in the source image}
@@ -613,9 +610,7 @@ See also: \cvCppCross{warpAffine}, \cvCppCross{transform}
 \cvCppFunc{getPerspectiveTransform}
 Calculates the perspective transform from 4 pairs of the corresponding points
 
-\begin{lstlisting}
-Mat getPerspectiveTransform( const Point2f src[], const Point2f dst[] );
-\end{lstlisting}
+\cvdefCpp{Mat getPerspectiveTransform( const Point2f src[], \par const Point2f dst[] );}
 
 \begin{description}
 \cvarg{src}{Coordinates of a quadrange vertices in the source image}
@@ -653,10 +648,8 @@ See also: \cvCppCross{findHomography}, \cvCppCross{warpPerspective}, \cvCppCross
 \cvCppFunc{getRectSubPix}
 Retrieves the pixel rectangle from an image with sub-pixel accuracy
 
-\begin{lstlisting}
-void getRectSubPix( const Mat& image, Size patchSize,
-                    Point2f center, Mat& dst, int patchType=-1 );
-\end{lstlisting}
+\cvdefCpp{void getRectSubPix( const Mat\& image, Size patchSize,\par
+                    Point2f center, Mat\& dst, int patchType=-1 );}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{patchSize}{Size of the extracted patch}
@@ -683,9 +676,7 @@ See also: \cvCppCross{warpAffine}, \cvCppCross{warpPerspective}
 \cvCppFunc{getRotationMatrix2D}
 Calculates the affine matrix of 2d rotation.
 
-\begin{lstlisting}
-Mat getRotationMatrix2D( Point2f center, double angle, double scale );
-\end{lstlisting}
+\cvdefCpp{Mat getRotationMatrix2D( Point2f center, double angle, double scale );}
 \begin{description}
 \cvarg{center}{Center of the rotation in the source image}
 \cvarg{angle}{The rotation angle in degrees. Positive values mean counter-clockwise rotation (the coordinate origin is assumed to be the top-left corner)}
@@ -717,11 +708,11 @@ See also: \cvCppCross{getAffineTransform}, \cvCppCross{warpAffine}, \cvCppCross{
 \cvCppFunc{initUndistortRectifyMap}
 Computes the undistortion and rectification transformation map of a head of a stereo camera.
 
-\begin{lstlisting}
-void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& distCoeffs,
-                           const Mat& R, const Mat& newCameraMatrix,
-                           Size size, int m1type, Mat& map1, Mat& map2 );
-\end{lstlisting}
+\cvdefCpp{void initUndistortRectifyMap( const Mat\& cameraMatrix,\par
+                           const Mat\& distCoeffs, const Mat\& R,\par
+                           const Mat\& newCameraMatrix,\par
+                           Size size, int m1type,\par
+                           Mat\& map1, Mat\& map2 );}
 \begin{description}
 \cvarg{cameraMatrix}{The camera matrix $A=\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
 \cvarg{distCoeffs}{The vector of distortion coefficients, \cvCppCross{4x1, 1x4, 5x1 or 1x5}}
@@ -759,9 +750,7 @@ In the case of a stereo camera this function is called twice, once for each came
 \cvCppFunc{invertAffineTransform}
 Inverts an affine transformation
 
-\begin{lstlisting}
-void invertAffineTransform(const Mat& M, Mat& iM);
-\end{lstlisting}
+\cvdefCpp{void invertAffineTransform(const Mat\& M, Mat\& iM);}
 \begin{description}
 \cvarg{M}{The original affine transformation}
 \cvarg{iM}{The output reverse affine transformation}
@@ -780,11 +769,9 @@ The result will also be a $2 \times 3$ matrix of the same type as \texttt{M}.
 \cvCppFunc{remap}
 Applies a generic geometrical transformation to an image.
 
-\begin{lstlisting}
-void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
-            int interpolation, int borderMode=BORDER_CONSTANT,
-            const Scalar& borderValue=Scalar());
-\end{lstlisting}
+\cvdefCpp{void remap( const Mat\& src, Mat\& dst, const Mat\& map1, const Mat\& map2,\par
+            int interpolation, int borderMode=BORDER\_CONSTANT,\par
+            const Scalar\& borderValue=Scalar());}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image. It will have the same size as \texttt{map1} and the same type as \texttt{src}}
@@ -807,14 +794,9 @@ The function can not operate in-place.
 \cvCppFunc{resize}
 Resizes an image
 
-\begin{lstlisting}
-void resize( const Mat& src, Mat& dst,
-             Size dsize, double fx=0, double fy=0,
-             int interpolation=INTER_LINEAR );
-
-enum { INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3,
-       INTER_LANCZOS4=4, INTER_MAX=7, WARP_INVERSE_MAP=16 };
-\end{lstlisting}
+\cvdefCpp{void resize( const Mat\& src, Mat\& dst,\par
+             Size dsize, double fx=0, double fy=0,\par
+             int interpolation=INTER\_LINEAR );}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
@@ -841,10 +823,8 @@ See also: \cvCppCross{warpAffine}, \cvCppCross{warpPerspective}, \cvCppCross{rem
 \cvCppFunc{undistort}
 Transforms an image to compensate for lens distortion.
 
-\begin{lstlisting}
-void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
-                const Mat& distCoeffs, const Mat& newCameraMatrix=Mat() );
-\end{lstlisting}
+\cvdefCpp{void undistort( const Mat\& src, Mat\& dst, const Mat\& cameraMatrix,\par
+                const Mat\& distCoeffs, const Mat\& newCameraMatrix=Mat() );}
 \begin{description}
 \cvarg{src}{The input (distorted) image}
 \cvarg{dst}{The output (corrected) image; will have the same size and the same type as \texttt{src}}
@@ -863,19 +843,17 @@ need to be scaled accordingly, while the distortion coefficients remain the same
 \cvCppFunc{warpAffine}
 Applies an affine transformation to an image.
 
-\begin{lstlisting}
-void warpAffine( const Mat& src, Mat& dst,
-                 const Mat& M, Size dsize,
-                 int flags=INTER_LINEAR,
-                 int borderMode=BORDER_CONSTANT,
-                 const Scalar& borderValue=Scalar());
-\end{lstlisting}
+\cvdefCpp{void warpAffine( const Mat\& src, Mat\& dst,\par
+                 const Mat\& M, Size dsize,\par
+                 int flags=INTER\_LINEAR,\par
+                 int borderMode=BORDER\_CONSTANT,\par
+                 const Scalar\& borderValue=Scalar());}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image; will have size \texttt{dsize} and the same type as \texttt{src}}
 \cvarg{M}{$2\times 3$ transformation matrix}
 \cvarg{dsize}{Size of the destination image}
-\cvarg{flags}{A combination of interpolation methods, see \cvCppCross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation (\texttt{dst}$\rightarrow$\texttt{src})}
+\cvarg{flags}{A combination of interpolation methods, see \cvCppCross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation ($\texttt{dst}\rightarrow\texttt{src}$)}
 \cvarg{borderMode}{The pixel extrapolation method, see \cvCppCross{borderInterpolate}. When the \\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
 \cvarg{borderValue}{A value used in case of a constant border. By default it is 0}
 \end{description}
@@ -893,19 +871,17 @@ See also: \cvCppCross{warpPerspective}, \cvCppCross{resize}, \cvCppCross{remap},
 \cvCppFunc{warpPerspective}
 Applies a perspective transformation to an image.
 
-\begin{lstlisting}
-void warpPerspective( const Mat& src, Mat& dst,
-                      const Mat& M, Size dsize,
-                      int flags=INTER_LINEAR,
-                      int borderMode=BORDER_CONSTANT,
-                      const Scalar& borderValue=Scalar());
-\end{lstlisting}
+\cvdefCpp{void warpPerspective( const Mat\& src, Mat\& dst,\par
+                      const Mat\& M, Size dsize,\par
+                      int flags=INTER\_LINEAR,\par
+                      int borderMode=BORDER\_CONSTANT,\par
+                      const Scalar\& borderValue=Scalar());}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image; will have size \texttt{dsize} and the same type as \texttt{src}}
 \cvarg{M}{$3\times 3$ transformation matrix}
 \cvarg{dsize}{Size of the destination image}
-\cvarg{flags}{A combination of interpolation methods, see \cvCppCross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation (\texttt{dst}$\rightarrow$\texttt{src})}
+\cvarg{flags}{A combination of interpolation methods, see \cvCppCross{resize}, and the optional flag \texttt{WARP\_INVERSE\_MAP} that means that \texttt{M} is the inverse transformation ($\texttt{dst}\rightarrow\texttt{src}$)}
 \cvarg{borderMode}{The pixel extrapolation method, see \cvCppCross{borderInterpolate}. When the \\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
 \cvarg{borderValue}{A value used in case of a constant border. By default it is 0}
 \end{description}
