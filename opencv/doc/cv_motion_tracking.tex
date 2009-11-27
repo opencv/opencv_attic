@@ -5,9 +5,9 @@
 \cvCPyFunc{Acc}
 Adds a frame to an accumulator.
 
-\cvcodeC{
+\cvdefC{
 void cvAcc( \par const CvArr* image,\par CvArr* sum,\par const CvArr* mask=NULL );
-}\cvcodePy{Acc(image,smu,mask=NULL)-> None}
+}\cvdefPy{Acc(image,smu,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point. (each channel of multi-channel image is processed independently)}
@@ -22,9 +22,9 @@ The function adds the whole image \texttt{image} or its selected region to the a
 \cvCPyFunc{CalcGlobalOrientation}
 Calculates the global motion orientation of some selected region.
 
-\cvcodeC{
+\cvdefC{
 double cvCalcGlobalOrientation( \par const CvArr* orientation,\par const CvArr* mask,\par const CvArr* mhi,\par double timestamp,\par double duration );
-}\cvcodePy{CalcGlobalOrientation(orientation,mask,mhi,timestamp,duration)-> None}
+}\cvdefPy{CalcGlobalOrientation(orientation,mask,mhi,timestamp,duration)-> None}
 
 \begin{description}
 \cvarg{orientation}{Motion gradient orientation image; calculated by the function \cvCPyCross{CalcMotionGradient}}
@@ -46,9 +46,9 @@ a circular sum of the basic orientation and the shift.
 \cvCPyFunc{CalcMotionGradient}
 Calculates the gradient orientation of a motion history image.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* orientation,\par double delta1,\par double delta2,\par int aperture\_size=3 );
-}\cvcodePy{CalcMotionGradient(mhi,mask,orientation,delta1,delta2,aperture\_size=3)-> None}
+}\cvdefPy{CalcMotionGradient(mhi,mask,orientation,delta1,delta2,aperture\_size=3)-> None}
 
 \begin{description}
 \cvarg{mhi}{Motion history image}
@@ -72,9 +72,9 @@ where both $Dx(x,y)$ and $Dy(x,y)$ signs are taken into account (as in the \cvCP
 \cvCPyFunc{CalcOpticalFlowBM}
 Calculates the optical flow for two images by using the block matching method.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcOpticalFlowBM( \par const CvArr* prev,\par const CvArr* curr,\par CvSize block\_size,\par CvSize shift\_size,\par CvSize max\_range,\par int use\_previous,\par CvArr* velx,\par CvArr* vely );
-}\cvcodePy{CalcOpticalFlowBM(prev,curr,block\_size,shift\_size,max\_range,use\_previous,velx,vely)-> None}
+}\cvdefPy{CalcOpticalFlowBM(prev,curr,block\_size,shift\_size,max\_range,use\_previous,velx,vely)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -105,9 +105,9 @@ function call (if \texttt{use\_previous=1})
 \cvCPyFunc{CalcOpticalFlowHS}
 Calculates the optical flow for two images.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcOpticalFlowHS( \par const CvArr* prev,\par const CvArr* curr,\par int use\_previous,\par CvArr* velx,\par CvArr* vely,\par double lambda,\par CvTermCriteria criteria );
-}\cvcodePy{CalcOpticalFlowHS(prev,curr,use\_previous,velx,vely,lambda,criteria)-> None}
+}\cvdefPy{CalcOpticalFlowHS(prev,curr,use\_previous,velx,vely,lambda,criteria)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -125,9 +125,9 @@ The function computes the flow for every pixel of the first input image using th
 \cvCPyFunc{CalcOpticalFlowLK}
 Calculates the optical flow for two images.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvSize win\_size,\par CvArr* velx,\par CvArr* vely );
-}\cvcodePy{CalcOpticalFlowLK(prev,curr,win\_size,velx,vely)-> None}
+}\cvdefPy{CalcOpticalFlowLK(prev,curr,win\_size,velx,vely)-> None}
 \begin{description}
 
 \cvarg{prev}{First image, 8-bit, single-channel}
@@ -143,9 +143,9 @@ The function computes the flow for every pixel of the first input image using th
 \cvCPyFunc{CalcOpticalFlowPyrLK}
 Calculates the optical flow for a sparse feature set using the iterative Lucas-Kanade method with pyramids.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prevPyr,\par CvArr* currPyr,\par const CvPoint2D32f* prevFeatures,\par CvPoint2D32f* currFeatures,\par int count,\par CvSize win\_size,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
-}\cvcodePy{
+}\cvdefPy{
 CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, CvSize win\_size, int level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
 }
 
@@ -192,9 +192,9 @@ readiness flag for the corresponding image can be set in the next call
 \cvCPyFunc{CamShift}
 Finds the object center, size, and orientation.
 
-\cvcodeC{
+\cvdefC{
 int cvCamShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCriteria criteria,\par CvConnectedComp* comp,\par CvBox2D* box=NULL );
-}\cvcodePy{CamShift(prob\_image,window,criteria,box=NULL)-> comp}
+}\cvdefPy{CamShift(prob\_image,window,criteria,box=NULL)-> comp}
 
 \begin{description}
 \cvarg{prob\_image}{Back projection of object histogram (see \cvCPyCross{CalcBackProject})}
@@ -236,7 +236,7 @@ The structure \texttt{CvConDensation} stores the CONditional DENSity propagATION
 \cvCPyFunc{CreateConDensation}
 Allocates the ConDensation filter structure.
 
-\cvcodeC{
+\cvdefC{
 CvConDensation* cvCreateConDensation( \par int dynam\_params,\par int measure\_params,\par int sample\_count );
 }
 
@@ -251,7 +251,7 @@ The function creates a \texttt{CvConDensation} structure and returns a pointer t
 \cvCPyFunc{ConDensInitSampleSet}
 Initializes the sample set for the ConDensation algorithm.
 
-\cvcodeC{
+\cvdefC{
 void cvConDensInitSampleSet( CvConDensation* condens, \par CvMat* lower\_bound, \par CvMat* upper\_bound );
 }
 
@@ -264,7 +264,7 @@ void cvConDensInitSampleSet( CvConDensation* condens, \par CvMat* lower\_bound, 
 The function fills the samples arrays in the structure \cvCPyCross{CvConDensation} with values within the specified ranges.
 
 
-\cvstruct{CvKalman}\label{CvKalman}
+\cvfunc{CvKalman}\label{CvKalman}
 Kalman filter state.
 
 \begin{lstlisting}
@@ -357,7 +357,7 @@ In the case of the standard Kalman filter, all of the matrices: A, B, H, Q and R
 \cvCPyFunc{CreateKalman}
 Allocates the Kalman filter structure.
 
-\cvcodeC{
+\cvdefC{
 CvKalman* cvCreateKalman( \par int dynam\_params,\par int measure\_params,\par int control\_params=0 );
 }
 
@@ -373,7 +373,7 @@ The function allocates \cvCPyCross{CvKalman} and all its matrices and initialize
 \cvCPyFunc{KalmanCorrect}
 Adjusts the model state.
 
-\cvcodeC{
+\cvdefC{
 const CvMat* cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement );
 }
 
@@ -523,7 +523,7 @@ int main(int argc, char** argv)
 \cvCPyFunc{KalmanPredict}
 Estimates the subsequent model state.
 
-\cvcodeC{
+\cvdefC{
 const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=NULL );
 }
 \begin{lstlisting}
@@ -561,9 +561,9 @@ The function returns the estimated state.
 \cvCPyFunc{MeanShift}
 Finds the object center on back projection.
 
-\cvcodeC{
+\cvdefC{
 int cvMeanShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCriteria criteria,\par CvConnectedComp* comp );
-}\cvcodePy{MeanShift(prob\_image,window,criteria)-> comp}
+}\cvdefPy{MeanShift(prob\_image,window,criteria)-> comp}
 
 \begin{description}
 \cvarg{prob\_image}{Back projection of the object histogram (see \cvCPyCross{CalcBackProject})}
@@ -581,9 +581,9 @@ of iterations. The function returns the number of iterations made.
 \cvCPyFunc{MultiplyAcc}
 Adds the product of two input images to the accumulator.
 
-\cvcodeC{
+\cvdefC{
 void cvMultiplyAcc( \par const CvArr* image1,\par const CvArr* image2,\par CvArr* acc,\par const CvArr* mask=NULL );
-}\cvcodePy{MulitplyAcc(image1,image2,acc,mask=NULL)-> None}
+}\cvdefPy{MulitplyAcc(image1,image2,acc,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image1}{First input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -599,7 +599,7 @@ The function adds the product of 2 images or their selected regions to the accum
 \cvCPyFunc{ReleaseConDensation}
 Deallocates the ConDensation filter structure.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseConDensation( CvConDensation** condens );
 
 }
@@ -612,7 +612,7 @@ The function releases the structure \cvCPyCross{CvConDensation}) and frees all m
 \cvCPyFunc{ReleaseKalman}
 Deallocates the Kalman filter structure.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseKalman( \par CvKalman** kalman );
 }
 
@@ -625,9 +625,9 @@ The function releases the structure \cvCPyCross{CvKalman} and all of the underly
 \cvCPyFunc{RunningAvg}
 Updates the running average.
 
-\cvcodeC{
+\cvdefC{
 void cvRunningAvg( \par const CvArr* image,\par CvArr* acc,\par double alpha,\par const CvArr* mask=NULL );
-}\cvcodePy{RunningAvg(image,acc,alpha,mask=NULL)-> None}
+}\cvdefPy{RunningAvg(image,acc,alpha,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -648,9 +648,9 @@ where $\alpha$ (\texttt{alpha}) regulates the update speed (how fast the accumul
 \cvCPyFunc{SegmentMotion}
 Segments a whole motion into separate moving parts.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvSegmentMotion( \par const CvArr* mhi,\par CvArr* seg\_mask,\par CvMemStorage* storage,\par double timestamp,\par double seg\_thresh );
-}\cvcodePy{SegmentMotion(mhi,seg\_mask,storage,timestamp,seg\_thresh)-> None}
+}\cvdefPy{SegmentMotion(mhi,seg\_mask,storage,timestamp,seg\_thresh)-> None}
 
 \begin{description}
 \cvarg{mhi}{Motion history image}
@@ -671,9 +671,9 @@ component \cvCPyCross{Cmp}.
 \cvCPyFunc{SnakeImage}
 Changes the contour position to minimize its energy.
 
-\cvcodeC{
+\cvdefC{
 void cvSnakeImage( \par const IplImage* image,\par CvPoint* points,\par int length,\par float* alpha,\par float* beta,\par float* gamma,\par int coeff\_usage,\par CvSize win,\par CvTermCriteria criteria,\par int calc\_gradient=1 );
-}\cvcodePy{SnakeImage(image,points,alpha,beta,gamma,coeff\_usage,win,criteria,calc\_gradient=1)-> None}
+}\cvdefPy{SnakeImage(image,points,alpha,beta,gamma,coeff\_usage,win,criteria,calc\_gradient=1)-> None}
 
 \begin{description}
 \cvarg{image}{The source image or external energy field}
@@ -710,9 +710,9 @@ than \texttt{criteria.epsilon} or the function performed
 \cvCPyFunc{SquareAcc}
 Adds the square of the source image to the accumulator.
 
-\cvcodeC{
+\cvdefC{
 void cvSquareAcc( \par const CvArr* image,\par CvArr* sqsum,\par const CvArr* mask=NULL );
-}\cvcodePy{SquareAcc(image,sqsum,mask=NULL)-> None}
+}\cvdefPy{SquareAcc(image,sqsum,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -727,9 +727,9 @@ The function adds the input image \texttt{image} or its selected region, raised 
 \cvCPyFunc{UpdateMotionHistory}
 Updates the motion history image by a moving silhouette.
 
-\cvcodeC{
+\cvdefC{
 void cvUpdateMotionHistory( \par const CvArr* silhouette,\par CvArr* mhi,\par double timestamp,\par double duration );
-}\cvcodePy{UpdateMotionHistory(silhouette,mhi,timestamp,duration)-> None}
+}\cvdefPy{UpdateMotionHistory(silhouette,mhi,timestamp,duration)-> None}
 
 \begin{description}
 \cvarg{silhouette}{Silhouette mask that has non-zero pixels where the motion occurs}
@@ -755,9 +755,7 @@ That is, MHI pixels where motion occurs are set to the current timestamp, while 
 \cvCppFunc{accumulate}
 Adds image to the accumulator.
 
-\begin{lstlisting}
-void accumulate( const Mat& src, Mat& dst, const Mat& mask=Mat() );
-\end{lstlisting}
+\cvdefCpp{void accumulate( const Mat\& src, Mat\& dst, const Mat\& mask=Mat() );}
 \begin{description}
 \cvarg{src}{The input image, 1- or 3-channel, 8-bit or 32-bit floating point}
 \cvarg{dst}{The accumulator image with the same number of channels as input image, 32-bit or 64-bit floating-point}
@@ -777,9 +775,7 @@ See also: \cvCppCross{accumulateSquare}, \cvCppCross{accumulateProduct}, \cvCppC
 \cvCppFunc{accumulateSquare}
 Adds the square of the source image to the accumulator.
 
-\begin{lstlisting}
-void accumulateSquare( const Mat& src, Mat& dst, const Mat& mask=Mat() );
-\end{lstlisting}
+\cvdefCpp{void accumulateSquare( const Mat\& src, Mat\& dst, \par const Mat\& mask=Mat() );}
 \begin{description}
 \cvarg{src}{The input image, 1- or 3-channel, 8-bit or 32-bit floating point}
 \cvarg{dst}{The accumulator image with the same number of channels as input image, 32-bit or 64-bit floating-point}
@@ -797,10 +793,8 @@ See also: \cvCppCross{accumulateSquare}, \cvCppCross{accumulateProduct}, \cvCppC
 \cvCppFunc{accumulateProduct}
 Adds the per-element product of two input images to the accumulator.
 
-\begin{lstlisting}
-void accumulateProduct( const Mat& src1, const Mat& src2,
-                        Mat& dst, const Mat& mask=Mat() );
-\end{lstlisting}
+\cvdefCpp{void accumulateProduct( const Mat\& src1, const Mat\& src2,\par
+                        Mat\& dst, const Mat\& mask=Mat() );}
 \begin{description}
 \cvarg{src1}{The first input image, 1- or 3-channel, 8-bit or 32-bit floating point}
 \cvarg{src2}{The second input image of the same type and the same size as \texttt{src1}}
@@ -819,10 +813,8 @@ See also: \cvCppCross{accumulate}, \cvCppCross{accumulateSquare}, \cvCppCross{ac
 \cvCppFunc{accumulateWeighted}
 Updates the running average.
 
-\begin{lstlisting}
-void accumulateWeighted( const Mat& src, Mat& dst,
-                         double alpha, const Mat& mask=Mat() );
-\end{lstlisting}
+\cvdefCpp{void accumulateWeighted( const Mat\& src, Mat\& dst,\par
+                         double alpha, const Mat\& mask=Mat() );}
 \begin{description}
 \cvarg{src}{The input image, 1- or 3-channel, 8-bit or 32-bit floating point}
 \cvarg{dst}{The accumulator image with the same number of channels as input image, 32-bit or 64-bit floating-point}
@@ -844,15 +836,13 @@ See also: \cvCppCross{accumulate}, \cvCppCross{accumulateSquare}, \cvCppCross{ac
 \cvCppFunc{calcOpticalFlowPyrLK}
 Calculates the optical flow for a sparse feature set using the iterative Lucas-Kanade method with pyramids
 
-\begin{lstlisting}
-void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg,
-        const vector<Point2f>& prevPts, vector<Point2f>& nextPts,
-        vector<uchar>& status, vector<float>& err, Size winSize=Size(15,15),
-        int maxLevel=3, TermCriteria criteria=TermCriteria(
-            TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01),
-        double derivLambda=0.5, int flags=0 );
-enum { OPTFLOW_USE_INITIAL_FLOW=4 };
-\end{lstlisting}
+\cvdefCpp{void calcOpticalFlowPyrLK( const Mat\& prevImg, const Mat\& nextImg,\par
+        const vector<Point2f>\& prevPts, vector<Point2f>\& nextPts,\par
+        vector<uchar>\& status, vector<float>\& err, \par
+        Size winSize=Size(15,15), int maxLevel=3,\par
+        TermCriteria criteria=TermCriteria(\par
+            TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01),\par
+        double derivLambda=0.5, int flags=0 );}
 \begin{description}
 \cvarg{prevImg}{The first 8-bit single-channel or 3-channel input image}
 \cvarg{nextImg}{The second input image of the same size and the same type as \texttt{prevImg}}
@@ -875,12 +865,9 @@ The function implements the sparse iterative version of the Lucas-Kanade optical
 \cvCppFunc{calcOpticalFlowFarneback}
 Computes dense optical flow using Gunnar Farneback's algorithm
 
-\begin{lstlisting}
-void calcOpticalFlowFarneback( const Mat& prevImg, const Mat& nextImg,
-                               Mat& flow, double pyrScale, int levels, int winsize,
-                               int iterations, int poly_n, double poly_sigma, int flags );
-enum { OPTFLOW_FARNEBACK_GAUSSIAN=256 };
-\end{lstlisting}
+\cvdefCpp{void calcOpticalFlowFarneback( const Mat\& prevImg, const Mat\& nextImg,\par
+                               Mat\& flow, double pyrScale, int levels, int winsize,\par
+                               int iterations, int polyN, double polySigma, int flags );}
 \begin{description}
 \cvarg{prevImg}{The first 8-bit single-channel input image}
 \cvarg{nextImg}{The second input image of the same size and the same type as \texttt{prevImg}}
@@ -889,12 +876,12 @@ enum { OPTFLOW_FARNEBACK_GAUSSIAN=256 };
 \cvarg{levels}{The number of pyramid layers, including the initial image. \texttt{levels=1} means that no extra layers are created and only the original images are used}
 \cvarg{winsize}{The averaging window size; The larger values increase the algorithm robustness to image noise and give more chances for fast motion detection, but yield more blurred motion field}
 \cvarg{iterations}{The number of iterations the algorithm does at each pyramid level}
-\cvarg{poly\_n}{Size of the pixel neighborhood used to find polynomial expansion in each pixel. The larger values mean that the image will be approximated with smoother surfaces, yielding more robust algorithm and more blurred  motion field. Typically, \texttt{poly\_n}=5 or 7}
-\cvarg{poly\_sigma}{Standard deviation of the Gaussian that is used to smooth derivatives that are used as a basis for the polynomial expansion. For \texttt{poly\_n=5} you can set \texttt{poly\_sigma=1.1}, for \texttt{poly\_n=7} a good value would be \texttt{poly\_sigma=1.5}}
+\cvarg{polyN}{Size of the pixel neighborhood used to find polynomial expansion in each pixel. The larger values mean that the image will be approximated with smoother surfaces, yielding more robust algorithm and more blurred  motion field. Typically, \texttt{polyN}=5 or 7}
+\cvarg{polySigma}{Standard deviation of the Gaussian that is used to smooth derivatives that are used as a basis for the polynomial expansion. For \texttt{polyN=5} you can set \texttt{polySigma=1.1}, for \texttt{polyN=7} a good value would be \texttt{polySigma=1.5}}
 \cvarg{flags}{The operation flags; can be a combination of the following:
 \begin{description}
     \cvarg{OPTFLOW\_USE\_INITIAL\_FLOW}{Use the input \texttt{flow} as the initial flow approximation}
-    \cvarg{OPTFLOW\_FARNEBACK\_GAUSSIAN}{Use a Gaussian $\texttt{winsize} \times \texttt{winsize}$filter instead of box filter of the same size for optical flow estimation. Usually, this option gives more accurate flow than with a box filter, at the cost of lower speed (and normally \texttt{winsize} for a Gaussian window should be set to a larger value to achieve the same level of robustness)}
+    \cvarg{OPTFLOW\_FARNEBACK\_GAUSSIAN}{Use a Gaussian $\texttt{winsize}\times\texttt{winsize}$ filter instead of box filter of the same size for optical flow estimation. Usually, this option gives more accurate flow than with a box filter, at the cost of lower speed (and normally \texttt{winsize} for a Gaussian window should be set to a larger value to achieve the same level of robustness)}
 \end{description}}
 \end{description}
 
@@ -906,10 +893,8 @@ The function finds optical flow for each \texttt{prevImg} pixel using the alorit
 \cvCppFunc{updateMotionHistory}
 Updates the motion history image by a moving silhouette.
 
-\begin{lstlisting}
-void updateMotionHistory( const Mat& silhouette, Mat& mhi,
-                          double timestamp, double duration );
-\end{lstlisting}
+\cvdefCpp{void updateMotionHistory( const Mat\& silhouette, Mat\& mhi,\par
+                          double timestamp, double duration );}
 \begin{description}
 \cvarg{silhouette}{Silhouette mask that has non-zero pixels where the motion occurs}
 \cvarg{mhi}{Motion history image, that is updated by the function (single-channel, 32-bit floating-point)}
@@ -933,12 +918,10 @@ See also the OpenCV sample \texttt{motempl.c} that demonstrates the use of all t
 \cvCppFunc{calcMotionGradient}
 Calculates the gradient orientation of a motion history image.
 
-\begin{lstlisting}
-void calcMotionGradient( const Mat& mhi, Mat& mask,
-                         Mat& orientation,
-                         double delta1, double delta2,
-                         int apertureSize=3 );
-\end{lstlisting}
+\cvdefCpp{void calcMotionGradient( const Mat\& mhi, Mat\& mask,\par
+                         Mat\& orientation,\par
+                         double delta1, double delta2,\par
+                         int apertureSize=3 );}
 \begin{description}
 \cvarg{mhi}{Motion history single-channel floating-point image}
 \cvarg{mask}{The output mask image; will have the type \texttt{CV\_8UC1} and the same size as \texttt{mhi}. Its non-zero elements will mark pixels where the motion gradient data is correct}
@@ -961,11 +944,9 @@ The function calculates the gradient orientation at each pixel $(x, y)$ as:
 \cvCppFunc{calcGlobalOrientation}
 Calculates the global motion orientation in some selected region.
 
-\begin{lstlisting}
-double calcGlobalOrientation( const Mat& orientation, const Mat& mask,
-                              const Mat& mhi, double timestamp,
-                              double duration );
-\end{lstlisting}
+\cvdefCpp{double calcGlobalOrientation( const Mat\& orientation, const Mat\& mask,\par
+                              const Mat\& mhi, double timestamp,\par
+                              double duration );}
 \begin{description}
 \cvarg{orientation}{Motion gradient orientation image, calculated by the function \cvCppCross{calcMotionGradient}}
 \cvarg{mask}{Mask image. It may be a conjunction of a valid gradient mask, also calculated by \cvCppCross{calcMotionGradient}, and the mask of the region, whose direction needs to be calculated}
@@ -983,10 +964,8 @@ weight and the motion occurred in the past has smaller weight, as recorded in \t
 \cvCppFunc{CamShift}
 Finds the object center, size, and orientation
 
-\begin{lstlisting}
-RotatedRect CamShift( const Mat& probImage, Rect& window,
-                      TermCriteria criteria );
-\end{lstlisting}
+\cvdefCpp{RotatedRect CamShift( const Mat\& probImage, Rect\& window,\par
+                      TermCriteria criteria );}
 \begin{description}
 \cvarg{probImage}{Back projection of the object histogram; see \cvCppCross{calcBackProject}}
 \cvarg{window}{Initial search window}
@@ -1002,10 +981,8 @@ See the OpenCV sample \texttt{camshiftdemo.c} that tracks colored objects.
 \cvCppFunc{meanShift}
 Finds the object on a back projection image.
 
-\begin{lstlisting}
-int meanShift( const Mat& probImage, Rect& window,
-               TermCriteria criteria );
-\end{lstlisting}
+\cvdefCpp{int meanShift( const Mat\& probImage, Rect\& window,\par
+               TermCriteria criteria );}
 \begin{description}
 \cvarg{probImage}{Back projection of the object histogram; see \cvCppCross{calcBackProject}}
 \cvarg{window}{Initial search window}
@@ -1022,15 +999,14 @@ Kalman filter class
 class KalmanFilter
 {
 public:
-    KalmanFilter();
-    KalmanFilter(int dynamParams, int measureParams, int controlParams=0);
-    void init(int dynamParams, int measureParams, int controlParams=0);
-
+    KalmanFilter();newline
+    KalmanFilter(int dynamParams, int measureParams, int controlParams=0);newline
+    void init(int dynamParams, int measureParams, int controlParams=0);newline
     // predicts statePre from statePost
-    const Mat& predict(const Mat& control=Mat());
+    const Mat& predict(const Mat& control=Mat());newline
     // corrects statePre based on the input measurement vector
     // and stores the result to statePost. 
-    const Mat& correct(const Mat& measurement);
+    const Mat& correct(const Mat& measurement);newline
 
     Mat statePre;           // predicted state (x'(k)):
                             //    x(k)=A*x(k-1)+B*u(k)

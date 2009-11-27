@@ -1,7 +1,7 @@
 \section{Utility and System Functions and Macros}
 
 \ifCPy
-\cvfunc{Error Handling}\label{Error handling}
+\subsection{Error Handling}\label{Error handling}
 
 \ifPy
 Errors in argument type cause a \texttt{TypeError} exception.
@@ -22,19 +22,19 @@ can be retrieved with the \cvCPyCross{GetErrStatus} function.
 There are three modes of error handling (see \cvCPyCross{SetErrMode} and
 \cvCPyCross{GetErrMode}):
 
-\begin{description}
-\cvarg{Leaf}{The program is terminated after the error handler is
+\begin{itemize}
+\item \textbf{Leaf}. The program is terminated after the error handler is
 called. This is the default value. It is useful for debugging, as the
 error is signalled immediately after it occurs. However, for production
 systems, other two methods may be preferable as they provide more
-control.}
-\cvarg{Parent}{The program is not terminated, but the error handler
+control.
+\item \textbf{Parent}. The program is not terminated, but the error handler
 is called. The stack is unwound (it is done w/o using a C++ exception
 mechanism). The user may check error code after calling the \texttt{CxCore} function with
-\cvCPyCross{GetErrStatus} and react.}
-\cvarg{Silent}{Similar to \texttt{Parent} mode, but no error handler
-is called}
-\end{description}
+\cvCPyCross{GetErrStatus} and react.
+\item \textbf{Silent}. Similar to \texttt{Parent} mode, but no error handler
+is called.
+\end{itemize}
 
 Actually, the semantics of the \texttt{Leaf} and \texttt{Parent} modes are implemented by error handlers and the above description is true for them. \cvCPyCross{GuiBoxReport} behaves slightly differently, and some custom error handlers may implement quite different semantics.  
 
@@ -91,7 +91,7 @@ Macros for raising an error, checking for errors, etc.
 
 Instead of a discussion, below is a documented example of a typical CXCORE function and an example of the function use.
 
-\cvfunc{Example: Use of Error Handling Macros}
+\subsection{Example: Use of Error Handling Macros}
 \begin{lstlisting}
 
 #include "cxcore.h"
@@ -167,7 +167,7 @@ int main( int argc, char** argv )
 \cvCPyFunc{GetErrStatus}
 Returns the current error status.
 
-\cvcodeC{int cvGetErrStatus( void );}
+\cvdefC{int cvGetErrStatus( void );}
 
 The function returns the current error status -
 the value set with the last \cvCPyCross{SetErrStatus} call. Note that in
@@ -179,7 +179,7 @@ or \texttt{Silent} error mode.
 \cvCPyFunc{SetErrStatus}
 Sets the error status.
 
-\cvcodeC{void cvSetErrStatus( int status );}
+\cvdefC{void cvSetErrStatus( int status );}
 
 \begin{description}
 \cvarg{status}{The error status}
@@ -190,7 +190,7 @@ The function sets the error status to the specified value. Mostly, the function 
 \cvCPyFunc{GetErrMode}
 Returns the current error mode.
 
-\cvcodeC{int cvGetErrMode(void);}
+\cvdefC{int cvGetErrMode(void);}
 
 The function returns the current error mode - the value set with the last \cvCPyCross{SetErrMode} call.
 
@@ -203,7 +203,7 @@ Sets the error mode.
 #define CV_ErrModeSilent  2
 \end{lstlisting}
 
-\cvcodeC{int cvSetErrMode( int mode );}
+\cvdefC{int cvSetErrMode( int mode );}
 
 \begin{description}
 \cvarg{mode}{The error mode}
@@ -214,7 +214,7 @@ The function sets the specified error mode. For descriptions of different error 
 \cvCPyFunc{Error}
 Raises an error.
 
-\cvcodeC{int cvError( \par int status,\par const char* func\_name,\par const char* err\_msg,\par const char* filename,\par int line );}
+\cvdefC{int cvError( \par int status,\par const char* func\_name,\par const char* err\_msg,\par const char* filename,\par int line );}
 
 \begin{description}
 \cvarg{status}{The error status}
@@ -229,7 +229,7 @@ The function sets the error status to the specified value (via \cvCPyCross{SetEr
 \cvCPyFunc{ErrorStr}
 Returns textual description of an error status code.
 
-\cvcodeC{const char* cvErrorStr( int status );}
+\cvdefC{const char* cvErrorStr( int status );}
 
 \begin{description}
 \cvarg{status}{The error status}
@@ -247,7 +247,7 @@ typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
                     const char* err_msg, const char* file_name, int line );
 \end{lstlisting}
 
-\cvcodeC{CvErrorCallback cvRedirectError( \par CvErrorCallback error\_handler,\par void* userdata=NULL,\par void** prevUserdata=NULL );}
+\cvdefC{CvErrorCallback cvRedirectError( \par CvErrorCallback error\_handler,\par void* userdata=NULL,\par void** prevUserdata=NULL );}
 
 \begin{description}
 \cvarg{error\_handler}{The new error\_handler}
@@ -318,7 +318,7 @@ Terminating the application...
 \cvCPyFunc{Alloc}
 Allocates a memory buffer.
 
-\cvcodeC{void* cvAlloc( size\_t size );}
+\cvdefC{void* cvAlloc( size\_t size );}
 
 \begin{description}
 \cvarg{size}{Buffer size in bytes}
@@ -334,7 +334,7 @@ allocation/deallocation functions using the \cvCPyCross{SetMemoryManager} functi
 \cvCPyFunc{Free}
 Deallocates a memory buffer.
 
-\cvcodeC{void cvFree( void** ptr );}
+\cvdefC{void cvFree( void** ptr );}
 
 \begin{description}
 \cvarg{ptr}{Double pointer to released buffer}
@@ -348,14 +348,14 @@ does nothing.
 \cvCPyFunc{GetTickCount}
 Returns the number of ticks.
 
-\cvcodeC{int64 cvGetTickCount( void );}
+\cvdefC{int64 cvGetTickCount( void );}
 
 The function returns number of the ticks starting from some platform-dependent event (number of CPU ticks from the startup, number of milliseconds from 1970th year, etc.). The function is useful for accurate measurement of a function/user-code execution time. To convert the number of ticks to time units, use \cvCPyCross{GetTickFrequency}.
 
 \cvCPyFunc{GetTickFrequency}
 Returns the number of ticks per microsecond.
 
-\cvcodeC{double cvGetTickFrequency( void );}
+\cvdefC{double cvGetTickFrequency( void );}
 
 The function returns the number of ticks per microsecond. Thus, the quotient of \cvCPyCross{GetTickCount} and \cvCPyCross{GetTickFrequency} will give the number of microseconds starting from the platform-dependent event.
 
@@ -383,7 +383,7 @@ typedef struct CvModuleInfo
 CvModuleInfo;
 \end{lstlisting}
 
-\cvcodeC{int cvRegisterModule( const CvModuleInfo* moduleInfo );}
+\cvdefC{int cvRegisterModule( const CvModuleInfo* moduleInfo );}
 
 \begin{description}
 \cvarg{moduleInfo}{Information about the module}
@@ -404,7 +404,7 @@ on how IPP and MKL are connected to the modules.
 \cvCPyFunc{GetModuleInfo}
 Retrieves information about registered module(s) and plugins.
 
-\cvcodeC{
+\cvdefC{
 void  cvGetModuleInfo( \par const char* moduleName,\par const char** version,\par const char** loadedAddonPlugins);
 }
 
@@ -422,7 +422,7 @@ text strings.
 \cvCPyFunc{UseOptimized}
 Switches between optimized/non-optimized modes.
 
-\cvcodeC{int cvUseOptimized( int onoff );}
+\cvdefC{int cvUseOptimized( int onoff );}
 
 \begin{description}
 \cvarg{onoff}{Use optimized ($\ne 0$) or not ($=0$)}
@@ -446,7 +446,7 @@ typedef void* (CV_CDECL *CvAllocFunc)(size_t size, void* userdata);
 typedef int (CV_CDECL *CvFreeFunc)(void* pptr, void* userdata);
 \end{lstlisting}
 
-\cvcodeC{
+\cvdefC{
 void cvSetMemoryManager( \par CvAllocFunc allocFunc=NULL,\par CvFreeFunc freeFunc=NULL,\par void* userdata=NULL );
 }
 
@@ -484,7 +484,7 @@ typedef IplImage* (CV_STDCALL* Cv_iplCloneImage)(const IplImage*);
                         iplDeallocate, iplCreateROI, iplCloneImage )
 \end{lstlisting}
 
-\cvcodeC{
+\cvdefC{
 void cvSetIPLAllocators( \par
                          Cv\_iplCreateImageHeader create\_header, \par
                          Cv\_iplAllocateImageData allocate\_data, \par
@@ -521,9 +521,7 @@ functions are used to process the data.
 \cvCppFunc{alignPtr}
 Aligns pointer to the specified number of bytes
 
-\begin{lstlisting}
-template<typename _Tp> _Tp* alignPtr(_Tp* ptr, int n=sizeof(_Tp));
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp> \_Tp* alignPtr(\_Tp* ptr, int n=sizeof(\_Tp));}
 \begin{description}
 \cvarg{ptr}{The aligned pointer}
 \cvarg{n}{The alignment size; must be a power of two}
@@ -536,9 +534,7 @@ The function returns the aligned pointer of the same type as the input pointer:
 \cvCppFunc{alignSize}
 Aligns a buffer size to the specified number of bytes
 
-\begin{lstlisting}
-size_t alignSize(size_t sz, int n);
-\end{lstlisting}
+\cvdefCpp{size\_t alignSize(size\_t sz, int n);}
 \begin{description}
 \cvarg{sz}{The buffer size to align}
 \cvarg{n}{The alignment size; must be a power of two}
@@ -551,9 +547,7 @@ The function returns the minimum number that is greater or equal to \texttt{sz} 
 \cvCppFunc{allocate}
 Allocates an array of elements
 
-\begin{lstlisting}
-template<typename _Tp> _Tp* allocate(size_t n);
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp> \_Tp* allocate(size\_t n);}
 \begin{description}
 \cvarg{n}{The number of elements to allocate}
 \end{description}
@@ -564,9 +558,7 @@ The generic function \texttt{allocate} allocates buffer for the specified number
 \cvCppFunc{deallocate}
 Allocates an array of elements
 
-\begin{lstlisting}
-template<typename _Tp> void deallocate(_Tp* ptr, size_t n);
-\end{lstlisting}
+\cvdefCpp{template<typename \_Tp> void deallocate(\_Tp* ptr, size\_t n);}
 \begin{description}
 \cvarg{ptr}{Pointer to the deallocated buffer}
 \cvarg{n}{The number of elements in the buffer}
@@ -591,12 +583,9 @@ The macros \texttt{CV\_Assert} and \texttt{CV\_DbgAssert} evaluate the specified
 \cvCppFunc{error}
 Signals an error and raises the exception
 
-\begin{lstlisting}
-void error( const Exception& exc );
-
-#define CV_Error( code, msg )
-#define CV_Error_( code, args )
-\end{lstlisting}
+\cvdefCpp{void error( const Exception\& exc );\newline
+\#define CV\_Error( code, msg ) <...>\newline
+\#define CV\_Error\_( code, args ) <...>}
 \begin{description}
 \cvarg{exc}{The exception to throw}
 \cvarg{code}{The error code, normally, a negative value. The list of pre-defined error codes can be found in \texttt{cxerror.h}}
@@ -626,18 +615,18 @@ public:
     // various constructors and the copy operation
     Exception() { code = 0; line = 0; }
     Exception(int _code, const string& _err,
-              const string& _func, const string& _file, int _line);
-    Exception(const Exception& exc);
-    Exception& operator = (const Exception& exc);
+              const string& _func, const string& _file, int _line);newline
+    Exception(const Exception& exc);newline
+    Exception& operator = (const Exception& exc);newline
 
     // the error code
-    int code;
+    int code;newline
     // the error text message
-    string err;
+    string err;newline
     // function name where the error happened
-    string func;
+    string func;newline
     // the source file name where the error happened
-    string file;
+    string file;newline
     // the source file line where the error happened
     int line;
 };
@@ -649,9 +638,7 @@ The class \texttt{Exception} encapsulates all or almost all the necessary inform
 \cvCppFunc{fastMalloc}
 Allocates aligned memory buffer
 
-\begin{lstlisting}
-void* fastMalloc(size_t size);
-\end{lstlisting}
+\cvdefCpp{void* fastMalloc(size\_t size);}
 \begin{description}
 \cvarg{size}{The allocated buffer size}
 \end{description}
@@ -661,9 +648,7 @@ The function allocates buffer of the specified size and returns it. When the buf
 \cvCppFunc{fastFree}
 Deallocates memory buffer
 
-\begin{lstlisting}
-void fastFree(void* ptr);
-\end{lstlisting}
+\cvdefCpp{void fastFree(void* ptr);}
 \begin{description}
 \cvarg{ptr}{Pointer to the allocated buffer}
 \end{description}
@@ -674,9 +659,7 @@ If NULL pointer is passed, the function does nothing.
 \cvCppFunc{format}
 Returns a text string formatted using printf-like expression
 
-\begin{lstlisting}
-string format( const char* fmt, ... );
-\end{lstlisting}
+\cvdefCpp{string format( const char* fmt, ... );}
 \begin{description}
 \cvarg{fmt}{The printf-compatible formatting specifiers}
 \end{description}
@@ -686,9 +669,7 @@ The function acts like \texttt{sprintf}, but forms and returns STL string. It ca
 \cvCppFunc{getNumThreads}
 Returns the number of threads used by OpenCV
 
-\begin{lstlisting}
-int getNumThreads();
-\end{lstlisting}
+\cvdefCpp{int getNumThreads();}
 
 The function returns the number of threads that is used by OpenCV.
 
@@ -698,9 +679,7 @@ See also: \cvCppCross{setNumThreads}, \cvCppCross{getThreadNum}.
 \cvCppFunc{getThreadNum}
 Returns index of the currently executed thread
 
-\begin{lstlisting}
-int getThreadNum();
-\end{lstlisting}
+\cvdefCpp{int getThreadNum();}
 
 The function returns 0-based index of the currently executed thread. The function is only valid inside a parallel OpenMP region. When OpenCV is built without OpenMP support, the function always returns 0.
 
@@ -709,9 +688,7 @@ See also: \cvCppCross{setNumThreads}, \cvCppCross{getNumThreads}.
 \cvCppFunc{getTickCount}
 Returns the number of ticks
 
-\begin{lstlisting}
-int64 getTickCount();
-\end{lstlisting}
+\cvdefCpp{int64 getTickCount();}
 
 The function returns the number of ticks since the certain event (e.g. when the machine was turned on).
 It can be used to initialize \cvCppCross{RNG} or to measure a function execution time by reading the tick count before and after the function call. See also the tick frequency.
@@ -719,9 +696,7 @@ It can be used to initialize \cvCppCross{RNG} or to measure a function execution
 \cvCppFunc{getTickFrequency}
 Returns the number of ticks per second
 
-\begin{lstlisting}
-double getTickFrequency();
-\end{lstlisting}
+\cvdefCpp{double getTickFrequency();}
 
 The function returns the number of ticks per second.
 That is, the following code computes the executing time in seconds.
@@ -734,9 +709,7 @@ t = ((double)getTickCount() - t)/getTickFrequency();
 \cvCppFunc{setNumThreads}
 Sets the number of threads used by OpenCV
 
-\begin{lstlisting}
-void setNumThreads(int nthreads);
-\end{lstlisting}
+\cvdefCpp{void setNumThreads(int nthreads);}
 \begin{description}
 \cvarg{nthreads}{The number of threads used by OpenCV}
 \end{description}

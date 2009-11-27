@@ -5,9 +5,9 @@
 \cvCPyFunc{MatchTemplate}
 Compares a template against overlapped image regions.
 
-\cvcodeC{
+\cvdefC{
 void cvMatchTemplate( \par const CvArr* image,\par const CvArr* templ,\par CvArr* result,\par int method );
-}\cvcodePy{MatchTemplate(image,templ,result,method)-> None}
+}\cvdefPy{MatchTemplate(image,templ,result,method)-> None}
 
 \begin{description}
 \cvarg{image}{Image where the search is running; should be 8-bit or 32-bit floating-point}
@@ -244,7 +244,7 @@ The whole hierarchy can be constructed manually or loaded from a file or an embe
 \cvCPyFunc{LoadHaarClassifierCascade}
 Loads a trained cascade classifier from a file or the classifier database embedded in OpenCV.
 
-\cvcodeC{
+\cvdefC{
 CvHaarClassifierCascade* cvLoadHaarClassifierCascade( \par const char* directory,\par CvSize orig\_window\_size );
 }
 
@@ -276,9 +276,9 @@ CvAvgComp;
 \end{lstlisting}
 \fi
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade* cascade,\par CvMemStorage* storage,\par double scale\_factor=1.1,\par int min\_neighbors=3,\par int flags=0,\par CvSize min\_size=cvSize(0,\par0) );
-}\cvcodePy{HaarDetectObjects(image,cascade,storage,scale\_factor=1.1,min\_neighbors=3,flags=0,min\_size=(0,0))-> detected\_objects}
+}\cvdefPy{HaarDetectObjects(image,cascade,storage,scale\_factor=1.1,min\_neighbors=3,flags=0,min\_size=(0,0))-> detected\_objects}
 
 \begin{description}
 \cvarg{image}{Image to detect objects in}
@@ -362,7 +362,7 @@ int main( int argc, char** argv )
 \cvCPyFunc{SetImagesForHaarClassifierCascade}
 Assigns images to the hidden cascade.
 
-\cvcodeC{
+\cvdefC{
 void cvSetImagesForHaarClassifierCascade( \par CvHaarClassifierCascade* cascade,\par const CvArr* sum,\par const CvArr* sqsum,\par const CvArr* tilted\_sum,\par double scale );
 }
 
@@ -379,7 +379,7 @@ The function assigns images and/or window scale to the hidden classifier cascade
 \cvCPyFunc{ReleaseHaarClassifierCascade}
 Releases the haar classifier cascade.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseHaarClassifierCascade( \par CvHaarClassifierCascade** cascade );
 }
 
@@ -392,7 +392,7 @@ The function deallocates the cascade that has been created manually or loaded us
 \cvCPyFunc{RunHaarClassifierCascade}
 Runs a cascade of boosted classifiers at the given image location.
 
-\cvcodeC{
+\cvdefC{
 int cvRunHaarClassifierCascade( \par CvHaarClassifierCascade* cascade,\par CvPoint pt,\par int start\_stage=0 );
 }
 
@@ -509,10 +509,8 @@ public:
 \cvCppFunc{groupRectangles}
 Groups the object candidate rectangles
 
-\begin{lstlisting}
-void groupRectangles(vector<Rect>& rectList,
-                     int groupThreshold, double eps=0.2);
-\end{lstlisting}
+\cvdefCpp{void groupRectangles(vector<Rect>\& rectList,\par
+                     int groupThreshold, double eps=0.2);}
 \begin{description}
 \cvarg{rectList}{The input/output vector of rectangles. On output there will be retained and grouped rectangles}
 \cvarg{groupThreshold}{The minimum possible number of rectangles, minus 1, in a group of rectangles to retain it.}
@@ -524,14 +522,8 @@ The function is a wrapper for a generic function \cvCppCross{partition}. It clus
 \cvCppFunc{matchTemplate}
 Compares a template against overlapped image regions.
 
-\begin{lstlisting}
-void matchTemplate( const Mat& image, const Mat& templ,
-                    Mat& result, int method );
-
-enum { TM_SQDIFF=CV_TM_SQDIFF, TM_SQDIFF_NORMED=CV_TM_SQDIFF_NORMED,
-       TM_CCORR=CV_TM_CCORR, TM_CCORR_NORMED=CV_TM_CCORR_NORMED,
-       TM_CCOEFF=CV_TM_CCOEFF, TM_CCOEFF_NORMED=CV_TM_CCOEFF_NORMED };
-\end{lstlisting}
+\cvdefCpp{void matchTemplate( const Mat\& image, const Mat\& templ,\par
+                    Mat\& result, int method );}
 \begin{description}
 \cvarg{image}{Image where the search is running; should be 8-bit or 32-bit floating-point}
 \cvarg{templ}{Searched template; must be not greater than the source image and have the same data type}

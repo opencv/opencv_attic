@@ -3,20 +3,20 @@
 Drawing functions work with matrices/images of arbitrary depth.
 The boundaries of the shapes can be rendered with antialiasing (implemented only for 8-bit images for now).
 All the functions include the parameter color that uses a rgb value (that may be constructed
-with \texttt{CV\_RGB} \cvC{macro or the \cross{cvScalar} function}
+with \texttt{CV\_RGB} \cvC{macro or the \cvCppCross{cvScalar} function}
 \cvCpp{or the \cross{Scalar} constructor}) for color
 images and brightness for grayscale images. For color images the order channel
-is normally \emph{Blue, Green, Red}, this is what \cross{imshow}, \cross{imread} and \cross{imwrite} expect
+is normally \emph{Blue, Green, Red}, this is what \cvCppCross{imshow}, \cvCppCross{imread} and \cvCppCross{imwrite} expect
 \ifCpp
 , so if you form a color using \cross{Scalar} constructor, it should look like:
 \[\texttt{Scalar}(blue\_component, green\_component, red\_component[, alpha\_component])\]
 \fi
 \ifC
-, so if you form a color using \cross{cvScalar}, it should look like:
+, so if you form a color using \cvCppCross{cvScalar}, it should look like:
 \[\texttt{cvScalar}(blue\_component, green\_component, red\_component[, alpha\_component])\]
 \fi
 
-If you are using your own image rendering and I/O functions, you can use any channel ordering, the drawing functions process each channel independently and do not depend on the channel order or even on the color space used. The whole image can be converted from BGR to RGB or to a different color space using \cross{cvtColor}.
+If you are using your own image rendering and I/O functions, you can use any channel ordering, the drawing functions process each channel independently and do not depend on the channel order or even on the color space used. The whole image can be converted from BGR to RGB or to a different color space using \cvCppCross{cvtColor}.
 
 If a drawn figure is partially or completely outside the image, the drawing functions clip it. Also, many drawing functions can handle pixel coordinates specified with sub-pixel accuracy, that is, the coordinates can be passed as fixed-point numbers, encoded as integers. The number of fractional bits is specified by the \texttt{shift} parameter and the real point coordinates are calculated as $\texttt{Point}(x,y)\rightarrow\texttt{Point2f}(x*2^{-shift},y*2^{-shift})$. This feature is especially effective wehn rendering antialiased shapes.
 
@@ -27,8 +27,8 @@ Also, note that the functions do not support alpha-transparency - when the targe
 \cvCPyFunc{Circle}
 Draws a circle.
 
-\cvcodeC{void cvCircle( \par CvArr* img,\par CvPoint center,\par int radius,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvcodePy{Circle(img,center,radius,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefC{void cvCircle( \par CvArr* img,\par CvPoint center,\par int radius,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
+\cvdefPy{Circle(img,center,radius,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the circle is drawn}
@@ -46,8 +46,8 @@ given center and radius.
 \cvCPyFunc{ClipLine}
 Clips the line against the image rectangle.
 
-\cvcodeC{int cvClipLine( \par CvSize imgSize,\par CvPoint* pt1,\par CvPoint* pt2 );}
-\cvcodePy{ClipLine(img, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
+\cvdefC{int cvClipLine( \par CvSize imgSize,\par CvPoint* pt1,\par CvPoint* pt2 );}
+\cvdefPy{ClipLine(img, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
 \begin{description}
 \cvarg{imgSize}{Size of the image \cvPy{as a 2-tuple}}
 \cvarg{pt1}{First ending point of the line segment. \cvC{It is modified by the function.}}
@@ -61,10 +61,10 @@ The function calculates a part of the line segment which is entirely within the 
 \cvCPyFunc{DrawContours}
 Draws contour outlines or interiors in an image.
 
-\cvcodeC{
+\cvdefC{
 void cvDrawContours( \par CvArr *img,\par CvSeq* contour,\par CvScalar external\_color,\par CvScalar hole\_color,\par int max\_level,\par int thickness=1,\par int lineType=8 );
 }
-\cvcodePy{DrawContours(img,contour,external\_color,hole\_color,max\_level,thickness=1,lineType=8,offset=(0,0)-> None}
+\cvdefPy{DrawContours(img,contour,external\_color,hole\_color,max\_level,thickness=1,lineType=8,offset=(0,0)-> None}
 
 \begin{description}
 \cvarg{img}{Image where the contours are to be drawn. As with any other drawing function, the contours are clipped with the ROI.}
@@ -129,8 +129,8 @@ int main( int argc, char** argv )
 \cvCPyFunc{Ellipse}
 Draws a simple or thick elliptic arc or an fills ellipse sector.
 
-\cvcodeC{void cvEllipse( \par CvArr* img,\par CvPoint center,\par CvSize axes,\par double angle,\par double start\_angle,\par double end\_angle,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvcodePy{Ellipse(img,pt1,axes,angle,start\_angle,end\_angle,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefC{void cvEllipse( \par CvArr* img,\par CvPoint center,\par CvSize axes,\par double angle,\par double start\_angle,\par double end\_angle,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
+\cvdefPy{Ellipse(img,pt1,axes,angle,start\_angle,end\_angle,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -159,9 +159,9 @@ Parameters of Elliptic Arc
 
 Draws a simple or thick elliptic arc or fills an ellipse sector.
 
-\cvcodeC{void cvEllipseBox( \par CvArr* img, \par CvBox2D box, \par CvScalar color,
+\cvdefC{void cvEllipseBox( \par CvArr* img, \par CvBox2D box, \par CvScalar color,
                    \par int thickness=1, \par int lineType=8, \par int shift=0 );}
-\cvcodePy{EllipseBox(img,box,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefPy{EllipseBox(img,box,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -176,9 +176,9 @@ The function draws a simple or thick ellipse outline, or fills an ellipse. The f
 \cvCPyFunc{FillConvexPoly}
 Fills a convex polygon.
 
-\cvcodeC{
+\cvdefC{
 void cvFillConvexPoly( \par CvArr* img,\par CvPoint* pts,\par int npts,\par CvScalar color,\par int lineType=8,\par int shift=0 );}
-\cvcodePy{FillConvexPoly(img,pn,color,lineType=8,shift=0)-> None}
+\cvdefPy{FillConvexPoly(img,pn,color,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -199,10 +199,10 @@ line) twice at the most.
 \cvCPyFunc{FillPoly}
 Fills a polygon's interior.
 
-\cvcodeC{
+\cvdefC{
 void cvFillPoly( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par CvScalar color,\par int lineType=8,\par int shift=0 );
 }
-\cvcodePy{FillPoly(img,polys,color,lineType=8,shift=0)-> None}
+\cvdefPy{FillPoly(img,polys,color,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -227,14 +227,14 @@ areas with holes, contour self-intersection, and so forth.
 \cvCPyFunc{GetTextSize}
 Retrieves the width and height of a text string.
 
-\cvcodeC{
-void cvGetTextSize( \par const char* text\_string,\par const CvFont* font,\par CvSize* text\_size,\par int* baseline );}
-\cvcodePy{GetTextSize(text\_string,font)-> text\_size,baseline}
+\cvdefC{
+void cvGetTextSize( \par const char* textString,\par const CvFont* font,\par CvSize* textSize,\par int* baseline );}
+\cvdefPy{GetTextSize(textString,font)-> textSize,baseline}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure}
-\cvarg{text\_string}{Input string}
-\cvarg{text\_size}{Resultant size of the text string. Height of the text does not include the height of character parts that are below the baseline.}
+\cvarg{textString}{Input string}
+\cvarg{textSize}{Resultant size of the text string. Height of the text does not include the height of character parts that are below the baseline.}
 \cvarg{baseline}{y-coordinate of the baseline relative to the bottom-most text point}
 \end{description}
 
@@ -243,17 +243,17 @@ The function calculates the dimensions of a rectangle to enclose a text string w
 \cvCPyFunc{InitFont}
 Initializes font structure.
 
-\cvcodeC{
-void cvInitFont( \par CvFont* font,\par int font\_face,\par double hscale,\par double vscale,\par double shear=0,\par int thickness=1,\par int lineType=8 );}
-\cvcodePy{InitFont(font\_face,hscale,vscale,shear=0,thickness=1,lineType=8)-> font}
+\cvdefC{
+void cvInitFont( \par CvFont* font,\par int fontFace,\par double hscale,\par double vscale,\par double shear=0,\par int thickness=1,\par int lineType=8 );}
+\cvdefPy{InitFont(fontFace,hscale,vscale,shear=0,thickness=1,lineType=8)-> font}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure initialized by the function}
-\cvarg{font\_face}{Font name identifier. Only a subset of Hershey fonts \url{http://sources.isc.org/utils/misc/hershey-font.txt} are supported now:
+\cvarg{fontFace}{Font name identifier. Only a subset of Hershey fonts \url{http://sources.isc.org/utils/misc/hershey-font.txt} are supported now:
  \begin{description}
  \cvarg{CV\_FONT\_HERSHEY\_SIMPLEX}{normal size sans-serif font}
  \cvarg{CV\_FONT\_HERSHEY\_PLAIN}{small size sans-serif font}
- \cvarg{CV\_FONT\_HERSHEY\_DUPLEX}{normal size sans-serif font (more complex than \newline \texttt{CV\_FONT\_HERSHEY\_SIMPLEX})}
+ \cvarg{CV\_FONT\_HERSHEY\_DUPLEX}{normal size sans-serif font (more complex than \par \texttt{CV\_FONT\_HERSHEY\_SIMPLEX})}
  \cvarg{CV\_FONT\_HERSHEY\_COMPLEX}{normal size serif font}
  \cvarg{CV\_FONT\_HERSHEY\_TRIPLEX}{normal size serif font (more complex than \texttt{CV\_FONT\_HERSHEY\_COMPLEX})}
  \cvarg{CV\_FONT\_HERSHEY\_COMPLEX\_SMALL}{smaller version of \texttt{CV\_FONT\_HERSHEY\_COMPLEX}}
@@ -274,10 +274,10 @@ The function initializes the font structure that can be passed to text rendering
 \cvCPyFunc{InitLineIterator}
 Initializes the line iterator.
 
-\cvcodeC{
+\cvdefC{
 int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt2,\par CvLineIterator* line\_iterator,\par int connectivity=8,\par int left\_to\_right=0 );
 }
-\cvcodePy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0)}
+\cvdefPy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0)}
 
 \begin{description}
 \cvarg{image}{Image to sample the line from}
@@ -338,10 +338,10 @@ CvScalar sum_line_pixels( IplImage* image, CvPoint pt1, CvPoint pt2 )
 \cvCPyFunc{Line}
 Draws a line segment connecting two points.
 
-\cvcodeC{
+\cvdefC{
 void cvLine( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );
 }
-\cvcodePy{Line(img,pt1,pt2,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefPy{Line(img,pt1,pt2,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -370,9 +370,9 @@ the line color, the user may use the macro
 \cvCPyFunc{PolyLine}
 Draws simple or thick polygons.
 
-\cvcodeC{
+\cvdefC{
 void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par int is\_closed,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvcodePy{PolyLine(img,pts,is\_closed,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefPy{PolyLine(img,pts,is\_closed,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \ifC
@@ -398,9 +398,9 @@ The function draws single or multiple polygonal curves.
 \cvCPyFunc{PutText}
 Draws a text string.
 
-\cvcodeC{
+\cvdefC{
 void cvPutText( \par CvArr* img,\par const char* text,\par CvPoint org,\par const CvFont* font,\par CvScalar color );}
-\cvcodePy{PutText(img,text,org,font,color)-> None}
+\cvdefPy{PutText(img,text,org,font,color)-> None}
 
 \begin{description}
 \cvarg{img}{Input image}
@@ -419,8 +419,8 @@ replaced with the symbol for a rectangle.
 \cvCPyFunc{Rectangle}
 Draws a simple, thick, or filled rectangle.
 
-\cvcodeC{void cvRectangle( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvcodePy{Rectangle(img,pt1,pt2,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefC{void cvRectangle( \par CvArr* img,\par CvPoint pt1,\par CvPoint pt2,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
+\cvdefPy{Rectangle(img,pt1,pt2,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{Image}
@@ -437,41 +437,41 @@ The function draws a rectangle with two opposite corners \texttt{pt1} and \textt
 \cvfunc{CV\_RGB}\label{CV_RGB}
 Constructs a color value.
 
-\cvcodeC{\#define CV\_RGB( r, g, b )  cvScalar( (b), (g), (r) )}
-\cvcodePy{CV\_RGB(red,grn,blu)->CvScalar}
+\cvdefC{\#define CV\_RGB( r, g, b )  cvScalar( (b), (g), (r) )}
+\cvdefPy{CV\_RGB(red,grn,blu)->CvScalar}
 
 \fi
 
 \ifCpp
 
-\cvfunc{circle}\label{circle}
+\cvCppFunc{circle}
 Draws a circle
 
-\begin{lstlisting}
-void circle(Mat& img, Point center, int radius,
-            const Scalar& color, int thickness=1,
-            int lineType=8, int shift=0);
-\end{lstlisting}
+\cvdefCpp{
+void circle(Mat\& img, Point center, int radius,\par
+            const Scalar\& color, int thickness=1,\par
+            int lineType=8, int shift=0);\newline
+}
 \begin{description}
 \cvarg{img}{Image where the circle is drawn}
 \cvarg{center}{Center of the circle}
 \cvarg{radius}{Radius of the circle}
 \cvarg{color}{Circle color}
 \cvarg{thickness}{Thickness of the circle outline if positive; negative thickness means that a filled circle is to be drawn}
-\cvarg{lineType}{Type of the circle boundary, see \cross{line} description}
+\cvarg{lineType}{Type of the circle boundary, see \cvCppCross{line} description}
 \cvarg{shift}{Number of fractional bits in the center coordinates and radius value}
 \end{description}
 
 The function \texttt{circle} draws a simple or filled circle with a
 given center and radius.
 
-\cvfunc{clipLine}\label{clipLine}
+\cvCppFunc{clipLine}
 Clips the line against the image rectangle
 
-\begin{lstlisting}
-bool clipLine(Size imgSize, Point& pt1, Point& pt2);
-bool clipLine(Rect imgRect, Point& pt1, Point& pt2);
-\end{lstlisting}
+\cvdefCpp{
+bool clipLine(Size imgSize, Point\& pt1, Point\& pt2);\newline
+bool clipLine(Rect imgRect, Point\& pt1, Point\& pt2);\newline
+}
 \begin{description}
 \cvarg{imgSize}{The image size; the image rectangle will be \texttt{Rect(0, 0, imgSize.width, imgSize.height)}}
 \cvarg{imgSize}{The image rectangle}
@@ -484,17 +484,17 @@ segment which is entirely within the specified rectangle.
 They return \texttt{false} if the line segment is completely outside the rectangle and \texttt{true} otherwise.
 
 
-\cvfunc{ellipse}\label{ellipse}
+\cvCppFunc{ellipse}
 Draws a simple or thick elliptic arc or an fills ellipse sector.
 
-\begin{lstlisting}
-void ellipse(Mat& img, Point center, Size axes,
-             double angle, double startAngle, double endAngle,
-             const Scalar& color, int thickness=1,
-             int lineType=8, int shift=0);
-void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
-             int thickness=1, int lineType=8);
-\end{lstlisting}
+\cvdefCpp{
+void ellipse(Mat\& img, Point center, Size axes,\par
+             double angle, double startAngle, double endAngle,\par
+             const Scalar\& color, int thickness=1,\par
+             int lineType=8, int shift=0);\newline
+void ellipse(Mat\& img, const RotatedRect\& box, const Scalar\& color,\par
+             int thickness=1, int lineType=8);\newline
+}
 \begin{description}
 \cvarg{img}{The image}
 \cvarg{center}{Center of the ellipse}
@@ -505,53 +505,53 @@ void ellipse(Mat& img, const RotatedRect& box, const Scalar& color,
 \cvarg{box}{Alternative ellipse representation via a \cross{RotatedRect}, i.e. the function draws an ellipse inscribed in the rotated rectangle}
 \cvarg{color}{Ellipse color}
 \cvarg{thickness}{Thickness of the ellipse arc outline if positive, otherwise this indicates that a filled ellipse sector is to be drawn}
-\cvarg{lineType}{Type of the ellipse boundary, see \cross{line} description}
+\cvarg{lineType}{Type of the ellipse boundary, see \cvCppCross{line} description}
 \cvarg{shift}{Number of fractional bits in the center coordinates and axes' values}
 \end{description}
 
 The functions \texttt{ellipse} with less parameters draw an ellipse outline, a filled ellipse, an elliptic
 arc or a filled ellipse sector. 
-A piecewise-linear curve is used to approximate the elliptic arc boundary. If you need more control of the ellipse rendering, you can retrieve the curve using \cross{ellipse2Poly} and then render it with \cross{polylines} or fill it with \cross{fillPoly}. If you use the first variant of the function and want to draw the whole ellipse, not an arc, pass \texttt{startAngle=0} and \texttt{endAngle=360}. The picture below
+A piecewise-linear curve is used to approximate the elliptic arc boundary. If you need more control of the ellipse rendering, you can retrieve the curve using \cvCppCross{ellipse2Poly} and then render it with \cvCppCross{polylines} or fill it with \cvCppCross{fillPoly}. If you use the first variant of the function and want to draw the whole ellipse, not an arc, pass \texttt{startAngle=0} and \texttt{endAngle=360}. The picture below
 explains the meaning of the parameters.
 
 Parameters of Elliptic Arc
 
 \includegraphics[width=0.5\textwidth]{pics/ellipse.png}
 
-\cvfunc{ellipse2Poly}\label{ellipse2Poly}
+\cvCppFunc{ellipse2Poly}
 Approximates an elliptic arc with a polyline
 
-\begin{lstlisting}
-void ellipse2Poly( Point center, Size axes, int angle,
-                   int startAngle, int endAngle, int delta,
-                   vector<Point>& pts );
-\end{lstlisting}
+\cvdefCpp{
+void ellipse2Poly( Point center, Size axes, int angle,\par
+                   int startAngle, int endAngle, int delta,\par
+                   vector<Point>\& pts );\newline
+}
 \begin{description}
 \cvarg{center}{Center of the arc}
-\cvarg{axes}{Half-sizes of the arc. See \cross{ellipse}}
-\cvarg{angle}{Rotation angle of the ellipse in degrees. See \cross{ellipse}}
+\cvarg{axes}{Half-sizes of the arc. See \cvCppCross{ellipse}}
+\cvarg{angle}{Rotation angle of the ellipse in degrees. See \cvCppCross{ellipse}}
 \cvarg{startAngle}{Starting angle of the elliptic arc in degrees}
 \cvarg{endAngle}{Ending angle of the elliptic arc in degrees}
 \cvarg{delta}{Angle between the subsequent polyline vertices. It defines the approximation accuracy.}
 \cvarg{pts}{The output vector of polyline vertices}
 \end{description}
 
-The function \texttt{ellipse2Poly} computes the vertices of a polyline that approximates the specified elliptic arc. It is used by \cross{ellipse}.
+The function \texttt{ellipse2Poly} computes the vertices of a polyline that approximates the specified elliptic arc. It is used by \cvCppCross{ellipse}.
 
-\cvfunc{fillConvexPoly}\label{fillConvexPoly}
+\cvCppFunc{fillConvexPoly}
 Fills a convex polygon.
 
-\begin{lstlisting}
-void fillConvexPoly(Mat& img, const Point* pts, int npts,
-                    const Scalar& color, int lineType=8,
-                    int shift=0);
-\end{lstlisting}
+\cvdefCpp{
+void fillConvexPoly(Mat\& img, const Point* pts, int npts,\par
+                    const Scalar\& color, int lineType=8,\par
+                    int shift=0);\newline
+}
 \begin{description}
 \cvarg{img}{Image}
 \cvarg{pts}{The polygon vertices}
 \cvarg{npts}{The number of polygon vertices}
 \cvarg{color}{Polygon color}
-\cvarg{lineType}{Type of the polygon boundaries, see \cross{line} description}
+\cvarg{lineType}{Type of the polygon boundaries, see \cvCppCross{line} description}
 \cvarg{shift}{The number of fractional bits in the vertex coordinates}
 \end{description}
 
@@ -561,21 +561,20 @@ and can fill not only convex polygons but any monotonic polygon without self-int
 i.e., a polygon whose contour intersects every horizontal line (scan
 line) twice at the most (though, its top-most and/or the bottom edge could be horizontal).
 
-\cvfunc{fillPoly}\label{fillPoly}
+\cvCppFunc{fillPoly}
 Fills the area bounded by one or more polygons
 
-\begin{lstlisting}
-void fillPoly(Mat& img, const Point** pts, const int* npts, int ncontours,
-              const Scalar& color, int lineType=8, int shift=0,
-              Point offset=Point() );
-\end{lstlisting}
+\cvdefCpp{void fillPoly(Mat\& img, const Point** pts, \par
+              const int* npts, int ncontours,\par
+              const Scalar\& color, int lineType=8,\par
+              int shift=0, Point offset=Point() );}
 \begin{description}
 \cvarg{img}{Image}
 \cvarg{pts}{Array of polygons, each represented as an array of points}
 \cvarg{npts}{The array of polygon vertex counters}
 \cvarg{ncontours}{The number of contours that bind the filled region}
 \cvarg{color}{Polygon color}
-\cvarg{lineType}{Type of the polygon boundaries, see \cross{line} description}
+\cvarg{lineType}{Type of the polygon boundaries, see \cvCppCross{line} description}
 \cvarg{shift}{The number of fractional bits in the vertex coordinates}
 \end{description}
 
@@ -583,19 +582,17 @@ The function \texttt{fillPoly} fills an area bounded by several
 polygonal contours. The function can fills complex areas, for example,
 areas with holes, contours with self-intersections (some of thier parts), and so forth.
 
-\cvfunc{getTextSize}\label{getTextSize}
+\cvCppFunc{getTextSize}
 Calculates the width and height of a text string.
 
-\begin{lstlisting}
-Size getTextSize(const string& text, int fontFace,
-                 double fontScale, int thickness,
-                 int* baseLine);
-\end{lstlisting}
+\cvdefCpp{Size getTextSize(const string\& text, int fontFace,\par
+                 double fontScale, int thickness,\par
+                 int* baseLine);\newline}
 \begin{description}
 \cvarg{text}{The input text string}
-\cvarg{fontFace}{The font to use; see \cross{putText}}
-\cvarg{fontScale}{The font scale; see \cross{putText}}
-\cvarg{thickness}{The thickness of lines used to render the text; see \cross{putText}}
+\cvarg{fontFace}{The font to use; see \cvCppCross{putText}}
+\cvarg{fontScale}{The font scale; see \cvCppCross{putText}}
+\cvarg{thickness}{The thickness of lines used to render the text; see \cvCppCross{putText}}
 \cvarg{baseLine}{The output parameter - y-coordinate of the baseline relative to the bottom-most text point}
 \end{description}
 
@@ -635,13 +632,11 @@ putText(img, text, textOrg, fontFace, fontScale,
 \end{lstlisting}
         
         
-\cvfunc{line}\label{line}
+\cvCppFunc{line}
 Draws a line segment connecting two points
 
-\begin{lstlisting}
-void line(Mat& img, Point pt1, Point pt2, const Scalar& color,
-          int thickness=1, int lineType=8, int shift=0);
-\end{lstlisting}
+\cvdefCpp{void line(Mat\& img, Point pt1, Point pt2, const Scalar\& color,\par
+          int thickness=1, int lineType=8, int shift=0);\newline}
 \begin{description}
 \cvarg{img}{The image}
 \cvarg{pt1}{First point of the line segment}
@@ -667,7 +662,7 @@ the line color, the user may use the macro
 \texttt{CV\_RGB(r, g, b)}.
 
 
-\cvfunc{LineIterator}\label{LineIterator}
+\cvCppFunc{LineIterator}
 Class for iterating pixels on a raster line
 
 \begin{lstlisting}
@@ -681,18 +676,18 @@ public:
     // from the left-most point to the right most,
     // not to depend on the ordering of pt1 and pt2 parameters
     LineIterator(const Mat& img, Point pt1, Point pt2,
-                 int connectivity=8, bool leftToRight=false);
+                 int connectivity=8, bool leftToRight=false);newline
     // returns pointer to the current line pixel
-    uchar* operator *();
+    uchar* operator *();newline
     // move the iterator to the next pixel
-    LineIterator& operator ++();
-    LineIterator operator ++(int);
+    LineIterator& operator ++();newline
+    LineIterator operator ++(int);newline
 
     // internal state of the iterator
-    uchar* ptr;
-    int err, count;
-    int minusDelta, plusDelta;
-    int minusStep, plusStep;
+    uchar* ptr;newline
+    int err, count;newline
+    int minusDelta, plusDelta;newline
+    int minusStep, plusStep;newline
 };
 \end{lstlisting}
 
@@ -711,35 +706,31 @@ for(int i = 0; i < it.count; i++, ++it)
 \end{lstlisting}
 
 
-\cvfunc{rectangle}\label{rectangle}
+\cvCppFunc{rectangle}
 Draws a simple, thick, or filled up-right rectangle.
 
-\begin{lstlisting}
-void rectangle(Mat& img, Point pt1, Point pt2,
-               const Scalar& color, int thickness=1,
-               int lineType=8, int shift=0);
-\end{lstlisting}
+\cvdefCpp{void rectangle(Mat\& img, Point pt1, Point pt2,\par
+               const Scalar\& color, int thickness=1,\par
+               int lineType=8, int shift=0);}
 \begin{description}
 \cvarg{img}{Image}
 \cvarg{pt1}{One of the rectangle's vertices}
 \cvarg{pt2}{Opposite to \texttt{pt1} rectangle vertex}
 \cvarg{color}{Rectangle color or brightness (grayscale image)}
 \cvarg{thickness}{Thickness of lines that make up the rectangle. Negative values, e.g. \texttt{CV\_FILLED}, mean that the function has to draw a filled rectangle.}
-\cvarg{lineType}{Type of the line, see \cross{line} description}
+\cvarg{lineType}{Type of the line, see \cvCppCross{line} description}
 \cvarg{shift}{Number of fractional bits in the point coordinates}
 \end{description}
 
 The function \texttt{rectangle} draws a rectangle outline or a filled rectangle, which two opposite corners are \texttt{pt1} and \texttt{pt2}.
                
 
-\cvfunc{polylines}\label{polylines}
+\cvCppFunc{polylines}
 Draws several polygonal curves
 
-\begin{lstlisting}
-void polylines(Mat& img, const Point** pts, const int* npts,
-               int ncontours, bool isClosed, const Scalar& color,
-               int thickness=1, int lineType=8, int shift=0 );
-\end{lstlisting}
+\cvdefCpp{void polylines(Mat\& img, const Point** pts, const int* npts,\par
+               int ncontours, bool isClosed, const Scalar\& color,\par
+               int thickness=1, int lineType=8, int shift=0 );\newline}
 \begin{description}
 \cvarg{img}{The image}
 \cvarg{pts}{Array of polygonal curves}
@@ -748,38 +739,27 @@ void polylines(Mat& img, const Point** pts, const int* npts,
 \cvarg{isClosed}{Indicates whether the drawn polylines are closed or not. If they are closed, the function draws the line from the last vertex of each curve to its first vertex}
 \cvarg{color}{Polyline color}
 \cvarg{thickness}{Thickness of the polyline edges}
-\cvarg{lineType}{Type of the line segments, see \cross{line} description}
+\cvarg{lineType}{Type of the line segments, see \cvCppCross{line} description}
 \cvarg{shift}{The number of fractional bits in the vertex coordinates}
 \end{description}
 
 The function \texttt{polylines} draws one or more polygonal curves.
 
-\cvfunc{putText}\label{putText}
+\cvCppFunc{putText}
 Draws a text string
 
-\begin{lstlisting}
-void putText( Mat& img, const string& text, Point org,
-              int fontFace, double fontScale, Scalar color,
-              int thickness=1, int lineType=8,
-              bool bottomLeftOrigin=false );
-enum
-{
- FONT_HERSHEY_SIMPLEX = 0,
- FONT_HERSHEY_PLAIN = 1,
- FONT_HERSHEY_DUPLEX = 2,
- FONT_HERSHEY_COMPLEX = 3,
- FONT_HERSHEY_TRIPLEX = 4,
- FONT_HERSHEY_COMPLEX_SMALL = 5,
- FONT_HERSHEY_SCRIPT_SIMPLEX = 6,
- FONT_HERSHEY_SCRIPT_COMPLEX = 7,
- FONT_ITALIC = 16
-};
-\end{lstlisting}
+\cvdefCpp{void putText( Mat\& img, const string\& text, Point org,\par
+              int fontFace, double fontScale, Scalar color,\par
+              int thickness=1, int lineType=8,\par
+              bool bottomLeftOrigin=false );}
 \begin{description}
 \cvarg{img}{The image}
 \cvarg{text}{The text string to be drawn}
 \cvarg{org}{The bottom-left corner of the text string in the image}
-\cvarg{fontFace}{The font type, one of \texttt{FONT\_HERSHEY\_...}}
+\cvarg{fontFace}{The font type, one of \cvarg{FONT\_HERSHEY\_SIMPLEX}, \cvarg{FONT\_HERSHEY\_PLAIN},
+ \cvarg{FONT\_HERSHEY\_DUPLEX}, \cvarg{FONT\_HERSHEY\_COMPLEX}, \cvarg{FONT\_HERSHEY\_TRIPLEX},
+ \cvarg{FONT\_HERSHEY\_COMPLEX\_SMALL}, \cvarg{FONT\_HERSHEY\_SCRIPT\_SIMPLEX} or \cvarg{FONT\_HERSHEY\_SCRIPT\_COMPLEX},
+   where each of the font id's can be combined with \cvarg{FONT\_HERSHEY\_ITALIC} to get the slanted letters.}
 \cvarg{fontScale}{The font scale factor that is multiplied by the font-specific base size}
 \cvarg{thickness}{Thickness of the lines used to draw the text}
 \cvarg{lineType}{The line type; see \texttt{line} for details}
@@ -788,6 +768,6 @@ enum
 
 The function \texttt{putText} draws a text string in the image.
 Symbols that can not be rendered using the specified font are
-replaced question marks. See \cross{getTextSize} for a text rendering code example.
+replaced question marks. See \cvCppCross{getTextSize} for a text rendering code example.
 
 \fi

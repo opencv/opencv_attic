@@ -5,13 +5,13 @@
 \cvCPyFunc{Canny}
 Implements the Canny algorithm for edge detection.
 
-\cvcodeC{
+\cvdefC{
 void cvCanny(\par const CvArr* image,
 \par CvArr* edges,
 \par double threshold1,
 \par double threshold2,
 \par int aperture\_size=3 );
-}\cvcodePy{Canny(image,edges,threshold1,threshold2,aperture\_size=3)-> None}
+}\cvdefPy{Canny(image,edges,threshold1,threshold2,aperture\_size=3)-> None}
 \begin{description}
 \cvarg{image}{Single-channel input image}
 \cvarg{edges}{Single-channel image to store the edges found by the function}
@@ -25,10 +25,10 @@ The function finds the edges on the input image \texttt{image} and marks them in
 \cvCPyFunc{CornerEigenValsAndVecs}
 Calculates eigenvalues and eigenvectors of image blocks for corner detection.
 
-\cvcodeC{
+\cvdefC{
 void cvCornerEigenValsAndVecs( \par const CvArr* image,\par CvArr* eigenvv,\par int block\_size,\par int aperture\_size=3 );
 
-}\cvcodePy{CornerEigenValsAndVecs(image,eigenvv,block\_size,aperture\_size=3)-> None}
+}\cvdefPy{CornerEigenValsAndVecs(image,eigenvv,block\_size,aperture\_size=3)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -57,14 +57,14 @@ $(\lambda_1, \lambda_2, x_1, y_1, x_2, y_2)$ where
 \cvCPyFunc{CornerHarris}
 Harris edge detector.
 
-\cvcodeC{
+\cvdefC{
 void cvCornerHarris(
 \par const CvArr* image,
 \par CvArr* harris\_responce,
 \par int block\_size,
 \par int aperture\_size=3,
 \par double k=0.04 );
-}\cvcodePy{CornerHarris(image,harris\_dst,block\_size,aperture\_size=3,k=0.04)-> None}
+}\cvdefPy{CornerHarris(image,harris\_dst,block\_size,aperture\_size=3,k=0.04)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -86,13 +86,13 @@ to the destination image. Corners in the image can be found as the local maxima 
 \cvCPyFunc{CornerMinEigenVal}
 Calculates the minimal eigenvalue of gradient matrices for corner detection.
 
-\cvcodeC{
+\cvdefC{
 void cvCornerMinEigenVal(
 \par const CvArr* image,
 \par CvArr* eigenval,
 \par int block\_size,
 \par int aperture\_size=3 );
-}\cvcodePy{CornerMinEigenVal(image,eigenval,block\_size,aperture\_size=3)-> None}
+}\cvdefPy{CornerMinEigenVal(image,eigenval,block\_size,aperture\_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{eigenval}{Image to store the minimal eigenvalues. Should have the same size as \texttt{image}}
@@ -106,9 +106,9 @@ The function is similar to \cvCPyCross{CornerEigenValsAndVecs} but it calculates
 \cvCPyFunc{ExtractSURF}
 Extracts Speeded Up Robust Features from an image.
 
-\cvcodeC{
+\cvdefC{
 void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** keypoints,\par CvSeq** descriptors,\par CvMemStorage* storage,\par CvSURFParams params );
-}\cvcodePy{ExtractSURF(image,mask,storage,params)-> keypoints,descriptors}
+}\cvdefPy{ExtractSURF(image,mask,storage,params)-> keypoints,descriptors}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image}
@@ -168,7 +168,7 @@ can be used for object tracking and localization, image stitching etc. See the
 \cvCPyFunc{FindCornerSubPix}
 Refines the corner locations.
 
-\cvcodeC{
+\cvdefC{
 void cvFindCornerSubPix(
 \par const CvArr* image,
 \par CvPoint2D32f* corners,
@@ -176,7 +176,7 @@ void cvFindCornerSubPix(
 \par CvSize win,
 \par CvSize zero\_zone,
 \par CvTermCriteria criteria );
-}\cvcodePy{FindCornerSubPix(image,corners,win,zero\_zone,criteria)-> corners}
+}\cvdefPy{FindCornerSubPix(image,corners,win,zero\_zone,criteria)-> corners}
 
 \begin{description}
 \cvarg{image}{Input image}
@@ -222,9 +222,9 @@ The algorithm sets the center of the neighborhood window at this new center $q$ 
 \cvCPyFunc{GetStarKeypoints}
 Retrieves keypoints using the StarDetector algorithm.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\par CvStarDetectorParams params=cvStarDetectorParams() );
-}\cvcodePy{GetStarKeypoints(image,storage,params)-> keypoints}
+}\cvdefPy{GetStarKeypoints(image,storage,params)-> keypoints}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image}
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
 \cvCPyFunc{GoodFeaturesToTrack}
 Determines strong corners on an image.
 
-\cvcodeC{
+\cvdefC{
 void cvGoodFeaturesToTrack(
 \par const CvArr* image
 \par CvArr* eig\_image, CvArr* temp\_image
@@ -333,7 +333,7 @@ void cvGoodFeaturesToTrack(
 \par int use\_harris=0
 \par double k=0.04 );
 }
-\cvcodePy{GoodFeaturesToTrack(image,eig\_image,temp\_image,quality\_level,min\_distance,mask=NULL,block\_size=3,use\_harris=0,k=0.04)-> corners}
+\cvdefPy{GoodFeaturesToTrack(image,eig\_image,temp\_image,quality\_level,min\_distance,mask=NULL,block\_size=3,use\_harris=0,k=0.04)-> corners}
 
 \begin{description}
 \cvarg{image}{The source 8-bit or floating-point 32-bit, single-channel image}
@@ -368,9 +368,9 @@ features than are too close to the stronger features.
 \cvCPyFunc{HoughLines2}
 Finds lines in a binary image using a Hough transform.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
-}\cvcodePy{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> lines}
+}\cvdefPy{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> lines}
 
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, binary source image. In the case of a probabilistic method, the image is modified by the function}
@@ -493,12 +493,12 @@ And this is the output of the above program in the case of probabilistic Hough t
 \cvCPyFunc{PreCornerDetect}
 Calculates the feature map for corner detection.
 
-\cvcodeC{
+\cvdefC{
 void cvPreCornerDetect(
 \par const CvArr* image,
 \par CvArr* corners,
 \par int apertureSize=3 );
-}\cvcodePy{PreCornerDetect(image,corners,aperture\_size=3)-> None}
+}\cvdefPy{PreCornerDetect(image,corners,aperture\_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{corners}{Image to store the corner candidates}
@@ -528,10 +528,11 @@ cvReleaseImage( &corners );
 cvReleaseImage( &dilated_corners );
 \end{lstlisting}
 
+\ifC
 \cvCPyFunc{SampleLine}
 Reads the raster line to the buffer.
 
-\cvcodeC{
+\cvdefC{
 int cvSampleLine(
 \par const CvArr* image
 \par CvPoint pt1
@@ -556,17 +557,17 @@ The function implements a particular application of line iterators. The function
 
 \fi
 
+\fi
+
 
 \ifCpp
 
 \cvCppFunc{Canny}
 Finds edges in an image using Canny algorithm.
 
-\begin{lstlisting}
-void Canny( const Mat& image, Mat& edges,
-            double threshold1, double threshold2,
-            int apertureSize=3, bool L2gradient=false );
-\end{lstlisting}
+\cvdefCpp{void Canny( const Mat\& image, Mat\& edges,\par
+            double threshold1, double threshold2,\par
+            int apertureSize=3, bool L2gradient=false );}
 \begin{description}
 \cvarg{image}{Single-channel 8-bit input image}
 \cvarg{edges}{The output edge map. It will have the same size and the same type as \texttt{image}}
@@ -582,11 +583,9 @@ The function finds edges in the input image \texttt{image} and marks them in the
 \cvCppFunc{cornerEigenValsAndVecs}
 Calculates eigenvalues and eigenvectors of image blocks for corner detection.
 
-\begin{lstlisting}
-void cornerEigenValsAndVecs( const Mat& src, Mat& dst,
-                            int blockSize, int apertureSize,
-                            int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void cornerEigenValsAndVecs( const Mat\& src, Mat\& dst,\par
+                            int blockSize, int apertureSize,\par
+                            int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{Input single-channel 8-bit or floating-point image}
 \cvarg{dst}{Image to store the results. It will have the same size as \texttt{src} and the type \texttt{CV\_32FC(6)}}
@@ -621,11 +620,9 @@ See also: \cvCppCross{cornerMinEigenVal}, \cvCppCross{cornerHarris}, \cvCppCross
 \cvCppFunc{cornerHarris}
 Harris edge detector.
 
-\begin{lstlisting}
-void cornerHarris( const Mat& src, Mat& dst, int blockSize,
-                  int apertureSize, double k,
-                  int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void cornerHarris( const Mat\& src, Mat\& dst, int blockSize,\par
+                  int apertureSize, double k,\par
+                  int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{Input single-channel 8-bit or floating-point image}
 \cvarg{dst}{Image to store the Harris detector responses; will have type \texttt{CV\_32FC1} and the same size as \texttt{src}}
@@ -646,11 +643,9 @@ Corners in the image can be found as the local maxima of this response map.
 \cvCppFunc{cornerMinEigenVal}
 Calculates the minimal eigenvalue of gradient matrices for corner detection.
 
-\begin{lstlisting}
-void cornerMinEigenVal( const Mat& src, Mat& dst,
-                        int blockSize, int apertureSize=3,
-                        int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void cornerMinEigenVal( const Mat\& src, Mat\& dst,\par
+                        int blockSize, int apertureSize=3,\par
+                        int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{Input single-channel 8-bit or floating-point image}
 \cvarg{dst}{Image to store the minimal eigenvalues; will have type \texttt{CV\_32FC1} and the same size as \texttt{src}}
@@ -664,11 +659,9 @@ The function is similar to \cvCppCross{cornerEigenValsAndVecs} but it calculates
 \cvCppFunc{cornerSubPix}
 Refines the corner locations.
 
-\begin{lstlisting}
-void cornerSubPix( const Mat& image, vector<Point2f>& corners,
-                   Size winSize, Size zeroZone,
-                   TermCriteria criteria );
-\end{lstlisting}
+\cvdefCpp{void cornerSubPix( const Mat\& image, vector<Point2f>\& corners,\par
+                   Size winSize, Size zeroZone,\par
+                   TermCriteria criteria );}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{corners}{Initial coordinates of the input corners; refined coordinates on output}
@@ -705,12 +698,10 @@ The algorithm sets the center of the neighborhood window at this new center $q$ 
 \cvCppFunc{goodFeaturesToTrack}
 Determines strong corners on an image.
 
-\begin{lstlisting}
-void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
-                         int maxCorners, double qualityLevel, double minDistance,
-                         const Mat& mask=Mat(), int blockSize=3,
-                         bool useHarrisDetector=false, double k=0.04 );
-\end{lstlisting}
+\cvdefCpp{void goodFeaturesToTrack( const Mat\& image, vector<Point2f>\& corners,\par
+                         int maxCorners, double qualityLevel, double minDistance,\par
+                         const Mat\& mask=Mat(), int blockSize=3,\par
+                         bool useHarrisDetector=false, double k=0.04 );}
 \begin{description}
 \cvarg{image}{The input 8-bit or floating-point 32-bit, single-channel image}
 \cvarg{corners}{The output vector of detected corners}
@@ -741,12 +732,10 @@ See also: \cvCppCross{cornerMinEigenVal}, \cvCppCross{cornerHarris}, \cvCppCross
 \cvCppFunc{HoughCircles}
 Finds circles in a grayscale image using a Hough transform.
 
-\begin{lstlisting}
-void HoughCircles( Mat& image, vector<Vec3f>& circles,
-                 int method, double dp, double minDist,
-                 double param1=100, double param2=100,
-                 int minRadius=0, int maxRadius=0 );
-\end{lstlisting}
+\cvdefCpp{void HoughCircles( Mat\& image, vector<Vec3f>\& circles,\par
+                 int method, double dp, double minDist,\par
+                 double param1=100, double param2=100,\par
+                 int minRadius=0, int maxRadius=0 );}
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, grayscale input image}
 \cvarg{circles}{The output vector of found circles. Each vector is encoded as 3-element floating-point vector $(x, y, radius)$}
@@ -801,14 +790,12 @@ See also: \cvCppCross{fitEllipse}, \cvCppCross{minEnclosingCircle}
 \cvCppFunc{HoughLines}
 Finds lines in a binary image using standard Hough transform.
 
-\begin{lstlisting}
-void HoughLines( Mat& image, vector<Vec2f>& lines,
-                 double rho, double theta, int threshold,
-                 double srn=0, double stn=0 );
-\end{lstlisting}
+\cvdefCpp{void HoughLines( Mat\& image, vector<Vec2f>\& lines,\par
+                 double rho, double theta, int threshold,\par
+                 double srn=0, double stn=0 );}
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, binary source image. The image may be modified by the function}
-\cvarg{lines}{The output vector of lines. Each line is represented by a two-element vector $(\rho, \theta)$. $\rho$ is the distance from the coordinate origin $(0,0)$ (top-left corner of the image) and $\theta$ is the line rotation angle in radians (0 $\sim$ vertical line, $\pi/2 \sim$ horizontal line)}
+\cvarg{lines}{The output vector of lines. Each line is represented by a two-element vector $(\rho, \theta)$. $\rho$ is the distance from the coordinate origin $(0,0)$ (top-left corner of the image) and $\theta$ is the line rotation angle in radians ($0 \sim \textrm{vertical line}, \pi/2 \sim \textrm{horizontal line}$)}
 \cvarg{rho}{Distance resolution of the accumulator in pixels}
 \cvarg{theta}{Angle resolution of the accumulator in radians}
 \cvarg{threshold}{The accumulator threshold parameter. Only those lines are returned that get enough votes ($>\texttt{threshold}$)}
@@ -822,11 +809,9 @@ The function implements standard or standard multi-scale Hough transform algorit
 \cvCppFunc{HoughLinesP}
 Finds lines segments in a binary image using probabilistic Hough transform.
 
-\begin{lstlisting}
-void HoughLinesP( Mat& image, vector<Vec4i>& lines,
-                  double rho, double theta, int threshold,
-                  double minLineLength=0, double maxLineGap=0 );
-\end{lstlisting}
+\cvdefCpp{void HoughLinesP( Mat\& image, vector<Vec4i>\& lines,\par
+                  double rho, double theta, int threshold,\par
+                  double minLineLength=0, double maxLineGap=0 );}
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, binary source image. The image may be modified by the function}
 \cvarg{lines}{The output vector of lines. Each line is represented by a 4-element vector $(x_1, y_1, x_2, y_2)$, where $(x_1,y_1)$ and $(x_2, y_2)$ are the ending points of each line segment detected.}
@@ -906,10 +891,8 @@ And this is the output of the above program in the case of probabilistic Hough t
 \cvCppFunc{perCornerDetect}
 Calculates the feature map for corner detection
 
-\begin{lstlisting}
-void preCornerDetect( const Mat& src, Mat& dst, int apertureSize,
-                     int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void preCornerDetect( const Mat\& src, Mat\& dst, int apertureSize,\par
+                     int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source single-channel 8-bit of floating-point image}
 \cvarg{dst}{The output image; will have type \texttt{CV\_32F} and the same size as \texttt{src}}
@@ -940,7 +923,7 @@ Mat corner_mask = corners == dilated_corners;
 Data structure for salient point detectors
 
 \begin{lstlisting}
-class KeyPoint
+KeyPoint
 {
 public:
     // default constructor
@@ -965,7 +948,7 @@ public:
     // scale-space octave in which the feature has been found;
     // may correlate with the size
     int octave;
-    // point class (can be used by feature
+    // point (can be used by feature
     // classifiers or object detectors)
     int class_id;
 };

@@ -9,14 +9,14 @@ Another common feature of the functions and classes described in this section is
 \cvCPyFunc{CopyMakeBorder}
 Copies an image and makes a border around it.
 
-\cvcodeC{
+\cvdefC{
 void cvCopyMakeBorder(
 \par const CvArr* src,
 \par CvArr* dst,
 \par CvPoint offset,
 \par int bordertype,
 \par CvScalar value=cvScalarAll(0) );}
-\cvcodePy{CopyMakeBorder(src,dst,offset,bordrtype,value=cvScalarAll(0))-> None}
+\cvdefPy{CopyMakeBorder(src,dst,offset,bordrtype,value=cvScalarAll(0))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -36,9 +36,9 @@ The function copies the source 2D array into the interior of the destination arr
 \cvCPyFunc{CreateStructuringElementEx}
 Creates a structuring element.
 
-\cvcodeC{IplConvKernel* cvCreateStructuringElementEx(\par int cols,
+\cvdefC{IplConvKernel* cvCreateStructuringElementEx(\par int cols,
  \par int rows, \par int anchorX, \par int anchorY, \par int shape, \par int* values=NULL );}
-\cvcodePy{CreateStructuringElementEx(cols,rows,anchorX,anchorY,shape,values={NULL,0})-> kernel}
+\cvdefPy{CreateStructuringElementEx(cols,rows,anchorX,anchorY,shape,values={NULL,0})-> kernel}
 
 \begin{description}
 \cvarg{cols}{Number of columns in the structuring element}
@@ -60,8 +60,8 @@ The function CreateStructuringElementEx allocates and fills the structure \textt
 \cvCPyFunc{Dilate}
 Dilates an image by using a specific structuring element.
 
-\cvcodeC{void cvDilate(\par const CvArr* src,\par CvArr* dst,\par IplConvKernel* element=NULL,\par int iterations=1 );}
-\cvcodePy{Dilate(src,dst,element=NULL,iterations=1)-> None}
+\cvdefC{void cvDilate(\par const CvArr* src,\par CvArr* dst,\par IplConvKernel* element=NULL,\par int iterations=1 );}
+\cvdefPy{Dilate(src,dst,element=NULL,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -81,8 +81,8 @@ The function supports the in-place mode. Dilation can be applied several (\textt
 \cvCPyFunc{Erode}
 Erodes an image by using a specific structuring element.
 
-\cvcodeC{void cvErode(\par const CvArr* src,\par  CvArr* dst,\par  IplConvKernel* element=NULL,\par  int iterations=1);}
-\cvcodePy{Erode(src,dst,element=NULL,itertions=1)-> None}
+\cvdefC{void cvErode(\par const CvArr* src,\par  CvArr* dst,\par  IplConvKernel* element=NULL,\par  int iterations=1);}
+\cvdefPy{Erode(src,dst,element=NULL,itertions=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -102,9 +102,9 @@ The function supports the in-place mode. Erosion can be applied several (\texttt
 \cvCPyFunc{Filter2D}
 Convolves an image with the kernel.
 
-\cvcodeC{void cvFilter2D(
+\cvdefC{void cvFilter2D(
 \par const CvArr* src,\par  CvArr* dst,\par  const CvMat* kernel,\par  CvPoint anchor=cvPoint(-1,-1));}
-\cvcodePy{Filter2D(src,dst,kernel,anchor=(-1,-1))-> None}
+\cvdefPy{Filter2D(src,dst,kernel,anchor=(-1,-1))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -118,8 +118,8 @@ The function applies an arbitrary linear filter to the image. In-place operation
 \cvCPyFunc{Laplace}
 Calculates the Laplacian of an image.
 
-\cvcodeC{void cvLaplace(\par const CvArr* src,\par  CvArr* dst,\par  int apertureSize=3);}
-\cvcodePy{Laplace(src,dst,apertureSize=3)-> None}
+\cvdefC{void cvLaplace(\par const CvArr* src,\par  CvArr* dst,\par  int apertureSize=3);}
+\cvdefPy{Laplace(src,dst,apertureSize=3)-> None}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
@@ -141,10 +141,10 @@ Similar to the \cvCPyCross{Sobel} function, no scaling is done and the same comb
 \cvCPyFunc{MorphologyEx}
 Performs advanced morphological transformations.
 
-\cvcodeC{void cvMorphologyEx(
+\cvdefC{void cvMorphologyEx(
 \par const CvArr* src,\par  CvArr* dst,\par  CvArr* temp,\par  IplConvKernel* element,
 \par int operation,\par  int iterations=1 );}
-\cvcodePy{MorphologyEx(src,dst,temp,element,operation,iterations=1)-> None}
+\cvdefPy{MorphologyEx(src,dst,temp,element,operation,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -199,8 +199,8 @@ The temporary image \texttt{temp} is required for a morphological gradient and, 
 \cvCPyFunc{PyrDown}
 Downsamples an image.
 
-\cvcodeC{void cvPyrDown(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIAN\_5x5 );}
-\cvcodePy{PyrDown(src,dst,filter=CV\_GAUSSIAN\_5X5)-> None}
+\cvdefC{void cvPyrDown(\par const CvArr* src,\par CvArr* dst,\par int filter=CV\_GAUSSIAN\_5x5 );}
+\cvdefPy{PyrDown(src,dst,filter=CV\_GAUSSIAN\_5X5)-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -214,7 +214,7 @@ The function performs the downsampling step of the Gaussian pyramid decompositio
 \cvCPyFunc{ReleaseStructuringElement}
 Deletes a structuring element.
 
-\cvcodeC{void cvReleaseStructuringElement( IplConvKernel** element );}
+\cvdefC{void cvReleaseStructuringElement( IplConvKernel** element );}
 
 \begin{description}
 \cvarg{element}{Pointer to the deleted structuring element}
@@ -226,9 +226,9 @@ The function releases the structure \texttt{IplConvKernel} that is no longer nee
 \cvCPyFunc{Smooth}
 Smooths the image in one of several ways.
 
-\cvcodeC{void cvSmooth(\par const CvArr* src,
+\cvdefC{void cvSmooth(\par const CvArr* src,
 \par CvArr* dst,\par  int smoothtype=CV\_GAUSSIAN,\par  int param1=3,\par  int param2=0,\par  double param3=0, \par double param4=0);}
-\cvcodePy{Smooth(src,dst,smoothtype=CV\_GAUSSIAN,param1=3,param2=0,param3=0,param4=0)-> None}
+\cvdefPy{Smooth(src,dst,smoothtype=CV\_GAUSSIAN,param1=3,param2=0,param3=0,param4=0)-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -268,8 +268,8 @@ Median and bilateral filters work with 1- or 3-channel 8-bit images and can not 
 \cvCPyFunc{Sobel}
 Calculates the first, second, third or mixed image derivatives using an extended Sobel operator.
 
-\cvcodeC{void cvSobel(\par const CvArr* src,\par  CvArr* dst,\par  int xorder,\par  int yorder,\par  int apertureSize=3 );}
-\cvcodePy{Sobel(src,dst,xorder,yorder,apertureSize = 3)-> None}
+\cvdefC{void cvSobel(\par const CvArr* src,\par  CvArr* dst,\par  int xorder,\par  int yorder,\par  int apertureSize=3 );}
+\cvdefPy{Sobel(src,dst,xorder,yorder,apertureSize = 3)-> None}
 
 \begin{description}
 \cvarg{src}{Source image of type CvArr*}
@@ -653,11 +653,9 @@ See also: \cvCppCross{BaseColumnFilter}, \cvCppCross{BaseFilter}, \cvCppCross{Ba
 \cvCppFunc{bilateralFilter}
 Applies bilateral filter to the image
 
-\begin{lstlisting}
-void bilateralFilter( const Mat& src, Mat& dst, int d,
-                      double sigmaColor, double sigmaSpace,
-                      int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void bilateralFilter( const Mat\& src, Mat\& dst, int d,\par
+                      double sigmaColor, double sigmaSpace,\par
+                      int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source 8-bit or floating-point, 1-channel or 3-channel image}
 \cvarg{dst}{The destination image; will have the same size and the same type as \texttt{src}}
@@ -672,11 +670,9 @@ The function applies bilateral filtering to the input image, as described in
 \cvCppFunc{blur}
 Smoothes image using normalized box filter
 
-\begin{lstlisting}
-void blur( const Mat& src, Mat& dst,
-           Size ksize, Point anchor=Point(-1,-1),
-           int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void blur( const Mat\& src, Mat\& dst,\par
+           Size ksize, Point anchor=Point(-1,-1),\par
+           int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same type as \texttt{src}}
@@ -704,21 +700,7 @@ See also: \cvCppCross{boxFilter}, \cvCppCross{bilateralFilter}, \cvCppCross{Gaus
 \cvCppFunc{borderInterpolate}
 Computes source location of extrapolated pixel
 
-\begin{lstlisting}
-int borderInterpolate( int p, int len, int borderType );
-
-enum { // the first and the last pixels in each row and each column are replicated
-       BORDER_REPLICATE=IPL_BORDER_REPLICATE,
-       // 
-       BORDER_CONSTANT=IPL_BORDER_CONSTANT,
-       BORDER_REFLECT=IPL_BORDER_REFLECT,
-       BORDER_REFLECT_101=IPL_BORDER_REFLECT_101,
-       BORDER_REFLECT101=BORDER_REFLECT_101,
-       BORDER_WRAP=IPL_BORDER_WRAP,
-       BORDER_TRANSPARENT,
-       BORDER_DEFAULT=BORDER_REFLECT_101,
-       BORDER_ISOLATED=16 };
-\end{lstlisting}
+\cvdefCpp{int borderInterpolate( int p, int len, int borderType );}
 \begin{description}
 \cvarg{p}{0-based coordinate of the extrapolated pixel along one of the axes, likely <0 or >=\texttt{len}}
 \cvarg{len}{length of the array along the corresponding axis}
@@ -739,12 +721,10 @@ See also: \cvCppCross{FilterEngine}, \cvCppCross{copyMakeBorder}
 \cvCppFunc{boxFilter}
 Smoothes image using box filter
 
-\begin{lstlisting}
-void boxFilter( const Mat& src, Mat& dst, int ddepth,
-                Size ksize, Point anchor=Point(-1,-1),
-                bool normalize=true,
-                int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void boxFilter( const Mat\& src, Mat\& dst, int ddepth,\par
+                Size ksize, Point anchor=Point(-1,-1),\par
+                bool normalize=true,\par
+                int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same type as \texttt{src}}
@@ -778,9 +758,7 @@ See also: \cvCppCross{boxFilter}, \cvCppCross{bilateralFilter}, \cvCppCross{Gaus
 \cvCppFunc{buildPyramid}
 Constructs Gaussian pyramid for an image
 
-\begin{lstlisting}
-void buildPyramid( const Mat& src, vector<Mat>& dst, int maxlevel );
-\end{lstlisting}
+\cvdefCpp{void buildPyramid( const Mat\& src, vector<Mat>\& dst, int maxlevel );}
 \begin{description}
 \cvarg{src}{The source image; check \cvCppCross{pyrDown} for the list of supported types}
 \cvarg{dst}{The destination vector of \texttt{maxlevel+1} images of the same type as \texttt{src};
@@ -794,11 +772,9 @@ The function constructs a vector of images and builds the gaussian pyramid by re
 \cvCppFunc{copyMakeBorder}
 Forms a border around the image
 
-\begin{lstlisting}
-void copyMakeBorder( const Mat& src, Mat& dst,
-                    int top, int bottom, int left, int right,
-                    int borderType, const Scalar& value=Scalar() );
-\end{lstlisting}
+\cvdefCpp{void copyMakeBorder( const Mat\& src, Mat\& dst,\par
+                    int top, int bottom, int left, int right,\par
+                    int borderType, const Scalar\& value=Scalar() );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same type as \texttt{src} and the size \texttt{Size(src.cols+left+right, src.rows+top+bottom)}}
@@ -832,16 +808,14 @@ See also: \cvCppCross{borderInterpolate}
 \cvCppFunc{createBoxFilter}
 Returns box filter engine
 
-\begin{lstlisting}
-Ptr<FilterEngine> createBoxFilter( int srcType, int dstType, Size ksize,
-                                 Point anchor=Point(-1,-1),
-                                 bool normalize=true,
-                                 int borderType=BORDER_DEFAULT);
-Ptr<BaseRowFilter> getRowSumFilter(int srcType, int sumType,
-                                   int ksize, int anchor=-1);
-Ptr<BaseColumnFilter> getColumnSumFilter(int sumType, int dstType,
-                                   int ksize, int anchor=-1, double scale=1);
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createBoxFilter( int srcType, int dstType,\par
+                                 Size ksize, Point anchor=Point(-1,-1),\par
+                                 bool normalize=true,\par
+                                 int borderType=BORDER\_DEFAULT);\newline
+Ptr<BaseRowFilter> getRowSumFilter(int srcType, int sumType,\par
+                                   int ksize, int anchor=-1);\newline
+Ptr<BaseColumnFilter> getColumnSumFilter(int sumType, int dstType,\par
+                                   int ksize, int anchor=-1, double scale=1);}
 \begin{description}
 \cvarg{srcType}{The source image type}
 \cvarg{sumType}{The intermediate horizontal sum type; must have as many channels as \texttt{srcType}}
@@ -862,11 +836,9 @@ See also: \cvCppCross{FilterEngine}, \cvCppCross{blur}, \cvCppCross{boxFilter}.
 \cvCppFunc{createDerivFilter}
 Returns engine for computing image derivatives 
 
-\begin{lstlisting}
-Ptr<FilterEngine> createDerivFilter( int srcType, int dstType,
-                                     int dx, int dy, int ksize,
-                                     int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createDerivFilter( int srcType, int dstType,\par
+                                     int dx, int dy, int ksize,\par
+                                     int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{srcType}{The source image type}
 \cvarg{dstType}{The destination image type; must have as many channels as \texttt{srcType}}
@@ -883,16 +855,14 @@ See also: \cvCppCross{createSeparableLinearFilter}, \cvCppCross{getDerivKernels}
 \cvCppFunc{createGaussianFilter}
 Returns engine for smoothing images with a Gaussian filter
 
-\begin{lstlisting}
-Ptr<FilterEngine> createGaussianFilter( int type, Size ksize,
-                                   double sigmaX, double sigmaY=0,
-                                   int borderType=BORDER_DEFAULT);
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createGaussianFilter( int type, Size ksize,\par
+                                   double sigmaX, double sigmaY=0,\par
+                                   int borderType=BORDER\_DEFAULT);}
 \begin{description}
 \cvarg{type}{The source and the destination image type}
 \cvarg{ksize}{The aperture size; see \cvCppCross{getGaussianKernel}}
 \cvarg{sigmaX}{The Gaussian sigma in the horizontal direction; see \cvCppCross{getGaussianKernel}}
-\cvarg{sigmaY}{The Gaussian sigma in the vertical direction; if 0, then \texttt{sigmaY}$\leftarrow$\texttt{sigmaX}}
+\cvarg{sigmaY}{The Gaussian sigma in the vertical direction; if 0, then $\texttt{sigmaY}\leftarrow\texttt{sigmaX}$}
 \cvarg{borderType}{Which border type to use; see \cvCppCross{borderInterpolate}}
 \end{description}
 
@@ -903,17 +873,14 @@ See also: \cvCppCross{createSeparableLinearFilter}, \cvCppCross{getGaussianKerne
 \cvCppFunc{createLinearFilter}
 Creates non-separable linear filter engine
 
-\begin{lstlisting}
-Ptr<FilterEngine> createLinearFilter(int srcType, int dstType,
-               const Mat& kernel, Point _anchor=Point(-1,-1),
-               double delta=0, int rowBorderType=BORDER_DEFAULT,
-               int columnBorderType=-1, const Scalar& borderValue=Scalar());
-               
-Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
-                               const Mat& kernel,
-                               Point anchor=Point(-1,-1),
-                               double delta=0, int bits=0);
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createLinearFilter(int srcType, int dstType,\par
+               const Mat\& kernel, Point \_anchor=Point(-1,-1),\par
+               double delta=0, int rowBorderType=BORDER\_DEFAULT,\par
+               int columnBorderType=-1, const Scalar\& borderValue=Scalar());\newline
+Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,\par
+                               const Mat\& kernel,\par
+                               Point anchor=Point(-1,-1),\par
+                               double delta=0, int bits=0);}
 \begin{description}
 \cvarg{srcType}{The source image type}
 \cvarg{dstType}{The destination image type; must have as many channels as \texttt{srcType}}
@@ -933,25 +900,19 @@ See also: \cvCppCross{createSeparableLinearFilter}, \cvCppCross{FilterEngine}, \
 \cvCppFunc{createMorphologyFilter}
 Creates engine for non-separable morphological operations
 
-\begin{lstlisting}
-Ptr<FilterEngine> createMorphologyFilter(int op, int type,
-    const Mat& element, Point anchor=Point(-1,-1),
-    int rowBorderType=BORDER_CONSTANT,
-    int columnBorderType=-1,
-    const Scalar& borderValue=morphologyDefaultBorderValue());
-                   
-Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat& element,
-                                    Point anchor=Point(-1,-1));
-                                   
-Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type,
-                                          int esize, int anchor=-1);
-                                          
-Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type,
-                                                int esize, int anchor=-1);
-
-static inline Scalar morphologyDefaultBorderValue()
-{ return Scalar::all(DBL_MAX); }
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createMorphologyFilter(int op, int type,\par
+    const Mat\& element, Point anchor=Point(-1,-1),\par
+    int rowBorderType=BORDER\_CONSTANT,\par
+    int columnBorderType=-1,\par
+    const Scalar\& borderValue=morphologyDefaultBorderValue());\newline
+Ptr<BaseFilter> getMorphologyFilter(int op, int type, const Mat\& element,\par
+                                    Point anchor=Point(-1,-1));\newline
+Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type,\par
+                                          int esize, int anchor=-1);\newline
+Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type,\par
+                                                int esize, int anchor=-1);\newline
+static inline Scalar morphologyDefaultBorderValue()\par
+{ return Scalar::all(DBL\_MAX); }}
 \begin{description}
 \cvarg{op}{The morphology operation id, \texttt{MORPH\_ERODE} or \texttt{MORPH\_DILATE}}
 \cvarg{type}{The input/output image type}
@@ -969,23 +930,19 @@ See also: \cvCppCross{erode}, \cvCppCross{dilate}, \cvCppCross{morphologyEx}, \c
 \cvCppFunc{createSeparableLinearFilter}
 Creates engine for separable linear filter
 
-\begin{lstlisting}
-Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstType,
-                         const Mat& rowKernel, const Mat& columnKernel,
-                         Point anchor=Point(-1,-1), double delta=0,
-                         int rowBorderType=BORDER_DEFAULT,
-                         int columnBorderType=-1,
-                         const Scalar& borderValue=Scalar());
-                         
-Ptr<BaseColumnFilter> getLinearColumnFilter(int bufType, int dstType,
-                         const Mat& columnKernel, int anchor,
-                         int symmetryType, double delta=0,
-                         int bits=0);
-                         
-Ptr<BaseRowFilter> getLinearRowFilter(int srcType, int bufType,
-                         const Mat& rowKernel, int anchor,
-                         int symmetryType);
-\end{lstlisting}
+\cvdefCpp{Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstType,\par
+                         const Mat\& rowKernel, const Mat\& columnKernel,\par
+                         Point anchor=Point(-1,-1), double delta=0,\par
+                         int rowBorderType=BORDER\_DEFAULT,\par
+                         int columnBorderType=-1,\par
+                         const Scalar\& borderValue=Scalar());\newline
+Ptr<BaseColumnFilter> getLinearColumnFilter(int bufType, int dstType,\par
+                         const Mat\& columnKernel, int anchor,\par
+                         int symmetryType, double delta=0,\par
+                         int bits=0);\newline
+Ptr<BaseRowFilter> getLinearRowFilter(int srcType, int bufType,\par
+                         const Mat\& rowKernel, int anchor,\par
+                         int symmetryType);}
 \begin{description}
 \cvarg{srcType}{The source array type}
 \cvarg{dstType}{The destination image type; must have as many channels as \texttt{srcType}}
@@ -1009,12 +966,10 @@ See also: \cvCppCross{sepFilter2D}, \cvCppCross{createLinearFilter}, \cvCppCross
 \cvCppFunc{dilate}
 Dilates an image by using a specific structuring element.
 
-\begin{lstlisting}
-void dilate( const Mat& src, Mat& dst, const Mat& element,
-             Point anchor=Point(-1,-1), int iterations=1,
-             int borderType=BORDER_CONSTANT,
-             const Scalar& borderValue=morphologyDefaultBorderValue() );
-\end{lstlisting}
+\cvdefCpp{void dilate( const Mat\& src, Mat\& dst, const Mat\& element,\par
+             Point anchor=Point(-1,-1), int iterations=1,\par
+             int borderType=BORDER\_CONSTANT,\par
+             const Scalar\& borderValue=morphologyDefaultBorderValue() );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the same size and the same type as \texttt{src}}
@@ -1038,12 +993,10 @@ See also: \cvCppCross{erode}, \cvCppCross{morphologyEx}, \cvCppCross{createMorph
 \cvCppFunc{erode}
 Erodes an image by using a specific structuring element.
 
-\begin{lstlisting}
-void erode( const Mat& src, Mat& dst, const Mat& element,
-            Point anchor=Point(-1,-1), int iterations=1,
-            int borderType=BORDER_CONSTANT,
-            const Scalar& borderValue=morphologyDefaultBorderValue() );
-\end{lstlisting}
+\cvdefCpp{void erode( const Mat\& src, Mat\& dst, const Mat\& element,\par
+            Point anchor=Point(-1,-1), int iterations=1,\par
+            int borderType=BORDER\_CONSTANT,\par
+            const Scalar\& borderValue=morphologyDefaultBorderValue() );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the same size and the same type as \texttt{src}}
@@ -1067,11 +1020,9 @@ See also: \cvCppCross{dilate}, \cvCppCross{morphologyEx}, \cvCppCross{createMorp
 \cvCppFunc{filter2D}
 Convolves an image with the kernel
 
-\begin{lstlisting}
-void filter2D( const Mat& src, Mat& dst, int ddepth,
-               const Mat& kernel, Point anchor=Point(-1,-1),
-               double delta=0, int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void filter2D( const Mat\& src, Mat\& dst, int ddepth,\par
+               const Mat\& kernel, Point anchor=Point(-1,-1),\par
+               double delta=0, int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the same size and the same number of channels as \texttt{src}}
@@ -1099,11 +1050,9 @@ See also: \cvCppCross{sepFilter2D}, \cvCppCross{createLinearFilter}, \cvCppCross
 \cvCppFunc{GaussianBlur}
 Smoothes image using a Gaussian filter
 
-\begin{lstlisting}
-void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
-                   double sigmaX, double sigmaY=0,
-                   int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void GaussianBlur( const Mat\& src, Mat\& dst, Size ksize,\par
+                   double sigmaX, double sigmaY=0,\par
+                   int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same type as \texttt{src}}
@@ -1119,10 +1068,8 @@ See also: \cvCppCross{sepFilter2D}, \cvCppCross{filter2D}, \cvCppCross{blur}, \c
 \cvCppFunc{getDerivKernels}
 Returns filter coefficients for computing spatial image derivatives
 
-\begin{lstlisting}
-void getDerivKernels( Mat& kx, Mat& ky, int dx, int dy, int ksize,
-                      bool normalize=false, int ktype=CV_32F );
-\end{lstlisting}
+\cvdefCpp{void getDerivKernels( Mat\& kx, Mat\& ky, int dx, int dy, int ksize,\par
+                      bool normalize=false, int ktype=CV\_32F );}
 \begin{description}
 \cvarg{kx}{The output matrix of row filter coefficients; will have type \texttt{ktype}}
 \cvarg{ky}{The output matrix of column filter coefficients; will have type \texttt{ktype}}
@@ -1138,9 +1085,7 @@ The function computes and returns the filter coefficients for spatial image deri
 \cvCppFunc{getGaussianKernel}
 Returns Gaussian filter coefficients
 
-\begin{lstlisting}
-Mat getGaussianKernel( int ksize, double sigma, int ktype=CV_64F );
-\end{lstlisting}
+\cvdefCpp{Mat getGaussianKernel( int ksize, double sigma, int ktype=CV\_64F );}
 \begin{description}
 \cvarg{ksize}{The aperture size. It should be odd ($\texttt{ksize} \mod 2 = 1$) and positive.}
 \cvarg{sigma}{The Gaussian standard deviation. If it is non-positive, it is computed from \texttt{ksize} as \\
@@ -1161,11 +1106,8 @@ See also: \cvCppCross{sepFilter2D}, \cvCppCross{createSeparableLinearFilter}, \c
 \cvCppFunc{getKernelType}
 Returns the kernel type
 
-\begin{lstlisting}
-int getKernelType(const Mat& kernel, Point anchor);
-enum { KERNEL_GENERAL=0, KERNEL_SYMMETRICAL=1, KERNEL_ASYMMETRICAL=2,
-       KERNEL_SMOOTH=4, KERNEL_INTEGER=8 };
-\end{lstlisting}
+\cvdefCpp{int getKernelType(const Mat\& kernel, Point anchor);}
+
 \begin{description}
 \cvarg{kernel}{1D array of the kernel coefficients to analyze}
 \cvarg{anchor}{The anchor position within the kernel}
@@ -1183,10 +1125,8 @@ The function analyzes the kernel coefficients and returns the corresponding kern
 \cvCppFunc{getStructuringElement}
 Returns the structuring element of the specified size and shape for morphological operations
 
-\begin{lstlisting}
-Mat getStructuringElement(int shape, Size esize, Point anchor=Point(-1,-1));
-enum { MORPH_RECT=0, MORPH_CROSS=1, MORPH_ELLIPSE=2 };
-\end{lstlisting}
+\cvdefCpp{Mat getStructuringElement(int shape, Size esize,\par Point anchor=Point(-1,-1));}
+
 \begin{description}
 \cvarg{shape}{The element shape, one of:
     
@@ -1215,9 +1155,7 @@ The function constructs and returns the structuring element that can be then pas
 \cvCppFunc{medianBlur}
 Smoothes image using median filter
 
-\begin{lstlisting}
-void medianBlur( const Mat& src, Mat& dst, int ksize );
-\end{lstlisting}
+\cvdefCpp{void medianBlur( const Mat\& src, Mat\& dst, int ksize );}
 \begin{description}
 \cvarg{src}{The source 1-, 3- or 4-channel image. When \texttt{ksize} is 3 or 5, the image depth should be \texttt{CV\_8U}, \texttt{CV\_16U} or \texttt{CV\_32F}. For larger aperture sizes it can only be \texttt{CV\_8U}}
 \cvarg{dst}{The destination array; will have the same size and the same type as \texttt{src}}
@@ -1231,14 +1169,11 @@ See also: \cvCppCross{bilateralFilter}, \cvCppCross{blur}, \cvCppCross{boxFilter
 \cvCppFunc{morphologyEx}
 Performs advanced morphological transformations
 
-\begin{lstlisting}
-void morphologyEx( const Mat& src, Mat& dst, int op, const Mat& element,
-                   Point anchor=Point(-1,-1), int iterations=1,
-                   int borderType=BORDER_CONSTANT,
-                   const Scalar& borderValue=morphologyDefaultBorderValue() );
-enum { MORPH_ERODE=0, MORPH_DILATE=1, MORPH_OPEN=2, MORPH_CLOSE=3,
-     MORPH_GRADIENT=4, MORPH_TOPHAT=5, MORPH_BLACKHAT=6 };
-\end{lstlisting}
+\cvdefCpp{void morphologyEx( const Mat\& src, Mat\& dst, \par
+                   int op, const Mat\& element,\par
+                   Point anchor=Point(-1,-1), int iterations=1,\par
+                   int borderType=BORDER\_CONSTANT,\par
+                   const Scalar\& borderValue=morphologyDefaultBorderValue() );}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image. It will have the same size and the same type as \texttt{src}}
@@ -1295,11 +1230,9 @@ See also: \cvCppCross{dilate}, \cvCppCross{erode}, \cvCppCross{createMorphologyF
 \cvCppFunc{Laplacian}
 Calculates the Laplacian of an image
 
-\begin{lstlisting}
-void Laplacian( const Mat& src, Mat& dst, int ddepth,
-               int ksize=1, double scale=1, double delta=0,
-               int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void Laplacian( const Mat\& src, Mat\& dst, int ddepth,\par
+               int ksize=1, double scale=1, double delta=0,\par
+               int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image; will have the same size and the same number of channels as \texttt{src}}
@@ -1326,9 +1259,7 @@ See also: \cvCppCross{Sobel}, \cvCppCross{Scharr}
 \cvCppFunc{pyrDown}
 Smoothes an image and downsamples it.
 
-\begin{lstlisting}
-void pyrDown( const Mat& src, Mat& dst, const Size& dstsize=Size());
-\end{lstlisting}
+\cvdefCpp{void pyrDown( const Mat\& src, Mat\& dst, const Size\& dstsize=Size());}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the specified size and the same type as \texttt{src}}
@@ -1359,9 +1290,7 @@ and then downsamples the image by rejecting even rows and columns.
 \cvCppFunc{pyrUp}
 Upsamples an image and then smoothes it
 
-\begin{lstlisting}
-void pyrUp( const Mat& src, Mat& dst, const Size& dstsize=Size());
-\end{lstlisting}
+\cvdefCpp{void pyrUp( const Mat\& src, Mat\& dst, const Size\& dstsize=Size());}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the specified size and the same type as \texttt{src}}
@@ -1380,12 +1309,10 @@ The function performs the upsampling step of the Gaussian pyramid construction (
 \cvCppFunc{sepFilter2D}
 Applies separable linear filter to an image
 
-\begin{lstlisting}
-void sepFilter2D( const Mat& src, Mat& dst, int ddepth,
-                  const Mat& rowKernel, const Mat& columnKernel,
-                  Point anchor=Point(-1,-1),
-                  double delta=0, int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void sepFilter2D( const Mat\& src, Mat\& dst, int ddepth,\par
+                  const Mat\& rowKernel, const Mat\& columnKernel,\par
+                  Point anchor=Point(-1,-1),\par
+                  double delta=0, int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same number of channels as \texttt{src}}
@@ -1404,12 +1331,10 @@ See also: \cvCppCross{createSeparableLinearFilter}, \cvCppCross{filter2D}, \cvCp
 \cvCppFunc{Sobel}
 Calculates the first, second, third or mixed image derivatives using an extended Sobel operator
 
-\begin{lstlisting}
-void Sobel( const Mat& src, Mat& dst, int ddepth,
-            int xorder, int yorder, int ksize=3,
-            double scale=1, double delta=0,
-            int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void Sobel( const Mat\& src, Mat\& dst, int ddepth,\par
+            int xorder, int yorder, int ksize=3,\par
+            double scale=1, double delta=0,\par
+            int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same number of channels as \texttt{src}}
@@ -1470,12 +1395,10 @@ See also: \cvCppCross{Scharr}, \cvCppCross{Lapacian}, \cvCppCross{sepFilter2D}, 
 \cvCppFunc{Scharr}
 Calculates the first x- or y- image derivative using Scharr operator
 
-\begin{lstlisting}
-void Scharr( const Mat& src, Mat& dst, int ddepth,
-            int xorder, int yorder,
-            double scale=1, double delta=0,
-            int borderType=BORDER_DEFAULT );
-\end{lstlisting}
+\cvdefCpp{void Scharr( const Mat\& src, Mat\& dst, int ddepth,\par
+            int xorder, int yorder,\par
+            double scale=1, double delta=0,\par
+            int borderType=BORDER\_DEFAULT );}
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image; will have the same size and the same number of channels as \texttt{src}}

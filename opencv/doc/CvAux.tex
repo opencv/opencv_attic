@@ -8,7 +8,7 @@
 
 Calculates disparity for a stereo-pair.
 
-\cvcodeC{
+\cvdefC{
 cvFindStereoCorrespondence(
                    \par const  CvArr* leftImage, \par const  CvArr* rightImage,
                    \par int     mode, \par CvArr*  depthImage,
@@ -60,7 +60,7 @@ And here is the example stereo pair that can be used to test the example
 
 Calculates the coordinates of scanlines for two cameras using a fundamental matrix.
 
-\cvcodeC{
+\cvdefC{
 void cvMakeScanlines( \par const CvMatrix3* matrix, \par CvSize img\_size, \par int* scanlines1,
                       \par int* scanlines2, \par int* lengths1, \par int* lengths2, \par int* line\_count );
 
@@ -84,7 +84,7 @@ This function returns the number of scanlines. The function does nothing except 
 
 Rectifies an image.
 
-\cvcodeC{
+\cvdefC{
 void cvPreWarpImage( \par int line\_count, \par IplImage* img, \par uchar* dst,
                      \par int* dst\_nums, \par int* scanlines );
 
@@ -104,7 +104,7 @@ The function \texttt{cvPreWarpImage} rectifies an image so that the scanlines in
 
 Retrieves the scanlines from a rectified image and breaks them down into runs.
 
-\cvcodeC{
+\cvdefC{
 void cvFindRuns( \par int line\_count, \par uchar* prewarp1, \par uchar* prewarp2,
                  \par int* line\_lengths1, \par int* line\_lengths2,
                  \par int* runs1, \par int* runs2,
@@ -130,7 +130,7 @@ The function \texttt{cvFindRuns} retrieves scanlines from the rectified image an
 
 Finds the correspondence between two sets of runs of two warped images.
 
-\cvcodeC{
+\cvdefC{
 void cvDynamicCorrespondMulti( \par int line\_count, \par int* first, \par int* first\_runs,
                                \par int* second, \par int* second\_runs,
                                \par int* first\_corr, \par int* second\_corr );
@@ -156,7 +156,7 @@ The function \texttt{cvDynamicCorrespondMulti} finds the correspondence between 
 
 Calculates the coordinates of the scanlines in an image from a virtual camera.
 
-\cvcodeC{
+\cvdefC{
 void cvMakeAlphaScanlines( \par int* scanlines1, \par int* scanlines2,
                            \par int* scanlinesA, \par int* lengths,
                            \par int line\_count, \par float alpha );
@@ -180,7 +180,7 @@ Memory must be allocated before calling this function. Memory size for the array
 
 Morphs two pre-warped images using information about their stereo correspondence.
 
-\cvcodeC{
+\cvdefC{
 void cvMorphEpilinesMulti( \par int line\_count, \par uchar* first\_pix, \par int* first\_num,
                            \par uchar* second\_pix, \par int* second\_num,
                            \par uchar* dst\_pix, \par int* dst\_num,
@@ -213,7 +213,7 @@ The function \texttt{cvMorphEpilinesMulti} morphs two pre-warped images using in
 
 Warps a rectified, morphed image back.
 
-\cvcodeC{
+\cvdefC{
 void cvPostWarpImage( \par int line\_count, \par uchar* src, \par int* src\_nums,
                       \par IplImage* img, \par int* scanlines );
 
@@ -233,7 +233,7 @@ The function \texttt{cvPostWarpImage} warps the resultant image from the virtual
 
 Deletes moire in a given image.
 
-\cvcodeC{
+\cvdefC{
 void cvDeleteMoire( IplImage* img );
 
 }
@@ -262,7 +262,7 @@ contains a description of how to test the filter on sample data.
 
 Simultaneously determines the position and orientation of multiple cameras.
 
-\cvcodeC{
+\cvdefC{
 CvBool cv3dTrackerCalibrateCameras(\par int num\_cameras,
            \par const Cv3dTrackerCameraIntrinsics camera\_intrinsics[],
            \par CvSize checkerboard\_size,
@@ -294,7 +294,7 @@ Note that this method works well only if the checkerboard is rigidly mounted; if
 
 Determines the 3d location of tracked objects.
 
-\cvcodeC{
+\cvdefC{
 int  cv3dTrackerLocateObjects(\par int num\_cameras,
          \par int num\_objects,
          \par const Cv3dTrackerCameraInfo camera\_info[],
@@ -329,7 +329,7 @@ to do PCA.
 
 Calculates the covariance matrix for a group of input objects.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcCovarMatrixEx( \par int object\_count, \par void* input, \par int io\_flags,
                           \par int iobuf\_size, \par uchar* buffer, \par void* userdata,
                           \par IplImage* avg, \par float* covar\_matrix );
@@ -353,7 +353,7 @@ The function \texttt{cvCalcCovarMatrixEx} calculates a covariance matrix of the 
 
 Calculates the orthonormal eigen basis and the averaged object for group a of input objects.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcEigenObjects( \par int nObjects, \par void* input, \par void* output, \par int ioFlags,
                          \par int ioBufSize, \par void* userData, \par CvTermCriteria* calcLimit,
                          \par IplImage* avg, \par float* eigVals );
@@ -384,7 +384,7 @@ The function \texttt{cvCalcEigenObjects} uses the function \cross{cvCalcCovarMat
 
 Calculates the decomposition coefficient of an input object.
 
-\cvcodeC{
+\cvdefC{
 double cvCalcDecompCoeff( \par IplImage* obj, \par IplImage* eigObj, \par IplImage* avg );
 
 }
@@ -401,7 +401,7 @@ The function \texttt{cvCalcDecompCoeff} calculates one decomposition coefficient
 
 Calculates all of the decomposition coefficients for an input object.
 
-\cvcodeC{
+\cvdefC{
 void cvEigenDecomposite( \par IplImage* obj, \par int eigenvec\_count, \par void* eigInput,
                          \par int ioFlags, \par void* userData, \par IplImage* avg, \par float* coeffs );
 
@@ -423,7 +423,7 @@ The function \texttt{cvEigenDecomposite} calculates all of the decomposition coe
 
 Calculates the object projection into the eigen sub-space.
 
-\cvcodeC{
+\cvdefC{
 void cvEigenProjection( \par void* input\_vecs, \par int eigenvec\_count, \par int io\_flags, \par void* userdata,
                         \par float* coeffs, \par IplImage* avg, \par IplImage* proj );
 
@@ -449,7 +449,7 @@ In order to support embedded models, the user must define structures to represen
 
 Embedded HMM Structure.
 
-\cvcodeC{typedef struct \_CvEHMM}
+\cvdefC{typedef struct \_CvEHMM}
 \begin{lstlisting} 
     {
         int level;
@@ -480,7 +480,7 @@ For representation of observations the following structure is defined:
 
 Image Observation Structure.
 
-\cvcodeC{
+\cvdefC{
     typedef struct CvImgObsInfo
     }
 \begin{lstlisting}
@@ -507,7 +507,7 @@ Image Observation Structure.
 
 Creates a 2D, embedded HMM.
 
-\cvcodeC{
+\cvdefC{
 CvEHMM* cvCreate2DHMM( int* stateNumber, int* numMix, int obsSize );
 
 }
@@ -524,7 +524,7 @@ The function \texttt{cvCreate2DHMM} returns the created structure of the type \c
  
 Releases a 2D, embedded HMM.
 
-\cvcodeC{
+\cvdefC{
 void cvRelease2DHMM(CvEHMM** hmm );
 
 }
@@ -539,7 +539,7 @@ The function \texttt{cvRelease2DHMM} frees all the memory used by the HMM and cl
 
 Creates a structure to store image observation vectors.
 
-\cvcodeC{
+\cvdefC{
 CvImgObsInfo* cvCreateObsInfo( CvSize numObs, int obsSize );
 
 }
@@ -555,7 +555,7 @@ The function \texttt{cvCreateObsInfo} creates new structures to store image obse
 
 Releases the observation vector structures.
 
-\cvcodeC{
+\cvdefC{
 void cvReleaseObsInfo( CvImgObsInfo** obsInfo );
 
 }
@@ -570,7 +570,7 @@ The function \texttt{cvReleaseObsInfo} frees all of the memory used by the obser
 
 Extracts observation vectors from an image.
 
-\cvcodeC{
+\cvdefC{
 void cvImgToObs\_DCT( \par IplImage* image, \par float* obs, \par CvSize dctSize,
                      \par CvSize obsSize, \par CvSize delta );
 
@@ -589,7 +589,7 @@ The function \texttt{cvImgToObs\_DCT} extracts observation vectors, that is, DCT
 
 \texttt{Calculating Observations for HMM}
 
-\cvcodeC{
+\cvdefC{
     CvImgObsInfo* obs\_info;
 
         ...
@@ -604,7 +604,7 @@ The function \texttt{cvImgToObs\_DCT} extracts observation vectors, that is, DCT
 
 Performs uniform segmentation of image observations using HMM states.
 
-\cvcodeC{
+\cvdefC{
 void cvUniformImgSegm( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 
 }
@@ -624,7 +624,7 @@ The function \texttt{cvUniformImgSegm} segments image observations using HMM sta
 
 Segments all observations within every internal state of HMM using state mixture components.
 
-\cvcodeC{
+\cvdefC{
 void cvInitMixSegm( \par CvImgObsInfo** obsInfoArray, \par int numImg, \par CvEHMM* hmm );
 
 }
@@ -641,7 +641,7 @@ The function \texttt{cvInitMixSegm} takes a group of observations from several t
 
 Estimates all of the parameters of every HMM state.
 
-\cvcodeC{
+\cvdefC{
 void cvEstimateHMMStateParams( \par CvImgObsInfo** obsInfoArray, \par int numImg, \par CvEHMM* hmm );
 
 }
@@ -658,7 +658,7 @@ The function \texttt{cvEstimateHMMStateParams} computes all inner parameters of 
 
 Computes transition probability matrices for the embedded HMM.
 
-\cvcodeC{
+\cvdefC{
 void cvEstimateTransProb( \par CvImgObsInfo** obsInfoArray, \par int numImg, \par CvEHMM* hmm );
 
 }
@@ -675,7 +675,7 @@ The function \texttt{cvEstimateTransProb} uses the current segmentation of image
 
 Computes the probability of every observation of several images.
 
-\cvcodeC{
+\cvdefC{
 void cvEstimateObsProb( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 
 }
@@ -691,7 +691,7 @@ The function \texttt{cvEstimateObsProb} computes the Gaussian probabilities of e
 
 Executes the Viterbi algorithm for the embedded HMM.
 
-\cvcodeC{
+\cvdefC{
 float cvEViterbi( CvImgObsInfo* obsInfo, CvEHMM* hmm );
 
 }
@@ -707,7 +707,7 @@ The function \texttt{cvEViterbi} executes the Viterbi algorithm for the embedded
 
 Segments the observations from all of the training images using the mixture components of the newly assigned states.
 
-\cvcodeC{
+\cvdefC{
 void cvMixSegmL2( \par CvImgObsInfo** obsInfoArray, \par int numImg, \par CvEHMM* hmm );
 
 }

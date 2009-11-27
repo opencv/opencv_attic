@@ -4,12 +4,12 @@ tput clear
 
 #cd .. && make && cd -
 mkdir -p _build/html/python
+mkdir -p _build/html/cpp
 
 if false
 then
   rm -f *.rst
   svn up
-  cp index-c.rst.copy index.rst
   TEXINPUTS=../: python renderer.py c # > a || exit
   TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 2.0 C Reference' -d _build/doctrees . _build/html
 fi
@@ -18,7 +18,6 @@ if true
 then
   rm -f *.rst
   svn up
-  cp index-py.rst.copy index.rst
   TEXINPUTS=../: python renderer.py py > a || exit
   TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
 fi
@@ -27,7 +26,6 @@ if false
 then
   rm -f *.rst
   svn up
-  cp index-cpp.rst.copy index.rst
   TEXINPUTS=../: python renderer.py cpp > a || exit
   TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 2.0 C++ Reference' -d _build/doctrees . _build/html/cpp
 fi

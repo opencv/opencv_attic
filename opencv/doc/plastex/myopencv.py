@@ -12,6 +12,14 @@ class cvfunc(Sectioning.subsection):
   def invoke(self, tex):
     Sectioning.subsection.invoke(self, tex)
 
+class cvCPyFunc(Sectioning.subsection):
+  def invoke(self, tex):
+    Sectioning.subsection.invoke(self, tex)
+
+class cvCppFunc(Sectioning.subsection):
+  def invoke(self, tex):
+    Sectioning.subsection.invoke(self, tex)
+
 class cvstruct(Sectioning.subsection):
   def invoke(self, tex):
     Sectioning.subsection.invoke(self, tex)
@@ -40,12 +48,47 @@ class cvarg(Base.Command):
   def invoke(self, tex):
     Base.Command.invoke(self, tex)
 
-class cvexp(Base.Command):
-  args = 'c cpp py'
+class cvCross(Base.Command):
+  args = 'name altname'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvCPyCross(Base.Command):
+  args = 'name'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+    
+class cvCppCross(Base.Command):
+  args = 'name'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvdefC(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvcode(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvdefPy(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvdefCpp(Base.Command):
+  args = 'a'
   def invoke(self, tex):
     Base.Command.invoke(self, tex)
 
 class cvC(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+    
+class cvCpp(Base.Command):
   args = 'a'
   def invoke(self, tex):
     Base.Command.invoke(self, tex)

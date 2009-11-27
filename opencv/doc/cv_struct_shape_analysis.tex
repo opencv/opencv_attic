@@ -5,9 +5,9 @@
 \cvCPyFunc{ApproxChains}
 Approximates Freeman chain(s) with a polygonal curve.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int method=CV\_CHAIN\_APPROX\_SIMPLE,\par double parameter=0,\par int minimal\_perimeter=0,\par int recursive=0 );
-}\cvcodePy{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimiter=0,recursive=0)-> chains}
+}\cvdefPy{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimiter=0,recursive=0)-> chains}
 
 \begin{description}
 \cvarg{src\_seq}{Pointer to the chain that can refer to other chains}
@@ -23,9 +23,9 @@ This is a stand-alone approximation routine. The function \texttt{cvApproxChains
 \cvCPyFunc{ApproxPoly}
 Approximates polygonal curve(s) with the specified precision.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemStorage* storage,\par int method,\par double parameter,\par int parameter2=0 );
-}\cvcodePy{
+}\cvdefPy{
 ApproxPoly(src\_seq, storage, method, parameter=0, parameter2=0)
 }
 
@@ -46,9 +46,9 @@ correspondence).
 \cvCPyFunc{ArcLength}
 Calculates the contour perimeter or the curve length.
 
-\cvcodeC{
+\cvdefC{
 double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\par int is\_closed=-1 );
-}\cvcodePy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,is\_closed=-1)-> double}
+}\cvdefPy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,is\_closed=-1)-> double}
 
 \begin{description}
 \cvarg{curve}{Sequence or array of the curve points}
@@ -66,9 +66,9 @@ The function calculates the length or curve as the sum of lengths of segments be
 \cvCPyFunc{BoundingRect}
 Calculates the up-right bounding rectangle of a point set.
 
-\cvcodeC{
+\cvdefC{
 CvRect cvBoundingRect( CvArr* points, int update=0 );
-}\cvcodePy{BoundingRect(points,update=0)-> CvRect}
+}\cvdefPy{BoundingRect(points,update=0)-> CvRect}
 
 \begin{description}
 \cvarg{points}{2D point set, either a sequence or vector (\texttt{CvMat}) of points}
@@ -90,9 +90,9 @@ update & points & action \\ \hline
 \cvCPyFunc{BoxPoints}
 Finds the box vertices.
 
-\cvcodeC{
+\cvdefC{
 void cvBoxPoints( \par CvBox2D box,\par CvPoint2D32f pt[4] );
-}\cvcodePy{BoxPoints(box)-> points}
+}\cvdefPy{BoxPoints(box)-> points}
 
 \begin{description}
 \cvarg{box}{Box}
@@ -121,9 +121,9 @@ void cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
 \cvCPyFunc{CalcPGH}
 Calculates a pair-wise geometrical histogram for a contour.
 
-\cvcodeC{
+\cvdefC{
 void cvCalcPGH( const CvSeq* contour, CvHistogram* hist );
-}\cvcodePy{CalcPGH(contour,hist)-> None}
+}\cvdefPy{CalcPGH(contour,hist)-> None}
 
 \begin{description}
 \cvarg{contour}{Input contour. Currently, only integer point coordinates are allowed}
@@ -148,9 +148,9 @@ definition). The histogram can be used for contour matching.
 \cvCPyFunc{CalcEMD2}
 Computes the "minimal work" distance between two weighted point configurations.
 
-\cvcodeC{
+\cvdefC{
 float cvCalcEMD2( \par const CvArr* signature1,\par const CvArr* signature2,\par int distance\_type,\par CvDistanceFunction distance\_func=NULL,\par const CvArr* cost\_matrix=NULL,\par CvArr* flow=NULL,\par float* lower\_bound=NULL,\par void* userdata=NULL );
-}\cvcodePy{CalcEMD2(signature1, signature2, distance\_type, distance\_func = None, cost\_matrix=None, flow=None, lower\_bound=None, userdata = None) -> float}
+}\cvdefPy{CalcEMD2(signature1, signature2, distance\_type, distance\_func = None, cost\_matrix=None, flow=None, lower\_bound=None, userdata = None) -> float}
 
 \begin{lstlisting}
 typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
@@ -181,9 +181,9 @@ so that they cannot relate to the same object.
 \cvCPyFunc{CheckContourConvexity}
 Tests contour convexity.
 
-\cvcodeC{
+\cvdefC{
 int cvCheckContourConvexity( const CvArr* contour );
-}\cvcodePy{CheckContourConvexity(contour)-> int}
+}\cvdefPy{CheckContourConvexity(contour)-> int}
 
 \begin{description}
 \cvarg{contour}{Tested contour (sequence or array of points)}
@@ -191,7 +191,7 @@ int cvCheckContourConvexity( const CvArr* contour );
 
 The function tests whether the input contour is convex or not. The contour must be simple, without self-intersections.
 
-\cvstruct{CvConvexityDefect}\label{CvConvexityDefect}
+\cvfunc{CvConvexityDefect}\label{CvConvexityDefect}
 
 Structure describing a single contour convexity defect.
 
@@ -211,9 +211,9 @@ typedef struct CvConvexityDefect
 \cvCPyFunc{ContourArea}
 Calculates the area of a whole contour or a contour section.
 
-\cvcodeC{
+\cvdefC{
 double cvContourArea( \par const CvArr* contour, \par CvSlice slice=CV\_WHOLE\_SEQ );
-}\cvcodePy{ContourAres(contour,slice=CV\_WHOLE\_SEQ)-> double}
+}\cvdefPy{ContourAres(contour,slice=CV\_WHOLE\_SEQ)-> double}
 
 \begin{description}
 \cvarg{contour}{Contour (sequence or array of vertices)}
@@ -232,9 +232,9 @@ Orientation of the contour affects the area sign, thus the function may return a
 \cvCPyFunc{ContourFromContourTree}
 Restores a contour from the tree.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvContourFromContourTree( \par const CvContourTree* tree,\par CvMemStorage* storage,\par CvTermCriteria criteria );
-}\cvcodePy{ContourFromContourTree(tree,storage,criteria)-> contour}
+}\cvdefPy{ContourFromContourTree(tree,storage,criteria)-> contour}
 
 \begin{description}
 \cvarg{tree}{Contour tree}
@@ -247,9 +247,9 @@ The function restores the contour from its binary tree representation. The param
 \cvCPyFunc{ConvexHull2}
 Finds the convex hull of a point set.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
-}\cvcodePy{ConvexHull2(points,storage,orientaton=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
+}\cvdefPy{ConvexHull2(points,storage,orientaton=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
@@ -358,9 +358,9 @@ void main( int argc, char** argv )
 \cvCPyFunc{ConvexityDefects}
 Finds the convexity defects of a contour.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvConvexityDefects( \par const CvArr* contour,\par const CvArr* convexhull,\par CvMemStorage* storage=NULL );
-}\cvcodePy{ConvexityDefects(contour,convexhull,storage)-> convexity\_defects}
+}\cvdefPy{ConvexityDefects(contour,convexhull,storage)-> convexity\_defects}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -373,9 +373,9 @@ The function finds all convexity defects of the input contour and returns a sequ
 \cvCPyFunc{CreateContourTree}
 Creates a hierarchical representation of a contour.
 
-\cvcodeC{
+\cvdefC{
 CvContourTree* cvCreateContourTree( \par const CvSeq* contour,\par CvMemStorage* storage,\par double threshold );
-}\cvcodePy{CreateCountourTree(contour,storage,threshold)-> contour\_tree}
+}\cvdefPy{CreateCountourTree(contour,storage,threshold)-> contour\_tree}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -388,7 +388,7 @@ The function creates a binary tree representation for the input \texttt{contour}
 \cvCPyFunc{EndFindContours}
 Finishes the scanning process.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvEndFindContours( \par CvContourScanner* scanner );
 }
 
@@ -401,11 +401,11 @@ The function finishes the scanning process and returns a pointer to the first co
 \cvCPyFunc{FindContours}
 Finds the contours in a binary image.
 
-\cvcodeC{
+\cvdefC{
 int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** first\_contour,\par
                     int header\_size=sizeof(CvContour),\par int mode=CV\_RETR\_LIST,\par
                     int method=CV\_CHAIN\_APPROX\_SIMPLE,\par CvPoint offset=cvPoint(0,0) );
-}\cvcodePy{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
+}\cvdefPy{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
 
 \begin{description}
 \cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as \texttt{binary}. To get such a binary image from grayscale, one may use \cvCPyCross{Threshold}, \cvCPyCross{AdaptiveThreshold} or \cvCPyCross{Canny}. The function modifies the source image's content}
@@ -447,7 +447,7 @@ sample directory.
 \cvCPyFunc{FindNextContour}
 Finds the next contour in the image.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvFindNextContour( \par CvContourScanner scanner );
 }
 
@@ -460,9 +460,9 @@ The function locates and retrieves the next contour in the image and returns a p
 \cvCPyFunc{FitEllipse}
 Fits an ellipse around a set of 2D points.
 
-\cvcodeC{
+\cvdefC{
 CvBox2D cvFitEllipse2( \par const CvArr* points );
-}\cvcodePy{FitEllipse2(points)-> Box2D}
+}\cvdefPy{FitEllipse2(points)-> Box2D}
 
 \begin{description}
 \cvarg{points}{Sequence or array of points}
@@ -477,9 +477,9 @@ not half-lengths.
 \cvCPyFunc{FitLine}
 Fits a line to a 2D or 3D point set.
 
-\cvcodeC{
+\cvdefC{
 void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,\par double reps,\par double aeps,\par float* line );
-}\cvcodePy{FitLine(points, dist\_type, param, reps, aeps) -> line}
+}\cvdefPy{FitLine(points, dist\_type, param, reps, aeps) -> line}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D or 3D points with 32-bit integer or floating-point coordinates}
@@ -524,9 +524,9 @@ The function fits a line to a 2D or 3D point set by minimizing $\sum_i \rho(r_i)
 \cvCPyFunc{GetCentralMoment}
 Retrieves the central moment from the moment state structure.
 
-\cvcodeC{
+\cvdefC{
 double cvGetCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}\cvcodePy{GetCentralMoment(cvmoments, x\_order, y\_order) -> double}
+}\cvdefPy{GetCentralMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -549,9 +549,9 @@ x_c=\frac{M_{10}}{M_{00}}, y_c=\frac{M_{01}}{M_{00}}
 \cvCPyFunc{GetNormalizedCentralMoment}
 Retrieves the normalized central moment from the moment state structure.
 
-\cvcodeC{
+\cvdefC{
 double cvGetNormalizedCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}\cvcodePy{GetNormalizedCentralMoment(cvmoments, x\_order, y\_order) -> double}
+}\cvdefPy{GetNormalizedCentralMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -568,9 +568,9 @@ The function retrieves the normalized central moment:
 \cvCPyFunc{GetSpatialMoment}
 Retrieves the spatial moment from the moment state structure.
 
-\cvcodeC{
+\cvdefC{
 double cvGetSpatialMoment( \par CvMoments* moments, \par int x\_order, \par int y\_order );
-}\cvcodePy{GetSpatialMoment(cvmoments, x\_order, y\_order) -> double}
+}\cvdefPy{GetSpatialMoment(cvmoments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{The moment state, calculated by \cvCPyCross{Moments}}
@@ -589,9 +589,9 @@ where $I(x,y)$ is the intensity of the pixel $(x, y)$.
 \cvCPyFunc{MatchContourTrees}
 Compares two contours using their tree representations.
 
-\cvcodeC{
+\cvdefC{
 double cvMatchContourTrees( \par const CvContourTree* tree1,\par const CvContourTree* tree2,\par int method,\par double threshold );
-}\cvcodePy{MatchContourTrees(tree1,tree2,method,threshold)-> double}
+}\cvdefPy{MatchContourTrees(tree1,tree2,method,threshold)-> double}
 
 \begin{description}
 \cvarg{tree1}{First contour tree}
@@ -605,9 +605,9 @@ The function calculates the value of the matching measure for two contour trees.
 \cvCPyFunc{MatchShapes}
 Compares two shapes.
 
-\cvcodeC{
+\cvdefC{
 double cvMatchShapes( \par const void* object1,\par const void* object2,\par int method,\par double parameter=0 );
-}\cvcodePy{MatchShapes(object1,object2,method,parameter=0)-> None}
+}\cvdefPy{MatchShapes(object1,object2,method,parameter=0)-> None}
 
 \begin{description}
 \cvarg{object1}{First contour or grayscale image}
@@ -648,9 +648,9 @@ and $h^A_i, h^B_i$ are the Hu moments of $A$ and $B$ respectively.
 \cvCPyFunc{MinAreaRect2}
 Finds the circumscribed rectangle of minimal area for a given 2D point set.
 
-\cvcodeC{
+\cvdefC{
 CvBox2D  cvMinAreaRect2( \par const CvArr* points,\par CvMemStorage* storage=NULL );
-}\cvcodePy{MinAreaRect2(points,storage)-> CvBox2D}
+}\cvdefPy{MinAreaRect2(points,storage)-> CvBox2D}
 
 \begin{description}
 \cvarg{points}{Sequence or array of points}
@@ -666,9 +666,9 @@ The function finds a circumscribed rectangle of the minimal area for a 2D point 
 \cvCPyFunc{MinEnclosingCircle}
 Finds the circumscribed circle of minimal area for a given 2D point set.
 
-\cvcodeC{
+\cvdefC{
 int cvMinEnclosingCircle( \par const CvArr* points,\par CvPoint2D32f* center,\par float* radius );
-}\cvcodePy{MinEnclosingCircle(points)-> int,center,radius}
+}\cvdefPy{MinEnclosingCircle(points)-> int,center,radius}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points}
@@ -684,9 +684,9 @@ if the resultant circle contains all the input points and zero otherwise
 \cvCPyFunc{Moments}
 Calculates all of the moments up to the third order of a polygon or rasterized shape.
 
-\cvcodeC{
+\cvdefC{
 void cvMoments( \par const CvArr* arr,\par CvMoments* moments,\par int binary=0 );
-}\cvcodePy{Moments(arr) -> cvmoments}
+}\cvdefPy{Moments(arr) -> cvmoments}
 
 \begin{description}
 \cvarg{arr}{Image (1-channel or 3-channel with COI set) or polygon (CvSeq of points or a vector of points)}
@@ -699,9 +699,9 @@ The function calculates spatial and central moments up to the third order and wr
 \cvCPyFunc{PointPolygonTest}
 Point in contour test.
 
-\cvcodeC{
+\cvdefC{
 double cvPointPolygonTest( \par const CvArr* contour,\par CvPoint2D32f pt,\par int measure\_dist );
-}\cvcodePy{PointPolygonTest(contour,pt,measure\_dist)-> double}
+}\cvdefPy{PointPolygonTest(contour,pt,measure\_dist)-> double}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -721,10 +721,12 @@ Here is the sample output of the function, where each image pixel is tested agai
 
 \includegraphics[width=0.5\textwidth]{pics/pointpolygon.png}
 
+\ifC
+
 \cvCPyFunc{PointSeqFromMat}
 Initializes a point sequence header from a point vector.
 
-\cvcodeC{
+\cvdefC{
 CvSeq* cvPointSeqFromMat( \par int seq\_kind,\par const CvArr* mat,\par CvContour* contour\_header,\par CvSeqBlock* block );
 }
 
@@ -775,7 +777,7 @@ cvDrawContours( img,
 \cvCPyFunc{ReadChainPoint}
 Gets the next chain point.
 
-\cvcodeC{
+\cvdefC{
 CvPoint cvReadChainPoint( CvChainPtReader* reader );
 }
 
@@ -788,7 +790,7 @@ The function returns the current chain point and updates the reader position.
 \cvCPyFunc{StartFindContours}
 Initializes the contour scanning process.
 
-\cvcodeC{
+\cvdefC{
 CvContourScanner cvStartFindContours(\par CvArr* image,\par CvMemStorage* storage,\par
                                       int header\_size=sizeof(CvContour),\par
                                       int mode=CV\_RETR\_LIST,\par
@@ -810,7 +812,7 @@ The function initializes and returns a pointer to the contour scanner. The scann
 \cvCPyFunc{StartReadChainPoints}
 Initializes the chain reader.
 
-\cvcodeC{
+\cvdefC{
 void cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
 }
 
@@ -819,7 +821,7 @@ The function initializes a special reader.
 \cvCPyFunc{SubstituteContour}
 Replaces a retrieved contour.
 
-\cvcodeC{
+\cvdefC{
 void cvSubstituteContour( \par CvContourScanner scanner, \par CvSeq* new\_contour );
 }
 
@@ -840,22 +842,25 @@ to this structure later.
 
 \fi
 
+\fi
+
 
 \ifCpp
 
 \cvCppFunc{moments}
 Calculates all of the moments up to the third order of a polygon or rasterized shape.
 
-\begin{lstlisting}
-Moments moments( const Mat& array, bool binaryImage=false );
+\cvdefCpp{Moments moments( const Mat\& array, bool binaryImage=false );}
 
+where \texttt{Moments} is defined as:
+\begin{lstlisting}
 class Moments
 {
 public:
     Moments();
     Moments(double m00, double m10, double m01, double m20, double m11,
             double m02, double m30, double m21, double m12, double m03 );
-    Moments( const CvMoments& moments );
+    Moments( const CvMoments\& moments );
     operator CvMoments() const;
     
     // spatial moments
@@ -866,6 +871,7 @@ public:
     double  nu20, nu11, nu02, nu30, nu21, nu12, nu03;
 };
 \end{lstlisting}
+
 \begin{description}
 \cvarg{array}{A raster image (single-channel, 8-bit or floating-point 2D array) or an array
     ($1 \times N$ or $N \times 1$) of 2D points (\texttt{Point} or \texttt{Point2f})}
@@ -898,9 +904,7 @@ See also: \cvCppCross{contourArea}, \cvCppCross{arcLength}
 \cvCppFunc{HuMoments}
 Calculates the seven Hu invariants.
 
-\begin{lstlisting}
-void HuMoments( const Moments& moments, double hu[7] );
-\end{lstlisting}
+\cvdefCpp{void HuMoments( const Moments\& moments, double hu[7] );}
 \begin{description}
 \cvarg{moments}{The input moments, computed with \cvCppCross{moments}}
 \cvarg{hu}{The output Hu invariants}
@@ -928,22 +932,12 @@ See also: \cvCppCross{matchShapes}
 \cvCppFunc{findContours}
 Finds the contours in a binary image.
 
-\begin{lstlisting}
-void findContours( const Mat& image, vector<vector<Point> >& contours,
-                   vector<Vec4i>& hierarchy, int mode,
-                   int method, Point offset=Point());
-
-void findContours( const Mat& image, vector<vector<Point> >& contours,
+\cvdefCpp{void findContours( const Mat\& image, vector<vector<Point> >\& contours,\par
+                   vector<Vec4i>\& hierarchy, int mode,\par
+                   int method, Point offset=Point());\newline
+void findContours( const Mat\& image, vector<vector<Point> >\& contours,\par
                    int mode, int method, Point offset=Point());
-
-enum { RETR_EXTERNAL=CV_RETR_EXTERNAL, RETR_LIST=CV_RETR_LIST,
-      RETR_CCOMP=CV_RETR_CCOMP, RETR_TREE=CV_RETR_TREE };
-
-enum { CHAIN_APPROX_NONE=CV_CHAIN_APPROX_NONE,
-      CHAIN_APPROX_SIMPLE=CV_CHAIN_APPROX_SIMPLE,
-      CHAIN_APPROX_TC89_L1=CV_CHAIN_APPROX_TC89_L1,
-      CHAIN_APPROX_TC89_KCOS=CV_CHAIN_APPROX_TC89_KCOS };
-\end{lstlisting}
+}
 \begin{description}
 \cvarg{image}{The source, an 8-bit single-channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as \texttt{binary}. You can use \cvCppCross{compare}, \cvCppCross{inRange}, \cvCppCross{threshold}, \cvCppCross{adaptiveThreshold}, \cvCppCross{Canny} etc. to create a binary image out of a grayscale or color one. The function modifies the \texttt{image} while extracting the contours}
 \cvarg{contours}{The detected contours. Each contour is stored as a vector of points}
@@ -970,12 +964,10 @@ binary image using the algorithm \cite{Suzuki85}. The contours are a useful tool
 \cvCppFunc{drawContours}
 Draws contours' outlines or filled contours.
 
-\begin{lstlisting}
-void drawContours( Mat& image, const vector<vector<Point> >& contours,
-                   int contourIdx, const Scalar& color, int thickness=1,
-                   int lineType=8, const vector<Vec4i>& hierarchy=vector<Vec4i>(),
-                   int maxLevel=INT_MAX, Point offset=Point() );
-\end{lstlisting}
+\cvdefCpp{void drawContours( Mat\& image, const vector<vector<Point> >\& contours,\par
+                   int contourIdx, const Scalar\& color, int thickness=1,\par
+                   int lineType=8, const vector<Vec4i>\& hierarchy=vector<Vec4i>(),\par
+                   int maxLevel=INT\_MAX, Point offset=Point() );}
 \begin{description}
 \cvarg{image}{The destination image}
 \cvarg{contours}{All the input contours. Each contour is stored as a point vector}
@@ -989,6 +981,7 @@ drawn.}
 \cvarg{maxLevel}{Maximal level for drawn contours. If 0, only
 the specified contour is drawn. If 1, the function draws the contour(s) and all the nested contours. If 2, the function draws the contours, all the nested contours and all the nested into nested contours etc. This parameter is only taken into account when there is \texttt{hierarchy} available.}
 \cvarg{offset}{The optional contour shift parameter. Shift all the drawn contours by the specified $\texttt{offset}=(dx,dy)$}
+\end{description}
 
 The function draws contour outlines in the image if $\texttt{thickness} \ge 0$ or fills the area bounded by the contours if $ \texttt{thickness}<0$. Here is the example on how to retrieve connected components from the binary image and label them
 
@@ -1037,14 +1030,12 @@ int main( int argc, char** argv )
 \cvCppFunc{approxPolyDP}
 Approximates polygonal curve(s) with the specified precision.
 
-\begin{lstlisting}
-void approxPolyDP( const Mat& curve,
-                   vector<Point>& approxCurve,
-                   double epsilon, bool closed );
-void approxPolyDP( const Mat& curve,
-                   vector<Point2f>& approxCurve,
-                   double epsilon, bool closed );
-\end{lstlisting}
+\cvdefCpp{void approxPolyDP( const Mat\& curve,\par
+                   vector<Point>\& approxCurve,\par
+                   double epsilon, bool closed );\newline
+void approxPolyDP( const Mat\& curve,\par
+                   vector<Point2f>\& approxCurve,\par
+                   double epsilon, bool closed );}
 \begin{description}
 \cvarg{curve}{The polygon or curve to approximate. Must be $1 \times N$ or $N \times 1$ matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}. You can also pass \texttt{vector<Point>} or \texttt{vector<Point2f} that will be automatically converted to the matrix of the proper size and type}
 \cvarg{approxCurve}{The result of the approximation; The type should match the type of the input curve}
@@ -1057,9 +1048,7 @@ The functions \texttt{approxPolyDP} approximate a curve or a polygon with anothe
 \cvCppFunc{arcLength}
 Calculates a contour perimeter or a curve length.
 
-\begin{lstlisting}
-double arcLength( const Mat& curve, bool closed );
-\end{lstlisting}
+\cvdefCpp{double arcLength( const Mat\& curve, bool closed );}
 \begin{description}
 \cvarg{curve}{The input vector of 2D points, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \cvarg{closed}{Indicates, whether the curve is closed or not}
@@ -1070,9 +1059,7 @@ The function computes the curve length or the closed contour perimeter.
 \cvCppFunc{boundingRect}
 Calculates the up-right bounding rectangle of a point set.
 
-\begin{lstlisting}
-Rect boundingRect( const Mat& points );
-\end{lstlisting}
+\cvdefCpp{Rect boundingRect( const Mat\& points );}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \end{description}
@@ -1083,10 +1070,8 @@ The function calculates and returns the minimal up-right bounding rectangle for 
 \cvCppFunc{estimateRigidTransform}
 Computes optimal affine transformation between two 2D point sets
 
-\begin{lstlisting}
-Mat estimateRigidTransform( const Mat& srcpt, const Mat& dstpt,
-                            bool fullAffine );
-\end{lstlisting}
+\cvdefCpp{Mat estimateRigidTransform( const Mat\& srcpt, const Mat\& dstpt,\par
+                            bool fullAffine );}
 \begin{description}
 \cvarg{srcpt}{The first input 2D point set}
 \cvarg{dst}{The second input 2D point set of the same size and the same type as \texttt{A}}
@@ -1098,19 +1083,17 @@ The function finds the optimal affine transform $[A|b]$ (a $2 \times 3$ floating
 \[ [A^*|b^*] = arg \min_{[A|b]} \sum_i \|\texttt{dstpt}_i - A {\texttt{srcpt}_i}^T - b \|^2 \]
 
 where $[A|b]$ can be either arbitrary (when \texttt{fullAffine=true}) or have form
-$\begin{bmatrix}a_{11} & a_{12} & b_1 \\ -a_{12} & a_{11} & b_2 \end{bmatrix}$ when \texttt{fullAffine=false}.
+\[\begin{bmatrix}a_{11} & a_{12} & b_1 \\ -a_{12} & a_{11} & b_2 \end{bmatrix}\] when \texttt{fullAffine=false}.
 
 See also: \cvCppCross{getAffineTransform}, \cvCppCross{getPerspectiveTransform}, \cvCppCross{findHomography}
 
 \cvCppFunc{estimateAffine3D}
 Computes optimal affine transformation between two 3D point sets
 
-\begin{lstlisting}
-int estimateAffine3D(const Mat& srcpt, const Mat& dstpt, Mat& out,
-                     vector<uchar>& outliers,
-                     double ransacThreshold = 3.0,
-                     double confidence = 0.99);
-\end{lstlisting}
+\cvdefCpp{int estimateAffine3D(const Mat\& srcpt, const Mat\& dstpt, Mat\& out,\par
+                     vector<uchar>\& outliers,\par
+                     double ransacThreshold = 3.0,\par
+                     double confidence = 0.99);}
 \begin{description}
 \cvarg{srcpt}{The first input 3D point set}
 \cvarg{dstpt}{The second input 3D point set}
@@ -1126,9 +1109,7 @@ The function estimates the optimal 3D affine transformation between two 3D point
 \cvCppFunc{contourArea}
 Calculates the contour area
 
-\begin{lstlisting}
-double contourArea( const Mat& contour );    
-\end{lstlisting}
+\cvdefCpp{double contourArea( const Mat\& contour );    }
 \begin{description}
 \cvarg{contour}{The contour vertices, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \end{description}
@@ -1156,14 +1137,12 @@ cout << "area0 =" << area0 << endl <<
 \cvCppFunc{convexHull}    
 Finds the convex hull of a point set.
 
-\begin{lstlisting}
-void convexHull( const Mat& points, vector<int>& hull,
-                 bool clockwise=false );
-void convexHull( const Mat& points, vector<Point>& hull,
-                 bool clockwise=false );
-void convexHull( const Mat& points, vector<Point2f>& hull,
-                 bool clockwise=false );
-\end{lstlisting}
+\cvdefCpp{void convexHull( const Mat\& points, vector<int>\& hull,\par
+                 bool clockwise=false );\newline
+void convexHull( const Mat\& points, vector<Point>\& hull,\par
+                 bool clockwise=false );\newline
+void convexHull( const Mat\& points, vector<Point2f>\& hull,\par
+                 bool clockwise=false );}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
 \texttt{vector<Point>} or \texttt{vector<Point2f>}}
@@ -1176,19 +1155,14 @@ The functions find the convex hull of a 2D point set using Sklansky's algorithm 
 \cvCppFunc{findHomography}
 Finds the optimal perspective transformation between two 2D point sets
 
-\begin{lstlisting}
-Mat findHomography( const Mat& srcPoints, const Mat& dstPoints,
-                    Mat& mask, int method=0,
-                    double ransacReprojThreshold=0 );
-    
-Mat findHomography( const Mat& srcPoints, const Mat& dstPoints,
-                    vector<uchar>& mask, int method=0,
-                    double ransacReprojThreshold=0 );
-
-Mat findHomography( const Mat& srcPoints, const Mat& dstPoints,
-                    int method=0, double ransacReprojThreshold=0 );
-enum { LMEDS=4, RANSAC=8 };
-\end{lstlisting}
+\cvdefCpp{Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
+                    Mat\& mask, int method=0,\par
+                    double ransacReprojThreshold=0 );\newline
+Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
+                    vector<uchar>\& mask, int method=0,\par
+                    double ransacReprojThreshold=0 );\newline
+Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
+                    int method=0, double ransacReprojThreshold=0 );}
 \begin{description}
 \cvarg{srcPoints}{Coordinates of the points in the original plane, a matrix of type \texttt{CV\_32FC2} or a \texttt{vector<Point2f>}.}
 \cvarg{dstPoints}{Coordinates of the points in the target plane, a matrix of type \texttt{CV\_32FC2} or a \texttt{vector<Point2f>}.}
@@ -1256,9 +1230,7 @@ See also: \cvCppCross{getAffineTransform}, \cvCppCross{getPerspectiveTransform},
 \cvCppFunc{fitEllipse}
 Fits an ellipse around a set of 2D points.
 
-\begin{lstlisting}
-RotatedRect fitEllipse( const Mat& points );
-\end{lstlisting}
+\cvdefCpp{RotatedRect fitEllipse( const Mat\& points );}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
 \texttt{vector<Point>} or \texttt{vector<Point2f>}}
@@ -1270,12 +1242,10 @@ The function calculates the ellipse that fits best
 \cvCppFunc{fitLine}
 Fits a line to a 2D or 3D point set.
 
-\begin{lstlisting}
-void fitLine( const Mat& points, Vec4f& line, int distType,
-              double param, double reps, double aeps );
-void fitLine( const Mat& points, Vec6f& line, int distType,
-              double param, double reps, double aeps );
-\end{lstlisting}
+\cvdefCpp{void fitLine( const Mat\& points, Vec4f\& line, int distType,\par
+              double param, double reps, double aeps );\newline
+void fitLine( const Mat\& points, Vec6f\& line, int distType,\par
+              double param, double reps, double aeps );}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
 \texttt{vector<Point>}, \texttt{vector<Point2f>}, \texttt{vector<Point3i>} or \texttt{vector<Point3f>}}
@@ -1322,9 +1292,7 @@ The algorithm is based on the M-estimator (\url{http://en.wikipedia.org/wiki/M-e
 \cvCppFunc{isContourConvex}
 Tests contour convexity.
 
-\begin{lstlisting}
-bool isContourConvex( const Mat& contour );
-\end{lstlisting}
+\cvdefCpp{bool isContourConvex( const Mat\& contour );}
 \begin{description}
 \cvarg{contour}{The tested contour, a matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}, or \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \end{description}
@@ -1335,9 +1303,7 @@ The function tests whether the input contour is convex or not. The contour must 
 \cvCppFunc{minAreaRect}
 Finds the minimum area rotated rectangle enclosing a 2D point set.
 
-\begin{lstlisting}
-RotatedRect minAreaRect( const Mat& points );
-\end{lstlisting}
+\cvdefCpp{RotatedRect minAreaRect( const Mat\& points );}
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \end{description}
@@ -1347,9 +1313,7 @@ The function calculates and returns the minimum area bounding rectangle (possibl
 \cvCppFunc{minEnclosingCircle}
 Finds the minimum area circle enclosing a 2D point set.
 
-\begin{lstlisting}
-void minEnclosingCircle( const Mat& points, Point2f& center, float& radius );    
-\end{lstlisting}
+\cvdefCpp{void minEnclosingCircle( const Mat\& points, Point2f\& center, float\& radius );    }
 \begin{description}
 \cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
 \cvarg{center}{The output center of the circle}
@@ -1361,11 +1325,9 @@ The function finds the minimal enclosing circle of a 2D point set using iterativ
 \cvCppFunc{matchShapes}
 Compares two shapes.
 
-\begin{lstlisting}
-double matchShapes( const Mat& object1,
-                    const Mat& object2,
-                    int method, double parameter=0 );
-\end{lstlisting}
+\cvdefCpp{double matchShapes( const Mat\& object1,\par
+                    const Mat\& object2,\par
+                    int method, double parameter=0 );}
 \begin{description}
 \cvarg{object1}{The first contour or grayscale image}
 \cvarg{object2}{The second contour or grayscale image}
@@ -1405,10 +1367,8 @@ and $h^A_i, h^B_i$ are the Hu moments of $A$ and $B$ respectively.
 \cvCppFunc{pointPolygonTest}
 Performs point-in-contour test.
 
-\begin{lstlisting}
-double pointPolygonTest( const Mat& contour,
-                         Point2f pt, bool measureDist );
-\end{lstlisting}
+\cvdefCpp{double pointPolygonTest( const Mat\& contour,\par
+                         Point2f pt, bool measureDist );}
 \begin{description}
 \cvarg{contour}{The input contour}
 \cvarg{pt}{The point tested against the contour}
