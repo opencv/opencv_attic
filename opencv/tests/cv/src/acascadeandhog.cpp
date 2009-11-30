@@ -43,12 +43,12 @@
 using namespace cv;
 using namespace std;
 
-//#define GET_STAT
+#define GET_STAT
 
 #define DIST_E              "distE"
 #define S_E                 "sE"
 #define NO_PAIR_E           "noPairE"
-#define TOTAL_NO_PAIR_E     "totalNoPairE"
+//#define TOTAL_NO_PAIR_E     "totalNoPairE"
 
 #define DETECTOR_NAMES      "detector_names"
 #define DETECTOR_FILENAMES  "detector_filenames"
@@ -74,7 +74,7 @@ protected:
         float dist;
         float s;
         float noPair;
-        float totalNoPair;
+        //float totalNoPair;
     } eps;
     vector<string> detectorNames;
     vector<string> detectorFilenames;
@@ -113,7 +113,7 @@ int CV_DetectorTest::prepareData( FileStorage& _fs )
         fn[DIST_E] >> eps.dist;
         fn[S_E] >> eps.s;
         fn[NO_PAIR_E] >> eps.noPair;
-        fn[TOTAL_NO_PAIR_E] >> eps.totalNoPair;
+//        fn[TOTAL_NO_PAIR_E] >> eps.totalNoPair;
 
         // read detectors names and filenames
         if( fn[DETECTOR_NAMES].node->data.seq != 0 )
@@ -163,7 +163,7 @@ void CV_DetectorTest::run( int start_from )
     validationFS << DIST_E << eps.dist;
     validationFS << S_E << eps.s;
     validationFS << NO_PAIR_E << eps.noPair;
-    validationFS << TOTAL_NO_PAIR_E << eps.totalNoPair;
+//    validationFS << TOTAL_NO_PAIR_E << eps.totalNoPair;
 
     // write detector names
     validationFS << DETECTOR_NAMES << "[";
@@ -339,12 +339,13 @@ int CV_DetectorTest::validate( int detectorIdx, vector<vector<Rect> >& objects )
     }
     if( imageIdx < (int)imageFilenames.size() )
     {
-        char msg[100];
-        sprintf( msg, "%s %d%s", "overrated count of rectangles without pair on ", imageIdx, "-image" );
+        char msg[500];
+        sprintf( msg, "detector %s has overrated count of rectangles without pair on %s-image",
+            detectorNames[detectorIdx].c_str(), imageFilenames[imageIdx].c_str() );
         ts->printf( CvTS::LOG, msg );
         return CvTS::FAIL_BAD_ACCURACY;
     }
-    if ( totalNoPair > totalValRectCount*eps.totalNoPair+1 )
+    if ( totalNoPair > totalValRectCount*eps./*total*/noPair+1 )
     {
         ts->printf( CvTS::LOG, "overrated count of rectangles without pair on all images set" );
         return CvTS::FAIL_BAD_ACCURACY;

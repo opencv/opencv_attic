@@ -1,41 +1,34 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <cascade>
-  <distE>0.005</distE>
-  <sE>0.005</sE>
-  <noPairE>0.1</noPairE>
-  <totalNoPairE>0.1</totalNoPairE>
+  <distE>4.9999998882412910e-003</distE>
+  <sE>4.9999998882412910e-003</sE>
+  <noPairE>0.1000000014901161</noPairE>
   <detector_names>
-    haarold2 lbp2</detector_names>
+    haarold1 haarold2 haar1 haar3 lbp1 lbp3</detector_names>
   <detector_filenames>
-    <haarold2>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</haarold2>
-    <lbp2>cascadeandhog/cascades/lbpcascade_frontalface.xml</lbp2></detector_filenames>
+    <haarold1>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</haarold1>
+    <haarold2>cascadeandhog/cascades/haarcascade_frontalface_alt2.xml</haarold2>
+    <haar1>cascadeandhog/cascades/haarcascade_1.xml</haar1>
+	<haar3>cascadeandhog/cascades/haarcascade_3.xml</haar3>
+    <lbp1>cascadeandhog/cascades/lbpcascade_frontalface.xml</lbp1>
+    <lbp3>cascadeandhog/cascades/lbpcascade_frontalface_alt3.xml</lbp3></detector_filenames>
   <image_filenames>
     <!-- img_0 -->
-    cascadeandhog/images/addams-family.png
-    <!-- img_1 -->
-    cascadeandhog/images/audrey1.png
-    <!-- img_2 -->
     cascadeandhog/images/audrybt1.png
-    <!-- img_3 -->
+    <!-- img_1 -->
     cascadeandhog/images/churchill-downs.png
-    <!-- img_4 -->
+    <!-- img_2 -->
     cascadeandhog/images/class57.png
-    <!-- img_5 -->
+    <!-- img_3 -->
     cascadeandhog/images/er.png
-    <!-- img_6 -->
-    cascadeandhog/images/larroquette.png
-    <!-- img_7 -->
-    cascadeandhog/images/mickymouse-self-p.png
-    <!-- img_8 -->
+    <!-- img_4 -->
     cascadeandhog/images/mona-lisa.png
-    <!-- img_9 -->
+    <!-- img_5 -->
     cascadeandhog/images/waynesworld2.png
-    <!-- img_10 -->
+    <!-- img_6 -->
     cascadeandhog/images/rehg-thanksgiving-1994.png
-    <!-- img_11 -->
-    cascadeandhog/images/karen-and-rob.png
-    <!-- img_12 -->
-    cascadeandhog/images/bttf301.png</image_filenames>
+    <!-- img_7 -->
+    cascadeandhog/images/karen-and-rob.png</image_filenames>
 </cascade>
 </opencv_storage>
