@@ -300,14 +300,14 @@ void CvCascadeClassifier::writeFeatures( FileStorage &fs, const Mat& featureMap 
 
 void CvCascadeClassifier::writeStages( FileStorage &fs, const Mat& featureMap ) const
 {
-    //char cmnt[30];
-    //int i = 0;
+    char cmnt[30];
+    int i = 0;
     fs << CC_STAGES << "["; 
     for( vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
-        it != stageClassifiers.end(); it++/*, i++*/ )
+        it != stageClassifiers.end(); it++, i++ )
     {
-        /*sprintf( cmnt, "stage %d", i );
-        CV_CALL( cvWriteComment( fs, cmnt, 0 ) );*/
+        sprintf( cmnt, "stage %d", i );
+        cvWriteComment( fs.fs, cmnt, 0 );
         fs << "{";
         ((CvCascadeBoost*)((Ptr<CvCascadeBoost>)*it))->write( fs, featureMap );
         fs << "}";
