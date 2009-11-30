@@ -853,7 +853,7 @@ void cv::distanceTransform( const Mat& src, Mat& dst, Mat& labels,
                             int distanceType, int maskSize )
 {
     dst.create(src.size(), CV_32F);
-    dst.create(src.size(), CV_32S);
+    labels.create(src.size(), CV_32S);
     CvMat _src = src, _dst = dst, _labels = labels;
     cvDistTransform(&_src, &_dst, distanceType, maskSize, 0, &_labels);
 }
