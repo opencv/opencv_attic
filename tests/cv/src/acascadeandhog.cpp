@@ -43,7 +43,7 @@
 using namespace cv;
 using namespace std;
 
-#define GET_STAT
+//#define GET_STAT
 
 #define DIST_E              "distE"
 #define S_E                 "sE"
