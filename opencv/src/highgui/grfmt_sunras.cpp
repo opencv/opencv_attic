@@ -93,7 +93,7 @@ bool  SunRasterDecoder::readHeader()
 
         if( m_width > 0 && m_height > 0 &&
             (m_bpp == 1 || m_bpp == 8 || m_bpp == 24 || m_bpp == 32) &&
-            (m_type == RAS_OLD || m_type == RAS_STANDARD ||
+            (m_encoding == RAS_OLD || m_encoding == RAS_STANDARD ||
              (m_type == RAS_BYTE_ENCODED && m_bpp == 8) || m_type == RAS_FORMAT_RGB) &&
             ((m_maptype == RMT_NONE && m_maplength == 0) ||
              (m_maptype == RMT_EQUAL_RGB && m_maplength <= palSize && m_bpp <= 8)))

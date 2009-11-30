@@ -308,7 +308,7 @@ imdecode_( const Mat& buf, int flags, int hdrtype, Mat* mat=0 )
     IplImage* image = 0;
     CvMat *matrix = 0;
     Mat temp, *data = &temp;
-    char fnamebuf[L_tmpnam];
+    char fnamebuf[L_tmpnam+1];
     const char* filename = 0;
 
     ImageDecoder decoder = findDecoder(buf);
@@ -322,7 +322,7 @@ imdecode_( const Mat& buf, int flags, int hdrtype, Mat* mat=0 )
         if( !f )
             return 0;
         size_t bufSize = buf.cols*buf.rows*buf.elemSize();
-        fwrite( &buf.data, 1, bufSize, f );
+        fwrite( &buf.data[0], 1, bufSize, f );
         fclose(f);
         decoder->setSource(filename);
     }

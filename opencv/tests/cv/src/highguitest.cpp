@@ -116,34 +116,32 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		 return false;
 	}	
 		
-	const string exts[] = {"png", "bmp", "tiff", "jpg", "jp2", "ppm"/*, "ras"*/};	
+	const string exts[] = {"png", "bmp", "tiff", "jpg", "jp2", "ppm", "ras"};	
 	const size_t ext_num = sizeof(exts)/sizeof(exts[0]);	
 	
 	for(size_t i = 0; i < ext_num; ++i)
 	{
-		string full_name = tmp + "/img." + exts[i];
+        string ext = exts[i];
+		string full_name = tmp + "/img." + ext;
 		marker(exts[i]);	
 		
-		marker("begin");	
-			
 		imwrite(full_name, image);			
-		marker("begin++");	
 		Mat loaded = imread(full_name);	
 		if (loaded.empty())
 		{
+            ts->printf(CvTS::LOG, "Reading failed at fmt=%s\n", ext.c_str());
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;					
 		}				
-		marker("begin++++");	
 						
-		const double thresDbell = 20;		
-		if (PSNR(loaded, image) < thresDbell)
+		const double thresDbell = 20;
+		double psnr = PSNR(loaded, image);
+		if (psnr < thresDbell)
 		{
-			
-			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+			ts->printf(CvTS::LOG, "Reading image from file: too big difference (=%g) with fmt=%s\n", psnr, ext.c_str());
+			ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
 			return false;			
 		}	
-		
 		
 		FILE *f = fopen(full_name.c_str(), "rb");
 		fseek(f, 0, SEEK_END);
@@ -153,38 +151,31 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		size_t read = fread(&from_file[0], len, sizeof(vector<uchar>::value_type), f); (void)read;
 		fclose(f);
 		
-		marker("0");
-									
 		vector<uchar> buf;		
 		imencode("." + exts[i], image, buf);
 		
-		marker("0++");
-		
 		if (buf != from_file)
-		{		
-			marker("1");		
+		{
+            ts->printf(CvTS::LOG, "Encoding failed with fmt=%s\n", ext.c_str());
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;			
 		}			
 		
-		marker("1++");				
 		Mat buf_loaded = imdecode(buf, 1);
-		marker("1--");				
 		if (buf_loaded.empty())
 		{
-			marker("2");		
-			if (exts[i] == "tiff" || exts[i] == "jp2") continue;			
-			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+			ts->printf(CvTS::LOG, "Decoding failed with fmt=%s\n", ext.c_str());
+            ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;				
 		}
-							
-		if (PSNR(buf_loaded, image) < thresDbell)
-		{			
-			marker("3");
+		
+        psnr = PSNR(buf_loaded, image);
+		if (psnr < thresDbell)
+		{
+			ts->printf(CvTS::LOG, "Decoding image from memory: too big difference (=%g) with fmt=%s\n", psnr, ext.c_str());
 			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 			return false;			
 		}					
-		marker("3--");	
 	}  
 	return true;		
 }
@@ -280,7 +271,7 @@ void CV_HighGuiTest::run( int start_from )
 		
 	if (!ImagesTest(ts->get_data_path(), th.temp_folder))
 		return;
-		
+    
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC_DEFAULT))
 		return;				
 		
@@ -294,7 +285,7 @@ void CV_HighGuiTest::run( int start_from )
 	
 	if (!GuiTest(ts->get_data_path(), th.temp_folder))
 		return;
-  
+    
     ts->set_failed_test_info(CvTS::OK);
 }
 
