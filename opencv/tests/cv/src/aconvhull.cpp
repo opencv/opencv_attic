@@ -191,6 +191,8 @@ protected:
     void* result;
     double low_high_range;
     CvScalar low, high;
+    
+    bool test_cpp;
 };
 
 
@@ -210,6 +212,8 @@ CV_BaseShapeDescrTest::CV_BaseShapeDescrTest( const char* test_name, const char*
     enable_flt_points = true;
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    
+    test_cpp = false;
 }
 
 
@@ -370,6 +374,8 @@ int CV_BaseShapeDescrTest::prepare_test_case( int test_case_idx )
     }
 
     generate_point_set( points );
+    
+    test_cpp = (cvTsRandInt(rng) & 16) == 0;
     return 1;
 }
 
@@ -467,7 +473,7 @@ int CV_ConvHullTest::prepare_test_case( int test_case_idx )
     orientation = cvTsRandInt(rng) % 2 ? CV_CLOCKWISE : CV_COUNTER_CLOCKWISE;
     return_points = cvTsRandInt(rng) % 2;
 
-    use_storage_for_hull = cvTsRandInt(rng) % 2;
+    use_storage_for_hull = (cvTsRandInt(rng) % 2) && !test_cpp;
     if( use_storage_for_hull )
     {
         if( !storage )
@@ -495,7 +501,39 @@ int CV_ConvHullTest::prepare_test_case( int test_case_idx )
 
 void CV_ConvHullTest::run_func()
 {
-    hull1 = cvConvexHull2( points, hull_storage, orientation, return_points );
+    if(!test_cpp)
+        hull1 = cvConvexHull2( points, hull_storage, orientation, return_points );
+    else
+    {
+        cv::Mat _points = cv::cvarrToMat(points);
+        bool clockwise = orientation == CV_CLOCKWISE;
+        size_t n = 0;
+        if( !return_points )
+        {
+            std::vector<int> _hull;
+            cv::convexHull(_points, _hull, clockwise);
+            n = _hull.size();
+            memcpy(hull2->data.ptr, &_hull[0], n*sizeof(_hull[0]));
+        }
+        else if(_points.type() == CV_32SC2)
+        {
+            std::vector<cv::Point> _hull;
+            cv::convexHull(_points, _hull, clockwise);
+            n = _hull.size();
+            memcpy(hull2->data.ptr, &_hull[0], n*sizeof(_hull[0]));
+        }
+        else if(_points.type() == CV_32FC2)
+        {
+            std::vector<cv::Point2f> _hull;
+            cv::convexHull(_points, _hull, clockwise);
+            n = _hull.size();
+            memcpy(hull2->data.ptr, &_hull[0], n*sizeof(_hull[0]));
+        }
+        if(hull2->rows > hull2->cols)
+            hull2->rows = (int)n;
+        else
+            hull2->cols = (int)n;
+    }
 }
 
 
@@ -651,8 +689,17 @@ CV_MinAreaRectTest::CV_MinAreaRectTest():
 
 void CV_MinAreaRectTest::run_func()
 {
-    box = cvMinAreaRect2( points, storage );
-    cvBoxPoints( box, box_pt );
+    if(!test_cpp)
+    {
+        box = cvMinAreaRect2( points, storage );
+        cvBoxPoints( box, box_pt );
+    }
+    else
+    {
+        cv::RotatedRect r = cv::minAreaRect(cv::cvarrToMat(points));
+        box = (CvBox2D)r;
+        r.points((cv::Point2f*)box_pt);
+    }
 }
 
 
@@ -771,7 +818,10 @@ CV_MinCircleTest::CV_MinCircleTest():
 
 void CV_MinCircleTest::run_func()
 {
-    cvMinEnclosingCircle( points, &center, &radius );
+    if(!test_cpp)
+        cvMinEnclosingCircle( points, &center, &radius );
+    else
+        cv::minEnclosingCircle(cv::cvarrToMat(points), (cv::Point2f&)center, radius);
 }
 
 
@@ -880,7 +930,7 @@ int CV_PerimeterTest::prepare_test_case( int test_case_idx )
     else
         total = points2->cols + points2->rows - 1;
 
-    if( cvTsRandInt(rng) % 3 )
+    if( (cvTsRandInt(rng) % 3) && !test_cpp )
     {
         slice.start_index = cvTsRandInt(rng) % total;
         slice.end_index = cvTsRandInt(rng) % total;
@@ -894,7 +944,11 @@ int CV_PerimeterTest::prepare_test_case( int test_case_idx )
 
 void CV_PerimeterTest::run_func()
 {
-    result = cvArcLength( points, slice, points1 ? -1 : is_closed );
+    if(!test_cpp)
+        result = cvArcLength( points, slice, points1 ? -1 : is_closed );
+    else
+        result = cv::arcLength(cv::cvarrToMat(points),
+            !points1 ? is_closed != 0 : (points1->flags & CV_SEQ_FLAG_CLOSED) != 0);
 }
 
 
@@ -965,7 +1019,7 @@ protected:
 CV_FitEllipseTest::CV_FitEllipseTest():
     CV_BaseShapeDescrTest( "shape-fit-ellipse", "cvFitEllipse" )
 {
-    min_log_size = 4; // for robust ellipse fitting a dozen of points is needed at least
+    min_log_size = 5; // for robust ellipse fitting a dozen of points is needed at least
     max_log_size = 10;
     min_ellipse_size = 10;
     max_noise = 0.05;
@@ -1051,7 +1105,10 @@ int CV_FitEllipseTest::prepare_test_case( int test_case_idx )
 
 void CV_FitEllipseTest::run_func()
 {
-    box = cvFitEllipse2( points );
+    if(!test_cpp)
+        box = cvFitEllipse2( points );
+    else
+        box = (CvBox2D)cv::fitEllipse(cv::cvarrToMat(points));
 }
 
 
@@ -1164,7 +1221,7 @@ protected:
 CV_FitLineTest::CV_FitLineTest():
     CV_BaseShapeDescrTest( "shape-fit-line", "cvFitLine" )
 {
-    min_log_size = 4; // for robust ellipse fitting a dozen of points is needed at least
+    min_log_size = 5; // for robust ellipse fitting a dozen of points is needed at least
     max_log_size = 10;
     max_noise = 0.05;
 }
@@ -1258,7 +1315,12 @@ int CV_FitLineTest::prepare_test_case( int test_case_idx )
 
 void CV_FitLineTest::run_func()
 {
-    cvFitLine( points, dist_type, 0, reps, aeps, line );
+    if(!test_cpp)
+        cvFitLine( points, dist_type, 0, reps, aeps, line );
+    else if(dims == 2)
+        cv::fitLine(cv::cvarrToMat(points), (cv::Vec4f&)line[0], dist_type, 0, reps, aeps);
+    else
+        cv::fitLine(cv::cvarrToMat(points), (cv::Vec6f&)line[0], dist_type, 0, reps, aeps);
 }
 
 
@@ -1480,8 +1542,16 @@ int CV_ContourMomentsTest::prepare_test_case( int test_case_idx )
 
 void CV_ContourMomentsTest::run_func()
 {
-    cvMoments( points, &moments );
-    area = cvContourArea( points );
+    if(!test_cpp)
+    {
+        cvMoments( points, &moments );
+        area = cvContourArea( points );
+    }
+    else
+    {
+        moments = (CvMoments)cv::moments(cv::cvarrToMat(points));
+        area = cv::contourArea(cv::cvarrToMat(points));
+    }
 }
 
 
