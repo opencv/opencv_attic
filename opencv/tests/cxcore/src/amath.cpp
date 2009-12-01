@@ -68,6 +68,7 @@ public:
 protected:
     void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
     double get_success_error_level( int /*test_case_idx*/, int i, int j );
+    bool test_nd;
 };
 
 
@@ -86,6 +87,7 @@ CxCore_MathTestImpl::CxCore_MathTestImpl( const char* test_name, const char* tes
     whole_size_list = 0;
     depth_list = math_depths;
     cn_list = 0;
+    test_nd = false;
 }
 
 
@@ -110,6 +112,7 @@ void CxCore_MathTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         for( j = 0; j < count; j++ )
             types[i][j] = type;
     }
+    test_nd = cvTsRandInt(rng)%3 == 0;
 }
 
 CxCore_MathTestImpl math_test( "math", "" );
@@ -183,7 +186,14 @@ void CxCore_ExpTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvSc
 
 void CxCore_ExpTest::run_func()
 {
-    cvExp( test_array[INPUT][0], test_array[OUTPUT][0] );
+    if(!test_nd)
+        cvExp( test_array[INPUT][0], test_array[OUTPUT][0] );
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::exp(a, b);
+    }
 }
 
 
@@ -267,7 +277,14 @@ void CxCore_LogTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvSc
 
 void CxCore_LogTest::run_func()
 {
-    cvLog( test_array[INPUT][0], test_array[OUTPUT][0] );
+    if(!test_nd)
+        cvLog( test_array[INPUT][0], test_array[OUTPUT][0] );
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::log(a, b);
+    }
 }
 
 
@@ -368,6 +385,7 @@ void CxCore_PowTest::get_test_array_types_and_sizes( int test_case_idx, CvSize**
         for( j = 0; j < count; j++ )
             types[i][j] = type;
     }
+    test_nd = cvTsRandInt(rng)%3 == 0;
 }
 
 
@@ -444,7 +462,17 @@ void CxCore_PowTest::get_minmax_bounds( int /*i*/, int /*j*/, int type, CvScalar
 
 void CxCore_PowTest::run_func()
 {
-    cvPow( test_array[INPUT][0], test_array[OUTPUT][0], power );
+    if(!test_nd)
+        cvPow( test_array[INPUT][0], test_array[OUTPUT][0], power );
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
+        cv::MatND b = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        if(power == 0.5)
+            cv::sqrt(a, b);
+        else
+            cv::pow(a, power, b);
+    }
 }
 
 
@@ -661,8 +689,24 @@ void CxCore_CartToPolarTest::get_test_array_types_and_sizes( int test_case_idx, 
 
 void CxCore_CartToPolarTest::run_func()
 {
-    cvCartToPolar( test_array[INPUT][0], test_array[INPUT][1],
-                   test_array[OUTPUT][0], test_array[OUTPUT][1], use_degrees );
+    if(!test_nd)
+    {
+        cvCartToPolar( test_array[INPUT][0], test_array[INPUT][1],
+                    test_array[OUTPUT][0], test_array[OUTPUT][1], use_degrees );
+    }
+    else
+    {
+        cv::Mat X = cv::cvarrToMat(test_array[INPUT][0]);
+        cv::Mat Y = cv::cvarrToMat(test_array[INPUT][1]);
+        cv::Mat mag = test_array[OUTPUT][0] ? cv::cvarrToMat(test_array[OUTPUT][0]) : cv::Mat();
+        cv::Mat ph = test_array[OUTPUT][1] ? cv::cvarrToMat(test_array[OUTPUT][1]) : cv::Mat();
+        if(!mag.data)
+            cv::phase(X, Y, ph, use_degrees);
+        else if(!ph.data)
+            cv::magnitude(X, Y, mag);
+        else
+            cv::cartToPolar(X, Y, mag, ph, use_degrees);
+    }
 }
 
 
@@ -791,8 +835,19 @@ void CxCore_PolarToCartTest::get_test_array_types_and_sizes( int test_case_idx, 
 
 void CxCore_PolarToCartTest::run_func()
 {
-    cvPolarToCart( test_array[INPUT][1], test_array[INPUT][0],
-                   test_array[OUTPUT][0], test_array[OUTPUT][1], use_degrees );
+    if(!test_nd)
+    {
+        cvPolarToCart( test_array[INPUT][1], test_array[INPUT][0],
+                    test_array[OUTPUT][0], test_array[OUTPUT][1], use_degrees );
+    }
+    else
+    {
+        cv::Mat X = test_array[OUTPUT][0] ? cv::cvarrToMat(test_array[OUTPUT][0]) : cv::Mat();
+        cv::Mat Y = test_array[OUTPUT][1] ? cv::cvarrToMat(test_array[OUTPUT][1]) : cv::Mat();
+        cv::Mat mag = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat();
+        cv::Mat ph = test_array[INPUT][0] ? cv::cvarrToMat(test_array[INPUT][0]) : cv::Mat();
+        cv::polarToCart(mag, ph, X, Y, use_degrees);
+    }
 }
 
 
