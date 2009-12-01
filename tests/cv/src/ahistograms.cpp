@@ -82,6 +82,7 @@ protected:
     CvHistogram* hist[MAX_HIST];
     float* _ranges;
     float* ranges[CV_MAX_DIM];
+    bool test_cpp;
 };
 
 
@@ -104,6 +105,7 @@ CV_BaseHistTest::CV_BaseHistTest( const char* test_name, const char* test_funcs 
         hist[i] = 0;
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    test_cpp = false;
 }
 
 
@@ -305,6 +307,7 @@ int CV_BaseHistTest::prepare_test_case( int test_case_idx )
         hist[i] = cvCreateHist( cdims, dims, hist_type, r, uniform );
         init_hist( test_case_idx, i );
     }
+    test_cpp = (cvTsRandInt(ts->get_rng()) % 2) != 0;
 
     return 1;
 }
@@ -651,7 +654,16 @@ void CV_MinMaxHistTest::init_hist(int test_case_idx, int hist_i)
 
 void CV_MinMaxHistTest::run_func(void)
 {
-    cvGetMinMaxHistValue( hist[0], &min_val, &max_val, min_idx, max_idx );
+    if( hist_type != CV_HIST_ARRAY && test_cpp )
+    {
+        cv::SparseMat h((CvSparseMat*)hist[0]->bins);
+        double _min_val = 0, _max_val = 0;
+        cv::minMaxLoc(h, &_min_val, &_max_val, min_idx, max_idx );
+        min_val = _min_val;
+        max_val = _max_val;
+    }
+    else
+        cvGetMinMaxHistValue( hist[0], &min_val, &max_val, min_idx, max_idx );
 }
 
 
@@ -996,8 +1008,16 @@ int CV_CompareHistTest::prepare_test_case( int test_case_idx )
 void CV_CompareHistTest::run_func(void)
 {
     int k;
-    for( k = 0; k < MAX_METHOD; k++ )
-        result[k] = cvCompareHist( hist[0], hist[1], k );
+    if( hist_type != CV_HIST_ARRAY && test_cpp )
+    {
+        cv::SparseMat h0((CvSparseMat*)hist[0]->bins);
+        cv::SparseMat h1((CvSparseMat*)hist[1]->bins);
+        for( k = 0; k < MAX_METHOD; k++ )
+            result[k] = cv::compareHist(h0, h1, k);
+    }
+    else
+        for( k = 0; k < MAX_METHOD; k++ )
+            result[k] = cvCompareHist( hist[0], hist[1], k );
 }
 
 
