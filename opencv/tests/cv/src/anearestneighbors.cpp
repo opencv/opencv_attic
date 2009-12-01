@@ -63,7 +63,7 @@ protected:
 };
 
 void NearestNeighborTest::run( int /*start_from*/ ) {
-    int dims = 64;
+    int dims = 30;
     int featuresCount = 2000;
     int K = 1; // * should also test 2nd nn etc.?
     float noise = 0.2f;
@@ -206,7 +206,7 @@ protected:
 
 void CV_KDTreeTest_CPP::createModel( const Mat& data )
 {
-    tr = new KDTree( data );
+    tr = new KDTree( data, false );
 }
 
 void CV_KDTreeTest_CPP::searchNeighbors( Mat& points, Mat& neighbors )
