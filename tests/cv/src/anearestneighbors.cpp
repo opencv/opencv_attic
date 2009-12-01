@@ -274,6 +274,16 @@ protected:
 };
 
 //---------------------------------------
+class CV_FlannKMeansIndexTest : public CV_FlannTest
+{
+public:
+    CV_FlannKMeansIndexTest() : CV_FlannTest( "flann_kmeans", "KMeansIndex" ) {}
+protected:
+    virtual void createModel( const Mat& data ) { createIndex( data, KMeansIndexParams() ); }
+    virtual void searchNeighbors( Mat& points, Mat& neighbors ) { radiusSearch( points, neighbors ); }
+};
+
+//---------------------------------------
 class CV_FlannKDTreeIndexTest : public CV_FlannTest
 {
 public:
@@ -298,5 +308,6 @@ CV_SpillTreeTest_C spilltree_test_c;
 CV_KDTreeTest_C kdtree_test_c;
 CV_KDTreeTest_CPP kdtree_test_cpp;
 CV_FlannLinearIndexTest flann_linear_index;
+CV_FlannKMeansIndexTest flann_kmeans_index;
 CV_FlannKDTreeIndexTest flann_kdtree_index;
 CV_FlannAutotunedIndexTest flann_autotuned_index;
