@@ -219,6 +219,16 @@ static inline Mat cvarrToMat(const CvArr* arr, bool copyData=false,
             CV_Error(CV_BadCOI, "COI is not supported by the function");
         return Mat(iplimg, copyData);
     }
+    else if( CV_IS_SEQ(arr) )
+    {
+        CvSeq* seq = (CvSeq*)arr;
+        CV_Assert(seq->total > 0 && CV_ELEM_SIZE(seq->flags) == seq->elem_size);
+        if(!copyData && seq->first->next == seq->first)
+            return Mat(seq->total, 1, CV_MAT_TYPE(seq->flags), seq->first->data);
+        Mat buf(seq->total, 1, CV_MAT_TYPE(seq->flags));
+        cvCvtSeqToArray(seq, buf.data, CV_WHOLE_SEQ);
+        return buf;
+    }
     else
     {
         CvMat hdr, *cvmat = cvGetMat( arr, &hdr, 0, allowND ? 1 : 0 );
