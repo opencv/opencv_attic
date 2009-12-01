@@ -213,7 +213,7 @@ void CV_OptFlowTest::run( int /* start_from */)
     cout << "Error HS = " << showFlow("HS", prev, flowHS, rect, d) << endl;
     cout << "Error FB = " << showFlow("FB", prev, flowFB, rect, d) << endl;*/
                 
-    waitKey();
+    //waitKey();
         
     if (1)
     {        
