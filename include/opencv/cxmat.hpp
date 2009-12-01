@@ -4271,16 +4271,16 @@ template<typename _Tp> inline _Tp SparseMat::value(const int* idx, size_t* hashv
 }
 
 template<typename _Tp> inline const _Tp* SparseMat::find(int i0, size_t* hashval) const
-{ return (const _Tp*)((SparseMat*)this)->ptr(i0, true, hashval); }
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, false, hashval); }
     
 template<typename _Tp> inline const _Tp* SparseMat::find(int i0, int i1, size_t* hashval) const
-{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, true, hashval); }
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, false, hashval); }
 
 template<typename _Tp> inline const _Tp* SparseMat::find(int i0, int i1, int i2, size_t* hashval) const
-{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, i2, true, hashval); }
+{ return (const _Tp*)((SparseMat*)this)->ptr(i0, i1, i2, false, hashval); }
 
 template<typename _Tp> inline const _Tp* SparseMat::find(const int* idx, size_t* hashval) const
-{ return (const _Tp*)((SparseMat*)this)->ptr(idx, true, hashval); }
+{ return (const _Tp*)((SparseMat*)this)->ptr(idx, false, hashval); }
 
 template<typename _Tp> inline _Tp& SparseMat::value(Node* n)
 { return *(_Tp*)((uchar*)n + hdr->valueOffset); }

@@ -1382,7 +1382,7 @@ double compareHist( const SparseMat& H1, const SparseMat& H2, int method )
             {
                 double a = v1 - v2;
                 double b = v1 + v2;
-                if( fabs(b) > FLT_EPSILON )
+                if( b > FLT_EPSILON )
                     result += a*a/b;
             }
         }

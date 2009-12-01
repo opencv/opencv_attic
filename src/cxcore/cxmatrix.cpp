@@ -2937,7 +2937,7 @@ SparseMatConstIterator& SparseMatConstIterator::operator ++()
 
 double norm( const SparseMat& src, int normType )
 {
-    SparseMatConstIterator it;
+    SparseMatConstIterator it = src.begin();
     
     size_t i, N = src.nzcount();
     normType &= NORM_TYPE_MASK;
@@ -2986,8 +2986,7 @@ double norm( const SparseMat& src, int normType )
     
 void minMaxLoc( const SparseMat& src, double* _minval, double* _maxval, int* _minidx, int* _maxidx )
 {
-    SparseMatConstIterator it;
-    
+    SparseMatConstIterator it = src.begin();
     size_t i, N = src.nzcount(), d = src.hdr ? src.hdr->dims : 0;
     int type = src.type();
     const int *minidx = 0, *maxidx = 0;
