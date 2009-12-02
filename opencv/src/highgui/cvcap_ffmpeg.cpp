@@ -637,8 +637,10 @@ double CvCapture_FFMPEG::getProperty( int property_id )
 	    break;
     case CV_CAP_PROP_FRAME_WIDTH:
         return (double)frame.width;
+    break;
     case CV_CAP_PROP_FRAME_HEIGHT:
         return (double)frame.height;
+    break;
     case CV_CAP_PROP_FPS:
 #if LIBAVCODEC_BUILD > 4753
         return av_q2d (video_st->r_frame_rate);
@@ -646,12 +648,14 @@ double CvCapture_FFMPEG::getProperty( int property_id )
         return (double)video_st->codec.frame_rate
             / (double)video_st->codec.frame_rate_base;
 #endif
+    break;
     case CV_CAP_PROP_FOURCC:
 #if LIBAVFORMAT_BUILD > 4628
         return (double)video_st->codec->codec_tag;
 #else
         return (double)video_st->codec.codec_tag;
 #endif
+    break;
     }
     return 0;
 }
