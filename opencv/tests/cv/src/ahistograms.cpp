@@ -756,7 +756,15 @@ int CV_NormHistTest::prepare_test_case( int test_case_idx )
 
 void CV_NormHistTest::run_func(void)
 {
-    cvNormalizeHist( hist[0], factor );
+    if( hist_type != CV_HIST_ARRAY && test_cpp )
+    {
+        cv::SparseMat h((CvSparseMat*)hist[0]->bins);
+        cv::normalize(h, h, factor, CV_L1); 
+        cvReleaseSparseMat((CvSparseMat**)&hist[0]->bins);
+        hist[0]->bins = (CvSparseMat*)h;
+    }
+    else
+        cvNormalizeHist( hist[0], factor );
 }
 
 

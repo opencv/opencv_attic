@@ -2435,7 +2435,7 @@ void SparseMat::create(int d, const int* _sizes, int _type)
 
 void SparseMat::copyTo( SparseMat& m ) const
 {
-    if( this == &m )
+    if( hdr == m.hdr )
         return;
     if( !hdr )
     {
@@ -2506,7 +2506,7 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
     if( rtype < 0 )
         rtype = type();
     rtype = CV_MAKETYPE(rtype, cn);
-    if( this == &m && rtype != type()  )
+    if( hdr == m.hdr && rtype != type()  )
     {
         SparseMat temp;
         convertTo(temp, rtype, alpha);
@@ -2515,7 +2515,8 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
     }
     
     CV_Assert(hdr != 0);
-    m.create( m.hdr->dims, m.hdr->size, rtype );
+    if( hdr != m.hdr )
+        m.create( m.hdr->dims, m.hdr->size, rtype );
     
     SparseMatConstIterator from = begin();
     size_t i, N = nzcount();
@@ -2526,7 +2527,7 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
         for( i = 0; i < N; i++, ++from )
         {
             const Node* n = from.node();
-            uchar* to = m.newNode(n->idx, n->hashval);
+            uchar* to = hdr == m.hdr ? from.ptr : m.newNode(n->idx, n->hashval);
             cvtfunc( from.ptr, to, cn ); 
         }
     }
@@ -2536,7 +2537,7 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
         for( i = 0; i < N; i++, ++from )
         {
             const Node* n = from.node();
-            uchar* to = m.newNode(n->idx, n->hashval);
+            uchar* to = hdr == m.hdr ? from.ptr : m.newNode(n->idx, n->hashval);
             cvtfunc( from.ptr, to, cn, alpha, 0 ); 
         }
     }
