@@ -799,9 +799,11 @@ Resizes an image
              int interpolation=INTER\_LINEAR );}
 \begin{description}
 \cvarg{src}{Source image}
-\cvarg{dst}{Destination image}
+\cvarg{dst}{Destination image. It will have size \texttt{dsize} (when it is non-zero) or the size computed from \texttt{src.size()}
+and \texttt{fx} and \texttt{fy}. The type of \texttt{dst} will be the same as of \texttt{src}.}
 \cvarg{dsize}{The destination image size. If it is zero, then it is computed as:
-\[\texttt{dsize = Size(round(fx*src.cols), round(fy*src.rows))}\]}
+\[\texttt{dsize = Size(round(fx*src.cols), round(fy*src.rows))}\].
+Either \texttt{dsize} or both \texttt{fx} or \texttt{fy} must be non-zero.}
 \cvarg{fx}{The scale factor along the horizontal axis. When 0, it is computed as
 \[\texttt{(double)dsize.width/src.cols}\]}
 \cvarg{fy}{The scale factor along the vertical axis. When 0, it is computed as
@@ -817,6 +819,19 @@ Resizes an image
 \end{description}
 
 The function \texttt{resize} resizes an image \texttt{src} down to or up to the specified size.
+Note that the initial \texttt{dst} type or size are not taken into account. Instead the size and type are derived from the \texttt{src}, \texttt{dsize}, \texttt{fx} and \texttt{fy}. If you want to resize \texttt{src} so that it fits the pre-created \texttt{dst}, you may call the function as:
+
+\begin{lstlisting}
+// explicitly specify dsize=dst.size(); fx and fy will be computed from that.
+resize(src, dst, dst.size(), 0, 0, interpolation);
+\end{lstlisting}
+
+If you want to decimate the image by factor of 2 in each direction, you can call the function this way:
+
+\begin{lstlisting}
+// specify fx and fy and let the function to compute the destination image size.
+resize(src, dst, Size(), 0.5, 0.5, interpolation);
+\end{lstlisting}
 
 See also: \cvCppCross{warpAffine}, \cvCppCross{warpPerspective}, \cvCppCross{remap}.
 
