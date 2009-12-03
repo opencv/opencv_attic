@@ -62,13 +62,14 @@ CV_WatershedTest::~CV_WatershedTest() {}
 
 void CV_WatershedTest::run( int /* start_from */)
 {      
-    Mat orig = imread(string(ts->get_data_path()) + "inpaint/orig.jpg");    
-    Mat exp = imread(string(ts->get_data_path()) + "watershed/wshed_exp.png", 0); 
+    string exp_path = string(ts->get_data_path()) + "watershed/wshed_exp.png"; 
+    Mat exp = imread(exp_path, 0);
+    Mat orig = imread(string(ts->get_data_path()) + "inpaint/orig.jpg");
     FileStorage fs(string(ts->get_data_path()) + "watershed/comp.xml", FileStorage::READ);
             
-    if (orig.empty() || exp.empty() || orig.size() != exp.size() || !fs.isOpened())
+    if (orig.empty() || !fs.isOpened())
     {
-        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
+        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
         return;
     }
               
@@ -86,7 +87,8 @@ void CV_WatershedTest::run( int /* start_from */)
 
         //expected image was added with 1 in order to save to png
         //so now we substract 1 to get real color
-        colors.push_back(exp.ptr(p->y)[p->x] - 1);     
+        if(exp.data)
+            colors.push_back(exp.ptr(p->y)[p->x] - 1);
     }
     fs.release();
     const int compNum = colors.size() - 1;
@@ -107,12 +109,19 @@ void CV_WatershedTest::run( int /* start_from */)
                 continue; // bad result, doing nothing and going to get error latter;
             
             // repaint in saved color to compare with expected;
-            pixel = colors[pixel];                                        
+            if(exp.data)
+                pixel = colors[pixel];                                        
         }
     }    
 
     Mat markers8U;
     markers.convertTo(markers8U, CV_8U, 1, 1);
+    
+    if( exp.empty() || orig.size() != exp.size() )
+    {
+        imwrite(exp_path, markers8U);
+        exp = markers8U;
+    }
                 
     if (0 != norm(markers8U, exp, NORM_INF))
     {    

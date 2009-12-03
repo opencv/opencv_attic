@@ -81,7 +81,7 @@ CV_ImgWarpBaseTestImpl::CV_ImgWarpBaseTestImpl( const char* test_name, const cha
         test_array[INPUT].push(NULL);
     test_array[INPUT_OUTPUT].push(NULL);
     test_array[REF_INPUT_OUTPUT].push(NULL);
-    max_interpolation = 4;
+    max_interpolation = 5;
     interpolation = 0;
     element_wise_relative_error = false;
     spatial_scale_zoom = 0.01;
