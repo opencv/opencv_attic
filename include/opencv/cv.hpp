@@ -318,7 +318,7 @@ enum { INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3,
        INTER_LANCZOS4=4, INTER_MAX=7, WARP_INVERSE_MAP=16 };
 
 CV_EXPORTS void resize( const Mat& src, Mat& dst,
-                        Size dsize=Size(), double fx=0, double fy=0,
+                        Size dsize, double fx=0, double fy=0,
                         int interpolation=INTER_LINEAR );
 
 CV_EXPORTS void warpAffine( const Mat& src, Mat& dst,
@@ -807,7 +807,7 @@ enum
     CALIB_ZERO_DISPARITY = CV_CALIB_ZERO_DISPARITY
 };
 
-CV_EXPORTS void calibrateCamera( const vector<vector<Point3f> >& objectPoints,
+CV_EXPORTS double calibrateCamera( const vector<vector<Point3f> >& objectPoints,
                                  const vector<vector<Point2f> >& imagePoints,
                                  Size imageSize,
                                  Mat& cameraMatrix, Mat& distCoeffs,
@@ -824,7 +824,7 @@ CV_EXPORTS void calibrationMatrixValues( const Mat& cameraMatrix,
                                 Point2d& principalPoint,
                                 double& aspectRatio );
 
-CV_EXPORTS void stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
+CV_EXPORTS double stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
                                  const vector<vector<Point2f> >& imagePoints1,
                                  const vector<vector<Point2f> >& imagePoints2,
                                  Mat& cameraMatrix1, Mat& distCoeffs1,

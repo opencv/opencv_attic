@@ -1406,7 +1406,7 @@ CVAPI(void) cvDrawChessboardCorners( CvArr* image, CvSize pattern_size,
 
 /* Finds intrinsic and extrinsic camera parameters
    from a few views of known calibration pattern */
-CVAPI(void) cvCalibrateCamera2( const CvMat* object_points,
+CVAPI(double) cvCalibrateCamera2( const CvMat* object_points,
                                 const CvMat* image_points,
                                 const CvMat* point_counts,
                                 CvSize image_size,
@@ -1434,7 +1434,7 @@ CVAPI(void) cvCalibrationMatrixValues( const CvMat *camera_matrix,
 /* Computes the transformation from one camera coordinate system to another one
    from a few correspondent views of the same calibration target. Optionally, calibrates
    both cameras */
-CVAPI(void) cvStereoCalibrate( const CvMat* object_points, const CvMat* image_points1,
+CVAPI(double) cvStereoCalibrate( const CvMat* object_points, const CvMat* image_points1,
                                const CvMat* image_points2, const CvMat* npoints,
                                CvMat* camera_matrix1, CvMat* dist_coeffs1,
                                CvMat* camera_matrix2, CvMat* dist_coeffs2,
@@ -1442,7 +1442,7 @@ CVAPI(void) cvStereoCalibrate( const CvMat* object_points, const CvMat* image_po
                                CvMat* E CV_DEFAULT(0), CvMat* F CV_DEFAULT(0),
                                CvTermCriteria term_crit CV_DEFAULT(cvTermCriteria(
                                    CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,30,1e-6)),
-                               int flags CV_DEFAULT(CV_CALIB_FIX_INTRINSIC) );
+                               int flags CV_DEFAULT(CV_CALIB_FIX_INTRINSIC));
 
 #define CV_CALIB_ZERO_DISPARITY 1024
 
