@@ -46,16 +46,16 @@ using namespace cv;
 
 void defaultDistribs( vector<Mat>& means, vector<Mat>& covs )
 {
-    float mp0[] = {0.0f, 0.0f}, ep0[] = {0.67f, 0.0f, 0.0f, 0.67f};
-    float mp1[] = {5.0f, 0.0f}, ep1[] = {1.0f, 0.0f, 0.0f, 1.0f};
-    float mp2[] = {1.0f, 5.0f}, ep2[] = {1.0f, 0.0f, 0.0f, 1.0f};
-    Mat m0( 1, 2, CV_32FC1, mp0 ), e0( 2, 2, CV_32FC1, ep0 );
-    Mat m1( 1, 2, CV_32FC1, mp1 ), e1( 2, 2, CV_32FC1, ep1 );
-    Mat m2( 1, 2, CV_32FC1, mp2 ), e2( 2, 2, CV_32FC1, ep2 );
+    float mp0[] = {0.0f, 0.0f}, cp0[] = {0.67f, 0.0f, 0.0f, 0.67f};
+    float mp1[] = {5.0f, 0.0f}, cp1[] = {1.0f, 0.0f, 0.0f, 1.0f};
+    float mp2[] = {1.0f, 5.0f}, cp2[] = {1.0f, 0.0f, 0.0f, 1.0f};
+    Mat m0( 1, 2, CV_32FC1, mp0 ), c0( 2, 2, CV_32FC1, cp0 );
+    Mat m1( 1, 2, CV_32FC1, mp1 ), c1( 2, 2, CV_32FC1, cp1 );
+    Mat m2( 1, 2, CV_32FC1, mp2 ), c2( 2, 2, CV_32FC1, cp2 );
     means.resize(3), covs.resize(3);
-    m0.copyTo(means[0]), e0.copyTo(covs[0]);
-    m1.copyTo(means[1]), e1.copyTo(covs[1]);
-    m2.copyTo(means[2]), e2.copyTo(covs[2]);
+    m0.copyTo(means[0]), c0.copyTo(covs[0]);
+    m1.copyTo(means[1]), c1.copyTo(covs[1]);
+    m2.copyTo(means[2]), c2.copyTo(covs[2]);
 }
 
 // generate points sets by normal distributions
