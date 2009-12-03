@@ -262,7 +262,7 @@ protected:
 
 
 CV_CameraCalibrationTest::CV_CameraCalibrationTest():
-    CvTest( "calibratecamera", "cvCalibrateCamera2" )
+    CvTest( "calibrate-camera", "cvCalibrateCamera2" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
@@ -648,3 +648,179 @@ _exit_:
 }
 
 CV_CameraCalibrationTest calibrate_test;
+
+
+
+///////////////////////////////// Stereo Calibration /////////////////////////////////////
+
+
+class CV_StereoCalibrationTest : public CvTest
+{
+public:
+    CV_StereoCalibrationTest();
+    ~CV_StereoCalibrationTest();
+    void clear();
+    //int write_default_params(CvFileStorage* fs);
+    
+protected:
+    void run(int);
+};
+
+
+CV_StereoCalibrationTest::CV_StereoCalibrationTest():
+CvTest( "calibrate-stereo", "cvStereoCalibrate" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+
+CV_StereoCalibrationTest::~CV_StereoCalibrationTest()
+{
+    clear();
+}
+
+
+void CV_StereoCalibrationTest::clear()
+{
+    CvTest::clear();
+}
+
+using namespace cv;
+using namespace std;
+
+void CV_StereoCalibrationTest::run( int start_from )
+{
+    const int ntests = 1;
+    const double maxReprojErr = 2;
+    const double maxScanlineDistErr = 3;
+    FILE* f = 0;
+    
+    for(int testcase = 1; testcase <= ntests; testcase++)
+    {
+        char filepath[1000];
+        char buf[1000];
+        sprintf( filepath, "%sstereo/case%d/stereo_calib.txt", ts->get_data_path(), testcase );
+        f = fopen(filepath, "rt");
+        Size patternSize;
+        vector<string> imglist;
+        
+        if( !f || !fgets(buf, sizeof(buf)-3, f) || sscanf(buf, "%d%d", &patternSize.width, &patternSize.height) != 2 )
+        {
+            ts->printf( CvTS::LOG, "The file %s can not be opened or has invalid content\n", filepath );
+            ts->set_failed_test_info( f ? CvTS::FAIL_INVALID_TEST_DATA : CvTS::FAIL_MISSING_TEST_DATA );
+            return;
+        }
+        
+        for(;;)
+        {
+            if( !fgets( buf, sizeof(buf)-3, f ))
+                break;
+            size_t len = strlen(buf);
+            while( len > 0 && isspace(buf[len-1]))
+                buf[--len] = '\0';
+            if( buf[0] == '#')
+                continue;
+            sprintf(filepath, "%sstereo/case%d/%s", ts->get_data_path(), testcase, buf );
+            imglist.push_back(string(filepath));
+        }
+        fclose(f);
+        
+        if( imglist.size() == 0 || imglist.size() % 2 != 0 )
+        {
+            ts->printf( CvTS::LOG, "The number of images is 0 or an odd number in the case #%d\n", testcase );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+        
+        size_t i, nframes = imglist.size()/2;
+        int j, npoints = patternSize.width*patternSize.height;
+        vector<vector<Point3f> > objpt(nframes);
+        vector<vector<Point2f> > imgpt1(nframes);
+        vector<vector<Point2f> > imgpt2(nframes);
+        Size imgsize;
+        
+        for( i = 0; i < nframes; i++ )
+        {
+            Mat left = imread(imglist[i*2]);
+            Mat right = imread(imglist[i*2+1]);
+            if(!left.data || !right.data)
+            {
+                ts->printf( CvTS::LOG, "Can not load images %s and %s, testcase %d\n",
+                           imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
+                ts->set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+                return;
+            }
+            imgsize = left.size();
+            bool found1 = findChessboardCorners(left, patternSize, imgpt1[i]); 
+            bool found2 = findChessboardCorners(right, patternSize, imgpt2[i]);
+            if(!found1 || !found2)
+            {
+                ts->printf( CvTS::LOG, "The function could not detect boards on the images %s and %s, testcase %d\n",
+                           imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
+                ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+                return;
+            }
+            
+            for( j = 0; j < npoints; j++ )
+                objpt[i].push_back(Point3f((float)(j%patternSize.width), (float)(j/patternSize.width), 0.f));
+        }
+        
+        Mat M1 = Mat::eye(3,3,CV_64F), M2 = Mat::eye(3,3,CV_64F), D1(5,1,CV_64F), D2(5,1,CV_64F), R, T, E, F;
+        M1.at<double>(0,2) = M2.at<double>(0,2)=(imgsize.width-1)*0.5;
+        M1.at<double>(1,2) = M2.at<double>(1,2)=(imgsize.height-1)*0.5;
+        D1 = Scalar::all(0);
+        D2 = Scalar::all(0);
+        double err = stereoCalibrate(objpt, imgpt1, imgpt2, M1, D1, M2, D2, imgsize, R, T, E, F,
+                                     TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 1e-6),
+                                     CV_CALIB_SAME_FOCAL_LENGTH
+                                     //+ CV_CALIB_FIX_ASPECT_RATIO
+                                     + CV_CALIB_FIX_PRINCIPAL_POINT
+                                     + CV_CALIB_ZERO_TANGENT_DIST
+                                     );
+        err /= nframes*npoints;
+        if( err > maxReprojErr )
+        {
+            ts->printf( CvTS::LOG, "The average reprojection error is too big (=%g), testcase %d\n", err, testcase);
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        Mat R1, R2, P1, P2, Q;
+        stereoRectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 0);
+        
+        if(norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+           norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+           abs(determinant(F)) > 0.01)
+        {
+            ts->printf( CvTS::LOG, "The computed R1 and R2 are not orthogonal, or the computed F is not singular, testcase %d\n", testcase);
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        bool verticalStereo = abs(P2.at<double>(0,3)) < abs(P2.at<double>(1,3));
+        double maxDiff = 0;
+        
+        for( i = 0; i < nframes; i++ )
+        {
+            vector<Point2f> temp[2];
+            undistortPoints(imgpt1[i], temp[0], M1, D1, R1, P1);
+            undistortPoints(imgpt2[i], temp[1], M2, D2, R2, P2);
+            
+            for( j = 0; j < npoints; j++ )
+            {
+                double diff = verticalStereo ? abs(temp[0][j].x - temp[1][j].x) : abs(temp[0][j].y - temp[1][j].y);
+                maxDiff = max(maxDiff, diff);
+                if( maxDiff > maxScanlineDistErr )
+                {
+                    ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g), testcase %d\n",
+                               verticalStereo ? "x" : "y", diff, testcase);
+                    ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+                    return;
+                }
+            }                
+        }
+        ts->printf( CvTS::LOG, "Testcase %d. Max distance =%g\n", testcase, maxDiff );
+    }
+}
+
+CV_StereoCalibrationTest stereocalib_test;

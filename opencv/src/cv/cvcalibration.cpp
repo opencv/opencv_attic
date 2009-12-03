@@ -1467,7 +1467,7 @@ cvInitIntrinsicParams2D( const CvMat* objectPoints,
 
 /* finds intrinsic and extrinsic camera parameters
    from a few views of known calibration pattern */
-CV_IMPL void
+CV_IMPL double
 cvCalibrateCamera2( const CvMat* objectPoints,
                     const CvMat* imagePoints,
                     const CvMat* npoints,
@@ -1479,6 +1479,7 @@ cvCalibrateCamera2( const CvMat* objectPoints,
     const int NINTRINSIC = 9;
     CvMat *_M = 0, *_m = 0, *_Ji = 0, *_Je = 0, *_err = 0;
     CvLevMarq solver;
+    double reprojErr = 0;
 
     CV_FUNCNAME( "cvCalibrateCamera2" );
 
@@ -1678,6 +1679,8 @@ cvCalibrateCamera2( const CvMat* objectPoints,
 
         if( !proceed )
             break;
+        
+        reprojErr = 0;
 
         for( i = 0, pos = 0; i < nimages; i++, pos += ni )
         {
@@ -1728,12 +1731,11 @@ cvCalibrateCamera2( const CvMat* objectPoints,
                 cvGEMM( _Je, _err, 1, 0, 0, &_part, CV_GEMM_A_T );
             }
 
-            if( _errNorm )
-            {
-                double errNorm = cvNorm( &_mp, 0, CV_L2 );
-                *_errNorm += errNorm*errNorm;
-            }
+            double errNorm = cvNorm( &_mp, 0, CV_L2 );
+            reprojErr += errNorm*errNorm;
         }
+        if( _errNorm )
+            *_errNorm = reprojErr;
     }
 
     // 4. store the results
@@ -1778,6 +1780,8 @@ cvCalibrateCamera2( const CvMat* objectPoints,
     cvReleaseMat( &_Ji );
     cvReleaseMat( &_Je );
     cvReleaseMat( &_err );
+    
+    return reprojErr;
 }
 
 
@@ -1853,13 +1857,14 @@ static int dbCmp( const void* _a, const void* _b )
 }
 
 
-void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
+double cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
                         const CvMat* _imagePoints2, const CvMat* _npoints,
                         CvMat* _cameraMatrix1, CvMat* _distCoeffs1,
                         CvMat* _cameraMatrix2, CvMat* _distCoeffs2,
                         CvSize imageSize, CvMat* _R, CvMat* _T,
                         CvMat* _E, CvMat* _F,
-                        CvTermCriteria termCrit, int flags )
+                        CvTermCriteria termCrit,
+                        int flags )
 {
     const int NINTRINSIC = 9;
     CvMat* npoints = 0;
@@ -1871,6 +1876,7 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
     CvMat* objectPoints = 0;
     CvMat* RT0 = 0;
     CvLevMarq solver;
+    double reprojErr = 0;
 
     CV_FUNCNAME( "cvStereoCalibrate" );
 
@@ -2076,7 +2082,7 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         const CvMat* param = 0;
         CvMat tmpimagePoints;
         CvMat *JtJ = 0, *JtErr = 0;
-        double* errNorm = 0;
+        double *_errNorm = 0;
         double _omR[3], _tR[3];
         double _dr3dr1[9], _dr3dr2[9], /*_dt3dr1[9],*/ _dt3dr2[9], _dt3dt1[9], _dt3dt2[9];
         CvMat dr3dr1 = cvMat(3, 3, CV_64F, _dr3dr1);
@@ -2089,8 +2095,9 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
         CvMat dpdrot_hdr, dpdt_hdr, dpdf_hdr, dpdc_hdr, dpdk_hdr;
         CvMat *dpdrot = &dpdrot_hdr, *dpdt = &dpdt_hdr, *dpdf = 0, *dpdc = 0, *dpdk = 0;
 
-        if( !solver.updateAlt( param, JtJ, JtErr, errNorm ))
+        if( !solver.updateAlt( param, JtJ, JtErr, _errNorm ))
             break;
+        reprojErr = 0;
 
         cvRodrigues2( &om_LR, &R_LR );
         om[1] = cvMat(3,1,CV_64F,_omR);
@@ -2234,10 +2241,11 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
                     }
                 }
 
-                if( errNorm )
-                    *errNorm += l2err*l2err;
+                reprojErr += l2err*l2err;
             }
         }
+        if(_errNorm)
+            *_errNorm = reprojErr;
     }
 
     cvRodrigues2( &om_LR, &R_LR );
@@ -2300,6 +2308,8 @@ void cvStereoCalibrate( const CvMat* _objectPoints, const CvMat* _imagePoints1,
     cvReleaseMat( &objectPoints );
     cvReleaseMat( &imagePoints[0] );
     cvReleaseMat( &imagePoints[1] );
+    
+    return reprojErr;
 }
 
 
@@ -2975,7 +2985,7 @@ cv::Mat cv::initCameraMatrix2D( const vector<vector<Point3f> >& objectPoints,
 }
 
 
-void cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
+double cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
                           const vector<vector<Point2f> >& imagePoints,
                           Size imageSize, Mat& cameraMatrix, Mat& distCoeffs,
                           vector<Mat>& rvecs, vector<Mat>& tvecs, int flags )
@@ -2993,8 +3003,9 @@ void cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
     CvMat _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
     CvMat _rvecM = rvecM, _tvecM = tvecM;
 
-    cvCalibrateCamera2(&_objPt, &_imgPt, &_npoints, imageSize, &_cameraMatrix,
-                       &_distCoeffs, &_rvecM, &_tvecM, flags );
+    double reprojErr = cvCalibrateCamera2(
+        &_objPt, &_imgPt, &_npoints, imageSize, &_cameraMatrix,
+        &_distCoeffs, &_rvecM, &_tvecM, flags );
     rvecs.resize(nimages);
     tvecs.resize(nimages);
     for( i = 0; i < nimages; i++ )
@@ -3002,6 +3013,7 @@ void cv::calibrateCamera( const vector<vector<Point3f> >& objectPoints,
         rvecM.row((int)i).copyTo(rvecs[i]);
         tvecM.row((int)i).copyTo(tvecs[i]);
     }
+    return reprojErr;
 }
 
 void cv::calibrationMatrixValues( const Mat& cameraMatrix, Size imageSize,
@@ -3014,7 +3026,7 @@ void cv::calibrationMatrixValues( const Mat& cameraMatrix, Size imageSize,
         &fovx, &fovy, &focalLength, (CvPoint2D64f*)&principalPoint, &aspectRatio );
 }
 
-void cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
+double cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
                           const vector<vector<Point2f> >& imagePoints1,
                           const vector<vector<Point2f> >& imagePoints2,
                           Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -3030,8 +3042,11 @@ void cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
     distCoeffs2 = prepareDistCoeffs(distCoeffs2, rtype);
     R.create(3, 3, rtype);
     T.create(3, 1, rtype);
+    E.create(3, 3, rtype);
+    F.create(3, 3, rtype);
 
     Mat objPt, imgPt, imgPt2, npoints;
+
     collectCalibrationData( objectPoints, imagePoints1, imagePoints2,
                             objPt, imgPt, &imgPt2, npoints );
     CvMat _objPt = objPt, _imgPt = imgPt, _imgPt2 = imgPt2, _npoints = npoints;
@@ -3039,7 +3054,7 @@ void cv::stereoCalibrate( const vector<vector<Point3f> >& objectPoints,
     CvMat _cameraMatrix2 = cameraMatrix2, _distCoeffs2 = distCoeffs2;
     CvMat _R = R, _T = T, _E = E, _F = F;
 
-    cvStereoCalibrate(&_objPt, &_imgPt, &_imgPt2, &_npoints, &_cameraMatrix1,
+    return cvStereoCalibrate(&_objPt, &_imgPt, &_imgPt2, &_npoints, &_cameraMatrix1,
         &_distCoeffs1, &_cameraMatrix2, &_distCoeffs2, imageSize,
         &_R, &_T, &_E, &_F, criteria, flags );
 }
