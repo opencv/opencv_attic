@@ -172,7 +172,7 @@ int64 getCPUTickCount(void)
 
 #endif
 
-#elif defined _MSC_VER && defined WIN32 
+#elif defined _MSC_VER && defined WIN32 && !defined _WIN64
 
 int64 getCPUTickCount(void)
 {
