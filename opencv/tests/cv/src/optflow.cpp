@@ -45,6 +45,7 @@
 #include <iostream>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include "cvaux.h"
 
 using namespace cv;
@@ -107,6 +108,26 @@ void calcOpticalFlowHS( const Mat& prev, const Mat& curr, int usePrevious, doubl
     flow = copnvert2flow(velx, vely);
 }
 
+void calcAffineFlowPyrLK( const Mat& prev, const Mat& curr, 
+                          const vector<Point2f>& prev_features, vector<Point2f>& curr_features,
+                          vector<uchar>& status, vector<float>& track_error, vector<float>& matrices, 
+                          TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS,30, 0.01), 
+                          Size win_size = Size(15, 15), int level = 3, int flags = 0)
+{
+    CvMat cvprev = prev;
+    CvMat cvcurr = curr;
+
+    size_t count = prev_features.size();
+    curr_features.resize(count);
+    status.resize(count);
+    track_error.resize(count);
+    matrices.resize(count * 6);
+
+    cvCalcAffineFlowPyrLK( &cvprev, &cvcurr, 0, 0, 
+        (const CvPoint2D32f*)&prev_features[0], (CvPoint2D32f*)&curr_features[0], &matrices[0], 
+        (int)count, win_size, level, (char*)&status[0], &track_error[0], criteria, flags );
+}
+
 double showFlowAndCalcError(const string& name, const Mat& gray, const Mat& flow, 
                             const Rect& where, const Point& d, 
                             bool showImages = false, bool writeError = false)
@@ -159,7 +180,7 @@ double showFlowAndCalcError(const string& name, const Mat& gray, const Mat& flow
             double a = atan2(f.y, f.x);
             error += fabs(angle - a);            
         }
-        double res = all ? -1 : error / (inner.cols * inner.rows);
+        double res = all ? numeric_limits<double>::max() : error / (inner.cols * inner.rows);
 
         if (writeError)
             cout << "Error " + name << " = " << res << endl;
@@ -181,28 +202,32 @@ Mat generateImage(const Size& sz, bool doBlur = true)
     return mat;
 }
 
+Mat generateSample(const Size& sz)
+{
+    Mat smpl(sz, CV_8U);    
+    smpl = Scalar(0);
+    Point sc(smpl.cols/2, smpl.rows/2);
+    rectangle(smpl, Point(0,0), sc - Point(1,1), Scalar(255), CV_FILLED);
+    rectangle(smpl, sc, Point(smpl.cols, smpl.rows), Scalar(255), CV_FILLED);
+    return smpl;
+}
+
 bool CV_OptFlowTest::runDense(const Point& d)
 {
     Size matSize(40, 40);
     Size movSize(8, 8);
         
-    Mat smpl = generateImage(movSize);
-    cv::add(smpl, Scalar(30), smpl);
-    //cv::subtract(smpl, Scalar(50), smpl);
-    smpl = Scalar(0);
-    Point sc(smpl.cols/2, smpl.rows/2);
-    cv::rectangle(smpl, Point(0,0), sc - Point(1,1), Scalar(255), CV_FILLED);
-    cv::rectangle(smpl, sc, Point(smpl.cols, smpl.rows), Scalar(255), CV_FILLED);
-
+    Mat smpl = generateSample(movSize);
     Mat prev = generateImage(matSize);    
     Mat curr = prev.clone();
 
     Rect rect(Point(prev.cols/2, prev.rows/2) - Point(movSize.width/2, movSize.height/2), movSize);
 
-    Mat m1 = prev(rect);                            smpl.copyTo(m1);
-    m1 = curr(Rect(rect.tl() + d, rect.br() + d));  smpl.copyTo(m1);   
+    Mat flowLK, flowBM, flowHS, flowFB, flowBM_received, m1;
 
-    Mat flowLK, flowBM, flowHS, flowFB, flowBM_received;
+    m1 = prev(rect);                                smpl.copyTo(m1);
+    m1 = curr(Rect(rect.tl() + d, rect.br() + d));  smpl.copyTo(m1);   
+    
     calcOpticalFlowLK( prev, curr, Size(15, 15), flowLK);        
     calcOpticalFlowBM( prev, curr, Size(15, 15), Size(1, 1), Size(15, 15), 0, flowBM_received);       
     calcOpticalFlowHS( prev, curr, 0, 5, TermCriteria(TermCriteria::MAX_ITER, 400, 0), flowHS);                 
@@ -216,68 +241,113 @@ bool CV_OptFlowTest::runDense(const Point& d)
 
     double errorLK = showFlowAndCalcError("LK", prev, flowLK, rect, d);
     double errorBM = showFlowAndCalcError("BM", prev, flowBM, rect, d);
-    double errorHS = showFlowAndCalcError("HS", prev, flowHS, rect, d);
     double errorFB = showFlowAndCalcError("FB", prev, flowFB, rect, d);
-    //waitKey();
-
-    (void)errorHS;
+    double errorHS = showFlowAndCalcError("HS", prev, flowHS, rect, d); (void)errorHS;     
+    //waitKey();   
 
     const double thres = 0.2;
-    if (errorLK > thres || errorBM > thres || /*errorHS > thres || */errorFB > thres
-        || errorLK == -1 || errorBM == -1 || /*errorHS == -1 || */errorFB == -1)
+    if (errorLK > thres || errorBM > thres || errorFB > thres /*|| errorHS > thres /**/)
     {        
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
-    }    
-    ts->set_failed_test_info(CvTS::OK);
+    }        
     return true;
 }
 
-enum { LKFLOW_PYR_A_READY = 1, LKFLOW_PYR_B_READY = 2, 
-       LKFLOW_INITIAL_GUESSES = 4, LKFLOW_GET_MIN_EIGENVALS = 8 };
-
- /*void calcOpticalFlowPyrLK( const Mat& prevImg, const Mat& nextImg, 
-                    const vector<Point2f>& prevPts, vector<Point2f>& nextPts,
-                           vector<uchar>& status, vector<float>& err,
-                           Size winSize=Size(15,15), int maxLevel = 3,
-                           TermCriteria criteria=TermCriteria(TermCriteria::COUNT+TermCriteria::EPS,30, 0.01),
-                           double derivLambda=0.5,
-                           int flags=0 );*/
-
-void calcAffineFlowPyrLK( const Mat& prev, const Mat& curr, 
-                          const vector<Point2f>& prev_features, vector<Point2f>& curr_features,
-                          vector<float> matrices, Size win_size, int level,
-                          vector<char>& status, vector<float>& track_error,
-                          TermCriteria criteria, int flags )
-{
-    CvMat cvprev = prev;
-    CvMat cvcurr = curr;
-
-    size_t count = prev_features.size();
-    curr_features.resize(count);
-    status.resize(count);
-    track_error.resize(count);
-
-    cvCalcAffineFlowPyrLK( &cvprev, &cvcurr, 0, 0, 
-        (const CvPoint2D32f*)&prev_features[0], (CvPoint2D32f*)&curr_features[0], &matrices[0], 
-        (int)count, win_size, level, &status[0], &track_error[0], criteria, flags );
-}
 
 bool CV_OptFlowTest::runSparse()
-{
-    //cvCalcOpticalFlowPyrLK
-    //cvCalcAffineFlowPyrLK
+{    
+    Mat prev = imread(string(ts->get_data_path()) + "optflow/rock_1.bmp", 0);
+    Mat next = imread(string(ts->get_data_path()) + "optflow/rock_2.bmp", 0);
+
+    if (prev.empty() || next.empty())
+    {
+        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );  
+        return false;
+    }
+
+    Mat cprev, cnext;
+    cvtColor(prev, cprev, CV_GRAY2BGR);
+    cvtColor(next, cnext, CV_GRAY2BGR);
+
+    vector<Point2f> prev_pts;
+    vector<Point2f> next_ptsOpt;
+    vector<Point2f> next_ptsAff;
+    vector<uchar> status_Opt;
+    vector<uchar> status_Aff;
+    vector<float> error;
+    vector<float> matrices;
+
+    Size netSize(10, 10);
+    Point2f center = Point(prev.cols/2, prev.rows/2);
+
+    for(int i = 0 ; i < netSize.width; ++i)
+        for(int j = 0 ; j < netSize.width; ++j)
+        {
+            Point2f p(i * float(prev.cols)/netSize.width, j * float(prev.rows)/netSize.height);
+            prev_pts.push_back((p - center) * 0.5f + center);            
+        }
+
+    calcOpticalFlowPyrLK( prev, next, prev_pts, next_ptsOpt, status_Opt, error );
+    calcAffineFlowPyrLK ( prev, next, prev_pts, next_ptsAff, status_Aff, error, matrices);
+
+    const double expected_shift = 25;
+    const double thres = 1;    
+    for(size_t i = 0; i < prev_pts.size(); ++i)        
+    {
+        circle(cprev, prev_pts[i], 2, CV_RGB(255, 0, 0));               
+
+        if (status_Opt[i])
+        {            
+            circle(cnext, next_ptsOpt[i], 2, CV_RGB(0, 0, 255));
+            Point2f shift = prev_pts[i] - next_ptsOpt[i];
+            
+            double n = sqrt(shift.ddot(shift));
+            if (fabs(n - expected_shift) > thres)
+            {
+                ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+                return false;
+            }
+        }
+
+        if (status_Aff[i])
+        {            
+            circle(cnext, next_ptsAff[i], 4, CV_RGB(0, 255, 0));
+            Point2f shift = prev_pts[i] - next_ptsAff[i];
+
+            double n = sqrt(shift.ddot(shift));
+            if (fabs(n - expected_shift) > thres)
+            {
+                ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+                return false;
+            }
+        }
+        
+    }
+    
+    /*namedWindow("P");  imshow("P", cprev);
+    namedWindow("N"); imshow("N", cnext); 
+    waitKey();*/
+    
     return true;
 }
 
 
 void CV_OptFlowTest::run( int /* start_from */)
 {	
-    if (!runDense(Point(3, 0)))return;
-    if (!runDense(Point(0, 3))) return;
-    //if (!runDense(Point(3, 3))) return;
 
-    if (!runSparse()) return;
+    if (!runDense(Point(3, 0)))
+        return;
+
+    if (!runDense(Point(0, 3))) 
+        return;
+
+    //if (!runDense(Point(3, 3))) return;  //probably LK works incorrectly in this case.
+
+    if (!runSparse()) 
+        return;
+
+    ts->set_failed_test_info(CvTS::OK);
 }
 
 CV_OptFlowTest optFlow_test;
