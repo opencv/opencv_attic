@@ -495,7 +495,7 @@ if(IPP_FOUND AND USE_IPP)
                  ${A}ippvmmerged${B} ${A}ippvmemerged${B}
                  ${A}ippccmerged${B} ${A}ippccemerged${B}
                  ${A}ippcvmerged${B} ${A}ippcvemerged${B}
-                 ${A}ippcore${L}${B})
+                 ${A}ippcore${IPP_ARCH}${L}${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
 
