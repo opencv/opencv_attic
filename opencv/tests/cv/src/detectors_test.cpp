@@ -162,7 +162,7 @@ void CV_DetectorsTest::run( int /*start_from*/ )
 }
 
 
-CV_DetectorsTest HighGui_test;
+CV_DetectorsTest Detectors_test;
 
 
 
