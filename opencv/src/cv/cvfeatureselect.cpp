@@ -43,9 +43,9 @@
 namespace cv
 {
 
-template<typename T> struct lessThanPtr
+template<typename T> struct greaterThanPtr
 {
-    bool operator()(const T* a, const T* b) const { return *a < *b; }
+    bool operator()(const T* a, const T* b) const { return *a > *b; }
 };
 
 void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
@@ -88,7 +88,7 @@ void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
         }
     }
 
-    sort( tmpCorners, lessThanPtr<float>() );
+    sort( tmpCorners, greaterThanPtr<float>() );
     corners.clear();
     size_t i, j, total = tmpCorners.size(), ncorners = 0;
     
