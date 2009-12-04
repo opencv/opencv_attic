@@ -12,13 +12,13 @@ or
 
 \[
 s \vecthree{u}{v}{1} = \vecthreethree
-{fx}{0}{cx}
-{0}{fy}{cy}
+{f_x}{0}{c_x}
+{0}{f_y}{c_y}
 {0}{0}{1}
 \begin{bmatrix}
- r_{11} & r_{12} & r{13} & t_1 \\
- r_{21} & r_{22} & r{23} & t_2 \\
- r_{31} & r_{32} & r{33} & t_3
+ r_{11} & r_{12} & r_{13} & t_1 \\
+ r_{21} & r_{22} & r_{23} & t_2 \\
+ r_{31} & r_{32} & r_{33} & t_3
 \end{bmatrix}
 \begin{bmatrix}X\\Y\\Z\\1 \end{bmatrix}
 \]
@@ -69,7 +69,9 @@ v = f_y*y'' + c_y
 \]
 
 $k_1$, $k_2$, $k_3$ are radial distortion coefficients, $p_1$, $p_2$ are tangential distortion coefficients.
-Higher-order coefficients are not considered in OpenCV.
+Higher-order coefficients are not considered in OpenCV. In the functions below the coefficients are passed or returned as
+\label{k123p12}
+\[ (k_1, k_2, p_1, p_2[, k_3]) \]vector. That is, if the vector contains 4 elements, it means that $k_3=0$.
 The distortion coefficients do not depend on the scene viewed, thus they also belong to the intrinsic camera parameters.
 \emph{And they remain the same regardless of the captured image resolution.}
 That is, if, for example, a camera has been calibrated on images of $320
@@ -111,23 +113,23 @@ in the OpenCV Guide 3D Reconstruction Chapter).
 Finds the intrinsic and extrinsic camera parameters using a calibration pattern.
 
 \cvdefC{
-void cvCalibrateCamera2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* point\_counts,\par CvSize image\_size,\par CvMat* intrinsic\_matrix,\par CvMat* distortion\_coeffs,\par CvMat* rotation\_vectors=NULL,\par CvMat* translation\_vectors=NULL,\par int flags=0 );
-}\cvdefPy{CalibrateCamera2(object\_points,image\_points,point\_counts,image\_size,intrinsic\_matrix,distortion\_coeffs,rotation\_vectors,translation\_vectors,flags=0)-> None}
+void cvCalibrateCamera2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* pointCounts,\par CvSize imageSize,\par CvMat* intrinsicMatrix,\par CvMat* distortionCoeffs,\par CvMat* rotationVectors=NULL,\par CvMat* translationVectors=NULL,\par int flags=0 );
+}\cvdefPy{CalibrateCamera2(objectPoints,imagePoints,pointCounts,imageSize,intrinsicMatrix,distortionCoeffs,rotationVectors,translationVectors,flags=0)-> None}
 
 \begin{description}
-\cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views}
-\cvarg{image\_points}{The joint matrix of corresponding image points, 2xN or Nx2, where N is the total number of points in all views}
-\cvarg{point\_counts}{Vector containing the number of points in each particular view, 1xM or Mx1, where M is the number of points in a scene}
-\cvarg{image\_size}{Size of the image, used only to initialize the intrinsic camera matrix}
-\cvarg{intrinsic\_matrix}{The output camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $. If \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} and/or \texttt{CV\_CALIB\_FIX\_ASPECT\_RATION} are specified, some or all of \texttt{fx, fy, cx, cy} must be initialized}
-\cvarg{distortion\_coeffs}{The output 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$}
-\cvarg{rotation\_vectors}{The output 3xM or Mx3 array of rotation vectors (compact representation of rotation matrices, \cvCPyCross{Rodrigues2})}
-\cvarg{translation\_vectors}{The output 3xM or Mx3 array of translation vectors}
+\cvarg{objectPoints}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views}
+\cvarg{imagePoints}{The joint matrix of corresponding image points, 2xN or Nx2, where N is the total number of points in all views}
+\cvarg{pointCounts}{Vector containing the number of points in each particular view, 1xM or Mx1, where M is the number of points in a scene}
+\cvarg{imageSize}{Size of the image, used only to initialize the intrinsic camera matrix}
+\cvarg{intrinsicMatrix}{The output camera matrix $A = \vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1} $. If \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} and/or \texttt{CV\_CALIB\_FIX\_ASPECT\_RATION} are specified, some or all of \texttt{fx, fy, cx, cy} must be initialized}
+\cvarg{distortionCoeffs}{The output 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients \hyperref[k123p12]{$(k_1, k_2, p_1, p_2[, k_3])$}}.
+\cvarg{rotationVectors}{The output 3xM or Mx3 array of rotation vectors (compact representation of rotation matrices, \cvCPyCross{Rodrigues2})}
+\cvarg{translationVectors}{The output 3xM or Mx3 array of translation vectors}
 \cvarg{flags}{Different flags, may be 0 or combination of the following values:
 \begin{description}
-\cvarg{CV\_CALIB\_USE\_INTRINSIC\_GUESS}{\texttt{intrinsic\_matrix} contains the valid initial values of \texttt{fx, fy, cx, cy} that are optimized further. Otherwise, \texttt{(cx, cy)} is initially set to the image center (\texttt{image\_size} is used here), and focal distances are computed in some least-squares fashion. Note, that if intrinsic parameters are known, there is no need to use this function. Use \cvCPyCross{FindExtrinsicCameraParams2} instead.}
+\cvarg{CV\_CALIB\_USE\_INTRINSIC\_GUESS}{\texttt{intrinsicMatrix} contains the valid initial values of \texttt{fx, fy, cx, cy} that are optimized further. Otherwise, \texttt{(cx, cy)} is initially set to the image center (\texttt{imageSize} is used here), and focal distances are computed in some least-squares fashion. Note, that if intrinsic parameters are known, there is no need to use this function. Use \cvCPyCross{FindExtrinsicCameraParams2} instead.}
 \cvarg{CV\_CALIB\_FIX\_PRINCIPAL\_POINT}{The principal point is not changed during the global optimization, it stays at the center and at the other location specified (when \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} is set as well)}
-\cvarg{CV\_CALIB\_FIX\_ASPECT\_RATIO}{The optimization procedure considers only one of \texttt{fx} and \texttt{fy} as independent variables and keeps the aspect ratio \texttt{fx/fy} the same as it was set initially in \texttt{intrinsic\_matrix}. In this case the actual initial values of \texttt{(fx, fy)} are either taken from the matrix (when \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} is set) or estimated somehow (in the latter case \texttt{fx, fy} may be set to arbitrary values, only their ratio is used).}
+\cvarg{CV\_CALIB\_FIX\_ASPECT\_RATIO}{The optimization procedure considers only one of \texttt{fx} and \texttt{fy} as independent variables and keeps the aspect ratio \texttt{fx/fy} the same as it was set initially in \texttt{intrinsicMatrix}. In this case the actual initial values of \texttt{(fx, fy)} are either taken from the matrix (when \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} is set) or estimated somehow (in the latter case \texttt{fx, fy} may be set to arbitrary values, only their ratio is used).}
 \cvarg{CV\_CALIB\_ZERO\_TANGENT\_DIST}{Tangential distortion coefficients are set to zeros and do not change during the optimization.}}
 \end{description}
 \end{description}
@@ -143,7 +145,7 @@ rig (see \cvCPyCross{FindChessboardCornerGuesses}). Currently, initialization
 of intrinsic parameters (when \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS}
 is not set) is only implemented for planar calibration rigs
 (z-coordinates of object points must be all 0's or all 1's). 3D
-rigs can still be used as long as initial \texttt{intrinsic\_matrix}
+rigs can still be used as long as initial \texttt{intrinsicMatrix}
 is provided. After the initial values of intrinsic and extrinsic
 parameters are computed, they are optimized to minimize the total
 back-projection error - the sum of squared differences between the
@@ -154,20 +156,20 @@ Note: if you're using a non-square (=non-NxN) grid and
 \cvCPyCross{FindChessboardCorners} for calibration, and cvCalibrateCamera2 returns
 bad values (i.e. zero distortion coefficients, an image center of
 (w/2-0.5,h/2-0.5), and / or large differences between $fx$ and $fy$ (ratios of
-10:1 or more)), then you've probaby  used pattern\_size=cvSize(rows,cols),
-but should use pattern\_size=cvSize(cols,rows) in \cvCPyCross{FindChessboardCorners}.
+10:1 or more)), then you've probaby  used patternSize=cvSize(rows,cols),
+but should use patternSize=cvSize(cols,rows) in \cvCPyCross{FindChessboardCorners}.
 
 \cvCPyFunc{ComputeCorrespondEpilines}
 For points in one image of a stereo pair, computes the corresponding epilines in the other image.
 
 \cvdefC{
-void cvComputeCorrespondEpilines( \par const CvMat* points,\par int which\_image,\par const CvMat* fundamental\_matrix,\par CvMat* correspondent\_lines);
-}\cvdefPy{ComputeCorrespondEpilines(points, which\_image, fundamental\_matrix, correspondent\_lines) -> None}
+void cvComputeCorrespondEpilines( \par const CvMat* points,\par int which\_image,\par const CvMat* fundamentalMatrix,\par CvMat* correspondent\_lines);
+}\cvdefPy{ComputeCorrespondEpilines(points, which\_image, fundamentalMatrix, correspondent\_lines) -> None}
 
 \begin{description}
 \cvarg{points}{The input points. \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} array (where \texttt{N} number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable}
 \cvarg{which\_image}{Index of the image (1 or 2) that contains the \texttt{points}}
-\cvarg{fundamental\_matrix}{Fundamental matrix}
+\cvarg{fundamentalMatrix}{Fundamental matrix}
 \cvarg{correspondent\_lines}{Computed epilines, a \texttt{3xN} or \texttt{Nx3} array}
 \end{description}
 
@@ -374,12 +376,12 @@ It optionally returns three rotation matrices, one for each axis, and the three 
 Renders the detected chessboard corners.
 
 \cvdefC{
-void cvDrawChessboardCorners( \par CvArr* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int count,\par int pattern\_was\_found );
-}\cvdefPy{DrawChessboardCorners(image,pattern\_size,corners,pattern\_was\_found)-> None}
+void cvDrawChessboardCorners( \par CvArr* image,\par CvSize patternSize,\par CvPoint2D32f* corners,\par int count,\par int pattern\_was\_found );
+}\cvdefPy{DrawChessboardCorners(image,patternSize,corners,pattern\_was\_found)-> None}
 
 \begin{description}
 \cvarg{image}{The destination image; it must be an 8-bit color image}
-\cvarg{pattern\_size}{The number of inner corners per chessboard row and column. ( pattern\_size = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )}
+\cvarg{patternSize}{The number of inner corners per chessboard row and column. ( patternSize = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )}
 \cvarg{corners}{The array of corners detected}
 \cvarg{count}{The number of corners}
 \cvarg{pattern\_was\_found}{Indicates whether the complete board was found $(\ne 0)$ or not $(=0)$. One may just pass the return value \cvCPyCross{FindChessboardCorners} here}
@@ -392,13 +394,13 @@ The function draws the individual chessboard corners detected as red circles if 
 Finds the positions of the internal corners of the chessboard.
 
 \cvdefC{
-int cvFindChessboardCorners( \par const void* image,\par CvSize pattern\_size,\par CvPoint2D32f* corners,\par int* corner\_count=NULL,\par int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH );
-}\cvdefPy{FindChessboardCorners(image, pattern\_size, flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH) -> corners}
+int cvFindChessboardCorners( \par const void* image,\par CvSize patternSize,\par CvPoint2D32f* corners,\par int* corner\_count=NULL,\par int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH );
+}\cvdefPy{FindChessboardCorners(image, patternSize, flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH) -> corners}
 
 \begin{description}
 \cvarg{image}{Source chessboard view; it must be an 8-bit grayscale or color image}
-\cvarg{pattern\_size}{The number of inner corners per chessboard row and column}
-( pattern\_size = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
+\cvarg{patternSize}{The number of inner corners per chessboard row and column}
+( patternSize = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
 \cvarg{corners}{The output array of corners detected}
 \cvC{\cvarg{corner\_count}{The output corner counter. If it is not NULL, it stores the number of corners found}}
 \cvarg{flags}{Various operation flags, can be 0 or a combination of the following values:
@@ -425,14 +427,14 @@ the function \cvCPyCross{FindCornerSubPix}.
 Finds the extrinsic camera parameters for a particular view.
 
 \cvdefC{
-void cvFindExtrinsicCameraParams2( \par const CvMat* object\_points,\par const CvMat* image\_points,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* rotation\_vector,\par CvMat* translation\_vector );
-}\cvdefPy{FindExtrinsicCameraParams2(object\_points,image\_points,intrinsic\_matrix,distortion\_coeffs,rotation\_vector,translation\_vector)-> None}
+void cvFindExtrinsicCameraParams2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* intrinsicMatrix,\par const CvMat* distortionCoeffs,\par CvMat* rotation\_vector,\par CvMat* translation\_vector );
+}\cvdefPy{FindExtrinsicCameraParams2(objectPoints,imagePoints,intrinsicMatrix,distortionCoeffs,rotation\_vector,translation\_vector)-> None}
 
 \begin{description}
-\cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
-\cvarg{image\_points}{The array of corresponding image points, 2xN or Nx2, where N is the number of points in the view}
-\cvarg{intrinsic\_matrix}{The input camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
-\cvarg{distortion\_coeffs}{The input 4x1 or 1x4 vector of distortion coefficients $k_1, k_2, k_3, k_4$. If it is NULL, all of the distortion coefficients are set to 0}
+\cvarg{objectPoints}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
+\cvarg{imagePoints}{The array of corresponding image points, 2xN or Nx2, where N is the number of points in the view}
+\cvarg{intrinsicMatrix}{The input camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
+\cvarg{distortionCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients \hyperref[k123p12]{$(k_1, k_2, p_1, p_2[, k_3])$}. If it is NULL, all of the distortion coefficients are set to 0}
 \cvarg{rotation\_vector}{The output 3x1 or 1x3 rotation vector (compact representation of a rotation matrix, \cvCPyCross{Rodrigues2}}
 \cvarg{translation\_vector}{The output 3x1 or 1x3 translation vector}
 \end{description}
@@ -443,13 +445,13 @@ The function estimates the extrinsic camera parameters using known intrinsic par
 Calculates the fundamental matrix from the corresponding points in two images.
 
 \cvdefC{
-int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\par CvMat* fundamental\_matrix,\par int    method=CV\_FM\_RANSAC,\par double param1=1.,\par double param2=0.99,\par CvMat* status=NULL);
-}\cvdefPy{FindFundamentalMat(points1, points2, fundamental\_matrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
+int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\par CvMat* fundamentalMatrix,\par int    method=CV\_FM\_RANSAC,\par double param1=1.,\par double param2=0.99,\par CvMat* status=NULL);
+}\cvdefPy{FindFundamentalMat(points1, points2, fundamentalMatrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
 
 \begin{description}
 \cvarg{points1}{Array of the first image points of \texttt{2xN, Nx2, 3xN} or \texttt{Nx3} size (where \texttt{N} is number of points). Multi-channel \texttt{1xN} or \texttt{Nx1} array is also acceptable. The point coordinates should be floating-point (single or double precision)}
 \cvarg{points2}{Array of the second image points of the same size and format as \texttt{points1}}
-\cvarg{fundamental\_matrix}{The output fundamental matrix or matrices. The size should be 3x3 or 9x3 (7-point method may return up to 3 matrices)}
+\cvarg{fundamentalMatrix}{The output fundamental matrix or matrices. The size should be 3x3 or 9x3 (7-point method may return up to 3 matrices)}
 \cvarg{method}{Method for computing the fundamental matrix
 \begin{description}
   \cvarg{CV\_FM\_7POINT}{for a 7-point algorithm. $N = 7$}
@@ -506,13 +508,13 @@ int fm_count = cvFindFundamentalMat( points1,points2,fundamental_matrix,
 Finds the perspective transformation between two planes.
 
 \cvdefC{
-void cvFindHomography( \par const CvMat* src\_points,\par const CvMat* dst\_points,\par CvMat* homography \par
+void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* homography \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* mask=NULL);
-}\cvdefPy{FindHomography(src\_points,dst\_points)-> homography}
+}\cvdefPy{FindHomography(srcPoints,dstPoints)-> homography}
 
 \begin{description}
-\cvarg{src\_points}{Point coordinates in the original plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates), where N is the number of points}
-\cvarg{dst\_points}{Point coordinates in the destination plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates)}
+\cvarg{srcPoints}{Point coordinates in the original plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates), where N is the number of points}
+\cvarg{dstPoints}{Point coordinates in the destination plane, 2xN, Nx2, 3xN or Nx3 array (the latter two are for representation in homogenious coordinates)}
 \cvarg{homography}{Output 3x3 homography matrix}
 \cvarg{method}{ The method used to computed homography matrix; one of the following:
 \begin{description}
@@ -520,7 +522,7 @@ int method=0, \par double ransacReprojThreshold=0, \par CvMat* mask=NULL);
 \cvarg{CV\_RANSAC}{RANSAC-based robust method}
 \cvarg{CV\_LMEDS}{Least-Median robust method}
 \end{description}}
-\cvarg{ransacReprojThreshold}{The maximum allowed reprojection error to treat a point pair as an inlier. The parameter is only used in RANSAC-based homography estimation. E.g. if \texttt{dst\_points} coordinates are measured in pixels with pixel-accurate precision, it makes sense to set this parameter somewhere in the range 1 to 3. }
+\cvarg{ransacReprojThreshold}{The maximum allowed reprojection error to treat a point pair as an inlier. The parameter is only used in RANSAC-based homography estimation. E.g. if \texttt{dstPoints} coordinates are measured in pixels with pixel-accurate precision, it makes sense to set this parameter somewhere in the range 1 to 3. }
 \cvarg{mask}{The optional output mask set by a robust method (\texttt{CV\_RANSAC} or \texttt{CV\_LMEDS}).}
 \end{description}
 
@@ -540,8 +542,8 @@ So that the back-projection error is minimized:
 
 If the parameter method is set to the default value 0, the function
 uses all the point pairs and estimates the best suitable homography
-matrix. However, if not all of the point pairs ($src\_points_i$,
-$dst\_points_i$) fit the rigid perspective transformation (i.e. there
+matrix. However, if not all of the point pairs ($srcPoints_i$,
+$dstPoints_i$) fit the rigid perspective transformation (i.e. there
 can be outliers), it is still possible to estimate the correct
 transformation using one of the robust methods available. Both
 methods, \texttt{CV\_RANSAC} and \texttt{CV\_LMEDS}, try many different random subsets
@@ -667,15 +669,15 @@ cvSave( "disparity.png", disparity_left_visual );
 Implements the POSIT algorithm.
 
 \cvdefC{
-void cvPOSIT( \par CvPOSITObject* posit\_object,\par CvPoint2D32f* image\_points,\par double focal\_length,\par CvTermCriteria criteria,\par CvMatr32f rotation\_matrix,\par CvVect32f translation\_vector );
-}\cvdefPy{POSIT(posit\_object,image\_points,focal\_length,criteria)-> rotation\_matrix,translation\_vector}
+void cvPOSIT( \par CvPOSITObject* posit\_object,\par CvPoint2D32f* imagePoints,\par double focal\_length,\par CvTermCriteria criteria,\par CvMatr32f rotationMatrix,\par CvVect32f translation\_vector );
+}\cvdefPy{POSIT(posit\_object,imagePoints,focal\_length,criteria)-> rotationMatrix,translation\_vector}
 
 \begin{description}
 \cvarg{posit\_object}{Pointer to the object structure}
-\cvarg{image\_points}{Pointer to the object points projections on the 2D image plane}
+\cvarg{imagePoints}{Pointer to the object points projections on the 2D image plane}
 \cvarg{focal\_length}{Focal length of the camera used}
 \cvarg{criteria}{Termination criteria of the iterative POSIT algorithm}
-\cvarg{rotation\_matrix}{Matrix of rotations}
+\cvarg{rotationMatrix}{Matrix of rotations}
 \cvarg{translation\_vector}{Translation vector}
 \end{description}
 
@@ -688,16 +690,16 @@ Difference norm between two projections is the maximal distance between correspo
 Projects 3D points on to an image plane.
 
 \cvdefC{
-void cvProjectPoints2( \par const CvMat* object\_points,\par const CvMat* rotation\_vector,\par const CvMat* translation\_vector,\par const CvMat* intrinsic\_matrix,\par const CvMat* distortion\_coeffs,\par CvMat* image\_points,\par CvMat* dpdrot=NULL,\par CvMat* dpdt=NULL,\par CvMat* dpdf=NULL,\par CvMat* dpdc=NULL,\par CvMat* dpddist=NULL );
-}\cvdefPy{ProjectPoints2(object\_points,rotation\_vector,translation\_vector,intrinsic\_matrix,distortion\_coeffs, image\_points,dpdrot=NULL,dpdt=NULL,dpdf=NULL,dpdc=NULL,dpddist=NULL)-> None}
+void cvProjectPoints2( \par const CvMat* objectPoints,\par const CvMat* rotation\_vector,\par const CvMat* translation\_vector,\par const CvMat* intrinsicMatrix,\par const CvMat* distortionCoeffs,\par CvMat* imagePoints,\par CvMat* dpdrot=NULL,\par CvMat* dpdt=NULL,\par CvMat* dpdf=NULL,\par CvMat* dpdc=NULL,\par CvMat* dpddist=NULL );
+}\cvdefPy{ProjectPoints2(objectPoints,rotation\_vector,translation\_vector,intrinsicMatrix,distortionCoeffs, imagePoints,dpdrot=NULL,dpdt=NULL,dpdf=NULL,dpdc=NULL,dpddist=NULL)-> None}
 
 \begin{description}
-\cvarg{object\_points}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
+\cvarg{objectPoints}{The array of object points, 3xN or Nx3, where N is the number of points in the view}
 \cvarg{rotation\_vector}{The rotation vector, 1x3 or 3x1}
 \cvarg{translation\_vector}{The translation vector, 1x3 or 3x1}
-\cvarg{intrinsic\_matrix}{The camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
-\cvarg{distortion\_coeffs}{The vector of distortion coefficients, 4x1 or 1x4 $k_1, k_2, k_3, k_4$. If it is \texttt{NULL}, all of the distortion coefficients are considered 0's}
-\cvarg{image\_points}{The output array of image points, 2xN or Nx2, where N is the total number of points in the view}
+\cvarg{intrinsicMatrix}{The camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
+\cvarg{distortionCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients \hyperref[k123p12]{$(k_1, k_2, p_1, p_2[, k_3])$}. If it is NULL, all of the distortion coefficients are considered 0's}
+\cvarg{imagePoints}{The output array of image points, 2xN or Nx2, where N is the total number of points in the view}
 \cvarg{dpdrot}{Optional Nx3 matrix of derivatives of image points with respect to components of the rotation vector}
 \cvarg{dpdt}{Optional Nx3 matrix of derivatives of image points with respect to components of the translation vector}
 \cvarg{dpdf}{Optional Nx2 matrix of derivatives of image points with respect to $fx$ and $fy$}
@@ -840,26 +842,26 @@ Calibrates stereo camera.
 
 \cvdefC{
 
-void cvStereoCalibrate( \par const CvMat* object\_points, \par const CvMat* image\_points1,
-                        \par const CvMat* image\_points2, \par const CvMat* point\_counts,
-                        \par CvMat* camera\_matrix1, \par CvMat* dist\_coeffs1,
-                        \par CvMat* camera\_matrix2, \par CvMat* dist\_coeffs2,
-                       \par CvSize image\_size, \par CvMat* R, \par CvMat* T,
+void cvStereoCalibrate( \par const CvMat* objectPoints, \par const CvMat* imagePoints1,
+                        \par const CvMat* imagePoints2, \par const CvMat* pointCounts,
+                        \par CvMat* cameraMatrix1, \par CvMat* distCoeffs1,
+                        \par CvMat* cameraMatrix2, \par CvMat* distCoeffs2,
+                       \par CvSize imageSize, \par CvMat* R, \par CvMat* T,
                         \par CvMat* E=0, \par CvMat* F=0,
                         \par CvTermCriteria term\_crit=cvTermCriteria(
                                \par CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),
                         \par int flags=CV\_CALIB\_FIX\_INTRINSIC );
 
-}\cvdefPy{StereoCalibrate(\par object\_points,\par image\_points1,\par image\_points2,\par point\_counts,\par camera\_matrix1,\par dist\_coeffs1,\par camera\_matrix2,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par E=NULL,\par F=NULL,\par term\_crit=cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),\par flags=CV\_CALIB\_FIX\_INTRINSIC)-> None}
+}\cvdefPy{StereoCalibrate(\par objectPoints,\par imagePoints1,\par imagePoints2,\par pointCounts,\par cameraMatrix1,\par distCoeffs1,\par cameraMatrix2,\par distCoeffs2,\par imageSize,\par R,\par T,\par E=NULL,\par F=NULL,\par term\_crit=cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,30,1e-6),\par flags=CV\_CALIB\_FIX\_INTRINSIC)-> None}
 
 \begin{description}
-\cvarg{object\_points}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views.}
-\cvarg{image\_points1}{The joint matrix of corresponding image points in the views from the 1st camera, 2xN or Nx2, where N is the total number of points in all views.}
-\cvarg{image\_points2}{The joint matrix of corresponding image points in the views from the 2nd camera, 2xN or Nx2, where N is the total number of points in all views.}
-\cvarg{point\_counts}{Vector containing numbers of points in each view, 1xM or Mx1, where M is the number of views.}
-\cvarg{camera\_matrix1, camera\_matrix2}{The input/output camera matrices [${fx}_k 0 {cx}_k; 0 {fy}_k {cy}_k; 0 0 1$]. If \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} or \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO} are specified, some or all of the elements of the matrices must be initialized.}
-\cvarg{dist\_coeffs1, dist\_coeffs2}{The input/output vectors of distortion coefficients for each camera, \href{\#Pinhole Camera Model, Distortion}{4x1, 1x4, 5x1 or 1x5.}}
-\cvarg{image\_size}{Size of the image, used only to initialize intrinsic camera matrix.} 
+\cvarg{objectPoints}{The joint matrix of object points, 3xN or Nx3, where N is the total number of points in all views.}
+\cvarg{imagePoints1}{The joint matrix of corresponding image points in the views from the 1st camera, 2xN or Nx2, where N is the total number of points in all views.}
+\cvarg{imagePoints2}{The joint matrix of corresponding image points in the views from the 2nd camera, 2xN or Nx2, where N is the total number of points in all views.}
+\cvarg{pointCounts}{Vector containing numbers of points in each view, 1xM or Mx1, where M is the number of views.}
+\cvarg{cameraMatrix1, cameraMatrix2}{The input/output camera matrices $[{f_x}^(j) 0 {c_x}^(j); 0 {f_y}^(j) {c_y}^(j); 0 0 1]$. If \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS} or \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO} are specified, some or all of the elements of the matrices must be initialized.}
+\cvarg{distCoeffs1, distCoeffs2}{The input/output vectors of distortion coefficients for each camera, \hyperref[k123p12]{${k_1}^(j), {k_2}^(j), {p_1}^(j), {p_2}^(j) [, {k_3}^(j)]$}}
+\cvarg{imageSize}{Size of the image, used only to initialize intrinsic camera matrix.} 
 \cvarg{R}{The rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
 \cvarg{T}{The translation vector between the cameras' coordinate systems.}
 \cvarg{E}{The optional output essential matrix.}
@@ -867,12 +869,12 @@ void cvStereoCalibrate( \par const CvMat* object\_points, \par const CvMat* imag
 \cvarg{term\_crit}{Termination criteria for the iterative optimiziation algorithm.}
 \cvarg{flags}{Different flags, may be 0 or combination of the following values:
 \begin{description}
-\cvarg{CV\_CALIB\_FIX\_INTRINSIC}{If it is set, \texttt{camera\_matrix1,2}, as well as \texttt{dist\_coeffs1,2} are fixed, so that only extrinsic parameters are optimized.}
+\cvarg{CV\_CALIB\_FIX\_INTRINSIC}{If it is set, \texttt{cameraMatrix1,2}, as well as \texttt{distCoeffs1,2} are fixed, so that only extrinsic parameters are optimized.}
 \cvarg{CV\_CALIB\_USE\_INTRINSIC\_GUESS}{The flag allows the function to optimize some or all of the intrinsic parameters, depending on the other flags, but the initial values are provided by the user.}
 \cvarg{CV\_CALIB\_FIX\_PRINCIPAL\_POINT}{The principal points are fixed during the optimization.}
-\cvarg{CV\_CALIB\_FIX\_FOCAL\_LENGTH}{${fx}_k$ and ${fy}_k$ are fixed.}
-\cvarg{CV\_CALIB\_FIX\_ASPECT\_RATIO}{${fy}_k$ is optimized, but the ratio ${fx}_k/{fy}_k$ is fixed.}
-\cvarg{CV\_CALIB\_SAME\_FOCAL\_LENGTH}{Enforces ${fx}_0={fx}_1$ and ${fy}_0={fy}_1$. \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} - Tangential distortion coefficients for each camera are set to zeros and fixed there.}
+\cvarg{CV\_CALIB\_FIX\_FOCAL\_LENGTH}{${f_x}^(j)$ and ${f_y}^(j)$ are fixed.}
+\cvarg{CV\_CALIB\_FIX\_ASPECT\_RATIO}{${f_y}^(j)$ is optimized, but the ratio ${fx}_k/{fy}_k$ is fixed.}
+\cvarg{CV\_CALIB\_SAME\_FOCAL\_LENGTH}{Enforces ${f_x}^(0)={f_x}^(1)$ and ${f_y}^(0)={f_y}^(1)$. \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} - Tangential distortion coefficients for each camera are set to zeros and fixed there.}
 \cvarg{CV\_CALIB\_FIX\_K1}{The 0-th distortion coefficients (k1) are fixed.}
 \cvarg{CV\_CALIB\_FIX\_K2}{The 1-st distortion coefficients (k2) are fixed.}
 \cvarg{CV\_CALIB\_FIX\_K3}{The 4-th distortion coefficients (k3) are fixed.}
@@ -899,24 +901,24 @@ E=
 
 where $T_i$ are components of the translation vector $T$: $T=[T_0, T_1, T_2]^T$. And also the function can compute the fundamental matrix F:
 
-$F = inv(camera\_matrix2)^T*E*inv(camera\_matrix1)$
+$F = inv(cameraMatrix2)^T*E*inv(cameraMatrix1)$
 
 Besides the stereo-related information, the function can also perform full calibration of each of the 2 cameras. However, because of the high dimensionality of the parameter space and noise in the input data the function can diverge from the correct solution. Thus, if intrinsic parameters can be estimated with high accuracy for each of the cameras individually (e.g. using \cvCPyCross{cvCalibrateCamera2}), it is recommended to do so and then pass \texttt{CV\_CALIB\_FIX\_INTRINSIC} flag to the function along with the computed intrinsic parameters. Otherwise, if all the parameters are estimated at once, it makes sense to restrict some parameters, e.g. pass \texttt{CV\_CALIB\_SAME\_FOCAL\_LENGTH} and \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} flags, which are usually reasonable assumptions. 
 
 \cvCPyFunc{StereoRectify}
 Computes rectification transform for stereo camera.
 
-\cvdefC{void cvStereoRectify( \par const CvMat* camera\_matrix1, \par const CvMat* camera\_matrix2,
-                      \par const CvMat* dist\_coeffs1, \par const CvMat* dist\_coeffs2,
-                      \par CvSize image\_size, \par const CvMat* R, \par const CvMat* T,
+\cvdefC{void cvStereoRectify( \par const CvMat* cameraMatrix1, \par const CvMat* cameraMatrix2,
+                      \par const CvMat* distCoeffs1, \par const CvMat* distCoeffs2,
+                      \par CvSize imageSize, \par const CvMat* R, \par const CvMat* T,
                       \par CvMat* R1, \par CvMat* R2, \par CvMat* P1, \par CvMat* P2,
                       \par CvMat* Q=0, \par int flags=CV\_CALIB\_ZERO\_DISPARITY );}
-\cvdefPy{StereoRectify(\par camera\_matrix1,\par camera\_matrix2,\par dist\_coeffs1,\par dist\_coeffs2,\par image\_size,\par R,\par T,\par R1,\par R2,\par P1,\par P2,\par Q=NULL,\par flags=CV\_CALIB\_ZERO\_DISPARITY)-> None}
+\cvdefPy{StereoRectify(\par cameraMatrix1,\par cameraMatrix2,\par distCoeffs1,\par distCoeffs2,\par imageSize,\par R,\par T,\par R1,\par R2,\par P1,\par P2,\par Q=NULL,\par flags=CV\_CALIB\_ZERO\_DISPARITY)-> None}
 
 \begin{description}
-\cvarg{camera\_matrix1, camera\_matrix2}{The camera matrices [${fx}_k$ 0 ${cx}_k$; 0 ${fy}_k$ ${cy}_k$; 0 0 1].}
-\cvarg{dist\_coeffs1, dist\_coeffs2}{The vectors of distortion coefficients for each camera, \href{\#Pinhole Camera Model, Distortion}{4x1, 1x4, 5x1 or 1x5.}}
-\cvarg{image\_size}{Size of the image used for stereo calibration.}
+\cvarg{cameraMatrix1, cameraMatrix2}{The camera matrices $[{f_x}^(j) 0 {c_x}^(j); 0 {f_y}^(j) {c_y}^(j); 0 0 1]$.}
+\cvarg{distCoeffs1, distCoeffs2}{The input distortion coefficients for each camera, \hyperref[k123p12]{${k_1}^(j), {k_2}^(j), {p_1}^(j), {p_2}^(j) [, {k_3}^(j)]$}}
+\cvarg{imageSize}{Size of the image used for stereo calibration.}
 \cvarg{R}{The rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
 \cvarg{T}{The translation vector between the cameras' coordinate systems.}
 \cvarg{R1, R2}{3x3 Rectification transforms (rotation matrices) for the first and the second cameras, respectively.}
@@ -949,7 +951,7 @@ f & 0 & cx2 & Tx*f\\
 \]
 
 where $T_x$ is horizontal shift between the cameras and cx1=cx2 if \texttt{CV\_CALIB\_ZERO\_DISPARITY} is set.
-\item Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P2 and P2 will look as:
+\item Vertical stereo, when 1st and 2nd camera views are shifted relative to each other mainly in vertical direction (and probably a bit in the horizontal direction too). Then the epipolar lines in the rectified images will be vertical and have the same x coordinate. P1 and P2 will look as:
 
 \[
 P1=
@@ -980,16 +982,16 @@ Computes rectification transform for uncalibrated stereo camera.
 \cvdefC{
 
 void cvStereoRectifyUncalibrated( \par const CvMat* points1, \par const CvMat* points2,
-                                  \par const CvMat* F, \par CvSize image\_size,
+                                  \par const CvMat* F, \par CvSize imageSize,
                                   \par CvMat* H1, \par CvMat* H2,
                                   \par double threshold=5 );
 
-}\cvdefPy{StereoRectifyUncalibrated(points1,points2,F,image\_size,H1,H2,threshold=5)-> None}
+}\cvdefPy{StereoRectifyUncalibrated(points1,points2,F,imageSize,H1,H2,threshold=5)-> None}
 
 \begin{description}
 \cvarg{points1, points2}{The 2 arrays of corresponding 2D points.}
 \cvarg{F}{Fundamental matrix. It can be computed using the same set of point pairs points1 and points2  using \cvCPyCross{cvFindFundamentalMat}.}
-\cvarg{image\_size}{Size of the image.}
+\cvarg{imageSize}{Size of the image.}
 \cvarg{H1, H2}{The rectification homography matrices for the first and for the second images.}
 \cvarg{threshold}{Optional threshold used to filter out the outliers. If the parameter is greater than zero, then all the point pairs that do not comply the epipolar geometry well enough (that is, the points for which $fabs(points2[i]^T*F*points1[i])>threshold$) are rejected prior to computing the homographies. }
 \end{description}
@@ -1002,17 +1004,17 @@ Note that while the algorithm does not need to know the intrinsic parameters of 
 Computes the ideal point coordinates from the observed point coordinates.
 
 \cvdefC{void cvUndistortPoints( \par const CvMat* src, \par CvMat* dst,
-                        \par const CvMat* camera\_matrix,
-                        \par const CvMat* dist\_coeffs,
+                        \par const CvMat* cameraMatrix,
+                        \par const CvMat* distCoeffs,
                         \par const CvMat* R=NULL,
                         \par const CvMat* P=NULL);}
-\cvdefPy{UndistortPoints(src,dst,camera\_matrix,dist\_coeffs,R=NULL,P=NULL)-> None}
+\cvdefPy{UndistortPoints(src,dst,cameraMatrix,distCoeffs,R=NULL,P=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The observed point coordinates}
 \cvarg{dst}{The ideal point coordinates, after undistortion and reverse perspective transformation}
-\cvarg{camera\_matrix}{The camera matrix $A=[fx 0 cx; 0 fy cy; 0 0 1]$}
-\cvarg{dist\_coeffs}{he vector of distortion coefficients, \cvCPyCross{4x1, 1x4, 5x1 or 1x5}}
+\cvarg{cameraMatrix}{The camera matrix $A=[fx 0 cx; 0 fy cy; 0 0 1]$}
+\cvarg{distCoeffs}{he vector of distortion coefficients, \cvCPyCross{4x1, 1x4, 5x1 or 1x5}}
 \cvarg{R}{The rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cvCPyCross{StereoRectify} can be passed here. If the parameter is NULL, the identity matrix is used}
 \cvarg{P}{The new camera matrix (3x3) or the new projection matrix (3x4). \texttt{P1} or \texttt{P2}, computed by \cvCPyCross{StereoRectify} can be passed here. If the parameter is NULL, the identity matrix is used}
 \end{description}
@@ -1055,7 +1057,7 @@ Finds the camera matrix and the camera poses from several views of the calibrati
 \cvarg{imagePoints}{The vector of vectors of the object point projections on the calibration rig views, one vector per a view. The projections must be in the same order as the corresponding object points.}
 \cvarg{imageSize}{Size of the image, used only to initialize the intrinsic camera matrix}
 \cvarg{cameraMatrix}{The input/output matrix of intrinsic camera parameters $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1}$. If any of \texttt{CALIB\_USE\_INTRINSIC\_GUESS}, \texttt{CALIB\_FIX\_ASPECT\_RATIO}, \texttt{CALIB\_FIX\_FOCAL\_LENGTH} are specified, some or all of \texttt{fx, fy, cx, cy} must be initialized}
-\cvarg{distCoeffs}{The input/output lens distortion coefficients, 4x1, 5x1, 1x4 or 1x5 floating-point vector $k_1, k_2, p_1, p_2[, k_3]$. If any of \texttt{CALIB\_FIX\_K1}, \texttt{CALIB\_FIX\_K2} or \texttt{CALIB\_FIX\_K3} is specified, then the corresponding elements of \texttt{distCoeffs} must be initialized.}
+\cvarg{distCoeffs}{The input/output lens distortion coefficients, 4x1, 5x1, 1x4 or 1x5 floating-point vector $(k_1, k_2, p_1, p_2[, k_3])$. If any of \texttt{CALIB\_FIX\_K1}, \texttt{CALIB\_FIX\_K2} or \texttt{CALIB\_FIX\_K3} is specified, then the corresponding elements of \texttt{distCoeffs} must be initialized.}
 \cvarg{rvecs}{The output vector of rotation vectors (see \cvCppCross{Rodrigues}) estimated for each camera view}
 \cvarg{tvecsrans}{The output vector of translation vectors estimated for each camera view}
 \cvarg{flags}{Different flags, may be 0 or a combination of the following values:
@@ -1465,7 +1467,7 @@ void projectPoints( const Mat\& objectPoints,\par
 \cvarg{rvec}{The rotation vector, 1x3 or 3x1}
 \cvarg{tvec}{The translation vector, 1x3 or 3x1}
 \cvarg{cameraMatrix}{The camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
-\cvarg{distCoeffs}{The array of distortion coefficients, 4x1, 5x1, 1x4 or 1x5 $k_1, k_2, p_1, p_2[, k_3]$. If the matrix is empty, the function uses zero distortion coefficients}
+\cvarg{distCoeffs}{The array of distortion coefficients, 4x1, 5x1, 1x4 or 1x5: $(k_1, k_2, p_1, p_2[, k_3])$. If the matrix is empty, the function uses zero distortion coefficients}
 \cvarg{dpdrot, dpdt, dpdf, dpdc, dpdist}{The optional matrices of the partial derivatives of the computed point projections w.r.t the rotation vector, the translation vector, $f_x$ and $f_y$, $c_x$ and $c_y$ and the distortion coefficients respectively. Each matrix has $2*N$ rows (where $N$ is the number of points) - even rows (0th, 2nd ...) are the derivatives of the x-coordinates w.r.t. the camera parameters and odd rows (1st, 3rd ...) are the derivatives of the y-coordinates.}
 \cvarg{aspectRatio}{If zero or negative, $f_x$ and $f_y$ are treated as independent variables, otherwise they $f_x = f_y*\texttt{aspectRatio}$, so the derivatives are adjusted appropriately}
 \end{description}
@@ -1517,7 +1519,7 @@ Finds the camera pose from the 3D-2D point correspondences
 \cvarg{objectPoints}{The array of object points, a matrix of type \texttt{CV\_32FC3} or \texttt{vector<Point3f>}}
 \cvarg{imagePoints}{The array of the corresponding image points, a matrix of type{CV\_32FC2} or \texttt{vector<Point2f>}}
 \cvarg{cameraMatrix}{The input camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
-\cvarg{distCoeffs}{The input 4x1, 5x1, 1x4 or 1x5 array of distortion coefficients $(k_1, k_2, p_1, p_2[, k3])$. If it is NULL, all of the distortion coefficients are set to 0}
+\cvarg{distCoeffs}{The input 4x1, 5x1, 1x4 or 1x5 array of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$. If it is NULL, all of the distortion coefficients are set to 0}
 \cvarg{rvec}{The output camera view rotation vector (compact representation of a rotation matrix, \cvCppCross{Rodrigues} that (together with \texttt{tvec}) brings points from the model coordinate system to the camera coordinate system}
 \cvarg{tvec}{The output camera view translation vector}
 \end{description}
@@ -1544,7 +1546,7 @@ Calibrates stereo camera.
 \cvarg{imageSize}{Size of the image, used only to initialize the intrinsic camera matrices}
 \cvarg{cameraMatrix1, cameraMatrix2}{The input/output first and second camera matrices, respectively: $ \vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$, $j = 0,\, 1$. If any of \texttt{CALIB\_USE\_INTRINSIC\_GUESS}, \texttt{CALIB\_FIX\_ASPECT\_RATIO},
 \texttt{CALIB\_FIX\_INTRINSIC} or \texttt{CALIB\_FIX\_FOCAL\_LENGTH} are specified, some or all of the matrices' components must be initialized}
-\cvarg{distCoeffs1, distCoeffs2}{The input/output lens distortion coefficients for the first and the second cameras, 4x1, 5x1, 1x4 or 1x5 floating-point vectors $k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}]$, $j = 0,\, 1$. If any of \texttt{CALIB\_FIX\_K1}, \texttt{CALIB\_FIX\_K2} or \texttt{CALIB\_FIX\_K3} is specified, then the corresponding elements of the distortion coefficients must be initialized.}
+\cvarg{distCoeffs1, distCoeffs2}{The input/output lens distortion coefficients for the first and the second cameras, 4x1, 5x1, 1x4 or 1x5 floating-point vectors $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$, $j = 0,\, 1$. If any of \texttt{CALIB\_FIX\_K1}, \texttt{CALIB\_FIX\_K2} or \texttt{CALIB\_FIX\_K3} is specified, then the corresponding elements of the distortion coefficients must be initialized.}
 \cvarg{R}{The output rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
 \cvarg{T}{The output translation vector between the cameras' coordinate systems.}
 \cvarg{E}{The output essential matrix.}
@@ -1609,7 +1611,7 @@ Computes rectification transforms for each head of a calibrated stereo camera.
                     int flags=CALIB\_ZERO\_DISPARITY );}
 \begin{description}
 \cvarg{cameraMatrix1, cameraMatrix2}{The camera matrices $\vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$}
-\cvarg{distCoeffs1, distCoeffs2}{The vectors of distortion coefficients for each camera, \cvCppCross{4x1, 1x4, 5x1 or 1x5}}
+\cvarg{distCoeffs1, distCoeffs2}{The vectors of distortion coefficients for each camera, $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$}
 \cvarg{imageSize}{Size of the image used for stereo calibration.}
 \cvarg{R}{The input rotation matrix between the 1st and the 2nd cameras' coordinate systems; can be computed with \cvCppCross{stereoCalibrate}.}
 \cvarg{T}{The translation vector between the cameras' coordinate systems; can be computed with \cvCppCross{stereoCalibrate}.}
@@ -1730,7 +1732,7 @@ void undistortPoints( const Mat\& src, Mat\& dst,\par
 \cvarg{src}{The observed point coordinates, a matrix or vector of 2D points.}
 \cvarg{dst}{The ideal point coordinates, after undistortion and reverse perspective transformation}
 \cvarg{cameraMatrix}{The camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
-\cvarg{distCoeffs}{he vector of distortion coefficients, \cvCppCross{4x1, 1x4, 5x1 or 1x5}}
+\cvarg{distCoeffs}{he vector of distortion coefficients, $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$}
 \cvarg{R}{The rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cvCppCross{StereoRectify} can be passed here. If the matrix is empty, the identity transformation is used}
 \cvarg{P}{The new camera matrix (3x3) or the new projection matrix (3x4). \texttt{P1} or \texttt{P2}, computed by \cvCppCross{StereoRectify} can be passed here. If the matrix is empty, the identity new camera matrix is used}
 \end{description}
