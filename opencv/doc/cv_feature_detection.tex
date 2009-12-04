@@ -26,18 +26,18 @@ The function finds the edges on the input image \texttt{image} and marks them in
 Calculates eigenvalues and eigenvectors of image blocks for corner detection.
 
 \cvdefC{
-void cvCornerEigenValsAndVecs( \par const CvArr* image,\par CvArr* eigenvv,\par int block\_size,\par int aperture\_size=3 );
+void cvCornerEigenValsAndVecs( \par const CvArr* image,\par CvArr* eigenvv,\par int blockSize,\par int aperture\_size=3 );
 
-}\cvdefPy{CornerEigenValsAndVecs(image,eigenvv,block\_size,aperture\_size=3)-> None}
+}\cvdefPy{CornerEigenValsAndVecs(image,eigenvv,blockSize,aperture\_size=3)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{eigenvv}{Image to store the results. It must be 6 times wider than the input image}
-\cvarg{block\_size}{Neighborhood size (see discussion)}
+\cvarg{blockSize}{Neighborhood size (see discussion)}
 \cvarg{aperture\_size}{Aperture parameter for the Sobel operator (see \cvCPyCross{Sobel})}
 \end{description}
 
-For every pixel, the function \texttt{cvCornerEigenValsAndVecs} considers a \texttt{block\_size} $\times$ \texttt{block\_size} neigborhood S(p). It calcualtes the covariation matrix of derivatives over the neigborhood as:
+For every pixel, the function \texttt{cvCornerEigenValsAndVecs} considers a $\texttt{blockSize} \times \texttt{blockSize}$ neigborhood S(p). It calcualtes the covariation matrix of derivatives over the neigborhood as:
 
 \[
 M = \begin{bmatrix}
@@ -61,21 +61,21 @@ Harris edge detector.
 void cvCornerHarris(
 \par const CvArr* image,
 \par CvArr* harris\_responce,
-\par int block\_size,
+\par int blockSize,
 \par int aperture\_size=3,
 \par double k=0.04 );
-}\cvdefPy{CornerHarris(image,harris\_dst,block\_size,aperture\_size=3,k=0.04)-> None}
+}\cvdefPy{CornerHarris(image,harris\_dst,blockSize,aperture\_size=3,k=0.04)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{harris\_responce}{Image to store the Harris detector responses. Should have the same size as \texttt{image}}
-\cvarg{block\_size}{Neighborhood size (see the discussion of \cvCPyCross{CornerEigenValsAndVecs})}
+\cvarg{blockSize}{Neighborhood size (see the discussion of \cvCPyCross{CornerEigenValsAndVecs})}
 \cvarg{aperture\_size}{Aperture parameter for the Sobel operator (see \cvCPyCross{Sobel}).}
 % format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
 \cvarg{k}{Harris detector free parameter. See the formula below}
 \end{description}
 
-The function runs the Harris edge detector on the image. Similarly to \cvCPyCross{CornerMinEigenVal} and \cvCPyCross{CornerEigenValsAndVecs}, for each pixel it calculates a $2\times2$ gradient covariation matrix $M$ over a $\texttt{block\_size} \times \texttt{block\_size}$ neighborhood. Then, it stores
+The function runs the Harris edge detector on the image. Similarly to \cvCPyCross{CornerMinEigenVal} and \cvCPyCross{CornerEigenValsAndVecs}, for each pixel it calculates a $2\times2$ gradient covariation matrix $M$ over a $\texttt{blockSize} \times \texttt{blockSize}$ neighborhood. Then, it stores
 
 \[
 det(M) - k \, trace(M)^2
@@ -90,13 +90,13 @@ Calculates the minimal eigenvalue of gradient matrices for corner detection.
 void cvCornerMinEigenVal(
 \par const CvArr* image,
 \par CvArr* eigenval,
-\par int block\_size,
+\par int blockSize,
 \par int aperture\_size=3 );
-}\cvdefPy{CornerMinEigenVal(image,eigenval,block\_size,aperture\_size=3)-> None}
+}\cvdefPy{CornerMinEigenVal(image,eigenval,blockSize,aperture\_size=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{eigenval}{Image to store the minimal eigenvalues. Should have the same size as \texttt{image}}
-\cvarg{block\_size}{Neighborhood size (see the discussion of \cvCPyCross{CornerEigenValsAndVecs})}
+\cvarg{blockSize}{Neighborhood size (see the discussion of \cvCPyCross{CornerEigenValsAndVecs})}
 \cvarg{aperture\_size}{Aperture parameter for the Sobel operator (see \cvCPyCross{Sobel}).}
 %  format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
 \end{description}
@@ -187,7 +187,7 @@ void cvFindCornerSubPix(
 \ifPy
 \cvarg{corners}{Initial coordinates of the input corners as a list of (x, y) pairs}
 \fi
-\cvarg{win}{Half of the side length of the search window. For example, if \texttt{win} =(5,5), then a 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window would be used}
+\cvarg{win}{Half of the side length of the search window. For example, if \texttt{win}=(5,5), then a $5*2+1 \times 5*2+1 = 11 \times 11$ search window would be used}
 \cvarg{zero\_zone}{Half of the size of the dead region in the middle of the search zone over which the summation in the formula below is not done. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size}
 \cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after a certain number of iterations or when a required accuracy is achieved. The \texttt{criteria} may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}
@@ -323,46 +323,46 @@ Determines strong corners on an image.
 \cvdefC{
 void cvGoodFeaturesToTrack(
 \par const CvArr* image
-\par CvArr* eig\_image, CvArr* temp\_image
+\par CvArr* eigImage, CvArr* tempImage
 \par CvPoint2D32f* corners
-\par int* corner\_count
-\par double quality\_level
-\par double min\_distance
+\par int* cornerCount
+\par double qualityLevel
+\par double minDistance
 \par const CvArr* mask=NULL
-\par int block\_size=3
-\par int use\_harris=0
+\par int blockSize=3
+\par int useHarris=0
 \par double k=0.04 );
 }
-\cvdefPy{GoodFeaturesToTrack(image,eig\_image,temp\_image,quality\_level,min\_distance,mask=NULL,block\_size=3,use\_harris=0,k=0.04)-> corners}
+\cvdefPy{GoodFeaturesToTrack(image,eigImage,tempImage,qualityLevel,minDistance,mask=NULL,blockSize=3,useHarris=0,k=0.04)-> corners}
 
 \begin{description}
 \cvarg{image}{The source 8-bit or floating-point 32-bit, single-channel image}
-\cvarg{eig\_image}{Temporary floating-point 32-bit image, the same size as \texttt{image}}
-\cvarg{temp\_image}{Another temporary image, the same size and format as \texttt{eig\_image}}
+\cvarg{eigImage}{Temporary floating-point 32-bit image, the same size as \texttt{image}}
+\cvarg{tempImage}{Another temporary image, the same size and format as \texttt{eigImage}}
 \cvarg{corners}{Output parameter; detected corners}
-\cvarg{corner\_count}{Output parameter; number of detected corners}
-\cvarg{quality\_level}{Multiplier for the max/min eigenvalue; specifies the minimal accepted quality of image corners}
-\cvarg{min\_distance}{Limit, specifying the minimum possible distance between the returned corners; Euclidian distance is used}
+\cvarg{cornerCount}{Output parameter; number of detected corners}
+\cvarg{qualityLevel}{Multiplier for the max/min eigenvalue; specifies the minimal accepted quality of image corners}
+\cvarg{minDistance}{Limit, specifying the minimum possible distance between the returned corners; Euclidian distance is used}
 \cvarg{mask}{Region of interest. The function selects points either in the specified region or in the whole image if the mask is NULL}
-\cvarg{block\_size}{Size of the averaging block, passed to the underlying \cvCPyCross{CornerMinEigenVal} or \cvCPyCross{CornerHarris} used by the function}
-\cvarg{use\_harris}{If nonzero, Harris operator (\cvCPyCross{CornerHarris}) is used instead of default \cvCPyCross{CornerMinEigenVal}}
-\cvarg{k}{Free parameter of Harris detector; used only if ($\texttt{use\_harris} != 0$)}
+\cvarg{blockSize}{Size of the averaging block, passed to the underlying \cvCPyCross{CornerMinEigenVal} or \cvCPyCross{CornerHarris} used by the function}
+\cvarg{useHarris}{If nonzero, Harris operator (\cvCPyCross{CornerHarris}) is used instead of default \cvCPyCross{CornerMinEigenVal}}
+\cvarg{k}{Free parameter of Harris detector; used only if ($\texttt{useHarris} != 0$)}
 \end{description}
 
 The function finds corners with big
 eigenvalues in the image. The function first calculates the minimal
 eigenvalue for every source image pixel using the \cvCPyCross{CornerMinEigenVal}
-function and stores them in \texttt{eig\_image}. Then it performs
+function and stores them in \texttt{eigImage}. Then it performs
 non-maxima suppression (only local maxima in $3\times 3$ neighborhood
 remain). The next step is rejecting the corners with the minimal
 eigenvalue less than
-$\texttt{quality\_level} \cdot max(\texttt{eig\_image}(x,y))$
+$\texttt{qualityLevel} \cdot max(\texttt{eigImage}(x,y))$
 .
 Finally, the function ensures that all the corners found are distanced
 enough from one another by considering the corners (the strongest
 corners are considered first) and checking that the distance between
 the newly considered feature and the features considered earlier
-is larger than \texttt{min\_distance}. So, the function removes the
+is larger than \texttt{minDistance}. So, the function removes the
 features than are too close to the stronger features.
 
 \cvCPyFunc{HoughLines2}
@@ -665,7 +665,7 @@ Refines the corner locations.
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{corners}{Initial coordinates of the input corners; refined coordinates on output}
-\cvarg{winSize}{Half of the side length of the search window. For example, if \texttt{winSize=Size(5,5)}, then a 5*2+1 $\times$ 5*2+1 = 11 $\times$ 11 search window would be used}
+\cvarg{winSize}{Half of the side length of the search window. For example, if \texttt{winSize=Size(5,5)}, then a $5*2+1 \times 5*2+1 = 11 \times 11$ search window would be used}
 \cvarg{zeroZone}{Half of the size of the dead region in the middle of the search zone over which the summation in the formula below is not done. It is used sometimes to avoid possible singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there is no such size}
 \cvarg{criteria}{Criteria for termination of the iterative process of corner refinement. That is, the process of corner position refinement stops either after a certain number of iterations or when a required accuracy is achieved. The \texttt{criteria} may specify either of or both the maximum number of iteration and the required accuracy}
 \end{description}

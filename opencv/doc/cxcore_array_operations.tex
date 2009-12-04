@@ -435,7 +435,7 @@ The function compares the corresponding elements of an array and a scalar and fi
 dst(I)=src(I) op scalar
 \end{lstlisting}
 
-where \texttt{op} is $=$, $>$, $\ge$, $<$, $\le$ or $\ne$.
+where \texttt{op} is $=,\; >,\; \ge,\; <,\; \le\; or\; \ne$.
 
 \texttt{dst(I)} is set to 0xff (all \texttt{1}-bits) if the specific relation between the elements is true and 0 otherwise. All the arrays must have the same size (or ROI size).
 
@@ -3903,7 +3903,7 @@ Performs a forward or inverse Discrete Fourier transform of 1D or 2D floating-po
 \cvarg{DFT\_COMPLEX\_OUTPUT}{then the function performs forward transformation of 1D or 2D real array, the result, though being a complex array, has complex-conjugate symmetry (\emph{CCS}), see the description below. Such an array can be packed into real array of the same size as input, which is the fastest option and which is what the function does by default. However, you may wish to get the full complex array (for simpler spectrum analysis etc.). Pass the flag to tell the function to produce full-size complex output array.}
 \cvarg{DFT\_REAL\_OUTPUT}{then the function performs inverse transformation of 1D or 2D complex array, the result is normally a complex array of the same size. However, if the source array has conjugate-complex symmetry (for example, it is a result of forward transformation with \texttt{DFT\_COMPLEX\_OUTPUT} flag), then the output is real array. While the function itself does not check whether the input is symmetrical or not, you can pass the flag and then the function will assume the symmetry and produce the real output array. Note that when the input is packed real array and inverse transformation is executed, the function treats the input as packed complex-conjugate symmetrical array, so the output will also be real array}
 \end{description}}
-\cvarg{nonzeroRows}{When $\ne$ 0, the function assumes that only the first \texttt{nonzeroRows} rows of the input array (when \texttt{(flags \& DFT\_INVERSE) = 0} or only the first \texttt{nonzeroRows} o the output array (when \texttt{(flags \& DFT\_INVERSE) $\ne$ 0} contain non-zeros, thus the function can handle the rest of the rows more efficiently and thus save some time. This technique is very useful for computing array cross-correlation or convolution using DFT}
+\cvarg{nonzeroRows}{When the parameter $\ne 0$, the function assumes that only the first \texttt{nonzeroRows} rows of the input array (\texttt{DFT\_INVERSE} is not set) or only the first \texttt{nonzeroRows} of the output array (\texttt{DFT\_INVERSE} is set) contain non-zeros, thus the function can handle the rest of the rows more efficiently and thus save some time. This technique is very useful for computing array cross-correlation or convolution using DFT}
 \end{description}
 
 Forward Fourier transform of 1D vector of N elements:
@@ -3919,10 +3919,10 @@ X = (1/N) \cdot X,
 \]
 where $F^*=\left(\textrm{Re}(F^{(N)})-\textrm{Im}(F^{(N)})\right)^T$
 
-Forward Fourier transform of 2D vector of M $\times$ N elements:
+Forward Fourier transform of 2D vector of $M \times N$ elements:
 \[Y = F^{(M)} \cdot X \cdot F^{(N)}\]
 
-Inverse Fourier transform of 2D vector of M $\times$ N elements:
+Inverse Fourier transform of 2D vector of $M \times N$ elements:
 \[
 \begin{array}{l}
 X'= \left(F^{(M)}\right)^* \cdot Y \cdot \left(F^{(N)}\right)^*\\
@@ -3947,17 +3947,17 @@ in the case of 1D transform of real vector, the output will look as the first ro
 
 So, the function chooses the operation mode depending on the flags and size of the input array:
 \begin{itemize}
-    \item if \texttt{(flags \& DFT\_ROWS) $\ne$ 0} or the input array has single row or single column then the function performs 1D forward or inverse transform (of each row of a matrix when \texttt{(flags \& DFT\_ROWS) $\ne$ 0}), otherwise it will be 2D transform.
-    \item if input array is real and \texttt{(flags \& DFT\_INVERSE) == 0}, the function does forward 1D or 2D transform:
+    \item if \texttt{DFT\_ROWS} is set or the input array has single row or single column then the function performs 1D forward or inverse transform (of each row of a matrix when \texttt{DFT\_ROWS} is set, otherwise it will be 2D transform.
+    \item if input array is real and \texttt{DFT\_INVERSE} is not set, the function does forward 1D or 2D transform:
     \begin{itemize}
-        \item when \texttt{(flags \& DFT\_COMPLEX\_OUTPUT) $\ne$ 0)} then the output will be complex matrix of the same size as input.
+        \item when \texttt{DFT\_COMPLEX\_OUTPUT} is set then the output will be complex matrix of the same size as input.
         \item otherwise the output will be a real matrix of the same size as input. in the case of 2D transform it will use the packed format as shown above; in the case of single 1D transform it will look as the first row of the above matrix; in the case of multiple 1D transforms (when using \texttt{DCT\_ROWS} flag) each row of the output matrix will look like the first row of the above matrix.
     \end{itemize}
-    \item otherwise, if the input array is complex and \texttt{(flags \& DFT\_INVERSE) == 0} or \texttt{(flags \& DFT\_REAL\_OUTPUT) == 0} then the output will be a complex array of the same size as input and the function will perform the forward or inverse 1D or 2D transform of the whole input array or each row of the input array independently, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
-    \item otherwise, i.e. when \texttt{(flags \& DFT\_INVERSE) $\ne$ 0}, the input array is real, or it is complex but \texttt{(flags \& DFT\_REAL\_OUTPUT) $\ne$ 0}, the output will be a real array of the same size as input, and the function will perform 1D or 2D inverse transformation of the whole input array or each individual row, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
+    \item otherwise, if the input array is complex and either \texttt{DFT\_INVERSE} or \texttt{DFT\_REAL\_OUTPUT} are not set then the output will be a complex array of the same size as input and the function will perform the forward or inverse 1D or 2D transform of the whole input array or each row of the input array independently, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
+    \item otherwise, i.e. when \texttt{DFT\_INVERSE} is set, the input array is real, or it is complex but \texttt{DFT\_REAL\_OUTPUT} is set, the output will be a real array of the same size as input, and the function will perform 1D or 2D inverse transformation of the whole input array or each individual row, depending on the flags \texttt{DFT\_INVERSE} and \texttt{DFT\_ROWS}.
 \end{itemize}
 
-The scaling is done if needed (\texttt{(flags \& DFT\_SCALE) $\ne$ 0}) after the transformation.
+The scaling is done after the transformation if \texttt{DFT\_SCALE} is set.
 
 Unlike \cvCppCross{dct}, the function supports arrays of arbitrary size, but only those arrays are processed efficiently, which sizes can be factorized in a product of small prime numbers (2, 3 and 5 in the current implementation). Such an efficient DFT size can be computed using \cvCppCross{getOptimalDFTSize} method.
 
@@ -4006,7 +4006,7 @@ void convolveDFT(const Mat& A, const Mat& B, Mat& C)
 
 What can be optimized in the above sample?
 \begin{itemize}
-    \item since we passed \texttt{nonzeroRows $\ne$ 0} to the forward transform calls and
+    \item since we passed $\texttt{nonzeroRows} \ne 0$ to the forward transform calls and
     since we copied \texttt{A}/\texttt{B} to the top-left corners of \texttt{tempA}/\texttt{tempB}, respectively,
     it's not necessary to clear the whole \texttt{tempA} and \texttt{tempB};
     it is only necessary to clear the \texttt{tempA.cols - A.cols} (\texttt{tempB.cols - B.cols})
@@ -4602,7 +4602,7 @@ void minMaxLoc(const SparseMat\& src, double* minVal,\par
 
 The functions \texttt{ninMaxLoc} find minimum and maximum element values
 and their positions. The extremums are searched across the whole array, or,
-if \texttt{mask} is not \texttt{NULL}, in the specified array region.
+if \texttt{mask} is not an empty array, in the specified array region.
 
 The functions do not work with multi-channel arrays. If you need to find minimum or maximum elements across all the channels, use \cvCppCross{reshape} first to reinterpret the array as single-channel. Or you may extract the particular channel using \cvCppCross{extractImageCOI} or \cvCppCross{mixChannels} or \cvCppCross{split}.
 
@@ -5108,7 +5108,7 @@ The functions \texttt{saturate\_cast} resembles the standard C++ cast operations
 
 \begin{lstlisting}
 uchar a = saturate_cast<uchar>(-100); // a = 0 (UCHAR_MIN)
-short b = saturate_cast<short>(33333.33333); // b = 32768 (SHRT_MAX)
+short b = saturate_cast<short>(33333.33333); // b = 32767 (SHRT_MAX)
 \end{lstlisting}
 
 Such clipping is done when the target type is \texttt{unsigned char, signed char, unsigned short or signed short} - for 32-bit integers no clipping is done.

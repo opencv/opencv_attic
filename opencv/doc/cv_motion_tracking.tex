@@ -47,8 +47,8 @@ a circular sum of the basic orientation and the shift.
 Calculates the gradient orientation of a motion history image.
 
 \cvdefC{
-void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* orientation,\par double delta1,\par double delta2,\par int aperture\_size=3 );
-}\cvdefPy{CalcMotionGradient(mhi,mask,orientation,delta1,delta2,aperture\_size=3)-> None}
+void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* orientation,\par double delta1,\par double delta2,\par int apertureSize=3 );
+}\cvdefPy{CalcMotionGradient(mhi,mask,orientation,delta1,delta2,apertureSize=3)-> None}
 
 \begin{description}
 \cvarg{mhi}{Motion history image}
@@ -58,7 +58,7 @@ void cvCalcMotionGradient( \par const CvArr* mhi,\par CvArr* mask,\par CvArr* or
 \[
 \min(\texttt{delta1} , \texttt{delta2} ) \le M(x,y)-m(x,y) \le \max(\texttt{delta1} ,\texttt{delta2} ).
 \]}
-\cvarg{aperture\_size}{Aperture size of derivative operators used by the function: CV\_SCHARR, 1, 3, 5 or 7 (see \cvCPyCross{Sobel})}
+\cvarg{apertureSize}{Aperture size of derivative operators used by the function: CV\_SCHARR, 1, 3, 5 or 7 (see \cvCPyCross{Sobel})}
 \end{description}
 
 The function calculates the derivatives $Dx$ and $Dy$ of \texttt{mhi} and then calculates gradient orientation as:
@@ -73,46 +73,43 @@ where both $Dx(x,y)$ and $Dy(x,y)$ signs are taken into account (as in the \cvCP
 Calculates the optical flow for two images by using the block matching method.
 
 \cvdefC{
-void cvCalcOpticalFlowBM( \par const CvArr* prev,\par const CvArr* curr,\par CvSize block\_size,\par CvSize shift\_size,\par CvSize max\_range,\par int use\_previous,\par CvArr* velx,\par CvArr* vely );
-}\cvdefPy{CalcOpticalFlowBM(prev,curr,block\_size,shift\_size,max\_range,use\_previous,velx,vely)-> None}
+void cvCalcOpticalFlowBM( \par const CvArr* prev,\par const CvArr* curr,\par CvSize blockSize,\par CvSize shiftSize,\par CvSize max\_range,\par int usePrevious,\par CvArr* velx,\par CvArr* vely );
+}\cvdefPy{CalcOpticalFlowBM(prev,curr,blockSize,shiftSize,max\_range,usePrevious,velx,vely)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
 \cvarg{curr}{Second image, 8-bit, single-channel}
-\cvarg{block\_size}{Size of basic blocks that are compared}
-\cvarg{shift\_size}{Block coordinate increments}
+\cvarg{blockSize}{Size of basic blocks that are compared}
+\cvarg{shiftSize}{Block coordinate increments}
 \cvarg{max\_range}{Size of the scanned neighborhood in pixels around the block}
-\cvarg{use\_previous}{Uses the previous (input) velocity field}
+\cvarg{usePrevious}{Uses the previous (input) velocity field}
 \cvarg{velx}{Horizontal component of the optical flow of
 \[
-\left\lfloor \frac{\texttt{prev->width} - \texttt{block\_size.width}}{\texttt{shiftSize.width}} \right\rfloor
+\left\lfloor \frac{\texttt{prev->width} - \texttt{blockSize.width}}{\texttt{shiftSize.width}} \right\rfloor
 \times
-\left\lfloor \frac{\texttt{prev->height} - \texttt{block\_size.height}}{\texttt{shiftSize.height}} \right\rfloor
+\left\lfloor \frac{\texttt{prev->height} - \texttt{blockSize.height}}{\texttt{shiftSize.height}} \right\rfloor
 \]
 size, 32-bit floating-point, single-channel}
 \cvarg{vely}{Vertical component of the optical flow of the same size \texttt{velx}, 32-bit floating-point, single-channel}
 \end{description}
 
 The function calculates the optical
-flow for overlapped blocks $\texttt{block\_size.width} \times
-\texttt{block\_size.height}$ pixels each, thus the velocity
-fields are smaller than the original images. For every block
-in \texttt{prev} the functions tries to find a similar block in
-\texttt{curr} in some neighborhood of the original block or shifted by
-(velx(x0,y0),vely(x0,y0)) block as has been calculated by previous
-function call (if \texttt{use\_previous=1})
+flow for overlapped blocks $\texttt{blockSize.width} \times \texttt{blockSize.height}$ pixels each, thus the velocity
+fields are smaller than the original images. For every block in \texttt{prev} the functions tries to find a similar block in
+\texttt{curr} in some neighborhood of the original block or shifted by (velx(x0,y0),vely(x0,y0)) block as has been calculated by previous
+function call (if \texttt{usePrevious=1})
 
 \cvCPyFunc{CalcOpticalFlowHS}
 Calculates the optical flow for two images.
 
 \cvdefC{
-void cvCalcOpticalFlowHS( \par const CvArr* prev,\par const CvArr* curr,\par int use\_previous,\par CvArr* velx,\par CvArr* vely,\par double lambda,\par CvTermCriteria criteria );
-}\cvdefPy{CalcOpticalFlowHS(prev,curr,use\_previous,velx,vely,lambda,criteria)-> None}
+void cvCalcOpticalFlowHS( \par const CvArr* prev,\par const CvArr* curr,\par int usePrevious,\par CvArr* velx,\par CvArr* vely,\par double lambda,\par CvTermCriteria criteria );
+}\cvdefPy{CalcOpticalFlowHS(prev,curr,usePrevious,velx,vely,lambda,criteria)-> None}
 
 \begin{description}
 \cvarg{prev}{First image, 8-bit, single-channel}
 \cvarg{curr}{Second image, 8-bit, single-channel}
-\cvarg{use\_previous}{Uses the previous (input) velocity field}
+\cvarg{usePrevious}{Uses the previous (input) velocity field}
 \cvarg{velx}{Horizontal component of the optical flow of the same size as input images, 32-bit floating-point, single-channel}
 \cvarg{vely}{Vertical component of the optical flow of the same size as input images, 32-bit floating-point, single-channel}
 \cvarg{lambda}{Lagrangian multiplier}
@@ -126,13 +123,13 @@ The function computes the flow for every pixel of the first input image using th
 Calculates the optical flow for two images.
 
 \cvdefC{
-void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvSize win\_size,\par CvArr* velx,\par CvArr* vely );
-}\cvdefPy{CalcOpticalFlowLK(prev,curr,win\_size,velx,vely)-> None}
+void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvSize winSize,\par CvArr* velx,\par CvArr* vely );
+}\cvdefPy{CalcOpticalFlowLK(prev,curr,winSize,velx,vely)-> None}
 \begin{description}
 
 \cvarg{prev}{First image, 8-bit, single-channel}
 \cvarg{curr}{Second image, 8-bit, single-channel}
-\cvarg{win\_size}{Size of the averaging window used for grouping pixels}
+\cvarg{winSize}{Size of the averaging window used for grouping pixels}
 \cvarg{velx}{Horizontal component of the optical flow of the same size as input images, 32-bit floating-point, single-channel}
 \cvarg{vely}{Vertical component of the optical flow of the same size as input images, 32-bit floating-point, single-channel}
 \end{description}
@@ -144,9 +141,9 @@ The function computes the flow for every pixel of the first input image using th
 Calculates the optical flow for a sparse feature set using the iterative Lucas-Kanade method with pyramids.
 
 \cvdefC{
-void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prevPyr,\par CvArr* currPyr,\par const CvPoint2D32f* prevFeatures,\par CvPoint2D32f* currFeatures,\par int count,\par CvSize win\_size,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
+void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prevPyr,\par CvArr* currPyr,\par const CvPoint2D32f* prevFeatures,\par CvPoint2D32f* currFeatures,\par int count,\par CvSize winSize,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
 }\cvdefPy{
-CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, CvSize win\_size, int level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
+CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, CvSize winSize, int level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
 }
 
 \begin{description}
@@ -157,7 +154,7 @@ CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, CvSize win\_s
 \cvarg{prevFeatures}{Array of points for which the flow needs to be found}
 \cvarg{currFeatures}{Array of 2D points containing the calculated new positions of the input features in the second image}
 \cvarg{count}{Number of feature points}
-\cvarg{win\_size}{Size of the search window of each pyramid level}
+\cvarg{winSize}{Size of the search window of each pyramid level}
 \cvarg{level}{Maximal pyramid level number. If \texttt{0} , pyramids are not used (single level), if \texttt{1} , two levels are used, etc}
 \cvarg{status}{Array. Every element of the array is set to \texttt{1} if the flow for the corresponding feature has been found, \texttt{0} otherwise}
 \cvarg{error}{Array of double numbers containing the difference between patches around the original and moved points. Optional parameter; can be \texttt{NULL }}
