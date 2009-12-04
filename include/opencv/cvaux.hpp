@@ -1235,6 +1235,296 @@ struct DefaultRngAuto
     DefaultRngAuto& operator=(const DefaultRngAuto&);
 };
 
+	/****************************************************************************************\
+	*            Calonder Descriptor														 *
+	\****************************************************************************************/
+	/*!
+	A pseudo-random number generator usable with std::random_shuffle.
+	*/
+	class CV_EXPORTS CalonderRng
+	{
+	public:
+
+		typedef unsigned int int_type;
+
+		CalonderRng(int64 seed = -1);
+
+		~CalonderRng();
+
+		void seed(int64 seed);
+
+		//! Returns a random integer sampled uniformly over the range of int32.
+		// TODO: does this hold for Boost.Random?
+		unsigned int operator()();
+
+		//! Returns a random integer sampled uniformly from [0, N).
+		unsigned int operator()(unsigned int N);
+
+		double uniform(double a = 0, double b = 1);
+
+		//! Returns Gaussian random variate with mean zero.
+		double gaussian(double sigma);
+
+	private:
+		CvRNG rng;
+	};
+
+
+	//----------------------------
+	//patch_generator.h
+
+
+	class CV_EXPORTS CalonderPatchGenerator
+	{
+	public:
+		CalonderPatchGenerator(IplImage* source, CalonderRng &rng);
+
+		void operator() (CvPoint pt, IplImage* patch);
+
+		void setSource(IplImage* source);
+
+		//! Rotation
+		void setThetaBounds(double theta_min, double theta_max);
+		//! Skew rotation
+		void setPhiBounds(double phi_min, double phi_max);
+		//! Scaling
+		void setLambdaBounds(double lambda_min, double lambda_max);
+
+		void setRandomBackground(bool on_off);
+		void addWhiteNoise(bool on_off);
+		void setNoiseLevel(int level);
+
+		static const double DEFAULT_THETA_MIN;
+		static const double DEFAULT_THETA_MAX;
+		static const double DEFAULT_PHI_MIN;
+		static const double DEFAULT_PHI_MAX;
+		static const double DEFAULT_LAMBDA_MIN;
+		static const double DEFAULT_LAMBDA_MAX;
+		static const int DEFAULT_NOISE_LEVEL;
+
+	private:
+		IplImage* source_;
+		double theta_min_, theta_max_;
+		double phi_min_, phi_max_;
+		double lambda_min_, lambda_max_;
+		bool random_background_;
+		bool white_noise_;
+		int noise_level_;
+		CalonderRng &rng_;
+	};
+
+	//}// namespace features
+	//----------------------------
+	//randomized_tree.h
+#if (_MSC_VER < 1300)
+	typedef unsigned char     uint8_t;
+#else
+	typedef unsigned __int8   uint8_t;
+#endif
+
+	//class RTTester;
+
+	//namespace features {
+	static const size_t DEFAULT_REDUCED_NUM_DIM = 176;  
+	static const float LOWER_QUANT_PERC = .03f;
+	static const float UPPER_QUANT_PERC = .92f;
+	static const int PATCH_SIZE = 32;
+	static const int DEFAULT_DEPTH = 9;
+	static const int DEFAULT_VIEWS = 5000;
+	struct RTreeNode;
+
+	struct BaseKeypoint
+	{
+		int x;
+		int y;
+		IplImage* image;
+
+		BaseKeypoint()
+			: x(0), y(0), image(NULL)
+		{}
+
+		BaseKeypoint(int x, int y, IplImage* image)
+			: x(x), y(y), image(image)
+		{}
+	};
+
+	class CSMatrixGenerator {
+	public:
+		typedef enum { PDT_GAUSS=1, PDT_BERNOULLI, PDT_DBFRIENDLY } PHI_DISTR_TYPE;
+		~CSMatrixGenerator();
+		static float* getCSMatrix(int m, int n, PHI_DISTR_TYPE dt);     // do NOT free returned pointer   
+
+
+	private:
+		static float *cs_phi_;    // matrix for compressive sensing
+		static int cs_phi_m_, cs_phi_n_;
+	};
+
+	class CV_EXPORTS RandomizedTree
+	{  
+	public:
+		friend class RTreeClassifier;  
+		//friend class ::RTTester;
+
+
+		RandomizedTree();
+		~RandomizedTree();
+
+		void train(std::vector<BaseKeypoint> const& base_set, CalonderRng &rng,
+			int depth, int views, size_t reduced_num_dim, int num_quant_bits);
+		void train(std::vector<BaseKeypoint> const& base_set, CalonderRng &rng,
+			CalonderPatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
+			int num_quant_bits);
+
+		// following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
+		static void quantizeVector(float *vec, int dim, int N, float bnds[2], int clamp_mode=0);
+		static void quantizeVector(float *src, int dim, int N, float bnds[2], uint8_t *dst);  
+
+		// patch_data must be a 32x32 array (no row padding)
+		float* getPosterior(uchar* patch_data);
+		const float* getPosterior(uchar* patch_data) const;
+		uint8_t* getPosterior2(uchar* patch_data);
+
+		void read(const char* file_name, int num_quant_bits);
+		void read(std::istream &is, int num_quant_bits);
+		void write(const char* file_name) const;
+		void write(std::ostream &os) const;
+
+		int classes() { return classes_; }
+		int depth() { return depth_; }
+
+		//void setKeepFloatPosteriors(bool b) { keep_float_posteriors_ = b; }
+		void discardFloatPosteriors() { freePosteriors(1); }
+
+		inline void applyQuantization(int num_quant_bits) { makePosteriors2(num_quant_bits); }
+
+		// debug
+		void savePosteriors(std::string url, bool append=false);
+		void savePosteriors2(std::string url, bool append=false);
+
+	private:
+		int classes_;
+		int depth_;
+		int num_leaves_;  
+		std::vector<RTreeNode> nodes_;  
+		float **posteriors_;        // 16-bytes aligned posteriors
+		uint8_t **posteriors2_;     // 16-bytes aligned posteriors
+		std::vector<int> leaf_counts_;
+
+		void createNodes(int num_nodes, CalonderRng &rng);
+		void allocPosteriorsAligned(int num_leaves, int num_classes);
+		void freePosteriors(int which);    // which: 1=posteriors_, 2=posteriors2_, 3=both
+		void init(int classes, int depth, CalonderRng &rng);
+		void addExample(int class_id, uchar* patch_data);
+		void finalize(size_t reduced_num_dim, int num_quant_bits);  
+		int getIndex(uchar* patch_data) const;
+		inline float* getPosteriorByIndex(int index);
+		inline uint8_t* getPosteriorByIndex2(int index);
+		inline const float* getPosteriorByIndex(int index) const;
+		//void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);  
+		void convertPosteriorsToChar();
+		void makePosteriors2(int num_quant_bits);
+		void compressLeaves(size_t reduced_num_dim);  
+		void estimateQuantPercForPosteriors(float perc[2]);
+	};
+
+	struct RTreeNode
+	{
+		short offset1, offset2;
+
+		RTreeNode() {}
+
+		RTreeNode(uchar x1, uchar y1, uchar x2, uchar y2)
+			: offset1(y1*PATCH_SIZE + x1),
+			offset2(y2*PATCH_SIZE + x2)
+		{}
+
+		//! Left child on 0, right child on 1
+		inline bool operator() (uchar* patch_data) const
+		{
+			return patch_data[offset1] > patch_data[offset2];
+		}
+	};
+
+
+
+	//} // namespace features
+	//----------------------------
+	//rtree_classifier.h
+#if (_MSC_VER < 1300)
+	typedef unsigned short    uint16_t;
+#else
+	typedef unsigned __int16  uint16_t;
+#endif
+	//class RTTester;
+
+	//namespace features {
+
+	class CV_EXPORTS RTreeClassifier
+	{   
+	public:
+		//friend class ::RTTester;
+		static const int DEFAULT_TREES = 48;
+		static const size_t DEFAULT_NUM_QUANT_BITS = 4;  
+
+		RTreeClassifier();
+
+		//modified
+		void train(std::vector<BaseKeypoint> const& base_set, 
+			CalonderRng &rng,
+			int num_trees = RTreeClassifier::DEFAULT_TREES,
+			int depth = DEFAULT_DEPTH,
+			int views = DEFAULT_VIEWS,
+			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS);
+		void train(std::vector<BaseKeypoint> const& base_set,
+			CalonderRng &rng, 
+			CalonderPatchGenerator &make_patch,
+			int num_trees = RTreeClassifier::DEFAULT_TREES,
+			int depth = DEFAULT_DEPTH,
+			int views = DEFAULT_VIEWS,
+			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS);
+
+		// sig must point to a memory block of at least classes()*sizeof(float|uint8_t) bytes
+		void getSignature(IplImage *patch, uint8_t *sig);
+		void getSignature(IplImage *patch, float *sig);
+		void getSparseSignature(IplImage *patch, float *sig, float thresh);
+		// TODO: deprecated in favor of getSignature overload, remove
+		void getFloatSignature(IplImage *patch, float *sig) { getSignature(patch, sig); }
+
+		static int countNonZeroElements(float *vec, int n, double tol=1e-10);
+		static inline void safeSignatureAlloc(uint8_t **sig, int num_sig=1, int sig_len=176);
+		static inline uint8_t* safeSignatureAlloc(int num_sig=1, int sig_len=176);  
+
+		inline int classes() { return classes_; }
+		inline int original_num_classes() { return original_num_classes_; }
+
+		void setQuantization(int num_quant_bits);
+		void discardFloatPosteriors();
+
+		void read(const char* file_name);
+		void read(std::istream &is);
+		void write(const char* file_name) const;
+		void write(std::ostream &os) const;
+
+		// experimental and debug
+		void saveAllFloatPosteriors(std::string file_url);
+		void saveAllBytePosteriors(std::string file_url);
+		void setFloatPosteriorsFromTextfile_176(std::string url);
+		float countZeroElements();
+
+		std::vector<RandomizedTree> trees_;
+
+	private:    
+		int classes_;
+		int num_quant_bits_;
+		uint8_t **posteriors_;
+		uint16_t *ptemp_;
+		int original_num_classes_;  
+		bool keep_floats_;
+	};
+
 }
 
 #endif /* __cplusplus */
