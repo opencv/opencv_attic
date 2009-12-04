@@ -973,7 +973,7 @@ Dilates an image by using a specific structuring element.
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the same size and the same type as \texttt{src}}
-\cvarg{element}{The structuring element used for dilation. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
+\cvarg{element}{The structuring element used for dilation. If \texttt{element=Mat()}, a $3\times 3$ rectangular structuring element is used}
 \cvarg{anchor}{Position of the anchor within the element. The default value $(-1, -1)$ means that the anchor is at the element center}
 \cvarg{iterations}{The number of times dilation is applied}
 \cvarg{borderType}{The pixel extrapolation method; see \cvCppCross{borderInterpolate}}
@@ -1000,7 +1000,7 @@ Erodes an image by using a specific structuring element.
 \begin{description}
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image. It will have the same size and the same type as \texttt{src}}
-\cvarg{element}{The structuring element used for dilation. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
+\cvarg{element}{The structuring element used for dilation. If \texttt{element=Mat()}, a $3\times 3$ rectangular structuring element is used}
 \cvarg{anchor}{Position of the anchor within the element. The default value $(-1, -1)$ means that the anchor is at the element center}
 \cvarg{iterations}{The number of times erosion is applied}
 \cvarg{borderType}{The pixel extrapolation method; see \cvCppCross{borderInterpolate}}

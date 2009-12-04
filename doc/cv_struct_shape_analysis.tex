@@ -47,17 +47,17 @@ correspondence).
 Calculates the contour perimeter or the curve length.
 
 \cvdefC{
-double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\par int is\_closed=-1 );
-}\cvdefPy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,is\_closed=-1)-> double}
+double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\par int isClosed=-1 );
+}\cvdefPy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,isClosed=-1)-> double}
 
 \begin{description}
 \cvarg{curve}{Sequence or array of the curve points}
 \cvarg{slice}{Starting and ending points of the curve, by default, the whole curve length is calculated}
-\cvarg{is\_closed}{Indicates whether the curve is closed or not. There are 3 cases:
+\cvarg{isClosed}{Indicates whether the curve is closed or not. There are 3 cases:
 \begin{itemize}
-  \item $\texttt{is\_closed} =0$ the curve is assumed to be unclosed.
-  \item $\texttt{is\_closed}>0$ the curve is assumed to be closed.
-  \item $\texttt{is\_closed}<0$ if curve is sequence, the flag \texttt{CV\_SEQ\_FLAG\_CLOSED} of \texttt{((CvSeq*)curve)->flags} is checked to determine if the curve is closed or not, otherwise (curve is represented by array (CvMat*) of points) it is assumed to be unclosed.
+  \item $\texttt{isClosed}=0$ the curve is assumed to be unclosed.
+  \item $\texttt{isClosed}>0$ the curve is assumed to be closed.
+  \item $\texttt{isClosed}<0$ if curve is sequence, the flag \texttt{CV\_SEQ\_FLAG\_CLOSED} of \texttt{((CvSeq*)curve)->flags} is checked to determine if the curve is closed or not, otherwise (curve is represented by array (CvMat*) of points) it is assumed to be unclosed.
 \end{itemize}}
 \end{description}
 

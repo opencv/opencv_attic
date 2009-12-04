@@ -1519,7 +1519,7 @@ Finds the camera pose from the 3D-2D point correspondences
 \cvarg{objectPoints}{The array of object points, a matrix of type \texttt{CV\_32FC3} or \texttt{vector<Point3f>}}
 \cvarg{imagePoints}{The array of the corresponding image points, a matrix of type{CV\_32FC2} or \texttt{vector<Point2f>}}
 \cvarg{cameraMatrix}{The input camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
-\cvarg{distCoeffs}{The input 4x1, 5x1, 1x4 or 1x5 array of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$. If it is NULL, all of the distortion coefficients are set to 0}
+\cvarg{distCoeffs}{The input 4x1, 5x1, 1x4 or 1x5 array of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$. If \texttt{distCoeffs=Mat()}, all of the distortion coefficients are set to 0}
 \cvarg{rvec}{The output camera view rotation vector (compact representation of a rotation matrix, \cvCppCross{Rodrigues} that (together with \texttt{tvec}) brings points from the model coordinate system to the camera coordinate system}
 \cvarg{tvec}{The output camera view translation vector}
 \end{description}

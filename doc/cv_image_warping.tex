@@ -563,8 +563,8 @@ Converts image transformation maps from one representation to another
 
 The function converts a pair of maps for \cvCppCross{remap} from one representation to another. The following options (\texttt{(map1.type(), map2.type())} $\rightarrow$ \texttt{(dstmap1.type(), dstmap2.type())}) are supported:
 \begin{enumerate}
-    \item \texttt{(CV\_32FC1, CV\_32FC1)} $\rightarrow$ \texttt{(CV\_16SC2, CV\_16UC1)}. This is the most frequently used conversion operation, in which the original floating-point maps (see \cvCppCross{remap}) are converted to more compact and much faster fixed-point representation. The first output array will contain the rounded coordinates and the second array (created only when \texttt{nninterpolation=false}) will contain indices in the interpolation tables.   
-    \item \texttt{(CV\_32FC2)} $\rightarrow$ \texttt{(CV\_16SC2, CV\_16UC1)}. The same as above, but the original maps are stored in one 2-channel matrix.
+    \item $\texttt{(CV\_32FC1, CV\_32FC1)} \rightarrow \texttt{(CV\_16SC2, CV\_16UC1)}$. This is the most frequently used conversion operation, in which the original floating-point maps (see \cvCppCross{remap}) are converted to more compact and much faster fixed-point representation. The first output array will contain the rounded coordinates and the second array (created only when \texttt{nninterpolation=false}) will contain indices in the interpolation tables.   
+    \item $\texttt{(CV\_32FC2)} \rightarrow \texttt{(CV\_16SC2, CV\_16UC1)}$. The same as above, but the original maps are stored in one 2-channel matrix.
     \item the reverse conversion. Obviously, the reconstructed floating-point maps will not be exactly the same as the originals.
 \end{enumerate} 
 
