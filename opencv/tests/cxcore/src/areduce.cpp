@@ -240,6 +240,13 @@ int CV_ReduceTest::checkDim( int dim, Size sz )
     tempCode = checkCase( CV_8UC1, CV_64FC1, dim, sz );
     code = tempCode != CvTS::OK ? tempCode : code;
 
+    // CV_16UC1
+    tempCode = checkCase( CV_16UC1, CV_32FC1, dim, sz );
+    code = tempCode != CvTS::OK ? tempCode : code;
+
+    tempCode = checkCase( CV_16UC1, CV_64FC1, dim, sz );
+    code = tempCode != CvTS::OK ? tempCode : code;
+
     // CV_16SC1
     tempCode = checkCase( CV_16SC1, CV_32FC1, dim, sz );
     code = tempCode != CvTS::OK ? tempCode : code;
