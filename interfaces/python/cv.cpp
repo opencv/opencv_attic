@@ -309,7 +309,7 @@ static PyObject *iplimage_getheight(iplimage_t *cva)
 }
 static PyObject *iplimage_getdepth(iplimage_t *cva)
 {
-  return PyInt_FromLong(((IplImage*)(cva->a))->depth);
+  return PyLong_FromUnsignedLong((unsigned)((IplImage*)(cva->a))->depth);
 }
 static PyObject *iplimage_getorigin(iplimage_t *cva)
 {
