@@ -1532,6 +1532,7 @@ DecodeImage IplImage*
 DecodeImageM CvMat*
   CvMat buf
   int iscolor CV_LOAD_IMAGE_COLOR
+StartWindowThread
 
 # cvaux stuff
 HOGDetectMultiScale CvSeq*
