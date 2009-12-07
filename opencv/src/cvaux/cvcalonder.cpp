@@ -63,8 +63,8 @@ The code was integrated into OpenCV by Alexey Latyshev
 namespace cv {
 #define M_PI 3.14159265358
 
-//namespace features {
-//rng
+	//namespace features {
+	//rng
 	inline CalonderRng::CalonderRng(int64 seed)
 	{
 		rng = cvRNG(1);
@@ -103,7 +103,7 @@ namespace cv {
 		return res;
 	}
 
-//patch_generator
+	//patch_generator
 	const double CalonderPatchGenerator::DEFAULT_THETA_MIN = -M_PI;
 	const double CalonderPatchGenerator::DEFAULT_THETA_MAX = M_PI;
 	const double CalonderPatchGenerator::DEFAULT_PHI_MIN = -M_PI;
@@ -245,10 +245,10 @@ namespace cv {
 		noise_level_ = level;
 	}
 
-//} // namespace features
-//----------------------------
-//randomized_tree.cpp
-//namespace features {
+	//} // namespace features
+	//----------------------------
+	//randomized_tree.cpp
+	//namespace features {
 
 	inline uchar* getData(IplImage* image)
 	{
@@ -470,8 +470,8 @@ namespace cv {
 			compressLeaves(reduced_num_dim);
 		else {
 			static bool notified = false;
-			if (!notified)
-				printf("\n[OK] NO compression to leaves applied, dim=%i\n", reduced_num_dim);
+			//if (!notified)
+			//	printf("\n[OK] NO compression to leaves applied, dim=%i\n", reduced_num_dim);
 			notified = true;
 		}
 
@@ -768,13 +768,13 @@ namespace cv {
 	}
 
 
-//} // namespace features
+	//} // namespace features
 
-//----------------------------
-//rtree_classifier.cpp
-//namespace features {
+	//----------------------------
+	//rtree_classifier.cpp
+	//namespace features {
 
-		// Returns 16-byte aligned signatures that can be passed to getSignature().
+	// Returns 16-byte aligned signatures that can be passed to getSignature().
 	// Release by calling free() - NOT delete!
 	//
 	// note: 1) for num_sig>1 all signatures will still be 16-byte aligned, as
@@ -822,21 +822,24 @@ namespace cv {
 	void RTreeClassifier::train(std::vector<BaseKeypoint> const& base_set,
 		CalonderRng &rng, int num_trees, int depth,
 		int views, size_t reduced_num_dim,
-		int num_quant_bits)
+		int num_quant_bits, bool print_status)
 	{
 		CalonderPatchGenerator make_patch(NULL, rng);
-		train(base_set, rng, make_patch, num_trees, depth, views, reduced_num_dim, num_quant_bits);
+		train(base_set, rng, make_patch, num_trees, depth, views, reduced_num_dim, num_quant_bits, print_status);
 	}
 
 	// Single-threaded version of train(), with progress output
 	void RTreeClassifier::train(std::vector<BaseKeypoint> const& base_set,
 		CalonderRng &rng, CalonderPatchGenerator &make_patch, int num_trees,
 		int depth, int views, size_t reduced_num_dim,
-		int num_quant_bits)
+		int num_quant_bits, bool print_status)
 	{
 		if (reduced_num_dim > base_set.size()) {
-			printf("INVALID PARAMS in RTreeClassifier::train: reduced_num_dim{%i} > base_set.size(){%i}\n",
-				reduced_num_dim, base_set.size());
+			if (print_status)
+			{
+				printf("INVALID PARAMS in RTreeClassifier::train: reduced_num_dim{%i} > base_set.size(){%i}\n",
+					reduced_num_dim, base_set.size());
+			}
 			return;
 		}
 
@@ -844,11 +847,16 @@ namespace cv {
 		classes_ = reduced_num_dim; // base_set.size();
 		original_num_classes_ = base_set.size();
 		trees_.resize(num_trees);  
-
-		printf("[OK] Training trees: base size=%i, reduced size=%i\n", base_set.size(), reduced_num_dim); 
+		if (print_status)
+		{
+			printf("[OK] Training trees: base size=%i, reduced size=%i\n", base_set.size(), reduced_num_dim); 
+		}
 
 		int count = 1;
-		printf("[OK] Trained 0 / %i trees", num_trees);  fflush(stdout);
+		if (print_status)
+		{
+			printf("[OK] Trained 0 / %i trees", num_trees);  fflush(stdout);
+		}
 		//added
 		//BOOST_FOREACH( RandomizedTree &tree, trees_ ) {
 		//tree.train(base_set, rng, make_patch, depth, views, reduced_num_dim, num_quant_bits_);
@@ -857,13 +865,19 @@ namespace cv {
 		for (int i=0; i<(int)trees_.size(); i++)
 		{
 			trees_[i].train(base_set, rng, make_patch, depth, views, reduced_num_dim, num_quant_bits_);
-			printf("\r[OK] Trained %i / %i trees", count++, num_trees);
-			fflush(stdout);
+			if (print_status)
+			{
+				printf("\r[OK] Trained %i / %i trees", count++, num_trees);
+				fflush(stdout);
+			}
 		}  
 
-		printf("\n");
-		countZeroElements();
-		printf("\n\n");  
+		if (print_status)
+		{
+			printf("\n");
+			countZeroElements();
+			printf("\n\n");  
+		}
 	}
 
 	void RTreeClassifier::getSignature(IplImage* patch, float *sig)
@@ -1165,7 +1179,7 @@ namespace cv {
 		printf("[OK] RTC: discarded float posteriors of all trees\n");
 	}
 
-//} // namespace features
+	//} // namespace features
 
-	
+
 }
