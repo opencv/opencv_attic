@@ -494,8 +494,8 @@ void bitwise_xor(const Mat& a, const Scalar& s, Mat& c, const Mat& mask)
 void bitwise_not(const Mat& src, Mat& dst)
 {
     const uchar* sptr = src.data;
-    uchar* dptr = dst.data;
     dst.create( src.size(), src.type() );
+    uchar* dptr = dst.data;
     Size size = getContinuousSize( src, dst, (int)src.elemSize() );
 
     for( ; size.height--; sptr += src.step, dptr += dst.step )
