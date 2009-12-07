@@ -142,7 +142,7 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
     numPos = _numPos;
     numNeg = _numNeg;
     numStages = _numStages;
-    if ( !imgReader.create( _posFilename, _negFilename, cascadeParams.winSize ) )
+    if ( !imgReader.create( _posFilename, _negFilename, _cascadeParams.winSize ) )
         return false;
     if ( !load( dirName ) )
     {
