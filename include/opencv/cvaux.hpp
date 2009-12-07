@@ -1476,7 +1476,7 @@ struct DefaultRngAuto
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS);
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
 		void train(std::vector<BaseKeypoint> const& base_set,
 			CalonderRng &rng, 
 			CalonderPatchGenerator &make_patch,
@@ -1484,7 +1484,7 @@ struct DefaultRngAuto
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS);
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
 
 		// sig must point to a memory block of at least classes()*sizeof(float|uint8_t) bytes
 		void getSignature(IplImage *patch, uint8_t *sig);
