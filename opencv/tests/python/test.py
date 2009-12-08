@@ -174,7 +174,6 @@ class TestDirected(unittest.TestCase):
                         self.assert_(a.width == w)
                         self.assert_(a.height == h)
                         self.assert_(a.nChannels == c)
-                        print a.depth, d
                         self.assert_(a.depth == d)
                         self.assert_(cv.GetSize(a) == (w, h))
                         # self.assert_(cv.GetElemType(a) == d)
