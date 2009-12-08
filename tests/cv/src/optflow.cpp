@@ -223,7 +223,7 @@ bool CV_OptFlowTest::runDense(const Point& d)
 
     Rect rect(Point(prev.cols/2, prev.rows/2) - Point(movSize.width/2, movSize.height/2), movSize);
 
-    Mat flowLK, flowBM, flowHS, flowFB, flowBM_received, m1;
+    Mat flowLK, flowBM, flowHS, flowFB, flowFB_G, flowBM_received, m1;
 
     m1 = prev(rect);                                smpl.copyTo(m1);
     m1 = curr(Rect(rect.tl() + d, rect.br() + d));  smpl.copyTo(m1);   
@@ -232,6 +232,7 @@ bool CV_OptFlowTest::runDense(const Point& d)
     calcOpticalFlowBM( prev, curr, Size(15, 15), Size(1, 1), Size(15, 15), 0, flowBM_received);       
     calcOpticalFlowHS( prev, curr, 0, 5, TermCriteria(TermCriteria::MAX_ITER, 400, 0), flowHS);                 
     calcOpticalFlowFarneback( prev, curr, flowFB, 0.5, 3, std::max(d.x, d.y) + 10, 100, 6, 2, 0);
+    calcOpticalFlowFarneback( prev, curr, flowFB_G, 0.5, 3, std::max(d.x, d.y) + 10, 100, 6, 2, OPTFLOW_FARNEBACK_GAUSSIAN);            
 
     flowBM.create(prev.size(), CV_32FC2);
     flowBM = Scalar(0);    
@@ -242,11 +243,12 @@ bool CV_OptFlowTest::runDense(const Point& d)
     double errorLK = showFlowAndCalcError("LK", prev, flowLK, rect, d);
     double errorBM = showFlowAndCalcError("BM", prev, flowBM, rect, d);
     double errorFB = showFlowAndCalcError("FB", prev, flowFB, rect, d);
+    double errorFBG = showFlowAndCalcError("FBG", prev, flowFB_G, rect, d);
     double errorHS = showFlowAndCalcError("HS", prev, flowHS, rect, d); (void)errorHS;     
     //waitKey();   
 
     const double thres = 0.2;
-    if (errorLK > thres || errorBM > thres || errorFB > thres /*|| errorHS > thres /**/)
+    if (errorLK > thres || errorBM > thres || errorFB > thres || errorFBG > thres /*|| errorHS > thres /**/)
     {        
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
