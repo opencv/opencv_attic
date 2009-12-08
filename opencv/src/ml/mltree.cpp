@@ -282,8 +282,10 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     // for safe split_node_data() operation
     have_labels = cv_n > 0 || (ord_var_count == 1 && cat_var_count == 0) || _add_labels;
 
-    work_var_count = var_count + (is_classifier ? 1 : 0) + (have_labels ? 1 : 0);
-    buf_size = (work_var_count + 1)*sample_count;
+    work_var_count = var_count + (is_classifier ? 1 : 0) // for responses class_labels
+                               + (have_labels ? 1 : 0); // for cv_labels
+                               
+    buf_size = (work_var_count + 1 /*for sample_indices*/) * sample_count;
     shared = _shared;
     buf_count = shared ? 2 : 1;
     
