@@ -70,6 +70,7 @@ protected:
 
     int max_template_size;
     int method;
+    bool test_cpp;
 };
 
 
@@ -90,6 +91,7 @@ CV_TemplMatchTest::CV_TemplMatchTest()
     depth_list = templmatch_depths;
 
     default_timing_param_names = templmatch_param_names;
+    test_cpp = false;
 }
 
 
@@ -171,6 +173,7 @@ void CV_TemplMatchTest::get_test_array_types_and_sizes( int test_case_idx,
     sizes[REF_OUTPUT][0] = sizes[OUTPUT][0];
 
     method = cvTsRandInt(rng)%6;
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -225,7 +228,13 @@ double CV_TemplMatchTest::get_success_error_level( int /*test_case_idx*/, int /*
 
 void CV_TemplMatchTest::run_func()
 {
-    cvMatchTemplate( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0], method );
+    if(!test_cpp)
+        cvMatchTemplate( test_array[INPUT][0], test_array[INPUT][1], test_array[OUTPUT][0], method );
+    else
+    {
+        cv::Mat _out = cv::cvarrToMat(test_array[OUTPUT][0]);
+        cv::matchTemplate(cv::cvarrToMat(test_array[INPUT][0]), cv::cvarrToMat(test_array[INPUT][1]), _out, method);
+    }
 }
 
 

@@ -1576,6 +1576,7 @@ protected:
                                                 CvSize** whole_sizes, bool *are_images );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
     CvPoint2D32f center;
+    bool test_cpp;
 };
 
 
@@ -1587,6 +1588,7 @@ CV_GetRectSubPixTest::CV_GetRectSubPixTest()
     //default_timing_param_names = imgwarp_perspective_param_names;
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
     default_timing_param_names = 0;
+    test_cpp = false;
 }
 
 
@@ -1641,6 +1643,8 @@ void CV_GetRectSubPixTest::get_test_array_types_and_sizes( int test_case_idx, Cv
     center.x = (float)(cvTsRandReal(rng)*src_size.width);
     center.y = (float)(cvTsRandReal(rng)*src_size.height);
     interpolation = CV_INTER_LINEAR;
+    
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -1667,7 +1671,13 @@ void CV_GetRectSubPixTest::print_timing_params( int test_case_idx, char* ptr, in
 
 void CV_GetRectSubPixTest::run_func()
 {
-    cvGetRectSubPix( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], center );
+    if(!test_cpp)
+        cvGetRectSubPix( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], center );
+    else
+    {
+        cv::Mat _out = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]);
+        cv::getRectSubPix( cv::cvarrToMat(test_array[INPUT][0]), _out.size(), center, _out, _out.type());
+    }
 }
 
 

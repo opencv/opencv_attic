@@ -72,6 +72,7 @@ protected:
     bool use_mask, mask_only;
     int range_type;
     int new_mask_val;
+    bool test_cpp;
 };
 
 
@@ -94,6 +95,7 @@ CV_FloodFillTest::CV_FloodFillTest()
     size_list = floodfill_sizes;
     whole_size_list = floodfill_whole_sizes;
     cn_list = floodfill_channels;
+    test_cpp = false;
 }
 
 
@@ -148,6 +150,8 @@ void CV_FloodFillTest::get_test_array_types_and_sizes( int test_case_idx,
     new_val = cvScalarAll(0.);
     for( i = 0; i < cn; i++ )
         new_val.val[i] = cvTsRandReal(rng)*255;
+    
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -198,21 +202,42 @@ void CV_FloodFillTest::fill_array( int test_case_idx, int i, int j, CvMat* arr )
 
 void CV_FloodFillTest::run_func()
 {
-    CvConnectedComp comp;
+    int flags = connectivity + (mask_only ? CV_FLOODFILL_MASK_ONLY : 0) +
+        (range_type == 1 ? CV_FLOODFILL_FIXED_RANGE : 0) + (new_mask_val << 8);
     double* odata = test_mat[OUTPUT][0].data.db;
-    cvFloodFill( test_array[INPUT_OUTPUT][0], seed_pt, new_val, l_diff, u_diff, &comp,
-                 connectivity + (mask_only ? CV_FLOODFILL_MASK_ONLY : 0) +
-                 (range_type == 1 ? CV_FLOODFILL_FIXED_RANGE : 0) + (new_mask_val << 8),
-                 test_array[INPUT_OUTPUT][1] );
-    odata[0] = comp.area;
-    odata[1] = comp.rect.x;
-    odata[2] = comp.rect.y;
-    odata[3] = comp.rect.width;
-    odata[4] = comp.rect.height;
-    odata[5] = comp.value.val[0];
-    odata[6] = comp.value.val[1];
-    odata[7] = comp.value.val[2];
-    odata[8] = comp.value.val[3];
+    
+    if(!test_cpp)
+    {
+        CvConnectedComp comp;
+        cvFloodFill( test_array[INPUT_OUTPUT][0], seed_pt, new_val, l_diff, u_diff, &comp,
+                     flags, test_array[INPUT_OUTPUT][1] );
+        odata[0] = comp.area;
+        odata[1] = comp.rect.x;
+        odata[2] = comp.rect.y;
+        odata[3] = comp.rect.width;
+        odata[4] = comp.rect.height;
+        odata[5] = comp.value.val[0];
+        odata[6] = comp.value.val[1];
+        odata[7] = comp.value.val[2];
+        odata[8] = comp.value.val[3];
+    }
+    else
+    {
+        cv::Mat img = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]),
+            mask = test_array[INPUT_OUTPUT][1] ? cv::cvarrToMat(test_array[INPUT_OUTPUT][1]) : cv::Mat();
+        cv::Rect rect;
+        int area;
+        if( !mask.data )
+            area = cv::floodFill( img, seed_pt, new_val, &rect, l_diff, u_diff, flags );
+        else
+            area = cv::floodFill( img, mask, seed_pt, new_val, &rect, l_diff, u_diff, flags );
+        odata[0] = area;
+        odata[1] = rect.x;
+        odata[2] = rect.y;
+        odata[3] = rect.width;
+        odata[4] = rect.height;
+        odata[5] = odata[6] = odata[7] = odata[8] = 0;
+    }
 }
 
 
@@ -509,10 +534,12 @@ _exit_:
 
 void CV_FloodFillTest::prepare_to_validation( int /*test_case_idx*/ )
 {
+    double* comp = test_mat[REF_OUTPUT][0].data.db;
     cvTsFloodFill( &test_mat[REF_INPUT_OUTPUT][0], seed_pt, new_val, l_diff, u_diff,
                    test_array[REF_INPUT_OUTPUT][1] ? &test_mat[REF_INPUT_OUTPUT][1] : 0,
-                   test_mat[REF_OUTPUT][0].data.db, connectivity,
-                   range_type, new_mask_val, mask_only );
+                   comp, connectivity, range_type, new_mask_val, mask_only );
+    if(test_cpp)
+        comp[5] = comp[6] = comp[7] = comp[8] = 0;
 }
 
 

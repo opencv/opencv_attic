@@ -139,7 +139,7 @@ void CV_RandTest::run( int )
     
     CvRNG* rng = ts->get_rng();
     RNG tested_rng = theRNG();
-    test_case_count = 500;
+    test_case_count = 200;
     
     for( int idx = 0; idx < test_case_count; idx++ )
     {
