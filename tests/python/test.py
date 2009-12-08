@@ -101,6 +101,15 @@ class TestDirected(unittest.TestCase):
         cv.CV_64FC3,
         cv.CV_64FC4,
     ]
+    mat_types_single = [
+        cv.CV_8UC1,
+        cv.CV_8SC1,
+        cv.CV_16UC1,
+        cv.CV_16SC1,
+        cv.CV_32SC1,
+        cv.CV_32FC1,
+        cv.CV_64FC1,
+    ]
 
     def depthsize(self, d):
         return { cv.IPL_DEPTH_8U : 1,
@@ -459,6 +468,28 @@ class TestDirected(unittest.TestCase):
             took = (time.time() - started) / 1e7
             print "%4.1f took %f ns" % (a, took * 1e9)
         print dst[0,0], 10 ** 2.4
+
+    def test_SetIdentity(self):
+        for r in range(1,16):
+            for c in range(1, 16):
+                for t in self.mat_types_single:
+                    M = cv.CreateMat(r, c, t)
+                    cv.SetIdentity(M)
+                    for rj in range(r):
+                        for cj in range(c):
+                            if rj == cj:
+                                expected = 1.0
+                            else:
+                                expected = 0.0
+                            self.assertEqual(M[rj,cj], expected)
+
+    def test_Sum(self):
+        for r in range(1,11):
+            for c in range(1, 11):
+                for t in self.mat_types_single:
+                    M = cv.CreateMat(r, c, t)
+                    cv.Set(M, 1)
+                    self.assertEqual(cv.Sum(M)[0], r * c)
 
     def test_GetRowCol(self):
         src = cv.CreateImage((8,3), 8, 1)
@@ -877,6 +908,7 @@ class TestDirected(unittest.TestCase):
                 self.assert_(cv.CheckContourConvexity(pts) == 0)
                 hull = cv.ConvexHull2(pts, storage, return_points = 1)
                 self.assert_(cv.CheckContourConvexity(hull) == 1)
+                print len(hull), points
                 self.assert_(len(hull) == points)
 
                 if way in [ 'CvSeq', 'CvMat' ]:
