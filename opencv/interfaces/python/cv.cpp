@@ -3426,6 +3426,14 @@ static CvSeq* cvHOGDetectMultiScale( const CvArr* image, CvMemStorage* storage,
 static int zero = 0;
 
 /************************************************************************/
+/* Custom Validators */
+
+#define CVPY_VALIDATE_DrawChessboardCorners() do { \
+  if ((pattern_size.width * pattern_size.height) != corners.count) \
+    return (PyObject*)failmsg("Size is %dx%d, but corner list is length %d", pattern_size.width, pattern_size.height, corners.count); \
+  } while (0)
+
+/************************************************************************/
 /* Generated functions */
 
 #include "generated0.i"
