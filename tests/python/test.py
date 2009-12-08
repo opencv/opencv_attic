@@ -4,6 +4,8 @@ import time
 import math
 import sys
 import array
+import urllib
+import hashlib
 import os
 
 import cv
@@ -128,6 +130,27 @@ class TestDirected(unittest.TestCase):
             tripped = True
         self.assert_(tripped)
 
+    def setUp(self):
+        self.image_cache = {}
+
+    def get_sample(self, filename, iscolor = cv.CV_LOAD_IMAGE_COLOR):
+        if not filename in self.image_cache:
+            filedata = urllib.urlopen("https://code.ros.org/svn/opencv/trunk/opencv/" + filename).read()
+            imagefiledata = cv.CreateMat(1, len(filedata), cv.CV_8UC1)
+            cv.SetData(imagefiledata, filedata, len(filedata))
+            self.image_cache[filename] = cv.DecodeImageM(imagefiledata, iscolor)
+        return self.image_cache[filename]
+
+    def test_lena(self):
+        # Check that the lena jpg image has loaded correctly
+        # This test uses a 'golden' MD5 hash of the Lena image
+        # If the JPEG decompressor changes, it is possible that the MD5 hash will change,
+        # so the hash here will need to change.
+
+        im = self.get_sample("samples/c/lena.jpg")
+        # self.snap(im)     # uncomment this line to view the image, when regilding
+        self.assertEqual(hashlib.md5(im.tostring()).hexdigest(), "9dcd9247f9811c6ce86675ba7b0297b6")
+
     def test_LoadImage(self):
         self.expect_exception(lambda: cv.LoadImage(), TypeError)
         self.expect_exception(lambda: cv.LoadImage(4), TypeError)
@@ -151,6 +174,7 @@ class TestDirected(unittest.TestCase):
                         self.assert_(a.width == w)
                         self.assert_(a.height == h)
                         self.assert_(a.nChannels == c)
+                        print a.depth, d
                         self.assert_(a.depth == d)
                         self.assert_(cv.GetSize(a) == (w, h))
                         # self.assert_(cv.GetElemType(a) == d)
@@ -226,7 +250,7 @@ class TestDirected(unittest.TestCase):
             cv.CalcHist(s, hist, 0)
             return hist
 
-        src = cv.LoadImage(find_sample("lena.jpg"), 0)
+        src = self.get_sample("samples/c/lena.jpg", 0)
         h = imh(src)
         (minv, maxv, minl, maxl) = cv.GetMinMaxHistValue(h)
         self.assert_(cv.QueryHistValue_nD(h, minl) == minv)
@@ -334,8 +358,8 @@ class TestDirected(unittest.TestCase):
         cv.Or(Imask, Imaskt, Imask);
 
     def failing_test_cvtcolor(self):
-        src3 = cv.LoadImage(find_sample("lena.jpg"))
-        src1 = cv.LoadImage(find_sample("lena.jpg"), 0)
+        src3 = self.get_sample("samples/c/lena.jpg")
+        src1 = self.get_sample("samples/c/lena.jpg", 0)
         dst8u = dict([(c,cv.CreateImage(cv.GetSize(src1), cv.IPL_DEPTH_8U, c)) for c in (1,2,3,4)])
         dst16u = dict([(c,cv.CreateImage(cv.GetSize(src1), cv.IPL_DEPTH_16U, c)) for c in (1,2,3,4)])
         dst32f = dict([(c,cv.CreateImage(cv.GetSize(src1), cv.IPL_DEPTH_32F, c)) for c in (1,2,3,4)])
@@ -414,9 +438,9 @@ class TestDirected(unittest.TestCase):
         self.assert_(cv.Sum(img)[0] > 0)
 
     def test_inpaint(self):
-        src = cv.LoadImage(find_sample("building.jpg"))
+        src = self.get_sample("doc/pics/building.jpg")
         msk = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
-        damaged = cv.CloneImage(src)
+        damaged = cv.CloneMat(src)
         repaired = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 3)
         difference = cv.CloneImage(repaired)
         cv.SetZero(msk)
@@ -442,7 +466,7 @@ class TestDirected(unittest.TestCase):
             subs.append(sub)
         self.assert_(sys.getrefcount(data) == (start_count + iter))
 
-        src = cv.LoadImage(find_sample("lena.jpg"), 0)
+        src = self.get_sample("samples/c/lena.jpg", 0)
         made = cv.CreateImage(cv.GetSize(src), 8, 1)
         sub = cv.CreateMat(32, 32, cv.CV_8UC1)
         for x in range(0, 512, 32):
@@ -612,7 +636,7 @@ class TestDirected(unittest.TestCase):
         self.assert_(cv.CountNonZero(d) == 0)
 
     def test_GetStarKeypoints(self):
-        src = cv.LoadImage(find_sample("lena.jpg"), 0)
+        src = self.get_sample("samples/c/lena.jpg", 0)
         storage = cv.CreateMemStorage()
         kp = cv.GetStarKeypoints(src, storage)
         self.assert_(len(kp) > 0)
@@ -631,7 +655,7 @@ class TestDirected(unittest.TestCase):
 
     def test_Threshold(self):
         """ directed test for bug 2790622 """
-        src = cv.LoadImage(find_sample("lena.jpg"), 0)
+        src = self.get_sample("samples/c/lena.jpg", 0)
         results = set()
         for i in range(10):
             dst = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
@@ -908,7 +932,6 @@ class TestDirected(unittest.TestCase):
                 self.assert_(cv.CheckContourConvexity(pts) == 0)
                 hull = cv.ConvexHull2(pts, storage, return_points = 1)
                 self.assert_(cv.CheckContourConvexity(hull) == 1)
-                print len(hull), points
                 self.assert_(len(hull) == points)
 
                 if way in [ 'CvSeq', 'CvMat' ]:
@@ -951,8 +974,8 @@ class TestDirected(unittest.TestCase):
         self.snap(scribble)
 
     def test_CalcOpticalFlowBM(self):
-        a = cv.LoadImage(find_sample("lena.jpg"), 0)
-        b = cv.LoadImage(find_sample("lena.jpg"), 0)
+        a = self.get_sample("samples/c/lena.jpg", 0)
+        b = self.get_sample("samples/c/lena.jpg", 0)
         (w,h) = cv.GetSize(a)
         vel_size = (w - 8, h - 8)
         velx = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
@@ -1176,7 +1199,7 @@ class TestDirected(unittest.TestCase):
         cv.DestroyAllWindows()
 
     def yield_line_image(self):
-        src = cv.LoadImage(find_sample("building.jpg"), 0)
+        src = self.get_sample("doc/pics/building.jpg", 0)
         dst = cv.CreateImage(cv.GetSize(src), 8, 1)
         cv.Canny(src, dst, 50, 200, 3)
         return dst
@@ -1212,7 +1235,7 @@ class TestDirected(unittest.TestCase):
             self.assert_(type(o) == type(loaded))
 
     def test_ExtractSURF(self):
-        img = cv.LoadImage(find_sample("lena.jpg"), 0)
+        img = self.get_sample("samples/c/lena.jpg", 0)
         w,h = cv.GetSize(img)
         for hessthresh in [ 300,400,500]:
             for dsize in [0,1]:
@@ -1338,7 +1361,7 @@ class TestDirected(unittest.TestCase):
 
     def test_casts(self):
         """ Exercise Reshape """
-        im = cv.LoadImage(find_sample("lena.jpg"), 0)
+        im = cv.GetImage(self.get_sample("samples/c/lena.jpg", 0))
         data = im.tostring()
         cv.SetData(im, data, cv.GetSize(im)[0])
 
@@ -1365,7 +1388,7 @@ class TestDirected(unittest.TestCase):
         self.assert_(cv.ClipLine((100,100), (-100,0), (-200,0)) == None)
 
     def test_smoke_image_processing(self):
-        src = cv.LoadImage(find_sample("lena.jpg"), cv.CV_LOAD_IMAGE_GRAYSCALE)
+        src = self.get_sample("samples/c/lena.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
         #dst = cv.CloneImage(src)
         for aperture_size in [1, 3, 5, 7]:
           dst_16s = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_16S, 1)
@@ -1385,7 +1408,7 @@ class TestDirected(unittest.TestCase):
     def test_fitline(self):
         cv.FitLine([ (1,1), (10,10) ], cv.CV_DIST_L2, 0, 0.01, 0.01)
         cv.FitLine([ (1,1,1), (10,10,10) ], cv.CV_DIST_L2, 0, 0.01, 0.01)
-        a = cv.LoadImage(find_sample("lena.jpg"), 0)
+        a = self.get_sample("samples/c/lena.jpg", 0)
         eig_image = cv.CreateImage(cv.GetSize(a), cv.IPL_DEPTH_32F, 1)
         temp_image = cv.CreateImage(cv.GetSize(a), cv.IPL_DEPTH_32F, 1)
         pts = cv.GoodFeaturesToTrack(a, eig_image, temp_image, 100, 0.04, 2, use_harris=1)
@@ -1393,7 +1416,7 @@ class TestDirected(unittest.TestCase):
         cv.FitLine(hull, cv.CV_DIST_L2, 0, 0.01, 0.01)
 
     def test_moments(self):
-        im = cv.LoadImage(find_sample("lena.jpg"), 0)
+        im = self.get_sample("samples/c/lena.jpg", 0)
         mo = cv.Moments(im)
         orders = []
         for x_order in range(4):
@@ -1419,7 +1442,7 @@ class TestDirected(unittest.TestCase):
         self.assert_(abs(hu0[i] + hu1[i]) < 1e-6)
 
     def test_encode(self):
-        im = cv.LoadImage(find_sample("lena.jpg"), 1)
+        im = self.get_sample("samples/c/lena.jpg", 1)
         jpeg = cv.EncodeImage(".jpeg", im)
         sizes = dict([(qual, cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, qual]).cols) for qual in range(5, 100, 5)])
         self.assertEqual(cv.EncodeImage(".jpeg", im).cols, sizes[95])
