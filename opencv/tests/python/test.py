@@ -63,14 +63,6 @@ class TestDirected(unittest.TestCase):
                          cv.IPL_DEPTH_32F : 4,
                          cv.IPL_DEPTH_64F : 8 }[d]
 
-    def expect_exception(self, func, exception):
-        tripped = False
-        try:
-            func()
-        except exception:
-            tripped = True
-        self.assert_(tripped)
-
     def setUp(self):
         self.image_cache = {}
 
@@ -93,13 +85,13 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(hashlib.md5(im.tostring()).hexdigest(), "9dcd9247f9811c6ce86675ba7b0297b6")
 
     def test_LoadImage(self):
-        self.expect_exception(lambda: cv.LoadImage(), TypeError)
-        self.expect_exception(lambda: cv.LoadImage(4), TypeError)
-        self.expect_exception(lambda: cv.LoadImage('foo.jpg', 1, 1), TypeError)
-        self.expect_exception(lambda: cv.LoadImage('foo.jpg', xiscolor=cv.CV_LOAD_IMAGE_COLOR), TypeError)
+        self.assertRaises(TypeError, lambda: cv.LoadImage())
+        self.assertRaises(TypeError, lambda: cv.LoadImage(4))
+        self.assertRaises(TypeError, lambda: cv.LoadImage('foo.jpg', 1, 1))
+        self.assertRaises(TypeError, lambda: cv.LoadImage('foo.jpg', xiscolor=cv.CV_LOAD_IMAGE_COLOR))
 
     def test_CreateMat(self):
-        for rows in [2, 4, 16, 64, 512, 640]: # XXX - 1 causes bug in OpenCV
+        for rows in [1, 2, 4, 16, 64, 512, 640]:
             for cols in [1, 2, 4, 16, 64, 512, 640]:
                 for t in self.mat_types:
                     m = cv.CreateMat(rows, cols, t)
@@ -158,7 +150,7 @@ class TestDirected(unittest.TestCase):
     def failing_test_exception(self):
         a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         b = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
-        self.expect_exception(lambda: cv.Laplace(a, b), cv.error)
+        self.assertRaises(cv.error, lambda: cv.Laplace(a, b))
 
     def test_tostring(self):
         for w in [ 1, 4, 64, 512, 640]:
