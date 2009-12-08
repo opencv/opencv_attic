@@ -181,6 +181,17 @@ class TestDirected(unittest.TestCase):
     def test_types(self):
         self.assert_(type(cv.CreateImage((7,5), cv.IPL_DEPTH_8U, 1)) == cv.iplimage)
         self.assert_(type(cv.CreateMat(5, 7, cv.CV_32FC1)) == cv.cvmat)
+        for i,t in enumerate(self.mat_types):
+            basefunc = [
+                cv.CV_8UC,
+                cv.CV_8SC,
+                cv.CV_16UC,
+                cv.CV_16SC,
+                cv.CV_32SC,
+                cv.CV_32FC,
+                cv.CV_64FC,
+            ][i / 4]
+            self.assertEqual(basefunc(1 + (i % 4)), t)
 
     def test_GetSize(self):
         self.assert_(cv.GetSize(cv.CreateMat(5, 7, cv.CV_32FC1)) == (7,5))
