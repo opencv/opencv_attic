@@ -270,7 +270,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
     }
     var_type->data.i[var_count] = cat_var_count;
     var_type->data.i[var_count+1] = cat_var_count+1;
-    work_var_count = ( cat_var_count ? var_count : numPrecalcIdx ) + 1;
+    work_var_count = ( cat_var_count ? 0 : numPrecalcIdx ) + 1;
     buf_size = (work_var_count + 1) * sample_count;
     buf_count = 2;
     
