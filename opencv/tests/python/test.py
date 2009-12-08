@@ -203,7 +203,7 @@ class TestDirected(unittest.TestCase):
             r = cv.MinMaxLoc(scribble)
             self.assert_(r == (0, 255, tuple(reversed(lo)), tuple(reversed(hi))))
 
-    def failing_test_exception(self):
+    def test_exception(self):
         a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         b = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         self.expect_exception(lambda: cv.Laplace(a, b), cv.error)
@@ -663,7 +663,7 @@ class TestDirected(unittest.TestCase):
         # Should have produced the same answer every time, so results set should have size 1
         self.assert_(len(results) == 1)
 
-    def failing_test_Circle(self):
+    def test_Circle(self):
         """ smoke test to draw circles, many clipped """
         for w,h in [(2,77), (77,2), (256, 256), (640,480)]:
             img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
