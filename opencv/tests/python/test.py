@@ -771,28 +771,71 @@ class TestDirected(unittest.TestCase):
                 mat = cv.CreateMat(64, 64, fmt)
                 cv.RandArr(cv.RNG(), mat, mode, (0,0,0,0), (1,1,1,1))
 
-    def failing_test_mixchannels(self):
+    def test_MixChannels(self):
+
+        # First part - test the single case described in the documentation
         rgba = cv.CreateMat(100, 100, cv.CV_8UC4)
         bgr = cv.CreateMat(100, 100, cv.CV_8UC3)
         alpha = cv.CreateMat(100, 100, cv.CV_8UC1)
         cv.Set(rgba, (1,2,3,4))
-        cv.MixChannels([rgba,rgba,rgba,rgba], [bgr, bgr, bgr, alpha], [
+        cv.MixChannels([rgba], [bgr, alpha], [
            (0, 2),    # rgba[0] -> bgr[2]
            (1, 1),    # rgba[1] -> bgr[1]
            (2, 0),    # rgba[2] -> bgr[0]
-           (3, 0)     # rgba[3] -> alpha[0]
+           (3, 3)     # rgba[3] -> alpha[0]
         ])
         self.assert_(bgr[0,0] == (3,2,1))
         self.assert_(alpha[0,0] == 4)
 
-        cv.MixChannels([rgba,rgba,rgba,None], [bgr, bgr, bgr, alpha], [
-           (0, 0),    # rgba[0] -> bgr[0]
-           (1, 1),    # rgba[1] -> bgr[1]
-           (2, 2),    # rgba[2] -> bgr[2]
-           (77, 0)    # 0 -> alpha[0]
-        ])
-        self.assert_(bgr[0,0] == (1,2,3))
-        self.assert_(alpha[0,0] == 0)
+        # Second part.  Choose random sets of sources and destinations,
+        # fill them with known values, choose random channel assignments,
+        # run cvMixChannels and check that the result is as expected.
+
+        random.seed(1)
+
+        for rows in [1,2,4,13,64,1000]:
+            for cols in [1,2,4,13,64,1000]:
+                for loop in range(5):
+                    sources = [random.choice([1, 2, 3, 4]) for i in range(8)]
+                    dests = [random.choice([1, 2, 3, 4]) for i in range(8)]
+                    fromTo = [(random.randrange(-1, sum(sources)), random.randrange(sum(dests))) for i in range(random.randrange(1, 30))]
+                    # print sources
+                    # print dests
+                    # print fromTo
+                    
+                    def CV_8UC(n):
+                        return [cv.CV_8UC1, cv.CV_8UC2, cv.CV_8UC3, cv.CV_8UC4][n-1]
+                    source_m = [cv.CreateMat(rows, cols, CV_8UC(c)) for c in sources]
+                    dest_m =   [cv.CreateMat(rows, cols, CV_8UC(c)) for c in dests]
+
+                    # Sources numbered from 50, destinations numbered from 100
+
+                    for i in range(len(sources)):
+                        s = sum(sources[:i]) + 50
+                        cv.Set(source_m[i], (s, s+1, s+2, s+3))
+                    for i in range(len(dests)):
+                        s = sum(dests[:i]) + 100
+                        cv.Set(dest_m[i], (s, s+1, s+2, s+3))
+
+                    cv.MixChannels(source_m, dest_m, fromTo)
+
+                    expected = range(100, 100 + sum(dests))
+                    for (i, j) in fromTo:
+                        if i == -1:
+                            expected[j] = 0.0
+                        else:
+                            expected[j] = 50 + i
+
+                    def m00(m):
+                        # return the contents of the N channel mat m[0,0] as a N-length list
+                        chans = cv.CV_MAT_CN(cv.GetElemType(m))
+                        if chans == 1:
+                            return [m[0,0]]
+                        else:
+                            return list(m[0,0])[:chans]
+
+                    actual = sum([m00(m) for m in dest_m], [])
+                    self.assertEqual(sum([m00(m) for m in dest_m], []), expected)
 
     def test_access(self):
         cnames = { 1:cv.CV_32FC1, 2:cv.CV_32FC2, 3:cv.CV_32FC3, 4:cv.CV_32FC4 }
