@@ -89,6 +89,7 @@ protected:
     bool custom_inv_transform;
     int fwd_code, inv_code;
     int timing_code;
+    bool test_cpp;
 };
 
 
@@ -114,6 +115,7 @@ CV_ColorCvtBaseTestImpl::CV_ColorCvtBaseTestImpl( const char* test_name, const c
     fwd_code_str = inv_code_str = 0;
 
     default_timing_param_names = 0;
+    test_cpp = false;
 }
 
 
@@ -175,6 +177,7 @@ void CV_ColorCvtBaseTestImpl::get_test_array_types_and_sizes( int test_case_idx,
         types[OUTPUT][1] = types[REF_OUTPUT][1] = CV_MAKETYPE(depth, cn);
 
     inplace = cn == 3 && cvTsRandInt(rng) % 2 != 0;
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -226,13 +229,22 @@ void CV_ColorCvtBaseTestImpl::run_func()
     if( ts->get_testing_mode() == CvTS::CORRECTNESS_CHECK_MODE )
     {
         CvArr* out0 = test_array[OUTPUT][0];
-        cvCvtColor( inplace ? out0 : test_array[INPUT][0], out0, fwd_code );
+        cv::Mat _out0 = cv::cvarrToMat(out0), _out1 = cv::cvarrToMat(test_array[OUTPUT][1]);
+        
+        if(!test_cpp)
+            cvCvtColor( inplace ? out0 : test_array[INPUT][0], out0, fwd_code );
+        else
+            cv::cvtColor( cv::cvarrToMat(inplace ? out0 : test_array[INPUT][0]), _out0, fwd_code, _out0.channels());
+        
         if( inplace )
         {
             cvCopy( out0, test_array[OUTPUT][1] );
             out0 = test_array[OUTPUT][1];
         }
-        cvCvtColor( out0, test_array[OUTPUT][1], inv_code );
+        if(!test_cpp)
+            cvCvtColor( out0, test_array[OUTPUT][1], inv_code );
+        else
+            cv::cvtColor(cv::cvarrToMat(out0), _out1, inv_code, _out1.channels());
     }
     else if( timing_code == fwd_code )
         cvCvtColor( test_array[INPUT][0], test_array[OUTPUT][0], timing_code );
@@ -1682,7 +1694,13 @@ double CV_ColorBayerTest::get_success_error_level( int /*test_case_idx*/, int /*
 
 void CV_ColorBayerTest::run_func()
 {
-    cvCvtColor( test_array[INPUT][0], test_array[OUTPUT][0], fwd_code );
+    if(!test_cpp)
+        cvCvtColor( test_array[INPUT][0], test_array[OUTPUT][0], fwd_code );
+    else
+    {
+        cv::Mat _out = cv::cvarrToMat(test_array[OUTPUT][0]);
+        cv::cvtColor(cv::cvarrToMat(test_array[INPUT][0]), _out, fwd_code, _out.channels());
+    }
 }
 
 

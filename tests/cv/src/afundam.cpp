@@ -535,6 +535,7 @@ protected:
     void prepare_to_validation( int );
 
     bool calc_jacobians;
+    bool test_cpp;
 };
 
 
@@ -558,6 +559,7 @@ CV_RodriguesTest::CV_RodriguesTest()
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
     default_timing_param_names = 0;
+    test_cpp = false;
 }
 
 
@@ -607,7 +609,7 @@ void CV_RodriguesTest::get_test_array_types_and_sizes(
     types[OUTPUT][4] = types[OUTPUT][1];
     sizes[OUTPUT][4] = cvSize(3,3);
 
-    calc_jacobians = 1;//cvTsRandInt(rng) % 3 != 0;
+    calc_jacobians = cvTsRandInt(rng) % 3 != 0;
     if( !calc_jacobians )
         sizes[OUTPUT][1] = sizes[OUTPUT][3] = sizes[OUTPUT][4] = cvSize(0,0);
 
@@ -616,6 +618,7 @@ void CV_RodriguesTest::get_test_array_types_and_sizes(
         types[REF_OUTPUT][i] = types[OUTPUT][i];
         sizes[REF_OUTPUT][i] = sizes[OUTPUT][i];
     }
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -665,14 +668,33 @@ int CV_RodriguesTest::prepare_test_case( int test_case_idx )
 void CV_RodriguesTest::run_func()
 {
     CvMat *v2m_jac = 0, *m2v_jac = 0;
+    
     if( calc_jacobians )
     {
         v2m_jac = &test_mat[OUTPUT][1];
         m2v_jac = &test_mat[OUTPUT][3];
     }
 
-    cvRodrigues2( &test_mat[INPUT][0], &test_mat[OUTPUT][0], v2m_jac );
-    cvRodrigues2( &test_mat[OUTPUT][0], &test_mat[OUTPUT][2], m2v_jac );
+    if( !test_cpp )
+    {
+        cvRodrigues2( &test_mat[INPUT][0], &test_mat[OUTPUT][0], v2m_jac );
+        cvRodrigues2( &test_mat[OUTPUT][0], &test_mat[OUTPUT][2], m2v_jac );
+    }
+    else
+    {
+        cv::Mat v(&test_mat[INPUT][0]), M(&test_mat[OUTPUT][0]), v2(&test_mat[OUTPUT][2]);
+        if( !calc_jacobians )
+        {
+            cv::Rodrigues(v, M);
+            cv::Rodrigues(M, v2);
+        }
+        else
+        {
+            cv::Mat J1(&test_mat[OUTPUT][1]), J2(&test_mat[OUTPUT][3]);
+            cv::Rodrigues(v, M, J1);
+            cv::Rodrigues(M, v2, J2);
+        }
+    }
 }
 
 
@@ -747,6 +769,7 @@ protected:
     int f_result;
     double min_f, max_f;
     double sigma;
+    bool test_cpp;
 };
 
 
@@ -784,6 +807,7 @@ CV_FundamentalMatTest::CV_FundamentalMatTest()
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
     default_timing_param_names = 0;
+    test_cpp = false;
 }
 
 
@@ -852,6 +876,8 @@ void CV_FundamentalMatTest::get_test_array_types_and_sizes( int /*test_case_idx*
     types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC1;
     sizes[OUTPUT][1] = sizes[REF_OUTPUT][1] = cvSize(pt_count,1);
     types[OUTPUT][1] = types[REF_OUTPUT][1] = CV_8UC1;
+    
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -946,8 +972,22 @@ int CV_FundamentalMatTest::prepare_test_case( int test_case_idx )
 
 void CV_FundamentalMatTest::run_func()
 {
-    f_result = cvFindFundamentalMat( &test_mat[INPUT][0], &test_mat[INPUT][1],
-            &test_mat[TEMP][0], method, MAX(sigma*3, 0.01), 0, &test_mat[TEMP][1] );
+    //if(!test_cpp)
+    {
+        f_result = cvFindFundamentalMat( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                    &test_mat[TEMP][0], method, MAX(sigma*3, 0.01), 0, &test_mat[TEMP][1] );
+    }
+    /*else
+    {
+        cv::findFundamentalMat(const Mat& points1, const Mat& points2,
+        vector<uchar>& mask, int method=FM_RANSAC,
+        double param1=3., double param2=0.99 );
+        
+        CV_EXPORTS Mat findFundamentalMat( const Mat& points1, const Mat& points2,
+                                          int method=FM_RANSAC,
+                                          double param1=3., double param2=0.99 );
+    }*/
+
 }
 
 

@@ -55,6 +55,7 @@ protected:
 
     int aperture_size, use_true_gradient;
     double threshold1, threshold2;
+    bool test_cpp;
 };
 
 
@@ -70,6 +71,7 @@ CV_CannyTest::CV_CannyTest()
 
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
     default_timing_param_names = 0;
+    test_cpp = false;
 }
 
 
@@ -92,6 +94,7 @@ void CV_CannyTest::get_test_array_types_and_sizes( int test_case_idx,
         CV_SWAP( threshold1, threshold2, thresh_range );
 
     use_true_gradient = cvTsRandInt(rng) % 2;
+    test_cpp = (cvTsRandInt(rng) & 256) == 0;
 }
 
 
@@ -116,8 +119,15 @@ double CV_CannyTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, 
 
 void CV_CannyTest::run_func()
 {
-    cvCanny( test_array[INPUT][0], test_array[OUTPUT][0], threshold1, threshold2,
-            aperture_size + (use_true_gradient ? CV_CANNY_L2_GRADIENT : 0));
+    if(!test_cpp)
+        cvCanny( test_array[INPUT][0], test_array[OUTPUT][0], threshold1, threshold2,
+                aperture_size + (use_true_gradient ? CV_CANNY_L2_GRADIENT : 0));
+    else
+    {
+        cv::Mat _out = cv::cvarrToMat(test_array[OUTPUT][0]);
+        cv::Canny(cv::cvarrToMat(test_array[INPUT][0]), _out, threshold1, threshold2,
+                aperture_size + (use_true_gradient ? CV_CANNY_L2_GRADIENT : 0));
+    }
 }
 
 
