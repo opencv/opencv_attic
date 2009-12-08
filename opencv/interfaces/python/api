@@ -31,6 +31,20 @@ CV_FOURCC int
 CV_MAKETYPE int
   int depth
   int cn
+CV_8UC int
+  int n
+CV_8SC int
+  int n
+CV_16UC int
+  int n
+CV_16SC int
+  int n
+CV_32SC int
+  int n
+CV_32FC int
+  int n
+CV_64FC int
+  int n
 
 # Initialization
 CloneImage IplImage*
