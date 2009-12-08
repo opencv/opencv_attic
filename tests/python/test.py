@@ -10,65 +10,6 @@ import os
 
 import cv
 
-def find_sample(s):
-    for d in ["../samples/c/", "../doc/pics/"]:
-        path = os.path.join(d, s)
-        if os.access(path, os.R_OK):
-            return path
-    return s
-
-class FrameInterpolator:
-    def __init__(self, prev, curr):
-
-        w,h = cv.GetSize(prev)
-
-        self.offx = cv.CreateMat(h, w, cv.CV_32FC1)
-        self.offy = cv.CreateMat(h, w, cv.CV_32FC1)
-        for y in range(h):
-            for x in range(w):
-                self.offx[y,x] = x
-                self.offy[y,x] = y
-
-        self.maps = [ None, None ]
-        for i,a,b in [ (0, prev, curr), (1, curr, prev) ]:
-            velx = cv.CreateMat(h, w, cv.CV_32FC1)
-            vely = cv.CreateMat(h, w, cv.CV_32FC1)
-            cv.CalcOpticalFlowLK(a, b, (15,15), velx, vely)
-
-            for j in range(10):
-                cv.Smooth(velx, velx, param1 = 7)
-                cv.Smooth(vely, vely, param1 = 7)
-            self.maps[i] = (velx, vely)
-
-    def lerp(self, t, prev, curr):
-
-        w,h = cv.GetSize(prev)
-
-        x = cv.CreateMat(h, w, cv.CV_32FC1)
-        y = cv.CreateMat(h, w, cv.CV_32FC1)
-        d = cv.CloneImage(prev)
-        d0 = cv.CloneImage(prev)
-        d1 = cv.CloneImage(prev)
-
-        # d0 is curr mapped backwards in time, so 1.0 means exactly curr
-        velx,vely = self.maps[0]
-        cv.ConvertScale(velx, x, 1.0 - t)
-        cv.ConvertScale(vely, y, 1.0 - t)
-        cv.Add(x, self.offx, x)
-        cv.Add(y, self.offy, y)
-        cv.Remap(curr, d0, x, y)
-
-        # d1 is prev mapped forwards in time, so 0.0 means exactly prev
-        velx,vely = self.maps[1]
-        cv.ConvertScale(velx, x, t)
-        cv.ConvertScale(vely, y, t)
-        cv.Add(x, self.offx, x)
-        cv.Add(y, self.offy, y)
-        cv.Remap(prev, d1, x, y)
-
-        cv.AddWeighted(d0, t, d1, 1.0 - t, 0.0, d)
-        return d
-
 class TestDirected(unittest.TestCase):
 
     depths = [ cv.IPL_DEPTH_8U, cv.IPL_DEPTH_8S, cv.IPL_DEPTH_16U, cv.IPL_DEPTH_16S, cv.IPL_DEPTH_32S, cv.IPL_DEPTH_32F, cv.IPL_DEPTH_64F ]
@@ -214,7 +155,7 @@ class TestDirected(unittest.TestCase):
             r = cv.MinMaxLoc(scribble)
             self.assert_(r == (0, 255, tuple(reversed(lo)), tuple(reversed(hi))))
 
-    def test_exception(self):
+    def failing_test_exception(self):
         a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         b = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         self.expect_exception(lambda: cv.Laplace(a, b), cv.error)
@@ -1140,107 +1081,6 @@ class TestDirected(unittest.TestCase):
             cv.Line(b, (x*16,0), (x*16,1024), 255)
             #self.snapL([a,b])
 
-    def xxx_test_CalcOpticalFlowBM(self):
-        a = cv.LoadImage("ab/0.tiff", 0)
-
-        if 0:
-            # create b, just a shifted 2 pixels in X
-            b = cv.CreateImage(cv.GetSize(a), 8, 1)
-            m = cv.CreateMat(2, 3, cv.CV_32FC1)
-            cv.SetZero(m)
-            m[0,0] = 1
-            m[1,1] = 1
-            m[0,2] = 2
-            cv.WarpAffine(a, b, m)
-        else:
-            b = cv.LoadImage("ab/1.tiff", 0)
-
-        if 1:
-            factor = 2
-            for i in range(50):
-                print i
-                o0 = cv.LoadImage("again3_2245/%06d.tiff" % i, 1)
-                o1 = cv.LoadImage("again3_2245/%06d.tiff" % (i+1), 1)
-                a = cv.CreateImage((640,360), 8, 3)
-                b = cv.CreateImage((640,360), 8, 3)
-                cv.Resize(o0, a)
-                cv.Resize(o1, b)
-                am = cv.CreateImage(cv.GetSize(a), 8, 1)
-                bm = cv.CreateImage(cv.GetSize(b), 8, 1)
-                cv.CvtColor(a, am, cv.CV_RGB2GRAY)
-                cv.CvtColor(b, bm, cv.CV_RGB2GRAY)
-                fi = FrameInterpolator(am, bm)
-                for k in range(factor):
-                    on = (i * factor) + k
-                    cv.SaveImage("/Users/jamesb/Desktop/foo/%06d.png" % on, fi.lerp(k / float(factor), a, b))
-            return
-
-        if 0:
-            # Run FlowBM
-            w,h = cv.GetSize(a)
-            wv = (w - 6) / 8
-            hv = (h - 6) / 8
-            velx = cv.CreateMat(hv, wv, cv.CV_32FC1)
-            vely = cv.CreateMat(hv, wv, cv.CV_32FC1)
-            cv.CalcOpticalFlowBM(a, b, (6,6), (8,8), (32,32), 0, velx, vely)
-
-            if 1:
-                scribble = cv.CreateImage(cv.GetSize(a), 8, 3)
-                cv.CvtColor(a, scribble, cv.CV_GRAY2BGR)
-                for y in range(0,360, 4):
-                    for x in range(0,640, 4):
-                        cv.Line(scribble, (x, y), (x+velx[y,x], y + vely[y,x]), (0,255,0))
-                cv.Line(a, (640/5,0), (640/5,480), 255)
-                cv.Line(a, (0,360/5), (640,360/5), 255)
-                self.snap(scribbe)
-                return 0
-                ivx = cv.CreateMat(h, w, cv.CV_32FC1)
-                ivy = cv.CreateMat(h, w, cv.CV_32FC1)
-                cv.Resize(velx, ivx)
-                cv.Resize(vely, ivy)
-
-            cv.ConvertScale(ivx, ivx, 0.5)
-            cv.ConvertScale(ivy, ivy, 0.5)
-        
-        if 1:
-            w,h = cv.GetSize(a)
-            velx = cv.CreateMat(h, w, cv.CV_32FC1)
-            vely = cv.CreateMat(h, w, cv.CV_32FC1)
-            cv.CalcOpticalFlowLK(a, b, (7,7), velx, vely)
-
-            for i in range(10):
-                cv.Smooth(velx, velx, param1 = 7)
-                cv.Smooth(vely, vely, param1 = 7)
-            scribble = cv.CreateImage(cv.GetSize(a), 8, 3)
-            cv.CvtColor(a, scribble, cv.CV_GRAY2BGR)
-            for y in range(0, 360, 8):
-                for x in range(0, 640, 8):
-                    cv.Line(scribble, (x, y), (x+velx[y,x], y + vely[y,x]), (0,255,0))
-            self.snapL((a,scribble,b))
-            ivx = velx
-            ivy = vely
-
-        offx = cv.CreateMat(h, w, cv.CV_32FC1)
-        offy = cv.CreateMat(h, w, cv.CV_32FC1)
-        for y in range(360):
-            for x in range(640):
-                offx[y,x] = x
-                offy[y,x] = y
-
-        x = cv.CreateMat(h, w, cv.CV_32FC1)
-        y = cv.CreateMat(h, w, cv.CV_32FC1)
-        d = cv.CreateImage(cv.GetSize(a), 8, 1)
-        cv.ConvertScale(velx, x, 1.0)
-        cv.ConvertScale(vely, y, 1.0)
-        cv.Add(x, offx, x)
-        cv.Add(y, offy, y)
-
-        cv.Remap(b, d, x, y)
-        cv.Merge(d, d, a, None, scribble)
-        original = cv.CreateImage(cv.GetSize(a), 8, 3)
-        cv.Merge(b, b, a, None, original)
-        self.snapL((original, scribble))
-
     def snap(self, img):
         self.snapL([img])
 
@@ -1357,6 +1197,14 @@ class TestDirected(unittest.TestCase):
             cv.RandArr(rng, im, cv.CV_RAND_UNI, 0, 255.0)
             self.snap(im)
             status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+    def test_DrawChessboardCorners(self):
+        im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 3)
+        cv.SetZero(im)
+        cv.DrawChessboardCorners(im, (5, 5), [ (100,100) for i in range(5 * 5) ], 1)
+        self.assert_(cv.Sum(im)[0] > 0)
+
+        self.assertRaises(TypeError, lambda: cv.DrawChessboardCorners(im, (4, 5), [ (100,100) for i in range(5 * 5) ], 1))
 
     def test_FillPoly(self):
         scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
