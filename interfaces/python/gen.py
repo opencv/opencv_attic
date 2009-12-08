@@ -185,6 +185,10 @@ def gen(name, args, ty):
         pred = ''
       yield '  if (%s!convert_to_%s(pyobj_%s, &%s, "%s")) return NULL;' % (pred, safename(a.ty), a.nm, a.nm, a.nm)
 
+  yield '#ifdef CVPY_VALIDATE_%s' % name
+  yield 'CVPY_VALIDATE_%s();' % name
+  yield '#endif'
+
   def invokename(a):
     if 'K' in a.flags:
       prefix = "(const CvArr **)"
