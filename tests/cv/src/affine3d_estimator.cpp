@@ -180,8 +180,8 @@ bool CV_Affine3D_EstTest::testNPoints()
 
 void CV_Affine3D_EstTest::run( int /* start_from */)
 {	
-   /* if (!test4Points())
-        return;*/
+    if (!test4Points())
+        return;
 
     if (!testNPoints())
         return;
