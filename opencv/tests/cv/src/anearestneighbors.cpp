@@ -56,25 +56,33 @@ public:
     NearestNeighborTest( const char* test_name, const char* test_funcs ) 
         : CvTest( test_name, test_funcs ) {}
 protected:
+    static const int minValue = 0;
+    static const int maxValue = 1;
+    static const int dims = 30;
+    static const int featuresCount = 2000;
+    static const int K = 1; // * should also test 2nd nn etc.?
+
+
     virtual void run( int start_from );
     virtual void createModel( const Mat& data ) = 0;
-    virtual void searchNeighbors( Mat& points, Mat& neighbors ) = 0;
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) = 0;
+    virtual int checkBoxed();
+    virtual int checkSearch( const Mat& data );
     virtual void releaseModel() = 0;
 };
 
-void NearestNeighborTest::run( int /*start_from*/ ) {
-    int dims = 30;
-    int featuresCount = 2000;
-    int K = 1; // * should also test 2nd nn etc.?
-    float noise = 0.2f;
+int NearestNeighborTest::checkBoxed()
+{
+    return CvTS::OK;
+}
+
+int NearestNeighborTest::checkSearch( const Mat& data )
+{
+    int code = CvTS::OK;
     int pointsCount = 1000;
+    float noise = 0.2f;
 
     RNG rng;
-    Mat desc( featuresCount, dims, CV_32FC1 );
-    rng.fill( desc, RNG::UNIFORM, Scalar(0.0f), Scalar(1.0f) );
-
-    createModel( desc );
-    
     Mat points( pointsCount, dims, CV_32FC1 );
     Mat results( pointsCount, K, CV_32SC1 );
 
@@ -84,23 +92,55 @@ void NearestNeighborTest::run( int /*start_from*/ ) {
         int fi = rng.next() % featuresCount;
         fmap[pi] = fi;
         for( int d = 0; d < dims; d++ )
-            points.at<float>(pi, d) = desc.at<float>(fi, d) + rng.uniform(0.0f, 1.0f) * noise;
+            points.at<float>(pi, d) = data.at<float>(fi, d) + rng.uniform(0.0f, 1.0f) * noise;
     }
-    searchNeighbors( points, results );
 
-    releaseModel();
+    code = searchNeighbors( points, results );
 
-    int correctMatches = 0;
-    for( int pi = 0; pi < pointsCount; pi++ )
+    if( code == CvTS::OK )
     {
-        if( fmap[pi] == results.at<int>(pi, 0) )
-            correctMatches++;
+        int correctMatches = 0;
+        for( int pi = 0; pi < pointsCount; pi++ )
+        {
+            if( fmap[pi] == results.at<int>(pi, 0) )
+                correctMatches++;
+        }
+
+        double correctPerc = correctMatches / (double)pointsCount;
+        if (correctPerc < .75)
+        {
+            ts->printf( CvTS::LOG, "correct_perc = %d\n", correctPerc );
+            code = CvTS::FAIL_BAD_ACCURACY;
+        }
     }
 
-    double correctPerc = correctMatches / (double)pointsCount;
-    ts->printf( CvTS::LOG, "correct_perc = %d\n", correctPerc );
-    if (correctPerc < .8)
-        ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+    return code;
+}
+
+void NearestNeighborTest::run( int /*start_from*/ ) {
+    int code = CvTS::OK, tempCode;
+    Mat desc( featuresCount, dims, CV_32FC1 );
+    randu( desc, Scalar(minValue), Scalar(maxValue) );
+
+    createModel( desc );
+    
+    tempCode = checkBoxed();
+    if( tempCode != CvTS::OK )
+    {
+        ts->printf( CvTS::LOG, "bad accuracy of FindBoxed \n" );
+        code = tempCode;
+    }
+
+    tempCode = checkSearch( desc );
+    if( tempCode != CvTS::OK )
+    {
+        ts->printf( CvTS::LOG, "bad accuracy of Find \n" );
+        code = tempCode;
+    }
+    
+    releaseModel();
+    
+    ts->set_failed_test_info( code );
 }
 
 //--------------------------------------------------------------------------------
@@ -110,7 +150,7 @@ public:
     CV_LSHTest() : NearestNeighborTest( "lsh", "cvLSHQuery" ) {}
 protected:
     virtual void createModel( const Mat& data );
-    virtual void searchNeighbors( Mat& points, Mat& neighbors );
+    virtual int searchNeighbors( Mat& points, Mat& neighbors );
     virtual void releaseModel();
     struct CvLSH* lsh;
     CvMat desc;
@@ -123,12 +163,13 @@ void CV_LSHTest::createModel( const Mat& data )
     cvLSHAdd( lsh, &desc );
 }
 
-void CV_LSHTest::searchNeighbors( Mat& points, Mat& neighbors )
+int CV_LSHTest::searchNeighbors( Mat& points, Mat& neighbors )
 {
     const int emax = 20;
     Mat dist( points.rows, neighbors.cols, CV_64FC1);
     CvMat _dist = dist, _points = points, _neighbors = neighbors;
     cvLSHQuery( lsh, &_points, &_neighbors, &_dist, neighbors.cols, emax );
+    return CvTS::OK;
 }
 
 void CV_LSHTest::releaseModel()
@@ -143,18 +184,19 @@ public:
     CV_FeatureTreeTest_C( const char* test_name, const char* test_funcs ) 
         : NearestNeighborTest( test_name, test_funcs ) {}
 protected:
-    virtual void searchNeighbors( Mat& points, Mat& neighbors );
+    virtual int searchNeighbors( Mat& points, Mat& neighbors );
     virtual void releaseModel();
     CvFeatureTree* tr;
     CvMat desc;
 };
 
-void CV_FeatureTreeTest_C::searchNeighbors( Mat& points, Mat& neighbors )
+int CV_FeatureTreeTest_C::searchNeighbors( Mat& points, Mat& neighbors )
 {
     const int emax = 20;
     Mat dist( points.rows, neighbors.cols, CV_64FC1);
     CvMat _dist = dist, _points = points, _neighbors = neighbors;
     cvFindFeatures( tr, &_points, &_neighbors, &_dist, neighbors.cols, emax );
+    return CvTS::OK;
 }
 
 void CV_FeatureTreeTest_C::releaseModel()
@@ -184,12 +226,25 @@ public:
     CV_KDTreeTest_C(): CV_FeatureTreeTest_C( "kdtree_c", "cvFindFeatures-kd" ) {}
 protected:
     virtual void createModel( const Mat& data );
+    virtual int checkBoxed();
 };
 
 void CV_KDTreeTest_C::createModel( const Mat& data )
 {
     desc = data;
     tr = cvCreateKDTree( &desc );
+}
+
+int CV_KDTreeTest_C::checkBoxed()
+{
+    Mat min(1, dims, CV_32FC1 ), max(1, dims, CV_32FC1 ), indices( 1, 1, CV_32SC1 );
+    float l = minValue, r = maxValue;
+    min.setTo(Scalar(l)), max.setTo(Scalar(r));
+    CvMat _min = min, _max = max, _indices = indices;
+    // TODO check indices
+    if( cvFindFeaturesBoxed( tr, &_min, &_max, &_indices ) != featuresCount )
+        return CvTS::FAIL_BAD_ACCURACY;
+    return CvTS::OK;
 }
 
 //--------------------------------------------------------------------------------
@@ -199,21 +254,54 @@ public:
     CV_KDTreeTest_CPP() : NearestNeighborTest( "kdtree_cpp", "cv::KDTree funcs" ) {}
 protected:
     virtual void createModel( const Mat& data );
-    virtual void searchNeighbors( Mat& points, Mat& neighbors );
+    virtual int searchNeighbors( Mat& points, Mat& neighbors );
+    virtual int checkBoxed();
     virtual void releaseModel();
     KDTree* tr;
 };
+
 
 void CV_KDTreeTest_CPP::createModel( const Mat& data )
 {
     tr = new KDTree( data, false );
 }
 
-void CV_KDTreeTest_CPP::searchNeighbors( Mat& points, Mat& neighbors )
+int CV_KDTreeTest_CPP::checkBoxed()
+{
+    vector<float> min( dims, minValue), max(dims, maxValue);
+    vector<int> indices;
+    tr->findOrthoRange( &min[0], &max[0], &indices );
+    // TODO check indices
+    if( (int)indices.size() != featuresCount)
+        return CvTS::FAIL_BAD_ACCURACY;
+    return CvTS::OK;
+}
+
+int CV_KDTreeTest_CPP::searchNeighbors( Mat& points, Mat& neighbors )
 {
     const int emax = 20;
+    Mat neighbors2( neighbors.size(), CV_32SC1 );
+    int j;
+    vector<float> min(points.cols, minValue);
+    vector<float> max(points.cols, maxValue);
     for( int pi = 0; pi < points.rows; pi++ )
+    {
+        // 1st way
         tr->findNearest( points.ptr<float>(pi), neighbors.cols, emax, neighbors.ptr<int>(pi) );
+
+        // 2nd way
+        vector<int> neighborsIdx2( neighbors2.cols, 0 );
+        tr->findNearest( points.ptr<float>(pi), neighbors2.cols, emax, &neighborsIdx2 );
+        vector<int>::const_iterator it2 = neighborsIdx2.begin();
+        for( j = 0; it2 != neighborsIdx2.end(); ++it2, j++ )
+            neighbors2.at<int>(pi,j) = *it2;
+    }
+
+    // compare results
+    if( norm( neighbors, neighbors2, NORM_L1 ) != 0 )
+        return CvTS::FAIL_BAD_ACCURACY;
+
+    return CvTS::OK;
 }
 
 void CV_KDTreeTest_CPP::releaseModel()
@@ -229,8 +317,8 @@ public:
         : NearestNeighborTest( test_name, test_funcs ) {}
 protected:
     void createIndex( const Mat& data, const IndexParams& params );
-    void knnSearch( Mat& points, Mat& neighbors );
-    void radiusSearch( Mat& points, Mat& neighbors );
+    int knnSearch( Mat& points, Mat& neighbors );
+    int radiusSearch( Mat& points, Mat& neighbors );
     virtual void releaseModel();
     Index* index;
 };
@@ -240,22 +328,65 @@ void CV_FlannTest::createIndex( const Mat& data, const IndexParams& params )
     index = new Index( data, params );
 }
 
-void CV_FlannTest::knnSearch( Mat& points, Mat& neighbors )
+int CV_FlannTest::knnSearch( Mat& points, Mat& neighbors )
 {
     Mat dist( points.rows, neighbors.cols, CV_32FC1);
-    index->knnSearch( points, neighbors, dist, 1, SearchParams() );
+    int knn = 1, j;
+
+    // 1st way
+    index->knnSearch( points, neighbors, dist, knn, SearchParams() );
+
+    // 2nd way
+    Mat neighbors1( neighbors.size(), CV_32SC1 );
+    for( int i = 0; i < points.rows; i++ )
+    {
+        float* fltPtr = points.ptr<float>(i);
+        vector<float> query( fltPtr, fltPtr + points.cols );
+        vector<int> indices( neighbors1.cols, 0 );
+        vector<float> dists( dist.cols, 0 );
+        index->knnSearch( query, indices, dists, knn, SearchParams() );
+        vector<int>::const_iterator it = indices.begin();
+        for( j = 0; it != indices.end(); ++it, j++ )
+            neighbors1.at<int>(i,j) = *it;
+    }
+
+    // compare results
+    if( norm( neighbors, neighbors1, NORM_L1 ) != 0 )
+        return CvTS::FAIL_BAD_ACCURACY;
+
+    return CvTS::OK;
 }
 
-void CV_FlannTest::radiusSearch( Mat& points, Mat& neighbors )
+int CV_FlannTest::radiusSearch( Mat& points, Mat& neighbors )
 {
     Mat dist( 1, neighbors.cols, CV_32FC1);
+    Mat neighbors1( neighbors.size(), CV_32SC1 );
+    float radius = 10.0f;
+    int j;
+
     // radiusSearch can only search one feature at a time for range search
     for( int i = 0; i < points.rows; i++ )
     {
+        // 1st way
         Mat p( 1, points.cols, CV_32FC1, points.ptr<float>(i) ),
             n( 1, neighbors.cols, CV_32SC1, neighbors.ptr<int>(i) );
-        index->radiusSearch( p, n, dist, 10.0f, SearchParams() );
+        index->radiusSearch( p, n, dist, radius, SearchParams() );
+
+        // 2nd way
+        float* fltPtr = points.ptr<float>(i);
+        vector<float> query( fltPtr, fltPtr + points.cols );
+        vector<int> indices( neighbors1.cols, 0 );
+        vector<float> dists( dist.cols, 0 );
+        index->radiusSearch( query, indices, dists, radius, SearchParams() );
+        vector<int>::const_iterator it = indices.begin();
+        for( j = 0; it != indices.end(); ++it, j++ )
+            neighbors1.at<int>(i,j) = *it;
     }
+    // compare results
+    if( norm( neighbors, neighbors1, NORM_L1 ) != 0 )
+        return CvTS::FAIL_BAD_ACCURACY;
+
+    return CvTS::OK;
 }
 
 void CV_FlannTest::releaseModel()
@@ -270,7 +401,7 @@ public:
     CV_FlannLinearIndexTest() : CV_FlannTest( "flann_linear", "LinearIndex" ) {}
 protected:
     virtual void createModel( const Mat& data ) { createIndex( data, LinearIndexParams() ); }
-    virtual void searchNeighbors( Mat& points, Mat& neighbors ) { knnSearch( points, neighbors ); }
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return knnSearch( points, neighbors ); }
 };
 
 //---------------------------------------
@@ -280,7 +411,7 @@ public:
     CV_FlannKMeansIndexTest() : CV_FlannTest( "flann_kmeans", "KMeansIndex" ) {}
 protected:
     virtual void createModel( const Mat& data ) { createIndex( data, KMeansIndexParams() ); }
-    virtual void searchNeighbors( Mat& points, Mat& neighbors ) { radiusSearch( points, neighbors ); }
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return radiusSearch( points, neighbors ); }
 };
 
 //---------------------------------------
@@ -290,7 +421,17 @@ public:
     CV_FlannKDTreeIndexTest() : CV_FlannTest( "flann_kdtree", "KDTreeIndex" ) {}
 protected:
     virtual void createModel( const Mat& data ) { createIndex( data, KDTreeIndexParams() ); }
-    virtual void searchNeighbors( Mat& points, Mat& neighbors ) { radiusSearch( points, neighbors ); }
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return radiusSearch( points, neighbors ); }
+};
+
+//----------------------------------------
+class CV_FlannCompositeIndexTest : public CV_FlannTest
+{
+public:
+    CV_FlannCompositeIndexTest() : CV_FlannTest( "flann_composite", "CompositeIndex" ) {}
+protected:
+    virtual void createModel( const Mat& data ) { createIndex( data, CompositeIndexParams() ); }
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return knnSearch( points, neighbors ); }
 };
 
 //----------------------------------------
@@ -300,14 +441,44 @@ public:
     CV_FlannAutotunedIndexTest() : CV_FlannTest( "flann_autotuned", "AutotunedIndex" ) {}
 protected:
     virtual void createModel( const Mat& data ) { createIndex( data, AutotunedIndexParams() ); }
-    virtual void searchNeighbors( Mat& points, Mat& neighbors ) { knnSearch( points, neighbors ); }
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return knnSearch( points, neighbors ); }
 };
+//----------------------------------------
+class CV_FlannSavedIndexTest : public CV_FlannTest
+{
+public:
+    CV_FlannSavedIndexTest() : CV_FlannTest( "flann_saved", "SavedIndex" ) {}
+protected:
+    virtual void createModel( const Mat& data );
+    virtual int searchNeighbors( Mat& points, Mat& neighbors ) { return knnSearch( points, neighbors ); }
+};
+
+void CV_FlannSavedIndexTest::createModel(const cv::Mat &data)
+{
+    switch ( cvRandInt(ts->get_rng()) % 2 )
+    {
+        //case 0: createIndex( data, LinearIndexParams() ); break; // nothing to save for linear search
+        case 0: createIndex( data, KMeansIndexParams() ); break;
+        case 1: createIndex( data, KDTreeIndexParams() ); break;
+        //case 2: createIndex( data, CompositeIndexParams() ); break; // nothing to save for linear search
+        //case 2: createIndex( data, AutotunedIndexParams() ); break; // possible linear index !
+        default: assert(0);
+    }
+    char filename[50];
+    tmpnam( filename );
+    index->save( filename );
+    
+    createIndex( data, SavedIndexParams(filename));
+    unlink( filename );
+}
 
 CV_LSHTest lsh_test;
 CV_SpillTreeTest_C spilltree_test_c;
 CV_KDTreeTest_C kdtree_test_c;
 CV_KDTreeTest_CPP kdtree_test_cpp;
-CV_FlannLinearIndexTest flann_linear_index;
-CV_FlannKMeansIndexTest flann_kmeans_index;
-CV_FlannKDTreeIndexTest flann_kdtree_index;
-CV_FlannAutotunedIndexTest flann_autotuned_index;
+CV_FlannLinearIndexTest flann_linear_test;
+CV_FlannKMeansIndexTest flann_kmeans_test;
+CV_FlannKDTreeIndexTest flann_kdtree_test;
+CV_FlannCompositeIndexTest flann_composite_test;
+CV_FlannAutotunedIndexTest flann_autotuned_test;
+CV_FlannSavedIndexTest flann_saved_test;
