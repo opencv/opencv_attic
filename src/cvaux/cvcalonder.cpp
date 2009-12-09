@@ -61,16 +61,16 @@ The code was integrated into OpenCV by Alexey Latyshev
 \****************************************************************************************/
 
 namespace cv {
-#define M_PI 3.14159265358
+
 
 	//namespace features {
 	//rng
-	inline CalonderRng::CalonderRng(int64 seed)
+	CalonderRng::CalonderRng(int64 seed)
 	{
 		rng = cvRNG(1);
 	}
 
-	inline CalonderRng::~CalonderRng() {}
+	CalonderRng::~CalonderRng() {}
 
 	inline void CalonderRng::seed(int64 seed)
 	{
@@ -93,7 +93,7 @@ namespace cv {
 		return res;
 	}
 
-	inline double CalonderRng::gaussian(double sigma)
+	double CalonderRng::gaussian(double sigma)
 	{
 		// this did not work (got NANs): 
 		CvMat* values = cvCreateMat( 1, 1, CV_64FC1 );
@@ -104,10 +104,10 @@ namespace cv {
 	}
 
 	//patch_generator
-	const double CalonderPatchGenerator::DEFAULT_THETA_MIN = -M_PI;
-	const double CalonderPatchGenerator::DEFAULT_THETA_MAX = M_PI;
-	const double CalonderPatchGenerator::DEFAULT_PHI_MIN = -M_PI;
-	const double CalonderPatchGenerator::DEFAULT_PHI_MAX = M_PI;
+	const double CalonderPatchGenerator::DEFAULT_THETA_MIN = -CV_PI;
+	const double CalonderPatchGenerator::DEFAULT_THETA_MAX = CV_PI;
+	const double CalonderPatchGenerator::DEFAULT_PHI_MIN = -CV_PI;
+	const double CalonderPatchGenerator::DEFAULT_PHI_MAX = CV_PI;
 	const double CalonderPatchGenerator::DEFAULT_LAMBDA_MIN = 0.6;
 	const double CalonderPatchGenerator::DEFAULT_LAMBDA_MAX = 1.5;
 	const int CalonderPatchGenerator::DEFAULT_NOISE_LEVEL = 20;
