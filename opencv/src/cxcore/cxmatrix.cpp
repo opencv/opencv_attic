@@ -191,9 +191,7 @@ setIdentity( Mat& m, const Scalar& s )
         for( i = 0; i < rows; i++, data += step )
         {
             for( j = 0; j < cols; j++ )
-                data[j] = 0;
-            if( i < cols )
-                data[i] = val;
+                data[j] = j == i ? val : 0;
         }
     }
     else
