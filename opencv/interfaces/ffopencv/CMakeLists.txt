@@ -33,5 +33,6 @@ set_target_properties(${the_target} PROPERTIES
 
 install(TARGETS ${the_target}
 	RUNTIME DESTINATION bin COMPONENT main
+	ARCHIVE DESTINATION lib COMPONENT main
 	LIBRARY DESTINATION lib COMPONENT main
     )
