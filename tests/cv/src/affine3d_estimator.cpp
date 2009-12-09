@@ -123,7 +123,7 @@ struct Noise
     Point3f operator()(const Point3f& p)
     {
         RNG& rng = theRNG();        
-        return Point3f( p.x * (float)rng,  p.y * (float)rng,  p.z * (float)rng);                 
+        return Point3f( p.x + l * (float)rng,  p.y + l * (float)rng,  p.z + l * (float)rng);                 
     }
 };
 
