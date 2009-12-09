@@ -149,7 +149,7 @@ bool CV_MatrOpTest::TestMatND()
 bool CV_MatrOpTest::TestSparseMat()
 {  
     int sizes[] = { 10, 10, 10};
-    SparseMat mat(n, sizes, CV_32F);
+    SparseMat mat(sizeof(sizes)/sizeof(sizes[0]), sizes, CV_32F);
 
     return true;
 }
