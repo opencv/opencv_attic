@@ -127,28 +127,32 @@ Scalar sum( const Mat& m )
 {
     static SumFunc tab[]=
     {
-        sumBlock_<uchar, unsigned, double, 1<<24>, 0,
+        sumBlock_<uchar, unsigned, double, 1<<24>,
+        sumBlock_<schar, int, double, 1<<24>,
         sumBlock_<ushort, unsigned, double, 1<<16>,
         sumBlock_<short, int, double, 1<<16>,
         sum_<int, double>,
         sum_<float, double>,
         sum_<double, double>, 0,
 
-        sumBlock_<Vec<uchar, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<24>, 0,
+        sumBlock_<Vec<uchar, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<24>,
+        sumBlock_<Vec<schar, 2>, Vec<int, 2>, Vec<double, 2>, 1<<24>,
         sumBlock_<Vec<ushort, 2>, Vec<unsigned, 2>, Vec<double, 2>, 1<<16>,
         sumBlock_<Vec<short, 2>, Vec<int, 2>, Vec<double, 2>, 1<<16>,
         sum_<Vec<int, 2>, Vec<double, 2> >,
         sum_<Vec<float, 2>, Vec<double, 2> >,
         sum_<Vec<double, 2>, Vec<double, 2> >, 0,
 
-        sumBlock_<Vec<uchar, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<24>, 0,
+        sumBlock_<Vec<uchar, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<24>,
+        sumBlock_<Vec<schar, 3>, Vec<int, 3>, Vec<double, 3>, 1<<24>,
         sumBlock_<Vec<ushort, 3>, Vec<unsigned, 3>, Vec<double, 3>, 1<<16>,
         sumBlock_<Vec<short, 3>, Vec<int, 3>, Vec<double, 3>, 1<<16>,
         sum_<Vec<int, 3>, Vec<double, 3> >,
         sum_<Vec<float, 3>, Vec<double, 3> >,
         sum_<Vec<double, 3>, Vec<double, 3> >, 0,
 
-        sumBlock_<Vec<uchar, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<24>, 0,
+        sumBlock_<Vec<uchar, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<24>,
+        sumBlock_<Vec<schar, 4>, Vec<int, 4>, Vec<double, 4>, 1<<24>,
         sumBlock_<Vec<ushort, 4>, Vec<unsigned, 4>, Vec<double, 4>, 1<<16>,
         sumBlock_<Vec<short, 4>, Vec<int, 4>, Vec<double, 4>, 1<<16>,
         sum_<Vec<int, 4>, Vec<double, 4> >,

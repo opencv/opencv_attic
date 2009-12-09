@@ -81,7 +81,8 @@ bool clipLine( Size img_size, Point& pt1, Point& pt2 )
     int c1, c2;
     int right = img_size.width-1, bottom = img_size.height-1;
 
-    CV_Assert( img_size.width > 0 && img_size.height > 0 );
+    if( img_size.width <= 0 || img_size.height <= 0 )
+        return false;
 
     x1 = pt1.x; y1 = pt1.y; x2 = pt2.x; y2 = pt2.y;
     c1 = (x1 < 0) + (x1 > right) * 2 + (y1 < 0) * 4 + (y1 > bottom) * 8;

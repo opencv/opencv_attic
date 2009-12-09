@@ -742,7 +742,13 @@ class TestDirected(unittest.TestCase):
                 for loop in range(5):
                     sources = [random.choice([1, 2, 3, 4]) for i in range(8)]
                     dests = [random.choice([1, 2, 3, 4]) for i in range(8)]
-                    fromTo = [(random.randrange(-1, sum(sources)), random.randrange(sum(dests))) for i in range(random.randrange(1, 30))]
+                    # make sure that fromTo does not have duplicates in dests, otherwise the result is not determined
+                    while 1:
+                        fromTo = [(random.randrange(-1, sum(sources)), random.randrange(sum(dests))) for i in range(random.randrange(1, 30))]
+                        dests_set = list(set([j for (i, j) in fromTo]))
+                        if len(dests_set) == len(dests):
+                            break
+                        
                     # print sources
                     # print dests
                     # print fromTo
@@ -752,14 +758,35 @@ class TestDirected(unittest.TestCase):
                     source_m = [cv.CreateMat(rows, cols, CV_8UC(c)) for c in sources]
                     dest_m =   [cv.CreateMat(rows, cols, CV_8UC(c)) for c in dests]
 
+                    def m00(m):
+                        # return the contents of the N channel mat m[0,0] as a N-length list
+                        chans = cv.CV_MAT_CN(cv.GetElemType(m))
+                        if chans == 1:
+                            return [m[0,0]]
+                        else:
+                            return list(m[0,0])[:chans]
+
                     # Sources numbered from 50, destinations numbered from 100
 
                     for i in range(len(sources)):
                         s = sum(sources[:i]) + 50
                         cv.Set(source_m[i], (s, s+1, s+2, s+3))
+                        self.assertEqual(m00(source_m[i]), [s, s+1, s+2, s+3][:sources[i]])
+                        
                     for i in range(len(dests)):
                         s = sum(dests[:i]) + 100
                         cv.Set(dest_m[i], (s, s+1, s+2, s+3))
+                        self.assertEqual(m00(dest_m[i]), [s, s+1, s+2, s+3][:dests[i]])
+
+                    # now run the sanity check
+                    
+                    for i in range(len(sources)):
+                        s = sum(sources[:i]) + 50    
+                        self.assertEqual(m00(source_m[i]), [s, s+1, s+2, s+3][:sources[i]])
+                        
+                    for i in range(len(dests)):
+                        s = sum(dests[:i]) + 100
+                        self.assertEqual(m00(dest_m[i]), [s, s+1, s+2, s+3][:dests[i]])
 
                     cv.MixChannels(source_m, dest_m, fromTo)
 
@@ -769,14 +796,6 @@ class TestDirected(unittest.TestCase):
                             expected[j] = 0.0
                         else:
                             expected[j] = 50 + i
-
-                    def m00(m):
-                        # return the contents of the N channel mat m[0,0] as a N-length list
-                        chans = cv.CV_MAT_CN(cv.GetElemType(m))
-                        if chans == 1:
-                            return [m[0,0]]
-                        else:
-                            return list(m[0,0])[:chans]
 
                     actual = sum([m00(m) for m in dest_m], [])
                     self.assertEqual(sum([m00(m) for m in dest_m], []), expected)
@@ -895,6 +914,7 @@ class TestDirected(unittest.TestCase):
         for way in ['CvSeq', 'CvMat', 'list']:
             for points in range(3,20):
                 scratch = cv.CreateImage((800,800), 8, 1)
+                cv.SetZero(scratch)
                 sides = 2 * points
                 cv.FillPoly(scratch, [ [ polar2xy(i * 2 * math.pi / sides, [100,350][i&1]) for i in range(sides) ] ], 255)
 
