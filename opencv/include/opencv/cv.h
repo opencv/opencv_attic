@@ -1307,6 +1307,17 @@ CVAPI(void) cvUndistortPoints( const CvMat* src, CvMat* dst,
                                const CvMat* dist_coeffs,
                                const CvMat* R CV_DEFAULT(0),
                                const CvMat* P CV_DEFAULT(0));
+    
+/* Computes the optimal new camera matrix according to the free scaling parameter alpha:
+   alpha=0 - only valid pixels will be retained in the undistorted image
+   alpha=1 - all the source image pixels will be retained in the undistorted image
+*/
+CVAPI(void) cvGetOptimalNewCameraMatrix( const CvMat* camera_matrix,
+                                         const CvMat* dist_coeffs,
+                                         CvSize image_size, double alpha,
+                                         CvMat* new_camera_matrix,
+                                         CvSize new_imag_size CV_DEFAULT(cvSize(0,0)),
+                                         CvRect* valid_pixel_ROI CV_DEFAULT(0) );
 
 /* Converts rotation vector to rotation matrix or vice versa */
 CVAPI(int) cvRodrigues2( const CvMat* src, CvMat* dst,
@@ -1453,7 +1464,11 @@ CVAPI(void) cvStereoRectify( const CvMat* camera_matrix1, const CvMat* camera_ma
                              CvSize image_size, const CvMat* R, const CvMat* T,
                              CvMat* R1, CvMat* R2, CvMat* P1, CvMat* P2,
                              CvMat* Q CV_DEFAULT(0),
-                             int flags CV_DEFAULT(CV_CALIB_ZERO_DISPARITY) );
+                             int flags CV_DEFAULT(CV_CALIB_ZERO_DISPARITY),
+                             double alpha CV_DEFAULT(-1),
+                             CvSize new_image_size CV_DEFAULT(cvSize(0,0)),
+                             CvRect* valid_pix_ROI1 CV_DEFAULT(0),
+                             CvRect* valid_pix_ROI2 CV_DEFAULT(0));
 
 /* Computes rectification transformations for uncalibrated pair of images using a set
    of point correspondences */

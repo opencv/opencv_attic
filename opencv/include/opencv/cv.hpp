@@ -379,6 +379,9 @@ CV_EXPORTS void undistort( const Mat& src, Mat& dst, const Mat& cameraMatrix,
 CV_EXPORTS void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& distCoeffs,
                            const Mat& R, const Mat& newCameraMatrix,
                            Size size, int m1type, Mat& map1, Mat& map2 );
+CV_EXPORTS Mat getOptimalNewCameraMatrix( const Mat& cameraMatrix, const Mat& distCoeffs,
+                                          Size imageSize, double alpha, Size newImgSize,
+                                          Rect* validPixROI=0);
 CV_EXPORTS Mat getDefaultNewCameraMatrix( const Mat& cameraMatrix, Size imgsize=Size(),
                                           bool centerPrincipalPoint=false );
 
@@ -840,6 +843,14 @@ CV_EXPORTS void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
                                Size imageSize, const Mat& R, const Mat& T,
                                Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
                                int flags=CALIB_ZERO_DISPARITY );
+    
+CV_EXPORTS void stereoRectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+                              const Mat& cameraMatrix2, const Mat& distCoeffs2,
+                              Size imageSize, const Mat& R, const Mat& T,
+                              Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+                              double alpha, Size newImageSize=Size(),
+                              Rect* validPixROI1=0, Rect* validPixROI2=0,
+                              int flags=CALIB_ZERO_DISPARITY );
 
 CV_EXPORTS bool stereoRectifyUncalibrated( const Mat& points1,
                                            const Mat& points2,

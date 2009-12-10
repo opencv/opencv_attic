@@ -5028,7 +5028,7 @@ FileNodeIterator::FileNodeIterator(const CvFileStorage* _fs,
         int node_type = _node->tag & FileNode::TYPE_MASK;
         fs = _fs;
         container = _node;
-        if( node_type == FileNode::SEQ || node_type == FileNode::MAP )
+        if( !(_node->tag & FileNode::USER) && (node_type == FileNode::SEQ || node_type == FileNode::MAP) )
         {
             cvStartReadSeq( _node->data.seq, &reader );
             remaining = FileNode(_fs, _node).size();
