@@ -63,7 +63,7 @@ protected:
     bool runSparse();
 };
 
-CV_OptFlowTest::CV_OptFlowTest(): CvTest( "algorithm-opticalflow", "?" )
+CV_OptFlowTest::CV_OptFlowTest(): CvTest( "optflow-all", "?" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
@@ -248,7 +248,7 @@ bool CV_OptFlowTest::runDense(const Point& d)
     //waitKey();   
 
     const double thres = 0.2;
-    if (errorLK > thres || errorBM > thres || errorFB > thres || errorFBG > thres /*|| errorHS > thres */)
+    if (errorLK > thres || errorBM > thres || errorFB > thres || errorFBG > thres /*|| errorHS > thres /**/)
     {        
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
