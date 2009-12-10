@@ -25,6 +25,8 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
+#undef _GLIBCXX_DEBUG
+
 #include "cv.h"
 #include "cxmisc.h"
 #include "highgui.h"
@@ -46,6 +48,7 @@ using namespace std;
 static void
 StereoCalib(const char* imageList, int useUncalibrated)
 {
+    CvRect roi1, roi2;
     int nx = 0, ny = 0;
     int displayCorners = 0;
     int showUndistorted = 1;
@@ -195,7 +198,8 @@ StereoCalib(const char* imageList, int useUncalibrated)
         CV_TERMCRIT_EPS, 100, 1e-5),
         CV_CALIB_FIX_ASPECT_RATIO +
         CV_CALIB_ZERO_TANGENT_DIST +
-        CV_CALIB_SAME_FOCAL_LENGTH );
+        CV_CALIB_SAME_FOCAL_LENGTH +
+        CV_CALIB_FIX_K3);
     printf(" done\n");
 // CALIBRATION QUALITY CHECK
 // because the output fundamental matrix implicitly
@@ -257,11 +261,18 @@ StereoCalib(const char* imageList, int useUncalibrated)
         {
             CvMat _P1 = cvMat(3, 4, CV_64F, P1);
             CvMat _P2 = cvMat(3, 4, CV_64F, P2);
+
             cvStereoRectify( &_M1, &_M2, &_D1, &_D2, imageSize,
                 &_R, &_T,
                 &_R1, &_R2, &_P1, &_P2, 0,
-                0/*CV_CALIB_ZERO_DISPARITY*/ );
+                0/*CV_CALIB_ZERO_DISPARITY*/,
+                1, imageSize, &roi1, &roi2);
+            
             isVerticalStereo = fabs(P2[1][3]) > fabs(P2[0][3]);
+            if(!isVerticalStereo)
+                roi2.x += imageSize.width;
+            else
+                roi2.y += imageSize.height;
     //Precompute maps for cvRemap()
             cvInitUndistortRectifyMap(&_M1,&_D1,&_R1,&_P1,mx1,my1);
             cvInitUndistortRectifyMap(&_M2,&_D2,&_R2,&_P2,mx2,my2);
@@ -352,10 +363,16 @@ StereoCalib(const char* imageList, int useUncalibrated)
                     cvGetCols( pair, &part, imageSize.width,
                         imageSize.width*2 );
                     cvCvtColor( img2r, &part, CV_GRAY2BGR );
+                    cvRectangle( pair, cvPoint(roi1.x,roi1.y),
+                                cvPoint(roi1.x+roi1.width, roi1.y+roi1.height),
+                                CV_RGB(0,255,0),3);
+                    cvRectangle( pair, cvPoint(roi2.x,roi2.y),
+                                cvPoint(roi2.x+roi2.width, roi2.y+roi2.height),
+                                CV_RGB(0,255,0),3);
                     for( j = 0; j < imageSize.height; j += 16 )
                         cvLine( pair, cvPoint(0,j),
                         cvPoint(imageSize.width*2,j),
-                        CV_RGB(0,255,0));
+                        CV_RGB(255,0,0));
                 }
                 else
                 {
@@ -364,10 +381,16 @@ StereoCalib(const char* imageList, int useUncalibrated)
                     cvGetRows( pair, &part, imageSize.height,
                         imageSize.height*2 );
                     cvCvtColor( img2r, &part, CV_GRAY2BGR );
+                    cvRectangle( pair, cvPoint(roi1.x,roi1.y),
+                                cvPoint(roi1.x+roi1.width, roi1.y+roi1.height),
+                                CV_RGB(0,255,0),3);
+                    cvRectangle( pair, cvPoint(roi2.x,roi2.y),
+                                cvPoint(roi2.x+roi2.width, roi2.y+roi2.height),
+                                CV_RGB(0,255,0),3);
                     for( j = 0; j < imageSize.width; j += 16 )
                         cvLine( pair, cvPoint(j,0),
                         cvPoint(j,imageSize.height*2),
-                        CV_RGB(0,255,0));
+                        CV_RGB(255,0,0));
                 }
                 cvShowImage( "rectified", pair );
                 if( cvWaitKey() == 27 )
@@ -389,7 +412,7 @@ StereoCalib(const char* imageList, int useUncalibrated)
 
 int main(int argc, char** argv)
 {
-    StereoCalib(argc > 1 ? argv[1] : "stereo_calib.txt", 1);
+    StereoCalib(argc > 1 ? argv[1] : "stereo_calib.txt", 0);
     return 0;
 }
 
