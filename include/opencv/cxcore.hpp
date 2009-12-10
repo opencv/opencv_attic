@@ -2035,8 +2035,8 @@ public:
     };
 
     KDTree();
-    KDTree(const Mat& _points, bool copyPoints=true);
-    void build(const Mat& _points, bool copyPoints=true);
+    KDTree(const Mat& _points, bool copyAndReorderPoints=false);
+    void build(const Mat& _points, bool copyAndReorderPoints=false);
 
     int findNearest(const float* vec, int K, int Emax, int* neighborsIdx,
                     Mat* neighbors=0, float* dist=0) const;
