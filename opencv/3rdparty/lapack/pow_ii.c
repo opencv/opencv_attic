@@ -11,9 +11,7 @@ integer pow_ii(integer *ap, integer *bp)
     if (n <= 0) {
         if (n == 0 || x == 1)
             return 1;
-        if (x != -1)
-            return x == 0 ? 1/x : 0;
-        n = -n;
+        return x != -1 ? 0 : (n & 1) ? -1 : 1;
     }
     u = n;
     for(pow = 1; ; )
