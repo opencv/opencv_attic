@@ -2366,6 +2366,8 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
 {
     double _om[3], _t[3], _uu[3]={0,0,0}, _r_r[3][3], _pp[3][4];
     double _ww[3], _wr[3][3], _z[3] = {0,0,0}, _ri[3][3];
+    cv::Rect_<float> inner1, inner2, outer1, outer2;
+    
     CvMat om  = cvMat(3, 1, CV_64F, _om);
     CvMat t   = cvMat(3, 1, CV_64F, _t);
     CvMat uu  = cvMat(3, 1, CV_64F, _uu);
@@ -2478,24 +2480,24 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
     _pp[idx][3] = _t[idx]*fc_new; // baseline * focal length
     cvConvert(&pp, _P2);
     
+    alpha = MIN(alpha, 1.);
+    
+    icvGetRectangles( _cameraMatrix1, _distCoeffs1, _R1, _P1, imageSize, inner1, outer1 );
+    icvGetRectangles( _cameraMatrix2, _distCoeffs2, _R2, _P2, imageSize, inner2, outer2 );
+    
+    {
+    double cx1_0 = cc_new[0].x;
+    double cy1_0 = cc_new[0].y;
+    double cx2_0 = cc_new[1].x;
+    double cy2_0 = cc_new[1].y;
+    double cx1 = newImgSize.width*cx1_0/imageSize.width;
+    double cy1 = newImgSize.height*cy1_0/imageSize.height;
+    double cx2 = newImgSize.width*cx2_0/imageSize.width;
+    double cy2 = newImgSize.height*cy2_0/imageSize.height;
+    double s = 1.;
+    
     if( alpha >= 0 )
     {
-        alpha = MIN(alpha, 1.);
-        
-        cv::Rect_<float> inner1, inner2, outer1, outer2;
-        icvGetRectangles( _cameraMatrix1, _distCoeffs1, _R1, _P1, imageSize, inner1, outer1 );
-        icvGetRectangles( _cameraMatrix2, _distCoeffs2, _R2, _P2, imageSize, inner2, outer2 );
-        
-        newImgSize = newImgSize.width*newImgSize.height == 0 ? newImgSize : imageSize;
-        double cx1_0 = cc_new[0].x;
-        double cy1_0 = cc_new[0].y;
-        double cx2_0 = cc_new[1].x;
-        double cy2_0 = cc_new[1].y;
-        double cx1 = newImgSize.width*cx1_0/imageSize.width;
-        double cy1 = newImgSize.height*cy1_0/imageSize.height;
-        double cx2 = newImgSize.width*cx2_0/imageSize.width;
-        double cy2 = newImgSize.height*cy2_0/imageSize.height;
-        
         double s0 = std::max(std::max(std::max((double)cx1/(cx1_0 - inner1.x), (double)cy1/(cy1_0 - inner1.y)),
                             (double)(newImgSize.width - cx1)/(inner1.x + inner1.width - cx1_0)),
                         (double)(newImgSize.height - cy1)/(inner1.y + inner1.height - cy1_0));
@@ -2512,37 +2514,39 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
                      (double)(newImgSize.height - cy2)/(outer2.y + outer2.height - cy2_0)),
                  s1);
         
-        double s = s0*(1 - alpha) + s1*alpha;
-        fc_new *= s;
-        cc_new[0] = cvPoint2D64f(cx1, cy1);
-        cc_new[1] = cvPoint2D64f(cx2, cy2);
+        s = s0*(1 - alpha) + s1*alpha;
+    }
         
-        cvmSet(_P1, 0, 0, fc_new);
-        cvmSet(_P1, 1, 1, fc_new);
-        cvmSet(_P1, 0, 2, cx1);
-        cvmSet(_P1, 1, 2, cy1);
-        
-        cvmSet(_P2, 0, 0, fc_new);
-        cvmSet(_P2, 1, 1, fc_new);
-        cvmSet(_P2, 0, 2, cx2);
-        cvmSet(_P2, 1, 2, cy2);
-        cvmSet(_P2, idx, 3, s*cvmGet(_P2, idx, 3));
-        
-        if(roi1)
-        {
-            *roi1 = cv::Rect(cvCeil((inner1.x - cx1_0)*s + cx1),
-                         cvCeil((inner1.y - cy1_0)*s + cy1),
-                         cvFloor(inner1.width*s), cvFloor(inner1.height*s))
-                & cv::Rect(0, 0, newImgSize.width, newImgSize.height);
-        }
-        
-        if(roi2)
-        {
-            *roi2 = cv::Rect(cvCeil((inner2.x - cx2_0)*s + cx2),
-                         cvCeil((inner2.y - cy2_0)*s + cy2),
-                         cvFloor(inner2.width*s), cvFloor(inner2.height*s))
-                & cv::Rect(0, 0, newImgSize.width, newImgSize.height);
-        }
+    fc_new *= s;
+    cc_new[0] = cvPoint2D64f(cx1, cy1);
+    cc_new[1] = cvPoint2D64f(cx2, cy2);
+    
+    cvmSet(_P1, 0, 0, fc_new);
+    cvmSet(_P1, 1, 1, fc_new);
+    cvmSet(_P1, 0, 2, cx1);
+    cvmSet(_P1, 1, 2, cy1);
+    
+    cvmSet(_P2, 0, 0, fc_new);
+    cvmSet(_P2, 1, 1, fc_new);
+    cvmSet(_P2, 0, 2, cx2);
+    cvmSet(_P2, 1, 2, cy2);
+    cvmSet(_P2, idx, 3, s*cvmGet(_P2, idx, 3));
+    
+    if(roi1)
+    {
+        *roi1 = cv::Rect(cvCeil((inner1.x - cx1_0)*s + cx1),
+                     cvCeil((inner1.y - cy1_0)*s + cy1),
+                     cvFloor(inner1.width*s), cvFloor(inner1.height*s))
+            & cv::Rect(0, 0, newImgSize.width, newImgSize.height);
+    }
+    
+    if(roi2)
+    {
+        *roi2 = cv::Rect(cvCeil((inner2.x - cx2_0)*s + cx2),
+                     cvCeil((inner2.y - cy2_0)*s + cy2),
+                     cvFloor(inner2.width*s), cvFloor(inner2.height*s))
+            & cv::Rect(0, 0, newImgSize.width, newImgSize.height);
+    }
     }
 
     if( _Q )

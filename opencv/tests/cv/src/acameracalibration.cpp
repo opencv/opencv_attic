@@ -653,6 +653,8 @@ CV_CameraCalibrationTest calibrate_test;
 
 ///////////////////////////////// Stereo Calibration /////////////////////////////////////
 
+using namespace cv;
+using namespace std;
 
 class CV_StereoCalibrationTest : public CvTest
 {
@@ -663,6 +665,10 @@ public:
     //int write_default_params(CvFileStorage* fs);
     
 protected:
+    bool checkPandROI(int test_case_idx,
+                      const Mat& M, const Mat& D, const Mat& R,
+                      const Mat& P, Size imgsize, Rect roi);
+    
     void run(int);
 };
 
@@ -685,8 +691,52 @@ void CV_StereoCalibrationTest::clear()
     CvTest::clear();
 }
 
-using namespace cv;
-using namespace std;
+
+bool CV_StereoCalibrationTest::checkPandROI(int test_case_idx, const Mat& M, const Mat& D, const Mat& R,
+                                            const Mat& P, Size imgsize, Rect roi)
+{
+    const double eps = 0.05;
+    const int N = 21;
+    int x, y, k;
+    vector<Point2f> pts, upts;
+    
+    // step 1. check that all the original points belong to the destination image 
+    for( y = 0; y < N; y++ )
+        for( x = 0; x < N; x++ )
+            pts.push_back(Point2f((float)x*imgsize.width/(N-1), (float)y*imgsize.height/(N-1)));
+    
+    undistortPoints( pts, upts, M, D, R, P );
+    for( k = 0; k < N*N; k++ )
+        if( upts[k].x < -imgsize.width*eps || upts[k].x > imgsize.width*(1+eps) ||
+           upts[k].y < -imgsize.height*eps || upts[k].y > imgsize.height*(1+eps) )
+    {
+        ts->printf(CvTS::LOG, "Test #%d. The point (%g, %g) was mapped to (%g, %g) which is out of image\n",
+                   test_case_idx, pts[k].x, pts[k].y, upts[k].x, upts[k].y);
+        return false;
+    }
+    
+    // step 2. check that all the points inside ROI belong to the original source image
+    Mat temp(imgsize, CV_8U), utemp, map1, map2;
+    temp = Scalar::all(1);
+    initUndistortRectifyMap(M, D, R, P, imgsize, CV_16SC2, map1, map2);
+    remap(temp, utemp, map1, map2, INTER_LINEAR);
+    
+    if(roi.x < 0 || roi.y < 0 || roi.x + roi.width > imgsize.width || roi.y + roi.height > imgsize.height)
+    {
+        ts->printf(CvTS::LOG, "Test #%d. The ROI=(%d, %d, %d, %d) is outside of the imge rectangle\n",
+                   test_case_idx, roi.x, roi.y, roi.width, roi.height);
+        return false;
+    }
+    double s = sum(utemp(roi))[0];
+    if( s > roi.area() || roi.area() - s > roi.area()*(1-eps) )
+    {
+        ts->printf(CvTS::LOG, "Test #%d. The ratio of black pixels inside the valid ROI (~%g%%) is too large\n",
+                   test_case_idx, s*100./roi.area());
+        return false;
+    }
+    
+    return true;
+}
 
 void CV_StereoCalibrationTest::run( int start_from )
 {
@@ -786,7 +836,8 @@ void CV_StereoCalibrationTest::run( int start_from )
         }
         
         Mat R1, R2, P1, P2, Q;
-        stereoRectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 0);
+        Rect roi1, roi2;
+        stereoRectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 1, imgsize, &roi1, &roi2, 0);
         
         if(norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
            norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
@@ -794,6 +845,18 @@ void CV_StereoCalibrationTest::run( int start_from )
         {
             ts->printf( CvTS::LOG, "The computed R1 and R2 are not orthogonal, or the computed F is not singular, testcase %d\n", testcase);
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        if(!checkPandROI(testcase, M1, D1, R1, P1, imgsize, roi1))
+        {
+            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+            return;
+        }
+        
+        if(!checkPandROI(testcase, M2, D2, R2, P2, imgsize, roi2))
+        {
+            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
             return;
         }
         
