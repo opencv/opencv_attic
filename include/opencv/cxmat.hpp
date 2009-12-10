@@ -719,7 +719,8 @@ template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(Point pt) const
 template<typename _Tp> inline Mat_<_Tp>::operator vector<_Tp>() const
 {
     CV_Assert( rows == 1 || cols == 1 );
-    return isContinuous() ? vector<_Tp>((size_t)(rows + cols - 1), (_Tp*)data) :
+    return isContinuous() ?
+        vector<_Tp>((_Tp*)data,(_Tp*)data + (rows + cols - 1)) :
         (vector<_Tp>)((Mat_<_Tp>)this->t());
 }
 
