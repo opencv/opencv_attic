@@ -241,8 +241,8 @@ Smooths the image in one of several ways.
   \cvarg{CV\_MEDIAN}{median filter with a $\texttt{param1}\times\texttt{param1}$ square aperture}
   \cvarg{CV\_BILATERAL}{bilateral filter with a $\texttt{param1}\times\texttt{param1}$ square aperture, color sigma=\texttt{param3} and spatial sigma=\texttt{param4}. If \texttt{param1=0}, the aperture square side is set to \newline \texttt{cvRound(param4*1.5)*2+1}. Information about bilateral filtering can be found at \url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}}
 \end{description}}
-\cvarg{param1}{The first parameter of the smoothing operation}
-\cvarg{param2}{The second parameter of the smoothing operation. In the case of simple scaled/non-scaled and Gaussian blur if \texttt{param2} is zero, it is set to \texttt{param1}}
+\cvarg{param1}{The first parameter of the smoothing operation, the aperture width. Must be a positive odd number (1, 3, 5, ...)}
+\cvarg{param2}{The second parameter of the smoothing operation, the aperture height. Ignored by \texttt{CV\_MEDIAN} and \texttt{CV\_BILATERAL} methods. In the case of simple scaled/non-scaled and Gaussian blur if \texttt{param2} is zero, it is set to \texttt{param1}. Otherwise it must be a positive odd number.}
 \cvarg{param3}{In the case of a Gaussian parameter this parameter may specify Gaussian $\sigma$ (standard deviation). If it is zero, it is calculated from the kernel size:
 \[
 \sigma = 0.3 (n/2 - 1) + 0.8 \quad \text{where} \quad n=
