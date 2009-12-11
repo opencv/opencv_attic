@@ -2573,7 +2573,7 @@ void cvGetOptimalNewCameraMatrix( const CvMat* cameraMatrix, const CvMat* distCo
     cv::Rect_<float> inner, outer;
     icvGetRectangles( cameraMatrix, distCoeffs, 0, cameraMatrix, imgSize, inner, outer );
     
-    newImgSize = newImgSize.width*newImgSize.height == 0 ? newImgSize : imgSize;
+    newImgSize = newImgSize.width*newImgSize.height != 0 ? newImgSize : imgSize;
     
     double M[3][3];
     CvMat _M = cvMat(3, 3, CV_64F, M);
