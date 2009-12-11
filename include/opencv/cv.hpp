@@ -380,7 +380,7 @@ CV_EXPORTS void initUndistortRectifyMap( const Mat& cameraMatrix, const Mat& dis
                            const Mat& R, const Mat& newCameraMatrix,
                            Size size, int m1type, Mat& map1, Mat& map2 );
 CV_EXPORTS Mat getOptimalNewCameraMatrix( const Mat& cameraMatrix, const Mat& distCoeffs,
-                                          Size imageSize, double alpha, Size newImgSize,
+                                          Size imageSize, double alpha, Size newImgSize=Size(),
                                           Rect* validPixROI=0);
 CV_EXPORTS Mat getDefaultNewCameraMatrix( const Mat& cameraMatrix, Size imgsize=Size(),
                                           bool centerPrincipalPoint=false );

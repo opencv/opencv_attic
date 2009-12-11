@@ -20,6 +20,11 @@ class cvCppFunc(Sectioning.subsection):
   def invoke(self, tex):
     Sectioning.subsection.invoke(self, tex)
 
+class cvFunc(Sectioning.subsection):
+  args = 'title alt'
+  def invoke(self, tex):
+    Sectioning.subsection.invoke(self, tex)
+
 class cvstruct(Sectioning.subsection):
   def invoke(self, tex):
     Sectioning.subsection.invoke(self, tex)
@@ -89,6 +94,11 @@ class cvC(Base.Command):
     Base.Command.invoke(self, tex)
     
 class cvCpp(Base.Command):
+  args = 'a'
+  def invoke(self, tex):
+    Base.Command.invoke(self, tex)
+
+class cvCPy(Base.Command):
   args = 'a'
   def invoke(self, tex):
     Base.Command.invoke(self, tex)

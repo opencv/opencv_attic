@@ -95,22 +95,18 @@ showtabs=false,                 % show tabs within strings adding particular und
 }
 
 \newcommand{\cvC}[1]{
-\ifthenelse{\equal{\targetlang}{c}}{
-#1
-}{}
+\ifthenelse{\equal{\targetlang}{c}}{#1}{}
 }
 
-
 \newcommand{\cvCpp}[1]{
-\ifthenelse{\equal{\targetlang}{cpp}}{
-#1
-}{}
+\ifthenelse{\equal{\targetlang}{cpp}}{#1}{}
 }
 
 \newcommand{\cvPy}[1]{
-\ifthenelse{\equal{\targetlang}{python}}{
-#1
-}{}
+\ifthenelse{\equal{\targetlang}{python}}{#1}{}}
+
+\newcommand{\cvCPy}[1]{
+\ifthenelse{\equal{\targetlang}{c}\or\equal{\targetlang}{python}}{#1}{}
 }
 
 \newcommand{\cvcode}[1]{
