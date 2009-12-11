@@ -5,6 +5,7 @@ import math
 import sys
 import array
 import urllib
+import tarfile
 import hashlib
 import os
 import getopt
@@ -990,6 +991,95 @@ class TestDirected(unittest.TestCase):
         velx = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
         vely = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
         cv.CalcOpticalFlowBM(a, b, (8,8), (1,1), (8,8), 0, velx, vely)
+
+    def new_test_calibration(self):
+
+        def get_corners(mono, refine = False):
+            (ok, corners) = cv.FindChessboardCorners(mono, (num_x_ints, num_y_ints), cv.CV_CALIB_CB_ADAPTIVE_THRESH | cv.CV_CALIB_CB_NORMALIZE_IMAGE)
+            if refine and ok:
+                corners = cv.FindCornerSubPix(mono, corners, (5,5), (-1,-1), ( cv.CV_TERMCRIT_EPS+cv.CV_TERMCRIT_ITER, 30, 0.1 ))
+            return (ok, corners)
+
+        def mk_object_points(nimages, squaresize = 1):
+            opts = cv.CreateMat(nimages * num_pts, 3, cv.CV_32FC1)
+            for i in range(nimages):
+                for j in range(num_pts):
+                    opts[i * num_pts + j, 0] = (j / num_x_ints) * squaresize
+                    opts[i * num_pts + j, 1] = (j % num_x_ints) * squaresize
+                    opts[i * num_pts + j, 2] = 0
+            return opts
+
+        def mk_image_points(goodcorners):
+            ipts = cv.CreateMat(len(goodcorners) * num_pts, 2, cv.CV_32FC1)
+            for (i, co) in enumerate(goodcorners):
+                for j in range(num_pts):
+                    ipts[i * num_pts + j, 0] = co[j][0]
+                    ipts[i * num_pts + j, 1] = co[j][1]
+            return ipts
+
+        def mk_point_counts(nimages):
+            npts = cv.CreateMat(nimages, 1, cv.CV_32SC1)
+            for i in range(nimages):
+                npts[i, 0] = num_pts
+            return npts
+
+        def cvmat_iterator(cvmat):
+            for i in range(cvmat.rows):
+                for j in range(cvmat.cols):
+                    yield cvmat[i,j]
+
+        def image_from_archive(tar, name):
+            member = tar.getmember(name)
+            filedata = tar.extractfile(member).read()
+            imagefiledata = cv.CreateMat(1, len(filedata), cv.CV_8UC1)
+            cv.SetData(imagefiledata, filedata, len(filedata))
+            return cv.DecodeImageM(imagefiledata)
+
+        urllib.urlretrieve("http://pr.willowgarage.com/data/camera_calibration/camera_calibration.tar.gz", "camera_calibration.tar.gz")
+        tf = tarfile.open("camera_calibration.tar.gz")
+
+        num_x_ints = 8
+        num_y_ints = 6
+        num_pts = num_x_ints * num_y_ints
+
+        images = [image_from_archive(tf, "wide/left%04d.pgm" % i) for i in range(3, 15)]
+        size = cv.GetSize(images[0])
+        corners = [get_corners(i) for i in images]
+        goodcorners = [co for (im, (ok, co)) in zip(images, corners) if ok]
+
+        ipts = mk_image_points(goodcorners)
+        opts = mk_object_points(len(goodcorners), .1)
+        npts = mk_point_counts(len(goodcorners))
+
+        intrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
+        distortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+        cv.SetZero(intrinsics)
+        cv.SetZero(distortion)
+        # focal lengths have 1/1 ratio
+        intrinsics[0,0] = 1.0
+        intrinsics[1,1] = 1.0
+        cv.CalibrateCamera2(opts, ipts, npts,
+                   cv.GetSize(images[0]),
+                   intrinsics,
+                   distortion,
+                   cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
+                   cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
+                   flags = 0) # cv.CV_CALIB_ZERO_TANGENT_DIST)
+        print "D =", list(cvmat_iterator(distortion))
+        print "K =", list(cvmat_iterator(intrinsics))
+
+        newK = cv.CreateMat(3, 3, cv.CV_64FC1)
+        cv.GetOptimalNewCameraMatrix(intrinsics, distortion, size, 1.0, newK)
+        print "newK =", list(cvmat_iterator(newK))
+
+        mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
+        mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
+        cv.InitUndistortMap(newK, distortion, mapx, mapy)
+        for img in images:
+            r = cv.CloneMat(img)
+            cv.Remap(img, r, mapx, mapy)
+            cv.ShowImage("snap", r)
+            cv.WaitKey()
 
     def test_tostring(self):
 
