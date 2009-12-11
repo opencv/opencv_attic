@@ -1042,44 +1042,113 @@ class TestDirected(unittest.TestCase):
         num_y_ints = 6
         num_pts = num_x_ints * num_y_ints
 
-        images = [image_from_archive(tf, "wide/left%04d.pgm" % i) for i in range(3, 15)]
-        size = cv.GetSize(images[0])
-        corners = [get_corners(i) for i in images]
-        goodcorners = [co for (im, (ok, co)) in zip(images, corners) if ok]
+        leftimages = [image_from_archive(tf, "wide/left%04d.pgm" % i) for i in range(3, 15)]
+        size = cv.GetSize(leftimages[0])
 
-        ipts = mk_image_points(goodcorners)
-        opts = mk_object_points(len(goodcorners), .1)
-        npts = mk_point_counts(len(goodcorners))
+        # Monocular test
 
-        intrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
-        distortion = cv.CreateMat(4, 1, cv.CV_64FC1)
-        cv.SetZero(intrinsics)
-        cv.SetZero(distortion)
-        # focal lengths have 1/1 ratio
-        intrinsics[0,0] = 1.0
-        intrinsics[1,1] = 1.0
-        cv.CalibrateCamera2(opts, ipts, npts,
-                   cv.GetSize(images[0]),
-                   intrinsics,
-                   distortion,
-                   cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
-                   cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
-                   flags = 0) # cv.CV_CALIB_ZERO_TANGENT_DIST)
-        print "D =", list(cvmat_iterator(distortion))
-        print "K =", list(cvmat_iterator(intrinsics))
+        if False:
+            corners = [get_corners(i) for i in leftimages]
+            goodcorners = [co for (im, (ok, co)) in zip(leftimages, corners) if ok]
 
-        newK = cv.CreateMat(3, 3, cv.CV_64FC1)
-        cv.GetOptimalNewCameraMatrix(intrinsics, distortion, size, 1.0, newK)
-        print "newK =", list(cvmat_iterator(newK))
+            ipts = mk_image_points(goodcorners)
+            opts = mk_object_points(len(goodcorners), .1)
+            npts = mk_point_counts(len(goodcorners))
 
-        mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
-        mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
-        for K in [ intrinsics, newK ]:
-            cv.InitUndistortMap(K, distortion, mapx, mapy)
-            for img in images[:1]:
-                r = cv.CloneMat(img)
-                cv.Remap(img, r, mapx, mapy)
-                cv.ShowImage("snap", r)
+            intrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
+            distortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+            cv.SetZero(intrinsics)
+            cv.SetZero(distortion)
+            # focal lengths have 1/1 ratio
+            intrinsics[0,0] = 1.0
+            intrinsics[1,1] = 1.0
+            cv.CalibrateCamera2(opts, ipts, npts,
+                       cv.GetSize(leftimages[0]),
+                       intrinsics,
+                       distortion,
+                       cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
+                       cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
+                       flags = 0) # cv.CV_CALIB_ZERO_TANGENT_DIST)
+            print "D =", list(cvmat_iterator(distortion))
+            print "K =", list(cvmat_iterator(intrinsics))
+
+            newK = cv.CreateMat(3, 3, cv.CV_64FC1)
+            cv.GetOptimalNewCameraMatrix(intrinsics, distortion, size, 1.0, newK)
+            print "newK =", list(cvmat_iterator(newK))
+
+            mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
+            mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
+            for K in [ intrinsics, newK ]:
+                cv.InitUndistortMap(K, distortion, mapx, mapy)
+                for img in leftimages[:1]:
+                    r = cv.CloneMat(img)
+                    cv.Remap(img, r, mapx, mapy)
+                    cv.ShowImage("snap", r)
+                    cv.WaitKey()
+
+        rightimages = [image_from_archive(tf, "wide/right%04d.pgm" % i) for i in range(3, 15)]
+
+        # Stereo test
+
+        if True:
+            lcorners = [get_corners(i) for i in leftimages]
+            rcorners = [get_corners(i) for i in rightimages]
+            good = [(lco, rco) for ((lok, lco), (rok, rco)) in zip(lcorners, rcorners) if (lok and rok)]
+
+            lipts = mk_image_points([l for (l, r) in good])
+            ripts = mk_image_points([r for (l, r) in good])
+            opts = mk_object_points(len(good), .108)
+            npts = mk_point_counts(len(good))
+
+            flags = cv.CV_CALIB_FIX_ASPECT_RATIO | cv.CV_CALIB_FIX_INTRINSIC
+            flags = 0
+
+            T = cv.CreateMat(3, 1, cv.CV_64FC1)
+            R = cv.CreateMat(3, 3, cv.CV_64FC1)
+            cv.SetIdentity(T)
+            cv.SetIdentity(R)
+            lintrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
+            ldistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+            rintrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
+            rdistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+            cv.StereoCalibrate(opts, lipts, ripts, npts,
+                               lintrinsics, ldistortion,
+                               rintrinsics, rdistortion,
+                               size,
+                               R,                                  # R
+                               T,                                  # T
+                               cv.CreateMat(3, 3, cv.CV_32FC1),    # E
+                               cv.CreateMat(3, 3, cv.CV_32FC1),    # F
+                               (cv.CV_TERMCRIT_ITER + cv.CV_TERMCRIT_EPS, 1, 1e-5),
+                               flags)
+            lR = cv.CreateMat(3, 3, cv.CV_64FC1)
+            rR = cv.CreateMat(3, 3, cv.CV_64FC1)
+            lP = cv.CreateMat(3, 4, cv.CV_64FC1)
+            rP = cv.CreateMat(3, 4, cv.CV_64FC1)
+            for m in [lR, rR, lP, rP]:
+                cv.SetZero(m)
+            cv.StereoRectify(lintrinsics,
+                             rintrinsics,
+                             ldistortion,
+                             rdistortion,
+                             size,
+                             R,
+                             T,
+                             lR, rR, lP, rP)
+
+            lmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            lmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            rmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            rmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            cv.InitUndistortRectifyMap(lintrinsics, ldistortion, lR, lP, lmapx, lmapy)
+            cv.InitUndistortRectifyMap(rintrinsics, rdistortion, rR, rP, rmapx, rmapy)
+
+            for l,r in zip(leftimages, rightimages)[:1]:
+                l_ = cv.CloneMat(l)
+                r_ = cv.CloneMat(r)
+                cv.Remap(l, l_, lmapx, lmapy)
+                cv.Remap(r, r_, rmapx, rmapy)
+                cv.ShowImage("snap", l_)
                 cv.WaitKey()
 
     def test_tostring(self):
