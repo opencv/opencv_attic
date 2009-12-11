@@ -12,6 +12,12 @@
 
 static PyObject *opencv_error;
 
+struct memtrack_t {
+  PyObject_HEAD
+  void *ptr;
+  Py_ssize_t size;
+};
+
 struct iplimage_t {
   PyObject_HEAD
   IplImage *a;
@@ -363,8 +369,8 @@ static int is_iplimage(PyObject *o)
 static void cvmat_dealloc(PyObject *self)
 {
   cvmat_t *pc = (cvmat_t*)self;
-  cvFree(&(pc->a));
   Py_DECREF(pc->data);
+  cvFree((void**)&pc->a);
   PyObject_Del(self);
 }
 
@@ -502,7 +508,6 @@ static int is_cvmat(PyObject *o)
 static void cvmatnd_dealloc(PyObject *self)
 {
   cvmatnd_t *pc = (cvmatnd_t*)self;
-  cvFree(&(pc->a));
   Py_DECREF(pc->data);
   PyObject_Del(self);
 }
@@ -684,6 +689,54 @@ static void cvlineiterator_specials(void)
 {
   cvlineiterator_Type.tp_iter = cvlineiterator_iter;
   cvlineiterator_Type.tp_iternext = cvlineiterator_next;
+}
+
+/************************************************************************/
+
+/* memtrack */
+
+static void memtrack_dealloc(PyObject *self)
+{
+  memtrack_t *pi = (memtrack_t*)self;
+  // printf("===> memtrack_dealloc %p!\n", pi->ptr);
+  cvFree(&pi->ptr);
+  PyObject_Del(self);
+}
+
+static PyTypeObject memtrack_Type = {
+  PyObject_HEAD_INIT(&PyType_Type)
+  0,                                      /*size*/
+  MODULESTR".memtrack",                          /*name*/
+  sizeof(memtrack_t),                        /*basicsize*/
+};
+
+Py_ssize_t memtrack_getreadbuffer(PyObject *self, Py_ssize_t segment, void **ptrptr)
+{
+  *ptrptr = &((memtrack_t*)self)->ptr;
+  return ((memtrack_t*)self)->size;
+}
+
+Py_ssize_t memtrack_getwritebuffer(PyObject *self, Py_ssize_t segment, void **ptrptr)
+{
+  *ptrptr = ((memtrack_t*)self)->ptr;
+  return ((memtrack_t*)self)->size;
+}
+
+Py_ssize_t memtrack_getsegcount(PyObject *self, Py_ssize_t *lenp)
+{
+  return (Py_ssize_t)1;
+}
+
+PyBufferProcs memtrack_as_buffer = {
+  memtrack_getreadbuffer,
+  memtrack_getwritebuffer,
+  memtrack_getsegcount
+};
+
+static void memtrack_specials(void)
+{
+  memtrack_Type.tp_dealloc = memtrack_dealloc;
+  memtrack_Type.tp_as_buffer = &memtrack_as_buffer;
 }
 
 /************************************************************************/
@@ -1419,19 +1472,23 @@ static int convert_to_CvMat(PyObject *o, CvMat **dst, const char *name)
 
   if (!is_cvmat(o)) {
     return failmsg("Argument '%s' must be CvMat", name);
-  } else if (m->data && PyString_Check(m->data)) {
-    assert(cvGetErrStatus() == 0);
-    cvSetData(m->a, PyString_AsString(m->data) + m->offset, m->a->step);
-    assert(cvGetErrStatus() == 0);
-    *dst = m->a;
-    return 1;
-  } else if (m->data && PyObject_AsWriteBuffer(m->data, &buffer, &buffer_len) == 0) {
-    cvSetData(m->a, (void*)((char*)buffer + m->offset), m->a->step);
-    assert(cvGetErrStatus() == 0);
-    *dst = m->a;
-    return 1;
   } else {
-    return failmsg("CvMat argument '%s' has no data", name);
+    m->a->refcount = NULL;
+    if (m->data && PyString_Check(m->data)) {
+      assert(cvGetErrStatus() == 0);
+      char *ptr = PyString_AsString(m->data) + m->offset;
+      cvSetData(m->a, ptr, m->a->step);
+      assert(cvGetErrStatus() == 0);
+      *dst = m->a;
+      return 1;
+    } else if (m->data && PyObject_AsWriteBuffer(m->data, &buffer, &buffer_len) == 0) {
+      cvSetData(m->a, (void*)((char*)buffer + m->offset), m->a->step);
+      assert(cvGetErrStatus() == 0);
+      *dst = m->a;
+      return 1;
+    } else {
+      return failmsg("CvMat argument '%s' has no data", name);
+    }
   }
 }
 
@@ -2009,15 +2066,26 @@ static int convert_to_CvSubdiv2DEdge(PyObject *o, CvSubdiv2DEdge *dst, const cha
 static PyObject *pythonize_CvMat(cvmat_t *m)
 {
   // Need to make this CvMat look like any other, with a Python 
-  // string as its data.
+  // buffer object as its data.
   // So copy the image data into a Python string object, then release 
   // the original.
   CvMat *mat = m->a;
   assert(mat->step != 0);
-  PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->rows * mat->step);
+  // PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->rows * mat->step);
+  memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
+  size_t gap = mat->data.ptr - (uchar*)mat->refcount;
+  o->ptr = mat->refcount;
+  o->size = mat->rows * mat->step;
+  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)gap, mat->rows * mat->step);
+  if (data == NULL)
+    return NULL;
   m->data = data;
   m->offset = 0;
-  cvDecRefData(mat); // Ref count should be zero here, so this is a release
+  Py_DECREF(o);
+
+  // Now m has a reference to data, which has a reference to o.
+
+  // cvDecRefData(mat); // Ref count should be zero here, so this is a release
   return (PyObject*)m;
 }
 
@@ -3524,6 +3592,7 @@ void initcv()
   MKTYPE(cvvideowriter);
   MKTYPE(iplconvkernel);
   MKTYPE(iplimage);
+  MKTYPE(memtrack);
 
   m = Py_InitModule(MODULESTR"", methods);
   d = PyModule_GetDict(m);
