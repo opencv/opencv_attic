@@ -57,12 +57,12 @@ class TestDirected(unittest.TestCase):
 
     def depthsize(self, d):
         return { cv.IPL_DEPTH_8U : 1,
-                         cv.IPL_DEPTH_8S : 1,
-                         cv.IPL_DEPTH_16U : 2,
-                         cv.IPL_DEPTH_16S : 2,
-                         cv.IPL_DEPTH_32S : 4,
-                         cv.IPL_DEPTH_32F : 4,
-                         cv.IPL_DEPTH_64F : 8 }[d]
+                 cv.IPL_DEPTH_8S : 1,
+                 cv.IPL_DEPTH_16U : 2,
+                 cv.IPL_DEPTH_16S : 2,
+                 cv.IPL_DEPTH_32S : 4,
+                 cv.IPL_DEPTH_32F : 4,
+                 cv.IPL_DEPTH_64F : 8 }[d]
 
     def setUp(self):
         self.image_cache = {}
@@ -152,14 +152,6 @@ class TestDirected(unittest.TestCase):
         a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         b = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         self.assertRaises(cv.error, lambda: cv.Laplace(a, b))
-
-    def test_tostring(self):
-        for w in [ 1, 4, 64, 512, 640]:
-            for h in [ 1, 4, 64, 480, 512]:
-                for c in [1, 2, 3, 4]:
-                    for d in self.depths:
-                        a = cv.CreateImage((w,h), d, c);
-                        self.assert_(len(a.tostring()) == w * h * c * self.depthsize(d))
 
     def test_cvmat_accessors(self):
         cvm = cv.CreateMat(20, 10, cv.CV_32FC1)
@@ -1000,6 +992,14 @@ class TestDirected(unittest.TestCase):
         cv.CalcOpticalFlowBM(a, b, (8,8), (1,1), (8,8), 0, velx, vely)
 
     def test_tostring(self):
+
+        for w in [ 1, 4, 64, 512, 640]:
+            for h in [ 1, 4, 64, 480, 512]:
+                for c in [1, 2, 3, 4]:
+                    for d in self.depths:
+                        a = cv.CreateImage((w,h), d, c);
+                        self.assert_(len(a.tostring()) == w * h * c * self.depthsize(d))
+
         for w in [ 32, 96, 480 ]:
             for h in [ 32, 96, 480 ]:
                 depth_size = {
@@ -1051,13 +1051,13 @@ class TestDirected(unittest.TestCase):
                 }
 
                 for t in self.mat_types:
-                    im = cv.CreateMat(h, w, t)
-                    elemsize = cv.CV_MAT_CN(cv.GetElemType(im)) * mattype_size[cv.GetElemType(im)]
-                    cv.SetData(im, " " * (w * h * elemsize), (w * elemsize))
-                    esize = (w * h * elemsize)
-                    self.assert_(len(im.tostring()) == esize)
-                    cv.SetData(im, " " * esize, w * elemsize)
-                    self.assert_(len(im.tostring()) == esize)
+                    for im in [cv.CreateMat(h, w, t), cv.CreateMatND([h, w], t)]:
+                        elemsize = cv.CV_MAT_CN(cv.GetElemType(im)) * mattype_size[cv.GetElemType(im)]
+                        cv.SetData(im, " " * (w * h * elemsize), (w * elemsize))
+                        esize = (w * h * elemsize)
+                        self.assert_(len(im.tostring()) == esize)
+                        cv.SetData(im, " " * esize, w * elemsize)
+                        self.assert_(len(im.tostring()) == esize)
 
     def xxx_test_Disparity(self):
         print

@@ -279,7 +279,7 @@ static PyObject *iplimage_tostring(PyObject *self, PyObject *args)
     return (PyObject*)failmsg("Unrecognised depth %d", i->depth);
   }
   int bpl = i->width * i->nChannels * bps;
-  if (bpl == i->widthStep && pc->offset == 0 && ((bpl * i->height) == what_size(pc->data))) {
+  if (PyString_Check(pc->data) && bpl == i->widthStep && pc->offset == 0 && ((bpl * i->height) == what_size(pc->data))) {
     Py_INCREF(pc->data);
     return pc->data;
   } else {
@@ -422,7 +422,7 @@ static PyObject *cvmat_tostring(PyObject *self, PyObject *args)
 
   int bpl = m->cols * bps; // bytes per line
   cvmat_t *pc = (cvmat_t*)self;
-  if (bpl == m->step && pc->offset == 0 && ((bpl * m->rows) == what_size(pc->data))) {
+  if (PyString_Check(pc->data) && bpl == m->step && pc->offset == 0 && ((bpl * m->rows) == what_size(pc->data))) {
     Py_INCREF(pc->data);
     return pc->data;
   } else {
@@ -524,6 +524,35 @@ static PyObject *cvmatnd_repr(PyObject *self)
   return PyString_FromString(str);
 }
 
+static size_t cvmatnd_size(CvMatND *m)
+{
+  int bps;
+  switch (CV_MAT_DEPTH(m->type)) {
+  case CV_8U:
+  case CV_8S:
+    bps = CV_MAT_CN(m->type) * 1;
+    break;
+  case CV_16U:
+  case CV_16S:
+    bps = CV_MAT_CN(m->type) * 2;
+    break;
+  case CV_32S:
+  case CV_32F:
+    bps = CV_MAT_CN(m->type) * 4;
+    break;
+  case CV_64F:
+    bps = CV_MAT_CN(m->type) * 8;
+    break;
+  default:
+    assert(0);
+  }
+  size_t l = bps;
+  for (int d = 0; d < m->dims; d++) {
+    l *= m->dim[d].size;
+  }
+  return l;
+}
+
 static PyObject *cvmatnd_tostring(PyObject *self, PyObject *args)
 {
   CvMatND *m;
@@ -551,7 +580,7 @@ static PyObject *cvmatnd_tostring(PyObject *self, PyObject *args)
     return (PyObject*)failmsg("Unrecognised depth %d", CV_MAT_DEPTH(m->type));
   }
 
-  int l = 1;
+  int l = bps;
   for (int d = 0; d < m->dims; d++) {
     l *= m->dim[d].size;
   }
@@ -2071,14 +2100,17 @@ static PyObject *pythonize_CvMat(cvmat_t *m)
   // the original.
   CvMat *mat = m->a;
   assert(mat->step != 0);
-  // PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->rows * mat->step);
+#if 0
+  PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->rows * mat->step);
+#else
   memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
   size_t gap = mat->data.ptr - (uchar*)mat->refcount;
   o->ptr = mat->refcount;
-  o->size = mat->rows * mat->step;
+  o->size = gap + mat->rows * mat->step;
   PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)gap, mat->rows * mat->step);
   if (data == NULL)
     return NULL;
+#endif
   m->data = data;
   m->offset = 0;
   Py_DECREF(o);
@@ -2097,10 +2129,18 @@ static PyObject *pythonize_IplImage(iplimage_t *cva)
   // it.
 
   IplImage *ipl = (IplImage*)(cva->a);
-  PyObject *data = PyString_FromStringAndSize(ipl->imageData, ipl->imageSize);
+  // PyObject *data = PyString_FromStringAndSize(ipl->imageData, ipl->imageSize);
+
+  memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
+  assert(ipl->imageDataOrigin == ipl->imageData);
+  o->ptr = ipl->imageDataOrigin;
+  o->size = ipl->height * ipl->widthStep;
+  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)0, o->size);
+  if (data == NULL)
+    return NULL;
+  Py_DECREF(o);
   cva->data = data;
   cva->offset = 0;
-  cvReleaseData(ipl);
 
   return (PyObject*)cva;
 }
@@ -2116,7 +2156,17 @@ static PyObject *pythonize_CvMatND(cvmatnd_t *m)
 
   CvMatND *mat = m->a;
   assert(mat->dim[0].step != 0);
+#if 1
   PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->dim[0].size * mat->dim[0].step);
+#else
+  memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
+  size_t gap = mat->data.ptr - (uchar*)mat->refcount;
+  o->ptr = mat->refcount;
+  o->size = gap + mat->rows * mat->step;
+  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)gap, mat->rows * mat->step);
+  if (data == NULL)
+    return NULL;
+#endif
   m->data = data;
   m->offset = 0;
   cvDecRefData(mat); // Ref count should be zero here, so this is a release
