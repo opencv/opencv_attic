@@ -758,7 +758,7 @@ CV_INLINE void cvUnDistortOnce( const CvArr* src, CvArr* dst,
 {
     CvMat _a = cvMat( 3, 3, CV_32F, (void*)intrinsic_matrix );
     CvMat _k = cvMat( 4, 1, CV_32F, (void*)distortion_coeffs );
-    cvUndistort2( src, dst, &_a, &_k );
+    cvUndistort2( src, dst, &_a, &_k, 0 );
 }
 
 

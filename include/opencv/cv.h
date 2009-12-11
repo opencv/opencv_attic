@@ -1286,7 +1286,8 @@ CVAPI(int) cvRunHaarClassifierCascade( const CvHaarClassifierCascade* cascade,
 /* Transforms the input image to compensate lens distortion */
 CVAPI(void) cvUndistort2( const CvArr* src, CvArr* dst,
                           const CvMat* camera_matrix,
-                          const CvMat* distortion_coeffs );
+                          const CvMat* distortion_coeffs,
+                          const CvMat* new_camera_matrix CV_DEFAULT(0) );
 
 /* Computes transformation map from intrinsic camera parameters
    that can used by cvRemap */

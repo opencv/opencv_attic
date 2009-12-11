@@ -188,7 +188,7 @@ void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
 
         initUndistortRectifyMap( A, distCoeffs, I, Ar, Size(src.cols, stripe_size),
                                  map1_part.type(), map1_part, map2_part );
-        remap( src, dst_part, map1_part, map2_part, INTER_LINEAR, BORDER_REPLICATE );
+        remap( src, dst_part, map1_part, map2_part, INTER_LINEAR, BORDER_CONSTANT );
     }
 }
 
@@ -196,13 +196,15 @@ void undistort( const Mat& src, Mat& dst, const Mat& _cameraMatrix,
 
 
 CV_IMPL void
-cvUndistort2( const CvArr* srcarr, CvArr* dstarr, const CvMat* Aarr, const CvMat* dist_coeffs )
+cvUndistort2( const CvArr* srcarr, CvArr* dstarr, const CvMat* Aarr, const CvMat* dist_coeffs, const CvMat* newAarr )
 {
     cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), dst0 = dst;
-    cv::Mat A = cv::cvarrToMat(Aarr), distCoeffs = cv::cvarrToMat(dist_coeffs);
+    cv::Mat A = cv::cvarrToMat(Aarr), distCoeffs = cv::cvarrToMat(dist_coeffs), newA;
+    if( newAarr )
+        newA = cv::cvarrToMat(newAarr);
 
     CV_Assert( src.size() == dst.size() && src.type() == dst.type() );
-    cv::undistort( src, dst, A, distCoeffs, cv::Mat() );
+    cv::undistort( src, dst, A, distCoeffs, newA );
 }
 
 
