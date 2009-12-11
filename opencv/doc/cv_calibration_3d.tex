@@ -179,7 +179,7 @@ $(w/2-0.5,h/2-0.5)$, and / or large differences between $f_x$ and $f_y$ (ratios 
 10:1 or more)), then you've probaby used \texttt{patternSize=cvSize(rows,cols)},
 but should use \texttt{patternSize=cvSize(cols,rows)} in \cvCross{FindChessboardCorners}{findChessboardCorners}.
 
-See also: \cvCross{FindChessboardCorners}{findChessboardCorners}, \cvCross{FindExtrinsicCameraParams2}{solvePnP}, \cvCppCross{initCameraMatrix2D}, \cvCross{StereoCalibrate}{stereoCalibrate}, \cvCross{Undistort}{undistort}
+See also: \cvCross{FindChessboardCorners}{findChessboardCorners}, \cvCross{FindExtrinsicCameraParams2}{solvePnP}, \cvCppCross{initCameraMatrix2D}, \cvCross{StereoCalibrate}{stereoCalibrate}, \cvCross{Undistort2}{undistort}
 
 \ifCpp
 
@@ -817,37 +817,6 @@ cvSave( "disparity.pgm", disparity_left_visual );
 
 \includegraphics{pics/disparity.png}
 
-\else
-
-\cvCppFunc{StereoBM}
-The class for computing stereo correspondence using block matching algorithm.
-
-\begin{lstlisting}
-// Block matching stereo correspondence algorithm\par
-class StereoBM
-{
-    enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
-        BASIC_PRESET=CV_STEREO_BM_BASIC,
-        FISH_EYE_PRESET=CV_STEREO_BM_FISH_EYE,
-        NARROW_PRESET=CV_STEREO_BM_NARROW };
-
-    StereoBM();
-    // the preset is one of ..._PRESET above.
-    // ndisparities is the size of disparity range,
-    // in which the optimal disparity at each pixel is searched for.
-    // SADWindowSize is the size of averaging window used to match pixel blocks
-    //    (larger values mean better robustness to noise, but yield blurry disparity maps)
-    StereoBM(int preset, int ndisparities=0, int SADWindowSize=21);
-    // separate initialization function
-    void init(int preset, int ndisparities=0, int SADWindowSize=21);
-    // computes the disparity for the two rectified 8-bit single-channel images.
-    // the disparity will be 16-bit singed image of the same size as left.
-    void operator()( const Mat& left, const Mat& right, Mat& disparity );
-
-    Ptr<CvStereoBMState> state;
-};
-\end{lstlisting}
-
 \fi
 
 \ifCpp
@@ -939,6 +908,76 @@ The function estimates and returns the initial camera matrix for camera calibrat
 Currently, the function only supports planar calibration patterns, i.e. patterns where each object point has z-coordinate =0.
 
 \fi
+
+\ifCPy
+\cvFunc{InitUndistortMap}
+Computes an undistortion map.
+
+\cvdefC{void cvInitUndistortMap( \par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvArr* map1,\par CvArr* map2 );}
+\cvdefPy{InitUndistortMap(cameraMatrix,distCoeffs,map1,map2)-> None}
+
+\begin{description}
+\cvarg{cameraMatrix}{The input camera matrix $A = \vecthreethree{fx}{0}{cx}{0}{fy}{cy}{0}{0}{1} $}
+\cvarg{distCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$}.
+\cvarg{map1}{The first output map \cvCPy{of type \texttt{CV\_32FC1} or \texttt{CV\_16SC2} - the second variant is more efficient}}
+\cvarg{map2}{The second output map \cvCPy{of type \texttt{CV\_32FC1} or \texttt{CV\_16UC1} - the second variant is more efficient}}
+\end{description}
+
+The function is a simplified variant of \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap} where the rectification transformation \texttt{R} is identity matrix and \texttt{newCameraMatrix=cameraMatrix}.
+
+\fi
+
+\cvFunc{InitUndistortRectifyMap}{initUndistortRectifyMap}
+Computes the undistortion and rectification transformation map.
+
+\cvdefC{void cvInitUndistortRectifyMap( \par const CvMat* cameraMatrix,
+                                \par const CvMat* distCoeffs,
+                                \par const CvMat* R,
+                                \par const CvMat* newCameraMatrix,
+                                \par CvArr* map1, \par CvArr* map2 );}
+\cvdefPy{InitUndistortRectifyMap(cameraMatrix,distCoeffs,R,newCameraMatrix,map1,map2)-> None}
+\cvdefCpp{void initUndistortRectifyMap( const Mat\& cameraMatrix,\par
+                           const Mat\& distCoeffs, const Mat\& R,\par
+                           const Mat\& newCameraMatrix,\par
+                           Size size, int m1type,\par
+                           Mat\& map1, Mat\& map2 );}
+\begin{description}
+\cvarg{cameraMatrix}{The input camera matrix $A=\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
+\cvarg{distCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$}.
+\cvarg{R}{The optional rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cvCross{StereoRectify}{stereoRectify} can be passed here. If the matrix is \cvCPy{NULL}\cvCpp{empty}, the identity transformation is assumed}
+\cvarg{newCameraMatrix}{The new camera matrix $A'=\vecthreethree{f_x'}{0}{c_x'}{0}{f_y'}{c_y'}{0}{0}{1}$}
+\cvCpp{\cvarg{size}{The undistorted image size}
+\cvarg{m1type}{The type of the first output map, can be \texttt{CV\_32FC1} or \texttt{CV\_16SC2}. See \cvCppCross{convertMaps}}}
+\cvarg{map1}{The first output map \cvCPy{of type \texttt{CV\_32FC1} or \texttt{CV\_16SC2} - the second variant is more efficient}}
+\cvarg{map2}{The second output map \cvCPy{of type \texttt{CV\_32FC1} or \texttt{CV\_16UC1} - the second variant is more efficient}}
+\end{description}
+
+The function computes the joint undistortion+rectification transformation and represents the result in the form of maps for \cvCross{Remap}{remap}. The undistorted image will look like the original, as if it was captured with a camera with camera matrix \texttt{=newCameraMatrix} and zero distortion. In the case of monocular camera \texttt{newCameraMatrix} is usually equal to \texttt{cameraMatrix}, or it can be computed by \cvCross{GetOptimalNewCameraMatrix}{getOptimalNewCameraMatrix} for a better control over scaling. In the case of stereo camera \texttt{newCameraMatrix} is normally set to \texttt{P1} or \texttt{P2} computed by \cvCross{StereoRectify}{stereoRectify}.
+
+Also, this new camera will be oriented differently in the coordinate space, according to \texttt{R}. That, for example, helps to align two heads of a stereo camera so that the epipolar lines on both images become horizontal and have the same y- coordinate (in the case of horizontally aligned stereo camera).
+
+The function actually builds the maps for the inverse mapping algorithm that is used by \cvCross{Remap}{remap}. That is, for each pixel $(u, v)$ in the destination (corrected and rectified) image the function computes the corresponding coordinates in the source image (i.e. in the original image from camera). The process is the following:
+
+\[
+\begin{array}{l}
+x \leftarrow (u - {c'}_x)/{f'}_x \\
+y \leftarrow (v - {c'}_y)/{f'}_y \\
+{[X\,Y\,W]}^T \leftarrow R^{-1}*[x\,y\,1]^T \\
+x' \leftarrow X/W \\
+y' \leftarrow Y/W \\
+x" \leftarrow x' (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) + 2p_1 x' y' + p_2(r^2 + 2 x'^2) \\
+y" \leftarrow y' (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) + p_1 (r^2 + 2 y'^2) + 2 p_2 x' y' \\
+map_x(u,v) \leftarrow x" f_x + c_x \\
+map_y(u,v) \leftarrow y" f_y + c_y
+\end{array}
+\]
+where $(k_1, k_2, p_1, p_2[, k_3])$ are the distortion coefficients. 
+ 
+In the case of a stereo camera this function is called twice, once for each camera head, after \cvCross{StereoRectify}{stereoRectify}, which in its turn is called after \cvCross{StereoCalibrate}{stereoCalibrate}. But if the stereo camera was not calibrated, it is still possible to compute the rectification transformations directly from the fundamental matrix using \cvCross{StereoRectifyUncalibrated}{stereoRectifyUncalibrated}. For each camera the function computes homography \texttt{H} as the rectification transformation in pixel domain, not a rotation matrix \texttt{R} in 3D space. The \texttt{R} can be computed from \texttt{H} as 
+
+\[ \texttt{R} = \texttt{cameraMatrix}^{-1} \cdot \texttt{H} \cdot \texttt{cameraMatrix} \]
+
+where the \texttt{cameraMatrix} can be chosen arbitrarily.
 
 \ifCpp
 
@@ -1172,6 +1211,39 @@ used in the global 3D geometry optimization procedures like \cvCross{CalibrateCa
 \cvCross{StereoCalibrate}{stereoCalibrate} or \cvCross{FindExtrinsicCameraParams2}{solvePnP}.
 
 
+\ifCpp
+
+\cvCppFunc{StereoBM}
+The class for computing stereo correspondence using block matching algorithm.
+
+\begin{lstlisting}
+// Block matching stereo correspondence algorithm\par
+class StereoBM
+{
+    enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
+        BASIC_PRESET=CV_STEREO_BM_BASIC,
+        FISH_EYE_PRESET=CV_STEREO_BM_FISH_EYE,
+        NARROW_PRESET=CV_STEREO_BM_NARROW };
+
+    StereoBM();
+    // the preset is one of ..._PRESET above.
+    // ndisparities is the size of disparity range,
+    // in which the optimal disparity at each pixel is searched for.
+    // SADWindowSize is the size of averaging window used to match pixel blocks
+    //    (larger values mean better robustness to noise, but yield blurry disparity maps)
+    StereoBM(int preset, int ndisparities=0, int SADWindowSize=21);
+    // separate initialization function
+    void init(int preset, int ndisparities=0, int SADWindowSize=21);
+    // computes the disparity for the two rectified 8-bit single-channel images.
+    // the disparity will be 16-bit singed image of the same size as left.
+    void operator()( const Mat& left, const Mat& right, Mat& disparity );
+
+    Ptr<CvStereoBMState> state;
+};
+\end{lstlisting}
+
+\fi
+
 \cvFunc{StereoCalibrate}{stereoCalibrate}
 Calibrates stereo camera.
 
@@ -1250,7 +1322,7 @@ E=
 
 where $T_i$ are components of the translation vector $T$: $T=[T_0, T_1, T_2]^T$. And also the function can compute the fundamental matrix F:
 
-$F = inv(cameraMatrix2)^T*E*inv(cameraMatrix1)$
+\[F = cameraMatrix2^{-T} E cameraMatrix1^{-1}\]
 
 Besides the stereo-related information, the function can also perform full calibration of each of the 2 cameras. However, because of the high dimensionality of the parameter space and noise in the input data the function can diverge from the correct solution. Thus, if intrinsic parameters can be estimated with high accuracy for each of the cameras individually (e.g. using \cvCross{CalibrateCamera2}{calibrateCamera}), it is recommended to do so and then pass \texttt{CV\_CALIB\_FIX\_INTRINSIC} flag to the function along with the computed intrinsic parameters. Otherwise, if all the parameters are estimated at once, it makes sense to restrict some parameters, e.g. pass \texttt{CV\_CALIB\_SAME\_FOCAL\_LENGTH} and \texttt{CV\_CALIB\_ZERO\_TANGENT\_DIST} flags, which are usually reasonable assumptions.
 
@@ -1295,7 +1367,7 @@ void stereoRectify( const Mat\& cameraMatrix1, const Mat\& distCoeffs1,\par
 \cvarg{Q}{The output $4 \times 4$ disparity-to-depth mapping matrix, see \cvCppCross{reprojectImageTo3D}.}
 \cvarg{flags}{The operation flags; may be 0 or \texttt{CV\_CALIB\_ZERO\_DISPARITY}. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function may still shift the images in horizontal or vertical direction (depending on the orientation of epipolar lines) in order to maximize the useful image area.}
 \cvarg{alpha}{The free scaling parameter. If it is -1\cvCpp{ or absent}, the functions performs some default scaling. Otherwise the parameter should be between 0 and 1. \texttt{alpha=0} means that the rectified images will be zoomed and shifted so that only valid pixels are visible (i.e. there will be no black areas after rectification). \texttt{alpha=1} means that the rectified image will be decimated and shifted so that all the pixels from the original images from the cameras are retained in the rectified images, i.e. no source image pixels are lost. Obviously, any intermediate value yields some intermediate result between those two extreme cases.}
-\cvarg{newImageSize}{The new image resolution after rectification. The same size should be passed to \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap}, see the \texttt{stereo\_calib.cpp} sample. By default, i.e. when (0,0) is passed, it is set to the original \texttt{imageSize}. Setting it to larger value can help you to preserve details in the original image, especially when there is big radial distortion.}
+\cvarg{newImageSize}{The new image resolution after rectification. The same size should be passed to \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap}, see the \texttt{stereo\_calib.cpp} sample in OpenCV samples directory. By default, i.e. when (0,0) is passed, it is set to the original \texttt{imageSize}. Setting it to larger value can help you to preserve details in the original image, especially when there is big radial distortion.}
 \cvarg{roi1, roi2}{The optional output rectangles inside the rectified images where all the pixels are valid. If \texttt{alpha=0}, the ROIs will cover the whole images, otherwise they likely be smaller, see the picture below}
 \end{description}
 
@@ -1376,7 +1448,37 @@ Otherwise all the points are considered inliers.}
 
 The function computes the rectification transformations without knowing intrinsic parameters of the cameras and their relative position in space, hence the suffix "Uncalibrated". Another related difference from \cvCross{StereoRectify}{stereoRectify} is that the function outputs not the rectification transformations in the object (3D) space, but the planar perspective transformations, encoded by the homography matrices \texttt{H1} and \texttt{H2}. The function implements the algorithm \cite{Hartley99}. 
 
-Note that while the algorithm does not need to know the intrinsic parameters of the cameras, it heavily depends on the epipolar geometry. Therefore, if the camera lenses have significant distortion, it would better be corrected before computing the fundamental matrix and calling this function. For example, distortion coefficients can be estimated for each head of stereo camera separately by using \cvCross{CalibrateCamera2}{calibrateCamera} and then the images can be corrected using \cvCross{Undistort}{undistort}, or just the point coordinates can be corrected with \cvCross{UndistortPoints}{undistortPoints}.
+Note that while the algorithm does not need to know the intrinsic parameters of the cameras, it heavily depends on the epipolar geometry. Therefore, if the camera lenses have significant distortion, it would better be corrected before computing the fundamental matrix and calling this function. For example, distortion coefficients can be estimated for each head of stereo camera separately by using \cvCross{CalibrateCamera2}{calibrateCamera} and then the images can be corrected using \cvCross{Undistort2}{undistort}, or just the point coordinates can be corrected with \cvCross{UndistortPoints}{undistortPoints}.
+
+
+\cvFunc{Undistort2}{undistort}
+Transforms an image to compensate for lens distortion.
+
+\cvdefC{void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* cameraMatrix,
+    \par const CvMat* distCoeffs, \par const CvMat* newCameraMatrix=0 );}
+\cvdefPy{Undistort2(src,dst,cameraMatrix,distCoeffs)-> None}
+
+\cvdefCpp{void undistort( const Mat\& src, Mat\& dst, const Mat\& cameraMatrix,\par
+                const Mat\& distCoeffs, const Mat\& newCameraMatrix=Mat() );}
+\begin{description}
+\cvarg{src}{The input (distorted) image}
+\cvarg{dst}{The output (corrected) image; will have the same size and the same type as \texttt{src}}
+\cvarg{cameraMatrix}{The input camera matrix $A = \vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1} $}
+\cvarg{distCoeffs}{The vector of distortion coefficients, $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$}
+\cvCpp{\cvarg{newCameraMatrix}{Camera matrix of the distorted image. By default it is the same as \texttt{cameraMatrix}, but you may additionally scale and shift the result by using some different matrix}}
+\end{description}
+
+The function transforms the image to compensate radial and tangential lens distortion.
+
+The function is simply a combination of \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap} (with unity \texttt{R}) and \cvCross{Remap}{remap} (with bilinear interpolation). See the former function for details of the transformation being performed.
+
+Those pixels in the destination image, for which there is no correspondent pixels in the source image, are filled with 0's (black color).
+
+The particular subset of the source image that will be visible in the corrected image can be regulated by \texttt{newCameraMatrix}. You can use \cvCross{GetOptimalNewCameraMatrix}{getOptimalNewCameraMatrix} to compute the appropriate \texttt{newCameraMatrix}, depending on your requirements.
+
+The camera matrix and the distortion parameters can be determined using
+\cvCross{CalibrateCamera2}{calibrateCamera}. If the resolution of images is different from the used at the calibration stage, $f_x, f_y, c_x$ and $c_y$ need to be scaled accordingly, while the distortion coefficients remain the same.
+
 
 \cvFunc{UndistortPoints}{undistortPoints}
 Computes the ideal point coordinates from the observed point coordinates.
@@ -1399,12 +1501,12 @@ void undistortPoints( const Mat\& src, Mat\& dst,\par
 \cvarg{src}{The observed point coordinates, same format as \texttt{imagePoints} in \cvCross{ProjectPoints2}{projectPoints}}
 \cvarg{dst}{The output ideal point coordinates, after undistortion and reverse perspective transformation\cvCPy{, same format as \texttt{src}}.}
 \cvarg{cameraMatrix}{The camera matrix $\vecthreethree{f_x}{0}{c_x}{0}{f_y}{c_y}{0}{0}{1}$}
-\cvarg{distCoeffs}{he vector of distortion coefficients, $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$}
+\cvarg{distCoeffs}{The vector of distortion coefficients, $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$}
 \cvarg{R}{The rectification transformation in object space (3x3 matrix). \texttt{R1} or \texttt{R2}, computed by \cvCppCross{StereoRectify} can be passed here. If the matrix is empty, the identity transformation is used}
 \cvarg{P}{The new camera matrix (3x3) or the new projection matrix (3x4). \texttt{P1} or \texttt{P2}, computed by \cvCppCross{StereoRectify} can be passed here. If the matrix is empty, the identity new camera matrix is used}
 \end{description}
 
-The function is similar to \cvCross{Undistort}{undistort} and \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap}, but it operates on a sparse set of points instead of a raster image. Also the function does some kind of reverse transformation to \cvCross{ProjectPoints2}{projectPoints} (in the case of 3D object it will not reconstruct its 3D coordinates, of course; but for a planar object it will, up to a translation vector, if the proper \texttt{R} is specified).
+The function is similar to \cvCross{Undistort2}{undistort} and \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap}, but it operates on a sparse set of points instead of a raster image. Also the function does some kind of reverse transformation to \cvCross{ProjectPoints2}{projectPoints} (in the case of 3D object it will not reconstruct its 3D coordinates, of course; but for a planar object it will, up to a translation vector, if the proper \texttt{R} is specified).
 
 \begin{lstlisting}
 // (u,v) is the input point, (u', v') is the output point

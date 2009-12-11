@@ -235,13 +235,11 @@ Smooths the image in one of several ways.
 \cvarg{dst}{The destination image}
 \cvarg{smoothtype}{Type of the smoothing:
 \begin{description}
-  \cvarg{CV\_BLUR\_NO\_SCALE (simple blur with no scaling)}{summation over a pixel $\texttt{param1}\times \texttt{param2}$ neighborhood. If the neighborhood size varies, one can precompute the integral image with the \cvCPyCross{Integral} function}
-  \cvarg{CV\_BLUR (simple blur)}{summation over a pixel $\texttt{param1}\times \texttt{param2}$ neighborhood with subsequent scaling by $1/(\texttt{param1} \cdot \texttt{param2})$}
-  \cvarg{CV\_GAUSSIAN (gaussian blur)}{convolving image with a $\texttt{param1}\times \texttt{param2}$ Gaussian kernel}
-  \cvarg{CV\_MEDIAN (median blur)}{finds the median of a $\texttt{param1}\times \texttt{param1}$ neighborhood (i.e. the neighborhood is square)}
-  \cvarg{CV\_BILATERAL (bilateral filter)}{applying bilateral $\texttt{param1}\times \texttt{param2}$ filtering with color sigma=\texttt{param3} and space sigma=\texttt{param4}. \texttt{param1} and \texttt{param2} must be equal (square). Information about bilateral filtering can be found at
-\url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}
-}
+  \cvarg{CV\_BLUR\_NO\_SCALE}{linear convolution with $\texttt{param1}\times\texttt{param2}$ box kernel (all 1's). If you want to smooth different pixels with different-size box kernels, you can use the integral image that is computed using \cvCPyCross{Integral}}
+  \cvarg{CV\_BLUR}{linear convolution with $\texttt{param1}\times\texttt{param2}$ box kernel (all 1's) with subsequent scaling by $1/(\texttt{param1}\cdot\texttt{param2})$}
+  \cvarg{CV\_GAUSSIAN}{linear convolution with a $\texttt{param1}\times\texttt{param2}$ Gaussian kernel}
+  \cvarg{CV\_MEDIAN}{median filter with a $\texttt{param1}\times\texttt{param1}$ square aperture}
+  \cvarg{CV\_BILATERAL}{bilateral filter with a $\texttt{param1}\times\texttt{param1}$ square aperture, color sigma=\texttt{param3} and spatial sigma=\texttt{param4}. If \texttt{param1=0}, the aperture square side is set to \newline \texttt{cvRound(param4*1.5)*2+1}. Information about bilateral filtering can be found at \url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}}
 \end{description}}
 \cvarg{param1}{The first parameter of the smoothing operation}
 \cvarg{param2}{The second parameter of the smoothing operation. In the case of simple scaled/non-scaled and Gaussian blur if \texttt{param2} is zero, it is set to \texttt{param1}}

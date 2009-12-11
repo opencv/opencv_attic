@@ -649,7 +649,7 @@ Loads an image from a file.
 \end{description}
 \end{description}
 
-The function \texttt{imread} loads an image from the specified file and returns it. Currently, the following file formats are supported:
+The function \texttt{imread} loads an image from the specified file and returns it. If the image can not be read (because of missing file, improper permissions, unsupported or invalid format), the function returns empty matrix (\texttt{Mat::data==NULL}).Currently, the following file formats are supported:
 \begin{itemize}
 \item Windows bitmaps - \texttt{*.bmp, *.dib} (always supported)
 \item JPEG files - \texttt{*.jpeg, *.jpg, *.jpe} (see \textbf{Note2})
@@ -736,7 +736,37 @@ protected:
 };
 \end{lstlisting}
 
-See \hyperref[AutomaticMemoryManagement2]{the CXCORE introduction} for the sample code.
+The class provides C++ video capturing API. Here is how the class can be used:
+
+\begin{lstlisting}
+#include "cv.h"
+#include "highgui.h"
+
+using namespace cv;
+
+int main(int, char**)
+{
+    VideoCapture cap(0); // open the default camera
+    if(!cap.isOpened())  // check if we succeeded
+        return -1;
+
+    Mat edges;
+    namedWindow("edges",1);
+    for(;;)
+    {
+        Mat frame;
+        cap >> frame; // get a new frame from camera
+        cvtColor(frame, edges, CV_BGR2GRAY);
+        GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
+        Canny(edges, edges, 0, 30, 3);
+        imshow("edges", edges);
+        if(waitKey(30) >= 0) break;
+    }
+    // the camera will be deinitialized automatically in VideoCapture destructor
+    return 0;
+}
+\end{lstlisting}
+
 
 \cvCppFunc{VideoWriter}
 Video writer class
