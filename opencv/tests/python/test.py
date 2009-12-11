@@ -1119,8 +1119,11 @@ class TestDirected(unittest.TestCase):
                                T,                                  # T
                                cv.CreateMat(3, 3, cv.CV_32FC1),    # E
                                cv.CreateMat(3, 3, cv.CV_32FC1),    # F
-                               (cv.CV_TERMCRIT_ITER + cv.CV_TERMCRIT_EPS, 1, 1e-5),
+                               (cv.CV_TERMCRIT_ITER + cv.CV_TERMCRIT_EPS, 30, 1e-5),
                                flags)
+            print "leftK", list(cvmat_iterator(lintrinsics))
+            print "leftD", list(cvmat_iterator(ldistortion))
+
             lR = cv.CreateMat(3, 3, cv.CV_64FC1)
             rR = cv.CreateMat(3, 3, cv.CV_64FC1)
             lP = cv.CreateMat(3, 4, cv.CV_64FC1)
