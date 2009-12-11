@@ -1296,6 +1296,14 @@ StereoCalibrate
   CvMat F NULL
   CvTermCriteria term_crit cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,30,1e-6)
   int flags CV_CALIB_FIX_INTRINSIC
+GetOptimalNewCameraMatrix
+  CvMat cameraMatrix
+  CvMat distCoeffs
+  CvSize imageSize
+  double alpha
+  CvMat newCameraMatrix
+  CvSize newImageSize cvSize(0,0)
+  CvRect* validPixROI NULL
 StereoRectify
   CvMat camera_matrix1
   CvMat camera_matrix2
