@@ -466,4 +466,4 @@ void CV_CalonderTest::run( int /* start_from */)
 	}
 }
 
-CV_CalonderTest calonder_test;
+//CV_CalonderTest calonder_test;
