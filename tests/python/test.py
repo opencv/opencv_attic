@@ -1074,12 +1074,13 @@ class TestDirected(unittest.TestCase):
 
         mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
         mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
-        cv.InitUndistortMap(newK, distortion, mapx, mapy)
-        for img in images:
-            r = cv.CloneMat(img)
-            cv.Remap(img, r, mapx, mapy)
-            cv.ShowImage("snap", r)
-            cv.WaitKey()
+        for K in [ intrinsics, newK ]:
+            cv.InitUndistortMap(K, distortion, mapx, mapy)
+            for img in images[:1]:
+                r = cv.CloneMat(img)
+                cv.Remap(img, r, mapx, mapy)
+                cv.ShowImage("snap", r)
+                cv.WaitKey()
 
     def test_tostring(self):
 
