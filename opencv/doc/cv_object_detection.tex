@@ -328,7 +328,7 @@ void detect_and_draw_objects( IplImage* image,
     for( i = 0; i < faces->total; i++ )
     {
         /* extract the rectanlges only */
-        CvRect face_rect = *(CvRect*)cvGetSeqElem( faces, i, 0 );
+        CvRect face_rect = *(CvRect*)cvGetSeqElem( faces, i );
         cvRectangle( image, cvPoint(face_rect.x*scale,face_rect.y*scale),
                      cvPoint((face_rect.x+face_rect.width)*scale,
                              (face_rect.y+face_rect.height)*scale),

@@ -185,8 +185,8 @@ void on_track( int pos )
 
     for( i = 0; i < labels->total; i++ )
     {
-        CvPoint pt = *(CvPoint*)cvGetSeqElem( point_seq, i, 0 );
-        CvScalar color = colors[*(int*)cvGetSeqElem( labels, i, 0 )];
+        CvPoint pt = *(CvPoint*)cvGetSeqElem( point_seq, i );
+        CvScalar color = colors[*(int*)cvGetSeqElem( labels, i )];
         cvCircle( canvas, pt, 1, color, -1 );
     }
 

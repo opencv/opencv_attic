@@ -14,7 +14,7 @@ then
   TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 2.0 C Reference' -d _build/doctrees . _build/html
 fi
 
-if true
+if false
 then
   rm -f *.rst
   svn up
@@ -22,7 +22,7 @@ then
   TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
 fi
 
-if false
+if true
 then
   rm -f *.rst
   svn up

@@ -196,8 +196,8 @@ class reStructuredTextRenderer(BaseRenderer):
         return u""
     return u"\n\n%s.. image:: %s\n\n" % (self.ind(), filename)
 
-  def do_xfunc(self, node):
-    t = self.get_func_prefix() + unicode(node.attributes['title']).strip()
+  def do_xfunc(self, node, a='title'):
+    t = self.get_func_prefix() + unicode(node.attributes[a]).strip()
     print "====>", t
     label = u"\n\n.. index:: %s\n\n.. _%s:\n\n" % (t, t)
     self.in_func = True
@@ -228,6 +228,9 @@ class reStructuredTextRenderer(BaseRenderer):
     if self.language == 'py':
       return u"cv\\."
     return u""  
+  
+  def do_cvFunc(self, node):
+    return self.do_xfunc(node, ['title','alt'][self.language == 'cpp'])
     
   def do_cvCPyFunc(self, node):
     return self.do_xfunc(node)
@@ -470,6 +473,11 @@ class reStructuredTextRenderer(BaseRenderer):
     if self.language == 'py':
         return unicode(node.attributes['a'])
     return unicode("")
+    
+  def do_cvCPy(self, node):
+    if self.language == 'c' or self.language == 'py':
+        return unicode(node.attributes['a'])
+    return unicode("")
 
   def do_ifthenelse(self, node):
     # print "IFTHENELSE: [%s],[%s],[%s]" % (node.attributes['test'], str(node.attributes['then']), node.attributes['else'])
@@ -510,11 +518,12 @@ def preprocess_conditionals(fname, suffix, conditionals):
     print 'write', fname + suffix + ".tex"
     ifstack=[True]
     for l in f.readlines():
-        if l.startswith("\\if"):
-            ifstack.append(conditionals.get(l.rstrip()[3:], False))
-        elif l.startswith("\\else"):
+        ll = l.lstrip()
+        if ll.startswith("\\if"):
+            ifstack.append(conditionals.get(ll.rstrip()[3:], False))
+        elif ll.startswith("\\else"):
             ifstack[-1] = not ifstack[-1]
-        elif l.startswith("\\fi"):
+        elif ll.startswith("\\fi"):
             ifstack.pop()
         elif not False in ifstack:
             fout.write(l)
