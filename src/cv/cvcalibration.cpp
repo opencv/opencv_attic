@@ -2486,6 +2486,7 @@ void cvStereoRectify( const CvMat* _cameraMatrix1, const CvMat* _cameraMatrix2,
     icvGetRectangles( _cameraMatrix2, _distCoeffs2, _R2, _P2, imageSize, inner2, outer2 );
     
     {
+    newImgSize = newImgSize.width*newImgSize.height != 0 ? newImgSize : imageSize;
     double cx1_0 = cc_new[0].x;
     double cy1_0 = cc_new[0].y;
     double cx2_0 = cc_new[1].x;
