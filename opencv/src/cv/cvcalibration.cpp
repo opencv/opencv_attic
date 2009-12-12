@@ -2353,7 +2353,7 @@ icvGetRectangles( const CvMat* cameraMatrix, const CvMat* distCoeffs,
                 iY1 = MIN(iY1, p.y);
         }
     inner = cv::Rect_<float>(iX0, iY0, iX1-iX0, iY1-iY0);
-    outer = cv::Rect_<float>(oX0, oY0, oX1-iX0, oY1-iY0);
+    outer = cv::Rect_<float>(oX0, oY0, oX1-oX0, oY1-oY0);
 }  
 
 
