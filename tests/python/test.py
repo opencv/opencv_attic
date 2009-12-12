@@ -1101,7 +1101,7 @@ class TestDirected(unittest.TestCase):
             npts = mk_point_counts(len(good))
 
             flags = cv.CV_CALIB_FIX_ASPECT_RATIO | cv.CV_CALIB_FIX_INTRINSIC
-            flags = 0
+            flags = cv.CV_CALIB_SAME_FOCAL_LENGTH + cv.CV_CALIB_FIX_PRINCIPAL_POINT + cv.CV_CALIB_ZERO_TANGENT_DIST
 
             T = cv.CreateMat(3, 1, cv.CV_64FC1)
             R = cv.CreateMat(3, 3, cv.CV_64FC1)
@@ -1111,6 +1111,16 @@ class TestDirected(unittest.TestCase):
             ldistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
             rintrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
             rdistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+
+            cv.SetIdentity(lintrinsics)
+            cv.SetIdentity(rintrinsics)
+            lintrinsics[0,2] = size[0] * 0.5
+            lintrinsics[1,2] = size[1] * 0.5
+            rintrinsics[0,2] = size[0] * 0.5
+            rintrinsics[1,2] = size[1] * 0.5
+            cv.SetZero(ldistortion)
+            cv.SetZero(rdistortion)
+
             cv.StereoCalibrate(opts, lipts, ripts, npts,
                                lintrinsics, ldistortion,
                                rintrinsics, rdistortion,
@@ -1139,6 +1149,8 @@ class TestDirected(unittest.TestCase):
                              T,
                              lR, rR, lP, rP)
 
+            print "leftR", list(cvmat_iterator(lR))
+            print "leftP", list(cvmat_iterator(lP))
             lmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
             lmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
             rmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
