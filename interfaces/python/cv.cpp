@@ -2679,7 +2679,7 @@ static PyObject *pycvCreateHist(PyObject *self, PyObject *args)
     return NULL;
   }
   cvhistogram_t *h = PyObject_NEW(cvhistogram_t, &cvhistogram_Type);
-  args = Py_BuildValue("Ni", dims, CV_32FC1);
+  args = Py_BuildValue("Oi", dims, CV_32FC1);
   h->bins = pycvCreateMatND(self, args);
   Py_DECREF(args);
   if (h->bins == NULL) {
