@@ -39,6 +39,7 @@
 M*/
 
 #include "_ml.h"
+#include <omp.h>
 
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
@@ -517,7 +518,7 @@ void CvERTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     {
         int maxNumThreads = 1;
 #ifdef _OPENMP
-        maxNumThreads = cv::getNumThreads();
+        maxNumThreads = omp_get_num_procs();
 #endif
         pred_float_buf.resize(maxNumThreads);
         pred_int_buf.resize(maxNumThreads);

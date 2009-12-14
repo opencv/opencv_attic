@@ -39,6 +39,7 @@
 //M*/
 
 #include "_ml.h"
+#include <omp.h>
 
 CvForestTree::CvForestTree()
 {
@@ -110,7 +111,7 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
     }
     int maxNumThreads = 1;
 #ifdef _OPENMP
-    maxNumThreads = cv::getNumThreads();
+    maxNumThreads = omp_get_num_procs();
 #endif
     vector<CvDTreeSplit*> splits(maxNumThreads);
     vector<CvDTreeSplit*> bestSplits(maxNumThreads);
@@ -130,7 +131,10 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
     for( vi = 0; vi < data->var_count; vi++ )
     {
         CvDTreeSplit *res, *t;
-        int threadIdx = cv::getThreadNum();
+        int threadIdx = 0;
+#ifdef _OPENMP
+			threadIdx = omp_get_thread_num();
+#endif
         int ci = data->var_type->data.i[vi];
         if( node->num_valid[vi] <= 1
             || (active_var_mask && !active_var_mask->data.ptr[vi]) )

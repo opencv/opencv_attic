@@ -1,6 +1,8 @@
 #include "boost.h"
 #include "cascadeclassifier.h"
 #include <queue>
+#include <omp.h>
+
 using namespace std;
 
 static inline double
@@ -244,7 +246,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
 
     int maxNumThreads = 1;
 #ifdef _OPENMP
-    maxNumThreads = cv::getNumThreads();
+    maxNumThreads = omp_get_num_procs();
 #endif
     valCache.create( max(numPrecalcVal, maxNumThreads), sample_count, CV_32FC1 );
     var_type = cvCreateMat( 1, var_count + 2, CV_32SC1 );
@@ -491,24 +493,27 @@ void CvCascadeBoostTrainData::precalculate()
     double proctime = -TIME( 0 );
 	
 #ifdef _OPENMP
-    int maxNumThreads = cv::getNumThreads();
+    int maxNumThreads = omp_get_num_procs();
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
 #endif
     for ( int fi = numPrecalcVal; fi < numPrecalcIdx; fi++)
     {
-        int threadID = getThreadNum();
+        int threadIdx = 0;
+#ifdef _OPENMP
+		threadIdx = omp_get_thread_num();
+#endif
         for( int si = 0; si < sample_count; si++ )
         {
-            valCache.ptr<float>(threadID)[si] = (*featureEvaluator)( fi, si );
+            valCache.ptr<float>(threadIdx)[si] = (*featureEvaluator)( fi, si );
             if ( is_buf_16u )
                 *(udst + fi*sample_count + si) = (unsigned short)si;
             else
                 *(idst + fi*sample_count + si) = si;
         }
         if ( is_buf_16u )
-            icvSortUShAux( udst + fi*sample_count, sample_count, valCache.ptr<float>(threadID) );
+            icvSortUShAux( udst + fi*sample_count, sample_count, valCache.ptr<float>(threadIdx) );
         else
-            icvSortIntAux( idst + fi*sample_count, sample_count, valCache.ptr<float>(threadID) );
+            icvSortIntAux( idst + fi*sample_count, sample_count, valCache.ptr<float>(threadIdx) );
     }
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)

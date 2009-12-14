@@ -42,6 +42,8 @@
 #include "_cv.h"
 #include <cstdio>
 
+#include <omp.h>
+
 namespace cv
 {
 
@@ -784,8 +786,9 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
     
     int maxNumThreads = 1;
 #ifdef _OPENMP
-    maxNumThreads = cv::getNumThreads();
+	maxNumThreads = omp_get_num_procs();
 #endif
+
     vector<vector<Rect> > rects( maxNumThreads );
     vector<Rect>* rectsPtr = &rects[0];
     vector<Ptr<FeatureEvaluator> > fevals( maxNumThreads );
@@ -829,7 +832,10 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
 #endif
         for( int i = 0; i < stripCount; i++ )
         {
-            int threadIdx = cv::getThreadNum();
+			int threadIdx = 0;
+#ifdef _OPENMP
+			threadIdx = omp_get_thread_num();
+#endif
             int y1 = i*stripSize, y2 = (i+1)*stripSize;
             if( i == stripCount - 1 || y2 > sz1.height )
                 y2 = sz1.height;
