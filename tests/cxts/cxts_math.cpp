@@ -1276,6 +1276,8 @@ int cvTsCmpEps( const CvMat* check_arr, const CvMat* etalon, double* _max_diff,
                 double a_val = ((float*)a_data)[j];
                 double b_val = ((float*)b_data)[j];
                 double threshold;
+                if( ((int*)a_data)[j] == ((int*)b_data)[j] )
+                    continue;
                 if( cvIsNaN(a_val) || cvIsInf(a_val) )
                 {
                     result = -2;
@@ -1304,6 +1306,8 @@ int cvTsCmpEps( const CvMat* check_arr, const CvMat* etalon, double* _max_diff,
                 double a_val = ((double*)a_data)[j];
                 double b_val = ((double*)b_data)[j];
                 double threshold;
+                if( ((int64*)a_data)[j] == ((int64*)b_data)[j] )
+                    continue;
                 if( cvIsNaN(a_val) || cvIsInf(a_val) )
                 {
                     result = -2;
