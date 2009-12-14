@@ -1318,6 +1318,10 @@ StereoRectify
   CvMat P2
   CvMat Q NULL
   int flags CV_CALIB_ZERO_DISPARITY
+  double alpha -1
+  CvSize newImageSize cvSize(0,0)
+  CvRect* roi1 NULL
+  CvRect* roi2 NULL
 StereoRectifyUncalibrated
   CvMat points1
   CvMat points2
@@ -1414,7 +1418,7 @@ CalcMotionGradient
   double delta1
   double delta2
   int aperture_size 3 /ch_aperture
-CalcGlobalOrientation
+CalcGlobalOrientation double
   CvArr orientation
   CvArr mask
   CvArr mhi
