@@ -567,7 +567,7 @@ CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi, float init_quality, 
     {
         R += counts[i];
         rsum += sum[i];
-        sum[i] /= counts[i];
+		sum[i] = counts[i] != 0 ? sum[i]/counts[i] : 0;
         sum_ptr[i] = sum + i;
     }
 
