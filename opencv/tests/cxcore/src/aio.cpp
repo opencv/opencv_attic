@@ -235,11 +235,17 @@ void CV_IOTest::run( int start_from )
         CvMat* m = (CvMat*)fs["test_mat"].readObj();
         CvMat _test_mat = test_mat;
         double max_diff = 0;
+        CvMat stub1, _test_stub1;
+        cvReshape(m, &stub1, 1, 0);
+        cvReshape(&_test_mat, &_test_stub1, 1, 0);
+        CvPoint pt = {0,0};
+        
         if( !m || !CV_IS_MAT(m) || m->rows != test_mat.rows || m->cols != test_mat.cols ||
-            cvTsCmpEps( m, &_test_mat, &max_diff, depth == CV_32F ?
-                       FLT_EPSILON : DBL_EPSILON, 0, true) < 0 )
+            cvTsCmpEps( &stub1, &_test_stub1, &max_diff, 0, &pt, true) < 0 )
         {
-            ts->printf( CvTS::LOG, "the read matrix is not correct\n" );
+            ts->printf( CvTS::LOG, "the read matrix is not correct: (%.20g vs %.20g) at (%d,%d)\n",
+                       cvGetReal2D(&stub1, pt.y, pt.x), cvGetReal2D(&_test_stub1, pt.y, pt.x),
+                       pt.y, pt.x );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
@@ -251,7 +257,7 @@ void CV_IOTest::run( int start_from )
         
         if( !m_nd || !CV_IS_MATND(m_nd) )
         {
-            ts->printf( CvTS::LOG, "the read nd matrix is not correct\n" );
+            ts->printf( CvTS::LOG, "the read nd-matrix is not correct\n" );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
@@ -259,13 +265,17 @@ void CV_IOTest::run( int start_from )
         CvMat stub, _test_stub;
         cvGetMat(m_nd, &stub, 0, 1);
         cvGetMat(&_test_mat_nd, &_test_stub, 0, 1);
+        cvReshape(&stub, &stub1, 1, 0);
+        cvReshape(&_test_stub, &_test_stub1, 1, 0);
         
         if( !CV_ARE_TYPES_EQ(&stub, &_test_stub) ||
             !CV_ARE_SIZES_EQ(&stub, &_test_stub) ||
-            cvTsCmpEps( &stub, &_test_stub, &max_diff, depth == CV_32F ?
-                       FLT_EPSILON : DBL_EPSILON, 0, true) < 0 )
+            //cvNorm(&stub, &_test_stub, CV_L2) != 0 ) 
+            cvTsCmpEps( &stub1, &_test_stub1, &max_diff, 0, &pt, true) < 0 )
         {
-            ts->printf( CvTS::LOG, "the read nd matrix is not correct\n" );
+            ts->printf( CvTS::LOG, "the read nd matrix is not correct: (%.20g vs %.20g) at (%d,%d)\n",
+                       cvGetReal2D(&stub1, pt.y, pt.x), cvGetReal2D(&_test_stub1, pt.y, pt.x),
+                       pt.y, pt.x );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
@@ -313,10 +323,11 @@ void CV_IOTest::run( int start_from )
         int real_width = (int)tm["width"];
         int real_height = (int)tm["height"];
         
-        int real_lbp_val = ((int)tm_lbp[0]<<0) + ((int)tm_lbp[1]<<1) +
-            ((int)tm_lbp[2]<<2) + ((int)tm_lbp[3]<<3) +
-            ((int)tm_lbp[4]<<4) + ((int)tm_lbp[5]<<5) +
-            ((int)tm_lbp[6]<<6) + ((int)tm_lbp[7]<<7);
+        
+        int real_lbp_val = 0;
+        FileNodeIterator it = tm_lbp.begin();
+        for( int k = 0; k < 8; k++, ++it )
+            real_lbp_val |= (int)*it << k;
         
         if( tm.type() != FileNode::MAP || tm.size() != 5 ||
             real_x != 1 ||
