@@ -173,22 +173,26 @@ void CV_CalonderTest::ExtractFeatures(const IplImage* image, vector<CvPoint>& po
 void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, const int patch_size,const vector<CvPoint>& train_points,const IplImage* train_image)
 {
 	vector<BaseKeypoint> base_set;
-	for (int i=0;i<(int)(train_points.size());i++)
+	for (int i=0;i<20/*(int)(train_points.size())*/;i++)
 	{
 		base_set.push_back(BaseKeypoint(train_points[i].x,train_points[i].y,const_cast<IplImage*>(train_image)));
 	}
 
 	//Detector training
-    CalonderRng rng( cvGetTickCount());
+	CalonderRng rng( cvRandInt(this->ts->get_rng()));
     CalonderPatchGenerator gen(0,rng);
-    gen.setThetaBounds(-CV_PI/2,CV_PI/2);
-    gen.setPhiBounds(-CV_PI/2,CV_PI/2);
-    gen.setLambdaBounds(0.6,1.5);
+    gen.setThetaBounds(-CV_PI/3,CV_PI/3);
+    gen.setPhiBounds(-CV_PI/3,CV_PI/3);
+    gen.setLambdaBounds(0.7,1.3);
     gen.setRandomBackground(false);
     gen.addWhiteNoise(false);
     gen.setNoiseLevel(2);
 
-	detector.train(base_set,rng,gen,detector.DEFAULT_TREES,DEFAULT_DEPTH,DEFAULT_VIEWS,(int)base_set.size(),detector.DEFAULT_NUM_QUANT_BITS,false);
+	//int64 t0 = cvGetTickCount();
+	detector.train(base_set,rng,gen,6,DEFAULT_DEPTH,3000,(int)base_set.size(),detector.DEFAULT_NUM_QUANT_BITS,false);
+	//int64 t1 = cvGetTickCount();
+	//printf("Train: %f s\n",(float)(t1-t0)/cvGetTickFrequency()*1e-6);
+
 
 }
 
@@ -327,13 +331,16 @@ void CV_CalonderTest::RotateAndScale(const CvPoint& src, CvPoint& dst, const CvP
 
 float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 {
-	float angles[] = {-CV_PI/3,CV_PI/3};
-	float scales_x[] = {0.8,1.2};
-	float scales_y[] = {0.8,1.2};
-	int n_angles = 9;
-	int n_scales_x = 5;
-	int n_scales_y = 5;
+	float angles[] = {-CV_PI/4,CV_PI/4};
+	float scales_x[] = {0.85,1.15};
+	float scales_y[] = {0.85,1.15};
+	int n_angles = 4;
+	int n_scales_x = 3;
+	int n_scales_y = 3;
 	int accuracy = 4;
+
+	int total_cases = n_angles*n_scales_x*n_scales_y;
+	int n_case = 0;
 
 	int length = max(train_image->width,train_image->height);
 	int move_x = (int)(1.5*scales_x[0]*length);
@@ -350,6 +357,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 	ExtractFeatures(train_image,objectKeypoints);
 	RTreeClassifier detector;
 	int patch_size = PATCH_SIZE;
+	//this->update_progress(1,0,total_cases,5);
 	TrainDetector(detector,patch_size,objectKeypoints,train_image);
 
 
@@ -364,6 +372,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 	IplImage* temp = cvCloneImage(test_image);
 
 
+	//int64 t0 = cvGetTickCount();
 	//printf("\n\n-----------\nTest started\n-----------\n");
 	for (float angle = angles[0]; angle<=angles[1];angle+=(n_angles > 1 ?(angles[1]-angles[0])/n_angles : 1))
 	{
@@ -385,6 +394,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 				CvPoint res;
 				for (int i = 0; i< (int)object.size(); i++)
 				{
+
 					CvPoint current = object[i];
 					current.x+=move_x;
 					current.y+=move_y;
@@ -399,12 +409,12 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 				//if (drawResults)
 				//{					
 				//	DrawResult(train_image, temp,object,features);
-				//}
-				
-				
+				//}				
 			}
 		}
 	}
+//	int64 t1 = cvGetTickCount();
+	//printf("%f s\n",(float)(t1-t0)/cvGetTickFrequency()*1e-6);
 	cvReleaseImage(&temp);
 	cvReleaseImage(&test_image);
 	//printf("\n\n-----------\nTest completed\n-----------\n");
@@ -455,7 +465,7 @@ void CV_CalonderTest::run( int /* start_from */)
 		return;
 	}
 	// Testing rtree classifier
-	float min_accuracy = 0.55;
+	float min_accuracy = 0.35;
 	float correctness = RunTestsSeries(train_image);
 	if (correctness > min_accuracy)
 		ts->set_failed_test_info(CvTS::OK);
@@ -466,4 +476,4 @@ void CV_CalonderTest::run( int /* start_from */)
 	}
 }
 
-//CV_CalonderTest calonder_test;
+CV_CalonderTest calonder_test;
