@@ -24,7 +24,7 @@ Calculates the global motion orientation of some selected region.
 
 \cvdefC{
 double cvCalcGlobalOrientation( \par const CvArr* orientation,\par const CvArr* mask,\par const CvArr* mhi,\par double timestamp,\par double duration );
-}\cvdefPy{CalcGlobalOrientation(orientation,mask,mhi,timestamp,duration)-> None}
+}\cvdefPy{CalcGlobalOrientation(orientation,mask,mhi,timestamp,duration)-> float}
 
 \begin{description}
 \cvarg{orientation}{Motion gradient orientation image; calculated by the function \cvCPyCross{CalcMotionGradient}}
