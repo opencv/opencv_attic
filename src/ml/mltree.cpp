@@ -40,6 +40,7 @@
 
 #include "_ml.h"
 #include <ctype.h>
+#include <omp.h>
 
 using namespace cv;
 
@@ -639,7 +640,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     {
         int maxNumThreads = 1;
 #ifdef _OPENMP
-        maxNumThreads = cv::getNumThreads();
+        maxNumThreads = omp_get_num_procs();
 #endif
         pred_float_buf.resize(maxNumThreads);
         pred_int_buf.resize(maxNumThreads);
@@ -1486,27 +1487,51 @@ void CvDTreeTrainData::read_params( CvFileStorage* fs, CvFileNode* node )
 
 float* CvDTreeTrainData::get_pred_float_buf()
 {
-    return &pred_float_buf[cv::getThreadNum()][0];
+	int i = 0;
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+    return &pred_float_buf[i][0];
 }
 int* CvDTreeTrainData::get_pred_int_buf()
 {
-    return &pred_int_buf[cv::getThreadNum()][0];
+	int i = 0;
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+	return &pred_int_buf[i][0];
 }
 float* CvDTreeTrainData::get_resp_float_buf()
 {
-    return &resp_float_buf[cv::getThreadNum()][0];
+	int i = 0;
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+	return &resp_float_buf[i][0];
 }
 int* CvDTreeTrainData::get_resp_int_buf()
 {
-    return &resp_int_buf[cv::getThreadNum()][0];
+	int i = 0;	
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+	return &resp_int_buf[i][0];
 }
 int* CvDTreeTrainData::get_cv_lables_buf()
 {
-    return &cv_lables_buf[cv::getThreadNum()][0];
+	int i = 0;
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+	return &cv_lables_buf[i][0];
 }
 int* CvDTreeTrainData::get_sample_idx_buf()
 {
-    return &sample_idx_buf[cv::getThreadNum()][0];
+	int i = 0;
+#ifdef _OPENMP
+	i = omp_get_thread_num();
+#endif
+	return &sample_idx_buf[i][0];
 }
 
 /////////////////////// Decision Tree /////////////////////////
@@ -1868,7 +1893,7 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
     CvDTreeSplit *bestSplit = 0;
     int maxNumThreads = 1;
 #ifdef _OPENMP
-    maxNumThreads = cv::getNumThreads();
+    maxNumThreads = omp_get_num_procs();
 #endif
     vector<CvDTreeSplit*> splits(maxNumThreads);
     vector<CvDTreeSplit*> bestSplits(maxNumThreads);
@@ -1888,7 +1913,10 @@ CvDTreeSplit* CvDTree::find_best_split( CvDTreeNode* node )
     for( vi = 0; vi < data->var_count; vi++ )
     {
         CvDTreeSplit *res, *t;
-        int threadIdx = cv::getThreadNum();
+        int threadIdx = 0;
+#ifdef _OPENMP
+		threadIdx = omp_get_thread_num();
+#endif
         int ci = data->get_var_type(vi);
         if( node->get_num_valid(vi) <= 1 )
             continue;
