@@ -1,18 +1,30 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <cascade>
-  <distE>4.9999998882412910e-003</distE>
-  <sE>4.9999998882412910e-003</sE>
-  <noPairE>0.1000000014901161</noPairE>
+  <distE>0.005</distE>
+  <sE>0.017</sE>
+  <noPairE>0.1</noPairE>
   <detector_names>
     haarold1 haarold2 haar1 haar3 lbp1 lbp3</detector_names>
-  <detector_filenames>
-    <haarold1>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</haarold1>
-    <haarold2>cascadeandhog/cascades/haarcascade_frontalface_alt2.xml</haarold2>
-    <haar1>cascadeandhog/cascades/haarcascade_1.xml</haar1>
-	<haar3>cascadeandhog/cascades/haarcascade_3.xml</haar3>
-    <lbp1>cascadeandhog/cascades/lbpcascade_frontalface.xml</lbp1>
-    <lbp3>cascadeandhog/cascades/lbpcascade_frontalface_alt3.xml</lbp3></detector_filenames>
+  <detectors>
+    <haarold1>
+      <fn>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</fn>
+      <scale_cascade>0</scale_cascade></haarold1>
+    <haarold2>
+      <fn>cascadeandhog/cascades/haarcascade_frontalface_alt2.xml</fn>
+      <scale_cascade>1</scale_cascade></haarold2>
+    <haar1>
+      <fn>cascadeandhog/cascades/haarcascade_1.xml</fn>
+      <scale_cascade>0</scale_cascade></haar1>
+    <haar3>
+      <fn>cascadeandhog/cascades/haarcascade_3.xml</fn>
+      <scale_cascade>0</scale_cascade></haar3>
+    <lbp1>
+      <fn>cascadeandhog/cascades/lbpcascade_frontalface.xml</fn>
+      <scale_cascade>0</scale_cascade></lbp1>
+    <lbp3>
+      <fn>cascadeandhog/cascades/lbpcascade_frontalface_alt3.xml</fn>
+      <scale_cascade>0</scale_cascade></lbp3></detectors>
   <image_filenames>
     <!-- img_0 -->
     cascadeandhog/images/audrybt1.png

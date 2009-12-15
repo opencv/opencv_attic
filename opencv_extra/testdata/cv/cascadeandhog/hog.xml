@@ -6,8 +6,9 @@
   <noPairE>0.2000000029802322</noPairE>
   <detector_names>
     default</detector_names>
-  <detector_filenames>
-    <default>""</default></detector_filenames>
+  <detectors>
+    <default>
+      <fn>""</fn></default></detectors>
   <image_filenames>
     <!-- img_0 -->
     cascadeandhog/images/addams-family.png

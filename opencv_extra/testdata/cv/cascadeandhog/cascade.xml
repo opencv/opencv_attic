@@ -1,18 +1,30 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <cascade>
-  <distE>4.9999998882412910e-003</distE>
-  <sE>4.9999998882412910e-003</sE>
-  <noPairE>0.1000000014901161</noPairE>
+  <distE>0.005</distE>
+  <sE>0.017</sE>
+  <noPairE>0.1</noPairE>
   <detector_names>
     haarold1 haarold2 haar1 haar3 lbp1 lbp3</detector_names>
-  <detector_filenames>
-    <haarold1>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</haarold1>
-    <haarold2>cascadeandhog/cascades/haarcascade_frontalface_alt2.xml</haarold2>
-    <haar1>cascadeandhog/cascades/haarcascade_1.xml</haar1>
-    <haar3>cascadeandhog/cascades/haarcascade_3.xml</haar3>
-    <lbp1>cascadeandhog/cascades/lbpcascade_frontalface.xml</lbp1>
-    <lbp3>cascadeandhog/cascades/lbpcascade_frontalface_alt3.xml</lbp3></detector_filenames>
+  <detectors>
+    <haarold1>
+      <fn>cascadeandhog/cascades/haarcascade_frontalface_alt.xml</fn>
+      <scale_cascade>0</scale_cascade></haarold1>
+    <haarold2>
+      <fn>cascadeandhog/cascades/haarcascade_frontalface_alt2.xml</fn>
+      <scale_cascade>1</scale_cascade></haarold2>
+    <haar1>
+      <fn>cascadeandhog/cascades/haarcascade_1.xml</fn>
+      <scale_cascade>0</scale_cascade></haar1>
+    <haar3>
+      <fn>cascadeandhog/cascades/haarcascade_3.xml</fn>
+      <scale_cascade>0</scale_cascade></haar3>
+    <lbp1>
+      <fn>cascadeandhog/cascades/lbpcascade_frontalface.xml</fn>
+      <scale_cascade>0</scale_cascade></lbp1>
+    <lbp3>
+      <fn>cascadeandhog/cascades/lbpcascade_frontalface_alt3.xml</fn>
+      <scale_cascade>0</scale_cascade></lbp3></detectors>
   <image_filenames>
     <!-- img_0 -->
     cascadeandhog/images/audrybt1.png
@@ -33,35 +45,34 @@
   <validation>
     <haarold1>
       <img_0>
-        125 33 51 51</img_0>
-      <img_1>
-        377 176 135 135</img_1>
+        126 32 51 51</img_0>
+      <img_1></img_1>
       <img_2>
-        701 165 41 41 820 182 40 40 162 300 39 39 470 160 43 43 591 170
-        41 41 875 182 37 37 192 185 39 39 995 187 40 40 530 210 40 40
-        269 210 39 39 937 213 40 40 625 221 42 42 144 227 42 42 474 243
-        43 43 571 254 40 40 447 288 41 41 342 292 40 40 944 307 40 40
-        1057 319 38 38 341 179 42 42 728 237 42 42 823 252 38 38 976 258
-        40 40 644 271 40 40 787 272 44 44 834 346 47 47 347 357 47 47
-        671 377 44 44 1039 208 41 41 375 224 41 41 874 243 40 40 188 259
-        46 46 275 297 46 46 704 299 47 47 572 319 49 49 478 342 48 48
-        412 347 43 43 109 351 46 46 788 381 45 45 605 408 43 43 219 408
-        47 47 838 411 48 48 1162 415 45 45 1003 420 50 50 737 422 44 44
-        282 491 50 50 96 500 46 46 1105 271 45 45 239 352 47 47 1085 355
-        46 46 339 427 48 48 962 484 51 51 662 488 54 54 1126 506 50 50
-        470 476 59 59 805 495 56 56 416 565 180 180</img_2>
+        469 160 44 44 700 165 42 42 589 168 45 45 820 181 42 42 875 183
+        37 37 341 179 43 43 190 184 42 42 994 187 40 40 268 210 42 42
+        528 209 44 44 935 212 43 43 624 220 45 45 144 226 45 45 728 237
+        42 42 473 242 44 44 824 253 37 37 569 253 43 43 975 256 43 43
+        643 270 43 43 340 291 43 43 1054 317 42 42 1039 207 43 43 446
+        287 44 44 160 298 43 43 942 305 44 44 478 341 49 49 410 346 46
+        46 376 224 41 41 874 242 41 41 1104 270 46 46 786 271 46 46 703
+        298 51 51 571 318 50 50 832 345 51 51 1086 355 48 48 347 356 49
+        49 669 375 48 48 786 379 48 48 218 407 48 48 604 406 46 46 838
+        411 49 49 1161 414 48 48 736 421 46 46 1002 420 51 51 962 484 51
+        51 96 501 46 46 1125 505 51 51 273 295 51 51 108 350 49 49 239
+        352 47 47 339 426 48 48 663 488 52 52 282 490 52 52 806 496 54
+        54 341 54 46 46 187 257 49 49 961 371 47 47 473 477 56 56</img_2>
       <img_3>
-        136 257 40 40 67 127 37 37 256 230 35 35 332 35 40 40 116 49 40
-        40 396 84 46 46 30 282 50 50</img_3>
+        65 126 39 39 256 229 37 37 333 35 39 39 135 255 43 43 114 48 44
+        44 394 83 46 46 423 237 46 46</img_3>
       <img_4>
-        166 120 139 139</img_4>
+        163 118 144 144</img_4>
       <img_5>
-        248 53 52 52 116 79 58 58</img_5>
+        116 79 58 58 248 54 53 53 100 55 89 89</img_5>
       <img_6>
-        287 67 36 36 214 77 36 36 346 81 38 38 114 85 39 39 403 90 37 37
-        292 117 35 35 159 156 39 39</img_6>
+        213 77 37 37 345 81 40 40 113 83 42 42 288 68 33 33 404 90 36 36
+        288 115 41 41 158 155 41 41 283 64 44 44</img_6>
       <img_7>
-        190 33 52 52 80 192 55 55</img_7></haarold1>
+        190 32 53 53 80 191 55 55</img_7></haarold1>
     <haarold2>
       <img_0>
         126 33 50 50</img_0>

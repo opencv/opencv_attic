@@ -51,9 +51,12 @@ using namespace std;
 //#define TOTAL_NO_PAIR_E     "totalNoPairE"
 
 #define DETECTOR_NAMES      "detector_names"
-#define DETECTOR_FILENAMES  "detector_filenames"
+#define DETECTORS			"detectors"
 #define IMAGE_FILENAMES     "image_filenames"
 #define VALIDATION          "validation"
+#define FILENAME			"fn"
+
+#define C_SCALE_CASCADE		"scale_cascade"
 
 class CV_DetectorTest : public CvTest
 {
@@ -64,9 +67,11 @@ protected:
     virtual int prepareData( FileStorage& fs );
     virtual void run( int startFrom );
     virtual string& getValidationFilename();
-
+	
+	virtual void readDetector( const FileNode& fn ) = 0;
+	virtual void writeDetector( FileStorage& fs, int di ) = 0;
     int runTestCase( int detectorIdx, vector<vector<Rect> >& objects );
-    virtual void detectMultiScale( const string& detectorPath, const Mat& img, vector<Rect>& objects ) = 0;
+    virtual int detectMultiScale( int di, const Mat& img, vector<Rect>& objects ) = 0;
     int validate( int detectorIdx, vector<vector<Rect> >& objects );
 
     struct
@@ -115,18 +120,16 @@ int CV_DetectorTest::prepareData( FileStorage& _fs )
         fn[NO_PAIR_E] >> eps.noPair;
 //        fn[TOTAL_NO_PAIR_E] >> eps.totalNoPair;
 
-        // read detectors names and filenames
+        // read detectors
         if( fn[DETECTOR_NAMES].node->data.seq != 0 )
         {
             FileNodeIterator it = fn[DETECTOR_NAMES].begin();
             for( ; it != fn[DETECTOR_NAMES].end(); )
             {
-                string name, filename;
+                string name;
                 it >> name; 
                 detectorNames.push_back(name);
-                if( fn[DETECTOR_FILENAMES][name].node->data.str.ptr != 0 )
-                    fn[DETECTOR_FILENAMES][name] >> filename;
-                detectorFilenames.push_back(filename);
+				readDetector(fn[DETECTORS][name]);
             }
         }
         test_case_count = (int)detectorNames.size();
@@ -174,17 +177,18 @@ void CV_DetectorTest::run( int start_from )
     }
     validationFS << "]"; // DETECTOR_NAMES
 
-    // write detector filenames
-    validationFS << DETECTOR_FILENAMES << "{";
-    assert( detectorNames.size() == detectorFilenames.size() );
-    nit = detectorNames.begin();
-    vector<string>::const_iterator fnit = detectorFilenames.begin();
-    for( ; fnit != detectorFilenames.end(); ++nit, ++fnit )
-    {
-        validationFS << *nit << *fnit;
-    }
-    validationFS << "}"; // DETECTOR_FILENAMES
-
+	// write detectors
+	validationFS << DETECTORS << "{";
+	assert( detectorNames.size() == detectorFilenames.size() );
+	nit = detectorNames.begin();
+	for( int di = 0; di < detectorNames.size(), nit != detectorNames.end(); ++nit, di++ )
+	{
+		validationFS << *nit << "{";
+		writeDetector( validationFS, di );
+		validationFS << "}";
+	}
+	validationFS << "}";
+    
     // write image filenames
     validationFS << IMAGE_FILENAMES << "[";
     vector<string>::const_iterator it = imageFilenames.begin();
@@ -247,7 +251,10 @@ int CV_DetectorTest::runTestCase( int detectorIdx, vector<vector<Rect> >& object
             ts->printf( CvTS::LOG, msg );
             return CvTS::FAIL_INVALID_TEST_DATA;
         }
-        detectMultiScale( detectorFilename, image, imgObjects );
+        int code = detectMultiScale( detectorIdx, image, imgObjects );
+		if( code != CvTS::OK )
+			return code;
+
         objects.push_back( imgObjects );
 
 #ifdef GET_STAT
@@ -265,6 +272,9 @@ int CV_DetectorTest::runTestCase( int detectorIdx, vector<vector<Rect> >& object
     }
     return CvTS::OK;
 }
+
+
+bool isZero( uchar i ) {return i == 0;}
 
 int CV_DetectorTest::validate( int detectorIdx, vector<vector<Rect> >& objects )
 {
@@ -300,6 +310,7 @@ int CV_DetectorTest::validate( int detectorIdx, vector<vector<Rect> >& objects )
         totalValRectCount += (int)valRects.size();
                 
         // compare rectangles
+		vector<uchar> map(valRects.size(), 0);
         for( vector<Rect>::const_iterator cr = it->begin();
             cr != it->end(); ++cr )
         {
@@ -325,14 +336,14 @@ int CV_DetectorTest::validate( int detectorIdx, vector<vector<Rect> >& objects )
             else
             {
                 Rect vr = valRects[minIdx];
-                if( (minDist > dist) || (abs(cr->width - vr.width) > wDiff) ||
-                    (abs(cr->height - vr.height) > hDiff) )
-                {
+                if( map[minIdx] != 0 || (minDist > dist) || (abs(cr->width - vr.width) > wDiff) ||
+														(abs(cr->height - vr.height) > hDiff) )
                     noPair++;
-                }
+				else
+					map[minIdx] = 1;
             }
         }
-        noPair = (int)valRects.size() - (int)it->size() + 2*noPair;
+        noPair += (int)count_if( map.begin(), map.end(), isZero );
         totalNoPair += noPair;
         if( noPair > valRects.size()*eps.noPair+1 )
             break;
@@ -360,7 +371,10 @@ class CV_CascadeDetectorTest : public CV_DetectorTest
 public:
     CV_CascadeDetectorTest( const char* test_name );
 protected:
-    virtual void detectMultiScale( const string& detectorPath, const Mat& img, vector<Rect>& objects );
+	virtual void readDetector( const FileNode& fn );
+	virtual void writeDetector( FileStorage& fs, int di );
+    virtual int detectMultiScale( int di, const Mat& img, vector<Rect>& objects );
+	vector<int> flags;
 };
 
 CV_CascadeDetectorTest::CV_CascadeDetectorTest(const char *test_name)
@@ -369,14 +383,42 @@ CV_CascadeDetectorTest::CV_CascadeDetectorTest(const char *test_name)
     validationFilename = "cascadeandhog/cascade.xml";
 }
 
-void CV_CascadeDetectorTest::detectMultiScale(const string& detectorPath, const Mat& img,
+void CV_CascadeDetectorTest::readDetector( const FileNode& fn )
+{
+	string filename;
+	int flag;
+	fn[FILENAME] >> filename;
+	detectorFilenames.push_back(filename);
+	fn[C_SCALE_CASCADE] >> flag;
+	if( flag )
+		flags.push_back( 0 );
+	else
+		flags.push_back( CV_HAAR_SCALE_IMAGE );
+}
+
+void CV_CascadeDetectorTest::writeDetector( FileStorage& fs, int di )
+{
+	int sc = flags[di] & CV_HAAR_SCALE_IMAGE ? 0 : 1;
+	fs << FILENAME << detectorFilenames[di];
+	fs << C_SCALE_CASCADE << sc;
+}
+
+int CV_CascadeDetectorTest::detectMultiScale( int di, const Mat& img,
                                               vector<Rect>& objects)
 {
-    CascadeClassifier cascade( detectorPath );
+	string dataPath = ts->get_data_path(), filename;
+	filename = dataPath + detectorFilenames[di];
+    CascadeClassifier cascade( filename );
+	if( cascade.empty() )
+	{
+		ts->printf( CvTS::LOG, "cascade %s can not be opened");
+		return CvTS::FAIL_INVALID_TEST_DATA;
+	}
     Mat grayImg;
     cvtColor( img, grayImg, CV_BGR2GRAY );
     equalizeHist( grayImg, grayImg );
-    cascade.detectMultiScale( grayImg, objects );
+    cascade.detectMultiScale( grayImg, objects, 1.1, 3, flags[di] );
+	return CvTS::OK;
 }
 
 //----------------------------------------------- HOGDetectorTest -----------------------------------
@@ -385,7 +427,9 @@ class CV_HOGDetectorTest : public CV_DetectorTest
 public:
     CV_HOGDetectorTest( const char* test_name );
 protected:
-    virtual void detectMultiScale( const string& detectorPath, const Mat& img, vector<Rect>& objects );
+	virtual void readDetector( const FileNode& fn );
+	virtual void writeDetector( FileStorage& fs, int di );
+    virtual int detectMultiScale( int di, const Mat& img, vector<Rect>& objects );
 };
 
 CV_HOGDetectorTest::CV_HOGDetectorTest(const char *test_name)
@@ -394,15 +438,29 @@ CV_HOGDetectorTest::CV_HOGDetectorTest(const char *test_name)
     validationFilename = "cascadeandhog/hog.xml";
 }
 
-void CV_HOGDetectorTest::detectMultiScale(const string& detectorPath, const Mat& img,
+void CV_HOGDetectorTest::readDetector( const FileNode& fn )
+{
+	string filename;
+	if( fn[FILENAME].node->data.seq != 0 )
+		fn[FILENAME] >> filename;
+	detectorFilenames.push_back( filename);
+}
+
+void CV_HOGDetectorTest::writeDetector( FileStorage& fs, int di )
+{
+	fs << FILENAME << detectorFilenames[di];
+}
+
+int CV_HOGDetectorTest::detectMultiScale( int di, const Mat& img,
                                               vector<Rect>& objects)
 {
     HOGDescriptor hog;
-    if( detectorPath.empty() )
+    if( detectorFilenames[di].empty() )
         hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
     else
         assert(0);
     hog.detectMultiScale(img, objects);
+	return CvTS::OK;
 }
 
 CV_CascadeDetectorTest cascadeTest("cascade-detector");
