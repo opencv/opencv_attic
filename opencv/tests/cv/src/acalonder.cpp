@@ -371,6 +371,8 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 	vector<CvPoint> features;
 	IplImage* temp = cvCloneImage(test_image);
 
+	int progress = 0;
+
 
 	//int64 t0 = cvGetTickCount();
 	//printf("\n\n-----------\nTest started\n-----------\n");
@@ -406,6 +408,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 				//printf("Image points: %d\nCorrespondences found: %d/%d\n", (int)imageKeypoints.size(), correct, (int)object.size());
 				points_correct+=correct;
 				points_total+=(int)object.size();
+				progress = update_progress( progress, n_case++, total_cases, 0 );
 				//if (drawResults)
 				//{					
 				//	DrawResult(train_image, temp,object,features);
