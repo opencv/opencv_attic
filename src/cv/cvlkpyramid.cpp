@@ -1439,29 +1439,21 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
             CV_CALL( sA = cvCreateMat( sz1.height, sz1.width, CV_8UC1 ));
             CV_CALL( sB = cvCreateMat( sz1.height, sz1.width, CV_8UC1 ));
 
-            if( !equal_sizes && cn != 1 )
-                CV_CALL( gray = cvCreateMat( sz0.height, sz0.width, CV_8UC1 ));
-
-            if( gray )
+            if( cn != 1 )
             {
+                CV_CALL( gray = cvCreateMat( sz0.height, sz0.width, CV_8UC1 ));
                 cvCvtColor( A, gray, CV_BGR2GRAY );
                 cvResize( gray, sA, CV_INTER_AREA );
                 cvCvtColor( B, gray, CV_BGR2GRAY );
                 cvResize( gray, sB, CV_INTER_AREA );
-            }
-            else if( cn == 1 )
-            {
-                cvResize( gray, sA, CV_INTER_AREA );
-                cvResize( gray, sB, CV_INTER_AREA );
+                cvReleaseMat( &gray );
             }
             else
             {
-                cvCvtColor( A, gray, CV_BGR2GRAY );
-                cvResize( gray, sA, CV_INTER_AREA );
-                cvCvtColor( B, gray, CV_BGR2GRAY );
+                cvResize( A, sA, CV_INTER_AREA );
+                cvResize( B, sB, CV_INTER_AREA );
             }
-
-            cvReleaseMat( &gray );
+           
             A = sA;
             B = sB;
         }
@@ -1502,25 +1494,13 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     else if( CV_MAT_TYPE(A->type) == CV_32FC2 || CV_MAT_TYPE(A->type) == CV_32SC2 )
     {
         count = A->cols*A->rows;
-
-        if( CV_IS_MAT_CONT(A->type & B->type) && CV_MAT_TYPE(A->type) == CV_32FC2 )
-        {
-            pA = (CvPoint2D32f*)A->data.ptr;
-            pB = (CvPoint2D32f*)B->data.ptr;
-            allocated = 0;
-        }
-        else
-        {
-            CvMat _pA, _pB;
-
-            
-            ( pA = (CvPoint2D32f*)cvAlloc( count*sizeof(pA[0]) ));
-            CV_CALL( pB = (CvPoint2D32f*)cvAlloc( count*sizeof(pB[0]) ));
-            _pA = cvMat( A->rows, A->cols, CV_32FC2, pA );
-            _pB = cvMat( B->rows, B->cols, CV_32FC2, pB );
-            cvConvert( A, &_pA );
-            cvConvert( B, &_pB );
-        }
+        CvMat _pA, _pB;
+        pA = (CvPoint2D32f*)cvAlloc( count*sizeof(pA[0]) );
+        pB = (CvPoint2D32f*)cvAlloc( count*sizeof(pB[0]) );
+        _pA = cvMat( A->rows, A->cols, CV_32FC2, pA );
+        _pB = cvMat( B->rows, B->cols, CV_32FC2, pB );
+        cvConvert( A, &_pA );
+        cvConvert( B, &_pB );
     }
     else
         CV_ERROR( CV_StsUnsupportedFormat, "Both input images must have either 8uC1 or 8uC3 type" );
@@ -1626,8 +1606,11 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
 
     cvReleaseMat( &sA );
     cvReleaseMat( &sB );
-    cvFree( &pA );
-    cvFree( &pB );
+    if( allocated )
+    {
+        cvFree( &pA );
+        cvFree( &pB );
+    }
     cvFree( &status );
     cvFree( &good_idx );
     cvReleaseMat( &gray );
@@ -1637,15 +1620,6 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
 
 namespace cv
 {
-Mat estimateRigidTransform( const vector<Point2f>& A,
-                            const vector<Point2f>& B,
-                            bool fullAffine )
-{
-    Mat M(2, 3, CV_64F);
-    CvMat _A = Mat_<Point2f>(A), _B = Mat_<Point2f>(B), _M = M;
-    cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
-    return M;
-}
 
 Mat estimateRigidTransform( const Mat& A,
                             const Mat& B,
