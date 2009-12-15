@@ -1513,7 +1513,8 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
         {
             CvMat _pA, _pB;
 
-            CV_CALL( pA = (CvPoint2D32f*)cvAlloc( count*sizeof(pA[0]) ));
+            
+            ( pA = (CvPoint2D32f*)cvAlloc( count*sizeof(pA[0]) ));
             CV_CALL( pB = (CvPoint2D32f*)cvAlloc( count*sizeof(pB[0]) ));
             _pA = cvMat( A->rows, A->cols, CV_32FC2, pA );
             _pB = cvMat( B->rows, B->cols, CV_32FC2, pB );
@@ -1642,6 +1643,16 @@ Mat estimateRigidTransform( const vector<Point2f>& A,
 {
     Mat M(2, 3, CV_64F);
     CvMat _A = Mat_<Point2f>(A), _B = Mat_<Point2f>(B), _M = M;
+    cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
+    return M;
+}
+
+Mat estimateRigidTransform( const Mat& A,
+                            const Mat& B,
+                            bool fullAffine )
+{
+    Mat M(2, 3, CV_64F);
+    CvMat _A = A, _B = B, _M = M;
     cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
     return M;
 }
