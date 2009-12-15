@@ -683,6 +683,7 @@ void CV_RodriguesTest::run_func()
     else
     {
         cv::Mat v(&test_mat[INPUT][0]), M(&test_mat[OUTPUT][0]), v2(&test_mat[OUTPUT][2]);
+        cv::Mat M0 = M, v2_0 = v2;
         if( !calc_jacobians )
         {
             cv::Rodrigues(v, M);
@@ -691,9 +692,26 @@ void CV_RodriguesTest::run_func()
         else
         {
             cv::Mat J1(&test_mat[OUTPUT][1]), J2(&test_mat[OUTPUT][3]);
+            cv::Mat J1_0 = J1, J2_0 = J2;
             cv::Rodrigues(v, M, J1);
             cv::Rodrigues(M, v2, J2);
+            if( J1.data != J1_0.data )
+            {
+                if( J1.size() != J1_0.size() )
+                    J1 = J1.t();
+                J1.convertTo(J1_0, J1_0.type());
+            }
+            if( J2.data != J2_0.data )
+            {
+                if( J2.size() != J2_0.size() )
+                    J2 = J2.t();
+                J2.convertTo(J2_0, J2_0.type());
+            }
         }
+        if( M.data != M0.data )
+            M.reshape(M0.channels(), M0.rows).convertTo(M0, M0.type());
+        if( v2.data != v2_0.data )
+            v2.reshape(v2_0.channels(), v2_0.rows).convertTo(v2_0, v2_0.type());
     }
 }
 

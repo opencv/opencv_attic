@@ -3003,7 +3003,7 @@ static Mat prepareDistCoeffs(Mat& distCoeffs0, int rtype)
 void cv::Rodrigues(const Mat& src, Mat& dst)
 {
     bool v2m = src.cols == 1 || src.rows == 1;
-    dst.create(3, v2m ? 3 : 1, src.type());
+    dst.create(3, v2m ? 3 : 1, src.depth());
     CvMat _src = src, _dst = dst;
     bool ok = cvRodrigues2(&_src, &_dst, 0) > 0;
     if( !ok )
@@ -3013,8 +3013,8 @@ void cv::Rodrigues(const Mat& src, Mat& dst)
 void cv::Rodrigues(const Mat& src, Mat& dst, Mat& jacobian)
 {
     bool v2m = src.cols == 1 || src.rows == 1;
-    dst.create(3, v2m ? 3 : 1, src.type());
-    jacobian.create(v2m ? Size(9, 3) : Size(3, 9), src.type());
+    dst.create(3, v2m ? 3 : 1, src.depth());
+    jacobian.create(v2m ? Size(9, 3) : Size(3, 9), src.depth());
     CvMat _src = src, _dst = dst, _jacobian = jacobian;
     bool ok = cvRodrigues2(&_src, &_dst, &_jacobian) > 0;
     if( !ok )
