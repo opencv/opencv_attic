@@ -99,7 +99,7 @@ bool CV_RigidTransform_Test::testNPoints()
     const double thres = 1e-3;
     if (norm(aff_est, aff, NORM_INF) > thres)
     {        
-        cout << norm(aff_est, aff, NORM_INF) << endl;
+        //cout << norm(aff_est, aff, NORM_INF) << endl;
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
     }    
