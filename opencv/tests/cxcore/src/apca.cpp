@@ -57,7 +57,10 @@ void CV_PCATest::run( int )
     int code = CvTS::OK, err;
     int maxComponents = 1;
     Mat points( 1000, 3, CV_32FC1);
-    randn( points, Scalar::all(0.0), Scalar::all(1.0) );
+
+	RNG rng = *ts->get_rng(); // get ts->rng seed
+	rng.fill( points, RNG::NORMAL, Scalar::all(0.0), Scalar::all(1.0) );
+
     float mp[] = { 3.0f, 3.0f, 3.0f }, cp[] = { 0.5f, 0.0f, 0.0f,
                                                 0.0f, 1.0f, 0.0f,
                                                 0.0f, 0.0f, 0.3f };
@@ -80,20 +83,34 @@ void CV_PCATest::run( int )
         if( val > 3.0f || val < -3.0f )
             err++;
     }
-    if( (float)err > prjPoints.rows*0.01f )
+	float projectErr = 0.02f;
+	if( (float)err > prjPoints.rows * projectErr )
     {
-        ts->printf( CvTS::LOG, "bad accuracy of project()" );
+        ts->printf( CvTS::LOG, "bad accuracy of project() (real = %f, permissible = %f)",
+			(float)err/(float)prjPoints.rows, projectErr );
         code = CvTS::FAIL_BAD_ACCURACY;
     }
 
     // check backProject
     Mat points1 = pca.backProject( prjPoints );
     err = 0;
-    for( int i = 0; i < points.rows; i++ )    {        if( fabs(points1.at<float>(i,0) - mean.at<float>(0,0)) > 0.05 ||            fabs(points1.at<float>(i,1) - points.at<float>(i,1)) > 0.02 ||            fabs(points1.at<float>(i,2) - mean.at<float>(0,2)) > 0.05 )            err++;    }    if( (float)err > prjPoints.rows*0.04f )
+	for( int i = 0; i < points.rows; i++ ) 
+	{
+		if( fabs(points1.at<float>(i,0) - mean.at<float>(0,0)) > 0.15 ||
+            fabs(points1.at<float>(i,1) - points.at<float>(i,1)) > 0.05 ||
+            fabs(points1.at<float>(i,2) - mean.at<float>(0,2)) > 0.15 )
+            err++;
+	}
+	float backProjectErr = 0.05f;
+	if( (float)err > prjPoints.rows*backProjectErr )
     {
-        ts->printf( CvTS::LOG, "bad accuracy of backProject()" );
+        ts->printf( CvTS::LOG, "bad accuracy of backProject() (real = %f, permissible = %f)",
+			(float)err/(float)prjPoints.rows, backProjectErr );
         code = CvTS::FAIL_BAD_ACCURACY;
     }
+
+	CvRNG *oldRng = ts->get_rng(); // set ts->rng seed
+	*oldRng = rng.state;
 
     ts->set_failed_test_info( code );
 }
