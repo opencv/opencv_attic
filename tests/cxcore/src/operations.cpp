@@ -116,7 +116,7 @@ bool CV_OperationsTest::TestMat()
         Mat intMat10(3, 3, CV_32S, Scalar(10));
         Mat intMat11(3, 3, CV_32S, Scalar(11));
         Mat resMat(3, 3, CV_8U, Scalar(255));
-                
+                        
         checkDiff(resMat, intMat10 == intMat10);
         checkDiff(resMat, intMat10 <  intMat11);
         checkDiff(resMat, intMat11 >  intMat10);
@@ -124,10 +124,12 @@ bool CV_OperationsTest::TestMat()
         checkDiff(resMat, intMat11 >= intMat10);
 
         checkDiff(resMat, intMat10 == 10.0);
+        checkDiff(resMat, 10.0 == intMat10);
         checkDiff(resMat, intMat10 <  11.0);
-        checkDiff(resMat, intMat11 >  10.0);
-        checkDiff(resMat, intMat10 <= 11.0);
-        checkDiff(resMat, intMat11 >= 10.0);
+        checkDiff(resMat, 11.0 > intMat10);
+        checkDiff(resMat, 10.0 < intMat11);
+        checkDiff(resMat, 11.0 >= intMat10);
+        checkDiff(resMat, 10.0 <= intMat11);
 
         Mat maskMat4(3, 3, CV_8U, Scalar(4));
         Mat maskMat1(3, 3, CV_8U, Scalar(1));
@@ -151,7 +153,11 @@ bool CV_OperationsTest::TestMat()
         checkDiff(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
 
         checkDiff(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
+        checkDiff(maskMat5, (maskMat4 ^ maskMat1) | maskMat5)           ;        
         checkDiff(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
+        checkDiff(maskMat5, (maskMat4 | maskMat4) | Scalar(1));
+        checkDiff(maskMat5, Scalar(1) | (maskMat4 | maskMat4));
+        checkDiff(maskMat5, (maskMat5 | maskMat5) | (maskMat4 ^ maskMat1));
 
         checkDiff(~maskMat1, maskMat1 ^ 0xFF);
         checkDiff(~(maskMat1 | maskMat1), maskMat1 ^ 0xFF); 
@@ -273,7 +279,97 @@ bool CV_OperationsTest::TestTemplateMat()
         Mat_<int> negi(3, 3, -3);        
 
         checkDiff(abs(negf), -negf);         
-        //checkDiff(abs(negi), -(negi & negi));
+        //FIXME checkDiff(abs(negi), -(negi & negi));
+
+
+        ////////////////////////////////
+
+        typedef Mat_<int> TestMat_t;
+
+        const TestMat_t cnegi = negi.clone();
+
+        TestMat_t::iterator beg = negi.begin();
+        TestMat_t::iterator end = negi.end();
+        
+        TestMat_t::const_iterator cbeg = cnegi.begin();
+        TestMat_t::const_iterator cend = cnegi.end();
+
+        int sum = 0;
+        for(; beg!=end; ++beg)
+            sum+=*beg;
+
+        for(; cbeg!=cend; ++cbeg)
+            sum-=*cbeg;
+
+        if (sum != 0) throw test_excep();
+
+        checkDiff(negi.col(1), negi.col(2));
+        checkDiff(negi.row(1), negi.row(2));
+        checkDiff(negi.col(1), negi.diag());
+        
+        if (Mat_<Point2f>(1, 1).elemSize1() != sizeof(float)) throw test_excep();
+        if (Mat_<Point2f>(1, 1).elemSize() != 2 * sizeof(float)) throw test_excep();
+        if (Mat_<Point2f>(1, 1).depth() != CV_32F) throw test_excep();
+        if (Mat_<float>(1, 1).depth() != CV_32F) throw test_excep();
+        if (Mat_<int>(1, 1).depth() != CV_32S) throw test_excep();
+        if (Mat_<double>(1, 1).depth() != CV_64F) throw test_excep();
+        if (Mat_<Point3d>(1, 1).depth() != CV_64F) throw test_excep();        
+        //FIXME if (Mat_<char>(1, 1).depth() != CV_8S) throw test_excep();
+        if (Mat_<unsigned short>(1, 1).depth() != CV_16U) throw test_excep();
+        if (Mat_<unsigned short>(1, 1).channels() != 1) throw test_excep();
+        if (Mat_<Point2f>(1, 1).channels() != 2) throw test_excep();
+        if (Mat_<Point3f>(1, 1).channels() != 3) throw test_excep();
+        if (Mat_<Point3d>(1, 1).channels() != 3) throw test_excep();
+
+        Mat_<uchar> eye = Mat_<uchar>::zeros(2, 2);  checkDiff(Mat_<uchar>::zeros(Size(2, 2)), eye);
+        eye.at<uchar>(Point(0,0)) = 1; eye.at<uchar>(1, 1) = 1;
+                
+        checkDiff(Mat_<uchar>::eye(2, 2), eye);
+        checkDiff(eye, Mat_<uchar>::eye(Size(2,2)));        
+        
+        Mat_<uchar> ones(2, 2, (uchar)1);
+        checkDiff(ones, Mat_<uchar>::ones(Size(2,2)));
+        checkDiff(Mat_<uchar>::ones(2, 2), ones);
+
+        //FIXME Mat_<Point2f> pntMat(2, 2, Point2f(1, 0));
+        //FIXME if(pntMat.stepT() != 2) throw test_excep();
+        //FIXME if(pntMat.stepT() != 4) throw test_excep();
+
+        uchar uchar_data[] = {1, 0, 0, 1};
+
+        Mat_<uchar> matFromData(1, 4, uchar_data);
+        const Mat_<uchar> mat2 = matFromData.clone();
+        checkDiff(matFromData, eye.reshape(1));
+        if (matFromData(Point(0,0)) != uchar_data[0])throw test_excep();
+        if (mat2(Point(0,0)) != uchar_data[0]) throw test_excep();
+
+        if (matFromData(0,0) != uchar_data[0])throw test_excep();
+        if (mat2(0,0) != uchar_data[0]) throw test_excep();
+                
+        Mat_<uchar> rect(eye, Rect(0, 0, 1, 1));
+        if (rect.cols != 1 || rect.rows != 1 || rect(0,0) != uchar_data[0]) throw test_excep();
+
+        //cv::Mat_<_Tp>::adjustROI(int,int,int,int)
+        //cv::Mat_<_Tp>::cross(const Mat_&) const	        
+        //cv::Mat_<_Tp>::Mat_(const vector<_Tp>&,bool)
+        //cv::Mat_<_Tp>::Mat_(int,int,_Tp*,size_t)
+        //cv::Mat_<_Tp>::Mat_(int,int,const _Tp&)	
+        //cv::Mat_<_Tp>::Mat_(Size,const _Tp&)	
+        //cv::Mat_<_Tp>::mul(const Mat_<_Tp>&,double) const	
+        //cv::Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>,double,Mat_<_Tp>,MatOp_DivRS_<Mat> >,Mat_<_Tp> >&,double) const	
+        //cv::Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>,double,Mat_<_Tp>,MatOp_Scale_<Mat> >,Mat_<_Tp> >&,double) const	
+        //cv::Mat_<_Tp>::operator Mat_<T2>() const	
+        //cv::Mat_<_Tp>::operator MatExpr_<Mat_<_Tp>,Mat_<_Tp> >() const	
+        //cv::Mat_<_Tp>::operator()(const Range&,const Range&) const	
+        //cv::Mat_<_Tp>::operator()(const Rect&) const
+
+        //cv::Mat_<_Tp>::operator=(const MatExpr_Base&)
+        //cv::Mat_<_Tp>::operator[](int) const
+
+
+
+
+        ///////////////////////////////
     }
     catch (const test_excep&)
     {
@@ -378,6 +474,9 @@ bool CV_OperationsTest::operations1()
 void CV_OperationsTest::run( int /* start_from */)
 {
     if (!TestMat())
+        return;
+
+    if (!TestTemplateMat())
         return;
 
  /*   if (!TestMatND())
