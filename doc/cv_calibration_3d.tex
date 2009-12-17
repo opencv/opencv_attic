@@ -529,6 +529,8 @@ squares touch each other. The coordinates detected are approximate,
 and to determine their position more accurately, the user may use
 the function \cvCross{FindCornerSubPix}{cornerSubPix}.
 
+\textbf{Note:} the function requires some white space (like a square-thick border, the wider the better) around the board to make the detection more robust in various environment (otherwise if there is no border and the background is dark, the outer black squares could not be segmented properly and so the square grouping and ordering algorithm will fail).
+
 \cvFunc{FindExtrinsicCameraParams2}{solvePnP}
 Finds the object pose from the 3D-2D point correspondences
 
