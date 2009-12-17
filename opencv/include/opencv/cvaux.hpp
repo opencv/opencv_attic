@@ -1316,11 +1316,6 @@ struct DefaultRngAuto
 	//}// namespace features
 	//----------------------------
 	//randomized_tree.h
-#if (_MSC_VER < 1300)
-	typedef unsigned char     uint8_t;
-#else
-	typedef unsigned __int8   uint8_t;
-#endif
 
 	//class RTTester;
 
@@ -1378,12 +1373,12 @@ struct DefaultRngAuto
 
 		// following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
 		static void quantizeVector(float *vec, int dim, int N, float bnds[2], int clamp_mode=0);
-		static void quantizeVector(float *src, int dim, int N, float bnds[2], uint8_t *dst);  
+		static void quantizeVector(float *src, int dim, int N, float bnds[2], uchar *dst);  
 
 		// patch_data must be a 32x32 array (no row padding)
 		float* getPosterior(uchar* patch_data);
 		const float* getPosterior(uchar* patch_data) const;
-		uint8_t* getPosterior2(uchar* patch_data);
+		uchar* getPosterior2(uchar* patch_data);
 
 		void read(const char* file_name, int num_quant_bits);
 		void read(std::istream &is, int num_quant_bits);
@@ -1408,7 +1403,7 @@ struct DefaultRngAuto
 		int num_leaves_;  
 		std::vector<RTreeNode> nodes_;  
 		float **posteriors_;        // 16-bytes aligned posteriors
-		uint8_t **posteriors2_;     // 16-bytes aligned posteriors
+		uchar **posteriors2_;     // 16-bytes aligned posteriors
 		std::vector<int> leaf_counts_;
 
 		void createNodes(int num_nodes, CalonderRng &rng);
@@ -1419,7 +1414,7 @@ struct DefaultRngAuto
 		void finalize(size_t reduced_num_dim, int num_quant_bits);  
 		int getIndex(uchar* patch_data) const;
 		inline float* getPosteriorByIndex(int index);
-		inline uint8_t* getPosteriorByIndex2(int index);
+		inline uchar* getPosteriorByIndex2(int index);
 		inline const float* getPosteriorByIndex(int index) const;
 		//void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);  
 		void convertPosteriorsToChar();
@@ -1451,11 +1446,6 @@ struct DefaultRngAuto
 	//} // namespace features
 	//----------------------------
 	//rtree_classifier.h
-#if (_MSC_VER < 1300)
-	typedef unsigned short    uint16_t;
-#else
-	typedef unsigned __int16  uint16_t;
-#endif
 	//class RTTester;
 
 	//namespace features {
@@ -1486,16 +1476,16 @@ struct DefaultRngAuto
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
 			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
 
-		// sig must point to a memory block of at least classes()*sizeof(float|uint8_t) bytes
-		void getSignature(IplImage *patch, uint8_t *sig);
+		// sig must point to a memory block of at least classes()*sizeof(float|uchar) bytes
+		void getSignature(IplImage *patch, uchar *sig);
 		void getSignature(IplImage *patch, float *sig);
 		void getSparseSignature(IplImage *patch, float *sig, float thresh);
 		// TODO: deprecated in favor of getSignature overload, remove
 		void getFloatSignature(IplImage *patch, float *sig) { getSignature(patch, sig); }
 
 		static int countNonZeroElements(float *vec, int n, double tol=1e-10);
-		static inline void safeSignatureAlloc(uint8_t **sig, int num_sig=1, int sig_len=176);
-		static inline uint8_t* safeSignatureAlloc(int num_sig=1, int sig_len=176);  
+		static inline void safeSignatureAlloc(uchar **sig, int num_sig=1, int sig_len=176);
+		static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);  
 
 		inline int classes() { return classes_; }
 		inline int original_num_classes() { return original_num_classes_; }
@@ -1519,8 +1509,8 @@ struct DefaultRngAuto
 	private:    
 		int classes_;
 		int num_quant_bits_;
-		uint8_t **posteriors_;
-		uint16_t *ptemp_;
+		uchar **posteriors_;
+		ushort *ptemp_;
 		int original_num_classes_;  
 		bool keep_floats_;
 	};
