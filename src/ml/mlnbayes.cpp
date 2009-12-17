@@ -239,7 +239,7 @@ bool CvNormalBayesClassifier::train( const CvMat* _train_data, const CvMat* _res
             double* sum2 = sum[cls]->data.db;
             double* prod_data = productsum[cls]->data.db + i*_var_count;
             double* cov_data = cov->data.db + i*_var_count;
-            double s1val = sum1[j];
+            double s1val = sum1[i];
             double avg1 = avg_data[i];
             int count = count_data[i];
 
