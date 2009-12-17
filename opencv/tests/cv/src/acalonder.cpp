@@ -71,11 +71,14 @@ protected:
 	void RotateAndScale(const IplImage* src, IplImage* dst, float angle, float scale_x, float scale_y);
 	// Scales the source image point and rotate to the angle (Positive values mean counter-clockwise rotation) 
 	void RotateAndScale(const CvPoint& src, CvPoint& dst, const CvPoint& center, float angle, float scale_x, float scale_y);
-	float RunTestsSeries(const IplImage* train_image/*, bool drawResults = false*/);
+	float RunTestsSeries(const IplImage* train_image, vector<CvPoint>& keypoints/*, bool drawResults = false*/);
 	//returns 1 in the case of success, 0 otherwise
 	int SaveKeypoints(const vector<CvPoint>& points, const char* path);
 	////returns 1 in the case of success, 0 otherwise
-	//int LoadKeypoints(vector<CvPoint>& points, const char* path);
+	int LoadKeypoints(vector<CvPoint>& points, const char* path);
+
+	void GetKeypointSignature(IplImage* test_image, int patch_size, vector<float>& signature);
+
 
 };
 
@@ -329,7 +332,7 @@ void CV_CalonderTest::RotateAndScale(const CvPoint& src, CvPoint& dst, const CvP
 	cvReleaseMat(&transform);
 }
 
-float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
+float CV_CalonderTest::RunTestsSeries(const IplImage* train_image, vector<CvPoint>& keypoints)
 {
 	float angles[] = {-CV_PI/4,CV_PI/4};
 	float scales_x[] = {0.85,1.15};
@@ -354,7 +357,22 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image)
 	cvResetImageROI(test_image);
 
 	vector<CvPoint> objectKeypoints;
-	ExtractFeatures(train_image,objectKeypoints);
+	if (keypoints.size() < 1)
+	{
+		ExtractFeatures(train_image,objectKeypoints);
+		for (int i=0;i<objectKeypoints.size();i++)
+		{
+			keypoints.push_back(objectKeypoints[i]);
+		}
+	}
+	else
+	{
+		for (int i=0;i<keypoints.size();i++)
+		{
+			objectKeypoints.push_back(keypoints[i]);
+		}
+	}
+
 	RTreeClassifier detector;
 	int patch_size = PATCH_SIZE;
 	//this->update_progress(1,0,total_cases,5);
@@ -452,13 +470,34 @@ int CV_CalonderTest::SaveKeypoints(const vector<CvPoint>& points, const char* pa
 		fprintf(f,"%d,%d\n",points[i].x,points[i].y);
 	}
 	fclose(f);
-	return -1;
+	return 1;
+}
+
+int CV_CalonderTest::LoadKeypoints(vector<CvPoint>& points, const char* path)
+{
+	FILE* f = fopen(path,"r");
+	points.clear();
+
+	if (f==NULL)
+	{
+		return 0;
+	}
+	
+	while (!feof(f))
+	{
+		int x,y;
+		fscanf(f,"%d,%d\n",&x,&y);
+		points.push_back(cvPoint(x,y));
+	}
+	fclose(f);
+	return 1;
 }
 
 
 void CV_CalonderTest::run( int /* start_from */)
 {
 	string train_image_path = string(ts->get_data_path()) + "calonder/baboon200.jpg";
+	string train_keypoints_path = string(ts->get_data_path()) + "calonder/train_features.txt";
 	IplImage* train_image = cvLoadImage(train_image_path.c_str(),0);
 
 	if (!train_image)
@@ -467,9 +506,23 @@ void CV_CalonderTest::run( int /* start_from */)
 		ts->set_failed_test_info(CvTS::FAIL_MISSING_TEST_DATA);
 		return;
 	}
+
+
+
 	// Testing rtree classifier
 	float min_accuracy = 0.35;
-	float correctness = RunTestsSeries(train_image);
+	vector<CvPoint> train_keypoints;
+	train_keypoints.clear();
+	float correctness;
+	if (!LoadKeypoints(train_keypoints,train_keypoints_path.c_str()))
+	{
+		correctness = RunTestsSeries(train_image,train_keypoints);
+		SaveKeypoints(train_keypoints,train_keypoints_path.c_str());
+	}
+	else
+	{
+		correctness = RunTestsSeries(train_image,train_keypoints);
+	}
 	if (correctness > min_accuracy)
 		ts->set_failed_test_info(CvTS::OK);
 	else
