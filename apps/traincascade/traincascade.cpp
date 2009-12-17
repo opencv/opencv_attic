@@ -1,6 +1,8 @@
 #include "cv.h"
 #include "cascadeclassifier.h"
 
+using namespace std;
+
 int main( int argc, char* argv[] )
 {
     CvCascadeClassifier classifier;

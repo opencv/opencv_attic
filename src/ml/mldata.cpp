@@ -83,7 +83,7 @@ CvMLData :: CvMLData()
     miss_ch = '?';
     //flt_separator = '.';
 
-    class_map = new map<string, int>();
+    class_map = new std::map<std::string, int>();
     rng = cvRNG( -cvGetTickCount() );
 }
 
