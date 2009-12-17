@@ -1788,7 +1788,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     return value;
 }
 
-float CvBoost::calc_error( CvMLData* _data, int type, vector<float> *resp )
+float CvBoost::calc_error( CvMLData* _data, int type, std::vector<float> *resp )
 {
     float err = 0;
     const CvMat* values = _data->get_values();

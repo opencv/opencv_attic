@@ -113,9 +113,9 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 #ifdef _OPENMP
     maxNumThreads = omp_get_num_procs();
 #endif
-    vector<CvDTreeSplit*> splits(maxNumThreads);
-    vector<CvDTreeSplit*> bestSplits(maxNumThreads);
-    vector<int> canSplit(maxNumThreads);
+    std::vector<CvDTreeSplit*> splits(maxNumThreads);
+    std::vector<CvDTreeSplit*> bestSplits(maxNumThreads);
+    std::vector<int> canSplit(maxNumThreads);
     CvDTreeSplit **splitsPtr = &splits[0], ** bestSplitsPtr = &bestSplits[0];
     int* canSplitPtr = &canSplit[0];
     for (int i = 0; i < maxNumThreads; i++)
@@ -560,7 +560,7 @@ float CvRTrees::get_proximity( const CvMat* sample1, const CvMat* sample2,
     return result;
 }
 
-float CvRTrees::calc_error( CvMLData* _data, int type , vector<float> *resp )
+float CvRTrees::calc_error( CvMLData* _data, int type , std::vector<float> *resp )
 {
     float err = 0;
     const CvMat* values = _data->get_values();

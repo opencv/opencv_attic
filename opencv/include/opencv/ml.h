@@ -110,8 +110,6 @@
 
 // Apple defines a check() macro somewhere in the debug headers
 // that interferes with a method definiton in this header
-
-using namespace std;
 #undef check
 
 /****************************************************************************************\
@@ -867,12 +865,12 @@ struct CV_EXPORTS CvDTreeTrainData
     int* get_cv_lables_buf();
     int* get_sample_idx_buf();
 
-    vector<vector<float> > pred_float_buf;
-    vector<vector<int> > pred_int_buf;
-    vector<vector<float> > resp_float_buf;
-    vector<vector<int> > resp_int_buf;
-    vector<vector<int> > cv_lables_buf;
-    vector<vector<int> > sample_idx_buf;
+    std::vector<std::vector<float> > pred_float_buf;
+    std::vector<std::vector<int> > pred_int_buf;
+    std::vector<std::vector<float> > resp_float_buf;
+    std::vector<std::vector<int> > resp_int_buf;
+    std::vector<std::vector<int> > cv_lables_buf;
+    std::vector<std::vector<int> > sample_idx_buf;
 
     int sample_count, var_all, var_count, max_c_count;
     int ord_var_count, cat_var_count, work_var_count;
@@ -934,7 +932,7 @@ public:
 
     virtual bool train( CvMLData* _data, CvDTreeParams _params=CvDTreeParams() );
 
-    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , std::vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual bool train( CvDTreeTrainData* _train_data, const CvMat* _subsample_idx );
 
@@ -1110,7 +1108,7 @@ public:
     virtual float get_proximity( const CvMat* sample1, const CvMat* sample2,
         const CvMat* missing1 = 0, const CvMat* missing2 = 0 ) const;
     
-    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , std::vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual float get_train_error();    
 
@@ -1320,7 +1318,7 @@ public:
                           bool raw_mode=false, bool return_sum=false ) const;
 #endif
     
-    virtual float calc_error( CvMLData* _data, int type , vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+    virtual float calc_error( CvMLData* _data, int type , std::vector<float> *resp = 0 ); // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
 
     virtual void prune( CvSlice slice );
 
@@ -1806,7 +1804,6 @@ CVAPI(void) cvCreateTestSet( int type, CvMat** samples,
 #include <map>
 #include <string>
 #include <iostream>
-using namespace std;
 
 #define CV_COUNT     0
 #define CV_PORTION   1
@@ -1905,7 +1902,7 @@ protected:
     bool mix;
    
     int total_class_count;
-    map<string, int> *class_map;
+    std::map<std::string, int> *class_map;
 
     CvMat* train_sample_idx;
     CvMat* test_sample_idx;

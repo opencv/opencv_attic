@@ -1,6 +1,8 @@
 #include "haarfeatures.h"
 #include "cascadeclassifier.h"
 
+using namespace std;
+
 CvHaarFeatureParams::CvHaarFeatureParams() : mode(BASIC)
 { 
     name = HFP_NAME;

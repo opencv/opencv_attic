@@ -1,6 +1,8 @@
 #include "features.h"
 #include "cascadeclassifier.h"
 
+using namespace std;
+
 float calcNormFactor( const Mat& sum, const Mat& sqSum )
 {
     CV_DbgAssert( sum.cols > 3 && sqSum.rows > 3 );
