@@ -64,6 +64,7 @@ protected:
 
     struct test_excep {};
 
+    bool SomeMatFunctions();
     bool TestMat();
     bool TestTemplateMat();
     bool TestMatND();
@@ -122,6 +123,7 @@ bool CV_OperationsTest::TestMat()
         checkDiff(resMat, intMat11 >  intMat10);
         checkDiff(resMat, intMat10 <= intMat11);
         checkDiff(resMat, intMat11 >= intMat10);
+        checkDiff(resMat, intMat11 != intMat10);
 
         checkDiff(resMat, intMat10 == 10.0);
         checkDiff(resMat, 10.0 == intMat10);
@@ -130,12 +132,13 @@ bool CV_OperationsTest::TestMat()
         checkDiff(resMat, 10.0 < intMat11);
         checkDiff(resMat, 11.0 >= intMat10);
         checkDiff(resMat, 10.0 <= intMat11);
+        checkDiff(resMat, 10.0 != intMat11);
+        checkDiff(resMat, intMat11 != 10.0);
 
         Mat maskMat4(3, 3, CV_8U, Scalar(4));
         Mat maskMat1(3, 3, CV_8U, Scalar(1));
         Mat maskMat5(3, 3, CV_8U, Scalar(5));
         Mat maskMat0(3, 3, CV_8U, Scalar(0));
-
 
         checkDiff(maskMat0, maskMat4 & maskMat1);
         checkDiff(maskMat0, Scalar(1) & maskMat4);
@@ -148,22 +151,444 @@ bool CV_OperationsTest::TestMat()
         checkDiff(maskMat0, (maskMat4 | maskMat4) & (maskMat1 | maskMat1));
         checkDiff(maskMat0, (maskMat4 | maskMat4) & maskMat1);
         checkDiff(maskMat0, maskMat4 & (maskMat1 | maskMat1));
+        checkDiff(maskMat0, (maskMat1 | maskMat1) & Scalar(4));
+        checkDiff(maskMat0, Scalar(4) & (maskMat1 | maskMat1));
         
         checkDiff(maskMat0, maskMat5 ^ (maskMat4 | maskMat1));
         checkDiff(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
 
         checkDiff(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
-        checkDiff(maskMat5, (maskMat4 ^ maskMat1) | maskMat5)           ;        
+        checkDiff(maskMat5, (maskMat4 ^ maskMat1) | maskMat5);        
         checkDiff(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
         checkDiff(maskMat5, (maskMat4 | maskMat4) | Scalar(1));
         checkDiff(maskMat5, Scalar(1) | (maskMat4 | maskMat4));
         checkDiff(maskMat5, (maskMat5 | maskMat5) | (maskMat4 ^ maskMat1));
 
+        checkDiff(maskMat1, min(maskMat1, maskMat5));
+        checkDiff(maskMat5, max(maskMat1, maskMat5));
+
+        checkDiff(maskMat1, min(maskMat1, maskMat5 | maskMat5));
+        checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5));
+        checkDiff(maskMat5, max(maskMat1 | maskMat1, maskMat5));
+        checkDiff(maskMat5, max(maskMat1, maskMat5 | maskMat5));
+
         checkDiff(~maskMat1, maskMat1 ^ 0xFF);
         checkDiff(~(maskMat1 | maskMat1), maskMat1 ^ 0xFF); 
 
-        checkDiff(maskMat1, maskMat4/4.0);      
+        checkDiff(maskMat1, maskMat4/4.0);   
+
+        /////////////////////////////
+
+        checkDiff(1.0 - (maskMat5 | maskMat5), -maskMat4);
+        checkDiff((maskMat4 | maskMat4) * 1.0 + 1.0, maskMat5);
+        checkDiff(1.0 + (maskMat4 | maskMat4) * 1.0, maskMat5);
+        checkDiff((maskMat5 | maskMat5) * 1.0 - 1.0, maskMat4);
+        checkDiff(5.0 - (maskMat4 | maskMat4) * 1.0, maskMat1);
+        checkDiff((maskMat4 | maskMat4) * 1.0 + 0.5 + 0.5, maskMat5);
+        checkDiff(0.5 + ((maskMat4 | maskMat4) * 1.0 + 0.5), maskMat5);
+        checkDiff(((maskMat4 | maskMat4) * 1.0 + 2.0) - 1.0, maskMat5);
+        checkDiff(5.0 - ((maskMat1 | maskMat1) * 1.0 + 3.0), maskMat1);
+        checkDiff( ( (maskMat1 | maskMat1) * 2.0 + 2.0) * 1.25, maskMat5);
+        checkDiff( 1.25 * ( (maskMat1 | maskMat1) * 2.0 + 2.0), maskMat5);
+        checkDiff( -( (maskMat1 | maskMat1) * (-2.0) + 1.0), maskMat1);      
+        checkDiff( maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0, maskMat5);         
+        checkDiff( 1.0 + (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
+        checkDiff( (maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0) - 1.0, maskMat4);         
+        checkDiff(5.0 -  (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat1);         
+        checkDiff((maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0)*1.25, maskMat5);         
+        checkDiff(1.25 * (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
+        checkDiff(-(maskMat1 * 2.0 + maskMat4 * (-1) + 1.0), maskMat1);         
+        checkDiff((maskMat1 * 1.0 + maskMat4), maskMat5);         
+        checkDiff((maskMat4 + maskMat1 * 1.0), maskMat5);         
+        checkDiff((maskMat1 * 3.0 + 1.0) + maskMat1, maskMat5);         
+        checkDiff(maskMat1 + (maskMat1 * 3.0 + 1.0), maskMat5);         
+        checkDiff(maskMat1*4.0 + (maskMat1 | maskMat1), maskMat5);         
+        checkDiff((maskMat1 | maskMat1) + maskMat1*4.0, maskMat5);         
+        checkDiff((maskMat1*3.0 + 1.0) + (maskMat1 | maskMat1), maskMat5);         
+        checkDiff((maskMat1 | maskMat1) + (maskMat1*3.0 + 1.0), maskMat5);
+        checkDiff(maskMat1*4.0 + maskMat4*2.0, maskMat1 * 12);
+        checkDiff((maskMat1*3.0 + 1.0) + maskMat4*2.0, maskMat1 * 12);
+        checkDiff(maskMat4*2.0 + (maskMat1*3.0 + 1.0), maskMat1 * 12);
+        checkDiff((maskMat1*3.0 + 1.0) + (maskMat1*2.0 + 2.0), maskMat1 * 8);
+                                                     
+        checkDiff(maskMat5*1.0 - maskMat4, maskMat1);
+        checkDiff(maskMat5 - maskMat1 * 4.0, maskMat1);
+        checkDiff((maskMat4 * 1.0 + 4.0)- maskMat4, maskMat4);
+        //FIXME checkDiff(maskMat5 - (maskMat1 * 2.0 + 2.0), maskMat1);
+        checkDiff(maskMat5*1.0 - (maskMat4 | maskMat4), maskMat1);
+        checkDiff((maskMat5 | maskMat5) - maskMat1 * 4.0, maskMat1);                
+        checkDiff((maskMat4 * 1.0 + 4.0)- (maskMat4 | maskMat4), maskMat4);
+        //FIXME checkDiff((maskMat5 | maskMat5) - (maskMat1 * 2.0 + 2.0), maskMat1);
+        checkDiff(maskMat1*5.0 - maskMat4 * 1.0, maskMat1);
+        checkDiff((maskMat1*5.0 + 3.0)- maskMat4 * 1.0, maskMat4);
+        checkDiff(maskMat4 * 2.0 - (maskMat1*4.0 + 3.0), maskMat1);
+        checkDiff((maskMat1 * 2.0 + 3.0) - (maskMat1*3.0 + 1.0), maskMat1);
+                                                              
+        /////////////////////////////
         
+//      1949 // (A*alpha)*B
+//      1950 template<typename A, typename M> static inline
+//      1951 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   1952 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a, const M& b )
+//      1953 {
+//      1954     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      1955     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, b, a.e.a2, 0));
+//      1956 }
+//      1957 
+//      1958 // A*(B*alpha)
+//      1959 template<typename A, typename M> static inline
+//      1960 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   1961 operator * ( const M& b, const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a )
+//      1962 {
+//      1963     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      1964     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(b, (M)a.e.a1, a.e.a2, 0));
+//      1965 }
+//      1966 
+//      1967 // A^t*B
+//      1968 template<typename A, typename M> static inline
+//      1969 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//X     1970 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_T_<Mat> >, M>& a, const M& b )
+//      1971 {
+//      1972     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      1973     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, b, a.e.a2, GEMM_1_T));
+//      1974 }
+//      1975 
+//      1976 // A*B^t
+//      1977 template<typename A, typename M> static inline
+//      1978 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   1979 operator * ( const M& a, const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_T_<Mat> >, M>& b )
+//      1980 {
+//      1981     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      1982     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a, (M)b.e.a1, b.e.a2, GEMM_2_T));
+//      1983 }
+//      1984 
+//      1985 // (A*alpha)*(B*beta)
+//      1986 template<typename A, typename B, typename M> static inline
+//      1987 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   1988 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a,
+//      1989              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& b )
+//      1990 {
+//      1991     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      1992     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1, a.e.a2*b.e.a2, 0));
+//      1993 }
+//      1994 
+//      1995 // A^t*(B*alpha)
+//      1996 template<typename A, typename B, typename M> static inline
+//      1997 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   1998 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_T_<Mat> >, M>& a,
+//      1999              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& b )
+//      2000 {
+//      2001     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2002     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1, a.e.a2*b.e.a2, GEMM_1_T));
+//      2003 }
+//      2004 
+//      2005 // (A*alpha)*B^t
+//      2006 template<typename A, typename B, typename M> static inline
+//      2007 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   2008 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a,
+//      2009              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& b )
+//      2010 {
+//      2011     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2012     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1, a.e.a2*b.e.a2, GEMM_2_T));
+//      2013 }
+//      2014 
+//      2015 // A^t*B^t
+//      2016 template<typename A, typename B, typename M> static inline
+//      2017 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   2018 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_T_<Mat> >, M>& a,
+//      2019              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& b )
+//      2020 {
+//      2021     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2022     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1,
+//      2023         (M)b.e.a1, a.e.a2*b.e.a2, GEMM_1_T+GEMM_2_T));
+//      2024 }
+//      2025 
+//      2026 // (A*B)*alpha
+//      2027 template<typename A, typename B, typename M> static inline
+//      2028 MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   2029 operator * ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2030              double alpha )
+//      2031 {
+//      2032     typedef MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2033     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a.e.a1, a.e.a2, a.e.a3*alpha, a.e.a4));
+//      2034 }
+//      2035 
+//      2036 // alpha*(A*B)
+//      2037 template<typename A, typename B, typename M> static inline
+//      2038 MatExpr_<MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   2039 operator * ( double alpha,
+//      2040              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2041 {
+//      2042     return a*alpha;
+//      2043 }
+//      2044 
+//      2045 // -(A*B)
+//      2046 template<typename A, typename B, typename M> static inline
+//      2047 MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>
+//-->   2048 operator - ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2049 {
+//      2050     return a*(-1);
+//      2051 }
+//      2052 
+//      2053 // (A*alpha + beta)*B
+//      2054 template<typename A, typename M> static inline
+//      2055 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2056 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a, const M& b )
+//      2057 {
+//      2058     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2059     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, b, a.e.a2, b, a.e.a3, 0));
+//      2060 }
+//      2061 
+//      2062 // A*(B*alpha + beta)
+//      2063 template<typename A, typename M> static inline
+//      2064 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2065 operator * ( const M& a, const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
+//      2066 {
+//      2067     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2068     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a, (M)b.e.a1, b.e.a2, a, b.e.a3, 0));
+//      2069 }
+//      2070 
+//      2071 // (A*alpha + beta)*(B*gamma)
+//      2072 template<typename A, typename B, typename M> static inline
+//      2073 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2074 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a,
+//      2075              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& b )
+//      2076 {
+//      2077     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2078     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
+//      2079         a.e.a2*b.e.a2, (M)b.e.a1, a.e.a3*b.e.a2, 0));
+//      2080 }
+//      2081 
+//      2082 // (A*gamma)*(B*alpha + beta)
+//      2083 template<typename A, typename B, typename M> static inline
+//      2084 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2085 operator * ( const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& a,
+//      2086              const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
+//      2087 {
+//      2088     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2089     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
+//      2090         a.e.a2*b.e.a2, (M)a.e.a1, a.e.a2*b.e.a3, 0));
+//      2091 }
+//      2092 
+//      2093 // (A*alpha + beta)*B^t
+//      2094 template<typename A, typename B, typename M> static inline
+//      2095 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2096 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a,
+//      2097              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& b )
+//      2098 {
+//      2099     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2100     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
+//      2101         a.e.a2*b.e.a2, (M)b.e.a1, a.e.a3*b.e.a2, GEMM_2_T));
+//      2102 }
+//      2103 
+//      2104 // A^t*(B*alpha + beta)
+//      2105 template<typename A, typename B, typename M> static inline
+//      2106 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2107 operator * ( const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& a,
+//      2108              const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
+//      2109 {
+//      2110     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
+//      2111     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
+//      2112         a.e.a2*b.e.a2, (M)a.e.a1, a.e.a2*b.e.a3, GEMM_1_T));
+//      2113 }
+//      2114 
+//      2115 // (A*B + C)*alpha
+//      2116 template<typename A, typename B, typename C, typename M> static inline
+//      2117 MatExpr_<MatExpr_Op6_<A, B, double, C, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2118 operator * ( const MatExpr_<MatExpr_Op6_<A, B, double, C,
+//      2119              double, int, M, MatOp_MatMulAdd_<Mat> >, M>& a, double alpha )
+//      2120 {
+//      2121     typedef MatExpr_Op6_<A, B, double, C, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2122     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a.e.a1, a.e.a2,
+//      2123         a.e.a3*alpha, a.e.a4, a.e.a5*alpha, a.e.a6));
+//      2124 }
+//      2125 
+//      2126 // alpha*(A*B + C)
+//      2127 template<typename A, typename B, typename C, typename M> static inline
+//      2128 MatExpr_<MatExpr_Op6_<A, B, double, C, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2129 operator * ( double alpha, const MatExpr_<MatExpr_Op6_<A, B, double, C,
+//      2130              double, int, M, MatOp_MatMulAdd_<Mat> >, M>& a )
+//      2131 { return a*alpha; }
+//      2132 
+//      2133 // -(A*B + C)
+//      2134 template<typename A, typename B, typename C, typename M> static inline
+//      2135 MatExpr_<MatExpr_Op6_<A, B, double, C, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2136 operator - ( const MatExpr_<MatExpr_Op6_<A, B, double, C,
+//      2137              double, int, M, MatOp_MatMulAdd_<Mat> >, M>& a )
+//      2138 { return a*(-1); }
+//      2139 
+//      2140 
+//      2141 // (A*B) + C
+//      2142 template<typename A, typename B, typename M> static inline
+//      2143 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//X     2144 operator + ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2145              const M& b )
+//      2146 {
+//      2147     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2148     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2149         (M)a.e.a1, (M)a.e.a2, a.e.a3, b, 1, a.e.a4));
+//      2150 }
+//      2151 
+//      2152 // C + (A*B)
+//      2153 template<typename A, typename B, typename M> static inline
+//      2154 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2155 operator + ( const M& b,
+//      2156              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2157 { return a + b; }
+//      2158 
+//      2159 
+//      2160 // (A*B) - C
+//      2161 template<typename A, typename B, typename M> static inline
+//      2162 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//X     2163 operator - ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2164              const M& b )
+//      2165 {
+//      2166     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2167     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2168         (M)a.e.a1, (M)a.e.a2, a.e.a3, b, -1, a.e.a4));
+//      2169 }
+//      2170 
+//      2171 // C - (A*B)
+//      2172 template<typename A, typename B, typename M> static inline
+//      2173 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2174 operator - ( const M& b,
+//      2175              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2176 {
+//      2177     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2178     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2179         (M)a.e.a1, (M)a.e.a2, -a.e.a3, b, 1, a.e.a4));
+//      2180 }
+//      2181 
+//      2182 
+//      2183 // (A*B) + C
+//      2184 template<typename A, typename B, typename C, typename M> static inline
+//      2185 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2186 operator + ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2187              const MatExpr_<C, M>& b )
+//      2188 {
+//      2189     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2190     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2191         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b, 1, a.e.a4));
+//      2192 }
+//      2193 
+//      2194 // C + (A*B)
+//      2195 template<typename A, typename B, typename C, typename M> static inline
+//      2196 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2197 operator + ( const MatExpr_<C, M>& b,
+//      2198              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2199 { return a + b; }
+//      2200 
+//      2201 
+//      2202 // (A*B) - C
+//      2203 template<typename A, typename B, typename C, typename M> static inline
+//      2204 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//X     2205 operator - ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2206              const MatExpr_<C, M>& b )
+//      2207 {
+//      2208     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2209     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2210         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b, -1, a.e.a4));
+//      2211 }
+//      2212 
+//      2213 // C - (A*B)
+//      2214 template<typename A, typename B, typename C, typename M> static inline
+//      2215 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2216 operator - ( const MatExpr_<C, M>& b,
+//      2217              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2218 {
+//      2219     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2220     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2221         (M)a.e.a1, (M)a.e.a2, -a.e.a3, (M)b, 1, a.e.a4));
+//      2222 }
+//      2223 
+//      2224 
+//      2225 // (A*B) + C*alpha
+//      2226 template<typename A, typename B, typename C, typename M> static inline
+//      2227 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2228 operator + ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2229              const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_Scale_<Mat> >, M>& b )
+//      2230 {
+//      2231     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2232     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2233         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b.e.a1, b.e.a2, a.e.a4));
+//      2234 }
+//      2235 
+//      2236 // C*alpha + (A*B)
+//      2237 template<typename A, typename B, typename C, typename M> static inline
+//      2238 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2239 operator + ( const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_Scale_<Mat> >, M>& b,
+//      2240              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2241 { return a + b; }
+//      2242 
+//      2243 
+//      2244 // (A*B) - (C*alpha)
+//      2245 template<typename A, typename B, typename C, typename M> static inline
+//      2246 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2247 operator - ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2248              const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_Scale_<Mat> >, M>& b )
+//      2249 {
+//      2250     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2251     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2252         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b.e.a1, -b.e.a2, a.e.a4));
+//      2253 }
+//      2254 
+//      2255 // (C*alpha) - (A*B)
+//      2256 template<typename A, typename B, typename C, typename M> static inline
+//      2257 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2258 operator - ( const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_Scale_<Mat> >, M>& b,
+//      2259              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2260 {
+//      2261     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2262     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2263         (M)a.e.a1, (M)a.e.a2, -a.e.a3, (M)b.e.a1, b.e.a2, a.e.a4));
+//      2264 }
+//      2265 
+//      2266 
+//      2267 // (A*B) + C^t
+//      2268 template<typename A, typename B, typename C, typename M> static inline
+//      2269 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2270 operator + ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2271              const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_T_<Mat> >, M>& b )
+//      2272 {
+//      2273     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2274     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2275         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b.e.a1, b.e.a2, a.e.a4 + GEMM_3_T));
+//      2276 }
+//      2277 
+//      2278 // C^t + (A*B)
+//      2279 template<typename A, typename B, typename C, typename M> static inline
+//      2280 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2281 operator + ( const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_T_<Mat> >, M>& b,
+//      2282              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2283 { return a + b; }
+//      2284 
+//      2285 
+//      2286 // (A*B) - C^t
+//      2287 template<typename A, typename B, typename C, typename M> static inline
+//      2288 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2289 operator - ( const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a,
+//      2290              const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_T_<Mat> >, M>& b )
+//      2291 {
+//      2292     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2293     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2294         (M)a.e.a1, (M)a.e.a2, a.e.a3, (M)b.e.a1, -b.e.a2, a.e.a4+GEMM_3_T));
+//      2295 }
+//      2296 
+//      2297 // C^t - (A*B)
+//      2298 template<typename A, typename B, typename C, typename M> static inline
+//      2299 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
+//-->   2300 operator - ( const MatExpr_<MatExpr_Op2_<C, double, M, MatOp_T_<Mat> >, M>& b,
+//      2301              const MatExpr_<MatExpr_Op4_<A, B, double, int, M, MatOp_MatMul_<Mat> >, M>& a )
+//      2302 {
+//      2303     typedef MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> > MatExpr_Temp;
+//      2304     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(
+//      2305         (M)a.e.a1, (M)a.e.a2, -a.e.a3, (M)b.e.a1, b.e.a2, a.e.a4+GEMM_3_T));
+//      2306 }
+
+
+        /////////////////////////////
+
+
 
     }
     catch (const test_excep&)
@@ -174,13 +599,41 @@ bool CV_OperationsTest::TestMat()
     return true;
 }
 
+bool CV_OperationsTest::SomeMatFunctions()
+{
+    try
+    {
+        Mat rgba( 10, 10, CV_8UC4, Scalar(1,2,3,4) );
+        Mat bgr( rgba.rows, rgba.cols, CV_8UC3 );
+        Mat alpha( rgba.rows, rgba.cols, CV_8UC1 );        
+        Mat out[] = { bgr, alpha };
+        // rgba[0] -> bgr[2], rgba[1] -> bgr[1],
+        // rgba[2] -> bgr[0], rgba[3] -> alpha[0]
+        int from_to[] = { 0,2, 1,1, 2,0, 3,3 };
+        mixChannels( &rgba, 1, out, 2, from_to, 4 );        
+
+        Mat bgr_exp( rgba.size(), CV_8UC3, Scalar(3,2,1));
+        Mat alpha_exp( rgba.size(), CV_8UC1, Scalar(4));
+
+        checkDiff(bgr_exp, bgr);      
+        checkDiff(alpha_exp, alpha);      
+    }
+    catch (const test_excep&)
+    {
+        ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+        return false;
+    }
+    return true;
+
+}
+
 
 bool CV_OperationsTest::TestTemplateMat()
 {  
     try
     {
-        Mat_<float> one_3x1(3, 1, 1.0);
-        Mat_<float> shi_3x1(3, 1, 1.2);
+        Mat_<float> one_3x1(3, 1, 1.0f);
+        Mat_<float> shi_3x1(3, 1, 1.2f);
         Mat_<float> shi_2x1(2, 1, -2);
         Scalar shift = Scalar::all(15);
 
@@ -188,15 +641,19 @@ bool CV_OperationsTest::TestTemplateMat()
         Mat_<float> rot_2x3(2, 3, data);
                
         Mat_<float> res = 2 * rot_2x3 * (one_3x1 + shi_3x1 + shi_3x1 + shi_3x1) - shi_2x1 + shift;
+        Mat_<float> resS = rot_2x3 * one_3x1;
 
-        Mat_<float> tmp, res2;
+        Mat_<float> tmp, res2, resS2;
         add(one_3x1, shi_3x1, tmp);
         add(tmp, shi_3x1, tmp);
         add(tmp, shi_3x1, tmp);
         gemm(rot_2x3, tmp, 2, shi_2x1, -1, res2, 0);
         add(res2, Mat(2, 1, CV_32F, shift), res2);
         
-        checkDiff(res, res2);
+        gemm(rot_2x3, one_3x1, 1, shi_2x1, 0, resS2, 0);
+        checkDiff(res, res2);        
+        checkDiff(resS, resS2);
+
             
         Mat_<float> mat4x4(4, 4);
         randu(mat4x4, Scalar(0), Scalar(10));
@@ -232,7 +689,7 @@ bool CV_OperationsTest::TestTemplateMat()
         checkDiff(maskMat0, Scalar(1) & maskMat4);
         checkDiff(maskMat0, maskMat4 & Scalar(1));
                         
-        Mat m;
+        Mat_<uchar> m;
         m = maskMat4.clone(); m&=maskMat1; checkDiff(maskMat0, m);
         m = maskMat4.clone(); m&=Scalar(1); checkDiff(maskMat0, m);
         
@@ -268,6 +725,9 @@ bool CV_OperationsTest::TestTemplateMat()
         checkDiff(maskMat5 - 1, maskMat4);
         checkDiff((maskMat5 | maskMat5) - 1, maskMat4);
         checkDiff((maskMat5 | maskMat5) - (maskMat1 | maskMat1), maskMat4);
+
+        checkDiff(maskMat1, min(maskMat1, maskMat5));
+        checkDiff(maskMat5, max(maskMat1, maskMat5));
         
         m = maskMat5.clone(); m-=Scalar(1); checkDiff(m, maskMat4);
         m = maskMat5.clone(); m-=maskMat1; checkDiff(m, maskMat4);
@@ -474,6 +934,9 @@ bool CV_OperationsTest::operations1()
 void CV_OperationsTest::run( int /* start_from */)
 {
     if (!TestMat())
+        return;
+
+    if (!SomeMatFunctions())
         return;
 
     if (!TestTemplateMat())
