@@ -123,7 +123,7 @@ int build_rtrees_classifier( char* data_filename,
     else
     {
         // create classifier by using <data> and <responses>
-        printf( "Training the classifier ...");
+        printf( "Training the classifier ...\n");
 
         // 1. create type mask
         var_type = cvCreateMat( data->cols + 1, 1, CV_8U );
@@ -290,7 +290,7 @@ int build_boost_classifier( char* data_filename,
         cvSetReal1D( var_type, var_count+1, CV_VAR_CATEGORICAL );
 
         // 3. train classifier
-        printf( "Training the classifier (may take a few minutes)...");
+        printf( "Training the classifier (may take a few minutes)...\n");
         boost.train( new_data, CV_ROW_SAMPLE, new_responses, 0, 0, var_type, 0,
             CvBoostParams(CvBoost::REAL, 100, 0.95, 5, false, 0 ));
         cvReleaseMat( &new_data );
@@ -423,10 +423,14 @@ int build_mlp_classifier( char* data_filename,
         CvMat layer_sizes =
             cvMat( 1, (int)(sizeof(layer_sz)/sizeof(layer_sz[0])), CV_32S, layer_sz );
         mlp.create( &layer_sizes );
-        printf( "Training the classifier (may take a few minutes)...");
+        printf( "Training the classifier (may take a few minutes)...\n");
         mlp.train( &train_data, new_responses, 0, 0,
             CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER,300,0.01),
-            CvANN_MLP_TrainParams::RPROP,0.01));
+#if 1
+            CvANN_MLP_TrainParams::BACKPROP,0.001));
+#else
+            CvANN_MLP_TrainParams::RPROP,0.05));
+#endif
         cvReleaseMat( &new_responses );
         printf("\n");
     }

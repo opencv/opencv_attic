@@ -192,12 +192,12 @@ void CvANN_MLP::init_weights()
             {
                 val = cvRandReal(&rng)*2-1.;
                 w[k*n2 + j] = val;
-                s += val;
+                s += fabs(val);
             }
 
             if( i < layer_sizes->cols - 1 )
             {
-                s = 1./(s - val);
+                s = 1./(s - fabs(val));
                 for( k = 0; k <= n1; k++ )
                     w[k*n2 + j] *= s;
                 w[n1*n2 + j] *= G*(-1+j*2./n2);
@@ -503,62 +503,42 @@ void CvANN_MLP::calc_activ_func_deriv( CvMat* _xf, CvMat* _df,
                 df[j] = t*2*scale2;
                 xf[j] = t*t*scale;
             }
+        cvExp( _xf, _xf );
+
+        n *= cols;
+        xf -= n; df -= n;
+        
+        for( i = 0; i < n; i++ )
+            df[i] *= xf[i];
     }
     else
     {
-        scale = -f_param1;
+        scale = f_param1;
         for( i = 0; i < n; i++, xf += cols, df += cols )
             for( j = 0; j < cols; j++ )
+            {
                 xf[j] = (xf[j] + bias[j])*scale;
-    }
+                df[j] = -fabs(xf[j]);
+            }
+        
+        cvExp( _df, _df );
 
-    cvExp( _xf, _xf );
+        n *= cols;
+        xf -= n; df -= n;
 
-    n *= cols;
-    xf -= n; df -= n;
-
-    // ((1+exp(-ax))^-1)'=a*((1+exp(-ax))^-2)*exp(-ax);
-    // ((1-exp(-ax))/(1+exp(-ax)))'=(a*exp(-ax)*(1+exp(-ax)) + a*exp(-ax)*(1-exp(-ax)))/(1+exp(-ax))^2=
-    // 2*a*exp(-ax)/(1+exp(-ax))^2
-    switch( activ_func )
-    {
-    case SIGMOID_SYM:
-        scale *= -2*f_param2;
-        for( i = 0; i <= n - 4; i += 4 )
+        // ((1+exp(-ax))^-1)'=a*((1+exp(-ax))^-2)*exp(-ax);
+        // ((1-exp(-ax))/(1+exp(-ax)))'=(a*exp(-ax)*(1+exp(-ax)) + a*exp(-ax)*(1-exp(-ax)))/(1+exp(-ax))^2=
+        // 2*a*exp(-ax)/(1+exp(-ax))^2
+        scale *= 2*f_param2;
+        for( i = 0; i < n; i++ )
         {
-            double x0 = 1.+xf[i], x1 = 1.+xf[i+1], x2 = 1.+xf[i+2], x3 = 1.+xf[i+3];
-            double a = x0*x1, b = x2*x3, d = 1./(a*b), t0, t1;
-            a *= d; b *= d;
-
-            t0 = b*x1; t1 = b*x0;
-            df[i] = scale*xf[i]*t0*t0;
-            df[i+1] = scale*xf[i+1]*t1*t1;
-            t0 *= scale2*(2 - x0); t1 *= scale2*(2 - x1);
-            xf[i] = t0; xf[i+1] = t1;
-
-            t0 = a*x3; t1 = a*x2;
-            df[i+2] = scale*xf[i+2]*t0*t0;
-            df[i+3] = scale*xf[i+3]*t1*t1;
-            t0 *= scale2*(2 - x2); t1 *= scale2*(2 - x3);
-            xf[i+2] = t0; xf[i+3] = t1;
-        }
-
-        for( ; i < n; i++ )
-        {
-            double t0 = 1./(1. + xf[i]);
-            double t1 = scale*xf[i]*t0*t0;
-            t0 *= scale2*(1. - xf[i]);
+            int s0 = xf[i] > 0 ? 1 : -1;
+            double t0 = 1./(1. + df[i]);
+            double t1 = scale*df[i]*t0*t0;
+            t0 *= scale2*(1. - df[i])*s0;
             df[i] = t1;
             xf[i] = t0;
         }
-        break;
-
-    case GAUSSIAN:
-        for( i = 0; i < n; i++ )
-            df[i] *= xf[i];
-        break;
-    default:
-        ;
     }
 }
 
@@ -938,6 +918,7 @@ int CvANN_MLP::train_backprop( CvVectors x0, CvVectors u, const double* sw )
 
         if( idx == 0 )
         {
+            //printf("%d. E = %g\n", iter/count, E);
             if( fabs(prev_E - E) < epsilon )
                 break;
             prev_E = E;
@@ -1280,6 +1261,7 @@ int CvANN_MLP::train_rprop( CvVectors x0, CvVectors u, const double* sw )
             }
         }
 
+        //printf("%d. E = %g\n", iter, E);
         if( fabs(prev_E - E) < epsilon )
             break;
         prev_E = E;
