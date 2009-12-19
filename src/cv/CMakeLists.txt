@@ -24,7 +24,7 @@ source_group("Include\\Internal" FILES ${lib_int_hdrs})
 
 set(the_target "cv")
 
-add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
+add_library(${the_target} ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
 
 if(PCHSupport_FOUND)
     set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_cv.h)

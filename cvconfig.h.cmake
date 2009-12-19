@@ -118,6 +118,9 @@
 /* Intel Integrated Performance Primitives */
 #cmakedefine  HAVE_IPP
 
+/* OpenCV compiled as static or dynamic libs */
+#cmakedefine  OPENCV_BUILD_SHARED_LIB
+
 /* Name of package */
 #define  PACKAGE "${PACKAGE}"
 

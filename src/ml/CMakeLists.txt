@@ -18,7 +18,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
 
 set(the_target "ml")
 
-add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
+add_library(${the_target} ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
 
 if(PCHSupport_FOUND)
     set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_ml.h)
