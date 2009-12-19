@@ -38,7 +38,7 @@ endif()
 # ----------------------------------------------------------------------------------
 set(the_target "cxts")
 
-add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs})
+add_library(${the_target} ${lib_srcs} ${lib_hdrs})
 
 # For dynamic link numbering convenions
 set_target_properties(${the_target} PROPERTIES

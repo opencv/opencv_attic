@@ -148,7 +148,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
                     "${CMAKE_CURRENT_SOURCE_DIR}"
                     "${CMAKE_CURRENT_BINARY_DIR}")
 
-add_library(${the_target} SHARED ${lib_srcs} ${highgui_hdrs} ${grfmt_hdrs} ${highgui_ext_hdrs})
+add_library(${the_target} ${lib_srcs} ${highgui_hdrs} ${grfmt_hdrs} ${highgui_ext_hdrs})
 
 if(PCHSupport_FOUND)
     set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/_highgui.h)

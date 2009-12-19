@@ -53,6 +53,24 @@ foreach(__CVLIB ${OPENCV_LIB_COMPONENTS})
 	endif(CMAKE_MAJOR_VERSION GREATER 2  OR  CMAKE_MINOR_VERSION GREATER 4)
 endforeach(__CVLIB)
 
+# For OpenCV built as static libs, we need the user to link against 
+#  many more dependencies:
+IF (NOT @OPENCV_BUILD_SHARED_LIB@)
+	# Under static libs, the user of OpenCV needs access to the 3rdparty libs as well:
+	LINK_DIRECTORIES("@CMAKE_BINARY_DIR@/3rdparty/lib")
+
+	SET(OpenCV_LIBS 
+		@OPENCV_LINKER_LIBS@ 
+		@IPP_LIBS@
+		@JPEG_LIBRARIES@ 
+		@PNG_LIBRARIES@ 
+		@TIFF_LIBRARIES@ 
+		@JASPER_LIBRARIES@ 
+		@HIGHGUI_LIBRARIES@ 
+		${OpenCV_LIBS}) # The standard libs BEFORE (OpenCV_LIBS) since these can have "debug","optimized".
+ENDIF(NOT @OPENCV_BUILD_SHARED_LIB@)
+
+
 # ======================================================
 #  Version variables: 
 # ======================================================

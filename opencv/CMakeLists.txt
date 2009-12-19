@@ -79,6 +79,17 @@ endif()
 
 
 # ----------------------------------------------------------------------------
+# Build static or dynamic libs?
+# ----------------------------------------------------------------------------
+# Default: dynamic libraries:
+SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+IF(BUILD_SHARED_LIBS)
+	SET(OPENCV_BUILD_SHARED_LIB 1) # For cvconfig.h, etc.
+ELSE(BUILD_SHARED_LIBS)
+	SET(OPENCV_BUILD_SHARED_LIB 0)
+ENDIF(BUILD_SHARED_LIBS)
+
+# ----------------------------------------------------------------------------
 #  Variables for cvconfig.h.cmake
 # ----------------------------------------------------------------------------
 set(PACKAGE "opencv")
@@ -648,6 +659,15 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
 endif()
 
+# Extra link libs if the user selects building static libs:
+IF(NOT BUILD_SHARED_LIBS)
+	if(CMAKE_COMPILER_IS_GNUCXX)
+		set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} stdc++)
+	endif()
+
+	set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} flann zlib opencv_lapack)
+endif()
+
 
 # Add user supplied extra options (optimization, etc...)
 # ==========================================================
@@ -884,6 +904,7 @@ add_subdirectory(3rdparty)
 message(STATUS "")
 message(STATUS "General configuration for opencv ${OPENCV_VERSION} =====================================")
 message(STATUS "")
+message(STATUS "    Built as dynamic libs?:    ${BUILD_SHARED_LIBS}")
 message(STATUS "    Compiler:                  ${CMAKE_COMPILER}")
 message(STATUS "    C++ flags (Release):       ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "    C++ flags (Debug):         ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")

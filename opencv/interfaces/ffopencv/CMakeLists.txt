@@ -6,7 +6,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/highgui")
 link_directories("${CMAKE_SOURCE_DIR}/3rdparty/lib")
 
 set(the_target opencv_ffmpeg)
-add_library(${the_target} SHARED ffopencv.cpp ffopencv.h)
+add_library(${the_target} ffopencv.cpp ffopencv.h)
 
 if (MSVC)
 add_dependencies(${the_target} cxcore)

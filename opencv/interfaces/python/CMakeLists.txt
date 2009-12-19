@@ -21,7 +21,7 @@ add_custom_command(
    )
 
 set(the_target "cvpy")
-add_library(${the_target} SHARED ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs} ${CMAKE_CURRENT_BINARY_DIR}/generated0.i)
+add_library(${the_target} ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs} ${CMAKE_CURRENT_BINARY_DIR}/generated0.i)
 target_link_libraries(${the_target} ${PYTHON_LIBRARIES} cxcore cv cvaux highgui)
 set_target_properties(${the_target} PROPERTIES PREFIX "")
 set_target_properties(${the_target} PROPERTIES OUTPUT_NAME "cv")
