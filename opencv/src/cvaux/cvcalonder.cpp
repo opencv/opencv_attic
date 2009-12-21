@@ -67,14 +67,14 @@ namespace cv {
 	//rng
 	CalonderRng::CalonderRng(int64 seed)
 	{
-		rng = cvRNG(1);
+		rng = cvRNG(seed);
 	}
 
 	CalonderRng::~CalonderRng() {}
 
 	inline void CalonderRng::seed(int64 seed)
 	{
-		rng = cvRNG(1);
+		rng = cvRNG(seed);
 	}
 
 	inline unsigned int CalonderRng::operator()()
