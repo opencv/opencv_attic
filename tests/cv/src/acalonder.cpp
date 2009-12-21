@@ -62,7 +62,7 @@ protected:
 	void MapVectorAffine(const vector<CvPoint>& p1, vector<CvPoint>& p2, CvMat* transform);
 	float CalcAffineReprojectionError(const vector<CvPoint>& p1, const vector<CvPoint>& p2, CvMat* transform);
 	void ExtractFeatures(const IplImage* image, vector<CvPoint>& points);
-	void TrainDetector(RTreeClassifier& detector, const int patch_size,const vector<CvPoint>& train_points,const IplImage* train_image);
+	void TrainDetector(RTreeClassifier& detector, int patch_size, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints = 0);
 	void GetCorrespondences(const RTreeClassifier& detector, int patch_size,
 						const vector<CvPoint>& objectKeypoints, const vector<CvPoint>& imageKeypoints, const IplImage* image,
 						vector<CvPoint>& object, vector<CvPoint>& features);
@@ -77,7 +77,14 @@ protected:
 	////returns 1 in the case of success, 0 otherwise
 	int LoadKeypoints(vector<CvPoint>& points, const char* path);
 
-	void GetKeypointSignature(IplImage* test_image, int patch_size, vector<float>& signature);
+	void ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float>>& signatures);
+	//returns 1 in the case of success, 0 otherwise
+	int SaveKeypointSignatures(const char* path, const vector<vector<float>>& signatures);
+	//returns 1 in the case of success, 0 otherwise
+	int LoadKeypointSignatures(const char* path, vector<vector<float>>& signatures);
+
+	//returns 1 in the case signatures are identical, 0 otherwise
+	int CompareSignatures(const vector<vector<float>>& signatures1, const vector<vector<float>>& signatures2);
 
 
 };
@@ -101,10 +108,10 @@ void CV_CalonderTest::FindAffineTransform(const vector<CvPoint>& p1, const vecto
     
     for(int i = 0; i < (int)p1.size(); i++)
     {
-        cvmSet6(A, 2*i, 0, p1[i].x, p1[i].y, 1, 0, 0, 0);
-        cvmSet6(A, 2*i + 1, 0, 0, 0, 0, p1[i].x, p1[i].y, 1);
-        cvmSet(B, 2*i, 0, p2[i].x);
-        cvmSet(B, 2*i + 1, 0, p2[i].y);
+        cvmSet6(A, 2*i, 0, (float)p1[i].x, (float)p1[i].y, 1, 0, 0, 0);
+        cvmSet6(A, 2*i + 1, 0, 0, 0, 0, (float)p1[i].x, (float)p1[i].y, 1);
+        cvmSet(B, 2*i, 0, (double)p2[i].x);
+        cvmSet(B, 2*i + 1, 0, (double)p2[i].y);
     }
     
     cvSolve(A, B, X, CV_SVD);
@@ -123,17 +130,17 @@ void CV_CalonderTest::FindAffineTransform(const vector<CvPoint>& p1, const vecto
 
 void CV_CalonderTest::MapVectorAffine(const vector<CvPoint>& p1, vector<CvPoint>& p2, CvMat* transform)
 {
-    float a = cvmGet(transform, 0, 0);
-    float b = cvmGet(transform, 0, 1);
-    float c = cvmGet(transform, 0, 2);
-    float d = cvmGet(transform, 1, 0);
-    float e = cvmGet(transform, 1, 1);
-    float f = cvmGet(transform, 1, 2);
+    double a = cvmGet(transform, 0, 0);
+    double b = cvmGet(transform, 0, 1);
+    double c = cvmGet(transform, 0, 2);
+    double d = cvmGet(transform, 1, 0);
+    double e = cvmGet(transform, 1, 1);
+    double f = cvmGet(transform, 1, 2);
     
     for(int i = 0; i < (int)p1.size(); i++)
     {
-        float x = a*p1[i].x + b*p1[i].y + c;
-        float y = d*p1[i].x + e*p1[i].y + f;
+        double x = a*p1[i].x + b*p1[i].y + c;
+        double y = d*p1[i].x + e*p1[i].y + f;
         p2.push_back(cvPoint((int)x, (int)y));
     }
 }
@@ -173,15 +180,19 @@ void CV_CalonderTest::ExtractFeatures(const IplImage* image, vector<CvPoint>& po
 	cvReleaseMemStorage(&storage);
 }
 
-void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, const int patch_size,const vector<CvPoint>& train_points,const IplImage* train_image)
+void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, int patch_size, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints)
 {
 	vector<BaseKeypoint> base_set;
-	for (int i=0;i<20/*(int)(train_points.size())*/;i++)
+	int n = (int)(train_points.size());
+	if (n_keypoints)
+		n = n_keypoints;
+	for (int i=0;i<n;i++)
 	{
 		base_set.push_back(BaseKeypoint(train_points[i].x,train_points[i].y,const_cast<IplImage*>(train_image)));
 	}
 
 	//Detector training
+	//CvRNG r = cvRNG(1);
 	CalonderRng rng( cvRandInt(this->ts->get_rng()));
     CalonderPatchGenerator gen(0,rng);
     gen.setThetaBounds(-CV_PI/3,CV_PI/3);
@@ -214,7 +225,7 @@ void CV_CalonderTest::GetCorrespondences(const RTreeClassifier& detector, int pa
 	{
 		best_corr = new float[(int)imageKeypoints.size()];
 		best_corr_idx = new int[(int)imageKeypoints.size()];
-	}
+
 
 	for(int i=0; i < (int)imageKeypoints.size(); i++)
 	{
@@ -281,20 +292,22 @@ void CV_CalonderTest::GetCorrespondences(const RTreeClassifier& detector, int pa
 			features.push_back(imageKeypoints[idx]);
 		}
 	}
-	cvReleaseImage(&test_image);
-	if (signature)
-		delete[] signature;
+
 	if (best_corr)
 		delete[] best_corr;
 	if (best_corr_idx)
 		delete[] best_corr_idx;
+		}
+	cvReleaseImage(&test_image);
+	if (signature)
+		delete[] signature;
 }
 
 
 // Scales the source image (x and y) and rotate to the angle (Positive values mean counter-clockwise rotation) 
 void CV_CalonderTest::RotateAndScale(const IplImage* src, IplImage* dst, float angle, float scale_x, float scale_y)
 {
-	IplImage* temp = cvCreateImage(cvSize(src->width*scale_x,src->height*scale_y),src->depth,src->nChannels);
+	IplImage* temp = cvCreateImage(cvSize((int)(src->width*scale_x),(int)(src->height*scale_y)),src->depth,src->nChannels);
 
 	cvResize(src,temp);
 
@@ -318,15 +331,15 @@ void CV_CalonderTest::RotateAndScale(const CvPoint& src, CvPoint& dst, const CvP
 	cv2DRotationMatrix(cvPoint2D32f((double)center.x*scale_x,(double)center.y*scale_y), angle*180/CV_PI,
 		1.0f, transform );
 
-    float a = cvmGet(transform, 0, 0);
-    float b = cvmGet(transform, 0, 1);
-    float c = cvmGet(transform, 0, 2);
-    float d = cvmGet(transform, 1, 0);
-    float e = cvmGet(transform, 1, 1);
-    float f = cvmGet(transform, 1, 2);
+    double a = cvmGet(transform, 0, 0);
+    double b = cvmGet(transform, 0, 1);
+    double c = cvmGet(transform, 0, 2);
+    double d = cvmGet(transform, 1, 0);
+    double e = cvmGet(transform, 1, 1);
+    double f = cvmGet(transform, 1, 2);
     
-    float x = a*temp.x + b*temp.y + c;
-    float y = d*temp.x + e*temp.y + f;
+    double x = a*temp.x + b*temp.y + c;
+    double y = d*temp.x + e*temp.y + f;
     dst= cvPoint((int)x, (int)y);
 
 	cvReleaseMat(&transform);
@@ -334,13 +347,14 @@ void CV_CalonderTest::RotateAndScale(const CvPoint& src, CvPoint& dst, const CvP
 
 float CV_CalonderTest::RunTestsSeries(const IplImage* train_image, vector<CvPoint>& keypoints)
 {
-	float angles[] = {-CV_PI/4,CV_PI/4};
-	float scales_x[] = {0.85,1.15};
-	float scales_y[] = {0.85,1.15};
+	float angles[] = {(float)-CV_PI/4,(float)CV_PI/4};
+	float scales_x[] = {0.85f,1.15f};
+	float scales_y[] = {0.85f,1.15f};
 	int n_angles = 4;
 	int n_scales_x = 3;
 	int n_scales_y = 3;
 	int accuracy = 4;
+	int are_keypoints_loaded = (int)keypoints.size();
 
 	int total_cases = n_angles*n_scales_x*n_scales_y;
 	int n_case = 0;
@@ -357,26 +371,46 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image, vector<CvPoin
 	cvResetImageROI(test_image);
 
 	vector<CvPoint> objectKeypoints;
-	if (keypoints.size() < 1)
+	if (!are_keypoints_loaded)
 	{
 		ExtractFeatures(train_image,objectKeypoints);
-		for (int i=0;i<objectKeypoints.size();i++)
+		for (int i=0;i<(int)objectKeypoints.size();i++)
 		{
 			keypoints.push_back(objectKeypoints[i]);
 		}
 	}
 	else
 	{
-		for (int i=0;i<keypoints.size();i++)
+		for (int i=0;i<(int)keypoints.size();i++)
 		{
 			objectKeypoints.push_back(keypoints[i]);
 		}
 	}
 
+	//Checking signatures are identical
+	vector <vector<float>> signatures1;
+	string signatures_path = string(ts->get_data_path()) + "calonder/signatures.txt";
+	int can_load_signatures = LoadKeypointSignatures(signatures_path.c_str(),signatures1);
+	// end of region
+
 	RTreeClassifier detector;
 	int patch_size = PATCH_SIZE;
 	//this->update_progress(1,0,total_cases,5);
-	TrainDetector(detector,patch_size,objectKeypoints,train_image);
+	TrainDetector(detector,patch_size,objectKeypoints,train_image,20);
+
+	//Checking signatures are identical
+	vector <vector<float>> signatures2;
+	ExtractKeypointSignatures(train_image,patch_size,detector,objectKeypoints,signatures2);
+	if (!can_load_signatures)
+	{
+		//SaveKeypointSignatures(signatures_path.c_str(),signatures2);
+	}
+	else
+	{
+	//	if (!CompareSignatures(signatures1,signatures2))
+	//		return 0;
+	}
+	// end of region
 
 
 
@@ -465,7 +499,7 @@ int CV_CalonderTest::SaveKeypoints(const vector<CvPoint>& points, const char* pa
 	{
 		return 0;
 	}
-	for (int i=0;i<points.size();i++)
+	for (int i=0;i<(int)points.size();i++)
 	{
 		fprintf(f,"%d,%d\n",points[i].x,points[i].y);
 	}
@@ -493,6 +527,128 @@ int CV_CalonderTest::LoadKeypoints(vector<CvPoint>& points, const char* path)
 	return 1;
 }
 
+void CV_CalonderTest::ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float>>& signatures)
+{
+	IplImage* _test_image = cvCloneImage(test_image);
+	signatures.clear();
+
+	float* signature = new float[(const_cast<RTreeClassifier&>(detector)).original_num_classes()];
+
+	for (int i=0;i<(int)keypoints.size();i++)
+	{
+		CvRect roi = cvRect((int)(keypoints[i].x) - patch_size/2,(int)(keypoints[i].y) - patch_size/2, patch_size, patch_size);
+		cvSetImageROI(_test_image, roi);
+		roi = cvGetImageROI(_test_image);
+		if(roi.width != patch_size || roi.height != patch_size)
+		{
+			continue;
+		}
+
+		cvSetImageROI(_test_image, roi);
+		IplImage* roi_image = cvCreateImage(cvSize(roi.width, roi.height), _test_image->depth, _test_image->nChannels);
+		cvCopy(_test_image,roi_image);
+
+		(const_cast<RTreeClassifier&>(detector)).getSignature(roi_image, signature);
+		
+		vector<float> vec;
+
+		for (int j=0;j<(const_cast<RTreeClassifier&>(detector)).original_num_classes();j++)
+		{
+			vec.push_back(signature[j]);
+		}
+		signatures.push_back(vec);
+
+		cvReleaseImage(&roi_image);
+
+	}
+
+	delete[] signature;
+	cvReleaseImage(&_test_image);
+}
+
+
+
+
+int CV_CalonderTest::SaveKeypointSignatures(const char* path, const vector<vector<float>>& signatures)
+{
+	FILE* f = fopen(path,"w");
+	if (!f)
+		return 0;
+
+	for (int i=0;i<(int)signatures.size();i++)
+	{
+		for (int j=0;j<(int)signatures[i].size();j++)
+		{
+			fprintf(f,"%f",signatures[i][j]);
+			if (j<((int)signatures[i].size()-1))
+				fprintf(f,",");
+		}
+		if (i<((int)signatures.size()-1))
+			fprintf(f,"\n");
+	}
+	fclose(f);
+
+	return 1;
+}
+
+int CV_CalonderTest::LoadKeypointSignatures(const char* path, vector<vector<float>>& signatures)
+{
+	signatures.clear();
+	FILE* f = fopen(path,"r");
+	if (!f)
+		return 0;
+
+	char line[4096];
+	vector<float> vec;
+	char* tok;
+
+	while(fgets(line,4096,f))
+	{
+		vec.clear();	
+		float val;
+		tok = strtok(line,",");
+		if (tok)
+		{
+			sscanf(tok,"%f",&val);
+			vec.push_back(val);
+			tok = strtok(NULL,",");
+			while (tok)
+			{
+				sscanf(tok,"%f",&val);
+				vec.push_back(val);
+				tok = strtok(NULL,",");
+			}
+			signatures.push_back(vec);
+		}
+	}
+
+	fclose(f);
+	return(1);
+}
+
+int CV_CalonderTest::CompareSignatures(const vector<vector<float>>& signatures1, const vector<vector<float>>& signatures2)
+{
+	if (signatures1.size() != signatures2.size())
+	{
+		return 0;
+	}
+
+	float accuracy = 0.05f;
+	for (int i=0;i<(int)signatures1.size();i++)
+	{
+		if (signatures1[i].size() != signatures2[i].size())
+		{
+			return 0;
+		}
+		for (int j=0;j<(int)signatures1[i].size();j++)
+		{
+			if (abs(signatures1[i][j]-signatures2[i][j]) > accuracy)
+				return 0;
+		}
+	}
+	return 1;
+}
+
 
 void CV_CalonderTest::run( int /* start_from */)
 {
@@ -510,7 +666,7 @@ void CV_CalonderTest::run( int /* start_from */)
 
 
 	// Testing rtree classifier
-	float min_accuracy = 0.35;
+	float min_accuracy = 0.35f;
 	vector<CvPoint> train_keypoints;
 	train_keypoints.clear();
 	float correctness;
