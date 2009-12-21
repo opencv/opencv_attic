@@ -1556,11 +1556,16 @@ class TestDirected(unittest.TestCase):
     def test_encode(self):
         im = self.get_sample("samples/c/lena.jpg", 1)
         jpeg = cv.EncodeImage(".jpeg", im)
+
+        # Smoke jpeg compression at various qualities
         sizes = dict([(qual, cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, qual]).cols) for qual in range(5, 100, 5)])
+
+        # Check that the default QUALITY is 95
         self.assertEqual(cv.EncodeImage(".jpeg", im).cols, sizes[95])
-        # XXX - unsure why this is failing
-        # round_trip = cv.DecodeImage(cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, 10]))
-        # self.assert_(cv.GetSize(round_trip) == cv.GetSize(im))
+
+        # Check that the 'round-trip' gives an image of the same size
+        round_trip = cv.DecodeImage(cv.EncodeImage(".jpeg", im, [cv.CV_IMWRITE_JPEG_QUALITY, 10]))
+        self.assert_(cv.GetSize(round_trip) == cv.GetSize(im))
 
     def test_reduce(self):
         srcmat = cv.CreateMat(2, 3, cv.CV_32FC1)
