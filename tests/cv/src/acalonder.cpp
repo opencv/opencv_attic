@@ -84,7 +84,7 @@ protected:
 	int LoadKeypointSignatures(const char* path, vector<vector<float> >& signatures);
 
 	//returns 1 in the case signatures are identical, 0 otherwise
-	int CompareSignatures(const vector<vector<float>> & signatures1, const vector<vector<float> >& signatures2);
+	int CompareSignatures(const vector<vector<float> > & signatures1, const vector<vector<float> >& signatures2);
 
 
 };
