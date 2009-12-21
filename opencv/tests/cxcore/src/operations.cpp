@@ -341,6 +341,8 @@ bool CV_OperationsTest::TestMat()
         checkDiffF( 2.0 * (mi * mt), d2);
         checkDiffF( -(mi * mt), -d1);
 
+        //FIXME checkDiffF( (mi * mt) / 2.0, d1 / 2);
+
         Mat mt_mul_2_plus_1;
         gemm(mt, d1, 2, Mat::ones(3, 3, CV_32F), 1, mt_mul_2_plus_1);
         
