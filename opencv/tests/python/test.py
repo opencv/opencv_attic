@@ -138,6 +138,19 @@ class TestDirected(unittest.TestCase):
         self.assertAlmostEqual(mapping[0,0], 17, 2)
         self.assertAlmostEqual(mapping[1,1], 17, 2)
 
+    def test_GetRotationMatrix2D(self):
+        mapping = cv.CreateMat(2, 3, cv.CV_32FC1)
+        for scale in [0.0, 1.0, 2.0]:
+            for angle in [0.0, 360.0]:
+                cv.GetRotationMatrix2D((0,0), angle, scale, mapping)
+                for r in [0, 1]:
+                    for c in [0, 1, 2]:
+                        if r == c:
+                            e = scale
+                        else:
+                            e = 0.0
+                        self.assertAlmostEqual(mapping[r, c], e, 2)
+
     def test_MinMaxLoc(self):
         scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         los = [ (random.randrange(480), random.randrange(640)) for i in range(100) ]
@@ -189,6 +202,11 @@ class TestDirected(unittest.TestCase):
             cv.CalcHist(s, hist, 0)
             return hist
 
+        dims = [180] 
+        ranges = [(0,180)] 
+        a = cv.CreateHist(dims, cv.CV_HIST_ARRAY , ranges, 1) 
+        print dims
+        print ranges
         src = self.get_sample("samples/c/lena.jpg", 0)
         h = imh(src)
         (minv, maxv, minl, maxl) = cv.GetMinMaxHistValue(h)
@@ -1102,15 +1120,22 @@ class TestDirected(unittest.TestCase):
 
             flags = cv.CV_CALIB_FIX_ASPECT_RATIO | cv.CV_CALIB_FIX_INTRINSIC
             flags = cv.CV_CALIB_SAME_FOCAL_LENGTH + cv.CV_CALIB_FIX_PRINCIPAL_POINT + cv.CV_CALIB_ZERO_TANGENT_DIST
+            flags = 0
 
             T = cv.CreateMat(3, 1, cv.CV_64FC1)
             R = cv.CreateMat(3, 3, cv.CV_64FC1)
-            cv.SetIdentity(T)
-            cv.SetIdentity(R)
             lintrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
             ldistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
             rintrinsics = cv.CreateMat(3, 3, cv.CV_64FC1)
             rdistortion = cv.CreateMat(4, 1, cv.CV_64FC1)
+            lR = cv.CreateMat(3, 3, cv.CV_64FC1)
+            rR = cv.CreateMat(3, 3, cv.CV_64FC1)
+            lP = cv.CreateMat(3, 4, cv.CV_64FC1)
+            rP = cv.CreateMat(3, 4, cv.CV_64FC1)
+            lmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            lmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            rmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
+            rmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
 
             cv.SetIdentity(lintrinsics)
             cv.SetIdentity(rintrinsics)
@@ -1131,40 +1156,28 @@ class TestDirected(unittest.TestCase):
                                cv.CreateMat(3, 3, cv.CV_32FC1),    # F
                                (cv.CV_TERMCRIT_ITER + cv.CV_TERMCRIT_EPS, 30, 1e-5),
                                flags)
-            print "leftK", list(cvmat_iterator(lintrinsics))
-            print "leftD", list(cvmat_iterator(ldistortion))
 
-            lR = cv.CreateMat(3, 3, cv.CV_64FC1)
-            rR = cv.CreateMat(3, 3, cv.CV_64FC1)
-            lP = cv.CreateMat(3, 4, cv.CV_64FC1)
-            rP = cv.CreateMat(3, 4, cv.CV_64FC1)
-            for m in [lR, rR, lP, rP]:
-                cv.SetZero(m)
-            cv.StereoRectify(lintrinsics,
-                             rintrinsics,
-                             ldistortion,
-                             rdistortion,
-                             size,
-                             R,
-                             T,
-                             lR, rR, lP, rP)
+            for a in [-1, 0, 1]:
+                cv.StereoRectify(lintrinsics,
+                                 rintrinsics,
+                                 ldistortion,
+                                 rdistortion,
+                                 size,
+                                 R,
+                                 T,
+                                 lR, rR, lP, rP,
+                                 alpha = a)
 
-            print "leftR", list(cvmat_iterator(lR))
-            print "leftP", list(cvmat_iterator(lP))
-            lmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
-            lmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
-            rmapx = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
-            rmapy = cv.CreateImage(size, cv.IPL_DEPTH_32F, 1)
-            cv.InitUndistortRectifyMap(lintrinsics, ldistortion, lR, lP, lmapx, lmapy)
-            cv.InitUndistortRectifyMap(rintrinsics, rdistortion, rR, rP, rmapx, rmapy)
+                cv.InitUndistortRectifyMap(lintrinsics, ldistortion, lR, lP, lmapx, lmapy)
+                cv.InitUndistortRectifyMap(rintrinsics, rdistortion, rR, rP, rmapx, rmapy)
 
-            for l,r in zip(leftimages, rightimages)[:1]:
-                l_ = cv.CloneMat(l)
-                r_ = cv.CloneMat(r)
-                cv.Remap(l, l_, lmapx, lmapy)
-                cv.Remap(r, r_, rmapx, rmapy)
-                cv.ShowImage("snap", l_)
-                cv.WaitKey()
+                for l,r in zip(leftimages, rightimages)[:1]:
+                    l_ = cv.CloneMat(l)
+                    r_ = cv.CloneMat(r)
+                    cv.Remap(l, l_, lmapx, lmapy)
+                    cv.Remap(r, r_, rmapx, rmapy)
+                    cv.ShowImage("snap", l_)
+                    cv.WaitKey()
 
     def test_tostring(self):
 

@@ -858,7 +858,7 @@ GetAffineTransform
   CvPoint2D32f* src
   CvPoint2D32f* dst
   CvMat map_matrix
-2DRotationMatrix
+GetRotationMatrix2D
   CvPoint2D32f center
   double angle
   double scale

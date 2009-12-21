@@ -3551,6 +3551,8 @@ static int zero = 0;
     return (PyObject*)failmsg("Size is %dx%d, but corner list is length %d", pattern_size.width, pattern_size.height, corners.count); \
   } while (0)
 
+#define cvGetRotationMatrix2D cv2DRotationMatrix
+
 /************************************************************************/
 /* Generated functions */
 
