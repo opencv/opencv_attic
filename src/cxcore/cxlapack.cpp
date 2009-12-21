@@ -959,6 +959,8 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
         buf.allocate((lwork + n*n + (copy_evals ? n : 0))*elem_size +
                      (liwork+2*n+1)*sizeof(integer));
         Mat a(n, n, type, (uchar*)buf);
+        src.copyTo(a);
+        lda = a.step1();
         work = a.data + n*n*elem_size;
         if( copy_evals )
             s = (float*)(work + lwork*elem_size);
@@ -968,7 +970,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
         iwork = (integer*)cvAlignPtr(work + (lwork + (copy_evals ? n : 0))*elem_size, sizeof(integer));
         isupport = iwork + liwork;
 
-        ssyevr_(job, range, L, &n, (float*)src.data, &lda, &dummy, &dummy,
+        ssyevr_(job, range, L, &n, (float*)a.data, &lda, &dummy, &dummy,
             &il, &iu, &abstol, &m, s, (float*)evects.data,
             &ldv, isupport, (float*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
@@ -987,6 +989,8 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
         buf.allocate((lwork + n*n + (copy_evals ? n : 0))*elem_size +
                      (liwork+2*n+1)*sizeof(integer));
         Mat a(n, n, type, (uchar*)buf);
+        src.copyTo(a);
+        lda = a.step1();
         work = a.data + n*n*elem_size;
 
         if( copy_evals )
@@ -997,7 +1001,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
         iwork = (integer*)cvAlignPtr(work + (lwork + (copy_evals ? n : 0))*elem_size, sizeof(integer));
         isupport = iwork + liwork;
 
-        dsyevr_(job, range, L, &n, (double*)src.data, &lda, &dummy, &dummy,
+        dsyevr_(job, range, L, &n, (double*)a.data, &lda, &dummy, &dummy,
             &il, &iu, &abstol, &m, s, (double*)evects.data,
             &ldv, isupport, (double*)work, &lwork, iwork, &liwork, &info );
         result = info == 0;
@@ -1015,7 +1019,7 @@ static bool eigen( const Mat& src, Mat& evals, Mat& evects, bool computeEvects,
             flip(flipme, flipme, 0);
         }
     } else {
-        flip(evals, evals, 0);
+        flip(evals, evals, evals.rows > 1 ? 0 : 1);
         if( computeEvects )
             flip(evects, evects, 0);
     }
