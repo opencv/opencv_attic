@@ -62,7 +62,7 @@ protected:
 	void MapVectorAffine(const vector<CvPoint>& p1, vector<CvPoint>& p2, CvMat* transform);
 	float CalcAffineReprojectionError(const vector<CvPoint>& p1, const vector<CvPoint>& p2, CvMat* transform);
 	void ExtractFeatures(const IplImage* image, vector<CvPoint>& points);
-	void TrainDetector(RTreeClassifier& detector, int patch_size, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints = 0);
+	void TrainDetector(RTreeClassifier& detector, int/* patch_size*/, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints = 0);
 	void GetCorrespondences(const RTreeClassifier& detector, int patch_size,
 						const vector<CvPoint>& objectKeypoints, const vector<CvPoint>& imageKeypoints, const IplImage* image,
 						vector<CvPoint>& object, vector<CvPoint>& features);
@@ -180,7 +180,7 @@ void CV_CalonderTest::ExtractFeatures(const IplImage* image, vector<CvPoint>& po
 	cvReleaseMemStorage(&storage);
 }
 
-void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, int patch_size, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints)
+void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, int/* patch_size*/, const vector<CvPoint>& train_points,const IplImage* train_image, int n_keypoints)
 {
 	vector<BaseKeypoint> base_set;
 	int n = (int)(train_points.size());
