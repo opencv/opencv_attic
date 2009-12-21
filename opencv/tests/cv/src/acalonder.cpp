@@ -77,14 +77,14 @@ protected:
 	////returns 1 in the case of success, 0 otherwise
 	int LoadKeypoints(vector<CvPoint>& points, const char* path);
 
-	void ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float>>& signatures);
+	void ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float> >& signatures);
 	//returns 1 in the case of success, 0 otherwise
-	int SaveKeypointSignatures(const char* path, const vector<vector<float>>& signatures);
+	int SaveKeypointSignatures(const char* path, const vector<vector<float> >& signatures);
 	//returns 1 in the case of success, 0 otherwise
-	int LoadKeypointSignatures(const char* path, vector<vector<float>>& signatures);
+	int LoadKeypointSignatures(const char* path, vector<vector<float> >& signatures);
 
 	//returns 1 in the case signatures are identical, 0 otherwise
-	int CompareSignatures(const vector<vector<float>>& signatures1, const vector<vector<float>>& signatures2);
+	int CompareSignatures(const vector<vector<float>> & signatures1, const vector<vector<float> >& signatures2);
 
 
 };
@@ -388,7 +388,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image, vector<CvPoin
 	}
 
 	//Checking signatures are identical
-	vector <vector<float>> signatures1;
+	vector <vector<float> > signatures1;
 	string signatures_path = string(ts->get_data_path()) + "calonder/signatures.txt";
 	int can_load_signatures = LoadKeypointSignatures(signatures_path.c_str(),signatures1);
 	// end of region
@@ -399,7 +399,7 @@ float CV_CalonderTest::RunTestsSeries(const IplImage* train_image, vector<CvPoin
 	TrainDetector(detector,patch_size,objectKeypoints,train_image,20);
 
 	//Checking signatures are identical
-	vector <vector<float>> signatures2;
+	vector <vector<float> > signatures2;
 	ExtractKeypointSignatures(train_image,patch_size,detector,objectKeypoints,signatures2);
 	if (!can_load_signatures)
 	{
@@ -527,7 +527,7 @@ int CV_CalonderTest::LoadKeypoints(vector<CvPoint>& points, const char* path)
 	return 1;
 }
 
-void CV_CalonderTest::ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float>>& signatures)
+void CV_CalonderTest::ExtractKeypointSignatures(const IplImage* test_image, int patch_size, const RTreeClassifier& detector, const vector<CvPoint>& keypoints, vector<vector<float> >& signatures)
 {
 	IplImage* _test_image = cvCloneImage(test_image);
 	signatures.clear();
@@ -569,7 +569,7 @@ void CV_CalonderTest::ExtractKeypointSignatures(const IplImage* test_image, int 
 
 
 
-int CV_CalonderTest::SaveKeypointSignatures(const char* path, const vector<vector<float>>& signatures)
+int CV_CalonderTest::SaveKeypointSignatures(const char* path, const vector<vector<float> >& signatures)
 {
 	FILE* f = fopen(path,"w");
 	if (!f)
@@ -591,7 +591,7 @@ int CV_CalonderTest::SaveKeypointSignatures(const char* path, const vector<vecto
 	return 1;
 }
 
-int CV_CalonderTest::LoadKeypointSignatures(const char* path, vector<vector<float>>& signatures)
+int CV_CalonderTest::LoadKeypointSignatures(const char* path, vector<vector<float> >& signatures)
 {
 	signatures.clear();
 	FILE* f = fopen(path,"r");
@@ -626,7 +626,7 @@ int CV_CalonderTest::LoadKeypointSignatures(const char* path, vector<vector<floa
 	return(1);
 }
 
-int CV_CalonderTest::CompareSignatures(const vector<vector<float>>& signatures1, const vector<vector<float>>& signatures2)
+int CV_CalonderTest::CompareSignatures(const vector<vector<float> >& signatures1, const vector<vector<float> >& signatures2)
 {
 	if (signatures1.size() != signatures2.size())
 	{
