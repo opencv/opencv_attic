@@ -1311,6 +1311,8 @@ struct DefaultRngAuto
 		bool white_noise_;
 		int noise_level_;
 		CalonderRng &rng_;
+
+        CalonderPatchGenerator& operator=(const CalonderPatchGenerator&);
 	};
 
 	//}// namespace features
