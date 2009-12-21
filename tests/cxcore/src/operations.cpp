@@ -186,9 +186,9 @@ bool CV_OperationsTest::TestMat()
         checkDiff(maskMat5, (maskMat5 | maskMat5) | (maskMat4 ^ maskMat1));
 
         checkDiff(maskMat1, min(maskMat1, maskMat5));
-        //fixme checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5 | maskMat5));
+        //FIXME checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5 | maskMat5));
         checkDiff(maskMat5, max(maskMat1, maskMat5));
-        //fixme checkDiff(maskMat5, max(maskMat1 | maskMat1, maskMat5 | maskMat5));
+        //FIXME checkDiff(maskMat5, max(maskMat1 | maskMat1, maskMat5 | maskMat5));
 
         checkDiff(maskMat1, min(maskMat1, maskMat5 | maskMat5));
         checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5));
@@ -262,220 +262,42 @@ bool CV_OperationsTest::TestMat()
                       
                                     
         /////////////////////////////
-
         checkDiff(maskMat4 /  maskMat4, maskMat1);
 
-//       3014 ///// Element-wise multiplication
-//      3015 
-//      3016 inline MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
-//-->   3017 Mat::mul(const Mat& m, double scale) const
-//      3018 {
-//      3019     typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3020     return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(*this, m, scale, '*'));
-//      3021 }
-//      3022 
-//      3023 inline MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
-//-->   3024 Mat::mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat>& m, double scale) const
-//      3025 {
-//      3026     typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3027     return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(*this, m.e.a1, m.e.a2*scale, '*'));
-//      3028 }
-//      3029 
-//      3030 inline MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
-//-->   3031 Mat::mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> >, Mat>& m, double scale) const
-//      3032 {
-//      3033     typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3034     return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(*this, m.e.a1, scale/m.e.a2, '/'));
-//      3035 }
-//      3036 
-//      3037 template<typename _Tp> inline
-//      3038 MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-//-->   3039 Mat_<_Tp>::mul(const Mat_<_Tp>& m, double scale) const
-//      3040 {
-//      3041     typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3042     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m, scale, '*'));
-//      3043 }
-//      3044 
-//      3045 template<typename _Tp> inline
-//      3046 MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-//-->   3047 Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >& m, double scale) const
-//      3048 {
-//      3049     typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3050     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m.e.a1, m.e.a2*scale, '*'));
-//      3051 }
-//      3052 
-//      3053 template<typename _Tp> inline
-//      3054 MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-//-->   3055 Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_DivRS_<Mat> >, Mat_<_Tp> >& m, double scale) const
-//      3056 {
-//      3057     typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3058     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m.e.a1, scale/m.e.a2, '/'));
-//      3059 }
-//      3060 
-//      3061 template<typename A, typename B, typename M> static inline
-//      3062 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3063 operator * (const MatExpr_<MatExpr_Op4_<A, B, double, char, M, MatOp_MulDiv_<Mat> >, M>& a,
-//      3064             double alpha)
-//      3065 {
-//      3066     typedef MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3067     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)a.e.a2, a.e.a3*alpha, a.e.a4));
-//      3068 }
-//      3069 
-//      3070 template<typename A, typename B, typename M> static inline
-//      3071 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3072 operator * (double alpha,
-//      3073             const MatExpr_<MatExpr_Op4_<A, B, double, char, M, MatOp_MulDiv_<Mat> >, M>& a)
-//      3074 { return a*alpha; }
-//      3075 
-//      3076 
-//      3077 ////// Element-wise division
-//      3078 
-//      3079 static inline MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
-//-->   3080 operator / (const Mat& a, const Mat& b)
-//      3081 {
-//      3082     typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3083     return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(a, b, 1, '/'));
-//      3084 }
-//      3085 
-//      3086 template<typename _Tp> static inline
-//      3087 MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double,
-//      3088 char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-//-->   3089 operator / (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
-//      3090 {
-//      3091     typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double,
-//      3092         char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-//      3093     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, b, 1, '/'));
-//      3094 }
-//      3095 
-//      3096 template<typename A, typename B, typename M> static inline
-//      3097 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3098 operator / (const MatExpr_<A, M>& a, const MatExpr_<B, M>& b)
-//      3099 { return (M)a/(M)b; }
-//      3100 
-//      3101 template<typename A, typename M> static inline
-//      3102 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3103 operator / (const MatExpr_<A, M>& a, const M& b)
-//      3104 { return (M)a/b; }
-//      3105 
-//      3106 template<typename A, typename M> static inline
-//      3107 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3108 operator / (const M& a, const MatExpr_<A, M>& b)
-//      3109 { return a/(M)b; }
-//      3110 
-//      3111 template<typename A, typename M> static inline
-//      3112 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3113 operator / (const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a,
-//      3114             const M& b)
-//      3115 { return ((M)a.e.a1/b)*a.e.a2; }
-//      3116 
-//      3117 template<typename A, typename M> static inline
-//      3118 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3119 operator / (const M& a,
-//      3120             const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& b)
-//      3121 { return (a/(M)b.e.a1)*(1./b.e.a2); }
-//      3122 
-//      3123 template<typename A, typename B, typename M> static inline
-//      3124 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3125 operator / (const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a,
-//      3126             const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& b)
-//      3127 { return ((M)a.e.a1/(M)b.e.a1)*(a.e.a2/b.e.a2); }
-//      3128 
-//      3129 template<typename A, typename M> static inline
-//      3130 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3131 operator / (const M& a,
-//      3132             const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_DivRS_<Mat> >, M>& b)
-//      3133 { return a.mul((M)b.e.a1, 1./b.e.a2); }
-//      3134 
-//      3135 template<typename A, typename B, typename M> static inline
-//      3136 MatExpr_<MatExpr_Op4_<M, M, double, char, M, MatOp_MulDiv_<Mat> >, M>
-//-->   3137 operator / (const MatExpr_<A, M>& a,
-//      3138             const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_DivRS_<Mat> >, M>& b)
-//      3139 { return ((M)a).mul((M)b.e.a1, 1./b.e.a2); }
-//      3140 
-//      3141 static inline
-//      3142 MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> >, Mat >
-//-->   3143 operator / (double alpha, const Mat& a)
-//      3144 {
-//      3145     typedef MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> > MatExpr_Temp;
-//      3146     return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(a, alpha));
-//      3147 }
-//      3148 
-//-->   3149 static inline Mat& operator /= (const Mat& a, double alpha)
-//      3150 {
-//      3151     MatOp_Scale_<Mat>::apply( a, 1./alpha, (Mat&)a );
-//      3152     return (Mat&)a;
-//      3153 }
-//      3154 
-//      3155 template<typename _Tp>
-//-->   3156 static inline Mat_<_Tp>& operator /= (const Mat_<_Tp>& a, double alpha)
-//      3157 {
-//      3158     MatOp_Scale_<Mat>::apply( a, 1./alpha, (Mat&)a );
-//      3159     return (Mat_<_Tp>&)a;
-//      3160 }
-//      3161 
-//      3162 template<typename _Tp> static inline
-//      3163 MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_DivRS_<Mat> >, Mat_<_Tp> >
-//-->   3164 operator / (double alpha, const Mat_<_Tp>& a)
-//      3165 {
-//      3166     typedef MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>,
-//      3167         MatOp_DivRS_<Mat> > MatExpr_Temp;
-//      3168     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, alpha));
-//      3169 }
-//      3170 
-//      3171 template<typename A, typename M> static inline
-//      3172 MatExpr_<MatExpr_Op2_<M, double, M, MatOp_DivRS_<Mat> >, M>
-//-->   3173 operator / (double alpha, const MatExpr_<A, M>& a)
-//      3174 { return alpha/(M)a; }
-//      3175 
-//      3176 template<typename A, typename M> static inline
-//      3177 MatExpr_<MatExpr_Op2_<M, double, M, MatOp_DivRS_<Mat> >, M>
-//-->   3178 operator / (double alpha,
-//      3179             const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a)
-//      3180 { return (alpha/a.e.a2)/(M)a.e.a1; }
-//      3181 
-//      3182 template<typename A, typename M> static inline
-//      3183 MatExpr_<MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> >, M>
-//-->   3184 operator / (double alpha,
-//      3185             const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_DivRS_<Mat> >, M>& a)
-//      3186 { return (M)a.e.a1*(alpha/a.e.a2); }
-//      3187 
-//-->   3188 static inline Mat& operator /= (const Mat& a, const Mat& b)
-//      3189 {
-//      3190     MatOp_MulDiv_<Mat>::apply( a, b, 1, '/', (Mat&)a );
-//      3191     return (Mat&)a;
-//      3192 }
-//      3193 
-//      3194 template<typename A, typename M>
-//-->   3195 static inline M& operator /= (const M& a, const MatExpr_<MatExpr_Op2_<A, double,
-//      3196                               M, MatOp_Scale_<Mat> >, M>& b)
-//      3197 {
-//      3198     MatOp_MulDiv_<Mat>::apply( a, (M)b.e.a1, 1./b.e.a2, '/', (M&)a );
-//      3199     return (M&)a;
-//      3200 }
-//      3201 
-//      3202 template<typename A, typename M>
-//-->   3203 static inline M& operator /= (const M& a, const MatExpr_<MatExpr_Op2_<A, double,
-//      3204                               M, MatOp_DivRS_<Mat> >, M>& b)
-//      3205 {
-//      3206     MatOp_MulDiv_<Mat>::apply( a, (M)b.e.a1, 1./b.e.a2, '*', (M&)a );
-//      3207     return (M&)a;
-//      3208 }
+        ///// Element-wise multiplication
 
-      /*3227 template<typename A, typename M> static inline
-      3228 MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Solve_<Mat> >, M>
--->   3229 operator * (const MatExpr_<MatExpr_Op2_<A, int, M, MatOp_Inv_<Mat> >, M>& a,
-      3230             const M& b)
-      3231 {
-      3232     typedef MatExpr_Op3_<M, M, int, M, MatOp_Solve_<Mat> > MatExpr_Temp;
-      3233     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, b, a.e.a2));
-      3234 }
-      3235 
-      3236 template<typename A, typename B, typename M> static inline
-      3237 MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Solve_<Mat> >, M>
--->   3238 operator * (const MatExpr_<MatExpr_Op2_<A, int, M, MatOp_Inv_<Mat> >, M>& a,
-      3239             const MatExpr_<B, M>& b)
-      3240 { return a*(M)b; }*/
-                                                              
+        checkDiff(maskMat4.mul(maskMat4, 0.25), maskMat4);
+        checkDiff(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
+        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
+        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
+        checkDiff(maskMat4.mul(maskMat4) * 0.25, maskMat4);
+        checkDiff(0.25 * maskMat4.mul(maskMat4), maskMat4);
+      
+        ////// Element-wise division
+
+        checkDiff(maskMat4 / maskMat4, maskMat1);
+        checkDiff((maskMat4 & maskMat4) / (maskMat1 * 4), maskMat1);
+
+        checkDiff((maskMat4 & maskMat4) / maskMat4, maskMat1);
+        checkDiff(maskMat4 / (maskMat4 & maskMat4), maskMat1);
+        checkDiff((maskMat1 * 4) / maskMat4, maskMat1);
+
+        checkDiff(maskMat4 / (maskMat1 * 4), maskMat1);
+        checkDiff((maskMat4 * 0.5 )/ (maskMat1 * 2), maskMat1);
+
+        checkDiff(maskMat4 / maskMat4.mul(maskMat1), maskMat1);
+        checkDiff((maskMat4 & maskMat4) / maskMat4.mul(maskMat1), maskMat1);
+
+        checkDiff(4.0 / maskMat4, maskMat1);        
+        checkDiff(4.0 / (maskMat4 | maskMat4), maskMat1);        
+        checkDiff(4.0 / (maskMat1 * 4.0), maskMat1);
+        checkDiff(4.0 / (maskMat4 / maskMat1), maskMat1);
+
+        m = maskMat4.clone(); m/=4.0; checkDiff(m, maskMat1);
+        m = maskMat4.clone(); m/=maskMat4; checkDiff(m, maskMat1);
+        m = maskMat4.clone(); m/=(maskMat1 * 4.0); checkDiff(m, maskMat1);
+        m = maskMat4.clone(); m/=(maskMat4 / maskMat1); checkDiff(m, maskMat1);
+      
         /////////////////////////////        
         float matrix_data[] = { 3, 1, -4, -5, 1, 0, 0, 1.1f, 1.5f};        
         Mat mt(3, 3, CV_32F, matrix_data);
@@ -522,13 +344,12 @@ bool CV_OperationsTest::TestMat()
         Mat mt_mul_2_plus_1;
         gemm(mt, d1, 2, Mat::ones(3, 3, CV_32F), 1, mt_mul_2_plus_1);
         
-        checkDiff( (mt * 2.0 + 1.0) * mi, mt_mul_2_plus_1 * mi);
-        checkDiff( mi * (mt * 2.0 + 1.0), mi * mt_mul_2_plus_1);                
-
-        checkDiff( (mt * 2.0 + 1.0) * (mi * 2), mt_mul_2_plus_1 * mi2);
-        checkDiff( (mi *2)* (mt * 2.0 + 1.0), mi2 * mt_mul_2_plus_1);
-        checkDiff( (mt * 2.0 + 1.0) * mi.t(), mt_mul_2_plus_1 * mi_tr);
-        checkDiff( mi.t() * (mt * 2.0 + 1.0), mi_tr * mt_mul_2_plus_1);
+        checkDiff( (mt * 2.0 + 1.0) * mi, mt_mul_2_plus_1 * mi);        // (A*alpha + beta)*B
+        checkDiff( mi * (mt * 2.0 + 1.0), mi * mt_mul_2_plus_1);        // A*(B*alpha + beta)            
+        checkDiff( (mt * 2.0 + 1.0) * (mi * 2), mt_mul_2_plus_1 * mi2); // (A*alpha + beta)*(B*gamma)
+        checkDiff( (mi *2)* (mt * 2.0 + 1.0), mi2 * mt_mul_2_plus_1);   // (A*gamma)*(B*alpha + beta)
+        checkDiff( (mt * 2.0 + 1.0) * mi.t(), mt_mul_2_plus_1 * mi_tr); // (A*alpha + beta)*B^t
+        checkDiff( mi.t() * (mt * 2.0 + 1.0), mi_tr * mt_mul_2_plus_1); // A^t*(B*alpha + beta)
 
         checkDiffF( (mi * mt + d2)*5, d1 * 3 * 5);
         checkDiffF( mi * mt + d2, d1 * 3);
@@ -548,79 +369,12 @@ bool CV_OperationsTest::TestMat()
         checkDiffF( (mi * mt) - mi.t(), d1 - mi_tr);
         checkDiffF( mi.t() - (mi * mt), mi_tr - d1);
 
-
         checkDiffF( 2.0 *(mi * mt + d2), d1 * 6);
-
         checkDiffF( -(mi * mt + d2), d1 * -3);
 
-        
-//// (A*alpha + beta)*B
-//template<typename A, typename M> static inline
-//MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a, const M& b )
-//{
-//    typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//    return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, b, a.e.a2, b, a.e.a3, 0));
-//}
-//      2061 
-//      2062 // A*(B*alpha + beta)
-//      2063 template<typename A, typename M> static inline
-//      2064 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//-->   2065 operator * ( const M& a, const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
-//      2066 {
-//      2067     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//      2068     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a, (M)b.e.a1, b.e.a2, a, b.e.a3, 0));
-//      2069 }
-//      2070 
-//      2071 // (A*alpha + beta)*(B*gamma)
-//      2072 template<typename A, typename B, typename M> static inline
-//      2073 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//-->   2074 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a,
-//      2075              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& b )
-//      2076 {
-//      2077     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//      2078     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
-//      2079         a.e.a2*b.e.a2, (M)b.e.a1, a.e.a3*b.e.a2, 0));
-//      2080 }
-//      2081 
-//      2082 // (A*gamma)*(B*alpha + beta)
-//      2083 template<typename A, typename B, typename M> static inline
-//      2084 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//-->   2085 operator * ( const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_Scale_<Mat> >, M>& a,
-//      2086              const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
-//      2087 {
-//      2088     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//      2089     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
-//      2090         a.e.a2*b.e.a2, (M)a.e.a1, a.e.a2*b.e.a3, 0));
-//      2091 }
-//      2092 
-//      2093 // (A*alpha + beta)*B^t
-//      2094 template<typename A, typename B, typename M> static inline
-//      2095 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//-->   2096 operator * ( const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& a,
-//      2097              const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& b )
-//      2098 {
-//      2099     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//      2100     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
-//      2101         a.e.a2*b.e.a2, (M)b.e.a1, a.e.a3*b.e.a2, GEMM_2_T));
-//      2102 }
-//      2103 
-//      2104 // A^t*(B*alpha + beta)
-//      2105 template<typename A, typename B, typename M> static inline
-//      2106 MatExpr_<MatExpr_Op6_<M, M, double, M, double, int, M, MatOp_MatMulAdd_<Mat> >, M>
-//-->   2107 operator * ( const MatExpr_<MatExpr_Op2_<B, double, M, MatOp_T_<Mat> >, M>& a,
-//      2108              const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_ScaleAddS_<Mat> >, M>& b )
-//      2109 {
-//      2110     typedef MatExpr_Op4_<M, M, double, int, M, MatOp_MatMul_<Mat> > MatExpr_Temp;
-//      2111     return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a.e.a1, (M)b.e.a1,
-//      2112         a.e.a2*b.e.a2, (M)a.e.a1, a.e.a2*b.e.a3, GEMM_1_T));
-//      2113 }
+        checkDiffF(mt.inv() * mt, d1);
 
-        /////////////////////////////
-
-
-
-       
+        checkDiffF(mt.inv() * (2*mt - mt), d1);               
     }
     catch (const test_excep&)
     {
@@ -782,8 +536,19 @@ bool CV_OperationsTest::TestTemplateMat()
         //FIXME checkDiff(abs(negi), -(negi & negi));
 
         checkDiff(5.0 - maskMat4, maskMat1);
+        
 
+        checkDiff(maskMat4.mul(maskMat4, 0.25), maskMat4);
+        checkDiff(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
+        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
 
+          
+        ////// Element-wise division
+
+        checkDiff(maskMat4 / maskMat4, maskMat1);
+        checkDiff(4.0 / maskMat4, maskMat1);
+        m = maskMat4.clone(); m/=4.0; checkDiff(m, maskMat1);
+        
         ////////////////////////////////
 
         typedef Mat_<int> TestMat_t;
