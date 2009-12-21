@@ -14,7 +14,7 @@ The actual implementations of the geometrical transformations, from the most gen
 
 \ifCPy
 
-\cvCPyFunc{2DRotationMatrix}
+\cvCPyFunc{GetRotationMatrix2D}
 Calculates the affine matrix of 2d rotation.
 
 \cvdefC{
@@ -23,7 +23,7 @@ CvMat* cv2DRotationMatrix(
 \par double angle,
 \par double scale,
 \par CvMat* mapMatrix );
-}\cvdefPy{2DRotationMatrix(center,angle,scale,mapMatrix)-> None}
+}\cvdefPy{GetRotationMatrix2D(center,angle,scale,mapMatrix)-> None}
 
 \begin{description}
 \cvarg{center}{Center of the rotation in the source image}
