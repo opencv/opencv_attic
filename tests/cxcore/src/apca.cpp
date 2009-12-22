@@ -43,6 +43,9 @@
 
 using namespace cv;
 
+//#define CHECK_C
+
+Size sz( 200, 500);
 
 class CV_PCATest : public CvTest
 {
@@ -51,6 +54,8 @@ public:
 protected:
     void run( int);
 };
+
+#if 0
 
 void CV_PCATest::run( int )
 {
@@ -114,5 +119,189 @@ void CV_PCATest::run( int )
 
     ts->set_failed_test_info( code );
 }
+#else
+void CV_PCATest::run( int )
+{
+	int code = CvTS::OK;
+	
+	double diffPrjEps, diffBackPrjEps,
+		   prjEps, backPrjEps,
+		   evalEps, evecEps;
+	int maxComponents = 100;
+	Mat rPoints(sz, CV_32FC1), rTestPoints(sz, CV_32FC1);
+	RNG rng = *ts->get_rng(); 
+
+	rng.fill( rPoints, RNG::UNIFORM, Scalar::all(0.0), Scalar::all(1.0) );
+	rng.fill( rTestPoints, RNG::UNIFORM, Scalar::all(0.0), Scalar::all(1.0) );
+
+	PCA rPCA( rPoints, Mat(), CV_PCA_DATA_AS_ROW, maxComponents ), cPCA;
+
+	// 1. check C++ PCA & ROW
+	Mat rPrjTestPoints = rPCA.project( rTestPoints );
+	Mat rBackPrjTestPoints = rPCA.backProject( rPrjTestPoints );
+
+	Mat avg(1, sz.width, CV_32FC1 );
+	reduce( rPoints, avg, 0, CV_REDUCE_AVG );
+	Mat Q = rPoints - repeat( avg, rPoints.rows, 1 ), eval, evec;
+	Q = Q.t() * Q;
+	Q = Q /(float)rPoints.rows;
+
+	eigen( Q, eval, evec );
+	/*SVD svd(Q);
+	evec = svd.vt;
+	eval = svd.w;*/
+
+	Mat subEval( maxComponents, 1, eval.type(), eval.data ),
+		subEvec( maxComponents, evec.cols, evec.type(), evec.data );
+
+#ifdef CHECK_C
+	Mat prjTestPoints, backPrjTestPoints, cPoints = rPoints.t(), cTestPoints = rTestPoints.t();
+	CvMat _points, _testPoints, _avg, _eval, _evec, _prjTestPoints, _backPrjTestPoints;
+#endif
+
+	// check eigen()
+	double eigenEps = 1e-6;
+	double err;
+	for(int i = 0; i < Q.rows; i++ )
+	{
+		Mat v = evec.row(i).t();
+		Mat Qv = Q * v;
+
+		Mat lv = eval.at<float>(i,0) * v;
+		err = norm( Qv, lv );
+		if( err > eigenEps )
+		{
+			ts->printf( CvTS::LOG, "bad accuracy of eigen(); err = %f\n", err );
+			code = CvTS::FAIL_BAD_ACCURACY;
+			goto exit_func;
+		}
+	}
+	// check pca eigenvalues
+	evalEps = 1e-6, evecEps = 1;
+	err = norm( rPCA.eigenvalues, subEval );
+	if( err > evalEps )
+	{
+		ts->printf( CvTS::LOG, "pca.eigenvalues is incorrect (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+	// check pca eigenvectors
+	err = norm( rPCA.eigenvectors, subEvec, CV_RELATIVE_L2 );
+	if( err > evecEps )
+	{
+		ts->printf( CvTS::LOG, "pca.eigenvectors is incorrect (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+	
+	prjEps = 1.2, backPrjEps = 1.2;
+	for( int i = 0; i < rTestPoints.rows; i++ )
+	{
+		// check pca project
+		Mat prj = (rTestPoints.row(i) - avg) * subEvec.t();
+		err = norm(rPrjTestPoints.row(i), prj, CV_RELATIVE_L2);
+		if( err > prjEps )
+		{
+			ts->printf( CvTS::LOG, "bad accuracy of project() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+			code = CvTS::FAIL_BAD_ACCURACY;
+			goto exit_func;
+		}
+		// check pca backProject
+		Mat backPrj = rPrjTestPoints.row(i) * subEvec + avg;
+		err = norm( rBackPrjTestPoints.row(i), backPrj, CV_RELATIVE_L2 );
+		if( err > backPrjEps )
+		{
+			ts->printf( CvTS::LOG, "bad accuracy of backProject() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+			code = CvTS::FAIL_BAD_ACCURACY;
+			goto exit_func;
+		}
+	}
+
+	// 2. check C++ PCA & COL
+	cPCA( rPoints.t(), Mat(), CV_PCA_DATA_AS_COL, maxComponents );
+	diffPrjEps = 1, diffBackPrjEps = 1;
+	err = norm(cPCA.project(rTestPoints.t()), rPrjTestPoints.t(), CV_RELATIVE_L2 );
+	if( err > diffPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of project() (CV_PCA_DATA_AS_COL); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+	err = norm(cPCA.backProject(rPrjTestPoints.t()), rBackPrjTestPoints.t(), CV_RELATIVE_L2 );
+	if( err > diffBackPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of backProject() (CV_PCA_DATA_AS_COL); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+
+#ifdef CHECK_C
+	// 3. check C PCA & ROW
+	_points = rPoints;
+	_testPoints = rTestPoints;
+	_avg = avg;
+	_eval = eval;
+	_evec = evec;
+	prjTestPoints.create(rTestPoints.rows, rTestPoints.cols/*maxComponents*/, rTestPoints.type() );
+	backPrjTestPoints.create(rPoints.size(), rPoints.type() );
+	_prjTestPoints = prjTestPoints;
+	_backPrjTestPoints = backPrjTestPoints;
+
+	cvCalcPCA( &_points, &_avg, &_eval, &_evec, CV_PCA_DATA_AS_ROW );
+	cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
+	cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
+
+	err = norm(prjTestPoints, rPrjTestPoints.t(), CV_RELATIVE_L2);
+	if( err > diffPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+	err = norm(backPrjTestPoints, rBackPrjTestPoints.t(), CV_RELATIVE_L2);
+	if( err > diffBackPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of cvBackProjectPCA() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+
+	// 3. check C PCA & COL
+	_points = cPoints;
+	_testPoints = cTestPoints;
+	avg.t(); _avg = avg;
+	eval.t(); _eval = eval;
+	evec.t(); _evec = evec;
+	prjTestPoints.t(); _prjTestPoints = prjTestPoints;
+	backPrjTestPoints.t(); _backPrjTestPoints = backPrjTestPoints;
+
+	cvCalcPCA( &_points, &_avg, &_eval, &_evec, CV_PCA_DATA_AS_COL );
+	cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
+	cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
+
+	err = norm(prjTestPoints, rPrjTestPoints, CV_RELATIVE_L2 );
+	if( err > diffPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_COL); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+	err = norm(backPrjTestPoints, rBackPrjTestPoints, CV_RELATIVE_L2);
+	if( err > diffBackPrjEps )
+	{
+		ts->printf( CvTS::LOG, "bad accuracy of cvBackProjectPCA() (CV_PCA_DATA_AS_COL); err = %f\n", err );
+		code = CvTS::FAIL_BAD_ACCURACY;
+		goto exit_func;
+	}
+#endif
+
+exit_func:
+
+	CvRNG* _rng = ts->get_rng(); 
+	*_rng = rng.state;
+	ts->set_failed_test_info( code );
+}
+
+#endif
 
 CV_PCATest pca_test;
