@@ -40,7 +40,10 @@
 
 #include "_ml.h"
 #include <ctype.h>
-#include <omp.h>
+
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 using namespace cv;
 

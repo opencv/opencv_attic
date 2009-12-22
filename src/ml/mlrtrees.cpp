@@ -39,7 +39,10 @@
 //M*/
 
 #include "_ml.h"
-#include <omp.h>
+
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 CvForestTree::CvForestTree()
 {

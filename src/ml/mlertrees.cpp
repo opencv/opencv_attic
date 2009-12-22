@@ -39,7 +39,10 @@
 M*/
 
 #include "_ml.h"
-#include <omp.h>
+
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 static const float ord_nan = FLT_MAX*0.5f;
 static const int min_block_size = 1 << 16;
