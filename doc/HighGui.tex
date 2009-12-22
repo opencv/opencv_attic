@@ -48,9 +48,21 @@ CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \begin{description}
 \cvarg{ trackbarName}{Name of the created trackbar.}
 \cvarg{ windowName}{Name of the window which will be used as a parent for created trackbar.}
+\ifPy
+\cvarg{ value}{Initial value for the slider position, between 0 and \texttt{count}.}
+\else
 \cvarg{ value}{Pointer to an integer variable, whose value will reflect the position of the slider. Upon creation, the slider position is defined by this variable.}
+\fi
 \cvarg{ count}{Maximal position of the slider. Minimal position is always 0.}
-\cvarg{ onChange}{Pointer to the function to be called every time the slider changes position. This function should be prototyped as \texttt{void Foo(int);}Can be NULL if callback is not required.}
+\cvarg{ onChange}{
+\ifPy
+Callable that OpenCV will call every time the slider changes position.
+OpenCV will call it as \texttt{func(x)} where \texttt{x} is the new position of the slider.
+\else
+Pointer to the function to be called every time the slider changes position.
+This function should be prototyped as \texttt{void Foo(int);}  Can be NULL if callback is not required.
+\fi
+}
 \end{description}
 
 The function \texttt{cvCreateTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable to be syncronized with trackbar position and specifies a callback function to be called on trackbar position change. The created trackbar is displayed on the top of the given window.
