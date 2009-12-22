@@ -1,7 +1,10 @@
 #include "boost.h"
 #include "cascadeclassifier.h"
 #include <queue>
-#include <omp.h>
+
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 using namespace std;
 

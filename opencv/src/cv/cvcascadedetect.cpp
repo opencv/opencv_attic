@@ -42,7 +42,9 @@
 #include "_cv.h"
 #include <cstdio>
 
-#include <omp.h>
+#ifdef _OPENMP
+#include "omp.h"
+#endif
 
 namespace cv
 {
@@ -972,3 +974,4 @@ bool CascadeClassifier::read(const FileNode& root)
 } // namespace cv
 
 /* End of file. */
+
