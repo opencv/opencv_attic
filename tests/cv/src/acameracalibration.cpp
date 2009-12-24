@@ -242,43 +242,45 @@ CV_ProjectPointsTest ProjectPoints_test;
 
 #endif
 
+using namespace cv;
 
+// --------------------------------- CV_CameraCalibrationTest --------------------------------------------
 
 class CV_CameraCalibrationTest : public CvTest
 {
 public:
-    CV_CameraCalibrationTest();
+    CV_CameraCalibrationTest( const char* testName, const char* testFuncs );
     ~CV_CameraCalibrationTest();
     void clear();
-    //int write_default_params(CvFileStorage* fs);
-
 protected:
-    //int read_params( CvFileStorage* fs );
-    int compare(double* val, double* ref_val, int len,
-                double eps, const char* param_name);
+    int compare(double* val, double* refVal, int len,
+                double eps, const char* paramName);
+	virtual void calibrate( int imageCount, int* pointCounts,
+		CvSize imageSize, CvPoint2D64f* imagePoints, CvPoint3D64f* objectPoints,
+		double* distortionCoeffs, double* cameraMatrix, double* translationVectors,
+		double* rotationMatrices, int flags ) = 0;
+	virtual void project( int pointCount, CvPoint3D64f* objectPoints,
+		double* rotationMatrix, double*  translationVector,
+		double* cameraMatrix, double* distortion, CvPoint2D64f* imagePoints ) = 0;
 
     void run(int);
 };
 
-
-CV_CameraCalibrationTest::CV_CameraCalibrationTest():
-    CvTest( "calibrate-camera", "cvCalibrateCamera2" )
+CV_CameraCalibrationTest::CV_CameraCalibrationTest( const char* testName, const char* testFuncs ):
+    CvTest( testName, testFuncs )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
-
 
 CV_CameraCalibrationTest::~CV_CameraCalibrationTest()
 {
     clear();
 }
 
-
 void CV_CameraCalibrationTest::clear()
 {
-    CvTest::clear();
+	CvTest::clear();
 }
-
 
 int CV_CameraCalibrationTest::compare(double* val, double* ref_val, int len,
                                       double eps, const char* param_name )
@@ -289,8 +291,8 @@ int CV_CameraCalibrationTest::compare(double* val, double* ref_val, int len,
 void CV_CameraCalibrationTest::run( int start_from )
 {
     int code = CvTS::OK;
-    char            filepath[100];
-    char            filename[100];
+    char            filepath[200];
+    char            filename[200];
     
     CvSize          imageSize;
     CvSize          etalonSize;
@@ -497,30 +499,29 @@ void CV_CameraCalibrationTest::run( int start_from )
         cameraMatrix[8] = 1.;
 
         /* Now we can calibrate camera */
-        cvCalibrateCamera_64d(  numImages,
-                                numbers,
-                                imageSize,
-                                imagePoints,
-                                objectPoints,
-                                distortion,
-                                cameraMatrix,
-                                transVects,
-                                rotMatrs,
-                                calibFlags );
+        calibrate(  numImages,
+                    numbers,
+                    imageSize,
+                    imagePoints,
+                    objectPoints,
+                    distortion,
+                    cameraMatrix,
+                    transVects,
+                    rotMatrs,
+                    calibFlags );
 
         /* ---- Reproject points to the image ---- */
         for( currImage = 0; currImage < numImages; currImage++ )
         {
             int numPoints = etalonSize.width * etalonSize.height;
-            cvProjectPointsSimple(  numPoints,
-                                    objectPoints + currImage * numPoints,
-                                    rotMatrs + currImage * 9,
-                                    transVects + currImage * 3,
-                                    cameraMatrix,
-                                    distortion,
-                                    reprojectPoints + currImage * numPoints);
+            project(  numPoints,
+                      objectPoints + currImage * numPoints,
+                      rotMatrs + currImage * 9,
+                      transVects + currImage * 3,
+                      cameraMatrix,
+                      distortion,
+                      reprojectPoints + currImage * numPoints);
         }
-
 
         /* ----- Compute reprojection error ----- */
         i = 0;
@@ -647,8 +648,153 @@ _exit_:
         ts->set_failed_test_info( code );
 }
 
-CV_CameraCalibrationTest calibrate_test;
+// --------------------------------- CV_CameraCalibrationTest_C --------------------------------------------
 
+class CV_CameraCalibrationTest_C : public CV_CameraCalibrationTest
+{
+public:
+	CV_CameraCalibrationTest_C() : CV_CameraCalibrationTest( "calibrate-camera-c", "cvCalibrateCamera2" ) {}
+protected:
+	virtual void calibrate( int imageCount, int* pointCounts,
+		CvSize imageSize, CvPoint2D64f* imagePoints, CvPoint3D64f* objectPoints,
+		double* distortionCoeffs, double* cameraMatrix, double* translationVectors,
+		double* rotationMatrices, int flags );
+	virtual void project( int pointCount, CvPoint3D64f* objectPoints,
+		double* rotationMatrix, double*  translationVector,
+		double* cameraMatrix, double* distortion, CvPoint2D64f* imagePoints );
+};
+
+void CV_CameraCalibrationTest_C::calibrate( int imageCount, int* pointCounts,
+		CvSize imageSize, CvPoint2D64f* imagePoints, CvPoint3D64f* objectPoints,
+		double* distortionCoeffs, double* cameraMatrix, double* translationVectors,
+		double* rotationMatrices, int flags )
+{
+	cvCalibrateCamera_64d(  imageCount,
+							pointCounts,
+                            imageSize,
+                            imagePoints,
+                            objectPoints,
+                            distortionCoeffs,
+                            cameraMatrix,
+                            translationVectors,
+                            rotationMatrices,
+                            flags );
+}
+
+void CV_CameraCalibrationTest_C::project( int pointCount, CvPoint3D64f* objectPoints,
+		double* rotationMatrix, double*  translationVector,
+		double* cameraMatrix, double* distortion, CvPoint2D64f* imagePoints )
+{
+	cvProjectPointsSimple(  pointCount,
+                            objectPoints,
+                            rotationMatrix,
+                            translationVector,
+                            cameraMatrix,
+                            distortion,
+                            imagePoints );
+}
+
+CV_CameraCalibrationTest_C calibrate_test_c;
+
+// --------------------------------- CV_CameraCalibrationTest_CPP --------------------------------------------
+
+class CV_CameraCalibrationTest_CPP : public CV_CameraCalibrationTest
+{
+public:
+	CV_CameraCalibrationTest_CPP() : CV_CameraCalibrationTest( "calibrate-camera-cpp", "cv::calibrateCamera" ) {}
+protected:
+	virtual void calibrate( int imageCount, int* pointCounts,
+		CvSize imageSize, CvPoint2D64f* imagePoints, CvPoint3D64f* objectPoints,
+		double* distortionCoeffs, double* cameraMatrix, double* translationVectors,
+		double* rotationMatrices, int flags );
+	virtual void project( int pointCount, CvPoint3D64f* objectPoints,
+		double* rotationMatrix, double*  translationVector,
+		double* cameraMatrix, double* distortion, CvPoint2D64f* imagePoints );
+};
+
+void CV_CameraCalibrationTest_CPP::calibrate( int imageCount, int* pointCounts,
+		CvSize _imageSize, CvPoint2D64f* _imagePoints, CvPoint3D64f* _objectPoints,
+		double* _distortionCoeffs, double* _cameraMatrix, double* translationVectors,
+		double* rotationMatrices, int flags )
+{
+	vector<vector<Point3f> > objectPoints( imageCount );
+	vector<vector<Point2f> > imagePoints( imageCount );
+	Size imageSize = _imageSize;
+	Mat cameraMatrix, distCoeffs;
+	vector<Mat> rvecs, tvecs;
+
+	CvPoint3D64f* op = _objectPoints;
+	CvPoint2D64f* ip = _imagePoints;
+	vector<vector<Point3f> >::iterator objectPointsIt = objectPoints.begin();
+	vector<vector<Point2f> >::iterator imagePointsIt = imagePoints.begin();
+	for( int i = 0; i < imageCount; ++objectPointsIt, ++imagePointsIt, i++ )
+	{
+		int num = pointCounts[i];
+		objectPointsIt->resize( num );
+		imagePointsIt->resize( num );
+		vector<Point3f>::iterator oIt = objectPointsIt->begin();
+		vector<Point2f>::iterator iIt = imagePointsIt->begin();
+		for( int j = 0; j < num; ++oIt, ++iIt, j++, op++, ip++)
+		{
+			oIt->x = (float)op->x, oIt->y = (float)op->y, oIt->z = (float)op->z;
+			iIt->x = (float)ip->x, iIt->y = (float)ip->y;
+		}
+	}
+
+	calibrateCamera( objectPoints,
+	                 imagePoints,
+					 imageSize,
+					 cameraMatrix,
+					 distCoeffs,
+					 rvecs,
+					 tvecs,
+					 flags );
+
+	assert( cameraMatrix.type() == CV_64FC1 );
+	memcpy( _cameraMatrix, cameraMatrix.data, 9*sizeof(double) );
+
+	assert( cameraMatrix.type() == CV_64FC1 );
+	memcpy( _distortionCoeffs, distCoeffs.data, 4*sizeof(double) );
+
+	vector<Mat>::iterator rvecsIt = rvecs.begin();
+	vector<Mat>::iterator tvecsIt = tvecs.begin();
+	double *rm = rotationMatrices,
+		   *tm = translationVectors;
+	assert( rvecsIt->type() == CV_64FC1 );
+	assert( tvecsIt->type() == CV_64FC1 );
+	for( int i = 0; i < imageCount; ++rvecsIt, ++tvecsIt, i++, rm+=9, tm+=3 )
+	{
+		Mat r9( 3, 3, CV_64FC1 );
+		Rodrigues( *rvecsIt, r9 );
+		memcpy( rm, r9.data, 9*sizeof(double) );
+		memcpy( tm, tvecsIt->data, 3*sizeof(double) );
+	}
+}
+
+void CV_CameraCalibrationTest_CPP::project( int pointCount, CvPoint3D64f* _objectPoints,
+		double* rotationMatrix, double*  translationVector,
+		double* _cameraMatrix, double* distortion, CvPoint2D64f* _imagePoints )
+{
+	Mat objectPoints( pointCount, 3, CV_64FC1, _objectPoints );
+	Mat rmat( 3, 3, CV_64FC1, rotationMatrix ),
+		rvec( 1, 3, CV_64FC1 ),
+		tvec( 1, 3, CV_64FC1, translationVector );
+	Mat cameraMatrix( 3, 3, CV_64FC1, _cameraMatrix );
+	Mat distCoeffs( 1, 4, CV_64FC1, distortion );
+	vector<Point2f> imagePoints;
+	Rodrigues( rmat, rvec );
+	
+	objectPoints.convertTo( objectPoints, CV_32FC1 );
+	projectPoints( objectPoints, rvec, tvec,
+				   cameraMatrix, distCoeffs, imagePoints );
+	vector<Point2f>::const_iterator it = imagePoints.begin();
+	for( int i = 0; it != imagePoints.end(); ++it, i++ )
+	{
+		_imagePoints[i] = cvPoint2D64f( it->x, it->y );
+	}
+}
+
+//CV_CameraCalibrationTest_CPP calibrate_test_cpp;
 
 
 ///////////////////////////////// Stereo Calibration /////////////////////////////////////
@@ -738,7 +884,7 @@ bool CV_StereoCalibrationTest::checkPandROI(int test_case_idx, const Mat& M, con
     return true;
 }
 
-void CV_StereoCalibrationTest::run( int start_from )
+void CV_StereoCalibrationTest::run( int )
 {
     const int ntests = 1;
     const double maxReprojErr = 2;
