@@ -761,7 +761,7 @@ template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool compu
     Real* E = (Real*)_E.data;
     Real* e = (Real*)_e.data;
     int Sstep = _S.step/sizeof(Real);
-    int estep = _e.cols == 1 ? 1 : _e.step/sizeof(Real);
+    int estep = _e.rows == 1 ? 1 : _e.step/sizeof(Real);
     int Estep = _E.step/sizeof(Real);
     
     for( k = 0; k < n; k++ )
