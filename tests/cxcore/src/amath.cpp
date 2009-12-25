@@ -363,12 +363,12 @@ CxCore_PowTest::CxCore_PowTest()
 void CxCore_PowTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = cvTsRandInt(rng) % CV_64F;
+    int depth = cvTsRandInt(rng) % (CV_64F+1);
     int cn = cvTsRandInt(rng) % 4 + 1;
     int i, j;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     depth += depth == CV_8S;
-
+    
     if( depth < CV_32F || cvTsRandInt(rng)%8 == 0 )
         // integer power
         power = (int)(cvTsRandInt(rng)%21 - 10);
@@ -1309,6 +1309,7 @@ CxCore_GEMMTest::CxCore_GEMMTest() :
     CxCore_MatrixTest( "matrix-gemm", "cvGEMM", 5, 1, false, false, 2 )
 {
     test_case_count = 100;
+    max_log_array_size = 10;
     default_timing_param_names = matrix_gemm_param_names;
     alpha = beta = 0;
 }

@@ -174,12 +174,12 @@ void CxCore_ArithmTestImpl::get_test_array_types_and_sizes( int test_case_idx,
                                                             CvSize** sizes, int** types )
 {
     CvRNG* rng = ts->get_rng();
-    int depth = cvTsRandInt(rng)%CV_64F;
+    int depth = cvTsRandInt(rng)%(CV_64F+1);
     int cn = cvTsRandInt(rng) % 4 + 1;
     int i, j;
+    depth += depth == CV_8S;
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     generate_scalars( depth );
-    depth += depth == CV_8S;
 
     for( i = 0; i < max_arr; i++ )
     {
