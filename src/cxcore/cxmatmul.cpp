@@ -1832,11 +1832,11 @@ void transform( const Mat& src, Mat& dst, const Mat& _m )
         transformC4_<int, double>, transformC4_<float, float>, transformC4_<double, double>, 0},
 
         {0, 0, 0, 0, 0, 0, 0, 0,
-        diagtransC2_<uchar, float>, 0, diagtransC2_<ushort, float>, diagtransC2_<short,float>,
+        0, 0, diagtransC2_<ushort, float>, diagtransC2_<short,float>,
         diagtransC2_<int, double>, diagtransC2_<float, float>, diagtransC2_<double, double>, 0,
-        diagtransC3_<uchar, float>, 0, diagtransC3_<ushort, float>, diagtransC3_<short,float>,
+        0, 0, diagtransC3_<ushort, float>, diagtransC3_<short,float>,
         diagtransC3_<int, double>, diagtransC3_<float, float>, diagtransC3_<double, double>, 0,
-        diagtransC4_<uchar, float>, 0, diagtransC4_<ushort, float>, diagtransC4_<short,float>,
+        0, 0, diagtransC4_<ushort, float>, diagtransC4_<short,float>,
         diagtransC4_<int, double>, diagtransC4_<float, float>, diagtransC4_<double, double>, 0}
     };
 
@@ -1905,7 +1905,7 @@ void transform( const Mat& src, Mat& dst, const Mat& _m )
                 for( j = 0; j < 256; j++, val += delta )
                 {
                     int ival = cvRound(val);
-                    data[j] = CV_CAST_8U(ival);
+                    data[j*scn] = CV_CAST_8U(ival);
                 }
             }
             LUT( src, lut, dst );

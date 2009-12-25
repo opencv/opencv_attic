@@ -119,6 +119,7 @@ void CV_POSITTest::run( int start_from )
     for( counter = start_from; counter < test_case_count; counter++ )
     {
         ts->update_context( this, counter, true );
+        progress = update_progress( progress, counter, test_case_count, 0 );
         
         /* set all rotation matrix to zero */
         cvZero( true_rotationX );
@@ -195,8 +196,6 @@ void CV_POSITTest::run( int start_from )
         code = cvTsCmpEps2( ts, translation, true_translation, flEpsilon, false, "translation vector" );
         if( code < 0 )
             goto _exit_;
-
-        progress = update_progress( progress, counter, test_case_count, 0 );
     }
 
 _exit_:

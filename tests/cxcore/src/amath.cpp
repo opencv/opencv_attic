@@ -1611,6 +1611,7 @@ protected:
     void prepare_to_validation( int test_case_idx );
     
     double scale;
+    bool diagMtx;
 };
 
 
@@ -1658,6 +1659,7 @@ void CxCore_TransformTest::get_test_array_types_and_sizes( int test_case_idx, Cv
             sizes[INPUT][2] = cvSize(1,dst_cn);
         types[INPUT][2] &= ~CV_MAT_CN_MASK;
     }
+    diagMtx = (bits & 16) != 0;
 
     sizes[INPUT][1] = cvSize(mat_cols,dst_cn);
 }
@@ -1679,8 +1681,17 @@ int CxCore_TransformTest::prepare_test_case( int test_case_idx )
 {
     int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
     if( code > 0 )
+    {
         cvTsAdd(&test_mat[INPUT][1], cvScalarAll(scale), &test_mat[INPUT][1],
                 cvScalarAll(0), cvScalarAll(0), &test_mat[INPUT][1], 0 );
+        if(diagMtx)
+        {
+            CvMat* w = cvCloneMat(&test_mat[INPUT][1]);
+            cvSetIdentity(w, cvScalarAll(1));
+            cvMul(w, &test_mat[INPUT][1], &test_mat[INPUT][1]);
+            cvReleaseMat(&w);
+        }
+    }
     return code;
 }
 

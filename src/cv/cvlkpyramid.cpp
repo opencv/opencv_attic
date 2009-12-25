@@ -1381,9 +1381,8 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     
     const int COUNT = 15;
     const int WIDTH = 160, HEIGHT = 120;
-    const int RANSAC_MAX_ITERS = 100;
+    const int RANSAC_MAX_ITERS = 500;
     const int RANSAC_SIZE0 = 3;
-    const double MIN_TRIANGLE_SIDE = 20;
     const double RANSAC_GOOD_RATIO = 0.5;
 
     int allocated = 1;
@@ -1408,6 +1407,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     double m[6]={0};
     CvMat M = cvMat( 2, 3, CV_64F, m );
     int good_count = 0;
+    CvRect brect;
 
     CV_CALL( A = cvGetMat( _A, &stubA ));
     CV_CALL( B = cvGetMat( _B, &stubB ));
@@ -1509,6 +1509,11 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
 
     if( count < RANSAC_SIZE0 )
         EXIT;
+    
+    {
+    CvMat _pB = cvMat(1, count, CV_32FC2, pB);    
+    brect = cvBoundingRect(&_pB, 1);
+    }
 
     // RANSAC stuff:
     // 1. find the consensus
@@ -1534,10 +1539,10 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
                         break;
                     // check that the points are not very close one each other
                     if( fabs(pA[idx[i]].x - pA[idx[j]].x) +
-                        fabs(pA[idx[i]].y - pA[idx[j]].y) < MIN_TRIANGLE_SIDE )
+                        fabs(pA[idx[i]].y - pA[idx[j]].y) < FLT_EPSILON )
                         break;
                     if( fabs(pB[idx[i]].x - pB[idx[j]].x) +
-                        fabs(pB[idx[i]].y - pB[idx[j]].y) < MIN_TRIANGLE_SIDE )
+                        fabs(pB[idx[i]].y - pB[idx[j]].y) < FLT_EPSILON )
                         break;
                 }
 
@@ -1554,9 +1559,15 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
                     b[0] = pB[idx[0]];
                     b[1] = pB[idx[1]];
                     b[2] = pB[idx[2]];
+                    
+                    double dax1 = a[1].x - a[0].x, day1 = a[1].y - a[0].y;
+                    double dax2 = a[2].x - a[0].x, day2 = a[2].y - a[0].y;
+                    double dbx1 = b[1].x - b[0].y, dby1 = b[1].y - b[0].y;
+                    double dbx2 = b[2].x - b[0].x, dby2 = b[2].y - b[0].y;
+                    const double eps = 0.01;
 
-                    if( fabs((a[1].x - a[0].x)*(a[2].y - a[0].y) - (a[1].y - a[0].y)*(a[2].x - a[0].x)) < 1 ||
-                        fabs((b[1].x - b[0].x)*(b[2].y - b[0].y) - (b[1].y - b[0].y)*(b[2].x - b[0].x)) < 1 )
+                    if( fabs(dax1*day2 - day1*dax2) < eps*sqrt(dax1*dax1+day1*day1)*sqrt(dax2*dax2+day2*day2) ||
+                        fabs(dbx1*dby2 - dby1*dbx2) < eps*sqrt(dbx1*dbx1+dby1*dby1)*sqrt(dbx2*dbx2+dby2*dby2) )
                         continue;
                 }
                 break;
@@ -1575,7 +1586,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
         for( i = 0, good_count = 0; i < count; i++ )
         {
             if( fabs( m[0]*pA[i].x + m[1]*pA[i].y + m[2] - pB[i].x ) +
-                fabs( m[3]*pA[i].x + m[4]*pA[i].y + m[5] - pB[i].y ) < 8 )
+                fabs( m[3]*pA[i].x + m[4]*pA[i].y + m[5] - pB[i].y ) < MAX(brect.width,brect.height)*0.05 )
                 good_idx[good_count++] = i;
         }
 

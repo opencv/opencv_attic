@@ -143,6 +143,7 @@ void CV_RandTest::run( int )
     
     for( int idx = 0; idx < test_case_count; idx++ )
     {
+        progress = update_progress( progress, idx, test_case_count, 0 );
         ts->update_context( this, idx, false );
         
         int depth = cvTsRandInt(rng) % (CV_64F+1);
@@ -336,7 +337,6 @@ void CV_RandTest::run( int )
                 return;
             }
         }
-        progress = update_progress( progress, idx, test_case_count, 0 );
     }
 }
 

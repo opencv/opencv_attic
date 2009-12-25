@@ -106,6 +106,7 @@ void CV_SnakeTest::run( int /*start_from*/ )
 
     for( i = 0; i < test_case_count; i++ )
     {
+        progress = update_progress( progress, i, test_case_count, 0 );
         int num_pos;
         int k;
 
@@ -206,8 +207,6 @@ void CV_SnakeTest::run( int /*start_from*/ )
         cvFree(&Pts);
         cvFree(&resPts);
         cvReleaseImage(&iplSrc);
-
-        progress = update_progress( progress, i, test_case_count, 0 );
     }
 
     if( lErrors > 0 )
