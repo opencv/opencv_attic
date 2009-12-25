@@ -136,11 +136,11 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
 
         int64 _time0 = cvGetTickCount();
         result = cvCheckChessboard(gray, pattern_size);
-        if(result == 1)
+/*        if(result == 1)
         {
             OPENCV_CALL( result = cvFindChessboardCorners(
                      gray, pattern_size, v, &count, 7 ));
-        }
+        }*/
         int64 _time1 = cvGetTickCount();
 
         if( result != is_chessboard )
