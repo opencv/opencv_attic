@@ -1420,6 +1420,15 @@ CVAPI(CvSeq*) cvSegmentFGMask( CvArr *fgmask, int poly1Hull0 CV_DEFAULT(1),
                                CvMemStorage* storage CV_DEFAULT(0),
                                CvPoint offset CV_DEFAULT(cvPoint(0,0)));
 
+// does a fast check if a chessboard is in the input image. This is a workaround to 
+// a problem of cvFindChessboardCorners being slow on images with no chessboard
+// - src: input image
+// - size: chessboard size
+// Returns 1 if a chessboard can be in this image and findChessboardCorners should be called, 
+// 0 if there is no chessboard, -1 in case of error
+CVAPI(int) cvCheckChessboard(IplImage* src, CvSize size);
+
+    
 #ifdef __cplusplus
 }
 #endif
