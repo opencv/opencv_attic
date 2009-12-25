@@ -108,6 +108,7 @@ double PSNR(const Mat& m1, const Mat& m2)
 
 bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 {
+	int code = CvTS::OK;
 	Mat image = imread(dir + "shared/baboon.jpg");
 	
 	if (image.empty())
@@ -121,6 +122,7 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 	
 	for(size_t i = 0; i < ext_num; ++i)
 	{
+		ts->printf(CvTS::LOG, "ext=%s\n", exts[i].c_str());
         string ext = exts[i];
 		string full_name = tmp + "/img." + ext;
 		marker(exts[i]);	
@@ -130,8 +132,8 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		if (loaded.empty())
 		{
             ts->printf(CvTS::LOG, "Reading failed at fmt=%s\n", ext.c_str());
-			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
-			return false;					
+			code = CvTS::FAIL_MISMATCH;
+			continue;
 		}				
 						
 		const double thresDbell = 20;
@@ -139,8 +141,8 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		if (psnr < thresDbell)
 		{
 			ts->printf(CvTS::LOG, "Reading image from file: too big difference (=%g) with fmt=%s\n", psnr, ext.c_str());
-			ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
-			return false;			
+			code = CvTS::FAIL_BAD_ACCURACY;
+			continue;			
 		}	
 		
 		FILE *f = fopen(full_name.c_str(), "rb");
@@ -157,27 +159,28 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		if (buf != from_file)
 		{
             ts->printf(CvTS::LOG, "Encoding failed with fmt=%s\n", ext.c_str());
-			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
-			return false;			
+			code = CvTS::FAIL_MISMATCH;
+			continue;			
 		}			
 		
 		Mat buf_loaded = imdecode(buf, 1);
 		if (buf_loaded.empty())
 		{
 			ts->printf(CvTS::LOG, "Decoding failed with fmt=%s\n", ext.c_str());
-            ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
-			return false;				
+            code = CvTS::FAIL_MISMATCH;
+			continue;				
 		}
 		
         psnr = PSNR(buf_loaded, image);
 		if (psnr < thresDbell)
 		{
-			ts->printf(CvTS::LOG, "Decoding image from memory: too big difference (=%g) with fmt=%s\n", psnr, ext.c_str());
-			ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
-			return false;			
+			ts->printf(CvTS::LOG, "Decoding image from memory: too small PSNR (=%gdb) with fmt=%s\n", psnr, ext.c_str());
+			code = CvTS::FAIL_MISMATCH;
+			continue;			
 		}					
-	}  
-	return true;		
+	}
+	ts->set_failed_test_info(code);  
+	return code == CvTS::OK;		
 }
 
 bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
