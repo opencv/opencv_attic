@@ -3103,7 +3103,7 @@ void cv::projectPoints( const Mat& opoints,
     dpdrot.create(npoints*2, 3, CV_64F);
     dpdt.create(npoints*2, 3, CV_64F);
     dpdf.create(npoints*2, 2, CV_64F);
-    dpdc.create(npoints*2, 3, CV_64F);
+    dpdc.create(npoints*2, 2, CV_64F);
     dpddist.create(npoints*2, distCoeffs.rows + distCoeffs.cols - 1, CV_64F);
     CvMat _objectPoints = opoints, _imagePoints = Mat(ipoints);
     CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
