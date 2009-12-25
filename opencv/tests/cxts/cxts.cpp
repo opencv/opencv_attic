@@ -778,7 +778,26 @@ void CvTest::safe_run( int start_from )
     {
         try
         {
+        #if !defined WIN32 && !defined _WIN32
+        int _code = setjmp( cv_ts_jmp_mark );
+        if( !_code )
             run( start_from );
+        else
+            throw _code;
+        #else
+            run( start_from );
+        #endif
+        }
+        catch (const cv::Exception& exc)
+        {
+            const char* errorStr = cvErrorStr(exc.code);
+            char buf[1 << 16];
+            
+            sprintf( buf, "OpenCV Error: %s (%s) in %s, file %s, line %d",
+                    errorStr, exc.err.c_str(), exc.func.size() > 0 ?
+                    exc.func.c_str() : "unknown function", exc.file.c_str(), exc.line );
+            ts->printf(CvTS::LOG, "%s\n", buf);
+            ts->set_failed_test_info( CvTS::FAIL_ERROR_IN_CALLED_FUNC );
         }
         catch (...)
         {
