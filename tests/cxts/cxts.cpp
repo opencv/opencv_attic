@@ -108,14 +108,6 @@ static void cv_seh_translator( unsigned int /*u*/, EXCEPTION_POINTERS* pExp )
 }
 #endif
 
-#define CV_TS_TRY_BLOCK_BEGIN                   \
-    try {
-
-#define CV_TS_TRY_BLOCK_END                     \
-    } catch( int _code ) {                      \
-        ts->set_failed_test_info( _code );      \
-    }
-
 static void change_color( int color )
 {
     static int normal_attributes = -1;
@@ -140,7 +132,7 @@ static void change_color( int color )
 
 #include <signal.h>
 
-static const int cv_ts_sig_id[] = { SIGSEGV, SIGBUS, SIGFPE, SIGILL, -1 };
+static const int cv_ts_sig_id[] = { SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT, -1 };
 
 static jmp_buf cv_ts_jmp_mark;
 
@@ -162,18 +154,6 @@ void cv_signal_handler( int sig_code )
 
     longjmp( cv_ts_jmp_mark, code );
 }
-
-#define CV_TS_TRY_BLOCK_BEGIN                   \
-    {                                           \
-        int _code = setjmp( cv_ts_jmp_mark );   \
-        if( !_code ) {
-
-#define CV_TS_TRY_BLOCK_END                     \
-        }                                       \
-        else  {                                 \
-            ts->set_failed_test_info( _code );  \
-        }                                       \
-    }
 
 static void change_color( int color )
 {
@@ -792,11 +772,19 @@ int CvTest::get_support_testing_modes()
 
 void CvTest::safe_run( int start_from )
 {
-    CV_TS_TRY_BLOCK_BEGIN;
-
-    run( start_from );
-
-    CV_TS_TRY_BLOCK_END;
+    if(ts->is_debug_mode())
+        run( start_from );
+    else
+    {
+        try
+        {
+            run( start_from );
+        }
+        catch (...)
+        {
+            ts->set_failed_test_info( CvTS::FAIL_EXCEPTION );
+        }
+    }
 }
 
 
@@ -1005,7 +993,7 @@ void CvTS::clear()
         ostrm_base_name = 0;
     }
     params.rng_seed = (uint64)-1;
-    params.debug_mode = 1;
+    params.debug_mode = -1;
     params.print_only_failed = 0;
     params.skip_header = 0;
     params.test_mode = CORRECTNESS_CHECK_MODE;
@@ -1251,6 +1239,8 @@ int CvTS::run( int argc, char** argv )
             set_data_path(argv[++i]);
         else if( strcmp( argv[i], "-nc" ) == 0 )
             params.color_terminal = 0;
+        else if( strcmp( argv[i], "-r" ) == 0 )
+            params.debug_mode = 0;
     }
 
 #if 0
@@ -1482,15 +1472,22 @@ int CvTS::run( int argc, char** argv )
 void CvTS::print_help()
 {
     ::printf(
-        "Usage: <test_executable> [{-h|--help}][-l] [-w] [-t] [-f <config_name>] [-d <data_path>] [-O{0|1}]\n\n"
-        "-d - specify the test data path\n\n"
-        "-f - use parameters from the provided config XML/YAML file instead of the default parameters\n\n"
-        "-h or --help - print this help information\n\n"
-        "-l - list all the registered tests or subset of the tests, selected in the config file, and exit\n\n"
-        "-nc - do not use colors in the console output\n\n"     
-        "-O{0|1} - disable/enable on-fly detection of IPP and other supported optimized libs. It's enabled by default\n\n"
-        "-t - switch to the performance testing mode instead of the default algorithmic/correctness testing mode\n\n"
-        "-w - write default parameters of the algorithmic or performance (when -t is passed) tests to the specifed config file (see -f) and exit\n\n"
+        "Usage: <test_executable> [{-h|--help}][-l] [-r] [-w] [-t] [-f <config_name>] [-d <data_path>] [-O{0|1}]\n\n"
+        "-d - specify the test data path\n"
+        "-f - use parameters from the provided XML/YAML config file\n"
+        "     instead of the default parameters\n"
+        "-h or --help - print this help information\n"
+        "-l - list all the registered tests or subset of the tests,\n"
+        "     selected in the config file, and exit\n"
+        "-nc - do not use colors in the console output\n"     
+        "-O{0|1} - disable/enable on-fly detection of IPP and other\n"
+        "          supported optimized libs. It's enabled by default\n"
+        "-r - continue running tests after OS/Hardware exception occured\n"
+        "-t - switch to the performance testing mode instead of\n"
+        "     the default algorithmic/correctness testing mode\n"
+        "-w - write default parameters of the algorithmic or\n"
+        "     performance (when -t is passed) tests to the specifed\n"
+        "     config file (see -f) and exit\n\n"
         //"Test data path and config file can also be specified by the environment variables 'config' and 'datapath'.\n\n"
         );
 }
@@ -1506,7 +1503,8 @@ const char* default_data_path = "../../../../tests/cv/testdata/";
 int CvTS::read_params( CvFileStorage* fs )
 {
     CvFileNode* node = fs ? cvGetFileNodeByName( fs, 0, "common" ) : 0;
-    params.debug_mode = cvReadIntByName( fs, node, "debug_mode", 1 ) != 0;
+    if(params.debug_mode < 0)
+        params.debug_mode = cvReadIntByName( fs, node, "debug_mode", 1 ) != 0;
     params.skip_header = cvReadIntByName( fs, node, "skip_header", 0 ) != 0;
     params.print_only_failed = cvReadIntByName( fs, node, "print_only_failed", 0 ) != 0;
     params.rerun_failed = cvReadIntByName( fs, node, "rerun_failed", 0 ) != 0;
