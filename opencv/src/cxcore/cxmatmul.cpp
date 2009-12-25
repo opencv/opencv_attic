@@ -1115,7 +1115,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
         int dm0, dn0, dk0;
         size_t a_step0, a_step1, b_step0, b_step1, c_step0, c_step1;
         int work_elem_size = elem_size << (CV_MAT_DEPTH(type) == CV_32F ? 1 : 0);
-
+        
         if( !is_a_t )
             a_step0 = A.step, a_step1 = elem_size;
         else
@@ -1913,7 +1913,7 @@ void transform( const Mat& src, Mat& dst, const Mat& _m )
         }
     }
 
-    TransformFunc func = tab[0][type];
+    TransformFunc func = tab[isDiag][type];
     CV_Assert( func != 0 );
     func( src, dst, m );
 }
