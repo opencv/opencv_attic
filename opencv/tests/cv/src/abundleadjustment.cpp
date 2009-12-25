@@ -1230,6 +1230,7 @@ void CV_BundleAdjustmentTest::run( int start_from )
 
     for( currTest = start_from; currTest < numTests; currTest++ )
     {
+        progress = update_progress( progress, currTest, numTests, 0 );
         fscanf(datafile,"%s",i_dat_file);
         sprintf(filename, "%s%s", filepath, i_dat_file);
         file = fopen(filename,"r");
@@ -1488,8 +1489,6 @@ void CV_BundleAdjustmentTest::run( int start_from )
                       "Error in reprojection maxDy=%f > 1.0\n",maxDy);
             code = CvTS::FAIL_BAD_ACCURACY; goto _exit_;
         }
-
-        progress = update_progress( progress, currTest, numTests, 0 );
 
         cvFree(&imagePoints);
         cvFree(&objectPoints);

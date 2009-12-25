@@ -137,6 +137,7 @@ void CV_ChessboardDetectorTest::run( int start_from )
 
     for( idx = start_from; idx < max_idx; idx++ )
     {
+        progress = update_progress( progress, idx-1, max_idx, 0 );
         int count0 = -1;
         int count = 0;
         CvSize pattern_size = { -1, -1 };
@@ -266,7 +267,6 @@ void CV_ChessboardDetectorTest::run( int start_from )
         cvReleaseImage( &img );
         cvReleaseImage( &gray );
         cvReleaseImage( &thresh );
-        progress = update_progress( progress, idx-1, max_idx, 0 );
     }
 
 _exit_:

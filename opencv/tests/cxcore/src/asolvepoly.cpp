@@ -39,6 +39,7 @@ void CV_SolvePolyTest::run( int )
 
     for (int idx = 0, max_idx = 1000, progress = 0; idx < max_idx; ++idx)
     {
+        progress = update_progress(progress, idx-1, max_idx, 0);
         int n = cvRandInt(&rng) % 13 + 1;
         std::vector<complex_type> r(n), ar(n), c(n + 1, 0);
         std::vector<double> a(n + 1), u(n * 2);
@@ -113,8 +114,6 @@ void CV_SolvePolyTest::run( int )
             for (size_t j=0;j<ar.size();++j)
 	            ts->printf( CvTS::LOG, "ar[%d]=(%g, %g)\n", j, ar[j].real(), ar[j].imag());
         }
-
-        progress = update_progress(progress, idx-1, max_idx, 0);
     }
 }
 

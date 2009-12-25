@@ -148,9 +148,11 @@ void CV_IOTest::run( int start_from )
     
     for( int idx = 0; idx < test_case_count; idx++ )
     {
+        ts->update_context( this, idx, false );
+        progress = update_progress( progress, idx, test_case_count, 0 );
+        
         cvClearMemStorage(storage);
         
-        ts->update_context( this, idx, false );
         char buf[L_tmpnam+16];
         char* filename = tmpnam(buf);
         strcat(filename, idx % 2 ? ".yml" : ".xml");
@@ -348,7 +350,6 @@ void CV_IOTest::run( int start_from )
         #else
             unlink(filename);
         #endif
-        progress = update_progress( progress, idx, test_case_count, 0 );
     }
 }
 

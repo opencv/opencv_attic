@@ -554,6 +554,9 @@ protected:
 
     StreamInfo output_streams[MAX_IDX];
     int ostream_testname_mask;
+    char* logbuf;
+    size_t logbufsize;
+    size_t logbufpos;
 };
 
 
