@@ -82,26 +82,30 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
     CvFileNode* board_list = fs ? cvGetFileNodeByName( fs, 0, "boards" ) : 0;
 
     if( !fs || !board_list || !CV_NODE_IS_SEQ(board_list->tag) ||
-        board_list->data.seq->total % 2 != 0 )
+        board_list->data.seq->total % 4 != 0 )
     {
         ts->printf( CvTS::LOG, "chessboard_timing_list.dat can not be readed or is not valid" );
         code = CvTS::FAIL_MISSING_TEST_DATA;
         goto _exit_;
     }
 
-    max_idx = board_list->data.seq->total/2;
+    max_idx = board_list->data.seq->total/4;
 
     for( idx = start_from; idx < max_idx; idx++ )
     {
         int count0 = -1;
         int count = 0;
-        CvSize pattern_size = cvSize(5, 7);
+        CvSize pattern_size;
         int result;
+
+        const char* imgname = cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4), "dummy.txt");
+        int is_chessboard = cvReadInt((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4+1), 0);
+        pattern_size.width = cvReadInt((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4 + 2), -1);
+        pattern_size.height = cvReadInt((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4 + 3), -1);
         
         ts->update_context( this, idx-1, true );
 
         /* read the image */
-        const char* imgname = cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2),"dummy.txt");
         sprintf( filename, "%s%s", filepath, imgname );
     
         img = cvLoadImage( filename );
@@ -121,7 +125,6 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
         thresh = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
         cvCvtColor( img, gray, CV_BGR2GRAY );
  
-        int is_chessboard = cvReadInt((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2+1),0);
 
         count0 = pattern_size.width*pattern_size.height;
 
@@ -132,25 +135,25 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
         v = (CvPoint2D32f*)_v->data.fl;
 
         int64 _time0 = cvGetTickCount();
-        OPENCV_CALL( result = cvFindChessboardCorners(
+        result = cvCheckChessboard(gray, pattern_size);
+        if(result == 1)
+        {
+            OPENCV_CALL( result = cvFindChessboardCorners(
                      gray, pattern_size, v, &count, 7 ));
+        }
         int64 _time1 = cvGetTickCount();
 
-        //show_points( gray, 0, count0, v, count, pattern_size, result );
         if( result != is_chessboard )
         {
             ts->printf( CvTS::LOG, "Error: chessboard was %sdetected in the image %s\n", 
                        result ? "" : "not ", imgname );
-            //code = CvTS::FAIL_INVALID_OUTPUT;
-            //goto _exit_;
+            code = CvTS::FAIL_INVALID_OUTPUT;
+            goto _exit_;
         }
-
-        OPENCV_CALL( cvFindCornerSubPix( gray, v, count, cvSize( 5, 5 ), cvSize(-1,-1),
-                            cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1)));
         
-        ts->printf(CvTS::LOG, "%s: chessboard %d, findChessboard time us per pixel: %f\n", 
-                   imgname, is_chessboard, float(_time1 - _time0)/cvGetTickFrequency()/(gray->width*gray->height));
-        //show_points( gray, u + 1, count0, v, count, pattern_size, result  );
+        ts->printf(CvTS::LOG, "%s: chessboard %d, findChessboard time s: %f, us per pixel: %f\n", 
+                   imgname, is_chessboard, float(_time1 - _time0)/cvGetTickFrequency()*1e-6, 
+                   float(_time1 - _time0)/cvGetTickFrequency()/(gray->width*gray->height));
 
         cvReleaseMat( &_v );
         cvReleaseImage( &img );
