@@ -53,7 +53,6 @@ using namespace cv;
 using namespace std;
 
 
-
 class CV_OperationsTest : public CvTest
 {
 public:
@@ -62,7 +61,11 @@ public:
 protected:
     void run(int);    
 
-    struct test_excep {};
+    struct test_excep
+    {
+        test_excep(const string& _s=string("")) : s(_s) {};
+        string s;
+    };
 
     bool SomeMatFunctions();
     bool TestMat();
@@ -71,8 +74,8 @@ protected:
     bool TestSparseMat();
     bool operations1();
 
-    void checkDiff(const Mat& m1, const Mat& m2) { if (norm(m1, m2, NORM_INF) != 0) throw test_excep(); }
-    void checkDiffF(const Mat& m1, const Mat& m2) { if (norm(m1, m2, NORM_INF) > 1e-5) throw test_excep(); }
+    void checkDiff(const Mat& m1, const Mat& m2, const string& s) { if (norm(m1, m2, NORM_INF) != 0) throw test_excep(s); }
+    void checkDiffF(const Mat& m1, const Mat& m2, const string& s) { if (norm(m1, m2, NORM_INF) > 1e-5) throw test_excep(s); }
 
 };
 
@@ -82,6 +85,11 @@ CV_OperationsTest::CV_OperationsTest(): CvTest( "operations", "?" )
 }
 CV_OperationsTest::~CV_OperationsTest() {}
 
+#define STR(a) STR2(a)
+#define STR2(a) #a
+
+#define CHECK_DIFF(a, b) checkDiff(a, b, "(" #a ")  !=  (" #b ")  at l." STR(__LINE__))
+#define CHECK_DIFF_FLT(a, b) checkDiffF(a, b, "(" #a ")  !=(eps)  (" #b ")  at l." STR(__LINE__))
 
 bool CV_OperationsTest::TestMat()
 {
@@ -104,7 +112,7 @@ bool CV_OperationsTest::TestMat()
         gemm(rot_2x3, tmp, 2, shi_2x1, -1, res2, 0);
         add(res2, Mat(2, 1, CV_32F, shift), res2);
         
-        checkDiff(res, res2);
+        CHECK_DIFF(res, res2);
             
         Mat mat4x4(4, 4, CV_32F);
         randu(mat4x4, Scalar(0), Scalar(10));
@@ -112,191 +120,191 @@ bool CV_OperationsTest::TestMat()
         Mat roi1 = mat4x4(Rect(Point(1, 1), Size(2, 2)));
         Mat roi2 = mat4x4(Range(1, 3), Range(1, 3));
         
-        checkDiff(roi1, roi2);
-        checkDiff(mat4x4, mat4x4(Rect(Point(0,0), mat4x4.size())));        
+        CHECK_DIFF(roi1, roi2);
+        CHECK_DIFF(mat4x4, mat4x4(Rect(Point(0,0), mat4x4.size())));        
 
         Mat intMat10(3, 3, CV_32S, Scalar(10));
         Mat intMat11(3, 3, CV_32S, Scalar(11));
         Mat resMat(3, 3, CV_8U, Scalar(255));
                         
-        checkDiff(resMat, intMat10 == intMat10);
-        checkDiff(resMat, intMat10 <  intMat11);
-        checkDiff(resMat, intMat11 >  intMat10);
-        checkDiff(resMat, intMat10 <= intMat11);
-        checkDiff(resMat, intMat11 >= intMat10);
-        checkDiff(resMat, intMat11 != intMat10);
+        CHECK_DIFF(resMat, intMat10 == intMat10);
+        CHECK_DIFF(resMat, intMat10 <  intMat11);
+        CHECK_DIFF(resMat, intMat11 >  intMat10);
+        CHECK_DIFF(resMat, intMat10 <= intMat11);
+        CHECK_DIFF(resMat, intMat11 >= intMat10);
+        CHECK_DIFF(resMat, intMat11 != intMat10);
 
-        checkDiff(resMat, intMat10 == 10.0);
-        checkDiff(resMat, 10.0 == intMat10);
-        checkDiff(resMat, intMat10 <  11.0);
-        checkDiff(resMat, 11.0 > intMat10);
-        checkDiff(resMat, 10.0 < intMat11);
-        checkDiff(resMat, 11.0 >= intMat10);
-        checkDiff(resMat, 10.0 <= intMat11);
-        checkDiff(resMat, 10.0 != intMat11);
-        checkDiff(resMat, intMat11 != 10.0);
+        CHECK_DIFF(resMat, intMat10 == 10.0);
+        CHECK_DIFF(resMat, 10.0 == intMat10);
+        CHECK_DIFF(resMat, intMat10 <  11.0);
+        CHECK_DIFF(resMat, 11.0 > intMat10);
+        CHECK_DIFF(resMat, 10.0 < intMat11);
+        CHECK_DIFF(resMat, 11.0 >= intMat10);
+        CHECK_DIFF(resMat, 10.0 <= intMat11);
+        CHECK_DIFF(resMat, 10.0 != intMat11);
+        CHECK_DIFF(resMat, intMat11 != 10.0);
 
-        Mat eye =  Mat::eye(3, 3, CV_8U);
-        Mat maskMat4(3, 3, CV_8U, Scalar(4));
-        Mat maskMat1(3, 3, CV_8U, Scalar(1));
-        Mat maskMat5(3, 3, CV_8U, Scalar(5));
-        Mat maskMat0(3, 3, CV_8U, Scalar(0));
+        Mat eye =  Mat::eye(3, 3, CV_16S);
+        Mat maskMat4(3, 3, CV_16S, Scalar(4));
+        Mat maskMat1(3, 3, CV_16S, Scalar(1));
+        Mat maskMat5(3, 3, CV_16S, Scalar(5));
+        Mat maskMat0(3, 3, CV_16S, Scalar(0));
 
-        checkDiff(maskMat0, maskMat4 & maskMat1);
-        checkDiff(maskMat0, Scalar(1) & maskMat4);
-        checkDiff(maskMat0, maskMat4 & Scalar(1));
-
+        CHECK_DIFF(maskMat0, maskMat4 & maskMat1);
+        CHECK_DIFF(maskMat0, Scalar(1) & maskMat4);
+        CHECK_DIFF(maskMat0, maskMat4 & Scalar(1));
+        
         Mat m;
-        m = maskMat4.clone(); m &= maskMat1; checkDiff(maskMat0, m);
-        m = maskMat4.clone(); m &= maskMat1 | maskMat1; checkDiff(maskMat0, m);
-        m = maskMat4.clone(); m &= (2* maskMat1 - maskMat1); checkDiff(maskMat0, m);
+        m = maskMat4.clone(); m &= maskMat1; CHECK_DIFF(maskMat0, m);
+        m = maskMat4.clone(); m &= maskMat1 | maskMat1; CHECK_DIFF(maskMat0, m);
+        m = maskMat4.clone(); m &= (2* maskMat1 - maskMat1); CHECK_DIFF(maskMat0, m);
 
-        m = maskMat4.clone(); m &= Scalar(1); checkDiff(maskMat0, m);
-        m = maskMat4.clone(); m |= maskMat1; checkDiff(maskMat5, m);
-        m = maskMat5.clone(); m ^= maskMat1; checkDiff(maskMat4, m);
-        m = maskMat4.clone(); m |= (2* maskMat1 - maskMat1); checkDiff(maskMat5, m);
-        m = maskMat5.clone(); m ^= (2* maskMat1 - maskMat1); checkDiff(maskMat4, m);
+        m = maskMat4.clone(); m &= Scalar(1); CHECK_DIFF(maskMat0, m);
+        m = maskMat4.clone(); m |= maskMat1; CHECK_DIFF(maskMat5, m);
+        m = maskMat5.clone(); m ^= maskMat1; CHECK_DIFF(maskMat4, m);
+        m = maskMat4.clone(); m |= (2* maskMat1 - maskMat1); CHECK_DIFF(maskMat5, m);
+        m = maskMat5.clone(); m ^= (2* maskMat1 - maskMat1); CHECK_DIFF(maskMat4, m);
 
-        m = maskMat4.clone(); m |= Scalar(1); checkDiff(maskMat5, m);
-        m = maskMat5.clone(); m ^= Scalar(1); checkDiff(maskMat4, m);
+        m = maskMat4.clone(); m |= Scalar(1); CHECK_DIFF(maskMat5, m);
+        m = maskMat5.clone(); m ^= Scalar(1); CHECK_DIFF(maskMat4, m);
 
            
         
-        checkDiff(maskMat0, (maskMat4 | maskMat4) & (maskMat1 | maskMat1));
-        checkDiff(maskMat0, (maskMat4 | maskMat4) & maskMat1);
-        checkDiff(maskMat0, maskMat4 & (maskMat1 | maskMat1));
-        checkDiff(maskMat0, (maskMat1 | maskMat1) & Scalar(4));
-        checkDiff(maskMat0, Scalar(4) & (maskMat1 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 | maskMat4) & (maskMat1 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 | maskMat4) & maskMat1);
+        CHECK_DIFF(maskMat0, maskMat4 & (maskMat1 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat1 | maskMat1) & Scalar(4));
+        CHECK_DIFF(maskMat0, Scalar(4) & (maskMat1 | maskMat1));
         
-        checkDiff(maskMat0, maskMat5 ^ (maskMat4 | maskMat1));
-        checkDiff(maskMat0, (maskMat4 | maskMat1) ^ maskMat5);
-        checkDiff(maskMat0, (maskMat4 + maskMat1) ^ (maskMat4 + maskMat1));
-        checkDiff(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
-        checkDiff(maskMat1, Scalar(5) ^ maskMat4);
-        checkDiff(maskMat0, Scalar(5) ^ (maskMat4 + maskMat1));
-        checkDiff(maskMat5, Scalar(5) | (maskMat4 + maskMat1));
-        checkDiff(maskMat0, (maskMat4 + maskMat1) ^ Scalar(5));
+        CHECK_DIFF(maskMat0, maskMat5 ^ (maskMat4 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 | maskMat1) ^ maskMat5);
+        CHECK_DIFF(maskMat0, (maskMat4 + maskMat1) ^ (maskMat4 + maskMat1));
+        CHECK_DIFF(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
+        CHECK_DIFF(maskMat1, Scalar(5) ^ maskMat4);
+        CHECK_DIFF(maskMat0, Scalar(5) ^ (maskMat4 + maskMat1));
+        CHECK_DIFF(maskMat5, Scalar(5) | (maskMat4 + maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 + maskMat1) ^ Scalar(5));
 
-        checkDiff(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
-        checkDiff(maskMat5, (maskMat4 ^ maskMat1) | maskMat5);        
-        checkDiff(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
-        checkDiff(maskMat5, (maskMat4 | maskMat4) | Scalar(1));
-        checkDiff(maskMat5, Scalar(1) | (maskMat4 | maskMat4));
-        checkDiff(maskMat5, Scalar(1) | maskMat4);
-        checkDiff(maskMat5, (maskMat5 | maskMat5) | (maskMat4 ^ maskMat1));
+        CHECK_DIFF(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
+        CHECK_DIFF(maskMat5, (maskMat4 ^ maskMat1) | maskMat5);        
+        CHECK_DIFF(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
+        CHECK_DIFF(maskMat5, (maskMat4 | maskMat4) | Scalar(1));
+        CHECK_DIFF(maskMat5, Scalar(1) | (maskMat4 | maskMat4));
+        CHECK_DIFF(maskMat5, Scalar(1) | maskMat4);
+        CHECK_DIFF(maskMat5, (maskMat5 | maskMat5) | (maskMat4 ^ maskMat1));
 
-        checkDiff(maskMat1, min(maskMat1, maskMat5));
-        //FIXME checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5 | maskMat5));
-        checkDiff(maskMat5, max(maskMat1, maskMat5));
-        //FIXME checkDiff(maskMat5, max(maskMat1 | maskMat1, maskMat5 | maskMat5));
+        CHECK_DIFF(maskMat1, min(maskMat1, maskMat5));
+        CHECK_DIFF(maskMat1, min(Mat(maskMat1 | maskMat1), maskMat5 | maskMat5));
+        CHECK_DIFF(maskMat5, max(maskMat1, maskMat5));
+        CHECK_DIFF(maskMat5, max(Mat(maskMat1 | maskMat1), maskMat5 | maskMat5));
 
-        checkDiff(maskMat1, min(maskMat1, maskMat5 | maskMat5));
-        checkDiff(maskMat1, min(maskMat1 | maskMat1, maskMat5));
-        checkDiff(maskMat5, max(maskMat1 | maskMat1, maskMat5));
-        checkDiff(maskMat5, max(maskMat1, maskMat5 | maskMat5));
+        CHECK_DIFF(maskMat1, min(maskMat1, maskMat5 | maskMat5));
+        CHECK_DIFF(maskMat1, min(maskMat1 | maskMat1, maskMat5));
+        CHECK_DIFF(maskMat5, max(maskMat1 | maskMat1, maskMat5));
+        CHECK_DIFF(maskMat5, max(maskMat1, maskMat5 | maskMat5));
 
-        checkDiff(~maskMat1, maskMat1 ^ 0xFF);
-        checkDiff(~(maskMat1 | maskMat1), maskMat1 ^ 0xFF); 
+        CHECK_DIFF(~maskMat1, maskMat1 ^ -1);
+        CHECK_DIFF(~(maskMat1 | maskMat1), maskMat1 ^ -1); 
 
-        checkDiff(maskMat1, maskMat4/4.0);   
+        CHECK_DIFF(maskMat1, maskMat4/4.0);   
 
         /////////////////////////////
 
-        checkDiff(1.0 - (maskMat5 | maskMat5), -maskMat4);
-        checkDiff((maskMat4 | maskMat4) * 1.0 + 1.0, maskMat5);
-        checkDiff(1.0 + (maskMat4 | maskMat4) * 1.0, maskMat5);
-        checkDiff((maskMat5 | maskMat5) * 1.0 - 1.0, maskMat4);
-        checkDiff(5.0 - (maskMat4 | maskMat4) * 1.0, maskMat1);
-        checkDiff((maskMat4 | maskMat4) * 1.0 + 0.5 + 0.5, maskMat5);
-        checkDiff(0.5 + ((maskMat4 | maskMat4) * 1.0 + 0.5), maskMat5);
-        checkDiff(((maskMat4 | maskMat4) * 1.0 + 2.0) - 1.0, maskMat5);
-        checkDiff(5.0 - ((maskMat1 | maskMat1) * 1.0 + 3.0), maskMat1);
-        checkDiff( ( (maskMat1 | maskMat1) * 2.0 + 2.0) * 1.25, maskMat5);
-        checkDiff( 1.25 * ( (maskMat1 | maskMat1) * 2.0 + 2.0), maskMat5);
-        checkDiff( -( (maskMat1 | maskMat1) * (-2.0) + 1.0), maskMat1);      
-        checkDiff( maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0, maskMat5);         
-        checkDiff( 1.0 + (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
-        checkDiff( (maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0) - 1.0, maskMat4);         
-        checkDiff(5.0 -  (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat1);         
-        checkDiff((maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0)*1.25, maskMat5);         
-        checkDiff(1.25 * (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
-        checkDiff(-(maskMat1 * 2.0 + maskMat4 * (-1) + 1.0), maskMat1);         
-        checkDiff((maskMat1 * 1.0 + maskMat4), maskMat5);         
-        checkDiff((maskMat4 + maskMat1 * 1.0), maskMat5);         
-        checkDiff((maskMat1 * 3.0 + 1.0) + maskMat1, maskMat5);         
-        checkDiff(maskMat1 + (maskMat1 * 3.0 + 1.0), maskMat5);         
-        checkDiff(maskMat1*4.0 + (maskMat1 | maskMat1), maskMat5);         
-        checkDiff((maskMat1 | maskMat1) + maskMat1*4.0, maskMat5);         
-        checkDiff((maskMat1*3.0 + 1.0) + (maskMat1 | maskMat1), maskMat5);         
-        checkDiff((maskMat1 | maskMat1) + (maskMat1*3.0 + 1.0), maskMat5);
-        checkDiff(maskMat1*4.0 + maskMat4*2.0, maskMat1 * 12);
-        checkDiff((maskMat1*3.0 + 1.0) + maskMat4*2.0, maskMat1 * 12);
-        checkDiff(maskMat4*2.0 + (maskMat1*3.0 + 1.0), maskMat1 * 12);
-        checkDiff((maskMat1*3.0 + 1.0) + (maskMat1*2.0 + 2.0), maskMat1 * 8);
+        CHECK_DIFF(1.0 - (maskMat5 | maskMat5), -maskMat4);
+        CHECK_DIFF((maskMat4 | maskMat4) * 1.0 + 1.0, maskMat5);
+        CHECK_DIFF(1.0 + (maskMat4 | maskMat4) * 1.0, maskMat5);
+        CHECK_DIFF((maskMat5 | maskMat5) * 1.0 - 1.0, maskMat4);
+        CHECK_DIFF(5.0 - (maskMat4 | maskMat4) * 1.0, maskMat1);
+        CHECK_DIFF((maskMat4 | maskMat4) * 1.0 + 0.5 + 0.5, maskMat5);
+        CHECK_DIFF(0.5 + ((maskMat4 | maskMat4) * 1.0 + 0.5), maskMat5);
+        CHECK_DIFF(((maskMat4 | maskMat4) * 1.0 + 2.0) - 1.0, maskMat5);
+        CHECK_DIFF(5.0 - ((maskMat1 | maskMat1) * 1.0 + 3.0), maskMat1);
+        CHECK_DIFF( ( (maskMat1 | maskMat1) * 2.0 + 2.0) * 1.25, maskMat5);
+        CHECK_DIFF( 1.25 * ( (maskMat1 | maskMat1) * 2.0 + 2.0), maskMat5);
+        CHECK_DIFF( -( (maskMat1 | maskMat1) * (-2.0) + 1.0), maskMat1);      
+        CHECK_DIFF( maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0, maskMat5);         
+        CHECK_DIFF( 1.0 + (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
+        CHECK_DIFF( (maskMat1 * 1.0 + maskMat4 * 0.5 + 2.0) - 1.0, maskMat4);         
+        CHECK_DIFF(5.0 -  (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat1);         
+        CHECK_DIFF((maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0)*1.25, maskMat5);         
+        CHECK_DIFF(1.25 * (maskMat1 * 1.0 + maskMat4 * 0.5 + 1.0), maskMat5);         
+        CHECK_DIFF(-(maskMat1 * 2.0 + maskMat4 * (-1) + 1.0), maskMat1);         
+        CHECK_DIFF((maskMat1 * 1.0 + maskMat4), maskMat5);         
+        CHECK_DIFF((maskMat4 + maskMat1 * 1.0), maskMat5);         
+        CHECK_DIFF((maskMat1 * 3.0 + 1.0) + maskMat1, maskMat5);         
+        CHECK_DIFF(maskMat1 + (maskMat1 * 3.0 + 1.0), maskMat5);         
+        CHECK_DIFF(maskMat1*4.0 + (maskMat1 | maskMat1), maskMat5);         
+        CHECK_DIFF((maskMat1 | maskMat1) + maskMat1*4.0, maskMat5);         
+        CHECK_DIFF((maskMat1*3.0 + 1.0) + (maskMat1 | maskMat1), maskMat5);         
+        CHECK_DIFF((maskMat1 | maskMat1) + (maskMat1*3.0 + 1.0), maskMat5);
+        CHECK_DIFF(maskMat1*4.0 + maskMat4*2.0, maskMat1 * 12);
+        CHECK_DIFF((maskMat1*3.0 + 1.0) + maskMat4*2.0, maskMat1 * 12);
+        CHECK_DIFF(maskMat4*2.0 + (maskMat1*3.0 + 1.0), maskMat1 * 12);
+        CHECK_DIFF((maskMat1*3.0 + 1.0) + (maskMat1*2.0 + 2.0), maskMat1 * 8);
                                                      
-        checkDiff(maskMat5*1.0 - maskMat4, maskMat1);
-        checkDiff(maskMat5 - maskMat1 * 4.0, maskMat1);
-        checkDiff((maskMat4 * 1.0 + 4.0)- maskMat4, maskMat4);
-        //FIXME checkDiff(maskMat5 - (maskMat1 * 2.0 + 2.0), maskMat1);
-        checkDiff(maskMat5*1.0 - (maskMat4 | maskMat4), maskMat1);
-        checkDiff((maskMat5 | maskMat5) - maskMat1 * 4.0, maskMat1);                
-        checkDiff((maskMat4 * 1.0 + 4.0)- (maskMat4 | maskMat4), maskMat4);
-        //FIXME checkDiff((maskMat5 | maskMat5) - (maskMat1 * 2.0 + 2.0), maskMat1);
-        checkDiff(maskMat1*5.0 - maskMat4 * 1.0, maskMat1);
-        checkDiff((maskMat1*5.0 + 3.0)- maskMat4 * 1.0, maskMat4);
-        checkDiff(maskMat4 * 2.0 - (maskMat1*4.0 + 3.0), maskMat1);
-        checkDiff((maskMat1 * 2.0 + 3.0) - (maskMat1*3.0 + 1.0), maskMat1);
+        CHECK_DIFF(maskMat5*1.0 - maskMat4, maskMat1);
+        CHECK_DIFF(maskMat5 - maskMat1 * 4.0, maskMat1);
+        CHECK_DIFF((maskMat4 * 1.0 + 4.0)- maskMat4, maskMat4);
+        CHECK_DIFF(maskMat5 - (maskMat1 * 2.0 + 2.0), maskMat1);
+        CHECK_DIFF(maskMat5*1.0 - (maskMat4 | maskMat4), maskMat1);
+        CHECK_DIFF((maskMat5 | maskMat5) - maskMat1 * 4.0, maskMat1);                
+        CHECK_DIFF((maskMat4 * 1.0 + 4.0)- (maskMat4 | maskMat4), maskMat4);
+        CHECK_DIFF((maskMat5 | maskMat5) - (maskMat1 * 2.0 + 2.0), maskMat1);
+        CHECK_DIFF(maskMat1*5.0 - maskMat4 * 1.0, maskMat1);
+        CHECK_DIFF((maskMat1*5.0 + 3.0)- maskMat4 * 1.0, maskMat4);
+        CHECK_DIFF(maskMat4 * 2.0 - (maskMat1*4.0 + 3.0), maskMat1);
+        CHECK_DIFF((maskMat1 * 2.0 + 3.0) - (maskMat1*3.0 + 1.0), maskMat1);
 
-        checkDiff((maskMat5 - maskMat4)* 4.0, maskMat4);
-        checkDiff(4.0 * (maskMat5 - maskMat4), maskMat4);
+        CHECK_DIFF((maskMat5 - maskMat4)* 4.0, maskMat4);
+        CHECK_DIFF(4.0 * (maskMat5 - maskMat4), maskMat4);
         
-        //FIXME checkDiff(-(maskMat4 | maskMat4 - maskMat5 | maskMat5), maskMat1);
+        CHECK_DIFF(-((maskMat4 | maskMat4) - (maskMat5 | maskMat5)), maskMat1);
 
-        checkDiff(4.0 * (maskMat1 | maskMat1), maskMat4);
-        checkDiff((maskMat4 | maskMat4)/4.0, maskMat1);
+        CHECK_DIFF(4.0 * (maskMat1 | maskMat1), maskMat4);
+        CHECK_DIFF((maskMat4 | maskMat4)/4.0, maskMat1);
 
-        checkDiff(2.0 * (maskMat1 * 2.0) , maskMat4);
-        checkDiff((maskMat4 / 2.0) / 2.0 , maskMat1);
-        checkDiff(-(maskMat4 - maskMat5) , maskMat1);
-        checkDiff(-((maskMat4 - maskMat5) * 1.0), maskMat1);        
+        CHECK_DIFF(2.0 * (maskMat1 * 2.0) , maskMat4);
+        CHECK_DIFF((maskMat4 / 2.0) / 2.0 , maskMat1);
+        CHECK_DIFF(-(maskMat4 - maskMat5) , maskMat1);
+        CHECK_DIFF(-((maskMat4 - maskMat5) * 1.0), maskMat1);        
                       
                                     
         /////////////////////////////
-        checkDiff(maskMat4 /  maskMat4, maskMat1);
+        CHECK_DIFF(maskMat4 /  maskMat4, maskMat1);
 
         ///// Element-wise multiplication
 
-        checkDiff(maskMat4.mul(maskMat4, 0.25), maskMat4);
-        checkDiff(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
-        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
-        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
-        checkDiff(maskMat4.mul(maskMat4) * 0.25, maskMat4);
-        checkDiff(0.25 * maskMat4.mul(maskMat4), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4, 0.25), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4 / 4), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4 / 4), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4) * 0.25, maskMat4);
+        CHECK_DIFF(0.25 * maskMat4.mul(maskMat4), maskMat4);
       
         ////// Element-wise division
 
-        checkDiff(maskMat4 / maskMat4, maskMat1);
-        checkDiff((maskMat4 & maskMat4) / (maskMat1 * 4), maskMat1);
+        CHECK_DIFF(maskMat4 / maskMat4, maskMat1);
+        CHECK_DIFF((maskMat4 & maskMat4) / (maskMat1 * 4), maskMat1);
 
-        checkDiff((maskMat4 & maskMat4) / maskMat4, maskMat1);
-        checkDiff(maskMat4 / (maskMat4 & maskMat4), maskMat1);
-        checkDiff((maskMat1 * 4) / maskMat4, maskMat1);
+        CHECK_DIFF((maskMat4 & maskMat4) / maskMat4, maskMat1);
+        CHECK_DIFF(maskMat4 / (maskMat4 & maskMat4), maskMat1);
+        CHECK_DIFF((maskMat1 * 4) / maskMat4, maskMat1);
 
-        checkDiff(maskMat4 / (maskMat1 * 4), maskMat1);
-        checkDiff((maskMat4 * 0.5 )/ (maskMat1 * 2), maskMat1);
+        CHECK_DIFF(maskMat4 / (maskMat1 * 4), maskMat1);
+        CHECK_DIFF((maskMat4 * 0.5 )/ (maskMat1 * 2), maskMat1);
 
-        checkDiff(maskMat4 / maskMat4.mul(maskMat1), maskMat1);
-        checkDiff((maskMat4 & maskMat4) / maskMat4.mul(maskMat1), maskMat1);
+        CHECK_DIFF(maskMat4 / maskMat4.mul(maskMat1), maskMat1);
+        CHECK_DIFF((maskMat4 & maskMat4) / maskMat4.mul(maskMat1), maskMat1);
 
-        checkDiff(4.0 / maskMat4, maskMat1);        
-        checkDiff(4.0 / (maskMat4 | maskMat4), maskMat1);        
-        checkDiff(4.0 / (maskMat1 * 4.0), maskMat1);
-        checkDiff(4.0 / (maskMat4 / maskMat1), maskMat1);
+        CHECK_DIFF(4.0 / maskMat4, maskMat1);        
+        CHECK_DIFF(4.0 / (maskMat4 | maskMat4), maskMat1);        
+        CHECK_DIFF(4.0 / (maskMat1 * 4.0), maskMat1);
+        CHECK_DIFF(4.0 / (maskMat4 / maskMat1), maskMat1);
 
-        m = maskMat4.clone(); m/=4.0; checkDiff(m, maskMat1);
-        m = maskMat4.clone(); m/=maskMat4; checkDiff(m, maskMat1);
-        m = maskMat4.clone(); m/=(maskMat1 * 4.0); checkDiff(m, maskMat1);
-        m = maskMat4.clone(); m/=(maskMat4 / maskMat1); checkDiff(m, maskMat1);
+        m = maskMat4.clone(); m/=4.0; CHECK_DIFF(m, maskMat1);
+        m = maskMat4.clone(); m/=maskMat4; CHECK_DIFF(m, maskMat1);
+        m = maskMat4.clone(); m/=(maskMat1 * 4.0); CHECK_DIFF(m, maskMat1);
+        m = maskMat4.clone(); m/=(maskMat4 / maskMat1); CHECK_DIFF(m, maskMat1);
       
         /////////////////////////////        
         float matrix_data[] = { 3, 1, -4, -5, 1, 0, 0, 1.1f, 1.5f};        
@@ -309,77 +317,78 @@ bool CV_OperationsTest::TestMat()
         Mat mi2 = mi * 2;
 
 
-        checkDiffF( mi2 * mt, d2 );
-        checkDiffF( mi * mt, d1 );
-        checkDiffF( mt_tr * mi_tr, d1 );
+        CHECK_DIFF_FLT( mi2 * mt, d2 );
+        CHECK_DIFF_FLT( mi * mt, d1 );
+        CHECK_DIFF_FLT( mt_tr * mi_tr, d1 );
 
-        m = mi.clone(); m*=mt;  checkDiffF(m, d1);
-        m = mi.clone(); m*= (2 * mt - mt) ;  checkDiffF(m, d1);
+        m = mi.clone(); m*=mt;  CHECK_DIFF_FLT(m, d1);
+        m = mi.clone(); m*= (2 * mt - mt) ;  CHECK_DIFF_FLT(m, d1);
 
-        //FIXME m = maskMat4.clone(); m+=(maskMat1 * 1.0); checkDiff(m, maskMat5);
-        //FIXME m = maskMat5.clone(); m-=(maskMat1 * 4.0); checkDiff(m, maskMat1);
+        m = maskMat4.clone(); m+=(maskMat1 * 1.0); CHECK_DIFF(m, maskMat5);
+        m = maskMat5.clone(); m-=(maskMat1 * 4.0); CHECK_DIFF(m, maskMat1);
 
-        m = maskMat1.clone(); m+=(maskMat1 * 3.0 + 1.0); checkDiff(m, maskMat5);
-        m = maskMat5.clone(); m-=(maskMat1 * 3.0 + 1.0); checkDiff(m, maskMat1);
-        m = mi.clone(); m+=(3.0 * mi * mt + d1); checkDiffF(m, mi + d1 * 4);
-        m = mi.clone(); m-=(3.0 * mi * mt + d1); checkDiffF(m, mi - d1 * 4);
-        m = mi.clone(); m*=(mt * 1.0); checkDiffF(m, d1);
-        m = mi.clone(); m*=(mt * 1.0 + 1.0); checkDiffF(m, d1 + mi);
-        m = mi.clone(); m*=mt_tr.t(); checkDiffF(m, d1);
+        m = maskMat1.clone(); m+=(maskMat1 * 3.0 + 1.0); CHECK_DIFF(m, maskMat5);
+        m = maskMat5.clone(); m-=(maskMat1 * 3.0 + 1.0); CHECK_DIFF(m, maskMat1);
+        m = mi.clone(); m+=(3.0 * mi * mt + d1); CHECK_DIFF_FLT(m, mi + d1 * 4);
+        m = mi.clone(); m-=(3.0 * mi * mt + d1); CHECK_DIFF_FLT(m, mi - d1 * 4);
+        m = mi.clone(); m*=(mt * 1.0); CHECK_DIFF_FLT(m, d1);
+        m = mi.clone(); m*=(mt * 1.0 + 1.0); CHECK_DIFF_FLT(m, d1 + mi);
+        m = mi.clone(); m*=mt_tr.t(); CHECK_DIFF_FLT(m, d1);
         
-        checkDiffF( (mi * 2) * mt, d2);
-        checkDiffF( mi * (2 * mt), d2);           
-        checkDiffF( mt.t() * mi_tr, d1 );
-        checkDiffF( mt_tr * mi.t(), d1 );           
-        checkDiffF( (mi * 0.4) * (mt * 5), d2);
+        CHECK_DIFF_FLT( (mi * 2) * mt, d2);
+        CHECK_DIFF_FLT( mi * (2 * mt), d2);           
+        CHECK_DIFF_FLT( mt.t() * mi_tr, d1 );
+        CHECK_DIFF_FLT( mt_tr * mi.t(), d1 );           
+        CHECK_DIFF_FLT( (mi * 0.4) * (mt * 5), d2);
 
-        checkDiffF( mt.t() * (mi_tr * 2), d2 );
-        checkDiffF( (mt_tr * 2) * mi.t(), d2 );           
+        CHECK_DIFF_FLT( mt.t() * (mi_tr * 2), d2 );
+        CHECK_DIFF_FLT( (mt_tr * 2) * mi.t(), d2 );           
 
-        checkDiffF(mt.t() * mi.t(), d1);
-        checkDiffF( (mi * mt) * 2.0, d2);
-        checkDiffF( 2.0 * (mi * mt), d2);
-        checkDiffF( -(mi * mt), -d1);
+        CHECK_DIFF_FLT(mt.t() * mi.t(), d1);
+        CHECK_DIFF_FLT( (mi * mt) * 2.0, d2);
+        CHECK_DIFF_FLT( 2.0 * (mi * mt), d2);
+        CHECK_DIFF_FLT( -(mi * mt), -d1);
 
-        //FIXME checkDiffF( (mi * mt) / 2.0, d1 / 2);
+        CHECK_DIFF_FLT( (mi * mt) / 2.0, d1 / 2);
 
         Mat mt_mul_2_plus_1;
         gemm(mt, d1, 2, Mat::ones(3, 3, CV_32F), 1, mt_mul_2_plus_1);
         
-        checkDiff( (mt * 2.0 + 1.0) * mi, mt_mul_2_plus_1 * mi);        // (A*alpha + beta)*B
-        checkDiff( mi * (mt * 2.0 + 1.0), mi * mt_mul_2_plus_1);        // A*(B*alpha + beta)            
-        checkDiff( (mt * 2.0 + 1.0) * (mi * 2), mt_mul_2_plus_1 * mi2); // (A*alpha + beta)*(B*gamma)
-        checkDiff( (mi *2)* (mt * 2.0 + 1.0), mi2 * mt_mul_2_plus_1);   // (A*gamma)*(B*alpha + beta)
-        checkDiff( (mt * 2.0 + 1.0) * mi.t(), mt_mul_2_plus_1 * mi_tr); // (A*alpha + beta)*B^t
-        checkDiff( mi.t() * (mt * 2.0 + 1.0), mi_tr * mt_mul_2_plus_1); // A^t*(B*alpha + beta)
+        CHECK_DIFF( (mt * 2.0 + 1.0) * mi, mt_mul_2_plus_1 * mi);        // (A*alpha + beta)*B
+        CHECK_DIFF( mi * (mt * 2.0 + 1.0), mi * mt_mul_2_plus_1);        // A*(B*alpha + beta)            
+        CHECK_DIFF( (mt * 2.0 + 1.0) * (mi * 2), mt_mul_2_plus_1 * mi2); // (A*alpha + beta)*(B*gamma)
+        CHECK_DIFF( (mi *2)* (mt * 2.0 + 1.0), mi2 * mt_mul_2_plus_1);   // (A*gamma)*(B*alpha + beta)
+        CHECK_DIFF( (mt * 2.0 + 1.0) * mi.t(), mt_mul_2_plus_1 * mi_tr); // (A*alpha + beta)*B^t
+        CHECK_DIFF( mi.t() * (mt * 2.0 + 1.0), mi_tr * mt_mul_2_plus_1); // A^t*(B*alpha + beta)
 
-        checkDiffF( (mi * mt + d2)*5, d1 * 3 * 5);
-        checkDiffF( mi * mt + d2, d1 * 3);
-        checkDiffF( -(mi * mt) + d2, d1);
-        checkDiffF( (mi * mt) + d1, d2);
-        checkDiffF( d1 + (mi * mt), d2);
-        checkDiffF( (mi * mt) - d2, -d1);
-        checkDiffF( d2 - (mi * mt), d1);
+        CHECK_DIFF_FLT( (mi * mt + d2)*5, d1 * 3 * 5);
+        CHECK_DIFF_FLT( mi * mt + d2, d1 * 3);
+        CHECK_DIFF_FLT( -(mi * mt) + d2, d1);
+        CHECK_DIFF_FLT( (mi * mt) + d1, d2);
+        CHECK_DIFF_FLT( d1 + (mi * mt), d2);
+        CHECK_DIFF_FLT( (mi * mt) - d2, -d1);
+        CHECK_DIFF_FLT( d2 - (mi * mt), d1);
 
-        checkDiffF( (mi * mt) + d2 * 0.5, d2);
-        checkDiffF( d2 * 0.5 + (mi * mt), d2);
-        checkDiffF( (mi * mt) - d1 * 2, -d1);
-        checkDiffF( d1 * 2 - (mi * mt), d1);      
+        CHECK_DIFF_FLT( (mi * mt) + d2 * 0.5, d2);
+        CHECK_DIFF_FLT( d2 * 0.5 + (mi * mt), d2);
+        CHECK_DIFF_FLT( (mi * mt) - d1 * 2, -d1);
+        CHECK_DIFF_FLT( d1 * 2 - (mi * mt), d1);      
 
-        checkDiffF( (mi * mt) + mi.t(), mi_tr + d1);
-        checkDiffF( mi.t() + (mi * mt), mi_tr + d1);
-        checkDiffF( (mi * mt) - mi.t(), d1 - mi_tr);
-        checkDiffF( mi.t() - (mi * mt), mi_tr - d1);
+        CHECK_DIFF_FLT( (mi * mt) + mi.t(), mi_tr + d1);
+        CHECK_DIFF_FLT( mi.t() + (mi * mt), mi_tr + d1);
+        CHECK_DIFF_FLT( (mi * mt) - mi.t(), d1 - mi_tr);
+        CHECK_DIFF_FLT( mi.t() - (mi * mt), mi_tr - d1);
 
-        checkDiffF( 2.0 *(mi * mt + d2), d1 * 6);
-        checkDiffF( -(mi * mt + d2), d1 * -3);
+        CHECK_DIFF_FLT( 2.0 *(mi * mt + d2), d1 * 6);
+        CHECK_DIFF_FLT( -(mi * mt + d2), d1 * -3);
 
-        checkDiffF(mt.inv() * mt, d1);
+        CHECK_DIFF_FLT(mt.inv() * mt, d1);
 
-        checkDiffF(mt.inv() * (2*mt - mt), d1);               
+        CHECK_DIFF_FLT(mt.inv() * (2*mt - mt), d1);               
     }
-    catch (const test_excep&)
+    catch (const test_excep& e)
     {
+        ts->printf(CvTS::LOG, "%s\n", e.s.c_str());
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
     }
@@ -402,11 +411,12 @@ bool CV_OperationsTest::SomeMatFunctions()
         Mat bgr_exp( rgba.size(), CV_8UC3, Scalar(3,2,1));
         Mat alpha_exp( rgba.size(), CV_8UC1, Scalar(4));
 
-        checkDiff(bgr_exp, bgr);      
-        checkDiff(alpha_exp, alpha);      
+        CHECK_DIFF(bgr_exp, bgr);      
+        CHECK_DIFF(alpha_exp, alpha);      
     }
-    catch (const test_excep&)
+    catch (const test_excep& e)
     {
+        ts->printf(CvTS::LOG, "%s\n", e.s.c_str());
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
     }
@@ -438,8 +448,8 @@ bool CV_OperationsTest::TestTemplateMat()
         add(res2, Mat(2, 1, CV_32F, shift), res2);
         
         gemm(rot_2x3, one_3x1, 1, shi_2x1, 0, resS2, 0);
-        checkDiff(res, res2);        
-        checkDiff(resS, resS2);
+        CHECK_DIFF(res, res2);        
+        CHECK_DIFF(resS, resS2);
 
             
         Mat_<float> mat4x4(4, 4);
@@ -448,108 +458,108 @@ bool CV_OperationsTest::TestTemplateMat()
         Mat_<float> roi1 = mat4x4(Rect(Point(1, 1), Size(2, 2)));
         Mat_<float> roi2 = mat4x4(Range(1, 3), Range(1, 3));
         
-        checkDiff(roi1, roi2);
-        checkDiff(mat4x4, mat4x4(Rect(Point(0,0), mat4x4.size())));        
+        CHECK_DIFF(roi1, roi2);
+        CHECK_DIFF(mat4x4, mat4x4(Rect(Point(0,0), mat4x4.size())));        
 
         Mat_<int> intMat10(3, 3, 10);
         Mat_<int> intMat11(3, 3, 11);
         Mat_<uchar> resMat(3, 3, 255);
                 
-        checkDiff(resMat, intMat10 == intMat10);
-        checkDiff(resMat, intMat10 <  intMat11);
-        checkDiff(resMat, intMat11 >  intMat10);
-        checkDiff(resMat, intMat10 <= intMat11);
-        checkDiff(resMat, intMat11 >= intMat10);
+        CHECK_DIFF(resMat, intMat10 == intMat10);
+        CHECK_DIFF(resMat, intMat10 <  intMat11);
+        CHECK_DIFF(resMat, intMat11 >  intMat10);
+        CHECK_DIFF(resMat, intMat10 <= intMat11);
+        CHECK_DIFF(resMat, intMat11 >= intMat10);
 
-        checkDiff(resMat, intMat10 == 10.0);
-        checkDiff(resMat, intMat10 <  11.0);
-        checkDiff(resMat, intMat11 >  10.0);
-        checkDiff(resMat, intMat10 <= 11.0);
-        checkDiff(resMat, intMat11 >= 10.0);
+        CHECK_DIFF(resMat, intMat10 == 10.0);
+        CHECK_DIFF(resMat, intMat10 <  11.0);
+        CHECK_DIFF(resMat, intMat11 >  10.0);
+        CHECK_DIFF(resMat, intMat10 <= 11.0);
+        CHECK_DIFF(resMat, intMat11 >= 10.0);
 
         Mat_<uchar> maskMat4(3, 3, 4);
         Mat_<uchar> maskMat1(3, 3, 1);
         Mat_<uchar> maskMat5(3, 3, 5);
         Mat_<uchar> maskMat0(3, 3, (uchar)0);
 
-        checkDiff(maskMat0, maskMat4 & maskMat1);        
-        checkDiff(maskMat0, Scalar(1) & maskMat4);
-        checkDiff(maskMat0, maskMat4 & Scalar(1));
+        CHECK_DIFF(maskMat0, maskMat4 & maskMat1);        
+        CHECK_DIFF(maskMat0, Scalar(1) & maskMat4);
+        CHECK_DIFF(maskMat0, maskMat4 & Scalar(1));
                         
         Mat_<uchar> m;
-        m = maskMat4.clone(); m&=maskMat1; checkDiff(maskMat0, m);
-        m = maskMat4.clone(); m&=Scalar(1); checkDiff(maskMat0, m);
+        m = maskMat4.clone(); m&=maskMat1; CHECK_DIFF(maskMat0, m);
+        m = maskMat4.clone(); m&=Scalar(1); CHECK_DIFF(maskMat0, m);
 
-        m = maskMat4.clone(); m|=maskMat1; checkDiff(maskMat5, m);
-        m = maskMat4.clone(); m^=maskMat1; checkDiff(maskMat5, m);
+        m = maskMat4.clone(); m|=maskMat1; CHECK_DIFF(maskMat5, m);
+        m = maskMat4.clone(); m^=maskMat1; CHECK_DIFF(maskMat5, m);
         
-        checkDiff(maskMat0, (maskMat4 | maskMat4) & (maskMat1 | maskMat1));
-        checkDiff(maskMat0, (maskMat4 | maskMat4) & maskMat1);
-        checkDiff(maskMat0, maskMat4 & (maskMat1 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 | maskMat4) & (maskMat1 | maskMat1));
+        CHECK_DIFF(maskMat0, (maskMat4 | maskMat4) & maskMat1);
+        CHECK_DIFF(maskMat0, maskMat4 & (maskMat1 | maskMat1));
 
-        checkDiff(maskMat0, maskMat5 ^ (maskMat4 | maskMat1));
-        checkDiff(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
+        CHECK_DIFF(maskMat0, maskMat5 ^ (maskMat4 | maskMat1));
+        CHECK_DIFF(maskMat0, Scalar(5) ^ (maskMat4 | Scalar(1)));
 
-        checkDiff(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
-        checkDiff(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
+        CHECK_DIFF(maskMat5, maskMat5 | (maskMat4 ^ maskMat1));
+        CHECK_DIFF(maskMat5, maskMat5 | (maskMat4 ^ Scalar(1)));
 
-        checkDiff(~maskMat1, maskMat1 ^ 0xFF);
-        checkDiff(~(maskMat1 | maskMat1), maskMat1 ^ 0xFF); 
+        CHECK_DIFF(~maskMat1, maskMat1 ^ 0xFF);
+        CHECK_DIFF(~(maskMat1 | maskMat1), maskMat1 ^ 0xFF); 
 
-        checkDiff(maskMat1 + maskMat4, maskMat5);
-        checkDiff(maskMat1 + Scalar(4), maskMat5);
-        checkDiff(Scalar(4) + maskMat1, maskMat5);
-        checkDiff(Scalar(4) + (maskMat1 & maskMat1), maskMat5);
+        CHECK_DIFF(maskMat1 + maskMat4, maskMat5);
+        CHECK_DIFF(maskMat1 + Scalar(4), maskMat5);
+        CHECK_DIFF(Scalar(4) + maskMat1, maskMat5);
+        CHECK_DIFF(Scalar(4) + (maskMat1 & maskMat1), maskMat5);
 
-        checkDiff(maskMat1 + 4.0, maskMat5);
-        checkDiff((maskMat1 & 0xFF) + 4.0, maskMat5);
-        checkDiff(4.0 + maskMat1, maskMat5);
+        CHECK_DIFF(maskMat1 + 4.0, maskMat5);
+        CHECK_DIFF((maskMat1 & 0xFF) + 4.0, maskMat5);
+        CHECK_DIFF(4.0 + maskMat1, maskMat5);
 
-        m = maskMat4.clone(); m+=Scalar(1); checkDiff(m, maskMat5);
-        m = maskMat4.clone(); m+=maskMat1; checkDiff(m, maskMat5);
-        m = maskMat4.clone(); m+=(maskMat1 | maskMat1); checkDiff(m, maskMat5);
+        m = maskMat4.clone(); m+=Scalar(1); CHECK_DIFF(m, maskMat5);
+        m = maskMat4.clone(); m+=maskMat1; CHECK_DIFF(m, maskMat5);
+        m = maskMat4.clone(); m+=(maskMat1 | maskMat1); CHECK_DIFF(m, maskMat5);
 
-        checkDiff(maskMat5 - maskMat1, maskMat4);
-        checkDiff(maskMat5 - Scalar(1), maskMat4);
-        checkDiff((maskMat5 | maskMat5) - Scalar(1), maskMat4);
-        checkDiff(maskMat5 - 1, maskMat4);
-        checkDiff((maskMat5 | maskMat5) - 1, maskMat4);
-        checkDiff((maskMat5 | maskMat5) - (maskMat1 | maskMat1), maskMat4);
+        CHECK_DIFF(maskMat5 - maskMat1, maskMat4);
+        CHECK_DIFF(maskMat5 - Scalar(1), maskMat4);
+        CHECK_DIFF((maskMat5 | maskMat5) - Scalar(1), maskMat4);
+        CHECK_DIFF(maskMat5 - 1, maskMat4);
+        CHECK_DIFF((maskMat5 | maskMat5) - 1, maskMat4);
+        CHECK_DIFF((maskMat5 | maskMat5) - (maskMat1 | maskMat1), maskMat4);
 
-        checkDiff(maskMat1, min(maskMat1, maskMat5));
-        checkDiff(maskMat5, max(maskMat1, maskMat5));
+        CHECK_DIFF(maskMat1, min(maskMat1, maskMat5));
+        CHECK_DIFF(maskMat5, max(maskMat1, maskMat5));
         
-        m = maskMat5.clone(); m-=Scalar(1); checkDiff(m, maskMat4);
-        m = maskMat5.clone(); m-=maskMat1; checkDiff(m, maskMat4);
-        m = maskMat5.clone(); m-=(maskMat1 | maskMat1); checkDiff(m, maskMat4);
+        m = maskMat5.clone(); m-=Scalar(1); CHECK_DIFF(m, maskMat4);
+        m = maskMat5.clone(); m-=maskMat1; CHECK_DIFF(m, maskMat4);
+        m = maskMat5.clone(); m-=(maskMat1 | maskMat1); CHECK_DIFF(m, maskMat4);
 
-        m = maskMat4.clone(); m |= Scalar(1); checkDiff(maskMat5, m);
-        m = maskMat5.clone(); m ^= Scalar(1); checkDiff(maskMat4, m);
+        m = maskMat4.clone(); m |= Scalar(1); CHECK_DIFF(maskMat5, m);
+        m = maskMat5.clone(); m ^= Scalar(1); CHECK_DIFF(maskMat4, m);
 
-        checkDiff(maskMat1, maskMat4/4.0);       
+        CHECK_DIFF(maskMat1, maskMat4/4.0);       
 
         Mat_<float> negf(3, 3, -3.0);                
         Mat_<float> posf = -negf;
         Mat_<float> posf2 = posf * 2;
         Mat_<int> negi(3, 3, -3);        
 
-        checkDiff(abs(negf), -negf);         
-        checkDiff(abs(posf - posf2), -negf);         
-        //FIXME checkDiff(abs(negi), -(negi & negi));
+        CHECK_DIFF(abs(negf), -negf);         
+        CHECK_DIFF(abs(posf - posf2), -negf);         
+        CHECK_DIFF(abs(negi), -(negi & negi));
 
-        checkDiff(5.0 - maskMat4, maskMat1);
+        CHECK_DIFF(5.0 - maskMat4, maskMat1);
         
 
-        checkDiff(maskMat4.mul(maskMat4, 0.25), maskMat4);
-        checkDiff(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
-        checkDiff(maskMat4.mul(maskMat4 / 4), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4, 0.25), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat1 * 4, 0.25), maskMat4);
+        CHECK_DIFF(maskMat4.mul(maskMat4 / 4), maskMat4);
 
           
         ////// Element-wise division
 
-        checkDiff(maskMat4 / maskMat4, maskMat1);
-        checkDiff(4.0 / maskMat4, maskMat1);
-        m = maskMat4.clone(); m/=4.0; checkDiff(m, maskMat1);
+        CHECK_DIFF(maskMat4 / maskMat4, maskMat1);
+        CHECK_DIFF(4.0 / maskMat4, maskMat1);
+        m = maskMat4.clone(); m/=4.0; CHECK_DIFF(m, maskMat1);
         
         ////////////////////////////////
 
@@ -572,9 +582,9 @@ bool CV_OperationsTest::TestTemplateMat()
 
         if (sum != 0) throw test_excep();
 
-        checkDiff(negi.col(1), negi.col(2));
-        checkDiff(negi.row(1), negi.row(2));
-        checkDiff(negi.col(1), negi.diag());
+        CHECK_DIFF(negi.col(1), negi.col(2));
+        CHECK_DIFF(negi.row(1), negi.row(2));
+        CHECK_DIFF(negi.col(1), negi.diag());
         
         if (Mat_<Point2f>(1, 1).elemSize1() != sizeof(float)) throw test_excep();
         if (Mat_<Point2f>(1, 1).elemSize() != 2 * sizeof(float)) throw test_excep();
@@ -583,32 +593,31 @@ bool CV_OperationsTest::TestTemplateMat()
         if (Mat_<int>(1, 1).depth() != CV_32S) throw test_excep();
         if (Mat_<double>(1, 1).depth() != CV_64F) throw test_excep();
         if (Mat_<Point3d>(1, 1).depth() != CV_64F) throw test_excep();        
-        //FIXME if (Mat_<char>(1, 1).depth() != CV_8S) throw test_excep();
+        if (Mat_<signed char>(1, 1).depth() != CV_8S) throw test_excep();
         if (Mat_<unsigned short>(1, 1).depth() != CV_16U) throw test_excep();
         if (Mat_<unsigned short>(1, 1).channels() != 1) throw test_excep();
         if (Mat_<Point2f>(1, 1).channels() != 2) throw test_excep();
         if (Mat_<Point3f>(1, 1).channels() != 3) throw test_excep();
         if (Mat_<Point3d>(1, 1).channels() != 3) throw test_excep();
 
-        Mat_<uchar> eye = Mat_<uchar>::zeros(2, 2);  checkDiff(Mat_<uchar>::zeros(Size(2, 2)), eye);
+        Mat_<uchar> eye = Mat_<uchar>::zeros(2, 2);  CHECK_DIFF(Mat_<uchar>::zeros(Size(2, 2)), eye);
         eye.at<uchar>(Point(0,0)) = 1; eye.at<uchar>(1, 1) = 1;
                 
-        checkDiff(Mat_<uchar>::eye(2, 2), eye);
-        checkDiff(eye, Mat_<uchar>::eye(Size(2,2)));        
+        CHECK_DIFF(Mat_<uchar>::eye(2, 2), eye);
+        CHECK_DIFF(eye, Mat_<uchar>::eye(Size(2,2)));        
         
         Mat_<uchar> ones(2, 2, (uchar)1);
-        checkDiff(ones, Mat_<uchar>::ones(Size(2,2)));
-        checkDiff(Mat_<uchar>::ones(2, 2), ones);
+        CHECK_DIFF(ones, Mat_<uchar>::ones(Size(2,2)));
+        CHECK_DIFF(Mat_<uchar>::ones(2, 2), ones);
 
-        //FIXME Mat_<Point2f> pntMat(2, 2, Point2f(1, 0));
-        //FIXME if(pntMat.stepT() != 2) throw test_excep();
-        //FIXME if(pntMat.stepT() != 4) throw test_excep();
+        Mat_<Point2f> pntMat(2, 2, Point2f(1, 0));
+        if(pntMat.stepT() != 2) throw test_excep();
 
         uchar uchar_data[] = {1, 0, 0, 1};
 
         Mat_<uchar> matFromData(1, 4, uchar_data);
         const Mat_<uchar> mat2 = matFromData.clone();
-        checkDiff(matFromData, eye.reshape(1));
+        CHECK_DIFF(matFromData, eye.reshape(1));
         if (matFromData(Point(0,0)) != uchar_data[0])throw test_excep();
         if (mat2(Point(0,0)) != uchar_data[0]) throw test_excep();
 
@@ -647,16 +656,17 @@ bool CV_OperationsTest::TestTemplateMat()
         Mat_<float> mi_tr = mi.t();
         Mat_<float> mi2 = mi * 2;
 
-        checkDiffF( mi2 * mt, d2 );
-        checkDiffF( mi * mt, d1 );
-        checkDiffF( mt_tr * mi_tr, d1 );
+        CHECK_DIFF_FLT( mi2 * mt, d2 );
+        CHECK_DIFF_FLT( mi * mt, d1 );
+        CHECK_DIFF_FLT( mt_tr * mi_tr, d1 );
 
         Mat_<float> mf;
-        mf = mi.clone(); mf*=mt;  checkDiffF(mf, d1);
+        mf = mi.clone(); mf*=mt;  CHECK_DIFF_FLT(mf, d1);
 
     }
-    catch (const test_excep&)
+    catch (const test_excep& e)
     {
+        ts->printf(CvTS::LOG, "%s\n", e.s.c_str());
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
         return false;
     }

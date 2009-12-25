@@ -2132,7 +2132,7 @@ void scaleAdd( const Mat& src1, double alpha, const Mat& src2, Mat& dst )
         }
     }
     else
-        CV_Error( CV_StsUnsupportedFormat, "" );
+        addWeighted(src1, alpha, src2, 1, 0, dst);
 }
 
 /****************************************************************************************\

@@ -449,6 +449,7 @@ public:
     typedef _Tp value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -460,6 +461,7 @@ public:
     typedef bool value_type;
     typedef int work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -471,6 +473,7 @@ public:
     typedef uchar value_type;
     typedef int work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -482,6 +485,7 @@ public:
     typedef schar value_type;
     typedef int work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -493,6 +497,7 @@ public:
     typedef ushort value_type;
     typedef int work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -504,6 +509,7 @@ public:
     typedef short value_type;
     typedef int work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -515,6 +521,7 @@ public:
     typedef int value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -526,6 +533,7 @@ public:
     typedef float value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -537,6 +545,7 @@ public:
     typedef double value_type;
     typedef value_type work_type;
     typedef value_type channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = 1,
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -548,6 +557,7 @@ public:
     typedef Vec<_Tp, cn> value_type;
     typedef Vec<typename DataType<_Tp>::work_type, cn> work_type;
     typedef _Tp channel_type;
+    typedef value_type vec_type;
     enum { depth = DataDepth<channel_type>::value, channels = cn,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
@@ -562,6 +572,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Complex<_Tp> >
@@ -573,6 +584,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Point_<_Tp> >
@@ -584,6 +596,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Point3_<_Tp> >
@@ -595,6 +608,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 3,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Size_<_Tp> >
@@ -606,6 +620,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Rect_<_Tp> >
@@ -617,6 +632,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 4,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<typename _Tp> class DataType<Scalar_<_Tp> >
@@ -628,6 +644,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 4,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
 template<> class DataType<Range>
@@ -639,6 +656,7 @@ public:
     enum { depth = DataDepth<channel_type>::value, channels = 2,
            fmt = ((channels-1)<<8) + DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
+    typedef Vec<channel_type, channels> vec_type;
 };
 
     

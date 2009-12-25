@@ -617,7 +617,8 @@ template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const Mat_& m)
 
 template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const _Tp& s)
 {
-    Mat::operator=(Scalar(s));
+    typedef typename DataType<_Tp>::vec_type VT;
+    Mat::operator=(Scalar((const VT&)s));
     return *this;
 }
 
@@ -1413,13 +1414,19 @@ operator * (const MatExpr_<A, M>& a, double alpha)
 template<typename A, typename M> static inline
 MatExpr_<MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> >, M>
 operator * (double alpha, const MatExpr_<A, M>& a)
-{ return a*alpha; }
+{
+    typedef MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a, alpha));
+}
 
 // E/alpha
 template<typename A, typename M> static inline
 MatExpr_<MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> >, M>
 operator / (const MatExpr_<A, M>& a, double alpha)
-{ return a*(1./alpha); }
+{
+    typedef MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp((M)a, (1./alpha)));
+}
 
 // (E*alpha)*beta ~ E*(alpha*beta)
 template<typename A, typename M> static inline
@@ -1444,9 +1451,9 @@ operator / (const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a
 
 // -E ~ E*(-1)
 template<typename A, typename M> static inline
-MatExpr_<MatExpr_Op2_<MatExpr_<A, M>, double, M, MatOp_Scale_<Mat> >, M>
+MatExpr_<MatExpr_Op2_<M, double, M, MatOp_Scale_<Mat> >, M>
 operator - (const MatExpr_<A, M>& a)
-{ return a*(-1); }
+{ return a*(-1.); }
 
 // -(E*alpha) ~ E*(-alpha)
 template<typename A, typename M> static inline
@@ -1830,7 +1837,7 @@ operator - (const M& b,
             const MatExpr_<MatExpr_Op3_<A, double, double, M, MatOp_ScaleAddS_<Mat> >, M>& a)
 {
     typedef MatExpr_Op5_<A, double, M, double, double, M, MatOp_AddEx_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a.e.a1, a.e.a2, b, -1, a.e.a3));
+    return MatExpr_<MatExpr_Temp, M>(MatExpr_Temp(a.e.a1, -a.e.a2, b, 1, -a.e.a3));
 }
 
 // A*alpha - E
@@ -2393,7 +2400,7 @@ M& operator += (const M& a,
                 const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& b)
 {
     M& _a = (M&)a;
-    scaleAdd( b.e.a1, Scalar(b.e.a2), _a, _a );
+    scaleAdd( b.e.a1, b.e.a2, _a, _a );
     return _a;
 }
 
@@ -2402,7 +2409,7 @@ M& operator -= (const M& a,
                 const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& b)
 {
     M& _a = (M&)a;
-    scaleAdd( b.e.a1, -Scalar(b.e.a2), _a, _a );
+    scaleAdd( b.e.a1, -b.e.a2, _a, _a );
     return _a;
 }
 
@@ -2948,12 +2955,6 @@ abs(const Mat_<_Tp>& a, const Mat_<_Tp>& b)
         a, Scalar(0), 'a'));
 }
 
-// max(A, B)
-template<typename A, typename B, typename M> static inline
-MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Bin_<Mat> >, M>
-max(const MatExpr_<A, M>& a, const MatExpr_<B, M>& b)
-{ return max((M)a, (M)b); }
-
 template<typename A, typename M> static inline
 MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Bin_<Mat> >, M>
 max(const MatExpr_<A, M>& a, const M& b)
@@ -2963,12 +2964,6 @@ template<typename A, typename M> static inline
 MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Bin_<Mat> >, M>
 max(const M& a, const MatExpr_<A, M>& b)
 { return max(a, (M)b); }
-
-// min(A, B)
-template<typename A, typename B, typename M> static inline
-MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Bin_<Mat> >, M>
-min(const MatExpr_<A, M>& a, const MatExpr_<B, M>& b)
-{ return min((M)a, (M)b); }
 
 template<typename A, typename M> static inline
 MatExpr_<MatExpr_Op3_<M, M, int, M, MatOp_Bin_<Mat> >, M>
