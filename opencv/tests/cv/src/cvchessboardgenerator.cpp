@@ -129,7 +129,7 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
 
 Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, vector<Point2f>& corners) const
 {      
-    cov = min(cov, 0.9);
+    cov = min(cov, 0.8);
     double fovx, fovy, focalLen;
     Point2d principalPoint;
     double aspect;
@@ -174,7 +174,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
             break;
 
         cbHalfWidth*=0.8f;
-        cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;
+        cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;        
     }
 
     cbHalfWidth  *= static_cast<float>(patternSize.width)/(patternSize.width + 1);
@@ -191,7 +191,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
 Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
                                          const Size2f& squareSize, vector<Point2f>& corners) const
 {        
-    cov = min(cov, 0.9);
+    cov = min(cov, 0.8);
     double fovx, fovy, focalLen;
     Point2d principalPoint;
     double aspect;
@@ -250,7 +250,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
 Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
                                          const Size2f& squareSize, const Point3f& pos, vector<Point2f>& corners) const
 {           
-    cov = min(cov, 0.9);
+    cov = min(cov, 0.8);
     Point3f p = pos;    
     Point3f pb1, pb2;    
     generateBasis(pb1, pb2);   
