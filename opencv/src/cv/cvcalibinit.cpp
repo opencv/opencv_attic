@@ -240,6 +240,9 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 
     if( out_corner_count )
         *out_corner_count = 0;
+    
+    IplImage _img;
+    int check_chessboard_result;
 
     CV_FUNCNAME( "cvFindChessBoardCornerGuesses2" );
 
@@ -284,6 +287,16 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
         {
             cvEqualizeHist( img, norm_img );
             img = norm_img;
+        }
+    }
+
+    if( flags & CV_CALIB_CB_FAST_CHECK)
+    {
+        cvGetImage(img, &_img);
+        check_chessboard_result = cvCheckChessboard(&_img, pattern_size);
+        if(check_chessboard_result <= 0)
+        {
+            return 0;
         }
     }
 
