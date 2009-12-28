@@ -1394,8 +1394,17 @@ CVAPI(void) cvInitIntrinsicParams2D( const CvMat* object_points,
 #define CV_CALIB_CB_ADAPTIVE_THRESH  1
 #define CV_CALIB_CB_NORMALIZE_IMAGE  2
 #define CV_CALIB_CB_FILTER_QUADS     4
+#define CV_CALIB_CB_FAST_CHECK       8
 
-/* Detects corners on a chessboard calibration pattern */
+// Performs a fast check if a chessboard is in the input image. This is a workaround to 
+// a problem of cvFindChessboardCorners being slow on images with no chessboard
+// - src: input image
+// - size: chessboard size
+// Returns 1 if a chessboard can be in this image and findChessboardCorners should be called, 
+// 0 if there is no chessboard, -1 in case of error
+CVAPI(int) cvCheckChessboard(IplImage* src, CvSize size);
+    
+    /* Detects corners on a chessboard calibration pattern */
 CVAPI(int) cvFindChessboardCorners( const void* image, CvSize pattern_size,
                                     CvPoint2D32f* corners,
                                     int* corner_count CV_DEFAULT(NULL),
