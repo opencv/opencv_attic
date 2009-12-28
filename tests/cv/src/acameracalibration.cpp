@@ -351,7 +351,6 @@ void CV_CameraCalibrationTest::run( int start_from )
 
     for( currTest = start_from; currTest < numTests; currTest++ )
     {
-        progress = update_progress( progress, currTest, numTests, 0 );
         fscanf(datafile,"%s",i_dat_file);
         sprintf(filename, "%s%s", filepath, i_dat_file);
         file = fopen(filename,"r");
@@ -610,6 +609,8 @@ void CV_CameraCalibrationTest::run( int start_from )
             code = CvTS::FAIL_BAD_ACCURACY; goto _exit_;
         }
 
+        progress = update_progress( progress, currTest, numTests, 0 );
+
         cvFree(&imagePoints);
         cvFree(&objectPoints);
         cvFree(&reprojectPoints);
@@ -793,242 +794,546 @@ void CV_CameraCalibrationTest_CPP::project( int pointCount, CvPoint3D64f* _objec
 	}
 }
 
-//CV_CameraCalibrationTest_CPP calibrate_test_cpp;
+CV_CameraCalibrationTest_CPP calibrate_test_cpp;
 
+//----------------------------------------- CV_CalibrationMatrixValuesTest --------------------------------
+
+class CV_CalibrationMatrixValuesTest : public CvTest
+{
+public:
+	CV_CalibrationMatrixValuesTest( const char* testName, const char* testFuncs ) :
+	  CvTest( testName, testFuncs ) {}
+protected:
+	void run(int);
+	virtual void calibMatrixValues( const Mat& cameraMatrix, Size imageSize,
+		double apertureWidth, double apertureHeight, double& fovx, double& fovy, double& focalLength,
+		Point2d& principalPoint, double& aspectRatio ) = 0;
+};
+
+void CV_CalibrationMatrixValuesTest::run(int)
+{
+	int code = CvTS::OK;
+	const int fcMaxVal = 1000;
+	const double apertureMaxVal = 0.01;
+	const double eps = 1e-5;
+
+	RNG rng = *ts->get_rng(); 
+
+	double fx, fy, cx, cy, nx, ny;
+	Mat cameraMatrix( 3, 3, CV_64FC1 );
+	cameraMatrix.setTo( Scalar(0) );
+	fx = cameraMatrix.at<double>(0,0) = (double)rng * fcMaxVal + eps;
+	fy = cameraMatrix.at<double>(1,1) = (double)rng * fcMaxVal + eps;
+	cx = cameraMatrix.at<double>(0,2) = (double)rng * fcMaxVal + eps;
+	cy = cameraMatrix.at<double>(1,2) = (double)rng * fcMaxVal + eps;
+	cameraMatrix.at<double>(2,2) = 1;
+
+	Size imageSize( 600, 400 );
+
+	double apertureWidth = (double)rng * apertureMaxVal,
+		   apertureHeight = (double)rng * apertureMaxVal;
+
+	double fovx, fovy, focalLength, aspectRatio,
+		   goodFovx, goodFovy, goodFocalLength, goodAspectRatio;
+	Point2d principalPoint, goodPrincipalPoint;
+
+
+	calibMatrixValues( cameraMatrix, imageSize, apertureWidth, apertureHeight,
+		fovx, fovy, focalLength, principalPoint, aspectRatio );
+
+	// calculate calibration matrix values
+	goodAspectRatio = fy / fx;
+
+	if( apertureWidth != 0.0 && apertureHeight != 0.0 )
+	{
+		nx = imageSize.width / apertureWidth;
+		ny = imageSize.height / apertureHeight;
+	}
+	else
+	{
+		nx = 1.0;
+		ny = goodAspectRatio;
+	}
+
+	goodFovx = 2 * atan( imageSize.width / (2 * fx)) * 180.0 / CV_PI;
+	goodFovy = 2 * atan( imageSize.height / (2 * fy)) * 180.0 / CV_PI;
+
+	goodFocalLength = fx / nx;
+
+	goodPrincipalPoint.x = cx / nx;
+	goodPrincipalPoint.y = cy / ny;
+
+	// check results
+	if( fabs(fovx - goodFovx) > FLT_EPSILON )
+	{
+		ts->printf( CvTS::LOG, "bad fovx (real=%f, good = %f\n", fovx, goodFovx );
+		code = CvTS::FAIL_BAD_ACCURACY; 
+		goto _exit_;
+	}
+	if( fabs(fovy - goodFovy) > FLT_EPSILON )
+	{
+		ts->printf( CvTS::LOG, "bad fovy (real=%f, good = %f\n", fovy, goodFovy );
+		code = CvTS::FAIL_BAD_ACCURACY; 
+		goto _exit_;
+	}
+	if( fabs(focalLength - goodFocalLength) > FLT_EPSILON )
+	{
+		ts->printf( CvTS::LOG, "bad focalLength (real=%f, good = %f\n", focalLength, goodFocalLength );
+		code = CvTS::FAIL_BAD_ACCURACY; 
+		goto _exit_;
+	}
+	if( fabs(aspectRatio - goodAspectRatio) > FLT_EPSILON )
+	{
+		ts->printf( CvTS::LOG, "bad aspectRatio (real=%f, good = %f\n", aspectRatio, goodAspectRatio );
+		code = CvTS::FAIL_BAD_ACCURACY; 
+		goto _exit_;
+	}
+	if( norm( principalPoint - goodPrincipalPoint ) > FLT_EPSILON )
+	{
+		ts->printf( CvTS::LOG, "bad principalPoint\n" );
+		code = CvTS::FAIL_BAD_ACCURACY; 
+		goto _exit_;
+	}
+	
+_exit_:
+	CvRNG* _rng = ts->get_rng(); 
+	*_rng = rng.state;
+	ts->set_failed_test_info( code );
+}
+
+//----------------------------------------- CV_CalibrationMatrixValuesTest_C --------------------------------
+
+class CV_CalibrationMatrixValuesTest_C : public CV_CalibrationMatrixValuesTest
+{
+public:
+	CV_CalibrationMatrixValuesTest_C() : 
+	  CV_CalibrationMatrixValuesTest( "calibMatrixValues-c", "cvCalibrationMatrixValues" ) {}
+protected:
+	virtual void calibMatrixValues( const Mat& cameraMatrix, Size imageSize,
+		double apertureWidth, double apertureHeight, double& fovx, double& fovy, double& focalLength,
+		Point2d& principalPoint, double& aspectRatio );
+};
+
+void CV_CalibrationMatrixValuesTest_C::calibMatrixValues( const Mat& _cameraMatrix, Size imageSize,
+											   double apertureWidth, double apertureHeight, 
+											   double& fovx, double& fovy, double& focalLength,
+											   Point2d& principalPoint, double& aspectRatio )
+{
+	CvMat cameraMatrix = _cameraMatrix;
+	CvPoint2D64f pp;
+	cvCalibrationMatrixValues( &cameraMatrix, imageSize, apertureWidth, apertureHeight,
+		&fovx, &fovy, &focalLength, &pp, &aspectRatio );
+	principalPoint.x = pp.x;
+	principalPoint.y = pp.y;
+}
+
+CV_CalibrationMatrixValuesTest_C calibMatrixValues_test_c;
+
+//----------------------------------------- CV_CalibrationMatrixValuesTest_CPP --------------------------------
+
+class CV_CalibrationMatrixValuesTest_CPP : public CV_CalibrationMatrixValuesTest
+{
+public:
+	CV_CalibrationMatrixValuesTest_CPP() : 
+	  CV_CalibrationMatrixValuesTest( "calibMatrixValues-cpp", "cv::calibrationMatrixValues" ) {}
+protected:
+	virtual void calibMatrixValues( const Mat& cameraMatrix, Size imageSize,
+		double apertureWidth, double apertureHeight, double& fovx, double& fovy, double& focalLength,
+		Point2d& principalPoint, double& aspectRatio );
+};
+
+void CV_CalibrationMatrixValuesTest_CPP::calibMatrixValues( const Mat& cameraMatrix, Size imageSize,
+														 double apertureWidth, double apertureHeight, 
+														 double& fovx, double& fovy, double& focalLength,
+														 Point2d& principalPoint, double& aspectRatio )
+{
+	calibrationMatrixValues( cameraMatrix, imageSize, apertureWidth, apertureHeight,
+		fovx, fovy, focalLength, principalPoint, aspectRatio );
+}
+
+CV_CalibrationMatrixValuesTest_CPP calibMatrixValues_test_cpp;
 
 ///////////////////////////////// Stereo Calibration /////////////////////////////////////
-
-using namespace cv;
-using namespace std;
 
 class CV_StereoCalibrationTest : public CvTest
 {
 public:
-    CV_StereoCalibrationTest();
-    ~CV_StereoCalibrationTest();
-    void clear();
-    //int write_default_params(CvFileStorage* fs);
-    
+	CV_StereoCalibrationTest( const char* test_name, const char* test_funcs );
+	~CV_StereoCalibrationTest();
+	void clear();
 protected:
-    bool checkPandROI(int test_case_idx,
-                      const Mat& M, const Mat& D, const Mat& R,
-                      const Mat& P, Size imgsize, Rect roi);
-    
-    void run(int);
+	bool checkPandROI( int test_case_idx,
+		const Mat& M, const Mat& D, const Mat& R,
+		const Mat& P, Size imgsize, Rect roi );
+
+	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+		const vector<vector<Point2f> >& imagePoints1,
+		const vector<vector<Point2f> >& imagePoints2,
+		Mat& cameraMatrix1, Mat& distCoeffs1,
+		Mat& cameraMatrix2, Mat& distCoeffs2,
+		Size imageSize, Mat& R, Mat& T,
+		Mat& E, Mat& F, TermCriteria criteria, int flags ) = 0;
+	virtual void rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+		const Mat& cameraMatrix2, const Mat& distCoeffs2,
+		Size imageSize, const Mat& R, const Mat& T,
+		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+		double alpha, Size newImageSize,
+		Rect* validPixROI1, Rect* validPixROI2, int flags ) = 0;
+
+	void run(int);
 };
 
 
-CV_StereoCalibrationTest::CV_StereoCalibrationTest():
-CvTest( "calibrate-stereo", "cvStereoCalibrate" )
+CV_StereoCalibrationTest::CV_StereoCalibrationTest( const char* test_name, const char* test_funcs ):
+CvTest( test_name, test_funcs )
 {
-    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+	support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
 
 CV_StereoCalibrationTest::~CV_StereoCalibrationTest()
 {
-    clear();
+	clear();
 }
-
 
 void CV_StereoCalibrationTest::clear()
 {
-    CvTest::clear();
+	CvTest::clear();
 }
 
-
-bool CV_StereoCalibrationTest::checkPandROI(int test_case_idx, const Mat& M, const Mat& D, const Mat& R,
-                                            const Mat& P, Size imgsize, Rect roi)
+bool CV_StereoCalibrationTest::checkPandROI( int test_case_idx, const Mat& M, const Mat& D, const Mat& R,
+											const Mat& P, Size imgsize, Rect roi )
 {
-    const double eps = 0.05;
-    const int N = 21;
-    int x, y, k;
-    vector<Point2f> pts, upts;
-    
-    // step 1. check that all the original points belong to the destination image 
-    for( y = 0; y < N; y++ )
-        for( x = 0; x < N; x++ )
-            pts.push_back(Point2f((float)x*imgsize.width/(N-1), (float)y*imgsize.height/(N-1)));
-    
-    undistortPoints( pts, upts, M, D, R, P );
-    for( k = 0; k < N*N; k++ )
-        if( upts[k].x < -imgsize.width*eps || upts[k].x > imgsize.width*(1+eps) ||
-           upts[k].y < -imgsize.height*eps || upts[k].y > imgsize.height*(1+eps) )
-    {
-        ts->printf(CvTS::LOG, "Test #%d. The point (%g, %g) was mapped to (%g, %g) which is out of image\n",
-                   test_case_idx, pts[k].x, pts[k].y, upts[k].x, upts[k].y);
-        return false;
-    }
-    
-    // step 2. check that all the points inside ROI belong to the original source image
-    Mat temp(imgsize, CV_8U), utemp, map1, map2;
-    temp = Scalar::all(1);
-    initUndistortRectifyMap(M, D, R, P, imgsize, CV_16SC2, map1, map2);
-    remap(temp, utemp, map1, map2, INTER_LINEAR);
-    
-    if(roi.x < 0 || roi.y < 0 || roi.x + roi.width > imgsize.width || roi.y + roi.height > imgsize.height)
-    {
-        ts->printf(CvTS::LOG, "Test #%d. The ROI=(%d, %d, %d, %d) is outside of the imge rectangle\n",
-                   test_case_idx, roi.x, roi.y, roi.width, roi.height);
-        return false;
-    }
-    double s = sum(utemp(roi))[0];
-    if( s > roi.area() || roi.area() - s > roi.area()*(1-eps) )
-    {
-        ts->printf(CvTS::LOG, "Test #%d. The ratio of black pixels inside the valid ROI (~%g%%) is too large\n",
-                   test_case_idx, s*100./roi.area());
-        return false;
-    }
-    
-    return true;
+	const double eps = 0.05;
+	const int N = 21;
+	int x, y, k;
+	vector<Point2f> pts, upts;
+
+	// step 1. check that all the original points belong to the destination image 
+	for( y = 0; y < N; y++ )
+		for( x = 0; x < N; x++ )
+			pts.push_back(Point2f((float)x*imgsize.width/(N-1), (float)y*imgsize.height/(N-1)));
+
+	undistortPoints( pts, upts, M, D, R, P );
+	for( k = 0; k < N*N; k++ )
+		if( upts[k].x < -imgsize.width*eps || upts[k].x > imgsize.width*(1+eps) ||
+			upts[k].y < -imgsize.height*eps || upts[k].y > imgsize.height*(1+eps) )
+		{
+			ts->printf(CvTS::LOG, "Test #%d. The point (%g, %g) was mapped to (%g, %g) which is out of image\n",
+				test_case_idx, pts[k].x, pts[k].y, upts[k].x, upts[k].y);
+			return false;
+		}
+
+		// step 2. check that all the points inside ROI belong to the original source image
+		Mat temp(imgsize, CV_8U), utemp, map1, map2;
+		temp = Scalar::all(1);
+		initUndistortRectifyMap(M, D, R, P, imgsize, CV_16SC2, map1, map2);
+		remap(temp, utemp, map1, map2, INTER_LINEAR);
+
+		if(roi.x < 0 || roi.y < 0 || roi.x + roi.width > imgsize.width || roi.y + roi.height > imgsize.height)
+		{
+			ts->printf(CvTS::LOG, "Test #%d. The ROI=(%d, %d, %d, %d) is outside of the imge rectangle\n",
+				test_case_idx, roi.x, roi.y, roi.width, roi.height);
+			return false;
+		}
+		double s = sum(utemp(roi))[0];
+		if( s > roi.area() || roi.area() - s > roi.area()*(1-eps) )
+		{
+			ts->printf(CvTS::LOG, "Test #%d. The ratio of black pixels inside the valid ROI (~%g%%) is too large\n",
+				test_case_idx, s*100./roi.area());
+			return false;
+		}
+
+		return true;
 }
 
 void CV_StereoCalibrationTest::run( int )
 {
-    const int ntests = 1;
-    const double maxReprojErr = 2;
-    const double maxScanlineDistErr = 3;
-    FILE* f = 0;
-    
-    for(int testcase = 1; testcase <= ntests; testcase++)
-    {
-        char filepath[1000];
-        char buf[1000];
-        sprintf( filepath, "%sstereo/case%d/stereo_calib.txt", ts->get_data_path(), testcase );
-        f = fopen(filepath, "rt");
-        Size patternSize;
-        vector<string> imglist;
-        
-        if( !f || !fgets(buf, sizeof(buf)-3, f) || sscanf(buf, "%d%d", &patternSize.width, &patternSize.height) != 2 )
-        {
-            ts->printf( CvTS::LOG, "The file %s can not be opened or has invalid content\n", filepath );
-            ts->set_failed_test_info( f ? CvTS::FAIL_INVALID_TEST_DATA : CvTS::FAIL_MISSING_TEST_DATA );
-            return;
-        }
-        
-        for(;;)
-        {
-            if( !fgets( buf, sizeof(buf)-3, f ))
-                break;
-            size_t len = strlen(buf);
-            while( len > 0 && isspace(buf[len-1]))
-                buf[--len] = '\0';
-            if( buf[0] == '#')
-                continue;
-            sprintf(filepath, "%sstereo/case%d/%s", ts->get_data_path(), testcase, buf );
-            imglist.push_back(string(filepath));
-        }
-        fclose(f);
-        
-        if( imglist.size() == 0 || imglist.size() % 2 != 0 )
-        {
-            ts->printf( CvTS::LOG, "The number of images is 0 or an odd number in the case #%d\n", testcase );
-            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
-            return;
-        }
-        
-        size_t i, nframes = imglist.size()/2;
-        int j, npoints = patternSize.width*patternSize.height;
-        vector<vector<Point3f> > objpt(nframes);
-        vector<vector<Point2f> > imgpt1(nframes);
-        vector<vector<Point2f> > imgpt2(nframes);
-        Size imgsize;
-        
-        for( i = 0; i < nframes; i++ )
-        {
-            Mat left = imread(imglist[i*2]);
-            Mat right = imread(imglist[i*2+1]);
-            if(!left.data || !right.data)
-            {
-                ts->printf( CvTS::LOG, "Can not load images %s and %s, testcase %d\n",
-                           imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
-                ts->set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
-                return;
-            }
-            imgsize = left.size();
-            bool found1 = findChessboardCorners(left, patternSize, imgpt1[i]); 
-            bool found2 = findChessboardCorners(right, patternSize, imgpt2[i]);
-            if(!found1 || !found2)
-            {
-                ts->printf( CvTS::LOG, "The function could not detect boards on the images %s and %s, testcase %d\n",
-                           imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
-                ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
-                return;
-            }
-            
-            for( j = 0; j < npoints; j++ )
-                objpt[i].push_back(Point3f((float)(j%patternSize.width), (float)(j/patternSize.width), 0.f));
-        }
-        
-        Mat M1 = Mat::eye(3,3,CV_64F), M2 = Mat::eye(3,3,CV_64F), D1(5,1,CV_64F), D2(5,1,CV_64F), R, T, E, F;
-        M1.at<double>(0,2) = M2.at<double>(0,2)=(imgsize.width-1)*0.5;
-        M1.at<double>(1,2) = M2.at<double>(1,2)=(imgsize.height-1)*0.5;
-        D1 = Scalar::all(0);
-        D2 = Scalar::all(0);
-        double err = stereoCalibrate(objpt, imgpt1, imgpt2, M1, D1, M2, D2, imgsize, R, T, E, F,
-                                     TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 1e-6),
-                                     CV_CALIB_SAME_FOCAL_LENGTH
-                                     //+ CV_CALIB_FIX_ASPECT_RATIO
-                                     + CV_CALIB_FIX_PRINCIPAL_POINT
-                                     + CV_CALIB_ZERO_TANGENT_DIST
-                                     );
-        err /= nframes*npoints;
-        if( err > maxReprojErr )
-        {
-            ts->printf( CvTS::LOG, "The average reprojection error is too big (=%g), testcase %d\n", err, testcase);
-            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
-            return;
-        }
-        
-        Mat R1, R2, P1, P2, Q;
-        Rect roi1, roi2;
-        stereoRectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 1, imgsize, &roi1, &roi2, 0);
-        
-        if(norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
-           norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
-           abs(determinant(F)) > 0.01)
-        {
-            ts->printf( CvTS::LOG, "The computed R1 and R2 are not orthogonal, or the computed F is not singular, testcase %d\n", testcase);
-            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
-            return;
-        }
-        
-        if(!checkPandROI(testcase, M1, D1, R1, P1, imgsize, roi1))
-        {
-            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return;
-        }
-        
-        if(!checkPandROI(testcase, M2, D2, R2, P2, imgsize, roi2))
-        {
-            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return;
-        }
-        
-        bool verticalStereo = abs(P2.at<double>(0,3)) < abs(P2.at<double>(1,3));
-        double maxDiff = 0;
-        
-        for( i = 0; i < nframes; i++ )
-        {
-            vector<Point2f> temp[2];
-            undistortPoints(imgpt1[i], temp[0], M1, D1, R1, P1);
-            undistortPoints(imgpt2[i], temp[1], M2, D2, R2, P2);
-            
-            for( j = 0; j < npoints; j++ )
-            {
-                double diff = verticalStereo ? abs(temp[0][j].x - temp[1][j].x) : abs(temp[0][j].y - temp[1][j].y);
-                maxDiff = max(maxDiff, diff);
-                if( maxDiff > maxScanlineDistErr )
-                {
-                    ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g), testcase %d\n",
-                               verticalStereo ? "x" : "y", diff, testcase);
-                    ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-                    return;
-                }
-            }                
-        }
-        ts->printf( CvTS::LOG, "Testcase %d. Max distance =%g\n", testcase, maxDiff );
-    }
+	const int ntests = 1;
+	const double maxReprojErr = 2;
+	const double maxScanlineDistErr = 3;
+	FILE* f = 0;
+
+	for(int testcase = 1; testcase <= ntests; testcase++)
+	{
+		char filepath[1000];
+		char buf[1000];
+		sprintf( filepath, "%sstereo/case%d/stereo_calib.txt", ts->get_data_path(), testcase );
+		f = fopen(filepath, "rt");
+		Size patternSize;
+		vector<string> imglist;
+
+		if( !f || !fgets(buf, sizeof(buf)-3, f) || sscanf(buf, "%d%d", &patternSize.width, &patternSize.height) != 2 )
+		{
+			ts->printf( CvTS::LOG, "The file %s can not be opened or has invalid content\n", filepath );
+			ts->set_failed_test_info( f ? CvTS::FAIL_INVALID_TEST_DATA : CvTS::FAIL_MISSING_TEST_DATA );
+			return;
+		}
+
+		for(;;)
+		{
+			if( !fgets( buf, sizeof(buf)-3, f ))
+				break;
+			size_t len = strlen(buf);
+			while( len > 0 && isspace(buf[len-1]))
+				buf[--len] = '\0';
+			if( buf[0] == '#')
+				continue;
+			sprintf(filepath, "%sstereo/case%d/%s", ts->get_data_path(), testcase, buf );
+			imglist.push_back(string(filepath));
+		}
+		fclose(f);
+
+		if( imglist.size() == 0 || imglist.size() % 2 != 0 )
+		{
+			ts->printf( CvTS::LOG, "The number of images is 0 or an odd number in the case #%d\n", testcase );
+			ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+			return;
+		}
+
+		size_t i, nframes = imglist.size()/2;
+		int j, npoints = patternSize.width*patternSize.height;
+		vector<vector<Point3f> > objpt(nframes);
+		vector<vector<Point2f> > imgpt1(nframes);
+		vector<vector<Point2f> > imgpt2(nframes);
+		Size imgsize;
+
+		for( i = 0; i < nframes; i++ )
+		{
+			Mat left = imread(imglist[i*2]);
+			Mat right = imread(imglist[i*2+1]);
+			if(!left.data || !right.data)
+			{
+				ts->printf( CvTS::LOG, "Can not load images %s and %s, testcase %d\n",
+					imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
+				ts->set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+				return;
+			}
+			imgsize = left.size();
+			bool found1 = findChessboardCorners(left, patternSize, imgpt1[i]); 
+			bool found2 = findChessboardCorners(right, patternSize, imgpt2[i]);
+			if(!found1 || !found2)
+			{
+				ts->printf( CvTS::LOG, "The function could not detect boards on the images %s and %s, testcase %d\n",
+					imglist[i*2].c_str(), imglist[i*2+1].c_str(), testcase );
+				ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+				return;
+			}
+
+			for( j = 0; j < npoints; j++ )
+				objpt[i].push_back(Point3f((float)(j%patternSize.width), (float)(j/patternSize.width), 0.f));
+		}
+
+		Mat M1 = Mat::eye(3,3,CV_64F), M2 = Mat::eye(3,3,CV_64F), D1(5,1,CV_64F), D2(5,1,CV_64F), R, T, E, F;
+		M1.at<double>(0,2) = M2.at<double>(0,2)=(imgsize.width-1)*0.5;
+		M1.at<double>(1,2) = M2.at<double>(1,2)=(imgsize.height-1)*0.5;
+		D1 = Scalar::all(0);
+		D2 = Scalar::all(0);
+		double err = calibrate(objpt, imgpt1, imgpt2, M1, D1, M2, D2, imgsize, R, T, E, F,
+			TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 1e-6),
+			CV_CALIB_SAME_FOCAL_LENGTH
+			//+ CV_CALIB_FIX_ASPECT_RATIO
+			+ CV_CALIB_FIX_PRINCIPAL_POINT
+			+ CV_CALIB_ZERO_TANGENT_DIST
+			);
+		err /= nframes*npoints;
+		if( err > maxReprojErr )
+		{
+			ts->printf( CvTS::LOG, "The average reprojection error is too big (=%g), testcase %d\n", err, testcase);
+			ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+			return;
+		}
+
+		Mat R1, R2, P1, P2, Q;
+		Rect roi1, roi2;
+		rectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 1, imgsize, &roi1, &roi2, 0);
+
+		if(norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+			norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+			abs(determinant(F)) > 0.01)
+		{
+			ts->printf( CvTS::LOG, "The computed R1 and R2 are not orthogonal, or the computed F is not singular, testcase %d\n", testcase);
+			ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+			return;
+		}
+
+		if(!checkPandROI(testcase, M1, D1, R1, P1, imgsize, roi1))
+		{
+			ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+			return;
+		}
+
+		if(!checkPandROI(testcase, M2, D2, R2, P2, imgsize, roi2))
+		{
+			ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+			return;
+		}
+
+		bool verticalStereo = abs(P2.at<double>(0,3)) < abs(P2.at<double>(1,3));
+		double maxDiff = 0;
+
+		for( i = 0; i < nframes; i++ )
+		{
+			vector<Point2f> temp[2];
+			undistortPoints(imgpt1[i], temp[0], M1, D1, R1, P1);
+			undistortPoints(imgpt2[i], temp[1], M2, D2, R2, P2);
+
+			for( j = 0; j < npoints; j++ )
+			{
+				double diff = verticalStereo ? abs(temp[0][j].x - temp[1][j].x) : abs(temp[0][j].y - temp[1][j].y);
+				maxDiff = max(maxDiff, diff);
+				if( maxDiff > maxScanlineDistErr )
+				{
+					ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g), testcase %d\n",
+						verticalStereo ? "x" : "y", diff, testcase);
+					ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+					return;
+				}
+			}                
+		}
+		ts->printf( CvTS::LOG, "Testcase %d. Max distance =%g\n", testcase, maxDiff );
+	}
 }
 
-CV_StereoCalibrationTest stereocalib_test;
+//-------------------------------- CV_StereoCalibrationTest_C ------------------------------
+
+class CV_StereoCalibrationTest_C : public CV_StereoCalibrationTest
+{
+public:
+	CV_StereoCalibrationTest_C() : CV_StereoCalibrationTest( "calibrate-stereo-c", "cvStereoCalibrate" ) {}
+protected:
+	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+		const vector<vector<Point2f> >& imagePoints1,
+		const vector<vector<Point2f> >& imagePoints2,
+		Mat& cameraMatrix1, Mat& distCoeffs1,
+		Mat& cameraMatrix2, Mat& distCoeffs2,
+		Size imageSize, Mat& R, Mat& T,
+		Mat& E, Mat& F, TermCriteria criteria, int flags );
+	virtual void rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+		const Mat& cameraMatrix2, const Mat& distCoeffs2,
+		Size imageSize, const Mat& R, const Mat& T,
+		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+		double alpha, Size newImageSize,
+		Rect* validPixROI1, Rect* validPixROI2, int flags );
+};
+
+double CV_StereoCalibrationTest_C::calibrate( const vector<vector<Point3f> >& objectPoints,
+				 const vector<vector<Point2f> >& imagePoints1,
+				 const vector<vector<Point2f> >& imagePoints2,
+				 Mat& cameraMatrix1, Mat& distCoeffs1,
+				 Mat& cameraMatrix2, Mat& distCoeffs2,
+				 Size imageSize, Mat& R, Mat& T,
+				 Mat& E, Mat& F, TermCriteria criteria, int flags )
+{
+	cameraMatrix1.create( 3, 3, CV_64F );
+	cameraMatrix2.create( 3, 3, CV_64F);
+	distCoeffs1.create( 1, 5, CV_64F);
+	distCoeffs2.create( 1, 5, CV_64F);
+	R.create(3, 3, CV_64F);
+	T.create(3, 1, CV_64F);
+	E.create(3, 3, CV_64F);
+	F.create(3, 3, CV_64F);
+
+	int  nimages = objectPoints.size(), total = 0;
+	for( int i = 0; i < (int)objectPoints.size(); i++ )
+	{
+		total += objectPoints[i].size();
+	}
+
+	Mat npoints( 1, (int)nimages, CV_32S ), 
+		objPt( 1, (int)total, DataType<Point3f>::type ), 
+		imgPt( 1, (int)total, DataType<Point2f>::type ),
+		imgPt2( 1, (int)total, DataType<Point2f>::type );
+
+	Point2f* imgPtData2 = imgPt2.ptr<Point2f>();
+	Point3f* objPtData = objPt.ptr<Point3f>();
+	Point2f* imgPtData = imgPt.ptr<Point2f>();
+	for( int i = 0, ni = 0, j = 0; i < nimages; i++, j += ni )
+	{
+		ni = objectPoints[i].size();
+		((int*)npoints.data)[i] = (int)ni;
+		copy(objectPoints[i].begin(), objectPoints[i].end(), objPtData + j);
+		copy(imagePoints1[i].begin(), imagePoints1[i].end(), imgPtData + j);
+		copy(imagePoints2[i].begin(), imagePoints2[i].end(), imgPtData2 + j);
+	}
+	CvMat _objPt = objPt, _imgPt = imgPt, _imgPt2 = imgPt2, _npoints = npoints;
+	CvMat _cameraMatrix1 = cameraMatrix1, _distCoeffs1 = distCoeffs1;
+	CvMat _cameraMatrix2 = cameraMatrix2, _distCoeffs2 = distCoeffs2;
+	CvMat _R = R, _T = T, _E = E, _F = F;
+
+	return cvStereoCalibrate(&_objPt, &_imgPt, &_imgPt2, &_npoints, &_cameraMatrix1,
+		&_distCoeffs1, &_cameraMatrix2, &_distCoeffs2, imageSize,
+		&_R, &_T, &_E, &_F, criteria, flags );
+}
+
+void CV_StereoCalibrationTest_C::rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+			 const Mat& cameraMatrix2, const Mat& distCoeffs2,
+			 Size imageSize, const Mat& R, const Mat& T,
+			 Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+			 double alpha, Size newImageSize,
+			 Rect* validPixROI1, Rect* validPixROI2, int flags )
+{
+	int rtype = CV_64F;
+	R1.create(3, 3, rtype);
+	R2.create(3, 3, rtype);
+	P1.create(3, 4, rtype);
+	P2.create(3, 4, rtype);
+	Q.create(4, 4, rtype);
+	CvMat _cameraMatrix1 = cameraMatrix1, _distCoeffs1 = distCoeffs1;
+	CvMat _cameraMatrix2 = cameraMatrix2, _distCoeffs2 = distCoeffs2;
+	CvMat _R = R, _T = T, _R1 = R1, _R2 = R2, _P1 = P1, _P2 = P2, _Q = Q;
+	cvStereoRectify( &_cameraMatrix1, &_cameraMatrix2, &_distCoeffs1, &_distCoeffs2,
+		imageSize, &_R, &_T, &_R1, &_R2, &_P1, &_P2, &_Q, flags,
+		alpha, newImageSize, (CvRect*)validPixROI1, (CvRect*)validPixROI2);
+}
+
+CV_StereoCalibrationTest_C stereocalib_test_c;
+
+//-------------------------------- CV_StereoCalibrationTest_CPP ------------------------------
+
+class CV_StereoCalibrationTest_CPP : public CV_StereoCalibrationTest
+{
+public:
+	CV_StereoCalibrationTest_CPP() : CV_StereoCalibrationTest( "calibrate-stereo-cpp", "stereoCalibrate" ) {}
+protected:
+	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+		const vector<vector<Point2f> >& imagePoints1,
+		const vector<vector<Point2f> >& imagePoints2,
+		Mat& cameraMatrix1, Mat& distCoeffs1,
+		Mat& cameraMatrix2, Mat& distCoeffs2,
+		Size imageSize, Mat& R, Mat& T,
+		Mat& E, Mat& F, TermCriteria criteria, int flags );
+	virtual void rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+		const Mat& cameraMatrix2, const Mat& distCoeffs2,
+		Size imageSize, const Mat& R, const Mat& T,
+		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+		double alpha, Size newImageSize,
+		Rect* validPixROI1, Rect* validPixROI2, int flags );
+};
+
+double CV_StereoCalibrationTest_CPP::calibrate( const vector<vector<Point3f> >& objectPoints,
+											 const vector<vector<Point2f> >& imagePoints1,
+											 const vector<vector<Point2f> >& imagePoints2,
+											 Mat& cameraMatrix1, Mat& distCoeffs1,
+											 Mat& cameraMatrix2, Mat& distCoeffs2,
+											 Size imageSize, Mat& R, Mat& T,
+											 Mat& E, Mat& F, TermCriteria criteria, int flags )
+{
+	return stereoCalibrate( objectPoints, imagePoints1, imagePoints2,
+					cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2,
+					imageSize, R, T, E, F, criteria, flags );
+}
+
+void CV_StereoCalibrationTest_CPP::rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
+										 const Mat& cameraMatrix2, const Mat& distCoeffs2,
+										 Size imageSize, const Mat& R, const Mat& T,
+										 Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
+										 double alpha, Size newImageSize,
+										 Rect* validPixROI1, Rect* validPixROI2, int flags )
+{
+	stereoRectify( cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2,
+				imageSize, R, T, R1, R2, P1, P2, Q, alpha, newImageSize,validPixROI1, validPixROI2, flags );
+}
+
+CV_StereoCalibrationTest_CPP stereocalib_test_cpp;
+
