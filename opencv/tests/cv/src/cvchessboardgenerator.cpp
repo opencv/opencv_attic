@@ -80,7 +80,10 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
                 
                 projectPoints( pts_square3d, rvec, tvec, camMat, distCoeffs, pts_square2d);
 
-                squares_black.resize(squares_black.size() + 1);                
+                squares_black.resize(squares_black.size() + 1);  
+
+                vector<Point2f> r; approxPolyDP(pts_square2d, r, 1.0, true); pts_square2d = r;
+
                 transform(pts_square2d.begin(), pts_square2d.end(), back_inserter(squares_black.back()), Mult(rendererResolutionMultiplier));
             }   
 
@@ -98,19 +101,18 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
 
     Mat result;
     if (rendererResolutionMultiplier == 1)
-    {
+    {        
         result = bg.clone();
-        drawContours(result, whole_contour, -1, Scalar::all(255), CV_FILLED);       
-        drawContours(result, squares_black, -1, Scalar::all(0), CV_FILLED);
-
+        drawContours(result, whole_contour, -1, Scalar::all(255), CV_FILLED, CV_AA);       
+        drawContours(result, squares_black, -1, Scalar::all(0), CV_FILLED, CV_AA);
     }
     else
     {
         Mat tmp;        
         resize(bg, tmp, bg.size() * rendererResolutionMultiplier);
-        drawContours(tmp, whole_contour, -1, Scalar::all(255), CV_FILLED);       
-        drawContours(tmp, squares_black, -1, Scalar::all(0), CV_FILLED);
-        resize(tmp, result, bg.size(), 0, 0, INTER_CUBIC);
+        drawContours(tmp, whole_contour, -1, Scalar::all(255), CV_FILLED, CV_AA);       
+        drawContours(tmp, squares_black, -1, Scalar::all(0), CV_FILLED, CV_AA);
+        resize(tmp, result, bg.size(), 0, 0, INTER_AREA);
     }        
     return result;
 }
