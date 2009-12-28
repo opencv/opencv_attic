@@ -96,7 +96,7 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
         int count0 = -1;
         int count = 0;
         CvSize pattern_size;
-        int result;
+        int result, result1 = 0;
 
         const char* imgname = cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4), "dummy.txt");
         int is_chessboard = cvReadInt((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*4+1), 0);
@@ -136,11 +136,10 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
 
         int64 _time0 = cvGetTickCount();
         result = cvCheckChessboard(gray, pattern_size);
-/*        if(result == 1)
-        {
-            OPENCV_CALL( result = cvFindChessboardCorners(
-                     gray, pattern_size, v, &count, 7 ));
-        }*/
+        int64 _time01 = cvGetTickCount();
+        
+        OPENCV_CALL( result1 = cvFindChessboardCorners(
+                 gray, pattern_size, v, &count, 15 ));
         int64 _time1 = cvGetTickCount();
 
         if( result != is_chessboard )
@@ -150,10 +149,22 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
             code = CvTS::FAIL_INVALID_OUTPUT;
             goto _exit_;
         }
+        if(result != result1)
+        {
+            ts->printf( CvTS::LOG, "Warning: results differ cvCheckChessboard %d, cvFindChessboardCorners %d\n", 
+                       result, result1);
+        }
         
-        ts->printf(CvTS::LOG, "%s: chessboard %d, findChessboard time s: %f, us per pixel: %f\n", 
-                   imgname, is_chessboard, float(_time1 - _time0)/cvGetTickFrequency()*1e-6, 
-                   float(_time1 - _time0)/cvGetTickFrequency()/(gray->width*gray->height));
+        ts->printf(CvTS::LOG, "%s: chessboard %d:\n", imgname, is_chessboard);
+        
+        int num_pixels = gray->width*gray->height;
+        float check_chessboard_time = float(_time01 - _time0)/cvGetTickFrequency(); // in us
+        ts->printf(CvTS::LOG, "    cvCheckChessboard time s: %f, us per pixel: %f\n", 
+                   check_chessboard_time*1e-6, check_chessboard_time/num_pixels);
+        
+        float find_chessboard_time = float(_time1 - _time01)/cvGetTickFrequency();
+        ts->printf(CvTS::LOG, "    cvFindChessboard time s: %f, us per pixel: %f\n",
+                   find_chessboard_time*1e-6, find_chessboard_time/num_pixels);
 
         cvReleaseMat( &_v );
         cvReleaseImage( &img );
