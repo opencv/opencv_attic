@@ -10,4 +10,7 @@
 "chess7.jpg" "chess_corners7.dat"
 "chess8.jpg" "chess_corners8.dat"
 "chess9.jpg" "chess_corners9.dat"
+"small_chessboard1.jpg" "small_chessboard1.dat"
+"small_chessboard2.jpg" "small_chessboard2.dat"
+"small_chessboard3.jpg" "small_chessboard3.dat"
 </boards></opencv_storage>
