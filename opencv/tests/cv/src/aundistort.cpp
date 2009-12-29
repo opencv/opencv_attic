@@ -66,7 +66,7 @@ protected:
 	static const int MAX_VAL = 10000;
 };
 
-CV_DefaultNewCameraMatrixTest::CV_DefaultNewCameraMatrixTest() : CvArrTest("undistort","getDefaultNewCameraMatrix")
+CV_DefaultNewCameraMatrixTest::CV_DefaultNewCameraMatrixTest() : CvArrTest("undistort-getDefaultNewCameraMatrix","getDefaultNewCameraMatrix")
 {
 	 test_array[INPUT].push(NULL);
 	 test_array[OUTPUT].push(NULL);
@@ -92,7 +92,7 @@ int CV_DefaultNewCameraMatrixTest::prepare_test_case(int test_case_idx)
 	img_size.width = cvTsRandInt(rng) % MAX_X + 1;
 	img_size.height = cvTsRandInt(rng) % MAX_Y + 1;
 
-	center_principal_point = cvTsRandInt(rng) % 2;
+	center_principal_point = ((cvTsRandInt(rng) % 2)!=0);
 
 	// Generating camera_mat matrix
 	double sz = MAX(img_size.width, img_size.height);
