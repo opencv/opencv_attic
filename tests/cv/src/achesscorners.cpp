@@ -136,7 +136,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
     int progress = 0;
     int max_idx = board_list.node->data.seq->total/2;
 
-    for(int idx = 0; idx < max_idx; ++idx )
+    for(int idx = 9; idx < max_idx; ++idx )
     {
         ts.update_context( this, idx, true );
         
@@ -167,11 +167,8 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         size_t count_exp = static_cast<size_t>(expected.cols * expected.rows);                
         Size pattern_size = expected.size();
 
-      /*  if (idx == 9 || idx == 10 || idx == 11)
-            pattern_size = Size(4, 3);*/
-       
         vector<Point2f> v;        
-        bool result = findChessboardCorners(gray, pattern_size, v, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );        
+        bool result = findChessboardCorners(gray, pattern_size, v, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);        
         show_points( gray, Mat(), v, pattern_size, result );
         if( !result || v.size() != count_exp )
         {
