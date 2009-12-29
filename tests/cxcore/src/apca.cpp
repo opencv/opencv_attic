@@ -242,7 +242,7 @@ void CV_PCATest::run( int )
 	_avg = avg;
 	_eval = eval;
 	_evec = evec;
-	prjTestPoints.create(rTestPoints.rows, rTestPoints.cols/*maxComponents*/, rTestPoints.type() );
+	prjTestPoints.create(rTestPoints.rows, maxComponents, rTestPoints.type() );
 	backPrjTestPoints.create(rPoints.size(), rPoints.type() );
 	_prjTestPoints = prjTestPoints;
 	_backPrjTestPoints = backPrjTestPoints;
