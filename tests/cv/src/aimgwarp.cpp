@@ -1184,6 +1184,12 @@ protected:
     void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool *are_images );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
+
+	bool useCPlus;
+	cv::Mat input0;
+	cv::Mat input1;
+	cv::Mat input2;
+	cv::Mat input_output;
 };
 
 
@@ -1261,8 +1267,15 @@ void CV_UndistortTest::print_timing_params( int test_case_idx, char* ptr, int pa
 
 void CV_UndistortTest::run_func()
 {
-    cvUndistort2( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
+	if (!useCPlus)
+	{
+		cvUndistort2( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
                   &test_mat[INPUT][1], &test_mat[INPUT][2] );
+	}
+	else
+	{
+		cv::undistort(input0,input_output,input1,input2);
+	}
 }
 
 
@@ -1277,6 +1290,16 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
 {
     CvRNG* rng = ts->get_rng();
     int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
+
+	//Testing C++ code
+	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
+	if (useCPlus)
+	{
+		input0 = &test_mat[INPUT][0];
+		input1 = &test_mat[INPUT][1];
+		input2 = &test_mat[INPUT][2];
+	}
+
     const CvMat* src = &test_mat[INPUT][0];
     double k[4], a[9] = {0,0,0,0,0,0,0,0,1};
     double sz = MAX(src->rows, src->cols);
@@ -1326,6 +1349,12 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
 
 void CV_UndistortTest::prepare_to_validation( int /*test_case_idx*/ )
 {
+	if (useCPlus)
+	{
+		CvMat result = input_output;
+		CvMat* test_input_output = &test_mat[INPUT_OUTPUT][0];
+		cvTsConvert(&result,test_input_output);
+	}
     CvMat* src = &test_mat[INPUT][0];
     CvMat* dst = &test_mat[REF_INPUT_OUTPUT][0];
     CvMat* dst0 = &test_mat[INPUT_OUTPUT][0];
