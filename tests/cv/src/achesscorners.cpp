@@ -40,40 +40,34 @@
 //M*/
 
 #include "cvtest.h"
+#include "cvchessboardgenerator.h"
 
-void show_points( IplImage* gray, CvPoint2D32f* u, int u_cnt, CvPoint2D32f* v, int v_cnt,
-                  CvSize pattern_size, int was_found )
+#include <limits>
+
+using namespace std;
+using namespace cv;
+
+void show_points( const Mat& gray, const Mat& u, const vector<Point2f>& v, Size pattern_size, bool was_found )
 {
-    CvSize size;
-    int i;
+    Mat rgb( gray.size(), CV_8U);
+    merge(vector<Mat>(3, gray), rgb);
+        
+    for(size_t i = 0; i < v.size(); i++ )
+        circle( rgb, v[i], 3, CV_RGB(255, 0, 0), CV_FILLED);            
 
-    cvGetImageRawData( gray, 0, 0, &size );
-    
-    IplImage* rgb = cvCreateImage( size, 8, 3 );
-    cvMerge( gray, gray, gray, 0, rgb );
-
-    if( v )
+    if( !u.empty() )
     {
-        for( i = 0; i < v_cnt; i++ )
-        {
-            cvCircle( rgb, cvPoint(cvRound(v[i].x), cvRound(v[i].y)), 3, CV_RGB(255,0,0), CV_FILLED);
-        }
+        const Point2f* u_data = u.ptr<Point2f>();
+        size_t count = u.cols * u.rows;
+        for(size_t i = 0; i < count; i++ )
+            circle( rgb, u_data[i], 3, CV_RGB(0, 255, 0), CV_FILLED);
     }
-
-    if( u )
+    if (!v.empty())
     {
-        for( i = 0; i < u_cnt; i++ )
-        {
-            cvCircle( rgb, cvPoint(cvRound(u[i].x), cvRound(u[i].y)), 3, CV_RGB(0,255,0), CV_FILLED);
-        }
+        Mat corners(v.size(), 1, CV_32FC2, (void*)&v[0]);     
+        drawChessboardCorners( rgb, pattern_size, corners, was_found );
     }
-
-    cvDrawChessboardCorners( rgb, pattern_size, v, v_cnt, was_found );
-
-    cvvNamedWindow( "test", 0 );
-    cvvShowImage( "test", rgb );
-
-    cvvWaitKey(0);
+    //namedWindow( "test", 0 ); imshow( "test", rgb ); waitKey(0);
 }
 
 
@@ -85,202 +79,138 @@ protected:
     void run(int);
 };
 
-
 CV_ChessboardDetectorTest::CV_ChessboardDetectorTest():
     CvTest( "chessboard-detector", "cvFindChessboardCorners" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
 
-/* ///////////////////// chess_corner_test ///////////////////////// */
-void CV_ChessboardDetectorTest::run( int start_from )
+double calcError(const vector<Point2f>& v, const Mat& u)
 {
-    int code = CvTS::OK;
+    size_t count_exp = static_cast<size_t>(u.cols * u.rows);
+    const Point2f* u_data = u.ptr<Point2f>();
+
+    double err = numeric_limits<double>::max();
+    for( size_t k = 0; k < 2; ++k )
+    {
+        double err1 = 0;
+        for(size_t j = 0; j < count_exp; ++j )
+        {
+            int j1 = k == 0 ? j : count_exp - j - 1;
+            double dx = fabs( v[j].x - u_data[j1].x );
+            double dy = fabs( v[j].y - u_data[j1].y );
+
+            dx = MAX( dx, dy );
+            if( dx > err1 )
+                err1 = dx;
+        }
+        err = min(err, err1);
+    }
+    return err;
+}
+
+
+/* ///////////////////// chess_corner_test ///////////////////////// */
+void CV_ChessboardDetectorTest::run( int /*start_from */)
+{
+    CvTS& ts = *this->ts;
 
 //#define WRITE_POINTS 1
 #ifndef WRITE_POINTS    
     const double rough_success_error_level = 2.5;
     const double precise_success_error_level = 2;
-    double err = 0, max_rough_error = 0, max_precise_error = 0;
+    double max_rough_error = 0, max_precise_error = 0;
 #endif
+    string folder = string(ts.get_data_path()) + "cameracalibration/";
 
-    /* test parameters */
-    char   filepath[1000];
-    char   filename[1000];
-
-    CvMat*  _u = 0;
-    CvMat*  _v = 0;
-    CvPoint2D32f* u;
-    CvPoint2D32f* v;
-
-    IplImage* img = 0;
-    IplImage* gray = 0;
-    IplImage* thresh = 0;
-
-    int  k, idx, max_idx;
-    int  progress = 0;
-
-    sprintf( filepath, "%scameracalibration/", ts->get_data_path() );
-    sprintf( filename, "%schessboard_list.dat", filepath );
-    CvFileStorage* fs = cvOpenFileStorage( filename, 0, CV_STORAGE_READ );
-    CvFileNode* board_list = fs ? cvGetFileNodeByName( fs, 0, "boards" ) : 0;
-
-    if( !fs || !board_list || !CV_NODE_IS_SEQ(board_list->tag) ||
-        board_list->data.seq->total % 2 != 0 )
+    FileStorage fs( folder + "chessboard_list.dat", FileStorage::READ );
+    FileNode board_list = fs["boards"];
+        
+    if( !fs.isOpened() || board_list.empty() || !board_list.isSeq() || board_list.size() % 2 != 0 )
     {
-        ts->printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
-        code = CvTS::FAIL_MISSING_TEST_DATA;
-        goto _exit_;
+        ts.printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
+        ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+        return;
     }
 
-    max_idx = board_list->data.seq->total/2;
+    int progress = 0;
+    int max_idx = board_list.node->data.seq->total/2;
 
-    for( idx = start_from; idx < max_idx; idx++ )
+    for(int idx = 0; idx < max_idx; ++idx )
     {
-        progress = update_progress( progress, idx-1, max_idx, 0 );
-        int count0 = -1;
-        int count = 0;
-        CvSize pattern_size = { -1, -1 };
-        int j, result;
+        ts.update_context( this, idx, true );
         
-        ts->update_context( this, idx-1, true );
-
         /* read the image */
-        sprintf( filename, "%s%s", filepath,
-            cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2),"dummy.txt"));
-    
-        img = cvLoadImage( filename );
-        
-        if( !img )
+        string img_file = board_list[idx * 2];                    
+        Mat gray = imread( folder + img_file, 0);
+                
+        if( gray.empty() )
         {
-            ts->printf( CvTS::LOG, "one of chessboard images can't be read: %s", filename );
-            if( max_idx == 1 )
-            {
-                code = CvTS::FAIL_MISSING_TEST_DATA;
-                goto _exit_;
-            }
-            continue;
+            ts.printf( CvTS::LOG, "one of chessboard images can't be read: %s", img_file.c_str() );
+            ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+            return;
         }
 
-        gray = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
-        thresh = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
-        cvCvtColor( img, gray, CV_BGR2GRAY );
- 
-        sprintf( filename, "%s%s", filepath,
-            cvReadString((CvFileNode*)cvGetSeqElem(board_list->data.seq,idx*2+1),"dummy.txt"));
-
-        _u = (CvMat*)cvLoad( filename );
-
-        if( _u == 0 )
+        string filename = folder + (string)board_list[idx * 2 + 1];
+        Mat expected;
         {
-            if( idx == 0 )
-                ts->printf( CvTS::LOG, "one of chessboard corner files can't be read: %s", filename ); 
-            if( max_idx == 1 )
-            {
-                code = CvTS::FAIL_MISSING_TEST_DATA;
-                goto _exit_;
+            CvMat *u = (CvMat*)cvLoad( filename.c_str() );
+            if(!u )
+            {                
+                ts.printf( CvTS::LOG, "one of chessboard corner files can't be read: %s", filename.c_str() ); 
+                ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+                return;                
             }
-            continue;
-        }
+            expected = Mat(u, true);
+            cvReleaseMat( &u );
+        }                
+        size_t count_exp = static_cast<size_t>(expected.cols * expected.rows);                
+        Size pattern_size = expected.size();
 
-        pattern_size.width = _u->cols;
-        pattern_size.height = _u->rows;
-        count0 = pattern_size.width*pattern_size.height;
-
-        /* allocate additional buffers */
-        _v = cvCloneMat( _u );
-        count = count0;
-
-        u = (CvPoint2D32f*)_u->data.fl;
-        v = (CvPoint2D32f*)_v->data.fl;
-
-        OPENCV_CALL( result = cvFindChessboardCorners(
-                     gray, pattern_size, v, &count, 7 ));
-
-        //show_points( gray, 0, count0, v, count, pattern_size, result );
-        if( !result || count != count0 )
+      /*  if (idx == 9 || idx == 10 || idx == 11)
+            pattern_size = Size(4, 3);*/
+       
+        vector<Point2f> v;        
+        bool result = findChessboardCorners(gray, pattern_size, v, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );        
+        show_points( gray, Mat(), v, pattern_size, result );
+        if( !result || v.size() != count_exp )
         {
-            ts->printf( CvTS::LOG, "chess board is not found" );
-            code = CvTS::FAIL_INVALID_OUTPUT;
-            goto _exit_;
+            ts.printf( CvTS::LOG, "chess board is not found\n" );
+            ts.set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
         }
 
 #ifndef WRITE_POINTS
-        err = DBL_MAX;
-        for( k = 0; k < 2; k++ )
-        {
-            double err1 = 0;
-            for( j = 0; j < count0; j++ )
-            {
-                int j1 = k == 0 ? j : count0 - j - 1;
-                double dx = fabs( v[j].x - u[j1].x );
-                double dy = fabs( v[j].y - u[j1].y );
-
-                dx = MAX( dx, dy );
-                if( dx > err1 )
-                    err1 = dx;
-            }
-            err = MIN(err, err1);
-        }
+        double err = calcError(v, expected);
         if( err > rough_success_error_level )
         {
-            ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
-            code = CvTS::FAIL_BAD_ACCURACY;
-            goto _exit_;
+            ts.printf( CvTS::LOG, "bad accuracy of corner guesses" );
+            ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+            return;
         }
-
         max_rough_error = MAX( max_rough_error, err );
 #endif
-        OPENCV_CALL( cvFindCornerSubPix( gray, v, count, cvSize( 5, 5 ), cvSize(-1,-1),
-                            cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1)));
-        //show_points( gray, u + 1, count0, v, count, pattern_size, result  );
+        cornerSubPix( gray, v, Size(5, 5), Size(-1,-1), TermCriteria(TermCriteria::EPS|TermCriteria::MAX_ITER, 30, 0.1));        
+        show_points( gray, expected, v, pattern_size, result  );
 
 #ifndef WRITE_POINTS
-        err = DBL_MAX;
-        for( k = 0; k < 2; k++ )
-        {
-            double err1 = 0;
-            for( j = 0; j < count0; j++ )
-            {
-                int j1 = k == 0 ? j : count0 - j - 1;
-                double dx = fabs( v[j].x - u[j1].x );
-                double dy = fabs( v[j].y - u[j1].y );
-
-                dx = MAX( dx, dy );
-                if( dx > err1 )
-                    err1 = dx;
-            }
-            err = MIN(err, err1);
-        }
+        err = calcError(v, expected);
         if( err > precise_success_error_level )
         {
-            ts->printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
-            code = CvTS::FAIL_BAD_ACCURACY;
-            goto _exit_;
+            ts.printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
+            ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+            return;
         }
         max_precise_error = MAX( max_precise_error, err );
 #else
-        cvSave( filename, _v );
+        Mat mat_v(pattern_size, CV_32FC2, (void*)&v[0]);
+        CvMat cvmat_v = mat_v;
+        cvSave( filename.c_str(), &cvmat_v );
 #endif
-        cvReleaseMat( &_u );
-        cvReleaseMat( &_v );
-        cvReleaseImage( &img );
-        cvReleaseImage( &gray );
-        cvReleaseImage( &thresh );
+        progress = update_progress( progress, idx, max_idx, 0 );
     }
 
-_exit_:
-
-    /* release occupied memory */
-    cvReleaseMat( &_u );
-    cvReleaseMat( &_v );
-    cvReleaseFileStorage( &fs );
-    cvReleaseImage( &img );
-    cvReleaseImage( &gray );
-    cvReleaseImage( &thresh );
-
-    if( code < 0 )
-        ts->set_failed_test_info( code );
+    ts.set_failed_test_info( CvTS::OK);
 }
 
 CV_ChessboardDetectorTest chessboard_detector_test;
