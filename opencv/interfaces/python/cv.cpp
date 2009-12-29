@@ -1333,16 +1333,19 @@ static int convert_to_CvScalar(PyObject *o, CvScalar *s, const char *name = "no_
     PyObject *fi = PySequence_Fast(o, name);
     if (fi == NULL)
       return 0;
+    if (4 < PySequence_Fast_GET_SIZE(fi))
+        return failmsg("CvScalar value for argument '%s' is longer than 4", name);
     for (Py_ssize_t i = 0; i < PySequence_Fast_GET_SIZE(fi); i++) {
       PyObject *item = PySequence_Fast_GET_ITEM(fi, i);
-      if (PyNumber_Check(item))
+      if (PyFloat_Check(item) || PyInt_Check(item)) {
         s->val[i] = PyFloat_AsDouble(item);
-      else
+      } else {
         return failmsg("CvScalar value for argument '%s' is not numeric", name);
+      }
     }
     Py_DECREF(fi);
   } else {
-    if (PyNumber_Check(o)) {
+    if (PyFloat_Check(o) || PyInt_Check(o)) {
       s->val[0] = PyFloat_AsDouble(o);
     } else {
       return failmsg("CvScalar value for argument '%s' is not numeric", name);
@@ -2070,7 +2073,7 @@ static int convert_to_CvSubdiv2DPTR(PyObject *o, CvSubdiv2D** dst, const char *n
 
 static int convert_to_CvNextEdgeType(PyObject *o, CvNextEdgeType *dst, const char *name = "no_name")
 {
-  if (!PyNumber_Check(o)) {
+  if (!PyInt_Check(o)) {
     *dst = (CvNextEdgeType)NULL;
     return failmsg("Expected number for CvNextEdgeType argument '%s'", name);
   } else {
