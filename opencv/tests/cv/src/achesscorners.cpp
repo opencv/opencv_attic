@@ -77,6 +77,7 @@ public:
     CV_ChessboardDetectorTest();
 protected:
     void run(int);
+    bool checkByGenerator();
 };
 
 CV_ChessboardDetectorTest::CV_ChessboardDetectorTest():
@@ -109,16 +110,20 @@ double calcError(const vector<Point2f>& v, const Mat& u)
     return err;
 }
 
+const double rough_success_error_level = 2.5;
+const double precise_success_error_level = 2;
+
 
 /* ///////////////////// chess_corner_test ///////////////////////// */
 void CV_ChessboardDetectorTest::run( int /*start_from */)
 {
+    if (!checkByGenerator())
+        return;
+
     CvTS& ts = *this->ts;
 
 //#define WRITE_POINTS 1
 #ifndef WRITE_POINTS    
-    const double rough_success_error_level = 2.5;
-    const double precise_success_error_level = 2;
     double max_rough_error = 0, max_precise_error = 0;
 #endif
     string folder = string(ts.get_data_path()) + "cameracalibration/";
@@ -208,6 +213,81 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
     }
 
     ts.set_failed_test_info( CvTS::OK);
+}
+
+
+double calcErrorMinError(const Size& cornSz, const vector<Point2f>& corners_found, const vector<Point2f>& corners_generated)
+{
+    Mat m1(cornSz, CV_32FC2, (Point2f*)&corners_generated[0]);    
+    Mat m2; flip(m1, m2, 0);
+
+    Mat m3; flip(m1, m3, 1); m3 = m3.t(); flip(m3, m3, 1);
+    
+    Mat m4 = m1.t(); flip(m4, m4, 1);
+
+    double min1 =  min(calcError(corners_found, m1), calcError(corners_found, m2));    
+    double min2 =  min(calcError(corners_found, m3), calcError(corners_found, m4));    
+    return min(min1, min2);
+}
+
+bool CV_ChessboardDetectorTest::checkByGenerator()
+{   
+    try
+    {        
+        Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
+        randu(bg, Scalar::all(0), Scalar::all(255)); 
+        GaussianBlur(bg, bg, Size(7,7), 3.0); 
+                
+        Mat_<float> camMat(3, 3);
+        camMat << 300.f, 0.f, bg.cols/2.f, 0, 300.f, bg.rows/2.f, 0.f, 0.f, 1.f;
+        
+        Mat_<float> distCoeffs(1, 5);
+        distCoeffs << 1.2f, 0.2f, 0.f, 0.f, 0.f;
+
+        const Size sizes[] = { Size(6, 6), Size(8, 6), Size(11, 12),  Size(5, 4) };
+        const size_t sizes_num = sizeof(sizes)/sizeof(sizes[0]);                
+        const size_t test_num = 16;
+
+        int progress = 0;
+        for(size_t i = 0; i < test_num; ++i)
+        {          
+            progress = update_progress( progress, i, test_num, 0 );
+            ChessBoardGenerator cbg(sizes[i % sizes_num]);
+
+            vector<Point2f> corners_generated;
+            Mat cb = cbg(bg, camMat, distCoeffs, corners_generated);
+
+            /*cb = cb * 0.8 + Scalar::all(30);            
+            GaussianBlur(cb, cb, Size(3, 3), 0.8);     */
+            //cv::addWeighted(cb, 0.8, bg, 0.2, 20, cb); 
+            
+            //printf("%d\n", i);
+            /*if (i < 10)
+                continue;
+
+            cv::namedWindow("CB"); cv::imshow("CB", cb); cv::waitKey();*/
+                                   
+            vector<Point2f> corners_found;
+            bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found);
+            if (!found)
+            {
+                //cv::imwrite("e:/cb1.png", cb);
+                throw std::exception();            
+                
+            }
+
+            double err = calcErrorMinError(cbg.cornersSize(), corners_found, corners_generated);            
+            if( err > rough_success_error_level )
+                throw std::exception();            
+        }        
+    }
+    catch (const std::exception&)
+    {
+        ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
+        ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+        return false;
+    }
+    return true;
 }
 
 CV_ChessboardDetectorTest chessboard_detector_test;

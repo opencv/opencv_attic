@@ -21,6 +21,7 @@ public:
     Mat operator()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, vector<Point2f>& corners) const;    
     Mat operator ()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, const Size2f& squareSize, vector<Point2f>& corners) const;  
     Mat operator ()(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, const Size2f& squareSize, const Point3f& pos, vector<Point2f>& corners) const;
+    Size cornersSize() const;
 private:
     void generateEdge(const Point3f& p1, const Point3f& p2, vector<Point3f>& out) const;
     Mat generageChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 

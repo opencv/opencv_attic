@@ -21,6 +21,11 @@ void cv::ChessBoardGenerator::generateEdge(const Point3f& p1, const Point3f& p2,
         out.push_back( p1 + step * (float)n);
 }    
 
+Size cv::ChessBoardGenerator::cornersSize() const
+{
+    return Size(patternSize.width-1, patternSize.height-1);
+}
+
 struct Mult
 {
     float m;
@@ -93,7 +98,14 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
             corners3d.push_back(zero + (i + 1) * sqWidth * pb1 + (j + 1) * sqHeight * pb2);
     corners.clear();
     projectPoints( corners3d, rvec, tvec, camMat, distCoeffs, corners);
-        
+
+  /*  Mat_<Point2f> corners_mat(patternSize.width - 1, patternSize.height - 1, (Point2f*)&corners[0]);
+    const Point2f& a = corners_mat(0, 0);
+    const Point2f& b = corners_mat(0, corners_mat.cols - 1);
+    const Point2f& c = corners_mat(1, 0);
+    Point2f v1 = (a - b), v2 = (c - b);    
+    if (v1.x * v2.y - v1.y * v2.x > 0)
+        flip(corners_mat, corners_mat, 0);*/
 
     vector<Point3f> whole3d;
     vector<Point2f> whole2d;
